@@ -73,7 +73,7 @@ NS_METHOD nsCheckButton::Create(nsIWidget *aParent,
   InitDeviceContext(aContext, parentWidget);
 
 
-  mWidget = gtk_check_button_new_with_label("");
+  mWidget = gtk_check_button_new();
 
 /*
   mWidget = ::XtVaCreateManagedWidget("",
@@ -231,12 +231,14 @@ NS_METHOD nsCheckButton::GetState(PRBool& aState)
 NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
 {
   NS_ALLOC_STR_BUF(label, aText, 256);
-  gtk_label_get(); /* XXX*/
-  XmString str;
-  str = XmStringCreate(label, XmFONTLIST_DEFAULT_TAG);
-  XtVaSetValues(mWidget, XmNlabelString, str, nsnull);
+  if (mLabel) {
+    gtk_label_set(mLabel, label);
+  } else {
+    mLabel = gtk_label_new(label);
+    gtk_container_add(GTK_CONTAINER(mWidget), mLabel);
+    gtk_widget_show(mLabel); /* XXX */
+  }
   NS_FREE_STR_BUF(label);
-  XmStringFree(str);
   return NS_OK;
 }
 
@@ -248,15 +250,12 @@ NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::GetLabel(nsString& aBuffer)
 {
-  XmString str;
-  XtVaGetValues(mWidget, XmNlabelString, &str, nsnull);
   char * text;
-  if (XmStringGetLtoR(str, XmFONTLIST_DEFAULT_TAG, &text)) {
+  if (mLabel) {
+    gtk_label_get(mLabel, &text);
     aBuffer.SetLength(0);
     aBuffer.Append(text);
-    XtFree(text);
   }
-  XmStringFree(str);
   return NS_OK;
 }
 

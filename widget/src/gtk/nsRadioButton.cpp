@@ -83,7 +83,7 @@ NS_METHOD nsRadioButton::Create(nsIWidget *aParent,
                       nsWidgetInitData *aInitData)
 {
   aParent->AddChild(this);
-  Widget parentWidget = nsnull;
+  GtkWidget parentWidget = nsnull;
 
   if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
@@ -93,7 +93,12 @@ NS_METHOD nsRadioButton::Create(nsIWidget *aParent,
 
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
-
+/* FIXME
+ * we need to have a slist here, so store 
+ * the radio buttons that go with this one.
+ */
+  mWidget = gtk_radio_button_new(NULL);
+/*
   mWidget = ::XmCreateRadioBox(parentWidget, "radio", nsnull, 0);
   XtVaSetValues(mWidget, XmNwidth, aRect.width,
                          XmNheight, aRect.height,
@@ -115,6 +120,8 @@ NS_METHOD nsRadioButton::Create(nsIWidget *aParent,
 
   mRadioBtn = ::XmCreateToggleButton(mWidget, "", nsnull, 0);
 
+// This is goign to be the same as mWidget, not different. FIXME
+
   XtVaSetValues(mRadioBtn, 
                          XmNwidth, aRect.width,
                          XmNheight, aRect.height,
@@ -133,12 +140,12 @@ NS_METHOD nsRadioButton::Create(nsIWidget *aParent,
                          0);
 
   XtManageChild(mRadioBtn);
-
+*/
   // save the event callback function
   mEventCallback = aHandleEventFunction;
 
   InitCallbacks();
-
+/*
   XtAddCallback(mRadioBtn,
                 XmNarmCallback,
                 nsXtWidget_RadioButton_ArmCallback,
@@ -148,7 +155,7 @@ NS_METHOD nsRadioButton::Create(nsIWidget *aParent,
                 XmNdisarmCallback,
                 nsXtWidget_RadioButton_DisArmCallback,
                 this);
-
+*/
   return NS_OK;
 }
 
@@ -177,7 +184,7 @@ void nsRadioButton::Armed()
 {
   mIsArmed      = PR_TRUE;
   mValueWasSet  = PR_FALSE;
-  mInitialState = XmToggleButtonGetState(mRadioBtn);
+  mInitialState = GTK_TOGGLE_BUTTON(mWidget)->active;
 }
 
 //-------------------------------------------------------------------------
@@ -188,9 +195,11 @@ void nsRadioButton::Armed()
 void nsRadioButton::DisArmed() 
 {
   if (mValueWasSet) {
-    XmToggleButtonSetState(mRadioBtn, mNewValue, TRUE);
+    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), TRUE);
+//    XmToggleButtonSetState(mRadioBtn, mNewValue, TRUE);
   } else {
-    XmToggleButtonSetState(mRadioBtn, mInitialState, TRUE);
+    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), TRUE);
+//    XmToggleButtonSetState(mRadioBtn, mInitialState, TRUE);
   }
   mIsArmed = PR_FALSE;
 }
@@ -207,8 +216,8 @@ NS_METHOD nsRadioButton::SetState(const PRBool aState)
     mNewValue    = aState;
     mValueWasSet = PR_TRUE;
   }
-  XmToggleButtonSetState(mRadioBtn, aState, TRUE);
-
+//  XmToggleButtonSetState(mRadioBtn, aState, TRUE);
+  gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), aState);
   return NS_OK;
 }
 
@@ -219,7 +228,8 @@ NS_METHOD nsRadioButton::SetState(const PRBool aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::GetState(PRBool& aState)
 {
-  int state = XmToggleButtonGetState(mRadioBtn);
+//  int state = XmToggleButtonGetState(mRadioBtn);
+  int state = GTK_TOGGLE_BUTTON(mWidget)->active;
   if (mIsArmed) {
     if (mValueWasSet) {
       return mNewValue;
@@ -239,11 +249,14 @@ NS_METHOD nsRadioButton::GetState(PRBool& aState)
 NS_METHOD nsRadioButton::SetLabel(const nsString& aText)
 {
   NS_ALLOC_STR_BUF(label, aText, 256);
-  XmString str;
-  str = XmStringCreate(label, XmFONTLIST_DEFAULT_TAG);
-  XtVaSetValues(mRadioBtn, XmNlabelString, str, nsnull);
+  if (mLabel) {
+    gtk_label_set(mLabel, label);
+  } else {
+    mLabel = gtk_label_new(label);
+    gtk_container_add(GTK_CONTAINER(mWidget), mLabel);
+    gtk_widget_show(mLabel); /* XXX */
+  }
   NS_FREE_STR_BUF(label);
-  XmStringFree(str);
   return NS_OK;
 }
 
@@ -255,15 +268,12 @@ NS_METHOD nsRadioButton::SetLabel(const nsString& aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::GetLabel(nsString& aBuffer)
 {
-  XmString str;
-  XtVaGetValues(mRadioBtn, XmNlabelString, &str, nsnull);
   char * text;
-  if (XmStringGetLtoR(str, XmFONTLIST_DEFAULT_TAG, &text)) {
+  if (mLabel) {
+    gtk_label_get(mLabel, &text);
     aBuffer.SetLength(0);
     aBuffer.Append(text);
-    XtFree(text);
   }
-  XmStringFree(str);
   return NS_OK;
 }
 

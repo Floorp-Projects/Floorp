@@ -16,33 +16,31 @@
  * Reserved.
  */
 
-#ifndef nsRadioButton_h__
-#define nsRadioButton_h__
+#ifndef nsDialog_h__
+#define nsDialog_h__
 
 #include "nsWindow.h"
-#include "nsIRadioButton.h"
+#include "nsIDialog.h"
 
 /**
- * Native Motif Radiobutton wrapper
+ * Native Motif Dialog wrapper
  */
-class nsRadioButton : public nsWindow,
-                      public nsIRadioButton
+class nsDialog :  public nsWindow,
+                  public nsIDialog
 {
 
 public:
-                          nsRadioButton();
-  virtual                 ~nsRadioButton();
+  nsDialog();
+  virtual ~nsDialog();
 
   // nsISupports
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  // nsIRadioButton part
-  NS_IMETHOD              SetLabel(const nsString& aText);
-  NS_IMETHOD              GetLabel(nsString& aBuffer);
-  NS_IMETHOD              SetState(const PRBool aState);
-  NS_IMETHOD              GetState(PRBool& aState);
+    // nsIButton part
+  NS_IMETHOD     SetLabel(const nsString& aText);
+  NS_IMETHOD     GetLabel(nsString& aBuffer);
 
 
   NS_IMETHOD Create(nsIWidget *aParent,
@@ -52,7 +50,6 @@ public:
               nsIAppShell *aAppShell = nsnull,
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
-
   NS_IMETHOD Create(nsNativeWidget aParent,
               const nsRect &aRect,
               EVENT_CALLBACK aHandleEventFunction,
@@ -61,25 +58,15 @@ public:
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
 
-  // nsIRadioButton part
-  virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
-  virtual PRBool          OnPaint(nsPaintEvent &aEvent);
-  virtual PRBool          OnResize(nsSizeEvent &aEvent);
 
+  virtual PRBool OnPaint(nsPaintEvent & aEvent);
+  virtual PRBool OnResize(nsSizeEvent &aEvent);
 
-  // These are needed to Override the auto check behavior
-  void Armed();
-  void DisArmed();
+  //virtual void PreCreateWidget(nsWidgetInitData *aInitData);
 
 private:
-
-  GtkWidget *mLabel;
-//  Widget  mRadioBtn;
-  Boolean mInitialState;
-  Boolean mNewValue;
-  Boolean mValueWasSet;
-  Boolean mIsArmed;
+  GtkWidget mShell;
 
 };
 
-#endif // nsRadioButton_h__
+#endif // nsDialog_h__
