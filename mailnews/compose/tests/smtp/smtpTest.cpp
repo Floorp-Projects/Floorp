@@ -37,13 +37,13 @@
 #include "nsRepository.h"
 #include "nsString.h"
 
-#include "nsSmtpUrl.h"
-#include "nsSmtpProtocol.h"
+#include "nsISmtpService.h"
 
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
+#include "nsFileSpec.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -63,6 +63,7 @@
 
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test
@@ -92,20 +93,6 @@ extern "C" char *fe_GetConfigDir(void) {
 // functions like this one in the test harness...
 /////////////////////////////////////////////////////////////////////////////////
 
-
-nsresult NS_NewSmtpUrl(nsISmtpUrl ** aResult, const nsString urlSpec)
-{
-	nsresult rv = NS_OK;
-
-	 nsSmtpUrl * smtpUrl = new nsSmtpUrl(nsnull, nsnull);
-	 if (smtpUrl)
-	 {
-		smtpUrl->ParseURL(urlSpec);  // load the spec we were given...
-		rv = smtpUrl->QueryInterface(nsISmtpUrl::IID(), (void **) aResult);
-	 }
-
-	 return rv;
-}
 
 /* strip out non-printable characters */
 static void strip_nonprintable(char *string) {
@@ -163,14 +150,10 @@ protected:
 	PRUint32	m_port;
 	char		m_host[200];		
 
-	nsISmtpUrl * m_url; 
-	nsSmtpProtocol * m_SmtpProtocol; // running protocol instance
-	nsITransport * m_transport; // a handle on the current transport object being used with the protocol binding...
 	nsINetService * m_netService;
+	nsISmtpService * m_smtpService;
 
 	PRBool		m_runningURL;	// are we currently running a url? this flag is set to false on exit...
-
-	void InitializeProtocol(const char * urlSpec);
     nsresult SetupUrl(char *group);
 	PRBool m_protocolInitialized; 
 };
@@ -180,7 +163,6 @@ nsSmtpTestDriver::nsSmtpTestDriver(nsINetService * pNetService,
 {
 	m_urlSpec[0] = '\0';
 	m_urlString[0] = '\0';
-	m_url = nsnull;
 	m_protocolInitialized = PR_FALSE;
 	m_runningURL = PR_TRUE;
     m_eventQueue = queue;
@@ -189,64 +171,34 @@ nsSmtpTestDriver::nsSmtpTestDriver(nsINetService * pNetService,
 	
 	InitializeTestDriver(); // prompts user for initialization information...
 
-	m_transport = nsnull;
-	m_SmtpProtocol = nsnull; // we can't create it until we have a url...
+	m_smtpService = nsnull;
+	nsServiceManager::GetService(kSmtpServiceCID, nsISmtpService::IID(), (nsISupports **)&m_smtpService);
 }
 
-void nsSmtpTestDriver::InitializeProtocol(const char * urlString)
-{
-	// this is called when we don't have a url nor a protocol instance yet...
-	if (m_url)
-		m_url->Release(); // get rid of our old ref count...
-
-	NS_NewSmtpUrl(&m_url, urlString);
-	
-	NS_IF_RELEASE(m_transport);
-	
-	// create a transport socket...
-	m_netService->CreateSocketTransport(&m_transport, m_port, m_host);
-
-	// now create a protocl instance...
-	if (m_SmtpProtocol)
-		delete m_SmtpProtocol; // delete our old instance
-	
-	// now create a new protocol instance...
-	m_SmtpProtocol = new nsSmtpProtocol(m_url, m_transport);
-	NS_IF_ADDREF(m_SmtpProtocol); 
-	m_protocolInitialized = PR_TRUE;
-}
 
 nsSmtpTestDriver::~nsSmtpTestDriver()
 {
-	NS_IF_RELEASE(m_url);
-	NS_IF_RELEASE(m_transport);
 	NS_IF_RELEASE(m_netService); 
-	if (m_SmtpProtocol) delete m_SmtpProtocol;
+	nsServiceManager::ReleaseService(kSmtpServiceCID, m_smtpService);
 }
 
 nsresult nsSmtpTestDriver::RunDriver()
 {
 	nsresult status = NS_OK;
-
+	PRBool runCommand = PR_TRUE;
 
 	while (m_runningURL)
 	{
 		// if we haven't gotten started (and created a protocol) or
 		// if the protocol instance is currently not busy, then read in a new command
 		// and process it...
-		if ((!m_SmtpProtocol) || m_SmtpProtocol->IsRunningUrl() == PR_FALSE) // if we aren't running the url anymore, ask ueser for another command....
+		if (runCommand)
 		{
-			//  SMTP is a connectionless protocol...so kill off our transport and current protocol
-			//  each command must create its own transport and protocol instance to run the url...
-			NS_IF_RELEASE(m_transport);
-			if (m_SmtpProtocol)
-			{
-				NS_RELEASE(m_SmtpProtocol);
-				m_SmtpProtocol = nsnull;
-			}
-
 			status = ReadAndDispatchCommand();	
-		}  // if running url
+			runCommand = PR_FALSE;
+		}
+
+	 // if running url
 #ifdef XP_UNIX
 
         PL_ProcessPendingEvents(m_eventQueue);
@@ -384,6 +336,7 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 	char * userName = nsnull;
 	char * userPassword = nsnull;
 	char * displayString = nsnull;
+	char * recipients = nsnull;
 	
 	PL_strcpy(m_userData, DEFAULT_FILE);
 
@@ -399,11 +352,8 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 	rv = PromptForUserDataAndBuildUrl(displayString);
 	PR_FREEIF(displayString);
 
-	m_urlString[0] = '\0';
-	PL_strcpy(m_urlString, m_urlSpec);
-	PL_strcat(m_urlString, "/");
-	PL_strcat(m_urlString, m_userData); // tack on recipient...
-	
+	recipients = PL_strdup(m_userData);
+
 	// now ask the user what their address is...
 	PL_strcpy(m_userData, DEFAULT_SENDER);
 	displayString = PR_smprintf("Email address of sender [%s]: ", m_userData);
@@ -415,19 +365,12 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 	// SMTP is a connectionless protocol...so we always start with a new
 	// SMTP protocol instance every time we launch a mailto url...
 
-	InitializeProtocol(m_urlString);  // this creates a transport
-	m_url->SetSpec(m_urlString); // reset spec
-	m_url->SetHost(DEFAULT_HOST);
-	
-	// store the file name in the url...
-	m_url->SetPostMessageFile(fileName);
-	m_url->SetUserEmailAddress(userName);
-	m_url->SetUserPassword(DEFAULT_PASSWORD);
+	nsFilePath filePath (fileName);
+	m_smtpService->SendMailMessage(filePath, userName, recipients, nsnull);
+
 	PR_FREEIF(fileName);
 	PR_FREEIF(userName);
-		
-	printf("Running %s\n", m_urlString);
-	rv = m_SmtpProtocol->LoadURL(m_url);
+	PR_FREEIF(recipients);
 	return rv;
 }
 
@@ -483,7 +426,7 @@ int main()
 	}
 
 	// shut down:
-	NS_RELEASE(pNetService);
+	nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
     
     return 0;
 }
