@@ -1007,21 +1007,21 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
 
   static char  gTagSet1[]={ 
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_address,   eHTMLTag_applet,
-    eHTMLTag_blink,     eHTMLTag_b,      eHTMLTag_basefont,  eHTMLTag_bdo,
+    eHTMLTag_blink,     eHTMLTag_b,         eHTMLTag_basefont,  eHTMLTag_bdo,
     eHTMLTag_big,
     eHTMLTag_blockquote,eHTMLTag_br,        eHTMLTag_button,    eHTMLTag_center,
     eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,       eHTMLTag_dir,
     eHTMLTag_div,       eHTMLTag_dl,        eHTMLTag_em,        eHTMLTag_fieldset,
     eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
     eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
-    eHTMLTag_hr,        eHTMLTag_i,    eHTMLTag_iframe,    eHTMLTag_img,
+    eHTMLTag_hr,        eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,
     eHTMLTag_input,     eHTMLTag_isindex,   
     
     eHTMLTag_kbd,       eHTMLTag_label,     eHTMLTag_li,
     eHTMLTag_map,       eHTMLTag_menu,      eHTMLTag_newline,   eHTMLTag_nobr,
     eHTMLTag_noframes,  eHTMLTag_noscript,
-    eHTMLTag_object,    eHTMLTag_ol,        eHTMLTag_p, eHTMLTag_pre,
-    eHTMLTag_q, eHTMLTag_s,         eHTMLTag_strike,    
+    eHTMLTag_object,    eHTMLTag_ol,        eHTMLTag_p,         eHTMLTag_pre,
+    eHTMLTag_q,         eHTMLTag_s,         eHTMLTag_strike,    
     eHTMLTag_samp,      eHTMLTag_script,
     eHTMLTag_select,    eHTMLTag_small,     eHTMLTag_span,      eHTMLTag_strong,
     eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_table,     eHTMLTag_text,
@@ -1037,7 +1037,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
     eHTMLTag_button,    eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,
     eHTMLTag_div,       eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_hr,        
-    eHTMLTag_i,    eHTMLTag_iframe,    eHTMLTag_img,       eHTMLTag_input,     
+    eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,       eHTMLTag_input,     
     eHTMLTag_kbd,       
 
     eHTMLTag_label,     eHTMLTag_map,       eHTMLTag_newline,   eHTMLTag_nobr,
@@ -1059,14 +1059,14 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     eHTMLTag_div,       eHTMLTag_dt,        eHTMLTag_em,        eHTMLTag_fieldset,    
     eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
     eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
-    eHTMLTag_i,    eHTMLTag_iframe,    eHTMLTag_ins,       eHTMLTag_kbd,       
+    eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_ins,       eHTMLTag_kbd,       
 
     eHTMLTag_label,     eHTMLTag_legend,    
     eHTMLTag_li,  eHTMLTag_newline,
         
     eHTMLTag_noframes,
     eHTMLTag_noscript,  eHTMLTag_object,    eHTMLTag_p, eHTMLTag_pre,
-    eHTMLTag_q, eHTMLTag_s,         eHTMLTag_strike,    
+    eHTMLTag_q,         eHTMLTag_s,         eHTMLTag_strike,    
     eHTMLTag_samp,      eHTMLTag_small,
     eHTMLTag_span,      eHTMLTag_strong,    eHTMLTag_sub,       eHTMLTag_sup,   
     eHTMLTag_td,        eHTMLTag_text,
@@ -1091,21 +1091,10 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       result=PRBool(0!=strchr(gTagSet2,aChild)); break;
 
     case eHTMLTag_applet:
-      {
-        static char okTags[]={  
-          eHTMLTag_a,       eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_b,
-          eHTMLTag_basefont,eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
-          eHTMLTag_button,  eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,
-          eHTMLTag_em,      eHTMLTag_font,      eHTMLTag_i,    eHTMLTag_iframe,
-          eHTMLTag_img,     eHTMLTag_input,     eHTMLTag_kbd,       eHTMLTag_label,
-          eHTMLTag_map,     eHTMLTag_object,    eHTMLTag_param,     eHTMLTag_q,
-          eHTMLTag_s,       eHTMLTag_samp,      eHTMLTag_script,    
-          eHTMLTag_select,  eHTMLTag_small,
-          eHTMLTag_span,    eHTMLTag_strike,    eHTMLTag_strong,    eHTMLTag_sub,
-          eHTMLTag_sup,     eHTMLTag_textarea,  eHTMLTag_tt,        eHTMLTag_u,
-          eHTMLTag_var,0};
-        result=PRBool(0!=strchr(okTags,aChild));
-      }
+      if(eHTMLTag_param==aChild)
+        result=PR_TRUE;
+      else result=PRBool(0!=strchr(gTagSet2,aChild)); 
+      break;
 
     case eHTMLTag_area:
     case eHTMLTag_base:
@@ -1169,8 +1158,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
 
     case eHTMLTag_dd:
     case eHTMLTag_dt:
-      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
-
     case eHTMLTag_div:
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
@@ -1226,8 +1213,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       break;
 
     case eHTMLTag_iframe:/* XXX wrong */
-      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
-
     case eHTMLTag_label:
     case eHTMLTag_legend:/* XXX not sure */
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
@@ -1269,9 +1254,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_noscript:
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
-    case eHTMLTag_object:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
-
     case eHTMLTag_option:
       //for now, allow an option to contain anything but another option...
       result=PRBool(eHTMLTag_option!=aChild); break;
@@ -1279,17 +1261,18 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_p:
       if(eHTMLTag_p==aChild)
         result=PR_FALSE;
-      else result=PRBool(0!=strchr(gTagSet2,aChild)); 
+      else result=PRBool(0!=strchr(gTagSet2,aChild)); break;
       break;
+
+    case eHTMLTag_object:
+    case eHTMLTag_pre:
+      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
 
     case eHTMLTag_param:
       break;  //singletons can't contain other tags
 
     case eHTMLTag_plaintext:
       break;
-
-    case eHTMLTag_pre:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
 
     case eHTMLTag_script:
       break; //unadorned script text...
@@ -2607,7 +2590,6 @@ PRInt32 CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aTo
         CToken*   skippedToken=0;
         if(str.EqualsIgnoreCase("SCRIPT") ||
            str.EqualsIgnoreCase("STYLE")  ||
-           str.EqualsIgnoreCase("APPLET") ||
            str.EqualsIgnoreCase("TITLE")  ||
            str.EqualsIgnoreCase("TEXTAREA")) {
 
