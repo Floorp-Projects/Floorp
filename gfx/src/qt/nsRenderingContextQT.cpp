@@ -65,7 +65,7 @@ nsRenderingContextQT::nsRenderingContextQT()
     mContext            = nsnull;
     mSurface            = nsnull;
     mOffscreenSurface   = nsnull;
-    mCurrentColor       = 0;
+    mCurrentColor       = NS_RGB(0, 0, 0);
     mCurrentLineStyle   = nsLineStyle_kSolid;
     mCurrentFont        = nsnull;
     mCurrentFontMetrics = nsnull;
@@ -133,10 +133,10 @@ NS_IMETHODIMP nsRenderingContextQT::Init(nsIDeviceContext* aContext,
 
     mSurface = new nsDrawingSurfaceQT();
 
-    QPixmap * pixmap = (QPixmap *) aWindow->GetNativeData(NS_NATIVE_WINDOW);
+    QPaintDevice * pdevice = (QPaintDevice *) aWindow->GetNativeData(NS_NATIVE_WINDOW);
     QPainter * gc = (QPainter *) aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
 
-    mSurface->Init(pixmap, gc);
+    mSurface->Init(pdevice, gc);
 
     mOffscreenSurface = mSurface;
 
@@ -658,15 +658,15 @@ NS_IMETHODIMP nsRenderingContextQT::DestroyDrawingSurface(nsDrawingSurface aDS)
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRenderingContextQT::DestroyDrawingSurface\n"));
     nsDrawingSurfaceQT * surface = (nsDrawingSurfaceQT *) aDS;
 
-    if ((surface == NULL) || (surface->GetPixmap() == NULL))
+    if ((surface == NULL) || (surface->GetPaintDevice() == NULL))
     {
         return NS_ERROR_FAILURE;
     }
 
     QPainter * painter = surface->GetGC();
     delete painter;
-    QPixmap * pixmap = surface->GetPixmap();
-    delete pixmap;
+    QPaintDevice * pdevice = surface->GetPaintDevice();
+    delete pdevice;
 
     NS_IF_RELEASE(surface);
 
@@ -687,7 +687,7 @@ NS_IMETHODIMP nsRenderingContextQT::DrawLine(nscoord aX0,
             aY1));
     if (nsnull == mTMatrix || 
         nsnull == mSurface ||
-        nsnull == mSurface->GetPixmap() ||
+        nsnull == mSurface->GetPaintDevice() ||
         nsnull == mSurface->GetGC()) 
     {
         return NS_ERROR_FAILURE;
@@ -707,6 +707,13 @@ NS_IMETHODIMP nsRenderingContextQT::DrawLine(nscoord aX0,
     }
 #endif
 
+    PR_LOG(QtGfxLM, 
+           PR_LOG_DEBUG, 
+           ("nsRenderingContextQT::DrawLine: drawing line from (%d,%d) to (%d,%d)\n",
+            aX0, 
+            aY0, 
+            aX1, 
+            aY1));
     mSurface->GetGC()->drawLine(aX0, aY0, aX1, aY1);
 
     return NS_OK;
@@ -720,7 +727,7 @@ NS_IMETHODIMP nsRenderingContextQT::DrawPolyline(const nsPoint aPoints[],
 
     if (nsnull == mTMatrix || 
         nsnull == mSurface ||
-        nsnull == mSurface->GetPixmap() ||
+        nsnull == mSurface->GetPaintDevice() ||
         nsnull == mSurface->GetGC()) 
     {
         return NS_ERROR_FAILURE;
@@ -755,7 +762,7 @@ NS_IMETHODIMP nsRenderingContextQT::DrawRect(nscoord aX,
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRenderingContextQT::DrawRect\n"));
     if (nsnull == mTMatrix || 
         nsnull == mSurface ||
-        nsnull == mSurface->GetPixmap() ||
+        nsnull == mSurface->GetPaintDevice() ||
         nsnull == mSurface->GetGC()) 
     {
         return NS_ERROR_FAILURE;
@@ -789,10 +796,13 @@ NS_IMETHODIMP nsRenderingContextQT::FillRect(nscoord aX,
                                              nscoord aWidth, 
                                              nscoord aHeight)
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRenderingContextQT::FillRect\n"));
+    PR_LOG(QtGfxLM, 
+           PR_LOG_DEBUG, 
+           ("nsRenderingContextQT::FillRect: {%d,%d,%d,%d}\n",
+            aX, aY, aWidth, aHeight));
     if (nsnull == mTMatrix || 
         nsnull == mSurface ||
-        nsnull == mSurface->GetPixmap() ||
+        nsnull == mSurface->GetPaintDevice() ||
         nsnull == mSurface->GetGC()) 
     {
         return NS_ERROR_FAILURE;
@@ -864,7 +874,7 @@ NS_IMETHODIMP nsRenderingContextQT::DrawPolygon(const nsPoint aPoints[],
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRenderingContextQT::DrawPolygon\n"));
     if (nsnull == mTMatrix || 
         nsnull == mSurface ||
-        nsnull == mSurface->GetPixmap() ||
+        nsnull == mSurface->GetPaintDevice() ||
         nsnull == mSurface->GetGC()) 
     {
         return NS_ERROR_FAILURE;
@@ -901,7 +911,7 @@ NS_IMETHODIMP nsRenderingContextQT::FillPolygon(const nsPoint aPoints[],
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRenderingContextQT::FillPolygon\n"));
     if (nsnull == mTMatrix || 
         nsnull == mSurface ||
-        nsnull == mSurface->GetPixmap() ||
+        nsnull == mSurface->GetPaintDevice() ||
         nsnull == mSurface->GetGC()) 
     {
         return NS_ERROR_FAILURE;
@@ -936,7 +946,7 @@ NS_IMETHODIMP nsRenderingContextQT::DrawEllipse(nscoord aX,
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRenderingContextQT::DrawEllipse\n"));
     if (nsnull == mTMatrix || 
         nsnull == mSurface ||
-        nsnull == mSurface->GetPixmap() ||
+        nsnull == mSurface->GetPaintDevice() ||
         nsnull == mSurface->GetGC()) 
     {
         return NS_ERROR_FAILURE;
@@ -970,7 +980,7 @@ NS_IMETHODIMP nsRenderingContextQT::FillEllipse(nscoord aX,
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRenderingContextQT::FillEllipse\n"));
     if (nsnull == mTMatrix || 
         nsnull == mSurface ||
-        nsnull == mSurface->GetPixmap() ||
+        nsnull == mSurface->GetPaintDevice() ||
         nsnull == mSurface->GetGC()) 
     {
         return NS_ERROR_FAILURE;
@@ -1013,7 +1023,7 @@ NS_IMETHODIMP nsRenderingContextQT::DrawArc(nscoord aX,
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRenderingContextQT::DrawArc\n"));
     if (nsnull == mTMatrix || 
         nsnull == mSurface ||
-        nsnull == mSurface->GetPixmap() ||
+        nsnull == mSurface->GetPaintDevice() ||
         nsnull == mSurface->GetGC()) 
     {
         return NS_ERROR_FAILURE;
@@ -1061,7 +1071,7 @@ NS_IMETHODIMP nsRenderingContextQT::FillArc(nscoord aX,
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRenderingContextQT::FillArc\n"));
     if (nsnull == mTMatrix || 
         nsnull == mSurface ||
-        nsnull == mSurface->GetPixmap() ||
+        nsnull == mSurface->GetPaintDevice() ||
         nsnull == mSurface->GetGC()) 
     {
         return NS_ERROR_FAILURE;
@@ -1187,16 +1197,18 @@ NS_IMETHODIMP nsRenderingContextQT::DrawString(const char *aString,
                                                nscoord aY,
                                                const nscoord* aSpacing)
 {
+    QString buf(aString);
+    buf[aLength] = 0;
     PR_LOG(QtGfxLM, 
            PR_LOG_DEBUG, 
            ("nsRenderingContextQT::DrawString: drawing \"%s\" with length %d\n",
-            aString,
+            (const char *)buf,
             aLength));
     if (0 != aLength) 
     {
         if (nsnull == mTMatrix || 
             nsnull == mSurface ||
-            nsnull == mSurface->GetPixmap() ||
+            nsnull == mSurface->GetPaintDevice() ||
             nsnull == mSurface->GetGC() ||
             nsnull == aString)
         {
@@ -1246,12 +1258,15 @@ NS_IMETHODIMP nsRenderingContextQT::DrawString(const PRUnichar* aString,
                                                PRInt32 aFontID,
                                                const nscoord* aSpacing)
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRenderingContextQT::DrawString\n"));
+    PR_LOG(QtGfxLM, 
+           PR_LOG_DEBUG, 
+           ("nsRenderingContextQT::DrawString: drawing unicode string of length %d at (%d,%d)\n",
+            aLength, aX, aY));
     if (0 != aLength) 
     {
         if (nsnull == mTMatrix || 
             nsnull == mSurface ||
-            nsnull == mSurface->GetPixmap() ||
+            nsnull == mSurface->GetPaintDevice() ||
             nsnull == mSurface->GetGC() ||
             nsnull == aString)
         {
@@ -1284,7 +1299,17 @@ NS_IMETHODIMP nsRenderingContextQT::DrawString(const PRUnichar* aString,
         else 
         {
             mTMatrix->TransformCoord(&x, &y);
-            QString string((QChar *) aString, aLength);
+            QChar * uc = new QChar[aLength];
+            for (PRUint32 i = 0; i < aLength; i++)
+            {
+                uc[i] = aString[i];
+            }
+            QString string(uc, aLength);
+            delete [] uc;
+            PR_LOG(QtGfxLM, 
+                   PR_LOG_DEBUG, 
+                   ("nsRenderingContextQT::DrawString: drawing \"%s\"\n", 
+                    (const char *) string));
             mSurface->GetGC()->drawText(x, y, string);
         }
     }
@@ -1392,7 +1417,7 @@ nsRenderingContextQT::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
     if (nsnull == aSrcSurf ||
         nsnull == mTMatrix ||
         nsnull == mSurface ||
-        nsnull == mSurface->GetPixmap() ||
+        nsnull == mSurface->GetPaintDevice() ||
         nsnull == mSurface->GetGC())
     {
         return NS_ERROR_FAILURE;
@@ -1426,7 +1451,7 @@ nsRenderingContextQT::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
 
     destsurf->GetGC()->drawPixmap(x, 
                                   y, 
-                                  *((nsDrawingSurfaceQT *)aSrcSurf)->GetPixmap(), 
+                                  * (QPixmap *)((nsDrawingSurfaceQT *)aSrcSurf)->GetPaintDevice(), 
                                   drect.x, 
                                   drect.y, 
                                   drect.width, 
