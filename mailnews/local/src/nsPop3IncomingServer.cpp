@@ -302,3 +302,10 @@ nsPop3IncomingServer::GetDownloadMessagesAtStartup(PRBool *getMessagesAtStartup)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPop3IncomingServer::GetCanBeDefaultServer(PRBool *canBeDefaultServer)
+{
+    *canBeDefaultServer = PR_TRUE;
+    return NS_OK;
+}
+

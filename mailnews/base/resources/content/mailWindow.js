@@ -58,6 +58,7 @@ var messageDataSource;
 var messagesBox = null;
 var accountCentralBox = null;
 var gAccountCentralLoaded = false;
+var gPaneConfig = null;
 //End progress and Status variables
 
 // for checking if the folder loaded is Draft or Unsent which msg is editable
@@ -162,6 +163,7 @@ function CreateMailWindowGlobals()
 
         messagesBox       = document.getElementById("messagesBox");
         accountCentralBox = document.getElementById("accountCentralBox");
+        gPaneConfig = pref.GetIntPref("mail.pane_config");
 }
 
 function InitMsgWindow()
@@ -447,14 +449,33 @@ function loadStartPage() {
 // Load iframe in the AccountCentral box with corresponding page 
 function ShowAccountCentral()
 {
-    try {
+    try 
+    {
         var acctCentralPage = pref.getLocalizedUnicharPref("mailnews.account_central_page.url");
-        messagesBox.setAttribute("hidden", "true");
-        accountCentralBox.removeAttribute("hidden");
-        window.frames["accountCentralPane"].location = acctCentralPage;
-        gAccountCentralLoaded = true;
+        switch (gPaneConfig)
+        {    
+            case 0:
+                messagesBox.setAttribute("hidden", "true");
+                accountCentralBox.removeAttribute("hidden");
+                window.frames["accountCentralPane"].location = acctCentralPage;
+                gAccountCentralLoaded = true;
+                break;
+
+            case 1:
+                var messagePaneBox = document.getElementById("messagepanebox");
+                messagePaneBox.setAttribute("hidden", "true");
+                var threadPaneBox = document.getElementById("threadpaneBox");
+                threadPaneBox.setAttribute("hidden", "true");
+                var threadPaneSplitter = document.getElementById("threadpane-splitter");
+                threadPaneSplitter.setAttribute("hidden", "true");
+                accountCentralBox.removeAttribute("hidden");
+                window.frames["accountCentralPane"].location = acctCentralPage;
+                gAccountCentralLoaded = true;
+                break;
+        }
     }
-    catch (ex) {
+    catch (ex) 
+    {
         dump("Error loading AccountCentral page -> " + ex + "\n");
         return;
     }
@@ -465,12 +486,30 @@ function ShowAccountCentral()
 // box and display message box. 
 function HideAccountCentral()
 {
-    try {
-        accountCentralBox.setAttribute("hidden", "true");
-        messagesBox.removeAttribute("hidden");
-        gAccountCentralLoaded = false;
+    try 
+    {
+        switch (gPaneConfig)
+        {    
+            case 0:
+                accountCentralBox.setAttribute("hidden", "true");
+                messagesBox.removeAttribute("hidden");
+                gAccountCentralLoaded = false;
+                break;
+
+            case 1:
+                accountCentralBox.setAttribute("hidden", "true");
+                var messagePaneBox = document.getElementById("messagepanebox");
+                messagePaneBox.removeAttribute("hidden");
+                var threadPaneBox = document.getElementById("threadpaneBox");
+                threadPaneBox.removeAttribute("hidden");
+                var threadPaneSplitter = document.getElementById("threadpane-splitter");
+                threadPaneSplitter.removeAttribute("hidden");
+                gAccountCentralLoaded = false;
+                break;
+        }
     }
-    catch (ex) {
+    catch (ex) 
+    {
         dump("Error hiding AccountCentral page -> " + ex + "\n");
         return;
     }
@@ -487,6 +526,7 @@ function OpenInboxForServer(server)
         var folderTree     = GetFolderTree();
         var inboxFolderUri = document.getElementById(inboxFolder.URI);
         ChangeSelection(folderTree, inboxFolderUri); 
+        GetMessagesForInboxOnServer(server);
     } 
     catch (ex) {
         dump("Error opening inbox for server -> " + ex + "\n");

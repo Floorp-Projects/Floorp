@@ -205,6 +205,14 @@ nsMsgIncomingServer::SetCanHaveFilters(PRBool canHaveFilters)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgIncomingServer::GetCanBeDefaultServer(PRBool *canBeDefaultServer)
+{
+    // derived class should override if they need to do this.
+    *canBeDefaultServer = PR_FALSE;
+    return NS_OK;
+}
+
 // construct <localStoreType>://[<username>@]<hostname
 NS_IMETHODIMP
 nsMsgIncomingServer::GetServerURI(char* *aResult)

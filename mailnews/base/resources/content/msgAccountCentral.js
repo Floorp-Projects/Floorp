@@ -42,7 +42,7 @@ function OnInit()
         brandName    = brandBundle.getString("brandShortName"); 
 
         // Get the account type
-        messengerBundle = document.getElementById("brand_messenger");
+        messengerBundle = document.getElementById("bundle_messenger");
         selectedServer = GetSelectedServer(); 
         var serverType = selectedServer.type; 
         if (serverType == "nntp")

@@ -62,6 +62,7 @@ public:
 	NS_IMETHOD PerformExpand(nsIMsgWindow *aMsgWindow);
 	NS_IMETHOD CloseCachedConnections();
     NS_IMETHOD GetConstructedPrettyName(PRUnichar **retval);
+        NS_IMETHOD GetCanBeDefaultServer(PRBool *canBeDefaultServer);
 
 protected:
 	nsresult GetFolder(const char* name, nsIMsgFolder** pFolder);

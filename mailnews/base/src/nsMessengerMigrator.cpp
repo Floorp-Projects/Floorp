@@ -1424,6 +1424,11 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
 
   // we could only have one pop account in 4.x, so we make it the default in 5.0
   rv = accountManager->SetDefaultAccount(account);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set check for new mail option for default account to TRUE 
+  rv = server->SetLoginAtStartUp(PR_TRUE);
+
   return rv;
 }
 nsresult 
@@ -1690,6 +1695,9 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   if (isDefaultAccount) {
     rv = accountManager->SetDefaultAccount(account);
     if (NS_FAILED(rv)) return rv;
+
+    // Set check for new mail option for default account to TRUE 
+    rv = server->SetLoginAtStartUp(PR_TRUE);
   }
 
   return NS_OK;

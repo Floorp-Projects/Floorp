@@ -204,6 +204,9 @@ interface nsIMsgIncomingServer : nsISupports {
   attribute long maxMessageSize;
 
   attribute nsIMsgRetentionSettings retentionSettings;
+
+  /* check if this server can be a default server */
+  readonly attribute boolean canBeDefaultServer;
 };
 
 %{C++

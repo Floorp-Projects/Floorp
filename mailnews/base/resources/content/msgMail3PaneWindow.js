@@ -392,6 +392,8 @@ function loadStartFolder(initialUri)
     var defaultServer = null;
     var startFolderUri = initialUri;
     var isLoginAtStartUpEnabled = false;
+    var enabledNewMailCheckOnce = false;
+    var mailCheckOncePref = "mail.startup.enabledMailCheckOnce";
 
     //First get default account
     try
@@ -406,6 +408,17 @@ function loadStartFolder(initialUri)
 
             var folderResource = rootMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
             startFolderUri = folderResource.Value;
+
+            enabledNewMailCheckOnce = pref.GetBoolPref(mailCheckOncePref);
+
+            // Enable checknew mail once by turning checkmail pref 'on' to bring 
+            // all users to one plane. This allows all users to go to Inbox. User can 
+            // always go to server settings panel and turn off "Check for new mail at startup"
+            if (!enabledNewMailCheckOnce)
+            {
+                pref.SetBoolPref(mailCheckOncePref, true);
+                defaultServer.loginAtStartUp = true;
+            }
 
             // Get the user pref to see if the login at startup is enabled for default account
             isLoginAtStartUpEnabled = defaultServer.loginAtStartUp;
@@ -440,8 +453,8 @@ function loadStartFolder(initialUri)
         // only do this on startup, when we pass in null
         if (!initialUri && isLoginAtStartUpEnabled)
         {
-            // Start downloading messages for the INBOX of the default server
-            TriggerGetMessages(defaultServer);
+            // Perform biff on the server to check for new mail
+            defaultServer.PerformBiff();
         } 
 
         // because the "open" state persists, we'll call

@@ -2626,3 +2626,11 @@ nsImapIncomingServer::SetDumpListener(nsISubscribeDumpListener *dumpListener)
     NS_ENSURE_SUCCESS(rv,rv);
     return mInner->SetDumpListener(dumpListener);
 }
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetCanBeDefaultServer(PRBool *canBeDefaultServer)
+{
+    *canBeDefaultServer = PR_TRUE;
+    return NS_OK;
+}
+

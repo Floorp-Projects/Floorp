@@ -90,6 +90,9 @@ commonDialogsService = commonDialogsService.QueryInterface(Components.interfaces
 // the current nsIMsgAccount
 var gCurrentAccount;
 
+// default account
+var gDefaultAccount;
+
 // the current associative array that
 // will eventually be dumped into the account
 var gCurrentAccountData;
@@ -132,6 +135,8 @@ function onLoad() {
     }
     else
         wizardManager.LoadPage("accounttype", false);
+    
+    gDefaultAccount = accountm.defaultAccount;
 }
 
     
@@ -212,6 +217,9 @@ function FinishAccount() {
     finishAccount(gCurrentAccount, accountData);
     
     verifyLocalFoldersAccount(gCurrentAccount);
+
+    if (!serverIsNntp(pageData))
+        EnableCheckMailAtStartUpIfNeeded(gCurrentAccount);
 
     // hack hack - save the prefs file NOW in case we crash
     try {
@@ -816,4 +824,19 @@ function onFlush() {
         prefs.SetBoolPref("nglayout.debug.disable_xul_cache", true);
         prefs.SetBoolPref("nglayout.debug.disable_xul_cache", false);
 
+}
+
+/** If there are no default accounts..
+  * this is will be the new default, so enable
+  * check for mail at startup
+  */
+function EnableCheckMailAtStartUpIfNeeded(newAccount)
+{
+    // Check if default account exists and if that account is alllowed to be
+    // a default account. If no such account, make this one as the default account 
+    // and turn on the new mail check at startup for the current account   
+    if (!(gDefaultAccount && gDefaultAccount.incomingServer.canBeDefaultServer)) { 
+        accountm.defaultAccount = newAccount;
+        newAccount.incomingServer.loginAtStartUp = true;
+    }
 }

@@ -257,9 +257,9 @@ function MsgGetMessagesForAllServers(defaultServer)
     {
         var allServers = accountManager.allServers;
      
-        for (var i=0;i<accountManager.allServers.Count();i++) 
+        for (var i=0;i<allServers.Count();i++) 
         {
-            var currentServer = accountManager.allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
+            var currentServer = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
             var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + currentServer.type].getService(Components.interfaces.nsIMsgProtocolInfo);
             if (protocolinfo.canLoginAtStartUp && currentServer.loginAtStartUp) 
             {
@@ -269,8 +269,8 @@ function MsgGetMessagesForAllServers(defaultServer)
                 }
                 else 
                 {
-                    // this assumes "logging is" means getting message on the inbox...is that always true?
-                    GetMessagesForInboxOnServer(currentServer);
+                    // Check to see if there are new messages on the server
+                    currentServer.PerformBiff();
                 }
             }
         }
