@@ -1988,8 +1988,13 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
       if (mapper) {
         aSelf->mCCMap = MapperToCCMap(mapper);
         if (aSelf->mCCMap) {
-          //DEBUG_PRINTF(("\n\ncharset = %s", atomToName(charset)));
-          NS_WARNING(nsPrintfCString("\n\ncharset = %s", atomToName(charset)).get());
+#ifdef DEBUG
+          char* atomname = atomToName(charset);
+          if (atomname) {
+            NS_WARNING(nsPrintfCString("\n\ncharset = %s", atomname).get());
+            nsMemory::Free(atomname);
+          }
+#endif /* DEBUG */
   
           /*
            * We used to disable special characters like smart quotes
