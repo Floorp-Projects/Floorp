@@ -453,6 +453,9 @@ nsMenuFrame::ToggleMenuState()
 NS_IMETHODIMP
 nsMenuFrame::SelectMenu(PRBool aActivateFlag)
 {
+  if (!mContent) {
+    return NS_OK;
+  }
   if (aActivateFlag) {
     // Highlight the menu.
     mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, NS_LITERAL_STRING("true"), PR_TRUE);
