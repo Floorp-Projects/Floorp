@@ -17,20 +17,14 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsHTMLParts.h"
-#include "nsHTMLContainer.h"
-#include "nsFrame.h"
+#include "nsObjectContent.h"
 #include "nsHTMLIIDs.h"
 
-#define nsHTMLEmbedSuper nsHTMLContainer
+#define nsHTMLEmbedSuper nsObjectContent
 
 class nsHTMLEmbed : public nsHTMLEmbedSuper {
 public:
   nsHTMLEmbed(nsIAtom* aTag);
-
-  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
-                               nsIFrame*        aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*&       aResult);
 
 protected:
   virtual ~nsHTMLEmbed();
@@ -43,22 +37,6 @@ nsHTMLEmbed::nsHTMLEmbed(nsIAtom* aTag)
 
 nsHTMLEmbed::~nsHTMLEmbed()
 {
-}
-
-nsresult
-nsHTMLEmbed::CreateFrame(nsIPresContext*  aPresContext,
-                         nsIFrame*        aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*&       aResult)
-{
-  nsIFrame* frame;
-  nsresult rv = NS_NewObjectFrame(frame, this, aParentFrame);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  frame->SetStyleContext(aPresContext, aStyleContext);
-  aResult = frame;
-  return NS_OK;
 }
 
 nsresult
