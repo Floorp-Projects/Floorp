@@ -68,9 +68,9 @@ $(LIBDIR):
 
 $(LIBLBER): $(OBJS) $(LIBDIR)
 	@echo ======= making $(LIBLBER)
-#ifdef SO_FILES_TO_REMOVE
+ifdef SO_FILES_TO_REMOVE
 	-$(RM) $(SO_FILES_TO_REMOVE)
-#endif
+endif
 	$(LINK_LIB)
 
 veryclean:: clean
