@@ -44,7 +44,10 @@ void nsFileSpecHelpers::Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs)
     if (ioPath.IsEmpty())
         return;
   
-    if (inMakeDirs)
+    NS_ASSERTION(strchr((const char*)ioPath, '/') == 0,
+		"This smells like a Unix path. Native path expected! "
+		"Please fix.");
+	if (inMakeDirs)
     {
         const int mode = 0700;
         nsSimpleCharString unixStylePath = ioPath;
