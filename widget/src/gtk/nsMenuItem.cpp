@@ -78,7 +78,7 @@ void nsMenuItem::Create(nsIWidget      *aMBParent,
 
   mTarget = aMBParent;
   char * nameStr = mLabel.ToNewCString();
-  GtkWidget *parentMenuHandle = GetNativeParent();
+//  GtkWidget *parentMenuHandle = GetNativeParent();
   mMenu = gtk_menu_item_new_with_label(nameStr);
   gtk_widget_show(mMenu);
 /*
@@ -203,7 +203,7 @@ NS_METHOD nsMenuItem::GetLabel(nsString &aText)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::SetLabel(nsString &aText)
+NS_METHOD nsMenuItem::SetLabel(nsString &aText)
 {
    mLabel = aText;
   
