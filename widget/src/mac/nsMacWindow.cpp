@@ -219,19 +219,12 @@ nsMacWindow :: DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
 	nsMacWindow* geckoWindow = reinterpret_cast<nsMacWindow*>(handlerRefCon);
 	if ( !theWindow || !geckoWindow )
 		return dragNotAcceptedErr;
-
-	OSErr result = noErr;
-	printf("DragReceiveHandler called. We got a drop!!!!, DragRef is %ld\n", theDragRef);
     
-	// pass the drop event along to Gecko
-	Point mouseLocGlobal;
-	::GetDragMouse ( theDragRef, &mouseLocGlobal, nsnull );
-	short modifiers;
-	::GetDragModifiers ( theDragRef, &modifiers, nsnull, nsnull );
-	geckoWindow->DragEvent ( NS_DRAGDROP_DROP, mouseLocGlobal, modifiers );
-	
-	// once the event has gone to gecko, check the "canDrop" state in the 
-	// drag session to see what we should return to the OS (drag accepted or not).
+    // We make the assuption that the dragOver handlers have correctly set
+    // the |canDrop| property of the Drag Session. Before we dispatch the event
+    // into Gecko, check that value and either dispatch it or set the result
+    // code to "spring-back" and show the user the drag failed. 
+    OSErr result = noErr;
 	nsCOMPtr<nsIDragService> dragService ( do_GetService(kCDragServiceCID) );
 	if ( dragService ) {
 		nsCOMPtr<nsIDragSession> dragSession;
@@ -240,13 +233,22 @@ nsMacWindow :: DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
             // stop any drag tracking in this window
             dragSession->StopTracking();
 
-			// fail if the target has set that it can't accept the drag
+			// if the target has set that it can accept the drag, pass along
+			// to gecko, otherwise set phasers for failure.
 			PRBool canDrop = PR_FALSE;
 			if ( NS_SUCCEEDED(dragSession->GetCanDrop(&canDrop)) )
-				if ( canDrop == PR_FALSE )
+				if ( canDrop ) {
+                	// pass the drop event along to Gecko
+                	Point mouseLocGlobal;
+                	::GetDragMouse ( theDragRef, &mouseLocGlobal, nsnull );
+                	short modifiers;
+                	::GetDragModifiers ( theDragRef, &modifiers, nsnull, nsnull );
+                	geckoWindow->DragEvent ( NS_DRAGDROP_DROP, mouseLocGlobal, modifiers );
+                }
+                else
 					result = dragNotAcceptedErr;	
-		}
-          
+		} // if a valid drag session
+        
 		// we don't need the drag session anymore, the user has released the
 		// mouse and the event has already gone to gecko.
 		dragService->EndDragSession();
