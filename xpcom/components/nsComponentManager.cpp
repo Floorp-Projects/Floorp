@@ -705,6 +705,18 @@ nsComponentManagerImpl::PlatformInit(void)
     if (!mComponentsDir)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    char* componentDescriptor;
+    mComponentsDir->GetPath(&componentDescriptor);
+    if (!componentDescriptor)
+        return NS_ERROR_NULL_POINTER;
+
+    mComponentsOffset = strlen(componentDescriptor);
+
+    if (componentDescriptor)
+        nsMemory::Free(componentDescriptor);
+
+
+
     if (mNativeComponentLoader) {
         /* now that we have the registry, Init the native loader */
         rv = mNativeComponentLoader->Init(this, mRegistry);
@@ -2090,24 +2102,30 @@ nsComponentManagerImpl::RegistryLocationForSpec(nsIFile *aSpec,
     PRBool containedIn;
     mComponentsDir->Contains(aSpec, PR_TRUE, &containedIn);
 
+    char *persistentDescriptor;
+
     if (containedIn){
         
-        nsXPIDLCString relativeLocation;
-        if (NS_FAILED(rv = aSpec->GetLeafName(getter_Copies(relativeLocation))))
-           return rv;
-        
-        rv = MakeRegistryName(relativeLocation.get(), XPCOM_RELCOMPONENT_PREFIX, 
-                              aRegistryName);
-    } else {
-        nsXPIDLCString absoluteLocation;
-        /* absolute names include volume info on Mac, so persistent descriptor */
-        rv = aSpec->GetPath(getter_Copies(absoluteLocation));
+        rv = aSpec->GetPath(&persistentDescriptor);
         if (NS_FAILED(rv))
             return rv;
-        rv = MakeRegistryName(absoluteLocation.get(), XPCOM_ABSCOMPONENT_PREFIX,
+        
+        char* relativeLocation = persistentDescriptor + mComponentsOffset + 1;
+        
+        rv = MakeRegistryName(relativeLocation, XPCOM_RELCOMPONENT_PREFIX, 
+                              aRegistryName);
+    } else {
+        /* absolute names include volume info on Mac, so persistent descriptor */
+        rv = aSpec->GetPath(&persistentDescriptor);
+        if (NS_FAILED(rv))
+            return rv;
+        rv = MakeRegistryName(persistentDescriptor, XPCOM_ABSCOMPONENT_PREFIX,
                               aRegistryName);
     }
 
+    if (persistentDescriptor)
+        nsMemory::Free(persistentDescriptor);
+        
     return rv;
 
 }
