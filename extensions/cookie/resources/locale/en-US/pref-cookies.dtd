@@ -19,16 +19,16 @@
 <!ENTITY warnAboutCookies.label         "Warn me before storing a cookie">
 <!ENTITY warnAboutCookies.accesskey     "w">
 
-<!ENTITY cookieDetails                  "Cookies are small pieces of information that some web sites ask to store on your computer. If you enable cookies, your browser will accept a web site's cookies automatically when you visit the site. Such cookies are sent back to the web site on future visits.">
+<!ENTITY cookieDetails                  "Cookies are small pieces of information that some web sites ask to store on (and later retrieve from) your computer.">
 
 <!ENTITY viewCookies.label              "View Stored Cookies">
 <!ENTITY viewCookies.accesskey          "S">
-<!ENTITY viewP3P.label                   "View Privacy Levels">
+<!ENTITY viewP3P.label                   "View">
 <!ENTITY viewP3P.accesskey               "V">
 <!ENTITY viewTutorial.label              "More Information">
 <!ENTITY viewTutorial.accesskey          "M">
 
-<!ENTITY  limitLifetime.label            "Limit maximum lifetime of cookies to">
+<!ENTITY  limitLifetime.label            "Limit maximum lifetime of cookies to:">
 <!ENTITY  limitLifetime.accesskey        "l">
 <!ENTITY  current.label                  "current session">
 <!ENTITY  current.accesskey              "c">
