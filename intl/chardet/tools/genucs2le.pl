@@ -95,7 +95,7 @@ package genverifier;
 );
 
 
-$ucs2le_ver = genverifier::GenVerifier("UCS2LE", "ISO-10646-UCS-2-LE", \@ucs2le_cls,
+$ucs2le_ver = genverifier::GenVerifier("UCS2LE", "UTF-16LE", \@ucs2le_cls,
               6,     \@ucs2le_st);
 print $ucs2le_ver;
 

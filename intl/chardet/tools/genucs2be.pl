@@ -93,7 +93,7 @@ package genverifier;
 );
 
 
-$ucs2be_ver = genverifier::GenVerifier("UCS2BE", "ISO-10646-UCS-2", 
+$ucs2be_ver = genverifier::GenVerifier("UCS2BE", "UTF-16BE", 
                \@ucs2be_cls, 6,     \@ucs2be_st);
 print $ucs2be_ver;
 

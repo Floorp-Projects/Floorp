@@ -337,7 +337,9 @@ int main(int argc, char** argv) {
     sz = read(0, buf, bs); 
     if(sz > 0) {
       if(! done) {
+printf("call DoIt %d\n",sz);
         rev = det->DoIt( buf, sz, &done);
+printf("DoIt return Done = %d\n",done);
         if(NS_FAILED(rev))
         {
           printf("XPCOM ERROR CODE = %x\n", rev);
@@ -351,6 +353,8 @@ int main(int argc, char** argv) {
   } while(sz > 0);
   if(!done)
   {
+printf("Done = %d\n",done);
+printf("call Done %d\n",sz);
     rev = det->Done();
     if(NS_FAILED(rev))
     {
