@@ -91,9 +91,6 @@ for (@modules) {
         HTML::Tagset, version: 3.03
          Digest::MD5, version: 2.24
 
-   I've also heard that installing with Apache 2.x requires a few changes,
-   although I don't know what they are. If you know, tell jrgm@netscape.com.
-
 4) There is code to draw a sorted graph of the final results, but I have
    disabled the place in 'report.pl' where its use would be triggered (look
    for the comment). This is so that you can run this without having gone
@@ -111,8 +108,10 @@ for (@modules) {
    'GD::Text' and 'GD::Graph' from the CPAN shell.]
 
 5) To set this up with Apache, create a directory in the cgi-bin for the web
-   server called e.g. 'page-loader' and then place this in the Apache
-   httpd.conf file to enable this for mod_perl (and then restart Apache).
+   server called e.g. 'page-loader'.
+
+5a) For Apache 1.x/mod_perl 1.x, place this in the Apache httpd.conf file,
+    and skip to step 5c.
 
 --8<--------------------------------------------------------------------
 Alias /page-loader/  /var/www/cgi-bin/page-loader/
@@ -124,7 +123,30 @@ Options +ExecCGI
 </Location>
 --8<--------------------------------------------------------------------
 
-   So, now you can run this as 'http://yourserver.domain.com/page-loader/loader.pl'
+5b) If you're using Apache 2.x and mod_perl 1.99/2.x (tested with Red Hat 9),
+    place this in your perl.conf or httpd.conf:
+
+--8<--------------------------------------------------------------------
+Alias /page-loader/  /var/www/cgi-bin/page-loader/
+
+<Location /page-loader>
+SetHandler perl-script
+PerlResponseHandler ModPerl::RegistryPrefork
+PerlOptions +ParseHeaders
+Options +ExecCGI
+</Location>
+--8<--------------------------------------------------------------------
+
+   If your mod_perl version is less than 1.99_09, then copy RegistryPrefork.pm
+   to your vendor_perl ModPerl directory (for example, on Red Hat 9, this is
+   /usr/lib/perl5/vendor_perl/5.8.0/i386-linux-thread-multi/ModPerl).
+
+   If you are using mod_perl 1.99_09 or above, grab RegistryPrefork.pm from
+   http://perl.apache.org/docs/2.0/user/porting/compat.html#C_Apache__Registry___C_Apache__PerlRun__and_Friends
+   and copy it to the vendor_perl directory as described above.
+
+5c) When you're finished, restart Apache.  Now you can run this as
+    'http://yourserver.domain.com/page-loader/loader.pl'
 
 6) You need to create a subdirectory call 'db' under the 'page-loader'
    directory. This subdirectory 'db' must be writeable by UID that Apache
