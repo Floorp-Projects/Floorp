@@ -221,10 +221,11 @@ nsFtpConnectionThread::Run() {
 
 		    case FTP_R_SYST:
 			    if (mResponseCode == 2) {
-				    if (mUseDefaultPath)
+                    if (mUseDefaultPath) {
 					    mState = FTP_S_PWD;
-				    else
-					    ; // ftp figure out what to do.
+                    } else {
+                        mState = FindActionState();
+                    }
 
 				    SetSystInternals(); // must be called first to setup member vars.
 
@@ -294,7 +295,7 @@ nsFtpConnectionThread::Run() {
 					    mServerType = FTP_NCSA_TYPE;	
 				    }
 			    }
-                // XXX mState figure out what to do
+                mState = FindActionState();
 			    break;
 			    // END: FTP_R_MACB
 
@@ -326,7 +327,7 @@ nsFtpConnectionThread::Run() {
 			    }
 
 			    // default next state
-			    // mState = figure out what to do
+			    mState = FindActionState();
 
 			    // reset server types if necessary
 			    if (mServerType == FTP_TCPC_TYPE) {
@@ -405,6 +406,102 @@ nsFtpConnectionThread::Run() {
 //////////////////////////////
 //// ACTION STATES
 //////////////////////////////
+            case FTP_S_DEL_FILE:
+                {
+                const char *filename = nsnull;
+                nsresult rv;
+                rv = mUrl->GetPath(&filename); // XXX we should probably check to 
+                                               // XXX make sure we have an actual filename.
+                if (NS_FAILED(rv)) return rv;
+                PR_smprintf(buffer, "DELE %s\r\n", filename);
+                bufLen = PL_strlen(buffer);
+
+    		    // send off the command
+                rv = mOutStream->Write(buffer, bufLen, &bytes);
+
+                if (bytes < bufLen) {
+                    break;
+                }
+                
+                mState = FTP_READ_BUF;
+			    mNextState = FTP_R_DEL_FILE;
+                break;
+                }
+                // END: FTP_S_DEL_FILE
+
+            case FTP_R_DEL_FILE:
+                if (mResponseCode != 2) {
+                    // failed. Increment to the dir delete.
+                    mState = FTP_S_DEL_DIR;
+                    break;
+                }
+
+                mState = FTP_COMPLETE;
+                break;
+                // END: FTP_R_DEL_FILE
+
+            case FTP_S_DEL_DIR:
+                {
+                const char *dir = nsnull;
+                nsresult rv;
+                rv = mUrl->GetPath(&dir);
+                if (NS_FAILED(rv)) return rv;
+                PR_smprintf(buffer, "RMD %s\r\n", dir);
+                bufLen = PL_strlen(buffer);
+
+    		    // send off the command
+                rv = mOutStream->Write(buffer, bufLen, &bytes);
+
+                if (bytes < bufLen) {
+                    break;
+                }
+                
+                mState = FTP_READ_BUF;
+			    mNextState = FTP_R_DEL_DIR;
+
+                break;
+                }
+                // END: FTP_S_DEL_DIR
+
+            case FTP_R_DEL_DIR:
+                if (mResponseCode != 2) {
+                    // failed.
+                    // XXX indicate failure
+                }
+                mState = FTP_COMPLETE;
+                break;
+                // END: FTP_R_DEL_DIR
+
+            case FTP_S_MKDIR:
+                {
+                const char *dir = nsnull;
+                nsresult rv;
+                rv = mUrl->GetPath(&dir);
+                if (NS_FAILED(rv)) return rv;
+                PR_smprintf(buffer, "MKD %s\r\n", dir);
+                bufLen = PL_strlen(buffer);
+
+    		    // send off the command
+                rv = mOutStream->Write(buffer, bufLen, &bytes);
+
+                if (bytes < bufLen) {
+                    break;
+                }
+                
+                mState = FTP_READ_BUF;
+			    mNextState = FTP_R_MKDIR;
+                break;
+                }
+                // END: FTP_S_MKDIR
+
+            case FTP_R_MKDIR:
+                if (mResponseCode != 2) {
+                    // XXX indicate failure
+                }
+                mState = FTP_COMPLETE;
+                break;
+                // END: FTP_R_MKDIR
+
             default:
                 ;
 
@@ -509,4 +606,29 @@ nsFtpConnectionThread::SetSystInternals(void) {
 		mServerType = FTP_WEBSTAR_TYPE;
 		mList = TRUE;
 	}
+}
+
+FTP_STATE
+nsFtpConnectionThread::FindActionState(void) {
+
+    // These operations require the separate data channel.
+    if (mAction == GET || mAction == POST) {
+        // we're doing an operation that requies the data channel.
+        // figure out what kind of data channel we want to setup,
+        // and do it.
+        if (mUsePasv)
+            return FTP_S_PASV;
+        else
+            return FTP_S_PORT;
+    }
+
+    // These operations use the command channel response as the
+    // data to return to the user.
+    if (mAction == DEL)
+        return FTP_S_DEL_FILE; // we assume it's a file
+
+    if (mAction == MKDIR)
+        return FTP_S_MKDIR;
+
+    return FTP_ERROR;
 }
