@@ -36,7 +36,7 @@
 #include "nsIDOMHTMLInputElement.h"
 
 class nsString;
-class nsVector;
+class nsVoidArray;
 
 // {7E4BB410-8740-11d3-967F-00105A1B1B76}
 #define NS_IFORMPROCESSOR_CID \
@@ -83,7 +83,7 @@ public:
    */
 
   NS_IMETHOD ProvideContent(const nsString& aFormType, 
-                            nsVector& aContent,
+                            nsVoidArray& aContent,
                             nsString& aAttribute) = 0;
 
 };
