@@ -16,7 +16,7 @@
  * The Original Code is developed for mozilla.
  *
  * The Initial Developer of the Original Code is
- * Kenneth Herron <kherron@newsguy.com>.
+ * Kenneth Herron <kherron@fastmail.us>.
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
@@ -52,23 +52,16 @@
  * Constructor
  */
 
-nsEPSObjectPS::nsEPSObjectPS(const char *aData, unsigned long aDataLength) :
+nsEPSObjectPS::nsEPSObjectPS(FILE *aFile) :
   mStatus(NS_ERROR_INVALID_ARG),
-  mData(nsnull),
-  mDataLength(0UL),
-  mCurrPos(nsnull),
+  mEPSF(aFile),
   mBBllx(0.0),
   mBBlly(0.0),
   mBBurx(0.0),
   mBBury(0.0)
 {
-  mData       = aData;
-  mDataLength = aDataLength;
-
-  NS_PRECONDITION(aData != nsnull,   "aData == nsnull");
-  NS_PRECONDITION(aDataLength > 0UL, "No data");    
-
-  Reset();
+  NS_PRECONDITION(aFile != nsnull,   "aFile == nsnull");
+  NS_PRECONDITION(0 == fseek(aFile, 0L, SEEK_SET), "File isn't seekable");    
   Parse();
 }
 
@@ -94,22 +87,22 @@ nsEPSObjectPS::EPSFFgets(nsACString& aBuffer)
 {
   aBuffer.Truncate();
   while (1) {
-    int ch = *mCurrPos++;
+    int ch = getc(mEPSF);
     if ('\n' == ch) {
       /* Eat any following carriage return */
-      ch = *mCurrPos++;
-      if ((mCurrPos < (mData + mDataLength)) && ('\r' != ch))
-        mCurrPos--;
+      ch = getc(mEPSF);
+      if ((EOF != ch) && ('\r' != ch))
+        ungetc(ch, mEPSF);
       return PR_TRUE;
     }
     else if ('\r' == ch) {
       /* Eat any following line feed */
-      ch = *mCurrPos++;
-      if ((mCurrPos < (mData + mDataLength)) && ('\n' != ch))
-        mCurrPos--;
+      ch = getc(mEPSF);
+      if ((EOF != ch) && ('\n' != ch))
+        ungetc(ch, mEPSF);
       return PR_TRUE;
     }
-    else if (mCurrPos >= (mData + mDataLength)) {
+    else if (EOF == ch) {
       /* If we read any text before the EOF, return true. */
       return !aBuffer.IsEmpty();
     }
@@ -119,14 +112,6 @@ nsEPSObjectPS::EPSFFgets(nsACString& aBuffer)
   }
 }
 
-/** ------------------------------------------------------------------
- * Reset current position in data
- */
-void
-nsEPSObjectPS::Reset()
-{
-  mCurrPos = mData;
-}
 
 /** ------------------------------------------------------------------
  * Parse the EPSF and initialize the object accordingly.
@@ -137,7 +122,9 @@ nsEPSObjectPS::Parse()
 {
   nsCAutoString line;
 
-  Reset();   
+  NS_PRECONDITION(nsnull != mEPSF, "No file");
+
+  rewind(mEPSF);
   while (EPSFFgets(line)) {
     if (PR_sscanf(line.get(), "%%%%BoundingBox: %lf %lf %lf %lf",
                   &mBBllx, &mBBlly, &mBBurx, &mBBury) == 4) {
@@ -162,7 +149,7 @@ nsEPSObjectPS::WriteTo(FILE *aDest)
   nsCAutoString line;
   PRBool        inPreview = PR_FALSE;
 
-  Reset();
+  rewind(mEPSF);
   while (EPSFFgets(line)) {
     if (inPreview) {
       /* filter out the print-preview section */
