@@ -236,9 +236,10 @@ NPError NewControl(const char *pluginType,
             CComVariant vsValue(szParam.c_str());
             CComVariant vIValue; // Value converted to int
             CComVariant vRValue; // Value converted to real
+            CComVariant vBValue; // Value converted to bool
             CComVariant &vValue = vsValue;
 
-            // See if the variant can be converted to an integer
+            // See if the variant can be converted to a number or boolean
             if (VariantChangeType(&vIValue, &vsValue, 0, VT_I4) == S_OK)
             {
                 vValue = vIValue;
@@ -247,6 +248,11 @@ NPError NewControl(const char *pluginType,
             {
                 vValue = vRValue;
             }
+            else if (VariantChangeType(&vBValue, &vsValue, 0, VT_BOOL) == S_OK)
+            {
+                vValue = vBValue;
+            }
+
 
             // Add named parameter to list
             Property p;
