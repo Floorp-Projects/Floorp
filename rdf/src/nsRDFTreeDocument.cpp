@@ -32,7 +32,8 @@
 
 #define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Columns);
-
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Column);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Title);
 
 static const char* kChildrenTag = "CHILDREN";
 static const char* kFolderTag   = "FOLDER";
@@ -62,20 +63,50 @@ protected:
                        const nsString& tag,
                        nsIContent*& result);
 
+    /**
+     * Add a new child to the content model from a tree property. This creates
+     * the necessary cruft in the content model to ensure that content will
+     * recursively be generated as the content model is descended.
+     */
     nsresult
     AddTreeChild(nsIRDFContent* parent,
                  nsIRDFNode* property,
                  nsIRDFNode* value);
 
+    /**
+     * Add a single column to the content model.
+     */
     nsresult
     AddColumn(nsIContent* parent,
               nsIRDFNode* property,
               nsIRDFNode* title);
 
+
+    /**
+     * Add columns to the content model from an RDF container (sequence or bag)
+     */
+    nsresult
+    AddColumnsFromContainer(nsIContent* parent,
+                            nsIRDFNode* columns);
+
+
+    /**
+     * Add columns to the content model from a set of multi-attributes
+     */
+    nsresult
+    AddColumnsFromMultiAttributes(nsIContent* parent,
+                                  nsIRDFNode* columns);
+
+    /**
+     * Add columns to the content model.
+     */
     nsresult
     AddColumns(nsIContent* parent,
                nsIRDFNode* columns);
 
+    /**
+     * Add a new property element to the content model
+     */
     nsresult
     AddPropertyChild(nsIRDFContent* parent,
                      nsIRDFNode* property,
@@ -248,17 +279,138 @@ done:
 }
 
 
+/*
+
+  When columns are specified using a container, the data model is
+  assumed to look something like the following example:
+
+  <RDF:RDF>
+    <RDF:Description RDF:about="nc:history">
+      <NC:Columns>
+        <RDF:Seq>
+          <RDF:li>
+            <NC:Description
+                NC:Column="http://home.netscape.com/NC-rdf#LastVisitDate"
+                NC:Title="Date Last Visited"/>
+          </RDF:li>
+
+          <RDF:li>
+            <NC:Description
+                NC:Column="http://home.netscape.com/NC-rdf#URL"
+                NC:Title="URL"/>
+          </RDF:li>
+
+          <RDF:li>
+            <NC:Description
+                NC:Column="http://home.netscape.com/NC-rdf#Title"
+                NC:Title="Title"/>
+          </RDF:li>
+        </RDF:Seq>
+      </NC:Columns>
+
+      <!-- ...whatever... -->
+
+    </RDF:Description>
+  </RDF:RDF>
+
+ */
+
 nsresult
-RDFTreeDocumentImpl::AddColumns(nsIContent* parent,
-                                nsIRDFNode* columns)
+RDFTreeDocumentImpl::AddColumnsFromContainer(nsIContent* parent,
+                                             nsIRDFNode* columns)
 {
     nsresult rv;
-    PRBool moreElements;
 
     nsIContent* columnsElement;
     if (NS_FAILED(rv = EnsureChildElement(parent, kColumnsTag, columnsElement)))
         return rv;
 
+    nsIRDFNode* NC_Column = nsnull;
+    nsIRDFNode* NC_Title  = nsnull;
+    nsIRDFCursor* cursor  = nsnull;
+    PRBool moreElements;
+
+    if (NS_FAILED(rv = mResourceMgr->GetNode(kURINC_Column, NC_Column)))
+        goto done;
+
+    if (NS_FAILED(rv = mResourceMgr->GetNode(kURINC_Title, NC_Title)))
+        goto done;
+
+    if (NS_FAILED(rv = NS_NewContainerCursor(mDB, columns, cursor)))
+        goto done;
+
+    while (NS_SUCCEEDED(rv = cursor->HasMoreElements(moreElements)) && moreElements) {
+        nsIRDFNode* column;
+        PRBool tv; /* ignored */
+
+        if (NS_SUCCEEDED(rv = cursor->GetNext(column, tv))) {
+            nsIRDFNode* property = nsnull;
+            nsIRDFNode* title    = nsnull;
+
+            rv = mDB->GetTarget(column, NC_Column, PR_TRUE, property);
+            PR_ASSERT(NS_SUCCEEDED(rv));
+
+            rv = mDB->GetTarget(column, NC_Title, PR_TRUE, title);
+            PR_ASSERT(NS_SUCCEEDED(rv));
+
+            AddColumn(columnsElement, property, title);
+
+            NS_IF_RELEASE(title);
+            NS_IF_RELEASE(property);
+        }
+
+        if (NS_FAILED(rv))
+            break;
+    }
+
+done:
+    NS_IF_RELEASE(cursor);
+    NS_IF_RELEASE(NC_Title);
+    NS_IF_RELEASE(NC_Column);
+    return rv;
+}
+
+/*
+
+  When the columns are specified using multi-attributes, the data
+  model assumed to look something like the following example:
+
+  <RDF:RDF>
+    <RDF:Description RDF:about="nc:history">
+      <NC:Columns>
+        <NC:LastVisitDate RDF:ID="#001">Date Last Visited</NC:LastVisitDate>
+        <NC:URL RDF:ID="#002">URL</NC:URL>
+        <NC:Title RDF:ID="#003">Title</NC:URL>
+        <NC:Order>
+          <RDF:Seq>
+            <RDF:li RDF:resource="#003"/>
+            <RDF:li RDF:resource="#002"/>
+            <RDF:li RDF:resource="#001"/>
+          </RDF:Seq>
+        </NC:Order>
+      </NC:Columns>
+
+      <!-- ...whatever... -->
+
+    </RDF:Description>
+  </RDF:RDF>
+
+  TODO: implement the NC:Order property on the column set. This is not
+  exactly a slam dunk; it requires getting reification working
+  properly in the RDF content sink.
+
+ */
+nsresult
+RDFTreeDocumentImpl::AddColumnsFromMultiAttributes(nsIContent* parent,
+                                                   nsIRDFNode* columns)
+{
+    nsresult rv;
+
+    nsIContent* columnsElement;
+    if (NS_FAILED(rv = EnsureChildElement(parent, kColumnsTag, columnsElement)))
+        return rv;
+
+    PRBool moreElements;
     nsIRDFCursor* cursor = nsnull;
     if (NS_FAILED(rv = mDB->ArcLabelsOut(columns, cursor)))
         goto done;
@@ -280,8 +432,26 @@ RDFTreeDocumentImpl::AddColumns(nsIContent* parent,
             break;
     }
 
+    // XXX Now search for an "order" property and apply it to the
+    // above to sort them...
+
 done:
     NS_IF_RELEASE(cursor);
+    return rv;
+}
+
+nsresult
+RDFTreeDocumentImpl::AddColumns(nsIContent* parent,
+                                nsIRDFNode* columns)
+{
+    nsresult rv;
+    
+    if (rdf_IsContainer(mResourceMgr, mDB, columns)) {
+        rv = AddColumnsFromContainer(parent, columns);
+    }
+    else {
+        rv = AddColumnsFromMultiAttributes(parent, columns);
+    }
     return rv;
 }
 
@@ -349,11 +519,11 @@ RDFTreeDocumentImpl::AddChild(nsIRDFContent* parent,
                               nsIRDFNode* property,
                               nsIRDFNode* value)
 {
-    if (IsTreeProperty(property) || rdf_IsContainer(mResourceMgr, mDB, value)) {
-        return AddTreeChild(parent, property, value);
-    }
-    else if (rdf_ResourceEquals(mResourceMgr, property, kURINC_Columns)) {
+    if (parent == mRootContent && rdf_ResourceEquals(mResourceMgr, property, kURINC_Columns)) {
         return AddColumns(parent, value);
+    }
+    else if (IsTreeProperty(property) || rdf_IsContainer(mResourceMgr, mDB, value)) {
+        return AddTreeChild(parent, property, value);
     }
     else {
         return AddPropertyChild(parent, property, value);
