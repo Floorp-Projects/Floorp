@@ -46,7 +46,6 @@
 #include "nsAppShellCocoa.h"
 #include "nsFilePicker.h"
 
-#if TARGET_CARBON
 #include "nsMenuBarX.h"
 #include "nsMenuX.h"
 #include "nsMenuItemX.h"
@@ -54,12 +53,6 @@
 #define nsMenuBar nsMenuBarX
 #define nsMenu nsMenuX
 #define nsMenuItem nsMenuItemX
-
-#else
-#include "nsMenuBar.h"
-#include "nsMenu.h"
-#include "nsMenuItem.h"
-#endif
 
 #include "nsClipboard.h"
 #include "nsClipboardHelper.h"
@@ -77,12 +70,12 @@
 
 #include "nsSound.h"
 #include "nsTimerMac.h"
+#include "nsScrollbar.h"
 
 #ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
 #endif
 
-#ifdef XP_MACOSX
 
 #include "nsIGenericFactory.h"
 
@@ -96,6 +89,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuBar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenu)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuItem)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScrollbar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileSpecWithUIImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
@@ -106,7 +100,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 #ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #endif
-
 
 
 static nsModuleComponentInfo components[] =
@@ -185,241 +178,14 @@ static nsModuleComponentInfo components[] =
 		"@mozilla.org/widget/bidikeyboard;1",
 		nsBidiKeyboardConstructor },
 #endif // IBMBIDI
+	{	"Horiz Scrollbar",
+		NS_HORZSCROLLBAR_CID,
+		"@mozilla.org/widgets/horizscroll/mac;1",
+		nsScrollbarConstructor },
+	{	"Vert Scrollbar",
+		NS_VERTSCROLLBAR_CID,
+		"@mozilla.org/widgets/vertscroll/mac;1",
+		nsScrollbarConstructor },
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetModule, components)
-
-#else
-
-// NOTE the following does not match MAC_STATIC actually used below in this file!
-#define MACSTATIC
-
-static NS_DEFINE_CID(kCWindow,        NS_WINDOW_CID);
-static NS_DEFINE_IID(kCTimer,         NS_TIMER_CID);
-static NS_DEFINE_CID(kCPopUp,         NS_POPUP_CID);
-static NS_DEFINE_CID(kCChild,         NS_CHILD_CID);
-static NS_DEFINE_CID(kCButton,        NS_BUTTON_CID);
-static NS_DEFINE_CID(kCCheckButton,   NS_CHECKBUTTON_CID);
-static NS_DEFINE_CID(kCFilePicker,    NS_FILEPICKER_CID);
-static NS_DEFINE_CID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
-static NS_DEFINE_CID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
-static NS_DEFINE_CID(kCTextField,     NS_TEXTFIELD_CID);
-static NS_DEFINE_CID(kCAppShell,      NS_APPSHELL_CID);
-static NS_DEFINE_CID(kCToolkit,       NS_TOOLKIT_CID);
-static NS_DEFINE_CID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
-static NS_DEFINE_CID(kCLabel,         NS_LABEL_CID);
-static NS_DEFINE_CID(kCMenuBar,       NS_MENUBAR_CID);
-static NS_DEFINE_CID(kCMenu,          NS_MENU_CID);
-static NS_DEFINE_CID(kCMenuItem,      NS_MENUITEM_CID);
-static NS_DEFINE_CID(kCPopUpMenu,     NS_POPUPMENU_CID);
-
-// Drag and Drop/Clipboard
-static NS_DEFINE_CID(kCDataFlavor,    NS_DATAFLAVOR_CID);
-static NS_DEFINE_CID(kCClipboard,     NS_CLIPBOARD_CID);
-static NS_DEFINE_CID(kCClipboardHelper,  NS_CLIPBOARDHELPER_CID);
-static NS_DEFINE_CID(kCTransferable,  NS_TRANSFERABLE_CID);
-static NS_DEFINE_CID(kCHTMLFormatConverter,  NS_HTMLFORMATCONVERTER_CID);
-static NS_DEFINE_CID(kCDragService,   NS_DRAGSERVICE_CID);
-
-// Sound services (just Beep for now)
-static NS_DEFINE_CID(kCSound,   NS_SOUND_CID);
-
-#ifdef IBMBIDI
-static NS_DEFINE_CID(kCBidiKeyboard,   NS_BIDIKEYBOARD_CID);
-#endif
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-class nsWidgetFactory : public nsIFactory
-{
-public:
-
-    NS_DECL_ISUPPORTS
-
-    // nsIFactory methods
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              const nsIID &aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
-
-    nsWidgetFactory(const nsCID &aClass);
-    virtual ~nsWidgetFactory();
-private:
-  nsCID mClassID;
-
-};
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-nsWidgetFactory::nsWidgetFactory(const nsCID &aClass)
-{
- NS_INIT_REFCNT();
- mClassID = aClass;
-}
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-nsWidgetFactory::~nsWidgetFactory()
-{
-}
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS1(nsWidgetFactory, nsIFactory)
-
-//-------------------------------------------------------------------------
-//
-// ***IMPORTANT***
-// On all platforms, we are assuming in places that the implementation of |nsIWidget|
-// is really |nsWindow| and then calling methods specific to nsWindow to finish the job.
-// This is by design and the assumption is safe because an nsIWidget can only be created through
-// our Widget factory where all our widgets, including the XP widgets, inherit from nsWindow.
-// A similar warning is in nsWindow.cpp.
-//-------------------------------------------------------------------------
-nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
-                                          const nsIID &aIID,
-                                          void **aResult)
-{
-    if (aResult == NULL) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    *aResult = NULL;
-    if (nsnull != aOuter) {
-        return NS_ERROR_NO_AGGREGATION;
-    }
-
-    nsISupports *inst = nsnull;
-
-    if (mClassID.Equals(kCTimer)) {
-        inst = (nsISupports*)new nsTimerImpl();
-    }
-    else if (mClassID.Equals(kCWindow)) {
-        inst = (nsISupports*)(nsBaseWidget*)new nsCocoaWindow();
-    }
-    else if (mClassID.Equals(kCPopUp)) {
-        inst = (nsISupports*)(nsBaseWidget*)new nsCocoaWindow();
-    }
-    else if (mClassID.Equals(kCChild)) {
-        inst = (nsISupports*)(nsBaseWidget*)new nsChildView();
-    }
-    else if (mClassID.Equals(kCButton)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsButton();
-    }
-    else if (mClassID.Equals(kCFilePicker)) {
-       inst = (nsISupports*)(nsBaseFilePicker*)new nsFilePicker();
-    }
-#if USE_NATIVE_VERSION
-    else if (mClassID.Equals(kCCheckButton)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsCheckButton();
-    }
-#endif
-    else if (mClassID.Equals(kCHorzScrollbar)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsScrollbar(PR_FALSE);
-    }
-    else if (mClassID.Equals(kCVertScrollbar)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsScrollbar(PR_TRUE);
-    }
-   else if (mClassID.Equals(kCTextField)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsTextWidget();
-    }
-    else if (mClassID.Equals(kCAppShell)) {
-        inst = (nsISupports*)new nsAppShellCocoa();
-    }
-    else if (mClassID.Equals(kCToolkit)) {
-        inst = (nsISupports*)new nsToolkit();
-    }
-    else if (mClassID.Equals(kCLookAndFeel)) {
-        inst = (nsISupports*)new nsLookAndFeel();
-    }
-    else if (mClassID.Equals(kCLabel)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsLabel();
-    }
-    else if (mClassID.Equals(kCMenuBar)) {
-        inst = (nsISupports*)(nsIMenuBar*) new nsMenuBar();
-    }
-    else if (mClassID.Equals(kCMenu)) {
-        inst = (nsISupports*)(nsIMenu*) new nsMenu();
-    }
-    else if (mClassID.Equals(kCMenuItem)) {
-        inst = (nsISupports*)(nsIMenuItem*) new nsMenuItem();
-    }
-    else if (mClassID.Equals(kCPopUpMenu)) {
- //       inst = (nsISupports*)new nsPopUpMenu();
-					NS_NOTYETIMPLEMENTED("nsPopUpMenu");
-    }
-    else if (mClassID.Equals(kCSound)) {
-        inst = (nsISupports*)(nsISound*) new nsSound();
-    }
-    else if (mClassID.Equals(kCTransferable))
-        inst = (nsISupports*)new nsTransferable();
-    else if (mClassID.Equals(kCHTMLFormatConverter))
-        inst = (nsISupports*)new nsHTMLFormatConverter();
-    else if (mClassID.Equals(kCClipboard))
-        inst = (nsISupports*)new nsClipboard();
-    else if (mClassID.Equals(kCClipboardHelper))
-        inst = (nsISupports*)new nsClipboardHelper();
-    else if (mClassID.Equals(kCDragService))
-        inst = (nsISupports*)NS_STATIC_CAST(nsIDragService*, new nsDragService());
-#ifdef IBMBIDI
-    else if (mClassID.Equals(kCBidiKeyboard))
-        inst = (nsISupports*)(nsIBidiKeyboard*) new nsBidiKeyboard();
-#endif // IBMBIDI
-
-    if (inst == NULL) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-		NS_ADDREF(inst);
-    nsresult res = inst->QueryInterface(aIID, aResult);
-    NS_RELEASE(inst);
-
-    return res;
-}
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-nsresult nsWidgetFactory::LockFactory(PRBool aLock)
-{
-    // Not implemented in simplest case.
-    return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-// return the proper factory to the caller
-#if defined(XP_MAC) && defined(MAC_STATIC)
-extern "C" NS_WIDGET nsresult
-NSGetFactory_WIDGET_DLL(nsISupports* serviceMgr,
-                        const nsCID &aClass,
-                        const char *aClassName,
-                        const char *aContractID,
-                        nsIFactory **aFactory)
-#else
-extern "C" NS_WIDGET nsresult
-NSGetFactory(nsISupports* serviceMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aContractID,
-             nsIFactory **aFactory)
-#endif
-{
-    if (nsnull == aFactory) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    *aFactory = new nsWidgetFactory(aClass);
-
-    if (nsnull == aFactory) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    return (*aFactory)->QueryInterface(NS_GET_IID(nsIFactory), (void**)aFactory);
-}
-
-#endif

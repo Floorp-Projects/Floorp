@@ -250,7 +250,7 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
   // that NS_NATIVE_WIDGET is the NSView.
   NSRect r;
   ConvertGeckoToCocoaRect(mBounds, r);
-  mView = [[ChildView alloc] initWithGeckoChild:this eventSink:nsnull];
+  mView = [CreateCocoaView() retain];
   [mView setFrame:r];
   
   NS_ASSERTION(parentView && mView, "couldn't hook up new NSView in hierarchy");
@@ -261,6 +261,20 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
   
   return NS_OK;
 }
+
+
+//
+// CreateCocoaView
+//
+// Creates the appropriate child view. Override to create something other than
+// our |ChildView| object. Autoreleases, so caller must retain.
+//
+NSView*
+nsChildView::CreateCocoaView ( )
+{
+  return [[[ChildView alloc] initWithGeckoChild:this eventSink:nsnull] autorelease];
+}
+
 
 //-------------------------------------------------------------------------
 //
@@ -349,7 +363,7 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       break;
       
     case NS_NATIVE_GRAPHIC:           // quickdraw port (for now)
-      retVal = [mView qdPort];
+      retVal = GetQuickDrawPort();
       break;
       
     case NS_NATIVE_REGION:
@@ -357,11 +371,11 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
 #if 1
       //FIXME - this will leak.
       RgnHandle visRgn = ::NewRgn();
-      GrafPtr port = [mView qdPort];
+      GrafPtr port = GetQuickDrawPort();
       //printf("asked for visrgn, port is %d\n", port);
       //QDDebugPrintPortInfo(port);
       if (port)
-        ::GetPortVisibleRegion([mView qdPort], visRgn);
+        ::GetPortVisibleRegion(GetQuickDrawPort(), visRgn);
       retVal = (void*)visRgn;
       //retVal = (void*)mVisRegion;
 #endif
@@ -1106,7 +1120,7 @@ nsChildView::Flash(nsPaintEvent &aEvent)
   if (debug_WantPaintFlashing() && aEvent.rect ) {
     ::SetRect ( &flashRect, aEvent.rect->x, aEvent.rect->y, aEvent.rect->x + aEvent.rect->width,
             aEvent.rect->y + aEvent.rect->height );
-    StPortSetter portSetter(NS_REINTERPRET_CAST(GrafPtr, [mView qdPort]));
+    StPortSetter portSetter(GetQuickDrawPort());
     unsigned long endTicks;
     ::InvertRect ( &flashRect );
     ::Delay(10, &endTicks);
@@ -1156,7 +1170,7 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
   if (! mVisible)
     return;
 
-  ::SetPort([mView qdPort]);
+  ::SetPort(GetQuickDrawPort());
 
   // initialize the paint event
   nsPaintEvent paintEvent;
@@ -1179,109 +1193,59 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 }
 
 
-
 //
-// ScrollBits
+// Scroll
 //
-// ::ScrollRect() unfortunately paints the invalidated area with the 
-// background pattern. This causes lots of ugly flashing and makes us look 
-// pretty bad. Instead, we roll our own ::ScrollRect() by using ::CopyBits() 
-// to scroll the image in the view and then set the update
-// rgn appropriately so that the compositor can blit it to the screen.
+// Scroll the bits of a view and its children
 //
-// This will also work with system floating windows over the area that is
-// scrolling.
+// FIXME: I'm sure the invalidating can be optimized, just no time now.
 //
-// Under Carbon, this whole routine is basically moot as Apple has answered
-// our prayers with ::ScrollWindowRect().
-//
-void
-nsChildView::ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inTopDelta )
-{
-#if 0
-  ::ScrollWindowRect ( mWindowPtr, &inRectToScroll, inLeftDelta, inTopDelta, 
-                        kScrollWindowInvalidate, NULL );
-#endif
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Scroll the bits of a window
-//
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
-  NS_WARNING("Scroll not yet implemented for Cocoa");
-  return NS_OK;
-#if 0
-  if (! mVisible)
+  if ( !mVisible )
     return NS_OK;
 
-  nsRect scrollRect;  
+//FIXME
+// There seems to be a problem scrolling the NSQDView. It only blits white
+// where it should blit the contents of the view. So just forget blitting and
+// repaint the entire view. It sucks, but it works.
 
-  // If the clipping region is non-rectangular, just force a full update, sorry.
-  // XXX ?
-  if (!IsRegionRectangular(mWindowRegion)) {
-    Invalidate(PR_TRUE);
-    goto scrollChildren;
-  }
-
-  //--------
-  // Scroll this widget
-  if (aClipRect)
-    scrollRect = *aClipRect;
-  else
-  {
-    scrollRect = mBounds;
-    scrollRect.x = scrollRect.y = 0;
-  }
-
-  Rect macRect;
-  ConvertGeckoRectToMacRect(scrollRect, macRect);
-
-
-  StartDraw();
-
-    // Clip to the windowRegion instead of the visRegion (note: the visRegion
-    // is equal to the windowRegion minus the children). The result is that
-    // ScrollRect() scrolls the visible bits of this widget as well as its children.
-    ::SetClip(mWindowRegion);
-
-    // Scroll the bits now. We've rolled our own because ::ScrollRect looks ugly
-    ScrollBits(macRect,aDx,aDy);
-
-  EndDraw();
-
-scrollChildren:
-  //--------
+#if 0
+  NSSize scrollVector = {aDx, aDy};
+  [mView scrollRect:[mView frame] by:scrollVector];
+#endif
+  
   // Scroll the children
   nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
-  if (children)
-  {
+  if ( children ) {
     children->First();
-    do
-    {
-      nsISupports* child;
-      if (NS_SUCCEEDED(children->CurrentItem(&child)))
-      {
-        nsChildView* childWindow = static_cast<nsChildView*>(static_cast<nsIWidget*>(child));
-        NS_RELEASE(child);
-
+    do {
+      nsCOMPtr<nsISupports> child;
+      if (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child)))) {
+        nsCOMPtr<nsIWidget> widget = do_QueryInterface(child);
+        
         nsRect bounds;
-        childWindow->GetBounds(bounds);
-        bounds.x += aDx;
-        bounds.y += aDy;
-        childWindow->SetBounds(bounds);
+        widget->GetBounds(bounds);
+        widget->Move(bounds.x + aDx, bounds.y + aDy);
       }
     } while (NS_SUCCEEDED(children->Next()));     
   }
-
-  // recalculate the window regions
-  CalcWindowRegions();
-  return NS_OK;
+  
+#if 0
+  NSRect frame = [mView frame];
+  NSRect horizInvalid = frame;
+  horizInvalid.size.height = abs(aDy);
+  if ( aDy < 0 )
+    horizInvalid.origin.y = frame.origin.y + frame.size.height + aDy;
+printf("-- updating x/y (%f, %f) w/h (%f, %f)\n", horizInvalid.origin.x, horizInvalid.origin.y,
+          horizInvalid.size.width, horizInvalid.size.height);
+  //[mView displayRect:horizInvalid];
 #endif
+  [mView displayRect:[mView frame]];
+  
+  return NS_OK;
 }
+
 
 //-------------------------------------------------------------------------
 //
@@ -1504,7 +1468,7 @@ void nsChildView::CalcWindowRegions()
 NS_IMETHODIMP nsChildView::CalcOffset(PRInt32 &aX,PRInt32 &aY)
 {
   aX = aY = 0;
-  NSRect bounds;
+  NSRect bounds = {0, 0, 0, 0};
   bounds = [mView convertRect:bounds toView:nil];
   aX += NS_STATIC_CAST(PRInt32, bounds.origin.x);
   aY += NS_STATIC_CAST(PRInt32, bounds.origin.y);
@@ -1721,6 +1685,18 @@ NS_IMETHODIMP nsChildView::ResetInputState()
 }
 
 
+//
+// GetQuickDrawPort
+//
+// Find a quickdraw port in which to draw (needed by GFX until it
+// is converted to Cocoa). This must be overridden if CreateCocoaView()
+// does not create something that inherits from NSQuickDrawView!
+//
+GrafPtr
+nsChildView::GetQuickDrawPort ( )
+{
+  return [mView qdPort];
+}
 
 
 #pragma mark -
@@ -1932,6 +1908,106 @@ NS_IMETHODIMP nsChildView::ResetInputState()
 - (nsIWidget*) widget
 {
   return NS_STATIC_CAST(nsIWidget*, mGeckoChild);
+}
+
+
+
+- (void) convert:(NSEvent*)aKeyEvent message:(PRUint32)aMessage 
+           isChar:(PRBool*)outIsChar convertChar:(PRBool)aConvertChar
+           toGeckoEvent:(nsKeyEvent*)outGeckoEvent
+{
+	outGeckoEvent->eventStructType = NS_KEY_EVENT;
+  [self convert:aKeyEvent message:aMessage toGeckoEvent:outGeckoEvent];
+	
+#if 0
+	//
+	// initalize the basic message parts
+	//
+  aKeyEvent.message = aMessage;
+	aKeyEvent.point.x			= 0;
+	aKeyEvent.point.y			= 0;
+	aKeyEvent.time				= PR_IntervalNow();
+	
+	//
+	// initalize the GUI event parts
+	//
+  aKeyEvent.widget = aFocusedWidget;
+	aKeyEvent.nativeMsg		= (void*)&aOSEvent;
+	
+	//
+	// nsInputEvent parts
+	//
+	aKeyEvent.isShift			= ((aOSEvent.modifiers & shiftKey) != 0);
+	aKeyEvent.isControl		= ((aOSEvent.modifiers & controlKey) != 0);
+	aKeyEvent.isAlt				= ((aOSEvent.modifiers & optionKey) != 0);
+	aKeyEvent.isMeta		= ((aOSEvent.modifiers & cmdKey) != 0);
+#endif
+	
+#if 0
+	//
+	// nsKeyEvent parts
+	//
+  if ( outIsChar )
+    *outIsChar = PR_FALSE; 
+  if (aMessage == NS_KEY_PRESS 
+		&& !IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8) )
+	{
+    if (aKeyEvent.isControl)
+		{
+      if (outIsChar)
+        *outIsChar = PR_TRUE;
+      if (aConvertChar) 
+      {
+			aKeyEvent.charCode = (aOSEvent.message & charCodeMask);
+        if (aKeyEvent.charCode <= 26)
+			{
+          if (aKeyEvent.isShift)
+					aKeyEvent.charCode += 'A' - 1;
+				else
+					aKeyEvent.charCode += 'a' - 1;
+        } // if (aKeyEvent.charCode <= 26)
+      }
+			aKeyEvent.keyCode	= 0;
+    } // if (aKeyEvent.isControl)
+    else // else for if (aKeyEvent.isControl)
+		{
+      if (!aKeyEvent.isMeta)
+			{
+				aKeyEvent.isShift = aKeyEvent.isControl = aKeyEvent.isAlt = aKeyEvent.isMeta = 0;
+      } // if (!aKeyEvent.isMeta)
+    
+			aKeyEvent.keyCode	= 0;
+      if (outIsChar)
+        *outIsChar =  PR_TRUE; 
+      if (aConvertChar) 
+      {
+			aKeyEvent.charCode = ConvertKeyEventToUnicode(aOSEvent);
+        if (aKeyEvent.isShift && aKeyEvent.charCode <= 'z' && aKeyEvent.charCode >= 'a') 
+        {
+			  aKeyEvent.charCode -= 32;
+			}
+			NS_ASSERTION(0 != aKeyEvent.charCode, "nsMacEventHandler::InitializeKeyEvent: ConvertKeyEventToUnicode returned 0.");
+      }
+    } // else for if (aKeyEvent.isControl)
+	} // if (message == NS_KEY_PRESS && !IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8) )
+	else
+	{
+		aKeyEvent.keyCode = ConvertMacToRaptorKeyCode(aOSEvent.message, aOSEvent.modifiers);
+		aKeyEvent.charCode = 0;
+	} // else for  if (message == NS_KEY_PRESS && !IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8) )
+  
+  //
+  // obscure cursor if appropriate
+  //
+  if (aMessage == NS_KEY_PRESS 
+		&& !aKeyEvent.isMeta 
+		&& aKeyEvent.keyCode != NS_VK_PAGE_UP && aKeyEvent.keyCode != NS_VK_PAGE_DOWN
+		// also consider:  function keys and sole modifier keys
+	) 
+	{
+    ::ObscureCursor();
+  } // if (message == NS_KEY_PRESS && !aKeyEvent.isMeta && aKeyEvent.keyCode != NS_VK_PAGE_UP && aKeyEvent.keyCode != NS_VK_PAGE_DOWN
+#endif
 }
 
 @end

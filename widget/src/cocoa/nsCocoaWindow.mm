@@ -1275,7 +1275,7 @@ printf("resizing to %d %d\n", aWidth, aHeight);
   if ( mWindow ) {
     NSRect newBounds = [mWindow frame];
     newBounds.size.width = aWidth;
-    newBounds.size.height = aHeight + 20;     // add height of title bar
+    newBounds.size.height = aHeight + kTitleBarHeight;     // add height of title bar
     StartResizing();
     [mWindow setFrame:newBounds display:NO];
     StopResizing();
@@ -1654,9 +1654,11 @@ void StopResizing ( )
 {
   if ( !mGeckoWindow->IsResizing() ) {
     // must remember to give Gecko top-left, not straight cocoa origin
+    // and that Gecko already compensates for the title bar, so we have to
+    // strip it out here.
     NSRect frameRect = [[aNotification object] frame];
     mGeckoWindow->Resize ( NS_STATIC_CAST(PRInt32,frameRect.size.width),
-                            NS_STATIC_CAST(PRInt32,frameRect.size.height), PR_TRUE );
+                            NS_STATIC_CAST(PRInt32,frameRect.size.height - nsCocoaWindow::kTitleBarHeight), PR_TRUE );
   }
 }
 
