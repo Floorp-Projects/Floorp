@@ -31,6 +31,7 @@
 #include "nsCRT.h"
 #include "nsDeviceContextXlib.h"
 #include "nsDrawingSurfaceXlib.h"
+#include "nsCOMPtr.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -89,9 +90,11 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD  Init(const nsFont& aFont, nsIDeviceContext* aContext);
+  NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLangGroup,
+                   nsIDeviceContext *aContext);
   NS_IMETHOD  Destroy();
 
+  NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetXHeight(nscoord& aResult);
   NS_IMETHOD  GetSuperscriptOffset(nscoord& aResult);
   NS_IMETHOD  GetSubscriptOffset(nscoord& aResult);
@@ -156,6 +159,7 @@ protected:
   nsFont              *mFont;
   XFontStruct         *mFontHandle;
   XFontStruct         *mFontStruct;
+  nsCOMPtr<nsIAtom>   mLangGroup;
 
   nscoord             mHeight;
   nscoord             mAscent;

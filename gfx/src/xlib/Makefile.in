@@ -53,6 +53,12 @@ EXTRA_DSO_LDOPTS += $(TK_LIBS)
 CXXFLAGS	+= $(TK_CFLAGS)
 endif
 
+EXTRA_DSO_LDOPTS += \
+		$(NSPR_LIBS)	\
+		-lxpcom			\
+		-lraptorgfx		\
+		$(NULL)
+
 DEFINES		+= -D_IMPL_NS_GFXNONXP
 
 ifeq ($(OS_ARCH), Linux)

@@ -127,10 +127,13 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 
 #endif /* FONT_SWITCHING */
 
-NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aContext)
+NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont,
+                                      nsIAtom* aLangGroup,
+                                      nsIDeviceContext* aContext)
 {
   NS_ASSERTION(!(nsnull == aContext), "attempt to init fontmetrics with null device context");
 
+  mLangGroup = aLangGroup;
 #ifdef FONT_SWITCHING
 
   mFont = new nsFont(aFont);
@@ -543,6 +546,15 @@ NS_IMETHODIMP  nsFontMetricsXlib::GetFont(const nsFont*& aFont)
 NS_IMETHODIMP  nsFontMetricsXlib::GetFontHandle(nsFontHandle &aHandle)
 {
   aHandle = (nsFontHandle)mFontHandle;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFontMetricsXlib::GetLangGroup(nsIAtom **aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = mLangGroup;
+  NS_IF_ADDREF(*aResult);
+
   return NS_OK;
 }
 
