@@ -1,23 +1,21 @@
 <!ELEMENT bugzilla (bug+)>
-<!ATTLIST bugzilla version CDATA #REQUIRED>
-<!ATTLIST bugzilla urlbase CDATA #REQUIRED>
-<!ATTLIST bugzilla maintainer CDATA #REQUIRED>
-<!ATTLIST bugzilla exporter CDATA #IMPLIED>
-<!ELEMENT bug (bug_id, exporter, urlbase, bug_status, resolution?, product, 
-priority, version, rep_platform, assigned_to, delta_ts, component, 
-reporter, target_milestone?, bug_severity, creation_ts, qa_contact?, 
-status_whiteboard?, op_sys, short_desc?, keywords*, dependson*, 
-blocks*, cc*, long_desc?, attachment*)>
-<!ATTLIST bug error (NotFound|NotPermitted|InvalidBugId) #IMPLIED>
+<!ATTLIST bugzilla
+	version CDATA #REQUIRED
+	urlbase CDATA #REQUIRED
+	maintainer CDATA #REQUIRED
+	exporter CDATA #IMPLIED
+>
+<!ELEMENT bug (bug_id, (exporter?, urlbase?, bug_status, product, priority, version, rep_platform, assigned_to, delta_ts, component, reporter, target_milestone?, bug_severity, creation_ts, qa_contact?, op_sys, resolution?, bug_file_loc?, short_desc?, keywords*, status_whiteboard?, dependson*, blocks*, cc*, long_desc*, attachment*)?)>
+<!ATTLIST bug
+	error (NotFound | NotPermitted | InvalidBugId) #IMPLIED
+>
 <!ELEMENT bug_id (#PCDATA)>
-<!ELEMENT short_desc (#PCDATA)>
+<!ELEMENT exporter (#PCDATA)>
+<!ELEMENT urlbase (#PCDATA)>
 <!ELEMENT bug_status (#PCDATA)>
-<!ELEMENT dependson (#PCDATA)>
-<!ELEMENT blocks (#PCDATA)>
 <!ELEMENT product (#PCDATA)>
 <!ELEMENT priority (#PCDATA)>
 <!ELEMENT version (#PCDATA)>
-<!ELEMENT cc (#PCDATA)>
 <!ELEMENT rep_platform (#PCDATA)>
 <!ELEMENT assigned_to (#PCDATA)>
 <!ELEMENT delta_ts (#PCDATA)>
@@ -27,15 +25,21 @@ blocks*, cc*, long_desc?, attachment*)>
 <!ELEMENT bug_severity (#PCDATA)>
 <!ELEMENT creation_ts (#PCDATA)>
 <!ELEMENT qa_contact (#PCDATA)>
-<!ELEMENT op_sys (#PCDATA)>
-<!ELEMENT keywords (#PCDATA)>
 <!ELEMENT status_whiteboard (#PCDATA)>
+<!ELEMENT op_sys (#PCDATA)>
+<!ELEMENT resolution (#PCDATA)>
+<!ELEMENT bug_file_loc (#PCDATA)>
+<!ELEMENT short_desc (#PCDATA)>
+<!ELEMENT keywords (#PCDATA)>
+<!ELEMENT dependson (#PCDATA)>
+<!ELEMENT blocks (#PCDATA)>
+<!ELEMENT cc (#PCDATA)>
 <!ELEMENT long_desc (who, bug_when, thetext)>
 <!ELEMENT who (#PCDATA)>
 <!ELEMENT bug_when (#PCDATA)>
 <!ELEMENT thetext (#PCDATA)>
-<!ELEMENT attachment (id, date, attach_desc, type, data)>
-<!ELEMENT id (#PCDATA)>
+<!ELEMENT attachment (attachid, date, desc, type?, data?)>
+<!ELEMENT attachid (#PCDATA)>
 <!ELEMENT date (#PCDATA)>
 <!ELEMENT desc (#PCDATA)>
 <!ELEMENT type (#PCDATA)>
