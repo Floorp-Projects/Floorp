@@ -237,6 +237,7 @@ public:
 
   // nsIBox
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect);
 
   // nsICSSPseudoComparator
   NS_IMETHOD PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult);
@@ -250,11 +251,6 @@ public:
   NS_IMETHOD Init(nsIPresContext* aPresContext, nsIContent* aContent,
                   nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow);
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
-  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
-                    nsHTMLReflowMetrics& aReflowMetrics,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus& aStatus);
-
 
   // Painting methods.
   // Paint is the generic nsIFrame paint method.  We override this method
@@ -379,7 +375,7 @@ protected:
   void UpdateScrollbar();
 
   // Check vertical overflow.
-  nsresult CheckVerticalOverflow();
+  nsresult CheckVerticalOverflow(PRBool aInReflow);
 
   // Use to auto-fill some of the common properties without the view having to do it.
   // Examples include container, open, selected, and focus.
