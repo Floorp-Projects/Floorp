@@ -18,17 +18,21 @@
 IGNORE_MANIFEST=1
 
 !ifndef MOZ_JAVA
-LOCAL_JMC_SUBDIR =  ../jmcgen/include
+LOCAL_JMC_SUBDIR =  ..\jmcgen\include
 !endif
 
+
 DEPTH=..\..\.. 
+!include $(MOZ_SRC)\ns\config\config.mak
+
+
 JMC_GEN=Mnfdoer Mnff Mnffbc Mnffbp Mnffbu Mnffmi Mnffp Mnfrc Mnfrf \
     Mnfstrm Mnfdlm 
-EXPORTS=$(JMC_GEN_DIR)/Mnfdoer.h $(JMC_GEN_DIR)/Mnff.h \
-	$(JMC_GEN_DIR)/Mnffbc.h $(JMC_GEN_DIR)/Mnffbp.h \
-	$(JMC_GEN_DIR)/Mnffbu.h $(JMC_GEN_DIR)/Mnffmi.h \
-	$(JMC_GEN_DIR)/Mnffp.h $(JMC_GEN_DIR)/Mnfrc.h $(JMC_GEN_DIR)/Mnfrf.h \
-	$(JMC_GEN_DIR)/Mnfstrm.h $(JMC_GEN_DIR)/Mnfdlm.h
+EXPORTS=$(JMC_GEN_DIR)\Mnfdoer.h $(JMC_GEN_DIR)\Mnff.h \
+	$(JMC_GEN_DIR)\Mnffbc.h $(JMC_GEN_DIR)\Mnffbp.h \
+	$(JMC_GEN_DIR)\Mnffbu.h $(JMC_GEN_DIR)\Mnffmi.h \
+	$(JMC_GEN_DIR)\Mnffp.h $(JMC_GEN_DIR)\Mnfrc.h $(JMC_GEN_DIR)\Mnfrf.h \
+	$(JMC_GEN_DIR)\Mnfstrm.h $(JMC_GEN_DIR)\Mnfdlm.h
 !if !defined(MOZ_JAVA)
 EXPORTS=$(EXPORTS) $(JMC_GEN_DIR)\Mwinfp.h
 !endif
