@@ -488,6 +488,42 @@ input[type="submit"][disabled] {
   color: GrayText;
 }
 
+ /*
+  * Make form controls inherit 'unicode-bidi' transparently as required by
+  *  their various anonymous descendants and pseudo-elements:
+  *
+  * <textarea> and <input type="text">:
+  *  inherit into the XULScroll frame with class 'anonymous-div' which is a
+  *  child of the text control.
+  *
+  * Buttons (either <button>, <input type="submit">, <input type="button">
+  *          or <input type="reset">)
+  *  inherit into the ':-moz-button-content' pseudo-element.
+  *
+  * <select>:
+  *  inherit into the ':-moz-display-comboboxcontrol-frame' pseudo-element and
+  *  the <optgroup>'s ':before' pseudo-element, which is where the label of
+  *  the <optgroup> gets displayed. The <option>s don't use anonymous boxes,
+  *  so they need no special rules.
+  */
+textarea > .anonymous-div,
+input > .anonymous-div,
+*|*::-moz-button-content,
+*|*::-moz-display-comboboxcontrol-frame,
+optgroup:before {
+  unicode-bidi: inherit;
+}
+
+ /*
+  * Force the text control child of file input controls to have left-to-right
+  * directionality. Otherwise filenames containing right-to-left characters
+  * will be reordered with chaotic results.
+  */
+input[type="file"] > input[type="text"] {
+  direction: ltr !important;
+  text-align: inherit;
+}
+
 @media print {
   input, textarea, select, button {
     -moz-user-focus: none !important;
