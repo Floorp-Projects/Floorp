@@ -187,6 +187,7 @@ function onOK()
 {
   if (ValidateData())
   {
+    editorShell.BeginBatchChanges();
     editorShell.CloneAttributes(tableElement, globalElement);
 
     // Create necessary rows and cells for the table
@@ -215,12 +216,64 @@ function onOK()
         }
       }
     }
+    // Detect when entire cells are selected:
+      // Get number of cells selected
+    var tagNameObj = new Object;
+    var countObj = new Object;
+    tagNameObj.value = "";
+    var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
+    var deletePlaceholder = false;
+
+    if (tagNameObj.value == "table")
+    {
+      //Replace entire selected table with new table, so delete the table
+      editorShell.DeleteTable();
+    }
+    else if (tagNameObj.value == "td")
+    {
+      if (countObj.value >= 1)
+      {
+        if (countObj.value > 1)
+        {
+          // Assume user wants to replace a block of
+          //  contiguous cells with a tabl, so
+          //  join the selected cells
+          editorShell.JoinTableCells(false);
+          
+          // Get the cell everything was merged into
+          element = editorShell.GetFirstSelectedCell();
+          
+          // Collapse selection into just that cell
+          editorShell.editorSelection.collapse(element,0);
+        }
+
+        if (element)
+        {
+          // Empty just the contents of the cell
+          editorShell.DeleteTableCellContents();
+          
+          // Collapse selection to start of empty cell...
+          editorShell.editorSelection.collapse(element,0);
+          // ...but it will contain a <br> placeholder
+          deletePlaceholder = true;
+        }
+      }
+    }
+
     try {
-      // Don't delete selected text when inserting
+      // false means don't delete selected text when inserting
       editorShell.InsertElementAtSelection(tableElement, false);
     } catch (e) {
       dump("Exception occured in InsertElementAtSelection\n");
     }
+    if (deletePlaceholder && tableElement && tableElement.nextSibling)
+    {
+      // Delete the placeholder <br>
+      editorShell.DeleteElement(tableElement.nextSibling);
+    }
+
+    editorShell.EndBatchChanges();
+
     SaveWindowLocation();
     return true;
   }
