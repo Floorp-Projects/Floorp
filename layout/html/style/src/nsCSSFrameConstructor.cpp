@@ -2846,12 +2846,16 @@ nsCSSFrameConstructor::ConstructTableForeignFrame(nsIPresShell*            aPres
   aContent->GetTag(*getter_AddRefs(tag));
 
   if (nsHTMLAtoms::form == tag.get()) {
-    // forms don't cause psuedo frames to be generated, but
+    // A form doesn't get a psuedo frame parent, but it needs a frame.
     // if the parent is a table, put the form in the outer table frame
+    // otherwise use aParentFrameIn as the parent
     nsCOMPtr<nsIAtom> frameType;
     aParentFrameIn->GetFrameType(getter_AddRefs(frameType));
     if (nsLayoutAtoms::tableFrame == frameType.get()) {
       aParentFrameIn->GetParent(&parentFrame);
+    }
+    else {
+      parentFrame = aParentFrameIn;
     }
   }
   // Do not construct pseudo frames for trees 
@@ -2870,7 +2874,7 @@ nsCSSFrameConstructor::ConstructTableForeignFrame(nsIPresShell*            aPres
 
   if (!parentFrame) return rv; // if pseudo frame wasn't created
 
-  // save the pseudo frame state
+  // save the pseudo frame state XXX - why
   nsPseudoFrames prevPseudoFrames; 
   aState.mPseudoFrames.Reset(&prevPseudoFrames);
 
@@ -2878,7 +2882,7 @@ nsCSSFrameConstructor::ConstructTableForeignFrame(nsIPresShell*            aPres
   rv = ConstructFrame(aPresShell, aPresContext, aState, aContent, parentFrame, items);
   aNewFrame = items.childList;
 
-  // restore the pseudo frame state
+  // restore the pseudo frame state XXX - why
   aState.mPseudoFrames = prevPseudoFrames;
 
   if (aIsPseudoParent) {
