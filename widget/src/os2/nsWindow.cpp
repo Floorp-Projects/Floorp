@@ -115,7 +115,6 @@ PRBool              gRollupConsumeRollupEvent = PR_FALSE;
 
 PRBool gJustGotActivate = PR_FALSE;
 PRBool gJustGotDeactivate = PR_FALSE;
-PRBool gIsDestroyingAny = PR_FALSE;
 
 ////////////////////////////////////////////////////
 // Mouse Clicks - static variable defintions 
@@ -1085,7 +1084,6 @@ NS_METHOD nsWindow::Destroy()
       if( mWnd)
       {
          HWND hwndBeingDestroyed = mFrameWnd ? mFrameWnd : mWnd;
-         gIsDestroyingAny = PR_TRUE;
 #ifdef DEBUG_FOCUS
          printf("[%x] Destroy (%d)\n", this, mWindowIdentifier);
 #endif
@@ -1093,7 +1091,6 @@ NS_METHOD nsWindow::Destroy()
            WinSetFocus(HWND_DESKTOP, WinQueryWindow(hwndBeingDestroyed, QW_PARENT));
          }
          WinDestroyWindow(hwndBeingDestroyed);
-         gIsDestroyingAny = PR_FALSE;
       }
    }
    return NS_OK;
@@ -2617,31 +2614,26 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
 #endif
           if (SHORT1FROMMP(mp2)) {
             /* We are receiving focus */
-            if (!gIsDestroyingAny) {
 #ifdef DEBUG_FOCUS
-              printf("[%x] NS_GOTFOCUS (%d)\n", this, mWindowIdentifier);
+            printf("[%x] NS_GOTFOCUS (%d)\n", this, mWindowIdentifier);
 #endif
-              result = DispatchFocus(NS_GOTFOCUS, isMozWindowTakingFocus);
-              /* If mp1 is 0, this is the special WM_FOCUSCHANGED we got */
-              /* from the frame activate, so act like we just got activated */
-              if (gJustGotActivate || mp1 == 0) {
-                gJustGotActivate = PR_FALSE;
-                gJustGotDeactivate = PR_FALSE;
+            result = DispatchFocus(NS_GOTFOCUS, isMozWindowTakingFocus);
+            /* If mp1 is 0, this is the special WM_FOCUSCHANGED we got */
+            /* from the frame activate, so act like we just got activated */
+            if (gJustGotActivate || mp1 == 0) {
+              gJustGotActivate = PR_FALSE;
+              gJustGotDeactivate = PR_FALSE;
 #ifdef DEBUG_FOCUS
-                printf("[%x] NS_ACTIVATE (%d)\n", this, mWindowIdentifier);
+              printf("[%x] NS_ACTIVATE (%d)\n", this, mWindowIdentifier);
 #endif
-                result = DispatchFocus(NS_ACTIVATE, isMozWindowTakingFocus);
-              }
-              if ( WinIsChild( mWnd, HWNDFROMMP(mp1)) && mNextID == 1) {
+              result = DispatchFocus(NS_ACTIVATE, isMozWindowTakingFocus);
+            }
+            if ( WinIsChild( mWnd, HWNDFROMMP(mp1)) && mNextID == 1) {
 #ifdef DEBUG_FOCUS
-                printf("[%x] NS_PLUGIN_ACTIVATE (%d)\n", this, mWindowIdentifier);
+              printf("[%x] NS_PLUGIN_ACTIVATE (%d)\n", this, mWindowIdentifier);
 #endif
-                result = DispatchFocus(NS_PLUGIN_ACTIVATE, isMozWindowTakingFocus);
-                WinSetFocus(HWND_DESKTOP, mWnd);
-              }
-            } else {
-              nsToolkit *toolkit = NS_STATIC_CAST(nsToolkit *, mToolkit);
-              WinPostMsg(toolkit->GetDispatchWindow(), WM_FOCUSCHANGED, mp1, mp2);
+              result = DispatchFocus(NS_PLUGIN_ACTIVATE, isMozWindowTakingFocus);
+              WinSetFocus(HWND_DESKTOP, mWnd);
             }
 
           } else {
