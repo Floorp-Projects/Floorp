@@ -318,6 +318,7 @@ nsNntpIncomingServer::GetNewsrcHasChanged(PRBool *aNewsrcHasChanged)
 NS_IMETHODIMP
 nsNntpIncomingServer::CloseCachedConnections()
 {
+	nsresult rv;
 	// iterate through the connection cache for a connection that can handle this url.
 	PRUint32 cnt;
   nsCOMPtr<nsISupports> aSupport;
@@ -325,7 +326,7 @@ nsNntpIncomingServer::CloseCachedConnections()
 
   if (m_connectionCache)
   {
-    nsresult rv = m_connectionCache->Count(&cnt);
+    rv = m_connectionCache->Count(&cnt);
     if (NS_FAILED(rv)) return rv;
     for (PRUint32 i = 0; i < cnt; i++) 
 	  {
@@ -335,7 +336,15 @@ nsNntpIncomingServer::CloseCachedConnections()
     	  rv = connection->CloseConnection();
 	  }
   }
-  return WriteNewsrcFile();
+  rv = WriteNewsrcFile();
+  if (NS_FAILED(rv)) return rv;
+
+  if (mHostInfoHasChanged) {
+  	rv = WriteHostInfoFile(); 
+  	if (NS_FAILED(rv)) return rv;
+  }
+	
+  return NS_OK;
 }
 
 NS_IMPL_SERVERPREF_INT(nsNntpIncomingServer, MaximumConnectionsNumber,
@@ -598,14 +607,6 @@ nsNntpIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
 	rv = UpdateSubscribedInSubscribeDS();
 	if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsISubscribeListener> listener;
-	rv = GetSubscribeListener(getter_AddRefs(listener));
-	if (NS_FAILED(rv)) return rv;
-	if (!listener) return NS_ERROR_FAILURE;
-
-	rv = listener->OnStopPopulating();
-	if (NS_FAILED(rv)) return rv;
-
 	rv = StopPopulatingSubscribeDS();
 	if (NS_FAILED(rv)) return rv;
 
@@ -661,13 +662,52 @@ nsNntpIncomingServer::SubscribeToNewsgroup(const char *name)
 	return NS_OK;
 }
 
+nsresult
+nsNntpIncomingServer::WriteHostInfoFile()
+{
+#ifdef DEBUG_sspitzer
+	printf("WriteHostInfoFile()\n");
+#endif
+	mHostInfoHasChanged = PR_FALSE;
+	return NS_OK;
+}
+
+nsresult
+nsNntpIncomingServer::LoadHostInfoFile()
+{
+#ifdef DEBUG_sspitzer
+	printf("LoadHostInfoFile()\n");
+#endif
+  	mHostInfoLoaded = PR_TRUE;
+	return NS_OK;
+}
+
+nsresult
+nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsgWindow)
+{
+	nsresult rv;
+#ifdef DEBUG_sspitzer
+	printf("PopulateSubscribeDatasourceFromHostInfo()\n");
+#endif
+	rv = AddNewsgroupToSubscribeDS("a.b.d");
+	if (NS_FAILED(rv)) return rv;
+	rv = AddNewsgroupToSubscribeDS("a.b.e");
+	if (NS_FAILED(rv)) return rv;
+	rv = AddNewsgroupToSubscribeDS("a.b.f");
+	if (NS_FAILED(rv)) return rv;
+	rv = AddNewsgroupToSubscribeDS("a.c");
+	if (NS_FAILED(rv)) return rv;
+
+	rv = StopPopulatingSubscribeDS();
+	if (NS_FAILED(rv)) return rv;
+
+	return NS_OK;
+}
+
 NS_IMETHODIMP
 nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
 {
   nsresult rv;
-#ifdef DEBUG_sspitzer
-  printf("in PopulateSubscribeDatasource()\n");
-#endif
 
   rv = StartPopulatingSubscribeDS();
   if (NS_FAILED(rv)) return rv;
@@ -676,8 +716,27 @@ nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
   if (NS_FAILED(rv)) return rv;
   if (!nntpService) return NS_ERROR_FAILURE; 
 
-  rv = nntpService->BuildSubscribeDatasource(this, aMsgWindow);
-  if (NS_FAILED(rv)) return rv;
+#ifdef DEBUG_sspitzer_
+  if (!mHostInfoLoaded) {
+	// will set mHostInfoLoaded, if we were able to load the hostinfo.dat file
+	rv = LoadHostInfoFile();	
+  	if (NS_FAILED(rv)) return rv;
+  }
+#else
+  mHostInfoLoaded = PR_FALSE;
+#endif
+
+  if (mHostInfoLoaded) {
+	rv = PopulateSubscribeDatasourceFromHostInfo(aMsgWindow);
+  	if (NS_FAILED(rv)) return rv;
+  }
+  else {
+#ifdef DEBUG_sspitzer
+	printf("todo:  build up the host info stuff, and set mHostInfoLoaded\n");
+#endif
+	rv = nntpService->BuildSubscribeDatasource(this, aMsgWindow);
+	if (NS_FAILED(rv)) return rv;
+  }
 
   return NS_OK;
 }
@@ -750,6 +809,15 @@ NS_IMETHODIMP
 nsNntpIncomingServer::StopPopulatingSubscribeDS()
 {
 	nsresult rv;
+
+    nsCOMPtr<nsISubscribeListener> listener;
+	rv = GetSubscribeListener(getter_AddRefs(listener));
+	if (NS_FAILED(rv)) return rv;
+	if (!listener) return NS_ERROR_FAILURE;
+
+	rv = listener->OnStopPopulating();
+	if (NS_FAILED(rv)) return rv;
+
 	NS_ASSERTION(mInner,"not initialized");
 	if (!mInner) return NS_ERROR_FAILURE;
 	rv = mInner->StopPopulatingSubscribeDS();

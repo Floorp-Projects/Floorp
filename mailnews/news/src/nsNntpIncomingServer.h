@@ -68,6 +68,10 @@ protected:
 	NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *_retval);
 
 private:
+	nsresult WriteHostInfoFile();
+	nsresult LoadHostInfoFile();
+	nsresult PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsgWindow);
+	
     PRBool mNewsrcHasChanged;
 	nsAdapterEnumerator *mGroupsEnumerator;
 	PRBool mHostInfoLoaded;

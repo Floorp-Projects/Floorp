@@ -1864,14 +1864,6 @@ nsImapIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
 
     mDoingSubscribeDialog = PR_FALSE;
 
-    nsCOMPtr<nsISubscribeListener> listener;
-    rv = GetSubscribeListener(getter_AddRefs(listener));
-    if (NS_FAILED(rv)) return rv;
-    if (!listener) return NS_ERROR_FAILURE;
-
-    rv = listener->OnStopPopulating();
-    if (NS_FAILED(rv)) return rv;
-	
 	rv = StopPopulatingSubscribeDS();
 	if (NS_FAILED(rv)) return rv;
 
@@ -1939,6 +1931,14 @@ nsImapIncomingServer::StopPopulatingSubscribeDS()
 {
 	nsresult rv;
 
+    nsCOMPtr<nsISubscribeListener> listener;
+    rv = GetSubscribeListener(getter_AddRefs(listener));
+    if (NS_FAILED(rv)) return rv;
+    if (!listener) return NS_ERROR_FAILURE;
+
+    rv = listener->OnStopPopulating();
+    if (NS_FAILED(rv)) return rv;
+	
 	NS_ASSERTION(mInner,"not initialized");
 	if (!mInner) return NS_ERROR_FAILURE;
 	rv = mInner->StopPopulatingSubscribeDS();
