@@ -314,7 +314,7 @@ nsresult nsRange::QueryInterface(const nsIID& aIID,
  * Private helper routines
  ******************************************************/
 
-PRBool nsRange::InSameDoc(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr<nsIDOMNode> aNode2)
+PRBool nsRange::InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
 {
   nsCOMPtr<nsIContent> cN1;
   nsCOMPtr<nsIContent> cN2;
@@ -342,7 +342,7 @@ PRBool nsRange::InSameDoc(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr<nsIDOMNode> aNod
 }
 
 
-nsresult nsRange::AddToListOf(nsCOMPtr<nsIDOMNode> aNode)
+nsresult nsRange::AddToListOf(nsIDOMNode* aNode)
 {
   if (!aNode) 
     return NS_ERROR_NULL_POINTER;
@@ -358,7 +358,7 @@ nsresult nsRange::AddToListOf(nsCOMPtr<nsIDOMNode> aNode)
 }
   
 
-nsresult nsRange::RemoveFromListOf(nsCOMPtr<nsIDOMNode> aNode)
+nsresult nsRange::RemoveFromListOf(nsIDOMNode* aNode)
 {
   if (!aNode) 
     return NS_ERROR_NULL_POINTER;
@@ -378,8 +378,8 @@ nsresult nsRange::RemoveFromListOf(nsCOMPtr<nsIDOMNode> aNode)
 // for content notification of range ownership.  
 // Calling DoSetRange with either parent argument null will collapse
 // the range to have both endpoints point to the other node
-nsresult nsRange::DoSetRange(nsCOMPtr<nsIDOMNode> aStartN, PRInt32 aStartOffset,
-                             nsCOMPtr<nsIDOMNode> aEndN, PRInt32 aEndOffset)
+nsresult nsRange::DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
+                             nsIDOMNode* aEndN, PRInt32 aEndOffset)
 {
   //if only one endpoint is null, set it to the other one
   if (aStartN && !aEndN) 
@@ -432,8 +432,8 @@ nsresult nsRange::DoSetRange(nsCOMPtr<nsIDOMNode> aStartN, PRInt32 aStartOffset,
 }
 
 
-PRBool nsRange::IsIncreasing(nsCOMPtr<nsIDOMNode> aStartN, PRInt32 aStartOffset,
-                             nsCOMPtr<nsIDOMNode> aEndN, PRInt32 aEndOffset)
+PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
+                             nsIDOMNode* aEndN, PRInt32 aEndOffset)
 {
   PRInt32 numStartAncestors = 0;
   PRInt32 numEndAncestors = 0;
@@ -518,7 +518,7 @@ PRBool nsRange::IsIncreasing(nsCOMPtr<nsIDOMNode> aStartN, PRInt32 aStartOffset,
   }
 }
 
-nsresult nsRange::IsPointInRange(nsCOMPtr<nsIDOMNode> aParent, PRInt32 aOffset, PRBool* aResult)
+nsresult nsRange::IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, PRBool* aResult)
 {
   PRInt32  compareResult = 0;
   nsresult res;
@@ -531,7 +531,7 @@ nsresult nsRange::IsPointInRange(nsCOMPtr<nsIDOMNode> aParent, PRInt32 aOffset, 
 }
   
 // returns -1 if point is before range, 0 if point is in range, 1 if point is after range
-nsresult nsRange::ComparePointToRange(nsCOMPtr<nsIDOMNode> aParent, PRInt32 aOffset, PRInt32* aResult)
+nsresult nsRange::ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRInt32* aResult)
 {
   // check arguments
   if (!aResult) 
@@ -617,7 +617,7 @@ PRInt32 nsRange::IndexOf(nsIDOMNode* aChildNode)
   return theIndex;
 }
 
-PRInt32 nsRange::FillArrayWithAncestors(nsVoidArray* aArray, nsCOMPtr<nsIDOMNode> aNode)
+PRInt32 nsRange::FillArrayWithAncestors(nsVoidArray* aArray, nsIDOMNode* aNode)
 {
   PRInt32    i=0;
   nsCOMPtr<nsIDOMNode> node(aNode);
@@ -641,7 +641,7 @@ PRInt32 nsRange::FillArrayWithAncestors(nsVoidArray* aArray, nsCOMPtr<nsIDOMNode
   return i;
 }
 
-PRInt32 nsRange::GetAncestorsAndOffsets(nsCOMPtr<nsIDOMNode> aNode, PRInt32 aOffset,
+PRInt32 nsRange::GetAncestorsAndOffsets(nsIDOMNode* aNode, PRInt32 aOffset,
                         nsVoidArray* aAncestorNodes, nsVoidArray* aAncestorOffsets)
 {
   PRInt32    i=0;
@@ -679,7 +679,7 @@ PRInt32 nsRange::GetAncestorsAndOffsets(nsCOMPtr<nsIDOMNode> aNode, PRInt32 aOff
   return i;
 }
 
-nsCOMPtr<nsIDOMNode> nsRange::CommonParent(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr<nsIDOMNode> aNode2)
+nsCOMPtr<nsIDOMNode> nsRange::CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
 {
   nsCOMPtr<nsIDOMNode> theParent;
   
@@ -738,7 +738,7 @@ nsCOMPtr<nsIDOMNode> nsRange::CommonParent(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr
   return theParent;  
 }
 
-nsresult nsRange::GetDOMNodeFromContent(nsCOMPtr<nsIContent> inContentNode, nsCOMPtr<nsIDOMNode>* outDomNode)
+nsresult nsRange::GetDOMNodeFromContent(nsIContent* inContentNode, nsCOMPtr<nsIDOMNode>* outDomNode)
 {
   if (!outDomNode) 
     return NS_ERROR_NULL_POINTER;
@@ -748,7 +748,7 @@ nsresult nsRange::GetDOMNodeFromContent(nsCOMPtr<nsIContent> inContentNode, nsCO
   return NS_OK;
 }
 
-nsresult nsRange::GetContentFromDOMNode(nsCOMPtr<nsIDOMNode> inDomNode, nsCOMPtr<nsIContent>* outContentNode)
+nsresult nsRange::GetContentFromDOMNode(nsIDOMNode* inDomNode, nsCOMPtr<nsIContent>* outContentNode)
 {
   if (!outContentNode) 
     return NS_ERROR_NULL_POINTER;
@@ -758,7 +758,7 @@ nsresult nsRange::GetContentFromDOMNode(nsCOMPtr<nsIDOMNode> inDomNode, nsCOMPtr
   return NS_OK;
 }
 
-nsresult nsRange::PopRanges(nsCOMPtr<nsIDOMNode> aDestNode, PRInt32 aOffset, nsCOMPtr<nsIContent> aSourceNode)
+nsresult nsRange::PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* aSourceNode)
 {
   // utility routine to pop all the range endpoints inside the content subtree defined by 
   // aSourceNode, into the node/offset represented by aDestNode/aOffset.
@@ -826,7 +826,7 @@ nsresult nsRange::PopRanges(nsCOMPtr<nsIDOMNode> aDestNode, PRInt32 aOffset, nsC
 
 // sanity check routine for content helpers.  confirms that given 
 // node owns one or both range endpoints.
-nsresult nsRange::ContentOwnsUs(nsCOMPtr<nsIDOMNode> domNode)
+nsresult nsRange::ContentOwnsUs(nsIDOMNode* domNode)
 {
   NS_PRECONDITION(domNode, "null pointer");
   if ((mStartParent != domNode) && (mEndParent != domNode))
@@ -1279,10 +1279,10 @@ nsresult nsRange::ExtractContents(nsIDOMDocumentFragment** aReturn)
 //   - recurse to parent
 //
 nsresult
-nsRange::CloneSibsAndParents(nsCOMPtr<nsIDOMNode> parentNode, PRInt32 nodeOffset,
-                             nsCOMPtr<nsIDOMNode> clonedNode,
-                             nsCOMPtr<nsIDOMNode> commonParent,
-                             nsCOMPtr<nsIDOMDocumentFragment> docfrag,
+nsRange::CloneSibsAndParents(nsIDOMNode* aParentNode, PRInt32 nodeOffset,
+                             nsIDOMNode* aClonedNode,
+                             nsIDOMNode* aCommonParent,
+                             nsIDOMDocumentFragment* docfrag,
                              PRBool leftP)
 {
   nsresult res;
@@ -1291,11 +1291,15 @@ nsRange::CloneSibsAndParents(nsCOMPtr<nsIDOMNode> parentNode, PRInt32 nodeOffset
     return NS_ERROR_INVALID_ARG;
 
   nsCOMPtr<nsIDOMNode> parentClone;
-  if (!parentNode)
+  if (!aParentNode)
   {
     return NS_ERROR_INVALID_ARG;
   }
 
+  nsCOMPtr<nsIDOMNode> parentNode = aParentNode;
+  nsCOMPtr<nsIDOMNode> clonedNode = aClonedNode;
+  nsCOMPtr<nsIDOMNode> commonParent = aCommonParent;
+  
   // Make clone of parent:
   if (parentNode == commonParent || !parentNode)
   {
