@@ -39,12 +39,6 @@
 // defined in msgCompGlue.cpp
 extern int MIME_EncoderDestroy(MimeEncoderData *data, PRBool abort_p);
 extern int MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size);
-
-extern "C"
-{
-	extern int MK_OUT_OF_MEMORY;
-}
-
 static char *mime_mailto_stream_read_buffer = 0;
 
 PRInt32 nsMsgSendPart::M_counter = 0;
