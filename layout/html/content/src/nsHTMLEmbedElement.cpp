@@ -348,6 +348,14 @@ nsHTMLEmbedElement::GetScriptObject(nsIScriptContext* aContext,
   // don't cache it so that the next call can get the correct script object
   // if the plugin instance is available at the next call.
   if (NS_FAILED(rv)) {
+    if (mInner.mDocument) {
+      // Since we're resetting the script object to null we'll remove the
+      // reference to it so that we won't add the same named reference
+      // again the next time someone requests the script object.
+      aContext->RemoveReference((void *)&mInner.mDOMSlots->mScriptObject,
+                                mInner.mDOMSlots->mScriptObject);
+    }
+
     mInner.SetScriptObject(nsnull);
 
     *aScriptObject = elementObject;
