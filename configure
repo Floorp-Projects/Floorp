@@ -8765,8 +8765,8 @@ if test "${enable_pedantic+set}" = set; then
 fi
 
 if test "$_PEDANTIC"; then
-  _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -pedantic"
-  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -pedantic"
+  _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-pedantic"
+  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
 fi
 
 # Check whether --enable-ignore-no-long-long-warning or --disable-ignore-no-long-long-warning was given.
