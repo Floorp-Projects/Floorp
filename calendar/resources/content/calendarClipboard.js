@@ -120,7 +120,9 @@ function cutToClipboard( /* calendarEventArray */)
   var calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
 
    if( copyToClipboard( calendarEventArray ) )
+   {
       unifinderDeleteCommand( true ); // deletes all selected events without prompting.
+   }
 }
 
 
@@ -182,7 +184,7 @@ function copyToClipboard( calendarEventArray )
 
          clipboard.setData( trans, null, Components.interfaces.nsIClipboard.kGlobalClipboard );
 
-         return;         
+         return true;         
       }
    }
 }
