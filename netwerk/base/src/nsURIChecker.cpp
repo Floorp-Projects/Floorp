@@ -39,6 +39,7 @@
 #include "nsURIChecker.h"
 
 #include "nsIServiceManager.h"
+#include "nsIAuthPrompt.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIHttpChannel.h"
@@ -295,6 +296,11 @@ nsURIChecker::OnDataAvailable(nsIRequest *aRequest, nsISupports *aCtxt,
 NS_IMETHODIMP
 nsURIChecker::GetInterface(const nsIID & aIID, void **aResult)
 {
+    if (mObserver && aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
+        nsCOMPtr<nsIInterfaceRequestor> req = do_QueryInterface(mObserver);
+        if (req)
+            return req->GetInterface(aIID, aResult);
+    }
     return QueryInterface(aIID, aResult);
 }
 
