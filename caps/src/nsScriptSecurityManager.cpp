@@ -20,9 +20,6 @@
 #include "nsIScriptGlobalObjectData.h"
 #include "nsIPref.h"
 #include "nsIURL.h"
-#ifdef OJI
-#include "jvmmgr.h"
-#endif
 #include "nspr.h"
 #include "plstr.h"
 #include "nsCOMPtr.h"
@@ -421,23 +418,9 @@ nsScriptSecurityManager::GetSubjectPrincipal(JSContext *aCx,
     JSPrincipals *principals;
     JSStackFrame *fp;
     JSScript *script;
-#ifdef OJI
-    JSStackFrame *pFrameToStartLooking = 
-        *JVM_GetStartJSFrameFromParallelStack();
-    JSStackFrame *pFrameToEndLooking   = 
-        JVM_GetEndJSFrameFromParallelStack(pFrameToStartLooking);
-    if (pFrameToStartLooking == nsnull) {
-        pFrameToStartLooking = JS_FrameIterator(aCx, &pFrameToStartLooking);
-        if (pFrameToStartLooking == nsnull) {
-            // There are no frames or scripts at this point.
-            pFrameToEndLooking = nsnull;
-        }
-    }
-#else
     fp = nsnull; // indicate to JS_FrameIterator to start from innermost frame
     JSStackFrame *pFrameToStartLooking = JS_FrameIterator(aCx, &fp);
     JSStackFrame *pFrameToEndLooking   = nsnull;
-#endif
     fp = pFrameToStartLooking;
     while (fp != pFrameToEndLooking) {
         script = JS_GetFrameScript(aCx, fp);
@@ -454,23 +437,6 @@ nsScriptSecurityManager::GetSubjectPrincipal(JSContext *aCx,
         }
         fp = JS_FrameIterator(aCx, &fp);
     }
-#ifdef OJI
-    principals = JVM_GetJavaPrincipalsFromStack(pFrameToStartLooking);
-    if (principals && principals->codebase) {
-        // create new principals
-        /*
-        nsresult rv;
-        NS_WITH_SERVICE(nsIPrincipalManager, prinMan, 
-                        NS_PRINCIPALMANAGER_PROGID, &rv);
-        // NB TODO: create nsIURI to pass in
-        if (NS_SUCCEEDED(rv)) 
-            rv = prinMan->CreateCodebasePrincipal(principals->codebase, 
-                                                  nsnull, result);
-        if (NS_SUCCEEDED(rv))
-            return NS_OK;
-        */
-    }
-#endif
     // Couldn't find principals: no mobile code on stack.
     // Use system principal.
     *result = mSystemPrincipal;
