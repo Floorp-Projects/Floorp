@@ -1610,9 +1610,11 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 	if (NS_SUCCEEDED(filter->GetAction(&actionType)))
 	{
         if (actionType == nsMsgFilterAction::MoveToFolder)
+        {
             filter->GetActionTargetFolderUri(getter_Copies(actionTargetFolderUri));
-        if (!actionTargetFolderUri)
-          return rv;
+            if (!actionTargetFolderUri)
+              return rv;
+        }
 		nsCOMPtr<nsIMsgDBHdr> msgHdr = m_newMsgHdr;
 		PRUint32 msgFlags;
 
