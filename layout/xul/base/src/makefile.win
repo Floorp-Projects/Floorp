@@ -56,6 +56,7 @@ CPP_OBJS=					\
   .\$(OBJDIR)\nsIFrameBoxObject.obj \
   .\$(OBJDIR)\nsBrowserBoxObject.obj \
   .\$(OBJDIR)\nsTreeBoxObject.obj \
+  .\$(OBJDIR)\nsListBoxObject.obj \
   .\$(OBJDIR)\nsScrollBoxObject.obj \
   .\$(OBJDIR)\nsPopupBoxObject.obj \
   .\$(OBJDIR)\nsMenuBoxObject.obj \
@@ -103,6 +104,9 @@ CPP_OBJS=					\
   .\$(OBJDIR)\nsMenuDismissalListener.obj \
   .\$(OBJDIR)\nsTitleBarFrame.obj \
   .\$(OBJDIR)\nsResizerFrame.obj \
+  .\$(OBJDIR)\nsListBoxBodyFrame.obj \
+  .\$(OBJDIR)\nsListItemFrame.obj \
+  .\$(OBJDIR)\nsListBoxLayout.obj \
   .\$(OBJDIR)\nsXULTooltipListener.obj \
   $(NULL)
 

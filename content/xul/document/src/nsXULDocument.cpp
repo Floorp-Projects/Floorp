@@ -7065,6 +7065,8 @@ nsXULDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
       contractID += "-popup";
     else if (tag.get() == nsXULAtoms::tree)
       contractID += "-tree";
+    else if (tag.get() == nsXULAtoms::listbox)
+      contractID += "-listbox";
     else if (tag.get() == nsXULAtoms::scrollbox)
       contractID += "-scrollbox";
     else if (tag.get() == nsXULAtoms::outliner)

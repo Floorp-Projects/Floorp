@@ -216,6 +216,10 @@ static FrameCtorDebugFlags gFlags[] = {
 #include "nsMenuFrame.h"
 #include "nsPopupSetFrame.h"
 #include "nsOutlinerColFrame.h"
+#include "nsIBoxObject.h"
+#include "nsIListBoxObject.h"
+#include "nsListBoxBodyFrame.h"
+#include "nsListItemFrame.h"
 
 // To kill #define index(a,b) strchr(a,b) macro in Toolkit types.h
 #ifdef XP_OS2_VACPP
@@ -305,6 +309,9 @@ nsresult
 NS_NewTreeScrollPortFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
+NS_NewListBoxScrollPortFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+
+nsresult
 NS_NewOutlinerBodyFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 // grid
@@ -321,6 +328,9 @@ NS_NewGridRowGroupFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool
 
 nsresult
 NS_NewTreeLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
+
+nsresult
+NS_NewListBoxLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
 
 // end grid
 
@@ -5272,8 +5282,17 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         nsCOMPtr<nsIBoxLayout> layout;
       
         PRBool treeScrollPort = PR_FALSE;
+        
+        if (aTag == nsXULAtoms::listboxbody) {
+          NS_NewListBoxLayout(aPresShell, layout);
 
-        if (aTag == nsXULAtoms::treechildren || aTag == nsXULAtoms::treeitem) {
+          rv = NS_NewListBoxBodyFrame(aPresShell, &newFrame, PR_FALSE, layout);
+          ((nsListBoxBodyFrame*)newFrame)->InitGroup(this, aPresContext);
+          treeScrollPort = PR_TRUE;
+
+          processChildren = PR_FALSE;
+        }
+        else if (aTag == nsXULAtoms::treechildren || aTag == nsXULAtoms::treeitem) {
           NS_NewTreeLayout(aPresShell, layout);
 
           nsAutoString outer;
@@ -5300,9 +5319,12 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         if (IsScrollable(aPresContext, display)) {
 
           nsIFrame* scrollPort = nsnull;
-          if (treeScrollPort) 
-            NS_NewTreeScrollPortFrame(aPresShell, &scrollPort);
-
+          if (treeScrollPort) {
+            if (aTag == nsXULAtoms::listboxbody)
+              NS_NewListBoxScrollPortFrame(aPresShell, &scrollPort);
+            else
+              NS_NewTreeScrollPortFrame(aPresShell, &scrollPort);
+          }
           // set the top to be the newly created scrollframe
           BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
                            topFrame, aStyleContext, scrollPort);
@@ -5327,7 +5349,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
         NS_NewGridRowLeafLayout(aPresShell, getter_AddRefs(layout));
 
-        if (aTag == nsXULAtoms::treerow)
+        if (aTag == nsXULAtoms::listitem)
+          rv = NS_NewListItemFrame(aPresShell, &newFrame, PR_FALSE, layout);
+        else if (aTag == nsXULAtoms::treerow)
           rv = NS_NewXULTreeSliceFrame(aPresShell, &newFrame, PR_FALSE, layout);
         else
           rv = NS_NewGridRowLeafFrame(aPresShell, &newFrame, PR_FALSE, layout);
@@ -8306,6 +8330,29 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
     mDocument->GetBindingManager(getter_AddRefs(bindingManager));
 
     nsCOMPtr<nsIAtom> tag;
+    aChild->GetTag(*getter_AddRefs(tag));
+
+    PRBool listitem = tag && tag.get() == nsXULAtoms::listitem;
+    if (listitem) {
+      // XBL insertion may not yet have taken place here (in the case of 
+      // replacements), so our only connection to the listbox content is
+      // through aContainer.  Use the boxObject to get to the listboxbody
+      // frame so we can notify it of the insertion
+      nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(aContainer));
+      if (xulEl) {
+        nsCOMPtr<nsIBoxObject> boxObject;
+        xulEl->GetBoxObject(getter_AddRefs(boxObject));
+        nsCOMPtr<nsIListBoxObject> listBoxObject(do_QueryInterface(boxObject));
+        nsIListBoxObject* bodyBoxObject = nsnull;
+        listBoxObject->GetListboxBody(&bodyBoxObject);
+        nsListBoxBodyFrame* listBoxBody = NS_STATIC_CAST(nsListBoxBodyFrame*, bodyBoxObject);
+        NS_RELEASE(bodyBoxObject);
+        if (listBoxBody)
+          listBoxBody->OnContentInserted(aPresContext, aChild);
+      }
+      return NS_OK;
+    }
+
     PRInt32 namespaceID;
     bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
 
@@ -9187,6 +9234,40 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     mDocument->GetBindingManager(getter_AddRefs(bindingManager));
 
     nsCOMPtr<nsIAtom> tag;
+    aChild->GetTag(*getter_AddRefs(tag));
+
+    PRBool listitem = tag && tag.get() == nsXULAtoms::listitem;
+    if (listitem) {
+      nsListBoxBodyFrame* listBoxBody = nsnull;
+      if (childFrame) {
+        // There is a frame for the removed content, so its parent frame is the listboxbody
+        nsIFrame* parentFrame = nsnull;
+        childFrame->GetParent(&parentFrame);
+        if (parentFrame)
+          listBoxBody = (nsListBoxBodyFrame*)parentFrame;
+      } else {
+        // There is no frame for the removed content, so we need to dig
+        // further for the body frame. XBL insertion may not yet have taken
+        // place here (in the case of  replacements), so our only connection
+        // to the listbox content is through aContainer.  Use the boxObject
+        // to get to the listboxbody frame so we can notify it of the removal.
+        nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(aContainer));
+        if (xulEl) {
+          nsCOMPtr<nsIBoxObject> boxObject;
+          xulEl->GetBoxObject(getter_AddRefs(boxObject));
+          nsCOMPtr<nsIListBoxObject> listBoxObject(do_QueryInterface(boxObject));
+          nsIListBoxObject* bodyBoxObject = nsnull;
+          listBoxObject->GetListboxBody(&bodyBoxObject);
+          listBoxBody = NS_STATIC_CAST(nsListBoxBodyFrame*, bodyBoxObject);
+          NS_RELEASE(bodyBoxObject);
+        }
+      }
+
+      if (listBoxBody)
+        listBoxBody->OnContentRemoved(aPresContext, childFrame, aIndexInContainer);
+      return NS_OK;
+    }
+
     PRInt32 namespaceID;
     bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
 
@@ -9201,7 +9282,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 
     PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
     PRBool treeItem = tag && tag.get() == nsXULAtoms::treeitem;
-
     if (treeChildren || treeItem) {
       PRInt32 onScreenDelta = 0;
       if (childFrame) {
@@ -10140,7 +10220,8 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 
     if (tag && (tag.get() == nsXULAtoms::treechildren ||
       (tag.get() == nsXULAtoms::treeitem && aAttribute != nsXULAtoms::open) ||
-      tag.get() == nsXULAtoms::treerow || tag.get() == nsXULAtoms::treecell))
+      tag.get() == nsXULAtoms::treerow || tag.get() == nsXULAtoms::treecell ||
+      tag.get() == nsXULAtoms::listitem || tag.get() == nsXULAtoms::listcell))
       return NS_OK;
   }
 
@@ -12847,6 +12928,109 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
         rv = ((nsXULTreeGroupFrame*)aParentFrame)->TreeAppendFrames(newFrame);
       else
         rv = ((nsXULTreeGroupFrame*)aParentFrame)->TreeInsertFrames(aPrevFrame, newFrame);
+      // If there are new absolutely positioned child frames, then notify
+      // the parent
+      // XXX We can't just assume these frames are being appended, we need to
+      // determine where in the list they should be inserted...
+      if (state.mAbsoluteItems.childList) {
+        rv = state.mAbsoluteItems.containingBlock->AppendFrames(aPresContext, *shell,
+                                                         nsLayoutAtoms::absoluteList,
+                                                         state.mAbsoluteItems.childList);
+      }
+      
+      // If there are new fixed positioned child frames, then notify
+      // the parent
+      // XXX We can't just assume these frames are being appended, we need to
+      // determine where in the list they should be inserted...
+      if (state.mFixedItems.childList) {
+        rv = state.mFixedItems.containingBlock->AppendFrames(aPresContext, *shell,
+                                                      nsLayoutAtoms::fixedList,
+                                                      state.mFixedItems.childList);
+      }
+      
+      // If there are new floating child frames, then notify
+      // the parent
+      // XXX We can't just assume these frames are being appended, we need to
+      // determine where in the list they should be inserted...
+      if (state.mFloatedItems.childList) {
+        rv = state.mFloatedItems.containingBlock->AppendFrames(aPresContext, *shell,
+                                                    nsLayoutAtoms::floaterList,
+                                                    state.mFloatedItems.childList);
+      }
+    }
+  }
+
+  return rv;
+#else
+  return NS_ERROR_FAILURE;
+#endif
+}
+
+//----------------------------------------------------------------------
+
+// listbox Widget Routines
+
+NS_IMETHODIMP
+nsCSSFrameConstructor::CreateListBoxContent(nsIPresContext* aPresContext,
+                                            nsIFrame*       aParentFrame,
+                                            nsIFrame*       aPrevFrame,
+                                            nsIContent*     aChild,
+                                            nsIFrame**      aNewFrame,
+                                            PRBool          aIsAppend,
+                                            PRBool          aIsScrollbar,
+                                            nsILayoutHistoryState* aFrameState)
+{
+#ifdef INCLUDE_XUL
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  nsresult rv = NS_OK;
+
+  // Construct a new frame
+  if (nsnull != aParentFrame) {
+    nsFrameItems            frameItems;
+    nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
+                                  GetAbsoluteContainingBlock(aPresContext, aParentFrame),
+                                  GetFloaterContainingBlock(aPresContext, aParentFrame), 
+                                  mTempFrameTreeState);
+
+    nsCOMPtr<nsIStyleContext> styleContext;
+    rv = ResolveStyleContext(aPresContext, aParentFrame, aChild,
+                             getter_AddRefs(styleContext));
+
+    if (NS_SUCCEEDED(rv)) {
+      // Pre-check for display "none" - only if we find that, do we create
+      // any frame at all
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+        styleContext->GetStyleData(eStyleStruct_Display);
+
+      if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
+        *aNewFrame = nsnull;
+        return NS_OK;
+      }
+    }
+
+    nsCOMPtr<nsIAtom> tag;
+    aChild->GetTag(*getter_AddRefs(tag));
+
+    PRInt32 namespaceID;
+    aChild->GetNameSpaceID(namespaceID);
+
+    rv = ConstructFrameInternal(shell, aPresContext, state, aChild, aParentFrame, tag, namespaceID, 
+                                styleContext, frameItems, PR_FALSE);
+    
+    nsIFrame* newFrame = frameItems.childList;
+    *aNewFrame = newFrame;
+
+    if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
+      nsCOMPtr<nsIBindingManager> bm;
+      mDocument->GetBindingManager(getter_AddRefs(bm));
+      bm->ProcessAttachedQueue();
+
+      // Notify the parent frame
+      if (aIsAppend)
+        rv = ((nsListBoxBodyFrame*)aParentFrame)->ListBoxAppendFrames(newFrame);
+      else
+        rv = ((nsListBoxBodyFrame*)aParentFrame)->ListBoxInsertFrames(aPrevFrame, newFrame);
       // If there are new absolutely positioned child frames, then notify
       // the parent
       // XXX We can't just assume these frames are being appended, we need to

@@ -1,0 +1,126 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
+
+/* ===== listbox.css =======================================================
+  == Styles used by XUL listbox-related elements.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: listbox ::::: */
+
+listbox {
+  margin: 2px 4px;
+  border-top: 1px solid #BEC3D3;
+  border-right: 1px solid #F8FAFE;
+  border-bottom: 1px solid #F8FAFE;
+  border-left: 1px solid #BEC3D3;
+  background-color: #FFFFFF;
+  color: #000000;
+}
+
+listrows {
+  border: 1px solid #5D616E;
+}
+
+/* ::::: listitem ::::: */
+
+listitem {
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+}
+
+listbox:focus > listitem[selected="true"][current="true"] {
+  border-top-color: #000000;
+  border-bottom-color: #000000;
+}
+
+listitem[selected="true"] {
+  background-color: #C7D0D9;
+  color: #000000;
+}
+
+listbox:focus > listitem[selected="true"] {
+  background-color: #424F63;
+  color: #FFFFFF;
+}
+
+listcell {
+  padding: 0 0 1px 2px;
+}
+
+/* ::::: listheader ::::: */
+
+listheader {
+  -moz-box-align: center;
+  border: 2px solid;
+  -moz-border-top-colors: #EEF0F3 #C7D0D9;
+  -moz-border-right-colors: #63676B #A5ABB0;
+  -moz-border-bottom-colors: #63676B #A5ABB0;
+  -moz-border-left-colors: #EEF0F3 #C7D0D9;
+  padding: 0 4px;
+  background-color: #C7D0D9;
+  color: #000000;
+}
+
+listheader[sortable="true"]:hover:active {
+  border-top: 2px solid;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+  border-left: 2px solid;
+  -moz-border-top-colors: #A5ABB0 #C7D0D9;
+  -moz-border-right-colors: #A5ABB0;
+  -moz-border-bottom-colors: #A5ABB0;
+  -moz-border-left-colors: #A5ABB0 #C7D0D9;
+  padding: 1px 4px 0 5px;
+}
+
+.listheader-icon {
+  margin-right: 2px;
+}
+
+.listheader-label {
+  margin: 0px !important;
+}
+
+/* ..... sort direction icon ..... */
+
+.listheader-sortdirection {
+  list-style-image: none;
+}
+
+.listheader-sortdirection[sortdirection="ascending"] {
+  list-style-image: url("chrome://global/skin/tree/sort-asc.gif");
+}
+
+.listheader-sortdirection[sortdirection="descending"] {
+  list-style-image: url("chrome://global/skin/tree/sort-dsc.gif");
+}
+
+/* ::::: listcell ::::: */
+
+.listcell-label {
+  margin: 0px !important;
+  padding: 0px 0px 1px 4px;
+  white-space: nowrap;
+}

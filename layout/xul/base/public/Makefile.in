@@ -47,6 +47,7 @@ XPIDLSRCS=      nsIBoxObject.idl                  \
                 nsIBrowserBoxObject.idl \
                 nsIIFrameBoxObject.idl \
                 nsIEditorBoxObject.idl \
+                nsIListBoxObject.idl \
                 $(NULL)
 
 include $(topsrcdir)/config/rules.mk

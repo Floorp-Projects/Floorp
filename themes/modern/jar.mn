@@ -118,6 +118,7 @@ modern.jar:
   skin/modern/global/filepicker.css                                (global/filepicker.css)
   skin/modern/global/formatting.css                                (global/formatting.css)
   skin/modern/global/groupbox.css                                  (global/groupbox.css)
+  skin/modern/global/listbox.css                                   (global/listbox.css)
   skin/modern/global/menu.css                                      (global/menu.css)
   skin/modern/global/menulist.css                                  (global/menulist.css)
   skin/modern/global/outliner.css                                  (global/outliner.css)
