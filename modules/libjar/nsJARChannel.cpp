@@ -216,10 +216,10 @@ NS_IMETHODIMP
 nsJARChannel::GetOriginalURI(nsIURI* *aOriginalURI)
 {
     if (mOriginalURI)
-        *aOriginalURI = mOriginalURI.get();
+        *aOriginalURI = mOriginalURI;
     else
-        mURI->QueryInterface(NS_GET_IID(nsIURI), (void**)aOriginalURI);
-    
+       *aOriginalURI = NS_STATIC_CAST(nsIURI*, mURI);
+
     NS_IF_ADDREF(*aOriginalURI);
     return NS_OK;
 }
