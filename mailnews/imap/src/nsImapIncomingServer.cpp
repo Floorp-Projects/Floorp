@@ -692,7 +692,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
       if (NS_SUCCEEDED(rv)) 
         rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(aMsgWindow));
       
-      RequestOverrideInfo(aMsgWindow);
+      rv = RequestOverrideInfo(aMsgWindow);
       if (m_waitingForConnectionInfo)
       canRunButBusy = PR_TRUE;
       else 

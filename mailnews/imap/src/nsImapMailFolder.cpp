@@ -2056,7 +2056,7 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlList
   if(NS_SUCCEEDED(rv) && rootFolder) {
 
     nsCOMPtr<nsIImapIncomingServer> imapServer;
-    nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
+    rv = GetImapIncomingServer(getter_AddRefs(imapServer));
  
     if (NS_SUCCEEDED(rv) && imapServer)
       imapServer->GetDownloadBodiesOnGetNewMail(&m_downloadingFolderForOfflineUse);

@@ -931,7 +931,11 @@ nsresult nsImapOfflineDownloader::ProcessNextOperation()
           PRUint32 numFolders;
           rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
           if (inbox)
-            return inbox->GetNewMessages(m_window, this);
+          {
+            rv = inbox->GetNewMessages(m_window, this);
+            if (NS_SUCCEEDED(rv))
+              return rv; // otherwise, fall through.
+          }
         }
       }
       return ProcessNextOperation(); // recurse and do next server.
