@@ -1,21 +1,22 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
-*
-* The contents of this file are subject to the Netscape Public License
-* Version 1.0 (the "NPL"); you may not use this file except in
-* compliance with the NPL.  You may obtain a copy of the NPL at
-* http://www.mozilla.org/NPL/
-*
-* Software distributed under the NPL is distributed on an "AS IS" basis,
-* WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
-* for the specific language governing rights and limitations under the
-* NPL.
-*
-* The Initial Developer of this code under the NPL is Netscape
-* Communications Corporation.  Portions created by Netscape are
-* Copyright (C) 1998 Netscape Communications Corporation.  All Rights
-* Reserved.
-*/
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
 
+#include <ctype.h>
 #include "nsJSEnvironment.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptContextOwner.h"
@@ -49,24 +50,19 @@
 
 const size_t gStackSize = 8192;
 
-static NS_DEFINE_IID(kIScriptContextIID, NS_ISCRIPTCONTEXT_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIScriptNameSetRegistryIID, NS_ISCRIPTNAMESETREGISTRY_IID);
 static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
-static NS_DEFINE_CID(kXPConnectCID,              NS_XPCONNECT_CID);
 
 void PR_CALLBACK
-NS_ScriptErrorReporter(JSContext *cx, 
-                       const char *message, 
+NS_ScriptErrorReporter(JSContext *cx,
+                       const char *message,
                        JSErrorReport *report)
 {
   nsIScriptContext* context = (nsIScriptContext*)JS_GetContextPrivate(cx);
-  nsIScriptContextOwner* owner;
 
   if (context) {
-    nsresult result = context->GetOwner(&owner);
-    if (NS_SUCCEEDED(result) && owner) {
+    nsCOMPtr<nsIScriptContextOwner> owner;
+    nsresult rv = context->GetOwner(getter_AddRefs(owner));
+    if (NS_SUCCEEDED(rv) && owner) {
       const char* error;
       if (message) {
         error = message;
@@ -74,17 +70,16 @@ NS_ScriptErrorReporter(JSContext *cx,
       else {
         error = "<unknown>";
       }
- 
+
       if (report) {
-        owner->ReportScriptError(error, 
-                                 report->filename, 
+        owner->ReportScriptError(error,
+                                 report->filename,
                                  report->lineno,
                                  report->linebuf);
       }
       else {
         owner->ReportScriptError(error, nsnull, 0, nsnull);
       }
-      NS_RELEASE(owner);
     }
   }
 
@@ -93,44 +88,51 @@ NS_ScriptErrorReporter(JSContext *cx,
 
 nsJSContext::nsJSContext(JSRuntime *aRuntime)
 {
-	mRefCnt = 0;
-	mContext = JS_NewContext(aRuntime, gStackSize);
-	JS_SetContextPrivate(mContext, (void *)this);
-	mNameSpaceManager = nsnull;
-	mIsInitialized = PR_FALSE;
-	mNumEvaluations = 0;
+  mRefCnt = 0;
+  mContext = JS_NewContext(aRuntime, gStackSize);
+  if (mContext)
+    JS_SetContextPrivate(mContext, (void *)this);
+  mIsInitialized = PR_FALSE;
+  mNumEvaluations = 0;
   mSecurityManager = nsnull;
   mOwner = nsnull;
   mTerminationFunc = nsnull;
 }
 
+const char kScriptSecurityManagerProgID[] = NS_SCRIPTSECURITYMANAGER_PROGID;
+
 nsJSContext::~nsJSContext()
 {
-	// Tell xpconnect that we're about to destroy the JSContext so it can cleanup
-	nsIXPConnect* xpc;
-	nsresult res;
-	res = nsServiceManager::GetService(kXPConnectCID, nsIXPConnect::GetIID(), 
-		(nsISupports**) &xpc);
-	//NS_ASSERTION(NS_SUCCEEDED(res), "unable to get xpconnect");
-	if (NS_SUCCEEDED(res)) {
-		xpc->AbandonJSContext(mContext);
-		nsServiceManager::ReleaseService(kXPConnectCID, xpc);
-	}
-	
-	NS_IF_RELEASE(mNameSpaceManager);
-	JS_DestroyContext(mContext);
+  if (mSecurityManager) {
+    nsServiceManager::ReleaseService(kScriptSecurityManagerProgID,
+                                     mSecurityManager);
+    mSecurityManager = nsnull;
+  }
+
+  // Cope with JS_NewContext failure in ctor (XXXbe move NewContext to Init?)
+  if (!mContext)
+    return;
+
+  // Tell xpconnect that we're about to destroy the JSContext so it can cleanup
+  nsresult rv;
+  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+  if (NS_SUCCEEDED(rv))
+    xpc->AbandonJSContext(mContext);
+
+  JS_DestroyContext(mContext);
 }
 
-NS_IMPL_ISUPPORTS(nsJSContext, kIScriptContextIID);
+NS_IMPL_ISUPPORTS(nsJSContext, NS_GET_IID(nsIScriptContext));
 
 NS_IMETHODIMP
 nsJSContext::EvaluateString(const nsString& aScript,
                             const char *aURL,
                             PRUint32 aLineNo,
+                            const char* aVersion,
                             nsString& aRetValue,
                             PRBool* aIsUndefined)
 {
-  return EvaluateString(aScript, nsnull, nsnull, aURL, aLineNo, aRetValue, aIsUndefined);
+  return EvaluateString(aScript, nsnull, nsnull, aURL, aLineNo, aVersion, aRetValue, aIsUndefined);
 }
 
 NS_IMETHODIMP
@@ -139,273 +141,355 @@ nsJSContext::EvaluateString(const nsString& aScript,
                             nsIPrincipal *principal,
                             const char *aURL,
                             PRUint32 aLineNo,
+                            const char* aVersion,
                             nsString& aRetValue,
                             PRBool* aIsUndefined)
 {
   nsresult rv;
   if (!jsObj)
     jsObj = JS_GetGlobalObject(mContext);
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
-  if (NS_FAILED(rv)) 
-    return NS_ERROR_FAILURE;
-  if (NS_FAILED(stack->Push(mContext))) 
-    return NS_ERROR_FAILURE;
+
+  // Safety first: get an object representing the script's principals, i.e.,
+  // the entities who signed this script, or the fully-qualified-domain-name
+  // or "codebase" from which it was loaded.
   JSPrincipals *jsprin;
+  nsCOMPtr<nsIPrincipal> principalCOMPtr = principal;
   if (principal) {
     principal->GetJSPrincipals(&jsprin);
-  } else {
-    // norris TODO: Using GetGlobalObject to get principals is unrelible.
-    nsCOMPtr<nsIScriptGlobalObjectData> globalData;
-    nsCOMPtr<nsIPrincipal> principal;
+  }
+  else {
+    // norris TODO: Using GetGlobalObject to get principals is broken?
     nsCOMPtr<nsIScriptGlobalObject> global = GetGlobalObject();
-    if (!global || NS_FAILED(global->QueryInterface(NS_GET_IID(nsIScriptGlobalObjectData), 
-                                                    (void**) getter_AddRefs(globalData)))) 
-    {
+    if (!global)
       return NS_ERROR_FAILURE;
-    }
-    if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(principal)))) 
+    nsCOMPtr<nsIScriptGlobalObjectData> globalData = do_QueryInterface(global, &rv);
+    if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
-    principal->GetJSPrincipals(&jsprin);
+    rv = globalData->GetPrincipal(getter_AddRefs(principalCOMPtr));
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+    principalCOMPtr->GetJSPrincipals(&jsprin);
   }
+  // From here on, we must JSPRINCIPALS_DROP(jsprin) before returning...
+
+  PRBool ok = PR_FALSE;
+  nsCOMPtr<nsIScriptSecurityManager> securityManager;
+  rv = GetSecurityManager(getter_AddRefs(securityManager));
+  if (NS_SUCCEEDED(rv))
+    rv = securityManager->CanExecuteScripts(principalCOMPtr, &ok);
+  if (NS_FAILED(rv)) {
+    JSPRINCIPALS_DROP(mContext, jsprin);
+    return NS_ERROR_FAILURE;
+  }
+
+  // Push our JSContext on the current thread's context stack so JS called
+  // from native code via XPConnect uses the right context.  Do this whether
+  // or not the SecurityManager said "ok", in order to simplify control flow
+  // below where we pop before returning.
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+  if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext))) {
+    JSPRINCIPALS_DROP(mContext, jsprin);
+    return NS_ERROR_FAILURE;
+  }
+
+  // The result of evaluation, used only if there were no errors.  This need
+  // not be a GC root currently, provided we run the GC only from the branch
+  // callback or from ScriptEvaluated.  TODO: use JS_Begin/EndRequest to keep
+  // the GC from racing with JS execution on any thread.
   jsval val;
-  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-  if (NS_FAILED(rv)) 
-    return NS_ERROR_FAILURE;
-  PRBool canExecute;
-  if (NS_FAILED(securityManager->CanExecuteScripts(principal, &canExecute)))
-    return NS_ERROR_FAILURE;
-  mRef = 0;
-  mTerminationFunc = nsnull;
-  PRBool ret = PR_FALSE;
-  if (canExecute) {
-    ret = ::JS_EvaluateUCScriptForPrincipals(mContext, 
-                                             (JSObject *)jsObj,
-                                             jsprin,
-                                             (jschar*)aScript.GetUnicode(), 
-                                             aScript.Length(),
-                                             aURL, 
-                                             aLineNo,
-                                             &val);
+
+  if (ok) {
+    JSVersion newVersion;
+
+    // SecurityManager said "ok", but don't execute if aVersion is specified
+    // and unknown.  Do execute with the default version (and avoid thrashing
+    // the context's version) if aVersion is not specified.
+    if (!aVersion ||
+        (newVersion = JS_StringToVersion(aVersion)) != JSVERSION_UNKNOWN) {
+      JSVersion oldVersion;
+
+      if (aVersion)
+        oldVersion = JS_SetVersion(mContext, newVersion);
+      mRef = nsnull;
+      mTerminationFunc = nsnull;
+      ok = ::JS_EvaluateUCScriptForPrincipals(mContext,
+                                              (JSObject *)jsObj,
+                                              jsprin,
+                                              (jschar*)aScript.GetUnicode(),
+                                              aScript.Length(),
+                                              aURL,
+                                              aLineNo,
+                                              &val);
+      if (aVersion)
+        JS_SetVersion(mContext, oldVersion);
+    }
   }
+
+  // Whew!  Finally done with these manually ref-counted things.
   JSPRINCIPALS_DROP(mContext, jsprin);
-  if (ret) {
+
+  // If all went well, convert val to a string (XXXbe unless undefined?).
+  if (ok) {
     *aIsUndefined = JSVAL_IS_VOID(val);
-    JSString* jsstring = JS_ValueToString(mContext, val);   
+    JSString* jsstring = JS_ValueToString(mContext, val);
     aRetValue.SetString(JS_GetStringChars(jsstring));
   }
   else {
     *aIsUndefined = PR_TRUE;
     aRetValue.Truncate();
   }
-	
+
   ScriptEvaluated();
-  
-  if (NS_FAILED(stack->Pop(nsnull))) 
+
+  // Pop here, after JS_ValueToString and any other possible evaluation.
+  if (NS_FAILED(stack->Pop(nsnull)))
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+const char *gEventArgv[] = {"event"};
+
+NS_IMETHODIMP
+nsJSContext::CompileFunction(void *aObj, nsIAtom *aName, const nsString& aBody)
+{
+  JSPrincipals *jsprin = nsnull;
+
+  nsCOMPtr<nsIScriptGlobalObject> global = getter_AddRefs(GetGlobalObject());
+  if (global) {
+    // XXXbe why the two-step QI? speed up via a new GetGlobalObjectData func?
+    nsCOMPtr<nsIScriptGlobalObjectData> globalData = do_QueryInterface(global);
+    if (globalData) {
+      nsCOMPtr<nsIPrincipal> prin;
+      if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(prin))))
+        return NS_ERROR_FAILURE;
+      prin->GetJSPrincipals(&jsprin);
+    }
+  }
+
+  // optimized to avoid ns*Str*.h explicit/implicit copying and malloc'ing
+  // even nsCAutoString may call an Append that copy-constructs an nsStr from
+  // a const PRUnichar*
+  const PRUnichar *name;
+  aName->GetUnicode(&name);
+  char c, charName[64];
+  int i = 0;
+
+  do {
+    NS_ASSERTION(name[i] < 128, "non-ASCII DOM function name");
+    c = char(name[i]);
+    NS_ASSERTION(c == '\0' || isalpha(c), "non-alphabetic DOM function name");
+
+    NS_ASSERTION(i < sizeof charName, "overlong DOM function name");
+    charName[i++] = tolower(c);
+  } while (c != '\0');
+
+  JSBool ok = JS_CompileUCFunctionForPrincipals(mContext,
+                                                (JSObject*)aObj, jsprin,
+                                                charName, 1, gEventArgv,
+                                                (jschar*)aBody.GetUnicode(),
+                                                aBody.Length(),
+                                                //XXXbe filename, lineno:
+                                                nsnull, 0)
+              != 0;
+
+  if (jsprin)
+    JSPRINCIPALS_DROP(mContext, jsprin);
+  return ok ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsJSContext::CallFunction(void *aObj, void *aFunction, PRUint32 argc,
+                          void *argv, PRBool *aBoolResult)
+{
+  // This one's a lot easier than EvaluateString because we don't have to
+  // hassle with principals: they're already compiled into the JS function.
+  nsresult rv;
+  nsCOMPtr<nsIScriptSecurityManager> securityManager;
+  rv = GetSecurityManager(getter_AddRefs(securityManager));
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  PRBool ok;
+  rv = securityManager->CanExecuteFunction((JSFunction *)aFunction, &ok);
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+  if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext)))
+    return NS_ERROR_FAILURE;
+
+  mRef = nsnull;
+  mTerminationFunc = nsnull;
+
+  jsval val;
+  if (ok) {
+    ok = JS_CallFunction(mContext, (JSObject *)aObj, (JSFunction *)aFunction,
+                         argc, (jsval *)argv, &val);
+  }
+  *aBoolResult = ok
+                 ? !JSVAL_IS_BOOLEAN(val) || JSVAL_TO_BOOLEAN(val)
+                 : JS_TRUE;
+
+  ScriptEvaluated();
+
+  if (NS_FAILED(stack->Pop(nsnull)))
     return NS_ERROR_FAILURE;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJSContext::CallFunction(void *aObj, void *aFunction, PRUint32 argc, 
-                          void *argv, PRBool *aBoolResult)
+nsJSContext::SetDefaultLanguageVersion(const char* aVersion)
 {
-  nsresult rv;
-  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-  if (NS_FAILED(rv)) 
-    return NS_ERROR_FAILURE;
-  PRBool canExecute;
-  if (NS_FAILED(securityManager->CanExecuteFunction((JSFunction *)aFunction, 
-                                                    &canExecute)))
-    return NS_ERROR_FAILURE;
-
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
-  if (NS_FAILED(rv)) 
-    return NS_ERROR_FAILURE;
-  if (NS_FAILED(stack->Push(mContext))) 
-    return NS_ERROR_FAILURE;
-
-  mRef = 0;
-  mTerminationFunc = nsnull;
-
-  jsval val;
-  PRBool ret = canExecute &&
-               JS_CallFunction(mContext, (JSObject *)aObj, 
-                               (JSFunction *)aFunction, argc, 
-                               (jsval *)argv, &val);
-  *aBoolResult = ret 
-                 ? !JSVAL_IS_BOOLEAN(val) || JSVAL_TO_BOOLEAN(val) 
-                 : JS_TRUE;
-	
-  ScriptEvaluated();
-  
-  if (NS_FAILED(stack->Pop(nsnull))) 
-    return NS_ERROR_FAILURE;
-
+  (void) JS_SetVersion(mContext, JS_StringToVersion(aVersion));
   return NS_OK;
 }
-
 
 NS_IMETHODIMP_(nsIScriptGlobalObject*)
 nsJSContext::GetGlobalObject()
 {
-	JSObject *global = JS_GetGlobalObject(mContext);
-	nsIScriptGlobalObject *script_global = nsnull;
-	
-	if (nsnull != global) {
-		nsISupports* sup = (nsISupports *)JS_GetPrivate(mContext, global);
-		if (nsnull != sup) {
-			sup->QueryInterface(kIScriptGlobalObjectIID, (void**) &script_global);
-		}
-		return script_global;
-	}
-	else {
-		return nsnull;
-	}
+  JSObject *global = JS_GetGlobalObject(mContext);
+  nsIScriptGlobalObject *script_global = nsnull;
+
+  if (nsnull != global) {
+    nsISupports* sup = (nsISupports *)JS_GetPrivate(mContext, global);
+    if (nsnull != sup) {
+      sup->QueryInterface(NS_GET_IID(nsIScriptGlobalObject), (void**) &script_global);
+    }
+    return script_global;
+  }
+  return nsnull;
 }
 
 NS_IMETHODIMP_(void*)
 nsJSContext::GetNativeContext()
 {
-	return (void *)mContext;
+  return (void *)mContext;
 }
 
 
 NS_IMETHODIMP
 nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 {
-	nsIScriptObjectOwner *owner;
-	JSObject *global;
-	nsresult res = aGlobalObject->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);
-	mIsInitialized = PR_FALSE;
-	
-	if (NS_OK == res) {
-		res = owner->GetScriptObject(this, (void **)&global);
-		
-		// init standard classes
-		if ((NS_OK == res) && ::JS_InitStandardClasses(mContext, global)) {
-			JS_SetGlobalObject(mContext, global);
-			res = InitClasses(); // this will complete the global object initialization
-		}
-		
-		NS_RELEASE(owner);
-		
-		if (NS_OK == res) {
-			::JS_SetErrorReporter(mContext, NS_ScriptErrorReporter); 
-		}
-	}
-	
-	return res;
+  if (!mContext)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv;
+  nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(aGlobalObject, &rv);
+  JSObject *global;
+  mIsInitialized = PR_FALSE;
+
+  if (NS_SUCCEEDED(rv)) {
+    rv = owner->GetScriptObject(this, (void **)&global);
+
+    // init standard classes
+    if (NS_SUCCEEDED(rv) && ::JS_InitStandardClasses(mContext, global)) {
+      JS_SetGlobalObject(mContext, global);
+      rv = InitClasses(); // this will complete the global object initialization
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+      ::JS_SetErrorReporter(mContext, NS_ScriptErrorReporter);
+    }
+  }
+
+  return rv;
 }
 
 nsresult
 nsJSContext::InitializeExternalClasses()
 {
-	nsresult result = NS_OK;
-	
-	nsIScriptNameSetRegistry* registry;
-	result = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
-		kIScriptNameSetRegistryIID,
-		(nsISupports **)&registry);
-	if (NS_OK == result) {
-		result = registry->InitializeClasses(this);
-		nsServiceManager::ReleaseService(kCScriptNameSetRegistryCID,
-			registry);
-	}
-	
-	return result;
+  nsresult rv;
+  NS_WITH_SERVICE(nsIScriptNameSetRegistry, registry, kCScriptNameSetRegistryCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = registry->InitializeClasses(this);
+  }
+  return rv;
 }
 
 nsresult
 nsJSContext::InitializeLiveConnectClasses()
 {
 #if defined(OJI)
-	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIJVMManager, jvmManager, nsIJVMManager::GetCID(), &rv);
-	if (rv == NS_OK && jvmManager != nsnull) {
-		PRBool javaEnabled = PR_FALSE;
-		if (NS_OK == jvmManager->IsJavaEnabled(&javaEnabled) && javaEnabled) {
-			nsILiveConnectManager* liveConnectManager = nsnull;
-			if (NS_OK == jvmManager->QueryInterface(nsILiveConnectManager::GetIID(),
-				(void**)&liveConnectManager)) {
-				rv = liveConnectManager->InitLiveConnectClasses(mContext, JS_GetGlobalObject(mContext));
-				NS_RELEASE(liveConnectManager);
-			}
-		}
-	}
+  nsresult rv = NS_OK;
+  NS_WITH_SERVICE(nsIJVMManager, jvmManager, nsIJVMManager::GetCID(), &rv);
+  if (NS_SUCCEEDED(rv) && jvmManager != nsnull) {
+    PRBool javaEnabled = PR_FALSE;
+    if (NS_SUCCEEDED(jvmManager->IsJavaEnabled(&javaEnabled)) && javaEnabled) {
+      nsCOMPtr<nsILiveConnectManager> liveConnectManager = do_QueryInterface(jvmManager);
+      if (liveConnectManager) {
+        rv = liveConnectManager->InitLiveConnectClasses(mContext, JS_GetGlobalObject(mContext));
+      }
+    }
+  }
 #endif
-	
-	// return all is well until things are stable.
-	return NS_OK;
+
+  // return all is well until things are stable.
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJSContext::InitClasses()
 {
-	nsresult res = NS_ERROR_FAILURE;
-	nsIScriptGlobalObject *global = GetGlobalObject();
-	
-	if (NS_OK == NS_InitWindowClass(this, global) &&
-		NS_OK == NS_InitNodeClass(this, nsnull) &&
-		NS_OK == NS_InitElementClass(this, nsnull) &&
-		NS_OK == NS_InitDocumentClass(this, nsnull) &&
-		NS_OK == NS_InitTextClass(this, nsnull) &&
-		NS_OK == NS_InitAttrClass(this, nsnull) &&
-		NS_OK == NS_InitNamedNodeMapClass(this, nsnull) &&
-		NS_OK == NS_InitNodeListClass(this, nsnull) &&
-		NS_OK == InitializeExternalClasses() && 
-		NS_OK == InitializeLiveConnectClasses() &&
-		// XXX Temporarily here. These shouldn't be hardcoded.
-		NS_OK == NS_InitHTMLImageElementClass(this, nsnull) &&
-		NS_OK == NS_InitHTMLOptionElementClass(this, nsnull)) {
-		res = NS_OK;
-	}
-	
-	// Hook up XPConnect
-	{
-		nsIXPConnect* xpc;
-		res = nsServiceManager::GetService(kXPConnectCID, NS_GET_IID(nsIXPConnect), (nsISupports**) &xpc);
-		//NS_ASSERTION(NS_SUCCEEDED(res), "unable to get xpconnect");
-		if (NS_SUCCEEDED(res)) {
-			res = xpc->AddNewComponentsObject(mContext, JS_GetGlobalObject(mContext));
-			NS_ASSERTION(NS_SUCCEEDED(res), "unable to add Components object");
-			nsServiceManager::ReleaseService(kXPConnectCID, xpc);
-		}
-		else {
-			// silently fail for now
-			res = NS_OK;
-		}
-	}
-	mIsInitialized = PR_TRUE;
-	NS_RELEASE(global);
-	return res;
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIScriptGlobalObject> global = dont_AddRef(GetGlobalObject());
+
+  if (NS_OK == NS_InitWindowClass(this, global) &&
+      NS_OK == NS_InitNodeClass(this, nsnull) &&
+      NS_OK == NS_InitElementClass(this, nsnull) &&
+      NS_OK == NS_InitDocumentClass(this, nsnull) &&
+      NS_OK == NS_InitTextClass(this, nsnull) &&
+      NS_OK == NS_InitAttrClass(this, nsnull) &&
+      NS_OK == NS_InitNamedNodeMapClass(this, nsnull) &&
+      NS_OK == NS_InitNodeListClass(this, nsnull) &&
+      NS_OK == InitializeExternalClasses() &&
+      NS_OK == InitializeLiveConnectClasses() &&
+      // XXX Temporarily here. These shouldn't be hardcoded.
+      NS_OK == NS_InitHTMLImageElementClass(this, nsnull) &&
+      NS_OK == NS_InitHTMLOptionElementClass(this, nsnull)) {
+    rv = NS_OK;
+  }
+
+  // Hook up XPConnect
+  {
+    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = xpc->AddNewComponentsObject(mContext, JS_GetGlobalObject(mContext));
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add Components object");
+    }
+    else {
+      // silently fail for now
+      rv = NS_OK;
+    }
+  }
+  mIsInitialized = PR_TRUE;
+  return rv;
 }
 
-NS_IMETHODIMP     
+NS_IMETHODIMP
 nsJSContext::IsContextInitialized()
 {
-	return (mIsInitialized) ? NS_OK : NS_COMFALSE;
+  return (mIsInitialized) ? NS_OK : NS_COMFALSE;
 }
 
 NS_IMETHODIMP
 nsJSContext::AddNamedReference(void *aSlot, void *aScriptObject, const char *aName)
 {
-	return (::JS_AddNamedRoot(mContext, aSlot, aName)) ? NS_OK : NS_ERROR_FAILURE;
+  return (::JS_AddNamedRoot(mContext, aSlot, aName)) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsJSContext::RemoveReference(void *aSlot, void *aScriptObject)
 {
-	return (::JS_RemoveRoot(mContext, aSlot)) ? NS_OK : NS_ERROR_FAILURE;
+  return (::JS_RemoveRoot(mContext, aSlot)) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsJSContext::GC()
 {
-	JS_GC(mContext);
-	return NS_OK;
+  JS_GC(mContext);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -413,64 +497,57 @@ nsJSContext::ScriptEvaluated(void)
 {
   if (mTerminationFunc) {
     (*mTerminationFunc)(mRef);
-    mRef = 0;
+    mRef = nsnull;
     mTerminationFunc = nsnull;
   }
 
-	mNumEvaluations++;
-	
-	if (mNumEvaluations > 20) {
-		mNumEvaluations = 0;
-		GC();
-	}
-	
-	return NS_OK;
+  mNumEvaluations++;
+
+  if (mNumEvaluations > 20) {
+    mNumEvaluations = 0;
+    GC();
+  }
+
+  return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsJSContext::GetNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr)
 {
-	nsresult result = NS_OK;
-	
-	if (nsnull == mNameSpaceManager) {
-		result = NS_NewScriptNameSpaceManager(&mNameSpaceManager);
-		if (NS_OK == result) {
-			nsIScriptNameSetRegistry* registry;
-			result = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
-				kIScriptNameSetRegistryIID,
-				(nsISupports **)&registry);
-			if (NS_OK == result) {
-				result = registry->PopulateNameSpace(this);
-				nsServiceManager::ReleaseService(kCScriptNameSetRegistryCID,
-					registry);
-			}
-		}
-	}
-	
-	*aInstancePtr = mNameSpaceManager;
-	NS_ADDREF(mNameSpaceManager);
-	
-	return result;
+  nsresult rv = NS_OK;
+
+  if (!mNameSpaceManager.get()) {
+    rv = NS_NewScriptNameSpaceManager(getter_AddRefs(mNameSpaceManager));
+    if (NS_SUCCEEDED(rv)) {
+      // XXXbe used progid rather than CID?
+      NS_WITH_SERVICE(nsIScriptNameSetRegistry, registry, kCScriptNameSetRegistryCID, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        rv = registry->PopulateNameSpace(this);
+      }
+    }
+  }
+
+  *aInstancePtr = mNameSpaceManager;
+  NS_ADDREF(*aInstancePtr);
+  return rv;
 }
 
 NS_IMETHODIMP
 nsJSContext::GetSecurityManager(nsIScriptSecurityManager **aInstancePtr)
 {
-    if (!mSecurityManager) {
-        nsresult ret;
-        NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                        NS_SCRIPTSECURITYMANAGER_PROGID, &ret);
-        if (NS_FAILED(ret)) 
-            return NS_ERROR_FAILURE;
-        mSecurityManager = securityManager;
-        NS_ADDREF(mSecurityManager);
-    }
-    *aInstancePtr = mSecurityManager;
-    NS_ADDREF(*aInstancePtr);
-    return NS_OK;
+  if (!mSecurityManager) {
+    nsresult rv = nsServiceManager::GetService(kScriptSecurityManagerProgID,
+                                               NS_GET_IID(nsIScriptSecurityManager),
+                                               (nsISupports**)&mSecurityManager);
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+  }
+  *aInstancePtr = mSecurityManager;
+  NS_ADDREF(*aInstancePtr);
+  return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsJSContext::SetOwner(nsIScriptContextOwner* owner)
 {
   // The owner should not be addrefed!! We'll be told
@@ -480,16 +557,16 @@ nsJSContext::SetOwner(nsIScriptContextOwner* owner)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsJSContext::GetOwner(nsIScriptContextOwner** owner)
 {
   *owner = mOwner;
-  NS_IF_ADDREF(mOwner);
+  NS_IF_ADDREF(*owner);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsJSContext::SetTerminationFunction(nsScriptTerminationFunc aFunc,
                                     nsISupports* aRef)
 {
@@ -504,15 +581,15 @@ nsJSEnvironment *nsJSEnvironment::sTheEnvironment = nsnull;
 // Class to manage destruction of the singleton
 // JSEnvironment
 struct JSEnvironmentInit {
-	JSEnvironmentInit() {
-	}
-	
-	~JSEnvironmentInit() {
-		if (nsJSEnvironment::sTheEnvironment) {
-			delete nsJSEnvironment::sTheEnvironment;
-			nsJSEnvironment::sTheEnvironment = nsnull;
-		}
-	}
+  JSEnvironmentInit() {
+  }
+
+  ~JSEnvironmentInit() {
+    if (nsJSEnvironment::sTheEnvironment) {
+      delete nsJSEnvironment::sTheEnvironment;
+      nsJSEnvironment::sTheEnvironment = nsnull;
+    }
+  }
 };
 
 #ifndef XP_MAC
@@ -522,101 +599,103 @@ static JSEnvironmentInit initJSEnvironment;
 nsJSEnvironment *
 nsJSEnvironment::GetScriptingEnvironment()
 {
-	if (nsnull == sTheEnvironment) {
-		sTheEnvironment = new nsJSEnvironment();
-	}
-	return sTheEnvironment;
+  if (nsnull == sTheEnvironment) {
+    sTheEnvironment = new nsJSEnvironment();
+  }
+  return sTheEnvironment;
 }
+
+const char kJSRuntimeServiceProgID[] = "nsJSRuntimeService";
 
 nsJSEnvironment::nsJSEnvironment()
 {
-  nsresult result;
-
-  NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &result);
+  mRuntimeService = nsnull;
+  nsresult rv = nsServiceManager::GetService(kJSRuntimeServiceProgID,
+                                             NS_GET_IID(nsIJSRuntimeService),
+                                             (nsISupports**)&mRuntimeService);
   // get the JSRuntime from the runtime svc, if possible
-  if (NS_FAILED(result))
+  if (NS_FAILED(rv))
     return;                     // XXX swallow error! need Init()?
-  result = rtsvc->GetRuntime(&mRuntime);
-  if (NS_FAILED(result))
+  rv = mRuntimeService->GetRuntime(&mRuntime);
+  if (NS_FAILED(rv))
     return;                     // XXX swallow error! need Init()?
-  	
-#if defined(OJI)
-	// Initialize LiveConnect.
-	nsILiveConnectManager* manager = NULL;
-	result = nsServiceManager::GetService(nsIJVMManager::GetCID(),
-		nsILiveConnectManager::GetIID(),
-		(nsISupports **)&manager);
-	
-	// Should the JVM manager perhaps define methods for starting up LiveConnect?
-	if (result == NS_OK && manager != NULL) {
-		PRBool started = PR_FALSE;
-		result = manager->StartupLiveConnect(mRuntime, started);
-		result = nsServiceManager::ReleaseService(nsIJVMManager::GetCID(), manager);
-	}
-#endif
 
+#if defined(OJI)
+  // Initialize LiveConnect.  XXXbe uses GetCID rather than progid
+  NS_WITH_SERVICE(nsILiveConnectManager, manager,
+                  nsIJVMManager::GetCID(), &rv);
+
+  // Should the JVM manager perhaps define methods for starting up LiveConnect?
+  if (NS_SUCCEEDED(rv) && manager != nsnull) {
+    PRBool started = PR_FALSE;
+    rv = manager->StartupLiveConnect(mRuntime, started);
+  }
+#endif
 }
 
 nsJSEnvironment::~nsJSEnvironment()
 {
+  if (mRuntimeService)
+    nsServiceManager::ReleaseService(kJSRuntimeServiceProgID, mRuntimeService);
 }
 
 nsIScriptContext* nsJSEnvironment::GetNewContext()
 {
-	nsIScriptContext *context;
-	context = new nsJSContext(mRuntime);
-	NS_ADDREF(context);
-	return context;
+  nsIScriptContext *context;
+  context = new nsJSContext(mRuntime);
+  NS_ADDREF(context);
+  return context;
 }
 
 #define XPC_HOOK_VALUE (nsIXPCSecurityManager::HOOK_CREATE_WRAPPER  |   \
                         nsIXPCSecurityManager::HOOK_CREATE_INSTANCE |   \
                         nsIXPCSecurityManager::HOOK_GET_SERVICE)
 
-extern "C" NS_DOM nsresult NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal, 
+extern "C" NS_DOM nsresult NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal,
                                                   nsIScriptContext **aContext)
 {
-	nsresult rv = NS_OK;
-	nsJSEnvironment *environment = nsJSEnvironment::GetScriptingEnvironment();
-	*aContext = environment->GetNewContext();
-	if (! *aContext) return NS_ERROR_OUT_OF_MEMORY; // XXX
-	// Hook up XPConnect
-	nsIXPConnect* xpc;
-	rv = nsServiceManager::GetService(kXPConnectCID, nsIXPConnect::GetIID(), (nsISupports**) &xpc);
-	//NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get xpconnect");
-	if (NS_SUCCEEDED(rv)) {
-		nsIScriptObjectOwner* owner;
-		rv = aGlobal->QueryInterface(nsIScriptObjectOwner::GetIID(), (void**) &owner);
-		if (NS_SUCCEEDED(rv)) {
-			JSObject* global;
-			rv = owner->GetScriptObject(*aContext, (void**) &global);
-			if (NS_SUCCEEDED(rv)) {
-				JSContext *cx = (JSContext*) (*aContext)->GetNativeContext();
-				rv = xpc->InitJSContext(cx, global, JS_FALSE);
-				//NS_ASSERTION(NS_SUCCEEDED(rv), "xpconnect unable to init jscontext");
-				nsIScriptSecurityManager *mgr=NULL;
-				nsIXPCSecurityManager *xpcSecurityManager=NULL;
-				if (NS_SUCCEEDED(rv)) 
-					rv=(*aContext)->GetSecurityManager(&mgr);
-				if (NS_SUCCEEDED(rv))
-					rv = mgr->QueryInterface(nsIXPCSecurityManager::GetIID(), (void**)&xpcSecurityManager);
-	        // Bind the script context and the global object
-	        (*aContext)->InitContext(aGlobal);
-	         aGlobal->SetContext(*aContext);
-				if (NS_SUCCEEDED(rv))
-					xpc->SetSecurityManagerForJSContext(cx, xpcSecurityManager, XPC_HOOK_VALUE);
-			}
-			NS_RELEASE(owner);
-		}
-		nsServiceManager::ReleaseService(kXPConnectCID, xpc);
-	}
-	else {
-	    (*aContext)->InitContext(aGlobal);
-	    aGlobal->SetContext(*aContext);
-        rv = NS_OK;
-	}
-	// XXX silently fail for now
-	//  return rv;
-	return NS_OK;    
+  nsJSEnvironment *environment = nsJSEnvironment::GetScriptingEnvironment();
+  if (!environment)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsIScriptContext *scriptContext = environment->GetNewContext();
+  if (!scriptContext)
+    return NS_ERROR_OUT_OF_MEMORY;
+  *aContext = scriptContext;
+
+  // Hook up XPConnect
+  nsresult rv;
+  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(aGlobal, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      JSObject* global;
+      rv = owner->GetScriptObject(scriptContext, (void**) &global);
+      if (NS_SUCCEEDED(rv)) {
+        // Tell XPConnect about this context
+        JSContext *cx = (JSContext*) scriptContext->GetNativeContext();
+        rv = xpc->InitJSContext(cx, global, JS_FALSE);
+        //NS_ASSERTION(NS_SUCCEEDED(rv), "xpconnect unable to init jscontext");
+
+        // If that succeeded, get a security manager and install it
+        if (NS_SUCCEEDED(rv)) {
+          nsCOMPtr<nsIScriptSecurityManager> mgr;
+          rv = scriptContext->GetSecurityManager(getter_AddRefs(mgr));
+          if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIXPCSecurityManager> xpcSecurityManager = do_QueryInterface(mgr, &rv);
+            if (NS_SUCCEEDED(rv))
+              xpc->SetSecurityManagerForJSContext(cx, xpcSecurityManager, XPC_HOOK_VALUE);
+          }
+        }
+      }
+    }
+  }
+
+  // Bind the script context and the global object
+  scriptContext->InitContext(aGlobal);
+  aGlobal->SetContext(scriptContext);
+
+  // XXX suppress XPConnect failures for now?
+  return NS_OK;
 }
 

@@ -280,7 +280,7 @@ NS_IMETHODIMP nsPref::StartUp()
         /* MLM - need a global object for set version call now. */
         JS_SetGlobalObject(gMochaContext, gGlobalConfigObject);
 
-        JS_SetVersion(gMochaContext, JSVERSION_1_2);
+        JS_SetVersion(gMochaContext, JSVERSION_1_5);
 
         if (!JS_InitStandardClasses(gMochaContext, 
                         gGlobalConfigObject))

@@ -33,6 +33,7 @@
 #include "nsHTMLTokens.h"  
 #include "nsHTMLEntities.h" 
 #include "nsCRT.h"
+#include "jsapi.h" // for JSVERSION_* and JS_VersionToString
 #include "prtime.h"
 #include "prlog.h"
 
@@ -263,7 +264,9 @@ public:
   PRBool   PreEvaluateScript();
   void     PostEvaluateScript(PRBool aBodyPresent);
   nsresult EvaluateScript(nsString& aScript,
-                          PRInt32 aLineNo);
+                          PRInt32 aLineNo,
+                          const char* aVersion);
+  const char* mScriptLanguageVersion;
 
   void UpdateAllContexts();
   void NotifyAppend(nsIContent* aContent, 
@@ -3113,10 +3116,12 @@ static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aPa
   if (-1 != semiIndex) {
     aValue.Left(aType, semiIndex);
     aValue.Right(aParams, (aValue.Length() - semiIndex) - 1);
+    aParams.StripWhitespace();
   }
   else {
     aType = aValue;
   }
+  aType.StripWhitespace();
 }
 
 nsresult
@@ -3415,28 +3420,34 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 // Returns PR_TRUE if the language name is a version of JavaScript and
 // PR_FALSE otherwise
 static PRBool
-IsJavaScriptLanguage(const nsString& aName)
+IsJavaScriptLanguage(const nsString& aName, const char* *aVersion)
 {
-  if (aName.EqualsIgnoreCase("JavaScript") || 
-      aName.EqualsIgnoreCase("LiveScript") || 
-      aName.EqualsIgnoreCase("Mocha")) { 
-    return PR_TRUE;
-  } 
-  else if (aName.EqualsIgnoreCase("JavaScript1.1")) { 
-    return PR_TRUE;
-  } 
-  else if (aName.EqualsIgnoreCase("JavaScript1.2")) { 
-    return PR_TRUE;
-  } 
-  else if (aName.EqualsIgnoreCase("JavaScript1.3")) { 
-    return PR_TRUE;
-  } 
-  else if (aName.EqualsIgnoreCase("JavaScript1.4")) { 
-    return PR_TRUE;
-  } 
-  else { 
+  JSVersion version = JSVERSION_UNKNOWN;
+
+  if (aName.EqualsIgnoreCase("JavaScript") ||
+      aName.EqualsIgnoreCase("LiveScript") ||
+      aName.EqualsIgnoreCase("Mocha")) {
+    version = JSVERSION_DEFAULT;
+  }
+  else if (aName.EqualsIgnoreCase("JavaScript1.1")) {
+    version = JSVERSION_1_1;
+  }
+  else if (aName.EqualsIgnoreCase("JavaScript1.2")) {
+    version = JSVERSION_1_2;
+  }
+  else if (aName.EqualsIgnoreCase("JavaScript1.3")) {
+    version = JSVERSION_1_3;
+  }
+  else if (aName.EqualsIgnoreCase("JavaScript1.4")) {
+    version = JSVERSION_1_4;
+  }
+  else if (aName.EqualsIgnoreCase("JavaScript1.5")) {
+    version = JSVERSION_1_5;
+  }
+  if (version == JSVERSION_UNKNOWN)
     return PR_FALSE;
-  } 
+  *aVersion = JS_VersionToString(version);
+  return PR_TRUE;
 }
 
 #ifdef DEBUG
@@ -3525,7 +3536,8 @@ HTMLContentSink::IsInScript()
 
 nsresult
 HTMLContentSink::EvaluateScript(nsString& aScript,
-                                PRInt32 aLineNo)
+                                PRInt32 aLineNo,
+                                const char* aVersion)
 {
   nsresult rv = NS_OK;
 
@@ -3555,7 +3567,7 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
   
       PRBool isUndefined;
       context->EvaluateString(aScript, nsnull, principal, url, 
-                              aLineNo, ret, &isUndefined);
+                              aLineNo, aVersion, ret, &isUndefined);
       
       if (docURL) {
         NS_RELEASE(docURL);
@@ -3579,11 +3591,10 @@ nsDoneLoadingScript(nsIUnicharStreamLoader* aLoader,
   HTMLContentSink* sink = (HTMLContentSink*)aRef;
 
   if (NS_OK == aStatus) {
-
     PRBool bodyPresent = sink->PreEvaluateScript();
 
     // XXX We have no way of indicating failure. Silently fail?
-    sink->EvaluateScript(aData, 0);
+    sink->EvaluateScript(aData, 0, sink->mScriptLanguageVersion);
 
     sink->PostEvaluateScript(bodyPresent);
   }
@@ -3602,7 +3613,8 @@ nsresult
 HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
-  PRBool   isJavaScript = PR_TRUE;
+  PRBool isJavaScript = PR_TRUE;
+  const char* jsVersionString = nsnull;
   PRInt32 i, ac = aNode.GetAttributeCount();
 
   // Look for SRC attribute and look for a LANGUAGE attribute
@@ -3621,14 +3633,31 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       nsAutoString  params;
       SplitMimeType(type, mimeType, params);
 
-      isJavaScript = mimeType.EqualsIgnoreCase("text/javascript") || 
-        mimeType.EqualsIgnoreCase("application/x-javascript");
+      isJavaScript = mimeType.EqualsIgnoreCase("application/x-javascript") || 
+                     mimeType.EqualsIgnoreCase("text/javascript");
+      if (isJavaScript) {
+        JSVersion jsVersion = JSVERSION_DEFAULT;
+        if (params.Find("version=", PR_TRUE) == 0) {
+          if (params.Length() != 11 || params[8] != '1' || params[9] != '.')
+            jsVersion = JSVERSION_UNKNOWN;
+          else switch (params[10]) {
+            case '0': jsVersion = JSVERSION_1_0; break;
+            case '1': jsVersion = JSVERSION_1_1; break;
+            case '2': jsVersion = JSVERSION_1_2; break;
+            case '3': jsVersion = JSVERSION_1_3; break;
+            case '4': jsVersion = JSVERSION_1_4; break;
+            case '5': jsVersion = JSVERSION_1_5; break;
+            default:  jsVersion = JSVERSION_UNKNOWN;
+          }
+        }
+        jsVersionString = JS_VersionToString(jsVersion);
+      }
     }
     else if (key.EqualsIgnoreCase("language")) {
       nsAutoString  lang;
        
       GetAttributeValueAt(aNode, i, lang, nsnull);
-      isJavaScript = IsJavaScriptLanguage(lang);
+      isJavaScript = IsJavaScriptLanguage(lang, &jsVersionString);
     }
   }
 
@@ -3695,6 +3724,8 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   // Don't process scripts that aren't JavaScript and don't process
   // scripts that are inside iframes
   if (isJavaScript && !mNumOpenIFRAMES) {
+    mScriptLanguageVersion = jsVersionString;
+
     // If there is a SRC attribute...
     if (src.Length() > 0) {
       // Use the SRC attribute value to load the URL
@@ -3729,7 +3760,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 
       PRUint32 lineNo = (PRUint32)aNode.GetSourceLineNumber();
 
-      EvaluateScript(script, lineNo);
+      EvaluateScript(script, lineNo, jsVersionString);
 
       PostEvaluateScript(bodyPresent);
 

@@ -73,22 +73,10 @@ nsJSUtils::NameAndFormatForNSResult(nsresult rv,
 }
 
 NS_EXPORT JSBool
-nsJSUtils::nsReportError(JSContext* aContext, 
-                         nsresult aResult,
-                         const char* aMessage)
+nsJSUtils::nsGetCallingLocation(JSContext* aContext,
+                                const char* *aFilename,
+                                PRUint32 *aLineno)
 {
-  const char* name = nsnull;
-  const char* format = nsnull;
-  char* location = nsnull;
-
-  // Get the name and message
-  if (aMessage) {
-    format = aMessage;
-  }
-  else {
-    NameAndFormatForNSResult(aResult, &name, &format);
-  }
-
   // Get the current filename and line number
   JSStackFrame* frame = nsnull;
   JSScript* script = nsnull;
@@ -102,14 +90,40 @@ nsJSUtils::nsReportError(JSContext* aContext,
   if (script) {
     const char* filename = JS_GetScriptFilename(aContext, script);
     if (filename) {
-      PRUint32 lineNo = 0;
+      PRUint32 lineno = 0;
       jsbytecode* bytecode = JS_GetFramePC(aContext, frame);
       if (bytecode) {
-        lineNo = JS_PCToLineNumber(aContext, script, bytecode);
+        lineno = JS_PCToLineNumber(aContext, script, bytecode);
       }
-      location = PR_smprintf("%s Line: %d", filename, lineNo);
+      *aFilename = filename;
+      *aLineno = lineno;
+      return JS_TRUE;
     }
   }
+
+  return JS_FALSE;
+}
+
+NS_EXPORT JSBool
+nsJSUtils::nsReportError(JSContext* aContext, 
+                         nsresult aResult,
+                         const char* aMessage)
+{
+  const char* name = nsnull;
+  const char* format = nsnull;
+
+  // Get the name and message
+  if (!aMessage)
+    NameAndFormatForNSResult(aResult, &name, &format);
+  else
+    format = aMessage;
+
+  const char* filename;
+  PRUint32 lineno;
+  char* location = nsnull;
+
+  if (nsJSUtils::nsGetCallingLocation(aContext, &filename, &lineno))
+    location = PR_smprintf("%s Line: %d", filename, lineno);
   
   nsCOMPtr<nsIDOMDOMException> exc;
   nsresult rv = NS_NewDOMException(getter_AddRefs(exc), 

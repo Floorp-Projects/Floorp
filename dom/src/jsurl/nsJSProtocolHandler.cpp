@@ -50,14 +50,13 @@ static NS_DEFINE_CID(kJSProtocolHandlerCID, NS_JSPROTOCOLHANDLER_CID);
 /* nsEvaluateStringProxy                                                   */
 /* This private class will allow us to evaluate js on another thread       */
 /***************************************************************************/
-class nsEvaluateStringProxy : public nsIEvaluateStringProxy
-{
-    public:
-        NS_DECL_ISUPPORTS
-        NS_DECL_NSIEVALUATESTRINGPROXY
-        
-        nsEvaluateStringProxy();
-        virtual ~nsEvaluateStringProxy();
+class nsEvaluateStringProxy : public nsIEvaluateStringProxy {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIEVALUATESTRINGPROXY
+
+    nsEvaluateStringProxy();
+    virtual ~nsEvaluateStringProxy();
 };
 
 
@@ -73,28 +72,29 @@ nsEvaluateStringProxy::~nsEvaluateStringProxy()
 
 NS_IMPL_ISUPPORTS1(nsEvaluateStringProxy, nsIEvaluateStringProxy)
 
-NS_IMETHODIMP 
-nsEvaluateStringProxy::EvaluateString(nsIScriptContext *scriptContext, 
-                                      const char *script, 
-                                      void * aObj, 
-                                      nsIPrincipal *principal, 
-                                      const char *aURL, 
-                                      PRInt32 aLineNo, 
-                                      char **aRetValue, 
+NS_IMETHODIMP
+nsEvaluateStringProxy::EvaluateString(nsIScriptContext *scriptContext,
+                                      const char *script,
+                                      void * aObj,
+                                      nsIPrincipal *principal,
+                                      const char *aURL,
+                                      PRInt32 aLineNo,
+                                      char **aRetValue,
                                       PRBool *aIsUndefined)
 {
     nsString string;
     nsresult rv;
 
-    rv =   scriptContext->EvaluateString( nsString(script), 
-                                          aObj, 
-                                          principal, 
-                                          aURL, 
-                                          aLineNo, 
-                                          string, 
-                                          aIsUndefined);
+    rv =   scriptContext->EvaluateString(nsString(script),
+                                         aObj,
+                                         principal,
+                                         aURL,
+                                         aLineNo,
+                                         nsnull,
+                                         string,
+                                         aIsUndefined);
+    // XXXbe this should not decimate! pass back UCS-2 to necko
     *aRetValue = string.ToNewCString();
-
     return rv;
 }
 
@@ -208,9 +208,9 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
 {
     NS_ENSURE_ARG_POINTER(uri);
     NS_ENSURE_ARG_POINTER(eventSinkGetter);
-    
+
     nsresult rv;
-    
+
     // The event sink must be a script context owner or we fail.
     nsIScriptContextOwner* ownerPtr;
     rv = eventSinkGetter->GetEventSink(verb,
@@ -220,10 +220,10 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
         return rv;
     nsCOMPtr<nsIScriptContextOwner> owner = ownerPtr;
     NS_RELEASE(ownerPtr);
-    
+
     if (!owner)
         return NS_ERROR_FAILURE;
-    
+
     // So far so good: get the script context from its owner.
     nsCOMPtr<nsIScriptContext> scriptContext;
     rv = owner->GetScriptContext(getter_AddRefs(scriptContext));
@@ -235,7 +235,7 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
     if (NS_FAILED(rv))
         return NS_ERROR_FAILURE;
-    
+
     PRBool hasPrincipal;
     if (NS_FAILED(securityManager->HasSubjectPrincipal(&hasPrincipal)))
         return NS_ERROR_FAILURE;
@@ -260,16 +260,16 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
 
     //TODO Change this to GetSpec and then skip past the javascript:
     // Get the expression:
-    
+
     char* str;
     rv = uri->GetPath(&str);
     if (NS_FAILED(rv))
         return rv;
-    
+
     nsString jsExpr(str);
-    
+
     nsCRT::free(str);
-        
+
     // Finally, we have everything needed to evaluate the expression.
     // We do this by proxying back to the main thread.
 
@@ -277,73 +277,66 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
 
     NS_WITH_SERVICE(nsIProxyObjectManager, proxyObjectManager,
                     nsIProxyObjectManager::GetCID(), &rv);
-        
-    if (NS_FAILED(rv)) 
+
+    if (NS_FAILED(rv))
         return rv;
 
     nsIEvaluateStringProxy* evalProxy = nsnull;
     nsEvaluateStringProxy*  eval      = new nsEvaluateStringProxy();
-        
+
     if (eval == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    
+
     rv = proxyObjectManager->GetProxyObject(nsnull,
                                             nsCOMTypeInfo<nsIEvaluateStringProxy>::GetIID(),
                                             NS_STATIC_CAST(nsISupports*, eval),
                                             PROXY_SYNC | PROXY_ALWAYS,
                                             (void**) &evalProxy);
-        
-    if (NS_FAILED(rv))
-    {
+
+    if (NS_FAILED(rv)) {
         NS_RELEASE(eval);
         return rv;
     }
 
     char* retString;
     char* tempString = jsExpr.ToNewCString();
-    if (!tempString)
-    {
+    if (!tempString) {
         NS_RELEASE(eval);
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    
-    rv = evalProxy->EvaluateString(scriptContext, tempString, nsnull, principal, nsnull, 0, &retString, &isUndefined); 
-    
+
+    rv = evalProxy->EvaluateString(scriptContext, tempString, nsnull, principal, nsnull, 0, &retString, &isUndefined);
+
     Recycle(tempString);
 
     NS_RELEASE(evalProxy);
     NS_RELEASE(eval);
 
-    if (NS_FAILED(rv)) 
-    {
+    if (NS_FAILED(rv)) {
         rv = NS_ERROR_MALFORMED_URI;
         return rv;
     }
-    
-    if (isUndefined) 
-    {
+
+    if (isUndefined) {
         strcpy( retString, "" );
     }
 #if 0
-    else
-    {
+    else {
 // This is from the old code which need to be hack on a bit more:
 
-#if 0   // plaintext is apparently busted
+// plaintext is apparently busted
         if (ret[0] != PRUnichar('<'))
             ret.Insert("<plaintext>\n", 0);
-#endif
         mLength = ret.Length();
         PRUint32 resultSize = mLength + 1;
         mResult = (char *)PR_Malloc(resultSize);
         ret.ToCString(mResult, resultSize);
     }
-#endif 
+#endif
 
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv))
-    {
-        if (retString) 
+    if (NS_FAILED(rv)) {
+        if (retString)
             Recycle(retString);
         return rv;
     }
@@ -352,7 +345,7 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     rv = NS_NewStringInputStream(getter_AddRefs(s), retString);
     int length = PL_strlen(retString);
     Recycle(retString);
-        
+
     if (NS_FAILED(rv))
         return rv;
 
@@ -367,7 +360,6 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
         return rv;
 
     *result = channel;
-
     return rv;
 }
 
@@ -417,7 +409,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* aPath)
                                     NS_NETWORK_PROTOCOL_PROGID_PREFIX "javascript",
                                     aPath, PR_TRUE, PR_TRUE);
 
-    
+
     return rv;
 }
 

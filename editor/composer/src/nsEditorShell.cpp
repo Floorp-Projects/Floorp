@@ -3454,6 +3454,7 @@ void nsEditorShell::SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, co
 }
 #endif
 
+// XXXbe why is this needed?  eliminate
 NS_IMETHODIMP    
 nsEditorShell::ExecuteScript(nsIScriptContext * aContext, const nsString& aScript)
 {
@@ -3468,7 +3469,7 @@ nsEditorShell::ExecuteScript(nsIScriptContext * aContext, const nsString& aScrip
     nsCRT::free(script_str);
 #endif
 
-    aContext->EvaluateString(aScript, url, 0, rVal, &isUndefined);
+    aContext->EvaluateString(aScript, url, 0, nsnull, rVal, &isUndefined);
   } 
   return NS_OK;
 }

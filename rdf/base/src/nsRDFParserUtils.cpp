@@ -31,6 +31,7 @@
 #include "nsIURL.h"
 #include "nsString.h"
 #include "nsRDFParserUtils.h"
+#include "jsapi.h" // for JSVERSION_* and JS_VersionToString
 
 // XXX This totally sucks. I wish that mozilla/base had this code.
 PRUnichar
@@ -197,7 +198,7 @@ nsRDFParserUtils::StripAndConvert(nsString& aResult)
 }
 
 nsresult
-nsRDFParserUtils::GetQuotedAttributeValue(const nsString& aSource, 
+nsRDFParserUtils::GetQuotedAttributeValue(const nsString& aSource,
                                           const nsString& aAttribute,
                                           nsString& aValue)
 {
@@ -217,9 +218,9 @@ static const char kApostrophe = '\'';
             endOffset = aSource.FindChar(kQuote, PR_FALSE,++offset);
         }
         else if (kApostrophe == next) {
-            endOffset = aSource.FindChar(kApostrophe, PR_FALSE,++offset);	  
+            endOffset = aSource.FindChar(kApostrophe, PR_FALSE,++offset);
         }
-  
+
         if (-1 != endOffset) {
             aSource.Mid(aValue, offset, endOffset-offset);
         }
@@ -237,26 +238,32 @@ static const char kApostrophe = '\'';
 
 
 PRBool
-nsRDFParserUtils::IsJavaScriptLanguage(const nsString& aName)
+nsRDFParserUtils::IsJavaScriptLanguage(const nsString& aName, const char* *aVersion)
 {
-  if (aName.EqualsIgnoreCase("JavaScript") || 
-      aName.EqualsIgnoreCase("LiveScript") || 
-      aName.EqualsIgnoreCase("Mocha")) { 
+    JSVersion version = JSVERSION_UNKNOWN;
+
+    if (aName.EqualsIgnoreCase("JavaScript") ||
+        aName.EqualsIgnoreCase("LiveScript") ||
+        aName.EqualsIgnoreCase("Mocha")) {
+        version = JSVERSION_DEFAULT;
+    }
+    else if (aName.EqualsIgnoreCase("JavaScript1.1")) {
+        version = JSVERSION_1_1;
+    }
+    else if (aName.EqualsIgnoreCase("JavaScript1.2")) {
+        version = JSVERSION_1_2;
+    }
+    else if (aName.EqualsIgnoreCase("JavaScript1.3")) {
+        version = JSVERSION_1_3;
+    }
+    else if (aName.EqualsIgnoreCase("JavaScript1.4")) {
+        version = JSVERSION_1_4;
+    }
+    else if (aName.EqualsIgnoreCase("JavaScript1.5")) {
+        version = JSVERSION_1_5;
+    }
+    if (version == JSVERSION_UNKNOWN)
+        return PR_FALSE;
+    *aVersion = JS_VersionToString(version);
     return PR_TRUE;
-  } 
-  else if (aName.EqualsIgnoreCase("JavaScript1.1")) { 
-    return PR_TRUE;
-  } 
-  else if (aName.EqualsIgnoreCase("JavaScript1.2")) { 
-    return PR_TRUE;
-  } 
-  else if (aName.EqualsIgnoreCase("JavaScript1.3")) { 
-    return PR_TRUE;
-  } 
-  else if (aName.EqualsIgnoreCase("JavaScript1.4")) { 
-    return PR_TRUE;
-  } 
-  else { 
-    return PR_FALSE;
-  } 
 }

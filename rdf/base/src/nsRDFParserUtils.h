@@ -28,7 +28,7 @@
 #define nsRDFParserUtils_h__
 
 #include "nscore.h"
-#include "nsError.h"
+#include "jspubtd.h"
 class nsIURI;
 class nsString;
 
@@ -41,14 +41,13 @@ public:
     StripAndConvert(nsString& aResult);
 
     static nsresult
-    GetQuotedAttributeValue(const nsString& aSource, 
+    GetQuotedAttributeValue(const nsString& aSource,
                             const nsString& aAttribute,
                             nsString& aValue);
 
 
     static PRBool
-    IsJavaScriptLanguage(const nsString& aName);
-
+    IsJavaScriptLanguage(const nsString& aName, const char* *aVersion);
 };
 
 

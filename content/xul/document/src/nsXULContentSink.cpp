@@ -82,6 +82,7 @@
 #include "prlog.h"
 #include "prmem.h"
 #include "rdfutil.h"
+#include "jspubtd.h"            // for JSVERSION_*
 
 #include "nsHTMLTokens.h" // XXX so we can use nsIParserNode::GetTokenType()
 
@@ -801,10 +802,12 @@ static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aPa
   if (-1 != semiIndex) {
     aValue.Left(aType, semiIndex);
     aValue.Right(aParams, (aValue.Length() - semiIndex) - 1);
+    aParams.StripWhitespace();
   }
   else {
     aType = aValue;
   }
+  aType.StripWhitespace();
 }
 
 
@@ -1516,6 +1519,7 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
 {
     nsresult rv = NS_OK;
     PRBool isJavaScript = PR_TRUE;
+    const char* jsVersionString = nsnull;
     PRInt32 ac = aNode.GetAttributeCount();
 
     // Look for SRC attribute and look for a LANGUAGE attribute
@@ -1534,17 +1538,34 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
             SplitMimeType(type, mimeType, params);
 
             isJavaScript = mimeType.EqualsIgnoreCase("text/javascript");
+            if (isJavaScript) {
+                JSVersion jsVersion = JSVERSION_DEFAULT;
+                if (params.Find("version=", PR_TRUE) == 0) {
+                    if (params.Length() != 11 || params[8] != '1' || params[9] != '.')
+                        jsVersion = JSVERSION_UNKNOWN;
+                    else switch (params[10]) {
+                        case '0': jsVersion = JSVERSION_1_0; break;
+                        case '1': jsVersion = JSVERSION_1_1; break;
+                        case '2': jsVersion = JSVERSION_1_2; break;
+                        case '3': jsVersion = JSVERSION_1_3; break;
+                        case '4': jsVersion = JSVERSION_1_4; break;
+                        case '5': jsVersion = JSVERSION_1_5; break;
+                        default:  jsVersion = JSVERSION_UNKNOWN;
+                    }
+                }
+                jsVersionString = JS_VersionToString(jsVersion);
+            }
         }
         else if (key.EqualsIgnoreCase("language")) {
             nsAutoString  lang(aNode.GetValueAt(i));
             nsRDFParserUtils::StripAndConvert(lang);
-            isJavaScript = nsRDFParserUtils::IsJavaScriptLanguage(lang);
+            isJavaScript = nsRDFParserUtils::IsJavaScriptLanguage(lang, &jsVersionString);
         }
     }
   
     // Don't process scripts that aren't JavaScript
     if (isJavaScript) {
-        nsXULPrototypeScript* script = new nsXULPrototypeScript(/* line number */ -1);
+        nsXULPrototypeScript* script = new nsXULPrototypeScript(/* line number */ -1, jsVersionString);
         if (! script)
             return NS_ERROR_OUT_OF_MEMORY;
 

@@ -164,8 +164,8 @@ public:
 class nsXULPrototypeScript : public nsXULPrototypeNode
 {
 public:
-    nsXULPrototypeScript(PRInt32 aLineNo)
-        : nsXULPrototypeNode(eType_Script, aLineNo)
+    nsXULPrototypeScript(PRInt32 aLineNo, const char *aVersion)
+        : nsXULPrototypeNode(eType_Script, aLineNo), mVersion(aVersion)
     {
         MOZ_COUNT_CTOR(nsXULPrototypeScript);
     }
@@ -177,6 +177,7 @@ public:
 
     nsCOMPtr<nsIURI>         mSrcURI;
     nsString                 mInlineScript;
+    const char*              mVersion;
 };
 
 class nsXULPrototypeText : public nsXULPrototypeNode

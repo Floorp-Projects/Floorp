@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -366,12 +366,12 @@ PR_IMPLEMENT(PRBool) PREF_Init(const char *filename)
 {
     PRBool ok = PR_TRUE;
 
-	/* --ML hash test */
-	if (!gHashTable)
-	gHashTable = PR_NewHashTable(2048, PR_HashString, PR_CompareStrings,
-		PR_CompareValues, &pref_HashAllocOps, NULL);
-	if (!gHashTable)
-		return PR_FALSE;
+    /* --ML hash test */
+    if (!gHashTable)
+    gHashTable = PR_NewHashTable(2048, PR_HashString, PR_CompareStrings,
+            PR_CompareValues, &pref_HashAllocOps, NULL);
+    if (!gHashTable)
+        return PR_FALSE;
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
     if (filename)
@@ -383,77 +383,76 @@ PR_IMPLEMENT(PRBool) PREF_Init(const char *filename)
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
     if (!gMochaTaskState)
-		gMochaTaskState = JS_Init((PRUint32) 0xffffffffL);
+        gMochaTaskState = JS_Init((PRUint32) 0xffffffffL);
 
     if (!gMochaContext)
     {
-		gMochaContext = JS_NewContext(gMochaTaskState, 8192);  /* ???? What size? */
-		if (!gMochaContext)
-			return PR_FALSE;
+        gMochaContext = JS_NewContext(gMochaTaskState, 8192);  /* ???? What size? */
+        if (!gMochaContext)
+                return PR_FALSE;
 
-		JS_BeginRequest(gMochaContext);
+        JS_BeginRequest(gMochaContext);
 
-		gGlobalConfigObject = JS_NewObject(gMochaContext, &global_class, NULL, NULL);
-		if (!gGlobalConfigObject)
-		{
-		    JS_EndRequest(gMochaContext);
-		    return PR_FALSE;
+        gGlobalConfigObject = JS_NewObject(gMochaContext, &global_class, NULL, NULL);
+        if (!gGlobalConfigObject)
+        {
+            JS_EndRequest(gMochaContext);
+            return PR_FALSE;
         }
 
         /* MLM - need a global object for set version call now. */
         JS_SetGlobalObject(gMochaContext, gGlobalConfigObject);
 
-		JS_SetVersion(gMochaContext, JSVERSION_1_2);
+        JS_SetVersion(gMochaContext, JSVERSION_1_5);
 
-		if (!JS_InitStandardClasses(gMochaContext, 
-					    gGlobalConfigObject))
-	   {
-		    JS_EndRequest(gMochaContext);
-		    return PR_FALSE;
-	 	}
+        if (!JS_InitStandardClasses(gMochaContext, gGlobalConfigObject))
+        {
+            JS_EndRequest(gMochaContext);
+            return PR_FALSE;
+        }
 
-		JS_SetBranchCallback(gMochaContext, pref_BranchCallback);
-		JS_SetErrorReporter(gMochaContext, NULL);
+        JS_SetBranchCallback(gMochaContext, pref_BranchCallback);
+        JS_SetErrorReporter(gMochaContext, NULL);
 
-		gMochaPrefObject = JS_DefineObject(gMochaContext, 
-						    gGlobalConfigObject, 
-						    "PrefConfig",
-						    &autoconf_class, 
-						    NULL, 
-						    JSPROP_ENUMERATE|JSPROP_READONLY);
-		
-		if (gMochaPrefObject)
-		{
-		    if (!JS_DefineProperties(gMochaContext,
-					     gMochaPrefObject,
-					     autoconf_props))
-		    {
-		        JS_EndRequest(gMochaContext);
-			    return PR_FALSE;
-		    }
-		    if (!JS_DefineFunctions(gMochaContext,
-					    gMochaPrefObject,
-					    autoconf_methods))
-		    {
-		        JS_EndRequest(gMochaContext);
-			    return PR_FALSE;
-		    }
-		}
+        gMochaPrefObject = JS_DefineObject(gMochaContext, 
+                                            gGlobalConfigObject, 
+                                            "PrefConfig",
+                                            &autoconf_class, 
+                                            NULL, 
+                                            JSPROP_ENUMERATE|JSPROP_READONLY);
+        
+        if (gMochaPrefObject)
+        {
+            if (!JS_DefineProperties(gMochaContext,
+                                     gMochaPrefObject,
+                                     autoconf_props))
+            {
+                JS_EndRequest(gMochaContext);
+                    return PR_FALSE;
+            }
+            if (!JS_DefineFunctions(gMochaContext,
+                                    gMochaPrefObject,
+                                    autoconf_methods))
+            {
+                JS_EndRequest(gMochaContext);
+                    return PR_FALSE;
+            }
+        }
 
-		ok = pref_InitInitialObjects();
-	}
-	else 
-	    JS_BeginRequest(gMochaContext);
+        ok = pref_InitInitialObjects();
+    }
+    else 
+        JS_BeginRequest(gMochaContext);
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-	if (ok && gFileName)
-	    ok = (PRBool)(pref_OpenFile(gFileName, PR_TRUE, PR_FALSE, PR_FALSE, PR_TRUE) == PREF_NOERROR);
-	else
+    if (ok && gFileName)
+        ok = (PRBool)(pref_OpenFile(gFileName, PR_TRUE, PR_FALSE, PR_FALSE, PR_TRUE) == PREF_NOERROR);
+    else
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
-	if (!ok)
-		gErrorOpeningUserPrefs = PR_TRUE;
-	JS_EndRequest(gMochaContext);
-	return ok;
+    if (!ok)
+        gErrorOpeningUserPrefs = PR_TRUE;
+    JS_EndRequest(gMochaContext);
+    return ok;
 } /*PREF_Init*/
 
 PR_IMPLEMENT(PrefResult)

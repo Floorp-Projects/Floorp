@@ -19,6 +19,7 @@
 #define nsJSEnvironment_h___
 
 #include "nsIScriptContext.h"
+#include "nsCOMPtr.h"
 #include "jsapi.h"
 #include "nsCOMPtr.h"
 
@@ -29,11 +30,11 @@ class nsIPrincipal;
 class nsJSContext : public nsIScriptContext {
 private:
   JSContext *mContext;
-  nsIScriptNameSpaceManager* mNameSpaceManager;
+  nsCOMPtr<nsIScriptNameSpaceManager> mNameSpaceManager;
   PRBool mIsInitialized;
   PRUint32 mNumEvaluations;
-  nsIScriptSecurityManager *mSecurityManager;
-  nsIScriptContextOwner* mOwner;
+  nsIScriptSecurityManager* mSecurityManager; /* XXXbe nsCOMPtr to service */
+  nsIScriptContextOwner* mOwner;  /* NB: weak reference, not ADDREF'd */
   nsScriptTerminationFunc mTerminationFunc;
   nsCOMPtr<nsISupports> mRef;
   
@@ -46,6 +47,7 @@ public:
   NS_IMETHOD       EvaluateString(const nsString& aScript,
                                   const char *aURL,
                                   PRUint32 aLineNo,
+                                  const char* aVersion,
                                   nsString& aRetValue,
                                   PRBool* aIsUndefined);
   NS_IMETHOD       EvaluateString(const nsString& aScript,
@@ -53,11 +55,15 @@ public:
                                   nsIPrincipal *principal,
                                   const char *aURL,
                                   PRUint32 aLineNo,
+                                  const char* aVersion,
                                   nsString& aRetValue,
                                   PRBool* aIsUndefined);
+  NS_IMETHOD       CompileFunction(void *aObj, nsIAtom *aName,
+                                   const nsString& aBody);
   NS_IMETHOD       CallFunction(void *aObj, void *aFunction, 
                                 PRUint32 argc, void *argv, 
                                 PRBool *aBoolResult);
+  NS_IMETHOD SetDefaultLanguageVersion(const char* aVersion);
   NS_IMETHOD_(nsIScriptGlobalObject*)    GetGlobalObject();
   NS_IMETHOD_(void*)                     GetNativeContext();
   NS_IMETHOD     InitClasses();
@@ -80,9 +86,12 @@ public:
   nsresult InitializeLiveConnectClasses();
 };
 
+class nsIJSRuntimeService;
+
 class nsJSEnvironment {
 private:
   JSRuntime *mRuntime;
+  nsIJSRuntimeService* mRuntimeService; /* XXXbe nsCOMPtr to service */
 
 public:
   static nsJSEnvironment *sTheEnvironment;
