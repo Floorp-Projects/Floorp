@@ -17,6 +17,7 @@
  */
 
 #include "nsNetModRegEntry.h"
+#include "plstr.h"
 
 
 //////////////////////////////
@@ -45,13 +46,15 @@ nsNetModRegEntry::GetMEventQ(nsIEventQueue **aEventQ) {
 
 NS_IMETHODIMP
 nsNetModRegEntry::GetMTopic(char **aTopic) {
+    *aTopic = new char [PL_strlen(mTopic) + 1];
+    if (!*aTopic) return NS_ERROR_OUT_OF_MEMORY;
     PL_strcpy(*aTopic, mTopic);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNetModRegEntry::GetMCID(nsCID **aMCID) {
-    *aMCID = mCID;
+    *aMCID = &mCID;
     return NS_OK;
 }
 
@@ -62,7 +65,11 @@ nsNetModRegEntry::Equals(nsINetModRegEntry* aEntry, PRBool *_retVal) {
 
     NS_ADDREF(aEntry);
 
-    char * topic = nsnull;
+    char * topic = 0;
+    nsINetNotify* notify = 0;
+    nsIEventQueue* eventQ = 0;
+    nsCID *cid = 0;
+
     rv = aEntry->GetMTopic(&topic);
     if (NS_FAILED(rv)) {
         retVal = PR_FALSE;
@@ -73,7 +80,6 @@ nsNetModRegEntry::Equals(nsINetModRegEntry* aEntry, PRBool *_retVal) {
         goto end;
     }
 
-    nsINetNotify* notify = nsnull;
     rv = aEntry->GetMNotify(&notify);
     if (NS_FAILED(rv)) {
         retVal = PR_FALSE;
@@ -84,7 +90,6 @@ nsNetModRegEntry::Equals(nsINetModRegEntry* aEntry, PRBool *_retVal) {
         goto end;
     }
 
-    nsIEventQueue* eventQ = nsnull;
     rv = aEntry->GetMEventQ(&eventQ);
     if (NS_FAILED(rv)) {
         retVal = PR_FALSE;
@@ -95,18 +100,17 @@ nsNetModRegEntry::Equals(nsINetModRegEntry* aEntry, PRBool *_retVal) {
         goto end;
     }
 
-    nsCID *cid = nsnull;
     rv = aEntry->GetMCID(&cid);
     if (NS_FAILED(rv)) {
         retVal = PR_FALSE;
         goto end;
     }
-    if (!mCID->Equals(*cid)) {
+    if (!mCID.Equals(*cid)) {
         retVal = PR_FALSE;
         goto end;
     }
 
-:end
+end:
     NS_IF_RELEASE(notify);
     NS_IF_RELEASE(eventQ);
     *_retVal = retVal;
@@ -122,6 +126,7 @@ nsNetModRegEntry::Equals(nsINetModRegEntry* aEntry, PRBool *_retVal) {
 nsNetModRegEntry::nsNetModRegEntry(const char *aTopic, nsIEventQueue *aEventQ, nsINetNotify *aNotify, nsCID aCID)
     : mEventQ(aEventQ), mNotify(aNotify) {
     NS_INIT_REFCNT();
+    mTopic = new char [PL_strlen(aTopic) + 1];
     PL_strcpy(mTopic, aTopic);
     NS_ADDREF(mEventQ);
     NS_ADDREF(mNotify);
