@@ -121,6 +121,19 @@ function UpdateBookmarksLastVisitedDate(event)
   }
 }
 
+function HandleBookmarkIcon(iconURL, addFlag)
+{
+  var url = _content.location.href;
+  if (url) {
+    // update URL with new icon reference
+    if (!gBookmarksService)
+      gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
+                                    .getService(Components.interfaces.nsIBookmarksService);
+    if (addFlag)    gBookmarksService.UpdateBookmarkIcon(url, iconURL);
+    else            gBookmarksService.RemoveBookmarkIcon(url, iconURL);
+  }
+}
+
 function UpdateInternetSearchResults(event)
 {
   // XXX This somehow causes a big leak, back to the old way

@@ -15,7 +15,7 @@
   	  <xul:hbox class="box-inherit toolbarbutton-box"
                 inherits="align,dir,pack,orient" flex="1">
         <children>
-          <xul:image class="toolbarbutton-icon" inherits="src=image"/>
+          <xul:image class="toolbarbutton-icon" inherits="validate,src=image"/>
           <xul:label class="toolbarbutton-text" crop="right" flex="1"
                      inherits="value=label,accesskey,crop,dragover-top"/>
         </children>
@@ -30,7 +30,7 @@
   	  <xul:hbox class="box-inherit toolbarbutton-box"
                 inherits="align,dir,pack,orient" flex="1">
         <children>
-          <xul:image class="toolbarbutton-icon" inherits="src=image"/>
+          <xul:image class="toolbarbutton-icon" inherits="validate,src=image"/>
           <xul:label class="toolbarbutton-text" crop="right" flex="1"
                      inherits="value=label,accesskey,crop,dragover-top"/>
         </children>
