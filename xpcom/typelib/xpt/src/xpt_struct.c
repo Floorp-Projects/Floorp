@@ -316,8 +316,7 @@ XPT_InterfaceDescriptorAddMethods(XPTInterfaceDescriptor *id, uint16 num)
     if (!new)
         return PR_FALSE;
 
-    memset(id->method_descriptors + id->num_methods, 0,
-           sizeof(XPTMethodDescriptor) * num);
+    memset(new + id->num_methods, 0, sizeof(XPTMethodDescriptor) * num);
     id->method_descriptors = new;
     id->num_methods += num;
     return PR_TRUE;
@@ -578,7 +577,12 @@ DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor *md)
             goto error;
     }
     
-    md->result = PR_NEWZAP(XPTParamDescriptor);
+    if (mode == XPT_DECODE) {
+        md->result = PR_NEWZAP(XPTParamDescriptor);
+        if (!md->result)
+            return PR_FALSE;
+    }
+
     if (!md->result ||
         !DoParamDescriptor(cursor, md->result))
         goto error;
