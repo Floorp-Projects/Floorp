@@ -26,10 +26,11 @@
 
 #include "htrdf.h"
 #include "CGrayBevelView.h"
+#include "CImageIconMixin.h"
 
 
 class CNavCenterTitle 
-	: public CGrayBevelView, public LListener
+	: public CGrayBevelView, public LListener, public CTiledImageMixin
 {
 public:
 	
@@ -50,9 +51,15 @@ protected:
 		// Provide access to the LCaption that displays the title
 	LCaption& TitleCaption ( ) { return *mTitle; }
 	const LCaption& TitleCaption ( ) const { return *mTitle; }
-		
+	
+	virtual	void DrawBeveledFill ( ) ;
+	virtual void DrawStandby ( const Point & inTopLeft, 
+								const IconTransformType inTransform ) const;
+	virtual void EraseBackground ( HT_Resource inTopNode ) const ;
+
 private:
 
-	LCaption* mTitle;
+	LCaption*	mTitle;
+	HT_View		mView;			// ref back to current view for custom drawing 
 		
 }; // class CNavCenterTitle

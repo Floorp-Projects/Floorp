@@ -26,11 +26,14 @@
 
 #include "CNavCenterTitle.h"
 #include "CNavCenterSelectorPane.h"		// for message id's
+#include "URDFUtilities.h"
+
+extern RDF_NCVocab gNavCenter;			// RDF vocab struct for NavCenter
 
 
 CNavCenterTitle :: CNavCenterTitle ( LStream *inStream )
 	: CGrayBevelView (inStream),
-		mTitle(NULL)
+		mTitle(NULL), mView(NULL)
 {
 
 }
@@ -70,10 +73,10 @@ CNavCenterTitle :: ListenToMessage ( MessageT inMessage, void* ioParam )
 	
 		case CNavCenterSelectorPane::msg_ActiveSelectorChanged:
 		{
-			HT_View newView = reinterpret_cast<HT_View>(ioParam);
-			if ( newView ) {
+			mView = reinterpret_cast<HT_View>(ioParam);
+			if ( mView ) {
 				// do not delete |buffer|
-				const char* buffer = HT_GetViewName ( newView );
+				const char* buffer = HT_GetViewName ( mView );
 				TitleCaption().SetDescriptor(LStr255(buffer));
 				
 				// if we're in the middle of a drag and drop, draw NOW, not
@@ -88,3 +91,72 @@ CNavCenterTitle :: ListenToMessage ( MessageT inMessage, void* ioParam )
 	} // case of which message
 
 } // ListenToMessage
+
+
+void
+CNavCenterTitle :: DrawBeveledFill ( )
+{
+	StColorState saved;
+	
+	if ( mView ) {
+		HT_Resource topNode = HT_TopNode(mView);
+		if ( topNode ) {
+			char* url = NULL;
+			PRBool success = HT_GetNodeData ( topNode, gNavCenter->titleBarBGURL, HT_COLUMN_STRING, &url );
+			if ( success && url ) {
+				// draw the background image tiled to fill the whole pane
+				Point topLeft = { 0, 0 };
+				SetImageURL ( url );
+				DrawImage ( topLeft, kTransformNone, mFrameSize.width, mFrameSize.height );
+				FocusDraw();
+			}
+			else 
+				EraseBackground(topNode);
+		}
+		else
+			EraseBackground(NULL);
+	}
+	else
+		EraseBackground(NULL);
+
+} // DrawBeveledFill
+
+
+//
+// DrawStandby
+//
+// Draw correctly when the image has yet to load.
+//
+void
+CNavCenterTitle :: DrawStandby ( const Point & /*inTopLeft*/, 
+									const IconTransformType /*inTransform*/ ) const
+{
+	// we're just waiting for the image to come in, who cares if we don't use
+	// HT's color?
+	EraseBackground(NULL);
+
+} // DrawStandby
+
+
+//
+// EraseBackground
+//
+// Fill in the bg with either the correct HT color (from a property on |inTopNode|, the
+// correct AM color, or the default GA implementation (if we are before AM 1.1).
+//
+void
+CNavCenterTitle :: EraseBackground ( HT_Resource inTopNode ) const
+{
+	// when we can get the right AM bg color (in AM 1.1), use that but for now just ignore it
+	if ( !inTopNode || ! URDFUtilities::SetupBackgroundColor(inTopNode, gNavCenter->titleBarBGColor,
+											kThemeListViewSortColumnBackgroundBrush) ) {
+		CNavCenterTitle* self = const_cast<CNavCenterTitle*>(this);		// hack
+		self->CGrayBevelView::DrawBeveledFill();
+	}
+	else {
+		// use HT's color
+		Rect bounds;
+		CalcLocalFrameRect(bounds);
+		::EraseRect(&bounds);
+	}
+} // EraseBackground
