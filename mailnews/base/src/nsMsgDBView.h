@@ -116,6 +116,7 @@ protected:
   static nsIAtom* kHasUnreadAtom;
   static nsIAtom* kWatchThreadAtom;
   static nsIAtom* kIgnoreThreadAtom;
+  static nsIAtom* kHasImageAtom;
 
 #ifdef SUPPORT_PRIORITY_COLORS
   static nsIAtom* kHighestPriorityAtom;

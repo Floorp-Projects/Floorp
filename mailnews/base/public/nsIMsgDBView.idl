@@ -322,5 +322,5 @@ interface nsIMsgDBViewCommandUpdater : nsISupports
 	void updateCommandStatus();
 
 	/* displayed message has changed */
-	void displayMessageChanged(in nsIMsgFolder aFolder, in wstring aSubject);
+	void displayMessageChanged(in nsIMsgFolder aFolder, in wstring aSubject, in string aKeywords);
 };
