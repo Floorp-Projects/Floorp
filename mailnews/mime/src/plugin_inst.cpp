@@ -21,6 +21,8 @@
 #include "plugin_inst.h"
 #include "rebuffer.h"
 
+#include "net.h"
+
 static NS_DEFINE_IID(kINetPluginInstanceIID,  NS_INETPLUGININSTANCE_IID);
 static NS_DEFINE_IID(kINetOStreamIID,         NS_INETOSTREAM_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);

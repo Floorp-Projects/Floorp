@@ -92,10 +92,31 @@ extern NET_StreamClass *msg_MakeRebufferingStream (NET_StreamClass *next,
 
 extern char *MIME_DecodeMimePartIIStr(const char *header, char *charset);
 
+/*
+ * This is for the reworked mime parser.
+ */
+struct mime_stream_data {           /* This struct is the state we pass around
+                                       amongst the various stream functions
+                                       used by MIME_MessageConverter(). */
+  URL_Struct          *url;         /* The URL this is all coming from. */
+  int                 format_out;
+  MWContext           *context;     /* Must REMOVE this entry. */
+  void                *streamObj;   /* The new XP-COM stream converter object */
+  NET_StreamClass     *istream;     /* Stream we're writing out image data-if any. */
+  MimeObject          *obj;         /* The root parser object */
+  MimeDisplayOptions  *options;     /* Data for communicating with libmime.a */
+
+  /* These are used by FO_QUOTE_HTML_MESSAGE stuff only: */
+  PRInt16             lastcsid;     /* csid corresponding to above. */
+  PRInt16             outcsid;      /* csid passed to EDT_PasteQuoteINTL */
+#ifdef DEBUG_rhp
+  PRFileDesc          *logit;        /* Temp file to put generated HTML into. */
+#endif
+};
+
 /* Interface between netlib and the top-level message/rfc822 parser:
    MIME_MessageConverter()
  */
-
 static MimeHeadersState MIME_HeaderType;
 static PRBool MIME_NoInlineAttachments;
 static PRBool MIME_WrapLongLines;
