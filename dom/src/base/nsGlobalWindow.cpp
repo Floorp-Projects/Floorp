@@ -128,6 +128,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsIFullScreen.h"
+#include "nsIStringBundle.h"
 
 #include "plbase64.h"
 
@@ -159,7 +160,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID); // For window.find()
 static const char *sWindowWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
 static const char *sJSStackContractID = "@mozilla.org/js/xpc/ContextStack;1";
-
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 static const char * const kCryptoContractID = NS_CRYPTO_CONTRACTID;
 static const char * const kPkcs11ContractID = NS_PKCS11_CONTRACTID;
@@ -1193,7 +1194,28 @@ GlobalWindowImpl::GetControllers(nsIControllers** aResult)
 NS_IMETHODIMP
 GlobalWindowImpl::GetOpener(nsIDOMWindowInternal** aOpener)
 {
-  *aOpener = mOpener;
+  *aOpener = nsnull;
+  // We don't want to reveal the opener if the opener is a mail window,
+  // because opener can be used to spoof the contents of a message (bug 105050).
+  // So, we look in the opener's root docshell to see if it's a mail window.
+  nsCOMPtr<nsIScriptGlobalObject> openerSGO(do_QueryInterface(mOpener));
+  if (openerSGO) {
+    nsCOMPtr<nsIDocShell> openerDocShell;
+    openerSGO->GetDocShell(getter_AddRefs(openerDocShell));
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(openerDocShell));
+    if (docShellAsItem) {
+      nsCOMPtr<nsIDocShellTreeItem> openerRootItem;
+      docShellAsItem->GetRootTreeItem(getter_AddRefs(openerRootItem));
+      nsCOMPtr<nsIDocShell> openerRootDocShell(do_QueryInterface(openerRootItem));
+      if (openerRootDocShell) {
+        PRUint32 appType;
+        nsresult rv = openerRootDocShell->GetAppType(&appType);
+        if (NS_SUCCEEDED(rv) && appType != nsIDocShell::APP_TYPE_MAIL) {
+          *aOpener = mOpener;
+        }
+      }
+    }
+  } 
   NS_IF_ADDREF(*aOpener);
   return NS_OK;
 }
@@ -2589,6 +2611,46 @@ GlobalWindowImpl::GetFrames(nsIDOMWindow** aFrames)
   return NS_OK;
 }
 
+#define DOM_PROPERTIES_URL "chrome://communicator/locale/dom/dom.properties"
+
+nsresult
+GlobalWindowImpl::ConfirmClose(PRBool* aConfirmed)
+{
+  nsresult rv;
+  // Get the localized strings for the dialog
+  nsCOMPtr<nsIStringBundleService> bundleService(
+    do_GetService(kStringBundleServiceCID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  //XXX: What to do on error?
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = bundleService->CreateBundle(NS_LITERAL_CSTRING(DOM_PROPERTIES_URL).get(),
+                                   getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+    
+  nsXPIDLString confirmTitle;
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("ConfirmWindowCloseDialogTitle").get(),
+                                 getter_Copies(confirmTitle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLString confirmText;
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("ConfirmWindowCloseDialogText").get(),
+                                 getter_Copies(confirmText));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Show the dialog
+  nsCOMPtr<nsIPrompt> prompter;
+  rv = GetPrompter(getter_AddRefs(prompter));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return prompter->Confirm(confirmTitle,
+                           confirmText, aConfirmed);
+}
+
+#define DENY_SCRIPT_CLOSE      0
+#define CONFIRM_SCRIPT_CLOSE   1
+#define ALLOW_SCRIPT_CLOSE     2
+
 NS_IMETHODIMP
 GlobalWindowImpl::Close()
 {
@@ -2598,15 +2660,44 @@ GlobalWindowImpl::Close()
   if (parent != NS_STATIC_CAST(nsIDOMWindow *, this)) {
     // window.close() is called on a frame in a frameset, such calls
     // are ignored.
-
     return NS_OK;
   }
 
-  // Note: the basic security check, rejecting windows not opened through JS,
-  // has been removed. This was approved long ago by ...you're going to call me
-  // on this, aren't you... well it was. And anyway, a better means is coming.
-  // In the new world of application-level interfaces being written in JS, this
-  // security check was causing problems.
+  // If this window was not opened by script (!mOpener), find out
+  // whether it's OK for a script to close it.
+  if (!mOpener) {
+    nsresult rv;
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // System scripts can close all windows
+    PRBool InSystemCode = PR_FALSE;
+    rv = secMan->SubjectPrincipalIsSystem(&InSystemCode);
+    if (NS_FAILED(rv) || !InSystemCode) {
+      // Check the pref "dom.allow_scripts_to_close_windows"
+      nsCOMPtr<nsIPref> pref(do_GetService(kPrefServiceCID, &rv));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRInt32 closePref;
+      rv = pref->GetIntPref("dom.allow_scripts_to_close_windows", &closePref);
+      if (NS_FAILED(rv))
+          closePref = CONFIRM_SCRIPT_CLOSE;
+      PRBool confirmOK = PR_FALSE;
+      if (closePref == CONFIRM_SCRIPT_CLOSE) {
+        // Ask the user whether it's OK to close the window        
+        rv = ConfirmClose(&confirmOK);
+        if (NS_FAILED(rv))
+          return rv;
+      } else {
+        confirmOK = (closePref == ALLOW_SCRIPT_CLOSE);
+      }
+      if (!confirmOK) {
+        // User clicked Cancel, so abort the close
+        return NS_OK;
+      }
+    }
+  }
 
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1");

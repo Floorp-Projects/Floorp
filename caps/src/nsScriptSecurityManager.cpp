@@ -1249,6 +1249,31 @@ nsScriptSecurityManager::GetSystemPrincipal(nsIPrincipal **result)
 }
 
 NS_IMETHODIMP
+nsScriptSecurityManager::SubjectPrincipalIsSystem(PRBool* aIsSystem)
+{
+    NS_ENSURE_ARG_POINTER(aIsSystem);
+    *aIsSystem = PR_FALSE;
+
+    if (!mSystemPrincipal)
+        return NS_OK;
+
+    nsCOMPtr<nsIPrincipal> subject;
+    nsresult rv = GetSubjectPrincipal(getter_AddRefs(subject));
+    if (NS_FAILED(rv))
+        return rv;
+
+    if(!subject)
+    {
+        // No subject principal means no JS is running;
+        // this is the equivalent of system principal code
+        *aIsSystem = PR_TRUE;
+        return NS_OK;
+    }
+
+    return mSystemPrincipal->Equals(subject, aIsSystem);
+}
+
+NS_IMETHODIMP
 nsScriptSecurityManager::GetCertificatePrincipal(const char* aCertID,
                                                  nsIPrincipal **result)
 {
@@ -2708,7 +2733,6 @@ nsScriptSecurityManager::InitPrefs()
     PRUint32 prefCount;
     char** prefNames;
 
-    //-- Set a callback for policy changes
     // Registering the security manager as an observer to the
     // profile-after-change topic. We will build up the policy table
     // after the initial profile loads and after profile switches.
