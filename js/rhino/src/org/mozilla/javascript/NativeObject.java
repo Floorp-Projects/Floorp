@@ -91,45 +91,66 @@ final class NativeObjectPrototype extends NativeObject
         throws JavaScriptException
     {
         switch (methodId) {
-            case Id_constructor:
-                return jsConstructor(cx, args, f, thisObj == null);
+            case Id_constructor: {
+                if (thisObj != null) {
+                    // BaseFunction.construct will set up parent, proto
+                    return f.construct(cx, scope, args);
+                }
+                if (args.length == 0 || args[0] == null
+                    || args[0] == Undefined.instance)
+                {
+                    return new NativeObject();
+                }
+                return ScriptRuntime.toObject(cx, scope, args[0]);
+            }
 
             case Id_toString:
-                return js_toString(cx, thisObj);
-
-            case Id_toLocaleString:
-                // Not supported
+            case Id_toLocaleString: /* For now just alias toString */
                 return js_toString(cx, thisObj);
 
             case Id_valueOf:
                 return thisObj;
 
-            case Id_hasOwnProperty:
-                return js_hasOwnProperty(thisObj, args);
+            case Id_hasOwnProperty: {
+                if (args.length != 0) {
+                    String property = ScriptRuntime.toString(args[0]);
+                    if (thisObj.has(property, thisObj))
+                        return Boolean.TRUE;
+                }
+                return Boolean.FALSE;
+            }
 
-            case Id_propertyIsEnumerable:
-                return js_propertyIsEnumerable(cx, thisObj, args);
+            case Id_propertyIsEnumerable: {
+                if (args.length != 0) {
+                    String name = ScriptRuntime.toString(args[0]);
+                    if (thisObj.has(name, thisObj)) {
+                        if (thisObj instanceof ScriptableObject) {
+                            ScriptableObject so = (ScriptableObject)thisObj;
+                            try {
+                                int a = so.getAttributes(name, thisObj);
+                                if ((a & ScriptableObject.DONTENUM) == 0) {
+                                    return Boolean.TRUE;
+                                }
+                            } catch (PropertyException x) { }
+                        }
+                    }
+                }
+                return Boolean.FALSE;
+            }
 
-            case Id_isPrototypeOf:
-                return js_isPrototypeOf(cx, thisObj, args);
+            case Id_isPrototypeOf: {
+                if (args.length != 0 && args[0] instanceof Scriptable) {
+                    Scriptable v = (Scriptable) args[0];
+                    do {
+                        v = v.getPrototype();
+                        if (v == thisObj)
+                            return Boolean.TRUE;
+                    } while (v != null);
+                }
+                return Boolean.FALSE;
+            }
         }
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
-    }
-
-    private static Object jsConstructor(Context cx, Object[] args,
-                                        Function ctorObj, boolean inNewExpr)
-        throws JavaScriptException
-    {
-        if (!inNewExpr) {
-            // FunctionObject.construct will set up parent, proto
-            return ctorObj.construct(cx, ctorObj.getParentScope(), args);
-        }
-        if (args.length == 0 || args[0] == null
-            || args[0] == Undefined.instance)
-        {
-            return new NativeObject();
-        }
-        return ScriptRuntime.toObject(cx, ctorObj.getParentScope(), args[0]);
     }
 
     static String toString(Scriptable thisObj)
@@ -197,50 +218,6 @@ final class NativeObjectPrototype extends NativeObject
 
         result.append('}');
         return result.toString();
-    }
-
-    private static Object js_hasOwnProperty(Scriptable thisObj, Object[] args)
-    {
-        if (args.length != 0) {
-            if (thisObj.has(ScriptRuntime.toString(args[0]), thisObj))
-                return Boolean.TRUE;
-        }
-        return Boolean.FALSE;
-    }
-
-    private static Object js_propertyIsEnumerable(Context cx,
-                                                  Scriptable thisObj,
-                                                  Object[] args)
-    {
-        if (args.length != 0) {
-            String name = ScriptRuntime.toString(args[0]);
-            if (thisObj.has(name, thisObj)) {
-                if (thisObj instanceof ScriptableObject) {
-                    ScriptableObject so = (ScriptableObject)thisObj;
-                    try {
-                        int a = so.getAttributes(name, thisObj);
-                        if ((a & ScriptableObject.DONTENUM) == 0) {
-                            return Boolean.TRUE;
-                        }
-                    } catch (PropertyException x) { }
-                }
-            }
-        }
-        return Boolean.FALSE;
-    }
-
-    private static Object js_isPrototypeOf(Context cx, Scriptable thisObj,
-                                           Object[] args)
-    {
-        if (args.length != 0 && args[0] instanceof Scriptable) {
-            Scriptable v = (Scriptable) args[0];
-            do {
-                v = v.getPrototype();
-                if (v == thisObj)
-                    return Boolean.TRUE;
-            } while (v != null);
-        }
-        return Boolean.FALSE;
     }
 
     protected String getIdName(int id)

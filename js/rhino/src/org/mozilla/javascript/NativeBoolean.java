@@ -90,20 +90,20 @@ final class NativeBoolean extends IdScriptable {
                 // Boolean(val) converts val to a boolean.
                 return wrap_boolean(b);
             } else if (methodId == Id_toString) {
-                return realThis(thisObj, f).booleanValue ? "true" : "false";
+                return realThisBoolean(thisObj, f) ? "true" : "false";
             } else if (methodId == Id_valueOf) {
-                return wrap_boolean(realThis(thisObj, f).booleanValue);
+                return wrap_boolean(realThisBoolean(thisObj, f));
             }
         }
 
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
-    private static NativeBoolean realThis(Scriptable thisObj, IdFunction f)
+    private static boolean realThisBoolean(Scriptable thisObj, IdFunction f)
     {
         if (!(thisObj instanceof NativeBoolean))
             throw incompatibleCallError(f);
-        return (NativeBoolean)thisObj;
+        return ((NativeBoolean)thisObj).booleanValue;
     }
 
     protected String getIdName(int id) {

@@ -175,17 +175,22 @@ public class BaseFunction extends IdScriptable implements Function {
     {
         if (prototypeFlag) {
             switch (methodId) {
-                case Id_constructor:
-                    return jsConstructor(cx, scope, args);
+              case Id_constructor:
+                  return jsConstructor(cx, scope, args);
 
-                case Id_toString:
-                    return js_toString(cx, thisObj, args);
+              case Id_toString: {
+                int indent = ScriptRuntime.toInt32(args, 0);
+                Object x = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
+                if (x instanceof BaseFunction) {
+                    return ((BaseFunction)x).decompile(cx, indent, false);
+                }
+                throw ScriptRuntime.typeError1("msg.incompat.call", "toString");
+              }
 
-                case Id_apply:
-                    return applyOrCall(true, cx, scope, thisObj, args);
-
-                case Id_call:
-                    return applyOrCall(false, cx, scope, thisObj, args);
+              case Id_apply:
+              case Id_call:
+                return applyOrCall(methodId == Id_apply, cx, scope,
+                                   thisObj, args);
             }
         }
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
@@ -424,17 +429,6 @@ public class BaseFunction extends IdScriptable implements Function {
         ScriptRuntime.setFunctionProtoAndParent(global, fn);
 
         return fn;
-    }
-
-    private static Object js_toString(Context cx, Scriptable thisObj,
-                                      Object[] args)
-    {
-        int indent = ScriptRuntime.toInt32(args, 0);
-        Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
-        if (val instanceof BaseFunction) {
-            return ((BaseFunction)val).decompile(cx, indent, false);
-        }
-        throw ScriptRuntime.typeError1("msg.incompat.call", "toString");
     }
 
     /**

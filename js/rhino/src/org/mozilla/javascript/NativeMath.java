@@ -173,11 +173,22 @@ final class NativeMath extends IdScriptable
                 break;
 
             case Id_max:
-                x = js_max(args);
-                break;
-
             case Id_min:
-                x = js_min(args);
+                x = (methodId == Id_max)
+                    ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
+                for (int i = 0; i != args.length; ++i) {
+                    double d = ScriptRuntime.toNumber(args[i]);
+                    if (d != d) {
+                        x = d; // NaN
+                        break;
+                    }
+                    if (methodId == Id_max) {
+                        // if (x < d) x = d; does not work due to -0.0 >= +0.0
+                        x = Math.max(x, d);
+                    } else {
+                        x = Math.min(x, d);
+                    }
+                }
                 break;
 
             case Id_pow:
@@ -230,32 +241,6 @@ final class NativeMath extends IdScriptable
                 return super.execMethod(methodId, f, cx, scope, thisObj, args);
         }
         return wrap_double(x);
-    }
-
-    private double js_max(Object[] args) {
-        double result = Double.NEGATIVE_INFINITY;
-        if (args.length == 0)
-            return result;
-        for (int i = 0; i < args.length; i++) {
-            double d = ScriptRuntime.toNumber(args[i]);
-            if (d != d) return d;
-            // if (result < d) result = d; does not work due to -0.0 >= +0.0
-            result = Math.max(result, d);
-        }
-        return result;
-    }
-
-    private double js_min(Object[] args) {
-        double result = Double.POSITIVE_INFINITY;
-        if (args.length == 0)
-            return result;
-        for (int i = 0; i < args.length; i++) {
-            double d = ScriptRuntime.toNumber(args[i]);
-            if (d != d) return d;
-            // if (result > d) result = d; does not work due to -0.0 >= +0.0
-            result = Math.min(result, d);
-        }
-        return result;
     }
 
     // See Ecma 15.8.2.13
