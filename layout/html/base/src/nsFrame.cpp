@@ -1013,7 +1013,14 @@ NS_IMETHODIMP nsFrame::GetPosition(nsIPresContext& aCX,
     {
       return result;
     }
-    aContentOffsetEnd = aContentOffset +1;
+    nsRect rect;
+    GetRect(rect);
+    nsPoint offsetPoint; //used for offset of result frame
+    nsIView * view; //used for call of get offset from view
+    GetOffsetFromView(offsetPoint, &view);
+    if (aXCoord > (rect.width + rect.x))
+      aContentOffset++;
+    aContentOffsetEnd = aContentOffset;
   }
   return result;
 }
