@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+n/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
 * Version: NPL 1.1/GPL 2.0/LGPL 2.1
 *
@@ -380,11 +380,9 @@
     // if there's no tabviewitem at the point within our view, check the tabbar as well.
     overTabViewItem = [mTabBar tabViewItemAtPoint:[sender draggingLocation]];
     
-  if ([pasteBoardTypes containsObject: @"MozBookmarkType"])
-  {
+  if ([pasteBoardTypes containsObject: @"MozBookmarkType"]) {
     NSArray* draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
-    if (draggedItems)
-    {
+    if (draggedItems) {
       id aBookmark;
       if ([draggedItems count] == 1) {
         aBookmark = [draggedItems objectAtIndex:0];
@@ -408,8 +406,7 @@
       }
     }
   }
-  else if ([pasteBoardTypes containsObject: @"MozURLType"])
-  {
+  else if ([pasteBoardTypes containsObject: @"MozURLType"]) {
     // drag type is MozURLType
     NSDictionary* data = [[sender draggingPasteboard] propertyListForType: @"MozURLType"];
     if (data) {
@@ -417,20 +414,32 @@
       return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:urlString];
     }
   }
-  else if ([pasteBoardTypes containsObject: NSStringPboardType])
-  {
+  // check for NSFilenamesPboardType first so we always handle multiple filenames when we should
+  else if ([pasteBoardTypes containsObject: NSFilenamesPboardType]) {
+    NSArray *files = [[sender draggingPasteboard] propertyListForType:NSFilenamesPboardType];
+    for (int i = 0; i < [files count]; i ++) {
+      NSString* urlString = [files objectAtIndex:i];
+      if (i == 0) {
+        // if we're over the content area, just load the first one
+        if (overContentArea)
+          return [self handleDropOnTab:overTabViewItem overContent:YES withURL:urlString];
+        // otherwise load the first in the tab, and keep going
+        [self handleDropOnTab:overTabViewItem overContent:NO withURL:urlString];
+      }
+      else {
+        // for subsequent items, make new tabs
+        [self handleDropOnTab:nil overContent:NO withURL:urlString];
+      }
+    }
+    return YES;
+  }
+  else if ([pasteBoardTypes containsObject: NSStringPboardType]) {
     NSString*	urlString = [[sender draggingPasteboard] stringForType: NSStringPboardType];
     return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:urlString];
   }
-  else if ([pasteBoardTypes containsObject: NSURLPboardType])
-  {
+  else if ([pasteBoardTypes containsObject: NSURLPboardType]) {
     NSURL*	urlData = [NSURL URLFromPasteboard:[sender draggingPasteboard]];
     return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:[urlData absoluteString]];
-  }
-  else if ([pasteBoardTypes containsObject: NSFilenamesPboardType])
-  {
-    NSString*	urlString = [[sender draggingPasteboard] stringForType: NSFilenamesPboardType];
-    return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:urlString];
   }
   
   return NO;    
