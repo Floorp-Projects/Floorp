@@ -271,7 +271,7 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 ///* ATENTIE */ printf( "this=%p size=%d,%d  src=(%d %d %d %d) dest=(%d %d %d %d)\n",
 //this, mPhImage.size.w, mPhImage.size.h, aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth, aDHeight );
 
-		PhDrawContext_t *dc = PhDCGetCurrent();
+		PhDrawContext_t *dc = ((nsDrawingSurfacePh*)aSurface)->GetDC();
 		PhGC_t *gc = PgGetGCCx( dc );
 		if( (aSWidth != aDWidth || aSHeight != aDHeight) ) {
 
@@ -408,16 +408,17 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 	if (!aSurface || !mImageBits)
 		return (NS_ERROR_FAILURE);
 
+	PhDrawContext_t *dc = ((nsDrawingSurfacePh*)aSurface)->GetDC();
+
 	if ((mAlphaDepth == 1) || (mAlphaDepth == 0))
 	{
 		if( mImageFlags & IMAGE_SHMEM )
-			PgDrawPhImagemx( &pos, &mPhImage, 0 );
-		else PgDrawPhImage( &pos, &mPhImage, 0 );
+			PgDrawPhImageCxv( dc, &pos, &mPhImage, 0 );
+		else PgDrawPhImageCx( dc, &pos, &mPhImage, 0 );
 	}
 	else if (mAlphaDepth == 8)
 	{
 		PgMap_t map;
-		PhDrawContext_t *dc = PhDCGetCurrent();
 		PhGC_t *gc = PgGetGCCx( dc );
 
 		map.dim.w = mAlphaWidth;
@@ -450,7 +451,7 @@ NS_IMETHODIMP nsImagePh::DrawTile( nsIRenderingContext &aContext, nsDrawingSurfa
 	/* is this a 1x1 transparent image used for spacing? */
 	if( mWidth == 1 && mHeight == 1 && mAlphaDepth == 1 && mAlphaBits[0] == 0x0 ) return NS_OK;
 
-	dc = PhDCGetCurrent();
+	dc = ((nsDrawingSurfacePh*)aSurface)->GetDC();
 	gc = PgGetGCCx( dc );
 
 	// since there is an offset into the image and I only want to draw full
