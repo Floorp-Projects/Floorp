@@ -1046,8 +1046,10 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
                 else if (nsCRT::strcmp(mSocketTypes[type], "ssl-forcehandshake") == 0) {
                     mSecurityInfo = socketInfo;
                     nsCOMPtr<nsIChannelSecurityInfo> securityInfo = do_QueryInterface(mSecurityInfo, &rv);
-                    if (NS_SUCCEEDED(rv) && securityInfo)
+                    if (NS_SUCCEEDED(rv) && securityInfo) {
                         securityInfo->SetForceHandshake(PR_TRUE);
+                        securityInfo->SetChannel(this);
+                    }
                 }
                 else if (nsCRT::strcmp(mSocketTypes[type], "socks") == 0) {
                     // since socks is transparent, any layers above
