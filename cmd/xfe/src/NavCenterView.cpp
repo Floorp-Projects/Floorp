@@ -135,7 +135,13 @@ XFE_NavCenterView::notify(HT_Resource		n,
 void
 XFE_NavCenterView::finishPaneCreate()
 {
+#ifdef MOZ_SELECTOR_BAR
+    HT_SetPaneFEData(_ht_pane, this);
+
+    _ht_view = HT_GetSelectedView(_ht_pane);
+#else
   XFE_RDFBase::finishPaneCreate();
+#endif
 
   // This function takes a valid MWContext argument only when the
   // NavCenterView is docked.  However, we need a HT_Pane-to-context
@@ -271,7 +277,7 @@ XFE_NavCenterView::addHTView(HT_View htview)
 				   XmNpixmapMask, mask,
                    XmNwidth, (unsigned int)(w = rdfImage->getImageWidth()),
                    XmNheight, (unsigned int)(h = rdfImage->getImageHeight()),
-				   XmNbuttonLayout, XmBUTTON_PIXMAP_ONLY,
+                   /*				   XmNbuttonLayout, XmBUTTON_PIXMAP_ONLY, */
                    NULL);
 
 
@@ -299,15 +305,30 @@ XFE_NavCenterView::addHTView(HT_View htview)
 //////////////////////////////////////////////////////////////////////
 void
 XFE_NavCenterView::selector_activate_cb(Widget		/* w */,
-                                        XtPointer	/* clientData */, 
+                                        XtPointer	 clientData , 
                                         XtPointer	/* callData */)
 {	
-//   HT_View htView = (HT_View)clientData;
-//   HT_Pane htPane = HT_GetPane(htView);
+   HT_View htView = (HT_View)clientData;
+   HT_Pane htPane = HT_GetPane(htView);
 
-//  XFE_NavCenterView * nc = (XFE_NavCenterView *)HT_GetPaneFEData(htPane);
+  XFE_NavCenterView * nc = (XFE_NavCenterView *)HT_GetPaneFEData(htPane);
 
-//  nc->setRdftree(htView);
+  nc->setRdfTree(htView);
+}
+//////////////////////////////////////////////////////////////////////
+void
+XFE_NavCenterView::setRdfTree(HT_View    view)
+{
+
+  Widget toolbar;
+  //  WidgetList tool_items = NULL;
+  XtVaGetValues(_selector,XmNtoolBar,&toolbar,NULL);
+  //XfeToolBarSetSelectedButton(toolbar, xxx);
+
+  HT_SetSelectedView(_ht_pane, view);
+  _ht_view = view;
+
+
 }
 //////////////////////////////////////////////////////////////////////
 Widget 
@@ -384,7 +405,7 @@ XFE_NavCenterView::image_complete_cb(XtPointer client_data)
      XtVaSetValues(button,/*  XmNheight,(cb->height + b_height), */
 				   XmNpixmap, cb->image, 
 				   XmNpixmapMask, cb->mask,
-				   XmNbuttonLayout, XmBUTTON_PIXMAP_ONLY,
+                   /*                   XmNbuttonLayout, XmBUTTON_PIXMAP_ONLY, */
                    NULL);
      XtManageChild(button);
      XP_FREE(cb);

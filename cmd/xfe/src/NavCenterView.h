@@ -56,6 +56,7 @@ public:
   virtual void    handleImageComplete      (Widget, IL_Pixmap *);  
 #ifdef MOZ_SELECTOR_BAR
   static void     image_complete_cb        (XtPointer);
+  void setRdfTree(HT_View);
 #endif
 
 protected:

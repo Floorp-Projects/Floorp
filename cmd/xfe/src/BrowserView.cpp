@@ -111,9 +111,10 @@ XFE_BrowserView::showNavCenter()
 											   this, 
 											   m_contextData);
 
+#ifndef MOZ_SELECTOR_BAR
         // hack! Load something for now.  Eventually tie to toolbar
         _navCenterView->newBookmarksPane();
-
+#endif
 		// Add _navCenterView to the sub-view list of browser view
 		addView(_navCenterView);
 	}
