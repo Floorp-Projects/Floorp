@@ -187,7 +187,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMImplementationImpl_createDocum
 {
   nsIDOMDOMImplementation* dom = (nsIDOMDOMImplementation*) 
     env->GetLongField(jthis, JavaDOMGlobals::domImplementationPtrFID);
-  if (!dom || !jqualifiedName || ! jpublicID || jsystemID) {
+  if (!dom || !jqualifiedName || !jpublicID || !jsystemID) {
     JavaDOMGlobals::ThrowException(env,
 	"DOMImplementation.createDocumentType: NULL pointer");
     return NULL;
