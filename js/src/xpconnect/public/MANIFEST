@@ -5,5 +5,3 @@
 nsIXPConnect.h
 nsIXPCScriptable.h
 xpclog.h
-xpccomponents.h
-xpcjsid.h

@@ -26,11 +26,7 @@ MODULE		= xpconnect
 EXPORTS = \
     nsIXPConnect.h      \
     nsIXPCScriptable.h  \
-    xpccomponents.h     \
-    xpcjsid.h           \
     xpclog.h            \
-    xpctest.h           \
-    nsrootidl.h         \
     $(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

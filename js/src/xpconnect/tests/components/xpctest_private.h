@@ -37,12 +37,22 @@
 { 0xed132c20, 0xeed1, 0x11d2, \
     { 0xba, 0xa4, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
 
+
+// {0ECB3420-0D6F-11d3-BAB8-00805F8A5DD7}
+#define NS_CHILD_CID \
+{ 0xecb3420, 0xd6f, 0x11d3, \
+    { 0xba, 0xb8, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
+
 // 'namespace' class
 class xpctest
 {
 public:
   static const nsID& GetEchoCID() {static nsID cid = NS_ECHO_CID; return cid;}
   static NS_METHOD ConstructEcho(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+  static const nsID& GetChildCID() {static nsID cid = NS_CHILD_CID; return cid;}
+  static NS_METHOD ConstructChild(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
 private:
     xpctest();  // not implemented
 };

@@ -2,8 +2,10 @@
 
 function nsID(str)
 {
-    var id = Components.classes.nsIID.createInstance();
-    id = id.QueryInterface(Components.interfaces.nsIJSIID);
+    // let's do it in one step!
+    var id = Components.classes.nsIID.createInstance(Components.interfaces.nsIJSIID);
+//    var id = Components.classes.nsIID.createInstance();
+//    id = id.QueryInterface(Components.interfaces.nsIJSIID);
     id.init(str);
     return id;
 }
@@ -53,6 +55,10 @@ bar = new Object();
 bar.Test = _Test;
 bar.QueryInterface = _QI;
 // this 'bar' object is accessed from native code after this script is run
+
+var some_string = "some string"
+foo.Foo = some_string;
+print("property set/get: "+ (foo.Foo == some_string ? "passed" : "FAILED"));
 
 print("foo properties:");
 for(i in foo)

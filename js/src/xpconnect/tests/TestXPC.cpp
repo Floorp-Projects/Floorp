@@ -60,6 +60,7 @@ static void SetupRegistry()
   nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
   sysdir += "components";
   const char *componentsDir = sysdir.GetCString(); // native path
+//  const char *componentsDir = nsprPath(sysdir); // native path
   if (componentsDir != NULL)
   {
 #ifdef XP_PC
@@ -147,7 +148,14 @@ class nsTestXPCFoo : public nsITestXPCFoo2
     NS_DECL_ISUPPORTS
     NS_IMETHOD Test(int p1, int p2, int* retval);
     NS_IMETHOD Test2();
+
+    /* attribute string Foo; */
+    NS_IMETHOD GetFoo(char * *aFoo);
+    NS_IMETHOD SetFoo(char * aFoo);
+
     nsTestXPCFoo();
+    virtual ~nsTestXPCFoo();
+    char* mFoo;
 };
 
 NS_IMETHODIMP nsTestXPCFoo::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -185,15 +193,45 @@ NS_IMETHODIMP nsTestXPCFoo::Test2()
     return NS_OK;
 }
 
+NS_IMETHODIMP nsTestXPCFoo::GetFoo(char * *aFoo)
+{
+    if(!aFoo)
+        return NS_ERROR_NULL_POINTER;
+    if(mFoo)
+        *aFoo = (char*) nsAllocator::Clone(mFoo, strlen(mFoo)+1);
+    else
+        *aFoo = NULL;
+    return NS_OK;
+}        
+
+NS_IMETHODIMP nsTestXPCFoo::SetFoo(char * aFoo)
+{
+    if(mFoo)
+    {
+        nsAllocator::Free(mFoo);        
+        mFoo = NULL;
+    }
+    if(aFoo)
+        mFoo = (char*) nsAllocator::Clone(aFoo, strlen(aFoo)+1);
+    return NS_OK;
+}        
 
 NS_IMPL_ADDREF(nsTestXPCFoo)
 NS_IMPL_RELEASE(nsTestXPCFoo)
 
 nsTestXPCFoo::nsTestXPCFoo()
+    : mFoo(NULL)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 }
+
+nsTestXPCFoo::~nsTestXPCFoo()
+{
+    if(mFoo)
+        nsAllocator::Free(mFoo);        
+}        
+
 
 /***************************************************************************/
 
@@ -698,7 +736,8 @@ int main()
                     int result;
                     JSObject* test_js_obj;
                     ptr->Test(11, 13, &result);
-                    printf("call to ptr->Test returned %d\n", result);
+                    printf("call to ptr->Test result: %s\n", 
+                           result == 24 ? "passed" : "FAILED");
 
                     nsIXPConnectWrappedJSMethods* methods;
 
@@ -706,9 +745,22 @@ int main()
                                             (void**) &methods);
                     methods->GetJSObject(&test_js_obj);
 
-                    printf("call to methods->GetJSObject() returned: %s\n",
+                    printf("call to methods->GetJSObject() : %s\n",
                             test_js_obj == JSVAL_TO_OBJECT(v) ?
-                            "expected result" : "WRONG RESULT" );
+                            "passed" : "FAILED" );
+
+                    char some_string[] = "some string here";
+                    char* answer = NULL;
+//                    ptr->GetFoo(&answer);
+//                    printf("Foo : %s\n", answer);
+                    ptr->SetFoo(some_string);
+                    ptr->GetFoo(&answer);
+                    printf("set/get property : %s\n",
+                           0 == strcmp(some_string, answer) ? 
+                                "passed" : "FALIED");
+
+                    if(answer)
+                        nsAllocator::Free(answer);
 
                     // dump to log test...
 //                    XPC_DUMP(xpc, 50);
@@ -764,9 +816,11 @@ int main()
 
 #endif
 
-    NS_RELEASE(xpc);
-
+//    xpc->DebugDump(3);
+//    printf("-----------------------\n");
+    xpc->AbandonJSContext(jscontext);
     JS_DestroyContext(jscontext);
+    NS_RELEASE(xpc);
     JS_DestroyRuntime(rt);
     JS_ShutDown();
     return 0;

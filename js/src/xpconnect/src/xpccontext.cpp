@@ -92,6 +92,20 @@ XPCContext::XPCContext(JSContext* aJSContext,
     mLastResult = NS_OK;
 }
 
+JS_STATIC_DLL_CALLBACK(intN)
+WrappedNativeClassDestroyCB(JSHashEntry *he, intN i, void *arg)
+{
+    ((nsXPCWrappedNativeClass*)he->value)->XPCContextBeingDestroyed();
+    return HT_ENUMERATE_NEXT;
+}
+
+JS_STATIC_DLL_CALLBACK(intN)
+WrappedJSClassDestroyCB(JSHashEntry *he, intN i, void *arg)
+{
+    ((nsXPCWrappedJSClass*)he->value)->XPCContextBeingDestroyed();
+    return HT_ENUMERATE_NEXT;
+}
+
 XPCContext::~XPCContext()
 {
     if(mXPConnect)
@@ -100,10 +114,16 @@ XPCContext::~XPCContext()
         delete mWrappedJSMap;
     if(mWrappedNativeMap)
         delete mWrappedNativeMap;
-    if(mWrappedJSClassMap)
-        delete mWrappedJSClassMap;
     if(mWrappedNativeClassMap)
+    {
+        mWrappedNativeClassMap->Enumerate(WrappedNativeClassDestroyCB, NULL);
         delete mWrappedNativeClassMap;
+    }
+    if(mWrappedJSClassMap)
+    {
+        mWrappedJSClassMap->Enumerate(WrappedJSClassDestroyCB, NULL);
+        delete mWrappedJSClassMap;
+    }
 }
 
 JSBool

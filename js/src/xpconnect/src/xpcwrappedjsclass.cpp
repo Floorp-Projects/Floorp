@@ -119,7 +119,8 @@ nsXPCWrappedJSClass::~nsXPCWrappedJSClass()
 {
     if(mDescriptors && mDescriptors != &zero_methods_descriptor)
         delete [] mDescriptors;
-    mXPCContext->GetWrappedJSClassMap()->Remove(this);
+    if(mXPCContext)
+        mXPCContext->GetWrappedJSClassMap()->Remove(this);
     NS_RELEASE(mInfo);
 }
 
@@ -154,6 +155,9 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID
     jsval retval;
     JSObject* retObj;
     JSBool success = JS_FALSE;
+
+    if(!cx)
+        return NULL;
 
 //    id = CreateIIDJSObject(aIID);
     id = xpc_NewIIDObject(cx, aIID);
@@ -221,39 +225,73 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
 {
     if(aIID.Equals(nsISupports::GetIID()))
     {
+        // asking for nsISupports... no problem
         nsXPCWrappedJS* root = self->GetRootWrapper();
         *aInstancePtr = (void*) root;
         NS_ADDREF(root);
         return NS_OK;
     }
-    else if(aIID.Equals(self->GetIID()))
+
+    if(aIID.Equals(self->GetIID()))
     {
+        // asking for our wrapper's type... no problem
         *aInstancePtr = (void*) self;
         NS_ADDREF(self);
         return NS_OK;
     }
-    else if(aIID.Equals(WrappedJSIdentity::GetIID()))
+
+    if(aIID.Equals(WrappedJSIdentity::GetIID()))
     {
+        // asking to find out if this is a wrapper object
         *aInstancePtr = WrappedJSIdentity::GetSingleton();
         return NS_OK;
     }
-    else
+
+    // else...
+
+    // check if asking for an interface that we inherit from
+    nsIInterfaceInfo* current = GetInterfaceInfo();
+    NS_ADDREF(current);
+    nsIInterfaceInfo* parent;
+
+    while(NS_SUCCEEDED(current->GetParent(&parent)) && parent)
     {
-        JSObject* jsobj =
-            CallQueryInterfaceOnJSObject(self->GetJSObject(), aIID);
-        if(jsobj)
+        NS_RELEASE(current);
+        current = parent;
+
+        nsIID* iid;
+        if(NS_SUCCEEDED(current->GetIID(&iid)) && iid)
         {
-            nsXPCWrappedJS* wrapper =
-                nsXPCWrappedJS::GetNewOrUsedWrapper(GetXPCContext(),
-                                                    jsobj, aIID);
-            if(wrapper)
+            PRBool found = aIID.Equals(*iid);
+            nsAllocator::Free(iid);
+            if(found)
             {
-                *aInstancePtr = (void*) wrapper;
+                NS_RELEASE(current);
+                *aInstancePtr = (void*) self;
+                NS_ADDREF(self);
                 return NS_OK;
             }
         }
     }
+    NS_RELEASE(current);
 
+    // else...
+    // check if the JSObject claims to implement this interface
+    JSObject* jsobj = CallQueryInterfaceOnJSObject(self->GetJSObject(), aIID);
+    if(jsobj)
+    {
+        nsXPCWrappedJS* wrapper =
+            nsXPCWrappedJS::GetNewOrUsedWrapper(GetXPCContext(),
+                                                jsobj, aIID);
+        if(wrapper)
+        {
+            *aInstancePtr = (void*) wrapper;
+            return NS_OK;
+        }
+    }
+    
+    // else...
+    // no can do
     *aInstancePtr = NULL;
     return NS_NOINTERFACE;
 }
@@ -285,13 +323,15 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     JSBool InConversionsDone = JS_FALSE;
     nsID* conditional_iid = NULL;
     JSBool iidIsOwned = JS_FALSE;
+    JSObject* obj = wrapper->GetJSObject();
+    const char* name = info->GetName();
 
     // XXX ASSUMES that retval is last arg.
     paramCount = info->GetParamCount();
     argc = paramCount -
             (paramCount && info->GetParam(paramCount-1).IsRetval() ? 1 : 0);
 
-    if(!IsReflectable(methodIndex))
+    if(!cx || !IsReflectable(methodIndex))
         goto pre_call_clean_up;
 
     // setup argv
@@ -435,8 +475,14 @@ pre_call_clean_up:
 
     older = JS_SetErrorReporter(cx, NULL);
     JS_ClearPendingException(cx);
-    success = JS_CallFunctionName(cx, wrapper->GetJSObject(), info->GetName(),
-                                  argc, argv, &result);
+
+    if(info->IsGetter())
+        success = JS_GetProperty(cx, obj, name, &result);
+    else if(info->IsSetter())
+        success = JS_SetProperty(cx, obj, name, argv);
+    else
+        success = JS_CallFunctionName(cx, obj,  name, argc, argv, &result);
+
     if(JS_IsExceptionPending(cx))
     {
         JS_ClearPendingException(cx);

@@ -35,7 +35,7 @@ NS_IMPL_ISUPPORTS(nsXPCWrappedNativeClass, kWrappedNativeClassIID)
 // static
 nsXPCWrappedNativeClass*
 nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
-                                          REFNSIID aIID)
+                                           REFNSIID aIID)
 {
     IID2WrappedNativeClassMap* map;
     nsXPCWrappedNativeClass* clazz = NULL;
@@ -76,7 +76,7 @@ nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
 }
 
 nsXPCWrappedNativeClass::nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID,
-                                               nsIInterfaceInfo* aInfo)
+                                                 nsIInterfaceInfo* aInfo)
     : mXPCContext(xpcc),
       mIID(aIID),
       mName(NULL),
@@ -96,7 +96,8 @@ nsXPCWrappedNativeClass::nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID
 
 nsXPCWrappedNativeClass::~nsXPCWrappedNativeClass()
 {
-    mXPCContext->GetWrappedNativeClassMap()->Remove(this);
+    if(mXPCContext)
+        mXPCContext->GetWrappedNativeClassMap()->Remove(this);
     DestroyMemberDescriptors();
     if(mName)
         nsAllocator::Free(mName);
@@ -112,7 +113,8 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors()
     uint16 totalCount;
     JSContext* cx = GetJSContext();
 
-    if(NS_FAILED(mInfo->GetMethodCount(&methodCount))||
+    if(!cx ||
+       NS_FAILED(mInfo->GetMethodCount(&methodCount))||
        NS_FAILED(mInfo->GetConstantCount(&constCount)))
         return JS_FALSE;
 
@@ -209,10 +211,11 @@ nsXPCWrappedNativeClass::DestroyMemberDescriptors()
 {
     if(!mDescriptors)
         return;
-    JSContext* cx = GetJSContext();
-    for(int i = 0; i < mMemberCount; i++)
-        if(mDescriptors[i].invokeFuncObj)
-            JS_RemoveRoot(cx, &mDescriptors[i].invokeFuncObj);
+    JSContext* cx;
+    if(NULL != (cx = GetJSContext()))
+        for(int i = 0; i < mMemberCount; i++)
+            if(mDescriptors[i].invokeFuncObj)
+                JS_RemoveRoot(cx, &mDescriptors[i].invokeFuncObj);
     delete [] mDescriptors;
 }
 
@@ -250,10 +253,14 @@ WrappedNative_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     {
         nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
         NS_ASSERTION(clazz,"wrapper without class");
-        const XPCNativeMemberDescriptor* desc = 
-            clazz->LookupMemberByID(clazz->GetXPCContext()->
-                                        GetStringID(XPCContext::IDX_TO_STRING));
-        if(desc && desc->IsMethod())
+        
+        XPCContext* xpcc;
+        const XPCNativeMemberDescriptor* desc;
+
+        if(NULL != (xpcc = clazz->GetXPCContext()) &&
+           NULL != (desc = clazz->LookupMemberByID(
+                           xpcc->GetStringID(XPCContext::IDX_TO_STRING))) &&
+           desc->IsMethod())
         {
             if(!clazz->CallWrappedMethod(cx, wrapper, desc, 
                                          JS_FALSE, 0, NULL, vp))
@@ -675,6 +682,9 @@ nsXPCWrappedNativeClass::GetInvokeFunObj(const XPCNativeMemberDescriptor* desc)
 
         JSContext* cx = GetJSContext();
 
+        if(!cx)
+            return NULL;
+
         JSFunction *fun = JS_NewFunction(cx, WrappedNative_CallMethod, 0,
                                          JSFUN_BOUND_METHOD, NULL, name);
         if(!fun)
@@ -736,11 +746,13 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     else
     {
         nsIXPCScriptable* ds;
-        if(NULL != (ds = wrapper->GetDynamicScriptable()))
+        nsIXPCScriptable* as;
+        if(NULL != (ds = wrapper->GetDynamicScriptable()) &&
+           NULL != (as = wrapper->GetArbitraryScriptable()))
         {
             JSBool retval;
             if(NS_SUCCEEDED(ds->GetProperty(cx, obj, id, vp,
-                        wrapper, wrapper->GetArbitraryScriptable(), &retval)))
+                                            wrapper, as, &retval)))
                 return retval;
         }
         // XXX silently fail when property not found or call fails?
@@ -772,11 +784,13 @@ WrappedNative_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     else
     {
         nsIXPCScriptable* ds;
-        if(NULL != (ds = wrapper->GetDynamicScriptable()))
+        nsIXPCScriptable* as;
+        if(NULL != (ds = wrapper->GetDynamicScriptable()) &&
+           NULL != (as = wrapper->GetArbitraryScriptable()))
         {
             JSBool retval;
             if(NS_SUCCEEDED(ds->SetProperty(cx, obj, id, vp,
-                        wrapper, wrapper->GetArbitraryScriptable(), &retval)))
+                                            wrapper, as, &retval)))
                 return retval;
         }
         // fail silently
@@ -793,6 +807,7 @@ WrappedNative_LookupProperty(JSContext *cx, JSObject *obj, jsid id,
                             )
 {
     nsIXPCScriptable* ds;
+    nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if(wrapper)
     {
@@ -804,11 +819,12 @@ WrappedNative_LookupProperty(JSContext *cx, JSObject *obj, jsid id,
             *propp = (JSProperty*)1;
             return JS_TRUE;
         }
-        else if(NULL != (ds = wrapper->GetDynamicScriptable()))
+        else if(NULL != (ds = wrapper->GetDynamicScriptable()) &&
+                NULL != (as = wrapper->GetArbitraryScriptable()))
         {
             JSBool retval;
             if(NS_SUCCEEDED(ds->LookupProperty(cx, obj, id, objp, propp,
-                            wrapper, wrapper->GetArbitraryScriptable(), &retval)))
+                                               wrapper, as, &retval)))
                 return retval;
         }
     }
@@ -824,8 +840,11 @@ WrappedNative_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          uintN attrs, JSProperty **propp)
 {
     nsIXPCScriptable* ds;
+    nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
-    if(wrapper && NULL != (ds = wrapper->GetDynamicScriptable()))
+    if(wrapper && 
+       NULL != (ds = wrapper->GetDynamicScriptable()) &&
+       NULL != (as = wrapper->GetArbitraryScriptable()))
     {
         nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
         NS_ASSERTION(clazz,"wrapper without class");
@@ -833,8 +852,8 @@ WrappedNative_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
         {
             JSBool retval;
             if(NS_SUCCEEDED(ds->DefineProperty(cx, obj, id, value,
-                            getter, setter, attrs, propp,
-                            wrapper, wrapper->GetArbitraryScriptable(), &retval)))
+                                               getter, setter, attrs, propp,
+                                               wrapper, as, &retval)))
                 return retval;
         }
     }
@@ -848,8 +867,11 @@ WrappedNative_GetAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
     nsIXPCScriptable* ds;
+    nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
-    if(wrapper && NULL != (ds = wrapper->GetDynamicScriptable()))
+    if(wrapper && 
+       NULL != (ds = wrapper->GetDynamicScriptable()) &&
+       NULL != (as = wrapper->GetArbitraryScriptable()))
     {
         nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
         NS_ASSERTION(clazz,"wrapper without class");
@@ -857,7 +879,7 @@ WrappedNative_GetAttributes(JSContext *cx, JSObject *obj, jsid id,
         {
             JSBool retval;
             if(NS_SUCCEEDED(ds->GetAttributes(cx, obj, id, prop, attrsp,
-                            wrapper, wrapper->GetArbitraryScriptable(), &retval)))
+                                              wrapper, as, &retval)))
                 return retval;
         }
     }
@@ -871,8 +893,11 @@ WrappedNative_SetAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
     nsIXPCScriptable* ds;
+    nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
-    if(wrapper && NULL != (ds = wrapper->GetDynamicScriptable()))
+    if(wrapper && 
+       NULL != (ds = wrapper->GetDynamicScriptable()) &&
+       NULL != (as = wrapper->GetArbitraryScriptable()))
     {
         nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
         NS_ASSERTION(clazz,"wrapper without class");
@@ -880,7 +905,7 @@ WrappedNative_SetAttributes(JSContext *cx, JSObject *obj, jsid id,
         {
             JSBool retval;
             if(NS_SUCCEEDED(ds->SetAttributes(cx, obj, id, prop, attrsp,
-                            wrapper, wrapper->GetArbitraryScriptable(), &retval)))
+                                              wrapper, as, &retval)))
                 return retval;
         }
     }
@@ -892,8 +917,11 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     nsIXPCScriptable* ds;
+    nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
-    if(wrapper && NULL != (ds = wrapper->GetDynamicScriptable()))
+    if(wrapper && 
+       NULL != (ds = wrapper->GetDynamicScriptable()) &&
+       NULL != (as = wrapper->GetArbitraryScriptable()))
     {
         nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
         NS_ASSERTION(clazz,"wrapper without class");
@@ -901,7 +929,7 @@ WrappedNative_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         {
             JSBool retval;
             if(NS_SUCCEEDED(ds->DeleteProperty(cx, obj, id, vp,
-                            wrapper, wrapper->GetArbitraryScriptable(), &retval)))
+                                               wrapper, as, &retval)))
                 return retval;
         }
     }
@@ -913,12 +941,15 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_DefaultValue(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     nsIXPCScriptable* ds;
+    nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
-    if(wrapper && NULL != (ds = wrapper->GetDynamicScriptable()))
+    if(wrapper && 
+       NULL != (ds = wrapper->GetDynamicScriptable()) &&
+       NULL != (as = wrapper->GetArbitraryScriptable()))
     {
         JSBool retval;
         if(NS_SUCCEEDED(ds->DefaultValue(cx, obj, type, vp,
-                        wrapper, wrapper->GetArbitraryScriptable(), &retval)))
+                                         wrapper, as, &retval)))
             return retval;
     }
     return WrappedNative_Convert(cx, obj, type, vp);
@@ -933,6 +964,7 @@ struct EnumStateHolder
 JSBool
 nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
                                           nsIXPCScriptable* ds,
+                                          nsIXPCScriptable* as,
                                           JSContext *cx, JSObject *obj,
                                           JSIterateOp enum_op,
                                           jsval *statep, jsid *idp)
@@ -949,7 +981,7 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
             JSBool retval;
             if(NS_FAILED(ds->Enumerate(cx, obj, JSENUMERATE_INIT,
                                 &holder->dstate, &did, wrapper,
-                                GetArbitraryScriptable(), &retval)) || !retval)
+                                as, &retval)) || !retval)
             {
                 holder->dstate = JSVAL_NULL;
                 did = INT_TO_JSVAL(0);
@@ -979,7 +1011,7 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
             JSBool retval;
             if(NS_FAILED(ds->Enumerate(cx, obj, JSENUMERATE_NEXT,
                                 &holder->dstate, idp, wrapper,
-                                GetArbitraryScriptable(), &retval)) || !retval)
+                                as, &retval)) || !retval)
                 *idp = holder->dstate = JSVAL_NULL;
         }
 
@@ -999,7 +1031,7 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
             if(holder->dstate != JSVAL_NULL)
                 ds->Enumerate(cx, obj, JSENUMERATE_DESTROY,
                               &holder->dstate, idp, wrapper,
-                              GetArbitraryScriptable(), &retval);
+                              as, &retval);
             if(holder->sstate != JSVAL_NULL)
                 StaticEnumerate(wrapper, JSENUMERATE_DESTROY, &holder->sstate, idp);
             delete holder;
@@ -1055,6 +1087,7 @@ WrappedNative_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 {
     nsXPCWrappedNative* wrapper;
     nsIXPCScriptable* ds;
+    nsIXPCScriptable* as;
 
     wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if (!wrapper) {
@@ -1067,8 +1100,10 @@ WrappedNative_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
     NS_ASSERTION(clazz,"wrapper without class");
 
-    if(NULL != (ds = wrapper->GetDynamicScriptable()))
-        return clazz->DynamicEnumerate(wrapper, ds, cx, obj, enum_op, statep, idp);
+    if(NULL != (ds = wrapper->GetDynamicScriptable()) &&
+       NULL != (as = wrapper->GetArbitraryScriptable()))
+        return clazz->DynamicEnumerate(wrapper, ds, as, cx, obj, enum_op, 
+                                       statep, idp);
     else
         return clazz->StaticEnumerate(wrapper, enum_op, statep, idp);
 }
@@ -1078,8 +1113,11 @@ WrappedNative_CheckAccess(JSContext *cx, JSObject *obj, jsid id,
                       JSAccessMode mode, jsval *vp, uintN *attrsp)
 {
     nsIXPCScriptable* ds;
+    nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
-    if(wrapper && NULL != (ds = wrapper->GetDynamicScriptable()))
+    if(wrapper && 
+       NULL != (ds = wrapper->GetDynamicScriptable()) &&
+       NULL != (as = wrapper->GetArbitraryScriptable()))
     {
         nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
         NS_ASSERTION(clazz,"wrapper without class");
@@ -1087,7 +1125,7 @@ WrappedNative_CheckAccess(JSContext *cx, JSObject *obj, jsid id,
         {
             JSBool retval;
             if(NS_SUCCEEDED(ds->CheckAccess(cx, obj, id, mode, vp, attrsp,
-                            wrapper, wrapper->GetArbitraryScriptable(), &retval)))
+                                            wrapper, as, &retval)))
                 return retval;
         }
     }
@@ -1117,12 +1155,15 @@ WrappedNative_Call(JSContext *cx, JSObject *obj,
         return JS_FALSE;
 
     nsIXPCScriptable* ds;
+    nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx,obj);
-    if(wrapper && NULL != (ds = wrapper->GetDynamicScriptable()))
+    if(wrapper && 
+       NULL != (ds = wrapper->GetDynamicScriptable()) &&
+       NULL != (as = wrapper->GetArbitraryScriptable()))
     {
         JSBool retval;
         if(NS_SUCCEEDED(ds->Call(cx, obj, argc, argv, rval,
-                        wrapper, wrapper->GetArbitraryScriptable(), &retval)))
+                        wrapper, as, &retval)))
             return retval;
         JS_ReportError(cx, "Call to nsXPCScriptable failed");
     }
@@ -1141,12 +1182,15 @@ WrappedNative_Construct(JSContext *cx, JSObject *obj,
         return JS_FALSE;
 
     nsIXPCScriptable* ds;
+    nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx,obj);
-    if(wrapper && NULL != (ds = wrapper->GetDynamicScriptable()))
+    if(wrapper && 
+       NULL != (ds = wrapper->GetDynamicScriptable()) &&
+       NULL != (as = wrapper->GetArbitraryScriptable()))
     {
         JSBool retval;
         if(NS_SUCCEEDED(ds->Construct(cx, obj, argc, argv, rval,
-                        wrapper, wrapper->GetArbitraryScriptable(), &retval)))
+                                      wrapper, as, &retval)))
             return retval;
         JS_ReportError(cx, "Call to nsXPCScriptable failed");
     }
@@ -1237,6 +1281,8 @@ JSObject*
 nsXPCWrappedNativeClass::NewInstanceJSObject(nsXPCWrappedNative* self)
 {
     JSContext* cx = GetJSContext();
+    if(!cx)
+        return NULL;
     JSObject* jsobj = JS_NewObject(cx, &WrappedNative_class, NULL, NULL);
     if(!jsobj || !JS_SetPrivate(cx, jsobj, self))
         return NULL;

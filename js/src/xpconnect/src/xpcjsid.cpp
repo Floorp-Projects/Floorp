@@ -325,10 +325,23 @@ CIDCreateInstanceScriptable::Call(JSContext *cx, JSObject *obj,
 
     // XXX can do security check here (don't forget to free cid)
 
-    // XXX could allow for passing an IID
-    rv = nsComponentManager::CreateInstance(*cid, NULL,
-                                            nsISupports::GetIID(),
-                                            (void**) &inst);
+    // If an IID was passed in then use it
+    // XXX should it be JS error to pass something that is *not* and JSID?
+    const nsID* piid = NULL;
+    if(argc)
+    {
+        JSObject* iidobj;
+        jsval val = *argv;
+        if(!JSVAL_IS_VOID(val) && !JSVAL_IS_NULL(val) &&
+            JSVAL_IS_OBJECT(val) && NULL != (iidobj = JSVAL_TO_OBJECT(val)))
+        {
+            piid = xpc_JSObjectToID(cx, iidobj);
+        }
+    }
+    if(!piid)
+        piid = &nsISupports::GetIID();
+
+    rv = nsComponentManager::CreateInstance(*cid, NULL, *piid, (void**) &inst);
     nsAllocator::Free(cid);
 
     if(NS_FAILED(rv))
@@ -339,7 +352,7 @@ CIDCreateInstanceScriptable::Call(JSContext *cx, JSObject *obj,
     nsIXPConnect* xpc = nsXPConnect::GetXPConnect();
     if(xpc)
     {
-        rv = xpc->WrapNative(cx, inst, nsISupports::GetIID(), &instWrapper);
+        rv = xpc->WrapNative(cx, inst, *piid, &instWrapper);
         NS_RELEASE(xpc);
     }
 
@@ -515,9 +528,23 @@ CIDGetServiceScriptable::Call(JSContext *cx, JSObject *obj,
 
     // XXX can do security check here (don't forget to free cid)
 
-    // XXX could allow for passing an IID
-    rv = nsServiceManager::GetService(*cid, nsISupports::GetIID(),
-                                      &srvc, NULL);
+    // If an IID was passed in then use it
+    // XXX should it be JS error to pass something that is *not* and JSID?
+    const nsID* piid = NULL;
+    if(argc)
+    {
+        JSObject* iidobj;
+        jsval val = *argv;
+        if(!JSVAL_IS_VOID(val) && !JSVAL_IS_NULL(val) &&
+            JSVAL_IS_OBJECT(val) && NULL != (iidobj = JSVAL_TO_OBJECT(val)))
+        {
+            piid = xpc_JSObjectToID(cx, iidobj);
+        }
+    }
+    if(!piid)
+        piid = &nsISupports::GetIID();
+
+    rv = nsServiceManager::GetService(*cid, *piid, &srvc, NULL);
 
     if(NS_FAILED(rv))
         return NS_ERROR_FAILURE;
@@ -527,7 +554,7 @@ CIDGetServiceScriptable::Call(JSContext *cx, JSObject *obj,
     nsIXPConnect* xpc = nsXPConnect::GetXPConnect();
     if(xpc)
     {
-        rv = xpc->WrapNative(cx, srvc, nsISupports::GetIID(), &srvcWrapper);
+        rv = xpc->WrapNative(cx, srvc, *piid, &srvcWrapper);
         NS_RELEASE(xpc);
     }
 

@@ -29,11 +29,12 @@ nsrefcnt
 nsXPCWrappedNative::AddRef(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
+    XPCContext* xpcc;
 
     if(1 == ++mRefCnt && mRoot != this)
         NS_ADDREF(mRoot);
-    else if(2 == mRefCnt)
-        JS_AddRoot(mClass->GetXPCContext()->GetJSContext(), &mJSObj);
+    else if(2 == mRefCnt && NULL != (xpcc = mClass->GetXPCContext()))
+        JS_AddRoot(xpcc->GetJSContext(), &mJSObj);
 
 //    XPC_LOG_DEBUG(("+++ AddRef  of %x with mJSObj %x and mRefCnt = %d",this,mJSObj, mRefCnt));
 
@@ -54,8 +55,10 @@ nsXPCWrappedNative::Release(void)
     }
     if(1 == mRefCnt)
     {
+        XPCContext* xpcc;
 //        XPC_LOG_DEBUG(("--- Removing root of %x with mJSObj %x and mRefCnt = %d",this,mJSObj, mRefCnt));
-        JS_RemoveRoot(mClass->GetXPCContext()->GetJSContext(), &mJSObj);
+        if(NULL != (xpcc = mClass->GetXPCContext()))
+            JS_RemoveRoot(xpcc->GetJSContext(), &mJSObj);
     }
 
 //    XPC_LOG_DEBUG(("--- Release of %x with mJSObj %x and mRefCnt = %d",this,mJSObj, mRefCnt));
@@ -69,8 +72,10 @@ nsXPCWrappedNative::JSObjectFinalized(JSContext *cx, JSObject *obj)
     NS_PRECONDITION(1 == mRefCnt, "bad JSObject finalization");
 
     nsIXPCScriptable* ds;
-    if(NULL != (ds = GetDynamicScriptable()))
-        ds->Finalize(cx, obj, this, GetArbitraryScriptable());
+    nsIXPCScriptable* as;
+    if(NULL != (ds = GetDynamicScriptable()) &&
+       NULL != (as = GetArbitraryScriptable()))
+        ds->Finalize(cx, obj, this, as);
 
     // pass through to the real JSObject finalization code
     JS_FinalizeStub(cx, obj);
@@ -226,9 +231,13 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
         NS_ADDREF_THIS();
 
         nsIXPCScriptable* ds;
-        if(NULL != (ds = GetDynamicScriptable()))
-            ds->Create(GetClass()->GetXPCContext()->GetJSContext(),
-                       GetJSObject(), this, GetArbitraryScriptable());
+        nsIXPCScriptable* as;
+        XPCContext* xpcc;
+
+        if(NULL != (ds = GetDynamicScriptable()) &&
+           NULL != (as = GetArbitraryScriptable()) &&
+           NULL != (xpcc = GetClass()->GetXPCContext()))
+            ds->Create(xpcc->GetJSContext(), GetJSObject(), this, as);
     }
 }
 
@@ -262,7 +271,7 @@ nsXPCWrappedNative::~nsXPCWrappedNative()
         XPCContext* xpcc;
         Native2WrappedNativeMap* map;
         if(NULL != (clazz = GetClass()) &&
-           NULL != (xpcc = clazz->GetXPCContext())&&
+           NULL != (xpcc = clazz->GetXPCContext()) &&
            NULL != (map = xpcc->GetWrappedNativeMap()))
         {
             map->Remove(this);

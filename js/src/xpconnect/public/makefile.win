@@ -22,11 +22,7 @@ DEPTH=..\..\..\..
 EXPORTS = \
     nsIXPConnect.h      \
     nsIXPCScriptable.h  \
-    xpccomponents.h     \
-    xpcjsid.h           \
     xpclog.h            \
-    xpctest.h           \
-    nsrootidl.h         \
     $(NULL)
 
 MODULE = xpconnect
