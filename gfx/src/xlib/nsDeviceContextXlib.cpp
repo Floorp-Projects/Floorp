@@ -58,6 +58,14 @@ NS_IMETHODIMP nsDeviceContextXlib::Init(nsNativeWidget aNativeWidget)
 
   mWidget = aNativeWidget;
 
+  CommonInit();
+
+  return NS_OK;
+}
+
+void
+nsDeviceContextXlib::CommonInit(void)
+{
   static nscoord dpi = 96;
   static int initialized = 0;
 
@@ -89,7 +97,7 @@ NS_IMETHODIMP nsDeviceContextXlib::Init(nsNativeWidget aNativeWidget)
 
   //  printf("GFX: dpi=%d t2p=%g p2t=%g\n", dpi, mTwipsToPixels, mPixelsToTwips);
 
-  return NS_OK;
+  DeviceContextImpl::CommonInit();
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::CreateRenderingContext(nsIRenderingContext *&aContext)

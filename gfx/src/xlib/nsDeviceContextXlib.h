@@ -51,7 +51,8 @@ public:
   NS_IMETHOD EndPage(void);
 
 private:
-  virtual              ~nsDeviceContextXlib();
+  virtual             ~nsDeviceContextXlib();
+  void                 CommonInit(void);
   nsPaletteInfo        mPaletteInfo;
   PRBool               mWriteable;
   PRUint32             mNumCells;
