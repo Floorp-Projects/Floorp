@@ -178,8 +178,8 @@ nsEditorShell::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     AddRef();
     return NS_OK;
   }
-  else if ( aIID.Equals(nsISpellCheck::GetIID()) ) {
-    *aInstancePtr = (void*) ((nsISpellCheck*)this);
+  else if ( aIID.Equals(nsIEditorSpellCheck::GetIID()) ) {
+    *aInstancePtr = (void*) ((nsIEditorSpellCheck*)this);
     AddRef();
     return NS_OK;
   }

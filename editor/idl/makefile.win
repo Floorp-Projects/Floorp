@@ -26,7 +26,7 @@ MODULE=editor
 XPIDL_MODULE=editor
 
 XPIDLSRCS = .\nsIEditorShell.idl \
-						.\nsISpellCheck.idl  \
+						.\nsIEditorSpellCheck.idl  \
 						$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

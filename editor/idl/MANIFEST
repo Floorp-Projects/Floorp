@@ -17,4 +17,4 @@
 #
 
 nsIEditorShell.idl
-nsISpellCheck.idl
+nsIEditorSpellCheck.idl
