@@ -39,6 +39,7 @@ EXPORTS = \
 	nsMsgUtils.h \
 	nsMessage.h \
 	nsMsgProtocol.h \
+	nsMsgMailNewsUrl.h \
 	nsMsgTxn.h \
 	$(NULL)
 
@@ -56,6 +57,7 @@ CPPSRCS = \
 	nsMsgUtils.cpp \
 	nsMessage.cpp \
 	nsMsgProtocol.cpp \
+	nsMsgMailNewsUrl.cpp \
 	nsMsgTxn.cpp \
 	$(NULL)
 
