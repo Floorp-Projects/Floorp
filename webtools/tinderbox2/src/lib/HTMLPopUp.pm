@@ -12,8 +12,8 @@
 # the completed string before it is returned.
 
 
-# $Revision: 1.16 $ 
-# $Date: 2002/04/27 03:22:57 $ 
+# $Revision: 1.17 $ 
+# $Date: 2002/05/01 02:03:03 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp.pm,v $ 
 # $Name:  $ 
@@ -71,6 +71,9 @@ $IMPLS = ( ($TinderConfig::PopUpImpl) ||
 
 main::require_modules($IMPLS);
 
+@ISA=($IMPLS);
+
+$POPUP = HTMLPopUp->new();
 
 # The code at these sites look interesting.  Perhaps I will add them as
 # an alternative implementation someday.
@@ -114,11 +117,23 @@ $DEFAULT_POPUP_TITLE = '';
 $DEFAULT_POPUP_HEIGHT = 225;
 $DEFAULT_POPUP_WIDTH = 425;
 
-
+if (defined($TinderConfig::ADD_TEXT_BROWSER_STRINGS)) {
+    $ADD_TEXT_BROWSER_STRINGS = $TinderConfig::ADD_TEXT_BROWSER_STRINGS;
+} else {
+    $ADD_TEXT_BROWSER_STRINGS = 1;
+}
 
 #-----------------------------------------------------------
 # You should not need to configure anything below this line
 #-----------------------------------------------------------
+
+sub new {
+
+  my $type = shift;
+  my %params = @_;
+  my $self = {};
+  bless $self, $type;
+}
 
 
 
@@ -132,6 +147,10 @@ $DEFAULT_POPUP_WIDTH = 425;
 
 sub text_browser_color_string {
     my ($cell_color, $char) = @_;
+
+    if (!($ADD_TEXT_BROWSER_STRINGS)) {
+        return "";
+    }
 
     my $cell_options;
     if ( $cell_color ) {
@@ -351,7 +370,6 @@ sub parse_params {
     }
 }
 
-1;
 
 
 # call like this
@@ -392,3 +410,21 @@ sub parse_params {
 
 # define_structures()
 
+# call the implemenation defined functions, OO notionation looks
+# peculiar for this package so we do this instead.
+
+sub page_header {
+    return $POPUP->SUPER::page_header(@_);
+}
+
+sub Link {
+    return $POPUP->SUPER::Link(@_);
+}
+
+
+sub define_structures {
+    return $POPUP->SUPER::define_structures(@_);
+}
+
+
+1;
