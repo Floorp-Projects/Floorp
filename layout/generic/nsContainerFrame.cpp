@@ -432,70 +432,25 @@ nsContainerFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 void
 nsContainerFrame::PositionFrameView(nsIFrame* aKidFrame)
 {
-  if (aKidFrame->HasView()) {
-    nsIView* view = aKidFrame->GetView();
-    // Position view relative to its parent, not relative to aKidFrame's
-    // frame which may not have a view
-    nsIView*        parentView = view->GetParent();
+  nsIFrame* parentFrame = aKidFrame->GetParent();
+  if (!aKidFrame->HasView() || !parentFrame)
+    return;
 
-    nsIView*        containingView;
-    nsPoint         origin;
-    aKidFrame->GetOffsetFromView(origin, &containingView);
+  nsIView* view = aKidFrame->GetView();
+  nsIViewManager* vm = view->GetViewManager();
+  nsPoint pt;
+  nsIView* ancestorView = parentFrame->GetClosestView(&pt);
 
-    nsIViewManager* vm = view->GetViewManager();
-
-    // it's possible for the parentView to be nonnull but containingView to be
-    // null, when the parent view doesn't belong to this frame tree but to
-    // the frame tree of some enclosing document. We do nothing in that case,
-    // but we have to check that containingView is nonnull or we will crash.
-    if (nsnull != containingView && containingView != parentView) {
-      NS_ERROR("This hack should not be needed now!!! See bug 126263.");
-
-      // XXX roc this should be no longer needed, but it still is for printing/print preview
-
-      // it is possible for parent view not to have a frame attached to it
-      // kind of an anonymous view. This happens with native scrollbars and
-      // the clip view. To fix this we need to go up and parentView chain
-      // until we find a view with client data. This is total HACK to fix
-      // the HACK below. COMBO box code should NOT be in the container code!!!
-      // And the case it looks from does not just happen for combo boxes. Native
-      // scrollframes get in this situation too!! 
-      while (parentView) {
-        void *data = parentView->GetClientData();
-        if (data)
-          break;
-      
-        origin -= parentView->GetPosition();
-        parentView = parentView->GetParent();
-      }
-     
-      if (containingView != parentView) 
-      {
-        // Huh, the view's parent view isn't the same as the containing view.
-        // This happens for combo box drop-down frames.
-        //
-        // We have the origin in the coordinate space of the containing view,
-        // but we need it in the coordinate space of the parent view so do a
-        // view translation
-        origin += containingView->GetOffsetTo(parentView);
-      }
-    }
-
-    if (parentView) {
-      // If the parent view is scrollable, then adjust the origin by
-      // the parent's scroll position.
-      nsIScrollableView* scrollable = parentView->ToScrollableView();
-      if (scrollable) {
-        nscoord scrollX = 0, scrollY = 0;
-        scrollable->GetScrollPosition(scrollX, scrollY);
-
-        origin.x -= scrollX;
-        origin.y -= scrollY;
-      }
-    }
-
-    vm->MoveViewTo(view, origin.x, origin.y);
+  if (ancestorView != view->GetParent()) {
+    NS_ASSERTION(ancestorView == view->GetParent()->GetParent(),
+                 "Allowed only one anonymous view between frames");
+    // parentFrame is responsible for positioning aKidFrame's view
+    // explicitly
+    return;
   }
+
+  pt += aKidFrame->GetPosition();
+  vm->MoveViewTo(view, pt.x, pt.y);
 }
 
 static PRBool
@@ -860,6 +815,10 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
 PRBool
 nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
 {
+  if (aFrame->NeedsView()) {
+    return PR_TRUE;
+  }
+
   nsStyleContext* sc = aFrame->GetStyleContext();
   const nsStyleDisplay* display = sc->GetStyleDisplay();
   if (display->mOpacity != 1.0f) {
@@ -883,10 +842,6 @@ nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
   } 
 
   if (sc->GetPseudoType() == nsCSSAnonBoxes::scrolledContent) {
-    return PR_TRUE;
-  }
-
-  if (aFrame->GetType() == nsLayoutAtoms::objectFrame) {
     return PR_TRUE;
   }
 
