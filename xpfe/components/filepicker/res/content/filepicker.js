@@ -318,9 +318,6 @@ function openSelectedFile() {
   if (!file)
     return;
 
-  if (file.isSymlink())
-    file.initWithUnicodePath(file.unicodeTarget);
-
   if (file.isDirectory())
     gotoDirectory(file);
   else if (file.isFile())
