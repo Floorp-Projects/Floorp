@@ -83,6 +83,7 @@ export::
 		    $(NSINSTALL) -m 444 $$file crypto; \
 		fi; \
 	    done;  \
-		$(NSINSTALL) -m 444 crypto/nscertinit.c certdb; \
+	    $(NSINSTALL) -m 444 freebl/sha_fast.c crypto; \
+	    $(NSINSTALL) -m 444 freebl/sha_fast.h crypto; \
 	fi
 endif
