@@ -53,6 +53,7 @@
 #include "nsINetSupportDialogService.h"
 #include "nsNetUtil.h"
 #include "nsDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include "nsIZipReader.h"
 #include "nsIPluginInstance.h"
@@ -1175,7 +1176,7 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
         nsCOMPtr<nsIFile> systemCertFile;
         NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
         if (!directoryService) return NS_ERROR_FAILURE;
-        rv = directoryService->Get("system.OS_CurrentProcessDirectory", NS_GET_IID(nsIFile), 
+        rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), 
                               getter_AddRefs(systemCertFile));
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 #ifdef XP_MAC
