@@ -1541,8 +1541,10 @@ public:
     js2val invokeFunction(JS2Object *fnObj, js2val thisValue, js2val *argv, uint32 argc, ParameterFrame *runtimeFrame);
     void invokeInit(JS2Class *c, js2val thisValue, js2val* argv, uint32 argc);
 
-    DynamicVariable *createDynamicProperty(JS2Object *obj, const char *name, js2val initVal, Access access, bool sealed, bool enumerable);
-//    DynamicVariable *createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access, bool sealed, bool enumerable);
+    DynamicVariable *createDynamicProperty(JS2Object *obj, const char *name, js2val initVal, Access access, bool sealed, bool enumerable)
+	{
+        return createDynamicProperty(obj, world.identifiers[widenCString(name)], initVal, access, sealed, enumerable);
+	}
     DynamicVariable *createDynamicProperty(JS2Object *obj, const StringAtom &name, js2val initVal, Access access, bool sealed, bool enumerable);
     void addPublicVariableToLocalMap(LocalBindingMap *lMap, const StringAtom &name, LocalMember *v, Access access, bool enumerable);
 

@@ -286,7 +286,7 @@ namespace MetaData {
         if (init) {
             ParameterFrame *runtimeFrame;
             DEFINE_ROOTKEEPER(this, rk, runtimeFrame);
-            runtimeFrame = new (this) ParameterFrame(init->fWrap->compileFrame);
+            runtimeFrame = init->fWrap->compileFrame; //new (this) ParameterFrame(init->fWrap->compileFrame);
             if (!init->fWrap->compileFrame->callsSuperConstructor) {
                 invokeInit(c->super, thisValue, NULL, 0);
                 runtimeFrame->superConstructorCalled = true;
@@ -324,9 +324,10 @@ namespace MetaData {
                 CompilationData *oldData = startCompilationUnit(bCon, bCon->mSource, bCon->mSourceLocation);
                 DEFINE_ROOTKEEPER(this, rk, runtimeFrame);
                 if (runtimeFrame == NULL)
-                    runtimeFrame = new (this) ParameterFrame(fWrap->compileFrame);
+                    runtimeFrame = fWrap->compileFrame; //new (this) ParameterFrame(fWrap->compileFrame);
                 runtimeFrame->instantiate(fWrap->env);
                 runtimeFrame->thisObject = thisValue;
+				js2val oldThis = engine->thisVal;
                 uint32 newSlotsCount = 0;
                 js2val *newSlots = runtimeFrame->assignArguments(this, fnObj, argv, argc, newSlotsCount);
                 Frame *oldTopFrame = fWrap->env->getTopFrame();
@@ -342,6 +343,7 @@ namespace MetaData {
                     engine->parameterFrame = runtimeFrame;
                     engine->parameterSlots = newSlots;
                     engine->parameterCount = newSlotsCount;
+					engine->thisVal = thisValue;
                     result = engine->interpret(RunPhase, bCon, fWrap->env);
                 }
                 catch (Exception &x) {
@@ -352,6 +354,7 @@ namespace MetaData {
                     engine->parameterSlots = oldPSlots;
                     if (engine->parameterFrame)
                         engine->parameterFrame->argSlots = engine->parameterSlots;
+					engine->thisVal = oldThis;
                     throw x;
                 }
                 engine->pc = savePC;
@@ -361,6 +364,7 @@ namespace MetaData {
                 engine->parameterSlots = oldPSlots;
                 if (engine->parameterFrame)
                     engine->parameterFrame->argSlots = engine->parameterSlots;
+				engine->thisVal = oldThis;
             }
         }
         return result;

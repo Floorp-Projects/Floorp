@@ -583,7 +583,7 @@ namespace MetaData {
                     }
                 
                     VariableBinding *vb = vs->bindings;
-                    Frame *regionalFrame = (env->getRegionalFrame())->first;
+                    Frame *regionalFrame = *(env->getRegionalFrame());
                     while (vb)  {
 						ASSERT(vb->name);
                         const StringAtom &name = *vb->name;
@@ -1098,9 +1098,9 @@ namespace MetaData {
             {
                 SwitchStmtNode *sw = checked_cast<SwitchStmtNode *>(p);
                 FrameListIterator fi = env->getRegionalFrame();
-                NonWithFrame *regionalFrame = checked_cast<NonWithFrame *>(fi->first);
+                NonWithFrame *regionalFrame = checked_cast<NonWithFrame *>(*fi);
                 if (regionalFrame->kind == ParameterFrameKind)
-                    regionalFrame = checked_cast<NonWithFrame *>((--fi)->first);
+                    regionalFrame = checked_cast<NonWithFrame *>(*--fi);
                 FrameVariable *frV = makeFrameVariable(regionalFrame);
                 ASSERT(frV->kind != FrameVariable::Parameter);
                 Reference *switchTemp;
@@ -2419,7 +2419,7 @@ doUnary:
                     // that the arguments property will get built
                     FrameListIterator fi = env->getBegin(), end = env->getEnd();
                     while (fi != end) {
-                        Frame *fr = fi->first;
+                        Frame *fr = *fi;
                         if ((fr->kind != WithFrameKind) && (fr->kind != BlockFrameKind)) {
                             NonWithFrame *nwf = checked_cast<NonWithFrame *>(fr);
                             if (nwf->kind == ParameterFrameKind) {
@@ -2446,7 +2446,7 @@ doUnary:
                 FrameListIterator fi = env->getBegin(), end = env->getEnd();
                 bool keepLooking = true;
                 while (fi != end && keepLooking) {
-                    Frame *fr = fi->first;
+                    Frame *fr = *fi;
                     if (fr->kind == WithFrameKind)
                         // XXX unless it's provably not a dynamic object that been with'd??
                         break;
@@ -2840,8 +2840,8 @@ doUnary:
     {
         FrameListIterator fi = getBegin(), end = getEnd();
         while (fi != end) {
-            if ((fi->first)->kind == ClassKind)
-                return checked_cast<JS2Class *>(fi->first);
+            if ((*fi)->kind == ClassKind)
+                return checked_cast<JS2Class *>(*fi);
             fi++;
         }
         return NULL;
@@ -2853,14 +2853,17 @@ doUnary:
     {
         FrameListIterator fi = getBegin(), end = getEnd();
         while (fi != end) {
-            switch ((fi->first)->kind) {
+            switch ((*fi)->kind) {
             case ClassKind:
             case PackageKind:
             case SystemKind:
                 return NULL;
             case ParameterFrameKind:
-				if (thisP) *thisP = fi->second;
-                return checked_cast<ParameterFrame *>(fi->first);
+				{
+					ParameterFrame *pFrame = checked_cast<ParameterFrame *>(*fi);
+					if (thisP) *thisP = pFrame->thisObject;
+					return pFrame;
+				}
             case BlockFrameKind:
             case WithFrameKind:
                 break;
@@ -2879,12 +2882,12 @@ doUnary:
     {
         FrameListIterator start = getBegin();
         FrameListIterator  fi = start;
-        while (((fi->first)->kind == BlockFrameKind) || ((fi->first)->kind == WithFrameKind)) {
+        while (((*fi)->kind == BlockFrameKind) || ((*fi)->kind == WithFrameKind)) {
             fi++;
             ASSERT(fi != getEnd());
         }
-        if ((fi->first)->kind == ClassKind) {
-            while ((fi != start) && ((fi->first)->kind != BlockFrameKind))
+        if ((*fi)->kind == ClassKind) {
+            while ((fi != start) && ((*fi)->kind != BlockFrameKind))
                 fi--;
         }
         return fi;
@@ -2902,7 +2905,7 @@ doUnary:
     // Returns the penultimate frame, always a Package
     Package *Environment::getPackageFrame()
     {
-        Frame *result = (getEnd() - 2)->first;
+        Frame *result = *(getEnd() - 2);
         ASSERT(result->kind == PackageKind);
         return checked_cast<Package *>(result);
     }
@@ -2932,7 +2935,7 @@ doUnary:
         FrameListIterator fi = getBegin(), end = getEnd();
         bool result = false;
         while (fi != end) {
-            Frame *f = fi->first;
+            Frame *f = (*fi);
             switch (f->kind) {
             case ClassKind:
             case PackageKind:
@@ -2978,7 +2981,7 @@ doUnary:
         FrameListIterator fi = getBegin(), end = getEnd();
         bool result = false;
         while (fi != end) {
-            Frame *f = fi->first;
+            Frame *f = (*fi);
             switch (f->kind) {
             case ClassKind:
             case PackageKind:
@@ -3031,7 +3034,7 @@ doUnary:
         FrameListIterator fi = getBegin(), end = getEnd();
         bool result = false;
         while (fi != end) {
-            Frame *f = fi->first;
+            Frame *f = (*fi);
             switch (f->kind) {
             case ClassKind:
             case PackageKind:
@@ -3081,7 +3084,7 @@ doUnary:
         FrameListIterator fi = getBegin(), end = getEnd();
         bool result = false;
         while (fi != end) {
-            Frame *f = fi->first;
+            Frame *f = (*fi);
             switch (f->kind) {
             case ClassKind:
             case PackageKind:
@@ -3144,8 +3147,7 @@ doUnary:
     { 
         FrameListIterator fi = getBegin(), end = getEnd();
         while (fi != end) {
-            GCMARKOBJECT(fi->first);
-            GCMARKVALUE(fi->second);
+            GCMARKOBJECT(*fi);
             fi++;
         }
     }
@@ -3246,7 +3248,7 @@ doUnary:
                                                 Attribute::OverrideModifier overrideMod, bool xplicit, Access access,
                                                 LocalMember *m, size_t pos, bool enumerable)
     {
-        NonWithFrame *innerFrame = checked_cast<NonWithFrame *>((env->getBegin())->first);
+        NonWithFrame *innerFrame = checked_cast<NonWithFrame *>(*(env->getBegin()));
         if ((overrideMod != Attribute::NoOverride) || (xplicit && innerFrame->kind != PackageKind))
             reportError(Exception::definitionError, "Illegal definition", pos);
         
@@ -3268,12 +3270,12 @@ doUnary:
 
         // Check all frames below the current - up to the RegionalFrame - for a non-forbidden definition
         FrameListIterator fi = env->getBegin();
-        Frame *regionalFrame = env->getRegionalFrame()->first;
+        Frame *regionalFrame = *(env->getRegionalFrame());
         if (innerFrame != regionalFrame) {
             // The frame iterator is pointing at the top of the environment's
             // frame list, start at the one below that and continue to the frame
             // returned by 'getRegionalFrame()'.
-            Frame *fr = (++fi)->first;
+            Frame *fr = *++fi;
             while (true) {
                 if (fr->kind != WithFrameKind) {
                     NonWithFrame *nwfr = checked_cast<NonWithFrame *>(fr);
@@ -3290,7 +3292,7 @@ doUnary:
                 }
                 if (fr == regionalFrame)
                     break;
-                fr = (++fi)->first;
+                fr = *++fi;
                 ASSERT(fr);
             }
         }
@@ -3311,7 +3313,7 @@ doUnary:
         // region if they haven't been marked as such already.
         if (innerFrame != regionalFrame) {
             fi = env->getBegin();
-            Frame *fr = (++fi)->first;
+            Frame *fr = *++fi;
             while (true) {
                 if (fr->kind != WithFrameKind) {
                     NonWithFrame *nwfr = checked_cast<NonWithFrame *>(fr);
@@ -3338,7 +3340,7 @@ doUnary:
                 }
                 if (fr == regionalFrame)
                     break;
-                fr = (++fi)->first;
+                fr = *++fi;
             }
         }
         return multiname;
@@ -3505,7 +3507,7 @@ doUnary:
     {
         LocalMember *result = NULL;
         FrameListIterator regionalFrameEnd = env->getRegionalEnvironment();
-        NonWithFrame *regionalFrame = checked_cast<NonWithFrame *>(regionalFrameEnd->first);
+        NonWithFrame *regionalFrame = checked_cast<NonWithFrame *>(*regionalFrameEnd);
         ASSERT((regionalFrame->kind == PackageKind) || (regionalFrame->kind == ParameterFrameKind));          
 rescan:
         // run through all the existing bindings, to see if this variable already exists.
@@ -3529,7 +3531,7 @@ rescan:
                 && (regionalFrame->kind == ParameterFrameKind)
                 && (regionalFrameEnd != env->getBegin())) {
             // re-scan in the frame above the parameter frame
-            regionalFrame = checked_cast<NonWithFrame *>((regionalFrameEnd - 1)->first);
+            regionalFrame = checked_cast<NonWithFrame *>(*(regionalFrameEnd - 1));
             goto rescan;
         }
         
@@ -4636,11 +4638,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         return dv;
     }
 
-    // char * version of above (XXX inline?)
-    DynamicVariable *JS2Metadata::createDynamicProperty(JS2Object *obj, const char *name, js2val initVal, Access access, bool sealed, bool enumerable) 
-    {
-        return createDynamicProperty(obj, world.identifiers[widenCString(name)], initVal, access, sealed, enumerable); 
-    }
 
     // Use the slotIndex from the instanceVariable to access the slot
     Slot *JS2Metadata::findSlot(js2val thisObjVal, InstanceVariable *id)
@@ -5260,9 +5257,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     void ParameterFrame::instantiate(Environment *env)
     {
-        ASSERT(pluralFrame->kind == ParameterFrameKind);
-        ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
-        env->instantiateFrame(pluralFrame, this, !plural->buildArguments);
+//        ASSERT(pluralFrame->kind == ParameterFrameKind);
+//        ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
+//        env->instantiateFrame(pluralFrame, this, !plural->buildArguments);
     }
 
     // Assume that instantiate has been called, the plural frame will contain
@@ -5278,7 +5275,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
 		// slotCount is the number of slots required by the parameter frame
         uint32 slotCount = (frameSlots) ? frameSlots->size() : 0;
-		ASSERT(length == slotCount);
 
         if (buildArguments) {
             // If we're building an arguments object, the slots for the parameter frame are located

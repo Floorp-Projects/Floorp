@@ -1129,7 +1129,7 @@ namespace MetaData {
                 JS2Object::mark(float64Table[i]);
         }
         if (parameterSlots) {
-            for (i = 0; i < parameterFrame->frameSlots->size(); i++) {
+            for (i = 0; i < parameterCount; i++) {
                 GCMARKVALUE(parameterSlots[i]);
             }
         }

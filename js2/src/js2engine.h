@@ -314,6 +314,8 @@ public:
         ParameterFrame *parameterFrame;
         js2val *parameterSlots;
         uint32 parameterCount;
+		bool superConstructorCalled;
+		js2val thisVal;
     };
     void jsr(Phase execPhase, BytecodeContainer *bCon, uint32 stackBase, js2val returnVal, Environment *env);
     bool activationStackEmpty() { return (activationStackTop == activationStack); }

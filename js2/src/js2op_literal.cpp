@@ -107,8 +107,8 @@
             FrameListIterator closure_fi = x->fWrap->env->getBegin();
             FrameListIterator current_fi = meta->env->getBegin();
             while (true) {
-                Frame *closure_fr = closure_fi->first;
-                Frame *current_fr = current_fi->first;
+                Frame *closure_fr = *closure_fi;
+                Frame *current_fr = *current_fi;
                 ASSERT(closure_fr->kind == current_fr->kind);
                 if ((closure_fr->kind == ClassKind) || (closure_fr->kind == PackageKind) || (closure_fr->kind == SystemKind))
                     break;

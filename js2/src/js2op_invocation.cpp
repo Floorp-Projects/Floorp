@@ -81,13 +81,16 @@
                         push(a);
                     }
                     else {
-                        pFrame = new (meta) ParameterFrame(fWrap->compileFrame);
+                        pFrame = fWrap->compileFrame; //new (meta) ParameterFrame(fWrap->compileFrame);
                         pFrame->instantiate(meta->env);
                         baseVal = OBJECT_TO_JS2VAL(new (meta) SimpleInstance(meta, protoVal, meta->objectType(protoVal)));
                         pFrame->thisObject = baseVal;
-                        parameterSlots = pFrame->assignArguments(meta, obj, base(argCount), argCount, length);
+                        pFrame->assignArguments(meta, obj, base(argCount), argCount, length);
                         jsr(phase, fWrap->bCon, base(argCount + 1) - execStack, baseVal, fWrap->env);
-                        meta->env->addFrame(pFrame, baseVal);
+						parameterSlots = pFrame->argSlots;
+						parameterCount = length;
+						thisVal = a;
+                        meta->env->addFrame(pFrame);
                         parameterFrame = pFrame;
                         pFrame = NULL;
                     }
@@ -132,6 +135,8 @@ doCall:
                         push(JS2VAL_UNDEFINED);
                         argCount++;
                     }
+					if (parameterFrame)
+						thisVal = parameterFrame->thisObject;
                     jsr(phase, NULL, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);
                     if (fWrap->alien)
                         a = fWrap->alien(meta, fInst, a, base(argCount), argc);
@@ -146,11 +151,14 @@ doCall:
                         //pFrame->instantiate(meta->env);
                         pFrame->thisObject = a;
                         // XXX (use fWrap->compileFrame->signature)
-                        parameterSlots = pFrame->assignArguments(meta, fObj, base(argCount), argCount, length);
+                        pFrame->assignArguments(meta, fObj, base(argCount), argCount, length);
                         jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);
+						parameterSlots = pFrame->argSlots;
+						parameterCount = length;
+						thisVal = a;
                         if (fInst->isMethodClosure)
                             meta->env->addFrame(meta->objectType(a));
-                        meta->env->addFrame(pFrame, a);
+                        meta->env->addFrame(pFrame);
                         parameterFrame = pFrame;
                         pFrame = NULL;
                     }
@@ -162,7 +170,11 @@ doCall:
                         // Still need to mark the frame as a runtime frame (see stmtnode::return in validate)
                         pFrame = fWrap->compileFrame; //new (meta) ParameterFrame(a, fWrap->compileFrame->prototype);
                         pFrame->pluralFrame = fWrap->compileFrame;
-                        meta->env->addFrame(pFrame, a);
+                        meta->env->addFrame(pFrame);
+						parameterSlots = NULL;
+						parameterCount = 0;
+						thisVal = a;
+
                     }
                 }
             }
