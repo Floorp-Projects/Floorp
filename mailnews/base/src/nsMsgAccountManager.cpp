@@ -1521,12 +1521,33 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, char **new_uri)
 
   if (PL_strncasecmp(MAILBOX_SCHEMA,old_uri,MAILBOX_SCHEMA_LENGTH) == 0) {
 #ifdef DEBUG_ACCOUNTMANAGER
-    printf("turn %s into %s/%s/(%s - %s)\n",old_uri,MAILBOX_SCHEMA,usernameAtHostname,old_uri + MAILBOX_SCHEMA_LENGTH,mail_directory_value);
+	printf("turn %s into %s/%s/(%s - %s)\n",old_uri,MAILBOX_SCHEMA,usernameAtHostname,old_uri + MAILBOX_SCHEMA_LENGTH,mail_directory_value);
 #endif
 
-    // the extra -1 is because in 4.x, we had this:
-    // mailbox:<PATH> instead of mailbox:/<PATH> 
-    *new_uri = PR_smprintf("%s/%s/%s",MAILBOX_SCHEMA,usernameAtHostname,old_uri + MAILBOX_SCHEMA_LENGTH + PL_strlen(mail_directory_value) -1); 
+        // in 4.x, the mail.directory pref was stored in native path fashion.
+        // we need to convert it to unix style, to do the uri conversion.
+        // do nothing if on UNIX
+#ifdef XP_UNIX
+	char *mail_directory_value_unix_style = mail_directory_value;
+#else
+	nsCOMPtr <nsIFileSpec> spec;
+	rv = NS_NewFileSpec(getter_AddRefs(spec));
+	if (NS_FAILED(rv)) return rv;
+
+	rv=spec->SetNativePath(mail_directory_value);
+	if (NS_FAILED(rv)) return rv;
+
+	rv=spec->GetUnixStyleFilePath(&mail_directory_value_unix_style);
+	if (NS_FAILED(rv)) return rv;     
+#endif /* XP_UNIX */
+
+	// the extra -1 is because in 4.x, we had this:
+	// mailbox:<PATH> instead of mailbox:/<PATH> 
+	*new_uri = PR_smprintf("%s/%s/%s",MAILBOX_SCHEMA,usernameAtHostname,old_uri + MAILBOX_SCHEMA_LENGTH + PL_strlen(mail_directory_value_unix_style) -1); 
+
+#ifndef XP_UNIX
+	PR_FREEIF(mail_directory_unix_style);
+#endif /* !XP_UNIX */
   }
   else {
 #ifdef DEBUG_ACCOUNTMANAGER
