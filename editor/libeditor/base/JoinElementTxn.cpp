@@ -18,7 +18,6 @@
 
 #include "JoinElementTxn.h"
 #include "nsIDOMNodeList.h"
-#include "editor.h"
 
 
 JoinElementTxn::JoinElementTxn()
@@ -26,9 +25,11 @@ JoinElementTxn::JoinElementTxn()
 {
 }
 
-nsresult JoinElementTxn::Init(nsIDOMNode *aLeftNode,
+nsresult JoinElementTxn::Init(nsIEditor  *aEditor,
+                              nsIDOMNode *aLeftNode,
                               nsIDOMNode *aRightNode)
 {
+  mEditor = aEditor;
   mLeftNode = aLeftNode;
   mRightNode = aRightNode;
   mOffset=0;
@@ -63,7 +64,7 @@ nsresult JoinElementTxn::Do(void)
           {
             childNodes->GetLength(&mOffset);
           }
-          result = nsEditor::JoinNodes(mLeftNode, mRightNode, mParent, PR_FALSE);
+          result = mEditor->JoinNodes(mLeftNode, mRightNode, mParent, PR_FALSE);
         }
       }
     }
@@ -74,13 +75,13 @@ nsresult JoinElementTxn::Do(void)
 
 nsresult JoinElementTxn::Undo(void)
 {
-  nsresult result = nsEditor::SplitNode(mRightNode, mOffset, mLeftNode, mParent);
+  nsresult result = mEditor->SplitNode(mRightNode, mOffset, mLeftNode, mParent);
   return result;
 }
 
 nsresult JoinElementTxn::Redo(void)
 {
-  nsresult result = nsEditor::JoinNodes(mLeftNode, mRightNode, mParent, PR_FALSE);
+  nsresult result = mEditor->JoinNodes(mLeftNode, mRightNode, mParent, PR_FALSE);
   return result;
 }
 

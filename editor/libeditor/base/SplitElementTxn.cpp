@@ -19,7 +19,6 @@
 #include "SplitElementTxn.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
-#include "editor.h"
 
 // note that aEditor is not refcounted
 SplitElementTxn::SplitElementTxn()
@@ -27,9 +26,11 @@ SplitElementTxn::SplitElementTxn()
 {
 }
 
-nsresult SplitElementTxn::Init(nsIDOMNode *aNode,
+nsresult SplitElementTxn::Init(nsIEditor  *aEditor,
+                               nsIDOMNode *aNode,
                                PRInt32     aOffset)
 {
+  mEditor = aEditor;
   mExistingRightNode = aNode;
   mOffset = aOffset;
   return NS_OK;
@@ -52,7 +53,7 @@ nsresult SplitElementTxn::Do(void)
     // insert the new node
     if ((NS_SUCCEEDED(result)) && (mParent))
     {
-      result = nsEditor::SplitNode(mExistingRightNode, mOffset, mNewLeftNode, mParent);
+      result = mEditor->SplitNode(mExistingRightNode, mOffset, mNewLeftNode, mParent);
     }
   }
   return result;
@@ -61,13 +62,13 @@ nsresult SplitElementTxn::Do(void)
 nsresult SplitElementTxn::Undo(void)
 {
   // this assumes Do inserted the new node in front of the prior existing node
-  nsresult result = nsEditor::JoinNodes(mExistingRightNode, mNewLeftNode, mParent, PR_FALSE);
+  nsresult result = mEditor->JoinNodes(mExistingRightNode, mNewLeftNode, mParent, PR_FALSE);
   return result;
 }
 
 nsresult SplitElementTxn::Redo(void)
 {
-  nsresult result = nsEditor::SplitNode(mExistingRightNode, mOffset, mNewLeftNode, mParent);
+  nsresult result = mEditor->SplitNode(mExistingRightNode, mOffset, mNewLeftNode, mParent);
   return result;
 }
 

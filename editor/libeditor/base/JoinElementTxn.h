@@ -22,6 +22,7 @@
 #include "EditTxn.h"
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
+#include "nsIEditor.h"
 
 #define JOIN_ELEMENT_TXN_IID \
 {/* 9bc5f9f0-ac48-11d2-86d8-000064657374 */ \
@@ -37,7 +38,8 @@ class JoinElementTxn : public EditTxn
 {
 public:
 
-  virtual nsresult Init(nsIDOMNode *aLeftNode,
+  virtual nsresult Init(nsIEditor  *aEditor,
+                        nsIDOMNode *aLeftNode,
                         nsIDOMNode *aRightNode);
 protected:
   JoinElementTxn();
@@ -78,6 +80,7 @@ protected:
 
   /** the parent node containing mLeftNode and mRightNode */
   nsCOMPtr<nsIDOMNode> mParent;
+  nsCOMPtr<nsIEditor>  mEditor;
 
   friend class TransactionFactory;
 
