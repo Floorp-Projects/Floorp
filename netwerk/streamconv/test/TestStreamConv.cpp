@@ -151,9 +151,6 @@ main(int argc, char* argv[])
              do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = eventQService->CreateThreadEventQueue();
-    if (NS_FAILED(rv)) return rv;
-
     eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
 
     nsCOMPtr<nsICategoryManager> catman =

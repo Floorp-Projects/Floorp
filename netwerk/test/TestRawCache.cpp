@@ -268,9 +268,6 @@ InitQueue() {
              do_GetService(kEventQueueServiceCID, &rv);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get event queue service");
 
-    rv = eventQService->CreateThreadEventQueue();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create event queue");
-  
     rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQueue);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get event queue for main thread");
 

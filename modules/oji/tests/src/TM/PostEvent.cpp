@@ -119,11 +119,6 @@ TM_OJIAPITest(ThreadManager_PostEvent_6) {
 
 			nsCOMPtr<nsIEventQueue> eventQueue = NULL;
 			
-			lrc  = eventService->CreateThreadEventQueue();
-			if (lrc != NS_OK) {
-				printf("Can'r create event queue ...\n");
-				nsresult rc = NS_ERROR_FAILURE;
-			}
 			printf("Waiting for thread ID (%p) ...", &id);
 			tm->EnterMonitor(&id);
 			tm->ExitMonitor(&id);
@@ -204,11 +199,6 @@ TM_OJIAPITest(ThreadManager_PostEvent_7) {
 
 			nsCOMPtr<nsIEventQueue> eventQueue = NULL;
 			
-			lrc  = eventService->CreateThreadEventQueue();
-			if (lrc != NS_OK) {
-				printf("Can't create event queue ...\n");
-				nsresult rc = NS_ERROR_FAILURE;
-			}
 			//tm->EnterMonitor(&id);
 			printf("Waiting for thread ID (%p) ...", &id);
 			while(!id);

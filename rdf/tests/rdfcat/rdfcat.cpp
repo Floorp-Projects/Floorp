@@ -156,9 +156,6 @@ main(int argc, char** argv)
              do_GetService(kEventQueueServiceCID, &rv);
     RETURN_IF_FAILED(rv, "EventQueueService");
 
-    rv = theEventQueueService->CreateThreadEventQueue();
-    RETURN_IF_FAILED(rv, "CreateThreadEventQueue");
-
     nsIEventQueue* eq = nsnull;
     rv = theEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, &eq);
     RETURN_IF_FAILED(rv, "GetThreadEventQueue");

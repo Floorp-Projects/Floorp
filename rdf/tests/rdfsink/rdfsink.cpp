@@ -139,11 +139,6 @@ main(int argc, char** argv)
         goto done;
     }
 
-    if (NS_FAILED(rv = theEventQueueService->CreateThreadEventQueue())) {
-        NS_ERROR("unable to create thread event queue");
-        goto done;
-    }
-
     if (NS_FAILED(rv = theEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD,
                                                                  &mainQueue))) {
         NS_ERROR("unable to get event queue for current thread");

@@ -45,11 +45,7 @@
 #include "nsIStringBundle.h"
 
 
-static nsIEventQueue* gEventQ = nsnull;
-
-
 static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 
 void SetACookie(nsICookieService *cookieService, const char* aSpec, const char* aCookieString) {
     nsCOMPtr<nsIURI> uri;
@@ -91,16 +87,6 @@ int main(PRInt32 argc, char *argv[])
 {
     nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     if (NS_FAILED(rv)) return -1;
-
-    // Create the Event Queue for this thread...
-    nsCOMPtr<nsIEventQueueService> eventQService = 
-             do_GetService(kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return -1;
-
-    rv = eventQService->CreateThreadEventQueue();
-    if (NS_FAILED(rv)) return -1;
-
-    eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
 
     nsCOMPtr<nsIStringBundleService> bundleService = 
              do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);

@@ -375,9 +375,6 @@ TestConnection::Run(void)
            do_GetService(kEventQueueServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = eventQService->CreateThreadEventQueue();
-  if (NS_FAILED(rv)) return rv;
-
   //
   // Make sure that all resources were allocated in the constructor...
   //
@@ -639,9 +636,6 @@ main(int argc, char* argv[])
   // Create the Event Queue for this thread...
   nsCOMPtr<nsIEventQueueService> eventQService = 
            do_GetService(kEventQueueServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = eventQService->CreateThreadEventQueue();
   if (NS_FAILED(rv)) return rv;
 
   //

@@ -112,10 +112,6 @@ public:
         nsCOMPtr<nsIEventQueueService> eventQService = 
                  do_GetService(kEventQueueServiceCID, &rv);
         if (NS_SUCCEEDED(rv)) {
-          rv = eventQService->CreateThreadEventQueue();
-
-          if (NS_FAILED(rv)) return rv;
-  
           rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);
         }
 
