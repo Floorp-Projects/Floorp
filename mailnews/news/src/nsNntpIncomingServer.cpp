@@ -1672,22 +1672,23 @@ buildSubscribeSearchResult(nsCString &aElement, void *aData)
         return PR_FALSE;
     }
  
-    rv = server->AppendIfSearchMatch(aElement.get());
+    rv = server->AppendIfSearchMatch(aElement);
     NS_ASSERTION(NS_SUCCEEDED(rv),"AddSubscribeSearchResult failed");
     return PR_TRUE;
 }
 
 nsresult
-nsNntpIncomingServer::AppendIfSearchMatch(const char *newsgroupName)
+nsNntpIncomingServer::AppendIfSearchMatch(nsCString& newsgroupName)
 {
     // we've converted mSearchValue to lower case
     // do the same to the newsgroup name before we do our strstr()
     // this way searches will be case independant
-    nsCAutoString lowerCaseName(newsgroupName);
-    ToLowerCase(lowerCaseName);
+    nsCAutoString lowerCaseName;
+    ToLowerCase(newsgroupName, lowerCaseName);
+    NS_UnescapeURL(lowerCaseName);
 
     if (PL_strstr(lowerCaseName.get(), mSearchValue.get())) {
-        mSubscribeSearchResult.AppendCString(nsCAutoString(newsgroupName));
+        mSubscribeSearchResult.AppendCString(newsgroupName);
     }
     return NS_OK;
 }
@@ -1707,6 +1708,7 @@ nsNntpIncomingServer::SetSearchValue(const char *searchValue)
 
     mSubscribeSearchResult.Clear();
     mGroupsOnServer.EnumerateForwards((nsCStringArrayEnumFunc)buildSubscribeSearchResult, (void *)this);
+    mSubscribeSearchResult.SortIgnoreCase();
 
     if (mTree) {
         mTree->RowCountChanged(0, mSubscribeSearchResult.Count());

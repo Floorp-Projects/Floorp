@@ -101,7 +101,7 @@ public:
     NS_IMETHOD GetFilterScope(nsMsgSearchScopeValue *filterScope);
     NS_IMETHOD GetSearchScope(nsMsgSearchScopeValue *searchScope);
 
-    nsresult AppendIfSearchMatch(const char *newsgroupName);
+    nsresult AppendIfSearchMatch(nsCString& newsgroupName);
 
 protected:
     nsresult CreateProtocolInstance(nsINNTPProtocol ** aNntpConnection, nsIURI *url,
