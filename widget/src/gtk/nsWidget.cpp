@@ -2683,7 +2683,11 @@ nsWidget::GetXYFromPosition(unsigned long *aX,
   mIC->mask = GDK_IC_PREEDIT_FONTSET; // hack
   gdk_ic_get_attr((GdkIC*)mIC, attr, attrMask);
   if (attr->preedit_fontset) {
-    *aY += attr->preedit_fontset->ascent;
+    // this is currently not working well
+    // We change from += ascent to -= descent because we change the nsCaret
+    // code to return the nsPoint from the top of the cursor to the bottom
+    // of the cursor
+    *aY -= attr->preedit_fontset->descent;
   }
   gdk_ic_attr_destroy(attr);
   return;
