@@ -566,21 +566,36 @@ PRBool nsWindow::OnScroll(nsScrollbarEvent &aEvent, PRUint32 cPos)
   return PR_FALSE;
 }
 
-NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
+NS_METHOD nsWindow::SetMenuBar(nsIMenuBar* aMenuBar)
 {
-  NS_IF_RELEASE(m_nsIMenuBar);
+  if (m_nsIMenuBar == aMenuBar) {
+    // Ignore duplicate calls
+    return NS_OK;
+  }
+
+  if (m_nsIMenuBar) {
+    // Get rid of the old menubar
+    GtkWidget* oldMenuBar;
+    m_nsIMenuBar->GetNativeData((void*&) oldMenuBar);
+    if (oldMenuBar) {
+      gtk_container_remove(GTK_CONTAINER(mVBox), oldMenuBar);
+    }
+    NS_RELEASE(m_nsIMenuBar);
+  }
+
   m_nsIMenuBar = aMenuBar;
-  NS_IF_ADDREF(m_nsIMenuBar);
+  if (aMenuBar) {
+    NS_ADDREF(m_nsIMenuBar);
   
-  GtkWidget *menubar;
-  void *voidData;
-  aMenuBar->GetNativeData(voidData);
-  menubar = GTK_WIDGET(voidData);
+    GtkWidget *menubar;
+    void *voidData;
+    aMenuBar->GetNativeData(voidData);
+    menubar = GTK_WIDGET(voidData);
 
-  gtk_menu_bar_set_shadow_type (GTK_MENU_BAR(menubar), GTK_SHADOW_NONE);
-
-  gtk_box_pack_start(GTK_BOX(mVBox), menubar, PR_FALSE, PR_FALSE, 0);
-  gtk_box_reorder_child(GTK_BOX(mVBox), menubar, 0);
+    gtk_menu_bar_set_shadow_type (GTK_MENU_BAR(menubar), GTK_SHADOW_NONE);
+    gtk_box_pack_start(GTK_BOX(mVBox), menubar, PR_FALSE, PR_FALSE, 0);
+    gtk_box_reorder_child(GTK_BOX(mVBox), menubar, 0);
+  }
 
   return NS_OK;
 }
