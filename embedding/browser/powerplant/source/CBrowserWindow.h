@@ -1,3 +1,24 @@
+/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Conrad Carlen <conrad@ingress.com>
+ */
 
 #include <LWindow.h>
 #include <LListener.h>
@@ -28,9 +49,11 @@ class LEditText;
 class LStaticText;
 class CThrobber;
 class LBevelButton;
+class LProgressBar;
 class nsIDocumentLoader;
 class nsIURI;
-class nsIChannel;
+class nsIRequest;
+class nsIWebProgress;
 
 // CBrowserWindow:
 // A simple browser window that hooks up a CBrowserShell to a minimal set of controls
@@ -93,10 +116,14 @@ protected:
                         
    NS_METHOD            SetLocation(const nsString& aLocation);
                         
-	NS_METHOD            OnStatusNetStart(nsIChannel *aChannel);
-	NS_METHOD            OnStatusNetStop(nsIChannel *aChannel);
-	NS_METHOD            OnStatusDNS(nsIChannel *aChannel);
-   
+	NS_METHOD            OnStatusNetStart(nsIWebProgress *progress, nsIRequest *request,
+                                         PRInt32 progressStateFlags, PRUint32 status);
+	NS_METHOD            OnStatusNetStop(nsIWebProgress *progress, nsIRequest *request,
+                                        PRInt32 progressStateFlags, PRUint32 status);
+
+   NS_METHOD            OnProgressChange(nsIWebProgress *progress, nsIRequest *request,
+                                         PRInt32 curSelfProgress, PRInt32 maxSelfProgress, 
+                                         PRInt32 curTotalProgress, PRInt32 maxTotalProgress);   
 protected:
    nsCOMPtr<nsIWidget>  mWindow;
 
@@ -106,6 +133,7 @@ protected:
 	LStaticText*		   mStatusBar;
 	CThrobber*           mThrobber;
 	LBevelButton			*mBackButton, *mForwardButton, *mStopButton;
+	LProgressBar*        mProgressBar;
 };
 
 
