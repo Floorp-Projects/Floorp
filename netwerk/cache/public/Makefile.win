@@ -29,20 +29,14 @@ include <$(DEPTH)/config/config.mak>
 EXPORTS =                   \
         $(NULL)
 
-XPIDLSRCS =                       \
-	.\nsICache.idl				  \
-	.\nsICachedNetData.idl	      \
-	.\nsICacheEntryDescriptor.idl \
-	.\nsICacheListener.idl		  \
-	.\nsICacheService.idl		  \
-	.\nsICacheSession.idl         \
-	.\nsICacheVisitor.idl         \
-	.\nsINetDataCache.idl         \
-	.\nsINetDataCacheManager.idl  \
-	.\nsINetDataCacheRecord.idl   \
-	.\nsINetDataDiskCache.idl     \
-	.\nsIStreamAsFile.idl         \
-	$(NULL)
+XPIDLSRCS =                             \
+        .\nsICachedNetData.idl          \
+        .\nsINetDataCacheManager.idl    \
+        .\nsINetDataCache.idl           \
+        .\nsINetDataCacheRecord.idl     \
+        .\nsINetDataDiskCache.idl       \
+        .\nsIStreamAsFile.idl           \
+        $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
 
