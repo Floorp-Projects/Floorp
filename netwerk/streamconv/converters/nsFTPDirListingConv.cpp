@@ -114,8 +114,7 @@ nsFTPDirListingConv::AsyncConvertData(const char *aFromType, const char *aToType
     rv = NS_NewInputStreamChannel(&mPartChannel,
                                   uri,
                                   nsnull,
-                                  NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT),
-                                  EmptyCString());
+                                  NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT));
     NS_RELEASE(uri);
     if (NS_FAILED(rv)) return rv;
 
