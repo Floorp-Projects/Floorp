@@ -117,7 +117,11 @@ public:
     PRUint32        PostDataLen(void) const;
 
     PRUint32        Read(char* o_Buffer, PRUint32 len);
+    
+    /* Reset the streams/state, read/write locks, etc. */
+    void            Reset(void);
 
+    /* Accessor functions for the size of the cache object */
     PRUint32        Size(void) const;
     void            Size(PRUint32 i_Size);
 

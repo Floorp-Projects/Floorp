@@ -88,10 +88,9 @@ PRBool nsMemModule::Contains(const char* i_url) const
     if (m_pFirstObject && i_url && *i_url)
     {
         nsMemCacheObject* pObj = m_pFirstObject;
-        PRUint32 inlen = PL_strlen(i_url);
         do
         {
-            if (0 == PL_strncasecmp(pObj->ThisObject()->Address(), i_url, inlen))
+            if (0 == PL_strcasecmp(pObj->ThisObject()->Address(), i_url))
                 return PR_TRUE;
             pObj = pObj->Next();
         }
@@ -122,8 +121,7 @@ void nsMemModule::GarbageCollect(void)
         while (pEnum->HasMoreElements())
         {
             nsCacheObject* pObj = (nsCacheObject*) pEnum->NextElement();
-            PR_ASSERT(pObj);
-            if (pObj->IsExpired())
+            if (pObj && pObj->IsExpired())
             {
                 PRBool status = Remove(index);
                 PR_ASSERT(status == PR_TRUE);
@@ -155,10 +153,9 @@ nsCacheObject* nsMemModule::GetObject(const char* i_url) const
     if (m_pFirstObject && i_url && *i_url)
     {
         nsMemCacheObject* pObj = m_pFirstObject;
-        int inlen = PL_strlen(i_url);
         do
         {
-            if (0 == PL_strncasecmp(pObj->ThisObject()->Address(), i_url, inlen))
+            if (0 == PL_strcasecmp(pObj->ThisObject()->Address(), i_url))
                 return pObj->ThisObject();
             pObj = pObj->Next();
         }

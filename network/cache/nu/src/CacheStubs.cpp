@@ -60,6 +60,12 @@ CacheManager_GetObject(const char* i_url)
     return CACHEMGR->GetObj(i_url);
 }
 
+void
+CacheManager_InfoAsHTML(char* o_Buffer)
+{
+    CACHEMGR->InfoAsHTML(o_Buffer);
+}
+
 PRBool
 CacheManager_IsOffline(void)
 {
@@ -219,6 +225,13 @@ PRUint32
 CacheObject_Read(const void* pThis, char* o_Buffer, PRUint32 i_Len)
 {
     return pThis ? ((nsCacheObject*)pThis)->Read(o_Buffer, i_Len) : 0;
+}
+
+void
+CacheObject_Reset(void* pThis)
+{
+    if (pThis)
+        ((nsCacheObject*)pThis)->Reset();
 }
 
 void

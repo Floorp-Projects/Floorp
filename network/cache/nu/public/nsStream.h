@@ -45,7 +45,10 @@ public:
     virtual
         PRInt32     Read(void* o_Buffer, PRUint32 i_Len) = 0;
     virtual
+        void        Reset(void) = 0;
+    virtual
         PRInt32     Write(const void* i_Buffer, PRUint32 i_Len) = 0;
+
 protected:
 
 private:
