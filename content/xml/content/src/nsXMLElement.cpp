@@ -114,6 +114,8 @@ nsXMLElement::~nsXMLElement()
     NS_RELEASE(kOnLoadAtom);
     NS_RELEASE(kEmbedAtom);
   }
+
+  NS_IF_RELEASE(mNameSpace);
 }
 
 NS_IMETHODIMP 
