@@ -101,7 +101,7 @@ public:
   * Get the selection manager.
   */
   
-  virtual nsresult GetSelectionMgr(nsISelectionMgr** aSelectionMgr) = 0;
+  NS_IMETHOD GetSelectionMgr(nsISelectionMgr** aSelectionMgr) = 0;
 
 
 };
