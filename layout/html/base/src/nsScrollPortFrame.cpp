@@ -61,15 +61,12 @@ nsScrollPortFrame::NeedsClipWidget()
 {
     // XXX: This code will go away when a general solution for creating
     // widgets only when needed is implemented.
-  nsIFrame* parentFrame;
-  GetParent(&parentFrame);
-  nsIFormControlFrame* fcFrame;
-
-  while (parentFrame) {
+  for (nsIFrame* parentFrame = GetParent(); parentFrame;
+       parentFrame = parentFrame->GetParent()) {
+    nsIFormControlFrame* fcFrame;
     if ((NS_SUCCEEDED(parentFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame)))) {
-      return(PR_FALSE);
+      return PR_FALSE;
     }
-    parentFrame->GetParent(&parentFrame); 
   }
  
   return PR_TRUE;

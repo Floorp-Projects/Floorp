@@ -902,7 +902,7 @@ IncrementalReflow::Dispatch(nsIPresContext      *aPresContext,
     if (first == root)
       size = aMaxSize;
     else
-      first->GetSize(size);
+      size = first->GetSize();
 
     nsHTMLReflowState reflowState(aPresContext, first, path,
                                   &aRendContext, size);
@@ -916,11 +916,9 @@ IncrementalReflow::Dispatch(nsIPresContext      *aPresContext,
                  (aDesiredSize.width == size.width && aDesiredSize.height == size.height),
                  "non-root frame's desired size changed during an incremental reflow");
 
-    first->SizeTo(aPresContext, aDesiredSize.width, aDesiredSize.height);
+    first->SetSize(nsSize(aDesiredSize.width, aDesiredSize.height));
 
-    nsIView* view = first->GetView(aPresContext);
-    if (view)
-      nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, first, view, nsnull);
+    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, first, first->GetView(), nsnull);
 
     first->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
   }
@@ -938,12 +936,10 @@ IncrementalReflow::AddCommand(nsIPresContext      *aPresContext,
   // parent chain until we reach either a `reflow root' or the root
   // frame in the frame hierarchy.
   nsAutoVoidArray path;
-  nsFrameState state;
   do {
     path.AppendElement(frame);
-    frame->GetFrameState(&state);
-  } while (!(state & NS_FRAME_REFLOW_ROOT) &&
-           (frame->GetParent(&frame), frame != nsnull));
+  } while (!(frame->GetStateBits() & NS_FRAME_REFLOW_ROOT) &&
+           (frame = frame->GetParent()) != nsnull);
 
   // Pop off the root, add it to the set if it's not there already.
   PRInt32 lastIndex = path.Count() - 1;
@@ -1046,6 +1042,7 @@ public:
   NS_IMETHOD GetDocument(nsIDocument** aResult);
   NS_IMETHOD GetPresContext(nsIPresContext** aResult);
   NS_IMETHOD GetViewManager(nsIViewManager** aResult);
+  nsIViewManager* GetViewManager() { return mViewManager; }
   NS_IMETHOD GetStyleSet(nsIStyleSet** aResult);
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle);
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
@@ -2869,14 +2866,11 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     rootFrame->WillReflow(mPresContext);
     nsContainerFrame::PositionFrameView(mPresContext, rootFrame);
     rootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
-    rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
+    rootFrame->SetSize(nsSize(desiredSize.width, desiredSize.height));
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
 
-    nsIView* view = rootFrame->GetView(mPresContext);
-    if (view) {
-      nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
-                                                 nsnull);
-    }
+    nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, rootFrame->GetView(),
+                                               nsnull);
     rootFrame->DidReflow(mPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
       
 #ifdef NS_DEBUG
@@ -3014,11 +3008,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
 
-    nsIView* view = rootFrame->GetView(mPresContext);
-    if (view) {
-      nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
-                                                 nsnull);
-    }
+    nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, rootFrame->GetView(),
+                                               nsnull);
     rootFrame->DidReflow(mPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
 #ifdef NS_DEBUG
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
@@ -3272,11 +3263,8 @@ NS_IMETHODIMP
 PresShell::PageMove(PRBool aForward, PRBool aExtend)
 {
   nsresult result;
-  nsCOMPtr<nsIViewManager> viewManager;
+  nsIViewManager* viewManager = GetViewManager();
   nsIScrollableView *scrollableView;
-  result = GetViewManager(getter_AddRefs(viewManager));
-  if (NS_FAILED(result)) 
-    return result;
   if (!viewManager) 
     return NS_ERROR_UNEXPECTED;
   result = viewManager->GetRootScrollableView(&scrollableView);
@@ -3296,9 +3284,9 @@ PresShell::PageMove(PRBool aForward, PRBool aExtend)
 NS_IMETHODIMP 
 PresShell::ScrollPage(PRBool aForward)
 {
-  nsCOMPtr<nsIViewManager> viewManager;
-  nsresult result = GetViewManager(getter_AddRefs(viewManager));
-  if (NS_SUCCEEDED(result) && viewManager)
+  nsIViewManager* viewManager = GetViewManager();
+  nsresult result = NS_OK;
+  if (viewManager)
   {
     nsIScrollableView *scrollView;
     result = viewManager->GetRootScrollableView(&scrollView);
@@ -3313,9 +3301,9 @@ PresShell::ScrollPage(PRBool aForward)
 NS_IMETHODIMP
 PresShell::ScrollLine(PRBool aForward)
 {
-  nsCOMPtr<nsIViewManager> viewManager;
-  nsresult result = GetViewManager(getter_AddRefs(viewManager));
-  if (NS_SUCCEEDED(result) && viewManager)
+  nsIViewManager* viewManager = GetViewManager();
+  nsresult result = NS_OK;
+  if (viewManager)
   {
     nsIScrollableView *scrollView;
     result = viewManager->GetRootScrollableView(&scrollView);
@@ -3345,9 +3333,9 @@ PresShell::ScrollLine(PRBool aForward)
 NS_IMETHODIMP
 PresShell::ScrollHorizontal(PRBool aLeft)
 {
-  nsCOMPtr<nsIViewManager> viewManager;
-  nsresult result = GetViewManager(getter_AddRefs(viewManager));
-  if (NS_SUCCEEDED(result) && viewManager)
+  nsIViewManager* viewManager = GetViewManager();
+  nsresult result = NS_OK;
+  if (viewManager)
   {
     nsIScrollableView *scrollView;
     result = viewManager->GetRootScrollableView(&scrollView);
@@ -3370,9 +3358,9 @@ PresShell::ScrollHorizontal(PRBool aLeft)
 NS_IMETHODIMP
 PresShell::CompleteScroll(PRBool aForward)
 {
-  nsCOMPtr<nsIViewManager> viewManager;
-  nsresult result = GetViewManager(getter_AddRefs(viewManager));
-  if (NS_SUCCEEDED(result) && viewManager)
+  nsIViewManager* viewManager = GetViewManager();
+  nsresult result = NS_OK;
+  if (viewManager)
   {
     nsIScrollableView *scrollView;
     result = viewManager->GetRootScrollableView(&scrollView);
@@ -3398,9 +3386,7 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
   nsIView *scrolledView;
   result = scrollableView->GetScrolledView(scrolledView);
   // get a frame
-  void *clientData;
-  scrolledView->GetClientData(clientData);
-  nsIFrame *frame = (nsIFrame *)clientData;
+  nsIFrame *frame = (nsIFrame*)scrolledView->GetClientData();
   if (!frame)
     return NS_ERROR_FAILURE;
   //we need to get to the area frame.
@@ -3430,9 +3416,7 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
   if (aForward)
   {
     outsideLimit = 1;//search from end
-    nsRect rect;
-    frame->GetRect(rect);
-    pos.mDesiredX = rect.width * 2;//search way off to right of line
+    pos.mDesiredX = frame->GetRect().width * 2;//search way off to right of line
     pos.mDirection = eDirPrevious; //seach backwards from the end
   }
   else
@@ -3498,24 +3482,19 @@ PresShell::CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOff
 
 static void UpdateViewProperties(nsIPresContext* aPresContext, nsIViewManager* aVM,
                                  nsIView* aView) {
-  nsCOMPtr<nsIViewManager> thisVM;
-  aView->GetViewManager(*getter_AddRefs(thisVM));
+  nsIViewManager* thisVM = aView->GetViewManager();
   if (thisVM != aVM) {
     return;
   }
 
-  void* clientData;
-  aView->GetClientData(clientData);
-  nsIFrame* frame = NS_STATIC_CAST(nsIFrame*, clientData);
+  nsIFrame* frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
   if (frame) {
     nsContainerFrame::SyncFrameViewProperties(aPresContext, frame, nsnull, aView);
   }
 
-  nsIView* child;
-  aView->GetFirstChild(child);
-  while (child) {
+  for (nsIView* child = aView->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
     UpdateViewProperties(aPresContext, aVM, child);
-    child->GetNextSibling(child);
   }
 }
 
@@ -3561,13 +3540,11 @@ PresShell::StyleChangeReflow()
     rootFrame->WillReflow(mPresContext);
     nsContainerFrame::PositionFrameView(mPresContext, rootFrame);
     rootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
-    rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
+    rootFrame->SetSize(nsSize(desiredSize.width, desiredSize.height));
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
-    nsIView* view = rootFrame->GetView(mPresContext);
-    if (view) {
-      nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
-                                                 nsnull);
-    }
+    nsIView* view = rootFrame->GetView();
+    nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
+                                               nsnull);
     rootFrame->DidReflow(mPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
 #ifdef NS_DEBUG
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
@@ -3958,7 +3935,8 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
   }
   
   if (aFrame == mCurrentEventFrame) {
-    aFrame->GetContent(&mCurrentEventContent);
+    mCurrentEventContent = aFrame->GetContent();
+    NS_IF_ADDREF(mCurrentEventContent);
     mCurrentEventFrame = nsnull;
   }
 
@@ -3966,8 +3944,8 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
     if (aFrame == (nsIFrame*)mCurrentEventFrameStack.ElementAt(i)) {
       //One of our stack frames was deleted.  Get its content so that when we
       //pop it we can still get its new frame from its content
-      nsIContent *currentEventContent;
-      aFrame->GetContent(&currentEventContent);
+      nsIContent *currentEventContent = aFrame->GetContent();
+      NS_IF_ADDREF(currentEventContent);
       mCurrentEventContentStack.ReplaceElementAt((void*)currentEventContent, i);
       mCurrentEventFrameStack.ReplaceElementAt(nsnull, i);
     }
@@ -3985,16 +3963,13 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsPoint   pt;
   nsresult  rv;
 
-  nsIView *view = aFrame->GetClosestView(mPresContext);
+  nsIView *view = aFrame->GetClosestView();
 
   nsCOMPtr<nsIWidget> widget;
-  if (nsnull != view) {
-    nsCOMPtr<nsIViewManager> vm;
-    view->GetViewManager(*getter_AddRefs(vm));
-    vm->GetWidgetForView(view, getter_AddRefs(widget));
+  if (view) {
+    view->GetViewManager()->GetWidgetForView(view, getter_AddRefs(widget));
   }
 
   nsCOMPtr<nsIDeviceContext> dx;
@@ -4255,10 +4230,9 @@ static void ScrollViewToShowRect(nsIScrollableView* aScrollingView,
   // Determine the visible rect in the scrolling view's coordinate space.
   // The size of the visible area is the clip view size
   const nsIView*  clipView;
-  nsRect          visibleRect;
 
   aScrollingView->GetClipView(&clipView);
-  clipView->GetBounds(visibleRect); // get width and height
+  nsRect visibleRect = clipView->GetBounds(); // get width and height
   aScrollingView->GetScrollPosition(visibleRect.x, visibleRect.y);
 
   // The actual scroll offsets
@@ -4363,9 +4337,8 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   // is not for the anchor link to scroll back into view. That is what
   // this check is preventing.
   // XXX: The dependency on the command dispatcher needs to be fixed.
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
-  if(content) {
+  nsIContent* content = aFrame->GetContent();
+  if (content) {
     nsCOMPtr<nsIDocument> document;
     content->GetDocument(getter_AddRefs(document));
     if(document){
@@ -4391,8 +4364,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   // Step 2: Walk the views that are parents of the frame and scroll them
   //         appropriately.
   
-  nsRect  frameBounds;
-  aFrame->GetRect(frameBounds);
+  nsRect  frameBounds = aFrame->GetRect();
   nsPoint offset;
   nsIView* closestView;
   aFrame->GetOffsetFromView(mPresContext, offset, &closestView);
@@ -4407,7 +4379,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   while (frame && (frame->GetFrameType(getter_AddRefs(frameType)),
                    frameType == nsLayoutAtoms::inlineFrame)) {
     prevFrame = frame;
-    prevFrame->GetParent(&frame);
+    frame = prevFrame->GetParent();
   }
 
   if (frame != aFrame &&
@@ -4458,17 +4430,14 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   // make sure to get the scrolled view's position after it has been scrolled.
   nsIScrollableView* scrollingView = nsnull;
   while (closestView) {
-    nsIView* parent;
-    closestView->GetParent(parent);
+    nsIView* parent = closestView->GetParent();
     if (parent) {
       CallQueryInterface(parent, &scrollingView);
       if (scrollingView) {
         ScrollViewToShowRect(scrollingView, frameBounds, aVPercent, aHPercent);
       }
     }
-    nscoord x, y;
-    closestView->GetPosition(&x, &y);
-    frameBounds.MoveBy(x, y);
+    frameBounds += closestView->GetPosition();;
     closestView = parent;
   }
 
@@ -4968,8 +4937,7 @@ PresShell::UnsuppressAndInvalidate()
     nsIFrame* rootFrame;
     mFrameManager->GetRootFrame(&rootFrame);
     if (rootFrame) {
-      nsRect rect;
-      rootFrame->GetRect(rect);
+      nsRect rect = rootFrame->GetRect();
       if (!rect.IsEmpty()) {
         ((nsFrame*)rootFrame)->Invalidate(mPresContext, rect, PR_FALSE);
       }
@@ -5226,9 +5194,8 @@ PresShell::IsSafeToFlush(PRBool& aIsSafeToFlush)
     aIsSafeToFlush = PR_FALSE;
   } else {
     // Not safe if we are painting
-    nsCOMPtr<nsIViewManager> viewManager;
-    nsresult rv = GetViewManager(getter_AddRefs(viewManager));
-    if (NS_SUCCEEDED(rv) && (nsnull != viewManager)) {
+    nsIViewManager* viewManager = GetViewManager();
+    if (viewManager) {
       PRBool isPainting = PR_FALSE;
       viewManager->IsPainting(isPainting);
       if (isPainting) {
@@ -5468,8 +5435,7 @@ BuildFramechangeList(nsIFrame *aFrame, void *aClosure)
   // Ok, get our binding information.
   if (!aFrame->GetStyleDisplay()->mBinding.IsEmpty()) {
     // We had a binding.
-    nsCOMPtr<nsIContent> content;
-    aFrame->GetContent(getter_AddRefs(content));
+    nsIContent* content = aFrame->GetContent();
     nsCOMPtr<nsIDocument> doc;
     content->GetDocument(getter_AddRefs(doc));
     if (doc) {
@@ -5528,9 +5494,7 @@ WalkFramesThroughPlaceholders(nsIPresContext *aPresContext, nsIFrame *aFrame,
     nsIFrame *child = nsnull;
     aFrame->FirstChild(aPresContext, childList, &child);
     while (child) {
-      nsFrameState  state;
-      child->GetFrameState(&state);
-      if (!(state & NS_FRAME_OUT_OF_FLOW)) {
+      if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
         // only do frames that are in flow
         nsCOMPtr<nsIAtom> frameType;
         child->GetFrameType(getter_AddRefs(frameType));
@@ -5545,7 +5509,7 @@ WalkFramesThroughPlaceholders(nsIPresContext *aPresContext, nsIFrame *aFrame,
         else
           WalkFramesThroughPlaceholders(aPresContext, child, aFunc, aClosure);
       }
-      child->GetNextSibling(&child);
+      child = child->GetNextSibling();
     }
 
     aFrame->GetAdditionalChildListName(listIndex++, getter_AddRefs(childList));
@@ -5803,10 +5767,9 @@ static PRBool ComputeClipRect(nsIFrame* aFrame, nsRect& aResult) {
   // element: border, padding, and content areas, and even scrollbars if
   // there are any.
   if (display->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT)) {
-    nsSize  size;
+    nsSize  size = aFrame->GetSize();
 
     // Start with the 'auto' values and then factor in user specified values
-    aFrame->GetSize(size);
     nsRect  clipRect(0, 0, size.width, size.height);
 
     if (display->mClipFlags & NS_STYLE_CLIP_RECT) {
@@ -5869,7 +5832,6 @@ PresShell::Paint(nsIView              *aView,
                  nsIRenderingContext& aRenderingContext,
                  const nsRect&        aDirtyRect)
 {
-  void*     clientData;
   nsIFrame* frame;
   nsresult  rv = NS_OK;
 
@@ -5880,8 +5842,7 @@ PresShell::Paint(nsIView              *aView,
 
   NS_ASSERTION(!(nsnull == aView), "null view");
 
-  aView->GetClientData(clientData);
-  frame = (nsIFrame *)clientData;
+  frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
      
   if (nsnull != frame)
   {
@@ -5907,8 +5868,7 @@ PresShell::Paint(nsIView              *aView,
 #ifdef NS_DEBUG
     // Draw a border around the frame
     if (nsIFrameDebug::GetShowFrameBorders()) {
-      nsRect r;
-      frame->GetRect(r);
+      nsRect r = frame->GetRect();
       aRenderingContext.SetColor(NS_RGB(0,0,255));
       aRenderingContext.DrawRect(0, 0, r.width, r.height);
     }
@@ -6100,8 +6060,8 @@ PresShell::HandleEvent(nsIView         *aView,
   // Check for a system color change up front, since the frame type is
   // irrelevant
   if ((aEvent->message == NS_SYSCOLORCHANGED) && mPresContext) {
-    nsCOMPtr<nsIViewManager> vm;
-    if ((NS_SUCCEEDED(GetViewManager(getter_AddRefs(vm)))) && vm) {
+    nsIViewManager* vm = GetViewManager();
+    if (vm) {
       // Only dispatch system color change when the message originates from
       // from the root views widget. This is necessary to prevent us from 
       // dispatching the SysColorChanged notification for each child window 
@@ -6117,9 +6077,7 @@ PresShell::HandleEvent(nsIView         *aView,
     return NS_OK;
   }
 
-  void* clientData;
-  aView->GetClientData(clientData);
-  nsIFrame* frame = (nsIFrame *)clientData;
+  nsIFrame* frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
 
   nsresult rv = NS_OK;
   
@@ -6195,8 +6153,7 @@ PresShell::HandleEvent(nsIView         *aView,
       // GetFrameForPoint() work. The assumption here is that frame->GetView()
       // will return aView, and frame's parent view is aView's parent.
 
-      nsPoint eventPoint;
-      frame->GetOrigin(eventPoint);
+      nsPoint eventPoint = frame->GetPosition();
       eventPoint += aEvent->point;
 
       nsPoint originOffset;
@@ -6281,8 +6238,8 @@ PresShell::HandleEvent(nsIView         *aView,
       nsIView *oldView = mCurrentTargetView;
       nsPoint offset(0,0);
       nsRect oldTargetRect(mCurrentTargetRect);
-      mCurrentEventFrame->GetRect(mCurrentTargetRect);
-      mCurrentTargetView = mCurrentEventFrame->GetView(mPresContext);
+      mCurrentTargetRect = mCurrentEventFrame->GetRect();
+      mCurrentTargetView = mCurrentEventFrame->GetView();
       if (!mCurrentTargetView ) {
         mCurrentEventFrame->GetOffsetFromView(mPresContext, offset,
                                               &mCurrentTargetView);
@@ -6294,8 +6251,8 @@ PresShell::HandleEvent(nsIView         *aView,
         if ((mCurrentTargetRect != oldTargetRect) ||
             (mCurrentTargetView != oldView)) {
 
-          nsCOMPtr<nsIViewManager> vm;
-          if ((NS_SUCCEEDED(GetViewManager(getter_AddRefs(vm)))) && vm) {
+          nsIViewManager* vm = GetViewManager();
+          if (vm) {
             vm->UpdateView(mCurrentTargetView,mCurrentTargetRect,0);
             if (oldView)
               vm->UpdateView(oldView,oldTargetRect,0);
@@ -6481,10 +6438,9 @@ struct ReflowEvent : public PLEvent {
       ps->ClearReflowEventStatus();
       ps->GetReflowBatchingStatus(&isBatching);
       if (!isBatching) {
-        nsCOMPtr<nsIViewManager> viewManager;
         // Set a kung fu death grip on the view manager associated with the pres shell
         // before processing that pres shell's reflow commands.  Fixes bug 54868.
-        presShell->GetViewManager(getter_AddRefs(viewManager));
+        nsCOMPtr<nsIViewManager> viewManager = presShell->GetViewManager();
         ps->ProcessReflowCommands(PR_TRUE);
 
         // Now, explicitly release the pres shell before the view manager
@@ -6580,8 +6536,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     nsIRenderingContext*  rcx;
     nsIFrame*             rootFrame;        
     mFrameManager->GetRootFrame(&rootFrame);
-    nsSize          maxSize;
-    rootFrame->GetSize(maxSize);
+    nsSize          maxSize = rootFrame->GetSize();
 
     nsresult rv=CreateRenderingContext(rootFrame, &rcx);
     if (NS_FAILED(rv)) return rv;
@@ -7006,8 +6961,6 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
 
     nsRect r1, r2;
     nsIView* v1, *v2;
-    nsCOMPtr<nsIWidget> w1;
-    nsCOMPtr<nsIWidget> w2;
     for (;;) {
       if (((nsnull == k1) && (nsnull != k2)) ||
           ((nsnull != k1) && (nsnull == k2))) {
@@ -7017,33 +6970,29 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
       }
       else if (nsnull != k1) {
         // Verify that the frames are the same size
-        k1->GetRect(r1);
-        k2->GetRect(r2);
-        if (r1 != r2) {
+        if (k1->GetRect() != k2->GetRect()) {
           ok = PR_FALSE;
-          LogVerifyMessage(k1, k2, "(frame rects)", r1, r2);
+          LogVerifyMessage(k1, k2, "(frame rects)", k1->GetRect(), k2->GetRect());
         }
 
         // Make sure either both have views or neither have views; if they
         // do have views, make sure the views are the same size. If the
         // views have widgets, make sure they both do or neither does. If
         // they do, make sure the widgets are the same size.
-        v1 = k1->GetView(aFirstPresContext);
-        v2 = k2->GetView(aSecondPresContext);
+        v1 = k1->GetView();
+        v2 = k2->GetView();
         if (((nsnull == v1) && (nsnull != v2)) ||
             ((nsnull != v1) && (nsnull == v2))) {
           ok = PR_FALSE;
           LogVerifyMessage(k1, k2, "child views are not matched\n");
         }
         else if (nsnull != v1) {
-          v1->GetBounds(r1);
-          v2->GetBounds(r2);
-          if (r1 != r2) {
-            LogVerifyMessage(k1, k2, "(view rects)", r1, r2);
+          if (v1->GetBounds() != v2->GetBounds()) {
+            LogVerifyMessage(k1, k2, "(view rects)", v1->GetBounds(), v2->GetBounds());
           }
 
-          v1->GetWidget(*getter_AddRefs(w1));
-          v2->GetWidget(*getter_AddRefs(w2));
+          nsIWidget* w1 = v1->GetWidget();
+          nsIWidget* w2 = v2->GetWidget();
           if (((nsnull == w1) && (nsnull != w2)) ||
               ((nsnull != w1) && (nsnull == w2))) {
             ok = PR_FALSE;
@@ -7179,8 +7128,8 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
         }
 
         // Advance to next sibling
-        k1->GetNextSibling(&k1);
-        k2->GetNextSibling(&k2);
+        k1 = k1->GetNextSibling();
+        k2 = k2->GetNextSibling();
       }
       else {
         break;
@@ -7232,18 +7181,15 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
 static nsIFrame*
 FindTopFrame(nsIFrame* aRoot)
 {
-  if (nsnull != aRoot) {
-    nsIContent* content;
-    aRoot->GetContent(&content);
-    if (nsnull != content) {
+  if (aRoot) {
+    nsIContent* content = aRoot->GetContent();
+    if (content) {
       nsIAtom* tag;
       content->GetTag(tag);
       if (nsnull != tag) {
         NS_RELEASE(tag);
-        NS_RELEASE(content);
         return aRoot;
       }
-      NS_RELEASE(content);
     }
 
     // Try one of the children
@@ -7254,7 +7200,7 @@ FindTopFrame(nsIFrame* aRoot)
       if (nsnull != result) {
         return result;
       }
-      kid->GetNextSibling(&kid);
+      kid = kid->GetNextSibling();
     }
   }
   return nsnull;
@@ -7318,9 +7264,7 @@ PresShell::VerifyIncrementalReflow()
   if (NS_SUCCEEDED (rv)) {
     scrollView->GetScrollPreference(scrolling);
   }
-  nsCOMPtr<nsIWidget> rootWidget;
-  rootView->GetWidget(*getter_AddRefs(rootWidget));
-  void* nativeParentWidget = rootWidget->GetNativeData(NS_NATIVE_WIDGET);
+  void* nativeParentWidget = rootView->GetWidget()->GetNativeData(NS_NATIVE_WIDGET);
 
   // Create a new view manager.
   rv = nsComponentManager::CreateInstance(kViewManagerCID, nsnull,
@@ -7836,9 +7780,6 @@ void ReflowCountMgr::PaintCount(const char *    aName,
       fm->GetHeight(height);
       fm->GetMaxAscent(y);
 
-      nsRect r;
-      aFrame->GetRect(r);
-
       PRUint32 color;
       PRUint32 color2;
       if (aColor != 0) {
@@ -7977,7 +7918,7 @@ static void RecurseIndiTotals(nsIPresContext* aPresContext,
   aParentFrame->FirstChild(aPresContext, nsnull, &child);
   while (child) {
     RecurseIndiTotals(aPresContext, aHT, child, aLevel+1);
-    child->GetNextSibling(&child);
+    child = child->GetNextSibling();
   }
 
 }

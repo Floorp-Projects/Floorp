@@ -792,65 +792,57 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
   if (NS_OK != result) {
     return result;
   }
-  nsCOMPtr<nsIViewManager> viewMan;
 
   nsRect boundBox(0, 0, aWidth, aHeight);
 
-  nsIFrame* parWithView;
+  nsIView *parView = GetAncestorWithView()->GetView();
+  nsIViewManager* viewMan = parView->GetViewManager();
 
-  GetParentWithView(aPresContext, &parWithView);
-  nsIView *parView = parWithView->GetView(aPresContext);
-
-  if (NS_SUCCEEDED(parView->GetViewManager(*getter_AddRefs(viewMan))))
-  {
   //  nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
     // initialize the view as hidden since we don't know the (x,y) until Paint
-    result = view->Init(viewMan, boundBox, parView, nsViewVisibility_kHide);
+  result = view->Init(viewMan, boundBox, parView, nsViewVisibility_kHide);
   //  if (nsnull != initData) {
   //    delete(initData);
   //  }
 
-    if (NS_FAILED(result)) {
-      return NS_OK;       //XXX why OK? MMP
-    }
+  if (NS_FAILED(result)) {
+    return NS_OK;       //XXX why OK? MMP
+  }
 
 #if 0
-    // set the content's widget, so it can get content modified by the widget
-    nsIWidget *widget;
-    result = GetWidget(view, &widget);
-    if (NS_OK == result) {
-      nsInput* content = (nsInput *)mContent; // change this cast to QueryInterface 
-      content->SetWidget(widget);
-      NS_IF_RELEASE(widget);
-    } else {
-      NS_ASSERTION(0, "could not get widget");
-    }
+  // set the content's widget, so it can get content modified by the widget
+  nsIWidget *widget = view->GetWidget();
+  if (widget) {
+    nsInput* content = (nsInput *)mContent; // change this cast to QueryInterface 
+    content->SetWidget(widget);
+  } else {
+    NS_ASSERTION(0, "could not get widget");
+  }
 #endif
 
-    // Turn off double buffering on the Mac. This depends on bug 49743 and partially
-    // fixes 32327, 19931 amd 51787
+  // Turn off double buffering on the Mac. This depends on bug 49743 and partially
+  // fixes 32327, 19931 amd 51787
 #if defined(XP_MAC) || defined(XP_MACOSX)
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    PRBool doubleBuffer = PR_FALSE;
-    if (prefBranch) {
-      prefBranch->GetBoolPref("plugin.enable_double_buffer", &doubleBuffer);
-    }
-
-    viewMan->AllowDoubleBuffering(doubleBuffer);
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  PRBool doubleBuffer = PR_FALSE;
+  if (prefBranch) {
+    prefBranch->GetBoolPref("plugin.enable_double_buffer", &doubleBuffer);
+  }
+  
+  viewMan->AllowDoubleBuffering(doubleBuffer);
 #endif
-
-    // XXX Put this last in document order
-    // XXX Should we be setting the z-index here?
-    viewMan->InsertChild(parView, view, nsnull, PR_TRUE);
-
-    if(aViewOnly != PR_TRUE) {
-      // Bug 179822: Create widget and allow non-unicode SubClass
-      nsWidgetInitData initData;
-      initData.mUnicode = PR_FALSE;
-      result = view->CreateWidget(kWidgetCID, &initData);
-      if (NS_FAILED(result)) {
-        return NS_OK;       //XXX why OK? MMP
-      }
+  
+  // XXX Put this last in document order
+  // XXX Should we be setting the z-index here?
+  viewMan->InsertChild(parView, view, nsnull, PR_TRUE);
+  
+  if(aViewOnly != PR_TRUE) {
+    // Bug 179822: Create widget and allow non-unicode SubClass
+    nsWidgetInitData initData;
+    initData.mUnicode = PR_FALSE;
+    result = view->CreateWidget(kWidgetCID, &initData);
+    if (NS_FAILED(result)) {
+      return NS_OK;       //XXX why OK? MMP
     }
   }
 
@@ -859,11 +851,10 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
     // the child window background color when painting. If it's not set, it may default to gray
     // Sometimes, a frame doesn't have a background color or is transparent. In this
     // case, walk up the frame tree until we do find a frame with a background color
-    for (nsIFrame* frame = this; frame; frame->GetParent(&frame)) {
+    for (nsIFrame* frame = this; frame; frame = frame->GetParent()) {
       const nsStyleBackground* background = frame->GetStyleBackground();
       if (!background->IsTransparent()) {  // make sure we got an actual color
-        nsCOMPtr<nsIWidget> win;
-        view->GetWidget(*getter_AddRefs(win));
+        nsIWidget* win = view->GetWidget();
         if (win)
           win->SetBackgroundColor(background->mBackgroundColor);
         break;
@@ -885,7 +876,7 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
     viewMan->MoveViewTo(view, origin.x, origin.y);
   }
 
-  SetView(aPresContext, view);
+  SetView(view);
 
   return result;
 }
@@ -1490,23 +1481,17 @@ nsresult nsObjectFrame::GetWindowOriginInPixels(nsIPresContext * aPresContext, P
   // if it's windowless, let's make sure we have our origin set right
   // it may need to be corrected, like after scrolling
   if (aWindowless && parentWithView) {
-    nsPoint correction(0,0);
-    nsCOMPtr<nsIViewManager> parentVM;
-    parentWithView->GetViewManager(*getter_AddRefs(parentVM));
+    nsIViewManager* parentVM = parentWithView->GetViewManager();
 
     // Walk up all the views and add up their positions. This will give us our
     // absolute position which is what we want to give the plugin
     nsIView* theView = parentWithView;
     while (theView) {
-      nsCOMPtr<nsIViewManager> vm;
-      theView->GetViewManager(*getter_AddRefs(vm));
-      if (vm != parentVM)
+      if (theView->GetViewManager() != parentVM)
         break;
 
-      theView->GetPosition(&correction.x, &correction.y);
-      origin += correction;
-      
-      theView->GetParent(theView);
+      origin += theView->GetPosition();
+      theView = theView->GetParent();
     }  
   }
 
@@ -1533,9 +1518,8 @@ nsObjectFrame::DidReflow(nsIPresContext*           aPresContext,
   PRBool bHidden = IsHidden();
 
   if (HasView()) {
-    nsIView* view = GetView(aPresContext);
-    nsCOMPtr<nsIViewManager> vm;
-    view->GetViewManager(*getter_AddRefs(vm));
+    nsIView* view = GetView();
+    nsIViewManager* vm = view->GetViewManager();
     if (vm)
       vm->SetViewVisibility(view, bHidden ? nsViewVisibility_kHide : nsViewVisibility_kShow);
   }
@@ -1807,17 +1791,12 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
 #ifdef XP_WIN    // Windowless plugins on windows need a special event to update their location, see bug 135737
 
           // first, lets find out how big the window is, in pixels
-          nsCOMPtr<nsIPresShell> shell;
-          nsCOMPtr<nsIViewManager> vm;
-          aPresContext->GetShell(getter_AddRefs(shell));
-          if (shell) {
-            shell->GetViewManager(getter_AddRefs(vm));
-            if (vm) {  
+          nsIViewManager* vm = aPresContext->GetViewManager();
+            if (vm) {
               nsIView* view;
               vm->GetRootView(view);
               if (view) {
-                nsCOMPtr<nsIWidget> win;
-                view->GetWidget(*getter_AddRefs(win));
+                nsIWidget* win = view->GetWidget();
                 if (win) {
                   nsRect visibleRect;
                   win->GetBounds(visibleRect);         
@@ -1851,7 +1830,6 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
                 }
               }
             }
-          }
 #endif
 
           inst->SetWindow(window);        
@@ -1881,8 +1859,7 @@ nsObjectFrame::HandleEvent(nsIPresContext* aPresContext,
 
   if (anEvent->message == NS_PLUGIN_ACTIVATE)
   {
-    nsCOMPtr<nsIContent> content;
-    GetContent(getter_AddRefs(content));
+    nsIContent* content = GetContent();
     if (content)
     {
       content->SetFocus(aPresContext);
@@ -2004,7 +1981,7 @@ nsObjectFrame::GetNextObjectFrame(nsIPresContext* aPresContext,
   nsIFrame * child;
   aRoot->FirstChild(aPresContext, nsnull, &child);
 
-  while (child != nsnull) {
+  while (child) {
     *outFrame = nsnull;
     CallQueryInterface(child, outFrame);
     if (nsnull != *outFrame) {
@@ -2014,7 +1991,7 @@ nsObjectFrame::GetNextObjectFrame(nsIPresContext* aPresContext,
     }
 
     GetNextObjectFrame(aPresContext, child, outFrame);
-    child->GetNextSibling(&child);
+    child = child->GetNextSibling();
   }
 
   return NS_ERROR_FAILURE;
@@ -2050,8 +2027,7 @@ NS_IMPL_ISUPPORTS2(nsPluginDOMContextMenuListener, nsIDOMContextMenuListener, ns
 
 nsresult nsPluginDOMContextMenuListener::Init(nsObjectFrame *aFrame)
 {
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
+  nsIContent* content = aFrame->GetContent();
 
   // Register context menu listener
   if (content) {
@@ -2071,8 +2047,7 @@ nsresult nsPluginDOMContextMenuListener::Init(nsObjectFrame *aFrame)
 
 nsresult nsPluginDOMContextMenuListener::Destroy(nsObjectFrame *aFrame)
 {
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
+  nsIContent* content = aFrame->GetContent();
 
   // Unregister context menu listener
   if (content) {
@@ -2272,14 +2247,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDOMElement(nsIDOMElement* *result)
 
   if (nsnull != mOwner)
   {
-    nsIContent  *cont;
-
-    mOwner->GetContent(&cont);
-
-    if (nsnull != cont)
+    nsIContent* cont = mOwner->GetContent();
+    if (cont)
     {
       rv = cont->QueryInterface(NS_GET_IID(nsIDOMElement), (void **)result);
-      NS_RELEASE(cont);
     }
   }
 
@@ -2328,8 +2299,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
   rv = NS_NewURI(getter_AddRefs(uri), aURL, baseURL);
 
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIContent> content;
-  mOwner->GetContent(getter_AddRefs(content));
+  nsIContent* content = mOwner->GetContent();
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIInputStream> postDataStream;
@@ -2425,7 +2395,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(nsPluginRect *invalidRect)
   if(invalidRect)
   {
     //no reference count on view
-    nsIView* view = mOwner->GetView(mContext);
+    nsIView* view = mOwner->GetView();
 
     if (view)
     {
@@ -2437,15 +2407,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(nsPluginRect *invalidRect)
             (int)(ptot * (invalidRect->right - invalidRect->left)),
             (int)(ptot * (invalidRect->bottom - invalidRect->top)));
 
-      nsIViewManager* manager;
-      rv = view->GetViewManager(manager);
-
       //set flags to not do a synchronous update, force update does the redraw
-      if((rv == NS_OK) && manager)
-      {
-        rv = manager->UpdateView(view, rect, NS_VMREFRESH_NO_SYNC);
-        NS_RELEASE(manager);
-      }
+      view->GetViewManager()->UpdateView(view, rect, NS_VMREFRESH_NO_SYNC);
     }
   }
 
@@ -2459,23 +2422,13 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRegion(nsPluginRegion invalidRegi
 
 NS_IMETHODIMP nsPluginInstanceOwner::ForceRedraw()
 {
-  nsresult rv = NS_OK;
-  //no reference count on view
-  nsIView* view = mOwner->GetView(mContext);
-
+  nsIView* view = mOwner->GetView();
   if (view)
   {
-    nsIViewManager* manager;
-    rv = view->GetViewManager(manager);
-
-    if((rv == NS_OK) && manager)
-    {
-      rv = manager->Composite();
-      NS_RELEASE(manager);
-    }
+    return view->GetViewManager()->Composite();
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetValue(nsPluginInstancePeerVariable variable, void *value)
@@ -2490,11 +2443,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetValue(nsPluginInstancePeerVariable varia
       // get the view manager from the pres shell, not from the view!
       // we may not have a view if we are hidden
       if (mContext) {
-        nsCOMPtr<nsIPresShell> shell;
-        mContext->GetShell(getter_AddRefs(shell));
-        if (shell) {
-          nsCOMPtr<nsIViewManager> vm;
-          shell->GetViewManager(getter_AddRefs(vm));
+        nsIViewManager* vm = mContext->GetViewManager();
           if (vm) {
             nsCOMPtr<nsIWidget> widget;
             rv = vm->GetWidget(getter_AddRefs(widget));            
@@ -2505,7 +2454,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetValue(nsPluginInstancePeerVariable varia
 
             } else NS_ASSERTION(widget, "couldn't get doc's widget in getting doc's window handle");
           } else NS_ASSERTION(vm, "couldn't get view manager in getting doc's window handle");
-        } else NS_ASSERTION(shell, "couldn't get pres shell in getting doc's window handle");
       } else NS_ASSERTION(mContext, "plugin owner has no pres context in getting doc's window handle");
 
       break;
@@ -2522,13 +2470,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
 
   *result = nsPluginTagType_Unknown;
 
-  if (nsnull != mOwner)
+  if (mOwner)
   {
-    nsIContent  *cont;
-
-    mOwner->GetContent(&cont);
-
-    if (nsnull != cont)
+    nsIContent* cont = mOwner->GetContent();
+    if (cont)
     {
       nsCOMPtr<nsIAtom> atom;
       cont->GetTag(getter_AddRefs(atom));
@@ -2544,8 +2489,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
 
         rv = NS_OK;
       }
-
-      NS_RELEASE(cont);
     }
   }
 
@@ -2557,10 +2500,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagText(const char* *result)
     NS_ENSURE_ARG_POINTER(result);
     if (nsnull == mTagText) {
         nsresult rv;
-        nsCOMPtr<nsIContent> content;
-        rv = mOwner->GetContent(getter_AddRefs(content));
-        if (NS_FAILED(rv))
-            return rv;
+        nsIContent* content = mOwner->GetContent();
+
         nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content, &rv));
         if (NS_FAILED(rv))
             return rv;
@@ -2936,8 +2877,8 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   // arrays count up attributes
   mNumCachedAttrs = 0;
 
-  nsCOMPtr<nsIContent> content; 
-  nsresult rv = mOwner->GetContent(getter_AddRefs(content));
+  nsIContent* content = mOwner->GetContent();
+  nsresult rv = NS_OK;
   NS_ENSURE_TRUE(content, rv);
 
   PRInt32 cattrs;
@@ -3159,8 +3100,7 @@ void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord
     case NS_FOCUS_EVENT_START:   // this is the same as NS_FOCUS_CONTENT
         aMacEvent.what = nsPluginEventType_GetFocusEvent;
         if (mOwner && mOwner->mPresContext) {
-            nsCOMPtr<nsIContent> content;
-            mOwner->GetContent(getter_AddRefs(content));
+            nsIContent* content = mOwner->GetContent();
             if (content)
                 content->SetFocus(mOwner->mPresContext);
         }
@@ -3169,8 +3109,7 @@ void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord
     case NS_BLUR_CONTENT:
         aMacEvent.what = nsPluginEventType_LoseFocusEvent;
         if (mOwner && mOwner->mPresContext) {
-            nsCOMPtr<nsIContent> content;
-            mOwner->GetContent(getter_AddRefs(content));
+            nsIContent* content = mOwner->GetContent();
             if (content)
                 content->RemoveFocus(mOwner->mPresContext);
         }
@@ -3537,8 +3476,7 @@ nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
   // if the plugin is windowless, we need to set focus ourselves
   // otherwise, we might not get key events
   if (mPluginWindow && mPluginWindow->type == nsPluginWindowType_Drawable) {
-    nsCOMPtr<nsIContent> content;
-    mOwner->GetContent(getter_AddRefs(content));
+    nsIContent* content = mOwner->GetContent();
     if (content)
       content->SetFocus(mContext);
   }
@@ -3691,8 +3629,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 nsresult
 nsPluginInstanceOwner::Destroy()
 {
-  nsCOMPtr<nsIContent> content;
-  mOwner->GetContent(getter_AddRefs(content));
+  nsIContent* content = mOwner->GetContent();
 
   // stop the timer explicitly to reduce reference count.
   CancelTimer();
@@ -3732,19 +3669,15 @@ nsPluginInstanceOwner::Destroy()
   }
 
   // Unregister scroll position listener
-  nsIFrame* parentWithView;
-  mOwner->GetParentWithView(mContext, &parentWithView);
-  
-  nsIView* curView = nsnull;
-  if (parentWithView)
-    curView = parentWithView->GetView(mContext);
+  nsIFrame* parentWithView = mOwner->GetAncestorWithView();
+  nsIView* curView = parentWithView ? parentWithView->GetView() : nsnull;
   while (curView)
   {
     nsIScrollableView* scrollingView;
     if (NS_SUCCEEDED(CallQueryInterface(curView, &scrollingView)))
       scrollingView->RemoveScrollPositionListener((nsIScrollPositionListener *)this);
     
-    curView->GetParent(curView);
+    curView = curView->GetParent();
   }
 
   mOwner = nsnull; // break relationship between frame and plugin instance owner
@@ -3888,8 +3821,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
   mContext = aPresContext;
   mOwner = aFrame;
   
-  nsCOMPtr<nsIContent> content;
-  mOwner->GetContent(getter_AddRefs(content));
+  nsIContent* content = mOwner->GetContent();
   
   // Some plugins require a specific sequence of shutdown and startup when
   // a page is reloaded. Shutdown happens usually when the last instance
@@ -3960,18 +3892,15 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
   // Register scroll position listener
   // We need to register a scroll pos listener on every scrollable
   // view up to the top
-  nsIFrame* parentWithView;
-  mOwner->GetParentWithView(mContext, &parentWithView);
-  nsIView* curView = nsnull;
-  if (parentWithView)
-    curView = parentWithView->GetView(mContext);
+  nsIFrame* parentWithView = mOwner->GetAncestorWithView();
+  nsIView* curView = parentWithView ? parentWithView->GetView() : nsnull;
   while (curView)
   {
     nsIScrollableView* scrollingView;
     if (NS_SUCCEEDED(CallQueryInterface(curView, &scrollingView)))
       scrollingView->AddScrollPositionListener((nsIScrollPositionListener *)this);
     
-    curView->GetParent(curView);
+    curView = curView->GetParent();
   }
 
   return NS_OK; 
@@ -4017,7 +3946,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
   {
     // Create view if necessary
 
-    view = mOwner->GetView(mContext);
+    view = mOwner->GetView();
 
     if (!view || !mWidget)
     {
@@ -4033,18 +3962,14 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
                                 windowless);
       if (NS_OK == rv)
       {
-        view = mOwner->GetView(mContext);
+        view = mOwner->GetView();
         if (view)
         {
-          view->GetWidget(*getter_AddRefs(mWidget));
+          mWidget = view->GetWidget();
           PRBool fTransparent = PR_FALSE;
           mInstance->GetValue(nsPluginInstanceVariable_TransparentBool, (void *)&fTransparent);
           
-          nsCOMPtr<nsIViewManager> vm;
-          view->GetViewManager(*getter_AddRefs(vm));
-          if (vm) {
-            vm->SetViewContentTransparency(view, fTransparent);
-          }
+          view->GetViewManager()->SetViewContentTransparency(view, fTransparent);
         }
 
         if (PR_TRUE == windowless)
@@ -4100,34 +4025,32 @@ static void ConvertTwipsToPixels(nsIPresContext& aPresContext, nsRect& aTwipsRec
 #ifdef DO_DIRTY_INTERSECT
 // Convert from a frame relative coordinate to a coordinate relative to its
 // containing window
-static void ConvertRelativeToWindowAbsolute(nsIFrame* aFrame, nsIPresContext* aPresContext, nsPoint& aRel, nsPoint& aAbs, nsIWidget *&
-aContainerWidget)
+static void ConvertRelativeToWindowAbsolute(nsIFrame* aFrame,
+  nsIPresContext* aPresContext, nsPoint& aRel, nsPoint& aAbs,
+  nsIWidget *& aContainerWidget)
 {
-  aAbs.x = 0;
-  aAbs.y = 0;
-
   // See if this frame has a view
-  nsIView *view = aFrame->GetView(aPresContext);
-  if (nsnull == view) {
-   // Calculate frames offset from its nearest view
-   aFrame->GetOffsetFromView(aPresContext,
+  nsIView *view = aFrame->GetView();
+  if (!view) {
+    aAbs.x = 0;
+    aAbs.y = 0;
+    // Calculate frames offset from its nearest view
+    aFrame->GetOffsetFromView(aPresContext,
                    aAbs,
                    &view);
   } else {
-   // Store frames offset from its view.
-   nsRect rect;
-   aFrame->GetRect(rect);
-   aAbs.x = rect.x;
-   aAbs.y = rect.y;
+    // Store frames offset from its view.
+    aAbs = aFrame->GetPosition();
   }
 
-  if (view != nsnull) {
+  if (view) {
     // Caclulate the views offset from its nearest widget
 
    nscoord viewx = 0; 
    nscoord viewy = 0;
-   view->GetWidget(aContainerWidget);
-   if (nsnull == aContainerWidget) {
+   aContainerWidget = view->GetWidget();
+   NS_IF_ADDREF(aContainerWidget);
+   if (!aContainerWidget) {
      view->GetOffsetFromWidget(&viewx, &viewy, aContainerWidget/**getter_AddRefs(widget)*/);
      aAbs.x += viewx;
      aAbs.y += viewy;
@@ -4135,10 +4058,7 @@ aContainerWidget)
    
    // GetOffsetFromWidget does not include the views offset, so we need to add
    // that in.
-     nscoord x, y;
-     view->GetPosition(&x, &y);
-     aAbs.x += x;
-     aAbs.y += y;
+     aAbs += view->GetPosition();
     }
    
    nsRect widgetBounds;
@@ -4163,10 +4083,8 @@ nsPluginPort* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
     return nsnull;
 
   // first, check our view for CSS visibility style
-  nsIView *view = mOwner->GetView(mContext);
-  nsViewVisibility vis;
-  view->GetVisibility(vis);
-  PRBool isVisible = (vis == nsViewVisibility_kShow) ? PR_TRUE : PR_FALSE;
+  PRBool isVisible =
+    mOwner->GetView()->GetVisibility() == nsViewVisibility_kShow;
 
   nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
   
@@ -4174,7 +4092,8 @@ nsPluginPort* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
   nsRect widgetClip;
   PRBool widgetVisible;
   pluginWidget->GetPluginClipRect(widgetClip, pluginOrigin, widgetVisible);
-  isVisible &= widgetVisible;
+  if (!widgetVisible)
+    isVisible = FALSE;
   if (!isVisible)
     widgetClip.Empty();
 
@@ -4221,17 +4140,9 @@ nsPluginPort* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
 void nsPluginInstanceOwner::Composite()
 {
   //no reference count on view
-  nsIView* view = mOwner->GetView(mContext);
-
+  nsIView* view = mOwner->GetView();
   if (view) {
-    nsIViewManager* manager;
-    nsresult rv = view->GetViewManager(manager);
-
-    //set flags to not do a synchronous update, force update does the redraw
-    if (NS_SUCCEEDED(rv) && manager) {
-      rv = manager->UpdateView(view, NS_VMREFRESH_IMMEDIATE);
-      NS_RELEASE(manager);
-    }
+    view->GetViewManager()->UpdateView(view, NS_VMREFRESH_IMMEDIATE);
   }
 }
 
