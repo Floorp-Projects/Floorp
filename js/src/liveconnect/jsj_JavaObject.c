@@ -315,7 +315,7 @@ jsj_DiscardJavaObjReflections(JNIEnv *jEnv)
 #endif
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+JSBool JS_DLL_CALLBACK
 JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     JavaObjectWrapper *java_wrapper;
