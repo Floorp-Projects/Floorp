@@ -35,42 +35,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* nsIDocumentLoader -->
-
-*/
-
 #include "nsISupports.idl"
 interface nsILoadGroup;
-interface nsIContentViewerContainer;
 interface nsIChannel;
 interface nsIURI;
 interface nsIWebProgress;
 interface nsIRequest;
 
-[scriptable, uuid(f43ba260-0737-11d2-beb9-00805f8a66dc)]
+/**
+ * An nsIDocumentLoader is a component responsible for tracking groups of loads
+ * that belong together (images, external scripts, etc) and subdocuments
+ * (<iframe>, <frame>, etc). It is also responsible for sending
+ * nsIWebProgressListener notifications.
+ */
+[scriptable, uuid(8cb3d66d-a39c-46d4-9786-373b6b052e6d)]
 interface nsIDocumentLoader : nsISupports
 {
   void stop();
-  boolean isBusy();
+  
+  // XXXbiesi this seems like not such a good method here
   void createDocumentLoader(out nsIDocumentLoader anInstance);
 
   attribute nsISupports container;
   
-  [noscript] void getContentViewerContainer(in nsISupports aDocumentID, out nsIContentViewerContainer aResult);
   nsILoadGroup getLoadGroup();
 
   void destroy();
-  // this should really be in a private interface as it is only
-  // called between a parent doc loader and it's child.
-  void clearParentDocLoader();
   readonly attribute nsIChannel documentChannel;
 
   void fireOnLocationChange(in nsIWebProgress aWebProgress,
                             in nsIRequest aRequest,
                             in nsIURI aUri);
-  void fireOnStatusChange(in nsIWebProgress aWebProgress,
-                          in nsIRequest aRequest,
-                          in nsresult aStatus,
-                          in wstring aMessage);
 };
 

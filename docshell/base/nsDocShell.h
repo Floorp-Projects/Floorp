@@ -400,7 +400,6 @@ protected:
     nsCOMPtr<nsIContentViewer> mContentViewer;
     nsCOMPtr<nsIDocumentCharsetInfo> mDocumentCharsetInfo;
     nsCOMPtr<nsIDeviceContext> mDeviceContext;
-    nsCOMPtr<nsIDocumentLoader>mDocLoader;
     nsCOMPtr<nsIWidget>        mParentWidget;
     nsCOMPtr<nsIPrefBranch>    mPrefs;
     nsCOMPtr<nsIURI>           mCurrentURI;

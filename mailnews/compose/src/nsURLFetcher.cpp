@@ -357,9 +357,7 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsILocalFile *localFile, nsIFileOutpu
   NS_ENSURE_TRUE(pURILoader, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIChannel> channel;
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  pURILoader->GetLoadGroupForContext(this, getter_AddRefs(loadGroup));
-  NS_ENSURE_SUCCESS(NS_NewChannel(getter_AddRefs(channel), aURL, nsnull, loadGroup, this), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(NS_NewChannel(getter_AddRefs(channel), aURL, nsnull, nsnull, this), NS_ERROR_FAILURE);
  
   return pURILoader->OpenURI(channel, PR_FALSE, this);
 }
