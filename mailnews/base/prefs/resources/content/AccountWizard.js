@@ -866,7 +866,8 @@ function getCurrentServerType(pageData) {
 function getCurrentServerIsDeferred(pageData) {
     var serverDeferred = false; 
     if (pageData.server && pageData.server.deferStorage)
-        serverDeferred = true;
+        serverDeferred = pageData.server.deferStorage.value;
+
     return serverDeferred;
 }
 
