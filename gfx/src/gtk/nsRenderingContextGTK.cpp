@@ -1298,7 +1298,18 @@ nsRenderingContextGTK::GetWidth(const char* aString, PRUint32 aLength,
     g_return_val_if_fail(mCurrentFont != NULL, NS_ERROR_FAILURE);
     gint rawWidth;
     nsXFont *xFont = mCurrentFont->GetXFont();
-    if (!mCurrentFont->GetXFontIs10646()) {
+    if (mCurrentFont->IsFreeTypeFont()) {
+      PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
+      // need to fix this for long strings
+      PRUint32 len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
+      // convert 7 bit data to unicode
+      // this function is only supposed to be called for ascii data
+      for (PRUint32 i=0; i<len; i++) {
+        unichars[i] = (PRUnichar)((unsigned char)aString[i]);
+      }
+      rawWidth = mCurrentFont->GetWidth(unichars, len);
+    }
+    else if (!mCurrentFont->GetXFontIs10646()) {
       NS_ASSERTION(xFont->IsSingleByte(),"wrong string/font size");
       // 8 bit data with an 8 bit font
       rawWidth = xFont->TextWidth8(aString, aLength);
@@ -1451,6 +1462,8 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
                                   nscoord aX, nscoord aY,
                                   const nscoord* aSpacing)
 {
+  nsresult res = NS_OK;
+
   if (0 != aLength) {
     g_return_val_if_fail(mTranMatrix != NULL, NS_ERROR_FAILURE);
     g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
@@ -1471,7 +1484,19 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
         nscoord xx = x;
         nscoord yy = y;
         mTranMatrix->TransformCoord(&xx, &yy);
-        if (!mCurrentFont->GetXFontIs10646()) {
+        if (mCurrentFont->IsFreeTypeFont()) {
+          PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
+          // need to fix this for long strings
+          PRUint32 len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
+          // convert 7 bit data to unicode
+          // this function is only supposed to be called for ascii data
+          for (PRUint32 i=0; i<len; i++) {
+            unichars[i] = (PRUnichar)((unsigned char)aString[i]);
+          }
+          res = mCurrentFont->DrawString(this, mSurface, xx, yy,
+                                         unichars, len);
+        }
+        else if (!mCurrentFont->GetXFontIs10646()) {
           // 8 bit data with an 8 bit font
           NS_ASSERTION(xFont->IsSingleByte(),"wrong string/font size");
           xFont->DrawText8(mSurface->GetDrawable(), mGC, xx, yy, &ch, 1);
@@ -1487,7 +1512,19 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
     }
     else {
       mTranMatrix->TransformCoord(&x, &y);
-      if (!mCurrentFont->GetXFontIs10646()) { // keep 8 bit path fast
+      if (mCurrentFont->IsFreeTypeFont()) {
+        PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
+        // need to fix this for long strings
+        PRUint32 len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
+        // convert 7 bit data to unicode
+        // this function is only supposed to be called for ascii data
+        for (PRUint32 i=0; i<len; i++) {
+          unichars[i] = (PRUnichar)((unsigned char)aString[i]);
+        }
+        res = mCurrentFont->DrawString(this, mSurface, x, y,
+                                       unichars, len);
+      }
+      else if (!mCurrentFont->GetXFontIs10646()) { // keep 8 bit path fast
         // 8 bit data with an 8 bit font
         NS_ASSERTION(xFont->IsSingleByte(),"wrong string/font size");
         xFont->DrawText8(mSurface->GetDrawable(), mGC, x, y, aString, aLength);
@@ -1535,7 +1572,7 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
   }
 #endif
 
-  return NS_OK;
+  return res;
 }
 
 NS_IMETHODIMP
@@ -1873,12 +1910,25 @@ nsRenderingContextGTK::GetBoundingMetrics(const char*        aString,
                                           PRUint32           aLength,
                                           nsBoundingMetrics& aBoundingMetrics)
 {
+  nsresult res = NS_OK;
   aBoundingMetrics.Clear();
   if (aString && 0 < aLength) {
     g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
     g_return_val_if_fail(mCurrentFont != NULL, NS_ERROR_FAILURE);
     nsXFont *xFont = mCurrentFont->GetXFont();
-    if (!mCurrentFont->GetXFontIs10646()) {
+    if (mCurrentFont->IsFreeTypeFont()) {
+      PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
+      // need to fix this for long strings
+      PRUint32 len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
+      // convert 7 bit data to unicode
+      // this function is only supposed to be called for ascii data
+      for (PRUint32 i=0; i<len; i++) {
+        unichars[i] = (PRUnichar)((unsigned char)aString[i]);
+      }
+      res = mCurrentFont->GetBoundingMetrics(unichars, len,
+                                            aBoundingMetrics);
+    }
+    else if (!mCurrentFont->GetXFontIs10646()) {
         // 8 bit data with an 8 bit font
         NS_ASSERTION(xFont->IsSingleByte(),"wrong string/font size");
         xFont->TextExtents8(aString, aLength,
@@ -1906,7 +1956,8 @@ nsRenderingContextGTK::GetBoundingMetrics(const char*        aString,
     aBoundingMetrics.descent = NSToCoordRound(aBoundingMetrics.descent * mP2T);
   }
 
-  return NS_OK;
+  return res;
+
 }
 
 NS_IMETHODIMP
