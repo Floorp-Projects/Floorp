@@ -598,3 +598,7 @@ pref("mail.compose.max_recycled_windows", 0);
 # XP_UNIX
 #endif
 #endif
+
+#ifdef XP_OS2
+pref("mail.compose.max_recycled_windows", 0);
+#endif
