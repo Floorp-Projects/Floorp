@@ -55,7 +55,7 @@ typedef struct __struct_Options
 **                  Default is stdout.
 **  mOutputName     Name of the file.
 **  mHelp           Wether or not help should be shown.
-**  mTotalOnly      Only output a signle digit.
+**  mSummaryOnly    Only output a signle line.
 **  mZeroDrift      Output zero drift data.
 */
 {
@@ -65,7 +65,7 @@ typedef struct __struct_Options
     FILE* mOutput;
     char* mOutputName;
     int mHelp;
-    int mTotalOnly;
+    int mSummaryOnly;
     int mZeroDrift;
 }
 Options;
@@ -88,17 +88,28 @@ Switch;
 
 static Switch gInputSwitch = {"--input", "-i", 1, NULL, "Specify input file." DESC_NEWLINE "stdin is default."};
 static Switch gOutputSwitch = {"--output", "-o", 1, NULL, "Specify output file." DESC_NEWLINE "Appends if file exists." DESC_NEWLINE "stdout is default."};
-static Switch gTotalSwitch = {"--totalonly", "-t", 0, NULL, "Only output a single number." DESC_NEWLINE "The cumulative size change." DESC_NEWLINE "Overrides all other output options."};
+static Switch gSummarySwitch = {"--summary", "-s", 0, NULL, "Only output a single line." DESC_NEWLINE "The cumulative size changes." DESC_NEWLINE "Overrides all other output options."};
 static Switch gZeroDriftSwitch = {"--zerodrift", "-z", 0, NULL, "Output zero drift data."  DESC_NEWLINE "Zero drift data includes all changes, even if they cancel out."};
 static Switch gHelpSwitch = {"--help", "-h", 0, NULL, "Information on usage."};
 
 static Switch* gSwitches[] = {
         &gInputSwitch,
         &gOutputSwitch,
-        &gTotalSwitch,
+        &gSummarySwitch,
         &gZeroDriftSwitch,
         &gHelpSwitch
 };
+
+
+typedef struct __struct_SizeComposition
+/*
+**  Used to keep which parts positive and negative resulted in the total.
+*/
+{
+    int mPositive;
+    int mNegative;
+}
+SizeComposition;
 
 
 typedef struct __struct_SizeStats
@@ -108,7 +119,10 @@ typedef struct __struct_SizeStats
 */
 {
     int mCode;
+    SizeComposition mCodeComposition;
+
     int mData;
+    SizeComposition mDataComposition;
 }
 SizeStats;
 
@@ -142,6 +156,7 @@ typedef struct __struct_ObjectStats
 {
     char* mObject;
     int mSize;
+    SizeComposition mComposition;
     SymbolStats* mSymbols;
     unsigned mSymbolCount;
 }
@@ -156,6 +171,7 @@ typedef struct __struct_SegmentStats
     char* mSegment;
     SegmentClass mClass;
     int mSize;
+    SizeComposition mComposition;
     ObjectStats* mObjects;
     unsigned mObjectCount;
 }
@@ -378,6 +394,8 @@ int difftool(Options* inOptions)
 
                 if(0 == retval)
                 {
+                    unsigned moduleIndex = 0;
+
                     /*
                     **  Update our overall totals.
                     */
@@ -405,222 +423,214 @@ int difftool(Options* inOptions)
                     }
 
                     /*
-                    **  Anything else to track?
+                    **  Find, in succession, the following things:
+                    **      the module
+                    **      the segment
+                    **      the object
+                    **      the symbol
+                    **  Failure to find any one of these means to create it.
                     */
-                    if(0 == inOptions->mTotalOnly)
+                    
+                    for(moduleIndex = 0; moduleIndex < moduleCount; moduleIndex++)
                     {
-                        unsigned moduleIndex = 0;
-
-                        /*
-                        **  Find, in succession, the following things:
-                        **      the module
-                        **      the segment
-                        **      the object
-                        **      the symbol
-                        **  Failure to find any one of these means to create it.
-                        */
-
-                        for(moduleIndex = 0; moduleIndex < moduleCount; moduleIndex++)
+                        if(0 == strcmp(modules[moduleIndex].mModule, module))
                         {
-                            if(0 == strcmp(modules[moduleIndex].mModule, module))
+                            break;
+                        }
+                    }
+                    
+                    if(moduleIndex == moduleCount)
+                    {
+                        void* moved = NULL;
+                        
+                        moved = realloc(modules, sizeof(ModuleStats) * (1 + moduleCount));
+                        if(NULL != moved)
+                        {
+                            modules = (ModuleStats*)moved;
+                            moduleCount++;
+                            memset(modules + moduleIndex, 0, sizeof(ModuleStats));
+                            
+                            modules[moduleIndex].mModule = strdup(module);
+                            if(NULL == modules[moduleIndex].mModule)
+                            {
+                                retval = __LINE__;
+                                ERROR_REPORT(retval, module, "Unable to duplicate string.");
+                            }
+                        }
+                        else
+                        {
+                            retval = __LINE__;
+                            ERROR_REPORT(retval, inOptions->mProgramName, "Unable to increase module array.");
+                        }
+                    }
+                    
+                    if(0 == retval)
+                    {
+                        unsigned segmentIndex = 0;
+                        theModule = (modules + moduleIndex);
+                        
+                        if(CODE == segmentClass)
+                        {
+                            if(additive)
+                            {
+                                modules[moduleIndex].mSize.mCode += size;
+                            }
+                            else
+                            {
+                                modules[moduleIndex].mSize.mCode -= size;
+                            }
+                        }
+                        else
+                        {
+                            if(additive)
+                            {
+                                modules[moduleIndex].mSize.mData += size;
+                            }
+                            else
+                            {
+                                modules[moduleIndex].mSize.mData -= size;
+                            }
+                        }
+                        
+                        for(segmentIndex = 0; segmentIndex < theModule->mSegmentCount; segmentIndex++)
+                        {
+                            if(0 == strcmp(segment, theModule->mSegments[segmentIndex].mSegment))
                             {
                                 break;
                             }
                         }
-
-                        if(moduleIndex == moduleCount)
+                        
+                        if(segmentIndex == theModule->mSegmentCount)
                         {
                             void* moved = NULL;
-
-                            moved = realloc(modules, sizeof(ModuleStats) * (1 + moduleCount));
+                            
+                            moved = realloc(theModule->mSegments, sizeof(SegmentStats) * (theModule->mSegmentCount + 1));
                             if(NULL != moved)
                             {
-                                modules = (ModuleStats*)moved;
-                                moduleCount++;
-                                memset(modules + moduleIndex, 0, sizeof(ModuleStats));
-
-                                modules[moduleIndex].mModule = strdup(module);
-                                if(NULL == modules[moduleIndex].mModule)
+                                theModule->mSegments = (SegmentStats*)moved;
+                                theModule->mSegmentCount++;
+                                memset(theModule->mSegments + segmentIndex, 0, sizeof(SegmentStats));
+                                
+                                theModule->mSegments[segmentIndex].mClass = segmentClass;
+                                theModule->mSegments[segmentIndex].mSegment = strdup(segment);
+                                if(NULL == theModule->mSegments[segmentIndex].mSegment)
                                 {
                                     retval = __LINE__;
-                                    ERROR_REPORT(retval, module, "Unable to duplicate string.");
+                                    ERROR_REPORT(retval, segment, "Unable to duplicate string.");
                                 }
                             }
                             else
                             {
                                 retval = __LINE__;
-                                ERROR_REPORT(retval, inOptions->mProgramName, "Unable to increase module array.");
+                                ERROR_REPORT(retval, inOptions->mProgramName, "Unable to increase segment array.");
                             }
                         }
-
+                        
                         if(0 == retval)
                         {
-                            unsigned segmentIndex = 0;
-                            ModuleStats* theModule = (modules + moduleIndex);
-
-                            if(CODE == segmentClass)
+                            unsigned objectIndex = 0;
+                            theSegment = (theModule->mSegments + segmentIndex);
+                            
+                            if(additive)
                             {
-                                if(additive)
-                                {
-                                    modules[moduleIndex].mSize.mCode += size;
-                                }
-                                else
-                                {
-                                    modules[moduleIndex].mSize.mCode -= size;
-                                }
+                                theSegment->mSize += size;
                             }
                             else
                             {
-                                if(additive)
-                                {
-                                    modules[moduleIndex].mSize.mData += size;
-                                }
-                                else
-                                {
-                                    modules[moduleIndex].mSize.mData -= size;
-                                }
+                                theSegment->mSize -= size;
                             }
-
-                            for(segmentIndex = 0; segmentIndex < theModule->mSegmentCount; segmentIndex++)
+                            
+                            for(objectIndex = 0; objectIndex < theSegment->mObjectCount; objectIndex++)
                             {
-                                if(0 == strcmp(segment, theModule->mSegments[segmentIndex].mSegment))
+                                if(0 == strcmp(object, theSegment->mObjects[objectIndex].mObject))
                                 {
                                     break;
                                 }
                             }
-
-                            if(segmentIndex == theModule->mSegmentCount)
+                            
+                            if(objectIndex == theSegment->mObjectCount)
                             {
                                 void* moved = NULL;
-
-                                moved = realloc(theModule->mSegments, sizeof(SegmentStats) * (theModule->mSegmentCount + 1));
+                                
+                                moved = realloc(theSegment->mObjects, sizeof(ObjectStats) * (1 + theSegment->mObjectCount));
                                 if(NULL != moved)
                                 {
-                                    theModule->mSegments = (SegmentStats*)moved;
-                                    theModule->mSegmentCount++;
-                                    memset(theModule->mSegments + segmentIndex, 0, sizeof(SegmentStats));
-
-                                    theModule->mSegments[segmentIndex].mClass = segmentClass;
-                                    theModule->mSegments[segmentIndex].mSegment = strdup(segment);
-                                    if(NULL == theModule->mSegments[segmentIndex].mSegment)
+                                    theSegment->mObjects = (ObjectStats*)moved;
+                                    theSegment->mObjectCount++;
+                                    memset(theSegment->mObjects + objectIndex, 0, sizeof(ObjectStats));
+                                    
+                                    theSegment->mObjects[objectIndex].mObject = strdup(object);
+                                    if(NULL == theSegment->mObjects[objectIndex].mObject)
                                     {
                                         retval = __LINE__;
-                                        ERROR_REPORT(retval, segment, "Unable to duplicate string.");
+                                        ERROR_REPORT(retval, object, "Unable to duplicate string.");
                                     }
                                 }
                                 else
                                 {
                                     retval = __LINE__;
-                                    ERROR_REPORT(retval, inOptions->mProgramName, "Unable to increase segment array.");
+                                    ERROR_REPORT(retval, inOptions->mProgramName, "Unable to increase object array.");
                                 }
                             }
-
+                            
                             if(0 == retval)
                             {
-                                unsigned objectIndex = 0;
-                                SegmentStats* theSegment = (theModule->mSegments + segmentIndex);
-
+                                unsigned symbolIndex = 0;
+                                theObject = (theSegment->mObjects + objectIndex);
+                                
                                 if(additive)
                                 {
-                                    theSegment->mSize += size;
+                                    theObject->mSize += size;
                                 }
                                 else
                                 {
-                                    theSegment->mSize -= size;
+                                    theObject->mSize -= size;
                                 }
-
-                                for(objectIndex = 0; objectIndex < theSegment->mObjectCount; objectIndex++)
+                                
+                                for(symbolIndex = 0; symbolIndex < theObject->mSymbolCount; symbolIndex++)
                                 {
-                                    if(0 == strcmp(object, theSegment->mObjects[objectIndex].mObject))
+                                    if(0 == strcmp(symbol, theObject->mSymbols[symbolIndex].mSymbol))
                                     {
                                         break;
                                     }
                                 }
-
-                                if(objectIndex == theSegment->mObjectCount)
+                                
+                                if(symbolIndex == theObject->mSymbolCount)
                                 {
                                     void* moved = NULL;
-
-                                    moved = realloc(theSegment->mObjects, sizeof(ObjectStats) * (1 + theSegment->mObjectCount));
+                                    
+                                    moved = realloc(theObject->mSymbols, sizeof(SymbolStats) * (1 + theObject->mSymbolCount));
                                     if(NULL != moved)
                                     {
-                                        theSegment->mObjects = (ObjectStats*)moved;
-                                        theSegment->mObjectCount++;
-                                        memset(theSegment->mObjects + objectIndex, 0, sizeof(ObjectStats));
-
-                                        theSegment->mObjects[objectIndex].mObject = strdup(object);
-                                        if(NULL == theSegment->mObjects[objectIndex].mObject)
+                                        theObject->mSymbols = (SymbolStats*)moved;
+                                        theObject->mSymbolCount++;
+                                        memset(theObject->mSymbols + symbolIndex, 0, sizeof(SymbolStats));
+                                        
+                                        theObject->mSymbols[symbolIndex].mSymbol = strdup(symbol);
+                                        if(NULL == theObject->mSymbols[symbolIndex].mSymbol)
                                         {
                                             retval = __LINE__;
-                                            ERROR_REPORT(retval, object, "Unable to duplicate string.");
+                                            ERROR_REPORT(retval, symbol, "Unable to duplicate string.");
                                         }
                                     }
                                     else
                                     {
                                         retval = __LINE__;
-                                        ERROR_REPORT(retval, inOptions->mProgramName, "Unable to increase object array.");
+                                        ERROR_REPORT(retval, inOptions->mProgramName, "Unable to increase symbol array.");
                                     }
                                 }
-
+                                
                                 if(0 == retval)
                                 {
-                                    unsigned symbolIndex = 0;
-                                    ObjectStats* theObject = (theSegment->mObjects + objectIndex);
-
+                                    theSymbol = (theObject->mSymbols + symbolIndex);
+                                    
                                     if(additive)
                                     {
-                                        theObject->mSize += size;
+                                        theSymbol->mSize += size;
                                     }
                                     else
                                     {
-                                        theObject->mSize -= size;
-                                    }
-
-                                    for(symbolIndex = 0; symbolIndex < theObject->mSymbolCount; symbolIndex++)
-                                    {
-                                        if(0 == strcmp(symbol, theObject->mSymbols[symbolIndex].mSymbol))
-                                        {
-                                            break;
-                                        }
-                                    }
-
-                                    if(symbolIndex == theObject->mSymbolCount)
-                                    {
-                                        void* moved = NULL;
-
-                                        moved = realloc(theObject->mSymbols, sizeof(SymbolStats) * (1 + theObject->mSymbolCount));
-                                        if(NULL != moved)
-                                        {
-                                            theObject->mSymbols = (SymbolStats*)moved;
-                                            theObject->mSymbolCount++;
-                                            memset(theObject->mSymbols + symbolIndex, 0, sizeof(SymbolStats));
-
-                                            theObject->mSymbols[symbolIndex].mSymbol = strdup(symbol);
-                                            if(NULL == theObject->mSymbols[symbolIndex].mSymbol)
-                                            {
-                                                retval = __LINE__;
-                                                ERROR_REPORT(retval, symbol, "Unable to duplicate string.");
-                                            }
-                                        }
-                                        else
-                                        {
-                                            retval = __LINE__;
-                                            ERROR_REPORT(retval, inOptions->mProgramName, "Unable to increase symbol array.");
-                                        }
-                                    }
-
-                                    if(0 == retval)
-                                    {
-                                        SymbolStats* theSymbol = (theObject->mSymbols + symbolIndex);
-
-                                        if(additive)
-                                        {
-                                            theSymbol->mSize += size;
-                                        }
-                                        else
-                                        {
-                                            theSymbol->mSize -= size;
-                                        }
+                                        theSymbol->mSize -= size;
                                     }
                                 }
                             }
@@ -647,22 +657,83 @@ int difftool(Options* inOptions)
     */
     if(0 == retval)
     {
-        if(inOptions->mTotalOnly)
+        /*
+        **  Loop through our data once more, so that the symbols can
+        **      propigate their changes upwards in a positive/negative
+        **      fashion.
+        **  This will help give the composite change more meaning.
+        */
+        for(moduleLoop = 0; moduleLoop < moduleCount; moduleLoop++)
         {
-            fprintf(inOptions->mOutput, "%+d\n", overall.mCode + overall.mData);
+            theModule = modules + moduleLoop;
+            
+            for(segmentLoop = 0; segmentLoop < theModule->mSegmentCount; segmentLoop++)
+            {
+                theSegment = theModule->mSegments + segmentLoop;
+                
+                for(objectLoop = 0; objectLoop < theSegment->mObjectCount; objectLoop++)
+                {
+                    theObject = theSegment->mObjects + objectLoop;
+                    
+                    for(symbolLoop = 0; symbolLoop < theObject->mSymbolCount; symbolLoop++)
+                    {
+                        theSymbol = theObject->mSymbols + symbolLoop;
+                        
+                        /*
+                        **  Propogate the composition all the way to the top.
+                        */
+                        if(0 < theSymbol->mSize)
+                        {
+                            theObject->mComposition.mPositive += theSymbol->mSize;
+                            theSegment->mComposition.mPositive += theSymbol->mSize;
+                            if(CODE == theSegment->mClass)
+                            {
+                                overall.mCodeComposition.mPositive += theSymbol->mSize;
+                                theModule->mSize.mCodeComposition.mPositive += theSymbol->mSize;
+                            }
+                            else if(DATA == theSegment->mClass)
+                            {
+                                overall.mDataComposition.mPositive += theSymbol->mSize;
+                                theModule->mSize.mDataComposition.mPositive += theSymbol->mSize;
+                            }
+                        }
+                        else if(0 > theSymbol->mSize)
+                        {
+                            theObject->mComposition.mNegative += theSymbol->mSize;
+                            theSegment->mComposition.mNegative += theSymbol->mSize;
+                            if(CODE == theSegment->mClass)
+                            {
+                                overall.mCodeComposition.mNegative += theSymbol->mSize;
+                                theModule->mSize.mCodeComposition.mNegative += theSymbol->mSize;
+                            }
+                            else if(DATA == theSegment->mClass)
+                            {
+                                overall.mDataComposition.mNegative += theSymbol->mSize;
+                                theModule->mSize.mDataComposition.mNegative += theSymbol->mSize;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        if(inOptions->mSummaryOnly)
+        {
+            fprintf(inOptions->mOutput, "%+d (%+d/%+d)\n", overall.mCode + overall.mData, overall.mCodeComposition.mPositive + overall.mDataComposition.mPositive, overall.mCodeComposition.mNegative + overall.mDataComposition.mNegative);
         }
         else
         {
             fprintf(inOptions->mOutput, "Overall Change in Size\n");
-            fprintf(inOptions->mOutput, "\tTotal:\t%+11d\n", overall.mCode + overall.mData);
-            fprintf(inOptions->mOutput, "\tCode:\t%+11d\n", overall.mCode);
-            fprintf(inOptions->mOutput, "\tData:\t%+11d\n", overall.mData);
+            fprintf(inOptions->mOutput, "\tTotal:\t%+11d (%+d/%+d)\n", overall.mCode + overall.mData, overall.mCodeComposition.mPositive + overall.mDataComposition.mPositive, overall.mCodeComposition.mNegative + overall.mDataComposition.mNegative);
+            fprintf(inOptions->mOutput, "\tCode:\t%+11d (%+d/%+d)\n", overall.mCode, overall.mCodeComposition.mPositive, overall.mCodeComposition.mNegative);
+            fprintf(inOptions->mOutput, "\tData:\t%+11d (%+d/%+d)\n", overall.mData, overall.mDataComposition.mPositive, overall.mDataComposition.mNegative);
         }
 
         /*
         **  Check what else we should output.
         */
-        if(NULL != modules && moduleCount)
+        if(0 == inOptions->mSummaryOnly && NULL != modules && moduleCount)
         {
             const char* segmentType = NULL;
 
@@ -701,16 +772,16 @@ int difftool(Options* inOptions)
                 /*
                 **  Skip if there is zero drift, or no net change.
                 */
-                if(0 == inOptions->mZeroDrift && 0 == (theModule->mSize.mCode + theModule->mSize.mCode ))
+                if(0 == inOptions->mZeroDrift && 0 == (theModule->mSize.mCode + theModule->mSize.mData))
                 {
                     continue;
                 }
 
                 fprintf(inOptions->mOutput, "\n");
                 fprintf(inOptions->mOutput, "%s\n", theModule->mModule);
-                fprintf(inOptions->mOutput, "\tTotal:\t%+11d\n", theModule->mSize.mCode + theModule->mSize.mData);
-                fprintf(inOptions->mOutput, "\tCode:\t%+11d\n", theModule->mSize.mCode);
-                fprintf(inOptions->mOutput, "\tData:\t%+11d\n", theModule->mSize.mData);
+                fprintf(inOptions->mOutput, "\tTotal:\t%+11d (%+d/%+d)\n", theModule->mSize.mCode + theModule->mSize.mData, theModule->mSize.mCodeComposition.mPositive + theModule->mSize.mDataComposition.mPositive, theModule->mSize.mCodeComposition.mNegative + theModule->mSize.mDataComposition.mNegative);
+                fprintf(inOptions->mOutput, "\tCode:\t%+11d (%+d/%+d)\n", theModule->mSize.mCode, theModule->mSize.mCodeComposition.mPositive, theModule->mSize.mCodeComposition.mNegative);
+                fprintf(inOptions->mOutput, "\tData:\t%+11d (%+d/%+d)\n", theModule->mSize.mData, theModule->mSize.mDataComposition.mPositive, theModule->mSize.mDataComposition.mNegative);
 
                 for(segmentLoop = 0; segmentLoop < theModule->mSegmentCount; segmentLoop++)
                 {
@@ -733,7 +804,7 @@ int difftool(Options* inOptions)
                         segmentType = "DATA";
                     }
 
-                    fprintf(inOptions->mOutput, "\t%+11d\t%s (%s)\n", theSegment->mSize, theSegment->mSegment, segmentType);
+                    fprintf(inOptions->mOutput, "\t%+11d (%+d/%+d)\t%s (%s)\n", theSegment->mSize, theSegment->mComposition.mPositive, theSegment->mComposition.mNegative, theSegment->mSegment, segmentType);
 
                     for(objectLoop = 0; objectLoop < theSegment->mObjectCount; objectLoop++)
                     {
@@ -747,7 +818,7 @@ int difftool(Options* inOptions)
                             continue;
                         }
 
-                        fprintf(inOptions->mOutput, "\t\t%+11d\t%s\n", theObject->mSize, theObject->mObject);
+                        fprintf(inOptions->mOutput, "\t\t%+11d (%+d/%+d)\t%s\n", theObject->mSize, theObject->mComposition.mPositive, theObject->mComposition.mNegative, theObject->mObject);
                         
                         for(symbolLoop = 0; symbolLoop < theObject->mSymbolCount; symbolLoop++)
                         {
@@ -950,9 +1021,9 @@ int initOptions(Options* outOptions, int inArgc, char** inArgv)
             {
                 outOptions->mHelp = __LINE__;
             }
-            else if(current == &gTotalSwitch)
+            else if(current == &gSummarySwitch)
             {
-                outOptions->mTotalOnly = __LINE__;
+                outOptions->mSummaryOnly = __LINE__;
             }
             else if(current == &gZeroDriftSwitch)
             {
