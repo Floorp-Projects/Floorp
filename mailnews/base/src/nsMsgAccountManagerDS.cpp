@@ -191,7 +191,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
   
   rv = NS_RDF_NO_VALUE;
 
-  nsString str="";
+  nsAutoString str("");
   if (property == kNC_Name || property == kNC_FolderTreeName) {
 
     // XXX these should be localized

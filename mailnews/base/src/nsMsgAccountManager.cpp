@@ -1720,7 +1720,7 @@ nsMsgAccountManager::CreateLocalMailAccount(nsIMsgIdentity *identity)
 
   // we don't want "nobody at Local Mail" to show up in the
   // folder pane, so we set the pretty name to "Local Mail"
-  nsString localMailFakeHostName(LOCAL_MAIL_FAKE_HOST_NAME);
+  nsAutoString localMailFakeHostName(LOCAL_MAIL_FAKE_HOST_NAME);
   server->SetPrettyName(localMailFakeHostName.ToNewUnicode());
 
   // the server needs a username
@@ -1864,7 +1864,7 @@ nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity)
 
   // we don't want "nobody at Local Mail" to show up in the
   // folder pane, so we set the pretty name to "Local Mail"
-  nsString localMailFakeHostName(LOCAL_MAIL_FAKE_HOST_NAME);
+  nsAutoString localMailFakeHostName(LOCAL_MAIL_FAKE_HOST_NAME);
   server->SetPrettyName(localMailFakeHostName.ToNewUnicode());
   
   // create the directory structure for old 4.x "Local Mail"

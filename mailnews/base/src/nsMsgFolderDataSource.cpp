@@ -1429,7 +1429,7 @@ nsresult nsMsgFolderDataSource::DoNewFolder(nsIMsgFolder *folder, nsISupportsArr
 	{
 		PRUnichar *name;
 		literal->GetValue(&name);
-		nsString tempStr = name;
+		nsAutoString tempStr(name);
 		nsAutoCString nameStr(tempStr);
 
 		rv = folder->CreateSubfolder(nameStr);

@@ -179,7 +179,7 @@ nsresult nsMsgMessageDataSource::Init()
 nsresult nsMsgMessageDataSource::CreateLiterals(nsIRDFService *rdf)
 {
 
-	nsString str = " ";
+	nsAutoString str(" ");;
 	createNode(str, getter_AddRefs(kEmptyStringLiteral), rdf);
 	str = "lowest";
 	createNode(str, getter_AddRefs(kLowestLiteral), rdf);
@@ -1076,7 +1076,7 @@ nsMsgMessageDataSource::createMessageSizeNode(nsIMessage *message,
 {
 	nsresult rv;
 	PRUint32 size;
-	nsString sizeStr="";
+	nsAutoString sizeStr("");
 	rv = message->GetMessageSize(&size);
 	if(NS_FAILED(rv))
 		return rv;
@@ -1099,7 +1099,7 @@ nsresult nsMsgMessageDataSource::createMessageTotalNode(nsIMessage *message, nsI
 	nsCOMPtr<nsIMsgFolder> folder;
 	nsCOMPtr<nsIMsgThread> thread;
 	nsresult rv;
-	nsString emptyString("");
+	nsAutoString emptyString("");
 
 	PRBool showThreads;
   GetIsThreaded(&showThreads);

@@ -351,7 +351,7 @@ nsresult nsMsgRDFDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
 													  const char *newValue)
 {
 	nsCOMPtr<nsIRDFNode> newValueNode;
-	nsString newValueStr = newValue;
+	nsAutoString newValueStr(newValue);
 	createNode(newValueStr, getter_AddRefs(newValueNode), getRDFService());
 	NotifyPropertyChanged(resource, propertyResource, newValueNode);
 	return NS_OK;
