@@ -51,7 +51,7 @@ DIRS = content skin
 
 include $(topsrcdir)/config/config.mk
 
-include ../config/xmlterm_config.mk
+include $(srcdir)/../config/xmlterm_config.mk
 
 include $(topsrcdir)/config/rules.mk
 
