@@ -392,9 +392,7 @@ js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	}
     }
     return JS_TRUE;
-
 }
-
 
 /*
  * Find a function reference and its 'this' object implicit first parameter
@@ -403,7 +401,7 @@ js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
  * when done.  Then push the return value.
  */
 JS_FRIEND_API(JSBool)
-js_Invoke(JSContext *cx, uintN argc, JSBool constructing)
+js_Invoke(JSContext *cx, uintN argc, uintN flags)
 {
     JSStackFrame *fp, frame;
     jsval *sp, *newsp;
@@ -411,13 +409,13 @@ js_Invoke(JSContext *cx, uintN argc, JSBool constructing)
     JSObject *funobj, *parent, *thisp;
     JSClass *clasp;
     JSObjectOps *ops;
+    JSBool ok;
     JSNative native;
     JSFunction *fun;
     JSScript *script;
     uintN minargs, nvars;
     void *mark;
     intN nslots, nalloc, surplus;
-    JSBool ok;
     JSInterpreterHook hook;
     void *hookData;
 
@@ -429,11 +427,13 @@ js_Invoke(JSContext *cx, uintN argc, JSBool constructing)
      * Set vp to the callable value's stack slot (it's where rval goes).
      * Once vp is set, control must flow through label out2: to return.
      * Set frame.rval early so native class and object ops can throw and
-     * return false, causing a goto out2 with ok set to false.
+     * return false, causing a goto out2 with ok set to false.  Also set
+     * frame.constructing so we may test it anywhere below.
      */
     vp = sp - (2 + argc);
     v = *vp;
     frame.rval = JSVAL_VOID;
+    frame.constructing = (JSPackedBool)(flags & JSINVOKE_CONSTRUCT);
 
     /* A callable must be an object reference. */
     if (JSVAL_IS_PRIMITIVE(v))
@@ -454,7 +454,7 @@ js_Invoke(JSContext *cx, uintN argc, JSBool constructing)
          * We attempt the conversion under all circumstances for 1.2, but
          * only if there is a call op defined otherwise.
          */
-        if ((cx->version == JSVERSION_1_2)
+        if (cx->version == JSVERSION_1_2
             || ((ops == &js_ObjectOps) ? clasp->call : ops->call)) {
 	    ok = clasp->convert(cx, funobj, JSTYPE_FUNCTION, &v);
             if (!ok)
@@ -483,7 +483,7 @@ js_Invoke(JSContext *cx, uintN argc, JSBool constructing)
 	}
 
 	/* Try a call or construct native object op, using fun as fallback. */
-	native = constructing ? ops->construct : ops->call;
+	native = frame.constructing ? ops->construct : ops->call;
 	if (!native)
 	    goto bad;
     } else {
@@ -518,10 +518,8 @@ have_fun:
     frame.sp = sp;
     frame.sharpDepth = 0;
     frame.sharpArray = NULL;
-    frame.constructing = constructing;
     frame.overrides = 0;
     frame.debugging = JS_FALSE;
-    frame.internalCall = JS_FALSE;
     frame.dormantNext = NULL;
 
     /*
@@ -541,7 +539,7 @@ have_fun:
 	}
 
 	/* Default return value for a constructor is the new object. */
-	if (constructing)
+	if (frame.constructing)
 	    frame.rval = OBJECT_TO_JSVAL(thisp);
     } else {
 	/*
@@ -560,7 +558,7 @@ have_fun:
 	 *
 	 * The alert should display "true".
 	 */
-	JS_ASSERT(!constructing);
+	JS_ASSERT(!frame.constructing);
 	if (parent == NULL) {
 	    parent = cx->globalObject;
 	} else {
@@ -576,7 +574,8 @@ have_fun:
     /* From here on, control must flow through label out: to return. */
     cx->fp = &frame;
     mark = JS_ARENA_MARK(&cx->stackPool);
-    /* init these now in case we goto out before first hook call */
+
+    /* Init these now in case we goto out before first hook call. */
     hook = cx->runtime->callHook;
     hookData = NULL;
 
@@ -688,7 +687,7 @@ out:
 	ok &= js_PutCallObject(cx, &frame);
 #endif
 #if JS_HAS_ARGS_OBJECT
-    /* If frame has an arguments object, sync values clear back-pointer. */
+    /* If frame has an arguments object, sync values and clear back-pointer. */
     if (frame.argsobj)
 	ok &= js_PutArgsObject(cx, &frame);
 #endif
@@ -707,12 +706,12 @@ out2:
      * return value, but only if this is an external (compiled from script
      * source) call that has stack budget for the generating pc.
      */
-    if (fp->script && !fp->internalCall)
+    if (fp->script && !(flags & JSINVOKE_INTERNAL))
         vp[-fp->script->depth] = (jsval)fp->pc;
     return ok;
 
 bad:
-    js_ReportIsNotFunction(cx, vp, constructing);
+    js_ReportIsNotFunction(cx, vp, frame.constructing);
     ok = JS_FALSE;
     goto out2;
 }
@@ -745,9 +744,7 @@ js_InternalCall(JSContext *cx, JSObject *obj, jsval fval,
     for (i = 0; i < argc; i++)
 	PUSH(argv[i]);
     SAVE_SP(fp);
-    fp->internalCall = JS_TRUE;
-    ok = js_Invoke(cx, argc, JS_FALSE);
-    fp->internalCall = JS_FALSE;
+    ok = js_Invoke(cx, argc, JSINVOKE_INTERNAL);
     if (ok) {
 	RESTORE_SP(fp);
 	*rval = POP();
@@ -802,7 +799,6 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
     frame.constructing = JS_FALSE;
     frame.overrides = 0;
     frame.debugging = debugging;
-    frame.internalCall = JS_FALSE;
     frame.dormantNext = NULL;
 
     /*
@@ -1264,12 +1260,20 @@ js_Interpret(JSContext *cx, jsval *result)
 	    atom = GET_ATOM(cx, script, pc);
 	    id   = (jsid)atom;
 
+	    /*
+	     * ECMA 12.6.3 says to eval the LHS after looking for properties
+	     * to enumerate, and bail without LHS eval if there are no props.
+	     * We do Find here to share the most code at label do_forinloop;
+	     * if looking for enumerable properties could have side effects,
+	     * then we'd have to move this into the common code and condition
+	     * it on op == JSOP_FORNAME2.
+	     */
 	    SAVE_SP(fp);
-	    ok = js_FindVariable(cx, id, &obj, &obj2, &prop);
+	    ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
 	    if (!ok)
 		goto out;
-	    JS_ASSERT(prop);
-	    OBJ_DROP_PROPERTY(cx, obj2, prop);
+	    if (prop)
+		OBJ_DROP_PROPERTY(cx, obj2, prop);
 	    lval = OBJECT_TO_JSVAL(obj);
 	    goto do_forinloop;
 
@@ -1286,10 +1290,12 @@ js_Interpret(JSContext *cx, jsval *result)
 	    rval = POP();
 	    /* FALL THROUGH */
 	  case JSOP_FORELEM2:
-            /* FORELEM2 simply initializes the iteration state and
-               leaves the assignment to the enumerator until after
-               the next property has been acquired.
-            */
+            /*
+	     * JSOP_FORELEM2 simply initializes or updates the iteration state
+	     * and leaves the index expression evaluation and assignment to the
+	     * enumerator till after the next property has been acquired, via
+	     * a JSOP_ENUMELEM bytecode.
+             */
 
 	  do_forinloop:
 	    /*
@@ -1391,7 +1397,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
 	    /* Skip deleted and shadowed properties, leave next id in rval. */
 	    if (obj != origobj) {
-		/* Have we already enumerated a clone of this property? */
+		/* Have we already enumerated a shadower of this property? */
 		ok = OBJ_LOOKUP_PROPERTY(cx, origobj, rval, &obj2, &prop);
 		if (!ok)
 		    goto out;
@@ -1407,8 +1413,8 @@ js_Interpret(JSContext *cx, jsval *result)
 	    /* Make sure rval is a string for uniformity and compatibility. */
 	    if (!JSVAL_IS_INT(rval)) {
 		rval = ATOM_KEY((JSAtom *)rval);
-	    } else if ((cx->version <= JSVERSION_1_1) &&
-		       (cx->version >= JSVERSION_1_0)) {
+	    } else if (JSVERSION_1_0 <= cx->version &&
+		       cx->version <= JSVERSION_1_1) {
 		str = js_NumberToString(cx, (jsdouble) JSVAL_TO_INT(rval));
 		if (!str) {
 		    ok = JS_FALSE;
@@ -1419,7 +1425,10 @@ js_Interpret(JSContext *cx, jsval *result)
 		rval = sp[0] = STRING_TO_JSVAL(str);
 	    }
 
-            if (op != JSOP_FORELEM2) {
+            if (op == JSOP_FORELEM2) {
+                /* FORELEM2 is not a SET operation, it's more like BINDNAME. */
+                PUSH_OPND(rval);
+	    } else {
                 /* Convert lval to a non-null object containing id. */
 	        VALUE_TO_OBJECT(cx, lval, obj);
 
@@ -1428,8 +1437,6 @@ js_Interpret(JSContext *cx, jsval *result)
 	        if (!ok)
 		    goto out;
             }
-            else
-                PUSH_OPND(rval);
 
 	    /* Push true to keep looping through properties. */
 	    rval = JSVAL_TRUE;
@@ -1987,7 +1994,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	    /* Now we have an object with a constructor method; call it. */
 	    vp[1] = OBJECT_TO_JSVAL(obj);
 	    SAVE_SP(fp);
-	    ok = js_Invoke(cx, argc, JS_TRUE);
+	    ok = js_Invoke(cx, argc, JSINVOKE_CONSTRUCT);
 	    RESTORE_SP(fp);
 	    if (!ok) {
 		cx->newborn[GCX_OBJECT] = NULL;
@@ -2018,6 +2025,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	    atom = GET_ATOM(cx, script, pc);
 	    id   = (jsid)atom;
 
+	    SAVE_SP(fp);
 	    ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
 	    if (!ok)
 		goto out;
@@ -2214,7 +2222,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	  case JSOP_EVAL:
 	    argc = GET_ARGC(pc);
 	    SAVE_SP(fp);
-	    ok = js_Invoke(cx, argc, JS_FALSE);
+	    ok = js_Invoke(cx, argc, 0);
 	    RESTORE_SP(fp);
 	    if (!ok)
 		goto out;
@@ -2225,6 +2233,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	    atom = GET_ATOM(cx, script, pc);
 	    id   = (jsid)atom;
 
+	    SAVE_SP(fp);
 	    ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
 	    if (!ok)
 		goto out;
@@ -2450,6 +2459,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	     * such as js_WithClass, that property refers to the prototype's
 	     * constructor function.
 	     */
+	    SAVE_SP(fp);
 	    closure = js_ConstructObject(cx, &js_ClosureClass, obj2,
 					 fp->scopeChain);
 	    if (!closure) {
@@ -2462,6 +2472,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	     * but only if fun2 is not anonymous.
 	     */
 	    if (fun2->atom) {
+		SAVE_SP(fp);
 		ok = OBJ_DEFINE_PROPERTY(cx, obj, (jsid)fun2->atom,
 					 OBJECT_TO_JSVAL(closure),
 					 NULL, NULL, JSPROP_ENUMERATE,

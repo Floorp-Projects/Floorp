@@ -1223,7 +1223,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     fp = cx->fp;
     oldsp = fp->sp;
     fp->sp = sp;
-    ok = js_Invoke(cx, 0, JS_TRUE);
+    ok = js_Invoke(cx, 0, JSINVOKE_CONSTRUCT | JSINVOKE_INTERNAL);
     rval = sp[-1];
     fp->sp = oldsp;
     js_FreeStack(cx, mark);
@@ -1723,7 +1723,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     JSPropertyOp protogetter, protosetter;
     uintN protoattrs;
     JSClass *clasp;
-    jsval pval, rval;
+    jsval pval;
     jsint slot;
     JSString *str;
 
@@ -1812,7 +1812,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 	clasp = LOCKED_OBJ_GET_CLASS(obj);
 	if (protosprop) {
 	    if (protoattrs & JSPROP_READONLY)
-		goto Readonly;
+		goto read_only;
 	    sprop = js_NewScopeProperty(cx, scope, id,
 					protogetter, protosetter,
 					protoattrs);
@@ -1869,7 +1869,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
     /* Check for readonly now that we have sprop. */
     if (sprop->attrs & JSPROP_READONLY) {
-Readonly:
+read_only:
 	JS_UNLOCK_OBJ(cx, obj);
 	if (JSVERSION_IS_ECMA(cx->version))
 	    return JS_TRUE;

@@ -1094,10 +1094,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 		break;
 	      case TOK_LB:
                 /*
-                    we separate out the initialization and incrementing
-                    in order to avoid unwanted side-effects from the 
-                    index expression
-                */
+                 * We separate the first/next bytecode from the enumerator
+		 * variable binding to avoid any side-effects in the index
+                 * expression (e.g., for (x[i++] in {}) should not bind x[i]
+		 * or increment i at all).
+                 */
                 if (!js_Emit1(cx, cg, JSOP_FORELEM2))
                     return JS_FALSE;
 	        beq = js_Emit3(cx, cg, JSOP_IFEQ, 0, 0);
