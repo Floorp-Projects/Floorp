@@ -32,6 +32,12 @@
 #include "nsIWebProgress.h"
 
 #include "UMacUnicode.h"
+#include "ApplIDs.h"
+
+#include "LStaticText.h"
+#include "LIconControl.h"
+#include "LCheckBox.h"
+#include "LEditText.h"
 
 // Interfaces needed to be included
 
@@ -63,6 +69,7 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIPrompt)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -192,13 +199,16 @@ NS_IMETHODIMP CWebBrowserChrome::OnLocationChange(nsIURI *location)
 {
 	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
 
-	nsXPIDLCString spec;
+	char *buf = nsnull;
  
 	if (location)
-		location->GetSpec(getter_Copies(spec));
+		location->GetSpec(&buf);
 
-	nsAutoString tmp(spec);
+	nsAutoString tmp; tmp.AssignWithConversion(buf);
 	mBrowserWindow->SetLocation(tmp);
+
+	if (buf)	
+	    Recycle(buf);
 
 	return NS_OK;
 }
@@ -381,6 +391,268 @@ NS_IMETHODIMP CWebBrowserChrome::SetTitle(const PRUnichar* aTitle)
    
    return NS_OK;
 }
+
+//*****************************************************************************
+// CWebBrowserChrome::nsIPrompt
+//*****************************************************************************   
+
+NS_IMETHODIMP CWebBrowserChrome::Alert(const PRUnichar *text)
+{
+    RegisterClass_(LIconControl);
+    
+    StDialogHandler	theHandler(dlog_Alert, mBrowserWindow);
+    LWindow			 *theDialog = theHandler.GetDialog();
+    Str255            aStr;
+
+    UMacUnicode::StringToStr255(text, aStr);
+   			
+    LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
+    msgText->SetDescriptor(aStr);
+
+    theDialog->Show();
+	
+	while (true)  // This is our modal dialog event loop
+	{				
+		MessageT	hitMessage = theHandler.DoDialog();
+		
+		if (hitMessage == msg_OK)
+   		break;
+	}
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP CWebBrowserChrome::Confirm(const PRUnichar *text, PRBool *_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+    
+    StDialogHandler	theHandler(dlog_Confirm, mBrowserWindow);
+    LWindow			 *theDialog = theHandler.GetDialog();
+    Str255            aStr;
+
+    UMacUnicode::StringToStr255(text, aStr);
+   			
+    LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
+    msgText->SetDescriptor(aStr);
+
+    theDialog->Show();
+	
+	while (true)  // This is our modal dialog event loop
+	{				
+		MessageT	hitMessage = theHandler.DoDialog();
+		
+		if (hitMessage == msg_OK)
+		{
+		    *_retval = PR_TRUE;    
+   		    break;
+   		}
+   		else if (hitMessage == msg_Cancel)
+   		{
+   		    *_retval = PR_FALSE;
+   		    break;
+   		}
+	}
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP CWebBrowserChrome::ConfirmCheck(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
+{
+    NS_ENSURE_ARG_POINTER(checkValue);
+    NS_ENSURE_ARG_POINTER(_retval);
+
+    StDialogHandler	theHandler(dlog_ConfirmCheck, mBrowserWindow);
+    LWindow			 *theDialog = theHandler.GetDialog();
+    Str255          msgStr, checkBoxStr;
+
+    UMacUnicode::StringToStr255(text, msgStr);	
+    LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
+    msgText->SetDescriptor(msgStr);
+    UMacUnicode::StringToStr255(checkMsg, checkBoxStr);
+    LCheckBox *checkBox = dynamic_cast<LCheckBox*>(theDialog->FindPaneByID('Chck'));
+    checkBox->SetDescriptor(checkBoxStr);
+    checkBox->SetValue(*checkValue ? 1 : 0);
+
+    theDialog->Show();
+	
+	while (true)  // This is our modal dialog event loop
+	{				
+		MessageT	hitMessage = theHandler.DoDialog();
+		
+		if (hitMessage == msg_OK)
+		{
+		    *_retval = PR_TRUE;
+		    *checkValue = checkBox->GetValue();    
+   		    break;
+   		}
+   		else if (hitMessage == msg_Cancel)
+   		{
+   		    *_retval = PR_FALSE;
+   		    break;
+   		}
+	}
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP CWebBrowserChrome::Prompt(const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
+{
+    NS_ENSURE_ARG_POINTER(result);
+    NS_ENSURE_ARG_POINTER(_retval);
+
+    nsresult resultErr = NS_OK;
+
+    StDialogHandler	theHandler(dlog_Prompt, mBrowserWindow);
+    LWindow			 *theDialog = theHandler.GetDialog();
+    Str255          aStr;
+
+    UMacUnicode::StringToStr255(text, aStr);	
+    LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
+    msgText->SetDescriptor(aStr);
+    LEditText *responseText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Rslt'));
+    theDialog->SetLatentSub(responseText);
+    
+    theDialog->Show();
+	
+	while (true)  // This is our modal dialog event loop
+	{				
+		MessageT	hitMessage = theHandler.DoDialog();
+		
+		if (hitMessage == msg_OK)
+		{
+		    nsAutoString    responseStr;
+		    
+		    *_retval = PR_TRUE;
+		    responseText->GetDescriptor(aStr);
+		    UMacUnicode::Str255ToString(aStr, responseStr);
+		    *result = responseStr.ToNewUnicode();    
+   		    if (!result)
+   		        resultErr = NS_ERROR_OUT_OF_MEMORY;
+   		    break;
+   		}
+   		else if (hitMessage == msg_Cancel)
+   		{
+   		    *_retval = PR_FALSE;
+   		    break;
+   		}
+	}
+
+    return resultErr;
+}
+
+NS_IMETHODIMP CWebBrowserChrome::PromptUsernameAndPassword(const PRUnichar *text, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
+{
+    NS_ENSURE_ARG_POINTER(user);
+    NS_ENSURE_ARG_POINTER(pwd);
+    NS_ENSURE_ARG_POINTER(_retval);
+
+    nsresult resultErr = NS_OK;
+
+    StDialogHandler	theHandler(dlog_PromptNameAndPass, mBrowserWindow);
+    LWindow			 *theDialog = theHandler.GetDialog();
+    Str255          aStr;
+
+    UMacUnicode::StringToStr255(text, aStr);	
+    LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
+    msgText->SetDescriptor(aStr);	
+    LEditText *userText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Name'));
+    LEditText *pwdText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Pass'));
+ 
+    theDialog->SetLatentSub(userText);   
+    theDialog->Show();
+	
+	while (true)  // This is our modal dialog event loop
+	{				
+		MessageT	hitMessage = theHandler.DoDialog();
+		
+		if (hitMessage == msg_OK)
+		{
+		    nsAutoString    responseStr;
+		    
+		    userText->GetDescriptor(aStr);
+		    UMacUnicode::Str255ToString(aStr, responseStr);
+		    *user = responseStr.ToNewUnicode();
+		    if (*user == nsnull)
+		        resultErr = NS_ERROR_OUT_OF_MEMORY;
+		    
+		    pwdText->GetDescriptor(aStr);
+		    UMacUnicode::Str255ToString(aStr, responseStr);
+		    *pwd = responseStr.ToNewUnicode();
+		    if (*pwd == nsnull)
+		        resultErr = NS_ERROR_OUT_OF_MEMORY;
+		    
+		    *_retval = PR_TRUE;        
+   		    break;
+   		}
+   		else if (hitMessage == msg_Cancel)
+   		{
+   		    *_retval = PR_FALSE;
+   		    break;
+   		}
+	}
+
+    return resultErr;
+}
+
+NS_IMETHODIMP CWebBrowserChrome::PromptPassword(const PRUnichar *text, const PRUnichar *title, PRUnichar **pwd, PRBool *_retval)
+{
+    NS_ENSURE_ARG_POINTER(pwd);
+    NS_ENSURE_ARG_POINTER(_retval);
+    
+    nsresult resultErr = NS_OK;
+
+    StDialogHandler	theHandler(dlog_PromptPassword, mBrowserWindow);
+    LWindow			 *theDialog = theHandler.GetDialog();
+    Str255          aStr;
+
+    UMacUnicode::StringToStr255(text, aStr);	
+    LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
+    msgText->SetDescriptor(aStr);	
+    LEditText *pwdText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Pass'));
+ 
+    theDialog->SetLatentSub(pwdText);   
+    theDialog->Show();
+	
+	while (true)  // This is our modal dialog event loop
+	{				
+		MessageT	hitMessage = theHandler.DoDialog();
+		
+		if (hitMessage == msg_OK)
+		{
+		    nsAutoString    responseStr;
+		    		    
+		    pwdText->GetDescriptor(aStr);
+		    UMacUnicode::Str255ToString(aStr, responseStr);
+		    *pwd = responseStr.ToNewUnicode();
+		    if (*pwd == nsnull)
+		        resultErr = NS_ERROR_OUT_OF_MEMORY;
+		    *_retval = PR_TRUE;        
+   		    break;
+   		}
+   		else if (hitMessage == msg_Cancel)
+   		{
+   		    *_retval = PR_FALSE;
+   		    break;
+   		}
+	}
+
+    return resultErr;
+}
+
+NS_IMETHODIMP CWebBrowserChrome::Select(const PRUnichar *inDialogTitle, const PRUnichar *inMsg, PRUint32 inCount, const PRUnichar **inList, PRInt32 *outSelection, PRBool *_retval)
+{
+   //XXX First Check In
+   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   return NS_OK;
+}
+
+NS_IMETHODIMP CWebBrowserChrome::UniversalDialog(const PRUnichar *inTitleMessage, const PRUnichar *inDialogTitle, const PRUnichar *inMsg, const PRUnichar *inCheckboxMsg, const PRUnichar *inButton0Text, const PRUnichar *inButton1Text, const PRUnichar *inButton2Text, const PRUnichar *inButton3Text, const PRUnichar *inEditfield1Msg, const PRUnichar *inEditfield2Msg, PRUnichar **inoutEditfield1Value, PRUnichar **inoutEditfield2Value, const PRUnichar *inIConURL, PRBool *inoutCheckboxState, PRInt32 inNumberButtons, PRInt32 inNumberEditfields, PRInt32 inEditField1Password, PRInt32 *outButtonPressed)
+{
+   //XXX First Check In
+   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   return NS_OK;
+}
+
 
 //*****************************************************************************
 // CWebBrowserChrome: Helpers
