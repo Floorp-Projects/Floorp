@@ -33,7 +33,7 @@
 #include <UnicodeConverter.h>
 #include <Script.h>
 #include "nsIRollupListener.h"
-#define DEBUG_TSM
+//#define DEBUG_TSM
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
 
@@ -210,9 +210,7 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
 #endif
 	
 	mIMEIsComposing = PR_FALSE;
-	mIMECompositionString = nsnull;
-	mIMECompositionStringSize = 0;
-	mIMECompositionStringLength = 0;
+	mIMECompositionStr=nsnull;
 
 }
 
@@ -221,6 +219,10 @@ nsMacEventHandler::~nsMacEventHandler()
 {
 	if (mTSMDocument)
 		(void)::DeleteTSMDocument(mTSMDocument);
+	if(nsnull != mIMECompositionStr) {
+		nsAutoString::Recycle(mIMECompositionStr);
+		mIMECompositionStr = nsnull;
+	}
 }
 
 
@@ -271,6 +273,7 @@ PRBool nsMacEventHandler::HandleOSEvent ( EventRecord& aOSEvent )
 						gRollupListener->Rollup();
 					}
 				}
+				HandleActivateEvent(aOSEvent);
 			}
 			else {
 				if (! mInBackground)
@@ -760,7 +763,8 @@ PRBool nsMacEventHandler::IsSpecialRaptorKey(UInt32 macKeyCode)
 // ConvertKeyEventToUnicode
 //
 //-------------------------------------------------------------------------
-
+// we currently set the following to 5. We should fix this function later...
+#define UNICODE_BUFFER_SIZE_FOR_KEY 5
 PRUint32 nsMacEventHandler::ConvertKeyEventToUnicode(EventRecord& aOSEvent)
 {
 	char charResult = aOSEvent.message & charCodeMask;
@@ -788,19 +792,40 @@ PRUint32 nsMacEventHandler::ConvertKeyEventToUnicode(EventRecord& aOSEvent)
 	// convert to Unicode
 	//
 	ByteCount result_size, source_read;
-	PRUnichar unicharResult;
+	PRUnichar unicharResult[UNICODE_BUFFER_SIZE_FOR_KEY];
 	err = ::ConvertFromTextToUnicode(textToUnicodeInfo,
 									sizeof(char),&charResult,
 									kUnicodeLooseMappingsMask,
 									0,NULL,NULL,NULL,
-									sizeof(PRUnichar),&source_read,
-									&result_size,&unicharResult);
+									sizeof(PRUnichar)*UNICODE_BUFFER_SIZE_FOR_KEY,&source_read,
+									&result_size,unicharResult);
 	::DisposeTextToUnicodeInfo(&textToUnicodeInfo);
 	NS_ASSERTION(err == noErr, "nsMacEventHandler::ConvertKeyEventToUnicode: ConverFromTextToUnicode failed.");
+	// if we got the following result, then it mean we got more than one Unichar from it.
+	NS_ASSERTION(result_size == 2, "nsMacEventHandler::ConvertKeyEventToUnicode: ConverFromTextToUnicode failed.");
+	// Fix Me!!!
+	// the result_size will not equal to 2 in the following cases:
+	//
+	// 1. Hebrew/Arabic scripts, when we convert ( ) { } [ ]  < >  etc. 
+	// The TEC will produce result_size = 6 (3 PRUnichar*) :
+	// one Right-To-Left-Mark, the char and one Left-To-Right-Mark
+	// We should fix this later...
+	// See the following URL for the details...
+	// ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/APPLE/ARABIC.TXT
+	// ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/APPLE/FARSI.TXT
+	// ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/APPLE/HEBREW.TXT
+	//
+	// 2. Also, it probably won't work in Thai and Indic keyboard since one char may convert to
+	// several PRUnichar. It sometimes add zwj or zwnj. See the following url for details.
+	// ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/APPLE/DEVANAGA.TXT
+	// ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/APPLE/GUJARATI.TXT
+	// ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/APPLE/GURMUKHI.TXT
+	// ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/APPLE/THAI.TXT
+	
 //	if (err != noErr) return 0;
 // I think we should ignore the above error since we already have the result we want
 
-	return unicharResult;
+	return unicharResult[0];
 }
 
 
@@ -856,8 +881,19 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 {
 	OSErr	err;
+ Boolean isActive;
 
-	Boolean isActive = ((aOSEvent.modifiers & activeFlag) != 0);
+  switch (aOSEvent.what)
+  {
+    case activateEvt:
+      isActive = ((aOSEvent.modifiers & activeFlag) != 0);
+      break;
+
+    case osEvt:
+      isActive = ! mInBackground;
+      break;
+  }
+
 	if (isActive)
 	{
 		//
@@ -865,6 +901,8 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 		//
 		if (mTSMDocument)
 			err = ::ActivateTSMDocument(mTSMDocument);
+		else
+			err = ::UseInputWindow(NULL, true); // get this line from mozilla-classic - mozilla/cmd/macfe/central/TSMProxy.cp
 #ifdef DEBUG_TSM
 #if 0
 		NS_ASSERTION(err==noErr,"nsMacEventHandler::HandleActivateEvent: ActivateTSMDocument failed");
@@ -908,11 +946,9 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 		if (mTSMDocument)
 			err = ::DeactivateTSMDocument(mTSMDocument);
 #ifdef DEBUG_TSM
-#if 0
-		NS_ASSERTION(err==noErr,"nsMacEventHandler::HandleActivateEvent: DeactivateTSMDocument failed");
-#endif
+		NS_ASSERTION((noErr==err)||(tsmDocNotActiveErr==err),"nsMacEventHandler::HandleActivateEvent: DeactivateTSMDocument failed");
 		printf("nsEventHandler::HandleActivateEvent: DeactivateTSMDocument[%p] %s return %d\n",mTSMDocument,
-		(err==noErr)?"":"ERROR", err);
+		(err==noErr)||(tsmDocNotActiveErr==noErr)? "" : "ERROR!!!", err);
 #endif
 		
 		//¥TODO: save the focused widget for that window
@@ -1284,10 +1320,24 @@ long nsMacEventHandler::HandlePositionToOffset(Point aPoint,short* regionClass)
 // HandleOffsetToPosition Event
 //
 //-------------------------------------------------------------------------
-PRBool nsMacEventHandler::HandleOffsetToPosition(long offset,Point* thePoint)
+nsresult nsMacEventHandler::HandleOffsetToPosition(long offset,Point* thePoint)
 {
-	(*thePoint).v = 0;
-	(*thePoint).h = 0;
+	thePoint->v = mIMEPos.y;
+	thePoint->h = mIMEPos.x;
+	printf("local (x,y) = (%d, %d)\n", thePoint->h, thePoint->v);
+#if TARGET_CARBON
+	GrafPtr grafPort = reinterpret_cast<GrafPtr>(mTopLevelWidget->GetNativeData(NS_NATIVE_GRAPHIC));
+	::SetPort(grafPort);
+	Rect savePortRect;
+	::GetPortBounds(grafPort, &savePortRect);
+#else
+	GrafPtr grafPort = static_cast<GrafPort*>(mTopLevelWidget->GetNativeData(NS_NATIVE_GRAPHIC));
+	::SetPort(grafPort);
+	Rect savePortRect = grafPort->portRect;
+#endif
+	::LocalToGlobal(thePoint);
+	printf("global (x,y) = (%d, %d)\n", thePoint->h, thePoint->v);
+
 	return PR_TRUE;
 }
 
@@ -1296,117 +1346,359 @@ PRBool nsMacEventHandler::HandleOffsetToPosition(long offset,Point* thePoint)
 // HandleUpdate Event
 //
 //-------------------------------------------------------------------------
- nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, ScriptCode textScript,long fixedLength,TextRangeArray* textRangeList)
+// See ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/APPLE/CORPCHAR.TXT for detail of IS_APPLE_HINT_IN_PRIVATE_ZONE
+#define IS_APPLE_HINT_IN_PRIVATE_ZONE(u) ((0xF850 <= (u)) && ((u)<=0xF883))
+nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, ScriptCode textScript,long fixedLength,TextRangeArray* textRangeList)
 {
+#ifdef DEBUG_TSM
+	printf("********************************************************************************\n");
+	printf("nsMacEventHandler::HandleUpdateInputArea size=%d fixlen=%d\n",text_size, fixedLength);
+#endif
 	TextToUnicodeInfo	textToUnicodeInfo;
 	TextEncoding		textEncodingFromScript;
-	ByteCount			source_read;
-	ByteOffset			sourceOffset[2], destinationOffset[2];
-	ItemCount			destinationLength;
-	nsTextRangeArray	xpTextRangeArray;
-	PRBool				rv;
 	int					i;
 	OSErr				err;
-	
-	//
-	// if we aren't in composition mode alredy, signal the backing store w/ the mode change
-	//	
-	if (!mIMEIsComposing) {
-		mIMEIsComposing = PR_TRUE;
-		HandleStartComposition();
-	}
+	ByteCount			source_read;
+	nsresult res = NS_OK;
+	//====================================================================================================
+	// 0. Create Unicode Converter
+	//====================================================================================================
 
 	//
-	// convert our script code (smKeyScript) to a TextEncoding 
+	// convert our script code  to a TextEncoding 
 	//
 	err = ::UpgradeScriptInfoToTextEncoding(textScript,kTextLanguageDontCare,kTextRegionDontCare,nsnull,
 											&textEncodingFromScript);
 	NS_ASSERTION(err==noErr,"nsMacEventHandler::UpdateInputArea: UpgradeScriptInfoToTextEncoding failed.");
-	if (err!=noErr) { return PR_FALSE; }
+	if (err!=noErr) { 
+		res = NS_ERROR_FAILURE;
+		return res; 
+	}
 	
 	err = ::CreateTextToUnicodeInfoByEncoding(textEncodingFromScript,&textToUnicodeInfo);
 	NS_ASSERTION(err==noErr,"nsMacEventHandler::UpdateInputArea: CreateUnicodeToTextInfoByEncoding failed.");
-	if (err!=noErr) { return PR_FALSE; }
-
-	
-	if (mIMECompositionStringSize < text_size+32) {
-		mIMECompositionStringSize = text_size+32;
-		if (mIMECompositionString!=nsnull) delete [] mIMECompositionString;
-		mIMECompositionString = new PRUnichar[mIMECompositionStringSize];
+	if (err!=noErr) { 
+		res = NS_ERROR_FAILURE;
+		return res; 
 	}
+	//------------------------------------------------------------------------------------------------
+	// if we aren't in composition mode alredy, signal the backing store w/ the mode change
+	//------------------------------------------------------------------------------------------------
+	if (!mIMEIsComposing) {
+		res = HandleStartComposition();
+		NS_ASSERTION(NS_SUCCEEDED(res),"nsMacEventHandler::UpdateInputArea: HandleStartComposition failed.");
+		if(NS_FAILED(res))
+			goto error;
+	}
+	// mIMECompositionStr should be created in the HandleStartComposition
+	NS_ASSERTION(mIMECompositionStr, "do not have mIMECompositionStr"); 
+	if(nsnull == mIMECompositionStr)
+	{
+		res = NS_ERROR_OUT_OF_MEMORY;
+		goto error;
+	}
+	// Prepare buffer....
+	mIMECompositionStr->SetCapacity(text_size+1);
+	PRUnichar* ubuf = (PRUnichar*)mIMECompositionStr->GetUnicode();
+	size_t len;
 
-	//
-	// build up the nsGUIEvent text range array and convert the destination string to Unicode
-	//
-	if (textRangeList!=NULL) {
-	
-		xpTextRangeArray = new nsTextRange[textRangeList->fNumOfRanges];
+	//====================================================================================================
+	// Note- It is possible that the UnpdateInputArea event sent both committed text and uncommitted text
+	// in the same time. The easies way to do that is using Korean input method w/ "Enter by Character" option
+	//====================================================================================================
+	//	1. Handle the committed text
+	//====================================================================================================
+	long committedLen = (fixedLength == -1) ? text_size : fixedLength;
+	if(0 != committedLen)
+	{
+#ifdef DEBUG_TSM
+		printf("Have commit text from 0 to %d\n",committedLen);
+#endif
+		//------------------------------------------------------------------------------------------------
+		// 1.1 send textEvent to commit the text
+		//------------------------------------------------------------------------------------------------
+		len = 0;
+		err = ::ConvertFromTextToUnicode(textToUnicodeInfo,committedLen,text,kUnicodeLooseMappingsMask,
+						0,NULL,NULL,NULL,
+						mIMECompositionStr->mCapacity *sizeof(PRUnichar),
+						&source_read,&len,ubuf);
+		NS_ASSERTION(err==noErr,"nsMacEventHandler::UpdateInputArea: ConvertFromTextToUnicode failed.\n");
+		if (err!=noErr)
+		{
+			res = NS_ERROR_FAILURE;
+			goto error; 
+		}
+		len /= sizeof(PRUnichar);
+		// 1.2 Strip off the Apple Private U+F850-U+F87F ( source hint characters, transcodeing hints
+		// Metric characters
+		// See ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/APPLE/CORPCHAR.TXT for detail
+		PRUint32 s,d;
+		for(s=d=0;s<len;s++)
+		{
+			if(! IS_APPLE_HINT_IN_PRIVATE_ZONE(ubuf[s]))
+				ubuf[d++] = ubuf[s];
+		}
+		len = d;
+		ubuf[len] = '\0';		 // null terminate
+		mIMECompositionStr->mLength = len;
+		// for committed text, set no highlight ? (Do we need to set CaretPosition here ??? )
+#ifdef DEBUG_TSM
+			printf("1.2====================================\n");
+#endif
+		res = HandleTextEvent(0,nsnull);
+		NS_ASSERTION(NS_SUCCEEDED(res),"nsMacEventHandler::UpdateInputArea: HandleTextEvent failed.");
+		if(NS_FAILED(res)) 
+			goto error; 
+		//------------------------------------------------------------------------------------------------
+		// 1.3 send compositionEvent to end the comosition
+		//------------------------------------------------------------------------------------------------
+		res = nsMacEventHandler::HandleEndComposition();
+		NS_ASSERTION(NS_SUCCEEDED(res),"nsMacEventHandler::UpdateInputArea: HandleEndComposition failed.");
+		if(NS_FAILED(res)) 
+			goto error; 
+	}  	//	1. Handle the committed text
+
+	//====================================================================================================
+	//	2. Handle the uncommitted text
+	//====================================================================================================
+	if((-1 != fixedLength) && (text_size != fixedLength ))
+	{	
+#ifdef DEBUG_TSM
+		printf("Have new uncommited text from %d to text_size(%d)\n",committedLen,text_size);
+#endif
+		//------------------------------------------------------------------------------------------------
+		// 2.1 send compositionEvent to start the comosition
+		//------------------------------------------------------------------------------------------------
+		//
+		// if we aren't in composition mode alredy, signal the backing store w/ the mode change
+		//	
+		if (!mIMEIsComposing) {
+			res = HandleStartComposition();
+			NS_ASSERTION(NS_SUCCEEDED(res),"nsMacEventHandler::UpdateInputArea: HandleStartComposition failed.");
+			if(NS_FAILED(res))
+				goto error; 
+		} 	// 2.1 send compositionEvent to start the comosition
+		//------------------------------------------------------------------------------------------------
+		// 2.2 send textEvent for the uncommitted text
+		//------------------------------------------------------------------------------------------------
+		//------------------------------------------------------------------------------------------------
+		// 2.2.1 make sure we have one range array
+		//------------------------------------------------------------------------------------------------
+
+		TextRangeArray rawTextRangeArray;
+		TextRangeArray *rangeArray;
+		if(textRangeList && textRangeList->fNumOfRanges ) {
+			rangeArray = textRangeList;
+		} else {
+			rangeArray = &rawTextRangeArray;
+			rawTextRangeArray.fNumOfRanges = 1;
+			rawTextRangeArray.fRange[0].fStart = committedLen;
+			rawTextRangeArray.fRange[0].fEnd = text_size;
+			rawTextRangeArray.fRange[0].fHiliteStyle = NS_TEXTRANGE_RAWINPUT;			
+		}
+
+		
+#ifdef DEBUG_TSM
+		printf("nsMacEventHandler::HandleUpdateInputArea textRangeList is %s\n", textRangeList ? "NOT NULL" : "NULL");
+#endif
+		nsTextRangeArray	xpTextRangeArray  = new nsTextRange[rangeArray->fNumOfRanges];
 		NS_ASSERTION(xpTextRangeArray!=NULL,"nsMacEventHandler::UpdateInputArea: xpTextRangeArray memory allocation failed.");
-		if (xpTextRangeArray==NULL) { ::DisposeTextToUnicodeInfo(&textToUnicodeInfo); return PR_FALSE; }
-
+		if (xpTextRangeArray==NULL)
+		{
+			res = NS_ERROR_OUT_OF_MEMORY;
+			goto error; 
+		}
+	
+		//------------------------------------------------------------------------------------------------
+		// 2.2.2 convert range array into our xp range array
+		//------------------------------------------------------------------------------------------------
 		//
 		// the TEC offset mapping capabilities won't work here because you need to have unique, ordered offsets
 		//  so instead we iterate over the range list and map each range individually.  it's probably faster than
 		//  trying to do collapse all the ranges into a single offset list
 		//
-		for(i=0;i<textRangeList->fNumOfRanges;i++) {			
+		for(i=0;i<rangeArray->fNumOfRanges;i++) {			
+			ByteOffset			sourceOffset[2], destinationOffset[2];
+			ItemCount			destinationLength;
+			// 2.2.2.1 check each range item in NS_ASSERTION
+			NS_ASSERTION(
+				(NS_TEXTRANGE_CARETPOSITION==rangeArray->fRange[i].fHiliteStyle)||
+				(NS_TEXTRANGE_RAWINPUT==rangeArray->fRange[i].fHiliteStyle)||
+				(NS_TEXTRANGE_SELECTEDRAWTEXT==rangeArray->fRange[i].fHiliteStyle)||
+				(NS_TEXTRANGE_CONVERTEDTEXT==rangeArray->fRange[i].fHiliteStyle)||
+				(NS_TEXTRANGE_SELECTEDCONVERTEDTEXT==rangeArray->fRange[i].fHiliteStyle),
+				"illegal range type");
+			NS_ASSERTION( rangeArray->fRange[i].fStart <= text_size,"illegal range");
+			NS_ASSERTION( rangeArray->fRange[i].fEnd <= text_size,"illegal range");
+
+#ifdef DEBUG_TSM
+			printf("nsMacEventHandler::HandleUpdateInputArea textRangeList[%d] = (%d,%d) text_size = %d\n",i,
+				rangeArray->fRange[i].fStart, rangeArray->fRange[i].fEnd, text_size);
+#endif			
+			// 2.2.2.2 fill sourceOffset array
+			typedef enum {
+				kEqualToDest0,
+				kEqualToDest1,
+				kEqualToLength
+			} rangePairType;
+			rangePairType tpStart,tpEnd;
 			
-			sourceOffset[0] = textRangeList->fRange[i].fStart;
-			sourceOffset[1] = textRangeList->fRange[i].fEnd;
+			if(rangeArray->fRange[i].fStart < text_size) {
+				sourceOffset[0] = rangeArray->fRange[i].fStart-committedLen;
+				tpStart = kEqualToDest0;
+				destinationLength = 1;
+				if(rangeArray->fRange[i].fStart == rangeArray->fRange[i].fEnd) {
+					tpEnd = kEqualToDest0;
+				} else if(rangeArray->fRange[i].fEnd < text_size) {
+					sourceOffset[1] = rangeArray->fRange[i].fEnd-committedLen;
+					tpEnd = kEqualToDest1;
+					destinationLength++;
+				} else { 
+					// fEnd >= text_size
+					tpEnd = kEqualToLength;
+				}
+			} else { 
+				// fStart >= text_size
+				tpStart = kEqualToLength;
+				tpEnd = kEqualToLength;
+				destinationLength = 0;
+			} // if(rangeArray->fRange[i].fStart < text_size) 
 			
-			err = ::ConvertFromTextToUnicode(textToUnicodeInfo,text_size,text,kUnicodeLooseMappingsMask,
-							2,sourceOffset,&destinationLength,destinationOffset,
-							mIMECompositionStringSize*sizeof(PRUnichar),
-							&source_read,&mIMECompositionStringLength,mIMECompositionString);
+			// 2.2.2.3 call unicode converter to convert the sourceOffset into destinationOffset
+			len = 0;
+			// Note : The TEC will return -50 if sourceOffset[0,1] >= text_size-committedLen
+			err = ::ConvertFromTextToUnicode(textToUnicodeInfo,text_size-committedLen,text+committedLen,kUnicodeLooseMappingsMask,
+							destinationLength,sourceOffset,&destinationLength,destinationOffset,
+							mIMECompositionStr->mCapacity *sizeof(PRUnichar),
+							&source_read,&len, ubuf);
 			NS_ASSERTION(err==noErr,"nsMacEventHandler::UpdateInputArea: ConvertFromTextToUnicode failed.\n");
-			if (err!=noErr) { ::DisposeTextToUnicodeInfo(&textToUnicodeInfo); return PR_FALSE; }
+			if (err!=noErr) 
+			{
+				res = NS_ERROR_FAILURE;
+				goto error; 
+			}
+			// 2.2.2.4 Convert len, destinationOffset[0,1] into the unicode of PRUnichar.
+			len /= sizeof(PRUnichar);
+			if(destinationLength > 0 ){
+				destinationOffset[0] /= sizeof(PRUnichar);
+				if(destinationLength > 1 ) {
+					destinationOffset[1] /= sizeof(PRUnichar);
+				}
+			}
+			// 2.2.2.5 Strip off the Apple Private U+F850-U+F87F ( source hint characters, transcodeing hints
+			// Metric characters
+			// See ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/APPLE/CORPCHAR.TXT for detail
+			// If we don't do this, Trad Chinese input method won't handle ',' correctly
+			PRUint32 s,d;
+			for(s=d=0;s<len;s++)
+			{
+				if(! IS_APPLE_HINT_IN_PRIVATE_ZONE(ubuf[s]))
+				{
+					ubuf[d++] = ubuf[s];
+				}
+				else 
+				{
+					if(destinationLength > 0 ){
+						if(destinationOffset[0] >= s) {
+							destinationOffset[0]--;
+						}
+						if(destinationLength > 1 ) {
+							if(destinationOffset[1] >= s) {
+								destinationOffset[1]--;
+							}
+						}
+					}	
+				}
+			}
+			len = d;
+						 
+			// 2.2.2.6 put destinationOffset into xpTextRangeArray[i].mStartOffset 
+			xpTextRangeArray[i].mRangeType = rangeArray->fRange[i].fHiliteStyle;
+			switch(tpStart) {
+				case kEqualToDest0:
+					xpTextRangeArray[i].mStartOffset = destinationOffset[0];
+				break;
+				case kEqualToLength:
+					xpTextRangeArray[i].mStartOffset = len;
+				break;
+				case kEqualToDest1:
+				default:
+					NS_ASSERTION(PR_FALSE, "tpStart is wrong");
+				break;
+			}
+			switch(tpEnd) {
+				case kEqualToDest0:
+					xpTextRangeArray[i].mEndOffset = destinationOffset[0];
+				break;
+				case kEqualToDest1:
+					xpTextRangeArray[i].mEndOffset = destinationOffset[1];
+				break;
+				case kEqualToLength:
+					xpTextRangeArray[i].mEndOffset = len;
+				break;
+				default:
+					NS_ASSERTION(PR_FALSE, "tpEnd is wrong");
+				break;
+			}
+			// 2.2.2.7 Check the converted result in NS_ASSERTION
+			NS_ASSERTION(xpTextRangeArray[i].mStartOffset <= len,"illegal range");
+			NS_ASSERTION(xpTextRangeArray[i].mEndOffset <= len,"illegal range");
+#ifdef DEBUG_TSM
+			printf("nsMacEventHandler::HandleUpdateInputArea textRangeList[%d] => type=%d (%d,%d)\n",i,
+				xpTextRangeArray[i].mRangeType,
+				xpTextRangeArray[i].mStartOffset, xpTextRangeArray[i].mEndOffset);
+#endif			
+
+			NS_ASSERTION((NS_TEXTRANGE_CARETPOSITION!=xpTextRangeArray[i].mRangeType) ||
+						 (xpTextRangeArray[i].mStartOffset == xpTextRangeArray[i].mEndOffset),
+						 "start != end in CaretPosition");
 			
-			if (destinationLength==2) {
-				xpTextRangeArray[i].mStartOffset = destinationOffset[0]/sizeof(PRUnichar);
-				xpTextRangeArray[i].mEndOffset = destinationOffset[1]/sizeof(PRUnichar);
-				xpTextRangeArray[i].mRangeType = textRangeList->fRange[i].fHiliteStyle;
-			} else {
-				xpTextRangeArray[i].mStartOffset = destinationOffset[0]/sizeof(PRUnichar);
-				xpTextRangeArray[i].mEndOffset = destinationOffset[0]/sizeof(PRUnichar);
-				xpTextRangeArray[i].mRangeType = textRangeList->fRange[i].fHiliteStyle;
-			}			
 		}
-	} else {
+		//------------------------------------------------------------------------------------------------
+		// 2.2.3 null terminate the uncommitted text
+		//------------------------------------------------------------------------------------------------
+		ubuf[len] = '\0';		 // null terminate // we convert the text in 2.2.2 ...
+		mIMECompositionStr->mLength = len;			
+		//------------------------------------------------------------------------------------------------
+		// 2.2.4 send the text event
+		//------------------------------------------------------------------------------------------------
+#ifdef DEBUG_TSM
+			printf("2.2.4====================================\n");
+#endif			
 
-		err = ::ConvertFromTextToUnicode(textToUnicodeInfo,text_size,text,kUnicodeLooseMappingsMask,
-						0,NULL,NULL,NULL,
-						mIMECompositionStringSize*sizeof(PRUnichar),
-						&source_read,&mIMECompositionStringLength,mIMECompositionString);
-		NS_ASSERTION(err==noErr,"nsMacEventHandler::UpdateInputArea: ConvertFromTextToUnicode failed.\n");
-		if (err!=noErr) { ::DisposeTextToUnicodeInfo(&textToUnicodeInfo); return PR_FALSE; }
-
-		xpTextRangeArray = new nsTextRange[1];
-		xpTextRangeArray[0].mStartOffset = 0;
-		xpTextRangeArray[0].mEndOffset = (mIMECompositionStringLength/sizeof(PRUnichar));
-		xpTextRangeArray[0].mRangeType = NS_TEXTRANGE_RAWINPUT;		
+		res = HandleTextEvent(rangeArray->fNumOfRanges,xpTextRangeArray);
+		NS_ASSERTION(NS_SUCCEEDED(res), "nsMacEventHandler::UpdateInputArea: HandleTextEvent failed.");
+		if(NS_FAILED(res)) 
+			goto error; 
+		if(xpTextRangeArray) 
+			delete [] xpTextRangeArray;
+	} //	2. Handle the uncommitted text
+	else if((0==text_size) && (0==fixedLength))
+	{
+		// 3. Handle empty text event
+		// This is needed when we input some uncommitted text, and then delete all of them
+		// When the last delete come, we will got a text_size = 0 and fixedLength = 0
+		// In that case, we need to send a text event to clean un the input hole....
+		ubuf[0] = '\0';		 // null terminate
+		mIMECompositionStr->mLength = 0;			
+#ifdef DEBUG_TSM
+			printf("3.====================================\n");
+#endif
+		// 3.1 send the empty text event.
+		res = HandleTextEvent(0,nsnull);
+		NS_ASSERTION(NS_SUCCEEDED(res),"nsMacEventHandler::UpdateInputArea: HandleTextEvent failed.");
+		if(NS_FAILED(res)) 
+			goto error; 
+		// 3.2 send an endComposition event, we need this to make sure the delete after this work properly.
+		res = nsMacEventHandler::HandleEndComposition();
+		NS_ASSERTION(NS_SUCCEEDED(res),"nsMacEventHandler::UpdateInputArea: HandleEndComposition failed.");
+		if(NS_FAILED(res)) 
+			goto error; 		
 	}
-
-	//
-	// null terminate the string for the XP-stuff
-	//
-	mIMECompositionString[mIMECompositionStringLength/sizeof(PRUnichar)] = (PRUnichar)0;
-
-	if (textRangeList==NULL)
-		rv = HandleTextEvent(1,xpTextRangeArray);
-	else
-		rv = HandleTextEvent(textRangeList->fNumOfRanges,xpTextRangeArray);
-		
-	::DisposeTextToUnicodeInfo(&textToUnicodeInfo);
-	
-	//
-	// text_size incldues the null-terminator which isn't included in the fixedLength
-	//
-	if (fixedLength==-1 || fixedLength==text_size-1) {
-		HandleEndComposition();
-		mIMEIsComposing = PR_FALSE;
-	}
-	
-	return rv;
+	return res;
+error:
+	::DisposeTextToUnicodeInfo(&textToUnicodeInfo); 
+	return res; 
 }
 
 //-------------------------------------------------------------------------
@@ -1414,8 +1706,19 @@ PRBool nsMacEventHandler::HandleOffsetToPosition(long offset,Point* thePoint)
 // HandleStartComposition
 //
 //-------------------------------------------------------------------------
-PRBool nsMacEventHandler::HandleStartComposition(void)
+nsresult nsMacEventHandler::HandleStartComposition(void)
 {
+#ifdef DEBUG_TSM
+	printf("HandleStartComposition\n");
+#endif
+	mIMEIsComposing = PR_TRUE;
+	if(nsnull == mIMECompositionStr)
+		mIMECompositionStr = new nsAutoString();
+	NS_ASSERTION(mIMECompositionStr, "cannot allocate mIMECompositionStr");
+	if(nsnull == mIMECompositionStr)
+	{
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
 	// 
 	// get the focused widget [tague: may need to rethink this later]
 	//
@@ -1440,7 +1743,15 @@ PRBool nsMacEventHandler::HandleStartComposition(void)
 	compositionEvent.widget	= focusedWidget;
 	compositionEvent.nativeMsg	= (void*)nsnull;		// no native message for this
 
-	return(focusedWidget->DispatchWindowEvent(compositionEvent));
+	nsresult res = focusedWidget->DispatchWindowEvent(compositionEvent);
+	if(NS_SUCCEEDED(res)) {
+		mIMEPos = compositionEvent.theReply.mCursorPosition;
+		focusedWidget->LocalToWindowCoordinate(mIMEPos);
+#ifdef DEBUG_TSM
+		printf("HandleStartComposition reply (%d,%d)\n", mIMEPos.x , mIMEPos.y);
+#endif
+	}
+	return res;
 }
 
 //-------------------------------------------------------------------------
@@ -1448,8 +1759,12 @@ PRBool nsMacEventHandler::HandleStartComposition(void)
 // HandleEndComposition
 //
 //-------------------------------------------------------------------------
-PRBool nsMacEventHandler::HandleEndComposition(void)
+nsresult nsMacEventHandler::HandleEndComposition(void)
 {
+#ifdef DEBUG_TSM
+	printf("HandleEndComposition\n");
+#endif
+	mIMEIsComposing = PR_FALSE;
 	// 
 	// get the focused widget [tague: may need to rethink this later]
 	//
@@ -1473,7 +1788,6 @@ PRBool nsMacEventHandler::HandleEndComposition(void)
 	//
 	compositionEvent.widget	= focusedWidget;
 	compositionEvent.nativeMsg	= (void*)nsnull;		// no native message for this
-
 	return(focusedWidget->DispatchWindowEvent(compositionEvent));
 }
 
@@ -1482,8 +1796,48 @@ PRBool nsMacEventHandler::HandleEndComposition(void)
 // HandleTextEvent
 //
 //-------------------------------------------------------------------------
-PRBool nsMacEventHandler::HandleTextEvent(PRUint32 textRangeCount, nsTextRangeArray textRangeArray)
+nsresult nsMacEventHandler::HandleTextEvent(PRUint32 textRangeCount, nsTextRangeArray textRangeArray)
 {
+#ifdef DEBUG_TSM
+	printf("HandleTextEvent\n");
+	PRUint32 i;
+	printf("text event \n[");
+	const PRUnichar *ubuf = mIMECompositionStr->GetUnicode();
+	for(i=0; '\0' != *ubuf; i++)
+		printf("U+%04X ", *ubuf++);
+	printf("] len = %d\n",i);
+	if(textRangeCount > 0)
+	{
+		for(i=0;i<textRangeCount;i++ )
+		{
+			NS_ASSERTION((NS_TEXTRANGE_CARETPOSITION!=textRangeArray[i].mRangeType) ||
+						 (textRangeArray[i].mStartOffset == textRangeArray[i].mEndOffset),
+						 "start != end in CaretPosition");
+			NS_ASSERTION(
+				(NS_TEXTRANGE_CARETPOSITION==textRangeArray[i].mRangeType)||
+				(NS_TEXTRANGE_RAWINPUT==textRangeArray[i].mRangeType)||
+				(NS_TEXTRANGE_SELECTEDRAWTEXT==textRangeArray[i].mRangeType)||
+				(NS_TEXTRANGE_CONVERTEDTEXT==textRangeArray[i].mRangeType)||
+				(NS_TEXTRANGE_SELECTEDCONVERTEDTEXT==textRangeArray[i].mRangeType),
+				"illegal range type");
+			static char *name[6] =
+			{
+				"Unknown",
+				"CaretPosition", 
+				"RawInput", 
+				"SelectedRawText",
+				"ConvertedText",
+				"SelectedConvertedText"
+			};
+			printf("[%d,%d]=%s\n", 
+			textRangeArray[i].mStartOffset, 
+			textRangeArray[i].mEndOffset,
+			((textRangeArray[i].mRangeType<=NS_TEXTRANGE_SELECTEDCONVERTEDTEXT) ?
+				name[textRangeArray[i].mRangeType] : name[0])
+			);
+		}
+	}
+#endif
 	// 
 	// get the focused widget [tague: may need to rethink this later]
 	//
@@ -1501,18 +1855,23 @@ PRBool nsMacEventHandler::HandleTextEvent(PRUint32 textRangeCount, nsTextRangeAr
 	textEvent.point.x = 0;
 	textEvent.point.y = 0;
 	textEvent.time = PR_IntervalNow();
-	textEvent.theText = mIMECompositionString;
+	textEvent.theText = (PRUnichar*)mIMECompositionStr->GetUnicode();
 	textEvent.rangeCount = textRangeCount;
 	textEvent.rangeArray = textRangeArray;
-	
+
 	//
 	// nsGUIEvent parts
 	//
 	textEvent.widget	= focusedWidget;
 	textEvent.nativeMsg	= (void*)nsnull;		// no native message for this
 
-	if (NS_SUCCEEDED(focusedWidget->DispatchWindowEvent(textEvent))) 
-		return PR_TRUE;
-	else 
-		return PR_FALSE;
+	nsresult res = NS_OK;
+	if (NS_SUCCEEDED(res = focusedWidget->DispatchWindowEvent(textEvent))) {
+		mIMEPos = textEvent.theReply.mCursorPosition;
+		focusedWidget->LocalToWindowCoordinate(mIMEPos);
+#ifdef DEBUG_TSM
+		printf("HandleTextEvent reply (%d,%d)\n", mIMEPos.x , mIMEPos.y);
+#endif
+	} 
+	return res;
 }

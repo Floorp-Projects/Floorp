@@ -29,6 +29,7 @@
 #include "nsCOMPtr.h"
 #include "nsGUIEvent.h"
 #include "nsDeleteObserver.h"
+#include "nsString.h"
 
 class nsWindow;
 class nsMacWindow;
@@ -91,8 +92,8 @@ public:
 		// TSM Event Handlers
 		//
 		virtual long 		HandlePositionToOffset(Point aPoint,short* regionClass);
-		virtual PRBool 	HandleOffsetToPosition(long offset,Point* position);
-		virtual PRBool	HandleUpdateInputArea(char* text,Size text_size, ScriptCode textScript,long fixedLength,TextRangeArray* textRangeArray);
+		virtual nsresult 	HandleOffsetToPosition(long offset,Point* position);
+		virtual nsresult	HandleUpdateInputArea(char* text,Size text_size, ScriptCode textScript,long fixedLength,TextRangeArray* textRangeArray);
 		
 protected:
 #if 1
@@ -111,21 +112,22 @@ protected:
 												EventRecord&	aOSEvent,
 												nsMouseEvent&	aMouseEvent,
 												PRUint32		aMessage);
-		virtual PRBool	HandleStartComposition(void);
-		virtual PRBool	HandleEndComposition(void);
-		virtual PRBool  HandleTextEvent(PRUint32 textRangeCount, nsTextRangeArray textRangeArray);
+		virtual nsresult	HandleStartComposition(void);
+		virtual nsresult	HandleEndComposition(void);
+		virtual nsresult  HandleTextEvent(PRUint32 textRangeCount, nsTextRangeArray textRangeArray);
 
 protected:
 	static PRBool	mMouseInWidgetHit;
   static PRBool	mInBackground;
 
+
 	nsMacWindow*	mTopLevelWidget;
 	RgnHandle			mUpdateRgn;
 	TSMDocumentID	mTSMDocument;
+	nsPoint 		mIMEPos;
 	PRBool				mIMEIsComposing;
-	PRUnichar*		mIMECompositionString;
-	size_t				mIMECompositionStringSize;
-	size_t				mIMECompositionStringLength;
+	nsAutoString		*mIMECompositionStr;
+
 };
 
 #endif // MacMacEventHandler_h__
