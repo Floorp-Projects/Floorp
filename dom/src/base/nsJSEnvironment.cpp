@@ -919,7 +919,7 @@ nsJSContext::CompileFunction(void* aTarget,
   JSObject *target = (JSObject*)aTarget;
   JSFunction* fun =
       ::JS_CompileUCFunctionForPrincipals(mContext, target, jsprin,
-                                          aName, aArgCount, aArgArray,
+                                          aName.get(), aArgCount, aArgArray,
                                           (jschar*)(const PRUnichar*)PromiseFlatString(aBody).get(),
                                           aBody.Length(),
                                           aURL, aLineNo);
