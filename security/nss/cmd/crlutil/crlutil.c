@@ -92,7 +92,6 @@ static void ListCRLNames (CERTCertDBHandle *certHandle, int crlType)
     CERTName *name = NULL;
     PRArenaPool *arena = NULL;
     SECStatus rv;
-    void *mark;
 
     do {
 	arena = PORT_NewArena (SEC_ASN1_DEFAULT_ARENA_SIZE);
@@ -253,7 +252,6 @@ int main(int argc, char **argv)
     PRFileDesc *inFile;
     int listCRL;
     int importCRL;
-    int opt;
     int deleteCRL;
     int rv;
     char *nickName;
