@@ -36,13 +36,13 @@ EXPORTS = \
 	cert.h \
 	certt.h \
 	certdb.h \
-	cdbhdl.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
 	genname.h \
 	xconst.h \
 	certxutl.h \
+	cdbhdl.h \
 	$(NULL)
 
 MODULE = security
