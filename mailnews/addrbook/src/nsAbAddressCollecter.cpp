@@ -184,9 +184,14 @@ nsresult nsAbAddressCollecter::AutoCollectScreenName(nsIAbCard *aCard, const cha
   if (!domain)
     return NS_OK;
  
-  // username in username@aol.com and username@netscape.net are also
-  // AIM screennames.  
-  if (strcmp(domain,"aol.com") && strcmp(domain,"netscape.net"))
+  // username in 
+  // username@aol.com (America Online)
+  // username@cs.com (Compuserve)
+  // username@netscape.net (Netscape webmail)
+  // are all AIM screennames.  autocollect that info.
+  if (strcmp(domain,"aol.com") && 
+      strcmp(domain,"cs.com") && 
+      strcmp(domain,"netscape.net"))
     return NS_OK;
 
   nsAutoString userName(NS_ConvertASCIItoUCS2(aEmail).get());
