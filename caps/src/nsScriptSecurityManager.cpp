@@ -1967,7 +1967,8 @@ enumeratePolicy(const char *prefName, void *policies) {
         return;
     int count = 0;
     const char *dots[5];
-    for (const char *p=prefName; *p; p++) {
+    const char *p;
+    for (p=prefName; *p; p++) {
         if (*p == '.') {
             dots[count++] = p;
             if (count == sizeof(dots)/sizeof(dots[0]))
@@ -2004,6 +2005,6 @@ nsScriptSecurityManager::InitFromPrefs()
 	if (NS_FAILED(rv))
 		return NS_ERROR_FAILURE;
     rv = prefs->EnumerateChildren("security.policy", enumeratePolicy,
-                                  domPropertyPolicyTypes);
+                                  (void *) domPropertyPolicyTypes);
     return NS_OK;
 }
