@@ -24,6 +24,7 @@
 
 #include "MozillaControl.h"
 #include "MozillaBrowser.h"
+#include "IEHtmlDocument.h"
 
 extern "C" void NS_SetupRegistry();
 
@@ -34,6 +35,8 @@ static const std::string c_szDefaultPage   = "resource://res/MozillaControl.html
 
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
+static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
@@ -293,6 +296,47 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	m_pIWebShell->SetPrefs(m_pIPref);
 #endif
 	m_pIWebShell->Show();
+
+	return S_OK;
+}
+
+HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
+{
+	if (pDocument == NULL)
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	*pDocument = nsnull;
+
+	if (m_pIWebShell == nsnull)
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+	
+	nsIContentViewer * pCViewer = nsnull;
+	
+	m_pIWebShell->GetContentViewer(&pCViewer);
+	if (nsnull != pCViewer)
+	{
+		nsIDocumentViewer * pDViewer = nsnull;
+		if (pCViewer->QueryInterface(kIDocumentViewerIID, (void**) &pDViewer) == NS_OK)
+		{
+			nsIDocument * pDoc = nsnull;
+			pDViewer->GetDocument(pDoc);
+			if (pDoc != nsnull)
+			{
+				if (pDoc->QueryInterface(kIDOMDocumentIID, (void**) pDocument) == NS_OK)
+				{
+				}
+				NS_RELEASE(pDoc);
+			}
+			NS_RELEASE(pDViewer);
+		}
+		NS_RELEASE(pCViewer);
+	}
 
 	return S_OK;
 }
@@ -921,6 +965,16 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Document(IDispatch __RPC_FAR *__R
 	}
 
 	*ppDisp = NULL;
+
+	CIEHtmlDocumentInstance *pDocument = NULL;
+	CIEHtmlDocumentInstance::CreateInstance(&pDocument);
+	if (pDocument == NULL)
+	{
+		return E_OUTOFMEMORY;
+	}
+
+	pDocument->QueryInterface(IID_IDispatch, (void **) ppDisp);
+
 	return E_NOINTERFACE;
 }
 

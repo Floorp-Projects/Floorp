@@ -15,26 +15,17 @@ public:
 	// nsISupports overrides
 	NS_DECL_ISUPPORTS
 
-	// nsIEventHandler overrides
-    NS_IMETHOD HandleEvent(nsPluginEvent* event, PRBool* handled);
-
 	// nsIPluginInstance overrides
-    NS_IMETHOD Initialize(nsIPluginInstancePeer* peer);
+	NS_IMETHOD Initialize(nsIPluginInstancePeer* peer);
     NS_IMETHOD GetPeer(nsIPluginInstancePeer* *resultingPeer);
     NS_IMETHOD Start(void);
     NS_IMETHOD Stop(void);
     NS_IMETHOD Destroy(void);
     NS_IMETHOD SetWindow(nsPluginWindow* window);
-#ifdef NEW_PLUGIN_STREAM_API
     NS_IMETHOD NewStream(nsIPluginStreamListener** listener);
-#else
-    NS_IMETHOD NewStream(nsIPluginStreamPeer* peer, nsIPluginStream* *result);
-#endif
     NS_IMETHOD Print(nsPluginPrint* platformPrint);
-#ifndef NEW_PLUGIN_STREAM_API
-    NS_IMETHOD URLNotify(const char* url, const char* target, nsPluginReason reason, void* notifyData);
-#endif
     NS_IMETHOD GetValue(nsPluginInstanceVariable variable, void *value);
+    NS_IMETHOD HandleEvent(nsPluginEvent* event, PRBool* handled);
 };
 
 

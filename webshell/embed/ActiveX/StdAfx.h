@@ -40,7 +40,7 @@
 extern CComModule _Module;
 #include <atlcom.h>
 #include <atlctl.h>
-
+#include <mshtml.h>
 #include <winsock2.h>
 
 // STL headers
@@ -91,6 +91,9 @@ typedef long int32;
 #include "nsUnitConversion.h"
 #include "nsVoidArray.h"
 #include "nsCRT.h"
+
+#include "nsIDocumentViewer.h"
+#include "nsIDOMDocument.h"
 
 // Mozilla control headers
 #include "resource.h"

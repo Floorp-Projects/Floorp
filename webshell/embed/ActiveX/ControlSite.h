@@ -141,6 +141,11 @@ END_COM_MAP()
 		return m_hWndParent;
 	}
 
+	virtual BOOL IsInPlaceActive() const
+	{
+		return m_bInPlaceActive;
+	}
+
 	// IDispatch
 	virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(/* [out] */ UINT __RPC_FAR *pctinfo);
 	virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(/* [in] */ UINT iTInfo, /* [in] */ LCID lcid, /* [out] */ ITypeInfo __RPC_FAR *__RPC_FAR *ppTInfo);

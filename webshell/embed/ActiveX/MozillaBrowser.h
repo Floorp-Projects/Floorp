@@ -165,6 +165,7 @@ protected:
 	ObjectList				m_cBrowserHelperList;
 
 	virtual HRESULT CreateWebShell();
+	virtual HRESULT GetDOMDocument(nsIDOMDocument **pDocument);
 	virtual BOOL IsValid();
 
 	virtual HRESULT LoadBrowserHelpers();

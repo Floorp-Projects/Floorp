@@ -62,7 +62,7 @@ CControlSite::~CControlSite()
 
 HRESULT CControlSite::Create(REFCLSID clsid, PropertyList &pl, const tstring szName)
 {
-	NG_TRACE_METHOD_ARGS(CControlSite::Create, "...,...,\"%s\"", szName);
+	NG_TRACE_METHOD_ARGS(CControlSite::Create, "...,...,\"%s\"", szName.c_str());
 
 	m_clsid = clsid;
 	m_ParameterList = pl;
@@ -560,8 +560,6 @@ HRESULT STDMETHODCALLTYPE CControlSite::GetObject(/* [in] */ LPOLESTR pszItem, /
 	}
 
 	*ppvObject = NULL;
-
-
 	
 	return E_NOTIMPL;
 }
@@ -586,13 +584,23 @@ HRESULT STDMETHODCALLTYPE CControlSite::IsRunning(/* [in] */ LPOLESTR pszItem)
 
 HRESULT STDMETHODCALLTYPE CControlSite::OnInPlaceActivateEx(/* [out] */ BOOL __RPC_FAR *pfNoRedraw, /* [in] */ DWORD dwFlags)
 {
-	// TODO check if control is windowless
+	m_bInPlaceActive = TRUE;
+
+	if (pfNoRedraw)
+	{
+		*pfNoRedraw = FALSE;
+	}
+	if (dwFlags & ACTIVATE_WINDOWLESS)
+	{
+		// TODO check if control is windowless
+	}
 	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CControlSite::OnInPlaceDeactivateEx(/* [in] */ BOOL fNoRedraw)
 {
+	m_bInPlaceActive = FALSE;
 	return S_OK;
 }
 
