@@ -107,6 +107,7 @@ function fillThreadPaneContextMenu()
   SetupCopyMenuItem("threadPaneContext-copyMenu", numSelected, false);
   SetupMoveMenuItem("threadPaneContext-moveMenu", numSelected, isNewsgroup, false);
   EnableMenuItem("threadPaneContext-labels", (numSelected >= 1));
+  EnableMenuItem("threadPaneContext-mark", (numSelected >= 1));
   SetupSaveAsMenuItem("threadPaneContext-saveAs", numSelected, false);
   SetupPrintMenuItem("threadPaneContext-print", numSelected, false);
   SetupDeleteMenuItem("threadPaneContext-delete", numSelected, false);
@@ -184,6 +185,12 @@ function SetupCopyMenuItem(menuID, numSelected, forceHide)
 }
 
 function SetupLabelsMenuItem(menuID, numSelected, forceHide)
+{
+  ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
+  EnableMenuItem(menuID, (numSelected == 1));
+}
+
+function SetupMarkMenuItem(menuID, numSelected, forceHide)
 {
   ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
   EnableMenuItem(menuID, (numSelected == 1));
@@ -427,6 +434,7 @@ function fillMessagePaneContextMenu()
   SetupCopyMenuItem("messagePaneContext-copyMenu", numSelected, (numSelected == 0 || hideMailItems));
   SetupMoveMenuItem("messagePaneContext-moveMenu", numSelected, isNewsgroup, (numSelected == 0 || hideMailItems));
   SetupLabelsMenuItem("messagePaneContext-labels", numSelected, (numSelected == 0 || hideMailItems));
+  SetupMarkMenuItem("messagePaneContext-mark", numSelected, (numSelected == 0 || hideMailItems));
   SetupSaveAsMenuItem("messagePaneContext-saveAs", numSelected, (numSelected == 0 || hideMailItems));
   SetupPrintMenuItem("messagePaneContext-print", numSelected, (numSelected == 0 || hideMailItems));
   if (numSelected == 0 || hideMailItems)

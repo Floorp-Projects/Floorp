@@ -379,6 +379,10 @@ Rights Reserved.
 <!ENTITY markAllReadCmd.key "c">
 <!ENTITY markFlaggedCmd.label "Flag">
 <!ENTITY markFlaggedCmd.accesskey "F">
+<!ENTITY markAsJunkCmd.label "As Junk">
+<!ENTITY markAsJunkCmd.accesskey "J">
+<!ENTITY markAsNotJunkCmd.label "As Not Junk">
+<!ENTITY markAsNotJunkCmd.accesskey "N">
 <!ENTITY openMessageWindowCmd.label "Open Message">
 <!ENTITY openMessageWindowCmd.accesskey "O">
 <!ENTITY openMessageWindowCmd.key "o">
@@ -521,9 +525,6 @@ Rights Reserved.
 
 <!ENTITY runJunkControls.label "Run Junk Mail Controls on Selected Messages...">
 <!ENTITY runJunkControls.accesskey "u">
-
-<!ENTITY markSelectedAsJunk.label "Mark Selected Messages As Junk">
-<!ENTITY markSelectedAsNotJunk.label "Mark Selected Messages As Not Junk">
 
 <!-- junk bar -->
 <!ENTITY junkBarMessage.label "&brandShortName; thinks this message is junk mail">

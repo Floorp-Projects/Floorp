@@ -192,6 +192,8 @@ var DefaultController =
 			case "cmd_markAllRead":
 			case "cmd_markThreadAsRead":
 			case "cmd_markAsFlagged":
+			case "cmd_markAsJunk":
+			case "cmd_markAsNotJunk":
       case "cmd_label0":
       case "cmd_label1":
       case "cmd_label2":
@@ -302,6 +304,8 @@ var DefaultController =
       case "cmd_printSetup":
         return true;
       case "cmd_markAsFlagged":
+      case "cmd_markAsJunk":
+      case "cmd_markAsNotJunk":
       case "button_file":
       case "cmd_file":
         return (GetNumSelectedMessages() > 0 );
@@ -568,6 +572,12 @@ var DefaultController =
         return;
 			case "cmd_markAsFlagged":
 				MsgMarkAsFlagged(null);
+				return;
+			case "cmd_markAsJunk":
+                                JunkSelectedMessages(true);
+				return;
+			case "cmd_markAsNotJunk":
+                                JunkSelectedMessages(false);
 				return;
       case "cmd_label0":
         gDBView.doCommand(nsMsgViewCommandType.label0);

@@ -676,6 +676,8 @@ var MessageWindowController =
 			case "cmd_markAllRead":
 			case "cmd_markThreadAsRead":
 			case "cmd_markAsFlagged":
+			case "cmd_markAsJunk":
+			case "cmd_markAsNotJunk":
       case "cmd_label0":
       case "cmd_label1":
       case "cmd_label2":
@@ -744,6 +746,8 @@ var MessageWindowController =
 			case "cmd_markAsRead":
 			case "cmd_markAllRead":
 			case "cmd_markThreadAsRead":
+			case "cmd_markAsJunk":
+			case "cmd_markAsNotJunk":
       case "cmd_label0":
       case "cmd_label1":
       case "cmd_label2":
@@ -907,6 +911,12 @@ var MessageWindowController =
 				return;
 			case "cmd_markAsFlagged":
 				MsgMarkAsFlagged(null);
+				return;
+			case "cmd_markAsJunk":
+                                JunkSelectedMessages(true);
+				return;
+			case "cmd_markAsNotJunk":
+                                JunkSelectedMessages(false);
 				return;
       case "cmd_label0":
         gDBView.doCommand(nsMsgViewCommandType.label0);

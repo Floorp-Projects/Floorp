@@ -256,6 +256,8 @@ Rights Reserved.
     <command id="cmd_markAllRead" oncommand="goDoCommand('cmd_markAllRead'); event.preventBubble()" disabled="true"/>
     <command id="cmd_markThreadAsRead" oncommand="goDoCommand('cmd_markThreadAsRead'); event.preventBubble()" disabled="true"/>
     <command id="cmd_markAsFlagged" oncommand="goDoCommand('cmd_markAsFlagged'); event.preventBubble()" disabled="true"/>
+    <command id="cmd_markAsJunk" oncommand="goDoCommand('cmd_markAsJunk'); event.preventBubble()" disabled="true"/>
+    <command id="cmd_markAsNotJunk" oncommand="goDoCommand('cmd_markAsNotJunk'); event.preventBubble()" disabled="true"/>
 </commandset>
 
 <commandset id="mailLabelMenuItems"
@@ -522,7 +524,6 @@ Rights Reserved.
         </rule>
       </template>
     </menu>
-    <menuseparator/>
     <menu id="threadPaneContext-labels" label="&labelMenu.label;" accesskey="&labelMenu.accesskey;">
       <menupopup onpopupshowing="InitMessageLabel('threadPaneContext')">
         <menuitem
@@ -562,6 +563,37 @@ Rights Reserved.
            checked="false"
            accesskey="&labelCmd5.accesskey;"
            observes="cmd_label5"/>
+      </menupopup>
+    </menu>
+    <menu id="threadPaneContext-mark" label="&markMenu.label;" accesskey="&markMenu.accesskey;">
+      <menupopup onpopupshowing="InitMessageMark()">
+        <menuitem id="threadPaneContext-markRead"
+                  type="checkbox"
+                  key="key_toggleRead"
+                  label="&markAsReadCmd.label;"
+                  accesskey="&markAsReadCmd.accesskey;"
+                  observes="cmd_markAsRead"/>
+        <menuitem label="&markThreadAsReadCmd.label;"
+                  key="key_markThreadAsRead"
+                  accesskey="&markThreadAsReadCmd.accesskey;"
+                  observes="cmd_markThreadAsRead"/>
+        <menuitem label="&markAllReadCmd.label;"
+                  key="key_markAllRead"
+                  accesskey="&markAllReadCmd.accesskey;"
+                  observes="cmd_markAllRead"/>
+        <menuseparator/>
+        <menuitem id="threadPaneContext-markFlagged"
+                  type="checkbox"
+                  label="&markFlaggedCmd.label;"
+                  accesskey="&markFlaggedCmd.accesskey;"
+                  observes="cmd_markAsFlagged"/>
+        <menuseparator/>
+        <menuitem label="&markAsJunkCmd.label;"
+                  accesskey="&markAsJunkCmd.accesskey;"
+                  observes="cmd_markAsJunk"/>
+        <menuitem label="&markAsNotJunkCmd.label;"
+                  accesskey="&markAsNotJunkCmd.accesskey;"
+                  observes="cmd_markAsNotJunk"/>
       </menupopup>
     </menu>
     <menuseparator/>
@@ -865,6 +897,37 @@ Rights Reserved.
            checked="false"
            accesskey="&labelCmd5.accesskey;"
            observes="cmd_label5"/>
+      </menupopup>
+    </menu>
+    <menu id="messagePaneContext-mark" label="&markMenu.label;" accesskey="&markMenu.accesskey;">
+      <menupopup onpopupshowing="InitMessageMark()">
+        <menuitem id="threadPaneContext-markRead"
+                  type="checkbox"
+                  key="key_toggleRead"
+                  label="&markAsReadCmd.label;"
+                  accesskey="&markAsReadCmd.accesskey;"
+                  observes="cmd_markAsRead"/>
+        <menuitem label="&markThreadAsReadCmd.label;"
+                  key="key_markThreadAsRead"
+                  accesskey="&markThreadAsReadCmd.accesskey;"
+                  observes="cmd_markThreadAsRead"/>
+        <menuitem label="&markAllReadCmd.label;"
+                  key="key_markAllRead"
+                  accesskey="&markAllReadCmd.accesskey;"
+                  observes="cmd_markAllRead"/>
+        <menuseparator/>
+        <menuitem id="threadPaneContext-markFlagged"
+                  type="checkbox"
+                  label="&markFlaggedCmd.label;"
+                  accesskey="&markFlaggedCmd.accesskey;"
+                  observes="cmd_markAsFlagged"/>
+        <menuseparator/>
+        <menuitem label="&markAsJunkCmd.label;" 
+                  accesskey="&markAsJunkCmd.accesskey;" 
+                  observes="cmd_markAsJunk"/>
+        <menuitem label="&markAsNotJunkCmd.label;" 
+                  accesskey="&markAsNotJunkCmd.accesskey;" 
+                  observes="cmd_markAsNotJunk"/>
       </menupopup>
     </menu>
     <menuseparator id="messagePaneContext-sep-labels-2"/>
@@ -1404,11 +1467,33 @@ Rights Reserved.
     </menu>
     <menu label="&markMenu.label;" accesskey="&markMenu.accesskey;">
       <menupopup onpopupshowing="InitMessageMark()">
-        <menuitem type="checkbox" key="key_toggleRead" id="markReadMenuItem" label="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead"/>
-        <menuitem label="&markThreadAsReadCmd.label;" key="key_markThreadAsRead" accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"/>
-        <menuitem label="&markAllReadCmd.label;" key="key_markAllRead" accesskey="&markAllReadCmd.accesskey;" observes="cmd_markAllRead"/>
+        <menuitem id="markReadMenuItem"
+                  type="checkbox"
+                  key="key_toggleRead"
+                  label="&markAsReadCmd.label;"
+                  accesskey="&markAsReadCmd.accesskey;"
+                  observes="cmd_markAsRead"/>
+        <menuitem label="&markThreadAsReadCmd.label;"
+                  key="key_markThreadAsRead"
+                  accesskey="&markThreadAsReadCmd.accesskey;"
+                  observes="cmd_markThreadAsRead"/>
+        <menuitem label="&markAllReadCmd.label;"
+                  key="key_markAllRead"
+                  accesskey="&markAllReadCmd.accesskey;"
+                  observes="cmd_markAllRead"/>
         <menuseparator/>
-        <menuitem type="checkbox" id="markFlaggedMenuItem" label="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" observes="cmd_markAsFlagged"/>
+        <menuitem id="markFlaggedMenuItem"
+                  type="checkbox"
+                  label="&markFlaggedCmd.label;"
+                  accesskey="&markFlaggedCmd.accesskey;"
+                  observes="cmd_markAsFlagged"/>
+        <menuseparator/>
+        <menuitem label="&markAsJunkCmd.label;" 
+                  accesskey="&markAsJunkCmd.accesskey;" 
+                  observes="cmd_markAsJunk"/>
+        <menuitem label="&markAsNotJunkCmd.label;" 
+                  accesskey="&markAsNotJunkCmd.accesskey;" 
+                  observes="cmd_markAsNotJunk"/>
       </menupopup>
     </menu>
     <menuseparator/>
@@ -1438,24 +1523,21 @@ Rights Reserved.
     <menuitem label="&searchAddressesCmd.label;" 
               accesskey="&searchAddressesCmd.accesskey;" 
               oncommand="MsgSearchAddresses()"/>
+    <menuseparator/>
     <menuitem label="&filtersCmd.label;"
               accesskey="&filtersCmd.accesskey;"
               oncommand="MsgFilters(null);"/>
+    <menuitem label="&filtersApply.label;"
+              accesskey="&filtersApply.accesskey;"
+              oncommand="MsgApplyFilters(null);"/>
+    <menuseparator/>
     <menuitem label="&junkMailCmd.label;" 
               accesskey="&junkMailCmd.accesskey;" 
               oncommand="MsgJunkMail()"/>
-    <menuseparator/>
-    <menuitem label="&markSelectedAsJunk.label;" 
-              oncommand="JunkSelectedMessages(true);"/>
-    <menuitem label="&markSelectedAsNotJunk.label;" 
-              oncommand="JunkSelectedMessages(false);"/>
     <menuitem label="&runJunkControls.label;"
 	      accesskey="&runJunkControls.accesskey;"
 	      oncommand="analyzeMessages();"/>
     <menuseparator/>
-    <menuitem label="&filtersApply.label;"
-              accesskey="&filtersApply.accesskey;"
-              oncommand="MsgApplyFilters(null);"/>
     <menuitem label="&importCmd.label;" 
               accesskey="&importCmd.accesskey;" 
               oncommand="toImport();"/>
