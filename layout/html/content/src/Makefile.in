@@ -95,6 +95,7 @@ CPPSRCS		= \
 		nsHTMLTextAreaElement.cpp \
 		nsHTMLTitleElement.cpp \
 		nsHTMLUListElement.cpp \
+		nsHTMLUnknownElement.cpp \
 		nsHTMLWBRElement.cpp \
 		$(NULL)
 

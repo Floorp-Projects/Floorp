@@ -743,7 +743,6 @@ MakeContentObject(nsHTMLTag aNodeType,
   case eHTMLTag_div:
   case eHTMLTag_noembed:
   case eHTMLTag_noframes:
-  case eHTMLTag_nolayer:
   case eHTMLTag_noscript:
   case eHTMLTag_parsererror:
   case eHTMLTag_sourcetext:
@@ -904,6 +903,13 @@ MakeContentObject(nsHTMLTag aNodeType,
     break;
   case eHTMLTag_wbr:
     rv = NS_NewHTMLWBRElement(aResult, aAtom);
+    break;
+  case eHTMLTag_layer:
+  case eHTMLTag_ilayer:
+  case eHTMLTag_nolayer:
+  case eHTMLTag_unknown:
+  case eHTMLTag_userdefined:
+    rv = NS_NewHTMLUnknownElement(aResult, aAtom);
     break;
   }
 

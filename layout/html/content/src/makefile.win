@@ -30,7 +30,7 @@ DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 !endif
 
 CPPSRCS=				\
-	nsAttributeContent.cpp	\
+	nsAttributeContent.cpp		\
 	nsGenericHTMLElement.cpp	\
 	nsGenericDOMHTMLCollection.cpp	\
 	GenericElementCollection.cpp    \
@@ -93,6 +93,7 @@ CPPSRCS=				\
 	nsHTMLTextAreaElement.cpp	\
 	nsHTMLTitleElement.cpp		\
 	nsHTMLUListElement.cpp		\
+	nsHTMLUnknownElement.cpp	\
 	nsHTMLWBRElement.cpp		\
 	$(NULL)
 
@@ -154,12 +155,13 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsHTMLTableCaptionElement.obj	\
 	.\$(OBJDIR)\nsHTMLTableCellElement.obj		\
 	.\$(OBJDIR)\nsHTMLTableColElement.obj		\
-	.\$(OBJDIR)\nsHTMLTableColGroupElement.obj		\
+	.\$(OBJDIR)\nsHTMLTableColGroupElement.obj	\
 	.\$(OBJDIR)\nsHTMLTableRowElement.obj		\
 	.\$(OBJDIR)\nsHTMLTableSectionElement.obj	\
 	.\$(OBJDIR)\nsHTMLTextAreaElement.obj		\
 	.\$(OBJDIR)\nsHTMLTitleElement.obj		\
 	.\$(OBJDIR)\nsHTMLUListElement.obj		\
+	.\$(OBJDIR)\nsHTMLUnknownElement.obj		\
 	.\$(OBJDIR)\nsHTMLWBRElement.obj		\
 	$(NULL)
 
