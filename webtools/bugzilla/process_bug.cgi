@@ -961,14 +961,21 @@ Someone else has made changes to this bug at the same time you were trying to.
 The changes made were:
 <p>
 ";
-        DumpBugActivity($id, $::FORM{'delta_ts'});
+        use vars qw($template $vars);
+        
+        ($vars->{'operations'}, $vars->{'incomplete_data'}) = 
+                             GetBugActivity($::FORM{'id'}, $::FORM{'delta_ts'});
+
+        $template->process("show/activity.html.tmpl", $vars)
+          || DisplayError("Template process failed: " . $template->error())
+          && exit;
+          
         my $comments = GetComments($id);
         my $longchanged = 0;
 
         if (scalar(@$comments) > $::FORM{'longdesclength'}) {
             $longchanged = 1;
-            print "<P>Added text to the long description:<blockquote>";
-            use vars qw($template $vars);
+            print "<P>Added comments:<blockquote>";
             $vars->{'start_at'} = $::FORM{'longdesclength'};
             $vars->{'comments'} = $comments;   
             $vars->{'quoteUrls'} = \&quoteUrls;        
@@ -995,7 +1002,7 @@ The changes made were:
         print qq{<input type=submit value="Submit my changes anyway">\n};
         print " This will cause all of the above changes to be overwritten";
         if ($longchanged) {
-            print ", except for the changes to the description";
+            print ", except for the added comments";
         }
         print qq{.</form>\n<li><a href="show_bug.cgi?id=$id">Throw away my changes, and go revisit bug $id</a></ul>\n};
         PutFooter();

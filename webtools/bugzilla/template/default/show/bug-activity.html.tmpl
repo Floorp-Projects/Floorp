@@ -18,33 +18,25 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
-[% DEFAULT start_at = 0 %]
-[% count = 0 %]
-[% FOREACH comment = comments %]
-  [% IF count >= start_at %]
-    [% PROCESS a_comment %]
-  [% END %]
-  
-  [% count = count + 1 %]
-[% END %]
+[%# INTERFACE:
+  # bug_id: integer. The bug ID.
+  #
+  # This template also needs to be called with the interface to the
+  # activity.html.tmpl template fulfilled.
+  #%]
+ 
+[% INCLUDE global/header 
+  title = "Changes made to bug $bug_id"
+  h1 = "Activity log"
+  h2 = "Bug <a href='show_bug.cgi?id=$bug_id'>$bug_id</a>"
+ %]
 
+<br>
 
-[%############################################################################%]
-[%# Block for individual comments                                            #%]
-[%############################################################################%]
+[% INCLUDE show/activity.html.tmpl %]
 
-[% BLOCK a_comment %]
-  [% IF count > 0 %]
-    <br>
-    <i>------- Additional Comment
-      <a name="c[% count %]" href="#c[% count %]">#[% count %]</a> From 
-      <a href="mailto:[% comment.email %]">[% comment.name %]</a>
-      [%+ comment.time %] -------
-    </i>
-  [% END %]
-    
-  <br>
-  <pre>
-    [%- quoteUrls(comment.body) -%]
-  </pre>
-[% END %]
+<p>
+  <a href="show_bug.cgi?id=[% bug_id %]">Back to bug [% bug_id %]</a>
+</p>
+
+[% INCLUDE global/footer %]

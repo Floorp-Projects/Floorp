@@ -1254,8 +1254,7 @@ sub CheckIfVotedConfirmed {
 }
 
 
-
-sub DumpBugActivity {
+sub GetBugActivity {
     my ($id, $starttime) = (@_);
     my $datepart = "";
 
@@ -1264,6 +1263,7 @@ sub DumpBugActivity {
     if (defined $starttime) {
         $datepart = "and bugs_activity.bug_when > " . SqlQuote($starttime);
     }
+    
     my $query = "
         SELECT IFNULL(fielddefs.description, bugs_activity.fieldid),
                 bugs_activity.attach_id,
@@ -1279,46 +1279,54 @@ sub DumpBugActivity {
 
     SendSQL($query);
     
-    # Instead of outright printing this, we are going to store it in a $html
-    # variable and print it and the end.  This is so we can explain ? (if nesc.)
-    # at the top of the activity table rather than the botom.
-    my $html = "";
-    $html .= "<table border cellpadding=4>\n";
-    $html .= "<tr>\n";
-    $html .= "    <th>Who</th><th>What</th><th>Removed</th><th>Added</th><th>When</th>\n";
-    $html .= "</tr>\n";
-    
-    my @row;
+    my @operations;
+    my $operation = {};
+    my $changes = [];
     my $incomplete_data = 0;
-    while (@row = FetchSQLData()) {
-        my ($field,$attachid,$when,$removed,$added,$who) = (@row);
-        $field =~ s/^Attachment/<a href="attachment.cgi?id=$attachid&amp;action=view">Attachment #$attachid<\/a>/ 
-          if $attachid;
-        $removed = html_quote($removed);
-        $added = html_quote($added);
-        $removed = "&nbsp;" if $removed eq "";
-        $added = "&nbsp;" if $added eq "";
-        if ($added =~ /^\?/ || $removed =~ /^\?/) {
-            $incomplete_data = 1;
-        }
-        $html .= "<tr>\n";
-        $html .= "<td>$who</td>\n";
-        $html .= "<td>$field</td>\n";
-        $html .= "<td>$removed</td>\n";
-        $html .= "<td>$added</td>\n";
-        $html .= "<td>$when</td>\n";
-        $html .= "</tr>\n";
+    
+    while (my ($field, $attachid, $when, $removed, $added, $who) 
+                                                               = FetchSQLData())
+    {
+        my %change;
+        
+        # This gets replaced with a hyperlink in the template.
+        $field =~ s/^Attachment// if $attachid;
+
+        # Check for the results of an old Bugzilla data corruption bug
+        $incomplete_data = 1 if ($added =~ /^\?/ || $removed =~ /^\?/);
+        
+        # An operation, done by 'who' at time 'when', has a number of
+        # 'changes' associated with it.
+        # If this is the start of a new operation, store the data from the
+        # previous one, and set up the new one.
+        if ($operation->{'who'} 
+            && ($who ne $operation->{'who'} 
+                || $when ne $operation->{'when'})) 
+        {
+            $operation->{'changes'} = $changes;
+            push (@operations, $operation);
+            
+            # Create new empty anonymous data structures.
+            $operation = {};
+            $changes = [];
+        }  
+        
+        $operation->{'who'} = $who;
+        $operation->{'when'} = $when;            
+        
+        $change{'field'} = $field;
+        $change{'attachid'} = $attachid;
+        $change{'removed'} = $removed;
+        $change{'added'} = $added;
+        push (@$changes, \%change);
     }
-    $html .= "</table>\n";
-    if ($incomplete_data) {
-        print "There was a bug in older versions of Bugzilla which caused activity data \n";
-        print "to be lost if there was a large number of cc's or dependencies.  That \n";
-        print "has been fixed, however, there was some data already lost on this bug \n";
-        print "that could not be regenerated.  The changes that the script could not \n";
-        print "reliably determine are prefixed by '?'\n";
-        print "<p>\n";
+    
+    if ($operation->{'who'}) {
+        $operation->{'changes'} = $changes;
+        push (@operations, $operation);
     }
-    print $html;
+    
+    return(\@operations, $incomplete_data);
 }
 
 

@@ -136,7 +136,8 @@
     </tr>
   </table>
 
-  [% PROCESS show/comments.tmpl %]
+  [% PROCESS show/comments.tmpl 
+     comments = bug.comments %]
   
   <hr>
 [% END %]
