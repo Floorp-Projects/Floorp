@@ -29,7 +29,13 @@
 #include "prmem.h"
 #include "plstr.h"
 
-NS_IMPL_ISUPPORTS1(nsMimeConverter, nsIMimeConverter)
+NS_IMPL_THREADSAFE_ADDREF(nsMimeConverter)
+NS_IMPL_THREADSAFE_RELEASE(nsMimeConverter)
+
+NS_INTERFACE_MAP_BEGIN(nsMimeConverter)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMimeConverter)
+   NS_INTERFACE_MAP_ENTRY(nsIMimeConverter)
+NS_INTERFACE_MAP_END
 
 /*
  * nsMimeConverter definitions....

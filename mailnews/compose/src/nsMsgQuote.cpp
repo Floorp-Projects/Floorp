@@ -53,10 +53,16 @@ static NS_DEFINE_CID(kMsgQuoteListenerCID, NS_MSGQUOTELISTENER_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 
-NS_IMPL_ISUPPORTS2(nsMsgQuoteListener, nsIMimeStreamConverterListener, nsIMsgQuoteListener)
+NS_IMPL_THREADSAFE_ADDREF(nsMsgQuoteListener)
+NS_IMPL_THREADSAFE_RELEASE(nsMsgQuoteListener)
 
-nsMsgQuoteListener::nsMsgQuoteListener() :
-	mMsgQuote(nsnull)
+NS_INTERFACE_MAP_BEGIN(nsMsgQuoteListener)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgQuoteListener)
+   NS_INTERFACE_MAP_ENTRY(nsIMimeStreamConverterListener)
+   NS_INTERFACE_MAP_ENTRY(nsIMsgQuoteListener)
+NS_INTERFACE_MAP_END
+
+nsMsgQuoteListener::nsMsgQuoteListener()
 {
   /* the following macro is used to initialize the ref counting data */
   NS_INIT_REFCNT();
@@ -68,7 +74,7 @@ nsMsgQuoteListener::~nsMsgQuoteListener()
 
 NS_IMETHODIMP nsMsgQuoteListener::SetMsgQuote(nsIMsgQuote * msgQuote)
 {
-	mMsgQuote = msgQuote;
+	mMsgQuote = do_GetWeakReference(msgQuote);
   return NS_OK;
 }
 
@@ -77,7 +83,8 @@ NS_IMETHODIMP nsMsgQuoteListener::GetMsgQuote(nsIMsgQuote ** aMsgQuote)
   nsresult rv = NS_OK;
   if (aMsgQuote)
   {
-    *aMsgQuote = mMsgQuote;
+    nsCOMPtr<nsIMsgQuote> msgQuote = do_QueryReferent(mMsgQuote);
+    *aMsgQuote = msgQuote;
     NS_IF_ADDREF(*aMsgQuote);
   }
   else
@@ -91,8 +98,11 @@ nsresult nsMsgQuoteListener::OnHeadersReady(nsIMimeHeaders * headers)
 
 	printf("RECEIVE CALLBACK: OnHeadersReady\n");
 	nsCOMPtr<nsIStreamListener> aStreamListener;
-    if (mMsgQuote)
-    mMsgQuote->GetStreamListener(getter_AddRefs(aStreamListener));
+  nsCOMPtr<nsIMsgQuote> msgQuote = do_QueryReferent(mMsgQuote);
+
+  if (msgQuote)
+    msgQuote->GetStreamListener(getter_AddRefs(aStreamListener));
+
 	if (aStreamListener)
 	{
 		QuotingOutputStreamListener * quoting;
@@ -127,8 +137,14 @@ nsMsgQuote::~nsMsgQuote()
 {
 }
 
-/* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS1(nsMsgQuote, nsIMsgQuote)
+NS_IMPL_THREADSAFE_ADDREF(nsMsgQuote)
+NS_IMPL_THREADSAFE_RELEASE(nsMsgQuote)
+
+NS_INTERFACE_MAP_BEGIN(nsMsgQuote)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgQuote)
+   NS_INTERFACE_MAP_ENTRY(nsIMsgQuote)
+   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP nsMsgQuote::GetStreamListener(nsIStreamListener ** aStreamListener)
 {
@@ -199,7 +215,11 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
   if (NS_FAILED(rv)) return rv;
   mQuoteListener->SetMsgQuote(this);
 
-  nsCOMPtr<nsISupports> quoteSupport = do_QueryInterface(this);
+  // funky magic go get the isupports for this class which inherits from multiple interfaces.
+  nsISupports * supports;
+  QueryInterface(NS_GET_IID(nsISupports), (void **) &supports);
+  nsCOMPtr<nsISupports> quoteSupport = supports;
+  NS_IF_RELEASE(supports);
 
   // now we want to create a necko channel for this url and we want to open it
   mQuoteChannel = null_nsCOMPtr();

@@ -89,7 +89,7 @@ private:
   PRBool                        mWrapperOutput;   // Should we output the frame split message display 
   PRBool                        mDoneParsing;     // If this is true, we've already been told by libmime to stop sending
                                                   // data so don't feed the parser any more!
-  nsIMimeStreamConverterListener*	mMimeStreamConverterListener;
+  nsCOMPtr<nsIMimeStreamConverterListener>	mMimeStreamConverterListener;
   PRBool 						            mForwardInline;
   nsCOMPtr<nsIMsgIdentity>		  mIdentity;
 #ifdef DEBUG_mscott  

@@ -524,7 +524,6 @@ nsStreamConverter::nsStreamConverter()
   mOutputFormat = nsCRT::strdup("text/html");
   mDoneParsing = PR_FALSE;
   mAlreadyKnowOutputType = PR_FALSE;
-  mMimeStreamConverterListener = nsnull;
   mForwardInline = PR_FALSE;
   mDesiredOutputType = nsnull;
   
@@ -537,8 +536,16 @@ nsStreamConverter::~nsStreamConverter()
   InternalCleanup();
 }
 
+NS_IMPL_THREADSAFE_ADDREF(nsStreamConverter)
+NS_IMPL_THREADSAFE_RELEASE(nsStreamConverter)
 
-NS_IMPL_ISUPPORTS4(nsStreamConverter, nsIStreamListener, nsIRequestObserver, nsIStreamConverter, nsIMimeStreamConverter)
+NS_INTERFACE_MAP_BEGIN(nsStreamConverter)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamConverter)
+   NS_INTERFACE_MAP_ENTRY(nsIMimeStreamConverter)
+NS_INTERFACE_MAP_END
 
 ///////////////////////////////////////////////////////////////
 // nsStreamConverter definitions....
@@ -995,6 +1002,8 @@ nsStreamConverter::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresul
         else
           mMimeStreamConverterListener->OnHeadersReady(nsnull);
       }
+
+      mMimeStreamConverterListener = nsnull; // release our reference
     }
     
     tSession->complete((nsMIMESession *)mBridgeStream);

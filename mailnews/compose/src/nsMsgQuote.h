@@ -30,6 +30,7 @@
 #include "nsIMimeStreamConverter.h"
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
+#include "nsWeakReference.h"
 
 class nsMsgQuote;
 
@@ -46,10 +47,10 @@ public:
   NS_DECL_NSIMSGQUOTELISTENER
 
 private:
-	nsIMsgQuote * mMsgQuote;
+  nsWeakPtr mMsgQuote;
 };
 
-class nsMsgQuote: public nsIMsgQuote {
+class nsMsgQuote: public nsIMsgQuote, public nsSupportsWeakReference {
 public: 
   nsMsgQuote();
   virtual ~nsMsgQuote();
