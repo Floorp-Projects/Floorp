@@ -30,8 +30,9 @@ Message0=Please select the components you wish to install:
 Description Short=XPCOM
 Description Long=Installer technology software
 Archive=xpcom.xpi
-URL0=http://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
 Install Size=<#xpcom_size>
+Domain0=http://sweetlou.mcom.com/
+Server Path0=products/client/seamonkey/macos/8.x/ppc/<#buildID>/
 Attributes=SELECTED|INVISIBLE
 
 [Component1]
@@ -39,7 +40,8 @@ Description Short=Navigator
 Description Long=Web browser software
 Archive=browser.xpi
 Install Size=<#browser_size>
-URL0=ftp://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
+Domain0=http://sweetlou.mcom.com/
+Server Path0=products/client/seamonkey/macos/8.x/ppc/<#buildID>/
 Attributes=SELECTED
 
 [Component2]
@@ -47,7 +49,8 @@ Description Short=Mail & News
 Description Long=Email and Newsgroup software
 Archive=mail.xpi
 Install Size=<#mail_size>
-URL0=ftp://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
+Domain0=http://sweetlou.mcom.com/
+Server Path0=products/client/seamonkey/macos/8.x/ppc/<#buildID>/
 Attributes=SELECTED
 
 [Dialog Start Install]
