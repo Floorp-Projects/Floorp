@@ -63,6 +63,7 @@ static PRLogModuleInfo* gLog;
 #include "nsIPlatformCharset.h"
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 

@@ -43,6 +43,7 @@
 #include "nsReadableUtils.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
+#include "nsCRT.h"
 
 //
 // guids

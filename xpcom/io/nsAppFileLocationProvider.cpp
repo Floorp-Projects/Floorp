@@ -31,6 +31,7 @@
 #include "nsXPIDLString.h"
 #include "nsISimpleEnumerator.h"
 #include "prenv.h"
+#include "nsCRT.h"
 
 #if defined(XP_MAC) /* || defined(XP_MACOSX) REMIND HACKING FOR MACOS X!!! */
 #include <Folders.h>

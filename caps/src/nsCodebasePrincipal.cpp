@@ -48,6 +48,7 @@
 #include "nsIPref.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 NS_IMPL_QUERY_INTERFACE3_CI(nsCodebasePrincipal,
                             nsICodebasePrincipal,

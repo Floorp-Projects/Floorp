@@ -28,6 +28,7 @@
  */ 
  
 #include "CTextInputEventHandler.h"
+#include "nsCRT.h"
 
 #pragma mark -
 

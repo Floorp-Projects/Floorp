@@ -45,6 +45,7 @@
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
 #include <X11/Xatom.h>
+#include "nsCRT.h"
 
 #include "nsWindow.h"
 

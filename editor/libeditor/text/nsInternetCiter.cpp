@@ -41,6 +41,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsInternetCiter.h"
+#include "nsCRT.h"
 
 #include "nsCOMPtr.h"
 

@@ -39,6 +39,7 @@
 #include "nsReadableUtils.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsCRT.h"
 
 
 static const char DISK_CACHE_DEVICE_ID[] = { "disk" };

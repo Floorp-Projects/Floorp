@@ -57,6 +57,7 @@
 
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
+#include "nsCRT.h"
 
 #include <Gestalt.h>
 #include <Sound.h>

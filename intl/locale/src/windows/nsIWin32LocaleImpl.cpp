@@ -45,6 +45,7 @@
 #include "nsLocaleCID.h"
 #include "prprf.h"
 #include <Windows.h>
+#include "nsCRT.h"
 
 NS_DEFINE_IID(kIWin32LocaleImplCID, NS_WIN32LOCALE_CID);
 

@@ -55,6 +55,7 @@
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 #include "nsTime.h"
+#include "nsCRT.h"
 
 #include "nsError.h"
 #include "prnetdb.h"

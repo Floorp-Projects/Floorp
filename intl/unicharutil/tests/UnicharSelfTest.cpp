@@ -51,6 +51,7 @@
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 NS_DEFINE_IID(kCaseConversionIID, NS_ICASECONVERSION_IID);

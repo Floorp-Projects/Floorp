@@ -67,6 +67,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsCRT.h"
 
 #include "nsIDocumentViewer.h"
 #include "nsIPresShell.h"

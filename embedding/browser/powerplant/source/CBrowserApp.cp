@@ -77,6 +77,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
 #include "nsIDownload.h"
+#include "nsCRT.h"
 
 #include <TextServices.h>
 

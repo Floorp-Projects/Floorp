@@ -46,6 +46,7 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 
 NS_IMPL_QUERY_INTERFACE2_CI(nsSystemPrincipal, nsIPrincipal, nsISerializable)

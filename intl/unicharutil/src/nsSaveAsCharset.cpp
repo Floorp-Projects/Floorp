@@ -44,6 +44,7 @@
 #include "nsIComponentManager.h"
 #include "nsICharsetConverterManager2.h"
 #include "nsSaveAsCharset.h"
+#include "nsCRT.h"
 
 
 //

@@ -61,6 +61,7 @@
 #include "nsIWidget.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsIMacTextInputEventSink.h"
+#include "nsCRT.h"
 
 // Local
 #include "ApplIDs.h"

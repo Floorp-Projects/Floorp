@@ -51,6 +51,7 @@
 #include "nsCertificatePrincipal.h"
 #include "nsAggregatePrincipal.h"
 #include "nsXPIDLString.h"
+#include "nsCRT.h"
 #include "nsIJSContextStack.h"
 #include "nsDOMError.h"
 #include "nsDOMCID.h"

@@ -62,6 +62,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsCRT.h"
 
 #include "nsTraceRefcnt.h"
 

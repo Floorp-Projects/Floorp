@@ -44,6 +44,7 @@
 #include "nsIIOService.h"
 #include "nsIEventQueueService.h"
 #include "nsIProtocolHandler.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);

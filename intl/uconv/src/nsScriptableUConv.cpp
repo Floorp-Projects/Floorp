@@ -46,6 +46,7 @@
 #include "nsICharsetConverterManager2.h"
 #include "nsIScriptableUConv.h"
 #include "nsScriptableUConv.h"
+#include "nsCRT.h"
 
 #include "nsIPlatformCharset.h"
 

@@ -44,6 +44,7 @@
 #include "nsIDirIndex.h"
 #include "prtime.h"
 #include "nsDateTimeFormatCID.h"
+#include "nsCRT.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsIndexedToHTML,
                               nsIDirIndexListener,

@@ -28,6 +28,7 @@
 #include "nsIPersistentProperties2.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
+#include "nsCRT.h"
 
 #include "nsMathMLOperators.h"
 

@@ -73,6 +73,7 @@
 #include "nsIXPConnect.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptContext.h"
+#include "nsCRT.h"
 
 // Event listeners
 #include "nsIEventListenerManager.h"

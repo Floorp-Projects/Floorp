@@ -76,8 +76,6 @@
 
 #include "nsIAtom.h"
 #include "nsStr.h"
-#include "nsCRT.h"
-
 
 class UTF8traits
   {

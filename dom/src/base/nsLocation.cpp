@@ -64,6 +64,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
+#include "nsCRT.h"
 
 
 static nsresult EscapeNonAsciiInURI(const nsAString& aHref, nsACString& aEscapedHref)

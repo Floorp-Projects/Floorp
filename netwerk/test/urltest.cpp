@@ -54,6 +54,7 @@
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 #include "nsNetCID.h"
 #include "nsIComponentRegistrar.h"
 

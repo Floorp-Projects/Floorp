@@ -36,14 +36,16 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-  
+
+#ifndef nsCharTraits_h___
+#include "nsCharTraits.h"
+#endif
+
 #include "nsStrPrivate.h"
 #include "nsStr.h"
 #include "bufferRoutines.h"
 #include <stdio.h>  //only used for printf
-#include "nsCRT.h"
-#include "nsDeque.h"
- 
+
 /******************************************************************************************
   MODULE NOTES:
 
@@ -1147,7 +1149,7 @@ CBufDescriptor::CBufDescriptor(char* aString,PRBool aStackBased,PRUint32 aCapaci
   mLength=mCapacity=0;
   if(aString && aCapacity>1) {
     mCapacity=aCapacity-1;
-    mLength=(-1==aLength) ? strlen(aString) : aLength;
+    mLength=(-1==aLength) ? nsCharTraits<char>::length(aString) : aLength;
     if(mLength>PRInt32(mCapacity))
       mLength=mCapacity;
   }
@@ -1161,7 +1163,7 @@ CBufDescriptor::CBufDescriptor(const char* aString,PRBool aStackBased,PRUint32 a
   mLength=mCapacity=0;
   if(aString && aCapacity>1) {
     mCapacity=aCapacity-1;
-    mLength=(-1==aLength) ? strlen(aString) : aLength;
+    mLength=(-1==aLength) ? nsCharTraits<char>::length(aString) : aLength;
     if(mLength>PRInt32(mCapacity))
       mLength=mCapacity;
   }
@@ -1176,7 +1178,7 @@ CBufDescriptor::CBufDescriptor(PRUnichar* aString,PRBool aStackBased,PRUint32 aC
   mIsConst=PR_FALSE;
   if(aString && aCapacity>1) {
     mCapacity=aCapacity-1;
-    mLength=(-1==aLength) ? nsCRT::strlen(aString) : aLength;
+    mLength=(-1==aLength) ? nsCharTraits<PRUnichar>::length(aString) : aLength;
     if(mLength>PRInt32(mCapacity))
       mLength=mCapacity;
   }
@@ -1190,7 +1192,7 @@ CBufDescriptor::CBufDescriptor(const PRUnichar* aString,PRBool aStackBased,PRUin
   mIsConst=PR_TRUE;
   if(aString && aCapacity>1) {
     mCapacity=aCapacity-1;
-    mLength=(-1==aLength) ? nsCRT::strlen(aString) : aLength;
+    mLength=(-1==aLength) ? nsCharTraits<PRUnichar>::length(aString) : aLength;
     if(mLength>PRInt32(mCapacity))
       mLength=mCapacity;
   }
@@ -1201,10 +1203,26 @@ CBufDescriptor::CBufDescriptor(const PRUnichar* aString,PRBool aStackBased,PRUin
 PRUint32
 nsStrPrivate::HashCode(const nsStr& aDest)
 {
-	if (aDest.GetCharSize() == eTwoByte)
-    return nsCRT::HashCode(aDest.mUStr);
-  else 
-    return nsCRT::HashCode(aDest.mStr);
+  PRUint32 h = 0;
+  if (aDest.GetCharSize() == eTwoByte) {
+    const PRUnichar* s = aDest.mUStr;
+
+    if (!s) return h;
+    
+    PRUnichar c;
+    while ( (c = *s++) )
+      h = (h>>28) ^ (h<<4) ^ c;
+    return h;
+  } else {
+    const char* s = aDest.mStr;
+      
+    if (!s) return h;
+      
+    unsigned char c;
+    while ( (c = *s++) )
+      h = (h>>28) ^ (h<<4) ^ c;
+    return h;
+  }
 }
 
 #ifdef NS_STR_STATS

@@ -49,6 +49,7 @@
 #include "nsIModule.h"
 #include "nsUCvMathCID.h"
 #include "nsUCvMathDll.h"
+#include "nsCRT.h"
 
 #include "nsUnicodeToTeXCMRttf.h"
 #include "nsUnicodeToTeXCMMIttf.h"

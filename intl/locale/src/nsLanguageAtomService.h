@@ -41,6 +41,7 @@
 #include "nsILanguageAtomService.h"
 #include "nsIPersistentProperties2.h"
 #include "nsISupportsArray.h"
+#include "nsCRT.h"
 
 class nsLanguageAtomService : public nsILanguageAtomService
 {

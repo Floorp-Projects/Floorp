@@ -40,6 +40,7 @@
 
 #include "nsEditor.h"
 #include "nsTextEditUtils.h"
+#include "nsCRT.h"
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"

@@ -33,6 +33,7 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);

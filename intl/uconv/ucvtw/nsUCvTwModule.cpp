@@ -48,6 +48,7 @@
 #include "nsIModule.h"
 #include "nsUCvTWCID.h"
 #include "nsUCvTWDll.h"
+#include "nsCRT.h"
 
 #include "nsBIG5ToUnicode.h"
 #include "nsUnicodeToBIG5.h"

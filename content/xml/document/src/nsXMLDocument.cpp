@@ -99,6 +99,7 @@
 #include "nsIEventListenerManager.h"
 #include "nsContentUtils.h"
 #include "nsIElementFactory.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kHTMLStyleSheetCID,NS_HTMLSTYLESHEET_CID);
 

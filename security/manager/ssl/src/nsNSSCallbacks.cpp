@@ -36,6 +36,7 @@
 #include "nsProxiedService.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsCRT.h"
 
 #include "ssl.h"
 #include "cert.h"

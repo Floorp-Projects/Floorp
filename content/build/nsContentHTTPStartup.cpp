@@ -43,6 +43,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsCRT.h"
 
 #include "nsContentHTTPStartup.h"
 #include "nsIHttpProtocolHandler.h"

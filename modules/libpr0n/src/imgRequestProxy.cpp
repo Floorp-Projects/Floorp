@@ -31,6 +31,7 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 #include "ImageLogging.h"
 

@@ -40,6 +40,7 @@
 #include "nsNetUtil.h"
 #include "prlog.h"
 #include "nsIPref.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);

@@ -37,6 +37,7 @@
 #include "nsReadableUtils.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
+#include "nsCRT.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // These functions really should be part of nspr, and have internal knowledge

@@ -34,6 +34,7 @@
 #include "nsASN1Tree.h"
 #include "nsIComponentManager.h"
 #include "nsString.h"
+#include "nsCRT.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSASN1Tree, nsIASN1Tree, 
                                                  nsITreeView);

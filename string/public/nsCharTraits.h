@@ -174,7 +174,19 @@ struct nsCharTraits<PRUnichar>
     int
     compare( const char_type* s1, const char_type* s2, size_t n )
       {
-        return memcmp(s1, s2, n * sizeof(char_type));
+#ifdef USE_CPP_WCHAR_FUNCS
+        return wmemcmp(s1, s2, n);
+#else
+        for ( ; n--; ++s1, ++s2 )
+          {
+            if ( lt(*s1, *s2) )
+              return -1;
+            if ( lt(*s2, *s1) )
+              return 1;
+          }
+
+        return 0;
+#endif
       }
 
     static

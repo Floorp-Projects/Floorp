@@ -47,6 +47,7 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "plhash.h"
+#include "nsCRT.h"
 
 //-----------------------------------------------------------------------------
 // nsHttpAuthEntry

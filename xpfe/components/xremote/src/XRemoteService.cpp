@@ -32,6 +32,7 @@
 #include <nsIServiceManager.h>
 #include <nsRect.h>
 #include <nsString.h>
+#include <nsCRT.h>
 #include <nsIPref.h>
 #include <nsIWindowWatcher.h>
 #include <nsISupportsPrimitives.h>

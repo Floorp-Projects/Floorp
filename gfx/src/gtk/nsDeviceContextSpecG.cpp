@@ -45,6 +45,7 @@
 #define FORCE_PR_LOG /* Allow logging in the release build */
 #define PR_LOGGING 1
 #include "prlog.h"
+#include "plstr.h"
 
 #include "nsDeviceContextSpecG.h"
 

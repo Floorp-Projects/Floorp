@@ -50,6 +50,7 @@
 #include "nsIModule.h"
 #include "nsUCvKOCID.h"
 #include "nsUCvKODll.h"
+#include "nsCRT.h"
 
 #include "nsEUCKRToUnicode.h"
 #include "nsUnicodeToEUCKR.h"

@@ -42,6 +42,7 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsIEventQueue.h"
+#include "nsCRT.h"
 
 nsNetModuleMgr* nsNetModuleMgr::gManager;
 

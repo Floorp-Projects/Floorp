@@ -49,6 +49,7 @@
 #include "nsIModule.h"
 #include "nsUCvLatinCID.h"
 #include "nsUCvLatinDll.h"
+#include "nsCRT.h"
 
 #include "nsUEscapeToUnicode.h"
 #include "nsUnicodeToUEscape.h"

@@ -43,6 +43,7 @@
 #include "nsIObserverService.h"
 #include "nsXPIDLString.h"
 #include "nsIRegistry.h"
+#include "nsCRT.h"
 
 // ANSI
 #include <climits>

@@ -30,6 +30,7 @@
 #include "nsSound.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
+#include "nsCRT.h"
 
 NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 

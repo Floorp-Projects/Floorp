@@ -39,6 +39,7 @@
 #include "nsReadableUtils.h"
 #include "nsTreeUtils.h"
 #include "nsChildIterator.h"
+#include "nsCRT.h"
 
 nsresult
 nsTreeUtils::TokenizeProperties(const nsAString& aProperties, nsISupportsArray* aPropertiesArray)

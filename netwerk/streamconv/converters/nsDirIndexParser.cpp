@@ -50,6 +50,7 @@
 #include "nsIInputStream.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
+#include "nsCRT.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsDirIndexParser,
                               nsIRequestObserver,

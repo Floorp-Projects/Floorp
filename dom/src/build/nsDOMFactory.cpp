@@ -47,6 +47,8 @@
 #include "nsIObserverService.h"
 #include "nsIJSContextStack.h"
 #include "nsIExceptionService.h"
+#include "nsCRT.h"
+
 #include "nsScriptNameSpaceManager.h"
 #include "nsDOMException.h"
 

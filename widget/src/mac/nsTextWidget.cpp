@@ -37,6 +37,8 @@
 
 #include "nsTextWidget.h"
 #include "nsIRenderingContext.h"
+#include "nsCRT.h"
+
 #include <ToolUtils.h>
 #include <Appearance.h>
 #include <memory>

@@ -32,6 +32,7 @@
 #include "nsIPref.h"
 #include "nsICacheVisitor.h"
 #include "nsITransport.h"
+#include "nsCRT.h"
 #include <signal.h>
 
 

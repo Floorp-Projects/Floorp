@@ -29,6 +29,7 @@
 #include "nsIClipboardCommands.h"
 #include "nsDocShell.h"
 #include "nsICommandManager.h"
+#include "nsCRT.h"
 
 class nsIEventQueue;
 class nsIController;

@@ -54,6 +54,7 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsIWindowWatcher.h"
 #include "nsIStringBundle.h"
+#include "nsCRT.h"
 #include "nsIWindowMediator.h"
 
 /* Outstanding issues/todo:

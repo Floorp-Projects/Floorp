@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPermission.h"
-#include "nsString.h"
+#include "nsCRT.h"
 #include "prmem.h"
 
 // nsPermission Implementation

@@ -51,6 +51,7 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMClassInfo.h"
+#include "nsCRT.h"
 #include "nsIEventStateManager.h"
 
 

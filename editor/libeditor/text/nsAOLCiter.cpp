@@ -41,6 +41,7 @@
 
 #include "nsWrapUtils.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 /** Mail citations using the AOL style >> This is a citation <<
   */

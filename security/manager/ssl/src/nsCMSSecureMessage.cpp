@@ -40,6 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsCRT.h"
 
 #include "nsICMSSecureMessage.h"
 

@@ -50,6 +50,7 @@
 #include "nsMemory.h"
 #include "jsdebug.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 /* XXX this stuff is used by NestEventLoop, a temporary hack to be refactored
  * later */

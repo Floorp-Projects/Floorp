@@ -60,6 +60,7 @@
 #include "nsPrimitiveHelpers.h"
 #include "nsIImageMac.h"
 #include "nsMemory.h"
+#include "nsCRT.h"
 
 #include <Scrap.h>
 

@@ -27,6 +27,7 @@
 #include "nsHttpHeaderArray.h"
 #include "nsHttp.h"
 #include "nsString.h"
+#include "nsCRT.h"
 
 //-----------------------------------------------------------------------------
 // nsHttpRequestHead represents the request line and headers from an HTTP

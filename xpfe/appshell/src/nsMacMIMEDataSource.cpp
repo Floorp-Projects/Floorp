@@ -37,6 +37,7 @@
  
 #include "nsMacMIMEDataSource.h"
 #include "nsString.h"
+#include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIMIMEInfo.h"
 

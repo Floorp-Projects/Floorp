@@ -63,6 +63,7 @@
 #include "nsIWindowWatcher.h"
 #include "plstr.h"
 #include "Preferences.h"
+#include "nsCRT.h"
 #include <io.h>
 #include <fcntl.h>
 

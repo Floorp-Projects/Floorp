@@ -51,6 +51,7 @@
 #include "nsXPIDLString.h"
 #include "prmem.h"
 #include "nsString.h"
+#include "nsCRT.h"
 
 
 

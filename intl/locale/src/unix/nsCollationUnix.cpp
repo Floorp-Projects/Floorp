@@ -49,6 +49,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPref.h"
 #include "nsUnicharUtils.h"
+#include "nsCRT.h"
 //#define DEBUG_UNIX_COLLATION
 
 inline void nsCollationUnix::DoSetLocale()

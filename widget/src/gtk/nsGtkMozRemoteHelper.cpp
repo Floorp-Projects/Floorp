@@ -28,6 +28,7 @@
 #include <prprf.h>
 #include <prenv.h>
 #include "nsGtkMozRemoteHelper.h"
+#include "nsCRT.h"
 
 #define MOZILLA_VERSION_PROP   "_MOZILLA_VERSION"
 #define MOZILLA_LOCK_PROP      "_MOZILLA_LOCK"

@@ -35,6 +35,7 @@
 #include "nsITXTToHTMLConv.h"
 #include "nsIProgressEventSink.h"
 #include "nsNetUtil.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);

@@ -43,6 +43,7 @@
 #include "nsLocaleCID.h"
 #include "nsIComponentManager.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 #include <ctype.h>
 

@@ -65,6 +65,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsIHTMLDocument.h"
+#include "nsCRT.h"
 
 #include "nsIJSContextStack.h"
 // XXX Temporary inclusion to deal with fragment parsing

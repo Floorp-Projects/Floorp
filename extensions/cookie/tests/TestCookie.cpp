@@ -43,6 +43,7 @@
 #include "nsXPIDLString.h"
 #include "nsIEventQueueService.h"
 #include "nsIStringBundle.h"
+#include "nsCRT.h"
 
 
 static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);

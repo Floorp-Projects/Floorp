@@ -52,6 +52,7 @@
 #include "nsIImage.h"
 #include "nsImageClipboard.h"
 #include "prprf.h"
+#include "nsCRT.h"
 
 #include "OLE2.h"
 #include "URLMON.h"

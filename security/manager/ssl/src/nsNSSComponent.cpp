@@ -53,6 +53,7 @@
 #include "nsIEventQueue.h"
 #include "nsIRunnable.h"
 #include "plevent.h"
+#include "nsCRT.h"
 
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"

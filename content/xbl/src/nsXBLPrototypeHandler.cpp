@@ -78,6 +78,7 @@
 #include "nsDOMCID.h"
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);

@@ -40,6 +40,7 @@
 
 #include "nsColor.h"
 #include "nsString.h"
+#include "nsCRT.h"
 #include "nsCoord.h"
 #include "nsCSSProps.h"
 #include "nsUnitConversion.h"
