@@ -508,13 +508,85 @@ public final class XMLLibImpl extends XMLLib
     //
 
     /**
-     * TODO: Implement this method!
+     * See E4X 13.1.2.1.
      */
-    public boolean isXMLName(Context cx, Object name)
+    public boolean isXMLName(Context cx, Object nameObj)
     {
-        // TODO: Check if qname.localName() matches NCName
+        String name;
+        try {
+            name = ScriptRuntime.toString(nameObj);
+        } catch (EcmaError ee) {
+            if ("TypeError".equals(ee.getName())) {
+                return false;
+            }
+            throw ee;
+        }
 
-        return true;
+        // See http://w3.org/TR/xml-names11/#NT-NCName
+        int length = name.length();
+        if (length != 0) {
+            if (isNCNameStartChar(name.charAt(0))) {
+                for (int i = 1; i != length; ++i) {
+                    if (!isNCNameChar(name.charAt(i))) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean isNCNameStartChar(int c)
+    {
+        if ((c & ~0x7F) == 0) {
+            // Optimize for ASCII and use A..Z < _ < a..z
+            if (c >= 'a') {
+                return c <= 'z';
+            } else if (c >= 'A') {
+                if (c <= 'Z') {
+                    return true;
+                }
+                return c == '_';
+            }
+        } else if ((c & ~0x1FFF) == 0) {
+            return (0xC0 <= c && c <= 0xD6)
+                   || (0xD8 <= c && c <= 0xF6)
+                   || (0xF8 <= c && c <= 0x2FF)
+                   || (0x370 <= c && c <= 0x37D)
+                   || 0x37F <= c;
+        }
+        return (0x200C <= c && c <= 0x200D)
+               || (0x2070 <= c && c <= 0x218F)
+               || (0x2C00 <= c && c <= 0x2FEF)
+               || (0x3001 <= c && c <= 0xD7FF)
+               || (0xF900 <= c && c <= 0xFDCF)
+               || (0xFDF0 <= c && c <= 0xFFFD)
+               || (0x10000 <= c && c <= 0xEFFFF);
+    }
+
+    private static boolean isNCNameChar(int c)
+    {
+        if ((c & ~0x7F) == 0) {
+            // Optimize for ASCII and use - < . < 0..9 < A..Z < _ < a..z
+            if (c >= 'a') {
+                return c <= 'z';
+            } else if (c >= 'A') {
+                if (c <= 'Z') {
+                    return true;
+                }
+                return c == '_';
+            } else if (c >= '0') {
+                return c <= '9';
+            } else {
+                return c == '-' || c == '.';
+            }
+        } else if ((c & ~0x1FFF) == 0) {
+            return isNCNameStartChar(c) || c == 0xB7
+                   || (0x300 <= c && c <= 0x36F);
+        }
+        return isNCNameStartChar(c) || (0x203F <= c && c <= 0x2040);
     }
 
     XMLName toQualifiedName(Context cx, Object namespaceValue,
