@@ -37,6 +37,10 @@
 
 #import <AppKit/AppKit.h>
 
+extern NSString* const kCorePasteboardFlavorType_url;
+extern NSString* const kCorePasteboardFlavorType_urln;
+extern NSString* const kCorePasteboardFlavorType_urld;
+
 
 @interface NSPasteboard(ChimeraPasteboardURLUtils)
 

@@ -773,15 +773,21 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   else if ([types containsObject: NSURLPboardType])
   {
     NSURL*	urlData = [NSURL URLFromPasteboard:[info draggingPasteboard]];
-    [dropFolder addBookmark:[urlData absoluteString] url:[urlData absoluteString] inPosition:index isSeparator:NO];
+    NSString* urlTitle = nil;
+    if ([types containsObject:kCorePasteboardFlavorType_urld])
+      urlTitle = [[info draggingPasteboard] stringForType:kCorePasteboardFlavorType_urld];
+    [dropFolder addBookmark:(urlTitle ? urlTitle : [urlData absoluteString]) url:[urlData absoluteString] inPosition:index isSeparator:NO];
     return YES;
   }
   else if ([types containsObject: NSStringPboardType])
   {
     NSString* draggedText = [[info draggingPasteboard] stringForType:NSStringPboardType];
     NSURL *testURL = [NSURL URLWithString:draggedText];
+    NSString* urlTitle = nil;
+    if ([types containsObject:kCorePasteboardFlavorType_urld])
+      urlTitle = [[info draggingPasteboard] stringForType:kCorePasteboardFlavorType_urld];
     if (testURL) {
-      [dropFolder addBookmark:draggedText url:draggedText inPosition:index isSeparator:NO];
+      [dropFolder addBookmark:(urlTitle ? urlTitle : draggedText) url:draggedText inPosition:index isSeparator:NO];
       return YES;
     }
   }

@@ -48,6 +48,7 @@
 #import "Bookmark.h"
 #import "BookmarkFolder.h"
 #import "NSArray+Utils.h"
+#import "NSPasteboard+Utils.h"
 
 
 #define CHInsertNone 0
@@ -589,12 +590,18 @@ static const int kBMBarScanningStep = 5;
   }
   else if ([draggedTypes containsObject:NSStringPboardType]) {
     NSString* draggedText = [[sender draggingPasteboard] stringForType:NSStringPboardType];
-    [toolbar addBookmark:draggedText url:draggedText inPosition:index isSeparator:NO];
+    NSString* urlTitle = nil;
+    if ([draggedTypes containsObject:kCorePasteboardFlavorType_urld])
+      urlTitle = [[sender draggingPasteboard] stringForType:kCorePasteboardFlavorType_urld];
+    [toolbar addBookmark:(urlTitle ? urlTitle : draggedText) url:draggedText inPosition:index isSeparator:NO];
     dropHandled = YES;
   }
   else if ([draggedTypes containsObject: NSURLPboardType]) {
     NSURL*	urlData = [NSURL URLFromPasteboard:[sender draggingPasteboard]];
-    [toolbar addBookmark:[urlData absoluteString] url:[urlData absoluteString] inPosition:index isSeparator:NO];
+    NSString* urlTitle = nil;
+    if ([draggedTypes containsObject:kCorePasteboardFlavorType_urld])
+      urlTitle = [[sender draggingPasteboard] stringForType:kCorePasteboardFlavorType_urld];
+    [toolbar addBookmark:(urlTitle ? urlTitle : [urlData absoluteString]) url:[urlData absoluteString] inPosition:index isSeparator:NO];
     dropHandled = YES;
   }
   mDragInsertionButton = nil;
