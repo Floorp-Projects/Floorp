@@ -101,10 +101,14 @@ nsCodebasePrincipal::CanEnableCapability(const char *capability,
 		return NS_ERROR_FAILURE;
 	PRBool enabled;
     if (NS_FAILED(prefs->GetBoolPref(pref, &enabled)) || !enabled) {
-        // XXX check to see if subject is executing from file: and then 
-        // fall through to return ENABLE_WITH_USER_PERMISSION
-        *result = nsIPrincipal::ENABLE_DENIED;
-        return NS_OK;
+        // Unless subject is executing from file:, return denied 
+        nsXPIDLCString scheme;
+        if (NS_FAILED(mURI->GetScheme(getter_Copies(scheme))) ||
+            PL_strcmp(scheme, "file") != 0) 
+        {
+            *result = nsIPrincipal::ENABLE_DENIED;
+            return NS_OK;
+        }
     }
     rv = nsBasePrincipal::CanEnableCapability(capability, result);
     if (*result == nsIPrincipal::ENABLE_UNKNOWN)
@@ -132,9 +136,15 @@ nsCodebasePrincipal::GetOrigin(char **origin)
         return NS_ERROR_FAILURE;
     nsAutoString t = (const char *) s;
     t += "://";
-    if (NS_FAILED(mURI->GetHost(getter_Copies(s))))
+    if (NS_SUCCEEDED(mURI->GetHost(getter_Copies(s)))) {
+        t += s;
+    } else if (NS_SUCCEEDED(mURI->GetSpec(getter_Copies(s)))) {
+        // Some URIs (e.g., nsSimpleURI) don't support host. Just
+        // get the full spec.
+        t = s;
+    } else {
         return NS_ERROR_FAILURE;
-    t += s;
+    }
     *origin = t.ToNewCString();
     return *origin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -172,6 +182,18 @@ nsCodebasePrincipal::SameOrigin(nsIPrincipal *other, PRBool *result)
         if (PL_strcmp(scheme1, "file") == 0) {
             // All file: urls are considered to have the same origin.
             *result = PR_TRUE;
+        } else if (PL_strcmp(scheme1, "imap") == 0 ||
+                   PL_strcmp(scheme1, "mailbox") == 0) 
+        {
+            // Each message is a distinct trust domain; use the 
+            // whole spec for comparison
+            nsXPIDLCString spec1;
+            if (NS_FAILED(otherURI->GetSpec(getter_Copies(spec1))))
+                return NS_ERROR_FAILURE;
+            nsXPIDLCString spec2;
+            if (NS_FAILED(mURI->GetSpec(getter_Copies(spec2))))
+                return NS_ERROR_FAILURE;
+            *result = PL_strcmp(spec1, spec2) == 0;
         } else {
             // Need to check the host
             char *host1 = nsnull;

@@ -945,6 +945,18 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
             return NS_OK;
     }
 
+    // Allow access to about:blank
+    nsCOMPtr<nsICodebasePrincipal> objectCodebase = do_QueryInterface(object);
+    if (objectCodebase) {
+        nsXPIDLCString origin;
+        if (NS_FAILED(objectCodebase->GetOrigin(getter_Copies(origin))))
+            return NS_ERROR_FAILURE;
+        if (nsCRT::strcmp(origin, "about:blank") == 0) {
+            *aResult = PR_TRUE;
+            return NS_OK;
+        }
+    }
+
     /*
     ** If we failed the origin tests it still might be the case that we
     ** are a signed script and have permissions to do this operation.
