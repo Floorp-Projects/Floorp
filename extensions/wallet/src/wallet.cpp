@@ -49,7 +49,6 @@ static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 #include "htmldlgs.h"
-#include "prtypes.h"
 #include "prlong.h"
 #include "prinrval.h"
 #include "allxpstr.h"
@@ -159,10 +158,15 @@ wallet_ClearTiming() {
 
 void
 wallet_DumpTiming() {
-  PRInt32 i;
+  PRInt32 i, r4;
+  PRInt64 r1, r2, r3;
   for (i=1; i<timing_index; i++) {
 #ifndef	XP_MAC
-    fprintf(stdout, "time %c = %ld\n", timingID[i], (long)(timings[i] - timings[i-1])/100);
+    LL_SUB(r1, timings[i], timings[i-1]);
+    LL_I2L(r2, 100);
+    LL_DIV(r3, r1, r2);
+    LL_L2I(r4, r3);
+    fprintf(stdout, "time %c = %ld\n", timingID[i], (long)r4);
 #endif
     if (i%20 == 0) {
       wallet_Pause();
@@ -176,7 +180,8 @@ wallet_AddTiming(char c) {
   if (timing_index<timing_max) {
     timingID[timing_index] = c;
 #ifndef	XP_MAC
-    timings[timing_index++] = PR_IntervalNow();	// note: PR_IntervalNow returns a 32 bit value!
+    // note: PR_IntervalNow returns a 32 bit value!
+    LL_I2L(timings[timing_index++], PR_IntervalNow());
 #endif
   }
 }
@@ -191,7 +196,8 @@ void
 wallet_ResumeStopwatch() {
   if (!stopwatchRunning) {
 #ifndef	XP_MAC
-    stopwatchBase = PR_IntervalNow();	// note: PR_IntervalNow returns a 32 bit value!
+    // note: PR_IntervalNow returns a 32 bit value!
+    LL_I2L(stopwatchBase, PR_IntervalNow());
 #endif
     stopwatchRunning = TRUE;
   }
@@ -199,9 +205,13 @@ wallet_ResumeStopwatch() {
 
 void
 wallet_PauseStopwatch() {
+  PRInt64 r1, r2;
   if (stopwatchRunning) {
 #ifndef	XP_MAC
-    stopwatch += (PR_IntervalNow() - stopwatchBase);	// note: PR_IntervalNow returns a 32 bit value!
+    // note: PR_IntervalNow returns a 32 bit value!
+    LL_I2L(r1, PR_IntervalNow());
+    LL_SUB(r2, r1, stopwatchBase);
+    LL_ADD(stopwatch, stopwatch, r2);
 #endif
     stopwatchRunning = FALSE;
   }
@@ -209,14 +219,22 @@ wallet_PauseStopwatch() {
 
 void
 wallet_DumpStopwatch() {
+  PRInt64 r1, r2;
+  PRInt32 r3;
   if (stopwatchRunning) {
 #ifndef	XP_MAC
-    stopwatch += (PR_IntervalNow() - stopwatchBase);	// note: PR_IntervalNow returns a 32 bit value!
-    stopwatchBase = PR_IntervalNow();
+    // note: PR_IntervalNow returns a 32 bit value!
+    LL_I2L(r1, PR_IntervalNow());
+    LL_SUB(r2, r1, stopwatchBase);
+    LL_ADD(stopwatch, stopwatch, r2);
+    LL_I2L(stopwatchBase, PR_IntervalNow());
 #endif
   }
 #ifndef	XP_MAC
-  fprintf(stdout, "stopwatch = %ld\n", stopwatch/100);  
+  LL_I2L(r1, 100);
+  LL_DIV(r2, stopwatch, r1);
+  LL_L2I(r3, r2);
+  fprintf(stdout, "stopwatch = %ld\n", (long)r3);  
 #endif
 }
 #endif /* DEBUG */
