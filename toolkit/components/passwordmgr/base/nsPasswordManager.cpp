@@ -67,14 +67,16 @@
 #include "nsCURILoader.h"
 #include "nsAppDirectoryServiceDefs.h"
 
-static const char kSatchelPropertiesURL[] = "chrome://passwordmgr/locale/passwordmgr.properties";
+static const char kPMPropertiesURL[] = "chrome://passwordmgr/locale/passwordmgr.properties";
 static PRBool sRememberPasswords = PR_FALSE;
 static PRBool sPrefsInitialized = PR_FALSE;
 
-static nsIStringBundle* sSatchelBundle;
+static nsIStringBundle* sPMBundle;
 
-static void SatchelLocalizedString(const nsAString& key, nsAString& aResult,
-                                   PRBool aFormatted = PR_FALSE);
+static void PMLocalizedString(const nsAString& key, nsAString& aResult,
+                              PRBool aFormatted = PR_FALSE,
+                              const PRUnichar** aFormatArgs = nsnull,
+                              PRUint32 aFormatArgsLength = 0);
 
 class nsPasswordManager::SignonDataEntry
 {
@@ -86,6 +88,7 @@ public:
   SignonDataEntry* next;
 
   SignonDataEntry() : next(nsnull) { }
+  ~SignonDataEntry() { delete next; }
 };
 
 class nsPasswordManager::PasswordEntry : public nsIPassword
@@ -204,7 +207,7 @@ nsPasswordManager::Init()
   // Now read in the signon file
   nsXPIDLCString signonFile;
   prefBranch->GetCharPref("SignonFileName", getter_Copies(signonFile));
-  NS_ASSERTION(!signonFile.IsEmpty(), "Fallback for signon filename on present");
+  NS_ASSERTION(!signonFile.IsEmpty(), "Fallback for signon filename not present");
 
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mSignonFile));
   mSignonFile->AppendNative(signonFile);
@@ -274,7 +277,7 @@ nsPasswordManager::Unregister(nsIComponentManager* aCompMgr,
 /* static */ void
 nsPasswordManager::Shutdown()
 {
-  NS_IF_RELEASE(sSatchelBundle);
+  NS_IF_RELEASE(sPMBundle);
 }
 
 // nsIPasswordManager implementation
@@ -306,9 +309,18 @@ nsPasswordManager::RemoveUser(const nsACString& aHost, const nsAString& aUser)
     if (entry->userValue.Equals(aUser)) {
       if (prevEntry) {
         prevEntry->next = entry->next;
+        entry->next = nsnull;
         delete entry;
-      } else // the hashtable will delete the entry
-        mSignonTable.Remove(aHost);
+      } else {
+        // the hashtable will delete the entry
+        SignonDataEntry* next;
+        if ((next = entry->next)) {
+          entry->next = nsnull;
+          mSignonTable.Put(aHost, next);
+        } else {
+          mSignonTable.Remove(aHost);
+        }
+      }
 
       WriteSignonFile();
 
@@ -323,6 +335,7 @@ NS_IMETHODIMP
 nsPasswordManager::AddReject(const nsACString& aHost)
 {
   mRejectTable.Put(aHost, 1);
+  WriteSignonFile();
   return NS_OK;
 }
 
@@ -605,7 +618,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
 {
   // Check the reject list
   nsCOMPtr<nsIURI> uri;
-  formDoc->GetDocument()->GetDocumentURL(getter_AddRefs(uri));
+  aFormNode->GetDocument()->GetDocumentURL(getter_AddRefs(uri));
 
   nsCAutoString realm;
   uri->GetPrePath(realm);
@@ -620,120 +633,216 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
   PRUint32 numControls;
   formElement->GetElementCount(&numControls);
 
-  // Look for a password field in this form.  If there isn't one,
-  // don't try to save any login data.
+  // Count the number of password fields in the form.
 
   nsCOMPtr<nsIDOMHTMLInputElement> userField;
-  nsCOMPtr<nsIDOMHTMLInputElement> passField;
+  nsCOMArray<nsIDOMHTMLInputElement> passFields;
 
   PRUint32 i;
+
   for (i = 0; i < numControls; ++i) {
 
     nsCOMPtr<nsIFormControl> control;
     formElement->GetElementAt(i, getter_AddRefs(control));
 
     if (control->GetType() == NS_FORM_INPUT_PASSWORD) {
-      // We've got the password field now
-      passField = do_QueryInterface(control);
-      break;
-    }
-  }
-
-  if (!passField)  // no passwords, don't save anything
-    return NS_OK;
-
-  // Search backwards from the password field to find a username field.
-  for (PRUint32 j = i - 1; j >= 0; --j) {
-    nsCOMPtr<nsIFormControl> control;
-    formElement->GetElementAt(j, getter_AddRefs(control));
-
-    if (control->GetType() == NS_FORM_INPUT_TEXT) {
-      userField = do_QueryInterface(control);
-      break;
-    }
-  }
-
-  // If the username field or the form has autocomplete=off,
-  // we don't store the login
-
-  nsAutoString autocomplete;
-
-  if (userField) {
-    nsCOMPtr<nsIDOMElement> userFieldElement = do_QueryInterface(userField);
-    userFieldElement->GetAttribute(NS_LITERAL_STRING("autocomplete"),
-                                   autocomplete);
-
-    if (autocomplete.EqualsIgnoreCase("off"))
-      return NS_OK;
-  }
-
-  nsCOMPtr<nsIDOMElement> formDOMEl = do_QueryInterface(aFormNode);
-  formDOMEl->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
-  if (autocomplete.EqualsIgnoreCase("off"))
-    return NS_OK;
-
-
-  // Check whether this username and password are already stored
-  nsAutoString userValue, passValue, userFieldName, passFieldName;
-
-  if (userField) {
-    userField->GetValue(userValue);
-    userField->GetName(userFieldName);
-  }
-
-  passField->GetValue(passValue);
-  passField->GetName(passFieldName);
-
-  SignonDataEntry* entry;
-  if (mSignonTable.Get(realm, &entry)) {
-    while (entry) {
-      if (entry->userField.Equals(userFieldName) &&
-          entry->userValue.Equals(userValue) &&
-          entry->passField.Equals(passFieldName) &&
-          entry->passValue.Equals(passValue)) {
-
-        // It's already present; nothing else to do.
-        return NS_OK;
-      }
-
-      entry = entry->next;
+      nsCOMPtr<nsIDOMHTMLInputElement> elem = do_QueryInterface(control);
+      passFields.AppendObject(elem);
     }
   }
 
   nsCOMPtr<nsIPrompt> prompt;
   aWindow->GetPrompter(getter_AddRefs(prompt));
 
-  nsAutoString dialogTitle, dialogText, neverText;
-  SatchelLocalizedString(NS_LITERAL_STRING("savePasswordTitle"), dialogTitle);
-  SatchelLocalizedString(NS_LITERAL_STRING("savePasswordText"),
-                         dialogText,
-                         PR_TRUE);
-  SatchelLocalizedString(NS_LITERAL_STRING("neverForSite"), neverText);
+  switch (passFields.Count()) {
+  case 1:  // normal login
+    {
+      // Search backwards from the password field to find a username field.
+      for (PRUint32 j = i - 1; j >= 0; --j) {
+        nsCOMPtr<nsIFormControl> control;
+        formElement->GetElementAt(j, getter_AddRefs(control));
 
-  PRInt32 selection;
-  prompt->ConfirmEx(dialogTitle.get(),
-                    dialogText.get(),
-                    (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
-                    (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1) +
-                    (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_2),
-                    nsnull, nsnull,
-                    neverText.get(),
-                    nsnull, nsnull,
-                    &selection);
+        if (control->GetType() == NS_FORM_INPUT_TEXT) {
+          userField = do_QueryInterface(control);
+          break;
+        }
+      }
+
+      // If the username field or the form has autocomplete=off,
+      // we don't store the login
+
+      nsAutoString autocomplete;
+
+      if (userField) {
+        nsCOMPtr<nsIDOMElement> userFieldElement = do_QueryInterface(userField);
+        userFieldElement->GetAttribute(NS_LITERAL_STRING("autocomplete"),
+                                       autocomplete);
+
+        if (autocomplete.EqualsIgnoreCase("off"))
+          return NS_OK;
+      }
+
+      nsCOMPtr<nsIDOMElement> formDOMEl = do_QueryInterface(aFormNode);
+      formDOMEl->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+      if (autocomplete.EqualsIgnoreCase("off"))
+        return NS_OK;
 
 
+      // Check whether this username and password are already stored
+      nsAutoString userValue, passValue, userFieldName, passFieldName;
 
-  if (selection == 0) {
+      if (userField) {
+        userField->GetValue(userValue);
+        userField->GetName(userFieldName);
+      }
 
-    SignonDataEntry* entry = new SignonDataEntry();
+      passFields.ObjectAt(0)->GetValue(passValue);
+      passFields.ObjectAt(0)->GetName(passFieldName);
 
-    entry->userField.Assign(userFieldName);
-    entry->passField.Assign(passFieldName);
-    entry->userValue.Assign(userValue);
-    entry->passValue.Assign(passValue);
+      SignonDataEntry* entry;
 
-    AddSignonData(realm, entry);
+      if (mSignonTable.Get(realm, &entry)) {
+        for (; entry; entry = entry->next) {
+          if (entry->userField.Equals(userFieldName) &&
+              entry->userValue.Equals(userValue) &&
+              entry->passField.Equals(passFieldName) &&
+              entry->passValue.Equals(passValue)) {
+
+            // It's already present; nothing else to do.
+            return NS_OK;
+          }
+        }
+      }
+
+      nsAutoString dialogTitle, dialogText, neverText;
+      PMLocalizedString(NS_LITERAL_STRING("savePasswordTitle"), dialogTitle);
+      PMLocalizedString(NS_LITERAL_STRING("savePasswordText"),
+                        dialogText,
+                        PR_TRUE);
+      PMLocalizedString(NS_LITERAL_STRING("neverForSite"), neverText);
+
+      PRInt32 selection;
+      prompt->ConfirmEx(dialogTitle.get(),
+                        dialogText.get(),
+                        (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
+                        (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1) +
+                        (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_2),
+                        nsnull, nsnull,
+                        neverText.get(),
+                        nsnull, nsnull,
+                        &selection);
+
+      if (selection == 0) {
+        entry = new SignonDataEntry();
+        entry->userField.Assign(userFieldName);
+        entry->passField.Assign(passFieldName);
+        entry->userValue.Assign(userValue);
+        entry->passValue.Assign(passValue);
+
+        AddSignonData(realm, entry);
+        WriteSignonFile();
+      }
+    }
+    break;
+
+  case 2:
+  case 3:
+    {
+      // If the following conditions are true, we guess that this is a
+      // password change page:
+      //   - there are 2 or 3 password fields on the page
+      //   - the fields do not all have the same value
+      //   - there is already a stored login for this realm
+      //
+      // In this situation, prompt the user to confirm that this is a password
+      // change.
+
+      SignonDataEntry* changeEntry = nsnull;
+      nsAutoString value0, valueN;
+      passFields.ObjectAt(0)->GetValue(value0);
+
+      for (PRInt32 k = 1; k < passFields.Count(); ++k) {
+        passFields.ObjectAt(k)->GetValue(valueN);
+        if (!value0.Equals(valueN)) {
+
+          SignonDataEntry* entry = nsnull;
+
+          if (mSignonTable.Get(realm, &entry) && entry) {
+            if (entry->next) {
+
+              // Multiple stored logons, prompt for which username is
+              // being changed.
+
+              PRUint32 entryCount = 2;
+              SignonDataEntry* temp = entry->next;
+              while (temp->next) {
+                ++entryCount;
+                temp = temp->next;
+              }
+
+              const PRUnichar** formatArgs = new const PRUnichar*[entryCount];
+              temp = entry;
+
+              for (PRUint32 arg = 0; arg < entryCount; ++arg) {
+                formatArgs[arg] = entry->userValue.get();
+                temp = temp->next;
+              }
+
+              nsAutoString dialogTitle, dialogText;
+              PMLocalizedString(NS_LITERAL_STRING("passwordChangeTitle"), dialogTitle);
+              PMLocalizedString(NS_LITERAL_STRING("userSelectText"), dialogText);
+
+              PRInt32 selection;
+              PRBool confirm;
+              prompt->Select(dialogTitle.get(),
+                             dialogText.get(),
+                             entryCount,
+                             formatArgs,
+                             &selection,
+                             &confirm);
+
+              delete[] formatArgs;
+              if (confirm && selection >= 0) {
+                changeEntry = entry;
+                for (PRInt32 m = 1; m < selection; ++m)
+                  changeEntry = changeEntry->next;
+              }
+
+            } else {
+              nsAutoString dialogTitle, dialogText;
+              const PRUnichar* formatArgs[1] = { entry->userValue.get() };
+
+              PMLocalizedString(NS_LITERAL_STRING("passwordChangeTitle"), dialogTitle);
+              PMLocalizedString(NS_LITERAL_STRING("passwordChangeText"),
+                                dialogText,
+                                PR_TRUE,
+                                formatArgs,
+                                1);
+
+              PRBool confirm;
+              prompt->Confirm(dialogTitle.get(), dialogText.get(), &confirm);
+
+              if (confirm)
+                changeEntry = entry;
+            }
+          }
+          break;
+        }
+      }
+
+      if (changeEntry) {
+        nsAutoString newValue;
+        passFields.ObjectAt(1)->GetValue(newValue);
+        changeEntry->passValue.Assign(newValue);
+        WriteSignonFile();
+      }
+    }
+    break;
+
+  default:  // no passwords or something odd; be safe and just don't store anything
+    break;
   }
+
 
   return NS_OK;
 }
@@ -1084,7 +1193,7 @@ nsSingleSignonPrompt::Prompt(const PRUnichar* aDialogTitle,
   nsCOMPtr<nsIPasswordManagerInternal> mgrInternal;
 
   if (nsPasswordManager::SingleSignonEnabled()) {
-    SatchelLocalizedString(NS_LITERAL_STRING("rememberValue"), checkMsg);
+    PMLocalizedString(NS_LITERAL_STRING("rememberValue"), checkMsg);
     checkPtr = &checkValue;
 
     mgrInternal = do_GetService(NS_PASSWORDMANAGER_CONTRACTID);
@@ -1142,7 +1251,7 @@ nsSingleSignonPrompt::PromptUsernameAndPassword(const PRUnichar* aDialogTitle,
   nsCOMPtr<nsIPasswordManagerInternal> mgrInternal;
 
   if (nsPasswordManager::SingleSignonEnabled()) {
-    SatchelLocalizedString(NS_LITERAL_STRING("rememberPassword"), checkMsg);
+    PMLocalizedString(NS_LITERAL_STRING("rememberPassword"), checkMsg);
     checkPtr = &checkValue;
 
     mgrInternal = do_GetService(NS_PASSWORDMANAGER_CONTRACTID);
@@ -1203,7 +1312,7 @@ nsSingleSignonPrompt::PromptPassword(const PRUnichar* aDialogTitle,
   nsCOMPtr<nsIPasswordManagerInternal> mgrInternal;
 
   if (nsPasswordManager::SingleSignonEnabled()) {
-    SatchelLocalizedString(NS_LITERAL_STRING("rememberPassword"), checkMsg);
+    PMLocalizedString(NS_LITERAL_STRING("rememberPassword"), checkMsg);
     checkPtr = &checkValue;
 
     mgrInternal = do_GetService(NS_PASSWORDMANAGER_CONTRACTID);
@@ -1254,16 +1363,18 @@ nsSingleSignonPrompt::SetPromptDialogs(nsIPrompt* aDialogs)
 }
 
 static void
-SatchelLocalizedString(const nsAString& key,
-                       nsAString& aResult,
-                       PRBool aIsFormatted)
+PMLocalizedString(const nsAString& key,
+                  nsAString& aResult,
+                  PRBool aIsFormatted,
+                  const PRUnichar** aFormatArgs,
+                  PRUint32 aFormatArgsLength)
 {
-  if (!sSatchelBundle) {
+  if (!sPMBundle) {
     nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-    bundleService->CreateBundle(kSatchelPropertiesURL,
-                                &sSatchelBundle);
+    bundleService->CreateBundle(kPMPropertiesURL,
+                                &sPMBundle);
 
-    if (!sSatchelBundle) {
+    if (!sPMBundle) {
       NS_ERROR("string bundle not present");
       return;
     }
@@ -1271,10 +1382,11 @@ SatchelLocalizedString(const nsAString& key,
 
   nsXPIDLString str;
   if (aIsFormatted)
-    sSatchelBundle->FormatStringFromName(PromiseFlatString(key).get(),
-                                         nsnull, 0, getter_Copies(str));
+    sPMBundle->FormatStringFromName(PromiseFlatString(key).get(),
+                                    aFormatArgs, aFormatArgsLength,
+                                    getter_Copies(str));
   else
-    sSatchelBundle->GetStringFromName(PromiseFlatString(key).get(),
-                                      getter_Copies(str));
+    sPMBundle->GetStringFromName(PromiseFlatString(key).get(),
+                                 getter_Copies(str));
   aResult.Assign(str);
 }
