@@ -100,17 +100,23 @@ NS_IMETHODIMP nsDeviceContextGTK::SupportsNativeWidgets(PRBool &aSupportsWidgets
 
 NS_IMETHODIMP nsDeviceContextGTK::GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
-/* 11 + 2 + 2   (11 is the default scrollbar size, 2 is the y offset from the
-		 style code.  we should get this directly */
-  aWidth = 15.0 * mPixelsToTwips;
-  aHeight = 15.0 * mPixelsToTwips;
-//  aHeight = 24.0 * mPixelsToTwips;
-//  aWidth = 11.0 * mTwipsToPixels;
-//  aHeight = 24.0 * mTwipsToPixels;
+  GtkRequisition req;
+  GtkWidget *sb;
+
+  sb = gtk_vscrollbar_new(NULL);
+  gtk_widget_size_request(sb,&req);
+  aWidth = req.width * mPixelsToTwips;
+  gtk_widget_destroy(sb);
+
+  sb = gtk_hscrollbar_new(NULL);
+  gtk_widget_size_request(sb,&req);
+  aHeight = req.height * mPixelsToTwips;
+  gtk_widget_destroy(sb);
+ 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextGTK :: GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const
+NS_IMETHODIMP nsDeviceContextGTK::GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const
 {
   nsresult status = NS_OK;
   GtkStyle *style = gtk_style_new();  // get the default styles
@@ -158,11 +164,25 @@ NS_IMETHODIMP nsDeviceContextGTK :: GetSystemAttribute(nsSystemAttrID anID, Syst
     //---------
     // Size
     //---------
-    case eSystemAttr_Size_ScrollbarHeight : 
-        aInfo->mSize = 15;
+    case eSystemAttr_Size_ScrollbarHeight:
+        {
+          GtkRequisition req;
+          GtkWidget *sb;
+          sb = gtk_hscrollbar_new(NULL);
+          gtk_widget_size_request(sb,&req);
+          aInfo->mSize = req.height;
+          gtk_widget_destroy(sb);
+	}
         break;
     case eSystemAttr_Size_ScrollbarWidth : 
-        aInfo->mSize = 15;
+        {
+          GtkRequisition req;
+          GtkWidget *sb;
+          sb = gtk_vscrollbar_new(NULL);
+          gtk_widget_size_request(sb,&req);
+          aInfo->mSize = req.width;
+          gtk_widget_destroy(sb);
+	}
         break;
     case eSystemAttr_Size_WindowTitleHeight:
         aInfo->mSize = 0;
