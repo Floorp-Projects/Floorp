@@ -61,15 +61,14 @@ nsDocShell::nsDocShell() : mCreated(PR_FALSE), mContentListener(nsnull),
 
 {
 	NS_INIT_REFCNT();
-   mBaseInitInfo = new nsDocShellInitInfo();
 }
 
 nsDocShell::~nsDocShell()
 {
-   if(mBaseInitInfo)
+   if(mInitInfo)
       {
-      delete mBaseInitInfo;
-      mBaseInitInfo = nsnull;
+      delete mInitInfo;
+      mInitInfo = nsnull;
       }
 
    if(mContentListener)
@@ -584,7 +583,8 @@ NS_IMETHODIMP nsDocShell::CutSelection()
 NS_IMETHODIMP nsDocShell::GetCutable(PRBool* aCutable)
 {
    NS_ENSURE_ARG_POINTER(aCutable);
-   //XXX Implement
+
+   //XXXIMPL Implement
    //Should check to find the current focused object.  Then see if it can
    //be cut out of.  For now the answer is always no since CutSelection()
    // has not been implemented.
@@ -599,7 +599,7 @@ NS_IMETHODIMP nsDocShell::Paste()
    NS_ENSURE_SUCCESS(GetPasteable(&pasteable), NS_ERROR_FAILURE);
    NS_ENSURE_TRUE(pasteable, NS_ERROR_UNEXPECTED);
    
-   //XXX Implement
+   //XXXIMPL Implement
    return NS_ERROR_FAILURE;
 }
 
@@ -607,7 +607,7 @@ NS_IMETHODIMP nsDocShell::GetPasteable(PRBool* aPasteable)
 {
    NS_ENSURE_ARG_POINTER(aPasteable);
 
-   //XXX Implement
+   //XXXIMPL Implement
    //Should check to find the current focused object.  Then see if it can
    //be pasted into.  For now the answer is always no since Paste()
    // has not been implemented.
@@ -626,15 +626,14 @@ NS_IMETHODIMP nsDocShell::Save()
    NS_ENSURE_SUCCESS(GetSaveable(&saveable), NS_ERROR_FAILURE);
    NS_ENSURE_TRUE(saveable, NS_ERROR_UNEXPECTED);
 
-   //XXX First Check
+   //XXXIMPL
    return NS_ERROR_FAILURE;
 } 
 
 NS_IMETHODIMP nsDocShell::GetSaveable(PRBool* saveable)
 {
    NS_ENSURE_ARG_POINTER(saveable);
-   //XXX First Check
-   // XXX Implement
+   // XXXIMPL
    // Should check if a doc is loaded and if it is in a state that that is
    // ready to save.  For now the answer is always no since saving isn't
    // implemented.
@@ -650,14 +649,14 @@ NS_IMETHODIMP nsDocShell::Print()
    NS_ENSURE_SUCCESS(GetPrintable(&printable), NS_ERROR_FAILURE);
    NS_ENSURE_TRUE(printable, NS_ERROR_UNEXPECTED);
 
-   //XXX First Check
+   //XXXIMPL
    return NS_ERROR_FAILURE;
 } 
 
 NS_IMETHODIMP nsDocShell::GetPrintable(PRBool* printable)
 {
    NS_ENSURE_ARG_POINTER(printable);
-   // XXX Implement
+   // XXXIMPL
    // Should check if a doc is loaded and if it is in a state that that is
    // ready to print.  For now the answer is always no since printing isn't
    // implemented.
@@ -665,8 +664,6 @@ NS_IMETHODIMP nsDocShell::GetPrintable(PRBool* printable)
    *printable = PR_FALSE;
    return NS_OK;
 } 
-
-
 
 //*****************************************************************************
 // nsDocShell::nsIDocShellContainer
@@ -681,26 +678,29 @@ NS_IMETHODIMP nsDocShell::GetChildCount(PRInt32 *aChildCount)
 
 NS_IMETHODIMP nsDocShell::AddChild(nsIDocShell *aChild)
 {
-  NS_ENSURE_ARG_POINTER(aChild);
+   NS_ENSURE_ARG_POINTER(aChild);
 
-  NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
-  mChildren.AppendElement(aChild);
-  NS_ADDREF(aChild);
+   NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
+   mChildren.AppendElement(aChild);
+   NS_ADDREF(aChild);
 
-  //XXX HTML Specifics need to be moved out.
-  nsCOMPtr<nsIHTMLDocShell> childAsHTMLDocShell = do_QueryInterface(aChild);
-  if (childAsHTMLDocShell)
-  {
-    PRUnichar *defaultCharset=nsnull;
-    NS_ENSURE_SUCCESS(GetDefaultCharacterSet(&defaultCharset), NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(childAsHTMLDocShell->SetDefaultCharacterSet(defaultCharset), NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(childAsHTMLDocShell->SetForceCharacterSet(mForceCharacterSet.GetUnicode()), NS_ERROR_FAILURE);
-  }
+   //XXX HTML Specifics need to be moved out.
+   nsCOMPtr<nsIHTMLDocShell> childAsHTMLDocShell = do_QueryInterface(aChild);
+   if (childAsHTMLDocShell)
+      {
+      PRUnichar *defaultCharset=nsnull;
+      NS_ENSURE_SUCCESS(GetDefaultCharacterSet(&defaultCharset), 
+         NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(childAsHTMLDocShell->SetDefaultCharacterSet(
+         defaultCharset), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(childAsHTMLDocShell->SetForceCharacterSet(
+         mForceCharacterSet.GetUnicode()), NS_ERROR_FAILURE);
+      }
 
-  return NS_OK;
+   return NS_OK;
 }
 
-// XXX: tiny semantic change from webshell.  aChild is only effected if it was actually a child of this docshell
+// tiny semantic change from webshell.  aChild is only effected if it was actually a child of this docshell
 NS_IMETHODIMP nsDocShell::RemoveChild(nsIDocShell *aChild)
 {
   NS_ENSURE_ARG_POINTER(aChild);
@@ -766,13 +766,13 @@ NS_IMETHODIMP nsDocShell::InitWindow(nativeWindow parentNativeWindow,
    nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
 {
    NS_ENSURE_ARG(parentWidget);  // DocShells must get a widget for a parent
-   NS_ENSURE_STATE(!mCreated && mBaseInitInfo);
+   NS_ENSURE_STATE(!mCreated && InitInfo());
 
    mParentWidget = parentWidget;
-   mBaseInitInfo->x = x;
-   mBaseInitInfo->y = y;
-   mBaseInitInfo->cx = cx;
-   mBaseInitInfo->cy = cy;
+   mInitInfo->x = x;
+   mInitInfo->y = y;
+   mInitInfo->cx = cx;
+   mInitInfo->cy = cy;
 
    return NS_OK;
 }
@@ -801,37 +801,15 @@ NS_IMETHODIMP nsDocShell::Destroy()
 
 NS_IMETHODIMP nsDocShell::SetPosition(PRInt32 x, PRInt32 y)
 {
-   if(!mCreated)
+   if(mContentViewer)
+      NS_ENSURE_SUCCESS(mContentViewer->Move(x, y), NS_ERROR_FAILURE);
+   else if(InitInfo())
       {
-      mBaseInitInfo->x = x;
-      mBaseInitInfo->y = y;
+      mInitInfo->x = x;
+      mInitInfo->y = y;
       }
    else
-      {
-      /* XXX Implement below is code from old webShell
-      We don't have a heavy-weight window, we want to talk to our view I think.
-      We also don't want to duplicate the bounds locally.  No need, let the
-      view keep up with that.
-
-        PRInt32 w, h;
-        nsresult rv = GetSize(w, h);
-        if (NS_FAILED(rv)) { return rv; }
-
-        PRInt32 borderWidth  = 0;
-        PRInt32 borderHeight = 0;
-        if (mWindow) 
-        {
-          mWindow->GetBorderSize(borderWidth, borderHeight);
-          // Don't have the widget repaint. Layout will generate repaint requests
-          // during reflow
-          mWindow->Resize(aX, aY, w, h, PR_FALSE);
-        }
-
-        mBounds.SetRect(aX,aY,w,h);   // set the webshells bounds 
-
-        return rv;
-      */
-      }
+      NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -840,75 +818,47 @@ NS_IMETHODIMP nsDocShell::GetPosition(PRInt32* x, PRInt32* y)
 {
    NS_ENSURE_ARG_POINTER(x && y);
 
-   if(!mCreated)
+   if(mContentViewer)
       {
-      *x = mBaseInitInfo->x;
-      *y = mBaseInitInfo->y;
+      nsRect bounds;
+
+      NS_ENSURE_SUCCESS(mContentViewer->GetBounds(bounds), NS_ERROR_FAILURE);
+
+      *x = bounds.x;
+      *y = bounds.y;
+      }
+   else if(InitInfo())
+      {
+      *x = mInitInfo->x;
+      *y = mInitInfo->y;
       }
    else
-      {
-      /* XXX Implement below is code from old webShell
-      We don't have a heavy-weight window, we want to talk to our view I think.
-      We also don't want to duplicate the bounds locally.  No need, let the
-      view keep up with that.
-
-        nsRect result;
-        if (nsnull != mWindow) {
-          mWindow->GetClientBounds(result);
-        } else {
-          result = mBounds;
-        }
-
-        *aX = result.x;
-        *aY = result.y;
-
-        return NS_OK;
-      */
-      }
+      NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_FAILURE);
 
    return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
 {
-   if(!mCreated)
+   if(mContentViewer)
       {
-      mBaseInitInfo->cx = cx;
-      mBaseInitInfo->cy = cy;
+      PRInt32 x;
+      PRInt32 y;
+
+      NS_ENSURE_SUCCESS(GetPosition(&x, &y), NS_ERROR_FAILURE);
+
+      //XXX Border figured in here or is that handled elsewhere?
+      nsRect bounds(x, y, cx, cy);
+
+      NS_ENSURE_SUCCESS(mContentViewer->SetBounds(bounds), NS_ERROR_FAILURE);
+      }
+   else if(InitInfo())
+      {
+      mInitInfo->cx = cx;
+      mInitInfo->cy = cy;
       }
    else
-      {
-      /*  XXX Implement below is code from old webShell
-      We don't have a heavy-weight window, we want to talk to our view I think.
-      We also don't want to duplicate the bounds locally.  No need, let the
-      view keep up with that.
-
-
-        PRInt32 x, y;
-     nsresult rv = GetPosition(x, y);
-     if (NS_FAILED(rv)) { return rv; }
-
-     PRInt32 borderWidth  = 0;
-     PRInt32 borderHeight = 0;
-     if (mWindow) 
-     {
-       mWindow->GetBorderSize(borderWidth, borderHeight);
-       // Don't have the widget repaint. Layout will generate repaint requests
-       // during reflow
-       mWindow->Resize(x, y, aCX, aCY, PR_FALSE);
-     }
-
-     mBounds.SetRect(x, y, aCX, aCY);   // set the webshells bounds --dwc0001
-
-     // Set the size of the content area, which is the size of the window
-     // minus the borders
-     if (nsnull != mContentViewer) {
-       nsRect rr(0, 0, aCX-(borderWidth*2), aCY-(borderHeight*2));
-       mContentViewer->SetBounds(rr);
-     }
-     return rv;
-      */
-      }
+      NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -917,31 +867,22 @@ NS_IMETHODIMP nsDocShell::GetSize(PRInt32* cx, PRInt32* cy)
 {
    NS_ENSURE_ARG_POINTER(cx && cy);
 
-   if(!mCreated)
+   if(mContentViewer)
       {
-      *cx = mBaseInitInfo->cx;
-      *cy = mBaseInitInfo->cy;
+      nsRect   bounds;
+
+      NS_ENSURE_SUCCESS(mContentViewer->GetBounds(bounds), NS_ERROR_FAILURE);
+
+      *cx = bounds.width;
+      *cy = bounds.height;
+      }
+   else if(InitInfo())
+      {
+      *cx = mInitInfo->cx;
+      *cy = mInitInfo->cy;
       }
    else
-      {
-      /* XXX Implement below is code from old webShell
-      We don't have a heavy-weight window, we want to talk to our view I think.
-      We also don't want to duplicate the bounds locally.  No need, let the
-      view keep up with that.
-
-        nsRect result;
-     if (nsnull != mWindow) {
-       mWindow->GetClientBounds(result);
-     } else {
-       result = mBounds;
-     }
-
-     *aCX = result.width;
-     *aCY = result.height;
-
-     return NS_OK;
-      */
-      }
+      NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -949,51 +890,29 @@ NS_IMETHODIMP nsDocShell::GetSize(PRInt32* cx, PRInt32* cy)
 NS_IMETHODIMP nsDocShell::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
    PRInt32 cy, PRBool fRepaint)
 {
-   if(!mCreated)
+   if(mContentViewer)
       {
-      mBaseInitInfo->x = x;
-      mBaseInitInfo->y = y;
-      mBaseInitInfo->cx = cx;
-      mBaseInitInfo->cy = cy;
+      //XXX Border figured in here or is that handled elsewhere?
+      nsRect bounds(x, y, cx, cy);
+
+      NS_ENSURE_SUCCESS(mContentViewer->SetBounds(bounds), NS_ERROR_FAILURE);
+      }
+   else if(InitInfo())
+      {
+      mInitInfo->x = x;
+      mInitInfo->y = y;
+      mInitInfo->cx = cx;
+      mInitInfo->cy = cy;
       }
    else
-      {
-      // XXX Do normal size and position stuff.  Could just call 
-      // Size and then Position, but underlying control probably supports 
-      // some optimized setting of both like this.
-
-      /* XXX Implement below is code from old webShell
-      We don't have a heavy-weight window, we want to talk to our view I think.
-      We also don't want to duplicate the bounds locally.  No need, let the
-      view keep up with that.
-
-        PRInt32 borderWidth  = 0;
-     PRInt32 borderHeight = 0;
-     if (mWindow) 
-     {
-       mWindow->GetBorderSize(borderWidth, borderHeight);
-       // Don't have the widget repaint. Layout will generate repaint requests
-       // during reflow
-       mWindow->Resize(aX, aY, aCX, aCY, PR_FALSE);
-     }
-
-     mBounds.SetRect(aX, aY, aCX, aCY);   // set the webshells bounds --dwc0001
-
-     // Set the size of the content area, which is the size of the window
-     // minus the borders
-     if (nsnull != mContentViewer) {
-       nsRect rr(0, 0, aCX-(borderWidth*2), aCY-(borderHeight*2));
-       mContentViewer->SetBounds(rr);
-     }
-     return rv;
-      */
-      }
+      NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_FAILURE);
 
    return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::Repaint(PRBool fForce)
 {
+   
    //XXX First Check
 	/** 
 	 * Tell the window to repaint itself
@@ -1061,7 +980,7 @@ NS_IMETHODIMP nsDocShell::GetVisibility(PRBool* aVisibility)
   NS_ENSURE_ARG_POINTER(aVisibility);
 
   if(!mCreated) {
-    *aVisibility = mBaseInitInfo->visible;
+    *aVisibility = mInitInfo->visible;
   }
   else
   {
@@ -1097,9 +1016,11 @@ NS_IMETHODIMP nsDocShell::GetVisibility(PRBool* aVisibility)
 NS_IMETHODIMP nsDocShell::SetVisibility(PRBool visibility)
 {
    if(!mCreated)
-      mBaseInitInfo->visible = visibility;
+      mInitInfo->visible = visibility;
    else
       {
+
+     // NS_ENSURE_SUCCESS(mContentViewer->
       // XXX Set underlying control visibility
       }
 
@@ -1720,6 +1641,13 @@ NS_IMETHODIMP nsDocShell::HandleUnknownContentType(nsIDocumentLoader* aLoader,
 // nsDocShell: Helper Routines
 //*****************************************************************************   
 
+nsDocShellInitInfo* nsDocShell::InitInfo()
+{
+   if(mInitInfo)
+      return mInitInfo;
+   return mInitInfo = new nsDocShellInitInfo();
+}
+
 nsresult nsDocShell::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode* aParent,
    PRInt32* aOffset)
 {
@@ -2052,21 +1980,16 @@ NS_IMETHODIMP nsDocShell::InsertDocumentInDocTree()
 
 NS_IMETHODIMP nsDocShell::DestroyChildren()
 {
-  PRInt32 i, n = mChildren.Count();
-  for (i = 0; i < n; i++) 
-  {
-    nsIDocShell* shell = (nsIDocShell*) mChildren.ElementAt(i);
-    NS_WARN_IF_FALSE(shell, "docshell has null child");
-    if (shell)
-    {
-      shell->SetParent(nsnull);
-      // XXX: will shells have a separate Destroy?  See webshell::Destroy for what it does
-      //shell->Destroy();
-      NS_RELEASE(shell);
-    }
-  }
-  mChildren.Clear();
-  return NS_OK;
+   PRInt32 i, n = mChildren.Count();
+   nsCOMPtr<nsIDocShell>   shell;
+   for (i = 0; i < n; i++) 
+      {
+      shell = (nsIDocShell*) mChildren.ElementAt(i);
+      if(!NS_WARN_IF_FALSE(shell, "docshell has null child"))
+         shell->SetParent(nsnull);
+      }
+   mChildren.Clear();
+   return NS_OK;
 }
 
 nsresult nsDocShell::GetPrimaryFrameFor(nsIContent* content, nsIFrame** frame)
