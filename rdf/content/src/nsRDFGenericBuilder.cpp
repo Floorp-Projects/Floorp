@@ -1385,6 +1385,8 @@ RDFGenericBuilderImpl::UpdateWidgetItemAttribute(nsIContent* aTemplateNode,
 		nsCOMPtr<nsIContent>	aTreeItemKid;
 		if (NS_FAILED(rv = aTreeItemElement->ChildAt(loop, *getter_AddRefs(aTreeItemKid))))
 			continue;
+		if (!aTreeItemKid)
+			continue;
 		rv = UpdateWidgetItemAttribute(aTemplateKid, aTreeItemKid, aAction, aProperty, aValue);
 	}
 	return(rv);
