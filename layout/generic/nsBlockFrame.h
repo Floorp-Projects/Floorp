@@ -192,7 +192,7 @@ public:
     * recursively adds floaters in child blocks of this frame.
     */
   nsresult UpdateSpaceManager(nsIPresContext* aPresContext,
-                              nsISpaceManager* aSpaceManager);
+                              nsSpaceManager* aSpaceManager);
 
   // returns true on success and false if aFoundLine is set to end_lines()
   PRBool FindLineFor(nsIFrame* aFrame,

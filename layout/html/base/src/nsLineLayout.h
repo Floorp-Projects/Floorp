@@ -36,7 +36,7 @@
 #include "nsLineBox.h"
 #include "nsBlockReflowState.h"
 
-class nsISpaceManager;
+class nsSpaceManager;
 class nsPlaceholderFrame;
 struct nsStyleText;
 
@@ -46,7 +46,7 @@ struct nsStyleText;
 class nsLineLayout {
 public:
   nsLineLayout(nsIPresContext* aPresContext,
-               nsISpaceManager* aSpaceManager,
+               nsSpaceManager* aSpaceManager,
                const nsHTMLReflowState* aOuterReflowState,
                PRBool aComputeMaxElementSize);
   nsLineLayout(nsIPresContext* aPresContext);
@@ -265,7 +265,7 @@ public:
 
 protected:
   // This state is constant for a given block frame doing line layout
-  nsISpaceManager* mSpaceManager;
+  nsSpaceManager* mSpaceManager;
   const nsStyleText* mStyleText; // for the block
   const nsHTMLReflowState* mBlockReflowState;
   nsBlockReflowState* mBlockRS;/* XXX hack! */

@@ -39,7 +39,6 @@
 #include "nsIContent.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
-#include "nsISpaceManager.h"
 #include "nsIStyleContext.h"
 #include "nsRect.h"
 #include "nsPoint.h"

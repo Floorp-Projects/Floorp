@@ -25,42 +25,41 @@ XPIDL_MODULE=layout_base
 include <$(DEPTH)\config\config.mak>
 
 EXPORTS =				\
+	nsFrameList.h			\
+	nsFrameTraversal.h		\
 	nsHTMLReflowMetrics.h		\
 	nsHTMLReflowState.h		\
 	nsIAutoCopy.h			\
+	nsICanvasFrame.h		\
 	nsICaret.h			\
 	nsIFocusTracker.h		\
 	nsIFrame.h			\
-	nsIObjectFrame.h			\
-	nsIImageFrame.h			\
-	nsIFrameTraversal.h			\
 	nsIFrameDebug.h			\
 	nsIFrameManager.h		\
-	nsIIndependentSelection.h		\
-	nsILayoutDebugger.h		\
+	nsIFrameSelection.h		\
+	nsIFrameTraversal.h		\
 	nsIFrameUtil.h			\
+	nsIImageFrame.h			\
+	nsIIndependentSelection.h	\
+	nsILayoutDebugger.h		\
+	nsILayoutHistoryState.h		\
+	nsIMutableStyleContext.h	\
+	nsIObjectFrame.h		\
 	nsIPageSequenceFrame.h		\
 	nsIPresContext.h		\
 	nsIPresShell.h			\
-	nsIPresState.h          \
-  nsIReflowCallback.h \
+	nsIPresState.h			\
+	nsIPrintContext.h		\
+	nsIReflowCallback.h		\
 	nsIReflowCommand.h		\
-	nsIFrameSelection.h		\
-	nsISpaceManager.h		\
+	nsIScrollableFrame.h		\
+	nsIScrollableViewProvider.h	\
+	nsIStatefulFrame.h		\
 	nsIStyleContext.h		\
-	nsIMutableStyleContext.h		\
 	nsIStyleFrameConstruction.h	\
 	nsIStyleSet.h			\
-	nsFrameList.h			\
-	nsFrameTraversal.h		\
 	nsStyleChangeList.h		\
 	nsStyleConsts.h			\
-	nsILayoutHistoryState.h \
-	nsIStatefulFrame.h \
-	nsIScrollableFrame.h \
-	nsIScrollableViewProvider.h \
-  nsIPrintContext.h \
-  nsICanvasFrame.h \
 !ifdef IBMBIDI
 	nsBidiPresUtils.h		\
 	nsITextFrame.h			\

@@ -138,7 +138,7 @@ public:
 
   const nsHTMLReflowState& mReflowState;
 
-  nsISpaceManager* mSpaceManager;
+  nsSpaceManager* mSpaceManager;
 
   // The coordinates within the spacemanager where the block is being
   // placed <b>after</b> taking into account the blocks border and

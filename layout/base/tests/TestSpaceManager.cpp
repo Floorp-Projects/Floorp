@@ -703,7 +703,7 @@ PRBool MySpaceManager::TestResizeRectRegion()
   // #1. A simple test of resizing the right edge of the one and only band rect
   status = AddRectRegion((nsIFrame*)0x01, nsRect(10, 100, 100, 100));
   NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
-  status = ResizeRectRegion((nsIFrame*)0x01, 50, 50, nsISpaceManager::RightEdge);
+  status = ResizeRectRegion((nsIFrame*)0x01, 50, 50, nsSpaceManager::RightEdge);
   NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
 
   // Verify there is one band with one rect
@@ -804,23 +804,21 @@ int main(int argc, char** argv)
   // Create a space manager
   MySpaceManager* spaceMgr = new MySpaceManager(nsnull, nsnull);
   
-  NS_ADDREF(spaceMgr);
-
   // Test adding rect regions
   if (!spaceMgr->TestAddBand()) {
-    NS_RELEASE(spaceMgr);
+    delete spaceMgr;
     return -1;
   }
 
   // Test adding rect regions that overlap existing bands
   if (!spaceMgr->TestAddBandOverlap()) {
-    NS_RELEASE(spaceMgr);
+    delete spaceMgr;
     return -1;
   }
 
   // Test adding rects within an existing band
   if (!spaceMgr->TestAddRectToBand()) {
-    NS_RELEASE(spaceMgr);
+    delete spaceMgr;
     return -1;
   }
 
@@ -844,6 +842,6 @@ int main(int argc, char** argv)
     return -1;
   }
 
-  NS_RELEASE(spaceMgr);
+  delete spaceMgr;
   return 0;
 }

@@ -57,24 +57,18 @@ nsBlockBandData::nsBlockBandData()
 
 nsBlockBandData::~nsBlockBandData()
 {
-  NS_IF_RELEASE(mSpaceManager);
   if (mTrapezoids != mData) {
     delete [] mTrapezoids;
   }
 }
 
 nsresult
-nsBlockBandData::Init(nsISpaceManager* aSpaceManager,
+nsBlockBandData::Init(nsSpaceManager* aSpaceManager,
                       const nsSize& aSpace)
 {
-  NS_PRECONDITION(nsnull != aSpaceManager, "null pointer");
-  if (nsnull == aSpaceManager) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aSpaceManager, "null pointer");
 
-  NS_IF_RELEASE(mSpaceManager);
   mSpaceManager = aSpaceManager;
-  NS_ADDREF(aSpaceManager);
   aSpaceManager->GetTranslation(mSpaceManagerX, mSpaceManagerY);
 
   mSpace = aSpace;
@@ -115,9 +109,6 @@ nsresult
 nsBlockBandData::GetBandData(nscoord aY)
 {
   NS_ASSERTION(mSpaceManager, "bad state, no space manager");
-  if (!mSpaceManager) {
-    return NS_ERROR_FAILURE;
-  }
   PRInt32 iterations =0;
   nsresult rv = mSpaceManager->GetBandData(aY, mSpace, *this);
   while (NS_FAILED(rv)) {

@@ -45,7 +45,7 @@
 #include "nsStyleConsts.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsHTMLIIDs.h"
-#include "nsISpaceManager.h"
+#include "nsSpaceManager.h"
 #include "nsIStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsIFontMetrics.h"
@@ -155,7 +155,7 @@ static PRBool InUnconstrainedTableCell(const nsHTMLReflowState& aBlockReflowStat
 MOZ_DECL_CTOR_COUNTER(nsLineLayout)
 
 nsLineLayout::nsLineLayout(nsIPresContext* aPresContext,
-                           nsISpaceManager* aSpaceManager,
+                           nsSpaceManager* aSpaceManager,
                            const nsHTMLReflowState* aOuterReflowState,
                            PRBool aComputeMaxElementSize)
   : mPresContext(aPresContext),

@@ -40,7 +40,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsISpaceManager.h"
 
 class nsHTMLReflowCommand;
 class nsHTMLInfo;

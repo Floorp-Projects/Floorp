@@ -37,7 +37,7 @@
 #ifndef nsBlockBandData_h___
 #define nsBlockBandData_h___
 
-#include "nsISpaceManager.h"
+#include "nsSpaceManager.h"
 
 class nsIPresContext;
 
@@ -54,7 +54,7 @@ public:
   ~nsBlockBandData();
 
   // Initialize. This must be called before any of the other methods.
-  nsresult Init(nsISpaceManager* aSpaceManager, const nsSize& aSpace);
+  nsresult Init(nsSpaceManager* aSpaceManager, const nsSize& aSpace);
 
   // Get some available space. Note that aY is relative to the current
   // space manager translation.
@@ -119,7 +119,7 @@ protected:
   nsresult GetBandData(nscoord aY);
 
   // The spacemanager we are getting space from
-  nsISpaceManager* mSpaceManager;
+  nsSpaceManager* mSpaceManager;
   nscoord mSpaceManagerX, mSpaceManagerY;
 
   // Limit to the available space (set by Init)
