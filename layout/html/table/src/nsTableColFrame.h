@@ -34,7 +34,7 @@ class nsTableCellFrame;
 // XXX MIN_ADJ, DES_ADJ, PCT_ADJ, DES_PRO can probably go away and be replaced
 // by MIN_CON, DES_CON, PCT_CON, DES_CON saving 16 bytes per col frame
 #define WIDTH_NOT_SET   -1
-#define NUM_WIDTHS       9
+#define NUM_WIDTHS      10
 #define NUM_MAJOR_WIDTHS 3 // MIN, DES, FIX
 #define MIN_CON          0 // minimum width required of the content + padding
 #define DES_CON          1 // desired width of the content + padding
@@ -45,7 +45,7 @@ class nsTableCellFrame;
 #define PCT              6 // percent width of cell or col 
 #define PCT_ADJ          7 // percent width of cell or col from percent colspan
 #define MIN_PRO          8 // desired width due to proportional <col>s or cols attribute
-
+#define FINAL            9 // width after the table has been balanced, considering all of the others
 enum nsColConstraint {
   eNoConstraint          = 0,
   ePixelConstraint       = 1,      // pixel width 
@@ -148,7 +148,7 @@ public:
     * Return false if this col was constructed due to content having display type of table-col
     */
   PRBool IsAnonymous();
-  void SetIsAnonymous(PRBool aValue);
+  void   SetIsAnonymous(PRBool aValue);
 
   void ResetSizingInfo();
 
@@ -157,8 +157,9 @@ public:
 protected:
 
   struct ColBits {
-    unsigned int mType:4;       
-    unsigned int mUnused:28;                         
+    unsigned mType:4;
+    unsigned mIsAnonymous:1;
+    unsigned mUnused:27;                         
   } mBits;
 
   nsTableColFrame();
@@ -169,10 +170,8 @@ protected:
 
   // Widths including MIN_CON, DES_CON, FIX_CON, MIN_ADJ, DES_ADJ, FIX_ADJ, PCT, PCT_ADJ, MIN_PRO
   nscoord           mWidths[NUM_WIDTHS];
-  nscoord           mProportion; // proportion for porportional width col
   nsColConstraint   mConstraint;
   nsTableCellFrame* mConstrainingCell;
-  PRPackedBool      mIsAnonymous;
 };
 
 inline PRInt32 nsTableColFrame::GetColIndex() const
@@ -188,10 +187,10 @@ inline void nsTableColFrame::SetConstraint(nsColConstraint aConstraint)
 {  mConstraint = aConstraint;}
 
 inline PRBool nsTableColFrame::IsAnonymous()
-{ return mIsAnonymous; }
+{   return (PRBool)mBits.mIsAnonymous; }
 
 inline void nsTableColFrame::SetIsAnonymous(PRBool aIsAnonymous)
-{ mIsAnonymous = aIsAnonymous; }
+{   mBits.mIsAnonymous = (unsigned)aIsAnonymous; }
 
 inline void nsTableColFrame::SetConstrainingCell(nsTableCellFrame* aCellFrame) 
 { mConstrainingCell = aCellFrame; }

@@ -21,7 +21,7 @@
  */
 #ifndef nsTableBorderCollapser_h__
 #define nsTableBorderCollapser_h__
-
+#if 0
 #include "nsIStyleContext.h"
 class nsTableFrame;
 
@@ -153,6 +153,7 @@ inline nsBorderEdges* nsTableBorderCollapser::GetEdges()
   return &mBorderEdges;
 }
 
+#endif
 #endif
 
 

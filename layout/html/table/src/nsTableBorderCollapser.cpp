@@ -19,7 +19,7 @@
  *
  * Contributor(s): 
  */
-
+#if 0
 #include "nsIPresContext.h"
 #include "nsTableBorderCollapser.h"
 #include "nsTableFrame.h"
@@ -191,8 +191,7 @@ void nsTableBorderCollapser::ComputeLeftBorderForEdgeAt(nsIPresContext* aPresCon
   mTableFrame.GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
   styles.AppendElement((void*)borderStyleData);
   //    2. colgroup
-  nsTableColFrame* colFrame;
-  mTableFrame.GetColumnFrame(aColIndex, colFrame);
+  nsTableColFrame* colFrame = mTableFrame.GetColFrame(aColIndex);
   nsIFrame* colGroupFrame;
   colFrame->GetParent(&colGroupFrame);
   colGroupFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
@@ -869,3 +868,4 @@ void nsTableBorderCollapser::GetMaxBorder(PRInt32  aStartRowIndex,
     }
   }
 }
+#endif

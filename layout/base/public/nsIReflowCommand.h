@@ -94,6 +94,9 @@ public:
     // Reflow dirty stuff (really a per-frame extension)
     ReflowDirty,
 
+    // The pres shell ran out of time but will guaranteed the reflow command gets processed.
+    Timeout,
+
     // Trap door for extensions.
     UserDefined
   };

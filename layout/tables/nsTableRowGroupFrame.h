@@ -33,44 +33,30 @@ class nsTableRowFrame;
 class nsReflowTimer;
 #endif
 
-/* ----------- RowGroupReflowState ---------- */
-
-struct RowGroupReflowState {
-  nsIPresContext* mPresContext;  // Our pres context
+struct nsRowGroupReflowState {
   const nsHTMLReflowState& reflowState;  // Our reflow state
+
+  nsTableFrame* tableFrame;
+
+  nsReflowReason reason;
 
   // The available size (computed from the parent)
   nsSize availSize;
 
-  // Flags for whether the max size is unconstrained
-  PRBool  unconstrainedWidth;
-  PRBool  unconstrainedHeight;
-
   // Running y-offset
   nscoord y;
 
-  // Flag used to set maxElementSize to my first row
-  PRBool  firstRow;
-
-  nsTableFrame *tableFrame;
-
-  RowGroupReflowState(nsIPresContext*          aPresContext,
-                      const nsHTMLReflowState& aReflowState,
-                      nsTableFrame *           aTableFrame)
-    : mPresContext(aPresContext),
-      reflowState(aReflowState)
+  nsRowGroupReflowState(const nsHTMLReflowState& aReflowState,
+                        nsTableFrame*            aTableFrame)
+      :reflowState(aReflowState), tableFrame(aTableFrame)
   {
-    availSize.width = reflowState.availableWidth;
+    availSize.width  = reflowState.availableWidth;
     availSize.height = reflowState.availableHeight;
-    y=0;  // border/padding???
-    unconstrainedWidth = PRBool(reflowState.availableWidth == NS_UNCONSTRAINEDSIZE);
-    unconstrainedHeight = PRBool(reflowState.availableHeight == NS_UNCONSTRAINEDSIZE);
-    firstRow = PR_TRUE;
-    tableFrame = aTableFrame;
+    reason = reflowState.reason;
+    y = 0;  
   }
 
-  ~RowGroupReflowState() {
-  }
+  ~nsRowGroupReflowState() {}
 };
 
 #define NS_ITABLEROWGROUPFRAME_IID    \
@@ -131,10 +117,10 @@ public:
                          nsIFrame*       aOldFrame);
 
   /** @see nsIFrame::Paint */
-  NS_IMETHOD Paint(nsIPresContext* aPresContext,
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer);
 
   /** ask all children to paint themselves, without clipping (for cells with rowspan>1)
     * @see nsIFrame::Paint 
@@ -160,10 +146,10 @@ public:
     *
     * @see nsIFrame::Reflow
     */
-  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus& aStatus);
+                    nsReflowStatus&          aStatus);
 
   /**
    * Get the "type" of the frame
@@ -177,8 +163,8 @@ public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
-  /** set aCount to the number of child rows (not necessarily == number of child frames) */
-  NS_METHOD GetRowCount(PRInt32 &aCount, PRBool aDeepCount = PR_TRUE);
+  /** return the number of child rows (not necessarily == number of child frames) */
+  PRInt32 GetRowCount();
 
   /** return the table-relative row index of the first row in this rowgroup.
     * if there are no rows, -1 is returned.
@@ -201,14 +187,8 @@ public:
   /**
    * Get the total height of all the row rects
    */
-  NS_METHOD GetHeightOfRows(nsIPresContext* aPresContext, nscoord& aResult);
+  nscoord GetHeightOfRows(nsIPresContext* aPresContext);
   
-  virtual PRBool RowGroupReceivesExcessSpace() { return PR_TRUE; }
-
-  virtual PRBool ContinueReflow(nsIFrame* aFrame, nsIPresContext* aPresContext, nscoord y, nscoord height) { return PR_TRUE; }
-
-  void GetMaxElementSize(nsSize& aMaxElementSize) const;
-
 // nsILineIterator methods
 public:
   NS_IMETHOD GetNumLines(PRInt32* aResult);
@@ -247,17 +227,13 @@ protected:
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
 
-  void PlaceChild(nsIPresContext*      aPresContext,
-                  RowGroupReflowState& aReflowState,
-                  nsIFrame*            aKidFrame,
-                  nsHTMLReflowMetrics& aDesiredSize,
-                  nscoord              aX,
-                  nscoord              aY,
-                  nsSize*              aMaxElementSize,
-                  nsSize&              aKidMaxElementSize);
+  void PlaceChild(nsIPresContext*        aPresContext,
+                  nsRowGroupReflowState& aReflowState,
+                  nsIFrame*              aKidFrame,
+                  nsHTMLReflowMetrics&   aDesiredSize);
 
-  void CalculateRowHeights(nsIPresContext* aPresContext, 
-                           nsHTMLReflowMetrics& aDesiredSize,
+  void CalculateRowHeights(nsIPresContext*          aPresContext, 
+                           nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState);
 
 
@@ -268,36 +244,34 @@ protected:
     *
     * @see Reflow
     */
-  NS_IMETHOD IncrementalReflow(nsIPresContext*      aPresContext,
-                               nsHTMLReflowMetrics& aDesiredSize,
-                               RowGroupReflowState& aReflowState,
-                               nsReflowStatus&      aStatus);
+  NS_IMETHOD IncrementalReflow(nsIPresContext*        aPresContext,
+                               nsHTMLReflowMetrics&   aDesiredSize,
+                               nsRowGroupReflowState& aReflowState,
+                               nsReflowStatus&        aStatus);
 
-  NS_IMETHOD IR_TargetIsChild(nsIPresContext*      aPresContext,
-                              nsHTMLReflowMetrics& aDesiredSize,
-                              RowGroupReflowState& aReflowState,
-                              nsReflowStatus&      aStatus,
-                              nsIFrame *           aNextFrame);
+  NS_IMETHOD IR_TargetIsChild(nsIPresContext*        aPresContext,
+                              nsHTMLReflowMetrics&   aDesiredSize,
+                              nsRowGroupReflowState& aReflowState,
+                              nsReflowStatus&        aStatus,
+                              nsIFrame*              aNextFrame);
 
-  NS_IMETHOD IR_TargetIsMe(nsIPresContext*      aPresContext,
-                           nsHTMLReflowMetrics& aDesiredSize,
-                           RowGroupReflowState& aReflowState,
-                           nsReflowStatus&      aStatus);
+  NS_IMETHOD IR_TargetIsMe(nsIPresContext*        aPresContext,
+                           nsHTMLReflowMetrics&   aDesiredSize,
+                           nsRowGroupReflowState& aReflowState,
+                           nsReflowStatus&        aStatus);
 
-  NS_IMETHOD IR_StyleChanged(nsIPresContext*      aPresContext,
-                             nsHTMLReflowMetrics& aDesiredSize,
-                             RowGroupReflowState& aReflowState,
-                             nsReflowStatus&      aStatus);
+  NS_IMETHOD IR_StyleChanged(nsIPresContext*        aPresContext,
+                             nsHTMLReflowMetrics&   aDesiredSize,
+                             nsRowGroupReflowState& aReflowState,
+                             nsReflowStatus&        aStatus);
 
-  nsresult AdjustSiblingsAfterReflow(nsIPresContext*      aPresContext,
-                                     RowGroupReflowState& aReflowState,
-                                     nsIFrame*            aKidFrame,
-                                     nsSize*              aMaxElementSize,
-                                     nscoord              aDeltaY);
+  nsresult AdjustSiblingsAfterReflow(nsIPresContext*        aPresContext,
+                                     nsRowGroupReflowState& aReflowState,
+                                     nsIFrame*              aKidFrame,
+                                     nscoord                aDeltaY);
   
-  nsresult RecoverState(RowGroupReflowState& aReflowState,
-                        nsIFrame*            aKidFrame,
-                        nsSize*              aMaxElementSize);
+  nsresult RecoverState(nsRowGroupReflowState& aReflowState,
+                        nsIFrame*              aKidFrame);
 
   /**
    * Reflow the frames we've already created
@@ -307,14 +281,12 @@ protected:
    * @return  true if we successfully reflowed all the mapped children and false
    *            otherwise, e.g. we pushed children to the next in flow
    */
-  NS_METHOD     ReflowMappedChildren(nsIPresContext*      aPresContext,
-                                     nsHTMLReflowMetrics& aDesiredSize,
-                                     RowGroupReflowState& aReflowState,
-                                     nsReflowStatus&      aStatus,
-                                     nsTableRowFrame *    aStartFrame,
-                                     nsReflowReason       aReason,
-                                     PRBool               aDoSiblings,
-                                     PRBool               aDirtyOnly = PR_FALSE);
+  NS_METHOD ReflowChildren(nsIPresContext*        aPresContext,
+                           nsHTMLReflowMetrics&   aDesiredSize,
+                           nsRowGroupReflowState& aReflowState,
+                           nsReflowStatus&        aStatus,
+                           nsTableRowFrame*       aStartFrame,
+                           PRBool                 aDirtyOnly = PR_FALSE);
 
   /**
    * Pull-up all the row frames from our next-in-flow
@@ -327,39 +299,18 @@ protected:
                          nsTableFrame*            aTableFrame,
                          nsReflowStatus&          aStatus);
 
-  NS_IMETHOD     ReflowBeforeRowLayout(nsIPresContext*      aPresContext,
-                                      nsHTMLReflowMetrics& aDesiredSize,
-                                      RowGroupReflowState& aReflowState,
-                                      nsReflowStatus&      aStatus,
-                                      nsReflowReason       aReason) { return NS_OK; };
+  PRBool IsSimpleRowFrame(nsTableFrame* aTableFrame, 
+                          nsIFrame*     aFrame);
 
-  NS_IMETHOD     ReflowAfterRowLayout(nsIPresContext*      aPresContext,
-                                      nsHTMLReflowMetrics& aDesiredSize,
-                                      RowGroupReflowState& aReflowState,
-                                      nsReflowStatus&      aStatus,
-                                      nsReflowReason       aReason) { return NS_OK; };
-
-  nsresult AddTableDirtyReflowCommand(nsIPresContext* aPresContext,
-                                      nsIPresShell&   aPresShell,
-                                      nsIFrame*       aTableFrame);
-
-  PRBool IsSimpleRowFrame(nsTableFrame* aTableFrame, nsIFrame* aFrame);
-
-  virtual nsIFrame* GetFirstFrameForReflow(nsIPresContext* aPresContext) { return mFrames.FirstChild(); };
-  virtual void GetNextFrameForReflow(nsIPresContext* aPresContext, nsIFrame* aFrame, nsIFrame** aResult) { aFrame->GetNextSibling(aResult); };
   void GetNextRowSibling(nsIFrame** aRowFrame);
 
 public:
   virtual nsIFrame* GetFirstFrame() { return mFrames.FirstChild(); };
   virtual nsIFrame* GetLastFrame() { return mFrames.LastChild(); };
-  virtual void GetNextFrame(nsIFrame* aFrame, nsIFrame** aResult) { aFrame->GetNextSibling(aResult); };
-  virtual PRBool RowsDesireExcessSpace() { return PR_TRUE; };
-  virtual PRBool RowGroupDesiresExcessSpace() { return PR_TRUE; };
+  virtual void GetNextFrame(nsIFrame*  aFrame, 
+                            nsIFrame** aResult) { aFrame->GetNextSibling(aResult); };
   PRBool  IsRepeatable();
   void    SetRepeatable(PRBool aRepeatable);
-
-private:
-  nsSize   mMaxElementSize;
 
 #ifdef DEBUG_TABLE_REFLOW_TIMING
 public:
@@ -367,10 +318,6 @@ public:
 #endif
 };
 
-inline void nsTableRowGroupFrame::GetMaxElementSize(nsSize& aMaxElementSize) const
-{
-  aMaxElementSize = mMaxElementSize;
-}
 
 inline PRBool nsTableRowGroupFrame::IsRepeatable()
 {

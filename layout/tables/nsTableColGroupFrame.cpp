@@ -103,9 +103,7 @@ nsTableColGroupFrame::AddColsToTable(nsIPresContext&  aPresContext,
   nsresult rv = NS_OK;
   nsTableFrame* tableFrame = nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if (!(NS_SUCCEEDED(rv)  && tableFrame && aFirstFrame)) {
-    return rv;
-  }
+  if (!tableFrame || !aFirstFrame) return NS_ERROR_NULL_POINTER;
 
   // set the col indices of the col frames and and add col info to the table
   PRInt32 colIndex = aFirstColIndex;
@@ -229,6 +227,8 @@ nsTableColGroupFrame::SetInitialChildList(nsIPresContext* aPresContext,
 {
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
+  if (!tableFrame) return NS_ERROR_NULL_POINTER;
+
   if (!aChildList) {
     nsIFrame* firstChild;
     tableFrame->CreateAnonymousColFrames(*aPresContext, *this, GetSpan(), eColAnonymousColGroup, 
@@ -264,36 +264,6 @@ nsTableColGroupFrame::SetInitialChildList(nsIPresContext* aPresContext,
 
   mFrames.AppendFrames(this, aChildList);
   return NS_OK;
-}
-
-// Helper function. It marks the table frame as dirty and generates
-// a reflow command
-nsresult
-nsTableColGroupFrame::AddTableDirtyReflowCommand(nsIPresContext* aPresContext,
-                                                 nsIPresShell&   aPresShell,
-                                                 nsIFrame*       aTableFrame)
-{
-  nsFrameState      frameState;
-  nsIFrame*         tableParentFrame;
-  nsIReflowCommand* reflowCmd;
-  nsresult          rv;
-
-  // Mark the table frame as dirty
-  aTableFrame->GetFrameState(&frameState);
-  frameState |= NS_FRAME_IS_DIRTY;
-  aTableFrame->SetFrameState(frameState);
-
-  // Target the reflow comamnd at its parent frame
-  aTableFrame->GetParent(&tableParentFrame);
-  rv = NS_NewHTMLReflowCommand(&reflowCmd, tableParentFrame,
-                               nsIReflowCommand::ReflowDirty);
-  if (NS_SUCCEEDED(rv)) {
-    // Add the reflow command
-    rv = aPresShell.AppendReflowCommand(reflowCmd);
-    NS_RELEASE(reflowCmd);
-  }
-
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -338,10 +308,13 @@ nsTableColGroupFrame::InsertColsReflow(nsIPresContext& aPresContext,
 
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
-  tableFrame->InvalidateColumnWidths();
+  if (!tableFrame) return;
+
+  // XXX this could be optimized with much effort
+  tableFrame->SetNeedStrategyInit(PR_TRUE);
 
   // Generate a reflow command so we reflow the table
-  AddTableDirtyReflowCommand(&aPresContext, aPresShell, tableFrame);
+  nsTableFrame::AppendDirtyReflowCommand(&aPresShell, tableFrame);
 }
 
 void
@@ -361,6 +334,14 @@ nsTableColGroupFrame::RemoveChild(nsIPresContext&  aPresContext,
       ResetColIndices(&aPresContext, this, colIndex, nextChild);
     }
   }
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+  if (!tableFrame) return;
+
+  // XXX this could be optimized with much effort
+  tableFrame->SetNeedStrategyInit(PR_TRUE);
+  // Generate a reflow command so we reflow the table
+  nsTableFrame::AppendDirtyReflowCommand(nsTableFrame::GetPresShellNoAddref(&aPresContext), tableFrame);
 }
 
 // this removes children form the last col group (eColGroupAnonymousCell) in the 
@@ -413,13 +394,14 @@ nsTableColGroupFrame::RemoveFrame(nsIPresContext* aPresContext,
     
     nsTableFrame* tableFrame;
     nsTableFrame::GetTableFrame(this, tableFrame);
-    if (tableFrame) {
-      tableFrame->RemoveCol(*aPresContext, this, colIndex, PR_TRUE, PR_TRUE);
-    }
+    if (!tableFrame) return NS_ERROR_NULL_POINTER;
 
-    tableFrame->InvalidateColumnWidths();
+    tableFrame->RemoveCol(*aPresContext, this, colIndex, PR_TRUE, PR_TRUE);
+
+    // XXX This could probably be optimized with much effort
+    tableFrame->SetNeedStrategyInit(PR_TRUE);
     // Generate a reflow command so we reflow the table
-    AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
+    nsTableFrame::AppendDirtyReflowCommand(&aPresShell, tableFrame);
   }
   else {
     mFrames.DestroyFrame(aPresContext, aOldFrame);
@@ -593,9 +575,8 @@ NS_METHOD nsTableColGroupFrame::IR_StyleChanged(nsIPresContext*          aPresCo
   // XXX: we can optimize this when we know which style attribute changed
   nsTableFrame* tableFrame = nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if ((NS_SUCCEEDED(rv)) && tableFrame)  {
-    tableFrame->InvalidateColumnWidths();
-    tableFrame->InvalidateFirstPassCache();
+  if (tableFrame)  {
+    tableFrame->SetNeedStrategyInit(PR_TRUE);
   }
   return rv;
 }
@@ -620,11 +601,12 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsIPresContext*          aPresC
 
   nsTableFrame *tableFrame=nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame)) {
+  if (tableFrame) {
     // compare the new col count to the old col count.  
     // If they are the same, we just need to rebalance column widths
     // If they differ, we need to fix up other column groups and the column cache
-    tableFrame->InvalidateColumnWidths();
+    // XXX for now assume the worse
+    tableFrame->SetNeedStrategyInit(PR_TRUE);
   }
   return rv;
 }

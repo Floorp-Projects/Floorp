@@ -40,11 +40,10 @@
 
 
 nsTableColFrame::nsTableColFrame()
-  : nsFrame(), 
-    mProportion(WIDTH_NOT_SET),
-    mIsAnonymous(PR_FALSE) 
+  : nsFrame()
 {
   // note that all fields are initialized to 0 by nsFrame::operator new
+  mBits.mIsAnonymous = PR_FALSE;
   ResetSizingInfo();
   SetType(eColContent);
 }
@@ -98,7 +97,6 @@ nsStyleCoord nsTableColFrame::GetStyleWidth() const
 void nsTableColFrame::ResetSizingInfo()
 {
   nsCRT::memset(mWidths, WIDTH_NOT_SET, NUM_WIDTHS * sizeof(PRInt32));
-  mProportion = 0;
   mConstraint = eNoConstraint;
   mConstrainingCell = nsnull;
 }
@@ -226,7 +224,7 @@ void nsTableColFrame::Dump(PRInt32 aIndent)
   indent[aIndent] = 0;
 
   printf("%s**START COL DUMP** colIndex=%d isAnonymous=%d constraint=%d",
-    indent, mColIndex, mIsAnonymous, mConstraint);
+    indent, mColIndex, mBits.mIsAnonymous, mConstraint);
   printf("\n%s widths=", indent);
   for (PRInt32 widthX = 0; widthX < NUM_WIDTHS; widthX++) {
     printf("%d ", mWidths[widthX]);

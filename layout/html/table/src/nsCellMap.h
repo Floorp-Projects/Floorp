@@ -226,9 +226,6 @@ public:
   PRBool RowHasSpanningCells(nsTableCellMap& aMap,
                              PRInt32         aRowIndex);
 
-  PRBool ColIsSpannedInto(nsTableCellMap& aMap,
-                          PRInt32         aColIndex);
-
   PRBool ColHasSpanningCells(nsTableCellMap& aMap,
                              PRInt32         aColIndex);
 

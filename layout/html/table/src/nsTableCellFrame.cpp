@@ -56,7 +56,6 @@ nsTableCellFrame::nsTableCellFrame()
 {
   mColIndex        = 0;
   mPriorAvailWidth = 0;
-  mBorderEdges     = nsnull;
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   mTimer = new nsReflowTimer(this);
   mBlockTimer = new nsReflowTimer(this);
@@ -65,7 +64,6 @@ nsTableCellFrame::nsTableCellFrame()
 
 nsTableCellFrame::~nsTableCellFrame()
 {
-  delete mBorderEdges;
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflowDone(this);
 #endif
@@ -169,29 +167,8 @@ void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
 {
   nsTableFrame* tableFrame=nsnull;  // I should be checking my own style context, but border-collapse isn't inheriting correctly
   nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame)) {
+  if ((NS_SUCCEEDED(rv)) && tableFrame) {
     SetColIndex(aColIndex);
-    if (NS_STYLE_BORDER_COLLAPSE == tableFrame->GetBorderCollapseStyle()) {
-      if (mBorderEdges) delete mBorderEdges; // this could be non null during a reinitialization
-      mBorderEdges = new nsBorderEdges;
-      mBorderEdges->mOutsideEdge=PR_FALSE;
-      
-      PRInt32 rowspan = tableFrame->GetEffectiveRowSpan(*this);
-      PRInt32 i;
-      for (i=0; i<rowspan; i++) {
-        nsBorderEdge *borderToAdd = new nsBorderEdge();
-        mBorderEdges->mEdges[NS_SIDE_LEFT].AppendElement(borderToAdd);
-        borderToAdd = new nsBorderEdge();
-        mBorderEdges->mEdges[NS_SIDE_RIGHT].AppendElement(borderToAdd);
-      }
-      PRInt32 colspan = tableFrame->GetEffectiveColSpan(*this);
-      for (i=0; i<colspan; i++) {
-        nsBorderEdge *borderToAdd = new nsBorderEdge();
-        mBorderEdges->mEdges[NS_SIDE_TOP].AppendElement(borderToAdd);
-        borderToAdd = new nsBorderEdge();
-        mBorderEdges->mEdges[NS_SIDE_BOTTOM].AppendElement(borderToAdd);
-      }
-    }
   }
 }
 
@@ -220,28 +197,6 @@ nsresult nsTableCellFrame::SetColIndex(PRInt32 aColIndex)
   return rv;
 }
 
-      
-void nsTableCellFrame::SetBorderEdgeLength(PRUint8 aSide, 
-                                           PRInt32 aIndex, 
-                                           nscoord aLength)
-{
-  NS_PRECONDITION(mBorderEdges, "haven't allocated border edges struct");
-  if ((NS_SIDE_LEFT==aSide) || (NS_SIDE_RIGHT==aSide))
-  {
-    PRInt32 baseRowIndex;
-    GetRowIndex(baseRowIndex);
-    PRInt32 rowIndex = aIndex-baseRowIndex;
-    nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges->mEdges[aSide].ElementAt(rowIndex));
-    if (border) {
-      border->mLength = aLength;
-    }
-  }
-  else {
-    NS_ASSERTION(PR_FALSE, "bad arg aSide passed to SetBorderEdgeLength");
-  }
-}
-
-
 NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
                                   nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect,
@@ -258,38 +213,30 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
     if (disp->IsVisibleOrCollapsed()) {
       const nsStyleColor* myColor =
         (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-
-
       //TABLECELL SELECTION
       PRInt16 displaySelection;
       displaySelection = DisplaySelection(aPresContext);
-      if (displaySelection)
-      {
+      if (displaySelection) {
         nsFrameState  frameState;
         PRBool        isSelected;
         GetFrameState(&frameState);
         isSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
-        if (isSelected)
-        {
+        if (isSelected) {
           nsCOMPtr<nsIPresShell> shell;
           nsresult result = aPresContext->GetShell(getter_AddRefs(shell));
           if (NS_FAILED(result))
             return result;
           nsCOMPtr<nsIFrameSelection> frameSelection;
           result = shell->GetFrameSelection(getter_AddRefs(frameSelection));
-          if (NS_SUCCEEDED(result))
-          {
+          if (NS_SUCCEEDED(result)) {
             PRBool tableCellSelectionMode;
             result = frameSelection->GetTableCellSelection(&tableCellSelectionMode);
-            if (NS_SUCCEEDED(result) && tableCellSelectionMode)
-            {
+            if (NS_SUCCEEDED(result) && tableCellSelectionMode) {
               frameSelection->GetTableCellSelectionStyleColor(&myColor); 
-              if(displaySelection==nsISelectionController::SELECTION_DISABLED)
-              {
+              if(displaySelection==nsISelectionController::SELECTION_DISABLED) {
                 ((nsStyleColor *)myColor)->mBackgroundColor = NS_RGB(176,176,176);// disabled color
               }
-              else
-              {
+              else {
   	            nsILookAndFeel* look = nsnull;
 	              if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
 	                look->GetColor(nsILookAndFeel::eColor_TextSelectBackground, ((nsStyleColor *)myColor)->mBackgroundColor);//VERY BAD CAST..TEMPORARY
@@ -319,29 +266,20 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
     
       // empty cells do not render their border
       PRBool renderBorder = PR_TRUE;
-      if (PR_TRUE==GetContentEmpty())
-      {
-        if (NS_STYLE_TABLE_EMPTY_CELLS_HIDE==cellTableStyle->mEmptyCells)
+      if (GetContentEmpty()) {
+        if (NS_STYLE_TABLE_EMPTY_CELLS_HIDE == cellTableStyle->mEmptyCells)
           renderBorder=PR_FALSE;
       }
-      if (PR_TRUE==renderBorder)
-      {
+      if (renderBorder) {
         PRIntn skipSides = GetSkipSides();
-        nsTableFrame* tableFrame=nsnull;  // I should be checking my own style context, but border-collapse isn't inheriting correctly
+        nsTableFrame* tableFrame = nsnull;  // I should be checking my own style context, but border-collapse isn't inheriting correctly
         nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
-        if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
-        {
+        if ((NS_SUCCEEDED(rv)) && tableFrame) {
           const nsStyleTable* tableStyle;
           tableFrame->GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)tableStyle)); 
-          if (NS_STYLE_BORDER_SEPARATE == tableFrame->GetBorderCollapseStyle())
-          {
+          if (NS_STYLE_BORDER_SEPARATE == tableFrame->GetBorderCollapseStyle()) {
             nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                         aDirtyRect, rect, *myBorder, mStyleContext, skipSides);
-          }
-          else
-          {
-            nsCSSRendering::PaintBorderEdges(aPresContext, aRenderingContext, this,
-                                             aDirtyRect, rect, mBorderEdges, mStyleContext, skipSides);
           }
         }
       }
@@ -401,10 +339,10 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
-                                   const nsPoint& aPoint, 
+nsTableCellFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
+                                   const nsPoint&    aPoint, 
                                    nsFramePaintLayer aWhichLayer,
-                                   nsIFrame**     aFrame)
+                                   nsIFrame**        aFrame)
 {
   // this should act like a block, so we need to override
   return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
@@ -413,9 +351,9 @@ nsTableCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 //null range means the whole thing
 NS_IMETHODIMP
 nsTableCellFrame::SetSelected(nsIPresContext* aPresContext,
-                              nsIDOMRange *aRange,
-                              PRBool aSelected,
-                              nsSpread aSpread)
+                              nsIDOMRange*    aRange,
+                              PRBool          aSelected,
+                              nsSpread        aSpread)
 {
   //traverse through children unselect tables
 #if 0
@@ -441,12 +379,10 @@ nsTableCellFrame::SetSelected(nsIPresContext* aPresContext,
     return result;
   nsCOMPtr<nsIFrameSelection> frameSelection;
   result = shell->GetFrameSelection(getter_AddRefs(frameSelection));
-  if (NS_SUCCEEDED(result) && frameSelection)
-  {
+  if (NS_SUCCEEDED(result) && frameSelection) {
     PRBool tableCellSelectionMode;
     result = frameSelection->GetTableCellSelection(&tableCellSelectionMode);
-    if (NS_SUCCEEDED(result) && tableCellSelectionMode)
-    {
+    if (NS_SUCCEEDED(result) && tableCellSelectionMode) {
       nsRect frameRect;
       GetRect(frameRect);
       nsRect rect(0, 0, frameRect.width, frameRect.height);
@@ -479,71 +415,8 @@ PRBool nsTableCellFrame::ParentDisablesSelection() const //override default beha
   return nsFrame::ParentDisablesSelection();
 }
 
-void nsTableCellFrame::SetBorderEdge(PRUint8       aSide, 
-                                     PRInt32       aRowIndex, 
-                                     PRInt32       aColIndex, 
-                                     nsBorderEdge *aBorder,
-                                     nscoord       aOddAmountToAdd)
-{
-  NS_PRECONDITION(mBorderEdges, "haven't allocated border edges struct");
-  nsBorderEdge *border = nsnull;
-  switch (aSide)
-  {
-    case NS_SIDE_TOP:
-    {
-      PRInt32 baseColIndex;
-      GetColIndex(baseColIndex);
-      PRInt32 colIndex = aColIndex-baseColIndex;
-      border = (nsBorderEdge *)(mBorderEdges->mEdges[aSide].ElementAt(colIndex));
-      mBorderEdges->mMaxBorderWidth.top = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges->mMaxBorderWidth.top);
-      break;
-    }
 
-    case NS_SIDE_BOTTOM:
-    {
-      PRInt32 baseColIndex;
-      GetColIndex(baseColIndex);
-      PRInt32 colIndex = aColIndex-baseColIndex;
-      border = (nsBorderEdge *)(mBorderEdges->mEdges[aSide].ElementAt(colIndex));
-      mBorderEdges->mMaxBorderWidth.bottom = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges->mMaxBorderWidth.bottom);
-      break;
-    }
-  
-    case NS_SIDE_LEFT:
-    {
-      PRInt32 baseRowIndex;
-      GetRowIndex(baseRowIndex);
-      PRInt32 rowIndex = aRowIndex-baseRowIndex;
-      border = (nsBorderEdge *)(mBorderEdges->mEdges[aSide].ElementAt(rowIndex));
-      mBorderEdges->mMaxBorderWidth.left = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges->mMaxBorderWidth.left);
-      break;
-    }
-      
-    case NS_SIDE_RIGHT:  
-    {
-      PRInt32 baseRowIndex;
-      GetRowIndex(baseRowIndex);
-      PRInt32 rowIndex = aRowIndex-baseRowIndex;
-      border = (nsBorderEdge *)(mBorderEdges->mEdges[aSide].ElementAt(rowIndex));
-      mBorderEdges->mMaxBorderWidth.right = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges->mMaxBorderWidth.right);
-      break;
-    }
-  }
-  if (nsnull!=border) {
-    *border=*aBorder;
-    border->mWidth += aOddAmountToAdd;
-  }
-  else {
-    //XXX determine why this was asserting (after beta)
-    //NS_ASSERTION(PR_FALSE, "bad border edge state");
-  }
-}
-
-/**
-  *
-  * Align the cell's child frame within the cell
-  *
-  */
+// Align the cell's child frame within the cell
 void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContext,
                                             const nsHTMLReflowState& aReflowState,
                                             nscoord                  aMaxAscent)
@@ -644,8 +517,7 @@ PRInt32 nsTableCellFrame::GetRowSpan()
   PRInt32 rowSpan=1;
   nsIHTMLContent *hc=nsnull;
   nsresult rv = mContent->QueryInterface(kIHTMLContentIID, (void**) &hc);
-  if (NS_OK==rv)
-  {
+  if (NS_OK==rv) {
     nsHTMLValue val;
     hc->GetHTMLAttribute(nsHTMLAtoms::rowspan, val); 
     if (eHTMLUnit_Integer == val.GetUnit()) { 
@@ -661,8 +533,7 @@ PRInt32 nsTableCellFrame::GetColSpan()
   PRInt32 colSpan=1;
   nsIHTMLContent *hc=nsnull;
   nsresult rv = mContent->QueryInterface(kIHTMLContentIID, (void**) &hc);
-  if (NS_OK==rv)
-  {
+  if (NS_OK==rv) {
     nsHTMLValue val;
     hc->GetHTMLAttribute(nsHTMLAtoms::colspan, val); 
     if (eHTMLUnit_Integer == val.GetUnit()) { 
@@ -719,7 +590,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
   nsSize maxElementSize;
-  nsSize *pMaxElementSize = aDesiredSize.maxElementSize;
+  nsSize* pMaxElementSize = aDesiredSize.maxElementSize;
   if (NS_UNCONSTRAINEDSIZE==aReflowState.availableWidth)
     pMaxElementSize = &maxElementSize;
 
@@ -745,8 +616,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     availSize.height -= topInset+bottomInset;
 
   PRBool  isStyleChanged = PR_FALSE;
-  if (eReflowReason_Incremental == aReflowState.reason) 
-  {
+  if (eReflowReason_Incremental == aReflowState.reason) {
     // We *must* do this otherwise incremental reflow that's
     // passing through will not work right.
     nsIFrame* next;
@@ -757,14 +627,11 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     // first determine if this frame is the target or not
     nsIFrame *target=nsnull;
     rv = aReflowState.reflowCommand->GetTarget(target);
-    if ((PR_TRUE==NS_SUCCEEDED(rv)) && (nsnull!=target))
-    {
-      if (this==target)
-      {
+    if ((PR_TRUE==NS_SUCCEEDED(rv)) && target) {
+      if (this == target) {
         nsIReflowCommand::ReflowType type;
         aReflowState.reflowCommand->GetType(type);
-        if (nsIReflowCommand::StyleChanged==type)
-        {
+        if (nsIReflowCommand::StyleChanged == type) {
           isStyleChanged = PR_TRUE;
         }
         else {
@@ -926,15 +793,20 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.descent += kidSize.descent;
 
   if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
-    aDesiredSize.mMaximumWidth = kidSize.mMaximumWidth + leftInset + rightInset;
+    aDesiredSize.mMaximumWidth = kidSize.mMaximumWidth;
+    if (NS_UNCONSTRAINEDSIZE != aDesiredSize.mMaximumWidth) {
+      aDesiredSize.mMaximumWidth += leftInset + rightInset;
+    }
   }
-  if (nsnull!=aDesiredSize.maxElementSize) {
+  if (aDesiredSize.maxElementSize) {
     *aDesiredSize.maxElementSize = *pMaxElementSize;
-    if (0!=pMaxElementSize->height) {
+    if (0 != pMaxElementSize->height) {
       aDesiredSize.maxElementSize->height += topInset + bottomInset;
     }
     aDesiredSize.maxElementSize->width = PR_MAX(smallestMinWidth, aDesiredSize.maxElementSize->width); 
-    aDesiredSize.maxElementSize->width += leftInset + rightInset;
+    if (NS_UNCONSTRAINEDSIZE != aDesiredSize.maxElementSize->width) {
+      aDesiredSize.maxElementSize->width += leftInset + rightInset;
+    }
   }
   // remember my desired size for this reflow
   SetDesiredSize(aDesiredSize);
@@ -997,8 +869,7 @@ PRBool nsTableCellFrame::ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefau
     aResult = aValue.GetPixelValue();
   else if (aValue.GetUnit() == eHTMLUnit_Empty)
     aResult = aDefault;
-  else
-  {
+  else {
     NS_ERROR("Unit must be pixel or empty");
     return PR_FALSE;
   }
@@ -1065,10 +936,9 @@ void nsTableCellFrame::MapVAlignAttribute(nsIPresContext* aPresContext, nsTableF
   }
 
   // check if valign is set on the cell's COL (or COLGROUP by inheritance)
-  nsTableColFrame* colFrame;
   PRInt32 colIndex;
   GetColIndex(colIndex);
-  aTableFrame->GetColumnFrame(colIndex, colFrame);
+  nsTableColFrame* colFrame = aTableFrame->GetColFrame(colIndex);
   if (colFrame) {
     const nsStyleText* colTextStyle;
     colFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)colTextStyle);
@@ -1111,10 +981,9 @@ void nsTableCellFrame::MapHAlignAttribute(nsIPresContext* aPresContext,
   }
 
   // check if halign is set on the cell's COL (or COLGROUP by inheritance)
-  nsTableColFrame* colFrame;
   PRInt32 colIndex;
   GetColIndex(colIndex);
-  aTableFrame->GetColumnFrame(colIndex, colFrame);
+  nsTableColFrame* colFrame = aTableFrame->GetColFrame(colIndex);
   if (colFrame) {
     const nsStyleText* colTextStyle;
     colFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)colTextStyle);
@@ -1251,37 +1120,6 @@ NS_NewTableCellFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 /* ----- methods from CellLayoutData ----- */
 
-/**
-  * Given an Edge, find the opposing edge (top<-->bottom, left<-->right)
-  *
-  **/
-PRUint8 nsTableCellFrame::GetOpposingEdge(PRUint8 aEdge)
-{
-   PRUint8 result;
-
-   switch (aEdge)
-    {
-   case NS_SIDE_LEFT:
-        result = NS_SIDE_RIGHT;
-        break;
-
-   case NS_SIDE_RIGHT:
-        result = NS_SIDE_LEFT;
-        break;
-
-   case NS_SIDE_TOP:
-        result = NS_SIDE_BOTTOM;
-        break;
-
-   case NS_SIDE_BOTTOM:
-        result = NS_SIDE_TOP;
-        break;
-
-      default:
-        result = NS_SIDE_TOP;
-     }
-  return result;
-}
 
 void 
 nsTableCellFrame::GetCellBorder(nsMargin&     aBorder, 
@@ -1292,13 +1130,13 @@ nsTableCellFrame::GetCellBorder(nsMargin&     aBorder,
     return;
   }
 
-  if (NS_STYLE_BORDER_COLLAPSE==aTableFrame->GetBorderCollapseStyle()) {
-    NS_PRECONDITION(mBorderEdges, "haven't allocated border edges struct");
-    aBorder = mBorderEdges->mMaxBorderWidth;
-  } else {
+  if (NS_STYLE_BORDER_SEPARATE == aTableFrame->GetBorderCollapseStyle()) {
     const nsStyleBorder* borderData;
     GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderData);
     borderData->GetBorder(aBorder);
+  } 
+  else {
+    NS_ASSERTION(PR_FALSE, "not implemented");
   }
 }
 

@@ -209,10 +209,6 @@ protected:
                               nsReflowStatus&          aStatus,
                               nsIFrame *               aNextFrame);
 
-  nsresult AddTableDirtyReflowCommand(nsIPresContext* aPresContext,
-                                      nsIPresShell&   aPresShell,
-                                      nsIFrame*       aTableFrame);
-
 // data members
 
   PRInt32 mColCount;

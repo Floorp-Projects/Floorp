@@ -42,7 +42,7 @@ class nsTableBorderCollapser;
 class nsITableLayoutStrategy;
 class nsHTMLValue;
 
-struct InnerTableReflowState;
+struct nsTableReflowState;
 struct nsStylePosition;
 
 #ifdef DEBUG_TABLE_REFLOW_TIMING
@@ -56,6 +56,7 @@ public:
     mFrame = aFrame;
     mNextSibling = nsnull;
     aFrame->GetFrameType(&mFrameType);
+    mReflowType = -1;
 		Reset();
 	}
 
@@ -125,6 +126,7 @@ public:
   nscoord         mDesiredHeight;        
   nsReflowStatus  mStatus;
   nsReflowTimer*  mNextSibling;
+  PRInt32         mReflowType;
 
 private:
   ~nsReflowTimer() {}
@@ -189,8 +191,14 @@ public:
 
   NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
 
-  static nsresult AddTableDirtyReflowCommand(nsIPresContext* aPresContext,
-                                             nsIFrame*       aTableFrame);
+  static nsresult AppendDirtyReflowCommand(nsIPresShell* aPresShell,
+                                           nsIFrame*     aFrame);
+  static nsIPresShell* GetPresShellNoAddref(nsIPresContext* aPresContext);
+
+  static void RePositionViews(nsIPresContext* aPresContext,
+                              nsIFrame*       aFrame);
+
+  nsPoint GetFirstSectionOrigin(const nsHTMLReflowState& aReflowState) const;
   /*
    * Notification that aAttribute has changed for content inside a table (cell, row, etc)
    */
@@ -216,20 +224,13 @@ public:
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
+  nsMargin GetBorderPadding(const nsHTMLReflowState& aReflowState) const;
+
   /** helper method to find the table parent of any table frame object */
   // TODO: today, this depends on display types.  This should be changed to rely
   // on stronger criteria, like an inner table frame atom
   static NS_METHOD GetTableFrame(nsIFrame*      aSourceFrame, 
                                  nsTableFrame*& aTableFrame);
-
-  // calculate the width of aFrame including its border and padding given 
-  // given its reflow state.
-  nscoord CalcBorderBoxWidth(const nsHTMLReflowState& aReflowState);
-
-  // calculate the height of aFrame including its border and padding given 
-  // its reflow state.
-  nscoord CalcBorderBoxHeight(nsIPresContext*          aPresContext,
-                              const nsHTMLReflowState& aReflowState);
 
   // Return the closest sibling of aPriorChildFrame (including aPriroChildFrame)
   // of type aChildType.
@@ -237,7 +238,7 @@ public:
                                       nsIFrame*       aParentFrame,
                                       nsIFrame*       aPriorChildFrame,
                                       nsIAtom*        aChildType);
-  PRBool IsAutoWidth();
+  PRBool IsAutoWidth(PRBool* aIsPctWidth = nsnull);
   
   /** @return PR_TRUE if aDisplayType represents a rowgroup of any sort
     * (header, footer, or body)
@@ -306,12 +307,6 @@ public:
                                            nsIFrame** aProviderFrame, 
                                            nsContextProviderRelationship& aRelationship);
 
-  /** return the column frame corresponding to the given column index
-    * there are two ways to do this, depending on whether we have cached
-    * column information yet.
-    */
-  NS_METHOD GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aColFrame);
-
   static nsMargin GetPadding(const nsHTMLReflowState& aReflowState,
                              const nsTableCellFrame*  aCellFrame);
 
@@ -319,9 +314,6 @@ public:
                              const nsTableCellFrame* aCellFrame);
 
   nsFrameList& GetColGroups();
-
-  /** return PR_TRUE if the column width information has been set */
-  PRBool IsColumnWidthsSet();
 
   /**
    * Get the "type" of the frame
@@ -335,21 +327,6 @@ public:
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
-
-  /** get the max border thickness for each edge */
-  void GetTableBorder(nsMargin &aBorder);
-
-  void SetBorderEdgeLength(PRUint8 aSide, 
-                           PRInt32 aIndex, 
-                           nscoord aLength);
-
-  /** get the border values for the row and column */
-  void GetTableBorderAt(PRInt32  aRowIndex, 
-                        PRInt32  aColIndex,
-                        nsMargin &aBorder);
-
-  /** get the max border thickness for each edge encompassed by the row group */
-  void GetTableBorderForRowGroup(nsTableRowGroupFrame * aRowGroupFrame, nsMargin &aBorder);
 
   /** return the width of the column at aColIndex    */
   virtual PRInt32 GetColumnWidth(PRInt32 aColIndex);
@@ -459,10 +436,10 @@ public:
                      PRInt32               aRowIndex,
                      PRBool                aConsiderSpans);
 
-  virtual void RemoveRows(nsIPresContext& aPresContext,
-                          PRInt32         aFirstRowFrame,
-                          PRInt32         aNumRowsToRemove,
-                          PRBool          aConsiderSpans);
+  virtual void RemoveRows(nsIPresContext&  aPresContext,
+                          nsTableRowFrame& aFirstRowFrame,
+                          PRInt32          aNumRowsToRemove,
+                          PRBool           aConsiderSpans);
 
   void AppendRowGroups(nsIPresContext& aPresContext,
                        nsIFrame*       aFirstRowGroupFrame);
@@ -482,14 +459,15 @@ public:
                          PRBool                aRemoveFromCache,
                          PRBool                aRemoveFromCellMap);
 
-  static PRBool IsFinalPass(const nsHTMLReflowState& aReflowState);
-
   nsTableCellFrame* GetCellInfoAt(PRInt32            aRowX, 
                                   PRInt32            aColX, 
                                   PRBool*            aOriginates = nsnull, 
                                   PRInt32*           aColSpan = nsnull);
 
   PRInt32 GetNumCellsOriginatingInCol(PRInt32 aColIndex) const;
+
+  PRBool HasPctCol() const;
+  void SetHasPctCol(PRBool aValue);
 
   PRBool HasCellSpanningPctCol() const;
   void SetHasCellSpanningPctCol(PRBool aValue);
@@ -501,7 +479,7 @@ protected:
     */
   nsTableFrame();
 
-  /** destructor, responsible for mColumnLayoutData and mColumnWidths */
+  /** destructor, responsible for mColumnLayoutData */
   virtual ~nsTableFrame();
 
   /** implement abstract method on nsHTMLContainerFrame */
@@ -526,6 +504,12 @@ protected:
   // Calculate the starting column index to use for the specified col group frame
   PRInt32 CalculateStartingColumnIndexFor(nsTableColGroupFrame* aColGroupFrame);
 
+  PRBool DescendantReflowedNotTimeout() const;
+  void   SetDescendantReflowedNotTimeout(PRBool aValue);
+  PRBool RequestedTimeoutReflow() const;
+  void   SetRequestedTimeoutReflow(PRBool aValue);
+  void   InterruptNotification(nsIPresContext* aPresContext,
+                               PRBool          aIsRequest);
 public:
   /** first pass of ResizeReflow.  
     * lays out all table content with aMaxSize(NS_UNCONSTRAINEDSIZE,NS_UNCONSTRAINEDSIZE) and
@@ -538,31 +522,24 @@ public:
     *
     * @see nsIFrameReflow::Reflow
     */
-  NS_IMETHOD ResizeReflowPass1(nsIPresContext*          aPresContext,
-                               nsHTMLReflowMetrics&     aDesiredSize,
-                               const nsHTMLReflowState& aReflowState,
-                               nsReflowStatus&          aStatus,
-                               nsReflowReason           aReason,
-                               PRBool                   aDoSiblings);
 
-  virtual PRBool RowGroupsShouldBeConstrained() { return PR_FALSE; }
-  
   /** do I need to do a reflow? */
   virtual PRBool NeedsReflow(const nsHTMLReflowState& aReflowState);
-  
-protected:
-  /** second pass of ResizeReflow.
-    * lays out all table content with aMaxSize(computed_table_width, given_table_height) 
-    * Pass 2 is executed every time the table needs to resize.  An optimization is included
-    * so that if the table doesn't need to actually be resized, no work is done (see NeedsReflow).
-    * 
-    * @see nsIFrameReflow::Reflow
-    */
-  NS_IMETHOD ResizeReflowPass2(nsIPresContext*          aPresContext,
-                               nsHTMLReflowMetrics&     aDesiredSize,
-                               const nsHTMLReflowState& aReflowState,
-                               nsReflowStatus&          aStatus);
 
+  // increment or decrement the count of pending reflow commands targeted at
+  // descendants. Only rebalance the table when this count goes to 0 or the
+  // reflow is the last one in a batch (limited by the pres shell).
+  NS_IMETHOD  ReflowCommandNotify(nsIPresShell*     aShell,
+                                  nsIReflowCommand* aRC,
+                                  PRBool            aCommandAdded);
+protected:
+
+  NS_METHOD ReflowChildren(nsIPresContext*      aPresContext,
+                           nsTableReflowState&  aReflowState,
+                           PRBool               aDoColGroups,
+                           PRBool               aDirtyOnly,
+                           nsReflowStatus&      aStatus,
+                           PRBool*              aReflowedAtLeastOne = nsnull);
 // begin incremental reflow methods
   
   /** Incremental Reflow attempts to do column balancing with the minimum number of reflow
@@ -574,7 +551,6 @@ protected:
     * @see Reflow
     */
   NS_IMETHOD IncrementalReflow(nsIPresContext*          aPresContext,
-                               nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus);
 
@@ -582,38 +558,33 @@ protected:
     * @param aNextFrame  the next frame in the reflow target chain
     * @see nsIFrameReflow::Reflow
     */
-  NS_IMETHOD IR_TargetIsChild(nsIPresContext*        aPresContext,
-                              nsHTMLReflowMetrics&   aDesiredSize,
-                              InnerTableReflowState& aReflowState,
-                              nsReflowStatus&        aStatus,
-                              nsIFrame *             aNextFrame);
+  NS_IMETHOD IR_TargetIsChild(nsIPresContext*       aPresContext,
+                              nsTableReflowState&   aReflowStatet,
+                              nsReflowStatus&       aStatus,
+                              nsIFrame*             aNextFrame);
 
   /** process an incremental reflow command targeted at this frame. 
     * @see nsIFrameReflow::Reflow
     */
-  NS_IMETHOD IR_TargetIsMe(nsIPresContext*        aPresContext,
-                           nsHTMLReflowMetrics&   aDesiredSize,
-                           InnerTableReflowState& aReflowState,
-                           nsReflowStatus&        aStatus);
+  NS_IMETHOD IR_TargetIsMe(nsIPresContext*      aPresContext,
+                           nsTableReflowState&  aReflowState,
+                           nsReflowStatus&      aStatus);
 
   /** process a style chnaged notification.
     * @see nsIFrameReflow::Reflow
     * TODO: needs to be optimized for which attribute was actually changed.
     */
-  NS_IMETHOD IR_StyleChanged(nsIPresContext*        aPresContext,
-                             nsHTMLReflowMetrics&   aDesiredSize,
-                             InnerTableReflowState& aReflowState,
-                             nsReflowStatus&        aStatus);
+  NS_IMETHOD IR_StyleChanged(nsIPresContext*      aPresContext,
+                             nsTableReflowState&  aReflowState,
+                             nsReflowStatus&      aStatus);
   
-  NS_IMETHOD AdjustSiblingsAfterReflow(nsIPresContext*        aPresContext,
-                                       InnerTableReflowState& aReflowState,
-                                       nsIFrame*              aKidFrame,
-                                       nsSize*                aMaxElementSize,
-                                       nscoord                aDeltaY);
+  NS_IMETHOD AdjustSiblingsAfterReflow(nsIPresContext*     aPresContext,
+                                       nsTableReflowState& aReflowState,
+                                       nsIFrame*           aKidFrame,
+                                       nscoord             aDeltaY);
   
-  nsresult RecoverState(InnerTableReflowState& aReflowState,
-                        nsIFrame*              aKidFrame,
-                        nsSize*                aMaxElementSize);
+  nsresult RecoverState(nsTableReflowState& aReflowState,
+                        nsIFrame*           aKidFrame);
 
   NS_METHOD CollapseRowGroupIfNecessary(nsIPresContext* aPresContext,
                                         nsIFrame* aRowGroupFrame,
@@ -625,22 +596,35 @@ protected:
 
   NS_METHOD AdjustForCollapsingCols(nsIPresContext* aPresContext, 
                                     nscoord&        aWidth);
-// end incremental reflow methods
+  // end incremental reflow methods
 
-  /** return the desired width of this table accounting for the current
-    * reflow state, and for the table attributes and parent
-    */
-  nscoord ComputeDesiredWidth(const nsHTMLReflowState& aReflowState) const;
 
-  /** return the desired height of this table accounting for the current
-    * reflow state, and for the table attributes and parent
-    */
-  nscoord ComputeDesiredHeight(nsIPresContext*          aPresContext,
-                               const nsHTMLReflowState& aReflowState,
-                               nscoord                  aDefaultHeight);
+  // WIDTH AND HEIGHT CALCULATION
 
-  /** The following two functions are helpers for ComputeDesiredHeight 
-    */
+public:
+
+  // calculate the computed width of aFrame including its border and padding given 
+  // given its reflow state.
+  nscoord CalcBorderBoxWidth(const nsHTMLReflowState& aReflowState);
+
+  // calculate the computed height of aFrame including its border and padding given 
+  // its reflow state.
+  nscoord CalcBorderBoxHeight(nsIPresContext*          aPresContext,
+                              const nsHTMLReflowState& aReflowState);
+  void CalcMinAndPreferredWidths(const nsHTMLReflowState& aReflowState,
+                                 nscoord&                 aMinWidth,
+                                 nscoord&                 aPreferredWidth);
+protected:
+
+  // calcs the width of the table according to the computed widths of each column.
+  virtual PRInt32 CalcDesiredWidth(const nsHTMLReflowState& aReflowState);
+
+  // return the desired height of this table accounting for the current
+  // reflow state, and for the table attributes and parent 
+  nscoord CalcDesiredHeight(nsIPresContext*          aPresContext,
+                            const nsHTMLReflowState& aReflowState);
+  // The following two functions are helpers for CalcDesiredHeight 
+ 
   void DistributeSpaceToCells(nsIPresContext*          aPresContext, 
                               const nsHTMLReflowState& aReflowState,
                               nsIFrame*                aRowGroupFrame);
@@ -652,27 +636,11 @@ protected:
                              nscoord&                 aExcessForRowGroup, 
                              nscoord&                 aRowGroupYPos);
 
-  void PlaceChild(nsIPresContext*        aPresContext,
-                  InnerTableReflowState& aReflowState,
-                  nsIFrame*              aKidFrame,
-                  nsHTMLReflowMetrics&   aDesiredSize,
-                  nscoord                aX,
-                  nscoord                aY,
-                  nsSize*                aMaxElementSize,
-                  nsSize&                aKidMaxElementSize);
+  void PlaceChild(nsIPresContext*      aPresContext,
+                  nsTableReflowState&  aReflowState,
+                  nsIFrame*            aKidFrame,
+                  nsHTMLReflowMetrics& aDesiredSize);
 
-  /**
-   * Reflow the frames we've already created
-   *
-   * @param   aPresContext presentation context to use
-   * @param   aReflowState current inline state
-   * @return  true if we successfully reflowed all the mapped children and false
-   *            otherwise, e.g. we pushed children to the next in flow
-   */
-  NS_IMETHOD ReflowMappedChildren(nsIPresContext*        aPresContext,
-                                  nsHTMLReflowMetrics&   aDesiredSize,
-                                  InnerTableReflowState& aReflowState,
-                                  nsReflowStatus&        aStatus);
   /**
    * Try and pull-up frames from our next-in-flow
    *
@@ -681,35 +649,21 @@ protected:
    * @return  true if we successfully pulled-up all the children and false
    *            otherwise, e.g. child didn't fit
    */
-  NS_IMETHOD PullUpChildren(nsIPresContext*        aPresContext,
-                            nsHTMLReflowMetrics&   aDesiredSize,
-                            InnerTableReflowState& aReflowState,
-                            nsReflowStatus&        aStatus);
+  NS_IMETHOD PullUpChildren(nsIPresContext*      aPresContext,
+                            nsHTMLReflowMetrics& aDesiredSize,
+                            nsTableReflowState&  aReflowState,
+                            nsReflowStatus&      aStatus);
 
   /** assign widths for each column, taking into account the table content, the effective style, 
-    * the layout constraints, and the compatibility mode.  Sets mColumnWidths as a side effect.
+    * the layout constraints, and the compatibility mode.  
     * @param aPresContext     the presentation context
     * @param aTableStyle      the resolved style for the table
     * @param aMaxSize         the height and width constraints
     * @param aMaxElementSize  the min size of the largest indivisible object
     */
   virtual void BalanceColumnWidths(nsIPresContext*          aPresContext, 
-                                   const nsHTMLReflowState& aReflowState,
-                                   const nsSize&            aMaxSize, 
-                                   nsSize*                  aMaxElementSize);
+                                   const nsHTMLReflowState& aReflowState);
 
-  /** sets the width of the table according to the computed widths of each column. */
-  virtual void SetTableWidth(nsIPresContext*          aPresContext,
-                             const nsHTMLReflowState& aReflowState);
-
-  /** returns PR_TRUE if the cached pass 1 data is still valid */
-  virtual PRBool IsFirstPassValid() const;
-
-  /** returns PR_TRUE if the cached column info is still valid */
-  virtual PRBool IsColumnWidthsValid() const;
-  
-  /** returns PR_TRUE if the cached pass1 maximum width is still valid */
-  virtual PRBool IsMaximumWidthValid() const;
 
   nsIFrame* GetFirstBodyRowGroupFrame();
   PRBool MoveOverflowToChildList(nsIPresContext* aPresContext);
@@ -740,47 +694,38 @@ public:
   // which spans into the next col
   PRBool ColHasSpanningCells(PRInt32 aColIndex);
 
-  // Returns PR_TRUE if the style width change, aPrevStyleWidth, for aCellFrame 
-  // could require the columns to be rebalanced. This method can be used to 
-  // determine if an incremental reflow on aCellFrame is necessary as the result
-  // of the style width change. If aConsiderMinWidth is PR_TRUE, then potential
-  // changes to aCellFrame's min width is considered (however, if considered, 
-  // the function will always return PR_TRUE if the layout strategy is Basic).
-  PRBool ColumnsCanBeInvalidatedBy(nsStyleCoord*           aPrevStyleWidth,
-                                   const nsTableCellFrame& aCellFrame) const;
-
-  // Returns PR_TRUE if potential width changes to aCellFrame could require the 
-  // columns to be rebalanced. This method can be used after an incremental reflow
-  // of aCellFrame to determine if a pass1 reflow on aCellFrame is necessary. If 
-  // aConsiderMinWidth is PR_TRUE, then potential changes to aCellFrame's min width 
-  // is considered (however, if considered, the function will always return PR_TRUE 
-  // if the layout strategy is Basic).
-  PRBool ColumnsCanBeInvalidatedBy(const nsTableCellFrame& aCellFrame,
-                                   PRBool                  aConsiderMinWidth = PR_FALSE) const;
-
-  // Returns PR_TRUE if changes to aCellFrame's pass1 min and desired (max) sizes
-  // don't require the columns to be rebalanced. This method can be used after a 
-  // pass1 reflow of aCellFrame to determine if the columns need rebalancing. 
-  // aPrevCellMin and aPrevCellDes are the values aCellFrame had before the last 
-  // pass1 reflow.
-  PRBool ColumnsAreValidFor(const nsTableCellFrame& aCellFrame,
-                            nscoord                 aPrevCellMin,
-                            nscoord                 aPrevCellDes) const;
-  
-  virtual void InvalidateFirstPassCache();
-
-  virtual void InvalidateColumnWidths();
-
-  virtual void InvalidateMaximumWidth();
-
+  // Allows rows to notify the table of additions or changes to a cell's width
+  // The table uses this to update the appropriate column widths and to decide 
+  // whether to reinitialize (and then rebalance) or rebalance the table. If the 
+  // most extreme measure results (e.g. reinitialize) then PR_TRUE is returned 
+  // indicating that further calls are not going to accomplish anyting.
+  PRBool CellChangedWidth(const nsTableCellFrame& aCellFrame,
+                          nscoord                 aPrevMinWidth,
+                          nscoord                 aPrevMaxWidth,
+                          PRBool                  aCellWasDestroyed = PR_FALSE);
+ 
 protected:
+
+  PRBool HaveReflowedColGroups() const;
+  void   SetHaveReflowedColGroups(PRBool aValue);
+
+  PRBool DidResizeReflow() const;
+  void   SetResizeReflow(PRBool aValue);
 
   /** Support methods for DidSetStyleContext */
   void      MapBorderMarginPadding(nsIPresContext* aPresContext);
   void      MapHTMLBorderStyle(nsStyleBorder& aBorderStyle, nscoord aBorderWidth);
-  PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
+  PRBool    ConvertToPixelValue(nsHTMLValue& aValue, 
+                                PRInt32      aDefault, 
+                                PRInt32&     aResult);
 
 public:
+  PRBool NeedStrategyInit() const;
+  void SetNeedStrategyInit(PRBool aValue);
+
+  PRBool NeedStrategyBalance() const;
+  void SetNeedStrategyBalance(PRBool aValue);
+
   /** Get the cell map for this table frame.  It is not always mCellMap.
     * Only the firstInFlow has a legit cell map
     */
@@ -811,16 +756,12 @@ public:
 
 protected:
 
+  PRBool HadInitialReflow() const;
+  void SetHadInitialReflow(PRBool aValue);
+
   void SetColumnDimensions(nsIPresContext* aPresContext, 
                            nscoord         aHeight,
                            const nsMargin& aReflowState);
-
-#ifdef NS_DEBUG
-  /** for debugging only
-    * prints out info about the table layout state, printing columns and their cells
-    */
-  void ListColumnLayoutData(FILE* out, PRInt32 aIndent);
-#endif
 
   /** return the number of columns as specified by the input. 
     * has 2 side effects:<br>
@@ -862,21 +803,7 @@ public: /* ----- Cell Map public methods ----- */
   /** return the minimum width of the table caption.  Return 0 if there is no caption. */
   nscoord GetMinCaptionWidth();
 
-  /** return the minimum content width of the table (excludes borders and padding).  
-      Return 0 if the min width is unknown. */
-  nscoord GetMinTableWidth();
-
-  /** return the maximum content width of the table (excludes borders and padding). 
-      Return 0 if the max width is unknown. */
-  nscoord GetMaxTableWidth(const nsHTMLReflowState& aReflowState);
-
-  /** compute the max-element-size for the table
-    * @param aMaxElementSize  [OUT] width field set to the min legal width of the table
-    */
-  void SetMaxElementSize(nsSize*         aMaxElementSize,
-                         const nsMargin& aPadding);
-
-  /** returns PR_TRUE if table layout requires a preliminary pass over the content */
+  /** returns PR_TRUE if table-layout:auto  */
   virtual PRBool IsAutoLayout();
 
   // compute the height of the table to be used as the basis for 
@@ -885,6 +812,12 @@ public: /* ----- Cell Map public methods ----- */
                                   const nsHTMLReflowState& aReflowState);
 
   nscoord GetPercentBasisForRows();
+
+  nscoord GetMinWidth() const;
+  void    SetMinWidth(nscoord aWidth);
+  
+  nscoord GetDesiredWidth() const;
+  void    SetDesiredWidth(nscoord aWidth);
 
   nscoord GetPreferredWidth() const;
   void    SetPreferredWidth(nscoord aWidth); 
@@ -920,29 +853,39 @@ protected:
   void DumpRowGroup(nsIPresContext* aPresContext, nsIFrame* aChildFrame);
   void DebugPrintCount() const; // Debugging routine
 
-// data members
-  PRInt32     *mColumnWidths;       // widths of each column
-  PRInt32      mColumnWidthsLength; // the number of column lengths this frame has allocated
+  // DATA MEMBERS
 
   struct TableBits {
-    unsigned mColumnWidthsSet:1;       // PR_TRUE if column widths have been set at least once
-    unsigned mColumnWidthsValid:1;     // PR_TRUE if column width data is still legit, PR_FALSE if it needs to be recalculated
-    unsigned mFirstPassValid:1;        // PR_TRUE if first pass data is still legit, PR_FALSE if it needs to be recalculated
-    unsigned mIsInvariantWidth:1;      // PR_TRUE if table width cannot change
-    unsigned mCellSpansPctCol:1;
-    unsigned mMaximumWidthValid:1;
-    int : 26;                          // unused
+    unsigned mHadInitialReflow:1;      // has intial reflow happened
+    unsigned mHaveReflowedColGroups:1; // have the col groups gotten their initial reflow
+    unsigned mNeedStrategyBalance:1;   // does the strategy needs to balance the table
+    unsigned mNeedStrategyInit:1;      // does the strategy needs to be initialized and then balance the table
+    unsigned mHasPctCol:1;             // does any cell or col have a pct width
+    unsigned mCellSpansPctCol:1;       // does any cell span a col with a pct width (or containing a cell with a pct width)
+    unsigned mDidResizeReflow:1;       // did a resize reflow happen (indicating pass 2)
+    // true if a descendant was reflowed normally since the last time we reflowed.
+    // We will likely need a timeout reflow (targeted either at us or below)
+    unsigned mDescendantReflowedNotTimeout:1;      
+    // true if we requested a timeout reflow targeted at us. This will become false if
+    // we know that a descendant will be getting a timeout reflow and we cancel the one
+    // targeted at us, as an optimization.
+    unsigned mRequestedTimeoutReflow:1;
+    int : 23;                          // unused
   } mBits;
 
   nsTableCellMap*         mCellMap;            // maintains the relationships between rows, cols, and cells
   nsITableLayoutStrategy* mTableLayoutStrategy;// the layout strategy for this frame
   nsFrameList             mColGroups;          // the list of colgroup frames
-
-  nsTableBorderCollapser* mBorderCollapser;    // one list of border segments for each side of the table frame
-                                               // used only for the collapsing border model
   nscoord                 mPercentBasisForRows;
-  nscoord                 mPreferredWidth;
+  nscoord                 mMinWidth;       // XXX could store as PRUint16 with pixels
+  nscoord                 mDesiredWidth;   // XXX could store as PRUint16 with pixels
+  nscoord                 mPreferredWidth; // XXX could store as PRUint16 with pixels
+  // the number of normal incremental reflow commands targeted below this table
+  PRInt16   mNumDescendantReflowsPending;
+  // the number of timeout incremental reflow commands targeted below this table
+  PRInt16   mNumDescendantTimeoutReflowsPending;
 
+  // DEBUG REFLOW 
 #if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
 public:
   static void DebugReflow(nsIFrame*            aFrame, 
@@ -953,18 +896,11 @@ public:
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   static void DebugReflowDone(nsIFrame* aFrame);
 
-  static void DebugTimePctCols(nsTableFrame&      aFrame,
-                               nsHTMLReflowState& aReflowState,
-                               PRBool             aStart);
-
-  static void DebugTimeNonPctCols(nsTableFrame&      aFrame,
-                                  nsHTMLReflowState& aReflowState,
-                                  PRBool             aStart);
-
-  static void DebugTimeNonPctColspans(nsTableFrame&      aFrame,
-                                      nsHTMLReflowState& aReflowState,
-                                      PRBool             aStart);
-
+  enum nsMethod {eInit=0, eBalanceCols, eNonPctCols, eNonPctColspans, ePctCols};
+  static void DebugTimeMethod(nsMethod           aMethod,
+                              nsTableFrame&      aFrame,
+                              nsHTMLReflowState& aReflowState,
+                              PRBool             aStart);
   nsReflowTimer* mTimer;
 #endif
 #endif
@@ -983,6 +919,36 @@ inline nscoord nsTableFrame::GetPercentBasisForRows()
   return mPercentBasisForRows;
 }
 
+inline void nsTableFrame::SetHadInitialReflow(PRBool aValue)
+{
+  mBits.mHadInitialReflow = aValue;
+}
+
+inline PRBool nsTableFrame::HadInitialReflow() const
+{
+  return (PRBool)mBits.mHadInitialReflow;
+}
+
+inline void nsTableFrame::SetHaveReflowedColGroups(PRBool aValue)
+{
+  mBits.mHaveReflowedColGroups = aValue;
+}
+
+inline PRBool nsTableFrame::HaveReflowedColGroups() const
+{
+  return (PRBool)mBits.mHaveReflowedColGroups;
+}
+
+inline PRBool nsTableFrame::HasPctCol() const
+{
+  return (PRBool)mBits.mHasPctCol;
+}
+
+inline void nsTableFrame::SetHasPctCol(PRBool aValue)
+{
+  mBits.mHasPctCol = (unsigned)aValue;
+}
+
 inline PRBool nsTableFrame::HasCellSpanningPctCol() const
 {
   return (PRBool)mBits.mCellSpansPctCol;
@@ -991,6 +957,26 @@ inline PRBool nsTableFrame::HasCellSpanningPctCol() const
 inline void nsTableFrame::SetHasCellSpanningPctCol(PRBool aValue)
 {
   mBits.mCellSpansPctCol = (unsigned)aValue;
+}
+
+inline PRBool nsTableFrame::DescendantReflowedNotTimeout() const
+{
+  return (PRBool)mBits.mDescendantReflowedNotTimeout;
+}
+
+inline void nsTableFrame::SetDescendantReflowedNotTimeout(PRBool aValue)
+{
+  mBits.mDescendantReflowedNotTimeout = (unsigned)aValue;
+}
+
+inline PRBool nsTableFrame::RequestedTimeoutReflow() const
+{
+  return (PRBool)mBits.mRequestedTimeoutReflow;
+}
+
+inline void nsTableFrame::SetRequestedTimeoutReflow(PRBool aValue)
+{
+  mBits.mRequestedTimeoutReflow = (unsigned)aValue;
 }
 
 inline nsFrameList& nsTableFrame::GetColGroups()
@@ -1003,15 +989,21 @@ inline nsVoidArray& nsTableFrame::GetColCache()
   return mColFrames;
 }
 
-inline nscoord nsTableFrame::GetPreferredWidth() const
+inline void nsTableFrame::SetMinWidth(nscoord aWidth)
 {
-  return mPreferredWidth;
+  mMinWidth = aWidth;
+}
+
+inline void nsTableFrame::SetDesiredWidth(nscoord aWidth)
+{
+  mDesiredWidth = aWidth;
 }
 
 inline void nsTableFrame::SetPreferredWidth(nscoord aWidth)
 {
   mPreferredWidth = aWidth;
 }
+
 
                                                             
 enum nsTableIteration {

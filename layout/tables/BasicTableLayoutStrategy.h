@@ -59,17 +59,7 @@ public:
     * @param aMaxElementSize  [OUT] if not null, the max element size is computed and returned in this param
     */
   virtual PRBool Initialize(nsIPresContext*          aPresContext,
-                            nsSize*                  aMaxElementSize,
-                            nscoord                  aMaxSize,
                             const nsHTMLReflowState& aReflowState);
-
-  /** compute the max element size of the table.
-    * assumes that Initialize has been called
-    */
-  virtual void SetMaxElementSize(nsSize*         aMaxElementSize,
-                                 const nsMargin& aPadding);
-
-  void SetMinAndMaxTableContentWidths();
 
   /** Called during resize reflow to determine the new column widths
     * @param aTableStyle - the resolved style for mTableFrame
@@ -77,13 +67,8 @@ public:
  	  * @param aMaxWidth - the computed max width for columns to fit into
 	  */
   virtual PRBool BalanceColumnWidths(nsIPresContext*          aPresContext,
-                                     nsIStyleContext*         aTableStyle,
-                                     const nsHTMLReflowState& aReflowState,
-                                     nscoord                  aMaxWidth);
+                                     const nsHTMLReflowState& aReflowState);
 
-  // these accessors are mostly for debugging purposes
-  nscoord GetTableMinWidth() const;
-  nscoord GetTableMaxWidth(const nsHTMLReflowState& aReflowState) const;
   nscoord GetCOLSAttribute() const;
   void Dump(PRInt32 aIndent);
 
@@ -112,10 +97,12 @@ protected:
     * @param aReflowState - the reflow state of the table
     * @param aConsiderPct - if true, consider columns that have pct widths and are spanned by the cell
     * @param aPixelToTwips- the number of twips in a pixel.
+    * @param aHasPctCol   - if not null, then set *aHasPctCol to true if there is a pct cell or col
     */
   void ComputeNonPctColspanWidths(const nsHTMLReflowState& aReflowState,
                                   PRBool                   aConsiderPct,
-                                  float                    aPixelToTwips);
+                                  float                    aPixelToTwips,
+                                  PRBool*                  aHasPctCol);
 
   /** 
     * main helper for above. For min width calculations, it can get called up to
@@ -144,10 +131,13 @@ protected:
                                 PRBool                   aTableIsAutoWidth,
                                 float                    aPixelToTwips);
 
+  nscoord CalcPctAdjTableWidth(const nsHTMLReflowState& aReflowState,
+                               nscoord                  aAvailWidth,
+                               float                    aPixelToTwips);
+
   void ReduceOverSpecifiedPctCols(nscoord aExcess);
 
-  void CalculateTotals(PRInt32& aCellSpacing,
-                       PRInt32* aTotalCounts,
+  void CalculateTotals(PRInt32* aTotalCounts,
                        PRInt32* aTotalWidths,
                        PRInt32* aMinWidths,
                        PRInt32& a0ProportionalCount);
@@ -193,19 +183,6 @@ protected:
   void GetColumnsThatActLikeAutoWidth(PRInt32&  aOutNumColumns,
                                       PRInt32*& aOutColumnIndexes);
   void ContinuingFrameCheck();
-
-  // see nsTableFrame::ColumnsCanBeInvalidatedBy
-  PRBool ColumnsCanBeInvalidatedBy(nsStyleCoord*           aPrevStyleWidth,
-                                   const nsTableCellFrame& aCellFrame) const;
-
-  // see nsTableFrame::ColumnsCanBeInvalidatedBy
-  PRBool ColumnsCanBeInvalidatedBy(const nsTableCellFrame& aCellFrame,
-                                   PRBool                  aConsiderMinWidth = PR_FALSE) const;
-
-  // see nsTableFrame::ColumnsCanBeInvalidatedBy
-  PRBool ColumnsAreValidFor(const nsTableCellFrame& aCellFrame,
-                            nscoord                 aPrevCellMin,
-                            nscoord                 aPrevCellDes) const;
 
 #ifdef DEBUG
   void  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {

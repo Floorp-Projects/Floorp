@@ -59,22 +59,7 @@ public:
 	  * @param aMaxWidth - the computed max width for columns to fit into
 	  */
   virtual PRBool  BalanceColumnWidths(nsIPresContext*          aPresContext,
-                                      nsIStyleContext*         aTableStyle,
-                                      const nsHTMLReflowState& aReflowState,
-                                      nscoord                  aMaxWidth);
-
-  // see nsTableFrame::ColumnsCanBeInvalidatedBy
-  PRBool ColumnsCanBeInvalidatedBy(nsStyleCoord*           aPrevStyleWidth,
-                                   const nsTableCellFrame& aCellFrame) const;
-
-  // see nsTableFrame::ColumnsCanBeInvalidatedBy
-  PRBool ColumnsCanBeInvalidatedBy(const nsTableCellFrame& aCellFrame,
-                                   PRBool                  aConsiderMinWidth = PR_FALSE) const;
-
-  // see nsTableFrame::ColumnsCanBeInvalidatedBy
-  PRBool ColumnsAreValidFor(const nsTableCellFrame& aCellFrame,
-                            nscoord                 aPrevCellMin,
-                            nscoord                 aPrevCellDes) const;
+                                      const nsHTMLReflowState& aReflowState);
 
 #ifdef DEBUG
   void  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {

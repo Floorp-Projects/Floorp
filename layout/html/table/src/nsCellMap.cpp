@@ -443,14 +443,13 @@ PRBool nsTableCellMap::RowHasSpanningCells(PRInt32 aRowIndex)
 
 PRBool nsTableCellMap::ColIsSpannedInto(PRInt32 aColIndex)
 {
-  nsCellMap* cellMap = mFirstMap;
-  while (cellMap) {
-    if (cellMap->ColIsSpannedInto(*this, aColIndex)) {
-      return PR_TRUE;
-    }
-    cellMap = cellMap->GetNextSibling();
+  PRBool result = PR_FALSE;
+
+  PRInt32 colCount = mCols.Count();
+  if ((aColIndex >= 0) && (aColIndex < colCount)) {
+    result = (PRBool) ((nsColInfo *)mCols.ElementAt(aColIndex))->mNumCellsSpan;
   }
-  return PR_FALSE;
+  return result;
 }
 
 PRBool nsTableCellMap::ColHasSpanningCells(PRInt32 aColIndex)
@@ -1777,26 +1776,6 @@ PRBool nsCellMap::RowHasSpanningCells(nsTableCellMap& aMap,
         }
       }
     }
-  }
-  return PR_FALSE;
-}
-
-PRBool nsCellMap::ColIsSpannedInto(nsTableCellMap& aMap,
-                                   PRInt32         aColIndex)
-{
-  PRInt32 numColsInTable = aMap.GetColCount();
-  if ((0 > aColIndex) || (aColIndex >= numColsInTable)) {
-    return PR_FALSE;
-  }
-	for (PRInt32 rowIndex = 0; rowIndex < mRowCount; rowIndex++) {
-		CellData* cd = GetCellAt(aMap, rowIndex, aColIndex);
-		if (cd) { // there's really a cell at (aRowIndex, colIndex)
-			if (cd->IsSpan()) { // the cell at (aRowIndex, colIndex) is the result of a span
-        if (cd->IsColSpan() && GetCellFrame(rowIndex, aColIndex, *cd, PR_FALSE)) { // XXX why the last check
-          return PR_TRUE;
-        }
-			}
-		}
   }
   return PR_FALSE;
 }
