@@ -62,7 +62,8 @@ const SEC_ASN1Template CMMFCertifiedKeyPairTemplate[] = {
     { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_POINTER | 0,
       offsetof(CMMFCertifiedKeyPair, privateKey),
       CRMFEncryptedValueTemplate},
-    { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_XTRN | 1,
+    { SEC_ASN1_NO_STREAM | SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | 
+      SEC_ASN1_XTRN | 1,
       offsetof (CMMFCertifiedKeyPair, derPublicationInfo),
       SEC_ASN1_SUB(SEC_AnyTemplate) },
     { 0 }

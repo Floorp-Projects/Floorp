@@ -73,11 +73,11 @@ static const SEC_ASN1Template CRMFSequenceOfCertExtensionTemplate[] = {
 
 static const SEC_ASN1Template CRMFOptionalValidityTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof (CRMFOptionalValidity) },
-    { SEC_ASN1_EXPLICIT | SEC_ASN1_CONSTRUCTED | 
+    { SEC_ASN1_EXPLICIT | SEC_ASN1_CONSTRUCTED | SEC_ASN1_NO_STREAM |
       SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_OPTIONAL | SEC_ASN1_XTRN | 0, 
       offsetof (CRMFOptionalValidity, notBefore),
       SEC_ASN1_SUB(SEC_UTCTimeTemplate) },
-    { SEC_ASN1_EXPLICIT | SEC_ASN1_CONSTRUCTED | 
+    { SEC_ASN1_EXPLICIT | SEC_ASN1_CONSTRUCTED | SEC_ASN1_NO_STREAM |
       SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_OPTIONAL | SEC_ASN1_XTRN | 1, 
       offsetof (CRMFOptionalValidity, notAfter),
       SEC_ASN1_SUB(SEC_UTCTimeTemplate) },
@@ -113,10 +113,12 @@ static const SEC_ASN1Template CRMFCertTemplateTemplate[] = {
    { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_POINTER | 6, 
      offsetof (CRMFCertTemplate, publicKey), 
      CERT_SubjectPublicKeyInfoTemplate }, 
-   { SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_OPTIONAL | SEC_ASN1_XTRN | 7,
+   { SEC_ASN1_NO_STREAM | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_OPTIONAL | 
+     SEC_ASN1_XTRN | 7,
      offsetof (CRMFCertTemplate, issuerUID), 
      SEC_ASN1_SUB(SEC_BitStringTemplate) },
-   { SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_OPTIONAL | SEC_ASN1_XTRN | 8,
+   { SEC_ASN1_NO_STREAM | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_OPTIONAL |
+     SEC_ASN1_XTRN | 8,
      offsetof (CRMFCertTemplate, subjectUID), 
      SEC_ASN1_SUB(SEC_BitStringTemplate) },
    { SEC_ASN1_CONSTRUCTED | SEC_ASN1_OPTIONAL | 
@@ -184,7 +186,8 @@ const SEC_ASN1Template CRMFRAVerifiedTemplate[] = {
 /* This template will need to add POPOSigningKeyInput eventually, maybe*/
 static const SEC_ASN1Template crmfPOPOSigningKeyTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(CRMFPOPOSigningKey) },
-    { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_XTRN | 0,
+    { SEC_ASN1_NO_STREAM | SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | 
+      SEC_ASN1_XTRN | 0,
       offsetof(CRMFPOPOSigningKey, derInput), 
       SEC_ASN1_SUB(SEC_AnyTemplate) },
     { SEC_ASN1_POINTER | SEC_ASN1_XTRN, 
@@ -250,14 +253,16 @@ const SEC_ASN1Template CRMFEncryptedValueTemplate[] = {
       SEC_ASN1_XTRN | 1,
       offsetof (CRMFEncryptedValue, symmAlg), 
       SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
-    { SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_OPTIONAL | SEC_ASN1_XTRN | 2, 
+    { SEC_ASN1_NO_STREAM | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_OPTIONAL | 
+      SEC_ASN1_XTRN | 2, 
       offsetof(CRMFEncryptedValue, encSymmKey), 
       SEC_ASN1_SUB(SEC_BitStringTemplate) },
     { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_POINTER | 
       SEC_ASN1_XTRN | 3,
       offsetof(CRMFEncryptedValue, keyAlg), 
       SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
-    { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_XTRN | 4,
+    { SEC_ASN1_NO_STREAM | SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | 
+      SEC_ASN1_XTRN | 4,
       offsetof(CRMFEncryptedValue, valueHint),
       SEC_ASN1_SUB(SEC_OctetStringTemplate) },
     { SEC_ASN1_BIT_STRING, offsetof(CRMFEncryptedValue, encValue) },
