@@ -30,6 +30,7 @@ CPPSRCS=				\
 	nsHTMLBaseElement.cpp		\
 	nsHTMLBaseFontElement.cpp	\
 	nsHTMLBodyElement.cpp		\
+	nsHTMLButtonElement.cpp		\
 	nsHTMLDListElement.cpp		\
 	nsHTMLDelElement.cpp		\
 	nsHTMLDirectoryElement.cpp	\
@@ -37,14 +38,21 @@ CPPSRCS=				\
 	nsHTMLEmbedElement.cpp		\
 	nsHTMLFontElement.cpp		\
 	nsHTMLFormElement.cpp		\
+	nsHTMLFrameElement.cpp		\
+	nsHTMLFrameSetElement.cpp	\
 	nsHTMLHRElement.cpp		\
 	nsHTMLHeadElement.cpp		\
 	nsHTMLHeadingElement.cpp	\
 	nsHTMLHtmlElement.cpp		\
+	nsHTMLIFrameElement.cpp		\
+	nsHTMLImageElement.cpp		\
 	nsHTMLInputElement.cpp		\
 	nsHTMLInsElement.cpp		\
+	nsHTMLIsIndexElement.cpp	\
 	nsHTMLLIElement.cpp		\
+	nsHTMLLabelrElement.cpp		\
 	nsHTMLLayerElement.cpp		\
+	nsHTMLLegendElement.cpp		\
 	nsHTMLLinkElement.cpp		\
 	nsHTMLMapElement.cpp		\
 	nsHTMLMenuElement.cpp		\
@@ -53,6 +61,7 @@ CPPSRCS=				\
 	nsHTMLOListElement.cpp		\
 	nsHTMLObjectElement.cpp		\
 	nsHTMLOptionElement.cpp		\
+	nsHTMLOptGroupElement.cpp	\
 	nsHTMLParagraphElement.cpp	\
 	nsHTMLParamElement.cpp		\
 	nsHTMLPreElement.cpp		\
@@ -66,6 +75,7 @@ CPPSRCS=				\
 	nsHTMLTableColElement.cpp	\
 	nsHTMLTableRowElement.cpp	\
 	nsHTMLTableSectionElement.cpp	\
+	nsHTMLTextAreaElement.cpp	\
 	nsHTMLTitleElement.cpp		\
 	nsHTMLUListElement.cpp		\
 	$(NULL)
