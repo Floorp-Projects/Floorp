@@ -147,6 +147,8 @@ private:
   nsresult        NotifyListenersOnProgress(PRInt32 aTransactionID, PRUint32 aProgress, PRUint32 aProgressMax);
   nsresult        NotifyListenersOnStatus(PRInt32 aTransactionID, const PRUnichar *aMsg);
   nsresult        NotifyListenersOnStopSync(PRInt32 aTransactionID, nsresult aStatus, const PRUnichar *aMsg);
+  nsresult        NotifyListenersOnStartAuthOperation(void);
+  nsresult        NotifyListenersOnStopAuthOperation(nsresult aStatus, const PRUnichar *aMsg, const char *aCookie);
 
   nsresult        AnalyzeTheLocalAddressBook();
   nsresult        ProcessServerResponse(const char *aProtocolResponse);
@@ -160,6 +162,7 @@ private:
   nsresult        InternalCleanup();
   nsresult        CleanServerTable(nsVoidArray *aArray);
   PRUnichar       *GetString(const PRUnichar *aStringName);
+  nsresult        DisplayErrorMessage(const PRUnichar * msg);
 
   nsCOMPtr<nsIAbSyncPostEngine>   mPostEngine;
   nsString                        mPostString;

@@ -37,7 +37,7 @@
 //
 // For completion of send/message creation operations...
 //
-typedef nsresult (*nsPostCompletionCallback ) (nsIURI* aURL, nsresult aStatus,
+typedef nsresult (*nsPostCompletionCallback ) (nsresult aStatus,
                                                const char *aContentType,
                                                const char *aCharset,
                                                PRInt32 totalSize, const PRUnichar* aMsg, 
@@ -61,6 +61,8 @@ public:
   NS_IMETHOD FireURLRequest(nsIURI *aURL,  nsPostCompletionCallback cb, 
                             void *tagData, const char *postData);
 
+  NS_IMETHOD KickTheSyncOperation();
+
   NS_IMETHOD Initialize(nsOutputFileStream *fOut,
 						nsPostCompletionCallback cb,
 						void *tagData);
@@ -80,6 +82,8 @@ public:
 private:
   // Handy methods for listeners...
   nsresult        DeleteListeners();
+  nsresult        NotifyListenersOnStartAuthOperation(void);
+  nsresult        NotifyListenersOnStopAuthOperation(nsresult aStatus, const PRUnichar *aMsg, const char *aCookie);
   nsresult        NotifyListenersOnStartSending(PRInt32 aTransactionID, PRUint32 aMsgSize);
   nsresult        NotifyListenersOnProgress(PRInt32 aTransactionID, PRUint32 aProgress, PRUint32 aProgressMax);
   nsresult        NotifyListenersOnStatus(PRInt32 aTransactionID, PRUnichar *aMsg);
@@ -91,7 +95,6 @@ private:
   PRInt32                         mTotalWritten;      // Size counter variable
   nsString                        mProtocolResponse;  // Protocol response
 
-  nsCOMPtr<nsIURI>                mURL;           // URL being processed
   char                            *mContentType;  // The content type retrieved from the server
   char                            *mCharset;      // The charset retrieved from the server
   void                            *mTagData;      // Tag data for callback...
@@ -102,6 +105,13 @@ private:
 
   nsIAbSyncPostListener           **mListenerArray;
   PRInt32                         mListenerArrayCount;
+
+  // Since we need to do authentication a bit differently, do it here!
+  PRBool                          mAuthenticationRunning;
+
+  char                            *mSyncSpec;
+  PRInt32                         mSyncPort;
+  char                            *mSyncProtocolRequest;
 }; 
 
 #endif /* nsAbSyncPostEngine_h_ */

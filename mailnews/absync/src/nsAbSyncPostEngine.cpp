@@ -30,6 +30,7 @@
 #include "comi18n.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "nsIPref.h"
 #include "nsRepository.h"
 #include "nsIURI.h"
 #include "nsString.h"
@@ -40,8 +41,11 @@
 #include "nsMimeTypes.h"
 #include "nsIHTTPChannel.h"
 #include "nsHTTPEnums.h"
+#include "nsTextFormatter.h"
+#include "nsIHTTPHeader.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 /* 
  * This function will be used by the factory to generate an 
@@ -92,6 +96,7 @@ nsAbSyncPostEngine::nsAbSyncPostEngine()
   mPostEngineState =  nsIAbSyncPostEngineState::nsIAbSyncPostIdle;
   mTransactionID = 0;
   mMessageSize = 0;
+  mAuthenticationRunning = PR_TRUE;
 }
 
 nsAbSyncPostEngine::~nsAbSyncPostEngine()
@@ -99,6 +104,9 @@ nsAbSyncPostEngine::~nsAbSyncPostEngine()
   mStillRunning = PR_FALSE;
   PR_FREEIF(mContentType);
   PR_FREEIF(mCharset);
+
+  PR_FREEIF(mSyncSpec);
+  PR_FREEIF(mSyncProtocolRequest);
 
   DeleteListeners();
 }
@@ -222,7 +230,9 @@ nsAbSyncPostEngine::OnDataAvailable(nsIChannel * aChannel, nsISupports * ctxt, n
   mProtocolResponse.Append(NS_ConvertASCIItoUCS2(buf), readLen);
   PR_FREEIF(buf);
   mTotalWritten += readLen;
-  NotifyListenersOnProgress(mTransactionID, mTotalWritten, 0);
+
+  if (!mAuthenticationRunning)
+    NotifyListenersOnProgress(mTransactionID, mTotalWritten, 0);
   return NS_OK;
 }
 
@@ -231,7 +241,10 @@ nsAbSyncPostEngine::OnDataAvailable(nsIChannel * aChannel, nsISupports * ctxt, n
 nsresult
 nsAbSyncPostEngine::OnStartRequest(nsIChannel *aChannel, nsISupports *ctxt)
 {
-  NotifyListenersOnStartSending(mTransactionID, mMessageSize);
+  if (mAuthenticationRunning)
+    NotifyListenersOnStartAuthOperation();
+  else
+    NotifyListenersOnStartSending(mTransactionID, mMessageSize);
   return NS_OK;
 }
 
@@ -241,6 +254,8 @@ nsAbSyncPostEngine::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */
 #ifdef NS_DEBUG_rhp
   printf("nsAbSyncPostEngine::OnStopRequest()\n");
 #endif
+
+  char  *tProtResponse = nsnull;
 
   //
   // Now complete the stream!
@@ -273,10 +288,63 @@ nsAbSyncPostEngine::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */
 
   // Now if there is a callback, we need to call it...
   if (mCallback)
-    mCallback (mURL, aStatus, mContentType, mCharset, mTotalWritten, aMsg, mTagData);
+    mCallback (aStatus, mContentType, mCharset, mTotalWritten, aMsg, mTagData);
 
-  char  *tProtResponse = mProtocolResponse.ToNewCString();
-  NotifyListenersOnStopSending(mTransactionID, aStatus, aMsg, tProtResponse);
+  if (mAuthenticationRunning)
+  {
+    if (aChannel)
+    {
+      // Dig out the cookie!
+      nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(aChannel);
+      if (httpChannel)
+      {
+        nsresult rv;
+        if (httpChannel)
+        {
+          nsCAutoString			eTagValue, lastModValue, contentLengthValue;
+          nsCOMPtr<nsISimpleEnumerator>	enumerator;
+          if (NS_SUCCEEDED(rv = httpChannel->GetResponseHeaderEnumerator(getter_AddRefs(enumerator))))
+          {
+            PRBool			bMoreHeaders;
+            
+            while (NS_SUCCEEDED(rv = enumerator->HasMoreElements(&bMoreHeaders))
+              && (bMoreHeaders == PR_TRUE))
+            {
+              nsCOMPtr<nsISupports>   item;
+              enumerator->GetNext(getter_AddRefs(item));
+              nsCOMPtr<nsIHTTPHeader>	header = do_QueryInterface(item);
+              if (header)
+              {
+                nsCOMPtr<nsIAtom>       headerAtom;
+                header->GetField(getter_AddRefs(headerAtom));
+                nsAutoString		headerStr;
+                headerAtom->ToString(headerStr);
+                
+                char	*val = nsnull;
+                if (headerStr.EqualsIgnoreCase("set-cookie"))
+                {
+                  header->GetValue(&val);
+                  if (val)
+                  {
+                    nsCRT::free(val);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    NotifyListenersOnStopAuthOperation(aStatus, aMsg, tProtResponse);
+    KickTheSyncOperation();
+  }
+  else
+  {
+    tProtResponse = mProtocolResponse.ToNewCString();
+    NotifyListenersOnStopSending(mTransactionID, aStatus, aMsg, tProtResponse);
+  }
+
   PR_FREEIF(tProtResponse);
 
   // Time to return...
@@ -364,6 +432,26 @@ nsAbSyncPostEngine::DeleteListeners()
 }
 
 nsresult
+nsAbSyncPostEngine::NotifyListenersOnStartAuthOperation(void)
+{
+  PRInt32 i;
+  for (i=0; i<mListenerArrayCount; i++)
+    if (mListenerArray[i] != nsnull)
+      mListenerArray[i]->OnStartAuthOperation();
+  return NS_OK;
+}
+
+nsresult
+nsAbSyncPostEngine::NotifyListenersOnStopAuthOperation(nsresult aStatus, const PRUnichar *aMsg, const char *aCookie)
+{
+  PRInt32 i;
+  for (i=0; i<mListenerArrayCount; i++)
+    if (mListenerArray[i] != nsnull)
+      mListenerArray[i]->OnStopAuthOperation(aStatus, aMsg, aCookie);
+  return NS_OK;
+}
+
+nsresult
 nsAbSyncPostEngine::NotifyListenersOnStartSending(PRInt32 aTransactionID, PRUint32 aMsgSize)
 {
   PRInt32 i;
@@ -425,7 +513,7 @@ nsEngineNewURI(nsIURI** aInstancePtrResult, const char *aSpec, nsIURI *aBase)
 }
 
 static nsresult
-PostDoneCallback(nsIURI* aURL, nsresult aStatus, 
+PostDoneCallback(nsresult aStatus, 
                  const char *aContentType,
                  const char *aCharset,
                  PRInt32 totalSize, 
@@ -438,58 +526,6 @@ PostDoneCallback(nsIURI* aURL, nsresult aStatus,
   }
 
   return NS_OK;
-}
-
-
-/* PRInt32 GetCurrentState (); */
-NS_IMETHODIMP nsAbSyncPostEngine::GetCurrentState(PRInt32 *_retval)
-{
-  *_retval = mPostEngineState;
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////
-//
-// This is the implementation of the actual post driver. 
-//
-////////////////////////////////////////////////////////////////////////////////////////
-NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort, const char *aProtocolRequest, PRInt32 aTransactionID)
-{
-  nsresult  rv;
-  nsIURI    *workURI = nsnull;
-
-  // Only try if we are not currently busy!
-  if (mPostEngineState != nsIAbSyncPostEngineState::nsIAbSyncPostIdle)
-    return NS_ERROR_FAILURE;
-
-  mTransactionID = aTransactionID;
-  mProtocolResponse = NS_ConvertASCIItoUCS2("");
-  mTotalWritten = 0;
-
-  char    *postHeader = "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: %d\r\n\r\n%s";
-  if (aProtocolRequest)
-    mMessageSize = nsCRT::strlen(aProtocolRequest);
-  else
-    mMessageSize = 0;
-
-  char *tCommand = PR_smprintf(postHeader, mMessageSize, aProtocolRequest);
-  if (!tCommand)
-    return NS_ERROR_OUT_OF_MEMORY; // we couldn't allocate the string 
-
-  printf("POST: %s\n", aProtocolRequest);
-
-  rv = nsEngineNewURI(&workURI, aSpec, nsnull);
-  if (NS_FAILED(rv) || (!workURI))
-    return NS_ERROR_FAILURE;
-
-  if (aPort > 0)
-    workURI->SetPort(aPort);
-
-  rv = FireURLRequest(workURI, PostDoneCallback, this, tCommand);
-
-  PR_FREEIF(tCommand);
-  mPostEngineState = nsIAbSyncPostEngineState::nsIAbSyncPostRunning;
-  return rv;
 }
 
 nsresult
@@ -519,9 +555,159 @@ nsAbSyncPostEngine::FireURLRequest(nsIURI *aURL, nsPostCompletionCallback  cb,
 
   httpChannel->AsyncRead(this, nsnull);
 
-  mURL = dont_QueryInterface(aURL);
   mCallback = cb;
   mTagData = tagData;
-  NS_ADDREF(this);
   return NS_OK;
+}
+
+/* PRInt32 GetCurrentState (); */
+NS_IMETHODIMP nsAbSyncPostEngine::GetCurrentState(PRInt32 *_retval)
+{
+  *_retval = mPostEngineState;
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+//
+// This is the implementation of the actual post driver. 
+//
+////////////////////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort, const char *aProtocolRequest, PRInt32 aTransactionID)
+{
+  nsresult    rv;
+  nsIURI      *workURI = nsnull;
+  PRUnichar   *screenName = nsnull;
+  PRUnichar   *passWord = nsnull;
+  char        *sName = nsnull;
+  char        *pWord = nsnull;
+  char        *tCommand = nsnull;
+  char        *protocolRequest = nsnull;
+  char        *postHeader = nsnull;
+
+  // Only try if we are not currently busy!
+  if (mPostEngineState != nsIAbSyncPostEngineState::nsIAbSyncPostIdle)
+    return NS_ERROR_FAILURE;
+
+  // Get the prefs for the server and port for Authentication...
+  //
+  char      *authServer = nsnull;
+  char      *authSpec = nsnull;
+  PRInt32   authPort;
+
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  if (NS_FAILED(rv) || !prefs) 
+    return NS_ERROR_FAILURE;
+
+  prefs->CopyCharPref("mail.absync.auth_server",           &authServer);
+  if (NS_FAILED(prefs->GetIntPref("mail.absync.auth_port", &authPort)))
+    authPort = 16500;
+
+  authSpec = PR_smprintf("http://%s", authServer);
+  if (!authSpec)  
+  {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+    goto GetOuttaHere;
+  }
+
+  // Set transaction ID and save/init Sync info...
+  mTransactionID = aTransactionID;
+  mSyncSpec = nsCRT::strdup(aSpec);
+  mSyncPort = aPort;
+  mSyncProtocolRequest = nsCRT::strdup(aProtocolRequest);
+  mProtocolResponse = NS_ConvertASCIItoUCS2("");
+  mTotalWritten = 0;
+
+  // The first thing we need to do is authentication so do it!
+  mAuthenticationRunning = PR_TRUE;
+  mPostEngineState = nsIAbSyncPostEngineState::nsIAbSyncAuthenticationRunning;
+
+  // Now build the auth post to get the length...
+  // Got to aim and get the username and password:
+  //
+    // The interface is nsIAimSession: 
+    // GetCurrentScreenName(PRUnichar** aCurrentScreenName); 
+    // GetSavedPassword(PRUnichar** aPassword); 
+  //
+
+  prefs->CopyCharPref("mail.absync.aim_username_hack", &sName);
+  prefs->CopyCharPref("mail.absync.aim_password_hack", &pWord);
+
+  protocolRequest = PR_smprintf("screenname=%s&password=%s", sName, pWord);
+
+  if (protocolRequest)
+    mMessageSize = nsCRT::strlen(protocolRequest);
+  else
+    mMessageSize = 0;
+
+  postHeader = "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: %d\r\n\r\n%s";
+  tCommand = PR_smprintf(postHeader, mMessageSize, protocolRequest);
+  if (!tCommand)
+  {
+    rv = NS_ERROR_OUT_OF_MEMORY; // we couldn't allocate the string 
+    goto GetOuttaHere;
+  }
+
+  rv = nsEngineNewURI(&workURI, authSpec, nsnull);
+  if (NS_FAILED(rv) || (!workURI))
+  {
+    rv = NS_ERROR_OUT_OF_MEMORY; // we couldn't allocate the string 
+    goto GetOuttaHere;
+  }
+
+  if (authPort > 0)
+    workURI->SetPort(authPort);
+
+  rv = FireURLRequest(workURI, PostDoneCallback, this, tCommand);
+
+GetOuttaHere:
+  PR_FREEIF(authSpec);
+  NS_IF_RELEASE(workURI);
+  PR_FREEIF(tCommand);
+  PR_FREEIF(sName);
+  PR_FREEIF(pWord);
+  mPostEngineState = nsIAbSyncPostEngineState::nsIAbSyncPostRunning;
+  return rv;
+}
+
+NS_IMETHODIMP 
+nsAbSyncPostEngine::KickTheSyncOperation(void)
+{
+  nsresult  rv;
+  nsIURI    *workURI = nsnull;
+
+  // The first thing we need to do is authentication so do it!
+  mAuthenticationRunning = PR_FALSE;
+  mProtocolResponse = NS_ConvertASCIItoUCS2("");
+  mPostEngineState = nsIAbSyncPostEngineState::nsIAbSyncPostRunning;
+
+  char    *postHeader = "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: %d\r\n\r\n%s";
+  if (mSyncProtocolRequest)
+    mMessageSize = nsCRT::strlen(mSyncProtocolRequest);
+  else
+    mMessageSize = 0;
+
+  char *tCommand = PR_smprintf(postHeader, mMessageSize, mSyncProtocolRequest);
+  if (!tCommand)
+  {
+    rv = NS_ERROR_OUT_OF_MEMORY; // we couldn't allocate the string 
+    goto GetOuttaHere;
+  }
+
+  rv = nsEngineNewURI(&workURI, mSyncSpec, nsnull);
+  if (NS_FAILED(rv) || (!workURI))
+  {
+    rv = NS_ERROR_FAILURE;  // we couldn't allocate the string 
+    goto GetOuttaHere;
+  }
+
+  if (mSyncPort > 0)
+    workURI->SetPort(mSyncPort);
+
+  rv = FireURLRequest(workURI, PostDoneCallback, this, tCommand);
+
+GetOuttaHere:
+  NS_IF_RELEASE(workURI);
+  PR_FREEIF(tCommand);
+  mPostEngineState = nsIAbSyncPostEngineState::nsIAbSyncPostRunning;
+  return rv;
 }
