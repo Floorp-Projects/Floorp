@@ -421,8 +421,11 @@ nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
   
     - Dave
   */
+#define TPM_VERPOSANIMATION 0x1000L
+#define TPM_VERNEGANIMATION 0x2000L
+#define TPM_HORPOSANIMATION 0x0800L
+#define TPM_HORNEGANIMATION 0x0400L
 
-/*
   if (mAnchorAlignment == "topleft") {
     // Fancy animation in this case matters for 
     // bottomleft and topright
@@ -465,7 +468,6 @@ nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
       alignFlags |= TPM_HORPOSANIMATION;
     }
   }
-*/
 
   PRInt32 identifier = ::TrackPopupMenu(
 	  mMenu, 
