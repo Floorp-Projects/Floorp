@@ -2624,8 +2624,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             //SetFocus(); // this is bad
             //RelayMouseEvent(msg,wParam, lParam); 
             {
-            nsresult res = ResetInputState();
-            NS_ASSERTION(NS_SUCCEEDED(res) , "ResetInputState failed");
             result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN);
             } break;
 
@@ -2640,8 +2638,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         case WM_MBUTTONDOWN:
             { 
-            nsresult res = ResetInputState();
-            NS_ASSERTION(NS_SUCCEEDED(res) , "ResetInputState failed");
             result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN);
             } break;
 
@@ -2655,8 +2651,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         case WM_RBUTTONDOWN:
             {
-            nsresult res = ResetInputState();
-            NS_ASSERTION(NS_SUCCEEDED(res) , "ResetInputState failed");
             result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN);            
             } break;
 
@@ -4254,14 +4248,14 @@ NS_IMETHODIMP nsWindow::ResetInputState()
 #ifdef DEBUG_KBSTATE
 	printf("ResetInputState\n");
 #endif 
-	if(mIMEIsComposing) {
+	//if(mIMEIsComposing) {
 		HIMC hIMC = ::ImmGetContext(mWnd);
 		if(hIMC) {
 			BOOL ret = ::ImmNotifyIME(hIMC,NI_COMPOSITIONSTR,CPS_COMPLETE,NULL);
-			NS_ASSERTION(ret, "ImmNotify failed");
+			//NS_ASSERTION(ret, "ImmNotify failed");
 			::ImmReleaseContext(mWnd,hIMC);
 		}
-	}
+	//}
 	return NS_OK;
 }
 NS_IMETHODIMP nsWindow::PasswordFieldInit()

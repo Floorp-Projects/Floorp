@@ -1893,7 +1893,6 @@ nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
 /* virtual */ void
 nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 {
-  ResetInputState();
   nsMouseEvent event;
   nsMouseScrollEvent scrollEvent;
   PRUint32 eventType = 0;
