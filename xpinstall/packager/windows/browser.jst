@@ -282,6 +282,17 @@ function updateWinReg()
   }
 }
 
+function upgradeCleanup()
+{
+  // uncomment these function calls after beta1
+  // deleteThisFile("Program",    "oji.dll");
+  // deleteThisFile("Program",    "jsdom.dll");
+  // deleteThisFile("Program",    "defaults/pref/psm-glue.js");
+  // deleteThisFile("Program",    "defaults/wallet/URLFieldSchema.tbl");
+  deleteThisFile("Components", "gkhtml.dll");
+  deleteThisFile("Components", "mozucth.dll");
+}
+
 // main
 var srDest;
 var err;
@@ -320,6 +331,8 @@ if(verifyDiskSpace(fProgram, srDest))
   {
     updateWinReg();
     createShortcuts();
+    upgradeCleanup();
+
     // we don't want to fail on errors for the above two
     resetError();
 

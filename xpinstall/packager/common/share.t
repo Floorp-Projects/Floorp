@@ -20,3 +20,20 @@ function verifyDiskSpace(dirPath, spaceRequired)
 
   return(true);
 }
+
+// this function deletes a file if it exists
+function deleteThisFile(dirKey, file)
+{
+  var fFileToDelete;
+
+  fFileToDelete = getFolder(dirKey, file);
+  logComment(file + " file: " + fFileToDelete);
+  if(File.exists(fFileToDelete))
+  {
+    fileDelete(fFileToDelete);
+    return(true);
+  }
+  else
+    return(false);
+}
+
