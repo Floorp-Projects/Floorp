@@ -342,13 +342,25 @@ public class NativeArray extends ScriptableObject {
 
     public static String jsFunction_toString(Context cx, Scriptable thisObj,
                                              Object[] args, Function funObj)
+        throws JavaScriptException
     {
         return toStringHelper(cx, thisObj, 
-                              cx.getLanguageVersion() == cx.VERSION_1_2);
+                              cx.getLanguageVersion() == cx.VERSION_1_2,
+                              false);
+    }
+    
+    public static String jsFunction_toLocaleString(Context cx, 
+                                                   Scriptable thisObj,
+                                                   Object[] args, 
+                                                   Function funObj)
+        throws JavaScriptException
+    {
+        return toStringHelper(cx, thisObj, false, true);
     }
     
     private static String toStringHelper(Context cx, Scriptable thisObj,
-                                         boolean toSource)
+                                         boolean toSource, boolean toLocale)
+        throws JavaScriptException
     {
         /* It's probably redundant to handle long lengths in this
          * function; StringBuffers are limited to 2^31 in java.
@@ -403,6 +415,15 @@ public class NativeArray extends ScriptableObject {
                     try {
                         // stop recursion.
                         cx.iterating.put(thisObj, Boolean.TRUE);
+                        if (toLocale && elem != Undefined.instance && 
+                            elem != null) 
+                        {
+                            Scriptable obj = cx.toObject(elem, thisObj);
+                            Object tls = ScriptRuntime.getProp(obj, 
+                                             "toLocaleString", thisObj);
+                            elem = ScriptRuntime.call(cx, tls, elem, 
+                                                      ScriptRuntime.emptyArgs);
+                        }
                         result.append(ScriptRuntime.toString(elem));
                     } finally {
                         cx.iterating.remove(thisObj);
