@@ -57,6 +57,7 @@ extern GtkWidget* gHandleBoxWidget;
 extern GtkWidget* gFrameWidget;
 extern GtkWidget* gProtoWindow;
 extern GtkWidget* gProgressWidget;
+extern GtkWidget* gTabWidget;
 extern GtkTooltips* gTooltipWidget;
 
 GtkStateType
@@ -410,3 +411,22 @@ moz_gtk_progress_chunk_paint(GdkWindow* window, GtkStyle* style,
                 rect->width, rect->height);
 }
 
+void
+moz_gtk_tab_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
+                  GdkRectangle* cliprect, GtkTabType type)
+{
+  gtk_paint_extension(style, window,
+                      (type == kTabSelected ? GTK_STATE_NORMAL : GTK_STATE_ACTIVE),
+                      GTK_SHADOW_OUT, cliprect, gTabWidget, "tab", rect->x,
+                      rect->y, rect->width, rect->height, GTK_POS_BOTTOM);
+
+  /* Here is the sleazy hack for before/after selected tab */
+  if (type == kTabBeforeSelected)
+    gtk_paint_extension(style, window, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
+                        cliprect, gTabWidget, "tab", rect->x + rect->width,
+                        rect->y, rect->width, rect->height, GTK_POS_BOTTOM);
+  else if (type == kTabAfterSelected)
+    gtk_paint_extension(style, window, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
+                        cliprect, gTabWidget, "tab", rect->x - rect->width,
+                        rect->y, rect->width, rect->height, GTK_POS_BOTTOM);
+}
