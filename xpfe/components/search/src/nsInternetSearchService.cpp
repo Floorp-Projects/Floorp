@@ -3386,6 +3386,13 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(const nsFileSpec *file, const 
 		}
 	}
 
+	if (checkMacFileType == PR_FALSE)
+	{
+		// mark our private search files, so that we can distinguish
+		// between ours and any that are included with the OS
+		mInner->Assert(searchRes, kNC_SearchType, kNC_Engine, PR_TRUE);
+	}
+
 	if (dataUni != nsnull)
 	{
 		// save name of search engine (as specified in file)
@@ -3414,10 +3421,6 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(const nsFileSpec *file, const 
 
 		if (checkMacFileType == PR_FALSE)
 		{
-			// mark our private search files, so that we can distinguish
-			// between ours and any that are included with the OS
-			mInner->Assert(searchRes, kNC_SearchType, kNC_Engine, PR_TRUE);
-
 			// get update URL and # of days to check for updates
 			// Note: only check for updates on our private search files
 			nsAutoString	updateStr, updateCheckDaysStr;
