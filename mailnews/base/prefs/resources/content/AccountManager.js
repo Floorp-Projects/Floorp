@@ -210,8 +210,8 @@ function onDeleteAccount() {
 
 function saveAccount(accountValues, account)
 {
-  var identity;
-  var server;
+  var identity = null;
+  var server = null;
   
   if (account) {
     identity = account.defaultIdentity;

@@ -266,9 +266,11 @@ nsMsgAccount::GetDefaultIdentity(nsIMsgIdentity * *aDefaultIdentity)
   rv = m_identities->GetElementAt(0, &idsupports);
   if (NS_FAILED(rv)) return rv;
   
-  rv = idsupports->QueryInterface(NS_GET_IID(nsIMsgIdentity),
-                                  (void **)aDefaultIdentity);
-  NS_RELEASE(idsupports);
+  if (idsupports) {
+      rv = idsupports->QueryInterface(NS_GET_IID(nsIMsgIdentity),
+                                          (void **)aDefaultIdentity);
+      NS_RELEASE(idsupports);
+  }
   return rv;
 }
 
