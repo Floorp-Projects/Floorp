@@ -31,17 +31,9 @@
 
 #include "prtypes.h"
 
-/* NSPR1 compatibility definitions */
-#ifdef NSPR20
 #   include "prprf.h"
 #   include "prlog.h"
 #   include "plhash.h"          /* NSPR hash-tables      */
-#else
-#   include "prprintf.h"
-#   include "prassert.h"
-#   include "prhash.h"          /* NSPR hash-tables      */
-#   define PRHashNumber prhashcode
-#endif
 
 #ifdef XP_MAC
 #include "macstdlibextras.h"  /* for strdup() */
