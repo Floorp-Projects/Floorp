@@ -42,7 +42,7 @@ CVS_CFLAGS = -q -z 3
 endif
 
 CVSCO		= cvs $(CVS_FLAGS) co -P
-MAKE		= gmake
+#MAKE		= gmake
 AUTOCONF	= autoconf
 TARGETS		= export libs install
 MKDIR		= mkdir
@@ -52,11 +52,8 @@ ifndef MOZ_TOOLKIT
 MOZ_TOOLKIT	= USE_DEFAULT
 endif
 
-ifndef NSPR_INSTALL_DIR
-NSPR_INSTALL_DIR = /usr/local/nspr
+ifdef NSPR_INSTALL_DIR
 NSPR_CONFIG_FLAG = --with-nspr=$(NSPR_INSTALL_DIR)
-else
-NSPR_CONFIG_FLAG = 
 endif
 
 all: checkout
@@ -80,7 +77,7 @@ configure:	mozilla/configure.in
 	echo autoobjdir = $$autoobjdir; \
 	(cd mozilla; $(AUTOCONF)); \
 	if test ! -d mozilla/$$autoobjdir; then $(MKDIR) mozilla/$$autoobjdir; fi; \
-	(cd mozilla/$$autoobjdir; ../configure $(NSPR_CONFIG_FLAG) --enable-toolkit=$(MOZ_TOOLKIT)); \
+	(cd mozilla/$$autoobjdir; LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(NSPR_INSTALL_DIR)/lib ../configure $(NSPR_CONFIG_FLAG) --enable-toolkit=$(MOZ_TOOLKIT)); \
 
 mozilla/configure: mozilla/configure.in
 	$(MAKE) -f mozilla/client.mk configure
