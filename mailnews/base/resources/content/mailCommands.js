@@ -385,7 +385,11 @@ function MarkSelectedMessagesFlagged(markFlagged)
 
 function MarkAllMessagesRead(compositeDataSource, folder)
 {
-    dump("fix MarkAllMessagesRead()\n");
+  var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
+  var folderArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+  folderArray.AppendElement(folderResource);
+
+  DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#MarkAllMessagesRead", folderArray, null);
 }
 
 function DownloadFlaggedMessages(compositeDataSource, folder)
