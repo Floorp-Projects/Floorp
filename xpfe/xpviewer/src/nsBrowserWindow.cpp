@@ -2032,7 +2032,7 @@ nsBrowserWindow::NotifyImageButtonEvent(nsIImageButton * aImgBtn, nsGUIEvent* an
       break;
 
     case kReloadCmd :  {
-      mWebShell->Reload(nsURLReload);
+      mWebShell->Reload(nsURLReloadBypassCache);
       } break;
   
     case kHomeCmd : {
