@@ -446,10 +446,7 @@ NS_IMETHODIMP nsMailboxUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
   nsCOMPtr<nsIMsgFolder> folder;
   msg->GetMsgFolder(getter_AddRefs(folder));
   NS_ENSURE_TRUE(folder, NS_ERROR_FAILURE);
-  nsXPIDLString charset; 
-  folder->GetCharset(getter_Copies(charset));
-  *aCharacterSet = nsCRT::strdup(charset);
-
+  folder->GetCharset(aCharacterSet);
   return NS_OK;
 }
 

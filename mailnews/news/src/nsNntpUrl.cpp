@@ -57,7 +57,6 @@ nsNntpUrl::nsNntpUrl()
 	m_offlineNews = nsnull;
 	m_newsgroupList = nsnull;
   m_newsgroupPost = nsnull;
-  m_newsgroupName = nsnull;
   m_messageKey = nsMsgKey_None;
 	m_newsAction = nsINntpUrl::ActionGetNewNews;
   m_addDummyEnvelope = PR_FALSE;
@@ -74,7 +73,6 @@ nsNntpUrl::~nsNntpUrl()
 	NS_IF_RELEASE(m_offlineNews);
 	NS_IF_RELEASE(m_newsgroupList);
   NS_IF_RELEASE(m_newsgroupPost);
-  PR_FREEIF(m_newsgroupName);
 }
   
 NS_IMPL_ADDREF_INHERITED(nsNntpUrl, nsMsgMailNewsUrl)
@@ -377,36 +375,21 @@ NS_IMETHODIMP nsNntpUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
 
 NS_IMETHODIMP nsNntpUrl::SetNewsgroupName(const char * aNewsgroupName)
 {
-    if (!aNewsgroupName) return NS_ERROR_NULL_POINTER;
-
-    PR_FREEIF(m_newsgroupName);
-    
-    m_newsgroupName = PL_strdup(aNewsgroupName);
-    if (!m_newsgroupName) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    else {
-        return NS_OK;
-    }    
+    m_newsgroupName = aNewsgroupName;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsNntpUrl::GetNewsgroupName(char ** aNewsgroupName)
 {
-    if (!aNewsgroupName) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(aNewsgroupName);
 
-    if (!m_newsgroupName) {
-		*aNewsgroupName = nsnull;
-		return NS_OK;
-	}
+    *aNewsgroupName = nsCRT::strdup((const char *)m_newsgroupName);
 
-    *aNewsgroupName = PL_strdup(m_newsgroupName);
     if (!aNewsgroupName) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    else {
-        return NS_OK;
-    }
-}     
+    return NS_OK;
+}
 
 NS_IMETHODIMP nsNntpUrl::SetMessageKey(nsMsgKey aKey)
 {
@@ -449,12 +432,69 @@ nsNntpUrl::SetOriginalSpec(const char *aSpec)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsNntpUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
+NS_IMETHODIMP 
+nsNntpUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
 {
+    /*
+     well, not proud of this.  but it will all get fixed when
+     the news code gets the beating it deserves.
 
-  // news folders don't have charset associated with them..
-  *aCharacterSet = nsnull;
-  return NS_OK;
+     ideally, we'd keep a weak reference to the current news folder
+     and just use that to determine the char set, but for now
+     we'll just get the folder from the url we are running.
+    
+     this code takes the current uri, which is for a news message
+     and turns it into a news folder uri,
+     and then get the folder for that URI, and the ask the folder
+     for it's charset....
+     */
+
+    nsresult rv;
+    nsXPIDLCString uriStr;
+    rv = GetUri(getter_Copies(uriStr));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIURI> uri = do_CreateInstance("@mozilla.org/network/standard-url;1", &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = uri->SetSpec((const char *)uriStr);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // XXX todo?
+    // could the url already be a folder url?
+    //
+    // get the path, check for @ or %40.  if has them,
+    // this is an article url, and we need to replace
+    // the path with the newsgroup name.
+    // for now, assume it is always an article url
+
+    if (!((const char *)m_newsgroupName)) {
+        NS_ASSERTION(NS_ERROR_FAILURE,"no group name");
+        return NS_ERROR_FAILURE;
+    }
+
+    nsCAutoString groupPath("/");
+    groupPath += m_newsgroupName;
+
+    rv = uri->SetPath((const char *)groupPath);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = uri->GetSpec(getter_Copies(uriStr));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIRDFService> rdfService = do_GetService(NS_RDF_CONTRACTID "/rdf-service;1", &rv); 
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIRDFResource> resource;
+    rv = rdfService->GetResource((const char *)uriStr, getter_AddRefs(resource));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(resource, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = folder->GetCharset(aCharacterSet);
+    NS_ENSURE_SUCCESS(rv,rv);
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsNntpUrl::GetCharsetOverRide(PRUnichar ** aCharacterSet)
