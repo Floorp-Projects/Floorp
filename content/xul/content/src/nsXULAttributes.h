@@ -114,20 +114,6 @@ class nsXULAttribute : public nsIDOMAttr,
                        public nsIDOM3Node
 {
 protected:
-    static PRInt32 gRefCnt;
-    static nsIAtom* kIdAtom;
-
-    // A global fixed-size allocator for nsXULAttribute
-    // objects. |kBlockSize| is the number of nsXULAttribute objects
-    // the live together in a contiguous block of memory.
-    static const PRInt32 kBlockSize;
-
-    // The head of the free list for free nsXULAttribute objects.
-    static nsXULAttribute* gFreeList;
-
-    static void* operator new(size_t aSize);
-    static void  operator delete(void* aObject, size_t aSize);
-
     nsXULAttribute(nsIContent* aContent,
                    nsINodeInfo* aNodeInfo,
                    const nsAReadableString& aValue);
