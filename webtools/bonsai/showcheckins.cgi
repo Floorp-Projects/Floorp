@@ -55,26 +55,28 @@ sub BreakBig {
      return $result . $str;
 }
 
-
-if (exists($::FORM{'person'})) {
-     my $escaped_person = html_quote($::FORM{'person'});
+my $person = &SanitizeUsernames($::FORM{'person'});
+if ($person) {
+     my $escaped_person = &html_quote($person);
      $title = $head = "Checkins for $escaped_person";
 
      foreach $checkin (@::CheckInList) {
           $info = eval("\\\%$checkin");
           push @list, $checkin
-               if ($$info{'person'} eq $::FORM{'person'});
+               if ($$info{'person'} eq $person);
      }
 } elsif (exists($::FORM{'mindate'}) || exists($::FORM{'maxdate'})) {
      my ($min, $max) = (0, 1<<30);
 
      $title = "Checkins";
+     
      if (exists($::FORM{'mindate'})) {
-          $title .= " since " . MyFmtClock($min = $::FORM{'mindate'});
-          $title .= " and" if (exists($::FORM{'maxdate'}));
+         $title .= " since " .
+             &MyFmtClock($min = &ExpectDate($::FORM{'mindate}'}));
+         $title .= " and" if (exists($::FORM{'maxdate'}));
      }
-     $title .= " before" . MyFmtClock($max = $::FORM{'maxdate'})
-          if (exists($::FORM{'maxdate'}));
+     $title .= " before" . &MyFmtClock($max = &ExpectDate($::FORM{'maxdate'}))
+         if (exists($::FORM{'maxdate'}));
      $head = $title;
 
      foreach $checkin (@::CheckInList) {
@@ -103,13 +105,18 @@ day's checkins</a>.<br>";
 
 PutsHeader($title, $head, $subhead);
 
-$::FORM{'sort'} = 'date' unless $::FORM{'sort'};
+my $sort = $::FORM{'sort'} || "";
+if (!$sort) {
+    $sort = 'date';
+} else {
+    die ("Invalid sort string.\n") unless ($sort =~ m/^\w+(,\w+)*$/);
+}
 
 print "
-(Current sort is by <tt>$::FORM{'sort'}</tt>; click on a column header
+(Current sort is by <tt>$sort</tt>; click on a column header
 to sort by that column.)";
 
-my @fields = split(/,/, $::FORM{'sort'});
+my @fields = split(/,/, $sort);
 
 sub Compare {
      my $rval = 0;
@@ -179,7 +186,7 @@ my $otherparams;
 
 sub NewSort {
      my ($key) = @_;
-     my @sort_keys = grep(!/^$key$/, split(/,/, $::FORM{'sort'}));
+     my @sort_keys = grep(!/^$key$/, split(/,/, $sort));
      unshift(@sort_keys, $key);
 
      return $otherparams . "&sort=" . join(',', @sort_keys);

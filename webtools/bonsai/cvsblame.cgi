@@ -199,10 +199,12 @@ $use_html = 1 if defined $::FORM{use_html} and $::FORM{use_html} eq '1';
 #
 my %mark_line;
 my $mark_arg = '';
-$mark_arg = $::FORM{mark} if defined $::FORM{mark};
+$mark_arg = &SanitizeMark($::FORM{mark}) if defined $::FORM{mark};
 foreach my $mark (split ',', $mark_arg) {
     my ($begin, $end);
-    if (($begin, $end) = $mark =~ /(\d*)\-(\d*)/) {
+    if ($mark =~ m/^(\d*)-(\d*)$/) {
+        $begin = $1;
+        $end = $2;
         $begin = 1 if $begin eq '';
         $end = $#text + 1 if $end eq '' or $end > $#text + 1;
         next if $begin >= $end;

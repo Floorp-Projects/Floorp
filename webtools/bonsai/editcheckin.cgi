@@ -28,16 +28,14 @@ use strict;
 sub sillyness {
     my $zz;
     $zz = $::TreeID;
+    $zz = $::FORM{'id'};
 }
 
 require 'CGI.pl';
 
-LoadCheckins();
+&LoadCheckins();
 
-# Make sure checkin id is in designated format
-my $form_id = $::FORM{'id'};
-die("Invalid checkin id.\n") unless ($form_id =~ m/^::checkin_\d+_\d+$/);
-
+my $form_id = &ExpectCheckinId($::FORM{'id'});
 my $info = eval("\\%" . $form_id);
 
 print "Content-type: text/html
@@ -69,7 +67,7 @@ if (!exists $info->{'notes'}) {
 
 foreach my $i ('person', 'dir', 'files', 'notes') {
     print "<tr><td align=right><B>$i:</B></td>";
-    print "<td><INPUT NAME=$i VALUE=\"" . value_quote($info->{$i}) .
+    print "<td><INPUT NAME=$i VALUE=\"" . &value_quote($info->{$i}) .
     "\"></td></tr>";
 }
 
@@ -105,9 +103,9 @@ foreach my $i (sort(keys(%$info))) {
     print qq{<INPUT TYPE=HIDDEN NAME=orig$i VALUE="$q">\n};
 }
 
-print "<INPUT TYPE=HIDDEN NAME=id VALUE=\"$::FORM{'id'}\">";
+print "<INPUT TYPE=HIDDEN NAME=id VALUE=\"$form_id\">";
 
-print "<INPUT TYPE=HIDDEN NAME=treeid VALUE=\"" . value_quote($::TreeID) . "\">";
+print "<INPUT TYPE=HIDDEN NAME=treeid VALUE=\"$::TreeID\">";
 
 
 

@@ -44,26 +44,31 @@ my $CVS_ROOT = $::FORM{"cvsroot"};
 $CVS_ROOT = pickDefaultRepository() unless $CVS_ROOT;
 &validateRepository($CVS_ROOT);
 
-LoadTreeConfig();
-$::TreeID = $::FORM{'module'} 
-     if (!exists($::FORM{'treeid'}) &&
-         exists($::FORM{'module'}) &&
-         exists($::TreeInfo{$::FORM{'module'}}{'repository'}));
-$::TreeID = 'default'
-     if (!exists($::TreeInfo{$::TreeID}{'repository'}) ||
-         exists($::TreeInfo{$::TreeID}{'nobonsai'}));
+&LoadTreeConfig();
+my $intreeid = &SanitizeModule($::FORM{'treeid'});
+my $inmod = &SanitizeModule($::FORM{'module'});
+  
+if ($intreeid && exists($::TreeInfo{$intreeid}{'repository'}) &&
+    !exists($::TreeInfo{$intreeid}{'nobonsai'})) {
+    $::TreeID = $intreeid;
+} elsif ($inmod && exists($::TreeInfo{$inmod}{'repository'}) &&
+         !exists($::TreeInfo{$inmod}{'nobonsai'})) {
+    $::TreeID = $inmod;
+} else {
+    $::TreeID = 'default';
+}
 
 
 # get dir, remove leading and trailing slashes
 
-my $dir = $::FORM{"dir"};
-$dir = "" unless defined $dir;
-$dir = "" if ($dir =~ /^\.\.\/$/);
-$dir =~ s/^\/([^:]*)/$1/;
-$dir =~ s/([^:]*)\/$/$1/;
+my $dir = $::FORM{"dir"} || "";
+$dir =~ s/^[\/]+([^:]*)/$1/;
+$dir =~ s/([^:]*)[\/]+$/$1/;
+my $path = "$CVS_ROOT/$dir";
+&ChrootFilename($CVS_ROOT, $path);
+die "Invalid directory: " . &shell_escape($dir) . ".\n" if (! -d $path);
 
-my $rev = '';
-$rev = &SanitizeRevision($::FORM{"rev"}) if defined($::FORM{"rev"});
+my $rev = &SanitizeRevision($::FORM{"rev"});
 
 print "Content-type: text/html\n\n";
 
@@ -82,18 +87,16 @@ if ($rev) {
     $s = "for branch <i>$rev</i>";
 }
 
-CheckHidden("$CVS_ROOT/$dir");
-
 my $revstr = '';
 $revstr = "&rev=$rev" unless $rev eq '';
 my $rootstr = '';
-$rootstr .= "&cvsroot=$::FORM{'cvsroot'}" if defined $::FORM{'cvsroot'};
+$rootstr .= "&cvsroot=$CVS_ROOT";
 $rootstr .= "&module=$::TreeID";
 my $module = $::TreeInfo{$::TreeID}{'module'};
 
 my $toplevel = Param('toplevel');
 
-PutsHeader("Repository Directory $toplevel/$dir $s", "");
+&PutsHeader("Repository Directory $toplevel/" . &html_quote($dir) . " $s", "");
 
 my $output = "<DIV ALIGN=LEFT>";
 $output .= "<A HREF='toplevel.cgi" . BatchIdPart('?') . "'>$toplevel</a>/ ";

@@ -46,19 +46,21 @@ sub sillyness {
 
 require 'CGI.pl';
 
+$::query_debug = (defined($::FORM{'debug'}) ? 1 : 0);
+$::query_module = &SanitizeModule($::FORM{'module'});
+
 $::CVS_ROOT = $::FORM{'cvsroot'};
-$::CVS_ROOT = pickDefaultRepository() unless $::CVS_ROOT;
+$::CVS_ROOT = &pickDefaultRepository() unless $::CVS_ROOT;
 &validateRepository($::CVS_ROOT);
 
-$::TreeID = $::FORM{'module'} 
-     if (!exists($::FORM{'treeid'}) && 
-         exists($::FORM{'module'}) &&
-         exists($::TreeInfo{$::FORM{'module'}}{'repository'}));
+$::TreeID = $::query_module
+    if (!exists($::FORM{'treeid'}) && 
+        exists($::TreeInfo{$::query_module}{'repository'}));
 $::TreeID = 'default'
-     if (!exists($::TreeInfo{$::TreeID}{'repository'}) ||
-         exists($::TreeInfo{$::TreeID}{'nobonsai'}));
+    if (!exists($::TreeInfo{$::TreeID}{'repository'}) ||
+    exists($::TreeInfo{$::TreeID}{'nobonsai'}));
 
-LoadTreeConfig();
+&LoadTreeConfig();
 
 require 'cvsquery.pl';
 
@@ -101,7 +103,6 @@ Log("Query [$ENV{'REMOTE_ADDR'}]: $ENV{'QUERY_STRING'}");
 #
 # build a module map
 #
-$::query_module = $::FORM{'module'};
 
 #
 # allow ?file=/a/b/c/foo.c to be synonymous with ?dir=/a/b/c&file=foo.c
@@ -120,18 +121,20 @@ unless ($::FORM{'dir'}) {
 #
 # build a directory map
 #
-@::query_dirs = split(/[;, \t]+/, $::FORM{'dir'});
+@::query_dirs = split(/[;, \t\000]+/, $::FORM{'dir'});
 
 $::query_file = $::FORM{'file'};
-$::query_filetype = $::FORM{'filetype'};
+$::query_filetype = &ExpectMatchtype($::FORM{'filetype'});
 $::query_logexpr = $::FORM{'logexpr'};
 
 #
 # date
 #
 $::query_date_type = $::FORM{'date'};
+my $query_hours;
 if( $::query_date_type eq 'hours' ){
-    $::query_date_min = time - $::FORM{'hours'}*60*60;
+    $query_hours = &ExpectDigit('hours', $::FORM{'hours'});
+    $::query_date_min = time - $query_hours*60*60;
 }
 elsif( $::query_date_type eq 'day' ){
     $::query_date_min = time - 24*60*60;
@@ -161,8 +164,8 @@ else {
 #
 # who
 #
-$::query_who = $::FORM{'who'};
-$::query_whotype = $::FORM{'whotype'};
+$::query_who = &SanitizeUsernames($::FORM{'who'});
+$::query_whotype = &ExpectMatchtype($::FORM{'whotype'});
 
 
 my $show_raw = 0;
@@ -173,11 +176,8 @@ if ($::FORM{'raw'}) {
 #
 # branch
 #
-$::query_branch = $::FORM{'branch'};
-if (!defined $::query_branch) {
-    $::query_branch = 'HEAD';
-}
-$::query_branchtype = $::FORM{'branchtype'};
+$::query_branch = &SanitizeRevision($::FORM{'branch'});
+$::query_branchtype = &ExpectMatchtype($::FORM{'branchtype'});
 
 if ($::query_branch eq 'HEAD' && 
     ($::query_branchtype eq 'match' || $::query_branchtype eq 'regexp')) {
@@ -187,8 +187,8 @@ if ($::query_branch eq 'HEAD' &&
 #
 # tags
 #
-$::query_begin_tag = $::FORM{'begin_tag'};
-$::query_end_tag = $::FORM{'end_tag'};
+$::query_begin_tag = &SanitizeRevision($::FORM{'begin_tag'});
+$::query_end_tag = &SanitizeRevision($::FORM{'end_tag'});
 
 
 #
@@ -529,14 +529,7 @@ sub PrevRev {
 
 sub parse_date {
     my($d) = @_;
-
-    my($result) = str2time($d);
-    if (defined $result) {
-        return $result;
-    } elsif ($d  > 7000000) {
-        return $d;
-    }
-    return 0;
+    return &ExpectDate($d);
 }
 
 
@@ -654,7 +647,7 @@ sub query_to_english {
 
     $::query_date_type = $::FORM{'date'};
     if( $::query_date_type eq 'hours' ){
-        $english .="in the last " . html_quote($::FORM{hours}) . " hours";
+        $english .="in the last $query_hours hours";
     }
     elsif( $::query_date_type eq 'day' ){
         $english .="in the last day";

@@ -147,18 +147,16 @@ if ($browse_revtag eq 'HEAD') {
 # Handle the "mark" argument
 #
 my %mark;
-my $mark_arg = '';
-$mark_arg = $::FORM{'mark'} if defined($::FORM{'mark'});
+my $mark_arg = &SanitizeMark($::FORM{'mark'});
 foreach my $rev (split(',',$mark_arg)) {
-    $mark{$rev} = 1;
+    $mark{$rev} = 1 if ($rev =~ m/^\d+$/);
 }
 
 
 # Handle the "author" argument
 #
 my %use_author;
-my $author_arg = '';
-$author_arg = $::FORM{'author'} if defined($::FORM{'author'});
+my $author_arg = &SanitizeUsernames($::FORM{'author'});
 foreach my $author (split(',',$author_arg)) {
     $use_author{$author} = 1;
 }

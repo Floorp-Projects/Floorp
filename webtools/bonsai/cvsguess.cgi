@@ -25,9 +25,9 @@ use strict;
 require 'CGI.pl';
 
 my $file= $::FORM{'file'};
-my $mark= $::FORM{'mark'};
-my $ln = ($mark > 10 ? $mark-10 : 1 );
-my $rev = SanitizeRevision($::FORM{'rev'});
+my $mark= &SanitizeMark($::FORM{'mark'});
+my $ln = (($mark =~ m/^\d+$/ && $mark > 10) ? $mark-10 : 1 );
+my $rev = &SanitizeRevision($::FORM{'rev'});
 my $debug = $::FORM{'debug'};
 
 print "Content-Type: text/html\n\n";

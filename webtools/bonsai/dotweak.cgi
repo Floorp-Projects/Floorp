@@ -63,11 +63,13 @@ my $origtree = $::TreeID;
 my $what = "";
 
 my $i;
+my $id;
 
 SWITCH: for ($::FORM{'command'}) {
     /^nuke$/ && do {
         foreach $i (@list) {
-            my $w = lsearch(\@::CheckInList, $i);
+            $id = &ExpectCheckinId($i);
+            my $w = lsearch(\@::CheckInList, $id);
             if ($w >= 0) {
                 splice(@::CheckInList, $w, 1);
             }
@@ -77,7 +79,8 @@ SWITCH: for ($::FORM{'command'}) {
     };
     /^setopen$/ && do {
         foreach $i (@list) {
-            my $info = eval("\\%" . $i);
+            $id = &ExpectCheckinId($i);
+            my $info = eval("\\%" . $id);
             $info->{'treeopen'} = 1;
         }
         $what = "modified to be open.";
@@ -86,7 +89,8 @@ SWITCH: for ($::FORM{'command'}) {
 
     /^setclose$/ && do {
         foreach $i (@list) {
-            my $info = eval("\\%" . $i);
+            $id = &ExpectCheckinId($i);
+            my $info = eval("\\%" . $id);
             $info->{'treeopen'} = 0;
         }
         $what = "modified to be closed.";
@@ -101,7 +105,8 @@ SWITCH: for ($::FORM{'command'}) {
             exit();
         }
         foreach $i (@list) {
-            my $w = lsearch(\@::CheckInList, $i);
+            $id = &ExpectCheckinId($i);
+            my $w = lsearch(\@::CheckInList, $id);
             if ($w >= 0) {
                 splice(@::CheckInList, $w, 1);
             }

@@ -70,14 +70,14 @@ print "
 <SELECT name='module' size=5>
 ";
 
+my $inmod = &SanitizeModule($::FORM{module});
 my $Module = 'default';
-if( $::FORM{module} eq 'all' || $::FORM{module} eq '' ){
+if( $inmod  eq 'all' || $inmod eq 'default' || $inmod eq '' ){
     print "<OPTION SELECTED VALUE='all'>All Files in the Repository\n";
-}
-else {
+} else {
     print "<OPTION VALUE='all'>All Files in the Repository\n";
-    print "<OPTION SELECTED VALUE='$::FORM{module}'>$::FORM{module}\n";
-    $Module = $::FORM{module};
+    print "<OPTION SELECTED VALUE='$inmod'>$inmod\n";
+    $Module = $inmod;
 }
 
 #

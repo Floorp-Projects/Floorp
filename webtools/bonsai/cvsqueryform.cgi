@@ -31,21 +31,21 @@ $|=1;
 
 print "Content-type: text/html\n\n";
 
-LoadTreeConfig();
+&LoadTreeConfig();
 $::CVS_ROOT = $::FORM{'cvsroot'};
-$::CVS_ROOT = pickDefaultRepository() unless $::CVS_ROOT;
+$::CVS_ROOT = &pickDefaultRepository() unless $::CVS_ROOT;
 &validateRepository($::CVS_ROOT);
 
-if (exists $::FORM{'module'}) {
-    if (exists($::TreeInfo{$::FORM{'module'}}{'repository'})) {
-        $::TreeID = $::FORM{'module'} 
-    }
+my $Module = &SanitizeModule($::FORM{'module'}) || 'default';
+
+if (exists($::TreeInfo{$Module}{'repository'})) {
+    $::TreeID = $Module;
 }
 
 $::modules = {};
 require 'modules.pl';
 
-PutsHeader("Bonsai - CVS Query Form", "CVS Query Form",
+&PutsHeader("Bonsai - CVS Query Form", "CVS Query Form",
            "$::CVS_ROOT - $::TreeInfo{$::TreeID}{shortdesc}");
 
 print "
@@ -72,45 +72,36 @@ print "
 #
 my @reposList = &getRepositoryList();
 my $bMultiRepos = (@reposList > 1);
+my %module_selection;
+$module_selection{'all'} = $module_selection{'allrepos'} = "";
 
-#
-# This code sucks, I should rewrite it to be shorter
-#
-my $Module = 'default';
+if ($::TreeID eq 'default' || $Module eq 'default' || $Module eq 'all') {
+    $module_selection{'all'} = "SELECTED";
+} elsif( $Module eq 'allrepositories'){
+    $module_selection{'allrepos'} = "SELECTED";
+} else {
+    $module_selection{'custom'} = "SELECTED";
+}
 
-if (!exists $::FORM{module} || $::FORM{module} eq 'all' ||
-      $::FORM{module} eq '') {
-    print "<OPTION SELECTED VALUE='all'>All Files in the Repository\n";
-    if( $bMultiRepos ){
-        print "<OPTION VALUE='allrepositories'>All Files in all Repositories\n";
-    }
+print "<OPTION $module_selection{'all'} VALUE='all'>All Files in the Repository\n";
+if( $bMultiRepos ){
+    print "<OPTION $module_selection{'allreps'} VALUE='allrepositories'>All Files in all Repositories\n";
 }
-elsif( $::FORM{module} eq 'allrepositories' ){
-    print "<OPTION VALUE='all'>All Files in the Repository\n";
-    if( $bMultiRepos ){
-        print "<OPTION SELECTED VALUE='allrepositories'>All Files in all Repositories\n";
-    }
-}
-else {
-    $Module = $::FORM{module};
-    print "<OPTION VALUE='all'>All Files in the Repository\n";
-    if( $bMultiRepos ){
-        print "<OPTION VALUE='allrepositories'>All Files in all Repositories\n";
-    }
-    my $escaped_module = html_quote($::FORM{module});
+
+if (defined($module_selection{'custom'})) {
+    my $escaped_module = &html_quote($Module);
     print "<OPTION SELECTED VALUE='$escaped_module'>$escaped_module\n";
 }
 
 #
 # Print out all the Different Modules
 #
-for my $k  (sort( keys( %$::modules ) ) ){
-	if (defined $::FORM{module} && $k eq $::FORM{module}) { 
-		next; 
-	}
-    print "<OPTION value='$k'>$k\n";
-}
 
+if ($::TreeID eq "default") {
+    for my $k  (sort( keys( %$::modules ) ) ){
+        print "<OPTION value='$k'>$k\n";
+    }
+}
 
 print "</SELECT></td>\n";
 print "<td rowspan=2>";
@@ -120,11 +111,7 @@ print "</td></tr>";
 #
 # Branch
 #
-if( defined $::FORM{branch} ){
-    $b = &SanitizeRevision($::FORM{branch});
-} else {
-    $b = "HEAD";
-}
+$b = &SanitizeRevision($::FORM{branch}) || "HEAD";
 print "<tr>
 <th align=right>Branch:</th>
 <td> <input type=text name=branch value='$b' size=25><br>\n" .
@@ -138,24 +125,26 @@ regexpradio('branchtype') .
 #
 
 $::FORM{dir} ||= "";
+my $url_dir = &url_quote($::FORM{'dir'});
 
 print "
 <tr>
 <th align=right>Directory:</th>
 <td colspan=2>
-<input type=text name=dir value='$::FORM{dir}' size=45><br>
+<input type=text name=dir value='$url_dir' size=45><br>
 (you can list multiple directories)
 </td>
 </tr>
 ";
 
 $::FORM{file} ||= "";
+my $url_file = &url_quote($::FORM{'file'}) || "";
 
 print "
 <tr>
 <th align=right>File:</th>
 <td colspan=2>
-<input type=text name=file value='$::FORM{file}' size=45><br>" .
+<input type=text name=file value='$url_file' size=45><br>" .
 regexpradio('filetype') . "
 </td>
 </tr>
@@ -166,12 +155,12 @@ regexpradio('filetype') . "
 # Who
 #
 
-$::FORM{who} ||= "";
+my $url_who = &url_quote(&SanitizeUsernames($::FORM{'who'}));
 
 print "
 <tr>
 <th align=right>Who:</th>
-<td colspan=2> <input type=text name=who value='$::FORM{who}' size=45><br>" .
+<td colspan=2> <input type=text name=who value='$url_who' size=45><br>" .
 regexpradio('whotype') . "
 </td>
 </tr>";
@@ -217,8 +206,10 @@ if (!defined($::FORM{date}) || $::FORM{date} eq "") {
     $::FORM{date} = "hours";
 }
 
-$::FORM{mindate} = '' unless defined($::FORM{mindate});
-$::FORM{maxdate} = '' unless defined($::FORM{maxdate});
+my $mindate = '';
+my $maxdate = '';
+$mindate = &ExpectDate($::FORM{'mindate'}) if ($::FORM{'mindate'});
+$maxdate = &ExpectDate($::FORM{'maxdate'}) if ($::FORM{'maxdate'});
 
 print "
 <tr>
@@ -245,7 +236,7 @@ print "
 <td><table BORDER=0 CELLPADDING=0 CELLPSPACING=0>
 <tr>
 <TD VALIGN=TOP ALIGN=RIGHT NOWRAP>
-Between <input type=text name=mindate value='$::FORM{mindate}' size=25></td>
+Between <input type=text name=mindate value='$mindate' size=25></td>
 <td valign=top rowspan=2>You can use the form
 <B><TT><NOBR>yyyy-mm-dd hh:mm:ss</NOBR></TT></B> or a Unix <TT>time_t</TT>
 (seconds since the Epoch.)
@@ -253,7 +244,7 @@ Between <input type=text name=mindate value='$::FORM{mindate}' size=25></td>
 </tr>
 <tr>
 <td VALIGN=TOP ALIGN=RIGHT NOWRAP>
- and <input type=text name=maxdate value='$::FORM{maxdate}' size=25></td>
+ and <input type=text name=maxdate value='$maxdate' size=25></td>
 </tr>
 </table>
 </td>
