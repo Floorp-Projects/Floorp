@@ -28,14 +28,10 @@ public:
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
 
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aCX,
-                                   nsIFrame*        aParent,
-                                   nsIStyleContext* aStyleContext,
-                                   nsIFrame*&       aContinuingFrame);
-
-  NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect);
+  NS_IMETHOD  CreateContinuingFrame(nsIPresContext&  aCX,
+                                    nsIFrame*        aParent,
+                                    nsIStyleContext* aStyleContext,
+                                    nsIFrame*&       aContinuingFrame);
 
   // Debugging
   NS_IMETHOD  GetFrameName(nsString& aResult) const;

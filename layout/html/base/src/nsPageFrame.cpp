@@ -136,19 +136,6 @@ nsPageFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsPageFrame::Paint(nsIPresContext&      aPresContext,
-                           nsIRenderingContext& aRenderingContext,
-                           const nsRect&        aDirtyRect)
-{
-  nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
-
-  // For the time being paint a border around the page so we know
-  // where each page begins and ends
-  aRenderingContext.SetColor(NS_RGB(0, 0, 0));
-  aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsPageFrame::GetFrameName(nsString& aResult) const
 {

@@ -223,6 +223,7 @@ public:
   NS_IMETHOD ResizeReflow(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD StyleChangeReflow();
   virtual nsIFrame* GetRootFrame();
+  NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame*& aPageSequenceFrame);
   virtual nsIFrame* FindFrameWithContent(nsIContent* aContent);
   virtual void AppendReflowCommand(nsIReflowCommand* aReflowCommand);
   virtual void ProcessReflowCommands();
@@ -672,6 +673,33 @@ nsIFrame*
 PresShell::GetRootFrame()
 {
   return mRootFrame;
+}
+
+NS_IMETHODIMP
+PresShell::GetPageSequenceFrame(nsIPageSequenceFrame*& aPageSequenceFrame)
+{
+  nsIFrame*             child;
+  nsIPageSequenceFrame* pageSequence;
+
+  // The page sequence frame should be either the immediate child or
+  // its child
+  mRootFrame->FirstChild(nsnull, child);
+  if (nsnull != child) {
+    if (NS_SUCCEEDED(child->QueryInterface(kIPageSequenceFrameIID, (void**)&pageSequence))) {
+      aPageSequenceFrame = pageSequence;
+      return NS_OK;
+    }
+  
+    child->FirstChild(nsnull, child);
+    if (nsnull != child) {
+      if (NS_SUCCEEDED(child->QueryInterface(kIPageSequenceFrameIID, (void**)&pageSequence))) {
+        aPageSequenceFrame = pageSequence;
+        return NS_OK;
+      }
+    }
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

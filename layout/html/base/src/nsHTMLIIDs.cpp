@@ -20,7 +20,10 @@
 #include "nsIAbsoluteItems.h"
 #include "nsIAnchoredItems.h"
 #include "nsIHTMLReflow.h"
+#include "nsIPageSequenceFrame.h"
 
 const nsIID kIAbsoluteItemsIID = NS_IABSOLUTE_ITEMS_IID;
 const nsIID kIHTMLContentIID = NS_IHTMLCONTENT_IID;
 const nsIID kIHTMLReflowIID = NS_IHTMLREFLOW_IID;
+const nsIID kIPageSequenceFrameIID = NS_IPAGESEQUENCEFRAME_IID;
+
