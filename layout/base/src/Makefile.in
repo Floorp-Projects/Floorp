@@ -33,9 +33,10 @@ CPPSRCS =				\
 	nsDocument.cpp			\
 	nsDocumentFragment.cpp		\
 	nsFrameImageLoader.cpp		\
+	nsFrameUtil.cpp			\
 	nsGalleyContext.cpp		\
 	nsPresContext.cpp		\
-	nsPrintContext.cpp	\
+	nsPrintContext.cpp		\
 	nsPrintPreviewContext.cpp	\
 	nsSpaceManager.cpp		\
 	nsStyleCoord.cpp		\
@@ -43,8 +44,8 @@ CPPSRCS =				\
 	nsStyleSet.cpp			\
 	nsTextFragment.cpp		\
 	nsXIFConverter.cpp		\
-	nsRange.cpp		\
-	nsRangeList.cpp		\
+	nsRange.cpp			\
+	nsRangeList.cpp			\
 	nsLayoutAtoms.cpp		\
 	$(NULL)
 
