@@ -18,15 +18,15 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.11 $ ';
+$::UtilsVersion = '$Revision: 1.12 $ ';
 
 package TinderUtils;
 
 #
 # Driver script should call into this file like this:
-#   TinderUtils::InitAndParseArgs()
+#   TinderUtils::Setup()
 #   tree_specific_overrides()
-#   TinderUtils::SetupAndBuild($args);
+#   TinderUtils::Build($args);
 #
 
 sub Setup {
@@ -544,8 +544,8 @@ sub BuildIt {
         
         PrintEnv();
         
-        unless (-e "mozilla/client.mk") {
-            run_shell_command "$Settings::CVS $cvsco mozilla/client.mk";
+        unless (-e "$TreeSpecific::name/client.mk") {
+            run_shell_command "$Settings::CVS $cvsco $TreeSpecific::name/client.mk";
         }
         
         chdir $Settings::Topsrcdir or die "chdir $Settings::Topsrcdir: $!\n";
@@ -556,8 +556,9 @@ sub BuildIt {
             DeleteBinary($full_binary_name);
 
             my $make = "$Settings::Make -f client.mk";
-            my $targets = '';
-            $targets = 'checkout realclean build' unless $Settings::BuildDepend;
+            my $targets = $TreeSpecific::checkout_target;
+            $targets = $TreeSpecific::checkout_clobber_target unless $Settings::BuildDepend;
+
             my $status = run_shell_command "$make $targets";
             if ($status != 0) {
               $build_status = 'busted';
