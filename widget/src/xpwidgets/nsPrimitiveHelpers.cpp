@@ -20,11 +20,28 @@
  *   Mike Pinkerton
  */
 
+
+//
+// Part of the reason these routines are all in once place is so that as new
+// data flavors are added that are known to be one-byte or two-byte strings, or even
+// raw binary data, then we just have to go to one place to change how the data
+// moves into/out of the primitives and native line endings.
+//
+// If you add new flavors that have special consideration (binary data or one-byte
+// char* strings), please update all the helper classes in this file.
+//
+// For now, this is the assumption that we are making:
+//  - text/plain is always a char*
+//  - anything else is a PRUnichar*
+//
+
+
 #include "nsPrimitiveHelpers.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITransferable.h"
 #include "nsIComponentManager.h"
+#include "nsLinebreakConverter.h"
 
 
 //
@@ -95,3 +112,63 @@ nsPrimitiveHelpers :: CreateDataFromPrimitive ( const char* aFlavor, nsISupports
   }
 
 }
+
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+
+//
+// ConvertPlatformToDOMLinebreaks
+//
+// Given some data, convert from the platform linebreaks into the LF expected by the
+// DOM. This will attempt to convert the data in place, but the buffer may still need to
+// be reallocated regardless (disposing the old buffer is taken care of internally, see
+// the note below).
+//
+// NOTE: this assumes that it can use nsAllocator to dispose of the old buffer.
+//
+nsresult
+nsLinebreakHelpers :: ConvertPlatformToDOMLinebreaks ( const char* inFlavor, void** ioData, 
+                                                          PRInt32* ioLengthInBytes )
+{
+  NS_ASSERTION ( ioData && *ioData && ioLengthInBytes, "Bad Params");
+  if ( !(ioData && *ioData && ioLengthInBytes) )
+    return NS_ERROR_INVALID_ARG;
+    
+  nsresult retVal = NS_OK;
+  
+  if ( strcmp(inFlavor, "text/plain") == 0 ) {
+    char* buffAsChars = NS_REINTERPRET_CAST(char*, *ioData);
+    char* oldBuffer = buffAsChars;
+    retVal = nsLinebreakConverter::ConvertLineBreaksInSitu ( &buffAsChars, nsLinebreakConverter::eLinebreakPlatform, 
+                                                              nsLinebreakConverter::eLinebreakContent, 
+                                                              *ioLengthInBytes, ioLengthInBytes );
+    if ( NS_SUCCEEDED(retVal) ) {
+      if ( buffAsChars != oldBuffer )             // check if buffer was reallocated
+        nsAllocator::Free ( oldBuffer );
+      *ioData = buffAsChars;
+    }
+  }
+  else if ( strcmp(inFlavor, "image/jpeg") == 0 ) {
+    // I'd assume we don't want to do anything for binary data....
+  }
+  else {       
+    PRUnichar* buffAsUnichar = NS_REINTERPRET_CAST(PRUnichar*, *ioData);
+    PRUnichar* oldBuffer = buffAsUnichar;
+    PRInt32 newLengthInChars;
+    retVal = nsLinebreakConverter::ConvertUnicharLineBreaksInSitu ( &buffAsUnichar, nsLinebreakConverter::eLinebreakPlatform, 
+                                                                     nsLinebreakConverter::eLinebreakContent, 
+                                                                     *ioLengthInBytes / sizeof(PRUnichar), &newLengthInChars );
+    if ( NS_SUCCEEDED(retVal) ) {
+      if ( buffAsUnichar != oldBuffer )           // check if buffer was reallocated
+        nsAllocator::Free ( oldBuffer );
+      *ioData = buffAsUnichar;
+      *ioLengthInBytes = newLengthInChars * sizeof(PRUnichar);
+    }
+  }
+  
+  return retVal;
+
+} // ConvertPlatformToDOMLinebreaks
