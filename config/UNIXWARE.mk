@@ -60,8 +60,8 @@ I2_LOCALE		= i2
 # Version-specific stuff
 ######################################################################
 
-ifeq ($(OS_RELEASE),5)
-PLATFORM_FLAGS		+= -DUnixWare -DUNIXWARE5
+ifeq ($(OS_RELEASE),7)
+PLATFORM_FLAGS		+= -DUnixWare -DUNIXWARE7
 PORT_FLAGS		+= -DSVR5 -D_SIMPLE_R
 
 BUILD_UNIX_PLUGINS	= 1
@@ -75,10 +75,16 @@ endif
 # Overrides for defaults in config.mk (or wherever)
 ######################################################################
 
-CC			= $(DEPTH)/build/hcc
-CCC			= $(DEPTH)/build/hcpp
 EMACS			= /bin/true
 WHOAMI			= /usr/ucb/whoami
+
+ifeq ($(OS_RELEASE),2.1)
+CC			= $(DEPTH)/build/hcc
+CCC			= $(DEPTH)/build/hcpp
+else
+CC			= cc
+CCC			= CC
+endif
 
 ifdef NETSCAPE_HIERARCHY
 PERL			= perl5

@@ -82,6 +82,7 @@ OS_TEST		:= $(shell uname -p)
 endif
 ifeq ($(OS_ARCH),UnixWare)
 OS_ARCH		:= UNIXWARE
+OS_RELEASE	:= $(shell uname -v)
 endif
 
 #
