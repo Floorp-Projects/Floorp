@@ -38,7 +38,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.31 2003/03/26 00:31:13 wtc%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.32 2004/03/05 23:28:57 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -103,7 +103,8 @@ extern int Debug;
 #else
 #undef Debug
 #endif
-#if defined(DEBUG)
+
+#if defined(DEBUG) && !defined(TRACE) && !defined(NISCC_TEST)
 #define TRACE
 #endif
 

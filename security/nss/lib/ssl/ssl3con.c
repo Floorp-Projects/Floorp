@@ -38,7 +38,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.64 2004/03/03 03:18:56 jpierre%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.65 2004/03/05 23:28:56 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -7158,6 +7158,68 @@ ssl3_SendEmptyCertificate(sslSocket *ss)
     return rv;	/* error, if any, set by functions called above. */
 }
 
+#ifdef NISCC_TEST
+static PRInt32 connNum = 0;
+
+static SECStatus 
+get_fake_cert(SECItem *pCertItem, int *pIndex)
+{
+    PRFileDesc *cf;
+    char *      testdir;
+    char *      startat;
+    char *      stopat;
+    const char *extension;
+    int         fileNum;
+    PRInt32     numBytes   = 0;
+    PRStatus    prStatus;
+    PRFileInfo  info;
+    char        cfn[100];
+
+    pCertItem->data = 0;
+    if ((testdir = PR_GetEnv("NISCC_TEST")) == NULL) {
+	return SECSuccess;
+    }
+    *pIndex   = (NULL != strstr(testdir, "root"));
+    extension = (strstr(testdir, "simple") ? "" : ".der");
+    fileNum     = PR_AtomicIncrement(&connNum) - 1;
+    if ((startat = PR_GetEnv("START_AT")) != NULL) {
+	fileNum += atoi(startat);
+    }
+    if ((stopat = PR_GetEnv("STOP_AT")) != NULL && 
+	fileNum >= atoi(stopat)) {
+	*pIndex = -1;
+	return SECSuccess;
+    }
+    sprintf(cfn, "%s/%08d%s", testdir, fileNum, extension);
+    cf = PR_Open(cfn, PR_RDONLY, 0);
+    if (!cf) {
+	goto loser;
+    }
+    prStatus = PR_GetOpenFileInfo(cf, &info);
+    if (prStatus != PR_SUCCESS) {
+	PR_Close(cf);
+	goto loser;
+    }
+    pCertItem = SECITEM_AllocItem(NULL, pCertItem, info.size);
+    if (pCertItem) {
+	numBytes = PR_Read(cf, pCertItem->data, info.size);
+    }
+    PR_Close(cf);
+    if (numBytes != info.size) {
+	SECITEM_FreeItem(pCertItem, PR_FALSE);
+	PORT_SetError(SEC_ERROR_IO);
+	goto loser;
+    }
+    fprintf(stderr, "using %s\n", cfn);
+    return SECSuccess;
+
+loser:
+    fprintf(stderr, "failed to use %s\n", cfn);
+    *pIndex = -1;
+    return SECFailure;
+}
+#endif
+
 /*
  * Used by both client and server.
  * Called from HandleServerHelloDone and from SendServerHelloSequence.
@@ -7170,6 +7232,10 @@ ssl3_SendCertificate(sslSocket *ss)
     int                  len 		= 0;
     int                  i;
     SSL3KEAType          certIndex;
+#ifdef NISCC_TEST
+    SECItem              fakeCert;
+    int                  ndex           = -1;
+#endif
 
     SSL_TRC(3, ("%d: SSL3[%d]: send certificate handshake",
 		SSL_GETPID(), ss->fd));
@@ -7206,9 +7272,21 @@ ssl3_SendCertificate(sslSocket *ss)
 	ss->sec.localCert = CERT_DupCertificate(ss->ssl3->clientCertificate);
     }
 
+#ifdef NISCC_TEST
+    rv = get_fake_cert(&fakeCert, &ndex);
+#endif
+
     if (certChain) {
 	for (i = 0; i < certChain->len; i++) {
+#ifdef NISCC_TEST
+	    if (fakeCert.len > 0 && i == ndex) {
+		len += fakeCert.len + 3;
+	    } else {
+		len += certChain->certs[i].len + 3;
+	    }
+#else
 	    len += certChain->certs[i].len + 3;
+#endif
 	}
     }
 
@@ -7221,8 +7299,19 @@ ssl3_SendCertificate(sslSocket *ss)
 	return rv; 		/* err set by AppendHandshake. */
     }
     for (i = 0; i < certChain->len; i++) {
+#ifdef NISCC_TEST
+	if (fakeCert.len > 0 && i == ndex) {
+	    rv = ssl3_AppendHandshakeVariable(ss, fakeCert.data, fakeCert.len, 
+	                                      3);
+	    SECITEM_FreeItem(&fakeCert, PR_FALSE);
+	} else {
+	    rv = ssl3_AppendHandshakeVariable(ss, certChain->certs[i].data,
+					      certChain->certs[i].len, 3);
+	}
+#else
 	rv = ssl3_AppendHandshakeVariable(ss, certChain->certs[i].data,
 					  certChain->certs[i].len, 3);
+#endif
 	if (rv != SECSuccess) {
 	    return rv; 		/* err set by AppendHandshake. */
 	}
