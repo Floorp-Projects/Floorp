@@ -2000,7 +2000,9 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
   // XXX Huh, that's not true anymore. We do cache the width component of
   // the max-element-size...
   if (aState.mComputeMaxElementSize) {
+#ifdef DEBUG_troy
     printf("BLOCK: marking all child frames dirty...\n");
+#endif
     return PrepareResizeReflow(aState);
   }
 
