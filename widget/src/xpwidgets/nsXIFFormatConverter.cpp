@@ -301,7 +301,7 @@ nsXIFFormatConverter::ConvertFromXIFToText(const nsAutoString & aFromStr, nsAuto
   nsCOMPtr<nsIParser> parser;
   nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
                                              nsnull, 
-                                             NS_GET_IID(nsIParser), 
+                                             nsIParser::GetIID(), 
                                              getter_AddRefs(parser));
   if ( !parser )
     return rv;
@@ -333,7 +333,7 @@ nsXIFFormatConverter::ConvertFromXIFToHTML(const nsAutoString & aFromStr, nsAuto
   nsCOMPtr<nsIParser> parser;
   nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
                                              nsnull, 
-                                             NS_GET_IID(nsIParser), 
+                                             nsIParser::GetIID(), 
                                              getter_AddRefs(parser));
   if ( !parser )
     return rv;
