@@ -558,7 +558,7 @@ COOKIE_RemoveExpiredCookies(nsInt64 aCurrentTime,
     cookieInList = NS_STATIC_CAST(cookie_CookieStruct*, sCookieList->ElementAt(i));
     NS_ASSERTION(cookieInList, "corrupt cookie list");
 
-    if (!cookieInList->isSession && nsInt64(cookieInList->expires) < aCurrentTime) {
+    if (!cookieInList->isSession && nsInt64(cookieInList->expires) <= aCurrentTime) {
       sCookieList->RemoveElementAt(i);
       delete cookieInList;
       sCookieChanged = PR_TRUE;
@@ -763,7 +763,7 @@ COOKIE_Add(cookie_CookieStruct *aCookie,
     delete prevCookie;
 
     // check if the server wants to delete the cookie
-    if (!aCookie->isSession && nsInt64(aCookie->expires) < aCurrentTime) {
+    if (!aCookie->isSession && nsInt64(aCookie->expires) <= aCurrentTime) {
       // delete previous cookie
       sCookieList->RemoveElementAt(insertPosition);
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "previously stored cookie was deleted");
@@ -777,7 +777,7 @@ COOKIE_Add(cookie_CookieStruct *aCookie,
 
   } else {
     // check if cookie has already expired
-    if (!aCookie->isSession && nsInt64(aCookie->expires) < aCurrentTime) {
+    if (!aCookie->isSession && nsInt64(aCookie->expires) <= aCurrentTime) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie has already expired");
       return NS_ERROR_FAILURE;
     }
@@ -1427,7 +1427,7 @@ COOKIE_GetCookie(nsIURI *aHostURI,
     // check if the cookie has expired, and remove if so.
     // note that we do this *after* previous tests passed - so we're only removing
     // the ones that are relevant to this particular search.
-    if (!cookieInList->isSession && nsInt64(cookieInList->expires) < currentTime) {
+    if (!cookieInList->isSession && nsInt64(cookieInList->expires) <= currentTime) {
       sCookieList->RemoveElementAt(i--); // decrement i so next cookie isn't skipped
       --count; // update the count
       delete cookieInList;
@@ -1615,7 +1615,7 @@ cookie_GetExpiry(const nsAFlatCString &maxageAttribute,
 
     // default to session cookie if the conversion failed
     if (numInts != 1) {
-      goto session_cookie;
+      return PR_TRUE;
     }
 
     delta = nsInt64(maxage);
@@ -1629,50 +1629,39 @@ cookie_GetExpiry(const nsAFlatCString &maxageAttribute,
     if (PR_ParseTimeString(expiresAttribute.get(), PR_TRUE, &tempExpires) == PR_SUCCESS) {
       expires = nsInt64(tempExpires) / USEC_PER_SEC;
     } else {
-      goto session_cookie;
+      return PR_TRUE;
     }
 
     delta = expires - serverTime;
 
   // default to session cookie if no attributes found
   } else {
-    goto session_cookie;
+    return PR_TRUE;
   }
 
-  if (delta <= nsInt64(0)) {
-    goto expire_cookie;
-  }
-
-  // check cookie lifetime pref, and limit lifetime if required
-  if (gCookiePrefObserver->mCookiesLifetimeEnabled) {
-    if (gCookiePrefObserver->mCookiesLifetimeCurrentSession) {
-      // limit lifetime to session
-      goto session_cookie;
-    } else if (delta > nsInt64(gCookiePrefObserver->mCookiesLifetimeSec)) {
-      // limit lifetime to specified time
-      delta = gCookiePrefObserver->mCookiesLifetimeSec;
+  if (delta > nsInt64(0)) {
+    // check cookie lifetime pref, and limit lifetime if required.
+    // we only want to do this if the cookie isn't going to be expired anyway.
+    if (gCookiePrefObserver->mCookiesLifetimeEnabled) {
+      if (gCookiePrefObserver->mCookiesLifetimeCurrentSession) {
+        // limit lifetime to session
+        return PR_TRUE;
+      }
+      if (delta > nsInt64(gCookiePrefObserver->mCookiesLifetimeSec)) {
+        // limit lifetime to specified time
+        delta = gCookiePrefObserver->mCookiesLifetimeSec;
+      }
     }
   }
 
-  // if overflow, set to session cookie... not ideal, but it'll work.
+  // if this addition overflows, expiryTime will be less than currentTime
+  // and the cookie will be expired - that's okay.
   expiryTime = currentTime + delta;
-  if (expiryTime < currentTime) {
-    goto session_cookie;
-  }
 
-  // default case (proper expiry time).
+  // we need to return whether the cookie is a session cookie or not:
   // the cookie may have been previously downgraded by p3p prefs,
-  // so we take that into account here.
-  return (aStatus == nsICookie::STATUS_DOWNGRADED);
-
-  session_cookie:
-    return PR_TRUE;
-
-  expire_cookie:
-    // make sure the cookie is marked appropriately, for expiry.
-    // we can't just return now, because we might need to delete a previous cookie
-    expiryTime = currentTime - nsInt64(1);
-    return PR_FALSE;
+  // so we take that into account here. only applies to non-expired cookies.
+  return aStatus == nsICookie::STATUS_DOWNGRADED && expiryTime > currentTime;
 }
 
 // helper function to copy data from a cookie_CookieStruct into an nsICookie.
@@ -1778,7 +1767,7 @@ cookie_SetCookieInternal(nsIURI             *aHostURI,
   // check if the cookie we're trying to set is already expired, and return.
   // but we need to check there's no previous cookie first, because servers use
   // this as a trick for deleting previous cookies.
-  if (!foundCookie && !cookie->isSession && nsInt64(cookie->expires) < currentTime) {
+  if (!foundCookie && !cookie->isSession && nsInt64(cookie->expires) <= currentTime) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "cookie has already expired");
     goto failure;
   }
@@ -1982,7 +1971,7 @@ COOKIE_Write()
     NS_ASSERTION(cookieInList, "corrupt cookie list");
 
     // don't write entry if cookie has expired, or is a session cookie
-    if (cookieInList->isSession || nsInt64(cookieInList->expires) < currentTime) {
+    if (cookieInList->isSession || nsInt64(cookieInList->expires) <= currentTime) {
       continue;
     }
 
