@@ -34,8 +34,7 @@
 
   [% knum = 1 %]
 
-  [% IF bug.bug_status == "UNCONFIRMED" &&
-        bug.user.canconfirm %]
+  [% IF bug.isunconfirmed && bug.user.canconfirm %]
     <input type="radio" id="knob-confirm" name="knob" value="confirm">
     <label for="knob-confirm">
       Confirm [% terms.bug %] (change status to <b>NEW</b>)
@@ -110,6 +109,7 @@
         &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="andconfirm" name="andconfirm">
         <label for="andconfirm">
           and confirm [% terms.bug %] (change status to <b>NEW</b>)
+        </label>
         <br>
       [% END %]
       [% knum = knum + 1 %]
@@ -119,15 +119,15 @@
         Reassign [% terms.bug %] to owner
         [% " and QA contact" IF Param('useqacontact') %]
         of selected component
-        <br>
-        [% IF bug.isunconfirmed && bug.user.canconfirm %]
-          &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="compconfirm" name="compconfirm">
-          <label for="compconfirm">
-            and confirm [% terms.bug %] (change status to <b>NEW</b>)
-          </label>
-          <br>
-        [% END %]
       </label>
+      <br>
+      [% IF bug.isunconfirmed && bug.user.canconfirm %]
+        &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="compconfirm" name="compconfirm">
+        <label for="compconfirm">
+          and confirm [% terms.bug %] (change status to <b>NEW</b>)
+        </label>
+        <br>
+      [% END %]
       [% knum = knum + 1 %]
     [% ELSE %]
       [% IF bug.resolution != "MOVED" ||
