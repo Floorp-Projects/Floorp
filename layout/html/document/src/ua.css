@@ -414,6 +414,9 @@ input {
   background-color: white;
   color: black;
 }
+input[type=hidden] {
+  border: none;
+}
 input[type=radio] {
   /* these margins are for NavQuirks, we need a Standard ua.css */  
   margin-left:   3px;   
