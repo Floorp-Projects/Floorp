@@ -3824,7 +3824,6 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   // for print-preview, but not when printing), then create a scroll frame that
   // will act as the scrolling mechanism for the viewport. 
   // XXX Do we even need a viewport when printing to a printer?
-  PRBool isScrollable = PR_TRUE;
 
   //isScrollable = PR_FALSE;
 
@@ -3833,11 +3832,11 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   // the viewport.
   //
   // Threre are three possible values stored in the docshell:
-  //  1) NS_STYLE_OVERFLOW_HIDDEN = no scrollbars
-  //  2) NS_STYLE_OVERFLOW_AUTO = scrollbars appear if needed
-  //  3) NS_STYLE_OVERFLOW_SCROLL = scrollbars always
+  //  1) nsIScrollable::Scrollbar_Never = no scrollbars
+  //  2) nsIScrollable::Scrollbar_Auto = scrollbars appear if needed
+  //  3) nsIScrollable::Scrollbar_Always = scrollbars always
   // Only need to create a scroll frame/view for cases 2 and 3.
-  // Currently OVERFLOW_SCROLL isn't honored, as
+  // Currently Scrollbar_Always isn't honored, as
   // scrollportview::SetScrollPref is not implemented.
 
   PRBool isHTML = aDocElement->IsContentOfType(nsIContent::eHTML);
@@ -3848,12 +3847,16 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   }
 
   // Never create scrollbars for XUL documents
-#ifdef MOZ_XUL
-  if (isXUL) {
-    isScrollable = PR_FALSE;
-  } else 
-#endif
-  {
+  PRBool isScrollable = !isXUL;
+
+  // Never create scrollbars for frameset documents.
+  if (isHTML) {
+    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
+    if (htmlDoc && htmlDoc->GetIsFrameset())
+      isScrollable = PR_FALSE;
+  }
+
+  if (isScrollable) {
     nsresult rv;
     if (aPresContext) {
       nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
@@ -3862,7 +3865,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
         if (NS_SUCCEEDED(rv) && scrollableContainer) {
           PRInt32 scrolling = -1;
           // XXX We should get prefs for X and Y and deal with these independently!
-          scrollableContainer->GetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,&scrolling);
+          scrollableContainer->GetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,&scrolling);
           if (nsIScrollable::Scrollbar_Never == scrolling) {
             isScrollable = PR_FALSE;
           }
