@@ -773,7 +773,7 @@ if ($my_webservergroup && !$silent) {
         # that we can't chgrp to
         my $webservergid = (getgrnam($my_webservergroup))[2]
                            or die("no such group: $my_webservergroup");
-        if ($< != 0 && !grep(/^$webservergid$/, split(" ", $)))) {
+        if ($< != 0 && !grep($_ eq $webservergid, split(" ", $)))) {
             print <<EOF;
 
 Warning: you have entered a value for the "webservergroup" parameter in 

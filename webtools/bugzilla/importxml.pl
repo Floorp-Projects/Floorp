@@ -422,8 +422,8 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   }
 
   if (defined  ($::versions{$product[0]} ) &&
-     (my @version = grep /^$bug_fields{'version'}$/i, 
-                         @{$::versions{$product[0]}}) ){
+     (my @version = grep(lc($_) eq lc($bug_fields{'version'}), 
+                         @{$::versions{$product[0]}})) ){
     push (@values, SqlQuote($version[0]) );
     push (@query, "version");
   } else {
@@ -434,7 +434,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   }
 
   if (defined ($bug_fields{'priority'}) &&
-       (my @priority = grep /^$bug_fields{'priority'}$/i, @::legal_priority) ){
+       (my @priority = grep(lc($_) eq lc($bug_fields{'priority'}), @::legal_priority)) ){
     push (@values, SqlQuote($priority[0]) );
     push (@query, "priority");
   } else {
@@ -446,7 +446,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   }
 
   if (defined ($bug_fields{'rep_platform'}) &&
-       (my @platform = grep /^$bug_fields{'rep_platform'}$/i, @::legal_platform) ){
+       (my @platform = grep(lc($_) eq lc($bug_fields{'rep_platform'}), @::legal_platform)) ){
     push (@values, SqlQuote($platform[0]) );
     push (@query, "rep_platform");
   } else {
@@ -459,7 +459,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   }
 
   if (defined ($bug_fields{'op_sys'}) &&
-     (my @opsys = grep /^$bug_fields{'op_sys'}$/i, @::legal_opsys) ){
+     (my @opsys = grep(lc($_) eq lc($bug_fields{'op_sys'}), @::legal_opsys)) ){
     push (@values, SqlQuote($opsys[0]) );
     push (@query, "op_sys");
   } else {
@@ -472,8 +472,8 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
 
   if (Param("usetargetmilestone")) {
     if (defined  ($::target_milestone{$product[0]} ) &&
-       (my @tm = grep /^$bug_fields{'target_milestone'}$/i, 
-                       @{$::target_milestone{$product[0]}}) ){
+       (my @tm = grep(lc($_) eq lc($bug_fields{'target_milestone'}), 
+                       @{$::target_milestone{$product[0]}})) ){
       push (@values, SqlQuote($tm[0]) );
       push (@query, "target_milestone");
     } else {
@@ -492,8 +492,8 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   }
 
   if (defined ($bug_fields{'bug_severity'}) &&
-       (my @severity= grep /^$bug_fields{'bug_severity'}$/i, 
-                           @::legal_severity) ){
+       (my @severity= grep(lc($_) eq lc($bug_fields{'bug_severity'}), 
+                           @::legal_severity)) ){
     push (@values, SqlQuote($severity[0]) );
     push (@query, "bug_severity");
   } else {
@@ -543,7 +543,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
 
   my @resolution;
   if (defined ($bug_fields{'resolution'}) &&
-       (@resolution= grep /^$bug_fields{'resolution'}$/i, @::legal_resolution) ){
+       (@resolution= grep(lc($_) eq lc($bug_fields{'resolution'}), @::legal_resolution)) ){
     push (@values, SqlQuote($resolution[0]) );
     push (@query, "resolution");
   } elsif ( (defined $bug_fields{'resolution'}) && (!$resolution[0]) ){
@@ -571,7 +571,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
                      $bug_fields{'bug_status'}:"unknown";
     $err .= "\".\n";
   } elsif (defined ($bug_fields{'bug_status'}) &&
-       (my @status = grep /^$bug_fields{'bug_status'}$/i, @::legal_bug_status) ){
+       (my @status = grep(lc($_) eq lc($bug_fields{'bug_status'}), @::legal_bug_status)) ){
     #if a bug status was set then use it, if its legal
     push (@values, SqlQuote($status[0]));
     push (@query, "bug_status");

@@ -117,7 +117,7 @@ sub getTemplateIncludePath () {
         # 'en-uk' etc. but not the otherway round. (This is unfortunally
         # not very clearly stated in those RFC; see comment just over 14.5
         # in http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.4)
-        if(my @found = grep /^$lang(-.+)?$/i, @languages) {
+        if(my @found = grep /^\Q$lang\E(-.+)?$/i, @languages) {
             push (@usedlanguages, @found);
         }
     }

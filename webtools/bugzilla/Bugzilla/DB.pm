@@ -312,7 +312,7 @@ sub bz_setup_database {
     my @desired_tables = $self->_bz_schema->get_table_list();
 
     foreach my $table_name (@desired_tables) {
-        next if grep /^$table_name$/, @current_tables;
+        next if grep($_ eq $table_name, @current_tables);
         print "Creating table $table_name ...\n";
 
         my @table_sql = $self->_bz_schema->get_table_ddl($table_name);
