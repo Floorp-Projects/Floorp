@@ -26,6 +26,10 @@
 #define NS_UNIX 1
 #endif
 
+#if defined(XP_MAC)
+#define NS_MAC 1
+#endif
+
 #include "prtypes.h"
 #include "nsDebug.h"
 
@@ -64,13 +68,20 @@ typedef PRUcs2 PRUnichar;
 // is placed. It needs to be done this way to make the 4.x compiler happy...
 #undef NS_EXPORT_
 #define NS_EXPORT_(type) type _declspec(dllexport) __stdcall
-#else
+#elif defined(NS_MAC)
 /* XXX do something useful? */
 #define NS_IMPORT
 #define NS_IMPORT_(type) type
 #ifndef NS_EXPORT /* also declared in nsCom.h. */
 #define NS_EXPORT __declspec(export)
 #define NS_EXPORT_(type) __declspec(export) type
+#endif
+#else
+/* XXX do something useful? */
+#define NS_IMPORT
+#define NS_IMPORT_(type) type
+#define NS_EXPORT
+#define NS_EXPORT_(type) type
 #endif
 #endif
 
