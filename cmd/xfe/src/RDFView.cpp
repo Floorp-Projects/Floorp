@@ -153,10 +153,12 @@ public:
 
 static XFE_CommandList* my_commands = 0;
 
-XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
-                         XFE_View *parent_view, MWContext *context,
-                         XP_Bool isStandalone)
-  : XFE_View(toplevel, parent_view, context)
+XFE_RDFView::XFE_RDFView(XFE_Component *	toplevel, 
+						 Widget				parent,
+                         XFE_View *			parent_view, 
+						 MWContext *		context) :
+	XFE_View(toplevel, parent_view, context),
+	_standAloneState(False)
 {
   m_rdfview = NULL;
   m_popup = NULL;
@@ -183,7 +185,7 @@ XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
                                      XmNbottomAttachment, XmATTACH_FORM,
                                      NULL);
                                      
-  Widget closeRDFView = XtVaCreateManagedWidget("X",
+  /* Widget closeRDFView =  */XtVaCreateManagedWidget("X",
                                      xmPushButtonWidgetClass,
                                      rdfControlsParent,
                                      XmNtopAttachment, XmATTACH_FORM,
@@ -213,7 +215,6 @@ XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
                               XmNheadingRows,           1,
                               XmNvisibleRows,           14,
                               XmNhideUnhideButtons,     True,
-                              XmNvisibleColumns,        (isStandalone ? 0 : 1),
                               //XmNdebugLevel, 1,
                               /* Form resources */
                               XmNtopAttachment,    XmATTACH_WIDGET,
@@ -378,6 +379,7 @@ XFE_RDFView::refresh(HT_Resource node)
       HT_Resource child;
     
       HT_Cursor child_cursor = HT_NewCursor(node);
+
       while (child = HT_GetNextItem(child_cursor))
       {
           add_row(child);
@@ -488,7 +490,7 @@ XFE_RDFView::deselect_row(int row)
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_RDFView::notify(HT_Notification ns, HT_Resource n, 
+XFE_RDFView::notify(HT_Notification /* ns */, HT_Resource n, 
                     HT_Event whatHappened)
 {
   switch (whatHappened) {
@@ -835,7 +837,7 @@ XFE_RDFView::add_column(int index, char *name, uint32 width,
 }
 
 void
-XFE_RDFView::delete_column(HT_Resource cursor)
+XFE_RDFView::delete_column(HT_Resource /* cursor */)
 {
 
 }
@@ -980,13 +982,13 @@ XFE_RDFPopupMenu::XFE_RDFPopupMenu(String name, Widget parent,
 }
 
 void
-XFE_RDFPopupMenu::PushButtonActivate(Widget w, XtPointer userData)
+XFE_RDFPopupMenu::PushButtonActivate(Widget /* w */, XtPointer userData)
 {
     HT_DoMenuCmd(m_pane, (HT_MenuCmd)(int)userData);
 }
 
 void
-XFE_RDFView::closeRdfView_cb(Widget, XtPointer clientData, XtPointer callData)
+XFE_RDFView::closeRdfView_cb(Widget /* w */, XtPointer clientData, XtPointer /* callData */)
 {
 
   closeRdfViewCBStruct * obj = (closeRdfViewCBStruct *) clientData;
@@ -994,7 +996,7 @@ XFE_RDFView::closeRdfView_cb(Widget, XtPointer clientData, XtPointer callData)
 
   Widget  selector  = (Widget )ncview->getSelector();
 
-  Widget nc_base_widget = ncview->getBaseWidget();
+//  Widget nc_base_widget = ncview->getBaseWidget();
   Widget parent = XtParent(obj->rdfview->rdfControlsParent);
 
 
@@ -1009,3 +1011,29 @@ XFE_RDFView::closeRdfView_cb(Widget, XtPointer clientData, XtPointer callData)
                           NULL);
   XtManageChild(selector);
 }
+//////////////////////////////////////////////////////////////////////////
+//
+// Toggle the stand alone state
+//
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFView::setStandAloneState(XP_Bool state)
+{
+	XP_ASSERT( XfeIsAlive(m_tree) );
+
+	_standAloneState = state;
+
+	int visibleColumns = (_standAloneState ? 0 : 1);
+
+	XtVaSetValues(m_tree,
+				  XmNvisibleColumns,		visibleColumns,
+				  NULL);
+}
+//////////////////////////////////////////////////////////////////////////
+XP_Bool
+XFE_RDFView::getStandAloneState()
+{
+	return _standAloneState;
+}
+//////////////////////////////////////////////////////////////////////////
+

@@ -150,11 +150,13 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
 
   m_htview = NULL;
   m_pane = NULL;
-  m_rdfview = new XFE_RDFView(this, rdf_parent, this,
-                              context, m_isStandalone);
+
+  m_rdfview = new XFE_RDFView(this, rdf_parent, this, context);
+
+  m_rdfview->setStandAloneState(m_isStandalone);
 
   HT_Notification ns = new HT_NotificationStruct;
-  ns->notifyProc = notify_cb;
+  ns->notifyProc = &XFE_NavCenterView::notify_cb;
   ns->data = this;
 
   m_pane = HT_NewPane(ns);
@@ -186,17 +188,22 @@ XFE_NavCenterView::~XFE_NavCenterView()
 }
 
 //////////////////////////////////////////////////////////////////////////
-void notify_cb(HT_Notification ns, HT_Resource n, 
-                  HT_Event whatHappened, void *token, uint32 tokenType)
+/* static */ void 
+XFE_NavCenterView::notify_cb(HT_Notification	ns, 
+							 HT_Resource		n, 
+							 HT_Event			whatHappened, 
+							 void *				/* token */, 
+							 uint32				/* tokenType */)
 {
-  XFE_NavCenterView* theView = (XFE_NavCenterView*)ns->data;
+	XFE_NavCenterView * theView = (XFE_NavCenterView *) ns->data;
     
-  theView->notify(ns, n, whatHappened);
+	theView->notify(ns, n, whatHappened);
 }
-
+//////////////////////////////////////////////////////////////////////////
 void
-XFE_NavCenterView::notify(HT_Notification ns, HT_Resource n, 
-                  HT_Event whatHappened)
+XFE_NavCenterView::notify(HT_Notification	ns, 
+						  HT_Resource		n, 
+						  HT_Event			whatHappened)
 {
   switch (whatHappened) {
   case HT_EVENT_VIEW_CLOSED:
@@ -286,7 +293,7 @@ void
 XFE_NavCenterView::addRDFView(HT_View view) 
 {
  
-  static int counter=1;
+//  static int counter=1;
 
   XFE_RDFImage *   rdfImage = NULL;
 
@@ -365,9 +372,9 @@ XFE_NavCenterView::addRDFView(HT_View view)
 }
 //////////////////////////////////////////////////////////////////////
 void
-XFE_NavCenterView::selector_activate_cb(Widget		w,
+XFE_NavCenterView::selector_activate_cb(Widget		/* w */,
                                         XtPointer	clientData, 
-                                        XtPointer	callData)
+                                        XtPointer	/* callData */)
 {	
   SelectorCBStruct *cbdata = (SelectorCBStruct *)clientData;
 
@@ -375,9 +382,9 @@ XFE_NavCenterView::selector_activate_cb(Widget		w,
 }
 //////////////////////////////////////////////////////////////////////
 void
-XFE_NavCenterView::selector_destroy_cb(Widget		w,
+XFE_NavCenterView::selector_destroy_cb(Widget		/* w */,
                                         XtPointer	clientData, 
-                                        XtPointer	callData)
+                                        XtPointer	/* callData */)
 {	
   SelectorCBStruct *cbdata = (SelectorCBStruct *)clientData;
 

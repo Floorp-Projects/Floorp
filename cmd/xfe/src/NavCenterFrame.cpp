@@ -135,7 +135,7 @@ XFE_NavCenterFrame::commandToString(CommandType cmd, void* calldata,
 
 //////////////////////////////////////////////////////////////////////////
 extern "C" MWContext *
-fe_showNavCenter(Widget toplevel, XFE_Frame *parent_frame, Chrome *chromespec, URL_Struct *url)
+fe_showNavCenter(Widget toplevel, XFE_Frame *parent_frame, Chrome *chromespec, URL_Struct * /* url */)
 {
   // not a static global, since we can have multiple browsers.
 	XFE_NavCenterFrame *theFrame;

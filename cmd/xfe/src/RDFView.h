@@ -48,7 +48,7 @@ class XFE_RDFView : public XFE_View
 {
 public:
   XFE_RDFView(XFE_Component *toplevel, Widget parent,
-              XFE_View *parent_view, MWContext *context, XP_Bool isStandalone);
+              XFE_View *parent_view, MWContext *context);
 
   ~XFE_RDFView();
 
@@ -74,6 +74,9 @@ public:
 
   void doPopup(XEvent *event);
 
+	void setStandAloneState(XP_Bool state);
+	XP_Bool getStandAloneState();
+
 private:
   //HT_Pane m_Pane;		// The pane that owns this view
   HT_View m_rdfview;		// The view as registered in the hypertree
@@ -81,6 +84,9 @@ private:
   Widget  rdfControlsParent; // Parent of the label and the button on top
   Widget  m_tree;       // The tree widget
   XFE_RDFPopupMenu *m_popup;
+
+	// Is this a stand alone view ?
+	XP_Bool _standAloneState;
 
   // icons for use in the bookmark window.
   static fe_icon bookmark;
