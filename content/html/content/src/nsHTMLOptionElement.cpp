@@ -267,9 +267,8 @@ NS_IMETHODIMP
 nsHTMLOptionElement::SetSelectedInternal(PRBool aValue, PRBool aNotify)
 {
   mIsInitialized = PR_TRUE;
+
   // This affects the display, but what the hey, it's a good place for it
-  PRInt32 ind;
-  GetIndex(&ind);
   if (aValue) {
     return SetAttr(kNameSpaceID_None,
                    nsLayoutAtoms::optionSelectedPseudo,
