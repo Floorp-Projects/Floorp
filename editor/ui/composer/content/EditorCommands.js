@@ -73,7 +73,9 @@ function TextEditorOnLoad() {
     EditorStartup( 'text', document.getElementById("content-frame"));
     return;
 }
-  
+
+// This is called when the real editor document is created,
+// before it's loaded.
 var DocumentStateListener =
 {
   NotifyDocumentCreated: function() 
