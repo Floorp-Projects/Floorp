@@ -59,6 +59,17 @@ public:
                          nsIPostData* aPostData = 0) = 0;
 
   /**
+   * Process a mouse-over a link. aFrame is the frame that contains the
+   * linked content. aURLSpec is an absolute url spec that defines the
+   * destination for the link. aTargetSpec indicates where the link is
+   * targeted (it may be an empty string).
+   */
+  NS_IMETHOD OnOverLink(nsIFrame* aFrame, 
+                        const nsString& aURLSpec,
+                        const nsString& aTargetSpec,
+                        nsIPostData* aPostData = 0) = 0;
+
+  /**
    * Get the state of a link to a given absolute URL
    */
   NS_IMETHOD GetLinkState(const nsString& aURLSpec, nsLinkState& aState) = 0;
