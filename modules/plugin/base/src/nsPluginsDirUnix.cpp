@@ -51,7 +51,6 @@
 #include "nsIMemory.h"
 #include "nsIPluginStreamListener.h"
 #include "nsPluginsDir.h"
-#include "nsSpecialSystemDirectory.h"
 #include "prmem.h"
 #include "prenv.h"
 #include "prerror.h"
@@ -304,36 +303,6 @@ static void LoadExtraSharedLibs()
 
 /* nsPluginsDir implementation */
 
-// Get path to plugin directory. 
-// If already defined in environment, use it; otherwise, use native path.
-nsPluginsDir::nsPluginsDir(PRUint16 location)
-{
-    nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::
-                                    OS_CurrentProcessDirectory); 
-    const char *pluginsDir;
-    char       *tmp_dir;
-
-    if ((tmp_dir = PR_GetEnv(PLUGIN_PATH))) {
-        pluginsDir = (const char *)tmp_dir;
-    } else {
-        sysdir += "plugins";
-        pluginsDir = sysdir.GetCString(); // native path
-    }
-
-    if (pluginsDir != NULL) {
-        *(nsFileSpec*)this = pluginsDir;
-    }
-
-#ifdef NS_DEBUG
-    printf("********** Got plugins path: %s\n", pluginsDir);
-#endif
-}
-
-nsPluginsDir::~nsPluginsDir()
-{
-    // do nothing
-}
-
 PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 {
     const char* pathname = fileSpec.GetCString();
@@ -443,7 +412,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     } else {
         // It's old sk00l
         // if fileName parameter == 0 ns4xPlugin::CreatePlugin() will not call NP_Initialize()
-        rv = ns4xPlugin::CreatePlugin(mgr, 0, pLibrary, 
+        rv = ns4xPlugin::CreatePlugin(mgr, 0, 0, pLibrary, 
 				      getter_AddRefs(plugin));
         if (NS_FAILED(rv)) return rv;
     }

@@ -51,7 +51,6 @@
 #include "prmem.h"
 #include "nsReadableUtils.h"
 
-#include "nsSpecialSystemDirectory.h"
 
 #include <File.h>
 #include <AppFileInfo.h>
@@ -115,30 +114,6 @@ static nsresult GetMimeExtensions(const char *mimeType, char *extensions, int ex
 ///////////////////////////////////////////////////////////////////////////
 
 /* nsPluginsDir implementation */
-
-nsPluginsDir::nsPluginsDir(PRUint16 location)
-{
-  // this is somewhat lacking, in that it doesn't fall back to any other directories.
-  // then again, I'm not sure we should be falling back at all.  plugins have been (and probably
-  // should continue to be) loaded from both <libdir>/plugins and ~/.mozilla/plugins.  There
-  // doesn't seem to be any way to do this in the current nsPluginsDir code, which is disheartening.
-  //
-
-  // use MOZILLA_FIVE_HOME/plugins
-
-  nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory); 
-  sysdir += "plugins"; 
-  const char *pluginsDir = sysdir.GetCString(); // native path
-  if (pluginsDir != NULL)
-  {
-      *(nsFileSpec*)this = pluginsDir;
-  }
-}
-
-nsPluginsDir::~nsPluginsDir()
-{
-	// do nothing
-}
 
 PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 {

@@ -42,33 +42,16 @@
 #include "nsFileSpec.h"
 
 /**
- * Provides a cross-platform way to obtain the location of the plugins
- * directory. Once constructed, can be used with nsDirectoryIterator to
- * scan the plugins directory. An nsPluginFileSpec can be constructed from the
- * nsFileSpec returned by the iterator.
+ * nsPluginsDir is nearly obsolete. Directory Service should be used instead.
+ * It exists for the sake of one static function.
  */
 
-/* Where to seek for plugins dir */
-#define PLUGINS_DIR_LOCATION_AUTO       0
-#define PLUGINS_DIR_LOCATION_MOZ_LOCAL  1
-#define PLUGINS_DIR_LOCATION_4DOTX      2
-#define PLUGINS_DIR_LOCATION_MAC_SYSTEM_PLUGINS_FOLDER 3
-#define PLUGINS_DIR_LOCATION_JAVA_JRE   4
-
-class nsPluginsDir : public nsFileSpec {
+class nsPluginsDir {
 public:
-	/**
-	 * Locates the plugins directory in a platform-dependent manner.
-	 */
-	nsPluginsDir(PRUint16 location = PLUGINS_DIR_LOCATION_AUTO);
-  nsPluginsDir(nsFileSpec plugDir) :
-     nsFileSpec(plugDir) {  }
-	virtual ~nsPluginsDir();
-
 	/**
 	 * Determines whether or not the given file is actually a plugin file.
 	 */
-	PRBool IsPluginFile(const nsFileSpec& fileSpec);
+	static PRBool IsPluginFile(const nsFileSpec& fileSpec);
 };
 
 struct PRLibrary;

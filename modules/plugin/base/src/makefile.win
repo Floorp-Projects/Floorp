@@ -64,6 +64,7 @@ OBJS =                                       \
     .\$(OBJDIR)\nsPluginInstancePeer.obj     \
     .\$(OBJDIR)\nsPluginViewer.obj           \
     .\$(OBJDIR)\nsPluginsDirWin.obj          \
+    .\$(OBJDIR)\nsPluginDirServiceProvider.obj \
     $(NULL)
 
 LCFLAGS = \

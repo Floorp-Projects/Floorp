@@ -29,7 +29,6 @@
 #include "prlink.h"
 #include "plstr.h"
 #include "prmem.h"
-#include "nsSpecialSystemDirectory.h"
 #include "nsPluginDefs.h"
 
 /* Load a string stored as RCDATA in a resource segment */
@@ -122,23 +121,6 @@ static void FreeStringArray(PRUint32 variants, char ** array)
 }
 
 // nsPluginsDir class
-
-nsPluginsDir::nsPluginsDir(PRUint16 location)
-{
-   // XXX This isn't right for the embedded case, but it's as close
-   //     as we can do right now.
-   nsSpecialSystemDirectory appdir( nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-   appdir += "plugins";
-
-   if( !appdir.Exists())
-      appdir.CreateDirectory();
-
-   *(nsFileSpec*)this = appdir;
-}
-
-nsPluginsDir::~nsPluginsDir()
-{
-}
 
 PRBool nsPluginsDir::IsPluginFile( const nsFileSpec &fileSpec)
 {
