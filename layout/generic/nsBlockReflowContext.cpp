@@ -292,8 +292,8 @@ ComputeShrinkwrapMargins(const nsStyleMargin* aStyleMargin, nscoord aWidth,
 }
 
 static void
-nsPointDtor(nsPresContext *aPresContext, nsIFrame *aFrame,
-             nsIAtom *aPropertyName, void *aPropertyValue)
+nsPointDtor(void *aFrame, nsIAtom *aPropertyName,
+            void *aPropertyValue, void *aDtorData)
 {
   nsPoint *point = NS_STATIC_CAST(nsPoint*, aPropertyValue);
   delete point;
@@ -382,21 +382,16 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
 
   aComputedOffsets = aFrameRS.mComputedOffsets;
   if (NS_STYLE_POSITION_RELATIVE == display->mPosition) {
-    nsFrameManager *frameManager = mPresContext->FrameManager();
-
     nsPoint *offsets = NS_STATIC_CAST(nsPoint*,
-      frameManager->GetFrameProperty(mFrame,
-                                     nsLayoutAtoms::computedOffsetProperty,
-                                     0));
+                   mFrame->GetProperty(nsLayoutAtoms::computedOffsetProperty));
 
     if (offsets)
       offsets->MoveTo(aComputedOffsets.left, aComputedOffsets.top);
     else {
       offsets = new nsPoint(aComputedOffsets.left, aComputedOffsets.top);
       if (offsets)
-        frameManager->SetFrameProperty(mFrame,
-                                       nsLayoutAtoms::computedOffsetProperty,
-                                       offsets, nsPointDtor);
+        mFrame->SetProperty(nsLayoutAtoms::computedOffsetProperty,
+                            offsets, nsPointDtor);
     }
   }
 

@@ -43,6 +43,7 @@
 #include "nsEvent.h"
 #include "nsAString.h"
 #include "nsContentErrors.h"
+#include "nsPropertyTable.h"
 
 // Forward declarations
 class nsIAtom;
@@ -610,6 +611,27 @@ public:
   {
     return PR_TRUE;
   }
+
+  /* Methods for manipulating content node properties.  For documentation on
+   * properties, see nsPropertyTable.h.
+   */
+
+  virtual void* GetProperty(nsIAtom  *aPropertyName,
+                            nsresult *aStatus = nsnull) const
+  { if (aStatus) *aStatus = NS_ERROR_NOT_IMPLEMENTED; return nsnull; }
+
+  virtual nsresult SetProperty(nsIAtom                   *aPropertyName,
+                               void                      *aValue,
+                               NSPropertyDtorFunc         aDtor = nsnull)
+  { return NS_ERROR_NOT_IMPLEMENTED; }
+
+  virtual nsresult DeleteProperty(nsIAtom *aPropertyName)
+  { return NS_ERROR_NOT_IMPLEMENTED; }
+
+  virtual void* UnsetProperty(nsIAtom  *aPropertyName,
+                              nsresult *aStatus = nsnull)
+  { if (aStatus) *aStatus = NS_ERROR_NOT_IMPLEMENTED; return nsnull; }
+
 
 #ifdef DEBUG
   /**

@@ -45,6 +45,7 @@
 #include "nsIDOMAbstractView.h"
 #include "nsIPrivateCompositionEvent.h"
 #include "nsDOMEvent.h"
+#include "nsIDOMAbstractView.h"
 
 class nsDOMUIEvent : public nsIDOMUIEvent,
                      public nsIDOMNSUIEvent,
