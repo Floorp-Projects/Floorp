@@ -2622,10 +2622,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
             tempFileName += extension;
         }
         tempFile->Append(tempFileName);
-
-        // Create a temporary file to extract to
-        MakeUnique(tempFile);
-
+        tempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0664);
         tempFile->Clone(getter_AddRefs(extractHereSpec));
 
         if (extractHereSpec == nsnull)
@@ -2663,8 +2660,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
 
             //Now reset the leafname
             tempFile->SetLeafName(newLeafName);
-
-            MakeUnique(tempFile);
+            tempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
             extractHereSpec = tempFile;
         }
         extractHereSpec = temp;
@@ -2829,50 +2825,3 @@ nsInstall::DeleteVector(nsVoidArray* vector)
         vector = nsnull;
     }
 }
-
-// XXX what's wrong with nsIFile::createUnique?
-nsresult MakeUnique(nsILocalFile* file)
-{
-    PRBool flagExists;
-
-    nsresult rv = file->Exists(&flagExists);
-
-    if (NS_FAILED(rv)) return rv;
-    if (!flagExists) return NS_ERROR_FAILURE;
-
-    nsCAutoString leafNameBuf;
-
-    rv = file->GetNativeLeafName(leafNameBuf);
-    if (NS_FAILED(rv)) return rv;
-
-    // XXX this code should use iterators
-    char *leafName = (char *) leafNameBuf.get();
-
-    char* lastDot = strrchr(leafName, '.');
-    char* suffix = "";
-    if (lastDot)
-    {
-        suffix = nsCRT::strdup(lastDot); // include '.'
-        *lastDot = '\0'; // strip suffix and dot.
-    }
-
-    // 27 should work on Macintosh, Unix, and Win32.
-    const int maxRootLength = 27 - strlen(suffix) - 1;
-
-    if ((int)strlen(leafName) > (int)maxRootLength)
-        leafName[maxRootLength] = '\0';
-
-    for (short indx = 1; indx < 1000 && flagExists; indx++)
-    {
-        // start with "Picture-1.jpg" after "Picture.jpg" exists
-        char newName[32];
-        sprintf(newName, "%s-%d%s", leafName, indx, suffix);
-        file->SetNativeLeafName(nsDependentCString(newName));
-
-        rv = file->Exists(&flagExists);
-        if (NS_FAILED(rv)) return rv;
-    }
-    return NS_OK;
-}
-
-
