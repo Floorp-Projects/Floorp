@@ -293,7 +293,7 @@ nsresult
 nsStdURLParser::ParseAtPort(const char* i_Spec, PRInt32 *o_Port, char* *o_Path)
 {
     nsresult rv = NS_OK;
-    static const char delimiters[] = "/?"; //this order is optimized.
+    static const char delimiters[] = "/?#"; //this order is optimized.
     char* brk = PL_strpbrk(i_Spec, delimiters);
     if (!brk) // everything is a Port
     {
@@ -308,6 +308,7 @@ nsStdURLParser::ParseAtPort(const char* i_Spec, PRInt32 *o_Port, char* *o_Path)
     {
     case '/' :
     case '?' :
+    case '#' :
         // Get the Port, the rest is Path
         *o_Port = ExtractPortFrom(i_Spec);
         if (*o_Port <= 0)
@@ -406,7 +407,14 @@ nsStdURLParser::ParseAtDirectory(const char* i_Path, char* *o_Directory,
         // If its not the same as the first slash then extract directory
         if (file != dirfile)
         {
-            ExtractString(dirfile, o_Directory, (file - dirfile)+1);
+            ExtractString(dirfile, o_Directory, (file - dirfile)+1);          
+            if (*dirfile != '/') {
+                nsCAutoString dir;
+                dir += "/" ;
+                dir += *o_Directory;
+                CRTFREEIF(*o_Directory);
+                *o_Directory = dir.ToNewCString();
+            }
         } else {
             DupString(o_Directory, "/");
         }
