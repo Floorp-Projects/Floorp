@@ -412,7 +412,9 @@ else
 MKDEPEND_DIR	= $(DEPTH)/config/mkdepend
 MKDEPEND	= $(MKDEPEND_DIR)/mkdepend
 ifndef COMPILER_DEPEND
+ifneq ($(OS_ARCH),OS2)
 MKDEPEND_BUILTIN = $(MKDEPEND_DIR)/mkdepend
+endif
 endif
 endif
 
