@@ -87,7 +87,7 @@ protected:
 
   /** the parent node containing mLeftNode and mRightNode */
   nsCOMPtr<nsIDOMNode> mParent;
-  nsCOMPtr<nsIEditor>  mEditor;
+  nsIEditor*  mEditor;
 
   friend class TransactionFactory;
 
