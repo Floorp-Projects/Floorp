@@ -1720,6 +1720,21 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
 
   gdk_gc_unref(gc);
 
+  if ((mAlphaDepth==1) && (dest->mAlphaPixmap)) {
+    GdkGCValues values;
+    GdkGCValuesMask vmask;
+
+    memset(&values, 0, sizeof(GdkGCValues));
+    values.function = GDK_OR;
+    vmask = GDK_GC_FUNCTION;
+    gc = gdk_gc_new_with_values(dest->mAlphaPixmap, &values, vmask);
+    gdk_window_copy_area(dest->mAlphaPixmap, gc,
+                         aDX, aDY,
+                         mAlphaPixmap,
+                         0, 0, mWidth, mHeight);
+    gdk_gc_unref(gc);
+  }
+
   if (!mIsSpacer || !mAlphaDepth)
     dest->mIsSpacer = PR_FALSE;
 
