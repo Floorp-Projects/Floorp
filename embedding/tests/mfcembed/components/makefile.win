@@ -32,6 +32,11 @@ REQUIRES = \
 	xpcom \
 	string \
 	dom \
+	content \
+	gfx \
+	widget \
+  pref \
+  intl \
 	webBrowser_core \
 	windowwatcher \
 	exthandler \
@@ -47,11 +52,15 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 RESFILE=Dialogs.res
 
 LCFLAGS=/D "WIN32_LEAN_AND_MEAN" /D "_AFXDLL" /D "USE_SINGLE_SIGN_ON" \
-         /D "_USRDLL" /D "_WINDLL"
+         /D "_WINDLL"
 
 LLFLAGS=-SUBSYSTEM:windows
 
 CPP_OBJS= \
+    .\$(OBJDIR)\nsPrintDialogUtil.obj \
+    .\$(OBJDIR)\nsPrintProgressParams.obj \
+    .\$(OBJDIR)\PrintingPromptService.obj \
+    .\$(OBJDIR)\PrintProgressDialog.obj \
     .\$(OBJDIR)\Dialogs.obj \
     .\$(OBJDIR)\PromptService.obj \
     .\$(OBJDIR)\HelperAppDlg.obj \
@@ -60,6 +69,7 @@ CPP_OBJS= \
 LLIBS= \
     $(LIBNSPR) \
     $(DIST)\lib\xpcom.lib \
+    $(DIST)\lib\gkgfx.lib \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

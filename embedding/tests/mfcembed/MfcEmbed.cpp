@@ -72,6 +72,12 @@ static char THIS_FILE[] = __FILE__;
  {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
 static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
 
+// this is for overriding the Mozilla default PrintingPromptService component
+#include "PrintingPromptService.h"
+#define NS_PRINTINGPROMPTSERVICE_CID \
+ {0xe042570c, 0x62de, 0x4bb6, { 0xa6, 0xe0, 0x79, 0x8e, 0x3c, 0x7, 0xb4, 0xdf}}
+static NS_DEFINE_CID(kPrintingPromptServiceCID, NS_PRINTINGPROMPTSERVICE_CID);
+
 // this is for overriding the Mozilla default HelperAppLauncherDialog
 #include "HelperAppService.h"
 #define NS_HELPERAPPLAUNCHERDIALOG_CID \
@@ -209,6 +215,29 @@ nsresult CMfcEmbedApp::OverrideComponents()
           ::FreeLibrary(overlib);
     }
 
+    // replace Mozilla's default PrintingPromptService with our own, if the
+    // expected override DLL is present
+    overlib = ::LoadLibrary(kComponentsLibname);
+    if (overlib) {
+        InitPrintingPromptServiceType InitLib;
+        MakeFactoryType MakeFactory;
+        InitLib = reinterpret_cast<InitPrintingPromptServiceType>(::GetProcAddress(overlib, kPrintingPromptServiceInitFuncName));
+        MakeFactory = reinterpret_cast<MakeFactoryType>(::GetProcAddress(overlib, kPrintingPromptServiceFactoryFuncName));
+
+        if (InitLib && MakeFactory) {
+            InitLib(overlib);
+
+            nsCOMPtr<nsIFactory> printingPromptFactory;
+            rv = MakeFactory(getter_AddRefs(printingPromptFactory));
+            if (NS_SUCCEEDED(rv))
+                nsComponentManager::RegisterFactory(kPrintingPromptServiceCID,
+                                                    "Printing Prompt Service",
+                                                    "@mozilla.org/embedcomp/printingprompt-service;1",
+                                                    printingPromptFactory,
+                                                    PR_TRUE); // replace existing
+        } else
+          ::FreeLibrary(overlib);
+    }
     return rv;
 }
 

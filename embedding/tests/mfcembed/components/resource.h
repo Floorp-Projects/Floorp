@@ -9,6 +9,7 @@
 #define IDD_CONFIRM_CHECK_DIALOG        132
 #define IDD_PROGRESS_DIALOG             133
 #define IDD_CHOOSE_ACTION_DIALOG        134
+#define IDD_PRINT_PROGRESS_DIALOG       143
 #define IDC_PROMPT_ANSWER               1001
 #define IDC_PROMPT_TEXT                 1002
 #define IDC_USERNAME                    1003
@@ -29,15 +30,22 @@
 #define IDC_OPEN_USING                  1018
 #define IDC_CHOOSE_APP                  1019
 #define IDC_APP_NAME                    1020
+#define IDC_PRINT_PROGRESS_URL_TXT      1022
+#define IDC_PRINT_PROGRESS_PRG          1023
+#define IDC_PRINT_PROGRESS_PERCENT_TXT  1024
+#define IDC_PRINT_PROGRESS_URL_LABEL_TXT 1025
+#define IDC_PRINT_PROGRESS_TXT          1026
+
+
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        143
+#define _APS_NEXT_RESOURCE_VALUE        144
 #define _APS_NEXT_COMMAND_VALUE         32789
-#define _APS_NEXT_CONTROL_VALUE         1022
+#define _APS_NEXT_CONTROL_VALUE         1027
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

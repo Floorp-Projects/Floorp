@@ -171,6 +171,21 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,150,94,50,14
 END
 
+IDD_PRINT_PROGRESS_DIALOG DIALOG DISCARDABLE  0, 0, 294, 53
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Print Progress"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,237,36,50,14
+    RTEXT           "URL:",IDC_PRINT_PROGRESS_URL_LABEL_TXT,7,7,30,8
+    LTEXT           "...",IDC_PRINT_PROGRESS_URL_TXT,41,7,231,8
+    RTEXT           "Progress:",IDC_STATIC,7,18,30,8
+    CONTROL         "Progress1",IDC_PRINT_PROGRESS_PRG,"msctls_progress32",
+                    WS_BORDER,41,18,217,8
+    LTEXT           "Preparing...",IDC_PRINT_PROGRESS_TXT,41,18,217,8
+    LTEXT           "",IDC_PRINT_PROGRESS_PERCENT_TXT,264,18,19,8
+END
+
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
