@@ -492,6 +492,7 @@ nsXMLContentSink::PushNameSpacesFrom(const nsIParserNode& aNode)
           PRUnichar next = k.CharAt(sizeof(kNameSpaceDef)-1);
           // If the next character is a :, there is a namespace prefix
           if (':' == next) {
+            prefix.Truncate();
             k.Right(prefix, k.Length()-sizeof(kNameSpaceDef));
           }
           else {
