@@ -35,6 +35,7 @@ REQUIRES	= xpcom \
 		  timer \
 		  caps \
 		  gfx \
+		  htmlparser \
 		  layout \
 		  content \
 		  widget \
@@ -45,6 +46,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  xul \
 		  xuldoc \
+		  webshell \
 		  $(NULL)
 
 CPPSRCS		= \
