@@ -347,7 +347,7 @@
       <menuitem id="menu_findnext"   accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="cmd_findNext"/>
       <menuseparator id="sep_checkspelling" class="hide-in-IM" />
       <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_spelling" label="&checkSpellingCmd.label;"/>
-      <menuitem id="menu_validate" observes="cmd_validate"
+      <menuitem id="menu_validate" class="hide-in-IM" observes="cmd_validate"
         label="&validateCmd.label;"/>
       <menuseparator id="menu_PrefsSeparator"/>
       <menuitem id="menu_publishSettings" label="&publishSettings.label;" accesskey="&publishSettings.accesskey;" observes="cmd_publishSettings"/>
