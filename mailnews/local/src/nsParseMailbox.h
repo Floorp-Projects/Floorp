@@ -201,7 +201,6 @@ protected:
   nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
 
   virtual PRInt32     PublishMsgHeader(nsIMsgWindow *msgWindow);
-  virtual void        FolderTypeSpecificTweakMsgHeader(nsIMsgDBHdr *tweakMe);
   void                FreeBuffers();
 
   // data
@@ -242,9 +241,14 @@ public:
   nsOutputFileStream *GetLogFile();
   virtual PRInt32 PublishMsgHeader(nsIMsgWindow *msgWindow);
   void            GetMsgWindow(nsIMsgWindow **aMsgWindow);
-          nsresult EndMsgDownload();
+  nsresult EndMsgDownload();
+
+  nsresult AppendMsgFromFile(nsIOFileStream *fileStream, PRInt32 offset, 
+                             PRUint32 length, nsFileSpec &destFileSpec);
+
+  virtual void	ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow, PRUint32 msgOffset);
+
 protected:
-  virtual void	ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow);
   virtual nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
   virtual nsresult  MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
                                           nsIMsgDatabase *sourceDB, 
@@ -261,13 +265,16 @@ protected:
 
   nsImapMoveCoalescer *m_moveCoalescer; // strictly owned by nsParseNewMailState;
 
+  PRBool        m_msgMovedByFilter;
   nsIOFileStream  *m_inboxFileStream;
   nsFileSpec    m_inboxFileSpec;
   PRBool        m_disableFilters;
-  PRBool        m_msgMovedByFilter;
   PRUint32      m_ibuffer_fp;
   char          *m_ibuffer;
   PRUint32      m_ibuffer_size;
+  // used for applying move filters, because in the case of using a temporary
+  // download file, the offset/key in the msg hdr is not right.
+  PRUint32      m_curHdrOffset; 
 };
 
 #endif

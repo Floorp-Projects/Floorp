@@ -58,12 +58,14 @@ REQUIRES	= xpcom \
 		  intl \
 		  unicharutil \
 		  mime \
+		  dom \
 		  rdfutil \
 		  txmgr \
 		  caps \
 		  docshell \
 		  msgimap \
 		  nkcache \
+		  windowwatcher \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -94,5 +94,6 @@ private:
 #define MOVEMAIL_CANT_DELETE_LOCK                           4035
 #define MOVEMAIL_CANT_TRUNCATE_SPOOL_FILE                   4036
 #define MOVEMAIL_SPOOL_FILE_NOT_FOUND                       4037
+#define POP3_TMP_DOWNLOAD_FAILED                            4038
 
 #endif /* _nsLocalStringBundle_H__ */

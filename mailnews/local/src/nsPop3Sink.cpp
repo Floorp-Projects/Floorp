@@ -57,12 +57,23 @@
 #include "nsILineInputStream.h"
 #include "nsIPop3Protocol.h"
 #include "nsLocalMailFolder.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsSpecialSystemDirectory.h"
+#include "nsIMsgStringService.h"
+#include "nsIPrompt.h"
+#include "nsIPromptService.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIDocShell.h"
+#include "nsIDOMWindowInternal.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsPop3Sink, nsIPop3Sink)
 
 nsPop3Sink::nsPop3Sink()
 {
     m_authed = PR_FALSE;
+    m_downloadingToTempFile = PR_FALSE;
     m_accountUrl = nsnull;
     m_biffState = 0;
     m_numNewMessages = 0;
@@ -277,12 +288,41 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, nsIMsgWindow *aMsgWindow, PRB
       return NS_MSG_FOLDER_BUSY;
 
     nsCOMPtr<nsIFileSpec> path;
+
     m_folder->GetPath(getter_AddRefs(path));
     path->GetFileSpec(&fileSpec);
-    m_outFileStream = new nsIOFileStream(fileSpec /*, PR_CREATE_FILE */);
-    
+
+    nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    if (pPrefBranch)
+       pPrefBranch->GetBoolPref("mailnews.downloadToTempFile", &m_downloadingToTempFile);
+
+    if (m_downloadingToTempFile)
+    {
+      // need to create an nsIOFileStream from a temp file...
+      nsCOMPtr <nsIFileSpec> tmpDownloadFile;
+      nsSpecialSystemDirectory tmpFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+      tmpFile += "newmsg";
+
+      rv = NS_NewFileSpecWithSpec(tmpFile, getter_AddRefs(tmpDownloadFile));
+
+      NS_ASSERTION(NS_SUCCEEDED(rv),"writing tmp pop3 download file: failed to append filename");
+      if (NS_FAILED(rv)) 
+        return rv;
+
+      rv = tmpDownloadFile->MakeUnique();  //need a unique tmp file to prevent dataloss in multiuser environment
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = tmpDownloadFile->GetFileSpec(&m_tmpDownloadFileSpec);
+
+      if (NS_SUCCEEDED(rv))
+        m_outFileStream = new nsIOFileStream(m_tmpDownloadFileSpec);
+    }
+    else
+    {
+      m_outFileStream = new nsIOFileStream(fileSpec /*, PR_CREATE_FILE */);
+    }
     // The following (!m_outFileStream etc) was added to make sure that we don't write somewhere 
-    // where for some reason or another we can't write too and lose the messages
+    // where for some reason or another we can't write to and lose the messages
     // See bug 62480
     if (!m_outFileStream)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -303,7 +343,7 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, nsIMsgWindow *aMsgWindow, PRB
     rv = GetServerFolder(getter_AddRefs(serverFolder));
     if (NS_FAILED(rv)) return rv;
 
-    rv = m_newMailParser->Init(serverFolder, m_folder, fileSpec, m_outFileStream, aMsgWindow);
+    rv = m_newMailParser->Init(serverFolder, m_folder, (m_downloadingToTempFile) ? m_tmpDownloadFileSpec : fileSpec, m_outFileStream, aMsgWindow);
 	// if we failed to initialize the parser, then just don't use it!!!
 	// we can still continue without one...
 
@@ -312,10 +352,17 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, nsIMsgWindow *aMsgWindow, PRB
       NS_IF_RELEASE(m_newMailParser);
       rv = NS_OK;
     }
-    else
+    else if (!m_downloadingToTempFile)
     {
       // Share the inbox fileStream so that moz-status-line flags can be set in the Inbox 
       m_newMailParser->SetDBFolderStream(m_outFileStream); 
+    }
+    else // if (m_downloadingToTempFile)
+    {
+      // Tell the parser to use the offset that will be in the dest folder,
+      // not the temp folder, so that the msg hdr will start off with
+      // the correct mdb oid
+      m_newMailParser->SetEnvelopePos(fileSpec.GetFileSize());
     }
 
     if (m_newMailParser)
@@ -354,6 +401,9 @@ nsPop3Sink::EndMailDelivery(nsIPop3Protocol *protocol)
     delete m_outFileStream;
     m_outFileStream = 0;
   }
+
+  if (m_downloadingToTempFile)
+    m_tmpDownloadFileSpec.Delete(PR_FALSE);
 
   // tell the parser to mark the db valid *after* closing the mailbox.
   if (m_newMailParser)
@@ -661,6 +711,49 @@ nsresult nsPop3Sink::WriteLineToMailbox(const char *buffer)
   return NS_OK;
 }
 
+nsresult nsPop3Sink::HandleTempDownloadFailed(nsIMsgWindow *msgWindow)
+{
+
+  nsCOMPtr<nsIMsgStringService> stringService = do_GetService(NS_MSG_POPSTRINGSERVICE_CONTRACTID);
+  nsXPIDLString fromStr, subjectStr, confirmString;
+  m_newMailParser->m_newMsgHdr->GetMime2DecodedSubject(getter_Copies(subjectStr));
+  m_newMailParser->m_newMsgHdr->GetMime2DecodedAuthor(getter_Copies(fromStr));
+  const PRUnichar *params[] = { fromStr.get(), subjectStr.get() };
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsresult rv = stringService->GetBundle(getter_AddRefs(bundle));
+  if (NS_SUCCEEDED(rv))
+    bundle->FormatStringFromID(POP3_TMP_DOWNLOAD_FAILED, params, 2, getter_Copies(confirmString));
+  nsCOMPtr<nsIDOMWindowInternal> parentWindow;
+  nsCOMPtr<nsIPromptService> promptService = do_GetService("@mozilla.org/embedcomp/prompt-service;1");
+  nsCOMPtr<nsIDocShell> docShell;
+  if (msgWindow)
+  {
+    (void) msgWindow->GetRootDocShell(getter_AddRefs(docShell));
+    parentWindow = do_QueryInterface(docShell);
+  }
+  PRBool confirmed = PR_FALSE;
+  if (promptService && confirmString)
+  {
+    PRInt32 dlgResult  = -1;
+    rv = promptService->ConfirmEx(parentWindow, nsnull, confirmString,
+                      (nsIPromptService::BUTTON_TITLE_YES * 
+                      nsIPromptService::BUTTON_POS_0) +
+                      (nsIPromptService::BUTTON_TITLE_NO * 
+                      nsIPromptService::BUTTON_POS_1),
+                      nsnull,
+                      nsnull,
+                      nsnull,
+                      nsnull,
+                      nsnull,
+                      &dlgResult);
+    m_newMailParser->m_newMsgHdr = nsnull;
+
+    return (dlgResult == 0) ? NS_OK : NS_MSG_ERROR_COPYING_FROM_TMP_DOWNLOAD;
+  }
+  return rv;
+}
+
+
 NS_IMETHODIMP
 nsPop3Sink::IncorporateComplete(nsIMsgWindow *aMsgWindow, PRInt32 aSize)
 {
@@ -690,7 +783,70 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *aMsgWindow, PRInt32 aSize)
     if (!aSize && localFolder)
       (void) localFolder->DeleteDownloadMsg(hdr, &doSelect);
 
-    m_newMailParser->PublishMsgHeader(aMsgWindow); 
+    if (m_downloadingToTempFile)
+    {
+      PRBool moved = PR_FALSE;
+      // close file to give virus checkers a chance to do their thing...
+      m_outFileStream->flush();
+      m_outFileStream->close();
+      m_newMailParser->FinishHeader();
+      // need to re-open the inbox file stream.
+      if (!m_tmpDownloadFileSpec.Exists())
+        return HandleTempDownloadFailed(aMsgWindow);   
+
+      m_outFileStream->Open(m_tmpDownloadFileSpec, (PR_RDWR | PR_CREATE_FILE));
+
+      m_newMailParser->ApplyFilters(&moved, aMsgWindow, 0);
+      if (!moved)
+      {
+        if (m_outFileStream->is_open())
+        {
+          nsFileSpec destFolderSpec;
+
+          nsCOMPtr<nsIFileSpec> path;
+
+          m_folder->GetPath(getter_AddRefs(path));
+          path->GetFileSpec(&destFolderSpec);
+          PRUint32 newMsgPos = destFolderSpec.GetFileSize();
+          PRUint32 msgSize;
+          hdr->GetMessageSize(&msgSize);
+          if (msgSize > m_tmpDownloadFileSpec.GetFileSize())
+            rv = NS_MSG_ERROR_WRITING_MAIL_FOLDER;   
+          else
+            rv = m_newMailParser->AppendMsgFromFile(m_outFileStream, 0, msgSize, destFolderSpec);
+          if (NS_FAILED(rv))
+            return HandleTempDownloadFailed(aMsgWindow);   
+
+          // if we have made it this far then the message has successfully been written to the new folder
+          // now add the header to the destMailDB.
+          if (NS_SUCCEEDED(rv) && m_newMailParser->m_mailDB)
+          {
+            PRUint32 newFlags;
+            hdr->GetFlags(&newFlags);
+            if (! (newFlags & MSG_FLAG_READ))
+            {
+              hdr->OrFlags(MSG_FLAG_NEW, &newFlags);
+              m_newMailParser->m_mailDB->AddToNewList(newMsgPos);
+            }
+            m_newMailParser->m_mailDB->AddNewHdrToDB(hdr, PR_TRUE);
+          }
+        }
+        else
+        {
+            return HandleTempDownloadFailed(aMsgWindow);   
+          // need to give an error here.
+        }
+      }
+      else
+      {
+        // cleanup after mailHdr in source DB because we moved the message.
+        m_newMailParser->m_mailDB->RemoveHeaderMdbRow(hdr);
+      }
+      m_newMailParser->m_newMsgHdr = nsnull;
+      m_outFileStream->close(); // close so we can delete temp file.
+      m_tmpDownloadFileSpec.Delete(PR_FALSE);
+
+    }
     if (aSize)
       hdr->SetUint32Property("onlineSize", aSize);
 

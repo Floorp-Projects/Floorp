@@ -70,6 +70,7 @@ protected:
 
     nsresult WriteLineToMailbox(const char *buffer);
     nsresult ReleaseFolderLock();
+    nsresult HandleTempDownloadFailed(nsIMsgWindow *msgWindow);
 
     PRBool m_authed;
     PRInt64 m_msgOffset;
@@ -89,6 +90,8 @@ protected:
 #endif
     nsIOFileStream* m_outFileStream;
     PRBool m_buildMessageUri;
+    PRBool m_downloadingToTempFile;
+    nsFileSpec m_tmpDownloadFileSpec;
     nsCString m_messageUri;
     nsXPIDLCString m_baseMessageUri;
     nsXPIDLCString m_accountKey;

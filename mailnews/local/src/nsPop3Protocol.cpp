@@ -1057,7 +1057,8 @@ nsPop3Protocol::Error(PRInt32 err_code)
     // so print out that error message!
     nsresult rv = NS_OK;
     nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
-    if (NS_SUCCEEDED(rv))
+    // we handle POP3_TMP_DOWNLOAD_FAILED earlier...
+    if (err_code != POP3_TMP_DOWNLOAD_FAILED && NS_SUCCEEDED(rv))
     {
         nsCOMPtr<nsIMsgWindow> msgWindow;
         nsCOMPtr<nsIPrompt> dialog;
@@ -1100,7 +1101,6 @@ nsPop3Protocol::Error(PRInt32 err_code)
     }
     m_pop3ConData->next_state = POP3_ERROR_DONE;
     m_pop3ConData->pause_for_read = PR_FALSE;
-
     return -1;
 }
 
@@ -3247,7 +3247,9 @@ nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
             // fixed to return errors)
 
             if(NS_FAILED(rv))
-                return(Error(POP3_MESSAGE_WRITE_ERROR));
+              return(Error((rv == NS_MSG_ERROR_COPYING_FROM_TMP_DOWNLOAD)
+                            ? POP3_TMP_DOWNLOAD_FAILED 
+                            : POP3_MESSAGE_WRITE_ERROR));
 
             m_pop3ConData->msg_closure = 0;
             return 0;

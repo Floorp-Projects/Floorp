@@ -1906,7 +1906,7 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
   {
     // do it just for the parent folder (isMoveFolder is true for parent only) if we are deleting/moving a folder tree
     // don't confirm for rss folders.
-    if (isMoveFolder && strcmp(GetIncomingServerType(), "rss")) 
+    if (isMoveFolder) 
     {
       PRBool okToDelete = PR_FALSE;
       ConfirmFolderDeletion(msgWindow, &okToDelete);
