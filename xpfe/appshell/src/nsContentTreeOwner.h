@@ -41,7 +41,7 @@ public:
    NS_DECL_NSIDOCSHELLTREEOWNER
 
 protected:
-   nsContentTreeOwner();
+   nsContentTreeOwner(PRBool fPrimary);
    virtual ~nsContentTreeOwner();
 
    void XULWindow(nsXULWindow* aXULWindow);
@@ -49,6 +49,7 @@ protected:
 
 protected:
    nsXULWindow*      mXULWindow;
+   PRBool            mPrimary;
 };
 
 #endif /* nsContentTreeOwner_h__ */

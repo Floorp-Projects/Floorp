@@ -58,6 +58,7 @@ protected:
 
    NS_IMETHOD EnsureChromeTreeOwner();
    NS_IMETHOD EnsureContentTreeOwner();
+   NS_IMETHOD EnsurePrimaryContentTreeOwner();
 
    NS_IMETHOD GetDOMElementFromDocShell(nsIDocShell* aDocShell, 
       nsIDOMElement** aDOMElement);
@@ -68,6 +69,7 @@ protected:
 protected:
    nsChromeTreeOwner*      mChromeTreeOwner;
    nsContentTreeOwner*     mContentTreeOwner;
+   nsContentTreeOwner*     mPrimaryContentTreeOwner;
    nsCOMPtr<nsIWidget>     mWindow;
    nsCOMPtr<nsIDocShell>   mDocShell;
    nsVoidArray             mContentShells;

@@ -40,7 +40,8 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 //***    nsContentTreeOwner: Object Management
 //*****************************************************************************
 
-nsContentTreeOwner::nsContentTreeOwner() : mXULWindow(nsnull)
+nsContentTreeOwner::nsContentTreeOwner(PRBool fPrimary) : mXULWindow(nsnull), 
+   mPrimary(fPrimary)
 {
 	NS_INIT_REFCNT();
 }
@@ -306,6 +307,10 @@ NS_IMETHODIMP nsContentTreeOwner::GetTitle(PRUnichar** aTitle)
 
 NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
 {
+   // We only allow the title to be set from the primary content shell
+   if(!mPrimary)
+      return NS_OK;
+
    // Get the window title modifiers
    nsCOMPtr<nsIDOMElement> docShellElement;
    mXULWindow->GetDOMElementFromDocShell(mXULWindow->mDocShell, 
