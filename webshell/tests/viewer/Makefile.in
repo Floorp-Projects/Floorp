@@ -129,9 +129,10 @@ LIBS = \
 	$(ZLIB_LIBS) \
 	-lraptorplugin \
 	-lmozdbm \
+	$(TOOLKIT_LIBS) \
 	$(NULL)
 
-LIBS += $(TK_GTK_LIBS)
+
 
 PROGRAM = viewer
 
