@@ -62,6 +62,7 @@ SOURCES =						\
 	$(PATH_PREFIX)/NativeGlobal.java		\
 	$(PATH_PREFIX)/NativeJavaArray.java		\
 	$(PATH_PREFIX)/NativeJavaClass.java		\
+	$(PATH_PREFIX)/NativeJavaConstructor.java	\
 	$(PATH_PREFIX)/NativeJavaMethod.java		\
 	$(PATH_PREFIX)/NativeJavaObject.java		\
 	$(PATH_PREFIX)/NativeJavaPackage.java		\
