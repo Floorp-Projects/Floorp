@@ -917,7 +917,7 @@ void StyleTableImpl::ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPre
   mLayoutStrategy = NS_STYLE_TABLE_LAYOUT_AUTO;
   mCols  = NS_STYLE_TABLE_COLS_NONE;
   mFrame = NS_STYLE_TABLE_FRAME_NONE;
-  mRules = NS_STYLE_TABLE_RULES_NONE;
+  mRules = NS_STYLE_TABLE_RULES_ALL;
   mCellPadding.Reset();
   mSpan = 1;
 
