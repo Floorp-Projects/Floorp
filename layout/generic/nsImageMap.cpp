@@ -912,7 +912,7 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
             }
           }
         }
-        if (NS_FAILED(rv)) return PR_FALSE;
+        if (NS_FAILED(rv) || !baseUri) return PR_FALSE;
         
         nsAutoString href;
         area->GetHREF(href);
