@@ -31,6 +31,7 @@
 #include "plstr.h"
 #include "ilISystemServices.h"
 #include "nsCRT.h"
+#include "xp_mcom.h"
 
 extern ilISystemServices *il_ss;
 
