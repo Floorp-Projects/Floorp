@@ -51,6 +51,7 @@
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
 #include "nsContentUtils.h"
+#include "nsTextFormatter.h"
 
 // XXX This is here because nsCachedStyleData is accessed outside of
 // the content module; e.g., by nsCSSFrameConstructor.
@@ -528,4 +529,38 @@ PRBool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
     }
   }
   return result;
+}
+
+void nsStyleUtil::EscapeCSSString(const nsString& aString, nsAString& aReturn)
+{
+  aReturn.Truncate();
+
+  const nsString::char_type* in = aString.get();
+  const nsString::char_type* const end = in + aString.Length();
+  for (; in != end; in++)
+  {
+    if (*in < 0x20)
+    {
+     // Escape all characters below 0x20 numerically.
+   
+     /*
+      This is the buffer into which snprintf should write. As the hex. value is,
+      for numbers below 0x20, max. 2 characters long, we don't need more than 5
+      characters ("\XX "+NUL).
+     */
+     PRUnichar buf[5];
+     nsTextFormatter::snprintf(buf, NS_ARRAY_LENGTH(buf), NS_LITERAL_STRING("\\%hX ").get(), *in);
+     aReturn.Append(buf);
+   
+    } else switch (*in) {
+      // Special characters which should be escaped: Quotes and backslash
+      case '\\':
+      case '\"':
+      case '\'':
+       aReturn.Append(PRUnichar('\\'));
+      // And now, after the eventual escaping character, the actual one.
+      default:
+       aReturn.Append(PRUnichar(*in));
+    }
+  }
 }

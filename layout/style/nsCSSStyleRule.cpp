@@ -52,6 +52,7 @@
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsStyleConsts.h"
+#include "nsStyleUtil.h"
 #include "nsHTMLAtoms.h"
 #include "nsUnitConversion.h"
 #include "nsIFontMetrics.h"
@@ -69,13 +70,15 @@
 #include "nsContentUtils.h"
 #include "nsContentErrors.h"
 
+/* ************************************************************************** */
+
 // -- nsCSSSelector -------------------------------
 
 #define NS_IF_COPY(dest,source,type)  \
-  if (nsnull != source)  dest = new type(*(source))
+  if (source)  dest = new type(*(source))
 
 #define NS_IF_DELETE(ptr)   \
-  if (nsnull != ptr) { delete ptr; ptr = nsnull; }
+  if (ptr) { delete ptr; ptr = nsnull; }
 
 #define NS_IF_NEGATED_START(bool,str)  \
   if (bool) { str.AppendLiteral(":not("); }
@@ -681,27 +684,27 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
       list->mAttr->ToString(temp);
       aString.Append(temp);
       // Append the function
-      if (list->mFunction == NS_ATTR_FUNC_EQUALS) {
-        aString.Append(PRUnichar('='));
-      } else if (list->mFunction == NS_ATTR_FUNC_INCLUDES) {
+      if (list->mFunction == NS_ATTR_FUNC_INCLUDES)
         aString.Append(PRUnichar('~'));
-        aString.Append(PRUnichar('='));
-      } else if (list->mFunction == NS_ATTR_FUNC_DASHMATCH) {
+      else if (list->mFunction == NS_ATTR_FUNC_DASHMATCH)
         aString.Append(PRUnichar('|'));
-        aString.Append(PRUnichar('='));
-      } else if (list->mFunction == NS_ATTR_FUNC_BEGINSMATCH) {
+      else if (list->mFunction == NS_ATTR_FUNC_BEGINSMATCH)
         aString.Append(PRUnichar('^'));
-        aString.Append(PRUnichar('='));
-      } else if (list->mFunction == NS_ATTR_FUNC_ENDSMATCH) {
+      else if (list->mFunction == NS_ATTR_FUNC_ENDSMATCH)
         aString.Append(PRUnichar('$'));
-        aString.Append(PRUnichar('='));
-      } else if (list->mFunction == NS_ATTR_FUNC_CONTAINSMATCH) {
+      else if (list->mFunction == NS_ATTR_FUNC_CONTAINSMATCH)
         aString.Append(PRUnichar('*'));
-        aString.Append(PRUnichar('='));
-      }
+
+      aString.Append(PRUnichar('='));
+      
       // Append the value
-      aString.Append(list->mValue);
-      aString.Append(PRUnichar(']'));
+      nsAutoString escaped;
+      nsStyleUtil::EscapeCSSString(list->mValue, escaped);
+      
+      aString.Append(PRUnichar('\"'));
+      aString.Append(escaped);
+      aString.AppendLiteral("\"]");
+      
       NS_IF_NEGATED_END(aIsNegated, aString)
       list = list->mNext;
     }

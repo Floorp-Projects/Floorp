@@ -56,6 +56,7 @@
 #include "nsContentCID.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
+#include "nsStyleUtil.h"
 static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
 
 
@@ -612,6 +613,8 @@ nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
     aContent->GetAttr(nameSpaceID, attrAtom, attrValue);
     if (attrValue.IsEmpty())
       continue;
+    nsAutoString escapedAttrValue;
+    nsStyleUtil::EscapeCSSString(attrValue, escapedAttrValue);
 
     // don't add rules that are already in mathml.css
     // (this will also clean up whitespace before units - see bug 125303)
@@ -633,7 +636,7 @@ nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
     // make a style rule that maps to the equivalent CSS property
     nsAutoString cssRule;
     cssRule.Assign(NS_LITERAL_STRING("[")  + attrName +
-                   NS_LITERAL_STRING("='") + attrValue +
+                   NS_LITERAL_STRING("='") + escapedAttrValue +
                    NS_LITERAL_STRING("']{") + cssProperty + NS_LITERAL_STRING("}"));
 
     if (!sheet) {
@@ -657,12 +660,10 @@ nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
     }
 
     // check for duplicate, if a similar rule is already there, don't bother to add another one
-    // XXX bug 142648 - GetSourceSelectorText is in the format *[color=blue] (i.e., no quotes...) 
-    // XXXrbs need to keep this in sync with the fix for bug 142648
     nsAutoString selector;
     selector.Assign(NS_LITERAL_STRING("*[") + attrName +
-                    NS_LITERAL_STRING("=") + attrValue +
-                    NS_LITERAL_STRING("]"));
+                    NS_LITERAL_STRING("=\"") + escapedAttrValue +
+                    NS_LITERAL_STRING("\"]"));
     PRInt32 k, count;
     cssSheet->StyleRuleCount(count);
     for (k = 0; k < count; ++k) {
