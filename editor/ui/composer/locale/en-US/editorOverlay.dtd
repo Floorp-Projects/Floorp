@@ -263,7 +263,7 @@
 <!ENTITY insertbreak.accesskey "b">
 
 <!-- Used in both Edit and View menus -->
-<!ENTITY HTMLSourceCmd.label "HTML Source...">
+<!ENTITY HTMLSourceCmd.label "HTML Source">
 <!ENTITY HTMLsource.accesskey "h">
 
 <!-- Format Menu -->
@@ -421,7 +421,7 @@
 <!ENTITY listterm.accesskey "t">
 <!ENTITY listDefinitionCmd.label "Definition">
 <!ENTITY listdefinition.accesskey "d">
-<!ENTITY listProps.label "List Properties...">
+<!ENTITY listProps.label "List Properties">
 <!ENTITY listprops.accesskey "l">
 
 <!-- Shared among Heading, Paragraph, and List submenus, and in toolbar menulist -->
@@ -469,9 +469,9 @@
 <!ENTITY decreaseindent.accesskey "d">
 <!ENTITY decreaseindentkb "-">
 
-<!ENTITY pageProperties.label "Page Title and Properties...">
+<!ENTITY pageProperties.label "Page Title and Properties">
 <!ENTITY pageproperties.accesskey "g">
-<!ENTITY colorsAndBackground.label "Page Colors and Background...">
+<!ENTITY colorsAndBackground.label "Page Colors and Background">
 <!ENTITY colorsandbackground.accesskey "u">
 
 <!-- Table Menu -->
@@ -524,7 +524,7 @@
 <!ENTITY tablejoincells.accesskey "j">
 <!ENTITY tableSplitCell.label "Split Cell">
 <!ENTITY tablesplitcell.accesskey "i">
-<!ENTITY tableProperties.label "Table Properties...">
+<!ENTITY tableProperties.label "Table Properties">
 <!-- These may be shared in other menus -->
 <!ENTITY properties.label "Properties...">
 <!ENTITY properties.accesskey "o">
