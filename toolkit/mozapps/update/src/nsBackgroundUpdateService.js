@@ -137,12 +137,12 @@ nsBackgroundUpdateService.prototype = {
   
   get appUpdateDescription()
   {
-    return this._pref.getIntPref(PREF_UPDATE_APP_UPDATEDESCRIPTION);
+    return this._pref.getComplexValue(PREF_UPDATE_APP_UPDATEDESCRIPTION, Components.interfaces.nsISupportsString).data;
   },
   
   get appUpdateURL()
   {
-    return this._pref.getIntPref(PREF_UPDATE_APP_UPDATEURL);
+    return this._pref.getComplexValue(PREF_UPDATE_APP_UPDATEURL, Components.interfaces.nsISupportsString).data;
   },
   
   /////////////////////////////////////////////////////////////////////////////

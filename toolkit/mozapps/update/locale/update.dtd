@@ -47,3 +47,6 @@
                                            when updated versions become available.">
 <!ENTITY  finished.enableChecking.label   "Allow &brandShortName; to check for updates.">
 <!ENTITY  finished.mismatch.label         "Click Finish to continue starting &brandShortName;.">
+
+<!ENTITY  updatesAvailable.title          "Updates Are Available">
+
