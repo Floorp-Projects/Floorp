@@ -12,6 +12,7 @@ content/forms, forms/content/forms
 content/global, toolkit/content/global
 content/global/bindings, toolkit/content/global/bindings
 content/global-platform, toolkit/content/global-platform
+content/global-region, toolkit/content/global-region
 content/communicator/contents.rdf, comm/content/communicator/contents.rdf
 content/communicator/plugins.html, comm/content/communicator/plugins.html
 skin/classic/forms, classic/skin/classic/forms
@@ -38,6 +39,7 @@ locale/XXXX/global-platform, YYYY/locale/XXXX/global-platform
 locale/XXXX/global-platform/accessible.properties, XXXX/locale/XXXX/global-platform/accessible.properties
 locale/XXXX/communicator/layout, XXXX/locale/XXXX/communicator/layout
 locale/XXXX/forms, XXXX/locale/XXXX/forms
+locale/US/global-region, US/locale/US/global-region
 
 # Help stuff
 content/help, help/content/help,
