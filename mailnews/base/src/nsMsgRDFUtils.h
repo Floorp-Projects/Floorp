@@ -44,6 +44,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_FOLDER				NC_NAMESPACE_URI "Folder"
 #define NC_RDF_SPECIALFOLDER		NC_NAMESPACE_URI "SpecialFolder"
 #define NC_RDF_SERVERTYPE   NC_NAMESPACE_URI "ServerType"
+#define NC_RDF_ISSERVER   NC_NAMESPACE_URI "IsServer"
 #define NC_RDF_TOTALMESSAGES		NC_NAMESPACE_URI "TotalMessages"
 #define NC_RDF_TOTALUNREADMESSAGES	NC_NAMESPACE_URI "TotalUnreadMessages"
 #define NC_RDF_CHARSET				NC_NAMESPACE_URI "Charset"
