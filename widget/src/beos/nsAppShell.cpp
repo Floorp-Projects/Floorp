@@ -18,6 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Duncan Wilcox <duncan@be.com>
+ *   Yannick Koehler <ykoehler@mythrium.com>
+ *   Makoto Hamanaka <VYA04230@nifty.com>
  */
 
 #include "nsAppShell.h"
@@ -30,6 +33,7 @@
 #include "nsTimerBeOS.h"
 #include "plevent.h"
 #include "prprf.h"
+#include "nsGUIEvent.h"
 
 #include <stdlib.h>
 #include <AppKit.h>
@@ -41,6 +45,12 @@ struct ThreadInterfaceData
 {
   void  *data;
   int32  sync;
+};
+
+struct EventItem
+{
+  int32 code;
+  ThreadInterfaceData ifdata;
 };
 
 static sem_id my_find_sem(const char *name)
@@ -61,6 +71,7 @@ static sem_id my_find_sem(const char *name)
   }
   return ret;
 }
+
 
 //-------------------------------------------------------------------------
 //
@@ -131,6 +142,7 @@ int32 bapp_thread(void *arg)
 //
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()  
+	: is_port_error(false)
 { 
   NS_INIT_REFCNT();
   mDispatchListener = 0;
@@ -151,7 +163,7 @@ nsAppShell::nsAppShell()
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsAppShell::Create(int* argc, char ** argv)
+NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
 {
   // system wide unique names
   // NOTE: this needs to be run from within the main application thread
@@ -178,7 +190,7 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener) 
+NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener) 
 {
   mDispatchListener = aDispatchListener;
   return NS_OK;
@@ -190,17 +202,33 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 //
 //-------------------------------------------------------------------------
 
-nsresult nsAppShell::Run()
+NS_IMETHODIMP nsAppShell::Run()
 {
   int32               code;
   ThreadInterfaceData id;
 
   NS_ADDREF_THIS();
 
-  while(read_port(eventport, &code, &id, sizeof(id)) >= 0)
+  if (!mEventQueue)
+    Spinup();
+
+  if (!mEventQueue)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  while (!is_port_error)
   {
-    switch(code)
-    {
+    RetrieveAllEvents(true);
+    
+    while (CountStoredEvents() > 0) {
+      // get an event of the best priority
+      EventItem *newitem = (EventItem *) GetNextEvent();
+      if (!newitem) break;
+      
+      code = newitem->code;
+      id = newitem->ifdata;
+      
+      switch(code)
+      {
       case 'WMti' :
         {
           // Hack
@@ -221,10 +249,8 @@ nsresult nsAppShell::Run()
         break;
 
       case 'natv' :	// native queue PLEvent
-        {
-          PREventQueue *queue = (PREventQueue *)id.data;
-          PR_ProcessPendingEvents(queue);
-        }
+        if (mEventQueue)
+          mEventQueue->ProcessPendingEvents();
         break;
 
       default :
@@ -232,18 +258,21 @@ nsresult nsAppShell::Run()
         printf("nsAppShell::Run - UNKNOWN EVENT\n");
 #endif
         break;
-    }
+      }
 
-    if(mDispatchListener)
-    {
-      mDispatchListener->AfterDispatch();
-    }
-    
-    if(id.sync)
-    {
-      release_sem(syncsem);
+      if(mDispatchListener)
+        mDispatchListener->AfterDispatch();
+      if(id.sync)
+        release_sem(syncsem);
+
+      delete newitem;
+      newitem = nsnull;
+      
+      RetrieveAllEvents(false); // get newer messages (non-block)
     }
   }
+
+  Spindown();
 
   Release();
 
@@ -256,7 +285,7 @@ nsresult nsAppShell::Run()
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsAppShell::Exit()
+NS_IMETHODIMP nsAppShell::Exit()
 {
   // interrupt message flow
   close_port(eventport);
@@ -296,9 +325,38 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
 // Spinup - do any preparation necessary for running a message loop
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsAppShell::Spinup()
+NS_IMETHODIMP nsAppShell::Spinup()
 {
-  return NS_OK;
+  nsresult   rv = NS_OK;
+
+  // Get the event queue service
+  nsCOMPtr<nsIEventQueueService> eventQService = do_GetService(kEventQueueServiceCID, &rv);
+
+  if (NS_FAILED(rv)) {
+    NS_ASSERTION("Could not obtain event queue service", PR_FALSE);
+    return rv;
+  }
+
+  //Get the event queue for the thread.
+  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
+  
+  // If we got an event queue, use it.
+  if (mEventQueue)
+    goto done;
+
+  // otherwise create a new event queue for the thread
+  rv = eventQService->CreateThreadEventQueue();
+  if (NS_FAILED(rv)) {
+    NS_ASSERTION("Could not create the thread event queue", PR_FALSE);
+    return rv;
+  }
+
+  // Ask again nicely for the event queue now that we have created one.
+  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
+
+done:
+  ListenToEventQueue(mEventQueue, PR_TRUE);
+  return rv;
 }
 
 //-------------------------------------------------------------------------
@@ -306,12 +364,17 @@ NS_METHOD nsAppShell::Spinup()
 // Spindown - do any cleanup necessary for finishing a message loop
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsAppShell::Spindown()
+NS_IMETHODIMP nsAppShell::Spindown()
 {
+  if (mEventQueue) {
+    ListenToEventQueue(mEventQueue, PR_FALSE);
+    mEventQueue->ProcessPendingEvents();
+    mEventQueue = nsnull;
+  }
   return NS_OK;
 }
 
-NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
+NS_IMETHODIMP nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 {
   aRealEvent = PR_FALSE;
   aEvent = 0;
@@ -319,7 +382,7 @@ NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
   return NS_OK;
 }
 
-NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
+NS_IMETHODIMP nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
   // should we check for eventport initialization ?
   char  portname[64];
@@ -344,8 +407,15 @@ NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 
   do 
   {
-    if (read_port(eventport, &code, &id, sizeof(id)) >= 0) 
-    {
+      if (CountStoredEvents() == 0)
+        RetrieveAllEvents(true); // queue is empty. block until new message comes.
+      
+      EventItem *newitem = (EventItem *) GetNextEvent();
+      if (!newitem) continue;
+      
+      code = newitem->code;
+      id = newitem->ifdata;
+
       switch(code) 
       {
         case 'WMti' :
@@ -370,8 +440,8 @@ NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
         
         case 'natv' :	// native queue PLEvent
           {
-            PREventQueue *queue = (PREventQueue *)id.data;
-            PR_ProcessPendingEvents(queue);
+            if (mEventQueue)
+              mEventQueue->ProcessPendingEvents();
             gotMessage = PR_TRUE;
           }
           break;
@@ -387,15 +457,9 @@ NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
       {
         release_sem(syncsem);
       }
-    }
-    else
-    {
-      // read_port failure
-#ifdef DEBUG
-      printf("nsAppShell::GetNativeEvent() read_port failed.\n");
-#endif
-      return NS_ERROR_FAILURE;
-    }
+      delete newitem;
+      newitem = nsnull;
+
   } while (!gotMessage);
 
   // no need to do this?
@@ -405,5 +469,140 @@ NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
   //}
   
   return NS_OK;
+}
+
+NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue, PRBool aListen)
+{
+  // do nothing
+  return NS_OK;
+}
+
+// count all stored events 
+int nsAppShell::CountStoredEvents()
+{
+  int count = 0;
+  for (int i=0 ; i < PRIORITY_LEVELS ; i++)
+    count += events[i].CountItems();
+  
+  return count;
+}
+
+// get an event of the best priority
+void *nsAppShell::GetNextEvent()
+{
+  void *newitem = nsnull;
+  for (int i=0 ; i < PRIORITY_LEVELS ; i++) {
+    if (!events[i].IsEmpty()) {
+      newitem = events[i].RemoveItem((long int)0);
+      break;
+    }
+  }
+  return newitem;
+}
+
+// get all the messages on the port and dispatch them to 
+// several queues by priority.
+void nsAppShell::RetrieveAllEvents(bool blockable)
+{
+  if (is_port_error) return;
+  
+  bool is_first_loop = true;
+  while(true)
+  {
+    EventItem *newitem = new EventItem;
+    newitem->code = 0;
+    newitem->ifdata.data = nsnull;
+    newitem->ifdata.sync = 0;
+
+    if ( !newitem ) break;
+    
+    // only block on read_port when 
+    //   blockable == true
+    //   and
+    //   this is the first loop
+    // otherwise, return immediately.
+    if ( (!is_first_loop || !blockable) && port_count(eventport) <= 0 ) {
+      delete newitem;
+      break;
+    }
+    is_first_loop = false;
+    if ( read_port(eventport, &newitem->code, &newitem->ifdata, sizeof(newitem->ifdata)) < 0 ) {
+      delete newitem;
+      is_port_error = true;
+      return;
+    }
+    // synchronous events should be processed quickly (?)
+	if (newitem->ifdata.sync) {
+      events[PRIORITY_TOP].AddItem(newitem);
+	}
+	else {
+      switch(newitem->code)
+      {
+      case 'WMti' :
+        events[PRIORITY_LOW].AddItem(newitem);
+        break;
+  
+      case WM_CALLMETHOD :
+        {
+          MethodInfo *mInfo = (MethodInfo *)newitem->ifdata.data;
+          switch( mInfo->methodId ) {
+          case nsWindow::ONKEY :
+            events[PRIORITY_SECOND].AddItem(newitem);
+            break;
+          case nsWindow::ONMOUSE:
+            ConsumeRedundantMouseMoveEvent(mInfo);
+            events[PRIORITY_THIRD].AddItem(newitem);
+            break;
+          case nsWindow::ONWHEEL :
+          case nsWindow::BTNCLICK :
+            events[PRIORITY_THIRD].AddItem(newitem);
+            break;
+          default:
+            events[PRIORITY_NORMAL].AddItem(newitem);
+            break;
+          }
+        }
+        break;
+            
+      case 'natv' :	// native queue PLEvent
+        events[PRIORITY_NORMAL].AddItem(newitem);
+        break;
+      }
+    }
+  }
+  return;
+}
+
+// detect sequential NS_MOUSE_MOVE event and delete older one,
+// for the purpose of performance
+void nsAppShell::ConsumeRedundantMouseMoveEvent(MethodInfo *pNewEventMInfo)
+{
+  if (pNewEventMInfo->args[0] != NS_MOUSE_MOVE) return;
+
+  nsISupports *widget0 = pNewEventMInfo->widget;
+  nsSwitchToUIThread *target0 = pNewEventMInfo->target;
+  
+  int count = events[PRIORITY_THIRD].CountItems();
+  for (int i=count-1 ; i >= 0 ; i --) {
+    EventItem *previtem = (EventItem *)events[PRIORITY_THIRD].ItemAt(i);
+    if (!previtem) continue;
+    MethodInfo *mInfoPrev = (MethodInfo *)previtem->ifdata.data;
+    if (!mInfoPrev
+      || mInfoPrev->widget != widget0
+      || mInfoPrev->target != target0
+      || mInfoPrev->methodId != nsWindow::ONMOUSE) continue;
+    // if other mouse event was found, then no sequential.
+    if (mInfoPrev->args[0] != NS_MOUSE_MOVE) break;
+    // check if other conditions are the same
+    if (mInfoPrev->args[3] == pNewEventMInfo->args[3]
+      && mInfoPrev->args[4] == pNewEventMInfo->args[4]) {
+      // sequential mouse move found!
+      events[PRIORITY_THIRD].RemoveItem(previtem);
+      delete mInfoPrev;
+      delete previtem;
+      break;
+    }
+  }
+  return;
 }
 
