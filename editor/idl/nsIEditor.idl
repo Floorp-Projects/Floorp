@@ -88,9 +88,11 @@ interface nsIEditor  : nsISupports
 
   void setAttributeOrEquivalent(in nsIDOMElement element,
                                 in AString sourceAttrName,
-                                in AString sourceAttrValue);
+                                in AString sourceAttrValue,
+                                in boolean aSuppressTransaction);
   void removeAttributeOrEquivalent(in nsIDOMElement element,
-                                   in DOMString sourceAttrName);
+                                   in DOMString sourceAttrName,
+                                   in boolean aSuppressTransaction);
 
   /**
    * postCreate should be called after Init, and is the time that the editor

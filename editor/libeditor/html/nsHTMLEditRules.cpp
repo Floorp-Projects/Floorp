@@ -4017,7 +4017,8 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
         NS_NAMED_LITERAL_STRING(attrName, "align");
         PRInt32 count;
         mHTMLEditor->mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(curNode, nsnull,
-                                                   &attrName, alignType, &count);
+                                                                &attrName, alignType,
+                                                                &count, PR_FALSE);
         curDiv = 0;
         continue;
       }
@@ -4127,7 +4128,7 @@ nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAString *alignTyp
     // act on this div.
     nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(firstChild);
     if (useCSS) {
-      res = mHTMLEditor->SetAttributeOrEquivalent(divElem, attr, *alignType); 
+      res = mHTMLEditor->SetAttributeOrEquivalent(divElem, attr, *alignType, PR_FALSE); 
     }
     else {
       res = mHTMLEditor->SetAttribute(divElem, attr, *alignType);
@@ -4142,7 +4143,7 @@ nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAString *alignTyp
     // set up the alignment on the div
     nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(divNode);
     if (useCSS) {
-      res = mHTMLEditor->SetAttributeOrEquivalent(divElem, attr, *alignType); 
+      res = mHTMLEditor->SetAttributeOrEquivalent(divElem, attr, *alignType, PR_FALSE); 
     }
     else {
       res = mHTMLEditor->SetAttribute(divElem, attr, *alignType);
@@ -7833,7 +7834,7 @@ nsHTMLEditRules::RemoveAlignment(nsIDOMNode * aNode, const nsAString & aAlignTyp
       {
         if (nsHTMLEditUtils::IsTable(child) || nsHTMLEditUtils::IsHR(child))
         {
-          res = mHTMLEditor->SetAttributeOrEquivalent(curElem, NS_LITERAL_STRING("align"), aAlignType); 
+          res = mHTMLEditor->SetAttributeOrEquivalent(curElem, NS_LITERAL_STRING("align"), aAlignType, PR_FALSE); 
         }
         else
         {
@@ -8000,7 +8001,7 @@ nsHTMLEditRules::AlignBlock(nsIDOMElement * aElement, const nsAString * aAlignTy
   if (useCSS) {
     // let's use CSS alignment; we use margin-left and margin-right for tables
     // and text-align for other block-level elements
-    res = mHTMLEditor->SetAttributeOrEquivalent(aElement, attr, *aAlignType); 
+    res = mHTMLEditor->SetAttributeOrEquivalent(aElement, attr, *aAlignType, PR_FALSE); 
     if (NS_FAILED(res)) return res;
   }
   else {
@@ -8061,10 +8062,10 @@ nsHTMLEditRules::RelativeChangeIndentation(nsIDOMNode *aNode, PRInt8 aRelativeCh
       nsAutoString newValue;
       newValue.AppendFloat(f);
       newValue.Append(unitString);
-      mHTMLEditor->mHTMLCSSUtils->SetCSSProperty(element, nsIEditProperty::cssMarginLeft, newValue);
+      mHTMLEditor->mHTMLCSSUtils->SetCSSProperty(element, nsIEditProperty::cssMarginLeft, newValue, PR_FALSE);
     }
     else {
-      mHTMLEditor->mHTMLCSSUtils->RemoveCSSProperty(element, nsIEditProperty::cssMarginLeft, value);
+      mHTMLEditor->mHTMLCSSUtils->RemoveCSSProperty(element, nsIEditProperty::cssMarginLeft, value, PR_FALSE);
       if (nsHTMLEditUtils::IsDiv(aNode)) {
         // we deal with a DIV ; let's see if it is useless and if we can remove it
         nsCOMPtr<nsIDOMNamedNodeMap> attributeList;

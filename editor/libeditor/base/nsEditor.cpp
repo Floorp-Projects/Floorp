@@ -2223,10 +2223,12 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
           if (NS_SUCCEEDED(sourceAttribute->GetValue(sourceAttrValue)))
           {
             if (destInBody) {
-              result = SetAttributeOrEquivalent(destElement, sourceAttrName, sourceAttrValue);
+              result = SetAttributeOrEquivalent(destElement, sourceAttrName, sourceAttrValue, PR_FALSE);
             }
             else {
-              destElement->SetAttribute(sourceAttrName, sourceAttrValue);
+              // the element is not inserted in the document yet, we don't want to put a
+              // transaction on the UndoStack
+              result = SetAttributeOrEquivalent(destElement, sourceAttrName, sourceAttrValue, PR_TRUE);
             }
           } else {
             // Do we ever get here?
@@ -5073,14 +5075,16 @@ nsEditor::CreateHTMLContent(const nsAString& aTag, nsIContent** aContent)
 nsresult
 nsEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
                                    const nsAString & aAttribute,
-                                   const nsAString & aValue)
+                                   const nsAString & aValue,
+                                   PRBool aSuppressTransaction)
 {
   return SetAttribute(aElement, aAttribute, aValue);
 }
 
 nsresult
 nsEditor::RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
-                                      const nsAString & aAttribute)
+                                      const nsAString & aAttribute,
+                                      PRBool aSuppressTransaction)
 {
   return RemoveAttribute(aElement, aAttribute);
 }

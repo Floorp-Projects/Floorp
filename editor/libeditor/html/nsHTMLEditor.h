@@ -397,9 +397,11 @@ public:
 
   NS_IMETHOD SetAttributeOrEquivalent(nsIDOMElement * aElement,
                                       const nsAString & aAttribute,
-                                      const nsAString & aValue);
+                                      const nsAString & aValue,
+                                      PRBool aSuppressTransaction);
   NS_IMETHOD RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
-                                         const nsAString & aAttribute);
+                                         const nsAString & aAttribute,
+                                         PRBool aSuppressTransaction);
 
   /** join together any afjacent editable text nodes in the range */
   NS_IMETHOD CollapseAdjacentTextNodes(nsIDOMRange *aInRange);

@@ -316,7 +316,7 @@ function InitCellPanel()
     gDialog.CellWidthCheckbox.checked = AdvancedEditUsed && previousValue != gDialog.CellWidthInput.value;
 
     var previousIndex = gDialog.CellVAlignList.selectedIndex;
-    var valign = globalCellElement.vAlign.toLowerCase();
+    var valign = GetHTMLOrCSSStyleValue(globalCellElement, "valign", "vertical-align").toLowerCase();
     if (valign == topStr)
       gDialog.CellVAlignList.selectedIndex = 0;
     else if (valign == bottomStr)
@@ -476,7 +476,7 @@ function SetColor(ColorWellID, color)
     }
     else
     {
-      globalCellElement.removeAttribute(bgcolor);
+      gEditor.removeAttributeOrEquivalent(globalCellElement, bgcolor, true);
       // Reveal addition message explaining "default" color
       gDialog.CellInheritColor.removeAttribute("collapsed");
     }
@@ -490,7 +490,7 @@ function SetColor(ColorWellID, color)
     }
     else
     {
-      globalTableElement.removeAttribute(bgcolor);
+      gEditor.removeAttributeOrEquivalent(globalTableElement, bgcolor, true);
       gDialog.TableInheritColor.removeAttribute("collapsed");
     }
     SetCheckbox('CellColorCheckbox');
@@ -758,8 +758,9 @@ function SwitchToValidatePanel()
 function SetAlign(listID, defaultValue, element, attName)
 {
   var value = document.getElementById(listID).selectedItem.value;
-  if (value == defaultValue)
-    element.removeAttribute(attName);
+  if (value == defaultValue) {
+    gEditor.removeAttributeOrEquivalent(element, attName, true);
+  }
   else
     element.setAttribute(attName, value);
 }
@@ -867,7 +868,7 @@ function ValidateCellData()
     if (gDialog.TextWrapList.selectedIndex == 1)
       globalCellElement.setAttribute("nowrap","nowrap");
     else
-      globalCellElement.removeAttribute("nowrap");
+      gEditor.removeAttributeOrEquivalent(globalCellElement, "nowrap", true);
   }
 
   return true;
@@ -949,7 +950,7 @@ function ApplyTableAttributes()
   if (TableCaptionElement)
   {
     // Get current alignment
-    var align = TableCaptionElement.align.toLowerCase();
+    var align = GetHTMLOrCSSStyleValue(TableCaptionElement, "align", "caption-side").toLowerCase();
     // This is the default
     if (!align) align = "top";
 
@@ -959,12 +960,12 @@ function ApplyTableAttributes()
       editorShell.DeleteElement(TableCaptionElement);
       TableCaptionElement = null;
     }
-    else if( align != newAlign)
+    else if(newAlign != align)
     {
-      if (align == "top") // This is default, so don't explicitly set it
-        editorShell.RemoveAttribute(TableCaptionElement, "align");
+      if (newAlign == "top") // This is default, so don't explicitly set it
+        gEditor.removeAttributeOrEquivalent(TableCaptionElement, "align", false);
       else
-        editorShell.SetAttribute(TableCaptionElement, "align", newAlign);
+        gEditor.setAttributeOrEquivalent(TableCaptionElement, "align", newAlign, false);
     }
   }
   else if (newAlign != "")

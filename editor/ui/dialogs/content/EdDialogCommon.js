@@ -25,6 +25,7 @@
 // Each editor window must include this file
 // Variables  shared by all dialogs:
 var editorShell;
+var gEditor;
 
 // Object to attach commonly-used widgets (all dialogs should use this)
 var gDialog = {};
@@ -69,7 +70,7 @@ function InitEditorShell()
   // Save as a property of the window so it can be used by child dialogs
 
   window.editorShell = editorShell;
-
+  gEditor = editorShell.editor.QueryInterface(Components.interfaces.nsIHTMLEditor);
   return true;
 }
 

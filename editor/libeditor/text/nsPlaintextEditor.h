@@ -109,9 +109,11 @@ public:
   NS_IMETHOD BeginComposition(nsTextEventReply* aReply);
   NS_IMETHOD SetAttributeOrEquivalent(nsIDOMElement * aElement,
                                       const nsAString & aAttribute,
-                                      const nsAString & aValue);
+                                      const nsAString & aValue,
+                                      PRBool aSuppressTransaction);
   NS_IMETHOD RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
-                                         const nsAString & aAttribute);
+                                         const nsAString & aAttribute,
+                                         PRBool aSuppressTransaction);
 
   /** prepare the editor for use */
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,  nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);

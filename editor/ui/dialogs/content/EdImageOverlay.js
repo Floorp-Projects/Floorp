@@ -560,12 +560,12 @@ function ValidateImage()
   if (width)
     globalElement.setAttribute("width", width);
   else if (srcChanged)
-    globalElement.removeAttribute("width");
+    gEditor.removeAttributeOrEquivalent(globalElement, "width", true);
 
   if (height)
     globalElement.setAttribute("height", height);
   else if (srcChanged) 
-    globalElement.removeAttribute("height");
+    gEditor.removeAttributeOrEquivalent(globalElement, "height", true);
 
   // spacing attributes
   gValidateTab = gDialog.tabBorder;
@@ -598,7 +598,7 @@ function ValidateImage()
       globalElement.setAttribute( "align", gDialog.alignTypeSelect.value );
       break;
     default:
-      globalElement.removeAttribute( "align" );
+      gEditor.removeAttributeOrEquivalent(globalElement, "align", true);
   }
 
   return true;

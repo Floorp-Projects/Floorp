@@ -292,7 +292,7 @@ function ValidateData()
       if (gBulletStyleType && gDialog.ChangeAllRadio.selected)
         globalElement.setAttribute("type", gBulletStyleType);
       else
-        globalElement.removeAttribute("type");
+        gEditor.removeAttributeOrEquivalent(globalElement, "type", true);
 
     } 
     else if (gListType == "ol")
@@ -300,7 +300,7 @@ function ValidateData()
       if (gBulletStyleType)
         globalElement.setAttribute("type", gBulletStyleType);
       else
-        globalElement.removeAttribute("type");
+        gEditor.removeAttributeOrEquivalent(globalElement, "type", true);
       
       var startingNumber = ConvertUserStringToStartAttr(gBulletStyleType);
       if (startingNumber)
