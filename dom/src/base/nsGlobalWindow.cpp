@@ -528,10 +528,9 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
         isContentWindow = itemType != nsIDocShellTreeItem::typeChrome;
       }
 
-      PRBool isAboutBlank = PR_FALSE;
       nsCAutoString url;
       docURL->GetSpec(url);
-      isAboutBlank = url.Equals(NS_LITERAL_CSTRING("about:blank"));
+      PRBool isAboutBlank = url.Equals(NS_LITERAL_CSTRING("about:blank"));
 
       PRBool isSameOrigin = PR_FALSE;
       if (isAboutBlank && mOpenerScriptURL) {
@@ -540,9 +539,9 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
           nsCOMPtr<nsIURI> newDocURL;
           webNav->GetCurrentURI(getter_AddRefs(newDocURL));
           if (newDocURL && sSecMan) {
-            isSameOrigin =
-              NS_SUCCEEDED(sSecMan->CheckSameOriginURI(mOpenerScriptURL,
-                                                       newDocURL));
+            sSecMan->SecurityCompareURIs(mOpenerScriptURL,
+                                         newDocURL,
+                                         &isSameOrigin);
           }
         }
       }
