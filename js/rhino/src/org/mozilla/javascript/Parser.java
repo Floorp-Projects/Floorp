@@ -255,15 +255,16 @@ public class Parser
         int syntheticType = functionType;
         int baseLineno = ts.getLineno();  // line number where source starts
 
+        int functionSourceStart = decompiler.markFunctionStart(functionType);
         String name;
         Node memberExprNode = null;
         if (ts.matchToken(Token.NAME)) {
             name = ts.getString();
+            decompiler.addName(name);
             if (!ts.matchToken(Token.LP)) {
                 if (compilerEnv.allowMemberExprAsFunctionName) {
                     // Extension to ECMA: if 'function <name>' does not follow
                     // by '(', assume <name> starts memberExpr
-                    decompiler.addName(name);
                     Node memberExprHead = nf.createName(name);
                     name = "";
                     memberExprNode = memberExprTail(false, memberExprHead);
@@ -286,9 +287,6 @@ public class Parser
 
         if (memberExprNode != null) {
             syntheticType = FunctionNode.FUNCTION_EXPRESSION;
-            // transform 'function' <memberExpr> to  <memberExpr> = function
-            // even in the decompilated source
-            decompiler.addToken(Token.ASSIGN);
         }
 
         boolean nested = insideFunction();
@@ -310,8 +308,6 @@ public class Parser
 
         int functionIndex = currentScriptOrFn.addFunction(fnNode);
 
-        int functionSourceStart = decompiler.markFunctionStart(syntheticType,
-                                                               name);
         int functionSourceEnd;
 
         ScriptOrFnNode savedScriptOrFn = currentScriptOrFn;
@@ -352,16 +348,9 @@ public class Parser
             functionSourceEnd = decompiler.markFunctionEnd(functionSourceStart);
             if (functionType != FunctionNode.FUNCTION_EXPRESSION) {
                 checkWellTerminatedFunction();
-                if (memberExprNode == null) {
-                    // Add EOL only if function is not part of expression
-                    // since it gets SEMI + EOL from Statement in that case
-                    decompiler.addToken(Token.EOL);
-                } else {
-                    // Add ';' to make 'function x.f(){}'
-                    // and 'x.f = function(){}'
-                    // to print the same strings when decompiling
-                    decompiler.addEOL(Token.SEMI);
-                }
+                // Add EOL only if function is not part of expression
+                // since it gets SEMI + EOL from Statement in that case
+                decompiler.addToken(Token.EOL);
             }
         }
         finally {
@@ -374,14 +363,13 @@ public class Parser
         fnNode.setBaseLineno(baseLineno);
         fnNode.setEndLineno(ts.getLineno());
 
-        Node pn;
-        if (memberExprNode == null) {
-            pn = nf.initFunction(fnNode, functionIndex, body, syntheticType);
-        } else {
+        Node pn = nf.initFunction(fnNode, functionIndex, body, syntheticType);
+        if (memberExprNode != null) {
             pn = nf.initFunction(fnNode, functionIndex, body, syntheticType);
             pn = nf.createAssignment(memberExprNode, pn);
             if (functionType != FunctionNode.FUNCTION_EXPRESSION) {
-                pn = nf.createExprStatement(pn, baseLineno);
+                // XXX check JScript behavior: should it be createExprStatement?
+                pn = nf.createExprStatementNoReturn(pn, baseLineno);
             }
         }
         return pn;

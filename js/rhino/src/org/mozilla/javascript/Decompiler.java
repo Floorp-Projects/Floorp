@@ -112,14 +112,11 @@ public class Decompiler
         return sourceTop;
     }
 
-    int markFunctionStart(int functionType, String name)
+    int markFunctionStart(int functionType)
     {
         int savedOffset = getCurrentOffset();
         addToken(Token.FUNCTION);
         append((char)functionType);
-        if (name.length() != 0) {
-            addName(name);
-        }
         return savedOffset;
     }
 
