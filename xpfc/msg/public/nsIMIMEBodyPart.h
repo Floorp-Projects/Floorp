@@ -29,10 +29,13 @@
 
 typedef enum
 {
-  nsMIMEEncoding_default = 0,
-  nsMIMEEncoding_quoted_printable = 1,
-  nsMIMEEncoding_base_64 = 2,
-  nsMIMEEncoding_none = 3
+  nsMIMEEncoding_default            = 0,
+  nsMIMEEncoding_quoted_printable   = 1,
+  nsMIMEEncoding_base_64            = 2,
+  nsMIMEEncoding_binary             = 3,
+  nsMIMEEncoding_e7bit              = 4,
+  nsMIMEEncoding_e8bit              = 5,
+  nsMIMEEncoding_none               = 6
 } nsMIMEEncoding;
 
 
