@@ -97,6 +97,7 @@ static const char *kIncludeDefaultsStr = "\n"
 "#include \"nsIPtr.h\"\n"
 "#include \"nsString.h\"\n";
 static const char *kIncludeStr = "#include \"nsIDOM%s.h\"\n";
+static const char *kXPIDLIncludeStr = "#include \"%s.h\"\n";
 static const char *kIncludeConstructorStr =
 "#include \"nsIScriptNameSpaceManager.h\"\n"
 "#include \"nsComponentManager.h\"\n"
@@ -107,8 +108,20 @@ IncludeEnumerator(PLHashEntry *he, PRIntn i, void *arg)
 {
   char buf[512];
 
+  switch ((Type)(int)(he->value)) {
+  case TYPE_OBJECT:
+    sprintf(buf, kIncludeStr, (char *)he->key);
+    break;
+
+  case TYPE_XPIDL_OBJECT:
+    sprintf(buf, kXPIDLIncludeStr, (char *)he->key);
+    break;
+
+  default:
+    // uh oh...
+    break;
+  }
   ofstream *file = (ofstream *)arg;
-  sprintf(buf, kIncludeStr, (char *)he->key);
   *file << buf;
   
   return HT_ENUMERATE_NEXT;
@@ -142,9 +155,25 @@ JSStubGen_IIDEnumerator(PLHashEntry *he, PRIntn i, void *arg)
   char iid_buf[256];
   JSStubGen *me = (JSStubGen *)arg;
   ofstream *file = me->GetFile();
-  
-  me->GetInterfaceIID(iid_buf, (char *)he->key);
-  sprintf(buf, kIIDStr, (char *)he->key, iid_buf);
+
+  switch ((Type)(int)(he->value)) {
+  case TYPE_OBJECT:
+    me->GetInterfaceIID(iid_buf, (char *)he->key);
+    sprintf(buf, kIIDStr, (char *)he->key, iid_buf);
+    break;
+
+  case TYPE_XPIDL_OBJECT:
+    {
+      // This sucks. I know.
+      char* p = (char*) he->key;
+      if (p[0] == 'n' && p[1] == 's' && p[2] == 'I')
+        p += 3;
+
+      me->GetXPIDLInterfaceIID(iid_buf, p);
+      sprintf(buf, kIIDStr, p, iid_buf);
+      break;
+    }
+  }    
   *file << buf;
   
   return HT_ENUMERATE_NEXT;
@@ -164,14 +193,25 @@ JSStubGen::GenerateIIDDefinitions(IdlSpecification &aSpec)
 static const char *kDefPtrStr =
 "NS_DEF_PTR(nsIDOM%s);\n";
 
+static const char *kDefXPIDLPtrStr =
+"NS_DEF_PTR(%s);\n";
+
 PRIntn 
 JSStubGen_DefPtrEnumerator(PLHashEntry *he, PRIntn i, void *arg)
 {
   char buf[512];
   JSStubGen *me = (JSStubGen *)arg;
   ofstream *file = me->GetFile();
-  
-  sprintf(buf, kDefPtrStr, (char *)he->key);
+
+  switch ((Type)(int)(he->value)) {
+  case TYPE_OBJECT:
+    sprintf(buf, kDefPtrStr, (char *)he->key);
+    break;
+
+  case TYPE_XPIDL_OBJECT:
+    sprintf(buf, kDefXPIDLPtrStr, (char *)he->key);
+    break;
+  }
   *file << buf;
   
   return HT_ENUMERATE_NEXT;
@@ -529,6 +569,10 @@ static const char *kObjectGetCaseStr =
 "          // get the js object\n"
 "          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);\n";
 
+static const char *kXPIDLObjectGetCaseStr =
+"          // get the js object\n"
+"          *vp = OBJECT_TO_JSVAL(%s::GetJSObject(cx, prop));\n";
+
 static const char *kStringGetCaseStr = 
 "          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);\n";
 
@@ -538,7 +582,6 @@ static const char *kIntGetCaseStr =
 static const char *kBoolGetCaseStr =
 "          *vp = BOOLEAN_TO_JSVAL(prop);\n";
 
-
 void
 JSStubGen::GeneratePropGetter(ofstream *file,
                               IdlInterface &aInterface,
@@ -546,6 +589,7 @@ JSStubGen::GeneratePropGetter(ofstream *file,
                               PRInt32 aType)
 {
   char buf[2048];
+  char buf2[1024];
   char attr_type[128];
   char attr_name[128];
   const char *case_str;
@@ -573,6 +617,10 @@ JSStubGen::GeneratePropGetter(ofstream *file,
       break;
     case TYPE_OBJECT:
       case_str = kObjectGetCaseStr;
+      break;
+    case TYPE_XPIDL_OBJECT:
+      case_str = buf2;
+      sprintf(buf2, kXPIDLObjectGetCaseStr, aAttribute.GetTypeName());
       break;
     default:
       // XXX Fail for other cases
@@ -647,6 +695,8 @@ static const char *kObjectSetCaseStr =
 "          return JS_FALSE;\n"
 "        }\n";
 
+static const char *kXPIDLObjectSetCaseStr = kObjectSetCaseStr;
+
 static const char *kObjectSetCaseEndStr = "NS_IF_RELEASE(prop);";
 
 static const char *kStringSetCaseStr = 
@@ -700,6 +750,16 @@ JSStubGen::GeneratePropSetter(ofstream *file,
       break;
     case TYPE_OBJECT:
       sprintf(case_buf, kObjectSetCaseStr, aAttribute.GetTypeName(), aAttribute.GetTypeName());
+      break;
+    case TYPE_XPIDL_OBJECT:
+      // Yeah, this sucks. That's life.
+      {
+        char* p = aAttribute.GetTypeName();
+        if (p[0] == 'n' && p[1] == 's' && p[2] == 'I')
+          p += 3;
+
+        sprintf(case_buf, kXPIDLObjectSetCaseStr, p, p);
+      }
       break;
     default:
       // XXX Fail for other cases
@@ -872,6 +932,12 @@ static const char *kMethodObjectParamStr = "\n"
             paramType, paramNum)
 
 
+static const char *kMethodXPIDLObjectParamStr = kMethodObjectParamStr;
+
+#define JSGEN_GENERATE_XPIDL_OBJECTPARAM(buffer, paramNum, paramType) \
+    sprintf(buffer, kMethodXPIDLObjectParamStr, paramNum, paramType,  \
+            paramType, paramNum)
+
 static const char *kMethodStringParamStr = "\n"
 "    nsJSUtils::nsConvertJSValToString(b%d, cx, argv[%d]);\n";
 
@@ -915,6 +981,9 @@ static const char *kMethodBodyMiddleNoReturnStr =
 
 static const char *kMethodObjectRetStr = 
 "    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);\n";
+
+static const char *kMethodXPIDLObjectRetStr =
+"    *rval = %s::GetJSObject(cx, nativeRet);\n";
 
 static const char *kMethodStringRetStr = 
 "    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);\n";
@@ -1015,6 +1084,9 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
           case TYPE_OBJECT:
             JSGEN_GENERATE_OBJECTPARAM(buf, p, param->GetTypeName());
             break;
+          case TYPE_XPIDL_OBJECT:
+            JSGEN_GENERATE_XPIDL_OBJECTPARAM(buf, p, param->GetTypeName());
+            break;
           default:
             // XXX Fail for other cases
             break;
@@ -1073,6 +1145,13 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
             break;
           case TYPE_OBJECT:
             *file << kMethodObjectRetStr;
+            break;
+          case TYPE_XPIDL_OBJECT:
+            {
+              char buf[1024];
+              sprintf(buf, kMethodXPIDLObjectRetStr, rval->GetTypeName());
+              *file << buf;
+            }
             break;
           case TYPE_VOID:
             *file << kMethodVoidRetStr;
