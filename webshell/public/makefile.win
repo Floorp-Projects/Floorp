@@ -28,7 +28,6 @@ MODULE=raptor
 include <$(DEPTH)\config\config.mak>
 
 EXPORTS =                               \
-        nsIBrowserWindow.h              \
         nsIClipboardCommands.h          \
         nsIContentViewer.h              \
         nsIContentViewerContainer.h     \
