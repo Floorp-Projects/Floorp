@@ -40,6 +40,9 @@
 #include "nsEventQueueService.h"
 #include "nsEventQueue.h"
 
+#include "nsProxyObjectManager.h"
+#include "nsProxyEventPrivate.h"  // access to the impl of nsProxyObjectManager for the generic factory registration.
+
 #include "nsFileSpecImpl.h"
 
 // base
@@ -63,6 +66,8 @@ static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
 // threads
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
+// proxy
+static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 // XPCOM initialization
@@ -239,6 +244,13 @@ nsresult NS_InitXPCOM(nsIServiceManager* *result)
                                 NS_EVENTQUEUE_CLASSNAME,
                                 NS_EVENTQUEUE_PROGID,
                                 nsEventQueueImpl::Create);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = RegisterGenericFactory(compMgr, 
+                                kProxyObjectManagerCID, 
+                                NS_XPCOMPROXY_CLASSNAME,
+                                NS_XPCOMPROXY_PROGID,
+                                nsProxyObjectManager::Create);
     return rv;
 }
 
