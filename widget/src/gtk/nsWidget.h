@@ -21,6 +21,7 @@
 
 #include "nsIWidget.h"
 #include "nsToolkit.h"
+#include "nsIAppShell.h"
 #include <gtk/gtk.h>
 
 /**
@@ -57,23 +58,23 @@ class nsWidget : public nsIWidget
     NS_IMETHOD SetForegroundColor(const nscolor &aColor);
     nscolor GetBackgroundColor(void);
     NS_IMETHOD SetBackgroundColor(const nscolor &aColor);
-    
+
     nsIFontMetrics *GetFont(void);
     NS_IMETHOD SetFont(const nsFont &aFont);
 
     nsCursor GetCursor(void);
     NS_IMETHOD SetCursor(nsCursor aCursor);
-    
+
     NS_IMETHOD Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
     NS_IMETHOD Update(void);
-    
+
     NS_IMETHOD AddMouseListener(nsIMouseListener *aListener);
     nsIToolkit *GetToolkit(void);
     NS_IMETHOD SetColorMap(nsColorMap *aColorMap);
 
     NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
-    
+
     void AddChild(nsIWidget *aChild);
     void RemoveChild(nsIWidget *aChild);
     void* GetNativeData(PRUint32 aDataType);
@@ -88,26 +89,27 @@ class nsWidget : public nsIWidget
     NS_IMETHOD SetTooltips(PRUint32 aNumberOfTips, nsRect* aTooltipAreas[]);
     NS_IMETHOD UpdateTooltips(nsRect *aNewTips[]);
     NS_IMETHOD RemoveTooltips(void);
-    
+
     NS_IMETHOD WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
     NS_IMETHOD ScreenToWidget(const nsRect &aOldRect, nsRect &aNewRect);
 
     NS_IMETHOD BeginResizingChildren(void);
     NS_IMETHOD EndResizingChildren(void);
-    
+
     NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
     NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
 
     NS_IMETHOD GetClientData(void*& aClientData);
     NS_IMETHOD SetClientData(void* aClientData);
-    
+
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus &aStatus);
+    NS_IMETHOD DispatchMouseEvent(nsMouseEvent& aEvent);
     virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 
  protected:
     void InitToolkit(nsIToolkit *aToolKit, nsIWidget *aParent);
     void InitDeviceContext(nsIDeviceContext *aContext,
-			   GtkWidget *aParentWidget); 
+			   GtkWidget *aParentWidget);
     void InitCallbacks(char * aName = nsnull);
 
     GtkWidget *mWidget;

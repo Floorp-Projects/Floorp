@@ -37,7 +37,7 @@ class nsFont;
 
 
 /**
- * Native Motif window wrapper. 
+ * Native Motif window wrapper.
  */
 
 class nsWindow : public nsIWidget
@@ -53,7 +53,7 @@ public:
     NS_DECL_ISUPPORTS
 
     virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
- 
+
 
 
     NS_IMETHOD            PreCreateWidget(nsWidgetInitData *aWidgetInitData) { return NS_OK; }
@@ -111,10 +111,10 @@ public:
     virtual nsIDeviceContext* GetDeviceContext();
     virtual nsIAppShell *   GetAppShell();
     NS_IMETHOD            Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
-    virtual nsIToolkit*     GetToolkit();  
-    NS_IMETHOD            SetBorderStyle(nsBorderStyle aBorderStyle); 
-    NS_IMETHOD            SetTitle(const nsString& aTitle); 
-    NS_IMETHOD            SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);   
+    virtual nsIToolkit*     GetToolkit();
+    NS_IMETHOD            SetBorderStyle(nsBorderStyle aBorderStyle);
+    NS_IMETHOD            SetTitle(const nsString& aTitle);
+    NS_IMETHOD            SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);
     NS_IMETHOD            RemoveTooltips();
     NS_IMETHOD            UpdateTooltips(nsRect* aNewTips[]);
     NS_IMETHOD            WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
@@ -123,7 +123,7 @@ public:
     NS_IMETHOD            AddEventListener(nsIEventListener * aListener);
     NS_IMETHOD            BeginResizingChildren(void);
     NS_IMETHOD            EndResizingChildren(void);
-    NS_IMETHOD            SetMenuBar(nsIMenuBar * aMenuBar); 
+    NS_IMETHOD            SetMenuBar(nsIMenuBar * aMenuBar);
     NS_IMETHOD            GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
     NS_IMETHOD            SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
     NS_IMETHOD            DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
@@ -146,7 +146,7 @@ public:
     PRUint32 GetYCoord(PRUint32 aNewY);
     PRBool   DispatchMouseEvent(nsMouseEvent& aEvent);
     virtual  PRBool OnResize(nsSizeEvent &aEvent);
-   
+
      // Resize event management
     void   SetResizeRect(nsRect& aRect);
     void   SetResized(PRBool aResized);
@@ -169,7 +169,7 @@ protected:
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData,
                       nsNativeWidget aNativeParent = nsnull);
-  
+
   void InitToolkit(nsIToolkit *aToolkit, nsIWidget * aWidgetParent);
   void InitDeviceContext(nsIDeviceContext *aContext, GtkWidget *aWidgetParent);
 

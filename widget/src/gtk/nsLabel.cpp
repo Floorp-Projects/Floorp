@@ -20,14 +20,11 @@
 #include "gtklayout.h"
 
 #include "nsLabel.h"
-#include "nsIAppShell.h"
-#include "nsILabel.h"
 #include "nsToolkit.h"
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsStringUtil.h"
-#include "nsWidget.h"
 
 #include "nsGtkEventHandler.h"
 
@@ -52,7 +49,7 @@ NS_METHOD nsLabel::Create(nsIWidget *aParent,
                       nsIDeviceContext *aContext,
                       nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData) 
+                      nsWidgetInitData *aInitData)
 {
   aParent->AddChild(this);
   GtkWidget *parentWidget = nsnull;
@@ -78,14 +75,14 @@ NS_METHOD nsLabel::Create(nsIWidget *aParent,
 
   /*
   mWidget = ::XtVaCreateManagedWidget("label",
-                                    xmLabelWidgetClass, 
+                                    xmLabelWidgetClass,
                                     parentWidget,
                                     XmNwidth, aRect.width,
                                     XmNheight, aRect.height,
                                     XmNrecomputeSize, False,
                                     XmNhighlightOnEnter, False,
 		                    XmNx, aRect.x,
-		                    XmNy, aRect.y, 
+		                    XmNy, aRect.y,
                                     XmNalignment, alignment,
                                     nsnull);
 */
@@ -164,7 +161,7 @@ nsresult nsLabel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 //-------------------------------------------------------------------------
 //
-// 
+//
 //
 //-------------------------------------------------------------------------
 unsigned char nsLabel::GetNativeAlignment()
@@ -227,5 +224,3 @@ PRBool nsLabel::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
 }
-
-

@@ -20,7 +20,6 @@
 #include "gtklayout.h"
 
 #include "nsButton.h"
-#include "nsIAppShell.h"
 #include "nsToolkit.h"
 #include "nsColor.h"
 #include "nsGUIEvent.h"

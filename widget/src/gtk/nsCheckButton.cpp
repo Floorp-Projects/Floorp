@@ -30,7 +30,7 @@ NS_IMPL_RELEASE(nsCheckButton)
 // nsCheckButton constructor
 //
 //-------------------------------------------------------------------------
-nsCheckButton::nsCheckButton() : nsWindow() , nsICheckButton()
+nsCheckButton::nsCheckButton() : nsWidget() , nsICheckButton()
 {
   NS_INIT_REFCNT();
 }
@@ -135,8 +135,8 @@ NS_METHOD nsCheckButton::Create(nsNativeWidget aParent,
  * @param aIID The name of the class implementing the method
  * @param _classiiddef The name of the #define symbol that defines the IID
  * for the class (e.g. NS_ISUPPORTS_IID)
- * 
-*/ 
+ *
+*/
 nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     if (NULL == aInstancePtr) {
@@ -149,7 +149,7 @@ nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
         AddRef();
         return NS_OK;
     }
-    return nsWindow::QueryInterface(aIID,aInstancePtr);
+    return nsWidget::QueryInterface(aIID,aInstancePtr);
 }
 
 //-------------------------------------------------------------------------
@@ -157,7 +157,7 @@ nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 // Armed
 //
 //-------------------------------------------------------------------------
-void nsCheckButton::Armed() 
+void nsCheckButton::Armed()
 {
   mIsArmed      = PR_TRUE;
   mValueWasSet  = PR_FALSE;
@@ -169,7 +169,7 @@ void nsCheckButton::Armed()
 // DisArmed
 //
 //-------------------------------------------------------------------------
-void nsCheckButton::DisArmed() 
+void nsCheckButton::DisArmed()
 {
   if (mValueWasSet) {
     gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), TRUE);
@@ -190,7 +190,7 @@ void nsCheckButton::DisArmed()
 // Set this button label
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsCheckButton::SetState(const PRBool aState) 
+NS_METHOD nsCheckButton::SetState(const PRBool aState)
 {
   int state = aState;
   if (mIsArmed) {
@@ -276,5 +276,3 @@ PRBool nsCheckButton::OnResize(nsSizeEvent &aEvent)
 {
   return PR_FALSE;
 }
-
-

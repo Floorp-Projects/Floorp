@@ -57,7 +57,7 @@ NS_METHOD nsTextAreaWidget::Create(nsIWidget *aParent,
                       nsIDeviceContext *aContext,
                       nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData) 
+                      nsWidgetInitData *aInitData)
 {
 #if 0
   aParent->AddChild(this);
@@ -77,7 +77,7 @@ NS_METHOD nsTextAreaWidget::Create(nsIWidget *aParent,
   if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
   mWidget = ::XtVaCreateManagedWidget("button",
-                                    xmTextWidgetClass, 
+                                    xmTextWidgetClass,
                                     parentWidget,
                                     XmNwidth, aRect.width,
                                     XmNheight, aRect.height,
@@ -86,7 +86,7 @@ NS_METHOD nsTextAreaWidget::Create(nsIWidget *aParent,
                                     XmNeditMode, XmMULTI_LINE_EDIT,
                                     XmNeditable, mMakeReadOnly?False:True,
 		                    XmNx, aRect.x,
-		                    XmNy, aRect.y, 
+		                    XmNy, aRect.y,
                                     nsnull);
 
   // save the event callback function
@@ -136,7 +136,7 @@ nsresult nsTextAreaWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr
       return NS_OK;
   }
 
-  return nsWindow::QueryInterface(aIID, aInstancePtr);
+  return nsWidget::QueryInterface(aIID, aInstancePtr);
 }
 
 //-------------------------------------------------------------------------

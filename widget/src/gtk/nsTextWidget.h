@@ -19,7 +19,7 @@
 #ifndef nsTextWidget_h__
 #define nsTextWidget_h__
 
-#include "nsWindow.h"
+#include "nsWidget.h"
 #include "nsTextHelper.h"
 
 #include "nsITextWidget.h"
@@ -30,7 +30,7 @@ typedef struct _PasswordData {
 } PasswordData;
 
 /**
- * Native Motif single line edit control wrapper. 
+ * Native Motif single line edit control wrapper.
  */
 
 class nsTextWidget : public nsTextHelper

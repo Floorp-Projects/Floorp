@@ -33,12 +33,14 @@ NS_IMPL_RELEASE(nsScrollbar)
 // nsScrollbar constructor
 //
 //-------------------------------------------------------------------------
-nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWindow(), nsIScrollbar()
+nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget(), nsIScrollbar()
 {
   NS_INIT_REFCNT();
 
+#if 0
   strcpy(gInstanceClassName, "nsScrollbar");
-  mOrientation  = (aIsVertical) ? 
+#endif
+  mOrientation  = (aIsVertical) ?
     GTK_ORIENTATION_VERTICAL : GTK_ORIENTATION_HORIZONTAL;
   mLineIncrement = 0;
 }
@@ -143,7 +145,7 @@ nsScrollbar::~nsScrollbar()
 //-------------------------------------------------------------------------
 nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
+    nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
 
     static NS_DEFINE_IID(kInsScrollbarIID, NS_ISCROLLBAR_IID);
     if (result == NS_NOINTERFACE && aIID.Equals(kInsScrollbarIID)) {
@@ -157,7 +159,7 @@ nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 //-------------------------------------------------------------------------
 //
-// Define the range settings 
+// Define the range settings
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
@@ -172,7 +174,7 @@ NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 
 //-------------------------------------------------------------------------
 //
-// Return the range settings 
+// Return the range settings
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::GetMaxRange(PRUint32 & aMaxRange)
@@ -296,7 +298,7 @@ NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
     int maxPos = maxRange - thumbSize;
     int pos    = ((int)aPosition) > maxPos ? maxPos-1 : ((int)aPosition);
 
-    XtVaSetValues(mWidget, 
+    XtVaSetValues(mWidget,
                   XmNincrement,     mLineIncrement,
                   XmNminimum,       0,
                   XmNmaximum,       maxRange,
@@ -322,17 +324,19 @@ PRBool nsScrollbar::OnPaint(nsPaintEvent & aEvent)
 
 PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
 {
+#if 0
   return nsWindow::OnResize(aEvent);
+#endif
 }
 
 //-------------------------------------------------------------------------
-int nsScrollbar::AdjustScrollBarPosition(int aPosition) 
+int nsScrollbar::AdjustScrollBarPosition(int aPosition)
 {
   int maxRange;
   int sliderSize;
 #if 0
-  XtVaGetValues(mWidget, XmNmaximum, &maxRange, 
-                         XmNsliderSize, &sliderSize, 
+  XtVaGetValues(mWidget, XmNmaximum, &maxRange,
+                         XmNsliderSize, &sliderSize,
                          nsnull);
   int cap = maxRange - sliderSize;
   return aPosition > cap ? cap : aPosition;
@@ -353,7 +357,7 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
     switch (aEvent.message) {
 
         // scroll one line right or down
-        case NS_SCROLLBAR_LINE_NEXT: 
+        case NS_SCROLLBAR_LINE_NEXT:
         {
             XtVaGetValues(mWidget, XmNvalue, &newPosition, nsnull);
             newPosition += mLineIncrement;
@@ -362,7 +366,7 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
             GetThumbSize(thumbSize);
             GetMaxRange(maxRange);
             PRUint32 max = maxRange - thumbSize;
-            if (newPosition > (int)max) 
+            if (newPosition > (int)max)
                 newPosition = (int)max;
 
             // if an event callback is registered, give it the chance
@@ -372,20 +376,20 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
                 result = ConvertStatus((*mEventCallback)(&aEvent));
                 newPosition = aEvent.position;
             }
-            
-            XtVaSetValues(mWidget, XmNvalue, 
+
+            XtVaSetValues(mWidget, XmNvalue,
                           AdjustScrollBarPosition(newPosition), nsnull);
             break;
         }
 
 
         // scroll one line left or up
-        case NS_SCROLLBAR_LINE_PREV: 
+        case NS_SCROLLBAR_LINE_PREV:
         {
             XtVaGetValues(mWidget, XmNvalue, &newPosition, nsnull);
-            
+
             newPosition -= mLineIncrement;
-            if (newPosition < 0) 
+            if (newPosition < 0)
                 newPosition = 0;
 
             // if an event callback is registered, give it the chance
@@ -403,7 +407,7 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
         }
 
         // Scrolls one page right or down
-        case NS_SCROLLBAR_PAGE_NEXT: 
+        case NS_SCROLLBAR_PAGE_NEXT:
         {
             XtVaGetValues(mWidget, XmNvalue, &newPosition, nsnull);
             PRUint32 thumbSize;
@@ -412,7 +416,7 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
             GetThumbSize(thumbSize);
             GetMaxRange(maxRange);
             PRUint32 max = maxRange - thumbSize;
-            if (newPosition > (int)max) 
+            if (newPosition > (int)max)
                 newPosition = (int)max;
 
             // if an event callback is registered, give it the chance
@@ -422,16 +426,16 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
                 result = ConvertStatus((*mEventCallback)(&aEvent));
                 newPosition = aEvent.position;
             }
-            XtVaSetValues(mWidget, XmNvalue, 
+            XtVaSetValues(mWidget, XmNvalue,
                           AdjustScrollBarPosition(newPosition+10), nsnull);
             break;
         }
 
         // Scrolls one page left or up.
-        case NS_SCROLLBAR_PAGE_PREV: 
+        case NS_SCROLLBAR_PAGE_PREV:
         {
             XtVaGetValues(mWidget, XmNvalue, &newPosition, nsnull);
-            if (newPosition < 0) 
+            if (newPosition < 0)
                 newPosition = 0;
 
             // if an event callback is registered, give it the chance
@@ -447,9 +451,9 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
         }
 
 
-        // Scrolls to the absolute position. The current position is specified by 
+        // Scrolls to the absolute position. The current position is specified by
         // the cPos parameter.
-        case NS_SCROLLBAR_POS: 
+        case NS_SCROLLBAR_POS:
         {
             newPosition = cPos;
 
@@ -461,7 +465,7 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
                 newPosition = aEvent.position;
             }
 
-            XtVaSetValues(mWidget, XmNvalue, 
+            XtVaSetValues(mWidget, XmNvalue,
                           AdjustScrollBarPosition(newPosition), nsnull);
 
             break;
@@ -470,4 +474,3 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
     return result;
 #endif
 }
-

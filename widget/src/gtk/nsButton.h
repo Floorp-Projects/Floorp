@@ -54,7 +54,7 @@ public:
   // nsIButton part
   NS_IMETHOD     SetLabel(const nsString& aText);
   NS_IMETHOD     GetLabel(nsString& aBuffer);
-  
+
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool OnPaint(nsPaintEvent &aEvent);
   virtual PRBool OnResize(nsSizeEvent &aEvent);

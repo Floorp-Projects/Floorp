@@ -83,7 +83,7 @@ nsIWidget *nsWidget::GetParent(void)
 {
     return mParent;
 }
-    
+
 nsIEnumerator* nsWidget::GetChildren()
 {
     NS_NOTYETIMPLEMENTED("nsWidget::GetChildren");
@@ -216,53 +216,53 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
 {
     if (!mWidget || !mWidget->window)
 	return NS_ERROR_FAILURE;
-    
+
     // Only change cursor if it's changing
     if (aCursor != mCursor) {
 	GdkCursor *newCursor = 0;
-	
+
 	switch(aCursor) {
 	  case eCursor_select:
 	    newCursor = gdk_cursor_new(GDK_XTERM);
 	    break;
-	    
+
 	  case eCursor_wait:
 	    newCursor = gdk_cursor_new(GDK_WATCH);
 	    break;
-	    
+
 	  case eCursor_hyperlink:
 	    newCursor = gdk_cursor_new(GDK_HAND2);
 	    break;
-	    
+
 	  case eCursor_standard:
 	    newCursor = gdk_cursor_new(GDK_LEFT_PTR);
 	    break;
-	    
+
 	  case eCursor_arrow_south:
 	  case eCursor_arrow_south_plus:
 	    newCursor = gdk_cursor_new(GDK_BOTTOM_SIDE);
 	    break;
-	    
+
 	  case eCursor_arrow_north:
 	  case eCursor_arrow_north_plus:
 	    newCursor = gdk_cursor_new(GDK_TOP_SIDE);
 	    break;
-	    
+
 	  case eCursor_arrow_east:
 	  case eCursor_arrow_east_plus:
 	    newCursor = gdk_cursor_new(GDK_RIGHT_SIDE);
 	    break;
-	    
+
 	  case eCursor_arrow_west:
 	  case eCursor_arrow_west_plus:
 	    newCursor = gdk_cursor_new(GDK_LEFT_SIDE);
 	    break;
-	    
+
 	  default:
 	    NS_ASSERTION(PR_FALSE, "Invalid cursor type");
 	    break;
 	}
-	
+
 	if (nsnull != newCursor) {
 	    mCursor = aCursor;
 	    gdk_window_set_cursor(mWidget->window, newCursor);
@@ -392,10 +392,10 @@ NS_METHOD nsWidget::GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight)
     nsRect rectClient;
     GetBounds(rectWin);
     GetClientBounds(rectClient);
-    
+
     aWidth  = rectWin.width - rectClient.width;
     aHeight = rectWin.height - rectClient.height;
-    
+
     return NS_OK;
 }
 
@@ -469,24 +469,24 @@ void nsWidget::InitCallbacks(char *aName)
 nsIRenderingContext* nsWidget::GetRenderingContext()
 {
     nsIRenderingContext * ctx = nsnull;
-    
+
     if (GetNativeData(NS_NATIVE_WIDGET)) {
-	
+
 	nsresult  res;
-	
+
 	static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 	static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-	
+
 	res = nsRepository::CreateInstance(kRenderingContextCID, nsnull,
 					   kRenderingContextIID,
 					   (void **)&ctx);
-	
+
 	if (NS_OK == res)
 	    ctx->Init(mDeviceContext, this);
-	
+
 	NS_ASSERTION(NULL != ctx, "Null rendering context");
     }
-    
+
     return ctx;
 }
 
@@ -497,6 +497,11 @@ void nsWidget::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 
 NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
 				      nsEventStatus &aStatus)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
 {
     return NS_OK;
 }

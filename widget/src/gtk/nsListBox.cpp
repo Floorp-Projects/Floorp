@@ -33,7 +33,7 @@ NS_IMPL_RELEASE(nsListBox)
 // nsListBox constructor
 //
 //-------------------------------------------------------------------------
-nsListBox::nsListBox() : nsWindow(), nsIListWidget(), nsIListBox()
+nsListBox::nsListBox() : nsWidget(), nsIListWidget(), nsIListBox()
 {
   NS_INIT_REFCNT();
   mMultiSelect = PR_FALSE;
@@ -56,7 +56,7 @@ nsListBox::~nsListBox()
 //-------------------------------------------------------------------------
 nsresult nsListBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
+    nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
 
     static NS_DEFINE_IID(kInsListBoxIID, NS_ILISTBOX_IID);
     static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
@@ -104,7 +104,7 @@ NS_METHOD nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
   gtk_clist_insert(GTK_CLIST(mWidget), (int)aPosition+1, NULL);
   gtk_clist_set_text(GTK_CLIST(mWidget), (int)aPosition+1, 0, text);
   gtk_clist_set_row_data(GTK_CLIST(mWidget), (int)aPosition+1, aItem);
-  
+
   NS_FREE_STR_BUF(text);
 
   return NS_OK;
@@ -158,7 +158,7 @@ PRBool  nsListBox::RemoveItemAt(PRInt32 aPosition)
 
 //-------------------------------------------------------------------------
 //
-//  
+//
 //
 //-------------------------------------------------------------------------
 PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
@@ -204,7 +204,7 @@ NS_METHOD nsListBox::GetSelectedItem(nsString& aItem)
   int   count;
 
   if (XmListGetSelectedPos(mWidget, &list, &count)) {
-    GetItemAt(aItem, list[0]-1); 
+    GetItemAt(aItem, list[0]-1);
     XtFree((char *)list);
   }
 #endif
@@ -219,7 +219,7 @@ NS_METHOD nsListBox::GetSelectedItem(nsString& aItem)
 PRInt32 nsListBox::GetSelectedIndex()
 {
 #if 0
-  if (!mMultiSelect) { 
+  if (!mMultiSelect) {
     int * list;
     int   count;
 
@@ -349,7 +349,7 @@ NS_METHOD nsListBox::Create(nsIWidget *aParent,
   GtkSelectionMode selectionPolicy;
 
   mWidget = gtk_clist_new(1);
-  
+
   if (mMultiSelect) {
     //selectionPolicy = XmEXTENDED_SELECT;
     gtk_clist_set_selection_mode(GTK_CLIST(mWidget), GTK_SELECTION_MULTIPLE);
@@ -433,5 +433,3 @@ PRBool nsListBox::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
 }
-
-

@@ -38,7 +38,7 @@ NS_IMPL_RELEASE(nsComboBox)
 // nsComboBox constructor
 //
 //-------------------------------------------------------------------------
-nsComboBox::nsComboBox() : nsWindow(), nsIListWidget(), nsIComboBox()
+nsComboBox::nsComboBox() : nsWidget(), nsIListWidget(), nsIComboBox()
 {
   NS_INIT_REFCNT();
   mMultiSelect = PR_FALSE;
@@ -256,7 +256,7 @@ NS_METHOD nsComboBox::GetSelectedItem(nsString& aItem)
 PRInt32 nsComboBox::GetSelectedIndex()
 {
 #if 0
-  if (!mMultiSelect) { 
+  if (!mMultiSelect) {
     Widget w;
     XtVaGetValues(mWidget, XmNmenuHistory, &w, NULL);
     int i;
@@ -280,7 +280,7 @@ PRInt32 nsComboBox::GetSelectedIndex()
 NS_METHOD nsComboBox::SelectItem(PRInt32 aPosition)
 {
 #if 0
-  if (!mMultiSelect) { 
+  if (!mMultiSelect) {
     if (aPosition >= 0 && aPosition < mNumItems) {
       XtVaSetValues(mWidget,
 		    XmNmenuHistory, mItems[aPosition],
@@ -301,7 +301,7 @@ NS_METHOD nsComboBox::SelectItem(PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRInt32 nsComboBox::GetSelectedCount()
 {
-  if (!mMultiSelect) { 
+  if (!mMultiSelect) {
     PRInt32 inx = GetSelectedIndex();
     return (inx == -1? 0 : 1);
   } else {
@@ -327,7 +327,7 @@ NS_METHOD nsComboBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 //-------------------------------------------------------------------------
 NS_METHOD nsComboBox::Deselect()
 {
-  if (mMultiSelect) { 
+  if (mMultiSelect) {
     return NS_ERROR_FAILURE;
   }
 
@@ -355,7 +355,7 @@ nsresult nsComboBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   }
 
-  return nsWindow::QueryInterface(aIID,aInstancePtr);
+  return nsWidget::QueryInterface(aIID,aInstancePtr);
 }
 
 
@@ -463,5 +463,3 @@ PRBool nsComboBox::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
 }
-
-

@@ -19,12 +19,12 @@
 #ifndef nsTextAreaWidget_h__
 #define nsTextAreaWidget_h__
 
-#include "nsWindow.h"
+#include "nsWidget.h"
 #include "nsTextHelper.h"
 #include "nsITextAreaWidget.h"
 
 /**
- * Native Motif multi-line edit control wrapper. 
+ * Native Motif multi-line edit control wrapper.
  */
 
 class nsTextAreaWidget : public nsTextHelper

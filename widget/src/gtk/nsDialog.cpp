@@ -34,7 +34,7 @@ NS_IMPL_RELEASE(nsDialog)
 // nsDialog constructor
 //
 //-------------------------------------------------------------------------
-nsDialog::nsDialog() : nsWindow(), nsIDialog()
+nsDialog::nsDialog() : nsWidget(), nsIDialog()
 {
   NS_INIT_REFCNT();
 }
@@ -46,7 +46,7 @@ NS_METHOD nsDialog::Create(nsIWidget *aParent,
                       nsIDeviceContext *aContext,
                       nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData) 
+                      nsWidgetInitData *aInitData)
 {
   aParent->AddChild(this);
   GtkWidget *parentWidget = nsnull;
@@ -63,17 +63,17 @@ NS_METHOD nsDialog::Create(nsIWidget *aParent,
   mShell = gtk_dialog_new();
 /*
   mShell = ::XtVaCreateManagedWidget("Dialog",
-                                    xmDialogShellWidgetClass, 
+                                    xmDialogShellWidgetClass,
                                     parentWidget,
                                     XmNwidth, aRect.width,
                                     XmNheight, aRect.height,
                                     XmNrecomputeSize, False,
                                     XmNhighlightOnEnter, False,
 		                    XmNx, aRect.x,
-		                    XmNy, aRect.y, 
+		                    XmNy, aRect.y,
                                     nsnull);
 */
-  // Must use newManageClass instead of xmDrawingAreaWidgetClass 
+  // Must use newManageClass instead of xmDrawingAreaWidgetClass
   // Drawing area will spontaneously resize to fit it's contents
   // which is undesirable.
 
@@ -125,7 +125,7 @@ nsDialog::~nsDialog()
 //-------------------------------------------------------------------------
 nsresult nsDialog::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
+  nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
 
   static NS_DEFINE_IID(kInsDialogIID, NS_IDIALOG_IID);
   if (result == NS_NOINTERFACE && aIID.Equals(kInsDialogIID)) {
@@ -196,5 +196,3 @@ PRBool nsDialog::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
 }
-
-

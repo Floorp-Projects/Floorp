@@ -28,7 +28,7 @@ NS_IMPL_RELEASE(nsFileWidget)
 // nsFileWidget constructor
 //
 //-------------------------------------------------------------------------
-nsFileWidget::nsFileWidget() : nsWindow(), nsIFileWidget()
+nsFileWidget::nsFileWidget() : nsWidget(), nsIFileWidget()
 {
   NS_INIT_REFCNT();
   mNumberOfFilters = 0;
@@ -40,7 +40,7 @@ NS_METHOD nsFileWidget::Create(nsIWidget        *aParent,
                           nsIDeviceContext *aContext,
                           nsIAppShell      *aAppShell,
                           nsIToolkit       *aToolkit,
-                          nsWidgetInitData *aInitData) 
+                          nsWidgetInitData *aInitData)
 {
   nsString title("Load");
   Create(aParent, title, eMode_load, aContext, aAppShell, aToolkit, aInitData);
@@ -197,13 +197,13 @@ void nsFileWidget::GetFilterListArray(nsString& aFilterList)
   for (PRUint32 i = 0; i < mNumberOfFilters; i++) {
     const nsString& title = mTitles[i];
     const nsString& filter = mFilters[i];
-    
+
     aFilterList.Append(title);
     aFilterList.Append('\0');
     aFilterList.Append(filter);
     aFilterList.Append('\0');
   }
-  aFilterList.Append('\0'); 
+  aFilterList.Append('\0');
 }
 
 //-------------------------------------------------------------------------
@@ -255,4 +255,3 @@ NS_METHOD  nsFileWidget::SetDefaultString(nsString& aString)
 nsFileWidget::~nsFileWidget()
 {
 }
-

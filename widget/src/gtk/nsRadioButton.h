@@ -19,13 +19,13 @@
 #ifndef nsRadioButton_h__
 #define nsRadioButton_h__
 
-#include "nsWindow.h"
+#include "nsWidget.h"
 #include "nsIRadioButton.h"
 
 /**
  * Native Motif Radiobutton wrapper
  */
-class nsRadioButton : public nsWindow,
+class nsRadioButton : public nsWidget,
                       public nsIRadioButton
 {
 

@@ -34,7 +34,7 @@ NS_IMPL_RELEASE(nsRadioButton)
 // nsRadioButton constructor
 //
 //-------------------------------------------------------------------------
-nsRadioButton::nsRadioButton() : nsWindow(), nsIRadioButton()
+nsRadioButton::nsRadioButton() : nsWidget(), nsIRadioButton()
 {
   NS_INIT_REFCNT();
 }
@@ -57,7 +57,7 @@ nsRadioButton::~nsRadioButton()
 //-------------------------------------------------------------------------
 nsresult nsRadioButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
+  nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
 
   static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
   if (result == NS_NOINTERFACE && aIID.Equals(kIRadioButtonIID)) {
@@ -94,7 +94,7 @@ NS_METHOD nsRadioButton::Create(nsIWidget *aParent,
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
 /* FIXME
- * we need to have a slist here, so store 
+ * we need to have a slist here, so store
  * the radio buttons that go with this one.
  */
   mWidget = gtk_radio_button_new(NULL);
@@ -122,7 +122,7 @@ NS_METHOD nsRadioButton::Create(nsIWidget *aParent,
 
 // This is goign to be the same as mWidget, not different. FIXME
 
-  XtVaSetValues(mRadioBtn, 
+  XtVaSetValues(mRadioBtn,
                          XmNwidth, aRect.width,
                          XmNheight, aRect.height,
                          XmNx, 0,
@@ -180,7 +180,7 @@ NS_METHOD nsRadioButton::Create(nsNativeWidget aParent,
 // Armed
 //
 //-------------------------------------------------------------------------
-void nsRadioButton::Armed() 
+void nsRadioButton::Armed()
 {
   mIsArmed      = PR_TRUE;
   mValueWasSet  = PR_FALSE;
@@ -192,7 +192,7 @@ void nsRadioButton::Armed()
 // DisArmed
 //
 //-------------------------------------------------------------------------
-void nsRadioButton::DisArmed() 
+void nsRadioButton::DisArmed()
 {
   if (mValueWasSet) {
     gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), TRUE);
@@ -209,7 +209,7 @@ void nsRadioButton::DisArmed()
 // Set this button label
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsRadioButton::SetState(const PRBool aState) 
+NS_METHOD nsRadioButton::SetState(const PRBool aState)
 {
   int state = aState;
   if (mIsArmed) {
@@ -296,4 +296,3 @@ PRBool nsRadioButton::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
 }
-
