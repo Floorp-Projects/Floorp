@@ -38,7 +38,6 @@
 #include "nsIFileURL.h"
 #include "nsIStringBundle.h"
 #include "nsEnumeratorUtils.h"
-#include "nsModule.h"
 #include "nsCRT.h"
 
 #include "nsOS2Uni.h"
@@ -403,8 +402,8 @@ NS_IMETHODIMP nsFilePicker::SetDefaultString(const PRUnichar *aString)
   //as one of the FILE_ILLEGAL_CHARACTERS is a colon (:)
 
   mDefault.ReplaceChar("\"", '\'');
-  mDefault.ReplaceChar("\<", '(');
-  mDefault.ReplaceChar("\>", ')');
+  mDefault.ReplaceChar("<", '(');
+  mDefault.ReplaceChar(">", ')');
 
   mDefault.ReplaceChar(FILE_ILLEGAL_CHARACTERS, '_');
 
@@ -756,8 +755,6 @@ MRESULT EXPENTRY FileDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2
   MRESULT mr;
   PFILEDLG pfiledlg;
   HWND hwndTypeCombo;
-  HWND hwndFileEF;
-  PSZ pszTemp;
   INT i;
   SWP swp;
   PMYDATA pmydata;
