@@ -2,4 +2,3 @@
 #RewriteBase /webtools/build/ 
 #RewriteRule ^\.mozconfig\.sh(.*) config.cgi$1
 #RewriteRule ^\mozconfig\.sh(.*) config.cgi$1
-

@@ -1,3 +1,4 @@
+#!/usr/bin/env perl
 #!/usr/bonsaitools/bin/perl --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
@@ -27,8 +28,6 @@ $chrome_color    = '#F0A000';
 $ENV{CVSROOT}    = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 $ENV{PATH}       = "$ENV{PATH}:/usr/bin/ccs";
 
-system "cvs co mozilla/configure.in";
-
 print "Content-type: text/html\n\n\n";
   print qq(
 	   <HTML>
@@ -38,14 +37,22 @@ print "Content-type: text/html\n\n\n";
 	   <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
 	  );
 
-print "PATH=$ENV{PATH}\n";
+while (($key,$value) = each %ENV) {
+  print "<code>$key=$value</code><br>\n";
+}
+  print qq(
+	   <FORM action='test.cgi' method='post' enctype='multipart/form-data' onsubmit="this.doit='you';this.foo.filename = '/u/slamm/.cshrc';">
+	   <input type='file' name='foo'>
+	   <input type='submit' name='doit' >
+	   </form>
+	  );
 
-#  open(OPTIONS, "/usr/ccs/bin/m4 webify-configure.m4 $configure_in|")
-  open(OPTIONS, "m4 webify-configure.m4 $configure_in|")
-    or die "Error parsing configure.in\n";
-
-  foreach (<OPTIONS>) {
-    print;
-  }
+    if ($ENV{"REQUEST_METHOD"} eq 'POST') {
+      print "body:<br>\n";
+      print "$_<br>\n" while (<>);
+    }
+    else {
+        $s = $ENV{"QUERY_STRING"};
+    }
 
   print "\n</body>\n</html>\n";

@@ -198,7 +198,8 @@ sub print_script {
 
 sub print_configure_form {
   mkdir 'configure-mirror', 0777 if not -d 'configure-mirror';
-  system "cd configure-mirror && cvs -d $CVSROOT co mozilla/configure.in";
+  system "cd configure-mirror && HOME=.. cvs -d $CVSROOT co mozilla/configure.in";
+  die if not -f $configure_in;
 
   print qq(
     <HTML>
