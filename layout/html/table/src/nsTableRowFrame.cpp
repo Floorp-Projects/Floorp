@@ -943,17 +943,40 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
     maxTopMargin = PR_MAX(margin.top,maxTopMargin);
     maxBottomMargin = PR_MAX(margin.bottom,maxBottomMargin);
     
+    // Link child frame into the list of children
+    if (nsnull != prevKidFrame) {
+      prevKidFrame->SetNextSibling(kidFrame);
+    } else {
+      mFirstChild = kidFrame;  // our first child
+      SetFirstContentOffset(kidFrame);
+    }
+    mChildCount++;
+
+    // Compute the origin for the child frame
+    aState.x = margin.left;
+    // if we're constrained, compute the x offset where the cell should be put
+    if (NS_UNCONSTRAINEDSIZE!=aState.availSize.width)
+    {
+      // Adjust the running x-offset, taking into account intruders (cells from prior rows with rowspans > 1)
+      PRInt32 cellColIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
+      for (PRInt32 colIndex=0; colIndex<cellColIndex; colIndex++)
+            aState.x += aState.tableFrame->GetColumnWidth(colIndex);
+    }
+
     // Try to reflow the child into the available space. It might not
     // fit or might need continuing.
     nsReflowMetrics desiredSize(pKidMaxElementSize);
     desiredSize.width=desiredSize.height=desiredSize.ascent=desiredSize.descent=0;
     nsReflowStatus status;
+
+    // Inform the child it's being reflowed
+    kidFrame->WillReflow(*aPresContext);
+    kidFrame->MoveTo(aState.x, topMargin);
     if (NS_UNCONSTRAINEDSIZE == aState.availSize.width)
     {
       nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
                                    eReflowReason_Initial);
       // Reflow the child into the available space
-      kidFrame->WillReflow(*aPresContext);
       status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
       nsCellLayoutData *kidLayoutData = new nsCellLayoutData((nsTableCellFrame *)kidFrame, &desiredSize, pKidMaxElementSize);
       ((nsTableCellFrame *)kidFrame)->SetCellLayoutData(kidLayoutData);
@@ -969,7 +992,6 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
       NS_ASSERTION(0<availWidth, "illegal width for this column");
       kidAvailSize.width = availWidth;
       nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize, eReflowReason_Initial);
-      kidFrame->WillReflow(*aPresContext);
       status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
     }
     if (nsnull!=pKidMaxElementSize)
@@ -999,28 +1021,11 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
       break;
     }
 
-    aState.x = margin.left;
-    // if we're constrained, compute the x offset where the cell should be put
-    if (NS_UNCONSTRAINEDSIZE!=aState.availSize.width)
-    {
-      // Adjust the running x-offset, taking into account intruders (cells from prior rows with rowspans > 1)
-      PRInt32 cellColIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
-      for (PRInt32 colIndex=0; colIndex<cellColIndex; colIndex++)
-            aState.x += aState.tableFrame->GetColumnWidth(colIndex);
-    }
     // Place the child
     nsRect kidRect (aState.x, topMargin, desiredSize.width, desiredSize.height);
     PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, *pKidMaxElementSize);
 
-    // Link child frame into the list of children
-    if (nsnull != prevKidFrame) {
-      prevKidFrame->SetNextSibling(kidFrame);
-    } else {
-      mFirstChild = kidFrame;  // our first child
-      SetFirstContentOffset(kidFrame);
-    }
     prevKidFrame = kidFrame;
-    mChildCount++;
     kidIndex++;
 
     // Did the child complete?

@@ -637,7 +637,7 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
     if ((kidFrame == mFirstChild) || (aState.availSize.height > 0)) {
       // Reflow the child into the available space
       kidFrame->WillReflow(*aPresContext);
-      // XXX Set the origin...
+      kidFrame->MoveTo(kidMargin.left, aState.y);
       nsReflowState kidReflowState(kidFrame, aState.reflowState, kidFrame == mInnerTableFrame ?
                                    aState.innerTableMaxSize : aState.availSize,
                                    eReflowReason_Resize);
@@ -662,9 +662,7 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
 
     // Place the child after taking into account it's margin
     aState.y += topMargin;
-    nsRect kidRect (0, 0, kidSize.width, kidSize.height);
-    kidRect.x += kidMargin.left;
-    kidRect.y += aState.y;
+    nsRect kidRect (kidMargin.left, aState.y, kidSize.width, kidSize.height);
     PlaceChild(aState, kidFrame, kidRect, aMaxElementSize, kidMaxElementSize);
     if (bottomMargin < 0) {
       aState.prevMaxNegBottomMargin = -bottomMargin;

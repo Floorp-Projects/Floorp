@@ -322,6 +322,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
   nsReflowState kidReflowState(mFirstChild, aReflowState, availSize);
   mFirstChild->WillReflow(*aPresContext);
+  mFirstChild->MoveTo(leftInset, topInset);
   aStatus = ReflowChild(mFirstChild, aPresContext, kidSize, kidReflowState);
 
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
