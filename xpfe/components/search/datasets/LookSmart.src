@@ -1,18 +1,13 @@
 <search 
 	name="LookSmart" 
 	method=Get
-	action="http://www.looksmart.com/r" 
+	action="http://www.looksmart.com/r_search" 
 	>
 
 <input name="key" user>
-<input name="search" value="0">
-<input name="isp" value="zq">
-<input name="comefrom" value="izq-search">
 
 <interpret
 	skiplocal = true
-	bannerStart = "<!-- sherlock:ad -->"
-	bannerEnd = "<!-- sherlock:/ad -->"
-	resultListStart = "</table><br>"
-	resultListEnd = "<table width=635"
+	resultListStart = "<br><br>"
+	resultListEnd = "</table>"
 	>
