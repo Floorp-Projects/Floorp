@@ -275,6 +275,11 @@ public:
     NS_IMETHOD GetArrayLength(/*[in]*/  jarray array,
                               /*[out]*/ jsize* result) = 0;
 
+    NS_IMETHOD NewObjectArray(/*[in]*/  jsize len,
+    					/*[in]*/  jclass clazz,
+                        /*[in]*/  jobject init,
+                        /*[out]*/ jobjectArray* result) = 0;
+
     NS_IMETHOD GetObjectArrayElement(/*[in]*/  jobjectArray array,
                                      /*[in]*/  jsize index,
                                      /*[out]*/ jobject* result) = 0;
@@ -283,10 +288,8 @@ public:
                                      /*[in]*/  jsize index,
                                      /*[in]*/  jobject val) = 0;
 
-    NS_IMETHOD NewArray(/*[in]*/  jni_type type,
+    NS_IMETHOD NewArray(/*[in]*/ jni_type element_type,
                         /*[in]*/  jsize len,
-                        /*[in]*/  jclass clazz,
-                        /*[in]*/  jobject init,
                         /*[out]*/ jarray* result) = 0;
 
     NS_IMETHOD GetArrayElements(/*[in]*/  jni_type type,
