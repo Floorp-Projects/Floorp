@@ -26,50 +26,50 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_RESOURCE_CONTENT = \
-		$(srcdir)/EdDialogCommon.js \
-		$(srcdir)/EdLinkProps.xul \
-		$(srcdir)/EdLinkProps.js \
-		$(srcdir)/EdListProps.xul \
-		$(srcdir)/EdListProps.js \
-		$(srcdir)/EdPageProps.xul \
-		$(srcdir)/EdPageProps.js \
-		$(srcdir)/EdColorProps.xul \
-		$(srcdir)/EdColorProps.js \
-		$(srcdir)/EdImageProps.xul \
-		$(srcdir)/EdImageProps.js \
-		$(srcdir)/EdInsSrc.xul \
-		$(srcdir)/EdInsSrc.js \
-    $(srcdir)/EdInsertChars.xul \
-    $(srcdir)/EdInsertChars.js \
-		$(srcdir)/EdHLineProps.xul \
-		$(srcdir)/EdHLineProps.js \
-		$(srcdir)/EdSpellCheck.xul \
-		$(srcdir)/EdSpellCheck.js \
-		$(srcdir)/EdDictionary.xul \
-		$(srcdir)/EdDictionary.js \
-		$(srcdir)/EdNamedAnchorProps.xul \
-		$(srcdir)/EdNamedAnchorProps.js \
-		$(srcdir)/EdInsertTable.xul \
-		$(srcdir)/EdInsertTable.js \
-		$(srcdir)/EdTableProps.xul \
-		$(srcdir)/EdTableProps.js \
-		$(srcdir)/EdDialogOverlay.xul \
-		$(srcdir)/EdAdvancedEdit.xul \
-		$(srcdir)/EdAdvancedEdit.js \
-		$(srcdir)/EdAECSSAttributes.js \
-		$(srcdir)/EdAEHTMLAttributes.js \
-		$(srcdir)/EdAEJSEAttributes.js \
-		$(srcdir)/EdImageMap.js \
-		$(srcdir)/EdImageMap.xul \
-		$(srcdir)/EdImageMapHotSpot.js \
-		$(srcdir)/EdImageMapHotSpot.xul \
-		$(srcdir)/EdImageMapShapes.js \
-		$(srcdir)/EdImageMapPage.html \
+CHROME_DIR = editor
+CHROME_CONTENT_DIR = content
+
+CHROME_CONTENT = \
+		EdDialogCommon.js \
+		EdLinkProps.xul \
+		EdLinkProps.js \
+		EdListProps.xul \
+		EdListProps.js \
+		EdPageProps.xul \
+		EdPageProps.js \
+		EdColorProps.xul \
+		EdColorProps.js \
+		EdImageProps.xul \
+		EdImageProps.js \
+		EdInsSrc.xul \
+		EdInsSrc.js \
+    EdInsertChars.xul \
+    EdInsertChars.js \
+		EdHLineProps.xul \
+		EdHLineProps.js \
+		EdSpellCheck.xul \
+		EdSpellCheck.js \
+		EdDictionary.xul \
+		EdDictionary.js \
+		EdNamedAnchorProps.xul \
+		EdNamedAnchorProps.js \
+		EdInsertTable.xul \
+		EdInsertTable.js \
+		EdTableProps.xul \
+		EdTableProps.js \
+		EdDialogOverlay.xul \
+		EdAdvancedEdit.xul \
+		EdAdvancedEdit.js \
+		EdAECSSAttributes.js \
+		EdAEHTMLAttributes.js \
+		EdAEJSEAttributes.js \
+		EdImageMap.js \
+		EdImageMap.xul \
+		EdImageMapHotSpot.js \
+		EdImageMapHotSpot.xul \
+		EdImageMapShapes.js \
+		EdImageMapPage.html \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-install::
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/editor/content
 

@@ -26,28 +26,28 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_RESOURCE_CONTENT = \
-		$(srcdir)/EditorHLineProperties.dtd \
-		$(srcdir)/EditorImageProperties.dtd \
-		$(srcdir)/EditorInsertSource.dtd \
-		$(srcdir)/EditorInsertChars.dtd \
-		$(srcdir)/EditorInsertTable.dtd \
-		$(srcdir)/EditorLinkProperties.dtd \
-		$(srcdir)/EditorListProperties.dtd \
-		$(srcdir)/EditorPageProperties.dtd \
-		$(srcdir)/EditorColorProperties.dtd \
-		$(srcdir)/EditorPersonalDictionary.dtd \
-		$(srcdir)/EditorSpellCheck.dtd \
-		$(srcdir)/EditorTableProperties.dtd \
-		$(srcdir)/EdNamedAnchorProperties.dtd \
-		$(srcdir)/EdDialogOverlay.dtd \
-		$(srcdir)/EdAdvancedEdit.dtd \
-		$(srcdir)/EditorImageMap.dtd \
-		$(srcdir)/EditorImageMapHotSpot.dtd \
+CHROME_DIR = editor
+CHROME_L10N_DIR = locale
+
+CHROME_L10N = \
+		EditorHLineProperties.dtd \
+		EditorImageProperties.dtd \
+		EditorInsertSource.dtd \
+		EditorInsertChars.dtd \
+		EditorInsertTable.dtd \
+		EditorLinkProperties.dtd \
+		EditorListProperties.dtd \
+		EditorPageProperties.dtd \
+		EditorColorProperties.dtd \
+		EditorPersonalDictionary.dtd \
+		EditorSpellCheck.dtd \
+		EditorTableProperties.dtd \
+		EdNamedAnchorProperties.dtd \
+		EdDialogOverlay.dtd \
+		EdAdvancedEdit.dtd \
+		EditorImageMap.dtd \
+		EditorImageMapHotSpot.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-install::
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/editor/locale
 
