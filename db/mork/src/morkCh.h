@@ -38,10 +38,7 @@
 #define morkCh_kN      (1 << 6)
 #define morkCh_kM      (1 << 7)
 
-extern const mork_u1 morkCh_Type[]; /* 256 byte predicate bits ch map */
-
-/* is a character that normally continues a symbol token: */
-#define morkCh_IsSymbol(c)   ( morkCh_Type[ (mork_ch)(c) ] & morkCh_kS )
+extern const mork_flags morkCh_Type[]; /* 256 byte predicate bits ch map */
 
 /* is a numeric decimal digit: (note memory access might be slower) */
 /* define morkCh_IsDigit(c)  ( morkCh_Type[ (mork_ch)(c) ] & morkCh_kD ) */
@@ -72,6 +69,24 @@ extern const mork_u1 morkCh_Type[]; /* 256 byte predicate bits ch map */
 /* is alphanumeric, including lower case, upper case, and digits */
 #define morkCh_IsAlphaNum(c) \
   (morkCh_Type[ (mork_ch)(c) ]&(morkCh_kL|morkCh_kU|morkCh_kD))
+
+/* ````` repeated testing of predicate bits in single flag byte ````` */
+
+#define morkCh_GetFlags(c) ( morkCh_Type[ (mork_ch)(c) ] )
+
+#define morkFlags_IsDigit(f)    ( (f) & morkCh_kD )
+#define morkFlags_IsHex(f)      ( (f) & morkCh_kX )
+#define morkFlags_IsValue(f)    ( (f) & morkCh_kV )
+#define morkFlags_IsWhite(f)    ( (f) & morkCh_kW )
+#define morkFlags_IsName(f)     ( (f) & morkCh_kN )
+#define morkFlags_IsMore(f)     ( (f) & morkCh_kM )
+#define morkFlags_IsAlpha(f)    ( (f) & (morkCh_kL|morkCh_kU) )
+#define morkFlags_IsAlphaNum(f) ( (f) & (morkCh_kL|morkCh_kU|morkCh_kD) )
+
+#define morkFlags_IsUpper(f)    ( (f) & morkCh_kU )
+#define morkFlags_IsLower(f)    ( (f) & morkCh_kL )
+
+/* ````` character case (e.g. for case insensitive operations) ````` */
 
   
 #define morkCh_IsAscii(c)         ( ((mork_u1) c) <= 0x7F )
