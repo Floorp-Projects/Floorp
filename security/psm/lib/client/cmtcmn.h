@@ -2208,6 +2208,31 @@ CMTStatus CMT_SDREncrypt(PCMT_CONTROL control,
                const unsigned char *data, CMUint32 dataLen,
                unsigned char **result, CMUint32 *resultLen);
 
+/*
+ * FUNCTION: CMT_SDRDecrypt
+ * ----------------------------------
+ * INPUTS
+ *    control
+ *        A control connection that has been established with the psm server.
+ *    data
+ *        A buffer containing the the results of a call to SDREncrypt
+ *    dataLen
+ *        The length of the data buffer
+ *    result
+ *        Recieves a pointer to a buffer containing the result of the
+ *        decryption
+ *    resultLen
+ *        Receives the length of the result buffer
+ * NOTES
+ *
+ * RETURN
+ *     CMTSuccess - the encryption worked.
+ *     CMTFailure - some (unspecified) error occurred  (needs work)
+ */
+CMTStatus CMT_SDRDecrypt(PCMT_CONTROL control, 
+               const unsigned char *data, CMUint32 dataLen,
+               unsigned char **result, CMUint32 *resultLen);
+
 /* Lock operations */
 void CMT_LockConnection(PCMT_CONTROL control);
 void CMT_UnlockConnection(PCMT_CONTROL control);

@@ -61,6 +61,7 @@ CSRCS = cmtinit.c  \
         cmtpasswd.c \
 	cmtadvisor.c \
 	cmtrng.c \
+	cmtsdr.c \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS	+= -L$(DIST)/bin -lprotocol
