@@ -1407,7 +1407,7 @@ nsSocketTransport::OnStatusWithProgress(nsSocketRequest *req,
     if (!progressSink)
         return;
 
-    progressSink->OnStatus(req, ctxt, message, NS_ConvertASCIItoUCS2(mHostName).get());
+    progressSink->OnStatus(req, ctxt, message, NS_ConvertUTF8toUCS2(mHostName).get());
     progressSink->OnProgress(req, ctxt, offset, 0);
 }
 
@@ -1429,7 +1429,7 @@ nsSocketTransport::OnStatus_Locked(nsSocketRequest *req,
     // and we must not hold the monitor while calling out to our listener or
     // else we risk dead-locking.
     PR_ExitMonitor(mMonitor);
-    progressSink->OnStatus(req, ctxt, message, NS_ConvertASCIItoUCS2(mHostName).get());
+    progressSink->OnStatus(req, ctxt, message, NS_ConvertUTF8toUCS2(mHostName).get());
     PR_EnterMonitor(mMonitor);
 }
 

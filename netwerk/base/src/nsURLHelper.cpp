@@ -172,11 +172,25 @@ CoalesceDirs(char* io_Path)
         *(urlPtr-1) = '\0';
 }
 
-void
-ToLowerCase(char *str, PRInt32 length)
+static inline
+void ToLower(char &c)
 {
-    for (; length && *str; --length, ++str)
-        *str = nsCRT::ToLower(*str);
+    if ((unsigned)(c - 'A') <= (unsigned)('Z' - 'A'))
+        c += 'a' - 'A';
+}
+
+void
+ToLowerCase(char *str, PRUint32 length)
+{
+    for (char *end = str + length; str < end; ++str)
+        ToLower(*str);
+}
+
+void
+ToLowerCase(char *str)
+{
+    for (; *str; ++str)
+        ToLower(*str);
 }
 
 /* Extract URI-Scheme if possible */

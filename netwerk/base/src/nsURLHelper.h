@@ -43,10 +43,6 @@
 #include "nsCRT.h"
 #include "nsString.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Get port from string */ 
 PRInt32 ExtractPortFrom(const char* src);
 
@@ -60,7 +56,8 @@ nsresult DupString(char* *o_Dest, const char* i_Src);
 void CoalesceDirs(char* io_Path);
 
 /* convert to lower case */
-void ToLowerCase(char* str, PRInt32 length=-1);
+void ToLowerCase(char* str, PRUint32 length);
+void ToLowerCase(char* str);
 
 /* Extract URI-Scheme if possible */
 nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos, 
@@ -68,9 +65,5 @@ nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos,
 
 /* check that the given scheme conforms to RFC 2396 */
 PRBool IsValidScheme(const char *scheme, PRUint32 schemeLen);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
