@@ -26,6 +26,7 @@
 /* Include all of the interfaces our factory can generate components for */
 #include "nsISmtpService.h"
 #include "nsSmtpService.h"
+#include "nsSmtpUrl.h"
 #include "nsMsgComposeService.h"
 #include "nsMsgCompose.h"
 #include "nsMsgComposeFact.h"
@@ -46,6 +47,7 @@ static NS_DEFINE_CID(kCMsgSendLaterCID, NS_MSGSENDLATER_CID);
 static NS_DEFINE_CID(kCSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kCMsgComposeServiceCID, NS_MSGCOMPOSESERVICE_CID);
 static NS_DEFINE_CID(kCMsgQuoteCID, NS_MSGQUOTE_CID);
+static NS_DEFINE_CID(kCSmtpUrlCID, NS_SMTPURL_CID);
 
 
 ////////////////////////////////////////////////////////////
@@ -184,11 +186,11 @@ nsresult nsMsgComposeFactory::CreateInstance(nsISupports *aOuter, const nsIID &a
 		return aMsgCompService->QueryInterface(kISupportsIID, aResult);
 	}
 
-  // Quoting anyone?
-  else if (mClassID.Equals(kCMsgQuoteCID)) 
-	{
-    return NS_NewMsgQuote(aIID, aResult);
-	}
+	// Quoting anyone?
+	else if (mClassID.Equals(kCMsgQuoteCID)) 
+		return NS_NewMsgQuote(aIID, aResult);
+	else if (mClassID.Equals(kCSmtpUrlCID))
+		return NS_NewSmtpUrl(aIID, aResult);
   
 	return NS_NOINTERFACE;  
 }  
@@ -242,6 +244,12 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char* 
 										"SMTP Service", nsnull,
 										path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) finalResult = rv;
+	
+	rv = compMgr->RegisterComponent(kCSmtpUrlCID,
+										"Smtp url",
+										nsnull,
+										path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->RegisterComponent(kCMsgComposeServiceCID,
 										"Message Compose Service",
@@ -285,6 +293,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char* 
 										"Xcomponent://netscape/messengercompose/smtp",
 										path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) finalResult = rv;
+   
 
 #ifdef NS_DEBUG
   printf("composer registering from %s\n",path);
@@ -320,7 +329,10 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	rv = compMgr->UnregisterComponent(kCSmtpServiceCID, path);
 	if (NS_FAILED(rv)) finalResult = rv;
 
-  rv = compMgr->UnregisterComponent(kCMsgQuoteCID, path);
+	rv = compMgr->UnregisterComponent(kCSmtpUrlCID, path);
+	if (NS_FAILED(rv)) finalResult = rv;
+
+	rv = compMgr->UnregisterComponent(kCMsgQuoteCID, path);
 	if (NS_FAILED(rv)) finalResult = rv;
 
 	return finalResult;
