@@ -2643,6 +2643,10 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
 
     PRBool do_notify = !!aRefChild;
 
+    if (count && !do_notify && mDocument) {
+      mDocument->BeginUpdate();
+    }    
+    
     /*
      * Iterate through the fragments children, removing each from
      * the fragment and inserting it into the child list of its
@@ -2679,6 +2683,7 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
 
     if (count && !do_notify && mDocument) {
       mDocument->ContentAppended(this, old_count);
+      mDocument->EndUpdate();
     }
 
     doc_fragment->DropChildReferences();
