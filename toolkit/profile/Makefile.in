@@ -28,10 +28,4 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = public src
 
-# Use Qute for non-Phoenix apps
-ifndef MOZ_PHOENIX
-DIRS += skin
-endif
-
-
 include $(topsrcdir)/config/rules.mk
