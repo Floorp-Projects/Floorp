@@ -30,7 +30,11 @@ PROGRAM		= sendlatertest$(BIN_SUFFIX)
 
 CPPSRCS		= test.cpp
 
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS	= gkgfx msgbutil
+else
 EXTRA_DSO_LIBS	= gkgfx msgbaseutil
+endif
 
 LIBS		= \
 		$(EXTRA_DSO_LIBS) \
