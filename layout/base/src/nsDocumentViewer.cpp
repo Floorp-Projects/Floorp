@@ -1492,6 +1492,10 @@ PRInt32                               width,height;
         }
       }      
     }
+    else
+    {
+      return NS_ERROR_FAILURE;
+    }
   }
   return NS_OK;
 }
