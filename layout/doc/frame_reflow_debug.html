@@ -190,5 +190,29 @@ The entries in the reflow log can be controlled on a frame level.  For instance 
 <p>Once the problem is reduced to a single frame level, placing a breakpoint at <code>DisplayReflowEnterPrint</code> in <a href="http://lxr.mozilla.org/seamonkey/source/layout/html/base/src/nsFrame.cpp"><code>nsFrame.cpp</code></a> is a very efficient way to step through
  the reflow tree.
 
+<h2>Other reflow debug options</h2>
+
+<h3>GECKO_DISPLAY_REFLOW_FLAG_PIXEL_ERRORS</h3>
+<p>
+Setting this option via <code>set GECKO_DISPLAY_REFLOW_FLAG_PIXEL_ERRORS = 1</code> enables a verification for each coordinate value that the coordinates are aligned at pixel boundaries.
+<table class="log"><tr><td>
+<pre>
+              row 0268A594 r=0 a=UC,UC c=UC,20 cnt=870 
+VALUE 20 is not a whole pixel 
+               cell 0268A6C0 r=0 a=UC,UC c=UC,15 cnt=871 
+                block 0268A764 r=0 a=UC,UC c=UC,UC cnt=872 
+                block 0268A764 d=0,0 me=0 
+               cell 0268A6C0 d=0,0 me=0 
+              row 0268A594 d=UC,20 
+VALUE 20 is not a whole pixel 
+             rowG 0268A02C d=UC,695 
+VALUE 695 is not a whole pixel</pre>
+</td></tr></table>
+<p>
+While unaligned values at the entrance of a frame reflow can be ignored,  when they appear at the exit of a routine this can cause display errors like stray lines. OS2 is very vulnerable to pixel alignement errors as text is drawn on pixel boundaries.
+
+<h3>GECKO_DISPLAY_REFLOW_INDENT_UNDISPLAYED_FRAMES</h3>
+<p>
+Setting this option via <code>set GECKO_DISPLAY_REFLOW_INDENT_UNDISPLAYED_FRAMES = 1</code> will cause an advance of the indent even for frames which are blocked via the reflow rules file.  
  </body>
 </html>
