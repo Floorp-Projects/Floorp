@@ -31,6 +31,9 @@
 #include <StandardFile.h>
 #include "FullPath.h"
 #else
+#ifdef XP_OS2_EMX
+#include <sys/types.h>
+#endif
 #include <sys/stat.h>
 #endif
 #include <stdlib.h>
