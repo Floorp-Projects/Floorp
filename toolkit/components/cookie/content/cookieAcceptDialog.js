@@ -62,6 +62,11 @@ function onload()
   document.getElementById("cancel").label = dialog.getAttribute("cancelLabel");
   document.getElementById("cancel").accessKey = dialog.getAttribute("cancelKey");
 
+  // hook up button icons where implemented
+  document.getElementById("ok").setAttribute("icon","accept");
+  document.getElementById("cancel").setAttribute("icon","cancel");
+  document.getElementById("disclosureButton").setAttribute("icon","properties");
+
   if (!gDateService) {
     const nsScriptableDateFormat_CONTRACTID = "@mozilla.org/intl/scriptabledateformat;1";
     const nsIScriptableDateFormat = Components.interfaces.nsIScriptableDateFormat;
