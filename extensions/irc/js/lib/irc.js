@@ -1010,8 +1010,9 @@ function serv_mode (e)
 {
 
     e.destObject = this;
-    
-    if ((e.params[1][0] == "#") || (e.params[1][0] == "&"))
+    /* modes are not allowed in +channels -> no need to test that here.. */
+    if ((e.params[1][0] == "#") || (e.params[1][0] == "&") ||
+        (e.params[1][0] == "!"))
     {
         e.channel = new CIRCChannel (this, e.params[1]);
         if ("user" in e && e.user)
@@ -1389,7 +1390,8 @@ function serv_notice (e)
         return true;
     }
         
-    if ((e.params[1][0] == "#") || (e.params[1][0] == "&"))
+    if ((e.params[1][0] == "#") || (e.params[1][0] == "&") ||
+        (e.params[1][0] == "+") || (e.params[1][0] == "!"))
     {
         e.channel = new CIRCChannel(this, e.params[1]);
         e.user = new CIRCChanUser (e.channel, e.user.nick);
@@ -1422,7 +1424,8 @@ function serv_privmsg (e)
     
     /* setting replyTo provides a standard place to find the target for     */
     /* replys associated with this event.                                   */
-    if ((e.params[1][0] == "#") || (e.params[1][0] == "&"))
+    if ((e.params[1][0] == "#") || (e.params[1][0] == "&") ||
+        (e.params[1][0] == "+") || (e.params[1][0] == "!"))
     {
         e.channel = new CIRCChannel(this, e.params[1]);
         e.user = new CIRCChanUser (e.channel, e.user.nick);
