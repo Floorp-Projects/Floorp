@@ -2230,7 +2230,7 @@ nsEditorShell::SetDocumentTitle(const PRUnichar *title)
           {
             // Didn't find one above: Create a new one
             nsCOMPtr<nsIDOMElement>titleElement;
-            res = domDoc->CreateElementNS(NS_LITERAL_STRING("http://www.w3.org/1999/xhtml"), NS_LITERAL_STRING("title"), getter_AddRefs(titleElement));
+            res = domDoc->CreateElement(NS_LITERAL_STRING("title"), getter_AddRefs(titleElement));
             if (NS_SUCCEEDED(res) && titleElement)
             {
               titleNode = do_QueryInterface(titleElement);

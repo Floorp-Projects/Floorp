@@ -24,7 +24,7 @@
 #define CreateElementTxn_h__
 
 #include "EditTxn.h"
-#include "nsIEditor.h"
+#include "nsEditor.h"
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
 
@@ -51,7 +51,7 @@ public:
     * @param aOffsetInParent the location in aParent to insert the new element
     *                        if eAppend, the new element is appended as the last child
     */
-  NS_IMETHOD Init(nsIEditor *aEditor,
+  NS_IMETHOD Init(nsEditor *aEditor,
                   const nsString& aTag,
                   nsIDOMNode *aParent,
                   PRUint32 aOffsetInParent);
@@ -84,7 +84,7 @@ public:
 protected:
   
   /** the document into which the new node will be inserted */
-  nsIEditor* mEditor;
+  nsEditor* mEditor;
   
   /** the tag (mapping to object type) for the new element */
   nsString mTag;

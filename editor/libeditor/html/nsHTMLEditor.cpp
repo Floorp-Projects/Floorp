@@ -3744,12 +3744,13 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   //  go through the transaction system
 
   nsCOMPtr<nsIDOMElement>newElement;
+  nsCOMPtr<nsIContent> newContent;
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
-  nsString qualifiedTag;
-  qualifiedTag.AssignWithConversion("html:");
-  qualifiedTag+=realTagName;
-  res = doc->CreateElementNS(NS_ConvertASCIItoUCS2("http://www.w3.org/1999/xhtml"), qualifiedTag, getter_AddRefs(newElement));
+
+  //new call to use instead to get proper HTML element, bug# 39919
+  CreateHTMLContent(realTagName, getter_AddRefs(newContent));
+  newElement = do_QueryInterface(newContent);
   if (NS_FAILED(res) || !newElement)
     return NS_ERROR_FAILURE;
 

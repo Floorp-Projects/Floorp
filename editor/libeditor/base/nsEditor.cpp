@@ -90,6 +90,10 @@
 #include "nsStyleSheetTxns.h"
 #include "IMETextTxn.h"
 #include "nsIHTMLEditor.h"
+// included for nsEditor::CreateHTMLContent
+#include "nsIElementFactory.h"
+#include "nsINodeInfo.h"
+#include "nsINameSpaceManager.h"
 
 // #define HACK_FORCE_REDRAW 1
 
@@ -1840,12 +1844,13 @@ nsEditor::ReplaceContainer(nsIDOMNode *inNode,
 
   // create new container
   nsCOMPtr<nsIDOMElement> elem;
-  nsString qualifiedTag;
-  qualifiedTag.AssignWithConversion("html:");
-  qualifiedTag+=aNodeType;
-  res = doc->CreateElementNS(NS_ConvertASCIItoUCS2("http://www.w3.org/1999/xhtml"), qualifiedTag, getter_AddRefs(elem));
+  nsCOMPtr<nsIContent> newContent;
+
+  //new call to use instead to get proper HTML element, bug# 39919
+  CreateHTMLContent(aNodeType, getter_AddRefs(newContent));
+  elem = do_QueryInterface(newContent);
   if (NS_FAILED(res)) return res;
-  *outNode = do_QueryInterface(elem);
+    *outNode = do_QueryInterface(elem);
   
   // set attribute if needed
   if (aAttribute && aValue && !aAttribute->IsEmpty())
@@ -1960,10 +1965,11 @@ nsEditor::InsertContainerAbove( nsIDOMNode *inNode,
 
   // create new container
   nsCOMPtr<nsIDOMElement> elem;
-  nsString qualifiedTag;
-  qualifiedTag.AssignWithConversion("html:");
-  qualifiedTag+=aNodeType;
-  res = doc->CreateElementNS(NS_ConvertASCIItoUCS2("http://www.w3.org/1999/xhtml"), qualifiedTag, getter_AddRefs(elem));
+  nsCOMPtr<nsIContent> newContent;
+
+  //new call to use instead to get proper HTML element, bug# 39919
+  CreateHTMLContent(aNodeType, getter_AddRefs(newContent));
+  elem = do_QueryInterface(newContent);
   if (NS_FAILED(res)) return res;
   *outNode = do_QueryInterface(elem);
   
@@ -5739,5 +5745,45 @@ nsresult nsEditor::ClearSelection()
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_FAILURE;
   return selection->ClearSelection();  
+}
+
+nsresult
+nsEditor::CreateHTMLContent(const nsString& aTag, nsIContent** aContent)
+{
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsIElementFactory, elementFactory,
+    NS_ELEMENT_FACTORY_PROGID_PREFIX"http://www.w3.org/1999/xhtml" , &rv);
+  if (!elementFactory)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMDocument> tempDoc;
+  nsCOMPtr<nsIDocument> doc;
+
+  rv = GetDocument(getter_AddRefs(tempDoc));
+  if (NS_FAILED(rv) || !tempDoc)
+    return rv?rv:NS_ERROR_FAILURE;
+
+  doc = do_QueryInterface(tempDoc);
+
+  nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
+  rv = doc->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+  if (NS_FAILED(rv))
+    return rv;
+
+  NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  rv = nodeInfoManager->GetNodeInfo(aTag, nsnull, kNameSpaceID_None,*getter_AddRefs(nodeInfo));
+
+  if (NS_FAILED(rv) || !nodeInfo)
+    return rv?rv:NS_ERROR_FAILURE;
+
+  rv = elementFactory->CreateInstanceByTag(nodeInfo, aContent);
+
+  if (NS_FAILED(rv) || !aContent)
+    return rv?rv:NS_ERROR_FAILURE;
+  else
+    return NS_OK;
 }
 
