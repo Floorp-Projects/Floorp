@@ -56,31 +56,31 @@ public:
         
 										Context();
 				virtual 		~Context();
-				NS_IMETHOD	Init( nsIWebShell *aWebShell,
-				               nsIEditor* aEditor,
+				NS_IMETHOD	Init( nsIDOMWindow *aWindow,
+				               nsIEditorShell* aEditorShell,
 			                 const nsString& lastSearchString,
 			                 const nsString& lastReplaceString,
 			                 PRBool lastCaseSensitive,
 			                 PRBool lastSearchBackwards,
 			                 PRBool lastWrapSearch);
 
-				NS_IMETHOD	Reset(nsIWebShell *aNewWebShell);
+				NS_IMETHOD	Reset(nsIDOMWindow *aNewWindow);
 				NS_IMETHOD	DoFind(PRBool *aDidFind);
 				NS_IMETHOD	DoReplace();
 
         // Utility to construct new TS document from our webshell.
-        NS_IMETHOD  MakeTSDocument(nsIWebShell* aWebShell, nsITextServicesDocument** aDoc);
+        NS_IMETHOD  MakeTSDocument(nsIDOMWindow* aWindow, nsITextServicesDocument** aDoc);
         NS_IMETHOD  GetCurrentBlockIndex(nsITextServicesDocument *aDoc, PRInt32 *outBlockIndex);
         NS_IMETHOD  SetupDocForSearch(nsITextServicesDocument *aDoc, PRInt32 *outBlockOffset);
-
-        nsIWebShell* mTargetWebShell;			// weak link. Don't hold a reference
-        nsIEditor*   mEditor;							// weak link. Don't hold a reference
-        nsString     mSearchString;
-        nsString     mReplaceString;
-        PRBool       mCaseSensitive;
-        PRBool       mSearchBackwards;
-        PRBool       mWrapSearch;
-        nsIDOMWindow *mFindDialog;
+				
+        nsIDOMWindow*     mTargetWindow;			// weak link. Don't hold a reference
+        nsIEditorShell*   mEditorShell;						// weak link. Don't hold a reference
+        nsString       mSearchString;
+        nsString       mReplaceString;
+        PRBool         mCaseSensitive;
+        PRBool         mSearchBackwards;
+        PRBool         mWrapSearch;
+        nsIDOMWindow*  mFindDialog;
 
     }; // nsFindComponent::Context
 

@@ -372,9 +372,18 @@ nsMessenger::InitializeSearch( nsIFindComponent *finder )
     nsresult rv = NS_OK;
     if (!finder) return NS_ERROR_NULL_POINTER;
 
-    if (!mSearchContext ) {
+    if (!mSearchContext )
+    {
+        nsCOMPtr<nsIInterfaceRequestor> docShellIR = do_QueryInterface(mWebShell);
+        if (!docShellIR) return NS_ERROR_FAILURE;
+        
+        nsCOMPtr<nsIDOMWindow> domWindow;
+        docShellIR->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWindow));
+        if (!domWindow) return NS_ERROR_FAILURE;
+        
+        // we need to get the nsIDOMWindow for mWebShell
         // Create the search context for this browser window.
-        rv = finder->CreateContext( mWebShell, nsnull, getter_AddRefs(mSearchContext));
+        rv = finder->CreateContext(domWindow, nsnull, getter_AddRefs(mSearchContext));
     }
 
     return rv;

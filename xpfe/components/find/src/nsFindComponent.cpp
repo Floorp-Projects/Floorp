@@ -78,25 +78,25 @@ nsFindComponent::Context::~Context()
 }
 
 NS_IMETHODIMP
-nsFindComponent::Context::Init( nsIWebShell *aWebShell,
-                 nsIEditor* aEditor,
+nsFindComponent::Context::Init( nsIDOMWindow *aWindow,
+                 nsIEditorShell* aEditorShell,
                  const nsString& lastSearchString,
                  const nsString& lastReplaceString,
                  PRBool lastCaseSensitive,
                  PRBool lastSearchBackward,
                  PRBool lastWrapSearch)
 {
-	if (!aWebShell)
+	if (!aWindow)
 		return NS_ERROR_INVALID_ARG;
 	
-	mEditor          = aEditor;				// don't AddRef
-	mTargetWebShell  = aWebShell;			// don't AddRef
+	mEditorShell     = aEditorShell;				// don't AddRef
+	mTargetWindow    = aWindow;			// don't AddRef
 	mSearchString    = lastSearchString;
 	mReplaceString   = lastReplaceString;
 	mCaseSensitive   = lastCaseSensitive;
 	mSearchBackwards = lastSearchBackward;
 	mWrapSearch      = lastWrapSearch;
-    mFindDialog      = 0;
+	mFindDialog      = 0;
 	
 	return NS_OK;
 }
@@ -106,9 +106,9 @@ static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
 
 
 NS_IMETHODIMP
-nsFindComponent::Context::MakeTSDocument(nsIWebShell* aWebShell, nsITextServicesDocument** aDoc)
+nsFindComponent::Context::MakeTSDocument(nsIDOMWindow* aWindow, nsITextServicesDocument** aDoc)
 {
-  if (!aWebShell)
+  if (!aWindow)
     return NS_ERROR_INVALID_ARG;
     
   if (!aDoc)
@@ -125,32 +125,25 @@ nsFindComponent::Context::MakeTSDocument(nsIWebShell* aWebShell, nsITextServices
   if (NS_FAILED(rv) || !tempDoc)
     return rv;
 
-  // Get content viewer from the web shell.
-  nsCOMPtr<nsIContentViewer> contentViewer;
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aWebShell));
-  rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
-  if (NS_FAILED(rv) || !contentViewer)
-    return rv;
+  nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(aWindow, &rv);
+  if (NS_FAILED(rv) || !globalObj)
+    return NS_ERROR_FAILURE;
 
-  // Up-cast to a document viewer.
-  nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(contentViewer, &rv);
-  if (NS_FAILED(rv) || !docViewer)
-    return rv;
-    
-  // Get the document and pres shell from the doc viewer.
-  nsCOMPtr<nsIDocument>  document;
-  nsCOMPtr<nsIPresShell> presShell;
-  rv = docViewer->GetDocument(*getter_AddRefs(document));
-  if (document)
-      rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+  if (!docShell)
+    return NS_ERROR_FAILURE;
+	
+	nsCOMPtr<nsIPresShell> presShell;
+	docShell->GetPresShell(getter_AddRefs(presShell));
+  if (!presShell)
+    return NS_ERROR_FAILURE;
 
-  if (NS_FAILED(rv) || !document || !presShell)
-    return rv;
-
-  // Upcast document to a DOM document.
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(document, &rv);
-  if (NS_FAILED(rv) || !domDoc)
-    return rv;
+	nsCOMPtr<nsIDocument> document;
+	presShell->GetDocument(getter_AddRefs(document));
+	nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(document);
+  if (!domDoc)
+    return NS_ERROR_FAILURE;
 
   // Initialize the text services document.
   rv = tempDoc->InitWithDocument(domDoc, presShell);
@@ -432,7 +425,7 @@ nsFindComponent::Context::DoFind(PRBool *aDidFind)
   if (!aDidFind)
     return NS_ERROR_NULL_POINTER;
   
-	if (!mTargetWebShell)
+	if (!mTargetWindow)
 		return NS_ERROR_NOT_INITIALIZED;
 
 	*aDidFind = PR_FALSE;
@@ -446,7 +439,7 @@ nsFindComponent::Context::DoFind(PRBool *aDidFind)
   // Construct a text services document to use. This is freed when we
   // return from this function.
   nsCOMPtr<nsITextServicesDocument> txtDoc;
-  rv = MakeTSDocument(mTargetWebShell, getter_AddRefs(txtDoc));
+  rv = MakeTSDocument(mTargetWindow, getter_AddRefs(txtDoc));
   if (NS_FAILED(rv) || !txtDoc)
     return rv;
   
@@ -574,12 +567,12 @@ nsFindComponent::Context::DoReplace()
 }
 
 NS_IMETHODIMP
-nsFindComponent::Context::Reset( nsIWebShell *aNewWebShell )
+nsFindComponent::Context::Reset( nsIDOMWindow *aNewWindow )
 {
-	if (!aNewWebShell)
+	if (!aNewWindow)
 		return NS_ERROR_INVALID_ARG;
 
-  mTargetWebShell = aNewWebShell;		// don't AddRef
+  mTargetWindow = aNewWindow;		// don't AddRef
   return NS_OK;
 }
 
@@ -673,56 +666,47 @@ nsFindComponent::Context::GetWrapSearch(PRBool *aBool) {
 }
 
 NS_IMETHODIMP
-nsFindComponent::Context::SetWrapSearch(PRBool aBool) {
+nsFindComponent::Context::SetWrapSearch(PRBool aBool)
+{
     nsresult rv = NS_OK;
     mWrapSearch = aBool;
     return rv;
 }
 
 NS_IMETHODIMP
-nsFindComponent::Context::GetTargetWebShell( nsIWebShell  * *aWebShell) {
-    nsresult rv = NS_OK;
-    if ( aWebShell ) {
-        *aWebShell = mTargetWebShell;
-        if ( mTargetWebShell ) {
-            mTargetWebShell->AddRef();
-        }
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-    return rv;
+nsFindComponent::Context::GetTargetWindow( nsIDOMWindow * *aWindow)
+{
+	NS_ENSURE_ARG_POINTER(aWindow);
+	NS_IF_ADDREF(*aWindow = mTargetWindow);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFindComponent::Context::GetFindDialog( nsIDOMWindow  * *aDialog) {
-    nsresult rv = NS_OK;
-    if ( aDialog ) {
-        *aDialog = mFindDialog;
-        if ( mFindDialog ) {
-            mFindDialog->AddRef();
-        }
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-    return rv;
+nsFindComponent::Context::GetFindDialog( nsIDOMWindow  * *aDialog)
+{
+	NS_ENSURE_ARG_POINTER(aDialog);
+	NS_IF_ADDREF(*aDialog = mFindDialog);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFindComponent::Context::SetFindDialog( nsIDOMWindow *aDialog ) {
-    nsresult rv = NS_OK;
-    mFindDialog = aDialog;
-    return rv;
+nsFindComponent::Context::SetFindDialog( nsIDOMWindow *aDialog )
+{
+  mFindDialog = aDialog;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFindComponent::Context::ConvertToWeakReference() {
+nsFindComponent::Context::ConvertToWeakReference()
+{
     NS_ASSERTION( mRefCnt >= 1, "Can't convert last reference to a weak one!" );
     this->Release();
     return NS_OK;
 };
 
 NS_IMETHODIMP
-nsFindComponent::Context::ConvertToOwningReference() {
+nsFindComponent::Context::ConvertToOwningReference()
+{
     this->AddRef();
     return NS_OK;
 };
@@ -749,7 +733,7 @@ nsFindComponent::~nsFindComponent()
 }
 
 NS_IMETHODIMP
-nsFindComponent::CreateContext( nsIWebShell *aWebShell, nsIEditor* aEditor,
+nsFindComponent::CreateContext( nsIDOMWindow *aWindow, nsIEditorShell* aEditorShell,
                                 nsISupports **aResult )
 {
 
@@ -764,8 +748,8 @@ nsFindComponent::CreateContext( nsIWebShell *aWebShell, nsIEditor* aEditor,
      // Do the expected AddRef on behalf of caller.
     newContext->AddRef();
 
-    nsresult	rv = newContext->Init( aWebShell,
-                        aEditor,
+    nsresult	rv = newContext->Init( aWindow,
+                        aEditorShell,
                         mLastSearchString,
                         mLastReplaceString,
                         mLastCaseSensitive,
@@ -864,45 +848,27 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
         }
     }
 
-    if ( aContext && GetAppShell() )
+    if (aContext && GetAppShell())
     {
         nsCOMPtr<nsISearchContext> context = do_QueryInterface( aContext, &rv );
-        if ( NS_FAILED( rv ) ) {
+        if (NS_FAILED(rv))
             return rv;
-        }
 
         // Open Find dialog and prompt for search parameters.
         char * urlStr = "chrome://global/content/finddialog.xul";
 
         // We need the parent's nsIDOMWindow...
         // 1. Get topLevelWindow nsIWebShellContainer (chrome included).
-        nsCOMPtr<nsIWebShell> ws;
-        rv = context->GetTargetWebShell( getter_AddRefs( ws ) );
-        if ( NS_SUCCEEDED( rv ) && ws ) {
-            nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-            rv = ws->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
-            // 3. Convert that to an nsIWebShellWindow.
-            nsCOMPtr<nsIWebShellWindow> rootWindow(do_QueryInterface(topLevelWindow));
-            if ( rootWindow ) {
-                // 4. Convert window to nsIDOMWindow.
-                nsCOMPtr<nsIDOMWindow> domWindow;
-                rv = rootWindow->GetDOMWindow(getter_AddRefs( domWindow ) );
-                if ( NS_SUCCEEDED( rv ) && domWindow ) {
-                    // Whew.  Now open dialog with search context as argument.
-                    rv = OpenDialogWithArg( domWindow, context, urlStr );
-                } else {
-                    DEBUG_PRINTF( PR_STDOUT, "%s %d:  Error getting DOM window from web shell, rv=0x%08X\n",
-                                  (char*)__FILE__, (int)__LINE__, (int)rv );
-                }
-            } else {
-                DEBUG_PRINTF( PR_STDOUT, "%s %d:  QueryInterface (for nsIWebShellWindow) failed, rv=0x%08X\n",
-                              (char*)__FILE__, (int)__LINE__, (int)rv );
-            }
-        } else {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: GetTargetWebShell failed, rv=0x%08X\n",
-                          __FILE__, (int)__LINE__, (int)rv );
+        nsCOMPtr<nsIDOMWindow> window;
+        rv = context->GetTargetWindow( getter_AddRefs( window ) );
+        if ( NS_SUCCEEDED( rv ) && window )
+        {
+        	nsCOMPtr<nsIDOMWindow> topWindow;
+        	window->GetTop(getter_AddRefs(topWindow));
+        	if (topWindow)
+						rv = OpenDialogWithArg(topWindow, context, urlStr );
         }
-    } else {
+     } else {
         rv = NS_ERROR_NULL_POINTER;
     }
 
@@ -947,18 +913,17 @@ nsFindComponent::FindNext(nsISupports *aContext, PRBool *aDidFind)
 
 NS_IMETHODIMP
 nsFindComponent::ResetContext( nsISupports *aContext,
-                               nsIWebShell *aNewWebShell,
-                               nsIEditor* aEditor )
+                               nsIDOMWindow *aNewWindow,
+                               nsIEditorShell* aEditorShell )
 {
-    nsresult rv = NS_OK;
-    if ( aContext && aNewWebShell ) {
-        // Pass on the new document to the context.
-        Context *context = (Context*)aContext;
-        context->Reset( aNewWebShell );
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-    return rv;
+	NS_ENSURE_ARG(aContext);
+	NS_ENSURE_ARG(aNewWindow);
+	
+	// Pass on the new document to the context.
+	Context *context = (Context*)aContext;
+	context->Reset(aNewWindow);
+
+	return NS_OK;
 }
 
 // nsFindComponent::Context implementation...
