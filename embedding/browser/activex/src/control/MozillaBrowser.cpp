@@ -609,7 +609,7 @@ HRESULT CMozillaBrowser::CreateBrowser()
 {	
 	NG_TRACE_METHOD(CMozillaBrowser::CreateBrowser);
 
-	if (m_pIWebShell != nsnull)
+	if (m_pIDocShell != nsnull)
 	{
 		NG_ASSERT(0);
 		RETURN_E_UNEXPECTED();
@@ -666,14 +666,16 @@ HRESULT CMozillaBrowser::CreateBrowser()
 	m_pIDocShell->SetAllowPlugins(aAllowPlugins);
 	nsCOMPtr<nsIDocumentLoader> docLoader;
 
-	m_pIDocShell->QueryInterface(NS_GET_IID(nsIWebShell), (void **) &m_pIWebShell);
-
 	// Create the container object
 	m_pWebShellContainer = new CWebShellContainer(this);
 	m_pWebShellContainer->AddRef();
 
+	// Set up the web shell
+	m_pIDocShell->QueryInterface(NS_GET_IID(nsIWebShell), (void **) &m_pIWebShell);
+	NG_ASSERT(m_pIWebShell);
 	m_pIWebShell->SetContainer((nsIWebShellContainer*) m_pWebShellContainer);
 	m_pIWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+
 	if (docLoader)
 	{
 		docLoader->AddObserver(m_pWebShellContainer);
@@ -1327,7 +1329,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 {
 	NG_TRACE_METHOD(CMozillaBrowser::Navigate);
 
-	//Make sure m_pIWebShell is valid
+	//Make sure browser is valid
     if (!IsValid())
 	{
 		NG_ASSERT(0);
@@ -1444,16 +1446,14 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	// TODO find the correct target frame
 
 	// Load the URL	
-	char *tmpCommand = sCommand.ToNewCString();
-	nsresult res = m_pIWebShell->LoadURL(sUrl.GetUnicode()); 
+	nsresult res = NS_ERROR_FAILURE;
 
-/*	, tmpCommand, pIPostData, bModifyHistory);
-	  NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
-                     nsIInputStream* aPostDataStream=nsnull,
-                     PRBool aModifyHistory=PR_TRUE,
-                     nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-                     const PRUint32 aLocalIP=0) = 0;
-*/
+	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(m_pIDocShell);
+	if (spIWebNavigation)
+	{
+		res = spIWebNavigation->LoadURI(sUrl.GetUnicode());
+	}
+
 	return res;
 }
 
@@ -1522,7 +1522,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 		RETURN_E_UNEXPECTED();
 	}
 
-	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(m_pIWebShell);
+	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(m_pIDocShell);
 	if (spIWebNavigation)
 	{
 		spIWebNavigation->Reload(type);
@@ -1542,7 +1542,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Stop()
 		RETURN_E_UNEXPECTED();
 	}
 
-	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(m_pIWebShell);
+	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(m_pIDocShell);
 	if (spIWebNavigation)
 	{
 		spIWebNavigation->Stop();
