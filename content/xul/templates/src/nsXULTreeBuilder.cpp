@@ -795,7 +795,7 @@ nsXULOutlinerBuilder::CycleHeader(const PRUnichar* aColID, nsIDOMElement* aEleme
         mRows.InvalidateCachedRow();
         mBoxObject->Invalidate();
 
-        header->SetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir, PR_FALSE);
+        header->SetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir, PR_TRUE);
 
         // Unset sort attribute(s) on the other columns
         nsCOMPtr<nsIContent> parentContent;
@@ -814,7 +814,7 @@ nsXULOutlinerBuilder::CycleHeader(const PRUnichar* aColID, nsIDOMElement* aEleme
                         childContent->GetTag(*getter_AddRefs(childTag));
                         if (childTag == nsXULAtoms::outlinercol && childContent != header) {
                             childContent->UnsetAttr(kNameSpaceID_None,
-                                                    nsXULAtoms::sortDirection, PR_FALSE);
+                                                    nsXULAtoms::sortDirection, PR_TRUE);
                         }
                     }
                 }
