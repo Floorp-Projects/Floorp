@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# menuhack: Modies the tasks menu to insert XMLterm as a menu item
+# menuhack: Modifies the tasks menu to insert XMLterm as a menu item
 #           Execute in the mozilla "package" directory
 #
 #    NOTE: ** This is temporary hack until the chrome registry becomes

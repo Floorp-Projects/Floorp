@@ -12,10 +12,19 @@
 
   <!-- xmlterm package information -->
   <RDF:Description about="urn:mozilla:package:xmlterm"
-        chrome:displayName="Chatzilla"
-        chrome:author="mozilla.org"
+        chrome:displayName="XMLterm"
+        chrome:author="xmlterm.org"
         chrome:name="xmlterm">
   </RDF:Description>
+
+  <!-- xmlterm overlay information -->
+  <RDF:Seq about="urn:mozilla:overlays">
+    <RDF:li resource="chrome://global/content/tasksOverlay.xul"/>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://global/content/tasksOverlay.xul">
+    <RDF:li>chrome://xmlterm/content/xmltermOverlay.xul</RDF:li>
+  </RDF:Seq>
 
   <!-- xmlterm skin information -->
   <RDF:Description about="urn:mozilla:skin:modern/1.0"

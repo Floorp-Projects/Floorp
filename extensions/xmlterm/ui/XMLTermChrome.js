@@ -12,6 +12,15 @@ function StartupXMLTerm() {
       xmltwin = window.frames[0];
    }
 
+   // Determine telnet URL, if any, from query portion of chrome URL
+   // For security reasons, only the protocol/host portion of the URL should be
+   // used to open a new connection
+   var url = "";
+   if (document.location.search) {
+      url = document.location.search.substr(1);
+   }
+   dump("StartupXMLterm: URL="+url+"\n");
+
    dump("StartupXMLterm: WINDOW.ARGUMENTS="+window.arguments+"\n");
 
    dump("Trying to make an XMLTerm Shell through the component manager...\n");

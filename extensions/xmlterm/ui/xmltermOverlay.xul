@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<!--
+<!DOCTYPE window SYSTEM "chrome://xmlterm/locale/xmltermOverlay.dtd" >
+-->
+
+<!-- This is the overlay that addes "XMLterm" to the (global) task menu. -->
+
+<overlay id="XMLtermTaskMenuID"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script language="JavaScript" src="chrome://xmlterm/content/xmltermOverlay.js"/>
+
+<menupopup id="taskPopup">
+	<menuitem
+        position="7"
+        value="XMLterm"
+        oncommand="toXMLterm()"/>
+</menupopup>
+
+</overlay>
