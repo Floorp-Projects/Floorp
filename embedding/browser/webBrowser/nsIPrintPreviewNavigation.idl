@@ -30,20 +30,22 @@
 interface nsIPrintPreviewNavigation  : nsISupports
 {
 
+  readonly attribute long pageCount;
+
 
   /**
    * Preview the next Page
    *
    * Return - PR_TRUE if success
    */
-  PRBool	NextPage();
+  boolean	NextPage();
   
   /**
    * Preview the previous Page
    *
    * Return - PR_TRUE if success
    */
-  PRBool	PreviousPage();
+  boolean	PreviousPage();
 
   /**
    * Go to a page to preview
@@ -51,16 +53,16 @@ interface nsIPrintPreviewNavigation  : nsISupports
    * aPageNumber - Page to go preview
    * Return - PR_TRUE if success
    */
-  PRBool	GoToPage(PRUInt32 aPageNumber);
+  boolean	GoToPage(unsigned long aPageNumber);
 
 
   /**
    * Skip pages
    *
    * aNumPages - number of pages to skip including the current page. Neg. goes back
-   * Return - PR_TRUE if success
+   * Return - true if success
    */
-  PRBool	SkipPages(PRInt32 aNumPages);
+  boolean	SkipPages(long aNumPages);
 
 
   /**
@@ -68,7 +70,7 @@ interface nsIPrintPreviewNavigation  : nsISupports
    *
    * Return - Number of pages for preview session
    */
-  PRUInt32  PageCount();
+  unsigned long PageCount();
 
 
 
