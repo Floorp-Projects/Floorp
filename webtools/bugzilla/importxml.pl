@@ -33,6 +33,7 @@ $Data::Dumper::Useqq = 1;
 
 require "CGI.pl";
 require "globals.pl";
+$::lockcount = 0;
 
 GetVersionTable();
 ConnectToDatabase();
@@ -61,6 +62,62 @@ sub UnQuoteXMLChars {
     return($_[0]);
 }
 
+sub MailMessage {
+  my $subject = shift @_;
+  my $message = shift @_;
+  my @recipients = @_;
+
+  my $to = join (", ", @recipients);
+  my $header = "To: $to\n";
+  $header.= "From: Bugzilla <bugzilla\@beefaroni>\n";
+  $header.= "Subject: $subject\n\n";
+
+  open(SENDMAIL,
+    "|/usr/lib/sendmail -ODeliveryMode=background -t") ||
+      die "Can't open sendmail";
+  print SENDMAIL $header . $message . "\n";
+  close SENDMAIL;
+
+  Log($subject . " sent to: $to");
+}
+
+
+sub Log {
+    my ($str) = (@_);
+    Lock();
+    open(FID, ">>data/maillog") || die "Can't write to data/maillog";
+    print FID time2str("%D %H:%M", time()) . ": $str\n";
+    close FID;
+    Unlock();
+}
+
+sub Lock {
+    if ($::lockcount <= 0) {
+        $::lockcount = 0;
+        if (!open(LOCKFID, ">>data/maillock")) {
+            mkdir "data", 0777;
+            chmod 0777, "data";
+            open(LOCKFID, ">>data/maillock") || die "Can't open lockfile.";
+        }
+        my $val = flock(LOCKFID,2);
+        if (!$val) { # '2' is magic 'exclusive lock' const.
+            print "Content-type: text/html\n\n";
+            print "Lock failed: $val\n";
+        }
+        chmod 0666, "data/maillock";
+    }
+    $::lockcount++;
+}
+
+sub Unlock {
+    $::lockcount--;
+    if ($::lockcount <= 0) {
+        flock(LOCKFID,8);       # '8' is magic 'unlock' const.
+        close LOCKFID;
+    }
+}
+
+
 my $xml;
 while (<>) {
  $xml .= $_;
@@ -75,8 +132,12 @@ my $maintainer;
 if (defined $tree->[1][0]->{'maintainer'}) {
   $maintainer= $tree->[1][0]->{'maintainer'}; 
 } else {
-  print "Cannot import these bugs because no maintainer for the exporting db is given.\n";
-  print "Aborting.\n";
+  my $subject = "Bug import error: no maintainer";
+  my $message = "Cannot import these bugs because no maintainer for "; 
+  $message .=   "the exporting db is given.\n";
+  $message .= "\n\n$xml";
+  my @to = (Param("maintainer"));
+  MailMessage ($subject, $message, @to);
   exit;
 }
 
@@ -84,9 +145,22 @@ my $exporter;
 if (defined $tree->[1][0]->{'exporter'}) {
   $exporter = $tree->[1][0]->{'exporter'};
 } else {
-  print "Cannot import these bugs because no exporter is given.\n";
-  print "Send notification to $maintainer.\n";
-  print "Aborting.\n";
+  my $subject = "Bug import error: no exporter";
+  my $message = "Cannot import these bugs because no exporter is given.\n";
+  $message .= "\n\n$xml";
+  my @to = (Param("maintainer"), $maintainer);
+  MailMessage ($subject, $message, @to);
+  exit;
+}
+
+my $exporterid = DBname_to_id($exporter);
+if ( ! $exporterid ) {
+  my $subject = "Bug import error: invalid exporter";
+  my $message = "The user <$tree->[1][0]->{'exporter'}> who tried to move\n";
+  $message .= "bugs here does not have an account in this database.\n";
+  $message .= "\n\n$xml";
+  my @to = (Param("maintainer"), $maintainer);
+  MailMessage ($subject, $message, @to);
   exit;
 }
 
@@ -94,37 +168,30 @@ my $urlbase;
 if (defined $tree->[1][0]->{'urlbase'}) {
   $urlbase= $tree->[1][0]->{'urlbase'}; 
 } else {
-  print "Cannot import these bugs because the name of the exporting db was not given.\n";
-  print "Send notification to $maintainer.\n";
-  print "Aborting.\n";
+  my $subject = "Bug import error: invalid exporting database";
+  my $message = "Cannot import these bugs because the name of the exporting db was not given.\n";
+  $message .= "\n\n$xml";
+  my @to = (Param("maintainer"), $maintainer, $exporter);
+  MailMessage ($subject, $message, @to);
   exit;
 }
   
 
-my $exporterid = DBname_to_id($exporter);
-if ( ! $exporterid ) {
-  print "The user <$tree->[1][0]->{'exporter'}> who tried to move bugs here ";
-  print "does not have an account in this database. Aborting.\n";
-  print "Send notification to $maintainer.\n";
-  exit;
-}
-
-
 my $bugqty = ($#{@{$tree}->[1]} +1 -3) / 4;
-print "Importing $bugqty bugs from $urlbase,\n  sent by $exporter.\n";
+my $log = "Importing $bugqty bug(s) from $urlbase,\n  sent by $exporter.\n";
 for (my $k=1 ; $k <= $bugqty ; $k++) {
   my $cur = $k*4;
 
   if (defined $tree->[1][$cur][0]->{'error'}) {
-    print "\nError in bug $tree->[1][$cur][4][2]\@$urlbase:";
-    print " $tree->[1][$cur][0]->{'error'}\n";
+    $log .= "\nError in bug $tree->[1][$cur][4][2]\@$urlbase:";
+    $log .= " $tree->[1][$cur][0]->{'error'}\n";
     if ($tree->[1][$cur][0]->{'error'} =~ /NotFound/) {
-      print "$exporter tried to move bug $tree->[1][$cur][4][2] here";
-      print " but $urlbase reports that this bug does not exist.\n"; 
+      $log .= "$exporter tried to move bug $tree->[1][$cur][4][2] here";
+      $log .= " but $urlbase reports that this bug does not exist.\n"; 
     } elsif ( $tree->[1][$cur][0]->{'error'} =~ /NotPermitted/) {
-      print "$exporter tried to move bug $tree->[1][$cur][4][2] here";
-      print " but $urlbase reports that $exporter does not have access";
-      print " to that bug.\n";
+      $log .= "$exporter tried to move bug $tree->[1][$cur][4][2] here";
+      $log .= " but $urlbase reports that $exporter does not have access";
+      $log .= " to that bug.\n";
     }
     next;
   }
@@ -466,7 +533,6 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
     }
   }
 
-
   $long_description .= "\n" . $comments;
   if ($err) {
     $long_description .= "\n$err\n";
@@ -475,6 +541,9 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) VALUES " .
     "($id, $exporterid, now(), " . SqlQuote($long_description) . ")");
 
-  print "Bug $bug_fields{'bug_id'}\@$urlbase ";
-  print "imported as bug $id.\n";
+  $log .= "Bug $bug_fields{'bug_id'}\@$urlbase imported as bug $id.\n";
 }
+
+my $subject = "Bug import error: no maintainer";
+my @to = ($exporter);
+MailMessage ($subject, $log, @to);
