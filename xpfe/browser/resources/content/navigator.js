@@ -1297,6 +1297,9 @@ function applyTheme(themeName)
   // hacking around it yet again
   pref.SetUnicharPref("general.skins.selectedSkin", themeName.getAttribute("name"));
 
+  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+  observerService.Notify(null, "skin-selected", null);
+
   if (promptService) {
     var dialogTitle = gNavigatorBundle.getString("switchskinstitle");
     var brandName = gBrandBundle.getString("brandShortName");
