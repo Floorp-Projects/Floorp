@@ -52,30 +52,13 @@ function MigrateProfile(override)
 function MigrateAllProfiles()
 {
 	var body = document.getElementById("theTreeBody");
-	dump("I am here 1\n");
-	dump("body: "+body);                 
 
-	var child = body.getChild;
-	dump("I am here 2\n");
-	dump("child: "+child+"\n");
+	var child = body.firstChild;
 
 	while (child)
 	{
-		dump("Inside while loop\n\n");
-		dump("Child : " + child);
-
-		var var3 = child.getAttribute("rowMigrate");
-		dump("var3: "+var3+"\n");
-
 		if (child.getAttribute("rowMigrate") == "true")
 		{
-			dump("Child to be migrated: "+child+"\n");
-
-			var var1 = child.getAttribute("rowName");
-			var var2 = child.getAttribute("rowMigrate");
-			dump("var1: "+var1+"\n");
-			dump("var1: "+var2+"\n");
-
 			MigrateProfile(child);
 		}
 		child = child.nextSibling;
@@ -250,7 +233,8 @@ function openRename()
 }
 
 
-function ConfirmDelete() {
+function ConfirmDelete() 
+{
 	if (!selected)
 	{
 		dump("Select a profile to delete.\n");
@@ -270,6 +254,12 @@ function ConfirmDelete() {
     return win;
 }
 
+
+function ConfirmMigrateAll() 
+{
+    var win = window.openDialog('pmMigrateAll.xul', 'MigrateAll', 'chrome');
+    return win;
+}
 </html:script>
 
 <popup id="deletePopup">
@@ -340,6 +330,7 @@ bookmarks, and stored messages in your personal profile.
 
 <box align="horizontal" style="width: 100%">
   <html:div flex="100%"/>
+  <titledbutton value="Migrate All" class="push" onclick="ConfirmMigrateAll();" />
   <titledbutton value="Start" class="push" onclick="StartCommunicator();" />
   <titledbutton value="Exit" class="push" onclick="ExitApp();" />
   <html:div style="width: 10px"/>
