@@ -71,9 +71,6 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 #define DECODER_NAME_BASE "Unicode Decoder-"
 #define ENCODER_NAME_BASE "Unicode Encoder-"
 
-PRInt32 g_InstanceCount = 0;
-PRInt32 g_LockCount = 0;
-
 NS_IMPL_NSUCONVERTERREGSELF
 
 NS_UCONV_REG_UNREG(nsCP850ToUnicode, "IBM850", "Unicode" , NS_CP850TOUNICODE_CID);

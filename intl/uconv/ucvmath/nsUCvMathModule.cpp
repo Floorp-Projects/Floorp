@@ -72,9 +72,6 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 #define DECODER_NAME_BASE "Unicode Decoder-"
 #define ENCODER_NAME_BASE "Unicode Encoder-"
 
-PRInt32 g_InstanceCount = 0;
-PRInt32 g_LockCount = 0;
-
 NS_IMPL_NSUCONVERTERREGSELF
 
 #if defined(XP_PC) || defined(XP_MAC)

@@ -50,9 +50,6 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 #define DECODER_NAME_BASE "Unicode Decoder-"
 #define ENCODER_NAME_BASE "Unicode Encoder-"
 
-PRInt32 g_InstanceCount = 0;
-PRInt32 g_LockCount = 0;
-
 PRUint16 g_uf0201Mapping[] = {
 #include "jis0201.uf"
 };
