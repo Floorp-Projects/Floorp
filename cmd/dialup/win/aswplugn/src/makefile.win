@@ -92,8 +92,8 @@ CPP_OBJS=.\$(OBJDIR)\winplugn.obj \
 #################################################################
 
 MAKE_OBJ_TYPE=DLL
-LIBRARY_NAME = np$(MOZ_BITS)asw
-PDBFILE	= $(LIBRARY_NAME).pdb
+LIBNAME = np$(MOZ_BITS)asw
+PDBFILE	= $(LIBNAME).pdb
 
 #make link shut up about this...
 LFLAGS=/MACHINE:Ix86 $(LFLAGS)
@@ -122,9 +122,14 @@ DLL_LIBS=mapi32.lib \
 	$(DLL_LIBS)
 !endif
 
+DLL=$(OBJDIR)\$(LIBNAME).dll
+#LIBRARY=$(OBJDIR)\$(LIBNAME).dll
+
 #################################################################
+
+libs:: $(DLL)
 
 !include "$(DEPTH)\config\rules.mak"
 
 install::
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).dll $(DIST)\lib
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBNAME).dll $(DIST)\lib
