@@ -26,61 +26,62 @@
 
 */
 
-#main-box {
-  padding: 1px;
-}
-
-div.title {
-  font-weight: bold;
-  margin: 2px;
-}
-
-box.box-group {
-  padding: 2px;
-}
-box.button-group {
-  padding: 1mm;
-}
-
 /* These rules apply appropriate images to the 'reorder' buttons */
-titledbutton.up {
-  min-width: 1em;
-  list-style-image:url("chrome://sidebar/skin/list-up.gif");
+.up {
+  list-style-image:url("chrome://global/skin/scroll-up.gif");
+  min-width: 0px;
 }
 
-titledbutton.up[disabled="true"] {
-  list-style-image:url("chrome://sidebar/skin/list-up-dis.gif");
+.up[disabled="true"] {
+  list-style-image:url("chrome://global/skin/scroll-up-disabled.gif");
 }
 
-titledbutton.down {
-  min-width: 1em;
-  list-style-image:url("chrome://sidebar/skin/list-down.gif");
+.down {
+  min-width: 0px;
+  list-style-image:url("chrome://global/skin/scroll-down.gif");
 }
 
-titledbutton.down[disabled="true"] {
-  list-style-image:url("chrome://sidebar/skin/list-down-dis.gif");
+.down[disabled="true"] {
+  list-style-image:url("chrome://global/skin/scroll-down-disabled.gif");
 }
 
-treeitem > treerow > treecell > .tree-icon
+treeitem > treerow > treecell > .tree-button
 {
  list-style-image: url("chrome://bookmarks/skin/bookmark-item.gif");
 }
 
-treeitem[haslink="true"] > treerow > treecell > .tree-icon
+treeitem[haslink="true"] > treerow > treecell > .tree-button,
+treeitem[container="true"] > treerow > treecell > .tree-button
 {
  list-style-image: url("chrome://bookmarks/skin/bookmark-folder-closed.gif");
 }
-
-treeitem[container="true"] > treerow > treecell > .tree-icon
+treeitem[selected="true"][haslink="true"] > treerow > treecell > .tree-button,
+treeitem[selected="true"][container="true"] > treerow > treecell > .tree-button
 {
- list-style-image: url("chrome://bookmarks/skin/bookmark-folder-closed.gif");
+ list-style-image: url("chrome://bookmarks/skin/bookmark-folder-closed-sel.gif");
 }
 
-treeitem[container="true"][open="true"] > treerow > treecell > .tree-icon
+treeitem[container="true"][open="true"] > treerow > treecell > .tree-button
 {
  list-style-image: url("chrome://bookmarks/skin/bookmark-folder-open.gif");
+}
+treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > .tree-button
+{
+ list-style-image: url("chrome://bookmarks/skin/bookmark-folder-open-sel.gif");
 }
 
 treeitem > treerow > treecell > .tree-icon > .twisty{
   display: none;
+}
+
+box#header {
+  list-style-image: url("chrome://sidebar/skin/sidebar-icon.gif");
+}
+
+box#header > toolbar > .circle {
+  padding-top: 2px;
+}
+
+box#reorder {
+  text-align: center;
 }

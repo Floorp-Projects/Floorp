@@ -47,6 +47,7 @@ CHROME_SKIN	= \
 		preview.css \
 		sidebar.css \
 		sidebarOverlay.css \
+		sidebar-icon.gif \
 		list-down-dis.gif \
 		list-down.gif \
 		list-up-dis.gif \
