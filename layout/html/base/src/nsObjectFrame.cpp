@@ -53,6 +53,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIDOMElement.h"
+#include "nsContentPolicyUtils.h"
 
 // XXX For temporary paint code
 #include "nsIStyleContext.h"
@@ -861,6 +862,25 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext*          aPresContext,
 #ifdef XP_UNIX
   window->ws_info = nsnull;   //XXX need to figure out what this is. MMP
 #endif
+
+  // Check to see if content-policy wants to veto this
+  PRBool shouldLoad = PR_TRUE; // default permit
+  nsresult rv;
+  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mContent, &rv);
+
+  // For pinkerton: a symphony for string conversion, in 3 parts.
+  nsXPIDLCString urlCString;
+  aURL->GetSpec(getter_Copies(urlCString));
+  nsAutoString url;
+  url.AssignWithConversion((const char *)urlCString);
+  
+  if (NS_SUCCEEDED(rv) &&
+      NS_SUCCEEDED(NS_CheckContentLoadPolicy(nsIContentPolicy::CONTENT_OBJECT,
+                                             url, element, &shouldLoad)) &&
+      !shouldLoad) {
+    return NS_OK;
+  }
+
   return aPluginHost->InstantiateEmbededPlugin(aMimetype, aURL, mInstanceOwner);
 }
 
