@@ -496,7 +496,7 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
     // via the nsIContent interface allows us to support generic nodes
     // that might get added in by DOM calls.
     nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = nsRDFContentUtils::GetElementResource(aElement, getter_AddRefs(resource)))) {
+    if (NS_FAILED(rv = nsRDFContentUtils::GetElementRefResource(aElement, getter_AddRefs(resource)))) {
         NS_ERROR("unable to get element resource");
         return rv;
     }
@@ -1088,27 +1088,14 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 								{
 									// found an attribute which wants to bind its value
 									// to RDF so look it up in the graph
-#if 0
-	// this is commented out due to a bug in nsAutoString's Cut() method
-	// and instead we're doing a little hacky workaround
-									attribValue = attribValue.Cut(0,4);
+									attribValue.Cut(0,4);
 									char *prop = attribValue.ToNewCString();
-#else
-									char *crap = attribValue.ToNewCString();
-									char *prop = &crap[4];
-#endif
 									if (nsnull == prop)	continue;
 									attribValue = "";
 
 									nsCOMPtr<nsIRDFResource>	propRes;
 									rv = gRDFService->GetResource(prop, getter_AddRefs(propRes));
-#if 0
-	// this is commented out due to a bug in nsAutoString's Cut() method
-	// and instead we're doing a little hacky workaround
 									delete [] prop;
-#else
-									delete [] crap;
-#endif
 									if (NS_FAILED(rv))	continue;
 
 									nsCOMPtr<nsIRDFNode>		valueNode;
@@ -2185,7 +2172,7 @@ RDFGenericBuilderImpl::GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aR
         return rv;
     }
 
-    return nsRDFContentUtils::GetElementResource(element, aResource);
+    return nsRDFContentUtils::GetElementRefResource(element, aResource);
 }
 
 

@@ -558,7 +558,7 @@ RDFTreeBuilderImpl::CheckRDFGraphForUpdates(nsIContent *container)
 					{
 						nsCOMPtr<nsIRDFResource>	aRes;
 						PRBool				removeNode = PR_TRUE;
-						if (NS_SUCCEEDED(rv = nsRDFContentUtils::GetElementResource(grandChild, getter_AddRefs(aRes))))
+						if (NS_SUCCEEDED(rv = nsRDFContentUtils::GetElementRefResource(grandChild, getter_AddRefs(aRes))))
 						{
 							PRInt32			innerLoop;
 							for (innerLoop=0; innerLoop < numElements; innerLoop+=2)
@@ -602,7 +602,7 @@ RDFTreeBuilderImpl::CheckRDFGraphForUpdates(nsIContent *container)
 						if (nameSpaceID == kNameSpaceID_XUL)
 						{
 							nsCOMPtr<nsIRDFResource>	aRes;
-							if (NS_SUCCEEDED(rv = nsRDFContentUtils::GetElementResource(grandChild, getter_AddRefs(aRes))))
+							if (NS_SUCCEEDED(rv = nsRDFContentUtils::GetElementRefResource(grandChild, getter_AddRefs(aRes))))
 							{
 								PRBool	equals = PR_FALSE;
 								if (NS_SUCCEEDED(rv = theRes->EqualsNode(aRes, &equals)))
@@ -799,7 +799,7 @@ RDFTreeBuilderImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
 
                 // And now we need the child's resource.
                 nsCOMPtr<nsIRDFResource> target;
-                rv = nsRDFContentUtils::GetElementResource(child, getter_AddRefs(target));
+                rv = nsRDFContentUtils::GetElementRefResource(child, getter_AddRefs(target));
                 NS_ASSERTION(NS_SUCCEEDED(rv) && (target != nsnull), "expected child to have resource");
                 if (NS_FAILED(rv)) return rv;
 
@@ -956,7 +956,7 @@ RDFTreeBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
 
                 // And now we need the child's resource.
                 nsCOMPtr<nsIRDFResource> target;
-                rv = nsRDFContentUtils::GetElementResource(child, getter_AddRefs(target));
+                rv = nsRDFContentUtils::GetElementRefResource(child, getter_AddRefs(target));
                 NS_ASSERTION(NS_SUCCEEDED(rv) && (target != nsnull), "expected child to have resource");
                 if (NS_FAILED(rv)) return rv;
 
@@ -1319,7 +1319,7 @@ RDFTreeBuilderImpl::RemoveWidgetItem(nsIContent* aElement,
         // via the content model, because you're never sure who
         // might've added this stuff in...
         nsCOMPtr<nsIRDFResource> resource;
-        if (NS_FAILED(rv = nsRDFContentUtils::GetElementResource(kid, getter_AddRefs(resource)))) {
+        if (NS_FAILED(rv = nsRDFContentUtils::GetElementRefResource(kid, getter_AddRefs(resource)))) {
             NS_ERROR("severe error retrieving resource");
             return rv;
         }
@@ -1570,7 +1570,7 @@ RDFTreeBuilderImpl::CreateTreeItemCells(nsIContent* aTreeItemElement)
     // via the nsIContent interface allows us to support generic nodes
     // that might get added in by DOM calls.
     nsCOMPtr<nsIRDFResource> treeItemResource;
-    rv = nsRDFContentUtils::GetElementResource(aTreeItemElement, getter_AddRefs(treeItemResource));
+    rv = nsRDFContentUtils::GetElementRefResource(aTreeItemElement, getter_AddRefs(treeItemResource));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get tree item resource");
     if (NS_FAILED(rv)) return rv;
 
