@@ -3042,13 +3042,22 @@ nsDOMClassInfo::ShutDown()
 }
 
 
-static const nsIXPConnectWrappedNative *cached_wrapper;
-static const JSContext *cached_cx;
+static const nsIXPConnectWrappedNative *cached_win_wrapper;
+static const JSContext *cached_win_cx;
+static PRBool cached_win_needs_check = PR_TRUE;
+static const nsIXPConnectWrappedNative *cached_doc_wrapper;
+static const JSContext *cached_doc_cx;
+static PRBool cached_doc_needs_check = PR_TRUE;
+
 
 void InvalidateContextAndWrapperCache()
 {
-  cached_wrapper = nsnull;
-  cached_cx = nsnull;
+  cached_win_wrapper = nsnull;
+  cached_doc_wrapper = nsnull;
+  cached_win_cx = nsnull;
+  cached_doc_cx = nsnull;
+  cached_win_needs_check = PR_TRUE;
+  cached_doc_needs_check = PR_TRUE;
 }
 
 // static helper that determines if a security manager check is needed
@@ -3058,37 +3067,37 @@ void InvalidateContextAndWrapperCache()
 static inline PRBool
 needsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
 {
-  // Cache a pointer to a wrapper and a context and set these pointers
-  // to point to the wrapper and context that doesn't need a security
-  // check, thus we avoid doing all this work to find out if we need
-  // to do the security check, in most cases this check would end up
-  // being two pointer compares.
+  // We cache a pointer to a wrapper and a context that we've last vetted
+  // and cache what the verdict was.
 
   // First, compare the context and wrapper with the cached ones
-  if (cx != cached_cx || wrapper != cached_wrapper) {
-    cached_cx = nsnull;
-    cached_wrapper = nsnull;
+  if (cx == cached_win_cx && wrapper == cached_win_wrapper) {
+    return cached_win_needs_check;
+  }
 
-    nsCOMPtr<nsISupports> native;
-    wrapper->GetNative(getter_AddRefs(native));
+  cached_win_cx = cx;
+  cached_win_wrapper = wrapper;
+  cached_win_needs_check = PR_TRUE;
+  
+  nsCOMPtr<nsISupports> native;
+  wrapper->GetNative(getter_AddRefs(native));
 
-    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
+  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
 
-    if (!sgo) {
-      NS_ERROR("Huh, global not a nsIScriptGlobalObject?");
+  if (!sgo) {
+    NS_ERROR("Huh, global not a nsIScriptGlobalObject?");
 
-      return PR_TRUE;
-    }
+    return PR_TRUE;
+  }
 
-    nsIScriptContext *otherScriptContext = sgo->GetContext();
+  nsIScriptContext *otherScriptContext = sgo->GetContext();
 
-    if (!otherScriptContext) {
-      return PR_TRUE;
-    }
+  if (!otherScriptContext) {
+    return PR_TRUE;
+  }
 
-    if (cx != (JSContext *)otherScriptContext->GetNativeContext()) {
-      return PR_TRUE;
-    }
+  if (cx != (JSContext *)otherScriptContext->GetNativeContext()) {
+    return PR_TRUE;
   }
 
   // Compare the current context and function object
@@ -3117,8 +3126,7 @@ needsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
     }
   }
 
-  cached_cx = cx;
-  cached_wrapper = wrapper;
+  cached_win_needs_check = PR_FALSE;
 
   return PR_FALSE;
 }
@@ -5162,6 +5170,17 @@ nsFormControlListSH::GetNamedItem(nsISupports *aNative,
 static inline PRBool
 documentNeedsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
 {
+  // We cache a pointer to a wrapper and a context that we've last vetted
+  // and cache what the verdict was.
+
+  if (cx == cached_doc_cx && wrapper == cached_doc_wrapper) {
+    return cached_doc_needs_check;
+  }
+
+  cached_doc_cx = cx;
+  cached_doc_wrapper = wrapper;
+  cached_doc_needs_check = PR_TRUE;
+  
   // Get the JS object from the wrapper
   JSObject *wrapper_obj = nsnull;
   wrapper->GetJSObject(&wrapper_obj);
@@ -5204,6 +5223,9 @@ documentNeedsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
         // JS object using the JS API, no need to do security checks
         // then.
 
+        // Since the scope chain is immutable, it's OK to keep
+        // skipping the check
+        cached_doc_needs_check = PR_FALSE;
         return PR_FALSE;
       }
 
@@ -5227,7 +5249,7 @@ documentNeedsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
   // We're called from the same context as the context in the global
   // object in the scope that wrapper came from, no need to do a
   // security check now.
-
+  cached_doc_needs_check = PR_FALSE;
   return PR_FALSE;
 }
 
