@@ -683,7 +683,7 @@ ListCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 	CERTCertList *list;
 	CERTCertListNode *node;
 
-	list = PK11_ListCerts(PK11CertListUnique, pwdata);
+	list = PK11_ListCerts(PK11CertListAll, pwdata);
 	for (node = CERT_LIST_HEAD(list); !CERT_LIST_END(node, list);
 	     node = CERT_LIST_NEXT(node)) 
 	{
