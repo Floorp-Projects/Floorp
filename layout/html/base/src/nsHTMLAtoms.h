@@ -242,6 +242,7 @@ public:
   static nsIAtom* vlink;
   static nsIAtom* vspace;
 
+  static nsIAtom* wbr;
   static nsIAtom* width;
   static nsIAtom* wrap;
 
