@@ -478,7 +478,6 @@ nsSplitterFrame::HandleEvent(nsIPresContext* aPresContext,
          mInner->MouseDrag(aPresContext, aEvent);
     break;
   
-    case NS_MOUSE_RIGHT_BUTTON_UP:
     case NS_MOUSE_LEFT_BUTTON_UP:
          mInner->MouseUp(aPresContext, aEvent);     
     break;
@@ -737,6 +736,15 @@ nsSplitterFrameInner::MouseUp(nsIDOMEvent* aMouseEvent)
 nsresult
 nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
 {  
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aMouseEvent));
+
+  PRUint16 button = 0;
+  mouseEvent->GetButton(&button);
+
+  // only if left button
+  if (button != 1)
+     return NS_OK;
+
   nsBoxLayoutState state(mOuter->mPresContext);
   mCurrentPos = 0;
   mPressed = PR_TRUE;
@@ -855,8 +863,6 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   // us. To do this we just set the size of that list to be 0.
   if (resizeAfter == Grow)
      mChildInfosAfterCount = 0;
-
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aMouseEvent));
 
   nsRect vr(0,0,0,0);
   nsIView *v;
