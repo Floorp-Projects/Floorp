@@ -360,10 +360,10 @@ void CNsIWebNav::ReloadTest(const unsigned long theFlag)
   case nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE:
       strcpy(theFlagName, "LOAD_FLAGS_CHARSET_CHANGE");
       break;
-  case nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | \
-      nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY:
-      strcpy(theFlagName, "nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | "
-                          "nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY");
+  case nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY:
+//      strcpy(theFlagName, "nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | "
+//                          "nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY");
+      strcpy(theFlagName, "cache & proxy");
       break;
   } 
 
