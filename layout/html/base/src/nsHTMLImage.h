@@ -53,7 +53,9 @@ public:
   nsresult SetBaseHREF(const nsString& aBaseHREF);
 
   void GetURL(nsString& aResult) {
-    aResult = *mURLSpec;
+    if (nsnull != mURLSpec) {
+      aResult = *mURLSpec;
+    }
   }
 
   void GetBaseHREF(nsString& aResult) {
