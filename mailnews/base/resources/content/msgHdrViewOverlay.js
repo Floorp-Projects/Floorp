@@ -134,7 +134,7 @@ function createHeaderEntry(prefix, headerListInfo)
   this.textNode = document.getElementById(partialIDName + 'Value');
   this.isValid = false;
 
-  if (headerListInfo.useToggle != undefined)
+  if ("useToggle" in headerListInfo)
   {
     this.useToggle = headerListInfo.useToggle;
     if (this.useToggle) // find the toggle icon in the document
@@ -146,12 +146,12 @@ function createHeaderEntry(prefix, headerListInfo)
   else
    this.useToggle = false;
 
-  if (headerListInfo.useShortView != undefined)
+  if ("useShortView" in headerListInfo)
     this.useShortView = headerListInfo.useShortView;
   else
     this.useShortView = false;
 
-  if (headerListInfo.outputFunction != undefined)
+  if ("outputFunction" in headerListInfo)
     this.outputFunction = headerListInfo.outputFunction;
   else
     this.outputFunction = updateHeaderValue;
@@ -167,7 +167,7 @@ function initializeHeaderViewTables()
       new createHeaderEntry('collapsed', gCollapsedHeaderList[index]);
   }
 
-  for (var index = 0; index < gExpandedHeaderList.length; index++)
+  for (index = 0; index < gExpandedHeaderList.length; index++)
   {
     var headerName = gExpandedHeaderList[index].name;
     gExpandedHeaderView[headerName] = new createHeaderEntry('expanded', gExpandedHeaderList[index]);
@@ -377,8 +377,8 @@ function updateHeaderViews()
 
 function ToggleHeaderView ()
 {
-  expandedNode = document.getElementById("expandedHeaderView");
-  collapsedNode = document.getElementById("collapsedHeaderView");
+  var expandedNode = document.getElementById("expandedHeaderView");
+  var collapsedNode = document.getElementById("collapsedHeaderView");
 
   if (gCollapsedHeaderViewMode)
   {          
