@@ -180,7 +180,8 @@ public:
         // servers.
         if ((info->mProxyHost.get() || mProxyHost.get()) &&
             !mUsingSSL &&
-            PL_strcasecmp(mProxyType, "socks") != 0) {
+            PL_strcasecmp(mProxyType, "socks") != 0 &&
+            PL_strcasecmp(mProxyType, "socks4") != 0) {
             return (!PL_strcasecmp(info->mProxyHost, mProxyHost) &&
                     !PL_strcasecmp(info->mProxyType, mProxyType) &&
                     info->mProxyPort == mProxyPort &&
