@@ -90,8 +90,6 @@ private:
   nsresult FindItemWithName(const PRUnichar *aName,
                             nsIDocShellTreeItem **aFoundItem);
 
-  nsresult InitializeDocshell(nsIWebBrowserChrome *aChromeWindow);
-
   static JSContext *GetJSContextFromWindow(nsIDOMWindow *aWindow);
   static JSContext *GetJSContextFromCallStack();
   static nsresult   URIfromURL(const char *aURL,

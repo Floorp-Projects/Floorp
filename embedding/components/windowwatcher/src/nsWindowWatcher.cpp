@@ -1314,43 +1314,6 @@ nsWindowWatcher::FindItemWithName(
   return rv;
 }
 
-/*   Force docshell initialization. This will allow, for instance, script
-   executed immediately following window.open to access the docshell
-   (which can be something as straightforward as newWindow.document.write,
-   or something more indirect, such as window.resizeTo.)
-     This step is not necessary in Mozilla, since its content docshells
-   are loaded during XUL chrome docshell initialization (though it may
-   be desirable; to be determined). But this step is important for probably
-   all embedding apps. */
-/* Note this is not in use at time of writing (7 Nov 01), its functionality
-   replaced by lazy instantiation of the content viewer in nsDocShell
-   and by the DOM document in nsGlobalWindow. This method to be removed
-   when we're quite sure the lazy way will work. */
-nsresult
-nsWindowWatcher::InitializeDocshell(nsIWebBrowserChrome *aBrowserChrome)
-{
-return NS_OK;
-  nsCOMPtr<nsIDocShell> docshell;
-
-  // embedded window path: docshell corresponding to the primary content
-  nsCOMPtr<nsIDOMWindow> browserWindow(do_GetInterface(aBrowserChrome));
-  if (browserWindow) {
-    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(browserWindow));
-    if (sgo)
-      sgo->GetDocShell(getter_AddRefs(docshell));
-  }
-  // XUL Window path (should we decide this to be useful)
-  // XXX: teach nsContentTreeOwner to give up its nsIDocShell
-  if (!docshell) {
-  }
-
-  // asking mozilla's docshell for its document will force it to generate one
-  if (docshell)
-    nsCOMPtr<nsIDOMDocument> domdoc(do_GetInterface(docshell));
-
-  return NS_OK;
-}
-
 /* Fetch the nsIDOMWindow corresponding to the given nsIDocShellTreeItem.
    This forces the creation of a script context, if one has not already
    been created. Note it also sets the window's opener to the parent,

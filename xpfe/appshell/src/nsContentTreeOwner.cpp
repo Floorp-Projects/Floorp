@@ -394,9 +394,9 @@ NS_IMETHODIMP nsContentTreeOwner::SetWebBrowser(nsIWebBrowser* aWebBrowser)
 NS_IMETHODIMP nsContentTreeOwner::GetWebBrowser(nsIWebBrowser** aWebBrowser)
 {
   // Unimplemented, and probably will remain so; xpfe windows have docshells,
-  // not webbrowsers. Note that we're relying on this to differentiate
-  // embedded instances from Mozilla in nsWindowWatcher::InitializeDocshell.
-  // (Don't let me stop you, but keep that in mind.)
+  // not webbrowsers.
+  NS_ENSURE_ARG_POINTER(aWebBrowser);
+  *aWebBrowser = 0;
   return NS_ERROR_FAILURE;
 }
 
