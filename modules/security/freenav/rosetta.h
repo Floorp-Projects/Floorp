@@ -142,7 +142,7 @@
 #define HG42420
 #define HG42933
 #define HG52965
-#define HG66663
+#define HG66663 ,XP_Bool x1, XP_Bool x2
 #define HG66664
 #define HG65243
 #define HG00282
@@ -669,6 +669,12 @@
 
 #define HG43287
 #define HG43288
+
+
+#define HG91827
+#define HG92380
+#define HG28336
+
 
 
 
