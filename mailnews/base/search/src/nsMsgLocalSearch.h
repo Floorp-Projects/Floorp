@@ -35,11 +35,15 @@ class nsMsgMailboxParser;
 class nsIMsgSearchScopeTerm;
 class nsIMsgFolder;
 
-class nsMsgSearchOfflineMail : public nsMsgSearchAdapter
+class nsMsgSearchOfflineMail : public nsMsgSearchAdapter, public nsIUrlListener
 {
 public:
 	nsMsgSearchOfflineMail (nsIMsgSearchScopeTerm*, nsISupportsArray *);
 	virtual ~nsMsgSearchOfflineMail ();
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_DECL_NSIURLLISTENER;
 
   NS_IMETHOD ValidateTerms ();
   NS_IMETHOD Search (PRBool *aDone);
@@ -77,15 +81,6 @@ protected:
 	nsIMsgDatabase *m_db;
 	nsCOMPtr<nsISimpleEnumerator> m_listContext;
 
-	enum
-	{
-		kOpenFolderState,
-		kParseMoreState,
-		kCloseFolderState,
-		kDoneState
-	};
-	int m_parserState;
-	nsMsgMailboxParser *m_mailboxParser;
 	void CleanUpScope();
 };
 

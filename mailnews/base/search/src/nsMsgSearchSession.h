@@ -49,6 +49,7 @@ protected:
   nsCOMPtr <nsIMsgWindow> m_window;
 
 	nsresult Initialize();
+  nsresult StartTimer();
 	nsresult TimeSlice (PRBool *aDone);
 	nsMsgSearchScopeTerm *GetRunningScope();
 	void			StopRunning();
@@ -84,6 +85,7 @@ protected:
 	PRBool m_handlingError;
   nsCStringArray m_urlQueue;
   nsCOMPtr <nsITimer> m_backgroundTimer;
+  PRBool m_searchPaused;
 
 
 };

@@ -570,9 +570,17 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 
 
 //run the url to parse the mailbox
-nsresult nsMsgLocalMailFolder::ParseFolder(nsIMsgWindow *aMsgWindow, nsFileSpec& path)
+NS_IMETHODIMP nsMsgLocalMailFolder::ParseFolder(nsIMsgWindow *aMsgWindow, nsIUrlListener *listener)
 {
 	nsresult rv = NS_OK;
+	nsCOMPtr<nsIFileSpec> pathSpec;
+	rv = GetPath(getter_AddRefs(pathSpec));
+	if (NS_FAILED(rv)) return rv;
+
+	nsFileSpec path;
+	rv = pathSpec->GetFileSpec(&path);
+	if (NS_FAILED(rv)) return rv;
+
 
 	NS_WITH_SERVICE(nsIMailboxService, mailboxService,
                   kMailboxServiceCID, &rv);
@@ -582,7 +590,7 @@ nsresult nsMsgLocalMailFolder::ParseFolder(nsIMsgWindow *aMsgWindow, nsFileSpec&
 	if(!parser)
 		return NS_ERROR_OUT_OF_MEMORY;
   
-	rv = mailboxService->ParseMailbox(aMsgWindow, path, parser, this, nsnull);
+	rv = mailboxService->ParseMailbox(aMsgWindow, path, parser, listener, nsnull);
 
 	return rv;
 }
@@ -729,10 +737,6 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 		rv = GetPath(getter_AddRefs(pathSpec));
 		if (NS_FAILED(rv)) return rv;
 
-		nsFileSpec path;
-		rv = pathSpec->GetFileSpec(&path);
-		if (NS_FAILED(rv)) return rv;
-
 		nsresult folderOpen = NS_OK;
 		nsCOMPtr<nsIMsgDatabase> mailDBFactory;
 
@@ -780,7 +784,7 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 			// if we have to regenerate the folder, run the parser url.
 			if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
 			{
-				if(NS_FAILED(rv = ParseFolder(aMsgWindow, path)))
+				if(NS_FAILED(rv = ParseFolder(aMsgWindow, this)))
 					return rv;
 				else
 					return NS_ERROR_NOT_INITIALIZED;
@@ -971,12 +975,47 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName)
 	}
 	return rv;
 }
+#ifdef DEBUG_bienvenu
+  nsIMsgSearchSession *saveSearchSession;
+#endif
 
 NS_IMETHODIMP nsMsgLocalMailFolder::Compact()
 {
     // **** jefft -- needs to provide nsIMsgWindow for the compact status
     // update; come back later
 
+#ifdef DEBUG_bienvenu
+  nsCOMPtr<nsIMsgSearchSession> searchSession;
+  nsresult ret = nsComponentManager::CreateInstance(NS_MSGSEARCHSESSION_PROGID,
+                                          nsnull,
+                                          NS_GET_IID(nsIMsgSearchSession),
+                                          getter_AddRefs(searchSession));
+  if (searchSession)
+  {
+    nsCOMPtr <nsIMsgSearchValue> searchValue;
+    nsCOMPtr <nsIMsgSearchTerm> searchTerm;
+    nsCOMPtr<nsISupportsArray> searchTerms;
+    nsString valStr;
+    valStr.AssignWithConversion("test");
+    ret = NS_NewISupportsArray(getter_AddRefs(searchTerms));
+
+    searchSession->CreateSearchTerm(getter_AddRefs(searchTerm));
+    searchTerm->GetValue(getter_AddRefs(searchValue));
+    searchValue->SetStr(valStr.GetUnicode());
+    searchValue->SetAttrib(nsMsgSearchAttrib::Body);
+    searchTerm->SetAttrib(nsMsgSearchAttrib::Body);
+    searchTerm->SetOp(nsMsgSearchOp::Contains);
+    searchTerm->SetBooleanAnd(PR_FALSE);
+    searchTerm->SetValue(searchValue); // I guess this is right...
+    searchTerms->AppendElement(searchTerm);
+    searchSession->AddSearchTermArray(searchTerms);
+    searchSession->AddScopeTerm(nsMsgSearchScope::MailFolder, this);
+    saveSearchSession = searchSession;
+    NS_ADDREF(saveSearchSession);
+    searchSession->Search(nsnull);
+    return NS_OK;
+  }
+#endif
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIMsgDatabase> db;
   nsCOMPtr<nsIDBFolderInfo> folderInfo;

@@ -44,6 +44,7 @@ nsMsgSearchSession::nsMsgSearchSession()
 //	m_calledStartingUpdate = PR_FALSE;
 	m_handlingError = PR_FALSE;
 	m_pSearchParam = nsnull;
+  m_searchPaused = PR_FALSE;
 
 }
 
@@ -291,6 +292,29 @@ NS_IMETHODIMP nsMsgSearchSession::InterruptSearch()
     return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgSearchSession::PauseSearch()
+{
+  if (m_backgroundTimer)
+  {
+    m_backgroundTimer->Cancel();
+    m_searchPaused = PR_TRUE;
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsMsgSearchSession::ResumeSearch()
+{
+  if (m_searchPaused)
+  {
+    m_searchPaused = PR_FALSE;
+    return StartTimer();
+  }
+  else
+    return NS_ERROR_FAILURE;
+}
+
 /* [noscript] readonly attribute voidStar searchParam; */
 NS_IMETHODIMP nsMsgSearchSession::GetSearchParam(void * *aSearchParam)
 {
@@ -313,6 +337,20 @@ NS_IMETHODIMP nsMsgSearchSession::SetSearchParam(nsMsgSearchType *type, void * p
 NS_IMETHODIMP nsMsgSearchSession::GetNumResults(PRInt32 *aNumResults)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgSearchSession::SetWindow(nsIMsgWindow *aWindow)
+{
+  m_window = aWindow;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgSearchSession::GetWindow(nsIMsgWindow **aWindowPtr)
+{
+  NS_ENSURE_ARG(aWindowPtr);
+  *aWindowPtr = m_window;
+  NS_IF_ADDREF(*aWindowPtr);
+  return NS_OK;
 }
 
 /* void OnStartRunningUrl (in nsIURI url); */
@@ -456,41 +494,26 @@ nsresult nsMsgSearchSession::AddUrl(const char *url)
   PRBool done;
   searchSession->TimeSlice(&done);
   if (done)
+  {
     aTimer->Cancel();
+    searchSession->m_backgroundTimer = nsnull;
+  }
 }
 
+nsresult nsMsgSearchSession::StartTimer()
+{
+  nsresult err;
+  PRBool done;
+
+  m_backgroundTimer = do_CreateInstance("component://netscape/timer", &err);
+  m_backgroundTimer->Init(TimerCallback, (void *) this, 0, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
+  // ### start meteors?
+  return TimeSlice(&done);
+}
 
 nsresult nsMsgSearchSession::SearchWOUrls ()
 {
-    nsresult err = NS_OK;
-    PRBool done;
-
-    m_backgroundTimer = do_CreateInstance("component://netscape/timer", &err);
-    m_backgroundTimer->Init(TimerCallback, (void *) this, 0, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
-    // ### start meteors?
-    err = TimeSlice(&done);
-#if 0
-	if (!m_urlStruct)
-		m_urlStruct = NET_CreateURLStruct ("search-libmsg:", NET_DONT_RELOAD);
-
-	if (m_urlStruct)
-	{
-		// Set the internal_url flag so just in case someone else happens to have
-		// a search-libmsg URL, it won't fire my code, and surely crash.
-		m_urlStruct->internal_url = TRUE;
-
-		// Initiate the asynchronous search
-		int getUrlErr = m_pane->GetURL (m_urlStruct, FALSE);
-		if (getUrlErr)
-			err = (MSG_SearchError) -1; //###phil impedance mismatch
-		else 
-			if (!XP_STRNCMP(m_urlStruct->address, "news:", 5) || !XP_STRNCMP(m_urlStruct->address, "snews:", 6))
-				BeginCylonMode();
-	}
-	else
-		err = NS_ERROR_OUT_OF_MEMORY;
-#endif
-	return err;
+  return StartTimer();
 }
 
 NS_IMETHODIMP nsMsgSearchSession::GetRunningAdapter (nsIMsgSearchAdapter **aSearchAdapter)

@@ -89,7 +89,15 @@ interface nsIMsgSearchSession :  nsISupports {
     
     void Search(in nsIMsgWindow aWindow);
     void InterruptSearch();
-    
+
+	// these two methods are used when the search session is using
+	// a timer to do local search, and the search adapter needs
+	// to run a url (e.g., to reparse a local folder) and wants to
+	// pause the timer while running the url. This will fail if the
+	// current adapter is not using a timer.
+    void PauseSearch();
+	void ResumeSearch();
+
     [noscript] readonly attribute voidPtr searchParam;
     readonly attribute nsMsgSearchType searchType;
     
@@ -101,6 +109,7 @@ interface nsIMsgSearchSession :  nsISupports {
 	void AddSearchHit(in nsIMsgDBHdr header, in nsIMsgFolder folder);
 
     readonly attribute long numResults;
+	attribute nsIMsgWindow window;
     
     /* these longs are all actually of type nsMsgSearchBooleanOp */
     const long BooleanOR=0;

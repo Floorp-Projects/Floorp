@@ -143,7 +143,6 @@ public:
 
 
 protected:
-	nsresult ParseFolder(nsIMsgWindow *aMsgWindow, nsFileSpec& path);
 	nsresult CreateSubFolders(nsFileSpec &path);
 	nsresult AddDirectorySeparator(nsFileSpec &path);
 	nsresult GetDatabase(nsIMsgWindow *aMsgWindow);

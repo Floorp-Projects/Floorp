@@ -35,6 +35,8 @@
 
 #include "nsMsgBaseCID.h"
 #include "nsMsgSearchValue.h"
+#include "nsIMsgLocalMailFolder.h"
+#include "nsIMsgWindow.h"
 
 static NS_DEFINE_CID(kValidityManagerCID, NS_MSGSEARCHVALIDITYMANAGER_CID);
 
@@ -237,6 +239,7 @@ PRInt32 nsMsgSearchBoolExpression::GenerateEncodeStr(nsCString * buffer)
 
 //---------------- Adapter class for searching offline IMAP folders -----------
 //-----------------------------------------------------------------------------
+
 nsMsgSearchIMAPOfflineMail::nsMsgSearchIMAPOfflineMail (nsIMsgSearchScopeTerm *scope, nsISupportsArray  *termList) : nsMsgSearchOfflineMail(scope, termList)
 { 
 
@@ -292,13 +295,12 @@ nsresult nsMsgSearchIMAPOfflineMail::ValidateTerms ()
 //-----------------------------------------------------------------------------
 
 
+NS_IMPL_ISUPPORTS_INHERITED(nsMsgSearchOfflineMail, nsMsgSearchAdapter, nsIUrlListener)
+
 nsMsgSearchOfflineMail::nsMsgSearchOfflineMail (nsIMsgSearchScopeTerm *scope, nsISupportsArray *termList) : nsMsgSearchAdapter (scope, termList)
 {
     m_db = nsnull;
     m_listContext = nsnull;
-
-    m_mailboxParser = nsnull;
-    m_parserState = kOpenFolderState;
 }
 
 
@@ -373,26 +375,22 @@ nsresult nsMsgSearchOfflineMail::OpenSummaryFile ()
             break;
         case NS_MSG_ERROR_FOLDER_SUMMARY_MISSING:
         case NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE:
-#ifdef HANDLE_OUT_OF_DATE_SUMMARY_FILES  // which we don't yet.
-            m_mailboxParser = new nsMsgMailboxParser (m_scope->GetMailPath());
-            if (!m_mailboxParser)
-                err = NS_ERROR_OUT_OF_MEMORY;
-            else
+          {
+            nsCOMPtr<nsIMsgLocalMailFolder> localFolder = do_QueryInterface(scopeFolder, &err);
+            if (NS_SUCCEEDED(err) && localFolder)
             {
-                // Remove the old summary file so maildb::open can create a new one
-                XP_FileRemove (m_scope->GetMailPath(), xpMailFolderSummary);
-                dbErr = MailDB::Open (m_scope->GetMailPath(), PR_TRUE /*create?*/, &mailDb, PR_TRUE /*upgrading?*/);
-                NS_ASSERTION(mailDb, "couldn't opn DB");
+              nsCOMPtr<nsIMsgSearchSession> searchSession;
+              m_scope->GetSearchSession(getter_AddRefs(searchSession));
+              if (searchSession)
+              {
+                nsCOMPtr <nsIMsgWindow> searchWindow;
 
-                // Initialize the async parser to rebuild the summary file
-                m_parserState = kOpenFolderState;
-                m_mailboxParser->SetContext (m_scope->m_frame->GetContext());
-                m_mailboxParser->SetDB (mailDb);
-                m_mailboxParser->SetFolder(m_scope->m_folder);
-                m_mailboxParser->SetIgnoreNonMailFolder(PR_TRUE);
-                err = NS_OK;
+                searchSession->GetWindow(getter_AddRefs(searchWindow));
+                searchSession->PauseSearch();
+                localFolder->ParseFolder(searchWindow, this);
+              }
             }
-#endif // HANDLE_OUT_OF_DATE_SUMMARY_FILES
+          }
             break;
         default:
         {
@@ -656,19 +654,14 @@ nsresult nsMsgSearchOfflineMail::Search (PRBool *aDone)
 	nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
 
   *aDone = PR_FALSE;
-  // If we need to parse the mailbox before searching it, give another time
-  // slice to the parser
-  if (m_mailboxParser)
-    err = BuildSummaryFile ();
-  else
-    // Try to open the DB lazily. This will set up a parser if one is required
-    if (!m_db)
-      err = OpenSummaryFile ();
+  // Try to open the DB lazily. This will set up a parser if one is required
+  if (!m_db)
+    err = OpenSummaryFile ();
+  if (!m_db)  // must be reparsing.
+    return err;
   // Reparsing is unnecessary or completed
-  if (m_mailboxParser == nsnull && NS_SUCCEEDED(err))
+  if (NS_SUCCEEDED(err))
   {
-    NS_ASSERTION (m_db, "unable to open db for search");
-
     if (!m_listContext)
       dbErr = m_db->EnumerateMessages (getter_AddRefs(m_listContext));
     if (NS_SUCCEEDED(dbErr) && m_listContext)
@@ -753,12 +746,24 @@ nsMsgSearchOfflineMail::Abort ()
         m_db->Close(PR_TRUE /* commit in case we downloaded new headers */);
     m_db = nsnull;
 
-    // If we got aborted in the middle of parsing a mail folder, we should
-    // free the parser object (esp. so it releases the folderInfo's semaphore)
-    if (m_mailboxParser)
-        delete m_mailboxParser;
-    m_mailboxParser = nsnull;
 
     return nsMsgSearchAdapter::Abort ();
+}
+
+/* void OnStartRunningUrl (in nsIURI url); */
+NS_IMETHODIMP nsMsgSearchOfflineMail::OnStartRunningUrl(nsIURI *url)
+{
+    return NS_OK;
+}
+
+/* void OnStopRunningUrl (in nsIURI url, in nsresult aExitCode); */
+NS_IMETHODIMP nsMsgSearchOfflineMail::OnStopRunningUrl(nsIURI *url, nsresult aExitCode)
+{
+  nsCOMPtr<nsIMsgSearchSession> searchSession;
+  m_scope->GetSearchSession(getter_AddRefs(searchSession));
+  if (searchSession)
+    searchSession->ResumeSearch();
+
+  return NS_OK;
 }
 
