@@ -5236,7 +5236,7 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
   for (PRUint32 i=0; i < cnt; ++i)
   {
     nsCOMPtr<nsISupports> element = dont_AddRef(mRangeArray->ElementAt(i));
-    nsCOMPtr<nsIDOMRange> newrange,	range = do_QueryInterface(element);
+    nsCOMPtr<nsIDOMRange> range = do_QueryInterface(element);
     if (!range)
       return NS_ERROR_UNEXPECTED;
 /*      
@@ -5245,6 +5245,7 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
     // children are all selected to be selected itself.  This is to help the user get 
     // what they expect when copying html.
     
+    nsCOMPtr<nsIDOMRange> newrange;
     rv = range->CloneRange(getter_AddRefs(newrange));
     if (NS_FAILED(rv)) return rv;
     if (!newrange) return NS_ERROR_NULL_POINTER;
@@ -5255,7 +5256,7 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
     nsCOMPtr<nsIContent> content (do_QueryInterface(aNode));
     if (content)
     {
-      if (IsNodeIntersectsRange(content, newrange))
+      if (IsNodeIntersectsRange(content, range))
       {
         // If recursive, then we're done -- IsNodeIntersectsRange does the right thing
         if (aRecursive)
@@ -5267,7 +5268,7 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
         // else not recursive -- node itself must be contained,
         // so we need to do more checking
         PRBool nodeStartsBeforeRange, nodeEndsAfterRange;
-        if (NS_SUCCEEDED(CompareNodeToRange(content, newrange,
+        if (NS_SUCCEEDED(CompareNodeToRange(content, range,
                                             &nodeStartsBeforeRange,
                                             &nodeEndsAfterRange)))
         {
