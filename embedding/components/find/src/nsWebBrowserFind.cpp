@@ -63,6 +63,12 @@
 #include "nsXPIDLString.h"
 #endif
 
+#ifdef XP_MACOSX
+#include "nsAutoPtr.h"
+#include <Scrap.h>
+#endif
+
+
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 //*****************************************************************************
@@ -252,6 +258,25 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
 NS_IMETHODIMP nsWebBrowserFind::GetSearchString(PRUnichar * *aSearchString)
 {
     NS_ENSURE_ARG_POINTER(aSearchString);
+#ifdef XP_MACOSX
+    OSStatus err;
+    ScrapRef scrap;
+    err = ::GetScrapByName(kScrapFindScrap, kScrapGetNamedScrap, &scrap);
+    if (err == noErr) {
+        Size byteCount;
+        err = ::GetScrapFlavorSize(scrap, kScrapFlavorTypeUnicode, &byteCount);
+        if (err == noErr) {
+            NS_ASSERTION(byteCount%2 == 0, "byteCount not a multiple of 2");
+            nsAutoArrayPtr<PRUnichar> buffer(new PRUnichar[byteCount/2 + 1]);
+            NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
+            err = ::GetScrapFlavorData(scrap, kScrapFlavorTypeUnicode, &byteCount, buffer.get());
+            if (err == noErr) {
+                buffer[byteCount/2] = PRUnichar('\0');
+                mSearchString.Assign(buffer);
+            }
+        }
+    }    
+#endif
     *aSearchString = ToNewUnicode(mSearchString);
     return NS_OK;
 }
@@ -259,6 +284,15 @@ NS_IMETHODIMP nsWebBrowserFind::GetSearchString(PRUnichar * *aSearchString)
 NS_IMETHODIMP nsWebBrowserFind::SetSearchString(const PRUnichar * aSearchString)
 {
     mSearchString.Assign(aSearchString);
+#ifdef XP_MACOSX
+    OSStatus err;
+    ScrapRef scrap;
+    err = ::GetScrapByName(kScrapFindScrap, kScrapClearNamedScrap, &scrap);
+    if (err == noErr) {
+        ::PutScrapFlavor(scrap, kScrapFlavorTypeUnicode, kScrapFlavorMaskNone,
+        (mSearchString.Length()*2), aSearchString);
+    }
+#endif
     return NS_OK;
 }
 
