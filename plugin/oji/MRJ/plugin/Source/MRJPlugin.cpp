@@ -486,11 +486,12 @@ NS_METHOD MRJPlugin::SpendTime(PRUint32 timeMillis)
 {
 	nsresult result = NS_OK;
 	// Only do this if there aren't any plugin instances.
-	// if (true || MRJPluginInstance::getInstances() == NULL) {
-	result = StartupJVM();
-	if (result == NS_OK)
-		mSession->idle(timeMillis);
-	// }
+	if (MRJPluginInstance::getInstances() == NULL) {
+	    if (mSession == NULL)
+        	result = StartupJVM();
+    	if (mSession != NULL)
+    		mSession->idle(timeMillis);
+	}
 	return result;
 }
 
@@ -758,18 +759,17 @@ NS_METHOD MRJPluginInstance::HandleEvent(nsPluginEvent* pluginEvent, PRBool* eve
 	if (pluginEvent != NULL) {
 		EventRecord* event = pluginEvent->event;
 
+#if 0
 		// Check for clipping changes.
 		if (event->what == nsPluginEventType_ClippingChangedEvent) {
 			mContext->setClipping(RgnHandle(event->message));
 			return NS_OK;
 		}
-		
-		// Check for coordinate system changes.
-		// visibilityChanged = mContext->inspectWindow();
-		// assume the browser will generate the correct update events?
-		if (mContext->inspectWindow() && mWindowlessPeer != NULL)
-			mWindowlessPeer->ForceRedraw();
-		
+#else
+		// Check for coordinate/clipping changes.
+		inspectInstance();
+#endif
+	
 		if (event->what == nullEvent) {
 			// Give MRJ another quantum of time.
 			mSession->idle(kDefaultJMTime);	// now SpendTime does this.
@@ -832,6 +832,9 @@ NS_METHOD MRJPluginInstance::GetValue(nsPluginInstanceVariable variable, void *v
 	case nsPluginInstanceVariable_TransparentBool:
 		*(PRBool*)value = PR_FALSE;
 		break;
+	case nsPluginInstanceVariable_DoCacheBool:
+		*(PRBool*)value = PR_FALSE;
+		break;
 	}
 	return NS_OK;
 }
@@ -890,4 +893,10 @@ MRJContext* MRJPluginInstance::getContext()
 MRJSession* MRJPluginInstance::getSession()
 {
 	return mSession;
+}
+
+void MRJPluginInstance::inspectInstance()
+{
+    if (mContext != NULL && mContext->inspectWindow() && mWindowlessPeer != NULL)
+        mWindowlessPeer->ForceRedraw();
 }

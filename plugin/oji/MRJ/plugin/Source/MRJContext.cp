@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <Appearance.h>
 #include <Gestalt.h>
+#include <TextCommon.h>
 
 #include "MRJSession.h"
 #include "MRJContext.h"
@@ -45,8 +46,9 @@
 
 #include "nsIPluginManager2.h"
 #include "nsIPluginInstancePeer.h"
-#include "nsIPluginTagInfo2.h"
 #include "nsIJVMPluginTagInfo.h"
+
+#include <string>
 
 extern nsIPluginManager* thePluginManager;
 extern nsIPluginManager2* thePluginManager2;
@@ -72,26 +74,26 @@ void LocalPort::Exit()
 		::SetPort(fOldPort);
 }
 
+static RgnHandle NewEmptyRgn()
+{
+    RgnHandle region = ::NewRgn();
+    if (region != NULL) ::SetEmptyRgn(region);
+    return region;
+}
+
 MRJContext::MRJContext(MRJSession* session, MRJPluginInstance* instance)
 	:	mPluginInstance(instance), mSession(session), mSessionRef(session->getSessionRef()), mPeer(NULL),
 		mLocator(NULL), mContext(NULL), mViewer(NULL), mViewerFrame(NULL), mIsActive(false),
-		mPluginWindow(NULL), mPluginClipping(NULL),	mPluginPort(NULL), mCodeBase(NULL), mDocumentBase(NULL), mPage(NULL)
+		mPluginWindow(NULL), mCachedClipping(NULL), mPluginClipping(NULL), mPluginPort(NULL),
+		mDocumentBase(NULL), mAppletHTML(NULL), mPage(NULL)
 {
 	instance->GetPeer(&mPeer);
 	
 	// we cache attributes of the window, and periodically notice when they change.
-    mCache.window = NULL; 	/* Platform specific window handle */
-    mCache.x = -1;			/* Position of top left corner relative */
-    mCache.y = -1;			/*	to a netscape page.					*/
-    mCache.width = 0;		/* Maximum window size */
-    mCache.height = 0;
-    ::SetRect((Rect*)&mCache.clipRect, 0, 0, 0, 0);
-    						/* Clipping rectangle in port coordinates */
-							/* Used by MAC only.			  */
-    mCache.type = nsPluginWindowType_Drawable;
-    						/* Is this a window or a drawable? */
-
-	mPluginClipping = ::NewRgn();
+	mCachedOrigin.x = mCachedOrigin.y = -1;
+    ::SetRect((Rect*)&mCachedClipRect, 0, 0, 0, 0);
+    mCachedClipping = ::NewEmptyRgn();
+	mPluginClipping =::NewEmptyRgn();
 	mPluginPort = getEmptyPort();
 }
 
@@ -131,19 +133,24 @@ MRJContext::~MRJContext()
 		mPage = NULL;
 	}
 
+    if (mCachedClipping != NULL) {
+		::DisposeRgn(mCachedClipping);
+		mCachedClipping = NULL;
+    }
+    
 	if (mPluginClipping != NULL) {
 		::DisposeRgn(mPluginClipping);
 		mPluginClipping = NULL;
 	}
 	
-	if (mCodeBase != NULL) {
-		delete[] mCodeBase;
-		mCodeBase = NULL;
-	}
-	
 	if (mDocumentBase != NULL) {
 		delete[] mDocumentBase;
 		mDocumentBase = NULL;
+	}
+	
+	if (mAppletHTML != NULL) {
+		delete[] mAppletHTML;
+		mAppletHTML = NULL;
 	}
 }
 
@@ -160,6 +167,249 @@ static char* slashify(char* url)
 	}
 	return url;
 }
+
+static bool isAppletAttribute(const char* name)
+{
+	// this table must be kept in alphabetical order.
+	static const char* kAppletAttributes[] = {
+	    "ALIGN", "ALT", "ARCHIVE",
+	    "CODE", "CODEBASE",
+	    "HEIGHT", "HSPACE",
+	    "MAYSCRIPT", "NAME", "OBJECT",
+	    "VSPACE", "WIDTH"
+	};
+	int length = sizeof(kAppletAttributes) / sizeof(char*);
+	int minIndex = 0, maxIndex = length - 1;
+	int index = maxIndex / 2;
+	while (minIndex <= maxIndex) {
+		int diff = strcasecmp(name, kAppletAttributes[index]);
+		if (diff < 0) {
+			maxIndex = (index - 1);
+			index = (minIndex + maxIndex) / 2;
+		} else if (diff > 0) {
+			minIndex = (index + 1);
+			index = (minIndex + maxIndex) / 2;
+		} else {
+            return true;
+		}
+	}
+    return false;
+}
+
+static void addAttribute(string& attrs, const char* name, const char* value)
+{
+    attrs += " ";
+    attrs += name;
+    attrs += "=\"";
+    attrs += value;
+    attrs += "\"";
+}
+
+static void addParameter(string& params, const char* name, const char* value)
+{
+	params += "<param name=\"";
+	params += name;
+	params += "\" value=\"";
+	params += value;
+	params += "\">\n";
+}
+
+static void addAttributes(nsIPluginTagInfo* tagInfo, string& attributes)
+{
+	PRUint16 count;
+	const char* const* names;
+	const char* const* values;
+    if (tagInfo->GetAttributes(count, names, values) == NS_OK) {
+	    for (PRUint16 i = 0; i < count; ++i)
+			addAttribute(attributes, names[i], values[i]);
+    }
+} 
+
+static void addParameters(nsIPluginTagInfo2* tagInfo2, string& parameters)
+{
+	PRUint16 count;
+	const char* const* names;
+	const char* const* values;
+    if (tagInfo2->GetParameters(count, names, values) == NS_OK) {
+	    for (PRUint16 i = 0; i < count; ++i)
+			addParameter(parameters, names[i], values[i]);
+    }
+}
+
+static void addObjectAttributes(nsIPluginTagInfo* tagInfo, string& attributes)
+{
+	PRUint16 count;
+	const char* const* names;
+	const char* const* values;
+    const char kClassID[] = "classid";
+	const char kJavaPrefix[] = "java:";
+	const size_t kJavaPrefixSize = sizeof(kJavaPrefix) - 1;
+	if (tagInfo->GetAttributes(count, names, values) == NS_OK) {
+	    for (PRUint16 i = 0; i < count; ++i) {
+			const char* name = names[i];
+			const char* value = values[i];
+			if (strcasecmp(name, "classid") == 0 && strncmp(value, kJavaPrefix, kJavaPrefixSize) == 0)
+			    addAttribute(attributes, "code", value + kJavaPrefixSize);
+			else
+			    addAttribute(attributes, name, value);
+	    }
+	}
+}
+
+static void addEmbedAttributes(nsIPluginTagInfo* tagInfo, string& attributes, string& parameters)
+{
+	PRUint16 count;
+	const char* const* names;
+	const char* const* values;
+	const char kJavaPluginAttributePrefix[] = "java_";
+	const size_t kJavaPluginAttributePrefixSize = sizeof(kJavaPluginAttributePrefix) - 1;
+	if (tagInfo->GetAttributes(count, names, values) == NS_OK) {
+	    for (PRUint16 i = 0; i < count; ++i) {
+			const char* name = names[i];
+			const char* value = values[i];
+		    if (strncmp(name, kJavaPluginAttributePrefix, kJavaPluginAttributePrefixSize) == 0)
+			    name += kJavaPluginAttributePrefixSize;
+			if (isAppletAttribute(name)) {
+			    addAttribute(attributes, name, value);
+			} else {
+				// assume it's a parameter.
+				addParameter(parameters, name, value);
+			}
+	    }
+	}
+}
+
+static char* synthesizeAppletElement(nsIPluginTagInfo* tagInfo)
+{
+    // just synthesize an <APPLET> element out of whole cloth.
+    // this may be used because of the way the applet is being
+    // instantiated, or it may be used to work around bugs
+    // in the shipping browser.
+    string element("<applet");
+    string attributes("");
+    string parameters("");
+    
+	nsIPluginTagInfo2* tagInfo2 = NULL;
+	if (tagInfo->QueryInterface(NS_GET_IID(nsIPluginTagInfo2), &tagInfo2) == NS_OK) {
+	    nsPluginTagType tagType = nsPluginTagType_Unknown;
+	    if (tagInfo2->GetTagType(&tagType) == NS_OK) {
+	        switch (tagType) {
+	        case nsPluginTagType_Applet:
+	            addAttributes(tagInfo2, attributes);
+	            addParameters(tagInfo2, parameters);
+        	    break;
+        	case nsPluginTagType_Object:
+        	    addObjectAttributes(tagInfo2, attributes);
+        	    addParameters(tagInfo2, parameters);
+                break;
+            case nsPluginTagType_Embed:
+                addEmbedAttributes(tagInfo2, attributes, parameters);
+                break;
+        	}
+    	}
+	    NS_RELEASE(tagInfo2);
+	} else {
+	    addEmbedAttributes(tagInfo, attributes, parameters);
+	}	
+    
+    element += attributes;
+    element += ">\n";
+    element += parameters;
+    element += "</applet>\n";
+    
+    return ::strdup(element.c_str());
+}
+
+#if 1
+
+static void fetchCompleted(JMAppletLocatorRef ref, JMLocatorErrors status) {}
+
+void MRJContext::processAppletTag()
+{
+    // use the applet's HTML element to create a locator. this is required
+    // in general, to specify a separate CODEBASE.
+
+	nsIPluginTagInfo* tagInfo = NULL;
+	if (mPeer->QueryInterface(NS_GET_IID(nsIPluginTagInfo), &tagInfo) == NS_OK) {
+		nsIPluginTagInfo2* tagInfo2 = NULL;
+		if (tagInfo->QueryInterface(NS_GET_IID(nsIPluginTagInfo2), &tagInfo2) == NS_OK) {
+    		nsPluginTagType tagType = nsPluginTagType_Unknown;
+    		if (tagInfo2->GetTagType(&tagType) == NS_OK) {
+    			// get the URL of the HTML document	containing the applet, and the
+    			// fragment of HTML that defines this applet itself.
+    			const char* documentBase = NULL;
+    			if (tagInfo2->GetDocumentBase(&documentBase) == NS_OK)
+    				setDocumentBase(documentBase);
+    			const char* appletHTML = NULL;
+    			if (tagInfo2->GetTagText(&appletHTML) == NS_OK)
+    				setAppletHTML(appletHTML, tagType);
+    			else
+                    mAppletHTML = synthesizeAppletElement(tagInfo);
+            }
+
+            // to support applet communication, put applets from the same document, codebase, and mayscript setting
+            // in the same page.
+
+			// establish a page context for this applet to run in.
+			nsIJVMPluginTagInfo* jvmTagInfo = NULL;
+			if (mPeer->QueryInterface(NS_GET_IID(nsIJVMPluginTagInfo), &jvmTagInfo) == NS_OK) {
+				PRUint32 documentID;
+				const char* codeBase;
+				const char* archive;
+				PRBool mayScript;
+				if (tagInfo2->GetUniqueID(&documentID) != NS_OK) documentID = 0;
+				if (jvmTagInfo->GetCodeBase(&codeBase) != NS_OK) codeBase = NULL;
+				if (jvmTagInfo->GetArchive(&archive) != NS_OK) archive = NULL;
+				if (jvmTagInfo->GetMayScript(&mayScript) != NS_OK) mayScript = PR_FALSE;
+                MRJPageAttributes pageAttributes = { documentID, codeBase, archive, mayScript };
+				mPage = findPage(pageAttributes);
+				NS_RELEASE(jvmTagInfo);
+			}
+
+            NS_RELEASE(tagInfo2);
+        } else {
+            mAppletHTML = synthesizeAppletElement(tagInfo);
+        }
+        
+        NS_RELEASE(tagInfo);
+    }
+       
+    if (mDocumentBase != NULL && mAppletHTML != NULL) {
+        // example that works.
+        // const char* kBaseURL = "http://java.sun.com/applets/other/ImageLoop/index.html";
+        // const char* kAppletHTML = "<applet codebase=\"classes\" code=ImageLoopItem width=55 height=68>\n"
+        //                           "<param name=nimgs value=10>\n"
+        //                           "<param name=img value=\"images\">\n"
+        //                           "<param name=pause value=1000>\n"
+        //                           "</applet>";
+
+    	static JMAppletLocatorCallbacks callbacks = {
+    		kJMVersion,						/* should be set to kJMVersion */
+    		&fetchCompleted,				/* called when the html has been completely fetched */
+    	};
+        OSStatus status;
+        JMTextRef urlRef = NULL, htmlRef = NULL;
+
+        TextEncoding utf8 = CreateTextEncoding(kTextEncodingUnicodeDefault, kTextEncodingDefaultVariant, kUnicodeUTF8Format);
+
+        status = ::JMNewTextRef(mSessionRef, &urlRef, utf8, mDocumentBase, strlen(mDocumentBase));
+        if (status != noErr) goto done;
+
+        status = ::JMNewTextRef(mSessionRef, &htmlRef, utf8, mAppletHTML, strlen(mAppletHTML));
+        if (status != noErr) goto done;
+
+        status = ::JMNewAppletLocator(&mLocator, mSessionRef, &callbacks,
+                                      urlRef, htmlRef, JMClientData(this));
+        
+    done:
+    	if (urlRef != NULL)
+    		::JMDisposeTextRef(urlRef);
+    	if (htmlRef != NULL)
+    		::JMDisposeTextRef(htmlRef);
+    }
+}
+
+#else
 
 void MRJContext::processAppletTag()
 {
@@ -360,6 +610,8 @@ done:
 		delete info.fParams;
 	}
 }
+
+#endif
 
 static MRJFrame* getFrame(JMFrameRef ref)
 {
@@ -603,6 +855,11 @@ Boolean MRJContext::createContext()
 JMAWTContextRef MRJContext::getContextRef()
 {
 	return mContext;
+}
+
+JMAppletViewerRef MRJContext::getViewerRef()
+{
+    return mViewer;
 }
 
 void MRJContext::showDocument(JMAppletViewerRef viewer, JMTextRef urlString, JMTextRef windowName)
@@ -881,9 +1138,9 @@ jobject MRJContext::getApplet()
 				if (appearanceManagerExists()) {
 					SInt16 itemHit = 0;
 					Str255 appletURL = { "\pUnknown APPLET URL" };
-					if (mCodeBase != NULL) {
-						appletURL[0] = ::strlen(mCodeBase);
-						::BlockMoveData(mCodeBase, appletURL + 1, appletURL[0]);
+					if (mDocumentBase != NULL) {
+						appletURL[0] = ::strlen(mDocumentBase);
+						::BlockMoveData(mDocumentBase, appletURL + 1, mDocumentBase[0]);
 					}
 					::StandardAlert(kAlertPlainAlert, "\pApplet failed to load from URL:", appletURL, NULL, &itemHit);
 				}
@@ -916,6 +1173,19 @@ void MRJContext::drawApplet()
 			SetClip(oldClip);
 			DisposeRgn(oldClip);
 		}
+#endif
+
+#if defined(MRJPLUGIN_4X)
+	    // cache the current clipping region for later use.
+	    GrafPtr pluginPort = getPort();
+	    if (pluginPort != NULL) {
+	        if (!::EqualRgn(pluginPort->clipRgn, mCachedClipping)) {
+        	    ::CopyRgn(pluginPort->clipRgn, mCachedClipping);
+
+                // brute force, make sure clipping is in sync before every redraw.
+                setClipping();
+            }
+        }
 #endif
 
 		// ::JMFrameUpdate(mViewerFrame, framePort->visRgn);
@@ -1005,7 +1275,7 @@ void MRJContext::click(const EventRecord* event, MRJFrame* appletFrame)
 	// inspectWindow();
 //    printf("mrjcontext::click\n");
 
-	nsPluginPort* npPort = (nsPluginPort*) mCache.window;
+	nsPluginPort* npPort = mPluginWindow->window;
 	
 	// make the plugin's port current, and move its origin to (0, 0).
 	LocalPort port(GrafPtr(npPort->port));
@@ -1014,7 +1284,7 @@ void MRJContext::click(const EventRecord* event, MRJFrame* appletFrame)
 	// will we always be called in the right coordinate system?
 	Point localWhere = event->where;
 	::GlobalToLocal(&localWhere);
-	nsPluginRect& clipRect = mCache.clipRect;
+	nsPluginRect& clipRect = mCachedClipRect;
 	Rect bounds = { clipRect.top, clipRect.left, clipRect.bottom, clipRect.right };
 	if (PtInRect(localWhere, &bounds)) {
 		localToFrame(&localWhere);
@@ -1047,7 +1317,7 @@ void MRJContext::idle(short modifiers)
 //    printf("mrjcontext::idle\n");
 
 	// Put the port in to proper window coordinates.
-	nsPluginPort* npPort = (nsPluginPort*) mCache.window;
+	nsPluginPort* npPort = mPluginWindow->window;
 	LocalPort port(GrafPtr(npPort->port));
 	port.Enter();
 	
@@ -1071,18 +1341,17 @@ void MRJContext::setWindow(nsPluginWindow* pluginWindow)
 	if (mContext != NULL && pluginWindow != NULL) {
 		if (pluginWindow->height != 0 && pluginWindow->width != 0) {
 			mPluginWindow = pluginWindow;
-			mCache.window = NULL;
 
 			// establish the GrafPort the plugin will draw in.
 			mPluginPort = pluginWindow->window->port;
 
 			// set up the clipping region based on width & height.
-			::SetRectRgn(mPluginClipping, 0, 0, pluginWindow->width, pluginWindow->height);
+			::CopyRgn(mPluginPort->clipRgn, mCachedClipping);
 
 			if (! appletLoaded())
 				loadApplet();
 
-			setVisibility();
+			setClipping();
 		}
 	} else {
 		// tell MRJ the window has gone away.
@@ -1092,8 +1361,9 @@ void MRJContext::setWindow(nsPluginWindow* pluginWindow)
 		mPluginPort = getEmptyPort();
 		
 		// perhaps we should set the port to something quite innocuous, no? say a 0x0, empty port?
-		::SetEmptyRgn(mPluginClipping);
-		setVisibility();
+		::SetEmptyRgn(mCachedClipping);
+		
+		setClipping();
 	}
 }
 
@@ -1110,47 +1380,46 @@ Boolean MRJContext::inspectWindow()
 	if (mViewerFrame == NULL)
 		return false;
 
-	Boolean recomputeVisibility = false;
+	Boolean recomputeClipping = false;
 	
 	if (mPluginWindow != NULL) {
-		// Use new plugin data structures.
-		if (mCache.window == NULL || mCache.x != mPluginWindow->x || mCache.y != mPluginWindow->y || !equalRect(&mCache.clipRect, &mPluginWindow->clipRect)) {
+		// Check for origin or clipping changes.
+		nsPluginPort* npPort = mPluginWindow->window;
+		if (mCachedOrigin.x != npPort->portx || mCachedOrigin.y != npPort->porty || !equalRect(&mCachedClipRect, &mPluginWindow->clipRect)) {
 			// transfer over values to the window cache.
-			recomputeVisibility = true;
+			recomputeClipping = true;
 		}
 	}
 	
-	if (recomputeVisibility)
-		setVisibility();
+	if (recomputeClipping)
+		setClipping();
 	
-	return recomputeVisibility;
+	return recomputeClipping;
 }
 
-Boolean MRJContext::inspectClipping()
+void MRJContext::setClipping()
 {
 	// this is called on update events to make sure the clipping region is in sync with the browser's.
 	GrafPtr pluginPort = getPort();
 	if (pluginPort != NULL) {
-		if (true || !::EqualRgn(pluginPort->clipRgn, mPluginClipping)) {
-			::CopyRgn(pluginPort->clipRgn, mPluginClipping);
-			setVisibility();
-			return true;
-		}
+	    // plugin clipping is intersection of clipRgn and the clipRect.
+        nsPluginRect clipRect = mPluginWindow->clipRect;
+        nsPluginPort* npPort = mPluginWindow->window;
+        clipRect.left += npPort->portx, clipRect.right += npPort->portx;
+        clipRect.top += npPort->porty, clipRect.bottom += npPort->porty;
+	    ::SetRectRgn(mPluginClipping, clipRect.left, clipRect.top, clipRect.right, clipRect.bottom);
+#if defined(MRJPLUGIN_4X)
+	    ::SectRgn(mCachedClipping, mPluginClipping, mPluginClipping);
+#endif
+		setVisibility();
 	}
-	return false;
-}
-
-void MRJContext::setClipping(RgnHandle clipRgn)
-{
-	::CopyRgn(clipRgn, mPluginClipping);
-	setVisibility();
 }
 
 MRJFrame* MRJContext::findFrame(WindowRef window)
 {
 	MRJFrame* frame = NULL;
 
-	setVisibility();
+	// setVisibility();
 	
 	// locates the frame corresponding to this window.
 	if (window == NULL || (CGrafPtr(window) == mPluginPort) && mViewerFrame != NULL) {
@@ -1178,7 +1447,7 @@ GrafPtr MRJContext::getPort()
 {
 #if 0
 	if (mPluginWindow != NULL) {
-		nsPluginPort* npPort = (nsPluginPort*) mPluginWindow->window;
+		nsPluginPort* npPort = mPluginWindow->window;
 		return GrafPtr(npPort->port);
 	}
 	return NULL;
@@ -1191,7 +1460,7 @@ void MRJContext::localToFrame(Point* pt)
 {
 	if (mPluginWindow != NULL) {
 		// transform mouse to frame coordinates.
-		nsPluginPort* npPort = (nsPluginPort*) mPluginWindow->window;
+		nsPluginPort* npPort = mPluginWindow->window;
 		pt->v += npPort->porty;
 		pt->h += npPort->portx;
 	}
@@ -1200,7 +1469,7 @@ void MRJContext::localToFrame(Point* pt)
 void MRJContext::ensureValidPort()
 {
 	if (mPluginWindow != NULL) {
-		nsPluginPort* npPort = (nsPluginPort*) mPluginWindow->window;
+		nsPluginPort* npPort = mPluginWindow->window;
 		if (npPort == NULL)
 			mPluginPort = getEmptyPort();
 		::SetPort(GrafPtr(mPluginPort));
@@ -1218,32 +1487,32 @@ static void blinkRgn(RgnHandle rgn)
 void MRJContext::setVisibility()
 {
 	// always update the cached information.
-	if (mPluginWindow != NULL)
-		mCache = *mPluginWindow;
-		
-	// would be nice if printf or fprintf(stderr or fprintf(stdout actually
-	// dumped to sioux.. i so hate this development
-//    fprintf(stderr, "mrjcontext::setvisibility\n");
-	
-	if (mViewerFrame != NULL) {
-		nsPluginWindow* npWindow = &mCache;
+	if (mPluginWindow != NULL && mViewerFrame != NULL) {
+        nsPluginRect oldClipRect = mCachedClipRect;
+        nsPluginPort* npPort = mPluginWindow->window;
+	    mCachedOrigin.x = npPort->portx;
+	    mCachedOrigin.y = npPort->porty;
+	    mCachedClipRect = mPluginWindow->clipRect;
 		
 		// compute the frame's origin and clipping.
 		
 		// JManager wants the origin expressed in window coordinates.
 		// npWindow refers to the entire mozilla view port whereas the nport
 		// refers to the actual rendered html window.
-#if 0		
-		Point frameOrigin = { npWindow->y, npWindow->x };
-#else
-		nsPluginPort* npPort = mPluginWindow->window;
 		Point frameOrigin = { -npPort->porty, -npPort->portx };
-#endif
 	
 		// The clipping region is now maintained by a new browser event.
 		OSStatus status = ::JMSetFrameVisibility(mViewerFrame, GrafPtr(mPluginPort),
 												frameOrigin, mPluginClipping);
-	}
+
+        // Invalidate the old clip rectangle, so that any bogus drawing that may
+        // occurred at the old location, will be corrected.
+    	LocalPort port((GrafPtr)mPluginPort);
+        port.Enter();
+    	::InvalRect((Rect*)&oldClipRect);
+    	::InvalRect((Rect*)&mCachedClipRect);
+    	port.Exit();
+    }
 }
 
 void MRJContext::showFrames()
@@ -1304,30 +1573,79 @@ void MRJContext::releaseFrames()
 	}
 }
 
-void MRJContext::setCodeBase(const char* codeBase)
-{
-	if (mCodeBase != NULL)
-		delete[] mCodeBase;
-	if (codeBase != NULL)
-		mCodeBase = ::strdup(codeBase);
-}
-
-const char* MRJContext::getCodeBase()
-{
-	return mCodeBase;
-}
-
 void MRJContext::setDocumentBase(const char* documentBase)
 {
 	if (mDocumentBase != NULL)
 		mDocumentBase = NULL;
-	if (documentBase != NULL)
-		mDocumentBase = ::strdup(documentBase); 
+	mDocumentBase = ::strdup(documentBase); 
 }
 
 const char* MRJContext::getDocumentBase()
 {
 	return mDocumentBase;
+}
+
+void MRJContext::setAppletHTML(const char* appletHTML, nsPluginTagType tagType)
+{
+	if (mAppletHTML != NULL)
+		delete[] mAppletHTML;
+		
+    switch (tagType) {
+    case nsPluginTagType_Applet:
+    	mAppletHTML = ::strdup(appletHTML);
+    	break;
+	
+	case nsPluginTagType_Object:
+	    {
+        	// If the HTML isn't an <applet> element, but is an <object> element, then
+        	// transform it so MRJ can deal with it gracefully. it sure would be
+        	// nice if some DOM code would deal with this for us. This code
+        	// is fragile, because it assumes the case of the classid attribute.
+
+            // edit the <object> element, converting <object> to <applet>,
+            // classid="java:JitterText.class" to code="JitterText.class",
+            // and </object> to </applet>.
+        	string element(appletHTML);
+        	
+    		const char kAppletTag[] = "applet";
+    		const size_t kAppleTagSize = sizeof(kAppletTag) - 1;
+        	string::size_type startTag = element.find("<object");
+        	if (startTag != string::npos) {
+        	    element.replace(startTag + 1, kAppleTagSize, kAppletTag);
+        	}
+        	
+        	string::size_type endTag = element.rfind("</object>");
+        	if (endTag != string::npos) {
+        	    element.replace(endTag + 2, kAppleTagSize, kAppletTag);
+        	}
+
+    		const char kClassIDAttribute[] = "classid=\"java:";
+    		const char    kCodeAttribute[] = "code=\"";
+    		size_t kClassIDAttributeSize = sizeof(kClassIDAttribute) - 1;
+        	string::size_type classID = element.find(kClassIDAttribute);
+        	if (classID != string::npos) {
+        	    element.replace(classID, kClassIDAttributeSize, kCodeAttribute);
+        	}
+        	
+        	mAppletHTML = ::strdup(element.c_str());
+    	}
+    	break;
+    case nsPluginTagType_Embed:
+        {
+    	    nsIPluginTagInfo* tagInfo = NULL;
+    	    if (mPeer->QueryInterface(NS_GET_IID(nsIPluginTagInfo), &tagInfo) == NS_OK) {
+    	        // just synthesize an <APPLET> element out of whole cloth.
+    	        mAppletHTML = synthesizeAppletElement(tagInfo);
+    	        NS_RELEASE(tagInfo);
+    	    }
+    	}
+    	break;
+    }
+}
+
+const char* MRJContext::getAppletHTML()
+{
+	return mAppletHTML;
 }
 
 MRJPage* MRJContext::findPage(const MRJPageAttributes& attributes)

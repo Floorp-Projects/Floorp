@@ -453,6 +453,7 @@ public:
 private:
 	void pushInstance(void);
 	void popInstance(void);
+	void inspectInstance(void);
 
 private:
     nsIPluginInstancePeer* mPeer;
