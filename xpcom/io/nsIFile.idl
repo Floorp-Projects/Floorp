@@ -295,6 +295,12 @@ interface nsIFile : nsISupports
      *           not specify a directory.
      */
     readonly attribute nsISimpleEnumerator directoryEntries;
+
+    /**
+     * Accesses the file: url for the nsIFile. Setting this causes the path
+     * to be reset.
+     */
+    attribute string URL;
 };
 
 %{C++

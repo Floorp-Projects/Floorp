@@ -2091,6 +2091,16 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsLocalFile::SetURL(const char * aURL)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP
 nsLocalFile::GetPersistentDescriptor(char * *aPersistentDescriptor)
 {
