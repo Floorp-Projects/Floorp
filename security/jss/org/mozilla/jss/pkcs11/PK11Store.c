@@ -807,15 +807,13 @@ decodeAndImportKey(SECItem *dervalue,
         return OUT_OF_MEM;
     }
 
-    pki = (SECKEYPrivateKeyInfo *)
-        PORT_ArenaZAlloc(temparena, sizeof(SECKEYPrivateKeyInfo));
+    pki = PR_NEWZAP(SECKEYPrivateKeyInfo);
     if(pki == NULL) {
         result = DECODE_FAILURE;
         goto loser;
     }
 
-    pk = (SECKEYLowPrivateKey *)
-        PORT_ArenaZAlloc(temparena, sizeof(SECKEYLowPrivateKey));
+    pk = PR_NEWZAP(SECKEYLowPrivateKey);
     if(pk == NULL) {
         result = DECODE_FAILURE;
         goto loser;
