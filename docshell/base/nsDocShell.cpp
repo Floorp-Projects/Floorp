@@ -4917,6 +4917,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         return NS_ERROR_NULL_POINTER;
     }
 
+    NS_ENSURE_TRUE(IsValidLoadType(aLoadType), NS_ERROR_INVALID_ARG);
+
     // wyciwyg urls can only be loaded through history. Any normal load of
     // wyciwyg through docshell is  illegal. Disallow such loads.
     if (aLoadType & LOAD_CMD_NORMAL) {
