@@ -289,6 +289,31 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   
   if (!mActionNesting)
   {
+    // remember where our selection was before edit action took place:
+    
+    // get selection
+    nsCOMPtr<nsISelection>selection;
+    nsresult res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(res)) return res;
+  
+    // get the selection start location
+    nsCOMPtr<nsIDOMNode> selNode;
+    PRInt32 selOffset;
+    res = mHTMLEditor->GetStartNodeAndOffset(selection, address_of(selNode), &selOffset);
+    if (NS_FAILED(res)) return res;
+    mRangeItem.startNode = selNode;
+    mRangeItem.startOffset = selOffset;
+
+    // get the selection end location
+    res = mHTMLEditor->GetEndNodeAndOffset(selection, address_of(selNode), &selOffset);
+    if (NS_FAILED(res)) return res;
+    mRangeItem.endNode = selNode;
+    mRangeItem.endOffset = selOffset;
+
+    // register this range with range updater to track this as we perturb the doc
+    (mHTMLEditor->mRangeUpdater).RegisterRangeItem(&mRangeItem);
+
+    // clear out mDocChangeRange and mUtilRange
     nsCOMPtr<nsIDOMNSRange> nsrange;
     if(mDocChangeRange)
     {
@@ -304,6 +329,7 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
         return NS_ERROR_FAILURE;
       nsrange->NSDetach();  // ditto for mUtilRange.  
     }
+    
     // turn off caret
     nsCOMPtr<nsISelectionController> selCon;
     mHTMLEditor->GetSelectionController(getter_AddRefs(selCon));
@@ -331,6 +357,10 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   {
     // do all the tricky stuff
     res = AfterEditInner(action, aDirection);
+
+    // free up selectionState range item
+    (mHTMLEditor->mRangeUpdater).DropRangeItem(&mRangeItem);
+
     // turn on caret
     nsCOMPtr<nsISelectionController> selCon;
     mHTMLEditor->GetSelectionController(getter_AddRefs(selCon));
@@ -417,11 +447,38 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
     res = RemoveEmptyNodes();
     if (NS_FAILED(res)) return res;
 
-    // attempt to transform any uneeded nbsp's into spaces after doing deletions
-    if (action == nsEditor::kOpDeleteSelection)
+    // attempt to transform any uneeded nbsp's into spaces after doing various operations
+    if ((action == nsEditor::kOpInsertText) || 
+        (action == nsEditor::kOpInsertIMEText) ||
+        (action == nsEditor::kOpDeleteSelection) ||
+        (action == nsEditor::kOpInsertBreak) || 
+        (action == nsHTMLEditor::kOpHTMLPaste ||
+        (action == nsHTMLEditor::kOpLoadHTML)))
     {
       res = AdjustWhitespace(selection);
       if (NS_FAILED(res)) return res;
+      
+      // also do this for original selection endpoints.  The checks for the remembered
+      // selection endpoints are a performance fidgit.  Otherwise 
+      // nsRangeUpdater::SelAdjDeleteNode() would have to do much more expensive
+      // work (see comment in that routine in nsSelection.cpp)
+      nsCOMPtr<nsIDOMElement> bodyNode; 
+      PRInt32 unused;
+      res = mHTMLEditor->GetRootElement(getter_AddRefs(bodyNode));
+      if (NS_FAILED(res)) return res;
+      if (nsHTMLEditUtils::IsDescendantOf(mRangeItem.startNode, bodyNode, &unused))
+      {
+        nsWSRunObject(mHTMLEditor, mRangeItem.startNode, mRangeItem.startOffset).AdjustWhitespace();
+      }
+      // we only need to handle old selection endpoint if it was different from start
+      if ((mRangeItem.startNode != mRangeItem.endNode) || (mRangeItem.startOffset != mRangeItem.endOffset))
+      {
+        if (nsHTMLEditUtils::IsDescendantOf(mRangeItem.endNode, bodyNode, &unused))
+        {
+          nsWSRunObject(mHTMLEditor, mRangeItem.endNode, mRangeItem.endOffset).AdjustWhitespace();
+        }
+      }
+     
     }
     
     // if we created a new block, make sure selection lands in it
