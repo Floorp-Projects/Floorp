@@ -773,12 +773,13 @@ NS_METHOD nsWindow::Show(PRBool bState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 {
-	if (mView)
+	if (mView && mView->LockLooper())
 	{
 		if (PR_TRUE == aCapture)
 			mView->SetEventMask(B_POINTER_EVENTS);
 		else
 			mView->SetEventMask(0);
+		mView->UnlockLooper();
 	}
 	return NS_OK;
 }
