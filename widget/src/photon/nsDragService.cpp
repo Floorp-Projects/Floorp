@@ -102,6 +102,8 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
                                                 nsIScriptableRegion *aRegion,
                                                 PRUint32 aActionType)
 {
+  nsBaseDragService::InvokeDragSession ( aDOMNode, aTransferableArray, aRegion, aActionType );
+  
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsDragService::InvokeDragSession this=<%p> aActionType=<%d>\n", this, aActionType));
   //mWidget = gtk_invisible_new();
   //gtk_widget_show(mWidget);

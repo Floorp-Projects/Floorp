@@ -27,6 +27,7 @@
 #include "nsIDragSession.h"
 #include "nsITransferable.h"
 #include "nsISupportsArray.h"
+#include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
 
 /**
@@ -55,6 +56,8 @@ protected:
   nsSize             mTargetSize;
   PRUint32           mDragAction;  
   nsCOMPtr<nsIDragTracker> mCurrentlyTracking;
+  nsCOMPtr<nsIDOMDocument> mSourceDocument;       // the document at the drag source. will be null
+                                                  //  if it came from outside the app.
 
 };
 

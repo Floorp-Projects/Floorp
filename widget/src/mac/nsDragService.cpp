@@ -56,6 +56,9 @@
 #include "nsPoint.h"
 #include "nsIWidget.h"
 
+#include "nsIXULContent.h"
+#include "nsIDOMElement.h"
+
 
 #if !TARGET_CARBON
 DragSendDataUPP nsDragService::sDragSendDataUPP = NewDragSendDataProc(DragSendDataProc);
@@ -96,6 +99,23 @@ nsDragService :: ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outSc
 {
   NS_ASSERTION ( aDOMNode, "Oopps, no DOM node" );
 
+  // until bug 41237 is fixed, only do translucent dragging if the drag is in
+  // the chrome or it's a link.
+  nsCOMPtr<nsIXULContent> xulContent ( do_QueryInterface(aDOMNode) );
+  if ( !xulContent ) {
+    // the link node is the parent of the node we have (which is probably text or image).
+    nsCOMPtr<nsIDOMNode> parent;
+    aDOMNode->GetParentNode ( getter_AddRefs(parent) );
+    if ( parent ) {
+      nsAutoString localName;
+      parent->GetLocalName ( localName );
+      if ( ! localName.Equals(NS_LITERAL_STRING("A")) )
+        return PR_FALSE;
+    }
+    else
+      return FALSE;
+  }
+  
   PRBool	haveRectFlag = PR_FALSE;
   outScreenRect.left = outScreenRect.right = outScreenRect.top = outScreenRect.bottom = 0;
 
@@ -179,6 +199,8 @@ nsDragService :: ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outSc
 NS_IMETHODIMP
 nsDragService :: InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * aTransferableArray, nsIScriptableRegion * aDragRgn, PRUint32 aActionType)
 {
+  nsBaseDragService::InvokeDragSession ( aDOMNode, aTransferableArray, aDragRgn, aActionType );
+  
   Rect frameRect = { 0, 0, 0, 0 };
   PRBool useRectFromFrame = PR_FALSE;
   if ( aDOMNode )

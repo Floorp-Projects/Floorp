@@ -87,6 +87,8 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
                                                 nsIScriptableRegion * aRegion,
                                                 PRUint32 aActionType)
 {
+  nsBaseDragService::InvokeDragSession ( aDOMNode, anArrayTransferables, aRegion, aActionType );
+  
 #ifdef DEBUG_DD
   g_print("InvokeDragSession\n");
 #endif
