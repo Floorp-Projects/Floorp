@@ -41,10 +41,10 @@
 #include "private/pprthred.h"
 #endif
 
+#include "nsLeakDetector.h"
+
 extern FILE *GC_stdout, *GC_stderr;
 
-extern void NSInitGarbageCollector();
-extern void NSShutdownGarbageCollector();
 extern void GC_gcollect(void);
 extern void GC_clear_roots(void);
 
@@ -83,35 +83,28 @@ static void starter(void* unused)
 	PR_ResumeAll();
 }
 
-void NSInitGarbageCollector()
+nsresult NS_InitGarbageCollector()
 {
 	PRLock* mutex;
 	
-	/* redirect GC's stderr. */
-	GC_stderr = fopen("RuntimeLeaks", "w");
+	/* redirect GC's stderr to catch startup leaks. */
+	GC_stderr = fopen("StartupLeaks", "w");
 
 	mutex = PR_NewLock();
-	if (mutex != NULL) {
-		GC_generic_init_threads(&mark_all_stacks, mutex,
-							 	&locker, &unlocker,
-								&stopper, &starter);
-	}
+	if (mutex == NULL)
+		return NS_ERROR_FAILURE;
+		
+	GC_generic_init_threads(&mark_all_stacks, mutex,
+						 	&locker, &unlocker,
+							&stopper, &starter);
+	
+	return NS_OK;
 }
 
-void NSShutdownGarbageCollector()
+nsresult NS_ShutdownGarbageCollector()
 {
-	/* Run a collection to get unreferenced leaks. */
-	GC_gcollect();
-
-#if 0
-	fclose(GC_stderr);
-	GC_stderr = fopen("ShutdownLeaks", "w");
-
-	/* Try to show leaks in current roots: */
-	fprintf(GC_stderr, "Shutdown Leaks:\n");
-	GC_clear_roots();
-	GC_gcollect();
-#endif
+	/* do anything you need to shut down the collector. */
+	return NS_OK;
 }
 
 #endif /* GC_LEAK_DETECTOR */
