@@ -163,7 +163,11 @@ void nsFileControlFrame::MouseClicked(nsIPresContext* aPresContext)
 	  if (result) {
 	    nsFileSpec fileSpec;
 	    fileWidget->GetFile(fileSpec);
-      mTextFrame->SetProperty(nsHTMLAtoms::value,fileSpec.GetNativePathCString());
+	    char* leafName = fileSpec.GetLeafName();
+	    if (leafName) {
+	      mTextFrame->SetProperty(nsHTMLAtoms::value,leafName);
+	      nsCRT::free(leafName);
+      }
 	  }
 	  NS_RELEASE(fileWidget);
   }
