@@ -1799,7 +1799,7 @@ void nsCSSRendering::DrawCompositeSide(nsIRenderingContext& aRenderingContext,
     endRadius = aBorderRadii[3];
   }
 
-  while (shrinkage) {
+  while (shrinkage > 0) {
     nscoord xshrink = 0;
     nscoord yshrink = 0;
     nscoord widthshrink = 0;
