@@ -251,7 +251,7 @@ XPT_DoStringInline(XPTCursor *cursor, XPTString **strp)
             goto error;
 
     for (i = 0; i < str->length; i++)
-        if (!XPT_Do8(cursor, &str->bytes[i]))
+        if (!XPT_Do8(cursor, (uint8 *)&str->bytes[i]))
             goto error_2;
 
     if (mode == XPT_DECODE)
@@ -334,9 +334,9 @@ XPT_DoCString(XPTCursor *cursor, char **identp)
             return PR_FALSE;
         
         while(*ident)
-            if (!XPT_Do8(&my_cursor, ident++))
+            if (!XPT_Do8(&my_cursor, (uint8 *)ident++))
                 return PR_FALSE;
-        if (!XPT_Do8(&my_cursor, ident)) /* write trailing zero */
+        if (!XPT_Do8(&my_cursor, (uint8 *)ident)) /* write trailing zero */
             return PR_FALSE;
     }
     
@@ -430,7 +430,7 @@ XPT_DoIID(XPTCursor *cursor, nsID *iidp)
         return PR_FALSE;
 
     for (i = 0; i < 8; i++)
-        if (!XPT_Do8(cursor, &iidp->m3[i]))
+        if (!XPT_Do8(cursor, (uint8 *)&iidp->m3[i]))
             return PR_FALSE;
 
     return PR_TRUE;
