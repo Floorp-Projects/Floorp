@@ -215,6 +215,7 @@ protected:
   nsStringArray mIgnoreSchemes;
   nsStringArray mIgnoreHostnames;
   
+  nsresult AutoCompleteTypedSearch(nsIAutoCompleteMdbResult **aResult);
   nsresult AutoCompleteSearch(const nsAString& aSearchString,
                               AutocompleteExclude* aExclude,
                               nsIAutoCompleteMdbResult* aPrevResult,
@@ -417,48 +418,9 @@ protected:
     PRBool RowMatches(nsIMdbRow* aRow, searchQuery *aQuery);
   };
 
-  /*// AutoCompleteEnumerator - for searching for a partial url match  
-  class AutoCompleteEnumerator : public nsMdbTableEnumerator
-  {
-  protected:
-    nsGlobalHistory* mHistory;
-    mdb_column mURLColumn;
-    mdb_column mHiddenColumn;
-    mdb_column mTypedColumn;
-    mdb_column mCommentColumn;
-    AutocompleteExclude* mExclude;
-    const nsAString& mSelectValue;
-    PRBool mMatchOnlyTyped;
-
-    virtual ~AutoCompleteEnumerator();
-  
-  public:
-    AutoCompleteEnumerator(nsGlobalHistory* aHistory,
-                           mdb_column aURLColumn,
-                           mdb_column aCommentColumn,
-                           mdb_column aHiddenColumn,
-                           mdb_column aTypedColumn,
-                           PRBool aMatchOnlyTyped,
-                           const nsAString& aSelectValue,
-                           AutocompleteExclude* aExclude) :
-      mHistory(aHistory),
-      mURLColumn(aURLColumn),
-      mHiddenColumn(aHiddenColumn),
-      mTypedColumn(aTypedColumn),
-      mCommentColumn(aCommentColumn),
-      mExclude(aExclude),
-      mSelectValue(aSelectValue), 
-      mMatchOnlyTyped(aMatchOnlyTyped) {}
-
-  protected:
-    virtual PRBool   IsResult(nsIMdbRow* aRow);
-    virtual nsresult ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult);
-  };*/
-
 
   friend class URLEnumerator;
   friend class SearchEnumerator;
-//  friend class AutoCompleteEnumerator;
 };
 
 

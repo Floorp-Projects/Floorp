@@ -3856,61 +3856,6 @@ nsGlobalHistory::SearchEnumerator::ConvertToISupports(nsIMdbRow* aRow,
   return NS_OK;
 }
 
-/*
-//----------------------------------------------------------------------
-//
-// nsGlobalHistory::AutoCompleteEnumerator
-//
-//   Implementation
-
-nsGlobalHistory::AutoCompleteEnumerator::~AutoCompleteEnumerator()
-{
-}
-
-
-PRBool
-nsGlobalHistory::AutoCompleteEnumerator::IsResult(nsIMdbRow* aRow)
-{
-  if (!HasCell(mEnv, aRow, mTypedColumn)) {
-    if (mMatchOnlyTyped || HasCell(mEnv, aRow, mHiddenColumn))
-      return PR_FALSE;
-  }
-
-  nsCAutoString url;
-  mHistory->GetRowValue(aRow, mURLColumn, url);
-
-  NS_ConvertUTF8toUCS2 utf8Url(url);
-
-  PRBool result = mHistory->AutoCompleteCompare(utf8Url, mSelectValue, mExclude); 
-  
-  return result;
-}
-
-nsresult
-nsGlobalHistory::AutoCompleteEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult)
-{
-  nsCAutoString url;
-  mHistory->GetRowValue(aRow, mURLColumn, url);
-  nsAutoString comments;
-  mHistory->GetRowValue(aRow, mCommentColumn, comments);
-
-  nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID));
-  NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);
-
-  newItem->SetValue(NS_ConvertUTF8toUCS2(url.get()));
-  newItem->SetParam(aRow);
-  newItem->SetComment(comments.get());
-
-  *aResult = newItem;
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}*/
-
-//----------------------------------------------------------------------
-//
-// nsIAutoCompleteSession implementation
-//
-
 //----------------------------------------------------------------------
 //
 // nsIAutoCompleteSession implementation
@@ -3927,24 +3872,28 @@ nsGlobalHistory::StartSearch(const nsAString &aSearchString,
 
   NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
   
-  // if the search string is empty after it has had prefixes removed, then 
-  // there is no need to proceed with the search
-  nsAutoString cut(aSearchString);
-  AutoCompleteCutPrefix(cut, nsnull);
-  if (cut.Length() == 0)
-    return NS_ERROR_ILLEGAL_VALUE;
-  
-  // pass string through filter and then determine which prefixes to exclude
-  // when chopping prefixes off of history urls during comparison
-  nsSharableString filtered = AutoCompletePrefilter(aSearchString);
-  AutocompleteExclude exclude;
-  AutoCompleteGetExcludeInfo(filtered, &exclude);
-  
-  // perform the actual search here
   nsIAutoCompleteMdbResult *result = nsnull;
-  nsresult rv = AutoCompleteSearch(filtered, &exclude, NS_STATIC_CAST(nsIAutoCompleteMdbResult *, aPreviousResult), &result);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
+  if (aSearchString.IsEmpty()) {
+    AutoCompleteTypedSearch(&result);
+  } else {
+    // if the search string is empty after it has had prefixes removed, then 
+    // there is no need to proceed with the search
+    nsAutoString cut(aSearchString);
+    AutoCompleteCutPrefix(cut, nsnull);
+    if (cut.Length() == 0)
+      return NS_ERROR_ILLEGAL_VALUE;
+    
+    // pass string through filter and then determine which prefixes to exclude
+    // when chopping prefixes off of history urls during comparison
+    nsSharableString filtered = AutoCompletePrefilter(aSearchString);
+    AutocompleteExclude exclude;
+    AutoCompleteGetExcludeInfo(filtered, &exclude);
+    
+    // perform the actual search here
+    nsresult rv = AutoCompleteSearch(filtered, &exclude, NS_STATIC_CAST(nsIAutoCompleteMdbResult *, aPreviousResult), &result);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   aListener->OnSearchResult(this, result);  
   
   return NS_OK;
@@ -3961,6 +3910,50 @@ nsGlobalHistory::StopSearch()
 //
 // AutoComplete stuff
 //
+
+nsresult
+nsGlobalHistory::AutoCompleteTypedSearch(nsIAutoCompleteMdbResult **aResult)
+{
+  printf("typed search\n");
+  // Get a cursor to iterate through all rows in the database
+  nsCOMPtr<nsIMdbTableRowCursor> rowCursor;
+  mdb_err err = mTable->GetTableRowCursor(mEnv, -1, getter_AddRefs(rowCursor));
+  NS_ENSURE_TRUE(!err, NS_ERROR_FAILURE);
+
+  nsresult rv;
+  nsCOMPtr<nsIAutoCompleteMdbResult> result = do_CreateInstance("@mozilla.org/autocomplete/mdb-result;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  result->Init(mEnv, mTable);
+  result->SetTokens(kToken_URLColumn, nsIAutoCompleteMdbResult::kCharType, kToken_NameColumn, nsIAutoCompleteMdbResult::kUnicharType);
+
+  nsIMdbRow *row = nsnull;
+  mdb_pos pos;
+  do {
+    rowCursor->NextRow(mEnv, &row, &pos);
+    if (!row) break;
+    
+    if (HasCell(mEnv, row, kToken_TypedColumn)) {
+      printf("row\n");
+      result->AddRow(row);
+    }
+  } while (row);
+
+  // Determine the result of the search
+  PRUint32 matchCount;
+  rv = result->GetMatchCount(&matchCount);
+  if (matchCount > 0) {
+    result->SetSearchResult(nsIAutoCompleteResult::RESULT_SUCCESS);
+    result->SetDefaultIndex(0);
+  } else {
+    result->SetSearchResult(nsIAutoCompleteResult::RESULT_NOMATCH);
+    result->SetDefaultIndex(-1);
+  }
+
+  *aResult = result;
+  NS_ADDREF(*aResult);
+  
+  return NS_OK;
+}
 
 nsresult
 nsGlobalHistory::AutoCompleteSearch(const nsAString &aSearchString,
