@@ -1158,6 +1158,13 @@ NSCalendar::getComponent(JulianPtrArray * vTBE,
     return 0;
 }
 //---------------------------------------------------------------------
+JulianPtrArray * NSCalendar::changeEventsOwnership()
+{
+    JulianPtrArray * out = m_VEventVctr;
+    m_VEventVctr = 0;
+    return out;
+}
+//---------------------------------------------------------------------
 void NSCalendar::addEvent(ICalComponent * v)
 {
     if (m_VEventVctr == 0)

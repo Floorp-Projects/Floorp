@@ -382,6 +382,22 @@ public:
     JulianPtrArray * getEvents() const { return m_VEventVctr; }
     
     /**
+     *  XXX: Temp hack.
+     *  This is used to remove the ownership of the vector of events
+     *  from this calendar to nobody.  It does this by returning
+     *  the pointer to m_VEventVctr, then setting the internal value
+     *  of m_VEventVctr to 0.  Thus when this NSCalendar is destroyed
+     *  the vector of events is not.
+     *  The caller now owns the vector of events and must delete it
+     *  and its VEvent contents.
+     *  This method should be called only when moving events from
+     *  one calendar to another.  
+     *
+     * @return          the pointer to the vector of events
+     */
+    JulianPtrArray * changeEventsOwnership();
+
+    /**
      * Return ptr to vector of vfreebusies
      * @return          ptr to vector of vfreebusies
      */
