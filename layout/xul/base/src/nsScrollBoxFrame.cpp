@@ -299,7 +299,7 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
 
     // Get the nsIScrollableView interface
     nsIScrollableView* scrollingView;
-    view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
+    CallQueryInterface(view, &scrollingView);
 
     scrollingView->SetScrollPreference(nsScrollPreference_kNeverScroll);
 
@@ -439,7 +439,7 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
   nsIScrollableView* scrollingView;
   nsIView*           view;
   GetView(presContext, &view);
-  if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
+  if (NS_SUCCEEDED(CallQueryInterface(view, &scrollingView))) {
     scrollingView->ComputeScrollOffsets(PR_TRUE);
   }
 
@@ -516,7 +516,8 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
     if (!view)
       return NS_OK; // don't freak out if we have no view
 
-    nsCOMPtr<nsIScrollableView> scrollingView(do_QueryInterface(view));
+    nsIScrollableView* scrollingView;
+    CallQueryInterface(view, &scrollingView);
     if (scrollingView) {
       nscoord x = 0;
       nscoord y = 0;
@@ -735,7 +736,7 @@ nsScrollBoxFrame::SaveState(nsIPresContext* aPresContext,
 
   PRInt32 x,y;
   nsIScrollableView* scrollingView;
-  res = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
+  res = CallQueryInterface(view, &scrollingView);
   NS_ENSURE_SUCCESS(res, res);
   scrollingView->GetScrollPosition(x,y);
 
@@ -832,7 +833,8 @@ nsScrollBoxFrame::RestoreState(nsIPresContext* aPresContext,
       if (!view)
         return NS_ERROR_FAILURE;
 
-      nsCOMPtr<nsIScrollableView> scrollingView(do_QueryInterface(view));
+      nsIScrollableView* scrollingView;
+      CallQueryInterface(view, &scrollingView);
       if (scrollingView)
         scrollingView->GetScrollPosition(mLastPos.x, mLastPos.y);
     }
