@@ -525,7 +525,7 @@ void nsWindow::Destroy()
     // Switch to the "main gui thread" if necessary... This method must
     // be executed on the "gui thread"...
     //
-    if (!mToolkit->IsGuiThread()) {
+    if (mToolkit != nsnull && !mToolkit->IsGuiThread()) {
         MethodInfo info(this, nsWindow::DESTROY);
         mToolkit->CallMethod(&info);
         return;
