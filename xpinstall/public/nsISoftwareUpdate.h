@@ -64,7 +64,7 @@ class nsSoftwareUpdateFactory : public nsIFactory
     public:
         
         nsSoftwareUpdateFactory();
-        ~nsSoftwareUpdateFactory();
+        virtual ~nsSoftwareUpdateFactory();
         
         NS_DECL_ISUPPORTS
 
