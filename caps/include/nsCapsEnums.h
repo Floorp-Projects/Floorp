@@ -27,6 +27,10 @@ typedef enum nsSetComparisonType {
 
 /**
  * number of possible permissions (allowed, forbidden, or blank)
+ *
+ * The code in nsPrivilegeInitialize assumes that nsPermissionState 
+ * are ordered sequentially from 0 to N.
+ *
  */
 typedef enum nsPermissionState {
     nsPermissionState_Forbidden = 0, 
@@ -37,6 +41,10 @@ typedef enum nsPermissionState {
 
 /**
  * number of possible durations (scope, session, or forever)
+ *
+ * The code in nsPrivilegeInitialize assumes that nsDurationState 
+ * are ordered sequentially from 0 to N.
+ *
  */
 typedef enum nsDurationState {
     nsDurationState_Scope=0, 
