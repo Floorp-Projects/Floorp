@@ -1,0 +1,57 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+
+/*
+    Because imap protocol connections (which are channels) run through a cache,
+    it isn't always the case that when you want to run a url, you actually get
+    a connection back right away. Often times, the url goes into a queue until
+    a connection becomes available.
+
+    Unfortunately, if we want to be a truly pluggable protocol with necko, necko
+    requires the ability to get a channel back right away when it wants to run 
+    a url. It doesn't let you wait until an imap connection becomes available.
+
+    So I've created the notion of a "mock channel". This mock channel is what
+    gets returned to necko (or other callers) when they ask the imap service
+    for a new channel for a url. The mock channel has "mock" implementations
+    of nsIChannel. Eventually, when we actually assign the url to a real
+    channel, we set the real channel on the mock channel. From that point forward,
+    the mock channel forwards channel calls directly to the real channel.
+
+    In short, this class is how I'm solving the problem where necko wants
+    a channel back as soon as they ask for when with the fact that it
+    may be a while until the url is loaded into a connection.
+ */
+
+#include "nsISupports.idl"
+#include "nsIChannel.idl"
+
+interface nsIStreamListener;
+interface nsILoadGroup;
+interface nsIURI;
+
+[scriptable, uuid(6EEC5ED3-670F-11d3-989A-001083010E9B)]
+
+interface nsIImapMockChannel : nsIChannel
+{
+    void GetChannelListener(out nsIStreamListener aChannelListener);
+    void GetChannelContext(out nsISupports aChannelContext);
+    void SetLoadGroup(in nsILoadGroup aLoadGroup);
+    void SetURI(in nsIURI aUrl);
+};
