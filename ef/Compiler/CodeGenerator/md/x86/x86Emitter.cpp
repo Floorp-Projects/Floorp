@@ -49,7 +49,7 @@
 
 #include "x86Instruction.h"
 
-#include "x86Win32ExceptionHandler.h"
+#include "x86ExceptionHandler.h"
 
 UT_DEFINE_LOG_MODULE(x86Emitter);
 
