@@ -3640,6 +3640,16 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
 
     wsprintf(szVariable, "Software\\Netscape\\Netscape Seamonkey\\%s", szBuf);
   }
+  else if(lstrcmpi(szVariable, "Netscape6 CurrentVersion") == 0)
+  {
+    /* parse for the current Netscape WinReg key */
+    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Netscape\\Netscape 6", "CurrentVersion", szBuf, sizeof(szBuf));
+
+    if(*szBuf == '\0')
+      return(FALSE);
+
+    wsprintf(szVariable, "Software\\Netscape\\Netscape 6\\%s", szBuf);
+  }
   else if(lstrcmpi(szVariable, "Mozilla Seamonkey CurrentVersion") == 0)
   {
     /* parse for the current Mozilla WinReg key */
