@@ -478,7 +478,7 @@ nsToolbarDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
                 if ( dataObj ) {               
                   // If the string was not empty then paste it in
                   PRUnichar* buf;
-                  dataObj->toString(&buf);
+                  dataObj->ToString(&buf);
                   if ( buf ) {
                     nsAutoString converter(buf);
                     char* lame = converter.ToNewCString();
