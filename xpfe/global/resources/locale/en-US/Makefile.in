@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= unix
+DIRS		= unix win mac
 
 CHROME_DIR=locales/en-US
 CHROME_L10N_DIR=global/locale
