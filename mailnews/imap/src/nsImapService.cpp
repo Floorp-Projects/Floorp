@@ -314,8 +314,6 @@ NS_IMETHODIMP nsImapService::OpenAttachment(nsIURI *aURI, const char *aMessageUR
 		if (NS_SUCCEEDED(rv))
     {
       nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(aURI);
-      nsCAutoString urlSpec;
-      PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
       nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(aURI));
 
       msgurl->SetMsgWindow(aMsgWindow);

@@ -1669,7 +1669,6 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionError(const PRUnichar *pEr
 			nsCOMPtr<nsIImapUrl>
 				aImapUrl(do_QueryInterface(aSupport, &rv));
 
-		nsresult rv;
 		nsCOMPtr <nsIImapProtocol> imapProtocol;
 		nsCOMPtr <nsIEventQueue> aEventQueue;
 		// Get current thread envent queue
