@@ -153,7 +153,7 @@ clobber_all:  realclean
 pull_and_build_all: checkout build
 
 # Do everything from scratch
-everything: clobber_all all
+everything: checkout clobber_all build
 
 ####################################
 # CVS checkout
