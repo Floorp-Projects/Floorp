@@ -181,6 +181,7 @@ public:
   NS_IMETHOD NotifyError(const nsParserError* aError);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
+  NS_IMETHOD DoFragment(PRBool aFlag);
 
   nsIDocument* mDocument;
   nsIHTMLDocument* mHTMLDocument;
@@ -3092,3 +3093,11 @@ HTMLContentSink::NotifyError(const nsParserError* aError)
   PR_ASSERT(0);
   return NS_OK;
 }
+
+
+NS_IMETHODIMP
+HTMLContentSink::DoFragment(PRBool aFlag) 
+{
+  return NS_OK; 
+}
+
