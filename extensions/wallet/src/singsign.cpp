@@ -311,6 +311,8 @@ extern PRBool Wallet_KeySet();
 extern PRBool Wallet_SetKey(PRBool newkey);
 extern char * Wallet_Localize(char * genericString);
 
+char* signonFileName = nsnull;
+
 PRIVATE void
 si_RestartKey() {
   Wallet_RestartKey();
@@ -429,6 +431,40 @@ SI_GetBoolPref(const char * prefname, PRBool defaultvalue) {
   return prefvalue;
 }
 
+PUBLIC void
+SI_SetCharPref(const char * prefname, const char * prefvalue) {
+  nsresult ret;
+  nsIPref* pPrefService = nsnull;
+  ret = nsServiceManager::GetService(kPrefServiceCID, kIPrefServiceIID,
+    (nsISupports**) &pPrefService);
+  if (!NS_FAILED(ret)) {
+    ret = pPrefService->SetCharPref(prefname, prefvalue);
+    if (!NS_FAILED(ret)) {
+      ret = pPrefService->SavePrefFile(); 
+    }
+    nsServiceManager::ReleaseService(kPrefServiceCID, pPrefService);
+  }
+}
+
+PUBLIC void
+SI_GetCharPref(const char * prefname, char** aPrefvalue) {
+  nsresult ret;
+  nsIPref* pPrefService = nsnull;
+  ret = nsServiceManager::GetService(kPrefServiceCID, kIPrefServiceIID,
+    (nsISupports**) &pPrefService);
+  if (!NS_FAILED(ret)) {
+    ret = pPrefService->CopyCharPref(prefname, aPrefvalue);
+    if (!NS_FAILED(ret)) {
+      ret = pPrefService->SavePrefFile(); 
+    } else {
+      *aPrefvalue = nsnull;
+    }
+    nsServiceManager::ReleaseService(kPrefServiceCID, pPrefService);
+  } else {
+    *aPrefvalue = nsnull;
+  }
+}
+
 
 /*********************************
  * Preferences for Single Signon *
@@ -436,6 +472,7 @@ SI_GetBoolPref(const char * prefname, PRBool defaultvalue) {
 
 static const char *pref_rememberSignons = "signon.rememberSignons";
 static const char *pref_Notified = "signon.Notified";
+static const char *pref_SignonFileName = "signon.SignonFileName";
 
 PRIVATE PRBool si_RememberSignons = PR_FALSE;
 PRIVATE PRBool si_Notified = PR_FALSE;
@@ -524,6 +561,17 @@ si_GetSignonRememberingPref(void) {
     return PR_TRUE;
   } else {
     return si_RememberSignons;
+  }
+}
+
+extern char* Wallet_RandomName(char* suffix);
+
+PUBLIC void
+SI_InitSignonFileName() {
+  SI_GetCharPref(pref_SignonFileName, &signonFileName);
+  if (!signonFileName) {
+    signonFileName = Wallet_RandomName("psw");
+    SI_SetCharPref(pref_SignonFileName, signonFileName);
   }
 }
 
@@ -1572,7 +1620,7 @@ SI_LoadSignonData(PRBool fullLoad) {
   if (!strm.is_open()) {
     return -1;
   }
-  nsInputFileStream strmx(dirSpec + "signonx.tbl");
+  nsInputFileStream strmx(dirSpec + signonFileName);
   if (!strmx.is_open()) {
     return -1;
   }
@@ -1762,7 +1810,7 @@ si_SaveSignonDataLocked(PRBool fullSave) {
   if (!strm.is_open()) {
     return 0;
   }
-  nsOutputFileStream strmx(dirSpec + "signonx.tbl");
+  nsOutputFileStream strmx(dirSpec + signonFileName);
   if (fullSave) {
     if (!strmx.is_open()) {
       return 0;
@@ -2140,12 +2188,14 @@ si_RememberSignonDataFromBrowser(char* URLName, char* username, char* password) 
   PR_Free(value_array[1]);
 }
 
+#ifdef xxx
 PUBLIC void
 SI_RememberSignonDataFromBrowser (char* URLName, char* username, char* password) {
   if (si_OkToSave(URLName, username)) {
     si_RememberSignonDataFromBrowser (URLName, username, password);
   }
 }
+#endif
 
 /*
  * Check for remembered data from a previous browser-generated password dialog
@@ -2183,6 +2233,7 @@ si_RestoreOldSignonDataFromBrowser
   si_unlock_signon_list();
 }
 
+#ifdef xxx
 /* Browser-generated prompt for user-name and password */
 PUBLIC PRBool
 SINGSIGN_PromptUsernameAndPassword2
@@ -2350,6 +2401,7 @@ SINGSIGN_Prompt2 (char *prompt, char* defaultUsername, char *URLName)
   PR_FREEIF(copyOfPrompt);
   return result;
 }
+#endif
 
 PUBLIC nsresult
 SINGSIGN_PromptUsernameAndPassword

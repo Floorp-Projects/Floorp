@@ -539,8 +539,16 @@ SI_GetBoolPref(const char * prefname, PRBool defaultvalue);
 extern void
 SI_SetBoolPref(const char * prefname, PRBool prefvalue);
 
+extern void
+SI_SetCharPref(const char * prefname, const char * prefvalue);
+
+extern void
+SI_GetCharPref(const char * prefname, char** aPrefvalue);
+
 static const char *pref_captureForms = "wallet.captureForms";
 static const char *pref_WalletNotified = "wallet.Notified";
+static const char *pref_WalletKeyFileName = "wallet.KeyFileName";
+static const char *pref_WalletSchemaValueFileName = "wallet.SchemaValueFileName";
 
 PRIVATE PRBool wallet_captureForms = PR_FALSE;
 PRIVATE PRBool wallet_Notified = PR_FALSE;
@@ -1127,8 +1135,11 @@ PRUint32 keyPosition = 0;
 PRBool keyCancel = PR_FALSE;
 PRBool keySet = PR_FALSE;
 time_t keyExpiresTime;
+
 // 30 minute duration (60*30=1800 seconds)
 #define keyDuration 1800
+char* keyFileName = nsnull;
+char* schemaValueFileName = nsnull;
 
 PUBLIC void
 Wallet_RestartKey() {
@@ -1186,15 +1197,50 @@ PUBLIC nsresult Wallet_ResourceDirectory(nsFileSpec& dirSpec) {
   return res;
 }
 
+extern void SI_InitSignonFileName();
+
+PUBLIC char *
+Wallet_RandomName(char* suffix)
+{
+  /* pick the current time as the random number */
+  time_t curTime = time(NULL);
+
+  /* take 8 least-significant digits as the file name */
+  char name[9];
+  PR_snprintf(name, 13, "%lu.%s", (curTime%100000000), suffix);
+  return PL_strdup(name);
+}
+
+PRIVATE void
+wallet_InitKeyFileName() {
+  static PRBool namesInitialized = PR_FALSE;
+  if (!namesInitialized) {
+    SI_GetCharPref(pref_WalletKeyFileName, &keyFileName);
+    if (!keyFileName) {
+      keyFileName = Wallet_RandomName("key");
+      SI_SetCharPref(pref_WalletKeyFileName, keyFileName);
+    }
+    SI_GetCharPref(pref_WalletSchemaValueFileName, &schemaValueFileName);
+    if (!schemaValueFileName) {
+      schemaValueFileName = Wallet_RandomName("wlt");
+      SI_SetCharPref(pref_WalletSchemaValueFileName, schemaValueFileName);
+    }
+    SI_InitSignonFileName();
+    namesInitialized = PR_TRUE;
+  }
+}
+
 /* returns -1 if key does not exist, 0 if key is of length 0, 1 otherwise */
 PRIVATE PRInt32
 wallet_KeySize() {
+
+  wallet_InitKeyFileName();
   nsFileSpec dirSpec;
   nsresult rv = Wallet_ProfileDirectory(dirSpec);
   if (NS_FAILED(rv)) {
     return -1;
   }
-  nsInputFileStream strm(dirSpec + "key");
+  nsInputFileStream strm(dirSpec + keyFileName);
   if (!strm.is_open()) {
     return -1;
   } else {
@@ -1265,7 +1311,7 @@ Wallet_SetKey(PRBool isNewkey) {
     if (NS_FAILED(rval)) {
       return PR_FALSE;
     }
-    nsOutputFileStream strm2(dirSpec + "key");
+    nsOutputFileStream strm2(dirSpec + keyFileName);
     if (!strm2.is_open()) {
       *key = '\0';
       return PR_FALSE;
@@ -1313,7 +1359,7 @@ Wallet_SetKey(PRBool isNewkey) {
     if (NS_FAILED(rval)) {
       return PR_FALSE;
     }
-    nsInputFileStream strm(dirSpec + "key");
+    nsInputFileStream strm(dirSpec + keyFileName);
     Wallet_RestartKey();
     char* p = key+1;
     while (*p) {
@@ -1941,7 +1987,7 @@ wallet_Initialize() {
       }
     }
     PR_FREEIF(message);
-    wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE, PR_TRUE);
+    wallet_ReadFromFile(schemaValueFileName, wallet_SchemaToValue_list, PR_TRUE, PR_TRUE);
     wallet_keyInitialized = PR_TRUE;
   }
 
@@ -1996,7 +2042,7 @@ void WLLT_ChangePassword() {
   Wallet_SetKey(PR_TRUE);
 
   /* write out user data using new key */
-  wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE);
+  wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list, PR_TRUE);
 #ifdef SingleSignon
   SI_SaveSignonData();
 #endif
@@ -2306,7 +2352,7 @@ wallet_Capture(nsIDocument* doc, nsString field, nsString value, nsString vcard)
     nsAutoString * aSchema = new nsAutoString(schema);
     dummy = 0;
     wallet_WriteToList(*aSchema, *aValue, dummy, wallet_SchemaToValue_list);
-    wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE);
+    wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list, PR_TRUE);
 
   } else {
 
@@ -2342,7 +2388,7 @@ wallet_Capture(nsIDocument* doc, nsString field, nsString value, nsString vcard)
     nsAutoString * aValue = new nsAutoString(value);
     dummy = 0;
     wallet_WriteToList(*aField, *aValue, dummy, wallet_SchemaToValue_list);
-    wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE);
+    wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list, PR_TRUE);
   }
 }
 
@@ -2447,7 +2493,7 @@ WLLT_PostEdit(nsAutoString walletList) {
   *separator = BREAK;
 
   /* open SchemaValue file */
-  nsOutputFileStream strm(dirSpec + "SchemaValue.tbl");
+  nsOutputFileStream strm(dirSpec + schemaValueFileName);
   if (!strm.is_open()) {
     NS_ERROR("unable to open file");
     delete []walletListAsCString;
@@ -2474,7 +2520,7 @@ WLLT_PostEdit(nsAutoString walletList) {
   /* close the file and read it back into the SchemaToValue list */
   strm.close();
   wallet_Clear(&wallet_SchemaToValue_list);
-  wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE, PR_TRUE);
+  wallet_ReadFromFile(schemaValueFileName, wallet_SchemaToValue_list, PR_TRUE, PR_TRUE);
   delete []walletListAsCString;
 }
 
