@@ -53,46 +53,6 @@
 
 #include <os2.h>
 
-#if 0 // OLDWAY
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <io.h>
-#include <errno.h>
-
-#ifdef XP_OS2_VACPP
-#define ENOTDIR EBADPOS
-#endif
-
-#define NSRESULT_FOR_RETURN(ret) (!(ret) ? NS_OK : NSRESULT_FOR_ERRNO())
-
-inline nsresult
-nsresultForErrno(int err)
-{
-#ifdef DEBUG
-    if (err)
-        fprintf(stderr, "errno %d\n", err);
-#endif
-    switch(err) {
-      case 0:
-        return NS_OK;
-      case ENOENT:
-        return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
-      case ENOTDIR:
-        return NS_ERROR_FILE_DESTINATION_NOT_DIR;
-      case EEXIST:
-        return NS_ERROR_FILE_ALREADY_EXISTS;
-      case EACCES:
-      default:
-        return NS_ERROR_FAILURE;
-    }
-}
-
-#define NSRESULT_FOR_ERRNO() nsresultForErrno(errno)
-#endif
-
 class NS_COM nsLocalFile : public nsILocalFile
 {
 public:
@@ -129,11 +89,6 @@ private:
     // this will be the resolve path which will *NEVER* be return to the user
     nsCString mResolvedPath;
 
-#if defined(XP_WIN)
-    IPersistFile* mPersistFile; 
-    IShellLink*   mShellLink;
-#endif
-    
     PRFileInfo64  mFileInfo64;
     
     void MakeDirty();

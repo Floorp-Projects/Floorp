@@ -61,11 +61,7 @@ static int isleadbyte(int c);
 #include <io.h>
 
 
-#ifdef XP_OS2
 static nsresult ConvertOS2Error(int err)
-#else
-static nsresult ConvertWinError(DWORD winErr)
-#endif
 {
     nsresult rv;
     
@@ -255,10 +251,6 @@ nsLocalFile::nsLocalFile()
 {
     NS_INIT_ISUPPORTS();
       
-#ifndef XP_OS2  
-    mPersistFile = nsnull;
-    mShellLink   = nsnull;
-#endif
     mLastResolution = PR_FALSE;
     mFollowSymlinks = PR_FALSE;
     MakeDirty();
@@ -266,23 +258,6 @@ nsLocalFile::nsLocalFile()
 
 nsLocalFile::~nsLocalFile()
 {
-#ifndef XP_OS2  
-    PRBool uninitCOM = PR_FALSE;
-    if (mPersistFile || mShellLink)
-    {
-        uninitCOM = PR_TRUE;
-    }
-    // Release the pointer to the IPersistFile interface. 
-    if (mPersistFile)
-        mPersistFile->Release(); 
-    
-    // Release the pointer to the IShellLink interface. 
-    if(mShellLink)
-        mShellLink->Release();
-
-    if (uninitCOM)
-        CoUninitialize();
-#endif
 }
 
 /* nsISupports interface implementation. */
@@ -325,36 +300,6 @@ nsLocalFile::MakeDirty()
 nsresult 
 nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char** resolvedPath)
 {
-    nsresult rv = NS_OK;
-    
-#ifndef XP_OS2
-
-    if (strstr(workingPath, ".lnk") == nsnull)
-        return NS_ERROR_FILE_INVALID_PATH;
-
-    if (mPersistFile == nsnull || mShellLink == nsnull)
-    {
-        CoInitialize(NULL);  // FIX: we should probably move somewhere higher up during startup
-
-        HRESULT hres; 
-
-        // FIX.  This should be in a service.
-        // Get a pointer to the IShellLink interface. 
-        hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void**)&mShellLink); 
-        if (SUCCEEDED(hres)) 
-        { 
-            // Get a pointer to the IPersistFile interface. 
-            hres = mShellLink->QueryInterface(IID_IPersistFile, (void**)&mPersistFile); 
-        }
-        
-        if (mPersistFile == nsnull || mShellLink == nsnull)
-        {
-            return NS_ERROR_FILE_INVALID_PATH;
-        }
-    }
-#endif
-        
-    
     // Get the native path for |this|
     char* filePath = (char*) nsMemory::Clone( workingPath, strlen(workingPath)+1 );
 
@@ -430,90 +375,6 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
                 return NS_ERROR_NULL_POINTER;
             }
         }
-#ifndef XP_OS2
-      
-        WORD wsz[MAX_PATH];     // TODO, Make this dynamically allocated.
-
-        // check to see the file is a shortcut by the magic .lnk extension.
-        size_t offset = strlen(filePath) - 4;
-        if ((offset > 0) && (strncmp( (filePath + offset), ".lnk", 4) == 0))
-        {
-            MultiByteToWideChar(CP_ACP, 0, filePath, -1, wsz, MAX_PATH); 
-        }        
-        else
-        {
-            char linkStr[MAX_PATH];
-            strcpy(linkStr, filePath);
-            strcat(linkStr, ".lnk");
-
-            // Ensure that the string is Unicode. 
-            MultiByteToWideChar(CP_ACP, 0, linkStr, -1, wsz, MAX_PATH); 
-        }        
-
-        HRESULT hres; 
-        
-        // see if we can Load the path.
-        hres = mPersistFile->Load(wsz, STGM_READ); 
-
-        if (SUCCEEDED(hres)) 
-        {
-            // Resolve the link. 
-            hres = mShellLink->Resolve(nsnull, SLR_NO_UI ); 
-            if (SUCCEEDED(hres)) 
-            { 
-                WIN32_FIND_DATA wfd; 
-                
-                char *temp = (char*) nsMemory::Alloc( MAX_PATH );
-                if (temp == nsnull)
-                    return NS_ERROR_NULL_POINTER;
-                
-                // Get the path to the link target. 
-                hres = mShellLink->GetPath( temp, MAX_PATH, &wfd, SLGP_UNCPRIORITY ); 
-
-                if (SUCCEEDED(hres))
-                {
-                    // found a new path.
-                    
-                    // addend a slash on it since it does not come out of GetPath()
-                    // with one only if it is a directory.  If it is not a directory
-                    // and there is more to append, than we have a problem.
-                    
-                    struct stat st;
-                    int statrv = stat(temp, &st);
-                    
-                    if (0 == statrv && (_S_IFDIR & st.st_mode))
-                    {
-                        strcat(temp, "\\");
-                    }
-                                       
-                    if (slash)
-                    {
-                        // save where we left off.
-                        char *carot= (temp + strlen(temp) -1 );
-
-                        // append all the stuff that we have not done.
-                        strcat(temp, ++slash);
-                        
-                        slash = carot;
-                    }
-
-                    nsMemory::Free(filePath);
-                    filePath = temp;
-            
-                }
-                else
-                {
-                    nsMemory::Free(temp);
-                }
-            }
-            else
-            {
-                // could not resolve shortcut.  Return error;
-                nsMemory::Free(filePath);
-                return NS_ERROR_FILE_INVALID_PATH;
-            }
-        }
-#endif
     
         if (slash)
         {
@@ -530,7 +391,7 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
         temp[len] = '\0';
     
     *resolvedPath = filePath;
-    return rv;
+    return NS_OK;
 }
 
 nsresult
@@ -577,21 +438,12 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
         int pathLen = strlen(workingFilePath);
         const char* leaf = workingFilePath + pathLen - 4;
     
-#ifdef XP_OS2
         if (pathLen < 4)
-#else
-        if (pathLen < 4 || (strcmp(leaf, ".lnk") != 0))
-#endif
         {
             mDirty = PR_FALSE;
             return NS_OK;
         }
     }
-
-#ifndef XP_OS2
-    if (!mFollowSymlinks)
-        return NS_ERROR_FILE_NOT_FOUND;  // if we are not resolving, we just give up here.
-#endif
 
     nsresult result;
 
@@ -737,14 +589,9 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
         {
             *slash = '\0';
             
-#ifdef XP_OS2
                 rv = CreateDirectoryA(NS_CONST_CAST(char*, mResolvedPath.get()), NULL);
                 if (rv) {
                     rv = ConvertOS2Error(rv);
-#else
-                if (!CreateDirectoryA(NS_CONST_CAST(char*, mResolvedPath.get()), NULL)) {
-                    rv = ConvertWinError(GetLastError());
-#endif
                     if (rv != NS_ERROR_FILE_ALREADY_EXISTS) return rv;
                 }
                 *slash = '\\';
@@ -764,14 +611,9 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 
     if (type == DIRECTORY_TYPE)
     {
-#ifdef XP_OS2
         rv = CreateDirectoryA(NS_CONST_CAST(char*, mResolvedPath.get()), NULL);
         if (rv) 
             return ConvertOS2Error(rv);
-#else
-        if (!CreateDirectoryA(NS_CONST_CAST(char*, mResolvedPath.get()), NULL))
-            return ConvertWinError(GetLastError());
-#endif
         else 
             return NS_OK;
     }
@@ -1311,24 +1153,6 @@ nsLocalFile::SetModDate(PRInt64 aLastModifiedTime, PRBool resolveTerminal)
     
     const char *filePath = mResolvedPath.get();
     
-#ifndef XP_OS2
-    HANDLE file = CreateFile(  filePath,          // pointer to name of the file
-                               GENERIC_WRITE,     // access (write) mode
-                               0,                 // share mode
-                               NULL,              // pointer to security attributes
-                               OPEN_EXISTING,     // how to create
-                               0,                 // file attributes 
-                               NULL);
-
-    MakeDirty();
-
-    if (!file)
-    {
-        return ConvertWinError(GetLastError());
-    }
-#endif
-
-#ifdef XP_OS2
     PRExplodedTime pret;
     FILESTATUS3 pathInfo;
 
@@ -1368,39 +1192,6 @@ nsLocalFile::SetModDate(PRInt64 aLastModifiedTime, PRBool resolveTerminal)
        return rv;
 
     MakeDirty();
-#else  
-
-    FILETIME lft, ft;
-    SYSTEMTIME st;
-    PRExplodedTime pret;
-    
-    // PR_ExplodeTime expects usecs...
-    PR_ExplodeTime(aLastModifiedTime * PR_USEC_PER_MSEC, PR_LocalTimeParameters, &pret);
-    st.wYear            = pret.tm_year;    
-    st.wMonth           = pret.tm_month + 1; // Convert start offset -- Win32: Jan=1; NSPR: Jan=0
-    st.wDayOfWeek       = pret.tm_wday;    
-    st.wDay             = pret.tm_mday;    
-    st.wHour            = pret.tm_hour;
-    st.wMinute          = pret.tm_min;    
-    st.wSecond          = pret.tm_sec;
-    st.wMilliseconds    = pret.tm_usec/1000;
-
-    if ( 0 == SystemTimeToFileTime(&st, &lft) )
-    {
-        rv = ConvertWinError(GetLastError());
-    }
-    else if ( 0 == LocalFileTimeToFileTime(&lft, &ft) )
-    {
-        rv = ConvertWinError(GetLastError());
-    }
-    else if ( 0 == SetFileTime(file, NULL, &ft, &ft) )
-    {
-        // could not set time
-        rv = ConvertWinError(GetLastError());
-    }
-
-    CloseHandle( file );
-#endif
     return rv;
 }
 
@@ -1478,11 +1269,6 @@ NS_IMETHODIMP
 nsLocalFile::SetFileSize(PRInt64 aFileSize)
 {
 
-#ifndef XP_OS2
-    DWORD status;
-    HANDLE hFile;
-#endif
-
     nsresult rv = ResolveAndStat(PR_TRUE);
     
     if (NS_FAILED(rv))
@@ -1491,7 +1277,6 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
     const char *filePath = mResolvedPath.get();
 
 
-#ifdef XP_OS2   
     APIRET rc;
     HFILE hFile;
     ULONG actionTaken;
@@ -1510,57 +1295,23 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
         MakeDirty();
         return NS_ERROR_FAILURE;
     }
-#else
-    // Leave it to Microsoft to open an existing file with a function
-    // named "CreateFile".
-    hFile = CreateFile(filePath,
-                       GENERIC_WRITE, 
-                       FILE_SHARE_READ, 
-                       NULL, 
-                       OPEN_EXISTING, 
-                       FILE_ATTRIBUTE_NORMAL, 
-                       NULL); 
-
-    if (hFile == INVALID_HANDLE_VALUE)
-    {
-        MakeDirty();
-        return NS_ERROR_FAILURE;
-    }
-#endif   
-    
+   
     // Seek to new, desired end of file
     PRInt32 hi, lo;
     myLL_L2II(aFileSize, &hi, &lo );
 
-#ifdef XP_OS2
     rc = DosSetFileSize(hFile, lo);
     if (rc == NO_ERROR) 
        DosClose(hFile);
     else
        goto error; 
-#else   
-    status = SetFilePointer(hFile, lo, NULL, FILE_BEGIN);
-    if (status == 0xffffffff)
-        goto error;
-
-    // Truncate file at current cursor position
-    if (!SetEndOfFile(hFile))
-        goto error;
-
-    if (!CloseHandle(hFile))
-        return NS_ERROR_FAILURE;
-#endif
 
     MakeDirty();
     return NS_OK;
 
  error:
     MakeDirty();
-#ifdef XP_OS2
     DosClose(hFile);
-#else   
-    CloseHandle(hFile);
-#endif
     return NS_ERROR_FAILURE;
 }
 
@@ -1658,7 +1409,6 @@ nsLocalFile::IsWritable(PRBool *_retval)
     
     const char *workingFilePath = mWorkingPath.get();
 
-#ifdef XP_OS2
     APIRET rc;
     FILESTATUS3 pathInfo;
 
@@ -1674,11 +1424,6 @@ nsLocalFile::IsWritable(PRBool *_retval)
     }
 
     *_retval =  !((pathInfo.attrFile & FILE_READONLY)  != 0); 
-#else  
-    DWORD word = GetFileAttributes(workingFilePath);
-
-    *_retval = !((word & FILE_ATTRIBUTE_READONLY) != 0); 
-#endif
 
     return NS_OK;
 }
@@ -1723,16 +1468,10 @@ nsLocalFile::IsExecutable(PRBool *_retval)
 
     const char* leaf = (const char*) _mbsrchr((const unsigned char*) path.get(), '\\');
 
-    // XXX On Windows NT / 2000, it should use "PATHEXT" environment value
-#ifdef XP_OS2
     if ( (strstr(leaf, ".bat") != nsnull) ||
          (strstr(leaf, ".exe") != nsnull) ||
          (strstr(leaf, ".cmd") != nsnull) ||
          (strstr(leaf, ".com") != nsnull) ) {
-#else
-    if ( (strstr(leaf, ".bat") != nsnull) ||
-         (strstr(leaf, ".exe") != nsnull) ) {
-#endif
         *_retval = PR_TRUE;
     } else {
         *_retval = PR_FALSE;
@@ -1786,7 +1525,6 @@ nsLocalFile::IsHidden(PRBool *_retval)
     
     const char *workingFilePath = mWorkingPath.get();
 
-#ifdef XP_OS2
     APIRET rc;
     FILESTATUS3 pathInfo;
 
@@ -1803,12 +1541,6 @@ nsLocalFile::IsHidden(PRBool *_retval)
 
     *_retval =  ((pathInfo.attrFile & FILE_HIDDEN)  != 0); 
     
-#else  
-    DWORD word = GetFileAttributes(workingFilePath);
-
-    *_retval =  ((word & FILE_ATTRIBUTE_HIDDEN)  != 0); 
-#endif
-
     return NS_OK;
 }
 
@@ -1816,25 +1548,10 @@ nsLocalFile::IsHidden(PRBool *_retval)
 NS_IMETHODIMP  
 nsLocalFile::IsSymlink(PRBool *_retval)
 {
-    NS_ENSURE_ARG(_retval);
+    NS_ENSURE_ARG_POINTER(_retval);
+    // No Symlinks on OS/2
     *_retval = PR_FALSE;
 
-#ifndef XP_OS2   // No Symlinks on OS/2
-    nsCAutoString path;
-    int   pathLen;
-    
-    GetNativePath(path);
-    pathLen = path.Length();
-    
-    const char* leaf = path.get() + pathLen - 4;
-    
-    if ( (strcmp(leaf, ".lnk") == 0)) 
-    {
-        *_retval = PR_TRUE;
-    }
-    
-#endif
-    
     return NS_OK;
 }
 
@@ -1851,7 +1568,6 @@ nsLocalFile::IsSpecial(PRBool *_retval)
     
     const char *workingFilePath = mWorkingPath.get();
 
-#ifdef XP_OS2
     APIRET rc;
     FILESTATUS3 pathInfo;
 
@@ -1867,11 +1583,6 @@ nsLocalFile::IsSpecial(PRBool *_retval)
     } 
 
     *_retval =  ((pathInfo.attrFile & FILE_SYSTEM)  != 0); 
-#else  
-    DWORD word = GetFileAttributes(workingFilePath);
-
-    *_retval = ((word & FILE_ATTRIBUTE_SYSTEM)  != 0); 
-#endif
 
     return NS_OK;
 }
