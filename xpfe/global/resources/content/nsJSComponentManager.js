@@ -34,6 +34,7 @@ var nsJSComponentManager = {
       catch(e)
         {
         }
+        return null;
     },
 
   createInstanceByID: function (aID, aIID)
@@ -46,6 +47,7 @@ var nsJSComponentManager = {
       catch(e)
         {
         }
+        return null;
     },
         
   getService: function (aProgID, aIID)
@@ -58,6 +60,7 @@ var nsJSComponentManager = {
       catch(e)
         {
         }
+        return null;
     },
   
   getServiceByID: function (aID, aIID)  
@@ -70,5 +73,6 @@ var nsJSComponentManager = {
       catch(e)
         {
         }
+        return null;
     }
 };

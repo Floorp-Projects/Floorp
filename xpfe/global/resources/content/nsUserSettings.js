@@ -30,6 +30,7 @@ var nsPreferences = {
         {
           return aDefVal != undefined ? aDefVal : null;
         }
+      return null;        // quiet warnings
     },
   
   setUnicharPref: function (aPrefName, aPrefValue)
@@ -53,6 +54,7 @@ var nsPreferences = {
         {
           return aDefVal != undefined ? aDefVal : null;
         }
+      return null;        // quiet warnings
     },
     
   setIntPref: function (aPrefName, aPrefValue)
@@ -76,6 +78,7 @@ var nsPreferences = {
         {
           return aDefVal != undefined ? aDefVal : null;
         }
+      return null;        // quiet warnings
     },
 
   getLocalizedUnicharPref: function (aPrefName, aDefVal)
@@ -88,6 +91,7 @@ var nsPreferences = {
         {
           return aDefVal != undefined ? aDefVal : null;
         }
+      return null;        // quiet warnings
     },
 };
 
