@@ -5302,23 +5302,15 @@ nsBlockFrame::PaintFloats(nsIPresContext* aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect& aDirtyRect)
 {
-  for (line_iterator line = begin_lines(), line_end = end_lines();
-       line != line_end;
-       ++line) {
-    if (!line->HasFloats()) {
-      continue;
-    }
-    nsFloatCache* fc = line->GetFirstFloat();
-    while (fc) {
-      nsIFrame* floatFrame = fc->mPlaceholder->GetOutOfFlowFrame();
-      PaintChild(aPresContext, aRenderingContext, aDirtyRect,
-                 floatFrame, NS_FRAME_PAINT_LAYER_BACKGROUND);
-      PaintChild(aPresContext, aRenderingContext, aDirtyRect,
-                 floatFrame, NS_FRAME_PAINT_LAYER_FLOATS);
-      PaintChild(aPresContext, aRenderingContext, aDirtyRect,
-                 floatFrame, NS_FRAME_PAINT_LAYER_FOREGROUND);
-      fc = fc->Next();
-    }
+  for (nsIFrame* floatFrame = mFloats.FirstChild();
+       floatFrame;
+       floatFrame = floatFrame->GetNextSibling()) {
+    PaintChild(aPresContext, aRenderingContext, aDirtyRect,
+               floatFrame, NS_FRAME_PAINT_LAYER_BACKGROUND);
+    PaintChild(aPresContext, aRenderingContext, aDirtyRect,
+               floatFrame, NS_FRAME_PAINT_LAYER_FLOATS);
+    PaintChild(aPresContext, aRenderingContext, aDirtyRect,
+               floatFrame, NS_FRAME_PAINT_LAYER_FOREGROUND);
   }
 }
 
