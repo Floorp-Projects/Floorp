@@ -2099,8 +2099,7 @@ NS_IMETHODIMP mozSqlResultEnumerator::GetNext(nsISupports** _retval)
 
 mozSqlResultStream::mozSqlResultStream(mozSqlResult* aResult)
   : mResult(aResult),
-    mBuffer(nsnull),
-    mLength(0),
+    mInitialized(PR_FALSE),
     mPosition(0)
 {
   NS_ADDREF(mResult);
@@ -2109,8 +2108,6 @@ mozSqlResultStream::mozSqlResultStream(mozSqlResult* aResult)
 
 mozSqlResultStream::~mozSqlResultStream()
 {
-  if (mBuffer)
-    nsMemory::Free(mBuffer);
   NS_RELEASE(mResult);
 }
 
@@ -2146,7 +2143,7 @@ mozSqlResultStream::Available(PRUint32* _retval)
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = mLength - mPosition;
+  *_retval = mBuffer.Length() - mPosition;
 
   return NS_OK;
 }
@@ -2154,17 +2151,20 @@ mozSqlResultStream::Available(PRUint32* _retval)
 NS_IMETHODIMP
 mozSqlResultStream::Read(char* aBuffer, PRUint32 aCount, PRUint32* _retval)
 {
+  if (aCount == 0) {
+    *_retval = 0;
+    return NS_OK;
+  }
+
   nsresult rv = EnsureBuffer();
   if (NS_FAILED(rv))
     return rv;
 
-  if (aCount > mLength - mPosition)
-    aCount = mLength - mPosition;
+  if (aCount > mBuffer.Length() - mPosition)
+    aCount = mBuffer.Length() - mPosition;
 
-  if (aCount > 0) {
-    memcpy(aBuffer, &mBuffer[mPosition], aCount);
-    mPosition += aCount;
-  }
+  memcpy(aBuffer, mBuffer.get() + mPosition, aCount);
+  mPosition += aCount;
 
   *_retval = aCount;
 
@@ -2174,7 +2174,23 @@ mozSqlResultStream::Read(char* aBuffer, PRUint32 aCount, PRUint32* _retval)
 NS_IMETHODIMP
 mozSqlResultStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure, PRUint32 aCount, PRUint32* _retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (aCount == 0) {
+    *_retval = 0;
+    return NS_OK;
+  }
+
+  nsresult rv = EnsureBuffer();
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (aCount > mBuffer.Length() - mPosition)
+    aCount = mBuffer.Length() - mPosition;
+
+  rv = aWriter(this, aClosure, mBuffer.get() + mPosition, 0, aCount, _retval);
+  if (NS_SUCCEEDED(rv));
+    mPosition += aCount;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2188,28 +2204,28 @@ mozSqlResultStream::IsNonBlocking(PRBool* _retval)
 nsresult
 mozSqlResultStream::EnsureBuffer()
 {
-  if (!mBuffer) {
-    nsAutoString buffer;
-    buffer.Append(NS_LITERAL_STRING("<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\"></head><body><table border=\"1\" cellspacing=\"0\" width=\"100%\">"));
+  if (!mInitialized) {
+    mBuffer.Append(NS_LITERAL_CSTRING("<?xml version=\"1.0\"?>\n"));
+    mBuffer.Append(NS_LITERAL_CSTRING("<document>\n<body>\n"));
     PRInt32 rowCount = mResult->mRows.Count();
     PRInt32 columnCount = mResult->mColumnInfo.Count();
     for (PRInt32 i = 0; i < rowCount; i++) {
-      buffer.Append(NS_LITERAL_STRING("<tr>"));
+      mBuffer.Append(NS_LITERAL_CSTRING("<row>\n"));
       Row* row = (Row*)mResult->mRows[i];
       for (PRInt32 j = 0; j < columnCount; j++) {
-        buffer.Append(NS_LITERAL_STRING("<td>"));
+        mBuffer.Append(NS_LITERAL_CSTRING("<cell>\n"));
         Cell* cell = row->mCells[j];
         if (cell->IsNull())
-          buffer.Append(NS_LITERAL_STRING("null"));
+          mBuffer.Append(NS_LITERAL_CSTRING("null"));
         else {
           PRInt32 type = cell->GetType();
           if (type == mozISqlResult::TYPE_STRING)
-            buffer.Append(cell->mString);
+            mBuffer.Append(NS_ConvertUCS2toUTF8(cell->mString));
           else if (type == mozISqlResult::TYPE_INT)
-            buffer.AppendInt(cell->mInt);
+            mBuffer.AppendInt(cell->mInt);
           else if (type == mozISqlResult::TYPE_FLOAT ||
                    type == mozISqlResult::TYPE_DECIMAL)
-            buffer.AppendFloat(cell->mFloat);
+            mBuffer.AppendFloat(cell->mFloat);
           else if (type == mozISqlResult::TYPE_DATE ||
                    type == mozISqlResult::TYPE_TIME ||
                    type == mozISqlResult::TYPE_DATETIME) {
@@ -2219,23 +2235,22 @@ mozSqlResultStream::EnsureBuffer()
                                   type != mozISqlResult::TYPE_DATE ? kTimeFormatSeconds : kTimeFormatNone,
                                   PRTime(cell->mDate),
                                   value);
-            buffer.Append(value);
+            mBuffer.Append(NS_ConvertUCS2toUTF8(value));
           }
           else if (type == mozISqlResult::TYPE_BOOL) {
             if (cell->mBool)
-              buffer.Append(NS_LITERAL_STRING("true"));
+              mBuffer.Append(NS_LITERAL_CSTRING("true"));
             else
-              buffer.Append(NS_LITERAL_STRING("false"));
+              mBuffer.Append(NS_LITERAL_CSTRING("false"));
           }
         }
-        buffer.Append(NS_LITERAL_STRING("</td>"));
+        mBuffer.Append(NS_LITERAL_CSTRING("</cell>\n"));
       }
-      buffer.Append(NS_LITERAL_STRING("</tr>"));
+      mBuffer.Append(NS_LITERAL_CSTRING("</row>\n"));
     }
-    buffer.Append(NS_LITERAL_STRING("</table></body></html>"));
+    mBuffer.Append(NS_LITERAL_CSTRING("</body>\n</document>\n"));
 
-    mBuffer = ToNewUTF8String(buffer);
-    mLength = nsCRT::strlen(mBuffer);
+    mInitialized = PR_TRUE;
   }
 
   return NS_OK;

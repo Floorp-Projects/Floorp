@@ -415,8 +415,8 @@ class mozSqlResultStream : public mozISqlInputStream,
 
   private:
     mozSqlResult*               mResult;
-    char*                       mBuffer;
-    PRUint32                    mLength;
+    nsCAutoString               mBuffer;
+    PRBool                      mInitialized;
     PRUint32                    mPosition;
 };
 

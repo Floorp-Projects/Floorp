@@ -140,7 +140,7 @@ interface mozISqlResult : nsISupports
   mozISqlResultEnumerator enumerate();
 
   /**
-   * Returns a stream which may be used to return the rows as HTML.
+   * Returns a stream which may be used to return the rows as XML.
    *
    * @return               the input stream
    */
