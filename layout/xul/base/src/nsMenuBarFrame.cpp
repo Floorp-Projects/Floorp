@@ -232,8 +232,11 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
     if (mCaretWasVisible)
       caret->SetCaretVisible(!mIsActive);
   }
+
+  NS_NAMED_LITERAL_STRING(active, "DOMMenuBarActive");
+  NS_NAMED_LITERAL_STRING(inactive, "DOMMenuBarInactive");
   
-  FireDOMEvent(mPresContext, mIsActive? NS_LITERAL_STRING("DOMMenuBarActive"): NS_LITERAL_STRING("DOMMenuBarInactive"));
+  FireDOMEvent(mPresContext, mIsActive ? active : inactive);
 
   return NS_OK;
 }
