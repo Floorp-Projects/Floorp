@@ -53,6 +53,10 @@
 #include "nsIDocument.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
+#include "nsIDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsIFileStreams.h"
+#include "nsNetUtil.h"
 
 #if defined(XP_PC) && !defined(XP_OS2)
 #include "windows.h"
@@ -178,9 +182,9 @@ public:
 
 protected:
   char* mTarget;
-  nsFileURL mFileURL;
-  nsFileSpec mFileSpec;
-  nsCOMPtr<nsIFileSpecOutputStream> mFileThing;
+  nsCString mFileURL;
+  nsCOMPtr<nsILocalFile> mTempFile;
+  nsCOMPtr<nsIOutputStream> mOutputStream;
   nsIPluginInstanceOwner* mOwner;
 };
 
@@ -189,58 +193,44 @@ NS_IMPL_RELEASE(nsPluginStreamToFile);
 
 nsPluginStreamToFile::nsPluginStreamToFile(const char* target, nsIPluginInstanceOwner* owner) :
   mTarget(PL_strdup(target)),
-  mFileURL(nsnull),
   mOwner(owner)
 {
   NS_INIT_REFCNT();
 
-  // open the file and prepare it for writing
-  char buf[400], tpath[300];
-#ifdef XP_PC
-#ifdef XP_OS2
-    PL_strcpy(tpath, getenv("TEMP"));
-#else
-  ::GetTempPath(sizeof(tpath), tpath);
-#endif
-  PRInt32 len = PL_strlen(tpath);
+  nsresult rv;
+  nsCOMPtr<nsIFile> pluginTmp;
+  rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(pluginTmp));
+  if (NS_FAILED(rv)) return;
 
-  if ((len > 0) && (tpath[len-1] != '\\')) {
-    tpath[len] = '\\';
-    tpath[len+1] = 0;
-  }
-#elif defined (XP_UNIX) || defined (XP_BEOS)
-  PL_strcpy(tpath, "/tmp/");
-#else
-  tpath[0] = 0;
-#endif // XP_PC
-
-  PR_snprintf(buf, sizeof(buf), "%s%08X", tpath, this);
-
-  // Create and validate the file spec object. (When we have a constructor for the temp
-  // directory, we should use this instead of the per-platform hack above).
-  mFileSpec = PL_strdup(buf); 
-  if (mFileSpec.Error())
-    return;
+  mTempFile = do_QueryInterface(pluginTmp, &rv);
+  if (NS_FAILED(rv)) return;
+    
+  // need to create a file with a unique name - use target as the basis
+  rv = mTempFile->AppendNative(nsDependentCString(target));
+  if (NS_FAILED(rv)) return;
+    
+  // Yes, make it unique.
+  rv = mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0700); 
+  if (NS_FAILED(rv)) return;
 
   // create the file
-  nsISupports* ourStream;
-  if (NS_FAILED(NS_NewTypicalOutputFileStream(&ourStream, mFileSpec)))
+  rv = NS_NewLocalFileOutputStream(getter_AddRefs(mOutputStream), mTempFile, -1, 00600);
+  if (NS_FAILED(rv))
     return;
-  mFileThing = do_QueryInterface(ourStream);
-  NS_RELEASE(ourStream);
 	
-  mFileThing->Close();
+  mOutputStream->Close();
 
   // construct the URL we'll use later in calls to GetURL()
-  mFileURL = mFileSpec;	
+  NS_GetURLSpecFromFile(mTempFile, mFileURL);
 
 #ifdef NS_DEBUG
-  printf("File URL = %s\n", mFileURL.GetAsString());
+  printf("File URL = %s\n", mFileURL.get());
 #endif
 }
 
 nsPluginStreamToFile::~nsPluginStreamToFile()
 {
+  // should we be deleting mTempFile here?
   if (nsnull != mTarget)
     PL_strfree(mTarget);
 }
@@ -271,14 +261,10 @@ nsPluginStreamToFile::Flush()
 NS_IMETHODIMP
 nsPluginStreamToFile::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
 {
-  // write the data to the file and update the target
-  nsCOMPtr<nsIOpenFile> thing;
-  thing = do_QueryInterface(mFileThing);
-  thing->Open(mFileSpec, (PR_WRONLY | PR_CREATE_FILE | PR_APPEND), 0700);
   PRUint32 actualCount;
-  mFileThing->Write(aBuf, aCount, &actualCount);
-  mFileThing->Close();
-  mOwner->GetURL(mFileURL.GetAsString(), mTarget, nsnull, 0, nsnull, 0);
+  mOutputStream->Write(aBuf, aCount, &actualCount);
+  mOutputStream->Flush();
+  mOwner->GetURL(mFileURL.get(), mTarget, nsnull, 0, nsnull, 0);
 
   return NS_OK;
 }
@@ -307,7 +293,7 @@ nsPluginStreamToFile::IsNonBlocking(PRBool *aNonBlocking)
 NS_IMETHODIMP
 nsPluginStreamToFile::Close(void)
 {
-  mOwner->GetURL(mFileURL.GetAsString(), mTarget, nsnull, 0, nsnull, 0);
+  mOwner->GetURL(mFileURL.get(), mTarget, nsnull, 0, nsnull, 0);
   return NS_OK;
 }
 

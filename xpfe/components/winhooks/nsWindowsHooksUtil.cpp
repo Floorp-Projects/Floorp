@@ -127,7 +127,7 @@ struct BoolRegistryEntry : public RegistryEntry {
     BoolRegistryEntry( const char *name )
         : RegistryEntry( HKEY_LOCAL_MACHINE, mozillaKeyName, name, "1" ) {
     }
-    operator void*();
+    operator PRBool();
 };
 
 // SavedRegistryEntry
@@ -722,6 +722,6 @@ nsresult EditableFileTypeRegistryEntry::set() {
 }
 
 // Convert current registry setting to boolean.
-BoolRegistryEntry::operator void*() {
-    return (void*)( currentSetting().Equals( "1" ) ? PR_TRUE : PR_FALSE );
+BoolRegistryEntry::operator PRBool() {
+    return currentSetting().Equals( "1" ) ? PR_TRUE : PR_FALSE;
 }
