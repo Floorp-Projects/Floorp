@@ -3335,26 +3335,31 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
                                           aPos->mContentOffset,
                                           aPos->mContentOffsetEnd,
                                           aPos->mPreferLeft);
+          if (NS_SUCCEEDED(result))
+          {
+            PRBool selectable;
+            resultFrame->IsSelectable(&selectable, nsnull);
+            if (selectable)
+            {
+              found = PR_TRUE;
+              break;
+            }
+          }
         }
-        if (NS_SUCCEEDED(result))
-        {
-          found = PR_TRUE;
-        }
-        else {
-          if (aPos->mDirection == eDirPrevious && (resultFrame == farStoppingFrame))
-            break;
-          if (aPos->mDirection == eDirNext && (resultFrame == nearStoppingFrame))
-            break;
-          //always try previous on THAT line if that fails go the other way
-          result = frameTraversal->Prev();
-          if (NS_FAILED(result))
-            break;
-          result = frameTraversal->CurrentItem(&isupports);
-          if (NS_FAILED(result) || !isupports)
-            return result;
-          //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
-          resultFrame = (nsIFrame *)isupports;
-        }
+
+        if (aPos->mDirection == eDirPrevious && (resultFrame == farStoppingFrame))
+          break;
+        if (aPos->mDirection == eDirNext && (resultFrame == nearStoppingFrame))
+          break;
+        //always try previous on THAT line if that fails go the other way
+        result = frameTraversal->Prev();
+        if (NS_FAILED(result))
+          break;
+        result = frameTraversal->CurrentItem(&isupports);
+        if (NS_FAILED(result) || !isupports)
+          return result;
+        //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
+        resultFrame = (nsIFrame *)isupports;
       }
 
       if (!found){
@@ -3372,34 +3377,33 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         result = resultFrame->GetContentAndOffsetsFromPoint(context,point,
                                           getter_AddRefs(aPos->mResultContent), aPos->mContentOffset,
                                           aPos->mContentOffsetEnd, aPos->mPreferLeft);
-			  PRBool selectable;
-        resultFrame->IsSelectable(&selectable, nsnull);
-			  if (!selectable)
-          return NS_ERROR_FAILURE;//cant go to unselectable frame
-        
         if (NS_SUCCEEDED(result))
         {
-          found = PR_TRUE;
-          if (resultFrame == farStoppingFrame)
-            aPos->mPreferLeft = PR_FALSE;
-          else
-            aPos->mPreferLeft = PR_TRUE;
+          PRBool selectable;
+          resultFrame->IsSelectable(&selectable, nsnull);
+          if (selectable)
+          {
+            found = PR_TRUE;
+            if (resultFrame == farStoppingFrame)
+              aPos->mPreferLeft = PR_FALSE;
+            else
+              aPos->mPreferLeft = PR_TRUE;
+            break;
+          }
         }
-        else {
-          if (aPos->mDirection == eDirPrevious && (resultFrame == nearStoppingFrame))
-            break;
-          if (aPos->mDirection == eDirNext && (resultFrame == farStoppingFrame))
-            break;
-          //previous didnt work now we try "next"
-          result = frameTraversal->Next();
-          if (NS_FAILED(result))
-            break;
-          result = frameTraversal->CurrentItem(&isupports);
-          if (NS_FAILED(result) || !isupports)
-            return result;
-          //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
-          resultFrame = (nsIFrame *)isupports;
-        }
+        if (aPos->mDirection == eDirPrevious && (resultFrame == nearStoppingFrame))
+          break;
+        if (aPos->mDirection == eDirNext && (resultFrame == farStoppingFrame))
+          break;
+        //previous didnt work now we try "next"
+        result = frameTraversal->Next();
+        if (NS_FAILED(result))
+          break;
+        result = frameTraversal->CurrentItem(&isupports);
+        if (NS_FAILED(result) || !isupports)
+          break;
+        //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
+        resultFrame = (nsIFrame *)isupports;
       }
       aPos->mResultFrame = resultFrame;
     }
