@@ -444,10 +444,12 @@
     </menupopup>
     </menu>
     
+    <!-- Note: "cmd_fontColor" only monitors color state, it doesn't execute the command
+         (We should use "cmd_fontColorState" and "cmd_backgroundColorState" ?) -->
     <menuitem id="fontColor" label="&formatFontColor.label;" 
           accesskey="&formatfontcolor.accesskey;"
           observes="cmd_fontColor"
-          oncommand="goDoCommand('cmd_fontColor')"
+          oncommand="EditorSelectColor('Text', null);"
           position="4"/>
     <menuseparator position="5"/>
 
