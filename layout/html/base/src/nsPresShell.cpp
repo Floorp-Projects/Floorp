@@ -3399,7 +3399,7 @@ PresShell::HandleEvent(nsIView         *aView,
               rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_BACKGROUND, &mCurrentEventFrame);
               if (rv != NS_OK) {
                 // XXX Is this the right thing to do?
-                mCurrentEventFrame = nsnull;
+                mCurrentEventFrame = frame;
                 aHandled = PR_FALSE;
                 rv = NS_OK;
               }
@@ -3421,8 +3421,9 @@ PresShell::HandleEvent(nsIView         *aView,
           if (rv != NS_OK) {
             rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_BACKGROUND, &mCurrentEventFrame);
             if (rv != NS_OK) {
-              // XXX Is this the right thing to do?
-              mCurrentEventFrame = nsnull;
+              // XXX Is this the right thing to do? NO IT ISNT!
+              mCurrentEventFrame = frame;
+              //mCurrentEventFrame = nsnull;
               aHandled = PR_FALSE;
               rv = NS_OK;
             }

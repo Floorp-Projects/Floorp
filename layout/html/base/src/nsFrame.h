@@ -339,6 +339,10 @@ public:
                                              nsIAtom*                     aAttribute,
                                              nsIAtom*                     aListName);
 
+  //Mouse Capturing code used by the frames to tell the view to capture all the following events
+  nsresult CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);
+  PRBool   IsMouseCaptured(nsIPresContext* aPresContext);
+
 #ifdef NS_DEBUG
   /**
    * Tracing method that writes a method enter/exit routine to the
