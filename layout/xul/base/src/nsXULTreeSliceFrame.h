@@ -39,7 +39,12 @@
 #include "nsBoxFrame.h"
 #include "nsIXULTreeSlice.h"
 
+#ifdef MOZ_GRID2
+#include "nsGridRowLeafFrame.h"
+class nsXULTreeSliceFrame : public nsGridRowLeafFrame, public nsIXULTreeSlice
+#else
 class nsXULTreeSliceFrame : public nsBoxFrame, public nsIXULTreeSlice
+#endif
 {
 public:
   NS_DECL_ISUPPORTS

@@ -45,6 +45,8 @@
 #ifndef nsTreeLayout_h___
 #define nsTreeLayout_h___
 
+//#define MOZ_GRID2 1
+
 #ifdef MOZ_GRID2
   #include "nsGridRowGroupLayout.h"
 #else
