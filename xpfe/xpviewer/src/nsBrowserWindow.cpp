@@ -717,6 +717,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       mApp->Exit();
       return nsEventStatus_eConsumeNoDefault;
 
+    case VIEWER_COMM_NAV:
     case VIEWER_WINDOW_OPEN:
       mApp->OpenWindow();
       break;
@@ -3394,10 +3395,12 @@ void CreateBrowserMenus(nsIMenuBar * aMenuBar)
 
   CreateMenuItem(fileMenu, "Top 100 Sites", VIEWER_TOP100);
 
+#ifdef NOT_YET
   nsIMenu * printMenu = CreateMenu(fileMenu, "Print Preview", 'P');
   CreateMenuItem(printMenu, "One Column", VIEWER_ONE_COLUMN);
   CreateMenuItem(printMenu, "Two Column", VIEWER_TWO_COLUMN);
   CreateMenuItem(printMenu, "Three Column", VIEWER_THREE_COLUMN);
+#endif   /* NOT_YET */
 
   CreateMenuItem(fileMenu, "-", 0);
   CreateMenuItem(fileMenu, "Exit", VIEWER_EXIT);
@@ -3408,22 +3411,29 @@ void CreateBrowserMenus(nsIMenuBar * aMenuBar)
   CreateMenuItem(editMenu, editMenus[i].title, editMenus[i].command);
   i++;
   }
+
+#ifdef NOT_YET
   nsIMenu * viewMenu = CreateMenu(aMenuBar,  "View", 'V');
   CreateMenuItem(viewMenu, "Show", 0);
   CreateMenuItem(viewMenu, "-", 0);
   CreateMenuItem(viewMenu, "Reload", 0);
   CreateMenuItem(viewMenu, "Refresh", 0);
+#endif   /* NOT_YET  */
 
-  nsIMenu * goMenu   = CreateMenu(aMenuBar,  "Go", 'G');
+/*   nsIMenu * goMenu   = CreateMenu(aMenuBar,  "Go", 'G'); */
   nsIMenu * commMenu = CreateMenu(aMenuBar,  "Communicator", 'C');
+  CreateMenuItem(commMenu, "Navigator", VIEWER_COMM_NAV);
+
   nsIMenu * helpMenu = CreateMenu(aMenuBar,  "Help", 'H');
 
+#ifdef NS_DEBUG
   nsIMenu * debugMenu = CreateMenu(aMenuBar,  "Debug", 'D');
   i = 0;
   while (debugMenus[i].title != nsnull) {
   CreateMenuItem(debugMenu, debugMenus[i].title, debugMenus[i].command);
   i++;
   }
+#endif 
 
   /*nsIMenu * toolsMenu = CreateMenu(aMenuBar,  "Tools", 'T');
   CreateMenuItem(toolsMenu, "Java Script Console", JS_CONSOLE);

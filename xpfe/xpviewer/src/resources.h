@@ -62,11 +62,13 @@
 #define JS_CONSOLE              40100
 #define EDITOR_MODE             40120
 
+
 #define VIEWER_EDIT_CUT         40201
 #define VIEWER_EDIT_COPY        40202
 #define VIEWER_EDIT_PASTE       40203
 #define VIEWER_EDIT_SELECTALL   40204
 #define VIEWER_EDIT_FINDINPAGE  40205
+
 
 #define VIEWER_RL_BASE          41000
 
@@ -86,5 +88,7 @@
 #define ID_EXIT                 40404
 
 #define VIEWER_FILE_VIEW_SOURCE 40500
+
+#define VIEWER_COMM_NAV  40600
 
 #endif /* resources_h___ */
