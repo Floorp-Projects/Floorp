@@ -144,9 +144,11 @@ function extractLocaleTimeString(date)
   regexp = new RegExp('(.*)' +   year  +  '$'); 
   reducedDateString = (date.toDateString()).match(regexp)[1];
 
-  // now extract the middle of date.toString()
-  // the pattern for regexp:  /reducedDateString(.*)GMT.*/ 
-  regexp=new RegExp( reducedDateString  +  '(.*)GMT.*' );
+  // now extract the middle of date.toString() by matching
+  // up to "GMT". Guard against dates with two "GMT"s:
+  // dates like Jan 01 00:00:00 GMT+0000 (GMT Standard Time) 
+  // the pattern for regexp: /reducedDateString([^G]*)GMT.*/ 
+  regexp=new RegExp(reducedDateString  +  '([^G]*)GMT.*');
   hopeThisIsLocaleTimeString = (date.toString()).match(regexp)[1];
 
   // trim any trailing spaces -
