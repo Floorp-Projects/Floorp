@@ -53,6 +53,7 @@
 // XPCOM and String includes
 #include "nsCRT.h"
 #include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
 
 
@@ -505,10 +506,10 @@ nsCocoaBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress,
 					 nsIRequest *aRequest, 
 					 nsIURI *location)
 {
-  nsXPIDLCString spec;
+  nsCAutoString spec;
   
-  location->GetSpec(getter_Copies(spec));
-  if (!spec) {
+  location->GetAsciiSpec(spec);
+  if (spec.IsEmpty()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -769,8 +770,8 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
     return nsnull;
   }
 
-  nsXPIDLCString spec;
-  uri->GetSpec(getter_Copies(spec));
+  nsCAutoString spec;
+  uri->GetAsciiSpec(spec);
   
   const char* cstr = spec.get();
   NSString* str = [NSString stringWithCString:cstr];
