@@ -21,4 +21,4 @@
 <!ENTITY viewCRLs.button         "Revocation Lists">
 <!ENTITY viewCRLs.accesskey      "e">
 <!ENTITY viewOCSP.button         "Verification">
-<!ENTITY viewOCSP.accesskey      "V">
+<!ENTITY viewOCSP.accesskey      "i">
