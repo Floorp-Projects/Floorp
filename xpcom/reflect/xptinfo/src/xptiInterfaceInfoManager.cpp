@@ -993,12 +993,12 @@ xptiInterfaceInfoManager::AddOnlyNewFilesFromFileList(nsISupportsArray* aSearchP
                 rv = loader->EnumerateEntries(file, sink);
                 if (NS_FAILED(rv))
                     return PR_FALSE;
+                // This will correspond to typelibRecord used in
+                // xptiInterfaceInfoManager::FoundEntry.
+                aWorkingSet->AppendFile(fileRecord);
             } else {
                 NS_WARNING("Could not load XPT Zip loader");
             }
-            // This will correspond to typelibRecord used in
-            // xptiInterfaceInfoManager::FoundEntry.
-            aWorkingSet->AppendFile(fileRecord);
         }
     }
 
@@ -1140,12 +1140,12 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aS
                 rv = loader->EnumerateEntries(file, sink);
                 if (NS_FAILED(rv))
                     return PR_FALSE;
+                // This will correspond to typelibRecord used in
+                // xptiInterfaceInfoManager::FoundEntry.
+                aWorkingSet->AppendFile(fileRecord);
             } else {
                 NS_WARNING("Could not load XPT Zip loader");
             }
-            // This will correspond to typelibRecord used in
-            // xptiInterfaceInfoManager::FoundEntry.
-            aWorkingSet->AppendFile(fileRecord);
         }
     }
     return PR_TRUE;
