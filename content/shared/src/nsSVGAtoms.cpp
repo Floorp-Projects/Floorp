@@ -23,6 +23,7 @@
  */
 
 #include "nsSVGAtoms.h"
+#include "nsAtomListUtils.h"
 
 // define storage for all atoms
 #define SVG_ATOM(_name, _value) nsIAtom* nsSVGAtoms::_name;
@@ -31,13 +32,17 @@
 
 static nsrefcnt gRefCnt = 0;
 
+static const nsAtomListInfo SVGAtoms_info[] = {
+#define SVG_ATOM(name_, value_) { &nsSVGAtoms::name_, value_ },
+#include "nsSVGAtomList.h"
+#undef SVG_ATOM
+};
+
 void nsSVGAtoms::AddRefAtoms() {
 
   if (gRefCnt == 0) {
-    // now register the atoms
-#define SVG_ATOM(_name, _value) _name = NS_NewPermanentAtom(_value);
-#include "nsSVGAtomList.h"
-#undef SVG_ATOM
+    nsAtomListUtils::AddRefAtoms(SVGAtoms_info,
+                                 MOZ_ARRAY_LENGTH(SVGAtoms_info));
   }
   ++gRefCnt;
 }
@@ -46,8 +51,7 @@ void nsSVGAtoms::ReleaseAtoms() {
 
   NS_PRECONDITION(gRefCnt != 0, "bad release of SVG atoms");
   if (--gRefCnt == 0) {
-#define SVG_ATOM(_name, _value) NS_RELEASE(_name);
-#include "nsSVGAtomList.h"
-#undef SVG_ATOM
+    nsAtomListUtils::ReleaseAtoms(SVGAtoms_info,
+                                  MOZ_ARRAY_LENGTH(SVGAtoms_info));
   }
 }

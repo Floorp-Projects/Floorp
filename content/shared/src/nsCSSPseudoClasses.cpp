@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCSSPseudoClasses.h"
+#include "nsAtomListUtils.h"
 
 // define storage for all atoms
 #define CSS_PSEUDO_CLASS(_name, _value) \
@@ -45,14 +46,18 @@
 
 static nsrefcnt gRefCnt;
 
+static const nsAtomListInfo CSSPseudoClasses_info[] = {
+#define CSS_PSEUDO_CLASS(name_, value_) \
+    { (nsIAtom**)&nsCSSPseudoClasses::name_, value_ },
+#include "nsCSSPseudoClassList.h"
+#undef CSS_PSEUDO_CLASS
+};
+
 void nsCSSPseudoClasses::AddRefAtoms()
 {
   if (0 == gRefCnt++) {
-    // create atoms
-#define CSS_PSEUDO_CLASS(_name, _value) \
-    _name = NS_STATIC_CAST(nsICSSPseudoClass*, NS_NewPermanentAtom(_value));
-#include "nsCSSPseudoClassList.h"
-#undef CSS_PSEUDO_CLASS
+    nsAtomListUtils::AddRefAtoms(CSSPseudoClasses_info,
+                                 MOZ_ARRAY_LENGTH(CSSPseudoClasses_info));
   }
 }
 
@@ -60,19 +65,14 @@ void nsCSSPseudoClasses::ReleaseAtoms()
 {
   NS_PRECONDITION(gRefCnt != 0, "bad release atoms");
   if (--gRefCnt == 0) {
-    // release atoms
-#define CSS_PSEUDO_CLASS(_name, _value) NS_RELEASE(_name);
-#include "nsCSSPseudoClassList.h"
-#undef CSS_PSEUDO_CLASS
+    nsAtomListUtils::ReleaseAtoms(CSSPseudoClasses_info,
+                                  MOZ_ARRAY_LENGTH(CSSPseudoClasses_info));
   }
 }
 
 PRBool nsCSSPseudoClasses::IsPseudoClass(nsIAtom *aAtom)
 {
-  return
-#define CSS_PSEUDO_CLASS(_name, _value) (aAtom == _name) ||
-#include "nsCSSPseudoClassList.h"
-#undef CSS_PSEUDO_CLASS
-        PR_FALSE;
+  return nsAtomListUtils::IsMember(aAtom, CSSPseudoClasses_info,
+                                   MOZ_ARRAY_LENGTH(CSSPseudoClasses_info));
 }
 

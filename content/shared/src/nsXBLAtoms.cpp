@@ -37,9 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsString.h"
 #include "nsXBLAtoms.h"
-#include "nsContentCID.h"
+#include "nsAtomListUtils.h"
 
 // define storage for all atoms
 #define XBL_ATOM(_name, _value) nsIAtom* nsXBLAtoms::_name;
@@ -49,13 +48,17 @@
 
 static nsrefcnt gRefCnt = 0;
 
+static const nsAtomListInfo XBLAtoms_info[] = {
+#define XBL_ATOM(name_, value_) { &nsXBLAtoms::name_, value_ },
+#include "nsXBLAtomList.h"
+#undef XBL_ATOM
+};
+
 void nsXBLAtoms::AddRefAtoms() {
 
   if (gRefCnt == 0) {
-    // now register the atoms
-#define XBL_ATOM(_name, _value) _name = NS_NewPermanentAtom(_value);
-#include "nsXBLAtomList.h"
-#undef XBL_ATOM
+    nsAtomListUtils::AddRefAtoms(XBLAtoms_info,
+                                 MOZ_ARRAY_LENGTH(XBLAtoms_info));
   }
   ++gRefCnt;
 }
@@ -64,8 +67,7 @@ void nsXBLAtoms::ReleaseAtoms() {
 
   NS_PRECONDITION(gRefCnt != 0, "bad release of XBL atoms");
   if (--gRefCnt == 0) {
-#define XBL_ATOM(_name, _value) NS_RELEASE(_name);
-#include "nsXBLAtomList.h"
-#undef XBL_ATOM
+    nsAtomListUtils::ReleaseAtoms(XBLAtoms_info,
+                                  MOZ_ARRAY_LENGTH(XBLAtoms_info));
   }
 }

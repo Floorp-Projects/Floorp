@@ -34,6 +34,7 @@ REQUIRES	= xpcom \
 		  string \
 		  necko \
 		  gfx \
+		  content \
 		  $(NULL)
 
 include $(topsrcdir)/config/config.mk

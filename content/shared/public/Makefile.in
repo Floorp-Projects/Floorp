@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= content
 
 EXPORTS		= \
+nsAtomListUtils.h \
 nsBidiUtils.h \
 nsChangeHint.h \
 nsCSSAnonBoxList.h \
