@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.10 $ $Date: 2002/02/15 22:53:42 $ $Name:  $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.11 $ $Date: 2002/04/05 03:30:37 $ $Name:  $"
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
@@ -47,8 +47,6 @@ ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 EXTRA_LIBS += \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4_s.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4_s.lib \
-	wsock32.lib \
-	winmm.lib \
 	$(NULL)
 
 else
