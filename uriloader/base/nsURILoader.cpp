@@ -348,8 +348,14 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
                                     request, getter_AddRefs(contentStreamListener),
                                     &bAbortProcess);
 
-      // the listener is doing all the work from here...we are done!!!
-      if (bAbortProcess) return rv;
+      // Do not continue loading if nsIURIContentListener::DoContent(...)
+      // fails - It means that an unexpected error occurred...
+      //
+      // If bAbortProcess is TRUE then the listener is doing all the work from
+      // here...we are done!!!
+      if (NS_FAILED(rv) || bAbortProcess) {
+        return rv;
+      }
 
       // try to detect if there is a helper application we an use...
       if (/* mCommand == nsIURILoader::viewUserClick && */ !contentStreamListener)
