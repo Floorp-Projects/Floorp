@@ -40,7 +40,7 @@ package org.mozilla.javascript;
 /**
  * Embeddings that wish to provide their own custom wrappings for Java
  * objects may implement this interface and call Context.setWrapHandler.
- * @see org.mozilla.javascript.Context.setWrapHandler
+ * @see org.mozilla.javascript.Context#setWrapHandler
  */
 public interface WrapHandler {
 
