@@ -117,7 +117,9 @@ nsNNTPArticleList::FinishAddingArticleKeys()
   // if the last n messages in the group are cancelled, they won't have gotten removed
   // so we have to go an removed them now.
   PRUint32 totalCount = m_idsInDB.GetSize();
-  for (PRUint32 i = m_dbIndex; i < totalCount; i++) {
+  PRUint32 i;
+
+  for (i = m_dbIndex; i < totalCount; i++) {
     m_newsFolder->RemoveMessage(m_idsInDB.GetAt(i));
 #ifdef DEBUG
     m_idsDeleted.Add(m_idsInDB.GetAt(i));
