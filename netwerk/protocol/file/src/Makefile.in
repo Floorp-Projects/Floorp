@@ -30,16 +30,16 @@ MODULE		= necko
 LIBRARY_NAME	= nkfile_s
 REQUIRES	= xpcom \
 		  string \
-		  exthandler \
 		  mimetype \
 		  pref \
 		  uconv \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsFileChannel.cpp \
 		nsFileProtocolHandler.cpp \
+		nsFileChannel.cpp \
 		$(NULL)
+
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

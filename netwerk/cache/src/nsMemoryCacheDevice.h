@@ -50,9 +50,15 @@ public:
     virtual void            DoomEntry( nsCacheEntry * entry );
     virtual nsresult        DeactivateEntry( nsCacheEntry * entry );
 
-    virtual nsresult GetTransportForEntry( nsCacheEntry * entry,
-                                           nsCacheAccessMode mode,
-                                           nsITransport **transport );
+    virtual nsresult OpenInputStreamForEntry(nsCacheEntry *     entry,
+                                             nsCacheAccessMode  mode,
+                                             PRUint32           offset,
+                                             nsIInputStream **  result);
+
+    virtual nsresult OpenOutputStreamForEntry(nsCacheEntry *     entry,
+                                              nsCacheAccessMode  mode,
+                                              PRUint32           offset,
+                                              nsIOutputStream ** result);
 
     virtual nsresult GetFileForEntry( nsCacheEntry *    entry,
                                       nsIFile **        result );

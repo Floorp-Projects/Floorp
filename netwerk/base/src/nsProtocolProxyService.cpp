@@ -441,11 +441,11 @@ nsProtocolProxyService::NewProxyInfo(const char *aType,
     const char *type = nsnull;
 
     // canonicalize type
-    if (PL_strcasecmp(aType, "http"))
+    if (PL_strcasecmp(aType, "http") == 0)
         type = "http";
-    else if (PL_strcasecmp(aType, "socks"))
+    else if (PL_strcasecmp(aType, "socks") == 0)
         type = "socks";
-    else if (PL_strcasecmp(aType, "socks4"))
+    else if (PL_strcasecmp(aType, "socks4") == 0)
         type = "socks4";
     else
         return NS_ERROR_INVALID_ARG;

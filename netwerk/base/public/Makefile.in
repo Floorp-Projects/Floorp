@@ -44,14 +44,15 @@ SDK_XPIDLSRCS   = \
 		$(NULL)
 
 XPIDLSRCS	= \
-		nsIAuthenticator.idl \
 		nsIAuthPrompt.idl \
+		nsIAsyncStreamCopier.idl \
+		nsIBufferedStreams.idl \
 		nsIDirectoryListing.idl \
 		nsIDownloader.idl \
 		nsIEncodedChannel.idl \
-		nsIFileChannel.idl \
 		nsIFileStreams.idl \
-		nsIFileTransportService.idl \
+		nsIInputStreamPump.idl \
+		nsIInputStreamChannel.idl \
 		nsIMIMEInputStream.idl \
 		nsINetModRegEntry.idl \
 		nsINetModuleMgr.idl \
@@ -68,23 +69,18 @@ XPIDLSRCS	= \
 		nsITransport.idl \
 		nsISocketTransport.idl \
 		nsISocketTransportService.idl \
-		nsIStreamIO.idl \
-		nsIStreamIOChannel.idl \
 		nsIResumableChannel.idl \
 		nsIResumableEntityID.idl \
 		nsIRequestObserverProxy.idl \
 		nsIStreamListenerProxy.idl \
 		nsIStreamListenerTee.idl \
-		nsIStreamProvider.idl \
-		nsIStreamProviderProxy.idl \
 		nsISimpleStreamListener.idl \
-		nsISimpleStreamProvider.idl \
+		nsIStreamTransportService.idl \
 		nsIStreamLoader.idl \
 		nsIUnicharStreamLoader.idl \
 		nsIStandardURL.idl \
 		nsIURLParser.idl \
 		nsIURIChecker.idl \
-		nsIWebFilters.idl \
 		nsISecurityEventSink.idl \
 		nsISecretDecoderRing.idl \
 		nsISecureBrowserUI.idl \

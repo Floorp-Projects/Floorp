@@ -38,91 +38,51 @@
 #ifndef nsInputStreamChannel_h__
 #define nsInputStreamChannel_h__
 
-#include "nsIStreamIOChannel.h"
+#include "nsString.h"
+#include "nsCOMPtr.h"
+
+#include "nsIInputStreamChannel.h"
+#include "nsIInputStreamPump.h"
 #include "nsIInputStream.h"
 #include "nsIURI.h"
-#include "nsCRT.h"
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
-#include "nsIStreamProvider.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
-#include "nsIStreamIO.h"
-#include "nsITransport.h"
-#include "nsString.h"
 
-class nsInputStreamIO : public nsIInputStreamIO
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMIO
-    NS_DECL_NSIINPUTSTREAMIO
+//-----------------------------------------------------------------------------
 
-    nsInputStreamIO();
-    virtual ~nsInputStreamIO();
-
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
-protected:
-    nsCString                           mName;
-    nsCOMPtr<nsIInputStream>            mInputStream;
-    nsCString                           mContentType;
-    nsCString                           mContentCharset;
-    PRInt32                             mContentLength;
-    nsresult                            mStatus;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-class nsStreamIOChannel : public nsIStreamIOChannel, 
-                          public nsIStreamListener,
-                          public nsIStreamProvider,
-                          public nsIProgressEventSink,
-                          public nsIInterfaceRequestor
+class nsInputStreamChannel : public nsIInputStreamChannel
+                           , public nsIStreamListener
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
-    NS_DECL_NSISTREAMIOCHANNEL
+    NS_DECL_NSIINPUTSTREAMCHANNEL
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMPROVIDER
-    NS_DECL_NSIPROGRESSEVENTSINK
-    NS_DECL_NSIINTERFACEREQUESTOR
 
-    nsStreamIOChannel(); 
-    virtual ~nsStreamIOChannel();
-
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+    nsInputStreamChannel(); 
+    virtual ~nsInputStreamChannel();
 
 protected:
-    nsIStreamListener* GetListener() { return (nsIStreamListener*)mUserObserver.get(); }
-    void SetListener(nsIStreamListener* listener) { mUserObserver = listener; }
-    nsIStreamProvider* GetProvider() { return (nsIStreamProvider*)mUserObserver.get(); }
-    void SetProvider(nsIStreamProvider* provider) { mUserObserver = provider; }
 
-protected:
+    nsCOMPtr<nsIInputStreamPump>        mPump;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
     nsCOMPtr<nsIProgressEventSink>      mProgressSink;
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mURI;
+    nsCOMPtr<nsILoadGroup>              mLoadGroup;
+    nsCOMPtr<nsISupports>               mOwner;
+    nsCOMPtr<nsIStreamListener>         mListener;
+    nsCOMPtr<nsISupports>               mListenerContext;
+    nsCOMPtr<nsIInputStream>            mContentStream;
     nsCString                           mContentType;
     nsCString                           mContentCharset;
     PRInt32                             mContentLength;
-    nsCOMPtr<nsIStreamIO>               mStreamIO;
-    nsCOMPtr<nsILoadGroup>              mLoadGroup;
-    nsCOMPtr<nsISupports>               mOwner;
-    nsCOMPtr<nsITransport>              mFileTransport;
-    nsCOMPtr<nsIRequest>                mRequest;
-    nsCOMPtr<nsIRequestObserver>        mUserObserver;
-    PRUint32                            mBufferSegmentSize;
-    PRUint32                            mBufferMaxSize;
     PRUint32                            mLoadFlags;
     nsresult                            mStatus;
 };
 
-#endif // nsInputStreamChannel_h__
+#endif // !nsInputStreamChannel_h__

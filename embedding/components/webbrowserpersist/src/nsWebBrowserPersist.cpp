@@ -35,7 +35,6 @@
 
 #include "nsNetUtil.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIFileTransportService.h"
 #include "nsIStorageStream.h"
 #include "nsIHttpChannel.h"
 #include "nsIEncodedChannel.h"
@@ -85,7 +84,7 @@
 #include "nsIDOMHTMLDocument.h"
 
 #include "ftpCore.h"
-#include "nsISocketTransportService.h"
+#include "nsISocketTransport.h"
 #include "nsIStringBundle.h"
 
 #include "nsWebBrowserPersist.h"
@@ -900,7 +899,6 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStatus(
         case NS_NET_STATUS_CONNECTED_TO:
         case NS_NET_STATUS_SENDING_TO:
         case NS_NET_STATUS_RECEIVING_FROM:
-        case NS_NET_STATUS_READ_FROM:
             break;
 
         default:

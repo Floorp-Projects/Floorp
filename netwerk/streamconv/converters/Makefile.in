@@ -37,7 +37,6 @@ REQUIRES	= xpcom \
 		  util \
 		  pref \
 		  uconv \
-		  exthandler \
 		  imglib2 \
 		  necko2 \
 		  $(ZLIB_REQUIRES) \
@@ -45,7 +44,6 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= \
 		ParseFTPList.cpp \
-		nsMultiMixedConv.cpp \
 		nsFTPDirListingConv.cpp \
 		nsGopherDirListingConv.cpp \
 		mozTXTToHTMLConv.cpp \
@@ -55,7 +53,9 @@ CPPSRCS		= \
 		nsDirIndex.cpp \
 		nsDirIndexParser.cpp \
 		nsIndexedToHTML.cpp \
+		nsMultiMixedConv.cpp \
 		$(NULL)
+
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += \

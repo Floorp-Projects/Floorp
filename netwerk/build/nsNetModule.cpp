@@ -41,16 +41,12 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
-#include "nsIOService.h"
 #include "nsNetModuleMgr.h"
-#include "nsFileTransportService.h"
-#include "nsSocketTransportService.h"
 #include "nsSocketProviderService.h"
 #include "nscore.h"
 #include "nsSimpleURI.h"
 #include "nsDnsService.h"
 #include "nsLoadGroup.h"
-#include "nsInputStreamChannel.h"
 #include "nsStreamLoader.h"
 #include "nsUnicharStreamLoader.h"
 #include "nsDownloader.h"
@@ -75,6 +71,27 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "nsIOService.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsIOService, Init)
+
+#include "nsStreamTransportService.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStreamTransportService, Init)
+
+#include "nsSocketTransportService2.h"
+#undef LOG
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSocketTransportService, Init)
+
+#include "nsAsyncStreamCopier.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAsyncStreamCopier)
+
+#include "nsInputStreamPump.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsInputStreamPump)
+
+#include "nsInputStreamChannel.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsInputStreamChannel)
+
+///////////////////////////////////////////////////////////////////////////////
+
 #include "nsStreamConverterService.h"
 
 #ifdef BUILD_APPLEFILE_DECODER
@@ -91,18 +108,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMIMEInfoImpl)
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsRequestObserverProxy.h"
-#include "nsStreamListenerProxy.h"
-#include "nsStreamProviderProxy.h"
 #include "nsSimpleStreamListener.h"
-#include "nsSimpleStreamProvider.h"
 #include "nsDirIndexParser.h"
 #include "nsDirIndex.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRequestObserverProxy)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamListenerProxy)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamProviderProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleStreamListener)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleStreamProvider)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDirIndexParser, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirIndex)
 
@@ -113,15 +124,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamListenerTee)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "nsStorageTransport.h"
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsStorageTransport)
-
-///////////////////////////////////////////////////////////////////////////////
-
 #include "nsHttpHandler.h"
 #include "nsHttpBasicAuth.h"
 #include "nsHttpDigestAuth.h"
+#undef LOG
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpHandler, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpsHandler, Init)
@@ -160,10 +166,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsIDNService)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "nsFileChannel.h"
 #include "nsFileProtocolHandler.h"
-#include "nsDataHandler.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFileProtocolHandler, Init)
+
 #include "nsJARProtocolHandler.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsJARProtocolHandler, Init)
+
+#include "nsDataHandler.h"
 
 #include "nsAboutProtocolHandler.h"
 #include "nsAboutBlank.h"
@@ -515,15 +524,15 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     { NS_IOSERVICE_CLASSNAME,
       NS_IOSERVICE_CID,
       NS_IOSERVICE_CONTRACTID,
-      nsIOService::Create },
-    { "File Transport Service", 
-      NS_FILETRANSPORTSERVICE_CID,
-      "@mozilla.org/network/file-transport-service;1",
-      nsFileTransportService::Create },
-    { "Socket Transport Service", 
+      nsIOServiceConstructor },
+    { NS_STREAMTRANSPORTSERVICE_CLASSNAME,
+      NS_STREAMTRANSPORTSERVICE_CID,
+      NS_STREAMTRANSPORTSERVICE_CONTRACTID,
+      nsStreamTransportServiceConstructor },
+    { NS_SOCKETTRANSPORTSERVICE_CLASSNAME,
       NS_SOCKETTRANSPORTSERVICE_CID,
-      "@mozilla.org/network/socket-transport-service;1", 
-      nsSocketTransportService::Create },
+      NS_SOCKETTRANSPORTSERVICE_CONTRACTID,
+      nsSocketTransportServiceConstructor },
     { "Socket Provider Service", 
       NS_SOCKETPROVIDERSERVICE_CID,
       "@mozilla.org/network/socket-provider-service;1",
@@ -544,18 +553,18 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_NETMODULEMGR_CID,
       "@mozilla.org/network/net-extern-mod;1",
       nsNetModuleMgr::Create },
-    { NS_FILEIO_CLASSNAME,
-      NS_FILEIO_CID,
-      NS_FILEIO_CONTRACTID,
-      nsFileIO::Create },
-    { NS_INPUTSTREAMIO_CLASSNAME,
-      NS_INPUTSTREAMIO_CID,
-      NS_INPUTSTREAMIO_CONTRACTID,
-      nsInputStreamIO::Create },
-    { NS_STREAMIOCHANNEL_CLASSNAME,
-      NS_STREAMIOCHANNEL_CID,
-      NS_STREAMIOCHANNEL_CONTRACTID,
-      nsStreamIOChannel::Create },
+    { NS_ASYNCSTREAMCOPIER_CLASSNAME,
+      NS_ASYNCSTREAMCOPIER_CID,
+      NS_ASYNCSTREAMCOPIER_CONTRACTID,
+      nsAsyncStreamCopierConstructor },
+    { NS_INPUTSTREAMPUMP_CLASSNAME,
+      NS_INPUTSTREAMPUMP_CID,
+      NS_INPUTSTREAMPUMP_CONTRACTID,
+      nsInputStreamPumpConstructor },
+    { NS_INPUTSTREAMCHANNEL_CLASSNAME,
+      NS_INPUTSTREAMCHANNEL_CID,
+      NS_INPUTSTREAMCHANNEL_CONTRACTID,
+      nsInputStreamChannelConstructor },
     { NS_STREAMLOADER_CLASSNAME, 
       NS_STREAMLOADER_CID,
       NS_STREAMLOADER_CONTRACTID,
@@ -572,22 +581,10 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_REQUESTOBSERVERPROXY_CID,
       NS_REQUESTOBSERVERPROXY_CONTRACTID,
       nsRequestObserverProxyConstructor },
-    { NS_STREAMLISTENERPROXY_CLASSNAME,
-      NS_STREAMLISTENERPROXY_CID,
-      NS_STREAMLISTENERPROXY_CONTRACTID,
-      nsStreamListenerProxyConstructor },
-    { NS_STREAMPROVIDERPROXY_CLASSNAME,
-      NS_STREAMPROVIDERPROXY_CID,
-      NS_STREAMPROVIDERPROXY_CONTRACTID,
-      nsStreamProviderProxyConstructor },
     { NS_SIMPLESTREAMLISTENER_CLASSNAME,
       NS_SIMPLESTREAMLISTENER_CID,
       NS_SIMPLESTREAMLISTENER_CONTRACTID,
       nsSimpleStreamListenerConstructor },
-    { NS_SIMPLESTREAMPROVIDER_CLASSNAME,
-      NS_SIMPLESTREAMPROVIDER_CID,
-      NS_SIMPLESTREAMPROVIDER_CONTRACTID,
-      nsSimpleStreamProviderConstructor },
     { NS_ASYNCSTREAMLISTENER_CLASSNAME,
       NS_ASYNCSTREAMLISTENER_CID,
       NS_ASYNCSTREAMLISTENER_CONTRACTID,
@@ -596,10 +593,6 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_STREAMLISTENERTEE_CID,
       NS_STREAMLISTENERTEE_CONTRACTID,
       nsStreamListenerTeeConstructor },
-    { NS_STORAGETRANSPORT_CLASSNAME,
-      NS_STORAGETRANSPORT_CID,
-      NS_STORAGETRANSPORT_CONTRACTID,
-      nsStorageTransportConstructor },
     { NS_LOADGROUP_CLASSNAME,
       NS_LOADGROUP_CID,
       NS_LOADGROUP_CONTRACTID,
@@ -786,12 +779,6 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       nsDirIndexConstructor
     },
 
-#if defined(OLD_CACHE)
-    // from netwerk/cache:
-    { "Memory Cache", NS_MEM_CACHE_FACTORY_CID, NS_NETWORK_MEMORY_CACHE_CONTRACTID, nsMemCacheConstructor },
-    { "File Cache",   NS_NETDISKCACHE_CID,      NS_NETWORK_FILE_CACHE_CONTRACTID,   nsNetDiskCacheConstructor },
-    { "Cache Manager",NS_CACHE_MANAGER_CID,     NS_NETWORK_CACHE_MANAGER_CONTRACTID,nsCacheManagerConstructor },
-#endif
     // from netwerk/mime:
     { "xml mime INFO", 
       NS_MIMEINFO_CID,
@@ -800,15 +787,10 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     },
 
     // from netwerk/protocol/file:
-    { "File Protocol Handler", 
+    { NS_FILEPROTOCOLHANDLER_CLASSNAME,
       NS_FILEPROTOCOLHANDLER_CID,  
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "file", 
-      nsFileProtocolHandler::Create
-    },
-    { NS_LOCALFILECHANNEL_CLASSNAME,
-      NS_LOCALFILECHANNEL_CID,  
-      NS_LOCALFILECHANNEL_CONTRACTID, 
-      nsFileChannel::Create
+      nsFileProtocolHandlerConstructor
     },
 
     { "HTTP Handler",
@@ -839,20 +821,20 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     },
 
     // from netwerk/protocol/data:
-    { "Data Protocol Handler", 
-      NS_DATAHANDLER_CID,
+    { NS_DATAPROTOCOLHANDLER_CLASSNAME,
+      NS_DATAPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "data", 
       nsDataHandler::Create},
 
     // from netwerk/protocol/jar:
-    { "JAR Protocol Handler", 
-       NS_JARPROTOCOLHANDLER_CID,
-       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "jar", 
-       nsJARProtocolHandler::Create
+    { NS_JARPROTOCOLHANDLER_CLASSNAME,
+      NS_JARPROTOCOLHANDLER_CID,
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "jar", 
+      nsJARProtocolHandlerConstructor
     },
 
     // from netwerk/protocol/res:
-    { "Resource Protocol Handler", 
+    { NS_RESPROTOCOLHANDLER_CLASSNAME,
       NS_RESPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "resource",
       nsResProtocolHandlerConstructor
@@ -899,6 +881,7 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "logo",
       nsAboutRedirector::Create
     },
+
     { "about:cache", 
       NS_ABOUT_CACHE_MODULE_CID,
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "cache", 
@@ -909,6 +892,7 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "cache-entry",
       nsAboutCacheEntryConstructor
     },
+
     // from netwerk/protocol/keyword:
     { "The Keyword Protocol Handler", 
       NS_KEYWORDPROTOCOLHANDLER_CID,

@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsJARProtocolHandler_h___
-#define nsJARProtocolHandler_h___
+#ifndef nsJARProtocolHandler_h__
+#define nsJARProtocolHandler_h__
 
 #include "nsIJARProtocolHandler.h"
 #include "nsIProtocolHandler.h"
@@ -45,15 +45,6 @@
 #include "nsIMIMEService.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
-
-#define NS_JARPROTOCOLHANDLER_CID					 \
-{ /* 0xc7e410d4-0x85f2-11d3-9f63-006008a6efe9 */     \
-    0xc7e410d4,                                      \
-    0x85f2,                                          \
-    0x11d3,                                          \
-    {0x9f, 0x63, 0x00, 0x60, 0x08, 0xa6, 0xef, 0xe9} \
-}
-
 
 class nsJARProtocolHandler : public nsIJARProtocolHandler
                            , public nsSupportsWeakReference
@@ -73,11 +64,14 @@ public:
     nsresult Init();
 
     // returns non addref'ed pointer.  
-    nsIMIMEService* GetCachedMimeService();
+    nsIMIMEService    *MimeService();
+    nsIZipReaderCache *JarCache() { return mJARCache; }
 
 protected:
     nsCOMPtr<nsIZipReaderCache> mJARCache;
     nsCOMPtr<nsIMIMEService> mMimeService;
 };
 
-#endif /* nsJARProtocolHandler_h___ */
+extern nsJARProtocolHandler *gJarHandler;
+
+#endif // !nsJARProtocolHandler_h__

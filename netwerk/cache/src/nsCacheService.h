@@ -86,9 +86,15 @@ public:
     static nsresult  GetFileForEntry(nsCacheEntry *         entry,
                                      nsIFile **             result);
 
-    static nsresult  GetTransportForEntry(nsCacheEntry *     entry,
-                                          nsCacheAccessMode  mode,
-                                          nsITransport **    result);
+    static nsresult  OpenInputStreamForEntry(nsCacheEntry *     entry,
+                                             nsCacheAccessMode  mode,
+                                             PRUint32           offset,
+                                             nsIInputStream **  result);
+
+    static nsresult  OpenOutputStreamForEntry(nsCacheEntry *     entry,
+                                              nsCacheAccessMode  mode,
+                                              PRUint32           offset,
+                                              nsIOutputStream ** result);
 
     static nsresult  OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize);
 

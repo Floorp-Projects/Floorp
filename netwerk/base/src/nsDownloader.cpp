@@ -44,9 +44,12 @@
 #include "nsICachingChannel.h"
 #include "nsProxiedService.h"
 #include "nsIFile.h"
+#include "nsIFileURL.h"
 #include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+
+// XXX this API seems all wrong for "sync" downloading
 
 NS_IMETHODIMP
 nsDownloader::Init(nsIURI* aURL,
@@ -54,45 +57,47 @@ nsDownloader::Init(nsIURI* aURL,
                    nsISupports* aContext,
                    PRBool aIsSynchronous,
                    nsILoadGroup* aGroup,
-                   nsIInterfaceRequestor* aNotificationCallbacks,
-                   nsLoadFlags aLoadAttributes)
+                   nsIInterfaceRequestor* aCallbacks,
+                   nsLoadFlags aLoadFlags)
 {
+  NS_ENSURE_ARG_POINTER(aObserver);
   nsresult rv;
+
   mObserver = aObserver;
   mContext  = aContext;
-  nsCOMPtr<nsIFile> localFile;
-  nsCOMPtr<nsIChannel> channel;
 
-  rv = NS_NewChannel(getter_AddRefs(channel), aURL, nsnull, aGroup, aNotificationCallbacks,
-                     aLoadAttributes);
-  if (NS_SUCCEEDED(rv) && channel)
-  {
-    nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(channel);
-    if (fc)
-        rv = fc->GetFile(getter_AddRefs(localFile));
+  nsCOMPtr<nsIFile> file;
+
+  nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURL);
+  if (fileURL)
+    fileURL->GetFile(getter_AddRefs(file));
+
+  if (file) {
+    if (aIsSynchronous)
+      return mObserver->OnDownloadComplete(this, mContext, rv, file);
+
+    // If the open failed or the file is local, call the observer.
+    // don't callback synchronously as it puts the caller
+    // in a recursive situation and breaks the asynchronous
+    // semantics of nsIDownloader
+    nsCOMPtr<nsIProxyObjectManager> pIProxyObjectManager = 
+            do_GetService(kProxyObjectManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIDownloadObserver> pObserver;
+    rv = pIProxyObjectManager->GetProxyForObject(NS_CURRENT_EVENTQ, 
+            NS_GET_IID(nsIDownloadObserver), mObserver, 
+            PROXY_ASYNC | PROXY_ALWAYS, getter_AddRefs(pObserver));
+    if (NS_FAILED(rv)) return rv;
+
+    return pObserver->OnDownloadComplete(this, mContext, NS_OK, file);
   }
-  if (mObserver && (NS_FAILED(rv) || localFile)) 
-  {
-     if (aIsSynchronous)
-       return mObserver->OnDownloadComplete(this, mContext, rv, localFile);
-     else
-     {
-       // If the open failed or the file is local, call the observer.
-       // don't callback synchronously as it puts the caller
-       // in a recursive situation and breaks the asynchronous
-       // semantics of nsIDownloader
-       nsresult rv2 = NS_OK;
-       nsCOMPtr<nsIProxyObjectManager> pIProxyObjectManager = 
-                do_GetService(kProxyObjectManagerCID, &rv);
-       if (NS_FAILED(rv2)) return rv2;
-           nsCOMPtr<nsIDownloadObserver> pObserver;
-           rv2 = pIProxyObjectManager->GetProxyForObject(NS_CURRENT_EVENTQ, 
-                     NS_GET_IID(nsIDownloadObserver), mObserver, 
-                     PROXY_ASYNC | PROXY_ALWAYS, getter_AddRefs(pObserver));
-           if (NS_FAILED(rv2)) return rv2;
-           return pObserver->OnDownloadComplete(this, mContext, rv, localFile);
-     }
-  }
+
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel), aURL, nsnull,
+                     aGroup, aCallbacks, aLoadFlags);
+  if (NS_FAILED(rv)) return rv;
+
   return channel->AsyncOpen(this, aContext);
 }
 

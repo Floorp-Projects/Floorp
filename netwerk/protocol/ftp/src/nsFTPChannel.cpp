@@ -46,6 +46,7 @@
 #include "nsReadableUtils.h"
 #include "nsIPref.h"
 #include "nsIStreamConverterService.h"
+#include "nsISocketTransport.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
@@ -590,7 +591,7 @@ nsFTPChannel::OnStatus(nsIRequest *request, nsISupports *aContext,
         (void) mFTPState->DataConnectionEstablished();
     }
 
-    if (!mEventSink)
+    if (!mEventSink || (mLoadFlags & LOAD_BACKGROUND) || !mIsPending)
         return NS_OK;
 
     return mEventSink->OnStatus(this, mUserContext, aStatus,
@@ -599,8 +600,9 @@ nsFTPChannel::OnStatus(nsIRequest *request, nsISupports *aContext,
 
 NS_IMETHODIMP
 nsFTPChannel::OnProgress(nsIRequest *request, nsISupports* aContext,
-                                  PRUint32 aProgress, PRUint32 aProgressMax) {
-    if (!mEventSink)
+                         PRUint32 aProgress, PRUint32 aProgressMax)
+{
+    if (!mEventSink || (mLoadFlags & LOAD_BACKGROUND) || !mIsPending)
         return NS_OK;
 
     return mEventSink->OnProgress(this, mUserContext, 

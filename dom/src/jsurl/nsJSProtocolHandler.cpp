@@ -57,7 +57,7 @@
 #include "nsICodebasePrincipal.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIByteArrayInputStream.h"
+#include "nsIStringStream.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
@@ -72,13 +72,13 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 
 
-class nsJSThunk : public nsIStreamIO
+class nsJSThunk : public nsIInputStream
 {
 public:
     nsJSThunk();
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMIO
+    NS_FORWARD_SAFE_NSIINPUTSTREAM(mInnerStream)
 
     nsresult Init(nsIURI* uri);
     nsresult EvaluateScript(nsIChannel *aChannel);
@@ -88,24 +88,21 @@ protected:
     virtual ~nsJSThunk();
 
     nsCOMPtr<nsIURI>            mURI;
-    char*                       mResult;
-    PRUint32                    mLength;
+    nsCOMPtr<nsIInputStream>    mInnerStream;
 };
 
 //
 // nsISupports implementation...
 //
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsJSThunk, nsIStreamIO);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsJSThunk, nsIInputStream);
 
 
 nsJSThunk::nsJSThunk()
-         : mResult(nsnull), mLength(0)
 {
 }
 
 nsJSThunk::~nsJSThunk()
 {
-    (void)Close(NS_BASE_STREAM_CLOSED);
 }
 
 nsresult nsJSThunk::Init(nsIURI* uri)
@@ -289,9 +286,9 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         rv = NS_ERROR_DOM_RETVAL_UNDEFINED;
     }
     else {
+        // NS_NewStringInputStream calls ToNewCString
         // XXXbe this should not decimate! pass back UCS-2 to necko
-        mResult = ToNewCString(result);
-        mLength = result.Length();
+        rv = NS_NewStringInputStream(getter_AddRefs(mInnerStream), result);
     }
     return rv;
 }
@@ -324,87 +321,6 @@ nsresult nsJSThunk::BringUpConsole(nsIDOMWindow *aDomWindow)
     }
     return rv;
 }
-
-//
-// nsIStreamIO implementation...
-//
-NS_IMETHODIMP
-nsJSThunk::Open()
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsJSThunk::GetContentType(nsACString &aContentType)
-{
-    //
-    // At this point the script has already been evaluated...
-    // The resulting string (if any) is stored in mResult.
-    //
-    // If the resultant script evaluation actually does return a value, we
-    // treat it as html.
-    //
-    aContentType = NS_LITERAL_CSTRING("text/html");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSThunk::GetContentCharset(nsACString &aContentCharset)
-{
-    aContentCharset.Truncate();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSThunk::GetContentLength(PRInt32 *result)
-{
-    *result = mLength;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSThunk::Close(nsresult status)
-{
-    if (mResult) {
-        nsCRT::free(mResult);
-        mResult = nsnull;
-    }
-    mLength = 0;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSThunk::GetInputStream(nsIInputStream* *aInputStream)
-{
-    nsresult rv;
-    nsIByteArrayInputStream* str;
-
-    rv = NS_NewByteArrayInputStream(&str, mResult, mLength);
-    if (NS_SUCCEEDED(rv)) {
-        mResult = nsnull; // XXX Whackiness. The input stream takes ownership
-        *aInputStream = str;
-    }
-    else {
-        *aInputStream = nsnull;
-    }
-    return rv;
-}
-
-NS_IMETHODIMP
-nsJSThunk::GetOutputStream(nsIOutputStream* *aOutputStream)
-{
-    // should never be called
-    NS_NOTREACHED("nsJSThunk::GetOutputStream");
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsJSThunk::GetName(nsACString &aName)
-{
-    return mURI->GetSpec(aName);
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -454,17 +370,21 @@ nsresult nsJSChannel::Init(nsIURI *aURI)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(mIOThunk);
 
-    // Create a stock nsIStreamIOChannel...
+    // Create a stock input stream channel...
     // Remember, until AsyncOpen is called, the script will not be evaluated
     // and the underlying Input Stream will not be created...
-    nsCOMPtr<nsIStreamIOChannel> channel;
+    nsCOMPtr<nsIChannel> channel;
 
-    rv = NS_NewStreamIOChannel(getter_AddRefs(channel), aURI, mIOThunk);
+    // If the resultant script evaluation actually does return a value, we
+    // treat it as html.
+    rv = NS_NewInputStreamChannel(getter_AddRefs(channel), aURI, mIOThunk,
+                                  NS_LITERAL_CSTRING("text/html"),
+                                  NS_LITERAL_CSTRING(""));
     if (NS_FAILED(rv)) return rv;
 
     rv = mIOThunk->Init(aURI);
     if (NS_SUCCEEDED(rv)) {
-        mStreamChannel = do_QueryInterface(channel);
+        mStreamChannel = channel;
     }
 
     return rv;

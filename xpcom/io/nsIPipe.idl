@@ -35,12 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIAsyncInputStream.idl"
+#include "nsIAsyncOutputStream.idl"
 
-interface nsIPipe;
 interface nsIMemory;
-interface nsIInputStream;
-interface nsIOutputStream;
 
 [scriptable, uuid(f4211abc-61b3-11d4-9877-00c04fa0cf4a)]
 interface nsIPipe : nsISupports
@@ -48,21 +46,14 @@ interface nsIPipe : nsISupports
     /**
      * initialize this pipe
      */
-    void initialize(in unsigned long segmentSize,
-                    in unsigned long maxSize,
-                    in boolean nonBlockingInput,
-                    in boolean nonBlockingOutput,
-                    in nsIMemory segmentAllocator);
+    void init(in boolean nonBlockingInput,
+              in boolean nonBlockingOutput,
+              in unsigned long segmentSize,
+              in unsigned long segmentCount,
+              in nsIMemory segmentAllocator);
 
-    /**
-     * supports nsIObservableInputStream and nsISearchableInputStream
-     */
-    readonly attribute nsIInputStream inputStream;
-
-    /**
-     * supports nsIObservableOutputStream
-     */
-    readonly attribute nsIOutputStream outputStream;
+    readonly attribute nsIAsyncInputStream inputStream;
+    readonly attribute nsIAsyncOutputStream outputStream;
 };
 
 [scriptable, uuid(8C39EF62-F7C9-11d4-98F5-001083010E9B)] 
@@ -85,15 +76,40 @@ interface nsISearchableInputStream : nsISupports
 };
 
 %{C++
-#define NS_PIPE_DEFAULT_SEGMENT_SIZE    4096
-#define NS_PIPE_DEFAULT_BUFFER_SIZE     (1024*1024)
 
 extern NS_COM nsresult
-NS_NewPipe(nsIInputStream* *inStrResult,
-           nsIOutputStream* *outStrResult,
-           PRUint32 segmentSize = NS_PIPE_DEFAULT_SEGMENT_SIZE,
-           PRUint32 maxSize = NS_PIPE_DEFAULT_BUFFER_SIZE,
+NS_NewPipe2(nsIAsyncInputStream **pipeIn,
+            nsIAsyncOutputStream **pipeOut,
+            PRBool nonBlockingInput = PR_FALSE,
+            PRBool nonBlockingOutput = PR_FALSE,
+            PRUint32 segmentSize = 0,
+            PRUint32 segmentCount = 0,
+            nsIMemory *segmentAlloc = nsnull);
+
+inline nsresult
+NS_NewPipe(nsIInputStream **pipeIn,
+           nsIOutputStream **pipeOut,
+           PRUint32 segmentSize = 0,
+           PRUint32 maxSize = 0,
            PRBool nonBlockingInput = PR_FALSE,
            PRBool nonBlockingOutput = PR_FALSE,
-           nsIMemory* segmentAllocator = nsnull);
+           nsIMemory *segmentAlloc = nsnull)
+{
+    PRUint32 segmentCount;
+    if (segmentSize == 0)
+        segmentCount = 0; // use default
+    else
+        segmentCount = maxSize / segmentSize;
+
+    nsIAsyncInputStream *in;
+    nsIAsyncOutputStream *out;
+    nsresult rv = NS_NewPipe2(&in, &out, nonBlockingInput, nonBlockingOutput,
+                              segmentSize, segmentCount, segmentAlloc);
+    if (NS_FAILED(rv)) return rv;
+
+    *pipeIn = in;
+    *pipeOut = out;
+    return NS_OK;
+}
+
 %}

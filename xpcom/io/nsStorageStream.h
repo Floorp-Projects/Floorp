@@ -37,7 +37,7 @@
 class nsSegmentedBuffer;
 
 class nsStorageStream : public nsIStorageStream,
-                               public nsIOutputStream
+                        public nsIOutputStream
 {
 public:
     nsStorageStream();

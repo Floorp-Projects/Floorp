@@ -1,673 +1,392 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Darin Fisher <darin@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the NPL, indicate your
+ * use your version of this file under the terms of the MPL, indicate your
  * decision by deleting the provisions above and replace them with the notice
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the NPL, the GPL or the LGPL.
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include <stdio.h>
 
-#ifdef WIN32
-//#define USE_TIMERS  // Only use nsITimer on Windows (for now...)
-#include <windows.h>
-#endif
-#ifdef XP_OS2
-#include <os2.h>
-#endif
-
-#include "nspr.h"
-#ifdef XP_MAC
-#include "pprio.h"	// PR_Init_Log
-#endif
-
-#include "nsITransport.h"
-#include "nsIRequest.h"
-#include "nsISocketTransportService.h"
-#include "nsIEventQueueService.h"
-#include "nsIServiceManager.h"
 #include "nsIComponentRegistrar.h"
-#include "nsIRequestObserver.h"
-#include "nsIStreamListener.h"
-#include "nsIPipe.h"
-#include "nsIInputStream.h"
-#include "nsIOutputStream.h"
-#include "nsIRunnable.h"
-#include "nsIThread.h"
-#include "nsITimer.h"
+#include "nsISocketTransportService.h"
+#include "nsISocketTransport.h"
+#include "nsIAsyncInputStream.h"
+#include "nsIAsyncOutputStream.h"
+#include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIProgressEventSink.h"
-#include "nsCRT.h"
+#include "nsIProxyObjectManager.h"
+#include "nsIRequest.h"
+#include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
+#include "nsCOMPtr.h"
+#include "nsMemory.h"
+#include "nsString.h"
+#include "nsIFileStreams.h"
+#include "nsIStreamListener.h"
+#include "nsIEventQueueService.h"
+#include "nsIEventQueue.h"
+#include "nsILocalFile.h"
 #include "nsNetUtil.h"
+#include "nsAutoLock.h"
+#include "prlog.h"
 
-#if defined(XP_MAC)
-#include "macstdlibextras.h"
-  // Set up the toolbox and (if DEBUG) the console.  Do this in a static initializer,
-  // to make it as unlikely as possible that somebody calls printf() before we get initialized.
-static struct MacInitializer { MacInitializer() { InitializeMacToolbox(); InitializeSIOUX(true); } } gInitializer;
-#endif // XP_MAC
+////////////////////////////////////////////////////////////////////////////////
 
-// forward declarations...
-class TestConnection;
+#if defined(PR_LOGGING)
+//
+// set NSPR_LOG_MODULES=Test:5
+//
+static PRLogModuleInfo *gTestLog = nsnull;
+#endif
+#define LOG(args) PR_LOG(gTestLog, PR_LOG_DEBUG, args)
+
+////////////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 
-//static PRTime gElapsedTime;
-static int gKeepRunning = 1;
-
-#define NUM_TEST_THREADS 15
-#define TRANSFER_AMOUNT 64
-
-static TestConnection*  gConnections[NUM_TEST_THREADS];
-static nsIThread*       gThreads[NUM_TEST_THREADS];
-//static nsITimer*      gPeriodicTimer;
-static PRBool           gVerbose = PR_TRUE;
-
-
-void Pump_PLEvents(nsIEventQueueService * eventQService);
-void Pump_PLEvents(nsIEventQueueService * eventQService)
-{
-	nsIEventQueue* eventQ = nsnull;
-  eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
-
-  while ( gKeepRunning ) {
-#ifdef WIN32
-    MSG msg;
-
-    if (GetMessage(&msg, NULL, 0, 0)) {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-    } else {
-      gKeepRunning = FALSE;
-    }
-#elif defined(XP_OS2)
-    QMSG qmsg;
-
-    if (WinGetMsg(0, &qmsg, 0, 0, 0))
-      WinDispatchMsg(0, &qmsg);
-    else
-      gKeepRunning = FALSE;
-#else
-    nsresult rv;  
-    PLEvent *gEvent;
-    rv = eventQ->GetEvent(&gEvent);
-    rv = eventQ->HandleEvent(gEvent);
-#endif /* !WIN32 */
-  }
-
-}
-
-// -----
-//
-// TestConnection class...
-//
-// -----
-
-class TestConnection : public nsIRunnable, 
-                       public nsIStreamListener,
-                       public nsIInterfaceRequestor,
-                       public nsIProgressEventSink
-{
-public:
-  TestConnection(const char* aHostName, PRInt32 aPort,
-                 PRBool aAsyncFlag);
-  virtual ~TestConnection();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIRUNNABLE
-  NS_DECL_NSIREQUESTOBSERVER
-  NS_DECL_NSISTREAMLISTENER
-
-  // TestConnection methods...
-  nsresult WriteBuffer(void);
-  nsresult ReadBuffer(void);
-
-  nsresult Process(void);
-
-  nsresult Suspend(void);
-  nsresult Resume(void);
-
-  NS_IMETHOD GetInterface(const nsIID & uuid, void * *result) {
-    if (uuid.Equals(NS_GET_IID(nsIProgressEventSink))) {
-      *result = (nsIProgressEventSink*)this;
-      NS_ADDREF_THIS();
-      return NS_OK;
-    }
-    return NS_NOINTERFACE;
-  }
-
-  NS_IMETHOD OnProgress(nsIRequest *request, nsISupports *ctxt, 
-                        PRUint32 aProgress, PRUint32 aProgressMax) {
-    putc('+', stderr);
-    return NS_OK;
-  }
-
-  NS_IMETHOD OnStatus(nsIRequest *request, nsISupports *ctxt, 
-                      nsresult aStatus, const PRUnichar* aStatusArg) {
-    putc('?', stderr);
-    return NS_OK;
-  }
-
-protected:
-  nsIOutputStream* mOut;
-  nsIInputStream* mStream;
-
-  nsIInputStream*  mInStream;
-  nsIOutputStream* mOutStream;
-
-  nsITransport*   mTransport;
-  nsCOMPtr<nsIRequest> mReadRequest;
-  nsCOMPtr<nsIRequest> mWriteRequest;
-
-  PRBool  mIsAsync;
-  PRInt32 mBufferLength;
-  char    mBufferChar;
-
-  PRInt32 mBytesRead;
-
-};
+PRBool gDone = PR_FALSE;
+nsIEventQueue* gEventQ = nsnull;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class TestConnectionOpenObserver : public nsIRequestObserver 
+static void *PR_CALLBACK
+DoneEvent_Handler(PLEvent *ev)
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIREQUESTOBSERVER
-
-  TestConnectionOpenObserver(TestConnection* test)
-    : mTestConnection(test) { 
-  }
-  virtual ~TestConnectionOpenObserver() {}
-
-protected:
-  TestConnection* mTestConnection;
-
-};
-
-NS_IMPL_ISUPPORTS1(TestConnectionOpenObserver, nsIRequestObserver);
-
-NS_IMETHODIMP
-TestConnectionOpenObserver::OnStartRequest(nsIRequest *request, nsISupports* context)
-{
-  if (gVerbose)
-    printf("\n+++ TestConnectionOpenObserver::OnStartRequest +++. Context = %p\n", (void*)context);
-
-  return NS_OK;
+    gDone = PR_TRUE;
+    return nsnull;
 }
 
-NS_IMETHODIMP
-TestConnectionOpenObserver::OnStopRequest(nsIRequest *request, nsISupports* context,
-                                          nsresult aStatus)
+static void PR_CALLBACK
+DoneEvent_Cleanup(PLEvent *ev)
 {
-  if (gVerbose || NS_FAILED(aStatus))
-    printf("\n+++ TestConnectionOpenObserver::OnStopRequest (status = %x) +++."
-           "\tContext = %p\n", 
-           aStatus, (void*)context);
-  return NS_OK;
+    delete ev;
+}
+
+static void
+PostDoneEvent()
+{
+    LOG(("PostDoneEvent\n"));
+
+    PLEvent *ev = new PLEvent();
+
+    PL_InitEvent(ev, nsnull, 
+            DoneEvent_Handler,
+            DoneEvent_Cleanup);
+
+    gEventQ->PostEvent(ev);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP
-TestConnection::OnStartRequest(nsIRequest *request, nsISupports* context)
+class MyHandler : public nsIOutputStreamNotify
+                , public nsIInputStreamNotify
 {
-  if (gVerbose)
-    printf("\n+++ TestConnection::OnStartRequest +++. Context = %p\n", (void*)context);
-  return NS_OK;
-}
+public:
+    NS_DECL_ISUPPORTS
 
-
-NS_IMETHODIMP
-TestConnection::OnDataAvailable(nsIRequest *request, nsISupports* context,
-                                nsIInputStream *aIStream, 
-                                PRUint32 aSourceOffset,
-                                PRUint32 aLength)
-{
-  nsresult rv;
-
-  char buf[TRANSFER_AMOUNT];
-  PRUint32 amt;
-
-  if (gVerbose)
-    printf("\n+++ TestConnection::OnDavaAvailable +++."
-           "\tContext = %p length = %d\n", 
-           (void*)context, aLength);
-
-  while (aLength > 0) {
-    PRInt32 cnt = PR_MIN(TRANSFER_AMOUNT, aLength);
-    rv = aIStream->Read(buf, cnt, &amt);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Read failed");
-    mBytesRead += amt;
-    aLength -= amt;
-    buf[amt] = '\0';
-    if (gVerbose)
-      puts(buf);
-  }
-
-  if (mBufferLength == mBytesRead) {
-    mBytesRead = 0;
-    WriteBuffer();
-  }
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-TestConnection::OnStopRequest(nsIRequest *request, nsISupports* context,
-                              nsresult aStatus)
-{
-  if (gVerbose || NS_FAILED(aStatus))
-    printf("\n+++ TestConnection::OnStopRequest (status = %x) +++."
-           "\tContext = %p\n", 
-           aStatus, (void*)context);
-  return NS_OK;
-}
-
-
-TestConnection::TestConnection(const char* aHostName, PRInt32 aPort, 
-                               PRBool aAsyncFlag)
-{
-  nsresult rv;
-
-  mIsAsync      = aAsyncFlag;
-
-  mBufferLength = TRANSFER_AMOUNT;
-  mBufferChar   = 'a';
-  mBytesRead    = 0;
-
-  mTransport = nsnull;
-  mOut       = nsnull;
-  mStream    = nsnull;
-
-  mInStream  = nsnull;
-  mOutStream = nsnull;
-
-  // Create a socket transport...
-  nsCOMPtr<nsISocketTransportService> sts = 
-           do_GetService(kSocketTransportServiceCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    rv = sts->CreateTransport(aHostName, aPort, nsnull, 0, 0, &mTransport);
-    if (NS_SUCCEEDED(rv)) {
-      // Set up the notification callbacks to provide a progress event sink.
-      // That way we exercise the progress notification proxy code.
-      mTransport->SetNotificationCallbacks((nsIInterfaceRequestor*)this, PR_FALSE);
-    }
-  }
-
-
-  if (NS_SUCCEEDED(rv)) {
-    if (mIsAsync) {
-      // Create a stream for the data being written to the server...
-      if (NS_SUCCEEDED(rv)) {
-        rv = NS_NewPipe(&mStream, &mOut, 1024, 4096);
-      }
-    } 
-    // Synchronous transport...
-    else {
-      rv = mTransport->OpenInputStream(0, -1, 0, &mInStream);
-      rv = mTransport->OpenOutputStream(0, -1, 0, &mOutStream);
-    }
-  }
-}
-
-
-TestConnection::~TestConnection()
-{
-  NS_IF_RELEASE(mTransport);
-  // Async resources...
-  NS_IF_RELEASE(mStream);
-  NS_IF_RELEASE(mOut);
-
-  // Sync resources...
-  NS_IF_RELEASE(mInStream);
-  NS_IF_RELEASE(mOutStream);
-}
-
-NS_IMPL_THREADSAFE_ISUPPORTS5(TestConnection,
-                              nsIRunnable,
-                              nsIStreamListener,
-                              nsIRequestObserver,
-                              nsIInterfaceRequestor,
-                              nsIProgressEventSink);
-
-NS_IMETHODIMP
-TestConnection::Run(void)
-{
-  nsresult rv = NS_OK;
-
-  // Create the Event Queue for this thread...
-  nsCOMPtr<nsIEventQueueService> eventQService =
-           do_GetService(kEventQueueServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = eventQService->CreateMonitoredThreadEventQueue();
-  if (NS_FAILED(rv)) return rv;
-
-  //
-  // Make sure that all resources were allocated in the constructor...
-  //
-  if (!mTransport) {
-    rv = NS_ERROR_FAILURE;
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    if (mIsAsync) {
-
-      //
-      // Initiate an async read...
-      //
-      rv = mTransport->AsyncRead(this, mTransport, 0, -1, 0, getter_AddRefs(mReadRequest));
-
-      if (NS_FAILED(rv)) {
-        printf("Error: AsyncRead failed...");
-      } else {
-        rv = WriteBuffer();
-      }
-      Pump_PLEvents(eventQService);    
-    }
-    else {
-      while (NS_SUCCEEDED(rv)) {
-        rv = WriteBuffer();
-
-        if (NS_SUCCEEDED(rv)) {
-          rv = ReadBuffer();
+    MyHandler(const char *path,
+              nsIAsyncInputStream *in,
+              nsIAsyncOutputStream *out)
+        : mInput(in)
+        , mOutput(out)
+        , mWriteOffset(0)
+        {
+            mBuf = NS_LITERAL_CSTRING("GET ")
+                 + nsDependentCString(path)
+                 + NS_LITERAL_CSTRING(" HTTP/1.0\r\n\r\n");
         }
-      }
+    virtual ~MyHandler() {}
+
+    // called on any thread
+    NS_IMETHOD OnOutputStreamReady(nsIAsyncOutputStream *out)
+    {
+        LOG(("OnOutputStreamReady\n"));
+
+        nsresult rv;
+        PRUint32 n, count = mBuf.Length() - mWriteOffset;
+
+        rv = out->Write(mBuf.get() + mWriteOffset, count, &n);
+
+        LOG(("  write returned [rv=%x count=%u]\n", rv, n));
+
+        if (NS_FAILED(rv) || (n == 0)) {
+            if (rv != NS_BASE_STREAM_WOULD_BLOCK) {
+                LOG(("  done writing; starting to read\n"));
+                mInput->AsyncWait(this, 0, nsnull);
+                return NS_OK;
+            }
+        }
+
+        mWriteOffset += n;
+
+        return out->AsyncWait(this, 0, nsnull);
     }
-  }
 
-  if (gVerbose)
-    printf("Transport thread exiting...\n");
-  return rv;
-}
+    // called on any thread
+    NS_IMETHOD OnInputStreamReady(nsIAsyncInputStream *in)
+    {
+        LOG(("OnInputStreamReady\n"));
 
+        nsresult rv;
+        PRUint32 n;
+        char buf[500];
 
-nsresult TestConnection::WriteBuffer(void)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-  char *buffer;
-  PRInt32 size;
-  PRUint32 bytesWritten;
+        rv = in->Read(buf, sizeof(buf), &n);
 
-  if (mBufferChar == 'z') {
-    mBufferChar = 'a';
-  } else {
-    mBufferChar++;
-  }
+        LOG(("  read returned [rv=%x count=%u]\n", rv, n));
 
-  if (gVerbose)
-    printf("\n+++ Request is: %c.  Context = %p\n", mBufferChar, (void*)mTransport);
+        if (NS_FAILED(rv) || (n == 0)) {
+            if (rv != NS_BASE_STREAM_WOULD_BLOCK) {
+                PostDoneEvent();
+                return NS_OK;
+            }
+        }
 
-  // Create and fill a test buffer of data...
-  buffer = (char*)PR_Malloc(mBufferLength + 4);
-
-  if (buffer) {
-    for (size=0; size<mBufferLength-2; size++) {
-      buffer[size] = mBufferChar;
+        return in->AsyncWait(this, 0, nsnull);
     }
-    buffer[size++] = '\r';
-    buffer[size++] = '\n';
-    buffer[size]   = 0;
 
-    //
-    // Async case...
-    //
-    if (mStream) {
-      rv = mOut->Write(buffer, size, &bytesWritten);
+private:
+    nsCOMPtr<nsIAsyncInputStream>  mInput;
+    nsCOMPtr<nsIAsyncOutputStream> mOutput;
+    nsCString mBuf;
+    PRUint32  mWriteOffset;
+};
 
-      // Write the buffer to the server...
-      if (NS_SUCCEEDED(rv)) {
-          rv = NS_AsyncWriteFromStream(
-                  getter_AddRefs(mWriteRequest),
-                  mTransport, mStream, 0, bytesWritten, 0,
-                  nsnull, mTransport);
-      } 
-      // Wait for the write to complete...
-      if (NS_FAILED(rv)) {
-        printf("Error: AsyncWrite failed...");
-      }
-    } 
-    //
-    // Synchronous case...
-    //
-    else if (mOutStream) {
-      rv = mOutStream->Write(buffer, size, &bytesWritten);
-      NS_ASSERTION((PRUint32)size == bytesWritten, "Not enough was written...");
+NS_IMPL_THREADSAFE_ISUPPORTS2(MyHandler,
+                              nsIOutputStreamNotify,
+                              nsIInputStreamNotify)
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * create transport, open streams, and close
+ */
+static nsresult
+RunCloseTest(nsISocketTransportService *sts,
+             const char *host, int port,
+             PRUint32 inFlags, PRUint32 outFlags)
+{
+    nsresult rv;
+
+    LOG(("RunCloseTest\n"));
+
+    nsCOMPtr<nsISocketTransport> transport;
+    rv = sts->CreateTransport(nsnull, 0,
+                              nsDependentCString(host), port, nsnull,
+                              getter_AddRefs(transport));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIInputStream> in;
+    rv = transport->OpenInputStream(inFlags, 0, 0, getter_AddRefs(in));
+    nsCOMPtr<nsIAsyncInputStream> asyncIn = do_QueryInterface(in, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIOutputStream> out;
+    rv = transport->OpenOutputStream(outFlags, 0, 0, getter_AddRefs(out));
+    nsCOMPtr<nsIAsyncOutputStream> asyncOut = do_QueryInterface(out, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    LOG(("waiting 1 second before closing transport and streams...\n"));
+    PR_Sleep(PR_SecondsToInterval(1));
+    
+    // let nsCOMPtr destructors close everything...
+    return NS_OK;
+}
+
+
+/**
+ * asynchronously read socket stream
+ */
+static nsresult
+RunTest(nsISocketTransportService *sts,
+        const char *host, int port, const char *path,
+        PRUint32 inFlags, PRUint32 outFlags)
+{
+    nsresult rv;
+
+    LOG(("RunTest\n"));
+
+    nsCOMPtr<nsISocketTransport> transport;
+    rv = sts->CreateTransport(nsnull, 0,
+                              nsDependentCString(host), port, nsnull,
+                              getter_AddRefs(transport));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIInputStream> in;
+    rv = transport->OpenInputStream(inFlags, 0, 0, getter_AddRefs(in));
+    nsCOMPtr<nsIAsyncInputStream> asyncIn = do_QueryInterface(in, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIOutputStream> out;
+    rv = transport->OpenOutputStream(outFlags, 0, 0, getter_AddRefs(out));
+    nsCOMPtr<nsIAsyncOutputStream> asyncOut = do_QueryInterface(out, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    MyHandler *handler = new MyHandler(path, asyncIn, asyncOut);
+    if (handler == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(handler);
+
+    rv = asyncOut->AsyncWait(handler, 0, nsnull);
+
+    if (NS_SUCCEEDED(rv)) {
+        PLEvent* event;
+        gDone = PR_FALSE;
+        while (!gDone) {
+            rv = gEventQ->WaitForEvent(&event);
+            if (NS_FAILED(rv)) return rv;
+            rv = gEventQ->HandleEvent(event);
+            if (NS_FAILED(rv)) return rv;
+        }
     }
-    PR_Free(buffer);
-  } else {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
 
-  return rv;
+    NS_RELEASE(handler);
+
+    return NS_OK;
 }
 
-
-nsresult TestConnection::ReadBuffer(void)
-{
-  nsresult rv = NS_OK;
-
-  //
-  // Synchronous case...
-  //
-  if (mInStream) {
-    char *buffer;
-    PRUint32 bytesRead;
-
-    buffer = (char*)PR_Malloc(mBufferLength + 4);
-
-    if (buffer) {
-      rv = mInStream->Read(buffer, mBufferLength, &bytesRead);
-
-      if (NS_SUCCEEDED(rv) && bytesRead > 0) {
-        buffer[bytesRead] = '\0';
-        if (gVerbose)
-          printf("TestConnection::ReadBuffer.  Read %d bytes\n", bytesRead);
-        puts(buffer);
-      }
-      PR_Free(buffer);
-    }
-  }
-
-  return rv;
-}
-
-nsresult TestConnection::Process(void)
-{
-  return NS_OK;
-}
-
-
-nsresult TestConnection::Suspend(void)
-{
-  nsresult rv;
-
-  if (mReadRequest) {
-    rv = mReadRequest->Suspend();
-  } else {
-    rv = NS_ERROR_FAILURE;
-  }
-
-  return rv;
-}
-
-nsresult TestConnection::Resume(void)
-{
-  nsresult rv;
-
-  if (mReadRequest) {
-    rv = mReadRequest->Resume();
-  } else {
-    rv = NS_ERROR_FAILURE;
-  }
-
-  return rv;
-}
-
-
-
-
-
-
-#if defined(USE_TIMERS)
-
-void TimerCallback(nsITimer* aTimer, void* aClosure)
-{
-  static PRBool flag = PR_FALSE;
-  int i;
-
-  if (flag) {
-    printf("Resuming connections...\n");
-  } else {
-    printf("Suspending connections...\n");
-  }
-
-
-  for (i=0; i<NUM_TEST_THREADS; i++) {
-    TestConnection* connection;
-
-    connection = gConnections[i];
-    if (connection) {
-      if (flag) {
-        connection->Resume();
-      } else {
-        connection->Suspend();
-      }
-    }
-  }
-  flag = !flag;
-
-  gPeriodicTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
-    gPeriodicTimer->Init(TimerCallback, nsnull, 1000*5);
-  }
-}
-
-#endif /* USE_TIMERS */
+////////////////////////////////////////////////////////////////////////////////
 
 int
 main(int argc, char* argv[])
 {
-  nsresult rv;
+    nsresult rv;
 
-  // -----
-  //
-  // Parse the command line args...
-  //
-  // -----
-#if 0
-  if (argc < 3) {
-    printf("usage: %s [-sync|-silent] <host> <path>\n", argv[0]);
-    return -1;
-  }
-#endif
-  PRBool bIsAsync = PR_TRUE;
-  const char* hostName = nsnull;
-  int i;
-
-
-  for (i=1; i<argc; i++) {
-    // Turn on synchronous mode...
-    if (PL_strcasecmp(argv[i], "-sync") == 0) {
-      bIsAsync = PR_FALSE;
-      continue;
-    } 
-    if (PL_strcasecmp(argv[i], "-silent") == 0) {
-      gVerbose = PR_FALSE;
-      continue;
+    if (argc < 4) {
+        printf("usage: TestSocketTransport <host> <port> <path>\n");
+        return -1;
     }
 
-    hostName = argv[i];
-  }
-  if (!hostName) {
-    hostName = "chainsaw";
-  }
-  printf("Using %s as echo server...\n", hostName);
+    {
+        nsCOMPtr<nsIServiceManager> servMan;
+        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+        if (registrar)
+            registrar->AutoRegister(nsnull);
 
-#ifdef XP_MAC
-	(void) PR_SetEnv("NSPR_LOG_MODULES=nsSocketTransport:5");
-	(void) PR_SetEnv("NSPR_LOG_FILE=nspr.log");
-	PR_Init_Log();
+#if defined(PR_LOGGING)
+        gTestLog = PR_NewLogModule("Test");
 #endif
 
-  // -----
-  //
-  // Initialize XPCom...
-  //
-  // -----
-  {
-    nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    if (registrar)
-      registrar->AutoRegister(nsnull);
+        nsCOMPtr<nsIEventQueueService> eventQService =
+                 do_GetService(kEventQueueServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
 
-    // Create the Event Queue for this thread...
-    nsCOMPtr<nsIEventQueueService> eventQService =
-             do_GetService(kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+        rv = eventQService->CreateMonitoredThreadEventQueue();
+        if (NS_FAILED(rv)) return rv;
 
-    //
-    // Create the connections and threads...
-    //
-    for (i=0; i<NUM_TEST_THREADS; i++) {
-      gConnections[i] = new TestConnection(hostName, 7, bIsAsync);
-      rv = NS_NewThread(&gThreads[i], gConnections[i], 0, PR_JOINABLE_THREAD);
-    }
+        rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
+        if (NS_FAILED(rv)) return rv;
 
-#if defined(USE_TIMERS)
-    //
-    // Start up the timer to test Suspend/Resume APIs on the transport...
-    //
-    gPeriodicTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    if (NS_SUCCEEDED(rv)) {
-      gPeriodicTimer->Init(TimerCallback, nsnull, 1000);
-    }
-#endif /* USE_TIMERS */
+        nsCOMPtr<nsISocketTransportService> sts =
+            do_GetService(kSocketTransportServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
 
-    // Enter the message pump to allow the URL load to proceed.
-    Pump_PLEvents(eventQService);
+        LOG(("phase 1 tests...\n"));
 
-    PRTime endTime;
-    endTime = PR_Now();
+        LOG(("flags = { OPEN_UNBUFFERED, OPEN_UNBUFFERED }\n"));
+        rv = RunCloseTest(sts, argv[1], atoi(argv[2]),
+                          nsITransport::OPEN_UNBUFFERED,
+                          nsITransport::OPEN_UNBUFFERED);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "RunCloseTest failed");
 
-    //  printf("Elapsed time: %d\n", (PRInt32)(endTime/1000UL - gElapsedTime/1000UL));
-  } // this scopes the nsCOMPtrs
-  // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
-  rv = NS_ShutdownXPCOM(nsnull);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
-  return 0;
+        LOG(("flags = { OPEN_BUFFERED, OPEN_UNBUFFERED }\n"));
+        rv = RunCloseTest(sts, argv[1], atoi(argv[2]),
+                          0 /* nsITransport::OPEN_BUFFERED */,
+                          nsITransport::OPEN_UNBUFFERED);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "RunCloseTest failed");
+
+        LOG(("flags = { OPEN_UNBUFFERED, OPEN_BUFFERED }\n"));
+        rv = RunCloseTest(sts, argv[1], atoi(argv[2]),
+                          nsITransport::OPEN_UNBUFFERED,
+                          0 /*nsITransport::OPEN_BUFFERED */);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "RunCloseTest failed");
+
+        LOG(("flags = { OPEN_BUFFERED, OPEN_BUFFERED }\n"));
+        rv = RunCloseTest(sts, argv[1], atoi(argv[2]),
+                          0 /*nsITransport::OPEN_BUFFERED */,
+                          0 /*nsITransport::OPEN_BUFFERED */);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "RunCloseTest failed");
+
+        LOG(("calling Shutdown on socket transport service:\n"));
+        sts->Shutdown();
+
+        LOG(("calling Init on socket transport service:\n"));
+        sts->Init();
+
+        LOG(("phase 2 tests...\n"));
+
+        LOG(("flags = { OPEN_UNBUFFERED, OPEN_UNBUFFERED }\n"));
+        rv = RunTest(sts, argv[1], atoi(argv[2]), argv[3],
+                     nsITransport::OPEN_UNBUFFERED,
+                     nsITransport::OPEN_UNBUFFERED);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "RunTest failed");
+
+        LOG(("flags = { OPEN_BUFFERED, OPEN_UNBUFFERED }\n"));
+        rv = RunTest(sts, argv[1], atoi(argv[2]), argv[3],
+                     0 /* nsITransport::OPEN_BUFFERED */,
+                     nsITransport::OPEN_UNBUFFERED);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "RunTest failed");
+
+        LOG(("flags = { OPEN_UNBUFFERED, OPEN_BUFFERED }\n"));
+        rv = RunTest(sts, argv[1], atoi(argv[2]), argv[3],
+                     nsITransport::OPEN_UNBUFFERED,
+                     0 /*nsITransport::OPEN_BUFFERED */);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "RunTest failed");
+
+        LOG(("flags = { OPEN_BUFFERED, OPEN_BUFFERED }\n"));
+        rv = RunTest(sts, argv[1], atoi(argv[2]), argv[3],
+                     0 /*nsITransport::OPEN_BUFFERED */,
+                     0 /*nsITransport::OPEN_BUFFERED */);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "RunTest failed");
+
+        LOG(("waiting 1 second before calling Shutdown...\n"));
+        PR_Sleep(PR_SecondsToInterval(1));
+
+        LOG(("calling Shutdown on socket transport service:\n"));
+        sts->Shutdown();
+
+        NS_RELEASE(gEventQ);
+
+        // give background threads a chance to finish whatever work they may
+        // be doing.
+        LOG(("waiting 1 second before exiting...\n"));
+        PR_Sleep(PR_SecondsToInterval(1));
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+    rv = NS_ShutdownXPCOM(nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+    return NS_OK;
 }

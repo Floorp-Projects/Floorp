@@ -15,11 +15,11 @@ load_sync_1(nsISupports *element, void *data)
 {
     nsCOMPtr<nsIInputStream> stream;
     nsCOMPtr<nsIURI> uri( do_QueryInterface(element) );
+    nsCAutoString spec;
     nsresult rv;
 
     rv = NS_OpenURI(getter_AddRefs(stream), uri, gIOService);
     if (NS_FAILED(rv)) {
-        nsCAutoString spec;
         uri->GetAsciiSpec(spec);
         fprintf(stderr, "*** failed opening %s [rv=%x]\n", spec.get(), rv);
         return PR_TRUE;
@@ -30,8 +30,13 @@ load_sync_1(nsISupports *element, void *data)
 
     while (1) {
         rv = stream->Read(buf, sizeof(buf), &bytesRead);
-        if (NS_FAILED(rv) || bytesRead == 0)
+        if (NS_FAILED(rv) || bytesRead == 0) {
+            if (NS_FAILED(rv)) {
+                uri->GetAsciiSpec(spec);
+                fprintf(stderr, "*** failed reading %s [rv=%x]\n", spec.get(), rv);
+            }
             break;
+        }
     }
 
     return PR_TRUE;
@@ -107,7 +112,7 @@ MyListener::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status)
     if (NS_FAILED(status)) {
         nsCAutoString spec;
         req->GetName(spec);
-        fprintf(stderr, "*** failed loading %s\n", spec.get());
+        fprintf(stderr, "*** failed loading %s [reason=%x]\n", spec.get(), status);
     }
     if (--gRequestCount == 0) {
         // post shutdown event

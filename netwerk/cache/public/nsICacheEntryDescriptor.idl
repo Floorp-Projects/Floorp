@@ -29,7 +29,8 @@
 
 interface nsISimpleEnumerator;
 interface nsICacheListener;
-interface nsITransport;
+interface nsIInputStream;
+interface nsIOutputStream;
 interface nsIFile;
 interface nsICacheMetaDataVisitor;
 
@@ -50,10 +51,33 @@ interface nsICacheEntryDescriptor : nsICacheEntryInfo
     void setDataSize(in unsigned long size);
 
     /**
-     * Get a transport to the cache data.  This will fail if the cache entry
-     * IS NOT stream based.
+     * Open blocking input stream to cache data.  This will fail if the cache
+     * entry IS NOT stream based.  Use the stream transport service to
+     * asynchronously read this stream on a background thread.  The returned
+     * stream MAY implement nsISeekableStream.
+     *
+     * @param offset
+     *        read starting from this offset into the cached data.
+     *
+     * @return blocking, unbuffered input stream.
      */
-    readonly attribute nsITransport transport;
+    nsIInputStream openInputStream(in unsigned long offset);
+
+    /**
+     * Open blocking output stream to cache data.  This will fail if the cache
+     * entry IS NOT stream based.  Use the stream transport service to
+     * asynchronously write to this stream on a background thread.  The returned
+     * stream MAY implement nsISeekableStream.
+     *
+     * If opening an output stream to existing cached data, the data will be
+     * truncated to the specified offset.
+     *
+     * @param offset
+     *        write starting from this offset into the cached data.
+     *
+     * @return blocking, unbuffered output stream.
+     */
+    nsIOutputStream openOutputStream(in unsigned long offset);
 
     /**
      * Get/set the cache data element.  This will fail if the cache entry

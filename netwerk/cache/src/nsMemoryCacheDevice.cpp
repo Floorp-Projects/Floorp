@@ -25,18 +25,10 @@
 #include "nsMemoryCacheDevice.h"
 #include "nsCacheService.h"
 #include "nsICacheService.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-#include "nsNetCID.h"
-#include "nsIObserverService.h"
-#include "nsIPref.h"
+#include "nsIStorageStream.h"
 #include "nsICacheVisitor.h"
-#include "nsITransport.h"
 #include "nsCRT.h"
-#include <signal.h>
 
-
-static NS_DEFINE_CID(kStorageTransportCID, NS_STORAGETRANSPORT_CID);
 
 const char *gMemoryDeviceID      = "memory";
 
@@ -69,7 +61,7 @@ nsMemoryCacheDevice::Init()
     nsresult  rv = mMemCacheEntries.Init();
     
     // set some default memory limits, in case prefs aren't available
-    mSoftLimit = mHardLimit * 0.9;
+    mSoftLimit = (mHardLimit * 9) / 10;
 
     mInitialized = NS_SUCCEEDED(rv);
     return rv;
@@ -208,32 +200,65 @@ nsMemoryCacheDevice::DoomEntry(nsCacheEntry * entry)
 
 
 nsresult
-nsMemoryCacheDevice::GetTransportForEntry( nsCacheEntry *    entry,
-                                           nsCacheAccessMode mode,
-                                           nsITransport   ** transport )
+nsMemoryCacheDevice::OpenInputStreamForEntry( nsCacheEntry *    entry,
+                                              nsCacheAccessMode mode,
+                                              PRUint32          offset,
+                                              nsIInputStream ** result)
 {
     NS_ENSURE_ARG_POINTER(entry);
-    NS_ENSURE_ARG_POINTER(transport);
+    NS_ENSURE_ARG_POINTER(result);
 
     nsCOMPtr<nsISupports> data;
+    nsCOMPtr<nsIStorageStream> storage;
 
     nsresult rv = entry->GetData(getter_AddRefs(data));
     if (NS_FAILED(rv))
         return rv;
 
-    if (data)
-        return CallQueryInterface(data, transport);
-    else {
-        // create a new transport for this entry
-        rv = nsComponentManager::CreateInstance(kStorageTransportCID,
-                                                nsnull,
-                                                NS_GET_IID(nsITransport),
-                                                (void **) transport);
-        if (NS_FAILED(rv)) return rv;
-
-        entry->SetData(*transport);
-        return NS_OK;
+    if (data) {
+        storage = do_QueryInterface(data, &rv);
+        if (NS_FAILED(rv))
+            return rv;
     }
+    else {
+        rv = NS_NewStorageStream(4096, PRUint32(-1), getter_AddRefs(storage));
+        if (NS_FAILED(rv))
+            return rv;
+        entry->SetData(storage);
+    }
+
+    return storage->NewInputStream(offset, result);
+}
+
+nsresult
+nsMemoryCacheDevice::OpenOutputStreamForEntry( nsCacheEntry *     entry,
+                                               nsCacheAccessMode  mode,
+                                               PRUint32           offset,
+                                               nsIOutputStream ** result)
+{
+    NS_ENSURE_ARG_POINTER(entry);
+    NS_ENSURE_ARG_POINTER(result);
+
+    nsCOMPtr<nsISupports> data;
+    nsCOMPtr<nsIStorageStream> storage;
+
+    nsresult rv = entry->GetData(getter_AddRefs(data));
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (data) {
+        storage = do_QueryInterface(data, &rv);
+        if (NS_FAILED(rv))
+            return rv;
+    }
+    else {
+        rv = NS_NewStorageStream(4096, PRUint32(-1), getter_AddRefs(storage));
+        if (NS_FAILED(rv))
+            return rv;
+        entry->SetData(storage);
+    }
+
+    return storage->GetOutputStream(offset, result);
 }
 
 
@@ -251,7 +276,7 @@ nsMemoryCacheDevice::OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize)
     if (entry->IsStreamData()) {
         // we have the right to refuse or pre-evict
         PRUint32  newSize = entry->DataSize() + deltaSize;
-        if (newSize > mSoftLimit) {
+        if ((PRInt32) newSize > mSoftLimit) {
             nsresult rv = nsCacheService::DoomEntry(entry);
             NS_ASSERTION(NS_SUCCEEDED(rv),"DoomEntry() failed.");
             return NS_ERROR_ABORT;
@@ -407,7 +432,7 @@ void
 nsMemoryCacheDevice::SetCapacity(PRInt32  capacity)
 {
     PRInt32 hardLimit = capacity * 1024;  // convert k into bytes
-    PRInt32 softLimit = hardLimit * 0.9;
+    PRInt32 softLimit = (hardLimit * 9) / 10;
     AdjustMemoryLimits(softLimit, hardLimit);
 }
 

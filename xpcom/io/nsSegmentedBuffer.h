@@ -72,7 +72,7 @@ public:
     }
 
     PRUint32 GetSegmentSize() { return mSegmentSize; }
-
+    PRUint32 GetMaxSize() { return mMaxSize; }
     PRUint32 GetSize() { return GetSegmentCount() * mSegmentSize; }
 
     char* GetSegment(PRUint32 indx) {

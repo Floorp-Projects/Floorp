@@ -54,8 +54,7 @@
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsMemory.h"
-#include "nsNetCID.h"
-#include "nsIFileStreams.h"
+#include "nsNetUtil.h"
 // The order of these headers is important on Win2K because CreateDirectory
 // is |#undef|-ed in nsFileSpec.h, so we need to pull in windows.h for the
 // first time after nsFileSpec.h.

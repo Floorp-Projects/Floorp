@@ -46,6 +46,8 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
+#include "nsIInputStreamChannel.h"
+#include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
@@ -76,7 +78,8 @@ private:
     nsresult ParseURI(nsCString &, PRBool &, nsCString &);
 
 private:
-    nsCOMPtr<nsIChannel>            mStreamChannel;
+    nsCOMPtr<nsIURI>                mURI;
+    nsCOMPtr<nsIInputStreamChannel> mStreamChannel;
     nsCOMPtr<nsIStreamListener>     mListener;
     nsCOMPtr<nsISupports>           mListenerContext;
     nsCOMPtr<nsICacheSession>       mCacheSession;

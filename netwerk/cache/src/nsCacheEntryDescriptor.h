@@ -27,10 +27,8 @@
 
 #include "nsICacheEntryDescriptor.h"
 #include "nsCacheEntry.h"
+#include "nsIInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsITransport.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
 
 /******************************************************************************
 * nsCacheEntryDescriptor
@@ -64,98 +62,85 @@ public:
 
 private:
 
+
      /*************************************************************************
-      * transport wrapper class - 
+      * input stream wrapper class -
       *
-      * we want the transport wrapper to have the same lifetime as the
-      * descriptor, but since they each need to reference the other, we have the
-      * descriptor include the transport wrapper as a member, rather than just
-      * pointing to it, which avoids circular AddRefs.
+      * The input stream wrapper references the descriptor, but the descriptor
+      * doesn't need any references to the stream wrapper.
       *************************************************************************/
-     class nsTransportWrapper : public nsITransport
-     {
+     class nsInputStreamWrapper : public nsIInputStream {
+     private:
+         nsCacheEntryDescriptor    * mDescriptor;
+         nsCOMPtr<nsIInputStream>    mInput;
+         PRUint32                    mStartOffset;
+         PRBool                      mInitialized;
      public:
-         NS_DECL_ISUPPORTS_INHERITED
-         NS_DECL_NSITRANSPORT
+         NS_DECL_ISUPPORTS
+         NS_DECL_NSIINPUTSTREAM
 
-         nsTransportWrapper() : mCallbackFlags(0) {}
-         virtual ~nsTransportWrapper() {}
+         nsInputStreamWrapper(nsCacheEntryDescriptor * desc, PRUint32 off)
+             : mDescriptor(desc)
+             , mStartOffset(off)
+             , mInitialized(PR_FALSE)
+         {
+             NS_ADDREF(mDescriptor);
+         }
+         virtual ~nsInputStreamWrapper()
+         {
+             NS_RELEASE(mDescriptor);
+         }
 
-         nsresult EnsureTransportWithAccess(nsCacheAccessMode  mode);
-
-         PRUint32                         mCallbackFlags;
-
-         nsCOMPtr<nsITransport>           mTransport;
-         nsCOMPtr<nsIInterfaceRequestor>  mCallbacks;
-     }; // end of class nsTransportWrapper
-     friend class nsTransportWrapper;
+     private:
+         nsresult LazyInit();
+         nsresult EnsureInit() { return mInitialized ? NS_OK : LazyInit(); }
+     };
+     friend class nsInputStreamWrapper;
 
 
      /*************************************************************************
       * output stream wrapper class -
       *
       * The output stream wrapper references the descriptor, but the descriptor
-      * doesn't need any references to the stream wrapper, so we don't need the
-      * same kind of tricks that we're using for the transport wrapper.
+      * doesn't need any references to the stream wrapper.
       *************************************************************************/
      class nsOutputStreamWrapper : public nsIOutputStream {
      private:
-         nsCacheEntryDescriptor *  mDescriptor;
-         nsCOMPtr<nsIOutputStream> mOutput;
+         nsCacheEntryDescriptor *    mDescriptor;
+         nsCOMPtr<nsIOutputStream>   mOutput;
+         PRUint32                    mStartOffset;
+         PRBool                      mInitialized;
      public:
          NS_DECL_ISUPPORTS
-         // NS_DECL_NSIOUTPUTSTREAM
-         NS_IMETHOD Close(void) { return mOutput->Close(); }
-         NS_IMETHOD Flush(void) { return mOutput->Flush(); }
+         NS_DECL_NSIOUTPUTSTREAM
 
-         NS_IMETHOD Write(const char * buf,
-                          PRUint32     count,
-                          PRUint32 *   result);
-
-         NS_IMETHOD WriteFrom(nsIInputStream * inStr,
-                              PRUint32         count,
-                              PRUint32 *       result);
-
-         NS_IMETHOD WriteSegments(nsReadSegmentFun reader,
-                                  void *           closure,
-                                  PRUint32         count,
-                                  PRUint32 *       result);
-
-         NS_IMETHOD IsNonBlocking(PRBool * nonBlocking)
-         { return mOutput->IsNonBlocking(nonBlocking); }
-
-         nsOutputStreamWrapper(nsCacheEntryDescriptor * descriptor,
-                               nsIOutputStream *        output)
-             : mDescriptor(nsnull), mOutput(output)
+         nsOutputStreamWrapper(nsCacheEntryDescriptor * desc, PRUint32 off)
+             : mDescriptor(desc)
+             , mStartOffset(off)
+             , mInitialized(PR_FALSE)
          {
-             NS_ADDREF(mDescriptor = descriptor);
+             NS_ADDREF(mDescriptor); // owning ref
          }
-    
          virtual ~nsOutputStreamWrapper()
-         {
+         { 
+             // XXX _HACK_ the storage stream needs this!
+             Close();
              NS_RELEASE(mDescriptor);
          }
-    
-         nsresult Init();
-
 
      private:
+         nsresult LazyInit();
+         nsresult EnsureInit() { return mInitialized ? NS_OK : LazyInit(); }
          nsresult OnWrite(PRUint32 count);
-     }; // end of class nsOutputStreamWrapper
+     };
      friend class nsOutputStreamWrapper;
 
-
-
-     static nsresult NewOutputStreamWrapper(nsIOutputStream **       result,
-                                            nsCacheEntryDescriptor * descriptor,
-                                            nsIOutputStream *        output);
  private:
      /**
       * nsCacheEntryDescriptor data members
       */
      nsCacheEntry          * mCacheEntry; // we are a child of the entry
      nsCacheAccessMode       mAccessGranted;
-     nsTransportWrapper      mTransportWrapper;
 };
 
 

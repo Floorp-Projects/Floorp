@@ -17,409 +17,476 @@
  *
  */
 
-#include "nsNetUtil.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
 #include "nsJARChannel.h"
-#include "nsCRT.h"
-#include "nsIFileTransportService.h"
-#include "nsIURI.h"
-#include "nsIFileURL.h"
-#include "nsCExternalHandlerService.h"
-#include "nsIMIMEService.h"
-#include "nsAutoLock.h"
-#include "nsIFileStreams.h"
+#include "nsJARProtocolHandler.h"
 #include "nsMimeTypes.h"
+#include "nsNetUtil.h"
+
 #include "nsScriptSecurityManager.h"
 #include "nsIAggregatePrincipal.h"
-#include "nsIProgressEventSink.h"
-#include "nsXPIDLString.h"
-#include "nsReadableUtils.h"
+#include "nsIFileURL.h"
 #include "nsIJAR.h"
-#include "prthread.h"
 
-static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kScriptSecurityManagerCID, NS_SCRIPTSECURITYMANAGER_CID);
+static NS_DEFINE_CID(kInputStreamChannelCID, NS_INPUTSTREAMCHANNEL_CID);
+
+//-----------------------------------------------------------------------------
 
 #if defined(PR_LOGGING)
 //
-// Log module for JarChannel logging...
+// set NSPR_LOG_MODULES=nsJarProtocol:5
 //
-// To enable logging (see prlog.h for full details):
-//
-//    set NSPR_LOG_MODULES=nsJarProtocol:5
-//    set NSPR_LOG_FILE=nspr.log
-//
-// this enables PR_LOG_DEBUG level information and places all output in
-// the file nspr.log
-//
-PRLogModuleInfo* gJarProtocolLog = nsnull;
+static PRLogModuleInfo *gJarProtocolLog = nsnull;
+#endif
 
-#endif /* PR_LOGGING */
+#define LOG(args)     PR_LOG(gJarProtocolLog, PR_LOG_DEBUG, args)
+#define LOG_ENABLED() PR_LOG_TEST(gJarProtocolLog, 4)
 
-////////////////////////////////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
+// nsJARInputThunk
+//
+// this class allows us to do some extra work on the stream transport thread.
+//-----------------------------------------------------------------------------
 
-#define NS_DEFAULT_JAR_BUFFER_SEGMENT_SIZE      (16*1024)
-#define NS_DEFAULT_JAR_BUFFER_MAX_SIZE          (256*1024)
+class nsJARInputThunk : public nsIInputStream
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIINPUTSTREAM
+
+    nsJARInputThunk(nsIFile *jarFile, const nsACString &jarEntry,
+                    nsIZipReaderCache *jarCache)
+        : mJarCache(jarCache)
+        , mJarFile(jarFile)
+        , mJarEntry(jarEntry)
+    {
+        NS_ASSERTION(mJarFile, "no jar file");
+    }
+    virtual ~nsJARInputThunk() {}
+
+    void GetJarReader(nsIZipReader **result)
+    {
+        NS_ADDREF(*result = mJarReader);
+    }
+
+private:
+    nsresult EnsureJarStream();
+
+    nsCOMPtr<nsIZipReaderCache> mJarCache;
+    nsCOMPtr<nsIZipReader>      mJarReader;
+    nsCOMPtr<nsIFile>           mJarFile;
+    nsCOMPtr<nsIInputStream>    mJarStream;
+    nsCString                   mJarEntry;
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARInputThunk, nsIInputStream)
+
+nsresult
+nsJARInputThunk::EnsureJarStream()
+{
+    if (mJarStream)
+        return NS_OK;
+
+    nsresult rv = mJarCache->GetZip(mJarFile, getter_AddRefs(mJarReader));
+    if (NS_FAILED(rv)) return rv;
+
+    return mJarReader->GetInputStream(mJarEntry.get(),
+                                      getter_AddRefs(mJarStream));
+}
+
+NS_IMETHODIMP
+nsJARInputThunk::Close()
+{
+    if (mJarStream)
+        return mJarStream->Close();
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARInputThunk::Available(PRUint32 *avail)
+{
+    nsresult rv = EnsureJarStream();
+    if (NS_FAILED(rv)) return rv;
+
+    return mJarStream->Available(avail);
+}
+
+NS_IMETHODIMP
+nsJARInputThunk::Read(char *buf, PRUint32 count, PRUint32 *countRead)
+{
+    nsresult rv = EnsureJarStream();
+    if (NS_FAILED(rv)) return rv;
+
+    return mJarStream->Read(buf, count, countRead);
+}
+
+NS_IMETHODIMP
+nsJARInputThunk::ReadSegments(nsWriteSegmentFun writer, void *closure,
+                              PRUint32 count, PRUint32 *countRead)
+{
+    // stream transport does only calls Read()
+    NS_NOTREACHED("nsJarInputThunk::ReadSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsJARInputThunk::IsNonBlocking(PRBool *nonBlocking)
+{
+    *nonBlocking = PR_FALSE;
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
 
 nsJARChannel::nsJARChannel()
-    : mLoadFlags(LOAD_NORMAL)
-    , mContentLength(-1)
+    : mContentLength(-1)
+    , mLoadFlags(LOAD_NORMAL)
     , mStatus(NS_OK)
-#ifdef DEBUG
-    , mInitiator(nsnull)
-#endif
+    , mIsPending(PR_FALSE)
+    , mJarInput(nsnull)
 {
 #if defined(PR_LOGGING)
-    //
-    // Initialize the global PRLogModule for socket transport logging
-    // if necessary...
-    //
-    if (nsnull == gJarProtocolLog) {
+    if (!gJarProtocolLog)
         gJarProtocolLog = PR_NewLogModule("nsJarProtocol");
-    }
-#endif /* PR_LOGGING */
+#endif
+
+    // hold an owning reference to the jar handler
+    NS_ADDREF(gJarHandler);
 }
 
 nsJARChannel::~nsJARChannel()
 {
-    NS_IF_RELEASE(mJARProtocolHandler);
+    // release owning reference to the jar handler
+    nsJARProtocolHandler *handler = gJarHandler;
+    NS_RELEASE(handler); // NULL parameter
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS7(nsJARChannel,
-                              nsIJARChannel,
-                              nsIChannel,
-                              nsIRequest,
-                              nsIRequestObserver,
-                              nsIStreamListener,
-                              nsIStreamIO,
-                              nsIDownloadObserver)
+NS_IMPL_ISUPPORTS6(nsJARChannel,
+                   nsIRequest,
+                   nsIChannel,
+                   nsIStreamListener,
+                   nsIRequestObserver,
+                   nsIDownloadObserver,
+                   nsIJARChannel)
 
-NS_METHOD
-nsJARChannel::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+nsresult 
+nsJARChannel::Init(nsIURI *uri)
 {
     nsresult rv;
+    mJarURI = do_QueryInterface(uri, &rv);
 
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    nsJARChannel* jarChannel = new nsJARChannel();
-    if (jarChannel == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(jarChannel);
-    rv = jarChannel->QueryInterface(aIID, aResult);
-    NS_RELEASE(jarChannel);
+#if defined(PR_LOGGING)
+    mJarURI->GetSpec(mSpec);
+#endif
     return rv;
 }
- 
-nsresult 
-nsJARChannel::Init(nsJARProtocolHandler* aHandler, nsIURI* uri)
+
+nsresult
+nsJARChannel::CreateJarInput()
 {
-    nsresult rv;
-    mURI = do_QueryInterface(uri, &rv);
+    // important to pass a clone of the file since the nsIFile impl is not
+    // necessarily MT-safe
+    nsCOMPtr<nsIFile> clonedFile;
+    nsresult rv = mJarFile->Clone(getter_AddRefs(clonedFile));
     if (NS_FAILED(rv)) return rv;
 
-    NS_ADDREF(mJARProtocolHandler = aHandler);
+    mJarInput = new nsJARInputThunk(clonedFile, mJarEntry, gJarHandler->JarCache());
+    if (!mJarInput)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(mJarInput);
     return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// nsIRequest methods
+nsresult
+nsJARChannel::EnsureJarInput(PRBool blocking)
+{
+    LOG(("nsJARChannel::EnsureJarInput [this=%x %s]\n", this, mSpec.get()));
+
+    nsresult rv;
+    nsCOMPtr<nsIURI> uri;
+
+    rv = mJarURI->GetJARFile(getter_AddRefs(mJarBaseURI));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mJarURI->GetJAREntry(mJarEntry);
+    if (NS_FAILED(rv)) return rv;
+
+    // try to get a nsIFile directly from the url, which will often succeed.
+    {
+        nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mJarBaseURI);
+        if (fileURL)
+            fileURL->GetFile(getter_AddRefs(mJarFile));
+    }
+
+    if (mJarFile) {
+        rv = CreateJarInput();
+    }
+    else if (blocking) {
+        NS_NOTREACHED("need sync downloader");
+        rv = NS_ERROR_NOT_IMPLEMENTED;
+    }
+    else {
+        // kick off an async download of the base URI...
+        rv = NS_NewDownloader(getter_AddRefs(mDownloader),
+                              mJarBaseURI, this, nsnull, PR_FALSE,
+                              mLoadGroup, mCallbacks, mLoadFlags);
+    }
+    return rv;
+
+}
+
+//-----------------------------------------------------------------------------
+// nsIRequest
+//-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
 nsJARChannel::GetName(nsACString &result)
 {
-    return mURI->GetSpec(result);
+    return mJarURI->GetSpec(result);
 }
 
 NS_IMETHODIMP
-nsJARChannel::IsPending(PRBool* result)
+nsJARChannel::IsPending(PRBool *result)
 {
-    NS_NOTREACHED("nsJARChannel::IsPending");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *result = mIsPending;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJARChannel::GetStatus(nsresult *status)
 {
-    *status = mStatus;
+    if (mPump && NS_SUCCEEDED(mStatus))
+        mPump->GetStatus(status);
+    else
+        *status = mStatus;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJARChannel::Cancel(nsresult status)
 {
-#ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_GetCurrentThread(), "wrong thread");
-#endif
-    NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
-    nsresult rv = NS_OK;
-
-    if (mJarExtractionTransport) {
-        rv = mJarExtractionTransport->Cancel(status);
-        mJarExtractionTransport = nsnull;
-    }
-
     mStatus = status;
-    return rv;
+    if (mPump)
+        return mPump->Cancel(status);
+
+    NS_ASSERTION(!mIsPending, "need to implement cancel when downloading");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJARChannel::Suspend()
 {
-#ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_GetCurrentThread(), "wrong thread");
-#endif
-    nsresult rv = NS_OK;
+    if (mPump)
+        return mPump->Suspend();
 
-    if (mJarExtractionTransport) {
-        rv = mJarExtractionTransport->Suspend();
-    }
-
-    return rv;
+    NS_ASSERTION(!mIsPending, "need to implement suspend when downloading");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJARChannel::Resume()
 {
-#ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_GetCurrentThread(), "wrong thread");
-#endif
-    nsresult rv = NS_OK;
+    if (mPump)
+        return mPump->Resume();
 
-    if (mJarExtractionTransport) {
-        rv = mJarExtractionTransport->Resume();
-    }
-
-    return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIChannel methods
-
-NS_IMETHODIMP
-nsJARChannel::GetOriginalURI(nsIURI* *aOriginalURI)
-{
-    if (mOriginalURI)
-        *aOriginalURI = mOriginalURI;
-    else
-       *aOriginalURI = NS_STATIC_CAST(nsIURI*, mURI);
-
-    NS_IF_ADDREF(*aOriginalURI);
+    NS_ASSERTION(!mIsPending, "need to implement resume when downloading");
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJARChannel::SetOriginalURI(nsIURI* aOriginalURI)
-{
-    mOriginalURI = aOriginalURI;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJARChannel::GetURI(nsIURI* *aURI)
-{
-    *aURI = mURI;
-    NS_ADDREF(*aURI);
-    return NS_OK;
-}
-
-nsresult
-nsJARChannel::OpenJARElement()
-{
-    nsresult rv;
-    nsAutoCMonitor mon(this);
-    rv = Open();
-    if (NS_SUCCEEDED(rv))
-        rv = GetInputStream(getter_AddRefs(mSynchronousInputStream));
-    mon.Notify();       // wake up nsIChannel::Open
-    return rv;
-}
-
-NS_IMETHODIMP
-nsJARChannel::Open(nsIInputStream* *result)
-{
-    nsAutoCMonitor mon(this);
-    nsresult rv;
-    mSynchronousRead = PR_TRUE;
-    rv = EnsureJARFileAvailable();
-    if (NS_FAILED(rv)) return rv;
-    if (mSynchronousInputStream == nsnull) 
-        mon.Wait();
-    if (!mSynchronousInputStream)
-        return NS_ERROR_FAILURE;
-
-    *result = mSynchronousInputStream; // Result of GetInputStream called on transport thread
-    NS_ADDREF(*result);
-    mSynchronousInputStream = 0;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJARChannel::AsyncOpen(nsIStreamListener* listener, nsISupports* ctxt)
-{
-    nsresult rv;
-
-#ifdef DEBUG
-    mInitiator = PR_GetCurrentThread();
-#endif
-
-    mUserContext = ctxt;
-    mUserListener = listener;
-    mSynchronousRead = PR_FALSE;
-
-    if (mLoadGroup) {
-        rv = mLoadGroup->AddRequest(this, nsnull);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    rv = EnsureJARFileAvailable();
-    if (NS_FAILED(rv) && mLoadGroup)
-        mLoadGroup->RemoveRequest(this, nsnull, rv);
-    return rv;
-}
-
-nsresult
-nsJARChannel::EnsureJARFileAvailable()
-{
-    nsresult rv;
-
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gJarProtocolLog, PR_LOG_DEBUG)) {
-        nsCAutoString jarURLStr;
-        mURI->GetSpec(jarURLStr);
-        PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
-               ("nsJarProtocol: EnsureJARFileAvailable %s", jarURLStr.get()));
-    }
-#endif
-
-    rv = mURI->GetJARFile(getter_AddRefs(mJARBaseURI));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = mURI->GetJAREntry(mJAREntry);
-    if (NS_FAILED(rv)) return rv;
-
-    // try to get a nsIFile directly from the url, which will often succeed.
-    {
-        nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mJARBaseURI);
-        if (fileURL)
-            fileURL->GetFile(getter_AddRefs(mDownloadedJARFile));
-    }
-
-    if (mDownloadedJARFile) {
-        // after successfully downloading the jar file to the cache,
-        // start the extraction process:
-        if (mSynchronousRead)
-            rv = OpenJARElement();
-        else
-            rv = AsyncReadJARElement();
-    }
-    else {
-        rv = NS_NewDownloader(getter_AddRefs(mDownloader),
-                              mJARBaseURI, this, nsnull, mSynchronousRead,
-                              mLoadGroup, mCallbacks, mLoadFlags);
-
-        // if DownloadComplete() was called early, need to release the reference.
-        if (mSynchronousRead && mSynchronousInputStream)
-            mDownloader = 0;
-    }
-    return rv;
-}
-
-nsresult
-nsJARChannel::AsyncReadJARElement()
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIFileTransportService> fts = 
-             do_GetService(kFileTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsITransport> jarTransport;
-    rv = fts->CreateTransportFromStreamIO(this, PR_TRUE, getter_AddRefs(jarTransport));
-    if (NS_FAILED(rv)) return rv;
-
-    if (mCallbacks) {
-        nsCOMPtr<nsIProgressEventSink> sink = do_GetInterface(mCallbacks);
-        if (sink) {
-            // XXX don't think that this is needed anymore 
-            // jarTransport->SetProgressEventSink(sink);
-        }
-    }
-
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gJarProtocolLog, PR_LOG_DEBUG)) {
-        nsCAutoString jarURLStr;
-        mURI->GetSpec(jarURLStr);
-        PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
-               ("nsJarProtocol: AsyncRead jar entry %s", jarURLStr.get()));
-    }
-#endif
-
-    rv = jarTransport->AsyncRead(this, nsnull, 0, PRUint32(-1), 0,
-                                 getter_AddRefs(mJarExtractionTransport));
-    jarTransport = 0;
-    return rv;
-}
-
-NS_IMETHODIMP
-nsJARChannel::GetLoadFlags(PRUint32* aLoadFlags)
+nsJARChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
     *aLoadFlags = mLoadFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJARChannel::SetLoadFlags(PRUint32 aLoadFlags)
+nsJARChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
     mLoadFlags = aLoadFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJARChannel::GetContentType(nsACString &aContentType)
+nsJARChannel::GetLoadGroup(nsILoadGroup **aLoadGroup)
 {
-    nsresult rv = NS_OK;
-    if (mContentType.IsEmpty()) {
-        if (mJAREntry.IsEmpty())
-            return NS_ERROR_NOT_AVAILABLE;
-        const char *ext = nsnull, *fileName = mJAREntry.get();
-        PRInt32 len = mJAREntry.Length();
-        for (PRInt32 i = len-1; i >= 0; i--) {
-            if (fileName[i] == '.') {
-                ext = &fileName[i + 1];
-                break;
-            }
-        }
-        if (ext) {
-            nsIMIMEService* mimeServ = mJARProtocolHandler->GetCachedMimeService();
-            if (mimeServ) {
-                nsXPIDLCString mimeType;
-                rv = mimeServ->GetTypeFromExtension(ext, getter_Copies(mimeType));
-                if (NS_SUCCEEDED(rv))
-                    mContentType = mimeType;
-            }
-        }
-        else
-            rv = NS_ERROR_NOT_AVAILABLE;
+    NS_IF_ADDREF(*aLoadGroup = mLoadGroup);
+    return NS_OK;
+}
 
-        if (NS_FAILED(rv)) {
-            mContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
-            rv = NS_OK;
+NS_IMETHODIMP
+nsJARChannel::SetLoadGroup(nsILoadGroup *aLoadGroup)
+{
+    mLoadGroup = aLoadGroup;
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsIChannel
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsJARChannel::GetOriginalURI(nsIURI **aURI)
+{
+    if (mOriginalURI)
+        *aURI = mOriginalURI;
+    else
+        *aURI = mJarURI;
+    NS_IF_ADDREF(*aURI);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::SetOriginalURI(nsIURI *aURI)
+{
+    mOriginalURI = aURI;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetURI(nsIURI **aURI)
+{
+    NS_IF_ADDREF(*aURI = mJarURI);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetOwner(nsISupports **result)
+{
+    nsresult rv;
+
+    if (mOwner) {
+        NS_ADDREF(*result = mOwner);
+        return NS_OK;
+    }
+
+    if (!mJarInput) {
+        *result = nsnull;
+        return NS_OK;
+    }
+
+    //-- Verify signature, if one is present, and set owner accordingly
+    nsCOMPtr<nsIZipReader> jarReader;
+    mJarInput->GetJarReader(getter_AddRefs(jarReader));
+    if (!jarReader)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    nsCOMPtr<nsIJAR> jar = do_QueryInterface(jarReader, &rv);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsIJAR not supported");
+        return rv;
+    }
+
+    nsCOMPtr<nsIPrincipal> cert;
+    rv = jar->GetCertificatePrincipal(mJarEntry.get(), getter_AddRefs(cert));
+    if (NS_FAILED(rv)) return rv;
+
+    if (cert) {
+        // Get the codebase principal
+        nsCOMPtr<nsIScriptSecurityManager> secMan = 
+                 do_GetService(kScriptSecurityManagerCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIPrincipal> codebase;
+        rv = secMan->GetCodebasePrincipal(mJarBaseURI, 
+                                          getter_AddRefs(codebase));
+        if (NS_FAILED(rv)) return rv;
+    
+        // Join the certificate and the codebase
+        nsCOMPtr<nsIAggregatePrincipal> agg = do_QueryInterface(cert, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = agg->SetCodebase(codebase);
+        if (NS_FAILED(rv)) return rv;
+
+        mOwner = do_QueryInterface(agg, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        NS_ADDREF(*result = mOwner);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::SetOwner(nsISupports *aOwner)
+{
+    mOwner = aOwner;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetNotificationCallbacks(nsIInterfaceRequestor **aCallbacks)
+{
+    NS_IF_ADDREF(*aCallbacks = mCallbacks);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
+{
+    mCallbacks = aCallbacks;
+    mProgressSink = do_GetInterface(mCallbacks);
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsJARChannel::GetSecurityInfo(nsISupports **aSecurityInfo)
+{
+    *aSecurityInfo = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetContentType(nsACString &result)
+{
+    nsresult rv;
+
+    if (!mContentType.IsEmpty()) {
+        result = mContentType;
+        return NS_OK;
+    }
+
+    //
+    // generate content type and set it
+    //
+    if (mJarEntry.IsEmpty()) {
+        LOG(("mJarEntry is empty!\n"));
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    const char *ext = nsnull, *fileName = mJarEntry.get();
+    PRInt32 len = mJarEntry.Length();
+    for (PRInt32 i = len-1; i >= 0; i--) {
+        if (fileName[i] == '.') {
+            ext = &fileName[i + 1];
+            break;
         }
     }
-    if (NS_SUCCEEDED(rv))
-        aContentType = mContentType;
+    if (ext) {
+        nsIMIMEService *mimeServ = gJarHandler->MimeService();
+        if (mimeServ) {
+            nsXPIDLCString mimeType;
+            rv = mimeServ->GetTypeFromExtension(ext, getter_Copies(mimeType));
+            if (NS_SUCCEEDED(rv))
+                mContentType = mimeType;
+        }
+    }
     else
-        aContentType.Truncate();
-    return rv;
+        rv = NS_ERROR_NOT_AVAILABLE;
+
+    if (NS_FAILED(rv) || mContentType.IsEmpty())
+        mContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
+
+    result = mContentType;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJARChannel::SetContentType(const nsACString &aContentType)
 {
-    mContentType = aContentType;
+    // mContentCharset is unchanged if not parsed
+    NS_ParseContentType(aContentType, mContentType, mContentCharset);
     return NS_OK;
 }
 
@@ -438,274 +505,163 @@ nsJARChannel::SetContentCharset(const nsACString &aContentCharset)
 }
 
 NS_IMETHODIMP
-nsJARChannel::GetContentLength(PRInt32* aContentLength)
+nsJARChannel::GetContentLength(PRInt32 *result)
 {
-    NS_ENSURE_ARG_POINTER(aContentLength);
-    if (mContentLength == -1 && mJAR) {
+    if (mContentLength < 0 && mJarInput) {
         // ask the zip entry for the content length
-        nsresult rv;
-        nsCOMPtr<nsIZipEntry> entry;
-        rv = mJAR->GetEntry(mJAREntry.get(), getter_AddRefs(entry));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = entry->GetRealSize((PRUint32*)&mContentLength);
-        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIZipReader> jarReader;
+        mJarInput->GetJarReader(getter_AddRefs(jarReader));
+        if (jarReader) {
+            nsCOMPtr<nsIZipEntry> entry;
+            jarReader->GetEntry(mJarEntry.get(), getter_AddRefs(entry));
+            if (entry)
+                entry->GetRealSize((PRUint32 *) &mContentLength);
+        }
     }
-    *aContentLength = mContentLength;
+
+    *result = mContentLength;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJARChannel::SetContentLength(PRInt32 aContentLength)
 {
-    NS_NOTREACHED("nsJARChannel::SetContentLength");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsJARChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
-{
-    *aLoadGroup = mLoadGroup;
-    NS_IF_ADDREF(*aLoadGroup);
+    // XXX does this really make any sense at all?
+    mContentLength = aContentLength;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJARChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
+nsJARChannel::Open(nsIInputStream **stream)
 {
-    mLoadGroup = aLoadGroup;
+    LOG(("nsJARChannel::Open [this=%x]\n", this));
+
+    NS_ENSURE_TRUE(!mJarInput, NS_ERROR_IN_PROGRESS);
+    NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
+
+    nsresult rv = EnsureJarInput(PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!mJarInput)
+        return NS_ERROR_UNEXPECTED;
+
+    NS_ADDREF(*stream = mJarInput);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJARChannel::GetOwner(nsISupports* *aOwner)
+nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
 {
-    nsresult rv;
-    if (mOwner == nsnull) {
-        //-- Verify signature, if one is present, and set owner accordingly
-        rv = EnsureZipReader();
+    LOG(("nsJARChannel::AsyncOpen [this=%x]\n", this));
+
+    NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
+
+    nsresult rv = EnsureJarInput(PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
+
+    if (mJarInput) {
+        // create input stream pump
+        rv = NS_NewInputStreamPump(getter_AddRefs(mPump), mJarInput);
         if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIJAR> jar = do_QueryInterface(mJAR, &rv);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Zip reader is not an nsIJAR");
-        nsCOMPtr<nsIPrincipal> certificate;
-        rv = jar->GetCertificatePrincipal(mJAREntry.get(), 
-                                           getter_AddRefs(certificate));
+        rv = mPump->AsyncRead(this, nsnull);
         if (NS_FAILED(rv)) return rv;
-        if (certificate)
-        {   // Get the codebase principal
-            nsCOMPtr<nsIScriptSecurityManager> secMan = 
-                     do_GetService(kScriptSecurityManagerCID, &rv);
-            if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-            nsCOMPtr<nsIPrincipal> codebase;
-            rv = secMan->GetCodebasePrincipal(mJARBaseURI, 
-                                              getter_AddRefs(codebase));
-            if (NS_FAILED(rv)) return rv;
-        
-            // Join the certificate and the codebase
-            nsCOMPtr<nsIAggregatePrincipal> agg;
-            agg = do_QueryInterface(certificate, &rv);
-            rv = agg->SetCodebase(codebase);
-            if (NS_FAILED(rv)) return rv;
-            mOwner = do_QueryInterface(agg, &rv);
-            if (NS_FAILED(rv)) return rv;
-        }
     }
-    *aOwner = mOwner;
-    NS_IF_ADDREF(*aOwner);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJARChannel::SetOwner(nsISupports* aOwner)
-{
-    mOwner = aOwner;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJARChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
-{
-    *aNotificationCallbacks = mCallbacks.get();
-    NS_IF_ADDREF(*aNotificationCallbacks);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJARChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
-{
-    mCallbacks = aNotificationCallbacks;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsJARChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
-{
-    *aSecurityInfo = nsnull;
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIDownloadObserver methods:
-
-NS_IMETHODIMP
-nsJARChannel::OnDownloadComplete(nsIDownloader* aDownloader, nsISupports* aClosure,
-                                 nsresult aStatus, nsIFile* aFile)
-{
-   nsresult rv=aStatus;
-   if(NS_SUCCEEDED(aStatus)) {
-       NS_ASSERTION(!mDownloader ||(aDownloader == mDownloader.get()), "wrong downloader");
-       mDownloadedJARFile = aFile;
-       // after successfully downloading the jar file to the cache,
-       // start the extraction process:
-       if (mSynchronousRead)
-           rv = OpenJARElement();
-       else
-           rv = AsyncReadJARElement();
-   }
-   mDownloader = 0;
-   return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIRequestObserver methods:
-
-NS_IMETHODIMP
-nsJARChannel::OnStartRequest(nsIRequest* jarExtractionTransport,
-                             nsISupports* context)
-{
-#ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_GetCurrentThread(), "wrong thread");
-#endif
-    return mUserListener->OnStartRequest(this, mUserContext);
-}
-
-NS_IMETHODIMP
-nsJARChannel::OnStopRequest(nsIRequest* jarExtractionTransport, nsISupports* context, 
-                            nsresult aStatus)
-{
-    nsresult rv;
-#ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_GetCurrentThread(), "wrong thread");
-#endif
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gJarProtocolLog, PR_LOG_DEBUG)) {
-        nsCOMPtr<nsIURI> jarURI;
-        nsCAutoString jarURLStr;
-        rv = mURI->GetSpec(jarURLStr);
-        if (NS_SUCCEEDED(rv)) {
-            PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
-                   ("nsJarProtocol: jar extraction complete %s status=%x",
-                    jarURLStr.get(), aStatus));
-        }
-    }
-#endif
-
-    rv = mUserListener->OnStopRequest(this, mUserContext, aStatus);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "OnStopRequest failed");
 
     if (mLoadGroup)
-        mLoadGroup->RemoveRequest(this, context, aStatus);
+        mLoadGroup->AddRequest(this, nsnull);
 
-    mUserListener = nsnull;
-    mUserContext = nsnull;
-    mJarExtractionTransport = nsnull;
-    return rv;
+    mListener = listener;
+    mListenerContext = ctx;
+    mIsPending = PR_TRUE;
+    return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// nsIStreamListener methods:
+//-----------------------------------------------------------------------------
+// nsIDownloadObserver
+//-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsJARChannel::OnDataAvailable(nsIRequest* jarCacheTransport, 
-                              nsISupports* context, 
-                              nsIInputStream *inStr, 
-                              PRUint32 sourceOffset, 
-                              PRUint32 count)
+nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
+                                 nsISupports *closure,
+                                 nsresult status,
+                                 nsIFile *file)
 {
-#ifdef DEBUG
-    NS_ASSERTION(mInitiator == PR_GetCurrentThread(), "wrong thread");
-#endif
-    return mUserListener->OnDataAvailable(this, mUserContext, 
-                                          inStr, sourceOffset, count);
+    if (NS_SUCCEEDED(status)) {
+        mJarFile = file;
+    
+        nsresult rv = CreateJarInput();
+        if (NS_SUCCEEDED(rv)) {
+            // create input stream pump
+            rv = NS_NewInputStreamPump(getter_AddRefs(mPump), mJarInput);
+            if (NS_SUCCEEDED(rv))
+                rv = mPump->AsyncRead(this, nsnull);
+        }
+        status = rv;
+    }
+
+    if (NS_FAILED(status)) {
+        OnStartRequest(nsnull, nsnull);
+        OnStopRequest(nsnull, nsnull, status);
+    }
+
+    mDownloader = 0;
+    return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// nsIStreamIO methods:
+//-----------------------------------------------------------------------------
+// nsIStreamListener
+//-----------------------------------------------------------------------------
 
-nsresult
-nsJARChannel::EnsureZipReader()
+NS_IMETHODIMP
+nsJARChannel::OnStartRequest(nsIRequest *req, nsISupports *ctx)
 {
-    if (mJAR == nsnull) {
-        nsresult rv;
-        if (mDownloadedJARFile == nsnull)
-            return NS_ERROR_FAILURE;
+    LOG(("nsJARChannel::OnStartRequest [this=%x %s]\n", this, mSpec.get()));
 
-        nsCOMPtr<nsIZipReaderCache> jarCache;
-        rv = mJARProtocolHandler->GetJARCache(getter_AddRefs(jarCache));
-        if (NS_FAILED(rv)) return rv; 
+    return mListener->OnStartRequest(this, mListenerContext);
+}
 
-        rv = jarCache->GetZip(mDownloadedJARFile, getter_AddRefs(mJAR));
-        if (NS_FAILED(rv)) return rv; 
+NS_IMETHODIMP
+nsJARChannel::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status)
+{
+    LOG(("nsJARChannel::OnStopRequest [this=%x %s status=%x]\n",
+        this, mSpec.get(), status));
+
+    if (NS_SUCCEEDED(mStatus))
+        mStatus = status;
+
+    if (mListener) {
+        mListener->OnStopRequest(this, mListenerContext, status);
+        mListener = 0;
+        mListenerContext = 0;
     }
+
+    if (mLoadGroup)
+        mLoadGroup->RemoveRequest(this, nsnull, status);
+
+    mPump = 0;
+    NS_IF_RELEASE(mJarInput);
+    mIsPending = PR_FALSE;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJARChannel::Open()
+nsJARChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
+                               nsIInputStream *stream,
+                               PRUint32 offset, PRUint32 count)
 {
-    return EnsureZipReader();
-}
-
-NS_IMETHODIMP
-nsJARChannel::Close(nsresult status) 
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJARChannel::GetInputStream(nsIInputStream* *aInputStream) 
-{
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gJarProtocolLog, PR_LOG_DEBUG)) {
-        nsCAutoString jarURLStr;
-        mURI->GetSpec(jarURLStr);
-        PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
-               ("nsJarProtocol: GetInputStream jar entry %s", jarURLStr.get()));
-    }
+#if defined(PR_LOGGING)
+    LOG(("nsJARChannel::OnDataAvailable [this=%x %s]\n", this, mSpec.get()));
 #endif
-    NS_ENSURE_TRUE(mJAR, NS_ERROR_NULL_POINTER);
-    nsresult rv = mJAR->GetInputStream(mJAREntry.get(), aInputStream);
-    if (NS_SUCCEEDED(rv))
-        (*aInputStream)->Available((PRUint32 *) &mContentLength);
-    return rv;
-}
- 
-NS_IMETHODIMP
-nsJARChannel::GetOutputStream(nsIOutputStream* *aOutputStream) 
-{
-    NS_NOTREACHED("nsJARChannel::GetOutputStream");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
 
-NS_IMETHODIMP
-nsJARChannel::GetName(char* *aName) 
-{
-    nsCAutoString spec;
-    nsresult rv = mURI->GetSpec(spec);
-    if (NS_FAILED(rv)) return rv;
-    *aName = ToNewCString(spec);
-    return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    nsresult rv;
+
+    rv = mListener->OnDataAvailable(this, mListenerContext, stream, offset, count);
+
+    // simply report progress here instead of hooking ourselves up as a
+    // nsITransportEventSink implementation.
+    if (mProgressSink && NS_SUCCEEDED(rv) && !(mLoadFlags & LOAD_BACKGROUND))
+        mProgressSink->OnProgress(this, nsnull, offset + count, mContentLength);
+
+    return rv; // let the pump cancel on failure
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIJARChannel methods:
-
-NS_IMETHODIMP
-nsJARChannel::EnumerateEntries(const char *aRoot, nsISimpleEnumerator **_retval)
-{
-    NS_NOTREACHED("nsJARChannel::EnumerateEntries");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-////////////////////////////////////////////////////////////////////////////////

@@ -25,7 +25,16 @@
 #define nsHttpHandler_h__
 
 #include "nsHttp.h"
-#include "nsHttpPipeline.h"
+#include "nsHttpAuthCache.h"
+#include "nsHttpConnection.h"
+#include "nsHttpConnectionMgr.h"
+
+#include "nsXPIDLString.h"
+#include "nsString.h"
+#include "nsCOMPtr.h"
+#include "nsWeakReference.h"
+#include "nsVoidArray.h"
+
 #include "nsIHttpProtocolHandler.h"
 #include "nsIProtocolProxyService.h"
 #include "nsIIOService.h"
@@ -37,19 +46,12 @@
 #include "nsICacheSession.h"
 #include "nsIEventQueueService.h"
 #include "nsIMIMEService.h"
-#include "nsXPIDLString.h"
-#include "nsString.h"
-#include "nsCOMPtr.h"
-#include "nsWeakReference.h"
-#include "nsVoidArray.h"
 #include "nsIIDNService.h"
 #include "nsITimer.h"
 
-class nsHttpConnection;
 class nsHttpConnectionInfo;
 class nsHttpHeaderArray;
 class nsHttpTransaction;
-class nsHttpAuthCache;
 class nsAHttpTransaction;
 class nsIHttpChannel;
 class nsIPrefBranch;
@@ -72,9 +74,6 @@ public:
     nsHttpHandler();
     virtual ~nsHttpHandler();
 
-    // Returns a pointer to the one and only HTTP handler
-    static nsHttpHandler *get() { return mGlobalInstance; }
-
     nsresult Init();
     nsresult AddStandardRequestHeaders(nsHttpHeaderArray *,
                                        PRUint8 capabilities,
@@ -93,7 +92,8 @@ public:
     const char    *DefaultSocketType()       { return mDefaultSocketType.get(); /* ok to return null */ }
     nsIIDNService *IDNConverter()            { return mIDNConverter; }
 
-    nsHttpAuthCache *AuthCache() { return mAuthCache; }
+    nsHttpAuthCache     *AuthCache() { return &mAuthCache; }
+    nsHttpConnectionMgr *ConnMgr()   { return mConnMgr; }
 
     // cache support
     nsresult GetCacheSession(nsCacheStoragePolicy, nsICacheSession **);
@@ -113,21 +113,29 @@ public:
     // Called to kick-off a new transaction, by default the transaction
     // will be put on the pending transaction queue if it cannot be 
     // initiated at this time.  Callable from any thread.
-    nsresult InitiateTransaction(nsHttpTransaction *, nsHttpConnectionInfo *);
+    nsresult InitiateTransaction(nsHttpTransaction *trans)
+    {
+        return mConnMgr->AddTransaction(trans);
+    }
 
     // Called to cancel a transaction, which may or may not be assigned to
     // a connection.  Callable from any thread.
-    nsresult CancelTransaction(nsHttpTransaction *, nsresult status);
+    nsresult CancelTransaction(nsHttpTransaction *trans, nsresult reason)
+    {
+        return mConnMgr->CancelTransaction(trans, reason);
+    }
 
     // Called when a connection is done processing a transaction.  Callable
     // from any thread.
-    nsresult ReclaimConnection(nsHttpConnection *);
+    nsresult ReclaimConnection(nsHttpConnection *conn)
+    {
+        return mConnMgr->ReclaimConnection(conn);
+    }
 
-    // Called when a connection has been busy with a single transaction for
-    // longer than mMaxRequestDelay.
-    nsresult ProcessTransactionQ();
-
-    nsresult PurgeDeadConnections();
+    nsresult ProcessPendingQ(nsHttpConnectionInfo *cinfo)
+    {
+        return mConnMgr->ProcessPendingQ(cinfo);
+    }
 
     //
     // The HTTP handler caches pointers to specific XPCOM services, and
@@ -146,84 +154,14 @@ public:
     // Called by the channel once headers are available
     nsresult OnExamineResponse(nsIHttpChannel *);
 
-public: /* internal */
-    //
-    // Transactions that have not yet been assigned to a connection are kept
-    // in a queue of nsPendingTransaction objects.  nsPendingTransaction 
-    // implements nsAHttpTransactionSink to handle transaction Cancellation.
-    //
-    class nsPendingTransaction
-    {
-    public:
-        nsPendingTransaction(nsHttpTransaction *, nsHttpConnectionInfo *);
-       ~nsPendingTransaction();
-        
-        nsHttpTransaction    *Transaction()    { return mTransaction; }
-        nsHttpConnectionInfo *ConnectionInfo() { return mConnectionInfo; }
-
-        PRBool IsBusy()              { return mBusy; }
-        void   SetBusy(PRBool value) { mBusy = value; }
-
-    private:
-        nsHttpTransaction    *mTransaction;
-        nsHttpConnectionInfo *mConnectionInfo;
-        PRPackedBool          mBusy;
-    };
-
-    //
-    // Data structure used to hold information used during the construction of
-    // a transaction pipeline.
-    //
-    class nsPipelineEnqueueState
-    {
-    public:
-        nsPipelineEnqueueState() : mPipeline(nsnull) {}
-       ~nsPipelineEnqueueState() { Cleanup(); }
-
-        nsresult Init(nsHttpTransaction *);
-        nsresult AppendTransaction(nsPendingTransaction *);
-        void     Cleanup();
-        
-        nsAHttpTransaction   *Transaction() { return mPipeline; }
-        PRUint8               TransactionCaps() { return NS_HTTP_ALLOW_KEEPALIVE | NS_HTTP_ALLOW_PIPELINING; }
-        PRBool                HasPipeline() { return (mPipeline != nsnull); }
-        nsPendingTransaction *GetAppendedTrans(PRInt32 i) { return (nsPendingTransaction *) mAppendedTrans[i]; }
-        PRInt32               NumAppendedTrans() { return mAppendedTrans.Count(); }
-        void                  DropAppendedTrans() { mAppendedTrans.Clear(); }
-
-    private:
-        nsHttpPipeline *mPipeline;
-        nsAutoVoidArray mAppendedTrans;
-    };
-
 private:
-
-    //
-    // Connection management methods
-    //
-    nsresult GetConnection_Locked(nsHttpConnectionInfo *, PRUint8 caps, nsHttpConnection **);
-    nsresult EnqueueTransaction_Locked(nsHttpTransaction *, nsHttpConnectionInfo *);
-    nsresult DispatchTransaction_Locked(nsAHttpTransaction *, PRUint8 caps, nsHttpConnection *); // unlocked on return
-    void     ProcessTransactionQ_Locked(); // unlocked on return
-    PRBool   AtActiveConnectionLimit_Locked(nsHttpConnectionInfo *, PRUint8 caps);
-    nsresult RemovePendingTransaction_Locked(nsHttpTransaction *);
-
-    void     DropConnections(nsVoidArray &);
-
-    //
-    // Pipelining methods - these may fail silently, and that's ok!
-    //
-    PRBool   BuildPipeline_Locked(nsPipelineEnqueueState &,
-                                  nsHttpTransaction *,
-                                  nsHttpConnectionInfo *);
-    void     PipelineFailed_Locked(nsPipelineEnqueueState &);
 
     //
     // Useragent/prefs helper methods
     //
     void     BuildUserAgent();
     void     InitUserAgentComponents();
-    void     PrefsChanged(nsIPrefBranch *prefs, const char *pref = nsnull);
+    void     PrefsChanged(nsIPrefBranch *prefs, const char *pref);
     void     GetPrefBranch(nsIPrefBranch **);
 
     nsresult SetAccept(const char *);
@@ -232,10 +170,13 @@ private:
     nsresult SetAcceptCharsets(const char *);
 
     // timer callback for cleansing the idle connection list
-    static void DeadConnectionCleanupCB(nsITimer *, void *);
+    //static void DeadConnectionCleanupCB(nsITimer *, void *);
+
+    nsresult InitConnectionMgr();
+    void     StartPruneDeadConnectionsTimer();
+    void     StopPruneDeadConnectionsTimer();
 
 private:
-    static nsHttpHandler *mGlobalInstance;
 
     // cached services
     nsCOMPtr<nsIIOService>              mIOService;
@@ -248,7 +189,10 @@ private:
     nsCOMPtr<nsITimer>                  mTimer;
 
     // the authentication credentials cache
-    nsHttpAuthCache *mAuthCache;
+    nsHttpAuthCache mAuthCache;
+
+    // the connection manager
+    nsHttpConnectionMgr *mConnMgr;
 
     //
     // prefs
@@ -284,12 +228,6 @@ private:
     nsCOMPtr<nsICacheSession> mCacheSession_MEM;
     PRUint32                  mLastUniqueID;
     PRUint32                  mSessionStartTime;
- 
-    // connection management
-    nsVoidArray mActiveConnections; // list of nsHttpConnection objects
-    nsVoidArray mIdleConnections;   // list of nsHttpConnection objects
-    nsVoidArray mTransactionQ;      // list of nsPendingTransaction objects
-    PRLock     *mConnectionLock;    // protect connection lists
 
     // useragent components
     nsXPIDLCString mAppName;
@@ -317,6 +255,10 @@ private:
 };
 
 //-----------------------------------------------------------------------------
+
+extern nsHttpHandler *gHttpHandler;
+
+//-----------------------------------------------------------------------------
 // nsHttpsHandler - thin wrapper to distinguish the HTTP handler from the
 //                  HTTPS handler (even though they share the same impl).
 //-----------------------------------------------------------------------------
@@ -330,8 +272,8 @@ public:
     
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
-    NS_FORWARD_NSIPROXIEDPROTOCOLHANDLER (nsHttpHandler::get()->)
-    NS_FORWARD_NSIHTTPPROTOCOLHANDLER    (nsHttpHandler::get()->)
+    NS_FORWARD_NSIPROXIEDPROTOCOLHANDLER (gHttpHandler->)
+    NS_FORWARD_NSIHTTPPROTOCOLHANDLER    (gHttpHandler->)
 
     nsHttpsHandler() { }
     virtual ~nsHttpsHandler() { }

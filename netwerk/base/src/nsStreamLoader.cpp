@@ -40,7 +40,7 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
-#include "nsIHttpChannel.h"
+//#include "nsIHttpChannel.h"
 #include "nsProxiedService.h"
 
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);

@@ -18,29 +18,31 @@
  *
  * Contributor(s): 
  *  Bradley Baetz <bbaetz@student.usyd.edu.au>
+ *  Darin Fisher <darin@netscape.com>
  */
 
 // gopher implementation - based on datetime and finger implimentations
 // and documentation
 
 #include "nsGopherChannel.h"
+#include "nsMimeTypes.h"
+#include "nsEscape.h"
+#include "nsNetUtil.h"
+#include "netCore.h"
+#include "nsCRT.h"
+#include "prlog.h"
+
 #include "nsIServiceManager.h"
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsXPIDLString.h"
-#include "nsReadableUtils.h"
 #include "nsISocketTransportService.h"
 #include "nsIStringStream.h"
-#include "nsMimeTypes.h"
 #include "nsIStreamConverterService.h"
-#include "nsEscape.h"
 #include "nsITXTToHTMLConv.h"
-#include "nsIProgressEventSink.h"
-#include "nsNetUtil.h"
-#include "prlog.h"
+#include "nsIEventQueue.h"
+#include "nsEventQueueUtils.h"
 #include "nsIPref.h"
-#include "nsCRT.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
@@ -55,10 +57,10 @@ extern PRLogModuleInfo* gGopherLog;
 // nsGopherChannel methods
 nsGopherChannel::nsGopherChannel()
     : mContentLength(-1),
-      mActAsObserver(PR_TRUE),
       mListFormat(FORMAT_HTML),
       mType(-1),
-      mStatus(NS_OK)
+      mStatus(NS_OK),
+      mIsPending(PR_FALSE)
 {
 }
 
@@ -71,12 +73,13 @@ nsGopherChannel::~nsGopherChannel()
 #endif
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsGopherChannel,
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsGopherChannel,
                               nsIChannel,
                               nsIRequest,
                               nsIStreamListener,
                               nsIRequestObserver,
-                              nsIDirectoryListing);
+                              nsIDirectoryListing,
+                              nsITransportEventSink);
 
 nsresult
 nsGopherChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo)
@@ -142,18 +145,6 @@ nsGopherChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo)
 }
 
 
-NS_METHOD
-nsGopherChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
-{
-    nsGopherChannel* gc = new nsGopherChannel();
-    if (!gc)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(gc);
-    nsresult rv = gc->QueryInterface(aIID, aResult);
-    NS_RELEASE(gc);
-    return rv;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
 
@@ -166,14 +157,17 @@ nsGopherChannel::GetName(nsACString &result)
 NS_IMETHODIMP
 nsGopherChannel::IsPending(PRBool *result)
 {
-    NS_NOTREACHED("nsGopherChannel::IsPending");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *result = mIsPending;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGopherChannel::GetStatus(nsresult *status)
 {
-    *status = mStatus;
+    if (mPump && NS_SUCCEEDED(mStatus))
+        mPump->GetStatus(status);
+    else
+        *status = mStatus;
     return NS_OK;
 }
 
@@ -188,25 +182,28 @@ nsGopherChannel::Cancel(nsresult status)
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
  
     mStatus = status;
-    if (mTransportRequest) {
-        return mTransportRequest->Cancel(status);
-    }
+    if (mPump)
+        return mPump->Cancel(status);
 
-    return NS_ERROR_FAILURE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGopherChannel::Suspend(void)
+nsGopherChannel::Suspend()
 {
-    NS_NOTREACHED("nsGopherChannel::Suspend");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (mPump)
+        return mPump->Suspend();
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGopherChannel::Resume(void)
+nsGopherChannel::Resume()
 {
-    NS_NOTREACHED("nsGopherChannel::Resume");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (mPump)
+        return mPump->Resume();
+
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -238,34 +235,8 @@ nsGopherChannel::GetURI(nsIURI* *aURI)
 NS_IMETHODIMP
 nsGopherChannel::Open(nsIInputStream **_retval)
 {
-    nsresult rv = NS_OK;
-    
-    PRInt32 port;
-    rv = mUrl->GetPort(&port);
-    if (NS_FAILED(rv))
-        return rv;
- 
-    rv = NS_CheckPortSafety(port, "gopher");
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCOMPtr<nsISocketTransportService> socketService = 
-             do_GetService(kSocketTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = socketService->CreateTransport(mHost,
-                                        mPort,
-                                        mProxyInfo,
-                                        BUFFER_SEG_SIZE,
-                                        BUFFER_MAX_SIZE,
-                                        getter_AddRefs(mTransport));
-    
-    if (NS_FAILED(rv)) return rv;
-    
-    mTransport->SetNotificationCallbacks(mCallbacks,
-                                         (mLoadFlags & LOAD_BACKGROUND));
-    
-    return mTransport->OpenInputStream(0, (PRUint32)-1, 0, _retval);
+    NS_NOTREACHED("nsGopherChannel::Open");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -284,26 +255,58 @@ nsGopherChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     rv = NS_CheckPortSafety(port, "gopher");
     if (NS_FAILED(rv))
         return rv;
-    
-    mListener = aListener;
-    mResponseContext = ctxt;
 
+    // push stream converters in front of the consumer...
+    nsCOMPtr<nsIStreamListener> converter;
+    rv = PushStreamConverters(aListener, getter_AddRefs(converter));
+    if (NS_FAILED(rv)) return rv;
+    
+    // create socket transport
     nsCOMPtr<nsISocketTransportService> socketService = 
              do_GetService(kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = socketService->CreateTransport(mHost,
+    rv = socketService->CreateTransport(nsnull, 0,
+                                        mHost,
                                         mPort,
                                         mProxyInfo,
-                                        BUFFER_SEG_SIZE,
-                                        BUFFER_MAX_SIZE,
                                         getter_AddRefs(mTransport));
     if (NS_FAILED(rv)) return rv;
 
-    mTransport->SetNotificationCallbacks(mCallbacks,
-                                         (mLoadFlags & LOAD_BACKGROUND));    
-    
-    return SendRequest(mTransport);
+    // setup notification callbacks...
+    if (!(mLoadFlags & LOAD_BACKGROUND)) {
+        nsCOMPtr<nsIEventQueue> eventQ;
+        NS_GetCurrentEventQ(getter_AddRefs(eventQ));
+        if (eventQ)
+            mTransport->SetEventSink(this, eventQ);
+    }
+    mTransport->SetSecurityCallbacks(mCallbacks);
+
+    // open buffered, asynchronous socket input stream, and use a input stream
+    // pump to read from it.
+    nsCOMPtr<nsIInputStream> input;
+    rv = mTransport->OpenInputStream(0, 0, 0, getter_AddRefs(input));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SendRequest();
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_NewInputStreamPump(getter_AddRefs(mPump), input);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mPump->AsyncRead(this, nsnull);
+    if (NS_FAILED(rv)) return rv;
+
+    if (mLoadGroup)
+        mLoadGroup->AddRequest(this, nsnull);
+
+    mIsPending = PR_TRUE;
+    if (converter)
+        mListener = converter;
+    else
+        mListener = aListener;
+    mListenerContext = ctxt;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -476,8 +479,12 @@ nsGopherChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCa
 {
     mCallbacks = aNotificationCallbacks;
     if (mCallbacks) {
-        mCallbacks->GetInterface(NS_GET_IID(nsIPrompt),
-                                 getter_AddRefs(mPrompter));
+        mPrompter = do_GetInterface(mCallbacks);
+        mProgressSink = do_GetInterface(mCallbacks);
+    }
+    else {
+        mPrompter = 0;
+        mProgressSink = 0;
     }
     return NS_OK;
 }
@@ -485,8 +492,10 @@ nsGopherChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCa
 NS_IMETHODIMP 
 nsGopherChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 {
-    *aSecurityInfo = nsnull;
-    return NS_OK;
+    if (mTransport)
+        return mTransport->GetSecurityInfo(aSecurityInfo);
+
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 // nsIRequestObserver methods
@@ -498,14 +507,7 @@ nsGopherChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
            ("nsGopherChannel::OnStartRequest called [this=%x, aRequest=%x]\n",
             this, aRequest));
 
-    if (!mActAsObserver) {
-        // acting as a listener
-        return mListener->OnStartRequest(this, aContext);
-    } else {
-        // we don't want to pass our AsyncWrite's OnStart through
-        // we just ignore this
-        return NS_OK;
-    }
+    return mListener->OnStartRequest(this, mListenerContext);
 }
 
 NS_IMETHODIMP
@@ -517,112 +519,42 @@ nsGopherChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
            ("nsGopherChannel::OnStopRequest called [this=%x, aRequest=%x, aStatus=%x]\n",
             this,aRequest,aStatus));
 
-    nsresult rv = NS_OK;
+    if (NS_SUCCEEDED(mStatus))
+        mStatus = aStatus;
 
-    if (NS_FAILED(aStatus) || !mActAsObserver) {
-        if (mListener) {
-            rv = mListener->OnStopRequest(this, mResponseContext, aStatus);
-            if (NS_FAILED(rv)) return rv;
-        }
-
-        if (mLoadGroup) {
-            rv = mLoadGroup->RemoveRequest(this, nsnull, aStatus);
-        }
-        
-        mTransport = 0;
-        return rv;
-    } else {
-        // at this point we know the request has been sent.
-        // we're no longer acting as an observer.
-        mActAsObserver = PR_FALSE;
-
-        nsCOMPtr<nsIStreamListener> converterListener;
-        
-        nsCOMPtr<nsIStreamConverterService> StreamConvService = 
-                 do_GetService(kStreamConverterServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-     
-        // What we now do depends on what type of file we have
-        if (mType=='1' || mType=='7') {
-            // Send the directory format back for a directory
-            switch (mListFormat) {
-            case nsIDirectoryListing::FORMAT_RAW:
-                converterListener = this;
-                break;
-            default:
-                // fall through
-            case nsIDirectoryListing::FORMAT_HTML:
-                // XXX - work arround bug 126417. We have to do the chaining
-                // manually so that we don't crash
-                {
-                    nsCOMPtr<nsIStreamListener> tmpListener;
-                    rv = StreamConvService->AsyncConvertData(
-                           NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
-                           NS_LITERAL_STRING(TEXT_HTML).get(),
-                           this,
-                           mUrl, 
-                           getter_AddRefs(tmpListener));
-                    if (NS_FAILED(rv)) break;
-                    rv = StreamConvService->AsyncConvertData(NS_LITERAL_STRING("text/gopher-dir").get(),
-                           NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
-                           tmpListener,
-                           mUrl,
-                           getter_AddRefs(converterListener));
-                }
-            break;
-            case nsIDirectoryListing::FORMAT_HTTP_INDEX:
-                rv = StreamConvService->AsyncConvertData(NS_LITERAL_STRING("text/gopher-dir").get(), 
-                       NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
-                       this,
-                       mUrl,
-                       getter_AddRefs(converterListener));
-                break;
-            }
-            if (NS_FAILED(rv)) return rv;
-        } else if (mType=='0') {
-            // Convert general file
-            rv = StreamConvService->AsyncConvertData(NS_LITERAL_STRING("text/plain").get(),
-                                                     NS_LITERAL_STRING("text/html").get(),
-                                                     this,
-                                                     mResponseContext,
-                                                     getter_AddRefs(converterListener));
-            if (NS_FAILED(rv)) return rv;
-            
-            nsCOMPtr<nsITXTToHTMLConv> converter(do_QueryInterface(converterListener));
-            if (converter) {
-                nsCAutoString spec;
-                rv = mUrl->GetSpec(spec);
-                converter->SetTitle(NS_ConvertUTF8toUCS2(spec).get());
-                converter->PreFormatHTML(PR_TRUE);
-            }
-        } else 
-            // other file type - no conversions
-            converterListener = this;
-        
-        return mTransport->AsyncRead(converterListener, mResponseContext, 0,
-                                     (PRUint32)-1, 0, getter_AddRefs(mTransportRequest));
+    if (mListener) {
+        mListener->OnStopRequest(this, mListenerContext, mStatus);
+        mListener = 0;
+        mListenerContext = 0;
     }
+
+    if (mLoadGroup)
+        mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+    
+    mTransport->Close(mStatus);
+    mTransport = 0;
+    mPump = 0;
+    return NS_OK;
 }
+
 
 // nsIStreamListener method
 NS_IMETHODIMP
-nsGopherChannel::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
-                                 nsIInputStream *aInputStream,
-                                 PRUint32 aSourceOffset, PRUint32 aLength)
+nsGopherChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
+                                 nsIInputStream *stream,
+                                 PRUint32 offset, PRUint32 count)
 {
     PR_LOG(gGopherLog, PR_LOG_DEBUG,
-           ("OnDataAvailable called - [this=%x, aLength=%d]\n",this,aLength));
-    mContentLength = aLength;
-    return mListener->OnDataAvailable(this, aContext, aInputStream,
-                                      aSourceOffset, aLength);
+           ("OnDataAvailable called - [this=%x, aLength=%d]\n",this,count));
+
+    return mListener->OnDataAvailable(this, mListenerContext, stream,
+                                      offset, count);
 }
 
 nsresult
-nsGopherChannel::SendRequest(nsITransport* aTransport)
+nsGopherChannel::SendRequest()
 {
     nsresult rv = NS_OK;
-    nsCOMPtr<nsISupports> result;
-    nsCOMPtr<nsIInputStream> charstream;
 
     // Note - you have to keep this as a class member, because the char input
     // stream doesn't copy its buffer
@@ -696,11 +628,6 @@ nsGopherChannel::SendRequest(nsITransport* aTransport)
             if (!res || !(*search.get()))
                 return NS_ERROR_FAILURE;
     
-            if (mLoadGroup) {
-                rv = mLoadGroup->AddRequest(this, nsnull);
-                if (NS_FAILED(rv)) return rv;
-            }
-            
             mRequest.Append('\t');
             mRequest.AppendWithConversion(search.get());
 
@@ -723,24 +650,98 @@ nsGopherChannel::SendRequest(nsITransport* aTransport)
 
     mRequest.Append(CRLF);
     
-    rv = NS_NewCharInputStream(getter_AddRefs(result), mRequest.get());
-    if (NS_FAILED(rv)) return rv;
-
-    charstream = do_QueryInterface(result, &rv);
-    if (NS_FAILED(rv)) return rv;
-
     PR_LOG(gGopherLog,PR_LOG_DEBUG,
            ("Sending: %s\n", mRequest.get()));
 
-    rv = NS_AsyncWriteFromStream(getter_AddRefs(mTransportRequest),
-                                 aTransport, charstream,
-                                 0, mRequest.Length(), 0,
-                                 this, nsnull);
-    return rv;
+    // open a buffered, blocking output stream.  (it should never block because
+    // the buffer is big enough for our entire request.)
+    nsCOMPtr<nsIOutputStream> output;
+    rv = mTransport->OpenOutputStream(nsITransport::OPEN_BLOCKING,
+                                      mRequest.Length(), 1,
+                                      getter_AddRefs(output));
+    if (NS_FAILED(rv)) return rv;
+
+    PRUint32 n;
+    rv = output->Write(mRequest.get(), mRequest.Length(), &n);
+    if (NS_FAILED(rv)) return rv;
+
+    if (n != mRequest.Length())
+        return NS_ERROR_UNEXPECTED;
+
+    return NS_OK;
+}
+
+nsresult
+nsGopherChannel::PushStreamConverters(nsIStreamListener *listener, nsIStreamListener **result)
+{
+    nsresult rv;
+    nsCOMPtr<nsIStreamListener> converterListener;
+    
+    nsCOMPtr<nsIStreamConverterService> StreamConvService = 
+             do_GetService(kStreamConverterServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+ 
+    // What we now do depends on what type of file we have
+    if (mType=='1' || mType=='7') {
+        // Send the directory format back for a directory
+        switch (mListFormat) {
+        case nsIDirectoryListing::FORMAT_RAW:
+            break;
+        default:
+            // fall through
+        case nsIDirectoryListing::FORMAT_HTML:
+            // XXX - work arround bug 126417. We have to do the chaining
+            // manually so that we don't crash
+            {
+                nsCOMPtr<nsIStreamListener> tmpListener;
+                rv = StreamConvService->AsyncConvertData(
+                       NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
+                       NS_LITERAL_STRING(TEXT_HTML).get(),
+                       listener,
+                       mUrl, 
+                       getter_AddRefs(tmpListener));
+                if (NS_FAILED(rv)) break;
+                rv = StreamConvService->AsyncConvertData(NS_LITERAL_STRING("text/gopher-dir").get(),
+                       NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
+                       tmpListener,
+                       mUrl,
+                       getter_AddRefs(converterListener));
+            }
+            break;
+        case nsIDirectoryListing::FORMAT_HTTP_INDEX:
+            rv = StreamConvService->AsyncConvertData(NS_LITERAL_STRING("text/gopher-dir").get(), 
+                   NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
+                   listener,
+                   mUrl,
+                   getter_AddRefs(converterListener));
+            break;
+        }
+        if (NS_FAILED(rv)) return rv;
+    } else if (mType=='0') {
+        // Convert general file
+        rv = StreamConvService->AsyncConvertData(NS_LITERAL_STRING("text/plain").get(),
+                                                 NS_LITERAL_STRING("text/html").get(),
+                                                 listener,
+                                                 mListenerContext,
+                                                 getter_AddRefs(converterListener));
+        if (NS_FAILED(rv)) return rv;
+        
+        nsCOMPtr<nsITXTToHTMLConv> converter(do_QueryInterface(converterListener));
+        if (converter) {
+            nsCAutoString spec;
+            rv = mUrl->GetSpec(spec);
+            converter->SetTitle(NS_ConvertUTF8toUCS2(spec).get());
+            converter->PreFormatHTML(PR_TRUE);
+        }
+    }
+
+    NS_IF_ADDREF(*result = converterListener);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGopherChannel::SetListFormat(PRUint32 format) {
+nsGopherChannel::SetListFormat(PRUint32 format)
+{
     if (format != FORMAT_PREF &&
         format != FORMAT_RAW &&
         format != FORMAT_HTML &&
@@ -771,8 +772,25 @@ nsGopherChannel::SetListFormat(PRUint32 format) {
 }
 
 NS_IMETHODIMP
-nsGopherChannel::GetListFormat(PRUint32 *format) {
+nsGopherChannel::GetListFormat(PRUint32 *format)
+{
     *format = mListFormat;
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGopherChannel::OnTransportStatus(nsITransport *trans, nsresult status,
+                                   PRUint32 progress, PRUint32 progressMax)
+{
+    // suppress status notification if channel is no longer pending!
+    if (mProgressSink && mPump && !(mLoadFlags & LOAD_BACKGROUND)) {
+        NS_ConvertUTF8toUCS2 host(mHost);
+        mProgressSink->OnStatus(this, nsnull, status, host.get());
+
+        if (status == nsISocketTransport::STATUS_RECEIVING_FROM ||
+            status == nsISocketTransport::STATUS_SENDING_TO) {
+            mProgressSink->OnProgress(this, nsnull, progress, progressMax);
+        }
+    }
+    return NS_OK;
+}

@@ -134,12 +134,12 @@ nsGopherDirListingConv::AsyncConvertData(const PRUnichar *aFromType,
     mUri = do_QueryInterface(aCtxt,&rv);
     if (NS_FAILED(rv)) return rv;
 
+    // XXX this seems really wrong!!
     rv = NS_NewInputStreamChannel(&mPartChannel,
                                   mUri,
                                   nsnull,
                                   NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT),
-                                  NS_LITERAL_CSTRING(""),
-                                  -1);
+                                  NS_LITERAL_CSTRING(""));
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;

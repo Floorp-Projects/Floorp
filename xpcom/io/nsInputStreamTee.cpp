@@ -85,6 +85,8 @@ nsInputStreamTee::TeeSegment(const char *buf, PRUint32 count)
             // ok, this is not a fatal error... just drop our reference to mSink
             // and continue on as if nothing happened.
             NS_WARNING("Write failed (non-fatal)");
+            // catch possible misuse of the input stream tee
+            NS_ASSERTION(rv != NS_BASE_STREAM_WOULD_BLOCK, "sink must be a blocking stream");
             mSink = 0;
             break;
         }
@@ -181,16 +183,6 @@ nsInputStreamTee::GetSource(nsIInputStream **source)
 NS_IMETHODIMP
 nsInputStreamTee::SetSink(nsIOutputStream *sink)
 {
-    if (sink) {
-        PRBool nonBlocking = PR_FALSE;
-        nsresult rv = sink->IsNonBlocking(&nonBlocking);
-        if (NS_FAILED(rv))
-            return rv;
-        if (nonBlocking) {
-            NS_NOTREACHED("Can only tee data to a blocking output stream"); 
-            return NS_ERROR_NOT_IMPLEMENTED;
-        }
-    }
     mSink = sink;
     return NS_OK;
 }

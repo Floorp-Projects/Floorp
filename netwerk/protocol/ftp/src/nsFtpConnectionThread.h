@@ -42,6 +42,7 @@
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 #include "nsISocketTransportService.h"
+#include "nsISocketTransport.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
@@ -186,7 +187,7 @@ private:
     PRPackedBool                    mTryingCachedControl;     // retrying the password
     PRPackedBool                    mWaitingForDConn;         // Are we wait for a data connection
     PRPackedBool                    mRETRFailed;              // Did we already try a RETR and it failed?
-    nsCOMPtr<nsITransport>          mDPipe;                   // the data transport
+    nsCOMPtr<nsISocketTransport>    mDPipe;                   // the data transport
     nsCOMPtr<nsIRequest>            mDPipeRequest;
     DataRequestForwarder*           mDRequestForwarder;
     PRUint32                        mFileSize;
@@ -221,6 +222,7 @@ private:
     PRUint32               mBufferMaxSize;
     PRLock                 *mLock;
     nsCOMPtr<nsIInputStream> mWriteStream; // This stream is written to the server.
+    PRUint32                 mWriteCount;
     PRPackedBool           mIPv6Checked;
     nsCOMPtr<nsIPrompt>    mPrompter;
     nsCOMPtr<nsIFTPEventSink>       mFTPEventSink;

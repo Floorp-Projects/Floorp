@@ -38,6 +38,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIIDNService.h"
 #include "nsIStreamListenerTee.h"
+#include "nsISeekableStream.h"
 #include "nsCPasswordManager.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
@@ -67,7 +68,7 @@ nsHttpChannel::nsHttpChannel()
     , mCacheAccess(0)
     , mPostID(0)
     , mRequestTime(0)
-    , mRedirectionLimit(nsHttpHandler::get()->RedirectionLimit())
+    , mRedirectionLimit(gHttpHandler->RedirectionLimit())
     , mIsPending(PR_FALSE)
     , mApplyConversion(PR_TRUE)
     , mAllowPipelining(PR_TRUE)
@@ -80,7 +81,7 @@ nsHttpChannel::nsHttpChannel()
     LOG(("Creating nsHttpChannel @%x\n", this));
 
     // grab a reference to the handler to ensure that it doesn't go away.
-    nsHttpHandler *handler = nsHttpHandler::get();
+    nsHttpHandler *handler = gHttpHandler;
     NS_ADDREF(handler);
 }
 
@@ -102,7 +103,7 @@ nsHttpChannel::~nsHttpChannel()
     NS_IF_RELEASE(mPrevTransaction);
 
     // release our reference to the handler
-    nsHttpHandler *handler = nsHttpHandler::get();
+    nsHttpHandler *handler = gHttpHandler;
     NS_RELEASE(handler);
 }
 
@@ -182,7 +183,7 @@ nsHttpChannel::Init(nsIURI *uri,
     rv = mRequestHead.SetHeader(nsHttp::Host, hostLine);
     if (NS_FAILED(rv)) return rv;
 
-    rv = nsHttpHandler::get()->
+    rv = gHttpHandler->
         AddStandardRequestHeaders(&mRequestHead.Headers(), caps,
                                   !mConnectionInfo->UsingSSL() &&
                                   mConnectionInfo->UsingHttpProxy());
@@ -204,7 +205,7 @@ nsHttpChannel::AsyncCall(nsAsyncCallback funcPtr)
     nsCOMPtr<nsIEventQueueService> eqs;
     nsCOMPtr<nsIEventQueue> eventQ;
 
-    nsHttpHandler::get()->GetEventQueueService(getter_AddRefs(eqs));
+    gHttpHandler->GetEventQueueService(getter_AddRefs(eqs));
     if (eqs)
         eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(eventQ));
     if (!eventQ)
@@ -267,7 +268,7 @@ nsHttpChannel::Connect(PRBool firstTime)
     
         // are we offline?
         nsCOMPtr<nsIIOService> ioService;
-        rv = nsHttpHandler::get()->GetIOService(getter_AddRefs(ioService));
+        rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
         if (NS_FAILED(rv)) return rv;
 
         ioService->GetOffline(&offline);
@@ -315,7 +316,10 @@ nsHttpChannel::Connect(PRBool firstTime)
     rv = SetupTransaction();
     if (NS_FAILED(rv)) return rv;
 
-    return nsHttpHandler::get()->InitiateTransaction(mTransaction, mConnectionInfo);
+    rv = gHttpHandler->InitiateTransaction(mTransaction);
+    if (NS_FAILED(rv)) return rv;
+
+    return mTransactionPump->AsyncRead(this, nsnull);
 }
 
 // called when Connect fails
@@ -329,7 +333,7 @@ nsHttpChannel::AsyncAbort(nsresult status)
 
     // create an async proxy for the listener..
     nsCOMPtr<nsIProxyObjectManager> mgr;
-    nsHttpHandler::get()->GetProxyObjectManager(getter_AddRefs(mgr));
+    gHttpHandler->GetProxyObjectManager(getter_AddRefs(mgr));
     if (mgr) {
         nsCOMPtr<nsIRequestObserver> observer;
         mgr->GetProxyForObject(NS_CURRENT_EVENTQ,
@@ -414,12 +418,7 @@ nsHttpChannel::SetupTransaction()
 {
     NS_ENSURE_TRUE(!mTransaction, NS_ERROR_ALREADY_INITIALIZED);
 
-    nsCOMPtr<nsIStreamListener> listenerProxy;
-    nsresult rv = NS_NewStreamListenerProxy(getter_AddRefs(listenerProxy),
-                                            this, nsnull,
-                                            NS_HTTP_SEGMENT_SIZE,
-                                            NS_HTTP_BUFFER_SIZE);
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv;
 
     // figure out if we should disallow pipelining.  disallow if 
     // the method is not GET or HEAD.  we also disallow pipelining
@@ -427,7 +426,7 @@ nsHttpChannel::SetupTransaction()
     // XXX does the toplevel document check really belong here?
     // XXX or, should we push it out entirely to necko consumers?
     PRUint8 caps = mCapabilities;
-    if (!mAllowPipelining || (mLoadFlags && LOAD_INITIAL_DOCUMENT_URI) ||
+    if (!mAllowPipelining || (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) ||
         !(mRequestHead.Method() == nsHttp::Get ||
           mRequestHead.Method() == nsHttp::Head)) {
         LOG(("nsHttpChannel::SetupTransaction [this=%x] pipelining disallowed\n", this));
@@ -436,12 +435,6 @@ nsHttpChannel::SetupTransaction()
     
     if (mLoadFlags & nsIRequest::LOAD_BACKGROUND)
         caps |= NS_HTTP_DONT_REPORT_PROGRESS;
-
-    // create the transaction object
-    mTransaction = new nsHttpTransaction(listenerProxy, this, caps);
-    if (!mTransaction)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(mTransaction);
 
     // use the URI path if not proxying (transparent proxying such as SSL proxy
     // does not count here). also, figure out what version we should be speaking.
@@ -455,7 +448,7 @@ nsHttpChannel::SetupTransaction()
             requestURI = buf.get();
         else
             requestURI = path.get();
-        mRequestHead.SetVersion(nsHttpHandler::get()->HttpVersion());
+        mRequestHead.SetVersion(gHttpHandler->HttpVersion());
     }
     else {
         rv = mURI->GetUserPass(buf);
@@ -473,7 +466,7 @@ nsHttpChannel::SetupTransaction()
         }
         else
             requestURI = mSpec.get();
-        mRequestHead.SetVersion(nsHttpHandler::get()->ProxyHttpVersion());
+        mRequestHead.SetVersion(gHttpHandler->ProxyHttpVersion());
     }
 
     // trim off the #ref portion if any...
@@ -508,10 +501,30 @@ nsHttpChannel::SetupTransaction()
             mRequestHead.SetHeader(nsHttp::Pragma, NS_LITERAL_CSTRING("no-cache"), PR_TRUE);
     }
 
-    return mTransaction->SetupRequest(&mRequestHead, mUploadStream, 
-                                      mUploadStreamHasHeaders, 
-                                      mConnectionInfo->UsingSSL() &&
-                                      mConnectionInfo->UsingHttpProxy());
+    if (!mEventQ) {
+        // grab a reference to the calling thread's event queue.
+        nsCOMPtr<nsIEventQueueService> eqs;
+        gHttpHandler->GetEventQueueService(getter_AddRefs(eqs));
+        if (eqs)
+            eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(mEventQ));
+    }
+
+    // create the transaction object
+    mTransaction = new nsHttpTransaction();
+    if (!mTransaction)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(mTransaction);
+
+    nsCOMPtr<nsIAsyncInputStream> responseStream;
+    rv = mTransaction->Init(caps, mConnectionInfo, &mRequestHead,
+                              mUploadStream, mUploadStreamHasHeaders,
+                              mEventQ, mCallbacks, this,
+                              getter_AddRefs(responseStream));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_NewInputStreamPump(getter_AddRefs(mTransactionPump),
+                               responseStream);
+    return rv;
 }
 
 void
@@ -528,9 +541,9 @@ nsHttpChannel::ApplyContentConversions()
     }
 
     const char *val = mResponseHead->PeekHeader(nsHttp::Content_Encoding);
-    if (nsHttpHandler::get()->IsAcceptableEncoding(val)) {
+    if (gHttpHandler->IsAcceptableEncoding(val)) {
         nsCOMPtr<nsIStreamConverterService> serv;
-        nsresult rv = nsHttpHandler::get()->
+        nsresult rv = gHttpHandler->
                 GetStreamConverterService(getter_AddRefs(serv));
         // we won't fail to load the page just because we couldn't load the
         // stream converter service.. carry on..
@@ -561,7 +574,7 @@ nsHttpChannel::CallOnStartRequest()
         // neither does applying the conversion from the URILoader
 
         nsCOMPtr<nsIStreamConverterService> serv;
-        nsresult rv = nsHttpHandler::get()->
+        nsresult rv = gHttpHandler->
                 GetStreamConverterService(getter_AddRefs(serv));
         // If we failed, we just fall through to the "normal" case
         if (NS_SUCCEEDED(rv)) {
@@ -597,7 +610,7 @@ nsHttpChannel::ProcessResponse()
         this, httpStatus));
 
     // notify nsIHttpNotify implementations
-    rv = nsHttpHandler::get()->OnExamineResponse(this);
+    rv = gHttpHandler->OnExamineResponse(this);
     NS_ASSERTION(NS_SUCCEEDED(rv), "OnExamineResponse failed");
 
     // handle different server response categories
@@ -758,8 +771,8 @@ nsHttpChannel::ProcessPartialContent()
     NS_ENSURE_TRUE(mCachedResponseHead, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_INITIALIZED);
 
-    // suspend the current transaction (may still get an OnDataAvailable)
-    rv = mTransaction->Suspend();
+    // suspend the current transaction
+    rv = mTransactionPump->Suspend();
     if (NS_FAILED(rv)) return rv;
 
     // merge any new headers with the cached response headers
@@ -786,39 +799,6 @@ nsHttpChannel::ProcessPartialContent()
 }
 
 nsresult
-nsHttpChannel::BufferPartialContent(nsIInputStream *input, PRUint32 count)
-{
-    nsresult rv;
-
-    LOG(("nsHttpChannel::BufferPartialContent [this=%x count=%u]\n", this, count));
-
-    if (!mBufferOut) {
-        LOG(("creating pipe...\n"));
-        //
-        // create a pipe for buffering network data (the size of this
-        // pipe must be equal to or greater than the size of the pipe
-        // used to proxy data from the socket transport thread).
-        //
-        rv = NS_NewPipe(getter_AddRefs(mBufferIn),
-                        getter_AddRefs(mBufferOut),
-                        NS_HTTP_SEGMENT_SIZE,
-                        NS_HTTP_BUFFER_SIZE,
-                        PR_TRUE,
-                        PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    PRUint32 bytesWritten = 0;
-    rv = mBufferOut->WriteFrom(input, count, &bytesWritten);
-    if (NS_FAILED(rv) || (bytesWritten != count)) {
-        LOG(("writing to pipe failed [rv=%s bytes-written=%u]\n", rv, bytesWritten));
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    return NS_OK;
-}
-
-nsresult
 nsHttpChannel::OnDoneReadingPartialCacheEntry(PRBool *streamDone)
 {
     nsresult rv;
@@ -836,20 +816,6 @@ nsHttpChannel::OnDoneReadingPartialCacheEntry(PRBool *streamDone)
     rv = InstallCacheListener(size);
     if (NS_FAILED(rv)) return rv;
 
-    // process any buffered data
-    if (mBufferIn) {
-        PRUint32 avail;
-        rv = mBufferIn->Available(&avail);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = mListener->OnDataAvailable(this, mListenerContext, mBufferIn, size, avail);
-        if (NS_FAILED(rv)) return rv;
-
-        // done with the pipe
-        mBufferIn = 0;
-        mBufferOut = 0;
-    }
-
     // need to track the logical offset of the data being sent to our listener
     mLogicalOffset = size;
 
@@ -859,11 +825,13 @@ nsHttpChannel::OnDoneReadingPartialCacheEntry(PRBool *streamDone)
 
     // resume the transaction if it exists, otherwise the pipe contained the
     // remaining part of the document and we've now streamed all of the data.
-    if (mTransaction) {
-        rv = mTransaction->Resume();
+    if (mTransactionPump) {
+        rv = mTransactionPump->Resume();
         if (NS_SUCCEEDED(rv))
             *streamDone = PR_FALSE;
     }
+    else
+        NS_NOTREACHED("no transaction");
     return rv;
 }
 
@@ -902,7 +870,9 @@ nsHttpChannel::ProcessNotModified()
     // drop our reference to the current transaction... ie. let it finish
     // in the background, since we can most likely reuse the connection.
     mPrevTransaction = mTransaction;
+    mPrevTransactionPump = mTransactionPump;
     mTransaction = nsnull;
+    mTransactionPump = 0;
 
     mCachedContentIsValid = PR_TRUE;
     return ReadFromCache();
@@ -927,7 +897,7 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
         // a post transaction via the cache.  Otherwise, we need a unique
         // post id for this transaction.
         if (mPostID == 0)
-            mPostID = nsHttpHandler::get()->GenerateUniqueID();
+            mPostID = gHttpHandler->GenerateUniqueID();
     }
     else if ((mRequestHead.Method() != nsHttp::Get) &&
              (mRequestHead.Method() != nsHttp::Head)) {
@@ -951,7 +921,7 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
     else
         storagePolicy = nsICache::STORE_ANYWHERE; // allow on disk
     nsCOMPtr<nsICacheSession> session;
-    rv = nsHttpHandler::get()->GetCacheSession(storagePolicy,
+    rv = gHttpHandler->GetCacheSession(storagePolicy,
                                                getter_AddRefs(session));
     if (NS_FAILED(rv)) return rv;
 
@@ -1092,7 +1062,7 @@ nsHttpChannel::CheckCache()
     // Determine if this is the first time that this cache entry
     // has been accessed during this session.
     PRBool fromPreviousSession =
-            (nsHttpHandler::get()->SessionStartTime() > lastModifiedTime);
+            (gHttpHandler->SessionStartTime() > lastModifiedTime);
 
     // Get the cached HTTP response headers
     rv = mCacheEntry->GetMetaDataElement("response-head", getter_Copies(buf));
@@ -1317,20 +1287,16 @@ nsHttpChannel::ReadFromCache()
         return AsyncCall(&nsHttpChannel::HandleAsyncNotModified);
     }
 
-    // Get a transport to the cached data...
-    rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport));
+    // open input stream for reading...
+    nsCOMPtr<nsIInputStream> stream;
+    rv = mCacheEntry->OpenInputStream(0, getter_AddRefs(stream));
     if (NS_FAILED(rv)) return rv;
 
-    // Hookup the notification callbacks interface to the new transport...
-    mCacheTransport->SetNotificationCallbacks(this, 
-                                  ((mLoadFlags & nsIRequest::LOAD_BACKGROUND) 
-                                    ? nsITransport::DONT_REPORT_PROGRESS 
-                                    : 0));
+    rv = NS_NewInputStreamPump(getter_AddRefs(mCachePump),
+                               stream, -1, -1, 0, 0, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
 
-    // Pump the cache data downstream
-    return mCacheTransport->AsyncRead(this, mListenerContext,
-                                      0, PRUint32(-1), 0,
-                                      getter_AddRefs(mCacheReadRequest));
+    return mCachePump->AsyncRead(this, mListenerContext);
 }
 
 nsresult
@@ -1342,7 +1308,7 @@ nsHttpChannel::CloseCacheEntry(nsresult status)
 
         // don't doom the cache entry if only reading from it...
         if (NS_FAILED(status)
-                && (mCacheAccess & nsICache::ACCESS_WRITE) && !mCacheReadRequest) {
+                && (mCacheAccess & nsICache::ACCESS_WRITE) && !mCachePump) {
             LOG(("dooming cache entry!!"));
             rv = mCacheEntry->Doom();
         }
@@ -1352,12 +1318,7 @@ nsHttpChannel::CloseCacheEntry(nsresult status)
             mCachedResponseHead = 0;
         }
 
-        // make sure the cache transport isn't holding a reference back to us
-        if (mCacheTransport)
-            mCacheTransport->SetNotificationCallbacks(nsnull, 0);
-
-        mCacheReadRequest = 0;
-        mCacheTransport = 0;
+        mCachePump = 0;
         mCacheEntry = 0;
         mCacheAccess = 0;
     }
@@ -1462,13 +1423,8 @@ nsHttpChannel::InstallCacheListener(PRUint32 offset)
     NS_ASSERTION(mCacheEntry, "no cache entry");
     NS_ASSERTION(mListener, "no listener");
 
-    if (!mCacheTransport) {
-        rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport));
-        if (NS_FAILED(rv)) return rv;
-    }
-
     nsCOMPtr<nsIOutputStream> out;
-    rv = mCacheTransport->OpenOutputStream(offset, PRUint32(-1), 0, getter_AddRefs(out));
+    rv = mCacheEntry->OpenOutputStream(offset, getter_AddRefs(out));
     if (NS_FAILED(rv)) return rv;
 
     // XXX disk cache does not support overlapped i/o yet
@@ -1543,7 +1499,7 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
         rv = NS_NewProxyInfo("http", location, proxyPort, getter_AddRefs(pi));
 
         // talk to the http handler directly for this case
-        rv = nsHttpHandler::get()->
+        rv = gHttpHandler->
                 NewProxiedChannel(mURI, pi, getter_AddRefs(newChannel));
         if (NS_FAILED(rv)) return rv;
     }
@@ -1551,7 +1507,7 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
         // create a new URI using the location header and the current URL
         // as a base...
         nsCOMPtr<nsIIOService> ioService;
-        rv = nsHttpHandler::get()->GetIOService(getter_AddRefs(ioService));
+        rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
 
         // the new uri should inherit the origin charset of the current uri
         nsCAutoString originCharset;
@@ -1661,7 +1617,8 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
 
     // close down this transaction (null if processing a cached redirect)
     if (mTransaction)
-        mTransaction->Cancel(NS_BINDING_REDIRECTED);
+        gHttpHandler->CancelTransaction(mTransaction, NS_BINDING_REDIRECTED);
+        //mTransaction->Cancel(NS_BINDING_REDIRECTED);
     
     // disconnect from our listener
     mListener = 0;
@@ -1705,9 +1662,12 @@ nsHttpChannel::ProcessAuthentication(PRUint32 httpStatus)
         mRequestHead.SetHeader(nsHttp::Authorization, creds);
 
     // kill off the current transaction
-    mTransaction->Cancel(NS_BINDING_REDIRECTED);
+    gHttpHandler->CancelTransaction(mTransaction, NS_BINDING_REDIRECTED);
+    //mTransaction->Cancel(NS_BINDING_REDIRECTED);
     mPrevTransaction = mTransaction;
+    mPrevTransactionPump = mTransactionPump;
     mTransaction = nsnull;
+    mTransactionPump = 0;
 
     // toggle mIsPending to allow nsIHttpNotify implementations to modify
     // the request headers (bug 95044).
@@ -1716,7 +1676,7 @@ nsHttpChannel::ProcessAuthentication(PRUint32 httpStatus)
     // notify nsIHttpNotify implementations.. the server response could
     // have included cookies that must be sent with this authentication
     // attempt (bug 84794).
-    rv = nsHttpHandler::get()->OnModifyRequest(this);
+    rv = gHttpHandler->OnModifyRequest(this);
     NS_ASSERTION(NS_SUCCEEDED(rv), "OnModifyRequest failed");
    
     mIsPending = PR_TRUE;
@@ -1732,10 +1692,10 @@ nsHttpChannel::ProcessAuthentication(PRUint32 httpStatus)
             seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
     }
 
-    rv = nsHttpHandler::get()->InitiateTransaction(mTransaction, mConnectionInfo);
+    rv = gHttpHandler->InitiateTransaction(mTransaction);
     if (NS_FAILED(rv)) return rv;
 
-    return NS_OK;
+    return mTransactionPump->AsyncRead(this, nsnull);
 }
 
 nsresult
@@ -1748,7 +1708,7 @@ nsHttpChannel::GetCredentials(const char *challenges,
     LOG(("nsHttpChannel::GetCredentials [this=%x proxyAuth=%d challenges=%s]\n",
         this, proxyAuth, challenges));
 
-    nsHttpAuthCache *authCache = nsHttpHandler::get()->AuthCache();
+    nsHttpAuthCache *authCache = gHttpHandler->AuthCache();
     if (!authCache)
         return NS_ERROR_NOT_INITIALIZED;
 
@@ -2121,7 +2081,7 @@ void
 nsHttpChannel::AddAuthorizationHeaders()
 {
     LOG(("nsHttpChannel::AddAuthorizationHeaders? [this=%x]\n", this));
-    nsHttpAuthCache *authCache = nsHttpHandler::get()->AuthCache();
+    nsHttpAuthCache *authCache = gHttpHandler->AuthCache();
     if (authCache) {
         // check if proxy credentials should be sent
         const char *proxyHost = mConnectionInfo->ProxyHost();
@@ -2169,13 +2129,12 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
     NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
     NS_INTERFACE_MAP_ENTRY(nsIHttpChannel)
-    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-    NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
     NS_INTERFACE_MAP_ENTRY(nsICachingChannel)
     NS_INTERFACE_MAP_ENTRY(nsIUploadChannel)
     NS_INTERFACE_MAP_ENTRY(nsICacheListener)
     NS_INTERFACE_MAP_ENTRY(nsIEncodedChannel)
     NS_INTERFACE_MAP_ENTRY(nsIHttpChannelInternal)
+    NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChannel)
 NS_INTERFACE_MAP_END
 
@@ -2213,9 +2172,9 @@ nsHttpChannel::Cancel(nsresult status)
     mCanceled = PR_TRUE;
     mStatus = status;
     if (mTransaction)
-        mTransaction->Cancel(status);
-    else if (mCacheReadRequest)
-        mCacheReadRequest->Cancel(status);
+        gHttpHandler->CancelTransaction(mTransaction, status);
+    else if (mCachePump)
+        mCachePump->Cancel(status);
     return NS_OK;
 }
 
@@ -2223,10 +2182,10 @@ NS_IMETHODIMP
 nsHttpChannel::Suspend()
 {
     LOG(("nsHttpChannel::Suspend [this=%x]\n", this));
-    if (mTransaction)
-        mTransaction->Suspend();
-    else if (mCacheReadRequest)
-        mCacheReadRequest->Suspend();
+    if (mTransactionPump)
+        mTransactionPump->Suspend();
+    else if (mCachePump)
+        mCachePump->Suspend();
     return NS_OK;
 }
 
@@ -2234,10 +2193,10 @@ NS_IMETHODIMP
 nsHttpChannel::Resume()
 {
     LOG(("nsHttpChannel::Resume [this=%x]\n", this));
-    if (mTransaction)
-        mTransaction->Resume();
-    else if (mCacheReadRequest)
-        mCacheReadRequest->Resume();
+    if (mTransactionPump)
+        mTransactionPump->Resume();
+    else if (mCachePump)
+        mCachePump->Resume();
     return NS_OK;
 }
 
@@ -2438,7 +2397,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         return rv;
  
     nsCOMPtr<nsIIOService> ioService;
-    rv = nsHttpHandler::get()->GetIOService(getter_AddRefs(ioService));
+    rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
     if (NS_FAILED(rv)) return rv;
 
     rv = NS_CheckPortSafety(port, "http", ioService); // this works for https
@@ -2446,7 +2405,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         return rv;
 
     // Notify nsIHttpNotify implementations
-    rv = nsHttpHandler::get()->OnModifyRequest(this);
+    rv = gHttpHandler->OnModifyRequest(this);
     NS_ASSERTION(NS_SUCCEEDED(rv), "OnModifyRequest failed");
     
     mIsPending = PR_TRUE;
@@ -2533,7 +2492,7 @@ nsHttpChannel::SetReferrer(nsIURI *referrer)
         referrerLevel = 1; // user action
     else
         referrerLevel = 2; // inline content
-    if (nsHttpHandler::get()->ReferrerLevel() < referrerLevel)
+    if (gHttpHandler->ReferrerLevel() < referrerLevel)
         return NS_OK;
 
     nsCOMPtr<nsIURI> referrerGrip;
@@ -2610,7 +2569,7 @@ nsHttpChannel::SetReferrer(nsIURI *referrer)
         if (!match)
             return NS_OK;
 
-        if (!nsHttpHandler::get()->SendSecureXSiteReferrer()) {
+        if (!gHttpHandler->SendSecureXSiteReferrer()) {
             nsCAutoString referrerHost;
             nsCAutoString host;
 
@@ -2804,7 +2763,7 @@ nsHttpChannel::SetResponseHeader(const nsACString &header,
 
     // XXX temporary hack until http supports some form of a header change observer
     if ((atom == nsHttp::Set_Cookie) && NS_SUCCEEDED(rv))
-        rv = nsHttpHandler::get()->OnExamineResponse(this);
+        rv = gHttpHandler->OnExamineResponse(this);
 
     mResponseHeadersModified = PR_TRUE;
     return rv;
@@ -2919,7 +2878,7 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
         this, request, mStatus));
 
     // don't enter this block if we're reading from the cache...
-    if (NS_SUCCEEDED(mStatus) && !mCacheReadRequest && mTransaction) {
+    if (NS_SUCCEEDED(mStatus) && !mCachePump && mTransaction) {
         // grab the security info from the connection object; the transaction
         // is guaranteed to own a reference to the connection.
         mSecurityInfo = mTransaction->SecurityInfo();
@@ -2953,31 +2912,31 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         status = mStatus;
 
     // if the request is a previous transaction, then simply release it.
-    if (request == mPrevTransaction) {
+    if (request == mPrevTransactionPump) {
         NS_RELEASE(mPrevTransaction);
         mPrevTransaction = nsnull;
+        mPrevTransactionPump = 0;
     }
 
     if (mCachedContentIsPartial && NS_SUCCEEDED(status)) {
-        if (request == mTransaction) {
-            // byte-range transaction finished before we got around to streaming it.
-            NS_ASSERTION(mCacheReadRequest, "should be reading from cache right now");
-            NS_RELEASE(mTransaction);
-            mTransaction = nsnull;
-            return NS_OK;
-        }
-        if (request == mCacheReadRequest) {
+        // mTransactionPump should be suspended
+        NS_ASSERTION(request != mTransactionPump,
+            "byte-range transaction finished prematurely");
+
+        if (request == mCachePump) {
             PRBool streamDone;
             status = OnDoneReadingPartialCacheEntry(&streamDone);
             if (NS_SUCCEEDED(status) && !streamDone)
                 return status;
             // otherwise, fall through and fire OnStopRequest...
         }
+        else
+            NS_NOTREACHED("unexpected request");
     }
 
     // if the request is for something we no longer reference, then simply 
     // drop this event.
-    if ((request != mTransaction) && (request != mCacheReadRequest))
+    if ((request != mTransactionPump) && (request != mCachePump))
         return NS_OK;
 
     mIsPending = PR_FALSE;
@@ -2988,19 +2947,11 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         if (mCacheEntry) {
             // find out if the transaction ran to completion...
             isPartial = !mTransaction->ResponseIsComplete();
-#if 0
-            if (!isPartial) {
-                // even if the transaction ran to completion, we might not
-                // have written all of the data into the cache.
-                PRUint32 entrySize = 0;
-                if (NS_SUCCEEDED(mCacheEntry->GetDataSize(&entrySize)))
-                    isPartial = (entrySize < mTransaction->GetContentRead());
-            }
-#endif
         }
         // at this point, we're done with the transaction
         NS_RELEASE(mTransaction);
         mTransaction = nsnull;
+        mTransactionPump = 0;
     }
 
     // perform any final cache operations before we close the cache entry.
@@ -3024,7 +2975,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         if (mCanceled) {
             // we don't want to discard the cache entry if canceled and
             // reading from the cache.
-            if (request == mCacheReadRequest)
+            if (request == mCachePump)
                 closeStatus = NS_OK;
             // we also don't want to discard the cache entry if the
             // server supports byte range requests, because we could always
@@ -3059,14 +3010,12 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
     if (mCanceled)
         return mStatus;
 
-    if (mCachedContentIsPartial && (request == mTransaction)) {
-        // XXX we can eliminate this buffer once bug 93055 is resolved.
-        return BufferPartialContent(input, count);
-    }
+    NS_ASSERTION(!(mCachedContentIsPartial && (request == mTransactionPump)),
+            "transaction pump not suspended");
 
     // if the request is for something we no longer reference, then simply 
     // drop this event.
-    if ((request != mTransaction) && (request != mCacheReadRequest)) {
+    if ((request != mTransactionPump) && (request != mCachePump)) {
         NS_WARNING("got stale request... why wasn't it cancelled?");
         return NS_BASE_STREAM_CLOSED;
     }
@@ -3083,7 +3032,8 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
                                                   input,
                                                   mLogicalOffset,
                                                   count);
-        mLogicalOffset += count;
+        if (NS_SUCCEEDED(rv))
+            mLogicalOffset += count;
         return rv;
     }
 
@@ -3091,56 +3041,34 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
 }
 
 //-----------------------------------------------------------------------------
-// nsHttpChannel::nsIInterfaceRequestor
+// nsHttpChannel::nsITransportEventSink
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpChannel::GetInterface(const nsIID &iid, void **result)
+nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
+                                 PRUint32 progress, PRUint32 progressMax)
 {
-    if (iid.Equals(NS_GET_IID(nsIProgressEventSink))) {
-        //
-        // we return ourselves as the progress event sink so we can intercept
-        // notifications and set the correct request and context parameters.
-        // but, if we don't have a progress sink to forward those messages
-        // to, then there's no point in handing out a reference to ourselves.
-        //
-        if (!mProgressSink)
-            return NS_ERROR_NO_INTERFACE;
+    // block socket status event after OnStopRequest has been fired.
+    if (mProgressSink && mIsPending && !(mLoadFlags & LOAD_BACKGROUND)) {
+        LOG(("sending status notification [status=%x]\n", status));
 
-        return QueryInterface(iid, result);
+        NS_ConvertASCIItoUCS2 host(mConnectionInfo->Host());
+        mProgressSink->OnStatus(this, nsnull, status, host.get());
+
+        // suppress "sending to" progress event if not uploading
+        if (status == nsISocketTransport::STATUS_RECEIVING_FROM ||
+            (status == nsISocketTransport::STATUS_SENDING_TO && mUploadStream)) {
+            mProgressSink->OnProgress(this, nsnull, progress, progressMax);
+        }
     }
-
-    if (mCallbacks)
-        return mCallbacks->GetInterface(iid, result);
-
-    return NS_ERROR_NO_INTERFACE;
-}
-
-//-----------------------------------------------------------------------------
-// nsHttpChannel::nsIProgressEventSink
-//-----------------------------------------------------------------------------
-
-// called on the socket thread
-NS_IMETHODIMP
-nsHttpChannel::OnStatus(nsIRequest *req, nsISupports *ctx, nsresult status,
-                        const PRUnichar *statusText)
-{
-    if (mProgressSink && !mCanceled)
-        mProgressSink->OnStatus(this, mListenerContext, status, statusText);
+#ifdef DEBUG
+    else
+        LOG(("skipping status notification [sink=%x pending=%u background=%x]\n",
+            mProgressSink.get(), mIsPending, (mLoadFlags & LOAD_BACKGROUND)));
+#endif
 
     return NS_OK;
-}
-
-// called on the socket thread
-NS_IMETHODIMP
-nsHttpChannel::OnProgress(nsIRequest *req, nsISupports *ctx,
-                          PRUint32 progress, PRUint32 progressMax)
-{
-    if (mProgressSink && !mCanceled)
-        mProgressSink->OnProgress(this, mListenerContext, progress, progressMax);
-
-    return NS_OK;
-}
+} 
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsICachingChannel
@@ -3246,7 +3174,7 @@ nsHttpChannel::IsFromCache(PRBool *value)
     // return false if reading a partial cache entry; the data isn't entirely
     // from the cache!
 
-    *value = (mCacheReadRequest || (mLoadFlags & LOAD_ONLY_IF_MODIFIED)) &&
+    *value = (mCachePump || (mLoadFlags & LOAD_ONLY_IF_MODIFIED)) &&
               mCachedContentIsValid && !mCachedContentIsPartial;
 
     return NS_OK;

@@ -67,6 +67,7 @@
 #include "nsIPref.h"
 #include "nsMimeTypes.h"
 #include "nsIStringBundle.h"
+#include "nsEventQueueUtils.h"
 
 #include "nsICacheEntryDescriptor.h"
 #include "nsICacheListener.h"
@@ -84,13 +85,12 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 extern PRLogModuleInfo* gFTPLog;
 #endif /* PR_LOGGING */
 
-#define NS_SUCCESS_IGNORE_NOTIFICATION 0x00000666
+#define NS_ERROR_IGNORE_NOTIFICATION 0x80000666
 
 class DataRequestForwarder : public nsIFTPChannel, 
                              public nsIStreamListener,
-                             public nsIInterfaceRequestor,
-                             public nsIProgressEventSink,
-                             public nsIResumableChannel
+                             public nsIResumableChannel,
+                             public nsITransportEventSink
 {
 public:
     DataRequestForwarder();
@@ -104,16 +104,15 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSIINTERFACEREQUESTOR
-    NS_DECL_NSIPROGRESSEVENTSINK
     NS_DECL_NSIRESUMABLECHANNEL
+    NS_DECL_NSITRANSPORTEVENTSINK
 
     NS_FORWARD_NSIREQUEST(mRequest->)
     NS_FORWARD_NSICHANNEL(mFTPChannel->)
     NS_FORWARD_NSIFTPCHANNEL(mFTPChannel->)
     
     PRUint32 GetBytesTransfered() {return mBytesTransfered;} ;
-    void Uploading(PRBool value);
+    void Uploading(PRBool value, PRUint32 uploadCount);
     void SetRetrying(PRBool retry);
     
 protected:
@@ -126,6 +125,7 @@ protected:
     nsCOMPtr<nsIResumableEntityID>    mEntityID;
 
     PRUint32 mBytesTransfered;
+    PRUint32 mBytesToUpload;
     PRPackedBool   mDelayedOnStartFired;
     PRPackedBool   mUploading;
     PRPackedBool   mRetrying;
@@ -138,15 +138,14 @@ protected:
 // the socket transport so that clients only see
 // the same nsIChannel/nsIRequest that they started.
 
-NS_IMPL_THREADSAFE_ISUPPORTS8(DataRequestForwarder, 
+NS_IMPL_THREADSAFE_ISUPPORTS7(DataRequestForwarder, 
                               nsIStreamListener, 
                               nsIRequestObserver, 
                               nsIFTPChannel,
                               nsIResumableChannel,
                               nsIChannel,
                               nsIRequest,
-                              nsIInterfaceRequestor,
-                              nsIProgressEventSink);
+                              nsITransportEventSink)
 
 
 DataRequestForwarder::DataRequestForwarder()
@@ -154,26 +153,13 @@ DataRequestForwarder::DataRequestForwarder()
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder CREATED\n", this));
 
     mBytesTransfered = 0;
+    mBytesToUpload = 0;
     mRetrying = mUploading = mDelayedOnStartFired = PR_FALSE;
 }
 
 DataRequestForwarder::~DataRequestForwarder()
 {
 }
-
-// nsIInterfaceRequestor method
-NS_IMETHODIMP
-DataRequestForwarder::GetInterface(const nsIID &anIID, void **aResult ) 
-{
-    if (anIID.Equals(NS_GET_IID(nsIProgressEventSink))) 
-    {
-        *aResult = NS_STATIC_CAST(nsIProgressEventSink*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    } 
-    return NS_ERROR_NO_INTERFACE;
-}
-
 
 nsresult 
 DataRequestForwarder::Init(nsIRequest *request)
@@ -195,9 +181,10 @@ DataRequestForwarder::Init(nsIRequest *request)
 }
 
 void 
-DataRequestForwarder::Uploading(PRBool value)
+DataRequestForwarder::Uploading(PRBool value, PRUint32 uploadCount)
 {
     mUploading = value;
+    mBytesToUpload = uploadCount;
 }
 
 nsresult 
@@ -211,12 +198,9 @@ DataRequestForwarder::SetCacheEntry(nsICacheEntryDescriptor *cacheEntry, PRBool 
     if (!writing)
         return NS_OK;
 
-    nsCOMPtr<nsITransport> cacheTransport;
-    nsresult rv = cacheEntry->GetTransport(getter_AddRefs(cacheTransport));
-    if (NS_FAILED(rv)) return rv;
-
+    nsresult rv;
     nsCOMPtr<nsIOutputStream> out;
-    rv = cacheTransport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(out));
+    rv = cacheEntry->OpenOutputStream(0, getter_AddRefs(out));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIStreamListenerTee> tee =
@@ -296,14 +280,10 @@ DataRequestForwarder::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     NS_ASSERTION(mListener, "No Listener Set.");
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder OnStartRequest \n[mRetrying=%d]", this, mRetrying)); 
 
-    if (mRetrying) {
-        mRetrying = PR_FALSE;
-        return NS_OK;
-    }
-
     if (!mListener)
         return NS_ERROR_NOT_INITIALIZED;
 
+    // OnStartRequest is delayed.
     return NS_OK;
 }
 
@@ -312,8 +292,12 @@ DataRequestForwarder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsre
 {
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder OnStopRequest [status=%x, mRetrying=%d]\n", this, statusCode, mRetrying)); 
 
-    if (mRetrying || statusCode == NS_SUCCESS_IGNORE_NOTIFICATION)
+    if (statusCode == NS_ERROR_IGNORE_NOTIFICATION)
         return NS_OK;
+    if (mRetrying) {
+        mRetrying = PR_FALSE;
+        return NS_OK;
+    }
 
     // If there were no calls to ODA, then the onstart won't have been
     // fired - bug 122913
@@ -321,16 +305,6 @@ DataRequestForwarder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsre
         mDelayedOnStartFired = PR_TRUE;
         nsresult rv = DelayedOnStartRequest(request, ctxt);
         if (NS_FAILED(rv)) return rv;
-    }
-    
-    nsCOMPtr<nsITransportRequest> trequest(do_QueryInterface(request));
-    if (trequest)
-    {
-        nsCOMPtr<nsITransport> trans;
-        trequest->GetTransport(getter_AddRefs(trans));
-        nsCOMPtr<nsISocketTransport> sTrans (do_QueryInterface(trans));
-        if (sTrans)
-            sTrans->SetReuseConnection(PR_FALSE);
     }
 
     if (!mListener)
@@ -357,40 +331,29 @@ DataRequestForwarder::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, ns
     }
 
     rv = mListener->OnDataAvailable(this, ctxt, input, mBytesTransfered, count); 
-    mBytesTransfered += count;
+    if (NS_SUCCEEDED(rv))
+        mBytesTransfered += count;
     return rv;
 } 
 
-
-// nsIProgressEventSink methods
+// nsITransportEventSink methods
 NS_IMETHODIMP
-DataRequestForwarder::OnStatus(nsIRequest *request, nsISupports *aContext,
-                       nsresult aStatus, const PRUnichar* aStatusArg)
+DataRequestForwarder::OnTransportStatus(nsITransport *transport, nsresult status,
+                                        PRUint32 progress, PRUint32 progressMax)
 {
-    if (!mEventSink)
-        return NS_OK;
+    if (mEventSink) {
+        mEventSink->OnStatus(nsnull, nsnull, status, nsnull);
 
-    return mEventSink->OnStatus(nsnull, nsnull, aStatus, nsnull);
-}
-
-NS_IMETHODIMP
-DataRequestForwarder::OnProgress(nsIRequest *request, nsISupports* aContext,
-                                  PRUint32 aProgress, PRUint32 aProgressMax) {
-    if (!mEventSink)
-        return NS_OK;
-
-    // we want to delay firing the onStartRequest until we know that there is data
-    if (!mDelayedOnStartFired) { 
-        mDelayedOnStartFired = PR_TRUE;
-        nsresult rv = DelayedOnStartRequest(request, aContext);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "DelayedOnStartRequest failed");
+        if (status == nsISocketTransport::STATUS_RECEIVING_FROM ||
+            status == nsISocketTransport::STATUS_SENDING_TO) {
+            // compute progress based on whether we are uploading or receiving...
+            PRUint32 count = mUploading ? progress       : mBytesTransfered;
+            PRUint32 max   = mUploading ? mBytesToUpload : progressMax;
+            mEventSink->OnProgress(this, nsnull, count, max);
+        }
     }
-    
-    PRUint32 count = mUploading ? aProgress : mBytesTransfered;
-    PRUint32 max   = mUploading ? aProgressMax : 0;
-    return mEventSink->OnProgress(this, nsnull, count, max);
+    return NS_OK;
 }
-
 
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsFtpState,
@@ -398,7 +361,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsFtpState,
                               nsIRequestObserver, 
                               nsIRequest);
 
-nsFtpState::nsFtpState() {
+nsFtpState::nsFtpState()
+{
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpState created", this));
     // bool init
     mRETRFailed = PR_FALSE;
@@ -415,6 +379,8 @@ nsFtpState::nsFtpState() {
 
     mReceivedControlData = PR_FALSE;
     mControlStatus = NS_OK;
+
+    mWriteCount = 0;
 
     mIPv6Checked = PR_FALSE;
     mIPv6ServerAddress = nsnull;
@@ -1665,22 +1631,36 @@ nsFtpState::R_stor() {
     }
 
     if (mResponseCode/100 == 1) {
-        PRUint32 len;
-        mWriteStream->Available(&len);
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) writing on Data Transport\n", this));
         
         // Close the read pipe since we are going to be writing data.
-        if (mDPipeRequest)
-            mDPipeRequest->Cancel(NS_SUCCESS_IGNORE_NOTIFICATION);
-    
-        nsresult rv = NS_AsyncWriteFromStream(getter_AddRefs(mDPipeRequest), 
-                                              mDPipe, 
-                                              mWriteStream, 
-                                              0, 
-                                              len,
-                                              0, 
-                                              mDRequestForwarder);
+        if (mDPipeRequest) {
+            mDPipeRequest->Cancel(NS_ERROR_IGNORE_NOTIFICATION);
+            mDPipeRequest = 0;
+        }
+
+        nsresult rv;
+
+        // nsIUploadChannel requires the upload stream to support ReadSegments.
+        // therefore, we can open an unbuffered socket output stream.
+        nsCOMPtr<nsIOutputStream> output;
+        rv = mDPipe->OpenOutputStream(nsITransport::OPEN_UNBUFFERED, 0, 0,
+                                      getter_AddRefs(output));
         if (NS_FAILED(rv)) return FTP_ERROR;
+        
+        nsCOMPtr<nsIAsyncStreamCopier> copier;
+        rv = NS_NewAsyncStreamCopier(getter_AddRefs(copier),
+                                     mWriteStream,
+                                     output,
+                                     PR_TRUE,   // mWriteStream is buffered
+                                     PR_FALSE); // output is NOT buffered
+        if (NS_FAILED(rv)) return FTP_ERROR;
+    
+        rv = copier->AsyncCopy(mDRequestForwarder, nsnull);
+        if (NS_FAILED(rv)) return FTP_ERROR;
+
+        // hold a reference to the copier so we can cancel it if necessary.
+        mDPipeRequest = copier;
         return FTP_READ_BUF;
     }
 
@@ -1702,20 +1682,21 @@ nsFtpState::S_pasv() {
         nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(controlSocket, &rv);
         
         if (sTrans) {
-            rv = sTrans->GetIPStr(100, &mIPv6ServerAddress);
-        }
-
-        if (NS_SUCCEEDED(rv)) {
             PRNetAddr addr;
-            if (PR_StringToNetAddr(mIPv6ServerAddress, &addr) != PR_SUCCESS ||
-                PR_IsNetAddrType(&addr, PR_IpAddrV4Mapped)) {
-                nsMemory::Free(mIPv6ServerAddress);
-                mIPv6ServerAddress = 0;
+            rv = sTrans->GetAddress(&addr);
+            if (NS_SUCCEEDED(rv)) {
+                if (addr.raw.family == PR_AF_INET6 && !PR_IsNetAddrType(&addr, PR_IpAddrV4Mapped)) {
+                    mIPv6ServerAddress = (char *) nsMemory::Alloc(100);
+                    if (mIPv6ServerAddress) {
+                        if (PR_NetAddrToString(&addr, mIPv6ServerAddress, 100) != PR_SUCCESS) {
+                            nsMemory::Free(mIPv6ServerAddress);
+                            mIPv6ServerAddress = 0;
+                        }
+                    }
+                }
             }
-            PR_ASSERT(!mIPv6ServerAddress || addr.raw.family == PR_AF_INET6);
         }
     }
-
 
     const char * string;
     if (mIPv6ServerAddress)
@@ -1820,27 +1801,22 @@ nsFtpState::R_pasv() {
         // Reuse this connection only if its still alive, and the port
         // is the same
 
-        nsCOMPtr<nsISocketTransport> st = do_QueryInterface(mDPipe);
-
-        if (st) {
+        if (mDPipe) {
             PRInt32 oldPort;
-            nsresult rv = st->GetPort(&oldPort);
+            nsresult rv = mDPipe->GetPort(&oldPort);
             if (NS_SUCCEEDED(rv)) {
                 if (oldPort == port) {
                     PRBool isAlive;
-                    if (NS_SUCCEEDED(st->IsAlive(0, &isAlive)) && isAlive) {
+                    if (NS_SUCCEEDED(mDPipe->IsAlive(&isAlive)) && isAlive)
                         newDataConn = PR_FALSE;
-                    }
                 }
             }
         }
 
         if (newDataConn) {
-            if (st)
-                st->SetReuseConnection(PR_FALSE);
-            mDPipe = 0;
-            mDPipeRequest->Cancel(NS_OK);
+            mDPipeRequest->Cancel(NS_ERROR_ABORT);
             mDPipeRequest = 0;
+            mDPipe = 0;
         } else {
             mDRequestForwarder->SetRetrying(PR_FALSE);
         }
@@ -1850,20 +1826,12 @@ nsFtpState::R_pasv() {
         // now we know where to connect our data channel
         nsCOMPtr<nsISocketTransportService> sts = do_GetService(kSocketTransportServiceCID, &rv);
         
-        rv =  sts->CreateTransport(hostStr, 
-                                   port, 
-                                   mProxyInfo,
-                                   FTP_DATA_CHANNEL_SEG_SIZE, 
-                                   FTP_DATA_CHANNEL_MAX_SIZE, 
-                                   getter_AddRefs(mDPipe)); // the data channel
+        rv =  sts->CreateTransport(nsnull, 0,
+                                   nsDependentCString(hostStr), port, mProxyInfo,
+                                   getter_AddRefs(mDPipe)); // the data socket
         if (NS_FAILED(rv)) return FTP_ERROR;
         
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) Created Data Transport (%s:%x)\n", this, hostStr, port));
-        
-        nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(mDPipe, &rv);
-        if (NS_FAILED(rv)) return FTP_ERROR;
-        
-        if (NS_FAILED(sTrans->SetReuseConnection(PR_TRUE))) return FTP_ERROR;
         
         if (!mDRequestForwarder) {
             mDRequestForwarder = new DataRequestForwarder;
@@ -1877,24 +1845,52 @@ nsFtpState::R_pasv() {
             }
         }
         
-        // hook ourself up as a proxy for progress notifications
         mWaitingForDConn = PR_TRUE;
-        rv = mDPipe->SetNotificationCallbacks(NS_STATIC_CAST(nsIInterfaceRequestor*, mDRequestForwarder), PR_FALSE);
+
+        // hook ourself up as a proxy for status notifications
+        nsCOMPtr<nsIEventQueue> eventQ;
+        rv = NS_GetCurrentEventQ(getter_AddRefs(eventQ));
         if (NS_FAILED(rv)){
-            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) forwarder->SetNotificationCallbacks failed (rv=%x)\n", this, rv));
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) NS_GetCurrentEventQ failed (rv=%x)\n", this, rv));
+            return FTP_ERROR;
+        }
+        rv = mDPipe->SetEventSink(NS_STATIC_CAST(nsITransportEventSink*, mDRequestForwarder), eventQ);
+        if (NS_FAILED(rv)){
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) forwarder->SetEventSink failed (rv=%x)\n", this, rv));
+            return FTP_ERROR;
+        }
+
+        // open a buffered, asynchronous socket input stream
+        nsCOMPtr<nsIInputStream> input;
+        rv = mDPipe->OpenInputStream(0,
+                                     FTP_DATA_CHANNEL_SEG_SIZE,
+                                     FTP_DATA_CHANNEL_SEG_COUNT,
+                                     getter_AddRefs(input));
+        if (NS_FAILED(rv)) {
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) OpenInputStream failed (rv=%x)\n", this, rv));
+            return FTP_ERROR;
+        }
+
+        // pump data to the request forwarder...
+        nsCOMPtr<nsIInputStreamPump> pump;
+        rv = NS_NewInputStreamPump(getter_AddRefs(pump), input, -1, -1, 0, 0, PR_TRUE);
+        if (NS_FAILED(rv)) {
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) NS_NewInputStreamPump failed (rv=%x)\n", this, rv));
             return FTP_ERROR;
         }
         
-        // we need to get mDPipe going so tcp connection is made
-        rv = mDPipe->AsyncRead(mDRequestForwarder, nsnull, 0, PRUint32(-1), 0, getter_AddRefs(mDPipeRequest));    
-        if (NS_FAILED(rv)){
-            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) forwarder->AsyncRead failed (rv=%x)\n", this, rv));
+        rv = pump->AsyncRead(mDRequestForwarder, nsnull);
+        if (NS_FAILED(rv)) {
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) AsyncRead failed (rv=%x)\n", this, rv));
             return FTP_ERROR;
         }
+
+        // hold a reference to the input stream pump so we can cancel it.
+        mDPipeRequest = pump;
         
         if (mAction == PUT) {
             NS_ASSERTION(!mRETRFailed, "Failed before uploading");
-            mDRequestForwarder->Uploading(PR_TRUE);
+            mDRequestForwarder->Uploading(PR_TRUE, mWriteCount);
             return FTP_S_STOR;
         }
 
@@ -2007,11 +2003,10 @@ nsFtpState::Resume(void)
 
         PRBool dataAlive = PR_FALSE;
 
-        nsCOMPtr<nsISocketTransport> dataSocket = do_QueryInterface(mDPipe);
-        if (dataSocket) 
-            dataSocket->IsAlive(0, &dataAlive);            
+        if (mDPipe) 
+            mDPipe->IsAlive(&dataAlive);            
             
-        if (dataSocket && dataAlive && mControlConnection->IsAlive())
+        if (mDPipe && dataAlive && mControlConnection->IsAlive())
         {
             nsCOMPtr<nsIRequest> controlRequest;
             mControlConnection->GetReadRequest(getter_AddRefs(controlRequest));
@@ -2200,15 +2195,19 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
             mDRequestForwarder->SetEntityID(nsnull);
 
             // Get a transport to the cached data...
-            nsCOMPtr<nsITransport> transport;
-            rv = mCacheEntry->GetTransport(getter_AddRefs(transport));
+            nsCOMPtr<nsIInputStream> input;
+            rv = mCacheEntry->OpenInputStream(0, getter_AddRefs(input));
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIInputStreamPump> pump;
+            rv = NS_NewInputStreamPump(getter_AddRefs(pump), input);
             if (NS_FAILED(rv)) return rv;
 
             // Pump the cache data downstream
-            return transport->AsyncRead(mDRequestForwarder, 
-                                        nsnull,
-                                        0, PRUint32(-1), 0,
-                                        getter_AddRefs(mDPipeRequest));
+            rv = pump->AsyncRead(mDRequestForwarder, nsnull);
+            if (NS_FAILED(rv)) return rv;
+
+            mDPipeRequest = pump;
         }
     }
 
@@ -2302,6 +2301,7 @@ nsFtpState::SetWriteStream(nsIInputStream* aInStream) {
 
     mAction = PUT;
     mWriteStream = aInStream;
+    mWriteStream->Available(&mWriteCount);
     return NS_OK;
 }
 
@@ -2310,7 +2310,8 @@ nsFtpState::KillControlConnection() {
     mControlReadCarryOverBuf.Truncate(0);
 
     if (mDPipe) {
-        mDPipe->SetNotificationCallbacks(nsnull, PR_FALSE);
+        mDPipe->SetSecurityCallbacks(nsnull);
+        mDPipe->SetEventSink(nsnull, nsnull);
         mDPipe = 0;
     }
     
@@ -2491,7 +2492,7 @@ nsFtpState::DataConnectionEstablished()
 {
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) Data Connection established.", this));
     
-    mWaitingForDConn= PR_FALSE;
+    mWaitingForDConn = PR_FALSE;
 
     // sending empty string with (mWaitingForDConn == PR_FALSE) will cause the 
     // control socket to write out its buffer.

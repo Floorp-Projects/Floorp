@@ -110,6 +110,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS0(nsDiskCacheBinding);
 
 nsDiskCacheBinding::nsDiskCacheBinding(nsCacheEntry* entry, nsDiskCacheRecord * record)
     :   mCacheEntry(entry)
+    ,   mStreamIO(nsnull)
 {
     NS_ASSERTION(record->ValidRecord(), "bad record");
     PR_INIT_CLIST(this);
@@ -125,9 +126,21 @@ nsDiskCacheBinding::~nsDiskCacheBinding()
         PR_REMOVE_LINK(this);       // XXX why are we still on a list?
     
     // sever streamIO/binding link
-    // XXX what's the right way to call a method on the concrete class?
-    nsDiskCacheStreamIO * streamIO = (nsDiskCacheStreamIO *)mStreamIO.get();
-    if (streamIO)  streamIO->ClearBinding();
+    if (mStreamIO) {
+        mStreamIO->ClearBinding();
+        NS_RELEASE(mStreamIO);
+    }
+}
+
+nsresult
+nsDiskCacheBinding::EnsureStreamIO()
+{
+    if (!mStreamIO) {
+        mStreamIO = new nsDiskCacheStreamIO(this);
+        if (!mStreamIO)  return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(mStreamIO);
+    }
+    return NS_OK;
 }
 
 

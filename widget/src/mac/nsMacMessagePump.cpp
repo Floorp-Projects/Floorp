@@ -83,8 +83,8 @@
 #include "nsPIWidgetMac.h"
 #include "nsPIEventSinkStandalone.h"
 
-#include "nsISocketTransportService.h"
-#include "nsIFileTransportService.h"
+//#include "nsISocketTransportService.h"
+//include "nsIFileTransportService.h"
 
 #if TARGET_CARBON && !XP_MACOSX
 #include "MenuSharing.h"
@@ -314,8 +314,8 @@ void nsMacMessagePump::DoMessagePump()
   }
 }
 
-static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kFileTransportServiceCID,   NS_FILETRANSPORTSERVICE_CID);
+//static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
+//static NS_DEFINE_CID(kFileTransportServiceCID,   NS_FILETRANSPORTSERVICE_CID);
 
 //#define BUSINESS_INDICATOR
 #define kIdleHysterysisTicks    60

@@ -82,8 +82,9 @@ nsTXTToHTMLConv::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     // be parsed in OnDataAvailable().
 
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-    NS_ENSURE_TRUE(channel, NS_ERROR_UNEXPECTED);
-    channel->SetContentType(NS_LITERAL_CSTRING("text/html"));
+    if (channel)
+        channel->SetContentType(NS_LITERAL_CSTRING("text/html"));
+    // else, assume there is a channel somewhere that knows what it is doing!
 
     nsresult rv = mListener->OnStartRequest(request, aContext);
     if (NS_FAILED(rv)) return rv;

@@ -28,7 +28,7 @@
 #include "nsIProxyInfo.h"
 #include "nsCOMPtr.h"
 #include "nsDependentString.h"
-#include "nsSharableString.h"
+#include "nsString.h"
 #include "plstr.h"
 #include "nsCRT.h"
 
@@ -71,16 +71,13 @@ public:
         return n;
     }
 
-    nsresult SetOriginServer(const nsACString &host, PRInt32 port)
-    {
-        mHost = host;
-        mPort = port == -1 ? DefaultPort() : port;
-        return NS_OK;
-    }
+    const nsAFlatCString &HashKey() const { return mHashKey; }
 
-    nsresult SetOriginServer(const char *host, PRInt32 port)
+    void SetOriginServer(const nsACString &host, PRInt32 port);
+
+    void SetOriginServer(const char *host, PRInt32 port)
     {
-        return SetOriginServer(nsDependentCString(host), port);
+        SetOriginServer(nsDependentCString(host), port);
     }
 
     const char *ProxyHost() const { return mProxyInfo ? mProxyInfo->Host() : nsnull; }
@@ -96,21 +93,7 @@ public:
     // a request will end up at the same host.
     PRBool Equals(const nsHttpConnectionInfo *info)
     {
-        // Strictly speaking, we could talk to a proxy on the same port
-        // and reuse the connection. Its not worth the extra strcmp.
-        if ((info->mUsingHttpProxy != mUsingHttpProxy) ||
-            (info->mUsingSSL != mUsingSSL))
-            return PR_FALSE;
-
-        // if its a proxy, then compare the proxy servers.
-        if (mUsingHttpProxy && !mUsingSSL)
-            return (!PL_strcasecmp(info->ProxyHost(), ProxyHost()) &&
-                    info->ProxyPort() == ProxyPort());
-
-        // otherwise, just check the hosts
-        return (!PL_strcasecmp(info->Host(), Host()) &&
-                info->mPort == mPort);
-
+        return mHashKey.Equals(info->HashKey());
     }
 
     const char   *Host() const           { return mHost.get(); }
@@ -122,7 +105,8 @@ public:
             
 private:
     nsrefcnt               mRef;
-    nsSharableCString      mHost;
+    nsCString              mHashKey;
+    nsCString              mHost;
     PRInt32                mPort;
     nsCOMPtr<nsIProxyInfo> mProxyInfo;
     PRPackedBool           mUsingHttpProxy;

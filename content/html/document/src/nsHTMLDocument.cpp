@@ -4029,7 +4029,7 @@ nsHTMLDocument::RemoveWyciwygChannel(void)
   // note there can be a write request without a load group if
   // this is a synchronously constructed about:blank document
   if (loadGroup && mWyciwygChannel) {
-    mWyciwygChannel->CloseCacheEntry();
+    mWyciwygChannel->CloseCacheEntry(NS_OK);
     rv = loadGroup->RemoveRequest(mWyciwygChannel, nsnull, NS_OK);
     if (NS_FAILED(rv)) return rv;
   }

@@ -28,37 +28,38 @@
 #include "nsHttpConnectionInfo.h"
 #include "nsAHttpConnection.h"
 #include "nsAHttpTransaction.h"
-#include "nsIStreamListener.h"
-#include "nsIStreamProvider.h"
-#include "nsISocketTransport.h"
-#include "nsIProgressEventSink.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIEventQueue.h"
-#include "nsIInputStream.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "prlock.h"
 
-class nsHttpHandler;
+#include "nsIStreamListener.h"
+#include "nsISocketTransport.h"
+#include "nsIEventQueue.h"
+#include "nsIAsyncInputStream.h"
+#include "nsIAsyncOutputStream.h"
+#include "nsIInterfaceRequestor.h"
 
 //-----------------------------------------------------------------------------
 // nsHttpConnection - represents a connection to a HTTP server (or proxy)
+//
+// NOTE: this objects lives on the socket thread only.  it should not be
+// accessed from any other thread.
 //-----------------------------------------------------------------------------
 
 class nsHttpConnection : public nsAHttpConnection
-                       , public nsIStreamListener
-                       , public nsIStreamProvider
-                       , public nsIProgressEventSink
+                       , public nsAHttpSegmentReader
+                       , public nsAHttpSegmentWriter
+                       , public nsIInputStreamNotify
+                       , public nsIOutputStreamNotify
+                       , public nsITransportEventSink
                        , public nsIInterfaceRequestor
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMPROVIDER
-    NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSIINPUTSTREAMNOTIFY
+    NS_DECL_NSIOUTPUTSTREAMNOTIFY
+    NS_DECL_NSITRANSPORTEVENTSINK
     NS_DECL_NSIINTERFACEREQUESTOR
-    NS_DECL_NSIPROGRESSEVENTSINK
 
     nsHttpConnection();
     virtual ~nsHttpConnection();
@@ -70,12 +71,15 @@ public:
     //                alive.  a value of 0xffff indicates no limit.
     nsresult Init(nsHttpConnectionInfo *info, PRUint16 maxHangTime);
 
-    // SetTransaction causes the given transaction to be processed on this
+    // Activate causes the given transaction to be processed on this
     // connection.  It fails if there is already an existing transaction.
-    nsresult SetTransaction(nsAHttpTransaction *, PRUint8 capabilities);
+    nsresult Activate(nsAHttpTransaction *, PRUint8 caps);
 
-    // called to cause the underlying socket to start speaking SSL
-    nsresult ProxyStartSSL();
+    // Close the underlying socket transport.
+    void Close(nsresult reason);
+
+    //-------------------------------------------------------------------------
+    // XXX document when these are ok to call
 
     PRBool   SupportsPipelining() { return mSupportsPipelining; }
     PRBool   IsKeepAlive() { return mKeepAliveMask && mKeepAlive; }
@@ -86,48 +90,67 @@ public:
     void     DropTransport() { DontReuse(); mSocketTransport = 0; }
 
     nsAHttpTransaction   *Transaction()    { return mTransaction; }
-    nsHttpConnectionInfo *ConnectionInfo() { return mConnectionInfo; }
+    nsHttpConnectionInfo *ConnectionInfo() { return mConnInfo; }
 
     // nsAHttpConnection methods:
     nsresult OnHeadersAvailable(nsAHttpTransaction *, nsHttpRequestHead *, nsHttpResponseHead *, PRBool *reset);
-    nsresult OnTransactionComplete(nsAHttpTransaction *, nsresult status);
-    nsresult OnSuspend();
-    nsresult OnResume();
-    void     GetConnectionInfo(nsHttpConnectionInfo **ci) { NS_IF_ADDREF(*ci = mConnectionInfo); }
-    void     DropTransaction(nsAHttpTransaction *);
+    void     CloseTransaction(nsAHttpTransaction *, nsresult reason);
+    void     GetConnectionInfo(nsHttpConnectionInfo **ci) { NS_IF_ADDREF(*ci = mConnInfo); }
+    void     GetSecurityInfo(nsISupports **);
     PRBool   IsPersistent() { return IsKeepAlive(); }
     nsresult PushBack(const char *data, PRUint32 length) { NS_NOTREACHED("PushBack"); return NS_ERROR_UNEXPECTED; }
+    nsresult ResumeSend();
+    nsresult ResumeRecv();
+
+    // nsAHttpSegmentReader methods:
+    nsresult OnReadSegment(const char *, PRUint32, PRUint32 *);
+
+    // nsAHttpSegmentWriter methods:
+    nsresult OnWriteSegment(char *, PRUint32, PRUint32 *);
+ 
+    static NS_METHOD ReadFromStream(nsIInputStream *, void *, const char *,
+                                    PRUint32, PRUint32, PRUint32 *);
 
 private:
-    nsresult ActivateConnection();
+    // called to cause the underlying socket to start speaking SSL
+    nsresult ProxyStartSSL();
+
     nsresult CreateTransport();
+    nsresult OnTransactionDone(nsresult reason);
+    nsresult OnSocketWritable();
+    nsresult OnSocketReadable();
 
     nsresult SetupSSLProxyConnect();
 
     PRBool   IsAlive();
     PRBool   SupportsPipelining(nsHttpResponseHead *);
-
+    
 private:
     nsCOMPtr<nsISocketTransport>    mSocketTransport;
-    nsCOMPtr<nsIRequest>            mWriteRequest;
-    nsCOMPtr<nsIRequest>            mReadRequest;
+    nsCOMPtr<nsIAsyncInputStream>   mSocketIn;
+    nsCOMPtr<nsIAsyncOutputStream>  mSocketOut;
+
+    nsresult                        mSocketInCondition;
+    nsresult                        mSocketOutCondition;
 
     nsCOMPtr<nsIInputStream>        mSSLProxyConnectStream;
+    nsCOMPtr<nsIInputStream>        mRequestStream;
 
-    nsAHttpTransaction             *mTransaction;    // hard ref
-    nsHttpConnectionInfo           *mConnectionInfo; // hard ref
+    nsAHttpTransaction             *mTransaction; // hard ref
+    nsHttpConnectionInfo           *mConnInfo;    // hard ref
 
     PRLock                         *mLock;
+    PRInt32                         mSuspendCount;
 
-    PRUint32                        mReadStartTime;  // time of OnStartRequest
-    PRUint32                        mLastActiveTime;
+    PRUint32                        mLastReadTime;
     PRUint16                        mMaxHangTime;    // max download time before dropping keep-alive status
     PRUint16                        mIdleTimeout;    // value of keep-alive: timeout=
 
+    nsresult                        mTransactionStatus;
+    PRPackedBool                    mTransactionDone;
+
     PRPackedBool                    mKeepAlive;
     PRPackedBool                    mKeepAliveMask;
-    PRPackedBool                    mWriteDone;
-    PRPackedBool                    mReadDone;
     PRPackedBool                    mSupportsPipelining;
 };
 

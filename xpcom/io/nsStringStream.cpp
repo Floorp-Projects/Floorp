@@ -318,7 +318,8 @@ class ConstCharImpl
                                                         0, aCount, result);
                                             if (NS_SUCCEEDED(rv))
                                                 mOffset += *result;
-                                            return rv;
+                                            // errors returned from the writer end here!
+                                            return NS_OK;
                                         }
 
     protected:

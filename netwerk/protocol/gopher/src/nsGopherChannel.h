@@ -18,33 +18,38 @@
  *
  * Contributor(s): 
  *  Bradley Baetz <bbaetz@student.usyd.edu.au>
+ *  Darin Fisher <darin@netscape.com>
  */
 
-#ifndef nsGopherChannel_h___
-#define nsGopherChannel_h___
+#ifndef nsGopherChannel_h__
+#define nsGopherChannel_h__
 
+#include "nsGopherHandler.h"
+#include "nsXPIDLString.h"
 #include "nsString.h"
+#include "nsCOMPtr.h"
+
 #include "nsILoadGroup.h"
 #include "nsIInputStream.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
-#include "nsGopherHandler.h"
 #include "nsIPrompt.h"
 #include "nsIProxy.h"
 #include "nsIStreamListener.h"
-#include "nsITransport.h"
+#include "nsISocketTransport.h"
+#include "nsIProgressEventSink.h"
 #include "nsIProxyInfo.h"
 #include "nsIDirectoryListing.h"
 #include "nsIStringBundle.h"
+#include "nsIInputStreamPump.h"
 
 class nsGopherChannel : public nsIChannel,
                         public nsIStreamListener,
-                        public nsIDirectoryListing {
+                        public nsIDirectoryListing,
+                        public nsITransportEventSink {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
@@ -52,21 +57,19 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSIDIRECTORYLISTING
+    NS_DECL_NSITRANSPORTEVENTSINK
 
     // nsGopherChannel methods:
     nsGopherChannel();
     virtual ~nsGopherChannel();
 
-    // Define a Create method to be used with a factory:
-    static NS_METHOD
-    Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
-    
     nsresult Init(nsIURI* uri, nsIProxyInfo* proxyInfo);
 
 protected:
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
     nsCOMPtr<nsIPrompt>                 mPrompter;
+    nsCOMPtr<nsIProgressEventSink>      mProgressSink;
     nsCOMPtr<nsIURI>                    mUrl;
     nsCOMPtr<nsIStreamListener>         mListener;
     PRUint32                            mLoadFlags;
@@ -75,9 +78,6 @@ protected:
     nsCString                           mContentCharset;
     PRInt32                             mContentLength;
     nsCOMPtr<nsISupports>               mOwner; 
-    PRUint32                            mBufferSegmentSize;
-    PRUint32                            mBufferMaxSize;
-    PRBool                              mActAsObserver;
     PRUint32                            mListFormat;
 
     nsXPIDLCString                      mHost;
@@ -86,15 +86,17 @@ protected:
     nsCString                           mSelector;
     nsCString                           mRequest;
 
-    nsCOMPtr<nsISupports>               mResponseContext;
-    nsCOMPtr<nsITransport>              mTransport;
-    nsCOMPtr<nsIRequest>                mTransportRequest;
+    nsCOMPtr<nsISupports>               mListenerContext;
+    nsCOMPtr<nsISocketTransport>        mTransport;
+    nsCOMPtr<nsIInputStreamPump>        mPump;
     nsCOMPtr<nsIProxyInfo>              mProxyInfo;
-    nsresult                            mStatus;
     nsCOMPtr<nsIStringBundle>           mStringBundle;
 
-    nsresult SendRequest(nsITransport* aTransport);
+    nsresult                            mStatus;
+    PRBool                              mIsPending;
 
+    nsresult SendRequest();
+    nsresult PushStreamConverters(nsIStreamListener *, nsIStreamListener **);
 };
 
-#endif /* nsGopherChannel_h___ */
+#endif // !nsGopherChannel_h__

@@ -35,7 +35,6 @@
 #include "nsIFileURL.h"
 
 #include "nsITransport.h"
-#include "nsIFileTransportService.h"
 #include "nsIOutputStream.h"
 #include "nsNetUtil.h"
 #include "nsIInputStream.h"
@@ -795,26 +794,10 @@ nsXPInstallManager::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
     {
         NS_ASSERTION( !mItem->mOutStream, "Received double OnStartRequest from Necko");
 
-        NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-        nsCOMPtr<nsIFileTransportService> fts =
-                 do_GetService( kFileTransportServiceCID, &rv );
-
-        if (NS_SUCCEEDED(rv) && !mItem->mOutStream)
-        {
-            nsCOMPtr<nsITransport> outTransport;
-
-            rv = fts->CreateTransport(mItem->mFile,
-                                      PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
-                                      0664,
-                                      PR_TRUE,
-                                      getter_AddRefs( outTransport));
-
-            if (NS_SUCCEEDED(rv))
-            {
-                // Open output stream.
-                rv = outTransport->OpenOutputStream(0, PRUint32(-1), 0,  getter_AddRefs( mItem->mOutStream ) );
-            }
-        }
+        rv = NS_NewLocalFileOutputStream(getter_AddRefs(mItem->mOutStream),
+                                         mItem->mFile,
+                                         PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
+                                         0664);
     }
     return rv;
 }

@@ -38,9 +38,10 @@
 #ifndef nsBufferedStreams_h__
 #define nsBufferedStreams_h__
 
-#include "nsIFileStreams.h"
+#include "nsIBufferedStreams.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsISeekableStream.h"
 #include "nsIStreamBufferAccess.h"
 #include "nsCOMPtr.h"
 

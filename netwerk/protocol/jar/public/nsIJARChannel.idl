@@ -37,16 +37,7 @@
 
 #include "nsIChannel.idl"
 
-interface nsISimpleEnumerator;
-
 [scriptable, uuid(c7e410d1-85f2-11d3-9f63-006008a6efe9)]
 interface nsIJARChannel : nsIChannel 
 {
-    /**
-     * Enumerates all the entries in the JAR (the root URI).
-     * ARGUMENTS:
-     *  aRoot - a string representing the root dir to enumerate from
-     *    or null to enumerate the whole thing.
-     */
-    nsISimpleEnumerator EnumerateEntries(in string aRoot);
 };

@@ -29,7 +29,6 @@
 
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsISeekableStream.h"
 #include "nsAutoLock.h"
 
 
@@ -64,7 +63,7 @@ public:
 private:
     friend class nsDiskCacheStreamIO;
     
-    nsCOMPtr<nsDiskCacheStreamIO>   mStreamIO;  // backpointer to parent
+    nsDiskCacheStreamIO *           mStreamIO;  // backpointer to parent
     PRFileDesc *                    mFD;
     const char *                    mBuffer;
     PRUint32                        mStreamEnd;
@@ -73,7 +72,7 @@ private:
 };
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDiskCacheInputStream, nsIInputStream);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsDiskCacheInputStream, nsIInputStream)
 
 
 nsDiskCacheInputStream::nsDiskCacheInputStream( nsDiskCacheStreamIO * parent,
@@ -87,6 +86,7 @@ nsDiskCacheInputStream::nsDiskCacheInputStream( nsDiskCacheStreamIO * parent,
     , mPos(0)
     , mClosed(PR_FALSE)
 {
+    NS_ADDREF(mStreamIO);
     mStreamIO->IncrementInputStreamCount();
 }
 
@@ -95,6 +95,7 @@ nsDiskCacheInputStream::~nsDiskCacheInputStream()
 {
     Close();
     mStreamIO->DecrementInputStreamCount();
+    NS_RELEASE(mStreamIO);
 }
 
 
@@ -182,37 +183,37 @@ nsDiskCacheInputStream::IsNonBlocking(PRBool * nonBlocking)
 #pragma mark -
 #pragma mark nsDiskCacheOutputStream
 #endif
-class nsDiskCacheOutputStream : public nsIOutputStream, nsISeekableStream {
-
+class nsDiskCacheOutputStream : public nsIOutputStream {
 public:
-  nsDiskCacheOutputStream( nsDiskCacheStreamIO * parent);
-  virtual ~nsDiskCacheOutputStream();
+    nsDiskCacheOutputStream( nsDiskCacheStreamIO * parent);
+    virtual ~nsDiskCacheOutputStream();
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOUTPUTSTREAM
-  NS_DECL_NSISEEKABLESTREAM
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOUTPUTSTREAM
 
 private:
     friend class nsDiskCacheStreamIO;
     
-    nsCOMPtr<nsDiskCacheStreamIO>   mStreamIO;  // backpointer to parent
+    nsDiskCacheStreamIO *           mStreamIO;  // backpointer to parent
     PRBool                          mClosed;
 };
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsDiskCacheOutputStream, nsIOutputStream, nsISeekableStream);
-
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsDiskCacheOutputStream,
+                              nsIOutputStream)
 
 nsDiskCacheOutputStream::nsDiskCacheOutputStream( nsDiskCacheStreamIO * parent)
     : mStreamIO(parent)
     , mClosed(PR_FALSE)
 {
+    NS_ADDREF(mStreamIO);
 }
 
 
 nsDiskCacheOutputStream::~nsDiskCacheOutputStream()
 {
     Close();
+    NS_RELEASE(mStreamIO);
 }
 
 
@@ -265,30 +266,6 @@ nsDiskCacheOutputStream::WriteSegments( nsReadSegmentFun reader,
 
 
 NS_IMETHODIMP
-nsDiskCacheOutputStream::Seek(PRInt32 whence, PRInt32 offset)
-{
-    if (mClosed)  return NS_ERROR_NOT_AVAILABLE;
-    return mStreamIO->Seek(whence, offset);
-}
-
-
-NS_IMETHODIMP
-nsDiskCacheOutputStream::Tell(PRUint32 * result)
-{
-    if (mClosed)  return NS_ERROR_NOT_AVAILABLE;
-    return mStreamIO->Tell(result);
-}
-
-
-NS_IMETHODIMP
-nsDiskCacheOutputStream::SetEOF()
-{
-    if (mClosed)  return NS_ERROR_NOT_AVAILABLE;
-    return mStreamIO->SetEOF();
-}
-
-
-NS_IMETHODIMP
 nsDiskCacheOutputStream::IsNonBlocking(PRBool * nonBlocking)
 {
     *nonBlocking = PR_FALSE;
@@ -305,7 +282,7 @@ nsDiskCacheOutputStream::IsNonBlocking(PRBool * nonBlocking)
 #pragma mark nsDiskCacheStreamIO
 #endif
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDiskCacheStreamIO, nsIStreamIO);
+NS_IMPL_THREADSAFE_ISUPPORTS0(nsDiskCacheStreamIO)
 
 // we pick 16k as the max buffer size because that is the threshold above which
 //      we are unable to store the data in the cache block files
@@ -335,7 +312,7 @@ nsDiskCacheStreamIO::nsDiskCacheStreamIO(nsDiskCacheBinding *   binding)
 
 nsDiskCacheStreamIO::~nsDiskCacheStreamIO()
 {
-    (void) Close(NS_OK);
+    Close();
 
     // release "death grip" on cache service
     nsCacheService *service = nsCacheService::GlobalInstance();
@@ -343,15 +320,8 @@ nsDiskCacheStreamIO::~nsDiskCacheStreamIO()
 }
 
 
-NS_IMETHODIMP
-nsDiskCacheStreamIO::Open()
-{
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsDiskCacheStreamIO::Close(nsresult status)
+void
+nsDiskCacheStreamIO::Close()
 {
     // this should only be called from our destructor
     // no one is interested in us anymore, so we don't need to grab any locks
@@ -362,18 +332,18 @@ nsDiskCacheStreamIO::Close(nsresult status)
     NS_ASSERTION(!mFD, "file descriptor not closed");
 
     DeleteBuffer();
-    
-    return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsDiskCacheStreamIO::GetInputStream(nsIInputStream ** inputStream)
+// NOTE: called with service lock held
+nsresult
+nsDiskCacheStreamIO::GetInputStream(PRUint32 offset, nsIInputStream ** inputStream)
 {
     NS_ENSURE_ARG_POINTER(inputStream);
+    NS_ENSURE_TRUE(offset == 0, NS_ERROR_NOT_IMPLEMENTED);
+
     *inputStream = nsnull;
     
-    nsAutoLock lock(nsCacheService::ServiceLock()); // grab service lock
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
 
     if (mOutStream) {
@@ -413,13 +383,13 @@ nsDiskCacheStreamIO::GetInputStream(nsIInputStream ** inputStream)
 }
 
 
-NS_IMETHODIMP
-nsDiskCacheStreamIO::GetOutputStream(nsIOutputStream ** outputStream)
+// NOTE: called with service lock held
+nsresult
+nsDiskCacheStreamIO::GetOutputStream(PRUint32 offset, nsIOutputStream ** outputStream)
 {
     NS_ENSURE_ARG_POINTER(outputStream);
     *outputStream = nsnull;
 
-    nsAutoLock lock(nsCacheService::ServiceLock()); // grab service lock
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
         
     NS_ASSERTION(!mOutStream, "already have an output stream open");
@@ -432,6 +402,14 @@ nsDiskCacheStreamIO::GetOutputStream(nsIOutputStream ** outputStream)
     mStreamPos = 0;
     mStreamEnd = mBinding->mCacheEntry->DataSize();
 
+    nsresult rv;
+    if (offset) {
+        rv = Seek(PR_SEEK_SET, offset);
+        if (NS_FAILED(rv)) return rv;
+    }
+    rv = SetEOF();
+    if (NS_FAILED(rv)) return rv;
+
     // create a new output stream
     mOutStream = new nsDiskCacheOutputStream(this);
     if (!mOutStream)  return NS_ERROR_OUT_OF_MEMORY;
@@ -439,40 +417,6 @@ nsDiskCacheStreamIO::GetOutputStream(nsIOutputStream ** outputStream)
     NS_ADDREF(*outputStream = mOutStream);
     return NS_OK;
 }
-
-
-NS_IMETHODIMP
-nsDiskCacheStreamIO::GetName(nsACString & name)
-{
-    name = NS_LITERAL_CSTRING("nsDiskCacheStreamIO");
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsDiskCacheStreamIO::GetContentType(nsACString & contentType)
-{
-    contentType.Truncate();
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsDiskCacheStreamIO::GetContentCharset(nsACString & contentCharset)
-{
-    contentCharset.Truncate();
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsDiskCacheStreamIO::GetContentLength(PRInt32 *contentLength)
-{
-    NS_ENSURE_ARG_POINTER(contentLength);
-    *contentLength = -1;
-    return NS_OK;
-}
-
 
 void
 nsDiskCacheStreamIO::ClearBinding()
@@ -799,12 +743,12 @@ nsDiskCacheStreamIO::DeleteBuffer()
 }
 
 
-// called only from nsDiskCacheOutputStream::Seek
+// NOTE: called with service lock held
 nsresult
 nsDiskCacheStreamIO::Seek(PRInt32 whence, PRInt32 offset)
 {
     PRInt32  newPos;
-    nsAutoLock lock(nsCacheService::ServiceLock()); // grab service lock
+    //nsAutoLock lock(nsCacheService::ServiceLock()); // grab service lock
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
 
     if (PRUint32(offset) > mStreamEnd)  return NS_ERROR_FAILURE;
@@ -891,17 +835,11 @@ nsDiskCacheStreamIO::Tell(PRUint32 * result)
 }
 
 
-
-// SetEOF() will only be called by FileTransport.
-//      nsCacheEntryDescriptor::TransportWrapper::OpenOutputStream() will eventually update
-//          the cache entry, so we need only update the underlying data structure here.
-//
-// called only from nsDiskCacheOutputStream::SetEOF
+// NOTE: called with service lock held
 nsresult
 nsDiskCacheStreamIO::SetEOF()
 {
     nsresult    rv;
-    nsAutoLock lock(nsCacheService::ServiceLock()); // grab service lock
     NS_ASSERTION(mStreamPos <= mStreamEnd, "bad stream");
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
     

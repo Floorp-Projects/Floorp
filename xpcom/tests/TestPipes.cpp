@@ -40,8 +40,6 @@
 #include "nsIRunnable.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsIObservableInputStream.h"
-#include "nsIObservableOutputStream.h"
 #include "nsIServiceManager.h"
 #include "prprf.h"
 #include "prinrval.h"
@@ -58,6 +56,22 @@
 char kTestPattern[] = "My hovercraft is full of eels.\n";
 
 PRBool gTrace = PR_FALSE;
+
+static nsresult
+WriteAll(nsIOutputStream *os, const char *buf, PRUint32 bufLen, PRUint32 *lenWritten)
+{
+    const char *p = buf;
+    *lenWritten = 0;
+    while (bufLen) {
+        PRUint32 n;
+        nsresult rv = os->Write(p, bufLen, &n);
+        if (NS_FAILED(rv)) return rv;
+        p += n;
+        bufLen -= n;
+        *lenWritten += n;
+    }
+    return NS_OK;
+}
 
 class nsReceiver : public nsIRunnable {
 public:
@@ -126,8 +140,9 @@ TestPipe(nsIInputStream* in, nsIOutputStream* out)
     PRIntervalTime start = PR_IntervalNow();
     for (PRUint32 i = 0; i < ITERATIONS; i++) {
         PRUint32 writeCount;
-        char* buf = PR_smprintf("%d %s", i, kTestPattern);
-        rv = out->Write(buf, strlen(buf), &writeCount);
+        char *buf = PR_smprintf("%d %s", i, kTestPattern);
+        PRUint32 len = strlen(buf);
+        rv = WriteAll(out, buf, len, &writeCount);
         if (gTrace) {
             printf("wrote: ");
             for (PRUint32 j = 0; j < writeCount; j++) {
@@ -203,9 +218,9 @@ public:
     }
 
     PRUint32 WaitForReceipt() {
-        PRUint32 result = mReceived;
         nsAutoCMonitor mon(this);
-        if (mReceived == 0) {
+        PRUint32 result = mReceived;
+        while (result == 0) {
             mon.Wait();
             NS_ASSERTION(mReceived >= 0, "failed to receive");
             result = mReceived;
@@ -240,7 +255,7 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
         PRUint32 len = strlen(buf);
         len = len * rand() / RAND_MAX;
         len = PR_MAX(1, len);
-        rv = out->Write(buf, len, &writeCount);
+        rv = WriteAll(out, buf, len, &writeCount);
         if (NS_FAILED(rv)) return rv;
         NS_ASSERTION(writeCount == len, "didn't write enough");
         total += writeCount;
@@ -267,6 +282,8 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
 
 class nsPipeObserver : public nsIInputStreamObserver, 
                        public nsIOutputStreamObserver
@@ -380,48 +397,23 @@ TestPipeObserver()
     NS_RELEASE(out);
     return NS_OK;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsPump : public nsIInputStreamObserver, 
-               public nsIOutputStreamObserver,
+class nsPump : /*public nsIInputStreamObserver, 
+               public nsIOutputStreamObserver,*/
                public nsIRunnable
 {
 public:
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD OnFull(nsIOutputStream *outStr) {
-        printf("OnFull outStr=%p\n", outStr);
-        nsAutoCMonitor mon(this);
-        mon.Notify();
-        return NS_OK;
-    }
-
-    NS_IMETHOD OnWrite(nsIOutputStream *outStr, PRUint32 amount) {
-        printf("OnWrite outStr=%p amount=%d\n", outStr, amount);
-        return NS_OK;
-    }
-
-    NS_IMETHOD OnEmpty(nsIInputStream *inStr) {
-        printf("OnEmpty inStr=%p\n", inStr);
-        nsAutoCMonitor mon(this);
-        mon.Notify();
-        return NS_OK;
-    }
-
-    NS_IMETHOD OnClose(nsIInputStream *inStr) {
-        printf("OnClose inStr=%p\n", inStr);
-        nsAutoCMonitor mon(this);
-        mon.Notify();
-        return NS_OK;
-    }
 
     NS_IMETHOD Run() {
         nsresult rv;
         PRUint32 count;
         while (PR_TRUE) {
             nsAutoCMonitor mon(this);
-            rv = mOut->WriteFrom(mIn, -1, &count);
+            rv = mOut->WriteFrom(mIn, ~0U, &count);
             if (NS_FAILED(rv)) {
                 printf("Write failed\n");
                 break;
@@ -454,8 +446,8 @@ protected:
     PRUint32                            mCount;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsPump, nsIInputStreamObserver, 
-                              nsIOutputStreamObserver, nsIRunnable)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsPump,
+                              nsIRunnable)
 
 nsresult
 TestChainedPipes()
@@ -496,7 +488,8 @@ TestChainedPipes()
         PRUint32 len = strlen(buf);
         len = len * rand() / RAND_MAX;
         len = PR_MAX(1, len);
-        rv = out1->Write(buf, len, &writeCount);
+        rv = WriteAll(out1, buf, len, &writeCount);
+        //rv = out1->Write(buf, len, &writeCount);
         if (NS_FAILED(rv)) return rv;
         NS_ASSERTION(writeCount == len, "didn't write enough");
         total += writeCount;
@@ -645,8 +638,8 @@ main(int argc, char* argv[])
     TestSearch("baz", 2);
 #endif
 
-    rv = TestPipeObserver();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "TestPipeObserver failed");
+    //rv = TestPipeObserver();
+    //NS_ASSERTION(NS_SUCCEEDED(rv), "TestPipeObserver failed");
     rv = TestChainedPipes();
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestChainedPipes failed");
     RunTests(16, 1);

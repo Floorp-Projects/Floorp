@@ -37,9 +37,8 @@
 
 #include "nsISupports.idl"
 
-interface nsITransport;
-interface nsIEventSinkGetter;
-interface nsIChannel;
+interface nsISocketTransport;
+interface nsISocketEventHandler;
 interface nsIProxyInfo;
 
 [scriptable, uuid(05331390-6884-11d3-9382-00104ba0fd40)]
@@ -48,86 +47,70 @@ interface nsISocketTransportService : nsISupports
     /**
      * Creates a transport for a specified host and port.
      *
-     * @param proxyInfo Information about any transport-layer proxying. Used
-     * for communicating information about proxies like socks.
-     * This can either be the proxyInfo attribute on an
-     * nsISupportsTransparentProxy (or from the protocolProxyService),
-     * or null for no proxying.
-     *
-     * @see nsISupportsTransparentProxy
+     * @param aSocketTypes
+     *        array of socket type strings.  null if using default socket type.
+     * @param aTypeCount
+     *        specifies length of aSocketTypes.
+     * @param aHost
+     *        specifies the target hostname or IP address literal of the peer
+     *        for this socket.
+     * @param aPort
+     *        specifies the target port of the peer for this socket.
+     * @param aProxyInfo
+     *        specifies the transport-layer proxy type to use.  null if no
+     *        proxy.  used for communicating information about proxies like
+     *        SOCKS (which are transparent to upper protocols).
+     * 
+     * @see nsIProxiedProtocolHandler
      * @see nsIProtocolProxyService::GetProxyInfo
      */
-    nsITransport createTransport(in string host,
-                                 in long port,
-                                 in nsIProxyInfo proxyInfo,
-                                 in unsigned long bufferSegmentSize,
-                                 in unsigned long bufferMaxSize);
-    
-    nsITransport createTransportOfType(in string socketType,
-                                       in string host, 
-                                       in long port,
-                                       in nsIProxyInfo proxyInfo,
-                                       in unsigned long bufferSegmentSize,
-                                       in unsigned long bufferMaxSize);
-
-    nsITransport createTransportOfTypes(in unsigned long typeCount,
-				      [array, size_is(typeCount)] in string socketTypes,
-                                        in string host, 
-                                        in long port,
-                                        in nsIProxyInfo proxyInfo,
-                                        in unsigned long bufferSegmentSize,
-                                        in unsigned long bufferMaxSize);
+    nsISocketTransport createTransport([array, size_is(aTypeCount)]
+                                       in string aSocketTypes,
+                                       in unsigned long aTypeCount,
+                                       in AUTF8String aHost, 
+                                       in long aPort,
+                                       in nsIProxyInfo aProxyInfo);
 
     /**
-     * Returns true if the specified transport is good enough for 
-     * being used again. The situations in which this may return false
-     * include- an error including server resets, an explicit 
-     * Connection: close header (for HTTP) and timeouts! 
+     * init/shutdown routines.
      */
-    boolean reuseTransport(in nsITransport i_Transport);
-
-    void init	 ();
+    void init();
     void shutdown();
-    void wakeup  (in nsITransport i_Transport);
-
-	/**
-	 * Total number of nsSocketTransport objects currently alive
-	 */
-	readonly attribute unsigned long totalTransportCount;
-	/**
-	 * A number of nsSocketTransport objects with I/O operation currently in-progress
-	 */
-	readonly attribute unsigned long inUseTransportCount;
-	/**
-	 * A number of nsSocketTransport objects connected (this may include keep-alive idle connections)
-	 */
-	readonly attribute unsigned long connectedTransportCount;
 
     /**
-	 * Autodial helper is enabled via pref.
+     * Post an event to be executed on the socket thread.
+     *
+     * @param aHandler
+     *        handler that will be executed on the socket thread.
+     * @param aType
+     *        caller defined message parameter
+     * @param aUParam
+     *        caller defined message parameter
+     * @param aVParam
+     *        caller defined message parameter
+     *
+     * The socket transport service treats each parameter as opaque data (i.e.,
+     * it is not responsible for cleaning up aVParam if it happens to be
+     * dynamically allocated).  If this function succeeds, then the message
+     * will be delivered.  All messages successfully posted will be delivered
+     * before the socket transport service shuts down.
+     */
+    [noscript] void postEvent(in nsISocketEventHandler aHandler,
+                              in unsigned long aType,
+                              in unsigned long aUParam,
+                              in voidPtr aVParam);
+
+    /**
+     * controls whether or not the socket transport service should poke
+     * the autodialer on connection failure.
      */
     attribute boolean autodialEnabled;
-
 };
 
-%{C++
-#define NS_SOCKETTRANSPORTSERVICE_CID                \
-{ /* c07e81e0-ef12-11d2-92b6-00105a1b0d64 */         \
-    0xc07e81e0,                                      \
-    0xef12,                                          \
-    0x11d2,                                          \
-    {0x92, 0xb6, 0x00, 0x10, 0x5a, 0x1b, 0x0d, 0x64} \
-}
-
-#include "nsNetError.h"
-
-/**
- * Status nsresult codes: used with nsIProgressEventSink::OnStatus 
- */
-#define NS_NET_STATUS_RESOLVING_HOST  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 3)
-#define NS_NET_STATUS_CONNECTED_TO    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 4)
-#define NS_NET_STATUS_SENDING_TO      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 5)
-#define NS_NET_STATUS_RECEIVING_FROM  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 6)
-#define NS_NET_STATUS_CONNECTING_TO   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 7)
-
-%}
+[uuid(c20f98be-b3e4-4f9b-a492-97a688577355)]
+interface nsISocketEventHandler : nsISupports
+{
+    [noscript] void onSocketEvent(in unsigned long aType,
+                                  in unsigned long aUParam,
+                                  in voidPtr aVParam);
+};

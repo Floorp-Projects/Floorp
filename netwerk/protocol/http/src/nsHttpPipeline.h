@@ -28,10 +28,13 @@
 #include "nsAHttpConnection.h"
 #include "nsAHttpTransaction.h"
 #include "nsIInputStream.h"
+#include "nsIOutputStream.h"
+#include "nsVoidArray.h"
 #include "nsCOMPtr.h"
 
 class nsHttpPipeline : public nsAHttpConnection
                      , public nsAHttpTransaction
+                     , public nsAHttpSegmentReader
 {
 public:
     NS_DECL_ISUPPORTS
@@ -39,73 +42,82 @@ public:
     nsHttpPipeline();
     virtual ~nsHttpPipeline();
 
-    nsresult Init(nsAHttpTransaction *);
-    nsresult AppendTransaction(nsAHttpTransaction *);
+    nsresult AddTransaction(nsAHttpTransaction *);
 
     // nsAHttpConnection methods:
     nsresult OnHeadersAvailable(nsAHttpTransaction *, nsHttpRequestHead *, nsHttpResponseHead *, PRBool *reset);
-    nsresult OnTransactionComplete(nsAHttpTransaction *, nsresult status);
-    nsresult OnSuspend();
-    nsresult OnResume();
+    nsresult ResumeSend();
+    nsresult ResumeRecv();
+    void CloseTransaction(nsAHttpTransaction *, nsresult);
     void GetConnectionInfo(nsHttpConnectionInfo **);
-    void DropTransaction(nsAHttpTransaction *);
+    void GetSecurityInfo(nsISupports **);
     PRBool IsPersistent();
     nsresult PushBack(const char *, PRUint32);
     
     // nsAHttpTransaction methods:
     void SetConnection(nsAHttpConnection *);
-    void SetSecurityInfo(nsISupports *);
-    void GetNotificationCallbacks(nsIInterfaceRequestor **);
-    PRUint32 GetRequestSize();
-    nsresult OnDataWritable(nsIOutputStream *);
-    nsresult OnDataReadable(nsIInputStream *);
-    nsresult OnStopTransaction(nsresult status);
-    void OnStatus(nsresult status, const PRUnichar *statusText);
+    void GetSecurityCallbacks(nsIInterfaceRequestor **);
+    void OnTransportStatus(nsresult status, PRUint32 progress);
     PRBool   IsDone();
     nsresult Status();
+    PRUint32 Available();
+    nsresult ReadSegments(nsAHttpSegmentReader *, PRUint32, PRUint32 *);
+    nsresult WriteSegments(nsAHttpSegmentWriter *, PRUint32, PRUint32 *);
+    void     Close(nsresult reason);
+
+    // nsAHttpSegmentReader methods:
+    nsresult OnReadSegment(const char *, PRUint32, PRUint32 *);
+
+    // nsAHttpSegmentWriter methods:
+    nsresult OnWriteSegment(char *, PRUint32, PRUint32 *);
 
 private:
-    //
-    // simple nsIInputStream implementation that wraps the push-back data
-    // and returns NS_BASE_STREAM_WOULD_BLOCK when empty.  unfortunately, none
-    // of the string stream classes behave this way.
-    //
-    class nsInputStreamWrapper : public nsIInputStream
+
+    nsresult FillSendBuf();
+    
+    static NS_METHOD ReadFromPipe(nsIInputStream *, void *, const char *,
+                                  PRUint32, PRUint32, PRUint32 *);
+
+    // convenience functions
+    nsAHttpTransaction *Request(PRInt32 i)
     {
-    public:
-        NS_DECL_ISUPPORTS
-        NS_DECL_NSIINPUTSTREAM
+        if (mRequestQ.Count() == 0)
+            return nsnull;
 
-        nsInputStreamWrapper(const char *data, PRUint32 dataLen);
-        virtual ~nsInputStreamWrapper();
+        return (nsAHttpTransaction *) mRequestQ[i];
+    }
+    nsAHttpTransaction *Response(PRInt32 i)
+    {
+        if (mResponseQ.Count() == 0)
+            return nsnull;
 
-    private:
-        const char *mData;
-        PRUint32    mDataLen;
-        PRUint32    mDataPos;
-    };
+        return (nsAHttpTransaction *) mResponseQ[i];
+    }
 
-    //
-    // helpers
-    //
-    PRBool   IsDone_Locked();
-    PRInt8   LocateTransaction_Locked(nsAHttpTransaction *);
-    void     DropTransaction_Locked(PRInt8);
-    PRUint32 GetRequestSize_Locked();
+    nsAHttpConnection *mConnection;
+    nsVoidArray        mRequestQ;  // array of transactions
+    nsVoidArray        mResponseQ; // array of transactions
+    nsresult           mStatus;
 
-private:
-    enum {
-        eTransactionReading  = PR_BIT(1),
-        eTransactionComplete = PR_BIT(2)
-    };
-    nsAHttpConnection       *mConnection;                                       // hard ref
-    nsAHttpTransaction      *mTransactionQ    [NS_HTTP_MAX_PIPELINED_REQUESTS]; // hard refs
-    PRUint32                 mTransactionFlags[NS_HTTP_MAX_PIPELINED_REQUESTS];
-    PRInt8                   mNumTrans;      // between 2 and NS_HTTP_MAX_PIPELINED_REQUESTS
-    PRInt8                   mCurrentReader; // index of transaction currently reading
-    PRLock                  *mLock;
-    nsresult                 mStatus;
-    nsCOMPtr<nsIInputStream> mRequestData;
+    // these flags indicate whether or not the first request or response
+    // is partial.  a partial request means that Request(0) has been 
+    // partially written out to the socket.  a partial response means
+    // that Response(0) has been partially read in from the socket.
+    PRBool mRequestIsPartial;
+    PRBool mResponseIsPartial;
+
+    // used when calling ReadSegments/WriteSegments on a transaction.
+    nsAHttpSegmentReader *mReader;
+    nsAHttpSegmentWriter *mWriter;
+
+    // send buffer
+    nsCOMPtr<nsIInputStream>  mSendBufIn;
+    nsCOMPtr<nsIOutputStream> mSendBufOut;
+
+    // the push back buffer.  not exceeding NS_HTTP_SEGMENT_SIZE bytes.
+    char     *mPushBackBuf;
+    PRUint32  mPushBackLen;
+    PRUint32  mPushBackMax;
 };
 
 #endif // nsHttpPipeline_h__

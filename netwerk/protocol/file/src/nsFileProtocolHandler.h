@@ -35,29 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsFileProtocolHandler_h___
-#define nsFileProtocolHandler_h___
+#ifndef nsFileProtocolHandler_h__
+#define nsFileProtocolHandler_h__
 
 #include "nsIFileProtocolHandler.h"
 #include "nsWeakReference.h"
 
-class nsISupportsArray;
-class nsIRunnable;
-class nsFileChannel;
-class nsIThreadPool;
-
-#define NS_FILE_TRANSPORT_WORKER_COUNT  1//4
-
-// {25029490-F132-11d2-9588-00805F369F95}
-#define NS_FILEPROTOCOLHANDLER_CID                   \
-{ /* fbc81170-1f69-11d3-9344-00104ba0fd40 */         \
-    0xfbc81170,                                      \
-    0x1f69,                                          \
-    0x11d3,                                          \
-    {0x93, 0x44, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
-}
-
-class nsFileProtocolHandler : public nsIFileProtocolHandler, public nsSupportsWeakReference
+class nsFileProtocolHandler : public nsIFileProtocolHandler
+                            , public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS
@@ -65,15 +50,12 @@ public:
     NS_DECL_NSIFILEPROTOCOLHANDLER
 
     nsFileProtocolHandler();
-    virtual ~nsFileProtocolHandler();
-
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+    virtual ~nsFileProtocolHandler() {}
 
     nsresult Init();
 
 protected:
-    PRBool mGenerateHTMLContent;
+    PRBool mGenerateHTMLDirs;
 };
 
-#endif /* nsFileProtocolHandler_h___ */
+#endif // !nsFileProtocolHandler_h__

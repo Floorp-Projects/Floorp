@@ -40,41 +40,13 @@
 
 #include "nsIFileStreams.h"
 #include "nsIFile.h"
-#include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsISeekableStream.h"
 #include "nsILineInputStream.h"
-#include "nsIStreamIO.h"
 #include "nsCOMPtr.h"
 #include "nsReadLine.h"
 #include "prlog.h"
-
-////////////////////////////////////////////////////////////////////////////////
-
-class nsFileIO : public nsIFileIO
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMIO
-    NS_DECL_NSIFILEIO
-
-    nsFileIO();
-    virtual ~nsFileIO();
-
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
-protected:
-    nsCOMPtr<nsIFile>   mFile;
-    PRFileDesc*         mFD;
-    PRInt32             mIOFlags;
-    PRInt32             mPerm;
-    nsresult            mStatus;
-    nsCString           mContentType;
-#ifdef PR_LOGGING
-    nsCString           mSpec;
-#endif
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 

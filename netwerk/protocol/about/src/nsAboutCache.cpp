@@ -139,10 +139,6 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     outputStream->Write(mBuffer.get(), mBuffer.Length(), &bytesWritten);
         
     nsCOMPtr<nsIInputStream> inStr;
-    PRUint32 size;
-
-    rv = storageStream->GetLength(&size);
-    if (NS_FAILED(rv)) return rv;
 
     rv = storageStream->NewInputStream(0, getter_AddRefs(inStr));
     if (NS_FAILED(rv)) return rv;
@@ -150,8 +146,7 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     nsIChannel* channel;
     rv = NS_NewInputStreamChannel(&channel, aURI, inStr,
                                   NS_LITERAL_CSTRING("text/html"),
-                                  NS_LITERAL_CSTRING(""),
-                                  size);
+                                  NS_LITERAL_CSTRING(""));
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;

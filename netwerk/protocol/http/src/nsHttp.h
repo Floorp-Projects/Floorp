@@ -64,8 +64,9 @@ extern PRLogModuleInfo *gHttpLog;
 #define LOG_ENABLED() LOG4_ENABLED()
 
 // http default buffer geometry
-#define NS_HTTP_SEGMENT_SIZE 4096
-#define NS_HTTP_BUFFER_SIZE  4096*4 // 16k maximum
+#define NS_HTTP_SEGMENT_SIZE  4096
+#define NS_HTTP_SEGMENT_COUNT 16   // 64k maximum
+#define NS_HTTP_MAX_ODA_SIZE  (NS_HTTP_SEGMENT_SIZE * 4) // 16k
 
 // http version codes
 #define NS_HTTP_VERSION_UNKNOWN  0
@@ -76,12 +77,12 @@ extern PRLogModuleInfo *gHttpLog;
 typedef PRUint8 nsHttpVersion;
 
 // http connection capabilities
-#define NS_HTTP_ALLOW_KEEPALIVE  (1<<0)
-#define NS_HTTP_ALLOW_PIPELINING (1<<1)
+#define NS_HTTP_ALLOW_KEEPALIVE      (1<<0)
+#define NS_HTTP_ALLOW_PIPELINING     (1<<1)
 #define NS_HTTP_DONT_REPORT_PROGRESS (1<<2)
 
 // hard upper limit on the number of requests that can be pipelined
-#define NS_HTTP_MAX_PIPELINED_REQUESTS 10 
+#define NS_HTTP_MAX_PIPELINED_REQUESTS 8 
 
 //-----------------------------------------------------------------------------
 // http atoms...

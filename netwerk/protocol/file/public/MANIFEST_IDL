@@ -1,1 +1,2 @@
 nsIFileProtocolHandler.idl
+nsIFileChannel.idl

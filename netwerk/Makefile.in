@@ -29,11 +29,11 @@ include $(DEPTH)/config/autoconf.mk
 DIRS		= \
 		base \
 		cookie \
-		cache \
 		dns \
 		socket \
 		mime \
 		streamconv \
+		cache \
 		protocol \
 		build \
 		build2 \

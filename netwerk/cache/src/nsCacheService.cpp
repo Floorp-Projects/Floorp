@@ -40,6 +40,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
 #include "nsIPref.h"
+#include "nsILocalFile.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsVoidArray.h"
@@ -1240,14 +1241,27 @@ nsCacheService::GetFileForEntry(nsCacheEntry *         entry,
 
 
 nsresult
-nsCacheService::GetTransportForEntry(nsCacheEntry *     entry,
-                                     nsCacheAccessMode  mode,
-                                     nsITransport    ** result)
+nsCacheService::OpenInputStreamForEntry(nsCacheEntry *     entry,
+                                        nsCacheAccessMode  mode,
+                                        PRUint32           offset,
+                                        nsIInputStream  ** result)
 {
     nsCacheDevice * device = gService->EnsureEntryHasDevice(entry);
     if (!device)  return  NS_ERROR_UNEXPECTED;
 
-    return device->GetTransportForEntry(entry, mode, result);
+    return device->OpenInputStreamForEntry(entry, mode, offset, result);
+}
+
+nsresult
+nsCacheService::OpenOutputStreamForEntry(nsCacheEntry *     entry,
+                                         nsCacheAccessMode  mode,
+                                         PRUint32           offset,
+                                         nsIOutputStream ** result)
+{
+    nsCacheDevice * device = gService->EnsureEntryHasDevice(entry);
+    if (!device)  return  NS_ERROR_UNEXPECTED;
+
+    return device->OpenOutputStreamForEntry(entry, mode, offset, result);
 }
 
 
