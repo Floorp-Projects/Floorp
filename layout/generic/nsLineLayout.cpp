@@ -1160,8 +1160,8 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
   // Record ascent and update max-ascent and max-descent values
   pfd->mAscent = aMetrics.ascent;
   pfd->mDescent = aMetrics.descent;
-  pfd->mCarriedOutTopMargin = aMetrics.mCarriedOutTopMargin;
-  pfd->mCarriedOutBottomMargin = aMetrics.mCarriedOutBottomMargin;
+  mCarriedOutTopMargin = aMetrics.mCarriedOutTopMargin;
+  mCarriedOutBottomMargin = aMetrics.mCarriedOutBottomMargin;
 
   // If the band was updated during the reflow of that frame then we
   // need to adjust any prior frames that were reflowed.
@@ -1182,7 +1182,7 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
 
   // Count the number of frames on the line...
   mTotalPlacedFrames++;
-  if (0 != psd->mX) {
+  if (psd->mX != psd->mLeftEdge) {
     // As soon as a frame placed on the line advances an X coordinate
     // of any span we can no longer place a floater on the line.
     mCanPlaceFloater = PR_FALSE;
@@ -1825,6 +1825,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify)
         // used when the direction is right-to-left.
 
       case NS_STYLE_TEXT_ALIGN_RIGHT:
+      case NS_STYLE_TEXT_ALIGN_MOZ_RIGHT:
         dx = remainingWidth;
         break;
 
@@ -1845,6 +1846,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify)
         break;
 
       case NS_STYLE_TEXT_ALIGN_CENTER:
+      case NS_STYLE_TEXT_ALIGN_MOZ_CENTER:
         dx = remainingWidth / 2;
         break;
     }
