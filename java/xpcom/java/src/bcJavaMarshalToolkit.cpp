@@ -154,6 +154,7 @@ nsresult bcJavaMarshalToolkit::UnMarshal(bcIUnMarshaler *um) {
     printf("--nsresult bcJavaMarshalToolkit::UnMarshal\n");
     bcIAllocator * allocator = new javaAllocator(nsAllocator::GetGlobalAllocator());
     PRUint32 paramCount = info->GetParamCount();
+    retV = NULL;
     jobject value;
     for (unsigned int i = 0; i < paramCount; i++) {
         nsXPTParamInfo param = info->GetParam(i);
