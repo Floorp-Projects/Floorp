@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsecur.c,v 1.5 2001/02/07 00:34:55 nelsonb%netscape.com Exp $
+ * $Id: sslsecur.c,v 1.6 2001/02/09 00:32:04 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -174,11 +174,7 @@ ssl_Do1stHandshake(sslSocket *ss)
  * Handshake function that blocks.  Used to force a
  * retry on a connection on the next read/write.
  */
-#ifdef macintosh
 static SECStatus
-#else
-static int
-#endif
 AlwaysBlock(sslSocket *ss)
 {
     PORT_SetError(PR_WOULD_BLOCK_ERROR);	/* perhaps redundant. */
@@ -259,11 +255,11 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
 ** and then starts new client hello or hello request.
 ** Acquires and releases HandshakeLock.
 */
-int
+SECStatus
 SSL_ReHandshake(PRFileDesc *fd, PRBool flushCache)
 {
     sslSocket *ss;
-    int        rv;
+    SECStatus  rv;
     
     ss = ssl_FindSocket(fd);
     if (!ss) {
@@ -292,7 +288,7 @@ SSL_ReHandshake(PRFileDesc *fd, PRBool flushCache)
     return rv;
 }
 
-int
+SECStatus
 SSL_RedoHandshake(PRFileDesc *fd)
 {
     return SSL_ReHandshake(fd, PR_TRUE);
@@ -301,7 +297,7 @@ SSL_RedoHandshake(PRFileDesc *fd)
 /* Register an application callback to be called when SSL handshake completes.
 ** Acquires and releases HandshakeLock.
 */
-int
+SECStatus
 SSL_HandshakeCallback(PRFileDesc *fd, SSLHandshakeCallback cb,
 		      void *client_data)
 {
@@ -343,35 +339,37 @@ SSL_HandshakeCallback(PRFileDesc *fd, SSLHandshakeCallback cb,
 ** or a fatal error occurs.
 ** Application should use handshake completion callback to tell which. 
 */
-int
+SECStatus
 SSL_ForceHandshake(PRFileDesc *fd)
 {
     sslSocket *ss;
-    int        rv;
+    SECStatus  rv = SECFailure;
 
     ss = ssl_FindSocket(fd);
     if (!ss) {
 	SSL_DBG(("%d: SSL[%d]: bad socket in ForceHandshake",
 		 SSL_GETPID(), fd));
-	return SECFailure;
+	return rv;
     }
 
     /* Don't waste my time */
     if (!ss->useSecurity) 
-    	return 0;
+    	return SECSuccess;
 
     ssl_Get1stHandshakeLock(ss);
 
     if (ss->version >= SSL_LIBRARY_VERSION_3_0) {
+	int gatherResult;
+
     	ssl_GetRecvBufLock(ss);
-	rv = ssl3_GatherCompleteHandshake(ss, 0);
+	gatherResult = ssl3_GatherCompleteHandshake(ss, 0);
 	ssl_ReleaseRecvBufLock(ss);
-	if (rv == 0) {
+	if (gatherResult > 0) {
+	    rv = SECSuccess;
+	} else if (gatherResult == 0) {
 	    PORT_SetError(PR_END_OF_FILE_ERROR);
-	    rv = SECFailure;
-	} else if (rv == SECWouldBlock) {
+	} else if (gatherResult == SECWouldBlock) {
 	    PORT_SetError(PR_WOULD_BLOCK_ERROR);
-	    rv = SECFailure;
 	}
     } else if (!ss->connected) {
 	rv = ssl_Do1stHandshake(ss);
@@ -382,8 +380,6 @@ SSL_ForceHandshake(PRFileDesc *fd)
 
     ssl_Release1stHandshakeLock(ss);
 
-    if (rv > 0) 
-    	rv = SECSuccess;
     return rv;
 }
 
@@ -1097,11 +1093,11 @@ ssl_SecureWrite(sslSocket *ss, const unsigned char *buf, int len)
     return ssl_SecureSend(ss, buf, len, 0);
 }
 
-int
+SECStatus
 SSL_BadCertHook(PRFileDesc *fd, SSLBadCertHandler f, void *arg)
 {
     sslSocket *ss;
-    int rv;
+    SECStatus rv;
     
     ss = ssl_FindSocket(fd);
     if (!ss) {
@@ -1111,23 +1107,23 @@ SSL_BadCertHook(PRFileDesc *fd, SSLBadCertHandler f, void *arg)
     }
 
     if ((rv = ssl_CreateSecurityInfo(ss)) != 0) {
-	return(rv);
+	return rv;
     }
     ss->handleBadCert = f;
     ss->badCertArg = arg;
 
-    return(0);
+    return SECSuccess;
 }
 
 /*
  * Allow the application to pass the url or hostname into the SSL library
  * so that we can do some checking on it.
  */
-int
+SECStatus
 SSL_SetURL(PRFileDesc *fd, const char *url)
 {
     sslSocket *   ss = ssl_FindSocket(fd);
-    int           rv = SECSuccess;
+    SECStatus     rv = SECSuccess;
 
     if (!ss) {
 	SSL_DBG(("%d: SSL[%d]: bad socket in SSLSetURL",
@@ -1164,7 +1160,6 @@ SSL_DataPending(PRFileDesc *fd)
 
     ss = ssl_FindSocket(fd);
 
-
     if (ss && ss->useSecurity) {
 
 	ssl_Get1stHandshakeLock(ss);
@@ -1185,11 +1180,11 @@ SSL_DataPending(PRFileDesc *fd)
     return rv;
 }
 
-int
+SECStatus
 SSL_InvalidateSession(PRFileDesc *fd)
 {
     sslSocket *   ss = ssl_FindSocket(fd);
-    int           rv = SECFailure;
+    SECStatus     rv = SECFailure;
 
     ssl_Get1stHandshakeLock(ss);
     ssl_GetSSL3HandshakeLock(ss);

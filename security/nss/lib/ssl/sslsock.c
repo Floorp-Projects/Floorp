@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.11 2001/02/07 02:06:05 nelsonb%netscape.com Exp $
+ * $Id: sslsock.c,v 1.12 2001/02/09 00:32:08 nelsonb%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -1264,7 +1264,7 @@ ssl_GetSockName(PRFileDesc *fd, PRNetAddr *name)
     return (PRStatus)(*ss->ops->getsockname)(ss, name);
 }
 
-int PR_CALLBACK
+SECStatus PR_CALLBACK
 SSL_SetSockPeerID(PRFileDesc *fd, char *peerID)
 {
     sslSocket *ss;
@@ -1277,7 +1277,7 @@ SSL_SetSockPeerID(PRFileDesc *fd, char *peerID)
     }
 
     ss->peerID = PORT_Strdup(peerID);
-    return 0;
+    return SECSuccess;
 }
 
 static PRInt16 PR_CALLBACK
