@@ -56,6 +56,7 @@ public:
   NS_IMETHOD Reset(void);
   NS_IMETHOD GetDeviceContext(nsIDeviceContext *&aContext);
   NS_IMETHOD SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
+  NS_IMETHOD GetDrawingSurface(nsDrawingSurface *aSurface);
   NS_IMETHOD GetHints(PRUint32& aResult){return NS_OK;};
   NS_IMETHOD PushState(void);
   NS_IMETHOD PopState(PRBool &aClipEmpty);

@@ -109,6 +109,12 @@ public:
   NS_IMETHOD SelectOffScreenDrawingSurface(nsDrawingSurface aSurface) = 0;
 
   /**
+   * Get the currently selected drawing surface
+   * @param aSurface out parameter for the current drawing surface
+   */
+  NS_IMETHOD GetDrawingSurface(nsDrawingSurface *aSurface) = 0;
+
+  /**
    * Returns in aResult any rendering hints that the context has.
    * See below for the hints bits. Always returns NS_OK.
    */

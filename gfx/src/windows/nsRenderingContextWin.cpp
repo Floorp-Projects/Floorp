@@ -729,6 +729,13 @@ nsRenderingContextWin :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface
 }
 
 NS_IMETHODIMP
+nsRenderingContextWin :: GetDrawingSurface(nsDrawingSurface *aSurface)
+{
+  *aSurface = mSurface;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsRenderingContextWin :: GetHints(PRUint32& aResult)
 {
   PRUint32 result = 0;

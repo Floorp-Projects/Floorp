@@ -192,6 +192,17 @@ PRBool nsRegionMotif :: ForEachRect(nsRectInRegionFunc *func, void *closure)
   return PR_FALSE;
 }
 
+
+NS_IMETHODIMP nsRegionMotif :: GetRects(nsRegionRectSet **aRects)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRegionMotif :: FreeRects(nsRegionRectSet *aRects)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsRegionMotif :: GetNativeRegion(void *&aRegion) const
 {
   aRegion = (void *)mRegion;

@@ -187,6 +187,12 @@ NS_IMETHODIMP nsRenderingContextGTK::SelectOffScreenDrawingSurface(nsDrawingSurf
   return NS_OK;
 }
 
+NS_IMETHODIMP nsRenderingContextGTK::GetDrawingSurface(nsDrawingSurface *aSurface)
+{
+  *aSurface = mRenderingSurface;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsRenderingContextGTK::Reset()
 {
   return NS_OK;

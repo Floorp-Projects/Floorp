@@ -220,6 +220,17 @@ nsRenderingContextPS :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP
+nsRenderingContextPS :: GetScreenDrawingSurface(nsDrawingSurface *aSurface)
+{
+  *aSurface = nsnull;
+  return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsIRenderingContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP
 nsRenderingContextPS :: GetHints(PRUint32& aResult)
 {
   return NS_OK;

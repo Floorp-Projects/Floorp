@@ -226,6 +226,16 @@ PRBool nsRegionGTK::ForEachRect(nsRectInRegionFunc *func, void *closure)
   return PR_FALSE;
 }
 
+NS_IMETHODIMP nsRegionGTK::GetRects(nsRegionRectSet **aRects)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRegionGTK::FreeRects(nsRegionRectSet *aRects)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsRegionGTK::GetNativeRegion(void *&aRegion) const
 {
   aRegion = (void *)mRegion;

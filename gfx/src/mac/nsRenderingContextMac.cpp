@@ -635,6 +635,14 @@ NS_IMETHODIMP nsRenderingContextMac::SelectOffScreenDrawingSurface(nsDrawingSurf
 
 //------------------------------------------------------------------------
 
+NS_IMETHODIMP nsRenderingContextMac::GetDrawingSurface(nsDrawingSurface *aSurface)
+{  
+  *aSurface = mCurrentSurface;
+  return NS_OK;
+}
+
+//------------------------------------------------------------------------
+
 NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
                                                          PRInt32 aSrcX, PRInt32 aSrcY,
                                                          const nsRect &aDestBounds,
