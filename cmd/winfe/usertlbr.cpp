@@ -1384,16 +1384,15 @@ static void toolbarNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event 
 		
 		uint32 index = HT_GetViewIndex(theView);
 		
-		theToolbarHolder->AddNewWindow(ID_PERSONAL_TOOLBAR+index, pWindow, index, 43, 27, 1, 
-				HT_GetNodeName(HT_TopNode(theNewToolbar->GetHTView())),theApp.m_pToolbarStyle, FALSE);
-		theToolbarHolder->GetCachedParentWindow()->RecalcLayout();
+		theToolbarHolder->AddNewWindowAtIndex(ID_PERSONAL_TOOLBAR+index, pWindow, index, 43, 27, 1, 
+				HT_GetNodeName(HT_TopNode(theNewToolbar->GetHTView())),theApp.m_pToolbarStyle);
 	}
 	else if (whatHappened == HT_EVENT_VIEW_DELETED)
 	{
 		CRDFToolbar* pToolbar = (CRDFToolbar*)HT_GetViewFEData(theView);
 		pToolbar->SetHTView(NULL);
-		delete pToolbar;
 		HT_SetViewFEData(theView, NULL);
+		theToolbarHolder->RemoveToolbarAtIndex(HT_GetViewIndex(theView));
 	}
 	else if (whatHappened == HT_EVENT_NODE_VPROP_CHANGED && HT_TopNode(theView) == n)
 	{

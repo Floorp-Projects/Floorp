@@ -246,6 +246,11 @@ public:
 		//Creation
 	int Create(CFrameWnd* pParent, BOOL bHasAnimation);
 
+	void RemoveToolbarAtIndex(int index);
+
+	void AddNewWindowAtIndex(UINT nToolbarID, CToolbarWindow* pWindow, int nPosition, int nNoviceHeight, int nAdvancedHeight,
+							 UINT nTabBitmapIndex, CString tabTip, BOOL bIsNoviceMode);
+
 	inline void AddNewWindow(UINT nToolbarID, CToolbarWindow* pWindow,  int nPosition, int nNoviceHeight, int nAdvancedHeight,
 					  UINT nTabBitmapIndex, CString tabTip, BOOL bIsNoviceMode, BOOL bIsOpen, BOOL bIsAnimation)
 			{ AddNewWindowGuts(nToolbarID, pWindow, nPosition, tabTip, TRUE, bIsOpen); }

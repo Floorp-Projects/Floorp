@@ -932,6 +932,102 @@ CDragToolbar* CCustToolbar::CreateDragBar()
 	return new CDragToolbar();
 }
 
+void CCustToolbar::RemoveToolbarAtIndex(int nPosition)
+{
+	if (nPosition < 0 || nPosition >= m_nNumToolbars)
+		return;
+
+	// A toolbar is in this position.  Either hidden or not, it needs to be nuked.
+	CDragToolbar* pToolbar = NULL;
+	if (m_pToolbarArray[nPosition] != NULL)
+	{
+		m_nNumShowing--;
+		m_nActiveToolbars--;
+		if (m_pToolbarArray[nPosition]->GetOpen())
+			m_nNumOpen--;
+
+		pToolbar = m_pToolbarArray[nPosition];
+	}
+	else pToolbar = m_pHiddenToolbarArray[nPosition];
+
+	if (pToolbar)
+	{
+		pToolbar->DestroyWindow();
+		delete pToolbar;
+	}
+	
+	// We need to adjust the toolbar IDs of the toolbars as well as the array positions.
+	for (int i = nPosition+1; i < m_nNumToolbars; i++)
+	{
+		// Move down one.
+		m_pToolbarArray[i-1] = m_pToolbarArray[i];
+		m_pHiddenToolbarArray[i-1] = m_pHiddenToolbarArray[i];
+		if (m_pToolbarArray[i-1] != NULL)
+			m_pToolbarArray[i-1]->SetToolID(ID_PERSONAL_TOOLBAR+i-1);
+		if (m_pHiddenToolbarArray[i-1] != NULL)
+			m_pHiddenToolbarArray[i-1]->SetToolID(ID_PERSONAL_TOOLBAR+i-1);
+	}
+}
+
+void CCustToolbar::AddNewWindowAtIndex(UINT nToolbarID, CToolbarWindow* pWindow, int nPosition, int nNoviceHeight, int nAdvancedHeight,
+							 UINT nTabBitmapIndex, CString tabTip, BOOL bIsNoviceMode)
+{
+	if(nPosition < 0 || nPosition >= m_nNumToolbars) 
+		nPosition = FindFirstAvailablePosition();
+	else if (m_pToolbarArray[nPosition] != NULL)
+	{
+		// A toolbar is in this position.
+		// We need to adjust the toolbar IDs of the toolbars as well as the array positions.
+		for (int i = m_nNumToolbars-1; i >= nPosition; i++)
+		{
+			// Move down one.
+			m_pToolbarArray[i+1] = m_pToolbarArray[i];
+			m_pHiddenToolbarArray[i+1] = m_pHiddenToolbarArray[i];
+			if (m_pToolbarArray[i+1] != NULL)
+				m_pToolbarArray[i+1]->SetToolID(ID_PERSONAL_TOOLBAR+i+1);
+			if (m_pHiddenToolbarArray[i+1] != NULL)
+				m_pHiddenToolbarArray[i+1]->SetToolID(ID_PERSONAL_TOOLBAR+i+1);
+		}
+
+		m_pToolbarArray[nPosition] = NULL;
+		m_pHiddenToolbarArray[nPosition] = NULL;
+	}
+
+	CDragToolbar *pDragToolbar = CreateDragBar();
+	if(pDragToolbar->Create(this, pWindow))
+	{
+		m_nNumShowing++;
+		m_pToolbarArray[nPosition] = pDragToolbar;
+		pWindow->GetToolbar()->ShowWindow(SW_SHOW);
+		BOOL bIsOpen = pDragToolbar->GetOpen();
+		pDragToolbar->SetTabTip(tabTip);
+		pDragToolbar->SetToolbarID(nToolbarID);
+
+		if (bIsOpen)
+		{
+			pDragToolbar->ShowWindow(SW_SHOW);
+			m_nNumOpen++;
+			if(nPosition < m_nAnimationPos || m_nAnimationPos == -1)
+			{
+				if(m_nAnimationPos != -1)
+				{
+					m_pToolbarArray[m_nAnimationPos]->SetAnimation(NULL);
+				}
+				m_pToolbarArray[nPosition]->SetAnimation(m_pAnimation);
+				if(m_pAnimation)
+					m_pAnimation->ShowWindow(SW_SHOW);
+				m_nAnimationPos = nPosition;
+				
+			}
+		}
+
+		m_nActiveToolbars++;
+
+
+		m_pParent->RecalcLayout();
+	}
+}
+
 void CCustToolbar::AddNewWindowGuts(UINT nToolbarID, CToolbarWindow* pWindow, int nPosition,
 								CString tabTip, BOOL bForceOpen, BOOL bIsOpen)
 {
