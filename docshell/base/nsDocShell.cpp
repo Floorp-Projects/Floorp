@@ -165,63 +165,62 @@ NS_IMETHODIMP
 nsDocShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
 {
 
-  // The tricky part is bypassing the normal load process and just putting a document into
-  // the webshell.  This is particularly nasty, since webshells don't normally even know
-  // about their documents
+   // The tricky part is bypassing the normal load process and just putting a document into
+   // the webshell.  This is particularly nasty, since webshells don't normally even know
+   // about their documents
 
-  // (1) Create a document viewer 
-  nsCOMPtr<nsIContentViewer> documentViewer;
-  nsCOMPtr<nsIDocumentLoaderFactory> docFactory;
-  static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
-  NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(kLayoutDocumentLoaderFactoryCID, nsnull, 
+   // (1) Create a document viewer 
+   nsCOMPtr<nsIContentViewer> documentViewer;
+   nsCOMPtr<nsIDocumentLoaderFactory> docFactory;
+   static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
+   NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(kLayoutDocumentLoaderFactoryCID, nsnull, 
                                                        nsIDocumentLoaderFactory::GetIID(),
                                                        (void**)getter_AddRefs(docFactory)),
                     NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDoc);
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-  NS_ENSURE_SUCCESS(docFactory->CreateInstanceForDocument(this,
+   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDoc);
+   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(docFactory->CreateInstanceForDocument(this,
                                                           doc,
                                                           "view",
                                                           getter_AddRefs(documentViewer)),
                     NS_ERROR_FAILURE); 
 
-  // (2) Feed the docshell to the content viewer
-  NS_ENSURE_SUCCESS(documentViewer->SetContainer(this), NS_ERROR_FAILURE);
+   // (2) Feed the docshell to the content viewer
+   NS_ENSURE_SUCCESS(documentViewer->SetContainer(this), NS_ERROR_FAILURE);
 
-  // (3) Tell the content viewer container to embed the content viewer.
-  //     (This step causes everything to be set up for an initial flow.)
-  NS_ENSURE_SUCCESS(Embed(documentViewer, "view", nsnull), NS_ERROR_FAILURE);
+   // (3) Tell the content viewer container to embed the content viewer.
+   //     (This step causes everything to be set up for an initial flow.)
+   NS_ENSURE_SUCCESS(Embed(documentViewer, "view", nsnull), NS_ERROR_FAILURE);
 
-  // XXX: It would be great to get rid of this dummy channel!
-  const nsAutoString uriString = "about:blank";
-  nsCOMPtr<nsIURI> uri;
-  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), uriString), NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(uri, NS_ERROR_OUT_OF_MEMORY);
+   // XXX: It would be great to get rid of this dummy channel!
+   const nsAutoString uriString = "about:blank";
+   nsCOMPtr<nsIURI> uri;
+   NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), uriString), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(uri, NS_ERROR_OUT_OF_MEMORY);
 
-  nsCOMPtr<nsIChannel> dummyChannel;
-  NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(dummyChannel), uri, nsnull), NS_ERROR_FAILURE);
+   nsCOMPtr<nsIChannel> dummyChannel;
+   NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(dummyChannel), uri, nsnull), NS_ERROR_FAILURE);
 
-  // (4) fire start document load notification
-  nsIStreamListener* outStreamListener=nsnull;  // a valid pointer is required for the returned stream listener
-  NS_ENSURE_SUCCESS(doc->StartDocumentLoad("view", dummyChannel, nsnull, this, &outStreamListener), 
-                    NS_ERROR_FAILURE);
-  NS_IF_RELEASE(outStreamListener);
-  NS_ENSURE_SUCCESS(FireStartDocumentLoad(mDocLoader, uri, "load"), NS_ERROR_FAILURE);
+   // (4) fire start document load notification
+   nsCOMPtr<nsIStreamListener> outStreamListener;
+   NS_ENSURE_SUCCESS(doc->StartDocumentLoad("view", dummyChannel, nsnull, this, 
+      getter_AddRefs(outStreamListener)), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(FireStartDocumentLoad(mDocLoader, uri, "load"), NS_ERROR_FAILURE);
 
-  // (5) hook up the document and its content
-  nsCOMPtr<nsIContent> rootContent = do_QueryInterface(aRootNode);
-  NS_ENSURE_TRUE(doc, NS_ERROR_OUT_OF_MEMORY);
-  NS_ENSURE_SUCCESS(rootContent->SetDocument(doc, PR_FALSE), NS_ERROR_FAILURE);
-  doc->SetRootContent(rootContent);
+   // (5) hook up the document and its content
+   nsCOMPtr<nsIContent> rootContent = do_QueryInterface(aRootNode);
+   NS_ENSURE_TRUE(doc, NS_ERROR_OUT_OF_MEMORY);
+   NS_ENSURE_SUCCESS(rootContent->SetDocument(doc, PR_FALSE), NS_ERROR_FAILURE);
+   doc->SetRootContent(rootContent);
 
-  // (6) reflow the document
-  //XXX: SetScrolling doesn't make any sense
-  //SetScrolling(-1, PR_FALSE);
-  PRInt32 i;
-  PRInt32 ns = doc->GetNumberOfShells();
-  for (i = 0; i < ns; i++) 
-  {
+   // (6) reflow the document
+   //XXX: SetScrolling doesn't make any sense
+   //SetScrolling(-1, PR_FALSE);
+   PRInt32 i;
+   PRInt32 ns = doc->GetNumberOfShells();
+   for (i = 0; i < ns; i++) 
+   {
     nsCOMPtr<nsIPresShell> shell(dont_AddRef(doc->GetShellAt(i)));
     if (shell) 
     {
@@ -257,18 +256,18 @@ nsDocShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
                           NS_ERROR_FAILURE);
       }
     }
-  }
+   }
 
-  // (7) fire end document load notification
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIDocumentLoaderObserver> dlObserver; 
-  // XXX: this was just "this", and webshell container relied on getting a webshell
-  // through this interface.  No one else uses it anywhere afaict  
-  //if (!dlObserver) { return NS_ERROR_NO_INTERFACE; }
-  NS_ENSURE_SUCCESS(FireEndDocumentLoad(mDocLoader, dummyChannel, rv, dlObserver), NS_ERROR_FAILURE);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);  // test the resulting out-param separately
+   // (7) fire end document load notification
+   nsresult rv = NS_OK;
+   nsCOMPtr<nsIDocumentLoaderObserver> dlObserver; 
+   // XXX: this was just "this", and webshell container relied on getting a webshell
+   // through this interface.  No one else uses it anywhere afaict  
+   //if (!dlObserver) { return NS_ERROR_NO_INTERFACE; }
+   NS_ENSURE_SUCCESS(FireEndDocumentLoad(mDocLoader, dummyChannel, rv, dlObserver), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);  // test the resulting out-param separately
 
-  return NS_OK;
+   return NS_OK;
 }
 
 
@@ -577,7 +576,7 @@ NS_IMETHODIMP nsDocShell::CutSelection()
 
 
 
-   //XXX Implement
+   //XXXIMPL
    //Should check to find the current focused object.  Then cut the contents.
    return NS_ERROR_FAILURE;
 }
