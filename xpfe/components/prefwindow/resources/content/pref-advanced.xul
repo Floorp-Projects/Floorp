@@ -33,7 +33,7 @@
   <script language="JavaScript">
   <![CDATA[
     var panel = "chrome://communicator/content/pref/pref-advanced.xul";
-    _elementIDs = ["advancedJavaAllow", "javascriptEnabled", "advancedMailFTP"];
+    var _elementIDs = ["advancedJavaAllow", "javascriptEnabled", "advancedMailFTP"];
     
   ]]>
   </script>

@@ -33,9 +33,9 @@
 
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["nglayoutDebugPaintFlashing", "nglayoutDebugPaintDumping",
-                   "nglayoutDebugInvalidateDumping", "nglayoutDebugEventDumping", 
-                   "nglayoutDebugMotionEventDumping", "nglayoutDebugCrossingEventDumping", ];
+    var _elementIDs = ["nglayoutDebugPaintFlashing", "nglayoutDebugPaintDumping",
+                       "nglayoutDebugInvalidateDumping", "nglayoutDebugEventDumping", 
+                       "nglayoutDebugMotionEventDumping", "nglayoutDebugCrossingEventDumping", ];
   ]]>
   </script>
         
