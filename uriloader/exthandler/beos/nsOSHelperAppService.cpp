@@ -312,8 +312,9 @@ nsresult nsOSHelperAppService::GetMimeInfoFromMIMEType(const char *aMIMEType,
 }
 
 already_AddRefed<nsIMIMEInfo>
-nsOSHelperAppService::GetMIMEInfoFromOS(const char *aMIMEType, const char *aFileExt)
+nsOSHelperAppService::GetMIMEInfoFromOS(const char *aMIMEType, const char *aFileExt, PRBool* aFound)
 {
+  *aFound = PR_TRUE;
   nsIMIMEInfo* mi = nsnull;
   GetMimeInfoFromMIMEType(aMIMEType, &mi);
   if (mi)
@@ -322,6 +323,18 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const char *aMIMEType, const char *aFile
   GetMimeInfoFromExtension(aFileExt, &mi);
   if (mi && aMIMEType && *aMIMEType)
     mi->SetMIMEType(aMIMEType);
+  if (mi)
+    return mi;
+
+  *aFound = PR_FALSE;
+  CallCreateInstance(NS_MIMEINFO_CONTRACTID, &mi);
+  if (!mi)
+    return nsnull;
+  if (aMIMEType && *aMIMEType)
+    mi->SetMIMEType(aMIMEType);
+  if (aFileExt && *aFileExt)
+    mi->AppendExtension(aFileExt);
+
   return mi;
 }
 

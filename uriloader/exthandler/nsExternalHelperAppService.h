@@ -117,17 +117,19 @@ public:
    * Given a content type, look up the user override information to see if
    * we have a mime info object representing this content type. The user
    * over ride information is contained in a in memory data source.
+   * @param aMIMEInfo The mime info to fill with the information
    */
   nsresult GetMIMEInfoForMimeTypeFromDS(const char * aContentType,
-                                        nsIMIMEInfo ** aMIMEInfo);
+                                        nsIMIMEInfo * aMIMEInfo);
   
   /**
    * Given an extension, look up the user override information to see if we
    * have a mime info object representing this extension. The user over ride
    * information is contained in a in memory data source.
+   * @param aMIMEInfo The mime info to fill with the information
    */
   nsresult GetMIMEInfoForExtensionFromDS(const char * aFileExtension,
-                                         nsIMIMEInfo ** aMIMEInfo);
+                                         nsIMIMEInfo * aMIMEInfo);
 
   /**
    * Given a mimetype and an extension, looks up a mime info from the OS.
@@ -135,9 +137,17 @@ public:
    * as nsIMIMEService::GetFromTypeAndExtension.
    * This is supposed to be overridden by the platform-specific
    * nsOSHelperAppService!
+   * @param [out] aFound
+   *        Should be set to PR_TRUE if the os has a mapping, to
+   *        PR_FALSE otherwise. Must not be null.
+   * @return A MIMEInfo. This function must return a MIMEInfo object if it
+   *         can allocate one.  The only justifiable reason for not
+   *         returning one is an out-of-memory error.
+   *         If null, the value of aFound is unspecified.
    */
   virtual already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char * aMIMEType,
-                                                          const char * aFileExt);
+                                                          const char * aFileExt,
+                                                          PRBool     * aFound);
 
   /**
    * Given a string identifying an application, create an nsIFile representing
@@ -208,19 +218,21 @@ protected:
 
   /**
    * Searches the "extra" array of MIMEInfo objects for an object
-   * with a specific type.
+   * with a specific type. If found, it will modify the passed-in
+   * MIMEInfo. Otherwise, it will return an error and the MIMEInfo
+   * will be untouched.
    * @param aContentType The type to search for.
-   * @param aMIMEInfo    [out] The mime info, if found
+   * @param aMIMEInfo    [inout] The mime info, if found
    */
-  virtual nsresult GetMIMEInfoForMimeTypeFromExtras(const char * aContentType,
-                                                    nsIMIMEInfo ** aMIMEInfo);
+  nsresult GetMIMEInfoForMimeTypeFromExtras(const char * aContentType,
+                                            nsIMIMEInfo * aMIMEInfo);
   /**
    * Searches the "extra" array of MIMEInfo objects for an object
    * with a specific extension.
    * @see GetMIMEInfoForMimeTypeFromExtras
    */
-  virtual nsresult GetMIMEInfoForExtensionFromExtras(const char * aExtension,
-                                                     nsIMIMEInfo ** aMIMEInfo);
+  nsresult GetMIMEInfoForExtensionFromExtras(const char * aExtension,
+                                             nsIMIMEInfo * aMIMEInfo);
 
 protected:
 #ifdef PR_LOGGING

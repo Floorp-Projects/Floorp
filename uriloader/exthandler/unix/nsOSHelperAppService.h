@@ -44,7 +44,9 @@ public:
   NS_IMETHOD LaunchAppWithTempFile(nsIMIMEInfo *aMIMEInfo, nsIFile * aTempFile);
 
   // method overrides for mime.types and mime.info look up steps
-  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char *aMimeType, const char *aFileExt);
+  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char *aMimeType,
+                                                  const char *aFileExt,
+                                                  PRBool     *aFound);
 
   // override nsIExternalProtocolService methods
   NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);

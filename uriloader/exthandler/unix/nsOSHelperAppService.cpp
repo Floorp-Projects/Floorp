@@ -1615,19 +1615,38 @@ nsOSHelperAppService::GetFromType(const char *aMIMEType) {
 
 already_AddRefed<nsIMIMEInfo>
 nsOSHelperAppService::GetMIMEInfoFromOS(const char *aType,
-                                        const char *aFileExt) {
+                                        const char *aFileExt,
+                                        PRBool     *aFound) {
+  *aFound = PR_TRUE;
   nsIMIMEInfo* retval = GetFromType(aType).get();
   PRBool hasDefault = PR_FALSE;
   if (retval)
     retval->GetHasDefaultHandler(&hasDefault);
   if (!retval || !hasDefault) {
     nsCOMPtr<nsIMIMEInfo> miByExt = GetFromExtension(aFileExt);
-    if (!miByExt)
+    // If we had no extension match, but a type match, use that
+    if (!miByExt && retval)
       return retval;
-    if (!retval) {
+    // If we had an extension match but no type match, set the mimetype and use
+    // it
+    if (!retval && miByExt) {
       if (aType)
         miByExt->SetMIMEType(aType);
       miByExt.swap(retval);
+
+      return retval;
+    }
+    // If we got nothing, make a new mimeinfo
+    if (!retval) {
+      *aFound = PR_FALSE;
+      CallCreateInstance(NS_MIMEINFO_CONTRACTID, &retval);
+      if (retval) {
+        if (aType && *aType)
+          retval->SetMIMEType(aType);
+        if (aFileExt && *aFileExt)
+          retval->AppendExtension(aFileExt);
+      }
+      
       return retval;
     }
 
