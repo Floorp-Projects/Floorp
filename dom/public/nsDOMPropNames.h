@@ -51,6 +51,16 @@
     "characterdata.length", \
     "characterdata.replacedata", \
     "characterdata.substringdata", \
+    "crmfobject.request", \
+    "crypto.alert", \
+    "crypto.disablerightclick", \
+    "crypto.generatecrmfrequest", \
+    "crypto.importusercertificates", \
+    "crypto.logout", \
+    "crypto.popchallengeresponse", \
+    "crypto.random", \
+    "crypto.signtext", \
+    "crypto.version", \
     "css2properties.azimuth", \
     "css2properties.background", \
     "css2properties.backgroundattachment", \
@@ -783,6 +793,8 @@
     "nsuievent.rangeoffset", \
     "nsuievent.rangeparent", \
     "nsuievent.which", \
+    "pkcs11.addmodule", \
+    "pkcs11.deletemodule", \
     "plugin.description", \
     "plugin.filename", \
     "plugin.item", \
@@ -887,6 +899,7 @@
     "window.confirm", \
     "window.content", \
     "window.controllers", \
+    "window.crypto", \
     "window.defaultstatus", \
     "window.directories", \
     "window.disableexternalcapture", \
@@ -918,6 +931,7 @@
     "window.pageyoffset", \
     "window.parent", \
     "window.personalbar", \
+    "window.pkcs11", \
     "window.print", \
     "window.prompt", \
     "window.releaseevents", \

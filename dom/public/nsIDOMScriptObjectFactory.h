@@ -114,6 +114,21 @@ public:
                                   nsISupports *aPI, 
                                   nsISupports *aParent, 
                                   void** aReturn)=0;
+
+  NS_IMETHOD    NewScriptCrypto(nsIScriptContext *aContext, 
+                                nsISupports *aPI, 
+                                nsISupports *aParent, 
+                                void** aReturn)=0;
+
+  NS_IMETHOD    NewScriptCRMFObject(nsIScriptContext *aContext, 
+                                    nsISupports *aPI, 
+                                    nsISupports *aParent, 
+                                    void** aReturn)=0;
+
+  NS_IMETHOD    NewScriptPkcs11(nsIScriptContext *aContext, 
+                                nsISupports *aPI, 
+                                nsISupports *aParent, 
+                                void** aReturn)=0;
 };
 
 #endif /* nsIDOMScriptObjectFactory_h__ */
