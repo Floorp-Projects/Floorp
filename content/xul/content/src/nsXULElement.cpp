@@ -189,7 +189,7 @@ struct XULBroadcastListener
     : mAttributeList(nsnull)
     {
         mListener = aListener; // WEAK REFERENCE
-        if (aAttribute != "*") {
+        if (!aAttribute.Equals("*")) {
             mAttributeList = new nsVoidArray();
             mAttributeList->AppendElement((void*)(new nsString(aAttribute)));
         }
@@ -3134,8 +3134,8 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
             aEvent->message == NS_MENU_DESTROY || aEvent->message == NS_FORM_SELECTED ||
             aEvent->message == NS_XUL_BROADCAST || aEvent->message == NS_XUL_COMMAND_UPDATE ||
             aEvent->message == NS_DRAGDROP_GESTURE ||
-            tagName == "menu" || tagName == "menuitem" || tagName == "menulist" ||
-            tagName == "menubar" || tagName == "menupopup" || tagName == "key" || tagName == "keyset") {
+            tagName.Equals("menu") || tagName.Equals("menuitem") || tagName.Equals("menulist") ||
+            tagName.Equals("menubar") || tagName.Equals("menupopup") || tagName.Equals("key") || tagName.Equals("keyset")) {
             nsCOMPtr<nsIEventListenerManager> listenerManager;
             if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
                 NS_ERROR("Unable to instantiate a listener manager on this event.");
@@ -3315,7 +3315,7 @@ nsXULElement::AddBroadcastListener(const nsString& attr, nsIDOMElement* anElemen
     // We need to sync up the initial attribute value.
     nsCOMPtr<nsIContent> listener( do_QueryInterface(anElement) );
 
-    if (attr == "*") {
+    if (attr.Equals("*")) {
         // All of the attributes found on this node should be set on the
         // listener.
         if (Attributes()) {
@@ -3366,7 +3366,7 @@ nsXULElement::RemoveBroadcastListener(const nsString& attr, nsIDOMElement* anEle
                 NS_REINTERPRET_CAST(XULBroadcastListener*, BroadcastListeners()->ElementAt(i));
 
             if (xulListener->mListener == anElement) {
-                if (xulListener->ObservingEverything() || attr == "*") { 
+                if (xulListener->ObservingEverything() || attr.Equals("*")) { 
                     // Do the removal.
                     BroadcastListeners()->RemoveElementAt(i);
                     delete xulListener;
@@ -3681,7 +3681,7 @@ nsXULElement::GetElementsByAttribute(nsIDOMNode* aNode,
             return rv;
         }
 
-        if ((attrValue == aValue) || (attrValue.Length() > 0 && aValue == "*")) {
+        if ((attrValue == aValue) || (attrValue.Length() > 0 && aValue.Equals("*"))) {
             if (NS_FAILED(rv = aElements->AppendNode(child))) {
                 NS_ERROR("unable to append element to node list");
                 return rv;
@@ -3775,7 +3775,7 @@ nsXULElement::GetContentStyleRules(nsISupportsArray* aRules)
         nsAutoString hidden;
         GetAttribute(kNameSpaceID_None, hiddenAtom, hidden);
 
-        if (width != "" || hidden != "") {
+        if (!width.IsEmpty() || !hidden.IsEmpty()) {
             // XXX This should ultimately be factored out if we find that
             // a bunch of XUL widgets are implementing attributes that need
             // to be mapped into style.  I'm hoping treecol will be the only
@@ -4040,7 +4040,7 @@ nsXULElement::Click()
     nsCOMPtr<nsIPresContext> context;
     nsAutoString tagName;
     GetTagName(tagName);
-    PRBool isButton = (tagName == "titledbutton");
+    PRBool isButton = (tagName.Equals("titledbutton"));
 
     for (PRInt32 i=0; i<numShells; i++) {
       shell = getter_AddRefs(doc->GetShellAt(i));
@@ -4077,7 +4077,7 @@ nsXULElement::SetFocus(nsIPresContext* aPresContext)
 {
   nsAutoString disabled;
   GetAttribute("disabled", disabled);
-  if (disabled == "true")
+  if (disabled.Equals("true"))
     return NS_OK;
  
   nsIEventStateManager* esm;
@@ -4183,10 +4183,10 @@ nsXULElement::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPr
         nsAutoString hiddenVal;
         GetAttribute("width", widthVal);
         GetAttribute("hidden", hiddenVal);
-        if (hiddenVal != "")
+        if (!hiddenVal.IsEmpty())
           widthVal = "0*";
 
-        if (widthVal != "") {
+        if (!widthVal.IsEmpty()) {
             PRInt32 intVal;
             float floatVal;
             nsHTMLUnit unit = eHTMLUnit_Null;

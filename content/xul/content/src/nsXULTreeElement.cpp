@@ -331,9 +331,9 @@ nsXULTreeElement::ToggleItemSelection(nsIDOMXULElement* aTreeItem)
 
   nsAutoString isSelected;
   aTreeItem->GetAttribute("selected", isSelected);
-  if (isSelected == "true")
+  if (isSelected.Equals("true"))
     RemoveItemFromSelectionInternal(aTreeItem);
-  else if (multiple == "true" || length == 0)
+  else if (multiple.Equals("true") || length == 0)
     AddItemToSelectionInternal(aTreeItem);
   else 
     return NS_OK;
@@ -355,9 +355,9 @@ nsXULTreeElement::ToggleCellSelection(nsIDOMXULElement* aTreeCell)
 
   nsAutoString isSelected;
   aTreeCell->GetAttribute("selected", isSelected);
-  if (isSelected == "true")
+  if (isSelected.Equals("true"))
     RemoveCellFromSelectionInternal(aTreeCell);
-  else if (multiple == "true" || length == 0)
+  else if (multiple.Equals("true") || length == 0)
     AddCellToSelectionInternal(aTreeCell);
   else 
     return NS_OK;
@@ -376,7 +376,7 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
   nsAutoString multiple;
   mOuter->GetAttribute("multiple", multiple);
 
-  if (multiple != "true") {
+  if (!multiple.Equals("true")) {
     // We're a single selection tree only. This
     // is not allowed.
     return NS_OK;
@@ -534,7 +534,7 @@ nsXULTreeElement::FireOnSelectHandler()
   nsCOMPtr<nsIAtom> kSuppressSelectChange = dont_AddRef(NS_NewAtom("suppressonselect"));
   nsAutoString value;
   content->GetAttribute(kNameSpaceID_None, kSuppressSelectChange, value);
-  if (value == "true")
+  if (value.Equals("true"))
     return NS_OK;
 
   PRInt32 count = document->GetNumberOfShells();
@@ -755,7 +755,7 @@ nsXULTreeElement::IndexOfContent(nsIContent* aRoot,
       nsAutoString isOpen;
       rv = child->GetAttribute(kNameSpaceID_None, kOpenAtom, isOpen);
 
-      if (isOpen != "true")
+      if (!isOpen.Equals("true"))
         parentIsOpen=PR_FALSE;
     }
 

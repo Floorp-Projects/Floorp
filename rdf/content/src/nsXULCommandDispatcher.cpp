@@ -470,7 +470,7 @@ nsXULCommandDispatcher::SetScriptObject(void *aScriptObject)
 PRBool
 nsXULCommandDispatcher::Matches(const nsString& aList, const nsString& aElement)
 {
-    if (aList == "*")
+    if (aList.Equals("*"))
         return PR_TRUE; // match _everything_!
 
     PRInt32 indx = aList.Find(aElement);

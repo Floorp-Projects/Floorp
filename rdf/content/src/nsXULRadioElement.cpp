@@ -139,7 +139,7 @@ nsXULRadioElement::GetChecked(PRBool* aChecked)
 {
   nsAutoString value;
   mOuter->GetAttribute("checked", value);
-  if(value == "true")
+  if(value.Equals("true"))
     *aChecked = PR_TRUE;
   else
     *aChecked = PR_FALSE;
@@ -164,7 +164,7 @@ nsXULRadioElement::GetDisabled(PRBool* aDisabled)
 {
   nsAutoString value;
   mOuter->GetAttribute("disabled", value);
-  if(value == "true")
+  if(value.Equals("true"))
     *aDisabled = PR_TRUE;
   else
     *aDisabled = PR_FALSE;

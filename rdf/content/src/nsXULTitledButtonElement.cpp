@@ -139,7 +139,7 @@ nsXULTitledButtonElement::GetDisabled(PRBool* aDisabled)
 {
   nsAutoString value;
   mOuter->GetAttribute("disabled", value);
-  if(value == "true")
+  if(value.Equals("true"))
     *aDisabled = PR_TRUE;
   else
     *aDisabled = PR_FALSE;

@@ -790,7 +790,7 @@ nsresult nsXULAttributes::UpdateClassList(const nsString& aValue)
 
 nsresult nsXULAttributes::UpdateStyleRule(nsIURI* aDocURL, const nsString& aValue)
 {
-    if (aValue == "")
+    if (aValue.IsEmpty())
     {
       // XXX: Removing the rule. Is this sufficient?
       mStyleRule = nsnull;

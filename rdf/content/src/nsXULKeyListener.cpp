@@ -582,451 +582,451 @@ PRBool nsXULKeyListenerImpl::IsMatchingKeyCode(const PRUint32 theChar, const nsS
 
   switch ( theChar ) {
     case VK_CANCEL:
-      if(keyName == "VK_CANCEL")
+      if(keyName.Equals("VK_CANCEL"))
         ret = PR_TRUE;
         break;
     case VK_BACK:
-      if(keyName == "VK_BACK")
+      if(keyName.Equals("VK_BACK"))
         ret = PR_TRUE;
         break;
     case VK_TAB:
-      if(keyName == "VK_TAB")
+      if(keyName.Equals("VK_TAB"))
         ret = PR_TRUE;
         break;
     case VK_CLEAR:
-      if(keyName == "VK_CLEAR")
+      if(keyName.Equals("VK_CLEAR"))
         ret = PR_TRUE;
         break;
     case VK_RETURN:
-      if(keyName == "VK_RETURN")
+      if(keyName.Equals("VK_RETURN"))
         ret = PR_TRUE;
         break;
     case VK_ENTER:
-      if(keyName == "VK_ENTER")
+      if(keyName.Equals("VK_ENTER"))
         ret = PR_TRUE;
         break;
     case VK_SHIFT:
-      if(keyName == "VK_SHIFT")
+      if(keyName.Equals("VK_SHIFT"))
         ret = PR_TRUE;
         break;
     case VK_CONTROL:
-      if(keyName == "VK_CONTROL")
+      if(keyName.Equals("VK_CONTROL"))
         ret = PR_TRUE;
         break;
     case VK_ALT:
-      if(keyName == "VK_ALT")
+      if(keyName.Equals("VK_ALT"))
         ret = PR_TRUE;
         break;
     case VK_PAUSE:
-      if(keyName == "VK_PAUSE")
+      if(keyName.Equals("VK_PAUSE"))
         ret = PR_TRUE;
         break;
     case VK_CAPS_LOCK:
-      if(keyName == "VK_CAPS_LOCK")
+      if(keyName.Equals("VK_CAPS_LOCK"))
         ret = PR_TRUE;
         break;
     case VK_ESCAPE:
-      if(keyName == "VK_ESCAPE")
+      if(keyName.Equals("VK_ESCAPE"))
         ret = PR_TRUE;
         break;
     case VK_SPACE:
-      if(keyName == "VK_SPACE")
+      if(keyName.Equals("VK_SPACE"))
         ret = PR_TRUE;
         break;
     case VK_PAGE_UP:
-      if(keyName == "VK_PAGE_UP")
+      if(keyName.Equals("VK_PAGE_UP"))
         ret = PR_TRUE;
         break;
     case VK_PAGE_DOWN:
-      if(keyName == "VK_PAGE_DOWN")
+      if(keyName.Equals("VK_PAGE_DOWN"))
         ret = PR_TRUE;
         break;
     case VK_END:
-      if(keyName == "VK_END")
+      if(keyName.Equals("VK_END"))
         ret = PR_TRUE;
         break;
     case VK_HOME:
-      if(keyName == "VK_HOME")
+      if(keyName.Equals("VK_HOME"))
         ret = PR_TRUE;
         break;
     case VK_LEFT:
-      if(keyName == "VK_LEFT")
+      if(keyName.Equals("VK_LEFT"))
         ret = PR_TRUE;
         break;
     case VK_UP:
-      if(keyName == "VK_UP")
+      if(keyName.Equals("VK_UP"))
         ret = PR_TRUE;
         break;
     case VK_RIGHT:
-      if(keyName == "VK_RIGHT")
+      if(keyName.Equals("VK_RIGHT"))
         ret = PR_TRUE;
         break;
     case VK_DOWN:
-      if(keyName == "VK_DOWN")
+      if(keyName.Equals("VK_DOWN"))
         ret = PR_TRUE;
         break;
     case VK_PRINTSCREEN:
-      if(keyName == "VK_PRINTSCREEN")
+      if(keyName.Equals("VK_PRINTSCREEN"))
         ret = PR_TRUE;
         break;
     case VK_INSERT:
-      if(keyName == "VK_INSERT")
+      if(keyName.Equals("VK_INSERT"))
         ret = PR_TRUE;
         break;
     case VK_DELETE:
-      if(keyName == "VK_DELETE")
+      if(keyName.Equals("VK_DELETE"))
         ret = PR_TRUE;
         break;
     case VK_0:
-      if(keyName == "VK_0")
+      if(keyName.Equals("VK_0"))
         ret = PR_TRUE;
         break;
     case VK_1:
-      if(keyName == "VK_1")
+      if(keyName.Equals("VK_1"))
         ret = PR_TRUE;
         break;
     case VK_2:
-      if(keyName == "VK_2")
+      if(keyName.Equals("VK_2"))
         ret = PR_TRUE;
         break;
     case VK_3:
-      if(keyName == "VK_3")
+      if(keyName.Equals("VK_3"))
         ret = PR_TRUE;
         break;
     case VK_4:
-      if(keyName == "VK_4")
+      if(keyName.Equals("VK_4"))
         ret = PR_TRUE;
         break;
     case VK_5:
-      if(keyName == "VK_5")
+      if(keyName.Equals("VK_5"))
         ret = PR_TRUE;
         break;
     case VK_6:
-      if(keyName == "VK_6")
+      if(keyName.Equals("VK_6"))
         ret = PR_TRUE;
         break;
     case VK_7:
-      if(keyName == "VK_7")
+      if(keyName.Equals("VK_7"))
         ret = PR_TRUE;
         break;
     case VK_8:
-      if(keyName == "VK_8")
+      if(keyName.Equals("VK_8"))
         ret = PR_TRUE;
         break;
     case VK_9:
-      if(keyName == "VK_9")
+      if(keyName.Equals("VK_9"))
         ret = PR_TRUE;
         break;
     case VK_SEMICOLON:
-      if(keyName == "VK_SEMICOLON")
+      if(keyName.Equals("VK_SEMICOLON"))
         ret = PR_TRUE;
         break;
     case VK_EQUALS:
-      if(keyName == "VK_EQUALS")
+      if(keyName.Equals("VK_EQUALS"))
         ret = PR_TRUE;
         break;
     case VK_A:
-      if(keyName == "VK_A"  || keyName == "A" || keyName == "a")
+      if(keyName.Equals("VK_A")  || keyName.Equals("A") || keyName.Equals("a"))
         ret = PR_TRUE;
         break;
     case VK_B:
-      if(keyName == "VK_B" || keyName == "B" || keyName == "b")
+      if(keyName.Equals("VK_B") || keyName.Equals("B") || keyName.Equals("b"))
         ret = PR_TRUE;
     break;
     case VK_C:
-      if(keyName == "VK_C"  || keyName == "C" || keyName == "c")
+      if(keyName.Equals("VK_C")  || keyName.Equals("C") || keyName.Equals("c"))
         ret = PR_TRUE;
         break;
     case VK_D:
-      if(keyName == "VK_D"  || keyName == "D" || keyName == "d")
+      if(keyName.Equals("VK_D")  || keyName.Equals("D") || keyName.Equals("d"))
         ret = PR_TRUE;
         break;
     case VK_E:
-      if(keyName == "VK_E"  || keyName == "E" || keyName == "e")
+      if(keyName.Equals("VK_E")  || keyName.Equals("E") || keyName.Equals("e"))
         ret = PR_TRUE;
         break;
     case VK_F:
-      if(keyName == "VK_F"  || keyName == "F" || keyName == "f")
+      if(keyName.Equals("VK_F")  || keyName.Equals("F") || keyName.Equals("f"))
         ret = PR_TRUE;
         break;
     case VK_G:
-      if(keyName == "VK_G"  || keyName == "G" || keyName == "g")
+      if(keyName.Equals("VK_G")  || keyName.Equals("G") || keyName.Equals("g"))
         ret = PR_TRUE;
         break;
     case VK_H:
-      if(keyName == "VK_H"  || keyName == "H" || keyName == "h")
+      if(keyName.Equals("VK_H")  || keyName.Equals("H") || keyName.Equals("h"))
         ret = PR_TRUE;
         break;
     case VK_I:
-      if(keyName == "VK_I"  || keyName == "I" || keyName == "i")
+      if(keyName.Equals("VK_I")  || keyName.Equals("I") || keyName.Equals("i"))
         ret = PR_TRUE;
         break;
     case VK_J:
-      if(keyName == "VK_J"  || keyName == "J" || keyName == "j")
+      if(keyName.Equals("VK_J")  || keyName.Equals("J") || keyName.Equals("j"))
         ret = PR_TRUE;
         break;
     case VK_K:
-      if(keyName == "VK_K"  || keyName == "K" || keyName == "k")
+      if(keyName.Equals("VK_K")  || keyName.Equals("K") || keyName.Equals("k"))
         ret = PR_TRUE;
         break;
     case VK_L:
-      if(keyName == "VK_L"  || keyName == "L" || keyName == "l")
+      if(keyName.Equals("VK_L")  || keyName.Equals("L") || keyName.Equals("l"))
         ret = PR_TRUE;
         break;
     case VK_M:
-      if(keyName == "VK_M"  || keyName == "M" || keyName == "m")
+      if(keyName.Equals("VK_M")  || keyName.Equals("M") || keyName.Equals("m"))
         ret = PR_TRUE;
         break;
     case VK_N:
-      if(keyName == "VK_N"  || keyName == "N" || keyName == "n")
+      if(keyName.Equals("VK_N")  || keyName.Equals("N") || keyName.Equals("n"))
         ret = PR_TRUE;
         break;
     case VK_O:
-      if(keyName == "VK_O"  || keyName == "O" || keyName == "o")
+      if(keyName.Equals("VK_O")  || keyName.Equals("O") || keyName.Equals("o"))
         ret = PR_TRUE;
         break;
     case VK_P:
-      if(keyName == "VK_P"  || keyName == "P" || keyName == "p")
+      if(keyName.Equals("VK_P")  || keyName.Equals("P") || keyName.Equals("p"))
         ret = PR_TRUE;
         break;
     case VK_Q:
-      if(keyName == "VK_Q"  || keyName == "Q" || keyName == "q")
+      if(keyName.Equals("VK_Q")  || keyName.Equals("Q") || keyName.Equals("q"))
         ret = PR_TRUE;
         break;
     case VK_R:
-      if(keyName == "VK_R"  || keyName == "R" || keyName == "r")
+      if(keyName.Equals("VK_R")  || keyName.Equals("R") || keyName.Equals("r"))
         ret = PR_TRUE;
         break;
     case VK_S:
-      if(keyName == "VK_S"  || keyName == "S" || keyName == "s")
+      if(keyName.Equals("VK_S")  || keyName.Equals("S") || keyName.Equals("s"))
         ret = PR_TRUE;
         break;
     case VK_T:
-      if(keyName == "VK_T"  || keyName == "T" || keyName == "t")
+      if(keyName.Equals("VK_T")  || keyName.Equals("T") || keyName.Equals("t"))
         ret = PR_TRUE;
         break;
     case VK_U:
-      if(keyName == "VK_U"  || keyName == "U" || keyName == "u")
+      if(keyName.Equals("VK_U")  || keyName.Equals("U") || keyName.Equals("u"))
         ret = PR_TRUE;
         break;
     case VK_V:
-      if(keyName == "VK_V"  || keyName == "V" || keyName == "v")
+      if(keyName.Equals("VK_V")  || keyName.Equals("V") || keyName.Equals("v"))
         ret = PR_TRUE;
         break;
     case VK_W:
-      if(keyName == "VK_W"  || keyName == "W" || keyName == "w")
+      if(keyName.Equals("VK_W")  || keyName.Equals("W") || keyName.Equals("w"))
         ret = PR_TRUE;
         break;
     case VK_X:
-      if(keyName == "VK_X"  || keyName == "X" || keyName == "x")
+      if(keyName.Equals("VK_X")  || keyName.Equals("X") || keyName.Equals("x"))
         ret = PR_TRUE;
         break;
     case VK_Y:
-      if(keyName == "VK_Y"  || keyName == "Y" || keyName == "y")
+      if(keyName.Equals("VK_Y")  || keyName.Equals("Y") || keyName.Equals("y"))
         ret = PR_TRUE;
         break;
     case VK_Z:
-      if(keyName == "VK_Z"  || keyName == "Z" || keyName == "z")
+      if(keyName.Equals("VK_Z")  || keyName.Equals("Z") || keyName.Equals("z"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD0:
-      if(keyName == "VK_NUMPAD0")
+      if(keyName.Equals("VK_NUMPAD0"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD1:
-      if(keyName == "VK_NUMPAD1")
+      if(keyName.Equals("VK_NUMPAD1"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD2:
-      if(keyName == "VK_NUMPAD2")
+      if(keyName.Equals("VK_NUMPAD2"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD3:
-      if(keyName == "VK_NUMPAD3")
+      if(keyName.Equals("VK_NUMPAD3"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD4:
-      if(keyName == "VK_NUMPAD4")
+      if(keyName.Equals("VK_NUMPAD4"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD5:
-      if(keyName == "VK_NUMPAD5")
+      if(keyName.Equals("VK_NUMPAD5"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD6:
-      if(keyName == "VK_NUMPAD6")
+      if(keyName.Equals("VK_NUMPAD6"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD7:
-      if(keyName == "VK_NUMPAD7")
+      if(keyName.Equals("VK_NUMPAD7"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD8:
-      if(keyName == "VK_NUMPAD8")
+      if(keyName.Equals("VK_NUMPAD8"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD9:
-      if(keyName == "VK_NUMPAD9")
+      if(keyName.Equals("VK_NUMPAD9"))
         ret = PR_TRUE;
         break;
     case VK_MULTIPLY:
-      if(keyName == "VK_MULTIPLY")
+      if(keyName.Equals("VK_MULTIPLY"))
         ret = PR_TRUE;
         break;
     case VK_ADD:
-      if(keyName == "VK_ADD")
+      if(keyName.Equals("VK_ADD"))
         ret = PR_TRUE;
         break;
     case VK_SEPARATOR:
-      if(keyName == "VK_SEPARATOR")
+      if(keyName.Equals("VK_SEPARATOR"))
         ret = PR_TRUE;
         break;
     case VK_SUBTRACT:
-      if(keyName == "VK_SUBTRACT")
+      if(keyName.Equals("VK_SUBTRACT"))
         ret = PR_TRUE;
         break;
     case VK_DECIMAL:
-      if(keyName == "VK_DECIMAL")
+      if(keyName.Equals("VK_DECIMAL"))
         ret = PR_TRUE;
         break;
     case VK_DIVIDE:
-      if(keyName == "VK_DIVIDE")
+      if(keyName.Equals("VK_DIVIDE"))
         ret = PR_TRUE;
         break;
     case VK_F1:
-      if(keyName == "VK_F1")
+      if(keyName.Equals("VK_F1"))
         ret = PR_TRUE;
         break;
     case VK_F2:
-      if(keyName == "VK_F2")
+      if(keyName.Equals("VK_F2"))
         ret = PR_TRUE;
         break;
     case VK_F3:
-      if(keyName == "VK_F3")
+      if(keyName.Equals("VK_F3"))
         ret = PR_TRUE;
         break;
     case VK_F4:
-      if(keyName == "VK_F4")
+      if(keyName.Equals("VK_F4"))
         ret = PR_TRUE;
         break;
     case VK_F5:
-      if(keyName == "VK_F5")
+      if(keyName.Equals("VK_F5"))
         ret = PR_TRUE;
         break;
     case VK_F6:
-      if(keyName == "VK_F6")
+      if(keyName.Equals("VK_F6"))
         ret = PR_TRUE;
         break;
     case VK_F7:
-      if(keyName == "VK_F7")
+      if(keyName.Equals("VK_F7"))
         ret = PR_TRUE;
         break;
     case VK_F8:
-      if(keyName == "VK_F8")
+      if(keyName.Equals("VK_F8"))
         ret = PR_TRUE;
         break;
     case VK_F9:
-      if(keyName == "VK_F9")
+      if(keyName.Equals("VK_F9"))
         ret = PR_TRUE;
         break;
     case VK_F10:
-      if(keyName == "VK_F10")
+      if(keyName.Equals("VK_F10"))
         ret = PR_TRUE;
         break;
     case VK_F11:
-      if(keyName == "VK_F11")
+      if(keyName.Equals("VK_F11"))
         ret = PR_TRUE;
         break;
     case VK_F12:
-      if(keyName == "VK_F12")
+      if(keyName.Equals("VK_F12"))
         ret = PR_TRUE;
         break;
     case VK_F13:
-      if(keyName == "VK_F13")
+      if(keyName.Equals("VK_F13"))
         ret = PR_TRUE;
         break;
     case VK_F14:
-      if(keyName == "VK_F14")
+      if(keyName.Equals("VK_F14"))
         ret = PR_TRUE;
         break;
     case VK_F15:
-      if(keyName == "VK_F15")
+      if(keyName.Equals("VK_F15"))
         ret = PR_TRUE;
         break;
     case VK_F16:
-      if(keyName == "VK_F16")
+      if(keyName.Equals("VK_F16"))
         ret = PR_TRUE;
         break;
     case VK_F17:
-      if(keyName == "VK_F17")
+      if(keyName.Equals("VK_F17"))
         ret = PR_TRUE;
         break;
     case VK_F18:
-      if(keyName == "VK_F18")
+      if(keyName.Equals("VK_F18"))
         ret = PR_TRUE;
         break;
     case VK_F19:
-      if(keyName == "VK_F19")
+      if(keyName.Equals("VK_F19"))
         ret = PR_TRUE;
         break;
     case VK_F20:
-      if(keyName == "VK_F20")
+      if(keyName.Equals("VK_F20"))
         ret = PR_TRUE;
         break;
     case VK_F21:
-      if(keyName == "VK_F21")
+      if(keyName.Equals("VK_F21"))
         ret = PR_TRUE;
         break;
     case VK_F22:
-      if(keyName == "VK_F22")
+      if(keyName.Equals("VK_F22"))
         ret = PR_TRUE;
         break;
     case VK_F23:
-      if(keyName == "VK_F23")
+      if(keyName.Equals("VK_F23"))
         ret = PR_TRUE;
         break;
     case VK_F24:
-      if(keyName == "VK_F24")
+      if(keyName.Equals("VK_F24"))
         ret = PR_TRUE;
         break;
     case VK_NUM_LOCK:
-      if(keyName == "VK_NUM_LOCK")
+      if(keyName.Equals("VK_NUM_LOCK"))
         ret = PR_TRUE;
         break;
     case VK_SCROLL_LOCK:
-      if(keyName == "VK_SCROLL_LOCK")
+      if(keyName.Equals("VK_SCROLL_LOCK"))
         ret = PR_TRUE;
         break;
     case VK_COMMA:
-      if(keyName == "VK_COMMA")
+      if(keyName.Equals("VK_COMMA"))
         ret = PR_TRUE;
         break;
     case VK_PERIOD:
-      if(keyName == "VK_PERIOD")
+      if(keyName.Equals("VK_PERIOD"))
         ret = PR_TRUE;
         break;
     case VK_SLASH:
-      if(keyName == "VK_SLASH")
+      if(keyName.Equals("VK_SLASH"))
         ret = PR_TRUE;
         break;
     case VK_BACK_QUOTE:
-      if(keyName == "VK_BACK_QUOTE")
+      if(keyName.Equals("VK_BACK_QUOTE"))
         ret = PR_TRUE;
         break;
     case VK_OPEN_BRACKET:
-      if(keyName == "VK_OPEN_BRACKET")
+      if(keyName.Equals("VK_OPEN_BRACKET"))
         ret = PR_TRUE;
         break;
     case VK_BACK_SLASH:
-      if(keyName == "VK_BACK_SLASH")
+      if(keyName.Equals("VK_BACK_SLASH"))
         ret = PR_TRUE;
         break;
     case VK_CLOSE_BRACKET:
-      if(keyName == "VK_CLOSE_BRACKET")
+      if(keyName.Equals("VK_CLOSE_BRACKET"))
         ret = PR_TRUE;
         break;
     case VK_QUOTE:
-      if(keyName == "VK_QUOTE")
+      if(keyName.Equals("VK_QUOTE"))
         ret = PR_TRUE;
         break;
   }
@@ -1050,7 +1050,7 @@ PRBool nsXULKeyListenerImpl::IsMatchingCharCode(const nsString &theChar, const n
 NS_IMETHODIMP nsXULKeyListenerImpl::GetKeyBindingDocument(nsCAutoString& aURLStr, nsIDOMXULDocument** aResult)
 {
   nsCOMPtr<nsIDOMXULDocument> document;
-  if (aURLStr != nsCAutoString("")) {
+  if (!aURLStr.IsEmpty()) {
     nsCOMPtr<nsIURL> uri;
     nsComponentManager::CreateInstance("component://netscape/network/standard-url",
                                           nsnull,
@@ -1440,7 +1440,7 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
         // Get the cancel attribute.
         nsAutoString cancelValue;
         keyElement->GetAttribute(nsAutoString("cancel"), cancelValue);
-        if (cancelValue == "true") {
+        if (cancelValue.Equals("true")) {
           return NS_OK;
         }
 
@@ -1522,7 +1522,7 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
               nsCOMPtr<nsIContent> keyContent = do_QueryInterface(keyElement);
               nsAutoString value;
               keyContent->GetAttribute(kNameSpaceID_None, eventName, value);
-              if (value != "") {
+              if (!value.IsEmpty()) {
                   if (handlerOwner) {
                       handlerOwner->CompileEventHandler(context, scriptObject, eventName, value, &handler);
                   }

@@ -395,7 +395,7 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
   nsAutoString identifier;
   mElement->GetAttribute(type, identifier);
 
-  if (identifier == "")
+  if (identifier.IsEmpty())
     return rv;
 
   // Try to find the popup content and the document. We don't use FindDocumentForNode()
@@ -485,7 +485,7 @@ XULPopupListenerImpl :: sTooltipCallback (nsITimer *aTimer, void *aClosure)
         // check that node is enabled before showing tooltip
         nsAutoString disabledState;
         element->GetAttribute ( "disabled", disabledState );
-        if ( disabledState != "true" ) {
+        if ( !disabledState.Equals("true") ) {
           doc->SetTooltipNode ( element );        
           self->LaunchPopup (self->mMouseClientX, self->mMouseClientY+16);
         } // if node enabled
