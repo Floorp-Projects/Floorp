@@ -3893,7 +3893,7 @@ dnl Turn off the new image library.  Soon to go away.
 MOZ_ARG_DISABLE_BOOL(libpr0n,
 [  --disable-libpr0n       Disable new imagelib],
    USE_IMG2=)
-if test "USE_IMG2"; then
+if test "$USE_IMG2" = "1"; then
   AC_DEFINE(USE_IMG2)
 fi
 AC_SUBST(USE_IMG2)
