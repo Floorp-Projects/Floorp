@@ -109,7 +109,6 @@ function SetupHTMLEditorCommands()
   commandManager.registerCommand("cmd_TableOrCellColor",   nsTableOrCellColorCommand);
   commandManager.registerCommand("cmd_NormalizeTable",     nsNormalizeTableCommand);
   commandManager.registerCommand("cmd_smiley",             nsSetSmiley);
-  commandManager.registerCommand("cmd_buildRecentPagesMenu", nsBuildRecentPagesMenu);
   commandManager.registerCommand("cmd_ConvertToTable",     nsConvertToTable);
 }
 
@@ -3814,24 +3813,6 @@ var nsCancelHTMLSource =
   {
     // In editor.js
     CancelHTMLSource();
-  }
-};
-
-var nsBuildRecentPagesMenu =
-{
-  isCommandEnabled: function(aCommand, dummy)
-  {
-    return true;
-  },
-
-  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
-  doCommandParams: function(aCommand, aParams, aRefCon) {},
-
-  doCommand: function(aCommand)
-  {
-    // From editor.js, rebuild the menu and save to prefs
-    BuildRecentMenu();
-    SaveRecentFilesPrefs();
   }
 };
 
