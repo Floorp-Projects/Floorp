@@ -94,6 +94,10 @@ static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
 
 //#define TEST_SANITY
 
+#ifdef DEBUG_rods
+#define DO_NOISY_REFLOW
+#endif
+
 /**
  * The boxes private implementation
  */
@@ -662,6 +666,19 @@ nsBoxFrame::DidReflow(nsIPresContext* aPresContext,
 
 }
 
+#ifdef DO_NOISY_REFLOW
+static int myCounter = 0;
+static void printSize(char * aDesc, nscoord aSize) 
+{
+  printf(" %s: ", aDesc);
+  if (aSize == NS_UNCONSTRAINEDSIZE) {
+    printf("UC");
+  } else {
+    printf("%d", aSize);
+  }
+}
+#endif
+
 NS_IMETHODIMP
 nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
@@ -671,6 +688,33 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsBoxFrame", aReflowState.reason);
 
   NS_ASSERTION(aReflowState.mComputedWidth >=0 && aReflowState.mComputedHeight >= 0, "Computed Size < 0");
+
+#ifdef DO_NOISY_REFLOW
+  printf("\n-------------Starting BoxFrame Reflow ----------------------------\n");
+  printf("%p ** nsBF::Reflow %d R: ", this, myCounter++);
+  switch (aReflowState.reason) {
+    case eReflowReason_Initial:
+      printf("Ini");break;
+    case eReflowReason_Incremental:
+      printf("Inc");break;
+    case eReflowReason_Resize:
+      printf("Rsz");break;
+    case eReflowReason_StyleChange:
+      printf("Sty");break;
+    case eReflowReason_Dirty:
+      printf("Drt ");
+      break;
+    default:printf("<unknown>%d", aReflowState.reason);break;
+  }
+  
+  printSize("AW", aReflowState.availableWidth);
+  printSize("AH", aReflowState.availableHeight);
+  printSize("CW", aReflowState.mComputedWidth);
+  printSize("CH", aReflowState.mComputedHeight);
+
+  printf(" *\n");
+
+#endif
 
   aStatus = NS_FRAME_COMPLETE;
 
@@ -781,6 +825,18 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
         maxElementSize->height = mRect.height;
      }
   }
+#ifdef DO_NOISY_REFLOW
+  {
+    printf("%p ** nsBF(done) W:%d H:%d  ", this, aDesiredSize.width, aDesiredSize.height);
+
+    if (maxElementSize) {
+      printf("MW:%d MH:%d\n", maxElementSize->width, maxElementSize->height); 
+    } else {
+      printf("MW:? MH:?\n"); 
+    }
+
+  }
+#endif
 
   return NS_OK;
 }
