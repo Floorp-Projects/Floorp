@@ -846,6 +846,11 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   // for it to live.
   nsRect region;
 
+  // The floater's old region, so we can propagate damage.
+  nsRect oldRegion;
+  floater->GetRect(oldRegion);
+  oldRegion.Inflate(aFloaterCache->mMargins);
+
   // Advance mY to mLastFloaterY (if it's not past it already) to
   // enforce 9.5.1 rule [2]; i.e., make sure that a float isn't
   // ``above'' another float that preceded it in the flow.
@@ -1001,6 +1006,18 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
 #endif
     mSpaceManager->AddRectRegion(floater, region);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "bad floater placement");
+  }
+
+  // If the floater's dimensions have changed, note the damage in the
+  // space manager.
+  if (region != oldRegion) {
+    // XXXwaterson conservative: we could probably get away with noting
+    // less damage; e.g., if only height has changed, then only note the
+    // area into which the float has grown or from which the float has
+    // shrunk.
+    nscoord top = NS_MIN(region.y, oldRegion.y);
+    nscoord bottom = NS_MAX(region.YMost(), oldRegion.YMost());
+    mSpaceManager->IncludeInDamage(top, bottom);
   }
 
   // Save away the floaters region in the spacemanager, after making

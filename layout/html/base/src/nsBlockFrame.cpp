@@ -1561,9 +1561,7 @@ nsresult
 nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
 {
   // Determine the line being impacted
-  PRBool isFloater;
-  line_iterator line;
-  FindLineFor(aState.mNextRCFrame, &isFloater, &line);
+  line_iterator line = FindLineFor(aState.mNextRCFrame);
   if (line == end_lines()) {
     // This assertion actually fires on lots of pages
     // (e.g., bugzilla, bugzilla query page), so limit it
@@ -1578,12 +1576,6 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
                   "Being inefficient");
 #endif
     // This can't happen, but just in case it does...
-    return PrepareResizeReflow(aState);
-  }
-
-  // XXX: temporary: If the child frame is a floater then punt
-  // XXX_perf XXXldb How big a perf problem is this?
-  if (isFloater) {
     return PrepareResizeReflow(aState);
   }
 
@@ -1653,9 +1645,7 @@ nsBlockFrame::RetargetInlineIncrementalReflow(nsBlockReflowState &aState,
 #ifdef DEBUG
     // Paranoia. Ensure that the prev-in-flow is really in the
     // previous line.
-    PRBool dummy;
-    line_iterator check;
-    FindLineFor(aState.mNextRCFrame, &dummy, &check);
+    line_iterator check = FindLineFor(aState.mNextRCFrame);
     NS_ASSERTION(check == aLine, "prev-in-flow not in previous linebox");
 #endif
 
@@ -1947,10 +1937,8 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
 
 //----------------------------------------
 
-PRBool
-nsBlockFrame::FindLineFor(nsIFrame* aFrame,
-                          PRBool* aIsFloaterResult,
-                          line_iterator* aFoundLine)
+nsBlockFrame::line_iterator
+nsBlockFrame::FindLineFor(nsIFrame* aFrame)
 {
   // This assertion actually fires on lots of pages (e.g., bugzilla,
   // bugzilla query page), so limit it to a few people until we fix the
@@ -1960,30 +1948,27 @@ nsBlockFrame::FindLineFor(nsIFrame* aFrame,
   NS_PRECONDITION(aFrame, "why pass a null frame?");
 #endif
 
-  PRBool isFloater = PR_FALSE;
   line_iterator line = begin_lines(),
                 line_end = end_lines();
   for ( ; line != line_end; ++line) {
-    if (line->Contains(aFrame)) {
-      break;
-    }
-    // XXXldb what does this do?
+    // If the target frame is in-flow, and this line contains the it,
+    // then we've found our line.
+    if (line->Contains(aFrame))
+      return line;
+
+    // If the target frame is floated, and this line contains the
+    // floater's placeholder, then we've found our line.
     if (line->HasFloaters()) {
-      nsFloaterCache* fc = line->GetFirstFloater();
-      while (fc) {
-        if (aFrame == fc->mPlaceholder->GetOutOfFlowFrame()) {
-          isFloater = PR_TRUE;
-          goto done;
-        }
-        fc = fc->Next();
+      for (nsFloaterCache *fc = line->GetFirstFloater();
+           fc != nsnull;
+           fc = fc->Next()) {
+        if (aFrame == fc->mPlaceholder->GetOutOfFlowFrame())
+          return line;
       }
-    }
+    }      
   }
 
- done:
-  *aIsFloaterResult = isFloater;
-  *aFoundLine = line;
-  return (line != line_end);
+  return line_end;
 }
 
 // SEC: added GetCurrentLine() for bug 45152
@@ -1998,45 +1983,9 @@ nsBlockFrame::GetCurrentLine(nsBlockReflowState *aState, nsLineBox ** aOutCurren
 }
 
 /**
- * Remember regions of reflow damage from floaters that changed size (so
- * far, only vertically, which is a bug) in the space manager so that we
- * can mark any impacted lines dirty in |PropagateFloaterDamage|.
- */
-void
-nsBlockFrame::RememberFloaterDamage(nsBlockReflowState& aState,
-                                    nsLineBox* aLine,
-                                    const nsRect& aOldCombinedArea)
-{
-  nsRect lineCombinedArea;
-  aLine->GetCombinedArea(&lineCombinedArea);
-  if (lineCombinedArea != aLine->mBounds &&
-      lineCombinedArea != aOldCombinedArea) {
-    // The line's combined-area changed. Therefore we need to damage
-    // the lines below that were previously (or are now) impacted by
-    // the change. It's possible that a floater shrunk or grew so
-    // use the larger of the impacted area.
-
-    // XXXldb If just the width of the floater changed, then this code
-    // won't be triggered and the code below (in |PropagateFloaterDamage|)
-    // won't kick in for "non-Block lines".  See
-    // "XXX: Maybe the floater itself changed size?" below.
-    //
-    // This is a major flaw in this code.
-    //
-    nscoord newYMost = lineCombinedArea.YMost();
-    nscoord oldYMost = aOldCombinedArea.YMost();
-    nscoord impactYB = newYMost < oldYMost ? oldYMost : newYMost;
-    nscoord impactYA = lineCombinedArea.y;
-    nsSpaceManager *spaceManager = aState.mReflowState.mSpaceManager;
-    spaceManager->IncludeInDamage(impactYA, impactYB);
-  }
-}
-
-/**
  * Propagate reflow "damage" from from earlier lines to the current
  * line.  The reflow damage comes from the following sources:
- *  1. The regions of floater damage remembered in
- *     |RememberFloaterDamage|.
+ *  1. The regions of floater damage remembered during reflow.
  *  2. The combination of nonzero |aDeltaY| and any impact by a floater,
  *     either the previous reflow or now.
  *
@@ -2279,11 +2228,6 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       } else {
         deltaY = line->mBounds.YMost() - oldYMost;
       }
-
-      // Remember any things that could potentially be changes in the
-      // positions of floaters in this line so that we later damage the
-      // lines adjacent to those changes.
-      RememberFloaterDamage(aState, line, oldCombinedArea);
     } else {
       if (deltaY != 0)
         SlideLine(aState, line, deltaY);
@@ -5898,22 +5842,9 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
     }
 
     // Mark the line containing the child frame dirty.
-    PRBool isFloater;
-    line_iterator fline;
-    FindLineFor(aChild, &isFloater, &fline);
-    
-    if (!isFloater) {
-      if (fline != end_lines())
-        MarkLineDirty(fline);
-    }
-    else {
-      // XXXldb Could we do this more efficiently?
-      for (line_iterator line = begin_lines(), line_end = end_lines();
-           line != line_end;
-           ++line) {
-        line->MarkDirty();
-      }
-    }
+    line_iterator fline = FindLineFor(aChild);
+    if (fline != end_lines())
+      MarkLineDirty(fline);
   }
 
   // Either generate a reflow command to reflow the dirty child or 
