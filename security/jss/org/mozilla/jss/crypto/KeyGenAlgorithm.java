@@ -116,6 +116,9 @@ public class KeyGenAlgorithm extends Algorithm {
     DES3 = new KeyGenAlgorithm(CKM_DES3_KEY_GEN, "DESede",
             new FixedKeyStrengthValidator(168), null, null);
 
+    public static final KeyGenAlgorithm
+    DESede = DES3;
+
     //////////////////////////////////////////////////////////////
     public static final KeyGenAlgorithm
     RC4 = new KeyGenAlgorithm(CKM_RC4_KEY_GEN, "RC4",
