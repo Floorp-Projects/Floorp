@@ -32,6 +32,12 @@ SHORT_LIBNAME	= mimemitr
 IS_COMPONENT	= 1
 REQUIRES	= xpcom mime necko pref js intl locale msgbase msgbaseutil
 
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS = msgbutil
+else
+EXTRA_DSO_LIBS = msgbaseutil
+endif
+
 CPPSRCS		= nsEmitterFactory.cpp
 EXPORTS		= nsMimeEmitterCID.h
 
@@ -42,7 +48,7 @@ SHARED_LIBRARY_LIBS = \
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		$(MOZ_COMPONENT_LIBS) \
-		-lmsgbaseutil \
+		$(EXTRA_DSO_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
