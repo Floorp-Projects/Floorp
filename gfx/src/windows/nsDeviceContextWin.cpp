@@ -29,7 +29,7 @@ nsDeviceContextWin :: nsDeviceContextWin()
 
   HDC hdc = ::GetDC(NULL);
 
-  mTwipsToPixels = ::GetDeviceCaps(hdc, LOGPIXELSX) / NS_POINTS_TO_TWIPS_FLOAT(72.0f);
+  mTwipsToPixels = ((float)::GetDeviceCaps(hdc, LOGPIXELSX)) / NS_POINTS_TO_TWIPS_FLOAT(72.0f);
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
   ::ReleaseDC(NULL, hdc);
