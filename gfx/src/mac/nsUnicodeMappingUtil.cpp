@@ -59,7 +59,7 @@ void nsUnicodeMappingUtil::Init()
 	InitFromPref();
 	InitScriptFontMapping();
 	InitBlockToScriptMapping(); // this must be called after InitScriptEnabled()
-	gCache = new nsUnicodeFontMappingCache();
+	mCache = new nsUnicodeFontMappingCache();
 	++gUnicodeMappingUtilCount;
 }
 void nsUnicodeMappingUtil::CleanUp()
@@ -70,8 +70,11 @@ void nsUnicodeMappingUtil::CleanUp()
 	  		 nsString::Recycle(mGenericFontMapping[i][j]);
 	  	}
 	}
-	if(gCache)
-		delete gCache;
+	if (mCache)
+	{
+		delete mCache;
+		mCache = nsnull;
+	}
 
 }
 //--------------------------------------------------------------------------

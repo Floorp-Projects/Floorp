@@ -125,7 +125,6 @@ static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *a
 }
 //--------------------------------------------------------------------------
 nsUnicodeMappingUtil *nsUnicodeFontMappingMac::gUtil = nsnull;
-nsUnicodeFontMappingCache *nsUnicodeFontMappingMac::gCache = nsnull;
 
 //--------------------------------------------------------------------------
 
@@ -308,19 +307,21 @@ nsUnicodeFontMappingMac* nsUnicodeFontMappingMac::GetCachedInstance(
 {
 	if(! gUtil)
 		gUtil = nsUnicodeMappingUtil::GetSingleton();
-	if(! gCache)
-		gCache = gUtil->GetFontMappingCache();	
-
+	
+	nsUnicodeFontMappingCache* fontMappingCache = gUtil->GetFontMappingCache();	
+  NS_ASSERTION(fontMappingCache, "Should have a fontMappingCache here");
+  if (!fontMappingCache) return nsnull;
+  
 	nsUnicodeFontMappingMac* obj = nsnull;
 	nsAutoString key(aFont->name);
 	key.AppendWithConversion(":");
 	key.Append(aLangGroup);
 	key.AppendWithConversion(":");
 	key.Append(aLANG);
-	if(! gCache->Get ( key, &obj )){
+	if(! fontMappingCache->Get ( key, &obj )){
 		obj = new nsUnicodeFontMappingMac(aFont, aDeviceContext, aLangGroup, aLANG);
 		if( obj )
-			gCache->Set ( key, obj);
+			fontMappingCache->Set ( key, obj);
 	}
 	NS_PRECONDITION(nsnull !=  obj, "out of memory");
 	return obj;
