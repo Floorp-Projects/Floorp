@@ -668,6 +668,9 @@ nsMsgAccountManager::removeKeyedAccount(const char *key)
     token = nsCRT::strtok(newStr, ",", &newStr);
   }
 
+  // Update mAccountKeyList to reflect the deletion
+  mAccountKeyList = newAccountList;
+
   // now write the new account list back to the prefs
   rv = m_prefs->SetCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS,
                               newAccountList.GetBuffer());
