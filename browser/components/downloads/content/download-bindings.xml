@@ -16,11 +16,11 @@
     <content>
       <xul:deck anonid="title-deck">
         <xul:hbox>
-          <xul:image style="max-width: 16px; max-height: 16px;" xbl:inherits="src=image"/>
+          <xul:image style="width: 16px; max-width: 16px; height: 16px; max-height: 16px;" xbl:inherits="src=image"/>
           <xul:label xbl:inherits="value=target"/>
         </xul:hbox>
         <xul:hbox>
-          <xul:image style="max-width: 16px; max-height: 16px;" xbl:inherits="src=image"/>
+          <xul:image style="width: 16px; max-width: 16px; height: 16px; max-height: 16px;" xbl:inherits="src=image"/>
           <xul:label xbl:inherits="value=target" class="link" onclick="this.parentNode.parentNode.parentNode.launch();"/>
         </xul:hbox>
       </xul:deck>
