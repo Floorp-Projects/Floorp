@@ -32,6 +32,8 @@ LLIBS+=$(DIST)/lib/libxpcom.a $(DIST)/lib/libraptorbase.a $(DIST)/lib/libraptorg
 CPPSRCS=nsDeviceContextGTK.cpp nsFontMetricsGTK.cpp nsGfxFactoryGTK.cpp \
 	nsRenderingContextGTK.cpp nsImageGTK.cpp
 
+CSRCS=gtklayout.c
+
 include $(DEPTH)/config/rules.mk
 
 
