@@ -125,7 +125,7 @@ public class Undefined implements Scriptable {
     }
 
     public boolean hasInstance(Scriptable value) {
-	throw reportError();
+        throw reportError();
     }
 
     public boolean instanceOf(Scriptable prototype) {
