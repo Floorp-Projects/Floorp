@@ -25,6 +25,9 @@ MAKE_OBJ_TYPE	= DLL
 OBJS = $(OBJS) 
 
 LLIBS = $(DIST)\lib\nsdlg$(MOZ_BITS).lib
+!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
+LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
+!endif
 
 MODULE  = mnrcdll
 DEPTH  	= ..\..\..\..

@@ -59,6 +59,10 @@ LLIBS=	$(LIBNSPR) 										\
 		$(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib	\
 		$(DIST)\lib\jrt$(MOZ_BITS)$(VERSION_NUMBER).lib	
 
+!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
+LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
+!endif
+
 
 #//------------------------------------------------------------------------
 #//

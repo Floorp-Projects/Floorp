@@ -35,6 +35,9 @@ C_OBJS=.\$(OBJDIR)\nsunbind.obj
 !if "$(MOZ_BITS)" != "16"
 LINCS=-I$(XPDIST)\public\softupdt 
 !endif
+!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
+LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
+!endif
 
 include <$(DEPTH)\config\rules.mak>
 

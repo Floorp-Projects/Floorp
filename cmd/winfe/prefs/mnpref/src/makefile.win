@@ -43,7 +43,11 @@ LLIBS32 = $(LLIBS32) uuid2.lib
 !endif
 
 !if "$(MOZ_BITS)" == "32"
+!if defined(MOZ_DEBUG) && defined(GLOWCODE)
+LLIBS = $(LLIBS) $(LLIBS32) $(GLOWDIR)\glowcode.lib
+!else
 LLIBS = $(LLIBS) $(LLIBS32)
+!endif
 !else
 LLIBS = $(LLIBS) $(LLIBS16)
 !endif
