@@ -229,7 +229,21 @@ BASIC_LIBS	= \
 		  $(XFE_WIDGETS_BM_LIB) \
 		  $(XFE_WIDGETS_LIB) \
 		  $(DIST)/lib/libxlate.a \
-		  $(DIST)/lib/lib$(LITE_PREFIX)net.a \
+		  $(DIST)/lib/libnetcache.a	\
+		  $(DIST)/lib/libnetcnvts.a	\
+		  $(DIST)/lib/libnetwork.a	\
+		  $(DIST)/lib/libnetcnvts.a	\
+		  $(DIST)/lib/libcnetinit.a	\
+		  $(DIST)/lib/libabouturl.a	\
+		  $(DIST)/lib/libdataurl.a	\
+		  $(DIST)/lib/libfileurl.a	\
+		  $(DIST)/lib/libftpurl.a	\
+		  $(DIST)/lib/libgophurl.a	\
+		  $(DIST)/lib/libhttpurl.a	\
+		  $(DIST)/lib/libjsurl.a	\
+		  $(DIST)/lib/libmarimurl.a	\
+		  $(DIST)/lib/libremoturl.a	\
+		  $(DIST)/lib/libnetwork.a	\
 		  $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)xml.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)lay.a \
@@ -259,7 +273,10 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libreg.a \
 		  $(NULL)
 
-BASIC_LIBS_2	= $(DIST)/lib/lib$(LITE_PREFIX)xp.a $(DIST)/lib/libdbm.a
+BASIC_LIBS_2	= \
+		  $(DIST)/lib/lib$(LITE_PREFIX)xp.a \
+		  $(DIST)/lib/libdbm.a \
+		  $(NULL)
 
 ifdef MOZ_MAIL_NEWS
 BASIC_LIBS	+= \
