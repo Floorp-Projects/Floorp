@@ -51,7 +51,8 @@ use strict;
 # the rest of the file is compiled.
 BEGIN {
  $::path = $0;
- $::path =~ s#(.*)/[^/]+#$1#;
+ $::path =~ m#(.*)/[^/]+#;
+ $::path = $1;
 }
 chdir $::path;
 use lib ($::path);
