@@ -18,9 +18,9 @@
 #ifndef nsICSSStyleRule_h___
 #define nsICSSStyleRule_h___
 
-#include <stdio.h>
+//#include <stdio.h>
 #include "nslayout.h"
-#include "nsIStyleRule.h"
+#include "nsICSSRule.h"
 #include "nsString.h"
 
 class nsIAtom;
@@ -47,13 +47,14 @@ public:
 
 struct nsAttrSelector {
 public:
-  nsAttrSelector(const nsString& aAttr);
-  nsAttrSelector(const nsString& aAttr, PRUint8 aFunction, const nsString& aValue,
-                 PRBool aCaseSensitive);
+  nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr);
+  nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunction, 
+                 const nsString& aValue, PRBool aCaseSensitive);
   nsAttrSelector(const nsAttrSelector& aCopy);
   ~nsAttrSelector(void);
   PRBool Equals(const nsAttrSelector* aOther) const;
 
+  PRInt32         mNameSpace;
   nsIAtom*        mAttr;
   PRUint8         mFunction;
   PRPackedBool    mCaseSensitive;
@@ -77,9 +78,9 @@ public:
   void AddClass(const nsString& aClass);
   void AddPseudoClass(const nsString& aPseudoClass);
   void AddPseudoClass(nsIAtom* aPseudoClass);
-  void AddAttribute(const nsString& aAttr);
-  void AddAttribute(const nsString& aAttr, PRUint8 aFunc, const nsString& aValue,
-                    PRBool aCaseSensitive);
+  void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr);
+  void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunc, 
+                    const nsString& aValue, PRBool aCaseSensitive);
   void SetOperator(PRUnichar aOperator);
 
   PRInt32 CalcWeight(void) const;
@@ -100,7 +101,7 @@ public:
 #define NS_ICSS_STYLE_RULE_IID     \
 {0x7c277af0, 0xaf19, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
-class nsICSSStyleRule : public nsIStyleRule {
+class nsICSSStyleRule : public nsICSSRule {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ICSS_STYLE_RULE_IID; return iid; }
 
@@ -117,10 +118,6 @@ public:
   virtual void SetWeight(PRInt32 aWeight) = 0;
 
   virtual nsIStyleRule* GetImportantRule(void) = 0;
-
-  NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet) = 0;
-
-  NS_IMETHOD Clone(nsICSSStyleRule*& aClone) const = 0;
 };
 
 extern NS_HTML nsresult
