@@ -129,7 +129,7 @@ nsresult nsAbAutoCompleteSession::InitializeTable()
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr <nsIRDFResource> resource;
-  rv = rdfService->GetResource("abdirectory://history.mab", getter_AddRefs(resource));
+  rv = rdfService->GetResource("abdirectory://abook.mab", getter_AddRefs(resource));
   if (NS_FAILED(rv)) return rv;
   
   // query interface 
@@ -143,9 +143,9 @@ nsresult nsAbAutoCompleteSession::InitializeTable()
   rv = PopulateTableWithAB(cards);
   if (NS_FAILED(rv)) return rv;
 
-  // now if we have any left over space, populate the table with the regular address book
+  // now if we have any left over space, populate the table with the history address book
 
-  rv = rdfService->GetResource("abdirectory://abook.mab", getter_AddRefs(resource));
+  rv = rdfService->GetResource("abdirectory://history.mab", getter_AddRefs(resource));
   if (NS_FAILED(rv)) return rv;
   
   directory = do_QueryInterface(resource, &rv);
@@ -164,10 +164,10 @@ nsAbAutoCompleteSession::~nsAbAutoCompleteSession()
 {
 	PRInt32 i;
 	for (i=0;i<m_numEntries;i++) {
-      PR_FREEIF(m_searchNameCompletionEntryTable[m_numEntries].userName);     
-      m_searchNameCompletionEntryTable[m_numEntries].userName = nsnull;
-      PR_FREEIF(m_searchNameCompletionEntryTable[m_numEntries].emailAddress);
-      m_searchNameCompletionEntryTable[m_numEntries].emailAddress = nsnull;
+      PR_FREEIF(m_searchNameCompletionEntryTable[i].userName);     
+      m_searchNameCompletionEntryTable[i].userName = nsnull;
+      PR_FREEIF(m_searchNameCompletionEntryTable[i].emailAddress);
+      m_searchNameCompletionEntryTable[i].emailAddress = nsnull;
 	}
 }
 
