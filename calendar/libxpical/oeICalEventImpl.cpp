@@ -922,7 +922,7 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
 //id    
     icalproperty *prop = icalcomponent_get_first_property( vevent, ICAL_UID_PROPERTY );
     assert( prop != 0);
-    const char *tmpstr = icalproperty_get_value_as_string( prop );
+    const char *tmpstr = icalproperty_get_uid( prop );
     m_id = atol( tmpstr );
 
 //title
@@ -930,7 +930,7 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
         nsMemory::Free( m_title );
     prop = icalcomponent_get_first_property( vevent, ICAL_SUMMARY_PROPERTY );
     if ( prop != 0) {
-        tmpstr = icalproperty_get_value_as_string( prop );
+        tmpstr = icalproperty_get_summary( prop );
         SetTitle( tmpstr );
     } else
         m_title = nsnull;
@@ -940,7 +940,7 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
         nsMemory::Free( m_description );
     prop = icalcomponent_get_first_property( vevent, ICAL_DESCRIPTION_PROPERTY );
     if ( prop != 0) {
-        tmpstr = icalproperty_get_value_as_string( prop );
+        tmpstr = icalproperty_get_description( prop );
         SetDescription( tmpstr );
     } else
         m_description = nsnull;
@@ -950,7 +950,7 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
         nsMemory::Free( m_location );
     prop = icalcomponent_get_first_property( vevent, ICAL_LOCATION_PROPERTY );
     if ( prop != 0) {
-        tmpstr = icalproperty_get_value_as_string( prop );
+        tmpstr = icalproperty_get_location( prop );
         SetLocation( tmpstr );
     } else
         m_location = nsnull;
@@ -960,7 +960,7 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
         nsMemory::Free( m_category );
     prop = icalcomponent_get_first_property( vevent, ICAL_CATEGORIES_PROPERTY );
     if ( prop != 0) {
-        tmpstr = (char *)icalproperty_get_value_as_string( prop );
+        tmpstr = (char *)icalproperty_get_categories( prop );
         SetCategory( tmpstr );
     } else
         m_category= nsnull;
@@ -968,8 +968,8 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
 //isprivate
     prop = icalcomponent_get_first_property( vevent, ICAL_CLASS_PROPERTY );
     if ( prop != 0) {
-        tmpstr = icalproperty_get_value_as_string( prop );
-        if( strcmp( tmpstr, "PUBLIC" ) == 0 )
+        icalproperty_class tmpcls = icalproperty_get_class( prop );
+        if( tmpcls == ICAL_CLASS_PUBLIC )
             m_isprivate= false;
         else
             m_isprivate= true;

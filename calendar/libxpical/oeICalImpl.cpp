@@ -333,7 +333,6 @@ END:VCALENDAR\n\
     icalcomponent_add_property( icalevent, category );
 
     icalproperty *classp = icalproperty_new_class( ICAL_CLASS_PRIVATE );
-//    icalproperty *classp = icalproperty_new_class( "PRIVATE" );
     icalcomponent_add_property( icalevent, classp );
 
     start.year = 2001; start.month = 8; start.day = 15;
@@ -455,27 +454,27 @@ END:VCALENDAR\n\
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_UID_PROPERTY );
     assert( tmpprop != 0 );
-    printf("id: %s\n", icalproperty_get_value_as_string( tmpprop ) );
+    printf("id: %s\n", icalproperty_get_uid( tmpprop ) );
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_SUMMARY_PROPERTY );
     assert( tmpprop != 0 );
-    printf("Title: %s\n", icalproperty_get_value_as_string( tmpprop ) );
+    printf("Title: %s\n", icalproperty_get_summary( tmpprop ) );
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_CATEGORIES_PROPERTY );
     assert( tmpprop != 0 );
-    printf("Category: %s\n", icalproperty_get_value_as_string( tmpprop ) );
+    printf("Category: %s\n", icalproperty_get_categories( tmpprop ) );
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_DESCRIPTION_PROPERTY );
     assert( tmpprop != 0 );
-    printf("Description: %s\n", icalproperty_get_value_as_string( tmpprop ) );
+    printf("Description: %s\n", icalproperty_get_description( tmpprop ) );
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_LOCATION_PROPERTY );
     assert( tmpprop != 0 );
-    printf("Location: %s\n", icalproperty_get_value_as_string( tmpprop ) );
+    printf("Location: %s\n", icalproperty_get_location( tmpprop ) );
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_CLASS_PROPERTY );
     assert( tmpprop != 0 );
-    printf("Class: %s\n", icalproperty_get_value_as_string( tmpprop ) );
+    printf("Class: %s\n", (icalproperty_get_class( tmpprop ) == ICAL_CLASS_PUBLIC) ? "PUBLIC" : "PRIVATE" );
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_DTSTART_PROPERTY );
     assert( tmpprop != 0 );
@@ -509,7 +508,7 @@ END:VCALENDAR\n\
 
     icalfileset_commit(stream);
 	printf("Event updated\n");
-    printf( "New Title: %s\n", icalproperty_get_value_as_string( tmpprop ) );
+    printf( "New Title: %s\n", icalproperty_get_summary( tmpprop ) );
 
     fetchedcal = icalfileset_fetch( stream, uidstr );
     assert( fetchedcal != 0 );
@@ -861,7 +860,7 @@ oeICalImpl::SearchBySQL( const char *sqlstr,  nsISimpleEnumerator **resultList )
         icalproperty *prop = icalcomponent_get_first_property( vevent, ICAL_UID_PROPERTY );
         assert( prop != 0);
 
-        eventEnum->AddEventId( atol( icalproperty_get_value_as_string( prop ) ) );
+        eventEnum->AddEventId( atol( icalproperty_get_uid( prop ) ) );
     }
 	
     icalfileset_free(stream);
