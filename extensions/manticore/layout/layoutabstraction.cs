@@ -134,6 +134,26 @@ namespace Silverstone.Manticore.LayoutAbstraction
         trident.Navigate(url, ref o, ref o, ref o, ref o);
     }
 
+    public void RefreshPage() 
+    {
+      // XXX Should take a refresh level and use Refresh2.
+      RealizeLayoutEngine();
+      Object o = 0 as Object;
+      if (gecko != null)
+        gecko.Refresh2(ref o);
+      else if (trident != null)
+        trident.Refresh2(ref o);
+    }
+
+    public void Stop()
+    {
+      RealizeLayoutEngine();
+      if (gecko != null)
+        gecko.Stop();
+      else if (trident != null)
+        trident.Stop();
+    }
+
     public void GoBack()
     {
       RealizeLayoutEngine();

@@ -186,6 +186,12 @@ namespace Silverstone.Manticore.BrowserWindow
         case "view-go-home":
           mBrowserWindow.webBrowser.GoHome();
           break;
+        case "view-reload":
+          mBrowserWindow.webBrowser.RefreshPage();
+          break;
+        case "view-stop":
+          mBrowserWindow.webBrowser.Stop();
+          break;
         case "view-layout-gecko":
           mBrowserWindow.webBrowser.SwitchLayoutEngine("gecko");
           break;
