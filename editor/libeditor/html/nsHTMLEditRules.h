@@ -100,6 +100,7 @@ protected:
   nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::EDirection aAction, 
                                PRBool *aCancel, PRBool *aHandled);
+  nsresult DeleteNonTableElements(nsIDOMNode *aNode);
   nsresult WillMakeList(nsIDOMSelection *aSelection, const nsString *aListType, PRBool *aCancel, PRBool *aHandled, const nsString *aItemType=nsnull);
   nsresult WillRemoveList(nsIDOMSelection *aSelection, PRBool aOrderd, PRBool *aCancel, PRBool *aHandled);
   nsresult WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
