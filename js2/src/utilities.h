@@ -147,7 +147,7 @@ namespace JavaScript {
 #else // Microsoft VC6 bug: String constructor and append limited to char16 iterators
 	String widenCString(const char *cstr);
 	void appendChars(String &str, const char *chars, size_t length);
-	void insertChars(String &str, String::size_type pos, const char *chars, size_t length)
+	void insertChars(String &str, String::size_type pos, const char *chars, size_t length);
 #endif
 	void insertChars(String &str, String::size_type pos, const char *cstr);
 
