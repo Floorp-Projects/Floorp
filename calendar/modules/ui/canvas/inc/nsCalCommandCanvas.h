@@ -40,7 +40,7 @@ public:
   NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent);
   NS_IMETHOD_(nsEventStatus) OnPaint(nsIRenderingContext& aRenderingContext,
                                      const nsRect& aDirtyRect);
-  NS_IMETHOD_(nsEventStatus) OnResize(nsGUIEvent *aEvent);
+  NS_IMETHOD_(nsEventStatus) OnResize(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
   NS_IMETHOD GetClassPreferredSize(nsSize& aSize);
 

@@ -238,7 +238,7 @@ protected:
 public:
     NS_IMETHOD_(nsEventStatus) OnPaint(nsIRenderingContext& aRenderingContext,
                                      const nsRect& aDirtyRect);
-    NS_IMETHOD_(nsEventStatus) OnResize(nsGUIEvent *aEvent);
+    NS_IMETHOD_(nsEventStatus) OnResize(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
     NS_IMETHOD_(nsEventStatus) OnLeftButtonDown(nsGUIEvent *aEvent);
     NS_IMETHOD_(nsEventStatus) OnLeftButtonUp(nsGUIEvent *aEvent);
     NS_IMETHOD_(nsEventStatus) OnMouseMove(nsGUIEvent *aEvent);

@@ -1628,9 +1628,9 @@ nsEventStatus nsCalMonthContextController :: OnPaint(nsIRenderingContext& aRende
     return nsEventStatus_eConsumeNoDefault;
 }
 
-nsEventStatus nsCalMonthContextController::OnResize(nsGUIEvent *aEvent) 
+nsEventStatus nsCalMonthContextController :: OnResize(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-    GetWidget()->Resize(0,0,((nsSizeEvent*)aEvent)->windowSize->width,((nsSizeEvent*)aEvent)->windowSize->height, PR_TRUE);
+    GetWidget()->Resize(0,0,aWidth,aHeight, PR_TRUE);
     return nsEventStatus_eConsumeNoDefault;
 }
 

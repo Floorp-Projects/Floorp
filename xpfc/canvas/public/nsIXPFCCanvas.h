@@ -136,7 +136,7 @@ public:
    * @param aEvent The GUI Event to be handled
    * @result nsEventStatus, status of OnResize event processing
    */
-  NS_IMETHOD_(nsEventStatus) OnResize(nsGUIEvent *aEvent) = 0;
+  NS_IMETHOD_(nsEventStatus) OnResize(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) = 0;
 
   /**
    * Handle an OnMove Message

@@ -173,7 +173,7 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
       mRootUI->Init();
     }
 
-    mRootUI->Init(aParent, aBounds,(((nsCalendarShell *)aCalendarShell)->mShellInstance->GetShellEventCallback()));
+    mRootUI->Init(aParent, aBounds,(((nsCalendarShell *)aCalendarShell)->mShellInstance->GetShellEventCallback()));    
 
     widget_parent = mRootUI->GetWidget();
 
@@ -190,17 +190,20 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
     if (res != NS_OK)
       return res;
 
+    static NS_DEFINE_IID(kCWidgetCID, NS_CHILD_CID);    
+
     view->Init(mViewManager, 
                aBounds, 
                nsnull,
+               nsnull,//&kCWidgetCID,
                nsnull,
-               nsnull,
-               widget_parent->GetNativeData(NS_NATIVE_WIDGET));
+               aParent->GetNativeData(NS_NATIVE_WIDGET));
 
     mViewManager->SetRootView(view);
 
-    mViewManager->DisableRefresh();
     mViewManager->SetWindowDimensions(aBounds.width, aBounds.height);
+
+    //view->GetWidget(widget_parent);
 
     gXPFCToolkit->GetCanvasManager()->Register(mRootUI,view);
   }
@@ -531,12 +534,13 @@ nsEventStatus nsCalendarContainer::HandleEvent(nsGUIEvent *aEvent)
   /*
    * find the canvas this event is associated with!
    */
-
   res = aEvent->widget->QueryInterface(kIXPFCCanvasIID,(void**)&canvas);
 
   if (res == NS_OK)
   {
     es = canvas->HandleEvent(aEvent);
+      
+    //mViewManager->DispatchEvent(aEvent, es);
 
     NS_RELEASE(canvas);
 
@@ -545,13 +549,6 @@ nsEventStatus nsCalendarContainer::HandleEvent(nsGUIEvent *aEvent)
 
   if (aEvent->message == NS_SIZE)
     mRootUI->SetBounds(*(((nsSizeEvent*)aEvent)->windowSize));
-#if 0
-    mRootUI->GetWidget()->Resize(((nsSizeEvent*)aEvent)->windowSize->x, 
-                                 ((nsSizeEvent*)aEvent)->windowSize->y, 
-                                 ((nsSizeEvent*)aEvent)->windowSize->width, 
-                                 ((nsSizeEvent*)aEvent)->windowSize->height, 
-                                 PR_FALSE);
-#endif
     
   return (mRootUI->HandleEvent(aEvent));
 }

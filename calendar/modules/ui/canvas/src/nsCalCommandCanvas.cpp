@@ -190,10 +190,11 @@ nsEventStatus PR_CALLBACK HandleEventTextField(nsGUIEvent *aEvent)
   return nsEventStatus_eIgnore;
 }
 
-nsEventStatus nsCalCommandCanvas :: OnResize(nsGUIEvent *aEvent)
+nsEventStatus nsCalCommandCanvas :: OnResize(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  SetBounds(*((nsSizeEvent*)aEvent)->windowSize);
-  return (nsXPFCCanvas::OnResize(aEvent));
+  nsRect rect(aX, aY, aWidth, aHeight);
+  SetBounds(rect);
+  return (nsXPFCCanvas::OnResize(aX, aY, aWidth, aHeight));
 }
 
 nsresult nsCalCommandCanvas :: SetBounds(const nsRect &aBounds)
