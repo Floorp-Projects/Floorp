@@ -20,6 +20,9 @@
 
 DEPTH = ..
 
+# Create JAR file
+DIRS += classes
+
 #
 # XCFLAGS may be set in the environment or on the gmake command line
 #
@@ -39,9 +42,17 @@ LC_HFILES =		\
 	jsj_private.h   \
 	jsjava.h        \
 	netscape_javascript_JSObject.h \
+	nsCLiveconnectFactory.h        \
+	nsILiveconnect.h               \
+	nsISecureLiveconnect.h         \
+	nsISecurityContext.h           \
 	$(NULL)
 
-HFILES = $(LC_HFILES)
+OTHER_HFILES =		\
+	jsj.msg		\
+	$(NULL)
+
+HFILES = $(LC_HFILES) $(OTHER_HFILES)
 
 LC_CFILES =	\
 	jsj.c \
@@ -72,12 +83,12 @@ INCLUDES   += -I. -I.. -I../$(OBJDIR)
 ifdef USE_MSVC
 OTHER_LIBS += $(DEPTH)/fdlibm/$(OBJDIR)/fdlibm.lib
 else
-OTHER_LIBS += -L$(DEPTH)/fdlibm/$(OBJDIR) -lfdm
+OTHER_LIBS += -L$(DEPTH)/fdlibm/$(OBJDIR) -lfdm -L../$(OBJDIR) -ljs
 endif
 
 ifdef JS_THREADSAFE
 ifdef USE_MSVC
-OTHER_LIBS += $(DEPTH)/../../dist/$(OBJDIR)/lib/nspr3.lib
+OTHER_LIBS += $(DEPTH)/../../dist/$(OBJDIR)/lib/libnspr3.lib
 else
 OTHER_LIBS += -L$(DEPTH)/../../dist/$(OBJDIR)/lib -lnspr3
 endif
@@ -86,11 +97,11 @@ endif
 ifdef USE_MSVC
 LIBRARY = $(OBJDIR)/jsj.lib
 SHARED_LIBRARY = $(OBJDIR)/jsj.dll
-PROGRAM = $(OBJDIR)/jsj.exe
+PROGRAM = $(OBJDIR)/lcshell.exe
 else
-LIBRARY = $(OBJDIR)/jsj.a
-SHARED_LIBRARY = $(OBJDIR)/jsj.so
-PROGRAM = $(OBJDIR)/jsj
+LIBRARY = $(OBJDIR)/libjsj.a
+SHARED_LIBRARY = $(OBJDIR)/libjsj.$(SO_SUFFIX)
+PROGRAM = $(OBJDIR)/lcshell
 endif
 
 include $(DEPTH)/rules.mk
@@ -100,14 +111,14 @@ $(OBJDIR)/$(PROG_FILE)_lc.obj: ../$(PROG_FILE).c
 	@$(MAKE_OBJDIR)
 	$(CC) -Fo$@ -c $(CFLAGS) -DLIVECONNECT ../$(PROG_FILE).c
 
-$(PROGRAM): $(OBJDIR)/$(PROG_FILE)_lc.obj $(LIBRARY)
-	link.exe -out:"$@" /pdb:"$(OBJDIR)/$(@F:.exe=.pdb)" $(EXE_LINK_FLAGS) ../$(OBJDIR)/js32.lib $?
+$(PROGRAM): $(OBJDIR)/$(PROG_FILE)_lc.obj $(OBJDIR)/jsj_simpleapi.obj $(LIBRARY)
+	link.exe -out:"$@" $(EXE_LINK_FLAGS) ../$(OBJDIR)/js32.lib $(OTHER_LIBS) $?
 else
 $(OBJDIR)/$(PROG_FILE).o: ../$(PROG_FILE).c
 	@$(MAKE_OBJDIR)
 	$(CC) -o $@ -c $(CFLAGS) -DLIVECONNECT ../$(PROG_FILE).c
 
-$(PROGRAM): $(OBJDIR)/$(PROG_FILE).o
+$(PROGRAM): $(OBJDIR)/$(PROG_FILE).o $(OBJDIR)/jsj_simpleapi.o
 	@$(MAKE_OBJDIR)
 	$(CC) -o $@ $(CFLAGS) $+ $(LIBRARY) ../$(OBJDIR)/libjs.a $(LDFLAGS) $(OTHER_LIBS)
 endif
