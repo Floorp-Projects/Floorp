@@ -327,6 +327,15 @@
                        (write-to-string item)))))))
 
 
+; Return an association list of all the entries in the hash table.
+(defun hash-table-entries (hash-table)
+  (let ((entries nil))
+    (maphash #'(lambda (key value)
+                 (push (cons key value) entries))
+             hash-table)
+    entries))
+
+
 ; Given an association list ((key1 . data1) (key2 . data2) ... (keyn datan)),
 ; produce another association list whose keys are sets of the keys of the original list,
 ; where the data elements of each such set are equal according to the given test function.
