@@ -169,7 +169,7 @@
 
     function OpenAboutPopups() {
       window.openDialog("chrome://communicator/content/aboutPopups.xul", "", 
-                        "chrome,centerscreen,resizable=yes", 
+                        "chrome,centerscreen,dependent", 
                         false);
     }
 
