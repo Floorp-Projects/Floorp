@@ -1276,8 +1276,8 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsDependentString href(NS_REINTERPRET_CAST(PRUnichar *,
-                                               ::JS_GetStringChars(val)),
-                           ::JS_GetStringLength(val));
+                                                 ::JS_GetStringChars(val)),
+                             ::JS_GetStringLength(val));
 
       rv = location->SetHref(href);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -1415,8 +1415,8 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
   NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
   nsDependentString name(NS_REINTERPRET_CAST(const PRUnichar*,
-                                           ::JS_GetStringChars(str)),
-                       ::JS_GetStringLength(str));
+                                             ::JS_GetStringChars(str)),
+                         ::JS_GetStringLength(str));
 
   const nsGlobalNameStruct *name_struct = nsnull;
 
@@ -2142,8 +2142,8 @@ nsNamedArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     JSString *str = JSVAL_TO_STRING(id);
 
     nsDependentString name(NS_REINTERPRET_CAST(const PRUnichar *,
-                                             ::JS_GetStringChars(str)),
-                         ::JS_GetStringLength(str));
+                                               ::JS_GetStringChars(str)),
+                           ::JS_GetStringLength(str));
 
     nsresult rv = GetNamedItem(native, name, getter_AddRefs(item));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2312,8 +2312,8 @@ nsDocumentSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         NS_ENSURE_TRUE(val, NS_ERROR_UNEXPECTED);
 
         nsDependentString href(NS_REINTERPRET_CAST(const PRUnichar *,
-                                                 ::JS_GetStringChars(val)),
-                             ::JS_GetStringLength(val));
+                                                   ::JS_GetStringChars(val)),
+                               ::JS_GetStringLength(val));
 
         nsresult rv = location->SetHref(href);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -2329,29 +2329,64 @@ nsDocumentSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 // HTMLDocument helper
 
+nsresult
+nsHTMLDocumentSH::ResolveImpl(nsIXPConnectWrappedNative *wrapper, jsval id,
+                              nsISupports **result)
+{
+  nsCOMPtr<nsISupports> native;
+
+  wrapper->GetNative(getter_AddRefs(native));
+  NS_ABORT_IF_FALSE(native, "No native!");
+
+  nsCOMPtr<nsIHTMLDocument> doc(do_QueryInterface(native));
+  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+
+  JSString *str = JSVAL_TO_STRING(id);
+
+  const nsDependentString name(NS_REINTERPRET_CAST(const PRUnichar *,
+                                                   ::JS_GetStringChars(str)),
+                               ::JS_GetStringLength(str));
+
+  return doc->ResolveName(name, nsnull, result);
+}
+
+NS_IMETHODIMP
+nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                             JSObject *obj, jsval id, PRUint32 flags,
+                             JSObject **objp, PRBool *_retval)
+{
+  if (!(flags & JSRESOLVE_ASSIGNING) && JSVAL_IS_STRING(id)) {
+    nsCOMPtr<nsISupports> result;
+
+    nsresult rv = ResolveImpl(wrapper, id, getter_AddRefs(result));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (result) {
+      JSString *str = JSVAL_TO_STRING(id);
+
+      JSBool ok = *_retval =
+        ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                              ::JS_GetStringLength(str), JSVAL_VOID, nsnull,
+                              nsnull, 0);
+      *objp = obj;
+
+      return ok ? NS_OK : NS_ERROR_FAILURE;
+    }
+  }
+
+  return nsDocumentSH::NewResolve(wrapper, cx, obj, id, flags, objp, _retval);
+}
+
 NS_IMETHODIMP
 nsHTMLDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
                               JSContext *cx, JSObject *obj, jsval id,
                               jsval *vp, PRBool *_retval)
 {
   if (JSVAL_IS_STRING(id)) {
-    nsCOMPtr<nsISupports> native;
-
-    wrapper->GetNative(getter_AddRefs(native));
-    NS_ABORT_IF_FALSE(native, "No native!");
-
-    nsCOMPtr<nsIHTMLDocument> doc(do_QueryInterface(native));
-    NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
-
-    JSString *str = JSVAL_TO_STRING(id);
-
-    nsDependentString name(NS_REINTERPRET_CAST(const PRUnichar *,
-                                             ::JS_GetStringChars(str)),
-                         ::JS_GetStringLength(str));
-
     nsCOMPtr<nsISupports> result;
 
-    doc->ResolveName(name, nsnull, getter_AddRefs(result));
+    nsresult rv = ResolveImpl(wrapper, id, getter_AddRefs(result));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (result) {
       return WrapNative(cx, ::JS_GetGlobalObject(cx), result,
@@ -2373,8 +2408,8 @@ nsHTMLFormElementSH::FindNamedItem(nsIForm *aForm, JSString *str,
   *aResult = nsnull;
 
   nsDependentString name(NS_REINTERPRET_CAST(const PRUnichar *,
-                                           ::JS_GetStringChars(str)),
-                       ::JS_GetStringLength(str));
+                                             ::JS_GetStringChars(str)),
+                         ::JS_GetStringLength(str));
 
   aForm->ResolveName(name, aResult);
 
