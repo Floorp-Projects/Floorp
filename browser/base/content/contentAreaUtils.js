@@ -161,8 +161,9 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
   const nsILocalFile = Components.interfaces.nsILocalFile;
   const lfContractID = "@mozilla.org/file/local;1";
 
+  var dir = null;
   try {
-    var dir = prefs.getComplexValue("dir", nsILocalFile);
+    dir = prefs.getComplexValue("dir", nsILocalFile);
   }
   catch (e) {
   }
@@ -179,7 +180,8 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
     appendFiltersForContentType(fp, contentType,
                                 isDocument ? MODE_COMPLETE : MODE_FILEONLY);  
   
-    fp.displayDirectory = dir;
+    if (dir)
+      fp.displayDirectory = dir;
     
     if (isDocument) {
       try {
