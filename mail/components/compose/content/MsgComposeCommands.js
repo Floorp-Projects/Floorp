@@ -1778,15 +1778,9 @@ function Save()
 
 function SaveAsFile(saveAs)
 {
-<<<<<<< MsgComposeCommands.js
-  dump("SaveAsFile from XUL\n");
-  var subject = document.getElementById('msgSubject').value;
-  GetCurrentEditor().setDocumentTitle(subject);
-=======
   dump("SaveAsFile from XUL\n");
   var subject = document.getElementById('msgSubject').value; 
   GetCurrentEditor().setDocumentTitle(subject); 
->>>>>>> 1.26
 
   if (gMsgCompose.bodyConvertible() == nsIMsgCompConvertible.Plain)
     SaveDocument(saveAs, false, "text/plain");
