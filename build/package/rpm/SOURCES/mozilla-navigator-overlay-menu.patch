@@ -1,11 +1,11 @@
---- mozilla/xpfe/browser/resources/content/navigatorOverlay.xul.foo	Tue Jul 23 14:43:07 2002
-+++ mozilla/xpfe/browser/resources/content/navigatorOverlay.xul	Tue Jul 23 14:44:43 2002
-@@ -363,133 +363,6 @@
+--- mozilla/xpfe/browser/resources/content/navigatorOverlay.xul.foo	2002-10-16 01:45:18.000000000 -0400
++++ mozilla/xpfe/browser/resources/content/navigatorOverlay.xul	2002-10-16 01:45:39.000000000 -0400
+@@ -366,134 +366,6 @@
    
    <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
  
 -  <!-- Menu for testing. -->
--  <menu id="debugMenu" accesskey="D" label="Debug">
+-  <menu id="debugMenu" accesskey="U" label="Debug">
 -    <menupopup>
 -      <menu label="Verification">
 -        <menupopup>
@@ -79,7 +79,7 @@
 -        </menupopup>
 -      </menu>
 -
--      <menuitem label="Form Manager Samples" oncommand="loadURI('chrome://communicator/locale/wallet/index.html');"/>
+-      <menuitem label="Form Manager Samples" oncommand="loadURI('http://www.mozilla.org/wallet/samples/wallet.html');"/>
 -
 -      <menuitem label="chofmann's Browser Buster" oncommand="loadURI('http://komodo.mozilla.org/buster/');"/>
 -      <menuitem label="Composer (with test page)" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
@@ -114,12 +114,13 @@
 -
 -      <menuitem label="Frequently Reported Bugs" oncommand="loadURI('http://bugzilla.mozilla.org/duplicates.cgi');"/>
 -      <menuitem label="Bug Writing Guidelines" oncommand="loadURI('http://www.mozilla.org/quality/bug-writing-guidelines.html');"/>
--      <menuitem label="File a Bug" oncommand="loadURI('http://www.mozilla.org/quality/help/bug-form.html');"/>
+-      <menuitem label="File a Bug" oncommand="loadURI('http://bugzilla.mozilla.org/enter_bug.cgi?format=guided');"/>
 -
 -      <menuseparator />
 -
 -      <menuitem label="Bugs Filed Today" oncommand="loadURI('http://bugzilla.mozilla.org/buglist.cgi?changedin=1&amp;chfield=%5BBug+creation%5D&amp;amp;chfieldto=Now&amp;product=Browser&amp;product=MailNews');"/>
 -      <menuitem label="CVS Checkins Today" oncommand="loadURI('http://bonsai.mozilla.org/cvsquery.cgi?treeid=default&amp;module=SeaMonkeyAll&amp;branch=HEAD&amp;branchtype=match&amp;sortby=Date&amp;date=day&amp;cvsroot=%2Fcvsroot');"/>
+-      <menuitem label="Tree Status" oncommand="loadURI('http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey');"/>
 -
 -      <menuseparator />
 -

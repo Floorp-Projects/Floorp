@@ -1,10 +1,14 @@
+%define _unpackaged_files_terminate_build 0
+%define toolkit_options --disable-freetype2
+%define builddir %{_builddir}/mozilla
+
 Name:        mozilla
 Summary:     Web browser and mail reader
 Version:     VERSION_REPLACE
 Release:     RELEASE_REPLACE
 Serial:      35
 Copyright:   MPL
-Source0:     mozilla-source-RELEASE_REPLACE.tar.gz
+Source0:     mozilla-source-SOURCE_RELEASE_REPLACE.tar.gz
 Source1:     mozilla.sh.in
 Source2:     mozilla-icon.png
 Source4:     mozilla.desktop
@@ -36,7 +40,8 @@ Group:       Applications/Internet
 Provides:    webclient
 BuildPrereq: libpng-devel, libjpeg-devel, zlib-devel, zip, perl, autoconf, indexhtml, ORBit-devel, glib-devel, gtk+-devel
 Prereq:      fileutils perl
-Requires:    mozilla-nspr = %{version}-%{release}
+Prereq:      /usr/bin/killall
+Requires:    mozilla-nspr = %{version}-%{release}, indexhtml
 
 %description
 Mozilla is an open-source web browser, designed for standards
@@ -182,6 +187,7 @@ if test "x$CPUS" = "x" -o "x$CPUS" = "x0"; then
 fi
 
 # build mozilla
+CC=gcc296 CXX=g++296 \
 BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 \
 	./configure --prefix=%{_prefix} --enable-optimize \
 	--disable-debug \
@@ -195,8 +201,10 @@ BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 \
 	--enable-crypto \
 	--disable-xprint \
 	--without-system-nspr \
+	%{toolkit_options} \
 	--with-system-zlib \
-	--disable-freetype2
+	--mandir=%{_mandir}
+
 
 BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 make -s export
 BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 make -j$CPUS -s libs
@@ -210,6 +218,13 @@ BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 \
 
 # create a list of all of the different package and the files that
 # will hold them
+
+/bin/rm -f %{builddir}/mozilla.list
+/bin/rm -f %{builddir}/mozilla-mail.list
+/bin/rm -f %{builddir}/mozilla-psm.list
+/bin/rm -f %{builddir}/mozilla-chat.list
+/bin/rm -f %{builddir}/mozilla-js-debugger.list
+/bin/rm -f %{builddir}/mozilla-dom-inspector.list
 
 # NSS and NSPR are both installed into /usr/lib instead of
 # /usr/lib/mozilla-VERSION
@@ -227,86 +242,92 @@ mv -v \
   $RPM_BUILD_ROOT/usr/lib/
 
 # copy system libs
-mv -v \
-  libgkgfx.so libjsj.so libmozjs.so libxpcom.so \
-  libgtkembedmoz.so libgtksuperwin.so libgtkxtbin.so \
-  $RPM_BUILD_ROOT/usr/lib/
+for i in libgkgfx.so libjsj.so libmozjs.so libxpcom.so \
+  libgtkembedmoz.so libgtksuperwin.so libgtkxtbin.so
+do
+  if [ -f $i ]; then
+    mv -v $i $RPM_BUILD_ROOT/usr/lib/
+    echo /usr/lib/$i >> %{builddir}/mozilla.list
+  else
+    echo $i does not exist - skipping
+  fi
+done
 
 # libnssckbi.so must be in both places
 cp -v libnssckbi.so $RPM_BUILD_ROOT/usr/lib/
 popd
 
-/bin/rm -f /tmp/mozilla-nspr.list
-%{SOURCE7} --package nspr --output-file /tmp/mozilla-nspr.list \
+/bin/rm -f %{builddir}/mozilla-nspr.list
+%{SOURCE7} --package nspr --output-file %{builddir}/mozilla-nspr.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
     --install-dir $RPM_BUILD_ROOT/usr/lib \
     --install-root /usr/lib
 
-/bin/rm -f /tmp/mozilla-nss.list
-%{SOURCE7} --package nss --output-file /tmp/mozilla-nss.list \
+/bin/rm -f %{builddir}/mozilla-nss.list
+%{SOURCE7} --package nss --output-file %{builddir}/mozilla-nss.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
     --install-dir $RPM_BUILD_ROOT/usr/lib \
     --install-root /usr/lib
 
 # manually add the libnssckbi.so file
-echo /usr/lib/mozilla-%{version}/libnssckbi.so >> /tmp/mozilla-nss.list
+echo /usr/lib/mozilla-%{version}/libnssckbi.so >> %{builddir}/mozilla-nss.list
 
 # build all of the default browser components
-/bin/rm -f /tmp/mozilla.list
-%{SOURCE7} --package langenus --output-file /tmp/mozilla.list \
+# base mozilla package (mozilla.list)
+%{SOURCE7} --package langenus --output-file %{builddir}/mozilla.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
     --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
     --install-root /usr/lib/mozilla-%{version}
 
-%{SOURCE7} --package regus --output-file /tmp/mozilla.list \
+%{SOURCE7} --package regus --output-file %{builddir}/mozilla.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
     --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
     --install-root /usr/lib/mozilla-%{version}
 
-%{SOURCE7} --package deflenus --output-file /tmp/mozilla.list \
+%{SOURCE7} --package deflenus --output-file %{builddir}/mozilla.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
     --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
     --install-root /usr/lib/mozilla-%{version}
 
-%{SOURCE7} --package xpcom --output-file /tmp/mozilla.list \
+%{SOURCE7} --package xpcom --output-file %{builddir}/mozilla.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
     --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
     --install-root /usr/lib/mozilla-%{version} \
     --exclude-file=%{SOURCE18}
 
-%{SOURCE7} --package browser --output-file /tmp/mozilla.list \
+%{SOURCE7} --package browser --output-file %{builddir}/mozilla.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
     --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
     --install-root /usr/lib/mozilla-%{version} \
     --exclude-file=%{SOURCE16}
 
-/bin/rm -f /tmp/mozilla-mail.list
-%{SOURCE7} --package mail --output-file /tmp/mozilla-mail.list \
+# mozilla mail (mozilla-mail.list)
+%{SOURCE7} --package mail --output-file %{builddir}/mozilla-mail.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
     --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
     --install-root /usr/lib/mozilla-%{version}
 
-/bin/rm -f /tmp/mozilla-psm.list
-%{SOURCE7} --package psm --output-file /tmp/mozilla-psm.list \
+# mozilla psm (mozilla-psm.list)
+%{SOURCE7} --package psm --output-file %{builddir}/mozilla-psm.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
     --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
     --install-root /usr/lib/mozilla-%{version} \
     --exclude-file=%{SOURCE17}
 
-/bin/rm -f /tmp/mozilla-chat.list
-%{SOURCE7} --package chatzilla --output-file /tmp/mozilla-chat.list \
+# mozilla chat (mozilla-chat.list)
+%{SOURCE7} --package chatzilla --output-file %{builddir}/mozilla-chat.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
     --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
     --install-root /usr/lib/mozilla-%{version}
 
-/bin/rm -f /tmp/mozilla-js-debugger.list
-%{SOURCE7} --package venkman --output-file /tmp/mozilla-js-debugger.list \
+# mozilla JS debugger (mozilla-js-debugger.list)
+%{SOURCE7} --package venkman --output-file %{builddir}/mozilla-js-debugger.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
     --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
     --install-root /usr/lib/mozilla-%{version}
 
-/bin/rm -f /tmp/mozilla-dom-inspector.list
-%{SOURCE7} --package inspector --output-file /tmp/mozilla-dom-inspector.list \
+# mozilla DOM inspector (mozilla-dom-inspector.list)
+%{SOURCE7} --package inspector --output-file %{builddir}/mozilla-dom-inspector.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
     --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
     --install-root /usr/lib/mozilla-%{version}
@@ -338,25 +359,25 @@ mkdir $RPM_BUILD_ROOT/%{prefix}/include/mozilla-%{version}/nss/
  $RPM_BUILD_ROOT/%{prefix}/include/mozilla-%{version}/nss/ \;
 
 # build the list of include files
-rm -f /tmp/mozilla-devel.list
-rm -f /tmp/mozilla-nss-devel.list
-rm -f /tmp/mozilla-nspr-devel.list
+rm -f %{builddir}/mozilla-devel.list
+rm -f %{builddir}/mozilla-nss-devel.list
+rm -f %{builddir}/mozilla-nspr-devel.list
 
 find $RPM_BUILD_ROOT/%{prefix}/include/mozilla-%{version}/ -type f | \
   sed -e "s,$RPM_BUILD_ROOT,," | \
   grep -v "/%{prefix}/include/mozilla-%{version}/nss" | \
   grep -v "/%{prefix}/include/mozilla-%{version}/nspr" > \
-  /tmp/mozilla-devel.list
+  %{builddir}/mozilla-devel.list
 
 find $RPM_BUILD_ROOT/%{prefix}/include/mozilla-%{version}/ -type f | \
   sed -e "s,$RPM_BUILD_ROOT,," | \
   grep "/%{prefix}/include/mozilla-%{version}/nspr" > \
-  /tmp/mozilla-nspr-devel.list
+  %{builddir}/mozilla-nspr-devel.list
 
 find $RPM_BUILD_ROOT/%{prefix}/include/mozilla-%{version}/ -type f| \
   sed -e "s,$RPM_BUILD_ROOT,," | \
   grep "/%{prefix}/include/mozilla-%{version}/nss" > \
-  /tmp/mozilla-nss-devel.list
+  %{builddir}/mozilla-nss-devel.list
 
 # copy our idl into place
 #mkdir -p $RPM_BUILD_ROOT/%{prefix}/share/idl/mozilla-%{version}
@@ -380,6 +401,14 @@ install -c -m 644 %{SOURCE2} %{SOURCE13} %{SOURCE15} \
 
 install -c -m 644  %{SOURCE4} %{SOURCE12} %{SOURCE14} \
   $RPM_BUILD_ROOT/etc/X11/applnk/Internet
+
+if [ ! -d mkdir -m 755 $RPM_BUILD_ROOT/usr/lib/mozilla-%{version}/icons/ ]; then
+  mkdir -m 755 $RPM_BUILD_ROOT/usr/lib/mozilla-%{version}/icons
+fi
+
+if [ ! -d $RPM_BUILD_ROOT/usr/lib/mozilla-%{version}/plugins/ ]; then
+  mkdir -m 755 $RPM_BUILD_ROOT/usr/lib/mozilla-%{version}/plugins
+fi
 
 # our icons are better!
 install -c -m 644 %{SOURCE9} $RPM_BUILD_ROOT/usr/lib/mozilla-%{version}/icons/
@@ -525,21 +554,13 @@ if [ -f /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
     /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
 fi
 
-%files -f /tmp/mozilla.list
+%files -f mozilla.list
 %defattr(-,root,root)
 %{prefix}/bin/mozilla
 %{prefix}/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
 %{prefix}/share/pixmaps/mozilla-icon.png
 %{prefix}/share/pixmaps/mozilla-mail-icon.gif
 %{prefix}/share/pixmaps/mozilla-compose-icon.gif
-
-%{prefix}/lib/libgkgfx.so
-%{prefix}/lib/libjsj.so
-%{prefix}/lib/libmozjs.so
-%{prefix}/lib/libxpcom.so
-%{prefix}/lib/libgtkembedmoz.so
-%{prefix}/lib/libgtksuperwin.so
-%{prefix}/lib/libgtkxtbin.so
 
 %verify (not md5 mtime size) %{prefix}/lib/mozilla-%{version}/components/compreg.dat
 %verify (not md5 mtime size) %{prefix}/lib/mozilla-%{version}/components/xpti.dat
@@ -564,38 +585,38 @@ fi
 
 /etc/X11/applnk/Internet/mozilla.desktop
 
-%files nspr -f /tmp/mozilla-nspr.list
+%files nspr -f mozilla-nspr.list
 %defattr(-,root,root)
 
-%files nspr-devel -f /tmp/mozilla-nspr-devel.list
+%files nspr-devel -f mozilla-nspr-devel.list
 %defattr(-,root,root)
 %{prefix}/lib/pkgconfig/*
 %{prefix}/bin/mozilla-config
 
-%files nss -f /tmp/mozilla-nss.list
+%files nss -f mozilla-nss.list
 %defattr(-,root,root)
 
-%files nss-devel -f /tmp/mozilla-nss-devel.list
+%files nss-devel -f mozilla-nss-devel.list
 %defattr(-,root,root)
 
-%files mail -f /tmp/mozilla-mail.list
+%files mail -f mozilla-mail.list
 %defattr(-,root,root)
 /etc/X11/applnk/Internet/mozilla-mail.desktop
 /etc/X11/applnk/Internet/mozilla-compose.desktop
 
-%files psm -f /tmp/mozilla-psm.list
+%files psm -f mozilla-psm.list
 %defattr(-,root,root)
 
-%files chat -f /tmp/mozilla-chat.list
+%files chat -f mozilla-chat.list
 %defattr(-,root,root)
 
-%files js-debugger -f /tmp/mozilla-js-debugger.list
+%files js-debugger -f mozilla-js-debugger.list
 %defattr(-,root,root)
 
-%files dom-inspector -f /tmp/mozilla-dom-inspector.list
+%files dom-inspector -f mozilla-dom-inspector.list
 %defattr(-,root,root)
 
-%files devel -f /tmp/mozilla-devel.list
+%files devel -f mozilla-devel.list
 %defattr(-,root,root)
 %{prefix}/share/idl/mozilla-%{version}/*
 %{prefix}/lib/mozilla-%{version}/xpcshell
