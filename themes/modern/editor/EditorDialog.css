@@ -167,7 +167,7 @@ tree.list {
 /* ::::: color picker button ::::: */
 
 button.color-button {
-  margin: 4px;
+  margin: 2px;
   width: 32px;
   min-width: 32px;
 }
