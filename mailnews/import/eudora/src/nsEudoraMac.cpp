@@ -41,8 +41,8 @@
 
 #include "EudoraDebugLog.h"
 
-#include <resources.h>
-#include <files.h>
+#include <Resources.h>
+#include <Files.h>
 #include <TextUtils.h>
 
 #ifdef XP_MACOSX

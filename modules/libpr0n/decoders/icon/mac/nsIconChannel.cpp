@@ -33,7 +33,7 @@
 #include "nsIStringStream.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
-#include "nsIMimeService.h"
+#include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
 #include "plstr.h"
 #include "nsILocalFileMac.h"
@@ -42,7 +42,7 @@
 #include <Files.h>
 #include <Folders.h>
 #include <Icons.h>
-#include <QuickDraw.h>
+#include <Quickdraw.h>
 #include <MacMemory.h>
 
 // nsIconChannel methods
