@@ -29,9 +29,9 @@
 
 #include "nsIGenericFactory.h"
 #include "nsAccessProxy.h"
+#include "nsIServiceManager.h"
 #include "nsIAppShellComponent.h"
 #include "nsIRegistry.h"
-#include "nsIServiceManager.h"
 #include "prprf.h"
 #include "nsCRT.h"
 

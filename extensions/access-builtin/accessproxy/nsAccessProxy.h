@@ -67,7 +67,7 @@ public:
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   //NS_DECL_NSIACCESSPROXY
-  virtual nsresult HandleEvent(nsIDOMEvent *event);  // This compiles on Windows
+  NS_IMETHOD HandleEvent(nsIDOMEvent *event);  
 
   static nsAccessProxy *GetInstance();
   static void ReleaseInstance(void);
