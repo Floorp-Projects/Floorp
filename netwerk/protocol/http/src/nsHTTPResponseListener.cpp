@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -59,7 +59,9 @@ static const int kMAX_HEADER_SIZE = 60000;
 nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel* aConnection):
     mFirstLineParsed(PR_FALSE),
     mHeadersDone(PR_FALSE),
-    mDataOnly(PR_FALSE),
+    mFiredOnHeadersAvailable(PR_FALSE),
+    mFiredOpenOnStartRequest(PR_FALSE),
+    mAsyncReadAfterAsyncOpen(PR_FALSE),
     mReadLength(0),
     mResponse(nsnull),
     mResponseContext(nsnull),
@@ -147,35 +149,21 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
         }
 
         if (NS_FAILED(rv)) return rv;
+        
+        // Don't do anything else until all headers have been parsed
+        if (!mHeadersDone)
+            return NS_OK;
+
         //
-        // All the headers have been read.  Check the status code of the 
-        // response to see if any special action should be taken.
-
-        // We want to defer header completion notification until the 
-        // caller actually does an AsyncRead();
-        if (mHeadersDone) {
-            if (mConnection->mOpenObserver) {
-                mConnection->mRawResponseListener = this;
-                rv = mConnection->mOpenObserver->OnStartRequest(mConnection, 
-                                                            mConnection->mOpenContext);
-                mDataStream = i_pStream;
-            } else {
-                rv = FinishedResponseHeaders();
-            }
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
-
-    if (mDataOnly && mDataStream) {
-        // fire on headers *once* if we're in data only mode.
-        mDataStream = 0; // we're done w/ this stream.
+        // All the headers have been read.
+        //
         rv = FinishedResponseHeaders();
         if (NS_FAILED(rv)) return rv;
     }
 
     // At this point we've digested headers from the server and we're
     // onto the actual data. If this transaction was initiated without
-    // an AsyncOpen, we just want to pass the OnData() notifications
+    // an AsyncRead, we just want to pass the OnData() notifications
     // straight through to the consumer.
     //
     // .... otherwise...
@@ -184,8 +172,9 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
     // so when we finally push the stream to the consumer via AsyncRead,
     // we're sure to pass him all the data that has queued up.
 
-    if (mConnection->mOpenObserver && !mDataOnly) {
+    if (mConnection->mOpenObserver && !mAsyncReadAfterAsyncOpen) {
         mBytesReceived += i_Length;
+        mDataStream = i_pStream;
     } else {
 
         //
@@ -271,9 +260,8 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
         mConnection->ResponseCompleted(channel, i_Status, i_pMsg);
     }
 
-    if (mDataOnly) {
+    if (mConnection->mOpenObserver) {
         // we're done processing the data
-        NS_ASSERTION(mConnection->mOpenObserver, "HTTP: HTTP should still have an observer.");
         rv = mConnection->mOpenObserver->OnStopRequest(mConnection,
                                                    mConnection->mOpenContext,
                                                    i_Status, i_pMsg);
@@ -295,11 +283,22 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
 nsresult nsHTTPResponseListener::FireSingleOnData(nsIStreamListener *aListener, nsISupports *aContext)
 {
     nsresult rv;
+
     mConsumer = aListener;
     mResponseContext = aContext;
-    rv = mConsumer->OnDataAvailable(mConnection, mResponseContext,
-                                    mDataStream, 0, mBytesReceived);
-    mDataOnly = PR_TRUE;
+
+    if (mHeadersDone) {
+        rv = FinishedResponseHeaders();
+        if (NS_FAILED(rv)) return rv;
+        
+        if (mBytesReceived) {
+            rv = mConsumer->OnDataAvailable(mConnection, mResponseContext,
+                                            mDataStream, 0, mBytesReceived);
+        }
+        mDataStream = 0;
+    }
+    
+    mAsyncReadAfterAsyncOpen = PR_TRUE;
     return rv;
 }
 
@@ -390,95 +389,12 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in,
   mHeaderBuffer.CompressSet(" \t", ' ');
   mHeaderBuffer.StripChars("\r\n");
 
-  //
-  // The Status Line has the following: format:
-  //    HTTP-Version SP Status-Code SP Reason-Phrase CRLF
-  //
+  rv = mResponse->ParseStatusLine(mHeaderBuffer);
+  if (NS_FAILED(rv)) return rv;
 
-  const char *token;
-  nsCAutoString str;
-  PRInt32 offset, error;
-
-  //
-  // Parse the HTTP-Version:: "HTTP" "/" 1*DIGIT "." 1*DIGIT
-  //
-
-  offset = mHeaderBuffer.FindChar(' ');
-  (void) mHeaderBuffer.Left(str, offset);
-  if (!str.Length()) {
-    // The status line is bogus...
-    return NS_ERROR_FAILURE;
-  }
-  token = str.GetBuffer();
-  mResponse->SetServerVersion(token);
-
-  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-         ("\tParseStatusLine [this=%x].\tHTTP-Version: %s\n",
-          this, token));
-
-  mHeaderBuffer.Cut(0, offset+1);
-
-  //
-  // Parse the Status-Code:: 3DIGIT
-  //
-  PRInt32 statusCode;
-
-  offset = mHeaderBuffer.FindChar(' ');
-  (void) mHeaderBuffer.Left(str, offset);
-  if (3 != str.Length()) {
-    // The status line is bogus...
-    return NS_ERROR_FAILURE;
-  }
-
-  statusCode = str.ToInteger(&error);
-  if (NS_FAILED(error)) return NS_ERROR_FAILURE;
-
-  mResponse->SetStatus(statusCode);
-
-  PRBool authAttempt = PR_FALSE;
-  mConnection->GetAuthTriedWithPrehost(&authAttempt);
-
-  if ( statusCode != 401 && authAttempt) {
-    // we know this auth challenge response wassuccessful. cache any authentication 
-    // now so URLs within this body can use it.
-    nsAuthEngine* pEngine;
-    NS_ASSERTION(mConnection->mHandler, "HTTP handler went away");
-    if (NS_SUCCEEDED(mConnection->mHandler->GetAuthEngine(&pEngine)) )
-    {
-       nsXPIDLCString authString;
-       NS_ASSERTION(mConnection->mRequest, "HTTP request went away");
-       rv = mConnection->mRequest->GetHeader(nsHTTPAtoms::Authorization, 
-               getter_Copies(authString));
-       if (NS_FAILED(rv)) return rv;
-
-       nsCOMPtr<nsIURI> luri;
-       rv = mConnection->GetURI(getter_AddRefs(luri));
-       if (NS_FAILED(rv)) return rv;
-
-       pEngine->SetAuthString(luri, authString);
-    }
-  }
-  
-  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-         ("\tParseStatusLine [this=%x].\tStatus-Code: %d\n",
-          this, statusCode));
-
-  mHeaderBuffer.Cut(0, offset+1);
-
-  //
-  // Parse the Reason-Phrase:: *<TEXT excluding CR,LF>
-  //
-  token = mHeaderBuffer.GetBuffer();
-  mResponse->SetStatusString(token);
-
-  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-         ("\tParseStatusLine [this=%x].\tReason-Phrase: %s\n",
-          this, token));
-
-  mHeaderBuffer.Truncate();
   mFirstLineParsed = PR_TRUE;
-  
-  return rv;
+
+  return NS_OK;
 }
 
 
@@ -502,7 +418,7 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBufferInputStream* in,
   //
   // Read the header from the input buffer...  A header is terminated by 
   // a CRLF.  Header values may be extended over multiple lines by preceeding
-  // each extran line with LWS...
+  // each extra line with linear white space...
   //
   do {
     //
@@ -572,59 +488,42 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBufferInputStream* in,
   mHeaderBuffer.CompressSet(" \t", ' ');
   mHeaderBuffer.StripChars("\r\n");
 
-  if (!mHeaderBuffer.Length()) {
+  if (mHeaderBuffer.Length() == 0) {
     mHeadersDone = PR_TRUE;
     return NS_OK;
   }
 
-  //
-  // Extract the key field - everything up to the ':'
-  // The header name is case-insensitive...
-  //
-  PRInt32 colonOffset;
-  nsCAutoString headerKey;
-  nsCOMPtr<nsIAtom> headerAtom;
-
-  colonOffset = mHeaderBuffer.FindChar(':');
-  if (kNotFound == colonOffset) {
-    //
-    // The header is malformed... Just clear it.
-    //
-    mHeaderBuffer.Truncate();
-    return NS_ERROR_FAILURE;
-  }
-  (void) mHeaderBuffer.Left(headerKey, colonOffset);
-  headerKey.ToLowerCase();
-  //
-  // Extract the value field - everything past the ':'
-  // Trim any leading or trailing whitespace...
-  //
-  mHeaderBuffer.Cut(0, colonOffset+1);
-  mHeaderBuffer.Trim(" ");
-
-  headerAtom = NS_NewAtom(headerKey.GetBuffer());
-  if (headerAtom) {
-    rv = ProcessHeader(headerAtom, mHeaderBuffer);
-  } else {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  mHeaderBuffer.Truncate();
-
-  return rv;
+  return mResponse->ParseHeader(mHeaderBuffer);
 }
-
 
 nsresult nsHTTPResponseListener::FinishedResponseHeaders(void)
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
+
+  if (mFiredOnHeadersAvailable)
+      return NS_OK;
+
+  rv = NS_OK;
 
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("nsHTTPResponseListener::FinishedResponseHeaders [this=%x].\n",
           this));
 
+  if (mConnection->mOpenObserver && !mFiredOpenOnStartRequest) {
+      mConnection->mRawResponseListener = this;
+      rv = mConnection->mOpenObserver->OnStartRequest(mConnection, 
+                                                      mConnection->mOpenContext);
+      mFiredOpenOnStartRequest = PR_TRUE;
+
+      // We want to defer header completion notification until the 
+      // caller actually does an AsyncRead();
+      if (!mAsyncReadAfterAsyncOpen)
+          return rv;
+  }
+
   // Notify the consumer that headers are available...
   FireOnHeadersAvailable();
+  mFiredOnHeadersAvailable = PR_TRUE;
 
   //
   // Check the status code to see if any special processing is necessary.
@@ -649,68 +548,6 @@ nsresult nsHTTPResponseListener::FinishedResponseHeaders(void)
   return rv;
 }
 
-
-nsresult nsHTTPResponseListener::ProcessHeader(nsIAtom* aHeader, 
-                                               nsCString& aValue)
-{
-  nsresult rv;
-
-  //
-  // When the Content-Type response header is processed, the Content-Type
-  // and Charset information must be set into the nsHTTPChannel...
-  //
-  if (nsHTTPAtoms::Content_Type == aHeader) {
-    nsCAutoString buffer;
-    PRInt32 semicolon;
-
-    // Set the content-type in the HTTPChannel...
-    semicolon = aValue.FindChar(';');
-    if (kNotFound != semicolon) {
-      aValue.Left(buffer, semicolon);
-      mConnection->SetContentType(buffer.GetBuffer());
-
-      // Does the Content-Type contain a charset attribute?
-      aValue.Mid(buffer, semicolon+1, -1);
-      buffer.Trim(" ");
-      if (0 == buffer.Find("charset=", PR_TRUE)) {
-        //
-        // Set the charset in the HTTPChannel...
-        //
-        // XXX: Currently, the charset is *everything* past the "charset="
-        //      This includes comments :-(
-        //
-        buffer.Cut(0, 8);
-        mConnection->SetCharset(buffer.GetBuffer());
-      }
-    } 
-    else {
-      mConnection->SetContentType(aValue.GetBuffer());
-    }
-  }
-  //
-  // When the Content-Length response header is processed, set the
-  // ContentLength in the Channel...
-  //
-  else if (nsHTTPAtoms::Content_Length == aHeader) {
-    PRInt32 length, status;
-
-    length = aValue.ToInteger(&status);
-    rv = (nsresult)status;
-
-    if (NS_SUCCEEDED(rv)) {
-      mConnection->SetContentLength(length);
-    }
-  }
-
-  //
-  // Set the response header...
-  //
-  rv = mResponse->SetHeader(aHeader, aValue.GetBuffer());
-
-  return rv;
-}
-
-
 nsresult nsHTTPResponseListener::ProcessStatusCode(void)
 {
   nsresult rv = NS_OK;
@@ -718,8 +555,32 @@ nsresult nsHTTPResponseListener::ProcessStatusCode(void)
 
   statusCode = 0;
   rv = mResponse->GetStatus(&statusCode);
-  statusClass = statusCode / 100;
 
+  PRBool authAttempt = PR_FALSE;
+  mConnection->GetAuthTriedWithPrehost(&authAttempt);
+  
+  if ( statusCode != 401 && authAttempt) {
+    // we know this auth challenge response was successful. cache any authentication 
+    // now so URLs within this body can use it.
+    nsAuthEngine* pEngine;
+    NS_ASSERTION(mConnection->mHandler, "HTTP handler went away");
+    if (NS_SUCCEEDED(mConnection->mHandler->GetAuthEngine(&pEngine)) )
+      {
+        nsXPIDLCString authString;
+        NS_ASSERTION(mConnection->mRequest, "HTTP request went away");
+        rv = mConnection->mRequest->GetHeader(nsHTTPAtoms::Authorization, 
+                                              getter_Copies(authString));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIURI> luri;
+        rv = mConnection->GetURI(getter_AddRefs(luri));
+        if (NS_FAILED(rv)) return rv;
+              
+        pEngine->SetAuthString(luri, authString);
+      }
+  }
+  
+  statusClass = statusCode / 100;
 
   switch (statusClass) {
     //

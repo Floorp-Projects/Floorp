@@ -41,6 +41,8 @@
 #include "nsIStreamObserver.h"
 
 class nsHTTPRequest;
+class nsHTTPResponse;
+
 /* 
     The nsHTTPChannel class is an example implementation of a
     protocol instnce that is active on a per-URL basis.
@@ -85,9 +87,6 @@ public:
                                           const PRUnichar* aMsg);
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
     nsresult            GetResponseContext(nsISupports** aContext);
-    nsresult            SetContentLength(PRInt32 aContentLength);
-    nsresult            SetContentType(const char* aContentType);
-    nsresult            SetCharset(const char *aCharset);
 
     nsresult            OnHeadersAvailable();
 
@@ -107,7 +106,6 @@ protected:
     nsCOMPtr<nsIURI>                    mURI;
     PRBool                              mConnected; 
     HTTPState                           mState;
-
     nsCString                           mVerb;
     nsCOMPtr<nsIHTTPEventSink>          mEventSink;
     nsCOMPtr<nsIProgressEventSink>      mProgressEventSink;
@@ -121,9 +119,6 @@ protected:
     nsCOMPtr<nsISupports>               mResponseContext;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
 
-    PRInt32                             mContentLength;
-    nsCString                           mContentType;
-    nsCString                           mCharset;
     nsCOMPtr<nsISupports>               mOwner;
     
     // Auth related stuff-

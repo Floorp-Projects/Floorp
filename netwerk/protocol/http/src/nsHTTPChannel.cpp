@@ -90,9 +90,6 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Creating nsHTTPChannel [this=%x].\n", this));
 
-    // The content length is unknown...
-    mContentLength = -1;
-
     mVerb = i_Verb;
 }
 
@@ -278,12 +275,9 @@ nsHTTPChannel::GetContentType(char * *aContentType)
     //
     // If the content type has been returned by the server then return that...
     //
-    if (mContentType.Length()) {
-        *aContentType = mContentType.ToNewCString();
-        if (!*aContentType) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        }
-        return rv;
+    if (mResponse) {
+      rv = mResponse->GetContentType(aContentType);
+      if (rv != NS_ERROR_NOT_AVAILABLE) return rv;
     }
 
     //
@@ -312,8 +306,9 @@ nsHTTPChannel::GetContentType(char * *aContentType)
 NS_IMETHODIMP
 nsHTTPChannel::GetContentLength(PRInt32 *aContentLength)
 {
-    *aContentLength = mContentLength;
-    return NS_OK;
+  if (!mResponse)
+    return NS_ERROR_NOT_AVAILABLE;
+  return mResponse->GetContentLength(aContentLength);
 }
 
 
@@ -538,14 +533,9 @@ nsHTTPChannel::GetResponseDataListener(nsIStreamListener* *aListener)
 NS_IMETHODIMP
 nsHTTPChannel::GetCharset(char* *o_String)
 {
-  nsresult rv = NS_OK;
-
-  *o_String = mCharset.ToNewCString();
-  if (!*o_String) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return rv;
+  if (!mResponse)
+    return NS_ERROR_NOT_AVAILABLE;
+  return mResponse->GetCharset(o_String);
 }
 
 NS_IMETHODIMP
@@ -678,7 +668,8 @@ nsHTTPChannel::Open(void)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsISimpleEnumerator> pModules;
-    rv = pNetModuleMgr->EnumerateModules(NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID, getter_AddRefs(pModules));
+    rv = pNetModuleMgr->EnumerateModules(NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID,
+                                         getter_AddRefs(pModules));
     if (NS_FAILED(rv)) return rv;
 
     // Go through the external modules and notify each one.
@@ -705,15 +696,11 @@ nsHTTPChannel::Open(void)
         rv = pModules->GetNext(getter_AddRefs(supEntry)); // go around again
     }
 
-    if (transport) {
-        rv = mRequest->WriteRequest(transport, mUsingProxy);
-        if (NS_FAILED(rv)) return rv;
-
-        mState = HS_WAITING_FOR_RESPONSE;
-        mConnected = PR_TRUE;
-    }
-    else
-        NS_ERROR("Failed to create/get a transport!");
+    rv = mRequest->WriteRequest(transport, mUsingProxy);
+    if (NS_FAILED(rv)) return rv;
+    
+    mState = HS_WAITING_FOR_RESPONSE;
+    mConnected = PR_TRUE;
 
     return rv;
 }
@@ -866,27 +853,6 @@ nsresult nsHTTPChannel::GetResponseContext(nsISupports** aContext)
   }
 
   return NS_ERROR_NULL_POINTER;
-}
-
-nsresult nsHTTPChannel::SetContentLength(PRInt32 aContentLength)
-{
-    mContentLength = aContentLength;
-    return NS_OK;
-}
-
-nsresult nsHTTPChannel::SetContentType(const char* aContentType)
-{
-    nsCAutoString cType(aContentType);
-    cType.ToLowerCase();
-    mContentType = cType.GetBuffer();
-    return NS_OK;
-}
-
-
-nsresult nsHTTPChannel::SetCharset(const char *aCharset)
-{
-  mCharset = aCharset;
-  return NS_OK;
 }
 
 nsresult nsHTTPChannel::OnHeadersAvailable()
