@@ -867,7 +867,7 @@ nscoord nsTableFrame::GetDesiredWidth() const
   }
 }
 
-inline nscoord nsTableFrame::GetPreferredWidth() const
+nscoord nsTableFrame::GetPreferredWidth() const
 {
   nsTableFrame* firstInFlow = (nsTableFrame *)GetFirstInFlow();
   if (this == firstInFlow) {

@@ -3734,7 +3734,7 @@ nsFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 }
 
 
-inline NS_IMETHODIMP
+NS_IMETHODIMP
 nsFrame::ReflowCommandNotify(nsIPresShell*     aShell,
                              nsIReflowCommand* aRC,
                              PRBool            aCommandAdded)
