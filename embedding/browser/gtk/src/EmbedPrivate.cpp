@@ -42,6 +42,9 @@
 #include <nsIDOMWindowInternal.h>
 #include <nsIChromeEventHandler.h>
 
+// for profiles
+#include <nsMPFileLocProvider.h>
+
 // all of our local includes
 #include "EmbedPrivate.h"
 #include "EmbedWindow.h"
@@ -59,6 +62,9 @@ char        *EmbedPrivate::sCompPath    = nsnull;
 nsIAppShell *EmbedPrivate::sAppShell    = nsnull;
 PRBool       EmbedPrivate::sCreatorInit = PR_FALSE;
 nsVoidArray *EmbedPrivate::sWindowList  = nsnull;
+char        *EmbedPrivate::sProfileDir  = nsnull;
+char        *EmbedPrivate::sProfileName = nsnull;
+nsIPref     *EmbedPrivate::sPrefs       = nsnull;
 
 EmbedPrivate::EmbedPrivate(void)
 {
@@ -220,6 +226,7 @@ EmbedPrivate::LoadCurrentURI(void)
     mNavigation->LoadURI(mURI.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
 }
 
+/* static */
 void
 EmbedPrivate::PushStartup(void)
 {
@@ -241,7 +248,11 @@ EmbedPrivate::PushStartup(void)
     if (NS_FAILED(rv))
       return;
 
-    // XXX startup profiles
+    rv = StartupProfile();
+    if (NS_FAILED(rv))
+      NS_WARNING("Warning: Failed to start up profiles.\n");
+    
+
     // XXX startup appshell service?
     // XXX create offscreen window for appshell service?
     // XXX remove X prop from offscreen window?
@@ -259,11 +270,31 @@ EmbedPrivate::PushStartup(void)
   }
 }
 
+/* static */
 void
 EmbedPrivate::PopStartup(void)
 {
+  sWidgetCount--;
+  if (sWidgetCount == 0) {
+    if (sPrefs) {
+      sPrefs->ShutDown();
+      NS_RELEASE(sPrefs);
+      sPrefs = 0;
+    }
+
+    if (sAppShell) {
+      // Shutdown the appshell service.
+      sAppShell->Spindown();
+      NS_RELEASE(sAppShell);
+      sAppShell = 0;
+    }
+
+    // shut down XPCOM/Embedding
+    NS_TermEmbedding();
+  }
 }
 
+/* static */
 void
 EmbedPrivate::SetCompPath(char *aPath)
 {
@@ -273,6 +304,52 @@ EmbedPrivate::SetCompPath(char *aPath)
     sCompPath = strdup(aPath);
   else
     sCompPath = nsnull;
+}
+
+/* static */
+void
+EmbedPrivate::SetProfilePath(char *aDir, char *aName)
+{
+  if (sProfileDir) {
+    free(sProfileDir);
+    sProfileDir = nsnull;
+  }
+
+  if (sProfileName) {
+    free(sProfileName);
+    sProfileName = nsnull;
+  }
+
+  if (aDir)
+    sProfileDir = strdup(aDir);
+  
+  if (aName)
+    sProfileName = strdup(aName);
+}
+
+/* static */
+EmbedPrivate *
+EmbedPrivate::FindPrivateForBrowser(nsIWebBrowserChrome *aBrowser)
+{
+  if (!sWindowList)
+    return nsnull;
+
+  // Get the number of browser windows.
+  PRInt32 count = sWindowList->Count();
+  // This function doesn't get called very often at all ( only when
+  // creating a new window ) so it's OK to walk the list of open
+  // windows.
+  for (int i = 0; i < count; i++) {
+    EmbedPrivate *tmpPrivate = NS_STATIC_CAST(EmbedPrivate *,
+					      sWindowList->ElementAt(i));
+    // get the browser object for that window
+    nsIWebBrowserChrome *chrome = NS_STATIC_CAST(nsIWebBrowserChrome *,
+						 tmpPrivate->mWindow);
+    if (chrome == aBrowser)
+      return tmpPrivate;
+  }
+
+  return nsnull;
 }
 
 void
@@ -386,26 +463,50 @@ EmbedPrivate::DetachListeners(void)
 }
 
 /* static */
-EmbedPrivate *
-EmbedPrivate::FindPrivateForBrowser(nsIWebBrowserChrome *aBrowser)
+nsresult
+EmbedPrivate::StartupProfile(void)
 {
-  if (!sWindowList)
-    return nsnull;
+  // initialize profiles
+  if (sProfileDir && sProfileName) {
+    nsresult rv;
+    nsCOMPtr<nsILocalFile> profileDir;
+    PRBool exists = PR_FALSE;
+    PRBool isDir = PR_FALSE;
+    profileDir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+    rv = profileDir->InitWithPath(sProfileDir);
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+    profileDir->Exists(&exists);
+    profileDir->IsDirectory(&isDir);
+    // if it exists and it isn't a directory then give up now.
+    if (!exists) {
+      rv = profileDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+      if NS_FAILED(rv) {
+	return NS_ERROR_FAILURE;
+      }
+    }
+    else if (exists && !isDir) {
+      return NS_ERROR_FAILURE;
+    }
+    // actually create the loc provider and initialize prefs.
+    nsMPFileLocProvider *locProvider;
+    // Set up the loc provider.  This has a really strange ownership
+    // model.  When I initialize it it will register itself with the
+    // directory service.  The directory service becomes the owning
+    // reference.  So, when that service is shut down this object will
+    // be destroyed.  It's not leaking here.
+    locProvider = new nsMPFileLocProvider;
+    rv = locProvider->Initialize(profileDir, sProfileName);
 
-  // Get the number of browser windows.
-  PRInt32 count = sWindowList->Count();
-  // This function doesn't get called very often at all ( only when
-  // creating a new window ) so it's OK to walk the list of open
-  // windows.
-  for (int i = 0; i < count; i++) {
-    EmbedPrivate *tmpPrivate = NS_STATIC_CAST(EmbedPrivate *,
-					      sWindowList->ElementAt(i));
-    // get the browser object for that window
-    nsIWebBrowserChrome *chrome = NS_STATIC_CAST(nsIWebBrowserChrome *,
-						 tmpPrivate->mWindow);
-    if (chrome == aBrowser)
-      return tmpPrivate;
+    // get prefs
+    nsCOMPtr<nsIPref> pref;
+    pref = do_GetService(NS_PREF_CONTRACTID);
+    if (!pref)
+      return NS_ERROR_FAILURE;
+    sPrefs = pref.get();
+    NS_ADDREF(sPrefs);
+    sPrefs->ResetPrefs();
+    sPrefs->ReadUserPrefs();
   }
-
-  return nsnull;
+  return NS_OK;
 }
