@@ -132,7 +132,7 @@ static nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
 
   switch (aCoord.GetUnit()) {
     case eStyleUnit_Auto:
-      aFrame->GetAutoMarginSize(aSide, result);
+      // Auto margins are handled by layout
       break;
 
     case eStyleUnit_Inherit:
