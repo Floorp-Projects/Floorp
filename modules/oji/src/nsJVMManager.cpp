@@ -113,7 +113,7 @@ static NS_DEFINE_IID(kIJVMPluginIID, NS_IJVMPLUGIN_IID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_AGGREGATED(nsJVMManager);
+NS_IMPL_AGGREGATED(nsJVMManager)
 
 extern "C" {
 static nsIJVMPlugin* GetRunningJVM(void);

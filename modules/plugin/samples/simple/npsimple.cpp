@@ -386,7 +386,7 @@ static const nsModuleComponentInfo gComponentInfo[] = {
       SimplePluginInstance::UnregisterSelf },
 };
 
-NS_IMPL_NSGETMODULE(SimplePlugin, gComponentInfo);
+NS_IMPL_NSGETMODULE(SimplePlugin, gComponentInfo)
 
 
 
@@ -822,7 +822,7 @@ SimplePluginStreamListener::~SimplePluginStreamListener(void)
 // This macro produces a simple version of QueryInterface, AddRef and Release.
 // See the nsISupports.h header file for details.
 
-NS_IMPL_ISUPPORTS1(SimplePluginStreamListener, nsIPluginStreamListener);
+NS_IMPL_ISUPPORTS1(SimplePluginStreamListener, nsIPluginStreamListener)
 
 NS_METHOD
 SimplePluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)

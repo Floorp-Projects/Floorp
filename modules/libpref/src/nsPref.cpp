@@ -125,7 +125,7 @@ nsPref* nsPref::gInstance = NULL;
 static PRInt32 g_InstanceCount = 0;
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS7(nsPref, nsIPref, nsIPrefService, nsIObserver, nsIPrefBranch, nsIPrefBranchInternal, nsISecurityPref, nsISupportsWeakReference);
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsPref, nsIPref, nsIPrefService, nsIObserver, nsIPrefBranch, nsIPrefBranchInternal, nsISecurityPref, nsISupportsWeakReference)
 
 //----------------------------------------------------------------------------------------
 nsPref::nsPref()

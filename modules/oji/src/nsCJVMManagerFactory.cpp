@@ -78,4 +78,4 @@ static const nsModuleComponentInfo components[] =
 #endif
 };
 
-NS_IMPL_NSGETMODULE(nsCJVMManagerModule, components);
+NS_IMPL_NSGETMODULE(nsCJVMManagerModule, components)

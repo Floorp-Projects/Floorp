@@ -94,7 +94,7 @@ NS_IMPL_ISUPPORTS7(nsPluginInstancePeerImpl,
                    nsIPluginTagInfo,
                    nsIPluginTagInfo2,
                    nsIJVMPluginTagInfo,
-                   nsPIPluginInstancePeer);
+                   nsPIPluginInstancePeer)
 #else
 NS_IMPL_ISUPPORTS6(nsPluginInstancePeerImpl,
                    nsIPluginInstancePeer,
@@ -102,7 +102,7 @@ NS_IMPL_ISUPPORTS6(nsPluginInstancePeerImpl,
                    nsIWindowlessPluginInstancePeer,
                    nsIPluginTagInfo,
                    nsIPluginTagInfo2,
-                   nsPIPluginInstancePeer);
+                   nsPIPluginInstancePeer)
 #endif
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::GetValue(nsPluginInstancePeerVariable variable, void *value)
@@ -157,8 +157,8 @@ protected:
   nsIPluginInstanceOwner* mOwner;
 };
 
-NS_IMPL_ADDREF(nsPluginStreamToFile);
-NS_IMPL_RELEASE(nsPluginStreamToFile);
+NS_IMPL_ADDREF(nsPluginStreamToFile)
+NS_IMPL_RELEASE(nsPluginStreamToFile)
 
 nsPluginStreamToFile::nsPluginStreamToFile(const char* target, nsIPluginInstanceOwner* owner) :
   mTarget(PL_strdup(target)),

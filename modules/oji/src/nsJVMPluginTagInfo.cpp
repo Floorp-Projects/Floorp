@@ -65,7 +65,7 @@ nsJVMPluginTagInfo::~nsJVMPluginTagInfo(void)
         PL_strfree(fSimulatedCode);
 }
 
-NS_IMPL_AGGREGATED(nsJVMPluginTagInfo);
+NS_IMPL_AGGREGATED(nsJVMPluginTagInfo)
 
 NS_METHOD
 nsJVMPluginTagInfo::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)

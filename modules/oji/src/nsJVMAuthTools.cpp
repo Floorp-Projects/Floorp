@@ -83,7 +83,7 @@ NS_IMETHODIMP nsAuthenticationInfoImp::GetPassword(const char * *aPassword)
 //---------------------------------------------------
 // implementation of interface nsIJVMAuthTools
 // --------------------------------------------------
-NS_IMPL_AGGREGATED(nsJVMAuthTools);
+NS_IMPL_AGGREGATED(nsJVMAuthTools)
 
 nsJVMAuthTools::nsJVMAuthTools(nsISupports* outer)
 {

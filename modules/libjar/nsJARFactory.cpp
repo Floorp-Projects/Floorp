@@ -74,4 +74,4 @@ static void PR_CALLBACK nsJarShutdown(nsIModule *module)
     delete gZlibAllocator;
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsJarModule, components, nsJarShutdown);
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsJarModule, components, nsJarShutdown)
