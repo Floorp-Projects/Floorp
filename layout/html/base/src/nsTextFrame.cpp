@@ -118,6 +118,11 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   // nsIFrame
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
+                                   nsIFrame*        aParent,
+                                   nsIStyleContext* aStyleContext,
+                                   nsIFrame*&       aContinuingFrame);
+
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
@@ -383,6 +388,22 @@ TextFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
 {
   *aContent = mContent;
   aCursor = NS_STYLE_CURSOR_IBEAM;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TextFrame::CreateContinuingFrame(nsIPresContext&  aCX,
+                                 nsIFrame*        aParent,
+                                 nsIStyleContext* aStyleContext,
+                                 nsIFrame*&       aContinuingFrame)
+{
+  TextFrame* cf = new TextFrame(mContent, aParent);
+  if (nsnull == cf) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  cf->SetStyleContext(&aCX, aStyleContext);
+  cf->AppendToFlow(this);
+  aContinuingFrame = cf;
   return NS_OK;
 }
 
