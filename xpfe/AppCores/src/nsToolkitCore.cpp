@@ -154,14 +154,8 @@ nsToolkitCore::ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
 #else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
-
-  nsIURI *uri = nsnull;
-  const char *uriStr = aUrl.GetBuffer();
-  rv = service->NewURI(uriStr, nsnull, &uri);
+  rv = service->NewURI(nsCAutoString(aUrl), nsnull, getter_AddRefs(urlObj));
   if (NS_FAILED(rv)) return rv;
-
-  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
-  NS_RELEASE(uri);
 #endif // NECKO
   if (NS_FAILED(rv))
     return rv;
@@ -194,14 +188,8 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
 #else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
-
-  nsIURI *uri = nsnull;
-  const char *uriStr = aUrl.GetBuffer();
-  rv = service->NewURI(uriStr, nsnull, &uri);
+  rv = service->NewURI(nsCAutoString(aUrl), nsnull, getter_AddRefs(urlObj));
   if (NS_FAILED(rv)) return rv;
-
-  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
-  NS_RELEASE(uri);
 #endif // NECKO
   if (NS_FAILED(rv))
     return rv;
@@ -313,14 +301,8 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
 #else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
-
-  nsIURI *uri = nsnull;
-  nsCAutoString aUriStr(aUrl);
-  rv = service->NewURI(aUriStr, nsnull, &uri);
+  rv = service->NewURI(nsCAutoString(aUrl), nsnull, getter_AddRefs(urlObj));
   if (NS_FAILED(rv)) return rv;
-
-  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
-  NS_RELEASE(uri);
 #endif // NECKO
   if (NS_FAILED(rv))
     return rv;
@@ -355,14 +337,8 @@ nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
 #else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
-
-  nsIURI *uri = nsnull;
-  const char *uriStr = aUrl.GetBuffer();
-  rv = service->NewURI(uriStr, nsnull, &uri);
+  rv = service->NewURI(nsCAutoString(aUrl), nsnull, getter_AddRefs(urlObj));
   if (NS_FAILED(rv)) return rv;
-
-  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
-  NS_RELEASE(uri);
 #endif // NECKO
   if (NS_FAILED(rv))
     return rv;
