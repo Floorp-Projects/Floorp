@@ -219,7 +219,7 @@ public:
   NS_IMETHOD DoneCreatingElement();
 
   // nsITextControlElement
-  NS_IMETHOD SetValueGuaranteed(const nsAString& aValue, nsITextControlFrame* aFrame);
+  NS_IMETHOD TakeTextFrameValue(const nsAString& aValue);
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
 
   // nsIRadioControlElement
@@ -232,9 +232,8 @@ public:
 
 protected:
   // Helper method
-  NS_IMETHOD SetValueSecure(const nsAString& aValue,
-                            nsITextControlFrame* aFrame,
-                            PRBool aCheckSecurity);
+  nsresult SetValueInternal(const nsAString& aValue,
+                            nsITextControlFrame* aFrame);
 
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
   //Helper method
@@ -505,6 +504,21 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       SetCheckedChanged(PR_FALSE);
     }
   }
+  //
+  // If we are changing type from File/Text/Passwd to other input types
+  // we need save the mValue into value attribute
+  //
+  if (aName == nsHTMLAtoms::type && mValue &&
+      mType != NS_FORM_INPUT_TEXT &&
+      mType != NS_FORM_INPUT_PASSWORD &&
+      mType != NS_FORM_INPUT_FILE) {
+    SetAttr(kNameSpaceID_None, nsHTMLAtoms::value,
+            NS_ConvertUTF8toUCS2(mValue), PR_FALSE);
+    if (mValue) {
+      nsMemory::Free(mValue);
+      mValue = nsnull;
+    }
+  }
 }
 
 // nsIDOMHTMLInputElement
@@ -647,46 +661,44 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
 NS_IMETHODIMP 
 nsHTMLInputElement::SetValue(const nsAString& aValue)
 {
-  return SetValueSecure(aValue, nsnull, PR_TRUE);
-}
+  //check secuity
+  if (mType == NS_FORM_INPUT_FILE) {
+    nsresult rv;
+    nsCOMPtr<nsIScriptSecurityManager> securityManager =
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-NS_IMETHODIMP
-nsHTMLInputElement::SetValueGuaranteed(const nsAString& aValue,
-                                       nsITextControlFrame* aFrame)
-{
-  return SetValueSecure(aValue, aFrame, PR_FALSE);
-}
+    PRBool enabled;
+    rv = securityManager->IsCapabilityEnabled("UniversalFileRead", &enabled);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-NS_IMETHODIMP
-nsHTMLInputElement::SetValueSecure(const nsAString& aValue,
-                                   nsITextControlFrame* aFrame,
-                                   PRBool aCheckSecurity)
-{
-  PRInt32 type;
-  GetType(&type);
-  if (type == NS_FORM_INPUT_TEXT || type == NS_FORM_INPUT_PASSWORD ||
-      type == NS_FORM_INPUT_FILE) {
-
-    if (aCheckSecurity && type == NS_FORM_INPUT_FILE) {
-      nsresult rv;
-      nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-               do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-
-      PRBool enabled;
-      rv = securityManager->IsCapabilityEnabled("UniversalFileRead", &enabled);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-
-      if (!enabled) {
-        // setting the value of a "FILE" input widget requires the
-        // UniversalFileRead privilege
-        return NS_ERROR_DOM_SECURITY_ERR;
-      }
+    if (!enabled) {
+      // setting the value of a "FILE" input widget requires the
+      // UniversalFileRead privilege
+      return NS_ERROR_DOM_SECURITY_ERR;
     }
+  }
+  SetValueInternal(aValue, nsnull);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::TakeTextFrameValue(const nsAString& aValue)
+{
+  if (mValue) {
+    nsMemory::Free(mValue);
+  }
+  mValue = ToNewUTF8String(aValue);
+  SetValueChanged(PR_TRUE);
+  return NS_OK;
+}
+
+nsresult
+nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
+                                     nsITextControlFrame* aFrame)
+{
+  if (mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD ||
+      mType == NS_FORM_INPUT_FILE) {
 
     nsITextControlFrame* textControlFrame = aFrame;
     nsIFormControlFrame* formControlFrame = textControlFrame;
@@ -704,7 +716,7 @@ nsHTMLInputElement::SetValueSecure(const nsAString& aValue,
     // File frames always own the value (if the frame is there).
     // Text frames have a bit that says whether they own the value.
     PRBool frameOwnsValue = PR_FALSE;
-    if (type == NS_FORM_INPUT_FILE && formControlFrame) {
+    if (mType == NS_FORM_INPUT_FILE && formControlFrame) {
       frameOwnsValue = PR_TRUE;
     }
     if (textControlFrame) {
@@ -734,7 +746,7 @@ nsHTMLInputElement::SetValueSecure(const nsAString& aValue,
   // the meaning of ValueChanged just a teensy bit to save a measly byte of
   // storage space in nsHTMLInputElement.  Yes, you are free to make a new flag,
   // NEED_TO_SAVE_VALUE, at such time as mBitField becomes a 16-bit value.
-  if (type == NS_FORM_INPUT_HIDDEN) {
+  if (mType == NS_FORM_INPUT_HIDDEN) {
     SetValueChanged(PR_TRUE);
   }
 
@@ -2223,7 +2235,7 @@ nsHTMLInputElement::Reset()
     case NS_FORM_INPUT_FILE:
     {
       // Resetting it to blank should not perform security check
-      rv = SetValueGuaranteed(NS_LITERAL_STRING(""), nsnull);
+      rv = SetValueInternal(NS_LITERAL_STRING(""), nsnull);
       break;
     }
     // Value is the same as defaultValue for hidden inputs
@@ -2606,7 +2618,7 @@ nsHTMLInputElement::RestoreState(nsIPresState* aState)
         nsAutoString value;
         rv = aState->GetStateProperty(NS_LITERAL_STRING("v"), value);
         NS_ASSERTION(NS_SUCCEEDED(rv), "value restore failed!");
-        SetValueGuaranteed(value, nsnull);
+        SetValueInternal(value, nsnull);
         break;
       }
   }
