@@ -450,6 +450,8 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   
 #define DO_STRUCT_DIFFERENCE(struct_)                                         \
   PR_BEGIN_MACRO                                                              \
+    NS_ASSERTION(NS_IsHintSubset(nsStyle##struct_::MaxDifference(), maxHint), \
+                 "Struct placed in the wrong maxHint section");               \
     const nsStyle##struct_* this##struct_ =                                   \
         NS_STATIC_CAST(const nsStyle##struct_*,                               \
                       PeekStyleData(NS_GET_STYLESTRUCTID(nsStyle##struct_))); \
@@ -460,6 +462,10 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
       if (compare &&                                                          \
           !NS_IsHintSubset(maxHint, hint) &&                                  \
           this##struct_ != other##struct_) {                                  \
+        NS_ASSERTION(NS_IsHintSubset(                                         \
+             this##struct_->CalcDifference(*other##struct_),                  \
+             nsStyle##struct_::MaxDifference()),                              \
+             "CalcDifference() returned bigger hint than MaxDifference()");   \
         NS_UpdateHint(hint, this##struct_->CalcDifference(*other##struct_));  \
       }                                                                       \
     }                                                                         \
@@ -468,7 +474,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // We begin by examining those style structs that are capable of
   // causing the maximal difference, a FRAMECHANGE.
   // FRAMECHANGE Structs: Display, XUL, Content, UserInterface,
-  // Visibility, Outline, TableBorder, Quotes
+  // Visibility, Outline, TableBorder, Table, Background, UIReset, Quotes
   DO_STRUCT_DIFFERENCE(Display);
   DO_STRUCT_DIFFERENCE(XUL);
   DO_STRUCT_DIFFERENCE(Column);
@@ -477,6 +483,9 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   DO_STRUCT_DIFFERENCE(Visibility);
   DO_STRUCT_DIFFERENCE(Outline);
   DO_STRUCT_DIFFERENCE(TableBorder);
+  DO_STRUCT_DIFFERENCE(Table);
+  DO_STRUCT_DIFFERENCE(Background);
+  DO_STRUCT_DIFFERENCE(UIReset);
 #ifdef MOZ_SVG
   DO_STRUCT_DIFFERENCE(SVG);
 #endif
@@ -490,7 +499,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
       
   // The following structs cause (as their maximal difference) a reflow
   // to occur.  REFLOW Structs: Font, Margin, Padding, Border, List,
-  // Position, Text, TextReset, Table,
+  // Position, Text, TextReset
   DO_STRUCT_DIFFERENCE(Font);
   DO_STRUCT_DIFFERENCE(Margin);
   DO_STRUCT_DIFFERENCE(Padding);
@@ -499,17 +508,14 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   DO_STRUCT_DIFFERENCE(Position);
   DO_STRUCT_DIFFERENCE(Text);
   DO_STRUCT_DIFFERENCE(TextReset);
-  DO_STRUCT_DIFFERENCE(Table);
 
   // At this point, we know that the worst kind of damage we could do is
   // a re-render (i.e., a VISUAL change).
   maxHint = NS_STYLE_HINT_VISUAL;
 
   // The following structs cause (as their maximal difference) a
-  // re-render to occur.  VISUAL Structs: Color, Background, UIReset
+  // re-render to occur.  VISUAL Structs: Color
   DO_STRUCT_DIFFERENCE(Color);
-  DO_STRUCT_DIFFERENCE(Background);
-  DO_STRUCT_DIFFERENCE(UIReset);
 
 #undef DO_STRUCT_DIFFERENCE
 

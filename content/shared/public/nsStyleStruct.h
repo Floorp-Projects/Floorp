@@ -104,6 +104,9 @@ struct nsStyleFont : public nsStyleStruct {
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Font)
 
   nsChangeHint CalcDifference(const nsStyleFont& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
   static nsChangeHint CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2);
 
   static nscoord ZoomText(nsPresContext* aPresContext, nscoord aSize);
@@ -128,6 +131,9 @@ struct nsStyleColor : public nsStyleStruct {
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Color)
 
   nsChangeHint CalcDifference(const nsStyleColor& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
   
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
@@ -158,6 +164,9 @@ struct nsStyleBackground : public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStyleBackground& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
 
   // On Linux (others?), there is an extra byte being used up by
   // inheritance so we only have 3 bytes to fit these 6 things into.
@@ -217,6 +226,9 @@ struct nsStyleMargin: public nsStyleStruct {
 
   void RecalcData();
   nsChangeHint CalcDifference(const nsStyleMargin& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
 
   nsStyleSides  mMargin;          // [reset] length, percent, auto, inherit
 
@@ -250,6 +262,9 @@ struct nsStylePadding: public nsStyleStruct {
 
   void RecalcData();
   nsChangeHint CalcDifference(const nsStylePadding& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
   
   nsStyleSides  mPadding;         // [reset] length, percent, inherit
 
@@ -328,6 +343,9 @@ struct nsStyleBorder: public nsStyleStruct {
   PRBool IsBorderSideVisible(PRUint8 aSide) const;
   void RecalcData();
   nsChangeHint CalcDifference(const nsStyleBorder& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
  
   nsStyleSides  mBorder;          // [reset] length, enum (see nsStyleConsts.h)
   nsStyleSides  mBorderRadius;    // [reset] length, percent, inherit
@@ -498,6 +516,9 @@ struct nsStyleOutline: public nsStyleStruct {
 
   void RecalcData();
   nsChangeHint CalcDifference(const nsStyleOutline& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
  
   nsStyleSides  mOutlineRadius;    // [reset] length, percent, inherit
   																// (top=topLeft, right=topRight, bottom=bottomRight, left=bottomLeft)
@@ -580,6 +601,9 @@ struct nsStyleList : public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStyleList& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
   
   PRUint8   mListStyleType;             // [inherited] See nsStyleConsts.h
   PRUint8   mListStylePosition;         // [inherited] 
@@ -603,6 +627,9 @@ struct nsStylePosition : public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStylePosition& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
   
   nsStyleSides  mOffset;                // [reset]
   nsStyleCoord  mWidth;                 // [reset] coord, percent, auto, inherit
@@ -631,6 +658,9 @@ struct nsStyleTextReset : public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStyleTextReset& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
   
   PRUint8 mTextDecoration;              // [reset] see nsStyleConsts.h
   PRUint8 mUnicodeBidi;                 // [reset] see nsStyleConsts.h
@@ -654,6 +684,9 @@ struct nsStyleText : public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStyleText& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
 
   PRUint8 mTextAlign;                   // [inherited] see nsStyleConsts.h
   PRUint8 mTextTransform;               // [inherited] see nsStyleConsts.h
@@ -686,6 +719,9 @@ struct nsStyleVisibility : public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStyleVisibility& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
   
   PRUint8 mDirection;                  // [inherited] see nsStyleConsts.h NS_STYLE_DIRECTION_*
   PRUint8   mVisible;                  // [inherited]
@@ -717,6 +753,9 @@ struct nsStyleDisplay : public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStyleDisplay& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
   
   nsCOMPtr<nsIURI> mBinding;    // [reset]
 #if 0
@@ -786,6 +825,9 @@ struct nsStyleTable: public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStyleTable& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
   
   PRUint8       mLayoutStrategy;// [reset] see nsStyleConsts.h NS_STYLE_TABLE_LAYOUT_*
   PRUint8       mFrame;         // [reset] see nsStyleConsts.h NS_STYLE_TABLE_FRAME_*
@@ -810,6 +852,9 @@ struct nsStyleTableBorder: public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStyleTableBorder& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
   
   nsStyleCoord  mBorderSpacingX;// [inherited]
   nsStyleCoord  mBorderSpacingY;// [inherited]
@@ -872,7 +917,9 @@ struct nsStyleQuotes : public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStyleQuotes& aOther) const;
-
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
   
   PRUint32  QuotesCount(void) const { return mQuotesCount; } // [inherited]
 
@@ -942,6 +989,9 @@ struct nsStyleContent: public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStyleContent& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
 
   PRUint32  ContentCount(void) const  { return mContentCount; } // [reset]
 
@@ -1054,6 +1104,9 @@ struct nsStyleUIReset: public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStyleUIReset& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
 
   PRUnichar mKeyEquivalent;   // [reset] XXX what type should this be?
   PRUint8   mUserSelect;      // [reset] (selection-style)
@@ -1076,6 +1129,9 @@ struct nsStyleUserInterface: public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStyleUserInterface& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
 
   PRUint8   mUserInput;       // [inherited]
   PRUint8   mUserModify;      // [inherited] (modify-content)
@@ -1100,6 +1156,9 @@ struct nsStyleXUL : public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStyleXUL& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
   
   float         mBoxFlex;               // [reset] see nsStyleConsts.h
   PRUint32      mBoxOrdinal;            // [reset] see nsStyleConsts.h
@@ -1125,6 +1184,9 @@ struct nsStyleColumn : public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStyleColumn& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
 
   PRUint32     mColumnCount; // [reset] see nsStyleConsts.h
   nsStyleCoord mColumnWidth; // [reset]
@@ -1160,6 +1222,9 @@ struct nsStyleSVG : public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStyleSVG& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
 
   nsStyleSVGPaint  mFill;             // [inherited]
   float            mFillOpacity;      // [inherited]
@@ -1194,6 +1259,9 @@ struct nsStyleSVGReset : public nsStyleStruct {
   };
 
   nsChangeHint CalcDifference(const nsStyleSVGReset& aOther) const;
+#ifdef DEBUG
+  static nsChangeHint MaxDifference();
+#endif
 
   PRUint8          mDominantBaseline; // [reset] see nsStyleConsts.h
 };
