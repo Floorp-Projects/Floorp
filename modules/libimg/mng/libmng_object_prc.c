@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_object_prc.c       copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.3                                                      * */
+/* * version   : 0.9.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : Object processing routines (implementation)                * */
 /* *                                                                        * */
@@ -69,6 +69,13 @@
 /* *             - fixed delta-processing behavior                          * */
 /* *             0.9.3 - 10/19/2000 - G.Juyn                                * */
 /* *             - added storage for pixel-/alpha-sampledepth for delta's   * */
+/* *                                                                        * */
+/* *             0.9.4 -  1/18/2001 - G.Juyn                                * */
+/* *             - removed "old" MAGN methods 3 & 4                         * */
+/* *             - added "new" MAGN methods 3, 4 & 5                        * */
+/* *                                                                        * */
+/* *             0.9.5 -  1/22/2001 - G.Juyn                                * */
+/* *             - B129681 - fixed compiler warnings SGI/Irix               * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -730,7 +737,7 @@ mng_retcode renum_imageobject (mng_datap  pData,
     while ((pPrev) && (pPrev->iId > iId))
       pPrev = (mng_imagep)pPrev->sHeader.pPrev;
                                        /* different from current ? */
-    if (pPrev != pSource->sHeader.pPrev)
+    if (pPrev != (mng_imagep)pSource->sHeader.pPrev)
     {
       if (pSource->sHeader.pPrev)      /* unlink from current position !! */
         ((mng_imagep)pSource->sHeader.pPrev)->sHeader.pNext = pSource->sHeader.pNext;
@@ -1164,16 +1171,18 @@ mng_retcode magnify_imageobject (mng_datap  pData,
                   {
                     case 1  : { fMagnifyX = magnify_g8_x1; break; }
                     case 2  : { fMagnifyX = magnify_g8_x2; break; }
-                    case 3  : { fMagnifyX = magnify_g8_x1; break; }
+                    case 3  : { fMagnifyX = magnify_g8_x3; break; }
                     case 4  : { fMagnifyX = magnify_g8_x2; break; }
+                    case 5  : { fMagnifyX = magnify_g8_x3; break; }
                   }
 
                   switch (pImage->iMAGN_MethodY)
                   {
                     case 1  : { fMagnifyY = magnify_g8_y1; break; }
                     case 2  : { fMagnifyY = magnify_g8_y2; break; }
-                    case 3  : { fMagnifyY = magnify_g8_y1; break; }
+                    case 3  : { fMagnifyY = magnify_g8_y3; break; }
                     case 4  : { fMagnifyY = magnify_g8_y2; break; }
+                    case 5  : { fMagnifyY = magnify_g8_y3; break; }
                   }
                 }
                 else
@@ -1194,16 +1203,18 @@ mng_retcode magnify_imageobject (mng_datap  pData,
                   {
                     case 1  : { fMagnifyX = magnify_rgb8_x1; break; }
                     case 2  : { fMagnifyX = magnify_rgb8_x2; break; }
-                    case 3  : { fMagnifyX = magnify_rgb8_x1; break; }
+                    case 3  : { fMagnifyX = magnify_rgb8_x3; break; }
                     case 4  : { fMagnifyX = magnify_rgb8_x2; break; }
+                    case 5  : { fMagnifyX = magnify_rgb8_x3; break; }
                   }
 
                   switch (pImage->iMAGN_MethodY)
                   {
                     case 1  : { fMagnifyY = magnify_rgb8_y1; break; }
                     case 2  : { fMagnifyY = magnify_rgb8_y2; break; }
-                    case 3  : { fMagnifyY = magnify_rgb8_y1; break; }
+                    case 3  : { fMagnifyY = magnify_rgb8_y3; break; }
                     case 4  : { fMagnifyY = magnify_rgb8_y2; break; }
+                    case 5  : { fMagnifyY = magnify_rgb8_y3; break; }
                   }
                 }
                 else
@@ -1226,6 +1237,7 @@ mng_retcode magnify_imageobject (mng_datap  pData,
                     case 2  : { fMagnifyX = magnify_ga8_x2; break; }
                     case 3  : { fMagnifyX = magnify_ga8_x3; break; }
                     case 4  : { fMagnifyX = magnify_ga8_x4; break; }
+                    case 5  : { fMagnifyX = magnify_ga8_x5; break; }
                   }
 
                   switch (pImage->iMAGN_MethodY)
@@ -1234,6 +1246,7 @@ mng_retcode magnify_imageobject (mng_datap  pData,
                     case 2  : { fMagnifyY = magnify_ga8_y2; break; }
                     case 3  : { fMagnifyY = magnify_ga8_y3; break; }
                     case 4  : { fMagnifyY = magnify_ga8_y4; break; }
+                    case 5  : { fMagnifyY = magnify_ga8_y5; break; }
                   }
                 }
                 else
@@ -1254,8 +1267,9 @@ mng_retcode magnify_imageobject (mng_datap  pData,
                   {
                     case 1  : { fMagnifyX = magnify_rgba8_x1; break; }
                     case 2  : { fMagnifyX = magnify_rgba8_x2; break; }
-                    case 3  : { fMagnifyX = magnify_rgba8_x2; break; }
-                    case 4  : { fMagnifyX = magnify_rgba8_x3; break; }
+                    case 3  : { fMagnifyX = magnify_rgba8_x3; break; }
+                    case 4  : { fMagnifyX = magnify_rgba8_x4; break; }
+                    case 5  : { fMagnifyX = magnify_rgba8_x5; break; }
                   }
 
                   switch (pImage->iMAGN_MethodY)
@@ -1264,6 +1278,7 @@ mng_retcode magnify_imageobject (mng_datap  pData,
                     case 2  : { fMagnifyY = magnify_rgba8_y2; break; }
                     case 3  : { fMagnifyY = magnify_rgba8_y3; break; }
                     case 4  : { fMagnifyY = magnify_rgba8_y4; break; }
+                    case 5  : { fMagnifyY = magnify_rgba8_y5; break; }
                   }
                 }
                 else
@@ -2343,7 +2358,7 @@ mng_retcode process_ani_endl (mng_datap   pData,
 
       if (!pLOOP->iRunningcount)       /* reached zero ? */
       {                                /* was this the outer LOOP ? */
-        if (pLOOP == pData->pFirstaniobj)
+        if (pData->pFirstaniobj == (mng_objectp)pLOOP)
           pData->bHasLOOP = MNG_FALSE;
       }
       else

@@ -260,11 +260,6 @@ mng_retcode init_rowdiffering (mng_datap pData)
   MNG_TRACE (pData, MNG_FN_INIT_ROWDIFFERING, MNG_LC_START)
 #endif
 
-  pData->iLevel0 = 0;                  /* default levels */
-  pData->iLevel1 = 0;
-  pData->iLevel2 = 0;
-  pData->iLevel3 = 0;
-
   if (pData->iFilter & 0x40)           /* has leveling parameters ? */
   {
     switch (pData->iColortype)         /* salvage leveling parameters */

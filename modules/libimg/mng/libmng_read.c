@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_read.c             copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.3                                                      * */
+/* * version   : 0.9.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : Read logic (implementation)                                * */
 /* *                                                                        * */
@@ -54,6 +54,9 @@
 /* *             - removed test-MaGN                                        * */
 /* *             0.9.3 - 10/16/2000 - G.Juyn                                * */
 /* *             - added support for JDAA                                   * */
+/* *                                                                        * */
+/* *             0.9.5 -  1/23/2001 - G.Juyn                                * */
+/* *             - fixed timing-problem with switching framing_modes        * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -666,7 +669,7 @@ mng_retcode read_graphic (mng_datap pData)
         return iRetcode;
     }
 #ifdef MNG_SUPPORT_DISPLAY             /* until EOF or a break-request */
-    while ((!pData->bEOF) && (!pData->bSuspended) &&
+    while (((!pData->bEOF) || (pData->pCurraniobj)) && (!pData->bSuspended) &&
            (!pData->bTimerset) && (!pData->bSectionwait));
 #else
     while ((!pData->bEOF) && (!pData->bSuspended));

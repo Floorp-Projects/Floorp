@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_pixels.h           copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.3                                                      * */
+/* * version   : 0.9.4                                                      * */
 /* *                                                                        * */
 /* * purpose   : Pixel-row management routines (definition)                 * */
 /* *                                                                        * */
@@ -39,6 +39,9 @@
 /* *             - added support for JDAA                                   * */
 /* *             0.9.3 - 10/19/2000 - G.Juyn                                * */
 /* *             - implemented delayed delta-processing                     * */
+/* *                                                                        * */
+/* *             0.9.4 -  1/18/2001 - G.Juyn                                * */
+/* *             - added "new" MAGN methods 3, 4 & 5                        * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -342,6 +345,13 @@ mng_retcode magnify_g8_x2          (mng_datap  pData,
                                     mng_uint32 iWidth,
                                     mng_uint8p pSrcline,
                                     mng_uint8p pDstline);
+mng_retcode magnify_g8_x3          (mng_datap  pData,
+                                    mng_uint16 iMX,
+                                    mng_uint16 iML,
+                                    mng_uint16 iMR,
+                                    mng_uint32 iWidth,
+                                    mng_uint8p pSrcline,
+                                    mng_uint8p pDstline);
 mng_retcode magnify_rgb8_x1        (mng_datap  pData,
                                     mng_uint16 iMX,
                                     mng_uint16 iML,
@@ -350,6 +360,13 @@ mng_retcode magnify_rgb8_x1        (mng_datap  pData,
                                     mng_uint8p pSrcline,
                                     mng_uint8p pDstline);
 mng_retcode magnify_rgb8_x2        (mng_datap  pData,
+                                    mng_uint16 iMX,
+                                    mng_uint16 iML,
+                                    mng_uint16 iMR,
+                                    mng_uint32 iWidth,
+                                    mng_uint8p pSrcline,
+                                    mng_uint8p pDstline);
+mng_retcode magnify_rgb8_x3        (mng_datap  pData,
                                     mng_uint16 iMX,
                                     mng_uint16 iML,
                                     mng_uint16 iMR,
@@ -384,6 +401,13 @@ mng_retcode magnify_ga8_x4         (mng_datap  pData,
                                     mng_uint32 iWidth,
                                     mng_uint8p pSrcline,
                                     mng_uint8p pDstline);
+mng_retcode magnify_ga8_x5         (mng_datap  pData,
+                                    mng_uint16 iMX,
+                                    mng_uint16 iML,
+                                    mng_uint16 iMR,
+                                    mng_uint32 iWidth,
+                                    mng_uint8p pSrcline,
+                                    mng_uint8p pDstline);
 mng_retcode magnify_rgba8_x1       (mng_datap  pData,
                                     mng_uint16 iMX,
                                     mng_uint16 iML,
@@ -412,6 +436,13 @@ mng_retcode magnify_rgba8_x4       (mng_datap  pData,
                                     mng_uint32 iWidth,
                                     mng_uint8p pSrcline,
                                     mng_uint8p pDstline);
+mng_retcode magnify_rgba8_x5       (mng_datap  pData,
+                                    mng_uint16 iMX,
+                                    mng_uint16 iML,
+                                    mng_uint16 iMR,
+                                    mng_uint32 iWidth,
+                                    mng_uint8p pSrcline,
+                                    mng_uint8p pDstline);
 
 mng_retcode magnify_g8_y1          (mng_datap  pData,
                                     mng_int32  iS,
@@ -427,6 +458,13 @@ mng_retcode magnify_g8_y2          (mng_datap  pData,
                                     mng_uint8p pSrcline1,
                                     mng_uint8p pSrcline2,
                                     mng_uint8p pDstline);
+mng_retcode magnify_g8_y3          (mng_datap  pData,
+                                    mng_int32  iS,
+                                    mng_int32  iM,
+                                    mng_uint32 iWidth,
+                                    mng_uint8p pSrcline1,
+                                    mng_uint8p pSrcline2,
+                                    mng_uint8p pDstline);
 mng_retcode magnify_rgb8_y1        (mng_datap  pData,
                                     mng_int32  iS,
                                     mng_int32  iM,
@@ -435,6 +473,13 @@ mng_retcode magnify_rgb8_y1        (mng_datap  pData,
                                     mng_uint8p pSrcline2,
                                     mng_uint8p pDstline);
 mng_retcode magnify_rgb8_y2        (mng_datap  pData,
+                                    mng_int32  iS,
+                                    mng_int32  iM,
+                                    mng_uint32 iWidth,
+                                    mng_uint8p pSrcline1,
+                                    mng_uint8p pSrcline2,
+                                    mng_uint8p pDstline);
+mng_retcode magnify_rgb8_y3        (mng_datap  pData,
                                     mng_int32  iS,
                                     mng_int32  iM,
                                     mng_uint32 iWidth,
@@ -469,6 +514,13 @@ mng_retcode magnify_ga8_y4         (mng_datap  pData,
                                     mng_uint8p pSrcline1,
                                     mng_uint8p pSrcline2,
                                     mng_uint8p pDstline);
+mng_retcode magnify_ga8_y5         (mng_datap  pData,
+                                    mng_int32  iS,
+                                    mng_int32  iM,
+                                    mng_uint32 iWidth,
+                                    mng_uint8p pSrcline1,
+                                    mng_uint8p pSrcline2,
+                                    mng_uint8p pDstline);
 mng_retcode magnify_rgba8_y1       (mng_datap  pData,
                                     mng_int32  iS,
                                     mng_int32  iM,
@@ -491,6 +543,13 @@ mng_retcode magnify_rgba8_y3       (mng_datap  pData,
                                     mng_uint8p pSrcline2,
                                     mng_uint8p pDstline);
 mng_retcode magnify_rgba8_y4       (mng_datap  pData,
+                                    mng_int32  iS,
+                                    mng_int32  iM,
+                                    mng_uint32 iWidth,
+                                    mng_uint8p pSrcline1,
+                                    mng_uint8p pSrcline2,
+                                    mng_uint8p pDstline);
+mng_retcode magnify_rgba8_y5       (mng_datap  pData,
                                     mng_int32  iS,
                                     mng_int32  iM,
                                     mng_uint32 iWidth,

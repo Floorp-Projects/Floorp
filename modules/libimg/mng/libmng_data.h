@@ -93,6 +93,8 @@
 /* *             - fixed support for bKGD                                   * */
 /* *             0.9.3 - 10/19/2000 - G.Juyn                                * */
 /* *             - implemented delayed delta-processing                     * */
+/* *             0.9.4 - 12/16/2000 - G.Juyn                                * */
+/* *             - fixed mixup of data- & function-pointers (thanks Dimitri)* */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -468,27 +470,27 @@ typedef struct mng_data_struct {
            mng_float         dLastgamma;         /* last gamma used to compute table */
 #endif
 
-           mng_ptr           fDisplayrow;        /* internal callback to display an
+           mng_fptr          fDisplayrow;        /* internal callback to display an
                                                     uncompressed/unfiltered/
                                                     color-corrected row */
-           mng_ptr           fRestbkgdrow;       /* internal callback for restore-
+           mng_fptr          fRestbkgdrow;       /* internal callback for restore-
                                                     background processing of a row */
-           mng_ptr           fCorrectrow;        /* internal callback to color-correct an
+           mng_fptr          fCorrectrow;        /* internal callback to color-correct an
                                                     uncompressed/unfiltered row */
-           mng_ptr           fRetrieverow;       /* internal callback to retrieve an
+           mng_fptr          fRetrieverow;       /* internal callback to retrieve an
                                                     uncompressed/unfiltered row of data */
-           mng_ptr           fStorerow;          /* internal callback to store an
+           mng_fptr          fStorerow;          /* internal callback to store an
                                                     uncompressed/unfiltered row of data */
-           mng_ptr           fProcessrow;        /* internal callback to process an
+           mng_fptr          fProcessrow;        /* internal callback to process an
                                                     uncompressed row of data */
-           mng_ptr           fDifferrow;         /* internal callback to perform
+           mng_fptr          fDifferrow;         /* internal callback to perform
                                                     added filter leveling and
                                                     differing on an unfiltered row */
-           mng_ptr           fScalerow;          /* internal callback to scale a
+           mng_fptr          fScalerow;          /* internal callback to scale a
                                                     delta-row to the bitdepth of its target */
-           mng_ptr           fDeltarow;          /* internal callback to execute a
+           mng_fptr          fDeltarow;          /* internal callback to execute a
                                                     delta-row onto a target */
-           mng_ptr           fInitrowproc;       /* internal callback to initialize
+           mng_fptr          fInitrowproc;       /* internal callback to initialize
                                                     the row processing */
 
            mng_uint16        iDEFIobjectid;      /* DEFI fields */
@@ -573,10 +575,10 @@ typedef struct mng_data_struct {
            mng_uint32        iDeltaBlocky;
            mng_bool          bDeltaimmediate;
 
-           mng_ptr           fDeltagetrow;       /* internal delta-proc callbacks */
-           mng_ptr           fDeltaaddrow;
-           mng_ptr           fDeltareplacerow;
-           mng_ptr           fDeltaputrow;
+           mng_fptr          fDeltagetrow;       /* internal delta-proc callbacks */
+           mng_fptr          fDeltaaddrow;
+           mng_fptr          fDeltareplacerow;
+           mng_fptr          fDeltaputrow;
 
            mng_uint16        iMAGNfromid;
            mng_uint16        iMAGNtoid;
@@ -649,10 +651,10 @@ typedef struct mng_data_struct {
            mng_bool          bJPEGscanstarted2;  /* indicates "first scan" started (JDAA) */
            mng_bool          bJPEGprogressive2;  /* indicates a progressive image (JDAA) */
 
-           mng_ptr           fStorerow2;         /* internal callback to store an
+           mng_fptr          fStorerow2;         /* internal callback to store an
                                                     uncompressed/unfiltered row of JPEG-data (JDAT) */
 
-           mng_ptr           fStorerow3;         /* internal callback to store an
+           mng_fptr          fStorerow3;         /* internal callback to store an
                                                     uncompressed/unfiltered row of JPEG-data (JDAA) */
 
            mng_uint32        iJPEGrow;           /* row-number for current JPEG row */

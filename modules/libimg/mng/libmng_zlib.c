@@ -201,15 +201,18 @@ mng_retcode mngzlib_inflaterows (mng_datap  pData,
       if (pData->iRow >= (mng_int32)pData->iDataheight)
 /*        MNG_ERROR (pData, MNG_TOOMUCHIDAT) */ ;  /* TODO: check this!!! */
       else
-      {
-        if (pData->iFilterofs)         /* has leveling info ? */
+      {                                /* has leveling info ? */
+/*        if (pData->iFilterofs)
           iRslt = init_rowdiffering (pData);
         else
-          iRslt = MNG_NOERROR;
+          iRslt = MNG_NOERROR; */
                                        /* filter the row if necessary */
-        if ((!iRslt) && (pData->iFilterofs < pData->iPixelofs  ) &&
-                        (*(pData->pWorkrow + pData->iFilterofs))    )
+/*        if ((!iRslt) && (pData->iFilterofs < pData->iPixelofs  ) &&
+                        (*(pData->pWorkrow + pData->iFilterofs))    ) */
+        if (*(pData->pWorkrow + pData->iFilterofs))   
           iRslt = filter_a_row (pData);
+        else
+          iRslt = MNG_NOERROR;
                                        /* additonal leveling/differing ? */
         if ((!iRslt) && (pData->fDifferrow))
         {
@@ -217,7 +220,7 @@ mng_retcode mngzlib_inflaterows (mng_datap  pData,
 
           pSwap           = pData->pWorkrow;
           pData->pWorkrow = pData->pPrevrow;
-          pData->pPrevrow = pSwap;     /* so prev points to the processed row! */
+          pData->pPrevrow = pSwap;     /* make sure we're processing the right data */
         }
 
         if (!iRslt)

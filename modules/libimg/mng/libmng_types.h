@@ -86,6 +86,10 @@
 /* *                                                                        * */
 /* *             0.9.4 - 11/20/2000 - R.Giles                               * */
 /* *             - fixed inclusion of lcms header for non-windows platforms * */
+/* *             0.9.4 - 12/12/2000 - G.Juyn                                * */
+/* *             - changed callback convention for MSVC (Thanks Chad)       * */
+/* *             0.9.4 - 12/16/2000 - G.Juyn                                * */
+/* *             - fixed mixup of data- & function-pointers (thanks Dimitri)* */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -114,8 +118,11 @@
 /* ************************************************************************** */
 
 #ifdef WIN32                           /* only include needed stuff */
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+#endif
+
 #ifdef MNG_USE_DLL
 #ifdef MNG_SKIP_ZLIB
 #undef MNG_INCLUDE_ZLIB
@@ -249,6 +256,7 @@ typedef size_t           mng_size_t;             /* size field for memory alloca
 
 typedef char *           mng_pchar;              /* string */
 typedef void *           mng_ptr;                /* generic pointer */
+typedef void             (*mng_fptr) (void);     /* generic function pointer */
 
 /* ************************************************************************** */
 /* *                                                                        * */
@@ -366,24 +374,24 @@ typedef enum mng_speedtypes mng_speedtype;
 /* ************************************************************************** */
 
                                        /* memory management callbacks */
-typedef mng_ptr    MNG_DECL (*mng_memalloc)      (mng_size_t  iLen);
-typedef void       MNG_DECL (*mng_memfree)       (mng_ptr     iPtr,
+typedef mng_ptr    (MNG_DECL *mng_memalloc)      (mng_size_t  iLen);
+typedef void       (MNG_DECL *mng_memfree)       (mng_ptr     iPtr,
                                                   mng_size_t  iLen);
 
                                        /* I/O management callbacks */
-typedef mng_bool   MNG_DECL (*mng_openstream)    (mng_handle  hHandle);
-typedef mng_bool   MNG_DECL (*mng_closestream)   (mng_handle  hHandle);
-typedef mng_bool   MNG_DECL (*mng_readdata)      (mng_handle  hHandle,
+typedef mng_bool   (MNG_DECL *mng_openstream)    (mng_handle  hHandle);
+typedef mng_bool   (MNG_DECL *mng_closestream)   (mng_handle  hHandle);
+typedef mng_bool   (MNG_DECL *mng_readdata)      (mng_handle  hHandle,
                                                   mng_ptr     pBuf,
                                                   mng_uint32  iBuflen,
                                                   mng_uint32p pRead);
-typedef mng_bool   MNG_DECL (*mng_writedata)     (mng_handle  hHandle,
+typedef mng_bool   (MNG_DECL *mng_writedata)     (mng_handle  hHandle,
                                                   mng_ptr     pBuf,
                                                   mng_uint32  iBuflen,
                                                   mng_uint32p pWritten);
 
                                        /* error & trace processing callbacks */
-typedef mng_bool   MNG_DECL (*mng_errorproc)     (mng_handle  hHandle,
+typedef mng_bool   (MNG_DECL *mng_errorproc)     (mng_handle  hHandle,
                                                   mng_int32   iErrorcode,
                                                   mng_int8    iSeverity,
                                                   mng_chunkid iChunkname,
@@ -391,53 +399,53 @@ typedef mng_bool   MNG_DECL (*mng_errorproc)     (mng_handle  hHandle,
                                                   mng_int32   iExtra1,
                                                   mng_int32   iExtra2,
                                                   mng_pchar   zErrortext);
-typedef mng_bool   MNG_DECL (*mng_traceproc)     (mng_handle  hHandle,
+typedef mng_bool   (MNG_DECL *mng_traceproc)     (mng_handle  hHandle,
                                                   mng_int32   iFuncnr,
                                                   mng_int32   iFuncseq,
                                                   mng_pchar   zFuncname);
 
                                        /* read processing callbacks */
-typedef mng_bool   MNG_DECL (*mng_processheader) (mng_handle  hHandle,
+typedef mng_bool   (MNG_DECL *mng_processheader) (mng_handle  hHandle,
                                                   mng_uint32  iWidth,
                                                   mng_uint32  iHeight);
-typedef mng_bool   MNG_DECL (*mng_processtext)   (mng_handle  hHandle,
+typedef mng_bool   (MNG_DECL *mng_processtext)   (mng_handle  hHandle,
                                                   mng_uint8   iType,
                                                   mng_pchar   zKeyword,
                                                   mng_pchar   zText,
                                                   mng_pchar   zLanguage,
                                                   mng_pchar   zTranslation);
-typedef mng_bool   MNG_DECL (*mng_processsave)   (mng_handle  hHandle);
-typedef mng_bool   MNG_DECL (*mng_processseek)   (mng_handle  hHandle,
+typedef mng_bool   (MNG_DECL *mng_processsave)   (mng_handle  hHandle);
+typedef mng_bool   (MNG_DECL *mng_processseek)   (mng_handle  hHandle,
                                                   mng_pchar   zName);
-typedef mng_bool   MNG_DECL (*mng_processneed)   (mng_handle  hHandle,
+typedef mng_bool   (MNG_DECL *mng_processneed)   (mng_handle  hHandle,
                                                   mng_pchar   zKeyword);
-typedef mng_bool   MNG_DECL (*mng_processunknown) (mng_handle  hHandle,
+typedef mng_bool   (MNG_DECL *mng_processunknown) (mng_handle  hHandle,
                                                    mng_chunkid iChunkid,
                                                    mng_uint32  iRawlen,
                                                    mng_ptr     pRawdata);
 
                                        /* display processing callbacks */
-typedef mng_ptr    MNG_DECL (*mng_getcanvasline) (mng_handle  hHandle,
+typedef mng_ptr    (MNG_DECL *mng_getcanvasline) (mng_handle  hHandle,
                                                   mng_uint32  iLinenr);
-typedef mng_ptr    MNG_DECL (*mng_getbkgdline)   (mng_handle  hHandle,
+typedef mng_ptr    (MNG_DECL *mng_getbkgdline)   (mng_handle  hHandle,
                                                   mng_uint32  iLinenr);
-typedef mng_ptr    MNG_DECL (*mng_getalphaline)  (mng_handle  hHandle,
+typedef mng_ptr    (MNG_DECL *mng_getalphaline)  (mng_handle  hHandle,
                                                   mng_uint32  iLinenr);
-typedef mng_bool   MNG_DECL (*mng_refresh)       (mng_handle  hHandle,
+typedef mng_bool   (MNG_DECL *mng_refresh)       (mng_handle  hHandle,
                                                   mng_uint32  iX,
                                                   mng_uint32  iY,
                                                   mng_uint32  iWidth,
                                                   mng_uint32  iHeight);
 
                                        /* timer management callbacks */
-typedef mng_uint32 MNG_DECL (*mng_gettickcount)  (mng_handle  hHandle);
-typedef mng_bool   MNG_DECL (*mng_settimer)      (mng_handle  hHandle,
+typedef mng_uint32 (MNG_DECL *mng_gettickcount)  (mng_handle  hHandle);
+typedef mng_bool   (MNG_DECL *mng_settimer)      (mng_handle  hHandle,
                                                   mng_uint32  iMsecs);
 
                                        /* color management callbacks */
-typedef mng_bool   MNG_DECL (*mng_processgamma)  (mng_handle  hHandle,
+typedef mng_bool   (MNG_DECL *mng_processgamma)  (mng_handle  hHandle,
                                                   mng_uint32  iGamma);
-typedef mng_bool   MNG_DECL (*mng_processchroma) (mng_handle  hHandle,
+typedef mng_bool   (MNG_DECL *mng_processchroma) (mng_handle  hHandle,
                                                   mng_uint32  iWhitepointx,
                                                   mng_uint32  iWhitepointy,
                                                   mng_uint32  iRedx,
@@ -446,18 +454,18 @@ typedef mng_bool   MNG_DECL (*mng_processchroma) (mng_handle  hHandle,
                                                   mng_uint32  iGreeny,
                                                   mng_uint32  iBluex,
                                                   mng_uint32  iBluey);
-typedef mng_bool   MNG_DECL (*mng_processsrgb)   (mng_handle  hHandle,
+typedef mng_bool   (MNG_DECL *mng_processsrgb)   (mng_handle  hHandle,
                                                   mng_uint8   iRenderingintent);
-typedef mng_bool   MNG_DECL (*mng_processiccp)   (mng_handle  hHandle,
+typedef mng_bool   (MNG_DECL *mng_processiccp)   (mng_handle  hHandle,
                                                   mng_uint32  iProfilesize,
                                                   mng_ptr     pProfile);
-typedef mng_bool   MNG_DECL (*mng_processarow)   (mng_handle  hHandle,
+typedef mng_bool   (MNG_DECL *mng_processarow)   (mng_handle  hHandle,
                                                   mng_uint32  iRowsamples,
                                                   mng_bool    bIsRGBA16,
                                                   mng_ptr     pRow);
 
                                        /* chunk access callback(s) */
-typedef mng_bool   MNG_DECL (*mng_iteratechunk)  (mng_handle  hHandle,
+typedef mng_bool   (MNG_DECL *mng_iteratechunk)  (mng_handle  hHandle,
                                                   mng_handle  hChunk,
                                                   mng_chunkid iChunkid,
                                                   mng_uint32  iChunkseq);

@@ -172,6 +172,11 @@ il_mng_refresh(mng_handle handle,
                               mng_get_refreshpass(handle) /* pass */);
   }
 
+  if (mng_get_imagetype(handle) == mng_it_mng) {
+    ic->imgdcb->ImgDCBFlushImage();
+    ic->imgdcb->ImgDCBHaveImageFrame();
+  }
+
   return MNG_TRUE;
 }
 
@@ -228,6 +233,7 @@ il_mng_free(mng_ptr ptr, mng_size_t size)
   nsMemory::Free(ptr);
 }
 
+#ifdef DEBUG_tor
 static mng_bool
 il_mng_trace(mng_handle handle, mng_int32 iFuncnr, mng_int32 iFuncseq,
              mng_pchar zFuncname)
@@ -244,6 +250,7 @@ il_mng_error(mng_handle hHandle, mng_int32 iErrorcode, mng_int8 iSeverity,
   dprintf((stderr, "== error == %s\n", zErrortext));
   return MNG_TRUE;
 }
+#endif
 
 // Boilerplate methods... *yawn*
 //===========================================================

@@ -1,13 +1,9 @@
-libmng v0.9.3
--------------
+libmng 0.9.4
+------------
 
-This is the fourth beta-release!
+This is the fifth (and last?) beta-release!
 
-Quite a few changes, since there has been several changes in the MNG spec.
-Also fixes a number of problems that have surfaced during extensive tests.
-And a number of functions have been added to facilitate in integrating
-the library in a multitude of applications, as these were the result of
-requests from several implementors.
+A few small amendments from the spec, and a couple of minor bug-fixes.
 
 This is another release candidate. If no significant problems are discovered,
 libmng 1.0.0 will be just around the corner!

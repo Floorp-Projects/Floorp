@@ -100,7 +100,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng.h                  copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.3                                                      * */
+/* * version   : 0.9.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : main application interface                                 * */
 /* *                                                                        * */
@@ -204,6 +204,10 @@
 /* *             - added get/set for bKGD preference setting                * */
 /* *             0.9.3 - 10/21/2000 - G.Juyn                                * */
 /* *             - added get function for interlace/progressive display     * */
+/* *                                                                        * */
+/* *             0.9.4 -  1/18/2001 - G.Juyn                                * */
+/* *             - added errorcode for MAGN methods                         * */
+/* *             - removed test filter-methods 1 & 65                       * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -343,12 +347,12 @@ extern "C" {
 /* *                                                                        * */
 /* ************************************************************************** */
 
-#define MNG_VERSION_TEXT    "0.9.4"
+#define MNG_VERSION_TEXT    "0.9.5"
 #define MNG_VERSION_SO      0          /* eg. libmng.so.0 (while in test/beta) */
 #define MNG_VERSION_DLL     0          /* eg. libmng.dll (nb. same for version 1) */
 #define MNG_VERSION_MAJOR   0
 #define MNG_VERSION_MINOR   9
-#define MNG_VERSION_RELEASE 4
+#define MNG_VERSION_RELEASE 5
 
 MNG_EXT mng_pchar MNG_DECL mng_version_text    (void);
 MNG_EXT mng_uint8 MNG_DECL mng_version_so      (void);
@@ -367,10 +371,10 @@ MNG_EXT mng_uint8 MNG_DECL mng_version_release (void);
 #define MNG_PNG_VERSION_MAJ 1
 #define MNG_PNG_VERSION_MIN 2
 
-#define MNG_MNG_VERSION     "0.98a"
-#define MNG_MNG_VERSION_MAJ 0
-#define MNG_MNG_VERSION_MIN 98
-#define MNG_MNG_DRAFT       81
+#define MNG_MNG_VERSION     "1.0"
+#define MNG_MNG_VERSION_MAJ 1
+#define MNG_MNG_VERSION_MIN 0
+#define MNG_MNG_DRAFT       99
 
 /* ************************************************************************** */
 /* *                                                                        * */
@@ -2026,6 +2030,7 @@ MNG_EXT mng_retcode MNG_DECL mng_updatemngsimplicity (mng_handle        hHandle,
 #define MNG_UNKNOWNCRITICAL  (mng_retcode)1061 /* unknown critical chunk found*/
 #define MNG_UNSUPPORTEDNEED  (mng_retcode)1062 /* nEED requirement unsupported*/
 #define MNG_INVALIDDELTA     (mng_retcode)1063 /* Delta operation illegal     */
+#define MNG_INVALIDMETHOD    (mng_retcode)1064 /* invalid MAGN method         */
 
 #define MNG_INVALIDCNVSTYLE  (mng_retcode)2049 /* can't make anything of this */
 #define MNG_WRONGCHUNK       (mng_retcode)2050 /* accessing the wrong chunk   */
@@ -2184,10 +2189,10 @@ MNG_EXT mng_retcode MNG_DECL mng_updatemngsimplicity (mng_handle        hHandle,
                                                     BASI, JHDR */
 
 #define MNG_FILTER_ADAPTIVE              0       /* IHDR, BASI, JHDR */
-#define MNG_FILTER_NO_ADAPTIVE           1
+/* #define MNG_FILTER_NO_ADAPTIVE           1 */
 #define MNG_FILTER_NO_DIFFERING          0
 #define MNG_FILTER_DIFFERING             0x40
-#define MNG_FILTER_MASK                  (MNG_FILTER_NO_ADAPTIVE | MNG_FILTER_DIFFERING)
+/* #define MNG_FILTER_MASK                  (MNG_FILTER_NO_ADAPTIVE | MNG_FILTER_DIFFERING) */
 
 #define MNG_INTERLACE_NONE               0       /* IHDR, BASI, JHDR */
 #define MNG_INTERLACE_ADAM7              1
