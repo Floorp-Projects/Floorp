@@ -926,6 +926,10 @@ AddGroup 'creategroups',     'Can create and destroy groups.';
 AddGroup 'editcomponents',   'Can create, destroy, and edit components.';
 AddGroup 'editkeywords',   'Can create, destroy, and edit keywords.';
 
+# Add the groupset field here because this code is run before the
+# code that updates the database structure.
+AddField('profiles', 'groupset', 'bigint not null');
+
 if (!GroupExists("editbugs")) {
     my $id = AddGroup('editbugs',  'Can edit all aspects of any bug.', ".*");
     $dbh->do("UPDATE profiles SET groupset = groupset | $id");
@@ -1245,6 +1249,18 @@ sub DropField ($$)
 $::regenerateshadow = 0;
 
 
+# really old fields that were added before checksetup.pl existed
+# but aren't in very old bugzilla's (like 2.1)
+# Steve Stock (sstock@iconnect-inc.com)
+AddField('bugs', 'target_milestone', 'varchar(20) not null default "---"');
+AddField('bugs', 'groupset', 'bigint not null');
+AddField('bugs', 'qa_contact', 'mediumint not null');
+AddField('bugs', 'status_whiteboard', 'mediumtext not null');
+AddField('products', 'disallownew', 'tinyint not null');
+AddField('products', 'milestoneurl', 'tinytext not null');
+AddField('components', 'initialqacontact', 'tinytext not null');
+AddField('components', 'description', 'mediumtext not null');
+ChangeFieldType('components', 'program', 'varchar(64)');
 
 
 # 1999-05-12 Added a pref to control how much email you get.  This needs a new
