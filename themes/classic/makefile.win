@@ -30,6 +30,7 @@ DIRS =  communicator\search\win  \
         communicator\win         \
         global\win               \
         messenger\win            \
+        messenger\addressbook\win            \
         preview\win              \
         editor\win               \
         navigator\win
