@@ -883,19 +883,6 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
   aBottom = row->mBottom;
 }
 
-PRBool
-nsGrid::CheckCollapsed(nsBoxLayoutState& aState, nsGridRow* aRow, nscoord& aSize, nscoord& aNewSize)
-{
-    if (aRow->IsCollapsed(aState))
-    {
-      aSize = 0;
-      aNewSize = 0;
-      return PR_TRUE;
-    }
-    
-    return PR_FALSE;
-}
-
 /**
  * These methods return the preferred, min, max coord for a given row index if
  * aIsHorizontal is PR_TRUE. If you pass PR_FALSE you will get the inverse.
@@ -908,8 +895,11 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSiz
 
   nsGridRow* row = GetRowAt(aIndex, aIsHorizontal);
 
-  if (CheckCollapsed(aState, row, row->mPref, aSize))
-      return NS_OK;
+  if (row->IsCollapsed(aState))
+  {
+    aSize = 0;
+    return NS_OK;
+  }
 
   if (row->IsPrefSet()) 
   {
@@ -1005,8 +995,11 @@ nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize
 
   nsGridRow* row = GetRowAt(aIndex, aIsHorizontal);
 
-  if (CheckCollapsed(aState, row, row->mMin, aSize))
-      return NS_OK;
+  if (row->IsCollapsed(aState))
+  {
+    aSize = 0;
+    return NS_OK;
+  } 
 
   if (row->IsMinSet()) 
   {
@@ -1098,8 +1091,11 @@ nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize
 
   nsGridRow* row = GetRowAt(aIndex, aIsHorizontal);
 
-  if (CheckCollapsed(aState, row, row->mMax, aSize))
-     return NS_OK;
+  if (row->IsCollapsed(aState))
+  {
+    aSize = 0;
+    return NS_OK;
+  }
 
   if (row->IsMaxSet()) 
   {

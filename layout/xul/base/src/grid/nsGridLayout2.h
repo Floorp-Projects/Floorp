@@ -81,9 +81,13 @@ public:
   NS_IMETHOD GetRowCount(PRInt32& aRowCount);
 
 protected:
-  nsGridLayout2(nsIPresShell* aShell);
 
+  nsGridLayout2(nsIPresShell* aShell);
   nsGrid mGrid;
+
+private:
+  void AddWidth(nsSize& aSize, nscoord aSize2, PRBool aIsHorizontal);
+
 
 }; // class nsGridLayout2
 

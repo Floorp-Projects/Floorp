@@ -244,6 +244,14 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
       if (i == firstIndex || i == lastIndex) {
         nsMargin offset(0,0,0,0);
         GetTotalMargin(aBox, offset, isHorizontal);
+
+        nsMargin border(0,0,0,0);
+        // can't call GetBorderPadding we will get into recursion
+        aBox->GetBorder(border);
+        offset += border;
+        aBox->GetPadding(border);
+        offset += border;
+
         // subtract from out left and right
         if (i == firstIndex) 
         {
