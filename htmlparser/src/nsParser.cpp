@@ -1676,9 +1676,11 @@ nsresult nsParser::Parse(nsIInputStream& aStream,const nsString& aMimeType,PRBoo
  * @param   aMimeType tells us what type of content to expect in the given string
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(const nsAReadableString& aSourceBuffer,void* aKey,const nsString&
-aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,nsDTDMode aMode){ 
-  
+nsresult nsParser::Parse(const nsAReadableString& aSourceBuffer, void* aKey,
+                         const nsAReadableString& aMimeType,
+                         PRBool aVerifyEnabled, PRBool aLastCall,
+                         nsDTDMode aMode){ 
+
   //NOTE: Make sure that updates to this method don't cause 
   //      bug #2361 to break again! 
 

@@ -2296,19 +2296,13 @@ nsHTMLDocument::WriteCommon(const nsAReadableString& aText,
     }
   }
 
-  const nsAReadableString *text_to_write = &aText;
-  nsAutoString string_buffer;
-
-  if (aNewlineTerminate) {
-    string_buffer.Assign(aText);
-    string_buffer.Append((PRUnichar)'\n');
-
-    text_to_write = &string_buffer;
-  }
-
   mWriteLevel++;
-  rv = mParser->Parse(*text_to_write, NS_GENERATE_PARSER_KEY(),
-                      NS_ConvertASCIItoUCS2("text/html"), PR_FALSE,
+
+  static const NS_NAMED_LITERAL_STRING(sNewLine, "\n");
+
+  rv = mParser->Parse(aNewlineTerminate ? (aText + sNewLine) : aText,
+                      NS_GENERATE_PARSER_KEY(),
+                      NS_LITERAL_STRING("text/html"), PR_FALSE,
                       (!mIsWriting || (mWriteLevel > 1)));
   mWriteLevel--;
 
