@@ -22,6 +22,7 @@
 # Contributor(s):
 #   R.J. Keller <rlk@trfenv.com>
 #   Steffen Wilberg <steffen.wilberg@web.de>
+#   Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,10 +48,8 @@
     %brandDTD;
     <!ENTITY % helpDTD SYSTEM "chrome://help/locale/help.dtd">
     %helpDTD;
-    <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
-    %browserDTD;
-    <!ENTITY % findDTD SYSTEM "chrome://global/locale/finddialog.dtd" >
-    %findDTD;
+    <!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findbar.dtd" >
+    %findBarDTD;
     <!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
     %globalRegionDTD;
 ]>
@@ -76,12 +75,11 @@
 
     <script type="application/x-javascript" src="chrome://help/content/toolbarCustomization.js"/>
     <script type="application/x-javascript" src="chrome://help/content/help.js"/>
-    <script type="application/x-javascript" src="chrome://browser/content/sessionHistoryUI.js"/>
     <script type="application/x-javascript" src="chrome://global/content/findBar.js"/>
     <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
     <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 
-    <stringbundle id="bundle_findBar" src="chrome://browser/locale/browser.properties"/>
+    <stringbundle id="bundle_findBar" src="chrome://global/locale/findbar.properties"/>
     
     <menupopup id="backMenu" position="after_start"
         onpopupshowing="return createBackMenu(event);"

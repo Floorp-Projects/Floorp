@@ -43,3 +43,11 @@
 <!ENTITY menu_textEnlarge.accesskey "I">
 <!ENTITY menu_textReduce.label "Decrease Text Size">
 <!ENTITY menu_textReduce.accesskey "D">
+
+<!ENTITY findOnCmd.label     "Find in This Page...">
+<!ENTITY findOnCmd.accesskey "F">
+<!ENTITY findOnCmd.commandkey "f">
+<!ENTITY findAgainCmd.label  "Find Again">
+<!ENTITY findAgainCmd.accesskey "g">
+<!ENTITY findAgainCmd.commandkey "g">
+<!ENTITY findAgainCmd.commandkey2 "VK_F3">

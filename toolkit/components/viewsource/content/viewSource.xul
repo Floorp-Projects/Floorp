@@ -25,6 +25,7 @@
 #     Roger B. Sidje <rbs@maths.uq.edu.au>
 #     Pierre Chanial <p_ch@verizon.net>
 #     Blake Ross     <blake@cs.stanford.edu>
+#     Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,9 +41,15 @@
 #
 #***** END LICENSE BLOCK ***** -->
 
+#ifndef MOZ_THUNDERBIRD
+#define USE_FIND_TOOLBAR
+#endif
+
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://global/content/viewSource.css" type="text/css"?> 
+#ifdef USE_FIND_TOOLBAR
 <?xml-stylesheet href="chrome://global/skin/findBar.css" type="text/css"?>
+#endif
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 
@@ -51,12 +58,10 @@
 %brandDTD;
 <!ENTITY % sourceDTD SYSTEM "chrome://global/locale/viewSource.dtd" >
 %sourceDTD;
-#ifdef MOZ_PHOENIX
-<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
-%browserDTD;
+#ifdef USE_FIND_TOOLBAR
+<!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findbar.dtd" >
+%findBarDTD;
 #endif
-<!ENTITY % findDTD SYSTEM "chrome://global/locale/finddialog.dtd" >
-%findDTD;
 ]>
 
 <window id="main-window"
@@ -78,15 +83,18 @@
   <script type="application/x-javascript" src="chrome://global/content/viewSource.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
 #ifdef MOZ_PHOENIX
-  <script type="application/x-javascript" src="chrome://global/content/findBar.js"/>
   <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
-  <stringbundle id="bundle_findBar" src="chrome://browser/locale/browser.properties"/>
 #else
-  <script type="application/x-javascript" src="chrome://global/content/findUtils.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
   <!-- XPCNativeWrapper.js is needed by xpfe's contentAreaUtils.js (introduced by bug 220215) -->
   <script type="application/x-javascript" src="chrome://global/content/XPCNativeWrapper.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
+#endif
+#ifdef USE_FIND_TOOLBAR
+  <script type="application/x-javascript" src="chrome://global/content/findBar.js"/>
+  <stringbundle id="bundle_findBar" src="chrome://global/locale/findbar.properties"/>
+#else
+  <script type="application/x-javascript" src="chrome://global/content/findUtils.js"/>
 #endif
   <stringbundle id="viewSourceBundle" src="chrome://global/locale/viewSource.properties"/>
 
@@ -96,7 +104,7 @@
   <command id="cmd_pagesetup" oncommand="PrintUtils.showPageSetup();"/>
   <command id="cmd_close" oncommand="window.close();"/>
   <commandset id="editMenuCommands"/>
-#ifdef MOZ_PHOENIX
+#ifdef USE_FIND_TOOLBAR
   <command id="cmd_find" oncommand="onFindCmd();"/>
   <command id="cmd_findAgain" oncommand="onFindAgainCmd();"/>
   <command id="cmd_findPrevious" oncommand="onFindPreviousCmd();"/>    
@@ -122,7 +130,7 @@
     <key id="key_textZoomEnlarge2" key="&textEnlarge.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key id="key_textZoomReduce"  key="&textReduce.commandkey;" command="cmd_textZoomReduce" modifiers="accel"/>
     <key id="key_textZoomReset" key="&textReset.commandkey;" oncommand="ZoomManager.prototype.getInstance().reset();" modifiers="accel"/>
-#ifdef MOZ_PHOENIX
+#ifdef USE_FIND_TOOLBAR
     <key id="key_find" key="&findOnCmd.commandkey;" command="cmd_find" modifiers="accel"/>
     <key id="key_findAgain" key="&findAgainCmd.commandkey;" command="cmd_findAgain" modifiers="accel"/>
     <key id="key_findPrevious" key="&findAgainCmd.commandkey;" command="cmd_findPrevious" modifiers="accel,shift"/>
@@ -205,7 +213,7 @@
 
     <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"
              context="viewSourceContextMenu"/>
-#ifdef MOZ_PHOENIX
+#ifdef USE_FIND_TOOLBAR
 #include ../../typeaheadfind/content/findBar.inc
 #endif
 

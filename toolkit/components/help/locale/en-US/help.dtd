@@ -5,6 +5,7 @@
 
 <!ENTITY findOnCmd.commandkey           "F">
 <!ENTITY findAgainCmd.commandkey        "G">
+<!ENTITY findAgainCmd.commandkey2       "VK_F3">
 
 <!ENTITY backButton.label               "Back">
 <!ENTITY backButton.accesskey           "B">
