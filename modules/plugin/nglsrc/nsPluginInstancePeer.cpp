@@ -803,6 +803,29 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSThread(PRUint32 *outThreadID)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSContext(JSContext* *outContext)
+{
+	*outContext = NULL;
+	nsresult rv = NS_ERROR_FAILURE;
+#if defined(OJI)
+	nsIDocument* document = nsnull;
+	if (mOwner->GetDocument(&document) == NS_OK) {
+		nsIScriptContextOwner* contextOwner = document->GetScriptContextOwner();
+		if (nsnull != contextOwner) {
+			nsIScriptContext* context = nsnull;
+			if (contextOwner->GetScriptContext(&context) == NS_OK) {
+				*outContext = (JSContext*) context->GetNativeContext();
+				NS_RELEASE(context);
+				rv = NS_OK;
+			}
+			NS_RELEASE(contextOwner);
+		}
+		NS_RELEASE(document);	
+	}
+#endif
+	return rv;
+}
+
 nsresult nsPluginInstancePeerImpl::Initialize(nsIPluginInstanceOwner *aOwner,
                                                 const nsMIMEType aMIMEType)
 {
