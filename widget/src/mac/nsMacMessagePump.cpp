@@ -479,7 +479,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 			case inContent:
 			{
 				::SetPortWindowPort(whichWindow);
-				if (IsWindowHilited(whichWindow))
+				if ( IsWindowHilited(whichWindow) || (gRollupListener && gRollupWidget) )
 					DispatchOSEventToRaptor(anEvent, whichWindow);
 				else {
 					nsMacWindow *mw = mMessageSink->GetNSWindowFromMacWindow(whichWindow);
