@@ -63,7 +63,7 @@ nsresult TextEditorTest::RunUnitTest()
   TEST_RESULT(result);
 
   // insert some more text
-  nsString docContent2("Moreover, I am cognizant of the interrelatedness of all communities and states.  I cannot sit idly by in Atlanta and not be concerned about what happens in Birmingham.  Injustice anywhere is a threat to justice everywhere.");
+  nsString docContent2("Moreover, I am cognizant of the interrelatedness of all communities and states.  I cannot sit idly by in Atlanta and not be concerned about what happens in Birmingham.  Injustice anywhere is a threat to justice everywhere");
   result = mTextEditor->InsertText(docContent2);
   TEST_RESULT(result);
 
@@ -194,8 +194,20 @@ nsresult TextEditorTest::TestTextProperties()
   NS_ASSERTION(PR_TRUE==any, "any should be true");
   NS_ASSERTION(PR_TRUE==all, "all should be true");
   mEditor->DebugDumpContent();
-  /* I need a way of setting the selection I want here.  Maybe use Kin's text service stuff?
+
   // make all the text underlined, except for the first 2 and last 2 characters
+  result = doc->GetElementsByTagName(textTag, getter_AddRefs(nodeList));
+  TEST_RESULT(result);
+  TEST_POINTER(nodeList.get());
+  nodeList->GetLength(&count);
+  NS_ASSERTION(0!=count, "there are no text nodes in the document!");
+  result = nodeList->Item(1, getter_AddRefs(textNode));
+  TEST_RESULT(result);
+  TEST_POINTER(textNode.get());
+  textData = do_QueryInterface(textNode);
+  textData->GetLength(&length);
+  selection->Collapse(textNode, 1);
+  selection->Extend(textNode, length-2);
 
   result = mTextEditor->SetTextProperty(nsIEditProperty::u, nsnull, nsnull);
   TEST_RESULT(result);
@@ -205,7 +217,6 @@ nsresult TextEditorTest::TestTextProperties()
   NS_ASSERTION(PR_TRUE==any, "any should be true");
   NS_ASSERTION(PR_TRUE==all, "all should be true");
   mEditor->DebugDumpContent();
-  */
 
   return result;
 }

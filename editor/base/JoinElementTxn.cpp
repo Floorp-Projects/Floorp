@@ -150,33 +150,6 @@ NS_IMETHODIMP JoinElementTxn::Undo(void)
 
 }
 
-/*
-NS_IMETHODIMP JoinElementTxn::Redo(void)
-{
-  if (gNoisy) { printf("Redo Join\n"); }
-  nsresult result;
-  nsCOMPtr<nsIEditorSupport> editor;
-  result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
-  if (NS_SUCCEEDED(result) && editor) 
-  {
-    result = editor->JoinNodesImpl(mRightNode, mLeftNode, mParent, PR_FALSE);
-    if (NS_SUCCEEDED(result))
-    {
-      nsCOMPtr<nsIDOMSelection>selection;
-      mEditor->GetSelection(getter_AddRefs(selection));
-      if (selection)
-      {
-        selection->Collapse(mRightNode, mOffset);
-      }
-    }
-  }
-  else {
-    result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return result;
-}
-*/
-
 NS_IMETHODIMP JoinElementTxn::GetIsTransient(PRBool *aIsTransient)
 {
   if (nsnull!=aIsTransient)

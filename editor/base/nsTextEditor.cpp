@@ -1136,7 +1136,7 @@ NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode  *aNode,
         result = nsEditor::CreateNode(tag, aParent, 0, getter_AddRefs(newStyleNode));
         if (NS_SUCCEEDED(result) && newStyleNode)
         {
-          result = MoveContentIntoNewParent(aNode, newStyleNode, aStartOffset, aEndOffset);
+          result = MoveContentOfNodeIntoNewParent(aNode, newStyleNode, aStartOffset, aEndOffset);
           if (NS_SUCCEEDED(result) && newStyleNode) 
           {
             if (aAttribute)
@@ -1158,13 +1158,13 @@ NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode  *aNode,
   return result;
 }
 
-NS_IMETHODIMP nsTextEditor::MoveContentIntoNewParent(nsIDOMNode  *aNode, 
-                                                     nsIDOMNode  *aNewParentNode, 
-                                                     PRInt32      aStartOffset, 
-                                                     PRInt32      aEndOffset)
+NS_IMETHODIMP nsTextEditor::MoveContentOfNodeIntoNewParent(nsIDOMNode  *aNode, 
+                                                           nsIDOMNode  *aNewParentNode, 
+                                                           PRInt32      aStartOffset, 
+                                                           PRInt32      aEndOffset)
 {
   if (!aNode || !aNewParentNode) { return NS_ERROR_NULL_POINTER; }
-  if (gNoisy) { printf("nsTextEditor::MoveContentIntoNewParent\n"); }
+  if (gNoisy) { printf("nsTextEditor::MoveContentOfNodeIntoNewParent\n"); }
   nsresult result=NS_OK;
 
   PRUint32 count;
@@ -1491,43 +1491,73 @@ nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode  *aStartNode,
   IsTextPropertySetByContent(aStartNode, aPropName, aAttribute, aValue, textPropertySet, getter_AddRefs(resultNode));
   if (PR_FALSE==textPropertySet)
   {
-    nsCOMPtr<nsIDOMNode>newLeftTextNode;  // this will be the middle text node
-    if (0!=aStartOffset) {
-      result = nsEditor::SplitNode(aStartNode, aStartOffset, getter_AddRefs(newLeftTextNode));
+    nsAutoString tag;
+    aPropName->ToString(tag);
+    // create the new style node, which will be the new parent for the selected nodes
+    nsCOMPtr<nsIDOMNode>newStyleNode;
+    result = nsEditor::CreateNode(tag, aParent, 0, getter_AddRefs(newStyleNode));
+    if (NS_SUCCEEDED(result) && newStyleNode)
+    {
+      result = MoveContiguousContentIntoNewParent(aStartNode, aStartOffset, aEndNode, aEndOffset, aParent, newStyleNode);
+      if (NS_SUCCEEDED(result) && aAttribute)
+      {
+        nsCOMPtr<nsIDOMElement> newStyleElement;
+        newStyleElement = do_QueryInterface(newStyleNode);
+        nsAutoString value;
+        if (aValue) {
+          value = *aValue;
+        }
+        result = newStyleElement->SetAttribute(*aAttribute, value);
+      }
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP nsTextEditor::MoveContiguousContentIntoNewParent(nsIDOMNode  *aStartNode, 
+                                                               PRInt32      aStartOffset, 
+                                                               nsIDOMNode  *aEndNode,
+                                                               PRInt32      aEndOffset,
+                                                               nsIDOMNode  *aGrandParentNode,
+                                                               nsIDOMNode  *aNewParentNode)
+{
+  if (!aStartNode || !aEndNode || !aNewParentNode) { return NS_ERROR_NULL_POINTER; }
+  if (gNoisy) { printf("nsTextEditor::MoveContiguousContentIntoNewParent\n"); }
+
+  nsresult result = NS_OK;
+  nsCOMPtr<nsIDOMNode>newLeftNode;  // this will be the middle text node
+  if (0!=aStartOffset) {
+    result = nsEditor::SplitNode(aStartNode, aStartOffset, getter_AddRefs(newLeftNode));
+  }
+  if (NS_SUCCEEDED(result))
+  {
+    PRUint32 count;
+    GetLengthOfDOMNode(aEndNode, count);
+    nsCOMPtr<nsIDOMNode>newRightNode;  // this will be the middle text node
+    if ((PRInt32)count!=aEndOffset) {
+      result = nsEditor::SplitNode(aEndNode, aEndOffset, getter_AddRefs(newRightNode));
+    }
+    else {
+      newRightNode = do_QueryInterface(aEndNode);
     }
     if (NS_SUCCEEDED(result))
     {
-      nsCOMPtr<nsIDOMCharacterData>endNodeAsChar;
-      endNodeAsChar = do_QueryInterface(aEndNode);
-      if (!endNodeAsChar)
-        return NS_ERROR_FAILURE;
-      PRUint32 count;
-      endNodeAsChar->GetLength(&count);
-      nsCOMPtr<nsIDOMNode>newRightTextNode;  // this will be the middle text node
-      if ((PRInt32)count!=aEndOffset) {
-        result = nsEditor::SplitNode(aEndNode, aEndOffset, getter_AddRefs(newRightTextNode));
+      PRInt32 offsetInParent;
+      if (newLeftNode) {
+        result = nsIEditorSupport::GetChildOffset(newLeftNode, aGrandParentNode, offsetInParent);
       }
       else {
-        newRightTextNode = do_QueryInterface(aEndNode);
+        offsetInParent = -1; // relies on +1 below in call to CreateNode
       }
       if (NS_SUCCEEDED(result))
       {
-        PRInt32 offsetInParent;
-        if (newLeftTextNode) {
-          result = nsIEditorSupport::GetChildOffset(newLeftTextNode, aParent, offsetInParent);
-        }
-        else {
-          offsetInParent = -1; // relies on +1 below in call to CreateNode
-        }
+        // wherever aNewParentNode is, delete it and insert it into aGrandParentNode
+        result = nsEditor::DeleteNode(aNewParentNode);
         if (NS_SUCCEEDED(result))
-        {
-          nsAutoString tag;
-          aPropName->ToString(tag);
-          // create the new style node, which will be the new parent for the selected nodes
-          nsCOMPtr<nsIDOMNode>newStyleNode;
-          result = nsEditor::CreateNode(tag, aParent, offsetInParent+1, getter_AddRefs(newStyleNode));
+        { 
+          result = nsEditor::InsertNode(aNewParentNode, aGrandParentNode, offsetInParent);
           if (NS_SUCCEEDED(result))
-          { // move the right half of the start node into the new style node
+          { // move the right half of the start node into the new parent node
             nsCOMPtr<nsIDOMNode>intermediateNode;
             result = aStartNode->GetNextSibling(getter_AddRefs(intermediateNode));
             if (NS_SUCCEEDED(result))
@@ -1536,10 +1566,10 @@ nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode  *aStartNode,
               if (NS_SUCCEEDED(result)) 
               { 
                 PRInt32 childIndex=0;
-                result = nsEditor::InsertNode(aStartNode, newStyleNode, childIndex);
+                result = nsEditor::InsertNode(aStartNode, aNewParentNode, childIndex);
                 childIndex++;
                 if (NS_SUCCEEDED(result))
-                { // move all the intermediate nodes into the new style node
+                { // move all the intermediate nodes into the new parent node
                   nsCOMPtr<nsIDOMNode>nextSibling;
                   while (intermediateNode.get() != aEndNode)
                   {
@@ -1552,17 +1582,17 @@ nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode  *aStartNode,
                     intermediateNode->GetNextSibling(getter_AddRefs(nextSibling));
                     result = nsEditor::DeleteNode(intermediateNode);
                     if (NS_SUCCEEDED(result)) {
-                      result = nsEditor::InsertNode(intermediateNode, newStyleNode, childIndex);
+                      result = nsEditor::InsertNode(intermediateNode, aNewParentNode, childIndex);
                       childIndex++;
                     }
                     intermediateNode = do_QueryInterface(nextSibling);
                   }
                   if (NS_SUCCEEDED(result))
-                  { // move the left half of the end node into the new style node
-                    result = nsEditor::DeleteNode(newRightTextNode);
+                  { // move the left half of the end node into the new parent node
+                    result = nsEditor::DeleteNode(newRightNode);
                     if (NS_SUCCEEDED(result)) 
                     {
-                      result = nsEditor::InsertNode(newRightTextNode, newStyleNode, childIndex);
+                      result = nsEditor::InsertNode(newRightNode, aNewParentNode, childIndex);
                     }
                   }
                 }
@@ -1575,6 +1605,7 @@ nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode  *aStartNode,
   }
   return result;
 }
+
 
 /* this wraps every selected text node in a new inline style node if needed
    the text nodes are treated as being unique -- each needs it's own style node 
