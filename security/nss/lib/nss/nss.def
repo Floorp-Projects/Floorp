@@ -252,6 +252,7 @@ PORT_FreeArena;
 PORT_NewArena;
 PORT_Realloc;
 PORT_ZAlloc;
+PORT_ZFree;
 RSA_FormatBlock;
 SECITEM_CompareItem;
 SECKEY_CreateRSAPrivateKey;
