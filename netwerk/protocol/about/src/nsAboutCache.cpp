@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Henrik Gemal <gemal@gemal.dk>
  */
 
 #include "nsAboutCache.h"
@@ -82,8 +83,7 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     rv = storageStream->GetOutputStream(0, getter_AddRefs(outputStream));
     if (NS_FAILED(rv)) return rv;
 
-    mBuffer.Assign("<HTML><TITLE>Information about the Netscape Cache Manager"
-                   "</TITLE>\n");
+    mBuffer.Assign("<html>\n<head>\n<title>Information about the Cache Manager</title>\n</head>\n<body>\n");
     outputStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
 
 
@@ -158,7 +158,7 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
 */
     } while(1);
 
-    mBuffer.Assign("</HTML>\n");
+    mBuffer.Assign("</body>\n</html>\n");
     outputStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
         
     nsCOMPtr<nsIInputStream> inStr;
@@ -193,28 +193,28 @@ void nsAboutCache::DumpCacheInfo(nsIOutputStream *aStream, nsINetDataCache *aCac
 
   // Write out cache info
 
-  mBuffer.Append("<TABLE>\n<TR><TD><b>Current entries:</TD>\n");
+  mBuffer.Append("<table>\n<tr><td><b>Current entries:</b></td>\n");
   value = 0;
   aCache->GetNumEntries(&value);
-  mBuffer.Append("<TD>");
+  mBuffer.Append("<td>");
   mBuffer.AppendInt(value);
-  mBuffer.Append("</TD>\n</TR>\n");
+  mBuffer.Append("</td>\n</tr>\n");
 
-  mBuffer.Append("<TABLE>\n<TR><TD><b>Maximum entries:</TD>\n");
+  mBuffer.Append("\n<tr><td><b>Maximum entries:</b></td>\n");
   value = 0;
   aCache->GetMaxEntries(&value);
-  mBuffer.Append("<TD>");
+  mBuffer.Append("<td>");
   mBuffer.AppendInt(value);
-  mBuffer.Append("</TD>\n</TR>\n");
+  mBuffer.Append("</td>\n</tr>\n");
 
-  mBuffer.Append("<TABLE>\n<TR><TD><b>Storage in use:</TD>\n");
-  mBuffer.Append("<TD>");
+  mBuffer.Append("\n<tr><td><b>Storage in use:</td>\n");
+  mBuffer.Append("<td>");
   value = 0;
   aCache->GetStorageInUse(&value);
   mBuffer.AppendInt(value);
-  mBuffer.Append("kb</TD>\n</TR>\n");
+  mBuffer.Append("kb</td>\n</tr>\n");
 
-  mBuffer.Append("</TABLE>\n<HR>\n");
+  mBuffer.Append("</table>\n<HR>\n");
 
   aStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
 }
@@ -238,11 +238,11 @@ void nsAboutCache::DumpCacheEntryInfo(nsIOutputStream *aStream,
   mBuffer.Assign("<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
                      "&nbsp;&nbsp;&nbsp;&nbsp;URL: </tt>");
   entry->GetUriSpec(getter_Copies(str));
-  mBuffer.Append("<A HREF=\"");
+  mBuffer.Append("<a href=\"");
   mBuffer.Append(str);
   mBuffer.Append("\">");
   mBuffer.Append(str);
-  mBuffer.Append("</A><BR>\n");
+  mBuffer.Append("</a><br>\n");
 
   // Content length
   PRUint32 length = 0;
@@ -250,7 +250,7 @@ void nsAboutCache::DumpCacheEntryInfo(nsIOutputStream *aStream,
 
   mBuffer.Append("<tt>Content Length: </tt>");
   mBuffer.AppendInt(length);
-  mBuffer.Append("<BR>\n");
+  mBuffer.Append("<br>\n");
 
   // Number of accesses
   PRUint16 numAccesses = 0;
@@ -258,7 +258,7 @@ void nsAboutCache::DumpCacheEntryInfo(nsIOutputStream *aStream,
 
   mBuffer.Append("<tt>&nbsp;# of accesses: </tt>");
   mBuffer.AppendInt(numAccesses);
-  mBuffer.Append("<BR>\n");
+  mBuffer.Append("<br>\n");
 
   // Last modified time
   char buf[255];
@@ -275,7 +275,7 @@ void nsAboutCache::DumpCacheEntryInfo(nsIOutputStream *aStream,
   } else {
     mBuffer.Append("No modified date sent");
   }
-  mBuffer.Append("<BR>");
+  mBuffer.Append("<br>");
 
   // Expires time
   mBuffer.Append("<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
@@ -289,7 +289,7 @@ void nsAboutCache::DumpCacheEntryInfo(nsIOutputStream *aStream,
   } else {
     mBuffer.Append("No expiration date sent");
   }
-  mBuffer.Append("<BR>");
+  mBuffer.Append("<br>");
 
   // Flags
   PRBool flag = PR_FALSE, foundFlag = PR_FALSE;
@@ -316,13 +316,13 @@ void nsAboutCache::DumpCacheEntryInfo(nsIOutputStream *aStream,
   }
 
   if (!foundFlag) {
-    mBuffer.Append("</b>none<BR>\n");
+    mBuffer.Append("</b>none<br>\n");
   } else {
-    mBuffer.Append("</b><BR>\n");
+    mBuffer.Append("</b><br>\n");
   }
 
   // Entry is done...
-  mBuffer.Append("\n\n<P>\n");
+  mBuffer.Append("\n\n<p>\n");
 
   aStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
 }
