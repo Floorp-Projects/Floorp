@@ -30,6 +30,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLAreaElement.h"
+#include "nsGUIEvent.h"
 
 
 // --- area -----

@@ -45,12 +45,10 @@
 #include "nsHTMLListboxAccessible.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsHTMLFormControlAccessible.h"
-#include "nsIAccessibleProvider.h"
 #include "nsILink.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLOptionElement.h"
-#include "nsIDOMXULCheckboxElement.h"
 
 // IFrame
 #include "nsIDocShell.h"
@@ -170,19 +168,6 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTMLCheckboxAccessible(nsISupports *
     return rv;
 
   *_retval = new nsHTMLCheckboxAccessible(node, weakShell);
-  if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsAccessibilityService::CreateXULCheckboxAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
-{
-  nsCOMPtr<nsIWeakReference> weakShell;
-  GetShellFromNode(aNode, getter_AddRefs(weakShell));
-
-  *_retval = new nsHTMLCheckboxAccessible(aNode, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -352,28 +337,6 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTMLTextFieldAccessible(nsISupports 
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsAccessibilityService::GetShellFromNode(nsIDOMNode *aNode, nsIWeakReference **aWeakShell)
-{
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  aNode->GetOwnerDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  if (!doc)
-    return NS_ERROR_INVALID_ARG;
-
-  // ---- Get the pres shell ----
-  nsCOMPtr<nsIPresShell> shell;
-  doc->GetShellAt(0, getter_AddRefs(shell));
-  if (!shell)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIWeakReference> weakRef(do_GetWeakReference(shell));
-  
-  *aWeakShell = weakRef;
-  NS_IF_ADDREF(*aWeakShell);
-
   return NS_OK;
 }
 
@@ -661,12 +624,9 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
   nsCOMPtr<nsIAccessible> newAcc;
   frame->GetAccessible(getter_AddRefs(newAcc));
 
-  // ---- Is it a XUL element? -- they impl nsIAccessibleProvider via XBL
-  if (!newAcc) {
-    nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
-    if (accProv)  
-      accProv->GetAccessible(getter_AddRefs(newAcc));
-  }
+  // ---- Try QI'ing node to get nsIAccessible ----
+  if (!newAcc)
+    newAcc = do_QueryInterface(aNode);
 
   // ---- If link, create link accessible ----
   if (!newAcc) {

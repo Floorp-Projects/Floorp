@@ -24,6 +24,7 @@
 #include "nsHTMLTextAccessible.h"
 #include "nsWeakReference.h"
 #include "nsIFrame.h"
+#include "nsString.h"
 #include "nsILink.h"
 #include "nsILinkHandler.h"
 #include "nsISelection.h"

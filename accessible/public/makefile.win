@@ -30,7 +30,6 @@ XPIDLSRCS =               \
   .\nsIAccessibleEventReceiver.idl \
   .\nsIAccessibleEventListener.idl \
   .\nsIAccessibleSelectable.idl \
-  .\nsIAccessibleProvider.idl \
   $(NULL)
 
 EXPORTS = \
