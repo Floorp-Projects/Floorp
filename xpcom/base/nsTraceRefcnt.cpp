@@ -103,6 +103,29 @@ static FILE *gLeakyLog = nsnull;
 #define XPCOM_REFCNT_LOG_CALLS    0x10
 #define XPCOM_REFCNT_LOG_NEW      0x20
 
+////////////////////////////////////////////////////////////////////////////////
+
+NS_COM void 
+NS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
+                 double *meanResult, double *stdDevResult)
+{
+  double mean = 0.0, var = 0.0, stdDev = 0.0;
+  if (n > 0.0 && sumOfValues >= 0) {
+    mean = sumOfValues / n;
+    double temp = (n * sumOfSquaredValues) - (sumOfValues * sumOfValues);
+    if (temp < 0.0 || n <= 1)
+      var = 0.0;
+    else
+      var = temp / (n * (n - 1));
+    // for some reason, Windows says sqrt(0.0) is "-1.#J" (?!) so do this:
+    stdDev = var != 0.0 ? sqrt(var) : 0.0;
+  }
+  *meanResult = mean;
+  *stdDevResult = stdDev;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 struct GatherArgs {
   nsTraceRefcntStatFunc func;
   void* closure;
@@ -126,9 +149,9 @@ public:
     stats->mCreates = 0;
     stats->mDestroys = 0;
     stats->mRefsOutstandingTotal = 0;
-    stats->mRefsOutstandingVariance = 0;
+    stats->mRefsOutstandingSquared = 0;
     stats->mObjsOutstandingTotal = 0;
-    stats->mObjsOutstandingVariance = 0;
+    stats->mObjsOutstandingSquared = 0;
   }
 
   void Accumulate() {
@@ -137,9 +160,9 @@ public:
       mAllStats.mCreates += mNewStats.mCreates;
       mAllStats.mDestroys += mNewStats.mDestroys;
       mAllStats.mRefsOutstandingTotal += mNewStats.mRefsOutstandingTotal;
-      mAllStats.mRefsOutstandingVariance += mNewStats.mRefsOutstandingVariance;
+      mAllStats.mRefsOutstandingSquared += mNewStats.mRefsOutstandingSquared;
       mAllStats.mObjsOutstandingTotal += mNewStats.mObjsOutstandingTotal;
-      mAllStats.mObjsOutstandingVariance += mNewStats.mObjsOutstandingVariance;
+      mAllStats.mObjsOutstandingSquared += mNewStats.mObjsOutstandingSquared;
       Clear(&mNewStats);
   }
 
@@ -172,13 +195,13 @@ public:
   void AccountRefs() {
     PRInt32 cnt = (mNewStats.mAddRefs - mNewStats.mReleases);
     mNewStats.mRefsOutstandingTotal += cnt;
-    mNewStats.mRefsOutstandingVariance += cnt * cnt;
+    mNewStats.mRefsOutstandingSquared += cnt * cnt;
   }
 
   void AccountObjs() {
     PRInt32 cnt = (mNewStats.mCreates - mNewStats.mDestroys);
     mNewStats.mObjsOutstandingTotal += cnt;
-    mNewStats.mObjsOutstandingVariance += cnt * cnt;
+    mNewStats.mObjsOutstandingSquared += cnt * cnt;
   }
 
   static PRIntn DumpNewEntry(PLHashEntry *he, PRIntn i, void *arg) {
@@ -215,9 +238,9 @@ public:
     total->mAllStats.mCreates += mNewStats.mCreates + mAllStats.mCreates;
     total->mAllStats.mDestroys += mNewStats.mDestroys + mAllStats.mDestroys;
     total->mAllStats.mRefsOutstandingTotal += mNewStats.mRefsOutstandingTotal + mAllStats.mRefsOutstandingTotal;
-    total->mAllStats.mRefsOutstandingVariance += mNewStats.mRefsOutstandingVariance + mAllStats.mRefsOutstandingVariance;
+    total->mAllStats.mRefsOutstandingSquared += mNewStats.mRefsOutstandingSquared + mAllStats.mRefsOutstandingSquared;
     total->mAllStats.mObjsOutstandingTotal += mNewStats.mObjsOutstandingTotal + mAllStats.mObjsOutstandingTotal;
-    total->mAllStats.mObjsOutstandingVariance += mNewStats.mObjsOutstandingVariance + mAllStats.mObjsOutstandingVariance;
+    total->mAllStats.mObjsOutstandingSquared += mNewStats.mObjsOutstandingSquared + mAllStats.mObjsOutstandingSquared;
     PRInt32 count = (mNewStats.mCreates + mAllStats.mCreates);
     total->mClassSize += mClassSize * count;    // adjust for average in DumpTotal
   }
@@ -268,23 +291,18 @@ public:
       return NS_OK;
     }
 
-    double nRefs = stats->mAddRefs + stats->mReleases;
-    double meanRefs = 0.0, varRefs = 0.0, stddevRefs = 0.0;
-    if (nRefs > 0.0 && stats->mRefsOutstandingTotal >= 0) {
-      meanRefs = stats->mRefsOutstandingTotal / nRefs;
-      varRefs = fabs(stats->mRefsOutstandingVariance / nRefs - meanRefs * meanRefs);
-      // for some reason, Windows says sqrt(0.0) is "-1.#J" (?!) so do this:
-      stddevRefs = varRefs != 0.0 ? sqrt(varRefs) : 0.0;
-    }
+    double meanRefs, stddevRefs;
+    NS_MeanAndStdDev(stats->mAddRefs + stats->mReleases, 
+                     stats->mRefsOutstandingTotal, 
+                     stats->mRefsOutstandingSquared,
+                     &meanRefs, &stddevRefs);
 
-    double nObjs = stats->mCreates + stats->mDestroys;
-    double meanObjs = 0.0, varObjs = 0.0, stddevObjs = 0.0;
-    if (nObjs > 0.0 && stats->mObjsOutstandingTotal >= 0) {
-      meanObjs = stats->mObjsOutstandingTotal / nObjs;
-      varObjs = fabs(stats->mObjsOutstandingVariance / nObjs - meanObjs * meanObjs);
-      // for some reason, Windows says sqrt(0.0) is "-1.#J" (?!) so do this:
-      stddevObjs = varObjs != 0.0 ? sqrt(varObjs) : 0.0;
-    }
+    double meanObjs, stddevObjs;
+    NS_MeanAndStdDev(stats->mCreates + stats->mDestroys,
+                     stats->mObjsOutstandingTotal, 
+                     stats->mObjsOutstandingSquared,
+                     &meanObjs, &stddevObjs);
+
     if ((stats->mAddRefs - stats->mReleases) != 0 ||
         stats->mAddRefs != 0 ||
         meanRefs != 0 ||

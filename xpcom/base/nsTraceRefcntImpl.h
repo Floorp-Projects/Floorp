@@ -116,9 +116,9 @@ struct nsTraceRefcntStats {
   nsrefcnt mCreates;
   nsrefcnt mDestroys;
   double mRefsOutstandingTotal;
-  double mRefsOutstandingVariance;
+  double mRefsOutstandingSquared;
   double mObjsOutstandingTotal;
-  double mObjsOutstandingVariance;
+  double mObjsOutstandingSquared;
 };
 
 // Function type used by GatherStatistics. For each type that data has
@@ -202,4 +202,12 @@ public:
   static NS_COM void SetPrefServiceAvailability(PRBool avail);
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// And now for that utility that you've all been asking for...
+
+extern NS_COM void 
+NS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
+                 double *meanResult, double *stdDevResult);
+
+////////////////////////////////////////////////////////////////////////////////
 #endif /* nsTraceRefcnt_h___ */
