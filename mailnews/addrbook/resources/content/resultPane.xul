@@ -41,6 +41,14 @@
 		</treehead>
 
 		<treebody id="" name="cardTreeBody">
+			<treeitem>
+				<treecell/>
+				<treecell/>
+				<treecell/>
+				<treecell/>
+				<treecell/>
+				<treecell/>
+			</treeitem>
 		</treebody>
 	</tree>
 

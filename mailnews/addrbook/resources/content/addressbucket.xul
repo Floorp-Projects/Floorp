@@ -18,6 +18,9 @@
 		<treecol style="width:100%"/>
 
 		<treebody id="bucketBody">
+			<treeitem>
+				<treecell/>
+			</treeitem>
 		</treebody>
 	</tree>
 
