@@ -135,8 +135,52 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByTables(const char * aSrc,
                                                      uShiftTable ** aShiftTable, 
                                                      uMappingTable ** aMappingTable)
 {
-  // XXX write me
-  return NS_OK;
+  const char * src = aSrc;
+  PRInt32 srcLen = *aSrcLength;
+  PRUnichar * dest = aDest;
+  PRUnichar * destEnd = aDest + *aDestLength;
+
+  PRUnichar med;
+  PRInt32 bcr; // byte count for read
+  nsresult res = NS_OK;
+  PRInt32 i;
+
+  while ((srcLen > 0) && (dest < destEnd)) {
+    for (i=0; i<aTableCount; i++) 
+      if ((aRangeArray[i].min <= *src) && (*src <= aRangeArray[i].max)) break;
+
+    if (i == aTableCount) {
+      src++;
+      res = NS_ERROR_UDEC_ILLEGALINPUT;
+      break;
+    }
+
+    if (!uScan(aShiftTable[i], NULL, (PRUint8 *)src, &med, srcLen, 
+    (PRUint32 *)&bcr)) {
+      res = NS_OK_UDEC_MOREINPUT;
+      break;
+    }
+
+    if (!uMapCode((uTable*) aMappingTable[i], med, dest)) {
+      if (med < 0x20) {
+        // somehow some table miss the 0x00 - 0x20 part
+        *dest = med;
+      } else {
+        // Unicode replacement value for unmappable chars
+        *dest = 0xfffd;
+      }
+    }
+
+    src += bcr;
+    srcLen -= bcr;
+    dest++;
+  }
+
+  if (srcLen > 0) res = NS_OK_UDEC_MOREOUTPUT;
+
+  *aSrcLength = src - aSrc;
+  *aDestLength  = dest - aDest;
+  return res;
 }
 
 //----------------------------------------------------------------------
