@@ -1286,7 +1286,7 @@ NS_IMETHODIMP nsImapProtocol::GetRunningImapURL(nsIImapUrl **aImapUrl)
  * stream, etc). We need to make another pass through this file to install an error system (mscott)
  */
 
-nsresult nsImapProtocol::SendData(const char * dataBuffer)
+nsresult nsImapProtocol::SendData(const char * dataBuffer, PRBool aSupressLogging)
 {
   PRUint32 writeCount = 0; 
   nsresult rv = NS_ERROR_NULL_POINTER;
@@ -1296,7 +1296,10 @@ nsresult nsImapProtocol::SendData(const char * dataBuffer)
   if (dataBuffer && m_outputStream)
   {
     m_currentCommand = dataBuffer;
-    Log("SendData", nsnull, dataBuffer);
+    if (!aSupressLogging)
+      Log("SendData", nsnull, dataBuffer);
+    else
+      Log("SendData", nsnull, "Logging supressed for this command (it probably contained authentication information");
     rv = m_outputStream->Write(dataBuffer, PL_strlen(dataBuffer), &writeCount);
     if (NS_FAILED(rv))
     {
@@ -2265,9 +2268,9 @@ void nsImapProtocol::SelectMailbox(const char *mailboxName)
   commandBuffer.Append("\"" CRLF);
 
   nsMemory::Free(escapedName);
-    nsresult res;       
-    res = SendData(commandBuffer.GetBuffer());
-    if (NS_FAILED(res)) return;
+  nsresult res;       
+  res = SendData(commandBuffer.GetBuffer());
+  if (NS_FAILED(res)) return;
   ParseIMAPandCheckForNewMail();
 
   PRInt32 numOfMessagesInFlagState = 0;
@@ -2289,20 +2292,19 @@ void nsImapProtocol::SelectMailbox(const char *mailboxName)
 // Please call only with a single message ID
 void nsImapProtocol::Bodystructure(const char *messageId, PRBool idIsUid)
 {
-    IncrementCommandTagNumber();
-    
-    nsCString commandString(GetServerCommandTag());
-    if (idIsUid)
-      commandString.Append(" UID");
-    commandString.Append(" fetch ");
+  IncrementCommandTagNumber();
+  
+  nsCString commandString(GetServerCommandTag());
+  if (idIsUid)
+    commandString.Append(" UID");
+  commandString.Append(" fetch ");
 
   commandString.Append(messageId);
   commandString.Append(" (BODYSTRUCTURE)" CRLF);
-
-              
-    nsresult rv = SendData(commandString.GetBuffer());
-    if (NS_SUCCEEDED(rv))
-        ParseIMAPandCheckForNewMail(commandString.GetBuffer());
+            
+  nsresult rv = SendData(commandString.GetBuffer());
+  if (NS_SUCCEEDED(rv))
+      ParseIMAPandCheckForNewMail(commandString.GetBuffer());
 }
 
 void nsImapProtocol::PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePartIDArray *parts)
@@ -2586,7 +2588,7 @@ nsImapProtocol::FetchMessage(const char * messageIds,
           messageIds);
     }
               
-      nsresult rv = SendData(protocolString);
+    nsresult rv = SendData(protocolString);
       
     nsMemory::Free(cCommandStr);
     if (NS_SUCCEEDED(rv))
@@ -4295,14 +4297,10 @@ void nsImapProtocol::InsecureLogin(const char *userName, const char *password)
   command.Append(password);
   command.Append("\""CRLF);
 
-  nsresult rv = SendData(command.GetBuffer());
-    
-//    PR_snprintf(m_dataOutputBuf,  OUTPUT_BUFFER_SIZE, "%s login \"%s\" \"%s\"" CRLF,
-//        GetServerCommandTag(), userName,  password);
-
-//  SendData(m_dataOutputBuf);
-    if (NS_SUCCEEDED(rv))
-        ParseIMAPandCheckForNewMail();
+  nsresult rv = SendData(command.GetBuffer(), PR_TRUE /* supress logging */);
+  
+  if (NS_SUCCEEDED(rv))
+     ParseIMAPandCheckForNewMail();
 }
 
 void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAPCapabilityFlag flag)
@@ -4386,9 +4384,9 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
       {
         PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s" CRLF, base64Str);
         PR_Free(base64Str);
-        rv = SendData(m_dataOutputBuf);
-                if (NS_SUCCEEDED(rv))
-                    ParseIMAPandCheckForNewMail(currentCommand);
+        rv = SendData(m_dataOutputBuf, PR_TRUE /* supress logging */);
+        if (NS_SUCCEEDED(rv))
+            ParseIMAPandCheckForNewMail(currentCommand);
         if (GetServerStateParser().LastCommandSuccessful())
         {
           PR_FREEIF(currentCommand);
@@ -4402,7 +4400,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
   {
     PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s authenticate login" CRLF, GetServerCommandTag());
     rv = SendData(m_dataOutputBuf);
-        if (NS_FAILED(rv)) return;
+    if (NS_FAILED(rv)) return;
     currentCommand = PL_strdup(m_dataOutputBuf);
     ParseIMAPandCheckForNewMail();
 
@@ -4413,18 +4411,18 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
       {
         PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s" CRLF, base64Str);
         PR_Free(base64Str);
-        rv = SendData(m_dataOutputBuf);
-                if (NS_SUCCEEDED(rv))
-                    ParseIMAPandCheckForNewMail(currentCommand);
+        rv = SendData(m_dataOutputBuf, PR_TRUE /* supress logging */);
+        if (NS_SUCCEEDED(rv))
+            ParseIMAPandCheckForNewMail(currentCommand);
       }
       if (GetServerStateParser().LastCommandSuccessful()) 
       {
         base64Str = PL_Base64Encode((char*)password, PL_strlen(password), nsnull);
         PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s" CRLF, base64Str);
         PR_FREEIF(base64Str);
-        rv = SendData(m_dataOutputBuf);
-                if (NS_SUCCEEDED(rv))
-                    ParseIMAPandCheckForNewMail(currentCommand);
+        rv = SendData(m_dataOutputBuf, PR_TRUE /* supress logging */);
+        if (NS_SUCCEEDED(rv))
+           ParseIMAPandCheckForNewMail(currentCommand);
         if (GetServerStateParser().LastCommandSuccessful())
         {
           PR_FREEIF(currentCommand);

@@ -416,7 +416,10 @@ private:
 
 	// SendData not only writes the NULL terminated data in dataBuffer to our output stream
 	// but it also informs the consumer that the data has been written to the stream.
-	nsresult SendData(const char * dataBuffer);
+  // aSupressLogging --> set to true if you wish to supress logging for this particular command.
+  // this is useful for making sure we don't log authenication information like the user's password (which was 
+  // encoded anyway), but still we shouldn't add that information to the log.
+	nsresult SendData(const char * dataBuffer, PRBool aSupressLogging = PR_FALSE);
 
 	// state ported over from 4.5
 	PRBool					m_pseudoInterrupted;
