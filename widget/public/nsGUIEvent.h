@@ -142,6 +142,8 @@ struct nsEvent {
   nsEvent()
     : eventStructType(NS_EVENT),
       message(NS_EVENT_TYPE_NULL),
+      point(0, 0),
+      refPoint(0, 0),
       time(0),
       flags(NS_EVENT_FLAG_NONE),
       internalAppFlags(NS_APP_EVENT_FLAG_NONE),
