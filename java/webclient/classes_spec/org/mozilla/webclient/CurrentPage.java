@@ -22,6 +22,8 @@
 
 package org.mozilla.webclient;
 
+import java.util.Properties;
+
 public interface CurrentPage
 {
 public void copyCurrentSelectionToSystemClipboard();
@@ -34,7 +36,7 @@ public String getCurrentURL();
             
     //    org.w3c.dom.Document getDOM();
 
-    // webclient.PageInfo getPageInfo();
+public Properties getPageInfo();
             
 public String getSource();
  
