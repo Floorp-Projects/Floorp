@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Contributor(s): Rick Potts <rpotts@netscape.com>
+ *                 Rick Potts <rpotts@netscape.com>
  *                 Ramiro Estrugo <ramiro@netscape.com>
  *                 Warren Harris <warren@netscape.com>
  *                 Leaf Nunes <leaf@mozilla.org>

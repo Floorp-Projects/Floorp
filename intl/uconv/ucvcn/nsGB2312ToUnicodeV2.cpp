@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Contributor(s): Yueheng Xu <yuheng.xu@intel.com>
+ *          Yueheng Xu <yuheng.xu@intel.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of

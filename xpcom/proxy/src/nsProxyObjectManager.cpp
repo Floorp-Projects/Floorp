@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Contributor(s): Doug Turner <dougt@netscape.com> (Original Author)
+ *                 Doug Turner <dougt@netscape.com> (Original Author)
  *                 Judson Valeski <valeski@netscape.com>
  *                 Dan Matejka <danm@netscape.com>
  *                 Scott Collins <scc@netscape.com>

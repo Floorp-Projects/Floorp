@@ -18,8 +18,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): Kin Blas <kin@netscape.com>
- * Contributor(s): Akkana Peck <akkana@netscape.com>
+ * Contributor(s):
+ *                 Kin Blas <kin@netscape.com>
+ *                 Akkana Peck <akkana@netscape.com>
  *
  */
 
