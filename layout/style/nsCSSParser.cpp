@@ -977,20 +977,29 @@ PRBool CSSParserImpl::ParseDeclaration(PRInt32* aErrorCode, nsICSSDeclaration* a
 }
 
 // Flags for ParseVariant method
-#define VARIANT_KEYWORD         0x01
-#define VARIANT_LENGTH          0x02
-#define VARIANT_PERCENT         0x04
-#define VARIANT_COLOR           0x08
-#define VARIANT_URL             0x10
-#define VARIANT_NUMBER          0x20
-#define VARIANT_INTEGER         0x40
+#define VARIANT_KEYWORD         0x0001
+#define VARIANT_LENGTH          0x0002
+#define VARIANT_PERCENT         0x0004
+#define VARIANT_COLOR           0x0008
+#define VARIANT_URL             0x0010
+#define VARIANT_NUMBER          0x0020
+#define VARIANT_INTEGER         0x0040
+#define VARIANT_AUTO            0x0100
+#define VARIANT_INHERIT         0x0200
+#define VARIANT_NONE            0x0400
+#define VARIANT_NORMAL          0x0800
 
 // Common combinations of variants
 #define VARIANT_KL   (VARIANT_KEYWORD | VARIANT_LENGTH)
 #define VARIANT_KLP  (VARIANT_KEYWORD | VARIANT_LENGTH | VARIANT_PERCENT)
 #define VARIANT_KLPN (VARIANT_KLP | VARIANT_NUMBER)
 #define VARIANT_KP   (VARIANT_KEYWORD | VARIANT_PERCENT)
-#define VARIANT_KI   (VARIANT_KEYWORD | VARIANT_INTEGER)
+#define VARIANT_AHLP (VARIANT_AUTO | VARIANT_INHERIT | VARIANT_LP)
+#define VARIANT_AHI  (VARIANT_AUTO | VARIANT_INHERIT | VARIANT_INTEGER)
+#define VARIANT_AHK  (VARIANT_AUTO | VARIANT_INHERIT | VARIANT_KEYWORD)
+#define VARIANT_HLP  (VARIANT_INHERIT | VARIANT_LP)
+#define VARIANT_HL   (VARIANT_INHERIT | VARIANT_LENGTH)
+#define VARIANT_AL   (VARIANT_AUTO | VARIANT_LENGTH)
 #define VARIANT_LP   (VARIANT_LENGTH | VARIANT_PERCENT)
 #define VARIANT_CK   (VARIANT_COLOR | VARIANT_KEYWORD)
 #define VARIANT_C    VARIANT_COLOR
@@ -1005,11 +1014,6 @@ static PRInt32 kBackgroundAttachmentKTable[] = {
 
 static PRInt32 kBackgroundColorKTable[] = {
   KEYWORD_TRANSPARENT, NS_STYLE_BG_COLOR_TRANSPARENT,
-  -1
-};
-
-static PRInt32 kBackgroundImageKTable[] = {
-  KEYWORD_NONE, NS_STYLE_BG_IMAGE_NONE,
   -1
 };
 
@@ -1049,13 +1053,7 @@ static PRInt32 kClearKTable[] = {
   -1
 };
 
-static PRInt32 kClipKTable[] = {
-  KEYWORD_AUTO, NS_STYLE_CLIP_AUTO,
-  -1
-};
-
 static PRInt32 kCursorKTable[] = {
-  KEYWORD_INHERIT, NS_STYLE_CURSOR_INHERIT,
   KEYWORD_IBEAM, NS_STYLE_CURSOR_IBEAM,
   KEYWORD_ARROW, NS_STYLE_CURSOR_DEFAULT,
   KEYWORD_HAND, NS_STYLE_CURSOR_HAND,
@@ -1110,16 +1108,6 @@ static PRInt32 kFontVariantKTable[] = {
   -1
 };
 
-static PRInt32 kLeftKTable[] = {
-  KEYWORD_AUTO, NS_STYLE_POSITION_VALUE_AUTO,
-  -1
-};
-
-static PRInt32 kHeightKTable[] = {
-  KEYWORD_AUTO, NS_STYLE_POSITION_VALUE_AUTO,
-  -1
-};
-
 static PRInt32 kLineHeightKTable[] = {
   KEYWORD_NORMAL, NS_STYLE_LINE_HEIGHT_NORMAL,
   -1
@@ -1154,11 +1142,6 @@ static PRInt32 kMarginSizeKTable[] = {
   -1
 };
 
-static PRInt32 kSpacingKTable[] = {
-  KEYWORD_NORMAL, NS_STYLE_SPACING_NORMAL,
-  -1
-};
-
 static PRInt32 kOverflowKTable[] = {
   KEYWORD_VISIBLE, NS_STYLE_OVERFLOW_VISIBLE,
   KEYWORD_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN,
@@ -1190,11 +1173,6 @@ static PRInt32 kTextTransformKTable[] = {
   -1
 };
 
-static PRInt32 kTopKTable[] = {
-  KEYWORD_AUTO, NS_STYLE_POSITION_VALUE_AUTO,
-  -1
-};
-
 static PRInt32 kVerticalAlignKTable[] = {
   KEYWORD_BASELINE, NS_STYLE_VERTICAL_ALIGN_BASELINE,
   KEYWORD_SUB, NS_STYLE_VERTICAL_ALIGN_SUB,
@@ -1218,16 +1196,6 @@ static PRInt32 kWhitespaceKTable[] = {
   KEYWORD_NORMAL, NS_STYLE_WHITESPACE_NORMAL,
   KEYWORD_PRE, NS_STYLE_WHITESPACE_PRE,
   KEYWORD_NOWRAP, NS_STYLE_WHITESPACE_NOWRAP,
-  -1
-};
-
-static PRInt32 kWidthKTable[] = {
-  KEYWORD_AUTO, NS_STYLE_POSITION_VALUE_AUTO,
-  -1
-};
-
-static PRInt32 kZIndexKTable[] = {
-  KEYWORD_AUTO, NS_STYLE_POSITION_VALUE_AUTO,
   -1
 };
 
@@ -1331,16 +1299,42 @@ PRBool CSSParserImpl::ParseVariant(PRInt32* aErrorCode,
   if (!GetToken(aErrorCode, PR_TRUE)) {
     return PR_FALSE;
   }
-  if (((aVariants & VARIANT_KEYWORD) != 0) &&
+  if (((aVariants & (VARIANT_AHK | VARIANT_NORMAL | VARIANT_NONE)) != 0) &&
       (eCSSToken_Ident == tk->mType)) {
     char cbuf[50];
     tk->mIdent.ToCString(cbuf, sizeof(cbuf));
     PRInt32 sid = nsCSSKeywords::LookupName(cbuf);
-    if (sid >= 0) {
-      PRInt32 ix = SearchKeywordTable(sid, aTable);
-      if (ix >= 0) {
-        aDeclaration->AddValue(aName, nsCSSValue(aTable[ix+1], eCSSUnit_Enumerated));
-        return PR_TRUE;
+    if (sid >= 0) { // known keyword
+      if ((aVariants & VARIANT_AUTO) != 0) {
+        if (sid == KEYWORD_AUTO) {
+          aDeclaration->AddValue(aName, nsCSSValue(eCSSUnit_Auto));
+          return PR_TRUE;
+        }
+      }
+      if ((aVariants & VARIANT_INHERIT) != 0) {
+        if (sid == KEYWORD_INHERIT) {
+          aDeclaration->AddValue(aName, nsCSSValue(eCSSUnit_Inherit));
+          return PR_TRUE;
+        }
+      }
+      if ((aVariants & VARIANT_NONE) != 0) {
+        if (sid == KEYWORD_NONE) {
+          aDeclaration->AddValue(aName, nsCSSValue(eCSSUnit_None));
+          return PR_TRUE;
+        }
+      }
+      if ((aVariants & VARIANT_NORMAL) != 0) {
+        if (sid == KEYWORD_NORMAL) {
+          aDeclaration->AddValue(aName, nsCSSValue(eCSSUnit_Normal));
+          return PR_TRUE;
+        }
+      }
+      if ((aVariants & VARIANT_KEYWORD) != 0) {
+        PRInt32 ix = SearchKeywordTable(sid, aTable);
+        if (ix >= 0) {
+          aDeclaration->AddValue(aName, nsCSSValue(aTable[ix+1], eCSSUnit_Enumerated));
+          return PR_TRUE;
+        }
       }
     }
   }
@@ -1359,7 +1353,7 @@ PRBool CSSParserImpl::ParseVariant(PRInt32* aErrorCode,
   }
   if (((aVariants & VARIANT_INTEGER) != 0) &&
       (eCSSToken_Number == tk->mType) && tk->mIntegerValid) {
-    aDeclaration->AddValue(aName, nsCSSValue(tk->mInteger, eCSSUnit_Absolute));
+    aDeclaration->AddValue(aName, nsCSSValue(tk->mInteger, eCSSUnit_Integer));
     return PR_TRUE;
   }
   if (((aVariants & VARIANT_URL) != 0) &&
@@ -1493,8 +1487,8 @@ PRBool CSSParserImpl::ParseProperty(PRInt32* aErrorCode,
   case PROP_BACKGROUND_FILTER:
     return ParseBackgroundFilter(aErrorCode, aDeclaration, aName);
   case PROP_BACKGROUND_IMAGE:
-    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_UK,
-                        kBackgroundImageKTable);
+    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_URL | VARIANT_NONE,
+                        nsnull);
   case PROP_BACKGROUND_POSITION:
     return ParseBackgroundPosition(aErrorCode, aDeclaration, aName);
   case PROP_BACKGROUND_REPEAT:
@@ -1538,7 +1532,7 @@ PRBool CSSParserImpl::ParseProperty(PRInt32* aErrorCode,
   case PROP_COLOR:
     return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_COLOR, nsnull);
   case PROP_CURSOR:
-    return ParseEnum(aErrorCode, aDeclaration, aName, kCursorKTable);
+    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_AHK, kCursorKTable);
   case PROP_DIRECTION:
     return ParseEnum(aErrorCode, aDeclaration, aName, kDirectionKTable);
   case PROP_DISPLAY:
@@ -1561,9 +1555,9 @@ PRBool CSSParserImpl::ParseProperty(PRInt32* aErrorCode,
   case PROP_FONT_WEIGHT:
     return ParseFontWeight(aErrorCode, aDeclaration, aName);
   case PROP_HEIGHT:
-    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_KLP, kHeightKTable);
+    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_AHLP, nsnull);
   case PROP_LEFT:
-    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_KLP, kLeftKTable);
+    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_AHLP, nsnull);
   case PROP_LINE_HEIGHT:
     return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_KLPN,
                         kLineHeightKTable);
@@ -1604,7 +1598,7 @@ PRBool CSSParserImpl::ParseProperty(PRInt32* aErrorCode,
   case PROP_TEXT_TRANSFORM:
     return ParseEnum(aErrorCode, aDeclaration, aName, kTextTransformKTable);
   case PROP_TOP:
-    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_KLP, kTopKTable);
+    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_AHLP, nsnull);
   case PROP_VERTICAL_ALIGN:
     return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_KP,
                         kVerticalAlignKTable);
@@ -1613,12 +1607,12 @@ PRBool CSSParserImpl::ParseProperty(PRInt32* aErrorCode,
   case PROP_WHITE_SPACE:
     return ParseEnum(aErrorCode, aDeclaration, aName, kWhitespaceKTable);
   case PROP_WIDTH:
-    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_KLP, kWidthKTable);
+    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_AHLP, nsnull);
   case PROP_LETTER_SPACING:
   case PROP_WORD_SPACING:
-    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_KL, kSpacingKTable);
+    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_HL | VARIANT_NORMAL, nsnull);
   case PROP_Z_INDEX:
-    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_KI, kZIndexKTable);
+    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_AHI, nsnull);
   }
   return PR_FALSE;
 }
@@ -1910,8 +1904,7 @@ PRBool CSSParserImpl::ParseClip(PRInt32* aErrorCode, nsICSSDeclaration* aDeclara
   }
   if (ident->EqualsIgnoreCase("auto")) {
     for (int i = 0; i < 4; i++) {
-      aDeclaration->AddValue(kClipNames[i], 
-                             nsCSSValue(NS_STYLE_CLIP_AUTO, eCSSUnit_Enumerated));
+      aDeclaration->AddValue(kClipNames[i], nsCSSValue(eCSSUnit_Auto));
     }
     return PR_TRUE;
   } else if (ident->EqualsIgnoreCase("rect")) {
@@ -1919,8 +1912,7 @@ PRBool CSSParserImpl::ParseClip(PRInt32* aErrorCode, nsICSSDeclaration* aDeclara
       return PR_FALSE;
     }
     for (int i = 0; i < 4; i++) {
-      if (!ParseVariant(aErrorCode, aDeclaration, kClipNames[i], VARIANT_KL,
-                        kClipKTable)) {
+      if (!ParseVariant(aErrorCode, aDeclaration, kClipNames[i], VARIANT_AL, nsnull)) {
         return PR_FALSE;
       }
       if (3 != i) {
@@ -2078,7 +2070,7 @@ PRBool CSSParserImpl::ParseFontWeight(PRInt32* aErrorCode, nsICSSDeclaration* aD
     if (v < 100) v = 100;
     else if (v > 900) v = 900;
     v = v - (v % 100);
-    aDeclaration->AddValue(aName, nsCSSValue(v, eCSSUnit_Absolute));
+    aDeclaration->AddValue(aName, nsCSSValue(v, eCSSUnit_Integer));
   } else {
     UngetToken();
     return PR_FALSE;
@@ -2204,6 +2196,6 @@ PRBool CSSParserImpl::ParseTextDecoration(PRInt32* aErrorCode,
   if (0 == decoration) {
     return PR_FALSE;
   }
-  aDeclaration->AddValue(aName, nsCSSValue(decoration, eCSSUnit_Absolute));
+  aDeclaration->AddValue(aName, nsCSSValue(decoration, eCSSUnit_Integer));
   return PR_TRUE;
 }

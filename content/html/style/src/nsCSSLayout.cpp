@@ -74,7 +74,7 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
     nscoord kidYTop = 0;
 
     switch (verticalAlignUnit) {
-      case eStyleUnit_Twips:
+      case eStyleUnit_Coord:
         kidYTop = aMaxAscent + textStyle->mVerticalAlign.GetCoordValue();
         break;
 
@@ -164,7 +164,7 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
 
       if (eStyleUnit_Percent == verticalAlignUnit) {
         nscoord kidYTop = aMaxAscent +
-          nscoord(textStyle->mVerticalAlign.GetFloatValue() * lineHeight);
+          nscoord(textStyle->mVerticalAlign.GetPercentValue() * lineHeight);
         kid->GetRect(kidRect);
         kid->MoveTo(kidRect.x, aY0 + kidYTop);
         if (--pass2Kids == 0) {
@@ -252,9 +252,9 @@ void nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
       kidSC->GetData(kStylePositionSID);
     if (NS_STYLE_POSITION_RELATIVE == kidPosition->mPosition) {
       kid->GetOrigin(origin);
-      // XXX Check the flags: could be auto or percent (not just length)
-      nscoord dx = kidPosition->mLeftOffset;
-      nscoord dy = kidPosition->mTopOffset;
+      // XXX Check the unit: could be auto or percent (not just length)
+      nscoord dx = kidPosition->mLeftOffset.GetCoordValue();
+      nscoord dy = kidPosition->mTopOffset.GetCoordValue();
       kid->MoveTo(origin.x + dx, origin.y + dy);
     }
     kid->GetNextSibling(kid);

@@ -107,7 +107,7 @@ struct HTMLAttribute {
       }
     }
     else {
-      aBuffer.SetLength(0);
+      aBuffer.Truncate();
       aBuffer.Append("null");
     }
   }
@@ -303,13 +303,13 @@ PRInt32 HTMLAttributesImpl::SetAttribute(nsIAtom* aAttribute, const nsString& aV
 {
   if (nsHTMLAtoms::id == aAttribute) {
     nsIAtom* id = NS_NewAtom(aValue);
-    PRInt32 result = SetID (id);
+    PRInt32 result = SetID(id);
     NS_RELEASE(id);
     return result;
   }
   if (nsHTMLAtoms::kClass == aAttribute) {
     nsIAtom* classA = NS_NewAtom(aValue);
-    PRInt32 result = SetClass (classA);
+    PRInt32 result = SetClass(classA);
     NS_RELEASE(classA);
     return result;
   }
@@ -319,7 +319,7 @@ PRInt32 HTMLAttributesImpl::SetAttribute(nsIAtom* aAttribute, const nsString& aV
 
   while (nsnull != attr) {
     if (attr->mAttribute == aAttribute) {
-      attr->mValue.Set (aValue);
+      attr->mValue.SetStringValue(aValue);
       return mCount;
     }
     last = attr;
@@ -341,14 +341,14 @@ PRInt32 HTMLAttributesImpl::SetAttribute(nsIAtom* aAttribute, const nsHTMLValue&
   if (nsHTMLAtoms::id == aAttribute) {
     nsAutoString  buffer;
     nsIAtom* id = NS_NewAtom(aValue.GetStringValue(buffer));
-    PRInt32 result = SetID (id);
+    PRInt32 result = SetID(id);
     NS_RELEASE(id);
     return result;
   }
   if (nsHTMLAtoms::kClass == aAttribute) {
     nsAutoString  buffer;
     nsIAtom* classA = NS_NewAtom(aValue.GetStringValue(buffer));
-    PRInt32 result = SetClass (classA);
+    PRInt32 result = SetClass(classA);
     NS_RELEASE(classA);
     return result;
   }
@@ -414,7 +414,7 @@ nsContentAttr HTMLAttributesImpl::GetAttribute(nsIAtom* aAttribute,
     if (nsnull != id) {
       nsAutoString buffer;
       id->ToString(buffer);
-      aValue.Set(buffer);
+      aValue.SetStringValue(buffer);
       NS_RELEASE(id);
       return eContentAttr_HasValue;
     }
@@ -425,7 +425,7 @@ nsContentAttr HTMLAttributesImpl::GetAttribute(nsIAtom* aAttribute,
     if (nsnull != classA) {
       nsAutoString buffer;
       classA->ToString(buffer);
-      aValue.Set(buffer);
+      aValue.SetStringValue(buffer);
       NS_RELEASE(classA);
       return eContentAttr_HasValue;
     }
