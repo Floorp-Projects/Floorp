@@ -1148,7 +1148,7 @@ public class ScriptRuntime {
         return toString(d);
     }
 
-    static String getStringId(Object id)
+    public static String getStringId(Object id)
     {
         if (id instanceof Number) {
             double d = ((Number) id).doubleValue();
@@ -1164,7 +1164,7 @@ public class ScriptRuntime {
         return s;
     }
 
-    static int getIntId(Object id)
+    public static int getIntId(Object id)
     {
         if (id instanceof Number) {
             double d = ((Number) id).doubleValue();
@@ -2334,11 +2334,11 @@ public class ScriptRuntime {
         }
         return object;
     }
-	
-	public static boolean isArrayObject(Object obj)
-	{
-		return obj instanceof NativeArray || obj instanceof Arguments;
-	}
+
+    public static boolean isArrayObject(Object obj)
+    {
+        return obj instanceof NativeArray || obj instanceof Arguments;
+    }
 
     public static Object[] getArrayElements(Scriptable object)
     {
@@ -2420,13 +2420,14 @@ public class ScriptRuntime {
         return constructError("TypeError", msg);
     }
 
-    static EcmaError typeError1(String messageId, String arg1)
+    public static EcmaError typeError1(String messageId, String arg1)
     {
         String msg = getMessage1(messageId, arg1);
         return constructError("TypeError", msg);
     }
 
-    static EcmaError typeError2(String messageId, String arg1, String arg2)
+    public static EcmaError typeError2(String messageId, String arg1,
+                                       String arg2)
     {
         String msg = getMessage2(messageId, arg1, arg2);
         return constructError("TypeError", msg);
