@@ -204,7 +204,7 @@ function vmgr_createwindow (windowId, cb)
     }
     
     var win = openDialog ("chrome://venkman/content/venkman-floater.xul?id=" +
-                          escape(windowId), "_blank",
+                          encodeURIComponent(windowId), "_blank",
                           "chrome,menubar,toolbar,resizable,dialog=no",
                           onWindowLoaded);
     this.windows[windowId] = win;

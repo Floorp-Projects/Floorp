@@ -1190,10 +1190,10 @@ function BreakInstance (parentBP, scriptWrapper, pc)
 BreakInstance.prototype.__defineGetter__ ("jsdURL", bi_getURL);
 function bi_getURL ()
 {
-    return ("x-jsd:break?url=" + escape(this.url) +
+    return ("x-jsd:break?url=" + encodeURIComponent(this.url) +
             "&lineNumber=" + this.lineNumber +
             "&conditionEnabled=" + this.conditionEnabled +
-            "&condition=" + escape(this.condition) +
+            "&condition=" + encodeURIComponent(this.condition) +
             "&passExceptions=" + this.passExceptions +
             "&logResult=" + this.logResult +
             "&resultAction=" + this.resultAction +
@@ -1384,10 +1384,10 @@ function FutureBreakpoint (url, lineNumber)
 FutureBreakpoint.prototype.__defineGetter__ ("jsdURL", fb_getURL);
 function fb_getURL ()
 {
-    return ("x-jsd:fbreak?url=" + escape(this.url) +
+    return ("x-jsd:fbreak?url=" + encodeURIComponent(this.url) +
             "&lineNumber=" + this.lineNumber +
             "&conditionEnabled=" + this.conditionEnabled +
-            "&condition=" + escape(this.condition) +
+            "&condition=" + encodeURIComponent(this.condition) +
             "&passExceptions=" + this.passExceptions +
             "&logResult=" + this.logResult +
             "&resultAction=" + this.resultAction +

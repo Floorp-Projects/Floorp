@@ -477,7 +477,7 @@ function ScriptRecord(scriptWrapper)
     this.scriptWrapper = scriptWrapper;
 
     this.jsdurl = "jsd:sourcetext?url=" +
-        escape(this.scriptWrapper.jsdScript.fileName) + 
+        encodeURIComponent(this.scriptWrapper.jsdScript.fileName) + 
         "&base=" + this.baseLineNumber + "&extent=" + this.lineExtent +
         "&name=" + this.functionName;
 }

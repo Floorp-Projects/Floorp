@@ -112,10 +112,10 @@ function parseJSDURL (url)
             ary = assignment.match(/(.+)=(.*)/);
             if (ASSERT(ary, "error parsing ``" + assignment + "'' from " + url))
             {
-                var name = unescape(ary[1]);
+                var name = decodeURIComponent(ary[1]);
                 /* only set the property the first time we see it */
                 if (2 in ary && !(name in parseResult))
-                    parseResult[name] = unescape(ary[2]);
+                    parseResult[name] = decodeURIComponent(ary[2]);
             }
             ary = rest.match(/([^&#]+)/);
         }

@@ -945,14 +945,16 @@ function SourceText (scriptInstance)
     {
         this.scriptInstance = scriptInstance;
         this.url = scriptInstance.url;
-        this.jsdURL = JSD_URL_SCHEME + "source?location=" + escape(this.url) +
+        this.jsdURL = JSD_URL_SCHEME + "source?location=" + 
+            encodeURIComponent(this.url) +
             "&instance=" + scriptInstance.sequence;
     }
     else
     {
         /* assume scriptInstance is a string containing the filename */
         this.url = scriptInstance;
-        this.jsdURL = JSD_URL_SCHEME + "source?location=" + escape(this.url);
+        this.jsdURL = JSD_URL_SCHEME + "source?location=" + 
+                      encodeURIComponent(this.url);
     }
 
     this.shortName = abbreviateWord(getFileFromPath (this.url), 30);
