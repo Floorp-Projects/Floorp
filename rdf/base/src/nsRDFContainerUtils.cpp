@@ -363,7 +363,7 @@ RDFContainerUtilsImpl::RDFContainerUtilsImpl()
             gRDFService->GetResource(RDF_NAMESPACE_URI "Bag",        &kRDF_Bag);
             gRDFService->GetResource(RDF_NAMESPACE_URI "Seq",        &kRDF_Seq);
             gRDFService->GetResource(RDF_NAMESPACE_URI "Alt",        &kRDF_Alt);
-            gRDFService->GetLiteral(NS_LITERAL_STRING("1"), &kOne);
+            gRDFService->GetLiteral(NS_LITERAL_STRING("1").get(), &kOne);
         }
     }
 }

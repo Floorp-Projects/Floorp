@@ -7033,7 +7033,7 @@ nsXULTemplateBuilder::GetFlags()
     nsAutoString flags;
     mRoot->GetAttribute(kNameSpaceID_None, nsXULAtoms::flags, flags);
 
-    if (flags.Find(NS_LITERAL_STRING("dont-test-empty")) >= 0)
+    if (flags.Find(NS_LITERAL_STRING("dont-test-empty").get()) >= 0)
         mFlags |= eDontTestEmpty;
 
     return NS_OK;
