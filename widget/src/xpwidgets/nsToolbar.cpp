@@ -16,17 +16,24 @@
  * Reserved.
  */
 
+//
+// pinkerton ToDo:
+// - remove dependence on toolbar manager and grippy
+// - make this talk to DOM for its children.
+// - rip out nsIToolbar stuff
+//
+
 #include "nsToolbar.h"
 #include "nsHTToolbarDataModel.h"
 #include "nsWidgetsCID.h"
 #include "nspr.h"
 #include "nsIWidget.h"
 #include "nsIImageButton.h"
-#include "nsIToolbarManager.h"
 #include "nsIToolbarItemHolder.h"
 #include "nsImageButton.h"
 #include "nsRepository.h"
 #include "nsIDeviceContext.h"
+#include "nsCOMPtr.h"
 
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -34,8 +41,10 @@ static NS_DEFINE_IID(kCToolbarCID,  NS_TOOLBAR_CID);
 static NS_DEFINE_IID(kCIToolbarIID, NS_ITOOLBAR_IID);
 static NS_DEFINE_IID(kIToolbarIID, NS_ITOOLBAR_IID);
 
+#if GRIPPYS_NOT_WIDGETS
 #define TAB_WIDTH  9
 #define TAB_HEIGHT 42
+#endif
 
 const PRInt32 gMaxInfoItems = 32;
 
@@ -54,23 +63,13 @@ static NS_DEFINE_IID(kIImageButtonListenerIID, NS_IIMAGEBUTTONLISTENER_IID);
 static NS_DEFINE_IID(kIContentConnectorIID, NS_ICONTENTCONNECTOR_IID);
 
 
-static nsEventStatus PR_CALLBACK
-HandleToolbarEvent(nsGUIEvent *aEvent)
-{
-  nsEventStatus result = nsEventStatus_eIgnore;
-  nsIContentConnector * toolbar;
-  if (NS_OK == aEvent->widget->QueryInterface(kIContentConnectorIID,(void**)&toolbar)) {
-    result = toolbar->HandleEvent(aEvent);
-    NS_RELEASE(toolbar);
-  }
-  return result;
-}
+
 
 
 //------------------------------------------------------------
 class ToolbarLayoutInfo {
 public:
-  nsIToolbarItem * mItem;
+  nsCOMPtr<nsIToolbarItem> mItem;
   PRInt32          mGap;
   PRBool           mStretchable;
 
@@ -79,28 +78,9 @@ public:
     mItem = aItem;
     mGap  = aGap;
     mStretchable = isStretchable;
-    NS_ADDREF(aItem);
-  }
-
-  virtual ~ToolbarLayoutInfo() 
-  {
-    NS_RELEASE(mItem);
   }
 
 };
-
-/**************************************************************
-  Now define the token deallocator class...
- **************************************************************/
-/*class CToolbarItemInfoDeallocator: public nsDequeFunctor{
-public:
-  virtual void* operator()(void* anObject) {
-    ToolbarLayoutInfo* aItem = (ToolbarLayoutInfo*)anObject;
-    delete aItem;
-    return 0;
-  }
-};
-static CNavTokenDeallocator gItemInfoKiller;*/
 
 
 
@@ -108,7 +88,7 @@ static CNavTokenDeallocator gItemInfoKiller;*/
 //-- nsToolbar Constructor
 //--------------------------------------------------------------------
 nsToolbar::nsToolbar() : nsDataModelWidget(), nsIToolbar(),
-	mImageGroup(nsnull), mDataModel(new nsHTToolbarDataModel)
+	mDataModel(new nsHTToolbarDataModel)
 {
   NS_INIT_REFCNT();
 
@@ -123,7 +103,9 @@ nsToolbar::nsToolbar() : nsDataModelWidget(), nsIToolbar(),
   mWrapItems                = PR_FALSE;
   mDoHorizontalLayout       = PR_TRUE;
 
+#if GRIPPYS_NOT_WIDGETS
   mToolbarMgr = nsnull;
+#endif
 
   //mItemDeque = new nsDeque(gItemInfoKiller);
   mItems = (ToolbarLayoutInfo **) new PRInt32[gMaxInfoItems];
@@ -135,10 +117,9 @@ nsToolbar::~nsToolbar()
 {
   delete mDataModel;
   
+#if GRIPPYS_NOT_WIDGETS
   NS_IF_RELEASE(mToolbarMgr);
-  NS_IF_RELEASE(mImageGroup);
-
-  //delete mItemDeque;
+#endif
 
   PRInt32 i;
   for (i=0;i<mNumItems;i++) {
@@ -149,83 +130,38 @@ nsToolbar::~nsToolbar()
 
 //--------------------------------------------------------------------
 nsresult nsToolbar::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{                                                                        
+{
+  nsresult retval = NS_OK;
+                                                                 
   if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
+    retval = NS_ERROR_NULL_POINTER;
   }                                                                      
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-  static NS_DEFINE_IID(kClassIID, kCToolbarCID);                         
-  if (aIID.Equals(kCIToolbarIID)) {                                          
+  else if (aIID.Equals(kCIToolbarIID)) {                                          
     *aInstancePtr = (void*) (nsIToolbar *)this;                                        
     AddRef();                                                            
-    return NS_OK;                                                        
   }   
-  if (aIID.Equals(kIToolbarItemIID)) {                                          
+  else if (aIID.Equals(kIContentConnectorIID)) {                                          
+    *aInstancePtr = (void*) (nsIContentConnector *)this;                                        
+    AddRef();                                                           
+  }     
+  else if (aIID.Equals(kIToolbarItemIID)) {                                          
     *aInstancePtr = (void*) (nsIToolbarItem *)this;                                        
     AddRef();                                                            
-    return NS_OK;                                                        
   }                                                                        
-  if (aIID.Equals(kClassIID)) {                                          
-    *aInstancePtr = (void*) (nsToolbar *)this;                                        
-    AddRef();                                                            
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*) (this);                        
-    AddRef();                                                            
-    return NS_OK;                                                        
-  }                                                                      
-  return (nsWindow::QueryInterface(aIID, aInstancePtr));
+  else
+   retval = nsDataModelWidget::QueryInterface(aIID, aInstancePtr);
+  
+  return retval;
 }
 
-//-----------------------------------------------------
+
 static nsEventStatus PR_CALLBACK
-HandleTabEvent(nsGUIEvent *aEvent)
+HandleToolbarEvent(nsGUIEvent *aEvent)
 {
   nsEventStatus result = nsEventStatus_eIgnore;
-
-  nsIImageButton * button;
-	if (NS_OK == aEvent->widget->QueryInterface(kIImageButtonIID,(void**)&button)) {
-    result = button->HandleEvent(aEvent);
-
-    if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-      nsIWidget * widget;
-      aEvent->widget->GetClientData((void *&)widget);
-      if (nsnull != widget) {
-        nsIToolbar * toolbar;
-	      if (NS_OK == widget->QueryInterface(kIToolbarIID,(void**)&toolbar)) {
-          nsIToolbarManager * toolbarMgr;
-          if (NS_OK == toolbar->GetToolbarManager(toolbarMgr)) {
-            toolbarMgr->CollapseToolbar(toolbar);
-            NS_RELEASE(toolbarMgr);
-          }
-          NS_RELEASE(toolbar);
-        }
-      }
-    }
-
-    NS_RELEASE(button);
-  }
-
-
-  /*switch(aEvent->message) {
-    case NS_PAINT: {
-      nsRect pRect;
-      nsRect r;
-      nsIWidget * parent;
-      parent = aEvent->widget->GetParent();
-      parent->GetBounds(pRect);
-      aEvent->widget->GetBounds(r);
-      NS_RELEASE(parent);
-      nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
-      drawCtx->SetColor(NS_RGB(128,128,128));
-      drawCtx->SetColor(NS_RGB(255,0,0));
-      drawCtx->DrawLine(0, pRect.height-1, r.width, pRect.height-1);
-      drawCtx->DrawLine(0, pRect.height-5, r.width, pRect.height-5);
-    }
-    break;
-  }*/
-
+  nsCOMPtr<nsIContentConnector> toolbar ( aEvent->widget );
+  if ( toolbar )
+    result = toolbar->HandleEvent(aEvent);
   return result;
 }
 
@@ -245,7 +181,7 @@ nsToolbar :: Create(nsIWidget *aParent,
                     nsWidgetInitData *aInitData)
 {
   nsresult answer = ChildWindow::Create(aParent, aRect,
-     nsnull != aHandleEventFunction ? aHandleEventFunction : HandleToolbarEvent,
+     aHandleEventFunction ? aHandleEventFunction : HandleToolbarEvent,
      aContext, aAppShell, aToolkit, aInitData);
 
   if (mDataModel)
@@ -295,6 +231,7 @@ NS_METHOD nsToolbar::InsertItemAt(nsIToolbarItem* anItem,
     PRInt32 downToInx = anIndex + 1;
     for (i=mNumItems;i>downToInx;i--) {
       mItems[i] = mItems[i-1];
+      
     }
 
     // Insert the new widget
@@ -304,7 +241,6 @@ NS_METHOD nsToolbar::InsertItemAt(nsIToolbarItem* anItem,
   }
     mNumItems++;
 
-  NS_ADDREF(anItem);
   return NS_OK;    
 }
 //--------------------------------------------------------------------
@@ -719,6 +655,8 @@ NS_METHOD nsToolbar::SetBorderType(nsToolbarBorderType aBorderType)
   return NS_OK;
 }
 
+#if GRIPPYS_NOT_WIDGETS
+
 //--------------------------------------------------------------------
 NS_METHOD nsToolbar::SetToolbarManager(nsIToolbarManager * aToolbarManager)
 {
@@ -735,6 +673,8 @@ NS_METHOD nsToolbar::GetToolbarManager(nsIToolbarManager *& aToolbarManager)
   NS_ADDREF(aToolbarManager);
   return NS_OK;
 }
+
+#endif
 
 //--------------------------------------------------------------------
 //
@@ -830,20 +770,16 @@ nsEventStatus nsToolbar::OnPaint(nsIRenderingContext& aRenderingContext,
                                  const nsRect& aDirtyRect)
 {
   nsresult res = NS_OK;
-  nsIWidget * widget = nsnull;
   nsRect r = aDirtyRect;
 
-  res = QueryInterface(kIWidgetIID,(void**)&widget);
-
-  if (NS_OK != res)
-    return nsEventStatus_eIgnore;
-
-  aRenderingContext.SetColor(widget->GetBackgroundColor());
+  aRenderingContext.SetColor(GetBackgroundColor());
   aRenderingContext.FillRect(r);
   r.width--;
 
-  nsIDeviceContext* dc = GetDeviceContext();  //*** use COM_auto_ptr here
-  
+  nsCOMPtr<nsIDeviceContext> dc ( dont_AddRef(GetDeviceContext()) );
+  if ( !dc )
+    return nsEventStatus_eIgnore;
+    
   nsFont titleBarFont("MS Sans Serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
 					  400, NS_FONT_DECORATION_NONE,
 					  12);
@@ -854,8 +790,6 @@ nsEventStatus nsToolbar::OnPaint(nsIRenderingContext& aRenderingContext,
   if ( styleInfo.BackgroundImage() )
     PaintBackgroundImage(aRenderingContext, styleInfo.BackgroundImage(), r);
   
-  NS_RELEASE(dc);
-   
   if (mBorderType != eToolbarBorderType_none) 
   {
     nsRect rect(r);
@@ -873,7 +807,6 @@ nsEventStatus nsToolbar::OnPaint(nsIRenderingContext& aRenderingContext,
       aRenderingContext.DrawLine(rect.width,0,rect.width,rect.height);
     }
   }
-  NS_RELEASE(widget);
 
   return nsEventStatus_eIgnore;
 }
@@ -888,8 +821,7 @@ nsEventStatus nsToolbar::HandleEvent(nsGUIEvent *aEvent)
     aEvent->widget->GetBounds(r);
     r.x = 0;
     r.y = 0;
-    nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
-
+    nsCOMPtr<nsIRenderingContext> drawCtx(NS_STATIC_CAST(nsPaintEvent*, aEvent)->renderingContext);
     return (OnPaint(*drawCtx,r));
   }
 
@@ -990,6 +922,7 @@ NS_METHOD nsToolbar::GetPreferredConstrainedSize(PRInt32& aSuggestedWidth, PRInt
 }
 
 
+#if GRIPPYS_NOT_WIDGETS
 
 //-------------------------------------------------------------------
 NS_METHOD nsToolbar::CreateTab(nsIWidget *& aTab)
@@ -1058,8 +991,10 @@ NS_METHOD nsToolbar::CreateTab(nsIWidget *& aTab)
   NS_RELEASE(toolbarItem);
   NS_RELEASE(toolbarItemHolder);
 
-  return NS_OK;    
+  return NS_OK;
 }
+
+#endif
 
 
 //
