@@ -93,11 +93,11 @@ public:
   NS_IMETHOD CreateStorageIfMissing(nsIUrlListener* urlListener);
   NS_IMETHOD PropagateDelete(nsIMsgFolder *folder, PRBool deleteStorage);
   NS_IMETHOD RecursiveDelete(PRBool deleteStorage);
-  NS_IMETHOD CreateSubfolder(const PRUnichar *folderName);
+  NS_IMETHOD CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow *msgWindow);
   NS_IMETHOD AddSubfolder(nsAutoString *folderName, nsIMsgFolder **newFolder);
   NS_IMETHOD Compact(void);
   NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener);
-  NS_IMETHOD Rename(const PRUnichar *name);
+  NS_IMETHOD Rename(const PRUnichar *name, nsIMsgWindow *msgWindow);
   NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
   NS_IMETHOD ContainsChildNamed(const char *name, PRBool *_retval);
   NS_IMETHOD IsAncestorOf(nsIMsgFolder *folder, PRBool *_retval);
