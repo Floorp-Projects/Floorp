@@ -1222,7 +1222,6 @@ void nsWidget::DispatchDragDropEvent( PhEvent_t *phevent, PRUint32 aEventType, P
   DispatchEvent( &event, status );
 	}
 
-
 int nsWidget::DndCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo ) {
 	nsWidget *pWidget = (nsWidget *) data;
 	PtDndCallbackInfo_t *cbdnd = (  PtDndCallbackInfo_t * ) cbinfo->cbdata;
@@ -1254,16 +1253,21 @@ int nsWidget::DndCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbi
 		case Ph_EV_DND_DROP:
 			nsDragService *d;
 			d = ( nsDragService * )sDragService;
-			d->SetDropData( (char*)cbdnd->data+4+100, (PRUint32) *(int*)cbdnd->data, (char*) cbdnd->data + 4 );
-///* ATENTIE */ printf("SetDropData with data=%s\n", (char*) cbdnd->data );
-
+			if( d->SetDropData( (char*)cbdnd->data ) != NS_OK ) break;
 			pWidget->ProcessDrag( cbinfo->event, NS_DRAGDROP_DROP, &ptrev->pos );
 			sDragService->EndDragSession();
+			((nsDragService*) sDragService)->SourceEndDrag();
 			break;
+
 		case Ph_EV_DND_LEAVE:
+			pWidget->ProcessDrag( cbinfo->event, NS_DRAGDROP_EXIT, &ptrev->pos );
+			sDragService->EndDragSession();
+			break;
+
 		case Ph_EV_DND_CANCEL:
 			pWidget->ProcessDrag( cbinfo->event, NS_DRAGDROP_EXIT, &ptrev->pos );
 			sDragService->EndDragSession();
+			((nsDragService*) sDragService)->SourceEndDrag();
 			break;
 		}
 

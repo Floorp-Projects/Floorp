@@ -69,8 +69,8 @@ public:
   NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 anItem);
   NS_IMETHOD GetNumDropItems (PRUint32 * aNumItems);
   NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval);
-	NS_IMETHOD SetDropData( char *data, PRUint32 tmpDataLen, char *flavorStr );
-	NS_IMETHOD GetRawData( nsISupportsArray* aArrayTransferables, nsISupports **data, PRUint32 *tmpDataLen, char *aflavorStr );
+	NS_IMETHOD SetDropData( char *data );
+	void SourceEndDrag(void);
 
 	PRUint32 mActionType;
 
@@ -78,11 +78,10 @@ private:
   PtWidget_t *mDndWidget;
 	static char *mDndEvent;
 	static int mDndEventLen;
+	nsCOMPtr<nsISupportsArray> mSourceDataItems;
 
 	PtTransportCtrl_t *mNativeCtrl;
-	char *mData;
-	PRUint32 mtmpDataLen;
-	char *mflavorStr;
+	char *mRawData, *mFlavourStr, *mTransportFile;
 };
 
 #endif // nsDragService_h__
