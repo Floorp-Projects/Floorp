@@ -337,10 +337,20 @@ sub print_warning {
   print "<li>";
 
   # File link
-  print "<a target='_other' href='"
-    .file_url($file,$linenum)."'>";
-  print   "$file:$linenum";
-  print "</a> ";
+  if ($file =~ /\[multiple\]/) {
+    $file =~ s/.\[multiple\]//;
+    print   "<a target='_other' href='http://lxr.mozilla.org/seamonkey/find?string=$file'>";
+    print   "$file:$linenum";
+    print "</a> (multiple file matches)";
+  } elsif ($file =~ /\[no_match\]/) {
+    $file =~ s/.\[multiple\]//;
+    print   "$file:$linenum (no file match)";
+  } else {
+    print "<a target='_other' href='"
+      .file_url($file,$linenum)."'>";
+    print   "$file:$linenum";
+    print "</a> ";
+  }
   print "<br>";
   # Warning text
   print "\u$warning";
