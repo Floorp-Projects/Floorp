@@ -41,7 +41,6 @@
 #include "nsIMsgSearchScopeTerm.idl"
 
 [ptr] native nsMsgSearchTermArray(nsMsgResultElement);
-//[ptr] native nsMsgResultElement(nsMsgResultElement);
 
 %{C++
 class nsMsgResultElement;
@@ -49,8 +48,6 @@ class nsMsgResultElement;
 
 [scriptable, uuid(66f4b80c-0fb5-11d3-a515-0060b0fc04b7)]
 interface nsIMsgSearchAdapter : nsISupports {
-//    [noscript] void Init(in nsMsgSearchScopeTerm scope,
-//                         in nsMsgSearchTermArray terms);
     void ValidateTerms();
     void Search(out boolean done);
     void SendUrl();

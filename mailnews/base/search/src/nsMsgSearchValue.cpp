@@ -59,6 +59,32 @@ nsMsgSearchValueImpl::~nsMsgSearchValueImpl()
 
 NS_IMPL_ISUPPORTS1(nsMsgSearchValueImpl, nsIMsgSearchValue)
 
+NS_IMPL_GETSET(nsMsgSearchValueImpl, Priority, nsMsgPriorityValue, mValue.u.priority);
+NS_IMPL_GETSET(nsMsgSearchValueImpl, Status, PRUint32, mValue.u.msgStatus);
+NS_IMPL_GETSET(nsMsgSearchValueImpl, Size, PRUint32, mValue.u.size);
+NS_IMPL_GETSET(nsMsgSearchValueImpl, MsgKey, nsMsgKey, mValue.u.key);
+NS_IMPL_GETSET(nsMsgSearchValueImpl, Age, PRUint32, mValue.u.age);
+NS_IMPL_GETSET(nsMsgSearchValueImpl, Date, PRTime, mValue.u.date);
+NS_IMPL_GETSET(nsMsgSearchValueImpl, Attrib, nsMsgSearchAttribValue, mValue.attribute);
+
+NS_IMETHODIMP
+nsMsgSearchValueImpl::GetFolder(nsIMsgFolder* *aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::FolderInfo, NS_ERROR_ILLEGAL_VALUE);
+    *aResult = mValue.u.folder;
+    NS_IF_ADDREF(*aResult);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchValueImpl::SetFolder(nsIMsgFolder* aValue)
+{
+    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::FolderInfo, NS_ERROR_ILLEGAL_VALUE);
+    mValue.u.folder = aValue;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsMsgSearchValueImpl::GetStr(PRUnichar** aResult)
 {
@@ -75,140 +101,6 @@ nsMsgSearchValueImpl::SetStr(const PRUnichar* aValue)
     if (mValue.string)
         nsCRT::free(mValue.string);
     mValue.string = ToNewUTF8String(nsDependentString(aValue));
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchValueImpl::GetPriority(nsMsgPriorityValue *aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::Priority, NS_ERROR_ILLEGAL_VALUE);
-    *aResult = mValue.u.priority;
-    return NS_OK;
-}
-NS_IMETHODIMP
-nsMsgSearchValueImpl::SetPriority(nsMsgPriorityValue aValue)
-{
-    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::Priority, NS_ERROR_ILLEGAL_VALUE);
-    mValue.u.priority = aValue;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchValueImpl::GetStatus(PRUint32 *aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::MsgStatus, NS_ERROR_ILLEGAL_VALUE);
-    *aResult = mValue.u.msgStatus;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchValueImpl::SetStatus(PRUint32 aValue)
-{
-    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::MsgStatus, NS_ERROR_ILLEGAL_VALUE);
-    mValue.u.msgStatus = aValue;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchValueImpl::GetSize(PRUint32 *aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::Size, NS_ERROR_ILLEGAL_VALUE);
-    *aResult = mValue.u.size;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchValueImpl::SetSize(PRUint32 aValue)
-{
-    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::Size, NS_ERROR_ILLEGAL_VALUE);
-    mValue.u.size = aValue;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchValueImpl::GetMsgKey(nsMsgKey *aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::MessageKey, NS_ERROR_ILLEGAL_VALUE);
-    *aResult = mValue.u.key;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchValueImpl::SetMsgKey(nsMsgKey aValue)
-{
-    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::MessageKey, NS_ERROR_ILLEGAL_VALUE);
-    mValue.u.key = aValue;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchValueImpl::GetAge(PRUint32 *aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::AgeInDays, NS_ERROR_ILLEGAL_VALUE);
-    *aResult = mValue.u.age;
-    return NS_OK;
-}
-NS_IMETHODIMP
-nsMsgSearchValueImpl::SetAge(PRUint32 aValue)
-{
-    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::AgeInDays, NS_ERROR_ILLEGAL_VALUE);
-    mValue.u.age = aValue;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchValueImpl::GetFolder(nsIMsgFolder* *aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::FolderInfo, NS_ERROR_ILLEGAL_VALUE);
-    *aResult = mValue.u.folder;
-    NS_IF_ADDREF(*aResult);
-    return NS_OK;
-}
-NS_IMETHODIMP
-nsMsgSearchValueImpl::SetFolder(nsIMsgFolder* aValue)
-{
-    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::FolderInfo, NS_ERROR_ILLEGAL_VALUE);
-    mValue.u.folder = aValue;
-    
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchValueImpl::GetDate(PRTime *aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::Date, NS_ERROR_ILLEGAL_VALUE);
-    *aResult = mValue.u.date;
-    return NS_OK;
-}
-NS_IMETHODIMP
-nsMsgSearchValueImpl::SetDate(PRTime aValue)
-{
-    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::Date, NS_ERROR_ILLEGAL_VALUE);
-    mValue.u.date = aValue;
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsMsgSearchValueImpl::GetAttrib(nsMsgSearchAttribValue *aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    
-    *aResult = mValue.attribute;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchValueImpl::SetAttrib(nsMsgSearchAttribValue aValue)
-{
-    mValue.attribute = aValue;
     return NS_OK;
 }
 

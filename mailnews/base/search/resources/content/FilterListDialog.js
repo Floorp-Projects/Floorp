@@ -133,8 +133,6 @@ function currentFilter()
         filter = gFilterTree.builderView.getResourceAtIndex(gFilterTree.currentIndex);
         filter = filter.GetDelegate("filter", Components.interfaces.nsIMsgFilter);
     } catch (ex) {
-        dump(ex);
-        dump("no filter selected!\n");
     }
     return filter;
 }
@@ -268,8 +266,6 @@ function getSelectedServerForFilters()
         }
         catch (ex)
         {
-            //dump("**** exception: "+ex+"\n");
-            //dump("**** !!!!!!! NOT A VALID msgfolder\n");
         }
     }
 
