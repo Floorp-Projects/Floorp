@@ -120,8 +120,9 @@ nsIsIndexFrame::Paint(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsIsIndexFrame::UpdatePromptLabel()
 {
-  nsresult result;
   if (!mTextContent) return NS_ERROR_UNEXPECTED;
+
+  nsresult result = NS_OK;
 
   // Get the text from the "prompt" attribute.
   // If it is zero length, set it to a default value (localized)
@@ -370,10 +371,11 @@ nsIsIndexFrame::GetFrameName(nsString& aResult) const
 NS_IMETHODIMP
 nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
 {
-  nsresult result;
   if (!mContent || !mInputContent) {
     return NS_ERROR_UNEXPECTED;
   }
+
+  nsresult result = NS_OK;
 
   // Begin ProcessAsURLEncoded
   nsAutoString data;
