@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.42 2003/11/13 16:21:46 wchang0222%aol.com Exp $
+ * $Id: cert.h,v 1.43 2003/12/03 00:09:04 wchang0222%aol.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -733,6 +733,7 @@ extern const char * CERT_GetFirstEmailAddress(CERTCertificate * cert);
 extern const char * CERT_GetNextEmailAddress(CERTCertificate * cert, 
                                              const char * prev);
 
+/* The return value must be freed with PORT_Free. */
 extern char *CERT_GetCommonName(CERTName *name);
 
 extern char *CERT_GetCountryName(CERTName *name);

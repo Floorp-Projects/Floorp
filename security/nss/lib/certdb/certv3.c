@@ -34,7 +34,7 @@
 /*
  * Code for dealing with X509.V3 extensions.
  *
- * $Id: certv3.c,v 1.5 2003/11/27 05:06:20 nelsonb%netscape.com Exp $
+ * $Id: certv3.c,v 1.6 2003/12/03 00:09:04 wchang0222%aol.com Exp $
  */
 
 #include "cert.h"
@@ -310,6 +310,8 @@ CERT_FindSubjectKeyIDExtension(CERTCertificate *cert, SECItem *retItem)
 	        rv = SECITEM_CopyItem(NULL, retItem, &decodedValue);
 	    }
 	    PORT_FreeArena(tmpArena, PR_FALSE);
+	} else {
+	    rv = SECFailure;
 	}
     }
     SECITEM_FreeItem(&encodedValue, PR_FALSE);
