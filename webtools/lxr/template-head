@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<META NAME="GENERATOR" CONTENT="lxr-0.3: http://lxr.linux.no">
+<META NAME="AUTHOR" CONTENT="Dawn Endico dawn@cannibal.mi.org">
+<title>$title</title>
+
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+var event = 0
+function js_dir_menu() {}
+function js_file_menu() {}
+//-->
+</SCRIPT>
+<SCRIPT LANGUAGE="JavaScript1.2">
+<!--
+function js_dir_menu(dir,d) {
+    if( parseInt(navigator.appVersion) < 4 ){
+        return true;
+    }
+    l = document.layers['popup'];
+    urlmonth="http://cvs1.mozilla.org/webtools/bonsai/cvsquery.cgi?module=MozillaSource&branch=HEAD&dir=mozilla"+dir+"&file=&who=&sortby=Date&hours=2&date=month&mindate=&maxdate=&cvsroot=%2Fcvsroot";
+    urlweek="http://cvs1.mozilla.org/webtools/bonsai/cvsquery.cgi?module=MozillaSource&branch=HEAD&dir=mozilla"+dir+"&file=&who=&sortby=Date&hours=2&date=week&mindate=&maxdate=&cvsroot=%2Fcvsroot";
+    text="<table border><tr><td><a href=\"mozilla/source"+dir+"\"><a href=\""+urlweek+"\">Checkins to mozilla"+dir+" in the last week</a> <br><a href=\""+urlmonth+"\">Checkins to mozilla"+dir+" in the last month</a> </td></tr> </table>"
+    l.document.write(text);
+    l.top = d.target.y;
+    l.left = d.target.x +  110;
+    if( (l.left + l.clipWidth) > window.width ){
+        l.left = window.width - l.clipWidth;
+    }
+    l.visibility="show";
+    l.document.close();
+    return false;
+}
+
+
+function js_file_menu(file,d) {
+    if( parseInt(navigator.appVersion) < 4 ){
+        return true;
+    }
+    l = document.layers['popup'];
+
+    text="<table border><tr><td><a href=\"http://cvs1.mozilla.org/webtools/bonsai/cvslog.cgi?file=/mozilla"+file+"&root=/cvsroot\">mozilla"+file+" change log</a><br><a href=\"http://cvs1.mozilla.org/webtools/bonsai/cvsblame.cgi?&file=mozilla"+file+"&root=/cvsroot\">mozilla"+file+" with change log annotations</a></td></tr></table>"
+    l.document.write(text);
+    l.top = d.target.y;
+    l.left = d.target.x +  110;
+    if( (l.left + l.clipWidth) > window.width ){
+        l.left = window.width - l.clipWidth;
+    }
+    l.visibility="show";
+    l.document.close();
+    return false;
+}
+// end script -->
+</script>
+
+
+<layer name="popup"  onMouseOut="this.visibility='hide';" left=0 top=0 bgcolor="#dddddd" visibility="hide">
+</layer>
+
+</head>
+
+<BODY   BGCOLOR="#FFFFFF" TEXT="#000000"
+	LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
+
+<TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
+<TR><TD><A HREF="http://www.mozilla.org/"><IMG
+ SRC="http://www.mozilla.org/images/mozilla-banner.gif" ALT=""
+ BORDER=0 WIDTH=600 HEIGHT=58></A></TD></TR></TABLE>
+
+<P>
+<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>
+ <TR>
+  <TD ALIGN=LEFT VALIGN=CENTER>
+   <A HREF="http://www.mozilla.org/">Mozilla</A>
+   <A HREF="http://lxr.linux.no/blurb.html">Cross Reference</A><BR>
+   $banner
+  </TD>
+  <TD ALIGN=RIGHT VALIGN=CENTER>
+   <TABLE CELLPADDING=0 CELLSPACING=0>
+    <TR>
+     <TD NOWRAP ID="ident">
+      <FORM METHOD=GET ACTION="/mozilla/ident">
+       <A HREF="/mozilla/ident">Id</A>:
+       <INPUT TYPE=TEXT NAME="i" VALUE="" SIZE=6>
+       <INPUT TYPE=SUBMIT VALUE="Find">
+      </FORM>
+     </TD>
+     <TD NOWRAP ID="string">
+      <FORM METHOD=GET ACTION="/mozilla/search">
+       <A HREF="/mozilla/search">Glimpse</A>:
+       <INPUT TYPE=TEXT NAME="string" VALUE="" SIZE=6>
+       <INPUT TYPE=SUBMIT VALUE="Find">
+      </FORM>
+     </TD>
+     <TD NOWRAP ID="find">
+      <FORM METHOD=GET ACTION="/mozilla/find">
+       <A HREF="/mozilla/find">File</A>:
+       <INPUT TYPE=TEXT NAME="string" VALUE="" SIZE=6>
+       <INPUT TYPE=SUBMIT VALUE="Find">
+      </FORM>
+     </TD>
+    </TR>
+   </TABLE>
+  </TD>
+ </TR>
+</TABLE>
+
+<P>
+<HR>
+<P>

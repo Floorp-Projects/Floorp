@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<TITLE>Linux Cross-Reference</TITLE>
+</HEAD>
+<BODY BGCOLOR=WHITE>
+<H1 ALIGN=CENTER>
+Cross-Referencing Linux<BR>
+<A HREF="http:source/">
+<I>Browse the code</I></A></H1>
+
+<HR><H2>Motivation</H2>
+The Linux Cross-Reference project is the testbed application of a
+general hypertext cross-referencing tool.  (Or the other way around.)
+
+<P>
+The main goal of the project is to create a versatile
+cross-referencing tool for relatively large code repositories.  The
+project is based on stock web technology, so the codeview client may
+be chosen from the full range of available web browsers.  On the
+server side, any Unix-based web server with cgi-script capability
+should do nicely.
+
+<P>
+The main feature of the indexer is of course the ability to jump
+easily to the declaration of any global identifier.  Indeed, even all
+<I>references</I> to global identifiers are indexed.  Quick access to
+function declarations, data (type) definitions and preprocessor macros
+makes code browsing just that tad more convenient.  At-a-glance
+overview of e.g. which code areas that will be affected by changing a
+function or type definition should also come in useful during
+development and debugging.
+
+<P>
+Other bits of hypertextual sugar, such as e-mail and include file
+links, are provided as well, but is on the whole, well, sugar.  Some
+minimal visual markup is also done.  (Style sheets are considered as a
+way to do this in the future.)
+
+
+<HR><H2>Technicalities</H2>
+The index generator is written in <A HREF="http://www.perl.org">Perl</A>
+and relies heavily on Perl's regular expression facilities.  The
+algorithm used is very brute force and extremely sloppy.  The
+rationale behind the sloppiness is that too little information renders
+the database useless, while too much information simply means the
+users have to think and navigate at the same time.
+
+<P>
+The Linux source code, with which the project has initially been
+linked, presents the indexer with some very tough obstacles.
+Specifically, the heavy use of preprocessor macros makes the parsing a
+virtual nightmare.  We want to index the information in the
+preprocessor directives as well as the actual C code, so we have to
+parse both at once, which leads to no end of trouble.  (Strict parsing
+is right out.)  Still, we're pretty satisfied with what the indexer
+manages to get out of it.
+
+<P>
+There's also the question of actually broken code.  We want to
+reasonably index all code portions, even if some of it is not entirely
+syntactically valid.  This is another reason for the sloppiness.
+
+<P>
+There are obviously disadvantages to this approach.  No scope checking
+is done, and the most annoying effect of this is mistaking local
+identifers for references to global ones with the same name.  This
+particular problem (and others) can only be solved by doing (almost)
+full parsing.  The feasibility of combining this with the fuzzy way
+indexing is currently done is being looked into.
+
+<P>
+An identifier is a macro, typedef, struct, enum, union, function,
+function prototype or variable. For the Linux source code between
+50000 and 60000 identifiers are collected. The individual files of the
+sourcecode are formatted on the fly and presented with clickable
+identifiers.
+
+<P>
+It is possible to search among the identifiers and the entire
+kernel source text. The freetext search is implemented using <A
+HREF="http://glimpse.cs.arizona.edu">Glimpse</A>, so all the
+capabilities of Glimpse are available. Especially the regular expression
+search capabilities are useful. 
+
+<HR><H2>Availability</H2>
+The code for the indexer is released under the
+<A HREF="http://www.gnu.org">GNU</A>
+<A HREF="http://www.gnu.org/copyleft/copyleft.html">Copyleft</A>
+license. Go to <A HREF="http://lxr.linux.no">LXR main site</A> to
+get the latest version.
+
+
+<HR><H2>Contacting the authors</H2>
+We would very much like to receive feedback on this project. If you
+find it useful or have suggestions on how to make improvements, feel
+free to send us e-mail. We hope that this will be a useful tool, both
+for experienced developers and beginners wanting to explore the Linux
+sourcecode.
+
+<HR>
+
+<ADDRESS>
+  <A HREF="mailto:lxr@linux.no">
+    Arne Georg Gleditsch and Per Kristian Gjermshus</A>
+</ADDRESS>
+</BODY>
+</HTML>

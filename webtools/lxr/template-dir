@@ -1,0 +1,17 @@
+<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=2 WIDTH="100%">
+  <TR BGCOLOR="#F38C00">
+    <TH WIDTH="1%">&nbsp;</TH>
+    <TH WIDTH="1%" NOWRAP ALIGN=LEFT>Name</TH>
+    <TH WIDTH="1%" NOWRAP ALIGN=RIGHT>Size</TH>
+    <TH WIDTH="1%" NOWRAP ALIGN=LEFT>Date (GMT)</TH>
+    <TH WIDTH="96%" NOWRAP ALIGN=LEFT>Description</TH>
+  </TR>
+  $files{
+  <tr BGCOLOR="$bgcolor" valign=top>
+    <td nowrap>$iconlink</td>
+    <td nowrap>$namelink</td>
+    <td nowrap align=right>$filesize{$kbytes}&nbsp;</td>
+    <td nowrap><font size=-1>$modtime</font></td>
+    <td class="date">&nbsp; $description{<i>$desctext</i>}}</td>
+  </tr>
+</table>

@@ -1,0 +1,71 @@
+#!/usr/bonsaitools/bin/perl
+# $Id: find,v 1.1 1998/06/11 23:56:15 jwz Exp $
+
+# find   --	Find files
+#
+#	Arne Georg Gleditsch <argggh@ifi.uio.no>
+#	Per Kristian Gjermshus <pergj@ifi.uio.no>
+#
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+######################################################################
+
+use lib 'lib/';
+use LXR::Common;
+use LXR::Config;
+
+sub find {
+    print("<p align=center>\n",
+	  "Search for files using regular expressions\n",
+	  "<form method=get action=\"find\">\n");
+
+    foreach ($Conf->allvariables) {
+	if ($Conf->variable($_) ne $Conf->vardefault($_)) {
+	    print("<input type=hidden name=\"",$_, "\" ",
+		  "value=\"", $Conf->variable($_), "\">\n");
+	}
+    }			       
+    
+    print("Find file: <input type=text name=\"string\" ",
+	  "value=\"",$searchtext,"\" size =60>\n",
+	  "<input type=submit value=\"search\">\n",
+	  "</form>\n");
+
+
+    if ($searchtext ne "") {
+	unless (open(FILELLISTING,$Conf->dbdir."/.glimpse_filenames")) {
+	    &warning("Could not open .glimpse_filenames.");
+	    return;
+	}
+	print("<hr>\n");
+	$sourceroot = $Conf->sourceroot;
+	while($file = <FILELLISTING>) {
+	    $file =~ s/^$sourceroot//;
+	    if($file =~ /$searchtext/) {
+		print(&fileref("$file", "$file"),"<br>\n");
+	    }
+	}
+    }
+}
+
+
+($Conf, $HTTP, $Path) = &init;
+$searchtext = $HTTP->{'param'}->{'string'};
+
+&makeheader('find');
+&find;
+&makefooter('find');
+

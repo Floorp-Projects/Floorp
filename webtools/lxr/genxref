@@ -1,0 +1,338 @@
+#!/usr/bonsaitools/perl
+# $Id: genxref,v 1.1 1998/06/11 23:56:15 jwz Exp $
+
+# genxref.pl --	Finds identifiers in a set of C files using an
+#		extremely fuzzy algorithm.  It sort of works.
+#
+#	Arne Georg Gleditsch <argggh@ifi.uio.no>
+#	Per Kristian Gjermshus <pergj@ifi.uio.no>
+#
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+# TODO: ns/cmd/xfe/src/MozillaApp.h, XFE_MozillaApp
+
+######################################################################
+
+use lib 'lib/';
+use integer;
+use DB_File;
+
+
+%itype = (('macro',	'M'),
+	  ('typedef',	'T'),
+	  ('struct',	'S'),
+	  ('enum',	'E'),
+	  ('union',	'U'),
+	  ('function',	'F'),
+	  ('funcprot',	'f'),
+	  ('class',	'C'),	# (C++)
+	  ('classforw',	'c'),	# (C++)
+	  ('var',	'V'));
+#         ('reference', 'R')
+
+@reserved = ('auto', 'break', 'case', 'char', 'const', 'continue',
+	     'default', 'do', 'double', 'else', 'enum', 'extern',
+	     'float', 'for', 'goto', 'if', 'int', 'long', 'register',
+	     'return', 'short', 'signed', 'sizeof', 'static',
+	     'struct', 'switch', 'typedef', 'union', 'unsigned',
+	     'void', 'volatile', 'while', 'fortran', 'asm',
+	     'inline', 'operator',
+	     'class',		# (C++)
+# Her bør vi ha flere av disse: 
+	     '__asm__','__inline__');
+
+
+$ident = '\~?_*[a-zA-Z][a-zA-Z0-9_]*';
+
+
+$realpath = $ARGV[0];
+$realpath ||= '.';
+$realpath .= '/';
+
+
+sub wash {
+    my $towash = $_[0];
+    $towash =~ s/[^\n]+//gs;
+    return($towash);
+}
+
+sub stripodd {
+    my $tostrip = $_[0];
+    while ($tostrip =~ s/\{([^\{\}]*)\}/
+	   "\05".&wash($1)/ges) {}
+    $tostrip =~ s/\05/\{\}/gs;
+    $tostrip =~ s/[\{\}]//gs;
+    return($tostrip);
+}
+
+sub classes {
+    my @c = (shift =~ /($ident)\s*(?:$|,)/gm);
+    if (@c) {
+	return(join(":", @c)."::");
+    } else {
+	return('');
+    }
+}
+
+sub findident {
+    print(STDERR "Starting pass 1: Collect identifier definitions.\n");
+
+    $start = time;
+    $fnum = 0; $defs = 0;
+
+    foreach $f (@f) {
+	$f =~ s/^$realpath//o;
+	$fileidx{++$fnum} = $f;
+
+	open(SRCFILE, $realpath.$f);
+	$_ = $/; undef($/); $contents = <SRCFILE>; $/ = $_;
+	close(SRCFILE);
+
+	print(STDERR 
+	      "(Pass 1) $f (",length($contents),
+	      "), file $fnum of ",$#f+1,"...\n");
+
+	# Remove comments.
+	$contents =~ s/\/\*(.*?)\*\//&wash($1)/ges;
+	$contents =~ s/\/\/[^\n]*//g; # C++
+
+	# Unwrap continunation lines.
+	$contents =~ s/\\\s*\n/$1\05/gs;
+	while ($contents =~ s/\05([^\n\05]+)\05/$1\05\05/gs) {}
+	$contents =~ s/(\05+)([^\n]*)/"$2"."\n" x length($1)/gse;
+
+	# Find macro (un)definitions.
+	$l = 0;
+	foreach ($contents =~ /^(.*)/gm) {
+	    $l++;
+	    if (/^[ \t]*\#\s*(define|undef)\s+($ident)/o) {
+		$xref{$2} .= "$itype{'macro'}$fnum:$l\t";
+		$defs++;
+	    }
+	}
+
+	# We want to do some funky heuristics with preprocessor blocks
+	# later, so mark them. (FIXME: #elif)
+	$contents =~ s/^[ \t]*\#\s*if.*/\01/gm;
+	$contents =~ s/^[ \t]*\#\s*else.*/\02/gm;
+	$contents =~ s/^[ \t]*\#\s*endif.*/\03/gm;
+
+	# Strip all preprocessor directives.
+	$contents =~ s/^[ \t]*\#(.*)//gm;
+
+	# Now, remove all odd block markers ({,}) we find inside
+	# #else..#endif blocks.  (And pray they matched one in the
+	# preceding #if..#else block.)
+	while ($contents =~ s/\02([^\01\02\03]*\03)/&stripodd($1)/ges ||
+	       $contents =~ s/\01([^\01\02\03]*)\03/$1/gs) {}
+
+	while ($contents =~ /([\01\02\03\04\05])/gs) {
+	    print(STDERR "\t ** stray ".($1 eq "\01"  
+					 ? "#if"
+					 : ($1 eq "\02"
+					    ? "#else"
+					    : ($1 eq "\03"
+					       ? "#endif"
+					       : "control sequence"
+					       )
+					    )
+					 )." found.\n");
+	}
+	$contents =~ s/[\01\02\03\04\05]//gs;
+
+	# Remove all but outermost blocks.  (No local variables.)
+	while ($contents =~ s/\{([^\{\}]*)\}/
+	       "\05".&wash($1)/ges) {}
+	$contents =~ s/\05/\{\}/gs;
+
+	# Remove nested parentheses.
+	while ($contents =~ s/\(([^\)]*)\(/\($1\05/g ||
+	       $contents =~ s/\05([^\(\)]*)\)/ $1 /g) {}
+	
+	# Some heuristics here: Try to recognize "code" and delete
+	# everything up to the next block delimiter.
+	# $contents =~ s/([\;\}\{])(\s*$ident\s*\([^\)]*\)[^\{\}]*)/
+	# 	"$1".&wash($2)/goes;
+	# $contents =~ s/([\;\{])(\s*\**$ident\s*\=[^\{\}]*)/
+	# 	"$1".&wash($2)/goes;
+
+	# Parentheses containing commas are probably not interesting.
+	$contents =~ s/\(([^\)]*\,[^\)]*)\)/
+	    "()".&wash($1)/ges;
+
+
+	# This operator-stuff messes things up. (C++)
+	$contents =~ s/operator[\<\>\=\!\+\-\*\%\/]{1,2}/operator/g;
+
+	# Ranges are uninteresting (and confusing).
+	$contents =~ s/\[.*?\]//gs;
+
+	# And so are assignments.
+	$contents =~ s/\=(.*?);/";".&wash($1)/ges;
+
+	# From here on, \01 and \02 are used to encapsulate found
+	# identifiers,
+
+	# Find struct, enum and union definitions.
+	$contents =~ s/((struct|enum|union)\s+($ident|)\s*({}|(;)))/
+	    "$2 ".($3 ? "\01".$itype{$2}.$3."\02 " : "").$5.&wash($1)/goes;
+
+	# Find class definitions. (C++)
+	$contents =~ s/((class)\s+($ident)\s*(:[^;\{]*|)({}|(;)))/
+	    "$2 "."\01".$itype{$2.($6 ? 'forw' : '')}.
+		&classes($4).$3."\02 ".$6.&wash($1)/goes;
+
+	@contents = split(/[;\}]/, $contents);
+	$contents = '';
+
+	foreach (@contents) {
+	    s/^(\s*)(struct|enum|union|inline)/$1/;
+
+	    if (/$ident[^a-zA-Z0-9_]+$ident/) { # It takes two, baby.
+
+		$t = /^\s*typedef/s;	# Is this a type definition?
+
+		s/($ident(?:\s*::\s*$ident|))	# ($1) Match the identifier
+		    ([\s\)]*		# ($2) Tokens allowed after identifier
+		     (\([^\)]*\)	# ($3) Function parameters?
+		      (?:\s*:[^\{]*|)	# inheritage specification (C++)
+		      |)		# No function parameters
+		     \s*($|,|\{))/	# ($4) Allowed termination chars.
+		  "\01".		# identifier marker
+		   ($t			# if type definition...
+		    ? $itype{'typedef'} # ..mark as such
+		    : ($3		# $3 is empty unless function definition.
+		       ? ($4 eq '{' 		# Terminating token indicates 
+			  ? $itype{'function'} 	# function or
+			  : $itype{'funcprot'}) # function prototype.
+		       : $itype{'var'}) 	# Variable.
+		    )."$1\02 ".&wash($2)/goesx;
+	       }
+
+	    $contents .= $_;
+	}
+
+	$l = 0; 
+	foreach ($contents =~ /^(.*)/gm) {
+	    $l++;
+	    while (/\01(.)(?:(.+?)\s*::\s*|)($ident)\02/go) {
+		$xref{$3} .= "$1$fnum:$l".($2 ? ":$2" : "")."\t";
+		$defs++;
+	    }
+	}
+    }
+
+    # Så juksar me litt.
+    foreach (@reserved) {
+	delete($xref{$_});
+    }
+
+    print(STDERR 
+	  "Completed pass 1 (",(time-$start),"s):",
+	  " $defs definitions found.\n\n");
+}	
+
+
+sub findusage {
+    print(STDERR "Starting pass 2: Generate reference statistics.\n");
+
+    $start = time;
+    $fnum = 0; $refs = 0;
+
+    foreach $f (@f) {
+	$f =~ s/^$realpath//o;
+	$fnum++;
+	$lcount = 0;
+	%tref = ();
+
+	open(SRCFILE, $realpath.$f);
+	$_ = $/; undef($/); $contents = <SRCFILE>; $/ = $_;
+	close(SRCFILE);
+
+	print(STDERR 
+	      "(Pass 2) $f (",length($contents),
+	      "), file $fnum of ",$#f+1,"...\n");
+
+	# Remove comments
+	$contents =~ s/\/\*(.*?)\*\//&wash($1)/ges; 
+	$contents =~ s/\/\/[^\n]*//g;
+
+	# Remove include statements
+	$contents =~ s/^[ \t]*\#include[ \t]+[^\n]*//gm;
+
+	# FIXME: "var"
+
+	@lines = split(/\n/, $contents);
+
+	foreach $line (@lines) {
+	    $lcount++;
+	    foreach ($line =~ /(?:^|[^a-zA-Z_\#])($ident)\b/og) {
+		$tref{$_} .= "$lcount," if $xref{$_};
+	    }
+	}
+
+	while (($a, $b) = each(%tref)) {
+	    chop($b);
+	    $xref{$a} .= "R$fnum:$b\t";
+	    $refs++;
+	}
+    }
+    print(STDERR 
+	  "Completed pass 2 (",(time-$start),"s):",
+	  "$refs references to known identifiers found.\n\n");
+}
+
+
+sub dumpdb {
+    print(STDERR "Starting pass 3: Dump database to disk.\n");
+
+    $start = time;
+    tie (%xrefdb, "DB_File" , "xref", O_RDWR|O_CREAT, 0664, $DB_HASH)
+	|| die("Could not open \"xref\" for writing");
+
+    $i = 0;
+    while (($k, $v) = each(%xref)) {
+	$i++;
+	delete($xref{$k});
+	$xrefdb{$k} = $v;
+	unless ($i % 100) {
+	    print(STDERR "(Pass 3) identifier $i of maximum $defs...\n");
+	}
+    }
+
+    untie(%xrefdb);
+    print(STDERR 
+	  "Completed pass 3 (",(time-$start),"s):",
+	  "Information on $i identifiers dumped to disk.\n\n");
+}
+
+
+tie (%fileidx, "DB_File", "fileidx", O_RDWR|O_CREAT, 0660, $DB_HASH)
+    || die("Could not open \"fileidx\" for writing");
+
+open(FILES, "find $realpath -print |");
+while (<FILES>) {
+    chop;
+    push(@f, $_) if /\.([ch]|cpp?|cc)$/i; # Duplicated in lib/LXR/Common.pm
+}
+close(FILES);
+
+&findident;
+&findusage;
+&dumpdb;
+
+dbmclose(%fileidx);
+

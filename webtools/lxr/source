@@ -1,0 +1,295 @@
+#!/usr/bonsaitools/bin/perl
+# $Id: source,v 1.1 1998/06/11 23:56:17 jwz Exp $
+
+# source --	Present sourcecode as html, complete with references
+#
+#	Arne Georg Gleditsch <argggh@ifi.uio.no>
+#	Per Kristian Gjermshus <pergj@ifi.uio.no>
+#
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+######################################################################
+
+use lib 'lib/';
+use SimpleParse;
+use LXR::Common;
+use LXR::Config;
+
+
+sub fdescexpand {
+
+    $desc= "";
+#    if (open(FILE, $Path->{'real'}."/".$filename)) {
+#	while(<FILE>){
+#	    if(/$filename\s*--*\s*/i){
+#	        ($null, $desc) = split(/ $filename\s*--*\s*/i);
+#		if ($desc) {last};
+#	    }elsif (/$filename\s*:\s*/i){
+#	        ($null, $desc) = split(/ $filename\s*:\s*/i);
+#		if ($desc) {last};
+#	    }elsif (/$filename\s*/i){
+#	        ($null, $desc) = split(/ $filename\s*/i);
+#		if ($desc) {last};
+#	    }
+#	}
+#	close(FILE);
+#    }
+    return($desc);
+}
+
+sub descexpand {
+
+    $desc= "";
+    if (open(DESC, $Path->{'real'}."/doc/".$filename.".short")) {
+	$desc=<DESC>;   
+	close(DESC);
+    }
+    return($desc);
+}
+
+
+sub diricon {
+    if ($filename eq '..') {
+	return(&fileref("<img src=\"/icons/back.gif\"".
+			" border=0 alt=\"Back\">", 
+			$parentdir));
+    } else {
+	return(&fileref("<img src=\"/icons/folder.gif\"".
+			" border=0 alt=\"Folder\">",
+			$Path->{'virt'}.$filename));
+    }
+}
+
+sub dirname {
+    if ($filename eq '..') {
+	return(&fileref("Parent directory", $parentdir));
+    } else {
+	return("<a href=\"".$Conf->{'virtroot'}."/source".$Path->{'virt'}.$filename.
+        "\" onMouseOver=\"return js_dir_menu(\'".
+        $Path->{'virt'}.$filename."\', event)\">".$filename."</a>"
+        );
+    }
+}
+
+
+sub fileicon {
+    if ($filename =~ /^.*\.[ch]$/) {
+	return(&fileref("<img src=\"/icons/c.gif\"".
+			" border=0 alt=\"C file\">",
+			$Path->{'virt'}.$filename));
+    } elsif ($filename =~ /^.*\.(cpp|cc)$/) {
+	# TODO: Find a nice icon for c++ files (KDE?)
+	return(&fileref("<img src=\"/icons/c.gif\"".
+			" border=0 alt=\"C++ file\">",
+			$Path->{'virt'}.$filename));
+    } else {		
+	return(&fileref("<img src=\"/icons/text.gif\"".
+			" border=0 alt=\"File\">",
+			$Path->{'virt'}.$filename));
+    }
+}
+
+
+sub filename {
+    return("<a href=\"".$Conf->{'virtroot'}."/source".$Path->{'virt'}.$filename.
+        "\" onMouseOver=\"return js_file_menu(\'". $Path->{'virt'}.
+        $filename."\', event)\">".$filename."</a>"
+        );
+
+}
+
+
+sub filesize {
+    my $templ = shift;
+    my $s = (-s $Path->{'real'}.$filename);
+
+    return(&expandtemplate($templ,
+			   ('bytes',	sub {return($s)}),
+			   ('kbytes',	sub {return(($s>>10)."k")}),
+#			   ('kbytes',	sub {return($s/1024)}),
+			   ('mbytes',	sub {return($s/1048576)})
+			   ));
+}
+
+
+sub modtime {
+    my @t = gmtime((stat($Path->{'real'}.$filename))[9]);
+    $t[5] += 1900;
+    $t[4]++;
+#   return(sprintf("%04d-%02d-%02d %02d:%02d:%02d", reverse(splice(@t, 0, 6))));
+    return(sprintf("%04d-%02d-%02d %02d:%02d", reverse(splice(@t, 0, 6))));
+}
+
+sub bgcolor {
+    if (!($line % 3)) {
+	$color = ($color eq "#EEEEEE")? "#FFFFFF": "#EEEEEE";
+    }
+    return($color);
+}
+
+
+sub direxpand {
+    my $templ = shift;
+    my $direx = '';
+    local $line = 0;
+    local $filename;
+    local $filestat;
+    local $color="#FFFFFF";
+
+    foreach $filename (@dirs) {
+	$line++;
+	$direx .= &expandtemplate($templ,
+				  ('iconlink',		\&diricon),
+				  ('namelink',		\&dirname),
+				  ('filesize',		sub {return('')}),
+				  ('modtime',		\&modtime),
+				  ('bgcolor',		\&bgcolor),
+				  ('description',	\&descexpand));
+    }
+	
+    foreach $filename (@files) {
+	$line++;
+	next if $filename =~ /^.*\.[oa]$|^core$|^00-INDEX$/;
+	$direx .= &expandtemplate($templ,
+				  ('iconlink',		\&fileicon),
+				  ('namelink',		\&filename),
+				  ('filesize',		\&filesize),
+				  ('modtime',		\&modtime),
+				  ('bgcolor',		\&bgcolor),
+				  ('description',	\&fdescexpand));
+    }
+
+    return($direx);
+}
+
+sub printdir {
+    my $template;
+    my $index;
+    local %index;
+    local @dirs;
+    local @files;
+    local $parentdir;
+
+
+    $template = "<ul>\n\$files{\n<li>\$iconlink \$namelink\n}</ul>\n";
+    if ($Conf->htmldir) {
+	unless (open(TEMPL, $Conf->htmldir)) {
+	    &warning("Template ".$Conf->htmldir." does not exist.");
+	} else {
+	    $save = $/; undef($/);
+	    $template = <TEMPL>;
+	    $/ = $save;
+	    close(TEMPL);
+	}
+    }
+	
+    if (opendir(DIR, $Path->{'real'})) {
+	foreach $f (sort(grep/^[^\.]/,readdir(DIR))) {
+	    if (-d $Path->{'real'}.$f) {
+		push(@dirs,"$f/");
+	    } else {
+		push(@files,$f);
+	    }
+	}
+	closedir(DIR);
+    } else {
+	print("<p align=center>\n<i>This directory does not exist.</i>\n");
+	if ($Path->{'real'} =~ m#(.+[^/])[/]*$#) {
+	    if (-e $1) {
+		&warning("Unable to open ".$Path->{'real'});
+	    }
+	}
+	return;
+    }
+    
+    if (-f $Path->{'real'}."00-INDEX") {
+	open(INDEX,$Path->{'real'}."00-INDEX") ||
+	    &warning("Existing \"00-INDEX\" could not be opened.");
+	$save = $/; undef($/);
+	$index = <INDEX>;
+	$/ = $save;
+	
+	%index = $index =~ /\n(\S*)\s*\n\t-\s*([^\n]*)/gs;
+    }
+
+    if ($Path->{'virt'} =~ m#^(.*/)[^/]*/$#) {
+	$parentdir = $1;
+	unshift(@dirs, '..');
+    }
+
+    if (open(DESC, $Path->{'real'}."/doc/index.html")) {
+	print(<DESC>);
+	print("\n<p>\n");
+	close(DESC);
+    }
+
+    print(&expandtemplate($template,
+			  ('files',	\&direxpand)));
+}
+
+
+sub printfile {
+
+    unless ($Path->{'file'}) {
+	&printdir;
+
+	if (open(SRCFILE, $Path->{'real'}.README)) {
+	    print("<hr><pre>");
+	    &markupfile(\*SRCFILE, $Path->{'virt'}, 'README', 
+			sub { print shift });
+	    print("</pre>");
+	    close(SRCFILE);
+	}
+
+    } else {
+	if (open(SRCFILE, $Path->{'realf'})) {
+	    if (($Path->{'file'} =~ /\.(html)$/)) {
+		print <SRCFILE>;
+		}
+	    else {
+    		if(open(DESC, $Path->{'real'}."doc/".$Path->{'file'}.".long")){
+		    print(<DESC>);   
+		    close(DESC);
+    		    }
+		print("<pre>");
+		&markupfile(\*SRCFILE, $Path->{'virt'}, $Path->{'file'},
+                            sub { print shift });
+		print("</pre>");
+		}
+	    close(SRCFILE);
+	} else {
+	    print("<p align=center>\n<i>This file does not exist.</i>\n");
+	    
+	    if (-f $Path->{'real'}.$Path->{'file'}) {
+		&warning("Unable to open ".$Path->{'realf'});
+	    }
+	}
+    }
+}
+
+($Conf, $HTTP, $Path) = &init;
+
+#if the file is html then don't print a header because the file
+#has its own -dme
+if (!($Path->{'file'} =~ /\.(html)$/)) {
+    &makeheader('source');
+    }
+&printfile;
+if (!($Path->{'file'} =~ /\.(html)$/)) {
+    &makefooter('source');
+    }
+#$len = length($file);
+#print ("length is: ", $len) ;
