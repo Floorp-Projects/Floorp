@@ -63,6 +63,9 @@ public class Main {
         mailDir = new File(userHome, "grndlmail");
         // Need to find out for sure what OS/2 reports as "os.name"
         // and add a sub for OS/2 (talisman)
+      } else if (System.getProperty("os.name").equals("OS/2")) {
+        File userHome = new File(System.getProperty("user.dir"));
+        mailDir = new File(userHome, "grndlmail");
       } else {    // if we're not Win or Mac, assume some kind of unix
         File userHome = new File(System.getProperty("user.home"));
         mailDir = new File(userHome, "grndlmail");
