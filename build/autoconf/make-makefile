@@ -38,7 +38,7 @@
 # make-makefiles - Quickly create Makefiles for subdirectories.
 #      Also, creates any needed subdirectories.
 #
-# usage: make-makefiles [ -t <topsrcdir> -d <depth> ] [ <subdir> | <subdir>/Makefile ] ...
+# usage: make-makefiles [ -t <topsrcdir> -p <print_topsrcdir> -d <depth> ] [ <subdir> | <subdir>/Makefile ] ...
 
 # Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
 
@@ -46,7 +46,7 @@
 
 # Determine various tree path variables
 #
-($topsrcdir, $depth, @makefiles) = parse_arguments(@ARGV);
+($topsrcdir, $ptopsrcdir, $depth, @makefiles) = parse_arguments(@ARGV);
 
 $object_fullpath = `pwd`;
 chdir $depth;
@@ -75,6 +75,7 @@ create_directories(@makefiles);
 #  was invoked. The path is either relative to the object directory
 #  or an absolute path.
 $given_srcdir = find_srcdir($topsrcdir, $depth);
+$pgiven_srcdir = find_srcdir($ptopsrcdir, $depth);
 
 if ($debug) {
   warn "object_fullpath = $object_fullpath\n";
@@ -84,7 +85,7 @@ if ($debug) {
   warn "given_srcdir    = $given_srcdir\n";
 }
 
-@unhandled = update_makefiles($given_srcdir, @makefiles);
+@unhandled = update_makefiles($given_srcdir, $pgiven_srcdir, @makefiles);
 
 run_config_status(@unhandled);
 
@@ -112,6 +113,7 @@ sub parse_arguments {
   my @args = @_;
   my $depth = '';
   my $topsrcdir = '';
+  my $ptopsrcdir;
   my @makefiles = ();
 
   while (1) {
@@ -123,6 +125,10 @@ sub parse_arguments {
       $topsrcdir = $args[1];
       shift @args; 
       shift @args; 
+    } elsif ($args[0] eq '-p') {
+      $ptopsrcdir = $args[1];
+      shift @args;
+      shift @args;
     } else {
       last;
     }
@@ -131,6 +137,9 @@ sub parse_arguments {
   if ($topsrcdir eq '') {
     $topsrcdir = $0; # Figure out topsrcdir based on program name.
     $topsrcdir =~ s|/?build/autoconf/.*$||;
+  }
+  if ($ptopsrcdir eq '') {
+    $ptopsrcdir = $topsrcdir;
   }
   if ($depth eq '') {
     # Use $(DEPTH) in the Makefile or Makefile.in to determine the depth
@@ -159,7 +168,7 @@ sub parse_arguments {
   }
   @makefiles = "Makefile" unless @args;
 
-  return ($topsrcdir, $depth, @makefiles);
+  return ($topsrcdir, $ptopsrcdir, $depth, @makefiles);
 }
 
 
@@ -173,7 +182,7 @@ sub create_directories {
     push @dirs, dirname($ac_file);
   }
   # Call mkdir with the directories sorted by subdir count (how many /'s)
-  system "mkdir -p ". join(' ', @dirs) if @dirs;
+  system "mkdir -p ". join(' ', map("\"$_\"", @dirs)) if @dirs;
 }
 
 # Find the top of the source directory
@@ -199,7 +208,7 @@ sub find_srcdir {
 # Output the makefiles.
 #
 sub update_makefiles {
-  my ($ac_given_srcdir, @makefiles) = @_;
+  my ($ac_given_srcdir, $pac_given_srcdir, @makefiles) = @_;
   my @unhandled=();
 
   my $ac_file;
@@ -224,9 +233,9 @@ sub update_makefiles {
         $top_srcdir = $ac_dots;
         $top_srcdir =~ s%/$%%;
       }
-    } elsif ($ac_given_srcdir =~ m%^/% or $ac_given_srcdir =~ m%^.:/%) {
-      $srcdir     = "$ac_given_srcdir$ac_dir_suffix";
-      $top_srcdir = "$ac_given_srcdir";
+    } elsif ($pac_given_srcdir =~ m%^/% or $pac_given_srcdir =~ m%^.:/%) {
+      $srcdir     = "$pac_given_srcdir$ac_dir_suffix";
+      $top_srcdir = "$pac_given_srcdir";
     } else {
       $srcdir     = "$ac_dots$ac_given_srcdir$ac_dir_suffix";
       $top_srcdir = "$ac_dots$ac_given_srcdir";

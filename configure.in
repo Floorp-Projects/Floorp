@@ -882,7 +882,7 @@ case "$host" in
         CYGWIN_WRAPPER="${_pwd}/${srcdir}/build/cygwin-wrapper"
     fi
     if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" = 0; then
-        _AS_PERL=1
+        AS_PERL=1
         PERL="${CYGWIN_WRAPPER} $PERL"
     fi
     ;;
@@ -5980,6 +5980,7 @@ AC_SUBST(MOZ_MAPINFO)
 AC_SUBST(MOZ_BROWSE_INFO)
 AC_SUBST(MOZ_TOOLS_DIR)
 AC_SUBST(CYGWIN_WRAPPER)
+AC_SUBST(AS_PERL)
 
 dnl Disable profile at startup, hack for tinderbox.
 if test "$MOZ_BYPASS_PROFILE_AT_STARTUP"; then
@@ -6318,7 +6319,7 @@ dnl This does not change the $MAKEFILES variable.
 dnl
 dnl OpenVMS gets a line overflow on the long eval command, so use a temp file.
 dnl
-if test -z "${_AS_PERL}"; then
+if test -z "${AS_PERL}"; then
 echo $MAKEFILES | ${PERL} $srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
 else
 echo $MAKEFILES | ${PERL} $srcdir/build/autoconf/acoutput-fast.pl -nowrap --cygwin-srcdir=$srcdir > conftest.sh

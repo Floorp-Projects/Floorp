@@ -1212,15 +1212,22 @@ endif
 ###############################################################################
 # Update Makefiles
 ###############################################################################
+
+# In GNU make 3.80, makefiles must use the /cygdrive syntax, even if we're
+# processing them with AS perl. See bug 232003
+ifdef AS_PERL
+CYGWIN_TOPSRCDIR = -nowrap -p $(topsrcdir) -wrap
+endif
+
 # Note: Passing depth to make-makefile is optional.
 #       It saves the script some work, though.
 Makefile: Makefile.in
-	@$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) 
+	@$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) $(CYGWIN_TOPSRCDIR)
 
 ifdef SUBMAKEFILES
 # VPATH does not work on some machines in this case, so add $(srcdir)
 $(SUBMAKEFILES): % : $(srcdir)/%.in
-	$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) $@
+	$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) $(CYGWIN_TOPSRCDIR) $@
 endif
 
 ifdef AUTOUPDATE_CONFIGURE
