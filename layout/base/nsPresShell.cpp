@@ -913,7 +913,7 @@ PresShell::EndObservingDocument()
   if (mSelection){
     nsCOMPtr<nsIDOMSelection> domselection;
     nsresult result;
-    domselection = do_QueryInterface(mSelection , &result);
+    result = mSelection->GetSelection(SELECTION_NORMAL, getter_AddRefs(domselection));
     if (NS_FAILED(result))
       return result;
     if (!domselection)
