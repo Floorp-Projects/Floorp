@@ -30,7 +30,7 @@ MODULE		= transformiix
 LIBRARY_NAME	= transformiix
 EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= t8iix
-REQUIRES	= xpcom string dom layout widget webbrwsr xsl_doc necko
+REQUIRES	= xpcom string dom layout widget xsl_doc necko
 IS_COMPONENT	= 1
 MODULE_NAME	= TransformiixModule
 
