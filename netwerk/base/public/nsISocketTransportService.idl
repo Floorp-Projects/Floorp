@@ -29,15 +29,26 @@ interface nsISocketTransportService : nsISupports
      * The eventSinkGetter is used to get the appropriate callbacks
      * for the socket activity from the application. These include
      * the progress and the status messages like "Contacting host.."
-     * etc.
+     * etc. The printHost contains the actual hostname (and not the 
+     * proxy) for displaying in status messages. 
      */
     nsIChannel createTransport(in string host,
                                in long port,
-                               in nsIEventSinkGetter eventSinkGetter);
+                               in nsIEventSinkGetter eventSinkGetter,
+                               in string printHost);
     nsIChannel createTransportOfType(in string socketType,
                                in string host, 
                                in long port,
-                               in nsIEventSinkGetter eventSinkGetter);
+                               in nsIEventSinkGetter eventSinkGetter,
+                               in string printHost);
+
+    /**
+     * Returns true if the specified transport is good enough for 
+     * being used again. The situations in which this may return false
+     * include- an error including server resets, an explicit 
+     * Connection: close header (for HTTP) and timeouts! 
+     */
+    boolean reuseTransport(in nsIChannel i_Transport);
 
     void shutdown();
 };

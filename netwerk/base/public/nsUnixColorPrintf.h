@@ -44,7 +44,7 @@
 
 /* 
     The nsUnixColorPrintf is a handy set of color term codes to change
-    the color of console texts for easiar spotting. As of now this is 
+    the color of console texts for easier spotting. As of now this is 
     Unix and Debug only. 
 
     Usage is simple. 
