@@ -145,11 +145,9 @@ nsMsgSearchAdapter::GetImapCharsetParam(const PRUnichar *destCharset)
 {
 	char *result = nsnull;
 
-  nsCAutoString charset;
-  charset.AssignWithConversion(destCharset);
 	// Specify a character set unless we happen to be US-ASCII.
-  if (nsCRT::strcmp(destCharset, "us-ascii"))
-	    result = PR_smprintf("%s%s", nsMsgSearchAdapter::m_kImapCharset, (const char *) charset);
+  if (nsCRT::strcmp(destCharset, NS_LITERAL_STRING("us-ascii").get()))
+	    result = PR_smprintf("%s%S", nsMsgSearchAdapter::m_kImapCharset, destCharset);
 
 	return result;
 }

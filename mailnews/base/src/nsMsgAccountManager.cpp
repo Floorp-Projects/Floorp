@@ -61,7 +61,7 @@
 #include "nsIImapIncomingServer.h" 
 #include "nsIImapUrl.h"
 
-#if defined(DEBUG_alecf_) || defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
+#if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_ACCOUNTMANAGER 1
 #endif
 
@@ -994,9 +994,9 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
              {  
                rv = aEnumerator->CurrentItem(getter_AddRefs(aSupport));
                nsCOMPtr<nsIMsgFolder>inboxFolder = do_QueryInterface(aSupport);
-               PRUnichar *folderName = nsnull;
-               inboxFolder->GetName(&folderName);
-               if (folderName && nsCRT::strcasecmp(folderName, "INBOX") ==0)
+               nsXPIDLString folderName;
+               inboxFolder->GetName(getter_Copies(folderName));
+               if (folderName && nsCRT::strcasecmp(folderName, NS_LITERAL_STRING("INBOX").get()) ==0)
                {
                  rv1 = inboxFolder->Compact(urlListener, nsnull /* msgwindow */);
                  if (NS_SUCCEEDED(rv1))

@@ -105,7 +105,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                      const PRUnichar* nameArray[], 
                      const PRUnichar* valueArray[])
 {
-    if(0 != nsCRT::strcasecmp(aTag, "META")) 
+    if(0 != nsCRT::strcasecmp(aTag, NS_LITERAL_STRING("META").get())) 
         return NS_ERROR_ILLEGAL_VALUE;
     else
         return Notify(aDocumentID, numOfAttributes, nameArray, valueArray);
@@ -145,7 +145,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                      const PRUnichar* aTag, 
                      const nsStringArray* keys, const nsStringArray* values)
 {
-    if(0 != nsCRT::strcasecmp(aTag, "META")) 
+    if(0 != nsCRT::strcasecmp(aTag, NS_LITERAL_STRING("META").get())) 
         return NS_ERROR_ILLEGAL_VALUE;
     else
         return Notify(aDocumentID, keys, values);
@@ -210,11 +210,11 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
         while(IS_SPACE_CHARS(*keyStr)) 
           keyStr++;
 
-        if(0 == nsCRT::strncasecmp(keyStr, "HTTP-EQUIV", 10))
+        if(0 == nsCRT::strncasecmp(keyStr, NS_LITERAL_STRING("HTTP-EQUIV").get(), 10))
               httpEquivValue=((values->StringAt(i))->get());
-        else if(0 == nsCRT::strncasecmp(keyStr, "content", 7))
+        else if(0 == nsCRT::strncasecmp(keyStr, NS_LITERAL_STRING("content").get(), 7))
               contentValue=(values->StringAt(i))->get();
-        else if (0 == nsCRT::strncasecmp(keyStr, "charset", 7))
+        else if (0 == nsCRT::strncasecmp(keyStr, NS_LITERAL_STRING("charset").get(), 7))
               charsetValue =(values->StringAt(i))->get();
       }
       NS_NAMED_LITERAL_STRING(contenttype, "Content-Type");
@@ -331,7 +331,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
     // e.g. <META charset="ISO-8859-1">
     PRInt32 numOfAttributes = keys->Count();
     if ((numOfAttributes >= 3) &&
-        (0 == nsCRT::strcasecmp((keys->StringAt(0))->get(), "charset")))
+        (0 == nsCRT::strcasecmp((keys->StringAt(0))->get(), NS_LITERAL_STRING("charset").get())))
     {
       nsAutoString srcStr((values->StringAt(numOfAttributes-2))->get());
       PRInt32 err;

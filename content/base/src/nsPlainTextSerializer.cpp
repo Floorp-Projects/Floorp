@@ -1082,7 +1082,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
          (
           '>' == aLineFragment[0] ||
           ' ' == aLineFragment[0] ||
-          !nsCRT::strncmp(aLineFragment, "From ", 5)
+          !nsCRT::strncmp(aLineFragment, NS_LITERAL_STRING("From ").get(), 5)
           )
          && mCiteQuoteLevel == 0  // We space-stuff quoted lines anyway
          )

@@ -433,7 +433,7 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=filtersite",     &kNC_SearchCommand_FilterSite);
 		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=clearfilters",   &kNC_SearchCommand_ClearFilters);
 
-		gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").get(), &kTrueLiteral);
+		gRDFService->GetLiteral(NS_LITERAL_STRING("true").get(), &kTrueLiteral);
 
 		rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), getter_AddRefs(prefs));
 		if (NS_SUCCEEDED(rv) && (prefs))
@@ -761,7 +761,8 @@ InternetSearchDataSource::isSearchCategoryEngineBasenameURI(nsIRDFNode *r)
 		{
 			const	PRUnichar	*uriUni = nsnull;
 			aLit->GetValueConst(&uriUni);
-			if ((uriUni) && (!nsCRT::strncmp(uriUni, kURINC_SearchCategoryEngineBasenamePrefix,
+			if ((uriUni) && (!nsCRT::strncmp(uriUni,
+							 NS_ConvertASCIItoUCS2(kURINC_SearchCategoryEngineBasenamePrefix).get(),
 				(int)sizeof(kURINC_SearchCategoryEngineBasenamePrefix) - 1)))
 			{
 				isSearchCategoryEngineBasenameURIFlag = PR_TRUE;
@@ -3342,7 +3343,7 @@ InternetSearchDataSource::MapEncoding(const nsString &numericEncoding, nsString 
 	};
 
 	// make "ISO-8859-1" as the default (not "UTF-8")
-	stringEncoding= NS_ConvertASCIItoUCS2("ISO-8859-1");
+	stringEncoding = NS_LITERAL_STRING("ISO-8859-1");
 
 	PRUint32	loop = 0;
 	while (encodingList[loop].numericEncoding != nsnull)

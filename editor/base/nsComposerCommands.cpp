@@ -94,7 +94,7 @@ nsBaseComposerCommand::GetCommandNodeState(const nsAReadableString & aCommandNam
   GetInterfaceNode(aCommandName, editorShell, getter_AddRefs(uiNode));
   if (!uiNode) return NS_ERROR_FAILURE;
 
-  return uiNode->GetAttribute(NS_ConvertASCIItoUCS2("state"), outNodeState);
+  return uiNode->GetAttribute(NS_LITERAL_STRING("state"), outNodeState);
 }
 
 
@@ -107,7 +107,7 @@ nsBaseComposerCommand::SetCommandNodeState(const nsAReadableString & aCommandNam
   GetInterfaceNode(aCommandName, editorShell, getter_AddRefs(uiNode));
   if (!uiNode) return NS_ERROR_FAILURE;
   
-  return uiNode->SetAttribute(NS_ConvertASCIItoUCS2("state"), inNodeState);
+  return uiNode->SetAttribute(NS_LITERAL_STRING("state"), inNodeState);
 }
 
 //--------------------------------------------------------------------------------------------------------------------
@@ -389,7 +389,7 @@ nsListCommand::GetCurrentState(nsIEditorShell *aEditorShell, const char* aTagNam
   if (NS_FAILED(rv)) return rv;
 
   // Need to use mTagName????
-  outInList = (0 == nsCRT::strcmp(tagStr, mTagName));
+  outInList = (0 == nsCRT::strcmp(tagStr, NS_ConvertASCIItoUCS2(mTagName).get()));
 
   if (tagStr) nsCRT::free(tagStr);
 
@@ -434,7 +434,7 @@ nsListItemCommand::GetCurrentState(nsIEditorShell *aEditorShell, const char* aTa
   nsresult rv = aEditorShell->GetListItemState(&bMixed, &tagStr);
   if (NS_FAILED(rv)) return rv;
 
-  outInList = (0 == nsCRT::strcmp(tagStr, mTagName));
+  outInList = (0 == nsCRT::strcmp(tagStr, NS_ConvertASCIItoUCS2(mTagName).get()));
 
   if (tagStr) nsCRT::free(tagStr);
 
@@ -969,14 +969,14 @@ nsRemoveStylesCommand::DoCommand(const nsAReadableString & aCommandName, nsISupp
   nsresult rv = NS_OK;
   if (editorShell)
   {
-    rv = editorShell->RemoveTextProperty(NS_ConvertASCIItoUCS2("all").get(), NS_ConvertASCIItoUCS2("").get());
+    rv = editorShell->RemoveTextProperty(NS_LITERAL_STRING("all").get(), NS_LITERAL_STRING("").get());
     if (NS_FAILED(rv)) return rv;
     
     // now get all the style buttons to update
     nsCOMPtr<nsIDOMWindowInternal> contentWindow;
     editorShell->GetContentWindow(getter_AddRefs(contentWindow));
     if (contentWindow)
-      contentWindow->UpdateCommands(NS_ConvertASCIItoUCS2("style"));
+      contentWindow->UpdateCommands(NS_LITERAL_STRING("style"));
   }
   
   return rv;  
