@@ -541,12 +541,12 @@ gc_mark(JSRuntime *rt, void *thing)
                         JSAtom *atom = sym_atom(sprop->symbols);
                         const char *id = (atom && ATOM_IS_STRING(atom))
                                        ? JS_GetStringBytes(ATOM_TO_STRING(atom))
-                                       : "unknown",
+                                       : "unknown";
 #endif
 
                         if (sprop->attrs & JSPROP_GETTER) {
 #ifdef GC_MARK_DEBUG
-                            PR_snprintf(buf, sizeof buf, "%s %s",
+                            JS_snprintf(buf, sizeof buf, "%s %s",
                                         id, js_getter_str);
 #endif
                             GC_MARK(rt,
@@ -557,7 +557,7 @@ gc_mark(JSRuntime *rt, void *thing)
                         }
                         if (sprop->attrs & JSPROP_SETTER) {
 #ifdef GC_MARK_DEBUG
-                            PR_snprintf(buf, sizeof buf, "%s %s",
+                            JS_snprintf(buf, sizeof buf, "%s %s",
                                         id, js_setter_str);
 #endif
                             GC_MARK(rt,

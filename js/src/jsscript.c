@@ -327,60 +327,87 @@ XDRAtomMap(JSXDRState *xdr, JSAtomMap *map)
 }
 
 JSBool
-js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *magic)
+js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
 {
-    JSScript *script = *scriptp;
-    uint32 length, lineno, depth, magicval, notelen, numtrys = 0;
+    JSScript *script;
+    uint32 length, lineno, depth, magic, notelen, numtrys;
+    uint32 prologLength, version;
 
+    script = *scriptp;
+    numtrys = 0;
+
+    /*
+     * Encode prologLength and version after script->length (_2), but decode
+     * both new (_2) and old, prolog&version-free (_1) scripts.
+     */
     if (xdr->mode == JSXDR_ENCODE)
-	magicval = SCRIPT_XDRMAGIC;
-    if (!JS_XDRUint32(xdr, &magicval))
-	return JS_FALSE;
-    if (magicval != SCRIPT_XDRMAGIC) {
-	*magic = JS_FALSE;
-	return JS_TRUE;
+        magic = JSXDR_MAGIC_SCRIPT_CURRENT;
+    if (!JS_XDRUint32(xdr, &magic))
+        return JS_FALSE;
+    if (magic != JSXDR_MAGIC_SCRIPT_2 && magic != JSXDR_MAGIC_SCRIPT_1) {
+        *hasMagic = JS_FALSE;
+        return JS_TRUE;
     }
-    *magic = JS_TRUE;
+    *hasMagic = JS_TRUE;
+
     if (xdr->mode == JSXDR_ENCODE) {
         jssrcnote *end = script->notes;
-	length = script->length;
-	lineno = (uint32)script->lineno;
-	depth = (uint32)script->depth;
-        /* count the trynotes */
+        length = script->length;
+        prologLength = script->main - script->code;
+        version = (int32) script->version;
+        lineno = (uint32)script->lineno;
+        depth = (uint32)script->depth;
+
+        /* Count the trynotes. */
         if (script->trynotes) {
             for (; script->trynotes[numtrys].catchStart; numtrys++)
-                ;               /* count the trynotes */
+                continue;
             numtrys++;          /* room for the end marker */
         }
-        /* count the src notes */
+
+        /* Count the src notes. */
         while (!SN_IS_TERMINATOR(end))
             end = SN_NEXT(end);
         notelen = end - script->notes;
     }
+
     if (!JS_XDRUint32(xdr, &length))
-	return JS_FALSE;
-    if (xdr->mode == JSXDR_DECODE) {
-	script = js_NewScript(xdr->cx, length);
-	if (!script)
-	    return JS_FALSE;
-	*scriptp = script;
+        return JS_FALSE;
+    if (magic == JSXDR_MAGIC_SCRIPT_2) {
+        if (!JS_XDRUint32(xdr, &prologLength))
+            return JS_FALSE;
+        if (!JS_XDRUint32(xdr, (uint32 *) &version))
+            return JS_FALSE;
     }
+
+    if (xdr->mode == JSXDR_DECODE) {
+        script = js_NewScript(xdr->cx, length);
+        if (!script)
+            return JS_FALSE;
+        if (magic == JSXDR_MAGIC_SCRIPT_2) {
+            script->main += prologLength;
+            script->version = (JSVersion) version;
+        }
+        *scriptp = script;
+    }
+
     if (!JS_XDRBytes(xdr, (char **)&script->code, length) ||
-	!XDRAtomMap(xdr, &script->atomMap) ||
+        !XDRAtomMap(xdr, &script->atomMap) ||
         !JS_XDRUint32(xdr, &notelen) ||
         /* malloc on decode only */
         (!(xdr->mode == JSXDR_ENCODE ||
            (script->notes = JS_malloc(xdr->cx, notelen)) != NULL)) ||
         !JS_XDRBytes(xdr, (char **)&script->notes, notelen) ||
-	!JS_XDRCStringOrNull(xdr, (char **)&script->filename) ||
-	!JS_XDRUint32(xdr, &lineno) ||
-	!JS_XDRUint32(xdr, &depth) ||
+        !JS_XDRCStringOrNull(xdr, (char **)&script->filename) ||
+        !JS_XDRUint32(xdr, &lineno) ||
+        !JS_XDRUint32(xdr, &depth) ||
         !JS_XDRUint32(xdr, &numtrys)) {
         goto error;
     }
+
     if (xdr->mode == JSXDR_DECODE) {
-	script->lineno = (uintN)lineno;
-	script->depth = (uintN)depth;
+        script->lineno = (uintN)lineno;
+        script->depth = (uintN)depth;
         if (numtrys) {
             script->trynotes = JS_malloc(xdr->cx,
                                          sizeof(JSTryNote) * (numtrys + 1));
@@ -394,11 +421,13 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *magic)
         JSTryNote *tn = &script->trynotes[numtrys - 1];
         if (!JS_XDRUint32(xdr, (uint32*)&tn->start) ||
             !JS_XDRUint32(xdr, (uint32*)&tn->length) ||
-            !JS_XDRUint32(xdr, (uint32*)&tn->catchStart))
+            !JS_XDRUint32(xdr, (uint32*)&tn->catchStart)) {
             goto error;
+        }
     }
     return JS_TRUE;
- error:
+
+  error:
     if (xdr->mode == JSXDR_DECODE) {
         js_DestroyScript(xdr->cx, script);
         *scriptp = NULL;
@@ -412,7 +441,7 @@ script_freeze(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
     JSXDRState *xdr;
     JSScript *script;
-    JSBool ok, magic;
+    JSBool ok, hasMagic;
     uint32 len;
     void *buf;
     JSString *str;
@@ -429,10 +458,10 @@ script_freeze(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	return JS_FALSE;
 
     /* write  */
-    ok = js_XDRScript(xdr, &script, &magic);
+    ok = js_XDRScript(xdr, &script, &hasMagic);
     if (!ok)
 	goto out;
-    if (!magic) {
+    if (!hasMagic) {
 	*rval = JSVAL_VOID;
 	goto out;
     }
@@ -478,7 +507,7 @@ script_thaw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     void *buf;
     uint32 len;
     JSScript *script, *oldscript;
-    JSBool ok, magic;
+    JSBool ok, hasMagic;
 
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
 	return JS_FALSE;
@@ -515,10 +544,10 @@ script_thaw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JS_XDRMemSetData(xdr, buf, len);
 
     /* XXXbe should magic mismatch be error, or false return value? */
-    ok = js_XDRScript(xdr, &script, &magic);
+    ok = js_XDRScript(xdr, &script, &hasMagic);
     if (!ok)
 	goto out;
-    if (!magic) {
+    if (!hasMagic) {
 	*rval = JSVAL_FALSE;
 	goto out;
     }
@@ -585,7 +614,7 @@ script_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return script_exec(cx, JSVAL_TO_OBJECT(argv[-2]), argc, argv, rval);
 }
 
-JSClass js_ScriptClass = {
+JS_FRIEND_DATA(JSClass) js_ScriptClass = {
     "Script",
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
@@ -652,23 +681,27 @@ js_NewScript(JSContext *cx, uint32 length)
     if (!script)
 	return NULL;
     memset(script, 0, sizeof(JSScript));
-    script->code = (jsbytecode *)(script + 1);
+    script->code = script->main = (jsbytecode *)(script + 1);
     script->length = length;
+    script->version = cx->version;
     return script;
 }
 
 JSScript *
 js_NewScriptFromParams(JSContext *cx, jsbytecode *code, uint32 length,
+		       jsbytecode *prolog, uint32 prologLength,
 		       const char *filename, uintN lineno, uintN depth,
 		       jssrcnote *notes, JSTryNote *trynotes,
 		       JSPrincipals *principals)
 {
     JSScript *script;
 
-    script = js_NewScript(cx, length);
+    script = js_NewScript(cx, prologLength + length);
     if (!script)
 	return NULL;
-    memcpy(script->code, code, length * sizeof(jsbytecode));
+    script->main += prologLength;
+    memcpy(script->code, prolog, prologLength * sizeof(jsbytecode));
+    memcpy(script->main, code, length * sizeof(jsbytecode));
     if (filename) {
 	script->filename = JS_strdup(cx, filename);
 	if (!script->filename) {
@@ -698,7 +731,8 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
     if (!js_FinishTakingTryNotes(cx, cg, &trynotes))
 	return NULL;
     notes = js_FinishTakingSrcNotes(cx, cg);
-    script = js_NewScriptFromParams(cx, cg->base, CG_OFFSET(cg),
+    script = js_NewScriptFromParams(cx, CG_BASE(cg), CG_OFFSET(cg),
+                                    CG_PROLOG_BASE(cg), CG_PROLOG_OFFSET(cg),
 				    cg->filename, cg->firstLine,
 				    cg->maxStackDepth, notes, trynotes,
 				    cg->principals);
@@ -749,7 +783,7 @@ js_GetSrcNote(JSScript *script, jsbytecode *pc)
     sn = script->notes;
     if (!sn)
 	return NULL;
-    target = PTRDIFF(pc, script->code, jsbytecode);
+    target = PTRDIFF(pc, script->main, jsbytecode);
     if ((uintN)target >= script->length)
 	return NULL;
     for (offset = 0; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
@@ -771,7 +805,7 @@ js_PCToLineNumber(JSScript *script, jsbytecode *pc)
     sn = script->notes;
     if (!sn)
 	return 0;
-    target = PTRDIFF(pc, script->code, jsbytecode);
+    target = PTRDIFF(pc, script->main, jsbytecode);
     lineno = script->lineno;
     for (offset = 0; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
 	offset += SN_DELTA(sn);
@@ -812,7 +846,7 @@ js_LineNumberToPC(JSScript *script, uintN target)
 	    lineno++;
 	}
     }
-    return script->code + offset;
+    return script->main + offset;
 }
 
 uintN

@@ -165,10 +165,8 @@ JS_FindClassById(JSXDRState *xdr, uint32 id);
 
 /* Magic values */
 
-#define OBJ_XDRMAGIC            0xdead1000
-#define OBJ_XDRTYPE_OBJ         0xdead1001
-#define OBJ_XDRTYPE_FUN         0xdead1002
-#define OBJ_XDRTYPE_REGEXP      0xdead1003
-#define SCRIPT_XDRMAGIC         0xdead0001
+#define JSXDR_MAGIC_SCRIPT_1        0xdead0001
+#define JSXDR_MAGIC_SCRIPT_2        0xdead0002
+#define JSXDR_MAGIC_SCRIPT_CURRENT  JSXDR_MAGIC_SCRIPT_2
 
 #endif /* ! jsxdrapi_h___ */

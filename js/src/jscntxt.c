@@ -60,6 +60,7 @@ JSContext *
 js_NewContext(JSRuntime *rt, size_t stacksize)
 {
     JSContext *cx;
+    JSBool ok, first;
 
     cx = malloc(sizeof *cx);
     if (!cx)
@@ -70,22 +71,47 @@ js_NewContext(JSRuntime *rt, size_t stacksize)
 #ifdef JS_THREADSAFE
     js_InitContextForLocking(cx);
 #endif
-    if (rt->contextList.next == (JSCList *)&rt->contextList) {
+
+    JS_LOCK_RUNTIME(rt);
+    for (;;) {
+	first = (rt->contextList.next == (JSCList *)&rt->contextList);
+	if (rt->state == JSRTS_UP) {
+	    JS_ASSERT(!first);
+	    break;
+	}
+	if (rt->state == JSRTS_DOWN) {
+	    JS_ASSERT(first);
+	    rt->state = JSRTS_LAUNCHING;
+	    break;
+	}
+	JS_WAIT_CONDVAR(rt->stateChange, JS_NO_TIMEOUT);
+    }
+    JS_APPEND_LINK(&cx->links, &rt->contextList);
+    JS_UNLOCK_RUNTIME(rt);
+
+    if (first) {
 	/* First context on this runtime: initialize atoms and keywords. */
-	if (!js_InitAtomState(cx, &rt->atomState) ||
-	    !js_InitScanner(cx)) {
+	ok = js_InitAtomState(cx, &rt->atomState);
+	if (ok)
+	    ok = js_InitScanner(cx);
+
+	JS_LOCK_RUNTIME(rt);
+	rt->state = JSRTS_UP;
+	JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
+	JS_UNLOCK_RUNTIME(rt);
+
+	if (!ok) {
 	    free(cx);
 	    return NULL;
 	}
     }
-    /* Atomicly append cx to rt's context list. */
-    JS_LOCK_RUNTIME_VOID(rt, JS_APPEND_LINK(&cx->links, &rt->contextList));
 
     cx->version = JSVERSION_DEFAULT;
     cx->jsop_eq = JSOP_EQ;
     cx->jsop_ne = JSOP_NE;
     JS_InitArenaPool(&cx->stackPool, "stack", stacksize, sizeof(jsval));
     JS_InitArenaPool(&cx->codePool, "code", 1024, sizeof(jsbytecode));
+    JS_InitArenaPool(&cx->notePool, "note", 256, sizeof(jssrcnote));
     JS_InitArenaPool(&cx->tempPool, "temp", 1024, sizeof(jsdouble));
 
 #if JS_HAS_REGEXPS
@@ -105,17 +131,20 @@ void
 js_DestroyContext(JSContext *cx, JSGCMode gcmode)
 {
     JSRuntime *rt;
-    JSBool rtempty;
+    JSBool last;
 
     rt = cx->runtime;
 
     /* Remove cx from context list first. */
     JS_LOCK_RUNTIME(rt);
+    JS_ASSERT(rt->state == JSRTS_UP);
     JS_REMOVE_LINK(&cx->links);
-    rtempty = (rt->contextList.next == (JSCList *)&rt->contextList);
+    last = (rt->contextList.next == (JSCList *)&rt->contextList);
+    if (last)
+    	rt->state = JSRTS_LANDING;
     JS_UNLOCK_RUNTIME(rt);
 
-    if (rtempty) {
+    if (last) {
 	/* Unpin all pinned atoms before final GC. */
 	js_UnpinPinnedAtoms(&rt->atomState);
 
@@ -150,7 +179,7 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
     else if (gcmode == JS_MAYBE_GC)
         JS_MaybeGC(cx);
 
-    if (rtempty) {
+    if (last) {
         if (gcmode == JS_NO_GC)
             js_ForceGC(cx);
 
@@ -161,6 +190,7 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
     /* Free the stuff hanging off of cx. */
     JS_FinishArenaPool(&cx->stackPool);
     JS_FinishArenaPool(&cx->codePool);
+    JS_FinishArenaPool(&cx->notePool);
     JS_FinishArenaPool(&cx->tempPool);
     if (cx->lastMessage)
 	free(cx->lastMessage);
@@ -171,6 +201,13 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
         JS_EndRequest(cx);
 #endif
     free(cx);
+
+    if (last) {
+	JS_LOCK_RUNTIME(rt);
+    	rt->state = JSRTS_DOWN;
+	JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
+	JS_UNLOCK_RUNTIME(rt);
+    }
 }
 
 JSContext *
@@ -361,8 +398,8 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 
 void
 js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
-			void *userRef, const uintN errorNumber,
-                        JSBool charArgs, va_list ap)
+                       void *userRef, const uintN errorNumber,
+                       JSBool charArgs, va_list ap)
 {
     JSStackFrame *fp;
     JSErrorReport report;

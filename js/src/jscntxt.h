@@ -53,7 +53,16 @@ JS_BEGIN_EXTERN_C
 
 typedef enum JSGCMode { JS_NO_GC, JS_MAYBE_GC, JS_FORCE_GC } JSGCMode;
 
+typedef enum JSRuntimeState {
+    JSRTS_DOWN,
+    JSRTS_LAUNCHING,
+    JSRTS_UP,
+    JSRTS_LANDING
+} JSRuntimeState;
+
 struct JSRuntime {
+    JSRuntimeState      state;
+
     /* Garbage collector state, used by jsgc.c. */
     JSArenaPool         gcArenaPool;
     JSArenaPool         gcFlagsPool;
@@ -132,7 +141,13 @@ struct JSRuntime {
     uint32              requestCount;
 
     /* Lock and owning thread pointer for JS_LOCK_RUNTIME. */
-    JSThinLock          rtLock;
+    PRLock              *rtLock;
+#ifdef DEBUG
+    jsword              rtLockOwner;
+#endif
+
+    /* Used to synchronize down/up state change; uses rtLock. */
+    PRCondVar           *stateChange;
 #endif
 };
 
@@ -173,6 +188,7 @@ struct JSContext {
 
     /* Temporary arena pools used while compiling and decompiling. */
     JSArenaPool         codePool;
+    JSArenaPool         notePool;
     JSArenaPool         tempPool;
 
     /* Top-level object and pointer to top stack frame's scope chain. */
@@ -214,7 +230,12 @@ struct JSContext {
     /* Exception state (NB: throwing is packed with gcActive above). */
     JSPackedBool        throwing;           /* is there a pending exception? */
     jsval               exception;          /* most-recently-thrown exceptin */
+
+    uint32              options;            /* see jsapi.h for JSOPTION_* */
 };
+
+/* Slightly more readable macros, also to hide bitset implementation detail. */
+#define JS_HAS_STRICT_OPTION(cx)    ((cx)->options & JSOPTION_STRICT)
 
 extern JSContext *
 js_NewContext(JSRuntime *rt, size_t stacksize);

@@ -171,13 +171,12 @@ struct JSTokenStream {
 #define CURRENT_TOKEN(ts) ((ts)->tokens[(ts)->cursor])
 
 /* JSTokenStream flags */
-#define TSF_ERROR       0x01            /* fatal error while scanning */
+#define TSF_ERROR       0x01            /* fatal error while compiling */
 #define TSF_EOF         0x02            /* hit end of file */
 #define TSF_NEWLINES    0x04            /* tokenize newlines */
 #define TSF_REGEXP      0x08            /* looking for a regular expression */
 #define TSF_NLFLAG      0x20            /* last linebuf ended with \n */
 #define TSF_CRFLAG      0x40            /* linebuf would have ended with \r */
-#define TSF_BADCOMPILE  0x80            /* compile failed, stop throwing exns */
 
 /*
  * Create a new token stream, either from an input buffer or from a file.
@@ -212,17 +211,6 @@ js_InitScanner(JSContext *cx);
  */
 extern JS_FRIEND_API(void)
 js_MapKeywords(void (*mapfun)(const char *));
-
-/*
- * Report an error found while scanning ts to a window or other output device
- * associated with cx.
- */
-#if 0
-/* XXX js_ReportCompileError is unused */
-extern void
-js_ReportCompileError(JSContext *cx, JSTokenStream *ts, uintN flags,
-		      const char *format, ...);
-#endif
 
 void
 js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,

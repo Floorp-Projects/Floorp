@@ -1417,6 +1417,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jschar *collected_args, *cp;
     size_t args_length;
     JSTokenType tt;
+    jsid oldArgId;
     JSBool ok;
 
     if (cx->fp && !cx->fp->constructing) {
@@ -1540,20 +1541,22 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 		    goto bad_formal;
 		}
 		if (sprop && obj2 == obj) {
-#ifdef CHECK_ARGUMENT_HIDING
-		    JS_ASSERT(SPROP_GETTER(sprop, obj) == js_GetArgument);
-		    OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
-		    JS_ReportErrorNumber(cx, JSREPORT_WARNING,
-					 JSMSG_SAME_FORMAL, ATOM_BYTES(atom));
-		    goto bad_formal;
-#else
+                    if (JS_HAS_STRICT_OPTION(cx)) {
+                        JS_ASSERT(SPROP_GETTER(sprop, obj) == js_GetArgument);
+                        OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
+                        js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
+                                                    JSMSG_DUPLICATE_FORMAL,
+                                                    ATOM_BYTES(atom));
+                        goto bad_formal;
+                    }
+
 		    /*
 		     * A duplicate parameter name. We create a dummy symbol
 		     * entry with property id of the parameter number and set
 		     * the id to the name of the parameter.  See jsopcode.c:
 		     * the decompiler knows to treat this case specially.
 		     */
-		    jsid oldArgId = (jsid) sprop->id;
+		    oldArgId = (jsid) sprop->id;
 		    OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
 		    sprop = NULL;
 		    if (!js_DefineProperty(cx, obj, oldArgId, JSVAL_VOID,
@@ -1563,7 +1566,6 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 			goto bad_formal;
 		    }
 		    sprop->id = (jsid) atom;
-#endif
 		}
 		if (sprop)
 		    OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
