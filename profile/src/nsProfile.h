@@ -64,5 +64,7 @@ public:
 	nsresult AutoMigrate();
 
 	nsresult CreateDefaultProfile(void);
+	nsresult TriggerActivation(char *profileName);
+	nsresult CleanUp();
 };
 

@@ -57,6 +57,7 @@
 #include "nsIBookmarksService.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
+#include "nsICookieService.h"
 
 #if defined (XP_UNIX)
 #elif defined (XP_MAC)
@@ -89,6 +90,7 @@
 
 // Use PregUrlPref to extract the activation url
 #define PREG_URL_PREF "browser.registration.url"
+#define ACTIVATION_SERVER_URL "browser.registration.domain"
 
 #define PROFILE_SELECTION_URL "chrome://profile/content/profileSelection.xul"
 #define PROFILE_SELECTION_CMD_LINE_ARG "-SelectProfile"
@@ -112,6 +114,8 @@
 // destructor at the right time (count == 0)
 static nsProfileAccess*	gProfileDataAccess = nsnull;
 static PRInt32			gDataAccessInstCount = 0;
+static PRBool           mCurrentProfileAvailable = PR_FALSE;
+static nsFileSpec       mRedundantDirectory;
 
 // IID and CIDs of all the services needed
 static NS_DEFINE_CID(kIProfileIID, NS_IPROFILE_IID);
@@ -125,6 +129,7 @@ static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kPrefMigrationCID, NS_PREFMIGRATION_CID);
+static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
 static
 nsresult GetStringFromSpec(nsFileSpec inSpec, char **string)
@@ -169,6 +174,7 @@ nsProfile::~nsProfile()
 	printf("~nsProfile \n");
 #endif
 
+    CleanUp();
 	gProfileDataAccess->UpdateRegistry();
 	
 	gDataAccessInstCount--;
@@ -240,7 +246,6 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
     nsresult rv;
     nsCOMPtr<nsIURI> profileURL;
     PRInt32 numProfiles=0;
-	PRBool pregURLLoaded = PR_FALSE;
   
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -254,30 +259,8 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
     if (NS_FAILED(rv))
         return rv;
 
-    char *isPregInfoSet = nsnull;
-    IsPregCookieSet(&isPregInfoSet); 
-		
-    PRBool pregPref = PR_FALSE;
-
-    rv = prefs->GetBoolPref(PREG_PREF, &pregPref);
-    //if (NS_FAILED(rv)) return rv;
-
-	nsXPIDLCString pregURL;
-	rv = prefs->CopyCharPref(PREG_URL_PREF, getter_Copies(pregURL));
-
-    // Check if the javascript is enabled....
-    PRBool javascriptEnabled = PR_TRUE;
-    rv = prefs->GetBoolPref(JAVASCRIPT_PREF, &javascriptEnabled);
-
-    // Check if cookies are accepted....
-    PRInt32 acceptCookies = 0;
-    rv = prefs->GetIntPref(COOKIES_PREF, &acceptCookies);
-
-    // Set the boolean based on javascript and cookies prefs 
-    PRBool requiredPrefsEnabled = PR_TRUE;
-
-    if ((!(javascriptEnabled)) || (acceptCookies == NEVER_ACCEPT_COOKIES))
-        requiredPrefsEnabled = PR_FALSE;
+    PRBool pregEnabled = PR_FALSE;
+    rv = prefs->GetBoolPref(PREG_PREF, &pregEnabled);
 
     if (profileURLStr.Length() == 0)
     {
@@ -286,13 +269,17 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
         // are no profiles yet, or if there is more than one.
         if (numProfiles == 0)
         {
-            if (pregPref && requiredPrefsEnabled)
+            if (pregEnabled)
 			{
 				rv = CreateDefaultProfile();
 				if (NS_FAILED(rv)) return rv;
                 
 			    GetProfileCount(&numProfiles);
-				profileURLStr = pregURL;
+				profileURLStr = "";
+
+                mCurrentProfileAvailable = PR_TRUE;
+                // Need to load new profile prefs.
+                rv = LoadNewProfilePrefs();
 			}
             else
                 profileURLStr = PROFILE_WIZARD_URL;
@@ -301,18 +288,8 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
             profileURLStr = PROFILE_SELECTION_URL;
     }
 
-    // Provide Preg information
-    if (pregPref && (PL_strcmp(isPregInfoSet, REGISTRY_YES_STRING) != 0) && requiredPrefsEnabled)
-	{
-        if (profileURLStr.Length() == 0)
-			profileURLStr = pregURL;
-	}
-
     if (profileURLStr.Length() != 0)
     {
-		if (PL_strcmp((const char *)profileURLStr, pregURL) == 0)
-			pregURLLoaded = PR_TRUE;
-
         rv = NS_NewURI(getter_AddRefs(profileURL), (const char *)profileURLStr);
 
         if (NS_FAILED(rv)) {
@@ -367,48 +344,17 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
 	if (NS_FAILED(rv) || !currentProfileStr || (PL_strlen(currentProfileStr) == 0)) {
 		return NS_ERROR_FAILURE;
 	}
-	PR_FREEIF(currentProfileStr); 
+    mCurrentProfileAvailable = PR_TRUE;
 
-	// in multiple profiles case, we still need to take them to registration screens
-    if (pregPref && (PL_strcmp(isPregInfoSet, REGISTRY_YES_STRING) != 0) && requiredPrefsEnabled)
-	{
-		profileURLStr = pregURL;
-
-		// Load PReg shell
-		if (!pregURLLoaded)
-		{
-			nsCOMPtr<nsIURI> registrationURL;
-			rv = NS_NewURI(getter_AddRefs(registrationURL), (const char *)profileURLStr);
-
-			if (NS_FAILED(rv)) {
-				return rv;
-			} 
-
-			nsCOMPtr<nsIWebShellWindow>  profWindow;
-			rv = profAppShell->CreateTopLevelWindow(nsnull, registrationURL,
-													PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
-													nsnull, 
-							NS_SIZETOCONTENT,           // width 
-							NS_SIZETOCONTENT,           // height
-													getter_AddRefs(profWindow));
-
-			if (NS_FAILED(rv)) return rv;
-
-			/*
-			 * Start up the main event loop...
-			 */	
-			rv = profAppShell->Run();
-		}
-	}
-
-    if (pregPref && (PL_strcmp(isPregInfoSet, REGISTRY_YES_STRING) != 0) && requiredPrefsEnabled)
-        ProcessPRegCookie();
-	
-	CRTFREEIF(isPregInfoSet);      
+    if (pregEnabled)
+	    TriggerActivation(currentProfileStr);
 
     // Now we have the right profile, read the user-specific prefs.
     rv = prefs->ReadUserPrefs();
-    return rv;
+
+    PR_FREEIF(currentProfileStr); 
+    
+	return rv;
 }
 
 nsresult 
@@ -460,11 +406,37 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 #ifdef DEBUG_profile
             printf("ProfileName : %s\n", cmdResult);
 #endif /* DEBUG_profile */
+            PRBool exists;
+            rv = ProfileExists(currProfileName, &exists);
+            if (NS_FAILED(rv)) return rv;			
             
-            GetProfileDir(currProfileName, &currProfileDirSpec);
-		
-            if (NS_SUCCEEDED(rv)){
-                *profileDirSet = PR_TRUE;
+            if (!exists) {
+                PRInt32 num5xProfiles = 0;
+                PRInt32 num4xProfiles = 0;
+
+                GetProfileCount(&num5xProfiles);
+                Get4xProfileCount(&num4xProfiles);
+
+                if (num5xProfiles == 0 && num4xProfiles == 0) {
+                    profileURLStr = PROFILE_WIZARD_URL;
+				}
+				else if (num5xProfiles > 0) {
+                    profileURLStr = PROFILE_SELECTION_URL;
+				}
+				else if (num4xProfiles > 0) {
+                    profileURLStr = PROFILE_MANAGER_URL;
+				}
+                *profileDirSet = PR_FALSE;
+			}
+			else {
+                rv = GetProfileDir(currProfileName, &currProfileDirSpec);
+                if (NS_SUCCEEDED(rv)){
+				    *profileDirSet = PR_TRUE;
+                    mCurrentProfileAvailable = PR_TRUE;
+
+                    // Need to load new profile prefs.
+                    rv = LoadNewProfilePrefs();
+                }
             }
         }
     }
@@ -511,6 +483,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 			rv = CreateNewProfile(currProfileName, currProfileDirSpec.GetNativePathCString());
 			if (NS_SUCCEEDED(rv)) {
 				*profileDirSet = PR_TRUE;
+                mCurrentProfileAvailable = PR_TRUE;
 
 				// Need to load new profile prefs.
 				rv = LoadNewProfilePrefs();
@@ -580,6 +553,10 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 			AutoMigrate();
 		}
 	    }
+			else if (numProfiles > 1)
+			{
+				profileURLStr = PROFILE_SELECTION_URL;
+			}
             else {
 		// show the profile manager
                 profileURLStr = PROFILE_MANAGER_URL;
@@ -747,6 +724,8 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& prof
 	aProfile->isMigrated		= nsCRT::strdup(REGISTRY_YES_STRING);
 	aProfile->NCProfileName		= nsnull;
 	aProfile->NCDeniedService	= nsnull;
+	aProfile->NCEmailAddress	= nsnull;
+	aProfile->NCHavePregInfo	= nsnull;
 
     rv = CreateUserDirectories(tmpDir);
 	if (NS_FAILED(rv)) return rv;
@@ -970,6 +949,8 @@ nsresult nsProfile::CopyRegKey(const char *oldProfile, const char *newProfile)
 	aProfile->profileName		= nsCRT::strdup(newProfile);
 	aProfile->NCProfileName		= nsnull;
 	aProfile->NCDeniedService	= nsnull;
+	aProfile->NCEmailAddress	= nsnull;
+	aProfile->NCHavePregInfo	= nsnull;
 
 	rv = gProfileDataAccess->SetValue(aProfile);
 
@@ -1053,7 +1034,8 @@ NS_IMETHODIMP nsProfile::StartApprunner(const char* profileName)
 #endif
 
 	gProfileDataAccess->SetCurrentProfile(profileName);
-      
+    mCurrentProfileAvailable = PR_TRUE;
+
     NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
@@ -1229,9 +1211,25 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName, PRBool showProg
 
 NS_IMETHODIMP nsProfile::GetCookie(char **cookie)
 {
-  // XXX NECKO we need to use the cookie module for this info instead of 
-  // XXX the IOService
-  return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+	nsString aCookie;
+
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+	char* pregURL;
+	rv = prefs->CopyCharPref(ACTIVATION_SERVER_URL, &pregURL);
+
+    nsCOMPtr<nsIURI> pregURI;
+    rv = NS_NewURI(getter_AddRefs(pregURI), pregURL);
+
+    NS_WITH_SERVICE(nsICookieService, service, kCookieServiceCID, &rv);
+    if ((NS_OK == rv) && (nsnull != service) && (nsnull != pregURI)) {
+        rv = service->GetCookieString(pregURI, aCookie);
+		*cookie = nsCRT::strdup(aCookie.ToNewCString());
+	}
+	CRTFREEIF(pregURL);
+    return rv;
 }
 
 NS_IMETHODIMP nsProfile::ProcessPRegCookie()
@@ -1324,16 +1322,31 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 	rv = GetCurrentProfile(&curProfile);
     if (NS_FAILED(rv)) return rv;
 
+    nsFileSpec dirSpec;
+    rv = GetProfileDir(curProfile, &dirSpec);
+    if (NS_FAILED(rv)) return rv;
+
 	if (userProfileName.mLength > 0)
 	{
-		CloneProfile(userProfileName.ToNewCString());
-		DeleteProfile(curProfile, PR_TRUE);
+		rv = CloneProfile(userProfileName.ToNewCString());
+        if (NS_FAILED(rv)) return rv;
+
+        // Delete only if the new name is different from current profile
+        if (PL_strcmp(userProfileName.ToNewCString(), curProfile) != 0)
+		{
+		    rv = DeleteProfile(curProfile, PR_FALSE);
+            if (NS_FAILED(rv)) return rv;
+		}
+
+		// After cloning we have a new filespec. Remove the old one.
+        mRedundantDirectory = dirSpec;
 
 		ProfileStruct*	aProfile;
 
 		gProfileDataAccess->GetValue(userProfileName.ToNewCString(), &aProfile);
 
 		aProfile->NCProfileName = nsCRT::strdup(userProfileName.ToNewCString());
+        aProfile->NCHavePregInfo = nsCRT::strdup(REGISTRY_YES_STRING);
 
 		gProfileDataAccess->SetValue(aProfile);
 		gProfileDataAccess->SetCurrentProfile(userProfileName.ToNewCString());
@@ -1346,6 +1359,7 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 		gProfileDataAccess->GetValue(curProfile, &aProfile);
 
 		aProfile->NCDeniedService = nsCRT::strdup(userServiceDenial.ToNewCString());
+        aProfile->NCHavePregInfo = nsCRT::strdup(REGISTRY_YES_STRING);
 
 		gProfileDataAccess->SetValue(aProfile);
 		FreeProfileStruct(aProfile);
@@ -1358,9 +1372,9 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 }
 
 
-NS_IMETHODIMP nsProfile::IsPregCookieSet(char **pregSet)
+NS_IMETHODIMP nsProfile::IsPregCookieSet(const char *profileName, char **pregSet)
 {
-	gProfileDataAccess->GetPREGInfo(pregSet);
+	gProfileDataAccess->GetPREGInfo(profileName, pregSet);
 	return NS_OK;
 }
 
@@ -1370,6 +1384,11 @@ NS_IMETHODIMP nsProfile::ProfileExists(const char *profileName, PRBool *exists)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsProfile::IsCurrentProfileAvailable(PRBool *avialable)
+{
+    *avialable = mCurrentProfileAvailable;
+    return NS_OK;
+}
 
 // Gets the number of unmigrated 4x profiles
 // Location: Common/Profiles
@@ -1431,15 +1450,15 @@ NS_IMETHODIMP nsProfile::CloneProfile(const char* newProfile)
 	nsFileSpec currProfileDir;
 	nsFileSpec newProfileDir;
 
+    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+    if (NS_FAILED(rv) || !locator) return NS_ERROR_FAILURE;
+
 	GetCurrentProfileDir(&currProfileDir);
 
 	if (currProfileDir.Exists())
 	{
-		NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-		if (NS_FAILED(rv) || !locator) return NS_ERROR_FAILURE;
-
-	    	nsCOMPtr <nsIFileSpec> dirSpec;
-        	rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultUserProfileRoot50, getter_AddRefs(dirSpec));
+    	nsCOMPtr <nsIFileSpec> dirSpec;
+       	rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultUserProfileRoot50, getter_AddRefs(dirSpec));
         
 		if (NS_FAILED(rv) || !dirSpec)
 			return NS_ERROR_FAILURE;
@@ -1472,8 +1491,11 @@ NS_IMETHODIMP nsProfile::CloneProfile(const char* newProfile)
 		printf("ProfileManager : Cloned CurrentProfile to new Profile ->%s<-\n", newProfile);
 #endif
 
+    gProfileDataAccess->mNumProfiles++;
 	gProfileDataAccess->mProfileDataChanged = PR_TRUE;
-	gProfileDataAccess->UpdateRegistry();
+
+    rv = locator->ForgetProfileDir();
+    if (NS_FAILED(rv)) return rv;  
 
 	return rv;
 }
@@ -1488,9 +1510,100 @@ nsProfile::FreeProfileStruct(ProfileStruct* aProfile)
 		CRTFREEIF(aProfile->isMigrated);
 		CRTFREEIF(aProfile->NCProfileName);
 		CRTFREEIF(aProfile->NCDeniedService);
+		CRTFREEIF(aProfile->NCEmailAddress);
+		CRTFREEIF(aProfile->NCHavePregInfo);
 
 		PR_FREEIF(aProfile);
 	}
+}
+
+nsresult
+nsProfile::TriggerActivation(char *profileName)
+{
+	nsresult rv = NS_OK;
+    char *isPregInfoSet = nsnull;
+    IsPregCookieSet(profileName, &isPregInfoSet); 
+
+	if (PL_strcmp(isPregInfoSet, REGISTRY_YES_STRING) != 0)
+	{
+		// fire up an instance of the cookie manager.
+		// I'm doing this using the serviceManager for convenience's sake.
+		// Presumably an application will init it's own cookie service a 
+		// different way (this way works too though).
+		nsCOMPtr<nsICookieService> cookieService = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
+		if (NS_FAILED(rv)) return rv;
+		// quiet the compiler
+		(void)cookieService;
+
+		PRBool acceptCookies = PR_TRUE;
+		cookieService->CookieEnabled(&acceptCookies);
+
+        NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+		char* pregURL = nsnull;
+		rv = prefs->CopyCharPref(PREG_URL_PREF, &pregURL);
+
+		// Check if the javascript is enabled....
+		PRBool javascriptEnabled = PR_TRUE;
+		rv = prefs->GetBoolPref(JAVASCRIPT_PREF, &javascriptEnabled);
+
+		// Check if cookies are accepted....
+		// PRInt32 acceptCookies = 0;
+		// rv = prefs->GetIntPref(COOKIES_PREF, &acceptCookies);
+
+		// Set the boolean based on javascript and cookies prefs 
+		PRBool requiredPrefsEnabled = PR_TRUE;
+
+		if ((!(javascriptEnabled)) || (!acceptCookies))
+			requiredPrefsEnabled = PR_FALSE;
+    
+		if (requiredPrefsEnabled)
+		{
+			/*
+			 * Create the Application Shell instance...
+			 */
+			NS_WITH_SERVICE(nsIAppShellService, pregAppShell, kAppShellServiceCID, &rv);
+			if (NS_FAILED(rv)) return rv;
+			
+			nsCOMPtr<nsIURI> registrationURL;
+			rv = NS_NewURI(getter_AddRefs(registrationURL), pregURL);
+
+			if (NS_FAILED(rv)) return rv;
+
+			nsCOMPtr<nsIWebShellWindow>  pregWindow;
+			rv = pregAppShell->CreateTopLevelWindow(nsnull, registrationURL,
+													PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
+													nsnull, 
+							NS_SIZETOCONTENT,           // width 
+							NS_SIZETOCONTENT,           // height
+													getter_AddRefs(pregWindow));
+
+			if (NS_FAILED(rv)) return rv;
+
+			/*
+			 * Start up the main event loop...
+			 */	
+			rv = pregAppShell->Run();
+		}
+
+		ProcessPRegCookie();
+		
+		CRTFREEIF(pregURL);      
+	}
+	CRTFREEIF(isPregInfoSet);    
+	
+	return rv;
+}
+
+nsresult
+nsProfile::CleanUp()
+{
+	nsresult rv = NS_OK;
+
+	DeleteUserDirectories(mRedundantDirectory);
+
+	return rv;
 }
 
 nsresult
@@ -1517,4 +1630,3 @@ nsProfile::CreateDefaultProfile(void)
 
 	return rv;
 }
-

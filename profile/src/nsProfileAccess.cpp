@@ -45,6 +45,8 @@
 #define REGISTRY_CURRENT_PROFILE_STRING     "CurrentProfile"
 #define REGISTRY_NC_SERVICE_DENIAL_STRING   "NCServiceDenial"
 #define REGISTRY_NC_PROFILE_NAME_STRING     "NCProfileName"
+#define REGISTRY_NC_USER_EMAIL_STRING       "NCEmailAddress"
+#define REGISTRY_NC_HAVE_PREG_INFO_STRING   "NCHavePregInfo"
 #define REGISTRY_HAVE_PREG_INFO_STRING      "HavePregInfo"
 #define REGISTRY_MIGRATED_STRING            "migrated"
 #define REGISTRY_DIRECTORY_STRING           "directory"
@@ -107,8 +109,8 @@ nsProfileAccess::~nsProfileAccess()
 	CRTFREEIF(mVersion);
 	CRTFREEIF(mHavePREGInfo);
 
-	FreeProfileMembers(mProfiles, mCount);
-	FreeProfileMembers(m4xProfiles, m4xCount);
+    FreeProfileMembers(mProfiles, mProfiles->Count());
+    FreeProfileMembers(m4xProfiles, m4xProfiles->Count());
 }
 
 // Free up the member profile structs
@@ -124,6 +126,8 @@ nsProfileAccess::FreeProfileMembers(nsVoidArray *profiles, PRInt32 numElems)
 	        aProfile = (ProfileStruct *) profiles->ElementAt(index);
 	        delete aProfile;
 	}
+    if (profiles)
+	    delete profiles;
 }
 
 // Close the registry.
@@ -188,6 +192,8 @@ nsProfileAccess::GetValue(const char* profileName, ProfileStruct** aProfile)
 		(*aProfile)->isMigrated			= nsnull;
 		(*aProfile)->NCProfileName		= nsnull;
 		(*aProfile)->NCDeniedService	= nsnull;
+		(*aProfile)->NCEmailAddress		= nsnull;
+		(*aProfile)->NCHavePregInfo     = nsnull;
 
 		(*aProfile)->profileName		= nsCRT::strdup(profileItem->profileName);
 		(*aProfile)->profileLocation	= nsCRT::strdup(profileItem->profileLocation);
@@ -197,6 +203,10 @@ nsProfileAccess::GetValue(const char* profileName, ProfileStruct** aProfile)
 			(*aProfile)->NCProfileName	= nsCRT::strdup(profileItem->NCProfileName);
 		if (profileItem->NCDeniedService)
 			(*aProfile)->NCProfileName	= nsCRT::strdup(profileItem->NCDeniedService);
+        if (profileItem->NCEmailAddress)
+            (*aProfile)->NCProfileName	= nsCRT::strdup(profileItem->NCEmailAddress);
+        if (profileItem->NCHavePregInfo)
+            (*aProfile)->NCProfileName	= nsCRT::strdup(profileItem->NCHavePregInfo);
 	}
 	else
 		*aProfile = nsnull;
@@ -241,6 +251,18 @@ nsProfileAccess::SetValue(ProfileStruct* aProfile)
 			profileItem->NCDeniedService = (char *) PR_Realloc(profileItem->NCDeniedService, length+1);
 			PL_strcpy(profileItem->NCDeniedService, aProfile->NCDeniedService);
 		}
+        if (aProfile->NCEmailAddress)
+		{
+            length = PL_strlen(aProfile->NCEmailAddress);
+            profileItem->NCEmailAddress = (char *) PR_Realloc(profileItem->NCEmailAddress, length+1);
+            PL_strcpy(profileItem->NCEmailAddress, aProfile->NCEmailAddress);
+		}
+        if (aProfile->NCHavePregInfo)
+		{
+            length = PL_strlen(aProfile->NCHavePregInfo);
+            profileItem->NCHavePregInfo = (char *) PR_Realloc(profileItem->NCHavePregInfo, length+1);
+            PL_strcpy(profileItem->NCHavePregInfo, aProfile->NCHavePregInfo);
+		}
 	}
 	else
 	{
@@ -253,6 +275,8 @@ nsProfileAccess::SetValue(ProfileStruct* aProfile)
 		profileItem->isMigrated			= nsnull;
 		profileItem->NCProfileName		= nsnull;
 		profileItem->NCDeniedService	= nsnull;
+        profileItem->NCEmailAddress		= nsnull;
+        profileItem->NCHavePregInfo	    = nsnull;
 
 		profileItem->profileName		= nsCRT::strdup(aProfile->profileName);
 		profileItem->profileLocation	= nsCRT::strdup(aProfile->profileLocation);
@@ -263,6 +287,10 @@ nsProfileAccess::SetValue(ProfileStruct* aProfile)
 			profileItem->NCProfileName	= nsCRT::strdup(aProfile->NCProfileName);
 		if (aProfile->NCDeniedService)
 			profileItem->NCProfileName	= nsCRT::strdup(aProfile->NCDeniedService);
+        if (aProfile->NCEmailAddress)
+            profileItem->NCEmailAddress	= nsCRT::strdup(aProfile->NCEmailAddress);
+        if (aProfile->NCHavePregInfo)
+            profileItem->NCHavePregInfo	= nsCRT::strdup(aProfile->NCHavePregInfo);
 
 		if (!mProfiles)
 			mProfiles = new nsVoidArray();
@@ -352,6 +380,8 @@ nsProfileAccess::FillProfileInfo()
         nsXPIDLCString isMigrated;
 		nsXPIDLCString NCProfileName;
 		nsXPIDLCString NCDeniedService;
+        nsXPIDLCString NCEmailAddress;
+        nsXPIDLCString NCHavePregInfo;
         char* directory = nsnull;
                                             
         rv = node->GetName( getter_Copies(profile) );
@@ -375,6 +405,8 @@ nsProfileAccess::FillProfileInfo()
 
             rv = m_registry->GetString(profKey, REGISTRY_NC_PROFILE_NAME_STRING, getter_Copies(NCProfileName));
             rv = m_registry->GetString(profKey, REGISTRY_NC_SERVICE_DENIAL_STRING, getter_Copies(NCDeniedService));
+            rv = m_registry->GetString(profKey, REGISTRY_NC_USER_EMAIL_STRING, getter_Copies(NCEmailAddress));
+            rv = m_registry->GetString(profKey, REGISTRY_NC_HAVE_PREG_INFO_STRING, getter_Copies(NCHavePregInfo));
 
             ProfileStruct*	profileItem	= new ProfileStruct();
             if (!profileItem)
@@ -385,6 +417,8 @@ nsProfileAccess::FillProfileInfo()
             profileItem->isMigrated			= nsnull;
             profileItem->NCProfileName		= nsnull;
             profileItem->NCDeniedService		= nsnull;
+            profileItem->NCEmailAddress		= nsnull;
+            profileItem->NCHavePregInfo		= nsnull;
             profileItem->updateProfileEntry	= PR_TRUE;
 	
             profileItem->profileName			= nsCRT::strdup(profile);
@@ -392,9 +426,13 @@ nsProfileAccess::FillProfileInfo()
             profileItem->isMigrated			= nsCRT::strdup(isMigrated);
 
             if (NCProfileName)
-            profileItem->NCProfileName	= nsCRT::strdup(NCProfileName);
+                profileItem->NCProfileName	= nsCRT::strdup(NCProfileName);
             if (NCDeniedService)
-            profileItem->NCDeniedService	= nsCRT::strdup(NCDeniedService);
+                profileItem->NCDeniedService	= nsCRT::strdup(NCDeniedService);
+            if (NCEmailAddress)
+                profileItem->NCEmailAddress	= nsCRT::strdup(NCEmailAddress);
+            if (NCHavePregInfo)
+                profileItem->NCHavePregInfo	= nsCRT::strdup(NCHavePregInfo);
 
             if (PL_strcmp(isMigrated, REGISTRY_YES_STRING) == 0)
 		mNumProfiles++;
@@ -625,15 +663,15 @@ nsProfileAccess::UpdateRegistry()
     rv = m_registry->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &profilesTreeKey);
 	if (NS_FAILED(rv)) return rv;
 
-	// Get the current profile
+	// Set the current profile
 	rv = m_registry->SetString(profilesTreeKey, REGISTRY_CURRENT_PROFILE_STRING, mCurrentProfile);
 	if (NS_FAILED(rv)) return rv;
 
-	// Get the current profile
+	// Set the registry version
 	rv = m_registry->SetString(profilesTreeKey, REGISTRY_VERSION_STRING, mVersion);
 	if (NS_FAILED(rv)) return rv;
 
-	// Get the current profile
+	// Set preg info
 	rv = m_registry->SetString(profilesTreeKey, REGISTRY_HAVE_PREG_INFO_STRING, mHavePREGInfo);
 	if (NS_FAILED(rv)) return rv;
 
@@ -692,6 +730,8 @@ nsProfileAccess::UpdateRegistry()
 
             rv = m_registry->SetString(profKey, REGISTRY_NC_PROFILE_NAME_STRING, profileItem->NCProfileName);
             rv = m_registry->SetString(profKey, REGISTRY_NC_SERVICE_DENIAL_STRING, profileItem->NCDeniedService);
+            rv = m_registry->SetString(profKey, REGISTRY_NC_USER_EMAIL_STRING, profileItem->NCEmailAddress);
+            rv = m_registry->SetString(profKey, REGISTRY_NC_HAVE_PREG_INFO_STRING, profileItem->NCHavePregInfo);
 
 			profileItem->updateProfileEntry = PR_FALSE;
 		}
@@ -715,6 +755,11 @@ nsProfileAccess::UpdateRegistry()
 
 			rv = m_registry->SetString(profKey, REGISTRY_MIGRATED_STRING, profileItem->isMigrated);
 			if (NS_FAILED(rv)) return rv;
+
+            rv = m_registry->SetString(profKey, REGISTRY_NC_PROFILE_NAME_STRING, profileItem->NCProfileName);
+            rv = m_registry->SetString(profKey, REGISTRY_NC_SERVICE_DENIAL_STRING, profileItem->NCDeniedService);
+            rv = m_registry->SetString(profKey, REGISTRY_NC_USER_EMAIL_STRING, profileItem->NCEmailAddress);
+            rv = m_registry->SetString(profKey, REGISTRY_NC_HAVE_PREG_INFO_STRING, profileItem->NCHavePregInfo);
 
 			profileItem->updateProfileEntry = PR_FALSE;
 		}
@@ -850,6 +895,8 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
         profileItem->isMigrated			= nsnull;
         profileItem->NCProfileName			= nsnull;
         profileItem->NCDeniedService		= nsnull;
+        profileItem->NCEmailAddress			= nsnull;
+        profileItem->NCHavePregInfo		= nsnull;
         profileItem->updateProfileEntry	= PR_TRUE;
 
         profileItem->profileName			= nsCRT::strdup(nsUnescape(profile));
@@ -896,6 +943,8 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
 		profileItem->isMigrated			= nsnull;
 		profileItem->NCProfileName			= nsnull;
 		profileItem->NCDeniedService		= nsnull;
+        profileItem->NCEmailAddress			= nsnull;
+        profileItem->NCHavePregInfo		= nsnull;
 		profileItem->updateProfileEntry	= PR_TRUE;
 
 		profileItem->profileName			= nsCRT::strdup(nsUnescape(unixProfileName));
@@ -981,11 +1030,21 @@ nsProfileAccess::SetPREGInfo(const char* pregInfo)
 
 //Get the for PREG info.
 void 
-nsProfileAccess::GetPREGInfo(char **info)
+nsProfileAccess::GetPREGInfo(const char *profileName, char **info)
 {
 	*info = nsnull;
+    PRInt32 index = 0;
 
-	if (mHavePREGInfo)
-		*info = nsCRT::strdup(mHavePREGInfo);
+    index = FindProfileIndex(profileName);
+
+	if (index >= 0 )
+	{
+		ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
+		
+		if (profileItem->NCHavePregInfo)
+		    *info = nsCRT::strdup(profileItem->NCHavePregInfo);
+		else
+            *info = nsCRT::strdup(REGISTRY_NO_STRING);
+	}
 }
 
