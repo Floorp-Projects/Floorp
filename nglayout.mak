@@ -56,6 +56,7 @@ CVSCO_IMGLIB = $(CVSCO) -r $(IMGLIB_BRANCH)
 CVSCO_NETLIB = $(CVSCO) -r $(NETLIB_BRANCH)
 CVSCO_RAPTOR = $(CVSCO)
 CVSCO_LIZARD = $(CVSCO)
+CVSCO_NETWORK = $(CVSCO) -A
 
 # The list of directories that need to be built to build the
 # standalone nglayout test program. The order is important. The
@@ -159,9 +160,9 @@ pull_imglib:
 
 pull_netlib:
 	@cd $(MOZ_SRC)\.
-	$(CVSCO_NETLIB) $(MOZ_TOP)/lib/xp
-	$(CVSCO_LIZARD) $(MOZ_TOP)/network
-	$(CVSCO_LIZARD) -A $(MOZ_TOP)/include
+	$(CVSCO_NETWORK) $(MOZ_TOP)/lib/xp
+	$(CVSCO_NETWORK) $(MOZ_TOP)/network
+	$(CVSCO_NETWORK) $(MOZ_TOP)/include
 
 pull_nglayout:
 	@cd $(MOZ_SRC)\.
