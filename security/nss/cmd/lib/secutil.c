@@ -657,10 +657,10 @@ SECStatus
 SECU_ReadDERFromFile(SECItem *der, PRFileDesc *inFile, PRBool ascii)
 {
     SECStatus rv;
-    char *asc, *body, *trailer;
     if (ascii) {
 	/* First convert ascii to binary */
 	SECItem filedata;
+	char *asc, *body;
 
 	/* Read in ascii data */
 	rv = SECU_FileToItem(&filedata, inFile);
@@ -672,8 +672,13 @@ SECU_ReadDERFromFile(SECItem *der, PRFileDesc *inFile, PRBool ascii)
 
 	/* check for headers and trailers and remove them */
 	if ((body = strstr(asc, "-----BEGIN")) != NULL) {
-	    body = PORT_Strchr(body, '\n') + 1;
-	    trailer = strstr(body, "-----END");
+	    char *trailer = NULL;
+	    asc = body;
+	    body = PORT_Strchr(body, '\n');
+	    if (!body)
+		body = PORT_Strchr(asc, '\r'); /* maybe this is a MAC file */
+	    if (body)
+		trailer = strstr(++body, "-----END");
 	    if (trailer != NULL) {
 		*trailer = '\0';
 	    } else {

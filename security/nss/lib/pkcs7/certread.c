@@ -294,27 +294,22 @@ CERT_DecodeCertPackage(char *certbuf,
 		       void *arg)
 {
     unsigned char *cp;
-    int seqLen, seqLenLen;
-    int cl;
-    unsigned char *bincert = NULL, *certbegin = NULL, *certend = NULL;
-    unsigned int binLen;
-    char *ascCert = NULL;
-    int asciilen;
-    CERTCertificate *cert;
-    SECItem certitem, oiditem;
-    SECStatus rv;
-    SECOidData *oiddata;
-    SECItem *pcertitem = &certitem;
+    unsigned char *bincert = NULL;
+    char *         ascCert = NULL;
+    SECStatus      rv;
     
     if ( certbuf == NULL ) {
 	return(SECFailure);
     }
     
-    cert = 0;
     cp = (unsigned char *)certbuf;
 
     /* is a DER encoded certificate of some type? */
     if ( ( *cp  & 0x1f ) == SEC_ASN1_SEQUENCE ) {
+	SECItem certitem;
+	SECItem *pcertitem = &certitem;
+	int seqLen, seqLenLen;
+
 	cp++;
 	
 	if ( *cp & 0x80) {
@@ -370,6 +365,8 @@ CERT_DecodeCertPackage(char *certbuf,
 	    
 	    return(rv);
 	} else if ( cp[0] == SEC_ASN1_OBJECT_ID ) {
+	    SECOidData *oiddata;
+	    SECItem oiditem;
 	    /* XXX - assume DER encoding of OID len!! */
 	    oiditem.len = cp[1];
 	    oiditem.data = (unsigned char *)&cp[2];
@@ -404,10 +401,32 @@ CERT_DecodeCertPackage(char *certbuf,
 
     /* now look for a netscape base64 ascii encoded cert */
 notder:
-    cp = (unsigned char *)certbuf;
+  {
+    unsigned char *certbegin = NULL; 
+    unsigned char *certend   = NULL;
+    char          *pc;
+    int cl;
+
+    /* Convert the ASCII data into a nul-terminated string */
+    ascCert = (char *)PORT_Alloc(certlen + 1);
+    if (!ascCert) {
+        rv = SECFailure;
+	goto loser;
+    }
+
+    PORT_Memcpy(ascCert, certbuf, certlen);
+    ascCert[certlen] = '\0';
+
+    pc = PORT_Strchr(ascCert, '\n');  /* find an EOL */
+    if (!pc) { /* maybe this is a MAC file */
+	pc = ascCert;
+	while (*pc && NULL != (pc = PORT_Strchr(pc, '\r'))) {
+	    *pc++ = '\n';
+	}
+    }
+
+    cp = (unsigned char *)ascCert;
     cl = certlen;
-    certbegin = 0;
-    certend = 0;
 
     /* find the beginning marker */
     while ( cl > sizeof(NS_CERT_HEADER) ) {
@@ -432,7 +451,6 @@ notder:
     }
 
     if ( certbegin ) {
-
 	/* find the ending marker */
 	while ( cl > sizeof(NS_CERT_TRAILER) ) {
 	    if ( !PORT_Strncasecmp((char *)cp, NS_CERT_TRAILER,
@@ -456,20 +474,11 @@ notder:
     }
 
     if ( certbegin && certend ) {
+	unsigned int binLen;
 
-	/* Convert the ASCII data into a nul-terminated string */
-	asciilen = certend - certbegin;
-	ascCert = (char *)PORT_Alloc(asciilen+1);
-	if (!ascCert) {
-	    rv = SECFailure;
-	    goto loser;
-	}
-
-	PORT_Memcpy(ascCert, certbegin, asciilen);
-	ascCert[asciilen] = '\0';
-	
+	*certend = 0;
 	/* convert to binary */
-	bincert = ATOB_AsciiToData(ascCert, &binLen);
+	bincert = ATOB_AsciiToData(certbegin, &binLen);
 	if (!bincert) {
 	    rv = SECFailure;
 	    goto loser;
@@ -481,6 +490,7 @@ notder:
     } else {
 	rv = SECFailure;
     }
+  }
 
 loser:
 
