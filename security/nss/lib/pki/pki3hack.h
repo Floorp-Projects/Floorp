@@ -35,7 +35,7 @@
 #define PKINSS3HACK_H
 
 #ifdef DEBUG
-static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pki3hack.h,v $ $Revision: 1.6 $ $Date: 2002/02/27 22:41:56 $ $Name:  $";
+static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pki3hack.h,v $ $Revision: 1.7 $ $Date: 2002/02/28 22:55:30 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKIT_H
@@ -81,8 +81,12 @@ nssToken_SearchCerts
   PRBool *notPresentOpt
 );
 
+/* renewInstances -- if the cached token certs have multiple instances,
+ * don't destroy them.  If this parameter is false, they will be destroyed
+ * anyway (used for clean shutdown).
+ */
 NSS_EXTERN void
-nssToken_DestroyCertList(NSSToken *token);
+nssToken_DestroyCertList(NSSToken *token, PRBool renewInstances);
 
 NSS_EXTERN void
 nssCertificateList_DestroyTokenCerts(nssList *certList, NSSToken *token);

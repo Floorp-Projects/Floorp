@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.35 $ $Date: 2002/02/27 22:41:56 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.36 $ $Date: 2002/02/28 22:55:30 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -515,7 +515,7 @@ static PRBool cert_token_not_present(NSSCertificate *c)
          instance  = (nssCryptokiInstance *)nssListIterator_Next(instances))
     {
 	if (!nssToken_IsPresent(instance->token)) {
-	    nssToken_DestroyCertList(instance->token);
+	    nssToken_DestroyCertList(instance->token, PR_TRUE);
 	    nssList_Remove(c->object.instanceList, instance);
 	} else {
 	    freeIt = PR_FALSE;
