@@ -384,17 +384,6 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
 		PtSetArg( &arg[arg_count++], Pt_CB_RESIZE, &cb_resize, NULL );
 		PtSetArg( &arg[arg_count++], Pt_CB_RAW, &cb_raw, NULL );
 		mWidget = PtCreateWidget( PtWindow, NULL, arg_count, arg );
-#if 0
-		PhRect_t rect;
-		memset(&rect, 0, sizeof(rect));
-		PtSetArg( &arg[0], Pt_ARG_ANCHOR_OFFSETS, &rect, 0 );
-		PtSetArg( &arg[1], Pt_ARG_ANCHOR_FLAGS, -1,
-				          Pt_LEFT_ANCHORED_LEFT |
-				          Pt_RIGHT_ANCHORED_RIGHT |
-				          Pt_TOP_ANCHORED_TOP |
-				          Pt_BOTTOM_ANCHORED_BOTTOM );
-		mClientWidget = PtCreateWidget( PtOSContainer, mWidget, 2, arg );
-#endif
 	}
   }
 
@@ -650,41 +639,44 @@ PRBool nsWindow::OnScroll(nsScrollbarEvent &aEvent, PRUint32 cPos)
 
 NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-  PRBool nNeedToShow = PR_FALSE;
-
-  mBounds.width  = aWidth;
-  mBounds.height = aHeight;
-
-  // code to keep the window from showing before it has been moved or resized
-  // if we are resized to 1x1 or less, we will hide the window.  Show(TRUE) will be ignored until a
-  // larger resize has happened
-  if (aWidth <= 1 || aHeight <= 1)
-  {
-    if ( mIsToplevel )
-    {
-      aWidth = 1;
-      aHeight = 1;
-      mIsTooSmall = PR_TRUE;
+	PRBool nNeedToShow = PR_FALSE;
+	
+	if ( aWidth == mBounds.width && aHeight == mBounds.height)
+		return NS_OK;
+	
+	mBounds.width  = aWidth;
+	mBounds.height = aHeight;
+	
+	// code to keep the window from showing before it has been moved or resized
+	// if we are resized to 1x1 or less, we will hide the window.  Show(TRUE) will be ignored until a
+	// larger resize has happened
+	if (aWidth <= 1 || aHeight <= 1)
+	{
+		if ( mIsToplevel )
+		{
+			aWidth = 1;
+			aHeight = 1;
+			mIsTooSmall = PR_TRUE;
 //			if( mShown ) Show(PR_FALSE);
-    }
-    else
-    {
-      aWidth = 1;
-      aHeight = 1;
-      mIsTooSmall = PR_TRUE;
+		}
+		else
+		{
+			aWidth = 1;
+			aHeight = 1;
+			mIsTooSmall = PR_TRUE;
 //			if( mShown ) Show(PR_FALSE);
-    }
-  }
-  else
-  {
-    if (mIsTooSmall)
-    {
-      // if we are not shown, we don't want to force a show here, so check and see if Show(TRUE) has been called
-      nNeedToShow = mShown;
-      mIsTooSmall = PR_FALSE;
-    }
-  }
-
+		}
+	}
+	else
+	{
+		if (mIsTooSmall)
+		{
+			// if we are not shown, we don't want to force a show here, so check and see if Show(TRUE) has been called
+			nNeedToShow = mShown;
+			mIsTooSmall = PR_FALSE;
+		}
+	}
+	
 	PtArg_t  arg;
 	PhDim_t  dim = { aWidth, aHeight };
 	
@@ -704,42 +696,40 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 		PtSetResources( mWidget, 1, &arg );
 		
 		/* This fixes XUL dialogs */
-    if (mClientWidget) {
-      PtWidget_t *theClientChild = PtWidgetChildBack(mClientWidget);
-	  	if (theClientChild) {
-        nsWindow * pWin = (nsWindow*) GetInstance( theClientChild );
-	    	pWin->Resize(aWidth, aHeight, aRepaint);
-      	}
+#if 0
+		if (mClientWidget) {
+			printf("resize!!!\n");
+			PtWidget_t *theClientChild = PtWidgetChildBack(mClientWidget);
+			if (theClientChild) {
+				nsWindow * pWin = (nsWindow*) GetInstance( theClientChild );
+				pWin->Resize(aWidth, aHeight, aRepaint);
 			}
-	
-  //  EnableDamage( mWidget, PR_TRUE );
-  	}
-
-
-  if (mIsToplevel || mListenForResizes) {
-    nsSizeEvent sevent;
-    sevent.message = NS_SIZE;
-    sevent.widget = this;
-    sevent.eventStructType = NS_SIZE_EVENT;
-
-		sevent.windowSize = new nsRect (0, 0, aWidth, aHeight); 	
-
-    sevent.point.x = 0;
-    sevent.point.y = 0;
-    sevent.mWinWidth = aWidth;
-    sevent.mWinHeight = aHeight;
-    // XXX fix this
-    sevent.time = 0;
-    AddRef();
-    DispatchWindowEvent(&sevent);
-    Release();
-    delete sevent.windowSize;
-  	}
-
-
-  if( nNeedToShow ) Show(PR_TRUE);
-  return NS_OK;
+		}
+#endif	
 	}
+	if (mIsToplevel || mListenForResizes) {
+		nsSizeEvent sevent;
+		sevent.message = NS_SIZE;
+		sevent.widget = this;
+		sevent.eventStructType = NS_SIZE_EVENT;
+		
+		sevent.windowSize = new nsRect (0, 0, aWidth, aHeight); 	
+		
+		sevent.point.x = 0;
+		sevent.point.y = 0;
+		sevent.mWinWidth = aWidth;
+		sevent.mWinHeight = aHeight;
+		// XXX fix this
+		sevent.time = 0;
+		AddRef();
+		DispatchWindowEvent(&sevent);
+		Release();
+		delete sevent.windowSize;
+	}
+	if( nNeedToShow ) Show(PR_TRUE);
+	if (aRepaint) Invalidate(PR_FALSE);
+	return NS_OK;
+}
 
 NS_IMETHODIMP nsWindow::Resize( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint ) {
   Move(aX,aY);
@@ -805,9 +795,21 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   PhTile_t  * dmg = NULL;
   PRBool      aClipState;
   nsPaintEvent pev;
+  PhRect_t   extent;
 
-  if( !PtWidgetIsRealized( pWidget ) ) return;
-
+#if 0	
+  PgSetFillColor(Pg_WHITE);
+  PgSetDrawMode(Pg_DRAWMODE_XOR);
+  PtWidgetExtent(pWidget, &extent);
+  int i;
+  for (i = 0; i < 5 * 2; i++)
+  {
+	  PgDrawRect(&extent, Pg_DRAW_FILL);
+	  PgFlush();
+	  delay(10);
+  }
+  PgSetDrawMode(Pg_DRAWMODE_OPAQUE);
+#endif	
   if( !pWin || !pWin->mContext ) return;
 
   // This prevents redraws while any window is resizing, ie there are
@@ -815,44 +817,38 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   if( pWin->mIsResizing ) return;
 
 	if ( pWin->mEventCallback ) {
-		PhRect_t   extent;
 		PhPoint_t  offset;
 		nsRect     nsDmg;
 
-		// Ok...  I ~think~ the damage rect is in window coordinates and is not neccessarily clipped to
+		// Ok...  The damage rect is in window coordinates and is not neccessarily clipped to
 		// the widgets canvas. Mozilla wants the paint coords relative to the parent widget, not the window.
-		PtWidgetExtent( pWidget, &extent );
-		PtWidgetOffset( pWidget, &offset );
-
+		PtWidgetExtent(pWidget, &extent);
+		PtWidgetOffset(pWidget, &offset);
 		/* Build a List of Tiles that might be in front of me.... */
-		PhTile_t *clip_tiles = pWin->GetWindowClipping( );
-
+		PhTile_t *new_damage, *clip_tiles, *intersect;
 		/* Intersect the Damage tile list w/ the clipped out list and see whats left! */
-		PhTile_t *new_damage;
-
-//		if( pWin->mWindowType == eWindowType_popup ) {
-			/* for a eWindowType_popup widget, consider damaging the whole widget - because of problems displaying comboboxes and color pickers */
-//			new_damage = PhRectsToTiles( &pWidget->extent, 1 );
-//		}
-//		else {
-			new_damage = PhRectsToTiles(&damage->rect, 1);
-//			new_damage = PhCopyTiles(damage->next);
-			/* new_damage is the same as tiles... I need to release it later */
+		new_damage = PhRectsToTiles(&damage->rect, 1);
+		PhDeTranslateTiles(new_damage, &offset);
+		clip_tiles = pWin->GetWindowClipping();
+		if (clip_tiles) {
 			new_damage = PhClipTilings( new_damage, clip_tiles, NULL);
-//		}
-		PhFreeTiles( clip_tiles );
-		if( new_damage == nsnull ) return; /* tiles and clip_tiles have been released */
-
-		PhDeTranslateTiles( new_damage, &offset );
-
+			PhFreeTiles(clip_tiles);
+		}
+		clip_tiles = PhRectsToTiles(&extent, 1);
+		intersect = PhIntersectTilings( new_damage, clip_tiles, NULL);
+		if ( intersect == NULL ) return;
+		PhDeTranslateTiles(intersect, &extent.ul);
+		PhFreeTiles(clip_tiles);
+		PhFreeTiles(new_damage);
+		new_damage = intersect;
+		
 		pWin->InitEvent(pev, NS_PAINT);
 		pev.eventStructType = NS_PAINT_EVENT;
 		pev.renderingContext = nsnull;
 		pev.renderingContext = pWin->GetRenderingContext();
 		for( dmg = new_damage; dmg; dmg = dmg->next ) {
-			/* Copy the Damage Rect - Do I need to Translate it?? If so by what? offset? offset+area? */
-			nsDmg.x = dmg->rect.ul.x - extent.ul.x;
-			nsDmg.y = dmg->rect.ul.y - extent.ul.y;
+			nsDmg.x = dmg->rect.ul.x;
+			nsDmg.y = dmg->rect.ul.y;
 			nsDmg.width = dmg->rect.lr.x - dmg->rect.ul.x + 1;
 			nsDmg.height = dmg->rect.lr.y - dmg->rect.ul.y + 1;
 
@@ -900,13 +896,9 @@ void nsWindow::ScreenToWidget( PhPoint_t &pt ) {
 PhTile_t *nsWindow::GetWindowClipping( ) {
 	PtWidget_t *w, *aWidget = (PtWidget_t *)GetNativeData(NS_NATIVE_WIDGET);
 	PhTile_t *clip_tiles = NULL, *last = NULL;
-	PhPoint_t w_offset;
 	PhRect_t w_extent;
 
-	PtWidgetOffset( aWidget, &w_offset );
 	PtWidgetExtent( aWidget, &w_extent);
-	w_offset.x += w_extent.ul.x;
-	w_offset.y += w_extent.ul.y;
 	
 	for( w = PtWidgetChildFront( aWidget ); w; w=PtWidgetBrotherBehind( w ) ) {
 		long flags = PtWidgetFlags( w );
@@ -914,8 +906,8 @@ PhTile_t *nsWindow::GetWindowClipping( ) {
 			PhTile_t *tile = PhGetTile( );
 			if( !tile ) return NULL;
 
-			tile->rect.ul.x = w->area.pos.x + w_offset.x;
-			tile->rect.ul.y = w->area.pos.y + w_offset.y;
+			tile->rect.ul.x = w->area.pos.x + w_extent.ul.x;
+			tile->rect.ul.y = w->area.pos.y + w_extent.ul.y;
 			tile->rect.lr.x = tile->rect.ul.x + w->area.size.w - 1;
 			tile->rect.lr.y = tile->rect.ul.y + w->area.size.h - 1;
 
@@ -937,13 +929,14 @@ int nsWindow::ResizeHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *c
 
   if( someWindow && extents)	// kedl
   {
-    rect.x = extents->ul.x;
+	rect.x = extents->ul.x;
     rect.y = extents->ul.y;
     rect.width = extents->lr.x - rect.x + 1;
     rect.height = extents->lr.y - rect.y + 1;
+    if ( someWindow->mBounds.width == rect.width && someWindow->mBounds.height == rect.height)
+		  return (Pt_CONTINUE);
     someWindow->mBounds.width  = rect.width;	// kedl, fix main window not resizing!!!!
     someWindow->mBounds.height = rect.height;
-
     /* This enables the resize holdoff */
     if (PtWidgetIsRealized(widget)) {
 //      someWindow->ResizeHoldOff();
