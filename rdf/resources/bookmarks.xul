@@ -1,6 +1,27 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="bookmarks.css" type="text/css"?>
 
+<!DOCTYPE window
+[
+<!ENTITY menu.file.label            "File">
+<!ENTITY menuitem.newWindow.label     "New Window">
+<!ENTITY menuitem.newBookmark.label   "New Bookmark...">
+<!ENTITY menuitem.newFolder.label     "New Folder...">
+<!ENTITY menuitem.newSeparator.label  "New Separator">
+<!ENTITY menuitem.close.label         "Close">
+<!ENTITY menu.edit.label            "Edit">
+<!ENTITY menuitem.undo.label          "Undo">
+<!ENTITY menuitem.redo.label          "Redo">
+<!ENTITY menuitem.cut.label           "Cut">
+<!ENTITY menuitem.copy.label          "Copy">
+<!ENTITY menuitem.paste.label         "Paste">
+<!ENTITY menuitem.delete.label        "Delete">
+<!ENTITY menuitem.selectAll.label     "Select All">
+<!ENTITY menuitem.find.label          "Find in Bookmarks...">
+<!ENTITY menuitem.findAgain.label     "Find Again">
+<!ENTITY menuitem.properties.label    "Bookmark Properties...">
+]>
+
 <xul:window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -9,32 +30,37 @@
   <html:script src="bookmarks.js"/>
 
   <menubar>
-    <menu name="File">
-      <menuitem name="New Window" onclick="BookmarksNewWindow();"/>
-      <menuitem name="New Bookmarks..."/>
-      <menuitem name="New Folder..."/>
-      <menuitem name="New Separator"/>
+    <menu name="&menu.file.label;">
+      <menuitem name="&menuitem.newWindow.label;"
+                onclick="BookmarksNewWindow();"/>
+      <menuitem name="x&menuitem.newBookmark.label;"/>
+      <menuitem name="x&menuitem.newFolder.label;"/>
+      <menuitem name="x&menuitem.newSeparator.label;"/>
       <separator/>
-      <menuitem name="Close"/>
+      <menuitem name="x&menuitem.close.label;"/>
     </menu>
-    <menu name="Edit">
-      <menuitem name="Undo"/>
-      <menuitem name="Redo"/>
+    <menu name="&menu.edit.label;">
+      <menuitem name="x&menuitem.undo.label;"/>
+      <menuitem name="x&menuitem.redo.label;"/>
       <separator/>
-      <menuitem name="Cut"/>
-      <menuitem name="Copy"/>
-      <menuitem name="Paste"/>
-      <menuitem name="Delete"/>
-      <menuitem name="Select All"/>
+      <menuitem name="x&menuitem.cut.label;"/>
+      <menuitem name="x&menuitem.copy.label;"/>
+      <menuitem name="x&menuitem.paste.label;"/>
+      <menuitem name="x&menuitem.delete.label;"/>
+      <menuitem name="x&menuitem.selectAll.label;"/>
       <separator/>
-      <menuitem name="Find in Bookmarks..."/>
-      <menuitem name="Find Again"/>
+      <menuitem name="x&menuitem.find.label;"/>
+      <menuitem name="x&menuitem.findAgain.label;"/>
       <separator/>
-      <menuitem name="Bookmark Properties..." onclick="return BookmarkProperties();"/>
+      <menuitem name="&menuitem.properties.label;"
+                onclick="return BookmarkProperties();"/>
     </menu>
   </menubar>
 
-<tree datasources="rdf:bookmarks" id="bookmarksTree" ondblclick="return OpenURL(event,event.target.parentNode);">
+<tree  id="bookmarksTree" 
+       datasources="rdf:bookmarks"
+       ondblclick="return OpenURL(event,event.target.parentNode);"
+       flex="100%">
   <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
