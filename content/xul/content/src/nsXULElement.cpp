@@ -2049,8 +2049,9 @@ RDFElementImpl::List(FILE* out, PRInt32 aIndent) const
 
         rdf_Indent(out, aIndent);
         fputs("[RDF ", out);
-        fputs(tag->GetUnicode(), out);
-
+        nsAutoString as;
+        tag->ToString(as);
+        fputs(as, out);
         NS_RELEASE(tag);
     }
 
