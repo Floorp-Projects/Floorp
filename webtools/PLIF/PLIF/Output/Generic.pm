@@ -99,6 +99,7 @@ sub init {
     my($app, $session, $protocol) = @_;
     $self->propertySet('actualSession', $session);
     $self->propertySet('actualProtocol', $protocol);
+    $self->propertySet('outputter', $self->app->getServiceInstance('output.generic.'.$self->actualProtocol));
 }
 
 sub output {
@@ -112,6 +113,19 @@ sub output {
         $expander = $self->app->getService('string.expander');
         $self->assert($expander, 1, 'Could not find a string expander.');
     }
-    $self->app->getService('output.generic.'.$self->actualProtocol)->output($self->app, $session, 
-         $expander->expand($self->app, $session, $self->actualProtocol, $string, $data));
+    $self->outputter->output($self->app, $session, $expander->expand($self->app, $session, $self->actualProtocol, $string, $data));
+}
+
+# If we don't implement the output handler directly, let's see if some
+# specific output dispatcher service for this protocol does.
+# Note: We pass ourselves as the 'output object for this protocol'
+# even though this is actually the generic output handler, because
+# there _is_ no 'output object for this protocol' since if there was
+# the generic output module wouldn't get called!
+sub methodMissing {
+    my $self = shift;
+    my($method, @arguments) = @_;
+    if (not $self->app->dispatchMethod('dispatcher.output.'.$self->actualProtocol, 'output', $method, $self, @arguments)) {
+        $self->SUPER::methodMissing(@_); # this does the same, but for 'dispatcher.output.generic' handlers
+    }
 }

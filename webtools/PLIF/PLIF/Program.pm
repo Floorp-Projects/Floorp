@@ -109,10 +109,20 @@ sub output {
         $default = 1;
         $protocol = $self->selectOutputProtocol();
     }
+    # There are two output models in PLIF. The first is the protocol-
+    # specific-code model, the second is the string-expander
+    # model. The string expander model is still protocol specific to
+    # some extent, but it gives greater flexibility for exactly what
+    # is output... so long as it can be represented by a single string
+    # that is then passed to protocol-specific code. 
+    # First, see if a full protocol-specific-code handler exists:
     my $output = $self->getServiceInstance("output.$protocol", $session);
     if (not $output) {
+        # ...and, since we failed to find one, fall back on the
+        # generic string expander model:
         $output = $self->getServiceInstance("output.generic", $session, $protocol);
         if (not $output) {
+            # oops, no string expander model either :-/
             $self->error(0, 'Could not find an applicable output class');
         }
     }
