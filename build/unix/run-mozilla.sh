@@ -386,7 +386,7 @@ then
         export XSUNTRANSPORT XSUNSMESIZE
 fi
 
-if [ "$moz_debug" ]
+if [ "$moz_debug" -eq 1 ]
 then
   echo "MOZILLA_FIVE_HOME=$MOZILLA_FIVE_HOME"
   echo "  LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
