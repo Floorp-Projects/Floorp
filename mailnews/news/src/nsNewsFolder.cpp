@@ -18,6 +18,7 @@
 
 #define NS_IMPL_IDS
 #include "nsIPref.h"
+#include "prlog.h"
 
 #include "msgCore.h"    // precompiled header...
 
@@ -916,7 +917,7 @@ NS_IMETHODIMP nsMsgNewsFolder::RememberPassword(const char *password)
 {
 #ifdef HAVE_DB
   NewsDB *newsDb = nsnull;
-  NewsDB::Open(m_pathName, TRUE, &newsDb);
+  NewsDB::Open(m_pathName, PR_TRUE, &newsDb);
   if (newsDb)
   {
     newsDb->SetCachedPassword(password);

@@ -112,7 +112,7 @@ nsNNTPNewsgroupPost::MakeControlCancel(const char *messageID)
     PL_strcpy(new_subject, "CANCEL ");
     PL_strcat(new_subject, messageID);
 
-    m_isControl = TRUE;
+    m_isControl = PR_TRUE;
     SetSubject(new_subject);
 
     return NS_OK;

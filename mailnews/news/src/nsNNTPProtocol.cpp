@@ -299,7 +299,7 @@ HG25430
    (the object that is going to manage the NNTP connections. it would keep track of the connection list.)
 */
 /* PRIVATE XP_List * nntp_connection_list=0; */
-PRIVATE PRBool net_news_last_username_probably_valid=PR_FALSE;
+static PRBool net_news_last_username_probably_valid=PR_FALSE;
 PRInt32 net_NewsChunkSize=DEFAULT_NEWS_CHUNK_SIZE; 
 /* PRIVATE PRInt32 net_news_timeout = 170; */
 /* seconds that an idle NNTP conn can live */
@@ -541,10 +541,10 @@ nsresult nsNNTPProtocol::Initialize(nsIURI * aURL)
 
 nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 {
-  PRBool bVal = FALSE;
+  PRBool bVal = PR_FALSE;
   char *group = nsnull;
   char *commandSpecificData = nsnull;
-  PRBool cancel = FALSE;
+  PRBool cancel = PR_FALSE;
   nsCOMPtr <nsINNTPNewsgroupPost> message;
   nsresult rv = NS_OK;
 
@@ -627,7 +627,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 	goto FAIL;
 
   if (m_messageID && commandSpecificData && !PL_strcmp (commandSpecificData, "?cancel"))
-	cancel = TRUE;
+	cancel = PR_TRUE;
 
   NET_SACopy(&m_path, m_messageID);
 
@@ -798,7 +798,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 
 		if (NET_IsOffline() || (NS_SUCCEEDED(rv) && articleIsOffline))
 		{
-			ce->local_file = TRUE;
+			ce->local_file = PR_TRUE;
 			cd->articleIsOffline = articleIsOffline;
 			ce->socket = NULL;
 
@@ -1833,7 +1833,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
             printf("group not found!\n");            
 #endif
 #ifdef UNREADY_CODE
-        MSG_GroupNotFound(cd->pane, cd->host, cd->control_con->current_group, TRUE /* opening group */);
+        MSG_GroupNotFound(cd->pane, cd->host, cd->control_con->current_group, PR_TRUE /* opening group */);
 #else
             m_newsHost->GroupNotFound(m_currentGroup,
                                           PR_TRUE /* opening */);

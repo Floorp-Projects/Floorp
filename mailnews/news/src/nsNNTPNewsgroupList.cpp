@@ -213,7 +213,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 #ifdef HAVE_PANES
 	if (m_pane != NULL && !m_finishingXover && !m_startedUpdate)
 	{
-		m_startedUpdate = TRUE;
+		m_startedUpdate = PR_TRUE;
 		m_pane->StartingUpdate(MSG_NotifyNone, 0, 0);
 	}
 #endif
@@ -249,7 +249,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
                     return rv;
                 }
 				if (last_possible < ((PRInt32)mark))
-					newsGroupInfo->SetHighWater(last_possible, TRUE);
+					newsGroupInfo->SetHighWater(last_possible, PR_TRUE);
 				if (m_knownArts.set) {
 					delete m_knownArts.set;
 				}
@@ -293,7 +293,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
     
 	if (maxextra <= 0 || last_possible < first_possible || last_possible < 1) 
 	{
-		emptyGroup_p = TRUE;
+		emptyGroup_p = PR_TRUE;
 	}
 
     // this is just a temporary hack. these used to be parameters
@@ -397,7 +397,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 				}
 				else
 					*first = *last = 0;
-				m_promptedAlready = TRUE;
+				m_promptedAlready = PR_TRUE;
 			}
 			else if (m_promptedAlready && !m_downloadAll)
 				*first = *last - m_maxArticles + 1;
@@ -495,7 +495,7 @@ nsNNTPNewsgroupList::InitXOVER(PRInt32 first_msg, PRInt32 last_msg)
 /* Given a string and a length, removes any "Re:" strings from the front.
    It also deals with that "Re[2]:" thing that some mailers do.
 
-   Returns TRUE if it made a change, FALSE otherwise.
+   Returns PR_TRUE if it made a change, PR_FALSE otherwise.
 
    The string is not altered: the pointer to its head is merely advanced,
    and the length correspondingly decreased.
@@ -544,7 +544,7 @@ nsNNTPNewsgroupList::msg_StripRE(const char **stringP, PRUint32 *lengthP)
 		  if ((s2[0] == ']' || s2[0] == ')') && s2[1] == ':')
 			{
 			  s = s2+2;			/* Skip over "]:" */
-			  result = TRUE;	/* Yes, we stripped it. */
+			  result = PR_TRUE;	/* Yes, we stripped it. */
 			  goto AGAIN;		/* Skip whitespace and try again. */
 			}
 		}
@@ -868,7 +868,7 @@ nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
 		// calls which happen when the fe selects a message as a result of getting EndingUpdate,
 		// which interrupts this url right before it was going to finish and causes FinishXOver
 		// to get called again.
-        m_finishingXover = TRUE;
+        m_finishingXover = PR_TRUE;
 		// if we haven't started an update, start one so the fe
 		// will know to update the size of the view.
 		if (!m_startedUpdate)
@@ -876,7 +876,7 @@ nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
 #ifdef HAVE_PANES
 			m_pane->StartingUpdate(MSG_NotifyNone, 0, 0);
 #endif
-			m_startedUpdate = TRUE;
+			m_startedUpdate = PR_TRUE;
 		}
 #ifdef HAVE_PANES
 		m_pane->EndingUpdate(MSG_NotifyNone, 0, 0);

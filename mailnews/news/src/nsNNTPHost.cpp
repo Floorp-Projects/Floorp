@@ -17,6 +17,7 @@
  */
 
 #include "nsNNTPHost.h"
+#include "prlog.h"
 
 #include "nsMsgNewsCID.h"
 
@@ -984,7 +985,7 @@ nsNNTPHost::AddGroup(const char *name,
 	nsCOMPtr <nsINNTPCategoryContainer> categoryContainer;
 	char* containerName = nsnull;
 	PRBool needpaneupdate = PR_FALSE;
-    PRBool isSubscribed=FALSE;
+    PRBool isSubscribed=PR_FALSE;
     
 	nsMsgGroupRecord* group = (inGroupRecord) ? inGroupRecord : FindOrCreateGroup(name);
 	if (!group) goto DONE;	// Out of memory.
@@ -1443,7 +1444,7 @@ PRBool nsNNTPHost::NeedsExtension (const char * /*extension*/)
 nsresult
 nsNNTPHost::AddExtension (const char *ext)
 {
-    PRBool alreadyHasExtension=FALSE;
+    PRBool alreadyHasExtension=PR_FALSE;
     QueryExtension(ext, &alreadyHasExtension);
 	if (!alreadyHasExtension)
 	{
@@ -2531,11 +2532,11 @@ nsNNTPHost::AddNewNewsgroup(const char *name,
         switch (flag)
         {
             case 'C':
-                bIsCategoryContainer = TRUE;
+                bIsCategoryContainer = PR_TRUE;
                 break;
             case 'P':           // profile
             case 'V':
-                bIsVirtual = TRUE;
+                bIsVirtual = PR_TRUE;
                 break;
             default:
                 break;
@@ -2585,7 +2586,7 @@ nsNNTPHost::DisplaySubscribedGroup(nsINNTPNewsgroup *newsgroup,
 {
     nsresult rv = NS_OK;
 
-    SetGroupSucceeded(TRUE);
+    SetGroupSucceeded(PR_TRUE);
     if (!newsgroup && visit_now) // let's try autosubscribe...
     {
 #if SETH_HACK
@@ -2604,7 +2605,7 @@ nsNNTPHost::DisplaySubscribedGroup(nsINNTPNewsgroup *newsgroup,
         rv = newsgroup->GetSubscribed(&subscribed);
         if (NS_FAILED(rv)) return rv;
         if (!subscribed) {
-            rv = newsgroup->SetSubscribed(TRUE);
+            rv = newsgroup->SetSubscribed(PR_TRUE);
             if (NS_FAILED(rv)) return rv;
         }
     }
