@@ -525,6 +525,7 @@ oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/p
       <menuitem value="&BloatDumpAllCmd.label;" oncommand="window._content.location.href='about:bloat'"/>
       <menuitem value="&BloatClearCmd.label;"   oncommand="window._content.location.href='about:bloat?clear'"/>
       <menuitem value="&BloatLeaksCmd.label;"   oncommand="dumpMemoryLeaks();"/>
+      <menuitem value="&BloatTraceCmd.label;"   oncommand="traceObject(document);"/>
     </menupopup>
   </menu>
 </menubar>

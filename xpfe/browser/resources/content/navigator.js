@@ -1538,17 +1538,29 @@ function dumpExpr( expr ) {
 
 var leakDetector = null;
 
+function getLeakDetector()
+{
+    leakDetector = createInstance("component://netscape/xpcom/leakdetector", "nsILeakDetector");
+    if (leakDetector == null) {
+        dump("Could not create leak detector, leak detection probably\n");
+        dump("not compiled into this browser\n");
+    }
+}
+
 // Dumps current set of memory leaks.
 function dumpMemoryLeaks() {
-    if (leakDetector == null) {
-        leakDetector = createInstance("component://netscape/xpcom/leakdetector", "nsILeakDetector");
-        if (leakDetector == null) {
-            dump("Could not create leak detector, leak detection probably\n");
-            dump("not compiled into this browser\n");
-        }
-    }
+    if (leakDetector == null)
+        getLeakDetector();
 	if (leakDetector != null)
 		leakDetector.dumpLeaks();
+}
+
+function traceObject(object)
+{
+    if (leakDetector == null)
+        getLeakDetector();
+	if (leakDetector != null)
+		leakDetector.traceObject(object);
 }
 
 var consoleListener = {
