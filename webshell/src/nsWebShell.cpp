@@ -1755,8 +1755,9 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
     if (NS_FAILED(rv)) return rv;
 
     nsIURI *uri = nsnull;
-    const char *uriSpec = aUrlSpec.GetBuffer();
+    char *uriSpec = aUrlSpec.ToNewCString();
     rv = service->NewURI(uriSpec, nsnull, &uri);
+    nsCRT::free(uriSpec);
     if (NS_FAILED(rv)) return rv;
 
     rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
