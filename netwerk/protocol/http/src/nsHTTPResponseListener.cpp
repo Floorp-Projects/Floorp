@@ -507,7 +507,7 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                         StreamConvService, kStreamConverterServiceCID, &rv) ;
                 if (NS_FAILED(rv)) return rv;
 
-                nsString fromStr; fromStr.AssignWithConversion(chunkHeader) ;
+                nsString fromStr; fromStr.AssignWithConversion( "chunked" ) ;
                 nsString toStr;     toStr.AssignWithConversion("unchunked") ;
 
                 mChunkHeaderCtx.SetEOF(PR_FALSE) ;
