@@ -455,17 +455,18 @@ struct OnLinkClickEvent : public PLEvent {
   ~OnLinkClickEvent();
 
   void HandleEvent() {
-    mHandler->HandleLinkClickEvent(mContent, mVerb, mURLSpec->get(),
-                                   mTargetSpec->get(), mPostDataStream,
-                                   mHeadersDataStream);
+    mHandler->OnLinkClickSync(mContent, mVerb, mURLSpec.get(),
+                              mTargetSpec.get(), mPostDataStream,
+                              mHeadersDataStream,
+                              nsnull, nsnull);
   }
 
-  nsWebShell*  mHandler;
-  nsString*    mURLSpec;
-  nsString*    mTargetSpec;
-  nsIInputStream* mPostDataStream;
-  nsIInputStream* mHeadersDataStream;
-  nsIContent*     mContent;
+  nsWebShell*     mHandler;
+  nsString       mURLSpec;
+  nsString       mTargetSpec;
+  nsCOMPtr<nsIInputStream> mPostDataStream;
+  nsCOMPtr<nsIInputStream> mHeadersDataStream;
+  nsCOMPtr<nsIContent>     mContent;
   nsLinkVerb      mVerb;
 };
 
@@ -489,14 +490,11 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
 {
   mHandler = aHandler;
   NS_ADDREF(aHandler);
-  mURLSpec = new nsString(aURLSpec);
-  mTargetSpec = new nsString(aTargetSpec);
+  mURLSpec.Assign(aURLSpec);
+  mTargetSpec.Assign(aTargetSpec);
   mPostDataStream = aPostDataStream;
-  NS_IF_ADDREF(mPostDataStream);
   mHeadersDataStream = aHeadersDataStream;
-  NS_IF_ADDREF(mHeadersDataStream);
   mContent = aContent;
-  NS_IF_ADDREF(mContent);
   mVerb = aVerb;
 
   PL_InitEvent(this, nsnull,
@@ -512,13 +510,7 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
 
 OnLinkClickEvent::~OnLinkClickEvent()
 {
-  NS_IF_RELEASE(mContent);
   NS_IF_RELEASE(mHandler);
-  NS_IF_RELEASE(mPostDataStream);
-  NS_IF_RELEASE(mHeadersDataStream);
-  if (nsnull != mURLSpec) delete mURLSpec;
-  if (nsnull != mTargetSpec) delete mTargetSpec;
-
 }
 
 //----------------------------------------
@@ -554,16 +546,26 @@ nsWebShell::GetEventQueue(nsIEventQueue **aQueue)
   return *aQueue ? NS_OK : NS_ERROR_FAILURE;
 }
 
-void
-nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
-                                 nsLinkVerb aVerb,
-                                 const PRUnichar* aURLSpec,
-                                 const PRUnichar* aTargetSpec,
-                                 nsIInputStream* aPostDataStream,
-                                 nsIInputStream* aHeadersDataStream)
+NS_IMETHODIMP
+nsWebShell::OnLinkClickSync(nsIContent *aContent,
+                            nsLinkVerb aVerb,
+                            const PRUnichar* aURLSpec,
+                            const PRUnichar* aTargetSpec,
+                            nsIInputStream* aPostDataStream,
+                            nsIInputStream* aHeadersDataStream,
+                            nsIDocShell** aDocShell,
+                            nsIRequest** aRequest)
 {
   nsresult rv;
   nsAutoString target(aTargetSpec);
+
+  // Initialize the DocShell / Request
+  if (aDocShell) {
+    *aDocShell = nsnull;
+  }
+  if (aRequest) {
+    *aRequest = nsnull;
+  }
 
   switch(aVerb) {
     case eLinkVerb_New:
@@ -599,19 +601,21 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
                     listener->OnStartURIOpen(uri, &abort);
                 }
             }
-            return;
+            return rv;
         }
 
-        rv = InternalLoad(uri,                // New URI
-                          mCurrentURI,        // Referer URI
-                          nsnull,             // No onwer
-                          PR_TRUE,            // Inherit owner from document
-                          target.get(),       // Window target
-                          aPostDataStream,    // Post data stream
-                          aHeadersDataStream, // Headers stream
-                          LOAD_LINK,          // Load type
-                          nsnull,             // No SHEntry
-                          PR_TRUE);           // first party site
+        return InternalLoad(uri,                // New URI
+                            mCurrentURI,        // Referer URI
+                            nsnull,             // No onwer
+                            PR_TRUE,            // Inherit owner from document
+                            target.get(),       // Window target
+                            aPostDataStream,    // Post data stream
+                            aHeadersDataStream, // Headers stream
+                            LOAD_LINK,          // Load type
+                            nsnull,             // No SHEntry
+                            PR_TRUE,            // first party site
+                            aDocShell,          // DocShell out-param
+                            aRequest);          // Request out-param
       }
       break;
     case eLinkVerb_Embed:
@@ -619,6 +623,7 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
       //          in NS 4.x
     default:
       NS_ABORT_IF_FALSE(0,"unexpected link verb");
+      return NS_ERROR_UNEXPECTED;
   }
 }
 
@@ -997,7 +1002,9 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
                        nsnull,                            // No headers stream
                        LOAD_RELOAD_BYPASS_PROXY_AND_CACHE,// Load type
                        nsnull,                            // No SHEntry
-                       PR_TRUE);                          // first party site
+                       PR_TRUE,                           // first party site
+                       nsnull,                            // No nsIDocShell
+                       nsnull);                           // No nsIRequest
           }
         }
     }

@@ -38,6 +38,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  unicharutil \
 		  webshell \
+		  uriloader \
 		  htmlparser \
 		  necko \
 		  view \

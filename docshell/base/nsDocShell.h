@@ -209,7 +209,9 @@ protected:
                                nsISupports * aOwner,
                                nsIInputStream * aPostData,
                                nsIInputStream * aHeadersData,
-                               PRBool firstParty);
+                               PRBool firstParty,
+                               nsIDocShell ** aDocShell,
+                               nsIRequest ** aRequest);
     NS_IMETHOD AddHeadersToChannel(nsIInputStream * aHeadersData, 
                                   nsIChannel * aChannel);
     virtual nsresult DoChannelLoad(nsIChannel * aChannel,

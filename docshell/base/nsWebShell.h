@@ -71,6 +71,14 @@ public:
         const PRUnichar* aTargetSpec,
         nsIInputStream* aPostDataStream = 0,
         nsIInputStream* aHeadersDataStream = 0);
+    NS_IMETHOD OnLinkClickSync(nsIContent* aContent,
+        nsLinkVerb aVerb,
+        const PRUnichar* aURLSpec,
+        const PRUnichar* aTargetSpec,
+        nsIInputStream* aPostDataStream = 0,
+        nsIInputStream* aHeadersDataStream = 0,
+        nsIDocShell** aDocShell = 0,
+        nsIRequest** aRequest = 0);
     NS_IMETHOD OnOverLink(nsIContent* aContent,
         const PRUnichar* aURLSpec,
         const PRUnichar* aTargetSpec);
@@ -81,12 +89,6 @@ public:
 
   // nsWebShell
     nsresult GetEventQueue(nsIEventQueue **aQueue);
-    void HandleLinkClickEvent(nsIContent *aContent,
-        nsLinkVerb aVerb,
-        const PRUnichar* aURLSpec,
-        const PRUnichar* aTargetSpec,
-        nsIInputStream* aPostDataStream = 0,
-        nsIInputStream* aHeadersDataStream = 0);
 
     static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
