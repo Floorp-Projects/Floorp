@@ -33,10 +33,18 @@
 
 #define NS_MAILNEWSRESOURCE_CID                      \
 { /* e490d22c-cd67-11d2-8cca-0060b0fc14a3 */         \
-    0xe490d22c,                                      \
+	0xe490d22c,										 \
     0xcd67,                                          \
     0x11d2,                                          \
     {0x8c, 0xca, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
+
+#define NS_MAILNEWSMESSAGERESOURCE_CID               \
+{ /* b0908e06-dc06-11d2-8a46-0060b0fc04d2 */         \
+	0xb0908e06,										 \
+	0xdc06,											 \
+	0x11d2,											 \
+	{0x8a, 0x46, 0x00, 0x60, 0xb0, 0xfc, 0x4, 0xd2}	 \
 }
 
 #endif // nsMsgLocal_h__

@@ -38,6 +38,7 @@ static NS_DEFINE_CID(kCMailboxParser, NS_MAILBOXPARSER_CID);
 static NS_DEFINE_CID(kCMailboxService, NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kMailNewsDatasourceCID, NS_MAILNEWSDATASOURCE_CID);
 static NS_DEFINE_CID(kMailNewsResourceCID, NS_MAILNEWSRESOURCE_CID);
+static NS_DEFINE_CID(kMailNewsMessageResourceCID, NS_MAILNEWSMESSAGERESOURCE_CID);
 static NS_DEFINE_CID(kPop3ServiceCID, NS_POP3SERVICE_CID);
 
 ////////////////////////////////////////////////////////////
@@ -142,6 +143,10 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports *aOuter, const nsIID &aII
 	{
 		inst = NS_STATIC_CAST(nsIMsgLocalMailFolder*, new nsMsgLocalMailFolder());
 	}
+	else if (mClassID.Equals(kMailNewsMessageResourceCID)) 
+	{
+		inst = NS_STATIC_CAST(nsIMessage*, new nsMsgHdr());
+	}
 	
 	if (inst == nsnull)
 		return NS_ERROR_OUT_OF_MEMORY;
@@ -232,6 +237,11 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
+  rv = compMgr->RegisterComponent(kMailNewsMessageResourceCID,
+                                  "Mail/News Resource Factory",
+                                  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "mailbox_message",
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
