@@ -133,7 +133,9 @@ class nsAStringAccessor : public nsAString
       nsAStringAccessor(); // NOT IMPLEMENTED
 
     public:
+#ifdef MOZ_V1_STRING_ABI
       const void *vtable() const { return mVTable; }
+#endif
       char_type  *data() const   { return mData; }
       size_type   length() const { return mLength; }
       PRUint32    flags() const  { return mFlags; }
@@ -153,7 +155,9 @@ class nsACStringAccessor : public nsACString
       nsACStringAccessor(); // NOT IMPLEMENTED
 
     public:
+#ifdef MOZ_V1_STRING_ABI
       const void *vtable() const { return mVTable; }
+#endif
       char_type  *data() const   { return mData; }
       size_type   length() const { return mLength; }
       PRUint32    flags() const  { return mFlags; }
@@ -229,8 +233,11 @@ nsStringBuffer::FromString(const nsAString& str)
     const nsAStringAccessor* accessor =
         NS_STATIC_CAST(const nsAStringAccessor*, &str);
 
-    if (accessor->vtable() != nsObsoleteAString::sCanonicalVTable ||
-        !(accessor->flags() & nsSubstring::F_SHARED))
+#ifdef MOZ_V1_STRING_ABI
+    if (accessor->vtable() != nsObsoleteAString::sCanonicalVTable)
+      return nsnull;
+#endif
+    if (!(accessor->flags() & nsSubstring::F_SHARED))
       return nsnull;
 
     return FromData(accessor->data());
@@ -242,8 +249,11 @@ nsStringBuffer::FromString(const nsACString& str)
     const nsACStringAccessor* accessor =
         NS_STATIC_CAST(const nsACStringAccessor*, &str);
 
-    if (accessor->vtable() != nsObsoleteACString::sCanonicalVTable ||
-        !(accessor->flags() & nsCSubstring::F_SHARED))
+#ifdef MOZ_V1_STRING_ABI
+    if (accessor->vtable() != nsObsoleteACString::sCanonicalVTable)
+      return nsnull;
+#endif
+    if (!(accessor->flags() & nsCSubstring::F_SHARED))
       return nsnull;
 
     return FromData(accessor->data());
@@ -255,21 +265,21 @@ nsStringBuffer::ToString(PRUint32 len, nsAString &str)
     PRUnichar* data = NS_STATIC_CAST(PRUnichar*, Data());
 
     nsAStringAccessor* accessor = NS_STATIC_CAST(nsAStringAccessor*, &str);
+#ifdef MOZ_V1_STRING_ABI
     if (accessor->vtable() != nsObsoleteAString::sCanonicalVTable)
       {
         str.Assign(data, len);
+        return;
       }
-    else
-      {
-        NS_ASSERTION(data[len] == PRUnichar(0), "data should be null terminated");
+#endif
+    NS_ASSERTION(data[len] == PRUnichar(0), "data should be null terminated");
 
-        // preserve class flags
-        PRUint32 flags = accessor->flags();
-        flags = (flags & 0xFFFF0000) | nsSubstring::F_SHARED | nsSubstring::F_TERMINATED;
+    // preserve class flags
+    PRUint32 flags = accessor->flags();
+    flags = (flags & 0xFFFF0000) | nsSubstring::F_SHARED | nsSubstring::F_TERMINATED;
 
-        AddRef();
-        accessor->set(data, len, flags);
-      }
+    AddRef();
+    accessor->set(data, len, flags);
   }
 
 void
@@ -278,21 +288,21 @@ nsStringBuffer::ToString(PRUint32 len, nsACString &str)
     char* data = NS_STATIC_CAST(char*, Data());
 
     nsACStringAccessor* accessor = NS_STATIC_CAST(nsACStringAccessor*, &str);
+#ifdef MOZ_V1_STRING_ABI
     if (accessor->vtable() != nsObsoleteACString::sCanonicalVTable)
       {
         str.Assign(data, len);
+        return;
       }
-    else
-      {
-        NS_ASSERTION(data[len] == char(0), "data should be null terminated");
+#endif
+    NS_ASSERTION(data[len] == char(0), "data should be null terminated");
 
-        // preserve class flags
-        PRUint32 flags = accessor->flags();
-        flags = (flags & 0xFFFF0000) | nsCSubstring::F_SHARED | nsCSubstring::F_TERMINATED;
+    // preserve class flags
+    PRUint32 flags = accessor->flags();
+    flags = (flags & 0xFFFF0000) | nsCSubstring::F_SHARED | nsCSubstring::F_TERMINATED;
 
-        AddRef();
-        accessor->set(data, len, flags);
-      }
+    AddRef();
+    accessor->set(data, len, flags);
   }
 
 // ---------------------------------------------------------------------------
