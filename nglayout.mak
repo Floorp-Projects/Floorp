@@ -186,6 +186,7 @@ pull_lizard:
 	$(CVSCO_PLUGIN) $(MOZ_TOP)/modules/plugin
 	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/oji
 	$(CVSCO_LIZARD) $(MOZ_TOP)/caps
+        $(CVSCO_LIZARD) $(MOZ_TOP)/rdf
 !if defined(NGPREFS)
 	$(CVSCO_LIZARD) $(MOZ_TOP)/cmd/wincom
 	$(CVSCO_LIZARD) $(MOZ_TOP)/cmd/winfe/defaults.h
