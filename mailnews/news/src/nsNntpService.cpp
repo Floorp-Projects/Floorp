@@ -1256,9 +1256,36 @@ nsresult nsNntpService::DisplayMessageForPrinting(const char* aMessageURI, nsISu
   return rv;
 }
 
-NS_IMETHODIMP nsNntpService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgWindow *aMsgWindow, nsIMsgFolder *aMsgFolder, const char *aMessageUri)
+NS_IMETHODIMP nsNntpService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgWindow *aMsgWindow, nsIMsgFolder *aMsgFolder, const char *aSearchUri)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG(aMsgFolder);
+  nsCOMPtr <nsIMsgIncomingServer> server;
+  nsresult rv = aMsgFolder->GetServer(getter_AddRefs(server));
+  if (NS_SUCCEEDED(rv) && server)
+  {
+  	nsCOMPtr<nsIURI> uri;
+    nsXPIDLCString serverUri;
+    nsXPIDLString newsgroupName;
+    rv = server->GetServerURI(getter_Copies(serverUri));
+    if (NS_FAILED(rv)) return rv;
+    aMsgFolder->GetName(getter_Copies(newsgroupName));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCString searchUrl = serverUri;
+    nsCString asciiNewsgroupName = newsgroupName;
+    searchUrl.Append(aSearchUri);
+    rv = ConstructNntpUrl(searchUrl.GetBuffer(), asciiNewsgroupName.GetBuffer(), nsMsgKey_None, nsnull, getter_AddRefs(uri));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(uri));
+    if (msgurl)
+      msgurl->SetSearchSession(aSearchSession);
+    // run the url to update the counts
+      rv = RunNewsUrl(uri, nsnull, nsnull);  
+    if (NS_FAILED(rv)) return rv;
+
+  }
+  return rv;
 }
 
 

@@ -60,6 +60,8 @@
 /* include event sink interfaces for news */
 
 #include "nsIMsgHeaderParser.h" 
+#include "nsIMsgSearchSession.h"
+#include "nsIMsgSearchAdapter.h"
 
 #include "nsMsgKeySet.h"
 
@@ -4005,12 +4007,8 @@ PRInt32 nsNNTPProtocol::XPATSend()
 	int status = 0;
 	char *thisTerm = NULL;
     
-#ifdef UNREADY_CODE
-	if (cd->current_search &&
-		(thisTerm = PL_strchr(cd->current_search, '/')) != NULL) {
-#else
-    if (1) {
-#endif
+	if (m_searchData &&
+		(thisTerm = PL_strchr(m_searchData, '/')) != NULL) {
 		/* extract the XPAT encoding for one query term */
         /* char *next_search = NULL; */
 		char *command = NULL;
@@ -4077,21 +4075,29 @@ PRInt32 nsNNTPProtocol::XPATResponse(nsIInputStream * inputStream, PRUint32 leng
 		{
 			long articleNumber;
 			PR_sscanf(line, "%ld", &articleNumber);
-#ifdef UNREADY_CODE
-			MSG_AddNewsXpatHit (ce->window_id, (PRUint32) articleNumber);
-#endif
+	    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+	    if (mailnewsurl)
+      {
+        nsCOMPtr <nsIMsgSearchSession> searchSession;
+        nsCOMPtr <nsIMsgSearchAdapter> searchAdapter;
+        mailnewsurl->GetSearchSession(getter_AddRefs(searchSession));
+        if (searchSession)
+        {
+          searchSession->GetRunningAdapter(getter_AddRefs(searchAdapter));
+          if (searchAdapter)
+            searchAdapter->AddHit((PRUint32) articleNumber);
+        }
+      }
 		}
 		else
 		{
 			/* set up the next term for next time around */
-#ifdef UNREADY_CODE
-			char *nextTerm = PL_strchr(cd->current_search, '/');
+			char *nextTerm = PL_strchr(m_searchData, '/');
 
 			if (nextTerm)
-				cd->current_search = ++nextTerm;
+				m_searchData = ++nextTerm;
 			else
-				cd->current_search = NULL;
-#endif
+				m_searchData = nsnull;
 
 			m_nextState = NNTP_XPAT_SEND;
 			ClearFlag(NNTP_PAUSE_FOR_READ);
@@ -4903,7 +4909,7 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 
         m_connectionBusy = PR_FALSE;
 #ifdef DEBUG_bienvenu
-#define USE_CONN_CACHE
+//#define USE_CONN_CACHE
 #endif
 #ifdef USE_CONN_CACHE
         mailnewsurl->SetUrlState(PR_FALSE, NS_OK);
