@@ -235,15 +235,14 @@ void nsXtWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data)
 void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
   nsWindow * widgetWindow = (nsWindow *) p ;
-
+  static char * passwd;
   char * newStr;
-  char * passwd;
   int len;
 
   XmTextVerifyCallbackStruct *cbs = (XmTextVerifyCallbackStruct *) call_data;
 
   if (cbs->reason == XmCR_ACTIVATE) {
-      printf ("Password: %s", passwd);
+      //printf ("Password: %s\n", passwd);
       return;
   }
 

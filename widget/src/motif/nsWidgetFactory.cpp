@@ -19,6 +19,7 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsIButton.h"
+#include "nsITextWidget.h"
 #include "nsWidgetsCID.h"
 
 #include "nsToolkit.h"
@@ -27,6 +28,7 @@
 #include "nsButton.h"
 #include "nsScrollbar.h"
 #include "nsCheckButton.h"
+#include "nsTextWidget.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
@@ -34,6 +36,7 @@ static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCHorzScrollbarCID, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCVertScrollbarCID, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCCheckButtonCID, NS_CHECKBUTTON_CID);
+static NS_DEFINE_IID(kCTextWidgetCID, NS_TEXTFIELD_CID);
 
 
 static NS_DEFINE_IID(kIWidget,        NS_IWIDGET_IID);
@@ -105,6 +108,8 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
                                           const nsIID &aIID,  
                                           void **aResult)  
 {  
+    fprintf(stderr, "Creating Widget\n");
+
     if (aResult == NULL) {  
         return NS_ERROR_NULL_POINTER;  
     }  
@@ -139,6 +144,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (aIID.Equals(kIWidget)) {
         inst = (nsIWidget*)new nsWindow(aOuter);
+    }
+    else if (mClassID.Equals(kCTextWidgetCID)) {
+        inst = (nsIWidget*)new nsTextWidget(aOuter);
     }
     else if (mClassID.Equals(kCChild)) {
         inst = (nsIWidget*)new ChildWindow(aOuter);
