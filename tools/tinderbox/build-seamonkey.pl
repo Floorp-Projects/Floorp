@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX qw(sys_wait_h strftime);
 use Cwd;
 
-$Version = '$Revision: 1.60 $ ';
+$Version = '$Revision: 1.61 $ ';
 
 
 sub PrintUsage {
@@ -189,10 +189,10 @@ sub BuildIt {
     mkdir $TopLevel, 0777;
     chdir $TopLevel or die "chdir($TopLevel): $!\n";
 
-    unless ($TestOnly) {
-      print "$CVS $CVSCO mozilla/client.mk\n";
-      print LOG "$CVS $CVSCO mozilla/client.mk\n";
-      open PULL, "$CVS $CVSCO mozilla/client.mk 2>&1 |" or die "open: $!\n";
+    unless (-e "$Topsrcdir/client.mk") {
+      print "$CVS $CVSCO $Topsrcdir/client.mk\n";
+      print LOG "$CVS $CVSCO $Topsrcdir/client.mk\n";
+      open PULL, "$CVS $CVSCO $Topsrcdir/client.mk 2>&1 |" or die "open: $!\n";
       while (<PULL>) {
         print $_;
         print LOG $_;
