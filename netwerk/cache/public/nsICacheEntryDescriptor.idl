@@ -100,6 +100,12 @@ interface nsICacheEntryDescriptor : nsISupports
      * Get the disk file associated with the cache entry.
      */
     readonly attribute nsIFile file;
+
+    /**
+     * Get/set security info on the cache entry for this descriptor.  This fails
+     * if the storage policy is not STORE_IN_MEMORY.
+     */
+    attribute nsISupports securityInfo;
     
     /**
      * Doom the cache entry this descriptor references in order to slate it for 
