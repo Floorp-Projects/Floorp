@@ -1864,7 +1864,7 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
     rv = GetCmdLineArgs( request, getter_AddRefs( args ) );
     if (NS_FAILED(rv)) return;
 
-    nsCOMPtr<nsIAppStartup> appStartup(do_GetService(appStartup));
+    nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
     if (!appStartup) return;
 
     nsCOMPtr<nsINativeAppSupport> nativeApp;
