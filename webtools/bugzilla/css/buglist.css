@@ -24,7 +24,7 @@
 /* Style bug rows according to severity. */
 .bz_blocker { color: red; font-weight: bold; }
 .bz_critical { color: red; }
-.bz_enhancement { font-style: italic; }
+.bz_enhancement { color: #888; background-color: white; }
 
 /* Style secure bugs if the installation is not using bug groups.
  * Installations that *are* using bug groups are likely to be using
