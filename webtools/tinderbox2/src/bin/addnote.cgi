@@ -6,8 +6,8 @@
 #		 on the tinderbox status page.
 
 
-# $Revision: 1.12 $ 
-# $Date: 2002/04/27 01:24:55 $ 
+# $Revision: 1.13 $ 
+# $Date: 2002/04/27 01:37:05 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
@@ -57,7 +57,54 @@ use Utils;
 sub timestring2time {
     my $string = @_;
 
-    return time();
+    $string = ~m/\s*(\d+)/s+(\d+):(\d+)\s*/;
+
+    my ($mon, $mday, $hours, $min,) = ($1, $2, $3, $4);
+
+    # we are only interested in history in our recent
+    # past, within the last year.
+    
+    # The perl conventions for these variables is 0 origin while the
+    # "display" convention for these variables is 1 origin.  
+    $mon--;
+  
+    # This calculation may use the wrong year.
+    my $sec = 0;
+    
+    my ($time) = timelocal($sec,$min,$hours,$mday,$mon,$year);    
+
+    # This fix is needed every year on Jan 1. On that day $time is
+    # nearly a year in the future so is much bigger then $main::TIME.
+    
+    if ( ($time - $main::TIME) > $main::SECONDS_PER_MONTH) {
+        $time = timegm($sec,$min,$hours,$mday,$mon,$year - 1);    
+    }
+
+    # check that the result is reasonable.
+    
+    if ( (($main::TIME - $main::SECONDS_PER_YEAR) > $time) || 
+         (($main::TIME + $main::SECONDS_PER_MONTH) < $time) ) {
+        die("Notice reported time: $time ".scalar(gmtime($time)).
+            " which is more then a year away from now or in the future.\n");
+    }
+
+    return $time;
+}
+
+
+sub time2timestring {
+    my $time = @_;
+    
+    my ($sec,$min,$hour,$mday,$mon,
+        $year,$wday,$yday,$isdst) =
+            localtime($time);
+    
+    $mon++;
+    $year += 1900;
+    my $display__time = sprintf("%02u/%02u %02u:%02u",
+                                $mon, $mday,  $hour, $min);
+  
+    return $display_time;
 }
 
 
@@ -77,9 +124,8 @@ sub get_params {
   $MAILADDR = ( param("mailaddr") ||
                 cookie(-name=>"tinderbox_mailaddr"));
 
-  $EFFECTIVE_TIME = param("effectivetime");
-  if ( $EFFECTIVE_TIME ) {
-      $EFFECTIVE_TIME = timestring2time($EFFECTIVE_TIME);
+  if (param("effectivetime")) {
+      $EFFECTIVE_TIME = timestring2time( param("effectivetime") );
   } else {
       $EFFECTIVE_TIME = time();
   }
@@ -112,6 +158,15 @@ sub format_input_page {
 
   my ($title) = "Add a Notice to tree: $tree";
 
+
+  my ($sec,$min,$hour,$mday,$mon,
+      $year,$wday,$yday,$isdst) =
+        localtime($EFFECTIVE_TIME);
+  $mon++;
+  $year += 1900;
+  my $display_effective_time = sprintf("%02u/%02u %02u:%02u",
+                                        $mon, $mday,  $hour, $min);
+  
   push @out, (
               start_html(-title=>$title),
               h2($title),
@@ -146,7 +201,7 @@ sub format_input_page {
   push @out, (
 	      "Effective Time: \n",p(),
 	      textarea(-name=>'effectivetime', 
-                       -default=>$LOCALTIME,
+                       -default=>$display_effective_time,
 		       -rows=>1, -cols=>30, -wrap=>'physical',),
 	      p(),
 	     );
