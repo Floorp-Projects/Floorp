@@ -3381,7 +3381,7 @@ static short createDialerShortcut( char* szDesktop,     // Desktop path
 		DWORD size = stRASENTRYNAME * MAX_PATH;
 		DWORD entries;
 		
-		if ( 0 != RasEnumEntries( NULL, pbPath, rasEntryName, &size, &entries ) )
+		if ( 0 != (*m_lpfnRasEnumEntries)( NULL, pbPath, rasEntryName, &size, &entries ) )
 			return -4;
 
 		BOOL		exists = FALSE;
