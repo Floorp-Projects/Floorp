@@ -381,7 +381,6 @@ nsMsgAccountManager::GetIncomingServer(const char* key,
   serverPref += ".userName";
   nsXPIDLCString username;
   rv = m_prefs->CopyCharPref(serverPref, getter_Copies(username));
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_NOT_INITIALIZED);
 
   // .hostname
   serverPref = serverPrefPrefix;
