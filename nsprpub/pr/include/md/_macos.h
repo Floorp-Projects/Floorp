@@ -65,6 +65,7 @@
 
 #include <Errors.h>
 #include <OpenTransport.h>
+#include <DriverServices.h>
 
 #define _PR_HAVE_PEEK_BUFFER
 #define _PR_PEEK_BUFFER_MAX (16 * 1024)
@@ -105,7 +106,9 @@ struct _MDSegment {
 };
 
 struct _MDCPU {
-    PRInt8 notused;
+    AbsoluteTime    lastThreadSwitch;
+    AbsoluteTime    lastWakeUpProcess;
+    PRBool          trackScheduling;
 };
 
 typedef struct _MDSocketCallerInfo {
@@ -175,7 +178,7 @@ extern void _MD_SetIntsOff(PRInt32 ints);
 #define _MD_CLEANUP_BEFORE_EXIT()
 #define _MD_EXIT(status)	exit(status)
 #define _MD_INIT_CPUS()
-#define _MD_INIT_RUNNING_CPU(cpu)
+#define _MD_INIT_RUNNING_CPU(cpu) _MD_InitRunningCPU(cpu)
 
 /*
 ** Process Related definitions
@@ -299,16 +302,20 @@ extern PRStatus _MD_InitThread(PRThread *thread);
 ** context switch because it might have changed.
 */
 /*    	ResetTimer();	before _PR_Schedule()		   		*/
-#define _MD_SWITCH_CONTEXT(_thread)    	\
-    PR_BEGIN_MACRO                     	\
-    PR_ASSERT(_thread->no_sched);       \
-	if (!setjmp(_thread->md.jb)) { 		\
-        _MD_SET_LAST_THREAD(_thread);   \
-	    _PR_Schedule();            		\
-    } else {                            \
-        PR_ASSERT(_MD_LAST_THREAD() !=_MD_CURRENT_THREAD()); \
-        _MD_LAST_THREAD()->no_sched = 0; \
-	}                              		\
+
+
+#define _MD_SWITCH_CONTEXT(_thread)                                 \
+    PR_BEGIN_MACRO                                                  \
+    PR_ASSERT(_thread->no_sched);                                   \
+    if (!setjmp(_thread->md.jb)) {                                  \
+        _MD_SET_LAST_THREAD(_thread);                               \
+        if (_PR_MD_CURRENT_CPU()->md.trackScheduling)               \
+            _PR_MD_CURRENT_CPU()->md.lastThreadSwitch = UpTime();   \
+        _PR_Schedule();                                             \
+    } else {                                                        \
+        PR_ASSERT(_MD_LAST_THREAD() !=_MD_CURRENT_THREAD());        \
+        _MD_LAST_THREAD()->no_sched = 0;                            \
+    }                                                               \
     PR_END_MACRO
 
 /*
@@ -518,7 +525,6 @@ extern PRStatus _MD_gethostname(char *name, int namelen);
 ** Time Related definitions
 */
 
-#define kMacTimerInMiliSecs				8L
 #define _MD_GET_INTERVAL 				_MD_GetInterval
 #define _MD_INTERVAL_PER_SEC() 			PR_MSEC_PER_SEC
 #define _MD_INTERVAL_INIT()

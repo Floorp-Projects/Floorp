@@ -39,7 +39,7 @@
 #include <MacTypes.h>
 #include <Timer.h>
 #include <OSUtils.h>
-
+#include <Math64.h>
 #include <LowMem.h>
 #include <Multiprocessing.h>
 #include <Gestalt.h>
@@ -184,6 +184,8 @@ _PRInterruptTable _pr_interruptTable[] = {
     { 0 }
 };
 
+#define kMacTimerInMiliSecs 8L
+
 pascal void TimerCallback(TMTaskPtr tmTaskPtr)
 {
     _PRCPU *cpu = _PR_MD_CURRENT_CPU();
@@ -201,8 +203,17 @@ pascal void TimerCallback(TMTaskPtr tmTaskPtr)
     _PR_ClockInterrupt();
 	
     if ((_PR_RUNQREADYMASK(cpu)) >> ((_PR_MD_CURRENT_THREAD()->priority))) {
-        if (gTimeManagerTaskDoesWUP)
-            WakeUpProcess(&gApplicationProcess);
+        if (gTimeManagerTaskDoesWUP) {
+            // We only want to call WakeUpProcess if we know that NSPR has managed to switch threads
+            // since the last call, otherwise we end up spewing out WakeUpProcess() calls while the
+            // application is blocking somewhere. This can interfere with events loops other than
+            // our own (see bug 158927).
+            if (UnsignedWideToUInt64(cpu->md.lastThreadSwitch) > UnsignedWideToUInt64(cpu->md.lastWakeUpProcess))
+            {
+                WakeUpProcess(&gApplicationProcess);
+                cpu->md.lastWakeUpProcess = UpTime();
+            }
+        }
         _PR_SET_RESCHED_FLAG();
 	}
 	
@@ -260,6 +271,16 @@ void _MD_PauseCPU(PRIntervalTime timeout)
 
         WaitOnIdleSemaphore(timeout);
         (void) _MD_IOInterrupt();
+    }
+}
+
+void _MD_InitRunningCPU(_PRCPU* cpu)
+{
+    cpu->md.trackScheduling = RunningOnOSX();
+    if (cpu->md.trackScheduling) {
+        AbsoluteTime    zeroTime = {0, 0};
+        cpu->md.lastThreadSwitch = UpTime();
+        cpu->md.lastWakeUpProcess = zeroTime;
     }
 }
 
