@@ -46,3 +46,10 @@
 <!ENTITY walletObscureCmd.label "Obscure Stored Data">
 <!ENTITY walletCookieManager.label "Cookie Manager">
 <!ENTITY walletImageManager.label "Image Manager">
+
+<!ENTITY taskNavigator.tooltip  "Navigator">
+<!ENTITY taskMessenger.tooltip  "&brandShortName; Mail">
+<!ENTITY taskComposer.tooltip  "Composer">
+<!ENTITY taskAddressBook.tooltip  "Address Book">
+<!ENTITY taskBar.tooltip  "Taskbar">
+

@@ -379,7 +379,7 @@
 
   <binding id="toolbar">
     <content>
-      <xul:toolbargrippy inherits="grippytooltiptext:tooltiptext" 
+      <xul:toolbargrippy inherits="grippytooltiptext:tooltiptext,grippytooltip:tooltip" 
                          onclick="var v = parentNode;
                                   var attr = v.getAttribute('collapsed');
                                   if (attr == 'true') {

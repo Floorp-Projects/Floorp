@@ -1,6 +1,11 @@
 <?xml version="1.0"?> 
 
-<!DOCTYPE  window SYSTEM "chrome://global/locale/taskbarOverlay.dtd">
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % taskbarDTD SYSTEM "chrome://global/locale/taskbarOverlay.dtd" >
+%taskbarDTD;
+]>
 
 <overlay id="taskbarOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -59,6 +64,7 @@
          to display all of the open windows -->
     <menubutton oncommand="ShowWindowFromResource(event.target)"
                 datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
+                tooltip="aTooltip" tooltiptext="&taskWindowList.tooltip;"
                 value="&openWinButton.label;" class="button-toolbar-4 plain">
       <template>
         <menupopup>

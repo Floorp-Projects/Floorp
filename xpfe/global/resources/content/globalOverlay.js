@@ -93,6 +93,13 @@ function goOnEvent(node, event)
 	}
 }
 
+function setTooltipText(aID, aTooltipText)
+{
+  var element = document.getElementById(aID);
+  if (element)
+    element.setAttribute("tooltiptext", aTooltipText);
+}
+
 function FillInTooltip ( tipElement )
 {
   var retVal = false;

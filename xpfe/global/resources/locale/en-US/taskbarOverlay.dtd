@@ -6,3 +6,5 @@
 <!-- taskbar popups -->
 <!-- LOCALIZATION NOTE  (tinderboxButton.label): Do NOT translate "Tinderbox" -->
 <!ENTITY  tinderboxButton.label "Look at Tinderbox">
+
+<!ENTITY taskWindowList.tooltip "List of open windows">
