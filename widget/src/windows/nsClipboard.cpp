@@ -226,8 +226,8 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
   }
 
   IDataObject * dataObj;
-  if (NS_OK == CreateNativeDataObject(mTransferable, &dataObj)) {
-    dataObj->AddRef();
+  if (NS_OK == CreateNativeDataObject(mTransferable, &dataObj)) { // this add refs
+    //dataObj->AddRef(); // ?? maybe not do this
 
     // cast our native DataObject to its IDataObject pointer
     // and put it on the clipboard
@@ -366,7 +366,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
           result = GetGlobalData(stm.hGlobal, aData, aLen);
           if (fe.cfFormat == CF_TEXT) {
             char * str = (char *)*aData;
-            if (str[*aLen-1] == 0) {
+            while (str[*aLen-1] == 0) {
               (*aLen)--;
             }
           }

@@ -32,6 +32,8 @@ static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
 #include "OLE2.h"
 #include "URLMON.h"
 
+//static int gCounter = 0;
+
 ULONG nsDataObjClassFactory::g_cLock = 0;
 ULONG nsDataObj::g_cRef = 0;
 
@@ -142,12 +144,14 @@ nsDataObj::nsDataObj()
 
   m_enumFE = new CEnumFormatEtc(this, 32);
   m_enumFE->AddRef();
+  //printf("**************************** Counter %d\n", (++gCounter));
 }
 
 nsDataObj::~nsDataObj()
 {
 	m_cRef = 0;
   m_enumFE->Release();
+  //printf("**************************** Counter %d\n", (--gCounter));
 
 }
 
@@ -171,12 +175,14 @@ STDMETHODIMP nsDataObj::QueryInterface(REFIID riid, void** ppv)
 STDMETHODIMP_(ULONG) nsDataObj::AddRef()
 {
 	++g_cRef;
+  //printf("AddRef >>>>>>>>>>>>>>>>>> %d on %p\n", (m_cRef+1), this);
 	return ++m_cRef;
 }
 
 
 STDMETHODIMP_(ULONG) nsDataObj::Release()
 {
+  //printf("Release>>>>>>>>>>>>>>>>>> %d on %p\n", (m_cRef-1), this);
 	if (0 < g_cRef)
 		--g_cRef;
 
@@ -394,21 +400,48 @@ HRESULT nsDataObj::GetText(nsIDataFlavor * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
   aSTG.tymed          = TYMED_HGLOBAL;
   aSTG.pUnkForRelease = NULL;
 
+  //***************
+  // NOTE: On Win98 it allocates to the nearest DWORD boundary 
+  // alloc 4 gets you 8
+  // alloc 6 gets you 8
+  // etc.
+  // The GHND will zero fill, external windows apps expect 
+  // text string to be zero terminated.
+  // 
+  // So if we are copying CF_TEXT or CF_UNICODE we need to add
+  // the null terminator because the transferable only gives up the text
+  // and no terminating zero.
+  // So if the length of the text is modulo 8 we need to add extra space
+  // for terminating zero
+
+  DWORD allocLen = (DWORD)len;
+
+  if (CF_TEXT        == aFE.cfFormat ||
+      CF_UNICODETEXT == aFE.cfFormat) {
+    if (len % 8 == 0) {
+      allocLen++; // note: this by actually add more than one byte.
+    }
+  }
+
+  // GHND zeroes the memory
+  hGlobalMemory = (HGLOBAL)::GlobalAlloc(GHND, allocLen); 
+  //DWORD newSize = ::GlobalSize(hGlobalMemory);
+
   // Copy text to Global Memory Area
-  hGlobalMemory = (HGLOBAL)::GlobalAlloc(GHND, (DWORD)len);
   if (hGlobalMemory != NULL) {
-    pGlobalMemory = (PSTR)::GlobalLock(hGlobalMemory);
-    PSTR pstr = pGlobalMemory;
+    //PSTR pstr = (PSTR)::GlobalLock(hGlobalMemory);
+    char * pstr = (char *)::GlobalLock(hGlobalMemory);
+    //PSTR pstr = pGlobalMemory;
 
     // need to use memcpy here
     char* s = data;
     PRUint32 inx;
     for (inx=0; inx < len; inx++) {
-	    *pGlobalMemory++ = *s++;
+	    *pstr++ = *s++;
     }
 
     // Put data on Clipboard
-    ::GlobalUnlock(hGlobalMemory);
+    BOOL status = ::GlobalUnlock(hGlobalMemory);
   }
 
   aSTG.hGlobal = hGlobalMemory;
