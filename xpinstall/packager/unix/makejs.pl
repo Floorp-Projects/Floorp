@@ -37,32 +37,81 @@
 #        ie: perl makejs.pl core.jst 5.0.0.99256 ../../staging_area/core
 #
 
+##
+# GetSpaceRequired
+#
+# Finds the space used by the contents of a dir by recursively
+# traversing the subdir hierarchy and counting individual file
+# sizes
+#
+# @param   targetDir  the directory whose space usage to find
+# @return  spaceUsed  the number of bytes used by the dir contents
+#
+sub GetSpaceRequired
+{
+    my($targetDir) = $_[0];
+    my($spaceUsed) = 0;
+    my(@dirEntries) = ();
+    my($item) = "";
+
+    @dirEntries = <$targetDir/*>;
+
+    # iterate over all dir entries 
+    foreach $item ( @dirEntries ) 
+    {
+        # if dir entry is dir
+        if (-d $item)
+        {       
+            # add GetSpaceRequired(<dirEntry>) to space used
+            $spaceUsed += GetSpaceRequired($item);
+        }
+        # else if dir entry is file
+        elsif (-e $item)
+        {
+            # add size of file to space used
+            $spaceUsed += (-s $item);
+        }
+    }
+
+    return $spaceUsed;
+}
+
 # Make sure there are at least three arguments
 if($#ARGV < 2)
 {
-  die "usage: $0 <.jst file> <default version> <staging path>
+  die "usage: $0 <.jst file> <default version> <staging path> [<.js file>]
 
        .jst file              : .js template input file
+       .js file               : .js output file
        default version        : default julian base version number to use in the
                                 form of: major.minor.release.yydoy
                                 ie: 5.0.0.99256
        component staging path : path to where this component is staged at
-                                ie: z:\stage\windows\32bit\en\5.0\core
+                                ie: ./../staging_area/core
        \n";
 }
 
 $inJstFile        = $ARGV[0];
 $inVersion        = $ARGV[1];
 $inStagePath      = $ARGV[2];
+$fullProgName     = $0;
+$fullProgName     =~ /(.*)makejs\.pl$/;
+if ($1){
+  $pathName       = $1;
+} else {
+  $pathName       = ".";
+}
 
 # Get the name of the file replacing the .jst extension with a .js extension
 @inJstFileSplit   = split(/\./,$inJstFile);
 $outJsFile        = $inJstFileSplit[0];
 $outJsFile       .= ".js";
-$outTempFile      = $inJstFileSplit[0];
+if($#ARGV >= 3) {$outJsFile = $ARGV[3];};
+@outJsFileSplit   = split(/\./,$outJsFile);
+$outTempFile      = $outJsFileSplit[0];
 $outTempFile     .= ".template";
 
-system("cp ../common/share.t $outTempFile");
+system("cp $pathName/../common/share.t $outTempFile");
 system("cat $inJstFile >> $outTempFile");
 
 # Open the input template file
@@ -107,42 +156,3 @@ while($line = <fpInJst>)
 }
 
 system("rm $outTempFile");
-
-##
-# GetSpaceRequired
-#
-# Finds the space used by the contents of a dir by recursively
-# traversing the subdir hierarchy and counting individual file
-# sizes
-#
-# @param   targetDir  the directory whose space usage to find
-# @return  spaceUsed  the number of bytes used by the dir contents
-#
-sub GetSpaceRequired()
-{
-    my($targetDir) = $_[0];
-    my($spaceUsed) = 0;
-    my(@dirEntries) = ();
-    my($item) = "";
-
-    @dirEntries = <$targetDir/*>;
-
-    # iterate over all dir entries 
-    foreach $item ( @dirEntries ) 
-    {
-        # if dir entry is dir
-        if (-d $item)
-        {       
-            # add GetSpaceRequired(<dirEntry>) to space used
-            $spaceUsed += GetSpaceRequired($item);
-        }
-        # else if dir entry is file
-        elsif (-e $item)
-        {
-            # add size of file to space used
-            $spaceUsed += (-s $item);
-        }
-    }
-
-    return $spaceUsed;
-}
