@@ -39,11 +39,6 @@ public:
                    nsFramePaintLayer    aWhichLayer);
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
                              nsIFrame**     aFrame);
-  NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
-                                   nsIStyleContext* aParentContext,
-                                   PRInt32 aParentChange,
-                                   nsStyleChangeList* aChangeList,
-                                   PRInt32* aLocalChange);
   NS_IMETHOD ReplaceFrame(nsIPresContext& aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,

@@ -88,11 +88,6 @@ public:
                                         nsIAtom** aListName) const;
   NS_IMETHOD Destroy(nsIPresContext& aPresContext);
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
-  NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
-                                   nsIStyleContext* aParentContext,
-                                   PRInt32 aParentChange,
-                                   nsStyleChangeList* aChangeList,
-                                   PRInt32* aLocalChange);
   NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,

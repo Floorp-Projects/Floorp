@@ -400,16 +400,18 @@ nsButtonFrameRenderer::GetStyleContext(PRInt32 aIndex, nsIStyleContext** aStyleC
   switch (aIndex) {
   case NS_BUTTON_RENDERER_OUTLINE_CONTEXT_INDEX:
     *aStyleContext = mOutlineStyle;
-    NS_ADDREF(*aStyleContext);
+    NS_IF_ADDREF(*aStyleContext);
     break;
   case NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX:
     *aStyleContext = mInnerFocusStyle;
-    NS_ADDREF(*aStyleContext);
+    NS_IF_ADDREF(*aStyleContext);
     break;
   case NS_BUTTON_RENDERER_FOCUS_OUTER_CONTEXT_INDEX:
     *aStyleContext = mOuterFocusStyle;
-    NS_ADDREF(*aStyleContext);
+    NS_IF_ADDREF(*aStyleContext);
     break;
+  default:
+    return NS_ERROR_INVALID_ARG;
   }
   return NS_OK;
 }

@@ -178,12 +178,14 @@ nsToolboxFrame::GetAdditionalStyleContext(PRInt32 aIndex,
   switch (aIndex) {
   case NS_TOOLBOX_GRIPPY_NORMAL_CONTEXT_INDEX:
     *aStyleContext = mGrippyNormalStyle;
-    NS_ADDREF(*aStyleContext);
+    NS_IF_ADDREF(*aStyleContext);
     break;
   case NS_TOOLBOX_GRIPPY_ROLLOVER_CONTEXT_INDEX:
     *aStyleContext = mGrippyRolloverStyle;
-    NS_ADDREF(*aStyleContext);
+    NS_IF_ADDREF(*aStyleContext);
     break;
+  default:
+    return NS_ERROR_INVALID_ARG;
   }
   return NS_OK;
 }
@@ -205,31 +207,6 @@ nsToolboxFrame::SetAdditionalStyleContext(PRInt32 aIndex,
   }
   return NS_OK;
 }
-
-//
-// ReResolveStyleContext
-//
-// When the style context changes, make sure that all of our styles are still up to date.
-//
-NS_IMETHODIMP
-nsToolboxFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext,
-                                          PRInt32 aParentChange, nsStyleChangeList* aChangeList,
-                                          PRInt32* aLocalChange)
-{
-  // this re-resolves |mStyleContext|, so it may change
-  nsresult rv = nsBoxFrame::ReResolveStyleContext(aPresContext, aParentContext, 
-                                                            aParentChange, aChangeList, aLocalChange); 
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (NS_COMFALSE != rv) {
-     UpdateStyles(aPresContext);
-  }
-  
-  return rv;
-  
-} // ReResolveStyleContext
 
 NS_IMETHODIMP
 nsToolboxFrame::Init(nsIPresContext&  aPresContext,

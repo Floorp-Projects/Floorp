@@ -235,6 +235,11 @@ nsProgressMeterFrame::Init(nsIPresContext&  aPresContext,
   mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::mode, mode);
   setMode(mode); 
 
+  nsCOMPtr<nsIAtom> barPseudo ( dont_AddRef(NS_NewAtom(":progressmeter-stripe")) );
+  nsIStyleContext* barStyle = nsnull;
+  aPresContext.ProbePseudoStyleContextFor(aContent, barPseudo, aContext, 
+                                          PR_FALSE, &barStyle);
+  mBarStyle = barStyle;
 
   return rv;
 }
@@ -743,8 +748,10 @@ nsProgressMeterFrame::GetAdditionalStyleContext(PRInt32 aIndex,
   switch (aIndex) {
   case NS_PROGRESS_METER_STRIPE_CONTEXT_INDEX:
     *aStyleContext = mBarStyle;
-    NS_ADDREF(*aStyleContext);
+    NS_IF_ADDREF(*aStyleContext);
     break;
+  default:
+    return NS_ERROR_INVALID_ARG;
   }
   return NS_OK;
 }
@@ -764,54 +771,7 @@ nsProgressMeterFrame::SetAdditionalStyleContext(PRInt32 aIndex,
   return NS_OK;
 }
 
-//
-// RefreshStyleContext
-//
-// Not exactly sure what this does ;)
-//
-void
-nsProgressMeterFrame :: RefreshStyleContext(nsIPresContext* aPresContext,
-                                            nsIAtom *         aNewContentPseudo,
-                                            nsCOMPtr<nsIStyleContext>* aCurrentStyle,
-                                            nsIContent *      aContent,
-                                            nsIStyleContext*  aParentStyle)
-{
-  nsIStyleContext* newStyleContext;
-  aPresContext->ProbePseudoStyleContextFor(aContent,
-                                           aNewContentPseudo,
-                                           aParentStyle,
-                                           PR_FALSE,
-                                           &newStyleContext);
-  if (newStyleContext != aCurrentStyle->get())
-    *aCurrentStyle = dont_QueryInterface(newStyleContext);
-    
-} // RefreshStyleContext
 
-
-//
-// ReResolveStyleContext
-//
-// When the style context changes, make sure that all of our styles are still up to date.
-//
-NS_IMETHODIMP
-nsProgressMeterFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext,
-                                                PRInt32 aParentChange, nsStyleChangeList* aChangeList, 
-                                                PRInt32* aLocalChange)
-{
-  // this re-resolves |mStyleContext|, so it may change
-  nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext, aParentChange, aChangeList, aLocalChange); 
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (NS_COMFALSE != rv) {
-    nsCOMPtr<nsIAtom> barPseudo ( dont_AddRef(NS_NewAtom(":progressmeter-stripe")) );
-    RefreshStyleContext(aPresContext, barPseudo, &mBarStyle, mContent, mStyleContext);
-  }
-  
-  return rv;
-  
-} // ReResolveStyleContext
 
 
 

@@ -70,8 +70,10 @@ nsGfxRadioControlFrame::GetAdditionalStyleContext(PRInt32 aIndex,
   switch (aIndex) {
   case NS_GFX_RADIO_CONTROL_FRAME_FACE_CONTEXT_INDEX:
     *aStyleContext = mRadioButtonFaceStyle;
-    NS_ADDREF(*aStyleContext);
+    NS_IF_ADDREF(*aStyleContext);
     break;
+  default:
+    return NS_ERROR_INVALID_ARG;
   }
   return NS_OK;
 }
@@ -91,41 +93,6 @@ nsGfxRadioControlFrame::SetAdditionalStyleContext(PRInt32 aIndex,
     break;
   }
   return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsGfxRadioControlFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
-                                              nsIStyleContext* aParentContext,
-                                              PRInt32 aParentChange,
-                                              nsStyleChangeList* aChangeList,
-                                              PRInt32* aLocalChange)
-{
- // this re-resolves |mStyleContext|, so it may change
-  nsresult rv = Inherited::ReResolveStyleContext(aPresContext, aParentContext, aParentChange,
-                                               aChangeList, aLocalChange); 
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (NS_COMFALSE != rv) {  // frame style changed
-    if (aLocalChange) {
-      aParentChange = *aLocalChange;  // tell children about or change
-    }
-  }
-
- // see if the outline has changed.
-  nsCOMPtr<nsIStyleContext> oldRadioButtonFaceStyle = mRadioButtonFaceStyle;
-	aPresContext->ProbePseudoStyleContextFor(mContent, nsHTMLAtoms::radioPseudo, mStyleContext,
-										  PR_FALSE,
-										  &mRadioButtonFaceStyle);
-
-  if ((mRadioButtonFaceStyle && oldRadioButtonFaceStyle.get()) && (mRadioButtonFaceStyle != oldRadioButtonFaceStyle.get())) {
-    nsRadioControlFrame::CaptureStyleChangeFor(this, oldRadioButtonFaceStyle, mRadioButtonFaceStyle, 
-                              aParentChange, aChangeList, aLocalChange);
-  }
-
-  return rv;
 }
 
 

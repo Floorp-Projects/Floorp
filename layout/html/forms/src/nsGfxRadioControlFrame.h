@@ -44,12 +44,6 @@ public:
                                        nsIStyleContext* aStyleContext);
 
 
-  NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
-                                   nsIStyleContext* aParentContext,
-                                   PRInt32 aParentChange,
-                                   nsStyleChangeList* aChangeList,
-                                   PRInt32* aLocalChange);
-
   //
   // XXX: The following paint methods are TEMPORARY. It is being used to get printing working
   // under windows. Later it may be used to GFX-render the controls to the display. 

@@ -647,33 +647,6 @@ nsHTMLButtonControlFrame::SetAdditionalStyleContext(PRInt32 aIndex,
   return mRenderer.SetStyleContext(aIndex, aStyleContext);
 }
 
-//
-// ReResolveStyleContext
-//
-// When the style context changes, make sure that all of our styles are still up to date.
-//
-NS_IMETHODIMP
-nsHTMLButtonControlFrame::ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext,
-                                                  PRInt32 aParentChange, nsStyleChangeList* aChangeList, 
-                                                  PRInt32* aLocalChange)
-{
-  // this re-resolves |mStyleContext|, so it may change
-  nsresult rv = nsHTMLContainerFrame::ReResolveStyleContext(aPresContext, aParentContext,
-                                                            aParentChange, aChangeList, aLocalChange); 
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (NS_COMFALSE != rv) {  // frame style changed
-    if (aLocalChange) {
-      aParentChange = *aLocalChange;  // tell children about or change
-    }
-  }
-  mRenderer.ReResolveStyles(*aPresContext, aParentChange, aChangeList, aLocalChange);
-  
-  return rv;
-  
-} // ReResolveStyleContext
 
 NS_IMETHODIMP nsHTMLButtonControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 {
