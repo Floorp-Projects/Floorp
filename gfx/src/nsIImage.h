@@ -43,9 +43,11 @@ typedef enum {
 } nsMaskRequirements;
 
 typedef enum{
-  nsHighQual,
+  nsLowQual=0,
+  nsLowMedQual,
   nsMedQual,
-  nsLowQual
+  nsHighMedQual,
+  nsHighQual,
 }nsBlendQuality;
 
 
@@ -214,6 +216,19 @@ public:
    * @return the new image
    */
   virtual nsIImage* DuplicateImage() = 0;
+
+
+  /**
+   * Set the alpha level for the image
+   * @param  the alpha level to set for the image, from 0 to 100%
+   */
+  virtual void  SetAlphaLevel(PRInt32 aAlphaLevel) = 0;
+
+  /**
+   * Get the alpha level for the image
+   * @return  the alpha level for the image, from 0 to 100%
+   */
+  virtual PRInt32 GetAlphaLevel() = 0;
 
   //get the color space metrics for this image
   //virtual NI_ColorSpec * GetColorSpec() = 0;                       fix

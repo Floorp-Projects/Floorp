@@ -98,6 +98,10 @@ public:
 
   PRBool  SetAlphaMask(nsIImage *aTheMask);
 
+  virtual void  SetAlphaLevel(PRInt32 aAlphaLevel) {mAlphaLevel=aAlphaLevel;}
+
+  virtual PRInt32 GetAlphaLevel() {return(mAlphaLevel);}
+
   void MoveAlphaMask(PRInt32 aX, PRInt32 aY){mLocation.x=aX;mLocation.y=aY;}
 
 private:
@@ -133,6 +137,37 @@ private:
                 PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality);
 
 
+    /** 
+   * Blend two 8 bit image arrays using an 8 bit alpha mask
+   * @param aNumlines  Number of lines to blend
+   * @param aNumberBytes Number of bytes per line to blend
+   * @param aSImage Pointer to beginning of the source bytes
+   * @param aDImage Pointer to beginning of the destination bytes
+   * @param aMImage Pointer to beginning of the mask bytes
+   * @param aSLSpan number of bytes per line for the source bytes
+   * @param aDLSpan number of bytes per line for the destination bytes
+   * @param aMLSpan number of bytes per line for the Mask bytes
+   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+   */
+  void Do8BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
+                PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality);
+
+  /** 
+   * Blend two 8 bit image arrays using a passed in blend value
+   * @param aNumlines  Number of lines to blend
+   * @param aNumberBytes Number of bytes per line to blend
+   * @param aSImage Pointer to beginning of the source bytes
+   * @param aDImage Pointer to beginning of the destination bytes
+   * @param aMImage Pointer to beginning of the mask bytes
+   * @param aSLSpan number of bytes per line for the source bytes
+   * @param aDLSpan number of bytes per line for the destination bytes
+   * @param aMLSpan number of bytes per line for the Mask bytes
+   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+   */
+  void Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
+                PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality);
+
+
   /** 
    * Calculate the information we need to do a blend
    * @param aNumlines  Number of lines to blend
@@ -161,14 +196,6 @@ private:
    */
   void ComputePaletteSize(PRIntn aBitCount);
 
-  /**
-   * Composite a 24 bit image into another 24 bit image
-   * @param aTheImage The image to blend into this image
-   * @param aULLocation The upper left coordinate to place the passed in image
-   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-   */
-  void Comp24to24(nsImageWin *aTheImage,nsPoint *aULLocation,nsBlendQuality aBlendQuality);
-
 
   /** 
    * Calculate the amount of memory needed for the initialization of the pixelmap
@@ -194,7 +221,7 @@ private:
   PRInt16             mAlphaHeight;       // alpha layer height
   nsPoint             mLocation;          // alpha mask location
   PRInt8              mImageCache;        // place to save off the old image for fast animation
-  
+  PRInt16             mAlphaLevel;        // an alpha level every pixel uses
 
   // for Set/GetColorMap
   HPALETTE            mHPalette;
