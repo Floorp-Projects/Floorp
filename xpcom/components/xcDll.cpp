@@ -488,12 +488,11 @@ void nsDll::BreakAfterLoad(const char *nsprPath)
             // Loading a dll that we want to break on
             // Put your breakpoint here
             printf("...Loading module %s\n", nsprPath);
-#if 0 // XXX I need a define for x86 linux
             // Break in the debugger here.
+#if defined(linux) && defined(__i386)
             asm("int $3");
-#endif
-#if defined(VMS)
-	    lib$signal(SS$_DEBUG);
+#elif defined(VMS)
+            lib$signal(SS$_DEBUG);
 #endif
         }
 #endif /* DEBUG */
