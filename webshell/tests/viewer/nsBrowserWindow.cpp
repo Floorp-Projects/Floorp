@@ -48,6 +48,7 @@
 #include "nsParserCIID.h"
 #include "nsIEnumerator.h"
 #include "nsCOMPtr.h"
+#include "nsIStringBundle.h"
 
 #include "nsIDocument.h"
 #include "nsIPresContext.h"
@@ -166,6 +167,9 @@ static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
 static NS_DEFINE_IID(kINetSupportIID,         NS_INETSUPPORT_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kXPBaseWindowCID, NS_XPBASE_WINDOW_CID);
+static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
+
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 
 static const char* gsAOLFormat = "AOLMAIL";
@@ -1113,9 +1117,47 @@ nsBrowserWindow::DoSelectAll()
 
 //----------------------------------------------------------------------
 
+#define VIEWER_BUNDLE_URL "resource:/res/viewer.properties"
+
+static nsString* gTitleSuffix = nsnull;
+
+static nsString*
+GetTitleSuffix(void)
+{
+  nsString* suffix = new nsString(" - Failed");
+  nsIStringBundleService* service = nsnull;
+  nsresult ret = nsServiceManager::GetService(kStringBundleServiceCID,
+    kIStringBundleServiceIID, (nsISupports**) &service);
+  if (NS_FAILED(ret)) {
+    return suffix;
+  }
+  nsIURL* url = nsnull;
+  ret = NS_NewURL(&url, nsString(VIEWER_BUNDLE_URL));
+  if (NS_FAILED(ret)) {
+    NS_RELEASE(service);
+    return suffix;
+  }
+  nsILocale* locale = nsnull;
+  nsIStringBundle* bundle = nsnull;
+  ret = service->CreateBundle(url, locale, &bundle);
+  if (NS_FAILED(ret)) {
+    NS_RELEASE(url);
+    NS_RELEASE(service);
+    return suffix;
+  }
+  ret = bundle->GetStringFromID(1, *suffix);
+  NS_RELEASE(bundle);
+  NS_RELEASE(service);
+
+  return suffix;
+}
+
 // Note: operator new zeros our memory
 nsBrowserWindow::nsBrowserWindow()
 {
+  if (!gTitleSuffix) {
+    gTitleSuffix = GetTitleSuffix();
+  }
   AddBrowser(this);
 }
 
@@ -1666,7 +1708,8 @@ nsBrowserWindow::SetTitle(const PRUnichar* aTitle)
   NS_PRECONDITION(nsnull != mWindow, "null window");
   mTitle = aTitle;
   nsAutoString newTitle(aTitle);
-  newTitle.Append(" - Raptor");
+  //newTitle.Append(" - Raptor");
+  newTitle.Append(*gTitleSuffix);
   mWindow->SetTitle(newTitle.GetUnicode());
   return NS_OK;
 }
