@@ -3,9 +3,16 @@
 #include "nsMsgCompCID.h"
 #include "nsIMsgCompose.h"
 #include "nsIMsgCompFields.h"
+#include "nsIMsgSend.h"
 
+static NS_DEFINE_IID(kIMsgComposeIID, NS_IMSGCOMPOSE_IID); 
 static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID); 
+
+static NS_DEFINE_IID(kIMsgCompFieldsIID, NS_IMSGCOMPFIELDS_IID); 
 static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
+
+static NS_DEFINE_IID(kIMsgSendIID, NS_IMSGSEND_IID); 
+static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID); 
 
 /* This is just a testing stub added by mscott. All I'm doing is loading a component,
    and querying it for a particular interface.
@@ -18,12 +25,14 @@ static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
  { 
 	nsIMsgCompose *pMsgCompose; 
 	nsIMsgCompFields *pMsgCompFields;
+	nsIMsgSend *pMsgSend;
 	nsresult res;
 
 	// register our dll
 	nsRepository::RegisterFactory(kMsgComposeCID, "msgcompose.dll", PR_FALSE, PR_FALSE);
 	nsRepository::RegisterFactory(kMsgCompFieldsCID, "msgcompose.dll", PR_FALSE, PR_FALSE);
-   
+	nsRepository::RegisterFactory(kMsgSendCID, "msgcompose.dll", PR_FALSE, PR_FALSE);
+
 	res = nsRepository::CreateInstance(kMsgCompFieldsCID, 
                                            NULL, 
                                            nsIMsgCompFields::IID(), 
@@ -33,6 +42,7 @@ static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 		printf("We succesfully obtained a nsIMsgCompFields interface....\n");
 		pMsgCompFields->Test();
 
+/*
 		const char * value;
 		pMsgCompFields->SetFrom("field #01 FROM", NULL);
 		pMsgCompFields->SetReplyTo("field #02 REPLY_TO", NULL);
@@ -80,31 +90,6 @@ static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 			printf("%s\n", value);
 			pCopyFields->Release();
 		}
-
-
-
-/*
-	NS_IMETHOD GetBcc(char **_retval);
-	NS_IMETHOD GetFcc(char **_retval);
-	NS_IMETHOD GetNewsFcc(char **_retval);
-	NS_IMETHOD GetNewsBcc(char **_retval);
-	NS_IMETHOD GetNewsgroups(char **_retval);
-	NS_IMETHOD GetFollowupTo(char **_retval);
-	NS_IMETHOD GetSubject(char **_retval);
-	NS_IMETHOD GetAttachments(char **_retval);
-	NS_IMETHOD GetOrganization(char **_retval);
-	NS_IMETHOD GetReferences(char **_retval);
-	NS_IMETHOD GetOtherRandomHeaders(char **_retval);
-	NS_IMETHOD GetNewspostUrl(char **_retval);
-	NS_IMETHOD GetDefaultBody(char **_retval);
-	NS_IMETHOD GetPriority(char **_retval);
-	NS_IMETHOD GetMessageEncoding(char **_retval);
-	NS_IMETHOD GetCharacterSet(char **_retval);
-	NS_IMETHOD GetMessageId(char **_retval);
-	NS_IMETHOD GetHTMLPart(char **_retval);
-	NS_IMETHOD GetTemplateName(char **_retval);
-	NS_IMETHOD GetReturnReceipt(PRBool *_retval);
-	NS_IMETHOD GetAttachVCard(PRBool *_retval);
 */
 
 	 printf("Releasing the interface now...\n");
@@ -116,12 +101,41 @@ static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
                                                nsIMsgCompose::IID(), 
                                                (void **) &pMsgCompose); 
 
-   if (res == NS_OK && pMsgCompose) { 
+   if (res == NS_OK && pMsgCompose) {
 	 printf("We succesfully obtained a nsIMsgCompose interface....\n");
 	 pMsgCompose->Test();
 
 	 printf("Releasing the interface now...\n");
      pMsgCompose->Release(); 
    } 
-  return 0; 
+ 
+	res = nsRepository::CreateInstance(kMsgSendCID, 
+                                               NULL, 
+                                               kIMsgSendIID, 
+                                               (void **) &pMsgSend); 
+
+	if (res == NS_OK && pMsgSend) { 
+		printf("We succesfully obtained a nsIMsgSend interface....\n");
+		pMsgSend->Test();
+
+		res = nsRepository::CreateInstance(kMsgCompFieldsCID, 
+													NULL, 
+													kIMsgCompFieldsIID, 
+													(void **) &pMsgCompFields); 
+		if (res == NS_OK && pMsgCompFields) { 
+			pMsgCompFields->SetFrom("qatest02@netscape.com", NULL);
+			pMsgCompFields->SetTo("qatest02@netscape.com", NULL);
+			pMsgCompFields->SetSubject("[spam] test", NULL);
+			pMsgCompFields->SetBody("Sample message sent with Mozilla\n\nPlease do not reply, thanks\n\nJean-Francois\n", NULL);
+
+			pMsgSend->SendMessage(pMsgCompFields);
+
+			pMsgCompFields->Release(); 
+		}
+
+		printf("Releasing the interface now...\n");
+		pMsgSend->Release(); 
+	}
+
+	return 0; 
  }
