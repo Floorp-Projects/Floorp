@@ -421,18 +421,20 @@ function sendEmail(Subject, Body, To, Cc, Bcc, Attachment, Priority)
 		MessageComposeFields.bcc = Bcc;
 	}
 	if (Body != "" && Body != null)
-		MessageComposeFields.body = Body;
+		MessageComposeFields.body = "\n"+Body+"\n";
 	if (Attachment != "" && Attachment != null)
 		MessageComposeFields.attachments = Attachment;
 	if (Priority != "" && Priority != null)
 		MessageComposeFields.priority = Priority;
 	MessageComposeFields.from = Account.email;
+    MessageComposeFields.forcePlainText = true;
+    MessageComposeFields.useMultipartAlternative = false;
 
 	/* try to send the email away, don't set a listener, we just trust that it makes it for now :) */
 	/* TODO: properly set a listener on this action and report errors back to the calling function */
 	try
 	{
-		MessageCompose.SendMsg(MessageDeliverMode.Now, Account.defaultIdentity, null);
+		MessageCompose.SendMsg(MessageDeliverMode.Now, Account.defaultIdentity, null,null);
 	}
 	catch(Exception)
 	{
