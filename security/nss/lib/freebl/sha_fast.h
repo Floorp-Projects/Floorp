@@ -49,8 +49,8 @@ struct SHA1ContextStr {
 
 #define SHA_MASK      0x00FF00FF
 #if defined(IS_LITTLE_ENDIAN)
-#define SHA_HTONL(x)  (A = (x), A = A << 16 | A >> 16, \
-                       (A & SHA_MASK) << 8 | (A >> 8) & SHA_MASK)
+#define SHA_HTONL(x)  (A = (x), A = (A << 16) | (A >> 16), \
+                       ((A & SHA_MASK) << 8) | ((A >> 8) & SHA_MASK))
 #else
 #define SHA_HTONL(x)  (x)
 #endif

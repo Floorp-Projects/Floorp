@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: alg2268.c,v 1.2 2001/01/05 22:37:46 mcgreer%netscape.com Exp $
+ * $Id: alg2268.c,v 1.3 2001/09/20 22:14:04 relyea%netscape.com Exp $
  */
 
 
@@ -146,7 +146,9 @@ RC2_CreateContext(unsigned char *key, unsigned int len,
     RC2Context *cx;
     PRUint8    *L,*L2;
     int         i;
+#if !defined(IS_LITTLE_ENDIAN)
     PRUint16    tmpS;
+#endif
     PRUint8     tmpB;
 
     if (!key || len == 0 || len > (sizeof cx->B) || efLen8 > (sizeof cx->B)) {
