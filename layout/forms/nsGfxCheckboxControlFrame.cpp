@@ -227,11 +227,11 @@ nsGfxCheckboxControlFrame::Paint(nsPresContext*   aPresContext,
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     PRBool doDefaultPainting = PR_TRUE;
     // Paint the checkmark
+    const nsStyleBorder* myBorder = mCheckButtonFaceStyle->GetStyleBorder();
     if (!mCheckButtonFaceStyle && GetCheckboxState()) {
       const nsStyleBackground* myColor = mCheckButtonFaceStyle->GetStyleBackground();
 
       if (myColor->mBackgroundImage) {
-        const nsStyleBorder* myBorder = mCheckButtonFaceStyle->GetStyleBorder();
         const nsStylePadding* myPadding = mCheckButtonFaceStyle->GetStylePadding();
         const nsStylePosition* myPosition = mCheckButtonFaceStyle->GetStylePosition();
 
@@ -250,6 +250,12 @@ nsGfxCheckboxControlFrame::Paint(nsPresContext*   aPresContext,
         doDefaultPainting = PR_FALSE;
       }
     } 
+
+    nsRect rect(0, 0, mRect.width, mRect.height);
+    const nsStyleOutline* myOutline = GetStyleOutline();
+    nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
+                                  aDirtyRect, rect, *myBorder, *myOutline,
+                                  mStyleContext, 0);
 
     if (doDefaultPainting) {
       PaintCheckBox(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);

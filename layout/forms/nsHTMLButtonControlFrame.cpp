@@ -356,6 +356,12 @@ nsHTMLButtonControlFrame::Paint(nsPresContext*      aPresContext,
 
 #endif
 
+  // Paint outline
+  const nsStyleOutline* outlineStyle = GetStyleOutline();
+  nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
+                               aDirtyRect, rect, *borderStyle, *outlineStyle,
+                               mStyleContext, 0);
+
   // to draw border when selected in editor
   return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
@@ -480,6 +486,9 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
 
   aDesiredSize.ascent  += aReflowState.mComputedBorderPadding.top + focusPadding.top;
   aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
+
+  nsRect buttonRect(0, 0, aDesiredSize.width, aDesiredSize.height);
+  FinishAndStoreOverflow(&buttonRect, buttonRect.Size());
 
   aStatus = NS_FRAME_COMPLETE;
 

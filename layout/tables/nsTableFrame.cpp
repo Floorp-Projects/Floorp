@@ -1434,6 +1434,13 @@ nsTableFrame::Paint(nsPresContext*      aPresContext,
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect,
                 aWhichLayer, aFlags);
 
+  // Paint outline
+  nsRect rect(0, 0, mRect.width, mRect.height);
+  const nsStyleOutline* outlineStyle = GetStyleOutline();
+  const nsStyleBorder* borderStyle  = GetStyleBorder();
+  nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
+                               aDirtyRect, rect, *borderStyle, *outlineStyle,
+                               mStyleContext, 0);
 #ifdef DEBUG
   // for debug...
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
