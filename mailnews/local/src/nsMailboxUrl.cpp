@@ -39,6 +39,67 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 
+// this is totally lame and MUST be removed by M6
+// the real fix is to attach the URI to the URL as it runs through netlib
+// then grab it and use it on the other side
+#include "nsIMsgMailSession.h"
+#include "nsCOMPtr.h"
+
+static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+
+static char *nsMailboxGetURI(char *filepath)
+{
+
+    nsresult rv;
+    char *uri = nsnull;
+
+    NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv);
+    if (NS_FAILED(rv)) return nsnull;
+
+    nsCOMPtr<nsIMsgAccountManager> accountManager;
+    rv = session->GetAccountManager(getter_AddRefs(accountManager));
+    if (NS_FAILED(rv)) return nsnull;
+
+    nsCOMPtr<nsISupportsArray> serverArray;
+    accountManager->GetAllServers(getter_AddRefs(serverArray));
+
+    PRInt32 count = serverArray->Count();
+    PRInt32 i;
+    for (i=0; i<count; i++) {
+
+        nsISupports* serverSupports = serverArray->ElementAt(i);
+        nsCOMPtr<nsIMsgIncomingServer> server =
+            do_QueryInterface(serverSupports);
+        NS_RELEASE(serverSupports);
+
+        if (!server) continue;
+
+        char *serverPath;
+        rv = server->GetLocalPath(&serverPath);
+        if (NS_FAILED(rv)) continue;
+
+        // check if filepath begins with serverPath
+        PRInt32 len = PL_strlen(serverPath);
+        if (PL_strncmp(serverPath, filepath, len) == 0) {
+            char *hostname;
+            rv = server->GetHostName(&hostname);
+            if (NS_FAILED(rv)) continue;
+            
+            // the relpath is just past the serverpath
+            char *relpath = filepath + len;
+            // this may break if local paths are not stored with "/"
+            uri = PR_smprintf("mailbox://%s%s", hostname, relpath);
+
+            PL_strfree(hostname);
+            PL_strfree(serverPath);
+            break;
+        }
+        PL_strfree(serverPath);
+    }
+    return uri;
+}
+
+
 // helper function for parsing the search field of a url
 char * extractAttributeValue(const char * searchString, const char * attributeName);
 
@@ -310,7 +371,8 @@ nsresult nsMailboxUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
 }
 
 // from nsIMsgUriUrl
-NS_IMETHODIMP nsMailboxUrl::GetURI(char ** aURI)
+NS_IMETHODIMP
+nsMailboxUrl::GetURI(char ** aURI)
 {
 	// function not implemented yet....
 	// when I get scott's function to take a path and a message id and turn it into
@@ -322,12 +384,11 @@ NS_IMETHODIMP nsMailboxUrl::GetURI(char ** aURI)
 		GetFilePath(&filePath);
 		if (filePath)
 		{
+            char * baseuri = nsMailboxGetURI(m_file);
 			char * uri = nsnull;
 			nsFileSpec folder = *filePath;
-			nsBuildLocalMessageURI(m_spec, m_messageKey, &uri);
-#ifdef DEBUG_alecf
-            fprintf(stderr, "nsBuildLocalMessageURI(%s, %d -> %s) in nsMailboxUrl::GetURI", m_spec, m_messageKey, uri);
-#endif
+			nsBuildLocalMessageURI(baseuri, m_messageKey, &uri);
+            PL_strfree(baseuri);
 			*aURI = uri;
 		}
 		else
