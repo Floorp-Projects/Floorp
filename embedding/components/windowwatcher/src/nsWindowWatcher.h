@@ -40,17 +40,17 @@ class  nsIURI;
 class  nsIDocShellTreeItem;
 class  nsIDocShellTreeOwner;
 class  nsString;
-class  nsWindowEnumerator;
+class  nsWatcherWindowEnumerator;
 struct JSContext;
 struct JSObject;
-struct WindowInfo;
+struct nsWatcherWindowEntry;
 struct PRLock;
 
 class nsWindowWatcher :
       public nsIWindowWatcher,
       public nsPIWindowWatcher
 {
-friend class nsWindowEnumerator;
+friend class nsWatcherWindowEnumerator;
 
 public:
   nsWindowWatcher();
@@ -64,11 +64,11 @@ public:
   NS_DECL_NSPIWINDOWWATCHER
 
 private:
-  PRBool AddEnumerator(nsWindowEnumerator* inEnumerator);
-  PRBool RemoveEnumerator(nsWindowEnumerator* inEnumerator);
+  PRBool AddEnumerator(nsWatcherWindowEnumerator* inEnumerator);
+  PRBool RemoveEnumerator(nsWatcherWindowEnumerator* inEnumerator);
 
-  WindowInfo *FindWindowInfo(nsIDOMWindow *aWindow);
-  nsresult RemoveWindow(WindowInfo *inInfo);
+  nsWatcherWindowEntry *FindWindowEntry(nsIDOMWindow *aWindow);
+  nsresult RemoveWindow(nsWatcherWindowEntry *inInfo);
 
   nsresult FindItemWithName(const PRUnichar *aName,
                             nsIDocShellTreeItem **aFoundItem);
@@ -105,10 +105,10 @@ private:
                                        nsIDocShellTreeOwner **outTreeOwner);
   static JSObject  *GetWindowScriptObject(nsIDOMWindow *inWindow);
 
-  nsVoidArray   mEnumeratorList;
-  WindowInfo   *mOldestWindow;
-  nsIDOMWindow *mActiveWindow;
-  PRLock       *mListLock;
+  nsVoidArray           mEnumeratorList;
+  nsWatcherWindowEntry *mOldestWindow;
+  nsIDOMWindow         *mActiveWindow;
+  PRLock               *mListLock;
 
   nsCOMPtr<nsIWindowCreator> mWindowCreator;
 };
