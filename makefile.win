@@ -56,8 +56,8 @@ DIRS =                         \
   modules\libutil              \
   modules\appfilelocprovider   \
   modules\zlib                 \
-  security                     \
   netwerk                      \
+  security                     \
   widget\timer                 \
   js                           \
   modules\libjar               \
