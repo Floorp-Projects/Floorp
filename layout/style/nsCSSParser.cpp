@@ -3519,19 +3519,8 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_font_family:
     return ParseFamily(aErrorCode, aValue);
   case eCSSProperty_font_size: 
-    {
-      // NONSTANDARD: *** Nav 4 ignores font-size values with no units ***
-      //              if quirk mode AND the value had no units (type=Number) and
-      //              it was otherwise successful, we need to ignore it
-      PRBool bRetVal = ParsePositiveVariant(aErrorCode, aValue, VARIANT_HKLP,
-                                            nsCSSProps::kFontSizeKTable);
-      if (bRetVal == PR_TRUE &&
-          mNavQuirkMode == PR_TRUE && 
-          mToken.mType == eCSSToken_Number){
-        return bRetVal = PR_FALSE;
-      }
-      return bRetVal;
-    }
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HKLP,
+                                nsCSSProps::kFontSizeKTable);
   case eCSSProperty_font_size_adjust:
     return ParseVariant(aErrorCode, aValue, VARIANT_HON,
                         nsnull);
@@ -4486,8 +4475,14 @@ PRBool CSSParserImpl::ParseFontWeight(PRInt32& aErrorCode, nsCSSValue& aValue)
   if (ParseVariant(aErrorCode, aValue, VARIANT_HMKI, nsCSSProps::kFontWeightKTable)) {
     if (eCSSUnit_Integer == aValue.GetUnit()) { // ensure unit value
       PRInt32 intValue = aValue.GetIntValue();
-      return ((100 <= intValue) && (intValue <= 900) &&
-              (0 == (intValue % 100)));
+      if ((100 <= intValue) &&
+          (intValue <= 900) &&
+          (0 == (intValue % 100))) {
+        return PR_TRUE;
+      } else {
+        UngetToken();
+        return PR_FALSE;
+      }
     }
     return PR_TRUE;
   }
