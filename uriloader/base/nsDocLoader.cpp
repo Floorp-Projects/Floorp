@@ -70,7 +70,7 @@ void GetURIStringFromRequest(nsIRequest* request, nsXPIDLCString &aStr)
     request->GetName(getter_Copies(name));
 
     if (name)
-        *getter_Copies(aStr) = ToNewUTF8String(name);
+        *getter_Copies(aStr) = ToNewUTF8String(name.get());
     else
         *getter_Shares(aStr) = "???";
 }
