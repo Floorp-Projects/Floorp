@@ -276,5 +276,10 @@ interface nsIDocShell : nsISupports
    * attribute to access the loadtype  for the document
    */
   attribute unsigned long  loadType;
+
+  /*
+   * returns true if the docshell is being destroyed, false otherwise
+   */
+  boolean IsBeingDestroyed();
 };
 

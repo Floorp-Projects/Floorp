@@ -2797,7 +2797,19 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     SINK_TRACE(SINK_TRACE_REFLOW,
                ("HTMLContentSink::DidBuildModel: forcing reflow on empty document"));
 
-    StartLayout();
+    // NOTE: only force the layout if we are NOT destroying the webshell. If we are destroying it, then 
+    //       starting layout will likely cause us to crash, or at best waste a lot of time as we are just
+    //       going to tear it down anyway.
+    PRBool bDestroying = PR_TRUE;
+    if (mWebShell) {
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+      if (docShell) {
+        docShell->IsBeingDestroyed(&bDestroying);
+      }
+    }
+    if (!bDestroying) {
+      StartLayout();
+    }
   }
 
   ScrollToRef();

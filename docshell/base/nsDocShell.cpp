@@ -5862,6 +5862,15 @@ nsDocShell::GetCanvasHasFocus(PRBool *aCanvasHasFocus)
   return NS_ERROR_FAILURE;
 }
 
+/* boolean IsBeingDestroyed (); */
+NS_IMETHODIMP 
+nsDocShell::IsBeingDestroyed(PRBool *aDoomed)
+{
+  NS_ENSURE_ARG(aDoomed);
+  *aDoomed = mIsBeingDestroyed;
+  return NS_OK;
+}
+
 //*****************************************************************************
 //***    nsRefreshTimer: Object Management
 //*****************************************************************************
