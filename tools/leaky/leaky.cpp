@@ -52,18 +52,20 @@ leaky::leaky()
   progFile = NULL;
 
   sortByFrequency = FALSE;
-  dumpAll = FALSE;
+  dumpLeaks = FALSE;
   dumpGraph = FALSE;
   dumpHTML = FALSE;
   quiet = FALSE;
-  showAll = FALSE;
+  dumpEntireLog = FALSE;
   showAddress = FALSE;
   stackDepth = 100000;
+  dumpRefcnts = false;
 
   mappedLogFile = -1;
   firstLogEntry = lastLogEntry = 0;
   buckets = DefaultBuckets;
-  dict = 0;
+  dict = NULL;
+  refcntDict = NULL;
 
   mallocs = 0;
   reallocs = 0;
@@ -90,7 +92,7 @@ leaky::~leaky()
 void leaky::usageError()
 {
   fprintf(stderr,
-	  "Usage: %s [-aAEdfgqx] [-e name] [-s depth] [-h hash-buckets] [-r root] prog log\n",
+	  "Usage: %s [-aAEdfgqxR] [-e name] [-s depth] [-h hash-buckets] [-r root|-i symbol] prog log\n",
 	  (char*) applicationName);
   exit(-1);
 }
@@ -107,20 +109,23 @@ void leaky::initialize(int argc, char** argv)
 
   int arg;
   int errflg = 0;
-  while ((arg = getopt(argc, argv, "adEe:fgh:r:s:tqx")) != -1) {
+  while ((arg = getopt(argc, argv, "adEe:fgh:i:r:Rs:tqx")) != -1) {
     switch (arg) {
       case '?':
 	errflg++;
 	break;
       case 'a':
-	showAll = TRUE;
+	dumpEntireLog = TRUE;
 	break;
       case 'A':
 	showAddress = TRUE;
 	break;
       case 'd':
-	dumpAll = TRUE;
+	dumpLeaks = TRUE;
 	if (dumpGraph) errflg++;
+	break;
+      case 'R':
+	dumpRefcnts = true;
 	break;
       case 'e':
 	exclusions.add(optarg);
@@ -130,10 +135,19 @@ void leaky::initialize(int argc, char** argv)
 	break;
       case 'g':
 	dumpGraph = TRUE;
-	if (dumpAll) errflg++;
+	if (dumpLeaks) errflg++;
 	break;
       case 'r':
 	roots.add(optarg);
+	if (!includes.IsEmpty()) {
+	  errflg++;
+	}
+	break;
+      case 'i':
+	includes.add(optarg);
+	if (!roots.IsEmpty()) {
+	  errflg++;
+	}
 	break;
       case 'h':
 	buckets = atoi(optarg);
@@ -165,6 +179,9 @@ void leaky::initialize(int argc, char** argv)
   logFile = argv[optind];
 
   dict = new MallocDict(buckets);
+  if (dumpRefcnts) {
+    refcntDict = new MallocDict(buckets);
+  }
 }
 
 static void* mapFile(int fd, u_int flags, off_t* sz)
@@ -230,7 +247,7 @@ void leaky::open()
 
   analyze();
 
-  if (dumpAll) {
+  if (dumpLeaks || dumpEntireLog || dumpRefcnts) {
     dumpLog();
   }
   else if (dumpGraph) {
@@ -308,17 +325,38 @@ Symbol* leaky::findSymbol(u_long addr)
 
 //----------------------------------------------------------------------
 
-int leaky::excluded(malloc_log_entry* lep)
+bool leaky::excluded(malloc_log_entry* lep)
 {
+  if (exclusions.IsEmpty()) {
+    return false;
+  }
+
   char** pcp = &lep->pcs[0];
   u_int n = lep->numpcs;
   for (u_int i = 0; i < n; i++, pcp++) {
     Symbol* sp = findSymbol((u_long) *pcp);
     if (sp && exclusions.contains(sp->name)) {
-      return TRUE;
+      return true;
     }
   }
-  return FALSE;
+  return false;
+}
+
+bool leaky::included(malloc_log_entry* lep)
+{
+  if (includes.IsEmpty()) {
+    return true;
+  }
+
+  char** pcp = &lep->pcs[0];
+  u_int n = lep->numpcs;
+  for (u_int i = 0; i < n; i++, pcp++) {
+    Symbol* sp = findSymbol((u_long) *pcp);
+    if (sp && includes.contains(sp->name)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 //----------------------------------------------------------------------
@@ -368,20 +406,49 @@ void leaky::dumpEntryToLog(malloc_log_entry* lep)
   displayStackTrace(stdout, lep);
 }
 
+bool leaky::ShowThisEntry(malloc_log_entry* lep)
+{
+  if ((!dumpRefcnts || IsRefcnt(lep)) && !excluded(lep) && included(lep)) {
+    return true;
+  }
+  return false;
+}
+
 void leaky::dumpLog()
 {
-  if (showAll) {
-    malloc_log_entry* lep = firstLogEntry;
-    while (lep < lastLogEntry) {
-      dumpEntryToLog(lep);
-      lep = (malloc_log_entry*) &lep->pcs[lep->numpcs];
-    }
-  } else {
-    malloc_log_entry* lep;
-    dict->rewind();
-    while (NULL != (lep = dict->next())) {
-      if (!excluded(lep)) {
-	dumpEntryToLog(lep);
+  if (dumpRefcnts) {
+      malloc_log_entry* lep;
+      refcntDict->rewind();
+      while (NULL != (lep = refcntDict->next())) {
+	if (ShowThisEntry(lep)) {
+	  // Now we get slow...
+	  u_long addr = lep->address;
+	  malloc_log_entry* lep2 = firstLogEntry;
+	  while (lep2 < lastLogEntry) {
+	    if (lep2->address == addr) {
+	      dumpEntryToLog(lep2);
+	    }
+	    lep2 = (malloc_log_entry*) &lep2->pcs[lep2->numpcs];
+	  }
+	}
+      }
+  }
+  else {
+    if (dumpEntireLog) {
+      malloc_log_entry* lep = firstLogEntry;
+      while (lep < lastLogEntry) {
+	if (ShowThisEntry(lep)) {
+	  dumpEntryToLog(lep);
+	}
+	lep = (malloc_log_entry*) &lep->pcs[lep->numpcs];
+      }
+    } else {
+      malloc_log_entry* lep;
+      dict->rewind();
+      while (NULL != (lep = dict->next())) {
+	if (ShowThisEntry(lep)) {
+	  dumpEntryToLog(lep);
+	}
       }
     }
   }
@@ -449,6 +516,30 @@ void leaky::analyze()
 	}
 	frees++;
 	break;
+      case malloc_log_addref:
+	if (dumpRefcnts) {
+	  if (lep->size == 0) {
+	    // Initial addref
+	    u_long addr = (u_long) lep->address;
+	    malloc_log_entry** lepp = refcntDict->find(addr);
+	    if (!lepp) {
+	      refcntDict->add(addr, lep);
+	    }
+	  }
+	}
+	break;
+      case malloc_log_release:
+	if (dumpRefcnts) {
+	  if (lep->oldaddress == 0) {
+	    // Final release
+	    u_long addr = (u_long) lep->address;
+	    malloc_log_entry** lepp = refcntDict->find(addr);
+	    if (lepp) {
+	      refcntDict->remove(addr);
+	    }
+	  }
+	}
+	break;
     }
     lep = (malloc_log_entry*) &lep->pcs[lep->numpcs];
   }
@@ -476,52 +567,54 @@ void leaky::buildLeakGraph()
   malloc_log_entry* lep;
   dict->rewind();
   while (NULL != (lep = dict->next())) {
-    char** basepcp = &lep->pcs[0];
-    char** pcp = &lep->pcs[lep->numpcs - 1];
+    if (ShowThisEntry(lep)) {
+      char** basepcp = &lep->pcs[0];
+      char** pcp = &lep->pcs[lep->numpcs - 1];
 
-    // Find root for this allocation
-    Symbol* sym = findSymbol((u_long) *pcp);
-    TreeNode* node = sym->root;
-    if (!node) {
-      sym->root = node = new TreeNode(sym);
+      // Find root for this allocation
+      Symbol* sym = findSymbol((u_long) *pcp);
+      TreeNode* node = sym->root;
+      if (!node) {
+	sym->root = node = new TreeNode(sym);
 
-      // Add root to list of roots
-      if (roots.IsEmpty()) {
-	node->nextRoot = rootList;
-	rootList = node;
+	// Add root to list of roots
+	if (roots.IsEmpty()) {
+	  node->nextRoot = rootList;
+	  rootList = node;
+	}
       }
-    }
-    pcp--;
+      pcp--;
 
-    // Build tree underneath the root
-    for (; pcp >= basepcp; pcp--) {
-      // Share nodes in the tree until there is a divergence
-      sym = findSymbol((u_long) *pcp);
-      if (!sym) {
-	break;
-      }
-      TreeNode* nextNode = node->GetDirectDescendant(sym);
-      if (!nextNode) {
-	// Make a new node at the point of divergence
-	nextNode = node->AddDescendant(sym);
-      }
+      // Build tree underneath the root
+      for (; pcp >= basepcp; pcp--) {
+	// Share nodes in the tree until there is a divergence
+	sym = findSymbol((u_long) *pcp);
+	if (!sym) {
+	  break;
+	}
+	TreeNode* nextNode = node->GetDirectDescendant(sym);
+	if (!nextNode) {
+	  // Make a new node at the point of divergence
+	  nextNode = node->AddDescendant(sym);
+	}
 
-      // See if the symbol is to be a user specified root. If it is,
-      // and we haven't already stuck it on the root-list do so now.
-      if (!sym->root && !roots.IsEmpty() && roots.contains(sym->name)) {
-	sym->root = nextNode;
-	nextNode->nextRoot = rootList;
-	rootList = nextNode;
-      }
+	// See if the symbol is to be a user specified root. If it is,
+	// and we haven't already stuck it on the root-list do so now.
+	if (!sym->root && !roots.IsEmpty() && roots.contains(sym->name)) {
+	  sym->root = nextNode;
+	  nextNode->nextRoot = rootList;
+	  rootList = nextNode;
+	}
 
-      if (pcp == basepcp) {
-	nextNode->bytesLeaked += lep->size;
-      }
-      else {
-	node->descendantBytesLeaked += lep->size;
-      }
+	if (pcp == basepcp) {
+	  nextNode->bytesLeaked += lep->size;
+	}
+	else {
+	  node->descendantBytesLeaked += lep->size;
+	}
 
-      node = nextNode;
+	node = nextNode;
+      }
     }
   }
 }
@@ -542,7 +635,7 @@ void leaky::dumpLeakGraph()
   if (dumpHTML) {
     printf("<html><head><title>Leaky Graph</title>\n");
     printf("<style src=\"resource:/res/leaky/leaky.css\"></style>\n");
-    printf("<script src=\"resource:/res/leaky/leaky.js\"/></script>\n");
+    printf("<script src=\"resource:/res/leaky/leaky.js\"></script>\n");
     printf("</head><body><div class=\"key\">\n");
     printf("Key:<br>\n");
     printf("<span class=b>Bytes directly leaked</span><br>\n");

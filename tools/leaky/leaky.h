@@ -84,12 +84,13 @@ struct leaky {
   char*  progFile;
 
   int   sortByFrequency;
-  int   dumpAll;
+  int   dumpLeaks;
   int   dumpGraph;
   int   dumpHTML;
   int   quiet;
-  int   showAll;
+  int   dumpEntireLog;
   int   showAddress;
+  bool  dumpRefcnts;
   u_int  stackDepth;
 
   int   mappedLogFile;
@@ -97,6 +98,7 @@ struct leaky {
   malloc_log_entry* lastLogEntry;
   u_int  buckets;
   MallocDict*  dict;
+  MallocDict*  refcntDict;
 
   u_long  mallocs;
   u_long  reallocs;
@@ -118,6 +120,7 @@ struct leaky {
   TreeNode* rootList;
 
   StrSet roots;
+  StrSet includes;
 
   void usageError();
 
@@ -142,12 +145,20 @@ struct leaky {
   void ReadSharedLibrarySymbols();
   void setupSymbols(const char* fileName);
   Symbol* findSymbol(u_long address);
-  int excluded(malloc_log_entry* lep);
+  bool excluded(malloc_log_entry* lep);
+  bool included(malloc_log_entry* lep);
 
   void buildLeakGraph();
   Symbol* findLeakGraphRoot(Symbol* aStart, Symbol* aEnd);
   void dumpLeakGraph();
   void dumpLeakTree(TreeNode* aNode, int aIndent);
+
+  bool ShowThisEntry(malloc_log_entry* lep);
+
+  bool IsRefcnt(malloc_log_entry* lep) const {
+    return (lep->type == malloc_log_addref) ||
+      (lep->type == malloc_log_release);
+  }
 
   static void indentBy(int aCount) {
     while (--aCount >= 0) fputs("  ", stdout);
