@@ -220,7 +220,7 @@ nsresult nsComponentManagerImpl::Init(void)
     PlatformVersionCheck();
 #endif
 
-#if !defined(XP_UNIX)
+#if !defined(XP_UNIX) && !defined(XP_PC)
     // The below code is being moved out into the applications using using
     // nsSpecialSystemDirectory platform by platform.
     AutoRegister(NS_Startup, NULL);
@@ -1578,7 +1578,7 @@ nsComponentManagerImpl::AutoRegister(RegistrationTime when,
     {
         SyncComponentsInPathList(pathlist);
     }
-#if !defined(XP_UNIX)
+#if !defined(XP_UNIX) && !defined(XP_PC)
     // The below code is being moved out into the applications using using
     // nsSpecialSystemDirectory platform by platform.
 #ifdef	XP_MAC
