@@ -46,8 +46,10 @@
 #include "jsconfig.h"
 #include "jsexn.h"
 #include "jsfun.h"
+#include "jsinterp.h"
 #include "jsopcode.h"
 #include "jsnum.h"
+#include "jsscript.h"
 
 #if JS_HAS_ERROR_EXCEPTIONS
 #if !JS_HAS_EXCEPTIONS
@@ -58,6 +60,7 @@
 static char js_message_str[]  = "message";
 static char js_filename_str[] = "fileName";
 static char js_lineno_str[]   = "lineNumber";
+static char js_stack_str[]    = "stack";
 
 /* Forward declarations for ExceptionClass's initializer. */
 static JSBool
@@ -223,7 +226,7 @@ exn_finalize(JSContext *cx, JSObject *obj)
 
     privateValue = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
 
-    if (privateValue != JSVAL_NULL) {
+    if (!JSVAL_IS_VOID(privateValue)) {
         privateData = (JSExnPrivate*) JSVAL_TO_PRIVATE(privateValue);
         if (privateData)
             exn_destroyPrivate(cx, privateData);
@@ -243,7 +246,7 @@ js_ErrorFromException(JSContext *cx, jsval exn)
     if (OBJ_GET_CLASS(cx, obj) != &ExceptionClass)
         return NULL;
     privateValue = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
-    if (privateValue == JSVAL_NULL)
+    if (JSVAL_IS_VOID(privateValue))
         return NULL;
     privateData = (JSExnPrivate*) JSVAL_TO_PRIVATE(privateValue);
     if (!privateData)
@@ -319,7 +322,14 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSBool ok;
     jsval pval;
     int32 lineno;
-    JSString *message, *filename;
+    JSString *message, *filename, *stack, *argsrc;
+    char *stackbp;
+    JSStackFrame *fp;
+    JSCheckAccessOp checkAccess;
+    JSErrorReporter older;
+    JSExceptionState *state;
+    jsval callerid, v;
+    uintN i;
 
     if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
         /*
@@ -345,7 +355,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * data so that the finalizer doesn't attempt to free it.
      */
     if (OBJ_GET_CLASS(cx, obj) == &ExceptionClass)
-        OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, JSVAL_NULL);
+        OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, JSVAL_VOID);
 
     /* Set the 'message' property. */
     if (argc != 0) {
@@ -382,10 +392,93 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else {
         lineno = 0;
     }
-    return JS_DefineProperty(cx, obj, js_lineno_str,
-                             INT_TO_JSVAL(lineno),
-                             NULL, NULL, JSPROP_ENUMERATE);
+    ok = JS_DefineProperty(cx, obj, js_lineno_str,
+                           INT_TO_JSVAL(lineno),
+                           NULL, NULL, JSPROP_ENUMERATE);
+    if (!ok)
+        return JS_FALSE;
 
+    /*
+     * Set the 'stack' property.  No early returns till label done!
+     * XXXbe ISO-Latin-1 identifiers and decompiled arguments only for now
+     */
+    stackbp = NULL;
+    checkAccess = cx->runtime->checkObjectAccess;
+    if (checkAccess) {
+        older = JS_SetErrorReporter(cx, NULL);
+        state = JS_SaveExceptionState(cx);
+    }
+    callerid = ATOM_KEY(cx->runtime->atomState.callerAtom);
+
+    JS_ASSERT(cx->fp);
+    for (fp = cx->fp->down; fp; fp = fp->down) {
+        if (checkAccess) {
+            v = (fp->fun && fp->argv) ? fp->argv[-2] : JSVAL_NULL;
+            if (!JSVAL_IS_PRIMITIVE(v)) {
+                ok = checkAccess(cx, fp->fun->object, callerid, JSACC_READ, &v);
+                if (!ok) {
+                    ok = JS_TRUE;
+                    break;
+                }
+            }
+        }
+
+        stackbp = JS_sprintf_append(stackbp, "%s(",
+                                    (fp->fun && fp->fun->atom)
+                                    ? ATOM_BYTES(fp->fun->atom)
+                                    : "");
+        for (i = 0; i < fp->argc; i++) {
+            argsrc = js_ValueToSource(cx, fp->argv[i]);
+            if (!argsrc) {
+                JS_free(cx, stackbp);
+                stackbp = NULL;
+                ok = JS_FALSE;
+                goto done;
+            }
+            stackbp = JS_sprintf_append(stackbp, "%s%s",
+                                        (i > 0) ? "," : "",
+                                        JS_GetStringBytes(argsrc));
+        }
+        stackbp = JS_sprintf_append(stackbp, ")@%s:%u\n",
+                                    (fp->script && fp->script->filename)
+                                    ? fp->script->filename
+                                    : "",
+                                    (fp->script && fp->pc)
+                                    ? js_PCToLineNumber(fp->script, fp->pc)
+                                    : 0);
+        if (!stackbp) {
+            JS_ReportOutOfMemory(cx);
+            ok = JS_FALSE;
+            break;
+        }
+    }
+
+done:
+    if (checkAccess) {
+        if (ok)
+            JS_RestoreExceptionState(cx, state);
+        else
+            JS_DropExceptionState(cx, state);
+        JS_SetErrorReporter(cx, older);
+    }
+    if (!ok) {
+        JS_ASSERT(!stackbp);
+        return JS_FALSE;
+    }
+
+    if (!stackbp) {
+        stack = cx->runtime->emptyString;
+    } else {
+        stack = JS_NewString(cx, stackbp, strlen(stackbp));
+        if (!stack) {
+            free(stackbp);
+            return JS_FALSE;
+        }
+    }
+    ok = JS_DefineProperty(cx, obj, js_stack_str,
+                           STRING_TO_JSVAL(stack),
+                           NULL, NULL, JSPROP_ENUMERATE);
+    return ok;
 }
 
 /*
@@ -586,14 +679,14 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
             return NULL;
 
         /* So exn_finalize knows whether to destroy private data. */
-        OBJ_SET_SLOT(cx, protos[i], JSSLOT_PRIVATE, JSVAL_NULL);
+        OBJ_SET_SLOT(cx, protos[i], JSSLOT_PRIVATE, JSVAL_VOID);
 
         atom = js_Atomize(cx, exceptions[i].name, strlen(exceptions[i].name), 0);
         if (!atom)
             return NULL;
 
         /* Make a constructor function for the current name. */
-        fun = js_DefineFunction(cx, obj, atom, exceptions[i].native, 1, 0);
+        fun = js_DefineFunction(cx, obj, atom, exceptions[i].native, 3, 0);
         if (!fun)
             return NULL;
 
@@ -774,6 +867,8 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
      * data in the JSTokenStream.
      */
     privateData = exn_newPrivate(cx, reportp);
+    if (!privateData)
+        return JS_FALSE;
     OBJ_SET_SLOT(cx, errObject, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(privateData));
 
     /* Set the generated Exception object as the current exception. */
