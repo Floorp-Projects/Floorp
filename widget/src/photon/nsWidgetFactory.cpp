@@ -27,26 +27,15 @@
 #include "nsWidgetsCID.h"
 
 #include "nsWindow.h"
-#include "nsButton.h"
-//#include "nsCheckButton.h"
-#include "nsFileWidget.h"
-#include "nsTextWidget.h"
 #include "nsAppShell.h"
 #include "nsToolkit.h"
 #include "nsLookAndFeel.h"
-//#include "nsLabel.h"
 #include "nsTransferable.h"
 #include "nsClipboard.h"
 #include "nsHTMLFormatConverter.h"
-#include "nsFontRetrieverService.h"
 #include "nsDragService.h"
 #include "nsFileSpecWithUIImpl.h"
 #include "nsScrollbar.h"
-#include "nsSound.h"
-
-#ifdef IBMBIDI
-#include "nsBidiKeyboard.h"
-#endif
 
 #include <prlog.h>
 struct PRLogModuleInfo  *PhWidLog =  nsnull;
@@ -54,32 +43,20 @@ struct PRLogModuleInfo  *PhWidLog =  nsnull;
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsButton)
-//NS_GENERIC_FACTORY_CONSTRUCTOR(nsCheckButton)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileWidget)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextWidget)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
-//NS_GENERIC_FACTORY_CONSTRUCTOR(nsLabel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontRetrieverService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileSpecWithUIImpl)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
-#ifdef IBMBIDI
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-#endif
 
 static nsresult nsHorizScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   nsresult rv;
   nsISupports *inst = nsnull;
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidgetFactory::nsHorizScrollbarConstructor\n"));
-  
   if ( NULL == aResult )
   {
     rv = NS_ERROR_NULL_POINTER;
@@ -109,7 +86,6 @@ static nsresult nsVertScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, 
   nsresult rv;
   nsISupports *inst = nsnull;
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidgetFactory::nsVertScrollbarConstructor\n"));
   if ( NULL == aResult )
   {
     rv = NS_ERROR_NULL_POINTER;
@@ -144,20 +120,6 @@ static nsModuleComponentInfo components[] =
     NS_CHILD_CID,
     "@mozilla.org/widgets/child_window/ph;1",
     ChildWindowConstructor },
-  { "Ph Button",
-    NS_BUTTON_CID,
-    "@mozilla.org/widgets/button/ph;1",
-    nsButtonConstructor },
-/*
-  { "Ph Check Button",
-    NS_CHECKBUTTON_CID,
-    "@mozilla.org/widgets/checkbutton/ph;1",
-    nsCheckButtonConstructor },
-*/
-  { "Ph File Widget",
-    NS_FILEWIDGET_CID,
-    "@mozilla.org/widgets/filewidget/ph;1",
-    nsFileWidgetConstructor },
   { "Ph Horiz Scrollbar",
     NS_HORZSCROLLBAR_CID,
     "@mozilla.org/widgets/horizscroll/ph;1",
@@ -166,10 +128,6 @@ static nsModuleComponentInfo components[] =
     NS_VERTSCROLLBAR_CID,
     "@mozilla.org/widgets/vertscroll/ph;1",
     nsVertScrollbarConstructor },
-  { "Ph Text Widget",
-    NS_TEXTFIELD_CID,
-    "@mozilla.org/widgets/textwidget/ph;1",
-    nsTextWidgetConstructor },
   { "Ph AppShell",
     NS_APPSHELL_CID,
     "@mozilla.org/widget/appshell/ph;1",
@@ -182,17 +140,6 @@ static nsModuleComponentInfo components[] =
     NS_LOOKANDFEEL_CID,
     "@mozilla.org/widget/lookandfeel/ph;1",
     nsLookAndFeelConstructor },
-/*
-  { "Ph Label",
-    NS_LABEL_CID,
-    "@mozilla.org/widget/label/ph;1",
-    nsLabelConstructor },
-*/
-  { "Ph Sound",
-    NS_SOUND_CID,
-    //    "@mozilla.org/widget/sound/ph;1"
-    "@mozilla.org/sound;1",
-    nsSoundConstructor },
   { "Transferrable",
     NS_TRANSFERABLE_CID,
     //    "@mozilla.org/widget/transferrable/ph;1",
@@ -207,21 +154,12 @@ static nsModuleComponentInfo components[] =
     NS_HTMLFORMATCONVERTER_CID,
     "@mozilla.org/widget/htmlformatconverter/ph;1",
     nsHTMLFormatConverterConstructor },
-  { "Ph Font Retriever Service",
-    NS_FONTRETRIEVERSERVICE_CID,
-    "@mozilla.org/widget/fontretrieverservice/ph;1",
-    nsFontRetrieverServiceConstructor },
   { "Ph Drag Service",
     NS_DRAGSERVICE_CID,
     //    "@mozilla.org/widget/dragservice/ph;1",
     "@mozilla.org/widget/dragservice;1",
     nsDragServiceConstructor },
-#ifdef IBMBIDI
-    { "Ph Bidi Keyboard",
-    NS_BIDIKEYBOARD_CID,
-    "@mozilla.org/widget/bidikeyboard;1",
-    nsBidiKeyboardConstructor },
-#endif // IBMBIDI
+
   { "File Spec with UI",
     NS_FILESPECWITHUI_CID,
     //    "@mozilla.org/widget/filespecwithui/ph;1",

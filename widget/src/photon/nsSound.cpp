@@ -40,22 +40,16 @@ NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver);
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsSound::nsSound this=<%p>\n", this));
-
   NS_INIT_REFCNT();
   mInited = PR_FALSE;
 }
 
 nsSound::~nsSound()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsSound::~nsSound this=<%p>\n", this));
-
 }
 
 nsresult nsSound::Init()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsSound::Init this=<%p> mInited=<%d>\n", this, mInited));
-
   if (mInited) return NS_OK;
 
   mInited = PR_TRUE;
@@ -82,13 +76,11 @@ nsresult NS_NewSound(nsISound** aSound)
 NS_METHOD nsSound::Beep()
 {
   ::PtBeep();
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsSound::Beep this=<%p>\n", this));
   return NS_OK;
 }
 
 NS_METHOD nsSound::Play(nsIURL *aURL)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsSound::Play - Not Implemented\n"));
   NS_NOTYETIMPLEMENTED("nsSound::Play");
   return NS_OK;
 }

@@ -61,7 +61,6 @@ nsButton::nsButton() : nsWidget(), nsIButton()
 //-------------------------------------------------------------------------
 nsButton::~nsButton()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsButton::~nsButton this=<%p> - Not Implemented!\n", this));
 }
 
 //-------------------------------------------------------------------------
@@ -71,7 +70,6 @@ nsButton::~nsButton()
 //-------------------------------------------------------------------------
 NS_METHOD nsButton::SetLabel(const nsString& aText)
 {
-  nsresult res = NS_ERROR_FAILURE;
   mLabel = aText;
 
   if( mWidget )
@@ -80,16 +78,13 @@ NS_METHOD nsButton::SetLabel(const nsString& aText)
     
     NS_ALLOC_STR_BUF(label, aText, aText.Length());
 
-    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsButton:SetLabel - aText=<%s> mWidget=%p mRefCnt=<%d>\n", label, mWidget, mRefCnt));
-
     PtSetArg( &arg, Pt_ARG_TEXT_STRING, label, 0 );
-    if( PtSetResources( mWidget, 1, &arg ) == 0 )
-      res = NS_OK;
+    PtSetResources( mWidget, 1, &arg );
 
     NS_FREE_STR_BUF(label);
   }
 
-  return res;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -99,10 +94,6 @@ NS_METHOD nsButton::SetLabel(const nsString& aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsButton::GetLabel(nsString& aBuffer)
 {
-   NS_ALLOC_STR_BUF(label, mLabel, mLabel.Length());
-   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsButton::GetLabel label=<%s> mRefCnt=<%d>\n", label, mRefCnt));
-   NS_FREE_STR_BUF(label);
-
   aBuffer = mLabel;
   return NS_OK;
 }
@@ -112,21 +103,21 @@ NS_METHOD nsButton::GetLabel(nsString& aBuffer)
 // move, paint, resizes message - ignore
 //
 //-------------------------------------------------------------------------
+// Not Implemented
 PRBool nsButton::OnMove(PRInt32, PRInt32)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsButton::OnMove - Not Implemented\n"));
   return PR_FALSE;
 }
 
+// Not Implemented
 PRBool nsButton::OnPaint()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsButton::OnPaint - Not Implemented\n"));
   return PR_FALSE;
 }
 
+// Not Implemented
 PRBool nsButton::OnResize(nsRect &aWindowRect)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsButton::OnResize - Not Implemented\n"));
   return PR_FALSE;
 }
 
@@ -135,10 +126,10 @@ PRBool nsButton::OnResize(nsRect &aWindowRect)
  * Renders the Button for Printing
  *
  **/
+// Not Implemented
 NS_METHOD nsButton::Paint(nsIRenderingContext& aRenderingContext,
                           const nsRect& aDirtyRect)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsButton::Paint - Not Implemented\n"));
   return NS_OK;
 }
 
@@ -151,8 +142,6 @@ NS_METHOD nsButton::CreateNative( PtWidget_t* aParent )
   PhDim_t   dim;
   const unsigned short BorderWidth = 2;
   
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsButton::CreateNative at (%d,%d) for (%d,%d) with mRefCnt=<%d>\n",mBounds.x,mBounds.y, mBounds.width, mBounds.height, mRefCnt));
-
   NS_PRECONDITION(aParent, "nsButton::CreateNative aParent is NULL");
 
   pos.x = mBounds.x;

@@ -43,8 +43,6 @@ NS_IMPL_ISUPPORTS1(nsToolkit,nsIToolkit);
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit()  
 {
-//  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsToolkit::nsToolkit this=<%p>\n", this));
-
   NS_INIT_REFCNT();
 }
 
@@ -58,7 +56,6 @@ nsToolkit::~nsToolkit()
 {
   // Remove the TLS reference to the toolkit...
   PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
-//  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsToolkit::~nsToolkit this=<%p>\n", this));
 }
 
 
@@ -81,7 +78,6 @@ NS_METHOD nsToolkit::Init(PRThread *aThread)
     mDefaultPhotonDrawContext = PhDCGetCurrent();  
   }
   
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsToolkit::Init this=<%p> aThread=<%p>\n", this, aThread));
   return NS_OK;
 }
 
@@ -96,22 +92,12 @@ PhDrawContext_t *nsToolkit::GetDefaultPhotonDrawContext()
   return nsToolkit::mDefaultPhotonDrawContext;
 }
 
-PhPoint_t nsToolkit::GetConsoleOffset()
-{
+PhPoint_t nsToolkit::GetConsoleOffset( ) {
   PhRect_t  console;
-  char        *p = NULL;
-  int            inp_grp = 0;
-  
-   p = getenv("PHIG");
-   if (p)
-   {
-      inp_grp = atoi(p);
-      if (PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, inp_grp, &console ) == 0)
-        return(PhPoint_t)  {console.ul.x, console.ul.y};
-   }
-
+	if( PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, 1, &console ) == 0 )
+		return(PhPoint_t)  {console.ul.x, console.ul.y};
    return(PhPoint_t)  {0,0};
-}
+	}
 
 //-------------------------------------------------------------------------
 //

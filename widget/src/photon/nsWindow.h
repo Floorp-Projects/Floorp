@@ -97,7 +97,6 @@ public:
   PRBool                OnKey(nsKeyEvent &aEvent);
   PRBool                DispatchFocus(nsGUIEvent &aEvent);
   virtual PRBool        OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
-  NS_IMETHOD            GetFrameSize(int *FrameLeft, int *FrameRight, int *FrameTop, int *FrameBottom) const;
   NS_IMETHOD            SetColorMap(nsColorMap *aColorMap);
   NS_IMETHOD            GetClientBounds( nsRect &aRect );
   NS_IMETHOD            SetModal(PRBool aModal);
@@ -125,9 +124,7 @@ protected:
   static int            ResizeHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
   static int            WindowCloseHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
   PRBool                HandleEvent( PtCallbackInfo_t* aCbInfo );
-  NS_METHOD             GetSiblingClippedRegion( PhTile_t **btiles, PhTile_t **ctiles );
-  NS_METHOD             SetWindowClipping( PhTile_t *damage, PhPoint_t &offset );
-  PhTile_t              *GetWindowClipping(PhPoint_t &offset);
+  PhTile_t              *GetWindowClipping( );
 
   void                  ResizeHoldOff();
   void                  RemoveResizeWidget();
@@ -152,10 +149,6 @@ protected:
   nsFont                *mFont;
   nsIMenuBar            *mMenuBar;
   PRBool                mMenuBarVis;
-  int                   mFrameLeft;
-  int                   mFrameRight;
-  int                   mFrameTop;
-  int                   mFrameBottom;
   PRBool                mIsUpdating;
 
   // when this is PR_TRUE we will block focus

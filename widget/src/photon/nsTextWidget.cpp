@@ -61,7 +61,6 @@ nsTextWidget::nsTextWidget() : nsTextHelper()
 //-------------------------------------------------------------------------
 nsTextWidget::~nsTextWidget()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextWidget::~nsTextWidget Destructor called.\n"));
 }
 
 //-------------------------------------------------------------------------
@@ -89,13 +88,11 @@ nsresult nsTextWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 PRBool nsTextWidget::OnPaint()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextWidget::OnPaint - Not Implemented\n"));
   return PR_FALSE;
 }
 
 PRBool nsTextWidget::OnResize(nsRect &aWindowRect)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextWidget::OnResize - Not Implemented\n"));
   return PR_FALSE;
 }
 
@@ -105,8 +102,6 @@ NS_METHOD nsTextWidget::CreateNative( PtWidget_t* aParent )
   PtArg_t   arg[5];
   PhPoint_t pos;
   PhDim_t   dim;
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextWidget::CreateNative"));
 
   pos.x = mBounds.x;
   pos.y = mBounds.y;
@@ -133,8 +128,6 @@ int nsTextWidget::RawEventHandler(PtWidget_t *aWidget, void *aData, PtCallbackIn
 {
   nsTextWidget *me = (nsTextWidget *) aData;	/* Mozilla object that created the event */
 
-//PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextWidget::RawEventHandler\n"));
-
   if( aCbInfo->reason == Pt_CB_RAW )
   {
     PhEvent_t* event = aCbInfo->event;
@@ -148,7 +141,6 @@ int nsTextWidget::RawEventHandler(PtWidget_t *aWidget, void *aData, PtCallbackIn
       break;
     }
     default:
-		PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextWidget::RawEventHandler Unknown event\n"));
 	  break;	
     }
   } 
@@ -158,9 +150,5 @@ int nsTextWidget::RawEventHandler(PtWidget_t *aWidget, void *aData, PtCallbackIn
 
 int nsTextWidget::handle_activate_event (PtWidget_t *aWidget, void *aData, PtCallbackInfo_t *aCbinfo )
 {
-  nsTextWidget *me = (nsTextWidget *) aData;
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextWidget::handle_activate_event me=<%p> - Not Implemented\n",me));
-  
   return (Pt_CONTINUE);
 }

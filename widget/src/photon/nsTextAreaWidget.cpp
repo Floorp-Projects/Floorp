@@ -61,7 +61,6 @@ nsTextAreaWidget::nsTextAreaWidget() : nsTextHelper()
 //-------------------------------------------------------------------------
 nsTextAreaWidget::~nsTextAreaWidget()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextAreaWidget::~nsTextAreaWidget Destructor called.\n"));
 }
 
 //-------------------------------------------------------------------------
@@ -89,13 +88,12 @@ nsresult nsTextAreaWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr
 //-------------------------------------------------------------------------
 PRBool nsTextAreaWidget::OnPaint()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextAreaWidget::OnPaint - Not Implemented\n"));
   return PR_FALSE;
 }
 
+// Not Implemented
 PRBool nsTextAreaWidget::OnResize(nsRect &aWindowRect)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextAreaWidget::OnResize - Not Implemented\n"));
   return PR_FALSE;
 }
 
@@ -105,8 +103,6 @@ NS_METHOD nsTextAreaWidget::CreateNative( PtWidget_t* aParent )
   PtArg_t   arg[5];
   PhPoint_t pos;
   PhDim_t   dim;
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextAreaWidget::CreateNative"));
 
   pos.x = mBounds.x;
   pos.y = mBounds.y;
@@ -133,8 +129,6 @@ int nsTextAreaWidget::RawEventHandler(PtWidget_t *aWidget, void *aData, PtCallba
 {
   nsTextAreaWidget *me = (nsTextAreaWidget *) aData;	/* Mozilla object that created the event */
 
-//PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextAreaWidget::RawEventHandler\n"));
-
   if( aCbInfo->reason == Pt_CB_RAW )
   {
     PhEvent_t* event = aCbInfo->event;
@@ -148,21 +142,9 @@ int nsTextAreaWidget::RawEventHandler(PtWidget_t *aWidget, void *aData, PtCallba
       break;
     }
     default:
-		PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextAreaWidget::RawEventHandler Unknown event\n"));
 	  break;	
     }
   } 
 
   return (Pt_CONTINUE);
 }
-
-#if 0
-int nsTextAreaWidget::handle_activate_event (PtWidget_t *aWidget, void *aData, PtCallbackInfo_t *aCbinfo )
-{
-  nsTextAreaWidget *me = (nsTextAreaWidget *) aData;
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextAreaWidget::handle_activate_event me=<%p> - Not Implemented\n",me));
-  
-  return (Pt_CONTINUE);
-}
-#endif

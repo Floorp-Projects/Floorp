@@ -39,8 +39,6 @@ NS_IMPL_ISUPPORTS2(nsFontRetrieverService, nsIFontRetrieverService, nsIFontNameI
 //----------------------------------------------------------
 nsFontRetrieverService::nsFontRetrieverService()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFontRetrieverService::nsFontRetrieverService this=<%p>\n", this));
-
   NS_INIT_REFCNT();
   mFontList     = nsnull;
   mSizeIter     = nsnull;
@@ -51,8 +49,6 @@ nsFontRetrieverService::nsFontRetrieverService()
 //----------------------------------------------------------
 nsFontRetrieverService::~nsFontRetrieverService()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFontRetrieverService::~nsFontRetrieverService this=<%p>\n",this));
-
   if (nsnull != mFontList) {
     for (PRInt32 i=0;i<mFontList->Count();i++) {
       FontInfo * font = (FontInfo *)mFontList->ElementAt(i);
@@ -73,8 +69,6 @@ nsFontRetrieverService::~nsFontRetrieverService()
 //----------------------------------------------------------
 NS_IMETHODIMP nsFontRetrieverService::CreateFontNameIterator( nsIFontNameIterator** aIterator )
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFontRetrieverService::CreateFontNameIterator this=<%p>\n",this));
-
   if (nsnull == aIterator) {
     return NS_ERROR_FAILURE;
   }
@@ -91,8 +85,6 @@ NS_IMETHODIMP nsFontRetrieverService::CreateFontNameIterator( nsIFontNameIterato
 NS_IMETHODIMP nsFontRetrieverService::CreateFontSizeIterator( const nsString & aFontName, 
                                                               nsIFontSizeIterator** aIterator )
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFontRetrieverService::CreateFontNameIterator 2 this=<%p>\n",this));
-
   // save value in case someone externally is using it
   PRInt32 saveIterInx = mNameIterInx;
 
@@ -130,8 +122,6 @@ NS_IMETHODIMP nsFontRetrieverService::CreateFontSizeIterator( const nsString & a
 //----------------------------------------------------------
 NS_IMETHODIMP nsFontRetrieverService::Reset()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFontRetrieverService::Reset this=<%p>\n",this));
-
   mNameIterInx = 0;
   return NS_OK;
 }
@@ -139,8 +129,6 @@ NS_IMETHODIMP nsFontRetrieverService::Reset()
 //----------------------------------------------------------
 NS_IMETHODIMP nsFontRetrieverService::Get( nsString* aFontName )
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFontRetrieverService::Get this=<%p>\n",this));
-
   if (mNameIterInx < mFontList->Count()) {
     FontInfo * fontInfo = (FontInfo *)mFontList->ElementAt(mNameIterInx);
     *aFontName = fontInfo->mName;
@@ -152,8 +140,6 @@ NS_IMETHODIMP nsFontRetrieverService::Get( nsString* aFontName )
 //----------------------------------------------------------
 NS_IMETHODIMP nsFontRetrieverService::Advance()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFontRetrieverService::Advance this=<%p>\n",this));
-
   if (mNameIterInx < mFontList->Count()-1) {
     mNameIterInx++;
     return NS_OK;
@@ -164,8 +150,6 @@ NS_IMETHODIMP nsFontRetrieverService::Advance()
 //------------------------------
 static FontInfo * GetFontInfo(nsVoidArray * aFontList, char * aName)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFontRetrieverService::GetFontInfo\n"));
-
   nsAutoString name((const PRUnichar *) aName, strlen(aName) );
   PRInt32 i;
   PRInt32 cnt = aFontList->Count();
@@ -188,8 +172,6 @@ static FontInfo * GetFontInfo(nsVoidArray * aFontList, char * aName)
 //------------------------------
 static void AddSizeToFontInfo(FontInfo * aFontInfo, PRInt32 aSize)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFontRetrieverService::AddSizeToFontInfo\n"));
-
   nsVoidArray * sizes;
   if (nsnull == aFontInfo->mSizes) {
     sizes = new nsVoidArray();
@@ -228,8 +210,6 @@ static void AddSizeToFontInfo(FontInfo * aFontInfo, PRInt32 aSize)
 //--------------------------------------------------
 NS_IMETHODIMP nsFontRetrieverService::LoadFontList()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFontRetrieverService::LoadFontList this=<%p>\n",this));
-
 #if 0
   char    * pattern = "*";
   int nnames = 1024;
@@ -392,8 +372,6 @@ NS_IMETHODIMP nsFontRetrieverService::LoadFontList()
 NS_IMETHODIMP nsFontRetrieverService::IsFontScalable(const nsString & aFontName,
                                                      PRBool* aResult ) 
 { 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFontRetrieverService::IsFontScalable this=<%p>\n",this));
-
   // save value in case someone externally is using it
   PRInt32 saveIterInx = mNameIterInx;
    

@@ -108,8 +108,6 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
 //-------------------------------------------------------------------------
 nsMenuBar::~nsMenuBar()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::~nsMenuBar Destructor Called - Not Implmenented\n"));
-
   // Remove all references to menus on this menubar
   mItems->Clear();
 
@@ -136,12 +134,10 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
   mMenuBar = PtCreateWidget( PtMenuBar, parent, 1, arg);
   if (!mMenuBar)
   {
-    PR_LOG(PhWidLog, PR_LOG_ERROR, ("nsMenuBar::Create Failed to create the PtMenuBar\n"));
     return NS_ERROR_FAILURE;	  
   }
   else
   {
-    PR_LOG(PhWidLog, PR_LOG_ERROR, ("nsMenuBar::Create with nsIWidget parent=%p, this=%p Photon menuBar=<%p>\n", aParent, this, mMenuBar));
 
     SetParent(aParent);
 //    PtRealizeWidget(mMenuBar);
@@ -152,8 +148,6 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::GetParent mParent=<%p>\n", mParent));
-
   aParent = mParent;
   return NS_OK;
 }
@@ -161,8 +155,6 @@ NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::SetParent(nsIWidget *aParent)
 {
- PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::SetParent aParent=<%p>\n", aParent));
-
   mParent = aParent;
   return NS_OK;
 }
@@ -172,20 +164,9 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 {
   NS_ASSERTION(aMenu, "NULL Pointer in nsMenuBar::AddMenu");
   
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::AddMenu aMenu=<%p>\n", aMenu));
-
   /* Add the nsMenu to our list */
   mItems->AppendElement(aMenu);
   NS_ADDREF(aMenu);
-
-#ifdef DEBUG		  
-  nsString Label;
-  aMenu->GetLabel(Label);
-  char *labelStr = Label.ToNewCString();
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::AddMenu Label is <%s>\n", labelStr));
-  delete[] labelStr;
-#endif
-
   return NS_OK;
 }
 
@@ -193,14 +174,12 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 NS_METHOD nsMenuBar::GetMenuCount(PRUint32 &aCount)
 {
   aCount = mItems->Count();;
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::GetMenuCount aCount=<%d>\n", aCount));
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::GetMenuAt(const PRUint32 aPos, nsIMenu *& aMenu)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::GetMenuAt %d\n", aPos));
   aMenu = (nsIMenu *) mItems->ElementAt(aPos);
   NS_ADDREF(aMenu);
   return NS_OK;
@@ -209,8 +188,6 @@ NS_METHOD nsMenuBar::GetMenuAt(const PRUint32 aPos, nsIMenu *& aMenu)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::InsertMenuAt(const PRUint32 aPos, nsIMenu *& aMenu)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::InsertMenuAt aPos=<%d> - Not Implemented\n", aPos));
-
   mItems->InsertElementAt(aMenu, aPos);
   NS_ADDREF(aMenu);
 
@@ -229,8 +206,6 @@ NS_METHOD nsMenuBar::InsertMenuAt(const PRUint32 aPos, nsIMenu *& aMenu)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::RemoveMenu(const PRUint32 aPos)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::RemoveMenu aPos=<%d>\n", aPos));
-
   nsIMenu * menu = (nsIMenu *) mItems->ElementAt(aPos);
   NS_RELEASE(menu);
   mItems->RemoveElementAt(aPos);
@@ -240,8 +215,6 @@ NS_METHOD nsMenuBar::RemoveMenu(const PRUint32 aPos)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::RemoveAll()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::RemoveAll\n"));
-
  while (mItems->Count()) {
     nsISupports * supports = (nsISupports *)mItems->ElementAt(0);
     NS_RELEASE(supports);
@@ -254,34 +227,33 @@ NS_METHOD nsMenuBar::RemoveAll()
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::GetNativeData(void *& aData)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::GetNativeData this=<%p> mMenuBar=<%p>\n", this, mMenuBar));
   aData = (void *)mMenuBar;
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
+// Not Implemented
 NS_METHOD nsMenuBar::SetNativeData(void * aData)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::SetNativeData to <%p> - Not Implemented\n", aData));
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::Paint()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::Paint\n"));
   mParent->Invalidate(PR_TRUE);
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
+// Not Implemented
 nsEventStatus nsMenuBar::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::MenuItemSelected - Not Implemented\n"));
   return nsEventStatus_eIgnore;
 }
 
 //-------------------------------------------------------------------------
+// Not Implemented
 nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
   // I should determine which menu was selected and call MenuConstruct
@@ -289,8 +261,6 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
   // Not really sure what to do here, will have to wait until someone
   // calls it!
     
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::MenuSelected  aMenuEvent->nativeMsg=<%p> - Not Implemented\n", aMenuEvent.nativeMsg));
-
   /* I have no idea what this really is... */
 //  PtWidget_t *PhMenu = (PtWidget_t *) aMenuEvent.nativeMsg;
 
@@ -298,9 +268,9 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 }
 
 //-------------------------------------------------------------------------
+// Not Implemented
 nsEventStatus nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::MenuDeSelected - Not Implemented\n"));
   return nsEventStatus_eIgnore;
 }
 
@@ -311,7 +281,6 @@ nsEventStatus nsMenuBar::MenuConstruct(
     void              * menubarNode,
     void              * aWebShell)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::MenuConstruct\n"));
 
     mWebShell = (nsIWebShell*) aWebShell;
     mDOMNode  = (nsIDOMNode*)menubarNode;
@@ -382,8 +351,8 @@ nsEventStatus nsMenuBar::MenuConstruct(
   return nsEventStatus_eIgnore;
 }
 
+// Not Implemented
 nsEventStatus nsMenuBar::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::MenuDeconstruct - Not Implemented\n"));
   return nsEventStatus_eIgnore;
 }

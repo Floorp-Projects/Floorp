@@ -37,7 +37,7 @@ static void raw_draw_container_draw( PtWidget_t *widget, PhTile_t *damage )
   }
 
   if( rdc->draw_f )
-    rdc->draw_f( widget, damage );	
+    rdc->draw_f( widget, damage );
 }
 
 //
