@@ -626,6 +626,7 @@ dnl the qsort routine under solaris is faulty
     DSO_LDOPTS='-Bdynamic'
     MKSHLIB='-$(LD) $(DSO_LDOPTS)'
     MKCSHLIB='-$(LD) $(DSO_LDOPTS)'
+    AC_DEFINE(SUNOS4)
     AC_DEFINE(SPRINTF_RETURNS_STRING)
     ;;
 
