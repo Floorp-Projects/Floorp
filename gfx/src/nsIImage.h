@@ -210,14 +210,6 @@ public:
   virtual void  MoveAlphaMask(PRInt32 aX, PRInt32 aY) = 0;
 
 
-  /** 
-   * Duplicate this image and pass back new object to it
-   * @param TheImage is the image to duplicate into this object
-   * @return the new image
-   */
-  virtual nsIImage* DuplicateImage() = 0;
-
-
   /**
    * Set the alpha level for the image
    * @param  the alpha level to set for the image, from 0 to 100%
