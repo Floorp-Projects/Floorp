@@ -119,7 +119,7 @@ public:
   PRBool IsMarkupEntity(const PRUnichar aChar);
   PRBool AddMarkupEntity(const PRUnichar aChar);
 
-#ifdef DEBUG
+#ifdef DEBUG_XIF
   void WriteDebugFile();        // saves to a temp file
 #endif
 
