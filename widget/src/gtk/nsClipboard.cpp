@@ -166,22 +166,20 @@ void nsClipboard::SetTopLevelWidget(GtkWidget* w)
 
   mWidget = w;
 
-#if 0
   // Respond to requests for the selection:
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "selection_get",
-                     GTK_SIGNAL_FUNC(nsSelectionMgr::SelectionRequestCB),
-                     theSelectionMgr);
+  gtk_signal_connect(GTK_OBJECT(mWidget), "selection_get",
+                     GTK_SIGNAL_FUNC(nsClipboard::SelectionRequestCB),
+                     0);
 
   // When someone else takes the selection away:
   gtk_signal_connect(GTK_OBJECT(mWidget), "selection_clear_event",
-                     GTK_SIGNAL_FUNC(nsSelectionMgr::SelectionClearCB),
-                     theSelectionMgr);
+                     GTK_SIGNAL_FUNC(nsClipboard::SelectionClearCB),
+                     0);
 
   // Set up the paste handler:
   gtk_signal_connect(GTK_OBJECT(mWidget), "selection_received",
-                     GTK_SIGNAL_FUNC(nsSelectionMgr::SelectionReceivedCB),
-                     theSelectionMgr);
+                     GTK_SIGNAL_FUNC(nsClipboard::SelectionReceivedCB),
+                     0);
 
   // Hmm, sometimes we need this, sometimes not.  I'm not clear why:
   // Register all the target types we handle:
@@ -191,5 +189,4 @@ void nsClipboard::SetTopLevelWidget(GtkWidget* w)
   // Need to add entries for whatever it is that emacs uses
   // Need to add entries for XIF and HTML
 
-#endif
 }

@@ -43,10 +43,12 @@ public:
   // nsIClipboard  
   NS_IMETHOD ForceDataToClipboard();
 
+  void SetTopLevelWidget(GtkWidget* w);
+
+
 protected:
   NS_IMETHOD SetNativeClipboardData();
   NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable);
-  void       SetTopLevelWidget(GtkWidget* w);
 
   PRBool              mIgnoreEmptyNotification;
 
@@ -54,6 +56,20 @@ protected:
   nsITransferable   *mTransferable;
   nsIWidget         *mWindow;
   GtkWidget         *mWidget;
+
+private:
+  static void SelectionRequestCB( GtkWidget *widget, 
+                                  GtkSelectionData *selection_data,
+                                  guint info,
+                                  guint time,
+                                  gpointer data );
+  static void SelectionClearCB( GtkWidget *widget, 
+                                GdkEventSelection *event,
+                                gpointer data );
+  static void SelectionReceivedCB(GtkWidget *aWidget,
+                                  GtkSelectionData *aSelectionData,
+                                  gpointer aData);
+
 };
 
 #endif // nsClipboard_h__
