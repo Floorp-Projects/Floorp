@@ -38,7 +38,6 @@ public:
     nsISupports* mService;
     nsVector* mListeners;        // nsVector<nsIShutdownListener>
     PRBool mShuttingDown;
-
 };
 
 nsServiceEntry::nsServiceEntry(const nsCID& cid, nsISupports* service)
@@ -158,6 +157,7 @@ protected:
 
     nsObjectHashtable/*<nsServiceEntry>*/* mServices;
     PRBool mShuttingDown;
+    PRMonitor* mMonitor;
 };
 
 static PRBool
@@ -171,13 +171,21 @@ DeleteEntry(nsHashKey *aKey, void *aData, void* closure)
 }
 
 nsServiceManagerImpl::nsServiceManagerImpl(void)
-    : mShuttingDown(PR_FALSE)
+    : mShuttingDown(PR_FALSE),
+      mMonitor(0)
 {
     NS_INIT_REFCNT();
     mServices = new nsObjectHashtable(nsnull, nsnull,   // should never be cloned
                                       DeleteEntry, nsnull,
                                       256, PR_TRUE);    // Get a threadSafe hashtable
     NS_ASSERTION(mServices, "out of memory already?");
+
+    /* XXX: This is a hack to force NSPR initialization..  This should be 
+     *      removed once PR_CEnterMonitor(...) initializes NSPR... (rick)
+     */
+    (void)PR_GetCurrentThread();
+    mMonitor = PR_NewMonitor();
+    NS_ASSERTION(mMonitor, "unable to get service manager monitor. Uh oh.");
 }
 
 nsServiceManagerImpl::~nsServiceManagerImpl(void)
@@ -185,6 +193,11 @@ nsServiceManagerImpl::~nsServiceManagerImpl(void)
     mShuttingDown = PR_TRUE;
     if (mServices) {
         delete mServices;
+    }
+
+    if (mMonitor) {
+        PR_DestroyMonitor(mMonitor);
+        mMonitor = 0;
     }
 }
 
@@ -196,11 +209,7 @@ nsServiceManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
                                  nsIShutdownListener* shutdownListener)
 {
     nsresult rv = NS_OK;
-    /* XXX: This is a hack to force NSPR initialization..  This should be 
-     *      removed once PR_CEnterMonitor(...) initializes NSPR... (rick)
-     */
-    (void)PR_GetCurrentThread();
-    PR_CEnterMonitor(this);
+    PR_EnterMonitor(mMonitor);
 
     nsIDKey key(aClass);
     nsServiceEntry* entry = (nsServiceEntry*)mServices->Get(&key);
@@ -247,7 +256,7 @@ nsServiceManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
         }
     }
 
-    PR_CExitMonitor(this);
+    PR_ExitMonitor(mMonitor);
     return rv;
 }
 
@@ -257,7 +266,7 @@ nsServiceManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
 {
     PRBool serviceFound = PR_FALSE;
     nsresult rv = NS_OK;
-    PR_CEnterMonitor(this);
+    PR_EnterMonitor(mMonitor);
 
 #ifndef NS_DEBUG
     // Do entry lookup only if there is a shutdownlistener to be removed.
@@ -287,7 +296,7 @@ nsServiceManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
                  "*** Service in hash table but is being deleted. Dangling pointer\n"
                  "*** in service manager hash table.");
 
-    PR_CExitMonitor(this);
+    PR_ExitMonitor(mMonitor);
     return rv;
 }
 
@@ -295,7 +304,7 @@ NS_IMETHODIMP
 nsServiceManagerImpl::RegisterService(const nsCID& aClass, nsISupports* aService)
 {
     nsresult rv = NS_OK;
-    PR_CEnterMonitor(this);
+    PR_EnterMonitor(mMonitor);
 
     nsIDKey key(aClass);
     nsServiceEntry* entry = (nsServiceEntry*)mServices->Get(&key);
@@ -311,7 +320,7 @@ nsServiceManagerImpl::RegisterService(const nsCID& aClass, nsISupports* aService
             NS_ADDREF(aService);      // Released in DeleteEntry from UnregisterService
         }
     }
-    PR_CExitMonitor(this);
+    PR_ExitMonitor(mMonitor);
     return rv;
 }
 
@@ -319,7 +328,7 @@ NS_IMETHODIMP
 nsServiceManagerImpl::UnregisterService(const nsCID& aClass)
 {
     nsresult rv = NS_OK;
-    PR_CEnterMonitor(this);
+    PR_EnterMonitor(mMonitor);
 
     nsIDKey key(aClass);
     nsServiceEntry* entry = (nsServiceEntry*)mServices->Get(&key);
@@ -333,7 +342,7 @@ nsServiceManagerImpl::UnregisterService(const nsCID& aClass)
         mServices->RemoveAndDelete(&key);				// This will call the delete entry func
     }
 
-    PR_CExitMonitor(this);
+    PR_ExitMonitor(mMonitor);
     return rv;
 }
 
