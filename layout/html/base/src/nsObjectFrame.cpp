@@ -377,7 +377,7 @@ private:
   nsresult EnsureCachedAttrParamArrays();
 };
 
-#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_WIN) || (defined(DO_DIRTY_INTERSECT) && (defined(XP_MAC) || defined(XP_MACOSX)))
 static void ConvertTwipsToPixels(nsPresContext& aPresContext, nsRect& aTwipsRect, nsRect& aPixelRect);
 #endif
 
@@ -3925,7 +3925,7 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
   mPluginHost = aHost;
 }
 
-#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_WIN) || (defined(DO_DIRTY_INTERSECT) && (defined(XP_MAC) || defined(XP_MACOSX)))
 // convert frame coordinates from twips to pixels
 static void ConvertTwipsToPixels(nsPresContext& aPresContext, nsRect& aTwipsRect, nsRect& aPixelRect)
 {
