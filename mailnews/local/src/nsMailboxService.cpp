@@ -24,7 +24,7 @@
 #endif
 
 #include "nsMailboxService.h"
-
+#include "nsIMsgMailSession.h"
 #include "nsMailboxUrl.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsMailboxProtocol.h"
@@ -33,6 +33,7 @@
 #include "nsMsgKeyArray.h"
 #include "nsLocalUtils.h"
 #include "nsMsgLocalCID.h"
+#include "nsMsgBaseCID.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -40,6 +41,7 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
+static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 nsMailboxService::nsMailboxService()
 {
@@ -272,6 +274,15 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 			// set up the url listener
 			if (aUrlListener)
 				rv = url->RegisterListener(aUrlListener);
+
+			// set progress feedback...eventually, we'll need to pass this into all methods in
+			// the mailbox service...this is just a temp work around to get things going...
+			NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
+			if (NS_FAILED(rv)) return rv;
+			nsCOMPtr<nsIMsgStatusFeedback> status;
+			session->GetTemporaryMsgStatusFeedback(getter_AddRefs(status));
+			url->SetStatusFeedback(status);
+
 		} // if we got a url
 	} // if we got a url
 
