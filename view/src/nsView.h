@@ -172,30 +172,16 @@ public:
    * @param x new x position
    * @param y new y position
    */
-  NS_IMETHOD  SetPosition(nscoord x, nscoord y);
+  virtual void SetPosition(nscoord aX, nscoord aY);
   /**
-   * Called to indicate that the dimensions of the view (actually the
-   * width and height of the clip) have been changed. 
-   * @param width new width
-   * @param height new height
+   * Called to indicate that the dimensions of the view have been changed.
+   * The x and y coordinates may be < 0, indicating that the view extends above
+   * or to the left of its origin position.
    */
-  NS_IMETHOD  SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE);
-  NS_IMETHOD  GetDimensions(nscoord *width, nscoord *height) const;
-  /**
-   * Called to indicate that the dimensions and position of the view have
-   * been changed.
-   * @param aBounds new bounds
-   */
-  NS_IMETHOD  SetBounds(const nsRect &aBounds, PRBool aPaint = PR_TRUE);
-  /**
-   * Called to indicate that the dimensions and position of the view have
-   * been changed.
-   * @param aX new x position
-   * @param aY new y position
-   * @param aWidth new width
-   * @param aHeight new height
-   */
-  NS_IMETHOD  SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, PRBool aPaint = PR_TRUE);
+  virtual void SetDimensions(const nsRect &aRect, PRBool aPaint = PR_TRUE);
+  void GetDimensions(nsRect &aRect) const { aRect = mDimBounds; aRect.x -= mPosX; aRect.y -= mPosY; }
+  void GetDimensions(nsSize &aSize) const { aSize.width = mDimBounds.width; aSize.height = mDimBounds.height; }
+
   /**
    * Called to set the clip of the children of this view.
    * The clip is relative to the origin of the view.
@@ -341,6 +327,9 @@ public: // NOT in nsIView, so only available in view module
 
   PRUint32 GetViewFlags() const { return mVFlags; }
 
+  void ConvertToParentCoords(nscoord* aX, nscoord* aY) { *aX += mPosX; *aY += mPosY; }
+  void ConvertFromParentCoords(nscoord* aX, nscoord* aY) { *aX -= mPosX; *aY -= mPosY; }
+
 protected:
   virtual ~nsView();
   //
@@ -360,7 +349,8 @@ protected:
   PRInt32           mZIndex;
   nsViewVisibility  mVis;
   PRInt32           mNumKids;
-  nsRect            mBounds;
+  nscoord           mPosX, mPosY;
+  nsRect            mDimBounds; // relative to parent
   nsViewClip        mChildClip;
   float             mOpacity;
   PRUint32          mVFlags;

@@ -478,7 +478,7 @@ NS_IMETHODIMP nsScrollingView::Init(nsIViewManager* aManager,
   return nsView::Init(aManager, aBounds, aParent, aVisibilityFlag);
 }
 
-NS_IMETHODIMP nsScrollingView::SetDimensions(nscoord width, nscoord height, PRBool aPaint)
+void nsScrollingView::SetDimensions(const nsRect& aRect, PRBool aPaint)
 {
   nsIDeviceContext  *dx;
   mViewManager->GetDeviceContext(dx);
@@ -488,7 +488,7 @@ NS_IMETHODIMP nsScrollingView::SetDimensions(nscoord width, nscoord height, PRBo
   nsRect            clipRect;
 
   // Set our bounds and size our widget if we have one
-  nsView::SetDimensions(width, height, aPaint);
+  nsView::SetDimensions(aRect, aPaint);
 
 #if 0
   //this will fix the size of the thumb when we resize the root window,
@@ -499,6 +499,8 @@ NS_IMETHODIMP nsScrollingView::SetDimensions(nscoord width, nscoord height, PRBo
   ComputeScrollOffsets();
 #endif
 
+  NS_ASSERTION(aRect.x == 0 && aRect.y == 0, "ScrollingView has contents sticking above or to left");
+
   // Determine how much space is actually taken up by the scrollbars
   if (mHScrollBarView && ViewIsShowing((ScrollBarView *)mHScrollBarView))
     showHorz = NSToCoordRound(scrollHeight);
@@ -507,20 +509,21 @@ NS_IMETHODIMP nsScrollingView::SetDimensions(nscoord width, nscoord height, PRBo
     showVert = NSToCoordRound(scrollWidth);
 
   // Compute the clip view rect
-  clipRect.SetRect(0, 0, PR_MAX((width - showVert), mInsets.left+mInsets.right), PR_MAX((height - showHorz), mInsets.top+mInsets.bottom));
+  clipRect.SetRect(0, 0, PR_MAX((aRect.width - showVert), mInsets.left+mInsets.right), PR_MAX((aRect.height - showHorz), mInsets.top+mInsets.bottom));
   clipRect.Deflate(mInsets);
 
   // Size and position the clip view
   if (nsnull != mClipView) {
-    mClipView->SetBounds(clipRect, aPaint);
-     UpdateScrollControls(aPaint);
+    mClipView->SetPosition(clipRect.x, clipRect.y);
+    clipRect.x = clipRect.y = 0;
+    mClipView->SetDimensions(clipRect, aPaint);
+    UpdateScrollControls(aPaint);
   }
 
   NS_RELEASE(dx);
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsScrollingView::SetPosition(nscoord aX, nscoord aY)
+void nsScrollingView::SetPosition(nscoord aX, nscoord aY)
 {
   // If we have a widget then there's no need to adjust child widgets,
   // because they're relative to our window
@@ -561,7 +564,6 @@ NS_IMETHODIMP nsScrollingView::SetPosition(nscoord aX, nscoord aY)
   
     NS_RELEASE(dx);
   }
-  return NS_OK;
 }
 
 nsresult
@@ -683,7 +685,7 @@ void nsScrollingView::HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags
   NS_RELEASE(px);
 
   // Get the size of the clip view
-  mClipView->GetDimensions(&clipSize.width, &clipSize.height);
+  mClipView->GetDimensions(clipSize);
 
   nscoord offsetX = mOffsetX;
   nscoord offsetY = mOffsetY;
@@ -828,7 +830,7 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
     // child views with widgets. Note that the clip view has an opacity
     // of 0.0f (completely transparent)
     // XXX The clip widget should be created on demand only...
-    rv = mClipView->Init(mViewManager, mBounds, this);
+    rv = mClipView->Init(mViewManager, mDimBounds, this);
     rv = mViewManager->InsertChild(this, mClipView, mZIndex);
     rv = mViewManager->SetViewOpacity(mClipView, 0.0f);
     rv = mClipView->CreateWidget(kWidgetCID, &initData,
@@ -845,9 +847,9 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
 
     dx->GetScrollBarDimensions(sbWidth, sbHeight);
     trect.width = NSToCoordRound(sbWidth);
-    trect.x = mBounds.x + mBounds.XMost() - trect.width;
+    trect.x = mDimBounds.width - trect.width;
     trect.height = NSToCoordRound(sbHeight);
-    trect.y = mBounds.y + mBounds.YMost() - trect.height;
+    trect.y = mDimBounds.height - trect.height;
 
     rv = mCornerView->Init(mViewManager, trect, this, nsViewVisibility_kHide);
     mViewManager->InsertChild(this, mCornerView, mZIndex);
@@ -860,13 +862,14 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
 
   if (nsnull != mVScrollBarView)
   {
-    nsRect  trect = mBounds;
+    nsRect  trect;
     float   sbWidth, sbHeight;
 
     dx->GetScrollBarDimensions(sbWidth, sbHeight);
     trect.width = NSToCoordRound(sbWidth);
-    trect.x += mBounds.XMost() - trect.width;
+    trect.x = mDimBounds.width - trect.width;
     trect.height -= NSToCoordRound(sbHeight);
+    trect.y = 0;
 
     static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
 
@@ -920,13 +923,14 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
 
   if (nsnull != mHScrollBarView)
   {
-    nsRect  trect = mBounds;
+    nsRect  trect;
     float   sbWidth, sbHeight;
 
     dx->GetScrollBarDimensions(sbWidth, sbHeight);
     trect.height = NSToCoordRound(sbHeight);
-    trect.y += mBounds.YMost() - trect.height;
+    trect.y = mDimBounds.height - trect.height;
     trect.width -= NSToCoordRound(sbWidth);
+    trect.x = 0;
 
     static NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
 
@@ -977,22 +981,25 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
   {
     nscoord           dx = 0, dy = 0;
     nsIDeviceContext  *px;
-    nscoord           hwidth, hheight;
-    nscoord           vwidth, vheight;
+    nsSize            hSize;
+    nsSize            vSize;
     PRUint32          oldsizey = mSizeY, oldsizex = mSizeX;
     nscoord           offx, offy;
     float             scale;
-    nsRect            controlRect(0, 0, mBounds.width, mBounds.height);
+    nsRect            controlRect(0, 0, mDimBounds.width, mDimBounds.height);
 
     controlRect.Deflate(mInsets);
 
     mViewManager->GetDeviceContext(px);
     px->GetAppUnitsToDevUnits(scale);
 
-    scrolledView->GetDimensions(&mSizeX, &mSizeY);
+    nsSize sz;
+    scrolledView->GetDimensions(sz);
+    mSizeX = sz.width;
+    mSizeY = sz.height;
 
     if (nsnull != mHScrollBarView) {
-      mHScrollBarView->GetDimensions(&hwidth, &hheight);
+      mHScrollBarView->GetDimensions(hSize);
       mHScrollBarView->GetWidget(win);
       
       if (NS_OK == win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh)) {
@@ -1010,13 +1017,13 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
     }
 
     if (nsnull != mVScrollBarView) {
-      mVScrollBarView->GetDimensions(&vwidth, &vheight);
+      mVScrollBarView->GetDimensions(vSize);
       offy = mOffsetY;
 
       mVScrollBarView->GetWidget(win);
 
       if (NS_OK == win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv)) {
-        if ((mSizeY > (controlRect.height - (hasHorizontal ? hheight : 0)))) {
+        if ((mSizeY > (controlRect.height - (hasHorizontal ? hSize.height : 0)))) {
           // if we are scrollable
           if (mScrollPref != nsScrollPreference_kNeverScroll) {
             //we need to be able to scroll
@@ -1033,7 +1040,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
             scrollv->GetPosition(oldpos);
             px->GetDevUnitsToAppUnits(p2t);
 
-            availheight = controlRect.height - (hasHorizontal ? hheight : 0);
+            availheight = controlRect.height - (hasHorizontal ? hSize.height : 0);
 
             // XXX Check for 0 initial size. This is really indicative
             // of a problem. 
@@ -1089,7 +1096,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
       mHScrollBarView->GetWidget(win);
       
       if (NS_OK == win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh)) {
-        if ((mSizeX > (controlRect.width - (hasVertical ? vwidth : 0)))) {
+        if ((mSizeX > (controlRect.width - (hasVertical ? vSize.width : 0)))) {
           if (mScrollPref != nsScrollPreference_kNeverScroll) {
             //we need to be able to scroll
 
@@ -1105,7 +1112,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
             scrollh->GetPosition(oldpos);
             px->GetDevUnitsToAppUnits(p2t);
 
-            availwidth = controlRect.width - (hasVertical ? vwidth : 0);
+            availwidth = controlRect.width - (hasVertical ? vSize.width : 0);
 
             // XXX Check for 0 initial size. This is really indicative
             // of a problem. 
@@ -1158,16 +1165,17 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
     // Adjust the size of the clip view to account for scrollbars that are
     // showing
     if (mHScrollBarView && ViewIsShowing((ScrollBarView *)mHScrollBarView)) {
-      controlRect.height -= hheight;
+      controlRect.height -= hSize.height;
       controlRect.height = PR_MAX(controlRect.height, 0);
     }
 
     if (mVScrollBarView && ViewIsShowing((ScrollBarView *)mVScrollBarView)) {
-      controlRect.width -= vwidth;
+      controlRect.width -= vSize.width;
       controlRect.width = PR_MAX(controlRect.width, 0);
     }
 
-    mClipView->SetDimensions(controlRect.width, controlRect.height, PR_FALSE);
+    nsRect r(0, 0, controlRect.width, controlRect.height);
+    mClipView->SetDimensions(r, PR_FALSE);
 
     // Position the scrolled view
     scrolledView->SetPosition(-mOffsetX, -mOffsetY);
@@ -1281,7 +1289,7 @@ NS_IMETHODIMP nsScrollingView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdate
 
 	NS_RELEASE(dev);
 
-	mClipView->GetDimensions(&clipSize.width, &clipSize.height);
+  mClipView->GetDimensions(clipSize);
 
 	// Clamp aX
 
@@ -1463,7 +1471,7 @@ void nsScrollingView::UpdateScrollControls(PRBool aPaint)
 
     if (nsnull != mCornerView)
     {
-      mCornerView->GetDimensions(&cornerSize.width, &cornerSize.height);
+      mCornerView->GetDimensions(cornerSize);
  
         // If both the vertical and horizontal scrollbars are enabled, so is the corner view.
       if (vertVis && horzVis)
@@ -1481,9 +1489,10 @@ void nsScrollingView::UpdateScrollControls(PRBool aPaint)
     {
       nsSize            vertSize;
 
-      mVScrollBarView->GetDimensions(&vertSize.width, &vertSize.height);
-      mVScrollBarView->SetBounds(clipRect.XMost(), clipRect.y, vertSize.width, 
-                                 clipRect.height - visCornerSize.height, aPaint);
+      mVScrollBarView->GetDimensions(vertSize);
+      mVScrollBarView->SetPosition(clipRect.XMost(), clipRect.y);
+      nsRect r(0, 0, vertSize.width, clipRect.height - visCornerSize.height);
+      mVScrollBarView->SetDimensions(r, aPaint);
 
       if (vertVis == nsViewVisibility_kShow)
         cornerPos.x = clipRect.XMost();
@@ -1496,9 +1505,10 @@ void nsScrollingView::UpdateScrollControls(PRBool aPaint)
     {
       nsSize            horzSize;
 
-      mHScrollBarView->GetDimensions(&horzSize.width, &horzSize.height);
-      mHScrollBarView->SetBounds(clipRect.x, clipRect.YMost(), clipRect.width - visCornerSize.width,
-                                 horzSize.height, aPaint);
+      mHScrollBarView->GetDimensions(horzSize);
+      mHScrollBarView->SetPosition(clipRect.x, clipRect.YMost());
+      nsRect r(0, 0, clipRect.width - visCornerSize.width, horzSize.height);
+      mHScrollBarView->SetDimensions(r, aPaint);
 
       if (horzVis == nsViewVisibility_kShow)
         cornerPos.y = clipRect.YMost();
@@ -1604,7 +1614,7 @@ NS_IMETHODIMP nsScrollingView::ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLin
   }
 
   nsSize    clipSize;
-  mClipView->GetDimensions(&clipSize.width, &clipSize.height);
+  mClipView->GetDimensions(clipSize);
 
   //sanity check values
   if (newPosX > (mSizeX - clipSize.height))
@@ -1635,7 +1645,7 @@ NS_IMETHODIMP nsScrollingView::ScrollByPages(PRInt32 aNumPages)
 			scrollv->GetPosition(oldPos);
 			NS_RELEASE(scrollv);
 			
-			mClipView->GetDimensions(&clipSize.width, &clipSize.height);
+			mClipView->GetDimensions(clipSize);
 
 			newPos = oldPos + clipSize.height * aNumPages;
 
@@ -1662,7 +1672,7 @@ NS_IMETHODIMP nsScrollingView::ScrollByWhole(PRBool aTop)
   }
   else {
   	nsSize    clipSize;
-	  mClipView->GetDimensions(&clipSize.width, &clipSize.height);
+	  mClipView->GetDimensions(clipSize);
 		newPos = mSizeY - clipSize.height;
   }
 

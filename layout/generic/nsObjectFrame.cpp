@@ -3878,10 +3878,10 @@ aContainerWidget)
    
    // GetOffsetFromWidget does not include the views offset, so we need to add
    // that in.
-    nsRect bounds;
-    view->GetBounds(bounds);
-    aAbs.x += bounds.x;
-    aAbs.y += bounds.y;
+     nscoord x, y;
+     view->GetPosition(&x, &y);
+     aAbs.x += x;
+     aAbs.y += y;
     }
    
    nsRect widgetBounds;

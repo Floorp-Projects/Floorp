@@ -54,16 +54,6 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID,
                             void** aInstancePtr);
 
-  //overrides
-  NS_IMETHOD  Init(nsIViewManager* aManager,
-      						 const nsRect &aBounds,
-                   const nsIView *aParent,
-      						 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
-  NS_IMETHOD  SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE);
-  NS_IMETHOD  SetPosition(nscoord aX, nscoord aY);
-   // SetVisibility is overriden so that it will set it's components visibility (ClipView, 
-   // CornerView, ScrollBarView's),as well as it's own visibility.
-  NS_IMETHOD  SetVisibility(nsViewVisibility visibility);
   NS_IMETHOD  SetWidget(nsIWidget *aWidget);
 
   //nsIScrollableView interface

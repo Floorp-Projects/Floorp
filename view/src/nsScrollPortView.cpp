@@ -115,31 +115,6 @@ nsrefcnt nsScrollPortView::Release()
 }
 
 
-NS_IMETHODIMP nsScrollPortView::Init(nsIViewManager* aManager,
-                                      const nsRect &aBounds,
-                                      const nsIView *aParent,
-                                      nsViewVisibility aVisibilityFlag)
-{
-  return nsView::Init(aManager, aBounds, aParent, aVisibilityFlag);
-}
-
-NS_IMETHODIMP nsScrollPortView::SetDimensions(nscoord width, nscoord height, PRBool aPaint)
-{
-  return nsView::SetDimensions(width, height, aPaint);
-}
-
-NS_IMETHODIMP nsScrollPortView::SetPosition(nscoord aX, nscoord aY)
-{
-
-  return nsView::SetPosition(aX, aY);
-}
-
-
-NS_IMETHODIMP nsScrollPortView::SetVisibility(nsViewVisibility aVisibility)
-{
-  return nsView::SetVisibility(aVisibility);
-}
-  
 NS_IMETHODIMP nsScrollPortView::GetClipView(const nsIView** aClipView) const
 {
   *aClipView = this; 
@@ -203,7 +178,11 @@ NS_IMETHODIMP nsScrollPortView::GetContainerSize(nscoord *aWidth, nscoord *aHeig
   if (!scrolledView)
     return NS_ERROR_FAILURE;
 
-  return scrolledView->GetDimensions(aWidth, aHeight);
+  nsSize sz;
+  scrolledView->GetDimensions(sz);
+  *aWidth = sz.width;
+  *aHeight = sz.height;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsScrollPortView::ShowQuality(PRBool aShow)
@@ -264,10 +243,10 @@ NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdat
 #endif
 
 	if (!scrolledView) return NS_ERROR_FAILURE;
-	scrolledView->GetDimensions(&scrolledSize.width, &scrolledSize.height);
+	scrolledView->GetDimensions(scrolledSize);
 
     nsSize portSize;
-	GetDimensions(&portSize.width, &portSize.height);
+    GetDimensions(portSize);
 
     nscoord maxX = scrolledSize.width - portSize.width;
     nscoord maxY = scrolledSize.height - portSize.height;
@@ -484,7 +463,7 @@ NS_IMETHODIMP nsScrollPortView::ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLi
 NS_IMETHODIMP nsScrollPortView::ScrollByPages(PRInt32 aNumPages)
 {
     nsSize size;
-	GetDimensions(&size.width, &size.height);
+    GetDimensions(size);
     
     // scroll % of the window
     nscoord dy = nscoord(float(size.height)*PAGE_SCROLL_PERCENT);
@@ -505,7 +484,7 @@ NS_IMETHODIMP nsScrollPortView::ScrollByWhole(PRBool aTop)
   if (!aTop) {
     nsSize scrolledSize;
     nsView* scrolledView = GetScrolledView();
-    scrolledView->GetDimensions(&scrolledSize.width, &scrolledSize.height);
+    scrolledView->GetDimensions(scrolledSize);
     newPos = scrolledSize.height;
   }
 
@@ -569,7 +548,8 @@ NS_IMETHODIMP nsScrollPortView::Paint(nsIRenderingContext& rc, const nsRect& rec
 {
 	PRBool clipEmpty;
 	rc.PushState();
-	nsRect bounds = mBounds;
+	nsRect bounds;
+  GetDimensions(bounds);
 	bounds.x = bounds.y = 0;
 	rc.SetClipRect(bounds, nsClipCombine_kIntersect, clipEmpty);
 
@@ -585,7 +565,8 @@ NS_IMETHODIMP nsScrollPortView::Paint(nsIRenderingContext& aRC, const nsIRegion&
 {
 	PRBool clipEmpty;
 	aRC.PushState();
-	nsRect bounds = mBounds;
+	nsRect bounds;
+  GetDimensions(bounds);
 	bounds.x = bounds.y = 0;
 	aRC.SetClipRect(bounds, nsClipCombine_kIntersect, clipEmpty);
 

@@ -558,28 +558,34 @@ NS_IMETHODIMP nsViewManager::SetWindowOffset(nscoord aX, nscoord aY)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::GetWindowDimensions(nscoord *width, nscoord *height)
+NS_IMETHODIMP nsViewManager::GetWindowDimensions(nscoord *aWidth, nscoord *aHeight)
 {
-  if (nsnull != mRootView)
-    mRootView->GetDimensions(width, height);
+  if (nsnull != mRootView) {
+    nsRect dim;
+    mRootView->GetDimensions(dim);
+    *aWidth = dim.width;
+    *aHeight = dim.height;
+  }
   else
     {
-      *width = 0;
-      *height = 0;
+      *aWidth = 0;
+      *aHeight = 0;
     }
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::SetWindowDimensions(nscoord width, nscoord height)
+NS_IMETHODIMP nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight)
 {
   // Resize the root view
-  if (nsnull != mRootView)
-    mRootView->SetDimensions(width, height);
+  if (nsnull != mRootView) {
+    nsRect dim(0, 0, aWidth, aHeight);
+    mRootView->SetDimensions(dim);
+  }
 
-  //printf("new dims: %d %d\n", width, height);
+  //printf("new dims: %d %d\n", aWidth, aHeight);
   // Inform the presentation shell that we've been resized
   if (nsnull != mObserver)
-    mObserver->ResizeReflow(mRootView, width, height);
+    mObserver->ResizeReflow(mRootView, aWidth, aHeight);
   //printf("reflow done\n");
 
   return NS_OK;
@@ -678,14 +684,17 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIReg
   }
 
   nsRect viewRect;
-  aView->GetBounds(viewRect);
-  viewRect.x = viewRect.y = 0;
+  aView->GetDimensions(viewRect);
 
   nsRect damageRect = damageRectInPixels;
   nsRect paintRect;
   float  p2t;
   mContext->GetDevUnitsToAppUnits(p2t);
   damageRect.ScaleRoundOut(p2t);
+
+  // move the view rect into widget coordinates
+  viewRect.x = 0;
+  viewRect.y = 0;
 
   if (paintRect.IntersectRect(damageRect, viewRect)) {
 
@@ -696,9 +705,22 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIReg
     }
 
     PRBool result;
+    // Note that nsIRenderingContext::SetClipRegion always works in pixel coordinates,
+    // and nsIRenderingContext::SetClipRect always works in app coordinates. Stupid huh?
     localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace, result);
     localcx->SetClipRect(paintRect, nsClipCombine_kIntersect, result);
-    RenderViews(aView, *localcx, paintRect, result);
+
+    // pass in a damage rectangle in aView's coordinates.
+    nsRect r = paintRect;
+    nsRect dims;
+    aView->GetDimensions(dims);
+    r.x += dims.x;
+    r.y += dims.y;
+
+    // painting will be done in aView's coordinates, so shift them back to widget coordinates
+    localcx->Translate(-dims.x, -dims.y);
+    RenderViews(aView, *localcx, r, result);
+    localcx->Translate(dims.x, dims.y);
 
     if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds) {
       // Setup the region relative to the destination's coordinates 
@@ -998,11 +1020,7 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsIRegion* aRgn, nsIDeviceC
                       nsView* viewParent = view->GetParent();
 
                       while (viewParent && viewParent != aRootView) {
-                        nsRect parentBounds;
-
-                        viewParent->GetBounds(parentBounds);
-                        bounds.x += parentBounds.x;
-                        bounds.y += parentBounds.y;
+                        viewParent->ConvertToParentCoords(&bounds.x, &bounds.y);
                         viewParent = viewParent->GetParent();
                       }
 
@@ -1049,9 +1067,6 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
       break;
     }
     displayRoot = displayParent;
-
-    nsRect bounds;
-    displayRoot->GetBounds(bounds);
   }
     
   DisplayZTreeNode *zTree;
@@ -1145,7 +1160,7 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
     //mOffScreenCX->SetColor(NS_RGB(0, 255, 0));
     //mOffScreenCX->FillRect(nsRect(0, 0, gOffScreenSize.width, gOffScreenSize.height));
   }
-    
+
   // draw all views in the display list, from back to front.
   for (PRInt32 i = 0; i < mDisplayListCount; i++) {
     DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, mDisplayList.ElementAt(i));
@@ -1199,37 +1214,19 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
   }
 }
 
-void nsViewManager::RenderView(nsView *aView, nsIRenderingContext &aRC, const nsRect &aDamageRect,
-                               nsRect &aGlobalRect, PRBool &aResult)
-{
-  nsRect  drect;
-
-  NS_ASSERTION((nsnull != aView), "no view");
-
-  aRC.PushState();
-
-  aRC.Translate(aGlobalRect.x, aGlobalRect.y);
-
-  drect.IntersectRect(aDamageRect, aGlobalRect);
-
-  drect.x -= aGlobalRect.x;
-  drect.y -= aGlobalRect.y;
-
-  // should use blender here if opacity < 1.0
-
-  aView->Paint(aRC, drect, 0, aResult);
-
-  aRC.PopState(aResult);
-}
-
 void nsViewManager::RenderDisplayListElement(DisplayListElement2* element, nsIRenderingContext &aRC)
 {
   PRBool isTranslucent = (element->mFlags & VIEW_TRANSLUCENT) != 0;
   PRBool clipEmpty;
+  nsRect r;
+  nsView* view = element->mView;
+
+  view->GetDimensions(r);
+
   if (!isTranslucent) {
     aRC.PushState();
 
-    nscoord x = element->mAbsX, y = element->mAbsY;
+    nscoord x = element->mAbsX - r.x, y = element->mAbsY - r.y;
     aRC.Translate(x, y);
 
     nsRect drect(element->mBounds.x - x, element->mBounds.y - y,
@@ -1248,7 +1245,7 @@ void nsViewManager::RenderDisplayListElement(DisplayListElement2* element, nsIRe
     
     // compute the origin of the view, relative to the offscreen buffer, which has the
     // same dimensions as mTranslucentArea.
-    nscoord x = element->mAbsX, y = element->mAbsY;
+    nscoord x = element->mAbsX - r.x, y = element->mAbsY - r.y;
     nscoord viewX = x - mTranslucentArea.x, viewY = y - mTranslucentArea.y;
 
     nsRect damageRect(element->mBounds);
@@ -1257,8 +1254,6 @@ void nsViewManager::RenderDisplayListElement(DisplayListElement2* element, nsIRe
     damageRect.x -= x, damageRect.y -= y;
     
     if (element->mFlags & VIEW_TRANSLUCENT) {
-      nsView* view = element->mView;
-
       // paint the view twice, first in the black buffer, then the white;
       // the blender will pick up the touched pixels only.
       PaintView(view, *mBlackCX, viewX, viewY, damageRect);
@@ -1300,7 +1295,7 @@ void nsViewManager::RenderDisplayListElement(DisplayListElement2* element, nsIRe
       mWhiteCX->SetColor(NS_RGB(255, 255, 255));
       mWhiteCX->FillRect(damageRect);
     } else {
-      PaintView(element->mView, *mOffScreenCX, viewX, viewY, damageRect);
+      PaintView(view, *mOffScreenCX, viewX, viewY, damageRect);
     }
   }
 #endif
@@ -1480,7 +1475,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, PRUint32 aUpdateFlags)
 
   nsRect bounds;
   view->GetBounds(bounds);
-  bounds.x = bounds.y = 0;
+  view->ConvertFromParentCoords(&bounds.x, &bounds.y);
   return UpdateView(view, bounds, aUpdateFlags);
 }
 
@@ -1494,14 +1489,15 @@ nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
   nsPoint origin(0, 0);
   ComputeViewOffset(view, &origin);
   nsRect damageRect;
-  aView->GetBounds(damageRect);
-  damageRect.x = origin.x;
-  damageRect.y = origin.y;
+  view->GetBounds(damageRect);
+  view->ConvertFromParentCoords(&damageRect.x, &damageRect.y);
+  damageRect.x += origin.x;
+  damageRect.y += origin.y;
 
   // if this is a floating view, it isn't covered by any widgets other than
   // its children, which are handled by the widget scroller.
   PRBool viewIsFloating = PR_FALSE;
-  aView->GetFloating(viewIsFloating);
+  view->GetFloating(viewIsFloating);
   if (viewIsFloating) {
     return NS_OK;
   }
@@ -1524,8 +1520,7 @@ PRBool nsViewManager::UpdateAllCoveringWidgets(nsView *aView, nsView *aTarget,
 
   nsRect bounds;
   aView->GetBounds(bounds);
-  bounds.x = 0;  // aDamagedRect is already in this view's coordinate system
-  bounds.y = 0;
+  aView->ConvertFromParentCoords(&bounds.x, &bounds.y);
   PRBool overlap = bounds.IntersectRect(bounds, aDamagedRect);
     
   if (!overlap) {
@@ -1549,10 +1544,7 @@ PRBool nsViewManager::UpdateAllCoveringWidgets(nsView *aView, nsView *aTarget,
   PRBool childCovers = PR_FALSE;
   while (nsnull != childView) {
     nsRect childRect = bounds;
-    nsRect childBounds;
-    childView->GetBounds(childBounds);
-    childRect.x -= childBounds.x;
-    childRect.y -= childBounds.y;
+    childView->ConvertFromParentCoords(&childRect.x, &childRect.y);
     if (UpdateAllCoveringWidgets(childView, aTarget, childRect, aRepaintOnlyUnblittableViews)) {
       childCovers = PR_TRUE;
       // we can't stop here. We're not making any assumptions about how the child
@@ -1640,10 +1632,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
     widgetParent->HasWidget(&hasWidget);
 
     while (!hasWidget) {
-      nsRect bounds;
-      widgetParent->GetBounds(bounds);
-      damagedRect.x += bounds.x;
-      damagedRect.y += bounds.y;
+      widgetParent->ConvertToParentCoords(&damagedRect.x, &damagedRect.y);
 
       widgetParent = widgetParent->GetParent();
       widgetParent->HasWidget(&hasWidget);
@@ -1731,7 +1720,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
     case NS_PAINT:
       {
         nsView *view = nsView::GetViewFor(aEvent->widget);
-        
+
         if (nsnull != view)
           {
             // Do an immediate refresh
@@ -1843,7 +1832,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 
         //Find the view whose coordinates system we're in.
         baseView = nsView::GetViewFor(aEvent->widget);
-        
+
         //Find the view to which we're initially going to send the event 
         //for hittesting.
         if (nsnull != mMouseGrabber && (NS_IS_MOUSE_EVENT(aEvent) || (NS_IS_DRAG_EVENT(aEvent)))) {
@@ -1866,39 +1855,39 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           if (baseView != view) {
             //Get offset from root of baseView
             nsView *parent;
-            nsRect bounds;
 
             parent = baseView;
             while (nsnull != parent) {
-              parent->GetBounds(bounds);
-              offset.x += bounds.x;
-              offset.y += bounds.y;
+              parent->ConvertToParentCoords(&offset.x, &offset.y);
               parent = parent->GetParent();
             }
 
             //Subtract back offset from root of view
             parent = view;
             while (nsnull != parent) {
-              parent->GetBounds(bounds);
-              offset.x -= bounds.x;
-              offset.y -= bounds.y;
+              parent->ConvertFromParentCoords(&offset.x, &offset.y);
               parent = parent->GetParent();
             }
       
           }
 
           //Dispatch the event
-          float p2t, t2p;
-
-          mContext->GetDevUnitsToAppUnits(p2t);
-          mContext->GetAppUnitsToDevUnits(t2p);
-
           //Before we start mucking with coords, make sure we know our baseline
           aEvent->refPoint.x = aEvent->point.x;
           aEvent->refPoint.y = aEvent->point.y;
 
-          aEvent->point.x = NSIntPixelsToTwips(aEvent->point.x, p2t);
-          aEvent->point.y = NSIntPixelsToTwips(aEvent->point.y, p2t);
+          nsRect baseViewDimensions;
+          if (baseView != nsnull) {
+            baseView->GetDimensions(baseViewDimensions);
+          }
+
+          float t2p;
+          mContext->GetAppUnitsToDevUnits(t2p);
+          float p2t;
+          mContext->GetDevUnitsToAppUnits(p2t);
+
+          aEvent->point.x = baseViewDimensions.x + NSIntPixelsToTwips(aEvent->point.x, p2t);
+          aEvent->point.y = baseViewDimensions.y + NSIntPixelsToTwips(aEvent->point.y, p2t);
 
           aEvent->point.x += offset.x;
           aEvent->point.y += offset.y;
@@ -1906,11 +1895,13 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           PRBool handled = PR_FALSE;
           view->HandleEvent(aEvent, 0, aStatus, PR_TRUE, handled);
 
+          // From here on out, "this" could have been deleted!!!
+
           aEvent->point.x -= offset.x;
           aEvent->point.y -= offset.y;
 
-          aEvent->point.x = NSTwipsToIntPixels(aEvent->point.x, t2p);
-          aEvent->point.y = NSTwipsToIntPixels(aEvent->point.y, t2p);
+          aEvent->point.x = NSTwipsToIntPixels(aEvent->point.x - baseViewDimensions.x, t2p);
+          aEvent->point.y = NSTwipsToIntPixels(aEvent->point.y - baseViewDimensions.y, t2p);
 
           //
           // if the event is an nsTextEvent, we need to map the reply back into platform coordinates
@@ -2156,7 +2147,9 @@ NS_IMETHODIMP nsViewManager::MoveViewTo(nsIView *aView, nscoord aX, nscoord aY)
 {
   nscoord oldX, oldY;
   nsView* view = NS_STATIC_CAST(nsView*, aView);
+  nsRect oldArea;
   view->GetPosition(&oldX, &oldY);
+  view->GetBounds(oldArea);
   view->SetPosition(aX, aY);
 
   // only do damage control if the view is visible
@@ -2165,32 +2158,55 @@ NS_IMETHODIMP nsViewManager::MoveViewTo(nsIView *aView, nscoord aX, nscoord aY)
     nsViewVisibility  visibility;
     view->GetVisibility(visibility);
     if (visibility != nsViewVisibility_kHide) {
-      nsRect  bounds;
-      view->GetBounds(bounds);
-      nsRect oldArea(oldX, oldY, bounds.width, bounds.height);
       nsView* parentView = view->GetParent();
       UpdateView(parentView, oldArea, NS_VMREFRESH_NO_SYNC);
-      nsRect newArea(aX, aY, bounds.width, bounds.height); 
+      nsRect newArea;
+      view->GetBounds(newArea);
       UpdateView(parentView, newArea, NS_VMREFRESH_NO_SYNC);
     }
   }
   return NS_OK;
 }
 
+void nsViewManager::InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
+  PRUint32 aUpdateFlags, nscoord aY1, nscoord aY2, PRBool aInCutOut) {
+  nscoord height = aY2 - aY1;
+  if (aRect.x < aCutOut.x) {
+    nsRect r(aRect.x, aY1, aCutOut.x - aRect.x, height);
+    UpdateView(aView, r, aUpdateFlags);
+  }
+  if (!aInCutOut && aCutOut.x < aCutOut.XMost()) {
+    nsRect r(aCutOut.x, aY1, aCutOut.width, height);
+    UpdateView(aView, r, aUpdateFlags);
+  }
+  if (aCutOut.XMost() < aRect.XMost()) {
+    nsRect r(aCutOut.XMost(), aY1, aRect.XMost() - aCutOut.XMost(), height);
+    UpdateView(aView, r, aUpdateFlags);
+  }
+}
+
+void nsViewManager::InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
+  PRUint32 aUpdateFlags) {
+  if (aRect.y < aCutOut.y) {
+    InvalidateHorizontalBandDifference(aView, aRect, aCutOut, aUpdateFlags, aRect.y, aCutOut.y, PR_FALSE);
+  }
+  if (aCutOut.y < aCutOut.YMost()) {
+    InvalidateHorizontalBandDifference(aView, aRect, aCutOut, aUpdateFlags, aCutOut.y, aCutOut.YMost(), PR_TRUE);
+  }
+  if (aCutOut.YMost() < aRect.YMost()) {
+    InvalidateHorizontalBandDifference(aView, aRect, aCutOut, aUpdateFlags, aCutOut.YMost(), aRect.YMost(), PR_FALSE);
+  }
+}
+
 NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRBool aRepaintExposedAreaOnly)
 {
-  nscoord oldWidth, oldHeight;
   nsView* view = NS_STATIC_CAST(nsView*, aView);
-  PRInt32 width = aRect.XMost();
-  PRInt32 height = aRect.YMost();
+  nsRect oldDimensions;
 
-  view->GetDimensions(&oldWidth, &oldHeight);
-  if ((width != oldWidth) || (height != oldHeight)) {
-    nscoord x = 0, y = 0;
+  view->GetDimensions(oldDimensions);
+  if (oldDimensions != aRect) {
     nsView* parentView = view->GetParent();
-    if (parentView != nsnull)
-      view->GetPosition(&x, &y);
-    else
+    if (parentView == nsnull)
       parentView = view;
 
     // resize the view.
@@ -2199,54 +2215,23 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
 
     // Prevent Invalidation of hidden views 
     if (visibility == nsViewVisibility_kHide) {  
-      view->SetDimensions(width, height, PR_FALSE);
+      view->SetDimensions(aRect, PR_FALSE);
     } else {
       if (!aRepaintExposedAreaOnly) {
         //Invalidate the union of the old and new size
-        view->SetDimensions(width, height, PR_TRUE);
-        nscoord maxWidth = (oldWidth < width ? width : oldWidth);
-        nscoord maxHeight = (oldHeight < height ? height : oldHeight);
-        nsRect boundingArea(x, y, maxWidth, maxHeight);
-        UpdateView(parentView, boundingArea, NS_VMREFRESH_NO_SYNC);
+        view->SetDimensions(aRect, PR_TRUE);
+
+        UpdateView(parentView, oldDimensions, NS_VMREFRESH_NO_SYNC);
+        nsRect r = aRect;
+        view->ConvertFromParentCoords(&r.x, &r.y);
+        UpdateView(view, r, NS_VMREFRESH_NO_SYNC);
       } else {
-        // Invalidate only the newly exposed or contracted region
-        nscoord shortWidth, longWidth, shortHeight, longHeight;
-        if (width < oldWidth) { 
-          shortWidth = width; 
-          longWidth = oldWidth; 
-        } 
-        else { 
-          shortWidth = oldWidth; 
-          longWidth = width; 
-        } 
-  
-        if (height < oldHeight) { 
-          shortHeight = height; 
-          longHeight = oldHeight; 
-        } 
-        else { 
-          shortHeight = oldHeight; 
-          longHeight = height; 
-        } 
-
-        nsRect  damageRect; 
-     
-        //damage the right edge of the parent's view
-        damageRect.x = x + shortWidth; 
-        damageRect.y = y; 
-        damageRect.width = longWidth - shortWidth; 
-        damageRect.height = longHeight; 
-        UpdateView(parentView, damageRect, NS_VMREFRESH_NO_SYNC); 
-            
-        //damage the bottom edge of the parent's view
-        damageRect.x = x; 
-        damageRect.y = y + shortHeight; 
-        damageRect.width = longWidth; 
-        damageRect.height = longHeight - shortHeight; 
-        UpdateView(parentView, damageRect, NS_VMREFRESH_NO_SYNC); 
-         
-
-        view->SetDimensions(width, height);
+        view->SetDimensions(aRect, PR_FALSE);
+        InvalidateRectDifference(parentView, oldDimensions, aRect, NS_VMREFRESH_NO_SYNC);
+        nsRect r = aRect;
+        view->ConvertFromParentCoords(&r.x, &r.y);
+        view->ConvertFromParentCoords(&oldDimensions.x, &oldDimensions.y);
+        InvalidateRectDifference(view, r, oldDimensions, NS_VMREFRESH_NO_SYNC);
       } 
     }
   }
@@ -2530,7 +2515,7 @@ nsIRenderingContext * nsViewManager::CreateRenderingContext(nsView &aView)
   nsView              *par = &aView;
   nsCOMPtr<nsIWidget> win;
   nsIRenderingContext *cx = nsnull;
-  nscoord             x, y, ax = 0, ay = 0;
+  nscoord             ax = 0, ay = 0;
 
   do
     {
@@ -2546,10 +2531,7 @@ nsIRenderingContext * nsViewManager::CreateRenderingContext(nsView &aView)
 
       if (par != &aView)
         {
-          par->GetPosition(&x, &y);
-
-          ax += x;
-          ay += y;
+          par->ConvertToParentCoords(&ax, &ay);
         }
 
       par = par->GetParent();
@@ -2716,12 +2698,12 @@ NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY, con
     }
 
   view->GetBounds(trect);
+  view->ConvertFromParentCoords(&trect.x, &trect.y);
 
   localcx->Translate(aX, aY);
 
   PRBool  result;
 
-  trect.x = trect.y = 0;
   localcx->SetClipRect(aClipRect, nsClipCombine_kReplace, result);
 
   // Paint the view. The clipping rect was set above set don't clip again.
@@ -2833,15 +2815,19 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
 
   nsRect bounds;
   aView->GetBounds(bounds);
+  nscoord posX, posY;
+  aView->GetPosition(&posX, &posY);
 
   if (aView == aTopView) {
-    bounds.x = 0;
-    bounds.y = 0;
+    aView->ConvertFromParentCoords(&bounds.x, &bounds.y);
+    posX = posY = 0;
   }
 
   // -> to global coordinates (relative to aTopView)
   bounds.x += aX;
   bounds.y += aY;
+  posX += aX;
+  posY += aY;
 
   // is this a clip view?
   PRBool isClipView = IsClipView(aView);
@@ -2923,7 +2909,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
       DisplayZTreeNode* createdNode;
       retval = CreateDisplayList(childView, aReparentedViewsPresent, createdNode,
                                  aInsideRealView || aRealView == aView,
-                                 aOriginX, aOriginY, aRealView, aDamageRect, aTopView, bounds.x, bounds.y, aPaintFloaters);
+                                 aOriginX, aOriginY, aRealView, aDamageRect, aTopView, posX, posY, aPaintFloaters);
       if (createdNode != nsnull) {
         EnsureZTreeNodeCreated(aView, aResult);
         createdNode->mZSibling = aResult->mZChild;
@@ -2979,7 +2965,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
         DisplayZTreeNode* createdNode;
         retval = CreateDisplayList(childView, aReparentedViewsPresent, createdNode,
                                    aInsideRealView || aRealView == aView,
-                                   aOriginX, aOriginY, aRealView, aDamageRect, aTopView, bounds.x, bounds.y, aPaintFloaters);
+                                   aOriginX, aOriginY, aRealView, aDamageRect, aTopView, posX, posY, aPaintFloaters);
         if (createdNode != nsnull) {
           EnsureZTreeNodeCreated(aView, aResult);
           createdNode->mZSibling = aResult->mZChild;
@@ -3263,16 +3249,24 @@ void nsViewManager::ShowDisplayList(PRInt32 flatlen)
     nsView*              view = element->mView;
     nsRect               rect = element->mBounds;
     PRUint32             flags = element->mFlags;
+    nsRect               dim;
+    nscoord              vx, vy;
 
+    view->GetDimensions(dim);
+    view->GetPosition(&vx, &vy);
     nsView* parent = view->GetParent();
     PRInt32 zindex = view->GetZIndex();
 
     nest[nestcnt << 1] = 0;
 
     rect *= t2p;
-    printf("%snsIView@%p [z=%d, x=%d, y=%d, w=%d, h=%d, p=%p]\n",
-           nest, (void*)view, zindex,
-           rect.x, rect.y, rect.width, rect.height, (void*)parent);
+    printf("%snsIView@%p{%d,%d,%d,%d @ %d,%d; p=%p, z=%d} [x=%d, y=%d, w=%d, h=%d, absX=%d, absY=%d]\n",
+           nest, (void*)view,
+           dim.x, dim.y, dim.width, dim.height,
+           vx, vy,
+           (void*)parent, zindex,
+           rect.x, rect.y, rect.width, rect.height,
+           element->mAbsX, element->mAbsY);
 
     newnestcnt = nestcnt;
 
@@ -3308,11 +3302,7 @@ void nsViewManager::ComputeViewOffset(nsView *aView, nsPoint *aOrigin)
   if (aOrigin) {
     while (aView != nsnull) {
       // compute the view's global position in the view hierarchy.
-      nsRect bounds;
-      aView->GetBounds(bounds);
-      aOrigin->x += bounds.x;
-      aOrigin->y += bounds.y;
-        
+      aView->ConvertToParentCoords(&aOrigin->x, &aOrigin->y);
       aView = aView->GetParent();
     }
   }
@@ -3350,17 +3340,17 @@ nsView* nsViewManager::GetWidgetView(nsView *aView) const
 void nsViewManager::ViewToWidget(nsView *aView, nsView* aWidgetView, nsRect &aRect) const
 {
   while (aView != aWidgetView) {
-    nscoord x, y;
-    aView->GetPosition(&x, &y);
-    aRect.MoveBy(x, y);
+    aView->ConvertToParentCoords(&aRect.x, &aRect.y);
     aView = aView->GetParent();
   }
   
   // intersect aRect with bounds of aWidgetView, to prevent generating any illegal rectangles.
   nsRect bounds;
-  aWidgetView->GetBounds(bounds);
-  bounds.x = bounds.y = 0;
+  aWidgetView->GetDimensions(bounds);
   aRect.IntersectRect(aRect, bounds);
+  // account for the view's origin not lining up with the widget's
+  aRect.x -= bounds.x;
+  aRect.y -= bounds.y;
   
   // finally, convert to device coordinates.
   float t2p;
@@ -3380,12 +3370,12 @@ nsresult nsViewManager::GetVisibleRect(nsRect& aVisibleRect)
     // Determine the visible rect in the scrolled view's coordinate space.
     // The size of the visible area is the clip view size
     const nsIView*  clipViewI;
-
-    scrollingView->GetScrollPosition(aVisibleRect.x, aVisibleRect.y);
     scrollingView->GetClipView(&clipViewI);
 
     const nsView* clipView = NS_STATIC_CAST(const nsView*, clipViewI);
-    clipView->GetDimensions(&aVisibleRect.width, &aVisibleRect.height);
+    clipView->GetDimensions(aVisibleRect);
+
+    scrollingView->GetScrollPosition(aVisibleRect.x, aVisibleRect.y);
   } else {
     rv = NS_ERROR_FAILURE;
   }
@@ -3412,9 +3402,7 @@ nsresult nsViewManager::GetAbsoluteRect(nsView *aView, const nsRect &aRect,
   aAbsRect = aRect;
   nsView *parentView = aView;
   while ((parentView != nsnull) && (parentView != scrolledView)) {
-    nscoord x, y;
-    parentView->GetPosition(&x, &y);
-    aAbsRect.MoveBy(x, y);
+    parentView->ConvertToParentCoords(&aAbsRect.x, &aAbsRect.y);
     parentView = parentView->GetParent();
   }
 

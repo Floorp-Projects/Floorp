@@ -229,7 +229,10 @@ NS_IMETHODIMP nsView::Init(nsIViewManager* aManager,
   mChildClip.mTop = 0;
   mChildClip.mBottom = 0;
 
-  SetBounds(aBounds);
+  SetPosition(aBounds.x, aBounds.y);
+  nsRect dim(0, 0, aBounds.width, aBounds.height);
+
+  SetDimensions(dim, PR_FALSE);
 
   //temporarily set it...
   SetParent(NS_CONST_CAST(nsView*, NS_STATIC_CAST(const nsView*, aParent)));
@@ -317,7 +320,6 @@ NS_IMETHODIMP nsView::HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
 
   //see if any of this view's children can process the event
   if ( !(mVFlags & NS_VIEW_FLAG_DONT_CHECK_CHILDREN) ) {
-    nsRect  trect;
     nscoord x, y;
 
     x = event->point.x;
@@ -327,7 +329,8 @@ NS_IMETHODIMP nsView::HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
     PRInt32 cnt = 0; 
     while (pKid != nsnull && (!aHandled)) 
     {
-      pKid->GetBounds(trect);
+      nscoord tx, ty;
+      pKid->GetPosition(&tx, &ty);
 
       mChildRemoved = PR_FALSE;
       if (PointIsInside(*pKid, x, y))
@@ -336,13 +339,13 @@ NS_IMETHODIMP nsView::HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
         //is inside this child view, so give it the
         //opportunity to handle the event
 
-        event->point.x -= trect.x;
-        event->point.y -= trect.y;
+        event->point.x -= tx;
+        event->point.y -= ty;
 
         pKid->HandleEvent(event, 0, aStatus, PR_FALSE, aHandled);
 
-        event->point.x += trect.x;
-        event->point.y += trect.y;
+        event->point.x += tx;
+        event->point.y += ty;
       }
  
       if (!aHandled) {
@@ -393,13 +396,13 @@ NS_IMETHODIMP nsView::IgnoreSetPosition(PRBool aShouldIgnore)
   mShouldIgnoreSetPosition = aShouldIgnore;
   // resync here
   if (!mShouldIgnoreSetPosition) {
-    SetPosition(mBounds.x, mBounds.y);
+    SetPosition(mPosX, mPosY);
   }
   return NS_OK;
 }
 // XXX End Temporary fix for Bug #19416
 
-NS_IMETHODIMP nsView::SetPosition(nscoord aX, nscoord aY)
+void nsView::SetPosition(nscoord aX, nscoord aY)
 {
   nscoord x = aX;
   nscoord y = aY;
@@ -413,11 +416,14 @@ NS_IMETHODIMP nsView::SetPosition(nscoord aX, nscoord aY)
     x += offsetX;
     y += offsetY;
   }
-  mBounds.MoveTo(x, y);
+  mDimBounds.x += aX - mPosX;
+  mDimBounds.y += aY - mPosY;
+  mPosX = aX;
+  mPosY = aY;
 
   // XXX Start Temporary fix for Bug #19416
   if (mShouldIgnoreSetPosition) {
-    return NS_OK;
+    return;
   }
   // XXX End Temporary fix for Bug #19416
 
@@ -430,7 +436,7 @@ NS_IMETHODIMP nsView::SetPosition(nscoord aX, nscoord aY)
     mViewManager->IsCachingWidgetChanges(&caching);
     if (caching) {
       mVFlags |= NS_VIEW_FLAG_WIDGET_MOVED;
-      return NS_OK;
+      return;
     }
 
     nsIDeviceContext  *dx;
@@ -444,12 +450,10 @@ NS_IMETHODIMP nsView::SetPosition(nscoord aX, nscoord aY)
 
     GetOffsetFromWidget(&parx, &pary, pwidget);
     NS_IF_RELEASE(pwidget);
-    
-    mWindow->Move(NSTwipsToIntPixels((x + parx), scale),
-                  NSTwipsToIntPixels((y + pary), scale));
-  }
 
-  return NS_OK;
+    mWindow->Move(NSTwipsToIntPixels((mDimBounds.x + parx), scale),
+                  NSTwipsToIntPixels((mDimBounds.y + pary), scale));
+  }
 }
 
 NS_IMETHODIMP nsView::SynchWidgetSizePosition()
@@ -478,10 +482,10 @@ NS_IMETHODIMP nsView::SynchWidgetSizePosition()
       GetOffsetFromWidget(&parx, &pary, pwidget);
       NS_IF_RELEASE(pwidget);
 
-      PRInt32 x = NSTwipsToIntPixels(mBounds.x + parx, t2p);
-      PRInt32 y = NSTwipsToIntPixels(mBounds.y + pary, t2p);
-      PRInt32 width = NSTwipsToIntPixels(mBounds.width, t2p);
-      PRInt32 height = NSTwipsToIntPixels(mBounds.height, t2p);
+      PRInt32 x = NSTwipsToIntPixels(mDimBounds.x + parx, t2p);
+      PRInt32 y = NSTwipsToIntPixels(mDimBounds.y + pary, t2p);
+      PRInt32 width = NSTwipsToIntPixels(mDimBounds.width, t2p);
+      PRInt32 height = NSTwipsToIntPixels(mDimBounds.height, t2p);
 
       nsRect bounds;
       mWindow->GetBounds(bounds);
@@ -490,7 +494,6 @@ NS_IMETHODIMP nsView::SynchWidgetSizePosition()
       else if (bounds.width == width && bounds.height == bounds.height)
          mVFlags &= ~NS_VIEW_FLAG_WIDGET_RESIZED;
       else {
-         printf("%d) SetBounds(%d,%d,%d,%d)\n", this, x, y, width, height);
          mWindow->Resize(x,y,width,height, PR_TRUE);
          mVFlags &= ~NS_VIEW_FLAG_WIDGET_RESIZED;
          mVFlags &= ~NS_VIEW_FLAG_WIDGET_MOVED;
@@ -502,8 +505,8 @@ NS_IMETHODIMP nsView::SynchWidgetSizePosition()
     if (mVFlags & NS_VIEW_FLAG_WIDGET_RESIZED) 
     {
 
-      PRInt32 width = NSTwipsToIntPixels(mBounds.width, t2p);
-      PRInt32 height = NSTwipsToIntPixels(mBounds.height, t2p);
+      PRInt32 width = NSTwipsToIntPixels(mDimBounds.width, t2p);
+      PRInt32 height = NSTwipsToIntPixels(mDimBounds.height, t2p);
 
       nsRect bounds;
       mWindow->GetBounds(bounds);
@@ -526,8 +529,8 @@ NS_IMETHODIMP nsView::SynchWidgetSizePosition()
       GetOffsetFromWidget(&parx, &pary, pwidget);
       NS_IF_RELEASE(pwidget);
 
-      PRInt32 x = NSTwipsToIntPixels(mBounds.x + parx, t2p);
-      PRInt32 y = NSTwipsToIntPixels(mBounds.y + pary, t2p);
+      PRInt32 x = NSTwipsToIntPixels(mDimBounds.x + parx, t2p);
+      PRInt32 y = NSTwipsToIntPixels(mDimBounds.y + pary, t2p);
 
       nsRect bounds;
       mWindow->GetBounds(bounds);
@@ -557,8 +560,8 @@ NS_IMETHODIMP nsView::GetPosition(nscoord *x, nscoord *y) const
   else
   {
 
-    *x = mBounds.x;
-    *y = mBounds.y;
+    *x = mPosX;
+    *y = mPosY;
 
   }
 
@@ -566,77 +569,53 @@ NS_IMETHODIMP nsView::GetPosition(nscoord *x, nscoord *y) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView::SetDimensions(nscoord width, nscoord height, PRBool aPaint)
+void nsView::SetDimensions(const nsRect& aRect, PRBool aPaint)
 {
-  if ((mBounds.width == width) &&
-      (mBounds.height == height))
-    return NS_OK;
-  
-  mBounds.SizeTo(width, height);
+  nsRect dims = aRect;
+  dims.MoveBy(mPosX, mPosY);
 
-#if 0
-  if (nsnull != mParent)
-  {
-    nsIScrollableView *scroller;
-
-    static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
-
-    // XXX The scrolled view is a child of the clip view which is a child of
-    // the scrolling view. It's kind of yucky the way this works. A parent
-    // notification that the child's size changed would be cleaner.
-    nsIView *grandParent;
-    mParent->GetParent(grandParent);
-    if ((nsnull != grandParent) &&
-        (NS_OK == grandParent->QueryInterface(kscroller, (void **)&scroller)))
-    {
-      scroller->ComputeContainerSize();
-    }
+  if (mDimBounds.x == dims.x && mDimBounds.y == dims.y && mDimBounds.width == dims.width
+      && mDimBounds.height == dims.height) {
+    return;
   }
-#endif
-
-  if (nsnull != mWindow)
+  
+  if (nsnull == mWindow)
   {
+    mDimBounds = dims;
+  }
+  else
+  {
+    PRBool needToMoveWidget = mDimBounds.x != dims.x || mDimBounds.y != dims.y;
+
+    mDimBounds = dims;
+
     PRBool caching = PR_FALSE;
     mViewManager->IsCachingWidgetChanges(&caching);
     if (caching) {
-      mVFlags |= NS_VIEW_FLAG_WIDGET_RESIZED;
-      return NS_OK;
+      mVFlags |= NS_VIEW_FLAG_WIDGET_RESIZED | (needToMoveWidget ? NS_VIEW_FLAG_WIDGET_MOVED : 0);
+      return;
     }
 
     nsIDeviceContext  *dx;
     float             t2p;
+    nsIWidget         *pwidget = nsnull;
+    nscoord           parx = 0, pary = 0;
   
     mViewManager->GetDeviceContext(dx);
     dx->GetAppUnitsToDevUnits(t2p);
 
-    mWindow->Resize(NSTwipsToIntPixels(width, t2p), NSTwipsToIntPixels(height, t2p),
+    GetOffsetFromWidget(&parx, &pary, pwidget);
+    NS_IF_RELEASE(pwidget);
+    
+    if (needToMoveWidget) {
+      mWindow->Move(NSTwipsToIntPixels((mDimBounds.x + parx), t2p),
+                    NSTwipsToIntPixels((mDimBounds.y + pary), t2p));
+    }
+    mWindow->Resize(NSTwipsToIntPixels(mDimBounds.width, t2p), NSTwipsToIntPixels(mDimBounds.height, t2p),
                     aPaint);
 
     NS_RELEASE(dx);
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView::GetDimensions(nscoord *width, nscoord *height) const
-{
-  *width = mBounds.width;
-  *height = mBounds.height;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView::SetBounds(const nsRect &aBounds, PRBool aPaint)
-{
-  SetPosition(aBounds.x, aBounds.y);
-  SetDimensions(aBounds.width, aBounds.height, aPaint);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView::SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, PRBool aPaint)
-{
-  SetPosition(aX, aY);
-  SetDimensions(aWidth, aHeight, aPaint);
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsView::GetBounds(nsRect &aBounds) const
@@ -648,7 +627,7 @@ NS_IMETHODIMP nsView::GetBounds(nsRect &aBounds) const
   }
 
   nsView *rootView = mViewManager->GetRootView();
-  aBounds = mBounds;
+  aBounds = mDimBounds;
 
   if (this == rootView)
     aBounds.x = aBounds.y = 0;
@@ -872,7 +851,7 @@ NS_IMETHODIMP nsView::CreateWidget(const nsIID &aWindowIID,
                                      PRBool aResetVisibility)
 {
   nsIDeviceContext  *dx;
-  nsRect            trect = mBounds;
+  nsRect            trect = mDimBounds;
   float             scale;
 
   NS_IF_RELEASE(mWindow);
@@ -1044,17 +1023,18 @@ NS_IMETHODIMP nsView::GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget 
   while (nsnull != ancestor)
   {
     ancestor->GetWidget(aWidget);
-	  if (nsnull != aWidget)
+	  if (nsnull != aWidget) {
+      // the widget's (0,0) is at the top left of the view's bounds, NOT its position
+      nsRect r;
+      ancestor->GetDimensions(r);
+      aDx -= r.x;
+      aDy -= r.y;
 	    return NS_OK;
+    }
 
     if ((nsnull != aDx) && (nsnull != aDy))
     {
-      nscoord offx, offy;
-
-      ancestor->GetPosition(&offx, &offy);
-
-      *aDx += offx;
-      *aDy += offy;
+      ancestor->ConvertToParentCoords(aDx, aDy);
     }
 
 	  ancestor = ancestor->GetParent();
@@ -1173,10 +1153,7 @@ NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, P
       }
     }
 
-    nsRect bounds;
-    parentView->GetBounds(bounds);
-    ancestorX -= bounds.x;
-    ancestorY -= bounds.y;
+    parentView->ConvertFromParentCoords(&ancestorX, &ancestorY);
 
     parentView = parentView->GetParent();
   }

@@ -367,11 +367,11 @@ static PRBool
 TranslatePointTo(nsPoint& aPoint, nsIView* aChildView, nsIView* aParentView)
 {
   do {
-    nsRect  bounds;
+    nscoord x, y;
 
-    aChildView->GetBounds(bounds);
-    aPoint.x += bounds.x;
-    aPoint.y += bounds.y;
+    aChildView->GetPosition(&x, &y);
+    aPoint.x += x;
+    aPoint.y += y;
     aChildView->GetParent(aChildView);
   } while (aChildView && (aChildView != aParentView));
 
@@ -416,10 +416,10 @@ nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
         if (data)
           break;
       
-        nsRect bounds;
-        parentView->GetBounds(bounds);
-        origin.x -= bounds.x;
-        origin.y -= bounds.y;
+        nscoord x, y;
+        parentView->GetPosition(&x, &y);
+        origin.x -= x;
+        origin.y -= y;
         parentView->GetParent(parentView);
       }
      
