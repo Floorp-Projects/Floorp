@@ -310,7 +310,7 @@ protected:
     nsSocketReadRequest            *mReadRequest;
     nsSocketWriteRequest           *mWriteRequest;
 
-    friend nsSocketRequest;
+    friend class nsSocketRequest;
 };
 
 /**
