@@ -67,7 +67,6 @@ protected:
 
     nsresult GetHeaderSink(nsIMsgHeaderSink ** aHeaderSink);
     PRBool BroadCastHeadersAndAttachments();
-    nsresult DumpAttachmentMenu();
     nsresult StartAttachmentInBody(const char *name, const char *contentType, const char *url);
 };
 

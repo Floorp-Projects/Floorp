@@ -186,8 +186,6 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
     }
   }
 
-  DumpAttachmentMenu();
-
   if (headerSink)
     headerSink->OnEndHeaders();
   return NS_OK;
@@ -201,48 +199,6 @@ nsMimeHtmlDisplayEmitter::EndHeader()
 }
 
 nsresult
-nsMimeHtmlDisplayEmitter::DumpAttachmentMenu()
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIMsgHeaderSink> headerSink; 
-  GetHeaderSink(getter_AddRefs(headerSink));
-
-  if ( (!mAttachArray) || (mAttachArray->Count() <= 0) )
-    return NS_OK;
-
-  nsCAutoString escapedName;
-  nsCAutoString escapedUrl;
-  nsCOMPtr<nsIMsgMessageUrl> messageUrl;
-  nsXPIDLCString uriString;
-
-  // Now we can finally write out the attachment information...  
-  PRInt32     i;
-  for (i=0; i<mAttachArray->Count(); i++)
-  {
-    attachmentInfoType *attachInfo = (attachmentInfoType *)mAttachArray->ElementAt(i);
-    if (!attachInfo)
-       continue;
-
-    escapedName = nsEscape(attachInfo->displayName, url_Path);
-    escapedUrl = nsEscape(attachInfo->urlSpec, url_Path);
-     
-    nsCOMPtr<nsIMsgMessageUrl> messageUrl = do_QueryInterface(mURL, &rv);
-    if (NS_SUCCEEDED(rv))
-    {
-      rv = messageUrl->GetURI(getter_Copies(uriString));
-    }
-
-    if (headerSink)
-      headerSink->HandleAttachment(escapedUrl, attachInfo->displayName, uriString);
-  } // for each attachment
-
-    // now broadcast to the display emitter sink 
-
-  return NS_OK;
-}
-
-nsresult
 nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
 {
 
@@ -252,14 +208,23 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
   
   if (headerSink)
   {
-    nsCAutoString escapedUrl;
+    char * escapedUrl = nsEscape(url, url_Path);
     nsXPIDLCString uriString;
-    escapedUrl = nsEscape(url, url_Path);
 
-    nsCOMPtr<nsIMsgMessageUrl> messageUrl = do_QueryInterface(mURL, &rv);
+    nsCOMPtr<nsIMsgMessageUrl> msgurl (do_QueryInterface(mURL, &rv));
     if (NS_SUCCEEDED(rv))
-      rv = messageUrl->GetURI(getter_Copies(uriString));
-    headerSink->HandleAttachment(escapedUrl, name, uriString);
+      rv = msgurl->GetURI(getter_Copies(uriString));
+
+    // we need to convert the attachment name from UTF-8 to unicode before
+    // we emit it...
+    nsAutoString unicodeHeaderValue;
+    nsAutoString attachmentName (name);
+    nsAutoString charset ("UTF-8");
+  
+	  rv = mUnicodeConverter->DecodeMimePartIIStr(attachmentName, charset, unicodeHeaderValue);
+    if (NS_SUCCEEDED(rv))
+      headerSink->HandleAttachment(escapedUrl, unicodeHeaderValue.GetUnicode(), uriString);
+    nsCRT::free(escapedUrl);
     mSkipAttachment = PR_TRUE;
   }
   else
