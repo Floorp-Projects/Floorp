@@ -1,0 +1,75 @@
+window { 
+ display: block;
+ background-color: light-gray; 
+ width: 100%;
+} 
+
+iframe {
+  width: 100%;
+  height: 100%;
+  border: 0px;
+}
+
+box {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+box.sidebartitle {
+  background-color: #505888;
+  padding: 2px 3px 3px 3px;
+  border: 0px;
+  margin: 0px;
+  font: 10pt sans-serif;
+}
+
+box.panelbar {
+  background-color: #006870;
+  padding: 2px 3px 3px 3px;
+  border: 0px;
+  margin: 0px;
+  font: 10pt sans-serif;
+}
+
+box#sidebox {
+  width: 100%;
+  height: 100%;
+  display:block;
+}
+
+titledbutton.sidebartitle:hover { 
+  border: 0px;
+  margin: 1px; 
+}
+
+titledbutton.active { 
+  color: yellow;
+  border: 0px;
+  margin: 1px; 
+  padding: 3px 2px 0px 1px
+}
+
+titledbutton[disabled] { 
+  color: black;
+}
+
+titledbutton:hover[disabled] { 
+  border: 0px;
+  margin: 1px; 
+}
+
+titledbutton.paneltitle { 
+  horizontal-align: left;
+}
+
+titledbutton { 
+  color: black;
+  margin: 1px;
+  padding: 2px 1px 1px 2px
+}
+
+titledbutton:hover {
+  border: 1px outset white;
+  margin: 0px; 
+}
