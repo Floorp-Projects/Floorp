@@ -37,7 +37,7 @@ class nsIDOMElement;
 class nsIDOMEvent;
 class nsIAtom;
 class nsIXBLDocumentInfo;
-struct nsXBLSpecialDocInfo;
+class nsXBLSpecialDocInfo;
 
 
 //

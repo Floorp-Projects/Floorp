@@ -54,6 +54,11 @@
 #include "xptinfo.h"
 #include "nsIInterfaceInfoManager.h"
 
+#ifdef USE_IMGLIB2
+#include "imgILoader.h"
+#include "imgIRequest.h"
+#endif
+
 // Helper Classes =====================================================================
 
 // nsIXBLAttributeEntry and helpers.  This class is used to efficiently handle
@@ -171,6 +176,10 @@ nsIAtom* nsXBLPrototypeBinding::kHandlersAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kChildrenAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kIncludesAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kContentAtom = nsnull;
+nsIAtom* nsXBLPrototypeBinding::kResourcesAtom = nsnull;
+nsIAtom* nsXBLPrototypeBinding::kResourceAtom = nsnull;
+nsIAtom* nsXBLPrototypeBinding::kTypeAtom = nsnull;
+nsIAtom* nsXBLPrototypeBinding::kSrcAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kInheritsAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kHTMLAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kValueAtom = nsnull;
@@ -207,6 +216,7 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsAReadableCString& aID, nsIC
 : mID(aID), 
   mInheritStyle(PR_TRUE), 
   mHasBaseProto(PR_TRUE),
+  mLoadedResources(PR_FALSE),
   mAttributeTable(nsnull), 
   mInsertionPointTable(nsnull),
   mInterfaceTable(nsnull)
@@ -226,6 +236,10 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsAReadableCString& aID, nsIC
     kHandlersAtom = NS_NewAtom("handlers");
     kChildrenAtom = NS_NewAtom("children");
     kContentAtom = NS_NewAtom("content");
+    kResourcesAtom = NS_NewAtom("resources");
+    kResourceAtom = NS_NewAtom("resource");
+    kTypeAtom = NS_NewAtom("type");
+    kSrcAtom = NS_NewAtom("src");
     kIncludesAtom = NS_NewAtom("includes");
     kInheritsAtom = NS_NewAtom("inherits");
     kHTMLAtom = NS_NewAtom("html");
@@ -270,6 +284,10 @@ nsXBLPrototypeBinding::~nsXBLPrototypeBinding(void)
     NS_RELEASE(kHandlersAtom);
     NS_RELEASE(kChildrenAtom);
     NS_RELEASE(kContentAtom);
+    NS_RELEASE(kResourcesAtom);
+    NS_RELEASE(kResourceAtom);
+    NS_RELEASE(kTypeAtom);
+    NS_RELEASE(kSrcAtom);
     NS_RELEASE(kIncludesAtom);
     NS_RELEASE(kInheritsAtom);
     NS_RELEASE(kHTMLAtom);
@@ -368,6 +386,63 @@ nsXBLPrototypeBinding::GetAllowScripts(PRBool* aResult)
   nsCOMPtr<nsIXBLDocumentInfo> info;
   GetXBLDocumentInfo(nsnull, getter_AddRefs(info));
   return info->GetScriptAccess(aResult);
+}
+
+NS_IMETHODIMP
+nsXBLPrototypeBinding::LoadResources()
+{
+  if (mLoadedResources)
+    return NS_OK;
+
+  mLoadedResources = PR_TRUE;
+
+  nsCOMPtr<nsIContent> content;
+  GetImmediateChild(kResourcesAtom, getter_AddRefs(content));
+  if (content) {
+#ifdef USE_IMGLIB2
+    // Get the image loader.
+    nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
+    if (!il) return NS_ERROR_FAILURE;
+
+    PRInt32 childCount;
+    content->ChildCount(childCount);
+    for (PRInt32 i = 0; i < childCount; i++) {
+      nsCOMPtr<nsIContent> resource;
+      content->ChildAt(i, *getter_AddRefs(resource));
+
+      nsAutoString type;
+      resource->GetAttribute(kNameSpaceID_None, kTypeAtom, type);
+      if (type.EqualsIgnoreCase("image")) {
+        // Obtain our src attribute.
+        nsAutoString src;
+        resource->GetAttribute(kNameSpaceID_None, kSrcAtom, src);
+        
+        // Construct a URI out of our src attribute.
+        if (src.Length() > 0) {
+          nsCAutoString csrc; csrc.AssignWithConversion(src);
+
+          nsCOMPtr<nsIURL> uri;
+          nsComponentManager::CreateInstance("@mozilla.org/network/standard-url;1",
+                                             nsnull,
+                                             NS_GET_IID(nsIURL),
+                                             getter_AddRefs(uri));
+          uri->SetSpec(csrc);
+
+          // Now kick off the image load
+          nsCOMPtr<imgIRequest> req;
+          il->LoadImage(uri, nsnull, nsnull, getter_AddRefs(req));
+        }
+      }
+    }
+
+    // Remove our child so that we don't waste precious memory holding on to the
+    // XML resource description.
+    PRInt32 index;
+    mBinding->IndexOf(content, index);
+    mBinding->RemoveChildAt(index, PR_FALSE);
+#endif
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

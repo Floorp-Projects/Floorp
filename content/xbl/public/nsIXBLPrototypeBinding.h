@@ -55,6 +55,8 @@ public:
   NS_IMETHOD BindingAttached(nsIDOMEventReceiver* aReceiver)=0;
   NS_IMETHOD BindingDetached(nsIDOMEventReceiver* aReceiver)=0;
 
+  NS_IMETHOD LoadResources()=0;
+
   NS_IMETHOD InheritsStyle(PRBool* aResult)=0;
 
   NS_IMETHOD GetPrototypeHandlers(nsIXBLPrototypeHandler** aHandler, 
