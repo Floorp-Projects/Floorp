@@ -515,7 +515,7 @@ XP_END_PROTOS
 
 #include "xp_str.h"
 
-  typedef void (* DisplayPixmapPtr)(MWContext * context, IL_Pixmap * pixmap, IL_Pixmap * mask, jint  x, jint y, jint x_offset, jint y_offset, jint width, jint height);
+  typedef void (* DisplayPixmapPtr)(MWContext * context, IL_Pixmap * image, IL_Pixmap * mask, PRInt32  x, PRInt32  y, PRInt32  x_offset,  PRInt32 y_offset, PRInt32  width, PRInt32 height);
 
   typedef void ( * NewPixmapPtr)(MWContext *, IL_Pixmap * pixmap, Boolean Mask);
    typedef void ( * ImageCompletePtr)(MWContext *, IL_Pixmap * pixmap);
@@ -676,7 +676,7 @@ XtPointer fe_WidgetTreeWalkChildren(Widget widget,
 Widget    fe_FindWidget(Widget top, char* name); /* find widget by name */
 
 
-void DisplayPixmap(MWContext *, IL_Pixmap *, IL_Pixmap * , jint , jint , jint , jint , jint , jint) ;
+void DisplayPixmap(MWContext * context, IL_Pixmap * image, IL_Pixmap * mask, PRInt32  x, PRInt32  y, PRInt32  x_offset,  PRInt32 y_offset, PRInt32  width, PRInt32 height);
 void NewPixmap(MWContext *, IL_Pixmap * image, Boolean mask);
 void ImageComplete(MWContext *, IL_Pixmap * image);
 
