@@ -145,7 +145,7 @@ nsScrollbar::Move(PRInt32 aX, PRInt32 aY)
     // If the bounds aren't sane then don't actually move the window.
     // It will be moved to the proper position when the bounds become
     // sane.
-    if (AreBoundsSane())
+    if (AreBoundsSane() && mCreated)
         moz_container_move(MOZ_CONTAINER(gtk_widget_get_parent(mWidget)),
                            mWidget, aX, aY, mBounds.width, mBounds.height);
 
