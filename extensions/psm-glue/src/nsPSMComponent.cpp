@@ -398,6 +398,17 @@ loser:
     return rv;
 }
 
+#ifdef XP_MAC
+extern "C" {
+    void RunMacPSM(void* arg);
+    PRThread* SSM_CreateAndRegisterThread(PRThreadType type, void (*start)(void *arg),
+                                          void *arg, PRThreadPriority priority,
+                                          PRThreadScope scope, PRThreadState state,
+                                          PRUint32 stackSize);
+    void SSM_KillAllThreads(void);
+}
+#endif
+            
 NS_IMETHODIMP
 nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
 {
@@ -413,6 +424,24 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
             
         if (nsPSMMutexInit() != PR_SUCCESS)
             return NS_ERROR_FAILURE;
+
+#ifdef XP_MAC
+        /* FIXME:  Really need better error handling in PSM, which simply exits on error. */
+        /* use a cached monitor to rendezvous with the PSM thread. */
+        PRMonitor* monitor = PR_CEnterMonitor(this);
+        if (monitor != nsnull) {
+            /* create the Cartman thread, and let it run awhile to get things going. */
+            PRThread* cartmanThread = SSM_CreateAndRegisterThread(PR_USER_THREAD, RunMacPSM, 
+							                                      this, PR_PRIORITY_NORMAL,
+							                                      PR_LOCAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+            if (cartmanThread != nsnull) {
+                /* need a good way to rendezvouz with the Cartman thread. */
+                PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
+            }
+            
+            PR_CExitMonitor(this);
+        }
+#endif
 
         // Try to see if it is open already
         mControl = CMT_ControlConnect(&nsPSMMutexTbl, &nsPSMShimTbl);
