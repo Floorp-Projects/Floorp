@@ -92,7 +92,7 @@ ssl_init()
 
   fileout=0 #FIXME, looks like all.sh tried to turn this on but actually didn't
   #fileout=1
-  #verbose="-v" #FIXME - see where this is usefull
+  verbose="-v" #FIXME - see where this is usefull
   cd ${CLIENTDIR}
 
 }
