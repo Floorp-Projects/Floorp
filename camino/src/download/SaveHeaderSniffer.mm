@@ -50,6 +50,7 @@
 #include "nsIPrefService.h"
 #include "nsIMIMEService.h"
 #include "nsIMIMEInfo.h"
+#include "nsIStringEnumerator.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDownload.h"
 
@@ -275,12 +276,17 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
         if (!mimeInfo)
           return rv;
 
-        PRUint32 extCount = 0;
-        char** extList = nsnull;
-        mimeInfo->GetFileExtensions(&extCount, &extList);        
-        if (extCount > 0 && extList) {
-            defaultFileName += PRUnichar('.');
-            defaultFileName.AppendWithConversion(extList[0]);
+        nsCOMPtr<nsIUTF8StringEnumerator> extensions;
+        mimeInfo->GetFileExtensions(getter_AddRefs(extensions));        
+        if (extensions) {
+            PRBool hasMore;
+            extensions->HasMore(&hasMore);
+            if (hasMore) {
+                nsCAutoString ext;
+                extensions->GetNext(ext);
+                defaultFileName += PRUnichar('.');
+                defaultFileName.Append(NS_ConvertUTF8toUCS2(ext));
+            }
         }
     }
     
