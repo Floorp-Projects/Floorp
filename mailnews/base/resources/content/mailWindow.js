@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -226,16 +226,13 @@ nsMsgStatusFeedback.prototype =
 		},
 	StopMeteors : function()
 		{
-            dump("stopping meteors 1\n");
-            if (!gStatusBar)
-                gStatusBar = document.getElementById("statusbar-icon");
-            if(!gThrobber)
-                gThrobber = document.getElementById("navigator-throbber");
+      dump("stopping meteors 1\n");
+      if (!gStatusBar) gStatusBar = document.getElementById("statusbar-icon");
+      if(!gThrobber) gThrobber = document.getElementById("navigator-throbber");
 
 			// Record page loading time.
 			var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
-            var msg = Bundle.GetStringFromName("documentDonePrefix") +
-                elapsed + Bundle.GetStringFromName("documentDonePostfix");
+			var msg = "Document: Done (" + elapsed + " secs)";
 			dump( msg + "\n" );
       window.MsgStatusFeedback.ShowStatusString(msg);
       defaultStatus = msg;
