@@ -104,9 +104,6 @@ function BuildHTMLAttributeNameList()
       }
     }
   }
-
-  // Always start with empty input fields
-  ClearHTMLInputWidgets();
 }
 
 // build attribute list in tree form from element attributes
@@ -156,7 +153,7 @@ function ClearHTMLInputWidgets()
   gDialog.AddHTMLAttributeTree.clearSelection();
   gDialog.AddHTMLAttributeNameInput.value ="";
   gDialog.AddHTMLAttributeValueInput.value = "";
-  gDialog.AddHTMLAttributeNameInput.inputField.focus();
+  SetTextboxFocus(gDialog.AddHTMLAttributeNameInput);
 }
 
 function onSelectHTMLTreeItem()
