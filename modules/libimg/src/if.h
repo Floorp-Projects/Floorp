@@ -18,12 +18,13 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.5 1999/02/17 18:14:57 kipp%netscape.com Exp $
+ * $Id: if.h,v 3.6 1999/04/22 22:38:12 pnunn%netscape.com Exp $
  */
 
 #ifndef _if_h
 #define _if_h
-
+/*************************************************/
+#ifndef _ifstruct_h
 #define M12N
 
 #define IL_INTERNAL
@@ -46,6 +47,7 @@
 
 #ifndef STANDALONE_IMAGE_LIB
 #include "net.h"
+#include "nsIImgDecoder.h"
 #endif /* STANDALONE_IMAGE_LIB */
 
 typedef struct _IL_GroupContext IL_GroupContext;
@@ -63,6 +65,7 @@ typedef struct il_container_struct il_container;
 #include "ilINetReader.h"
 #ifdef STANDALONE_IMAGE_LIB
 #include "ilIImageRenderer.h"
+//#include "nsIImgDecCB.h"
 #endif /* STANDALONE_IMAGE_LIB */
 
 /***************************** also in xpcompat.h ***********************/
@@ -70,7 +73,6 @@ typedef struct il_container_struct il_container;
 PR_BEGIN_EXTERN_C
 typedef void
 (*TimeoutCallbackFunction) (void * closure);
-
 extern void * 
 IL_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs);
 extern void
@@ -96,7 +98,8 @@ PR_END_EXTERN_C
 extern PRLogModuleInfo *il_log_module;
 
 #ifdef DEBUG
-#define ILTRACE(l,t) { if(il_debug>l) {PR_LOG(il_log_module, 1, t);} }
+//#define ILTRACE(l,t) { if(il_debug>l) {PR_LOG(il_log_module, 1, t);} }
+#define ILTRACE(l,t){}
 #else
 #define ILTRACE(l,t) {}
 #endif
@@ -231,11 +234,8 @@ struct il_container_struct {
     il_converter converter;
     void *quantize;             /* quantizer's private data */
 
-    int (*write)(il_container *ic, const uint8*, int32);
-    void (*complete)(il_container *ic);
-    void (*abort)(il_container *ic);
-
-    unsigned int (*write_ready)(il_container *ic);
+    class nsIImgDecoder *imgdec;
+    class ImgDCallbk *imgdcb;
 
     void *row_output_timeout;
     uint8 *scalerow;
@@ -378,6 +378,8 @@ struct _IL_ImageReq {
     struct _IL_ImageReq *next;  /* Next entry in a list of image requests. */
 };
 
+/********************** end of ifstruct_h test *********************************************************/
+#endif
 
 extern int il_debug;
 extern uint8 il_identity_index_map[];
@@ -413,27 +415,10 @@ il_stream_complete(NET_StreamClass *stream, jint op,
                    struct JMCException* *exceptionThrown);
 #endif /* M12N_NEW_DEPENDENCIES */
 
-extern int  il_gif_init(il_container *ic);
-extern int  il_gif_write(il_container *, const uint8 *, int32);
-extern void il_gif_complete(il_container *ic);
-extern int  il_gif_compute_percentage_complete(int row, il_container *ic);
-extern unsigned int il_gif_write_ready(il_container *ic);
-extern void il_gif_abort(il_container *ic);
-
 extern int  il_xbm_init(il_container *ic);
 extern int  il_xbm_write(il_container *, const uint8 *, int32);
 extern void il_xbm_complete(il_container *ic);
 extern void il_xbm_abort(il_container *ic);
-
-extern int  il_jpeg_init(il_container *ic);
-extern int  il_jpeg_write(il_container *, const uint8 *, int32);
-extern void il_jpeg_complete(il_container *ic);
-extern void il_jpeg_abort(il_container *ic);
-
-extern int  il_png_init(il_container *ic);
-extern int  il_png_write(il_container *, const uint8 *, int32);
-extern void il_png_complete(il_container *ic);
-extern void il_png_abort(il_container *ic);
 
 /* Allocate and initialize the destination image's transparent_pixel with
    the Image Library's preferred transparency color i.e. the background color
@@ -451,6 +436,7 @@ extern void il_destroy_image_transparent_pixel(il_container *ic);
    image request, then a mask will also be allocated for the destination
    image. */
 extern int  il_size(il_container *);
+extern void  il_dimensions_notify(il_container *ic, int dest_width, int dest_height);
 
 extern int  il_setup_quantize(void);
 extern int  il_init_quantize(il_container *ic);
@@ -548,6 +534,7 @@ il_image_destroyed_notify(IL_ImageReq *image_req);
    or started/stopped looping in the context. */
 extern void
 il_group_notify(IL_GroupContext *img_cx, XP_ObservableMsg message);
+
 
 #endif /* _if_h */
 
