@@ -145,7 +145,12 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
   nsresult rv;
   nsAutoString src;
   if (mLoadImageFailed || (nsnull == mURLSpec)) {
+#ifdef _WIN32
+    mLoadImageFailed = PR_TRUE;
+    return NS_OK;
+#else
     src.Append(BROKEN_IMAGE_URL);
+#endif
   } else {
     nsAutoString baseURL;
     if (nsnull != mBaseHREF) {
