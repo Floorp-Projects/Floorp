@@ -973,6 +973,17 @@ nsListControlFrame::Init(nsIPresContext&  aPresContext,
   reciever->AddEventListenerByIID((nsIDOMMouseMotionListener *)this, kIDOMMouseMotionListenerIID);
   reciever->AddEventListenerByIID((nsIDOMKeyListener *)this, kIDOMKeyListenerIID);
 
+#if 0
+  nsIFrame* parent;
+  GetParentWithView(&parent);
+  NS_ASSERTION(parent, "GetParentWithView failed");
+
+  // Get parent view
+  nsIView* parentView = nsnull;
+  while (1) {
+    parent->GetView(&parentView);
+  }
+#endif
   return result;
 }
 
@@ -1449,10 +1460,16 @@ nsListControlFrame::GetSelectedItem(nsString & aStr)
       nsIDOMHTMLOptionElement* optionElement = GetOption(*options, selectedIndex);
       if (nsnull != optionElement) {
         nsAutoString text;
-        if (NS_CONTENT_ATTR_HAS_VALUE == optionElement->GetText(text)) {
+        rv = optionElement->GetLabel(text);
+        if (NS_CONTENT_ATTR_HAS_VALUE != rv || 0 == text.Length()) {
+          if (NS_CONTENT_ATTR_HAS_VALUE == optionElement->GetText(text)) {
+            aStr = text;
+            rv = NS_OK;
+          }
+        } else {
           aStr = text;
           rv = NS_OK;
-        }
+        }          
         NS_RELEASE(optionElement);
       }
     }
