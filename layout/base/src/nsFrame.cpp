@@ -962,7 +962,7 @@ NS_METHOD nsFrame::IncrementalReflow(nsIPresContext*  aPresContext,
 
   // The only type of incremental reflow command we expect to get is a
   // content changed reflow command
-  if (aReflowCommand.GetType() == nsReflowCommand.ContentChanged) {
+  if (aReflowCommand.GetType() == nsReflowCommand::ContentChanged) {
     // Generic response is to reflow the child
     return ResizeReflow(aPresContext, aDesiredSize, aMaxSize, nsnull, aStatus);
 
