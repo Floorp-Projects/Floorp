@@ -134,14 +134,26 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
     return rv;
   }
 
+  // create pathResult if it doesn't exist
+  // at this point, pathResult should be something like
+  // .../News, ...\News, ...:News)
+  if (!pathResult.Exists())
+    pathResult.CreateDir();
+              
   nsAutoString alteredHost = "host-";
   alteredHost += hostname;
-
+  
   // can't do pathResult += "host-"; pathresult += hostname; 
   // because += on a nsFileSpec inserts a separator
   // so we'd end up with host-/hostname and not host-hostname
   pathResult += alteredHost;
 
+  // create pathResult if it doesn't exist
+  // at this point, pathResult should be something like
+  // ../News/host-<hostname>, ...\News\host-<hostname>, ...:News:host-<hostname>
+  if (!pathResult.Exists())
+    pathResult.CreateDir();
+  
   if (newsgroup != "") {
     pathResult += newsgroup;
   }
