@@ -298,8 +298,8 @@ public class Utilities extends Object {
      * method.  If the resource is found, interpret it as a
      * <code>Properties</code> file and read out its first line.
      * Interpret the first line as the fully qualified class name of a
-     * class that implements <code></code>.  The named class must have a
-     * public no-arg constructor.</p>
+     * class that implements <code>interfaceClassName</code>.  The named
+     * class must have a public no-arg constructor.</p>
      *
      */
 
