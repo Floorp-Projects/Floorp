@@ -32,18 +32,13 @@
 #include "nsIBufferOutputStream.h"
 #include "nsAutoLock.h"
 #include "nsIDNSService.h"
-
-#ifdef NET_SOCKET_PROVIDER_BUILD
 #include "nsISocketProvider.h"
 #include "nsISocketProviderService.h"
-#endif
 
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
-
-#ifdef NET_SOCKET_PROVIDER_BUILD
 static NS_DEFINE_CID(kSocketProviderService, NS_SOCKETPROVIDERSERVICE_CID);
-#endif
+
 
 //
 // This is the State table which maps current state to next state
@@ -577,7 +572,6 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
     // Step 1:
     //    Create a new TCP socket structure...
     //
-#ifdef NET_SOCKET_PROVIDER_BUILD
     if (!mSocketType)
       {
       mSocketFD = PR_NewTCPSocket();
@@ -597,9 +591,6 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
       if (NS_SUCCEEDED(rv))
         rv = pProvider->NewSocket(&mSocketFD);
       }
-#else
-    mSocketFD = PR_NewTCPSocket();
-#endif
 
     if (mSocketFD) {
       PRSocketOptionData opt;
