@@ -543,8 +543,11 @@ case "$target" in
 
 *-linux*)
     AC_DEFINE(XP_UNIX)
-    CFLAGS="$CFLAGS -pipe"
-    CXXFLAGS="$CXXFLAGS -pipe"
+    AC_DEFINE(_POSIX_SOURCE)
+    AC_DEFINE(_BSD_SOURCE)
+    AC_DEFINE(_SVID_SOURCE)
+    CFLAGS="$CFLAGS -pipe -ansi"
+    CXXFLAGS="$CXXFLAGS -pipe -ansi"
     MDCPUCFG_H=_linux.cfg
     PR_MD_CSRCS=linux.c
     MKSHLIB='$(LD) $(DSO_LDOPTS) -soname $(notdir $@) -o $@'
