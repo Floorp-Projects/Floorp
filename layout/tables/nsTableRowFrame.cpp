@@ -758,9 +758,10 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
   }
 
   nsresult rv=NS_OK;
-  nsSize  kidMaxElementSize;
-  nsSize* pKidMaxElementSize = (nsnull != aDesiredSize.maxElementSize) ?
-                                  &kidMaxElementSize : nsnull;
+
+  nsSize  localKidMaxElementSize(0,0);
+  nsSize* kidMaxElementSize = (aDesiredSize.maxElementSize) ? &localKidMaxElementSize : nsnull;
+
   nscoord maxCellTopMargin = 0;
   nscoord maxCellBottomMargin = 0;
   nscoord cellSpacingX = aReflowState.tableFrame->GetCellSpacingX();
@@ -858,7 +859,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
         
         // remember the rightmost (ltr) or leftmost (rtl) column this cell spans into
         prevColIndex = (iter.IsLeftToRight()) ? cellColIndex + (cellColSpan - 1) : cellColIndex;
-        nsHTMLReflowMetrics desiredSize(pKidMaxElementSize);
+        nsHTMLReflowMetrics desiredSize(kidMaxElementSize);
   
         // If the available width is the same as last time we reflowed the cell,
         // then just use the previous desired size and max element size.
@@ -907,7 +908,9 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
           if (eReflowReason_Initial == reason) {
             // Save the pass1 reflow information
             ((nsTableCellFrame *)kidFrame)->SetPass1DesiredSize(desiredSize);
-            ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(kidMaxElementSize);
+            if (kidMaxElementSize) {
+              ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(*kidMaxElementSize);
+            }
           }
 
           // If any of the cells are not complete, then we're not complete
@@ -920,8 +923,8 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
           nsSize priorSize = ((nsTableCellFrame *)kidFrame)->GetDesiredSize();
           desiredSize.width = priorSize.width;
           desiredSize.height = priorSize.height;
-          if (nsnull != pKidMaxElementSize) 
-            *pKidMaxElementSize = ((nsTableCellFrame *)kidFrame)->GetPass1MaxElementSize();
+          if (kidMaxElementSize) 
+            *kidMaxElementSize = ((nsTableCellFrame *)kidFrame)->GetPass1MaxElementSize();
         }
   
         // Calculate the cell's actual size given its pass2 size. This function
@@ -935,7 +938,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
                         desiredSize.height);
   
         PlaceChild(aPresContext, aReflowState, kidFrame, kidRect,
-                   aDesiredSize.maxElementSize, pKidMaxElementSize);
+                   aDesiredSize.maxElementSize, kidMaxElementSize);
   
       }
       else
