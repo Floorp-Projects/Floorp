@@ -23,18 +23,20 @@ DEPTH=..\..\..
 MODULE=webBrowser_core
 
 XPIDLSRCS=						\
-		.\nsIContextMenuListener.idl					\
-		.\nsCWebBrowser.idl						\
-		.\nsIWebBrowser.idl						\
-		.\nsIWebBrowserChrome.idl					\
+		.\nsIContextMenuListener.idl			\
+		.\nsCWebBrowser.idl				\
+		.\nsIWebBrowser.idl				\
+		.\nsIWebBrowserChrome.idl			\
+		.\nsICommandHandler.idl				\
 		$(NULL)
 
 LIBRARY_NAME=nsWebBrowser_s
 
-CPP_OBJS=											\
-		.\$(OBJDIR)\nsDocShellTreeOwner.obj			\
-		.\$(OBJDIR)\nsWBURIContentListener.obj			\
+CPP_OBJS=							\
+		.\$(OBJDIR)\nsDocShellTreeOwner.obj		\
+		.\$(OBJDIR)\nsWBURIContentListener.obj		\
 		.\$(OBJDIR)\nsWebBrowser.obj			\
+		.\$(OBJDIR)\nsCommandHandler.obj		\
 		$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
