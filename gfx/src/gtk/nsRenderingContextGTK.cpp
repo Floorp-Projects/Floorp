@@ -40,9 +40,11 @@ static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
   gdk.height = ns.height; \
   PR_END_MACRO
 
+MOZ_DECL_CTOR(nsRenderingContextGTK);
 
 nsRenderingContextGTK::nsRenderingContextGTK()
 {
+  MOZ_CTOR(nsRenderingContextGTK);
   NS_INIT_REFCNT();
 
   mFontMetrics = nsnull;
@@ -63,6 +65,8 @@ nsRenderingContextGTK::nsRenderingContextGTK()
 
 nsRenderingContextGTK::~nsRenderingContextGTK()
 {
+  MOZ_DTOR(nsRenderingContextGTK);
+
   // Destroy the State Machine
   if (mStateCache)
   {
@@ -282,7 +286,8 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
 
     // restore everything
     mClipRegion = state->mClipRegion;
-    mFontMetrics = state->mFontMetrics;
+    if (mFontMetrics != state->mFontMetrics)
+      SetFont(state->mFontMetrics);
 
     if (mSurface && mClipRegion)
     {
@@ -514,9 +519,13 @@ NS_IMETHODIMP nsRenderingContextGTK::GetColor(nscolor &aColor) const
 
 NS_IMETHODIMP nsRenderingContextGTK::SetFont(const nsFont& aFont)
 {
-  NS_IF_RELEASE(mFontMetrics);
-  mContext->GetMetricsFor(aFont, mFontMetrics);
-  return SetFont(mFontMetrics);
+  nsIFontMetrics* newMetrics;
+  nsresult rv = mContext->GetMetricsFor(aFont, newMetrics);
+  if (NS_SUCCEEDED(rv)) {
+    rv = SetFont(newMetrics);
+    NS_RELEASE(newMetrics);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetFont(nsIFontMetrics *aFontMetrics)
