@@ -26,7 +26,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public src decoders build
+DIRS		= public src 
+
+ifdef MOZ_IMG_DECODERS
+DIRS		+= decoders
+endif
+
+DIRS		+= build
 
 include $(topsrcdir)/config/rules.mk
 
