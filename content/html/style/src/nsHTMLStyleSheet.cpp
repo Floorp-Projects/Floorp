@@ -585,17 +585,12 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
         if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
             (nsnull != linkHandler)) {
-          nsAutoString base, href;  // XXX base??
+          nsAutoString base, href;
           nsresult attrState = htmlContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
 
           if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
             nsIURL* docURL = nsnull;
-            nsIDocument* doc = nsnull;
-            aContent->GetDocument(doc);
-            if (nsnull != doc) {
-              docURL = doc->GetDocumentURL();
-              NS_RELEASE(doc);
-            }
+            htmlContent->GetBaseURL(docURL);
 
             nsAutoString absURLSpec;
             nsresult rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
@@ -835,6 +830,16 @@ NS_IMETHODIMP HTMLStyleSheetImpl::SetAttributeFor(nsIAtom* aAttribute,
   return result;
 }
 
+#ifdef NS_DEBUG
+#define NS_ASSERT_REFCOUNT(ptr,cnt,msg) { \
+  nsrefcnt  count = ptr->AddRef();        \
+  ptr->Release();                         \
+  NS_ASSERTION(--count == cnt, msg);      \
+}
+#else
+#define NS_ASSERT_REFCOUNT(ptr,cnt,msg) {}
+#endif
+
 NS_IMETHODIMP
 HTMLStyleSheetImpl::EnsureSingleAttributes(nsIHTMLAttributes*& aAttributes, 
                                            nsMapAttributesFunc aMapFunc,
@@ -847,6 +852,7 @@ HTMLStyleSheetImpl::EnsureSingleAttributes(nsIHTMLAttributes*& aAttributes,
   if (nsnull == aAttributes) {
     if (PR_TRUE == aCreate) {
       if (nsnull != mRecycledAttrs) {
+        NS_ASSERT_REFCOUNT(mRecycledAttrs, 1, "attributes used elsewhere");
         aSingleAttrs = mRecycledAttrs;
         mRecycledAttrs = nsnull;
         aSingleAttrs->SetMappingFunction(aMapFunc);
@@ -2712,9 +2718,10 @@ HTMLStyleSheetImpl::AttributeChanged(nsIPresContext* aPresContext,
       case NS_STYLE_HINT_VISUAL:
         render = PR_TRUE;
       case NS_STYLE_HINT_CONTENT:
+      case NS_STYLE_HINT_AURAL:
         restyle = PR_TRUE;
         break;
-      case NS_STYLE_HINT_AURAL:
+      case NS_STYLE_HINT_NONE:
         break;
     }
 
@@ -2729,18 +2736,18 @@ HTMLStyleSheetImpl::AttributeChanged(nsIPresContext* aPresContext,
         NS_IF_RELEASE(parentContext);
         NS_RELEASE(frameContext);
       }
-    }
-    if (PR_TRUE == reframe) {
-      NS_NOTYETIMPLEMENTED("frame change reflow");
-    }
-    else if (PR_TRUE == reflow) {
-      StyleChangeReflow(aPresContext, frame, aAttribute);
-    }
-    else if (PR_TRUE == render) {
-      ApplyRenderingChangeToTree(aPresContext, frame);
-    }
-    else {  // let the frame deal with it, since we don't know how to
-      frame->AttributeChanged(aPresContext, aContent, aAttribute, aHint);
+      if (PR_TRUE == reframe) {
+        NS_NOTYETIMPLEMENTED("frame change reflow");
+      }
+      else if (PR_TRUE == reflow) {
+        StyleChangeReflow(aPresContext, frame, aAttribute);
+      }
+      else if (PR_TRUE == render) {
+        ApplyRenderingChangeToTree(aPresContext, frame);
+      }
+      else {  // let the frame deal with it, since we don't know how to
+        frame->AttributeChanged(aPresContext, aContent, aAttribute, aHint);
+      }
     }
   }
 
@@ -2773,9 +2780,10 @@ HTMLStyleSheetImpl::StyleRuleChanged(nsIPresContext* aPresContext,
     case NS_STYLE_HINT_VISUAL:
       render = PR_TRUE;
     case NS_STYLE_HINT_CONTENT:
+    case NS_STYLE_HINT_AURAL:
       restyle = PR_TRUE;
       break;
-    case NS_STYLE_HINT_AURAL:
+    case NS_STYLE_HINT_NONE:
       break;
   }
 
@@ -2784,19 +2792,19 @@ HTMLStyleSheetImpl::StyleRuleChanged(nsIPresContext* aPresContext,
     frame->GetStyleContext(sc);
     sc->RemapStyle(aPresContext);
     NS_RELEASE(sc);
-  }
 
-  // XXX hack, skip the root and scrolling frames
-  frame->FirstChild(nsnull, frame);
-  frame->FirstChild(nsnull, frame);
-  if (reframe) {
-    NS_NOTYETIMPLEMENTED("frame change reflow");
-  }
-  else if (reflow) {
-    StyleChangeReflow(aPresContext, frame, nsnull);
-  }
-  else if (render) {
-    ApplyRenderingChangeToTree(aPresContext, frame);
+    // XXX hack, skip the root and scrolling frames
+    frame->FirstChild(nsnull, frame);
+    frame->FirstChild(nsnull, frame);
+    if (reframe) {
+      NS_NOTYETIMPLEMENTED("frame change reflow");
+    }
+    else if (reflow) {
+      StyleChangeReflow(aPresContext, frame, nsnull);
+    }
+    else if (render) {
+      ApplyRenderingChangeToTree(aPresContext, frame);
+    }
   }
 
   NS_RELEASE(shell);
