@@ -52,7 +52,7 @@ fi
 
 #if [ ! -s "${HOSTDIR}" ]; then -s means different things to different tests...
 if [ ! -d "${HOSTDIR}" ]; then
-	echo "No hostdir"
+	#echo "No hostdir"
     if [ -f ${TESTDIR}/${HOST} ]; then
 		version=`cat ${TESTDIR}/${HOST}`
 	else
