@@ -616,7 +616,7 @@ nsAuthURLParser::ParseAfterScheme(const char *spec, PRInt32 specLen,
     const char *end = spec + specLen;
     const char *p;
     for (p = spec + nslash; p < end; ++p) {
-        if (strchr("/?#;", *p))
+        if (*p == '/' || *p == '?' || *p == '#' || *p == ';')
             break;
     }
     if (p < end) {
