@@ -14,6 +14,20 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 03/23/2000       IBM Corp.       Changed write() to DosWrite(). EMX i/o
+ *                                  calls cannot be intermixed with DosXXX
+ *                                  calls since EMX remaps file/socket
+ *                                  handles.
  */
 
 /* OS2 IO module
@@ -182,23 +196,16 @@ _PR_MD_WRITE(PRFileDesc *fd, const void *buf, PRInt32 len)
     PRInt32 bytes;
     int rv; 
 
-    /* No longer using DosWrite since it doesn't convert \n to \n\r like C runtime does */
-#if 0
     rv = DosWrite((HFILE)fd->secret->md.osfd,
                   (PVOID)buf,
                   len,
-                  &bytes);
+                  (PULONG)&bytes);
 
     if (rv != NO_ERROR) 
     {
-		_PR_MD_MAP_WRITE_ERROR(rv);
+        _PR_MD_MAP_WRITE_ERROR(rv);
         return -1;
     }
-#else
-    bytes = write(fd->secret->md.osfd, buf, len);
-    if (bytes == -1) 
-       _PR_MD_MAP_WRITE_ERROR(errno);
-#endif
 
     return bytes;
 } /* --- end _PR_MD_WRITE() --- */
