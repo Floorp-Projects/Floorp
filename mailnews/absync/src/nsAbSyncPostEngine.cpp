@@ -576,6 +576,9 @@ nsAbSyncPostEngine::KickTheSyncOperation(void)
 
   rv = FireURLRequest(workURI, tCommand);
 
+  if (NS_SUCCEEDED(rv))
+    NotifyListenersOnStartSending(mTransactionID, mMessageSize);
+
 GetOuttaHere:
   NS_IF_RELEASE(workURI);
   PR_FREEIF(tCommand);
