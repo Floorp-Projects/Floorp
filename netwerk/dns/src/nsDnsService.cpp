@@ -290,6 +290,8 @@ nsDNSLookup::InitiateDNSLookup(nsDNSService * dnsService)
 ////////////////////////////////////////////////////////////////////////////////
 
 #if defined(XP_MAC)
+pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
+
 pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie)
 {
 #pragma unused(contextPtr)
