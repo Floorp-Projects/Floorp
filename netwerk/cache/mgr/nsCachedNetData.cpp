@@ -1179,8 +1179,11 @@ public:
 
     NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
                              nsresult aStatus, const PRUnichar* aStatusArg) {
-        if (NS_FAILED(aStatus))
+        if (NS_FAILED(aStatus)) {
             mCacheEntry->SetFlag(nsCachedNetData::TRUNCATED_CONTENT);
+        } else {
+            mCacheEntry->ClearFlag(nsCachedNetData::TRUNCATED_CONTENT);
+        }
     
         mCacheEntry->ClearFlag(nsCachedNetData::VESTIGIAL);
         mCacheEntry->ClearFlag(nsCachedNetData::UPDATE_IN_PROGRESS);
