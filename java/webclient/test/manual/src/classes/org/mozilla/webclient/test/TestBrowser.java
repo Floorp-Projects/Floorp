@@ -26,6 +26,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.SwingConstants;
 import java.io.File;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.MalformedURLException;
 import java.util.Map;
@@ -253,10 +254,31 @@ public class TestBrowser extends JPanel {
 			    }
 			    break;
 			case ((int) DocumentLoadEvent.END_URL_LOAD_EVENT_MASK):
+			    String requestMethod = null;
 			    System.out.println("requestMethod: " + 
-					       map.get("method"));
+					       (requestMethod = (String)
+						map.get("method")));
 			    System.out.println("status: " + 
 					       map.get("status"));
+			    if (null != requestMethod &&
+				requestMethod.equalsIgnoreCase("POST")) {
+				InputStream requestBody = (InputStream)
+				    map.get("requestBody");
+				System.out.print("request body: ");
+				int avail;
+				byte bytes[];
+				try {
+				    while (0 < (avail = requestBody.available())) {
+					bytes = new byte[avail];
+					requestBody.read(bytes);
+					System.out.write(bytes);
+				    }
+				}
+				catch (java.io.IOException e) {
+				}
+				System.out.println("");
+			    }
+				
 			    if (map.get("headers") instanceof Map) {
 				Iterator iter = (map = (Map) map.get("headers")).keySet().iterator();
 				while (iter.hasNext()) {
