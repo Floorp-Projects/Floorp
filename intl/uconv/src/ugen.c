@@ -181,6 +181,26 @@ PRIVATE PRBool uCnGAlways8BytesComposedHangul(
 		PRUint32*				outlen
 );
 
+PRIVATE PRBool uCnGAlways8BytesGLComposedHangul(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+);
+
+
+PRIVATE PRBool uComposedHangulCommon(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen,
+                PRUint8   mask
+);
+
 PRIVATE PRBool uGenAlways2Byte(
 		PRUint16 				in,
 		unsigned char*		out
@@ -225,7 +245,8 @@ PRIVATE uGeneratorFunc m_generator[uNumOfCharsetType] =
 	uCheckAndGen2ByteGRPrefix8EA6,
 	uCheckAndGen2ByteGRPrefix8EA7,
 	uCheckAndGenAlways1ByteShiftGL,
-        uCnGAlways8BytesComposedHangul
+        uCnGAlways8BytesComposedHangul,
+        uCnGAlways8BytesGLComposedHangul
 };
 
 /*=================================================================================
@@ -695,13 +716,14 @@ PRIVATE PRBool uCheckAndGenAlways1ByteShiftGL(
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE PRBool uCnGAlways8BytesComposedHangul(
+PRIVATE PRBool uComposedHangulCommon(
 		uShiftTable 			*shift,
 		PRInt32*				state,
 		PRUint16				in,
 		unsigned char*		out,
 		PRUint32 				outbuflen,
-		PRUint32*				outlen
+		PRUint32*				outlen,
+                PRUint8  mask
 )
 {
 	if(outbuflen < 8)
@@ -727,14 +749,36 @@ PRIVATE PRBool uCnGAlways8BytesComposedHangul(
             /* item 2 of Hangul Syllabel Decomposition w/ modification */
             LIndex = SIndex / NCount;
             VIndex = (SIndex % NCount) / TCount;
-            TIndex = SIndex / TCount;
+            TIndex = SIndex % TCount;
 
             *outlen = 8;
-            out[0] = out[2] = out[4] = out[6] = 0xa4;
-            out[1] = 0xd4;
-            out[3] = lMap[LIndex];
-            out[5] = VIndex + 0xbf;
-            out[7] = tMap[TIndex];
+            out[0] = out[2] = out[4] = out[6] = (0xa4 & mask);
+            out[1] = 0xd4 & mask;
+            out[3] = lMap[LIndex] & mask;
+            out[5] = (VIndex + 0xbf) & mask;
+            out[7] = tMap[TIndex] & mask;
 	    return PR_TRUE;
     }
+}
+PRIVATE PRBool uCnGAlways8BytesComposedHangul(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+)
+{
+  return uComposedHangulCommon(shift,state,in,out,outbuflen,outlen,0xff);
+}
+PRIVATE PRBool uCnGAlways8BytesGLComposedHangul(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+)
+{
+  return uComposedHangulCommon(shift,state,in,out,outbuflen,outlen,0x7f);
 }

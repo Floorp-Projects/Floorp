@@ -28,12 +28,27 @@ static PRUint16 g2BytesShiftTable[] =  {
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
 
+static PRUint16 gComposedHangulShiftTable[] =  {
+  0, uComposedHangulCharset,
+  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
+};
+
+static PRUint16 *g_MappingTable[3] = {
+  g_ufKSC5601Mapping,
+  g_HangulNullMapping
+};
+
+static PRUint16 *g_ShiftTable[3] =  {
+  g2BytesShiftTable,
+  gComposedHangulShiftTable
+};
+
 //----------------------------------------------------------------------
 // Class nsUnicodeToKSC5601 [implementation]
 
 nsUnicodeToKSC5601::nsUnicodeToKSC5601() 
-: nsTableEncoderSupport( (uShiftTable*) g2BytesShiftTable, 
-                        (uMappingTable*) g_ufKSC5601Mapping)
+: nsMultiTableEncoderSupport(2, (uShiftTable**) g_ShiftTable, 
+                        (uMappingTable**) g_MappingTable)
 {
 }
 
@@ -54,6 +69,6 @@ NS_IMETHODIMP nsUnicodeToKSC5601::GetMaxLength(const PRUnichar * aSrc,
                                               PRInt32 aSrcLength,
                                               PRInt32 * aDestLength)
 {
-  *aDestLength = aSrcLength * 2;
-  return NS_OK_UENC_EXACTLENGTH;
+  *aDestLength = aSrcLength * 8;
+  return NS_OK;
 }

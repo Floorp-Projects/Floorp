@@ -174,6 +174,25 @@ PRIVATE PRBool uCnSAlways8BytesComposedHangul(
 		PRUint32*				inscanlen
 );
 
+PRIVATE PRBool uCnSAlways8BytesGLComposedHangul(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+);
+
+PRIVATE PRBool uComposedHangulCommon(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen,
+                PRUint8 mask
+);
+
 PRIVATE PRBool uScanAlways2Byte(
 		unsigned char*		in,
 		PRUint16*				out
@@ -655,24 +674,25 @@ PRIVATE PRBool uCheckAndScanAlways1ByteShiftGL(
 #define VCount 21
 #define TCount 28
 #define NCount (VCount * TCount)
-PRIVATE PRBool uCnSAlways8BytesComposedHangul(
+PRIVATE PRBool uComposedHanguleCommon(
 		uShiftTable 			*shift,
 		PRInt32*				state,
 		unsigned char		*in,
 		PRUint16				*out,
 		PRUint32 				inbuflen,
-		PRUint32*				inscanlen
+		PRUint32*				inscanlen,
+                PRUint8    mask
 )
 {
         
         PRUint16 LIndex, VIndex, TIndex;
         /* no 8 bytes, not in a4 range, or the first 2 byte are not a4d4 */
-        if((inbuflen < 8) || (0xa4 != in[0]) || (0xd4 != in[1]) ||
-           (0xa4 != in[2] ) || (0xa4 != in[4]) || (0xa4 != in[6]))
+        if((inbuflen < 8) || ((mask & 0xa4) != in[0]) || ((mask& 0xd4) != in[1]) ||
+           ((mask&0xa4) != in[2] ) || ((mask&0xa4) != in[4]) || ((mask&0xa4) != in[6]))
 		return PR_FALSE;
 
         /* Compute LIndex  */
-        if((in[3] < 0xa1) && (in[3] > 0xbe)) { /* illegal leading consonant */
+        if((in[3] < (mask&0xa1)) && (in[3] > (mask&0xbe))) { /* illegal leading consonant */
  	  return PR_FALSE;
         } else {
           static PRUint8 lMap[] = {
@@ -686,23 +706,23 @@ PRIVATE PRBool uCnSAlways8BytesComposedHangul(
                12,  13,  14,  15,  16,  17,  18     
           };
 
-          LIndex = lMap[in[3] - 0xa1];
+          LIndex = lMap[in[3] - (0xa1 & mask)];
           if(0xff == (0xff & LIndex))
  	    return PR_FALSE;
         }
         
         /* Compute VIndex  */
-        if((in[5] < 0xbf) && (in[5] > 0xd3)) { /* illegal medial vowel */
+        if((in[5] < (mask&0xbf)) && (in[5] > (mask&0xd3))) { /* illegal medial vowel */
  	  return PR_FALSE;
         } else {
-          VIndex = in[5] - 0xbf;
+          VIndex = in[5] - (mask&0xbf);
         }
 
         /* Compute TIndex  */
-        if(0xd4 == in[7])  
+        if((mask&0xd4) == in[7])  
         {
           TIndex = 0;
-        } else if((in[7] < 0xa1) && (in[7] > 0xbe)) {/* illegal trailling consonant */
+        } else if((in[7] < (mask&0xa1)) && (in[7] > (mask&0xbe))) {/* illegal trailling consonant */
  	  return PR_FALSE;
         } else {
           static PRUint8 tMap[] = {
@@ -715,7 +735,7 @@ PRIVATE PRBool uCnSAlways8BytesComposedHangul(
           /*   B8   B9   BA   BB   BC   BD   BE       */
                22,0xff,  23,  24,  25,  26,  27     
           };
-          TIndex = tMap[in[3] - 0xa1];
+          TIndex = tMap[in[3] - (mask&0xa1)];
           if(0xff == (0xff & TIndex))
  	    return PR_FALSE;
         }
@@ -725,4 +745,32 @@ PRIVATE PRBool uCnSAlways8BytesComposedHangul(
         *out = ( LIndex * VCount + VIndex) * TCount + TIndex + SBase;
 
 	return PR_TRUE;
+}
+/*=================================================================================
+
+=================================================================================*/
+PRIVATE PRBool uCnSAlways8BytesComposedHangul(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+)
+{
+   return uComposedHangulCommon(shift,state,in,out,inbuflen,inscanlen,0xff);
+}
+/*=================================================================================
+
+=================================================================================*/
+PRIVATE PRBool uCnSAlways8BytesGLComposedHangul(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+)
+{
+   return uComposedHangulCommon(shift,state,in,out,inbuflen,inscanlen,0x7f);
 }

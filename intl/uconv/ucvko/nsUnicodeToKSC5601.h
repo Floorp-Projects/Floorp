@@ -31,7 +31,7 @@
  * @created         06/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToKSC5601 : public nsTableEncoderSupport
+class nsUnicodeToKSC5601 : public nsMultiTableEncoderSupport
 {
 public:
 
