@@ -316,10 +316,10 @@ void nsWindow::InitCallbacks(char * aName)
                     nsXtWidget_ResizeRedirectMask_EventHandler,
                     this);*/
 
-  /*XtAddCallback(mWidget, 
+  XtAddCallback(mWidget, 
                 XmNresizeCallback, 
                 nsXtWidget_Resize_Callback, 
-                NULL);*/
+                NULL);
 
 
 }

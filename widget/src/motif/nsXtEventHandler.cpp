@@ -243,9 +243,14 @@ void nsXtWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data)
 //==============================================================
 void nsXtWidget_Resize_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
-  if (DBG) fprintf(stderr, "In nsXtWidget_Resize_Callback\n");
+  //if (DBG) 
+fprintf(stderr, "In nsXtWidget_Resize_Callback 0x%x\n", p);
 
   nsWindow * widgetWindow = (nsWindow *) p ;
+  if (widgetWindow == nsnull) {
+    return;
+  }
+
   XmDrawingAreaCallbackStruct * cbs = (XmDrawingAreaCallbackStruct *)call_data;
   if (cbs->reason == XmCR_RESIZE) {
     nsSizeEvent event;
