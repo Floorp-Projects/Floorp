@@ -457,15 +457,15 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                                        cx, desc, i);
                 goto done;
             }
-            if(!param.IsIn())
-                continue;
-
-            // in the future there may be a param flag indicating 'shared'
-            if(type.IsPointer())
+            if(type.IsPointer() && 
+               !type.IsInterfacePointer() &&
+               !param.IsShared())
             {
                 useAllocator = JS_TRUE;
                 dp->flags |= nsXPTCVariant::VAL_IS_OWNED;
             }
+            if(!param.IsIn())
+                continue;
         }
         else
         {

@@ -16,29 +16,17 @@
  * Reserved.
  */
 
+#include "nsrootidl.idl"
+
 %{C++
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"
 #include "nsIID.h"
-%}
-/* #include "nsID.idl" */
-%{C++
 #include "nsError.h"
-
 #include "nsISupportsUtils.h"
 %}
 
-native nsQIResult(void *);
-native voidStar(void*);
-native voidStarRef(void**);
-native nsIIDRef(REFNSIID);
-
-typedef unsigned long   nsrefcnt;
-
-[
- object,
-	uuid(00000000-0000-0000-c000-000000000046)
-]
+[object, uuid(00000000-0000-0000-c000-000000000046)]
 interface nsISupports {
   void QueryInterface(in nsIIDRef uuid, [iid_is(uuid),retval] out nsQIResult result);
   [notxpcom] nsrefcnt AddRef();

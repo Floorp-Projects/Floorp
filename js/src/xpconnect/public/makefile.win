@@ -25,6 +25,7 @@ EXPORTS = \
     xpccomponents.h     \
     xpcjsid.h           \
     xpclog.h            \
+    nsrootidl.h         \
     $(NULL)
 
 MODULE = xpconnect

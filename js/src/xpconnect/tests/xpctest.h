@@ -6,12 +6,13 @@
 #define __gen_xpctest_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsrootidl.h" /* interface nsrootidl */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
 
-/* starting interface nsITestXPCFoo */
+/* starting interface:    nsITestXPCFoo */
 
 /* {159E36D0-991E-11d2-AC3F-00C09300144B} */
 #define NS_ITESTXPCFOO_IID_STR "159E36D0-991E-11d2-AC3F-00C09300144B"
@@ -31,6 +32,9 @@ class nsITestXPCFoo : public nsISupports {
 
   /* void Test2 (); */
   NS_IMETHOD Test2() = 0;
+  enum { one = 1 };
+  enum { five = 5 };
+  enum { six = 6 };
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
@@ -38,7 +42,7 @@ class nsITestXPCFoo : public nsISupports {
 #endif
 };
 
-/* starting interface nsITestXPCFoo2 */
+/* starting interface:    nsITestXPCFoo2 */
 
 /* {5F9D20C0-9B6B-11d2-9FFE-000064657374} */
 #define NS_ITESTXPCFOO2_IID_STR "5F9D20C0-9B6B-11d2-9FFE-000064657374"
@@ -59,7 +63,7 @@ class nsITestXPCFoo2 : public nsITestXPCFoo {
 #endif
 };
 
-/* starting interface nsIEcho */
+/* starting interface:    nsIEcho */
 
 /* {CD2F2F40-C5D9-11d2-9838-006008962422} */
 #define NS_IECHO_IID_STR "CD2F2F40-C5D9-11d2-9838-006008962422"
@@ -74,8 +78,8 @@ class nsIEcho : public nsISupports {
     return iid;
   }
 
-  /* void SetReciever (in nsIEcho aReciever); */
-  NS_IMETHOD SetReciever(nsIEcho *aReciever) = 0;
+  /* void SetReceiver (in nsIEcho aReceiver); */
+  NS_IMETHOD SetReceiver(nsIEcho *aReceiver) = 0;
 
   /* void SendOneString (in string str); */
   NS_IMETHOD SendOneString(const char *str) = 0;
@@ -99,13 +103,16 @@ class nsIEcho : public nsISupports {
   NS_IMETHOD SendInOutManyTypes(PRUint8 *p1, PRInt16 *p2, PRInt32 *p3, PRInt64 *p4, PRUint8 *p5, PRUint16 *p6, PRUint32 *p7, PRUint64 *p8, float *p9, double *p10, PRBool *p11, char *p12, PRUint16 *p13, nsID * *p14, char **p15, PRUnichar **p16) = 0;
 
   /* void MethodWithNative (in long p1, in voidStar p2); */
-  NS_IMETHOD MethodWithNative(PRInt32 p1, void* p2) = 0;
+  NS_IMETHOD MethodWithNative(PRInt32 p1, void * p2) = 0;
 
   /* void ReturnCode (in long code); */
   NS_IMETHOD ReturnCode(PRInt32 code) = 0;
 
   /* void FailInJSTest (in long fail); */
   NS_IMETHOD FailInJSTest(PRInt32 fail) = 0;
+
+  /* void SharedString ([shared, retval] out string str); */
+  NS_IMETHOD SharedString(char **str) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

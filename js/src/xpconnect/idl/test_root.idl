@@ -1,0 +1,10 @@
+
+#include "nsrootidl.idl"
+
+[uuid(bbc57da0-e321-11d2-ba97-00805f8a5dd7)]
+interface test{
+    void m1(in voidStar foo);
+    void m2(in voidRef foo);
+    void m3([const] in voidRef foo);
+    void m4(in nsIIDRef id, out nsIDPtr idOut);
+};

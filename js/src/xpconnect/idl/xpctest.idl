@@ -8,6 +8,10 @@ native nsID(nsID *);
 interface nsITestXPCFoo : nsISupports {
     long Test(in long p1, in long p2);
     void Test2();
+
+    const short one = 1;
+    const short five = 5;
+    const short six = 6;
 };
 
 [uuid(5F9D20C0-9B6B-11d2-9FFE-000064657374)]
@@ -18,7 +22,7 @@ interface nsITestXPCFoo2 : nsITestXPCFoo {
 [uuid(CD2F2F40-C5D9-11d2-9838-006008962422)]
 interface nsIEcho : nsISupports {
 
-    void SetReciever(in nsIEcho aReciever);
+    void SetReceiver(in nsIEcho aReceiver);
     void SendOneString(in string str);
     long In2OutOneInt(in long input);
 
@@ -64,5 +68,6 @@ interface nsIEcho : nsISupports {
     void MethodWithNative(in long p1, in voidStar p2);
     void ReturnCode(in long code);
     void FailInJSTest(in long fail);
+    void SharedString([retval, shared] out string str);
 };
 

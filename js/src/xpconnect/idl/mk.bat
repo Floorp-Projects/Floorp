@@ -1,4 +1,5 @@
 
+xpidl -w -m header -o ..\public\nsrootidl           nsrootidl.idl
 xpidl -w -m header -o ..\public\xpccomponents       xpccomponents.idl
 xpidl -w -m header -o ..\public\xpcjsid             xpcjsid.idl
 xpidl -w -m header -o ..\tests\xpctest              xpctest.idl
