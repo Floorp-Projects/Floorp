@@ -1,5 +1,3 @@
-#!gmake
-#
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -18,32 +16,7 @@
 # Rights Reserved.
 #
 # Contributor(s): 
-
-
-
-DEPTH	= ..\..\..
-
-MODULE	= oji
-
-XPIDLSRCS =                     \
-            .\nsIJVMManager.idl     \
-            .\nsIJVMPluginInstance.idl     \
-            $(NULL)
-
-EXPORTS	=			  \
-	nsjvm.h			  \
-	nsIJRIPlugin.h		  \
-	nsIJVMConsole.h		  \
-	nsIJVMPlugin.h		  \
-	nsIJVMPluginTagInfo.h	  \
-	nsIJVMPrefsWindow.h  	  \
-	nsIJVMWindow.h  	  \
-	nsISymantecDebugManager.h \
-	nsISymantecDebugger.h  \
-	nsISecureEnv.h \
-	ProxyJNI.h \
-	nsIThreadManager.h \
-	nsILiveConnectManager.h
-
-include <$(DEPTH)/config/rules.mak>
-
+#
+# This is a list of local files which get copied to the mozilla:dist:??? directory
+#
+nsIPluginManager.idl
