@@ -62,8 +62,7 @@ NS_IMPL_AGGREGATED(nsCLiveconnect);
 NS_METHOD
 nsCLiveconnect::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-	 if (!*aInstancePtr)
-		return NS_ERROR_INVALID_POINTER;
+	 NS_ENSURE_ARG_POINTER(aInstancePtr);
 
     if (aIID.Equals(NS_GET_IID(nsISupports))) {
       *aInstancePtr = GetInner();
