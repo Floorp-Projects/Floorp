@@ -123,7 +123,7 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 
     // Supply our own directory service provider so we can control where
     // the registry and profiles are located.
-    AppDirServiceProvider *provider = new AppDirServiceProvider(NS_LITERAL_CSTRING("Project X"));
+    AppDirServiceProvider *provider = new AppDirServiceProvider(NS_LITERAL_CSTRING("Chimera"));
     NS_ASSERTION(provider, "Failed to create AppDirServiceProvider");
     rv = NS_InitEmbedding(binDir, provider);
     if (NS_FAILED(rv)) {
