@@ -477,7 +477,7 @@ tbx_dirs()
             URL="cindercone.red.iplanet.com"
         fi
         if [ "$O_WIN" = "ON" ] ; then
-            RESULTDIRURL="<a title=\"QA Results\" href=\"http://${URL}${TBX_WIN_NSSBASEDIR}/tinderbox/tests_results/security/${TRD}\">QA</a>"
+            RESULTDIRURL="<a title=\"QA Results\" href=\"http://${URL}${UX_D0}/nsstip/tinderbox/tests_results/security/${TRD}\">QA</a>"
         else
             RESULTDIRURL="<a title=\"QA Results\" href=\"http://${URL}${RESULTDIR}\">QA</a>"
         fi
@@ -972,8 +972,6 @@ win_set_d1()
         fi
     done
     Debug "NSS_VER_DIR set to $NSS_VER_DIR"
-    TBX_WIN_NSSBASEDIR="$UX_D0/nsstip"
-    Debug "TBX_WIN_BASEDIR set to $TBX_WIN_BASEDIR"
 }
 
 ########################### init_host ##################################
