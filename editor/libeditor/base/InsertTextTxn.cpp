@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "InsertTextTxn.h"
-#include "nsEditor.h"
 #include "nsIDOMCharacterData.h"
 #include "nsISelection.h"
 #include "EditAggregateTxn.h"
@@ -50,7 +49,7 @@ nsIAtom *InsertTextTxn::gInsertTextTxnName;
 
 nsresult InsertTextTxn::ClassInit()
 {
-  if (nsnull==gInsertTextTxnName)
+  if (!gInsertTextTxnName)
     gInsertTextTxnName = NS_NewAtom("NS_InsertTextTxn");
   return NS_OK;
 }
@@ -75,7 +74,7 @@ NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
                                   const nsAString     &aStringToInsert,
                                   nsIEditor           *aEditor)
 {
-#if 0 //def DEBUG_cmanske
+#if 0
       nsAutoString text;
       aElement->GetData(text);
       printf("InsertTextTxn: Offset to insert at = %d. Text of the node to insert into:\n", aOffset);
@@ -134,27 +133,25 @@ NS_IMETHODIMP InsertTextTxn::UndoTransaction(void)
   NS_ASSERTION(mElement && mEditor, "bad state");
   if (!mElement || !mEditor) { return NS_ERROR_NOT_INITIALIZED; }
 
-  nsresult result;
   PRUint32 length = mStringToInsert.Length();
-  result = mElement->DeleteData(mOffset, length);
-  return result;
+  return mElement->DeleteData(mOffset, length);
 }
 
 NS_IMETHODIMP InsertTextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   // set out param default value
-  if (nsnull!=aDidMerge)
-    *aDidMerge=PR_FALSE;
+  if (aDidMerge)
+    *aDidMerge = PR_FALSE;
   nsresult result = NS_OK;
-  if ((nsnull!=aDidMerge) && (nsnull!=aTransaction))
+  if (aDidMerge && aTransaction)
   {
-    // if aTransaction isa InsertTextTxn, and if the selection hasn't changed, 
+    // if aTransaction is a InsertTextTxn, and if the selection hasn't changed, 
     // then absorb it
     InsertTextTxn *otherInsTxn = nsnull;
     aTransaction->QueryInterface(InsertTextTxn::GetCID(), (void **)&otherInsTxn);
     if (otherInsTxn)
     {
-      if (PR_TRUE==IsSequentialInsert(otherInsTxn))
+      if (IsSequentialInsert(otherInsTxn))
       {
         nsAutoString otherData;
         otherInsTxn->GetData(otherData);
@@ -188,7 +185,7 @@ NS_IMETHODIMP InsertTextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMer
             {
               if (otherInsertTxn)
               {
-                if (PR_TRUE==IsSequentialInsert(otherInsertTxn))
+                if (IsSequentialInsert(otherInsertTxn))
 	              {
 	                nsAutoString otherData;
 	                otherInsertTxn->GetData(otherData);
@@ -224,7 +221,7 @@ NS_IMETHODIMP InsertTextTxn::GetTxnDescription(nsAString& aString)
 NS_IMETHODIMP
 InsertTextTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (nsnull == aInstancePtr) {
+  if (!aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(InsertTextTxn::GetCID())) {
@@ -245,19 +242,13 @@ NS_IMETHODIMP InsertTextTxn::GetData(nsString& aResult)
 
 PRBool InsertTextTxn::IsSequentialInsert(InsertTextTxn *aOtherTxn)
 {
-  NS_ASSERTION(nsnull!=aOtherTxn, "null param");
-  PRBool result=PR_FALSE;
-  if (nsnull!=aOtherTxn)
+  NS_ASSERTION(aOtherTxn, "null param");
+  if (aOtherTxn && aOtherTxn->mElement == mElement)
   {
-    if (aOtherTxn->mElement == mElement)
-    {
-      // here, we need to compare offsets.
-      PRInt32 length = mStringToInsert.Length();
-      if (aOtherTxn->mOffset==(mOffset+length))
-      {
-        result = PR_TRUE;
-      }
-    }
+    // here, we need to compare offsets.
+    PRInt32 length = mStringToInsert.Length();
+    if (aOtherTxn->mOffset == (mOffset + length))
+      return PR_TRUE;
   }
-  return result;
+  return PR_FALSE;
 }
