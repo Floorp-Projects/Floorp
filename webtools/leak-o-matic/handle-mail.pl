@@ -20,7 +20,7 @@
 # Contributor(s):
 # Chris Waterson <waterson@netscape.com>
 # 
-# $Id: handle-mail.pl,v 1.2 1999/11/17 22:30:35 waterson%netscape.com Exp $
+# $Id: handle-mail.pl,v 1.3 1999/11/18 03:29:11 waterson%netscape.com Exp $
 #
 
 #
@@ -44,6 +44,7 @@ use Getopt::Long;
 use File::Copy;
 
 GetOptions("datadir=s");
+chdir('/tmp');
 
 LINE: while (<>) {
     if (/^begin \d\d\d (.*)/) {
