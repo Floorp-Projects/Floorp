@@ -48,7 +48,7 @@ public class IRFactory {
         this.compiler = compiler;
         this.ts = ts;
     }
-    
+
     public ScriptOrFnNode createScript() {
         return new ScriptOrFnNode(TokenStream.SCRIPT);
     }
@@ -67,6 +67,7 @@ public class IRFactory {
 
         Node children = ((Node) body).getFirstChild();
         if (children != null) { scriptNode.addChildrenToBack(children); }
+        scriptNode.finishParsing(this);
     }
 
     /**
@@ -207,7 +208,7 @@ public class IRFactory {
         return compiler.createFunctionNode(this, name);
     }
 
-    public Object initFunction(FunctionNode fnNode, int functionIndex, 
+    public Object initFunction(FunctionNode fnNode, int functionIndex,
                                Object statements,
                                String sourceName, int baseLineno,
                                int endLineno, String source,
@@ -219,7 +220,8 @@ public class IRFactory {
         fnNode.setEndLineno(endLineno);
         fnNode.setFunctionType(functionType);
         fnNode.addChildToBack((Node)statements);
-        
+        fnNode.finishParsing(this);
+
         Node result = Node.newString(TokenStream.FUNCTION,
                                      fnNode.getFunctionName());
         result.putIntProp(Node.FUNCTION_PROP, functionIndex);

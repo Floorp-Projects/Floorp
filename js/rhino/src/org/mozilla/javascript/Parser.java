@@ -99,10 +99,9 @@ class Parser {
         throws IOException
     {
         currentScriptOrFn = nf.createScript();
-        
+
         this.ok = true;
-        fn_sourceTop = 0;
-        fn_funcExprStmNames = null;
+        sourceTop = 0;
 
         int tt;          // last token from getToken();
         int baseLineno = ts.getLineno();  // line number where source starts
@@ -145,7 +144,7 @@ class Parser {
 
         String source = sourceToString(0);
         sourceBuffer = null; // To help GC
-        
+
         nf.initScript(currentScriptOrFn, pn, ts.getSourceName(),
                       baseLineno, ts.getLineno(), source);
         return currentScriptOrFn;
@@ -240,9 +239,8 @@ class Parser {
 
         // Save current source top to restore it on exit not to include
         // function to parent source
-        int saved_sourceTop = fn_sourceTop;
-        ObjArray saved_funcExprStmNames = fn_funcExprStmNames;
-        
+        int saved_sourceTop = sourceTop;
+
         ScriptOrFnNode savedScriptOrFn = currentScriptOrFn;
         currentScriptOrFn = fnNode;
 
@@ -285,13 +283,9 @@ class Parser {
 
             // name might be null;
             source = sourceToString(saved_sourceTop);
-
-            // Remove name clashes for nested functions
-            checkVariables(fnNode, fn_funcExprStmNames);
         }
         finally {
-            fn_sourceTop = saved_sourceTop;
-            fn_funcExprStmNames = saved_funcExprStmNames;
+            sourceTop = saved_sourceTop;
             currentScriptOrFn = savedScriptOrFn;
         }
 
@@ -303,14 +297,6 @@ class Parser {
                                  source,
                                  functionType);
             if (functionType == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
-                // Record the name to check for possible var and
-                // function expression statement name clashes
-                if (name.length()!= 0) {
-                    if (fn_funcExprStmNames == null) {
-                        fn_funcExprStmNames = new ObjArray();
-                    }
-                    fn_funcExprStmNames.add(name);
-                }
                 // The following can be removed but then code generators should
                 // be modified not to push on the stack function expression
                 // statements
@@ -339,19 +325,6 @@ class Parser {
             }
         }
         return pn;
-    }
-
-    private static void
-    checkVariables(ScriptOrFnNode scriptOrFn, ObjArray funcExprStmNames)
-    {
-// Remove all variables corresponding to function expression statements
-        if (funcExprStmNames != null) {
-            int N = funcExprStmNames.size();
-            for (int i = 0; i != N; ++i) {
-                String name = (String)funcExprStmNames.get(i);
-                scriptOrFn.removeParameterOrVar(name);
-            }
-        }
     }
 
     private Object statements(TokenStream ts)
@@ -1492,11 +1465,11 @@ class Parser {
 
  */
     private void sourceAdd(char c) {
-        if (fn_sourceTop == sourceBuffer.length) {
-            increaseSourceCapacity(fn_sourceTop + 1);
+        if (sourceTop == sourceBuffer.length) {
+            increaseSourceCapacity(sourceTop + 1);
         }
-        sourceBuffer[fn_sourceTop] = c;
-        ++fn_sourceTop;
+        sourceBuffer[sourceTop] = c;
+        ++sourceTop;
     }
 
     private void sourceAddString(int type, String str) {
@@ -1510,20 +1483,20 @@ class Parser {
         if (L >= 0x8000) {
             lengthEncodingSize = 2;
         }
-        int nextTop = fn_sourceTop + lengthEncodingSize + L;
+        int nextTop = sourceTop + lengthEncodingSize + L;
         if (nextTop > sourceBuffer.length) {
             increaseSourceCapacity(nextTop);
         }
         if (L >= 0x8000) {
             // Use 2 chars to encode strings exceeding 32K, were the highest
             // bit in the first char indicates presence of the next byte
-            sourceBuffer[fn_sourceTop] = (char)(0x8000 | (L >>> 16));
-            ++fn_sourceTop;
+            sourceBuffer[sourceTop] = (char)(0x8000 | (L >>> 16));
+            ++sourceTop;
         }
-        sourceBuffer[fn_sourceTop] = (char)L;
-        ++fn_sourceTop;
-        str.getChars(0, L, sourceBuffer, fn_sourceTop);
-        fn_sourceTop = nextTop;
+        sourceBuffer[sourceTop] = (char)L;
+        ++sourceTop;
+        str.getChars(0, L, sourceBuffer, sourceTop);
+        sourceTop = nextTop;
     }
 
     private void sourceAddNumber(double n) {
@@ -1586,13 +1559,13 @@ class Parser {
             newCapacity = minimalCapacity;
         }
         char[] tmp = new char[newCapacity];
-        System.arraycopy(sourceBuffer, 0, tmp, 0, fn_sourceTop);
+        System.arraycopy(sourceBuffer, 0, tmp, 0, sourceTop);
         sourceBuffer = tmp;
     }
 
     private String sourceToString(int offset) {
-        if (offset < 0 || fn_sourceTop < offset) Context.codeBug();
-        return new String(sourceBuffer, offset, fn_sourceTop - offset);
+        if (offset < 0 || sourceTop < offset) Context.codeBug();
+        return new String(sourceBuffer, offset, sourceTop - offset);
     }
 
     /**
@@ -2300,14 +2273,9 @@ class Parser {
 
     private char[] sourceBuffer = new char[128];
 
-// fn_ prefix means per-function data that should be reset/restored in function
-
-// Per function source buffer top: nested functions sources are not
-// included in parent.
-    private int fn_sourceTop;
-
-// Nested function number
-    private ObjArray fn_funcExprStmNames;
+// Per script/function source buffer top: parent source does not include a
+// nested functions source and uses function index as a reference instead.
+    private int sourceTop;
 
     private ScriptOrFnNode currentScriptOrFn;
 

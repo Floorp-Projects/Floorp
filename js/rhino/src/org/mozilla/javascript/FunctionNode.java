@@ -49,8 +49,6 @@ public class FunctionNode extends ScriptOrFnNode {
         return functionName;
     }
 
-    protected void markVariableTableReady() { }
-
     public boolean requiresActivation() {
         return itsNeedsActivation;
     }
@@ -96,6 +94,57 @@ public class FunctionNode extends ScriptOrFnNode {
 
     public int getParameterCount() {
         return getVariableTable().getParameterCount();
+    }
+
+    protected void finishParsing(IRFactory irFactory) {
+        super.finishParsing(irFactory);
+        int functionCount = getFunctionCount();
+        if (functionCount != 0) {
+            for (int i = 0; i != functionCount; ++i) {
+                FunctionNode fn = getFunctionNode(i);
+
+                // Nested functions must check their 'this' value to insure
+                // it is not an activation object: see 10.1.6 Activation Object
+                fn.setCheckThis(true);
+
+                // nested function expression statements overrides var
+                if (fn.getFunctionType() == FUNCTION_EXPRESSION_STATEMENT) {
+                    String name = fn.getFunctionName();
+                    if (name != null && name.length() != 0) {
+                        removeParameterOrVar(name);
+                    }
+                }
+            }
+
+            // Functions containing other functions require activation objects
+            setRequiresActivation(true);
+        }
+
+        Node stmts = getLastChild();
+        if (getFunctionType() == FUNCTION_EXPRESSION) {
+            String name = getFunctionName();
+            if (name != null && name.length() != 0 && !hasParameterOrVar(name))
+            {
+                // A function expression needs to have its name as a
+                // variable (if it isn't already allocated as a variable).
+                // See ECMA Ch. 13.  We add code to the beginning of the
+                // function to initialize a local variable of the
+                // function's name to the function value.
+                addVar(name);
+                Node setFn = new Node(TokenStream.POP,
+                                new Node(TokenStream.SETVAR,
+                                    Node.newString(name),
+                                    new Node(TokenStream.PRIMARY,
+                                             TokenStream.THISFN)));
+                stmts.addChildrenToFront(setFn);
+            }
+        }
+
+        // Add return to end if needed.
+        Node lastStmt = stmts.getLastChild();
+        if (lastStmt == null || lastStmt.getType() != TokenStream.RETURN) {
+            stmts.addChildToBack(new Node(TokenStream.RETURN));
+        }
     }
 
     protected boolean itsNeedsActivation;

@@ -43,7 +43,7 @@ public class ScriptOrFnNode extends Node {
 
     public final VariableTable getVariableTable() {
         if (variableTable == null) { variableTable = new VariableTable(); }
-        return variableTable; 
+        return variableTable;
     }
 
     public final String getSourceName() { return sourceName; }
@@ -121,7 +121,7 @@ public class ScriptOrFnNode extends Node {
         regexps.add(flags);
         return regexps.size() / 2 - 1;
     }
-    
+
     public final boolean hasParameterOrVar(String name) {
         if (variableTable == null) { return false; }
         return variableTable.hasVariable(name);
@@ -147,6 +147,8 @@ public class ScriptOrFnNode extends Node {
     public final void incrementLocalCount() {
         ++localCount;
     }
+
+    protected void finishParsing(IRFactory irFactory) { }
 
     private String encodedSource;
     private String originalSource;

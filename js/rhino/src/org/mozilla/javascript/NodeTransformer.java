@@ -63,38 +63,6 @@ public class NodeTransformer {
         loops = new ObjArray();
         loopEnds = new ObjArray();
         inFunction = tree.getType() == TokenStream.FUNCTION;
-        VariableTable vars = tree.getVariableTable();
-        if (inFunction) {
-            Node stmts = tree.getLastChild();
-            FunctionNode fn = (FunctionNode)tree;
-            if (fn.getFunctionType() == FunctionNode.FUNCTION_EXPRESSION) {
-                String name = fn.getFunctionName();
-                if (name != null && name.length() != 0
-                    && !vars.hasVariable(name))
-                {
-                    // A function expression needs to have its name as a
-                    // variable (if it isn't already allocated as a variable).
-                    // See ECMA Ch. 13.  We add code to the beginning of the
-                    // function to initialize a local variable of the
-                    // function's name to the function value.
-                    vars.addLocal(name);
-                    Node setFn = new Node(TokenStream.POP,
-                                    new Node(TokenStream.SETVAR,
-                                        Node.newString(name),
-                                        new Node(TokenStream.PRIMARY,
-                                                 TokenStream.THISFN)));
-                    stmts.addChildrenToFront(setFn);
-                }
-            }
-            // Add return to end if needed.
-            Node lastStmt = stmts.getLastChild();
-            if (lastStmt == null ||
-                lastStmt.getType() != TokenStream.RETURN)
-            {
-                stmts.addChildToBack(new Node(TokenStream.RETURN));
-            }
-            fn.markVariableTableReady();
-        }
 
         // to save against upchecks if no finally blocks are used.
         boolean hasFinally = false;
@@ -111,16 +79,6 @@ public class NodeTransformer {
                 if (node != tree) {
                     int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
                     FunctionNode fnNode = tree.getFunctionNode(fnIndex);
-                    if (inFunction) {
-                        // Functions containing other functions require
-                        //  activation objects
-                        ((FunctionNode) tree).setRequiresActivation(true);
-
-                        // Nested functions must check their 'this' value to
-                        //  insure it is not an activation object:
-                        //  see 10.1.6 Activation Object
-                        fnNode.setCheckThis(true);
-                    }
                     NodeTransformer inner = newInstance();
                     fnNode = (FunctionNode)inner.transform(fnNode);
                     tree.replaceFunctionNode(fnIndex, fnNode);
@@ -431,7 +389,7 @@ public class NodeTransformer {
                     // use of "arguments" requires an activation object.
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }
-                if (vars.hasVariable(name)) {
+                if (tree.hasParameterOrVar(name)) {
                     if (type == TokenStream.SETNAME) {
                         node.setType(TokenStream.SETVAR);
                         bind.setType(TokenStream.STRING);
@@ -471,7 +429,7 @@ public class NodeTransformer {
                     // Use of "arguments" requires an activation object.
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }
-                if (vars.hasVariable(name)) {
+                if (tree.hasParameterOrVar(name)) {
                     node.setType(TokenStream.GETVAR);
                 }
                 break;
@@ -512,9 +470,10 @@ public class NodeTransformer {
         }
         boolean addGetThis = false;
         if (left.getType() == TokenStream.NAME) {
-            VariableTable vars = tree.getVariableTable();
             String name = left.getString();
-            if (inFunction && vars.hasVariable(name) && !inWithStatement()) {
+            if (inFunction && tree.hasParameterOrVar(name)
+                && !inWithStatement())
+            {
                 // call to a var. Transform to Call(GetVar("a"), b, c)
                 left.setType(TokenStream.GETVAR);
                 // fall through to code to add GetParent

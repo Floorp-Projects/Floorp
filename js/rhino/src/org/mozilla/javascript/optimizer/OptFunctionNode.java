@@ -46,8 +46,8 @@ class OptFunctionNode extends FunctionNode {
         itsClassName = className;
     }
 
-    protected void markVariableTableReady() {
-        super.markVariableTableReady();
+    protected void finishParsing(IRFactory irFactory) {
+        super.finishParsing(irFactory);
         VariableTable vars = getVariableTable();
         int N = vars.size();
         int parameterCount = getParameterCount();
