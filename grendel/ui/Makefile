@@ -53,6 +53,10 @@ SRCS=						\
 	UIFactory.java				\
 	UnifiedMessageDisplayManager.java	\
 	Util.java				\
+	XMLPageBuilder.java			\
+	XMLMenuBuilder.java			\
+	XMLWidgetBuilder.java			\
+	PageModel.java				\
 	$(NULL)
 
 include ../rules.mk

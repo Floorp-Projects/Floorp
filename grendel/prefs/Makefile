@@ -18,13 +18,13 @@
 
 SRCS=					\
 	MailServerPrefs.java		\
-	# MailServerPrefsEditor.java	\
 	Prefs.java			\
 	PrefsBeanInfo.java		\
 	UIPrefs.java			\
 	UIPrefsEditor.java		\
 	UserPrefs.java			\
 	UserPrefsEditor.java		\
+	MailServerPrefsEditor.java	\
 	$(NULL)
 
 include ../rules.mk
