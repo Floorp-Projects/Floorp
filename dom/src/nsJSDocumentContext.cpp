@@ -123,15 +123,15 @@ SetDocumentContextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case DOCUMENTCONTEXT_DOCUMENT:
       {
         nsIDOMDocument* prop;
-        if (JSVAL_IS_OBJECT(*vp)) {
+        if (JSVAL_IS_NULL(*vp)) {
+          prop = nsnull;
+        }
+        else if (JSVAL_IS_OBJECT(*vp)) {
           JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
           nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
           if (NS_OK != supports->QueryInterface(kIDocumentIID, (void **)&prop)) {
             return JS_FALSE;
           }
-        }
-        else if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
         }
         else {
           return JS_FALSE;

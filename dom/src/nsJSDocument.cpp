@@ -206,15 +206,15 @@ SetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case DOCUMENT_DOCUMENTTYPE:
       {
         nsIDOMNode* prop;
-        if (JSVAL_IS_OBJECT(*vp)) {
+        if (JSVAL_IS_NULL(*vp)) {
+          prop = nsnull;
+        }
+        else if (JSVAL_IS_OBJECT(*vp)) {
           JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
           nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
           if (NS_OK != supports->QueryInterface(kINodeIID, (void **)&prop)) {
             return JS_FALSE;
           }
-        }
-        else if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
         }
         else {
           return JS_FALSE;
@@ -227,15 +227,15 @@ SetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case DOCUMENT_DOCUMENTELEMENT:
       {
         nsIDOMElement* prop;
-        if (JSVAL_IS_OBJECT(*vp)) {
+        if (JSVAL_IS_NULL(*vp)) {
+          prop = nsnull;
+        }
+        else if (JSVAL_IS_OBJECT(*vp)) {
           JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
           nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
           if (NS_OK != supports->QueryInterface(kIElementIID, (void **)&prop)) {
             return JS_FALSE;
           }
-        }
-        else if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
         }
         else {
           return JS_FALSE;
@@ -248,15 +248,15 @@ SetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case DOCUMENT_DOCUMENTCONTEXT:
       {
         nsIDOMDocumentContext* prop;
-        if (JSVAL_IS_OBJECT(*vp)) {
+        if (JSVAL_IS_NULL(*vp)) {
+          prop = nsnull;
+        }
+        else if (JSVAL_IS_OBJECT(*vp)) {
           JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
           nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
           if (NS_OK != supports->QueryInterface(kIDocumentContextIID, (void **)&prop)) {
             return JS_FALSE;
           }
-        }
-        else if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
         }
         else {
           return JS_FALSE;
@@ -421,7 +421,10 @@ DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
       b0.SetString("");   // Should this really be null?? 
     }
 
-    if (JSVAL_IS_OBJECT(argv[1])) {
+    if (JSVAL_IS_NULL(argv[1])){
+      b1 = nsnull;
+    }
+    else if (JSVAL_IS_OBJECT(argv[1])) {
       nsISupports *supports1 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[1]));
       NS_ASSERTION(nsnull != supports1, "null pointer");
 
@@ -429,9 +432,6 @@ DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
           (NS_OK != supports1->QueryInterface(kIAttributeListIID, (void **)(b1.Query())))) {
         return JS_FALSE;
       }
-    }
-    else if (JSVAL_IS_NULL(argv[1])){
-      b1 = nsnull;
     }
     else {
       return JS_FALSE;
@@ -675,7 +675,10 @@ DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
       b0.SetString("");   // Should this really be null?? 
     }
 
-    if (JSVAL_IS_OBJECT(argv[1])) {
+    if (JSVAL_IS_NULL(argv[1])){
+      b1 = nsnull;
+    }
+    else if (JSVAL_IS_OBJECT(argv[1])) {
       nsISupports *supports1 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[1]));
       NS_ASSERTION(nsnull != supports1, "null pointer");
 
@@ -683,9 +686,6 @@ DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
           (NS_OK != supports1->QueryInterface(kINodeIID, (void **)(b1.Query())))) {
         return JS_FALSE;
       }
-    }
-    else if (JSVAL_IS_NULL(argv[1])){
-      b1 = nsnull;
     }
     else {
       return JS_FALSE;
@@ -788,7 +788,10 @@ DocumentCreateTreeIterator(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
   if (argc >= 1) {
 
-    if (JSVAL_IS_OBJECT(argv[0])) {
+    if (JSVAL_IS_NULL(argv[0])){
+      b0 = nsnull;
+    }
+    else if (JSVAL_IS_OBJECT(argv[0])) {
       nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
       NS_ASSERTION(nsnull != supports0, "null pointer");
 
@@ -796,9 +799,6 @@ DocumentCreateTreeIterator(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
           (NS_OK != supports0->QueryInterface(kINodeIID, (void **)(b0.Query())))) {
         return JS_FALSE;
       }
-    }
-    else if (JSVAL_IS_NULL(argv[0])){
-      b0 = nsnull;
     }
     else {
       return JS_FALSE;
