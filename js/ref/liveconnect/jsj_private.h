@@ -106,6 +106,7 @@ typedef struct JavaMemberDescriptor {
     JavaFieldSpec *         field;      /* field with the given name, if any */
     JavaMethodSpec *        methods;    /* Overloaded methods which share the same name, if any */
     JavaMemberDescriptor *  next;       /* next descriptor in same defining class */
+    JSObject *              invoke_func_obj; /* If non-null, JSFunction obj to invoke method */
 } JavaMemberDescriptor;
 
 /* This is the native portion of a reflected Java class */
@@ -138,7 +139,6 @@ typedef struct JavaMemberVal {
 typedef struct {
     jobject                 java_obj;           /* Opaque JVM ref to Java object */
     JavaClassDescriptor *   class_descriptor;   /* Java class info */
-    JavaMemberVal *         members;            /* Reflected methods and fields */
 } JavaObjectWrapper;
 
 /* These are definitions of the Java class/method/field modifier bits.

@@ -279,6 +279,9 @@ destroy_java_member_descriptor(JSContext *cx, JNIEnv *jEnv, JavaMemberDescriptor
         jsj_DestroyMethodSpec(cx, jEnv, method);
         method = next_method;
     }
+
+    if (member_descriptor->invoke_func_obj)
+        JS_RemoveRoot(cx, &member_descriptor->invoke_func_obj);
 }
 
 static void
@@ -357,9 +360,14 @@ enumerate_remove_java_class(JSJHashEntry *he, PRIntn i, void *arg)
 {
     JNIEnv *jEnv = (JNIEnv*)arg;
     jclass java_class;
+    JavaClassDescriptor *class_descriptor;
 
-    java_class = (jclass)he->key;
+    class_descriptor = (JavaClassDescriptor*)he->value;
+
+    java_class = class_descriptor->java_class;
     (*jEnv)->DeleteGlobalRef(jEnv, java_class);
+    class_descriptor->java_class = NULL;
+
     return HT_ENUMERATE_REMOVE;
 }
 
