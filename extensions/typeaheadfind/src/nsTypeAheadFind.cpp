@@ -286,8 +286,7 @@ nsTypeAheadFind::PrefsReset(const char* aPrefName, void* instance_data)
       }
       else {
         progress->AddProgressListener(typeAheadFind,
-                                      nsIWebProgress::NOTIFY_STATE_DOCUMENT |
-                                      nsIWebProgress::NOTIFY_STATE_WINDOW);
+                                      nsIWebProgress::NOTIFY_STATE_DOCUMENT);
         // Initialize string bundle
         nsCOMPtr<nsIStringBundleService> stringBundleService =
           do_GetService(kStringBundleServiceCID);
@@ -554,11 +553,6 @@ nsTypeAheadFind::Blur(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 nsTypeAheadFind::HandleEvent(nsIDOMEvent* aEvent)
 {
-  nsAutoString eventName;
-  aEvent->GetType(eventName);
-  if (eventName.Equals(NS_LITERAL_STRING("DOMWindowDestroyed")))
-    printf("\nDOMWindowClose!");
-
   return NS_OK; 
 }
 
@@ -1804,6 +1798,7 @@ void
 nsTypeAheadFind::DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent, 
                                PRBool aClearStatus)
 {
+  // pres shell -> pres context -> container -> tree item -> tree owner -> browser chrome
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mFocusedWeakShell));
   if (!presShell)
     return;

@@ -1,0 +1,4 @@
+typeaheadfind.jar:
+    locale/en-US/typeaheadfind/contents.rdf                               (locale/en-US/contents.rdf)
+    locale/en-US/typeaheadfind/typeaheadfind.properties                   (locale/en-US/typeaheadfind.properties)
+
