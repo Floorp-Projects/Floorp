@@ -5256,12 +5256,8 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 				 * again.  But only if we didn't have any successful protocol
 				 * dialog at all.
                  */
-                if (m_nntpServer)
-                    m_nntpServer->RemoveConnection(this);
-				m_nextState = NEWS_FREE;
-				break;
+				return CloseConnection();
             case NEWS_FREE:
-                mailnewsurl->SetUrlState(PR_FALSE, NS_OK);
                 m_lastActiveTimeStamp = PR_Now(); // remmeber when we last used this connection.
                 return CleanupAfterRunningUrl();
 			case NEWS_FINISHED:
@@ -5346,7 +5342,10 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
   {
   	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
     if (mailnewsurl)
+    {
+      mailnewsurl->SetUrlState(PR_FALSE, NS_OK);
       mailnewsurl->SetMemCacheEntry(nsnull);
+    }
   }
 
   PR_FREEIF(m_path);
