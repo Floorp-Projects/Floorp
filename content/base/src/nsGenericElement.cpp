@@ -632,9 +632,9 @@ nsGenericElement::SetPrefix(const nsAReadableString& aPrefix)
 }
 
 nsresult
-nsGenericElement::InternalSupports(const nsAReadableString& aFeature,
-                                   const nsAReadableString& aVersion,
-                                   PRBool* aReturn)
+nsGenericElement::InternalIsSupported(const nsAReadableString& aFeature,
+                                      const nsAReadableString& aVersion,
+                                      PRBool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = PR_FALSE;
@@ -665,10 +665,24 @@ nsGenericElement::InternalSupports(const nsAReadableString& aFeature,
 }
 
 nsresult
-nsGenericElement::Supports(const nsAReadableString& aFeature, const nsAReadableString& aVersion,
-                           PRBool* aReturn)
+nsGenericElement::IsSupported(const nsAReadableString& aFeature,
+                              const nsAReadableString& aVersion,
+                              PRBool* aReturn)
 {
-  return InternalSupports(aFeature, aVersion, aReturn);
+  return InternalIsSupported(aFeature, aVersion, aReturn);
+}
+
+nsresult
+nsGenericElement::HasAttributes(PRBool* aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aReturn);
+  PRInt32 attrCount = 0;
+
+  mContent->GetAttributeCount(attrCount);
+
+  *aReturn = !!attrCount;
+
+  return NS_OK;
 }
 
 nsresult

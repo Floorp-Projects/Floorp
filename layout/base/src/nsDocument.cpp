@@ -421,7 +421,7 @@ nsDOMImplementation::HasFeature(const nsAReadableString& aFeature,
                                 const nsAReadableString& aVersion, 
                                 PRBool* aReturn)
 {
-  return nsGenericElement::InternalSupports(aFeature, aVersion, aReturn);
+  return nsGenericElement::InternalIsSupported(aFeature, aVersion, aReturn);
 }
 
 NS_IMETHODIMP
@@ -2594,6 +2594,16 @@ nsDocument::HasChildNodes(PRBool* aHasChildNodes)
 }
 
 NS_IMETHODIMP    
+nsDocument::HasAttributes(PRBool* aHasAttributes)
+{
+  NS_ENSURE_ARG(aHasAttributes);
+
+  *aHasAttributes = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
 nsDocument::GetFirstChild(nsIDOMNode** aFirstChild)
 {
   nsresult result = NS_OK;
@@ -2968,10 +2978,11 @@ nsDocument::Normalize()
 }
 
 NS_IMETHODIMP
-nsDocument::Supports(const nsAReadableString& aFeature, const nsAReadableString& aVersion,
-                     PRBool* aReturn)
+nsDocument::IsSupported(const nsAReadableString& aFeature,
+                        const nsAReadableString& aVersion,
+                        PRBool* aReturn)
 {
-  return nsGenericElement::InternalSupports(aFeature, aVersion, aReturn);
+  return nsGenericElement::InternalIsSupported(aFeature, aVersion, aReturn);
 }
 
 NS_IMETHODIMP    

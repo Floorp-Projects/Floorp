@@ -1067,6 +1067,21 @@ nsXULElement::HasChildNodes(PRBool* aReturn)
 
 
 NS_IMETHODIMP
+nsXULElement::HasAttributes(PRBool* aReturn)
+{
+    NS_ENSURE_ARG_POINTER(aReturn);
+
+    PRInt32 attrCount = 0;
+
+    GetAttributeCount(attrCount);
+
+    *aReturn = (attrCount > 0);
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
     nsresult rv;
@@ -1164,9 +1179,9 @@ nsXULElement::Normalize()
 
 
 NS_IMETHODIMP
-nsXULElement::Supports(const nsAReadableString& aFeature,
-                       const nsAReadableString& aVersion,
-                       PRBool* aReturn)
+nsXULElement::IsSupported(const nsAReadableString& aFeature,
+                          const nsAReadableString& aVersion,
+                          PRBool* aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;

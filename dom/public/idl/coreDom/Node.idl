@@ -1,4 +1,4 @@
- interface Node {
+interface Node {
  /* IID: { 0xa6cf907c, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
 
@@ -41,11 +41,11 @@
                                          raises(DOMException);
    boolean                   hasChildNodes();
    Node                      cloneNode(in boolean deep);
-   // Introduced in DOM Level 2:
+   // Modified in DOM Level 2:
    void                      normalize();
    // Introduced in DOM Level 2:
-   boolean                   supports(in DOMString feature, 
-                                      in DOMString version);
+   boolean                   isSupported(in DOMString feature, 
+                                        in DOMString version);
    // Introduced in DOM Level 2:
    readonly attribute DOMString        namespaceURI;
    // Introduced in DOM Level 2:
@@ -54,6 +54,8 @@
 
    // Introduced in DOM Level 2:
    readonly attribute DOMString        localName;
+   // Introduced in DOM Level 2:
+   boolean            hasAttributes();
 };
 
  interface EventTarget {

@@ -3514,6 +3514,17 @@ nsXULDocument::HasChildNodes(PRBool* aHasChildNodes)
 
 
 NS_IMETHODIMP
+nsXULDocument::HasAttributes(PRBool* aHasAttributes)
+{
+    NS_ENSURE_ARG_POINTER(aHasAttributes);
+
+    *aHasAttributes = PR_FALSE;
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsXULDocument::GetFirstChild(nsIDOMNode** aFirstChild)
 {
     NS_PRECONDITION(aFirstChild != nsnull, "null ptr");
@@ -3676,9 +3687,9 @@ nsXULDocument::Normalize()
 
 
 NS_IMETHODIMP
-nsXULDocument::Supports(const nsAReadableString& aFeature,
-                        const nsAReadableString& aVersion,
-                        PRBool* aReturn)
+nsXULDocument::IsSupported(const nsAReadableString& aFeature,
+                           const nsAReadableString& aVersion,
+                           PRBool* aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;

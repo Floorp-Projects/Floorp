@@ -436,6 +436,14 @@ nsXULAttribute::HasChildNodes(PRBool* aReturn)
 }
 
 NS_IMETHODIMP
+nsXULAttribute::HasAttributes(PRBool* aReturn)
+{
+    NS_ENSURE_ARG_POINTER(aReturn);
+    *aReturn = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
     NS_NOTYETIMPLEMENTED("write me");
@@ -449,9 +457,9 @@ nsXULAttribute::Normalize()
 }
 
 NS_IMETHODIMP
-nsXULAttribute::Supports(const nsAReadableString& aFeature,
-                         const nsAReadableString& aVersion,
-                         PRBool* aReturn)
+nsXULAttribute::IsSupported(const nsAReadableString& aFeature,
+                            const nsAReadableString& aVersion,
+                            PRBool* aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;

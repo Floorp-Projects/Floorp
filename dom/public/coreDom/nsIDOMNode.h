@@ -99,7 +99,9 @@ public:
 
   NS_IMETHOD    Normalize()=0;
 
-  NS_IMETHOD    Supports(const nsAReadableString& aFeature, const nsAReadableString& aVersion, PRBool* aReturn)=0;
+  NS_IMETHOD    IsSupported(const nsAReadableString& aFeature, const nsAReadableString& aVersion, PRBool* aReturn)=0;
+
+  NS_IMETHOD    HasAttributes(PRBool* aReturn)=0;
 };
 
 
@@ -127,7 +129,8 @@ public:
   NS_IMETHOD    HasChildNodes(PRBool* aReturn);  \
   NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn);  \
   NS_IMETHOD    Normalize();  \
-  NS_IMETHOD    Supports(const nsAReadableString& aFeature, const nsAReadableString& aVersion, PRBool* aReturn);  \
+  NS_IMETHOD    IsSupported(const nsAReadableString& aFeature, const nsAReadableString& aVersion, PRBool* aReturn);  \
+  NS_IMETHOD    HasAttributes(PRBool* aReturn);  \
 
 
 
@@ -155,7 +158,8 @@ public:
   NS_IMETHOD    HasChildNodes(PRBool* aReturn) { return _to HasChildNodes(aReturn); }  \
   NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn) { return _to CloneNode(aDeep, aReturn); }  \
   NS_IMETHOD    Normalize() { return _to Normalize(); }  \
-  NS_IMETHOD    Supports(const nsAReadableString& aFeature, const nsAReadableString& aVersion, PRBool* aReturn) { return _to Supports(aFeature, aVersion, aReturn); }  \
+  NS_IMETHOD    IsSupported(const nsAReadableString& aFeature, const nsAReadableString& aVersion, PRBool* aReturn) { return _to IsSupported(aFeature, aVersion, aReturn); }  \
+  NS_IMETHOD    HasAttributes(PRBool* aReturn) { return _to HasAttributes(aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitNodeClass(nsIScriptContext *aContext, void **aPrototype);

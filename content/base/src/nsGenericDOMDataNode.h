@@ -69,6 +69,11 @@ struct nsGenericDOMDataNode {
     *aHasChildNodes = PR_FALSE;
     return NS_OK;
   }
+  nsresult    HasAttributes(PRBool* aHasAttributes) {
+    NS_ENSURE_ARG_POINTER(aHasAttributes);
+    *aHasAttributes = PR_FALSE;
+    return NS_OK;
+  }
   nsresult    GetFirstChild(nsIDOMNode** aFirstChild) {
     NS_ENSURE_ARG_POINTER(aFirstChild);
     *aFirstChild = nsnull;
@@ -116,8 +121,9 @@ struct nsGenericDOMDataNode {
   nsresult    GetPrefix(nsAWritableString& aPrefix);
   nsresult    SetPrefix(const nsAReadableString& aPrefix);
   nsresult    Normalize();
-  nsresult    Supports(const nsAReadableString& aFeature, const nsAReadableString& aVersion,
-                       PRBool* aReturn);
+  nsresult    IsSupported(const nsAReadableString& aFeature,
+                          const nsAReadableString& aVersion,
+                          PRBool* aReturn);
 
   // Implementation for nsIDOMCharacterData
   nsresult    GetData(nsAWritableString& aData);
@@ -285,14 +291,14 @@ struct nsGenericDOMDataNode {
  *       NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
  */
 #define NS_IMPL_IDOMNODE_USING_GENERIC_DOM_DATA(_g)                     \
-  NS_IMETHOD GetNodeName(nsAWritableString& aNodeName);                          \
-  NS_IMETHOD GetLocalName(nsAWritableString& aLocalName) {                       \
+  NS_IMETHOD GetNodeName(nsAWritableString& aNodeName);                 \
+  NS_IMETHOD GetLocalName(nsAWritableString& aLocalName) {              \
     return GetNodeName(aLocalName);                                     \
   }                                                                     \
-  NS_IMETHOD GetNodeValue(nsAWritableString& aNodeValue) {                       \
+  NS_IMETHOD GetNodeValue(nsAWritableString& aNodeValue) {              \
     return _g.GetNodeValue(aNodeValue);                                 \
   }                                                                     \
-  NS_IMETHOD SetNodeValue(const nsAReadableString& aNodeValue) {                 \
+  NS_IMETHOD SetNodeValue(const nsAReadableString& aNodeValue) {        \
     return _g.SetNodeValue(this, aNodeValue);                           \
   }                                                                     \
   NS_IMETHOD GetNodeType(PRUint16* aNodeType);                          \
@@ -304,6 +310,9 @@ struct nsGenericDOMDataNode {
   }                                                                     \
   NS_IMETHOD HasChildNodes(PRBool* aHasChildNodes) {                    \
     return _g.HasChildNodes(aHasChildNodes);                            \
+  }                                                                     \
+  NS_IMETHOD HasAttributes(PRBool* aHasAttributes) {                    \
+    return _g.HasAttributes(aHasAttributes);                            \
   }                                                                     \
   NS_IMETHOD GetFirstChild(nsIDOMNode** aFirstChild) {                  \
     return _g.GetFirstChild(aFirstChild);                               \
@@ -337,29 +346,30 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument) {        \
     return _g.GetOwnerDocument(aOwnerDocument);                         \
   }                                                                     \
-  NS_IMETHOD GetNamespaceURI(nsAWritableString& aNamespaceURI) {                 \
+  NS_IMETHOD GetNamespaceURI(nsAWritableString& aNamespaceURI) {        \
     return _g.GetNamespaceURI(aNamespaceURI);                           \
   }                                                                     \
-  NS_IMETHOD GetPrefix(nsAWritableString& aPrefix) {                             \
+  NS_IMETHOD GetPrefix(nsAWritableString& aPrefix) {                    \
     return _g.GetPrefix(aPrefix);                                       \
   }                                                                     \
-  NS_IMETHOD SetPrefix(const nsAReadableString& aPrefix) {                       \
+  NS_IMETHOD SetPrefix(const nsAReadableString& aPrefix) {              \
     return _g.SetPrefix(aPrefix);                                       \
   }                                                                     \
   NS_IMETHOD Normalize() {                                              \
     return NS_OK;                                                       \
   }                                                                     \
-  NS_IMETHOD Supports(const nsAReadableString& aFeature, const nsAReadableString& aVersion,\
+  NS_IMETHOD IsSupported(const nsAReadableString& aFeature,             \
+                      const nsAReadableString& aVersion,                \
                       PRBool* aReturn) {                                \
-    return _g.Supports(aFeature, aVersion, aReturn);                    \
+    return _g.IsSupported(aFeature, aVersion, aReturn);                 \
   }                                                                     \
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
-#define NS_IMPL_IDOMCHARACTERDATA_USING_GENERIC_DOM_DATA(_g)                         \
-  NS_IMETHOD GetData(nsAWritableString& aData) {                                     \
+#define NS_IMPL_IDOMCHARACTERDATA_USING_GENERIC_DOM_DATA(_g)                \
+  NS_IMETHOD GetData(nsAWritableString& aData) {                            \
     return _g.GetData(aData);                                               \
   }                                                                         \
-  NS_IMETHOD SetData(const nsAReadableString& aData) {                               \
+  NS_IMETHOD SetData(const nsAReadableString& aData) {                      \
     return _g.SetData(this, aData);                                         \
   }                                                                         \
   NS_IMETHOD GetLength(PRUint32* aLength) {                                 \
@@ -368,10 +378,10 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD SubstringData(PRUint32 aStart, PRUint32 aEnd, nsAWritableString& aReturn) { \
     return _g.SubstringData(aStart, aEnd, aReturn);                         \
   }                                                                         \
-  NS_IMETHOD AppendData(const nsAReadableString& aData) {                            \
+  NS_IMETHOD AppendData(const nsAReadableString& aData) {                   \
     return _g.AppendData(this, aData);                                      \
   }                                                                         \
-  NS_IMETHOD InsertData(PRUint32 aOffset, const nsAReadableString& aData) {          \
+  NS_IMETHOD InsertData(PRUint32 aOffset, const nsAReadableString& aData) { \
     return _g.InsertData(this, aOffset, aData);                             \
   }                                                                         \
   NS_IMETHOD DeleteData(PRUint32 aOffset, PRUint32 aCount) {                \
