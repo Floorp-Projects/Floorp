@@ -468,6 +468,10 @@ extern "C" NS_GFX_(double) NS_DisplayGammaValue(void)
 extern "C" NS_GFX_(void) NS_InitializeGamma(void)
 {
   nsresult result;
+  static PRBool gammaInitialized = PR_FALSE;
+
+  if (gammaInitialized)
+    return;
 
   nsCOMPtr<nsIScreenManager> screenmgr =
     do_GetService("@mozilla.org/gfx/screenmanager;1", &result);
@@ -484,6 +488,7 @@ extern "C" NS_GFX_(void) NS_InitializeGamma(void)
     nsGammaRamp[i]        = pow(double(i)/255.0, gamma)   * 255.0 + 0.5;
     nsInverseGammaRamp[i] = pow(double(i)/255.0, 1/gamma) * 255.0 + 0.5;
   }
+  gammaInitialized = PR_TRUE;
 }
 
 // Function to convert RGB color space into the HSV colorspace
