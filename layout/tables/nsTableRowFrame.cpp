@@ -1265,6 +1265,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
     // If any column widths have to change due to this, rebalance column widths.
     // XXX need to calculate this, but for now just do it
     aReflowState.tableFrame->InvalidateColumnWidths();  
+    aReflowState.tableFrame->InvalidateColumnCache();  
     break;
   }
 
