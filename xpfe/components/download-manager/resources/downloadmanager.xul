@@ -31,7 +31,7 @@
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window [
-<!ENTITY % downloadManagerDTD SYSTEM "chrome://communicator/locale/downloadmanager/downloadmanager.ent">
+<!ENTITY % downloadManagerDTD SYSTEM "chrome://communicator/locale/downloadmanager/downloadmanager.dtd">
 %downloadManagerDTD;
 <!ENTITY % downloadProgressDTD SYSTEM "chrome://global/locale/nsProgressDialog.dtd" >
 %downloadProgressDTD;
