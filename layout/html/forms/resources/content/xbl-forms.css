@@ -50,6 +50,7 @@ select, select[size="1"] {
   display: -moz-inline-box;
   -moz-box-orient: horizontal;
   -moz-user-focus: normal;
+  font: list;
 }
 
 select[size] > option {
