@@ -762,7 +762,7 @@ nsSHistory::CompareFrames(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsID
   }
 
   /* The root entries are the same, so compare any child frames */
-  PRInt32  cnt=0, pcnt=0, ncnt=0, dsCount=0;
+  PRInt32 pcnt=0, ncnt=0, dsCount=0;
   nsCOMPtr<nsISHContainer>  prevContainer(do_QueryInterface(aPrevEntry));
   nsCOMPtr<nsISHContainer>  nextContainer(do_QueryInterface(aNextEntry));
   nsCOMPtr<nsIDocShellTreeNode> dsTreeNode(do_QueryInterface(aParent));
