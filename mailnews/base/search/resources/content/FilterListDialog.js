@@ -149,7 +149,7 @@ function onEditFilter() {
 
     var args = {filter: selectedFilter};
     
-    window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal,resizable", args);
+    window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal,titlebar,resizable", args);
 
     if (args.refresh)
         refreshFilterList();
@@ -160,7 +160,7 @@ function onNewFilter()
     var curFilterList = currentFilterList();
     var args = {filterList: curFilterList };
     
-  window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal,resizable", args);
+  window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal,titlebar,resizable", args);
 
   if (args.refresh) refreshFilterList();
   

@@ -11,7 +11,7 @@
       {
       	window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
       					  "",
-    	  				  "chrome,resizeable=no,modal",
+    	  				  "chrome,resizeable=no,titlebar,modal",
     		  			  {selectedAB:selectedAB});
       }
 

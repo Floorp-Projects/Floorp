@@ -118,7 +118,7 @@ function MsgAccountWizard()
 function msgOpenAccountWizard()
 {
     window.openDialog("chrome://messenger/content/AccountWizard.xul",
-                      "AccountWizard", "chrome,modal,resizable");
+                      "AccountWizard", "chrome,modal,titlebar,resizable");
 }
 
 function MsgAccountManager()
@@ -130,6 +130,6 @@ function MsgAccountManager()
     } catch (ex) { /* functions might not be defined */}
     
     window.openDialog("chrome://messenger/content/AccountManager.xul",
-                      "AccountManager", "chrome,modal,resizable",
+                      "AccountManager", "chrome,modal,titlebar,resizable",
                       { server: server });
 }

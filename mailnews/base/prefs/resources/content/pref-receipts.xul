@@ -16,7 +16,7 @@
     
     function doCustomize() 
     {
-    	var dialog = window.openDialog("chrome://messenger/content/custreceipt.xul","","modal=yes,chrome,resizable=no", 0);
+    	var dialog = window.openDialog("chrome://messenger/content/custreceipt.xul","","modal=yes,chrome,titlebar,resizable=no", 0);
     }
   ]]>  
   </script>

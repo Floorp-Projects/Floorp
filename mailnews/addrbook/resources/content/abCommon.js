@@ -539,7 +539,7 @@ function AbNewList()
 		
 	window.openDialog("chrome://messenger/content/addressbook/abMailListDialog.xul",
 					  "",
-					  "chrome,resizeable=no",
+					  "chrome,titlebar,resizeable=no",
 					  {selectedAB:selectedAB});
 }
 
@@ -548,6 +548,6 @@ function goEditListDialog(abURI, listURI)
 {
 	window.openDialog("chrome://messenger/content/addressbook/abEditListDialog.xul",
 					  "",
-					  "chrome,resizeable=no",
+					  "chrome,titlebar,resizeable=no",
 					  {abURI:abURI, listURI:listURI});
 }

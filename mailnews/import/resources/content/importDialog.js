@@ -170,7 +170,7 @@ function ImportDialogOKButton()
 							top.window.openDialog(
 								"chrome://messenger/content/importProgress.xul",
 								"",
-								"chrome,modal",
+								"chrome,modal,titlebar",
 								{windowTitle: GetBundleString( 'MailProgressTitle'),
 								 progressTitle: meterText,
 								 progressStatus: "",
@@ -213,7 +213,7 @@ function ImportDialogOKButton()
 							top.window.openDialog(
 								"chrome://messenger/content/importProgress.xul",
 								"",
-								"chrome,modal",
+								"chrome,modal,titlebar",
 								{windowTitle: titleText,
 								 progressTitle: meterText,
 								 progressStatus: "",
@@ -666,7 +666,7 @@ function ImportAddress( module, success, error) {
 			top.window.openDialog(
 				"chrome://messenger/content/fieldMapImport.xul",
 				"",
-				"chrome,modal",
+				"chrome,modal,titlebar",
 				{fieldMap: map,
 				 addInterface: addInterface,
 				 result: result});

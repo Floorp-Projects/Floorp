@@ -33,7 +33,7 @@
 	xmlns:html="http://www.w3.org/1999/xhtml"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	title="&bookmarks.windowtitle.label;"
-	onload="Init()" style="width: 25em;"
+	onload="Init()" style="width: 36em;"
 	class="dialog" orient="vertical">
  
 	<script language="Javascript" src="chrome://global/content/globalOverlay.js"></script>

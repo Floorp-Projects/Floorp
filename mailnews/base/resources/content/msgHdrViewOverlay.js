@@ -221,7 +221,7 @@ function AddNodeToAddressBook (emailAddressNode)
     var displayName = emailAddressNode.getAttribute("displayName");
 	  window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
 					  "",
-					  "chrome,resizeable=no", 
+					  "chrome,titlebar,resizeable=no", 
             {primaryEmail:primaryEmail, displayName:displayName });
   }
 }

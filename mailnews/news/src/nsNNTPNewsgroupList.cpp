@@ -256,7 +256,7 @@ openWindow(nsIMsgWindow *aMsgWindow, const char *chromeURL, nsIDialogParamBlock 
                                     "sss%ip",
                                     chromeURL,
                                     "_blank",
-                                    "chrome,modal",
+                                    "chrome,modal,titlebar",
                                     (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)), 
                                     (nsISupports*)ioParamBlock);
 

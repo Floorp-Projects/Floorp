@@ -116,7 +116,7 @@ function openImapAdvanced()
     dump("Opening dialog..\n");
     window.openDialog("chrome://messenger/content/am-imap-advanced.xul",
                       "_blank",
-                      "chrome,modal", imapServer);
+                      "chrome,modal,titlebar", imapServer);
 
     saveServerLocally(imapServer);
 }

@@ -153,7 +153,7 @@ function AbNewAddressBook()
 {
 	var dialog = window.openDialog("chrome://messenger/content/addressbook/abAddressBookNameDialog.xul",
 								   "",
-								   "chrome",
+								   "chrome,titlebar",
 								   {okCallback:AbCreateNewAddressBook});
 }
 

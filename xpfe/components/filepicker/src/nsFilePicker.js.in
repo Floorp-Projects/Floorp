@@ -164,7 +164,7 @@ nsFilePicker.prototype = {
     try {
       parent.openDialog("chrome://global/content/filepicker.xul",
                         "",
-                        "chrome,modal,resizeable=yes,dependent=yes",
+                        "chrome,modal,titlebar,resizeable=yes,dependent=yes",
                         o);
       this.mFile = o.retvals.file;
       lastDirectory = o.retvals.directory;

@@ -160,5 +160,5 @@ function setDisplayToDefaultFolder()
 function showLangDialog()
 {
   var selectedLanguage = document.getElementById("ProfileLocale").getAttribute("data");
-  var selectLang = window.openDialog("chrome://communicator/content/profile/selectLang.xul","","modal=yes,resizable=no",selectedLanguage);
+  var selectLang = window.openDialog("chrome://communicator/content/profile/selectLang.xul","","modal=yes,titlebar,resizable=no",selectedLanguage);
 }

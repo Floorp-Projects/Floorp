@@ -947,7 +947,7 @@ function GenericSendMessage( msgType )
                                   convertible:convert,
                                   abort:false};
                     window.openDialog("chrome://messenger/content/messengercompose/askSendFormat.xul",
-                                      "askSendFormatDialog", "chrome,modal,centerscreen",
+                                      "askSendFormatDialog", "chrome,modal,titlebar,centerscreen",
                                       result);
 					if (result.abort)
 						return;
@@ -1137,7 +1137,7 @@ function SelectAddress()
 	dump("toAddress: " + toAddress + "\n");
 	window.openDialog("chrome://messenger/content/addressbook/abSelectAddressesDialog.xul",
 					  "",
-					  "chrome,resizable,modal",
+					  "chrome,resizable,titlebar,modal",
 					  {composeWindow:top.window,
 					   msgCompFields:msgCompFields,
 					   toAddress:toAddress,

@@ -36,7 +36,7 @@ function onSave()
 function onAdvanced(event)
 {
     var args = {result: false};
-    window.openDialog('chrome://messenger/content/SmtpServerList.xul', 'smtp', 'modal,chrome', args);
+    window.openDialog('chrome://messenger/content/SmtpServerList.xul', 'smtp', 'modal,titlebar,chrome', args);
 
     if (args.result) {
         // this is the wrong way to do this.

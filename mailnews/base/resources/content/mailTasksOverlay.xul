@@ -42,7 +42,7 @@
 
     function toImport()
       {
-      	window.openDialog("chrome://messenger/content/importDialog.xul","importDialog","chrome, modal", {importType: "addressbook"});
+      	window.openDialog("chrome://messenger/content/importDialog.xul","importDialog","chrome, modal, titlebar", {importType: "addressbook"});
       }
 
   ]]>

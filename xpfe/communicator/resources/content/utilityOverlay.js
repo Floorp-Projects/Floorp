@@ -61,7 +61,7 @@ function goEditCardDialog(abURI, card, okCallback)
 {
 	window.openDialog("chrome://messenger/content/addressbook/abEditCardDialog.xul",
 					  "",
-					  "chrome,resizeable=no,modal",
+					  "chrome,resizeable=no,modal,titlebar",
 					  {abURI:abURI, card:card, okCallback:okCallback});
 }
 
@@ -81,7 +81,7 @@ function goPreferences(id, paneURL, paneID)
   }
   var modality = prefWindowModalityPref ? "yes" : "no";
   
-  var prefWindow = window.openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", "chrome,modal=" + modality+ ",resizable=yes", paneURL, paneID);
+  var prefWindow = window.openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", "chrome,titlebar,modal=" + modality+ ",resizable=yes", paneURL, paneID);
 }
 
 function okToCapture() {

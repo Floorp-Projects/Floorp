@@ -184,7 +184,7 @@ function openServerEditor(serverarg)
     var args = {server: serverarg,
                 result: false};
     window.openDialog("chrome://messenger/content/SmtpServerEdit.xul",
-                      "smtpEdit", "chrome,modal", args);
+                      "smtpEdit", "chrome,titlebar,modal", args);
     if (args.result) {
         refreshServerList();
         hasEdited = true;

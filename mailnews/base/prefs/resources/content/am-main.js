@@ -29,7 +29,7 @@ function onAdvanced()
     dump("selected key = " + oldSmtpServerKey + "\n");
     var arg = { smtpServerKey: oldSmtpServerKey };
     window.openDialog('am-identity-advanced.xul','smtpadvanced',
-                      'modal,chrome', arg);
+                      'modal,titlebar,chrome', arg);
     
     if (arg.smtpServerKey != oldSmtpServerKey) {
         // save the identity back to the page as a key

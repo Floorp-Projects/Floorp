@@ -292,7 +292,7 @@ function CreateNewSubfolder(chromeWindowURL,windowTitle, preselectedMsgFolder)
 	var dialog = window.openDialog(
 				chromeWindowURL,
 				"",
-				"chrome,modal",
+				"chrome,titlebar,modal",
 				{preselectedURI:preselectedURI, title:windowTitle,
 				okCallback:NewFolder});
 }
@@ -333,7 +333,7 @@ function Subscribe(windowTitle, preselectedMsgFolder)
 	}
 
 	window.openDialog("chrome://messenger/content/subscribe.xul",
-					  "subscribe", "chrome,modal,resizable=yes",
+					  "subscribe", "chrome,modal,titlebar,resizable=yes",
 				{preselectedURI:preselectedURI, title:windowTitle,
 				okCallback:SubscribeOKCallback});
 }
