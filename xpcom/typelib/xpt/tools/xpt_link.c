@@ -46,6 +46,7 @@ static int compare_IDE_with_zero(const void *ap);
 static int compare_IDEs_by_name(const void *ap, const void *bp);
 static int compare_IDEs_by_name_space(const void *ap, const void *bp);
 static int compare_strings(const void *ap, const void *bp);
+static int compare_pointers(const void *ap, const void *bp);
 static int compare_fixElements_by_IID(const void *ap, const void *bp);
 static int compare_fixElements_by_name(const void *ap, const void *bp);
 static int compare_IIDs(const void *ap, const void *bp);
@@ -262,8 +263,10 @@ main(int argc, char **argv)
         
         /* Check for name_space::name collision. 
          */
-        if (compare_IDEs_by_name(&IDE_array[i-1], &IDE_array[i]) == 0 && 
-            compare_IDEs_by_name_space(&IDE_array[i-1], &IDE_array[i]) == 0) {
+        if (compare_strings(IDE_array[i-1].name, 
+                            IDE_array[i].name) == 0 && 
+            compare_strings(IDE_array[i-1].name_space, 
+                             IDE_array[i].name_space) == 0) {
             
             /* If one of the interfaces is unresolved, delete that one 
              * preferentailly.
@@ -523,11 +526,14 @@ compare_fixElements_by_IID(const void *ap,
 
 static int 
 compare_IDEs_by_name(const void *ap,
-                    const void *bp)
+                     const void *bp)
 {
     const XPTInterfaceDirectoryEntry *ide1 = ap, *ide2 = bp;
-    
-    return compare_strings(ide1->name, ide2->name);
+    int answer = compare_strings(ide1->name, ide2->name);
+    if(!answer)
+        answer = compare_pointers(ide1->name, ide2->name);
+
+    return answer;
 }
 
 static int 
@@ -555,14 +561,31 @@ compare_strings(const void *ap, const void *bp)
 }     
 
 static int 
+compare_pointers(const void *ap, const void *bp)
+{
+    if (ap == bp) {
+#ifdef DEBUG_jband
+        perror("name addresses were equal!");
+#endif
+        return 0;
+    }
+    if (ap > bp)
+        return 1;
+    return -1;
+}        
+
+static int 
 compare_fixElements_by_name(const void *ap,
-                    const void *bp)
+                            const void *bp)
 {
     const fixElement *fix1 = ap, *fix2 = bp;
-    
-    return compare_strings(fix1->name, fix2->name);
+    int answer= compare_strings(fix1->name, fix2->name);
+    if(!answer)
+        answer = compare_pointers(fix1->name, fix2->name);
+
+    return answer;
 }
-    
+
 static int
 compare_IIDs(const void *ap, const void *bp)
 {
