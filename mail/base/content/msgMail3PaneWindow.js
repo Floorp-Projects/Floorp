@@ -652,6 +652,8 @@ function UpdateMailPaneConfig(aMsgWindowInitialized) {
      msgPaneReRooted = true;
   }
 
+  document.getElementById('messengerBox').removeAttribute('flex');
+
   // now for each config, handle any extra clean up to create that view (such as changing a box orientation)
   if (paneConfig == kStandardPaneConfig) // standard 3-Pane Layout
   {     
@@ -665,6 +667,8 @@ function UpdateMailPaneConfig(aMsgWindowInitialized) {
   else if (paneConfig == kWidePaneConfig)  // "Wide" Window Pane Layout
   {     
     threadPaneSplitter.setAttribute("orient", "vertical");
+    
+    document.getElementById('messengerBox').setAttribute('flex', '1');
 
     // finally, make sure mailContentWrapper has the correct orientation
     mailContentWrapper.setAttribute("orient", "vertical");
