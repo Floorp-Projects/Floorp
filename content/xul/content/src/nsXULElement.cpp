@@ -42,7 +42,7 @@
 #include "nsGenericAttribute.h"
 #include "nsHashtable.h"
 #include "nsIAtom.h"
-#include "nsIContent.h"
+#include "nsIXMLContent.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
@@ -56,6 +56,7 @@
 #include "nsIEventListenerManager.h"
 #include "nsIEventStateManager.h"
 #include "nsIJSScriptObject.h"
+#include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContentModelBuilder.h"
@@ -97,8 +98,8 @@ static NS_DEFINE_IID(kIDOMElementIID,             NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID,       NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMNodeIID,                NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMNodeListIID,            NS_IDOMNODELIST_IID);
-static NS_DEFINE_IID(kIEventListenerManagerIID,   NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIDocumentIID,               NS_IDOCUMENT_IID);
+static NS_DEFINE_IID(kIEventListenerManagerIID,   NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID,         NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kINameSpaceManagerIID,       NS_INAMESPACEMANAGER_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID,        NS_IPRIVATEDOMEVENT_IID);
@@ -107,6 +108,7 @@ static NS_DEFINE_IID(kIRDFDocumentIID,            NS_IRDFDOCUMENT_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,             NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID,      NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIXMLContentIID,             NS_IXMLCONTENT_IID);
 
 static NS_DEFINE_CID(kEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,     NS_NAMESPACEMANAGER_CID);
@@ -139,7 +141,7 @@ class RDFElementImpl : public nsIDOMXULElement,
                        public nsIDOMEventReceiver,
                        public nsIScriptObjectOwner,
                        public nsIJSScriptObject,
-                       public nsIContent
+                       public nsIXMLContent
 {
 public:
     RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag);
@@ -203,11 +205,11 @@ public:
     NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const;
 
     // nsIXMLContent (from nsIRDFContent)
-    //NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);
-    //NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
-    //NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace);
-    //NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const;
-    //NS_IMETHOD SetNameSpaceID(PRInt32 aNameSpaceID);
+    NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);
+    NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
+    NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace);
+    NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const;
+    NS_IMETHOD SetNameSpaceID(PRInt32 aNameSpaceID);
 
     // nsIDOMEventReceiver
     NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
@@ -260,6 +262,8 @@ private:
     void*             mScriptObject;
     nsISupportsArray* mChildren;
     nsIContent*       mParent;
+    nsINameSpace*     mNameSpace;
+    nsIAtom*          mNameSpacePrefix;
     PRInt32           mNameSpaceID;
     nsIAtom*          mTag;
     nsIEventListenerManager* mListenerManager;
@@ -286,6 +290,7 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
       mScriptObject(nsnull),
       mChildren(nsnull),
       mParent(nsnull),
+      mNameSpace(nsnull),
       mNameSpaceID(aNameSpaceID),
       mTag(aTag),
       mListenerManager(nsnull),
@@ -391,7 +396,8 @@ RDFElementImpl::QueryInterface(REFNSIID iid, void** result)
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
-    if (iid.Equals(kIContentIID) ||
+    if (iid.Equals(kIXMLContentIID) ||
+        iid.Equals(kIContentIID) ||
         iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIContent*, this);
     }
@@ -867,6 +873,59 @@ RDFElementImpl::Normalize()
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+// nsIXMLContent interface
+
+NS_IMETHODIMP
+RDFElementImpl::SetContainingNameSpace(nsINameSpace* aNameSpace)
+{
+    NS_PRECONDITION(aNameSpace != nsnull, "null ptr");
+    if (! aNameSpace)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_IF_RELEASE(mNameSpace);
+    mNameSpace = aNameSpace;
+    NS_ADDREF(mNameSpace);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFElementImpl::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
+{
+    aNameSpace = mNameSpace;
+    NS_IF_ADDREF(aNameSpace);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFElementImpl::SetNameSpacePrefix(nsIAtom* aNameSpacePrefix)
+{
+    NS_PRECONDITION(aNameSpacePrefix != nsnull, "null ptr");
+    if (! aNameSpacePrefix)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_IF_RELEASE(mNameSpacePrefix);
+    mNameSpacePrefix = aNameSpacePrefix;
+    NS_ADDREF(mNameSpacePrefix);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFElementImpl::GetNameSpacePrefix(nsIAtom*& aNameSpacePrefix) const
+{
+    aNameSpacePrefix = mNameSpacePrefix;
+    NS_IF_ADDREF(aNameSpacePrefix);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFElementImpl::SetNameSpaceID(PRInt32 aNameSpaceID)
+{
+    mNameSpaceID = aNameSpaceID;
+    return NS_OK;
 }
 
 
@@ -1386,14 +1445,24 @@ static char kNameSpaceSeparator[] = ":";
         name.Cut(0, nsoffset+1);
     }
 
-    // XXX This is wrong: we need to implement nsIXMLContent so
-    // that we can get the namespace scoping set up properly for
-    // this tag.
-    aNameSpaceID = kNameSpaceID_XUL;
-
-#if 0
     // Figure out the namespace ID
-    aNameSpaceID = kNameSpaceID_None;
+
+    // XXX This is currently broken, because _nobody_ will ever set
+    // the namespace scope via the nsIXMLElement interface. To make
+    // that work will require a bit more machinery: something that
+    // remembers the XML namespace scoping as nodes get created in the
+    // RDF graph, and can then extract them later when content nodes
+    // are built via the content model builders.
+    //
+    // Since mNameSpace will _always_ be null, specifying
+    // kNameSpaceID_Unknown allows us to at least match on the
+    // tag. You'll start seeing problems when the same name is used in
+    // different namespaces.
+    //
+    // See http://bugzilla.mozilla.org/show_bug.cgi?id=3275 for more
+    // info.
+
+    aNameSpaceID = kNameSpaceID_Unknown; // XXX should be kNameSpaceID_None
     if (0 < prefix.Length()) {
         nsIAtom* nameSpaceAtom = NS_NewAtom(prefix);
         if (mNameSpace) {
@@ -1401,7 +1470,6 @@ static char kNameSpaceSeparator[] = ":";
         }
         NS_RELEASE(nameSpaceAtom);
     }
-#endif
 
     aName = NS_NewAtom(name);
     return NS_OK;
