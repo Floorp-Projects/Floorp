@@ -85,9 +85,11 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
       res = prefs->GetIntPref("browser.screen_resolution", &intVal);
       if (NS_SUCCEEDED(res)) {
         if (intVal) {
+          // if the pref is set to something nonzero, use it
           dpi = intVal;
         }
         else {
+          // if the pref is set to 0, believe the system
           // Compute dpi of display
           float screenWidth = float(::gdk_screen_width());
           float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
@@ -107,13 +109,10 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 #endif
 
   int pt2t = 72;
-  // Now for some wacky heuristics. XXX used to hope that dpi / nsIntPointsToTwips is always the same?
-  if (dpi == 96) pt2t = 72;
-  else if (dpi == 100) pt2t = 75;
-  else if (dpi == 120) pt2t = 90;
 
-  mTwipsToPixels = float(dpi) / float(NSIntPointsToTwips(pt2t));
-  mPixelsToTwips = 1.0f / mTwipsToPixels;
+  // make p2t a nice round number - this prevents rounding problems
+  mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(dpi)));
+  mTwipsToPixels = 1.0f / mPixelsToTwips;
 
 #if 0
   mTwipsToPixels = ( ( ((float)::gdk_screen_width()) /
