@@ -71,6 +71,7 @@ XPIDLSRCS	= \
 		nsIMsgRDFDataSource.idl \
 		nsIIncomingServerListener.idl \
 		nsIMsgHdr.idl \
+		nsIMessengerMigrator.idl	\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -21,6 +21,8 @@
 var accountManagerProgID   = "component://netscape/messenger/account-manager";
 var accountManager = Components.classes[accountManagerProgID].getService(Components.interfaces.nsIMsgAccountManager);
 
+var messengerMigratorProgID   = "component://netscape/messenger/migrator";
+
 var msgComposeService = Components.classes["component://netscape/messengercompose"].getService();
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 var msgCompose = null;
@@ -281,7 +283,8 @@ function MigratePrefsIfNecessary()
         if (accounts.Count() > 0) return;
 
         try {
-            accountManager.UpgradePrefs(); 
+			messengerMigrator = Components.classes[messengerMigratorProgID].getService(Components.interfaces.nsIMessengerMigrator);
+            messengerMigrator.UpgradePrefs(); 
 	}
 	catch (ex) {
 		var alertText = Bundle.GetStringFromName("noIdentities");

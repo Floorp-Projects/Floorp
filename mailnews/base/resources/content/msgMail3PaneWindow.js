@@ -26,6 +26,7 @@ var statusFeedbackProgID   = "component://netscape/messenger/statusfeedback";
 var messageViewProgID      = "component://netscape/messenger/messageview";
 var mailSessionProgID      = "component://netscape/messenger/services/session";
 var accountManagerProgID   = "component://netscape/messenger/account-manager";
+var messengerMigratorProgID   = "component://netscape/messenger/migrator";
 var prefProgID             = "component://netscape/preferences";
 var msgWindowProgID		   = "component://netscape/messenger/msgwindow";
 
@@ -227,8 +228,9 @@ function verifyAccounts() {
         if (accounts.Count() > 0) return;
 
         try {
+			messengerMigrator = Components.classes[messengerMigratorProgID].getService(Components.interfaces.nsIMessengerMigrator);  
             dump("attempt to UpgradePrefs.  If that fails, open the account wizard.\n");
-            am.UpgradePrefs();
+            messengerMigrator.UpgradePrefs();
             refreshFolderPane();
         }
         catch (ex) {

@@ -30,41 +30,6 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 
-/*
- * some platforms (like Windows and Mac) use a map file, because of
- * file name length limitations.
- */
-#if defined(XP_UNIX) || defined(XP_BEOS)
-/* in 4.x, the prefix was ".newsrc-", in 5.0, the profile migrator code copies the newsrc files from
- * ~/.newsrc-* to ~/.mozilla/<profile>/News/newsrc-*
- */
-#define NEWSRC_FILE_PREFIX_5x "newsrc-"
-#else
-#define USE_NEWSRC_MAP_FILE
-
-// in the fat file, the hostname is prefix by this string:
-#define PSUEDO_NAME_PREFIX "newsrc-"
-
-#if defined(XP_PC)
-#define NEWS_FCC_DEFAULT_TO_IMAP_SENT
-#define NEWS_FAT_FILE_NAME "fat"
-/*
- * on the PC, the fat file stores absolute paths to the newsrc files
- * on the Mac, the fat file stores relative paths to the newsrc files
- */
-#define NEWS_FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS 1
-#elif defined(XP_MAC)
-#define NEWS_FAT_FILE_NAME "NewsFAT"
-#else
-#error dont_know_what_your_news_fat_file_is
-#endif /* XP_PC, XP_MAC */
-
-#endif /* XP_UNIX || XP_BEOS */
-
-#ifdef XP_UNIX
-#define HAVE_MOVEMAIL 1
-#endif /* HAVE_MOVEMAIL */
-
 class nsMsgAccountManager
 	: public nsIMsgAccountManager,
 		public nsIObserver,
@@ -88,8 +53,6 @@ public:
 private:
 
   PRBool m_accountsLoaded;
-  PRBool m_alreadySetNntpDefaultLocalPath;
-  PRBool m_alreadySetImapDefaultLocalPath;
   
   nsCOMPtr <nsIMsgFolderCache>	m_msgFolderCache;
   nsISupportsArray *m_accounts;
@@ -174,44 +137,13 @@ private:
   static PRBool writeFolderCache(nsHashKey *aKey, void *aData, void *closure);
   static PRBool closeCachedConnections(nsHashKey *aKey, void *aData, void *closure);
 
-  // methods for migration / upgrading
-  nsresult MigrateIdentity(nsIMsgIdentity *identity);
-  nsresult MigrateSmtpServer(nsISmtpServer *server);
-  nsresult CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *destIdentity);
-  nsresult SetMailCopiesAndFolders(nsIMsgIdentity *identity, const char *username, const char *hostname);
-  nsresult SetNewsCopiesAndFolders(nsIMsgIdentity *identity);
-   
-  nsresult MigrateImapAccounts(nsIMsgIdentity *identity);
-  nsresult MigrateImapAccount(nsIMsgIdentity *identity, const char *hostAndPort);
-  
-  nsresult MigrateOldImapPrefs(nsIMsgIncomingServer *server, const char *hostAndPort);
-  
-  nsresult MigratePopAccount(nsIMsgIdentity *identity);
-
-#ifdef HAVE_MOVEMAIL
-  nsresult MigrateMovemailAccount(nsIMsgIdentity *identity);
-#endif /* HAVE_MOVEMAIL */
-  
-  nsresult MigrateLocalMailAccount(nsIMsgIdentity *identity);
-
-  nsresult MigrateOldMailPrefs(nsIMsgIncomingServer *server);
-  
-  nsresult MigrateNewsAccounts(nsIMsgIdentity *identity);
-  nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostAndPort, nsFileSpec &newsrcfile, nsFileSpec &newsHostsDir);
-  nsresult MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostAndPort, nsFileSpec &newsrcfile);
-
-  nsresult ProceedWithMigration();
-  
   static char *getUniqueKey(const char* prefix, nsHashtable *hashTable);
   static char *getUniqueAccountKey(const char* prefix,
                                    nsISupportsArray *accounts);
 
-  nsresult Convert4XUri(const char *old_uri, PRBool for_news, const char *aUsername, const char *aHostname, const char *default_folder_name, char **new_uri);
- 
   nsresult SetSendLaterUriPref(nsIMsgIncomingServer *server);
  
   nsresult getPrefService();
   nsIPref *m_prefs;
-  PRInt32 m_oldMailType;
 };
 

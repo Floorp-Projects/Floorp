@@ -49,6 +49,7 @@ EXPORTS=						\
 	nsMsgStatusFeedback.h \
 	nsMessageView.h \
 	nsMsgWindow.h \
+	nsMessengerMigrator.h \
 	$(NULL)
 
 
@@ -80,6 +81,7 @@ CPP_OBJS=									\
 	.\$(OBJDIR)\nsMsgStatusFeedback.obj		\
 	.\$(OBJDIR)\nsMessageView.obj		\
 	.\$(OBJDIR)\nsMsgWindow.obj \
+	.\$(OBJDIR)\nsMessengerMigrator.obj \
 	$(NULL)
 
 

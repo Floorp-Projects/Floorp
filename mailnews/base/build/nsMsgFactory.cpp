@@ -48,6 +48,7 @@
 #include "nsMsgMailSession.h"
 #include "nsMsgAccount.h"
 #include "nsMsgAccountManager.h"
+#include "nsMessengerMigrator.h"
 #include "nsMsgIdentity.h"
 #include "nsMsgIncomingServer.h"
 #include "nsMessageViewDataSource.h"
@@ -95,6 +96,8 @@ static NS_DEFINE_CID(kMsgIncomingServerCID, NS_MSGINCOMINGSERVER_CID);
 // account manager RDF stuff
 static NS_DEFINE_CID(kMsgAccountManagerDataSourceCID, NS_MSGACCOUNTMANAGERDATASOURCE_CID);
 
+// migrator stuff
+static NS_DEFINE_CID(kMessengerMigratorCID, NS_MESSENGERMIGRATOR_CID);
 // search and filter stuff
 static NS_DEFINE_CID(kMsgSearchSessionCID, NS_MSGSEARCHSESSION_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
@@ -127,6 +130,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlListenerManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgMailSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessenger)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgAccountManager, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerMigrator, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgAccount)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgIdentity)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgFolderDataSource, Init)
@@ -165,6 +169,7 @@ protected:
     nsCOMPtr<nsIGenericFactory> mMsgMailSessionFactory;
     nsCOMPtr<nsIGenericFactory> mMessengerFactory;
     nsCOMPtr<nsIGenericFactory> mMsgAccountManagerFactory;
+    nsCOMPtr<nsIGenericFactory> mMessengerMigratorFactory;
     nsCOMPtr<nsIGenericFactory> mMsgAccountFactory;
     nsCOMPtr<nsIGenericFactory> mMsgIdentityFactory;
     nsCOMPtr<nsIGenericFactory> mMsgFolderDataSourceFactory;
@@ -213,6 +218,7 @@ void nsMsgBaseModule::Shutdown()
     mMsgMailSessionFactory = null_nsCOMPtr();
     mMessengerFactory = null_nsCOMPtr();
     mMsgAccountManagerFactory = null_nsCOMPtr();
+    mMessengerMigratorFactory = null_nsCOMPtr();
     mMsgAccountFactory = null_nsCOMPtr();
     mMsgIdentityFactory = null_nsCOMPtr();
     mMsgFolderDataSourceFactory = null_nsCOMPtr();
@@ -284,6 +290,12 @@ NS_IMETHODIMP nsMsgBaseModule::GetClassObject(nsIComponentManager *aCompMgr,
         if (!mMsgAccountManagerFactory)
             rv = NS_NewGenericFactory(getter_AddRefs(mMsgAccountManagerFactory), &nsMsgAccountManagerConstructor);
         fact = mMsgAccountManagerFactory;
+    }
+    else if (aClass.Equals(kMessengerMigratorCID))
+    {
+        if (!mMessengerMigratorFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMessengerMigratorFactory), &nsMessengerMigratorConstructor);
+        fact = mMessengerMigratorFactory;
     }
     else if (aClass.Equals(kMsgAccountCID))
     {
@@ -395,6 +407,8 @@ static Components gComponents[] = {
       NS_MESSENGER_PROGID },
     { "Messenger Account Manager", &kMsgAccountManagerCID,
       NS_MSGACCOUNTMANAGER_PROGID },
+    { "Messenger Migrator", &kMessengerMigratorCID,
+      NS_MESSENGERMIGRATOR_PROGID },
     { "Messenger User Account", &kMsgAccountCID,
       NS_MSGACCOUNT_PROGID },
     { "Messenger User Identity", &kMsgIdentityCID,

@@ -32,6 +32,7 @@ XPIDLSRCS =								\
 		.\nsIMessageView.idl			\
 		.\nsIMsgAccount.idl				\
 		.\nsIMsgAccountManager.idl		\
+		.\nsIMessengerMigrator.idl		\
 		.\nsIMsgFolder.idl				\
 		.\nsIMsgFolderCache.idl			\
 		.\nsIMsgFolderCacheElement.idl	\

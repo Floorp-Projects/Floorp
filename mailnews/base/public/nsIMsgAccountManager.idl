@@ -138,14 +138,9 @@ interface nsIMsgAccountManager : nsISupports {
 
   void CloseCachedConnections();
 
-  /* search for 4.x mailnews prefs, and migrate to 5.0 prefs */
-  void UpgradePrefs();
-
   void AddIncomingServerListener(in nsIIncomingServerListener serverListener);
   void RemoveIncomingServerListener(in nsIIncomingServerListener serverListener);
   void NotifyServerLoaded(in nsIMsgIncomingServer server);
   void NotifyServerUnloaded(in nsIMsgIncomingServer server);
-
-  void createLocalMailAccount(in nsIMsgIdentity identity, in boolean migrating);
 };
 

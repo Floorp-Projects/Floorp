@@ -272,7 +272,8 @@ function createAccount(hash) {
 	if (!localMailServer) {
         // dump("Creating local mail account\n");
 		// creates a copy of the identity you pass in
-		am.createLocalMailAccount(identity, false);
+        messengerMigrator = Components.classes["component://netscape/messenger/migrator"].getService(Components.interfaces.nsIMessengerMigrator);
+		messengerMigrator.createLocalMailAccount(identity, false);
 
 		// find the local mail server that we just created
 		localMailServer = am.FindServer("","","none");
