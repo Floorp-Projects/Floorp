@@ -56,7 +56,7 @@ class nsContentPolicy : public nsIContentPolicy
     nsCOMArray<nsIContentPolicy> mPolicies;
 
     //Helper type for CheckPolicy
-    typedef NS_METHOD_(nsresult)
+    typedef NS_METHOD
     (nsIContentPolicy::*CPMethod)(PRUint32, nsIURI*, nsIURI*, nsIDOMNode*,
                                   const nsACString &, nsISupports*, PRInt16*);
 
