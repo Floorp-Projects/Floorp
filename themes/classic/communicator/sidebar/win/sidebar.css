@@ -1,0 +1,118 @@
+/* 
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla Communicator.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corp. Portions created by Netscape Communications
+ * Corp. are Copyright (C) 1999 Netscape Communications Corp. All
+ * Rights Reserved.
+ * 
+ * Contributor(s): Stephen Lamm <slamm@netscape.com>
+ */ 
+
+#sidebar-box 
+  {
+    border-left           : 1px solid threedshadow;
+    border-top            : 1px solid threedshadow;
+    border-right          : 1px solid threedhighlight;
+    border-bottom         : 1px solid threedhighlight;
+  }
+
+#sidebar-panels
+  {
+    background-color      : window;
+  }
+
+.text-panel-loading 
+  {
+    margin                : 5px 0px;
+  }
+
+.image-panel-loading 
+  {
+    margin                : 5px;
+    list-style-image      : url("chrome://global/skin/loading.gif"); 
+  }
+
+/*
+ *    Sidebar and Panel title buttons
+ */
+.sidebarheader-main 
+  {
+    border-left           : 1px solid threedhighlight;
+    border-top            : 1px solid threedhighlight;
+    border-right          : 1px solid threedshadow;
+    border-bottom         : 1px solid threedshadow;
+    padding-left          : 4px;
+  }
+
+/** XXX: this should be a menubutton! **/  
+#sidebar-panel-picker > .menu-right 
+  {
+    list-style-image: url("chrome://global/skin/toolbar-menu-arrow.gif");
+    padding-right: 2px;
+  }
+  
+/**
+ * texttab folder lookalike e.g. for sidebar panel headers
+ * attributes set: selected, top-panel, first-panel-after-selected, last-panel
+ */
+  .box-texttab
+    {
+      behavior            : url("chrome://communicator/skin/sidebar/sidebarBindings.xml#sidebar-panel-header");
+      background-color    : threedface;
+      border-left         : 1px solid threedhighlight;
+      border-top          : 1px solid threedhighlight;
+      border-right        : 1px solid threedshadow;
+      border-bottom       : 1px solid threedshadow;
+    }
+
+  .box-texttab:hover
+    {
+      border-left         : 1px solid threedface;
+      border-top          : 1px solid threedface;
+      border-right        : 1px solid threeddarkshadow;
+      border-bottom       : 1px solid threeddarkshadow;
+    }
+
+  .sidebar-panel-header-box
+    {
+      border              : 1px solid threedface;
+      padding             : 1px 1px 1px 5px;
+    }
+
+  .box-texttab:hover > .sidebar-panel-header-box
+    {
+      border-left         : 1px solid threedhighlight;
+      border-top          : 1px solid threedhighlight;
+      border-right        : 1px solid threedshadow;
+      border-bottom       : 1px solid threedshadow;
+    }
+   
+  .box-texttab:hover:active
+    {
+      border              : 1px solid threedshadow;
+    }   
+    
+  .box-texttab:hover:active > .sidebar-panel-header-box
+    {
+      border              : 1px solid threedface;
+      padding             : 2px 0px 0px 6px;
+    }    
+    
+  .iframe-panel
+    {
+      border-left         : 1px solid threeddarkshadow;
+      border-top          : 1px solid threeddarkshadow;
+      border-right        : 1px solid threedface;
+      border-bottom       : 1px solid threedface;
+    }

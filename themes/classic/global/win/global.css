@@ -52,7 +52,7 @@
  **/
   window 
     { 
-      background-color    : window;
+      background-color    : threedface;
       color               : windowtext;
       padding             : 0px;
       font                : dialog;

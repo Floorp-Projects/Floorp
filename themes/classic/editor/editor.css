@@ -21,6 +21,7 @@
  */
 
 @import url(chrome://communicator/skin/);
+@import url(chrome://communicator/skin/sidebar/sidebar.css);
 /* Note: most of our styles are in EditorToolbars.css 
    in order to share with all users of editor
 */

@@ -2,130 +2,121 @@
 
 /********* XP Scrollbar *********/
 
-scrollbar {
-   behavior: url("resource:/chrome/xulBindings.xml#scrollbar");
-}
+scrollbar 
+  {
+    behavior              : url("chrome://global/skin/classicBindings.xml#scrollbar");
+  }
 
-slider {
-   user-focus: ignore;
-   user-select: none;
-}
+slider 
+  {
+  }
 
-scrollbarbutton {
-  display: inline;
-  user-focus: ignore;
-  user-select: none;
-}
+scrollbarbutton 
+  {
+  }
 
-scrollbar[value="hidden"] {
-   visibility: hidden;
-   user-focus: ignore;
-   user-select: none;
-}
+scrollbar[value="hidden"] 
+  {
+  }
 
 /********* XP Scrollbar *********/
 
-thumb {
-  behavior: url(resource:/chrome/xulBindings.xml#thumb);
-  user-focus: ignore;
-  user-select: none;
-  background-color: #CCCCCC;
-  border: 1px outset #CCCCCC;
-  list-style-image: url("chrome://global/skin/scroll-thumb-horiz.gif")
-}
+thumb 
+  {
+    behavior              : url(chrome://global/skin/classicBindings.xml#thumb);
+    border-left           : 1px solid threedface;
+    border-top            : 1px solid threedface;
+    border-right          : 1px solid threeddarkshadow;
+    border-bottom         : 1px solid threeddarkshadow;
+    background-color      : scrollbar;
+  }
 
-thumb[disabled="true"] {
-   user-focus: ignore;
-   user-select: none;
-   list-style-image: url("chrome://global/skin/scroll-thumb-horiz-disabled.gif");
-}
+.thumb-box
+  {
+    border-left           : 1px solid threedhighlight;
+    border-top            : 1px solid threedhighlight;
+    border-right          : 1px solid threedshadow;
+    border-bottom         : 1px solid threedshadow;
+  }
+  
+/**
+ * Scrollbar button
+ **/  
+scrollbarbutton 
+  {
+    behavior              : url("chrome://global/skin/classicBindings.xml#scrollbarbutton");
+    cursor                : default;
+    border-left           : 1px solid threedface;
+    border-top            : 1px solid threedface;
+    border-right          : 1px solid threeddarkshadow;
+    border-bottom         : 1px solid threeddarkshadow;
+    background-color      : scrollbar;
+  }
 
-thumb[align="vertical"] {
-   list-style-image: url("chrome://global/skin/scroll-thumb-vert.gif")
-}
+.scrollbarbutton-box
+  {
+    border-left           : 1px solid threedhighlight;
+    border-top            : 1px solid threedhighlight;
+    border-right          : 1px solid threedshadow;
+    border-bottom         : 1px solid threedshadow;
+    padding               : 1px;
+  }
 
-scrollbarbutton {
-  user-focus: ignore;
-  user-select: none;
-  vertical-align: bottom;
-  cursor: default;
+scrollbarbutton:hover:active 
+  {
+    border                : 1px solid threedshadow;
+  }
+  
+scrollbarbutton:hover:active > .scrollbarbutton-box
+  {
+    border                : 1px solid scrollbar;
+    padding               : 2px 0px 0px 2px;
+  }   
 
-  border: 1px outset white;
-  background-color: #CCCCCC;
-  color:black; 
+scrollbarbutton[type="decrement"] 
+  {
+    list-style-image      : url("chrome://global/skin/scroll-left.gif")
+  }
 
-  padding: 1px;
-}
+scrollbarbutton[type="decrement"][disabled="true"] 
+  {
+    list-style-image      : url("chrome://global/skin/scroll-left-disabled.gif") 
+  }
 
-scrollbarbutton:active {
-  user-focus: ignore;
-  user-select: none;
-  border-style: inset;
-
-  padding-left: 2px;
-  padding-right: 0px;
-  padding-top: 2px;
-  padding-bottom: 0px;
-}
-
-scrollbarbutton[type="decrement"] {
-   user-focus: ignore;
-   user-select: none;
-   list-style-image: url("chrome://global/skin/scroll-left.gif")
-}
-
-scrollbarbutton[type="decrement"][disabled="true"] {
-   user-focus: ignore;
-   user-select: none;
-   list-style-image: url("chrome://global/skin/scroll-left-disabled.gif") 
-}
-
-scrollbarbutton[type="increment"] {
-   user-focus: ignore;
-   user-select: none;
-   list-style-image: url("chrome://global/skin/scroll-right.gif")
-}
-
-
-scrollbarbutton[type="increment"][disabled="true"] {
-   user-focus: ignore;
-   user-select: none;
-   list-style-image: url("chrome://global/skin/scroll-right-disabled.gif") 
-}
+scrollbarbutton[type="increment"] 
+  {
+    list-style-image      : url("chrome://global/skin/scroll-right.gif")
+  }
 
 
-scrollbar[align="vertical"] scrollbarbutton[type="decrement"] {
-   user-focus: ignore;
-   user-select: none;
-   list-style-image: url("chrome://global/skin/scroll-up.gif")
-}
+scrollbarbutton[type="increment"][disabled="true"] 
+  {
+    list-style-image      : url("chrome://global/skin/scroll-right-disabled.gif") 
+  }
 
-scrollbar[align="vertical"] scrollbarbutton[type="decrement"][disabled="true"] {
-   user-focus: ignore;
-   user-select: none;
-   list-style-image: url("chrome://global/skin/scroll-up-disabled.gif") 
-}
 
-scrollbar[align="vertical"] scrollbarbutton[type="increment"] {
-   user-focus: ignore;
-   user-select: none;
-   list-style-image: url("chrome://global/skin/scroll-down.gif")
-}
+scrollbarbutton[type="decrement"][sborient="vertical"]
+  {
+    list-style-image      : url("chrome://global/skin/scroll-up.gif")
+  }
 
-scrollbar[align="vertical"] scrollbarbutton[type="increment"][disabled="true"] {
-   user-focus: ignore;
-   user-select: none;
-   list-style-image: url("chrome://global/skin/scroll-down-disabled.gif") 
-}
+scrollbarbutton[type="decrement"][disabled="true"][sborient="vertical"]
+  {
+    list-style-image      : url("chrome://global/skin/scroll-up-disabled.gif") 
+  }
 
-slider[align="vertical"] thumb:active {
-   user-focus: ignore;
-   user-select: none;
-   background-color: #CCCCCC;
-}
+scrollbarbutton[type="increment"][sborient="vertical"]
+  {
+    list-style-image      : url("chrome://global/skin/scroll-down.gif")
+  }
 
-slider {
-   user-focus: ignore;
-   user-select: none;
-   background-color: #999999;
-}
+scrollbarbutton[type="increment"][disabled="true"][sborient="vertical"]
+  {
+    list-style-image      : url("chrome://global/skin/scroll-down-disabled.gif") 
+  }
+
+slider 
+  {
+    background-color      : scrollbar;
+    background-image      : url("chrome://global/skin/scrollbar-slider-bg.gif");
+  }

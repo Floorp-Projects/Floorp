@@ -54,3 +54,4 @@ install::
 	$(MAKE_INSTALL) classicBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) menulistBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) treeBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) scrollbar-slider-bg.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin

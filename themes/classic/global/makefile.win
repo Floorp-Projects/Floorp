@@ -132,3 +132,4 @@ install::
 	$(MAKE_INSTALL) toolbargrippy-texture.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) loading.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) smallheader-bg.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) splitter-drag-bg.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin

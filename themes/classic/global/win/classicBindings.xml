@@ -53,5 +53,45 @@
       </xul:box>
     </content>
   </binding>
+
+  <binding id="thumb" extends="xul:box">
+    <content>
+      <xul:box class="thumb-box" autostretch="never" orient="vertical" flex="1">
+        <xul:spring flex="1"/>
+      </xul:box>
+    </content>
+  </binding>
+
+  <binding id="scrollbar">
+    <content>
+      <xul:scrollbarbutton type="decrement" inherits="align:sborient"/>
+      <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment">
+	      <xul:thumb inherits="align,src" flex="1"/>
+      </xul:slider>
+      <xul:scrollbarbutton type="increment" inherits="align:sborient"/>
+    </content>
+  </binding>
+  
+  <binding id="scrollbarbutton">
+    <content>
+      <xul:box class="scrollbarbutton-box" flex="1">
+        <xul:image class="scrollbarbutton-icon" inherits="src"/>
+      </xul:box>
+    </content>
+  </binding>
+
+  <binding id="slider">
+    <content>
+	    <xul:button class="slider-button"/>
+  	</content>
+  </binding>
+  
+  <binding id="grippy">
+    <content>
+      <xul:box class="grippy-box" flex="1">
+        <xul:image class="grippy-image" inherits="src" />
+      </xul:box>
+    </content>
+  </binding>
   
 </bindings>

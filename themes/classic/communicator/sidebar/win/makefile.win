@@ -19,32 +19,18 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../..
-THEME_ROOT_DEPTH = @srcdir@/..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH		= ..\..\..\..\..
+THEME_ROOT_DEPTH = ..\..\..
 
-include $(DEPTH)/config/autoconf.mk
-include $(THEME_ROOT_DEPTH)/theme.mk
+include <$(DEPTH)\config\rules.mak>
+include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-EXPORT_RESOURCE = \
-		$(srcdir)/brand.css \
-		$(srcdir)/box.css \
-		$(srcdir)/button.css \
-		$(srcdir)/communicator.css \
-		$(srcdir)/formatting.css \
-		$(srcdir)/menubuttonBindings.xml \
-		$(srcdir)/menubutton.css \
-		$(srcdir)/navbar-endbox.gif \
-		$(srcdir)/tb-menubutton-dm.gif \
-		$(srcdir)/tb-menubutton-dm-disabled.gif \
-		$(NULL)
+clobber::
+	rm -f $(DIST)\chrome\skins\$(THEME)\communicator\skin\sidebar\*.*
 
-DIRS = search xpinstall sidebar bookmarks directory profile regviewer related wallet 
-
-include $(topsrcdir)/config/rules.mk
-
-install::
-	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin
+install:: 
+	$(MAKE_INSTALL) customize.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
+	$(MAKE_INSTALL) preview.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
+	$(MAKE_INSTALL) sidebar.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
+	$(MAKE_INSTALL) sidebarBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 
