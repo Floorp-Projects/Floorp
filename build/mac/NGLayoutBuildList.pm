@@ -645,10 +645,17 @@ sub MakeResourceAliases()
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
 
+
+	#//
+	#// Most resources should all go into the chrome dir eventually
+	#//
+	my($chrome_dir) = "$dist_dir" . "Chrome:";
+	my($resource_dir) = "$dist_dir" . "res:";
+
+
 	#//
 	#// Make aliases of resource files
 	#//
-	my($resource_dir) = "$dist_dir" . "res:";
 	MakeAlias(":mozilla:layout:html:document:src:ua.css",								"$resource_dir");
 	MakeAlias(":mozilla:webshell:tests:viewer:resources:viewer.properties",				"$resource_dir");
 
@@ -670,27 +677,35 @@ sub MakeResourceAliases()
 	BuildFolderResourceAliases(":mozilla:rdf:resources:",								"$rdf_dir");
 	
 	# NOTE: this will change as we move the toolbar/appshell chrome files to a real place
-	BuildFolderResourceAliases(":mozilla:xpfe:browser:src:", 							"$samples_dir");
+	InstallResources(":mozilla:xpfe:browser:src:MANIFEST",								"$samples_dir");
+
 	BuildFolderResourceAliases(":mozilla:xpfe:browser:samples:", 						"$samples_dir");
 	MakeAlias(":mozilla:xpfe:browser:samples:sampleimages:", 							"$samples_dir");
 	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:",							"$samples_dir");
 	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:resources:",					"$toolbar_dir");
 	MakeAlias(":mozilla:xpfe:AppCores:xul:resources:throbbingN.gif",					"$throbber_dir");
 	
-   if ($main::build{mailnews})
-   {
+	if ($main::build{editor})
+	{
+		my($editor_chrome_dir) = "$chrome_dir" . "Editor";
+
+		InstallResources(":mozilla:editor:ui:composer:content:MANIFEST",			"$editor_chrome_dir:composer:content:", 0);
+		InstallResources(":mozilla:editor:ui:composer:skin:MANIFEST",				"$editor_chrome_dir:composer:skin:", 0);
+	}
+
+	if ($main::build{mailnews})
+	{
 		my($messenger_dir) = "$resource_dir" . "mailnews:messenger:";
 		BuildFolderResourceAliases(":mozilla:mailnews:ui:messenger:resources:",				"$messenger_dir");	
-#		BuildFolderResourceAliases(":mozilla:mailnews:mime:emitters:xml:resources:",		"$messenger_dir");	
+		#		BuildFolderResourceAliases(":mozilla:mailnews:mime:emitters:xml:resources:",		"$messenger_dir");	
 		
 		my($compose_dir) = "$resource_dir" . "mailnews:compose:";
 		BuildFolderResourceAliases(":mozilla:mailnews:ui:compose:resources:",				"$compose_dir");	
-
+		
 		my($msgpref_dir) = "$resource_dir" . "mailnews:preference:";
 		BuildFolderResourceAliases(":mozilla:mailnews:ui:preference:resources:",			"$msgpref_dir");
 	}	
 
-	my($chrome_dir) = "$dist_dir" . "chrome:";
 	MakeAlias(":mozilla:rdf:chrome:build:registry.rdf",								"$chrome_dir");
 }
 
