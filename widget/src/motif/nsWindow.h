@@ -118,7 +118,7 @@ public:
     virtual void            OnDestroy();
     virtual PRBool          OnPaint(nsPaintEvent &event);
     virtual PRBool          OnResize(nsSizeEvent &aEvent);
-    virtual PRBool          OnKey(PRUint32 aEventType, PRUint32 aKeyCode);
+    virtual PRBool          OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent);
 
     virtual PRBool          DispatchFocus(nsGUIEvent &aEvent);
     virtual PRBool          OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
@@ -294,7 +294,7 @@ public: \
     virtual void            OnDestroy(); \
     virtual PRBool          OnPaint(nsPaintEvent & event); \
     virtual PRBool          OnResize(nsSizeEvent &aEvent); \
-    virtual PRBool          OnKey(PRUint32 aEventType, PRUint32 aKeyCode); \
+    virtual PRBool          OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent); \
     virtual PRBool          DispatchFocus(nsGUIEvent &aEvent); \
     virtual PRBool          OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos); 
 
@@ -512,9 +512,9 @@ public: \
     { \
       return GET_OUTER()->OnResize(aEvent); \
     } \
-    PRBool _classname::_aggname::OnKey(PRUint32 aEventType, PRUint32 aKeyCode) \
+    PRBool _classname::_aggname::OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent) \
     { \
-      return GET_OUTER()->OnKey(aEventType, aKeyCode); \
+      return GET_OUTER()->OnKey(aEventType, aKeyCode, aEvent); \
     } \
     PRBool _classname::_aggname::DispatchFocus(nsGUIEvent &aEvent) \
     { \
