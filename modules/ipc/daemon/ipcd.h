@@ -84,9 +84,10 @@ IPC_API PRStatus IPC_SendMsg(ipcClient *client, ipcMessage *msg);
 IPC_API PRUint32 IPC_GetClientID(ipcClient *client);
 
 //
-// returns the client name (NULL if the client did not specify a name).
+// returns the primary client name (NULL if the client did not specify a name).
+// this is the name specified by the client in its "client hello" message.
 //
-IPC_API const char *IPC_GetClientName(ipcClient *client);
+IPC_API const char *IPC_GetPrimaryClientName(ipcClient *client);
 
 //
 // client lookup functions
