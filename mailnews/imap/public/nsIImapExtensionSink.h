@@ -39,12 +39,6 @@ public:
 	return iid;
   }
   
-  NS_IMETHOD SetUserAuthenticated(nsIImapProtocol* aProtocol,
-								  PRBool aBool) = 0;
-  NS_IMETHOD SetMailServerUrls(nsIImapProtocol* aProtocol,
-							   const char* hostName) = 0;
-  NS_IMETHOD SetMailAccountUrl(nsIImapProtocol* aProtocol,
-							   const char* hostName) = 0;
   NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
 							   nsIMAPACLRightsInfo* aclRights) = 0;
   NS_IMETHOD AddFolderRights(nsIImapProtocol* aProtocol,
@@ -53,8 +47,6 @@ public:
 								 nsIMAPACLRightsInfo* aclRights) = 0;
   NS_IMETHOD FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
 									   nsIMAPACLRightsInfo* aclRights) = 0;
-  NS_IMETHOD SetFolderAdminURL(nsIImapProtocol* aProtocol,
-							   FolderQueryInfo* aInfo) = 0;
   NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                 nsMsgKeyArray* keyArray, 
                                 const char *msgIdString,

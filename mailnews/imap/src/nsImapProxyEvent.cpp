@@ -701,81 +701,6 @@ static NS_DEFINE_IID(kIImapExtensionSinkIID, NS_IIMAPEXTENSIONSINK_IID);
 NS_IMPL_THREADSAFE_ISUPPORTS(nsImapExtensionSinkProxy, kIImapExtensionSinkIID);
 
 NS_IMETHODIMP
-nsImapExtensionSinkProxy::SetUserAuthenticated(nsIImapProtocol* aProtocol,
-                                           PRBool aBool)
-{
-    nsresult res = NS_OK;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        SetUserAuthenticatedProxyEvent *ev =
-            new SetUserAuthenticatedProxyEvent(this, aBool);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-            ev->PostEvent(m_eventQueue);
-    }
-    else
-    {
-        res = m_realImapExtensionSink->SetUserAuthenticated(aProtocol, aBool);
-    }
-    return res;
-}
-
-NS_IMETHODIMP
-nsImapExtensionSinkProxy::SetMailServerUrls(nsIImapProtocol* aProtocol,
-                                        const char* hostName)
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (hostName, "Oops... null hostName");
-    if(!hostName)
-        return NS_ERROR_NULL_POINTER;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        SetMailServerUrlsProxyEvent *ev =
-            new SetMailServerUrlsProxyEvent(this, hostName);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-            ev->PostEvent(m_eventQueue);
-    }
-    else
-    {
-        res = m_realImapExtensionSink->SetMailServerUrls(aProtocol, hostName);
-    }
-    return res;
-}
-
-NS_IMETHODIMP
-nsImapExtensionSinkProxy::SetMailAccountUrl(nsIImapProtocol* aProtocol,
-                                        const char* hostName)
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (hostName, "Oops... null hostName");
-    if(!hostName)
-        return NS_ERROR_NULL_POINTER;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        SetMailAccountUrlProxyEvent *ev =
-            new SetMailAccountUrlProxyEvent(this, hostName);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-            ev->PostEvent(m_eventQueue);
-    }
-    else
-    {
-        res = m_realImapExtensionSink->SetMailAccountUrl(aProtocol, hostName);
-    }
-    return res;
-}
-
-NS_IMETHODIMP
 nsImapExtensionSinkProxy::ClearFolderRights(nsIImapProtocol* aProtocol,
                                         nsIMAPACLRightsInfo* aclRights)
 {
@@ -888,32 +813,6 @@ nsImapExtensionSinkProxy::FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
         res = m_realImapExtensionSink->FolderNeedsACLInitialized(aProtocol,
                                                              aclRights);
         aProtocol->NotifyFEEventCompletion();
-    }
-    return res;
-}
-
-NS_IMETHODIMP
-nsImapExtensionSinkProxy::SetFolderAdminURL(nsIImapProtocol* aProtocol,
-                                        FolderQueryInfo* aInfo)
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (aInfo, "Oops... null aInfo");
-    if(!aInfo)
-        return NS_ERROR_NULL_POINTER;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        SetFolderAdminURLProxyEvent *ev =
-            new SetFolderAdminURLProxyEvent(this, aInfo);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-            ev->PostEvent(m_eventQueue);
-    }
-    else
-    {
-        res = m_realImapExtensionSink->SetFolderAdminURL(aProtocol, aInfo);
     }
     return res;
 }
@@ -2097,81 +1996,6 @@ nsImapExtensionSinkProxyEvent::~nsImapExtensionSinkProxyEvent()
     NS_IF_RELEASE (m_proxy);
 }
 
-SetUserAuthenticatedProxyEvent::SetUserAuthenticatedProxyEvent(
-    nsImapExtensionSinkProxy* aProxy, PRBool aBool) :
-    nsImapExtensionSinkProxyEvent(aProxy)
-{
-    m_bool = aBool;
-}
-
-SetUserAuthenticatedProxyEvent::~SetUserAuthenticatedProxyEvent()
-{
-}
-
-NS_IMETHODIMP
-SetUserAuthenticatedProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapExtensionSink->SetUserAuthenticated(
-        m_proxy->m_protocol, m_bool); 
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
-SetMailServerUrlsProxyEvent::SetMailServerUrlsProxyEvent(
-    nsImapExtensionSinkProxy* aProxy, const char* hostName) :
-    nsImapExtensionSinkProxyEvent(aProxy)
-{
-    NS_ASSERTION (hostName, "Oops... a null host name");
-    if (hostName)
-        m_hostName = PL_strdup (hostName);
-    else
-        m_hostName = nsnull;
-}
-
-SetMailServerUrlsProxyEvent::~SetMailServerUrlsProxyEvent()
-{
-    if (m_hostName)
-        PL_strfree(m_hostName);
-}
-
-NS_IMETHODIMP
-SetMailServerUrlsProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapExtensionSink->SetMailServerUrls(
-        m_proxy->m_protocol, m_hostName); 
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
-SetMailAccountUrlProxyEvent::SetMailAccountUrlProxyEvent(
-    nsImapExtensionSinkProxy* aProxy, const char* hostName) :
-    nsImapExtensionSinkProxyEvent(aProxy)
-{
-    NS_ASSERTION (hostName, "Oops... a null host name");
-    if (hostName)
-        m_hostName = PL_strdup (hostName);
-    else
-        m_hostName = nsnull;
-}
-
-SetMailAccountUrlProxyEvent::~SetMailAccountUrlProxyEvent()
-{
-    if (m_hostName)
-        PL_strfree(m_hostName);
-}
-
-NS_IMETHODIMP
-SetMailAccountUrlProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapExtensionSink->SetMailAccountUrl(
-        m_proxy->m_protocol, m_hostName); 
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
 ClearFolderRightsProxyEvent::ClearFolderRightsProxyEvent(
     nsImapExtensionSinkProxy* aProxy, nsIMAPACLRightsInfo* aclRights) :
     nsImapExtensionSinkProxyEvent(aProxy)
@@ -2339,41 +2163,6 @@ FolderNeedsACLInitializedProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapExtensionSink->FolderNeedsACLInitialized(
         m_proxy->m_protocol, &m_aclRightsInfo); 
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
-SetFolderAdminURLProxyEvent::SetFolderAdminURLProxyEvent(
-    nsImapExtensionSinkProxy* aProxy, FolderQueryInfo* aInfo) :
-    nsImapExtensionSinkProxyEvent(aProxy)
-{
-    NS_ASSERTION (aInfo, "Oops... a null folder query info");
-    if (aInfo)
-    {
-        m_folderQueryInfo.name = PL_strdup(aInfo->name);
-        m_folderQueryInfo.hostName = PL_strdup(aInfo->hostName);
-        m_folderQueryInfo.rv = aInfo->rv;
-    }
-    else
-    {
-        memset(&m_folderQueryInfo, 0, sizeof(FolderQueryInfo));
-    }
-}
-
-SetFolderAdminURLProxyEvent::~SetFolderAdminURLProxyEvent()
-{
-    if (m_folderQueryInfo.name)
-        PL_strfree(m_folderQueryInfo.name);
-    if (m_folderQueryInfo.hostName)
-        PL_strfree(m_folderQueryInfo.hostName);
-}
-
-NS_IMETHODIMP
-SetFolderAdminURLProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapExtensionSink->SetFolderAdminURL(
-        m_proxy->m_protocol, &m_folderQueryInfo); 
     if (m_notifyCompletion)
         m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;

@@ -28,6 +28,7 @@ interface nsIImapServerSink : nsISupports {
 	void OnlineFolderCreateFailed(in string aFolderName);
 	void OnlineFolderRename(in string oldName, in string newName);
 	void FolderIsNoSelect(in string aFolderName, out boolean aResult);
+	void SetFolderAdminURL(in string aFolderName, in string adminUrl);
 
 	void SubscribeUpgradeFinished(in boolean bringUpSubscribeUI);
 

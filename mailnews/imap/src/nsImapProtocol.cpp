@@ -4913,22 +4913,17 @@ void nsImapProtocol::FolderRenamed(const char *oldName,
     	
     	if (oldConvertedName && newConvertedName)
     	{
-	        folder_rename_struct *orphanRenameStruct = 
-                (folder_rename_struct *) PR_MALLOC(sizeof(folder_rename_struct));
-			orphanRenameStruct->fHostName = PL_strdup(GetImapHostName());
+			char *oldName, *newName;
             m_runningUrl->AllocateCanonicalPath(oldConvertedName,
                                                 onlineDelimiter,
-                                                &orphanRenameStruct->fOldName);
+                                                &oldName);
             m_runningUrl->AllocateCanonicalPath(newConvertedName,
                                                 onlineDelimiter,
-                                                &orphanRenameStruct->fNewName);
+                                                &newName);
 
-            m_imapServerSink->OnlineFolderRename(orphanRenameStruct->fOldName,
-                                                     orphanRenameStruct->fNewName);
-            PR_FREEIF(orphanRenameStruct->fHostName);
-            PR_FREEIF (orphanRenameStruct->fOldName);
-            PR_FREEIF(orphanRenameStruct->fNewName);
-            PR_FREEIF(orphanRenameStruct);
+            m_imapServerSink->OnlineFolderRename(oldName, newName);
+            PR_FREEIF (oldName);
+            PR_FREEIF(newName);
         }
         PR_FREEIF(oldConvertedName);
         PR_FREEIF(newConvertedName);
@@ -5185,38 +5180,15 @@ void nsImapProtocol::DiscoverMailboxList()
 
 PRBool nsImapProtocol::FolderNeedsACLInitialized(const char *folderName)
 {
-	FolderQueryInfo *value = (FolderQueryInfo *)PR_MALLOC(sizeof(FolderQueryInfo));
 	PRBool rv = PR_FALSE;
 
-	if (!value) return PR_FALSE;
-
-	value->name = PL_strdup(folderName);
-	if (!value->name)
-	{
-		PR_Free(value);
+	char *name = PL_strdup(folderName);
+	if (!name)
 		return PR_FALSE;
-	}
-
-	value->hostName = PL_strdup(GetImapHostName());
-	if (!value->hostName)
-	{
-		PR_Free(value->name);
-		PR_Free(value);
-		return PR_FALSE;
-	}
-
 	// mscott - big hack...where do we get a IMAPACLRights object from??????
-	m_imapExtensionSink->FolderNeedsACLInitialized(this, /* value */ nsnull);
-	WaitForFEEventCompletion();
-	//TImapFEEvent *folderACLInitEvent = 
-	//    new TImapFEEvent(MOZTHREAD_FolderNeedsACLInitialized,               // function to call
-	//                    this,                                              // access to current entry/context
-	//                    value, PR_FALSE);
+//	m_imapServerSink->FolderNeedsACLInitialized(name, nsnull);
 
-	rv = value->rv;
-	PR_Free(value->hostName);
-	PR_Free(value->name);
-	PR_Free(value);
+	PR_Free(name);
 	return rv;
 }
 
@@ -5959,7 +5931,7 @@ PRBool nsImapProtocol::TryToLogon()
 			if (loginSucceeded && imapPasswordIsNew)
 			{
 				// let's record the user as authenticated.
-				m_imapExtensionSink->SetUserAuthenticated(this, PR_TRUE);
+				m_imapServerSink->SetUserAuthenticated(PR_TRUE);
 			}
 
 			if (loginSucceeded)

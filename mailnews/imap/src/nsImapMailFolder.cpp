@@ -2624,27 +2624,6 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
     // nsIImapExtensionSink methods
 
 NS_IMETHODIMP
-nsImapMailFolder::SetUserAuthenticated(nsIImapProtocol* aProtocol,
-                                       PRBool aBool)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsImapMailFolder::SetMailServerUrls(nsIImapProtocol* aProtocol,
-                                    const char* hostName)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsImapMailFolder::SetMailAccountUrl(nsIImapProtocol* aProtocol,
-                                    const char* hostName)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsImapMailFolder::ClearFolderRights(nsIImapProtocol* aProtocol,
                                     nsIMAPACLRightsInfo* aclRights)
 {
@@ -2668,13 +2647,6 @@ nsImapMailFolder::RefreshFolderRights(nsIImapProtocol* aProtocol,
 NS_IMETHODIMP
 nsImapMailFolder::FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
                                             nsIMAPACLRightsInfo* aclRights)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsImapMailFolder::SetFolderAdminURL(nsIImapProtocol* aProtocol,
-                                    FolderQueryInfo* aInfo)
 {
     return NS_ERROR_FAILURE;
 }

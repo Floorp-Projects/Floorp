@@ -192,11 +192,6 @@ typedef struct _ProgressInfo {
 	int percent;
 } ProgressInfo;
 
-typedef struct _FolderQueryInfo {
-	char *name, *hostName;
-	PRBool rv;
-} FolderQueryInfo;
-
 typedef struct _StatusMessageInfo {
 	PRUint32 msgID;
 	char * extraInfo;
@@ -258,12 +253,6 @@ typedef enum {
 	kFailedAppend,
 	kInterruptedState
 } ImapOnlineCopyState;
-
-typedef struct _folder_rename_struct {
-	char		*fHostName;
-	char 		*fOldName;
-	char		*fNewName;
-} folder_rename_struct;
 
 typedef enum {
     	eContinue,

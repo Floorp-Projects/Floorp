@@ -149,12 +149,6 @@ public:
 
     NS_DECL_ISUPPORTS
   
-    NS_IMETHOD SetUserAuthenticated(nsIImapProtocol* aProtocol,
-                                    PRBool aBool);
-    NS_IMETHOD SetMailServerUrls(nsIImapProtocol* aProtocol,
-                                 const char* hostName);
-    NS_IMETHOD SetMailAccountUrl(nsIImapProtocol* aProtocol,
-                                 const char* hostName);
     NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
                                  nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD AddFolderRights(nsIImapProtocol* aProtocol,
@@ -163,8 +157,6 @@ public:
                                    nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
                                          nsIMAPACLRightsInfo* aclRights);
-    NS_IMETHOD SetFolderAdminURL(nsIImapProtocol* aProtocol,
-                                 FolderQueryInfo* aInfo);
     NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                   nsMsgKeyArray* aKeyArray,
                                   const char* msgIdString,
@@ -429,33 +421,6 @@ struct nsImapExtensionSinkProxyEvent : nsImapEvent
     nsImapExtensionSinkProxy* m_proxy;
 };
 
-struct SetUserAuthenticatedProxyEvent : nsImapExtensionSinkProxyEvent
-{
-    SetUserAuthenticatedProxyEvent(nsImapExtensionSinkProxy* aProxy,
-                                   PRBool aBool);
-    virtual ~SetUserAuthenticatedProxyEvent();
-    NS_IMETHOD HandleEvent();
-    PRBool m_bool;
-};
-
-struct SetMailServerUrlsProxyEvent : nsImapExtensionSinkProxyEvent
-{
-    SetMailServerUrlsProxyEvent(nsImapExtensionSinkProxy* aProxy,
-                                const char* hostName);
-    virtual ~SetMailServerUrlsProxyEvent();
-    NS_IMETHOD HandleEvent();
-    char* m_hostName;
-};
-
-struct SetMailAccountUrlProxyEvent : nsImapExtensionSinkProxyEvent
-{
-    SetMailAccountUrlProxyEvent(nsImapExtensionSinkProxy* aProxy,
-                                const char* hostName);
-    virtual ~SetMailAccountUrlProxyEvent();
-    NS_IMETHOD HandleEvent();
-    char* m_hostName;
-};
-
 struct ClearFolderRightsProxyEvent : nsImapExtensionSinkProxyEvent
 {
     ClearFolderRightsProxyEvent(nsImapExtensionSinkProxy* aProxy,
@@ -490,15 +455,6 @@ struct FolderNeedsACLInitializedProxyEvent : nsImapExtensionSinkProxyEvent
     virtual ~FolderNeedsACLInitializedProxyEvent();
     NS_IMETHOD HandleEvent();
     nsIMAPACLRightsInfo m_aclRightsInfo;
-};
-
-struct SetFolderAdminURLProxyEvent : nsImapExtensionSinkProxyEvent
-{
-    SetFolderAdminURLProxyEvent(nsImapExtensionSinkProxy* aProxy,
-                                FolderQueryInfo* aInfo);
-    virtual ~SetFolderAdminURLProxyEvent();
-    NS_IMETHOD HandleEvent();
-    FolderQueryInfo m_folderQueryInfo;
 };
 
 struct SetCopyResponseUidProxyEvent : nsImapExtensionSinkProxyEvent

@@ -703,6 +703,12 @@ NS_IMETHODIMP  nsImapIncomingServer::FolderIsNoSelect(const char *aFolderName, P
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsImapIncomingServer::SetFolderAdminURL(const char *aFolderName, const char *aFolderAdminUrl)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+	return rv;
+}
+
 NS_IMETHODIMP  nsImapIncomingServer::SubscribeUpgradeFinished(PRBool bringUpSubscribeUI) 
 {
 	return NS_OK;

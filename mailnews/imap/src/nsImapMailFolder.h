@@ -219,12 +219,6 @@ public:
 	NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
 
     // nsIImapExtensionSink methods
-    NS_IMETHOD SetUserAuthenticated(nsIImapProtocol* aProtocol,
-                                    PRBool aBool);
-    NS_IMETHOD SetMailServerUrls(nsIImapProtocol* aProtocol,
-                                 const char* hostName);
-    NS_IMETHOD SetMailAccountUrl(nsIImapProtocol* aProtocol,
-                                 const char* hostName);
     NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
                                  nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD AddFolderRights(nsIImapProtocol* aProtocol,
@@ -233,8 +227,6 @@ public:
                                    nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
                                          nsIMAPACLRightsInfo* aclRights);
-    NS_IMETHOD SetFolderAdminURL(nsIImapProtocol* aProtocol,
-                                 FolderQueryInfo* aInfo);
     NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                   nsMsgKeyArray* keyArray,
                                   const char* msgIdString,
