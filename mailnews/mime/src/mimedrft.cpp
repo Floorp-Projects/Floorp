@@ -1618,26 +1618,11 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   // if ( (tmpSpec) && (!bodyPart) )
   if (tmpSpec)
   {
-    char *tmpSpecStr = PR_smprintf("file:///%s", tmpSpec->GetNativePathCString());
+      nsFileURL fileURL(*tmpSpec);
+      const char * tempSpecStr = fileURL.GetURLString();
 
-    if (tmpSpecStr)
-    {
-      char *slashPtr = tmpSpecStr+7;
-      while (*slashPtr)
-      {
-        if (*slashPtr == '\\') 
-          *slashPtr = '/';
-#ifdef XP_WIN
-		if (*slashPtr == ':')
-			*slashPtr = '|';
-#endif 
-
-        slashPtr++;
-      }
-      nsMimeNewURI(&(newAttachment->orig_url), tmpSpecStr, nsnull);
+      nsMimeNewURI(&(newAttachment->orig_url), tempSpecStr, nsnull);
       NS_IF_ADDREF(newAttachment->orig_url);
-      PR_FREEIF(tmpSpecStr);
-    }
   }
 
   PR_FREEIF(workURLSpec);
