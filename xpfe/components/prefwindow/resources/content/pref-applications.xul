@@ -118,10 +118,8 @@
   <groupbox id="pluginFinderBox">
     <caption label="&plugins.label;"/>
     <vbox>
-      <hbox pack="start" align="center">
-        <checkbox id="useNSPluginFinder" label="&pluginFinder.label;"
-                  prefstring="application.use_ns_plugin_finder"/>
-      </hbox>
+      <checkbox id="useNSPluginFinder" label="&pluginFinder.label;"
+                prefstring="application.use_ns_plugin_finder"/>
       <description>&pluginFinderDesc.label;</description>
     </vbox>
   </groupbox>
