@@ -2796,6 +2796,7 @@ HDC   dc1 = NULL;
 
     // Begin -- section of code to get the real x-height with GetGlyphOutline()
     GLYPHMETRICS gm;
+    memset((void*)&gm, 0, sizeof(gm));
     DWORD len = gGlyphAgent.GetGlyphMetrics(dc, PRUnichar('x'), 0, &gm);
     if (GDI_ERROR != len && gm.gmptGlyphOrigin.y > 0)
     {

@@ -325,6 +325,7 @@ nsXULElement::nsXULElement()
       mDocument(nsnull),
       mParent(nsnull),
       mScriptObject(nsnull),
+      mContentId(0),
       mLazyState(0),
       mBindingParent(nsnull),
       mSlots(nsnull)
