@@ -149,7 +149,7 @@ protected:
 				XULSortServiceImpl(void);
 	virtual			~XULSortServiceImpl(void);
 
-	static nsICollation	*collationService;
+	static nsICollation	*gCollation;
 
 	friend nsresult		NS_NewXULSortService(nsIXULSortService** mgr);
 
@@ -212,7 +212,7 @@ public:
 
 
 
-nsICollation		*XULSortServiceImpl::collationService = nsnull;
+nsICollation		*XULSortServiceImpl::gCollation = nsnull;
 nsIRDFService		*XULSortServiceImpl::gRDFService = nsnull;
 nsIRDFContainerUtils	*XULSortServiceImpl::gRDFC = nsnull;
 nsrefcnt XULSortServiceImpl::gRefCnt = 0;
@@ -284,7 +284,7 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 				    do_CreateInstance(kCollationFactoryCID);
 				if (colFactory)
 				{
-					if (NS_FAILED(rv = colFactory->CreateCollation(locale, &collationService)))
+					if (NS_FAILED(rv = colFactory->CreateCollation(locale, &gCollation)))
 					{
 						NS_ERROR("couldn't create collation instance");
 					}
@@ -354,8 +354,7 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 	        NS_IF_RELEASE(kSortSeparatorsAtom);
 		NS_IF_RELEASE(kRDF_type);
 
-		NS_IF_RELEASE(collationService);
-		collationService = nsnull;
+		NS_IF_RELEASE(gCollation);
 
 		if (gRDFService)
 		{
@@ -773,120 +772,117 @@ XULSortServiceImpl::GetNodeTextValue(sortPtr sortInfo, nsIContent *node, nsStrin
 }
 
 
-
 nsresult
 XULSortServiceImpl::CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
 				 nsIRDFNode *cellNode2, PRBool isCollationKey2,
 				 PRBool &bothValid, PRInt32 & sortOrder)
 {
-	bothValid = PR_FALSE;
-	sortOrder = 0;
+  bothValid = PR_FALSE;
+  sortOrder = 0;
 
-	const PRUnichar			*uni1 = nsnull, *uni2 = nsnull;
-	nsCOMPtr<nsIRDFLiteral>		literal1 = do_QueryInterface(cellNode1);
-	nsCOMPtr<nsIRDFLiteral>		literal2 = do_QueryInterface(cellNode2);
-	if (literal1)	literal1->GetValueConst(&uni1);
-	if (literal2)	literal2->GetValueConst(&uni2);
+	// First, check for blobs.  This is the preferred way to do a raw key comparison.
+  {
+    nsCOMPtr<nsIRDFBlob> l = do_QueryInterface(cellNode1);
+    if (l)
+    {
+      nsCOMPtr<nsIRDFBlob> r = do_QueryInterface(cellNode2);
+      if (r)
+      {
+        const PRUint8 *lkey, *rkey;
+        PRInt32 llen, rlen;
+        l->GetValue(&lkey);
+        l->GetLength(&llen);
+        r->GetValue(&rkey);
+        r->GetLength(&rlen);
+        bothValid = PR_TRUE;
+        if (gCollation)
+          return gCollation->CompareRawSortKey(lkey, llen, rkey, rlen, &sortOrder);
+      }
+    }
+  }
 
-	if (isCollationKey1 == PR_TRUE && isCollationKey2 == PR_TRUE)
+  // Next, literals.  If isCollationKey1 and 2 are both set, do
+  // an unsafe raw comparison. (XXX Remove this code someday.)
 	{
-		bothValid = PR_TRUE;
+    nsCOMPtr<nsIRDFLiteral> l = do_QueryInterface(cellNode1);
+    if (l)
+    {
+      nsCOMPtr<nsIRDFLiteral> r = do_QueryInterface(cellNode2);
+      if (r)
+      {
+        const PRUnichar *luni, *runi;
+        l->GetValueConst(&luni);
+        r->GetValueConst(&runi);
+        bothValid = PR_TRUE;
+        if (isCollationKey1 && isCollationKey2)
+          return gCollation->CompareRawSortKey(NS_REINTERPRET_CAST(const PRUint8*, luni),
+                                               nsCRT::strlen(luni)*sizeof(PRUnichar),
+                                               NS_REINTERPRET_CAST(const PRUint8*, runi),
+                                               nsCRT::strlen(runi)*sizeof(PRUnichar),
+                                               &sortOrder);
+        else
+        {
+          nsresult rv = NS_ERROR_FAILURE;
+          nsDependentString lstr(luni), rstr(runi);
+          if (gCollation)
+            rv = gCollation->CompareString(kCollationCaseInSensitive, lstr, rstr, &sortOrder);
+					if (NS_FAILED(rv))
+            sortOrder = Compare(lstr, rstr, nsCaseInsensitiveStringComparator());
+          return NS_OK;
+        }
+      }
+    }
+  }
 
-		// sort collation keys
-		if (collationService)
-		{
-            collationService->CompareRawSortKey((const PRUint8 *) uni1,
-                nsCRT::strlen(uni1) * sizeof(PRUnichar),
-                (const PRUint8 *) uni2,
-                nsCRT::strlen(uni2) * sizeof(PRUnichar),
-                &sortOrder);			
-		}
-		else
-		{
-			// without a collation service, unable to collate
-			sortOrder = 0;
-		}
-	}
-	else if ((isCollationKey1 == PR_TRUE) && (isCollationKey2 == PR_FALSE))
-	{
-		sortOrder = -1;
-	}
-	else if ((isCollationKey1 == PR_FALSE) && (isCollationKey2 == PR_TRUE))
-	{
-		sortOrder = 1;
-	}
-	else if (literal1 || literal2)
-	{
-		// not a collation key, but one or both are strings
-		if (literal1 && literal2)
-		{
-			if ((*uni1) && (*uni2))
-			{
-				nsresult rv = NS_ERROR_FAILURE;
-				bothValid = PR_TRUE;
-				sortOrder = 0;  
-				nsDependentString uni1Str(uni1);
-				nsDependentString uni2Str(uni2);
-				if (collationService) 
-				{
-					rv = collationService->CompareString(
-						kCollationCaseInSensitive,
-						uni1Str,
-						uni2Str,
-						&sortOrder);
-				}
-				if (NS_FAILED(rv)) {
-				    sortOrder = Compare(uni1Str,
-							uni2Str,
-							nsCaseInsensitiveStringComparator());
-				}
-			}
-			else if (*uni1)	sortOrder = -1;
-			else		sortOrder = 1;
-		}
-		else if (literal1)	sortOrder = -1;
-		else			sortOrder = 1;
-	}
-	else
-	{
-		// not a collation key, and both aren't strings, so try other data types (ints)
-		nsCOMPtr<nsIRDFInt>		intLiteral1 = do_QueryInterface(cellNode1);
-		nsCOMPtr<nsIRDFInt>		intLiteral2 = do_QueryInterface(cellNode2);
-		if (intLiteral1 || intLiteral2)
-		{
-    		if (intLiteral1 && intLiteral2)
-    		{
-    			PRInt32			intVal1, intVal2;
-    			intLiteral1->GetValue(&intVal1);
-    			intLiteral2->GetValue(&intVal2);
-    			bothValid = PR_TRUE;
-    			sortOrder = 0;
-    			if (intVal1 < intVal2)		sortOrder = -1;
-    			else if (intVal1 > intVal2)	sortOrder = 1;
-    		}
-    		else if (intLiteral1)	sortOrder = -1;
-    		else					sortOrder = 1;
-		}
-		else
-		{
-			sortOrder = 0;
-			// not a collation key, and both aren't strings/ints, so try dates
-			nsCOMPtr<nsIRDFDate>		dateLiteral1 = do_QueryInterface(cellNode1);
-			nsCOMPtr<nsIRDFDate>		dateLiteral2 = do_QueryInterface(cellNode2);
-			if (dateLiteral1 && dateLiteral2)
-			{
-				PRInt64			dateVal1, dateVal2;
-				dateLiteral1->GetValue(&dateVal1);
-				dateLiteral2->GetValue(&dateVal2);
-				bothValid = PR_TRUE;
-				if (LL_CMP(dateVal1, <, dateVal2))	sortOrder = -1;
-				else if (LL_CMP(dateVal1, >, dateVal2))	sortOrder = 1;
-			}
-			else if (dateLiteral1)	sortOrder = -1;
-			else if (dateLiteral2)	sortOrder = 1;
-		}
-	}
-	return(NS_OK);
+  // Integers.
+  {
+    nsCOMPtr<nsIRDFInt> l = do_QueryInterface(cellNode1);
+    if (l)
+    {
+      nsCOMPtr<nsIRDFInt> r = do_QueryInterface(cellNode2);
+      if (r)
+      {
+        PRInt32 lint, rint;
+        l->GetValue(&lint);
+        r->GetValue(&rint);
+        bothValid = PR_TRUE;
+        sortOrder = 0;
+        if (lint < rint)
+          sortOrder = -1;
+        else if (lint > rint)
+          sortOrder = 1;
+        return NS_OK;
+      }
+    }
+  }
+
+  // Dates.
+  {
+    nsCOMPtr<nsIRDFDate> l = do_QueryInterface(cellNode1);
+    if (l)
+    {
+      nsCOMPtr<nsIRDFDate> r = do_QueryInterface(cellNode2);
+      if (r)
+      {
+        PRInt64 ldate, rdate, delta;
+        l->GetValue(&ldate);
+        r->GetValue(&rdate);
+        bothValid = PR_TRUE;
+        LL_SUB(delta, ldate, rdate);
+
+				if (LL_IS_ZERO(delta))
+          sortOrder = 0;
+        else if (LL_GE_ZERO(delta))
+          sortOrder = 1;
+				else
+          sortOrder = -1;
+        return NS_OK;
+      }
+    }
+  }
+
+  // Rats.
+  return NS_OK;
 }
 
 
