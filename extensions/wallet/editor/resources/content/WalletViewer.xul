@@ -14,7 +14,7 @@
         persist="screenX screenY width height"
         screenX="24" screenY="24"
         onload="Startup();"
-        width="620" height="470"> 
+        width="720" height="470"> 
 
   <script>
   <![CDATA[
