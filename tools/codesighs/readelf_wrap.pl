@@ -87,7 +87,7 @@ while (<READELF_OUTPUT>) {
 
             # note that we strip off the leading '.' of section names for
             # readability
-            if (! (@section = (/^ *\[ *(\d+)\] \.([\w\.]+) *(\w+) *(.{8}) (.{6}) (.{6}) *(\d+) ([a-zA-Z]+ +| +[a-zA-Z]+|) *(\d+) *(\w+) *(\d+)/))) {
+            if (! (@section = (/^ *\[ *(\d+)\] \.([\w\.\-]+) *(\w+) *(.{8}) (.{6}[0-9a-fA-F]*) (.{6}[0-9a-fA-F]*) *(\d+) ([a-zA-Z]+ +| +[a-zA-Z]+|) *(\d+) *(\w+) *(\d+)/))) {
                 # capture the 'null' section which has no name, so that the
                 # array indices are the same as the section indices.
 
