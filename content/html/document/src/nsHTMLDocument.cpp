@@ -1138,29 +1138,38 @@ nsHTMLDocument::GetImageMap(const nsAString& aMapName,
     return NS_ERROR_NULL_POINTER;
   }
 
+  *aResult = nsnull;
+
   nsAutoString name;
   PRUint32 i, n = mImageMaps.Count();
 
   for (i = 0; i < n; i++) {
     nsCOMPtr<nsIDOMHTMLMapElement> map = mImageMaps[i];
-    if (map && NS_SUCCEEDED(map->GetName(name))) {
-      PRBool match;
+    NS_ASSERTION(map, "Null map in map list!");
 
-      if (IsXHTML()) {
-        match = name.Equals(aMapName);
-      } else {
-        match = name.Equals(aMapName, nsCaseInsensitiveStringComparator());
-      }
+    PRBool match;
+    nsresult rv;
 
-      if (match) {
-        *aResult = map;
-        NS_ADDREF(*aResult);
-        return NS_OK;
-      }
+    if (IsXHTML()) {
+      rv = map->GetId(name);
+
+      match = name.Equals(aMapName);
+    } else {
+      rv = map->GetName(name);
+
+      match = name.Equals(aMapName, nsCaseInsensitiveStringComparator());
+    }
+
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (match) {
+      *aResult = map;
+      NS_ADDREF(*aResult);
+      return NS_OK;
     }
   }
 
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
