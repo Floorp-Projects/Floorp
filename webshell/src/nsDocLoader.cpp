@@ -87,11 +87,13 @@ class nsDocumentBindInfo : public nsIStreamListener,
                            public nsIDocumentLoadInfo
 {
 public:
-    nsDocumentBindInfo(nsDocLoaderImpl* aDocLoader,
-                       const char *aCommand, 
-                       nsIContentViewerContainer* aContainer,
-                       nsISupports* aExtraInfo,
-                       nsIStreamObserver* anObserver);
+    nsDocumentBindInfo();
+
+    nsresult Init(nsDocLoaderImpl* aDocLoader,
+                  const char *aCommand, 
+                  nsIContentViewerContainer* aContainer,
+                  nsISupports* aExtraInfo,
+                  nsIStreamObserver* anObserver);
 
     NS_DECL_ISUPPORTS
 
@@ -599,15 +601,17 @@ nsDocLoaderImpl::LoadURL(const nsString& aURLSpec,
         goto done;
     }
 
-    loader = new nsDocumentBindInfo(this,           // DocLoader
-                                    aCommand,       // Command
-                                    aContainer,     // Viewer Container
-                                    aExtraInfo,     // Extra Info
-                                    anObserver);    // Observer
+    NS_NEWXPCOM(loader, nsDocumentBindInfo);
     if (nsnull == loader) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         goto done;
     }
+    loader->Init(this,           // DocLoader
+                 aCommand,       // Command
+                 aContainer,     // Viewer Container
+                 aExtraInfo,     // Extra Info
+                 anObserver);    // Observer
+
     /* The DocumentBindInfo reference is only held by the Array... */
     m_LoadingDocsList->AppendElement((nsIStreamListener *)loader);
 
@@ -630,15 +634,16 @@ nsDocLoaderImpl::LoadURL(const nsString& aURLSpec,
         goto done;
     }
 
-    loader = new nsDocumentBindInfo(this,           // DocLoader
-                                    nsnull,         // Command
-                                    nsnull,         // Viewer Container
-                                    nsnull,         // Extra Info
-                                    nsnull);        // Observer
+    NS_NEWXPCOM(loader, nsDocumentBindInfo);
     if (nsnull == loader) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         goto done;
     }
+    loader->Init(this,           // DocLoader
+                 nsnull,         // Command
+                 nsnull,         // Viewer Container
+                 nsnull,         // Extra Info
+                 nsnull);        // Observer
 
     /* The DocumentBindInfo reference is only held by the Array... */
     m_LoadingDocsList->AppendElement(((nsISupports*)(nsIStreamObserver*)loader));
@@ -698,6 +703,7 @@ void nsDocLoaderImpl::LoadURLComplete(nsISupports* aBindInfo)
         rv = aBindInfo->QueryInterface(kDocumentBindInfoIID, (void**)&docInfo);
         NS_ASSERTION(((NS_OK == rv) && (docInfo->GetStatus() == NS_BINDING_ABORTED)), 
                      "Entry was not Aborted!");
+        NS_IF_RELEASE(docInfo);
     }
 #endif /* NS_DEBUG */
 }
@@ -711,6 +717,7 @@ PRBool nsDocLoaderImpl::StopBindInfoEnumerator(nsISupports* aElement, void* aDat
     rv = aElement->QueryInterface(kDocumentBindInfoIID, (void**)&bindInfo);
     if (NS_OK == rv) {
         bindInfo->Stop();
+        NS_RELEASE(bindInfo);
     }
 
     return PR_TRUE;
@@ -758,13 +765,28 @@ nsDocLoaderImpl::RemoveObserver(nsIDocumentLoaderObserver* aObserver)
  * nsDocumentBindInfo implementation...
  ****************************************************************************/
 
-nsDocumentBindInfo::nsDocumentBindInfo(nsDocLoaderImpl* aDocLoader,
-                                       const char *aCommand, 
-                                       nsIContentViewerContainer* aContainer,
-                                       nsISupports* aExtraInfo,
-                                       nsIStreamObserver* anObserver)
+nsDocumentBindInfo::nsDocumentBindInfo()
 {
     NS_INIT_REFCNT();
+
+    m_Command = nsnull;
+    m_Url = nsnull;
+    m_Container = nsnull;
+    m_ExtraInfo = nsnull;
+    m_Observer = nsnull;
+    m_NetSupport = nsnull;
+    m_NextStream = nsnull;
+    m_DocLoader = nsnull;
+    mStatus = NS_OK;
+}
+
+nsresult
+nsDocumentBindInfo::Init(nsDocLoaderImpl* aDocLoader,
+                         const char *aCommand, 
+                         nsIContentViewerContainer* aContainer,
+                         nsISupports* aExtraInfo,
+                         nsIStreamObserver* anObserver)
+{
 
     m_Url        = nsnull;
     m_NextStream = nsnull;
@@ -787,6 +809,8 @@ nsDocumentBindInfo::nsDocumentBindInfo(nsDocLoaderImpl* aDocLoader,
     m_ExtraInfo = aExtraInfo;
     NS_IF_ADDREF(m_ExtraInfo);
     mStatus = NS_OK;
+
+    return NS_OK;
 }
 
 nsDocumentBindInfo::~nsDocumentBindInfo()
