@@ -1,0 +1,6 @@
+# target: libimgDebug.shlb
+mozilla/modules/libimg/jpgcom/jpeg.cpp
+mozilla/modules/libimg/jpgcom/nsJPGCallback.cpp
+mozilla/modules/libimg/jpgcom/nsJPGDecoder.cpp
+mozilla/modules/libimg/jpgcom/dllcompatr.cpp
+
