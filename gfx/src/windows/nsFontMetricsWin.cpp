@@ -3570,7 +3570,7 @@ nsFontMetricsWin::ResolveBackwards(HDC                  aDC,
       // We have a substring that can be represented with the same font, and
       // we are about to switch fonts, it is time to notify our caller.
       fontSwitch.mFontWin = currFont;
-      if (!(*aFunc)(&fontSwitch, firstChar, firstChar - currChar, aData))
+      if (!(*aFunc)(&fontSwitch, currChar+1, firstChar - currChar, aData))
         return NS_OK;
       // continue with the next substring, re-using the available loaded fonts
       firstChar = currChar;
@@ -3580,7 +3580,7 @@ nsFontMetricsWin::ResolveBackwards(HDC                  aDC,
 
   //do it for last part of the string
   fontSwitch.mFontWin = currFont;
-  (*aFunc)(&fontSwitch, firstChar, firstChar - currChar, aData);
+  (*aFunc)(&fontSwitch, currChar+1, firstChar - currChar, aData);
 
   return NS_OK;
 }
