@@ -27,7 +27,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIURL.h"
+#include "nsIURI.h"
 #include "nsNeckoUtil.h"
 #else
 #include "nsIURLGroup.h"
@@ -58,6 +58,14 @@
 #include "prtime.h"
 #include "prlog.h"
 #include "prmem.h"
+#ifdef XSL
+#include "nsXSLContentSink.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
+#include <windows.h>
+#include "nsISupports.h"
+#include "nsParserCIID.h"
+#endif
 
 // XXX misnamed header file, but oh well
 #include "nsHTMLTokens.h"  
@@ -71,7 +79,6 @@ static char kCSSType[] = "text/css";
 static char kXSLType[] = "text/xsl";
 #endif
 
-
 static NS_DEFINE_IID(kIXMLContentSinkIID, NS_IXMLCONTENT_SINK_IID);
 static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
@@ -80,6 +87,13 @@ static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMCDATASectionIID, NS_IDOMCDATASECTION_IID);
+#ifdef XSL
+static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
+static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
+static NS_DEFINE_IID(kIObserverIID, NS_IOBSERVER_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+#endif
 
 static void SetTextStringOnTextNode(const nsString& aTextString, nsIContent* aTextNode);
 
@@ -141,10 +155,8 @@ nsXMLContentSink::nsXMLContentSink()
   mInScript = PR_FALSE;
   mStyleSheetCount = 0;
   mCSSLoader       = nsnull;
-
 #ifdef XSL
-  mXSLState.sheetExists = PR_FALSE;
-  mXSLState.sink = nsnull;
+  mXSLTransformMediator = nsnull;
 #endif
 }
 
@@ -179,6 +191,9 @@ nsXMLContentSink::~nsXMLContentSink()
     PR_FREEIF(mText);
   }
   NS_IF_RELEASE(mCSSLoader);
+#ifdef XSL  
+  NS_IF_RELEASE(mXSLTransformMediator);
+#endif
 }
 
 nsresult
@@ -219,8 +234,41 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
   return NS_OK;
 }
 
+#ifndef XSL
 // nsISupports
 NS_IMPL_ISUPPORTS(nsXMLContentSink, kIXMLContentSinkIID)
+#else
+
+NS_IMPL_THREADSAFE_ADDREF(nsXMLContentSink)
+NS_IMPL_THREADSAFE_RELEASE(nsXMLContentSink)
+
+nsresult
+nsXMLContentSink::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  nsresult rv = NS_NOINTERFACE;
+
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kIXMLContentSinkIID)) {
+    *aInstancePtr = (void*)(nsIXMLContentSink*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }    
+  if (aIID.Equals(kIObserverIID)) {
+    *aInstancePtr = (void*)(nsIObserver*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }  
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*)(nsISupports*)(nsIXMLContentSink*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  return rv;
+}
+#endif
 
   // nsIContentSink
 NS_IMETHODIMP 
@@ -277,25 +325,95 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   PopContent();
 #endif
 
-  StartLayout();
+#ifndef XSL
+  StartLayoutProcess();
+#else
+  nsresult rv;
+  if (mXSLTransformMediator) {
+    rv = SetupTransformMediator();  
+  } 
 
-#if 0
-  // XXX For now, we don't do incremental loading. We wait
-  // till the end to flow the entire document.
-  if (nsnull != mDocElement) {
-    mDocument->ContentAppended(mDocElement, 0);
+  if (!mXSLTransformMediator || NS_FAILED(rv)) {
+    mDocument->SetRootContent(mDocElement);
+    StartLayoutProcess();
   }
 #endif
+
+  // Drop our reference to the parser to get rid of a circular
+  // reference.
+  NS_IF_RELEASE(mParser);
+
+  return NS_OK;
+}
+
+void 
+nsXMLContentSink::StartLayoutProcess()
+{
+  StartLayout();
 
   // XXX Should scroll to ref when that makes sense
   // ScrollToRef();
 
   mDocument->EndLoad();
-  // Drop our reference to the parser to get rid of a circular
-  // reference.
-  NS_IF_RELEASE(mParser);
-  return NS_OK;
 }
+
+#ifdef XSL
+// The observe method is called on completion of the transform.  The nsISupports argument is an
+// nsIDOMElement interface to the root node of the output content model.
+NS_IMETHODIMP
+nsXMLContentSink::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+{
+  nsIContent* content;
+  nsresult rv = NS_OK;
+
+  // Set the output content model on the document
+  rv = aSubject->QueryInterface(kIContentIID, (void **) &content);
+  if (NS_SUCCEEDED(rv)) {
+    mDocument->SetRootContent(content);
+    NS_RELEASE(content);
+  }
+  else
+    mDocument->SetRootContent(mDocElement);
+
+  // Start the layout process
+  StartLayoutProcess();
+
+  // Reset the observer on the transform mediator
+  mXSLTransformMediator->SetTransformObserver(nsnull);
+  
+  return rv;
+}
+
+
+// Provide the transform mediator with the source document's content
+// model and the output document, and register the XML content sink 
+// as the transform observer.  The transform mediator will call
+// the nsIObserver::Observe() method on the transform observer once
+// the transform is completed.  The nsISupports pointer to the Observe
+// method will be an nsIDOMElement pointer to the root node of the output
+// content model.
+nsresult
+nsXMLContentSink::SetupTransformMediator()
+{
+  nsIDOMElement* source;
+  nsIDOMDocument* currentDoc;
+  nsresult rv = NS_OK;
+
+  rv = mDocElement->QueryInterface(kIDOMElementIID, (void **) &source);
+  if (NS_SUCCEEDED(rv)) {
+    mXSLTransformMediator->SetSourceContentModel(source);
+    rv = mDocument->QueryInterface(kIDOMDocumentIID, (void **) &currentDoc);
+    if (NS_SUCCEEDED(rv)) {
+      mXSLTransformMediator->SetCurrentDocument(currentDoc);
+      mXSLTransformMediator->SetTransformObserver(this);
+      NS_RELEASE(currentDoc);
+    }
+    NS_RELEASE(source);
+  }
+
+  return rv;
+}
+#endif
 
 NS_IMETHODIMP 
 nsXMLContentSink::WillInterrupt(void)
@@ -641,7 +759,13 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
       if (nsnull == mDocElement) {
         mDocElement = content;
         NS_ADDREF(mDocElement);
+
+        // For XSL, we need to wait till after the transform 
+        // to set the root content object.  Hence, the following
+        // ifndef.
+#ifndef XSL         
         mDocument->SetRootContent(mDocElement);
+#endif
       }
       else {
         nsIContent *parent = GetCurrentContent();
@@ -994,86 +1118,6 @@ GetQuotedAttributeValue(nsString& aSource,
   return result;
 }
 
-
-#ifdef XSL
-nsresult
-nsXMLContentSink::CreateStyleSheetURL(nsIURI** aUrl, 
-                                      const nsAutoString& aHref)
-{
-  nsAutoString absURL;
-  nsIURI* docURL = mDocument->GetDocumentURL();
-  nsILoadGroup* LoadGroup; 
-  nsresult result = NS_OK;
-  
-  result = docURL->GetLoadGroup(&LoadGroup);
-
-  if ((NS_SUCCEEDED(result)) && LoadGroup) {
-    result = LoadGroup->CreateURL(aUrl, docURL, aHref, nsnull);
-    NS_RELEASE(LoadGroup);
-  }
-  else {
-#ifndef NECKO
-    result = NS_MakeAbsoluteURL(docURL, nsnull, aHref, absURL);
-    if (NS_SUCCEEDED(result)) {
-      result = NS_NewURL(aUrl, absURL);
-    }
-#else
-    result = NS_MakeAbsoluteURL(docURL, nsnull, aHref, absURL);
-    if (NS_SUCCEEDED(result)) {
-      result = NS_NewURL(aUrl, absURL);
-    }
-#endif // NECKO
-  }
-  NS_RELEASE(docURL);
-  return result;
-}
-
-
-// Create an XML parser and an XSL content sink and start parsing
-// the XSL stylesheet located at the given URL.
-nsresult
-nsXMLContentSink::LoadXSLStyleSheet(const nsIURI* aUrl)
-{  
-  nsresult rv = NS_OK;
-
-  static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-
-  // Create the XML parser
-  rv = nsComponentManager::CreateInstance(kCParserCID, 
-                                    nsnull, 
-                                    kCParserIID, 
-                                    (void **)&parser);
-  if (NS_SUCCEEDED(rv)) {
-    nsIXSLContentSink* sink;
-    
-    // Create the XSL content sink
-    rv = NS_NewXSLContentSink(&sink, mDocument, aUrl, mWebShell);
-    if (NS_OK == rv) {
-      // Set up XSL state in the XML content sink
-      mXSLState.sheetExists = PR_TRUE;
-      mXSLState.sink = sink;
-
-      // Hook up the content sink to the parser's output and ask the parser
-      // to start parsing the URL specified by aURL.
-      nsIDTD* theDTD=0;
-      NS_NewWellFormed_DTD(&theDTD);
-      parser->RegisterDTD(theDTD);
-      parser->SetContentSink(sink);
- 
-      nsAutoString utf8("UTF-8");
-      mDocument->SetDocumentCharacterSet(utf8);
-      parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
-      parser->Parse(aUrl);
-      
-      // XXX Don't we have to NS_RELEASE() theDTD?
-      NS_RELEASE(sink);
-    }
-  }
-  return rv;
-}
-#endif
-
 static void
 ParseProcessingInstruction(const nsString& aText,
                            nsString& aTarget,
@@ -1105,11 +1149,137 @@ static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aPa
   }
 }
 
+#ifdef XSL
+nsXMLContentSink::CreateStyleSheetURL(nsIURI** aUrl, 
+                                      const nsAutoString& aHref)
+{
+   nsAutoString absURL;
+   nsIURI* docURL = mDocument->GetDocumentURL();
+   nsILoadGroup* LoadGroup; 
+   nsresult result = NS_OK;
+   
+   result = docURL->GetLoadGroup(&LoadGroup);
 
+   if ((NS_SUCCEEDED(result)) && LoadGroup) {
+     result = LoadGroup->CreateURL(aUrl, docURL, aHref, nsnull);
+     NS_RELEASE(LoadGroup);
+   }
+   else {
+#ifndef NECKO
+     result = NS_MakeAbsoluteURL(docURL, nsnull, aHref, absURL);
+     if (NS_SUCCEEDED(result)) {
+       result = NS_NewURL(aUrl, absURL);
+     }
+#else
+     result = NS_MakeAbsoluteURL(docURL, nsnull, aHref, absURL);
+     if (NS_SUCCEEDED(result)) {
+       result = NS_NewURL(aUrl, absURL);
+     }
+#endif // NECKO
+   }
+   NS_RELEASE(docURL);
+   return result;
+}
 
-#ifndef XSL
+// Create an XML parser and an XSL content sink and start parsing
+// the XSL stylesheet located at the given URL.
+nsresult
+nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType)
+{  
+  nsresult rv = NS_OK;
+  nsIParser* parser;
+
+  static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+  // Create the XML parser
+  rv = nsComponentManager::CreateInstance(kCParserCID, 
+                                    nsnull, 
+                                    kCParserIID, 
+                                    (void **)&parser);
+
+  if (NS_SUCCEEDED(rv)) {
+    // Create a transform mediator
+    rv = NS_NewTransformMediator(&mXSLTransformMediator, aType);
+
+    if (NS_SUCCEEDED(rv)) {
+      // Enable the transform mediator. It will start the transform
+      // as soon as it has enough state to do so.  The state needed is
+      // the source content model, the style content model, the current
+      // document, and an observer.  The XML and XSL content sinks provide 
+      // this state by calling the various setters on nsITransformMediator.
+      mXSLTransformMediator->SetEnabled(PR_TRUE);
+
+      // The XML document owns the transform mediator.  Give the mediator to
+      // the XML document.
+      nsIXMLDocument* xmlDoc;
+      rv = mDocument->QueryInterface(kIXMLDocumentIID, (void **) &xmlDoc);
+      if (NS_SUCCEEDED(rv)) {
+        xmlDoc->SetTransformMediator(mXSLTransformMediator);
+
+        // Create the XSL content sink
+        nsIXMLContentSink* sink;
+        rv = NS_NewXSLContentSink(&sink, mXSLTransformMediator, mDocument, aUrl, mWebShell);
+
+        if (NS_SUCCEEDED(rv)) {
+          // Hook up the content sink to the parser's output and ask the parser
+          // to start parsing the URL specified by aURL.   
+          parser->SetContentSink(sink);
+
+          nsAutoString utf8("UTF-8");
+          mDocument->SetDocumentCharacterSet(utf8);
+          parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
+          parser->Parse(aUrl);
+    
+          // XXX Don't we have to NS_RELEASE() theDTD?
+          NS_RELEASE(sink);
+        }
+        NS_RELEASE(xmlDoc);
+      }
+      NS_RELEASE(mXSLTransformMediator);
+    }    
+    NS_RELEASE(parser);
+  }
+  return rv;
+}
+
 nsresult
 nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
+                                   const nsString& aHref, PRBool aAlternate,
+                                   const nsString& aTitle, const nsString& aType,
+                                   const nsString& aMedia)
+{
+  nsresult rv = NS_OK;
+
+  if (aType.EqualsIgnoreCase(kXSLType))
+    rv = ProcessXSLStyleLink(aElement, aHref, aAlternate, aTitle, aType, aMedia);
+  else
+    rv = ProcessCSSStyleLink(aElement, aHref, aAlternate, aTitle, aType, aMedia);
+
+  return rv;
+}
+
+nsresult
+nsXMLContentSink::ProcessXSLStyleLink(nsIContent* aElement,
+                                   const nsString& aHref, PRBool aAlternate,
+                                   const nsString& aTitle, const nsString& aType,
+                                   const nsString& aMedia)
+{
+  nsresult rv = NS_OK;
+  nsIURI* url;
+  
+  rv = CreateStyleSheetURL(&url, aHref);
+  if (NS_SUCCEEDED(rv)) {
+    rv = LoadXSLStyleSheet(url, aType);
+    NS_RELEASE(url);
+  }
+  
+  return rv;
+}
+#endif
+
+nsresult
+nsXMLContentSink::ProcessCSSStyleLink(nsIContent* aElement,
                                    const nsString& aHref, PRBool aAlternate,
                                    const nsString& aTitle, const nsString& aType,
                                    const nsString& aMedia)
@@ -1172,7 +1342,6 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
   return result;
 }
 
-
 NS_IMETHODIMP 
 nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 {
@@ -1220,103 +1389,18 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
       if (NS_OK != result) {
         return result;
       }
-      
+#ifndef XSL      
+      result = ProcessCSSStyleLink(node, href, alternate.Equals("yes"),
+                                title, type, media);
+#else
       result = ProcessStyleLink(node, href, alternate.Equals("yes"),
                                 title, type, media);
-    }
-  }
-
-  return result;
-}
-#else
-/* The version of AddProcessingInstruction down below is being hacked on for XSL...
-   Please make changes to the version above this comment.  
-   I'll merge the changes when I un-ifdef stuff.
-
-NS_IMETHODIMP 
-nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
-{
-  nsIURI* url = nsnull;
-  FlushText();
-
-  // XXX For now, we don't add the PI to the content model.
-  // We just check for a style sheet PI
-  nsAutoString text, type, href, title, media;
-  PRInt32 offset;
-  nsresult result = NS_OK;
-
-  text = aNode.GetText();
-
-  offset = text.Find(kStyleSheetPI);
-  // If it's a stylesheet PI...
-  if (0 == offset) {
-    result = GetQuotedAttributeValue(text, "href", href);
-    // If there was an error or there's no href, we can't do
-    // anything with this PI
-    if ((NS_OK != result) || (0 == href.Length())) {
-      return result;
-    }
-    
-    result = GetQuotedAttributeValue(text, "type", type);
-    if (NS_OK != result) {
-      return result;
-    }
-    result = GetQuotedAttributeValue(text, "title", title);
-    if (NS_OK != result) {
-      return result;
-    }
-    title.CompressWhitespace();
-    result = GetQuotedAttributeValue(text, "media", media);
-    if (NS_OK != result) {
-      return result;
-    }
-
-    // XXX At some point, we need to have a registry based mechanism
-    // for dealing with loading stylesheets attached to XML documents
-    if (type.Equals(kCSSType) || type.Equals(kXSLType)) {
-      result = CreateStylesheetURL(&url, href);
-      if (NS_OK != result) {
-        return result;
-      }
-    }
-
-    if (type.Equals(kCSSType)) {
-      nsAsyncStyleProcessingDataXML* d = new nsAsyncStyleProcessingDataXML;
-      if (nsnull == d) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      d->mTitle.SetString(title);
-      d->mMedia.SetString(media);
-      d->mIsActive = PR_TRUE;
-      d->mURL = url;
-      NS_ADDREF(url);
-      // XXX Need to create PI node
-      d->mElement = nsnull;
-      d->mSink = this;
-      NS_ADDREF(this);
-
-      nsIUnicharStreamLoader* loader;
-      result = NS_NewUnicharStreamLoader(&loader,
-                                         url, 
-                                         (nsStreamCompleteFunc)nsDoneLoadingStyle, 
-                                         (void *)d);
-      if (NS_SUCCEEDED(result)) {
-        result = NS_ERROR_HTMLPARSER_BLOCK;
-      }
-    }
-    else if (type.Equals(kXSLType)) {
-      result = LoadXSLStyleSheet(url);
-    }
-
-    if (type.Equals(kCSSType) || type.Equals(kXSLType)) {
-      NS_RELEASE(url);
-    }
-  }
-                     
-  return result;
-}
-*/
 #endif
+    }
+  }
+
+  return result;
+}
 
 
 NS_IMETHODIMP 
