@@ -42,6 +42,8 @@
  * to be a sample application for using xpcom standalone.
  */
 
+#include <stdio.h>
+
 #include "nsISample.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
