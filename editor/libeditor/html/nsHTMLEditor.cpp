@@ -2553,7 +2553,9 @@ NS_IMETHODIMP nsHTMLEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
 // 
 NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
 {
+#ifdef DEBUG_akkana
   printf("SetBodyWrapWidth(%d)\n", aWrapColumn);
+#endif
   nsresult res;
 
   // Ought to set a style sheet here ...
