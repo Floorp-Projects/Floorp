@@ -68,7 +68,8 @@ DIRS +=				\
   view				\
   widget			\
   layout			\
-  webshell
+  webshell			\
+  xpfe
 
 include $(topsrcdir)/config/config.mk
 
