@@ -76,7 +76,7 @@ nsCookiePermission::TestPermission(nsIURI *aURI,
   nsresult rv;
   *aPermission = kDefaultPolicy;
 
-  // check if the user wants to be prompted. we only do this if a prior
+  // check whether the user wants to be prompted. we only do this if a prior
   // permissionlist lookup (performed by the caller) returned UNKNOWN_ACTION
   // (i.e., no permissionlist entry exists for this host).
   if (aShowDialog && aListPermission == nsIPermissionManager::UNKNOWN_ACTION) {
