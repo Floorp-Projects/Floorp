@@ -50,6 +50,7 @@ REQUIRES        = appcomps \
 		  webBrowser_core \
 		  webshell \
 		  widget \
+		  windowwatcher \
 		  xpcom \
 		  $(NULL)
 

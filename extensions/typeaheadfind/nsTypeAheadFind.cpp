@@ -88,6 +88,8 @@
 #include "nsWidgetsCID.h"
 #include "nsXULAtoms.h"
 #include "nsINameSpaceManager.h"
+#include "nsIWindowWatcher.h"
+
 
 // Header for this class
 #include "nsTypeAheadFind.h"
@@ -158,8 +160,6 @@ nsTypeAheadFind::nsTypeAheadFind():
   if (!mFind)
     return;  // mFind is always null when we are not correctly initialized
   
-  AddRef();
-
   // ----------- Set search options ---------------
   mFind->SetCaseSensitive(PR_FALSE);
   mFind->SetWordBreaker(nsnull);
@@ -278,7 +278,7 @@ NS_IMETHODIMP nsTypeAheadFind::OnStateChange(nsIWebProgress *aWebProgress,
 {
 /* PRUint32 aStateFlags ...
  *
- * ===== What has happened =====	
+ * ===== What has happened =====
  * STATE_START=1, STATE_REDIRECTING=2, STATE_TRANSFERRING=4,
  * STATE_NEGOTIATING=8, STATE_STOP=0x10
  *
@@ -361,7 +361,9 @@ NS_IMETHODIMP nsTypeAheadFind::OnStateChange(nsIWebProgress *aWebProgress,
   nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(domWindow));
   if (eventTarget)
     AttachNewWindowFocusListener(eventTarget);
-
+  nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsIDOMWindow> activeDOMWindow;
+  windowWatcher->GetActiveWindow(getter_AddRefs(activeDOMWindow));
   return NS_OK;
 }
 
@@ -416,9 +418,10 @@ NS_IMETHODIMP nsTypeAheadFind::Focus(nsIDOMEvent* aEvent)
 
 nsresult nsTypeAheadFind::HandleFocusInternal(nsIDOMEventTarget *aTarget)
 {
+  printf("\n*** In focus handler *** \n");
   nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aTarget));
   if (!domNode)
-    return NS_OK;  
+    return NS_OK;
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   domNode->GetOwnerDocument(getter_AddRefs(domDoc));
@@ -502,13 +505,23 @@ NS_IMETHODIMP nsTypeAheadFind::Unload(nsIDOMEvent* aEvent)
     eventTarget->RemoveEventListener(NS_LITERAL_STRING("unload"), 
                                      NS_STATIC_CAST(nsIDOMLoadListener*, this), 
                                      PR_FALSE);
-    nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(eventTarget));
-    if (domWin) {
-      // Remove from list of manual find windows, 
-      // because window pointer is no longer valid
-      SetAutoStart(domWin, PR_TRUE); 
-      if (mFocusedWindow == domWin)
-        mFocusedWindow = nsnull;
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(eventTarget));
+    if (doc) {
+      nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
+      doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+      nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(ourGlobal));
+
+      if (domWin) {
+        // Remove from list of manual find windows, 
+        // because window pointer is no longer valid
+        SetAutoStart(domWin, PR_TRUE); 
+        if (mFocusedWindow == domWin) {
+          RemoveCurrentKeypressListener();
+          RemoveCurrentScrollPositionListener();
+          CancelFind();
+          mFocusedWindow = nsnull;
+        }
+      }
     }
   }
 
@@ -652,10 +665,8 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
            mRepeatingMode != eRepeatingReverse) {
     PRUnichar uniChar = ToLowerCase(NS_STATIC_CAST(PRUnichar, charCode));
     PRInt32 bufferLength = mTypeAheadBuffer.Length();
-    if (uniChar < ' ') {
-      NS_NOTREACHED("Non printable charCode key caught in type ahead find.");
-      return NS_OK; // Not a printable char. Are any charCodes non-printable?
-    }
+    if (uniChar < ' ')
+      return NS_OK; // Not a printable char
     if (uniChar == ' ') {
       if (bufferLength == 0)
         return NS_OK; // We ignore space only if it's the first character
@@ -817,8 +828,7 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar,
   }
 
   // ------------ Get ranges ready ----------------
-  nsCOMPtr<nsIDOMRange> searchRange, startPointRange, endPointRange, 
-                        returnRange;
+  nsCOMPtr<nsIDOMRange> returnRange;
   if (NS_FAILED(GetSearchContainers(currentContainer, aIsRepeatingSameChar, 
                                     aIsFirstVisiblePreferred, PR_TRUE,
                                     getter_AddRefs(presShell), 
@@ -832,7 +842,7 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar,
 
   PRInt32 rangeCompareResult = 0;
   mStartPointRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START , 
-                                          searchRange, &rangeCompareResult);
+                                          mSearchRange, &rangeCompareResult);
   // No need to wrap find in doc if starting at beginning
   PRBool hasWrapped = (rangeCompareResult <= 0);
 
@@ -1472,12 +1482,12 @@ PRBool nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
 
   float p2t;
   aPresContext->GetPixelsToTwips(&p2t);
-  PRBool isVisible = PR_FALSE, isBelowViewPort = PR_FALSE;
-  viewManager->IsRectVisible(containingView, relFrameRect,
-                             NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), 
-                             &isVisible, &isBelowViewPort);
+  ERectVisibility rectVisibility;
+  viewManager->GetRectVisibility(containingView, relFrameRect,
+                                 NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), 
+                                 &rectVisibility);
 
-  if (isVisible || isBelowViewPort)
+  if (rectVisibility != eAboveViewport && rectVisibility != eZeroAreaRect)
     return PR_TRUE;
 
   // We know that the target range isn't usable because it's not in the 
@@ -1491,8 +1501,7 @@ PRBool nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   if (!frameTraversal)
     return PR_FALSE;
 
-  PRBool isFirstVisible = PR_FALSE;
-  while (!isFirstVisible && !isBelowViewPort) {
+  while (rectVisibility == eAboveViewport && rectVisibility != eZeroAreaRect) {
     frameTraversal->Next();
     nsISupports* currentItem;
     frameTraversal->CurrentItem(&currentItem);
@@ -1504,9 +1513,9 @@ PRBool nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
     if (containingView) {
       relFrameRect.x = frameOffset.x;
       relFrameRect.y = frameOffset.y;
-      viewManager->IsRectVisible(containingView, relFrameRect,
-                                 NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), 
-                                 &isFirstVisible, &isBelowViewPort);
+      viewManager->GetRectVisibility(containingView, relFrameRect,
+                                     NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), 
+                                     &rectVisibility);
     }
   }
   if (frame) {

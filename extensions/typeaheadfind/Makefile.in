@@ -57,8 +57,9 @@ REQUIRES        = appcomps \
 		  webBrowser_core \
 		  webshell \
 		  widget \
-		  xpcom \
 		  webbrwsr \
+		  windowwatcher \
+		  xpcom \
 		  $(NULL)
 
 EXPORT_LIBRARY = 1
