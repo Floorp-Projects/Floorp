@@ -258,14 +258,6 @@ nsresult nsLayer::FetchEventsByRange(
   /*
    * Set up the range of time for which we'll pull events...
    */
-#if 0
-  int iOffset = 30;
-  d.prevDay(iOffset);
-  psDTStart = d.toISO8601().toCString("");
-  d.nextDay(2 * iOffset);
-  psDTEnd = d.toISO8601().toCString("");
-#endif
-
   psDTStart = aStart->toISO8601().toCString("");
   psDTEnd = aStop->toISO8601().toCString("");
 
@@ -288,7 +280,7 @@ nsresult nsLayer::FetchEventsByRange(
                  0);
 
   capiStatus = pCapi->CAPI_SetStreamCallbacks(
-    mpShell->mCAPISession, &RcvStream, 0,0,RcvData, pCalStreamReader,0);
+    pSession->m_Session, &RcvStream, 0,0,RcvData, pCalStreamReader,0);
 
   if (CAPI_ERR_OK != capiStatus)
     return 1;   /* XXX: really need to fix this up */
@@ -298,7 +290,7 @@ nsresult nsLayer::FetchEventsByRange(
      *      local capi can take a null list or as soon as
      *      cs&t capi can take a list.
      */
-    nsCurlParser sessionURL(mpShell->msCalURL);
+    nsCurlParser sessionURL(msCurl);
     char** asList = gasViewPropList;
     int iListSize = giViewPropListCount;
 
@@ -308,10 +300,24 @@ nsresult nsLayer::FetchEventsByRange(
       iListSize = 0;
     }
 
+    CAPIHandle h = 0;
+    JulianString sHandle(sessionURL.GetCSID());
+
+    /*
+     * The handle name may be a file name. We need to make sure that
+     * the characters are in URL form. That is "C|/bla" instead of
+     * "C:/bla"
+     */
+    nsCurlParser::ConvertToURLFileChars(sHandle);
+    capiStatus = pCapi->CAPI_GetHandle(
+      pSession->m_Session,
+      sHandle.GetBuffer(),0,&h);
+    if (0 != capiStatus)
+      return 1; /* XXX really need to fix this */
     capiStatus = pCapi->CAPI_FetchEventsByRange( 
-        mpShell->mCAPISession, &mpShell->mCAPIHandle, 1, 0,
-        psDTStart, psDTEnd, 
-        asList, iListSize, RcvStream);
+      pSession->m_Session, &h, 1, 0,
+      psDTStart, psDTEnd, 
+      asList, iListSize, RcvStream);
   }  
   
   if (CAPI_ERR_OK != capiStatus)
@@ -344,7 +350,15 @@ nsresult nsLayer::FetchEventsByRange(
       {
         pEvent = (ICalComponent*)pEventList->GetAt(j);
         if (0 != pEvent)
+        {
+#if 0
+          UnicodeString usFmt("%(yyyy-MMM-dd hh:mma)B-%(hh:mma)e  %S");         // XXX this needs to be put in a resource, then a variable that can be switched
+          char *psBuf = pEvent->toStringFmt(usFmt).toCString("");
+          delete psBuf;
+#endif
+          anArray->Add(pEvent);
           mpShell->mpCalendar->addEvent(pEvent);
+        }
       }
     }
   }

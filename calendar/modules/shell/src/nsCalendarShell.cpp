@@ -50,6 +50,7 @@
 
 #include "nsCoreCIID.h"
 #include "nsLayer.h"
+#include "nsLayerCollection.h"
 #include "nsCalUser.h"
 #include "nsCalendarUser.h"
 #include "nsCalendarModel.h"
@@ -95,6 +96,7 @@ static NS_DEFINE_IID(kCCapiCSTCID,          NS_CAPI_CST_CID);
 static NS_DEFINE_IID(kCLayerCID,            NS_LAYER_CID);
 static NS_DEFINE_IID(kILayerIID,            NS_ILAYER_IID);
 static NS_DEFINE_IID(kCLayerCollectionCID,  NS_LAYER_COLLECTION_CID);
+static NS_DEFINE_IID(kILayerCollectionIID,  NS_ILAYER_COLLECTION_IID);
 static NS_DEFINE_IID(kCCalendarModelCID,    NS_CALENDAR_MODEL_CID);
 static NS_DEFINE_IID(kICalendarUserIID,     NS_ICALENDAR_USER_IID); 
 static NS_DEFINE_IID(kCCalendarUserCID,     NS_CALENDAR_USER_CID);
@@ -244,6 +246,13 @@ nsresult nsCalendarShell::Logon()
   if (NS_OK != (res = mpLoggedInUser->QueryInterface(kIUserIID,(void**)&pUser)))
     return res ;
 
+
+  /*
+   * THIS WHOLE AREA NEEDS TO BE MOVED INTO USERMGR. Have it 
+   * create the user, etc based on a curl or curllist.
+   */
+
+
   /*
    *  Getting the first calendar by user name should be reviewed.
    */
@@ -307,6 +316,15 @@ nsresult nsCalendarShell::Logon()
       //mScheduler.InitialLoadData();
       mpLoggedInUser->GetLayer(pLayer);
       NS_ASSERTION(0 != pLayer,"null pLayer");
+      {
+        char sBuf[2048];
+        int iBufSize = sizeof(sBuf);
+        JulianString sTmp;
+        mShellInstance->GetPreferences()->GetCharPref(CAL_STRING_PREF_PREFERRED_ADDR,sBuf, &iBufSize );
+        sTmp = sBuf;
+        EnvVarsToValues(sTmp);
+      pLayer->SetCurl(sTmp);
+      }
       pLayer->SetShell(this);
       pLayer->FetchEventsByRange(&d,&d1,&EventList);
       pLayer->SetCal(mpCalendar);
@@ -521,9 +539,9 @@ nsresult nsCalendarShell::LoadPreferences()
    */
   nsILayer* pLayer;
   if (NS_OK != (res = nsRepository::CreateInstance(
-          kCLayerCID,         // class id that we want to create
-          nsnull,             // not aggregating anything  (this is the aggregatable interface)
-          kILayerIID,         // interface id of the object we want to get back
+          kCLayerCollectionCID,  // class id that we want to create
+          nsnull,                // not aggregating anything  (this is the aggregatable interface)
+          kILayerIID,            // interface id of the object we want to get back
           (void**)&pLayer)))
     return 1;  // XXX fix this
   pLayer->Init();

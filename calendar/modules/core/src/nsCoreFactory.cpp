@@ -22,6 +22,7 @@
 #include "nsCoreCIID.h"
 
 #include "nsLayer.h"
+#include "nsLayerCollection.h"
 #include "nsCalendarUser.h"
 #include "nsCalendarModel.h"
 
@@ -30,6 +31,7 @@ static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,       NS_IFACTORY_IID);
 static NS_DEFINE_IID(kICalUSerIID,       NS_ICALENDAR_USER_IID);
 static NS_DEFINE_IID(kCLayerCID,         NS_LAYER_CID);
+static NS_DEFINE_IID(kCLayerCollectionCID, NS_LAYER_COLLECTION_CID);
 static NS_DEFINE_IID(kCCalendarUserCID,  NS_CALENDAR_USER_CID);
 static NS_DEFINE_IID(kCCalendarModelCID, NS_CALENDAR_MODEL_CID);
 
@@ -120,6 +122,8 @@ nsresult nsCoreFactory::CreateInstance(nsISupports *aOuter,
 
   if (mClassID.Equals(kCLayerCID)) {
     inst = (nsISupports *)new nsLayer(aOuter);
+  } else if (mClassID.Equals(kCLayerCollectionCID)) {
+    inst = (nsISupports *)(nsILayerCollection*) new nsLayerCollection(aOuter);
   } else if (mClassID.Equals(kCCalendarUserCID)) {
     inst = (nsISupports *)new nsCalendarUser(aOuter);
   } else if (mClassID.Equals(kCCalendarModelCID)) {

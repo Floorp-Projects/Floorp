@@ -186,14 +186,14 @@ public:
      *
      * <pre>
      *   JulianString x("012345");
-     *   x[2,4] returns a JulianString containing "234"
+     *   x.indexSubstr(2,4) returns a JulianString containing "234"
      * </pre>
      *
-     * @param i   index of first character of the sub
-     * @param j   index of the last character of the sub
-     * @return    a JulianString
+     * @param iStart  index of first character of the sub
+     * @param iStop   index of the last character of the sub
+     * @return        a JulianString
      */
-    JulianString indexSubstr(int32 iIndex, int32 iCount);
+    JulianString indexSubstr(int32 iStart, int32 iStop);
 
     /**
      *  Encode illegal characters to something suitable for a URL

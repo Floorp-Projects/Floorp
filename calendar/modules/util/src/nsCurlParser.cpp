@@ -43,9 +43,14 @@
  *                delimiting the extra stuff
  *    extra:      extra information that may be needed by a particular
  *                server or service.
+ *    remainder:  Anything past an embedded space. When the URL is parsed
+ *                it is expected not to include embedded spaces. When a
+ *                space is found, it could be that the string is
+ *                actually a list of URLs. The characters to the right
+ *                of the space are stored in remainder.
  *
  * This class provides quick access to these component parts.
- * Expected protocols are:  CAPI, IRIP, MAILTO
+ * Expected protocols are:  CAPI, IRIP, MAILTO, FILE, HTTP, FTP, RESOURCE
  *
  * This code probably exists somewhere else.
  *
@@ -122,6 +127,7 @@ void nsCurlParser::Init()
   m_iPort = -1;
   m_sCSID = "";
   m_sExtra = "";
+  m_sRemainder = "";
   m_bParseNeeded = PR_FALSE;
   m_bAssemblyNeeded = PR_FALSE;
 }
@@ -136,6 +142,7 @@ void nsCurlParser::Init(const nsCurlParser& that)
   m_iPort = that.m_iPort;
   m_sCSID = that.m_sCSID;
   m_sExtra = that.m_sExtra;
+  m_sRemainder = that.m_sRemainder;
   m_bParseNeeded = that.m_bParseNeeded;
   m_bAssemblyNeeded = that.m_bAssemblyNeeded;
 }
@@ -188,7 +195,19 @@ void nsCurlParser::Parse()
 
   Init();
 
+  /*
+   * quick check: look for an embedded space. If one is found 
+   * all characters to the right are stored in m_sRemainder.
+   */
+  if (-1 != (i = m_sCurl.Find(' ',0)))
+  {
+    m_sRemainder = m_sCurl.Right( m_sCurl.GetStrlen() - i );
+    m_sCurl.GetBuffer()[i] = 0;
+    m_sCurl.DoneWithBuffer();
+  }
+
   m_eProto = eUNKNOWN;
+
   /*
    * Was a protocol specified?
    */ 

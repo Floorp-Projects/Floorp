@@ -20,13 +20,16 @@
 #include "nscore.h"
 #include "jdefines.h"
 #include "ptrarray.h"
+#include "julnstr.h"
 #include "nsLayerCollection.h"
+#include "nsCurlParser.h"
 #include "nsCoreCIID.h"
 #include "nsxpfcCIID.h"
 
-static NS_DEFINE_IID(kILayerIID,                 NS_ILAYER_IID);
-static NS_DEFINE_IID(kILayerCollectionIID,       NS_ILAYER_COLLECTION_IID);
-static NS_DEFINE_IID(kCLayerCollectionCID,       NS_LAYER_COLLECTION_CID);
+static NS_DEFINE_IID(kILayerIID,              NS_ILAYER_IID);
+static NS_DEFINE_IID(kILayerCollectionIID,    NS_ILAYER_COLLECTION_IID);
+static NS_DEFINE_IID(kCLayerCollectionCID,    NS_LAYER_COLLECTION_CID);
+static NS_DEFINE_IID(kCLayerCID,              NS_LAYER_CID);
 
 nsLayerCollection::nsLayerCollection(nsISupports* outer)
 {
@@ -116,13 +119,112 @@ nsresult nsLayerCollection :: RemoveLayer(nsILayer * aLayer)
   return NS_OK;
 }
 
-nsresult nsLayerCollection::SetCurl(const JulianString& s)
+/**
+ * Remove any existing layers, and create a layer for each
+ * of the supplied urls.
+ * @param sCurl  A string of space-delimited calendar urls 
+ *               that form the layer list.
+ * @return NS_OK on success
+ */
+nsresult nsLayerCollection::SetCurl(const JulianString& sC)
 {
+  nsILayer* pLayer;
+  nsresult res;
+  JulianString sCurl = sC;
+
+  /*
+   * Delete all layers we currently hold...
+   */
+  while (mLayers->Count() > 0 )
+  {
+    pLayer = (nsILayer*)mLayers->ElementAt(0);
+    RemoveLayer(pLayer);
+    mLayers->RemoveAt(0);
+  }
+
+  /*
+   * Now build up the layers based on what we have...
+   */
+  JulianString s;
+  int32 i,j;
+  for (i = 0; i >= 0 && i < (PRInt32)sCurl.GetStrlen(); i = j + 1 )
+  {
+    while (' ' == sCurl.GetBuffer()[i] && i < (PRInt32)sCurl.GetStrlen())
+      ++i;
+    if (i >= (PRInt32)sCurl.GetStrlen())
+      break;
+    /*
+     * XXX:
+     * this is a complete hack.  I want to use the commented out 
+     * lines below. But if I
+     * do we get library link errors. Maybe it will go away when we make
+     * the big changeover to nsString.
+     */
+    
+#if 0
+     if (-1 == (j = sCurl.Strpbrk(i," \t")))
+       j = sCurl.GetStrlen()-1;
+     s = sCurl(i,j-i+1);
+#endif
+
+#if 1
+    {
+      /*
+       * XXX: REMOVE this code when replacing the string.
+       */
+    char sBuf[1024];
+    int k;
+    char c;
+    for ( k = 0, j = i;
+          (' ' != (c = sCurl.GetBuffer()[j])) && (j < (PRInt32)sCurl.GetStrlen());
+          j++, k++)
+          {
+            sBuf[k] = c;
+          }
+    sBuf[k] = 0;
+    s = sBuf;
+    }
+#endif
+
+    /*
+     * create a new layer for this curl
+     */
+    if (NS_OK != (res = nsRepository::CreateInstance(
+            kCLayerCID,         // class id that we want to create
+            nsnull,             // not aggregating anything  (this is the aggregatable interface)
+            kILayerIID,         // interface id of the object we want to get back
+            (void**)&pLayer)))
+      return 1;  // XXX fix this
+    pLayer->Init();
+    pLayer->SetCurl(s);
+    AddLayer(pLayer);
+  }
   return (NS_OK);
 }
 
+/**
+ * Build a string containing all the layers in this collection.
+ * @param s the returned string
+ * @return NS_OK on success.
+ */
 nsresult nsLayerCollection::GetCurl(JulianString& s)
 {
+  PRInt32 i;
+  PRInt32 iSize = mLayers->Count();
+  JulianString sTmp;
+  nsILayer* pLayer;
+  nsresult res;
+
+  s = "";
+  for ( i = 0; i < (PRInt32)mLayers->Count(); i++)
+  {
+    pLayer = (nsILayer*)mLayers->ElementAt(i);
+    if ( NS_OK != (res = pLayer->GetCurl(sTmp)))
+      return res;
+    if (i > 0)
+      s += " ";
+    s += sTmp;
+  }
   return (NS_OK);
 }
 
@@ -208,6 +310,25 @@ nsresult nsLayerCollection::URLMatch(const JulianString& aUrl, PRBool& aMatch)
       if (PR_TRUE == aMatch)
         return NS_OK;
     }
+  }
+  return NS_OK;
+}
+
+/**
+ * @param aShell the shell object 
+ *
+ * @return NS_OK on success
+ */
+nsresult nsLayerCollection::SetShell(nsCalendarShell* aShell)
+{
+  mpShell = aShell;
+  PRInt32 i;
+  PRInt32 iSize = mLayers->Count();
+  nsILayer *pLayer;
+  for ( i = 0; i < iSize; i++)
+  {
+    pLayer = (nsILayer*)mLayers->ElementAt(i);
+    pLayer->SetShell(aShell);
   }
   return NS_OK;
 }

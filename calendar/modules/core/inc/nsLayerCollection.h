@@ -40,7 +40,7 @@ public:
   NS_IMETHOD AddLayer(nsILayer * aLayer);
   NS_IMETHOD RemoveLayer(nsILayer * aLayer);
 
-  NS_IMETHOD SetShell(nsCalendarShell* aShell) {mpShell = aShell; return NS_OK;}
+  NS_IMETHOD SetShell(nsCalendarShell* aShell);
   NS_IMETHOD SetCurl(const JulianString& s);
   NS_IMETHOD GetCurl(JulianString& s);
   

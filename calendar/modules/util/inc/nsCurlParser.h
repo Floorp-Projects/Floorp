@@ -20,13 +20,15 @@
 /**
  * This class manages a string in one of the following forms:
  *
- *    protocol://user:password@host.domain[:port]/CSID[:extra]
+ *    protocol://[user[:password]@]host.domain[:port]/CSID[:extra]
  *    mailto:user@host.domain
  *
  * Examples:
  *    capi://calendar-1.mcom.com/sman
  *    capi://jason:badguy@calendar-1.mcom.com/sman
- *    capi://localhost/c|/temp/junk.ics
+ *    capi://guest@calendar-1.mcom.com/sman
+ *    file://localhost/c|/temp/junk.ics
+ *    file:///c|/temp/junk.ics
  *    mailto:sman@netscape.com
  *
  * The component parts of a calendar URL are:
@@ -41,9 +43,14 @@
  *                delimiting the extra stuff
  *    extra:      extra information that may be needed by a particular
  *                server or service.
+ *    remainder:  Anything past an embedded space. When the URL is parsed
+ *                it is expected not to include embedded spaces. When a
+ *                space is found, it could be that the string is
+ *                actually a list of URLs. The characters to the right
+ *                of the space are stored in remainder.
  *
  * This class provides quick access to these component parts.
- * Expected protocols are:  CAPI, IRIP, MAILTO
+ * Expected protocols are:  CAPI, IRIP, MAILTO, FILE, HTTP, FTP, RESOURCE
  *
  * This code probably exists somewhere else.
  *
@@ -53,6 +60,7 @@
  * to platform specific file handle.
  *
  */
+
 #ifndef _NS_CURL_PARSER_H
 #define _NS_CURL_PARSER_H
 
@@ -73,6 +81,7 @@ private:
   PRInt32       m_iPort;
   JulianString  m_sCSID;
   JulianString  m_sExtra;
+  JulianString  m_sRemainder;
   PRBool        m_bParseNeeded;
   PRBool        m_bAssemblyNeeded;
   
@@ -97,6 +106,7 @@ public:
   JulianString  GetCSID();
   JulianString  GetPath();
   JulianString  GetExtra();
+  JulianString  GetRemainder();
 
   /**
    * @return a JulianString containing the fully qualified Calendar URL.
