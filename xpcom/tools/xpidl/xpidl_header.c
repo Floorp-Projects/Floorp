@@ -26,7 +26,8 @@
 /* is this node from an aggregate type (interface)? */
 #define UP_IS_AGGREGATE(node)                                                 \
     (IDL_NODE_UP(node) &&                                                     \
-     IDL_NODE_TYPE(IDL_NODE_UP(node)) == IDLN_INTERFACE)
+     (IDL_NODE_TYPE(IDL_NODE_UP(node)) == IDLN_INTERFACE ||                   \
+      IDL_NODE_TYPE(IDL_NODE_UP(node)) == IDLN_FORWARD_DCL))
 
 #define UP_IS_NATIVE(node)                                                    \
     (IDL_NODE_UP(node) &&                                                     \
