@@ -70,14 +70,33 @@
 #include "jsjit.h"
 #endif
 
+#ifdef DEBUG
+#define ASSERT_CACHE_IS_EMPTY(cache)                                          \
+    JS_BEGIN_MACRO                                                            \
+        JSPropertyCacheEntry *end_, *pce_, entry_;                            \
+        JSPropertyCache *cache_ = (cache);                                    \
+        JS_ASSERT(cache_->empty);                                             \
+        end_ = &cache_->table[PROPERTY_CACHE_SIZE];                           \
+        for (pce_ = &cache_->table[0]; pce_ < end_; pce_++) {                 \
+            PCE_LOAD(cache_, pce_, entry_);                                   \
+            JS_ASSERT(!PCE_OBJECT(entry_));                                   \
+            JS_ASSERT(!PCE_PROPERTY(entry_));                                 \
+        }                                                                     \
+    JS_END_MACRO
+#else
+#define ASSERT_CACHE_IS_EMPTY(cache) ((void)0)
+#endif
+
 void
 js_FlushPropertyCache(JSContext *cx)
 {
     JSPropertyCache *cache;
 
     cache = &cx->runtime->propertyCache;
-    if (cache->empty)
+    if (cache->empty) {
+        ASSERT_CACHE_IS_EMPTY(cache);
         return;
+    }
     memset(cache->table, 0, sizeof cache->table);
     cache->empty = JS_TRUE;
     cache->flushes++;
@@ -87,7 +106,6 @@ void
 js_FlushPropertyCacheByProp(JSContext *cx, JSProperty *prop)
 {
     JSPropertyCache *cache;
-    JSBool empty;
     JSPropertyCacheEntry *end, *pce, entry;
     JSProperty *pce_prop;
 
@@ -95,22 +113,31 @@ js_FlushPropertyCacheByProp(JSContext *cx, JSProperty *prop)
     if (cache->empty)
         return;
 
-    empty = JS_TRUE;
     end = &cache->table[PROPERTY_CACHE_SIZE];
     for (pce = &cache->table[0]; pce < end; pce++) {
         PCE_LOAD(cache, pce, entry);
         pce_prop = PCE_PROPERTY(entry);
-        if (pce_prop) {
-            if (pce_prop == prop) {
-                PCE_OBJECT(entry) = NULL;
-                PCE_PROPERTY(entry) = NULL;
-                PCE_STORE(cache, pce, entry);
-            } else {
-                empty = JS_FALSE;
-            }
+        if (pce_prop == prop) {
+            PCE_OBJECT(entry) = NULL;
+            PCE_PROPERTY(entry) = NULL;
+            PCE_STORE(cache, pce, entry);
         }
     }
-    cache->empty = empty;
+}
+
+void
+js_DisablePropertyCache(JSContext *cx)
+{
+    JS_ASSERT(!cx->runtime->propertyCache.disabled);
+    cx->runtime->propertyCache.disabled = JS_TRUE;
+}        
+
+void
+js_EnablePropertyCache(JSContext *cx)
+{
+    JS_ASSERT(cx->runtime->propertyCache.disabled);
+    ASSERT_CACHE_IS_EMPTY(&cx->runtime->propertyCache);
+    cx->runtime->propertyCache.disabled = JS_FALSE;
 }
 
 /*

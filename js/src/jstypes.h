@@ -381,7 +381,7 @@ typedef JSIntn JSBool;
 /************************************************************************
 ** TYPES:       JSPackedBool
 ** DESCRIPTION:
-**  Use PRPackedBOol within structs where bitfields are not desireable
+**  Use JSPackedBool within structs where bitfields are not desireable
 **      but minimum and consistant overhead matters.
 ************************************************************************/
 typedef JSUint8 JSPackedBool;
