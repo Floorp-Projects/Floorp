@@ -14,11 +14,12 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
- *
+ *   Joe Hewitt (hewitt@netscape.com)
+ *   Brian Ryner (bryner@netscape.com)
  */
 
 /* ===== filepicker.css =================================================
@@ -39,11 +40,11 @@
 
 /* ::::: file/directory items ::::: */
 
-treecell.directory {
+outlinerbody:-moz-outliner-image(FilenameColumn, directory) {
   list-style-image: url("chrome://global/skin/filepicker/dir-closed.gif");
 }
 
-treecell.file {
+outlinerbody:-moz-outliner-image(FilenameColumn, file) {
   list-style-image: url("chrome://global/skin/filepicker/blank.gif");
 }
 

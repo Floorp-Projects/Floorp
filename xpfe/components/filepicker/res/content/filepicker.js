@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -24,36 +24,34 @@
  *  Peter Annema <disttsc@bart.nl>
  */
 
-const nsILocalFile        = Components.interfaces.nsILocalFile;
-const nsILocalFile_CONTRACTID = "@mozilla.org/file/local;1";
 const nsIFilePicker       = Components.interfaces.nsIFilePicker;
 const nsIDirectoryServiceProvider = Components.interfaces.nsIDirectoryServiceProvider;
 const nsIDirectoryServiceProvider_CONTRACTID = "@mozilla.org/file/directory_service;1";
 const nsStdURL_CONTRACTID     = "@mozilla.org/network/standard-url;1";
 const nsIFileURL          = Components.interfaces.nsIFileURL;
-const NC_NAMESPACE_URI = "http://home.netscape.com/NC-rdf#";
+const nsIOutlinerBoxObject = Components.interfaces.nsIOutlinerBoxObject;
 
-var sfile = Components.classes[nsILocalFile_CONTRACTID].createInstance(nsILocalFile);
+var sfile = Components.classes[nsLocalFile_CONTRACTID].createInstance(nsILocalFile);
 var retvals;
 var filePickerMode;
-var currentFilter;
 var dirHistory;
 var homeDir;
+var outlinerView;
 
-var directoryTree;
 var textInput;
 var okButton;
 
 var gFilePickerBundle;
 
-function onLoad() {
+function filepickerLoad() {
   gFilePickerBundle = document.getElementById("bundle_filepicker");
 
   dirHistory = new Array();
 
-  directoryTree = document.getElementById("directoryTree");
   textInput = document.getElementById("textInput");
   okButton = document.getElementById("ok");
+  outlinerView = new nsFileView();
+  outlinerView.selectionCallback = onSelect;
 
   if (window.arguments) {
     var o = window.arguments[0];
@@ -78,8 +76,9 @@ function onLoad() {
   if ((filePickerMode == nsIFilePicker.modeOpen) ||
       (filePickerMode == nsIFilePicker.modeSave)) {
 
-    currentFilter = filterTypes[0];
-    applyFilter();
+    window.setCursor("wait");
+    outlinerView.setFilter(filterTypes[0]);
+    window.setCursor("auto");
 
     /* build filter popup */
     var filterPopup = document.createElement("menupopup");
@@ -98,9 +97,11 @@ function onLoad() {
     var filterBox = document.getElementById("filterBox");
     filterBox.removeAttribute("hidden");
   } else if (filePickerMode == nsIFilePicker.modeGetFolder) {
-     // This applies a special filter to only show directories
-     applyDirectoryFilter();
+    outlinerView.showOnlyDirectories = true;
   }
+
+  // start out with a filename sort
+  handleColumnClick("FilenameColumn");
 
   try {
     var buttonLabel;
@@ -143,6 +144,9 @@ function onLoad() {
   retvals.buttonStatus = nsIFilePicker.returnCancel;
 
   gotoDirectory(sfile);
+  var outliner = document.getElementById("directoryOutliner");
+  outliner.outlinerBoxObject.view = outlinerView;
+
   doEnabling();
   textInput.focus();
 }
@@ -150,61 +154,9 @@ function onLoad() {
 function onFilterChanged(target)
 {
   var filterTypes = target.getAttribute("filters");
-  currentFilter = filterTypes;
-  applyFilter();
-}
-
-function applyFilter()
-{
-  /* This is where we manipulate the DOM to create new <rule>s */
-  var splitFilters = currentFilter.split("; ");
-  var matchAllFiles = false;
-  var ruleNode;
-
-  /* get just the extensions for each of the filters */
-  var extensions = new Array(splitFilters.length);
-  for (var j = 0; j < splitFilters.length; j++) {
-    var tmpStr = splitFilters[j];
-    if (tmpStr == "*") {
-      matchAllFiles = true;
-      break;
-    } else
-      extensions[j] = tmpStr.substring(1); /* chop off the '*' */
-  }
-
-  /* delete all rules except the first one */
-  for (j = 1;; j++) {
-    ruleNode = document.getElementById("matchRule."+j);
-    if (ruleNode) {
-      ruleNode.parentNode.removeChild(ruleNode);
-    } else {
-      break;
-    }
-  }
-
-  /* if we are matching all files, just clear the extension attribute
-     on the first match rule and we're done */
-  var rule0 = document.getElementById("matchRule.0");
-  if (matchAllFiles) {
-    rule0.removeAttributeNS(NC_NAMESPACE_URI, "extension");
-    directoryTree.builder.rebuild();
-    return;
-  }
-
-  /* rule 0 is special */
-  rule0.setAttributeNS(NC_NAMESPACE_URI, "extension" , extensions[0]);
-
-  /* iterate through the remaining extensions, creating new rules */
-  ruleNode = document.getElementById("fileFilter");
-
-  for (var k=1; k < extensions.length; k++) {
-    var newRule = rule0.cloneNode(true);
-    newRule.setAttribute("id", "matchRule."+k);
-    newRule.setAttributeNS(NC_NAMESPACE_URI, "extension", extensions[k]);
-    ruleNode.appendChild(newRule);
-  }
-
-  directoryTree.builder.rebuild();
+  window.setCursor("wait");
+  outlinerView.setFilter(filterTypes);
+  window.setCursor("auto");
 }
 
 function onOK()
@@ -338,22 +290,86 @@ function onCancel()
   return true;
 }
 
-function onClick(e) {
-  if ( e.detail == 2 ) {
-    var path = e.target.parentNode.getAttribute("path");
+function onDblClick(e) {
+  var t = e.originalTarget;
+  if (t.localName != "outlinerbody")
+    return;
 
-    if (path) {
-      var file = URLpathToFile(path);
-      if (file) {
-        if (file.isDirectory()) {
-          gotoDirectory(file);
-        }
-        else if (file.isFile()) {
-          doOKButton();
-        }
+  var file = outlinerView.getSelectedFile();
+  if (!file)
+    return;
+
+  if (file.isSymlink()) {
+    var targetFile = Components.classes[nsLocalFile_CONTRACTID].createInstance(nsILocalFile);
+    targetFile.initWithUnicodePath(file.unicodeTarget);
+    file = targetFile;
+  }
+
+  if (file.isDirectory()) {
+    gotoDirectory(file);
+  }
+  else if (file.isFile()) {
+    doOKButton();
+  }
+}
+
+function onClick(e) {
+  var t = e.originalTarget;
+  if (t.localName == "outlinercol")
+    handleColumnClick(t.id);
+}
+
+function convertColumnIDtoSortType(columnID) {
+  var sortKey;
+  
+  switch (columnID) {
+  case "FilenameColumn":
+    sortKey = nsFileView.SORTTYPE_NAME;
+    break;
+  case "FileSizeColumn":
+    sortKey = nsFileView.SORTTYPE_SIZE;
+    break;
+  case "LastModifiedColumn":
+    sortKey = nsFileView.SORTTYPE_DATE;
+    break;
+  default:
+    dump("unsupported sort column: " + columnID + "\n");
+    sortKey = 0;
+    break;
+  }
+  
+  return sortKey;
+}
+
+function handleColumnClick(columnID) {
+  var sortType = convertColumnIDtoSortType(columnID);
+  var sortOrder = (outlinerView.sortType == sortType) ? !outlinerView.reverseSort : false;
+  outlinerView.sort(sortType, sortOrder, false);
+  
+  // set the sort indicator on the column we are sorted by
+  var sortedColumn = document.getElementById(columnID);
+  if (outlinerView.reverseSort) {
+    sortedColumn.setAttribute("sortDirection", "descending");
+  } else {
+    sortedColumn.setAttribute("sortDirection", "ascending");
+  }
+  
+  // remove the sort indicator from the rest of the columns
+  var currCol = document.getElementById("directoryOutliner").firstChild;
+  while (currCol) {
+    while (currCol && currCol.localName != "outlinercol")
+      currCol = currCol.nextSibling;
+    if (currCol) {
+      if (currCol != sortedColumn) {
+        currCol.removeAttribute("sortDirection");
       }
+      currCol = currCol.nextSibling;
     }
   }
+}
+
+function doSort(sortType) {
+  outlinerView.sort(sortType, false);
 }
 
 function onKeypress(e) {
@@ -369,21 +385,13 @@ function doEnabling() {
   okButton.disabled = !enable;
 }
 
-function onSelect(e) {
-  if (e.target.selectedItems.length != 1)
-    return;
-  var path = e.target.selectedItems[0].firstChild.getAttribute("path");
+function onSelect(file) {
+  var path = file.unicodeLeafName;
 
   if (path) {
-    var file = URLpathToFile(path);
-    if (file) {
-      /* Put the leafName of the selected item in the input field if:
-         - GetFolder mode   : a directory was selected (only option)
-         - Open or Save mode: a file was selected                    */
-      if ((filePickerMode == nsIFilePicker.modeGetFolder) || file.isFile()) {
-        textInput.value = file.unicodeLeafName;
-        doEnabling();
-      }
+    if ((filePickerMode == nsIFilePicker.modeGetFolder) || file.isFile()) {
+      textInput.value = path;
+      doEnabling();
     }
   }
 }
@@ -392,7 +400,7 @@ function onDirectoryChanged(target)
 {
   var path = target.getAttribute("label");
 
-  var file = Components.classes[nsILocalFile_CONTRACTID].createInstance(nsILocalFile);
+  var file = Components.classes[nsLocalFile_CONTRACTID].createInstance(nsILocalFile);
   file.initWithUnicodePath(path);
 
   if (!sfile.equals(file)) {
@@ -447,30 +455,9 @@ function goUp() {
 
 function gotoDirectory(directory) {
   addToHistory(directory.unicodePath);
-  directoryTree.setAttribute("ref", fileToURL(directory).spec);
+  window.setCursor("wait");
+  outlinerView.setDirectory(directory.unicodePath);
+  window.setCursor("auto");
   sfile = directory;
-}
-
-function fileToURL(aFile) {
-  var newDirectoryURL = Components.classes[nsStdURL_CONTRACTID].createInstance().QueryInterface(nsIFileURL);
-  newDirectoryURL.file = aFile;
-  return newDirectoryURL;
-}
-
-function URLpathToFile(aURLstr) {
-  var fileURL = Components.classes[nsStdURL_CONTRACTID].createInstance().QueryInterface(nsIFileURL);
-  fileURL.spec = aURLstr;
-  return fileURL.file;
-}
-
-function applyDirectoryFilter() {
-  var ruleNode = document.getElementById("matchRule.0");
-
-  // A file can never have an extension of ".", because the extension is
-  // by definition everything after the last dot.  So, this rule will
-  // cause only directories to show up.
-  ruleNode.setAttributeNS(NC_NAMESPACE_URI, "extension", ".");
-
-  directoryTree.builder.rebuild();
 }
 
