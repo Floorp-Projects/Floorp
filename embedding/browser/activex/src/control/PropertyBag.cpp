@@ -66,18 +66,33 @@ HRESULT STDMETHODCALLTYPE CPropertyBag::Read(/* [in] */ LPCOLESTR pszPropName, /
         return E_INVALIDARG;
     }
 
+    VARTYPE vt = pVar->vt;
     VariantInit(pVar);
+
     for (unsigned long i = 0; i < m_PropertyList.GetSize(); i++)
     {
         if (wcsicmp(m_PropertyList.GetNameOf(i), pszPropName) == 0)
         {
+            const VARIANT *pvSrc = m_PropertyList.GetValueOf(i);
+            if (!pvSrc)
+            {
+                return E_FAIL;
+            }
+            CComVariant vNew;
+            HRESULT hr = (vt == VT_EMPTY) ?
+                vNew.Copy(pvSrc) : vNew.ChangeType(vt, pvSrc);
+            if (FAILED(hr))
+            {
+                return E_FAIL;
+            }
             // Copy the new value
-            VariantCopy(pVar, const_cast<VARIANT *>(m_PropertyList.GetValueOf(i)));
+            vNew.Detach(pVar);
             return S_OK;
         }
     }
+
     // Property does not exist in the bag
-    return E_INVALIDARG;
+    return E_FAIL;
 }
 
 
