@@ -46,8 +46,6 @@ MAKE := $(patsubst -j%,,$(MAKE)) -j1
 DIRS = config pr lib
 
 ifdef MOZILLA_CLIENT
-PR_CLIENT_BUILD = 1
-PR_CLIENT_BUILD_UNIX = 1
 # Make nsinstall use absolute symlinks by default for Mozilla OSX builds
 # http://bugzilla.mozilla.org/show_bug.cgi?id=193164
 ifeq ($(OS_ARCH),Darwin)
@@ -76,15 +74,6 @@ endif
 #
 ifeq ($(OS_ARCH),WINNT)
 ZIP_ASCII_OPT = -ll
-endif
-
-ifdef PR_CLIENT_BUILD
-export::
-	rm -r -f $(DIST)/../public/nspr
-ifdef PR_CLIENT_BUILD_UNIX
-	rm -f $(dist_libdir)/libnspr.a
-	rm -f $(dist_bindir)/libnspr.$(DLL_SUFFIX)
-endif
 endif
 
 # Delete config/autoconf.mk last because it is included by every makefile.
