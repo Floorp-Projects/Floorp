@@ -10,7 +10,6 @@ select.combobox {
   border-left: 4px;
   border-right: 4px;
   border-style: outset;
-  //background: silver;
 }
 
 titledbutton#TextColorPopup {
@@ -20,3 +19,35 @@ titledbutton#TextColorPopup {
 titledbutton#BackColorPopup {
   margin-left: -3px;
 }
+
+titledbutton#BoldButton {
+  min-width: 16px; 
+  font-size: 19px; 
+  font-weight: 900; 
+  font-family: times, serif, sans-serif;
+}
+
+titledbutton#BoldButton:hover {
+  text-decoration: none;
+}
+
+titledbutton#ItalicButton {
+  min-width: 16px; 
+  font-size: 19px; 
+  font-weight: 500; 
+  font-family: times, serif, sans-serif; 
+  font-style:  italic;
+}
+
+titledbutton#ItalicButton:hover {
+  text-decoration: none;
+}
+
+titledbutton#UnderlineButton {
+  min-width: 16px; 
+  font-size: 19px; 
+  font-weight: 500; 
+  font-family: times, serif, sans-serif; 
+  text-decoration: underline;
+}
+
