@@ -132,12 +132,7 @@ nsRenderingContextOS2::nsRenderingContextOS2()
   mPreservedInitialClipRegion = PR_FALSE;
   mPaletteMode = PR_FALSE;
 
-  // Need to enforce setting color values for first time. Make cached values different from current ones.
-  mCurrFontMetrics = mFontMetrics + 1;
-  mCurrTextColor   = mColor + 1;
-  mCurrLineColor   = mColor + 1;
-  mCurrLineStyle   = (nsLineStyle)((int)mLineStyle + 1);
-  mCurrFillColor   = mColor + 1;
+  mCurrFontMetrics = 0;
 
   mStateCache = new nsVoidArray();
   mRightToLeftText = PR_FALSE;
@@ -292,11 +287,7 @@ nsresult nsRenderingContextOS2::SetupPS (void)
    GFX (::GpiSetAttrs (mPS, PRIM_IMAGE, IBB_COLOR | IBB_BACK_COLOR | IBB_MIX_MODE | IBB_BACK_MIX_MODE, 0, (PBUNDLE)&ib), FALSE);
 
    // Need to enforce setting color values for first time. Make cached values different from current ones.
-   mCurrFontMetrics = mFontMetrics + 1;
-   mCurrTextColor   = mColor + 1;
-   mCurrLineColor   = mColor + 1;
-   mCurrLineStyle   = (nsLineStyle)((int)mLineStyle + 1);
-   mCurrFillColor   = mColor + 1;
+   mCurrFontMetrics = 0;
 
    return NS_OK;
 }
@@ -885,45 +876,35 @@ LONG nsRenderingContextOS2::GetGPIColor (void)
 
 void nsRenderingContextOS2::SetupLineColorAndStyle (void)
 {
-   if (mColor != mCurrLineColor)
+   
+   LINEBUNDLE lineBundle;
+   lineBundle.lColor = GetGPIColor ();
+
+   GFX (::GpiSetAttrs (mPS, PRIM_LINE, LBB_COLOR, 0, (PBUNDLE)&lineBundle), FALSE);
+   
+   long ltype = 0;
+   switch( mLineStyle)
    {
-      LINEBUNDLE lineBundle;
-      lineBundle.lColor = GetGPIColor ();
-
-      GFX (::GpiSetAttrs (mPS, PRIM_LINE, LBB_COLOR, 0, (PBUNDLE)&lineBundle), FALSE);
-
-      mCurrLineColor = mColor;
+      case nsLineStyle_kNone:   ltype = LINETYPE_INVISIBLE; break;
+      case nsLineStyle_kSolid:  ltype = LINETYPE_SOLID; break;
+      case nsLineStyle_kDashed: ltype = LINETYPE_SHORTDASH; break;
+      case nsLineStyle_kDotted: ltype = LINETYPE_DOT; break;
+      default:
+         NS_ASSERTION(0, "Unexpected line style");
+         break;
    }
-
-   if (mLineStyle != mCurrLineStyle)
-   {
-      long ltype = 0;
-      switch( mLineStyle)
-      {
-         case nsLineStyle_kNone:   ltype = LINETYPE_INVISIBLE; break;
-         case nsLineStyle_kSolid:  ltype = LINETYPE_SOLID; break;
-         case nsLineStyle_kDashed: ltype = LINETYPE_SHORTDASH; break;
-         case nsLineStyle_kDotted: ltype = LINETYPE_DOT; break;
-         default:
-            NS_ASSERTION(0, "Unexpected line style");
-            break;
-      }
-      GFX (::GpiSetLineType (mPS, ltype), FALSE);
-      mCurrLineStyle = mLineStyle;
-   }
+   GFX (::GpiSetLineType (mPS, ltype), FALSE);
+   
 }
 
 void nsRenderingContextOS2::SetupFillColor (void)
 {
-   if (mColor != mCurrFillColor)
-   {
-      AREABUNDLE areaBundle;
-      areaBundle.lColor = GetGPIColor ();
+   
+   AREABUNDLE areaBundle;
+   areaBundle.lColor = GetGPIColor ();
 
-      GFX (::GpiSetAttrs (mPS, PRIM_AREA, ABB_COLOR, 0, (PBUNDLE)&areaBundle), FALSE);
+   GFX (::GpiSetAttrs (mPS, PRIM_AREA, ABB_COLOR, 0, (PBUNDLE)&areaBundle), FALSE);
 
-      mCurrFillColor = mColor;
-   }
 }
 
 NS_IMETHODIMP nsRenderingContextOS2::DrawLine( nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
@@ -2549,20 +2530,17 @@ void nsRenderingContextOS2::SetupFontAndColor (void)
       }
    }
 
-   if (mColor != mCurrTextColor)
-   {
-      CHARBUNDLE cBundle;
-      cBundle.lColor = GetGPIColor ();
-      cBundle.usMixMode = FM_OVERPAINT;
-      cBundle.usBackMixMode = BM_LEAVEALONE;
+   
+   CHARBUNDLE cBundle;
+   cBundle.lColor = GetGPIColor ();
+   cBundle.usMixMode = FM_OVERPAINT;
+   cBundle.usBackMixMode = BM_LEAVEALONE;
 
-      GFX (::GpiSetAttrs (mPS, PRIM_CHAR,
-                          CBB_COLOR | CBB_MIX_MODE | CBB_BACK_MIX_MODE,
-                          0, &cBundle),
-           FALSE);
-
-      mCurrTextColor = mColor;
-   }
+   GFX (::GpiSetAttrs (mPS, PRIM_CHAR,
+                       CBB_COLOR | CBB_MIX_MODE | CBB_BACK_MIX_MODE,
+                       0, &cBundle),
+        FALSE);
+   
 }
 
 void nsRenderingContextOS2::PushClipState(void)

@@ -236,9 +236,6 @@ protected:
   nsVoidArray         *mStateCache;
   nsIFontMetrics      *mFontMetrics;     // current font
   nsIFontMetrics      *mCurrFontMetrics; // currently selected font
-  nscolor              mCurrTextColor;   // currently selected text color
-  nscolor              mCurrLineColor;   // currently selected line color
-  nsLineStyle          mCurrLineStyle;   // currently selected line style
   nscolor              mCurrFillColor;   // currently selected fill color
   PRBool               mPreservedInitialClipRegion;
   PRBool               mPaletteMode;     // GPI colors are indexes into selected palette
