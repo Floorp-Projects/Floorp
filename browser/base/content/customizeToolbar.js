@@ -55,6 +55,8 @@ function buildDialog()
   if (!modeValue)
     modeValue = "full";
   modeList.value = modeValue;
+  if (modeValue == "text")
+    useSmallIcons.disabled = true;
   
   var cloneToolbarBox = document.getElementById("cloned-bar-container");
   var paletteBox = document.getElementById("palette-box");
@@ -73,7 +75,7 @@ function buildDialog()
   
   if (useSmallIcons.checked)
     newToolbar.setAttribute("iconsize", "small");
-  newToolbar.setAttribute("mode", modeList.value);
+  newToolbar.setAttribute("mode", modeValue);
 
   // Walk through and manually clone the children of the to-be-customized toolbar.
   // Make sure all buttons look enabled (and that textboxes are disabled).
@@ -562,4 +564,7 @@ function updateToolbarMode(modeValue)
   toolbar.setAttribute("mode", modeValue);
   toolbar.removeAttribute("minheight");
   gToolbarChanged = true;
+  
+  var iconSizeCheckbox = document.getElementById("smallicons");
+  iconSizeCheckbox.disabled = modeValue == "text";
 }
