@@ -285,6 +285,7 @@ DataRequestForwarder::RetryConnection()
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder RetryConnection \n", this));
 
     mRetrying = PR_TRUE;
+    mDelayedOnStartFired = PR_FALSE;
 }
 
 NS_IMETHODIMP 
@@ -1481,8 +1482,14 @@ nsFtpState::S_list() {
 
 FTP_STATE
 nsFtpState::R_list() {
-    if (mResponseCode/100 == 1) 
+    if (mResponseCode/100 == 1) {
+        nsresult rv = mDPipeRequest->Resume();
+        if (NS_FAILED(rv)) {
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) dataPipe->Resume (rv=%x)\n", this, rv));
+            return FTP_ERROR;
+        }
         return FTP_READ_BUF;
+    }
 
     if (mResponseCode/100 == 2) {
         //(DONE)
@@ -1512,7 +1519,6 @@ nsFtpState::S_retr() {
 
 FTP_STATE
 nsFtpState::R_retr() {
-
     if (mResponseCode/100 == 2) {
         //(DONE)
         mNextState = FTP_COMPLETE;
@@ -1526,6 +1532,11 @@ nsFtpState::R_retr() {
         if (mCacheEntry) {
             (void)mCacheEntry->Doom();
             mCacheEntry = nsnull;
+        }
+        nsresult rv = mDPipeRequest->Resume();
+        if (NS_FAILED(rv)) {
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) dataPipe->Resume (rv=%x)\n", this, rv));
+            return FTP_ERROR;
         }
         return FTP_READ_BUF;
     }
@@ -1544,6 +1555,8 @@ nsFtpState::R_retr() {
         if (st)
             st->SetReuseConnection(PR_FALSE);
         mDPipe = 0;
+        mDPipeRequest->Cancel(NS_OK);
+        mDPipeRequest = 0;
 
         return FTP_S_PASV;
     }
@@ -1788,6 +1801,16 @@ nsFtpState::R_pasv() {
 
     if (mRETRFailed)
         return FTP_S_CWD;
+
+    // Suspend the read
+    // If we don't do this, then the remote server could close the connection
+    // before we get the error message, and then we process the onstop as if
+    // it was from the real data connection
+    rv = mDPipeRequest->Suspend();
+    if (NS_FAILED(rv)){
+        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) dataPipe->Suspend failed (rv=%x)\n", this, rv));
+        return FTP_ERROR;
+    }
 
     return FTP_S_SIZE;
 }
