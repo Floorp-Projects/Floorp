@@ -27,8 +27,12 @@ install::
 	$(MAKE_INSTALL) .\messagel.gif $(DISTBROWSWER)
 	$(MAKE_INSTALL) .\navigator.css $(DISTBROWSWER)
 	$(MAKE_INSTALL) .\questionl.gif $(DISTBROWSWER)
-	$(MAKE_INSTALL) .\xul.css $(DISTBROWSWER)
 	$(MAKE_INSTALL) .\contentframe.css $(DISTBROWSWER)
 
 clobber::
-  rm -f $(DIST)\bin\chrome\browser\skin\default\*.*
+  rm -f $(DISTBROWSER)\alertl.gif
+  rm -f $(DISTBROWSER)\errorl.gif
+  rm -f $(DISTBROWSER)\messagel.gif
+  rm -f $(DISTBROWSER)\navigator.css
+  rm -f $(DISTBROWSER)\questionl.gif
+  rm -f $(DISTBROWSER)\contentframe.css

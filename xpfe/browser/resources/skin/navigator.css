@@ -155,14 +155,7 @@ window#main-window {
    height: 100%;
 }
 
-box#outer-box {
-   width: 100%; 
-   height:100%;
-}
-
 iframe#content-frame {
- min-width: 10px;
- min-height: 10px;
- width: 100px;
- height: 100px;
+ min-width: 0px;
+ min-height: 0px;
 }
