@@ -406,14 +406,15 @@ nsIOService::NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
 
 NS_IMETHODIMP
 nsIOService::NewInputStreamChannel(nsIURI* uri, const char *contentType,
-                                   nsIInputStream *inStr, nsIChannel **result)
+                                   nsIInputStream *inStr, nsILoadGroup* group,
+                                   nsIChannel **result)
 {
     nsresult rv;
     nsInputStreamChannel* channel;
     rv = nsInputStreamChannel::Create(nsnull, NS_GET_IID(nsIChannel),
                                       (void**)&channel);
     if (NS_FAILED(rv)) return rv;
-    rv = channel->Init(uri, contentType, inStr);
+    rv = channel->Init(uri, contentType, inStr, group);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

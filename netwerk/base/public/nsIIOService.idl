@@ -154,7 +154,8 @@ interface nsIIOService : nsISupports
      */
     nsIChannel NewInputStreamChannel(in nsIURI uri,
                                      in string contentType, 
-                                     in nsIInputStream inStr);
+                                     in nsIInputStream inStr,
+                                     in nsILoadGroup group);
 };
 
 %{C++
