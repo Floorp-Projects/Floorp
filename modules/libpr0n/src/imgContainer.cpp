@@ -656,7 +656,7 @@ void imgContainer::FillWithColor(gfxIImageFrame *aFrame, gfx_color color)
             *rgbRowIndex++ = (backgroundColor & 0x0000FF00) >> 8;
             *rgbRowIndex++ = backgroundColor & 0x000000FF;
 #else
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
             *rgbRowIndex++ = 0;
 #endif
             *rgbRowIndex++ = backgroundColor & 0x000000FF;
