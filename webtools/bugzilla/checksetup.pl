@@ -500,7 +500,8 @@ unlink "data/versioncache";
 #
 
 # These are the files which need to be marked executable
-my @executable_files = ('processmail', 'whineatnews.pl', 'collectstats.pl', 'checksetup.pl', 'syncshadowdb');
+my @executable_files = ('processmail', 'whineatnews.pl', 'collectstats.pl',
+   'checksetup.pl', 'syncshadowdb', 'importxml.pl');
 
 # tell me if a file is executable.  All CGI files and those in @executable_files
 # are executable
