@@ -78,6 +78,11 @@
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 
+//focus
+#include "nsIDOMEventReceiver.h" 
+#include "nsIDOMFocusListener.h"
+
+
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
 #ifdef NS_DEBUG
@@ -125,6 +130,35 @@ protected:
   PRPackedBool         mSelectionWasCollapsed;
   
 };
+
+
+/** editor Implementation of the FocusListener interface
+ */
+class nsDocViewerFocusListener : public nsIDOMFocusListener 
+{
+public:
+  /** default constructor
+   */
+  nsDocViewerFocusListener();
+  /** default destructor
+   */
+  virtual ~nsDocViewerFocusListener();
+
+
+/*interfaces for addref and release and queryinterface*/
+  NS_DECL_ISUPPORTS
+
+/*BEGIN implementations of focus event handler interface*/
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
+  virtual nsresult Focus(nsIDOMEvent* aEvent);
+  virtual nsresult Blur(nsIDOMEvent* aEvent);
+/*END implementations of focus event handler interface*/
+  nsresult             Init(DocumentViewerImpl *aDocViewer);
+
+private:
+    DocumentViewerImpl*  mDocViewer;
+};
+
 
 
 #ifdef XP_MAC
@@ -230,6 +264,7 @@ protected:
   nsCOMPtr<nsIStyleSheet>  mUAStyleSheet;
 
   nsCOMPtr<nsIDOMSelectionListener> mSelectionListener;
+  nsCOMPtr<nsIDOMFocusListener> mFocusListener;
   
   PRBool  mEnableRendering;
   PRInt16 mNumURLStarts;
@@ -354,6 +389,8 @@ DocumentViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 DocumentViewerImpl::~DocumentViewerImpl()
 {
+  nsresult rv;
+
   if (mDocument) {
     // Break global object circular reference on the document created
     // in the DocViewer Init
@@ -364,7 +401,14 @@ DocumentViewerImpl::~DocumentViewerImpl()
     }
     // out of band cleanup of webshell
     mDocument->SetScriptGlobalObject(nsnull);
+    if (mFocusListener) {
+      // get the DOM event receiver
+      nsCOMPtr<nsIDOMEventReceiver> erP;
+      rv = mDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
+      if(NS_SUCCEEDED(rv) && erP)
+        erP->RemoveEventListenerByIID(mFocusListener, NS_GET_IID(nsIDOMFocusListener));
   }
+ }
 
   if (mPresContext) {
     mPresContext->SetContainer(nsnull);
@@ -378,7 +422,6 @@ DocumentViewerImpl::~DocumentViewerImpl()
     // Break circular reference (or something)
     mPresShell->EndObservingDocument();
     nsCOMPtr<nsIDOMSelection> selection;
-    nsresult rv;
     rv = GetDocumentSelection(getter_AddRefs(selection));
     if (NS_FAILED(rv) || !selection) 
       return;
@@ -541,6 +584,33 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
   rv = selection->AddSelectionListener(mSelectionListener);
   if (NS_FAILED(rv)) return rv;
   
+  //focus listener
+  // now register ourselves as a focus listener, so that we get called
+  // when the focus changes in the window
+  nsDocViewerFocusListener *focusListener;
+  NS_NEWXPCOM(focusListener, nsDocViewerFocusListener);
+  if (!focusListener) return NS_ERROR_OUT_OF_MEMORY;
+  focusListener->Init(this);
+  
+  // this is the owning reference. The nsCOMPtr will take care of releasing
+  // our ref to the listener on destruction.
+  NS_ADDREF(focusListener);
+  rv = focusListener->QueryInterface(NS_GET_IID(nsIDOMFocusListener), getter_AddRefs(mFocusListener));
+  NS_RELEASE(focusListener);
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  if(mDocument)
+  {
+    // get the DOM event receiver
+    nsCOMPtr<nsIDOMEventReceiver> erP;
+    rv = mDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
+    if(NS_FAILED(rv) || !erP)
+      return rv?rv:NS_ERROR_FAILURE;
+
+    rv = erP->AddEventListenerByIID(mFocusListener, NS_GET_IID(nsIDOMFocusListener));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
+  }
   return rv;
 }
 
@@ -1702,3 +1772,87 @@ NS_IMETHODIMP nsDocViwerSelectionListener::NotifySelectionChanged(nsIDOMDocument
   return NS_OK;
 }
 
+//nsDocViewerFocusListener
+NS_IMPL_ISUPPORTS(nsDocViewerFocusListener, NS_GET_IID(nsIDOMFocusListener));
+
+nsDocViewerFocusListener::nsDocViewerFocusListener()
+:mDocViewer(nsnull)
+{
+  NS_INIT_REFCNT();
+}
+
+nsDocViewerFocusListener::~nsDocViewerFocusListener(){}
+
+nsresult
+nsDocViewerFocusListener::HandleEvent(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+nsresult
+nsDocViewerFocusListener::Focus(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDocument> doc;
+  if(!mDocViewer)
+    return NS_ERROR_FAILURE;
+
+  nsresult result = mDocViewer->GetDocument(*getter_AddRefs(doc));//deref once cause it take a ptr ref
+  if(NS_FAILED(result) || !doc)
+    return result?result:NS_ERROR_FAILURE;
+
+  PRInt8 selectionStatus;
+  selectionStatus = doc->GetDisplaySelection();
+
+  //if selection was nsIDocument::SELECTION_OFF, do nothing
+  //otherwise re-enable it.
+  if(selectionStatus == nsIDocument::SELECTION_DISABLED)
+  {
+    doc->SetDisplaySelection(nsIDocument::SELECTION_ON);
+
+    nsCOMPtr<nsIPresShell> ps;
+    result = mDocViewer->GetPresShell(*getter_AddRefs(ps));
+
+    if(NS_FAILED(result) || !ps)
+      return result?result:NS_ERROR_FAILURE;
+    ps->RepaintSelection(SELECTION_NORMAL);
+  }
+  return result;
+}
+
+nsresult
+nsDocViewerFocusListener::Blur(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDocument> doc;
+  if(!mDocViewer)
+    return NS_ERROR_FAILURE;
+
+  nsresult result = mDocViewer->GetDocument(*getter_AddRefs(doc));//deref once cause it take a ptr ref
+  if(NS_FAILED(result) || !doc)
+    return result?result:NS_ERROR_FAILURE;
+
+  PRInt8 selectionStatus;
+  selectionStatus = doc->GetDisplaySelection();
+ 
+  //if selection was nsIDocument::SELECTION_OFF, do nothing
+  //otherwise re-enable it.
+  if(selectionStatus == nsIDocument::SELECTION_ON)
+  {
+    doc->SetDisplaySelection(nsIDocument::SELECTION_DISABLED);
+
+    nsCOMPtr<nsIPresShell> ps;
+    result = mDocViewer->GetPresShell(*getter_AddRefs(ps));//deref once cause it take a ptr ref
+
+    if(NS_FAILED(result) || !ps)
+      return result?result:NS_ERROR_FAILURE;
+    ps->RepaintSelection(SELECTION_NORMAL);
+  }
+  return result;
+}
+
+
+nsresult
+nsDocViewerFocusListener::Init(DocumentViewerImpl *aDocViewer)
+{
+  mDocViewer = aDocViewer;
+  return NS_OK;
+}
