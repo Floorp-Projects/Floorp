@@ -52,7 +52,6 @@
 #include "TypeInState.h"
 
 #include "nsIServiceManager.h"
-#include "nsCRT.h"
 
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
@@ -67,6 +66,7 @@
 #include "nsIDOMNSRange.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIEnumerator.h"
+#include "nsIStyleContext.h"
 #include "nsIPresShell.h"
 #include "nsLayoutCID.h"
 #include "nsIPrefBranch.h"
@@ -1509,6 +1509,23 @@ nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
     blockParent = mHTMLEditor->GetBlockNodeParent(node);
     
   if (!blockParent) return NS_ERROR_FAILURE;
+  
+  // if block is empty, populate with br.
+  // (for example, imagine a div that contains the word "text".  the user selects
+  // "text" and types return.  "text" is deleted leaving an empty block.  we want
+  // to put in one br to make block have a line.  then code further below will put 
+  // in a second br.)
+  PRBool isEmpty;
+  res = IsEmptyBlock(blockParent, &isEmpty);
+  if (isEmpty)
+  {
+    PRUint32 blockLen;
+    res = mHTMLEditor->GetLengthOfDOMNode(blockParent, blockLen);
+    if (NS_FAILED(res)) return res;
+    nsCOMPtr<nsIDOMNode> brNode;
+    res = mHTMLEditor->CreateBR(blockParent, blockLen, address_of(brNode));
+    if (NS_FAILED(res)) return res;
+  }
   
   nsCOMPtr<nsIDOMNode> listItem = IsInListItem(blockParent);
   if (listItem)
