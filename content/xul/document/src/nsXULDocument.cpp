@@ -3936,23 +3936,32 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
 	  // in the document.
 	  // Do a getElementById to retrieve the broadcaster
     nsCOMPtr<nsIDOMElement> broadcaster;
-	  nsAutoString observesVal;
-	  aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::observes, observesVal);
-    GetElementById(observesVal, getter_AddRefs(broadcaster));
-    if (broadcaster) {
-        nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aElement));
-		    RemoveBroadcastListenerFor(broadcaster,
-                                   elt,
-                                   NS_LITERAL_STRING("*"));
+    nsAutoString observesVal;
+    
+    if (aElement->HasAttr(kNameSpaceID_None, nsXULAtoms::observes)) {
+        aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::observes, observesVal);
+        if (!observesVal.IsEmpty()) {
+            GetElementById(observesVal, getter_AddRefs(broadcaster));
+            if (broadcaster) {
+                nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aElement));
+		            RemoveBroadcastListenerFor(broadcaster,
+                                           elt,
+                                           NS_LITERAL_STRING("*"));
+            } 
+        }
     }
-	  
-    aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::command, observesVal);
-    GetElementById(observesVal, getter_AddRefs(broadcaster));
-    if (broadcaster) {
-		    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aElement));
-		    RemoveBroadcastListenerFor(broadcaster,
-                                   elt,
-                                   NS_LITERAL_STRING("*"));
+
+    if (aElement->HasAttr(kNameSpaceID_None, nsXULAtoms::command)) {
+        aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::command, observesVal);
+        if (!observesVal.IsEmpty()) {
+            GetElementById(observesVal, getter_AddRefs(broadcaster));
+            if (broadcaster) {
+                nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aElement));
+		            RemoveBroadcastListenerFor(broadcaster,
+                                           elt,
+                                           NS_LITERAL_STRING("*"));
+            } 
+        }
     }
     return NS_OK;
 }
