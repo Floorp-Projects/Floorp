@@ -854,7 +854,8 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
         // ssaux 12/03/2001.
         const PRUnichar *params[1];
         // here I assume that mailbox contains ascii rather than utf8.
-        params[0]= NS_ConvertASCIItoUCS2(mailbox).get();
+        NS_ConvertASCIItoUCS2 wstr_mailbox(mailbox);
+        params[0]= wstr_mailbox.get();
         res = 
           SMIMEBundleFormatStringFromName(NS_LITERAL_STRING("MissingRecipientEncryptionCert").get(),
                                           params,
