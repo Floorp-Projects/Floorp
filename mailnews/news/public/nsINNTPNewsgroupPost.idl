@@ -58,7 +58,7 @@ interface nsINNTPNewsgroupPost : nsISupports {
     attribute string organization;
 
     /* the message itself */
-    attribute string message;
+    attribute string body;
 
     /* control messages */
     void MakeControlCancel(in string messageID);

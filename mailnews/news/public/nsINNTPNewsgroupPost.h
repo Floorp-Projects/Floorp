@@ -98,8 +98,8 @@ class nsINNTPNewsgroupPost : public nsISupports {
   NS_IMETHOD SetOrganization(char * aOrganization) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetMessage(char * *aMessage) = 0;
-  NS_IMETHOD SetMessage(char * aMessage) = 0;
+  NS_IMETHOD GetBody(char * *aBody) = 0;
+  NS_IMETHOD SetBody(char * aBody) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD MakeControlCancel(const char *messageID) = 0;

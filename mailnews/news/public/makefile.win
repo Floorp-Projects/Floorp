@@ -27,6 +27,7 @@ EXPORTS =							\
 		nsIMsgOfflineNewsState.h 	\
 		nsINNTPArticleList.h 		\
 		nsINntpUrl.h				\
+		nsINNTPNewsgroupPost.h		\
         $(NULL)
 
 MODULE=mailnews

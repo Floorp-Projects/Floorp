@@ -31,6 +31,7 @@ EXPORTS = \
 	nsNNTPArticleSet.h	\
 	nsNNTPNewsgroupList.h	\
 	nsNNTPNewsgroup.h	\
+	nsNNTPNewsgroupPost.h \
 	nntpCore.h		\
 	$(NULL)
 
@@ -38,6 +39,7 @@ CPPSRCS = \
 	nsNNTPArticleList.cpp \
 	nsNNTPArticleSet.cpp \
 	nsNNTPNewsgroupList.cpp \
+	nsNNTPNewsgroupPost.cpp \
 	nsNNTPProtocol.cpp \
 	nsNntpUrl.cpp	\
 	nsNNTPHost.cpp \

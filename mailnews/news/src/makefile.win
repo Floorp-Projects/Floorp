@@ -32,6 +32,7 @@ CPPSRCS=    nsNNTPProtocol.cpp				\
 			nsNNTPArticleSet.cpp			\
 			nsNNTPArticleList.cpp			\
 			nsNNTPNewsgroupList.cpp			\
+			nsNNTPNewsgroupPost.cpp			\
 			nsNNTPHost.cpp					\
 			$(NULL)
 
@@ -40,6 +41,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsNNTPProtocol.obj				\
 			.\$(OBJDIR)\nsNNTPArticleSet.obj			\
 			.\$(OBJDIR)\nsNNTPArticleList.obj			\
 			.\$(OBJDIR)\nsNNTPNewsgroupList.obj			\
+			.\$(OBJDIR)\nsNNTPNewsgroupPost.obj			\
 			.\$(OBJDIR)\nsNNTPHost.obj					\
 			$(NULL)
 
@@ -50,6 +52,7 @@ EXPORTS=	nsNNTPProtocol.h				\
 			nsNNTPNewsgroupList.h			\
 			nsNNTPNewsgroup.h				\
 			nntpCore.h						\
+			nsNNTPNewsgroupPost.h			\
             $(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib -I$(PUBLIC)\security -I$(PUBLIC)\rdf

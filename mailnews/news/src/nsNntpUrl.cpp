@@ -48,11 +48,11 @@ nsNntpUrl::nsNntpUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 	m_offlineNews = nsnull;
 	m_newsgroupList = nsnull;
 	m_errorMessage = nsnull;
-
+    m_newsgroupPost = nsnull;
+    
 	// nsINetLibUrl specific state
     m_URL_s = nsnull;
-    m_messageToPost = nsnull;
-    
+
 	// nsIURL specific state
     m_protocol = nsnull;
     m_host = nsnull;
@@ -75,7 +75,7 @@ nsNntpUrl::~nsNntpUrl()
 	NS_IF_RELEASE(m_newsgroup);
 	NS_IF_RELEASE(m_offlineNews);
 	NS_IF_RELEASE(m_newsgroupList);
-    PR_FREEIF(m_messageToPost);
+    PR_FREEIF(m_newsgroupPost);
 	PR_FREEIF(m_errorMessage);
 
     PR_FREEIF(m_spec);
@@ -102,17 +102,17 @@ nsresult nsNntpUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
     static NS_DEFINE_IID(kINetlibURLIID, NS_INETLIBURL_IID);
     if (aIID.Equals(kINntpURLIID) || aIID.Equals(kISupportsIID)) {
         *aInstancePtr = (void*) ((nsINntpUrl*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
     if (aIID.Equals(kIURLIID)) {
         *aInstancePtr = (void*) ((nsIURL*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
     if (aIID.Equals(kINetlibURLIID)) {
         *aInstancePtr = (void*) ((nsINetlibURL*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
 
@@ -410,7 +410,7 @@ nsresult nsNntpUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     // protocol spec. A protocol spec is an alphanumeric string of 1 or
     // more characters that is terminated with a colon.
     PRBool isAbsolute = PR_FALSE;
-    char* cp;
+    char* cp=NULL;
     char* ap = cSpec;
     char ch;
     while (0 != (ch = *ap)) {
@@ -871,7 +871,7 @@ nsresult nsNntpUrl::SetPostHeader(const char* name, const char* value)
 
 nsresult nsNntpUrl::SetPostData(nsIInputStream* input)
 {
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult nsNntpUrl::GetURLGroup(nsIURLGroup* *result) const
@@ -900,21 +900,22 @@ nsresult nsNntpUrl::ToString(PRUnichar* *aString) const
 	return NS_OK;
 }
 
-nsresult nsNntpUrl::SetMessageToPost(char *aString)
+nsresult nsNntpUrl::SetMessageToPost(nsINNTPNewsgroupPost *post)
 {
     NS_LOCK_INSTANCE();
-    PR_FREEIF(m_messageToPost);
-    m_messageToPost = PL_strdup(aString);
+    NS_IF_RELEASE(m_newsgroupPost);
+    m_newsgroupPost=post;
+    if (m_newsgroupPost) NS_ADDREF(m_newsgroupPost);
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
 
-nsresult nsNntpUrl::GetMessageToPost(char **aString)
+nsresult nsNntpUrl::GetMessageToPost(nsINNTPNewsgroupPost **aPost)
 {
     NS_LOCK_INSTANCE();
-    char *result;
-    if (!aString) return NS_ERROR_NULL_POINTER;
-    *aString = PL_strdup(m_messageToPost);
+    if (!aPost) return NS_ERROR_NULL_POINTER;
+    *aPost = m_newsgroupPost;
+    if (*aPost) NS_ADDREF(*aPost);
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }

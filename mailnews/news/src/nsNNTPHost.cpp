@@ -55,7 +55,6 @@
 
 /* temporary hacks to test if this compiles */
 typedef void MSG_GroupName;
-class nsNNTPHost;
 
 #ifdef XP_UNIX
 static const char LINEBREAK_START = '\012';

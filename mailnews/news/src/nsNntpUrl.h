@@ -21,6 +21,7 @@
 
 #include "nsINntpUrl.h"
 #include "nsINetlibURL.h" /* this should be temporary until Network N2 project lands */
+#include "nsINNTPNewsgroupPost.h"
 
 class nsNntpUrl : public nsINntpUrl, public nsINetlibURL
 {
@@ -81,8 +82,8 @@ public:
 	// caller must free using PR_FREE
 	NS_IMETHOD GetErrorMessage (char ** errorMessage) const;
 
-    NS_IMETHOD SetMessageToPost(char *messageToPost);
-    NS_IMETHOD GetMessageToPost(char **messageToPost);
+    NS_IMETHOD SetMessageToPost(nsINNTPNewsgroupPost *post);
+    NS_IMETHOD GetMessageToPost(nsINNTPNewsgroupPost **post);
     // nsNntpUrl
 
     nsNntpUrl(nsISupports* aContainer, nsIURLGroup* aGroup);
@@ -105,9 +106,9 @@ protected:
     char		*m_ref;
     char		*m_search;
 	char		*m_errorMessage;
-    char		*m_messageToPost; // temp char buffer of message to post
-                                // (eventually probably a message
-                                // instance of some kind)
+    
+    nsINNTPNewsgroupPost *m_newsgroupPost;
+    
 	PRInt32 m_port;
     nsISupports*    m_container;
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -29,6 +29,7 @@
 #include "nsINNTPArticleList.h"
 #include "nsINNTPHost.h"
 #include "nsINNTPNewsgroup.h"
+#include "nsINNTPNewsgroupPost.h"
 #include "nsIMsgOfflineNewsState.h"
 
 /* BDD12930-A682-11d2-804C-006008128C4E */
@@ -67,6 +68,10 @@ public:
 	NS_IMETHOD SetErrorMessage (char * errorMessage) = 0;
 	// caller must free using PR_FREE
 	NS_IMETHOD GetErrorMessage (char ** errorMessage) const = 0;
+
+    NS_IMETHOD SetMessageToPost (nsINNTPNewsgroupPost *post) = 0;
+    NS_IMETHOD GetMessageToPost (nsINNTPNewsgroupPost **post) = 0;
+
 };
 
 #endif /* nsIHttpURL_h___ */

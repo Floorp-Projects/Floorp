@@ -34,7 +34,11 @@
 #include "prerror.h"
 #include "nsEscape.h"
 
-#include HG09893
+#include "xp_str.h"
+#include "fe_proto.h"
+#include "prprf.h"
+#include "merrors.h"
+/* #include HG09893 */
 
 /* include event sink interfaces for news */
 
@@ -370,7 +374,6 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
 {
   PRInt32 status = 0;
   PRBool bVal = FALSE;
-  PRBool default_host = FALSE;
   char * hostAndPort = 0;
   int32 port = 0;
   char *group = 0;
@@ -378,6 +381,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
   char *commandSpecificData = 0;
   PRBool cancel = FALSE;
   char* colon;
+  nsINNTPNewsgroupPost *message=NULL;
 
   nsresult rv = NS_OK;
 
@@ -405,7 +409,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
 		  m_runningURL->GetNewsgroup(&m_newsgroup);
 		  m_runningURL->GetOfflineNewsState(&m_offlineNewsState);
 	  }
-	  else
+	  else                      /* let rv fall through */
 		  NS_ASSERTION(0, "Invalid url type passed into NNTP Protocol Handler");
   }
   else
@@ -457,8 +461,16 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
 	  status = -1;
 	  goto FAIL;
   }
-  else if (ce->URL_s->method == URL_POST_METHOD)
+  else
+#endif
+  /* We are posting a user-written message
+     if and only if this message has a message to post
+     Cancel messages are created later with a ?cancel URL
+  */
+  rv = m_runningURL->GetMessageToPost(&message);
+  if (NS_SUCCEEDED(rv) && message)
 	{
+#ifdef UNREADY_CODE
 	  /* news://HOST done with a POST instead of a GET;
 		 this means a new message is being posted.
 		 Don't allow this unless it's an internal URL.
@@ -468,12 +480,12 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
 		  status = -1;
 		  goto FAIL;
 		}
+#endif
 	  PR_ASSERT (!group && !message_id && !commandSpecificData);
 	  m_typeWanted = NEWS_POST;
-	  StrAllocCopy(cd->path, "");
+	  StrAllocCopy(m_path, "");
 	}
   else 
-#endif
 	if (messageID)
 	{
 	  /* news:MESSAGE_ID
@@ -1087,8 +1099,12 @@ PRInt32 nsNNTPProtocol::SendData(const char * dataBuffer)
 	NS_PRECONDITION(m_outputStream && m_outputConsumer, "no registered consumer for our output");
 	if (dataBuffer && m_outputStream)
 	{
-		nsresult rv = m_outputStream->Write(dataBuffer, 0 /* offset */, PL_strlen(dataBuffer), &writeCount);
-		if (NS_SUCCEEDED(rv) && writeCount == PL_strlen(dataBuffer))
+		nsresult rv;
+        
+        int len = PL_strlen(dataBuffer);
+        rv = m_outputStream->Write(dataBuffer, 0 /* offset */,
+                                   len, &writeCount);
+		if (NS_SUCCEEDED(rv) && (writeCount == (PRUint32)len))
 		{
 			// notify the consumer that data has arrived
 			// HACK ALERT: this should really be m_runningURL once we have NNTP url support...
@@ -1628,15 +1644,6 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 		  }
 	  }
 
-	  /* mscott: we'll extract the post_data from the news URL when we have it */
-#ifdef HAVE_NEWS_URL 
-    if(m_typeWanted == NEWS_POST && !ce->URL_s->post_data)
-      {
-		PR_ASSERT(0);
-        return(-1);
-      }
-    else 
-#endif
 	if(m_typeWanted == NEWS_POST)
       {  /* posting to the news group */
         StrAllocCopy(command, "POST");
@@ -3056,6 +3063,21 @@ PRInt32 nsNNTPProtocol::PostData()
     /* returns 0 on done and negative on error
      * positive if it needs to continue.
      */
+    nsresult rv;
+
+    nsINNTPNewsgroupPost *message;
+    rv = m_runningURL->GetMessageToPost(&message);
+    if (NS_SUCCEEDED(rv)) {
+        char *fullMessage;
+        
+        // XXX maybe we should be breaking this up into chunks?
+        // or maybe we should be passing the nsIOutputStream to
+        // the message to tell it to "write itself"
+        // (but SendData does more than just write to the nsIOutputStream)
+        message->GetFullMessage(&fullMessage);
+        SendData(fullMessage);
+    }
+
 #ifdef UNREADY_CODE
     status = NET_WritePostData(ce->window_id, ce->URL_s,
                                   ce->socket,
@@ -3341,7 +3363,7 @@ PRInt32 nsNNTPProtocol::Cancel()
 {
 	int status = 0;
 	char *id, *subject, *newsgroups, *distribution, *other_random_headers, *body;
-	char *from, *old_from, *news_url;
+	char *from, *old_from;
 	int L;
 #ifdef USE_LIBMSG
 	MSG_CompositionFields *fields = NULL;
