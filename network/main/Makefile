@@ -20,7 +20,9 @@ DEPTH		= ../..
 MODULE		= network
 LIBRARY_NAME	= network
 
+ifdef MOZ_MAIL_NEWS
 CPPSRCS= mkabook.cpp	
+endif
 
 CSRCS		= \
 	jscookie.c	\
