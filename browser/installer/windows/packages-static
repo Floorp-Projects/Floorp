@@ -240,16 +240,16 @@ bin\chrome\pippki.jar
 ; [Additional Developer Tools]
 [adt]
 ; [Document Inspector]
-bin\components\inspector-cmdline.js
-bin\components\inspector.dll
-bin\components\inspector.xpt
-bin\chrome\inspector.jar
-bin\defaults\pref\inspector.js
-bin\res\inspector\viewer-registry.rdf
-bin\res\inspector\search-registry.rdf
+; bin\components\inspector-cmdline.js
+; bin\components\inspector.dll
+; bin\components\inspector.xpt
+; bin\chrome\inspector.jar
+; bin\defaults\pref\inspector.js
+; bin\res\inspector\viewer-registry.rdf
+; bin\res\inspector\search-registry.rdf
 ; [Venkman JavaScript Debugger]
-bin\components\venkman-service.js
-bin\chrome\venkman.jar
+; bin\components\venkman-service.js
+; bin\chrome\venkman.jar
 
 ; [Additional Browsing Enhancements]
 [abe]
