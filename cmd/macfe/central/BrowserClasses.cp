@@ -105,6 +105,7 @@
 	#include "CNavCenterWindow.h"
 	#include "CNavCenterContextMenuAtt.h"
 	#include "CNavCenterTitle.h"
+	#include "CNavCenterScroller.h"
 	#include "CInlineEditField.h"
 
 	#include "CConfigActiveScroller.h"
@@ -300,6 +301,7 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CWindowRDFCoordinator);
 	RegisterClass_(CPopdownRDFCoordinator);
 	RegisterClass_(CHyperTreeHeader);
+	RegisterClass_(CNavCenterScroller);
 	RegisterClass_(CInlineEditField);
 
 	RegisterClass_(CChameleonCaption);
