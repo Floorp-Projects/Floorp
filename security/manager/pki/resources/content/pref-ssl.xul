@@ -42,7 +42,7 @@
   <![CDATA[
     var _elementIDs = ["enableSSL2", "enableSSL3", "enableTLS", 
         "warnEnteringSecure", "warnEnteringWeak", 
-        "warnInsecurePost",
+        "warnLeavingSecure", "warnInsecurePost",
         "warnViewMixed" ];
   ]]>
   </script>
@@ -83,6 +83,9 @@
               prefattribute="checked"/>
     <checkbox id="warnEnteringWeak" label="&warn.enteringweak;"
               pref="true" preftype="bool" prefstring="security.warn_entering_weak"
+              prefattribute="checked"/>
+    <checkbox id="warnLeavingSecure" label="&warn.leavingsecure;"
+              pref="true" preftype="bool" prefstring="security.warn_leaving_secure"
               prefattribute="checked"/>
     <checkbox id="warnInsecurePost" label="&warn.insecurepost;"
               pref="true" preftype="bool" prefstring="security.warn_submit_insecure"
