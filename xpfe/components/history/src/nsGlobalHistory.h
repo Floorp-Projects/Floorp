@@ -132,11 +132,11 @@ public:
 
   // Train the perceptron on an input instance.  This will cause it
   // to update its weights so that its linear
-  virtual Train(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64 aTargetOutput);
-  virtual Test (PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64* aOutput);  
+  virtual void Train(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64 aTargetOutput);
+  virtual void Test (PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64* aOutput);  
 
-  LoadWeights();
-  SaveWeights();
+  void LoadWeights();
+  void SaveWeights();
   
 
 protected:
@@ -153,8 +153,8 @@ public:
   nsSigmoidPerceptron(PRInt32 aNumFeatures);
   ~nsSigmoidPerceptron() {}
 
-  virtual Train(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64 aTargetOutput);
-  virtual Test(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64* aOutput);
+  virtual void Train(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64 aTargetOutput);
+  virtual void Test(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64* aOutput);
 
 private:
   PRFloat64 Sigmoid(PRFloat64 aNum);

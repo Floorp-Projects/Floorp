@@ -197,6 +197,7 @@ nsPerceptron::nsPerceptron(PRInt32 aNumFeatures)
   }
 }
 
+void
 nsPerceptron::Train(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64 aTargetOutput)
 {
   double output = 0.0;
@@ -214,6 +215,7 @@ nsPerceptron::Train(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64 aTargetOut
   }
 }
 
+void
 nsPerceptron::Test(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64* aOutput)
 {
   *aOutput = 0;
@@ -225,6 +227,7 @@ nsPerceptron::Test(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64* aOutput)
   }
 }
 
+void
 nsPerceptron::LoadWeights()
 {
   nsCOMPtr<nsIFile> file;
@@ -256,7 +259,7 @@ nsPerceptron::LoadWeights()
   }
 }
 
-
+void
 nsPerceptron::SaveWeights()
 {
   nsCOMPtr<nsIFile> file;
@@ -286,11 +289,13 @@ nsSigmoidPerceptron::nsSigmoidPerceptron(PRInt32 aNumFeatures)
   // empty
 }
 
+void
 nsSigmoidPerceptron::Train(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64 aTargetOutput)
 {
   nsPerceptron::Train(aInputs, aNumInputs, aTargetOutput);
 }
 
+void
 nsSigmoidPerceptron::Test(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64* aOutput)
 {
   nsPerceptron::Test(aInputs, aNumInputs, aOutput);
