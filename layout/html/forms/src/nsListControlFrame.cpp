@@ -1281,7 +1281,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   if (visibleHeight == 0) {
     if (aReflowState.mComputedHeight != 0) {
       nsCOMPtr<nsIFontMetrics> fontMet;
-      nsresult rvv = nsFormControlHelper::GetFrameFontFM(aPresContext, this, getter_AddRefs(fontMet));
+      nsresult rvv = nsFormControlHelper::GetFrameFontFM(this, getter_AddRefs(fontMet));
       if (NS_SUCCEEDED(rvv) && fontMet) {
         aReflowState.rendContext->SetFont(fontMet);
         fontMet->GetHeight(visibleHeight);
@@ -1415,15 +1415,6 @@ nsListControlFrame::GetScrollbarStyles() const
   return nsGfxScrollFrameInner::ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN,
                                                 verticalStyle);
 }
-
-//---------------------------------------------------------
-NS_IMETHODIMP
-nsListControlFrame::GetFont(nsIPresContext* aPresContext, 
-                            const nsFont*&  aFont)
-{
-  return nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
-}
-
 
 //---------------------------------------------------------
 PRBool 

@@ -445,15 +445,6 @@ nsComboboxControlFrame::GetFormContent(nsIContent*& aContent) const
 }
 
 //--------------------------------------------------------------
-NS_IMETHODIMP
-nsComboboxControlFrame::GetFont(nsIPresContext* aPresContext, 
-                                const nsFont*&  aFont)
-{
-  return nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
-}
-
-
-//--------------------------------------------------------------
 nscoord 
 nsComboboxControlFrame::GetVerticalBorderWidth(float aPixToTwip) const
 {
@@ -788,13 +779,9 @@ nsComboboxControlFrame::ReflowItems(nsIPresContext* aPresContext,
                                     nsHTMLReflowMetrics& aDesiredSize) 
 {
   //printf("*****************\n");
-  const nsStyleFont* dspFont = mDisplayFrame->GetStyleFont();
-  nsIFontMetrics * fontMet;
-  aPresContext->DeviceContext()->GetMetricsFor(dspFont->mFont, fontMet);
-
-  nscoord visibleHeight;
-  //nsCOMPtr<nsIFontMetrics> fontMet;
-  //nsresult res = nsFormControlHelper::GetFrameFontFM(aPresContext, this, getter_AddRefs(fontMet));
+  nscoord visibleHeight = 0;
+  nsCOMPtr<nsIFontMetrics> fontMet;
+  nsresult res = nsFormControlHelper::GetFrameFontFM(mDisplayFrame, getter_AddRefs(fontMet));
   if (fontMet) {
     fontMet->GetHeight(visibleHeight);
   }
@@ -854,7 +841,6 @@ nsComboboxControlFrame::ReflowItems(nsIPresContext* aPresContext,
          frmWidth-aDesiredSize.width, frmHeight-aDesiredSize.height,
          (frmWidth-aDesiredSize.width)/15, (frmHeight-aDesiredSize.height)/15);
 #endif
-  NS_RELEASE(fontMet);
   return NS_OK;
 }
 #endif

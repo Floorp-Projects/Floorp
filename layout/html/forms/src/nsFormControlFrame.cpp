@@ -779,13 +779,6 @@ nsFormControlFrame::GetFormContent(nsIContent*& aContent) const
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFormControlFrame::GetFont(nsIPresContext* aPresContext, 
-                            const nsFont*&  aFont)
-{
-  return nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
-}
-
 nsresult
 nsFormControlFrame::GetDefaultCheckState(PRBool *aState)
 {

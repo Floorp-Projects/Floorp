@@ -119,19 +119,14 @@ void nsFormControlHelper::GetBoolString(const PRBool aValue,
 }
 
 
-nsresult nsFormControlHelper::GetFrameFontFM(nsIPresContext* aPresContext, 
-                                         nsIFormControlFrame * aFrame,
-                                         nsIFontMetrics** aFontMet)
+nsresult nsFormControlHelper::GetFrameFontFM(nsIFrame* aFrame,
+                                             nsIFontMetrics** aFontMet)
 {
-  // Initialize with default font
-  const nsFont * font = nsnull;
-  // Get frame font
-  if (NS_SUCCEEDED(aFrame->GetFont(aPresContext, font))) {
-    if (font) { // Get font metrics
-      return aPresContext->DeviceContext()->GetMetricsFor(*font, *aFontMet);
-    }
-  }
-  return NS_ERROR_FAILURE;
+  nsStyleContext* sc = aFrame->GetStyleContext();
+  return aFrame->GetPresContext()->DeviceContext()->
+    GetMetricsFor(sc->GetStyleFont()->mFont,
+                  sc->GetStyleVisibility()->mLangGroup,
+                  *aFontMet);
 }
 
 nsresult
@@ -174,64 +169,6 @@ nsFormControlHelper::GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& 
   }
   return rv;
 }
-
-nscoord
-nsFormControlHelper::GetTextSize(nsIPresContext* aPresContext, nsIFormControlFrame* aFrame,
-                                const nsString& aString, nsSize& aSize,
-                                nsIRenderingContext *aRendContext)
-{
-  nsCOMPtr<nsIFontMetrics> fontMet;
-  nsresult res = GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
-  if (NS_SUCCEEDED(res) && fontMet) {
-    aRendContext->SetFont(fontMet);
-
-    // measure string
-    aRendContext->GetWidth(aString, aSize.width);
-    fontMet->GetHeight(aSize.height);
-  } else {
-    NS_ASSERTION(PR_FALSE, "Couldn't get Font Metrics"); 
-    aSize.width = 0;
-  }
-
-  char char1, char2;
-  GetRepChars(char1, char2);
-  nscoord char1Width, char2Width;
-  aRendContext->GetWidth(char1, char1Width);
-  aRendContext->GetWidth(char2, char2Width);
-
-  return ((char1Width + char2Width) / 2) + 1;
-}  
-  
-nscoord
-nsFormControlHelper::GetTextSize(nsIPresContext* aPresContext, nsIFormControlFrame* aFrame,
-                                PRInt32 aNumChars, nsSize& aSize,
-                                nsIRenderingContext *aRendContext)
-{
-  nsAutoString val;
-  char char1, char2;
-  GetRepChars(char1, char2);
-  int i;
-  for (i = 0; i < aNumChars; i+=2) {
-    val.Append(PRUnichar(char1));
-  }
-  for (i = 1; i < aNumChars; i+=2) {
-    val.Append(PRUnichar(char2));
-  }
-  return GetTextSize(aPresContext, aFrame, val, aSize, aRendContext);
-}
-  
-nsresult  
-nsFormControlHelper::GetFont(nsIFormControlFrame * aFormFrame,
-                             nsIPresContext*       aPresContext, 
-                             nsStyleContext *      aStyleContext, 
-                             const nsFont*&        aFont)
-{
-  const nsStyleFont* styleFont = (const nsStyleFont*)aStyleContext->GetStyleData(eStyleStruct_Font);
-
-  aFont = &styleFont->mFont;
-  return NS_OK;
-}
-
 
 //
 //-------------------------------------------------------------------------------------

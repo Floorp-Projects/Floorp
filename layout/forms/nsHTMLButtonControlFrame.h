@@ -150,9 +150,6 @@ public:
   void SetFocus(PRBool aOn, PRBool aRepaint);
   void ScrollIntoView(nsIPresContext* aPresContext);
 
-  NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
-                     const nsFont*&  aFont);
-
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
   virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                            float aPixToTwip,

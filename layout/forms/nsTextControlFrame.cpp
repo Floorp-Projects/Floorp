@@ -1420,7 +1420,7 @@ nsTextControlFrame::CalculateSizeStandard(nsIPresContext*       aPresContext,
   nscoord charMaxAdvance  = 0;
 
   nsCOMPtr<nsIFontMetrics> fontMet;
-  nsresult rv = nsFormControlHelper::GetFrameFontFM(aPresContext, this, getter_AddRefs(fontMet));
+  nsresult rv = nsFormControlHelper::GetFrameFontFM(this, getter_AddRefs(fontMet));
   NS_ENSURE_SUCCESS(rv, rv);
   aRendContext->SetFont(fontMet);
   fontMet->GetHeight(fontHeight);
@@ -2118,13 +2118,6 @@ nsTextControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
   mSuggestedWidth = aWidth;
   mSuggestedHeight = aHeight;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextControlFrame::GetFont(nsIPresContext* aPresContext, 
-                            const nsFont*&  aFont)
-{
-  return nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
 }
 
 NS_IMETHODIMP

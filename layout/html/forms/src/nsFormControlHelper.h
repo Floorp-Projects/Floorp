@@ -84,24 +84,8 @@ class nsFormControlHelper
 
 public:
   
-
-  static nscoord GetTextSize(nsIPresContext* aContext, nsIFormControlFrame* aFrame,
-                             const nsString& aString, nsSize& aSize,
-                             nsIRenderingContext *aRendContext);
-
-  static nscoord GetTextSize(nsIPresContext* aContext, nsIFormControlFrame* aFrame,
-                             PRInt32 aNumChars, nsSize& aSize,
-                             nsIRenderingContext *aRendContext);
-
-  // XXX This could be removed now that we no longer have form quirks.
-  static nsresult GetFont(nsIFormControlFrame *  aFormFrame,
-                          nsIPresContext*        aPresContext, 
-                          nsStyleContext *       aStyleContext, 
-                          const nsFont*&         aFont);
-
   // returns the an addref'ed FontMetrics for the default font for the frame
-  static nsresult GetFrameFontFM(nsIPresContext* aPresContext, 
-                                 nsIFormControlFrame * aFrame,
+  static nsresult GetFrameFontFM(nsIFrame* aFrame,
                                  nsIFontMetrics** aFontMet);
 
   // Map platform line endings (CR, CRLF, LF) to DOM line endings (LF)

@@ -197,9 +197,6 @@ public:
 
   virtual void SetClickPoint(nscoord aX, nscoord aY);
 
-  NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
-                     const nsFont*&  aFont);
-
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
 
    /**
