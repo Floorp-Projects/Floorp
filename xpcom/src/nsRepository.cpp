@@ -40,7 +40,7 @@
 
 #ifdef USE_NSREG
 #define XP_BEGIN_PROTOS extern "C" {
-#define XP_END_PROTOS };
+#define XP_END_PROTOS }
 #include "NSReg.h"
 #endif
 
