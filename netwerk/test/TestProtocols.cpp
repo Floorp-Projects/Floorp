@@ -370,13 +370,13 @@ InputTestConsumer::OnDataAvailable(nsIRequest *request,
   return NS_OK;
 }
 
-static void DecrementDestroyHandler(PLEvent *self) 
+PR_STATIC_CALLBACK(void) DecrementDestroyHandler(PLEvent *self) 
 {
     PR_DELETE(self);
 }
 
 
-static void* DecrementEventHandler(PLEvent *self) 
+PR_STATIC_CALLBACK(void*) DecrementEventHandler(PLEvent *self) 
 {
     gKeepRunning--;
     return nsnull;
