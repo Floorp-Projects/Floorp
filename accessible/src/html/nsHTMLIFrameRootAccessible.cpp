@@ -51,7 +51,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsRootAccessible)
 NS_IMPL_ADDREF_INHERITED(nsHTMLIFrameRootAccessible, nsRootAccessible);
 NS_IMPL_RELEASE_INHERITED(nsHTMLIFrameRootAccessible, nsRootAccessible);
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLIFrameAccessible, nsBlockAccessible, nsIAccessibleDocument, nsIAccessibleHyperText)
+NS_IMPL_ISUPPORTS_INHERITED3(nsHTMLIFrameAccessible, nsBlockAccessible, nsIAccessibleDocument, nsIAccessibleHyperText, nsIAccessibleEventReceiver)
 
 nsHTMLIFrameAccessible::nsHTMLIFrameAccessible(nsIDOMNode* aNode, nsIAccessible* aRoot, nsIWeakReference* aShell, nsIDocument *aDoc):
   nsBlockAccessible(aNode, aShell), nsDocAccessibleMixin(aDoc), mRootAccessible(aRoot)
@@ -323,10 +323,24 @@ nsresult nsHTMLIFrameAccessible::GetLinkIndexFromAccNode(nsIAccessible *aAccNode
   return NS_ERROR_INVALID_ARG;
 }
 
+NS_IMETHODIMP nsHTMLIFrameAccessible::AddAccessibleEventListener(nsIAccessibleEventListener *aListener)
+{
+  nsCOMPtr<nsIAccessibleEventReceiver> rootReceiver(do_QueryInterface(mRootAccessible));
+  NS_ENSURE_TRUE(rootReceiver, NS_OK);
+  return rootReceiver->AddAccessibleEventListener(aListener);
+}
+
+NS_IMETHODIMP nsHTMLIFrameAccessible::RemoveAccessibleEventListener()
+{
+  nsCOMPtr<nsIAccessibleEventReceiver> rootReceiver(do_QueryInterface(mRootAccessible));
+  NS_ENSURE_TRUE(rootReceiver, NS_OK);
+  return rootReceiver->RemoveAccessibleEventListener();
+}
+
+
 //=============================//
 // nsHTMLIFrameRootAccessible  //
 //=============================//
-
 
 //-----------------------------------------------------
 // construction 
@@ -393,3 +407,25 @@ NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccPreviousSibling(nsIAccessible **
     Init();
   return mOuterAccessible->GetAccPreviousSibling(_retval);
 }
+
+/* void addAccessibleEventListener (in nsIAccessibleEventListener aListener); */
+NS_IMETHODIMP nsHTMLIFrameRootAccessible::AddAccessibleEventListener(nsIAccessibleEventListener *aListener)
+{
+  NS_ASSERTION(aListener, "Trying to add a null listener!");
+  if (!mListener) {
+    mListener = aListener;
+    AddContentDocListeners();
+  }
+  return NS_OK;
+}
+
+/* void removeAccessibleEventListener (); */
+NS_IMETHODIMP nsHTMLIFrameRootAccessible::RemoveAccessibleEventListener()
+{
+  if (mListener) {
+    RemoveContentDocListeners();
+    mListener = nsnull;
+  }
+  return NS_OK;
+}
+
