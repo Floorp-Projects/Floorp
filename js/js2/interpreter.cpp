@@ -114,23 +114,26 @@ struct Activation : public gc_base {
     }
 
     // calling a binary operator, no 'this'
-    Activation(ICodeModule* iCode, const JSValue arg1, const JSValue arg2)
+    Activation(ICodeModule* iCode, const JSValue thisArg, const JSValue arg1, const JSValue arg2)
         : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
     {
+        mRegisters[0] = thisArg;
         mRegisters[1] = arg1;
         mRegisters[2] = arg2;
     }
 
     // calling a getter function, no arguments
-    Activation(ICodeModule* iCode)
+    Activation(ICodeModule* iCode, const JSValue thisArg)
         : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
     {
+        mRegisters[0] = thisArg;
     }
 
     // calling a setter function, 1 argument
-    Activation(ICodeModule* iCode, const JSValue arg)
+    Activation(ICodeModule* iCode, const JSValue thisArg, const JSValue arg)
         : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
     {
+        mRegisters[0] = thisArg;
         mRegisters[1] = arg;
     }
 
@@ -165,7 +168,7 @@ ICodeModule* Context::compileFunction(const String &source)
         v = v->next;
     }
     icg.genStmt(f->function.body);
-    ICodeModule* result = icg.complete();
+    ICodeModule* result = icg.complete(icg.extractType(f->function.resultType));
     result->setFileName(filename);
     return result;
 }
@@ -238,7 +241,7 @@ ICodeModule* Context::genCode(StmtNode *p, const String &fileName)
     }
     icg.returnStmt(ret);
 
-    ICodeModule *icm = icg.complete();
+    ICodeModule *icm = icg.complete(&Void_Type);
     icm->setFileName (fileName);
     return icm;
 }
@@ -717,6 +720,15 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         ArgumentList callArgs(pCount, Argument(TypedRegister(NotARegister, &Null_Type), NULL));
                         if (icm->mHasNamedRestParameter) pCount--;
 
+/*
+
+    For new style, there must be enough un-named parameters to satisfy #unnamed-positional, but no
+    more than #total positional (unless there's a rest parameter). Extras go to the optional parameters first, then to rest.
+
+    Named parameters 
+
+*/
+
 
                         // walk along the given arguments, handling each.
                         // might be good to optimize the case of calls without named arguments and/or rest parameters
@@ -886,7 +898,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     if (getter) {
                         ASSERT(!getter->isNative());
                         mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, dst(ln));
-                        mActivation = new Activation(getter->getICode());
+                        mActivation = new Activation(getter->getICode(), kNullValue);
                         registers = &mActivation->mRegisters;
                         mPC = mActivation->mICode->its_iCode->begin();
                         endPC = mActivation->mICode->its_iCode->end();
@@ -903,7 +915,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     if (setter) {
                         ASSERT(!setter->isNative());
                         mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, TypedRegister(NotARegister, &Null_Type));
-                        mActivation = new Activation(setter->getICode(), (*registers)[src1(sn).first]);
+                        mActivation = new Activation(setter->getICode(), (*registers)[src1(sn).first], kNullValue);
                         registers = &mActivation->mRegisters;
                         mPC = mActivation->mICode->its_iCode->begin();
                         endPC = mActivation->mICode->its_iCode->end();
@@ -1051,7 +1063,18 @@ using JSString throughout.
                     JSValue& value = (*registers)[src1(gs).first];
                     if (value.isObject()) {
                         JSInstance* inst = static_cast<JSInstance *>(value.object);
-                        (*registers)[dst(gs).first] = (*inst)[src2(gs)];
+                        if (inst->hasGetter(src2(gs))) {
+                            JSFunction* getter = inst->getter(src2(gs));
+                            ASSERT(!getter->isNative());
+                            mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, dst(gs));
+                            mActivation = new Activation(getter->getICode(), value);
+                            registers = &mActivation->mRegisters;
+                            mPC = mActivation->mICode->its_iCode->begin();
+                            endPC = mActivation->mICode->its_iCode->end();
+                            continue;
+                        }
+                        else
+                            (*registers)[dst(gs).first] = (*inst)[src2(gs)];
                     }
                     // XXX runtime error
                 }
@@ -1062,7 +1085,18 @@ using JSString throughout.
                     JSValue& value = (*registers)[dst(ss).first];
                     if (value.isObject()) {
                         JSInstance* inst = static_cast<JSInstance *>(value.object);
-                        (*inst)[src1(ss)] = (*registers)[src2(ss).first];
+                        if (inst->hasSetter(src1(ss))) {
+                            JSFunction* setter = inst->setter(src1(ss));
+                            ASSERT(!setter->isNative());
+                            mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, TypedRegister(NotARegister, &Null_Type));
+                            mActivation = new Activation(setter->getICode(), value, (*registers)[src2(ss).first]);
+                            registers = &mActivation->mRegisters;
+                            mPC = mActivation->mICode->its_iCode->begin();
+                            endPC = mActivation->mICode->its_iCode->end();
+                            continue;
+                        }
+                        else
+                            (*inst)[src1(ss)] = (*registers)[src2(ss).first];
                     }
                 }
                 break;
@@ -1143,7 +1177,7 @@ using JSString throughout.
                     else {
                         mLinkage = new Linkage(mLinkage, ++mPC,
                                                mActivation, mGlobal, dst(gbo));
-                        mActivation = new Activation(target->getICode(), r1, r2);
+                        mActivation = new Activation(target->getICode(), kNullValue, r1, r2);
                         registers = &mActivation->mRegisters;
                         mPC = mActivation->mICode->its_iCode->begin();
                         endPC = mActivation->mICode->its_iCode->end();

@@ -139,7 +139,7 @@ TypedRegister ICodeGenerator::allocateVariable(const StringAtom& name, JSType *t
     return allocateRegister(name, type); 
 }
 
-ICodeModule *ICodeGenerator::complete()
+ICodeModule *ICodeGenerator::complete(JSType *resultType)
 {
 #ifdef DEBUG
     for (LabelList::iterator i = labels.begin();
@@ -188,7 +188,8 @@ ICodeModule *ICodeGenerator::complete()
                                             mParameterCount, 
                                             mInstructionMap, 
                                             mHasRestParameter, 
-                                            mHasNamedRestParameter);
+                                            mHasNamedRestParameter,
+                                            resultType);
     if (pLabels) {
         uint32 i;
         uint32 parameterInits = pLabels->size() - 1;        // there's an extra label at the end for the actual entryPoint
@@ -695,15 +696,27 @@ static bool generatedBoolean(ExprNode *p)
     return false;
 }
 
-static bool isSlotName(JSType *t, const StringAtom &name, uint32 &slotIndex, JSType *&type)
+static bool isSlotName(JSType *t, const StringAtom &name, uint32 &slotIndex, JSType *&type, bool lvalue)
 {
     JSClass* c = dynamic_cast<JSClass*>(t);
     while (c) {
         if (c->hasSlot(name)) {
             const JSSlot &s = c->getSlot(name);
-            slotIndex = s.mIndex;
-            type = s.mType;
-            return true;
+            if (lvalue) {
+                if (s.mActual || s.mSetter) {
+                    slotIndex = s.mIndex;
+                    type = s.mType;
+                    return true;
+                }
+            }
+            else {
+                if (s.mActual || s.mGetter) {
+                    slotIndex = s.mIndex;
+                    type = s.mType;
+                    return true;
+                }
+            }
+            return false;
         }
         c = c->getSuperClass();
     }
@@ -722,7 +735,7 @@ static bool isMethodName(JSType *t, const StringAtom &name, uint32 &slotIndex)
 }
 
 
-ICodeGenerator::LValueKind ICodeGenerator::resolveIdentifier(const StringAtom &name, TypedRegister &v, uint32 &slotIndex)
+ICodeGenerator::LValueKind ICodeGenerator::resolveIdentifier(const StringAtom &name, TypedRegister &v, uint32 &slotIndex, bool lvalue)
 {
     if (!isWithinWith()) {
         v = variableList->findVariable(name);
@@ -731,7 +744,7 @@ ICodeGenerator::LValueKind ICodeGenerator::resolveIdentifier(const StringAtom &n
         else {
             if (mClass) {   // we're compiling a method of a class
                 if (!isStaticMethod()) {
-                    if (isSlotName(mClass, name, slotIndex, v.second))
+                    if (isSlotName(mClass, name, slotIndex, v.second, lvalue))
                         return Slot;
                     if (isMethodName(mClass, name, slotIndex))
                         return Method;
@@ -749,7 +762,7 @@ ICodeGenerator::LValueKind ICodeGenerator::resolveIdentifier(const StringAtom &n
     return Name;
 }
 
-TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args)
+TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue)
 {
     ASSERT(p->getKind() == ExprNode::identifier);
 
@@ -758,7 +771,7 @@ TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::
     TypedRegister v;
 
     const StringAtom &name = (static_cast<IdentifierExprNode *>(p))->name;
-    LValueKind lValueKind = resolveIdentifier(name, v, slotIndex);
+    LValueKind lValueKind = resolveIdentifier(name, v, slotIndex, lvalue);
     JSType *targetType = v.second;
 
     TypedRegister thisBase = TypedRegister(0, mClass ? mClass : &Any_Type);
@@ -907,7 +920,7 @@ TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::
 
 }
 
-TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args)
+TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue)
 {   
     ASSERT(b->getKind() == ExprNode::dot);
 
@@ -924,7 +937,7 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
         uint32 slotIndex;
         if ((b->op1->getKind() == ExprNode::identifier) && !isWithinWith()) {
             const StringAtom &baseName = (static_cast<IdentifierExprNode *>(b->op1))->name;
-            resolveIdentifier(baseName, base, slotIndex);
+            resolveIdentifier(baseName, base, slotIndex, false);
             
             //
             // handle <class name>.<static field>
@@ -939,7 +952,7 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
                 }
             }
             if (lValueKind == Property) {
-                if (isSlotName(base.second, fieldName, slotIndex, fieldType))
+                if (isSlotName(base.second, fieldName, slotIndex, fieldType, lvalue))
                     lValueKind = Slot;
                 else
                     if (isMethodName(base.second, fieldName, slotIndex))
@@ -956,7 +969,7 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
         }
         else {
             base = genExpr(b->op1);
-            if (isSlotName(base.second, fieldName, slotIndex, fieldType))
+            if (isSlotName(base.second, fieldName, slotIndex, fieldType, lvalue))
                 lValueKind = Slot;
             else
                 if (isMethodName(base.second, fieldName, slotIndex))
@@ -1184,7 +1197,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
         {
             UnaryExprNode *d = static_cast<UnaryExprNode *>(p);
             ASSERT(d->op->getKind() == ExprNode::dot);
-            ret = handleDot(static_cast<BinaryExprNode *>(d->op), p->getKind(), xcrementOp, ret, NULL);
+            ret = handleDot(static_cast<BinaryExprNode *>(d->op), p->getKind(), xcrementOp, ret, NULL, true);
             // rather than getProperty(), need to do a deleteProperty().
         }
         break;
@@ -1193,21 +1206,33 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             InvokeExprNode *i = static_cast<InvokeExprNode *>(p);
             ArgumentList args;
             ExprPairList *p = i->pairs;
+            uint32 count = 0;
+            StringFormatter s;
             while (p) {
                 if (p->field && (p->field->getKind() == ExprNode::identifier))
                     args.push_back(Argument(genExpr(p->value), &(static_cast<IdentifierExprNode *>(p->field))->name));
                 else
-                    args.push_back(Argument(genExpr(p->value), NULL ));
+                    if (p->field && (p->field->getKind() == ExprNode::string))
+                        args.push_back(Argument(genExpr(p->value), &mWorld->identifiers[(static_cast<StringExprNode *>(p->field))->str]));
+                    else {
+/*  do this for new argument style to provide default 'positional' name
+                        s << count;
+                        args.push_back(Argument(genExpr(p->value), &mWorld->identifiers[s] ));
+                        s.clear();
+*/
+                        args.push_back(Argument(genExpr(p->value), NULL ));
+                    }
+                count++;
                 p = p->next;
             }
 
             if (i->op->getKind() == ExprNode::dot) {
                 BinaryExprNode *b = static_cast<BinaryExprNode *>(i->op);
-                ret = handleDot(b, ExprNode::call, xcrementOp, ret, &args);
+                ret = handleDot(b, ExprNode::call, xcrementOp, ret, &args, false);
             }
             else 
                 if (i->op->getKind() == ExprNode::identifier) {
-                    ret = handleIdentifier(static_cast<IdentifierExprNode *>(i->op), ExprNode::call, xcrementOp, ret, &args);
+                    ret = handleIdentifier(static_cast<IdentifierExprNode *>(i->op), ExprNode::call, xcrementOp, ret, &args, false);
                 }
                 else 
                     if (i->op->getKind() == ExprNode::index) {
@@ -1234,7 +1259,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
     case ExprNode::dot :
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
-            ret = handleDot(b, p->getKind(), xcrementOp, ret, NULL);
+            ret = handleDot(b, p->getKind(), xcrementOp, ret, NULL, false);
         }
         break;
     case ExprNode::This :
@@ -1244,7 +1269,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
         break;
     case ExprNode::identifier :
         {
-            ret = handleIdentifier(static_cast<IdentifierExprNode *>(p), ExprNode::identifier, xcrementOp, ret, NULL);
+            ret = handleIdentifier(static_cast<IdentifierExprNode *>(p), ExprNode::identifier, xcrementOp, ret, NULL, false);
         }
         break;
     case ExprNode::number :
@@ -1259,11 +1284,11 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
        {
             UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
             if (u->op->getKind() == ExprNode::dot) {
-                ret = handleDot(static_cast<BinaryExprNode *>(u->op), p->getKind(), xcrementOp, ret, NULL);
+                ret = handleDot(static_cast<BinaryExprNode *>(u->op), p->getKind(), xcrementOp, ret, NULL, true);
             }
             else
                 if (u->op->getKind() == ExprNode::identifier) {
-                    ret = handleIdentifier(static_cast<IdentifierExprNode *>(u->op), p->getKind(), xcrementOp, ret, NULL);
+                    ret = handleIdentifier(static_cast<IdentifierExprNode *>(u->op), p->getKind(), xcrementOp, ret, NULL, true);
                 }
                 else
                     if (u->op->getKind() == ExprNode::index) {
@@ -1284,11 +1309,11 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
         {
             UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
             if (u->op->getKind() == ExprNode::dot) {
-                ret = handleDot(static_cast<BinaryExprNode *>(u->op), p->getKind(), xcrementOp, ret, NULL);
+                ret = handleDot(static_cast<BinaryExprNode *>(u->op), p->getKind(), xcrementOp, ret, NULL, true);
             }
             else
                 if (u->op->getKind() == ExprNode::identifier) {
-                    ret = handleIdentifier(static_cast<IdentifierExprNode *>(u->op), p->getKind(), xcrementOp, ret, NULL);
+                    ret = handleIdentifier(static_cast<IdentifierExprNode *>(u->op), p->getKind(), xcrementOp, ret, NULL, true);
                 }
                 else
                     if (u->op->getKind() == ExprNode::index) {
@@ -1334,12 +1359,12 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             ret = genExpr(b->op2);
             if (b->op1->getKind() == ExprNode::identifier) {
-                ret = handleIdentifier(static_cast<IdentifierExprNode *>(b->op1), p->getKind(), xcrementOp, ret, NULL);
+                ret = handleIdentifier(static_cast<IdentifierExprNode *>(b->op1), p->getKind(), xcrementOp, ret, NULL, true);
             }
             else
                 if (b->op1->getKind() == ExprNode::dot) {
                     BinaryExprNode *lb = static_cast<BinaryExprNode *>(b->op1);
-                    ret = handleDot(lb, p->getKind(), xcrementOp, ret, NULL);
+                    ret = handleDot(lb, p->getKind(), xcrementOp, ret, NULL, true);
                 }
                 else
                     if (b->op1->getKind() == ExprNode::index) {
@@ -1367,12 +1392,12 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             ret = genExpr(b->op2);
             if (b->op1->getKind() == ExprNode::identifier) {
-                ret = handleIdentifier(static_cast<IdentifierExprNode *>(b->op1), p->getKind(), xcrementOp, ret, NULL);
+                ret = handleIdentifier(static_cast<IdentifierExprNode *>(b->op1), p->getKind(), xcrementOp, ret, NULL, true);
             }
             else
                 if (b->op1->getKind() == ExprNode::dot) {
                     BinaryExprNode *lb = static_cast<BinaryExprNode *>(b->op1);
-                    ret = handleDot(lb, p->getKind(), xcrementOp, ret, NULL);
+                    ret = handleDot(lb, p->getKind(), xcrementOp, ret, NULL, true);
                 }
                 else
                     if (b->op1->getKind() == ExprNode::index) {
@@ -1546,7 +1571,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             }
             icg.genStmt(f->function.body);
             //stdOut << icg;
-            ICodeModule *icm = icg.complete();
+            ICodeModule *icm = icg.complete(extractType(f->function.resultType));
             ret = newFunction(icm);
         }
         break;
@@ -1708,8 +1733,7 @@ ICodeModule *ICodeGenerator::genFunction(FunctionStmtNode *f, bool isConstructor
         TypedRegister thisValue = TypedRegister(0, mClass);
         icg.returnStmt(thisValue);
     }
-    return icg.complete();
-
+    return icg.complete(extractType(f->function.resultType));
 }
 
 TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
@@ -1813,8 +1837,19 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                                         thisClass->defineStatic(name, &Function_Type);
                                         scg.setStatic(thisClass, name, scg.newFunction(icm));
                                     }
-                                    else
-                                        thisClass->defineMethod(name, new JSFunction(icm));
+                                    else {
+                                        switch (f->function.prefix) {
+                                        case FunctionName::Get:
+                                            thisClass->setGetter(name, new JSFunction(icm), icm->mResultType);
+                                            break;
+                                        case FunctionName::Set:
+                                            thisClass->setSetter(name, new JSFunction(icm), icm->mResultType);
+                                            break;
+                                        case FunctionName::normal:
+                                            thisClass->defineMethod(name, new JSFunction(icm));
+                                            break;
+                                        }
+                                    }
                             }
                         }                        
                         break;
@@ -1826,7 +1861,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                 }
 
                 // add the instance initializer
-                scg.setStatic(thisClass, initName, scg.newFunction(ccg.complete())); 
+                scg.setStatic(thisClass, initName, scg.newFunction(ccg.complete(&Void_Type))); 
                 // invent a default constructor if necessary, it just calls the 
                 //   initializer and the superclass default constructor
                 if (!hasDefaultConstructor) {
@@ -1839,7 +1874,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                     icg.call(icg.getStatic(thisClass, initName), thisValue, &args);
                     icg.returnStmt(thisValue);
                     thisClass->defineConstructor(nameExpr->name);
-                    scg.setStatic(thisClass, nameExpr->name, scg.newFunction(icg.complete()));
+                    scg.setStatic(thisClass, nameExpr->name, scg.newFunction(icg.complete(&Void_Type)));
                 }
                 // freeze the class.
                 thisClass->complete();
@@ -1848,7 +1883,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                 // REVISIT:  using the scope of the class to store both methods and statics.
                 if (scg.getICode()->size()) {
                     Interpreter::Context cx(*mWorld, thisScope);
-                    ICodeModule* clinit = scg.complete();
+                    ICodeModule* clinit = scg.complete(&Void_Type);
                     cx.interpret(clinit, JSValues());
                     delete clinit;
                 }

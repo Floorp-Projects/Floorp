@@ -44,17 +44,22 @@ namespace JSClasses {
     using JSTypes::JSType;
     using JSTypes::JSScope;
     using JSTypes::JSFunction;
+    using JSTypes::FunctionMap;
     using ICG::ICodeModule;
     
 
     struct JSSlot {
         typedef enum { kNoFlag = 0, kIsConstructor = 0x01 } SlotFlags;   // <-- readonly, enumerable etc
 
+        // a slot may have a getter or a setter or both, but NOT either if mActual
         JSType* mType;
         uint32 mIndex;
         SlotFlags mFlags;
+        JSFunction* mGetter;
+        JSFunction* mSetter;
+        bool mActual;
         
-        JSSlot() : mType(0), mFlags(kNoFlag)
+        JSSlot() : mType(0), mFlags(kNoFlag), mGetter(0), mSetter(0), mActual(true)
         {
         }
 
@@ -83,13 +88,18 @@ namespace JSClasses {
         JSSlots mStaticSlots;
         JSValue* mStaticData;
         JSMethods mMethods;
+        bool mHasGetters;           // tracks whether any getters/setters get assigned
+        bool mHasSetters;
+        JSFunction **mGetters;       // allocated at 'complete()' time
+        JSFunction **mSetters;
     public:
         JSClass(JSScope* scope, const String& name, JSClass* superClass = 0)
             :   JSType(name, superClass),
                 mScope(new JSScope(scope)),
                 mSlotCount(superClass ? superClass->mSlotCount : 0),
                 mStaticCount(0),
-                mStaticData(0)
+                mStaticData(0),
+                mHasGetters(false), mHasSetters(false), mGetters(0), mSetters(0)
         {
             if (superClass) {
                    // inherit superclass methods
@@ -109,15 +119,76 @@ namespace JSClasses {
             return mScope;
         }
 
-        const JSSlot& defineSlot(const String& name, JSType* type)
+        const JSSlot& defineSlot(const String& name, JSType* type, JSFunction* getter = 0, JSFunction* setter = 0)
         {
             JSSlot& slot = mSlots[name];
             ASSERT(slot.mType == 0);
             slot.mType = type;
             slot.mIndex = mSlotCount++; // starts at 0.
+            slot.mSetter = setter;
+            slot.mGetter = getter;
+            if (setter || getter)
+                slot.mActual = false;
             return slot;
         }
+
+        void setGetter(const String& name, JSFunction *getter, JSType* type)
+        {
+            JSSlots::iterator slti = mSlots.find(name);
+            if (slti == mSlots.end())
+                defineSlot(name, type, getter, 0);
+            else {
+                ASSERT(!slti->second.mActual);
+                ASSERT(slti->second.mGetter == 0);
+                slti->second.mGetter = getter;
+            }
+            mHasGetters = true;
+        }
         
+        void setSetter(const String& name, JSFunction *setter, JSType* type)
+        {
+            JSSlots::iterator slti = mSlots.find(name);
+            if (slti == mSlots.end())
+                defineSlot(name, type, 0, setter);
+            else {
+                ASSERT(!slti->second.mActual);
+                ASSERT(slti->second.mSetter == 0);
+                slti->second.mSetter = setter;
+            }
+            mHasSetters = true;
+        }
+        
+        bool hasGetter(const String& name)
+        {
+            JSSlots::iterator slti = mSlots.find(name);
+            return ((slti != mSlots.end()) && slti->second.mGetter);
+        }
+        
+        bool hasSetter(const String& name)
+        {
+            JSSlots::iterator slti = mSlots.find(name);
+            return ((slti != mSlots.end()) && slti->second.mSetter);
+        }
+        
+        bool hasGetter(uint32 index)
+        {
+            return (mGetters && mGetters[index]);
+        }
+        
+        bool hasSetter(uint32 index)
+        {
+            return (mSetters && mSetters[index]);
+        }
+        
+        JSFunction* getter(uint32 index)
+        {
+            return mGetters[index];
+        }
+        
+        JSFunction* setter(uint32 index)
+        {
+            return mSetters[index];
+        }
         
 
         const JSSlot& getSlot(const String& name)
@@ -126,6 +197,11 @@ namespace JSClasses {
         }
         
         bool hasSlot(const String& name)
+        {
+            return (mSlots.find(name) != mSlots.end());
+        }
+        
+        bool hasGetterOrSetter(const String& name)
         {
             return (mSlots.find(name) != mSlots.end());
         }
@@ -185,6 +261,15 @@ namespace JSClasses {
 
         bool complete()
         {
+            if (mHasGetters || mHasSetters) {
+                if (mHasGetters) mGetters = new JSFunction*[mSlotCount];
+                if (mHasSetters) mSetters = new JSFunction*[mSlotCount];
+                JSSlots::iterator end = mSlots.end();
+                for (JSSlots::iterator i = mSlots.begin(); i != end; i++) {
+                    if (mHasGetters) mGetters[i->second.mIndex] = i->second.mGetter;
+                    if (mHasSetters) mSetters[i->second.mIndex] = i->second.mSetter;
+                }
+            }
             mStaticData = new JSValue[mStaticCount];
             return (mStaticData != 0);
         }
@@ -291,6 +376,27 @@ namespace JSClasses {
             f << "Slots:\n";
             printSlots(f, getClass());
         }
+
+        bool hasGetter(uint32 index)
+        {
+            return getClass()->hasGetter(index);
+        }
+        
+        bool hasSetter(uint32 index)
+        {
+            return getClass()->hasSetter(index);
+        }
+        
+        JSFunction* getter(uint32 index)
+        {
+            return getClass()->getter(index);
+        }
+
+        JSFunction* setter(uint32 index)
+        {
+            return getClass()->setter(index);
+        }
+
 
     private:
         void printSlots(Formatter& f, JSClass* thisClass)

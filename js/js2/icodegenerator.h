@@ -94,7 +94,8 @@ namespace ICG {
         ICodeModule(InstructionStream *iCode, VariableList *variables,
                     uint32 maxRegister, uint32 maxParameter,
                     InstructionMap *instructionMap, 
-                    bool hasRestParameter, bool hasNamedRestParameter) :
+                    bool hasRestParameter, bool hasNamedRestParameter,
+                    JSType *resultType) :
             its_iCode(iCode), itsVariables(variables),
             mParameterCount(maxParameter), itsMaxRegister(maxRegister),
             mID(++sMaxID), mInstructionMap(instructionMap), 
@@ -102,7 +103,8 @@ namespace ICG {
             mNonOptionalParameterCount(maxParameter),
             mEntryPoint(0),
             mHasRestParameter(hasRestParameter),
-            mHasNamedRestParameter(hasNamedRestParameter)
+            mHasNamedRestParameter(hasNamedRestParameter),
+            mResultType(resultType)
         {
         }
 
@@ -129,7 +131,8 @@ namespace ICG {
         uint32 mNonOptionalParameterCount;
         uint32 mEntryPoint;
         bool mHasRestParameter;
-        bool mHasNamedRestParameter;        
+        bool mHasNamedRestParameter;
+        JSType *mResultType;
 
         static uint32 sMaxID;
         
@@ -206,8 +209,6 @@ namespace ICG {
         TypedRegister allocateRegister(const StringAtom& name, JSType *type);
 
         JSType *findType(const StringAtom& typeName);
-        JSType *extractType(ExprNode *t);
-
 
 
         void addParameterLabel(Label *label)    { if (pLabels == NULL) pLabels = new LabelList(); pLabels->push_back(label); }
@@ -243,11 +244,11 @@ namespace ICG {
         void setFlag(uint32 flag, bool v) { mFlags = (ICodeGeneratorFlags)((v) ? mFlags | flag : mFlags & ~flag); }
 
 
-        typedef enum {Var, Property, Slot, Static, Constructor, Name, Method} LValueKind;
+        typedef enum { Var, Property, Slot, Static, Constructor, Name, Method } LValueKind;
 
-        LValueKind resolveIdentifier(const StringAtom &name, TypedRegister &v, uint32 &slotIndex);
-        TypedRegister handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args);
-        TypedRegister handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args);
+        LValueKind resolveIdentifier(const StringAtom &name, TypedRegister &v, uint32 &slotIndex, bool lvalue);
+        TypedRegister handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue);
+        TypedRegister handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue);
         ICodeModule *genFunction(FunctionStmtNode *f, bool isConstructor, JSClass *superClass);
     
     public:
@@ -263,7 +264,9 @@ namespace ICG {
             }
         }
                 
-        ICodeModule *complete();
+        ICodeModule *complete(JSType *resultType);
+
+        JSType *extractType(ExprNode *t);
 
         TypedRegister genExpr(ExprNode *p, 
                                 bool needBoolValueInBranch = false, 
