@@ -1717,6 +1717,8 @@ nsHTMLEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, nsIDOMDoc
   {
     res = mEditor->SplitStyleAbovePoint(&node, &offset, item->tag, &item->attr);
     if (NS_FAILED(res)) return res;
+    // we own item now (ProcessClearProperty hands ownership to us)
+    delete item;
     mEditor->mTypeInState->ProcessClearProperty(&item);
   }
   
@@ -1750,6 +1752,8 @@ nsHTMLEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, nsIDOMDoc
   {
     res = mEditor->SetInlinePropertyOnNode(node, item->tag, &item->attr, &item->value);
     if (NS_FAILED(res)) return res;
+    // we own item now (ProcessSetProperty hands ownership to us)
+    delete item;
     mEditor->mTypeInState->ProcessSetProperty(&item);
   }
   
