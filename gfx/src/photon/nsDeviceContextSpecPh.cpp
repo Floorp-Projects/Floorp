@@ -54,6 +54,9 @@
 #include "nsString.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
+#include "nsIPref.h"
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsDeviceContextSpecPh :: nsDeviceContextSpecPh()
 {
@@ -168,6 +171,48 @@ NS_IMETHODIMP nsDeviceContextSpecPh :: Init(nsIWidget* aWidget,
 		aPS->GetEndPageRange( &p );
 		PpPrintReleasePC(mPC);
 		mPC = ( PpPrintContext_t *) p;
+
+		/* set the print frame / BG colors and images settings, according to the Pt_ARG_WEB_OPTION setting */
+		nsresult res;
+		nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
+
+    PRInt16 howToEnableFrameUI = nsIPrintSettings::kFrameEnableNone;
+    aPS->GetHowToEnableFrameUI(&howToEnableFrameUI);
+
+    if( howToEnableFrameUI == nsIPrintSettings::kFrameEnableAll ||
+        howToEnableFrameUI == nsIPrintSettings::kFrameEnableAsIsAndEach )
+      {
+      /* we have frames and we have a selected frame already only if kFrameEnableAll */
+      /* look at the Pt_ARG_WEB_OPTION related to this */
+
+      char *printFrame = NULL;
+			if( prefs ) prefs->CopyCharPref( "user.print.print_frame", &printFrame );
+
+			if( printFrame ) {
+				if( !stricmp( printFrame, "print_frame_as_is" ) ) 
+      	    aPS->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
+				else if( !stricmp( printFrame, "print_frame_all" ) ) 
+      	    aPS->SetPrintFrameType(nsIPrintSettings::kEachFrameSep);
+				else if( !stricmp( printFrame, "print_frame_selected" ) )  {
+      	   if( howToEnableFrameUI == nsIPrintSettings::kFrameEnableAll )
+      	     aPS->SetPrintFrameType(nsIPrintSettings::kSelectedFrame);
+      	   else /* if no frame is selected, use the kFramesAsIs */
+      	     aPS->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
+						}
+      		}
+    		}
+
+		char *SetPrintBGColors = NULL, *SetPrintBGImages = NULL;
+		if( prefs ) prefs->CopyCharPref( "user.print.SetPrintBGColors", &SetPrintBGColors );
+		if( prefs ) prefs->CopyCharPref( "user.print.SetPrintBGImages", &SetPrintBGImages );
+
+  	if( SetPrintBGColors && !stricmp( SetPrintBGColors, "true" ) )
+			aPS->SetPrintBGColors( PR_TRUE );
+		else aPS->SetPrintBGColors( PR_FALSE );
+
+  	if( SetPrintBGImages && !stricmp( SetPrintBGImages, "true" ) )
+  	  aPS->SetPrintBGImages( PR_TRUE );
+  	else aPS->SetPrintBGImages( PR_FALSE );
 		}
 
  	return rv;
