@@ -141,6 +141,8 @@ nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   aDesiredLayoutSize.width  = size.width;
   aDesiredLayoutSize.height = size.height;
+  aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
+  aDesiredLayoutSize.descent = 0;
   aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
   aDesiredWidgetSize.height = aDesiredLayoutSize.height;
 }

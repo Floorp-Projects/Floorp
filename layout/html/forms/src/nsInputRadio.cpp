@@ -110,6 +110,8 @@ nsInputRadioFrame::GetDesiredSize(nsIPresContext* aPresContext,
   PRInt32 padding = GetPadding();
   aDesiredLayoutSize.width  = aDesiredWidgetSize.width  + (2 * padding);
   aDesiredLayoutSize.height = aDesiredWidgetSize.height;
+  aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
+  aDesiredLayoutSize.descent = 0;
 }
 
 void 

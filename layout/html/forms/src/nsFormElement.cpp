@@ -99,6 +99,8 @@ void FormElementFrame::GetDesiredSize(nsIPresContext* aPresContext,
   float p2t = aPresContext->GetPixelsToTwips();
   aDesiredSize.width = nscoord(75 * p2t);
   aDesiredSize.height = nscoord(37 * p2t);
+  aDesiredSize.ascent = aDesiredSize.height;
+  aDesiredSize.descent = 0;
 }
 
 //----------------------------------------------------------------------

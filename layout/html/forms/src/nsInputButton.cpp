@@ -401,6 +401,8 @@ nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
   if (kButton_Hidden == GetButtonType()) { // there is no physical rep
     aDesiredLayoutSize.width  = 0;
     aDesiredLayoutSize.height = 0;
+    aDesiredLayoutSize.ascent = 0;
+    aDesiredLayoutSize.descent = 0;
   }
   else {
     nsSize styleSize;
@@ -444,6 +446,8 @@ nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
       aDesiredLayoutSize.width = size.width;
       aDesiredLayoutSize.height= size.height;
     }
+    aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
+    aDesiredLayoutSize.descent = 0;
   }
 
   aDesiredWidgetSize.width = aDesiredLayoutSize.width;
