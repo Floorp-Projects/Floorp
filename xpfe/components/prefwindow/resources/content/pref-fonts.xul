@@ -5,7 +5,7 @@
 
 <!DOCTYPE window [
 
-<!ENTITY  title.label "Fonts">
+<!ENTITY  window.title "Fonts">
 <!ENTITY  header "Fonts">
 <!ENTITY  encod.select "For the Encoding:">
 <!ENTITY  encod1.option "Western">
@@ -23,7 +23,7 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('Fonts');"  title="&title.label;">
+        onload="StartUp('Fonts')"  title="&window.title;">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
 
