@@ -87,7 +87,7 @@ nsLayoutHistoryState::~nsLayoutHistoryState()
 
 NS_IMPL_ISUPPORTS2(nsLayoutHistoryState,
                    nsILayoutHistoryState,
-                   nsISupportsWeakReference);
+                   nsISupportsWeakReference)
 
 NS_IMETHODIMP
 nsLayoutHistoryState::AddState(const nsCString& aStateKey,

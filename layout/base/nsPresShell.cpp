@@ -773,9 +773,9 @@ struct nsCallbackEventRequest
 PRInt32 nsDummyLayoutRequest::gRefCnt;
 nsIURI* nsDummyLayoutRequest::gURI;
 
-NS_IMPL_ADDREF(nsDummyLayoutRequest);
-NS_IMPL_RELEASE(nsDummyLayoutRequest);
-NS_IMPL_QUERY_INTERFACE2(nsDummyLayoutRequest, nsIRequest, nsIChannel);
+NS_IMPL_ADDREF(nsDummyLayoutRequest)
+NS_IMPL_RELEASE(nsDummyLayoutRequest)
+NS_IMPL_QUERY_INTERFACE2(nsDummyLayoutRequest, nsIRequest, nsIChannel)
 
 nsresult
 nsDummyLayoutRequest::Create(nsIRequest** aResult, nsIPresShell* aPresShell)

@@ -56,7 +56,7 @@ xpcstringtest::~xpcstringtest()
 {
 }
 
-NS_IMPL_ISUPPORTS1(xpcstringtest, nsIXPCTestString);
+NS_IMPL_ISUPPORTS1(xpcstringtest, nsIXPCTestString)
 
 /* string GetStringA (); */
 NS_IMETHODIMP

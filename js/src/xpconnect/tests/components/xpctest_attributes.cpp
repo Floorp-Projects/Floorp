@@ -56,7 +56,7 @@ class xpcTestObjectReadOnly : public nsIXPCTestObjectReadOnly {
     char    *stringID;
 };
 
-NS_IMPL_ISUPPORTS1(xpcTestObjectReadOnly, nsIXPCTestObjectReadOnly);
+NS_IMPL_ISUPPORTS1(xpcTestObjectReadOnly, nsIXPCTestObjectReadOnly)
 
 xpcTestObjectReadOnly :: xpcTestObjectReadOnly() {
     NS_ADDREF_THIS();
@@ -68,7 +68,7 @@ xpcTestObjectReadOnly :: xpcTestObjectReadOnly() {
 
     const char _id[] = "a68cc6a6-6552-11d3-82ef-0060b0eb596f";
     stringID = (char*) nsMemory::Clone(_id, sizeof(char)*(strlen(_id)+1));
-};
+}
 
 NS_IMETHODIMP xpcTestObjectReadOnly :: GetID(char **_retval) {
     *_retval= (char*) nsMemory::Clone(stringID, 
@@ -84,28 +84,28 @@ NS_IMETHODIMP xpcTestObjectReadOnly :: GetStrReadOnly(char * *aStrReadOnly){
     *aStrReadOnly = (char*) nsMemory::Clone(aStrReadOnly, 
                                                sizeof(char)*(strlen(aString)+1));
     return *aStrReadOnly ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-};
+}
 
 NS_IMETHODIMP xpcTestObjectReadOnly :: GetBoolReadOnly(PRBool *aBoolReadOnly) {
     *aBoolReadOnly = boolProperty;
     return NS_OK;
-};
+}
 NS_IMETHODIMP xpcTestObjectReadOnly :: GetShortReadOnly(PRInt16 *aShortReadOnly){
     *aShortReadOnly = shortProperty;
     return NS_OK;
-};
+}
 NS_IMETHODIMP xpcTestObjectReadOnly :: GetLongReadOnly(PRInt32 *aLongReadOnly){
     *aLongReadOnly = longProperty;
     return NS_OK;
-};
+}
 NS_IMETHODIMP xpcTestObjectReadOnly :: GetFloatReadOnly(float *aFloatReadOnly){
     *aFloatReadOnly = floatProperty;
     return NS_OK;
-};
+}
 NS_IMETHODIMP xpcTestObjectReadOnly :: GetCharReadOnly(char *aCharReadOnly){
     *aCharReadOnly = charProperty;
     return NS_OK;
-};
+}
 NS_IMETHODIMP
 xpctest::ConstructXPCTestObjectReadOnly(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
@@ -126,7 +126,7 @@ xpctest::ConstructXPCTestObjectReadOnly(nsISupports *aOuter, REFNSIID aIID, void
     }
 
     return rv;
-};
+}
 /****************************************************************************/
 /* starting interface:    nsIXPCTestObjectReadWrite */
 /* {3b9b1d38-491a-11d3-82ef-0060b0eb596f} */
@@ -154,7 +154,7 @@ class xpcTestObjectReadWrite : public nsIXPCTestObjectReadWrite {
      const char *stringProperty;
 };
 
-NS_IMPL_ISUPPORTS1(xpcTestObjectReadWrite, nsIXPCTestObjectReadWrite);
+NS_IMPL_ISUPPORTS1(xpcTestObjectReadWrite, nsIXPCTestObjectReadWrite)
 
 xpcTestObjectReadWrite :: xpcTestObjectReadWrite() {
     NS_ADDREF_THIS();
@@ -168,7 +168,7 @@ xpcTestObjectReadWrite :: xpcTestObjectReadWrite() {
     const char s[] = "XPConnect Read-Writable String";
     stringProperty = (char*) nsMemory::Clone(s, 
                                                 sizeof(char)*(strlen(s)+1));
-};
+}
 
 NS_IMETHODIMP xpcTestObjectReadWrite :: GetStringProperty(char * *aStringProperty) {
     if(!aStringProperty)
@@ -177,52 +177,52 @@ NS_IMETHODIMP xpcTestObjectReadWrite :: GetStringProperty(char * *aStringPropert
                                                sizeof(char)*(strlen(stringProperty)+1));
     return *aStringProperty ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 
-};
+}
 NS_IMETHODIMP xpcTestObjectReadWrite :: SetStringProperty(const char * aStringProperty) {
     stringProperty = aStringProperty;
     return NS_OK;
-};
+}
 
 NS_IMETHODIMP xpcTestObjectReadWrite :: GetBooleanProperty(PRBool *aBooleanProperty) {
     *aBooleanProperty = boolProperty;
     return NS_OK;
-};
+}
 NS_IMETHODIMP xpcTestObjectReadWrite :: SetBooleanProperty(PRBool aBooleanProperty) {
     boolProperty = aBooleanProperty;
     return NS_OK;
-};
+}
 NS_IMETHODIMP xpcTestObjectReadWrite :: GetShortProperty(PRInt16 *aShortProperty) {
     *aShortProperty = shortProperty;
     return NS_OK;
-};
+}
 NS_IMETHODIMP xpcTestObjectReadWrite :: SetShortProperty(PRInt16 aShortProperty) {
     shortProperty = aShortProperty;
     return NS_OK;
-};
+}
 NS_IMETHODIMP xpcTestObjectReadWrite :: GetLongProperty(PRInt32 *aLongProperty) {
     *aLongProperty = longProperty;
     return NS_OK;
-};
+}
 NS_IMETHODIMP xpcTestObjectReadWrite :: SetLongProperty(PRInt32 aLongProperty) {
     longProperty = aLongProperty;
     return NS_OK;
-};
+}
 NS_IMETHODIMP xpcTestObjectReadWrite :: GetFloatProperty(float *aFloatProperty) {
     *aFloatProperty = floatProperty;
     return NS_OK;
-};
+}
 NS_IMETHODIMP xpcTestObjectReadWrite :: SetFloatProperty(float aFloatProperty) {
     floatProperty = aFloatProperty;
     return NS_OK;
-};
+}
 NS_IMETHODIMP xpcTestObjectReadWrite :: GetCharProperty(char *aCharProperty) {
     *aCharProperty = charProperty;
     return NS_OK;
-};
+}
 NS_IMETHODIMP xpcTestObjectReadWrite :: SetCharProperty(char aCharProperty) {
     charProperty = aCharProperty;
     return NS_OK;
-};
+}
 NS_IMETHODIMP
 xpctest::ConstructXPCTestObjectReadWrite(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
@@ -242,7 +242,7 @@ xpctest::ConstructXPCTestObjectReadWrite(nsISupports *aOuter, REFNSIID aIID, voi
         rv = NS_ERROR_OUT_OF_MEMORY;
     }
     return rv;
-};
+}
 
 
 /****************************************************************************/
@@ -262,7 +262,7 @@ private:
     char *name;
 };
   
-NS_IMPL_ISUPPORTS2(xpcTestAttributes, nsIXPCTestObjectReadWrite, nsIXPCTestObjectReadOnly);
+NS_IMPL_ISUPPORTS2(xpcTestAttributes, nsIXPCTestObjectReadWrite, nsIXPCTestObjectReadOnly)
 
 NS_IMETHODIMP xpcTestAttributes ::GetName(char * *aString) {
     if(!aString)
@@ -271,11 +271,11 @@ NS_IMETHODIMP xpcTestAttributes ::GetName(char * *aString) {
                 sizeof(char)*(strlen(name)+1));
     return *aString ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 
-};
+}
 NS_IMETHODIMP xpcTestAttributes ::SetName(char * aString) {
     name = aString;
     return NS_OK;
-};
+}
 
 NS_IMETHODIMP
 xpctest::ConstructXPCTestAttributes(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -296,5 +296,5 @@ xpctest::ConstructXPCTestAttributes(nsISupports *aOuter, REFNSIID aIID, void **a
         rv = NS_ERROR_OUT_OF_MEMORY;
     }
     return rv;
-};
+}
 */

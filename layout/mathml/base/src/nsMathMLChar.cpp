@@ -753,7 +753,7 @@ private:
   nsVoidArray mAdditionalTableList; 
 };
 
-NS_IMPL_ISUPPORTS1(nsGlyphTableList, nsIObserver);
+NS_IMPL_ISUPPORTS1(nsGlyphTableList, nsIObserver)
 
 // -----------------------------------------------------------------------------------
 // Here is the global list of applicable glyph tables that we will be using

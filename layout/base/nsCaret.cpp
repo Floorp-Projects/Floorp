@@ -201,7 +201,7 @@ NS_IMETHODIMP nsCaret::Terminate()
 
 
 //-----------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS2(nsCaret, nsICaret, nsISelectionListener);
+NS_IMPL_ISUPPORTS2(nsCaret, nsICaret, nsISelectionListener)
 
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP nsCaret::GetCaretDOMSelection(nsISelection **aDOMSel)

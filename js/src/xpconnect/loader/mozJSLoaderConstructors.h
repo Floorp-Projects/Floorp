@@ -71,8 +71,8 @@ UnregisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
     return NS_OK;
 }
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSComponentLoader);
+NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSComponentLoader)
 
 #ifndef NO_SUBSCRIPT_LOADER
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSSubScriptLoader);
+NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSSubScriptLoader)
 #endif

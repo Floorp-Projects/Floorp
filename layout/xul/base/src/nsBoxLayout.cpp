@@ -212,8 +212,8 @@ nsBoxLayout::BecameDirty(nsIBox* aBox, nsBoxLayoutState& aState)
 }
 
 // nsISupports
-NS_IMPL_ADDREF(nsBoxLayout);
-NS_IMPL_RELEASE(nsBoxLayout);
+NS_IMPL_ADDREF(nsBoxLayout)
+NS_IMPL_RELEASE(nsBoxLayout)
 
 //
 // QueryInterface

@@ -1575,13 +1575,13 @@ NS_IMETHODIMP nsXPCComponents::Get##_n(_b##_n * *a##_n) { \
     return NS_OK; \
 }
 
-XPC_IMPL_GET_OBJ_METHOD(nsIScriptable,     Interfaces);
-XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Classes);
-XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, ClassesByID);
-XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Results);
-XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, ID);
-XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Exception);
-XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Constructor);
+XPC_IMPL_GET_OBJ_METHOD(nsIScriptable,     Interfaces)
+XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Classes)
+XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, ClassesByID)
+XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Results)
+XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, ID)
+XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Exception)
+XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Constructor)
 
 #undef XPC_IMPL_GET_OBJ_METHOD
 /*******************************************/

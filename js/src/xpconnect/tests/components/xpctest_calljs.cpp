@@ -51,7 +51,7 @@ private:
 };
 
 
-NS_IMPL_ISUPPORTS2_CI(xpcTestCallJS, nsIXPCTestCallJS, nsIXPCScriptable);
+NS_IMPL_ISUPPORTS2_CI(xpcTestCallJS, nsIXPCTestCallJS, nsIXPCScriptable)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           xpcTestCallJS
@@ -61,11 +61,11 @@ NS_IMPL_ISUPPORTS2_CI(xpcTestCallJS, nsIXPCTestCallJS, nsIXPCScriptable);
 
 xpcTestCallJS :: xpcTestCallJS() {
     NS_ADDREF_THIS();
-};
+}
 
 xpcTestCallJS :: ~xpcTestCallJS() {
 
-};
+}
 
 NS_IMETHODIMP xpcTestCallJS :: SetJSObject( nsIXPCTestCallJS* o ) {
     //if (jsobject)
@@ -74,18 +74,18 @@ NS_IMETHODIMP xpcTestCallJS :: SetJSObject( nsIXPCTestCallJS* o ) {
     if ( jsobject ) 
         NS_ADDREF( jsobject );
     return NS_OK;
-};
+}
 
 NS_IMETHODIMP xpcTestCallJS :: CallMethodNoArgs(PRBool *_retval) {
     *_retval = PR_TRUE;
     return NS_OK;
-};
+}
 
 NS_IMETHODIMP xpcTestCallJS :: Evaluate ( const char *s ) {
     if (jsobject)
         return jsobject->Evaluate(s);
     return NS_OK;
-};
+}
 
 NS_IMETHODIMP 
 xpcTestCallJS :: EvaluateAndReturnError(nsresult in, nsresult *_retval){
@@ -95,17 +95,17 @@ xpcTestCallJS :: EvaluateAndReturnError(nsresult in, nsresult *_retval){
         *_retval = in;
     }
     return *_retval;
-};
+}
 
 NS_IMETHODIMP xpcTestCallJS :: EvaluateAndEatErrors(const char *s) {
     if ( jsobject ) 
         jsobject->Evaluate(s);
     return NS_OK;
-};
+}
 
 NS_IMETHODIMP xpcTestCallJS :: UnscriptableMethod() {
     return NS_OK;
-};
+}
 
 NS_IMETHODIMP
 xpctest::ConstructXPCTestCallJS(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -126,4 +126,4 @@ xpctest::ConstructXPCTestCallJS(nsISupports *aOuter, REFNSIID aIID, void **aResu
         rv = NS_ERROR_OUT_OF_MEMORY;
     }
     return rv;
-};
+}

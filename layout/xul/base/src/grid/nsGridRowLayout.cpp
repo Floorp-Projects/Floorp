@@ -254,8 +254,8 @@ nsGridRowLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHoriz
   return NS_OK;
 }
 
-NS_IMPL_ADDREF_INHERITED(nsGridRowLayout, nsBoxLayout);
-NS_IMPL_RELEASE_INHERITED(nsGridRowLayout, nsBoxLayout);
+NS_IMPL_ADDREF_INHERITED(nsGridRowLayout, nsBoxLayout)
+NS_IMPL_RELEASE_INHERITED(nsGridRowLayout, nsBoxLayout)
 
 NS_INTERFACE_MAP_BEGIN(nsGridRowLayout)
   NS_INTERFACE_MAP_ENTRY(nsIGridPart)

@@ -1117,8 +1117,8 @@ NS_NewTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-NS_IMPL_ADDREF_INHERITED(nsTextControlFrame, nsBoxFrame);
-NS_IMPL_RELEASE_INHERITED(nsTextControlFrame, nsBoxFrame);
+NS_IMPL_ADDREF_INHERITED(nsTextControlFrame, nsBoxFrame)
+NS_IMPL_RELEASE_INHERITED(nsTextControlFrame, nsBoxFrame)
  
 
 NS_IMETHODIMP

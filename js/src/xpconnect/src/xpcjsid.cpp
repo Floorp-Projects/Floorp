@@ -48,7 +48,7 @@ char nsJSID::gNoString[] = "";
 nsJSID::nsJSID()
     : mID(GetInvalidIID()), mNumber(gNoString), mName(gNoString)
 {
-};
+}
 
 nsJSID::~nsJSID()
 {

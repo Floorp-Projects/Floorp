@@ -254,7 +254,7 @@ nsFrameTraversal::~nsFrameTraversal()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsFrameTraversal,nsIFrameTraversal);
+NS_IMPL_ISUPPORTS1(nsFrameTraversal,nsIFrameTraversal)
 
 NS_IMETHODIMP 
 nsFrameTraversal::NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
