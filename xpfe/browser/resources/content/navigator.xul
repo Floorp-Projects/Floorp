@@ -193,7 +193,7 @@ Contributor(s):
 
         <button id="go-button" class="button-toolbar chromeclass-location"
                 label="&goButton.label;" hidden="true" persist="hidden"
-                oncommand="addToUrlbarHistory(); BrowserLoadURL();"
+                oncommand="addToUrlbarHistory(); BrowserLoadURL(event);"
                 ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
                 ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
                 ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
