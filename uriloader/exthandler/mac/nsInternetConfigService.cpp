@@ -32,6 +32,7 @@
 #include "nsMimeTypes.h"
 #include <TextUtils.h>
 #include "nsColor.h"
+#include <Processes.h>
 
 // helper converter function.....
 static void ConvertCharStringToStr255( char* inString, Str255& outString  )
@@ -110,9 +111,57 @@ NS_IMETHODIMP nsInternetConfigService::HasMappingForMIMEType(const char *mimetyp
 }
 
 /* boolean hasProtocalHandler (in string protocol); */
-NS_IMETHODIMP nsInternetConfigService::HasProtocalHandler(const char *protocol, PRBool *_retval)
+// returns NS_ERROR_NOT_AVAILABLE if the current application is registered for as the
+// protocol handler for protocol
+NS_IMETHODIMP nsInternetConfigService::HasProtocolHandler(const char *protocol, PRBool *_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  *_retval = PR_FALSE;
+  // look for IC pref "\pHelper¥<protocol>"
+  Str255 pref = kICHelper;
+
+  if (nsCRT::strlen(protocol) > 248)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsCRT::memcpy(pref + pref[0] + 1, protocol, nsCRT::strlen(protocol));
+  pref[0] = pref[0] + nsCRT::strlen(protocol);
+  
+  ICInstance instance = nsInternetConfig::GetInstance();
+  if ( !instance )
+    return NS_ERROR_FAILURE;
+
+  OSStatus err;
+  ICAttr junk;
+  ICAppSpec spec;
+  long ioSize = sizeof(ICAppSpec);
+  err = ::ICGetPref( instance, pref, &junk, (void *)&spec, &ioSize );
+  if ( err != noErr )
+    return NS_ERROR_FAILURE;
+  // check if registered protocol helper is us
+  // if so, return PR_FALSE because we'll go into infinite recursion
+  // continually launching back into ourselves
+  ProcessSerialNumber psn;
+  OSErr oserr = ::GetCurrentProcess(&psn);
+  if (oserr == noErr)
+  {
+    ProcessInfoRec info;
+    info.processInfoLength = sizeof(ProcessInfoRec);
+    info.processName = nsnull;
+    info.processAppSpec = nsnull;
+    err = ::GetProcessInformation(&psn, &info);
+    if (err == noErr)
+    {
+      if (info.processSignature != spec.fCreator)
+        *_retval = PR_TRUE;
+      else
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+    else
+      return NS_ERROR_FAILURE;
+  }
+  else
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
 // This method does the dirty work of traipsing through IC mappings database
