@@ -666,8 +666,8 @@ nsToolboxFrame :: HandleEvent ( nsIPresContext& aPresContext,
  
   switch ( aEvent->message ) {
 
-//  case NS_MOUSE_LEFT_CLICK:
-    case NS_MOUSE_LEFT_BUTTON_UP:
+    case NS_MOUSE_LEFT_CLICK:
+//    case NS_MOUSE_LEFT_BUTTON_UP:
       OnMouseLeftClick ( aEvent->point );
       break;
     
