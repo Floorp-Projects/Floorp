@@ -23,7 +23,6 @@
 #include <stdlib.h>
 
 #include "nsCWebBrowser.h"
-#include "nsFileSpec.h"
 #include "nsILocalFile.h"
 #include "nsISelectionController.h"
 #include "nsEmbedAPI.h"
