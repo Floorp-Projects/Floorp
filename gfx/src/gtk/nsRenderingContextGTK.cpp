@@ -78,8 +78,7 @@ nsRenderingContextGTK::nsRenderingContextGTK()
   mTMatrix = nsnull;
   mP2T = 1.0f;
   mStateCache = new nsVoidArray();
-  mRegion = new nsRegionGTK();
-  mRegion->Init();
+  mClipRegion = nsnull;
   mDrawStringBuf = nsnull;
 
   PushState();
@@ -104,7 +103,7 @@ nsRenderingContextGTK::~nsRenderingContextGTK()
 
   if (mTMatrix)
     delete mTMatrix;
-  NS_IF_RELEASE(mRegion);
+  NS_IF_RELEASE(mClipRegion);
   NS_IF_RELEASE(mOffscreenSurface);
   NS_IF_RELEASE(mFontMetrics);
   NS_IF_RELEASE(mContext);
@@ -131,13 +130,16 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
   if (mSurface)
   {
 #ifndef NS_GTK_REF
+    // we want to ref the window here so that we can unref in the drawing surface.
+    // otherwise, we can not unref and that causes windows that are created in the
+    // drawing surface not to be freed.
     GdkDrawable *win = (GdkDrawable*)gdk_window_ref((GdkWindow *)aWindow->GetNativeData(NS_NATIVE_WINDOW));
 #else
     GdkDrawable *win = (GdkDrawable *)aWindow->GetNativeData(NS_NATIVE_WINDOW);
 #endif
     GdkGC *gc = (GdkGC *)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
     mSurface->Init(win,gc);
-    
+
     mOffscreenSurface = mSurface;
 
     NS_ADDREF(mSurface);
@@ -159,6 +161,13 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
 
 NS_IMETHODIMP nsRenderingContextGTK::CommonInit()
 {
+  gint x, y, w, h, d;
+  gdk_window_get_geometry(mSurface->GetDrawable(), &x, &y, &w, &h, &d);
+  
+  mClipRegion = new nsRegionGTK();
+  mClipRegion->Init();
+  mClipRegion->SetTo(0, 0, w, h);
+
   mContext->GetDevUnitsToAppUnits(mP2T);
   float app2dev;
   mContext->GetAppUnitsToDevUnits(app2dev);
@@ -245,14 +254,15 @@ NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
   else
     mTMatrix = new nsTransform2D(mTMatrix);
 
-  NS_ADDREF(mRegion);
-  state->mClipRegion = mRegion;
-
-  if (state->mClipRegion) {
-    mRegion = new nsRegionGTK();
-    mRegion->Init();
-    mRegion->SetTo(state->mClipRegion);
-  }
+  if (mClipRegion)
+    {
+      NS_IF_ADDREF(mClipRegion);
+      state->mClipRegion = mClipRegion;
+      
+      mClipRegion = new nsRegionGTK();
+      mClipRegion->Init();
+      mClipRegion->SetTo(state->mClipRegion);
+    }
 
   NS_IF_ADDREF(mFontMetrics);
   state->mFontMetrics = mFontMetrics;
@@ -279,16 +289,16 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
       delete mTMatrix;
     mTMatrix = state->mMatrix;
 
-    NS_RELEASE(mRegion);
+    NS_RELEASE(mClipRegion);
 
 // restore everything
-    mRegion = state->mClipRegion;
+    mClipRegion = state->mClipRegion;
     mFontMetrics = state->mFontMetrics;
 
-    if (mSurface)
+    if (mSurface && mClipRegion)
     {
       GdkRegion *rgn;
-      mRegion->GetNativeRegion((void*&)rgn);
+      mClipRegion->GetNativeRegion((void*&)rgn);
       ::gdk_gc_set_clip_region (mSurface->GetGC(), rgn);
     }
 
@@ -302,7 +312,10 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
     delete state;
   }
 
-  aClipEmpty = mRegion->IsEmpty();
+  if (mClipRegion)
+    aClipEmpty = mClipRegion->IsEmpty();
+  else
+    aClipEmpty = PR_TRUE;
 
   return NS_OK;
 }
@@ -317,9 +330,9 @@ NS_IMETHODIMP nsRenderingContextGTK::IsVisibleRect(const nsRect& aRect,
 NS_IMETHODIMP nsRenderingContextGTK::GetClipRect(nsRect &aRect, PRBool &aClipValid)
 {
   PRInt32 x, y, w, h;
-  if (!mRegion->IsEmpty())
+  if (!mClipRegion->IsEmpty())
   {
-    mRegion->GetBoundingBox(&x,&y,&w,&h);
+    mClipRegion->GetBoundingBox(&x,&y,&w,&h);
     aRect.SetRect(x,y,w,h);
     aClipValid = PR_TRUE;
   } else {
@@ -388,22 +401,22 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
   switch(aCombine)
   {
     case nsClipCombine_kIntersect:
-      mRegion->Intersect(trect.x,trect.y,trect.width,trect.height);
+      mClipRegion->Intersect(trect.x,trect.y,trect.width,trect.height);
       break;
     case nsClipCombine_kUnion:
-      mRegion->Union(trect.x,trect.y,trect.width,trect.height);
+      mClipRegion->Union(trect.x,trect.y,trect.width,trect.height);
       break;
     case nsClipCombine_kSubtract:
-      mRegion->Subtract(trect.x,trect.y,trect.width,trect.height);
+      mClipRegion->Subtract(trect.x,trect.y,trect.width,trect.height);
       break;
     case nsClipCombine_kReplace:
-      mRegion->SetTo(trect.x,trect.y,trect.width,trect.height);
+      mClipRegion->SetTo(trect.x,trect.y,trect.width,trect.height);
       break;
   }
 
-  aClipEmpty = mRegion->IsEmpty();
+  aClipEmpty = mClipRegion->IsEmpty();
 
-  mRegion->GetNativeRegion((void*&)rgn);
+  mClipRegion->GetNativeRegion((void*&)rgn);
   gdk_gc_set_clip_region(mSurface->GetGC(),rgn);
 
   return NS_OK;
@@ -418,21 +431,21 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
   switch(aCombine)
   {
     case nsClipCombine_kIntersect:
-      mRegion->Intersect(aRegion);
+      mClipRegion->Intersect(aRegion);
       break;
     case nsClipCombine_kUnion:
-      mRegion->Union(aRegion);
+      mClipRegion->Union(aRegion);
       break;
     case nsClipCombine_kSubtract:
-      mRegion->Subtract(aRegion);
+      mClipRegion->Subtract(aRegion);
       break;
     case nsClipCombine_kReplace:
-      mRegion->SetTo(aRegion);
+      mClipRegion->SetTo(aRegion);
       break;
   }
 
-  aClipEmpty = mRegion->IsEmpty();
-  mRegion->GetNativeRegion((void*&)rgn);
+  aClipEmpty = mClipRegion->IsEmpty();
+  mClipRegion->GetNativeRegion((void*&)rgn);
   gdk_gc_set_clip_region(mSurface->GetGC(),rgn);
 
   return NS_OK;
@@ -464,7 +477,7 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRegion(nsIRegion **aRegion)
   }
 
   if (rv == NS_OK)
-    (*aRegion)->SetTo(*mRegion);
+    (*aRegion)->SetTo(*mClipRegion);
 
   return rv;
 }
@@ -714,6 +727,8 @@ NS_IMETHODIMP nsRenderingContextGTK::FillRect(nscoord aX, nscoord aY, nscoord aW
   h = aHeight;
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
+
+  //  gdk_gc_set_clip_region(mSurface->GetGC(), nsnull);
 
   ::gdk_draw_rectangle(mSurface->GetDrawable(), mSurface->GetGC(),
                        TRUE,
