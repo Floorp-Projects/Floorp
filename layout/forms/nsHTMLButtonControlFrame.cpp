@@ -410,6 +410,15 @@ void ButtonHack(nsHTMLReflowState& aReflowState, char* aMessage)
 }
 
 NS_IMETHODIMP 
+nsHTMLButtonControlFrame::AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
+                                                                const nsHTMLReflowState& aSuggestedReflowState)
+{
+  aDesiredSize.width  += aSuggestedReflowState.mComputedBorderPadding.left + aSuggestedReflowState.mComputedBorderPadding.right;
+  aDesiredSize.height += aSuggestedReflowState.mComputedBorderPadding.top + aSuggestedReflowState.mComputedBorderPadding.bottom;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
 nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
                                nsHTMLReflowMetrics& aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
@@ -514,8 +523,9 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
   else
     aDesiredSize.height += focusPadding.top + focusPadding.bottom;
 
-  aDesiredSize.width  += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
-  aDesiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+  AddComputedBorderPaddingToDesiredSize(aDesiredSize, aReflowState);
+  //aDesiredSize.width  += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
+  //aDesiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
   //adjust our max element size, if necessary
   if (aDesiredSize.maxElementSize) {
