@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: secsign.c,v 1.3 2001/01/07 08:12:57 nelsonb%netscape.com Exp $
+ * $Id: secsign.c,v 1.4 2002/09/19 01:07:43 nicolson%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -246,6 +246,7 @@ SGN_End(SGNContext *cx, SECItem *result)
     if (rv != SECSuccess) {
 	PORT_Free(sigitem.data);
 	sigitem.data = NULL;
+	goto loser;
     }
 
     if (cx->signalg == SEC_OID_ANSIX9_DSA_SIGNATURE) {
