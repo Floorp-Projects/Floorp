@@ -34,7 +34,7 @@ class nsINNTPNewsgroupList : public nsISupports {
   NS_IMETHOD InitXOVER(PRInt32 first_message, PRInt32 last_message) = 0;
 
   /* void ProcessXOVER (in string line, out long status); */
-  NS_IMETHOD ProcessXOVER(const char *line, PRInt32 *status) = 0;
+  NS_IMETHOD ProcessXOVER(const char *line, PRUint32 *status) = 0;
 
   /* void ProcessNonXOVER (in string line); */
   NS_IMETHOD ProcessNonXOVER(const char *line) = 0;
