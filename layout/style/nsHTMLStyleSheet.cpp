@@ -23,6 +23,7 @@
 #include "nsISupportsArray.h"
 #include "nsIHTMLContent.h"
 #include "nsIStyleRule.h"
+#include "nsIFrame.h"
 
 static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
@@ -43,6 +44,11 @@ public:
 
   virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
                                 nsIContent* aContent,
+                                nsIFrame* aParentFrame,
+                                nsISupportsArray* aResults);
+
+  virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
+                                nsIAtom* aPseudoTag,
                                 nsIFrame* aParentFrame,
                                 nsISupportsArray* aResults);
 
@@ -158,24 +164,40 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   PRInt32 matchCount = 0;
 
-  nsIHTMLContent* htmlContent;
-
-  // for now, just get the one and only style rule from the content
-  // this may need some special handling for pseudo-frames
-  if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
-    nsIStyleRule* rule = htmlContent->GetStyleRule();
-
-    if (nsnull != rule) {
-      aResults->AppendElement(rule);
-      NS_RELEASE(rule);
-      matchCount++;
-    }
-
-    NS_RELEASE(htmlContent);
+  nsIContent* parentContent = nsnull;
+  if (nsnull != aParentFrame) {
+    aParentFrame->GetContent(parentContent);
   }
+
+  if (aContent != parentContent) {  // if not a pseudo frame...
+    nsIHTMLContent* htmlContent;
+    // just get the one and only style rule from the content
+    if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
+      nsIStyleRule* rule = htmlContent->GetStyleRule();
+
+      if (nsnull != rule) {
+        aResults->AppendElement(rule);
+        NS_RELEASE(rule);
+        matchCount++;
+      }
+
+      NS_RELEASE(htmlContent);
+    }
+  }
+  NS_IF_RELEASE(parentContent);
 
   return matchCount;
 }
+
+PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
+                                          nsIAtom* aPseudoTag,
+                                          nsIFrame* aParentFrame,
+                                          nsISupportsArray* aResults)
+{
+  // no pseudo frame style
+  return 0;
+}
+
 
 nsIURL* HTMLStyleSheetImpl::GetURL(void)
 {
