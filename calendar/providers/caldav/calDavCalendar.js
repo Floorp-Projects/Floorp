@@ -150,9 +150,9 @@ calDavCalendar.prototype = {
         }
 
         // XXX how are we REALLY supposed to figure this out?
-        var eventUri = this.mUri.clone();
-        eventUri.spec = eventUri.spec + "calendar/" + aItem.id + ".ics";
-        var eventResource = new WebDavResource(eventUri);
+        var itemUri = this.mUri.clone();
+        itemUri.spec = itemUri.spec + "calendar/" + aItem.id + ".ics";
+        var eventResource = new WebDavResource(itemUri);
 
         var listener = new WebDavListener();
         var savedthis = this;
@@ -164,6 +164,8 @@ calDavCalendar.prototype = {
             if (aStatusCode == 201) {
                 dump("Item added successfully.\n");
                 var retVal = Components.results.NS_OK;
+
+                // XXX deal with Location header
 
                 // notify observers
                 // XXX should be called after listener?
@@ -186,12 +188,12 @@ calDavCalendar.prototype = {
         }
 
         dump("aItem.icalString = " + aItem.icalString + "\n");
+
         var newItem = aItem.clone();
         newItem.parent = this;
         newItem.generation = 1;
         newItem.makeImmutable();
-
-        // XXX deal with Location header
+        newItem.setProperty("locationURI", itemUri.spec);
 
         dump("icalString = " + newItem.icalString + "\n");
         // XXX use if not exists
@@ -219,11 +221,15 @@ calDavCalendar.prototype = {
             return;
         }
 
-        // XXX use if-exists stuff here
-
-        // XXX how are we REALLY supposed to figure this out?
         var eventUri = this.mUri.clone();
-        eventUri.spec = eventUri.spec + "calendar/" + aItem.id + ".ics";
+        try {
+            eventUri.spec = aItem.getProperty("locationURI");
+            dump("using locationURI: " + eventUri.spec + "\n");
+        } catch (ex) {
+            // XXX how are we REALLY supposed to figure this out?
+            eventUri.spec = eventUri.spec + "calendar/" + aItem.id + ".ics";
+        }
+
         var eventResource = new WebDavResource(eventUri);
 
         var listener = new WebDavListener();
@@ -265,6 +271,7 @@ calDavCalendar.prototype = {
             return;
         }
 
+        // XXX use if-exists stuff here
         // XXX use etag as generation
         // do WebDAV put
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
@@ -416,12 +423,16 @@ calDavCalendar.prototype = {
                 var C = new Namespace("urn:ietf:params:xml:ns:caldav");
 
                 // create a local event item
+                // XXX not just events
                 var item = calEventClass.createInstance(calIEvent);
 
                 // cause returned data to be parsed into the event item
                 // XXX try-catch
                 item.icalString = 
                     responseElement..C::["calendar-query-result"]; 
+
+                // save the location name in case we need to modify
+                item.setProperty("locationURI", aResource.spec);
 
                 // figure out what type of item to return
                 var iid;
