@@ -13,7 +13,7 @@ COMMENT | -*- Mode: asm; tab-width: 8; c-basic-offset: 4 -*-
  for the specific language governing rights and limitations under the
  License.
 
- The Original Code is mozilla.org Code.
+ The Original Code is mozilla.org code.
 
  The Initial Developer of the Original Code is
  Netscape Communications Corporation.
