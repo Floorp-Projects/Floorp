@@ -39,8 +39,11 @@
 #include <CarbonEvents.h>
 
 class TimedMessage {
-    EventLoopTimerUPP mTimerUPP;
 public:
+    // Override operator new/delete for thread-safe memory allocation.
+    void* operator new(size_t n);
+    void operator delete(void* ptr);
+    
     TimedMessage();
     virtual ~TimedMessage();
     
@@ -49,5 +52,5 @@ public:
 
 private:
     static pascal void TimedMessageHandler(EventLoopTimerRef inTimer, void *inUserData);
+    EventLoopTimerUPP mTimerUPP;
 };
-
