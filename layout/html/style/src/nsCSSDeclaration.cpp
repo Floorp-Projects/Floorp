@@ -51,7 +51,22 @@ nsCSSStruct::~nsCSSStruct()
 
 // --- nsCSSFont -----------------
 
-nsCSSFont::~nsCSSFont()
+nsCSSFont::nsCSSFont(void)
+{
+}
+
+nsCSSFont::nsCSSFont(const nsCSSFont& aCopy)
+  : mFamily(aCopy.mFamily),
+    mStyle(aCopy.mStyle),
+    mVariant(aCopy.mVariant),
+    mWeight(aCopy.mWeight),
+    mSize(aCopy.mSize),
+    mSizeAdjust(aCopy.mSizeAdjust),
+    mStretch(aCopy.mStretch)
+{
+}
+
+nsCSSFont::~nsCSSFont(void)
 {
 }
 
@@ -78,10 +93,20 @@ void nsCSSFont::List(FILE* out, PRInt32 aIndent) const
 
 // --- support -----------------
 
+#define CSS_IF_COPY(val, type) \
+  if (aCopy.##val) (val) = new type(*(aCopy.##val));
+
 nsCSSValueList::nsCSSValueList(void)
   : mValue(),
     mNext(nsnull)
 {
+}
+
+nsCSSValueList::nsCSSValueList(const nsCSSValueList& aCopy)
+  : mValue(aCopy.mValue),
+    mNext(nsnull)
+{
+  CSS_IF_COPY(mNext, nsCSSValueList);
 }
 
 nsCSSValueList::~nsCSSValueList(void)
@@ -94,6 +119,21 @@ nsCSSValueList::~nsCSSValueList(void)
 nsCSSColor::nsCSSColor(void)
   : mCursor(nsnull)
 {
+}
+
+nsCSSColor::nsCSSColor(const nsCSSColor& aCopy)
+  : mColor(aCopy.mColor),
+    mBackColor(aCopy.mBackColor),
+    mBackImage(aCopy.mBackImage),
+    mBackRepeat(aCopy.mBackRepeat),
+    mBackAttachment(aCopy.mBackAttachment),
+    mBackPositionX(aCopy.mBackPositionX),
+    mBackPositionY(aCopy.mBackPositionY),
+    mBackFilter(aCopy.mBackFilter),
+    mCursor(nsnull),
+    mOpacity(aCopy.mOpacity)
+{
+  CSS_IF_COPY(mCursor, nsCSSValueList);
 }
 
 nsCSSColor::~nsCSSColor(void)
@@ -136,6 +176,16 @@ nsCSSShadow::nsCSSShadow(void)
 {
 }
 
+nsCSSShadow::nsCSSShadow(const nsCSSShadow& aCopy)
+  : mColor(aCopy.mColor),
+    mXOffset(aCopy.mXOffset),
+    mYOffset(aCopy.mYOffset),
+    mRadius(aCopy.mRadius),
+    mNext(nsnull)
+{
+  CSS_IF_COPY(mNext, nsCSSShadow);
+}
+
 nsCSSShadow::~nsCSSShadow(void)
 {
   CSS_IF_DELETE(mNext);
@@ -145,6 +195,21 @@ nsCSSShadow::~nsCSSShadow(void)
 
 nsCSSText::nsCSSText(void)
   : mTextShadow(nsnull)
+{
+}
+
+nsCSSText::nsCSSText(const nsCSSText& aCopy)
+  : mWordSpacing(aCopy.mWordSpacing),
+    mLetterSpacing(aCopy.mLetterSpacing),
+    mDecoration(aCopy.mDecoration),
+    mVerticalAlign(aCopy.mVerticalAlign),
+    mTextTransform(aCopy.mTextTransform),
+    mTextAlign(aCopy.mTextAlign),
+    mTextIndent(aCopy.mTextIndent),
+    mTextShadow(nsnull),
+    mUnicodeBidi(aCopy.mUnicodeBidi),
+    mLineHeight(aCopy.mLineHeight),
+    mWhiteSpace(aCopy.mWhiteSpace)
 {
 }
 
@@ -193,6 +258,18 @@ void nsCSSText::List(FILE* out, PRInt32 aIndent) const
 }
 
 // --- nsCSSRect -----------------
+
+nsCSSRect::nsCSSRect(void)
+{
+}
+
+nsCSSRect::nsCSSRect(const nsCSSRect& aCopy)
+  : mTop(aCopy.mTop),
+    mRight(aCopy.mRight),
+    mBottom(aCopy.mBottom),
+    mLeft(aCopy.mLeft)
+{
+}
 
 void nsCSSRect::List(FILE* out, PRInt32 aPropID, PRInt32 aIndent) const
 {
@@ -249,6 +326,19 @@ nsCSSDisplay::nsCSSDisplay(void)
 {
 }
 
+nsCSSDisplay::nsCSSDisplay(const nsCSSDisplay& aCopy)
+  : mDirection(aCopy.mDirection),
+    mDisplay(aCopy.mDisplay),
+    mFloat(aCopy.mFloat),
+    mClear(aCopy.mClear),
+    mClip(nsnull),
+    mOverflow(aCopy.mOverflow),
+    mVisibility(aCopy.mVisibility),
+    mFilter(aCopy.mFilter)
+{
+  CSS_IF_COPY(mClip, nsCSSRect);
+}
+
 nsCSSDisplay::~nsCSSDisplay(void)
 {
   CSS_IF_DELETE(mClip);
@@ -286,6 +376,21 @@ nsCSSMargin::nsCSSMargin(void)
   : mMargin(nsnull), mPadding(nsnull), 
     mBorderWidth(nsnull), mBorderColor(nsnull), mBorderStyle(nsnull)
 {
+}
+
+nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
+  : mMargin(nsnull), mPadding(nsnull), 
+    mBorderWidth(nsnull), mBorderColor(nsnull), mBorderStyle(nsnull),
+    mBorderRadius(aCopy.mBorderRadius),
+    mOutlineWidth(aCopy.mOutlineWidth),
+    mOutlineColor(aCopy.mOutlineColor),
+    mOutlineStyle(aCopy.mOutlineStyle)
+{
+  CSS_IF_COPY(mMargin, nsCSSRect);
+  CSS_IF_COPY(mPadding, nsCSSRect);
+  CSS_IF_COPY(mBorderWidth, nsCSSRect);
+  CSS_IF_COPY(mBorderColor, nsCSSRect);
+  CSS_IF_COPY(mBorderStyle, nsCSSRect);
 }
 
 nsCSSMargin::~nsCSSMargin(void)
@@ -355,6 +460,20 @@ nsCSSPosition::nsCSSPosition(void)
 {
 }
 
+nsCSSPosition::nsCSSPosition(const nsCSSPosition& aCopy)
+  : mPosition(aCopy.mPosition),
+    mWidth(aCopy.mWidth),
+    mMinWidth(aCopy.mMinWidth),
+    mMaxWidth(aCopy.mMaxWidth),
+    mHeight(aCopy.mHeight),
+    mMinHeight(aCopy.mMinHeight),
+    mMaxHeight(aCopy.mMaxHeight),
+    mOffset(nsnull),
+    mZIndex(aCopy.mZIndex)
+{
+  CSS_IF_COPY(mOffset, nsCSSRect);
+}
+
 nsCSSPosition::~nsCSSPosition(void)
 {
   CSS_IF_DELETE(mOffset);
@@ -394,7 +513,18 @@ void nsCSSPosition::List(FILE* out, PRInt32 aIndent) const
 
 // --- nsCSSList -----------------
 
-nsCSSList::~nsCSSList()
+nsCSSList::nsCSSList(void)
+{
+}
+
+nsCSSList::nsCSSList(const nsCSSList& aCopy)
+  : mType(aCopy.mType),
+    mImage(aCopy.mImage),
+    mPosition(aCopy.mPosition)
+{
+}
+
+nsCSSList::~nsCSSList(void)
 {
 }
 
@@ -417,7 +547,21 @@ void nsCSSList::List(FILE* out, PRInt32 aIndent) const
 
 // --- nsCSSTable -----------------
 
-nsCSSTable::~nsCSSTable()
+nsCSSTable::nsCSSTable(void)
+{
+}
+
+nsCSSTable::nsCSSTable(const nsCSSTable& aCopy)
+  : mBorderCollapse(aCopy.mBorderCollapse),
+    mBorderSpacingX(aCopy.mBorderSpacingX),
+    mBorderSpacingY(aCopy.mBorderSpacingY),
+    mCaptionSide(aCopy.mCaptionSide),
+    mEmptyCells(aCopy.mEmptyCells),
+    mLayout(aCopy.mLayout)
+{
+}
+
+nsCSSTable::~nsCSSTable(void)
 {
 }
 
@@ -444,7 +588,21 @@ void nsCSSTable::List(FILE* out, PRInt32 aIndent) const
 
 // --- nsCSSBreaks -----------------
 
-nsCSSBreaks::~nsCSSBreaks()
+nsCSSBreaks::nsCSSBreaks(void)
+{
+}
+
+nsCSSBreaks::nsCSSBreaks(const nsCSSBreaks& aCopy)
+  : mOrphans(aCopy.mOrphans),
+    mWidows(aCopy.mWidows),
+    mPage(aCopy.mPage),
+    mPageBreakAfter(aCopy.mPageBreakAfter),
+    mPageBreakBefore(aCopy.mPageBreakBefore),
+    mPageBreakInside(aCopy.mPageBreakInside)
+{
+}
+
+nsCSSBreaks::~nsCSSBreaks(void)
 {
 }
 
@@ -471,7 +629,18 @@ void nsCSSBreaks::List(FILE* out, PRInt32 aIndent) const
 
 // --- nsCSSPage -----------------
 
-nsCSSPage::~nsCSSPage()
+nsCSSPage::nsCSSPage(void)
+{
+}
+
+nsCSSPage::nsCSSPage(const nsCSSPage& aCopy)
+  : mMarks(aCopy.mMarks),
+    mSizeWidth(aCopy.mSizeWidth),
+    mSizeHeight(aCopy.mSizeHeight)
+{
+}
+
+nsCSSPage::~nsCSSPage(void)
 {
 }
 
@@ -500,6 +669,14 @@ nsCSSCounterData::nsCSSCounterData(void)
 {
 }
 
+nsCSSCounterData::nsCSSCounterData(const nsCSSCounterData& aCopy)
+  : mCounter(aCopy.mCounter),
+    mValue(aCopy.mValue),
+    mNext(nsnull)
+{
+  CSS_IF_COPY(mNext, nsCSSCounterData);
+}
+
 nsCSSCounterData::~nsCSSCounterData(void)
 {
   CSS_IF_DELETE(mNext);
@@ -508,6 +685,14 @@ nsCSSCounterData::~nsCSSCounterData(void)
 nsCSSQuotes::nsCSSQuotes(void)
   : mNext(nsnull)
 {
+}
+
+nsCSSQuotes::nsCSSQuotes(const nsCSSQuotes& aCopy)
+  : mOpen(aCopy.mOpen),
+    mClose(aCopy.mClose),
+    mNext(nsnull)
+{
+  CSS_IF_COPY(mNext, nsCSSQuotes);
 }
 
 nsCSSQuotes::~nsCSSQuotes(void)
@@ -523,6 +708,19 @@ nsCSSContent::nsCSSContent(void)
     mCounterReset(nsnull),
     mQuotes(nsnull)
 {
+}
+
+nsCSSContent::nsCSSContent(const nsCSSContent& aCopy)
+  : mContent(nsnull),
+    mCounterIncrement(nsnull),
+    mCounterReset(nsnull),
+    mMarkerOffset(aCopy.mMarkerOffset),
+    mQuotes(nsnull)
+{
+  CSS_IF_COPY(mContent, nsCSSValueList);
+  CSS_IF_COPY(mCounterIncrement, nsCSSCounterData);
+  CSS_IF_COPY(mCounterReset, nsCSSCounterData);
+  CSS_IF_COPY(mQuotes, nsCSSQuotes);
 }
 
 nsCSSContent::~nsCSSContent(void)
@@ -574,7 +772,34 @@ void nsCSSContent::List(FILE* out, PRInt32 aIndent) const
 
 // --- nsCSSAural -----------------
 
-nsCSSAural::~nsCSSAural()
+nsCSSAural::nsCSSAural(void)
+{
+}
+
+nsCSSAural::nsCSSAural(const nsCSSAural& aCopy)
+  : mAzimuth(aCopy.mAzimuth),
+    mElevation(aCopy.mElevation),
+    mCueAfter(aCopy.mCueAfter),
+    mCueBefore(aCopy.mCueBefore),
+    mPauseAfter(aCopy.mPauseAfter),
+    mPauseBefore(aCopy.mPauseBefore),
+    mPitch(aCopy.mPitch),
+    mPitchRange(aCopy.mPitchRange),
+    mPlayDuring(aCopy.mPlayDuring),
+    mPlayDuringFlags(aCopy.mPlayDuringFlags),
+    mRichness(aCopy.mRichness),
+    mSpeak(aCopy.mSpeak),
+    mSpeakHeader(aCopy.mSpeakHeader),
+    mSpeakNumeral(aCopy.mSpeakNumeral),
+    mSpeakPunctuation(aCopy.mSpeakPunctuation),
+    mSpeechRate(aCopy.mSpeechRate),
+    mStress(aCopy.mStress),
+    mVoiceFamily(aCopy.mVoiceFamily),
+    mVolume(aCopy.mVolume)
+{
+}
+
+nsCSSAural::~nsCSSAural(void)
 {
 }
 
@@ -620,6 +845,7 @@ void nsCSSAural::List(FILE* out, PRInt32 aIndent) const
 class CSSDeclarationImpl : public nsICSSDeclaration {
 public:
   CSSDeclarationImpl(void);
+  CSSDeclarationImpl(const CSSDeclarationImpl& aCopy);
   virtual ~CSSDeclarationImpl(void);
 
   NS_DECL_ZEROING_OPERATOR_NEW
@@ -647,6 +873,8 @@ public:
 
   NS_IMETHOD ToString(nsString& aString);
 
+  NS_IMETHOD Clone(nsICSSDeclaration*& aClone) const;
+
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   
   NS_IMETHOD Count(PRUint32* aCount);
@@ -655,7 +883,6 @@ public:
   NS_IMETHOD GetStyleImpact(PRInt32* aHint) const;
 
 private:
-  CSSDeclarationImpl(const CSSDeclarationImpl& aCopy);
   CSSDeclarationImpl& operator=(const CSSDeclarationImpl& aCopy);
   PRBool operator==(const CSSDeclarationImpl& aCopy) const;
 
@@ -676,7 +903,7 @@ protected:
   CSSDeclarationImpl* mImportant;
 
   nsVoidArray*    mOrder;
-  nsVoidArray*    mComments;
+  nsStringArray*  mComments;
 };
 
 #ifdef DEBUG_REFS
@@ -695,6 +922,46 @@ CSSDeclarationImpl::CSSDeclarationImpl(void)
 #endif
 }
 
+#define DECL_IF_COPY(type) \
+  if (aCopy.m##type)  m##type = new nsCSS##type(*(aCopy.m##type))
+
+CSSDeclarationImpl::CSSDeclarationImpl(const CSSDeclarationImpl& aCopy)
+{
+  NS_INIT_REFCNT();
+  DECL_IF_COPY(Font);
+  DECL_IF_COPY(Color);
+  DECL_IF_COPY(Text);
+  DECL_IF_COPY(Margin);
+  DECL_IF_COPY(Position);
+  DECL_IF_COPY(List);
+  DECL_IF_COPY(Display);
+  DECL_IF_COPY(Table);
+  DECL_IF_COPY(Breaks);
+  DECL_IF_COPY(Page);
+  DECL_IF_COPY(Content);
+  DECL_IF_COPY(Aural);
+
+  if (aCopy.mImportant) {
+    mImportant = new CSSDeclarationImpl(*(aCopy.mImportant));
+    NS_IF_ADDREF(mImportant);
+  }
+
+  if (aCopy.mOrder) {
+    mOrder = new nsVoidArray();
+    if (mOrder) {
+      (*mOrder) = *(aCopy.mOrder);
+    }
+  }
+
+  if (aCopy.mComments) {
+    mComments = new nsStringArray();
+    if (mComments) {
+      (*mComments) = *(aCopy.mComments);
+    }
+  }
+}
+
+
 CSSDeclarationImpl::~CSSDeclarationImpl(void)
 {
   CSS_IF_DELETE(mFont);
@@ -712,14 +979,7 @@ CSSDeclarationImpl::~CSSDeclarationImpl(void)
 
   NS_IF_RELEASE(mImportant);
   CSS_IF_DELETE(mOrder);
-  if (nsnull != mComments) {
-    PRInt32 index = mComments->Count();
-    while (0 < --index) {
-      nsString* comment = (nsString*)mComments->ElementAt(index);
-      delete comment;
-    }
-    delete mComments;
-  }
+  CSS_IF_DELETE(mComments);
 
 #ifdef DEBUG_REFS
   --gInstanceCount;
@@ -2017,10 +2277,10 @@ CSSDeclarationImpl::AppendComment(const nsString& aComment)
     mOrder = new nsVoidArray();
   }
   if (nsnull == mComments) {
-    mComments = new nsVoidArray();
+    mComments = new nsStringArray();
   }
   if ((nsnull != mComments) && (nsnull != mOrder)) {
-    mComments->AppendElement(new nsString(aComment));
+    mComments->AppendString(aComment);
     mOrder->AppendElement((void*)-mComments->Count());
     result = NS_OK;
   }
@@ -3028,7 +3288,7 @@ CSSDeclarationImpl::ToString(nsString& aString)
       }
       else {  // is comment
         aString.Append("/* ");
-        nsString* comment = (nsString*)mComments->ElementAt((-1) - property);
+        nsString* comment = mComments->StringAt((-1) - property);
         aString.Append(*comment);
         aString.Append(" */ ");
       }
@@ -3137,6 +3397,17 @@ CSSDeclarationImpl::GetStyleImpact(PRInt32* aHint) const
   }
   *aHint = hint;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSDeclarationImpl::Clone(nsICSSDeclaration*& aClone) const
+{
+  CSSDeclarationImpl* clone = new CSSDeclarationImpl(*this);
+  if (clone) {
+    return clone->QueryInterface(kICSSDeclarationIID, (void**)&aClone);
+  }
+  aClone = nsnull;
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 
