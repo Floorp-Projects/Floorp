@@ -517,7 +517,36 @@ public:
    * the number of characters that fit. The number of characters
    * corresponds to an entry in the break array.
    * If no font has been Set, the results are undefined.
-   * @param aString string to measure
+   * @param aString 8-bit character string to measure
+   * @param aLength number of characters in string
+   * @param aAvailWidth the available space in which the text must fit
+   * @param aBreaks array of places to break. Specified as offsets from the
+   *          start of the string
+   * @param aNumBreaks the number of entries in the break array. The last
+   *          entry in the break array must equal the length of the string
+   * @param aWidth out parameter for width
+   * @param aNumCharsFit the number of characters that fit in the available space
+   * @param aFontID an optional out parameter used to store a
+   *        font identifier that can be passed into the DrawString()
+   *        methods to speed rendering
+   * @return error status
+   */
+  NS_IMETHOD GetWidth(const char *aString,
+                      PRInt32     aLength,
+                      PRInt32     aAvailWidth,
+                      PRInt32*    aBreaks,
+                      PRInt32     aNumBreaks,
+                      nscoord&    aWidth,
+                      PRInt32&    aNumCharsFit,
+                      PRInt32*    aFontID = nsnull) = 0;
+
+  /**
+   * Given an available width and an array of break points,
+   * returns the width (in app units) of the text that fit and
+   * the number of characters that fit. The number of characters
+   * corresponds to an entry in the break array.
+   * If no font has been Set, the results are undefined.
+   * @param aString Unicode string to measure
    * @param aLength number of characters in string
    * @param aAvailWidth the available space in which the text must fit
    * @param aBreaks array of places to break. Specified as offsets from the

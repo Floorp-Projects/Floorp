@@ -131,6 +131,14 @@ public:
                       PRInt32 *aFontID);
   NS_IMETHOD GetWidth(const char* aString, nscoord& aWidth);
   NS_IMETHOD GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth);
+  NS_IMETHOD GetWidth(const char *aString,
+                      PRInt32     aLength,
+                      PRInt32     aAvailWidth,
+                      PRInt32*    aBreaks,
+                      PRInt32     aNumBreaks,
+                      nscoord&    aWidth,
+                      PRInt32&    aNumCharsFit,
+                      PRInt32*    aFontID);
   NS_IMETHOD GetWidth(const PRUnichar* aString, PRUint32 aLength,
                       nscoord& aWidth, PRInt32 *aFontID);
   NS_IMETHOD GetWidth(const PRUnichar *aString,
