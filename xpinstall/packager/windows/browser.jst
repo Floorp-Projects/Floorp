@@ -412,6 +412,7 @@ if(verifyDiskSpace(fProgram, srDest))
     // register chrome
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global-platform/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator-platform/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/navigator-platform/");
 
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global-region/");
