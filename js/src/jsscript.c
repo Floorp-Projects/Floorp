@@ -897,7 +897,7 @@ typedef struct ScriptFilenameEntry {
 } ScriptFilenameEntry;
 
 JS_STATIC_DLL_CALLBACK(JSHashEntry *)
-js_alloc_entry(void *priv, const void *key)
+js_alloc_sftbl_entry(void *priv, const void *key)
 {
     size_t nbytes = offsetof(ScriptFilenameEntry, filename) + strlen(key) + 1;
 
@@ -905,7 +905,7 @@ js_alloc_entry(void *priv, const void *key)
 }
 
 JS_STATIC_DLL_CALLBACK(void)
-js_free_entry(void *priv, JSHashEntry *he, uintN flag)
+js_free_sftbl_entry(void *priv, JSHashEntry *he, uintN flag)
 {
     if (flag != HT_FREE_ENTRY)
         return;
@@ -914,7 +914,7 @@ js_free_entry(void *priv, JSHashEntry *he, uintN flag)
 
 static JSHashAllocOps table_alloc_ops = {
     js_alloc_table_space,   js_free_table_space,
-    js_alloc_entry,         js_free_entry
+    js_alloc_sftbl_entry,   js_free_sftbl_entry
 };
 
 JSBool
@@ -964,7 +964,7 @@ js_FinishRuntimeScriptState(JSContext *cx)
 }
 
 #ifdef DEBUG_brendan
-size_t sft_savings = 0;
+size_t sftbl_savings = 0;
 #endif
 
 const char *
@@ -983,7 +983,7 @@ js_SaveScriptFilename(JSContext *cx, const char *filename)
     sfe = (ScriptFilenameEntry *) *hep;
 #ifdef DEBUG_brendan
     if (sfe)
-        sft_savings += strlen(sfe->filename);
+        sftbl_savings += strlen(sfe->filename);
 #endif
     if (!sfe) {
         sfe = (ScriptFilenameEntry *)
@@ -1037,7 +1037,7 @@ js_SweepScriptFilenames(JSRuntime *rt)
                                  js_script_filename_sweeper,
                                  rt);
 #ifdef DEBUG_brendan
-    printf("script filename table savings so far: %u\n", sft_savings);
+    printf("script filename table savings so far: %u\n", sftbl_savings);
 #endif
 }
 
