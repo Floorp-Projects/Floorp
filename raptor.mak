@@ -331,11 +331,13 @@ tarball: prepare_for_tarballing
 tarball_zip: prepare_for_tarballing
     @echo Making $(TARBALL_ZIP)
     cd $(MOZ_SRC)\.
+    rm -f $(TARBALL_ZIP)
     $(ZIP) -9 -r -q $(TARBALL_ZIP) ns
 
 tarball_gz: $(TARBALL)
     @echo Making gzip of $(TARBALL)
     cd $(MOZ_SRC)\.
+    rm -f $(TARBALL).gz
     $(GZIP) -9 -q $(TARBALL)
 
 prepare_for_tarballing:
