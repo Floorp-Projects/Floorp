@@ -26,6 +26,7 @@
 #include "nsISupports.h"
 
 // Factory methods for creating MathML objects
+extern nsresult NS_NewMathMLForeignFrameWrapper ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmrowFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmiFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmtextFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
