@@ -50,6 +50,7 @@ CPPSRCS = \
 	nsLocalFolderSummarySpec.cpp	\
 	nsMsgMD5.cpp \
 	nsUrlListenerManager.cpp \
+	nsUInt32Array.cpp	\
 	$(NULL)
 
 CPPSRCS += \
