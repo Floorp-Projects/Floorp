@@ -886,7 +886,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   nscoord computedPaginatedHeight = 0;
 
   if (aReflowState.mFlags.mSpecialHeightReflow || 
-      (HadSpecialReflow() && (eReflowReason_Incremental == aReflowState.reason))) {
+      (HadSpecialReflow() && ((eReflowReason_Incremental == aReflowState.reason) || 
+                              (eReflowReason_Resize == aReflowState.reason)))) {
     ((nsHTMLReflowState&)aReflowState).mComputedHeight = mRect.height - topInset - bottomInset;
     DISPLAY_REFLOW_CHANGE();
   }
@@ -1090,10 +1091,14 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     SetNeedSpecialReflow(PR_FALSE);
     SetHadSpecialReflow(PR_TRUE);
   }
-  else if (HadSpecialReflow() && (eReflowReason_Incremental == aReflowState.reason)) {
+  else if (HadSpecialReflow() && ((eReflowReason_Incremental == aReflowState.reason) || 
+                                  (eReflowReason_Resize == aReflowState.reason))) {
     // if the block height value hasn't changed, use the last height of the cell, otherwise ignore it
     if (GetLastBlockHeight() == priorBlockHeight) {
       aDesiredSize.height = mRect.height;
+    }
+    else {
+      SetHadSpecialReflow(PR_FALSE);
     }
   }
   else if (computedPaginatedHeight > 0) {
