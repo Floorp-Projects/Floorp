@@ -184,14 +184,15 @@ nsMsgFolder::~nsMsgFolder(void)
 
   gInstanceCount--;
   if (gInstanceCount <= 0) {
-    NS_IF_RELEASE(kTotalMessagesAtom);
     NS_IF_RELEASE(kBiffStateAtom);
     NS_IF_RELEASE(kNewMessagesAtom);
     NS_IF_RELEASE(kNumNewBiffMessagesAtom);
-    NS_IF_RELEASE(kTotalUnreadMessagesAtom);
-    NS_IF_RELEASE(kFlaggedAtom);
-    NS_IF_RELEASE(kStatusAtom);
     NS_IF_RELEASE(kNameAtom);
+    NS_IF_RELEASE(kTotalUnreadMessagesAtom);
+    NS_IF_RELEASE(kTotalMessagesAtom);
+    NS_IF_RELEASE(kFolderSizeAtom);
+    NS_IF_RELEASE(kStatusAtom);
+    NS_IF_RELEASE(kFlaggedAtom);
     NS_IF_RELEASE(kSynchronizeAtom);
     NS_IF_RELEASE(kOpenAtom);
     NS_IF_RELEASE(kCollationKeyGenerator);
