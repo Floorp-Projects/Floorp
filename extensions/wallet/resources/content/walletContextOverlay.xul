@@ -34,21 +34,19 @@
 
     function initContextItems() {
 
-        // Determine if capture should be displayed and enabled.
-        var captureState = getState(capture, 0);
-        showItem("context-capture", (captureState != hide));
-        setDisabledAttr("context-capture", (captureState == disable));
+        // Determine if capture/prefill should be displayed and enabled.
+        var state = getState(0);
+        showItem("context-capture", (state.capture != hide));
+        setDisabledAttr("context-capture", (state.capture == disable));
 
-        // Determine if prefill should be displayed and enabled.
-        var prefillState = getState(prefill, 0);
-        showItem("context-prefill", (prefillState != hide));
-        setDisabledAttr("context-prefill", (prefillState == disable));
+        showItem("context-prefill", (state.prefill != hide));
+        setDisabledAttr("context-prefill", (state.prefill == disable));
 
-        // Display show-saved-dat if either prefill or capture is being displayed
-        showItem("context-formshow", captureState != hide || prefillState != hide);
+        // Display show-saved-data if either prefill or capture is being displayed
+        showItem("context-formshow", state.capture != hide || state.prefill != hide);
 
         // Display separator if either prefill or capture is being displayed
-        showItem("context-separator", captureState != hide || prefillState != hide);
+        showItem("context-separator", state.capture != hide || state.prefill != hide);
     }
 
     // For some unexplainable reason, this overlay is loaded twice as can be demonstrated

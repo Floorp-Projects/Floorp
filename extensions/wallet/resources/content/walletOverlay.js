@@ -17,9 +17,22 @@
  *
  * Contributor(s):
  */
- 
- var gIsEncrypted = -1;
- var gWalletService = -1;
+
+    var gIsEncrypted = -1;
+    var gWalletService = -1;
+
+    // states that the capture and prefill menu items can be in
+    const hide = -1;   // don't show menu item
+    const disable = 0; // show menu item but gray it out
+    const enable = 1;  // show menu item normally
+
+    // useful values for an array giving the state of the two menu item
+    const bothHide = {capture: hide, prefill: hide};
+    const bothEnable = {capture: enable, prefill: enable};
+
+    // useful values for an array indicating if state was determined for the two menu items
+    const bothTrue = {capture: true, prefill: true};
+    const bothFalse = {capture: false, prefill: false};
 
     // Set the disabled attribute of specified item.
     //   If the value is false, then it removes the attribute
@@ -105,11 +118,11 @@
       }
 
       // hide form toolbar if three or less text elements in form
-      var prefillState = getState(prefill, 3);
-      showItem("formToolbar", (prefillState != hide));
+      var state = getState(3);
+      showItem("formToolbar", (state.prefill != hide));
 
       // enable prefill button if there is at least one saved value for the form
-      setDisabledAttr("formPrefill", (prefillState == disable));
+      setDisabledAttr("formPrefill", (state.prefill == disable));
     }
 */
 
@@ -147,27 +160,18 @@
     }
 */
 
-    var hide = -1;
-    var disable = 0;
-    var enable = 1;
-
-    var capture = 0;
-    var prefill = 1;
-
     var elementCount;
 
     // Walk through the DOM to determine how a capture or prefill item is to appear.
-    //   arguments:
-    //      captureOrPrefill = capture, prefill
     //   returned value:
-    //      hide, disable, enable
-    function getStateFromFormsArray(formsArray, captureOrPrefill, threshhold) {
+    //      hide, disable, enable for .capture and .prefill
+    function getStateFromFormsArray(formsArray, threshhold) {
       if (!formsArray) {
-        return hide;
+        return bothHide;
       }
 
       var form;
-      var bestState = hide;
+      var bestState = bothHide;
 
       for (form=0; form<formsArray.length; form++) {
         var elementsArray = formsArray[form].elements;
@@ -193,16 +197,22 @@
 //              if (locked) { -- there's currently no way to make such a test
                   // it's encrypted and locked, we lose
                   elementCount = threshhold+1;
-                  return enable;
+                  return bothEnable;
 //              }
               }
             } catch(e) {
               // there is no crypto pref so database could not possible be encrypted
             }
-            
-            if (bestState == hide) {
-              bestState = disable;
+
+            // since we know there is at least one text or select element, we can unhide
+            // the menu items.  That means doing nothing if state is already "enable" but
+            // changing state to "disable" if it is currently "hide".
+            for (var j in bestState) {
+              if (bestState[j] == hide) {
+                bestState[j] = disable;
+              }
             }
+            
             var value;
 
             // obtain saved values if any and store in array called valueList
@@ -216,32 +226,35 @@
               valueList = valueSequence.substring(1, valueSequence.length).split(separator);
             }
 
-            // see if there's a value on screen (capture case) or a saved value (prefill case) 
-            if (captureOrPrefill == capture) {
-              // in capture case, see if element has a value on the screen which is not saved
-              value = elementsArray[element].value;
-              if (valueSequence && value) {
-                for (var i=0; i<valueList.length; i++) {
-                  if (value == valueList[i]) {
-                    value = null;
-                    break;
-                  }
+            // in capture case, see if element has a value on the screen which is not saved
+            value = elementsArray[element].value;
+            if (valueSequence && value) {
+              for (var i=0; i<valueList.length; i++) {
+                if (value == valueList[i]) {
+                  value = null;
+                  break;
                 }
               }
-            } else {
-              // in prefill case, see if element has a saved value
-              if (valueSequence) {
-                value = valueList[0];
+            }
+            if (value) {
+              // at least one text (or select) element has a value,
+              //    in which case the capture item is to appear in menu
+              bestState.capture = enable;
+            }
+
+            // in prefill case, see if element has a saved value
+            if (valueSequence) {
+              value = valueList[0];
+              if (value) {
+                // at least one text (or select) element has a value,
+                //    in which case the prefill item is to appear in menu
+                bestState.prefill = enable;
               }
             }
 
-            if (value) {
-              // at least one text (or select) element has a value,
-              //    in which case the capture or prefill item is to appear in menu
-              bestState = enable;
-              if (elementCount > threshhold) {
-                return enable;
-              }
+            // see if we've gone far enough
+            if ((bestState == bothEnable) && (elementCount > threshhold)) {
+              return bestState;
             }
           } 
         }
@@ -252,40 +265,42 @@
 
     var bestState;
 
-    function stateFoundInFormsArray(formsArray, captureOrPrefill, threshhold) {
-      var state =
-        getStateFromFormsArray(formsArray, captureOrPrefill, threshhold);
-      if (state == enable) {
-        bestState = enable;
-        if (elementCount > threshhold) {
-          return true;
+    function stateFoundInFormsArray(formsArray, threshhold) {
+      var rv = bothFalse;
+      var state = getStateFromFormsArray(formsArray, threshhold);
+      for (var i in state) {
+        if (state[i] == enable) {
+          bestState[i] = enable;
+          if (elementCount > threshhold) {
+            rv[i] = true;
+          }
+        } else if (state[i] == disable && bestState[i] == hide) {
+          bestState[i] = disable;
         }
-      } else if (state == disable && bestState == hide) {
-        bestState = disable;
       }
-      return false;
+      return rv;
     }
 
     // Walk through the DOM to determine how capture or prefill item is to appear.
-    //   arguments:
-    //      captureOrPrefill = capture, prefill
     //   returned value:
-    //      hide, disable, enable
+    //      hide, disable, enable for .capture and .prefill
 
-    function getState(captureOrPrefill, threshhold) {
-      stateFound(window.content, captureOrPrefill, threshhold);
+    function getState(threshhold) {
+      stateFound(window.content, threshhold);
       return bestState;
     }
 
-    function stateFound(content, captureOrPrefill, threshhold) {
-      bestState = hide;
+    function stateFound(content, threshhold) {
+      var captureStateFound = false;
+      var prefillStateFound = false;
+      bestState = bothHide;
       if (!content || !content.document) {
-        return false;
+        return bothFalse;
       }
       var document = content.document;
       if (!("forms" in document)) {
         // this will occur if document is xul document instead of html document for example
-        return false;
+        return bothFalse;
       }
 
       // test for wallet service being available
@@ -293,31 +308,35 @@
         gWalletService = Components.classes["@mozilla.org/wallet/wallet-service;1"]
                                    .getService(Components.interfaces.nsIWalletService);
       if (!gWalletService) {
-        return true;
+        return bothTrue;
       }
 
-      var state;
       elementCount = 0;
 
       // process frames if any
       var formsArray;
       var framesArray = content.frames;
+      var rv;
       if (framesArray.length != 0) {
         var frame;
         for (frame=0; frame<framesArray.length; ++frame) {
 
           // recursively process each frame for additional documents
-          if (stateFound(framesArray[frame], captureOrPrefill, threshhold)) {
-            return true;
+          rv = stateFound(framesArray[frame], threshhold);
+          captureStateFound |= rv.capture; prefillStateFound |= rv.prefill;
+          if (captureStateFound && prefillStateFound) {
+            return bothTrue;
           }
 
           // process the document of this frame
           var frameDocument = framesArray[frame].document;
           if (frameDocument) {
 
-            if (stateFoundInFormsArray(frameDocument.forms, captureOrPrefill, threshhold)) {
+            rv = stateFoundInFormsArray(frameDocument.forms, threshhold);
+            captureStateFound |= rv.capture; prefillStateFound |= rv.prefill;
+            if (captureStateFound && prefillStateFound) {
               gIsEncrypted = -1;
-              return true;
+              return bothTrue;
             }
           }
         }
@@ -325,18 +344,20 @@
 
       // process top-level document
       gIsEncrypted = -1;
-      if (stateFoundInFormsArray(document.forms, captureOrPrefill, threshhold)) {
-        return true;
+      rv = stateFoundInFormsArray(document.forms, threshhold);
+      captureStateFound |= rv.capture; prefillStateFound |= rv.prefill;
+      if (captureStateFound && prefillStateFound) {
+        return bothTrue;
       }
 
       // if we got here, then there was no text (or select) element with a value
       // or there were too few text (or select) elements
       if (elementCount > threshhold) {
         // no text (or select) element with a value
-        return false;
+        return bothFalse;
       }
 
       // too few text (or select) elements
       bestState = hide;
-      return false;
+      return bothFalse;
     }

@@ -33,15 +33,11 @@
   <![CDATA[
 
     function initEditItems() {
-      var state;
 
-      // Determine if capture should be displayed and enabled.
-      state = getState(capture, 0);
-      setDisabledAttr("edit_capture", (state != enable));
-
-      // Determine if prefill should be displayed and enabled.
-      state = getState(prefill, 0);
-      setDisabledAttr("edit_prefill", (state != enable));
+      // Determine if capture/prefill should be displayed and enabled.
+      var state = getState(0);
+      setDisabledAttr("edit_capture", (state.capture != enable));
+      setDisabledAttr("edit_prefill", (state.prefill != enable));
     }
 
 /* form toolbar is out
