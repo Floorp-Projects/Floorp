@@ -289,7 +289,10 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
        SetNewsFolderColumns(false);
 
   // null this out, so we don't try sort.
-  gDBView = null;
+  if (gDBView) {
+    gDBView.close();
+    gDBView = null;
+  }
 
   // if this is the drafts, sent, or send later folder,
   // we show "Recipient" instead of "Author"
@@ -315,7 +318,11 @@ function SwitchView(command)
   var oldSortOrder = gDBView ? gDBView.sortOrder : nsMsgViewSortOrder.ascending;
   var viewFlags = gCurViewFlags;
 
-  gDBView = null; // close existing view.
+  // close existing view.
+  if (gDBView) {
+    gDBView.close();
+    gDBView = null; 
+  }
 
   switch(command)
   {
@@ -726,7 +733,10 @@ function FolderPaneSelectionChange()
 
 function ClearThreadPane()
 {
-  gDBView = null; 
+  if (gDBView) {
+    gDBView.close();
+    gDBView = null; 
+  }
 }
 
 function OpenFolderTreeToFolder(folderURI)

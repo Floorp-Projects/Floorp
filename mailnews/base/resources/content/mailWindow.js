@@ -65,7 +65,6 @@ var gIsEditableMsgFolder = false;
 function OnMailWindowUnload()
 {
   var dbview = GetDBView();
-  dump("XXX closing dbview (" + dbview + ")\n");
   if (dbview) {
     dbview.close(); 
   }
