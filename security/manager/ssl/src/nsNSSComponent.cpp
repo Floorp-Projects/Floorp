@@ -761,15 +761,13 @@ nsNSSComponent::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
 nsresult
 nsNSSComponent::RegisterProfileChangeObserver()
 {
-  nsresult rv;
-  
   nsCOMPtr<nsIObserverService> observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID));
   NS_ASSERTION(observerService, "could not get observer service");
   if (observerService) {
     observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
     observerService->AddObserver(this, PROFILE_AFTER_CHANGE_TOPIC);
   }
-  return rv;
+  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS1(PipUIContext, nsIInterfaceRequestor)
