@@ -278,6 +278,7 @@ nsMessengerWinIntegration::nsMessengerWinIntegration()
   mBiffStateAtom = getter_AddRefs(NS_NewAtom("BiffState"));
   mBiffIconVisible = PR_FALSE;
   mSuppressBiffIcon = PR_FALSE;
+  mAlertInProgress = PR_FALSE;
   mBiffIconInitialized = PR_FALSE;
   mUseWideCharBiffIcon = PR_FALSE;
   NS_NewISupportsArray(getter_AddRefs(mFoldersWithNewMail));
@@ -497,6 +498,10 @@ nsresult nsMessengerWinIntegration::GetStringBundle(nsIStringBundle **aBundle)
 nsresult nsMessengerWinIntegration::ShowAlertMessage(const PRUnichar * aAlertText, const char * aFolderURI)
 {
   nsresult rv;
+  
+  // if we are already in the process of showing an alert, don't try to show another....
+  if (mAlertInProgress) 
+    return NS_OK; 
 
   nsCOMPtr<nsIPref> prefService;
   prefService = do_GetService(NS_PREF_CONTRACTID, &rv);  
@@ -520,6 +525,8 @@ nsresult nsMessengerWinIntegration::ShowAlertMessage(const PRUnichar * aAlertTex
         bundle->GetStringFromName(NS_LITERAL_STRING("newMail_Alert_Title").get(), getter_Copies(alertTitle));
         rv = alertsService->ShowAlertNotification(NEW_MAIL_ALERT_ICON, alertTitle, aAlertText, PR_TRUE, 
          NS_ConvertASCIItoUCS2(aFolderURI).get(), alertListener); 
+
+        mAlertInProgress = PR_TRUE;
       }
       else
         rv = NS_ERROR_FAILURE;
@@ -542,6 +549,7 @@ NS_IMETHODIMP nsMessengerWinIntegration::OnAlertFinished(const PRUnichar * aAler
   }
 
   mSuppressBiffIcon = PR_FALSE;
+  mAlertInProgress = PR_FALSE;
   return NS_OK;
 }
 
@@ -819,6 +827,13 @@ nsMessengerWinIntegration::OnItemPropertyFlagChanged(nsISupports *item, nsIAtom 
     {
       // we are always going to remove the icon whenever we get our first no mail
       // notification. 
+      
+      // avoid a race condition where we are told to remove the icon before we've actually
+      // added it to the system tray. This happens when the user reads a new message before
+      // the animated alert has gone away.
+      if (mAlertInProgress)
+        mSuppressBiffIcon = PR_TRUE;
+
       mFoldersWithNewMail->Clear(); 
       if (mBiffIconVisible) 
       {

@@ -110,6 +110,7 @@ private:
   PRPackedBool mBiffIconVisible;
   PRPackedBool mBiffIconInitialized;
   PRPackedBool mSuppressBiffIcon;
+  PRPackedBool mAlertInProgress;
   
   // "might" because we don't know until we check 
   // what type of server is associated with the default account
