@@ -122,10 +122,6 @@ nsViewerApp::nsViewerApp()
 nsViewerApp::~nsViewerApp()
 {
   Destroy();
-  if (nsnull != mPrefs) {
-    mPrefs->ShutDown();
-    NS_RELEASE(mPrefs);
-  }
 }
 
 NS_IMPL_THREADSAFE_ADDREF(nsViewerApp)
@@ -166,12 +162,16 @@ nsViewerApp::Destroy()
   // Release the crawler
   NS_IF_RELEASE(mCrawler);
 
+#ifndef NECKO
   // Only shutdown if Initialize has been called...
   if (PR_TRUE == mIsInitialized) {
-#ifndef NECKO
     NS_ShutdownINetService();
     mIsInitialized = PR_FALSE;
+  }
 #endif // NECKO
+  if (nsnull != mPrefs) {
+    mPrefs->ShutDown();
+    NS_RELEASE(mPrefs);
   }
 }
 
