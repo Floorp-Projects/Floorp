@@ -61,7 +61,6 @@
                src="chrome://communicator/locale/pref/prefutilities.properties"/>
   <script type="application/x-javascript" src="chrome://global/content/nsWidgetStateManager.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/nsPrefWindow.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-help.js"/>
 
   <hbox flex="1">
 
@@ -69,13 +68,11 @@
       <button id="mailnews"  orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&mailonly.label;" url="chrome://messenger/content/pref-mailnews.xul"/>
       <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://communicator/content/pref/pref-themes.xul" label="&themes.label;"/>
       <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&viewingMessages.label;" url="chrome://messenger/content/pref-viewing_messages.xul"/>
-      <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/pref-notifications.xul" label="&notifications.label;"/>
       <button id="mailcomposepref" orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/messengercompose/pref-composing_messages.xul" label="&composingMessages.label;"/>
       <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://communicator/content/pref/pref-fonts.xul" label="&fonts.label;"/>
       <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/messengercompose/pref-formatting.xul" label="&format.label;"/>
       <button id="mailaddressbookpref" orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/addressbook/pref-addressing.xul" label="&address.label;"/>
-      <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/pref-labels.xul" label="&labels.label;"/>
-      <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/pref-receipts.xul" label="&return.label;"/>/>
+      <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/pref-advanced.xul" label="&advanced.label;"/>
       <button orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/pref-privacy.xul" label="&privacy.label;"/>     
     </vbox>
 
@@ -92,8 +89,8 @@
         document.getElementById("panelFrame").setAttribute("tag", window.arguments[0] );
       }
       else {
-        document.getElementById("panelFrame").setAttribute("src", "chrome://communicator/content/pref/pref-navigator.xul" );
-        document.getElementById("panelFrame").setAttribute("tag", "chrome://communicator/content/pref/pref-navigator.xul" );
+        document.getElementById("panelFrame").setAttribute("src", "chrome://messenger/content/pref-mailnews.xul" );
+        document.getElementById("panelFrame").setAttribute("tag", "chrome://messenger/content/pref-mailnews.xul" );
       }
     ]]>
     </script>

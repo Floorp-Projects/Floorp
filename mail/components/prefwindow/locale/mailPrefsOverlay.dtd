@@ -1,6 +1,5 @@
 
 <!ENTITY  prefWindow.title            "Options">
-<!ENTITY  categoryHeader              "Category">
 
 <!ENTITY enbJsCheckMailNews.label     "Mail &amp; Newsgroups">
 <!ENTITY enbJsCheckMailNews.accesskey "m">
@@ -16,17 +15,14 @@
 <!ENTITY mail.label "Mail &amp; Newsgroups">
 <!ENTITY mail.accesskey "m">
 <!ENTITY windows.label "Windows">
-<!ENTITY viewingMessages.label "Message Display">
-<!ENTITY notifications.label "Notifications">
+<!ENTITY viewingMessages.label "Display">
 <!ENTITY address.label "Addressing">
 <!ENTITY composingMessages.label "Composition">
 <!ENTITY format.label "Send Format">
 <!ENTITY return.label "Return Receipts">
-<!ENTITY disk.label "Disk Space">
-<!ENTITY labels.label "Labels">
-<!ENTITY category.label "Category">
+<!ENTITY advanced.label "Advanced">
 <!ENTITY mailonly.label "General">
 <!ENTITY languages.label "Languages">
 <!ENTITY themes.label "Themes">
 <!ENTITY fonts.label "Fonts">
-<!ENTITY privacy.label "Privacy &amp; Security">
+<!ENTITY privacy.label "Privacy">

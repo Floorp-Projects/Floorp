@@ -27,7 +27,10 @@ Contributor(s):
 <?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
-<!DOCTYPE page SYSTEM "chrome://messenger/locale/pref-mailnews.dtd">
+<!DOCTYPE overlay [
+  <!ENTITY % dtd1 SYSTEM "chrome://messenger/locale/pref-mailnews.dtd" > %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://messenger/locale/pref-notifications.dtd" > %dtd2;
+]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://messenger/content/pref-mailnews.xul');"
@@ -35,10 +38,15 @@ Contributor(s):
 
   <script type="application/x-javascript" src="chrome://messenger/content/pref-mailnews.js"/>
 
+<!-- temporarily remove mailPaneConfig from the element IDs list -->
+
   <script type="application/x-javascript">
   <![CDATA[
+
     var _elementIDs = ["mailnewsConfirmMoveFoldersToTrash", 
-                       "mailnewsStartPageEnabled", "mailnewsStartPageUrl", "mailPaneConfig"];
+                       "mailnewsStartPageEnabled", "mailnewsStartPageUrl", 
+                       "mailnewsSoundFileUrl", "newMailNotification", "newMailNotificationType",
+                        "newMailNotificationAlert"];
   ]]>
   </script>
   
@@ -75,8 +83,7 @@ Contributor(s):
         <label value="&location.label;" accesskey="&location.accesskey;" 
                control="mailnewsStartPageUrl"/>
         <textbox id="mailnewsStartPageUrl" flex="1" preftype="localizedstring"
-                 type="autocomplete" prefstring="mailnews.start_page.url"
-                 searchSessions="history" timeout="50" maxrows="6" class="uri-element"/>
+                 prefstring="mailnews.start_page.url"/>
       </hbox>
 
     <hbox pack="end">
@@ -86,6 +93,9 @@ Contributor(s):
       </button>
      </hbox>
   </groupbox>
+
+<!-- Temporarily hide the window setting for the alternate 3-pane until we can 
+     create more room for it in the prefs panel. 
 
   <groupbox>
     <caption label="&windowSettings.label;"/>
@@ -97,6 +107,39 @@ Contributor(s):
         <radio class="iconic" value="0" id="classic"/>
         <radio class="iconic" value="1" id="wide"/>
       </radiogroup>
+    </hbox>
+  </groupbox>
+-->
+
+  <groupbox>
+    <caption label="&newMessagesArrive.label;"/>
+
+    <hbox align="center">
+      <checkbox id="newMailNotificationAlert" label="&showAnimatedAlert.label;"
+                prefstring="mail.biff.show_alert"
+                accesskey="&showAnimatedAlert.accesskey;" />
+    </hbox>
+    
+    <checkbox id="newMailNotification" accesskey="&playSound.accesskey;"
+         prefstring="mail.biff.play_sound" label="&playSound.label;"
+         oncommand="PlaySoundCheck()"/>
+
+    <hbox align="center" class="indent">
+      <radiogroup id="newMailNotificationType" prefstring="mail.biff.play_sound.type" orient="vertical">
+        <radio class="iconic" value="0" oncommand="PlaySoundCheck()" label="&systemsound.label;" id="system"/>
+        <radio class="iconic" value="1" oncommand="PlaySoundCheck()" label="&customsound.label;" id="custom"/>
+      </radiogroup>
+    </hbox>
+
+    <hbox align="center" class="indent">
+      <textbox flex="1" oninput="onCustomWavInput()" id="mailnewsSoundFileUrl" preftype="string"
+           prefstring="mail.biff.play_sound.url"/>
+      <hbox autostretch="never">
+        <button id="browse" label="&browse.label;" filepickertitle="&browse.title;"
+                accesskey="&browse.accesskey;" oncommand="Browse()"/>
+        <button id="preview" label="&preview.label;"
+                accesskey="&preview.accesskey;" oncommand="PreviewSound()"/>
+      </hbox>
     </hbox>
   </groupbox>
 
