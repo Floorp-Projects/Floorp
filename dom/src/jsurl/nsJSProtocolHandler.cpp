@@ -80,15 +80,14 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMIO
 
-    nsresult Init(nsIURI* uri, nsIChannel* channel);
-    nsresult EvaluateScript();
-    nsresult BringUpConsole();
+    nsresult Init(nsIURI* uri);
+    nsresult EvaluateScript(nsIChannel *aChannel);
+    nsresult BringUpConsole(nsIDOMWindow *aDomWindow);
 
 protected:
     virtual ~nsJSThunk();
 
     nsCOMPtr<nsIURI>            mURI;
-    nsCOMPtr<nsIChannel>        mChannel;
     char*                       mResult;
     PRUint32                    mLength;
 };
@@ -100,7 +99,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsJSThunk, nsIStreamIO);
 
 
 nsJSThunk::nsJSThunk()
-         : mChannel(nsnull), mResult(nsnull), mLength(0)
+         : mResult(nsnull), mLength(0)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -110,46 +109,28 @@ nsJSThunk::~nsJSThunk()
     (void)Close(NS_BASE_STREAM_CLOSED);
 }
 
-nsresult nsJSThunk::Init(nsIURI* uri, nsIChannel* channel)
+nsresult nsJSThunk::Init(nsIURI* uri)
 {
     NS_ENSURE_ARG_POINTER(uri);
-    NS_ENSURE_ARG_POINTER(channel);
 
     mURI = uri;
-    mChannel = channel;
     return NS_OK;
 }
 
-nsresult nsJSThunk::EvaluateScript()
+nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
 {
     nsresult rv;
 
-    NS_ENSURE_ARG_POINTER(mChannel);
+    NS_ENSURE_ARG_POINTER(aChannel);
 
     // Get the script string to evaluate...
     nsCAutoString script;
     rv = mURI->GetPath(script);
     if (NS_FAILED(rv)) return rv;
 
-    // If mURI is just "javascript:", we bring up the JavaScript console
-    // and return NS_ERROR_DOM_RETVAL_UNDEFINED.
-    if (script.IsEmpty()) {
-        rv = BringUpConsole();
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-        return NS_ERROR_DOM_RETVAL_UNDEFINED;
-    }
-
-    // Unescape the script
-    NS_UnescapeURL(script);
-
-    // Get the url.
-    nsCAutoString url;
-    rv = mURI->GetSpec(url);
-    if (NS_FAILED(rv)) return rv;
-
     // Get an interface requestor from the channel callbacks.
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
-    rv = mChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+    rv = aChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
 
     NS_ASSERTION(NS_SUCCEEDED(rv) && callbacks,
                  "Unable to get an nsIInterfaceRequestor from the channel");
@@ -180,16 +161,26 @@ nsresult nsJSThunk::EvaluateScript()
         return NS_ERROR_FAILURE;
     }
 
+    nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(global, &rv));
+    if (NS_FAILED(rv)) {
+        return NS_ERROR_FAILURE;
+    }
+
+    // If mURI is just "javascript:", we bring up the JavaScript console
+    // and return NS_ERROR_DOM_RETVAL_UNDEFINED.
+    if (script.IsEmpty()) {
+        rv = BringUpConsole(domWindow);
+        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+        return NS_ERROR_DOM_RETVAL_UNDEFINED;
+    }
+
     // Now get the DOM Document.  Accessing the document will create one
     // if necessary.  So, basically, this call ensures that a document gets
     // created -- if necessary.
-    nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(global, &rv));
-    if (domWindow) {
-        nsCOMPtr<nsIDOMDocument> doc;
+    nsCOMPtr<nsIDOMDocument> doc;
 
-        rv = domWindow->GetDocument(getter_AddRefs(doc));
-        NS_ASSERTION(doc, "No DOMDocument!");
-    }
+    rv = domWindow->GetDocument(getter_AddRefs(doc));
+    NS_ASSERTION(doc, "No DOMDocument!");
     if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
     }
@@ -201,9 +192,17 @@ nsresult nsJSThunk::EvaluateScript()
 
     if (!scriptContext) return NS_ERROR_FAILURE;
 
+    // Unescape the script
+    NS_UnescapeURL(script);
+
+    // Get the url.
+    nsCAutoString url;
+    rv = mURI->GetSpec(url);
+    if (NS_FAILED(rv)) return rv;
+
     // Get principal of code for execution
     nsCOMPtr<nsISupports> owner;
-    rv = mChannel->GetOwner(getter_AddRefs(owner));
+    rv = aChannel->GetOwner(getter_AddRefs(owner));
     nsCOMPtr<nsIPrincipal> principal;
     if (NS_FAILED(rv))
         return rv;
@@ -298,8 +297,7 @@ nsresult nsJSThunk::EvaluateScript()
     return rv;
 }
 
-// Gasp.  This is so much easier to write in JS....
-nsresult nsJSThunk::BringUpConsole()
+nsresult nsJSThunk::BringUpConsole(nsIDOMWindow *aDomWindow)
 {
     nsresult rv;
 
@@ -319,32 +317,11 @@ nsresult nsJSThunk::BringUpConsole()
         // If the console is already open, bring it to the top.
         rv = console->Focus();
     } else {
-        // Get an interface requestor from the channel callbacks.
-        nsCOMPtr<nsIInterfaceRequestor> callbacks;
-        rv = mChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
-        if (NS_FAILED(rv)) return rv;
-        NS_ENSURE_TRUE(callbacks, NS_ERROR_FAILURE);
-
-        // The requestor must be able to get a script global object owner.
-        nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner;
-        callbacks->GetInterface(NS_GET_IID(nsIScriptGlobalObjectOwner),
-                                getter_AddRefs(globalOwner));
-        NS_ENSURE_TRUE(globalOwner, NS_ERROR_FAILURE);
-
-        // So far so good: get the script global and its context.
-        nsCOMPtr<nsIScriptGlobalObject> global;
-        globalOwner->GetScriptGlobalObject(getter_AddRefs(global));
-        NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
-
-        // Finally, QI global to nsIDOMWindow and open the console.
-        nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(global, &rv);
-        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
         nsCOMPtr<nsIJSConsoleService> jsconsole;
 
         jsconsole = do_GetService("@mozilla.org/embedcomp/jsconsole-service;1", &rv);
         if (NS_FAILED(rv) || !jsconsole) return rv;
-        jsconsole->Open(window);
+        jsconsole->Open(aDomWindow);
     }
     return rv;
 }
@@ -394,7 +371,6 @@ nsJSThunk::Close(nsresult status)
         mResult = nsnull;
     }
     mLength = 0;
-    mChannel = nsnull;
     return NS_OK;
 }
 
@@ -488,7 +464,7 @@ nsresult nsJSChannel::Init(nsIURI *aURI)
     rv = NS_NewStreamIOChannel(getter_AddRefs(channel), aURI, mIOThunk);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mIOThunk->Init(aURI, channel);
+    rv = mIOThunk->Init(aURI);
     if (NS_SUCCEEDED(rv)) {
         mStreamChannel = do_QueryInterface(channel);
     }
@@ -585,7 +561,7 @@ nsJSChannel::Open(nsIInputStream **aResult)
     // the script evaluation phase.  This means that IsPending() will 
     // indicate the the request is busy while the script is executing...
     mIsActive = PR_TRUE;
-    rv = mIOThunk->EvaluateScript();
+    rv = mIOThunk->EvaluateScript(mStreamChannel);
 
     if (NS_SUCCEEDED(rv)) {
         rv = mStreamChannel->Open(aResult);
@@ -616,7 +592,7 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
     // the script evaluation phase.  This means that IsPending() will 
     // indicate the the request is busy while the script is executing...
     mIsActive = PR_TRUE;
-    rv = mIOThunk->EvaluateScript();
+    rv = mIOThunk->EvaluateScript(mStreamChannel);
 
     if (NS_SUCCEEDED(rv)) {
         rv = mStreamChannel->AsyncOpen(aListener, aContext);
