@@ -952,4 +952,4 @@ static const nsModuleComponentInfo components[] = {
     XRemoteServiceConstructor }
 };
 
-NS_IMPL_NSGETMODULE(XRemoteServiceModule, components);
+NS_IMPL_NSGETMODULE(XRemoteServiceModule, components)

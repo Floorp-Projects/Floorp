@@ -306,7 +306,7 @@ nsChildView::~nsChildView()
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsChildView, nsBaseWidget, nsIPluginWidget, nsIKBStateControl, nsIEventSink);
+NS_IMPL_ISUPPORTS_INHERITED3(nsChildView, nsBaseWidget, nsIPluginWidget, nsIKBStateControl, nsIEventSink)
 
 //-------------------------------------------------------------------------
 //

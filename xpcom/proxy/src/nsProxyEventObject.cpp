@@ -467,7 +467,7 @@ nsProxyEventObject::~nsProxyEventObject()
 // nsISupports implementation...
 //
 
-NS_IMPL_THREADSAFE_ADDREF(nsProxyEventObject);
+NS_IMPL_THREADSAFE_ADDREF(nsProxyEventObject)
 
 NS_IMETHODIMP_(nsrefcnt)
 nsProxyEventObject::Release(void)

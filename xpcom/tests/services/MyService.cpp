@@ -59,7 +59,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 // MyService Implementation
 
-NS_IMPL_ISUPPORTS1(MyService, IMyService);
+NS_IMPL_ISUPPORTS1(MyService, IMyService)
 
 MyService::MyService()
 {

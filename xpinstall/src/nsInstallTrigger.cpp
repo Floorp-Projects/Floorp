@@ -78,7 +78,7 @@ nsInstallTrigger::~nsInstallTrigger()
 NS_IMPL_THREADSAFE_ISUPPORTS3 (nsInstallTrigger,
                               nsIScriptObjectOwner,
                               nsIDOMInstallTriggerGlobal,
-                              nsIContentHandler);
+                              nsIContentHandler)
 
 
 NS_IMETHODIMP

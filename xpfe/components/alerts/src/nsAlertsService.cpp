@@ -47,8 +47,8 @@
 
 #define ALERT_CHROME_URL "chrome://communicator/content/alerts/alert.xul"
 
-NS_IMPL_THREADSAFE_ADDREF(nsAlertsService);
-NS_IMPL_THREADSAFE_RELEASE(nsAlertsService);
+NS_IMPL_THREADSAFE_ADDREF(nsAlertsService)
+NS_IMPL_THREADSAFE_RELEASE(nsAlertsService)
 
 NS_INTERFACE_MAP_BEGIN(nsAlertsService)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAlertsService)

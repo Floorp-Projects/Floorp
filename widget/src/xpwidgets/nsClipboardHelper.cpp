@@ -36,7 +36,7 @@
 #include "nsITransferable.h"
 #include "nsReadableUtils.h"
 
-NS_IMPL_ISUPPORTS1(nsClipboardHelper, nsIClipboardHelper);
+NS_IMPL_ISUPPORTS1(nsClipboardHelper, nsIClipboardHelper)
 
 /*****************************************************************************
  * nsClipboardHelper ctor / dtor
@@ -49,7 +49,7 @@ nsClipboardHelper::nsClipboardHelper()
 nsClipboardHelper::~nsClipboardHelper()
 {
   // no members, nothing to destroy
-};
+}
 
 /*****************************************************************************
  * nsIClipboardHelper methods

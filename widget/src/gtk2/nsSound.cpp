@@ -60,7 +60,7 @@ typedef int (PR_CALLBACK *EsdPlayStreamFallbackType)  (int,
                                                        const char *, 
                                                        const char *);
 
-NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver);
+NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound()

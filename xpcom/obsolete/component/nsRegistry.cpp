@@ -1650,7 +1650,7 @@ NS_IMETHODIMP nsRegSubtreeEnumerator::advance() {
     // Convert result.
     nsresult rv = regerr2nsresult( err );
     return rv;
-};
+}
 
 /*-------------------- nsRegSubtreeEnumerator::CurrentItem ---------------------
 | Allocates and returns a new instance of class nsRegistryNode.  The node      |
@@ -1748,7 +1748,7 @@ NS_IMETHODIMP nsRegValueEnumerator::advance() {
     // Convert result.
     nsresult rv = regerr2nsresult( err );
     return rv;
-};
+}
 
 
 /*---------------------- nsRegistryNode::nsRegistryNode ------------------------

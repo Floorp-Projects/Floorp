@@ -693,8 +693,8 @@ nsXPBaseWindowFactory::QueryInterface(const nsIID &aIID, void **aResult)
   return NS_OK;
 }
 
-NS_IMPL_ADDREF(nsXPBaseWindowFactory);
-NS_IMPL_RELEASE(nsXPBaseWindowFactory);
+NS_IMPL_ADDREF(nsXPBaseWindowFactory)
+NS_IMPL_RELEASE(nsXPBaseWindowFactory)
 
 //----------------------------------------------------------------------
 nsresult

@@ -445,7 +445,7 @@ nsMdbTableEnumerator::~nsMdbTableEnumerator()
 }
 
 
-NS_IMPL_ISUPPORTS1(nsMdbTableEnumerator, nsISimpleEnumerator);
+NS_IMPL_ISUPPORTS1(nsMdbTableEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsMdbTableEnumerator::HasMoreElements(PRBool* _result)

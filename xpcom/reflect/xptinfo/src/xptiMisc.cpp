@@ -104,7 +104,7 @@ xptiAutoLog::xptiAutoLog(xptiInterfaceInfoManager* mgr,
 #endif
         }
     }
-};
+}
 
 xptiAutoLog::~xptiAutoLog()
 {

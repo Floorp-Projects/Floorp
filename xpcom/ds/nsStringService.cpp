@@ -48,7 +48,7 @@ nsStringService::~nsStringService()
 }
 
 NS_IMPL_ISUPPORTS1(nsStringService,
-                   nsIStringService);
+                   nsIStringService)
 
 
 NS_IMETHODIMP 

@@ -757,8 +757,8 @@ nsSiteWindow2::~nsSiteWindow2()
 {
 }
 
-NS_IMPL_ADDREF_USING_AGGREGATOR(nsSiteWindow2, mAggregator);
-NS_IMPL_RELEASE_USING_AGGREGATOR(nsSiteWindow2, mAggregator);
+NS_IMPL_ADDREF_USING_AGGREGATOR(nsSiteWindow2, mAggregator)
+NS_IMPL_RELEASE_USING_AGGREGATOR(nsSiteWindow2, mAggregator)
 
 NS_INTERFACE_MAP_BEGIN(nsSiteWindow2)
   NS_INTERFACE_MAP_ENTRY(nsISupports)

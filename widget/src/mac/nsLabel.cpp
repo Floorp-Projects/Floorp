@@ -37,8 +37,8 @@
 
 #include "nsLabel.h"
 
-NS_IMPL_ADDREF(nsLabel);
-NS_IMPL_RELEASE(nsLabel);
+NS_IMPL_ADDREF(nsLabel)
+NS_IMPL_RELEASE(nsLabel)
 
 //-------------------------------------------------------------------------
 //

@@ -204,7 +204,7 @@ void nsWindowInfo::ReferenceSelf(PRBool inAge, PRBool inZ) {
 /*********************** nsAppShellWindowEnumerator *****************/
 /********************************************************************/
 
-NS_IMPL_ISUPPORTS1(nsAppShellWindowEnumerator, nsISimpleEnumerator);
+NS_IMPL_ISUPPORTS1(nsAppShellWindowEnumerator, nsISimpleEnumerator)
 
 nsAppShellWindowEnumerator::nsAppShellWindowEnumerator (
     const PRUnichar* aTypeString,
@@ -275,7 +275,7 @@ NS_IMETHODIMP nsASDOMWindowEnumerator::GetNext(nsISupports **retval) {
     mCurrentPosition = FindNext();
   }
   return NS_OK;
-};
+}
 
 /********************************************************************/
 /*********************** nsASXULWindowEnumerator ********************/
@@ -303,7 +303,7 @@ NS_IMETHODIMP nsASXULWindowEnumerator::GetNext(nsISupports **retval) {
     mCurrentPosition = FindNext();
   }
   return NS_OK;
-};
+}
 
 /********************************************************************/
 /****************** nsASDOMWindowEarlyToLateEnumerator **************/

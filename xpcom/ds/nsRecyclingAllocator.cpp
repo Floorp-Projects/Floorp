@@ -373,7 +373,7 @@ nsRecyclingAllocator::AddToFreeList(Block* block)
 // ----------------------------------------------------------------------
 
 // nsIMemory methods
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsRecyclingAllocatorImpl, nsIMemory, nsIRecyclingAllocator);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsRecyclingAllocatorImpl, nsIMemory, nsIRecyclingAllocator)
 
 NS_IMETHODIMP_(void *)
 nsRecyclingAllocatorImpl::Alloc(PRSize size)

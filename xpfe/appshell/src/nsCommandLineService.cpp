@@ -56,7 +56,7 @@ nsCmdLineService::nsCmdLineService()
 /*
  * Implement the nsISupports methods...
  */
-NS_IMPL_ISUPPORTS1(nsCmdLineService, nsICmdLineService);
+NS_IMPL_ISUPPORTS1(nsCmdLineService, nsICmdLineService)
 
 static void* ProcessURLArg(char* str)
 {

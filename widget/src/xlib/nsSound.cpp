@@ -37,7 +37,7 @@
 #include <unistd.h>
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound()

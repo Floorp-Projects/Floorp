@@ -111,7 +111,7 @@ static const nsModuleComponentInfo components[] =
     NS_FILEVIEW_CONTRACTID, nsFileViewConstructor }
 };
 
-NS_IMPL_NSGETMODULE(nsFileViewModule, components);
+NS_IMPL_NSGETMODULE(nsFileViewModule, components)
 
 
 nsFileView::nsFileView() :
@@ -145,7 +145,7 @@ nsFileView::Init()
 
 // nsISupports implementation
 
-NS_IMPL_ISUPPORTS2(nsFileView, nsITreeView, nsIFileView);
+NS_IMPL_ISUPPORTS2(nsFileView, nsITreeView, nsIFileView)
 
 // nsIFileView implementation
 

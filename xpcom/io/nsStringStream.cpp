@@ -136,7 +136,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsStringInputStream,
                               nsIStringInputStream,
                               nsIInputStream,
                               nsIRandomAccessStore,
-                              nsISeekableStream);
+                              nsISeekableStream)
 
 /////////
 // nsIStringInputStream implementation

@@ -407,7 +407,7 @@ nsViewManager::~nsViewManager()
 
 NS_IMPL_QUERY_INTERFACE1(nsViewManager, nsIViewManager)
 
-  NS_IMPL_ADDREF(nsViewManager);
+  NS_IMPL_ADDREF(nsViewManager)
 
 nsrefcnt nsViewManager::Release(void)
 {

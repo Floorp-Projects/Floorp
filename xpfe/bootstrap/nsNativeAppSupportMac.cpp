@@ -121,7 +121,7 @@ nsNativeAppSupportMac::~nsNativeAppSupportMac()
   HideSplashScreen();
 }
 
-NS_IMPL_ISUPPORTS2(nsNativeAppSupportMac, nsINativeAppSupport, nsIObserver);
+NS_IMPL_ISUPPORTS2(nsNativeAppSupportMac, nsINativeAppSupport, nsIObserver)
 
 /* boolean start (); */
 NS_IMETHODIMP nsNativeAppSupportMac::Start(PRBool *_retval)

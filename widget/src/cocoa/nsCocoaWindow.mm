@@ -280,7 +280,7 @@ nsCocoaWindow :: DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
 #endif
 
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsCocoaWindow, Inherited);
+NS_IMPL_ISUPPORTS_INHERITED0(nsCocoaWindow, Inherited)
 
 
 //-------------------------------------------------------------------------

@@ -59,7 +59,7 @@
 // In general, a bad idea (see http://www.jwz.org/doc/x-cut-and-paste.html)
 // but it might have its uses for backwards compatibility.
 
-NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard);
+NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
 
 #define Ph_CLIPBOARD_TYPE_MOZ_BOOKMARK	"BOOK"
 #define Ph_CLIPBOARD_TYPE_IMAGE			"IMAG"

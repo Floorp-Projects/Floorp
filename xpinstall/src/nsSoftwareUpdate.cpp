@@ -173,7 +173,7 @@ nsSoftwareUpdate::~nsSoftwareUpdate()
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsSoftwareUpdate,
                               nsISoftwareUpdate,
                               nsPIXPIStubHook,
-                              nsIObserver);
+                              nsIObserver)
 
 void
 nsSoftwareUpdate::Shutdown()
@@ -491,10 +491,10 @@ nsSoftwareUpdateNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
 // generic factory.
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSoftwareUpdate,
-                                         nsSoftwareUpdate::GetInstance);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsInstallTrigger);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsInstallVersion);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSoftwareUpdateNameSet);
+                                         nsSoftwareUpdate::GetInstance)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsInstallTrigger)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsInstallVersion)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSoftwareUpdateNameSet)
 
 //----------------------------------------------------------------------
 
