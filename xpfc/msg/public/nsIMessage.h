@@ -16,27 +16,35 @@
  * Reserved.
  */
 
-#ifndef nsSMTPService_h___
-#define nsSMTPService_h___
+#ifndef nsIMessage_h___
+#define nsIMessage_h___
 
-#include "nsISMTPService.h"
+#include "nsISupports.h"
+#include "nsString.h"
 
-class nsSMTPService : public nsISMTPService
+//4ecb61a0-6f98-11d2-8dbc-00805f8a7ab6
+#define NS_IMESSAGE_IID   \
+{ 0x4ecb61a0, 0x6f98, 0x11d2,    \
+{ 0x8d, 0xbc, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6 } }
+
+class nsIMessage : public nsISupports
 {
+
 public:
-  nsSMTPService();
 
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Init() ;
-
-  NS_IMETHOD SendMail(nsString& aServer, nsString& aFrom, nsString& aTo, nsString& aSubject, nsString& aBody) ;
-  NS_IMETHOD SendMail(nsString& aServer, nsIMessage& aMessage) ;
+  NS_IMETHOD Init() = 0;
 
 
-protected:
-  ~nsSMTPService();
+  NS_IMETHOD SetSender(nsString& aSender) = 0;
+  NS_IMETHOD AddRecipient(nsString& aRecipient) = 0;
+  NS_IMETHOD SetSubject(nsString& aSubject) = 0;
+  NS_IMETHOD SetBody(nsString& aBody) = 0;
+
+  NS_IMETHOD GetSender(nsString& aSender) = 0;
+  NS_IMETHOD GetReciepients(nsString& aRecipients) = 0;
+  NS_IMETHOD GetSubject(nsString& aSubject) = 0;
+  NS_IMETHOD GetBody(nsString& aBody) = 0;
 
 };
 
-#endif /* nsSMTPService_h___ */
+#endif /* nsIMessage_h___ */

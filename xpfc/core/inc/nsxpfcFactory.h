@@ -53,6 +53,7 @@
 #include "nsXPFCObserverManager.h"
 #include "nsSMTPService.h"
 #include "nsMIMEService.h"
+#include "nsMessage.h"
 #include "nsXPFCSubject.h"
 #include "nsXPFCCommand.h"
 #include "nsXPFCCanvas.h"
@@ -110,6 +111,7 @@ static NS_DEFINE_IID(kCXPFCCommandServerCID,      NS_XPFC_COMMAND_SERVER_CID);
 static NS_DEFINE_IID(kCXPFCActionCommand,         NS_XPFC_ACTION_COMMAND_CID);
 static NS_DEFINE_IID(kCUserCID,                   NS_USER_CID);
 static NS_DEFINE_IID(kCSMTPServiceCID,            NS_SMTP_SERVICE_CID);
+static NS_DEFINE_IID(kCMessageCID,                NS_MESSAGE_CID);
 static NS_DEFINE_IID(kCMIMEServiceCID,            NS_MIME_SERVICE_CID);
 
 class nsxpfcFactory : public nsIFactory

@@ -16,27 +16,33 @@
  * Reserved.
  */
 
-#ifndef nsSMTPService_h___
-#define nsSMTPService_h___
+#ifndef nsMessage_h___
+#define nsMessage_h___
 
-#include "nsISMTPService.h"
+#include "nsIMessage.h"
 
-class nsSMTPService : public nsISMTPService
+class nsMessage : public nsIMessage
 {
 public:
-  nsSMTPService();
+  nsMessage();
 
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init() ;
 
-  NS_IMETHOD SendMail(nsString& aServer, nsString& aFrom, nsString& aTo, nsString& aSubject, nsString& aBody) ;
-  NS_IMETHOD SendMail(nsString& aServer, nsIMessage& aMessage) ;
+  NS_IMETHOD SetSender(nsString& aSender);
+  NS_IMETHOD AddRecipient(nsString& aRecipient);
+  NS_IMETHOD SetSubject(nsString& aSubject);
+  NS_IMETHOD SetBody(nsString& aBody);
 
+  NS_IMETHOD GetSender(nsString& aSender);
+  NS_IMETHOD GetReciepients(nsString& aRecipients);
+  NS_IMETHOD GetSubject(nsString& aSubject);
+  NS_IMETHOD GetBody(nsString& aBody);
 
 protected:
-  ~nsSMTPService();
+  ~nsMessage();
 
 };
 
-#endif /* nsSMTPService_h___ */
+#endif /* nsMessage_h___ */

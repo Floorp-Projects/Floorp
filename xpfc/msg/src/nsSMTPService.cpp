@@ -67,6 +67,11 @@ nsresult nsSMTPService::Init()
   return NS_OK;
 }
 
+nsresult nsSMTPService::SendMail(nsString& aServer, nsIMessage& aMessage) 
+{
+  return NS_OK;
+}
+
 nsresult nsSMTPService::SendMail(nsString& aServer, 
                                  nsString& aFrom, 
                                  nsString& aTo, 
