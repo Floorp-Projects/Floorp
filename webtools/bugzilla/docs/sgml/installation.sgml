@@ -1215,6 +1215,19 @@
       </para>
     </section>
 
+    <section id="directoryindex" xreflabel="Modifying the Apache
+    DirectoryIndex parameter to use index.cgi">
+      <title>
+        <filename>directoryindex</filename> for the Bugzilla default page.
+      </title>
+      
+      <para>You should modify the &lt;DirectoryIndex&gt; parameter for
+      the Apache virtual host running your Bugzilla installation to
+      allow <filename>index.cgi</filename> as the index page for a
+      directory, as well as the usual <filename>index.html</filename>,
+      <filename>index.htm</filename>, and so forth. </para>
+    </section>
+
     <section id="mod-throttle"
     xreflabel="Using mod_throttle to prevent Denial of Service attacks">
       <title>
