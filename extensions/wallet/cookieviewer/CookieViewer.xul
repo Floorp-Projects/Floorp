@@ -44,7 +44,7 @@
 
   <keyset id="dialogKeys"/>
            
-  <tabbox id="tabbox" flex="1" orient="vertical">
+  <tabbox id="tabbox" flex="1">
     <tabs>
       <tab id="cookiesTab" label="&tab.cookiesonsystem.label;"/>
       <tab id="serversTab" label="&tab.bannedservers.label;"/>

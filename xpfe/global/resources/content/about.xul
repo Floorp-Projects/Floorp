@@ -40,7 +40,7 @@ Contributor(s): Michael Lowe <michael.lowe@bigfoot.com> -->
 
 <vbox flex="100%" style="margin: 0.5em;">
 
-<tabbox orient="vertical" flex="100%">
+<tabbox flex="100%">
   <tabs>
     <tab label="&aboutTab.label;"/>
     <tab label="&contributorsTab.label;"/>

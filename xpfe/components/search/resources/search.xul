@@ -30,7 +30,7 @@
 
   <script type="application/x-javascript" src="chrome://communicator/content/search/search.js" />
 
-  <tabbox orient="vertical"> 
+  <tabbox> 
     <tabs> 
       <tab id="findTab" oncommand="loadPage('find', null);" label="&find.title.label;"/>
       <tab id="internetTab" oncommand="loadPage('internet', null);" label="&internet.title.label;"/>

@@ -41,7 +41,7 @@
   <keyset id="keyset"/>
   <vbox id="editDirectory">
 
-    <tabbox orient="vertical" style="margin:5px">
+    <tabbox style="margin:5px">
       <tabs id="directoryTabBox">
         <tab label="&General.tab;"/>
         <tab label="&Advanced.tab;"/>

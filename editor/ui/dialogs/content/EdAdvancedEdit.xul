@@ -66,7 +66,7 @@
   
   <separator class="thin"/>
   
-  <tabbox orient="vertical" flex="1">
+  <tabbox flex="1">
     <tabs>
       <tab label="&tabHTML.label;"/>
       <tab label="&tabCSS.label;"/>

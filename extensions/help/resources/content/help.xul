@@ -120,8 +120,8 @@
 
       <vbox id="helpsidebar-box">
        <separator class="thin"/>
-        <tabbox orient="vertical" flex="1">
-          <tabs orient="horizontal">
+        <tabbox flex="1">
+          <tabs>
             <tab label="&tab1.label;"/>
             <tab label="&tab2.label;"/>
           </tabs>

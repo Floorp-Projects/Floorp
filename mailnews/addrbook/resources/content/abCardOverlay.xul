@@ -34,7 +34,7 @@ Rights Reserved.
 
 <vbox id="editcard">
 
-	<tabbox orient="vertical" style="margin:5px">
+	<tabbox style="margin:5px">
 	   <tabs id="abTabs">
         <tab label="&Name.tab;"/>
         <tab label="&Address.tab;"/>

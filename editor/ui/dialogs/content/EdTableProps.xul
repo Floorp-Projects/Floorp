@@ -47,7 +47,7 @@
   <broadcaster id="args" value=""/>
   <keyset id="dialogKeys"/>
 
-  <tabbox orient="vertical">
+  <tabbox>
     <tabs flex="1">
       <tab id="TableTab" oncommand="SelectTableTab()" label="&tableTab.label;"/>
       <tab id="CellTab" oncommand="SelectCellTab()" label="&cellTab.label;"/>

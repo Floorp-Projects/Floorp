@@ -40,7 +40,7 @@
 
 <keyset id="dialogKeys"/>  
 
-<tabbox orient="vertical">
+<tabbox>
   <tabs>
     <tab id="GeneralTab" label="&generalInfo.label;"/>
     <tab hidefor="pop3,none" hidable="true" id="OfflineTab" label="&folderOfflineTab.label;"/>
