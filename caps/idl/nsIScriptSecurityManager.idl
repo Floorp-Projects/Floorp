@@ -85,6 +85,9 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     // Allow the loading of chrome URLs by non-chrome URLs
     const unsigned long ALLOW_CHROME = 1 << 1;
 
+    // Don't allow javascript: (and data:) URLs to load
+    const unsigned long DISALLOW_JAVASCRIPT = 1 << 2;
+
     /**
      * Check that content from "from" can load "uri".
      *
