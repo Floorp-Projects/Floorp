@@ -128,7 +128,7 @@ public:
   static void ReleaseInstance(void);
 
 protected:
-  static int PR_CALLBACK PrefsReset(const char* aPrefName, void* instance);
+  nsresult PrefsReset();
 
   // Helper methods
   nsresult HandleChar(PRUnichar aChar);
