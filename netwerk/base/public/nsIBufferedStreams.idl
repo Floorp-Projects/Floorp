@@ -1,0 +1,33 @@
+#include "nsIInputStream.idl"
+#include "nsIOutputStream.idl"
+
+/**
+ * An input stream that reads ahead and keeps a buffer coming from another input
+ * stream so that fewer accesses to the underlying stream are necessary.
+ */
+[scriptable, uuid(616f5b48-da09-11d3-8cda-0060b0fc14a3)]
+interface nsIBufferedInputStream : nsIInputStream
+{
+    /**
+     * @param fillFromStream - add buffering to this stream
+     * @param bufferSize     - specifies the maximum buffer size
+     */
+    void init(in nsIInputStream fillFromStream,
+              in unsigned long bufferSize);
+};
+
+/**
+ * An output stream that stores up data to write out to another output stream
+ * and does the entire write only when the buffer is full, so that fewer writes
+ * to the underlying output stream are necessary.
+ */
+[scriptable, uuid(6476378a-da09-11d3-8cda-0060b0fc14a3)]
+interface nsIBufferedOutputStream : nsIOutputStream
+{
+    /**
+     * @param sinkToStream - add buffering to this stream
+     * @param bufferSize   - specifies the maximum buffer size
+     */
+    void init(in nsIOutputStream sinkToStream,
+              in unsigned long bufferSize);
+};
