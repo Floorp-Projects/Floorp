@@ -29,25 +29,24 @@ Rights Reserved.
 <window id="account-wizard-dialog" xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     title="&windowTitle.label;"
-    height="400" width="500" class="color-dialog"
+    height="400" width="500" class="dialog"
     onload="onLoad();">
 
-  <keyset id="keyset"/>
+<keyset id="keyset"/>
+<script src="chrome://global/content/strres.js"/>
+<script src="chrome://global/content/wizardOverlay.js"/>
+<script src="chrome://global/content/wizardHandlerSet.js"/>
+<script src="chrome://global/content/wizardManager.js"/>
+<script src="chrome://global/content/widgetStateManager.js"/>
 
-  <script src="chrome://global/content/strres.js"/>
-  <script src="chrome://global/content/wizardOverlay.js"/>
-  <script src="chrome://global/content/wizardHandlerSet.js"/>
-  <script src="chrome://global/content/wizardManager.js"/>
-  <script src="chrome://global/content/widgetStateManager.js"/>
-  <script language="JavaScript" src="chrome://messenger/content/accountUtils.js"/>
-  <script language="JavaScript" src="chrome://messenger/content/AccountWizard.js"/>
-  <script language="JavaScript" src="chrome://messenger/content/ispUtils.js"/>
-
-  <box orient="vertical" flex="1">
-    <box id="contentarea" flex="1">
-      <iframe flex="1" name="wizardContents" scrolling="auto" id="wizardContents"/>
-    </box>
-    <box id="wizardButtons"/>
+<script language="JavaScript" src="chrome://messenger/content/accountUtils.js"/>
+<script language="JavaScript" src="chrome://messenger/content/AccountWizard.js"/>
+<script language="JavaScript" src="chrome://messenger/content/ispUtils.js"/>
+<box align="vertical" flex="100%">
+  <box id="contentsink" flex="100%">
+  <iframe flex="100%" 
+          name="wizardContents" scrolling="auto" id="wizardContents"/>
   </box>
-
+  <box id="wizardButtons"/>
+</box>
 </window>

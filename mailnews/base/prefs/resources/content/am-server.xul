@@ -72,7 +72,6 @@
     <textfield wsm_persist="true" id="pop3.maxMessageSize" size="3"/>
     <text value="&maxMessageSizePostfix.label;" for="pop3.limitMessageSize" class="label"/>
   </box>
-  <separator class="thin"/>
   <!-- IMAP -->
   <box iscontrolcontainer="true" autostretch="never">
     <text class="label" value="&deleteMessagePrefix.label;"/>
@@ -85,7 +84,6 @@
     </menulist>
     <spring flex="1"/>
   </box>
-  <separator class="thin"/>
 
   <checkbox wsm_persist="true" id="imap.cleanupInboxOnExit"
             value="&expungeOnExit.label;"/>

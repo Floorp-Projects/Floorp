@@ -26,7 +26,9 @@
 
 <checkbox imap_persist="true" id="dualUseFolders" value="&dualUseFolders.label;"/>
 
+<spring class="spacer"/>
 <separator class="groove"/>
+<spring class="spacer"/>
 
 <html>&namespaceDesc.label;</html>
 <grid>

@@ -12,56 +12,57 @@
       onload="parent.onPanelLoaded('am-copies.xul');"
       align="vertical">
 
-  <script language="JavaScript" src="chrome://global/content/strres.js"/>
-  <script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
-  <script src="chrome://messenger/content/am-copies.js"/>
-  
-  <text hidden="true" wsm_persist="true" id="identity.fccFolder"/>
-  <text hidden="true" wsm_persist="true" id="identity.draftFolder"/>
-  <text hidden="true" wsm_persist="true" id="identity.stationeryFolder"/>
-  <text hidden="true" wsm_persist="true" id="identity.email"/>
-  
+<script language="JavaScript" src="chrome://global/content/strres.js"/>
+<script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
+<script src="chrome://messenger/content/am-copies.js"/>
+
+<text hidden="true" wsm_persist="true" id="identity.fccFolder"/>
+<text hidden="true" wsm_persist="true" id="identity.draftFolder"/>
+<text hidden="true" wsm_persist="true" id="identity.stationeryFolder"/>
+<text hidden="true" wsm_persist="true" id="identity.email"/>
+
   <box class="box-smallheader" title="&copyAndFolderTitle.label;"/>
-  
   <titledbox orient="vertical">
-    <title value="&sendingPrefix.label;"/>
-  
-    <box autostretch="never">
-      <checkbox wsm_persist="true" id="identity.doFcc" value="&fccMailFolder.label;"/>
-      <spring flex="1"/>
-  	  <menulist id="msgFccFolderPicker" flex="1"/>
-    </box>
-  
-    <box autostretch="never">
-      <checkbox wsm_persist="true" id="identity.bccSelf" before="&bccAccount.label; &lt;" after="&gt;"/>
-    </box>
-      
-    <box autostretch="never">
-      <checkbox wsm_persist="true" id="identity.bccOthers" value="&bccAddress.label;"/>
-      <textfield wsm_persist="true" id="identity.bccList" flex="1"/>
-    </box>
-  </titledbox>
-  
-  <titledbox orient="vertical">
-    <title value="&specialFolderTitle.label;"/>
-    <grid>
-      <columns>
-        <column flex="1"/>
-        <column flex="2"/>
-      </columns>
-      <rows>
-        <row autostretch="never">
-          <text class="label" value="&draftMailFolder.label;" for="msgDraftsFolderPicker"/>
-          <!-- name="identity.draftFolder" -->
-          <menulist id="msgDraftsFolderPicker"/>
-        </row>
-        <row autostretch="never">
-          <text class="label" value="&templateMailFolder.label;"/>
-          <!-- name="identity.stationeryFolder " -->
-          <menulist id="msgStationeryFolderPicker"/>
-        </row>
-      </rows>
-    </grid>
+  <title value="&sendingPrefix.label;"/>
+
+  <box>
+    <checkbox wsm_persist="true" id="identity.doFcc"
+      value="&fccMailFolder.label;"/>
+
+	<!-- name="identity.fccFolder" -->
+	<box align="horizontal" flex="2">
+		<menu id="msgFccFolderPicker" flex="1"/>
+	</box>
+  </box>
+
+  <checkbox wsm_persist="true" id="identity.bccSelf" before="&bccAccount.label; &lt;" after="&gt;"/>
+
+  <box autostretch="never">
+    <checkbox wsm_persist="true" id="identity.bccOthers"
+        value="&bccAddress.label;"/>
+    <textfield wsm_persist="true" id="identity.bccList"/>
+  </box>
   </titledbox>
 
+<titledbox orient="vertical">
+<title value="&specialFolderTitle.label;"/>
+<grid>
+  <columns>
+    <column flex="1"/>
+    <column flex="2"/>
+  </columns>
+  <rows>
+    <row autostretch="never">
+      <text class="label" value="&draftMailFolder.label;"/>
+      <!-- name="identity.draftFolder" -->
+      <menu id="msgDraftsFolderPicker"/>
+    </row>
+    <row autostretch="never">
+      <text class="label" value="&templateMailFolder.label;"/>
+      <!-- name="identity.stationeryFolder " -->
+      <menu id="msgStationeryFolderPicker"/>
+    </row>
+  </rows>
+</grid>
+</titledbox>
 </window>

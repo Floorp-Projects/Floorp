@@ -21,41 +21,42 @@ Rights Reserved.
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/wizardOverlay.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-identity.dtd" >
 <window id="identitypage" 
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        orient="vertical"
-        class="color-dialog"
-        onload="parent.wizardManager.onPageLoad('identity');">
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    align="vertical"
+    class="dialog"
+    onload="parent.wizardManager.onPageLoad('identity');">
 
-  <script language="JavaScript" src="chrome://global/content/strres.js"/>
-  <script language="JavaScript" src="chrome://messenger/content/aw-identity.js"/> 
-  <script language="JavaScript" src="chrome://messenger/content/aw-wizardAdapter.js"/> 
+<script language="JavaScript" src="chrome://global/content/strres.js"/>
+<script language="JavaScript" src="chrome://messenger/content/aw-identity.js"/> 
+<script language="JavaScript" src="chrome://messenger/content/aw-wizardAdapter.js"/> 
 
   <box class="box-header" value="&identityTitle.label;"/>
-  
-  <separator/>
-  
-  <box class="box-wizardcontent" orient="vertical" flex="1">
-    <html>&identityDesc.label;</html>
-    <separator/>
-    <html>&fullnameDesc.label; &fullnameExample.label;</html>
-    <separator class="thin"/>
-    <box autostretch="never">
-      <text class="label" for="fullName" value="&fullnameLabel.label;" style="width: 8em;"/>
-      <textfield mailtype="identity" wsm_persist="true" name="fullName" id="fullName" flex="6"/>
-    </box>
-    <separator/>  
-    <html>&emailDesc.label; &emailExample.label;</html>
-    <separator class="thin"/>
-    <box autostretch="never">
-      <text class="label" for="email" value="&emailLabel.label;" style="width: 8em;"/>
-      <textfield wsm_persist="true" mailtype="identity" name="email" id="email" flex="6"/>
-      <text id="postEmailText"/>
-    </box>
+  <html>&identityDesc.label;</html>
+
+  <spring class="spacer"/>
+  <html>&fullnameDesc.label; &fullnameExample.label;</html>
+
+  <spring class="spacer"/>
+
+  <box>
+      <text class="label" for="fullName" value="&fullnameLabel.label;"/>
+      <textfield mailtype="identity" wsm_persist="true" name="fullName" id="fullName"/>
   </box>
   
+  <spring class="spacer"/>
+  <spring class="spacer"/>
+
+  <html>&emailDesc.label; &emailExample.label;</html>
+
+  <spring class="spacer"/>
+
+  <box>
+      <text class="label" for="email" value="&emailLabel.label;"/>
+      <textfield wsm_persist="true" mailtype="identity" name="email" id="email"/>
+      <text id="postEmailText"/>
+  </box>
 </window>
