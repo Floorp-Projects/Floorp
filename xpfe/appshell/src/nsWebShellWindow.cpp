@@ -260,6 +260,9 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
   mWebShell->SetObserver((nsIStreamObserver*)anObserver);
   mWebShell->SetDocLoaderObserver(this);
 
+	// The outermost web shell is always considered to be chrome.
+	mWebShell->SetWebShellType(nsWebShellChrome);
+
   /*
    * XXX:  How should preferences be supplied to the nsWebShellWindow?
    *       Should there be the notion of a global preferences service?
