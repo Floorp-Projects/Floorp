@@ -26,6 +26,13 @@
 #include "nsIDOMMouseListener.h"
 #include "nsRDFCID.h"
 
+#include "nsIScriptGlobalObject.h"
+#include "nsIDOMWindow.h"
+#include "nsIScriptContextOwner.h"
+#include "nsIDOMXULDocument.h"
+#include "nsIDocument.h"
+#include "nsIContent.h"
+
 ////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_IID(kXULPopupListenerCID,      NS_XULPOPUPLISTENER_CID);
@@ -65,6 +72,9 @@ public:
 
     // nsIDOMEventListener
     virtual nsresult HandleEvent(nsIDOMEvent* anEvent) { return NS_OK; };
+
+protected:
+    virtual nsresult LaunchPopup(nsIDOMEvent* anEvent);
 
 private:
     nsIDOMElement* element; // Weak reference. The element will go away first.
@@ -134,7 +144,7 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
       aMouseEvent->GetButton(&button);
       if (button == 1) {
         // Time to launch a popup menu.
-        printf("Popup menu launching now!\n");
+        LaunchPopup(aMouseEvent);
       }
       break;
     case eXULPopupType_context:
@@ -143,10 +153,82 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
       // XXX: Handle Mac 
       if (button == 2) {
         // Time to launch a context menu.
-        printf("Context menu launching now!\n");
+        LaunchPopup(aMouseEvent);
       }
       break;
   }
+  return NS_OK;
+}
+
+nsresult
+XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
+{
+  nsresult rv = NS_OK;
+
+  nsString type("popup");
+  if (eXULPopupType_context == popupType)
+    type = "context";
+
+  nsString identifier;
+  element->GetAttribute(type, identifier);
+
+  if (identifier == "")
+    return rv;
+
+  // Try to find the popup content.
+  nsCOMPtr<nsIDocument> document;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(element);
+  if (NS_FAILED(rv = content->GetDocument(*getter_AddRefs(document)))) {
+    NS_ERROR("Unable to retrieve the document.");
+    return rv;
+  }
+
+  // Turn the document into a XUL document so we can use getElementById
+  nsCOMPtr<nsIDOMXULDocument> xulDocument = do_QueryInterface(document);
+  if (xulDocument == nsnull) {
+    NS_ERROR("Popup attached to an element that isn't in XUL!");
+    return NS_ERROR_FAILURE;
+  }
+
+  // XXX Handle the _child case for popups and context menus!
+
+  // Use getElementById to obtain the popup content.
+  nsCOMPtr<nsIDOMElement> popupContent;
+  if (NS_FAILED(rv = xulDocument->GetElementById(identifier, getter_AddRefs(popupContent)))) {
+    NS_ERROR("GetElementById had some kind of spasm.");
+    return rv;
+  }
+
+  if (popupContent == nsnull) {
+    // Gracefully fail in this case.
+    return NS_OK;
+  }
+
+  // We have some popup content. Obtain our window.
+  nsIScriptContextOwner* owner = document->GetScriptContextOwner();
+  nsCOMPtr<nsIScriptContext> context;
+  if (NS_OK == owner->GetScriptContext(getter_AddRefs(context))) {
+    nsIScriptGlobalObject* global = context->GetGlobalObject();
+    if (global) {
+      // Get the DOM window
+      nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(global);
+      if (domWindow != nsnull) {
+        printf("Can call createPopup!\n");
+
+        // Retrieve our x and y position.
+        PRInt32 xPos, yPos;
+        anEvent->GetClientX(&xPos); // XXX We may run into conversion problems if we're in nested 
+        anEvent->GetClientY(&yPos); // frames.
+        
+        domWindow->CreatePopup(element, popupContent, 
+                               xPos, yPos, 
+                               type, "point");
+      }
+      NS_RELEASE(global);
+    }
+  }
+  NS_IF_RELEASE(owner);
+
   return NS_OK;
 }
 
