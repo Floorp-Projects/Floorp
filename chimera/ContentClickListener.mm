@@ -279,21 +279,15 @@ ContentClickListener::MouseClick(nsIDOMEvent* aEvent)
   mouseEvent->GetShiftKey(&shiftKey);
   mouseEvent->GetAltKey(&altKey);
 
-  NSString* hrefStr = [NSString stringWithCharacters: href.get() length:nsCRT::strlen(href.get())];
+  NSString* hrefStr = [NSString stringWithCharacters: href.get() length: href.Length()];
   
   // Hack to determine specific protocols handled by Chimera in the frontend
   // until I can determine why the general unknown protocol handler handoff
-  // between Necko and uriloader isn't happening. 
+  // between Necko and uriloader isn't happening.
+  // NS_NewURI returns nil for the uri if we don't have a handler for the protocol
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), href);
-  nsCAutoString scheme;
-  uri->GetScheme(scheme);
-
-  nsCAutoString contractId(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX);
-  contractId.Append(scheme);
-
-  nsCOMPtr<nsIProtocolHandler> handler = do_GetService(contractId.get());
-  if (handler) {
+  if (uri) {
     // Fall through and do whatever we'd normally do with this kind of URL
   } else {
     NSString* escapedString = (NSString*) CFURLCreateStringByAddingPercentEscapes(NULL, (CFStringRef) hrefStr, NULL, NULL, kCFStringEncodingUTF8);
