@@ -988,11 +988,7 @@ void do_spellcheck( MWContext *mwcontext, CEditView *editView, CSimpleTextView *
 	try	{
 #ifdef USE_DYNAMIC_SC_LIB
 		sc_create_func sc_createProc;
-#ifndef NSPR20
-		sc_createProc = (sc_create_func)PR_FindSymbol( "SC_Create", spellCheckerLib );
-#else
 		sc_createProc = (sc_create_func)PR_FindSymbol( spellCheckerLib, "SC_Create" );
-#endif
 		if ( sc_createProc == NULL )
 		{
 			ErrorManager::PlainAlert( NO_SPELL_SHLB_FOUND );

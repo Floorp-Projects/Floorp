@@ -440,11 +440,7 @@ OSErr CPluginHandler::InitCodeResource(NPNetscapeFuncs* funcs, _np_handle* handl
 			    ThrowIf_(res != NS_OK);
 				handle->userPlugin = plugin;
 			} else {
-#ifndef NSPR20
-				fMainEntryFunc = (NPP_MainEntryUPP) PR_FindSymbol("mainRD", fLibrary);
-#else
 				fMainEntryFunc = (NPP_MainEntryUPP) PR_FindSymbol(fLibrary, "mainRD");
-#endif
 				ThrowIfNil_(fMainEntryFunc);
 			}
 		}

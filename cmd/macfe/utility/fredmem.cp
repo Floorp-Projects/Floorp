@@ -16,9 +16,6 @@
  * Reserved.
  */
 
-#ifndef NSPR20
-#include "prmacos.h"
-#endif
 #include "fredmem.h"
 
 #include "shist.h"

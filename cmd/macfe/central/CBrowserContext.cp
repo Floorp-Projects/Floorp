@@ -21,9 +21,6 @@
 #include "CBrowserContext.h"
 #include "CNSContextCallbacks.h"
 #include "CHTMLView.h"
-#ifndef NSPR20
-#include "CNetwork.h"
-#endif
 #include "UStdDialogs.h"
 #include "UFormElementFactory.h"
 #include "CAutoPtrXP.h"

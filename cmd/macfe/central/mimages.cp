@@ -38,9 +38,6 @@
 #include "uerrmgr.h"
 #include "resgui.h"
 #include "CIconCache.h"
-#ifndef NSPR20
-#include "prglobal.h"
-#endif
 #include "MacMemAllocator.h"
 #include "xlate.h"
 

@@ -22,9 +22,6 @@
 #include "CNSContext.h"
 #include "CNSContextCallbacks.h"
 #include "CHTMLView.h"
-#ifndef NSPR20
-#include "CNetwork.h"
-#endif
 #include "UStdDialogs.h"
 #include "CURLEditField.h"
 #include "CMochaHacks.h"
@@ -788,11 +785,6 @@ void CNSContext::Alert(
 
 void CNSContext::SetCallNetlibAllTheTime(void)
 {
-#ifndef NSPR20
-	extern CNetworkDriver* gNetDriver;
-	Assert_(gNetDriver != NULL);
- 	gNetDriver->SetCallAllTheTime();
-#endif
 }
 
 
@@ -802,21 +794,11 @@ void CNSContext::SetCallNetlibAllTheTime(void)
 
 void CNSContext::ClearCallNetlibAllTheTime(void)
 {
-#ifndef NSPR20
-	extern CNetworkDriver* gNetDriver;
-	Assert_(gNetDriver != NULL);
- 	gNetDriver->ClearCallAllTheTime();
-#endif
 }
 
 // A temporary abortion, we need this routine outside of MWContext function table
 void XP_ClearCallNetlibAllTheTime(MWContext *)
 {
-#ifndef NSPR20
-	extern CNetworkDriver* gNetDriver;
-	Assert_(gNetDriver != NULL);
- 	gNetDriver->SetCallAllTheTime();
-#endif
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ

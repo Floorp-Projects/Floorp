@@ -91,9 +91,6 @@
 #include "LMenuSharing.h"
 #define MENU_SHARING_FIRST 40
 
-#ifndef NSPR20
-#include "CNetwork.h"
-#endif
 #include "CEnvironment.h"
 
 #include "CWindowMenu.h"
@@ -158,10 +155,7 @@
 
 #include "InternetConfig.h"
 #include "il_strm.h"            /* Image Library stream converters. */
-#ifdef MOCHA
-//#include "libmocha.h"
 #include "CMochaHacks.h"
-#endif
 
 PRThread* mozilla_thread;
 
@@ -908,11 +902,6 @@ CFrontApp::CFrontApp()
 	InitUTearOffPalette(this);
 	CTearOffManager::GetDefaultManager()->AddListener(this);
 
-	// ¥Ênetwork
-#ifndef NSPR20
-	CNetworkDriver::CreateNetworkDriver();
-#endif
-
 	TheEarlManager.StartRepeating();
 
 //	WTSMManager::Initialize();
@@ -1060,23 +1049,12 @@ CFrontApp::~CFrontApp()
 	PR_ProcessPendingEvents(mozilla_event_queue);
 	//-----
 
-#ifndef NSPR20
-	if (gNetDriver && !fStartupAborted)
-	{
-		extern const char*	CacheFilePrefix;
-		NET_CleanupCacheDirectory( "", CacheFilePrefix );
-		NET_ShutdownNetLib(); 
-		delete gNetDriver;
-		gNetDriver = NULL;
-	}
-#else
 	if (!fStartupAborted)
 	{
 		extern const char*	CacheFilePrefix;
 		NET_CleanupCacheDirectory( "", CacheFilePrefix );
 		NET_ShutdownNetLib(); 
 	}
-#endif
 
 	if (!fStartupAborted)
 		CPrefs::DoWrite();
@@ -1663,11 +1641,8 @@ void CFrontApp::ProperStartup( FSSpec* file, short fileType )
 		possible. */	
 
 	if ((PR_GetGCInfo() != NULL) && (PR_GetGCInfo()->finalizer != NULL))
-#ifndef NSPR20
-		PR_SetThreadPriority(PR_GetGCInfo()->finalizer, 31);
-#else
-		PR_SetThreadPriority(PR_GetGCInfo()->finalizer, PR_PRIORITY_URGENT);
-#endif
+
+	PR_SetThreadPriority(PR_GetGCInfo()->finalizer, PR_PRIORITY_URGENT);
 
 	DestroySplashScreen();
 	if ( abortStartup == CPrefs::eRunAccountSetup )
@@ -3710,13 +3685,9 @@ void main( void )
 #endif
 	
 	// NSPR/MOCHA Initialization
-#ifndef NSPR20
-	PR_Init("Navigator", 0,0,0);
-#endif
+
 	mozilla_thread = PR_CurrentThread();
-#ifdef NSPR20
 	PR_SetThreadGCAble();
-#endif
 
 	// ¥ initialize the memory manager
 	//		it's important that this is done VERY early
@@ -4107,12 +4078,9 @@ CFrontApp::ProcessNextEvent()
 	}
 
 #ifdef DAVIDM_SPEED2
-#ifndef NSPR20
-	CSelectObject socketToCallWith;
-	Boolean	doWNE = haveUserEvent || ::LMGetTicks() > sNextWNETicks || ( gNetDriver && !gNetDriver->CanCallNetlib(socketToCallWith) );
-#else
+
 	Boolean	doWNE = haveUserEvent || ::LMGetTicks() > sNextWNETicks || NET_PollSockets();
-#endif // NSPR_20	
+	
 	SetUpdateCommandStatus(false);
 	
 	if ( doWNE )

@@ -28,9 +28,6 @@
 #include "uapp.h"
 #include "CNSContext.h"
 	// Network
-#ifndef NSPR20
-#include "CNetwork.h"
-#endif
 	// Netscape
 #include "secrng.h"
 	// utilities
@@ -44,12 +41,10 @@ extern "C" {
 
 #include "resgui.h"
 
-#ifdef NSPR20
 #include "prthread.h"
 PR_BEGIN_EXTERN_C
 PR_EXTERN(PRThread*) PR_GetPrimaryThread(void);
 PR_END_EXTERN_C
-#endif
 
 /*-----------------------------------------------------------------------------
 	Earl Manager
@@ -99,26 +94,11 @@ void EarlManager::SpendTime( const EventRecord& /*inMacEvent*/)
 	//	appropriate time, and make sure that our priority is
 	//	low so that other java threads an run.
 	
-#ifndef NSPR20
-	// If we don't have a gNetDriver then we better not call it
-	if (!gNetDriver)
-		return;
-	
-	PR_SetThreadPriority(PR_CurrentThread(), 0);
-	gNetDriver->SpendTime();
-#else
 	PR_SetThreadPriority(PR_CurrentThread(), PR_PRIORITY_LOW);
-#endif
 
 	unsigned char dst;
 	RNG_GenerateGlobalRandomBytes(&dst, 1);
-#ifdef NSPR20_DISABLED
-	CSelectObject socketToCallWith;
-	if (gNetDriver->CanCallNetlib(socketToCallWith))
-		NET_ProcessNet(MacToStdSocketID(socketToCallWith.fID), SocketSelectToFD_Type(socketToCallWith.fType));
-#else
 	NET_PollSockets();
-#endif
 	if ( fInterruptContext )
 	{
 		NET_InterruptWindow( fInterruptContext );
@@ -303,78 +283,35 @@ int EarlManagerNetTicklerCallback(void)
 	}
 }
 
-
-#ifdef NSPR20_DISABLED
-int SocketSelectToFD_Type(SocketSelect s)
-{
-	switch (s)	{
-	case eReadSocket:
-	case eExceptionSocket:
-		return NET_SOCKET_FD;
-	case eLocalFileSocket:
-		return NET_LOCAL_FILE_FD;
-	case eEverytimeSocket:
-		return NET_EVERYTIME_TYPE;
-	}
-	return 0;	// Never reached
-}
-#endif
-
 // FE Select routines
 void FE_SetReadSelect (MWContext * /* context */, int sd)
 {
-#ifndef NSPR20
-	gNetDriver->SetReadSelect(sd);
-#endif
 }
 
 void FE_ClearReadSelect (MWContext */* context */, int sd)
 {
-#ifndef NSPR20
-	gNetDriver->ClearReadSelect(sd);
-#endif
 }
 
 void FE_SetConnectSelect (MWContext */* context */, int sd)
 {
-#ifndef NSPR20
-	gNetDriver->SetConnectSelect(sd);
-#endif
 }
 
 void FE_ClearConnectSelect(MWContext */* context */, int sd)
 {
-#ifndef NSPR20
-	gNetDriver->ClearConnectSelect(sd);
-#endif
 }
 
 
 void FE_SetFileReadSelect (MWContext */* context */, int fd)
 {
-#ifndef NSPR20
-	gNetDriver->SetFileReadSelect(fd);
-#endif
 }
 
 		
 void FE_ClearFileReadSelect (MWContext */* context */, int fd)
 {
-#ifndef NSPR20
-	gNetDriver->ClearFileReadSelect(fd);
-#endif
 }
 
 int FE_StartAsyncDNSLookup (MWContext */* context */, char * host_port, void ** hoststruct_ptr_ptr, int sock)
 {
-#ifndef NSPR20
-	*hoststruct_ptr_ptr = NULL;
-	int err = gNetDriver->StartAsyncDNSLookup(host_port, (struct hostent **)hoststruct_ptr_ptr, sock);
-	if (err == EAGAIN)	// Because macsock knows nothing of netlib defines
-		return MK_WAITING_FOR_LOOKUP;
-	else
-		return err;
-#endif
 	return MK_WAITING_FOR_LOOKUP;
 }
 

@@ -17,11 +17,7 @@
  */
 
 #include <Types.h>
-#ifndef NSPR20
-#include "prmacros.h"
-#else
 #include "prtypes.h"
-#endif
 
 NSPR_BEGIN_EXTERN_C
 
