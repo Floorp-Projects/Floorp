@@ -28,6 +28,11 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= unicharutil uconv locale strres lwbrk chardet
 
+# Sun's Complex Text Layout support
+ifdef SUNCTL
+DIRS		+= ctl
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 DIRS		+= compatibility
 endif

@@ -196,6 +196,16 @@ intl/strres/src/Makefile
 intl/strres/tests/Makefile
 "
 
+if [ "$SUNCTL" ] ; then
+MAKEFILES_intl="$MAKEFILES_intl
+intl/ctl/Makefile
+intl/ctl/public/Makefile
+intl/ctl/src/Makefile
+intl/ctl/src/pangoLite/Makefile
+intl/ctl/src/thaiShaper/Makefile
+"
+fi
+
 MAKEFILES_js="
 js/Makefile
 js/src/Makefile
@@ -1048,13 +1058,6 @@ for extension in $MOZ_EXTENSIONS; do
         cookie ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/cookie/Makefile
             extensions/cookie/tests/Makefile
-            " ;;
-        ctl ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/ctl/Makefile
-            extensions/ctl/public/Makefile
-            extensions/ctl/src/Makefile
-            extensions/ctl/src/pangoLite/Makefile
-            extensions/ctl/src/thaiShaper/Makefile
             " ;;
         cview ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/cview/Makefile
