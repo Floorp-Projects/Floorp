@@ -27,7 +27,6 @@ include $(topsrcdir)/config/config.mk
 LIBRARY_NAME = rdfcontent_s
 
 CPPSRCS =				\
-	nsRDFContentFactory.cpp		\
 	nsRDFContentSink.cpp            \
 	nsRDFDocument.cpp               \
 	nsRDFDocumentContentSink.cpp	\
