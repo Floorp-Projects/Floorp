@@ -388,10 +388,14 @@ sub get_module_map {
     return $mod_map;
 }
 
+
 sub parse_modules {
     while( $l = &get_line ){
         ($mod_name, $flag, @params) = split(/[ \t]+/,$l);
-        if( $flag ne '-a' ){
+	if( $flag eq '-d' ){
+	    ($mod_name, $dummy, $dummy, @params) = split(/[ \t]+/,$l);
+	}
+        elsif( $flag ne '-a' ){
             next;
         }
         $modules->{$mod_name} = [@params];
