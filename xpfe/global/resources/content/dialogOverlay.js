@@ -6,7 +6,7 @@ var doCancelFunction = 0;
 // functions should return true if they want the dialog to close
 function doSetOKCancel(okFunc, cancelFunc)
 {
-	dump("top.window.navigator.platform: " + top.window.navigator.platform + "\n");
+	//dump("top.window.navigator.platform: " + top.window.navigator.platform + "\n");
 	
 	doOKFunction = okFunc;
 	doCancelFunction = cancelFunc;
