@@ -22,7 +22,7 @@
 #ifndef nsIImgDCallbk_h___
 #define nsIImgDCallbk_h___
 
-#include "dllcompat.h" // for TimeoutCallbackFunction
+#include "xpcompat.h" // for TimeoutCallbackFunction
 #include "nsISupports.h"
 
 /* d34a2f20-cd9f-11d2-802c-0060088f91a3 */

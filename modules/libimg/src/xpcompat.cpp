@@ -35,38 +35,8 @@
 #include "plstr.h"
 #include "ilISystemServices.h"
 #include "nsCRT.h"
-#if 0
-#include "xp_mcom.h"
-#endif
 
 extern ilISystemServices *il_ss;
-
-PR_BEGIN_EXTERN_C
-int MK_UNABLE_TO_LOCATE_FILE = -1;
-int MK_OUT_OF_MEMORY = -2;
-
-int XP_MSG_IMAGE_PIXELS = -7;
-int XP_MSG_IMAGE_NOT_FOUND = -8;
-int XP_MSG_XBIT_COLOR = -9;	
-int XP_MSG_1BIT_MONO = -10;
-int XP_MSG_XBIT_GREYSCALE = -11;
-int XP_MSG_XBIT_RGB = -12;
-int XP_MSG_DECODED_SIZE = -13;	
-int XP_MSG_WIDTH_HEIGHT = -14;	
-int XP_MSG_SCALED_FROM = -15;	
-int XP_MSG_IMAGE_DIM = -16;	
-int XP_MSG_COLOR = -17;	
-int XP_MSG_NB_COLORS = -18;	
-int XP_MSG_NONE = -19;	
-int XP_MSG_COLORMAP = -20;	
-int XP_MSG_BCKDRP_VISIBLE = -21;	
-int XP_MSG_SOLID_BKGND = -22;	
-int XP_MSG_JUST_NO = -23;	
-int XP_MSG_TRANSPARENCY = -24;	
-int XP_MSG_COMMENT = -25;	
-int XP_MSG_UNKNOWN = -26;	
-int XP_MSG_COMPRESS_REMOVE = -27;	
-PR_END_EXTERN_C
 
 char *XP_GetString(int i)
 {

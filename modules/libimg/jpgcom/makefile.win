@@ -87,11 +87,10 @@ MODULE=img
 DEPTH=..\..\.. 
 
 LINCS=-I$(DEPTH)/dist/public/xpcom -I. -I$(DEPTH)/dist/public/raptor -I$(DEPTH)/dist/public/jpeg
-CPPSRCS= nsJPGDecoder.cpp nsJPGModule.cpp jpeg.cpp dllcompat.cpp
+CPPSRCS= nsJPGDecoder.cpp nsJPGModule.cpp jpeg.cpp 
 CPP_OBJS= \
 	.\$(OBJDIR)\nsJPGDecoder.obj \
 	.\$(OBJDIR)\nsJPGModule.obj \
-	.\$(OBJDIR)\dllcompat.obj \
 	.\$(OBJDIR)\jpeg.obj \
 	$(NULL)
 

@@ -84,10 +84,6 @@ PRLogModuleInfo *il_log_module = NULL;
 #    define MAX(x, y)   (((x) > (y)) ? (x) : (y))
 #endif
 
-PR_BEGIN_EXTERN_C
-extern int MK_OUT_OF_MEMORY;
-PR_END_EXTERN_C
-
 /* List of possible parsing states */
 typedef enum {
     gif_gather,

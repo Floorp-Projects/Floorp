@@ -22,7 +22,7 @@
 
 /*
  *    jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.cpp,v 1.17 2000/05/26 07:48:21 shaver%mozilla.org Exp $
+ *    $Id: jpeg.cpp,v 1.18 2000/08/07 22:08:29 pnunn%netscape.com Exp $
  */
 
 
@@ -49,8 +49,6 @@
 PR_BEGIN_EXTERN_C
 #include "jpeglib.h"
 #include "jerror.h"
-
-extern int MK_OUT_OF_MEMORY;
 PR_END_EXTERN_C
 
 #ifdef XP_OS2

@@ -34,7 +34,6 @@ CPPSRCS		= \
 		gif.cpp \
 		nsGIFModule.cpp \
 		nsGIFDecoder.cpp \
-		dllcompat.cpp \
 		$(NULL)
 
 LOCAL_INCLUDES	= -I$(srcdir)

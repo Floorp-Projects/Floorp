@@ -86,9 +86,9 @@ MODULE=img
 DEPTH=..\..\.. 
 
 LINCS=-I$(DEPTH)/dist/public/xpcom -I. -I$(DEPTH)/dist/public/raptor
-CPPSRCS= nsGIFModule.cpp nsGIFDecoder.cpp dllcompat.cpp gif.cpp 
+CPPSRCS= nsGIFModule.cpp nsGIFDecoder.cpp gif.cpp 
 CPP_OBJS=   .\$(OBJDIR)\nsGIFModule.obj .\$(OBJDIR)\nsGIFDecoder.obj \
-         .\$(OBJDIR)\dllcompat.obj  .\$(OBJDIR)\gif.obj
+           .\$(OBJDIR)\gif.obj
 
 include <$(DEPTH)\config\rules.mak> 
 
