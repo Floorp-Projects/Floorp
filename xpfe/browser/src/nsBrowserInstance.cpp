@@ -466,6 +466,9 @@ nsBrowserInstance::SetDefaultCharacterSet(const PRUnichar *aCharset)
 void
 nsBrowserInstance::ReinitializeContentVariables()
 {
+  NS_ASSERTION(mDOMWindow,"Reinitializing Content Variables without a window will cause a crash. see Bugzilla Bug 46454");
+  if (!mDOMWindow)
+    return;
   nsresult rv;
 
   nsCOMPtr<nsIDOMWindow> contentWindow;
