@@ -60,6 +60,8 @@
 #include "nsIScrollableFrame.h"
 #include "nsIViewManager.h"
 #include "nsIBindingManager.h"
+#include "nsIServiceManager.h"
+#include "nsIXBLService.h"
 #include "nsCSSFrameConstructor.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   0
@@ -206,11 +208,8 @@ nsMenuFrame::SetInitialChildList(nsIPresContext* aPresContext,
     // the popup frame list.
     nsIFrame* frame = frames.FirstChild();
     while (frame) {
-      nsCOMPtr<nsIContent> content;
-      frame->GetContent(getter_AddRefs(content));
-      nsCOMPtr<nsIAtom> tag;
-      content->GetTag(*getter_AddRefs(tag));
-      if (tag.get() == nsXULAtoms::menupopup) {
+      nsCOMPtr<nsIMenuParent> menuPar(do_QueryInterface(frame));
+      if (menuPar) {
         // Remove this frame from the list and place it in the other list.
         frames.RemoveFrame(frame);
         mPopupFrames.AppendFrame(this, frame);
@@ -769,6 +768,9 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 void
 nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+  PRInt32 dummy;
   PRInt32 count;
   mContent->ChildCount(count);
 
@@ -776,7 +778,7 @@ nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
     nsCOMPtr<nsIContent> child;
     mContent->ChildAt(i, *getter_AddRefs(child));
     nsCOMPtr<nsIAtom> tag;
-    child->GetTag(*getter_AddRefs(tag));
+    xblService->ResolveTag(child, &dummy, getter_AddRefs(tag));
     if (tag && tag.get() == nsXULAtoms::menupopup) {
       *aResult = child.get();
       NS_ADDREF(*aResult);
@@ -1569,14 +1571,11 @@ nsMenuFrame::InsertFrames(nsIPresContext* aPresContext,
                             nsIFrame* aPrevFrame,
                             nsIFrame* aFrameList)
 {
-  nsCOMPtr<nsIContent> frameChild;
-  aFrameList->GetContent(getter_AddRefs(frameChild));
-
   nsCOMPtr<nsIAtom> tag;
   nsresult          rv;
 
-  frameChild->GetTag(*getter_AddRefs(tag));
-  if (tag && tag.get() == nsXULAtoms::menupopup) {
+  nsCOMPtr<nsIMenuParent> menuPar(do_QueryInterface(aFrameList));
+  if (menuPar) {
     nsCOMPtr<nsIBox> menupopup = do_QueryInterface(aFrameList);
     NS_ASSERTION(menupopup,"Popup is not a box!!!");
     menupopup->SetParentBox(this);
@@ -1601,14 +1600,11 @@ nsMenuFrame::AppendFrames(nsIPresContext* aPresContext,
   if (!aFrameList)
     return NS_OK;
 
-  nsCOMPtr<nsIContent> frameChild;
-  aFrameList->GetContent(getter_AddRefs(frameChild));
-
   nsCOMPtr<nsIAtom> tag;
   nsresult          rv;
 
-  frameChild->GetTag(*getter_AddRefs(tag));
-  if (tag && tag.get() == nsXULAtoms::menupopup) {
+  nsCOMPtr<nsIMenuParent> menuPar(do_QueryInterface(aFrameList));
+  if (menuPar) {
     nsCOMPtr<nsIBox> menupopup = do_QueryInterface(aFrameList);
     NS_ASSERTION(menupopup,"Popup is not a box!!!");
     menupopup->SetParentBox(this);
