@@ -1977,6 +1977,27 @@ si_SaveSignonDataLocked(char * state, PRBool notify) {
  * Processing Signon Forms *
  ***************************/
 
+PRIVATE PRBool
+si_ExtractRealm(nsIURI *uri, nsCString &realm)
+{
+  nsCAutoString hostPort;
+
+  /* Security check: if URI is of a scheme that doesn't support hostnames,
+   * we have no host to get the signon data from, so we must not attempt to
+   * build a valid realm from the URI (bug 159484) */
+  nsresult rv = uri->GetHostPort(hostPort);
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  nsCAutoString scheme;
+  rv = uri->GetScheme(scheme);
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  realm = scheme + NS_LITERAL_CSTRING("://") + hostPort;
+  return PR_TRUE;
+}
+
 /* Ask user if it is ok to save the signon data */
 PRIVATE PRBool
 si_OkToSave(const char *passwordRealm, const nsString& userName, nsIDOMWindowInternal* window) {
@@ -2144,17 +2165,13 @@ SINGSIGN_RememberSignonData
 {
   if (!passwordRealm)
     return;      
-  nsCAutoString strippedRealm;
 
-  /* Hacky security check: If address is of a scheme that
-   * doesn't support hostnames, we have no host to get the signon data from,
-   * so we must not attempt to restore the signon data (bug 159484) */
-  nsresult rv = passwordRealm->GetHost(strippedRealm);
-  if (NS_FAILED(rv))
+  nsCAutoString realm;
+  if (!si_ExtractRealm(passwordRealm, realm))
     return;
 
-  if (!strippedRealm.IsEmpty()) {
-    si_RememberSignonData(dialog, strippedRealm.get(), signonData, window);
+  if (!realm.IsEmpty()) {
+    si_RememberSignonData(dialog, realm.get(), signonData, window);
   }
 }
 
@@ -2184,8 +2201,7 @@ si_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnich
    *   first character position
    */
   if (*name == '\\') {
-    correctedName = nsAutoString('\\');
-    correctedName.Append(name);
+    correctedName = NS_LITERAL_STRING("\\") + nsDependentString(name);
   } else {
     correctedName = name;
   }
@@ -2266,16 +2282,18 @@ PUBLIC void
 SINGSIGN_RestoreSignonData(nsIPrompt* dialog, nsIURI* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 formNumber, PRUint32 elementNumber) {
   if (!passwordRealm)
     return;  
-  nsCAutoString strippedRealm;
 
-  /* Hacky security check: If address is of a scheme that
-   * doesn't support hostnames, we have no host to get the signon data from,
-   * so we must not attempt to restore the signon data (bug 159484) */
-  nsresult rv = passwordRealm->GetHost(strippedRealm);
-  if (NS_FAILED(rv))
+  nsCAutoString realm;
+  if (!si_ExtractRealm(passwordRealm, realm))
     return;
 
-  si_RestoreSignonData(dialog, strippedRealm.get(), name, value, formNumber, elementNumber);
+  si_RestoreSignonData(dialog, realm.get(), name, value, formNumber, elementNumber);
+  if (*value == nsnull) {
+    // try the old style host-only key format
+    nsresult rv = passwordRealm->GetHost(realm);
+    if (NS_SUCCEEDED(rv))
+      si_RestoreSignonData(dialog, realm.get(), name, value, formNumber, elementNumber);
+  }
 }
 
 /*
