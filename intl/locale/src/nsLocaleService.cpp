@@ -375,7 +375,7 @@ nsLocaleService::NewLocale(const PRUnichar *aLocale, nsILocale **_retval)
 	if (!resultLocale) return NS_ERROR_OUT_OF_MEMORY;
 
 	for(i=0;i<LocaleListLength;i++) {
-		nsString category = LocaleList[i];
+		nsString category; category.AssignWithConversion(LocaleList[i]);
 		result = resultLocale->AddCategory(category.GetUnicode(),aLocale);
 		if (NS_FAILED(result)) { delete resultLocale; return result;}
 	}
@@ -520,7 +520,7 @@ nsLocaleService::GetLocaleFromAcceptLanguage(const char *acceptLanguage, nsILoca
   //
   result = NS_ERROR_FAILURE;
   if (countLang>0) {
-	  PRUnichar* localeName = nsString(acceptLanguageList[0]).ToNewUnicode();
+	  PRUnichar* localeName = NS_ConvertToString(acceptLanguageList[0]).ToNewUnicode();
 	  result = NewLocale(localeName,_retval);
 	  delete localeName;
   }
@@ -542,7 +542,7 @@ nsLocaleService::GetLocaleComponentForUserAgent(PRUnichar **_retval)
 	result = GetSystemLocale(getter_AddRefs(system_locale));
 	if (NS_SUCCEEDED(result))
 	{
-		nsString	lc_messages(NSILOCALE_MESSAGE);
+		nsString	lc_messages; lc_messages.AssignWithConversion(NSILOCALE_MESSAGE);
 		result = system_locale->GetCategory(lc_messages.GetUnicode(),_retval);
 		return result;
 	}

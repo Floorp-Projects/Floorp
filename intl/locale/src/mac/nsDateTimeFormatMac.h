@@ -59,8 +59,7 @@ public:
                                   const PRExplodedTime*  explodedTime, 
                                   nsString& stringOut); 
 
-  nsDateTimeFormatMac() {NS_INIT_REFCNT();
-                         mLocale.SetString("");mAppLocale.SetString("");}
+  nsDateTimeFormatMac() {NS_INIT_REFCNT();}
   
   virtual ~nsDateTimeFormatMac() {}
   

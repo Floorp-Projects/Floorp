@@ -278,7 +278,7 @@ nsMacLocale::GetXPLocale(short scriptCode, short langCode, short regionCode, nsS
 	//
 	for(i=0;strlen(lang_list[i].iso_code)!=0;i++) {
 		if (langCode==lang_list[i].mac_lang_code && scriptCode==lang_list[i].mac_script_code) {
-			temp = lang_list[i].iso_code;
+			temp.AssignWithConversion(lang_list[i].iso_code);
 			validResultFound = true;
 			break;
 		}
@@ -289,8 +289,8 @@ nsMacLocale::GetXPLocale(short scriptCode, short langCode, short regionCode, nsS
 	//
 	for(i=0;strlen(country_list[i].iso_code)!=0;i++) {
 		if (regionCode==country_list[i].mac_region_code) {
-			temp += '-';
-			temp += country_list[i].iso_code;
+			temp.AppendWithConversion('-');
+			temp.AppendWithConversion(country_list[i].iso_code);
 			validResultFound = true;
 			break;
 		}

@@ -111,25 +111,25 @@ nsresult nsLWBreakerFImp::GetBreaker(nsString& aParam, nsILineBreaker** oResult)
   if( NULL == oResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  if( aParam.Equals("ja") ) 
+  if( aParam.EqualsWithConversion("ja") ) 
   {
      *oResult = new nsJISx4501LineBreaker (
            gJaNoBegin, sizeof(gJaNoBegin)/sizeof(PRUnichar), 
            gJaNoEnd, sizeof(gJaNoEnd)/sizeof(PRUnichar));
   } 
-  else if(aParam.Equals("ko")) 
+  else if(aParam.EqualsWithConversion("ko")) 
   {
      *oResult = new nsJISx4501LineBreaker (
            gKoNoBegin, sizeof(gKoNoBegin)/sizeof(PRUnichar), 
            gKoNoEnd, sizeof(gKoNoEnd)/sizeof(PRUnichar));
   } 
-  else if(aParam.Equals("tw")) 
+  else if(aParam.EqualsWithConversion("tw")) 
   {
      *oResult = new nsJISx4501LineBreaker (
            gTwNoBegin, sizeof(gTwNoBegin)/sizeof(PRUnichar), 
            gTwNoEnd, sizeof(gTwNoEnd)/sizeof(PRUnichar));
   } 
-  else if(aParam.Equals("cn")) 
+  else if(aParam.EqualsWithConversion("cn")) 
   {
      *oResult = new nsJISx4501LineBreaker (
            gCnNoBegin, sizeof(gCnNoBegin)/sizeof(PRUnichar), 
