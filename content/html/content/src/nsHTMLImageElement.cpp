@@ -47,6 +47,9 @@
 #include "nsNetUtil.h"
 #include "nsLayoutUtils.h"
 #include "nsIWebShell.h"
+#include "nsIFrame.h"
+#include "nsImageFrame.h"
+#include "nsLayoutAtoms.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -140,6 +143,8 @@ public:
   nsresult SetSrcInner(nsIURI* aBaseURL, const nsString& aSrc);
   nsresult GetCallerSourceURL(JSContext* cx, nsIURI** sourceURL);
 
+  nsresult GetIntrinsicImageSize(nsSize& aSize);
+
 protected:
   nsGenericHTMLLeafElement mInner;
   nsIDocument* mOwnerDocument;  // Only used if this is a script constructed image
@@ -220,13 +225,100 @@ NS_IMPL_STRING_ATTR(nsHTMLImageElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Alt, alt)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Border, border)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, Height, height)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Hspace, hspace)
 NS_IMPL_BOOL_ATTR(nsHTMLImageElement, IsMap, ismap)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, LongDesc, longdesc)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, UseMap, usemap)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Vspace, vspace)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, Width, width)
+
+nsresult
+nsHTMLImageElement::GetIntrinsicImageSize(nsSize& aSize) 
+{
+  nsresult result;
+  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsIPresShell> shell;
+  
+  result = nsGenericHTMLElement::GetPresContext(this, 
+                                                getter_AddRefs(context));
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  
+  result = context->GetShell(getter_AddRefs(shell));
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  
+  nsIFrame* frame;
+  result = shell->GetPrimaryFrameFor(this, &frame);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  
+  if (frame) {
+    nsCOMPtr<nsIAtom> type;
+    
+    frame->GetFrameType(getter_AddRefs(type));
+    
+    if (type == nsLayoutAtoms::imageFrame) {
+      // XXX We could have created an interface for this, but Troy
+      // preferred the ugliness of a static cast to the weight of
+      // a new interface.
+      nsImageFrame* imageFrame = NS_STATIC_CAST(nsImageFrame*, frame);
+      
+      return imageFrame->GetIntrinsicImageSize(aSize);
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsHTMLImageElement::GetHeight(nsString& aValue)
+{
+  nsresult result;
+
+  if (NS_CONTENT_ATTR_NOT_THERE ==  mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::height, aValue)) {
+    nsSize size;
+    
+    result = GetIntrinsicImageSize(size);
+    if (NS_SUCCEEDED(result)) {
+      aValue.Append(size.height);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLImageElement::SetHeight(const nsString& aValue)
+{
+  return mInner.SetAttribute(kNameSpaceID_None, nsHTMLAtoms::height, aValue, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsHTMLImageElement::GetWidth(nsString& aValue)
+{
+  nsresult result;
+
+  if (NS_CONTENT_ATTR_NOT_THERE ==  mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, aValue)) {
+    nsSize size;
+    
+    result = GetIntrinsicImageSize(size);
+    if (NS_SUCCEEDED(result)) {
+      aValue.Append(size.width);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLImageElement::SetWidth(const nsString& aValue)
+{
+  return mInner.SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, aValue, PR_TRUE);
+}
+
 
 NS_IMETHODIMP
 nsHTMLImageElement::StringToAttribute(nsIAtom* aAttribute,

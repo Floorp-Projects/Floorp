@@ -886,6 +886,22 @@ nsImageFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsImageFrame::GetIntrinsicImageSize(nsSize& aSize)
+{
+  nsIImage* image = mImageLoader.GetImage();
+  if (nsnull != image) {
+    aSize.width = image->GetWidth();
+    aSize.height = image->GetHeight();
+  }
+  else {
+    aSize.width = 0;
+    aSize.height = 0;
+  }
+
+  return NS_OK;
+}
+
 #ifdef DEBUG
 NS_IMETHODIMP
 nsImageFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
