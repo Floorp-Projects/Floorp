@@ -154,8 +154,6 @@ main(int argc, char* argv[])
     NS_RELEASE(transport);
   }
 
-  PLEvent *gEvent;
-
   // Enter the message pump to allow the URL load to proceed.
   while ( gKeepRunning ) {
 
@@ -170,6 +168,7 @@ main(int argc, char* argv[])
 #ifdef XP_MAC
     /* Mac stuff is missing here! */
 #else
+    PLEvent *gEvent;
     rv = eventQ->GetEvent(&gEvent);
     PL_HandleEvent(gEvent);
 #endif

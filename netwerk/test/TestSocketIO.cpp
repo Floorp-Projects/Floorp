@@ -253,8 +253,6 @@ main(int argc, char* argv[])
 
   if (NS_FAILED(rv)) return rv;
 
-  PLEvent *gEvent;
-
   // Enter the message pump to allow the URL load to proceed.
   while ( gKeepRunning ) {
 
@@ -271,6 +269,7 @@ main(int argc, char* argv[])
 #ifdef XP_MAC
     /* Mac stuff is missing here! */
 #else
+    PLEvent *gEvent;
     rv = gEventQ->GetEvent(&gEvent);
     PL_HandleEvent(gEvent);
 #endif
