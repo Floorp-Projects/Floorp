@@ -39,4 +39,5 @@ nsPrefWindow.js
 pref.xul
 preftree.xul
 pref-wallet.xul
+pref-passwords.xul
 prefutilities.js

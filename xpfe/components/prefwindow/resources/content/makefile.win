@@ -65,6 +65,7 @@ CHROME_CONTENT = \
 	.\pref-smart_browsing.xul \
 	.\pref-smartupdate.xul \
 	.\pref-wallet.xul \
+	.\pref-passwords.xul \
 	.\pref.xul \
 	.\nsPrefWindow.js \
 	.\preftree.xul \

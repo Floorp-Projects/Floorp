@@ -21,7 +21,8 @@
 <!ENTITY down.label "Download">
 <!ENTITY cookies.label "Cookies">
 <!ENTITY images.label "Images">
-<!ENTITY wallet.label "Forms and Passwords">
+<!ENTITY wallet.label "Forms">
+<!ENTITY passwords.label "Passwords">
 <!ENTITY cache.label "Cache">
 <!ENTITY proxies.label "Proxies">
 <!ENTITY smart.label "Software Installation">
