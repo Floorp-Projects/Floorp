@@ -8,8 +8,6 @@ my @name_array;
 my $opcode_maxlen = 0;
 
 #
-# template definitions for compare, arithmetic, and conditional branch ops
-#
 # fields are:
 #
 # * super: Class to inherit from, if super is Instruction_(1|2|3), the script
@@ -20,7 +18,7 @@ my $opcode_maxlen = 0;
 # * params: The parameter list expected by the constructor, you can specify a
 #           default value, using the syntax, [ ("Type = default") ].
 #
-# class namea will be generated based on the opcode mnemonic.  See the
+# class names will be generated based on the opcode mnemonic.  See the
 # subroutine get_classname for the implementation.  Basically underscores will
 # be removes and the class name will be WordCapped, using the positions where the
 # underscores were as word boundries.  The only exception occurs when a word is
@@ -28,6 +26,9 @@ my $opcode_maxlen = 0;
 # as in BRANCH_GT -> BranchGT.
 #
 
+#
+# template definitions for compare, arithmetic, and conditional branch ops
+#
 my $compare_op =
   {
    super  => "Compare",
