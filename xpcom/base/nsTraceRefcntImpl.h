@@ -113,10 +113,10 @@ protected:
 
 #ifdef DEBUG
 
-#define MOZ_DECL_CTOR(_type)                  \
+#define MOZ_DECL_CTOR_COUNTER(_type) \
   static mozCtorDtorCounter gCounter_##_type
 
-#define MOZ_CTOR(_type)                                     \
+#define MOZ_COUNT_CTOR(_type)                               \
 PR_BEGIN_MACRO                                              \
   if (0 == gCounter_##_type . ctors) {                      \
     nsTraceRefcnt::RegisterCtor(#_type, &gCounter_##_type); \
@@ -124,16 +124,16 @@ PR_BEGIN_MACRO                                              \
   gCounter_##_type . ctors++;                               \
 PR_END_MACRO
 
-#define MOZ_DTOR(_type)        \
+#define MOZ_COUNT_DTOR(_type)  \
 PR_BEGIN_MACRO                 \
   gCounter_##_type . dtors ++; \
 PR_END_MACRO
 
 #else
 
-#define MOZ_DECL_CTOR(_type)
-#define MOZ_CTOR(_type)
-#define MOZ_DTOR(_type)
+#define MOZ_DECL_CTOR_COUNTER(_type)
+#define MOZ_COUNT_CTOR(_type)
+#define MOZ_COUNT_DTOR(_type)
 
 #endif /* DEBUG */
 

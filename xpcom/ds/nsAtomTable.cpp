@@ -47,10 +47,9 @@ NS_COM void NS_PurgeAtomTable(void)
 {
   if (gAtomHashTable) {
 #if defined(DEBUG_kipp) && (defined(XP_UNIX) || defined(XP_PC))
-    if (0 != gAtoms) {
-      printf("*** leaking %d atoms\n", gAtoms);
+    if (gAtoms) {
       if (getenv("MOZ_DUMP_ATOM_LEAKS")) {
-        printf("*** leaked atoms:\n");
+        printf("*** leaking %d atoms\n", gAtoms);
         PL_HashTableEnumerateEntries(gAtomHashTable, DumpAtomLeaks, 0);
       }
     }
@@ -60,8 +59,12 @@ NS_COM void NS_PurgeAtomTable(void)
   }
 }
 
+MOZ_DECL_CTOR_COUNTER(AtomImpl);
+
 AtomImpl::AtomImpl()
 {
+  MOZ_COUNT_CTOR(AtomImpl);
+
   NS_INIT_REFCNT();
   // Every live atom holds a reference on the atom hashtable
   gAtoms++;
@@ -69,6 +72,8 @@ AtomImpl::AtomImpl()
 
 AtomImpl::~AtomImpl()
 {
+  MOZ_COUNT_DTOR(AtomImpl);
+
   NS_PRECONDITION(nsnull != gAtomHashTable, "null atom hashtable");
   if (nsnull != gAtomHashTable) {
     PL_HashTableRemove(gAtomHashTable, mString);
@@ -82,7 +87,34 @@ AtomImpl::~AtomImpl()
   }
 }
 
+#ifdef LOG_ATOM_REFCNTS
+extern "C" {
+  void __log_addref(void* p, int oldrc, int newrc);
+  void __log_release(void* p, int oldrc, int newrc);
+}
+
+nsrefcnt AtomImpl::AddRef(void)
+{
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+  __log_addref((void*) this, mRefCnt, mRefCnt + 1);
+  return ++mRefCnt;
+}
+
+nsrefcnt AtomImpl::Release(void)
+{
+  __log_release((void*) this, mRefCnt, mRefCnt - 1);
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  if (--mRefCnt == 0) {
+    NS_DELETEXPCOM(this);
+    return 0;
+  }
+  return mRefCnt;
+}
+
+NS_IMPL_QUERY_INTERFACE1(AtomImpl, nsIAtom)
+#else
 NS_IMPL_ISUPPORTS1(AtomImpl, nsIAtom)
+#endif /* LOG_ATOM_REFCNTS */
 
 void* AtomImpl::operator new(size_t size, const PRUnichar* us, PRInt32 uslen)
 {
