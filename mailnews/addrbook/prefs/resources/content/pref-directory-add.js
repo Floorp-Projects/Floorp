@@ -131,6 +131,29 @@ function createUniqueServername()
       gPref_string_desc += str[0];
   }
 } 
+
+function hasOnlyWhitespaces(string)
+{
+  // get all the whitespace characters of string and assign them to str.
+  // string is not modified in this function
+  // returns true if string contains only whitespaces and/or tabs
+  var re = /[ \s]/g;
+  var str = string.match(re);
+  if (str && (str.length == string.length))
+    return true;
+  else
+    return false;
+}
+
+function hasCharacters(number)
+{
+  var re = /[0-9]/g;
+  var num = number.match(re);
+  if(num && (num.length == number.length))
+    return false;
+  else
+    return true;
+}
  
 function onOK()
 {
@@ -159,8 +182,19 @@ function onOK()
 
   var description = document.getElementById("description").value;
   var hostname = document.getElementById("hostname").value;
+  var port = document.getElementById("port").value;
+  var results = document.getElementById("results").value;
+  var errorValue = null;
   gPref_string_desc = description;
-  if (gPref_string_desc && hostname) {
+  if ((!gPref_string_desc) || hasOnlyWhitespaces(gPref_string_desc))
+    errorValue = "invalidName";
+  else if ((!hostname) || hasOnlyWhitespaces(hostname))
+    errorValue = "invalidHostname";
+  else if (port && hasCharacters(port))
+    errorValue = "invalidPortNumber";
+  else if (results && hasCharacters(results))
+    errorValue = "invalidResults";
+  if (!errorValue) {
   pref_string_content = gPref_string_desc;
   if (gCurrentDirectory && gCurrentDirectoryString)
   {
@@ -178,8 +212,10 @@ function onOK()
   ldapUrl.host = hostname;
   pref_string_content = document.getElementById("basedn").value;
   ldapUrl.dn = pref_string_content;
-  pref_string_content = document.getElementById("port").value;
-  ldapUrl.port = pref_string_content;
+  if (!port)
+    ldapUrl.port = gPortNumber;
+  else
+    ldapUrl.port = port;
   pref_string_content = document.getElementById("search").value;
   ldapUrl.filter = pref_string_content;
   if (document.getElementById("one").checked)
@@ -191,10 +227,17 @@ function onOK()
   }
   pref_string_title = gPref_string_desc + ".uri";
   gPrefInt.SetCharPref(pref_string_title, ldapUrl.spec);
-  pref_string_content = document.getElementById("results").value;
+  pref_string_content = results;
+  pref_string_title = gPref_string_desc + ".maxHits";
   if (pref_string_content != gMaxHits) {
-    pref_string_title = gPref_string_desc + ".maxHits";
     gPrefInt.SetIntPref(pref_string_title, pref_string_content);
+  }
+  else
+  {
+    try {
+      gPrefInt.ClearUserPref(pref_string_title);
+    }
+    catch(ex) {}
   }
   pref_string_title = gPref_string_desc + ".auth.enabled";
   try{
@@ -213,7 +256,7 @@ function onOK()
   else
   {
     var addressBookBundle = document.getElementById("bundle_addressBook");
-    errorMsg = addressBookBundle.getString("errorMessage");
+    var errorMsg = addressBookBundle.getString(errorValue);
     alert(errorMsg);
   }
 
