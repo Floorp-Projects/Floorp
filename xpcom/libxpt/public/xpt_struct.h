@@ -104,13 +104,13 @@ typedef struct nsID nsID;
  * Every XPCOM typelib file begins with a header.
  */
 struct XPTHeader {
-    PRUint8                       magic[16];
-    PRUint8                       major_version;
-    PRUint8                       minor_version;
-    PRUint16                      num_interfaces;
-    PRUint32                      file_length;
+    PRUint8                     magic[16];
+    PRUint8                     major_version;
+    PRUint8                     minor_version;
+    PRUint16                    num_interfaces;
+    PRUint32                    file_length;
     XPTInterfaceDirectoryEntry  *interface_directory;
-    PRUint32                      data_pool;
+    PRUint32                    data_pool;
     XPTAnnotation               *annotations;
 };
 
@@ -156,10 +156,10 @@ XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
  * single XPCOM interface, including all of its methods. 
  */
 struct XPTInterfaceDescriptor {
-    PRUint16                     parent_interface;
-    PRUint16                     num_methods;
+    PRUint16                    parent_interface;
+    PRUint16                    num_methods;
     XPTMethodDescriptor        *method_descriptors;
-    PRUint16                     num_constants;
+    PRUint16                    num_constants;
     XPTConstDescriptor         *const_descriptors;
 };
 
@@ -286,23 +286,23 @@ struct XPTTypeDescriptor {
  * String record containing the constant string.
  */
 union XPTConstValue {
-    PRInt8      i8;
-    PRUint8     ui8; 
-    PRInt16     i16; 
-    PRUint16    ui16;
-    PRInt32     i32; 
-    PRUint32    ui32;
-    PRInt64     i64; 
-    PRUint64    ui64; 
+    PRInt8    i8;
+    PRUint8   ui8; 
+    PRInt16   i16; 
+    PRUint16  ui16;
+    PRInt32   i32; 
+    PRUint32  ui32;
+    PRInt64   i64; 
+    PRUint64  ui64; 
     float     flt;
     double    dbl;
     PRBool    bul;
     char      ch; 
-    PRUint16    wch;
+    PRUint16  wch;
     nsID      *iid;
     XPTString *string;
     char      *str;
-    PRUint16    *wstr;
+    PRUint16  *wstr;
 }; /* varies according to type */
 
 struct XPTConstDescriptor {
