@@ -270,8 +270,8 @@ wsPostEvent::handleEvent ()
       return (void *) rv;
   }
 
-  content = doc->GetRootContent();
-  if (!content) {
+  rv = doc->GetRootContent(getter_AddRefs(content));
+  if (NS_FAILED(rv) || !content) {
       return (void *) rv;
   }
 

@@ -548,7 +548,7 @@ void DoMozInitialization(WebShellInitContext * initContext)
         }
         nsCOMPtr<nsIProfileInternal> profileInt = do_QueryInterface(profile);
         if (profileInt) {
-            rv = profileInt->StartupWithArgs(cmdLine);
+            rv = profileInt->StartupWithArgs(cmdLine, PR_FALSE);
             if (NS_FAILED(rv)) {
                 ::util_ThrowExceptionToJava(env, "Can't statrup nsIProfile service.");
                 return;
