@@ -2177,7 +2177,7 @@ js_Interpret(JSContext *cx, jsval *result)
             BITWISE_OP(&);
             break;
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
 #define COMPARE_DOUBLES(LVAL, OP, RVAL, IFNAN)                                \
     ((JSDOUBLE_IS_NaN(LVAL) || JSDOUBLE_IS_NaN(RVAL))                         \
      ? (IFNAN)                                                                \
@@ -2442,7 +2442,7 @@ js_Interpret(JSContext *cx, jsval *result)
             FETCH_NUMBER(cx, -2, d);
             sp--;
             if (d2 == 0) {
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
                 /* XXX MSVC miscompiles such that (NaN == 0) */
                 if (JSDOUBLE_IS_NaN(d2))
                     rval = DOUBLE_TO_JSVAL(rt->jsNaN);
@@ -2468,7 +2468,7 @@ js_Interpret(JSContext *cx, jsval *result)
             if (d2 == 0) {
                 STORE_OPND(-1, DOUBLE_TO_JSVAL(rt->jsNaN));
             } else {
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
               /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
               if (!(JSDOUBLE_IS_FINITE(d) && JSDOUBLE_IS_INFINITE(d2)))
 #endif

@@ -169,7 +169,7 @@ js_compare_atom_keys(const void *k1, const void *k2)
         double d2 = *JSVAL_TO_DOUBLE(v2);
         if (JSDOUBLE_IS_NaN(d1))
             return JSDOUBLE_IS_NaN(d2);
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
         /* XXX MSVC miscompiles such that (NaN == 0) */
         if (JSDOUBLE_IS_NaN(d2))
             return JS_FALSE;

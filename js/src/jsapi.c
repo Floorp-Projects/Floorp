@@ -4142,9 +4142,7 @@ JS_ClearContextThread(JSContext *cx)
 
 /************************************************************************/
 
-#if defined(XP_OS2)
-/*DSR031297 - the OS/2 equiv is dll_InitTerm, but I don't see the need for it*/
-#elif defined(XP_WIN)
+#if defined(XP_WIN)
 #include <windows.h>
 /*
  * Initialization routine for the JS DLL...
@@ -4178,4 +4176,4 @@ BOOL CALLBACK __loadds WEP(BOOL fSystemExit)
 }
 
 #endif /* !_WIN32 */
-#endif /* XP_OS2 || XP_WIN */
+#endif /* XP_WIN */
