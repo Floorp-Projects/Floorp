@@ -8,6 +8,7 @@ EXPORTS
 	NP_Initialize       @2
 	NP_Shutdown         @3
 	NSGetFactory		@10
+
 	; ActiveX exports
 	DllCanUnloadNow     @100 PRIVATE
 	DllGetClassObject   @101 PRIVATE

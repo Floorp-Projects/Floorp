@@ -60,7 +60,7 @@ CFG=MozillaControl - Win32 Debug
 # PROP Intermediate_Dir "Debug"
 # PROP Cmd_Line "NMAKE /f makefile.win"
 # PROP Rebuild_Opt "/a"
-# PROP Target_File ".\WIN32_D.OBJ\npmozctl.dll"
+# PROP Target_File "c:\program files\netscape\communicator\program\plugins\npmozctl.dll"
 # PROP Bsc_Name "MozillaControl.bsc"
 # PROP Target_Dir ""
 

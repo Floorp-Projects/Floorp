@@ -36,6 +36,10 @@
 // Comment these out as appropriate
 //#define USE_NGPREF
 
+#ifdef MOZ_ACTIVEX_CONTROL_SUPPORT
+#define USE_CONTROL
+#endif
+
 #ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
 #define USE_PLUGIN
 #endif
@@ -71,7 +75,7 @@ typedef long int32;
 #include "nsIPref.h"
 #endif
 
-
+#ifdef USE_CONTROL
 #include "xp_core.h"
 #include "jscompat.h"
 
@@ -85,6 +89,7 @@ typedef long int32;
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
 #include "nsViewsCID.h"
+#include "nsXPComCIID.h"
 #include "nsString.h"
 
 #include "nsIURL.h"
@@ -104,20 +109,26 @@ typedef long int32;
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#endif
 
 // Mozilla control headers
 #include "resource.h"
 
 #include "ActiveXTypes.h"
 #include "BrowserDiagnostics.h"
-#include "PropertyList.h"
-#include "IEHtmlDocument.h"
 #include "MozillaControl.h"
-#include "MozillaBrowser.h"
-#include "WebShellContainer.h"
+#include "PropertyList.h"
 #include "PropertyBag.h"
 #include "ControlSite.h"
 #include "ControlSiteIPFrame.h"
+
+#ifdef USE_CONTROL
+#include "IEHtmlDocument.h"
+#include "CPMozillaControl.h"
+#include "MozillaBrowser.h"
+#include "WebShellContainer.h"
+#include "guids.h"
+#endif
 
 #ifdef USE_PLUGIN
 #include "npapi.h"
@@ -127,8 +138,6 @@ typedef long int32;
 #include "ActiveXPlugin.h"
 #include "ActiveXPluginInstance.h"
 #endif
-
-#include "guids.h"
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Developer Studio will insert additional declarations immediately before the previous line.

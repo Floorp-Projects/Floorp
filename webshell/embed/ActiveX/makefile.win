@@ -24,6 +24,16 @@ QUIET =
 DEPTH =..\..\..
 IGNORE_MANIFEST=1
 
+# The default is to include control support unless told to do otherwise
+!ifndef MOZ_ACTIVEX_NO_CONTROL_SUPPORT
+MOZ_ACTIVEX_CONTROL_SUPPORT = 1
+!endif
+
+!ifndef MOZ_ACTIVEX_NO_PLUGIN_SUPPORT
+# MOZ_ACTIVEX_PLUGIN_SUPPORT = 1
+!endif
+
+
 MAKE_OBJ_TYPE = DLL
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 RESFILE = MozillaControl.res
@@ -35,21 +45,23 @@ DEFFILE = MozillaControl.def
 
 OBJS =                                 \
 	.\$(OBJDIR)\StdAfx.obj             \
-	.\$(OBJDIR)\guids.obj              \
-	.\$(OBJDIR)\nsSetupRegistry.obj    \
-	.\$(OBJDIR)\MozillaControl.obj     \
-	.\$(OBJDIR)\MozillaBrowser.obj     \
-    .\$(OBJDIR)\WebShellContainer.obj  \
 	.\$(OBJDIR)\ControlSite.obj        \
 	.\$(OBJDIR)\ControlSiteIPFrame.obj \
 	.\$(OBJDIR)\PropertyBag.obj        \
+	.\$(OBJDIR)\MozillaControl.obj     \
+!ifdef MOZ_ACTIVEX_CONTROL_SUPPORT
+	.\$(OBJDIR)\nsSetupRegistry.obj    \
+	.\$(OBJDIR)\MozillaBrowser.obj     \
+    .\$(OBJDIR)\WebShellContainer.obj  \
 	.\$(OBJDIR)\IEHtmlNode.obj         \
 	.\$(OBJDIR)\IEHtmlElementCollection.obj \
 	.\$(OBJDIR)\IEHtmlElement.obj      \
 	.\$(OBJDIR)\IEHtmlDocument.obj     \
+	.\$(OBJDIR)\guids.obj              \
+!endif
+#	.\$(OBJDIR)\ActiveXPlugin.obj      \
+#	.\$(OBJDIR)\ActiveXPluginInstance.obj \
 !ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
-	.\$(OBJDIR)\ActiveXPlugin.obj      \
-	.\$(OBJDIR)\ActiveXPluginInstance.obj \
 	.\$(OBJDIR)\ActiveScriptSite.obj   \
 	.\$(OBJDIR)\LegacyPlugin.obj       \
 	.\$(OBJDIR)\npwin.obj              \
@@ -84,11 +96,13 @@ LINCS=  \
   $(NULL) 
 
 MYLIBS=                         \
+!ifdef MOZ_ACTIVEX_CONTROL_SUPPORT
  $(DIST)\lib\raptorbase.lib     \
  $(DIST)\lib\raptorgfxwin.lib   \
  $(DIST)\lib\raptorweb.lib      \
  $(DIST)\lib\xpcom32.lib        \
  $(LIBNSPR)                     \
+!endif
  $(NULL)
 
 LLIBS = $(MYLIBS)               \
@@ -110,6 +124,10 @@ LCFLAGS = $(LCFLAGS) -DMOZ_NO_DEBUG_RTL
 
 !ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
 LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_PLUGIN_SUPPORT
+!endif
+
+!ifdef MOZ_ACTIVEX_CONTROL_SUPPORT
+LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_CONTROL_SUPPORT
 !endif
 
 install:: $(DLL)
@@ -135,6 +153,10 @@ ControlSite.cpp \
 ControlSiteIPFrame.cpp \
 PropertyBag.cpp : StdAfx.h PropertyBag.h ControlSite.h ControlSiteIPFrame.h
 
+MozillaControl.cpp \
+StdAfx.cpp: StdAfx.h MozillaControl.h MozillaBrowser.h WebShellContainer.h
+
+!ifdef MOZ_ACTIVEX_CONTROL_SUPPORT
 IEHtmlNode.cpp : StdAfx.h IEHtmlNode.h
 
 IEHtmlElementCollection.cpp : StdAfx.h IEHtmlElementCollection.h
@@ -147,6 +169,7 @@ MozillaControl.cpp \
 MozillaBrowser.cpp \
 WebShellContainer.cpp \
 StdAfx.cpp: StdAfx.h MozillaControl.h MozillaBrowser.h WebShellContainer.h
+!endif
 
 guids.cpp: StdAfx.h guids.h
 

@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "stdafx.h"
+#include "guids.h"
 
 // Class IDs
 NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);

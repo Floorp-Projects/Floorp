@@ -34,6 +34,32 @@ static const std::string c_szDefaultPage   = "resource://res/MozillaControl.html
 
 BOOL CMozillaBrowser::m_bRegistryInitialized = FALSE;
 
+class CMozDir
+{
+	TCHAR m_szOldDir[1024];
+public:
+	CMozDir()
+	{
+		GetCurrentDirectory(1024, m_szOldDir);
+		CRegKey cKey;
+		if (cKey.Open(HKEY_LOCAL_MACHINE, _T("Software\\Mozilla")) == ERROR_SUCCESS)
+		{
+			TCHAR szCurDir[1024];
+			DWORD dwSize = sizeof(szCurDir) / sizeof(szCurDir[0]);
+			if (cKey.QueryValue(szCurDir, _T("MozillaDir"), &dwSize) == ERROR_SUCCESS)
+			{
+				SetCurrentDirectory(szCurDir);
+			}
+			cKey.Close();
+		}
+	}
+	~CMozDir()
+	{
+		// Restore old working directory
+		SetCurrentDirectory(m_szOldDir);
+	}
+};
+
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
 
@@ -63,6 +89,9 @@ CMozillaBrowser::CMozillaBrowser()
  	// the IHTMLDOcument, lazy allocation.
  	m_pDocument = NULL;
 
+	// Change the current directory to the Mozilla dist so that registration
+	// works properly
+
 	// Register components
 	if (!m_bRegistryInitialized)
 	{
@@ -84,6 +113,7 @@ CMozillaBrowser::CMozillaBrowser()
 		rv = eventQService->CreateThreadEventQueue();
 		nsServiceManager::ReleaseService(kEventQueueServiceCID, eventQService);
 	}
+
 }
 
 
@@ -859,7 +889,25 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	// Check the navigation flags
 	if (lFlags & navOpenInNewWindow)
 	{
-		// Open in new window is a no no
+		CIPtr(IDispatch) spDispNew;
+		VARIANT_BOOL bCancel = VARIANT_FALSE;
+		
+		// Test if the event sink can give us a new window to navigate into
+		Fire_NewWindow2(&spDispNew, &bCancel);
+
+		lFlags &= ~(navOpenInNewWindow);
+		if ((bCancel == VARIANT_FALSE) && spDispNew)
+		{
+			CIPtr(IWebBrowser2) spOther = spDispNew;;
+			if (spOther)
+			{
+				CComVariant vURL(URL);
+				CComVariant vFlags(lFlags);
+				spOther->Navigate2(&vURL, &vFlags, TargetFrameName, PostData, Headers);
+			}
+		}
+
+		// Can't open a new window without client suppot
 		return E_NOTIMPL;
 	}
 	if (lFlags & navNoHistory)
