@@ -46,6 +46,15 @@ static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 nsILookAndFeel *nsWidget::sLookAndFeel = nsnull;
 PRUint32 nsWidget::sWidgetCount = 0;
 
+//
+// Keep track of the last widget being "dragged"
+//
+nsWidget * nsWidget::sButtonMotionTarget = NULL;
+gint nsWidget::sButtonMotionRootX = -1;
+gint nsWidget::sButtonMotionRootY = -1;
+gint nsWidget::sButtonMotionWidgetX = -1;
+gint nsWidget::sButtonMotionWidgetY = -1;
+
 //#define DBG 1
 
 nsWidget::nsWidget()
@@ -989,17 +998,17 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
   if (nsnull != mMouseListener) {
     switch (aEvent.message) {
       case NS_MOUSE_MOVE: {
-        /*result = ConvertStatus(mMouseListener->MouseMoved(event));
-        nsRect rect;
-        GetBounds(rect);
-        if (rect.Contains(event.point.x, event.point.y)) {
-          if (mCurrentWindow == NULL || mCurrentWindow != this) {
-            //printf("Mouse enter");
-            mCurrentWindow = this;
-          }
-        } else {
-          //printf("Mouse exit");
-        }*/
+//         result = ConvertStatus(mMouseListener->MouseMoved(aEvent));
+//         nsRect rect;
+//         GetBounds(rect);
+//         if (rect.Contains(event.point.x, event.point.y)) {
+//           if (mCurrentWindow == NULL || mCurrentWindow != this) {
+//             printf("Mouse enter");
+//             mCurrentWindow = this;
+//           }
+//         } else {
+//           printf("Mouse exit");
+//         }
 
       } break;
 
@@ -1103,26 +1112,164 @@ nsWidget::InstallRealizeSignal(GtkWidget * aWidget)
 // OnSomething handlers
 //
 //////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////
+//
+// Turning TRACE_MOUSE_EVENTS on will cause printfs for all
+// mouse events that are dispatched.
+//
+//////////////////////////////////////////////////////////////////
+
+#undef TRACE_MOUSE_EVENTS
+
+#ifdef TRACE_MOUSE_EVENTS
+static void
+DebugPrintMouseEvent(nsMouseEvent & aEvent,char * sMessage,void * instance)
+{
+  char * eventName = nsnull;
+
+  switch(aEvent.message)
+  {
+  case NS_MOUSE_MOVE: 
+    eventName = "NS_MOUSE_MOVE"; 
+    break;
+
+  case NS_MOUSE_LEFT_BUTTON_UP: 
+    eventName = "NS_MOUSE_LEFT_BUTTON_UP"; 
+    break;
+
+  case NS_MOUSE_LEFT_BUTTON_DOWN: 
+    eventName = "NS_MOUSE_LEFT_BUTTON_DOWN"; 
+    break;
+
+  case NS_MOUSE_MIDDLE_BUTTON_UP: 
+    eventName = "NS_MOUSE_MIDDLE_BUTTON_UP"; 
+    break;
+
+  case NS_MOUSE_MIDDLE_BUTTON_DOWN: 
+    eventName = "NS_MOUSE_MIDDLE_BUTTON_DOWN"; 
+    break;
+
+  case NS_MOUSE_RIGHT_BUTTON_UP: 
+    eventName = "NS_MOUSE_RIGHT_BUTTON_UP"; 
+    break;
+
+  case NS_MOUSE_RIGHT_BUTTON_DOWN: 
+    eventName = "NS_MOUSE_RIGHT_BUTTON_DOWN"; 
+    break;
+
+  case NS_MOUSE_ENTER: 
+    eventName = "NS_MOUSE_ENTER"; 
+    break;
+
+  case NS_MOUSE_EXIT: 
+    eventName = "NS_MOUSE_EXIT"; 
+    break;
+
+  case NS_MOUSE_LEFT_DOUBLECLICK: 
+    eventName = "NS_MOUSE_LEFT_DOUBLECLICK"; 
+    break;
+
+  case NS_MOUSE_MIDDLE_DOUBLECLICK: 
+    eventName = "NS_MOUSE_MIDDLE_DOUBLECLICK"; 
+    break;
+
+  case NS_MOUSE_RIGHT_DOUBLECLICK: 
+    eventName = "NS_MOUSE_RIGHT_DOUBLECLICK"; 
+    break;
+
+  case NS_MOUSE_LEFT_CLICK: 
+    eventName = "NS_MOUSE_LEFT_CLICK"; 
+    break;
+
+  case NS_MOUSE_MIDDLE_CLICK: 
+    eventName = "NS_MOUSE_MIDDLE_CLICK"; 
+    break;
+
+  case NS_MOUSE_RIGHT_CLICK: 
+    eventName = "NS_MOUSE_RIGHT_CLICK"; 
+    break;
+
+  default: 
+    eventName = "UNKNOWN"; break;
+  }
+
+  static int sPrintCount=0;
+
+  printf("%4d %s(this=%p,%s,x=%d,y=%d,click=%d)\n",
+         sPrintCount++,
+         sMessage,
+         instance,
+         eventName,
+         aEvent.point.x,
+         aEvent.point.y,
+         aEvent.clickCount);
+}
+#endif // TRACE_MOUSE_EVENTS
+//////////////////////////////////////////////////////////////////
 /* virtual */ void 
 nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
 {
-//   static int x=0;
-//   printf("%4d nsWidget::OnMotionNotifySignal(%p,%d,%d)\n",
-//  		 x++,this,(int) aGdkMotionEvent->x,(int) aGdkMotionEvent->y);
-
   nsMouseEvent event;
 
   event.message = NS_MOUSE_MOVE;
-  event.widget  = this;
   event.eventStructType = NS_MOUSE_EVENT;
+
+  // If there is a button motion target, use that instead of the
+  // current widget
+
+  // XXX ramiro
+  // 
+  // Because of dynamic widget creation and destruction, this could
+  // potentially be a dangerious thing to do.  
+  //
+  // If the sButtonMotionTarget is destroyed between the time when
+  // it got set and now, we should end up sending an event to 
+  // a junk nsWidget.
+  //
+  // The way to solve this would be to add a destroy signal to
+  // the GtkWidget corresponding to the sButtonMotionTarget and
+  // marking if nsnull in there.
+  //
+  if (sButtonMotionTarget != nsnull)
+  {
+    gint diffX;
+    gint diffY;
+
+    if (aGdkMotionEvent != NULL) 
+    {
+      // Compute the difference between the original root coordinates
+      diffX = (gint) aGdkMotionEvent->x_root - sButtonMotionRootX;
+      diffY = (gint) aGdkMotionEvent->y_root - sButtonMotionRootY;
+      
+      event.widget = sButtonMotionTarget;
+      
+      // The event coords will be the initial *widget* coords plus the 
+      // root difference computed above.
+      event.point.x = nscoord(sButtonMotionWidgetX + diffX);
+      event.point.y = nscoord(sButtonMotionWidgetY + diffY);
+    }
+  }
+  else
+  {
+    event.widget = this;
+
+    if (aGdkMotionEvent != NULL) 
+    {
+      event.point.x = nscoord(aGdkMotionEvent->x);
+      event.point.y = nscoord(aGdkMotionEvent->y);
+    }
+  }
 
   if (aGdkMotionEvent != NULL) 
   {
-	event.point.x = nscoord(aGdkMotionEvent->x);
-	event.point.y = nscoord(aGdkMotionEvent->y);
     event.time = aGdkMotionEvent->time;
   }
-
+  
+#ifdef TRACE_MOUSE_EVENTS
+  DebugPrintMouseEvent(event,"Motion",this);
+#endif
+  
   AddRef();
 
   DispatchMouseEvent(event);
@@ -1133,7 +1280,17 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
 /* virtual */ void
 nsWidget::OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
 {
-  //  printf("nsWidget::OnEnterNotifySignal(%p)\n",this);
+  // If there is a button motion target, then we can ignore this
+  // event since what the gecko event system expects is for
+  // only motion events to be sent to that widget, even if the
+  // pointer is crossing on other widgets.
+  //
+  // XXX ramiro - Same as above.
+  //
+  if (sButtonMotionTarget != nsnull)
+  {
+    return;
+  }
 
   nsMouseEvent event;
 
@@ -1148,6 +1305,10 @@ nsWidget::OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
     event.time = aGdkCrossingEvent->time;
   }
 
+#ifdef TRACE_MOUSE_EVENTS
+  DebugPrintMouseEvent(event,"Enter",this);
+#endif
+
   AddRef();
 
   DispatchMouseEvent(event);
@@ -1158,7 +1319,17 @@ nsWidget::OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
 /* virtual */ void
 nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
 {
-  //  printf("nsWidget::OnLeaveNotifySignal(%p)\n",this);
+  // If there is a button motion target, then we can ignore this
+  // event since what the gecko event system expects is for
+  // only motion events to be sent to that widget, even if the
+  // pointer is crossing on other widgets.
+  //
+  // XXX ramiro - Same as above.
+  //
+  if (sButtonMotionTarget != nsnull)
+  {
+    return;
+  }
 
   nsMouseEvent event;
 
@@ -1173,6 +1344,10 @@ nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
     event.time = aGdkCrossingEvent->time;
   }
 
+#ifdef TRACE_MOUSE_EVENTS
+  DebugPrintMouseEvent(event,"Leave",this);
+#endif
+
   AddRef();
 
   DispatchMouseEvent(event);
@@ -1183,8 +1358,6 @@ nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
 /* virtual */ void
 nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 {
-  //  printf("nsWidget::OnButtonPressSignal(%p)\n",this);
-
   nsMouseEvent event;
   PRUint32 eventType = 0;
 
@@ -1249,19 +1422,31 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   }
 
   InitMouseEvent(aGdkButtonEvent, event, eventType);
+
+#ifdef TRACE_MOUSE_EVENTS
+  DebugPrintMouseEvent(event,"ButtonPress",this);
+#endif
+
+  // Set the button motion target and remeber the widget and root coords
+  sButtonMotionTarget = this;
+
+  sButtonMotionRootX = (gint) aGdkButtonEvent->x_root;
+  sButtonMotionRootY = (gint) aGdkButtonEvent->y_root;
+
+  sButtonMotionWidgetX = (gint) aGdkButtonEvent->x;
+  sButtonMotionWidgetY = (gint) aGdkButtonEvent->y;
   
   AddRef();
 
   DispatchMouseEvent(event);
 
   Release();
+
 }
 //////////////////////////////////////////////////////////////////////
 /* virtual */ void
 nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
 {
-  //  printf("nsWidget::OnButtonReleaseSignal(%p)\n",this);
-
   nsMouseEvent event;
   PRUint32 eventType = 0;
 
@@ -1285,6 +1470,15 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
 	}
 
   InitMouseEvent(aGdkButtonEvent, event, eventType);
+
+#ifdef TRACE_MOUSE_EVENTS
+  DebugPrintMouseEvent(event,"ButtonRelease",this);
+#endif
+
+  sButtonMotionTarget = nsnull;
+
+  sButtonMotionRootX = -1;
+  sButtonMotionRootY = -1;
 
   AddRef();
 
