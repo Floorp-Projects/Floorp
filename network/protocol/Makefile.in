@@ -31,6 +31,7 @@ DIRS	= about	\
 	ftp	\
 	gopher	\
 	remote  \
+        sockstub \
 	$(NULL)
 
 ifndef MODULAR_NETLIB
