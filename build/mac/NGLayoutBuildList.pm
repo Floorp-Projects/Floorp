@@ -403,7 +403,28 @@ sub BuildLayoutProjects()
 	BuildProject(":mozilla:webshell:macbuild:webshell.mcp",	"webshell$D.o");
 
 	BuildProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",	"viewer$D");
-	
+
+
+	my($resource_dir) = "$dist_dir" . "res:";
+	MakeAlias(":mozilla:layout:html:document:src:ua.css", "$resource_dir");
+
+	#-- not yet: the throbber chokes if we feed it with gifs
+	#my($throbber_dir) = "$dist_dir" . "res:throbber:";
+	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims00.gif", "$throbber_dir");
+	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims01.gif", "$throbber_dir");
+	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims02.gif", "$throbber_dir");
+	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims03.gif", "$throbber_dir");
+	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims04.gif", "$throbber_dir");
+	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims05.gif", "$throbber_dir");
+	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims06.gif", "$throbber_dir");
+	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims07.gif", "$throbber_dir");
+	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims08.gif", "$throbber_dir");
+	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims09.gif", "$throbber_dir");
+	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims10.gif", "$throbber_dir");
+	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims11.gif", "$throbber_dir");
+	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims12.gif", "$throbber_dir");
+	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims13.gif", "$throbber_dir");
+
 	my($samples_dir) = "$dist_dir" . "res:samples:";
 	MakeAlias(":mozilla:webshell:tests:viewer:samples:test0.html", "$samples_dir");
 	MakeAlias(":mozilla:webshell:tests:viewer:samples:test1.html", "$samples_dir");
@@ -415,7 +436,6 @@ sub BuildLayoutProjects()
 	MakeAlias(":mozilla:webshell:tests:viewer:samples:test7.html", "$samples_dir");
 	MakeAlias(":mozilla:webshell:tests:viewer:samples:test8.html", "$samples_dir");
 	MakeAlias(":mozilla:webshell:tests:viewer:samples:test9.html", "$samples_dir");
-	
 }
 
 sub BuildProjects()
