@@ -31,7 +31,7 @@ NS_IMPL_RELEASE(nsCheckButton);
 nsCheckButton::nsCheckButton() : nsMacControl(), nsICheckButton()
 {
   NS_INIT_REFCNT();
-  strcpy(gInstanceClassName, "nsCheckButton");
+  gInstanceClassName = "nsCheckButton";
   SetControlType(checkBoxProc);
 }
 

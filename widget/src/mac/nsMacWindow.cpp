@@ -259,7 +259,7 @@ nsMacWindow::nsMacWindow() : Inherited()
 	, mAcceptsActivation(PR_TRUE)
 {
 	mMacEventHandler.reset(new nsMacEventHandler(this));
-	strcpy(gInstanceClassName, "nsMacWindow");
+	gInstanceClassName = "nsMacWindow";
 }
 
 

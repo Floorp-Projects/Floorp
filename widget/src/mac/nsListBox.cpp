@@ -54,7 +54,7 @@ typedef struct ldesRsrc
 nsListBox::nsListBox() : nsMacControl(), nsIListWidget(), nsIListBox()
 {
 	NS_INIT_REFCNT();
-	strcpy(gInstanceClassName, "nsListBox");
+	gInstanceClassName = "nsListBox";
 	SetControlType(kControlListBoxProc);
 
 	mListHandle	= nsnull;
@@ -550,6 +550,13 @@ PRBool nsListBox::DispatchWindowEvent(nsGUIEvent& aEvent)
 			SInt16 charCode = (macEvent->message & charCodeMask);
 			StartDraw();
 			::HandleControlKey(mControl, keyCode, charCode, macEvent->modifiers);
+			nsKeyEvent* keyEvent = (nsKeyEvent*)&aEvent;
+			switch (keyEvent->keyCode) {
+			case NS_VK_UP:
+			case NS_VK_DOWN:
+				::LAutoScroll(mListHandle);
+				break;
+			}
 			EndDraw();
 			eventHandled = PR_TRUE;
 		} else {

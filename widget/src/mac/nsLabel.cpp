@@ -28,7 +28,7 @@ NS_IMPL_RELEASE(nsLabel);
 nsLabel::nsLabel() : nsTextWidget(), nsILabel()
 {
   NS_INIT_REFCNT();
-  strcpy(gInstanceClassName, "nsLabel");
+  gInstanceClassName = "nsLabel";
 }
 
 //-------------------------------------------------------------------------
