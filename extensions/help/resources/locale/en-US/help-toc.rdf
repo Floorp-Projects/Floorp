@@ -70,7 +70,7 @@
         <rdf:li> <rdf:Description ID="nav-doc-reload" nc:name="Stopping and Reloading"  nc:link="chrome://help/locale/nav_help.html#nav_reload"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-bmark" nc:name="Visiting Bookmarked Pages"  nc:link="chrome://help/locale/nav_help.html#nav_bookmark"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-tabbed" nc:name="Using Tabbed Browsing"  nc:link="chrome://help/locale/nav_help.html#nav_tabbed_browsing"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-sidebar" nc:name="Using My Sidebar"  nc:link="chrome://help/locale/nav_help.html#nav_sidebar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-sidebar" nc:name="Using Sidebar"  nc:link="chrome://help/locale/nav_help.html#nav_sidebar"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -648,7 +648,7 @@
 <rdf:Description about="#cust">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-doc" nc:name="My Sidebar"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-doc" nc:name="Sidebar"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-font" nc:name="Changing Fonts, Colors, and Themes"  nc:link="chrome://help/locale/customize_help.html#cust_font"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-toolbar" nc:name="Toolbars"  nc:link="chrome://help/locale/customize_help.html#cust_toolbar"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-bkmk" nc:name="Bookmarks"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk"/> </rdf:li>
@@ -661,12 +661,12 @@
  <rdf:Description about="#cust-doc">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-sidebar-define" nc:name="What is My Sidebar?"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_define"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-using" nc:name="Using My Sidebar"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_using"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-adding" nc:name="Adding My Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_adding"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-indiv" nc:name="Customizing Individual My Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_indiv"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-reorg" nc:name="Reorganizing My Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_reorg"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-removing" nc:name="Removing My Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_removing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-define" nc:name="What is Sidebar?"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_define"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-using" nc:name="Using Sidebar"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_using"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-adding" nc:name="Adding Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_adding"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-indiv" nc:name="Customizing Individual Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_indiv"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-reorg" nc:name="Reorganizing Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_reorg"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-removing" nc:name="Removing Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_removing"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-sidebar-openclose" nc:name="Opening, Closing, and Resizing"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_openclose"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-tabbed" nc:name="Tabbed Browsing"  nc:link="chrome://help/locale/customize_help.html#cust_tabbed"/> </rdf:li>
       </rdf:Seq>
@@ -1158,7 +1158,7 @@
         <rdf:li><rdf:Description ID="shortcuts_navigator_bookmarks" nc:name="Bookmark Shortcuts" nc:link="chrome://help/locale/shortcuts.html#nav_bookmark"/> </rdf:li>
         <rdf:li><rdf:Description ID="shortcuts_navigator_page_viewing" nc:name="Page Viewing Shortcuts" nc:link="chrome://help/locale/shortcuts.html#page_viewing"/> </rdf:li>
         <rdf:li><rdf:Description ID="shortcuts_navigator_tabbed_browsing" nc:name="Tabbed Browsing Shortcuts" nc:link="chrome://help/locale/shortcuts.html#tabbed_browsing"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_navigator_sidebar" nc:name="My Sidebar Shortcuts" nc:link="chrome://help/locale/shortcuts.html#sidebar"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_navigator_sidebar" nc:name="Sidebar Shortcuts" nc:link="chrome://help/locale/shortcuts.html#sidebar"/> </rdf:li>
         <rdf:li><rdf:Description ID="shortcuts_navigator_forms" nc:name="Forms Shortcuts" nc:link="chrome://help/locale/shortcuts.html#forms"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>

@@ -3368,7 +3368,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Sidebar"
          nc:name="Sidebar"
-	 nc:link="customize_help.html#My_Sidebar:adding_tabsIDX"/>
+	 nc:link="customize_help.html#Sidebar:adding_tabsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3378,7 +3378,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Sidebar:adding_tabs"
          nc:name="adding tabs"
-	 nc:link="customize_help.html#My_Sidebar:adding_tabsIDX"/>
+	 nc:link="customize_help.html#Sidebar:adding_tabsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3388,7 +3388,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Sidebar:customizing_tabs"
          nc:name="customizing tabs"
-	 nc:link="customize_help.html#My_Sidebar:customizing_tabsIDX"/>
+	 nc:link="customize_help.html#Sidebar:customizing_tabsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3398,7 +3398,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Sidebar:description"
          nc:name="description"
-	 nc:link="customize_help.html#My_Sidebar:descriptionIDX"/>
+	 nc:link="customize_help.html#Sidebar:descriptionIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3408,7 +3408,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Sidebar:removing_tabs"
          nc:name="removing tabs"
-	 nc:link="customize_help.html#My_Sidebar:removing_tabsIDX"/>
+	 nc:link="customize_help.html#Sidebar:removing_tabsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3418,7 +3418,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Sidebar:reorganizing_tabs"
          nc:name="reorganizing tabs"
-	 nc:link="customize_help.html#My_Sidebar:reorganizing_tabsIDX"/>
+	 nc:link="customize_help.html#Sidebar:reorganizing_tabsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3428,7 +3428,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Sidebar:search_categories"
          nc:name="search categories"
-	 nc:link="nav_help.html#My_Sidebar:search_categoriesIDX"/>
+	 nc:link="nav_help.html#Sidebar:search_categoriesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3438,7 +3438,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Sidebar:searching_from"
          nc:name="searching from"
-	 nc:link="nav_help.html#My_Sidebar:searching_fromIDX"/>
+	 nc:link="nav_help.html#Sidebar:searching_fromIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3448,7 +3448,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Sidebar:using"
          nc:name="using"
-	 nc:link="customize_help.html#My_Sidebar:usingIDX"/>
+	 nc:link="customize_help.html#Sidebar:usingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
