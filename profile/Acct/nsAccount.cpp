@@ -419,7 +419,7 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
     name[0] = 0;
     nsAutoString v("");
     sprintf(name, "%s", "SiteName");
-    ret = props->GetProperty(name, v);
+    ret = props->GetStringProperty(name, v);
 
     if (NS_FAILED(ret) || (!v.Length())) {
 
@@ -433,7 +433,7 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
 	LocCount++;
 
     sprintf(name, "%s", "Phone");
-    ret = props->GetProperty(name, v);
+    ret = props->GetStringProperty(name, v);
 
     if (NS_FAILED(ret) || (!v.Length())) {
 
@@ -534,7 +534,7 @@ int nsAccount::GetConfigValues(nsString fileName)
     nsAutoString v("");
 
     sprintf(name, "%s", "DomainName");
-    ret = props->GetProperty(name, v);
+    ret = props->GetStringProperty(name, v);
 
     if (NS_FAILED(ret) || (!v.Length())) {
 
@@ -544,7 +544,7 @@ int nsAccount::GetConfigValues(nsString fileName)
 	PL_strcpy(domainname, v.ToNewCString());
 
     sprintf(name, "%s", "DNSAddress");
-    ret = props->GetProperty(name, v);
+    ret = props->GetStringProperty(name, v);
 
     if (NS_FAILED(ret) || (!v.Length())) {
 
@@ -553,7 +553,7 @@ int nsAccount::GetConfigValues(nsString fileName)
 	PL_strcpy(dnsp, v.ToNewCString());
 
     sprintf(name, "%s", "DNSAddress2");
-    ret = props->GetProperty(name, v);
+    ret = props->GetStringProperty(name, v);
 
     if (NS_FAILED(ret) || (!v.Length())) {
 
