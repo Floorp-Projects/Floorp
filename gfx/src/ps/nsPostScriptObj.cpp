@@ -2384,7 +2384,7 @@ nsPostScriptObj::draw_image(nsIImage *anImage,
   anImage->UnlockImagePixels(PR_FALSE);
 
   // Free the PS data buffer and restore the previous graphics state.
-  fputs("\n/rowdata where { /rowdata undef } if\n", mScriptFP);
+  fputs("\n/undef where { pop /rowdata where { /rowdata undef } if } if\n", mScriptFP);
   fputs("grestore\n", mScriptFP);
 }
 
