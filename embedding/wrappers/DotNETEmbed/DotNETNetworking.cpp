@@ -14,13 +14,14 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2003
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Roy Yokoyama <yokoyama@netscape.com> (original author)
+ *   Johnny Stenback <jst@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -43,841 +44,313 @@
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
-#include "umURI.h"
 #include "DotNETNetworking.h"
-
-using namespace System;
-using namespace System::Runtime::InteropServices;
 
 using namespace Mozilla::Embedding::Networking;
 
-#pragma unmanaged
-unmanagedURI::unmanagedURI()
+URI::URI(nsIURI *aURI)
+  : mURI(aURI)
 {
-  mUri = nsnull;
+  NS_IF_ADDREF(mURI);
 }
 
-unmanagedURI::~unmanagedURI()
+URI::URI(String *aSpec)
+  : mURI(nsnull)
 {
-}
-
-nsresult unmanagedURI::CreateURI()
-{
-  return NS_NewURI(getter_AddRefs(mUri), "");
-}
-
-nsresult unmanagedURI::CreateURI(PRUnichar* url)
-{
-  nsAutoString urlString;
-
-  urlString.Assign(url);
-  return NS_NewURI(getter_AddRefs(mUri), urlString);
-}
-
-const char* unmanagedURI::GetSpec()
-{
-  nsresult rv = NS_OK;
-  nsCAutoString curSpec;
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  rv = mUri->GetSpec(curSpec);
-  if (NS_FAILED(rv)) 
-    return nsnull;
-
-  return curSpec.get();
-}
-
-const char* unmanagedURI::GetPrePath()
-{
-  nsresult rv = NS_OK;
-  nsCAutoString prePath;
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  rv = mUri->GetPrePath(prePath);
-  if (NS_FAILED(rv)) 
-    return nsnull;
-
-  return prePath.get();
-}
-
-const char* unmanagedURI::GetScheme()
-{
-  nsresult rv = NS_OK;
-  nsCAutoString scheme;
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  rv = mUri->GetScheme(scheme);
-  if (NS_FAILED(rv)) 
-    return nsnull;
-
-  return scheme.get();
-}
-
-void unmanagedURI::SetScheme(char* aScheme)
-{
-  nsresult rv = NS_OK;
-  nsCAutoString scheme(aScheme);
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return;
-
-  mUri->SetScheme(scheme);
-}
-
-const char* unmanagedURI::GetUserPass()
-{
-  nsresult rv = NS_OK;
-  nsCAutoString userPass;
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  rv = mUri->GetUserPass(userPass);
-  if (NS_FAILED(rv)) 
-    return nsnull;
-
-  return userPass.get();
-}
-
-void unmanagedURI::SetUserPass(char* aUserPass)
-{
-  nsresult rv = NS_OK;
-  nsCAutoString userPass(aUserPass);
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return;
-
-  mUri->SetUserPass(userPass);
-}
-
-const char* unmanagedURI::GetUsername()
-{
-  nsresult rv = NS_OK;
-  nsCAutoString username;
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  rv = mUri->GetUsername(username);
-  if (NS_FAILED(rv)) 
-    return nsnull;
-
-  return username.get();
-}
-
-void unmanagedURI::SetUsername(char* aUsername)
-{
-  nsresult rv = NS_OK;
-  nsCAutoString username(aUsername);
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return;
-
-  mUri->SetUsername(username);
-}
-
-const char* unmanagedURI::GetPassword()
-{
-  nsresult rv = NS_OK;
-  nsCAutoString password;
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  rv = mUri->GetPassword(password);
-  if (NS_FAILED(rv)) 
-    return nsnull;
-
-  return password.get();
-}
-
-void unmanagedURI::SetPassword(char* aPassword)
-{
-  nsresult rv = NS_OK;
-  nsCAutoString password(aPassword);
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return;
-
-  mUri->SetPassword(password);
-}
-
-const char* unmanagedURI::GetHostPort()
-{
-  nsresult rv = NS_OK;
-  nsCAutoString hostPort;
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  rv = mUri->GetHostPort(hostPort);
-  if (NS_FAILED(rv)) 
-    return nsnull;
-
-  return hostPort.get();
-}
-
-void unmanagedURI::SetHostPort(char* aHostPort)
-{
-  nsresult rv = NS_OK;
-  nsCAutoString hostPort(aHostPort);
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return;
-
-  mUri->SetHostPort(hostPort);
-}
-
-const char* unmanagedURI::GetHost()
-{
-  nsresult rv = NS_OK;
-  nsCAutoString host;
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  rv = mUri->GetHostPort(host);
-  if (NS_FAILED(rv)) 
-    return nsnull;
-
-  return host.get();
-}
-
-void unmanagedURI::SetHost(char* aHost)
-{
-  nsresult rv = NS_OK;
-  nsCAutoString host(aHost);
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return;
-
-  mUri->SetHost(host);
-}
-
-PRInt32 unmanagedURI::GetPort()
-{
-  nsresult rv = NS_OK;
-  PRInt32 port;
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return 0;
-
-  rv = mUri->GetPort(&port);
-  if (NS_FAILED(rv)) 
-    return 0;
-
-  return port;
-}
-
-void unmanagedURI::SetPort(PRInt32 aPort)
-{
-  nsresult rv = NS_OK;
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return;
-
-  mUri->SetPort(aPort);
-}
-
-const char* unmanagedURI::GetPath()
-{
-  nsresult rv = NS_OK;
-  nsCAutoString path;
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  rv = mUri->GetPath(path);
-  if (NS_FAILED(rv)) 
-    return nsnull;
-
-  return path.get();
-}
-
-void unmanagedURI::SetPath(char* aPath)
-{
-  nsresult rv = NS_OK;
-  nsCAutoString path(aPath);
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return;
-
-  mUri->SetPath(path);
-}
-
-bool unmanagedURI::Equals(unmanagedURI* aOther)
-{
-  nsresult rv = NS_OK;
-  PRBool equal = PR_FALSE;
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return false;
-
-  mUri->Equals(aOther->mUri, &equal);
-
-  return (equal == PR_FALSE) ? false : true;
-}
-
-bool unmanagedURI::SchemeIs(char* aScheme)
-{
-  nsresult rv = NS_OK;
-  PRBool isSheme = PR_FALSE;
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return false;
-
-  mUri->SchemeIs(aScheme, &isSheme);
-
-  return (isSheme == PR_FALSE) ? false : true;
-}
-
-const char * unmanagedURI::Resolve(char* aRelativePath)
-{
-  nsresult rv = NS_OK;
-  nsCAutoString relativePath(aRelativePath);
-  nsCAutoString path;
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  rv = mUri->Resolve(relativePath, path);
-  if (NS_FAILED(rv)) 
-    return nsnull;
-
-  return path.get();
-}
-
-const char* unmanagedURI::GetAsciiSpec()
-{
-  nsresult rv = NS_OK;
-  nsCAutoString asciiSpec;
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  rv = mUri->GetAsciiSpec(asciiSpec);
-  if (NS_FAILED(rv)) 
-    return nsnull;
-
-  return asciiSpec.get();
-}
-
-
-const char* unmanagedURI::GetAsciiHost()
-{
-  nsresult rv = NS_OK;
-  nsCAutoString asciiHost;
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  rv = mUri->GetAsciiHost(asciiHost);
-  if (NS_FAILED(rv)) 
-    return nsnull;
-
-  return asciiHost.get();
-}
-
-const char* unmanagedURI::GetOriginCharset()
-{
-  nsresult rv = NS_OK;
-  nsCAutoString originalCharset;
-
-  if (!mUri)
-    rv = CreateURI();
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  rv = mUri->GetOriginCharset(originalCharset);
-  if (NS_FAILED(rv)) 
-    return nsnull;
-
-  return originalCharset.get();
-}
-
-#pragma managed
-URI::URI()
-{
+  nsCAutoString spec;
+  CopyString(aSpec, spec);
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), spec.get());
+  ThrowIfFailed(rv);
+
+  mURI = uri.get();
+  NS_IF_ADDREF(mURI);
 }
 
 URI::~URI()
 {
-  Dispose(false);
+  NS_IF_RELEASE(mURI);
 }
 
-void URI::Dispose()
+Object *
+URI::Clone()
 {
-  Dispose(true);
+  nsCOMPtr<nsIURI> uriClone;
+
+  if (mURI) {
+    nsresult rv = mURI->Clone(getter_AddRefs(uriClone));
+    ThrowIfFailed(rv);
+  }
+
+  return new URI(uriClone);
 }
 
-void URI::Dispose(bool disposing)
+void
+URI::Dispose()
 {
-  if (mURI)   
-  {
-    delete mURI;
-    mURI = NULL;
-  }
+  NS_IF_RELEASE(mURI);
 
-  if (disposing)  
-  {
-    GC::SuppressFinalize(this);
-  }
+  GC::SuppressFinalize(this);
 }
-bool URI::CreateUnmanagedURI()
+
+String *
+URI::get_Spec()
 {
-  bool ret = false;
+  nsCAutoString spec;
+  nsresult rv = mURI->GetSpec(spec);
+  ThrowIfFailed(rv);
 
-  try 
-  {
-    mURI = new unmanagedURI();
-    if (mURI)
-      ret = true;
-  }
-  catch (Exception*) 
-  {
-    throw;
-  }
-
-  return ret;
+  return CopyString(spec);
 }
 
-String* URI::get_Spec() 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return NULL;
-  }
-
-  return Marshal::PtrToStringUni((wchar_t *)mURI->GetSpec());
-}
-
-String* URI::get_PrePath() 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return NULL;
-  }
-
-  return Marshal::PtrToStringUni((wchar_t *)mURI->GetPrePath());
-}
-
-String* URI::get_Scheme() 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return NULL;
-  }
-
-  return Marshal::PtrToStringUni((wchar_t *)mURI->GetScheme());
-}
-
-void URI::set_Scheme(String *aScheme) 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return;
-  }
-
-  try 
-  {
-    IntPtr schemePtr = Marshal::StringToHGlobalAnsi(aScheme);
-    char * pScheme = (char *)schemePtr.ToPointer();
-
-    mURI->SetScheme(pScheme);
-
-    Marshal::FreeHGlobal(pScheme);
-  }
-  catch (Exception*) 
-  {
-    throw;
-  }
-}
-
-String* URI::get_UserPass() 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return NULL;
-  }
-
-  return Marshal::PtrToStringAnsi((char *)mURI->GetScheme());
-}
-
-void URI::set_UserPass(String *aUserPass) 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return;
-  }
-
-  try 
-  {
-    IntPtr userPassPtr = Marshal::StringToHGlobalAnsi(aUserPass);
-    char * pUserPass = (char *)userPassPtr.ToPointer();
-
-    mURI->SetUserPass(pUserPass);
-
-    Marshal::FreeHGlobal(pUserPass);
-  }
-  catch (Exception*) 
-  {
-    throw;
-  }
-}
-
-String* URI::get_Username() 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return NULL;
-  }
-
-  return Marshal::PtrToStringAnsi((char *)mURI->GetUsername());
-}
-
-void URI::set_Username(String *aUsername) 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return;
-  }
-
-  try 
-  {
-    IntPtr userNamePtr = Marshal::StringToHGlobalAnsi(aUsername);
-    char * pUserName = (char *)userNamePtr.ToPointer();
-
-    mURI->SetUsername(pUserName);
-
-    Marshal::FreeHGlobal(pUserName);
-  }
-  catch (Exception*) 
-  {
-    throw;
-  }
-}
-
-String* URI::get_Password() 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return NULL;
-  }
-
-  return Marshal::PtrToStringUni((char *)mURI->GetPassword());
-}
-
-void URI::set_Password(String *aPassword) 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return;
-  }
-
-  try 
-  {
-    IntPtr passwordPtr = Marshal::StringToHGlobalAnsi(aPassword);
-    char * pPassword = (char *)passwordPtr.ToPointer();
-
-    mURI->SetPassword(pPassword);
-
-    Marshal::FreeHGlobal(pPassword);
-  }
-  catch (Exception*) 
-  {
-    throw;
-  }
-}
-
-String* URI::get_HostPort() 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return NULL;
-  }
-
-  return Marshal::PtrToStringUni((char *)mURI->GetHostPort());
-}
-
-void URI::set_HostPort(String *aHostPort) 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return;
-  }
-
-  try 
-  {
-    IntPtr hostPortPtr = Marshal::StringToHGlobalAnsi(aHostPort);
-    char * pHostPort = (char *)hostPortPtr.ToPointer();
-
-    mURI->SetHostPort(pHostPort);
-
-    Marshal::FreeHGlobal(pHostPort);
-  }
-  catch (Exception*) 
-  {
-    throw;
-  } 
-}
-
-String* URI::get_Host() 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return NULL;
-  }
-
-  return Marshal::PtrToStringUni((char *)mURI->GetHost());
-}
-
-void URI::set_Host(String *aHost) 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return;
-  }
-
-  try 
-  {
-    IntPtr hostPtr = Marshal::StringToHGlobalAnsi(aHost);
-    char * pHost = (char *)hostPtr.ToPointer();
-
-    mURI->SetHost(pHost);
-
-    Marshal::FreeHGlobal(pHost);
-  }
-  catch (Exception*) 
-  {
-    throw;
-  } 
-}
-
-IntPtr URI::get_Port() 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return 0;
-  }
-
-  return mURI->GetPort();
-}
-
-void URI::set_Port(IntPtr aPort) 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return;
-  }
-
-  try 
-  {
-    mURI->SetPort(aPort.ToInt32());
-  }
-  catch (Exception*) 
-  {
-    throw;
-  }
-} 
-
-String* URI::get_Path() 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return NULL;
-  }
-
-  return Marshal::PtrToStringUni((char *)mURI->GetPath());
-}
-
-void URI::set_Path(String *aPath) 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return;
-  }
-
-  try 
-  {
-    IntPtr pathPtr = Marshal::StringToHGlobalAnsi(aPath);
-    char * pPath = (char *)pathPtr.ToPointer();
-
-    mURI->SetPath(pPath);
-
-    Marshal::FreeHGlobal(pPath);
-  }
-  catch (Exception*) 
-  {
-    throw;
-  }
-}
-
-bool URI::Equals(URI *aOther)
+void
+URI::set_Spec(String *aSpec)
 {
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return false;
-  }
+  nsCAutoString spec;
+  CopyString(aSpec, spec);
 
-  return mURI->Equals(aOther->mURI);
+  nsresult rv = mURI->SetSpec(spec);
+  ThrowIfFailed(rv);
 }
 
-bool URI::SchemeIs(String *aScheme)
+String *
+URI::get_PrePath()
 {
-  bool scheme = false;
+  nsCAutoString prePath;
+  nsresult rv = mURI->GetPrePath(prePath);
+  ThrowIfFailed(rv);
 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return false;
-  }
-
-  try 
-  {
-    IntPtr schemePtr = Marshal::StringToHGlobalAnsi(aScheme);
-    char * pScheme = (char *)schemePtr.ToPointer();
-
-    scheme = mURI->SchemeIs(pScheme);
-
-    Marshal::FreeHGlobal(pScheme);
-  }
-  catch (Exception*) 
-  {
-    throw;
-  } 
-
-  return scheme;
+  return CopyString(prePath);
 }
 
-String* URI::Resolve(String *aRelativePath)
+String *
+URI::get_Scheme()
 {
-  String *resolvedPath;
+  nsCAutoString scheme;
+  nsresult rv = mURI->GetScheme(scheme);
+  ThrowIfFailed(rv);
 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return NULL;
-  }
-
-  try 
-  {
-    IntPtr relativePathPtr = Marshal::StringToHGlobalAnsi(aRelativePath);
-    char * pRelativePath = (char *)relativePathPtr.ToPointer();
-
-    resolvedPath = mURI->Resolve(pRelativePath);
-
-    Marshal::FreeHGlobal(pRelativePath);
-  }
-  catch (Exception*) 
-  {
-    throw;
-  }
-
-  return resolvedPath;
+  return CopyString(scheme);
 }
 
-String* URI::get_AsciiSpec() 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return NULL;
-  }
+void
+URI::set_Scheme(String *aScheme)
+{
+  nsCAutoString scheme;
+  CopyString(aScheme, scheme);
 
-  return Marshal::PtrToStringUni((char *)mURI->GetAsciiSpec());
-}
- 
-String* URI::get_AsciiHost() 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return NULL;
-  }
-
-  return Marshal::PtrToStringUni((char *)mURI->GetAsciiHost());
+  nsresult rv = mURI->SetScheme(scheme);
+  ThrowIfFailed(rv);
 }
 
-String* URI::get_OriginCharset() 
-{ 
-  if (!mURI) 
-  {
-    if (!CreateUnmanagedURI())  
-      return NULL;
-  }
+String *
+URI::get_UserPass()
+{
+  nsCAutoString userPass;
+  nsresult rv = mURI->GetUserPass(userPass);
+  ThrowIfFailed(rv);
 
-  return Marshal::PtrToStringUni((char *)mURI->GetOriginCharset());
+  return CopyString(userPass);
 }
 
+void
+URI::set_UserPass(String *aUserPass)
+{
+  nsCAutoString userPass;
+  CopyString(aUserPass, userPass);
 
+  nsresult rv = mURI->SetUserPass(userPass);
+  ThrowIfFailed(rv);
+}
+
+String *
+URI::get_Username()
+{
+  nsCAutoString username;
+  nsresult rv = mURI->GetUsername(username);
+  ThrowIfFailed(rv);
+
+  return CopyString(username);
+}
+
+void
+URI::set_Username(String *aUsername)
+{
+  nsCAutoString username;
+  CopyString(aUsername, username);
+
+  nsresult rv = mURI->SetUsername(username);
+  ThrowIfFailed(rv);
+}
+
+String *
+URI::get_Password()
+{
+  nsCAutoString password;
+  nsresult rv = mURI->GetPassword(password);
+  ThrowIfFailed(rv);
+
+  return CopyString(password);
+}
+
+void
+URI::set_Password(String *aPassword)
+{
+  nsCAutoString password;
+  CopyString(aPassword, password);
+
+  nsresult rv = mURI->SetPassword(password);
+  ThrowIfFailed(rv);
+}
+
+String *
+URI::get_HostPort()
+{
+  nsCAutoString hostPort;
+  nsresult rv = mURI->GetHostPort(hostPort);
+  ThrowIfFailed(rv);
+
+  return CopyString(hostPort);
+}
+
+void
+URI::set_HostPort(String *aHostPort)
+{
+  nsCAutoString hostPort;
+  CopyString(aHostPort, hostPort);
+
+  nsresult rv = mURI->SetHostPort(hostPort);
+  ThrowIfFailed(rv);
+}
+
+String *
+URI::get_Host()
+{
+  nsCAutoString host;
+  nsresult rv = mURI->GetHost(host);
+  ThrowIfFailed(rv);
+
+  return CopyString(host);
+}
+
+void
+URI::set_Host(String *aHost)
+{
+  nsCAutoString host;
+  CopyString(aHost, host);
+
+  nsresult rv = mURI->SetHost(host);
+  ThrowIfFailed(rv);
+}
+
+Int32
+URI::get_Port()
+{
+  PRInt32 port;
+  nsresult rv = mURI->GetPort(&port);
+  ThrowIfFailed(rv);
+
+  return port;
+}
+
+void
+URI::set_Port(Int32 aPort)
+{
+  nsresult rv = mURI->SetPort(aPort);
+  ThrowIfFailed(rv);
+}
+
+String *
+URI::get_Path()
+{
+  nsCAutoString path;
+  nsresult rv = mURI->GetPath(path);
+  ThrowIfFailed(rv);
+
+  return CopyString(path);
+}
+
+void
+URI::set_Path(String *aPath)
+{
+  nsCAutoString path;
+  CopyString(aPath, path);
+
+  nsresult rv = mURI->SetPath(path);
+  ThrowIfFailed(rv);
+}
+
+bool
+URI::Equals(URI *aOther)
+{
+  if (!mURI) {
+    if (!aOther || !aOther->mURI) {
+      return true;
+    }
+
+    return false;
+  }
+
+  PRBool equals;
+  nsresult rv = mURI->Equals(aOther->mURI, &equals);
+  ThrowIfFailed(rv);
+
+  return equals;
+}
+
+bool
+URI::SchemeIs(String *aScheme)
+{
+  nsCAutoString scheme;
+  CopyString(aScheme, scheme);
+
+  PRBool isScheme = PR_FALSE;
+
+  nsresult rv = mURI->SchemeIs(scheme.get(), &isScheme);
+  ThrowIfFailed(rv);
+
+  return isScheme;
+}
+
+String *
+URI::Resolve(String *aRelativePath)
+{
+  nsCAutoString relativePath, resolvedPath;
+  CopyString(aRelativePath, relativePath);
+
+  nsresult rv = mURI->Resolve(relativePath, resolvedPath);
+  ThrowIfFailed(rv);
+
+  return CopyString(resolvedPath);
+}
+
+String *
+URI::get_AsciiSpec()
+{
+  nsCAutoString asciiSpec;
+  nsresult rv = mURI->GetAsciiSpec(asciiSpec);
+  ThrowIfFailed(rv);
+
+  return CopyString(asciiSpec);
+}
+
+String *
+URI::get_AsciiHost()
+{
+  nsCAutoString asciiHost;
+  nsresult rv = mURI->GetAsciiHost(asciiHost);
+  ThrowIfFailed(rv);
+
+  return CopyString(asciiHost);
+}
+
+String *
+URI::get_OriginCharset()
+{
+  nsCAutoString originalCharset;
+  nsresult rv = mURI->GetOriginCharset(originalCharset);
+  ThrowIfFailed(rv);
+
+  return CopyString(originalCharset);
+}

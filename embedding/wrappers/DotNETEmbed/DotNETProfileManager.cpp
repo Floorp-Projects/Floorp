@@ -42,365 +42,165 @@
 
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsIProfile.h"
-#include "umProfileManager.h"
 #include "DotNetProfileManager.h"
 
-using namespace System;
-using namespace System::Runtime::InteropServices;
-using namespace Mozilla::Embedding::ProfileManager;
+using namespace Mozilla::Embedding;
 
-#pragma unmanaged
-unmanagedProfile::unmanagedProfile()
+// static
+void
+ProfileManager::EnsureProfileService()
 {
-  mProfileService = nsnull;
+  if (sProfileService) {
+    return;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIProfile> profileService =
+    do_GetService(NS_PROFILE_CONTRACTID, &rv);
+  ThrowIfFailed(rv);
+
+  sProfileService = profileService.get();
+  NS_ADDREF(sProfileService);
 }
 
-unmanagedProfile::~unmanagedProfile()
-{
+// static
+Int32
+ProfileManager::get_ProfileCount() 
+{ 
+  EnsureProfileService();
+
+  PRInt32 count;
+  nsresult rv = sProfileService->GetProfileCount(&count);
+  ThrowIfFailed(rv);
+
+  return count;
 }
 
-nsresult unmanagedProfile::CreateProfileService()
+// static
+String *
+ProfileManager::GetProfileList()[]
 {
-  nsresult rv = NS_OK;
-  mProfileService = do_GetService(NS_PROFILE_CONTRACTID, &rv);
-  return rv;
+  EnsureProfileService();
+
+  PRUint32 profileCount;
+  PRUnichar **profiles;
+
+  nsresult rv = sProfileService->GetProfileList(&profileCount, &profiles);
+  ThrowIfFailed(rv);
+
+  String *list[] = new String *[profileCount];
+
+  for (PRUint32 i = 0; i < profileCount; ++i) {
+    list[i] = CopyString(nsDependentString(profiles[i]));
+  }
+
+  return list;
 }
 
-long unmanagedProfile::GetProfileCount()
+// static
+bool
+ProfileManager::ProfileExists(String *aProfileName)
 {
-  nsresult rv = PR_TRUE;
-  PRInt32 profCount = 0;
+  EnsureProfileService();
 
-  if (!mProfileService)
-    rv = CreateProfileService();
-  if (NS_FAILED(rv))
-    return 0L;
+  PRBool exists;
+  const wchar_t __pin * profileName = PtrToStringChars(aProfileName);
 
-  rv = mProfileService->GetProfileCount(&profCount);
-  if (NS_FAILED(rv))
-    return 0L;
-
-  return profCount;
-}
-
-PRBool unmanagedProfile::ProfileExists(const wchar_t * aProfileName)
-{
-  nsresult rv = PR_TRUE;
-  PRBool exists = PR_FALSE;
-
-  if (!mProfileService)
-    rv = CreateProfileService();
-  if (NS_FAILED(rv))
-    return PR_FALSE;
-
-  rv = mProfileService->ProfileExists(aProfileName, &exists);
-  if (NS_FAILED(rv))
-    return PR_FALSE;
+  nsresult rv = sProfileService->ProfileExists(profileName, &exists);
+  ThrowIfFailed(rv);
 
   return exists;
 }
 
-const PRUnichar* unmanagedProfile::GetCurrentProfile()
+// static
+String*
+ProfileManager::get_CurrentProfile()
 {
-  nsresult rv = PR_TRUE;
-  nsXPIDLString curProfileName;
+  EnsureProfileService();
 
-  if (!mProfileService)
-    rv = CreateProfileService();
-  if (NS_FAILED(rv))
-    return nsnull;
+  nsXPIDLString currentProfile;
+  nsresult rv =
+    sProfileService->GetCurrentProfile(getter_Copies(currentProfile));
+  ThrowIfFailed(rv);
 
-  rv = mProfileService->GetCurrentProfile(getter_Copies(curProfileName));
-  if (NS_FAILED(rv)) 
-    return nsnull;
-
-  return (const PRUnichar *)curProfileName;
+  return CopyString(currentProfile);
 }
 
-bool unmanagedProfile::SetCurrentProfile(const wchar_t * aProfileName)
+// static
+void
+ProfileManager::set_CurrentProfile(String* aCurrentProfile)
 {
-  nsresult rv = PR_TRUE;
+  EnsureProfileService();
 
-  if (!mProfileService)
-    rv = CreateProfileService();
-  if (NS_FAILED(rv))
-    return false;
-
-  rv = mProfileService->SetCurrentProfile(aProfileName);
-  if (NS_FAILED(rv))
-    return false;
-
-  return true;
+  const wchar_t __pin * currentProfile = PtrToStringChars(aCurrentProfile);
+  nsresult rv = sProfileService->SetCurrentProfile(currentProfile);
+  ThrowIfFailed(rv);
 }
 
-void unmanagedProfile::ShutDownCurrentProfile(PRUint32 shutDownType)
+// static
+void
+ProfileManager::ShutDownCurrentProfile(UInt32 shutDownType)
 {
-  nsresult rv = PR_TRUE;
-  if (!mProfileService)
-    rv = CreateProfileService();
-  if (NS_FAILED(rv))
-    return;
+  EnsureProfileService();
 
-  mProfileService->ShutDownCurrentProfile(shutDownType);
+  nsresult rv = sProfileService->ShutDownCurrentProfile(shutDownType);
+  ThrowIfFailed(rv);
 }
 
-PRBool unmanagedProfile::CreateNewProfile(const wchar_t * profileName, const wchar_t * nativeProfileDir, const wchar_t * langcode, PRBool useExistingDir)
+// static
+void
+ProfileManager::CreateNewProfile(String* aProfileName,
+                                 String *aNativeProfileDir, String* aLangcode,
+                                 bool useExistingDir)
 {
-  nsresult rv = PR_TRUE;
-  if (!mProfileService)
-    rv = CreateProfileService();
-  if (NS_FAILED(rv))
-    return PR_FALSE;
+  EnsureProfileService();
 
-  rv = mProfileService->CreateNewProfile(profileName, nativeProfileDir, langcode, useExistingDir);
-  if (NS_FAILED(rv))
-    return PR_FALSE;
+  const wchar_t __pin * profileName = PtrToStringChars(aProfileName);
+  const wchar_t __pin * nativeProfileDir = PtrToStringChars(aNativeProfileDir);
+  const wchar_t __pin * langCode = PtrToStringChars(aLangcode);
+
+  nsresult rv = sProfileService->CreateNewProfile(profileName,
+                                                  nativeProfileDir, langCode,
+                                                  useExistingDir);
+  ThrowIfFailed(rv);
 }
 
-void unmanagedProfile::RenameProfile(const wchar_t * oldName, const wchar_t * newName)
+// static
+void
+ProfileManager::RenameProfile(String* aOldName, String* aNewName)
 {
-  nsresult rv = PR_TRUE;
-  if (!mProfileService)
-    rv = CreateProfileService();
-  if (NS_FAILED(rv))
-    return;
+  EnsureProfileService();
 
-  mProfileService->RenameProfile(oldName, newName);
+  const wchar_t __pin * oldName = PtrToStringChars(aOldName);
+  const wchar_t __pin * newName = PtrToStringChars(aNewName);
+
+  nsresult rv = sProfileService->RenameProfile(oldName, newName);
+  ThrowIfFailed(rv);
 }
 
-void unmanagedProfile::DeleteProfile(const wchar_t * name, PRBool canDeleteFiles)
+// static
+void
+ProfileManager::DeleteProfile(String* aName, bool aCanDeleteFiles)
 {
-  nsresult rv = NS_OK;
-  if (!mProfileService)
-    rv = CreateProfileService();
-  if (NS_FAILED(rv))
-    return;
+  EnsureProfileService();
 
-  mProfileService->DeleteProfile(name, canDeleteFiles);
+  const wchar_t __pin * name = PtrToStringChars(aName);
+  nsresult rv = sProfileService->DeleteProfile(name, aCanDeleteFiles);
+  ThrowIfFailed(rv);
 }
 
-void unmanagedProfile::CloneProfile(const wchar_t * profileName)
+// static
+void
+ProfileManager::CloneProfile(String* aProfileName)
 {
-  nsresult rv = NS_OK;
-  if (!mProfileService)
-    rv = CreateProfileService();
-  if (NS_FAILED(rv))
-    return;
+  EnsureProfileService();
 
-  mProfileService->CloneProfile(profileName);
-}
+  const wchar_t __pin * profileName = PtrToStringChars(aProfileName);
 
-#pragma managed
-Profile::Profile()
-{
-  mProfile = NULL;
-}
-
-Profile::~Profile()
-{
-  Dispose(false);
-}
-
-void Profile::Dispose()
-{
-  Dispose(true);
-}
-
-void Profile::Dispose(bool disposing)
-{
-  if (mProfile)   
-  {
-    delete mProfile;
-    mProfile = NULL;
-  }
-
-  if (disposing)  
-  {
-    GC::SuppressFinalize(this);
-  }
-}
-
-bool Profile::CreateUnmanagedProfile()
-{
-  bool ret = false;
-
-  try 
-  {
-    mProfile = new unmanagedProfile();
-    if (mProfile)
-      ret = true;
-  }
-  catch (Exception*) 
-  {
-    throw;
-  }
-
-  return ret;
-}
-
-Int32 Profile::get_ProfileCount() 
-{ 
-  if (!mProfile) 
-  {
-    if (!CreateUnmanagedProfile()) 
-      return 0;
-  }
-
-  return mProfile->GetProfileCount();
-}
-
-void Profile::GetProfileList(UInt32* length, String** profileNames)
-{
-  // ToDo
-  return;
-}
-
-bool Profile::ProfileExists(String *aProfileName)
-{
-  bool ret = false;
-
-  if (!mProfile) 
-  {
-    if (!CreateUnmanagedProfile()) 
-      return false;
-  }
-
-  try 
-  {
-    const wchar_t __pin * pName = PtrToStringChars(aProfileName);
-    ret = mProfile->ProfileExists(pName);
-  }
-  catch (Exception*) 
-  {
-    throw;
-  }
-
-  return ret;
-}
-
-String* Profile::get_CurrentProfile()
-{
-  if (!mProfile) 
-  {
-    if (!CreateUnmanagedProfile()) 
-      return NULL;
-  }
-
-  return Marshal::PtrToStringUni((wchar_t *)mProfile->GetCurrentProfile());
-}
-
-void Profile::set_CurrentProfile(String* aCurrentProfile)
-{
-  if (!mProfile) 
-  {
-    if (!CreateUnmanagedProfile()) 
-      return;
-  }
-
-  try 
-  {
-    const wchar_t __pin * pName = PtrToStringChars(aCurrentProfile);
-    mProfile->SetCurrentProfile(pName);
-  }
-  catch (Exception*) 
-  {
-    throw;
-  }
-}
-
-void Profile::ShutDownCurrentProfile(UInt32 shutDownType)
-{
-  if (!mProfile) 
-  {
-    if (!CreateUnmanagedProfile()) 
-      return;
-  }
-
-  mProfile->ShutDownCurrentProfile(shutDownType);
-}
-
-bool Profile::CreateNewProfile(String* aProfileName, String *aNativeProfileDir, String* aLangcode, bool useExistingDir)
-{
-  bool ret = false;
-
-  if (!mProfile) 
-  {
-    if (!CreateUnmanagedProfile()) 
-      return false;
-  }
-
-  try 
-  {
-    const wchar_t __pin * pName = PtrToStringChars(aProfileName);
-    const wchar_t __pin * pDir = PtrToStringChars(aNativeProfileDir);
-    const wchar_t __pin * pLang = PtrToStringChars(aLangcode);
-    ret = mProfile->CreateNewProfile(pName, pDir, pLang, useExistingDir);
-  }
-  catch (Exception*) 
-  {
-      throw;
-  }
-
-  return ret;
-}
-
-void Profile::RenameProfile(String* aOldName, String* aNewName)
-{
-  if (!mProfile) 
-  {
-    if (!CreateUnmanagedProfile()) 
-      return;
-  }
-
-  try 
-  {
-    const wchar_t __pin * pOld = PtrToStringChars(aOldName);
-    const wchar_t __pin * pNew = PtrToStringChars(aNewName);
-    mProfile->RenameProfile(pOld, pNew);
-  }
-  catch (Exception*) 
-  {
-    throw;
-  }
-}
-
-void Profile::DeleteProfile(String* aName, bool aCanDeleteFiles)
-{
-  if (!mProfile) 
-  {
-    if (!CreateUnmanagedProfile()) 
-      return;
-  }
-
-  try 
-  {
-    const wchar_t __pin * pName = PtrToStringChars(aName);
-    mProfile->DeleteProfile(pName, aCanDeleteFiles);
-  }
-  catch (Exception*) 
-  {
-    throw;
-  }
-}
-
-void Profile::CloneProfile(String* aProfileName)
-{
-  if (!mProfile) 
-  {
-    if (!CreateUnmanagedProfile()) 
-      return;
-  }
-
-  try 
-  {
-    const wchar_t __pin * pName = PtrToStringChars(aProfileName);
-    mProfile->CloneProfile(pName);
-  }
-  catch (Exception*) 
-  {
-    throw;
-  }
+  nsresult rv = sProfileService->CloneProfile(profileName);
+  ThrowIfFailed(rv);
 }
 

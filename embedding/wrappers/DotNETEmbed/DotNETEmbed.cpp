@@ -14,7 +14,7 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2003
  * the Initial Developer. All Rights Reserved.
@@ -38,9 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #using <mscorlib.dll>
-#include "cstringt.h"
-
-#include "nsISupports.h"
+#include <vcclr.h>
 #include "nsCOMPtr.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserChrome.h"
@@ -49,7 +47,6 @@
 #include "nsIWebNavigation.h"
 #include "nsIWindowWatcher.h"
 #include "nsIInputStream.h"
-#include "nsIURI.h"
 #include "nsEmbedAPI.h"
 
 #include "DotNETEmbed.h"
@@ -60,6 +57,55 @@ using namespace System::Runtime::InteropServices;
 
 using namespace Mozilla::Embedding;
 
+// Silly class for holding on to a static UTF8Encoding so that we
+// don't need to create a new one in every call to CopyString()...
+public __gc class UTF8EncodingHolder
+{
+public:
+  static Text::UTF8Encoding *sUTF8Encoding = new Text::UTF8Encoding();
+};
+
+String *
+Mozilla::Embedding::CopyString(const nsAFlatCString& aStr)
+{
+  return new String(aStr.get(), 0, aStr.Length(),
+                    UTF8EncodingHolder::sUTF8Encoding);
+}
+
+// In stead of copying String's to nsAString's we could write a class
+// that wraps a String object and exposes it's underlying
+// buffer. Doable, if we pin the String object, and so on, but this'll
+// do for now.
+nsAFlatString&
+Mozilla::Embedding::CopyString(String *aSrc, nsAFlatString& aDest)
+{
+  const wchar_t __pin * strbuf = PtrToStringChars(aSrc);
+
+  aDest.Assign(strbuf, aSrc->Length);
+
+  return aDest;
+}
+
+nsAFlatCString&
+Mozilla::Embedding::CopyString(String *aSrc, nsAFlatCString& aDest)
+{
+  const wchar_t __pin * strbuf = PtrToStringChars(aSrc);
+
+  aDest = NS_ConvertUCS2toUTF8(nsDependentString(strbuf, aSrc->Length));
+
+  return aDest;
+}
+
+void
+Mozilla::Embedding::ThrowIfFailed(nsresult rv)
+{
+  if (NS_FAILED(rv)) {
+    // XXX: Throw some useful exception here!
+
+    throw "rv is an error code!";
+  }
+}
+
 #pragma unmanaged
 
 #define NS_WEBBROWSER_CONTRACTID "@mozilla.org/embedding/browser/nsWebBrowser;1"
@@ -67,25 +113,30 @@ using namespace Mozilla::Embedding;
 bool ResizeEmbedding(HWND hWnd, nsIWebBrowserChrome* chrome);
 bool OpenWebPage(HWND hWnd, const wchar_t* url);
 nsresult CreateBrowserWindow(HWND hWnd, PRUint32 aChromeFlags,
-           nsIWebBrowserChrome *aParent,
-           nsIWebBrowserChrome **aNewWindow);
+                             nsIWebBrowserChrome *aParent,
+                             nsIWebBrowserChrome **aNewWindow);
 nsCOMPtr<nsIWebBrowserChrome> chrome;
 
-bool InitializeEmbedding()
+bool
+InitializeEmbedding()
 {
   nsresult rv = NS_InitEmbedding(nsnull, nsnull);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Could not Initialize Gecko Engine");
   return (NS_OK == rv) ? true : false;
 }
 
-bool TerminateEmbedding()
+bool
+TerminateEmbedding()
 {
   nsresult rv = NS_TermEmbedding();
   NS_ASSERTION(NS_SUCCEEDED(rv), "Could not Terminate Gecko Engine");
   return (NS_OK == rv) ? true : false;
 }
 
-nsresult CreateBrowserWindow(HWND hWnd, PRUint32 aChromeFlags, nsIWebBrowserChrome *aParent, nsIWebBrowserChrome **aNewWindow)
+nsresult
+CreateBrowserWindow(HWND hWnd, PRUint32 aChromeFlags,
+                    nsIWebBrowserChrome *aParent,
+                    nsIWebBrowserChrome **aNewWindow)
 {
   WebBrowserChrome * chrome = new WebBrowserChrome();
   if (!chrome)
@@ -117,57 +168,61 @@ nsresult CreateBrowserWindow(HWND hWnd, PRUint32 aChromeFlags, nsIWebBrowserChro
   return NS_OK;
 }
 
-bool OpenWebPage(HWND hWnd, const wchar_t *url)
+bool
+OpenWebPage(HWND hWnd, const wchar_t *url)
 {
   nsresult  rv;
 
   if (!chrome)
   {
-    rv = CreateBrowserWindow(hWnd, nsIWebBrowserChrome::CHROME_ALL,
-       nsnull, getter_AddRefs(chrome));
+    CreateBrowserWindow(hWnd, nsIWebBrowserChrome::CHROME_ALL,
+                        nsnull, getter_AddRefs(chrome));
   }
 
-  if (chrome) 
+  if (chrome)
   {
-    SetWindowLong(hWnd, GWL_USERDATA, (LONG)NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
+    SetWindowLong(hWnd, GWL_USERDATA,
+                  (LONG)NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
 
     // Start loading a page
     nsCOMPtr<nsIWebBrowser> newBrowser;
     chrome->GetWebBrowser(getter_AddRefs(newBrowser));
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
 
-    return (NS_OK == webNav->LoadURI(url,
-                           nsIWebNavigation::LOAD_FLAGS_NONE,
-                           nsnull, nsnull, nsnull) ? true : false);
+    rv = webNav->LoadURI(url, nsIWebNavigation::LOAD_FLAGS_NONE, nsnull,
+                         nsnull, nsnull);
+
+    return NS_SUCCEEDED(rv);
   }
 
   return false;
-}   
+}
 
-bool ResizeEmbedding(HWND hWnd, nsIWebBrowserChrome* chrome)
+bool
+ResizeEmbedding(HWND hWnd, nsIWebBrowserChrome* chrome)
 {
-  if (!chrome) 
+  if (!chrome)
   {
       chrome = (nsIWebBrowserChrome *)GetWindowLong(hWnd, GWL_USERDATA);
-      if (!chrome) 
+      if (!chrome)
           return false;
   }
-  
+
   nsCOMPtr<nsIEmbeddingSiteWindow> embeddingSite = do_QueryInterface(chrome);
-  
-  
+
+
   RECT rect;
   GetClientRect(hWnd, &rect);
-  
+
   // Make sure the browser is visible and sized
   nsCOMPtr<nsIWebBrowser> webBrowser;
   chrome->GetWebBrowser(getter_AddRefs(webBrowser));
   nsCOMPtr<nsIBaseWindow> webBrowserAsWin = do_QueryInterface(webBrowser);
-  if (webBrowserAsWin) 
+  if (webBrowserAsWin)
   {
-    webBrowserAsWin->SetPositionAndSize(rect.left, 
-                               rect.top, 
-                               rect.right - rect.left, 
+    webBrowserAsWin->SetPositionAndSize(rect.left,
+                               rect.top,
+                               rect.right - rect.left,
                                rect.bottom - rect.top,
                                PR_TRUE);
     webBrowserAsWin->SetVisibility(PR_TRUE);
@@ -178,7 +233,7 @@ bool ResizeEmbedding(HWND hWnd, nsIWebBrowserChrome* chrome)
 
 //*****************************************************************************
 // WebBrowserChrome::nsISupports
-//*****************************************************************************   
+//*****************************************************************************
 
 NS_IMPL_ADDREF(WebBrowserChrome)
 NS_IMPL_RELEASE(WebBrowserChrome)
@@ -200,25 +255,29 @@ WebBrowserChrome::~WebBrowserChrome()
 }
 
 /* attribute nativeSiteWindow siteWindow */
-NS_IMETHODIMP WebBrowserChrome::GetSiteWindow(void * *aSiteWindow)
+NS_IMETHODIMP
+WebBrowserChrome::GetSiteWindow(void * *aSiteWindow)
 {
   *aSiteWindow = mNativeWindow;
   return NS_OK;
 }
 
-NS_IMETHODIMP WebBrowserChrome::GetTitle(PRUnichar * *aTitle)
+NS_IMETHODIMP
+WebBrowserChrome::GetTitle(PRUnichar * *aTitle)
 {
   NS_ENSURE_ARG_POINTER(aTitle);
   *aTitle = nsnull;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-NS_IMETHODIMP WebBrowserChrome::SetTitle(const PRUnichar * aTitle)
+NS_IMETHODIMP
+WebBrowserChrome::SetTitle(const PRUnichar * aTitle)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* attribute boolean visibility; */
-NS_IMETHODIMP WebBrowserChrome::GetVisibility(PRBool * aVisibility)
+NS_IMETHODIMP
+WebBrowserChrome::GetVisibility(PRBool * aVisibility)
 {
   NS_ENSURE_ARG_POINTER(aVisibility);
   *aVisibility = PR_TRUE;
@@ -226,61 +285,74 @@ NS_IMETHODIMP WebBrowserChrome::GetVisibility(PRBool * aVisibility)
 }
 
 
-NS_IMETHODIMP WebBrowserChrome::SetVisibility(PRBool aVisibility)
+NS_IMETHODIMP
+WebBrowserChrome::SetVisibility(PRBool aVisibility)
 {
   return NS_OK;
 }
 
 /* void setFocus (); */
-NS_IMETHODIMP WebBrowserChrome::SetFocus()
+NS_IMETHODIMP
+WebBrowserChrome::SetFocus()
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP WebBrowserChrome::SetDimensions(PRUint32 aFlags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)
+NS_IMETHODIMP
+WebBrowserChrome::SetDimensions(PRUint32 aFlags, PRInt32 x, PRInt32 y,
+                                PRInt32 cx, PRInt32 cy)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP WebBrowserChrome::GetDimensions(PRUint32 aFlags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy)
+NS_IMETHODIMP
+WebBrowserChrome::GetDimensions(PRUint32 aFlags, PRInt32 *x, PRInt32 *y,
+                                PRInt32 *cx, PRInt32 *cy)
 {
   if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION)
   {
     *x = 0;
     *y = 0;
   }
+
   if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER ||
       aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER)
   {
     *cx = 0;
     *cy = 0;
   }
+
   return NS_OK;
 }
 
-NS_IMETHODIMP WebBrowserChrome::ExitModalEventLoop(nsresult aStatus)
+NS_IMETHODIMP
+WebBrowserChrome::ExitModalEventLoop(nsresult aStatus)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP WebBrowserChrome::ShowAsModal(void)
+NS_IMETHODIMP
+WebBrowserChrome::ShowAsModal(void)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP WebBrowserChrome::IsWindowModal(PRBool *_retval)
+NS_IMETHODIMP
+WebBrowserChrome::IsWindowModal(PRBool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
-NS_IMETHODIMP WebBrowserChrome::SetStatus(PRUint32 aType, const PRUnichar* aStatus)
+NS_IMETHODIMP
+WebBrowserChrome::SetStatus(PRUint32 aType, const PRUnichar* aStatus)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP WebBrowserChrome::GetWebBrowser(nsIWebBrowser** aWebBrowser)
+NS_IMETHODIMP
+WebBrowserChrome::GetWebBrowser(nsIWebBrowser** aWebBrowser)
 {
   NS_ENSURE_ARG_POINTER(aWebBrowser);
   *aWebBrowser = mWebBrowser;
@@ -288,47 +360,54 @@ NS_IMETHODIMP WebBrowserChrome::GetWebBrowser(nsIWebBrowser** aWebBrowser)
   return NS_OK;
 }
 
-NS_IMETHODIMP WebBrowserChrome::SetWebBrowser(nsIWebBrowser* aWebBrowser)
+NS_IMETHODIMP
+WebBrowserChrome::SetWebBrowser(nsIWebBrowser* aWebBrowser)
 {
   mWebBrowser = aWebBrowser;
   return NS_OK;
 }
 
-NS_IMETHODIMP WebBrowserChrome::GetChromeFlags(PRUint32* aChromeMask)
+NS_IMETHODIMP
+WebBrowserChrome::GetChromeFlags(PRUint32* aChromeMask)
 {
   *aChromeMask = mChromeFlags;
   return NS_OK;
 }
 
-NS_IMETHODIMP WebBrowserChrome::SetChromeFlags(PRUint32 aChromeMask)
+NS_IMETHODIMP
+WebBrowserChrome::SetChromeFlags(PRUint32 aChromeMask)
 {
   mChromeFlags = aChromeMask;
   return NS_OK;
 }
 
-NS_IMETHODIMP WebBrowserChrome::DestroyBrowserWindow(void)
+NS_IMETHODIMP
+WebBrowserChrome::DestroyBrowserWindow(void)
 {
   return NS_OK;
 }
 
 
-NS_IMETHODIMP WebBrowserChrome::SizeBrowserTo(PRInt32 aWidth, PRInt32 aHeight)
+NS_IMETHODIMP
+WebBrowserChrome::SizeBrowserTo(PRInt32 aWidth, PRInt32 aHeight)
 {
   ::MoveWindow((HWND)mNativeWindow, 0, 0, aWidth, aHeight, TRUE);
   return NS_OK;
 }
 
-nsresult WebBrowserChrome::CreateBrowser(HWND hWnd, PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **aBrowser)
+nsresult
+WebBrowserChrome::CreateBrowser(HWND hWnd, PRInt32 aX, PRInt32 aY, PRInt32 aCX,
+                                PRInt32 aCY, nsIWebBrowser **aBrowser)
 {
   NS_ENSURE_ARG_POINTER(aBrowser);
   *aBrowser = nsnull;
 
   mWebBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
-    
+
   if (!mWebBrowser)
     return NS_ERROR_FAILURE;
 
-  (void)mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
+  mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
 
   nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(mWebBrowser);
   dsti->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
@@ -340,9 +419,7 @@ nsresult WebBrowserChrome::CreateBrowser(HWND hWnd, PRInt32 aX, PRInt32 aY, PRIn
   if (!mNativeWindow)
     return NS_ERROR_FAILURE;
 
-  browserBaseWindow->InitWindow( mNativeWindow,
-                           nsnull, 
-                           aX, aY, aCX, aCY);
+  browserBaseWindow->InitWindow(mNativeWindow, nsnull, aX, aY, aCX, aCY);
   browserBaseWindow->Create();
 
   if (mWebBrowser)
@@ -356,23 +433,27 @@ nsresult WebBrowserChrome::CreateBrowser(HWND hWnd, PRInt32 aX, PRInt32 aY, PRIn
 }
 
 #pragma managed
-bool Gecko::InitEmbedding()
+bool
+Gecko::InitEmbedding()
 {
   return InitializeEmbedding();
 }
 
-bool Gecko::TermEmbedding()
+bool
+Gecko::TermEmbedding()
 {
   return TerminateEmbedding();
 }
 
-bool Gecko::OpenURL(IntPtr hWnd, String *url)
+bool
+Gecko::OpenURL(IntPtr hWnd, String *url)
 {
   const wchar_t __pin * pURL = PtrToStringChars(url);
   return OpenWebPage((HWND)hWnd.ToInt32(), pURL);
 }
-                
-bool Gecko::Resize(IntPtr hWnd)
+
+bool
+Gecko::Resize(IntPtr hWnd)
 {
   return ResizeEmbedding((HWND)hWnd.ToInt32(), NULL);
 }
