@@ -480,6 +480,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       nsCOMPtr<nsIScriptGlobalObject> globalObj;
       mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
       nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObj));
+      NS_ASSERTION(win, "win is null.  this happens [often on xlib builds].  see bug #79213");
+      if (!win) return NS_ERROR_NULL_POINTER;
       win->GetRootFocusController(getter_AddRefs(focusController));
 
       if (focusController) {
