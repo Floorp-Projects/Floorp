@@ -125,7 +125,7 @@ interface nsICacheEntryDescriptor : nsISupports
      * charset, but they must be null terminated.
      */
     string getMetaDataElement(in string key);
-    void   setMetadataElement(in string key, in string value);
+    void   setMetaDataElement(in string key, in string value);
     
     nsISimpleEnumerator getMetaDataEnumerator(); /* todo */
 };
