@@ -606,7 +606,7 @@ public:
    *  @param aEatingWS boolean to tell us the state of our search for Next/Prev
    */
   NS_IMETHOD  PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, 
-                         nsIContent **aResultContent, PRInt32 *aResultOffset, PRBool aEatingWS) const = 0;
+                         nsIContent **aResultContent, PRInt32 *aResultOffset, PRBool aEatingWS) = 0;
 
   /**
    * See if tree verification is enabled. To enable tree verification add

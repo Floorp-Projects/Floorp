@@ -48,22 +48,14 @@
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
 
-static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFrameSelectionIID, NS_IFRAMESELECTION_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
-static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
-static NS_DEFINE_IID(kIContentIteratorIID, NS_ICONTENTITERTOR_IID);
 
 //PROTOTYPES
 static void printRange(nsIDOMRange *aDomRange);
 
 
-#if 1
+#if 0
 #define DEBUG_OUT_RANGE(x)  printRange(x)
 #else
 #define DEBUG_OUT_RANGE(x)  
@@ -218,8 +210,8 @@ nsresult NS_NewRangeList(nsIDOMSelection **aRangeList)
   nsRangeList *rlist = new nsRangeList;
   if (!rlist)
     return NS_ERROR_OUT_OF_MEMORY;
-  nsresult result = rlist->QueryInterface(kIDOMSelectionIID ,
-                                          (void **)aRangeList);
+  *aRangeList = (nsIDOMSelection *)rlist;
+  nsresult result = rlist->AddRef();
   if (!NS_SUCCEEDED(result))
   {
     delete rlist;
@@ -308,8 +300,8 @@ nsRangeListIterator::CurrentItem(nsISupports **aItem)
   if (!aItem)
     return NS_ERROR_NULL_POINTER;
   if (mIndex >=0 && mIndex < (PRInt32)mRangeList->mRangeArray->Count()){
-    nsCOMPtr<nsISupports> indexIsupports = dont_AddRef(mRangeList->mRangeArray->ElementAt(mIndex));
-    return indexIsupports->QueryInterface(kISupportsIID, (void **)aItem);
+    *aItem = mRangeList->mRangeArray->ElementAt(mIndex);
+    return NS_OK;
   }
   return NS_ERROR_FAILURE;
 }
@@ -323,7 +315,7 @@ nsRangeListIterator::CurrentItem(nsIDOMRange **aItem)
     return NS_ERROR_NULL_POINTER;
   if (mIndex >=0 && mIndex < (PRInt32)mRangeList->mRangeArray->Count()){
     nsCOMPtr<nsISupports> indexIsupports = dont_AddRef(mRangeList->mRangeArray->ElementAt(mIndex));
-    return indexIsupports->QueryInterface(kIDOMRangeIID, (void **)aItem);
+    return CallQueryInterface(indexIsupports, aItem);
   }
   return NS_ERROR_FAILURE;
 }
@@ -356,23 +348,23 @@ nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   // XXX shouldn't this just do mRangeList->QueryInterface instead of
   // having a complete copy of that method here? What about AddRef and
   // Release? shouldn't they be delegated too?
-  if (aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(nsISupports::GetIID())) {
     nsIDOMSelection* tmp = mRangeList;
     *aInstancePtr = (void*)tmp;
     NS_ADDREF(mRangeList);
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMSelectionIID)) {
+  if (aIID.Equals(nsIDOMSelection::GetIID())) {
     *aInstancePtr = (void *)mRangeList;
     NS_ADDREF(mRangeList);
     return NS_OK;
   }
-  if (aIID.Equals(kIFrameSelectionIID)) {
+  if (aIID.Equals(nsIFrameSelection::GetIID())) {
     *aInstancePtr = (void *)mRangeList;
     NS_ADDREF(mRangeList);
     return NS_OK;
   }
-  if (aIID.Equals(kIEnumeratorIID) ||
+  if (aIID.Equals(nsIEnumerator::GetIID()) ||
       aIID.Equals(nsIBidirectionalEnumerator::GetIID())) {
     nsIBidirectionalEnumerator* tmp = this;
     *aInstancePtr = (void*) tmp;
@@ -442,29 +434,30 @@ nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIDOMSelectionIID)) {
+  if (aIID.Equals(nsIDOMSelection::GetIID())) {
     nsIDOMSelection* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIFrameSelectionIID)) {
+  if (aIID.Equals(nsIFrameSelection::GetIID())) {
     nsIFrameSelection* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+  if (aIID.Equals(nsIScriptObjectOwner::GetIID())) {
     nsIScriptObjectOwner* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIEnumeratorIID)) {
+  if (aIID.Equals(nsIEnumerator::GetIID())) {
     nsRangeListIterator *iterator =  new nsRangeListIterator(this);
-    return iterator->QueryInterface(kIEnumeratorIID, aInstancePtr);
+    *aInstancePtr = (void *)iterator;
+    return iterator->AddRef();
   }
-  if (aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(((nsISupports *)((nsIFrameSelection *)this))->GetIID())) {
     // use *first* base class for ISupports
     nsIFrameSelection* tmp1 = this;
     nsISupports* tmp2 = tmp1;
@@ -537,7 +530,7 @@ NS_METHOD nsRangeList::GetFocusOffset(PRInt32* aFocusOffset)
 
 void nsRangeList::setAnchorFocusRange(PRInt32 index)
 {
-  if (index >= mRangeArray->Count() )
+  if (((PRUint32)index) >= mRangeArray->Count() )
     return;
   if (index < 0) //release all
   {
@@ -673,12 +666,12 @@ void printRange(nsIDOMRange *aDomRange)
   aDomRange->GetStartOffset(&startOffset);
   aDomRange->GetEndParent(getter_AddRefs(endNode));
   aDomRange->GetEndOffset(&endOffset);
-  /*
+  
   printf("print DOMRANGE 0x%lx\t start: 0x%lx %ld, \t end: 0x%lx,%ld \n",
          (unsigned long)aDomRange,
          (unsigned long)(nsIDOMNode*)startNode, (long)startOffset,
          (unsigned long)(nsIDOMNode*)endNode, (long)endOffset);
-         */
+         
 }
 
 
@@ -726,7 +719,6 @@ nsRangeList::HandleTextEvent(nsGUIEvent *aGUIEvent)
 NS_IMETHODIMP
 nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
 {
-#if 0
 if (!aGuiEvent)
     return NS_ERROR_NULL_POINTER;
   STATUS_CHECK_RETURN_MACRO();
@@ -746,45 +738,50 @@ if (!aGuiEvent)
         printf("debug vk left\n");
 #endif
         if (keyEvent->isShift || (GetDirection() == eDirPrevious)) { //f,a
-          offsetused = fetchFocusOffset();
-          weakNodeUsed = dont_QueryInterface(fetchFocusNode());
+          offsetused = FetchFocusOffset();
+          weakNodeUsed = FetchFocusNode();
         }
         else {
-          offsetused = fetchAnchorOffset();
-          weakNodeUsed = dont_QueryInterface(fetchAnchorNode());
+          offsetused = FetchAnchorOffset();
+          weakNodeUsed = FetchAnchorNode();
         }
         if (weakNodeUsed && offsetused >=0){
           nsIFrame *frame;
-          nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-          result = mTracker->GetPrimaryFrameFor(content, &frame);
-          if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(amount, eDirPrevious, offsetused, &resultContent, &offsetused, PR_FALSE)) && resultFrame){
-            result = TakeFocus(resultContent, offsetused, keyEvent->isShift);
+          nsCOMPtr<nsIContent> content = do_QueryInterface(weakNodeUsed);
+          if (content){
+            result = mTracker->GetPrimaryFrameFor(content, &frame);
+            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && resultFrame){
+              result = TakeFocus(content, offsetused, keyEvent->isShift);
+            }
+            result = ScrollIntoView();
           }
-          result = ScrollIntoView();
         }
         break;
-/*      case nsIDOMEvent::VK_RIGHT : 
-        //we need to look for the next PAINTED location to move the cursor to.
+      case nsIDOMEvent::VK_RIGHT : 
+        //we need to look for the previous PAINTED location to move the cursor to.
 #ifdef DEBUG_NAVIGATION
-        printf("debug vk right\n");
+        printf("debug vk left\n");
 #endif
-        if (!keyEvent->isShift && (endoffset < beginoffset)){ //f,a
-          result = anchor->GetSelected(&selected,&beginoffset,&endoffset, &contentoffset);
-          if (NS_FAILED(result)){
-            return result;
-          }
-          offsetused = beginoffset;
-          frameused = anchor;
+        if (keyEvent->isShift || (GetDirection() == eDirPrevious)) { //f,a
+          offsetused = FetchFocusOffset();
+          weakNodeUsed = FetchFocusNode();
         }
         else {
-          offsetused = endoffset;
-          frameused = frame;
+          offsetused = FetchAnchorOffset();
+          weakNodeUsed = FetchAnchorNode();
         }
-        if (NS_SUCCEEDED(frameused->PeekOffset(amount, eDirNext, offsetused, &resultFrame, &frameOffset, &contentOffset, PR_FALSE)) && resultFrame){
-          result = TakeFocus(resultFrame, frameOffset, contentOffset, keyEvent->isShift);
+        if (weakNodeUsed && offsetused >=0){
+          nsIFrame *frame;
+          nsCOMPtr<nsIContent> content = do_QueryInterface(weakNodeUsed);
+          if (content){
+            result = mTracker->GetPrimaryFrameFor(content, &frame);
+            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(amount, eDirNext, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && resultFrame){
+              result = TakeFocus(content, offsetused, keyEvent->isShift);
+            }
+            result = ScrollIntoView();
+          }
         }
-        result = ScrollIntoView();
-        break;
+       break;
       case nsIDOMEvent::VK_UP : 
 #ifdef DEBUG_NAVIGATION
         printf("debug vk up\n");
@@ -794,13 +791,11 @@ if (!aGuiEvent)
 #ifdef DEBUG_NAVIGATION
         printf("debug vk down\n");
 #endif
-        break;*/
+        break;
     default :break;
     }
   }
   return result;
-#endif
-  return NS_OK;
 }
 
 #ifdef DEBUG
@@ -849,7 +844,7 @@ nsRangeList::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
     return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIContentIterator> iter;
   nsresult result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                              kIContentIteratorIID, 
+                                              nsIContentIterator::GetIID(), 
                                               getter_AddRefs(iter));
   if ((NS_SUCCEEDED(result)) && iter)
   {
@@ -1154,7 +1149,7 @@ nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
 
   nsCOMPtr<nsIDOMRange> range;
   result = nsComponentManager::CreateInstance(kRangeCID, nsnull,
-                                     kIDOMRangeIID,
+                                     nsIDOMRange::GetIID(),
                                      getter_AddRefs(range));
   if (NS_FAILED(result))
     return result;
@@ -1224,8 +1219,7 @@ nsRangeList::GetIsCollapsed(PRBool* aIsCollapsed)
   
   nsCOMPtr<nsISupports> nsisup(dont_AddRef(mRangeArray->ElementAt(0)));
   nsCOMPtr<nsIDOMRange> range;
-  if (!NS_SUCCEEDED(nsisup->QueryInterface(kIDOMRangeIID,
-                                           getter_AddRefs(range))))
+  if (!NS_SUCCEEDED(CallQueryInterface(nsisup,&range)))
   {
     *aIsCollapsed = PR_TRUE;
     return NS_OK;
@@ -1262,7 +1256,7 @@ nsRangeList::GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn)
 	if (!mRangeArray)
 		return NS_ERROR_INVALID_ARG;
 		
-	if (aIndex < 0 || aIndex >= mRangeArray->Count())
+	if (aIndex < 0 || ((PRUint32)aIndex) >= mRangeArray->Count())
 		return NS_ERROR_INVALID_ARG;
 
 	// the result of all this is one additional ref on the item, as
@@ -1317,7 +1311,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   nsCOMPtr<nsIDOMRange> difRange;
   nsresult res;
   res = nsComponentManager::CreateInstance(kRangeCID, nsnull,
-                                     kIDOMRangeIID,
+                                     nsIDOMRange::GetIID(),
                                      getter_AddRefs(difRange));
 
 
@@ -1346,7 +1340,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     }
     if (found && !(FetchFocusNode() == aParentNode && FetchFocusOffset() == aOffset )){
       res = nsComponentManager::CreateInstance(kRangeCID, nsnull,
-                                         kIDOMRangeIID,
+                                         nsIDOMRange::GetIID(),
                                          getter_AddRefs(difRange));
 
       if (NS_FAILED(res))
@@ -1475,6 +1469,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
       }
 
       setAnchorFocusRange(i);
+      DEBUG_OUT_RANGE(range);
       return NotifySelectionListeners();
     }
 
