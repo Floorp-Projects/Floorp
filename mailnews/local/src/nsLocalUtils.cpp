@@ -320,17 +320,17 @@ nsresult nsBuildLocalMessageURI(const char *baseURI, PRUint32 key, char** uri)
 	
 	if(!uri)
 		return NS_ERROR_NULL_POINTER;
-  // need to convert mailbox://hostname/.. to mailbox_message://hostname/..
+	// need to convert mailbox://hostname/.. to mailbox_message://hostname/..
 
-  nsAutoString tailURI(baseURI);
+	nsAutoString tailURI(baseURI);
 
-  // chop off mailbox:/
-  if (tailURI.Find(kMailboxRootURI) == 0)
-    tailURI.Cut(0, PL_strlen(kMailboxRootURI));
+	// chop off mailbox:/
+	if (tailURI.Find(kMailboxRootURI) == 0)
+		tailURI.Cut(0, PL_strlen(kMailboxRootURI));
   
-  const char *tail = tailURI.ToNewCString();
-    
+	char *tail = tailURI.ToNewCString();
+
 	*uri = PR_smprintf("%s%s#%d", kMailboxMessageRootURI, tail, key);
-  
+	delete[] tail;
 	return NS_OK;
 }
