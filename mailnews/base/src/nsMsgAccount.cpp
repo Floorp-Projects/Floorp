@@ -151,14 +151,6 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
                                             (void **)&server);
     PR_FREEIF(serverTypeProgID);
     
-#ifdef DEBUG_alecf
-    if (NS_SUCCEEDED(rv)) {
-      printf("Created a %s server\n", serverType);
-    } else {
-      printf("Could not create a %s server\n", serverType);
-    }
-#endif
-    
     if (NS_SUCCEEDED(rv))
       rv = server->SetKey(serverKey);
     
