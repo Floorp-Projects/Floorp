@@ -449,7 +449,7 @@ function loadStartPage() {
                 // first, clear out the charset setting.
                 messenger.setDisplayCharset("");
 
-                window.frames["messagepane"].location = startpage;
+                GetMessagePaneFrame().location = startpage;
                 //dump("start message pane with: " + startpage + "\n");
                 ClearMessageSelection();
             }
