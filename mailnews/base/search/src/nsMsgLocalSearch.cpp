@@ -567,6 +567,7 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
           charset = (const char*)defaultCharset;
         switch (attrib)
         {
+        case nsMsgSearchAttrib::SenderInAddressBook:
         case nsMsgSearchAttrib::Sender:
           msgToMatch->GetAuthor(getter_Copies(matchString));
           err = pTerm->MatchRfc822String (matchString, charset, charsetOverride, &result);

@@ -45,6 +45,9 @@
 #include "nsIMsgSearchScopeTerm.h"
 #include "nsIMsgSearchTerm.h"
 
+// needed to search for addresses in address books
+#include "nsIAbMDBDirectory.h"
+
 #define EMPTY_MESSAGE_LINE(buf) (buf[0] == nsCRT::CR || buf[0] == nsCRT::LF || buf[0] == '\0')
 
 class nsMsgSearchTerm : public nsIMsgSearchTerm
@@ -102,6 +105,7 @@ public:
 	nsMsgSearchBooleanOperator m_booleanOp;  // boolean operator to be applied to this search term and the search term which precedes it.
 	nsCString m_arbitraryHeader;         // user specified string for the name of the arbitrary header to be used in the search
 									  // only has a value when m_attribute = attribOtherHeader!!!!
+
 protected:
 	nsresult MatchString (const char *stringToMatch, const char *charset,
                           PRBool *pResult);
@@ -110,7 +114,10 @@ protected:
 	nsMsgSearchOpValue	ParseOperator(char *inStream);
 	nsresult		ParseValue(char *inStream);
 	nsresult		InitHeaderAddressParser();
-
+    nsresult  InitializeAddressBook();
+    nsresult MatchInAddressBook(const char * aAddress, PRBool *pResult);
+    // fields used by search in address book
+    nsCOMPtr <nsIAbMDBDirectory> mDirectory;  
 };
 
 #endif

@@ -102,8 +102,8 @@ interface nsMsgSearchAttrib {
     const nsMsgSearchAttribValue AdditionalEmail = 31;
 
 	
-    // 32 - 48, reserved for ab / LDAP;
-
+    // 32 - 46, reserved for ab / LDAP;
+    const nsMsgSearchAttribValue SenderInAddressBook = 47;
     const nsMsgSearchAttribValue Label = 48; /* mail only...can search by label */
     //49 is for showing customize... in ui headers start from 50 onwards up until 99.
 	const nsMsgSearchAttribValue OtherHeader = 49;  /* for mail and news. MUST ALWAYS BE LAST attribute since we can have an arbitrary # of these... */
@@ -140,7 +140,9 @@ interface nsMsgSearchOp {
 	const nsMsgSearchOpValue IsLessThan = 14;
 
 	const nsMsgSearchOpValue NameCompletion = 15; /* Name Completion operator...as the name implies =) */
-    const nsMsgSearchOpValue kNumMsgSearchOperators  = 16;     /* must be last operator */
+	const nsMsgSearchOpValue IsInAB = 16;
+	const nsMsgSearchOpValue IsntInAB = 17;
+    const nsMsgSearchOpValue kNumMsgSearchOperators  = 18;     /* must be last operator */
 };
 
 typedef long nsMsgSearchWidgetValue;
@@ -206,7 +208,7 @@ typedef struct nsMsgSearchValue
 (!(_a == nsMsgSearchAttrib::Priority || _a == nsMsgSearchAttrib::Date || \
    _a == nsMsgSearchAttrib::MsgStatus || _a == nsMsgSearchAttrib::MessageKey || \
    _a == nsMsgSearchAttrib::Size || _a == nsMsgSearchAttrib::AgeInDays || \
-   _a == nsMsgSearchAttrib::FolderInfo || _a == nsMsgSearchAttrib::Location))
+   _a == nsMsgSearchAttrib::FolderInfo || _a == nsMsgSearchAttrib::Location) || _a == nsMsgSearchAttrib::Label)
 %}
 
 [ptr] native nsSearchMenuItem(nsSearchMenuItem);

@@ -58,6 +58,8 @@
 #include "nsTime.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+
+#include "nsIRDFService.h"
 #include "nsISupportsObsolete.h"
 
 //---------------------------------------------------------------------------
@@ -86,7 +88,8 @@ nsMsgSearchAttribEntry SearchAttribEntryTable[] =
     {nsMsgSearchAttrib::MsgStatus,	"status"},	
     {nsMsgSearchAttrib::To,			"to"},
     {nsMsgSearchAttrib::CC,			"cc"},
-    {nsMsgSearchAttrib::ToOrCC,		"to or cc"}
+    {nsMsgSearchAttrib::ToOrCC,		"to or cc"},
+    {nsMsgSearchAttrib::SenderInAddressBook,		"from in ab"}
 };
 
 // Take a string which starts off with an attribute
@@ -207,7 +210,9 @@ nsMsgSearchOperatorEntry SearchOperatorEntryTable[] =
     {nsMsgSearchOp::IsHigherThan, "is higher than"},
     {nsMsgSearchOp::IsLowerThan,	"is lower than"},
     {nsMsgSearchOp::BeginsWith,  "begins with"},
-	{nsMsgSearchOp::EndsWith,	"ends with"}
+	{nsMsgSearchOp::EndsWith,	"ends with"},
+    {nsMsgSearchOp::IsInAB,	 "is in ab"},
+    {nsMsgSearchOp::IsntInAB,	"isn't in ab"},
 };
 
 nsresult NS_MsgGetOperatorFromString(const char *string, PRInt16 *op)
@@ -816,7 +821,50 @@ nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offs
 	return err;
 }
 
+nsresult nsMsgSearchTerm::InitializeAddressBook()
+{
+  // the search attribute value has the URI for the address book we need to load. 
+  // we need both the database and the directory.
+  nsresult rv = NS_OK;
 
+  if (mDirectory)
+  {
+    nsXPIDLCString dirURI;
+    mDirectory->GetDirUri(getter_Copies(dirURI));
+    if (strcmp(dirURI.get(), m_value.string))
+      mDirectory = NULL; // clear out the directory....we are no longer pointing to the right one
+  }
+  if (!mDirectory)
+  {  
+    nsCOMPtr <nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr <nsIRDFResource> resource;
+    rv = rdfService->GetResource(m_value.string, getter_AddRefs(resource));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mDirectory = do_QueryInterface(resource, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
+nsresult nsMsgSearchTerm::MatchInAddressBook(const char * aAddress, PRBool *pResult)
+{
+  nsresult rv = InitializeAddressBook(); 
+  *pResult = PR_FALSE;
+
+  if (mDirectory)
+  {
+    PRBool cardExists = PR_FALSE;
+    rv = mDirectory->HasCardForEmailAddress(aAddress, &cardExists);
+    if ( (m_operator == nsMsgSearchOp::IsInAB && cardExists) || (m_operator == nsMsgSearchOp::IsntInAB && !cardExists))
+      *pResult = PR_TRUE;
+  }
+  
+  return rv;
+}
 
 // *pResult is PR_FALSE when strings don't match, PR_TRUE if they do.
 nsresult nsMsgSearchTerm::MatchRfc2047String (const char *rfc2047string,
@@ -836,7 +884,12 @@ nsresult nsMsgSearchTerm::MatchRfc2047String (const char *rfc2047string,
                                                    charset, charsetOverride,
                                                    PR_FALSE);
 
-	res = MatchString(stringToMatch ? stringToMatch : rfc2047string,
+    if (nsMsgSearchAttrib::SenderInAddressBook == m_attribute)
+    {
+      res = MatchInAddressBook(stringToMatch ? stringToMatch : rfc2047string, pResult);
+    }
+    else
+	  res = MatchString(stringToMatch ? stringToMatch : rfc2047string,
                       nsnull, pResult);
 
     PR_FREEIF(stringToMatch);
@@ -957,7 +1010,6 @@ nsresult nsMsgSearchTerm::GetMatchAllBeforeDeciding (PRBool *aResult)
     return NS_OK;
 }
 
-
 nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *charset, PRBool charsetOverride, PRBool *pResult)
 {
 	if (!pResult)
@@ -997,9 +1049,16 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 		{
 			walkNames = names + namePos;
 			walkAddresses = addresses + addressPos;
-			err = MatchRfc2047String (walkNames.get(), charset, charsetOverride, &result);
-			if (boolContinueLoop == result)
-				err = MatchRfc2047String (walkAddresses.get(), charset, charsetOverride, &result);
+            if (nsMsgSearchAttrib::SenderInAddressBook == m_attribute)
+            {
+              err = MatchRfc2047String (walkAddresses.get(), charset, charsetOverride, &result);
+            }
+            else
+            {
+			  err = MatchRfc2047String (walkNames.get(), charset, charsetOverride, &result);
+			  if (boolContinueLoop == result)
+			  	err = MatchRfc2047String (walkAddresses.get(), charset, charsetOverride, &result);
+            }
 
 			namePos += walkNames.Length() + 1;
 			addressPos += walkAddresses.Length() + 1;

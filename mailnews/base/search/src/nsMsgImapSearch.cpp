@@ -192,6 +192,12 @@ nsresult nsMsgSearchValidityManager::InitOfflineMailTable ()
         m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::EndsWith, 1);
         m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::EndsWith, 1);
 
+        // don't enable this until we are ready to fork rules.dat
+        //m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::SenderInAddressBook, nsMsgSearchOp::IsInAB, 1);
+        //m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::SenderInAddressBook, nsMsgSearchOp::IsInAB, 1);
+        //m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::SenderInAddressBook, nsMsgSearchOp::IsntInAB, 1);
+        //m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::SenderInAddressBook, nsMsgSearchOp::IsntInAB, 1);
+
         m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::Contains, 1);
         m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::Contains, 1);
         m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::DoesntContain, 1);
@@ -280,13 +286,13 @@ nsresult nsMsgSearchValidityManager::InitOfflineMailTable ()
         m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::Is, 1);
 
         m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);
-		    m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);
-		    m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Is, 1);
-		    m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Is, 1);
-		    m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::BeginsWith, 1);
-		    m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::BeginsWith, 1);
-		    m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::EndsWith, 1);
-		    m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::EndsWith, 1);
+		m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);
+		m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Is, 1);
+		m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Is, 1);
+		m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::BeginsWith, 1);
+		m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::BeginsWith, 1);
+		m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::EndsWith, 1);
+		m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::EndsWith, 1);
 
     }
 
@@ -393,6 +399,12 @@ nsresult nsMsgSearchValidityManager::InitOnlineMailFilterTable ()
         m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::BeginsWith, 1);
         m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::EndsWith, 1);
         m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::EndsWith, 1);
+
+        // don't enable this until we are ready to fork rules.dat
+        //m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::SenderInAddressBook, nsMsgSearchOp::IsInAB, 1);
+        //m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::SenderInAddressBook, nsMsgSearchOp::IsInAB, 1);
+        //m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::SenderInAddressBook, nsMsgSearchOp::IsntInAB, 1);
+        //m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::SenderInAddressBook, nsMsgSearchOp::IsntInAB, 1);
 
         m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::Contains, 1);
         m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::Contains, 1);
