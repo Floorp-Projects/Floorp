@@ -186,13 +186,13 @@ static JSFunctionSpec gSandboxFun[] = {
     {0}
 };
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 sandbox_enumerate(JSContext *cx, JSObject *obj)
 {
     return JS_EnumerateStandardClasses(cx, obj);
 }
 
-static JSBool
+JS_STATIC_DLL_CALLBACK(JSBool)
 sandbox_resolve(JSContext *cx, JSObject *obj, jsval id)
 {
     JSBool resolved;
