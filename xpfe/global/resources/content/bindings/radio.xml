@@ -1,20 +1,13 @@
 <?xml version="1.0"?>
 
-<bindings id="xulBindings"
+<bindings id="radioBindings"
    xmlns="http://www.mozilla.org/xbl"
-   xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
- 
-  <binding id="radio" extends="chrome://global/content/xulBindings.xml#checkbox">
-    <implementation>
-      <property name="value" onset="this.setAttribute('value',val); return val;"
-                            onget="return this.getAttribute('value');"/>
-      <property name="group" onset="this.setAttribute('group',val); return val;"
-                            onget="return this.getAttribute('group');"/>
-    </implementation>
-  </binding>
-  
-  <binding id="radiogroup" extends="xul:box">
+
+  <binding id="radiogroup">
+    <resources>
+      <stylesheet src="chrome://global/skin/radio.css"/>
+    </resources>
 
     <implementation>
       <property name="value" onset="this.setAttribute('value',val); return val;"
@@ -42,9 +35,11 @@
         ]]>
         </setter>
       </property>
+      
       <property name="selectedItem">
         <getter>
         <![CDATA[
+          this.disabled = this.disabled; // this strange line is to fire the setter for the disabled property
           var groupElements = this.getElementsByAttribute( "group", this.id );
           for( var i = 0; i < groupElements.length; i++ ) {
             if( groupElements[i].checked || 
@@ -75,6 +70,7 @@
         ]]>
         </setter>        
       </property>
+      
       <property name="focusedItem">
         <getter>
         <![CDATA[
@@ -102,6 +98,7 @@
         ]]>
         </setter>
       </property>
+      
       <method name="checkAdjacentElement">
         <parameter name="aNextFlag"/>
         <body>
@@ -127,6 +124,7 @@
         </body>
       </method>
     </implementation>
+    
     <handlers>
       <handler event="click" button="0">
         <![CDATA[
@@ -135,6 +133,7 @@
 
          ]]>
       </handler>
+      
       <handler event="mousedown" button="0">
         <![CDATA[
             if (event.target.localName == "radio" && !event.target.disabled)
@@ -180,5 +179,19 @@
       </handler>
     </handlers>
   </binding>
+
+  <binding id="radio" extends="chrome://global/content/bindings/checkbox.xml#checkbox-baseline">
+    <resources>
+      <stylesheet src="chrome://global/skin/radio.css"/>
+    </resources>
+
+    <implementation>
+      <property name="value" onset="this.setAttribute('value',val); return val;"
+                            onget="return this.getAttribute('value');"/>
+      <property name="group" onset="this.setAttribute('group',val); return val;"
+                            onget="return this.getAttribute('group');"/>
+    </implementation>
+  </binding>
   
+
 </bindings>

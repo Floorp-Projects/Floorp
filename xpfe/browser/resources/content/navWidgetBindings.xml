@@ -43,7 +43,7 @@
     </handlers>
   </binding>
 
-  <binding id="menulist-editable" extends="chrome://global/content/menulistBindings.xml#menulist">
+  <binding id="menulist-editable" extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content>
       <xul:box autostretch="never" valign="middle" flex="1" class="menulist-container">
         <xul:image class="menulist-icon" inherits="src" emattr="icon"/>

@@ -1,8 +1,107 @@
 <?xml version="1.0"?>
 
 <bindings id="popupBindings"
-          xmlns="http://www.mozilla.org/xbl"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="popup-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/popup.css"/>
+    </resources>
+  </binding>
+
+  <binding id="popup" extends="chrome://global/content/bindings/popup.xml#popup-base">
+    <content>
+      <xul:arrowscrollbox class="popup-internal-box" flex="1" orient="vertical">
+        <children/>
+      </xul:arrowscrollbox>
+    </content>
+
+    <implementation>
+      <method name="openPopup">
+        <parameter name="element"/>
+        <parameter name="xpos"/>
+        <parameter name="ypos"/>
+        <parameter name="popuptype"/>
+        <parameter name="anchoralignment"/>
+        <parameter name="popupalignment"/>
+        <body>
+        <![CDATA[
+          try {
+            var popupSetBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
+          } catch(e) {}
+          try {
+            var menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
+          } catch(e) {}
+          if (popupSetBox)
+            popupSetBox.createPopup(element, this, xpos, ypos, popuptype, anchoralignment, popupalignment);
+          else if (menuBox)
+            menuBox.openMenu(true);
+        ]]>
+        </body>
+      </method>
+      <method name="closePopup">
+        <body>
+        <![CDATA[
+          try {
+            var popupSetBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
+          } catch(e) {}
+          try {
+            var menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
+          } catch(e) {}
+          if (popupSetBox)
+            popupSetBox.destroyPopup();
+          else if (menuBox)
+            menuBox.openMenu(false);
+        ]]>
+        </body>
+      </method>
+      <property name="activeChild">
+        <getter>
+          <![CDATA[
+            try {
+              var popupSetBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
+            } catch(e) {}
+            try {
+              var menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
+            } catch(e) {}
+            if (popupSetBox)
+              return popupSetBox.activeChild;
+            else if (menuBox)
+              return menuBox.activeChild;
+            throw Components.results.NS_ERROR_FAILURE;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            try {
+              var popupSetBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
+            } catch(e) {}
+            try {
+              var menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
+            } catch(e) {}
+            if (popupSetBox)
+              return popupSetBox.activeChild = val;
+            else if (menuBox)
+              return menuBox.activeChild = val;
+            throw Components.results.NS_ERROR_FAILURE;
+          ]]>
+        </setter>
+      </property>
+    </implementation>     
+
+    <handlers>
+      <handler event="contextmenu" action="event.preventDefault();"/>
+    </handlers>
+  </binding>
+
+  <binding id="tooltips" extends="chrome://global/content/bindings/popup.xml#popup">
+    <content>
+      <xul:box class="popup-internal-box" orient="vertical" flex="1">
+        <children/>
+      </xul:box>
+    </content>
+  </binding>
   
   <binding id="resizerbase" extends="xul:box">
     <implementation>
@@ -20,6 +119,7 @@
         ]]>
         </body>
       </method>
+      
       <method name="handleMouseMove">
         <parameter name="aEvent"/>
         <body>
@@ -28,11 +128,13 @@
         ]]>
         </body>
       </method> 
+      
       <property name="screenLeft">0</property>
       <property name="screenTop">0</property>
       <property name="direction">0</property>
       <property name="popup">0</property>
     </implementation>
+    
     <handlers>
       <handler event="mousedown" phase="capturing"> 
       <![CDATA[
@@ -66,7 +168,7 @@
   </binding>
   
   <!-- Right horizontal resizer -->
-  <binding id="r-resizer" extends="xul:box"> <!-- extends="chrome://global/content/popupBindings.xml#resizerbase"> -->
+  <binding id="r-resizer" extends="xul:box"> <!-- extends="chrome://global/content/bindings/popup.xml#resizerbase"> -->
     <content>
       <xul:box class="b-resizer-box" flex="1"/>
     </content>
@@ -100,7 +202,7 @@
   </binding>
   
   <!-- Bottom vertical resizer -->
-  <binding id="b-resizer" extends="xul:box"> <!-- extends="chrome://global/content/popupBindings.xml#resizerbase"> -->
+  <binding id="b-resizer" extends="xul:box"> <!-- extends="chrome://global/content/bindings/popup.xml#resizerbase"> -->
     <content>
       <xul:box class="b-resizer-box" flex="1"/>
     </content>
@@ -134,7 +236,7 @@
   </binding>
   
   <!-- Right/Bottom diagonal resizer -->
-  <binding id="rb-resizer" extends="xul:box"> <!-- extends="chrome://global/content/popupBindings.xml#resizerbase"> -->
+  <binding id="rb-resizer" extends="xul:box"> <!-- extends="chrome://global/content/bindings/popup.xml#resizerbase"> -->
     <content>
       <xul:box class="rb-resizer-box" autostretch="never" flex="1">
         <xul:image class="rb-resizer-image"/>
@@ -174,7 +276,7 @@
     -->
   </binding>
   
-  <binding id="titlebar" extends="xul:box"> <!-- extends="chrome://global/content/popupBindings.xml#resizerbase"> -->
+  <binding id="titlebar" extends="xul:box"> <!-- extends="chrome://global/content/bindings/popup.xml#resizerbase"> -->
     <content>
       <xul:box class="titlebar-box" flex="1">
         <xul:box class="titlebar-title-box" flex="1"  tooltip="aTooltip" tooltiptext="Click and drag to float">
@@ -399,7 +501,7 @@
     </handlers>
   </binding>
 
-  <binding id="floater-normal" extends="chrome://global/content/popupBindings.xml#floater-base">
+  <binding id="floater-normal" extends="chrome://global/content/bindings/popup.xml#floater-base">
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" >
       <box class="floater-box" orient="vertical" flex="1">
         <box class="floater-box-top">
@@ -418,7 +520,7 @@
     </xbl:content>
   </binding>
 
-  <binding id="floater-dock-left" extends="chrome://global/content/popupBindings.xml#floater-base">
+  <binding id="floater-dock-left" extends="chrome://global/content/bindings/popup.xml#floater-base">
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" >
       <box class="floater-box" orient="vertical" flex="1">
         <box class="floater-box-top">
@@ -434,10 +536,11 @@
     </xbl:content>
   </binding>  
   
-  <binding id="close-button" extends="xul:button">
+  <binding id="close-button" extends="chrome://global/content/bindings/button.xml#button-base">
     <content autostretch="never">
       <xul:image class="close-button-x"/>
     </content>
   </binding>
-          
-</bindings>          
+
+</bindings>
+

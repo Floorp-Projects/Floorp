@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+
+<bindings id="checkboxBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="checkbox" extends="chrome://global/content/bindings/checkbox.xml#checkbox-baseline">
+    <resources>
+      <stylesheet src="chrome://global/skin/checkbox.css"/>
+    </resources>
+  </binding>
+
+  <binding id="checkbox-baseline">
+    <content>
+      <xul:box flex="1" class="internal-box" autostretch="never" valign="top">
+        <xul:box class="checkmark-box" autostretch="never">
+          <xul:image class="checkbox-check"/>
+        </xul:box>
+        <xul:image class="checkbox-icon" inherits="src"/>
+        <xul:html class="checkbox-label" inherits="value=label,accesskey,crop" flex="1">
+          <children/>
+        </xul:html>
+      </xul:box>
+    </content>
+    
+    <implementation>
+      <!-- public implementation -->
+      <property name="checked"    onset="if (val) this.setAttribute('checked', 'true');
+                                         else this.removeAttribute('checked');
+                                         return val;"
+                                  onget="var v = this.getAttribute('checked');
+                                         if (v == 'true') return true; return false;"/>
+    </implementation>
+    <handlers>
+      <handler event="click" button="0" action="if (!this.disabled) this.checked = !this.checked;"/>
+      <handler event="keypress" key=" " action="if (!this.disabled) this.checked = !this.checked;"/>
+    </handlers>
+  </binding>
+
+</bindings>

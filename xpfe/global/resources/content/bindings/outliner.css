@@ -1,0 +1,20 @@
+
+outliner {
+  -moz-user-select: none;
+  min-width: 0px;
+  min-height: 0px;
+  width: 10px;
+  height: 10px;
+}
+
+outlinercol {
+  min-width: 16px;
+}
+
+outlinercol[hidden="true"] {
+  visibility: collapse;
+  display: -moz-xul-box;
+}
+
+
+

@@ -2,10 +2,16 @@
 
 <bindings id="outlinerBindings"
    xmlns="http://www.mozilla.org/xbl"
-   xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <binding id="outliner">
+  <binding id="outliner-base">
+    <resources>
+      <stylesheet src="chrome://global/content/bindings/outliner.css"/>
+      <stylesheet src="chrome://global/skin/outliner.css"/>
+    </resources>
+  </binding>
+
+  <binding id="outliner" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <content orient="vertical">
       <xul:box class="outliner-columns">
         <children includes="outlinercol|splitter"/>
@@ -15,6 +21,7 @@
         <children/>
       </xul:outlinerrows>
     </content>
+    
     <implementation>
       <property name="outlinerBoxObject"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);"
@@ -29,14 +36,15 @@
         -1
       </property>
     </implementation>
+    
     <handlers>
-    <handler event="focus" action="this.outlinerBoxObject.focused = true;"/>
-    <handler event="blur" action="this.outlinerBoxObject.focused = false;"/>
-
-    <handler event="dragenter" action="this.outlinerBoxObject.onDragEnter(event);"/>
-    <handler event="dragexit" action="this.outlinerBoxObject.onDragExit(event);"/>
-    <handler event="dragover" action="this.outlinerBoxObject.onDragOver(event);"/>
-    <handler event="dragdrop" action="this.outlinerBoxObject.onDragDrop(event);"/>
+      <handler event="focus" action="this.outlinerBoxObject.focused = true;"/>
+      <handler event="blur" action="this.outlinerBoxObject.focused = false;"/>
+  
+      <handler event="dragenter" action="this.outlinerBoxObject.onDragEnter(event);"/>
+      <handler event="dragexit" action="this.outlinerBoxObject.onDragExit(event);"/>
+      <handler event="dragover" action="this.outlinerBoxObject.onDragOver(event);"/>
+      <handler event="dragdrop" action="this.outlinerBoxObject.onDragDrop(event);"/>
 
       <handler event="keypress" keycode="vk_enter">
         <![CDATA[
@@ -397,7 +405,12 @@
     </handlers>    
   </binding>
 
-  <binding id="outlinerrows" extends="xul:box">
+  <binding id="outlinerrows" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
+    <resources>
+      <stylesheet src="chrome://global/content/bindings/outliner.css"/>
+      <stylesheet src="chrome://global/skin/outliner.css"/>
+    </resources>
+
     <content>
       <xul:box flex="1" class="outliner-bodybox">
         <children/>
@@ -406,7 +419,7 @@
     </content>
   </binding>
 
-  <binding id="outlinerbody">
+  <binding id="outlinerbody" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <handlers>
       <!-- If there is no modifier key, we select on mousedown, not
            click, so that drags work correctly. -->
@@ -415,7 +428,7 @@
          if (!event.ctrlKey && !event.shiftKey && !event.metaKey) {
            var row = {};
            var col = {};
-		   var obj = {};
+           var obj = {};
            var b = this.parentNode.outlinerBoxObject;
            b.getCellAt(event.clientX, event.clientY, row, col, obj);
 
@@ -502,10 +515,10 @@
     </handlers>
   </binding>
 
-  <binding id="outlinercol">
+  <binding id="outlinercol" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <content>
       <xul:box class="outlinercol-box" flex="1" autostretch="never">
-        <xul:image class="outliner-icon" inherits="src"/>
+        <xul:image class="outliner-image" inherits="src"/>
         <xul:text class="outlinercol-text" inherits="crop,value=label" flex="1" crop="right"/>
         <xul:image class="outlinercol-sortdirection"/>
       </xul:box>
@@ -515,7 +528,7 @@
     </handlers>
   </binding>
 
-  <binding id="outlinercol-image">
+  <binding id="outlinercol-image" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <content>
       <xul:box class="outlinercol-image-box" flex="1" autostretch="never">
         <xul:image class="outlinercol-icon" inherits="src"/>
@@ -526,7 +539,7 @@
     </handlers>
   </binding>
 
-  <binding id="columnpicker">
+  <binding id="columnpicker" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <content>
       <xul:menu class="outliner-colpicker-menu" autostretch="never" allowevents="true">
         <xul:image class="outliner-colpicker-icon"/>
@@ -534,30 +547,26 @@
                   oncreate="this.parentNode.parentNode.buildPopup(this);"/>
       </xul:menu>
     </content>
+    
     <implementation>
        <method name="buildPopup">
          <parameter name="aPopup"/>
          <body>
            <![CDATA[
+             var popupChild = aPopup.firstChild;
+             var firstTime = !popupChild ? true : false;
              var currCol = this.parentNode.parentNode.firstChild;
              var count = 0;
 
-             // we no longer cache the picker content.
-             // remove the old content
-             while (aPopup.childNodes.length) {
-                aPopup.removeChild(aPopup.childNodes[0]);
-             }
-
              while (currCol) {
-               while (currCol && (currCol.localName != "outlinercol" ||
-                                  currCol.getAttribute("primary") == "true"))
+               while (currCol && currCol.localName != "outlinercol")
                  currCol = currCol.nextSibling;
  
                if (currCol && (currCol != this)) {
-                 // Construct an entry for each cell in the row, unless it is not being shown
-                 if (currCol.getAttribute("ignoreincolumnpicker") != "true") {
+                 // Construct an entry for each cell in the row.
+                 if (firstTime) {
                      var columnName = currCol.getAttribute("label");
-                     var popupChild = document.createElement("menuitem");
+                     popupChild = document.createElement("menuitem");
                      popupChild.setAttribute("type", "checkbox");
                      popupChild.setAttribute("label", columnName);
                      if (columnName == "") {
@@ -594,7 +603,7 @@
            ]]>
          </body>
        </method>         
-     </implementation>
+     </implementation>    
    </binding>
 </bindings>
 

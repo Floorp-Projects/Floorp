@@ -1,0 +1,221 @@
+<?xml version="1.0"?>
+
+<bindings id="menulistBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/1999/xhtml"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="menulist-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/menulist.css"/>
+    </resources>
+  </binding>
+
+  <binding id="menulist" display="xul:menu" 
+           extends="chrome://global/content/bindings/menulist.xml#menulist-base">
+    <content>
+      <xul:image class="menu-icon" inherits="src"/>
+      <xul:text class="menu-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:image class="menu-dropmarker"/>
+      
+      <children includes="menupopup"/>
+    </content>
+
+    <handlers>
+      <handler event="command" phase="capturing"
+        action="if (event.originalTarget.localName == 'menuitem') this.selectedItem = event.originalTarget;"/>
+        
+      <handler event="create">
+        <![CDATA[
+          if (event.target.parentNode == this && this.selectedItem) {
+            // Not ready for auto-setting the active child in hierarchies yet.
+            // For now, only do this when the outermost menupopup opens.
+            var menuBox = this.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
+            menuBox.activeChild = this.selectedItem;
+          }
+        ]]>
+      </handler>
+    </handlers>
+
+    <implementation>
+      <constructor>
+        this.setInitialSelection()
+      </constructor>
+    
+      <method name="setInitialSelection">
+        <body>
+          <![CDATA[
+            this.setAttribute('sizetopopup', 'true');
+            if (!this.label && this.childNodes.length) {
+              var arr = this.firstChild.getElementsByAttribute('selected', 'true');
+
+              if (!arr.length && this.value)
+                arr = this.firstChild.getElementsByAttribute('value', this.value);
+
+              if (arr.length)
+                this.selectedItem = arr[0];
+              else
+                this.selectedIndex = 0;
+            }
+          ]]>
+        </body>
+      </method>
+      
+      <property name="value" onget="return this.getAttribute('value');">
+        <setter>
+          <![CDATA[
+            var arr;
+
+            if (this.childNodes.length)
+              arr = this.firstChild.getElementsByAttribute('value', val);
+
+            if (arr && arr.length)
+              this.selectedItem = arr[0];
+            else
+              this.setAttribute('value', val);
+
+            return val;
+          ]]>
+        </setter>
+      </property>
+
+      <property name="crop" onset="this.setAttribute('crop',val); return val;"
+                            onget="return this.getAttribute('crop');"/>
+      <property name="src"  onset="this.setAttribute('src',val); return val;"
+                            onget="return this.getAttribute('src');"/>
+      <property name="label" onset="this.setAttribute('label',val); return val;"
+                             onget="return this.getAttribute('label');"/>
+      <property name="disabled" onset="if (val) this.setAttribute('disabled',true); 
+                                       else this.removeAttribute('disabled');
+                                       return val;"
+                                onget="return (this.getAttribute('disabled')=='true');"/>
+
+      <property name="selectedInternal">
+        null
+      </property>
+
+      <property name="selectedIndex">
+        <getter>
+          <![CDATA[
+            // Quick and dirty. We won't deal with hierarchical menulists yet.
+            if (!this.selectedItem)
+              return -1;
+
+            var children = this.selectedItem.parentNode.childNodes;
+            for (var i = 0; i < children.length; i++) {
+              if (children[i] == this.selectedItem)
+                return i;
+            }
+
+            return -1;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            if (val < 0)
+              this.selectedItem = null;
+            else {
+              var curr = this.firstChild;
+              while (curr && curr.localName != 'menupopup')
+                curr = curr.nextSibling;
+              if (curr && val < curr.childNodes.length)
+                this.selectedItem = curr.childNodes[val];
+            }
+            return val;    
+          ]]>
+        </setter>
+      </property>
+
+      <property name="selectedItem">
+        <getter>
+          <![CDATA[
+            return this.selectedInternal;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            if (this.selectedInternal == val)
+              return val;
+            
+            if (this.selectedInternal)
+              this.selectedInternal.removeAttribute('selected');
+
+            this.selectedInternal = val;
+            if (!this.selectedInternal) {
+              this.removeAttribute('value');
+              this.removeAttribute('src');
+              this.removeAttribute('label');
+              return val;
+            }
+             
+            val.setAttribute('selected', 'true');
+
+            this.setAttribute('value', val.getAttribute('value'));
+            this.setAttribute('src', val.getAttribute('src'));
+            this.setAttribute('label', val.getAttribute('label'));
+
+            return val;
+
+          ]]>
+        </setter>
+      </property>
+    </implementation>  
+  </binding>
+
+  <binding id="menulist-editable" extends="chrome://global/content/bindings/menulist.xml#menulist">
+    <content>
+      <xul:box flex="1" class="menulist-editable-box">
+        <xul:image class="menu-icon" inherits="src"/>
+        <html:input type="text" flex="1" class="menulist-editable-text" allowevents="true"
+                    inherits="value=label,disabled"/>
+        <xul:image class="menu-dropmarker"/>
+      </xul:box>
+    
+      <children includes="menupopup"/>
+    </content>
+    
+    <implementation>
+      <property name="inputField" readonly="true">
+       <![CDATA[
+        var v = document.getAnonymousNodes(this);
+        var input = null;
+        for (var i = 0; i < v.length; i++) {
+          try {
+            var l = v[i].getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "input");
+            if (l.length > 0) {
+              input = l[0];
+              break;
+            }
+          } catch (e) {} 
+        }
+        input;
+      ]]>
+      </property>
+      <property name="label"      onset="this.inputField.value = val; return val;"
+                                  onget="return this.inputField.value;"/>
+    </implementation>
+
+    <handlers>
+      <handler event="focus" phase="capturing">
+      <![CDATA[
+        if (this.getAttribute('focused') != 'true') {
+          this.setAttribute('focused','true');
+          this.suppressFocusBlur = true;
+          if (document.commandDispatcher.focusedElement != this.inputField) 
+            this.inputField.focus();
+          this.suppressFocusBlur = false;
+        }
+      ]]>
+      </handler>
+      
+      <handler event="blur" phase="capturing">
+      <![CDATA[
+        if (!this.suppressFocusBlur && this.getAttribute('focused') == 'true') {
+          this.removeAttribute('focused');
+        }
+      ]]>
+      </handler>
+    </handlers>    
+  </binding>
+  
+</bindings>

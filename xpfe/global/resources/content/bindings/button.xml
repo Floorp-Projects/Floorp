@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+
+<bindings id="buttonBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="button-base" extends="chrome://global/content/bindings/general.xml#basetext">
+    <resources>
+      <stylesheet src="chrome://global/skin/button.css"/>
+    </resources>
+
+    <implementation implements="nsIAccessible">
+      <method name="getAccDefaultAction">
+        <body><![CDATA[
+          return 'Click';
+        ]]></body>
+      </method>
+      <method name="getAccDescription">
+        <body><![CDATA[
+          return 'This is a button that can be clicked to perform an action';
+        ]]></body>
+      </method>
+      <method name="getAccValue">
+        <body><![CDATA[
+          return this.getAttribute('value');
+        ]]></body>
+      </method>
+      <method name="getAccName">
+        <body><![CDATA[
+          return 'Left Button';
+        ]]></body>
+      </method>
+      <method name="getAccRole">
+        <body><![CDATA[
+          return 'push button';
+        ]]></body>
+      </method>
+      <method name="accDoDefaultAction">
+        <body><![CDATA[
+          this.click();
+        ]]></body>
+      </method>
+      <method name="getAccChildCount">
+        <body><![CDATA[
+          return 0;
+        ]]></body>
+      </method>
+      <method name="getAccFirstChild">
+        <body><![CDATA[
+          return null;
+        ]]></body>
+      </method>
+      <method name="getAccLastChild">
+        <body><![CDATA[
+          return null;
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="buttonleft" extends="chrome://global/content/bindings/button.xml#button-base">
+    <content>
+      <xul:box class="button-internal-box" autostretch="never" flex="1">
+        <xul:image class="button-icon" inherits="src"/>
+        <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
+          <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
+        </xul:box>
+      </xul:box>
+      <children includes="menupopup"/>
+    </content>
+  </binding>
+
+  <binding id="buttontop" extends="chrome://global/content/bindings/button.xml#button-base">
+    <content>
+      <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
+        <xul:image class="button-icon" inherits="src"/>
+        <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
+          <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
+        </xul:box>
+      </xul:box>
+      <children includes="menupopup"/>
+    </content>
+  </binding>
+  
+  <binding id="buttonright" extends="chrome://global/content/bindings/button.xml#button-base">
+    <content>
+      <xul:box class="button-internal-box" inherits="orient" autostretch="never" flex="1">
+        <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
+          <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
+        </xul:box>
+        <xul:image class="button-icon" inherits="src"/>
+      </xul:box>
+      <children includes="menupopup"/>
+    </content>
+  </binding>
+
+  <binding id="buttonbottom" extends="chrome://global/content/bindings/button.xml#button-base">
+    <content>
+      <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
+        <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
+          <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
+        </xul:box>
+        <xul:image class="button-icon" inherits="src"/>
+      </xul:box>
+      <children includes="menupopup"/>
+    </content>
+  </binding>
+
+</bindings>

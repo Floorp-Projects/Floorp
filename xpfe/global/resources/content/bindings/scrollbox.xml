@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+
+<bindings id="arrowscrollboxBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="scrollbox-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/scrollbox.css"/>
+    </resources>
+  </binding>
+
+  <binding id="scrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
+    <content>
+      <xul:box class="scrollbox-innerbox" inherits="orient,autostretch,align,valign">
+        <children/>
+      </xul:box>
+    </content>
+  </binding>
+
+  <binding id="arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
+    <content>
+      <xul:vbox 
+        onunderflow="
+          var button1 = this.firstChild;
+          var button2 = this.childNodes[2];
+          button1.setAttribute('collapsed', 'true');
+          button2.setAttribute('collapsed', 'true');
+          " 
+        onoverflow="
+          var button1 = this.firstChild;
+          var button2 = this.childNodes[2];
+          button1.removeAttribute('collapsed');
+          button2.removeAttribute('collapsed');
+          "
+      >
+        <xul:autorepeatbutton autostretch="never" class="up" collapsed="true"
+                              oncommand="parentNode.childNodes[1].boxObject.QueryInterface(
+                                         Components.interfaces.nsIScrollBoxObject).scrollByIndex(-1);"/>
+        <xul:scrollbox orient="vertical" flex="1">
+          <children/>
+        </xul:scrollbox>
+        <xul:autorepeatbutton autostretch="never" class="down" collapsed="true" 
+                              oncommand="parentNode.childNodes[1].boxObject.QueryInterface(
+                                         Components.interfaces.nsIScrollBoxObject).scrollByIndex(1);"/>
+      </xul:vbox>
+    </content>
+  </binding>
+
+  <binding id="autorepeatbutton-up" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
+    <content>
+      <xul:image class="autorepeatbutton-up"/>
+    </content>
+  </binding>
+
+  <binding id="autorepeatbutton-down" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
+    <content>
+      <xul:image class="autorepeatbutton-down"/>
+    </content>
+  </binding>
+
+</bindings>
