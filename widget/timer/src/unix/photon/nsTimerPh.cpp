@@ -43,7 +43,8 @@ PRBool nsTimerPh::FireTimeout()
     mCallback->Notify(this); // Fire the timer
   }
 
-  return (mType == NS_TYPE_REPEATING_SLACK);
+	/* FIXME: the use of REPEATING_SLACK is not know, more testing should be done.  */
+  return (mType == NS_TYPE_REPEATING_SLACK || (mType == NS_TYPE_REPEATING_PRECISE));
 }
 
 void nsTimerPh::SetDelay(PRUint32 aDelay)
@@ -240,91 +241,97 @@ int nsTimerPh::TimerEventHandler( void *aData, pid_t aRcvId, void *aMsg, size_t 
 
 NS_METHOD nsTimerPh::SetupTimer()
 {
-  PR_LOG(PhTimLog, PR_LOG_DEBUG, ("nsTimerPh::SetupTimer this=<%p>\n", this));
+	PR_LOG(PhTimLog, PR_LOG_DEBUG, ("nsTimerPh::SetupTimer this=<%p>\n", this));
 
-  struct itimerspec  tv;
-  int err;
+	struct itimerspec  tv;
+	int err;
 
-  if( mPulsePid )
-  {
-    NS_ASSERTION(0,"TimerImpl::SetupTimer - reuse of timer not allowed!");
-    return NS_ERROR_FAILURE;
-  }
-  int CurrentPriority = 10;		/* How Do I get this?? */
-  int NewPriority;
+	if( mPulsePid )
+	{
+		NS_ASSERTION(0,"TimerImpl::SetupTimer - reuse of timer not allowed!");
+		return NS_ERROR_FAILURE;
+	}
+	//int CurrentPriority = 10;		/* How Do I get this?? */
+	/* We get the current priority of the thread, by calling getprio(0) which is Neutrino specific.  */
+	int CurrentPriority = getprio (0);
+	int NewPriority = CurrentPriority;
   
-  switch(mPriority)
-  {
-   case NS_PRIORITY_LOWEST:
-    NewPriority = CurrentPriority - 2;
-	break;  
-   case NS_PRIORITY_LOW:
-    NewPriority = CurrentPriority - 1;
-	break;  
-   case NS_PRIORITY_NORMAL:
-    NewPriority = CurrentPriority;
-	break;  
-   case NS_PRIORITY_HIGH:
-    NewPriority = CurrentPriority +1;
-	break;  
-   case NS_PRIORITY_HIGHEST:
-    NewPriority = CurrentPriority + 2;
-	break;  
-  }
+	switch(mPriority)
+	{
+		case NS_PRIORITY_LOWEST:
+		NewPriority = CurrentPriority - 2;
+		break;  
 
-  if(( mPulsePid = PtAppCreatePulse( NULL, NewPriority )) > -2 )
-  {
-    NS_ASSERTION(0,"TimerImpl::SetupTimer - failed to create pulse");
-    return NS_ERROR_FAILURE;
-  }
-  if(( mPulseMsgId = PtPulseArmPid( NULL, mPulsePid, getpid(), &mPulseMsg )) == NULL )
-  {
-    NS_ASSERTION(0,"TimerImpl::SetupTimer - failed to arm pulse!");
-    return NS_ERROR_FAILURE;
-  }
-  if(( mInputId = PtAppAddInput( NULL, mPulsePid, TimerEventHandler, this )) == NULL )
-  {
-    NS_ASSERTION(0,"TimerImpl::SetupTimer - failed to add input handler!");
-    return NS_ERROR_FAILURE;
-  }
+		case NS_PRIORITY_LOW:
+		NewPriority = CurrentPriority - 1;
+		break;  
 
-  mTimerId = -1;
-  err = timer_create( CLOCK_SOFTTIME, &mPulseMsg, &mTimerId );
-  if( err != 0 )
-  { 
-    NS_ASSERTION(0,"TimerImpl::SetupTimer - timer_create error");
-    return NS_ERROR_FAILURE;
-  }
+		case NS_PRIORITY_NORMAL:
+		NewPriority = CurrentPriority;
+		break;  
 
-  switch(mType)
-  {
-   case NS_TYPE_ONE_SHOT:
-     tv.it_interval.tv_sec  = 0;
-     tv.it_interval.tv_nsec = 0;
-     break;
-   case NS_TYPE_REPEATING_SLACK:									/* HACK WRONG! */
-   case NS_TYPE_REPEATING_PRECISE:
-     tv.it_interval.tv_sec     = ( mDelay / 1000 );
-     tv.it_interval.tv_nsec    = ( mDelay % 1000 ) * 1000000L;   
-     break;
-  }
-  tv.it_value.tv_sec     = ( mDelay / 1000 );
-  tv.it_value.tv_nsec    = ( mDelay % 1000 ) * 1000000L;
+		case NS_PRIORITY_HIGH:
+		NewPriority = CurrentPriority +1;
+		break;  
 
-  /* If delay is set to 0 seconds then change it to 1 nsec. */
-  if ( (tv.it_value.tv_sec == 0) && (tv.it_value.tv_nsec == 0))
-  {
-    tv.it_value.tv_nsec = 1;
-  }
+		case NS_PRIORITY_HIGHEST:
+		NewPriority = CurrentPriority + 2;
+		break;  
+	}
+
+	if(( mPulsePid = PtAppCreatePulse( NULL, NewPriority )) == 0 )
+	{
+		NS_ASSERTION(0,"TimerImpl::SetupTimer - failed to create pulse");
+		return NS_ERROR_FAILURE;
+	}
+	if(( mPulseMsgId = PtPulseArmPid( NULL, mPulsePid, getpid(), &mPulseMsg )) == NULL )
+	{
+		NS_ASSERTION(0,"TimerImpl::SetupTimer - failed to arm pulse!");
+		return NS_ERROR_FAILURE;
+	}
+	if(( mInputId = PtAppAddInput( NULL, mPulsePid, TimerEventHandler, this )) == NULL )
+	{
+		NS_ASSERTION(0,"TimerImpl::SetupTimer - failed to add input handler!");
+		return NS_ERROR_FAILURE;
+	}
+
+	mTimerId = -1;
+	err = timer_create( CLOCK_MONOTONIC, &mPulseMsg, &mTimerId );
+	if( err != 0 )
+	{ 
+		NS_ASSERTION(0,"TimerImpl::SetupTimer - timer_create error");
+		return NS_ERROR_FAILURE;
+	}
+
+	switch(mType)
+	{
+		case NS_TYPE_ONE_SHOT:
+		tv.it_interval.tv_sec  = 0;
+		tv.it_interval.tv_nsec = 0;
+		break;
+		case NS_TYPE_REPEATING_SLACK:									/* HACK WRONG! */
+		case NS_TYPE_REPEATING_PRECISE:
+		tv.it_interval.tv_sec     = ( mDelay / 1000 );
+		tv.it_interval.tv_nsec    = ( mDelay % 1000 ) * 1000000L;   
+		break;
+	}
+	tv.it_value.tv_sec     = ( mDelay / 1000 );
+	tv.it_value.tv_nsec    = ( mDelay % 1000 ) * 1000000L;
+
+	/* If delay is set to 0 seconds then change it to 1 nsec. */
+	if ( (tv.it_value.tv_sec == 0) && (tv.it_value.tv_nsec == 0))
+	{
+		tv.it_value.tv_nsec = 1;
+	}
+
+	err = timer_settime( mTimerId, 0, &tv, NULL );
+	if( err != 0 )
+	{
+		NS_ASSERTION(0,"TimerImpl::SetupTimer timer_settime");
+		return NS_ERROR_FAILURE;
+	}
   
-  err = timer_settime( mTimerId, 0, &tv, 0 );
-  if( err != 0 )
-  {
-    NS_ASSERTION(0,"TimerImpl::SetupTimer timer_settime");
-    return NS_ERROR_FAILURE;
-  }
-  
-  return NS_OK;
+	return NS_OK;
 }
 
 

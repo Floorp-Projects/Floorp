@@ -37,8 +37,7 @@
 class nsFont;
 class nsIAppShell;
 
-#define NSRGB_2_COLOREF(color) \
-            RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
+#define NSRGB_2_COLOREF(color)				RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
 
 /**
  * Native Photon window wrapper. 
@@ -113,43 +112,25 @@ protected:
   virtual void          DestroyNative(void);
   void                  DestroyNativeChildren(void);
 
-  // grab in progress
-  PRBool GrabInProgress(void);
-  
   static int            MenuRegionCallback(PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo);  
-  static int            PopupMenuRegionCallback(PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo);  
 
   NS_IMETHOD            CreateNative(PtWidget_t *parentWidget);
 
   static int            ResizeHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
-  static int            WindowCloseHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
+	static int            EvInfo( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
+  static int            WindowWMHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
   PRBool                HandleEvent( PtCallbackInfo_t* aCbInfo );
   PhTile_t              *GetWindowClipping( );
 
   void                  ResizeHoldOff();
   void                  RemoveResizeWidget();
   static int            ResizeWorkProc( void *data );
-  NS_IMETHOD            ModalEventFilter(PRBool aRealEvent, void *aEvent,
-                                         PRBool *aForWindow);
+  NS_IMETHOD            ModalEventFilter(PRBool aRealEvent, void *aEvent, PRBool *aForWindow);
 
   PtWidget_t            *mClientWidget;
-  PtWidget_t            *mShell;         /* used for toplevel windows */
-  PtWidget_t            *mMenuRegion;
-  
-  PRBool                mIsDestroyingWindow;
-
-  nsIFontMetrics        *mFontMetrics;
-  PRBool                mVisible;
-  PRBool                mDisplayed;
   PRBool                mIsTooSmall;
-  PRBool                mClipChildren;
-  PRBool                mClipSiblings;
   static PRBool         mResizeQueueInited;
   PRBool                mIsResizing;
-  nsFont                *mFont;
-  nsIMenuBar            *mMenuBar;
-  PRBool                mMenuBarVis;
-  PRBool                mIsUpdating;
 
   // when this is PR_TRUE we will block focus
   // events to prevent recursion
@@ -157,14 +138,6 @@ protected:
   
   static DamageQueueEntry *mResizeQueue;
   static PtWorkProcId_t *mResizeProcID;
-
-  // are we doing a grab?
-  static PRBool      mIsGrabbing;
-  static nsWindow   *mGrabWindow;
-
-  // this is the last window that had a drag event happen on it.
-  static nsWindow  *mLastDragMotionWindow;
-  static nsWindow  *mLastLeaveWindow;
 };
 
 //

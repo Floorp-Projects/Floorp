@@ -40,26 +40,24 @@
 #include "nsGfxCIID.h"
 #include "nsIMenuBar.h"
 #include "nsToolkit.h"
-#include "nsIAppShell.h"
+
 #include "nsClipboard.h"
 #include "nsIRollupListener.h"
 
+#include "nsIServiceManager.h"
+#include "nsIAppShell.h"
+#include "nsIDocShell.h"
 
-// are we grabbing?
-PRBool      nsWindow::mIsGrabbing = PR_FALSE;
-nsWindow   *nsWindow::mGrabWindow = NULL;
+#include "nsIViewManager.h"
+#include "nsIXULWindow.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIWindowMediator.h"
+#include "nsIPresShell.h"
 
-// this is the last window that had a drag event happen on it.
-nsWindow *nsWindow::mLastDragMotionWindow = NULL;
-// we get our drop after the leave.
-nsWindow *nsWindow::mLastLeaveWindow = NULL;
 
 PRBool             nsWindow::mResizeQueueInited = PR_FALSE;
 DamageQueueEntry  *nsWindow::mResizeQueue = nsnull;
 PtWorkProcId_t    *nsWindow::mResizeProcID = nsnull;
-
-/* Photon Event Timestamp */
-unsigned long		IgnoreEvent = 0;
 
 //-------------------------------------------------------------------------
 //
@@ -69,27 +67,11 @@ unsigned long		IgnoreEvent = 0;
 nsWindow::nsWindow() 
 {
   mClientWidget    = nsnull;
-  mShell           = nsnull;
-  mFontMetrics     = nsnull;
-  mMenuRegion      = nsnull;
-  mVisible         = PR_FALSE;
-  mDisplayed       = PR_FALSE;
-  mClipChildren    = PR_TRUE;		/* This needs to be true for Photon */
-  mClipSiblings    = PR_FALSE;		/* TRUE = Fixes Pop-Up Menus over animations */
   mIsTooSmall      = PR_FALSE;
-  mIsUpdating      = PR_FALSE;
   mBlockFocusEvents = PR_FALSE;
   mBorderStyle     = eBorderStyle_default;
   mWindowType      = eWindowType_child;
   mIsResizing      = PR_FALSE;
-  mFont            = nsnull;
-  mMenuBar         = nsnull;
-  mMenuBarVis      = PR_FALSE;
-  
-  mIsDestroyingWindow = PR_FALSE;
-
-  if( mLastLeaveWindow == this )				mLastLeaveWindow = NULL;
-  if( mLastDragMotionWindow == this )		mLastDragMotionWindow = NULL;
 }
 
 ChildWindow::ChildWindow()
@@ -114,15 +96,6 @@ PRBool ChildWindow::IsChild() const
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
-  // make sure that we release the grab indicator here
-  if (mGrabWindow == this) {
-    mIsGrabbing = PR_FALSE;
-    mGrabWindow = NULL;
-  	}
-  // make sure that we unset the lastDragMotionWindow if
-  // we are it.
-  if (mLastDragMotionWindow == this) mLastDragMotionWindow = NULL;
-
   // always call destroy.  if it's already been called, there's no harm
   // since it keeps track of when it's already been called.
   Destroy();
@@ -136,28 +109,27 @@ PRBool nsWindow::IsChild() const
   return PR_FALSE;
 }
 
-NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
-{
-  PhPoint_t p1;
-  
-	if( mWidget ) PtWidgetOffset(mWidget,&p1);
+NS_IMETHODIMP nsWindow::WidgetToScreen( const nsRect& aOldRect, nsRect& aNewRect ) {
 
-	aNewRect.x = p1.x + mBounds.x + aOldRect.x;
-	aNewRect.y = p1.y + mBounds.y + aOldRect.y;
+	PhPoint_t pos, offset, orig = nsToolkit::GetConsoleOffset();
+	PtWidget_t *disjoint = PtFindDisjoint( mWidget );
+
+	PtGetAbsPosition( disjoint, &pos.x, &pos.y );
+	PtWidgetOffset( mWidget, &offset );
+	aNewRect.x = pos.x + offset.x + aOldRect.x - orig.x;
+	aNewRect.y = pos.y + offset.y + aOldRect.y - orig.y;
+
+	aNewRect.width = aOldRect.width;
+	aNewRect.height = aOldRect.height;
 
   return NS_OK;
-}
+	}
 
 void nsWindow::DestroyNative(void)
 {
   RemoveResizeWidget();
   RemoveDamagedWidget( mWidget );
   
-  if ( mMenuRegion )
-  {
-    PtDestroyWidget(mMenuRegion );  
-    mMenuRegion = nsnull;
-  }
   if ( mClientWidget )
   {
     PtDestroyWidget(mClientWidget );  
@@ -196,20 +168,9 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents( nsIRollupListener * aListener, PRBo
   PtWidget_t *grabWidget;
   grabWidget = mWidget;
 
-  if (aDoCapture) { /* Create a pointer region */
-     mIsGrabbing = PR_TRUE;
-     mGrabWindow = this;
-  	}
-  else {
-    // make sure that the grab window is marked as released
-    if (mGrabWindow == this) mGrabWindow = NULL;
-    mIsGrabbing = PR_FALSE;
-  	}
-  
   if (aDoCapture) {
     NS_IF_RELEASE(gRollupListener);
     NS_IF_RELEASE(gRollupWidget);
-    gRollupConsumeRollupEvent = PR_TRUE;
     gRollupListener = aListener;
     NS_ADDREF(aListener);
     gRollupWidget = this;
@@ -217,8 +178,9 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents( nsIRollupListener * aListener, PRBo
   	}
 	else {
     NS_IF_RELEASE(gRollupListener);
-    //gRollupListener = nsnull;
+    gRollupListener = nsnull;
     NS_IF_RELEASE(gRollupWidget);
+		gRollupWidget = nsnull;
   	}
   
   return NS_OK;
@@ -286,8 +248,8 @@ NS_IMETHODIMP nsWindow::SetBackgroundColor( const nscolor &aColor ) {
 	}
 
 
-NS_IMETHODIMP nsWindow::SetFocus(PRBool aRaise) {
-  return nsWidget::SetFocus();
+NS_IMETHODIMP nsWindow::SetFocus( PRBool aRaise ) {
+  return nsWidget::SetFocus(aRaise);
 	}
 
 	
@@ -404,174 +366,117 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
     if (!parentWidget)
       PtSetParentWidget( nsnull );
 		
-    if( mWindowType == eWindowType_popup )
-    {
-	  int	fields = Ph_REGION_PARENT|Ph_REGION_HANDLE| Ph_REGION_FLAGS|Ph_REGION_ORIGIN| 
-					 				Ph_REGION_EV_SENSE|Ph_REGION_EV_OPAQUE|Ph_REGION_RECT;
-	  int   sense =  Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE | Ph_EV_BUT_REPEAT;
+    if( mWindowType == eWindowType_popup ) {
+	  	int	fields = Ph_REGION_PARENT|Ph_REGION_HANDLE| Ph_REGION_FLAGS|Ph_REGION_ORIGIN|Ph_REGION_EV_SENSE|Ph_REGION_EV_OPAQUE|Ph_REGION_RECT;
+	  	int sense =  Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE | Ph_EV_BUT_REPEAT;
 
-      PtRawCallback_t callback;
-        callback.event_mask = sense;
-        callback.event_f = MenuRegionCallback;
-        callback.data = this;
-	  
-      PhRid_t    rid;
-      PhRegion_t region;
-	  	PhRect_t   rect;	  
-      PhArea_t   area;
-      PtArg_t    args[20];  
-      int        arg_count2 = 0;
-            
-      /* if no RollupListener has been added then add a full screen region to catch mounse and key */
-      /* events that are outside of the application */
-      if ( mMenuRegion == nsnull)
-      {
-	    PhQueryRids( 0, 0, 0, Ph_INPUTGROUP_REGION | Ph_QUERY_IG_POINTER, 0, 0, 0, &rid, 1);
-  	    PhRegionQuery( rid, &region, &rect, NULL, 0 );
-        area.pos = region.origin;
-        area.size.w = rect.lr.x - rect.ul.x + 1;
-        area.size.h = rect.lr.y - rect.ul.y + 1;
+      PtSetArg( &arg[arg_count++], Pt_ARG_REGION_FIELDS,   fields, fields );
+      PtSetArg( &arg[arg_count++], Pt_ARG_REGION_PARENT,   Ph_ROOT_RID, 0 );
+      PtSetArg( &arg[arg_count++], Pt_ARG_REGION_FLAGS,    Ph_FORCE_FRONT, Ph_FORCE_FRONT );
+      PtSetArg( &arg[arg_count++], Pt_ARG_REGION_SENSE,    sense | Ph_EV_DRAG|Ph_EV_EXPOSE, sense | Ph_EV_DRAG|Ph_EV_EXPOSE);
+      PtSetArg( &arg[arg_count++], Pt_ARG_REGION_OPAQUE,   sense | Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW, sense |Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW);
+      PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, 0, Pt_GETS_FOCUS);
+      mWidget = PtCreateWidget( PtRegion, parentWidget, arg_count, arg);
 
-        PtSetArg( &args[arg_count2++], Pt_ARG_FLAGS, Pt_DELAY_REALIZE, Pt_DELAY_REALIZE|Pt_GETS_FOCUS);
-        PtSetArg( &args[arg_count2++], Pt_ARG_REGION_PARENT,   Ph_ROOT_RID, 0 );
-        PtSetArg( &args[arg_count2++], Pt_ARG_REGION_FIELDS,   fields, fields );
-        PtSetArg( &args[arg_count2++], Pt_ARG_REGION_FLAGS,    Ph_FORCE_FRONT | Ph_FORCE_BOUNDARY, Ph_FORCE_FRONT | Ph_FORCE_BOUNDARY);
-        PtSetArg( &args[arg_count2++], Pt_ARG_REGION_SENSE,    sense, sense );
-        PtSetArg( &args[arg_count2++], Pt_ARG_REGION_OPAQUE,   Ph_EV_BOUNDARY, Ph_EV_BOUNDARY);
-        PtSetArg( &args[arg_count2++], Pt_ARG_AREA,            &area, 0 );
-        PtSetArg( &args[arg_count2++], Pt_ARG_FILL_COLOR,      Pg_TRANSPARENT, 0 );
-        PtSetArg( &args[arg_count2++], Pt_ARG_RAW_CALLBACKS,   &callback, 1 );
-        mMenuRegion = PtCreateWidget( PtRegion, parentWidget, arg_count2, args );
-      }
-
-        callback.event_f = PopupMenuRegionCallback;
-        PtSetArg( &arg[arg_count++], Pt_ARG_REGION_FIELDS,   fields, fields );
-        PtSetArg( &arg[arg_count++], Pt_ARG_REGION_FLAGS,    Ph_FORCE_FRONT, Ph_FORCE_FRONT );
-        PtSetArg( &arg[arg_count++], Pt_ARG_REGION_SENSE,    sense | Ph_EV_DRAG|Ph_EV_EXPOSE, sense | Ph_EV_DRAG|Ph_EV_EXPOSE);
-        PtSetArg( &arg[arg_count++], Pt_ARG_REGION_OPAQUE,   sense | Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW, sense |Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW);
-        PtSetArg( &arg[arg_count++], Pt_ARG_RAW_CALLBACKS,   &callback, 1 );
-        PtSetArg( &args[arg_count++], Pt_ARG_FLAGS, 0, Pt_GETS_FOCUS);
-        mWidget = PtCreateWidget( PtRegion, parentWidget, arg_count, arg);
-     }
-	else
-	{
-      PtSetParentWidget( nsnull );
-      
-      /* Dialog and TopLevel Windows */
-      PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, Pt_DELAY_REALIZE, Pt_DELAY_REALIZE);
-      PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_RENDER_FLAGS, render_flags, 0xFFFFFFFF );
-      PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_MANAGED_FLAGS, 0, Ph_WM_CLOSE );
-      PtSetArg( &arg[arg_count++], Pt_ARG_FILL_COLOR, Pg_BLUE, 0 );
-
-      mWidget = PtCreateWidget( PtWindow, NULL, arg_count, arg );
-      PtAddCallback(mWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
-	}
-	
-    // Must also create the client-area widget
-    if( mWidget )
-    {
+    	// Must also create the client-area widget
       arg_count = 0;
-      PtSetArg( &arg[arg_count++], Pt_ARG_ANCHOR_FLAGS, Pt_LEFT_ANCHORED_LEFT |
-                                   Pt_RIGHT_ANCHORED_RIGHT | Pt_TOP_ANCHORED_TOP | 
-								   Pt_BOTTOM_ANCHORED_BOTTOM, 0xFFFFFFFF );
+      PtSetArg( &arg[arg_count++], Pt_ARG_ANCHOR_FLAGS, Pt_ANCHOR_ALL, -1 );
       PtSetArg( &arg[arg_count++], Pt_ARG_BORDER_WIDTH, 0 , 0 );
       PtSetArg( &arg[arg_count++], Pt_ARG_MARGIN_WIDTH, 0 , 0 );
       PtSetArg( &arg[arg_count++], Pt_ARG_FILL_COLOR, Pg_GREEN, 0 );
-      //PtSetArg( &arg[arg_count++], Pt_ARG_FILL_COLOR, Pg_TRANSPARENT, 0 );
       PhRect_t anch_offset = { 0, 0, 0, 0 };
       PtSetArg( &arg[arg_count++], Pt_ARG_ANCHOR_OFFSETS, &anch_offset, 0 );
 
-      if( mWindowType == eWindowType_popup )
-	  {
-        PtSetArg( &arg[arg_count++], RDC_DRAW_FUNC, RawDrawFunc, 0 );
-        PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, 0, (Pt_HIGHLIGHTED | Pt_GETS_FOCUS));
-        mClientWidget = PtCreateWidget( PtRawDrawContainer, mWidget, arg_count, arg );
-	  }
-	  else
-	  {  
-        PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, 0, Pt_HIGHLIGHTED | Pt_GETS_FOCUS );
-        PtSetArg( &arg[arg_count++], Pt_ARG_FILL_COLOR, Pg_YELLOW, 0 );
-	  }
-    }
+      PtSetArg( &arg[arg_count++], RDC_DRAW_FUNC, RawDrawFunc, 0 );
+      PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, 0, (Pt_HIGHLIGHTED | Pt_GETS_FOCUS));
+      mClientWidget = PtCreateWidget( PtRawDrawContainer, mWidget, arg_count, arg );
+     }
+	else {
+		PtSetParentWidget( nsnull );
+
+		/* Dialog and TopLevel Windows */
+		PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, Pt_DELAY_REALIZE, Pt_DELAY_REALIZE);
+		PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_RENDER_FLAGS, render_flags, 0xFFFFFFFF );
+		PtSetArg( &arg[arg_count++], Pt_ARG_FILL_COLOR, Pg_BLUE, 0 );
+
+		PtRawCallback_t cb_raw = { Ph_EV_INFO, EvInfo, NULL };
+		PtCallback_t cb_resize = { ResizeHandler, NULL };
+		PtSetArg( &arg[arg_count++], Pt_CB_RESIZE, &cb_resize, NULL );
+		PtSetArg( &arg[arg_count++], Pt_CB_RAW, &cb_raw, NULL );
+
+		mWidget = PtCreateWidget( PtWindow, NULL, arg_count, arg );
+		}
   }
 
-  if( mWidget )
-  {
+  if( mWidget ) {
     SetInstance( mWidget, this );
-
-    if( mClientWidget )
-      SetInstance( mClientWidget, this );
+    if( mClientWidget ) SetInstance( mClientWidget, this );
  
-    if (mWindowType == eWindowType_child)
-    {
-      PtAddCallback(mWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
-      PtAddEventHandler( mWidget,
-        Ph_EV_PTR_MOTION_BUTTON | Ph_EV_PTR_MOTION_NOBUTTON |
-        Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE |Ph_EV_BOUNDARY|Ph_EV_DRAG /* | Ph_EV_WM | Ph_EV_EXPOSE */
-        , RawEventHandler, this );
-
-      PtArg_t arg;
-      PtRawCallback_t callback;
+    if( mWindowType == eWindowType_child ) {
+      	PtAddCallback(mWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
+      	PtAddEventHandler( mWidget,
+      	  Ph_EV_PTR_MOTION_BUTTON | Ph_EV_PTR_MOTION_NOBUTTON |
+      	  Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE |Ph_EV_BOUNDARY|Ph_EV_DRAG /* | Ph_EV_WM | Ph_EV_EXPOSE */
+      	  , RawEventHandler, this );
+	
+    		PtArg_t arg;
+    		PtRawCallback_t callback;
 		
-		callback.event_mask = ( Ph_EV_KEY ) ;
-		callback.event_f = RawEventHandler;
-		callback.data = this;
-		PtSetArg( &arg, Pt_CB_FILTER, &callback, 0 );
-		PtSetResources( mWidget, 1, &arg );
-    }
-    else if (mWindowType == eWindowType_popup)
-	{
-      PtAddEventHandler( mClientWidget,
-       	Ph_EV_PTR_MOTION_BUTTON | Ph_EV_PTR_MOTION_NOBUTTON | 
-        	Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE |Ph_EV_BOUNDARY | Ph_EV_WM | Ph_EV_EXPOSE,
-        RawEventHandler, this );
+				callback.event_mask = ( Ph_EV_KEY ) ;
+				callback.event_f = RawEventHandler;
+				callback.data = this;
+				PtSetArg( &arg, Pt_CB_FILTER, &callback, 0 );
+				PtSetResources( mWidget, 1, &arg );
+    		}
+    else if( mWindowType == eWindowType_popup ) {
+      		PtAddEventHandler( mClientWidget,
+      			 	Ph_EV_PTR_MOTION_BUTTON | Ph_EV_PTR_MOTION_NOBUTTON | 
+      		  	Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE |Ph_EV_BOUNDARY | Ph_EV_WM | Ph_EV_EXPOSE,
+      			  RawEventHandler, this );
 
-      PtArg_t arg;
-      PtRawCallback_t callback;
+      		PtArg_t arg;
+      		PtRawCallback_t callback;
 		
-		callback.event_mask = ( Ph_EV_KEY ) ;
-		callback.event_f = RawEventHandler;
-		callback.data = this;
-		PtSetArg( &arg, Pt_CB_FILTER, &callback, 0 );
-		PtSetResources( mClientWidget, 1, &arg );
+					callback.event_mask = ( Ph_EV_KEY ) ;
+					callback.event_f = RawEventHandler;
+					callback.data = this;
+					PtSetArg( &arg, Pt_CB_FILTER, &callback, 0 );
+					PtSetResources( mClientWidget, 1, &arg );
 			
-      PtAddCallback(mClientWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
-	}
-    else if ( !parentWidget )
-    {
-       if (mClientWidget) PtAddCallback(mClientWidget, Pt_CB_RESIZE, ResizeHandler, nsnull );
-       else
-       {
- 	     PtRawCallback_t filter_cb;
+    		  PtAddCallback(mClientWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
+					}
+    else if( !parentWidget ) {
+       if( mClientWidget ) PtAddCallback(mClientWidget, Pt_CB_RESIZE, ResizeHandler, nsnull );
+       else {
+ 	     			PtRawCallback_t filter_cb;
 		
-		  filter_cb.event_mask =  Ph_EV_EXPOSE ;
-          filter_cb.event_f = RawEventHandler;
-          filter_cb.data = this;
-		  PtSetResource(mWidget, Pt_CB_FILTER, &filter_cb,1);
+		  			filter_cb.event_mask =  Ph_EV_EXPOSE ;
+          	filter_cb.event_f = RawEventHandler;
+          	filter_cb.data = this;
+		  			PtSetResource(mWidget, Pt_CB_FILTER, &filter_cb,1);
 		  
-          PtAddCallback(mWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
+          	PtAddCallback(mWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
 
-           PtArg_t arg;
-           PtCallback_t callback;
-		
-		    callback.event_f = WindowCloseHandler;
+           	PtCallback_t callback;
+		    		callback.event_f = WindowWMHandler;
             callback.data = this;
-            PtSetArg( &arg,Pt_CB_WINDOW, &callback, 0 );
-            PtSetResources( mWidget, 1, &arg );
-			
-       }
-    }
+
+            PtSetArg( &arg[0], Pt_CB_WINDOW, &callback, 0 );
+						PtSetArg( &arg[1], Pt_ARG_WINDOW_NOTIFY_FLAGS, 0xFFFFFFFF, 0XFFFFFFFF );
+            PtSetResources( mWidget, 2, arg );
+       			}
+    		}
 
     // call the event callback to notify about creation
     DispatchStandardEvent( NS_CREATE );
 
     result = NS_OK;
-  }
+  	}
 
   SetCursor( mCursor );
 
   return result;
-}
+	}
 
 
 //-------------------------------------------------------------------------
@@ -637,7 +542,7 @@ NS_METHOD nsWindow::Scroll( PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect ) {
 
 	PtEndFlux( widget);
 
-	PhRect_t source = { 0, 0, widget->area.size.w, widget->area.size.h };
+	PhRect_t source = { widget->area.pos.x, widget->area.pos.y, widget->area.pos.x+ widget->area.size.w, widget->area.pos.y + widget->area.size.h };
 	PhPoint_t point = { aDx, aDy };
 	PtBlit( widget, &source, &point );
   
@@ -751,14 +656,14 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
       aWidth = 1;
       aHeight = 1;
       mIsTooSmall = PR_TRUE;
-//      if(mShown) Show(PR_FALSE);
+//			if( mShown ) Show(PR_FALSE);
     }
     else
     {
       aWidth = 1;
       aHeight = 1;
       mIsTooSmall = PR_TRUE;
-			//Show(PR_FALSE);
+//			if( mShown ) Show(PR_FALSE);
     }
   }
   else
@@ -834,59 +739,56 @@ NS_IMETHODIMP nsWindow::Resize( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 
 	}
 
 
-int nsWindow::WindowCloseHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo ) {
+int nsWindow::WindowWMHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo ) {
   PhWindowEvent_t *we = (PhWindowEvent_t *) cbinfo->cbdata;
   nsWindow * win = (nsWindow*) data;
 
-  if( we->event_f == Ph_WM_CLOSE ) {
-  	NS_ADDREF(win);
+  switch( we->event_f ) {
+		case Ph_WM_CLOSE:
+			{
+  		NS_ADDREF(win);
 
-  	// dispatch an "onclose" event. to delete immediately, call win->Destroy()
-  	nsGUIEvent event;
-  	nsEventStatus status;
+  		// dispatch an "onclose" event. to delete immediately, call win->Destroy()
+  		nsGUIEvent event;
+  		nsEventStatus status;
   
-  	event.message = NS_XUL_CLOSE;
-  	event.widget  = win;
-  	event.eventStructType = NS_GUI_EVENT;
+  		event.message = NS_XUL_CLOSE;
+  		event.widget  = win;
+  		event.eventStructType = NS_GUI_EVENT;
 
-  	event.time = 0;
-  	event.point.x = 0;
-  	event.point.y = 0;
+  		event.time = 0;
+  		event.point.x = 0;
+  		event.point.y = 0;
  
-  	win->DispatchEvent(&event, status);
+  		win->DispatchEvent(&event, status);
 
-  	NS_RELEASE(win);
-  	}
+  		NS_RELEASE(win);
+			}
+			break;
+
+		default:
+			/* destroy any pop up widgets ( menus ) */
+			if( gRollupWidget && gRollupListener ) gRollupListener->Rollup();
+			}
+
   return Pt_CONTINUE;
 	}
 
 NS_METHOD nsWindow::Show( PRBool bState ) {
 
-  if (!mWidget) return NS_OK; // Will be null durring printing
-  EnableDamage(mWidget, PR_FALSE);
+  if( !mWidget ) return NS_OK; // Will be null durring printing
+	if( ( mShown && bState ) || ( !mShown && !bState ) ) return NS_OK;
 
-  if (bState) {
-     if (mWindowType == eWindowType_popup) {
-          short arg_count=0;
-          PtArg_t   arg[2];
-          PhPoint_t pos = nsToolkit::GetConsoleOffset();
+	if( mWindowType == eWindowType_popup ) {
 
-          /* Position the region on the current console*/
-          PtSetArg( &arg[0],  Pt_ARG_POS,  &pos, 0 );
-          PtSetResources( mMenuRegion, 1, arg );
+  	EnableDamage( mWidget, PR_FALSE );
 
-          PtRealizeWidget(mMenuRegion);
+  	if( bState ) PtRealizeWidget( mWidget );
+		else PtUnrealizeWidget( mWidget );
 
-          /* Now that the MenuRegion is Realized make the popup menu a child in front of the big menu */
-          PtSetArg( &arg[arg_count++], Pt_ARG_REGION_PARENT, mMenuRegion->rid, 0 );
-          PtSetResources(mWidget, arg_count, arg);           
-					}
-			}
-  else {
-     if( mWindowType == eWindowType_popup ) PtUnrealizeWidget(mMenuRegion);
+  	EnableDamage( mWidget, PR_TRUE );
 		}
 
-  EnableDamage(mWidget, PR_TRUE);
   return nsWidget::Show(bState);
 	}
 
@@ -896,6 +798,7 @@ NS_METHOD nsWindow::Show( PRBool bState ) {
 //
 //-------------------------------------------------------------------------
 PRBool nsWindow::HandleEvent( PtCallbackInfo_t* aCbInfo ) {
+/* if in the future you add code here, modify nsWidget::HandleEvent() to allow you this call */
 	return nsWidget::HandleEvent(aCbInfo);
 	}
 
@@ -927,19 +830,24 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 		PtWidgetOffset( pWidget, &offset );
 
 		/* Build a List of Tiles that might be in front of me.... */
-		PhTile_t *intersection = NULL, *clip_tiles = pWin->GetWindowClipping( );
+		PhTile_t *clip_tiles = pWin->GetWindowClipping( );
 
 		/* Intersect the Damage tile list w/ the clipped out list and see whats left! */
 		PhTile_t *new_damage, *tiles;
 
-		if( damage->next ) tiles = PhCopyTiles( damage->next );
-		else tiles = PhRectsToTiles( &damage->rect, 1 );
+		if( pWin->mWindowType == eWindowType_popup ) {
+			/* for a eWindowType_popup widget, consider damaging the whole widget - because of problems displaying comboboxes and color pickers */
+			new_damage = PhRectsToTiles( &pWidget->extent, 1 );
+			}
+		else {
+			if( damage->next ) tiles = PhCopyTiles( damage->next );
+			else tiles = PhRectsToTiles( &damage->rect, 1 );
 
-		/* new_damage is the same as tiles2... I need to release it later */
-		new_damage = PhClipTilings( tiles, clip_tiles, &intersection );
+			/* new_damage is the same as tiles2... I need to release it later */
+			new_damage = PhClipTilings( tiles, clip_tiles, NULL);
+			}
 
 		PhFreeTiles( clip_tiles );
-		if( intersection ) PhFreeTiles( intersection );
 		if( new_damage == nsnull ) return; /* tiles and clip_tiles have been released */
 
 		PhDeTranslateTiles( new_damage, &offset );
@@ -1030,7 +938,8 @@ PhTile_t *nsWindow::GetWindowClipping( ) {
 
 int nsWindow::ResizeHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
 {
-  PhRect_t *extents = (PhRect_t *)cbinfo->cbdata; 
+  PtContainerCallback_t *cb = (PtContainerCallback_t *) cbinfo->cbdata;
+  PhRect_t *extents = &cb->new_size;
   nsWindow *someWindow = (nsWindow *) GetInstance(widget);
   nsRect rect;
 
@@ -1052,6 +961,46 @@ int nsWindow::ResizeHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *c
 	return( Pt_CONTINUE );
 }
 
+
+static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
+
+/* catch an Ph_EV_INFO event when the graphics mode has changed */
+int nsWindow::EvInfo( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo ) {
+
+	if( cbinfo->event && cbinfo->event->type == Ph_EV_INFO && cbinfo->event->subtype == Ph_OFFSCREEN_INVALID ) {
+
+		nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
+		NS_ENSURE_TRUE(windowMediator, NS_ERROR_FAILURE);
+
+		nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+		NS_ENSURE_SUCCESS(windowMediator->GetXULWindowEnumerator(nsnull, getter_AddRefs(windowEnumerator)), NS_ERROR_FAILURE);
+
+		PRBool more;
+		windowEnumerator->HasMoreElements(&more);
+		while(more) {
+			nsCOMPtr<nsISupports> nextWindow = nsnull;
+			windowEnumerator->GetNext(getter_AddRefs(nextWindow));
+			nsCOMPtr<nsIXULWindow> xulWindow(do_QueryInterface(nextWindow));
+			NS_ENSURE_TRUE(xulWindow, NS_ERROR_FAILURE);
+	
+			nsCOMPtr<nsIDocShell> docShell;
+			xulWindow->GetDocShell(getter_AddRefs(docShell));
+
+			nsCOMPtr<nsIPresShell> presShell;
+			docShell->GetPresShell( getter_AddRefs(presShell) );
+
+			nsCOMPtr<nsIViewManager> viewManager;
+			presShell->GetViewManager(getter_AddRefs(viewManager));
+			NS_ENSURE_TRUE(viewManager, NS_ERROR_FAILURE);
+
+			windowEnumerator->HasMoreElements(&more);
+			}
+
+		PtDamageWidget( widget );
+		}
+	return Pt_CONTINUE;
+	}
+
 void nsWindow::ResizeHoldOff() {
 
   if( !mWidget ) return;
@@ -1063,8 +1012,7 @@ void nsWindow::ResizeHoldOff() {
     PtWidget_t *top = PtFindDisjoint( mWidget );
 
 		if( (mResizeProcID = PtAppAddWorkProc( nsnull, ResizeWorkProc, top )) != nsnull ) {
-			int Global_Widget_Hold_Count;
-			Global_Widget_Hold_Count =  PtHold();
+			PtHold();
 			mResizeQueueInited = PR_TRUE;
 			}
 		}
@@ -1117,8 +1065,7 @@ void nsWindow::RemoveResizeWidget( ) {
 
     if( nsnull == mResizeQueue ) {
       mResizeQueueInited = PR_FALSE;
-      PtWidget_t *top = PtFindDisjoint( mWidget );
-      int Global_Widget_Hold_Count = PtRelease( );
+      PtRelease( );
       if( mResizeProcID ) PtAppRemoveWorkProc( nsnull, mResizeProcID );
     	}
   	}
@@ -1142,8 +1089,7 @@ int nsWindow::ResizeWorkProc( void *data ) {
     nsWindow::mResizeQueue = nsnull;
     nsWindow::mResizeQueueInited = PR_FALSE;
 
-    int Global_Widget_Hold_Count;
-    Global_Widget_Hold_Count =  PtRelease();
+    PtRelease();
   	}
 
   return Pt_END;
@@ -1188,8 +1134,7 @@ NS_METHOD nsWindow::Move( PRInt32 aX, PRInt32 aY ) {
 			{
 			PhPoint_t offset, total_offset = { 0, 0 };
     
-			PtWidget_t *parent, *disjoint = PtFindDisjoint( mWidget );
-			disjoint = PtFindDisjoint( PtWidgetParent( disjoint ) );
+			PtWidget_t *parent, *disjoint = PtFindDisjoint( mWidget->parent );
 
 			while( disjoint ) {
 				PtGetAbsPosition( disjoint, &offset.x, &offset.y );
@@ -1207,15 +1152,11 @@ NS_METHOD nsWindow::Move( PRInt32 aX, PRInt32 aY ) {
 			aX += total_offset.x;
 			aY += total_offset.y;
 
+
 			/* Add the Offset if the widget is offset from its parent.. */
-			parent = PtWidgetParent( mWidget );
-			PtWidgetOffset( parent, &offset );
+			PtWidgetOffset( mWidget->parent, &offset );
 			aX += offset.x;
 			aY += offset.y;
-
-			offset = nsToolkit::GetConsoleOffset();
-			aX -= offset.x;
-			aY -= offset.y;
 			}
 			break;
 
@@ -1253,16 +1194,11 @@ NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent, PRBool *aF
 
 int nsWindow::MenuRegionCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo ) {
 
-  nsWindow      *pWin = (nsWindow*) data;
-  nsWindow      *pWin2 = (nsWindow*) GetInstance(widget);
-  nsresult      result;
-  PhEvent_t	    *event = cbinfo->event;
-
-	if( event->type == Ph_EV_BUT_PRESS ) {
+	if( cbinfo->event->type == Ph_EV_BUT_PRESS ) {
+  	nsWindow      *pWin = (nsWindow*) data;
 		if( pWin->gRollupWidget && pWin->gRollupListener ) {
 			/* Close the Window */
 			pWin->gRollupListener->Rollup();
-			IgnoreEvent = event->timestamp;
 			}
 		}
 	return Pt_CONTINUE;
@@ -1311,10 +1247,4 @@ nsIRegion *nsWindow::GetRegion()
   NS_ASSERTION(NULL != region, "Null region context");
   
   return region;  
-}
-
-
-int nsWindow::PopupMenuRegionCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo)
-{
-  return RawEventHandler(widget, data, cbinfo);
 }

@@ -729,7 +729,7 @@ void nsMenu::LoadMenuItem(
   nsString menuitemCmd;
 
   menuitemElement->GetAttribute(nsAutoString("disabled"), disabled);
-  menuitemElement->GetAttribute(nsAutoString("label"), menuitemName);
+  menuitemElement->GetAttribute(nsAutoString("value"), menuitemName);
   menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
 
 #if 1
@@ -788,7 +788,7 @@ void nsMenu::LoadSubMenu(
   nsIDOMNode *    menuNode)
 {
   nsString menuName;
-  menuElement->GetAttribute(nsAutoString("label"), menuName);
+  menuElement->GetAttribute(nsAutoString("value"), menuName);
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::LoadSubMenu <%s>\n", menuName.ToNewCString()));
 
