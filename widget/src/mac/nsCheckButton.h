@@ -23,12 +23,11 @@
 #include "nsICheckButton.h"
 
 
-/**
- * Native Macintosh check button wrapper
+/**-------------------------------------------------------------------------------
+ * nsCheckButton Class definition for the Macintosh
+ * @update dc 10/16/98 
  */
-
-class nsCheckButton : public nsWindow,
-                      public nsICheckButton
+class nsCheckButton : public nsWindow,public nsICheckButton
 {
 
 public:
@@ -56,36 +55,25 @@ public:
               nsWidgetInitData *aInitData = nsnull);
 
 
-    // nsIRadioButton part
+  // nsICheckButton part
   NS_IMETHOD     SetLabel(const nsString& aText);
   NS_IMETHOD     GetLabel(nsString& aBuffer);
   NS_IMETHOD 		 SetState(const PRBool aState);
   NS_IMETHOD     GetState(PRBool& aState);
 
+	// event handling
   virtual PRBool OnPaint(nsPaintEvent & aEvent);
   virtual PRBool OnResize(nsSizeEvent &aEvent);
   virtual PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
     
-  // Overriden from nsWindow
-  //virtual PRBool PtInWindow(PRInt32 aX,PRInt32 aY);
-  
-  // Mac specific methods
-  void LocalToWindowCoordinate(nsPoint& aPoint);
-  void LocalToWindowCoordinate(nsRect& aRect);	
 
 private:
-
-	void StringToStr255(const nsString& aText, Str255& aStr255);
 	void DrawWidget(PRBool	aMouseInside);
 
-
-  
   nsString			mLabel;
   PRBool				mMouseDownInButton;
   PRBool				mWidgetArmed;
   PRBool				mButtonSet;
-
-
 };
 
 #endif // nsCheckButton_h__

@@ -25,12 +25,10 @@
 NS_IMPL_ADDREF(nsScrollbar)
 NS_IMPL_RELEASE(nsScrollbar)
 
-//=================================================================
-/*	Constructor for the scrollbar
- *  @update  gpk 08/27/98
- *  @param   aX -- x offset in widget local coordinates
- *  @param   aY -- y offset in widget local coordinates
- *  @return  PR_TRUE if the pt is contained in the widget
+/**-------------------------------------------------------------------------------
+ * nsScrollbar Constructor
+ *  @update  dc 10/31/98
+ * @param aIsVertical -- Tells if the scrollbar had a vertical or horizontal orientation
  */
 nsScrollbar::nsScrollbar(PRBool aIsVertical)
 {
@@ -40,16 +38,18 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical)
 
 }
 
-//=================================================================
-/*	Creates a scrollbar with aParent as the widgets parent
- *  @update  dc 09/16/98
- *  @param  aParent -- The parent of this widget
- *  @param  aHandleEventFunction -- Eventhandler
- *  @param  aContext -- Device context for widget
- *  @param  aToolkit -- Tookkit for all the widgets
- *	@param	aInitData -- 
- *  @return nothing
- */
+/**-------------------------------------------------------------------------------
+ * The create method for a scrollbar, using a nsIWidget as the parent
+ * @update  dc 08/31/98
+ * @param  aParent -- the widget which will be this widgets parent in the tree
+ * @param  aRect -- The bounds in parental coordinates of this widget
+ * @param  aHandleEventFunction -- Procedures to be executed for this widget
+ * @param  aContext -- device context to be used by this widget
+ * @param  aAppShell -- 
+ * @param  aToolkit -- toolkit to be used by this widget
+ * @param  aInitData -- Initialization data used by frames
+ * @return -- NS_OK if everything was created correctly
+ */ 
 NS_IMETHODIMP nsScrollbar::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
@@ -63,15 +63,11 @@ NS_IMETHODIMP nsScrollbar::Create(nsIWidget *aParent,
 	
 	WindowPtr window = nsnull;
 
-  if (aParent) 
-  	{
+  if (aParent) {
     window = (WindowPtr) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  	} 
- 	else 
- 		if (aAppShell) 
- 			{
+  } else if (aAppShell) {
    		window = (WindowPtr) aAppShell->GetNativeData(NS_NATIVE_SHELL);
-  		}
+  }
 
   mIsMainWindow = PR_FALSE;
   mWindowMadeHere = PR_TRUE;
@@ -79,8 +75,7 @@ NS_IMETHODIMP nsScrollbar::Create(nsIWidget *aParent,
 	mWindowPtr = (WindowPtr)window;
   
   NS_ASSERTION(window!=nsnull,"The WindowPtr for the widget cannot be null")
-	if (window)
-		{
+	if (window){
 	  InitToolkit(aToolkit, aParent);
 	  // InitDeviceContext(aContext, parentWidget);
 		
@@ -102,20 +97,22 @@ NS_IMETHODIMP nsScrollbar::Create(nsIWidget *aParent,
 
 	  //InitCallbacks("nsButton");
 	  InitDeviceContext(mContext, (nsNativeWidget)mWindowPtr);
-		}
-		return NS_OK;
+	}
+	return NS_OK;
 }
 
-//=================================================================
-/*	Creates a scrollbar with aParent as the widgets parent, this should never be called
- *  @update  dc 09/16/98
- *  @param  aParent -- The parent of this widget
- *  @param  aHandleEventFunction -- Eventhandler
- *  @param  aContext -- Device context for widget
- *  @param  aToolkit -- Tookkit for all the widgets
- *	@param	aInitData -- 
- *  @return nothing
- */
+/**-------------------------------------------------------------------------------
+ * The create method for a button, using a nsNativeWidget as the parent
+ * @update  dc 08/31/98
+ * @param  aParent -- the widget which will be this widgets parent in the tree
+ * @param  aRect -- The bounds in parental coordinates of this widget
+ * @param  aHandleEventFunction -- Procedures to be executed for this widget
+ * @param  aContext -- device context to be used by this widget
+ * @param  aAppShell -- 
+ * @param  aToolkit -- toolkit to be used by this widget
+ * @param  aInitData -- Initialization data used by frames
+ * @return -- NS_OK if everything was created correctly
+ */ 
 NS_IMETHODIMP nsScrollbar::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
@@ -127,58 +124,57 @@ NS_IMETHODIMP nsScrollbar::Create(nsNativeWidget aParent,
 nsWindow		*theNsWindow=nsnull;
 nsRefData		*theRefData;
 
-	if(0!=aParent)
-		{
+	if(0!=aParent){
 		theRefData = (nsRefData*)(((WindowPeek)aParent)->refCon);
 		theNsWindow = (nsWindow*)theRefData->GetCurWidget();
-		}
+	}
 		
-	if(nsnull!=theNsWindow)
+	if(nsnull!=theNsWindow){
 		Create(theNsWindow, aRect,aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
+	}
 
 	//NS_ERROR("This Widget must not use this Create method");
 	return NS_OK;
 
 }
 
-//-------------------------------------------------------------------------
-//
-// nsScrollbar destructor
-//
-//-------------------------------------------------------------------------
+/**-------------------------------------------------------------------------------
+ * Destuctor for the nsScrollbar
+ * @update  dc 10/31/98
+ */ 
 nsScrollbar::~nsScrollbar()
 {
 }
 
-
-/**
+/**-------------------------------------------------------------------------------
  * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
+ * @update  dc 08/31/98
  * @param aIID The name of the class implementing the method
  * @param _classiiddef The name of the #define symbol that defines the IID
  * for the class (e.g. NS_ISUPPORTS_IID)
-*/ 
+ */ 
 nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
+  if (NULL == aInstancePtr) {
+      return NS_ERROR_NULL_POINTER;
+  }
 
-    static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
-    if (aIID.Equals(kIScrollbarIID)) {
-        *aInstancePtr = (void*) ((nsIScrollbar*)this);
-        AddRef();
-        return NS_OK;
-    }
+  static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
+  if (aIID.Equals(kIScrollbarIID)) {
+      *aInstancePtr = (void*) ((nsIScrollbar*)this);
+      AddRef();
+      return NS_OK;
+  }
 
-    return nsWindow::QueryInterface(aIID,aInstancePtr);
+  return nsWindow::QueryInterface(aIID,aInstancePtr);
 }
 
-//=================================================================
-/*	Handle a mousedown event
- *  @update  dc 09/16/98
- *  @param  nsMouseEvent -- the mouse event to handle
- *  @return -- True if the event was handled
- */
+/**-------------------------------------------------------------------------------
+ * DispatchMouseEvent handle an event for this scrollbar
+ * @update  dc 08/31/98
+ * @Param aEvent -- The mouse event to respond to for this button
+ * @return -- True if the event was handled, PR_FALSE if we did not handle it.
+ */ 
 PRBool 
 nsScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
@@ -227,9 +223,9 @@ PRBool 	result;
 	return result;
 }
 
-//-------------------------------------------------------------------------
-/*  Draw in the different modes depending on the state of the mouse and buttons
- *  @update  dc 08/31/98
+/**-------------------------------------------------------------------------------
+ *  Draw in the scrollbar and thumb
+ *  @update  dc 10/16/98
  *  @param   aMouseInside -- A boolean indicating if the mouse is inside the control
  *  @return  nothing is returned
  */
@@ -269,9 +265,9 @@ RgnHandle						thergn;
 			
 }
 
-//-------------------------------------------------------------------------
-/*  Draw or clear the thumb area of the scrollbar
- *  @update  dc 08/31/98
+/**-------------------------------------------------------------------------------
+ *  Draw or clear the thumb area of the scrollbar
+ *  @update  dc 10/31/98
  *  @param   aClear -- A boolean indicating if it will be erased instead of painted
  *  @return  nothing is returned
  */
@@ -338,8 +334,8 @@ RgnHandle						thergn;
 
 
 
-//=================================================================
-/*	set the maximum range of a scroll bar
+/**-------------------------------------------------------------------------------
+ *	set the maximum range of a scroll bar
  *  @update  dc 09/16/98
  *  @param  aMaxRange -- the maximum to set this to
  *  @return -- If a good size was returned
@@ -350,8 +346,8 @@ NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 		return (NS_OK);
 }
 
-//=================================================================
-/*	get the maximum range of a scroll bar
+/**-------------------------------------------------------------------------------
+ *	get the maximum range of a scroll bar
  *  @update  dc 09/16/98
  *  @param  aMaxRange -- The current maximum this slider can be
  *  @return -- If a good size was returned
@@ -362,8 +358,8 @@ NS_METHOD nsScrollbar::GetMaxRange(PRUint32& aMaxRange)
 	return (NS_OK);
 }
 
-//=================================================================
-/*	set the current position of the slider
+/**-------------------------------------------------------------------------------
+ *	Set the current position of the slider
  *  @update  dc 09/16/98
  *  @param  aMaxRange -- The current value to set the slider position to.
  *  @return -- NS_OK if the position is valid
@@ -386,8 +382,8 @@ NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
 }
 
 
-//=================================================================
-/*	get the current position of the slider
+/**-------------------------------------------------------------------------------
+ *	Get the current position of the slider
  *  @update  dc 09/16/98
  *  @param  aMaxRange -- The current slider position.
  *  @return -- NS_OK if the position is valid
@@ -398,9 +394,8 @@ NS_METHOD nsScrollbar::GetPosition(PRUint32& aPos)
   return (NS_OK);
 }
 
-
-//=================================================================
-/*	Set the hieght of a vertical, or width of a horizontal scroll bar thumb control
+/**-------------------------------------------------------------------------------
+ *	Set the hieght of a vertical, or width of a horizontal scroll bar thumb control
  *  @update  dc 09/16/98
  *  @param  aSize -- the size to set the thumb control to
  *  @return -- NS_OK if the position is valid
@@ -416,9 +411,8 @@ NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
   	return(NS_OK);
 }
 
-
-//=================================================================
-/*	get the height of a vertical, or width of a horizontal scroll bar thumb control
+/**-------------------------------------------------------------------------------
+ *	get the height of a vertical, or width of a horizontal scroll bar thumb control
  *  @update  dc 09/16/98
  *  @param  aSize -- the size to set the thumb control to
  *  @return -- NS_OK if the position is valid
@@ -430,9 +424,8 @@ NS_METHOD nsScrollbar::GetThumbSize(PRUint32& aSize)
 	return(NS_OK);
 }
 
-
-//=================================================================
-/*	Set the increment of the scroll bar
+/**-------------------------------------------------------------------------------
+ *	Set the increment of the scroll bar
  *  @update  dc 09/16/98
  *  @param  aLineIncrement -- the control increment
  *  @return -- NS_OK if the position is valid
@@ -447,8 +440,8 @@ NS_METHOD nsScrollbar::SetLineIncrement(PRUint32 aLineIncrement)
 }
 
 
-//=================================================================
-/*	Get the increment of the scroll bar
+/**-------------------------------------------------------------------------------
+ *	Get the increment of the scroll bar
  *  @update  dc 09/16/98
  *  @param aLineIncrement -- the control increment
  *  @return NS_OK if the position is valid
@@ -460,11 +453,15 @@ NS_METHOD nsScrollbar::GetLineIncrement(PRUint32& aLineIncrement)
 }
 
 
-//-------------------------------------------------------------------------
-//
-// Set all scrolling parameters
-//
-//-------------------------------------------------------------------------
+/**-------------------------------------------------------------------------------
+ *	Set all the scrollbar parameters
+ *  @update  dc 09/16/98
+ *  @param aMaxRange -- max range of the scrollbar in relative units
+ *  @param aThumbSize -- thumb size, in relative units
+ *  @param aPosition -- the thumb position in relative units
+ *  @param aLineIncrement -- the increment levelof the scrollbar
+ *  @return NS_OK if the position is valid
+ */
 NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                 PRUint32 aPosition, PRUint32 aLineIncrement)
 {
@@ -480,10 +477,11 @@ NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
 }
 
 
-//-------------------------------------------------------------------------
-//
-// paint message. Don't send the paint out
-//
+/**-------------------------------------------------------------------------------
+ * The onPaint handleer for a button -- this may change, inherited from windows
+ * @param aEvent -- The paint event to respond to
+ * @return -- PR_TRUE if painted, false otherwise
+ */ 
 //-------------------------------------------------------------------------
 PRBool nsScrollbar::OnPaint(nsPaintEvent & aEvent)
 {
@@ -492,14 +490,23 @@ PRBool nsScrollbar::OnPaint(nsPaintEvent & aEvent)
 }
 
 
+/**-------------------------------------------------------------------------------
+ * Resizes the button, currently handles by nsWindow
+ * @update  dc 08/31/98
+ * @Param aEvent -- The event for this resize
+ * @return -- True if the event was handled, PR_FALSE is always return for now
+ */ 
 PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
 {
-
   return nsWindow::OnResize(aEvent);
-  //return PR_FALSE;
 }
 
-//-------------------------------------------------------------------------
+/**-------------------------------------------------------------------------------
+ * Set the scrollbar position
+ * @update  dc 10/31/98
+ * @Param aPosition -- position in relative units
+ * @return -- return the position
+ */ 
 int nsScrollbar::AdjustScrollBarPosition(int aPosition) 
 {
 int maxRange=0,cap,sliderSize=0;
@@ -508,22 +515,22 @@ int maxRange=0,cap,sliderSize=0;
   return aPosition > cap ? cap : aPosition;
 }
 
-//-------------------------------------------------------------------------
-//
-// Deal with scrollbar messages (actually implemented only in nsScrollbar)
-//
-//-------------------------------------------------------------------------
+/**-------------------------------------------------------------------------------
+ * Deal with scrollbar messages (actually implemented only in nsScrollbar)
+ * @update  dc 08/31/98
+ * @Param aEvent -- the event to handle
+ * @Param cPos -- the current position
+ * @return -- True if the event was handled, PR_FALSE if we did not handle it.
+ */ 
 PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
 PRBool 				result = PR_TRUE;
 PRUint32 			newPosition=0;
 PRUint32			range;
 
-	switch (aEvent.message) 
-		{
+	switch (aEvent.message) {
 	  // scroll one line right or down
-	  case NS_SCROLLBAR_LINE_NEXT: 
-	  	{
+	  case NS_SCROLLBAR_LINE_NEXT: {
 	    newPosition += mLineIncrement;
 	    PRUint32 max = GetMaxRange(range) - GetThumbSize(range);
 	    if (newPosition > (int)max) 
@@ -531,88 +538,79 @@ PRUint32			range;
 
 	    // if an event callback is registered, give it the chance
 	    // to change the increment
-	    if (mEventCallback) 
-	    	{
+	    if (mEventCallback) {
 	      aEvent.position = newPosition;
 	      result = ConvertStatus((*mEventCallback)(&aEvent));
 	      newPosition = aEvent.position;
-	    	}
+	    }
 	    break;
-	  	}
+	  }
 
-      // scroll one line left or up
-      case NS_SCROLLBAR_LINE_PREV: 
-      {
+    // scroll one line left or up
+    case NS_SCROLLBAR_LINE_PREV: {
       newPosition -= mLineIncrement;
       if (newPosition < 0) 
           newPosition = 0;
 
       // if an event callback is registered, give it the chance
       // to change the decrement
-      if (mEventCallback) 
-      	{
+      if (mEventCallback) {
         aEvent.position = newPosition;
         result = ConvertStatus((*mEventCallback)(&aEvent));
         newPosition = aEvent.position;
-      	}
-      break;
       }
+      break;
+    }
 
-      // Scrolls one page right or down
-      case NS_SCROLLBAR_PAGE_NEXT: 
-      {
+    // Scrolls one page right or down
+    case NS_SCROLLBAR_PAGE_NEXT: {
       PRUint32 max = GetMaxRange(range) - GetThumbSize(range);
       if (newPosition > (int)max) 
           newPosition = (int)max;
 
       // if an event callback is registered, give it the chance
       // to change the increment
-      if (mEventCallback) 
-      	{
+      if (mEventCallback) {
         aEvent.position = newPosition;
         result = ConvertStatus((*mEventCallback)(&aEvent));
         newPosition = aEvent.position;
-      	}
-      break;
       }
+      break;
+    }
 
       // Scrolls one page left or up.
-    case NS_SCROLLBAR_PAGE_PREV: 
-      {
+    case NS_SCROLLBAR_PAGE_PREV: {
       //XtVaGetValues(mWidget, XmNvalue, &newPosition, nsnull);
       if (newPosition < 0) 
           newPosition = 0;
 
       // if an event callback is registered, give it the chance
       // to change the increment
-      if (mEventCallback) 
-      	{
+      if (mEventCallback) {
         aEvent.position = newPosition;
         result = ConvertStatus((*mEventCallback)(&aEvent));
         newPosition = aEvent.position;
-      	}
-
-      break;
       }
+
+    break;
+    }
 
       // Scrolls to the absolute position. The current position is specified by 
       // the cPos parameter.
-      case NS_SCROLLBAR_POS: 
-      	{
+    case NS_SCROLLBAR_POS: {
         newPosition = cPos;
 
         // if an event callback is registered, give it the chance
         // to change the increment
-        if (mEventCallback) 
-        	{
+        if (mEventCallback) {
           aEvent.position = newPosition;
           result = ConvertStatus((*mEventCallback)(&aEvent));
           newPosition = aEvent.position;
-        	}
-        break;
-      	}
-    }
-    return result;
+        }
+     break;
+     }
+  }
+  return result;
 }
 
 
