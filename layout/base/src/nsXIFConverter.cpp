@@ -276,6 +276,12 @@ void nsXIFConverter::EndContainer(const nsString& aTag)
 
 void nsXIFConverter::BeginLeaf(const nsString& aTag)
 {
+// XXX: Complete hack to prevent the style leaf
+// From being created until the style sheet work
+// is redone. -- gpk 1/27/99
+  if (aTag.EqualsIgnoreCase("STYLE"))
+    return;
+
 
   BeginStartTag(mLeaf);
     AddAttribute(mIsa,aTag);
@@ -284,6 +290,13 @@ void nsXIFConverter::BeginLeaf(const nsString& aTag)
 
 void nsXIFConverter::EndLeaf(const nsString& aTag)
 {
+// XXX: Complete hack to prevent the style leaf
+// From being created until the style sheet work
+// is redone. -- gpk 1/27/99
+  if (aTag.EqualsIgnoreCase("STYLE"))
+    return;
+
+
   AddEndTag(mLeaf,PR_TRUE,PR_FALSE);
   AddComment(aTag);
   mBuffer.Append(mLF);
