@@ -33,7 +33,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <plstr.h>
 #include "aglobal.h"
 #include "bsafe.h"
 #include "secport.h"
@@ -44,7 +44,7 @@ int c;
 unsigned int count;
 {
 	if (count >= 0)
-		PORT_Memset(p, c, count);
+		memset(p, c, count);
 }
 
 void CALL_CONV T_memcpy (d, s, count)
@@ -52,7 +52,7 @@ POINTER d, s;
 unsigned int count;
 {
 	if (count >= 0)
-		PORT_Memcpy(d, s, count);
+		memcpy(d, s, count);
 }
 
 void CALL_CONV T_memmove (d, s, count)
@@ -70,7 +70,7 @@ unsigned int count;
 	if (count == 0)
 		return (0);
 	else
-		return(PORT_Memcmp(s1, s2, count));
+		return(memcmp(s1, s2, count));
 }
 
 POINTER CALL_CONV T_malloc (size)
@@ -100,3 +100,21 @@ POINTER p;
 		PORT_Free(p);
 }
 
+unsigned int CALL_CONV T_strlen(p)
+char *p;
+{
+    return PL_strlen(p);
+}
+
+void CALL_CONV T_strcpy(dest, src)
+char *dest;
+char *src;
+{
+    PL_strcpy(dest, src);
+}
+
+int CALL_CONV T_strcmp (a, b)
+char *a, *b;
+{
+  return (PL_strcmp (a, b));
+}
