@@ -1508,7 +1508,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 
 
 
-nsresult
+NS_IMETHODIMP
 NS_NewXULSortService(nsIXULSortService** mgr)
 {
 	XULSortServiceImpl	*sortService = new XULSortServiceImpl();
