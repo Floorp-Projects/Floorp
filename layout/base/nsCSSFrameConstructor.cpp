@@ -7112,7 +7112,6 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
   nsIFrame*     firstChild;
   parentFrame->FirstChild(listName, &firstChild);
   nsFrameList   frameList(firstChild);
-  nsIFrame*     prevSibling = frameList.GetPrevSiblingFor(aFrame);
   
   // See whether it's an IMG or an OBJECT element
   if (nsHTMLAtoms::img == tag.get()) {
