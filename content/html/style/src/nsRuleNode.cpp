@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:cindent:sw=2:et:ts=2:
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -194,14 +195,14 @@ nscoord CalcLength(const nsCSSValue& aValue,
   return 0;
 }
 
-#define SETCOORD_NORMAL       0x01
-#define SETCOORD_AUTO         0x02
-#define SETCOORD_INHERIT      0x04
-#define SETCOORD_PERCENT      0x08
-#define SETCOORD_FACTOR       0x10
-#define SETCOORD_LENGTH       0x20
-#define SETCOORD_INTEGER      0x40
-#define SETCOORD_ENUMERATED   0x80
+#define SETCOORD_NORMAL       0x01   // N
+#define SETCOORD_AUTO         0x02   // A
+#define SETCOORD_INHERIT      0x04   // H
+#define SETCOORD_PERCENT      0x08   // P
+#define SETCOORD_FACTOR       0x10   // F
+#define SETCOORD_LENGTH       0x20   // L
+#define SETCOORD_INTEGER      0x40   // I
+#define SETCOORD_ENUMERATED   0x80   // E
 
 #define SETCOORD_LP     (SETCOORD_LENGTH | SETCOORD_PERCENT)
 #define SETCOORD_LH     (SETCOORD_LENGTH | SETCOORD_INHERIT)
@@ -213,7 +214,7 @@ nscoord CalcLength(const nsCSSValue& aValue,
 #define SETCOORD_LE     (SETCOORD_LENGTH | SETCOORD_ENUMERATED)
 #define SETCOORD_LEH    (SETCOORD_LE | SETCOORD_INHERIT)
 #define SETCOORD_IA     (SETCOORD_INTEGER | SETCOORD_AUTO)
-#define SETCOORD_LAE		(SETCOORD_LENGTH | SETCOORD_AUTO | SETCOORD_ENUMERATED)
+#define SETCOORD_LAE    (SETCOORD_LENGTH | SETCOORD_AUTO | SETCOORD_ENUMERATED)
 
 static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
                        const nsStyleCoord& aParentCoord,
@@ -259,11 +260,14 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
         (eStyleUnit_Normal == unit) ||
         (eStyleUnit_Chars == unit)) {
       aCoord = aParentCoord;  // just inherit value from parent
+      aInherited = PR_TRUE;
     }
     else {
       aCoord.SetInheritValue(); // needs to be computed by client
+                                // Since this works just like being
+                                // specified and not inherited, that's
+                                // how it's treated.
     }
-    aInherited = PR_TRUE;
   }
   else if (((aMask & SETCOORD_NORMAL) != 0) && 
            (aValue.GetUnit() == eCSSUnit_Normal)) {
@@ -528,62 +532,495 @@ nsRuleNode::PropagateInheritBit(PRUint32 aBit, nsRuleNode* aHighestNode)
 }
 
 inline PRBool 
-nsRuleNode::InheritsFromParentRule(const nsStyleStructID& aSID)
+nsRuleNode::InheritsFromParentRule(const nsStyleStructID aSID)
 {
   return mInheritBits & nsCachedStyleData::GetBitForSID(aSID);
 }
 
-inline nsRuleNode::RuleDetail
-nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID& aSID, const nsCSSStruct& aCSSStruct)
+/*
+ * The following "Check" functions are used for determining what type of
+ * sharing can be used for the data on this rule node.  MORE HERE...
+ */
+
+/* the information for a property (or in some cases, a rect group of
+   properties) */
+
+// for PropertyCheckData::type
+// XXX Would bits be more efficient?
+#define CHECKDATA_VALUE       0
+#define CHECKDATA_RECT        1
+#define CHECKDATA_VALUELIST   2
+#define CHECKDATA_COUNTERDATA 3
+#define CHECKDATA_QUOTES      4
+#define CHECKDATA_SHADOW      5
+
+struct PropertyCheckData {
+  size_t offset;
+  PRUint16 type;
+  PRPackedBool mayHaveExplicitInherit;
+};
+
+#define CHECKDATA_PROP(_datastruct, _member, _type, _iscoord) \
+  { offsetof(_datastruct, _member), _type, _iscoord }
+
+/* the information for all the properties in a style struct */
+
+typedef nsRuleNode::RuleDetail
+  (* PR_CALLBACK CheckCallbackFn)(const nsCSSStruct& aData);
+
+struct StructCheckData {
+  const PropertyCheckData* props;
+  PRInt32 nprops;
+  CheckCallbackFn callback;
+};
+
+#define CHECKDATA_STRUCT(_props) \
+  {_props, sizeof(_props)/sizeof(PropertyCheckData), nsnull}
+#define CHECKDATA_STRUCT_WITH_CALLBACK(_props, _cb) \
+  {_props, sizeof(_props)/sizeof(PropertyCheckData), _cb}
+
+static void
+ExamineRectProperties(const nsCSSRect* aRect,
+                      PRUint32& aSpecifiedCount, PRUint32& aInheritedCount)
 {
-  switch (aSID) {
-  case eStyleStruct_Display:
-    return CheckDisplayProperties((const nsCSSDisplay&)aCSSStruct);
-  case eStyleStruct_Text:
-    return CheckTextProperties((const nsCSSText&)aCSSStruct);
-  case eStyleStruct_TextReset:
-    return CheckTextResetProperties((const nsCSSText&)aCSSStruct);
-  case eStyleStruct_UserInterface:
-    return CheckUIProperties((const nsCSSUserInterface&)aCSSStruct);
-  case eStyleStruct_UIReset:
-    return CheckUIResetProperties((const nsCSSUserInterface&)aCSSStruct);
-  case eStyleStruct_Visibility:
-    return CheckVisibilityProperties((const nsCSSDisplay&)aCSSStruct);
-  case eStyleStruct_Font:
-    return CheckFontProperties((const nsCSSFont&)aCSSStruct);
-  case eStyleStruct_Color:
-    return CheckColorProperties((const nsCSSColor&)aCSSStruct);
-  case eStyleStruct_Background:
-    return CheckBackgroundProperties((const nsCSSColor&)aCSSStruct);
-  case eStyleStruct_Margin:
-      return CheckMarginProperties((const nsCSSMargin&)aCSSStruct);
-  case eStyleStruct_Border:
-    return CheckBorderProperties((const nsCSSMargin&)aCSSStruct);
-  case eStyleStruct_Padding:
-    return CheckPaddingProperties((const nsCSSMargin&)aCSSStruct);
-  case eStyleStruct_Outline:
-    return CheckOutlineProperties((const nsCSSMargin&)aCSSStruct);
-  case eStyleStruct_List:
-    return CheckListProperties((const nsCSSList&)aCSSStruct);
-  case eStyleStruct_Position:
-    return CheckPositionProperties((const nsCSSPosition&)aCSSStruct);
-  case eStyleStruct_Table:
-    return CheckTableProperties((const nsCSSTable&)aCSSStruct);
-  case eStyleStruct_TableBorder:
-    return CheckTableBorderProperties((const nsCSSTable&)aCSSStruct);
-  case eStyleStruct_Content:
-    return CheckContentProperties((const nsCSSContent&)aCSSStruct);
-  case eStyleStruct_Quotes:
-    return CheckQuotesProperties((const nsCSSContent&)aCSSStruct);
-#ifdef INCLUDE_XUL
-  case eStyleStruct_XUL:
-    return CheckXULProperties((const nsCSSXUL&)aCSSStruct);
-#endif
-  case eStyleStruct_BorderPaddingShortcut:
-    NS_ERROR("unexpected SID");
+  if (!aRect)
+    return;
+
+  if (eCSSUnit_Null != aRect->mLeft.GetUnit()) {
+    aSpecifiedCount++;
+    if (eCSSUnit_Inherit == aRect->mLeft.GetUnit())
+      aInheritedCount++;
   }
 
-  return eRuleNone;
+  if (eCSSUnit_Null != aRect->mTop.GetUnit()) {
+    aSpecifiedCount++;
+    if (eCSSUnit_Inherit == aRect->mTop.GetUnit())
+      aInheritedCount++;
+  }
+
+  if (eCSSUnit_Null != aRect->mRight.GetUnit()) {
+    aSpecifiedCount++;
+    if (eCSSUnit_Inherit == aRect->mRight.GetUnit())
+      aInheritedCount++;
+  }
+
+  if (eCSSUnit_Null != aRect->mBottom.GetUnit()) {
+    aSpecifiedCount++;
+    if (eCSSUnit_Inherit == aRect->mBottom.GetUnit())
+      aInheritedCount++;
+  }
+}
+
+static void
+ExamineRectCoordProperties(const nsCSSRect* aRect,
+                           PRUint32& aSpecifiedCount,
+                           PRUint32& aInheritedCount,
+                           PRBool& aCanHaveExplicitInherit)
+{
+  if (!aRect)
+    return;
+
+  if (eCSSUnit_Null != aRect->mLeft.GetUnit()) {
+    aSpecifiedCount++;
+    if (eCSSUnit_Inherit == aRect->mLeft.GetUnit()) {
+      aInheritedCount++;
+      aCanHaveExplicitInherit = PR_TRUE;
+    }
+  }
+
+  if (eCSSUnit_Null != aRect->mTop.GetUnit()) {
+    aSpecifiedCount++;
+    if (eCSSUnit_Inherit == aRect->mTop.GetUnit()) {
+      aInheritedCount++;
+      aCanHaveExplicitInherit = PR_TRUE;
+    }
+  }
+
+  if (eCSSUnit_Null != aRect->mRight.GetUnit()) {
+    aSpecifiedCount++;
+    if (eCSSUnit_Inherit == aRect->mRight.GetUnit()) {
+      aInheritedCount++;
+      aCanHaveExplicitInherit = PR_TRUE;
+    }
+  }
+
+  if (eCSSUnit_Null != aRect->mBottom.GetUnit()) {
+    aSpecifiedCount++;
+    if (eCSSUnit_Inherit == aRect->mBottom.GetUnit()) {
+      aInheritedCount++;
+      aCanHaveExplicitInherit = PR_TRUE;
+    }
+  }
+}
+
+PR_STATIC_CALLBACK(nsRuleNode::RuleDetail)
+CheckFontCallback(const nsCSSStruct& aData)
+{
+  const nsCSSFont& fontData = NS_STATIC_CAST(const nsCSSFont&, aData);
+  if (eCSSUnit_Enumerated == fontData.mFamily.GetUnit()) {
+    // A special case. We treat this as a fully specified font,
+    // since no other font props are legal with a system font.
+    PRInt32 family = fontData.mFamily.GetIntValue();
+    if ((family == NS_STYLE_FONT_CAPTION) ||
+        (family == NS_STYLE_FONT_ICON) ||
+        (family == NS_STYLE_FONT_MENU) ||
+        (family == NS_STYLE_FONT_MESSAGE_BOX) ||
+        (family == NS_STYLE_FONT_SMALL_CAPTION) ||
+        (family == NS_STYLE_FONT_STATUS_BAR) ||
+        (family == NS_STYLE_FONT_WINDOW) ||
+        (family == NS_STYLE_FONT_DOCUMENT) ||
+        (family == NS_STYLE_FONT_WORKSPACE) ||
+        (family == NS_STYLE_FONT_DESKTOP) ||
+        (family == NS_STYLE_FONT_INFO) ||
+        (family == NS_STYLE_FONT_DIALOG) ||
+        (family == NS_STYLE_FONT_BUTTON) ||
+        (family == NS_STYLE_FONT_PULL_DOWN_MENU) ||
+        (family == NS_STYLE_FONT_LIST) ||
+        (family == NS_STYLE_FONT_FIELD))
+      return nsRuleNode::eRuleFullMixed;
+  }
+  return nsRuleNode::eRuleUnknown;
+}
+
+static const PropertyCheckData FontCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSFont, mFamily, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSFont, mStyle, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSFont, mVariant, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSFont, mWeight, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSFont, mSize, CHECKDATA_VALUE, PR_FALSE)
+};
+
+static const PropertyCheckData DisplayCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSDisplay, mClip, CHECKDATA_RECT, PR_FALSE),
+  CHECKDATA_PROP(nsCSSDisplay, mDisplay, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSDisplay, mBinding, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSDisplay, mPosition, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSDisplay, mFloat, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSDisplay, mClear, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSDisplay, mOverflow, CHECKDATA_VALUE, PR_FALSE)
+};
+
+static const PropertyCheckData VisibilityCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSDisplay, mVisibility, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSDisplay, mDirection, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSDisplay, mOpacity, CHECKDATA_VALUE, PR_FALSE)
+};
+
+static const PropertyCheckData MarginCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSMargin, mMargin, CHECKDATA_RECT, PR_TRUE)
+};
+
+static const PropertyCheckData BorderCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSMargin, mBorderWidth, CHECKDATA_RECT, PR_FALSE),
+  CHECKDATA_PROP(nsCSSMargin, mBorderStyle, CHECKDATA_RECT, PR_FALSE),
+  CHECKDATA_PROP(nsCSSMargin, mBorderColor, CHECKDATA_RECT, PR_FALSE),
+  CHECKDATA_PROP(nsCSSMargin, mBorderRadius, CHECKDATA_RECT, PR_TRUE),
+  CHECKDATA_PROP(nsCSSMargin, mFloatEdge, CHECKDATA_VALUE, PR_FALSE)
+};
+
+static const PropertyCheckData PaddingCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSMargin, mPadding, CHECKDATA_RECT, PR_TRUE)
+};
+
+static const PropertyCheckData OutlineCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSMargin, mOutlineColor, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSMargin, mOutlineWidth, CHECKDATA_VALUE, PR_TRUE),
+  CHECKDATA_PROP(nsCSSMargin, mOutlineStyle, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSMargin, mOutlineRadius, CHECKDATA_RECT, PR_TRUE)
+};
+
+static const PropertyCheckData ListCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSList, mType, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSList, mImage, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSList, mPosition, CHECKDATA_VALUE, PR_FALSE)
+};
+
+static const PropertyCheckData ColorCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSColor, mColor, CHECKDATA_VALUE, PR_FALSE)
+};
+
+static const PropertyCheckData BackgroundCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSColor, mBackAttachment, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSColor, mBackRepeat, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSColor, mBackColor, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSColor, mBackImage, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSColor, mBackPositionX, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSColor, mBackPositionY, CHECKDATA_VALUE, PR_FALSE)
+};
+
+static const PropertyCheckData PositionCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSPosition, mOffset, CHECKDATA_RECT, PR_TRUE),
+  CHECKDATA_PROP(nsCSSPosition, mWidth, CHECKDATA_VALUE, PR_TRUE),
+  CHECKDATA_PROP(nsCSSPosition, mMinWidth, CHECKDATA_VALUE, PR_TRUE),
+  CHECKDATA_PROP(nsCSSPosition, mMaxWidth, CHECKDATA_VALUE, PR_TRUE),
+  CHECKDATA_PROP(nsCSSPosition, mHeight, CHECKDATA_VALUE, PR_TRUE),
+  CHECKDATA_PROP(nsCSSPosition, mMinHeight, CHECKDATA_VALUE, PR_TRUE),
+  CHECKDATA_PROP(nsCSSPosition, mMaxHeight, CHECKDATA_VALUE, PR_TRUE),
+  CHECKDATA_PROP(nsCSSPosition, mBoxSizing, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSPosition, mZIndex, CHECKDATA_VALUE, PR_FALSE)
+};
+
+static const PropertyCheckData TableCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSTable, mLayout, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSTable, mFrame, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSTable, mRules, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSTable, mCols, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSTable, mSpan, CHECKDATA_VALUE, PR_FALSE)
+};
+
+static const PropertyCheckData TableBorderCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSTable, mBorderCollapse, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSTable, mBorderSpacingX, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSTable, mBorderSpacingY, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSTable, mCaptionSide, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSTable, mEmptyCells, CHECKDATA_VALUE, PR_FALSE)
+};
+
+static const PropertyCheckData ContentCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSContent, mContent, CHECKDATA_VALUELIST, PR_FALSE),
+  CHECKDATA_PROP(nsCSSContent, mMarkerOffset, CHECKDATA_VALUE, PR_TRUE),
+  CHECKDATA_PROP(nsCSSContent, mCounterIncrement, CHECKDATA_COUNTERDATA, PR_FALSE),
+  CHECKDATA_PROP(nsCSSContent, mCounterReset, CHECKDATA_COUNTERDATA, PR_FALSE)
+};
+
+static const PropertyCheckData QuotesCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSContent, mQuotes, CHECKDATA_QUOTES, PR_FALSE)
+};
+
+static const PropertyCheckData TextCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSText, mLineHeight, CHECKDATA_VALUE, PR_TRUE),
+  CHECKDATA_PROP(nsCSSText, mTextIndent, CHECKDATA_VALUE, PR_TRUE),
+  CHECKDATA_PROP(nsCSSText, mWordSpacing, CHECKDATA_VALUE, PR_TRUE),
+  CHECKDATA_PROP(nsCSSText, mLetterSpacing, CHECKDATA_VALUE, PR_TRUE),
+  CHECKDATA_PROP(nsCSSText, mTextAlign, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSText, mTextTransform, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSText, mWhiteSpace, CHECKDATA_VALUE, PR_FALSE)
+};
+
+static const PropertyCheckData TextResetCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSText, mDecoration, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSText, mVerticalAlign, CHECKDATA_VALUE, PR_TRUE),
+  CHECKDATA_PROP(nsCSSText, mUnicodeBidi, CHECKDATA_VALUE, PR_FALSE)
+};
+
+static const PropertyCheckData UserInterfaceCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSUserInterface, mUserInput, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSUserInterface, mUserModify, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSUserInterface, mUserFocus, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSUserInterface, mCursor, CHECKDATA_VALUELIST, PR_FALSE)
+};
+
+static const PropertyCheckData UIResetCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSUserInterface, mUserSelect, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSUserInterface, mResizer, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSUserInterface, mKeyEquivalent, CHECKDATA_VALUELIST, PR_FALSE)
+};
+
+#ifdef INCLUDE_XUL
+static const PropertyCheckData XULCheckProperties[] = {
+  CHECKDATA_PROP(nsCSSXUL, mBoxAlign, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSXUL, mBoxDirection, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSXUL, mBoxFlex, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSXUL, mBoxOrient, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSXUL, mBoxPack, CHECKDATA_VALUE, PR_FALSE)
+};
+#endif
+
+// These are indexed by style struct ID and must stay in order!
+static const StructCheckData gCheckProperties[] = {
+  { nsnull, 0, nsnull}, /* empty, since no 0th SID */
+  CHECKDATA_STRUCT_WITH_CALLBACK(FontCheckProperties, CheckFontCallback),
+  CHECKDATA_STRUCT(ColorCheckProperties),
+  CHECKDATA_STRUCT(BackgroundCheckProperties),
+  CHECKDATA_STRUCT(ListCheckProperties),
+  CHECKDATA_STRUCT(PositionCheckProperties),
+  CHECKDATA_STRUCT(TextCheckProperties),
+  CHECKDATA_STRUCT(TextResetCheckProperties),
+  CHECKDATA_STRUCT(DisplayCheckProperties),
+  CHECKDATA_STRUCT(VisibilityCheckProperties),
+  CHECKDATA_STRUCT(ContentCheckProperties),
+  CHECKDATA_STRUCT(QuotesCheckProperties),
+  CHECKDATA_STRUCT(UserInterfaceCheckProperties),
+  CHECKDATA_STRUCT(UIResetCheckProperties),
+  CHECKDATA_STRUCT(TableCheckProperties),
+  CHECKDATA_STRUCT(TableBorderCheckProperties),
+  CHECKDATA_STRUCT(MarginCheckProperties),
+  CHECKDATA_STRUCT(PaddingCheckProperties),
+  CHECKDATA_STRUCT(BorderCheckProperties),
+  CHECKDATA_STRUCT(OutlineCheckProperties),
+#ifdef INCLUDE_XUL
+  CHECKDATA_STRUCT(XULCheckProperties),
+#endif
+  { nsnull, 0, nsnull} /* empty, so at least we crash reliably if someone
+                          passes in the BorderPaddingShortcut ID */
+};
+
+
+
+// XXXldb Taking the address of a reference is evil.
+
+inline const nsCSSValue&
+ValueAtOffset(const nsCSSStruct& aCSSStruct, size_t aOffset)
+{
+  return * NS_REINTERPRET_CAST(const nsCSSValue*,
+                     NS_REINTERPRET_CAST(const char*, &aCSSStruct) + aOffset);
+}
+
+inline const nsCSSRect*
+RectAtOffset(const nsCSSStruct& aCSSStruct, size_t aOffset)
+{
+  return * NS_REINTERPRET_CAST(const nsCSSRect*const*,
+                     NS_REINTERPRET_CAST(const char*, &aCSSStruct) + aOffset);
+}
+
+inline const nsCSSValueList*
+ValueListAtOffset(const nsCSSStruct& aCSSStruct, size_t aOffset)
+{
+  return * NS_REINTERPRET_CAST(const nsCSSValueList*const*,
+                     NS_REINTERPRET_CAST(const char*, &aCSSStruct) + aOffset);
+}
+
+inline const nsCSSCounterData*
+CounterDataAtOffset(const nsCSSStruct& aCSSStruct, size_t aOffset)
+{
+  return * NS_REINTERPRET_CAST(const nsCSSCounterData*const*,
+                     NS_REINTERPRET_CAST(const char*, &aCSSStruct) + aOffset);
+}
+
+inline const nsCSSQuotes*
+QuotesAtOffset(const nsCSSStruct& aCSSStruct, size_t aOffset)
+{
+  return * NS_REINTERPRET_CAST(const nsCSSQuotes*const*,
+                     NS_REINTERPRET_CAST(const char*, &aCSSStruct) + aOffset);
+}
+
+inline nsRuleNode::RuleDetail
+nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
+                                     const nsCSSStruct& aCSSStruct)
+{
+  const StructCheckData *structData = gCheckProperties + aSID;
+  if (structData->callback) {
+    nsRuleNode::RuleDetail res = (*structData->callback)(aCSSStruct);
+    if (res != eRuleUnknown)
+      return res;
+  }
+
+  // Build a count of the:
+  PRUint32 total = 0,      // total number of props in the struct
+           specified = 0,  // number that were specified for this node
+           inherited = 0;  // number that were 'inherit' (and not
+                           //   eCSSUnit_Inherit) for this node
+  PRBool canHaveExplicitInherit = PR_FALSE;
+
+  for (const PropertyCheckData *prop = structData->props,
+                           *prop_end = prop + structData->nprops;
+       prop != prop_end;
+       ++prop)
+    switch (prop->type) {
+
+      case CHECKDATA_VALUE:
+        {
+          ++total;
+          const nsCSSValue& value = ValueAtOffset(aCSSStruct, prop->offset);
+          if (eCSSUnit_Null != value.GetUnit()) {
+            ++specified;
+            if (eCSSUnit_Inherit == value.GetUnit()) {
+              ++inherited;
+              if (prop->mayHaveExplicitInherit)
+                canHaveExplicitInherit = PR_TRUE;
+            }
+          }
+        }
+        break;
+
+      case CHECKDATA_RECT:
+        total += 4;
+        if (prop->mayHaveExplicitInherit)
+          ExamineRectCoordProperties(RectAtOffset(aCSSStruct, prop->offset),
+                                     specified, inherited,
+                                     canHaveExplicitInherit);
+        else
+          ExamineRectProperties(RectAtOffset(aCSSStruct, prop->offset),
+                                specified, inherited);
+        break;
+
+      case CHECKDATA_VALUELIST:
+        {
+          ++total;
+          const nsCSSValueList* valueList =
+              ValueListAtOffset(aCSSStruct, prop->offset);
+          if (valueList) {
+            ++specified;
+            if (eCSSUnit_Inherit == valueList->mValue.GetUnit()) {
+              ++inherited;
+              if (prop->mayHaveExplicitInherit)
+                canHaveExplicitInherit = PR_TRUE;
+            }
+          }
+        }
+        break;
+
+      case CHECKDATA_COUNTERDATA:
+        {
+          ++total;
+          NS_ASSERTION(!prop->mayHaveExplicitInherit,
+                       "counters can't be coordinates");
+          const nsCSSCounterData* counterData =
+              CounterDataAtOffset(aCSSStruct, prop->offset);
+          if (counterData) {
+            ++specified;
+            if (eCSSUnit_Inherit == counterData->mCounter.GetUnit()) {
+              ++inherited;
+            }
+          }
+        }
+        break;
+
+      case CHECKDATA_QUOTES:
+        {
+          ++total;
+          NS_ASSERTION(!prop->mayHaveExplicitInherit,
+                       "quotes can't be coordinates");
+          const nsCSSQuotes* quotes =
+              QuotesAtOffset(aCSSStruct, prop->offset);
+          if (quotes) {
+            ++specified;
+            if (eCSSUnit_Inherit == quotes->mOpen.GetUnit()) {
+              ++inherited;
+            }
+          }
+        }
+        break;
+
+      case CHECKDATA_SHADOW:
+        NS_NOTYETIMPLEMENTED("nsCSSShadow not yet transferred to structs");
+        break;
+
+      default:
+        NS_NOTREACHED("unknown type");
+        break;
+
+    }
+
+#if 0
+  printf("CheckSpecifiedProperties: SID=%d total=%d spec=%d inh=%d chei=%s.\n",
+    aSID, total, specified, inherited, canHaveExplicitInherit?"true":"false");
+#endif
+
+  if (canHaveExplicitInherit) {
+    if (specified == total)
+      return eRuleFullMixed;
+    return eRulePartialMixed;
+  }
+  if (inherited == total)
+    return eRuleFullInherited;
+  if (specified == total)
+    return eRuleFullMixed;
+  if (specified == 0)
+    return eRuleNone;
+  if (specified == inherited)
+    return eRulePartialInherited;
+  return eRulePartialMixed;
 }
 
 const nsStyleStruct*
@@ -838,7 +1275,8 @@ nsRuleNode::GetXULData(nsIStyleContext* aContext)
 #endif
 
 const nsStyleStruct*
-nsRuleNode::WalkRuleTree(const nsStyleStructID& aSID, nsIStyleContext* aContext, 
+nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
+                         nsIStyleContext* aContext, 
                          nsRuleData* aRuleData,
                          nsCSSStruct* aSpecificData)
 {
@@ -951,7 +1389,7 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID& aSID, nsIStyleContext* aContext,
 }
 
 const nsStyleStruct*
-nsRuleNode::SetDefaultOnRoot(const nsStyleStructID& aSID, nsIStyleContext* aContext)
+nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsIStyleContext* aContext)
 {
   switch (aSID) {
     case eStyleStruct_Font: 
@@ -1259,7 +1697,7 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
       }
     }
 
-		nsCOMPtr<nsIDeviceContext> dc;
+    nsCOMPtr<nsIDeviceContext> dc;
     mPresContext->GetDeviceContext(getter_AddRefs(dc));
     if (dc) {
       SystemAttrStruct sysInfo;
@@ -1675,7 +2113,7 @@ nsRuleNode::ComputeTextResetData(nsStyleStruct* aStartData, const nsCSSStruct& a
                                  const RuleDetail& aRuleDetail, PRBool aInherited)
 {
 #ifdef DEBUG_hyatt
-  printf("NEW TEXT CREATED!\n");
+  printf("NEW TEXTRESET CREATED!\n");
 #endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
 
@@ -1747,7 +2185,7 @@ nsRuleNode::ComputeUIData(nsStyleStruct* aStartData, const nsCSSStruct& aData,
                           const RuleDetail& aRuleDetail, PRBool aInherited)
 {
 #ifdef DEBUG_hyatt
-  printf("NEW TEXT CREATED!\n");
+  printf("NEW UI CREATED!\n");
 #endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
@@ -1856,7 +2294,7 @@ nsRuleNode::ComputeUIResetData(nsStyleStruct* aStartData, const nsCSSStruct& aDa
                                const RuleDetail& aRuleDetail, PRBool aInherited)
 {
 #ifdef DEBUG_hyatt
-  printf("NEW TEXT CREATED!\n");
+  printf("NEW UIRESET CREATED!\n");
 #endif
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
@@ -3632,913 +4070,8 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct, const nsCSSStruct& aData
 }
 #endif
 
-static void
-ExamineRectProperties(const nsCSSRect* aRect, PRUint32& aTotalCount, PRUint32& aInheritedCount)
-{
-  if (!aRect)
-    return;
-
-  if (eCSSUnit_Null != aRect->mLeft.GetUnit()) {
-    aTotalCount++;
-    if (eCSSUnit_Inherit == aRect->mLeft.GetUnit())
-      aInheritedCount++;
-  }
-
-  if (eCSSUnit_Null != aRect->mTop.GetUnit()) {
-    aTotalCount++;
-    if (eCSSUnit_Inherit == aRect->mTop.GetUnit())
-      aInheritedCount++;
-  }
-
-  if (eCSSUnit_Null != aRect->mRight.GetUnit()) {
-    aTotalCount++;
-    if (eCSSUnit_Inherit == aRect->mRight.GetUnit())
-      aInheritedCount++;
-  }
-
-  if (eCSSUnit_Null != aRect->mBottom.GetUnit()) {
-    aTotalCount++;
-    if (eCSSUnit_Inherit == aRect->mBottom.GetUnit())
-      aInheritedCount++;
-  }
-}
-
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckFontProperties(const nsCSSFont& aFontData)
-{
-  const PRUint32 numFontProps = 5;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-
-  if (eCSSUnit_Null != aFontData.mFamily.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aFontData.mFamily.GetUnit())
-      inheritCount++;
-    if (eCSSUnit_Enumerated == aFontData.mFamily.GetUnit()) {
-      // A special case. We treat this as a fully specified font,
-      // since no other font props are legal with a system font.
-      switch (aFontData.mFamily.GetIntValue()) {
-        case NS_STYLE_FONT_CAPTION:
-        case NS_STYLE_FONT_ICON:
-        case NS_STYLE_FONT_MENU:
-        case NS_STYLE_FONT_MESSAGE_BOX:
-        case NS_STYLE_FONT_SMALL_CAPTION:
-        case NS_STYLE_FONT_STATUS_BAR:
-        case NS_STYLE_FONT_WINDOW:
-        case NS_STYLE_FONT_DOCUMENT:
-        case NS_STYLE_FONT_WORKSPACE:
-        case NS_STYLE_FONT_DESKTOP:
-        case NS_STYLE_FONT_INFO:
-        case NS_STYLE_FONT_DIALOG:
-        case NS_STYLE_FONT_BUTTON:
-        case NS_STYLE_FONT_PULL_DOWN_MENU:
-        case NS_STYLE_FONT_LIST:
-        case NS_STYLE_FONT_FIELD:
-          return eRuleFullMixed;
-      }
-    }
-  }
-
-  if (eCSSUnit_Null != aFontData.mStyle.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aFontData.mStyle.GetUnit())
-      inheritCount++;
-  }
-  if (eCSSUnit_Null != aFontData.mVariant.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aFontData.mVariant.GetUnit())
-      inheritCount++;
-  }
-  if (eCSSUnit_Null != aFontData.mWeight.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aFontData.mWeight.GetUnit())
-      inheritCount++;
-  }
-  if (eCSSUnit_Null != aFontData.mSize.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aFontData.mSize.GetUnit())
-      inheritCount++;
-  }
-  
-  if (inheritCount == numFontProps)
-    return eRuleFullInherited;
-  else if (totalCount == numFontProps) 
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckDisplayProperties(const nsCSSDisplay& aData)
-{
-  // Left/Top/Right/Bottom are the four props we have to check.
-  const PRUint32 numProps = 10;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-
-  ExamineRectProperties(aData.mClip, totalCount, inheritCount);
-
-  if (eCSSUnit_Null != aData.mDisplay.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mDisplay.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mBinding.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mBinding.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mPosition.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mPosition.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mFloat.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mFloat.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mClear.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mClear.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mOverflow.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mOverflow.GetUnit())
-      inheritCount++;
-  }
-
-  if (inheritCount == numProps)
-    return eRuleFullInherited;
-  else if (totalCount == numProps) 
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckVisibilityProperties(const nsCSSDisplay& aData)
-{
-  // Left/Top/Right/Bottom are the four props we have to check.
-  const PRUint32 numProps = 3;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-
-  if (eCSSUnit_Null != aData.mVisibility.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mVisibility.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mDirection.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mDirection.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mOpacity.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mOpacity.GetUnit())
-      inheritCount++;
-  }
-
-  if (inheritCount == numProps)
-    return eRuleFullInherited;
-  else if (totalCount == numProps) 
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckMarginProperties(const nsCSSMargin& aMarginData)
-{
-  // Left/Top/Right/Bottom are the four props we have to check.
-  const PRUint32 numMarginProps = 4;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-
-  ExamineRectProperties(aMarginData.mMargin, totalCount, inheritCount);
-
-  if (inheritCount == numMarginProps)
-    return eRuleFullInherited;
-  else if (totalCount == numMarginProps) 
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckBorderProperties(const nsCSSMargin& aBorderData)
-{
-  // Left/Top/Right/Bottom are the four props we have to check.
-  const PRUint32 numBorderProps = 17;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-
-  ExamineRectProperties(aBorderData.mBorderWidth, totalCount, inheritCount);
-  ExamineRectProperties(aBorderData.mBorderStyle, totalCount, inheritCount);
-  ExamineRectProperties(aBorderData.mBorderColor, totalCount, inheritCount);
-  ExamineRectProperties(aBorderData.mBorderRadius, totalCount, inheritCount);
-  if (eCSSUnit_Null != aBorderData.mFloatEdge.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aBorderData.mFloatEdge.GetUnit())
-      inheritCount++;
-  }
-
-  if (inheritCount == numBorderProps)
-    return eRuleFullInherited;
-  else if (totalCount == numBorderProps)
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-  
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckPaddingProperties(const nsCSSMargin& aPaddingData)
-{
-  // Left/Top/Right/Bottom are the four props we have to check.
-  const PRUint32 numPaddingProps = 4;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-
-  ExamineRectProperties(aPaddingData.mPadding, totalCount, inheritCount);
-
-  if (inheritCount == numPaddingProps)
-    return eRuleFullInherited;
-  else if (totalCount == numPaddingProps) 
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-  
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckOutlineProperties(const nsCSSMargin& aMargin)
-{
-  const PRUint32 numProps = 7;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-  if (eCSSUnit_Null != aMargin.mOutlineColor.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aMargin.mOutlineColor.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aMargin.mOutlineWidth.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aMargin.mOutlineWidth.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aMargin.mOutlineStyle.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aMargin.mOutlineStyle.GetUnit())
-      inheritCount++;
-  }
-
-  ExamineRectProperties(aMargin.mOutlineRadius, totalCount, inheritCount);
-  
-  if (inheritCount == numProps)
-    return eRuleFullInherited;
-  else if (totalCount == numProps) 
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckListProperties(const nsCSSList& aListData)
-{
-  const PRUint32 numListProps = 3;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-  if (eCSSUnit_Null != aListData.mType.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aListData.mType.GetUnit())
-      inheritCount++;
-  }
-  if (eCSSUnit_Null != aListData.mImage.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aListData.mImage.GetUnit())
-      inheritCount++;
-  }
-  if (eCSSUnit_Null != aListData.mPosition.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aListData.mPosition.GetUnit())
-      inheritCount++;
-  }
-  
-  if (inheritCount == numListProps)
-    return eRuleFullInherited;
-  else if (totalCount == numListProps)
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckColorProperties(const nsCSSColor& aColorData)
-{
-  const PRUint32 numColorProps = 1;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-  if (eCSSUnit_Null != aColorData.mColor.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aColorData.mColor.GetUnit())
-      inheritCount++;
-  }
-  
-  if (inheritCount == numColorProps)
-    return eRuleFullInherited;
-  else if (totalCount == numColorProps)
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckBackgroundProperties(const nsCSSColor& aColorData)
-{
-  const PRUint32 numBGProps = 6;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-  
-  if (eCSSUnit_Null != aColorData.mBackAttachment.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aColorData.mBackAttachment.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aColorData.mBackRepeat.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aColorData.mBackRepeat.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aColorData.mBackColor.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aColorData.mBackColor.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aColorData.mBackImage.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aColorData.mBackImage.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aColorData.mBackPositionX.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aColorData.mBackPositionX.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aColorData.mBackPositionY.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aColorData.mBackPositionY.GetUnit())
-      inheritCount++;
-  }
-
-  if (inheritCount == numBGProps)
-    return eRuleFullInherited;
-  else if (totalCount == numBGProps)
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckPositionProperties(const nsCSSPosition& aPosData)
-{
-  const PRUint32 numPosProps = 12;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-
-  ExamineRectProperties(aPosData.mOffset, totalCount, inheritCount);
-  
-  if (eCSSUnit_Null != aPosData.mWidth.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aPosData.mWidth.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aPosData.mMinWidth.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aPosData.mMinWidth.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aPosData.mMaxWidth.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aPosData.mMaxWidth.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aPosData.mHeight.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aPosData.mHeight.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aPosData.mMinHeight.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aPosData.mMinHeight.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aPosData.mMaxHeight.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aPosData.mMaxHeight.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aPosData.mBoxSizing.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aPosData.mBoxSizing.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aPosData.mZIndex.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aPosData.mZIndex.GetUnit())
-      inheritCount++;
-  }
-
-  if (inheritCount == numPosProps)
-    return eRuleFullInherited;
-  else if (totalCount == numPosProps)
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckTableProperties(const nsCSSTable& aTableData)
-{
-  const PRUint32 numTableProps = 5;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-
-  if (eCSSUnit_Null != aTableData.mLayout.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aTableData.mLayout.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aTableData.mFrame.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aTableData.mFrame.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aTableData.mRules.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aTableData.mRules.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aTableData.mCols.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aTableData.mCols.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aTableData.mSpan.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aTableData.mSpan.GetUnit())
-      inheritCount++;
-  }
-
-  if (inheritCount == numTableProps)
-    return eRuleFullInherited;
-  else if (totalCount == numTableProps)
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckTableBorderProperties(const nsCSSTable& aTableData)
-{
-  const PRUint32 numTableProps = 5;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-
-  if (eCSSUnit_Null != aTableData.mBorderCollapse.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aTableData.mBorderCollapse.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aTableData.mBorderSpacingX.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aTableData.mBorderSpacingX.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aTableData.mBorderSpacingY.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aTableData.mBorderSpacingY.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aTableData.mCaptionSide.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aTableData.mCaptionSide.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aTableData.mEmptyCells.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aTableData.mEmptyCells.GetUnit())
-      inheritCount++;
-  }
-
-  if (inheritCount == numTableProps)
-    return eRuleFullInherited;
-  else if (totalCount == numTableProps)
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckContentProperties(const nsCSSContent& aData)
-{
-  const PRUint32 numProps = 4;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-
-  if (aData.mContent) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mContent->mValue.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mMarkerOffset.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mMarkerOffset.GetUnit())
-      inheritCount++;
-  }
-
-  if (aData.mCounterIncrement) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mCounterIncrement->mCounter.GetUnit())
-      inheritCount++;
-  }
-
-  if (aData.mCounterReset) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mCounterReset->mCounter.GetUnit())
-      inheritCount++;
-  }
-
-  if (inheritCount == numProps)
-    return eRuleFullInherited;
-  else if (totalCount == numProps)
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckQuotesProperties(const nsCSSContent& aData)
-{
-  const PRUint32 numProps = 1;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-
-  if (aData.mQuotes) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mQuotes->mOpen.GetUnit())
-      inheritCount++;
-  }
-
-  if (inheritCount == numProps)
-    return eRuleFullInherited;
-  else if (totalCount == numProps)
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckTextProperties(const nsCSSText& aData)
-{
-  const PRUint32 numProps = 7;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-
-  if (eCSSUnit_Null != aData.mLineHeight.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mLineHeight.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mTextIndent.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mTextIndent.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mTextAlign.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mTextAlign.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mTextTransform.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mTextTransform.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mWordSpacing.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mWordSpacing.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mLetterSpacing.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mLetterSpacing.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mWhiteSpace.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mWhiteSpace.GetUnit())
-      inheritCount++;
-  }
-
-  if (inheritCount == numProps)
-    return eRuleFullInherited;
-  else if (totalCount == numProps)
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckTextResetProperties(const nsCSSText& aData)
-{
-  const PRUint32 numProps = 3;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-
-  if (eCSSUnit_Null != aData.mDecoration.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mDecoration.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mVerticalAlign.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mVerticalAlign.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mUnicodeBidi.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mUnicodeBidi.GetUnit())
-      inheritCount++;
-  }
-
-  if (inheritCount == numProps)
-    return eRuleFullInherited;
-  else if (totalCount == numProps)
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckUIProperties(const nsCSSUserInterface& aData)
-{
-  const PRUint32 numProps = 4;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-
-  if (eCSSUnit_Null != aData.mUserInput.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mUserInput.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mUserModify.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mUserModify.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mUserFocus.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mUserFocus.GetUnit())
-      inheritCount++;
-  }
-
-  if (aData.mCursor) {
-    totalCount++;
-    if (aData.mCursor->mValue.GetUnit() == eCSSUnit_Inherit)
-      inheritCount++;
-  }
-
-  if (inheritCount == numProps)
-    return eRuleFullInherited;
-  else if (totalCount == numProps)
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckUIResetProperties(const nsCSSUserInterface& aData)
-{
-  const PRUint32 numProps = 3;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-
-  if (eCSSUnit_Null != aData.mUserSelect.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mUserSelect.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aData.mResizer.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aData.mResizer.GetUnit())
-      inheritCount++;
-  }
-
-  if (aData.mKeyEquivalent) {
-    totalCount++;
-    if (aData.mKeyEquivalent->mValue.GetUnit() == eCSSUnit_Inherit)
-      inheritCount++;
-  }
-
-  if (inheritCount == numProps)
-    return eRuleFullInherited;
-  else if (totalCount == numProps)
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-
-#ifdef INCLUDE_XUL
-inline nsRuleNode::RuleDetail 
-nsRuleNode::CheckXULProperties(const nsCSSXUL& aXULData)
-{
-  const PRUint32 numXULProps = 5;
-  PRUint32 totalCount=0;
-  PRUint32 inheritCount=0;
-
-  if (eCSSUnit_Null != aXULData.mBoxAlign.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aXULData.mBoxAlign.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aXULData.mBoxDirection.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aXULData.mBoxDirection.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aXULData.mBoxFlex.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aXULData.mBoxFlex.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aXULData.mBoxOrient.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aXULData.mBoxOrient.GetUnit())
-      inheritCount++;
-  }
-
-  if (eCSSUnit_Null != aXULData.mBoxPack.GetUnit()) {
-    totalCount++;
-    if (eCSSUnit_Inherit == aXULData.mBoxPack.GetUnit())
-      inheritCount++;
-  }
-
-  if (inheritCount == numXULProps)
-    return eRuleFullInherited;
-  else if (totalCount == numXULProps) 
-    return eRuleFullMixed;
-
-  if (totalCount == 0)
-    return eRuleNone;
-  else if (totalCount == inheritCount)
-    return eRulePartialInherited;
-
-  return eRulePartialMixed;
-}
-#endif
-
 inline const nsStyleStruct* 
-nsRuleNode::GetParentData(const nsStyleStructID& aSID)
+nsRuleNode::GetParentData(const nsStyleStructID aSID)
 {
   nsRuleNode* ruleNode = mParent;
   nsStyleStruct* currStruct = nsnull;
