@@ -17,6 +17,7 @@ sub RegisterConfig {
     $self->registerVariables(
       # [ name, save?, settable?, value ]
         ['preferredHelpLineLength', 1, 1, 90],
+        ['helpStyle', 1, 1, 'compact'], # change this to 'tidy' to use alternate style
     );
 }
 
@@ -66,21 +67,10 @@ sub Told {
             my $helpline = $self->getHelpLine();
             $self->directSay($event, "Help topics for mozbot $VERSION ($helpline):");
             $self->say($event, "$event->{'from'}: help info /msg'ed") if ($event->{'channel'});
-            local @" = ', '; # to reset font-lock: "
-            my @helplist;
-            foreach my $module ($self->getModules()) {
-                $module = $self->getModule($module);
-                my %commands = %{$module->Help($event)};
-                my $moduleHelp = delete($commands{''});
-                my @commands = sort keys %commands;
-                if (@commands) {
-                    push(@helplist, "$module->{'_name'}: @commands");
-                } elsif ($moduleHelp) {
-                    push(@helplist, "$module->{'_name'}");
-                }
-            }
-            foreach ($self->prettyPrint($self->{'preferredHelpLineLength'}, undef, '  ', ';  ', @helplist)) {
-                $self->directSay($event, $_);
+            if ($self->{'helpStyle'} eq 'compact') {
+                $self->printHelpCompact($event);
+            } else {
+                $self->printHelpTidy($event);
             }
             $self->directSay($event, 'For help on a particular topic, type \'help <topic>\'. Note that some commands may be disabled in certain channels.');
         }
@@ -125,4 +115,50 @@ sub CTCPVersion {
     my @modulenames = $self->getModules();
     local $" = ', ';
     $self->ctcpReply($event, 'VERSION', "mozbot $VERSION (@modulenames)");
+}
+
+sub printHelpCompact {
+    my $self = shift;
+    my ($event) = @_;
+    local $" = ', '; # to reset font-lock: "
+    my @helplist;
+    foreach my $module ($self->getModules()) {
+        $module = $self->getModule($module);
+        my %commands = %{$module->Help($event)};
+        my $moduleHelp = delete($commands{''});
+        my @commands = sort keys %commands;
+        if (@commands) {
+            push(@helplist, "$module->{'_name'}: @commands");
+        } elsif ($moduleHelp) {
+            push(@helplist, "$module->{'_name'}");
+        }
+    }
+    foreach ($self->prettyPrint($self->{'preferredHelpLineLength'}, undef, '  ', ';  ', @helplist)) {
+        $self->directSay($event, $_);
+    }
+}
+
+sub printHelpTidy {
+    my $self = shift;
+    my ($event) = @_;
+    my @modules = sort $self->getModules();
+    my $longestTitle = 0;
+    foreach my $module (@modules) {
+        $longestTitle = length($module) if length($module) > $longestTitle;
+        $module = [$module, sort keys %{$self->getModule($module)->Help($event)}];
+    }
+    foreach my $module (@modules) {
+        my $title = shift(@$module);
+        my $topicCount = @$module;
+        if (@$module and $module->[0] eq '') {
+            shift(@$module);
+        }
+        my @topics = @$module;
+        $module = ' ' x ($longestTitle - length($title)) . $title;
+        if (@topics) {
+            $self->directSay($event, $module . ': ' . join(",\n" . ' ' x ($longestTitle + 2), $self->wordWrap($self->{'preferredHelpLineLength'} - $longestTitle - 2, undef, undef, ', ', @topics)));
+        } elsif ($topicCount) {
+            $self->directSay($event, "$module: (no commands)");
+        }
+    }
 }
