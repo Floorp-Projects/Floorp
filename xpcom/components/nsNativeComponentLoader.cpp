@@ -232,7 +232,7 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
         autoStringFree delete_library(library, autoStringFree::nsCRT_String_Delete);
 
         // Get key associated with library
-        nsIRegistry::Key libKey;
+        nsRegistryKey libKey;
         rv = node->GetKey(&libKey);
         if (NS_FAILED(rv)) continue;
 
@@ -904,7 +904,7 @@ nsNativeComponentLoader::GetRegistryDllInfo(const char *aLocation,
 {
     nsresult rv;
 
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     rv = mRegistry->GetSubtreeRaw(mXPCOMKey, aLocation, &key);
     if (NS_FAILED(rv)) return rv;
 
@@ -912,7 +912,7 @@ nsNativeComponentLoader::GetRegistryDllInfo(const char *aLocation,
 }
 
 nsresult
-nsNativeComponentLoader::GetRegistryDllInfo(nsIRegistry::Key key,
+nsNativeComponentLoader::GetRegistryDllInfo(nsRegistryKey key,
                                             PRUint32 *lastModifiedTime,
                                             PRUint32 *fileSize)
 {
@@ -935,7 +935,7 @@ nsNativeComponentLoader::SetRegistryDllInfo(const char *aLocation,
                                             PRUint32 fileSize)
 {
     nsresult rv;
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     rv = mRegistry->GetSubtreeRaw(mXPCOMKey, aLocation, &key);
     if (NS_FAILED(rv)) return rv;
 

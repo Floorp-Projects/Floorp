@@ -1,0 +1,95 @@
+/* -*- Mode: idl; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsIEnumerator.idl"
+#include "nsICategoryHandler.idl"
+
+[scriptable, uuid(5a1e1a2c-1dd2-11b2-a72f-967357e43a00)]
+interface nsICategoryManager : nsISupports
+{
+    /**
+     * Get the value for the given category's entry.
+     * @param aCategory The name of the category ("protocol")
+     * @param aEntry The entry you're looking for ("http")
+     * @return The value.
+     */
+    string getCategoryEntry(in string aCategory, in string aEntry);
+    
+    /**
+     * As above, but do not permit overriding.  This is useful to allow
+     * an override handler to get at the ``normal'' category contents.
+     */
+    string getCategoryEntryRaw(in string aCategory, in string aEntry);
+
+    /**
+     * Add an entry to a category.
+     * @param aCategory The name of the category ("protocol")
+     * @param aEntry The entry to be added ("http")
+     * @param aValue The value for the entry ("moz.httprulez.1")
+     * @param aPersist Should we persist between invocations?
+     * @param aReplace Should we replace an existing entry?
+     * @return previous entry, if any
+     */
+    string addCategoryEntry(in string aCategory, in string aEntry,
+			    in string aValue, in boolean aPersist,
+			    in boolean aReplace);
+
+    /**
+     * Enumerate the entries in a category.
+     * @param aCategory The category to be enumerated.
+     */
+    nsIEnumerator enumerateCategory(in string aCategory);
+
+    /**
+     * Get all the category contents.
+     */
+    void getCategoryContents(in string category,
+			     [array, size_is(count)] out string entries,
+			     [array, size_is(count)] out string values,
+			     [retval] out long count);
+
+    const long override   = 0;
+    const long fallback   = 1;
+    const long checkFirst = 0;
+    const long checkLast  = 1;
+
+    /*
+     * Register a category handler for override or fallback when
+     * searching a given category.
+     * @param aCategory The name of the category ("protocol")
+     * @param aHandler The handler to be installed
+     * @param aMode override or fallback?
+     * @return The previously-installed category handler, if any
+     */
+    nsICategoryHandler registerCategoryHandler(in string aCategory,
+                                               in nsICategoryHandler aHandler,
+					       in long aMode);
+    
+    /*
+     * Unregister a category handler for the given category.
+     * XXX will this cause shutdown problems?  Who has owning refs on whom?
+     * @param category The name of the category ("protocol")
+     * @param handler The handler to be unregistered.
+     * @param previous The handler that this one replaced, typically the
+     * return from the registerCategoryHandler call.
+     */
+    void unregisterCategoryHandler(in string category,
+                                   in nsICategoryHandler handler,
+                                   in nsICategoryHandler previous);
+};

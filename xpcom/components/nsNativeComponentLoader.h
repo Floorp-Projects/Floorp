@@ -48,7 +48,7 @@ class nsNativeComponentLoader : public nsIComponentLoader {
     nsIComponentManager* mCompMgr;      // weak reference -- backpointer
     nsObjectHashtable*  mDllStore;
     NS_IMETHOD RegisterComponentsInDir(PRInt32 when, nsIFileSpec *dir);
-    nsIRegistry::Key mXPCOMKey;
+    nsRegistryKey mXPCOMKey;
 
  private:
     nsresult CreateDll(nsIFileSpec *aSpec, const char *aLocation,
@@ -57,7 +57,7 @@ class nsNativeComponentLoader : public nsIComponentLoader {
     nsresult SelfUnregisterDll(nsDll *dll);
     nsresult GetRegistryDllInfo(const char *aLocation, PRUint32 *lastModifiedTime,
                                 PRUint32 *fileSize);
-    nsresult GetRegistryDllInfo(nsIRegistry::Key key, PRUint32 *lastModifiedTime,
+    nsresult GetRegistryDllInfo(nsRegistryKey key, PRUint32 *lastModifiedTime,
                                 PRUint32 *fileSize);
     nsresult SetRegistryDllInfo(const char *aLocation, PRUint32 lastModifiedTime,
                                 PRUint32 fileSize);

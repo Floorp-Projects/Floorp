@@ -413,7 +413,7 @@ nsresult
 nsComponentManagerImpl::PlatformVersionCheck()
 {
 
-    nsIRegistry::Key xpcomKey;
+    nsRegistryKey xpcomKey;
     nsresult rv;
     rv = mRegistry->AddSubtree(nsIRegistry::Common, xpcomKeyName, &xpcomKey);
     		
@@ -432,7 +432,7 @@ nsComponentManagerImpl::PlatformVersionCheck()
                 "registry hierarchy.", buf, NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING));
 
         // Delete the XPCOM and CLSID hierarchy
-        nsIRegistry::Key mozillaKey;
+        nsRegistryKey mozillaKey;
         rv = mRegistry->GetSubtree(nsIRegistry::Common, mozillaKeyName,
                                    &mozillaKey);
         if(NS_FAILED(rv))
@@ -512,7 +512,7 @@ nsComponentManagerImpl::PlatformVersionCheck()
 
 #if 0
 void
-nsComponentManagerImpl::PlatformSetFileInfo(nsIRegistry::Key key, PRUint32 lastModifiedTime, PRUint32 fileSize)
+nsComponentManagerImpl::PlatformSetFileInfo(nsRegistryKey key, PRUint32 lastModifiedTime, PRUint32 fileSize)
 {
     mRegistry->SetInt(key, lastModValueName, lastModifiedTime);
     mRegistry->SetInt(key, fileSizeValueName, fileSize);
@@ -532,7 +532,7 @@ nsComponentManagerImpl::PlatformMarkNoComponents(nsDll *dll)
     
     nsresult rv;
 
-    nsIRegistry::Key dllPathKey;
+    nsRegistryKey dllPathKey;
     rv = mRegistry->AddSubtreeRaw(mXPCOMKey, dll->GetPersistentDescriptorString(), &dllPathKey);    
     if(NS_FAILED(rv))
     {
@@ -557,7 +557,7 @@ nsComponentManagerImpl::PlatformRegister(const char *cidString,
 
     nsresult rv;
     
-    nsIRegistry::Key IDkey;
+    nsRegistryKey IDkey;
     rv = mRegistry->AddSubtreeRaw(mCLSIDKey, cidString, &IDkey);
     if (NS_FAILED(rv)) return (rv);
 
@@ -571,7 +571,7 @@ nsComponentManagerImpl::PlatformRegister(const char *cidString,
     
     if (progID)
     {
-        nsIRegistry::Key progIDKey;
+        nsRegistryKey progIDKey;
         rv = mRegistry->AddSubtreeRaw(mClassesKey, progID, &progIDKey);
         rv = mRegistry->SetString(progIDKey, classIDValueName, cidString);
     }
@@ -580,7 +580,7 @@ nsComponentManagerImpl::PlatformRegister(const char *cidString,
     // XXX the registry non-xp. Someone beat on the nspr people to get
     // XXX a longlong serialization function please!
     
-    nsIRegistry::Key dllPathKey;
+    nsRegistryKey dllPathKey;
     rv = mRegistry->AddSubtreeRaw(mXPCOMKey,dll->GetPersistentDescriptorString(), &dllPathKey);
 
     PlatformSetFileInfo(dllPathKey, dll->GetLastModifiedTime(), dll->GetSize());
@@ -602,7 +602,7 @@ nsComponentManagerImpl::PlatformUnregister(const char *cidString,
 
     nsresult rv;
 
-    nsIRegistry::Key cidKey;
+    nsRegistryKey cidKey;
     rv = mRegistry->AddSubtreeRaw(mCLSIDKey, cidString, &cidKey);
 
     char *progID = NULL;
@@ -615,7 +615,7 @@ nsComponentManagerImpl::PlatformUnregister(const char *cidString,
 
     mRegistry->RemoveSubtree(mCLSIDKey, cidString);
     	
-    nsIRegistry::Key libKey;
+    nsRegistryKey libKey;
     rv = mRegistry->GetSubtreeRaw(mXPCOMKey, aLibrary, &libKey);
     if(NS_FAILED(rv)) return rv;
 
@@ -647,7 +647,7 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
 
     char *cidString = aCID.ToString();
 
-    nsIRegistry::Key cidKey;
+    nsRegistryKey cidKey;
     rv = mRegistry->GetSubtreeRaw(mCLSIDKey, cidString, &cidKey);
     delete [] cidString;
 
@@ -699,7 +699,7 @@ nsComponentManagerImpl::PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass
 
     nsresult rv;
     	
-    nsIRegistry::Key progIDKey;
+    nsRegistryKey progIDKey;
     rv = mRegistry->GetSubtreeRaw(mClassesKey, aProgID, &progIDKey);
     if (NS_FAILED(rv)) return rv;
 
@@ -726,7 +726,7 @@ nsComponentManagerImpl::PlatformCLSIDToProgID(const nsCID *aClass,
     nsresult rv;
 
     char* cidStr = aClass->ToString();
-    nsIRegistry::Key cidKey;
+    nsRegistryKey cidKey;
     rv = mRegistry->GetSubtreeRaw(mCLSIDKey, cidStr, &cidKey);
     if(NS_FAILED(rv)) return rv;
     PR_FREEIF(cidStr);
@@ -775,7 +775,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         autoStringFree delete_cidString(cidString, autoStringFree::nsCRT_String_Delete);
 
         // Get key associated with library
-        nsIRegistry::Key cidKey;
+        nsRegistryKey cidKey;
         rv = node->GetKey(&cidKey);
         if (NS_FAILED(rv)) continue;
 
@@ -829,7 +829,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         autoStringFree delete_progidString(progidString, autoStringFree::nsCRT_String_Delete);
 
         // Get cid string
-        nsIRegistry::Key progidKey;
+        nsRegistryKey progidKey;
         rv = node->GetKey(&progidKey);
         if (NS_FAILED(rv)) continue;
         char *cidString = NULL;
@@ -1645,7 +1645,7 @@ nsComponentManagerImpl::GetLoaderForType(const char *aType,
 	return NS_OK;
     }
 
-    nsIRegistry::Key loaderKey;
+    nsRegistryKey loaderKey;
     rv = mRegistry->GetSubtreeRaw(mLoadersKey, aType, &loaderKey);
     if (NS_FAILED(rv))
         return rv;
@@ -1677,7 +1677,7 @@ nsresult
 nsComponentManagerImpl::RegisterComponentLoader(const char *aType, const char *aProgID,
                                                 PRBool aReplace)
 {
-    nsIRegistry::Key loaderKey;
+    nsRegistryKey loaderKey;
     nsresult rv = mRegistry->AddSubtreeRaw(mLoadersKey, aType, &loaderKey);
     if (NS_FAILED(rv))
         return rv;
@@ -1701,7 +1701,7 @@ nsComponentManagerImpl::AddComponentToRegistry(const nsCID &aClass,
                                                const char *aType)
 {
     nsresult rv;
-    nsIRegistry::Key IDKey;
+    nsRegistryKey IDKey;
     int32 nComponents = 0;
     
     /* so why do we use strings here rather than writing bytes, anyway? */
@@ -1731,7 +1731,7 @@ nsComponentManagerImpl::AddComponentToRegistry(const nsCID &aClass,
         if (NS_FAILED(rv))
             goto out;
 
-        nsIRegistry::Key progIDKey;
+        nsRegistryKey progIDKey;
         rv = mRegistry->AddSubtreeRaw(mClassesKey, aProgID, &progIDKey);
         if (NS_FAILED(rv))
             goto out;
@@ -1740,7 +1740,7 @@ nsComponentManagerImpl::AddComponentToRegistry(const nsCID &aClass,
             goto out;
     }
 
-    nsIRegistry::Key compKey;
+    nsRegistryKey compKey;
     rv = mRegistry->AddSubtreeRaw(mXPCOMKey, aRegistryName, &compKey);
     
     // update component count

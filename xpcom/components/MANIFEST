@@ -1,5 +1,5 @@
 nsIGenericFactory.h
-nsIRegistry.h
+nsIRegistryUtils.h
 nsIServiceManager.h
 nsIServiceProvider.h
 nsRepository.h

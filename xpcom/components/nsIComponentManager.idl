@@ -89,6 +89,7 @@ interface nsIComponentManager : nsISupports
     boolean    isRegistered(in nsCIDRef aClass);
     nsIEnumerator	enumerateCLSIDs();
     nsIEnumerator	enumerateProgIDs();
+
 };
 
 %{ C++

@@ -51,39 +51,7 @@ struct nsRegistry : public nsIRegistry {
     NS_DECL_ISUPPORTS
 
     // This class implements the nsIRegistry interface functions.
-    NS_IMETHOD Open( const char *regFile);
-    NS_IMETHOD OpenWellKnownRegistry( uint32 regid );
-    NS_IMETHOD OpenDefault();
-    NS_IMETHOD Close();
-    NS_IMETHOD IsOpen( PRBool *result );
-
-    NS_IMETHOD GetString( Key baseKey, const char *path, char **result );
-    NS_IMETHOD SetString( Key baseKey, const char *path, const char *value );
-    NS_IMETHOD GetInt( Key baseKey, const char *path, int32 *result );
-    NS_IMETHOD SetInt( Key baseKey, const char *path, int32 value );
-    NS_IMETHOD GetBytes( Key baseKey, const char *path, void **result, uint32 *len );
-    NS_IMETHOD SetBytes( Key baseKey, const char *path, void *value, uint32 len );
-
-    NS_IMETHOD AddSubtree( Key baseKey, const char *path, Key *result );
-    NS_IMETHOD RemoveSubtree( Key baseKey, const char *path );
-    NS_IMETHOD GetSubtree( Key baseKey, const char *path, Key *result );
-
-	NS_IMETHOD AddSubtreeRaw( Key baseKey, const char *path, Key *result );
-    NS_IMETHOD RemoveSubtreeRaw( Key baseKey, const char *keyname );
-	NS_IMETHOD GetSubtreeRaw( Key baseKey, const char *path, Key *result );
-
-    NS_IMETHOD EnumerateSubtrees( Key baseKey, nsIEnumerator **result );
-    NS_IMETHOD EnumerateAllSubtrees( Key baseKey, nsIEnumerator **result );
-
-    NS_IMETHOD GetValueType( Key baseKey, const char *path, uint32 *result );
-    NS_IMETHOD GetValueLength( Key baseKey, const char *path, uint32 *result );
-
-    NS_IMETHOD EnumerateValues( Key baseKey, nsIEnumerator **result );
-
-    NS_IMETHOD GetCurrentUserName( char **result );
-    NS_IMETHOD SetCurrentUserName( const char *name );
-
-    NS_IMETHOD Pack();
+    NS_DECL_NSIREGISTRY
 
     // ctor/dtor
     nsRegistry();
@@ -95,7 +63,7 @@ protected:
     PRLock *mregLock;	// libreg isn't threadsafe. Use locks to synchronize.
 #endif
     char *mCurRegFile;	// these are to prevent open from opening the registry again
-    uint32 mCurRegID;
+    nsWellKnownRegistry mCurRegID;
 }; // nsRegistry
 
 
@@ -172,10 +140,7 @@ struct nsRegistryNode : public nsIRegistryNode {
     NS_DECL_ISUPPORTS
 
     // This class implements the nsIRegistryNode interface functions.
-    NS_IMETHOD GetName( char **result );
-
-    // Get the key associated with this node
-    NS_IMETHOD GetKey( nsIRegistry::Key *r_key );
+    NS_DECL_NSIREGISTRYNODE
 
     // ctor
     nsRegistryNode( HREG hReg, char *name, RKEY childKey );
@@ -200,9 +165,7 @@ struct nsRegistryValue : public nsIRegistryValue {
     NS_DECL_ISUPPORTS
 
     // This class implements the nsIRegistryValue interface functions.
-    NS_IMETHOD GetName( char **result );
-    NS_IMETHOD GetValueType( uint32 *result );
-    NS_IMETHOD GetValueLength( uint32 *result );
+    NS_DECL_NSIREGISTRYVALUE
 
     // ctor
     nsRegistryValue( HREG hReg, RKEY key, REGENUM slot );
@@ -429,7 +392,7 @@ NS_IMETHODIMP nsRegistry::Open( const char *regFile ) {
 | Takes a registry id and maps that to a file name for opening. We first check |
 | to see if a registry file is already open and close  it if so.               |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( uint32 regid ) {
+NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) {
     REGERR err = REGERR_OK;
 
     if (mCurRegID == regid)
@@ -444,7 +407,7 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( uint32 regid ) {
     nsSpecialSystemDirectory *registryLocation = NULL;
     PRBool foundReg = PR_FALSE;
     
-    switch ( (WellKnownRegistry) regid ) {
+    switch ( (nsWellKnownRegistry) regid ) {
       case ApplicationComponentRegistry:
         registryLocation =
           new nsSpecialSystemDirectory(nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentRegistry);
@@ -525,7 +488,7 @@ NS_IMETHODIMP nsRegistry::IsOpen( PRBool *result ) {
 | First, look for the entry using GetValueInfo.  If found, and it's a string,  |
 | allocate space for it and fetch the value.                                   |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::GetString( Key baseKey, const char *path, char **result ) {
+NS_IMETHODIMP nsRegistry::GetString( nsRegistryKey baseKey, const char *path, char **result ) {
     nsresult rv = NS_OK;
     REGERR   err = REGERR_OK;
 
@@ -596,7 +559,7 @@ NS_IMETHODIMP nsRegistry::GetString( Key baseKey, const char *path, char **resul
 /*--------------------------- nsRegistry::SetString ----------------------------
 | Simply sets the registry contents using NR_RegSetEntryString.                |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::SetString( Key baseKey, const char *path, const char *value ) {
+NS_IMETHODIMP nsRegistry::SetString( nsRegistryKey baseKey, const char *path, const char *value ) {
     REGERR err = REGERR_OK;
     // Set the contents.
     PR_Lock(mregLock);
@@ -610,7 +573,7 @@ NS_IMETHODIMP nsRegistry::SetString( Key baseKey, const char *path, const char *
 | This function is just shorthand for fetching a 1-element int32 array.  We    |
 | implement it "manually" using NR_RegGetEntry                                 |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::GetInt( Key baseKey, const char *path, int32 *result ) {
+NS_IMETHODIMP nsRegistry::GetInt( nsRegistryKey baseKey, const char *path, int32 *result ) {
     nsresult rv = NS_OK;
     REGERR err = REGERR_OK;
 
@@ -644,7 +607,7 @@ NS_IMETHODIMP nsRegistry::GetInt( Key baseKey, const char *path, int32 *result )
 /*---------------------------- nsRegistry::SetInt ------------------------------
 | Write out the value as a one-element int32 array, using NR_RegSetEntry.      |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::SetInt( Key baseKey, const char *path, int32 value ) {
+NS_IMETHODIMP nsRegistry::SetInt( nsRegistryKey baseKey, const char *path, int32 value ) {
     REGERR err = REGERR_OK;
     // Set the contents.
     PR_Lock(mregLock);
@@ -659,59 +622,10 @@ NS_IMETHODIMP nsRegistry::SetInt( Key baseKey, const char *path, int32 value ) {
     return regerr2nsresult( err );
 }
 
-/*--------------------------- nsRegistry::GetBytes -----------------------------
-| Get the registry contents at specified location using NR_RegGetEntry.        |
-------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::GetBytes( Key baseKey, const char *path, void **result, uint32 *len ) {
-    nsresult rv = NS_OK;
-    REGERR err = REGERR_OK;
-
-    // Make sure caller gave us place for result.
-    if( result && len ) {
-        // Get info about the requested entry.
-        uint32 type;
-        rv = GetValueType( baseKey, path, &type );
-        // See if that worked.
-        if( rv == NS_OK ) {
-            // Make sure the entry is bytes.
-            if( type == Bytes ) {
-                // Get bytes from registry into result field.
-				*result = PR_Malloc(*len);
-                PR_Lock(mregLock);
-                err = NR_RegGetEntry( mReg,(RKEY)baseKey,(char*)path, *result, len );
-                PR_Unlock(mregLock);
-                // Convert status.
-                rv = regerr2nsresult( err );
-            } else {
-                // They asked for the wrong type of value.
-                rv = NS_ERROR_REG_BADTYPE;
-            }
-        }
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-    return rv;
-}
-
-/*--------------------------- nsRegistry::SetBytes -----------------------------
-| Set the contents at the specified registry location, using NR_RegSetEntry.   |
-------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::SetBytes( Key baseKey, const char *path, void *value, uint32 len ) {
-    REGERR err = REGERR_OK;
-    // Set contents.
-    PR_Lock(mregLock);
-    err = NR_RegSetEntry( mReg,(RKEY)baseKey,(char*)path,
-                           REGTYPE_ENTRY_BYTES, value, len );
-    PR_Unlock(mregLock);
-    // Convert result;
-    return regerr2nsresult( err );
-}
-
-
 /*-------------------------- nsRegistry::AddSubtree ----------------------------
 | Add a new registry subkey with the specified name, using NR_RegAddKey.       |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::AddSubtree( Key baseKey, const char *path, Key *result ) {
+NS_IMETHODIMP nsRegistry::AddSubtree( nsRegistryKey baseKey, const char *path, nsRegistryKey *result ) {
     REGERR err = REGERR_OK;
     // Add the subkey.
     PR_Lock(mregLock);
@@ -724,7 +638,7 @@ NS_IMETHODIMP nsRegistry::AddSubtree( Key baseKey, const char *path, Key *result
 /*-------------------------- nsRegistry::AddSubtreeRaw--------------------------
 | Add a new registry subkey with the specified name, using NR_RegAddKeyRaw     |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::AddSubtreeRaw( Key baseKey, const char *path, Key *result ) {
+NS_IMETHODIMP nsRegistry::AddSubtreeRaw( nsRegistryKey baseKey, const char *path, nsRegistryKey *result ) {
     REGERR err = REGERR_OK;
     // Add the subkey.
     PR_Lock(mregLock);
@@ -738,7 +652,7 @@ NS_IMETHODIMP nsRegistry::AddSubtreeRaw( Key baseKey, const char *path, Key *res
 /*------------------------- nsRegistry::RemoveSubtree --------------------------
 | Deletes the subtree at a given location using NR_RegDeleteKey.               |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::RemoveSubtree( Key baseKey, const char *path ) {
+NS_IMETHODIMP nsRegistry::RemoveSubtree( nsRegistryKey baseKey, const char *path ) {
     REGERR err = REGERR_OK;
     // Delete the subkey.
     PR_Lock(mregLock);
@@ -752,7 +666,7 @@ NS_IMETHODIMP nsRegistry::RemoveSubtree( Key baseKey, const char *path ) {
 /*------------------------- nsRegistry::RemoveSubtreeRaw -----------------------
 | Deletes the subtree at a given location using NR_RegDeleteKeyRaw             |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::RemoveSubtreeRaw( Key baseKey, const char *keyname ) {
+NS_IMETHODIMP nsRegistry::RemoveSubtreeRaw( nsRegistryKey baseKey, const char *keyname ) {
     nsresult rv = NS_OK;
     REGERR err = REGERR_OK;
 
@@ -801,10 +715,10 @@ NS_IMETHODIMP nsRegistry::RemoveSubtreeRaw( Key baseKey, const char *keyname ) {
     return rv;
 }
 /*-------------------------- nsRegistry::GetSubtree ----------------------------
-| Returns a nsIRegistry::Key(RKEY) for a given key/path.  The key is           |
+| Returns a nsRegistryKey(RKEY) for a given key/path.  The key is           |
 | obtained using NR_RegGetKey.                                                 |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::GetSubtree( Key baseKey, const char *path, Key *result ) {
+NS_IMETHODIMP nsRegistry::GetSubtree( nsRegistryKey baseKey, const char *path, nsRegistryKey *result ) {
     nsresult rv = NS_OK;
     REGERR err = REGERR_OK;
     // Make sure we have a place for the result.
@@ -822,10 +736,10 @@ NS_IMETHODIMP nsRegistry::GetSubtree( Key baseKey, const char *path, Key *result
 }
 
 /*-------------------------- nsRegistry::GetSubtreeRaw--------------------------
-| Returns a nsIRegistry::Key(RKEY) for a given key/path.  The key is           |
+| Returns a nsRegistryKey(RKEY) for a given key/path.  The key is           |
 | obtained using NR_RegGetKeyRaw.                                              |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::GetSubtreeRaw( Key baseKey, const char *path, Key *result ) {
+NS_IMETHODIMP nsRegistry::GetSubtreeRaw( nsRegistryKey baseKey, const char *path, nsRegistryKey *result ) {
     nsresult rv = NS_OK;
     REGERR err = REGERR_OK;
     // Make sure we have a place for the result.
@@ -850,7 +764,7 @@ NS_IMETHODIMP nsRegistry::GetSubtreeRaw( Key baseKey, const char *path, Key *res
 | to recurse down subtrees.  No libreg functions are invoked at this point     |
 |(that will happen when the enumerator member functions are called).          |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::EnumerateSubtrees( Key baseKey, nsIEnumerator **result ) {
+NS_IMETHODIMP nsRegistry::EnumerateSubtrees( nsRegistryKey baseKey, nsIEnumerator **result ) {
     nsresult rv = NS_OK;
     // Make sure we have a place to put the result.
     if( result ) {
@@ -873,7 +787,7 @@ NS_IMETHODIMP nsRegistry::EnumerateSubtrees( Key baseKey, nsIEnumerator **result
 | Same as EnumerateSubtrees but we pass PR_TRUE to request that the            |
 | enumerator object descend subtrees when it is used.                          |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::EnumerateAllSubtrees( Key baseKey, nsIEnumerator **result ) {
+NS_IMETHODIMP nsRegistry::EnumerateAllSubtrees( nsRegistryKey baseKey, nsIEnumerator **result ) {
     nsresult rv = NS_OK;
     // Make sure we have a place to put the result.
     if( result ) {
@@ -897,7 +811,7 @@ NS_IMETHODIMP nsRegistry::EnumerateAllSubtrees( Key baseKey, nsIEnumerator **res
 | The result is transferred to the uint32 value passed in (with conversion     |
 | to the appropriate nsIRegistry::DataType value).                             |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::GetValueType( Key baseKey, const char *path, uint32 *result ) {
+NS_IMETHODIMP nsRegistry::GetValueType( nsRegistryKey baseKey, const char *path, uint32 *result ) {
     nsresult rv = NS_OK;
     REGERR err = REGERR_OK;
     // Make sure we have a place to put the result.
@@ -923,7 +837,7 @@ NS_IMETHODIMP nsRegistry::GetValueType( Key baseKey, const char *path, uint32 *r
 | Gets the registry value info via NR_RegGetEntryInfo.  The length is          |
 | converted to the proper "units" via reginfo2Length.                          |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::GetValueLength( Key baseKey, const char *path, uint32 *result ) {
+NS_IMETHODIMP nsRegistry::GetValueLength( nsRegistryKey baseKey, const char *path, uint32 *result ) {
     nsresult rv = NS_OK;
     REGERR err = REGERR_OK;
     // Make sure we have a place to put the result.
@@ -950,7 +864,7 @@ NS_IMETHODIMP nsRegistry::GetValueLength( Key baseKey, const char *path, uint32 
 | a similar fashion as the nsRegSubtreeEnumerator is allocated/returned by     |
 | EnumerateSubtrees.                                                           |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::EnumerateValues( Key baseKey, nsIEnumerator **result ) {
+NS_IMETHODIMP nsRegistry::EnumerateValues( nsRegistryKey baseKey, nsIEnumerator **result ) {
     nsresult rv = NS_OK;
     // Make sure we have a place to put the result.
     if( result ) {
@@ -1237,7 +1151,7 @@ NS_IMETHODIMP nsRegistryNode::GetName( char **result ) {
 | Get the subkey corresponding to this node                                    |						
 | using NR_RegEnumSubkeys.                                                     |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistryNode::GetKey( nsIRegistry::Key *r_key ) {
+NS_IMETHODIMP nsRegistryNode::GetKey( nsRegistryKey *r_key ) {
     nsresult rv = NS_OK;
     if (r_key == NULL) return NS_ERROR_NULL_POINTER;
     *r_key = mChildKey;
@@ -1291,12 +1205,12 @@ NS_IMETHODIMP nsRegistryValue::GetName( char **result ) {
     return rv;
 }
 
-/*----------------------- nsRegistryValue::GetValueType ------------------------
+/*----------------------- nsRegistryValue::GetType ------------------------
 | We test if we've got the info already.  If not, we git it by calling         |
 | getInfo.  We calculate the result by converting the REGINFO type field to    |
 | a nsIRegistry::DataType value (using reginfo2DataType).                      |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistryValue::GetValueType( uint32 *result ) {
+NS_IMETHODIMP nsRegistryValue::GetType( PRUint32 *result ) {
     nsresult rv = NS_OK;
     // Make sure we have room for th result.
     if( result ) {
@@ -1313,12 +1227,12 @@ NS_IMETHODIMP nsRegistryValue::GetValueType( uint32 *result ) {
     return rv;
 }
 
-/*---------------------- nsRegistryValue::GetValueLength -----------------------
+/*---------------------- nsRegistryValue::GetLength -----------------------
 | We test if we've got the info already.  If not, we git it by calling         |
 | getInfo.  We calculate the result by converting the REGINFO type field to    |
 | a nsIRegistry::DataType value (using reginfo2Length).                        |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistryValue::GetValueLength( uint32 *result ) {
+NS_IMETHODIMP nsRegistryValue::GetLength( uint32 *result ) {
     nsresult rv = NS_OK;
     // Make sure we have room for th result.
     if( result ) {
