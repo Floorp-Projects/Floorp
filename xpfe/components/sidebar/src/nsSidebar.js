@@ -129,16 +129,19 @@ function (aTitle, aContentURL, aCustomizeURL)
     {
         var titleMessage, dialogMessage;
         try {
-            var stringBundle = getStringBundle("chrome://communicator/locale/sidebar/sidebar.properties");
-            if (stringBundle) {
+			var stringBundle = srGetStrBundle("chrome://communicator/locale/sidebar/sidebar.properties");
+            var brandStringBundle = srGetStrBundle("chrome://global/locale/brand.properties");
+			if (stringBundle) {
+                sidebarName = brandStringBundle.GetStringFromName("sidebarName");
                 titleMessage = stringBundle.GetStringFromName("dupePanelAlertTitle");
                 dialogMessage = stringBundle.GetStringFromName("dupePanelAlertMessage");
                 dialogMessage = dialogMessage.replace(/%url%/, aContentURL);
+                dialogMessage = dialogMessage.replace(/%name%/, sidebarName);
             }
         }
         catch (e) {
             titleMessage = "Sidebar";
-            dialogMessage = aContentURL + " already exists in Sidebar.";
+            dialogMessage = aContentURL + " already exists in Sidebar.  No string bundle";
         }
           
         var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
@@ -152,18 +155,21 @@ function (aTitle, aContentURL, aCustomizeURL)
     
     var titleMessage, dialogMessage;
     try {
-        var stringBundle = getStringBundle("chrome://communicator/locale/sidebar/sidebar.properties");
-        if (stringBundle) {
+		var stringBundle = srGetStrBundle("chrome://communicator/locale/sidebar/sidebar.properties");
+        var brandStringBundle = srGetStrBundle("chrome://global/locale/brand.properties");
+		if (stringBundle) {
+			sidebarName = brandStringBundle.GetStringFromName("sidebarName");
             titleMessage = stringBundle.GetStringFromName("addPanelConfirmTitle");
             dialogMessage = stringBundle.GetStringFromName("addPanelConfirmMessage");
             dialogMessage = dialogMessage.replace(/%title%/, aTitle);
             dialogMessage = dialogMessage.replace(/%url%/, aContentURL);
             dialogMessage = dialogMessage.replace(/#/g, "\n");
+            dialogMessage = dialogMessage.replace(/%name%/, sidebarName);
         }
     }
     catch (e) {
         titleMessage = "Add Tab to Sidebar";
-        dialogMessage = "Add the Tab '" + aTitle + "' to Sidebar?\n\n" + "Source: " + aContentURL;
+        dialogMessage = "No string bundle.  Add the Tab '" + aTitle + "' to Sidebar?\n\n" + "Source: " + aContentURL;
     }
           
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
@@ -257,14 +263,17 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
 
     var titleMessage, dialogMessage;
     try {
-        var stringBundle = getStringBundle("chrome://communicator/locale/sidebar/sidebar.properties");
+        var stringBundle = srGetStrBundle("chrome://communicator/locale/sidebar/sidebar.properties");
+        var brandStringBundle = srGetStrBundle("chrome://global/locale/brand.properties");
         if (stringBundle) {
-            titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
+            sidebarName = brandStringBundle.GetStringFromName("sidebarName");            
+			titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
             dialogMessage = stringBundle.GetStringFromName("addEngineConfirmMessage");
             dialogMessage = dialogMessage.replace(/%title%/, suggestedTitle);
             dialogMessage = dialogMessage.replace(/%category%/, suggestedCategory);
             dialogMessage = dialogMessage.replace(/%url%/, engineURL);
             dialogMessage = dialogMessage.replace(/#/g, "\n");
+            dialogMessage = dialogMessage.replace(/%name%/, sidebarName);
         }
     }
     catch (e) {
@@ -392,17 +401,27 @@ function getSidebarDatasourceURI(panels_file_id)
     }
 }
 
-function getStringBundle(aURL) 
+
+var strBundleService = null;
+function srGetStrBundle(path)
 {
-  var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService();
-  stringBundleService = stringBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
-  var appLocale;
-  var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"].getService();
-  if (localeService)
-    localeService = localeService.QueryInterface(Components.interfaces.nsILocaleService);
-  if (localeService)
-    appLocale = localeService.GetApplicationLocale();
-  var stringBundle = stringBundleService.CreateBundle(aURL, appLocale);
-  if (stringBundle)
-    return stringBundle.QueryInterface(Components.interfaces.nsIStringBundle);
+   var strBundle = null;
+   if (!strBundleService) {
+       try {
+          strBundleService =
+          Components.classes["@mozilla.org/intl/stringbundle;1"].getService(); 
+          strBundleService = 
+          strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
+       } catch (ex) {
+          dump("\n--** strBundleService failed: " + ex + "\n");
+          return null;
+      }
+   }
+   strBundle = strBundleService.createBundle(path); 
+   if (!strBundle) {
+       dump("\n--** strBundle createInstance failed **--\n");
+   }
+   return strBundle;
 }
+
+
