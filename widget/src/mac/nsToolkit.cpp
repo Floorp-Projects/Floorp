@@ -30,7 +30,8 @@
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
-
+#include "nsIImageManager.h"
+#include "nsGfxCIID.h"
 
 //#define MAC_PL_EVENT_TWEAKING
 
@@ -38,6 +39,7 @@
 static NS_DEFINE_CID(kEventQueueCID,  NS_EVENTQUEUE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,  NS_EVENTQUEUESERVICE_CID);
 
+static NS_DEFINE_IID(kImageManagerCID, NS_IMAGEMANAGER_CID);
 
 static nsMacNSPREventQueueHandler*	gEventQueueHandler = nsnull;
 
@@ -283,5 +285,72 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
   }
 
   return rv;
+}
+
+#pragma mark -
+
+Handle nsMacMemoryCushion::sMemoryReserve;
+
+nsMacMemoryCushion::nsMacMemoryCushion()
+{
+}
+
+nsMacMemoryCushion::~nsMacMemoryCushion()
+{
+  ::SetGrowZone(nsnull);
+  if (sMemoryReserve)
+    ::DisposeHandle(sMemoryReserve);
+}
+
+
+OSErr nsMacMemoryCushion::Init(Size reserveSize)
+{
+  sMemoryReserve = ::NewHandle(reserveSize);
+  if (sMemoryReserve == nsnull)
+    return ::MemError();
+  
+	::SetGrowZone(NewGrowZoneProc(GrowZoneProc));
+	return noErr;
+}
+
+
+void nsMacMemoryCushion::RepeatAction(const EventRecord &aMacEvent)
+{
+  if (!RecoverMemoryReserve(kMemoryReserveSize))
+  {
+    nsMemory::HeapMinimize();
+    
+    // until imglib implements nsIMemoryPressureObserver (bug 46337)
+    // manually flush the imglib cache here
+    nsCOMPtr<nsIImageManager> imageManager = do_GetService(kImageManagerCID);
+    if (imageManager)
+    {
+      imageManager->FlushCache();
+    }    
+  }
+}
+
+
+Boolean nsMacMemoryCushion::RecoverMemoryReserve(Size reserveSize)
+{
+  if (!sMemoryReserve) return true;     // not initted yet
+  if (*sMemoryReserve != nsnull) return true;   // everything is OK
+  
+  ::ReallocateHandle(sMemoryReserve, reserveSize);
+  if (::MemError() != noErr) return false;
+  return true;
+}
+
+pascal long nsMacMemoryCushion::GrowZoneProc(Size amountNeeded)
+{
+  long    freedMem = 0;
+  
+  if (sMemoryReserve && *sMemoryReserve && sMemoryReserve != ::GZSaveHnd())
+  {
+    freedMem = ::GetHandleSize(sMemoryReserve);
+    ::EmptyHandle(sMemoryReserve);
+  }
+  
+  return freedMem;
 }
 

@@ -101,5 +101,40 @@ protected:
 };
 
 
+// class for low memory detection and handling
+class nsMacMemoryCushion : public Repeater
+{
+public:
+
+  enum {
+    kMemoryReserveSize      = 32 * 1024   // 32k memory reserve    
+  };
+  
+                nsMacMemoryCushion();
+                ~nsMacMemoryCushion();
+                
+  OSErr         Init(Size reserveSize);
+
+
+  void          RepeatAction(const EventRecord &aMacEvent);
+
+protected:
+
+                // allocate or recover the memory reserve. Returns true on success
+  Boolean       RecoverMemoryReserve(Size reserveSize);
+
+public:
+
+  static pascal long  GrowZoneProc(Size amountNeeded);
+  
+  
+protected:
+
+  static Handle  sMemoryReserve;
+
+};
+
+
+
 
 #endif  // TOOLKIT_H
