@@ -214,7 +214,7 @@ protected:
 
 private:
    // ConditionRect is used to fix a coordinate overflow problem under WIN95. 
-  void ConditionRect(nsRect aSrcRect, RECT& aDestRect);
+  void ConditionRect(nsRect& aSrcRect, RECT& aDestRect);
 
   nsresult CommonInit(void);
   nsresult SetupDC(HDC aOldDC, HDC aNewDC);

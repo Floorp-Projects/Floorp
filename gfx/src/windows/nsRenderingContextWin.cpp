@@ -1878,7 +1878,7 @@ nsRenderingContextWin::GetWidth(const char *aString,
         // Repeatedly back up until we get to where the text fits or we're all
         // the way back to the first word
         width += twWidth;
-        while ((breakIndex >= 0) && (width > aAvailWidth)) {
+        while ((breakIndex >= 1) && (width > aAvailWidth)) {
           start = aBreaks[breakIndex - 1];
           numChars = aBreaks[breakIndex] - start;
           
@@ -3702,18 +3702,22 @@ FoundFont:
     return NS_ERROR_FAILURE;
 }
 
-
-// ConditionRect is used to fix a coordinate overflow problem under WIN95. 
-// Convert nsRect to RECT with cooordinates modified to acceptable ranges for WIN95.
+/**
+ * ConditionRect is used to fix a coordinate overflow problem under WIN95/WIN98.
+ * Some operations fail for rectangles whose coordinates have very large
+ * absolute values.  Since these values are off the screen, they can be
+ * truncated to reasonable ones.
+ *
+ * @param aSrcRect input rectangle
+ * @param aDestRect output rectangle, same as input except with large
+ *                  coordinates changed so they are acceptable to WIN95/WIN98
+ */
 // XXX: TODO find all calls under WIN95 that will fail if passed large coordinate values
 // and make calls to this method to fix them.
 
 void 
-nsRenderingContextWin::ConditionRect(nsRect aSrcRect, RECT& aDestRect)
+nsRenderingContextWin::ConditionRect(nsRect& aSrcRect, RECT& aDestRect)
 {
-  aDestRect.left = aSrcRect.x;
-  aDestRect.right = aSrcRect.x + aSrcRect.width; 
-
    // XXX: TODO find the exact values for the and bottom limits. These limits were determined by
    // printing out the RECT coordinates and noticing when they failed. There must be an offical
    // document that describes what the coordinate limits are for calls
@@ -3722,19 +3726,21 @@ nsRenderingContextWin::ConditionRect(nsRect aSrcRect, RECT& aDestRect)
 
    // The following is for WIN95. If range of legal values for the rectangles passed for 
    // clipping and drawing is smaller on WIN95 than under WINNT.                              
-  const nscoord kBottomLimit = 16384;
-  const nscoord kTopLimit = -8192;
+  const nscoord kBottomRightLimit = 16384;
+  const nscoord kTopLeftLimit = -8192;
 
-  if (aSrcRect.y < kTopLimit)
-    aDestRect.top = kTopLimit;
-  else 
-    aDestRect.top = aSrcRect.y;
-
-  if ((aSrcRect.y + aSrcRect.height) > kBottomLimit) 
-     aDestRect.bottom = kBottomLimit;
-  else
-     aDestRect.bottom = aSrcRect.y + aSrcRect.height;
-
+  aDestRect.top = (aSrcRect.y < kTopLeftLimit)
+                      ? kTopLeftLimit
+                      : aSrcRect.y;
+  aDestRect.bottom = ((aSrcRect.y + aSrcRect.height) > kBottomRightLimit)
+                      ? kBottomRightLimit
+                      : (aSrcRect.y+aSrcRect.height);
+  aDestRect.left = (aSrcRect.x < kTopLeftLimit)
+                      ? kTopLeftLimit
+                      : aSrcRect.x;
+  aDestRect.right = ((aSrcRect.x + aSrcRect.width) > kBottomRightLimit)
+                      ? kBottomRightLimit
+                      : (aSrcRect.x+aSrcRect.width);
 }
 
 
