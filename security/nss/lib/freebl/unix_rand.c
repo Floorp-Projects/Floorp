@@ -155,7 +155,6 @@ GetHighResClock(void *buf, size_t maxbytes)
 }
 #else /* SunOS (Sun, but not SVR4) */
 
-#include <sys/wait.h>
 extern long sysconf(int name);
 
 static size_t
@@ -178,7 +177,6 @@ GiveSystemInfo(void)
 
 #if defined(__hpux)
 #include <sys/unistd.h>
-#include <sys/wait.h>
 
 #define getdtablesize() sysconf(_SC_OPEN_MAX)
 
@@ -208,7 +206,6 @@ GiveSystemInfo(void)
 #if defined(OSF1)
 #include <sys/types.h>
 #include <sys/sysinfo.h>
-#include <sys/wait.h>
 #include <sys/systeminfo.h>
 #include <c_asm.h>
 
@@ -475,7 +472,6 @@ GiveSystemInfo(void)
 #endif /* sony */
 
 #if defined(sinix)
-#include <unistd.h>
 #include <sys/systeminfo.h>
 #include <sys/times.h>
 
@@ -727,9 +723,9 @@ void RNG_SystemInfoForRNG(void)
     FILE *fp;
     char buf[BUFSIZ];
     size_t bytes;
-    extern const char * const * const environ;
     const char * const *cp;
     char *randfile;
+    extern char **environ;
     static const char * const files[] = {
 	"/etc/passwd",
 	"/etc/utmp",
@@ -776,7 +772,7 @@ for the small amount of entropy it provides.
      * execution environment of the user and on the platform the program
      * is running on.
      */
-    cp = environ;
+    cp = (const char * const *)environ;
     while (*cp) {
 	RNG_RandomUpdate(*cp, strlen(*cp));
 	cp++;
@@ -810,7 +806,6 @@ void RNG_SystemInfoForRNG(void)
     char buf[BUFSIZ];
     size_t bytes;
     int extra;
-    extern char **environ;
     char **cp;
     char *randfile;
  
