@@ -229,7 +229,8 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
                                               categoryEntry.get(),
                                               getter_Copies(constructorProto));
       if (NS_SUCCEEDED(rv)) {
-        nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(categoryEntry));
+        NS_ConvertASCIItoUCS2 name(categoryEntry);
+        nsGlobalNameStruct *s = AddToHash(name);
         NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
         if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
@@ -237,7 +238,7 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
           if (!s->mAlias) {
             // Free entry
             PL_DHashTableOperate(&mGlobalNames,
-                                 &NS_ConvertASCIItoUCS2(categoryEntry),
+                                 &name,
                                  PL_DHASH_REMOVE);
             return NS_ERROR_OUT_OF_MEMORY;
           }
