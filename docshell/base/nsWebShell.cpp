@@ -674,35 +674,25 @@ nsWebShell::OnOverLink(nsIContent* aContent,
     nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    PRUnichar *uStr;
-    nsString aSpec(aURLSpec);
-    PRInt32 pos = aSpec.FindChar(':');
-    nsAutoString scheme;
-    static const char kMailToURI[] = "mailto";
-    // If the scheme is mailtourl then should not convert from a document charset
-    if ((pos == (PRInt32)(sizeof kMailToURI - 1)) && (aSpec.Left(scheme, pos) != -1) &&
-         scheme.EqualsIgnoreCase(kMailToURI)) {
-      // use UTF-8 instead and apply URL escape.
-      rv = textToSubURI->UnEscapeAndConvert("UTF-8",NS_ConvertUCS2toUTF8(aURLSpec).get(), &uStr);
-    }
-    else  {
-      // use doc charset instead and apply URL escape.
-      nsCOMPtr<nsIPresShell> presShell;
-      nsCOMPtr<nsIDocument> doc;
-      nsDocShell::GetPresShell(getter_AddRefs(presShell));
-      NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-      presShell->GetDocument(getter_AddRefs(doc));
-      NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-      nsAutoString charset;
-      NS_ENSURE_SUCCESS(doc->GetDocumentCharacterSet(charset), NS_ERROR_FAILURE);
-      rv = textToSubURI->UnEscapeAndConvert(NS_ConvertUCS2toUTF8(charset.get()).get(),
-             NS_ConvertUCS2toUTF8(aURLSpec).get(), &uStr);    
-    }
+    // use doc charset to unescape the URL
+    nsCOMPtr<nsIPresShell> presShell;
+    nsDocShell::GetPresShell(getter_AddRefs(presShell));
+    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-    if (NS_SUCCEEDED(rv))   {
-      rv = browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK, uStr);
-      nsMemory::Free(uStr);
-    }
+    nsCOMPtr<nsIDocument> doc;
+    presShell->GetDocument(getter_AddRefs(doc));
+    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+    nsAutoString charset;
+    rv = doc->GetDocumentCharacterSet(charset);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString uStr;
+    rv = textToSubURI->UnEscapeURIForUI(NS_LossyConvertUCS2toASCII(charset),
+                                        NS_ConvertUCS2toUTF8(aURLSpec), uStr);    
+
+    if (NS_SUCCEEDED(rv))
+      rv = browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK, uStr.get());
   }
   return rv;
 }
