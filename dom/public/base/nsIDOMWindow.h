@@ -31,6 +31,7 @@
 
 class nsIDOMNavigator;
 class nsIDOMDocument;
+class nsIDOMSelection;
 class nsIDOMBarProp;
 class nsIDOMScreen;
 class nsIDOMHistory;
@@ -201,6 +202,8 @@ public:
   NS_IMETHOD    Escape(const nsString& aStr, nsString& aReturn)=0;
 
   NS_IMETHOD    Unescape(const nsString& aStr, nsString& aReturn)=0;
+
+  NS_IMETHOD    GetSelection(nsIDOMSelection** aReturn)=0;
 };
 
 
@@ -288,6 +291,7 @@ public:
   NS_IMETHOD    UpdateCommands(const nsString& aAction);  \
   NS_IMETHOD    Escape(const nsString& aStr, nsString& aReturn);  \
   NS_IMETHOD    Unescape(const nsString& aStr, nsString& aReturn);  \
+  NS_IMETHOD    GetSelection(nsIDOMSelection** aReturn);  \
 
 
 
@@ -375,6 +379,7 @@ public:
   NS_IMETHOD    UpdateCommands(const nsString& aAction) { return _to UpdateCommands(aAction); }  \
   NS_IMETHOD    Escape(const nsString& aStr, nsString& aReturn) { return _to Escape(aStr, aReturn); }  \
   NS_IMETHOD    Unescape(const nsString& aStr, nsString& aReturn) { return _to Unescape(aStr, aReturn); }  \
+  NS_IMETHOD    GetSelection(nsIDOMSelection** aReturn) { return _to GetSelection(aReturn); }  \
 
 
 extern nsresult NS_InitWindowClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobal);

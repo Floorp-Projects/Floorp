@@ -37,13 +37,14 @@
 #include "nsIDOMNavigator.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMSelection.h"
 #include "nsIDOMBarProp.h"
 #include "nsIDOMAbstractView.h"
 #include "nsIDOMScreen.h"
 #include "nsIDOMHistory.h"
-#include "nsIDOMEventListener.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIDOMEvent.h"
+#include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsISidebar.h"
 #include "nsIDOMWindow.h"
@@ -56,13 +57,14 @@ static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINavigatorIID, NS_IDOMNAVIGATOR_IID);
 static NS_DEFINE_IID(kIDocumentViewIID, NS_IDOMDOCUMENTVIEW_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
+static NS_DEFINE_IID(kISelectionIID, NS_IDOMSELECTION_IID);
 static NS_DEFINE_IID(kIBarPropIID, NS_IDOMBARPROP_IID);
 static NS_DEFINE_IID(kIAbstractViewIID, NS_IDOMABSTRACTVIEW_IID);
 static NS_DEFINE_IID(kIScreenIID, NS_IDOMSCREEN_IID);
 static NS_DEFINE_IID(kIHistoryIID, NS_IDOMHISTORY_IID);
-static NS_DEFINE_IID(kIEventListenerIID, NS_IDOMEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIWindowCollectionIID, NS_IDOMWINDOWCOLLECTION_IID);
 static NS_DEFINE_IID(kIEventIID, NS_IDOMEVENT_IID);
+static NS_DEFINE_IID(kIEventListenerIID, NS_IDOMEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIEventTargetIID, NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_IID(kISidebarIID, NS_ISIDEBAR_IID);
 static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
@@ -2421,6 +2423,42 @@ WindowUnescape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 
 
 //
+// Native method GetSelection
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsIDOMSelection* nativeRet;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_GETSELECTION, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->GetSelection(&nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method AddEventListener
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -2639,6 +2677,7 @@ static JSFunctionSpec WindowMethods[] =
   {"updateCommands",          WindowUpdateCommands,     1},
   {"escape",          WindowEscape,     1},
   {"unescape",          WindowUnescape,     1},
+  {"getSelection",          WindowGetSelection,     0},
   {"addEventListener",          EventTargetAddEventListener,     3},
   {"removeEventListener",          EventTargetRemoveEventListener,     3},
   {0}

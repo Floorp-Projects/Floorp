@@ -895,6 +895,7 @@
     "window.forward", \
     "window.frames", \
     "window.getattention", \
+    "window.getselection", \
     "window.history", \
     "window.home", \
     "window.innerheight", \
