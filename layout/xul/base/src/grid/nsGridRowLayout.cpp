@@ -194,7 +194,7 @@ nsGridRowLayout::CastToGridLayout(nsGridLayout2** aGridLayout)
 }
 
 NS_IMETHODIMP
-nsGridRowLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow)
+nsGridRowLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHorizontal)
 {
   // get our parents margin
   nsMargin margin(0,0,0,0);
@@ -217,7 +217,7 @@ nsGridRowLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow)
     // get the parent first child to see if we are first
     parent->GetChildBox(&child);
 
-    part->GetTotalMargin(parent,margin,aIsRow);
+    part->GetTotalMargin(parent,margin,aIsHorizontal);
 
     // if first or last
     if (child == aBox || next == nsnull) {
@@ -226,7 +226,7 @@ nsGridRowLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow)
        // we don't need it.
        if (child != aBox)
        {
-          if (aIsRow)
+          if (aIsHorizontal)
               margin.top = 0;
           else 
               margin.left = 0;
@@ -236,7 +236,7 @@ nsGridRowLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow)
        // we don't need it.
        if (next != nsnull)
        {
-          if (aIsRow)
+          if (aIsHorizontal)
               margin.bottom = 0;
           else 
               margin.right = 0;

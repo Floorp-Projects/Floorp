@@ -60,7 +60,7 @@ public:
   NS_IMETHOD CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
   NS_IMETHOD DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState);
   NS_IMETHOD BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount);
-  NS_IMETHOD GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow);
+  NS_IMETHOD GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHorizontal);
   NS_IMETHOD GetRowCount(PRInt32& aRowCount);
 
 protected:
@@ -68,7 +68,7 @@ protected:
   virtual ~nsGridRowGroupLayout();
 
   NS_IMETHOD ChildAddedOrRemoved(nsIBox* aBox, nsBoxLayoutState& aState);
-  static void AddWidth(nsSize& aSize, nscoord aSize2, PRBool aIsRow);
+  static void AddWidth(nsSize& aSize, nscoord aSize2, PRBool aIsHorizontal);
 
 private:
   nsGridRow* mRowColumn;

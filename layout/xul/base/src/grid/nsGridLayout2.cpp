@@ -142,7 +142,7 @@ nsGridLayout2::CastToGridLayout(nsGridLayout2** aGridLayout)
 }
 
 NS_IMETHODIMP
-nsGridLayout2::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow)
+nsGridLayout2::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHorizontal)
 {
   aMargin.left = 0;
   aMargin.right = 0;
