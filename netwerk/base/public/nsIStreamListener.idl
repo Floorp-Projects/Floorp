@@ -58,6 +58,8 @@ interface nsIStreamListener : nsIRequestObserver
      * @param aOffset current stream position
      * @param aCount number of bytes available in the stream
      *
+     * NOTE: The aInputStream parameter must implement readSegments.
+     *
      * An exception thrown from onDataAvailable has the side-effect of
      * causing the request to be canceled.
      */
