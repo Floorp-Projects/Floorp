@@ -320,3 +320,11 @@ nsMailGNOMEIntegration::ShowMailIntegrationDialog(nsIDOMWindow* aParentWindow)
 
   return rv;
 }
+
+NS_IMETHODIMP
+nsMailGNOMEIntegration::RegisterMailAndNewsClient()
+{
+  return NS_OK;
+}
+
+
