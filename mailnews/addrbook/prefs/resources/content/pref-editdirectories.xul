@@ -34,14 +34,14 @@ Rights Reserved.
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
-    <description>&directoriesText.label;</description>
+    <label value="&directoriesText.label;" accesskey="&directoriesText.accesskey;" control="directoriesList"/>
     <hbox flex="1">
       <listbox id="directoriesList" flex="1" onselect="selectDirectory();"/>
 
       <vbox>
-        <button id="addButton" label="&addDirectory.label;" oncommand="newDirectory();"/>
-        <button id="editButton" label="&editDirectory.label;" oncommand="editDirectory();" disabled="true"/>
-        <button id="removeButton" label="&deleteDirectory.label;" oncommand="removeDirectory();" disabled="true"/>
+        <button id="addButton" label="&addDirectory.label;" oncommand="newDirectory();" accesskey="&addDirectory.accesskey;"/>
+        <button id="editButton" label="&editDirectory.label;" oncommand="editDirectory();" disabled="true" accesskey="&editDirectory.accesskey;"/>
+        <button id="removeButton" label="&deleteDirectory.label;" oncommand="removeDirectory();" disabled="true" accesskey="&deleteDirectory.accesskey;"/>
       </vbox>
     </hbox>
 </dialog>

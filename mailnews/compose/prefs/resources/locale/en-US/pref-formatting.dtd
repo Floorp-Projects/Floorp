@@ -23,7 +23,7 @@ Rights Reserved.
 <!ENTITY sendMail.label               "Send Format">
 <!ENTITY sendMaildesc.label           "When sending messages in HTML format and one or more recipients are not listed as being able to receive HTML:">
 <!ENTITY askMe.label                  "Ask me what to do (Mail prompts you to choose a format)">
-<!ENTITY askMe.accesskey              "a">
+<!ENTITY askMe.accesskey              "k">
 <!ENTITY convertPlain.label           "Convert the message to plain text (some formatting may be lost)">
 <!ENTITY convertPlain.accesskey       "c">
 <!ENTITY sendHTML.label               "Send the message in HTML anyway (some mail programs may not be able to display it)">
@@ -37,7 +37,7 @@ Rights Reserved.
 <!ENTITY domain.title                 "HTML and Plain Text Domains">
 <!ENTITY domaindesc.label             "When you send a message to an address with one of the domain names listed below, Mail automatically sends the message in the correct format.">
 <!ENTITY HTMLdomaintitle.label        "HTML Domains">
-<!ENTITY HTMLdomaintitle.accesskey    "h">
+<!ENTITY HTMLdomaintitle.accesskey    "M">
 <!ENTITY PlainTexttitle.label         "Plain Text Domains">
 <!ENTITY PlainTexttitle.accesskey     "p">
 <!ENTITY AddButton.label              "Add...">

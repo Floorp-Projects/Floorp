@@ -37,20 +37,28 @@ Rights Reserved.
 <!ENTITY useAddress.accesskey   "u">
 <!ENTITY emailCollectionEnable.label	"Enable Email Address Collection">
 <!ENTITY emailCollectionIncomingEnable.label	"Incoming Mail Messages">
+<!ENTITY emailCollectionIncomingEnable.accesskey	"I">
 <!ENTITY emailCollectionOutgoingEnable.label	"Outgoing Mail Messages">
+<!ENTITY emailCollectionOutgoingEnable.accesskey	"O">
 <!ENTITY emailCollectionNewsgroupEnable.label	"Outgoing Newsgroup Messages">
+<!ENTITY emailCollectionNewsgroupEnable.accesskey	"u">
 <!ENTITY emailCollectionTypeText.label "Save email addresses from:">
 <!ENTITY emailCollectiontitle.label	"Email Address Collection">
 <!ENTITY emailCollectiontext.label	"Email addresses from messages can be added to a local address book, 'Collected Addresses'. Add email addresses from:">
 <!ENTITY useCABSizelimitPart1.label	"Limit the Collected Address book to">
+<!ENTITY useCABSizelimitPart1.accesskey	"L">
 <!ENTITY useCABSizelimitPart2.label	"cards">
+<!ENTITY useCABSizelimitPart2.accesskey	"c">
 
 <!-- Autocompletion -->
 <!ENTITY addressingTitle.label                 "Address Autocompletion">
 <!-- LOCALIZATION NOTE (addressingText.label) : do not translate "LDAP" in below line -->
 <!ENTITY addressingEnable.label                "Local Address Books">
+<!ENTITY addressingEnable.accesskey            "A">
 <!ENTITY autocompleteText.label                "When addressing messages, look for matching entries in:">
 <!ENTITY directories.label                     "Directory Server:">
+<!ENTITY directories.accesskey                 "D">
 <!ENTITY editDirectories.label                 "Edit Directories...">
+<!ENTITY editDirectories.accesskey             "E">
 <!ENTITY matchText.label                       "If there is a match in your local address books:">
 <!ENTITY skipDirectory.label                   "Do not search in the directory">

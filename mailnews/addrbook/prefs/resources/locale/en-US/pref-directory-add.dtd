@@ -22,7 +22,7 @@ Rights Reserved.
 <!ENTITY directoryName.label               "Name: ">
 <!ENTITY directoryName.accesskey           "n">
 <!ENTITY directoryHostname.label           "Hostname: ">
-<!ENTITY directoryHostname.accesskey       "h">
+<!ENTITY directoryHostname.accesskey       "o">
 <!ENTITY directoryBaseDN.label             "Base DN: ">
 <!ENTITY directoryBaseDN.accesskey         "b">
 <!ENTITY findButton.label                  "Find">
@@ -42,9 +42,11 @@ Rights Reserved.
 <!ENTITY searchFilter.label                "Search filter: ">
 <!ENTITY searchFilter.accesskey            "f">
 <!ENTITY scope.label                       "Scope: ">
-<!ENTITY scope.accesskey                   "s">
+<!ENTITY scope.accesskey                   "c">
 <!ENTITY scopeOneLevel.label               "One Level">
+<!ENTITY scopeOneLevel.accesskey           "L">
 <!ENTITY scopeSubtree.label                "Subtree">
+<!ENTITY scopeSubtree.accesskey            "S">
 <!ENTITY return.label                      "Don't return more than">
 <!ENTITY return.accesskey                  "r">
 <!ENTITY results.label                     "results">

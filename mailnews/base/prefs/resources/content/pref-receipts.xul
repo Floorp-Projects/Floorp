@@ -59,21 +59,23 @@
     <caption label="&pane.title;"/>
 
     <vbox id="returnReceiptSettings">
-      <checkbox id="alwaysRequest" label="&requestReceipt.label;" prefstring="mail.receipt.request_return_receipt_on"/>
+      <checkbox id="alwaysRequest" label="&requestReceipt.label;"
+                prefstring="mail.receipt.request_return_receipt_on"
+                accesskey="&requestReceipt.accesskey;"/>
 
       <vbox id="receiptArrive">
         <description>&receiptArrive.label;</description>
         <radiogroup id="receiptFolder" prefstring="mail.incorporate.return_receipt">
-          <radio value="0" label="&leaveIt.label;"/>
-          <radio value="1" label="&moveToSent.label;"/> 
+          <radio value="0" label="&leaveIt.label;" accesskey="&leaveIt.accesskey;"/>
+          <radio value="1" label="&moveToSent.label;" accesskey="&moveToSent.accesskey;"/> 
         </radiogroup>
       </vbox>
 
       <vbox id="receiptRequest">
         <description>&requestMDN.label;</description>
         <radiogroup id="receiptSend" preftype="bool" prefstring="mail.mdn.report.enabled" oncommand="EnableDisableAllowedReceipts();">
-          <radio value="false" label="&never.label;"/>
-          <radio value="true" label="&returnSome.label;"/> 
+          <radio value="false" label="&never.label;" accesskey="&never.accesskey;"/>
+          <radio value="true" label="&returnSome.label;" accesskey="&returnSome.accesskey;"/> 
         </radiogroup>
 
         <hbox id="receiptSendIf" class="indent">
@@ -81,7 +83,7 @@
             <columns><column/><column/></columns>
             <rows>
               <row align="center">
-                <label id="notInToCcLabel">&notInToCc.label;</label>
+                <label id="notInToCcLabel" accesskey="&notInToCc.accesskey;" control="notInToCcPref">&notInToCc.label;</label>
                 <menulist id="notInToCcPref" prefstring="mail.mdn.report.not_in_to_cc">
                   <menupopup>
                     <menuitem value="0" label="&neverSend.label;"/>
@@ -91,7 +93,7 @@
                 </menulist>
               </row>
               <row align="center">
-                <label id="outsideDomainLabel">&outsideDomain.label;</label>
+                <label id="outsideDomainLabel" accesskey="&outsideDomain.accesskey;" control="outsideDomainPref">&outsideDomain.label;</label>
                 <menulist id="outsideDomainPref" prefstring="mail.mdn.report.outside_domain">
                   <menupopup>
                     <menuitem value="0" label="&neverSend.label;"/>
@@ -101,7 +103,7 @@
                 </menulist>
               </row>
               <row align="center">
-                <label id="otherCasesLabel">&otherCases.label;</label>
+                <label id="otherCasesLabel" accesskey="&otherCases.accesskey;" control="otherCasesPref">&otherCases.label;</label>
                 <menulist id="otherCasesPref" prefstring="mail.mdn.report.other">
                   <menupopup>
                     <menuitem value="0" label="&neverSend.label;"/>

@@ -132,19 +132,19 @@
                  </hbox>
                </row>
                <row align="center">
-                 <label value="&scope.label;" control="scope"/>
+                 <label value="&scope.label;" control="scope" accesskey="&scope.accesskey;"/>
                  <radiogroup id="scope" orient="horizontal">
                    <radio id="one" value="1" label="&scopeOneLevel.label;"
-                          disableiflocked="true"/>
+                          disableiflocked="true" accesskey="&scopeOneLevel.accesskey;"/>
                    <radio id="sub" value="2" label="&scopeSubtree.label;"
-                          disableiflocked="true"/>
+                          disableiflocked="true" accesskey="&scopeSubtree.accesskey;"/>
                  </radiogroup>
                </row>
                <row>
                  <label value="&searchFilter.label;" 
                        accesskey="&searchFilter.accesskey;"
                        control="search"/>
-                 <textbox multiline="true" id="search" flex="1" disableiflocked="true"/>
+                 <textbox id="search" multiline="true" flex="1" disableiflocked="true"/>
               </row>
             </rows>
           </grid>

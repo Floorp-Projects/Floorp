@@ -32,18 +32,24 @@
   <description>&emailCollectiontext.label;</description>
     <vbox align="start" class="indent">
     <checkbox id="emailCollectionIncoming" label="&emailCollectionIncomingEnable.label;"
-              prefstring="mail.collect_email_address_incoming"/>
+              prefstring="mail.collect_email_address_incoming"
+              accesskey="&emailCollectionIncomingEnable.accesskey;"/>
     <checkbox id="emailCollectionOutgoing" label="&emailCollectionOutgoingEnable.label;"
-              prefstring="mail.collect_email_address_outgoing"/>
+              prefstring="mail.collect_email_address_outgoing"
+              accesskey="&emailCollectionOutgoingEnable.accesskey;"/>
     <checkbox id="emailCollectionNewsgroup" label="&emailCollectionNewsgroupEnable.label;"
-              prefstring="mail.collect_email_address_newsgroup"/>
+              prefstring="mail.collect_email_address_newsgroup"
+              accesskey="&emailCollectionNewsgroupEnable.accesskey;"/>
     </vbox>
     <hbox align="center">
       <checkbox id="enableCABsizeLimit" label="&useCABSizelimitPart1.label;"
-                prefstring="mail.collect_email_address_enable_size_limit"/>
+                prefstring="mail.collect_email_address_enable_size_limit"
+                accesskey="&useCABSizelimitPart1.accesskey;"/>
       <textbox id="CABsizeLimit" size="6" preftype="int"
                prefstring="mail.collect_email_address_size_limit"/>
-      <label id="useCABSizelimitPart2" class="small-margin" value="&useCABSizelimitPart2.label;"/>
+      <label id="useCABSizelimitPart2" class="small-margin" value="&useCABSizelimitPart2.label;"
+               accesskey="&useCABSizelimitPart2.accesskey;"
+               control="CABsizeLimit"/>
     </hbox> 
   </groupbox>
 	
@@ -52,12 +58,14 @@
       <description>&autocompleteText.label;</description>
       <hbox align="center">
         <checkbox id="addressingAutocomplete" label="&addressingEnable.label;"
-                  prefstring="mail.enable_autocomplete"/>
+                  prefstring="mail.enable_autocomplete"
+                  accesskey="&addressingEnable.accesskey;"/>
       </hbox>
       <hbox align="center">
         <checkbox id="autocompleteLDAP" label="&directories.label;" 
                   prefstring="ldap_2.autoComplete.useDirectory" 
-                  oncommand="enableAutocomplete();"/>
+                  oncommand="enableAutocomplete();"
+                  accesskey="&directories.accesskey;"/>
         <menulist id="directoriesList" flex="1"
                   preftype="string" 
                   prefstring="ldap_2.autoComplete.directoryServer">
@@ -67,7 +75,8 @@
        </menulist>
        <button id="editButton" label="&editDirectories.label;" 
                prefstring="pref.ldap.disable_button.edit_directories" 
-               oncommand="onEditDirectories();"/>
+               oncommand="onEditDirectories();"
+               accesskey="&editDirectories.accesskey;"/>
      </hbox>
      <!--
      <description>&matchText.label;</description>

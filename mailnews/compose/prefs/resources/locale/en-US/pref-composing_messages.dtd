@@ -30,7 +30,7 @@ Rights Reserved.
 <!ENTITY asAttachment.label                   "As Attachment">
 <!ENTITY asAttachment.accesskey               "A">
 <!ENTITY autoQuote.label                      "Automatically quote the original message when replying">
-<!ENTITY autoQuote.accesskey                  "u">
+<!ENTITY autoQuote.accesskey                  "A">
 <!-- LOCALIZATION NOTE (then.label): This will concatenate with the 4 strings that follow. -->
 <!ENTITY then.label                           "Then,">
 <!ENTITY then.accesskey                       "t">

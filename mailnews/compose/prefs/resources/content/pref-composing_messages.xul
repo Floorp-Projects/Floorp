@@ -42,7 +42,7 @@
     <caption label="&forwardReply.label;"/>
     
     <hbox align="center">
-      <label value="&forwardMsg.label;" accesskey="&forwardMsg.accesskey;"/>
+      <label value="&forwardMsg.label;" accesskey="&forwardMsg.accesskey;" control="forwardMessageMode"/>
       <menulist id="forwardMessageMode" 
                 prefstring="mail.forward_message_mode">
         <menupopup>
@@ -54,7 +54,8 @@
     <hbox align="center">
       <checkbox id="autoQuote" label="&autoQuote.label;" 
                 prefstring="mail.auto_quote"
-                oncommand="doEnabling();"/>
+                oncommand="doEnabling();"
+                accesskey="&autoQuote.accesskey;"/>
     </hbox>
     <hbox class="indent" align="center" id="thenBox">
       <label value="&then.label;" accesskey="&then.accesskey;" control="replyOnTop"/>
@@ -73,10 +74,12 @@
     <caption label="&sendingMessagesHeader.label;"/>
         
     <checkbox id="spellCheckBeforeSend" label="&spellCheck.label;"
-              prefstring="mail.SpellCheckBeforeSend"/>
+              prefstring="mail.SpellCheckBeforeSend"
+              accesskey="&spellCheck.accesskey;"/>
   
     <checkbox id="strictlyMime" label="&useMIME.label;"
-              prefstring="mail.strictly_mime"/>
+              prefstring="mail.strictly_mime"
+              accesskey="&useMIME.accesskey;"/>
     
 	<hbox align="center">
         <label value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" control="wrapLength"/>
@@ -86,7 +89,8 @@
   </hbox>
 
    <hbox align="center">
-    <label value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;" page="sendDefaultCharsetList"/>
+    <label value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;"
+           page="sendDefaultCharsetList" control="sendDefaultCharsetList"/>
     <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
               preftype="localizedstring" prefstring="mailnews.send_default_charset">
       <template>

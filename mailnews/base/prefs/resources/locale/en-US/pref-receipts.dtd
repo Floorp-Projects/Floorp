@@ -22,6 +22,7 @@ Rights Reserved.
 <!ENTITY pane.title                   "Return Receipts">
 <!ENTITY pane.description             "Settings for requesting or returning receipts">
 <!ENTITY requestReceipt.label         "When sending messages, always request a return receipt">
+<!ENTITY requestReceipt.accesskey     "W">
 <!-- LOCALIZATION NOTE dsn.label: don't translate "DSN"  -->
 <!ENTITY dsn.label                    "A delivery receipt from the receiving server (DSN)">
 <!ENTITY dsn.accesskey                "d">
@@ -43,8 +44,11 @@ Rights Reserved.
 <!ENTITY custom.label                 "Customize...">
 <!ENTITY custom.accesskey             "c">
 <!ENTITY notInToCc.label              "If I'm not in the To or Cc of the message:">
+<!ENTITY notInToCc.accesskey          "f">
 <!ENTITY outsideDomain.label          "If the sender is outside my domain:">
+<!ENTITY outsideDomain.accesskey      "t">
 <!ENTITY otherCases.label             "In all other cases:">
+<!ENTITY otherCases.accesskey         "a">
 <!ENTITY askMe.label                  "Ask me">
 <!ENTITY alwaysSend.label             "Always send">
 <!ENTITY neverSend.label              "Never send">

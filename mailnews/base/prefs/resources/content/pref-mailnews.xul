@@ -46,7 +46,7 @@ Contributor(s):
     <caption label="&windowSettings.label;"/>
     
     <hbox align="center">
-      <label value="&selectWindowLayout.label;"/>
+      <label value="&selectWindowLayout.label;" accesskey="&selectWindowLayout.accesskey;" control="mailPaneConfig"/>
       <spacer flex="1"/>
       <radiogroup id="mailPaneConfig" prefstring="mail.pane_config" orient="horizontal">
         <radio class="iconic" value="0" id="classic"/>
@@ -60,7 +60,8 @@ Contributor(s):
 
     <hbox align="center">
       <checkbox id="mailnewsConfirmMoveFoldersToTrash" label="&confirmMove.label;"
-                prefstring="mailnews.confirm.moveFoldersToTrash"/>
+                prefstring="mailnews.confirm.moveFoldersToTrash"
+                accesskey="&confirmMove.accesskey;"/>
     </hbox>
 
     <hbox align="center">
@@ -93,12 +94,13 @@ Contributor(s):
     <caption label="&messengerStartPage.label;"/>
       <hbox align="center">
         <checkbox id="mailnewsStartPageEnabled" label="&enableStartPage.label;"
-                  prefstring="mailnews.start_page.enabled" oncommand="StartPageCheck();"/>
+                  prefstring="mailnews.start_page.enabled" oncommand="StartPageCheck();"
+                  accesskey="&enableStartPage.accesskey;"/>
       </hbox>
 
       <hbox align="center">
         <label value="&location.label;" accesskey="&location.accesskey;" 
-               control="mailnews.start_page.url"/>
+               control="mailnewsStartPageUrl"/>
         <textbox id="mailnewsStartPageUrl" flex="1" preftype="localizedstring"
                  type="autocomplete" prefstring="mailnews.start_page.url"
                  searchSessions="history" timeout="50" maxrows="6"/>

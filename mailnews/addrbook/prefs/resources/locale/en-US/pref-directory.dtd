@@ -26,6 +26,7 @@ Rights Reserved.
 <!ENTITY directories.label         "LDAP Directory Server:">
 <!-- LOCALIZATION NOTE (directoriesText.label) : do not translate "LDAP" in below line -->
 <!ENTITY directoriesText.label     "Select an LDAP Directory Server:">
+<!ENTITY directoriesText.accesskey "S">
 <!-- LOCALIZATION NOTE (autocomplete.title) : do not translate "LDAP" in below line -->
 <!ENTITY autocomplete.title        "LDAP Directory Server">
 <!ENTITY addDirectory.label        "Add">

@@ -45,8 +45,8 @@
     <hbox class="indent">
       <radiogroup id="mailFixedWidthMessages" 
                   preftype="bool" prefstring="mail.fixed_width_messages">
-        <radio value="true" label="&fixedWidth.label;"/>
-        <radio value="false" label="&variableWidth.label;"/>                
+        <radio value="true" label="&fixedWidth.label;" accesskey="&fixedWidth.accesskey;"/>
+        <radio value="false" label="&variableWidth.label;" accesskey="&variableWidth.accesskey;"/>                
       </radiogroup>
     </hbox>
 
@@ -73,7 +73,7 @@
         </menupopup>
       </menulist>
       
-      <label value="&color.label;" accesskey="&color.accesskey;"/>
+      <label value="&color.label;" accesskey="&color.accesskey;" control="citationmenu"/>
       <colorpicker type="button" id="citationmenu" palettename="standard" onchange="setColorWell(this);"/>
       <broadcaster id="mailCitationColor" pref="true" preftype="color" prefstring="mail.citation_color" prefattribute="value" wsm_attributes="value"/>
     </hbox>    
@@ -81,9 +81,9 @@
   <description>&viewingPlainText.label;</description>
     <vbox align="start" class="indent">
       <checkbox id="wrapLongLines" label="&wrapInMsg.label;"
-                prefstring="mail.wrap_long_lines" />
+                prefstring="mail.wrap_long_lines" accesskey="&wrapInMsg.accesskey;"/>
       <checkbox class="iconic" id="displayGlyph" label="&convertEmoticons.label;"
-                prefstring="mail.display_glyph"/>   
+                prefstring="mail.display_glyph" accesskey="&convertEmoticons.accesskey;"/>
       <hbox align="center" class="indent">
            <label value="&example1.label;"/>
            <image class="smileface"/>
@@ -109,6 +109,7 @@
       </menulist> 
     </hbox>      
     <checkbox id="forceCharsetOverride" label="&forceCharsetOverride.label;"
-              prefstring="mailnews.force_charset_override"/>
+              prefstring="mailnews.force_charset_override"
+              accesskey="&forceCharsetOverride.accesskey;"/>
   </groupbox>   
 </page>

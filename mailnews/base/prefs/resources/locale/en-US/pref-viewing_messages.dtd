@@ -42,7 +42,7 @@ Rights Reserved.
 <!ENTITY sendDefaultCharset.label         "Character Coding:">
 <!ENTITY sendDefaultCharset.accesskey	  "h">
 <!ENTITY forceCharsetOverride.label       "Apply default to all messages (ignore character coding specified by MIME header)">
-<!ENTITY forceCharsetOverride.accesskey   "p">
+<!ENTITY forceCharsetOverride.accesskey   "A">
 <!ENTITY fixedWidth.label                 "Fixed width font">
 <!ENTITY fixedWidth.accesskey             "f">
 <!ENTITY variableWidth.label              "Variable width font">
