@@ -7,7 +7,11 @@
 
  $drive=$`;
 
- die "\nUsage: perl TestParser.pl [-b|-v|-c] <filelist>\n"
+ die "\nUsage: perl TestParser.pl [-b|-v|-c] <filelist>
+ b -> creates baseline file(*.b)
+ v -> creates verification file (*.v)
+ c -> compare baseline vs verification\n"
+
  if(@ARGV < 2 || @ARGV > 2);
 
  open(FILE_LIST,$ARGV[1]) || die "\nCannot open $ARGV[1]\n";
