@@ -204,6 +204,7 @@ static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
+static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   private nsIDocumentObserver, public nsIFocusTracker,
@@ -1981,6 +1982,17 @@ PresShell::HandleEvent(nsIView         *aView,
   frame = (nsIFrame *)clientData;
 
   if (nsnull != frame) {
+
+    nsIWebShell* webShell = nsnull;
+    nsISupports* container;
+    mPresContext->GetContainer(&container);
+    if (nsnull != container) {
+      if (NS_OK != container->QueryInterface(kIWebShellIID, (void**)&webShell)) {
+        NS_ASSERTION(webShell, "No webshell to grab during event dispatch");
+      }
+      NS_RELEASE(container);
+    }
+
     if (mSelection && aEvent->eventStructType == NS_KEY_EVENT)
     {
       mSelection->EnableFrameNotification(PR_FALSE);
@@ -2020,6 +2032,7 @@ PresShell::HandleEvent(nsIView         *aView,
         NS_RELEASE(manager);
       }
     }
+    NS_IF_RELEASE(webShell);
   }
   else {
     rv = NS_OK;
