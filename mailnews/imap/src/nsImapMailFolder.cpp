@@ -3092,7 +3092,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                     if (msgTxn)
                         msgTxn->GetSrcKeyArray(srcKeyArray);
                     srcDB->DeleteMessages(&srcKeyArray, nsnull);
-                    NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+                    srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
                 }
               }
               if (m_transactionManager)
