@@ -255,7 +255,7 @@ nsresult ArabicShaping(const PRUnichar* aString, PRUint32 aLen,
                        PRUnichar* aBuf, PRUint32 *aBufLen, 
                        PRBool aInputLogical, PRBool aOutputLogical)
 {
-  nsAutoString tempString(aString);
+  nsAutoString tempString(aString, aLen);
   PRUnichar *tempBuf = NS_CONST_CAST(PRUnichar*, tempString.get());
   if (aInputLogical) {
     ReverseString(tempBuf, aLen);
