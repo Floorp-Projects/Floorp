@@ -419,38 +419,15 @@ nsLDAPChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// XXX figure out why this went away
-
-#if 0
-// getter for shouldCache attribute
-//
-// Returns true if the data from this channel should be cached. Local files
-// report false because they exist on the local disk and need not be cached.
-// Input stream channels, data protocol, datetime protocol and finger 
-// protocol channels also should not be cached. Http and ftp on the other 
-// hand should. Note that the value of this attribute doesn't reflect any
-// http headers that may specify that this channel should not be cached.
-//
-// readonly attribute boolean shouldCache;
-//
-NS_IMETHODIMP
-nsLDAPChannel::GetShouldCache(PRBool *aShouldCache)
-{
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetShouldCache");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-#else
-//
 // Returns a local file to the channel's data if one exists, null otherwise.
 //
 // readonly attribute nsIFile localFile;
 NS_IMETHODIMP
 nsLDAPChannel::GetLocalFile(nsIFile* *aFile)
 {
-    NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetLocalFile");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-#endif
+
 
 // getter and setter for pipeliningAllowed attribute
 //
