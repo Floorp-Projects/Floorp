@@ -74,8 +74,6 @@ CPPSRCS=					\
 	nsSpinnerFrame.cpp \
 	nsScrollbarFrame.cpp \
         nsScrollbarButtonFrame.cpp \
-	nsColorPickerFrame.cpp \
-	nsStdColorPicker.cpp \
 	nsFontPickerFrame.cpp \
 	nsMenuPopupFrame.cpp \
 	nsMenuFrame.cpp \
