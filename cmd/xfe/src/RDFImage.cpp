@@ -23,6 +23,7 @@
 #include "RDFImage.h"
 #include "ViewGlue.h"
 #include "xfe.h"
+#include "il_util.h"
 
 #ifdef DEBUG_radha
 #define D(x) x
@@ -35,7 +36,7 @@ extern "C"
 void DisplayPixmap(MWContext *, IL_Pixmap *, IL_Pixmap * , jint , jint , jint , jint , jint , jint) ;
 void NewPixmap(MWContext *, IL_Pixmap * image, Boolean mask);
 void ImageComplete(MWContext *, IL_Pixmap * image);
-
+void fe_load_default_font(MWContext *context);
 };
 
 
@@ -215,7 +216,7 @@ XFE_RDFImage::RDFDisplayPixmap(IL_Pixmap * image, IL_Pixmap * mask, jint width, 
     if (!imageDrawn) 
     {   
        callbackClientData * client_data = XP_NEW_ZAP(callbackClientData);
-       client_data->widget = callbackData;
+       client_data->widget = (Widget)callbackData;
        client_data->image = getPixmap();
        client_data->mask = getMask();
        client_data->width = width;
