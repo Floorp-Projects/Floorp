@@ -310,6 +310,7 @@ SECMOD_LoadModule(char *modulespec,SECMODModule *parent, PRBool recurse)
 	    child = SECMOD_LoadModule(*index,module,PR_TRUE);
 	    if (!child) break;
 	    if (child->isCritical && !child->loaded) {
+		rv = SECFailure;
 		SECMOD_DestroyModule(child);
 		break;
 	    }
@@ -339,6 +340,9 @@ SECMOD_LoadModule(char *modulespec,SECMODModule *parent, PRBool recurse)
 
 loser:
     if (module) {
+	if (module->loaded) {
+	    SECMOD_UnloadModule(module);
+	}
 	SECMOD_AddModuleToUnloadList(module);
     }
     return module;
