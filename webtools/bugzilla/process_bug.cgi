@@ -1511,7 +1511,8 @@ foreach my $id (@idlist) {
                 && ($oldcontrol == CONTROLMAPDEFAULT)) {
                 # Bug was in a default group.
                 $buginanydefault = 1;
-                if ($newcontrol != CONTROLMAPDEFAULT) {
+                if (($newcontrol != CONTROLMAPDEFAULT)
+                    && ($newcontrol != CONTROLMAPMANDATORY)) {
                     # Bug was in a default group that no longer is.
                     $buginanychangingdefault = 1;
                     push (@defaultstoremove, $groupid);
