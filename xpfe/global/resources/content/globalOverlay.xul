@@ -9,12 +9,23 @@
 
 <html:script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
 
-	<!-- File Menu (Exit) -->
-	<menupopup id="fileMenuPopup">
-		<menuitem value="&quitApplicationCmd.label;" oncommand="goQuitApplication()"/>
+	<!-- File Menu -->
+	<menu id="menu_File" value="&fileMenu.label;"/>
+	<!-- close -->
+	<menuitem id="menu_close" value="&closeCmd.label;" key="key_close" observes="cmd_close"/>
+	<key id="key_close" command="true" key="&closeCmd.key;" observes="cmd_close"/>
+	<!-- quit -->
+	<menupopup id="menu_FilePopup">
+		<menuitem value="&quitApplicationCmd.label;" key="key_quit" observes="cmd_quit"/>
 	</menupopup>
+	<key id="key_quit" command="true" key="&quitApplicationCmd.key;" observes="cmd_quit"/>
+ 	<broadcaster id="cmd_quit" oncommand="goQuitApplication()"/>
 	
-	<!-- Edit Menu items -->
+	<!-- Page Setup menu item -->
+	<menuitem id="menu_pageSetup" value="&pageSetupCmd.label;" oncommand="goPageSetup()"/>
+	
+	<!-- Edit Menu -->
+	<menu id="menu_Edit" value="&editMenu.label;"/>
 	<menuitem id="menu_undo" value="&undoCmd.label;" key="key_undo" observes="cmd_undo"/>
 	<menuitem id="menu_redo" value="&redoCmd.label;" key="key_redo" observes="cmd_redo"/>
 	<menuitem id="menu_cut" value="&cutCmd.label;" key="key_cut" observes="cmd_cut"/>
@@ -31,11 +42,11 @@
 	<key id="key_delete" command="true" key="&deleteCmd.key;" observes="cmd_delete"/>
 	<key id="key_selectAll" command="true" key="&selectAllCmd.key;" observes="cmd_selectAll"/>
 
-	<!-- Page Setup menu item -->
-	<menuitem id="pageSetup" value="&pageSetupCmd.label;" oncommand="goPageSetup()"/>
+	<!-- View Menu -->
+	<menu id="menu_View" value="&viewMenu.label;"/>
 
 	<!-- Help Menu -->
-	<menu id="helpMenu" value="&helpMenu.label;">
+	<menu id="menu_Help" value="&helpMenu.label;">
 	  <menupopup>
 		<menu value="&helpContentCmd.label;">
 			<menupopup>

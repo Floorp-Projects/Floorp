@@ -1,9 +1,13 @@
 <!-- extracted from globalOverlay.xul -->
 
+<!ENTITY fileMenu.label					"File"> 
 <!ENTITY pageSetupCmd.label					".Page Setup...">  
+<!ENTITY closeCmd.label						"Close">  
+<!ENTITY closeCmd.key						"W">  
+<!ENTITY quitApplicationCmd.label			"Quit"> 
+<!ENTITY quitApplicationCmd.key				"Q"> 
 
-<!ENTITY quitApplicationCmd.label			"Exit"> 
-
+<!ENTITY editMenu.label					"Edit"> 
 <!ENTITY undoCmd.label						"Undo">  
 <!ENTITY undoCmd.key						"Z">  
 <!ENTITY redoCmd.label						"Redo">  
@@ -18,6 +22,8 @@
 <!ENTITY deleteCmd.key						"D">  
 <!ENTITY selectAllCmd.label					"Select All">  
 <!ENTITY selectAllCmd.key					"A">  
+
+<!ENTITY viewMenu.label					"View"> 
 
 <!ENTITY helpMenu.label					"Help"> 
 <!ENTITY helpContentCmd.label				".Help Contents">  
