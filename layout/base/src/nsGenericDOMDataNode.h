@@ -210,8 +210,7 @@ struct nsGenericDOMDataNode {
 
   nsresult SplitText(PRUint32 aOffset, nsIDOMText** aReturn);
 
-  nsresult GetText(const nsTextFragment*& aFragmentsResult,
-                   PRInt32& aNumFragmentsResult);
+  nsresult GetText(const nsTextFragment** aFragmentsResult);
   nsresult GetTextLength(PRInt32* aLengthResult);
   nsresult CopyText(nsString& aResult);
   nsresult SetText(const PRUnichar* aBuffer,
@@ -494,9 +493,8 @@ struct nsGenericDOMDataNode {
  * generic character data content object.
  */
 #define NS_IMPL_ITEXTCONTENT_USING_GENERIC_DOM_DATA(_g)           \
-  NS_IMETHOD GetText(const nsTextFragment*& aFragmentsResult,     \
-                     PRInt32& aNumFragmentsResult){               \
-    return mInner.GetText(aFragmentsResult, aNumFragmentsResult); \
+  NS_IMETHOD GetText(const nsTextFragment** aFragmentsResult) {   \
+    return mInner.GetText(aFragmentsResult);                      \
   }                                                               \
   NS_IMETHOD GetTextLength(PRInt32* aLengthResult) {              \
     return mInner.GetTextLength(aLengthResult);                   \

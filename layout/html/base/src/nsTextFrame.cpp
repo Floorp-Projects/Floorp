@@ -556,7 +556,7 @@ public:
                                    PRUint32 &aWordBufLen,
                                    PRUint32 aWordBufSize);
 
-  void ToCString(nsString& aBuf, PRInt32* aContentLength) const;
+  void ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const;
 
 protected:
   virtual ~nsTextFrame();
@@ -2968,53 +2968,6 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsTextFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
 {
-  // Get the text fragments that make up our content
-  const nsTextFragment* frag;
-  PRInt32 numFrags;
-  nsITextContent* tc;
-  if (NS_OK == mContent->QueryInterface(kITextContentIID, (void**) &tc)) {
-    tc->GetText(frag, numFrags);
-    NS_RELEASE(tc);
-
-    // Find fragment that contains the end of the mapped content
-    PRInt32 endIndex = mContentOffset + mContentLength;
-    PRInt32 offset = 0;
-    const nsTextFragment* lastFrag = frag + numFrags;
-    while (frag < lastFrag) {
-      PRInt32 fragLen = frag->GetLength();
-      if (endIndex <= offset + fragLen) {
-        offset = mContentOffset - offset;
-        if (frag->Is2b()) {
-          const PRUnichar* cp = frag->Get2b() + offset;
-          const PRUnichar* end = cp + mContentLength;
-          while (cp < end) {
-            PRUnichar ch = *cp++;
-            if (XP_IS_SPACE(ch)) {
-              aUsedSpace = aExtraSpace;
-              mRect.width += aExtraSpace;
-              return NS_OK;
-            }
-          }
-        }
-        else {
-          const unsigned char* cp =
-            ((const unsigned char*)frag->Get1b()) + offset;
-          const unsigned char* end = cp + mContentLength;
-          while (cp < end) {
-            PRUnichar ch = PRUnichar(*cp++);
-            if (XP_IS_SPACE(ch)) {
-              aUsedSpace = aExtraSpace;
-              mRect.width += aExtraSpace;
-              return NS_OK;
-            }
-          }
-        }
-        break;
-      }
-      offset += fragLen;
-      frag++;
-    }
-  }
   aUsedSpace = 0;
   return NS_OK;
 }
@@ -3035,8 +2988,7 @@ nsTextFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
     nsCOMPtr<nsITextContent> tc = do_QueryInterface(mContent);
     if (tc) {
       const nsTextFragment* frag;
-      PRInt32 numFrags;
-      tc->GetText(frag, numFrags);
+      tc->GetText(&frag);
       PRInt32 lastCharIndex = mContentOffset + mContentLength - 1;
       if (lastCharIndex < frag->GetLength()) {
         PRUnichar ch = frag->CharAt(lastCharIndex);
@@ -3230,46 +3182,29 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
 
 // Translate the mapped content into a string that's printable
 void
-nsTextFrame::ToCString(nsString& aBuf, PRInt32* aContentLength) const
+nsTextFrame::ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const
 {
   const nsTextFragment* frag;
-  PRInt32 numFrags;
 
   // Get the frames text content
   nsITextContent* tc;
   if (NS_OK != mContent->QueryInterface(kITextContentIID, (void**) &tc)) {
     return;
   }
-  tc->GetText(frag, numFrags);
+  tc->GetText(&frag);
   NS_RELEASE(tc);
 
   // Compute the total length of the text content.
-  PRInt32 sum = 0;
-  PRInt32 i, n = numFrags;
-  for (i = 0; i < n; i++) {
-    sum += frag[i].GetLength();
-  }
-  *aContentLength = sum;
+  *aTotalContentLength = frag->GetLength();
 
   // Set current fragment and current fragment offset
-  PRInt32 fragOffset = 0, offset = 0;
-  n = numFrags;
-  while (--n >= 0) {
-    if (mContentOffset < offset + frag->GetLength()) {
-      fragOffset = mContentOffset - offset;
-      break;
-    }
-    offset += frag->GetLength();
-    frag++;
-  }
-
   if (0 == mContentLength) {
     return;
   }
-
-  n = mContentLength;
-  for (;;) {
-    PRUnichar ch = frag->CharAt(fragOffset);
+  PRInt32 fragOffset = mContentOffset;
+  PRInt32 n = mContentLength;
+  while (fragOffset < n) {
+    PRUnichar ch = frag->CharAt(fragOffset++);
     if (ch == '\r') {
       aBuf.Append("\\r");
     } else if (ch == '\n') {
@@ -3281,13 +3216,6 @@ nsTextFrame::ToCString(nsString& aBuf, PRInt32* aContentLength) const
       aBuf.Append((PRInt32)ch, 8);
     } else {
       aBuf.Append(ch);
-    }
-    if (--n == 0) {
-      break;
-    }
-    if (++fragOffset == frag->GetLength()) {
-      frag++;
-      fragOffset = 0;
     }
   }
 }
@@ -3331,12 +3259,12 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
     fprintf(out, " [view=%p]", view);
   }
 
-  PRInt32 contentLength;
+  PRInt32 totalContentLength;
   nsAutoString tmp;
-  ToCString(tmp, &contentLength);
+  ToCString(tmp, &totalContentLength);
 
   // Output the first/last content offset and prev/next in flow info
-  PRBool isComplete = (mContentOffset + mContentLength) == contentLength;
+  PRBool isComplete = (mContentOffset + mContentLength) == totalContentLength;
   fprintf(out, "[%d,%d,%c] ", 
           mContentOffset, mContentLength,
           isComplete ? 'T':'F');

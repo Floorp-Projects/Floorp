@@ -168,8 +168,7 @@ public:
 
   ///////////////////
   // Implementation for nsITextContent
-  NS_IMETHOD GetText(const nsTextFragment*& aFragmentsResult,
-                   PRInt32& aNumFragmentsResult);
+  NS_IMETHOD GetText(const nsTextFragment** aFragmentsResult);
   NS_IMETHOD GetTextLength(PRInt32* aLengthResult);
   NS_IMETHOD CopyText(nsString& aResult);
   NS_IMETHOD SetText(const PRUnichar* aBuffer,
@@ -422,13 +421,11 @@ nsAttributeContent::ValidateTextFragment()
 }
 
 nsresult
-nsAttributeContent::GetText(const nsTextFragment*& aFragmentsResult,
-                            PRInt32& aNumFragmentsResult)
+nsAttributeContent::GetText(const nsTextFragment** aFragmentsResult)
 {
   ValidateTextFragment();
   if (nsnull != mContent) {
-    aFragmentsResult = &mText;
-    aNumFragmentsResult = 1;
+    *aFragmentsResult = &mText;
     return NS_OK;
   } 
   // XXX is this a good idea, or should we just return an empty

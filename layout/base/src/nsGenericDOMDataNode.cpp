@@ -889,11 +889,9 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
 // Implementation of the nsITextContent interface
 
 nsresult
-nsGenericDOMDataNode::GetText(const nsTextFragment*& aFragmentsResult,
-                              PRInt32& aNumFragmentsResult)
+nsGenericDOMDataNode::GetText(const nsTextFragment** aFragmentsResult)
 {
-  aFragmentsResult = &mText;
-  aNumFragmentsResult = 1;
+  *aFragmentsResult = &mText;
   return NS_OK;
 }
 
