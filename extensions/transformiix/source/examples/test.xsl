@@ -5,23 +5,23 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is XSL:P XSLT processor.
- * 
+ *
  * The Initial Developer of the Original Code is Keith Visco.
  * Portions created by Keith Visco (C) 1999 Keith Visco.
  * All Rights Reserved..
  *
- * Contributor(s): 
+ * Contributor(s):
  * Keith Visco, kvisco@ziplink.net
  *    - original author.
  *
- * $Id: test.xsl,v 1.3 1999/11/18 04:39:51 kvisco%ziplink.net Exp $
+ * $Id: test.xsl,v 1.4 2000/02/17 03:28:53 kvisco%ziplink.net Exp $
  */
 -->
 
@@ -29,7 +29,7 @@
   This is a test stylesheet used for testing the XSL processor
 -->
 
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/XSL/Transform/1.0">
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <!-- set the output properties -->
 <xsl:output method="html"/>
@@ -134,7 +134,7 @@
     <B></B> &lt;xsl:if test="'a'!='b'"&gt;a does not equal b&lt;/xsl:if&gt;
     <BR/>
     <B>Desired Result:</B> a does not equal to b<BR/>
-    <B>Result:</B> 
+    <B>Result:</B>
     <xsl:if test="'a'='b'">a equals b<BR/></xsl:if>
     <xsl:if test="'a'!='b'">a does not equal b</xsl:if>
  </P>

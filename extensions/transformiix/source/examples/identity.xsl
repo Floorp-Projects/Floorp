@@ -26,8 +26,8 @@
 **/
 -->
 <xsl:stylesheet
-        xmlns:xsl="http://www.w3.org/XSL/Transform/1.0"
-        indent-result="yes">
+        xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+        version="1.0">
 
 <!-- root rule -->
 <xsl:template match="/">

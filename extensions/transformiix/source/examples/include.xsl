@@ -26,7 +26,7 @@
 **/
 -->
 <xsl:stylesheet
-        xmlns:xsl="http://www.w3.org/XSL/Transform/1.0"
+        xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
         indent-result="yes"
         result-ns="http://www.w3.org/TR/REC-html40">
 

@@ -25,7 +25,7 @@
  * This is a test stylesheet used for testing MITRE's XSL processor
 **/
 -->
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/XSL/Transform/1.0">
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <!-- match document element  -->
 <xsl:template match="document">
