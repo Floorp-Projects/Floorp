@@ -63,6 +63,8 @@
 #include "nsDirectoryService.h"
 #include "nsICategoryManager.h"
 
+#include "nsAtomService.h"
+
 #ifdef GC_LEAK_DETECTOR
 #include "nsLeakDetector.h"
 #endif
@@ -115,6 +117,8 @@ static NS_DEFINE_CID(kThreadPoolCID, NS_THREADPOOL_CID);
 // proxy
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
+// atoms
+static NS_DEFINE_CID(kAtomServiceCID, NS_ATOMSERVICE_CID);
 
 // ds/nsISupportsPrimitives
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsIDImpl)
@@ -134,6 +138,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsFloatImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsDoubleImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsVoidImpl)
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAtomService);
+    
 ////////////////////////////////////////////////////////////////////////////////
 // XPCOM initialization
 //
@@ -348,6 +354,12 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                                 nsSupportsArray::Create);
     if (NS_FAILED(rv)) return rv;
 
+    rv = RegisterGenericFactory(compMgr, kAtomServiceCID,
+                                NS_ATOMSERVICE_CLASSNAME,
+                                NS_ATOMSERVICE_PROGID,
+                                nsAtomServiceConstructor);
+    if (NS_FAILED(rv)) return rv;
+    
     rv = RegisterGenericFactory(compMgr, nsObserver::GetCID(), 
                                 NS_OBSERVER_CLASSNAME,
                                 NS_OBSERVER_PROGID,
