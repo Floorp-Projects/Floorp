@@ -34,8 +34,6 @@
 #include "nsLocalStringBundle.h"
 #include "nsCOMPtr.h"
 
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
-
 /* km
  *
  *
