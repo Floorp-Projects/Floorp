@@ -26,16 +26,46 @@
 
 #if defined(XP_MAC)
 #include <TextUtils.h>
+#include <ToolUtils.h>
 #endif
 
 //#include <Xm/CascadeBG.h>
 //#include <Xm/SeparatoG.h>
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kMenuIID, NS_IMENU_IID);
-NS_IMPL_ISUPPORTS(nsMenu, kMenuIID)
+static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
+//NS_IMPL_ISUPPORTS(nsMenu, kMenuIID)
 
-PRUint32 nsMenu::mMacMenuID = 256;
+PRInt16 nsMenu::mMacMenuIDCount = 256;
+
+nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{                                                                        
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+                                                                         
+  *aInstancePtr = NULL;                                                  
+                                                                                        
+  if (aIID.Equals(kIMenuIID)) {                                         
+    *aInstancePtr = (void*)(nsIMenu*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                                      
+  if (aIID.Equals(kISupportsIID)) {                                      
+    *aInstancePtr = (void*)(nsISupports*) this;                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }
+  if (aIID.Equals(kIMenuListenerIID)) {                                      
+    *aInstancePtr = (void*) ((nsIMenuListener*)this);                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                     
+  return NS_NOINTERFACE;                                                 
+}
+
+NS_IMPL_ADDREF(nsMenu)
+NS_IMPL_RELEASE(nsMenu)
 
 //-------------------------------------------------------------------------
 //
@@ -49,6 +79,7 @@ nsMenu::nsMenu() : nsIMenu()
   mMenuParent    = nsnull;
   mMenuBarParent = nsnull;
   
+  mMacMenuID = 0;
   mMacMenuHandle = nsnull;
 }
 
@@ -71,6 +102,7 @@ nsMenu::~nsMenu()
 //-------------------------------------------------------------------------
 void nsMenu::Create(Widget aParent, const nsString &aLabel)
 {
+  /*
   if (NULL == aParent) {
     return;
   }
@@ -96,6 +128,7 @@ void nsMenu::Create(Widget aParent, const nsString &aLabel)
 
 
   delete[] labelStr;
+  */
 }
 
 
@@ -174,8 +207,9 @@ NS_METHOD nsMenu::SetLabel(nsString &aText)
    mLabel = aText;
    
   mMacMenuHandle = nsnull;
-  mMacMenuHandle = ::NewMenu(mMacMenuID, c2pstr(mLabel.ToNewCString()) );
-  mMacMenuID++;
+  mMacMenuHandle = ::NewMenu(mMacMenuIDCount, c2pstr(mLabel.ToNewCString()) );
+  mMacMenuID = mMacMenuIDCount;
+  mMacMenuIDCount++;
   /*
   Str255 test;
   strcpy((char*)&test, "test");
@@ -196,7 +230,7 @@ NS_METHOD nsMenu::AddItem(const nsString &aText)
 NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 {
   // XXX add aMenuItem to internal data structor list
-  mMenuItemVoidArrary.AppendElement(aMenuItem);
+  mMenuItemVoidArray.AppendElement(aMenuItem);
   
   nsString label;
   aMenuItem->GetLabel(label);
@@ -273,3 +307,28 @@ NS_METHOD nsMenu::GetNativeData(void *& aData)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// nsIMenuListener interface
+//
+//-------------------------------------------------------------------------
+nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
+{
+  // Determine if this is the correct menu to handle the event
+  PRInt16 menuID = HiWord(((nsMenuEvent)aMenuEvent).mCommand);
+  if(mMacMenuID == menuID)
+  {
+    for (int i = mMenuItemVoidArray.Count(); i >= 0; i--)
+    {
+      nsEventStatus eventStatus = nsEventStatus_eIgnore;
+	  nsIMenuListener * menuListener = nsnull;
+	  ((nsIMenuItem*)mMenuItemVoidArray[i-1])->QueryInterface(kIMenuListenerIID, &menuListener);
+	  eventStatus = menuListener->MenuSelected(aMenuEvent);
+	  //NS_RELEASE(menuListener);
+	  if(nsEventStatus_eIgnore != eventStatus)
+	    return eventStatus;
+	}
+  }
+  else
+    return nsEventStatus_eIgnore;
+}
