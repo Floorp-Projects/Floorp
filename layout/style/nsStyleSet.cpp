@@ -486,7 +486,6 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
 #endif
   AddImportantRules(lastUserRN, lastPresHintRN); //user
 #ifdef DEBUG
-  AssertNoCSSRules(lastPresHintRN, lastAgentRN);
   AssertNoImportantRules(lastPresHintRN, lastAgentRN); // preshints
 #endif
   AddImportantRules(lastAgentRN, nsnull);     //agent
