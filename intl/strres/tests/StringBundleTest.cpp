@@ -111,10 +111,10 @@ get_applocale(void)
 	value = new nsString();
 
 	result = locale->GetCategory(catagory->GetUnicode(),&lc_name_unichar);
+	value->SetString(lc_name_unichar);
 	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_get_locale failed");
 	NS_ASSERTION(value->Length()>0,"nsLocaleTest: factory_get_locale failed");
 
-  value->SetString(lc_name_unichar);
 	locale->Release();
 	delete catagory;
 	delete value;
