@@ -519,8 +519,9 @@ sub BuildClientDist()
    InstallFromManifest(":mozilla:xpfe:components:xfer:public:MANIFEST_IDL",			"$distdirectory:idl:");
 	
 	# XPAPPS
-   InstallFromManifest(":mozilla:xpfe:AppCores:public:MANIFEST",					"$distdirectory:xpfe:");
-   InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",					"$distdirectory:xpfe:");
+	InstallFromManifest(":mozilla:xpfe:AppCores:public:MANIFEST",					"$distdirectory:xpfe:");
+	InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",					"$distdirectory:xpfe:");
+	InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST_IDL",				"$distdirectory:idl:");
 
 	# MAILNEWS
    InstallFromManifest(":mozilla:mailnews:public:MANIFEST",							"$distdirectory:mailnews:");
@@ -677,6 +678,8 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:xpfe:components:related:macbuild:RelatedIDL.mcp",		"related");
 	BuildIDLProject(":mozilla:xpfe:components:prefwindow:macbuild:prefwindowIDL.mcp","prefwindow");
 	BuildIDLProject(":mozilla:xpfe:components:macbuild:mozcompsIDL.mcp",			"mozcomps");
+
+	BuildIDLProject(":mozilla:xpfe:appshell:macbuild:appshellIDL.mcp",				"appshell");
 
 	BuildIDLProject(":mozilla:mailnews:base:macbuild:msgCoreIDL.mcp",				"mailnews");
 	BuildIDLProject(":mozilla:mailnews:compose:macbuild:msgComposeIDL.mcp",			"MsgCompose");
@@ -1222,6 +1225,10 @@ sub BuildMailNewsProjects()
 	BuildOneProject(":mozilla:mailnews:addrbook:macbuild:msgAddrbook.mcp",				"MsgAddrbook$D.shlb", "MsgAddrbook.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	BuildOneProject(":mozilla:mailnews:mime:macbuild:mime.mcp",							"Mime$D.shlb", "Mime.toc", 1, $main::ALIAS_SYM_FILES, 1);
+
+	BuildOneProject(":mozilla:mailnews:mime:emitters:html:macbuild:htmlEmitter.mcp",	"htmlEmitter$D.shlb", "htmlEmitter.toc", 1, $main::ALIAS_SYM_FILES, 1);
+
+	BuildOneProject(":mozilla:mailnews:mime:emitters:xml:macbuild:xmlEmitter.mcp",		"xmlEmitter$D.shlb", "xmlEmitter.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	BuildOneProject(":mozilla:mailnews:mime:emitters:macbuild:mimeEmitter.mcp",			"mimeEmitter$D.shlb", "mimeEmitter.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
