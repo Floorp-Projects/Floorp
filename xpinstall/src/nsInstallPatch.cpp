@@ -58,6 +58,9 @@ static int32   gdiff_getdiff( pDIFFDATA dd, uchar *buffer, uint32 length );
 static int32   gdiff_add( pDIFFDATA dd, uint32 count );
 static int32   gdiff_copy( pDIFFDATA dd, uint32 position, uint32 count );
 static int32   gdiff_validateFile( pDIFFDATA dd, int file );
+#ifdef WIN32
+static XP_Bool su_unbind(char* oldsrc, char* newsrc);
+#endif
 
 
 nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
@@ -382,25 +385,30 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 			status = GDIFF_ERR_ACCESS;
 		}
 
-#ifdef dono
 #ifdef WIN32
 
         /* unbind Win32 images */
-        if ( dd->bWin32BoundImage && status == GDIFF_OK ) {
-            tmpurl = WH_TempName( xpURL, NULL );
-            if ( tmpurl != NULL ) {
-                if (su_unbind( srcfile, srctype, tmpurl, xpURL ))  	
-				{
-                    PL_strfree(realfile);
-					realfile = tmpurl;
-                    realtype = xpURL;
-                    
-                }
+        if ( dd->bWin32BoundImage && status == GDIFF_OK )
+        {
+            // create a tmp file, so we can unbind win32 images
+            nsSpecialSystemDirectory tempWinFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+            nsString srcName = sourceFile.GetLeafName();
+            tempWinFile.SetLeafName(srcName);
+            tempWinFile.MakeUnique();
+
+            // unbind images
+            char *tmpFile = PL_strdup(nsNSPRPath(tempWinFile));
+            if (su_unbind(realfile, tmpFile))
+            {
+                PL_strfree(realfile);
+                realfile = PL_strdup(tmpFile);
             }
             else
+            {
                 status = GDIFF_ERR_MEM;
+            }
+            PL_strfree(tmpFile);
         }
-#endif
 #endif
 
 #ifdef XP_MAC
@@ -554,6 +562,11 @@ cleanup:
         //XP_FileRemove( tmpurl, xpURL );
 		tmpurl = NULL;
         PR_DELETE( tmpurl );
+    }
+
+    if (realfile != NULL)
+    {
+        PL_strfree(realfile);
     }
     
 	/* lets map any GDIFF error to nice SU errors */
@@ -1022,3 +1035,177 @@ int32 gdiff_copy( pDIFFDATA dd, uint32 position, uint32 count )
     return (err);
 }
 
+
+#ifdef WIN32
+/*---------------------------------------------------------
+ *  su_unbind()
+ *
+ *  strips import binding information from Win32
+ *  executables and .DLL's
+ *---------------------------------------------------------
+ */
+static 
+XP_Bool su_unbind(char* oldfile, char* newfile)
+{
+    XP_Bool bSuccess = FALSE;
+
+    int     i;
+    DWORD   nRead;
+    PDWORD  pOrigThunk;
+    PDWORD  pBoundThunk;
+    FILE    *fh = NULL;
+    char    *buf;
+    BOOL    bModified = FALSE;
+    BOOL    bImports = FALSE;
+
+    IMAGE_DOS_HEADER            mz;
+    IMAGE_NT_HEADERS            nt;
+    IMAGE_SECTION_HEADER        sec;
+
+    PIMAGE_DATA_DIRECTORY       pDir;
+    PIMAGE_IMPORT_DESCRIPTOR    pImp;
+
+    typedef BOOL (__stdcall *BINDIMAGEEX)(DWORD Flags,
+									  LPSTR ImageName,
+									  LPSTR DllPath,
+									  LPSTR SymbolPath,
+									  PVOID StatusRoutine);
+    HINSTANCE   hImageHelp;
+    BINDIMAGEEX pfnBindImageEx;
+
+    if ( oldfile != NULL && newfile != NULL &&
+         CopyFile( oldfile, newfile, FALSE ) )
+    {   
+        /* call BindImage() first to make maximum room for a possible
+         * NT-style Bound Import Descriptors which can change various
+         * offsets in the file */
+	    hImageHelp = LoadLibrary("IMAGEHLP.DLL");
+	    if ( hImageHelp > (HINSTANCE)HINSTANCE_ERROR ) {
+        	pfnBindImageEx = (BINDIMAGEEX)GetProcAddress(hImageHelp, "BindImageEx");
+    	    if (pfnBindImageEx) {
+                pfnBindImageEx(0, newfile, NULL, NULL, NULL);
+            }
+		    FreeLibrary(hImageHelp);
+	    }
+        
+        
+        fh = fopen( newfile, "r+b" );
+        if ( fh == NULL )
+            goto bail;
+
+
+        /* read and validate the MZ header */
+        nRead = fread( &mz, 1, sizeof(mz), fh );
+        if ( nRead != sizeof(mz) || mz.e_magic != IMAGE_DOS_SIGNATURE )
+            goto bail;
+
+
+        /* read and validate the NT header */
+        fseek( fh, mz.e_lfanew, SEEK_SET );
+        nRead = fread( &nt, 1, sizeof(nt), fh );
+        if ( nRead != sizeof(nt) || 
+             nt.Signature != IMAGE_NT_SIGNATURE ||
+             nt.OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC ) 
+        {
+            goto bail;
+        }
+
+
+        /* find .idata section */
+        for (i = nt.FileHeader.NumberOfSections; i > 0; i--)
+        {
+            nRead = fread( &sec, 1, sizeof(sec), fh );
+            if ( nRead != sizeof(sec) ) 
+                goto bail;
+
+            if ( memcmp( sec.Name, ".idata", 6 ) == 0 ) {
+                bImports = TRUE;
+                break;
+            }
+        }
+
+
+        /* Zap any binding in the imports section */
+        if ( bImports ) 
+        {
+            buf = (char*)malloc( sec.SizeOfRawData );
+            if ( buf == NULL )
+                goto bail;
+
+            fseek( fh, sec.PointerToRawData, SEEK_SET );
+            nRead = fread( buf, 1, sec.SizeOfRawData, fh );
+            if ( nRead != sec.SizeOfRawData ) {
+                free( buf );
+                goto bail;
+            }
+            
+            pImp = (PIMAGE_IMPORT_DESCRIPTOR)buf;
+            while ( pImp->OriginalFirstThunk != 0 )
+            {
+                if ( pImp->TimeDateStamp != 0 || pImp->ForwarderChain != 0 )
+                {
+                    /* found a bound .DLL */
+                    pImp->TimeDateStamp = 0;
+                    pImp->ForwarderChain = 0;
+                    bModified = TRUE;
+    
+                    pOrigThunk = (PDWORD)(buf + (DWORD)(pImp->OriginalFirstThunk) - sec.VirtualAddress);
+                    pBoundThunk = (PDWORD)(buf + (DWORD)(pImp->FirstThunk) - sec.VirtualAddress);
+    
+                    for ( ; *pOrigThunk != 0; pOrigThunk++, pBoundThunk++ ) {
+                        *pBoundThunk = *pOrigThunk;
+                    }
+                }
+                pImp++;
+            }
+
+            if ( bModified ) 
+            {
+                /* it's been changed, write out the section */
+                fseek( fh, sec.PointerToRawData, SEEK_SET );
+                fwrite( buf, 1, sec.SizeOfRawData, fh );
+            }
+    
+            free( buf );
+        }
+
+
+        /* Check for a Bound Import Directory in the headers */
+        pDir = &nt.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT];
+        if ( pDir->VirtualAddress != 0 ) 
+        {
+            /* we've got one, so stomp it */
+            buf = (char*)calloc( pDir->Size, 1 );
+            if ( buf == NULL )
+                goto bail;
+        
+            fseek( fh, pDir->VirtualAddress, SEEK_SET );
+            fwrite( buf, pDir->Size, 1, fh );
+            free( buf );
+
+            pDir->VirtualAddress = 0;
+            pDir->Size = 0;
+            bModified = TRUE;
+        }
+
+
+        /* Write out changed headers if necessary */
+        if ( bModified )
+        {
+            /* zap checksum since it's now invalid */
+            nt.OptionalHeader.CheckSum = 0;
+
+            fseek( fh, mz.e_lfanew, SEEK_SET );
+            fwrite( &nt, 1, sizeof(nt), fh );
+        }
+
+        bSuccess = TRUE;
+    }
+
+bail:
+    if ( fh != NULL ) 
+        fclose(fh);
+
+    return bSuccess;
+}
+#endif
