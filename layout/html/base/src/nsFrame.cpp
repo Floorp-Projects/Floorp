@@ -54,6 +54,7 @@
 #include "nsHTMLParts.h"
 #include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
+#include "nsIHTMLContentSink.h" 
 
 #include "nsFrameTraversal.h"
 #include "nsCOMPtr.h"
@@ -2108,7 +2109,7 @@ nsFrame::Invalidate(nsIPresContext* aPresContext,
   NS_IF_RELEASE(viewManager);
 }
 
-#define MAX_REFLOW_DEPTH 500
+//#define MAX_REFLOW_DEPTH 500  get this from nsIHTMLContentSink.h; bug 55095
 
 PRBool
 nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
