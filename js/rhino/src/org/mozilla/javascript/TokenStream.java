@@ -254,7 +254,7 @@ public class TokenStream {
 
 
     public static String tokenToName(int token) {
-        if (Context.printTrees) {
+        if (Context.printTrees || Context.printICode) {
             switch (token) {
                 case ERROR:           return "error";
                 case EOF:             return "eof";

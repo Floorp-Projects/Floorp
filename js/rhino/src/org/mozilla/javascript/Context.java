@@ -1839,6 +1839,7 @@ public class Context {
 
     // debug flags
     static final boolean printTrees = false;
+    static final boolean printICode = false;
 
     /**
      * Compile a script.

@@ -46,8 +46,6 @@ import org.mozilla.javascript.debug.*;
 
 public class Interpreter extends LabelTable {
 
-    public static final boolean printICode = false;
-
 // Additional interpreter-specific codes
     static final int
     // To indicating a line number change in icodes.
@@ -148,7 +146,7 @@ public class Interpreter extends LabelTable {
         generateICodeFromTree(tree, varTable, activationNeeded, securityDomain);
         itsData.itsNestedFunctions = itsNestedFunctions;
         itsData.itsRegExpLiterals = regExpLiterals;
-        if (printICode) dumpICode(itsData);
+        if (Context.printICode) dumpICode(itsData);
 
         String[] argNames = itsVariableTable.getAllNames();
         short argCount = (short)itsVariableTable.getParameterCount();
@@ -207,7 +205,7 @@ public class Interpreter extends LabelTable {
         itsData.itsSource = (String)theFunction.getProp(Node.SOURCE_PROP);
         itsData.itsNestedFunctions = itsNestedFunctions;
         itsData.itsRegExpLiterals = regExpLiterals;
-        if (printICode) dumpICode(itsData);
+        if (Context.printICode) dumpICode(itsData);
 
         String[] argNames = itsVariableTable.getAllNames();
         short argCount = (short)itsVariableTable.getParameterCount();
@@ -1174,7 +1172,7 @@ public class Interpreter extends LabelTable {
 
     static PrintWriter out;
     static {
-        if (printICode) {
+        if (Context.printICode) {
             try {
                 out = new PrintWriter(new FileOutputStream("icode.txt"));
                 out.close();
@@ -1184,8 +1182,26 @@ public class Interpreter extends LabelTable {
         }
     }
 
+    private static String icodeToName(int icode) {
+        if (Context.printICode) {
+            if (icode <= TokenStream.LAST_TOKEN) {
+                return TokenStream.tokenToName(icode);
+            }else {
+                switch (icode) {
+                    case LINE_ICODE:         return "line";
+                    case SOURCEFILE_ICODE:   return "sourcefile";
+                    case BREAKPOINT_ICODE:   return "breakpoint";
+                    case SHORTNUMBER_ICODE:  return "shortnumber";
+                    case INTNUMBER_ICODE:    return "intnumber";
+                }
+            }
+            return "<UNKNOWN ICODE: "+icode+">";
+        }
+        return "";
+    }
+
     private static void dumpICode(InterpreterData theData) {
-        if (printICode) {
+        if (Context.printICode) {
             try {
                 int iCodeLength = theData.itsICodeTop;
                 byte iCode[] = theData.itsICode;
@@ -1199,7 +1215,7 @@ public class Interpreter extends LabelTable {
                 for (int pc = 0; pc < iCodeLength; ) {
                     out.print("[" + pc + "] ");
                     int token = iCode[pc] & 0xff;
-                    String tname = TokenStream.tokenToName(token);
+                    String tname = icodeToName(token);
                     ++pc;
                     switch (token) {
                         case TokenStream.SCOPE :
