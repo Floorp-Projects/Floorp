@@ -56,7 +56,7 @@ public:
    *  and it is the end of the list following a call to next
    *  @param aItem return value
    */
-  virtual nsresult IsDone(PRBool *aDone)=0;
+  virtual nsresult IsDone()=0;
 
 };
 
