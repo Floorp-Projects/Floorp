@@ -177,6 +177,7 @@ int ReplaceINIFile()
 	CString Dst = xpiDstPath + "\\" + zipName;
 	if (!CopyFile(Src, Dst, FALSE))
 		DWORD e = GetLastError();
+
 //	command = quotes + rootPath + "nszip.exe " + quotes + spaces + exeName + spaces + "config.ini";
 	command1 = quotes + rootPath + "zip.exe" + quotes + "-m " + spaces + zipName + spaces + "config.ini";
 	ExecuteCommand((char *)(LPCTSTR) command1, SW_SHOW, INFINITE);
@@ -997,14 +998,20 @@ int StartIB(CString parms, WIDGET *curWidget)
 
 	if (ftpLocation.Compare("ftp://") !=0)
 	{
-		for (int i=0; i<numComponents; i++)
-		{
-			if (Components[i].selected)
-				CopyFile(nscpxpiPath + "\\" + Components[i].archive, 
-						 networkPath + "\\" + Components[i].archive, TRUE);
-			
-			WritePrivateProfileString(Components[i].compname, "url0", ftpLocation, configiniPath);
-		}
+//****************	Change the ftp section to accomodate changes from PR3 to RTM
+//		for (int i=0; i<numComponents; i++)
+//		{
+//			if (Components[i].selected)
+//				CopyFile(nscpxpiPath + "\\" + Components[i].archive, 
+//						 networkPath + "\\" + Components[i].archive, TRUE);
+//			
+			WritePrivateProfileString("General", "url", ftpLocation, configiniPath);
+			WritePrivateProfileString("Redirect", "Status", "Disabled", configiniPath);
+			WritePrivateProfileString("Site Selector", NULL, "", configiniPath);
+			WritePrivateProfileString("Site Selector", "Identifier0", "Site0", configiniPath);
+			WritePrivateProfileString("Site Selector", "Description0", "Default", configiniPath);
+			WritePrivateProfileString("Site Selector", "Domain0", "ftp://", configiniPath);
+//		}
 		
 	}
 
