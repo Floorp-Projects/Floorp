@@ -74,8 +74,9 @@
 NS_IMPL_ISUPPORTS1(nsProcess, nsIProcess)
 
 //Constructor
-nsProcess::nsProcess():mExitValue(-1),
-                       mProcess(nsnull)
+nsProcess::nsProcess()
+    : mExitValue(-1),
+      mProcess(nsnull)
 {
 }
 
@@ -209,17 +210,11 @@ static int assembleCmdLine(char *const *argv, char **cmdLine)
 
 // XXXldb |args| has the wrong const-ness
 NS_IMETHODIMP  
-nsProcess::Run(PRBool blocking, const char **args, PRUint32 count, PRUint32 *pid)
+nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
+               PRUint32 *pid)
 {
     nsresult rv = NS_OK;
 
-#if defined(XP_MACOSX)
-    // You can't pass arguments to mac apps, tell the caller that it
-    // just aint going to work.
-    if (count) {
-        return NS_ERROR_INVALID_ARG;
-    }
-#else
     // make sure that when we allocate we have 1 greater than the
     // count since we need to null terminate the list for the argv to
     // pass into PR_CreateProcess
@@ -238,7 +233,6 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count, PRUint32 *pid
     my_argv[0] = mTargetPath.BeginWriting();
     // null terminate the array
     my_argv[count+1] = NULL;
-#endif
 
 #if defined(XP_WIN)
     STARTUPINFO startupInfo;
@@ -299,77 +293,83 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count, PRUint32 *pid
 
         // map return value into success code
 
-        if ( retVal == TRUE ) 
+        if (retVal == TRUE) 
             rv = PR_SUCCESS;
         else
             rv = PR_FAILURE;
     }
 
 #elif defined(XP_MACOSX)
-    FSSpec resolvedSpec;
-    OSErr err = noErr;
+    if (count == 0) {
+        FSSpec resolvedSpec;
+        OSErr err = noErr;
 
-    nsCOMPtr<nsILocalFileMac> macExecutable = do_QueryInterface(mExecutable);
-    macExecutable->GetFSSpec(&resolvedSpec);
+        nsCOMPtr<nsILocalFileMac> macExecutable =
+            do_QueryInterface(mExecutable);
+        macExecutable->GetFSSpec(&resolvedSpec);
 
-    LaunchParamBlockRec launchPB;
-    launchPB.launchAppSpec = &resolvedSpec;
-    launchPB.launchAppParameters = NULL;
-    launchPB.launchBlockID = extendedBlock;
-    launchPB.launchEPBLength = extendedBlockLen;
-    launchPB.launchFileFlags = NULL;
-    launchPB.launchControlFlags =
-        launchContinue + launchNoFileFlags + launchUseMinimum;
-    if (!blocking)
-        launchPB.launchControlFlags += launchDontSwitch;
+        LaunchParamBlockRec launchPB;
+        launchPB.launchAppSpec = &resolvedSpec;
+        launchPB.launchAppParameters = NULL;
+        launchPB.launchBlockID = extendedBlock;
+        launchPB.launchEPBLength = extendedBlockLen;
+        launchPB.launchFileFlags = NULL;
+        launchPB.launchControlFlags =
+            launchContinue + launchNoFileFlags + launchUseMinimum;
+        if (!blocking)
+            launchPB.launchControlFlags += launchDontSwitch;
 
-    err = LaunchApplication(&launchPB);
+        err = LaunchApplication(&launchPB);
 
-    // NOTE: blocking mode assumes you are running on a thread
-    //       other than the UI thread that has the main event loop
-    if (blocking && err == noErr) {
-        while (1) {
-            ProcessInfoRec info;
-            info.processInfoLength = sizeof(ProcessInfoRec);
-            info.processName = NULL;
-            info.processAppSpec = NULL;
+        // NOTE: blocking mode assumes you are running on a thread
+        //       other than the UI thread that has the main event loop
+        if (blocking && err == noErr) {
+            while (1) {
+                ProcessInfoRec info;
+                info.processInfoLength = sizeof(ProcessInfoRec);
+                info.processName = NULL;
+                info.processAppSpec = NULL;
 
-            err = GetProcessInformation(&launchPB.launchProcessSN, &info);
+                err = GetProcessInformation(&launchPB.launchProcessSN, &info);
 
-            if (err != noErr) {
-                // The process is no longer in the process manager's internal
-                // list, assume the process is done.
-                err = noErr;
+                if (err != noErr) {
+                    // The process is no longer in the process
+                    // manager's internal list, assume the process is
+                    // done.
+                    err = noErr;
 
-                break;
+                    break;
+                }
+
+                // still running so sleep some more (200 msecs)
+                PR_Sleep(200);
             }
+        }
 
-            // still running so sleep some more (200 msecs)
-            PR_Sleep(200);
+        if (err != noErr) {
+            rv = PR_FAILURE;
+        }
+
+        if (blocking) {
+            mExitValue = err;
+        }
+    } else {
+#else
+    {
+#endif
+        if (blocking) {
+            mProcess = PR_CreateProcess(mTargetPath.get(), my_argv, NULL,
+                                        NULL);
+            if (mProcess)
+                rv = PR_WaitProcess(mProcess, &mExitValue);
+        } else {
+            rv = PR_CreateProcessDetached(mTargetPath.get(), my_argv, NULL,
+                                          NULL);
         }
     }
 
-    if (err != noErr) {
-        rv = PR_FAILURE;
-    }
-
-    mExitValue = err;
-
-#else
-    if ( blocking ) {
-        mProcess = PR_CreateProcess(mTargetPath.get(), my_argv, NULL, NULL);
-        if (mProcess)
-            rv = PR_WaitProcess(mProcess, &mExitValue);
-    }
-    else {
-        rv = PR_CreateProcessDetached(mTargetPath.get(), my_argv, NULL, NULL);
-    }
-#endif
-
-#if !defined(XP_MACOSX)
     // free up our argv
     nsMemory::Free(my_argv);
-#endif
 
     if (rv != PR_SUCCESS)
         return NS_ERROR_FILE_EXECUTION_FAILED;
