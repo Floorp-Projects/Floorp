@@ -145,7 +145,7 @@ int ReportError()
 
 int ReportError(const char* msg)
 {
-	fprintf(stderr, "%Error: s\n", msg);
+	fprintf(stderr, "Error: %s\n", msg);
 	return ReportError();
 }
 
