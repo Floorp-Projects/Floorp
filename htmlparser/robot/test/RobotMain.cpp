@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include "nsVoidArray.h"
-#include "nsIWebWidget.h"
+#include "nsIWebShell.h"
 #include "nsString.h"
 
-extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList, nsIWebWidget * ww);
+extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList, nsIWebShell * ww);
 
 int main(int argc, char **argv)
 {

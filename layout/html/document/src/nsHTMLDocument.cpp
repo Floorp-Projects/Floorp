@@ -33,7 +33,8 @@
 #include "nsIPostToServer.h"  
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
-#include "nsIWebWidget.h"
+#include "nsIContentViewerContainer.h"
+#include "nsIWebShell.h"
 #include "nsIDocumentLoader.h"
 #include "CNavDTD.h"
 
@@ -43,7 +44,7 @@
 #include "nsHTMLContentSinkStream.h"
 #endif
 
-static NS_DEFINE_IID(kIWebWidgetIID, NS_IWEBWIDGET_IID);
+static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
@@ -87,11 +88,11 @@ NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
 
 NS_IMETHODIMP
 nsHTMLDocument::StartDocumentLoad(nsIURL *aURL, 
-                                  nsIViewerContainer* aWebWidget,
+                                  nsIContentViewerContainer* aContainer,
                                   nsIStreamListener **aDocListener)
 {
   nsresult rv;
-  nsIWebWidget* ww;
+  nsIWebShell* webShell;
 
   // Delete references to style sheets - this should be done in superclass...
   PRInt32 index = mStyleSheets.Count();
@@ -119,9 +120,9 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
 #ifdef rickgdebug
     rv = NS_New_HTML_ContentSinkStream(&sink);
 #else
-    aWebWidget->QueryInterface(kIWebWidgetIID, (void**)&ww);
-    rv = NS_NewHTMLContentSink(&sink, this, aURL, ww);
-    NS_IF_RELEASE(ww);
+    aContainer->QueryInterface(kIWebShellIID, (void**)&webShell);
+    rv = NS_NewHTMLContentSink(&sink, this, aURL, webShell);
+    NS_IF_RELEASE(webShell);
 #endif
 
     if (NS_OK == rv) {

@@ -40,7 +40,7 @@ class MyDocument : public nsDocument {
 public:
   MyDocument();
   NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
-                               nsIWebWidget* aWebWidget,
+                               nsIWebShell* aShell,
                                nsIStreamListener **aDocListener)
   {
     return NS_OK;

@@ -19,7 +19,7 @@
 #include "nsHTMLContainer.h"
 #include "nsLeafFrame.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsIWebWidget.h"
+#include "nsIWebShell.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsHTMLIIDs.h"
@@ -38,15 +38,15 @@
 #include "nsIStyleContext.h"
 #include "nsCSSLayout.h"
 #include "nsIDocumentLoader.h"
-#include "nsIDocumentWidget.h"
+//#include "nsIDocumentWidget.h"
 #include "nsHTMLFrameset.h"
 class nsHTMLFrame;
 
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIWebWidgetIID, NS_IWEBWIDGET_IID);
+static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebFrameIID, NS_IWEBFRAME_IID);
-static NS_DEFINE_IID(kCWebWidgetCID, NS_WEBWIDGET_CID);
+static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
@@ -129,6 +129,8 @@ public:
 
   nsHTMLFrameInnerFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
   /**
     * @see nsIFrame::Paint
     */
@@ -147,16 +149,14 @@ public:
   NS_IMETHOD MoveTo(nscoord aX, nscoord aY);
   NS_IMETHOD SizeTo(nscoord aWidth, nscoord aHeight);
 
-  virtual nsIWebWidget* GetWebWidget();
+  NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
 
-  float GetTwipsToPixels();
+//  float GetTwipsToPixels();
 
   NS_IMETHOD GetParentContent(nsHTMLFrame*& aContent);
 
-  NS_DECL_ISUPPORTS
-
 protected:
-  nsresult CreateWebWidget(const nsSize& aSize);
+  nsresult CreateWebShell(nsIPresContext& aPresContext, const nsSize& aSize);
 
   virtual ~nsHTMLFrameInnerFrame();
 
@@ -164,7 +164,7 @@ protected:
                               const nsReflowState& aReflowState,
                               nsReflowMetrics& aDesiredSize);
 
-  nsIWebWidget* mWebWidget;
+  nsIWebShell* mWebShell;
   PRBool mCreatingViewer;
 
   // XXX fix these
@@ -193,17 +193,17 @@ public:
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
 
 protected:
-  nsHTMLFrame(nsIAtom* aTag, PRBool aInline, nsIWebWidget* aParentWebWidget);
+  nsHTMLFrame(nsIAtom* aTag, PRBool aInline, nsIWebShell* aParentWebWidget);
   virtual  ~nsHTMLFrame();
 
   PRBool mInline; // true for <IFRAME>, false for <FRAME>
   // this is held for a short time until the frame uses it, so it is not ref counted
-  nsIWebWidget* mParentWebWidget;  
+  nsIWebShell* mParentWebWidget;  
 
   friend nsresult NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
-                                   nsIAtom* aTag, nsIWebWidget* aWebWidget);
+                                   nsIAtom* aTag, nsIWebShell* aWebWidget);
   friend nsresult NS_NewHTMLFrame(nsIHTMLContent** aInstancePtrResult,
-                                   nsIAtom* aTag, nsIWebWidget* aWebWidget);
+                                   nsIAtom* aTag, nsIWebShell* aWebWidget);
   friend class nsHTMLFrameInnerFrame;
 
 };
@@ -301,6 +301,8 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&      aPresContext,
 
   if (nsnull == mFirstChild) {
     mFirstChild = new nsHTMLFrameInnerFrame(mContent, this);
+    // XXX temporary! use style system to get correct style!
+    mFirstChild->SetStyleContext(&aPresContext, mStyleContext);
     mChildCount = 1;
   }
   
@@ -335,15 +337,11 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&      aPresContext,
 /*******************************************************************************
  * nsHTMLFrameInnerFrame
  ******************************************************************************/
-nsHTMLFrameInnerFrame::nsHTMLFrameInnerFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+nsHTMLFrameInnerFrame::nsHTMLFrameInnerFrame(nsIContent* aContent,
+                                             nsIFrame* aParentFrame)
   : nsLeafFrame(aContent, aParentFrame)
 {
-  NS_INIT_REFCNT();
-
-  // Addref this frame because it supports interfaces which require ref-counting!
-  NS_ADDREF(this);
-  
-  mWebWidget = nsnull;
+  mWebShell = nsnull;
   mCreatingViewer = PR_FALSE;
   mTempObserver = new TempObserver();
   NS_ADDREF(mTempObserver);
@@ -351,16 +349,13 @@ nsHTMLFrameInnerFrame::nsHTMLFrameInnerFrame(nsIContent* aContent, nsIFrame* aPa
 
 nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
 {
-  NS_IF_RELEASE(mWebWidget);
+  NS_IF_RELEASE(mWebShell);
   NS_RELEASE(mTempObserver);
 }
 
-NS_IMPL_ADDREF(nsHTMLFrameInnerFrame);
-NS_IMPL_RELEASE(nsHTMLFrameInnerFrame);
-
 nsresult
 nsHTMLFrameInnerFrame::QueryInterface(const nsIID& aIID,
-                                 void** aInstancePtrResult)
+                                      void** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
   if (nsnull == aInstancePtrResult) {
@@ -368,30 +363,27 @@ nsHTMLFrameInnerFrame::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kIWebFrameIID)) {
     *aInstancePtrResult = (void*) ((nsIWebFrame*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsISupports*)((nsIWebFrame*)this));
-    AddRef();
     return NS_OK;
   }
   return nsLeafFrame::QueryInterface(aIID, aInstancePtrResult);
 }
 
-nsIWebWidget* nsHTMLFrameInnerFrame::GetWebWidget()
+NS_IMETHODIMP
+nsHTMLFrameInnerFrame::GetWebShell(nsIWebShell*& aResult)
 {
-  NS_IF_ADDREF(mWebWidget);
-  return mWebWidget;
+  aResult = mWebShell;
+  NS_IF_ADDREF(mWebShell);
+  return NS_OK;
 }
 
+#if 0
 float nsHTMLFrameInnerFrame::GetTwipsToPixels()
 {
   nsISupports* parentSup;
-  if (mWebWidget) {
-    mWebWidget->GetContainer(&parentSup);
+  if (mWebShell) {
+    mWebShell->GetContainer(&parentSup);
     if (parentSup) {
-      nsIWebWidget* parentWidget;
+      nsIWebShell* parentWidget;
       nsresult res = parentSup->QueryInterface(kIWebWidgetIID, (void**)&parentWidget);
       if (NS_OK == res) {
         nsIPresContext* presContext = parentWidget->GetPresContext();
@@ -410,6 +402,7 @@ float nsHTMLFrameInnerFrame::GetTwipsToPixels()
   }
   return (float)0.05;  // this should not be reached
 }
+#endif
 
 
 NS_METHOD
@@ -430,8 +423,8 @@ nsHTMLFrameInnerFrame::Paint(nsIPresContext& aPresContext,
                          const nsRect& aDirtyRect)
 {
   //printf("inner paint %d %d %d %d \n", aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
-  if (nsnull != mWebWidget) {
-    //mWebWidget->Show();
+  if (nsnull != mWebShell) {
+    //mWebShell->Show();
   }
   return NS_OK;
 }
@@ -461,13 +454,16 @@ void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
 }
 
 
-nsresult nsHTMLFrameInnerFrame::CreateWebWidget(const nsSize& aSize)
+nsresult
+nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
+                                      const nsSize& aSize)
 {
   nsresult rv;
   nsHTMLFrame* content;
   GetParentContent(content);
 
-  rv = NSRepository::CreateInstance(kCWebWidgetCID, nsnull, kIWebWidgetIID, (void**)&mWebWidget);
+  rv = NSRepository::CreateInstance(kWebShellCID, nsnull, kIWebShellIID,
+                                    (void**)&mWebShell);
   if (NS_OK != rv) {
     NS_ASSERTION(0, "could not create web widget");
     return rv;
@@ -475,26 +471,29 @@ nsresult nsHTMLFrameInnerFrame::CreateWebWidget(const nsSize& aSize)
 
   nsString frameName;
   if (content->GetName(frameName)) {
-    mWebWidget->SetName(frameName);
+    mWebShell->SetName(frameName);
   }
 
-  // set the web widget parentage
-  nsIWebWidget* parentWebWidget = content->mParentWebWidget;
-  parentWebWidget->AddChild(mWebWidget);
+  // If our container is a web-shell, inform it that it has a new
+  // child. If it's not a web-shell then some things will not operate
+  // properly.
+  nsISupports* container;
+  aPresContext.GetContainer(&container);
+  if (nsnull != container) {
+    nsIWebShell* outerShell = nsnull;
+    container->QueryInterface(kIWebShellIID, (void**) &outerShell);
+    if (nsnull != outerShell) {
+      outerShell->AddChild(mWebShell);
+      NS_RELEASE(outerShell);
+    }
+    NS_RELEASE(container);
+  }
 
-
-  // Get the view manager, conversion
-  float t2p = 0.0f;
+  float t2p = aPresContext.GetTwipsToPixels();
   nsIViewManager* viewMan = nsnull;
-
-  nsIPresContext* presContext = parentWebWidget->GetPresContext();
-  t2p = presContext->GetTwipsToPixels();
-  nsIPresShell *presShell = presContext->GetShell();     
+  nsIPresShell *presShell = aPresContext.GetShell();     
 	viewMan = presShell->GetViewManager();  
   NS_RELEASE(presShell);
-  NS_RELEASE(presContext);
-  //NS_RELEASE(parentWebWidget);
-
 
   // create, init, set the parent of the view
   nsIView* view;
@@ -516,20 +515,17 @@ nsresult nsHTMLFrameInnerFrame::CreateWebWidget(const nsSize& aSize)
   SetView(view);
   NS_RELEASE(parView);
 
-  // init the web widget
-    // init the web widget
-  mWebWidget->SetUAStyleSheet(parentWebWidget->GetUAStyleSheet());
-
   nsIWidget* widget = view->GetWidget();
   NS_RELEASE(view);
   nsRect webBounds(0, 0, NS_TO_INT_ROUND(aSize.width * t2p), 
                    NS_TO_INT_ROUND(aSize.height * t2p));
-  mWebWidget->Init(widget->GetNativeData(NS_NATIVE_WIDGET), webBounds, 
+
+  mWebShell->Init(widget->GetNativeData(NS_NATIVE_WIDGET), webBounds, 
                    content->GetScrolling());
   NS_RELEASE(content);
   NS_RELEASE(widget);
 
-  mWebWidget->Show();
+  mWebShell->Show();
 
   return NS_OK;
 }
@@ -551,20 +547,20 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
     content->GetURL(url);
     nsSize size;
  
-    if (nsnull == mWebWidget) {
-      rv = CreateWebWidget(aReflowState.maxSize);
+    if (nsnull == mWebShell) {
+      rv = CreateWebShell(aPresContext, aReflowState.maxSize);
     }
 
-    if (nsnull != mWebWidget) {
+    if (nsnull != mWebShell) {
       mCreatingViewer=PR_TRUE;
 
       // load the document
       nsString absURL;
       TempMakeAbsURL(content, url, absURL);
 
-      rv = mWebWidget->LoadURL(absURL,          // URL string
-                               mTempObserver,   // Observer
-                               nsnull);         // Post Data
+      rv = mWebShell->LoadURL(absURL,          // URL string
+                              mTempObserver,   // Observer
+                              nsnull);         // Post Data
     }
     NS_RELEASE(content);
   }
@@ -594,7 +590,7 @@ nsHTMLFrameInnerFrame::GetDesiredSize(nsIPresContext* aPresContext,
 /*******************************************************************************
  * nsHTMLFrame
  ******************************************************************************/
-nsHTMLFrame::nsHTMLFrame(nsIAtom* aTag, PRBool aInline, nsIWebWidget* aParentWebWidget)
+nsHTMLFrame::nsHTMLFrame(nsIAtom* aTag, PRBool aInline, nsIWebShell* aParentWebWidget)
   : nsHTMLContainer(aTag), mInline(aInline), mParentWebWidget(aParentWebWidget)
 {
 }
@@ -697,7 +693,7 @@ PRBool nsHTMLFrame::GetFrameBorder()
 
 nsresult
 NS_NewHTMLFrame(nsIHTMLContent** aInstancePtrResult,
-                 nsIAtom* aTag, nsIWebWidget* aWebWidget)
+                 nsIAtom* aTag, nsIWebShell* aWebWidget)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
@@ -714,7 +710,7 @@ NS_NewHTMLFrame(nsIHTMLContent** aInstancePtrResult,
 
 nsresult
 NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
-                 nsIAtom* aTag, nsIWebWidget* aWebWidget)
+                 nsIAtom* aTag, nsIWebShell* aWebWidget)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {

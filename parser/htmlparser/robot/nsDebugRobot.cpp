@@ -18,7 +18,7 @@
 #include "nsIRobotSink.h"
 #include "nsIRobotSinkObserver.h"
 #include "nsIParser.h"
-#include "nsIWebWidget.h"
+#include "nsIWebShell.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsIURL.h"
@@ -148,7 +148,7 @@ extern "C" NS_EXPORT void DumpVectorRecord(void);
 //----------------------------------------------------------------------
 extern "C" NS_EXPORT int DebugRobot(
    nsVoidArray * workList, 
-   nsIWebWidget * ww, 
+   nsIWebShell * ww, 
    int iMaxLoads, 
    char * verify_dir,
    void (*yieldProc )(const char *)
