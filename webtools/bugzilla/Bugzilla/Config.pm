@@ -171,8 +171,8 @@ sub UpdateParams {
     delete $param{'version'};
 
     # Change from a boolean for quips to multi-state
-    if (exists $param{'usequip'} && !exists $param{'allowquips'}) {
-        $param{'allowquips'} = $param{'usequip'} ? 'on' : 'off';
+    if (exists $param{'usequip'} && !exists $param{'enablequips'}) {
+        $param{'enablequips'} = $param{'usequip'} ? 'on' : 'off';
         delete $param{'usequip'};
     }
 
