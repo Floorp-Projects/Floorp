@@ -947,7 +947,19 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
     //
     nsAutoString prefix, suffix;
     if (urlFilter[0] != 0 && nsCRT::strcmp(urlFilter, "(objectclass=*)")) {
-        prefix = NS_LITERAL_STRING("(&") + NS_ConvertUTF8toUCS2(urlFilter);
+
+        // if urlFilter isn't parenthesized, we need to add in parens so that
+        // the filter works as a term to &
+        //
+        if (urlFilter[0] != '(') {
+            prefix = NS_LITERAL_STRING("(&(") + 
+                NS_ConvertUTF8toUCS2(urlFilter) +   
+                NS_LITERAL_STRING(")");
+        } else {
+            prefix = NS_LITERAL_STRING("(&") + 
+                NS_ConvertUTF8toUCS2(urlFilter);
+        }
+        
         suffix = PRUnichar(')');
     }
 
