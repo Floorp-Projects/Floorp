@@ -42,6 +42,28 @@ Rights Reserved.
 <html:script language="JavaScript" src="chrome://messengercompose/content/MsgComposeCommands.js"/>
 <html:script language="JavaScript" src="chrome://messengercompose/content/addressAutoComplete.js"/>
 
+  <keyset id="defaultKeySet">
+    <key id="acmdkey" disabled="false" shift="false" command="true" alt="false" key="a" onkeypress="EditorSelectAll()" />
+    <key id="bcmdkey" disabled="false" shift="false" command="true" alt="false" key="b" onkeypress="EditorApplyStyle('b')"/>
+    <key id="ccmdkey" disabled="false" shift="false" command="true" alt="false" key="c" onkeypress="EditorCopy()" />
+    <key id="fcmdkey" disabled="false" shift="false" command="true" alt="false" key="f" onkeypress="EditorFind()" />
+    <key id="gcmdkey" disabled="false" shift="false" command="true" alt="false" key="g" onkeypress="EditorFindNext()" />
+    <key id="icmdkey" disabled="false" shift="false" command="true" alt="false" key="i" onkeypress="EditorApplyStyle('i')"/>
+    <key id="kcmdkey" disabled="false" shift="false" command="true" alt="false" key="k" onkeypress="CheckSpelling()" />
+    <key id="ncmdkey" disabled="false" shift="false" command="true" alt="false" key="n" onkeypress="EditorNew()" />
+    <key id="ocmdkey" disabled="false" shift="false" command="true" alt="false" key="o" onkeypress="EditorOpen()" />
+    <key id="pcmdkey" disabled="false" shift="false" command="true" alt="false" key="p" onkeypress="EditorPrint()" />
+    <key id="qcmdkey" disabled="false" shift="false" command="true" alt="false" key="q" onkeypress="EditorExit()" />
+    <key id="ucmdkey" disabled="false" shift="false" command="true" alt="false" key="u" onkeypress="EditorApplyStyle('u')"/>
+    <key id="vcmdkey" disabled="false" shift="false" command="true" alt="false" key="v" onkeypress="EditorPaste()" />
+    <key id="wcmdkey" disabled="false" shift="false" command="true" alt="false" key="w" onkeypress="EditorClose()" />
+    <key id="xcmdkey" disabled="false" shift="false" command="true" alt="false" key="x" onkeypress="EditorCut()" />
+    <key id="ycmdkey" disabled="false" shift="false" command="true" alt="false" key="y" onkeypress="EditorRedo()" />
+    <key id="zcmdkey" disabled="false" shift="false" command="true" alt="false" key="z" onkeypress="EditorUndo()" />
+
+<!-- how to handle return, enter, tab, function keys, arrow keys, others? -->
+  </keyset>
+
 <broadcaster id="args" value="editorType=default"/>
 
 <!-- The Following broadcasters have been imported from editorAppShell.xul -->
