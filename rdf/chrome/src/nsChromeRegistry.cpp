@@ -84,9 +84,9 @@ void BreakProviderAndRemainingFromPath(const char* i_path, char** o_provider, ch
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// XXX Both overlayEnumerator and chromeEntryEnumerator must take two sets of
-// arcs rather than one, and they must be able to move to the second set after
-// finishing the first.
+// XXX LOCAL COMPONENT PROBLEM! overlayEnumerator must take two sets of
+// arcs rather than one, and must be able to move to the second set after
+// finishing the first (chromeEntryEnumerator can do this, code needs to be copied).
 class nsOverlayEnumerator : public nsISimpleEnumerator
 {
 public:
