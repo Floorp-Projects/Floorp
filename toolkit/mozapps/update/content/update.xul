@@ -131,10 +131,20 @@
               label="&installing.title;"
               onpageshow="gInstallingPage.onPageShow();">
     <label>&installing.intro.label;</label>
-    <label>&installing.disclaimer.label;</label>
+    <label id="actionItem"/>
+    <progressmeter id="downloadProgress"/>
     
     <separator/>
-    
+  </wizardpage>
+  
+  <wizardpage id="errors" pageid="errors"
+              label="&errors.title;"
+              align="right">
+    <label>&errors.intro.label;</label>
+    <separator/>
+    <button label="&errors.details.label;" accesskey="&errors.details.accesskey;"
+            oncommand="gErrorsPage.onShowErrors();"/>
+    <separator/>
   </wizardpage>
   
   <wizardpage id="finished" pageid="finished"

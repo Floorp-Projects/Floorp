@@ -94,9 +94,6 @@ nsBackgroundUpdateService.prototype = {
     var interval = this._pref.getIntPref(PREF_UPDATE_INTERVAL);
     var lastUpdateTime = this._pref.getIntPref(PREF_UPDATE_LASTUPDATEDATE);
     var timeSinceLastCheck = Date.UTC() - lastUpdateTime;
-    this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY, 
-                                 nsIUpdateService.SOURCE_EVENT_BACKGROUND);  /// XXXben
-    
     if (timeSinceLastCheck > interval) {
       if (!this.updating)
         this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY, 

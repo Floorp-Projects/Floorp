@@ -164,6 +164,36 @@ nsExtensionManager.prototype = {
         // we don't do this every time we start.
         autoregFile.remove(false);
       }
+      
+      // Load default preferences files for all extensions
+      
+      var defaultsManifest = fileLocator.get("ProfD", Components.interfaces.nsIFile);
+      defaultsManifest.append("extensions");
+      defaultsManifest.append("Defaults");
+      if (defaultsManifest.exists()) {
+        var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefService);
+        var fis = Components.classes["@mozilla.org/network/file-input-stream;1"]
+                            .createInstance(Components.interfaces.nsIFileInputStream);
+        fis.init(defaultsManifest, -1, -1, false);
+        var lis = fis.QueryInterface(Components.interfaces.nsILineInputStream);
+        var line = { value: "" };
+        var more = false;
+        do {
+          more = lis.readLine(line);
+          var lf = Components.classes["@mozilla.org/file/local;1"]
+                              .createInstance(Components.interfaces.nsILocalFile);
+          var path = line.value;
+          if (path.charAt(path.length-1) == "\n")
+            path = path.substr(0, path.length - 1);
+          lf.initWithPath(path);
+          
+          if (lf.exists())
+            pref.readUserPrefs(lf);
+        }
+        while (more);
+        fis.close();
+      }
       break;
     }
   },
@@ -175,7 +205,7 @@ nsExtensionManager.prototype = {
     // Check to see if the version of the application that is being started
     // now is the same one that was started last time. 
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch);
+                         .getService(Components.interfaces.nsIPrefBranch);
     var currAppVersion = pref.getCharPref(PREF_EM_APP_VERSION);
     try {
       var lastAppVersion = pref.getCharPref(PREF_EM_LAST_APP_VERSION);
@@ -211,7 +241,7 @@ nsExtensionManager.prototype = {
     return rv;
   },
   
-  _writeAutoReg: function ()
+  _writeProfileFile: function (aSubfolder, aFileName, aGetDirFunc, aWriteLineFunc)
   {
     // When an operation is performed that requires a component re-registration
     // (extension enabled/disabled, installed, uninstalled), we must write the
@@ -230,14 +260,16 @@ nsExtensionManager.prototype = {
     
     // Open the .autoreg file for writing.
     
-    var autoregFile = profileDir.clone();
-    autoregFile.append(".autoreg");
+    var dataFile = profileDir.clone();
+    if (aSubfolder)
+      dataFile.append(aSubfolder);
+    dataFile.append(aFileName);
     var fos = Components.classes["@mozilla.org/network/file-output-stream;1"]
                         .createInstance(Components.interfaces.nsIFileOutputStream);
     const MODE_WRONLY   = 0x02;
     const MODE_CREATE   = 0x08;
     const MODE_TRUNCATE = 0x20;
-    fos.init(autoregFile, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0664, 0);
+    fos.init(dataFile, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0664, 0);
 
     var extensions = this.getItemList(null, Components.interfaces.nsIUpdateItem.TYPE_EXTENSION, { });
     for (var i = 0; i < extensions.length; ++i) {
@@ -254,19 +286,60 @@ nsExtensionManager.prototype = {
       var dir = location == "profile" ? profileDir : globalDir;
       
       // Now synthesize the components dir for the extension
-      var componentsDir = dir.clone();
-      componentsDir.append("extensions");
-      componentsDir.append(extension.id);
-      componentsDir.append("components");
-      if (componentsDir.exists()) {
+      var sourceDir = aGetDirFunc(dir, extension.id);
+      if (sourceDir.exists()) {
         // write the relative path of the components dir
-        var line = "reg:extensions/" + extension.id + "/components/\n";
-        fos.write(line, line.length);
+        aWriteLineFunc(fos, sourceDir, extension.id);
       }
     }
     fos.close();
   },
+  
+  _getComponentsDir: function (aSourceDir, aExtensionID)
+  {
+    var sourceDir = aSourceDir.clone();
+    sourceDir.append("extensions");
+    sourceDir.append(aExtensionID);
+    sourceDir.append("components");
+    return sourceDir;
+  },
+  
+  _getPreferencesDir: function (aSourceDir, aExtensionID)
+  {
+    var sourceDir = aSourceDir.clone();
+    sourceDir.append("extensions");
+    sourceDir.append(aExtensionID);
+    sourceDir.append("defaults");
+    sourceDir.append("preferences");
+    return sourceDir;
+  },
+  
+  _writeAutoregLines: function (aStream, aSourceDir, aExtensionID)
+  {
+    var line = "reg:extensions/" + aExtensionID + "/components/\n";
+    aStream.write(line, line.length);
+  },
+  
+  _writePreferencesLines: function (aStream, aSourceDir, aExtensionID)
+  {
+    var files = aSourceDir.directoryEntries;
+    while (files.hasMoreElements()) {
+      var file = files.getNext().QueryInterface(Components.interfaces.nsILocalFile);
+      var line = file.path + "\n";
+      aStream.write(line, line.length);
+    }
+  },
 
+  _writeProfileData: function ()
+  {
+    this._writeProfileFile(null, ".autoreg", 
+                           this._getComponentsDir, 
+                           this._writeAutoregLines);
+    this._writeProfileFile("extensions", "Defaults", 
+                           this._getPreferencesDir, 
+                           this._writePreferencesLines);
+  },
+  
   /////////////////////////////////////////////////////////////////////////////  
   // nsIExtensionManager
   installExtensionFromStream: function (aStream, aUseProfile)
@@ -290,25 +363,25 @@ nsExtensionManager.prototype = {
     this._ensureDS();
     
     this._ds.installExtension(ds, aUseProfile);
-    this._writeAutoReg();
+    this._writeProfileData();
   },
       
   uninstallExtension: function (aExtensionID)
   {
     this._ds.uninstallExtension(aExtensionID);
-    this._writeAutoReg();
+    this._writeProfileData();
   },
   
   enableExtension: function (aExtensionID)
   {
     this._ds.enableExtension(aExtensionID);
-    this._writeAutoReg();
+    this._writeProfileData();
   },
   
   disableExtension: function (aExtensionID)
   {
     this._ds.disableExtension(aExtensionID);
-    this._writeAutoReg();
+    this._writeProfileData();
   },
   
   // XXXben - handle the case where the item provides its own update url. 

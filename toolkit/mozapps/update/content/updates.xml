@@ -24,6 +24,7 @@
         var os = Components.classes["@mozilla.org/observer-service;1"]
                           .getService(Components.interfaces.nsIObserverService);
         os.addObserver(this, "Update:Ended", false);
+        this.refreshData("null");
       ]]>
       </constructor>
       <destructor>
@@ -41,18 +42,24 @@
         <parameter name="aData"/>
         <body>
         <![CDATA[
-          if (aTopic == "Update:Ended") {
+          if (aTopic == "Update:Ended")
+            this.refreshData(Components.interfaces.nsIUpdateService.SOURCE_EVENT_BACKGROUND);
+        ]]>
+        </body>
+      </method>
+      
+      <method name="refreshData">
+        <parameter name="aSourceEvent"/>
+        <body>
+        <![CDATA[
             var updates = Components.classes["@mozilla.org/updates/update-service;1"]
                                     .getService(Components.interfaces.nsIUpdateService);
             this.severity     = updates.updateSeverity;
             this.updateCount  = updates.updateCount;
-            delete updates;
-            updates = null;
 #ifdef XP_WIN
-            if (parseInt(aData) == Components.interfaces.nsIUpdateService.SOURCE_EVENT_BACKGROUND)
+            if (parseInt(aSourceEvent) == Components.interfaces.nsIUpdateService.SOURCE_EVENT_BACKGROUND)
               this._showUpdateInfo();
 #endif
-          }
         ]]>
         </body>
       </method>

@@ -1,12 +1,12 @@
 <!ENTITY  updateWizard.title              "&brandShortName; Update">
 
-<!ENTITY  mismatch.title                  "Incompatible Extensions">
-<!ENTITY  mismatch.intro1.label           "The following extensions are not compatible with the new version
+<!ENTITY  mismatch.title                  "Incompatible Components">
+<!ENTITY  mismatch.intro1.label           "The following components are not compatible with the new version
                                            of &brandShortName; you have just installed:">
 <!ENTITY  mismatch.intro2.label           "They have been disabled until compatible versions are 
                                            installed.">
 <!ENTITY  mismatch.intro3.label           "&brandShortName; can check for and install newer, compatible 
-                                           versions of these extensions.">
+                                           versions of these components.">
 
 <!ENTITY  checking.title                  "Checking for Updates">
 <!ENTITY  checking.intro.label            "&brandShortName; is now checking for available updates...">
@@ -37,14 +37,16 @@
 
 <!ENTITY  finished.title                  "Update Complete">
 <!ENTITY  finished.updated.label          "&brandShortName; has installed the available updates.">
-<!ENTITY  finished.remaining.label        "Some incompatible extensions could not be updated, perhaps
+<!ENTITY  finished.remaining.label        "Some incompatible components could not be updated, perhaps
                                            because compatible versions are not available at this time.
                                            &brandShortName; will check periodically and inform you
                                            when updated versions become available.">
-<!ENTITY  finished.remaining2.label       "Some incompatible extensions could not be updated, perhaps
+<!ENTITY  finished.remaining2.label       "Some incompatible components could not be updated, perhaps
                                            because compatible versions are not available at this time.
                                            &brandShortName; can check periodically and inform you
                                            when updated versions become available.">
+<!ENTITY  finished.error.label            "&brandShortName; did not succeed in downloading and 
+                                           installing some updates.">
 <!ENTITY  finished.enableChecking.label   "Allow &brandShortName; to check for updates.">
 <!ENTITY  finished.mismatch.label         "Click Finish to continue starting &brandShortName;.">
 
@@ -55,5 +57,9 @@
                                            web site where you can download the latest version of 
                                            &brandShortName;.">
                                            
-
+<!ENTITY  errors.title                    "Problems During Update">
+<!ENTITY  errors.intro.label              "&brandShortName; encountered problems when updating your
+                                           software, and as a result not all components could be updated.">
+<!ENTITY  errors.details.label            "Details">
+<!ENTITY  errors.details.accesskey        "D">
 
