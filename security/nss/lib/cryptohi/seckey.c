@@ -1113,7 +1113,7 @@ CERT_KMIDPublicKey(CERTCertificate *cert)
 }
 
 int
-SECKEY_ECParams2KeySize(SECItem *encodedParams)
+SECKEY_ECParamsToKeySize(SECItem *encodedParams)
 {
     SECOidTag tag;
     SECItem oid = { siBuffer, NULL, 0};
@@ -1268,7 +1268,7 @@ SECKEY_PublicKeyStrength(SECKEYPublicKey *pubk)
 	/* Get the key size in bits and adjust */
 	if (pubk->u.ec.size == 0) {
 	    pubk->u.ec.size = 
-		SECKEY_ECParams2KeySize(&pubk->u.ec.DEREncodedParams);
+		SECKEY_ECParamsToKeySize(&pubk->u.ec.DEREncodedParams);
 	} 
 	return (pubk->u.ec.size + 7)/8;
 #endif /* NSS_ENABLE_ECC */
@@ -1292,7 +1292,7 @@ SECKEY_PublicKeyStrengthInBits(SECKEYPublicKey *pubk)
     case ecKey:
 	if (pubk->u.ec.size == 0) {
 	    pubk->u.ec.size = 
-		SECKEY_ECParams2KeySize(&pubk->u.ec.DEREncodedParams);
+		SECKEY_ECParamsToKeySize(&pubk->u.ec.DEREncodedParams);
 	} 
 	return pubk->u.ec.size;
 #endif /* NSS_ENABLE_ECC */
