@@ -857,22 +857,22 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
     nsAutoString url;
     PRBool hasURL = GetURL(content, url);
 
-    // if there is a src, create the web shell
+    // create the web shell
     // we do this even if the size is not positive (bug 11762)
-    if (hasURL) {
-      if (!mWebShell) {
-        nsSize  maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
-        rv = CreateWebShell(aPresContext, maxSize);
+    // we do this even if there is no src (bug 16218)
+    if (!mWebShell) {
+      nsSize  maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
+      rv = CreateWebShell(aPresContext, maxSize);
 #ifdef INCLUDE_XUL
-        // The URL can be destructively altered when a content shell is made.
-        // Refetch it to ensure we have the actual URL to load.
-        hasURL = GetURL(content, url);
+      // The URL can be destructively altered when a content shell is made.
+      // Refetch it to ensure we have the actual URL to load.
+      hasURL = GetURL(content, url);
 #endif // INCLUDE_XUL
-      }
+    }
 
-      if (mWebShell) {
-        mCreatingViewer=PR_TRUE;
-
+    if (mWebShell) {
+      mCreatingViewer=PR_TRUE;
+      if (hasURL) {
         // load the document
         nsString absURL;
         TempMakeAbsURL(content, url, absURL);
@@ -891,8 +891,6 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
           }
         }
       }
-    } else {
-      mCreatingViewer = PR_TRUE;
     }
     NS_RELEASE(content);
   }
