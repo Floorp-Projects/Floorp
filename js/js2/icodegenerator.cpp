@@ -22,8 +22,11 @@
 #include "utilities.h"
 #include "icodegenerator.h"
 
+#include <iostream>
 #include <iomanip>
 #include <stdexcept>
+
+using std::ostream;
 
 namespace JavaScript {
 
@@ -654,7 +657,7 @@ namespace JavaScript {
         for (LabelList::iterator k = labels.begin(); k != labels.end(); k++)
             if ((*k)->itsOffset == (iCode->end() - iCode->begin())) {
 //                s << "label #" << (k - labels.begin()) << ":\n";
-                s << "#" << (i - iCode->begin());
+//                s << "#" << (i - iCode->begin());
             }
         return s;
     }
