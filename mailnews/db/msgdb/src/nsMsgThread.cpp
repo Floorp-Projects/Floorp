@@ -198,13 +198,14 @@ nsresult nsMsgThread::RerootThread(nsIMsgDBHdr *newParentOfOldRoot, nsIMsgDBHdr 
   do 
   {
     ancestorHdr->GetThreadParent(&newHdrAncestor);
-    if (newHdrAncestor != nsMsgKey_None && newHdrAncestor != m_threadRootKey)
+    if (newHdrAncestor != nsMsgKey_None && newHdrAncestor != m_threadRootKey && newHdrAncestor != newRoot)
     {
       newRoot = newHdrAncestor;
       rv = m_mdbDB->GetMsgHdrForKey(newRoot, getter_AddRefs(ancestorHdr));
     }
   }
-  while (NS_SUCCEEDED(rv) && ancestorHdr && newHdrAncestor != nsMsgKey_None && newHdrAncestor != m_threadRootKey);
+  while (NS_SUCCEEDED(rv) && ancestorHdr && newHdrAncestor != nsMsgKey_None && newHdrAncestor != m_threadRootKey
+    && newHdrAncestor != newRoot);
   SetThreadRootKey(newRoot);
   ReparentNonReferenceChildrenOf(oldRoot, newRoot, announcer);
   if (ancestorHdr)

@@ -2916,7 +2916,6 @@ NS_IMETHODIMP nsImapMailFolder::StoreImapFlags(PRInt32 flags, PRBool addFlags, n
     GetDatabase(nsnull);
     if (mDatabase)
     {
-//      UndoManager *undoManager = NULL;
       PRUint32 total = numKeys;
 
       for (PRUint32 keyIndex=0; keyIndex < total; keyIndex++)
@@ -2926,25 +2925,6 @@ NS_IMETHODIMP nsImapMailFolder::StoreImapFlags(PRInt32 flags, PRBool addFlags, n
         SetFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS);
         if (NS_SUCCEEDED(rv) && op)
         {
-#if 0
-          MailDB *originalDB = NULL;
-          if (op->GetOperationFlags() & kMoveResult)
-          {
-            // get the op in the source db and change the flags there
-            OfflineImapOperation  *originalOp = GetOriginalOp(op, &originalDB);
-            if (originalOp)
-            {
-              if (undoManager && undoManager->GetState() == UndoIdle && NET_IsOffline()) {
-                OfflineIMAPUndoAction *undoAction = new 
-                    OfflineIMAPUndoAction(paneForFlagUrl, (MSG_FolderInfo*) this, op->GetMessageKey(), kFlagsChanged,
-                    this, NULL, flags, NULL, addFlags);
-                if (undoAction)
-                  undoManager->AddUndoAction(undoAction);
-              }
-              op = originalOp;
-            }
-          }
-#endif   
           imapMessageFlagsType newFlags;
           op->GetNewFlags(&newFlags);
 
@@ -2952,13 +2932,6 @@ NS_IMETHODIMP nsImapMailFolder::StoreImapFlags(PRInt32 flags, PRBool addFlags, n
             op->SetFlagOperation(newFlags | flags);
           else
             op->SetFlagOperation(newFlags & ~flags);
-#if 0
-          if (originalDB)
-          {
-            originalDB->Close();
-            originalDB = NULL;
-          }
-#endif
         }
       }
       mDatabase->Commit(nsMsgDBCommitType::kLargeCommit); // flush offline flags
@@ -4895,11 +4868,11 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
 {
   NS_ENSURE_ARG(messages);
   nsresult rv = NS_OK;
-	nsresult stopit = 0;
-	nsCOMPtr <nsIMsgDatabase> sourceMailDB;
+  nsresult stopit = 0;
+  nsCOMPtr <nsIMsgDatabase> sourceMailDB;
   nsCOMPtr <nsIDBFolderInfo> srcDbFolderInfo;
   srcFolder->GetDBFolderInfoAndDB(getter_AddRefs(srcDbFolderInfo), getter_AddRefs(sourceMailDB));
-	PRBool deleteToTrash = PR_FALSE;
+  PRBool deleteToTrash = PR_FALSE;
   PRUint32 srcCount;
   messages->Count(&srcCount);
   nsCOMPtr<nsIImapIncomingServer> imapServer;
@@ -4913,18 +4886,13 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
   }	
   if (sourceMailDB)
   {
-#ifdef DOING_OFFLINEUNDO_YET
-    UndoManager *undoManager = NULL;
-    
-    if (state && state->sourcePane)
-      undoManager = state->sourcePane->GetUndoManager();
-    
-    PRBool shouldUndoOffline = undoManager && NET_IsOffline();
-    if (shouldUndoOffline)
-      undoManager->StartBatch();
-#endif 
     // save the future ops in the source DB, if this is not a imap->local copy/move
     
+    nsCOMPtr <nsITransactionManager> txnMgr;
+    if (msgWindow)
+      msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
+    if (txnMgr)
+      txnMgr->BeginBatch();
     GetDatabase(nsnull);
     if (mDatabase) 
     {
@@ -5013,16 +4981,28 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
             }
             else
               sourceOp->AddMessageCopyOperation(folderURI); // offline copy
-#ifdef DOING_OFFLINEUNDO_YET
-            if (shouldUndoOffline && undoManager->GetState() == UndoIdle)
-            {	// only need undo if we're really offline and not pseudo offline
-              OfflineIMAPUndoAction *undoAction = new 
-                OfflineIMAPUndoAction(state->sourcePane, (MSG_FolderInfo*) this, sourceOp->GetMessageKey(), opType,
-                sourceMailDB->GetFolderInfo(), dstFolder, 0, NULL, 0);
-              if (undoAction)
-                undoManager->AddUndoAction(undoAction);
+
+           nsMsgKeyArray srcKeyArray;
+           nsCOMPtr<nsIUrlListener> urlListener;
+
+            sourceOp->GetOperation(&opType);
+           srcKeyArray.Add(originalKey);
+           rv = QueryInterface(NS_GET_IID(nsIUrlListener), getter_AddRefs(urlListener));
+           nsImapOfflineTxn *undoMsgTxn = new 
+              nsImapOfflineTxn(srcFolder, &srcKeyArray, this, isMove, opType, message,
+                m_eventQueue, urlListener);
+
+            if (undoMsgTxn)
+            {
+              if (isMove)
+                undoMsgTxn->SetTransactionType(nsIMessenger::eMoveMsg);
+              else
+                undoMsgTxn->SetTransactionType(nsIMessenger::eCopyMsg);
+              // we're adding this undo action before the delete is successful. This is evil,
+              // but 4.5 did it as well.
+              if (txnMgr)
+                txnMgr->DoTransaction(undoMsgTxn);
             }
-#endif
           }
           PRBool hasMsgOffline = PR_FALSE;
           srcFolder->HasMsgOffline(originalKey, &hasMsgOffline);
@@ -5075,16 +5055,21 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
                 SetFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS);
                 destOp->SetSourceFolderURI(originalSrcFolderURI);
                 destOp->SetMessageKey(originalKey);
-#ifdef DOING_OFFLINEUNDO_YET
-                if (shouldUndoOffline && undoManager->GetState() == UndoIdle)
                 {
-                  OfflineIMAPUndoAction *undoAction = new 
-                    OfflineIMAPUndoAction(state->sourcePane, (MSG_FolderInfo*) this, destOp->GetMessageKey(), kAddedHeader,
-                    state->destDB->GetFolderInfo(), dstFolder, 0, newMailHdr);
-                  if (undoAction)
-                    undoManager->AddUndoAction(undoAction);
+                  nsCOMPtr<nsIUrlListener> urlListener;
+
+                  QueryInterface(NS_GET_IID(nsIUrlListener), getter_AddRefs(urlListener));
+                  nsMsgKeyArray keyArray;
+                  keyArray.Add(fakeBase + sourceKeyIndex);
+                  nsImapOfflineTxn *undoMsgTxn = new 
+                    nsImapOfflineTxn(this, &keyArray, this, isMove, nsIMsgOfflineImapOperation::kAddedHeader,
+                      newMailHdr, m_eventQueue, urlListener);
+                 if (undoMsgTxn)
+                 {
+                   if (txnMgr)
+                     txnMgr->DoTransaction(undoMsgTxn);
+                 }
                 }
-#endif
               }
             }
             else
@@ -5093,23 +5078,39 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
           successfulCopy = NS_SUCCEEDED(stopit);
           
           
+          nsMsgKey msgKey;
+          mailHdr->GetMessageKey(&msgKey);
           if (isMove && successfulCopy)	
           {
+           nsMsgKeyArray srcKeyArray;
+           nsCOMPtr<nsIUrlListener> urlListener;
+
+           srcKeyArray.Add(msgKey);
+           rv = QueryInterface(NS_GET_IID(nsIUrlListener), getter_AddRefs(urlListener));
+
             nsOfflineImapOperationType opType = nsIMsgOfflineImapOperation::kDeletedMsg;
             if (!deleteToTrash)
               opType = nsIMsgOfflineImapOperation::kMsgMarkedDeleted;
-#ifdef DOING_OFFLINEUNDO_YET
-            if (shouldUndoOffline && undoManager->GetState() == UndoIdle) 
-            {
-              OfflineIMAPUndoAction *undoAction = new 
-                OfflineIMAPUndoAction(state->sourcePane, (MSG_FolderInfo*) this, mailHdr->GetMessageKey(), opType,
-                sourceMailDB->GetFolderInfo(), dstFolder, 0, mailHdr);
-              if (undoAction)
-                undoManager->AddUndoAction(undoAction);
-            }
-#endif
-            nsMsgKey msgKey;
-            mailHdr->GetMessageKey(&msgKey);
+            srcKeyArray.Add(msgKey);
+            nsImapOfflineTxn *undoMsgTxn = new 
+              nsImapOfflineTxn(srcFolder, &srcKeyArray, this, isMove, opType, mailHdr,
+                m_eventQueue, urlListener);
+             if (undoMsgTxn)
+             {
+               if (isMove)
+               {
+                 if (mFlags & MSG_FOLDER_FLAG_TRASH)
+                   undoMsgTxn->SetTransactionType(nsIMessenger::eDeleteMsg);
+                 else
+                   undoMsgTxn->SetTransactionType(nsIMessenger::eMoveMsg);
+               }
+               else
+               {
+                  undoMsgTxn->SetTransactionType(nsIMessenger::eCopyMsg);
+               }
+               if (txnMgr)
+                 txnMgr->DoTransaction(undoMsgTxn);
+             }
             if (deleteToTrash)
               sourceMailDB->DeleteMessage(msgKey, nsnull, PR_FALSE);
             else
@@ -5141,11 +5142,8 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
       SummaryChanged();
       srcFolder->SummaryChanged();
     }
-
-#ifdef DOING_OFFLINEUNDO_YET
-    if (shouldUndoOffline)
-      undoManager->EndBatch();
-#endif
+    if (txnMgr)
+      txnMgr->EndBatch();
   }
   if (NS_SUCCEEDED(rv) && isMove)
     srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);

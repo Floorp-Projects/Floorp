@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998, 1999 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
@@ -30,6 +30,7 @@
 #include "nsIEventQueue.h"
 #include "nsMsgTxn.h"
 #include "nsMsgKeyArray.h"
+#include "nsIMsgOfflineImapOperation.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 
@@ -41,52 +42,77 @@
 class nsImapMoveCopyMsgTxn : public nsMsgTxn
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMAPMOVECOPYMSGTXN_IID)
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMAPMOVECOPYMSGTXN_IID)
 
-    nsImapMoveCopyMsgTxn();
-    nsImapMoveCopyMsgTxn(nsIMsgFolder* srcFolder, nsMsgKeyArray* srcKeyArray,
-                         const char* srcMsgIdString, nsIMsgFolder* dstFolder,
-                         PRBool idsAreUids, PRBool isMove, 
-                         nsIEventQueue *eventQueue, 
-                         nsIUrlListener *urlListener);
-    virtual ~nsImapMoveCopyMsgTxn();
+  nsImapMoveCopyMsgTxn();
+  nsImapMoveCopyMsgTxn(nsIMsgFolder* srcFolder, nsMsgKeyArray* srcKeyArray,
+                       const char* srcMsgIdString, nsIMsgFolder* dstFolder,
+                       PRBool idsAreUids, PRBool isMove, 
+                       nsIEventQueue *eventQueue, 
+                       nsIUrlListener *urlListener);
+  virtual ~nsImapMoveCopyMsgTxn();
 
-    NS_DECL_ISUPPORTS_INHERITED 
+  NS_DECL_ISUPPORTS_INHERITED 
 
-    NS_IMETHOD UndoTransaction(void);
-    NS_IMETHOD RedoTransaction(void);
+  NS_IMETHOD UndoTransaction(void);
+  NS_IMETHOD RedoTransaction(void);
 
-    // helper
-    nsresult SetCopyResponseUid(nsMsgKeyArray* keyArray,
-                                const char *msgIdString);
-    nsresult GetSrcKeyArray(nsMsgKeyArray& srcKeyArray);
-    nsresult GetDstKeyArray(nsMsgKeyArray& dstKeyArray);
-    nsresult AddDstKey(nsMsgKey aKey);
-    nsresult UndoMailboxDelete();
-    nsresult RedoMailboxDelete();
-    nsresult Init(nsIMsgFolder* srcFolder, nsMsgKeyArray* srcKeyArray,
-                  const char* srcMsgIdString, nsIMsgFolder* dstFolder,
-                  PRBool idsAreUids, PRBool isMove, 
-                  nsIEventQueue *eventQueue, 
-                  nsIUrlListener *urlListener);
-    PRBool DeleteIsMoveToTrash(nsIMsgFolder* folder);
+  // helper
+  nsresult SetCopyResponseUid(nsMsgKeyArray* keyArray,
+                              const char *msgIdString);
+  nsresult GetSrcKeyArray(nsMsgKeyArray& srcKeyArray);
+  nsresult GetDstKeyArray(nsMsgKeyArray& dstKeyArray);
+  nsresult AddDstKey(nsMsgKey aKey);
+  nsresult UndoMailboxDelete();
+  nsresult RedoMailboxDelete();
+  nsresult Init(nsIMsgFolder* srcFolder, nsMsgKeyArray* srcKeyArray,
+                const char* srcMsgIdString, nsIMsgFolder* dstFolder,
+                PRBool idsAreUids, PRBool isMove, 
+                nsIEventQueue *eventQueue, 
+                nsIUrlListener *urlListener);
+  PRBool DeleteIsMoveToTrash(nsIMsgFolder* folder);
 
-private:
+protected:
 
-    nsWeakPtr m_srcFolder;
-	nsCOMPtr<nsISupportsArray> m_srcHdrs;
-	nsMsgKeyArray m_dupKeyArray;
-    nsMsgKeyArray m_srcKeyArray;
-    nsCString m_srcMsgIdString;
-    nsWeakPtr m_dstFolder;
-    nsMsgKeyArray m_dstKeyArray;
-    nsCString m_dstMsgIdString;
-    nsCOMPtr<nsIEventQueue> m_eventQueue;
-    nsCOMPtr<nsIUrlListener> m_urlListener;
-    PRBool m_idsAreUids;
-    PRBool m_isMove;
-    PRBool m_srcIsPop3;
-    nsUInt32Array m_srcSizeArray;
+  nsWeakPtr m_srcFolder;
+  nsCOMPtr<nsISupportsArray> m_srcHdrs;
+  nsMsgKeyArray m_dupKeyArray;
+  nsMsgKeyArray m_srcKeyArray;
+  nsCString m_srcMsgIdString;
+  nsWeakPtr m_dstFolder;
+  nsMsgKeyArray m_dstKeyArray;
+  nsCString m_dstMsgIdString;
+  nsCOMPtr<nsIEventQueue> m_eventQueue;
+  nsCOMPtr<nsIUrlListener> m_urlListener;
+  PRBool m_idsAreUids;
+  PRBool m_isMove;
+  PRBool m_srcIsPop3;
+  nsUInt32Array m_srcSizeArray;
 };
+
+class nsImapOfflineTxn : public nsImapMoveCopyMsgTxn
+{
+public:
+  nsImapOfflineTxn(nsIMsgFolder* srcFolder, nsMsgKeyArray* srcKeyArray,
+                       nsIMsgFolder* dstFolder,
+                       PRBool isMove,
+                       nsOfflineImapOperationType opType,
+                       nsIMsgDBHdr *srcHdr,
+                       nsIEventQueue *eventQueue, 
+                       nsIUrlListener *urlListener);
+  virtual ~nsImapOfflineTxn();
+
+  NS_IMETHOD UndoTransaction(void);
+  NS_IMETHOD RedoTransaction(void);
+  void SetAddFlags(PRBool addFlags) {m_addFlags = addFlags;}
+  void SetFlags(PRUint32 flags) {m_flags = flags;}
+protected:
+  nsOfflineImapOperationType m_opType;
+  nsCOMPtr <nsIMsgDBHdr> m_header;
+  // these two are used to undo flag changes, which we don't currently do.
+  PRBool m_addFlags;
+  PRUint32 m_flags;
+};
+
 
 #endif

@@ -28,7 +28,7 @@
 #include "nsXPIDLString.h"
 #include "nsIIMAPHostSessionList.h"
 #include "nsIMsgIncomingServer.h"
-
+#include "nsIDBFolderInfo.h"
 
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
@@ -57,62 +57,62 @@ nsImapMoveCopyMsgTxn::Init(
 	PRBool idsAreUids, PRBool isMove,
 	nsIEventQueue* eventQueue, nsIUrlListener* urlListener)
 {
-	nsresult rv;
-	NS_NewISupportsArray(getter_AddRefs(m_srcHdrs));
-    m_srcMsgIdString = srcMsgIdString;
-    m_idsAreUids = idsAreUids;
-    m_isMove = isMove;
-	m_srcFolder = getter_AddRefs(NS_GetWeakReference(srcFolder));
-	m_dstFolder = getter_AddRefs(NS_GetWeakReference(dstFolder));
-	m_eventQueue = do_QueryInterface(eventQueue, &rv);
-	if (urlListener)
-		m_urlListener = do_QueryInterface(urlListener, &rv);
-	m_srcKeyArray.CopyArray(srcKeyArray);
-	m_dupKeyArray.CopyArray(srcKeyArray);
-    nsXPIDLCString uri;
-    rv = srcFolder->GetURI(getter_Copies(uri));
-    nsCString protocolType(uri);
-    protocolType.SetLength(protocolType.FindChar(':'));
-    // ** jt -- only do this for mailbox protocol
-    if (protocolType.EqualsIgnoreCase("mailbox"))
+  nsresult rv;
+  NS_NewISupportsArray(getter_AddRefs(m_srcHdrs));
+  m_srcMsgIdString = srcMsgIdString;
+  m_idsAreUids = idsAreUids;
+  m_isMove = isMove;
+  m_srcFolder = getter_AddRefs(NS_GetWeakReference(srcFolder));
+  m_dstFolder = getter_AddRefs(NS_GetWeakReference(dstFolder));
+  m_eventQueue = do_QueryInterface(eventQueue, &rv);
+  if (urlListener)
+    m_urlListener = do_QueryInterface(urlListener, &rv);
+  m_srcKeyArray.CopyArray(srcKeyArray);
+  m_dupKeyArray.CopyArray(srcKeyArray);
+  nsXPIDLCString uri;
+  rv = srcFolder->GetURI(getter_Copies(uri));
+  nsCString protocolType(uri);
+  protocolType.SetLength(protocolType.FindChar(':'));
+  // ** jt -- only do this for mailbox protocol
+  if (protocolType.EqualsIgnoreCase("mailbox"))
+  {
+    m_srcIsPop3 = PR_TRUE;
+    PRUint32 i, count = m_srcKeyArray.GetSize();
+    nsCOMPtr<nsIMsgDatabase> srcDB;
+    rv = srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIMsgDBHdr> srcHdr;
+    nsCOMPtr<nsIMsgDBHdr> copySrcHdr;
+    nsMsgKey pseudoKey;
+    
+    for (i=0; i<count; i++)
     {
-        m_srcIsPop3 = PR_TRUE;
-        PRUint32 i, count = m_srcKeyArray.GetSize();
-        nsCOMPtr<nsIMsgDatabase> srcDB;
-        rv = srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
-        if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsIMsgDBHdr> srcHdr;
-        nsCOMPtr<nsIMsgDBHdr> copySrcHdr;
-		nsMsgKey pseudoKey;
-	
-        for (i=0; i<count; i++)
+      rv = srcDB->GetMsgHdrForKey(m_srcKeyArray.GetAt(i),
+        getter_AddRefs(srcHdr));
+      if (NS_SUCCEEDED(rv))
+      {
+        PRUint32 msgSize;
+        rv = srcHdr->GetMessageSize(&msgSize);
+        if (NS_SUCCEEDED(rv))
+          m_srcSizeArray.Add(msgSize);
+        if (isMove)
         {
-            rv = srcDB->GetMsgHdrForKey(m_srcKeyArray.GetAt(i),
-                                        getter_AddRefs(srcHdr));
-            if (NS_SUCCEEDED(rv))
-            {
-                PRUint32 msgSize;
-                rv = srcHdr->GetMessageSize(&msgSize);
-                if (NS_SUCCEEDED(rv))
-                    m_srcSizeArray.Add(msgSize);
-				if (isMove)
-				{
-                    srcDB->GetNextPseudoMsgKey(&pseudoKey);
-                    pseudoKey--;
-				    m_dupKeyArray.SetAt(i,pseudoKey);
-                    rv = srcDB->CopyHdrFromExistingHdr(pseudoKey,
-                                                       srcHdr, PR_FALSE,
-                                                       getter_AddRefs(copySrcHdr));
-				    if (NS_SUCCEEDED(rv)) 
-                    {
-				      nsCOMPtr<nsISupports> supports = do_QueryInterface(copySrcHdr);
-				      m_srcHdrs->AppendElement(supports);
-					}
-				}
-            }
+          srcDB->GetNextPseudoMsgKey(&pseudoKey);
+          pseudoKey--;
+          m_dupKeyArray.SetAt(i,pseudoKey);
+          rv = srcDB->CopyHdrFromExistingHdr(pseudoKey,
+            srcHdr, PR_FALSE,
+            getter_AddRefs(copySrcHdr));
+          if (NS_SUCCEEDED(rv)) 
+          {
+            nsCOMPtr<nsISupports> supports = do_QueryInterface(copySrcHdr);
+            m_srcHdrs->AppendElement(supports);
+          }
         }
+      }
     }
-    return rv;
+  }
+  return rv;
 }
 
 nsImapMoveCopyMsgTxn::~nsImapMoveCopyMsgTxn()
@@ -146,61 +146,61 @@ nsImapMoveCopyMsgTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsImapMoveCopyMsgTxn::UndoTransaction(void)
 {
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
-	if (NS_FAILED(rv)) return rv;
-	if (m_isMove || !m_dstFolder)
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
+  if (NS_FAILED(rv)) return rv;
+  if (m_isMove || !m_dstFolder)
+  {
+    if (m_srcIsPop3)
     {
-        if (m_srcIsPop3)
-        {
-            rv = UndoMailboxDelete();
-            if (NS_FAILED(rv)) return rv;
-        }
-        else
-        {
-            nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryReferent(m_srcFolder, &rv);
-            if (NS_FAILED(rv) || !srcFolder) return rv;
-            nsCOMPtr<nsIUrlListener> srcListener =
-                do_QueryInterface(srcFolder, &rv);
-            if (NS_FAILED(rv)) return rv;
-            // ** make sure we are in the selected state; use lite select
-            // folder so we won't hit performance hard
-            rv = imapService->LiteSelectFolder(m_eventQueue, srcFolder,
-                                               srcListener, nsnull);
-            if (NS_FAILED(rv)) return rv;
-            rv = imapService->SubtractMessageFlags(
-                m_eventQueue, srcFolder, srcListener, nsnull,
-                m_srcMsgIdString.get(), kImapMsgDeletedFlag,
-                m_idsAreUids);
-            if (NS_FAILED(rv)) return rv;
-            if (DeleteIsMoveToTrash(srcFolder))
-                rv = imapService->GetHeaders(m_eventQueue, srcFolder,
-                                             srcListener, nsnull,
-                                             m_srcMsgIdString.get(),
-                                             PR_TRUE); 
-        }
+      rv = UndoMailboxDelete();
+      if (NS_FAILED(rv)) return rv;
     }
-    if (m_dstKeyArray.GetSize() > 0)
+    else
     {
-        nsCOMPtr<nsIMsgFolder> dstFolder = do_QueryReferent(m_dstFolder, &rv);
-        if (NS_FAILED(rv) || !dstFolder) return rv;
-
-        nsCOMPtr<nsIUrlListener> dstListener;
-
-        dstListener = do_QueryInterface(dstFolder, &rv);
-        if (NS_FAILED(rv)) return rv;
-        // ** make sire we are in the selected state; use lite select folder
-        // so we won't hit preformace hard
-        rv = imapService->LiteSelectFolder(m_eventQueue, dstFolder,
-                                           dstListener, nsnull);
-        if (NS_FAILED(rv)) return rv;
-        rv = imapService->AddMessageFlags(m_eventQueue, dstFolder,
-                                          dstListener, nsnull,
-                                          m_dstMsgIdString.get(),
-                                          kImapMsgDeletedFlag,
-                                          m_idsAreUids);
+      nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryReferent(m_srcFolder, &rv);
+      if (NS_FAILED(rv) || !srcFolder) return rv;
+      nsCOMPtr<nsIUrlListener> srcListener =
+        do_QueryInterface(srcFolder, &rv);
+      if (NS_FAILED(rv)) return rv;
+      // ** make sure we are in the selected state; use lite select
+      // folder so we won't hit performance hard
+      rv = imapService->LiteSelectFolder(m_eventQueue, srcFolder,
+        srcListener, nsnull);
+      if (NS_FAILED(rv)) return rv;
+      rv = imapService->SubtractMessageFlags(
+        m_eventQueue, srcFolder, srcListener, nsnull,
+        m_srcMsgIdString.get(), kImapMsgDeletedFlag,
+        m_idsAreUids);
+      if (NS_FAILED(rv)) return rv;
+      if (DeleteIsMoveToTrash(srcFolder))
+        rv = imapService->GetHeaders(m_eventQueue, srcFolder,
+        srcListener, nsnull,
+        m_srcMsgIdString.get(),
+        PR_TRUE); 
     }
-	return rv;
+  }
+  if (m_dstKeyArray.GetSize() > 0)
+  {
+    nsCOMPtr<nsIMsgFolder> dstFolder = do_QueryReferent(m_dstFolder, &rv);
+    if (NS_FAILED(rv) || !dstFolder) return rv;
+    
+    nsCOMPtr<nsIUrlListener> dstListener;
+    
+    dstListener = do_QueryInterface(dstFolder, &rv);
+    if (NS_FAILED(rv)) return rv;
+    // ** make sire we are in the selected state; use lite select folder
+    // so we won't hit preformace hard
+    rv = imapService->LiteSelectFolder(m_eventQueue, dstFolder,
+      dstListener, nsnull);
+    if (NS_FAILED(rv)) return rv;
+    rv = imapService->AddMessageFlags(m_eventQueue, dstFolder,
+      dstListener, nsnull,
+      m_dstMsgIdString.get(),
+      kImapMsgDeletedFlag,
+      m_idsAreUids);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -402,3 +402,213 @@ PRBool nsImapMoveCopyMsgTxn::DeleteIsMoveToTrash(nsIMsgFolder *folder)
                                                     retVal);
     return retVal;
 }
+
+
+
+nsImapOfflineTxn::nsImapOfflineTxn(nsIMsgFolder* srcFolder, nsMsgKeyArray* srcKeyArray, 
+	nsIMsgFolder* dstFolder, PRBool isMove, nsOfflineImapOperationType opType,
+        nsIMsgDBHdr *srcHdr,
+	nsIEventQueue* eventQueue, nsIUrlListener* urlListener)
+{
+  Init(srcFolder, srcKeyArray, nsnull, dstFolder, PR_TRUE,
+       isMove, eventQueue, urlListener);
+
+  m_opType = opType; 
+  m_flags = 0;
+  m_addFlags = PR_FALSE;
+  m_header = srcHdr;
+  if (opType == nsIMsgOfflineImapOperation::kDeletedMsg)
+  {
+    nsCOMPtr <nsIMsgDatabase> srcDB;
+    nsCOMPtr <nsIDBFolderInfo> folderInfo;
+
+    nsresult rv = srcFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(srcDB));
+    if (NS_SUCCEEDED(rv) && srcDB)
+    {
+      nsMsgKey pseudoKey;
+      nsCOMPtr <nsIMsgDBHdr> copySrcHdr;
+
+      srcDB->GetNextPseudoMsgKey(&pseudoKey);
+      pseudoKey--;
+      m_dupKeyArray.SetAt(0, pseudoKey);
+      rv = srcDB->CopyHdrFromExistingHdr(pseudoKey, srcHdr, PR_FALSE, getter_AddRefs(copySrcHdr));
+      if (NS_SUCCEEDED(rv)) 
+      {
+        nsCOMPtr<nsISupports> supports = do_QueryInterface(copySrcHdr);
+        m_srcHdrs->AppendElement(supports);
+      }
+    }
+  }
+}
+
+nsImapOfflineTxn::~nsImapOfflineTxn()
+{
+}
+
+// Open the database and find the key for the offline operation that we want to
+// undo, then remove it from the database, we also hold on to this
+// data for a redo operation.
+NS_IMETHODIMP nsImapOfflineTxn::UndoTransaction(void)
+{
+  nsresult rv;
+  
+  nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryReferent(m_srcFolder, &rv);
+  if (NS_FAILED(rv) || !srcFolder) 
+    return rv;
+  nsCOMPtr <nsIMsgOfflineImapOperation> op;
+  nsCOMPtr <nsIDBFolderInfo> folderInfo;
+  nsCOMPtr <nsIMsgDatabase> srcDB;
+  nsCOMPtr <nsIMsgDatabase> destDB;
+
+  nsMsgKey hdrKey = nsMsgKey_None;
+
+  if (m_header)
+    m_header->GetMessageKey(&hdrKey);
+
+  rv = srcFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(srcDB));
+  NS_ENSURE_SUCCESS(rv, rv);
+  switch (m_opType)
+  {
+    case nsIMsgOfflineImapOperation::kMsgMoved:
+    case nsIMsgOfflineImapOperation::kMsgCopy:
+    case nsIMsgOfflineImapOperation::kAddedHeader:
+    case nsIMsgOfflineImapOperation::kFlagsChanged:
+      rv = srcDB->GetOfflineOpForKey(hdrKey, PR_FALSE, getter_AddRefs(op));
+      if (NS_SUCCEEDED(rv) && op)
+      {
+        srcDB->RemoveOfflineOp(op);
+        op = nsnull;
+      }
+      if (m_header && (m_opType == nsIMsgOfflineImapOperation::kAddedHeader))
+      {
+        nsCOMPtr <nsIMsgDBHdr> mailHdr;
+        nsMsgKey msgKey;
+        m_header->GetMessageKey(&msgKey);
+        rv = srcDB->GetMsgHdrForKey(msgKey, getter_AddRefs(mailHdr));
+        if (mailHdr)
+          srcDB->DeleteHeader(mailHdr, nsnull, PR_TRUE, PR_FALSE);
+      }
+      break;
+    case nsIMsgOfflineImapOperation::kDeletedMsg:
+      {
+        nsMsgKey msgKey;
+        m_header->GetMessageKey(&msgKey);
+	nsCOMPtr<nsIMsgDBHdr> undeletedHdr;
+        m_srcHdrs->QueryElementAt(0, NS_GET_IID(nsIMsgDBHdr), getter_AddRefs(undeletedHdr));
+        if (undeletedHdr)
+        {
+          nsCOMPtr <nsIMsgDBHdr> newHdr;
+
+          srcDB->CopyHdrFromExistingHdr (msgKey, undeletedHdr, PR_TRUE, getter_AddRefs(newHdr));
+        }
+        srcDB->Close(PR_TRUE);
+        srcFolder->SummaryChanged();
+      }
+      break;
+    case nsIMsgOfflineImapOperation::kMsgMarkedDeleted:
+      srcDB->MarkImapDeleted(hdrKey, PR_FALSE, nsnull);
+      break;
+    default:
+      break;
+  }
+  srcDB->Close(PR_TRUE);
+  srcFolder->SummaryChanged();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapOfflineTxn::RedoTransaction(void)
+{
+  nsresult rv;
+  
+  nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryReferent(m_srcFolder, &rv);
+  if (NS_FAILED(rv) || !srcFolder) 
+    return rv;
+  nsCOMPtr <nsIMsgOfflineImapOperation> op;
+  nsCOMPtr <nsIDBFolderInfo> folderInfo;
+  nsCOMPtr <nsIMsgDatabase> srcDB;
+  nsCOMPtr <nsIMsgDatabase> destDB;
+  rv = srcFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(srcDB));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsMsgKey hdrKey = nsMsgKey_None;
+
+  if (m_header)
+    m_header->GetMessageKey(&hdrKey);
+
+  switch (m_opType)
+  {
+  case nsIMsgOfflineImapOperation::kMsgMoved:
+  case nsIMsgOfflineImapOperation::kMsgCopy:
+    rv = srcDB->GetOfflineOpForKey(hdrKey, PR_FALSE, getter_AddRefs(op));
+    if (NS_SUCCEEDED(rv) && op)
+    {
+      nsCOMPtr<nsIMsgFolder> dstFolder = do_QueryReferent(m_dstFolder, &rv);
+      if (dstFolder)
+      {
+        nsXPIDLCString folderURI;
+        dstFolder->GetURI(getter_Copies(folderURI));
+
+
+        if (m_opType == nsIMsgOfflineImapOperation::kMsgMoved)
+        {
+          op->SetDestinationFolderURI(folderURI); // offline move
+        }
+        if (m_opType == nsIMsgOfflineImapOperation::kMsgCopy)
+        {
+          op->SetOperation(nsIMsgOfflineImapOperation::kMsgMoved);
+          op->AddMessageCopyOperation(folderURI); // offline copy
+        }
+        dstFolder->SummaryChanged();
+      }
+    }
+    break;
+  case nsIMsgOfflineImapOperation::kAddedHeader:
+    {
+      nsCOMPtr <nsIMsgDBHdr> restoreHdr;
+      nsMsgKey msgKey;
+      m_header->GetMessageKey(&msgKey);
+      nsCOMPtr<nsIMsgFolder> dstFolder = do_QueryReferent(m_dstFolder, &rv);
+      rv = srcFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(destDB));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (m_header)
+        destDB->CopyHdrFromExistingHdr (msgKey, m_header, PR_TRUE, getter_AddRefs(restoreHdr));
+      destDB->Close(PR_TRUE);
+      dstFolder->SummaryChanged();
+      rv = destDB->GetOfflineOpForKey(hdrKey, PR_TRUE, getter_AddRefs(op));
+      if (NS_SUCCEEDED(rv) && op)
+      {
+        nsXPIDLCString folderURI;
+        srcFolder->GetURI(getter_Copies(folderURI));
+        op->SetSourceFolderURI(folderURI);
+      }
+      dstFolder->SummaryChanged();
+      destDB->Close(PR_TRUE);
+    }
+    break;
+  case nsIMsgOfflineImapOperation::kDeletedMsg:
+    srcDB->DeleteMessage(hdrKey, nsnull, PR_TRUE);
+    break;
+  case nsIMsgOfflineImapOperation::kMsgMarkedDeleted:
+    srcDB->MarkImapDeleted(hdrKey, PR_TRUE, nsnull);
+    break;
+  case nsIMsgOfflineImapOperation::kFlagsChanged:
+    rv = srcDB->GetOfflineOpForKey(hdrKey, PR_TRUE, getter_AddRefs(op));
+    if (NS_SUCCEEDED(rv) && op)
+    {
+      imapMessageFlagsType newMsgFlags;
+      op->GetNewFlags(&newMsgFlags);
+      if (m_addFlags)
+        op->SetFlagOperation(newMsgFlags | m_flags);
+      else
+        op->SetFlagOperation(newMsgFlags & ~m_flags);
+    }
+    break;
+  default:
+    break;
+  }
+  srcDB->Close(PR_TRUE);
+  srcDB = nsnull;
+  srcFolder->SummaryChanged();
+  return NS_OK;
+}
+
+
