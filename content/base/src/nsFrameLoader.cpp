@@ -161,96 +161,9 @@ nsFrameLoader::LoadFrame()
 
   loadInfo->SetReferrer(referrer);
 
-  // Bug 136580: Check for recursive frame loading
-  // pre-grab these for speed
-  nsCAutoString prepath;
-  nsCAutoString filepath;
-  nsCAutoString query;
-  nsCAutoString param;
-  rv = uri->GetPrePath(prepath);
-  NS_ENSURE_SUCCESS(rv,rv);
-  nsCOMPtr<nsIURL> aURL(do_QueryInterface(uri, &rv)); // QI can fail
-  if (NS_SUCCEEDED(rv)) {
-    rv = aURL->GetFilePath(filepath);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = aURL->GetQuery(query);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = aURL->GetParam(param);
-    NS_ENSURE_SUCCESS(rv,rv);
-  } else {
-    // Not a URL, so punt and just take the whole path.  Note that if you
-    // have a self-referential-via-refs non-URL (can't happen via nsSimpleURI,
-    // but could in theory with an external protocol handler) frameset it will
-    // recurse down to the depth limit before stopping, but it will stop.
-    rv = uri->GetPath(filepath);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  PRInt32 matchCount = 0;
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(mDocShell);
-  nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
-  treeItem->GetParent(getter_AddRefs(parentAsItem));
-  while (parentAsItem) {
-    // Only interested in checking for recursion in content
-    PRInt32 parentType;
-    parentAsItem->GetItemType(&parentType);
-    if (parentType != nsIDocShellTreeItem::typeContent) {
-      break; // Not content
-    }
-    // Check the parent URI with the URI we're loading
-    nsCOMPtr<nsIWebNavigation> parentAsNav(do_QueryInterface(parentAsItem));
-    if (parentAsNav) {
-      // Does the URI match the one we're about to load?
-      nsCOMPtr<nsIURI> parentURI;
-      parentAsNav->GetCurrentURI(getter_AddRefs(parentURI));
-      if (parentURI) {
-        // Bug 98158/193011: We need to ignore data after the #
-        // Note that this code is back-stopped by the maximum-depth checks.
-        
-        // Check prepath (foo://blah@bar:port/) and filepath
-        // (/dir/dir/file.ext), but not # extensions.
-        // There's no easy way to get the URI without extension
-        // directly, so check prepath, filepath and query/param (if any)
-
-        // Note that while in theory a CGI could return different data for
-        // the same query string, the spec states that it shouldn't, so
-        // we'll compare queries (and params).
-        nsCAutoString parentPrePath;
-        nsCAutoString parentFilePath;
-        nsCAutoString parentQuery;
-        nsCAutoString parentParam;
-        rv = parentURI->GetPrePath(parentPrePath);
-        NS_ENSURE_SUCCESS(rv,rv);
-        nsCOMPtr<nsIURL> parentURL(do_QueryInterface(parentURI, &rv)); // QI can fail
-        if (NS_SUCCEEDED(rv)) {
-          rv = parentURL->GetFilePath(parentFilePath);
-          NS_ENSURE_SUCCESS(rv,rv);
-          rv = parentURL->GetQuery(parentQuery);
-          NS_ENSURE_SUCCESS(rv,rv);
-          rv = parentURL->GetParam(parentParam);
-          NS_ENSURE_SUCCESS(rv,rv);
-        } else {
-          rv = uri->GetPath(filepath);
-          NS_ENSURE_SUCCESS(rv,rv);
-        }
-        
-        // filepath will often not match; test it first
-        if (filepath.Equals(parentFilePath) &&
-            query.Equals(parentQuery) &&
-            prepath.Equals(parentPrePath) &&
-            param.Equals(parentParam))
-        {
-          matchCount++;
-          if (matchCount >= MAX_SAME_URL_CONTENT_FRAMES) {
-            NS_WARNING("Too many nested content frames have the same url (recursion?) so giving up");
-            return NS_ERROR_UNEXPECTED;
-          }
-        }
-      }
-    }
-    nsIDocShellTreeItem* temp = parentAsItem;
-    temp->GetParent(getter_AddRefs(parentAsItem));
-  }
+  // Bail out if this is an infinite recursion scenario
+  rv = CheckForRecursiveLoad(uri);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   // Kick off the load...
   rv = mDocShell->LoadURI(uri, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE,
@@ -325,37 +238,6 @@ nsFrameLoader::EnsureDocShell()
 
   nsCOMPtr<nsIWebNavigation> parentAsWebNav =
     do_GetInterface(doc->GetScriptGlobalObject());
-
-  // Bug 8065: Don't exceed some maximum depth in content frames
-  // (MAX_DEPTH_CONTENT_FRAMES)
-  PRInt32 depth = 0;
-
-  if (parentAsWebNav) {
-    nsCOMPtr<nsIDocShellTreeItem> parentAsItem =
-      do_QueryInterface(parentAsWebNav);
-
-    while (parentAsItem) {
-      ++depth;
-
-      if (depth >= MAX_DEPTH_CONTENT_FRAMES) {
-        NS_WARNING("Too many nested content frames so giving up");
-
-        return NS_ERROR_UNEXPECTED; // Too deep, give up!  (silently?)
-      }
-
-      // Only count depth on content, not chrome.
-      // If we wanted to limit total depth, skip the following check:
-      PRInt32 parentType;
-      parentAsItem->GetItemType(&parentType);
-
-      if (nsIDocShellTreeItem::typeContent == parentType) {
-        nsIDocShellTreeItem* temp = parentAsItem;
-        temp->GetParent(getter_AddRefs(parentAsItem));
-      } else {
-        break; // we have exited content, stop counting, depth is OK!
-      }
-    }
-  }
 
   // Create the docshell...
   mDocShell = do_CreateInstance("@mozilla.org/webshell;1");
@@ -512,3 +394,124 @@ nsFrameLoader::GetURL(nsString& aURI)
   }
 }
 
+nsresult
+nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
+{
+  NS_PRECONDITION(mDocShell, "Must have docshell here");
+  
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(mDocShell);
+  NS_ASSERTION(treeItem, "docshell must be a treeitem!");
+  
+  PRInt32 ourType;
+  nsresult rv = treeItem->GetItemType(&ourType);
+  if (NS_SUCCEEDED(rv) && ourType != nsIDocShellTreeItem::typeContent) {
+    // No need to do recursion-protection here XXXbz why not??  Do we really
+    // trust people not to screw up with non-content docshells?
+    return NS_OK;
+  }
+
+  // Bug 8065: Don't exceed some maximum depth in content frames
+  // (MAX_DEPTH_CONTENT_FRAMES)
+  nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
+  treeItem->GetSameTypeParent(getter_AddRefs(parentAsItem));
+  PRInt32 depth = 0;
+  while (parentAsItem) {
+    ++depth;
+    
+    if (depth >= MAX_DEPTH_CONTENT_FRAMES) {
+      NS_WARNING("Too many nested content frames so giving up");
+
+      return NS_ERROR_UNEXPECTED; // Too deep, give up!  (silently?)
+    }
+
+    nsCOMPtr<nsIDocShellTreeItem> temp;
+    temp.swap(parentAsItem);
+    temp->GetSameTypeParent(getter_AddRefs(parentAsItem));
+  }
+  
+  // Bug 136580: Check for recursive frame loading
+  // pre-grab these for speed
+  nsCAutoString prepath;
+  nsCAutoString filepath;
+  nsCAutoString query;
+  nsCAutoString param;
+  rv = aURI->GetPrePath(prepath);
+  NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr<nsIURL> aURL(do_QueryInterface(aURI, &rv)); // QI can fail
+  if (NS_SUCCEEDED(rv)) {
+    rv = aURL->GetFilePath(filepath);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = aURL->GetQuery(query);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = aURL->GetParam(param);
+    NS_ENSURE_SUCCESS(rv,rv);
+  } else {
+    // Not a URL, so punt and just take the whole path.  Note that if you
+    // have a self-referential-via-refs non-URL (can't happen via nsSimpleURI,
+    // but could in theory with an external protocol handler) frameset it will
+    // recurse down to the depth limit before stopping, but it will stop.
+    rv = aURI->GetPath(filepath);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  PRInt32 matchCount = 0;
+  treeItem->GetSameTypeParent(getter_AddRefs(parentAsItem));
+  while (parentAsItem) {
+    // Check the parent URI with the URI we're loading
+    nsCOMPtr<nsIWebNavigation> parentAsNav(do_QueryInterface(parentAsItem));
+    if (parentAsNav) {
+      // Does the URI match the one we're about to load?
+      nsCOMPtr<nsIURI> parentURI;
+      parentAsNav->GetCurrentURI(getter_AddRefs(parentURI));
+      if (parentURI) {
+        // Bug 98158/193011: We need to ignore data after the #
+        // Note that this code is back-stopped by the maximum-depth checks.
+        
+        // Check prepath (foo://blah@bar:port/) and filepath
+        // (/dir/dir/file.ext), but not # extensions.
+        // There's no easy way to get the URI without extension
+        // directly, so check prepath, filepath and query/param (if any)
+
+        // Note that while in theory a CGI could return different data for
+        // the same query string, the spec states that it shouldn't, so
+        // we'll compare queries (and params).
+        nsCAutoString parentPrePath;
+        nsCAutoString parentFilePath;
+        nsCAutoString parentQuery;
+        nsCAutoString parentParam;
+        rv = parentURI->GetPrePath(parentPrePath);
+        NS_ENSURE_SUCCESS(rv,rv);
+        nsCOMPtr<nsIURL> parentURL(do_QueryInterface(parentURI, &rv)); // QI can fail
+        if (NS_SUCCEEDED(rv)) {
+          rv = parentURL->GetFilePath(parentFilePath);
+          NS_ENSURE_SUCCESS(rv,rv);
+          rv = parentURL->GetQuery(parentQuery);
+          NS_ENSURE_SUCCESS(rv,rv);
+          rv = parentURL->GetParam(parentParam);
+          NS_ENSURE_SUCCESS(rv,rv);
+        } else {
+          rv = parentURI->GetPath(filepath);
+          NS_ENSURE_SUCCESS(rv,rv);
+        }
+        
+        // filepath will often not match; test it first
+        if (filepath.Equals(parentFilePath) &&
+            query.Equals(parentQuery) &&
+            prepath.Equals(parentPrePath) &&
+            param.Equals(parentParam))
+        {
+          matchCount++;
+          if (matchCount >= MAX_SAME_URL_CONTENT_FRAMES) {
+            NS_WARNING("Too many nested content frames have the same url (recursion?) so giving up");
+            return NS_ERROR_UNEXPECTED;
+          }
+        }
+      }
+    }
+    nsCOMPtr<nsIDocShellTreeItem> temp;
+    temp.swap(parentAsItem);
+    temp->GetSameTypeParent(getter_AddRefs(parentAsItem));
+  }
+
+  return NS_OK;
+}
