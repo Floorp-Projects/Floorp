@@ -3086,7 +3086,8 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
             (tagName.get() == nsXULAtoms::key))
             return rv;
 
-        PRInt32 modHint = modification ? nsIDOMMutationEvent::MODIFICATION : nsIDOMMutationEvent::ADDITION;
+        PRInt32 modHint = modification ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
+                                       : PRInt32(nsIDOMMutationEvent::ADDITION);
         mDocument->AttributeChanged(this, attrns, attrName, modHint, 
                                     NS_STYLE_HINT_UNKNOWN);
       }
