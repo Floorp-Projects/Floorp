@@ -270,6 +270,7 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 
 nsresult nsAppShell::Run()
 {
+  NS_ADDREF_THIS();
   nsresult rv = NS_OK;
   nsIEventQueue *EQueue = nsnull;
   int xlib_fd = -1;
@@ -369,6 +370,8 @@ nsresult nsAppShell::Run()
   }
 
 	NS_IF_RELEASE(EQueue);
+  NS_IF_RELEASE(mEventQueueService);
+  Release();
   return rv;
 }
 
@@ -599,12 +602,27 @@ nsAppShell::HandleExposeEvent(XEvent *event, nsWidget *aWidget)
 {
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Expose event for window 0x%lx %d %d %d %d\n", event->xany.window,
                                        event->xexpose.x, event->xexpose.y, event->xexpose.width, event->xexpose.height));
+
+  nsRect *dirtyRect = new nsRect(event->xexpose.x, event->xexpose.y, 
+                                 event->xexpose.width, event->xexpose.height);
+
+  /* compress expose events...
+   */
+  if (event->xexpose.count!=0) {
+     XEvent txe;
+     do {
+        XWindowEvent(event->xany.display, event->xany.window, ExposureMask, (XEvent *)&txe);
+        dirtyRect->UnionRect(*dirtyRect, nsRect(txe.xexpose.x, txe.xexpose.y, 
+                                                txe.xexpose.width, txe.xexpose.height));
+     } while (txe.xexpose.count>0);
+  }
+
   nsPaintEvent pevent;
   pevent.message = NS_PAINT;
   pevent.widget = aWidget;
   pevent.eventStructType = NS_PAINT_EVENT;
-  pevent.rect = new nsRect (event->xexpose.x, event->xexpose.y,
-                            event->xexpose.width, event->xexpose.height);
+  pevent.rect = dirtyRect;
+
   // XXX fix this
   pevent.time = 0;
   NS_ADDREF(aWidget);
