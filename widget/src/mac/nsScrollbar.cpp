@@ -26,8 +26,6 @@
 NS_IMPL_ADDREF(nsScrollbar);
 NS_IMPL_RELEASE(nsScrollbar);
 
-#define SETUP_DRAW	0
-
 /**-------------------------------------------------------------------------------
  * nsScrollbar Constructor
  *  @update  dc 10/31/98
@@ -118,19 +116,25 @@ PRBool 	result;
 		{
 		case NS_MOUSE_LEFT_BUTTON_DOWN:
 			mMouseDownInScroll = PR_TRUE;
+			StartDraw();
 			DrawWidget();
+			EndDraw();
 			result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_LEFT_BUTTON_UP:
 			mMouseDownInScroll = PR_FALSE;
+			StartDraw();
 			DrawWidget();
+			EndDraw();
 			if(mWidgetArmed==PR_TRUE)
 				result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_EXIT:
 			if( mMouseDownInScroll )
 				{
+				StartDraw();
 				DrawWidget();
+				EndDraw();
 				mWidgetArmed = PR_FALSE;
 				}
 			result = nsWindow::DispatchMouseEvent(aEvent);
@@ -138,7 +142,9 @@ PRBool 	result;
 		case NS_MOUSE_ENTER:
 			if( mMouseDownInScroll )
 				{
+				StartDraw();
 				DrawWidget();
+				EndDraw();
 				//mWidgetArmed = PR_TRUE;
 				mWidgetArmed = PR_FALSE;
 				}
@@ -149,7 +155,9 @@ PRBool 	result;
 				{
 				
 				//this->SetPosition();
+				StartDraw();
 				this->DrawWidget();
+				EndDraw();
 				}
 			break;
 		}
@@ -166,43 +174,15 @@ PRBool 	result;
 void
 nsScrollbar::DrawWidget()
 {
-PRInt32							offx,offy;
-nsRect							theRect,tr;
-Rect								macRect;
-GrafPtr							theport;
-RGBColor						blackcolor = {0,0,0};
-RGBColor						redcolor = {255<<8,0,0};
-RgnHandle						thergn;
+	nsRect	theRect;
+	Rect		macRect;
 
-
-#if SETUP_DRAW
-	CalcOffset(offx,offy);
-	GetPort(&theport);
-	::SetPort(mWindowPtr);
-	::SetOrigin(-offx,-offy);
 	GetBounds(theRect);
-	nsRectToMacRect(theRect,macRect);
-	thergn = ::NewRgn();
-	::GetClip(thergn);
-	::ClipRect(&macRect);
-#else
-	GetBounds(theRect);
-	nsRectToMacRect(theRect,macRect);
-#endif
-	::PenNormal();
-	::RGBForeColor(&blackcolor);
-	// Frame the general scrollbar
+	theRect.x = theRect.y = 0;
+	nsRectToMacRect(theRect, macRect);
 	::FrameRect(&macRect);
 
-#if SETUP_DRAW
-	::RGBForeColor(&blackcolor);
-	::PenSize(1,1);
-	::SetClip(thergn);
-	::SetOrigin(0,0);
-	::SetPort(theport);
-#endif
 	DrawThumb(PR_FALSE);
-			
 }
 
 /**-------------------------------------------------------------------------------
@@ -214,70 +194,40 @@ RgnHandle						thergn;
 void
 nsScrollbar::DrawThumb(PRBool	aClear)
 {
-PRInt32							offx,offy;
-nsRect							frameRect,thumbRect;
-Rect								macFrameRect,macThumbRect;
-GrafPtr							theport;
-RGBColor						blackcolor = {0,0,0};
-RGBColor						redcolor = {255<<8,0,0};
-RgnHandle						thergn;
+	nsRect							frameRect,thumbRect;
+	Rect								macFrameRect,macThumbRect;
+	RGBColor						blackcolor = {0,0,0};
+	RGBColor						redcolor = {255<<8,0,0};
 
-
-#if SETUP_DRAW
-	CalcOffset(offx,offy);
-	GetPort(&theport);
-	::SetPort(mWindowPtr);
-	::SetOrigin(-offx,-offy);
-#endif
 	GetBounds(frameRect);
-	nsRectToMacRect(frameRect,macFrameRect);
-	::PenNormal();
-	::RGBForeColor(&blackcolor);
+	frameRect.x = frameRect.y = 0;
+	nsRectToMacRect(frameRect, macFrameRect);
 	
 	// draw or clear the thumb
-	if(mIsVertical)
-		{	
+	if (mIsVertical)
+	{	
 		thumbRect.width = frameRect.width;
-		thumbRect.height = (frameRect.height*mThumbSize)/mMaxRange;
+		thumbRect.height = (frameRect.height * mThumbSize) / mMaxRange;
 		thumbRect.x = frameRect.x;
-		thumbRect.y = frameRect.y+(frameRect.height*mPosition)/mMaxRange;
-		}
+		thumbRect.y = frameRect.y + (frameRect.height * mPosition) / mMaxRange;
+	}
 	else
-		{
-		thumbRect.width = (frameRect.width*mThumbSize)/mMaxRange;
+	{
+		thumbRect.width = (frameRect.width * mThumbSize) / mMaxRange;
 		thumbRect.height = frameRect.height;
-		thumbRect.y = frameRect.y+(frameRect.width*mPosition)/mMaxRange;
+		thumbRect.y = frameRect.y + (frameRect.width * mPosition) / mMaxRange;
 		thumbRect.y = frameRect.y;
-		}
+	}
 
-#if SETUP_DRAW
-	// clip only at the thumb
-	thergn = ::NewRgn();
-	::GetClip(thergn);
-	nsRectToMacRect(thumbRect,macThumbRect);
-	::ClipRect(&macThumbRect);
-#else
-	nsRectToMacRect(thumbRect,macThumbRect);
-#endif
-	
-	if(aClear == PR_TRUE)
+	nsRectToMacRect(thumbRect, macThumbRect);
+	::InsetRect(&macThumbRect, 1, 1);
+	if (aClear == PR_TRUE)
 		::EraseRect(&macThumbRect);
 	else
-		{
-		::RGBForeColor(&blackcolor);
+	{
+		::RGBForeColor(&redcolor);
 		::PaintRect(&macThumbRect);
-		}
-	
-	// Frame the general scrollbar
-	::FrameRect(&macFrameRect);
-
-#if SETUP_DRAW
-	::RGBForeColor(&blackcolor);
-	::PenSize(1,1);
-	::SetClip(thergn);
-	::SetOrigin(0,0);
-	::SetPort(theport);
-#endif
+	}
 }
 
 
@@ -314,17 +264,15 @@ NS_METHOD nsScrollbar::GetMaxRange(PRUint32& aMaxRange)
  */
 NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
 {
-	if(aPos>=0)
-		{
-		// erase the old position
-		
-		
-		DrawThumb(PR_TRUE);
-		mPosition = aPos;
-		DrawThumb(PR_FALSE);
-		//this->DrawWidget();
+	if (aPos >= 0)
+	{
+		StartDraw();
+			DrawThumb(PR_TRUE);
+			mPosition = aPos;
+			DrawThumb(PR_FALSE);
+		EndDraw();
   	return (NS_OK);
-  	}
+	}
   else
   	return(NS_ERROR_FAILURE);
 }
@@ -350,12 +298,13 @@ NS_METHOD nsScrollbar::GetPosition(PRUint32& aPos)
  */
 NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
 {
-
     if (aSize <= 0) 
   		aSize = 1;
-    
   	mThumbSize = aSize;
-  	this->DrawWidget();				// ??? is this necessary - DWC
+
+		StartDraw();
+  		DrawWidget();				// ??? is this necessary - DWC
+		EndDraw();
   	return(NS_OK);
 }
 
@@ -367,7 +316,6 @@ NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
  */
 NS_METHOD nsScrollbar::GetThumbSize(PRUint32& aSize)
 {
-
 	aSize = mThumbSize;
 	return(NS_OK);
 }
@@ -381,9 +329,8 @@ NS_METHOD nsScrollbar::GetThumbSize(PRUint32& aSize)
 NS_METHOD nsScrollbar::SetLineIncrement(PRUint32 aLineIncrement)
 {
   if (aLineIncrement > 0) 
-  	{
     mLineIncrement = aLineIncrement;
-  	}
+
 	return(NS_OK);
 }
 
@@ -459,6 +406,7 @@ NS_IMETHODIMP nsScrollbar::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRep
   if (aRepaint){
   	//UpdateVisibilityFlag();
   	//UpdateDisplay();
+  	Invalidate(PR_TRUE);
   	}
   return(NS_OK);
 }
@@ -490,6 +438,7 @@ nsSizeEvent 	event;
   if (aRepaint){
   	//UpdateVisibilityFlag();
   	//UpdateDisplay();
+  	Invalidate(PR_TRUE);
   }
  	return(NS_OK);
 }
