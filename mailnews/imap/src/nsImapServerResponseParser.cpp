@@ -783,6 +783,8 @@ void nsImapServerResponseParser::mailbox_list(PRBool discoveredFromLsub)
 				mailbox(boxSpec);
 		}
 	}
+
+	PR_FREEIF(boxSpec); // mscott - do we have any fields we need to release?
 }
 
 /* mailbox         ::= "INBOX" / astring
