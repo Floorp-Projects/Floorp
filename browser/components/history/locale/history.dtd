@@ -31,16 +31,9 @@
 <!ENTITY menuitem.view.descending.accesskey "z">
 <!ENTITY menuitem.view.show_columns.label "Show columns">
 <!ENTITY menuitem.view.show_columns.accesskey "S">
-<!ENTITY fileMenu.label            "File">
-<!ENTITY fileMenu.accesskey        "F">
 <!ENTITY find.label                "Find:">
 <!ENTITY find.accesskey            "n">
-<!ENTITY helpMenu.label            "Help">
-<!ENTITY helpMenu.accesskey        "H">
 <!ENTITY releaseCmd.label          "Release Notes">
-<!ENTITY releaseCmd.accesskey      "R">
-<!ENTITY aboutCmd.label         "About &brandShortName;">
-<!ENTITY aboutCmd.accesskey       "A">
 <!ENTITY tree.header.name.label              "Title">
 <!ENTITY tree.header.name.akey               "T">
 <!ENTITY tree.header.url.label               "Location">
@@ -56,3 +49,10 @@
 <!ENTITY tree.header.visitcount.label        "Visit Count">
 <!ENTITY tree.header.visitcount.akey         "V">
 <!ENTITY collapseExpand.accesskey            "e">
+<!ENTITY byDate.label "By Date">
+<!ENTITY byDate.accesskey "D">
+<!ENTITY bySite.label "By Site">
+<!ENTITY bySite.accesskey "S">
+<!ENTITY view.label "View">
+<!ENTITY byMostVisited.label "By Most Visited">
+<!ENTITY byMostVisited.accesskey "V">

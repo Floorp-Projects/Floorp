@@ -83,6 +83,7 @@ function closeDialog()
   unwrapToolbarItems();
   persistCurrentSets();
   notifyParentComplete();
+  window.close();
 }
 
 function slideOpen()
