@@ -1179,8 +1179,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 {
     nsIWidget *baseParent = aInitData &&
                  (aInitData->mWindowType == eWindowType_dialog ||
-                  aInitData->mWindowType == eWindowType_toplevel ||
-                  aInitData->mWindowType == eWindowType_popup) ?
+                  aInitData->mWindowType == eWindowType_toplevel) ?
                   nsnull : aParent;
 
     mIsTopWidgetWindow = (nsnull == baseParent);
@@ -1235,6 +1234,8 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
     if (mWindowType == eWindowType_popup) {
       mBorderlessParent = parent;
+      // Don't set the parent of a popup window. 
+      parent = NULL;
     } else if (nsnull != aInitData) {
       // See if the caller wants to explictly set clip children and clip siblings
       if (aInitData->clipChildren) {
