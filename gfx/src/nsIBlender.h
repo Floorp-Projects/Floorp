@@ -43,11 +43,6 @@ public:
   virtual nsresult Init(nsDrawingSurface aSrc,nsDrawingSurface aDst) = 0;
 
   /**
-   * Clean up the intialization stuff
-   */
-  virtual void CleanUp() = 0;
-
-  /**
    * NOTE: if we can make this static, that would be great. I don't think we can.
    * Blend source and destination nsDrawingSurfaces. Both drawing surfaces
    * will have bitmaps associated with them.

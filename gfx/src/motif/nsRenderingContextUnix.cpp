@@ -237,7 +237,11 @@ nsresult nsRenderingContextUnix :: CommonInit()
 NS_IMETHODIMP
 nsRenderingContextUnix :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {  
-  mRenderingSurface = (nsDrawingSurfaceUnix *) aSurface;  
+  if (nsnull == aSurface)
+    mRenderingSurface = mFrontBuffer;
+  else
+    mRenderingSurface = (nsDrawingSurfaceUnix *)aSurface;
+
   return NS_OK;
 }
 
@@ -679,7 +683,7 @@ nsTransform2D * nsRenderingContextUnix :: GetCurrentTransform()
   return mTMatrix;
 }
 
-nsDrawingSurface nsRenderingContextUnix :: CreateDrawingSurface(nsRect *aBounds)
+nsDrawingSurface nsRenderingContextUnix :: CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags)
 {
   if (nsnull == mRenderingSurface) {
     return nsnull;
@@ -1321,14 +1325,39 @@ void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, const nsRect& aRect)
 }
 
 NS_IMETHODIMP
-nsRenderingContextUnix :: CopyOffScreenBits(nsRect &aBounds)
+nsRenderingContextUnix :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
+                                            PRInt32 aSrcX, PRInt32 aSrcY,
+                                            const nsRect &aDestBounds,
+                                            PRUint32 aCopyFlags)
 {
+  PRInt32               x = aSrcX;
+  PRInt32               y = aSrcY;
+  nsRect                drect = aDestBounds;
+  nsDrawingSurfaceUnix  *destsurf;
 
-  ::XCopyArea(mRenderingSurface->display, 
-	      mRenderingSurface->drawable,
-	      mFrontBuffer->drawable,
-	      mRenderingSurface->gc,
-	      0,0, aBounds.width, aBounds.height, 0,0);
+  if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
+  {
+    NS_ASSERTION(!(nsnull == mRenderingSurface), "no back buffer");
+    destsurf = mRenderingSurface;
+  }
+  else
+    destsurf = mFrontBuffer;
+
+  if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
+    mTMatrix->TransformCoord(&x, &y);
+
+  if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
+    mTMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
+
+  //XXX flags are unused. that would seem to mean that there is
+  //inefficiency somewhere... MMP
+
+  ::XCopyArea(((nsDrawingSurfaceUnix *)aSrcSurf)->display, 
+	            ((nsDrawingSurfaceUnix *)aSrcSurf)->drawable,
+	            destsurf->drawable,
+	            ((nsDrawingSurfaceUnix *)aSrcSurf)->gc,
+	            x, y, drect.width, drect.height,
+              drect.x, drect.y);
 
   return NS_OK;
 }
