@@ -23,12 +23,11 @@
  *   Brian Ryner <bryner@netscape.com>
  */
 
-#include "nscore.h"
-//#include "nsINSSComponent.h"
+#ifndef _nsNSSComponent_h_
+#define _nsNSSComponent_h_
+
 #include "nsISecurityManagerComponent.h"
 #include "nsISignatureVerifier.h"
-#include "nsIStringBundle.h"
-
 #include "nsIContentHandler.h"
 
 #define SECURITY_STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
@@ -42,22 +41,16 @@ class nsNSSComponent : public nsISecurityManagerComponent,
                        public nsISignatureVerifier
 {
 public:
-  NS_DEFINE_STATIC_CID_ACCESSOR(NS_NSSCOMPONENT_CID);
-  
   nsNSSComponent();
   virtual ~nsNSSComponent();
-  
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSISECURITYMANAGERCOMPONENT
-  //  NS_DECL_NSINSSCOMPONENT
   NS_DECL_NSICONTENTHANDLER
   NS_DECL_NSISIGNATUREVERIFIER
-  
-  static NS_METHOD CreateNSSComponent(nsISupports* aOuter, REFNSIID aIID,
-                                      void **aResult);
-  
-private:
-  
-  nsCOMPtr<nsISupports> mSecureBrowserUI;
-  static nsNSSComponent* mInstance;
+
+  NS_METHOD Init();
 };
+
+#endif // _nsNSSComponent_h_
+

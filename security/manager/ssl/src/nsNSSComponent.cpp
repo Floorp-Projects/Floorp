@@ -24,51 +24,28 @@
  *   Brian Ryner <bryner@netscape.com>
  */
 
-#include "nsProxiedService.h"
-#include "VerReg.h"
-
-#include "nspr.h"
 #include "nsNSSComponent.h"
 #include "nsNSSCallbacks.h"
 
-#include "nsCRT.h"
-
 #include "nsNetUtil.h"
-#include "nsIURI.h"
-#include "nsIChannel.h"
-#include "nsIInputStream.h"
-#include "nsIStreamListener.h"
-
-#include "nsIPref.h"
-#include "nsIProfile.h"
-#include "nsILocalFile.h"
 #include "nsAppDirectoryServiceDefs.h"
-
 #include "nsDirectoryService.h"
+#include "nsIStreamListener.h"
+#include "prlog.h"
 
 #include "nss.h"
 #include "pk11func.h"
 #include "ssl.h"
 #include "sslproto.h"
 
-#include "nsISecureBrowserUI.h"
-#include "nsIDocumentLoaderObserver.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsICertificatePrincipal.h"
-#include "nsIProtocolProxyService.h"
+#ifdef PR_LOGGING
+PRLogModuleInfo* gPIPNSSLog = nsnull;
+#endif
 
-//#define DEBUG_SSL
-
-static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
-
-nsNSSComponent* nsNSSComponent::mInstance = nsnull;
 
 nsNSSComponent::nsNSSComponent()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsNSSComponent::~nsNSSComponent()
@@ -76,41 +53,22 @@ nsNSSComponent::~nsNSSComponent()
 }
 
 NS_IMETHODIMP
-nsNSSComponent::CreateNSSComponent(nsISupports* aOuter, REFNSIID aIID,
-                                   void **aResult)
+nsNSSComponent::Init()
 {
-  if (!aResult) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  
-  if (mInstance == nsnull) {
-    mInstance = new nsNSSComponent();
-  }
-  
-  if (mInstance == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  nsresult rv = mInstance->QueryInterface(aIID, aResult);
-  if (NS_FAILED(rv)) {
-    *aResult = nsnull;
-    return rv;
-  }
-  
-#ifdef DEBUG_SSL
-  printf("NSS: **** Beginning NSS initialization\n");
+#ifdef PR_LOGGING
+  if (!gPIPNSSLog)
+    gPIPNSSLog = PR_NewLogModule("pipnss");
 #endif
+
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Beginning NSS initialization\n"));
   
   nsXPIDLCString profileStr;
   nsCOMPtr<nsIFile> profilePath;
   
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                              getter_AddRefs(profilePath));
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(profilePath));
   if (NS_FAILED(rv)) {
-    printf("NSS: Unable to get profile directory\n");
+    PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to get profile directory\n"));
     return rv;
   }
 
@@ -121,14 +79,14 @@ nsNSSComponent::CreateNSSComponent(nsISupports* aOuter, REFNSIID aIID,
   NSS_InitReadWrite(profileStr);
   NSS_SetDomesticPolicy();
   //  SSL_EnableCipher(SSL_RSA_WITH_NULL_MD5, SSL_ALLOWED);
-  
-  SSL_EnableDefault(SSL_ENABLE_SSL2, PR_TRUE);
-  SSL_EnableDefault(SSL_ENABLE_SSL3, PR_TRUE);
-  SSL_EnableDefault(SSL_ENABLE_TLS, PR_TRUE);
-  
-#ifdef DEBUG_SSL
-  printf("NSS: NSS Initialized\n");
-#endif
+
+  // XXX should use prefs
+  SSL_OptionSetDefault(SSL_ENABLE_SSL2, PR_TRUE);
+  SSL_OptionSetDefault(SSL_ENABLE_SSL3, PR_TRUE);
+  SSL_OptionSetDefault(SSL_ENABLE_TLS, PR_TRUE);
+
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
+
   return rv;
 }
 
@@ -137,13 +95,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsNSSComponent,
                               nsISecurityManagerComponent,
                               nsIContentHandler,
                               nsISignatureVerifier);
-
-
-#define INIT_NUM_PREFS 100
-/* preference types */
-#define STRING_PREF 0
-#define BOOL_PREF 1
-#define INT_PREF 2
 
 
 NS_IMETHODIMP
@@ -171,10 +122,10 @@ protected:
 
 
 CertDownloader::CertDownloader(PRInt32 type)
+  : mByteData(nsnull),
+    mType(type)
 {
-  NS_INIT_REFCNT();
-  mByteData = nsnull;
-  mType = type;
+  NS_INIT_ISUPPORTS();
 }
 
 CertDownloader::~CertDownloader()
@@ -183,8 +134,7 @@ CertDownloader::~CertDownloader()
     nsMemory::Free(mByteData);
 }
 
-NS_IMPL_ISUPPORTS(CertDownloader,NS_GET_IID(nsIStreamListener));
-
+NS_IMPL_ISUPPORTS1(CertDownloader, nsIStreamListener);
 
 NS_IMETHODIMP
 CertDownloader::OnStartRequest(nsIChannel* channel, nsISupports* context)
@@ -328,7 +278,8 @@ nsNSSComponent::CreatePrincipalFromSignature(const char* aRSABuf,
 NS_IMETHODIMP
 nsNSSComponent::GetPassword(char **aRet)
 {
-  // We currently don't use a password
+  // This functionality is only used in wallet.
+  // This interface can go away once we get rid of PSM 1.x.
   *aRet = nsnull;
   return NS_OK;
 }

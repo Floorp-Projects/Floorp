@@ -21,17 +21,17 @@
  *  Brian Ryner <bryner@netscape.com>
  */
 
-#include "nspr.h"
-#include "nsString.h"
-
-#include "nsISecurityManagerComponent.h"
-#include "nsISecureSocketInfo.h"
-#include "nsIServiceManager.h"
 #include "nsNSSIOLayer.h"
+#include "nsNSSCallbacks.h"
+
+#include "nsString.h"
+#include "prlog.h"
+#include "nsISecurityManagerComponent.h"
+#include "nsIServiceManager.h"
+#include "nsIWebProgressListener.h"
 
 #include "ssl.h"
 
-//#define DEBUG_SSL
 //#define DEBUG_SSL_VERBOSE
 
 static nsISecurityManagerComponent* gNSSService = nsnull;
@@ -39,47 +39,25 @@ static PRBool firstTime = PR_TRUE;
 static PRDescIdentity nsSSLIOLayerIdentity;
 static PRIOMethods nsSSLIOLayerMethods;
 
-class nsNSSSocketInfo : public nsISecureSocketInfo
-{
-public:
-  nsNSSSocketInfo();
-  virtual ~nsNSSSocketInfo();
-  
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISECURESOCKETINFO
-  
-  nsresult SetHostName(const char *aHostName);
-  nsresult SetProxyName(const char *aName);
-  
-  nsresult SetHostPort(PRInt32 aPort);
-  nsresult SetProxyPort(PRInt32 aPort);
-  
-  nsresult SetUseTLS(PRBool useTLS);
-  nsresult GetUseTLS(PRBool *useTLS);
-  
-protected:
-  nsString mHostName;
-  PRInt32 mHostPort;
-  
-  nsString mProxyName;
-  PRInt32 mProxyPort;
-  
-  PRBool mForceHandshake;
-  PRBool mUseTLS;
-};
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gPIPNSSLog;
+#endif
 
 nsNSSSocketInfo::nsNSSSocketInfo()
+  : mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE),
+    mForceHandshake(PR_FALSE),
+    mUseTLS(PR_FALSE)
 { 
-  NS_INIT_REFCNT();
-  mForceHandshake = PR_FALSE;
-  mUseTLS = PR_FALSE;
+  NS_INIT_ISUPPORTS();
 }
 
 nsNSSSocketInfo::~nsNSSSocketInfo()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsNSSSocketInfo, nsISecureSocketInfo)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSSocketInfo,
+                              nsIChannelSecurityInfo,
+                              nsISSLSocketControl)
 
 NS_IMETHODIMP
 nsNSSSocketInfo::GetHostName(char * *aHostName)
@@ -148,6 +126,35 @@ nsNSSSocketInfo::SetProxyPort(PRInt32 aPort)
 }
 
 NS_IMETHODIMP
+nsNSSSocketInfo::GetSecurityState(PRInt32* state)
+{
+  *state = mSecurityState;
+  return NS_OK;
+}
+
+nsresult
+nsNSSSocketInfo::SetSecurityState(PRInt32 aState)
+{
+  mSecurityState = aState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetShortSecurityDescription(PRUnichar** aText) {
+  if (mShortDesc.IsEmpty())
+    *aText = nsnull;
+  else
+    *aText = mShortDesc.ToNewUnicode();
+  return NS_OK;
+}
+
+nsresult
+nsNSSSocketInfo::SetShortSecurityDescription(const PRUnichar* aText) {
+  mShortDesc.Assign(aText);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNSSSocketInfo::GetForceHandshake(PRBool* forceHandshake)
 {
   *forceHandshake = mForceHandshake;
@@ -191,7 +198,7 @@ static PRStatus PR_CALLBACK
 nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
                     PRIntervalTime timeout)
 {
-  if (!fd || !addr)
+  if (!fd || !fd->lower)
     return PR_FAILURE;
   
   PRStatus status = PR_SUCCESS;
@@ -213,26 +220,24 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
   status = fd->lower->methods->connect(fd->lower, addr, 
                                        PR_INTERVAL_NO_TIMEOUT);
   if (status != PR_SUCCESS) {
-    printf("NSS: [%p] lower layer connect error: %d\n", (void*)fd,
-           PR_GetError());
+    PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("[%p] Lower layer connect error: %d\n",
+                                      (void*)fd, PR_GetError()));
     goto loser;
   }
   
   PRBool forceHandshake, useTLS;
   infoObject->GetForceHandshake(&forceHandshake);
   infoObject->GetUseTLS(&useTLS);
-
-#ifdef DEBUG_SSL
-  printf("NSS: [%p] Connect: forceHandshake = %d, useTLS = %d\n", (void*)fd,
-         forceHandshake, useTLS);
-#endif
   
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Connect: forceHandshake = %d, useTLS = %d\n",
+                                    (void*)fd, forceHandshake, useTLS));
+
   if (!useTLS && forceHandshake) {
     PRInt32 res = SSL_ForceHandshake(fd);
     
     if (res == -1) {
-      printf("NSS: [%p] ForceHandshake failure -- error %d\n", (void*)fd,
-             PR_GetError());
+      PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("[%p] ForceHandshake failure -- error %d\n",
+                                        (void*)fd, PR_GetError()));
       status = PR_FAILURE;
     }
   }
@@ -251,9 +256,7 @@ nsSSLIOLayerClose(PRFileDesc *fd)
   if (!fd)
     return PR_FAILURE;
 
-#ifdef DEBUG_SSL
-  printf("NSS: [%p] Shutting down socket\n", (void*)fd);
-#endif
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Shutting down socket\n", (void*)fd));
   
   PRFileDesc* popped = PR_PopIOLayer(fd, PR_TOP_IO_LAYER);
   PRStatus status = fd->methods->close(fd);
@@ -266,35 +269,31 @@ nsSSLIOLayerClose(PRFileDesc *fd)
   return status;
 }
 
+#ifdef DEBUG_SSL_VERBOSE
+
 static PRInt32 PR_CALLBACK
 nsSSLIOLayerRead(PRFileDesc* fd, void* buf, PRInt32 amount)
 {
-  if (!fd || !buf)
+  if (!fd || !fd->lower)
     return PR_FAILURE;
-  
-#ifdef DEBUG_SSL_VERBOSE
+
   PRInt32 bytesRead = fd->lower->methods->read(fd->lower, buf, amount);
-  printf("NSS: [%p] read %d bytes:\n%s\n", (void*)fd, bytesRead, buf);
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] read %d bytes\n", (void*)fd, bytesRead));
   return bytesRead;
-#else
-  return fd->lower->methods->read(fd->lower, buf, amount);
-#endif
 }
 
 static PRInt32 PR_CALLBACK
 nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
 {
-  if (!fd || !buf)
+  if (!fd || !fd->lower)
     return PR_FAILURE;
-  
-#ifdef DEBUG_SSL_VERBOSE
+
   PRInt32 bytesWritten = fd->lower->methods->write(fd->lower, buf, amount);
-  printf("NSS: [%p] wrote %d bytes:\n%s\n", (void*)fd, bytesWritten, buf);
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] wrote %d bytes\n", (void*)fd, bytesWritten));
   return bytesWritten;
-#else
-  return fd->lower->methods->write(fd->lower, buf, amount);
-#endif
 }
+
+#endif // DEBUG_SSL_VERBOSE
 
 nsresult InitNSSMethods()
 {
@@ -303,8 +302,11 @@ nsresult InitNSSMethods()
   
   nsSSLIOLayerMethods.connect = nsSSLIOLayerConnect;
   nsSSLIOLayerMethods.close = nsSSLIOLayerClose;
+
+#ifdef DEBUG_SSL_VERBOSE
   nsSSLIOLayerMethods.read = nsSSLIOLayerRead;
   nsSSLIOLayerMethods.write = nsSSLIOLayerWrite;
+#endif
   
   nsresult rv;
   /* This performs NSS initialization for us */
@@ -359,14 +361,17 @@ nsSSLIOLayerAddToSocket(const char* host,
     firstTime = PR_FALSE;
   }
 
-  PRFileDesc* sslSock = SSL_ImportFD(NULL, fd);
+  PRFileDesc* sslSock = SSL_ImportFD(nsnull, fd);
   if (!sslSock) {
     NS_ASSERTION(PR_FALSE, "NSS: Error importing socket");
     return NS_ERROR_FAILURE;
   }
 
-  SSL_SetPKCS11PinArg(sslSock, NULL);
-  
+  SSL_SetPKCS11PinArg(sslSock, nsnull);
+  SSL_HandshakeCallback(sslSock, HandshakeCallback, nsnull);
+  SSL_GetClientAuthDataHook(sslSock, (SSLGetClientAuthData)NSS_GetClientAuthData,
+                            nsnull);
+
   PRInt32 ret = SSL_SetURL(sslSock, host);
   if (ret == -1) {
     NS_ASSERTION(PR_FALSE, "NSS: Error setting server name");
@@ -399,13 +404,8 @@ nsSSLIOLayerAddToSocket(const char* host,
     return NS_ERROR_FAILURE;
   }
 
-#ifdef DEBUG_SSL
-  printf("NSS: [%p] Socket set up\n", (void*)sslSock);
-#endif
-  
-  *info = infoObject;
-  NS_ADDREF(*info);
-  
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Socket set up\n", (void*)sslSock));
+  infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) (info));
   return NS_OK;
 }
   

@@ -55,7 +55,8 @@ XPIDLSRCS= \
 	.\nsISOCKSSocketProvider.idl \
 	.\nsISOCKSSocketInfo.idl \
 	.\nsISSLSocketProvider.idl \
-	.\nsISecureSocketInfo.idl \
+	.\nsIChannelSecurityInfo.idl \
+	.\nsISSLSocketControl.idl \
 	$(NULL)
 
 NO_GEN_XPT=1

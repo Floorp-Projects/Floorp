@@ -21,21 +21,12 @@
  *   Brian Ryner <bryner@netscape.com>
  */
 
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
 #include "nsTLSSocketProvider.h"
 #include "nsNSSIOLayer.h"
 
 nsTLSSocketProvider::nsTLSSocketProvider()
 {
-  NS_INIT_REFCNT();
-}
-
-nsresult
-nsTLSSocketProvider::Init()
-{
-  nsresult rv = NS_OK;
-  return rv;
+  NS_INIT_ISUPPORTS();
 }
 
 nsTLSSocketProvider::~nsTLSSocketProvider()
@@ -44,35 +35,6 @@ nsTLSSocketProvider::~nsTLSSocketProvider()
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsTLSSocketProvider, nsISocketProvider,
                               nsISSLSocketProvider);
-
-NS_METHOD
-nsTLSSocketProvider::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-  nsresult rv;
-  nsTLSSocketProvider* inst;
-  
-  if (!aResult) {
-    rv = NS_ERROR_NULL_POINTER;
-    return rv;
-  }
-  *aResult = nsnull;
-  if (aOuter) {
-    rv = NS_ERROR_NO_AGGREGATION;
-    return rv;
-  }
-  
-  NS_NEWXPCOM(inst, nsTLSSocketProvider);
-  if (!inst) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    return rv;
-  }
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-  
-  return rv;
-}
-
 
 NS_IMETHODIMP
 nsTLSSocketProvider::NewSocket(const char *host,

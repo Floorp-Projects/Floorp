@@ -61,8 +61,6 @@ public:
   nsSecureBrowserUIImpl();
   virtual ~nsSecureBrowserUIImpl();
   
-  static NS_METHOD Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSSECUREBROWSERUI
@@ -79,25 +77,17 @@ protected:
   nsCOMPtr<nsIDocumentLoaderObserver> mOldWebShellObserver;
   nsCOMPtr<nsIPref> mPref;
   nsCOMPtr<nsIStringBundle> mStringBundle;
-  
   nsCOMPtr<nsIURI> mCurrentURI;
   
-  PRBool mIsSecureDocument;
-  PRBool mIsDocumentBroken;
   PRBool mMixContentAlertShown;
-  
-  PRBool mInitByLocationChange;
-  
-  char* mLastPSMStatus;
-  
+  PRInt32 mSecurityState;
 
-  void GetBundleString(const nsString& name, nsString &outString);
+  void GetBundleString(const PRUnichar* name, nsString &outString);
   
   nsresult CheckProtocolContextSwitch(nsISecurityEventSink* sink,
-                                      nsIRequest* request, nsIURI* newURI,
-                                      nsIURI* oldURI);
+                                      nsIRequest* request, nsIChannel* aChannel);
   nsresult CheckMixedContext(nsISecurityEventSink* sink, nsIRequest* request,
-                             nsIURI* nextURI);
+                             nsIChannel* aChannel);
   nsresult CheckPost(nsIURI *actionURL, PRBool *okayToPost);
   nsresult IsURLHTTPS(nsIURI* aURL, PRBool *value);
   nsresult SetBrokenLockIcon(nsISecurityEventSink* sink, nsIRequest* request,

@@ -28,7 +28,9 @@
 #include "nspr.h"
 
 char* PK11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void* arg);
+void HandshakeCallback(PRFileDesc *fd, void *client_data);
 
-#endif
+#endif // _NSNSSCALLBACKS_H_
+
 
 
