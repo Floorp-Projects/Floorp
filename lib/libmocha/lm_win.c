@@ -670,8 +670,10 @@ lm_ResolveWindowProps(JSContext *cx, MochaDecoder *decoder, JSObject *obj,
     if (!XP_STRCMP(name, "screen"))
         return ((JSBool) (lm_DefineScreen(decoder, obj) != NULL));
 
+#ifdef NAV_HARDWARE
     if (!XP_STRCMP(name, "hardware"))
         return ((JSBool) (lm_DefineHardware(decoder, obj) != NULL));
+#endif
 
     if (!XP_STRCMP(name, "loading"))
         return (JS_DefinePropertyWithTinyId(cx, obj, name, WIN_LOADING, 
@@ -3198,7 +3200,9 @@ lm_NewWindow(MWContext *context)
     HOLD(decoder->components);
     HOLD(decoder->crypto);
     HOLD(decoder->screen);
+#ifdef NAV_HARDWARE
     HOLD(decoder->hardware);
+#endif
     HOLD(decoder->pkcs11);
     /* Drop ad-hoc GC roots. */
     HOLD(decoder->event_receiver);
@@ -3259,7 +3263,9 @@ lm_DestroyWindow(MochaDecoder *decoder)
     DROP(decoder->components);
     DROP(decoder->crypto);
     DROP(decoder->screen);
+#ifdef NAV_HARDWARE
     DROP(decoder->hardware);
+#endif
     DROP(decoder->pkcs11);
     /* Drop ad-hoc GC roots. */
     DROP(decoder->event_receiver);
@@ -3473,7 +3479,9 @@ lm_FreeWindowContent(MochaDecoder *decoder, JSBool fromDiscard)
     CLEAR(decoder->components);
     CLEAR(decoder->crypto);
     CLEAR(decoder->screen);
+#ifdef NAV_HARDWARE
     CLEAR(decoder->hardware);
+#endif
     CLEAR(decoder->pkcs11);
 
 #ifdef DOM

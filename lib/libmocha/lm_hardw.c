@@ -21,6 +21,7 @@
  *
  * Tom Pixley, 1/2/98
  */
+#ifdef NAV_HARDWARE
 #include "lm.h"
 
 typedef struct JSHardware {
@@ -151,3 +152,4 @@ lm_DefineHardware(MochaDecoder *decoder, JSObject *parent)
         decoder->hardware = obj;
     return obj;
 }
+#endif

@@ -1226,7 +1226,9 @@ LM_PutMochaDecoder(MochaDecoder *decoder)
         CLEAR(decoder->components);
         CLEAR(decoder->crypto);
         CLEAR(decoder->screen);
+#ifdef NAV_HARDWARE;
         CLEAR(decoder->hardware);
+#endif
         CLEAR(decoder->pkcs11);
 
 

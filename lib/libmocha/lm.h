@@ -209,8 +209,10 @@ extern JSObject         *lm_DefineComponents(MochaDecoder *decoder);
 extern JSObject         *lm_DefineCrypto(MochaDecoder *decoder);
 extern JSObject         *lm_DefineScreen(MochaDecoder *decoder,
                                          JSObject *parent);
+#ifdef NAV_HARDWARE
 extern JSObject         *lm_DefineHardware(MochaDecoder *decoder,
                                          JSObject *parent);
+#endif
 extern JSBool           lm_DefinePluginClasses(MochaDecoder *decoder);
 extern JSBool           lm_DefineBarClasses(MochaDecoder *decoder);
 extern JSBool           lm_ResolveBar(JSContext *cx, MochaDecoder *decoder,
