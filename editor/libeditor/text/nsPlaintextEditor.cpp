@@ -154,6 +154,8 @@ nsPlaintextEditor::~nsPlaintextEditor()
   nsCOMPtr<nsIEditActionListener> mListener = do_QueryInterface(mRules);
   RemoveEditActionListener(mListener);
   
+  // Remove event listeners. Note that if we had an HTML editor,
+  //  it installed its own instead of these
   nsCOMPtr<nsIDOMEventReceiver> erP;
   nsresult result = GetDOMEventReceiver(getter_AddRefs(erP));
   if (NS_SUCCEEDED(result) && erP) 
@@ -183,9 +185,6 @@ nsPlaintextEditor::~nsPlaintextEditor()
         erP->RemoveEventListenerByIID(mDragListenerP, NS_GET_IID(nsIDOMDragListener));
     }
   }
-  else
-    NS_NOTREACHED("~nsTextEditor");
-
 }
 
 NS_IMPL_ADDREF_INHERITED(nsPlaintextEditor, nsEditor)
