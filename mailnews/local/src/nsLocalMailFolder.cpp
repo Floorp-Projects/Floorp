@@ -1604,6 +1604,15 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
 {
   if (!srcFolder || !messages)
     return NS_ERROR_NULL_POINTER;
+
+  PRBool isServer;
+  nsresult rv = GetIsServer(&isServer);
+  if (NS_SUCCEEDED(rv) && isServer)
+  {
+    NS_ASSERTION(0, "Destination is the root folder. Cannot move/copy here");
+    return NS_OK;
+  }
+
   nsCOMPtr <nsITransactionManager> txnMgr;
 
   if (msgWindow && allowUndo)   // no undo for folder move/copy or from the search window
@@ -1613,7 +1622,6 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
 	if (txnMgr) SetTransactionManager(txnMgr);
   }
 
-	nsresult rv;
   nsCOMPtr<nsISupports> srcSupport(do_QueryInterface(srcFolder, &rv));
   if (NS_FAILED(rv)) return rv;
 
@@ -2274,7 +2282,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 
 
         // turn off offline flag - it's not valid for local mail folders.
-        newHdr->AndFlags(~MSG_FLAG_OFFLINE, &newHdrFlags);
+        if (newHdr)
+          newHdr->AndFlags(~MSG_FLAG_OFFLINE, &newHdrFlags);
       }
     }
     PRBool isImap;
