@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -27,10 +27,10 @@
 #include "pa_parse.h"
 
 typedef struct DOM_HTMLElementPrivate {
-    TagType 		tagtype;
-    LO_Element *	ele_start;
-    LO_Element *	ele_end;
-    uint32			doc_id;
+    TagType             tagtype;
+    LO_Element *        ele_start;
+    LO_Element *        ele_end;
+    int32               doc_id;
 } DOM_HTMLElementPrivate;
 
 #define ELEMENT_PRIV(e) ((DOM_HTMLElementPrivate *)(((DOM_Node *)(e))->data))

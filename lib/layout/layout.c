@@ -358,6 +358,7 @@ lo_NewTopState(MWContext *context, char *url)
 	top_state->savedData.OnMove = NULL;
 	top_state->savedData.OnResize = NULL;
 	top_state->embed_count = 0;
+	top_state->builtin_count = 0;
 
 	top_state->total_bytes = 0;
 	top_state->current_bytes = 0;
@@ -3749,13 +3750,11 @@ lo_FinishLayout(MWContext *context, lo_DocState *state, int32 mocha_event)
 	}
 #endif /* LAYPROBE_API */
 
-    if (state && state->top_state)
-        ET_SendLoadEvent(context, mocha_event, NULL, NULL, 
-                         LO_DOCUMENT_LAYER_ID, 
-                         state->top_state->resize_reload);
-    else
-        ET_SendLoadEvent(context, mocha_event, NULL, NULL, 
-                         LO_DOCUMENT_LAYER_ID, FALSE);
+	ET_SendLoadEvent(context, mocha_event, NULL, NULL, 
+			 LO_DOCUMENT_LAYER_ID, 
+			 (state && state->top_state)
+			 ? state->top_state->resize_reload
+			 : FALSE);
 
 	/* Reset state for force loading images. */
 	LO_SetForceLoadImage(NULL, FALSE);

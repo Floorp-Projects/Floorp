@@ -47,6 +47,9 @@ WINOS=$(WINOS: =)^
 !if [del osuname.inc]
 !endif
 
+# need this everywhere jsapi.h might be included
+LCFLAGS=$(LCFLAGS) -DJS_THREADSAFE
+
 !if "$(STAND_ALONE_JAVA)" == "1"
 LCFLAGS=$(LCFLAGS) -DSTAND_ALONE_JAVA
 !endif
@@ -226,7 +229,7 @@ CFLAGS = $(CFLAGS) -DLIVEWIRE
 CFLAGS = $(CFLAGS) -DMOZILLA_CLIENT
 !endif
 
-PERL= $(MOZ_TOOLS)\perl5\perl.exe
+PERL= $(MOZ_TOOLS)\perl5\bin\perl.exe
 MASM = $(MOZ_TOOLS)\bin\ml.exe
 
 !if "$(WINOS)" == "WIN95"

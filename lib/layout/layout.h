@@ -34,9 +34,6 @@
 #include "stystack.h"
 
 #include "libmocha.h"
-#ifdef DOM
-#include "domstyle.h"
-#endif
 
 #define MEMORY_ARENAS 1
 
@@ -849,9 +846,9 @@ struct lo_TopState_struct {
 	char * mimetype;
 #endif 
 #ifdef DOM
-    void /*DOM_Node*/ *top_node;     /* top of the DOM_Node tree */
-    void /*DOM_Node*/ *current_node; /* active node (only during tree gen) */
-    void /*DOM_StyleDatabase */ *style_db;
+    struct DOM_Node *top_node;     /* top of the DOM_Node tree */
+    struct DOM_Node *current_node; /* active node (only during tree gen) */
+    struct DOM_StyleDatabase *style_db;
 #endif
 	void*	LAPIprobe;
 };
@@ -1221,8 +1218,11 @@ extern intn lo_EvalAlignParam(char *str, Bool *floating);
 extern intn lo_EvalVAlignParam(char *str);
 extern void lo_EvalStyleSheetAlignment(StyleStruct *, intn *, Bool *floating);
 #ifdef DOM
+struct DOM_StyleDatabase;
+struct DOM_Node;
 void lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
-                                     DOM_StyleDatabase *db, DOM_Node *node,
+                                     struct DOM_StyleDatabase *db,
+                                     struct DOM_Node *node,
                                      PA_Tag *tag);
 #else
 void lo_SetStyleSheetLayerProperties(MWContext *context,

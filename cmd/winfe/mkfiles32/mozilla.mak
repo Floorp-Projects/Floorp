@@ -176,7 +176,7 @@ _MSC_VER=1020
 #
 !if "$(MOZ_BITS)"=="32"
 #CFLAGS_RELEASE=/DNDEBUG \
-CFLAGS_RELEASE=/DNDEBUG /DCookieManagement /DSingleSignon \
+CFLAGS_RELEASE=/DNDEBUG /DCookieManagement /DSingleSignon /DJS_THREADSAFE \
 !ifdef MOZ_TRANSACTION_RECEIPTS 
 /DTRANSACTION_RECEIPTS \
 !endif
@@ -221,7 +221,7 @@ MOZ_STACK=33679
 !if defined(MOZ_DEBUG)
 VERSTR=Dbg
 !if "$(MOZ_BITS)"=="32"
-CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG) /DCookieManagement /DSingleSignon \
+CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG) /DCookieManagement /DSingleSignon /DJS_THREADSAFE \
 !ifdef MOZ_TRANSACTION_RECEIPTS
 /DTRANSACTION_RECEIPTS \
 !endif
@@ -281,7 +281,15 @@ LINKFLAGS_DEBUG= \
 CFLAGS_DEFAULT=\
 !if "$(MOZ_BITS)"=="32"
     $(CFLAGS_DEBUG) \
-    /I$(DEPTH)\dist\public\js /I$(DEPTH)\dist\public\security /I$(DEPTH)\dist\public\network /I$(DEPTH)\dist\public\htmldlgs /I$(DEPTH)\dist\public\libfont /I$(DEPTH)\dist\public\httpurl /I$(DEPTH)\dist\public\netcache /I$(DEPTH)\dist\public\jsdebug /I$(DEPTH)\dist\public\winfont
+    /I$(DEPTH)\dist\public\js \
+    /I$(DEPTH)\dist\public\security \
+    /I$(DEPTH)\dist\public\network \
+    /I$(DEPTH)\dist\public\htmldlgs \
+    /I$(DEPTH)\dist\public\libfont \
+    /I$(DEPTH)\dist\public\httpurl \
+    /I$(DEPTH)\dist\public\netcache \
+    /I$(DEPTH)\dist\public\jsdebug \
+    /I$(DEPTH)\dist\public\winfont
 !else
     $(CFLAGS_RELEASE) -DFORCE_PR_LOG
 !endif
@@ -294,6 +302,9 @@ POLICY  = moz40p3
 #
 # If you add a file in a new directory, you must add flags for that directory
 #
+!ifdef DOM
+CFLAGS_LIBDOM_C=	$(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/dom_priv.pch" /YX"dom_priv.h"
+!endif
 !ifdef SMART_MAIL
 CFLAGS_LIBMIME_C=       $(CFLAGS_DEFAULT) /DMOZILLA_30 /I$(DEPTH)\dist\public\mime /I$(DEPTH)\lib\xp
 !else
@@ -304,7 +315,7 @@ CFLAGS_LIBIMG_C=        $(CFLAGS_DEFAULT) /I$(DEPTH)\jpeg /Fp"$(OUTDIR)/xp.pch" 
 CFLAGS_JTOOLS_C=        $(CFLAGS_DEFAULT)
 CFLAGS_LIBCNV_C=        $(CFLAGS_DEFAULT) /I$(DEPTH)\jpeg /Fp"$(OUTDIR)/xp.pch" /YX"xp.h"
 CFLAGS_JPEG_C=          $(CFLAGS_DEFAULT)
-CFLAGS_LAYOUT_C=        $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/layoutc.pch" /YX"xp.h"
+CFLAGS_LAYOUT_C=        $(CFLAGS_DEFAULT) /I$(DEPTH)\lib\libdom /I$(DEPTH)\lib\libmocha /Fp"$(OUTDIR)/layoutc.pch" /YX"xp.h"
 CFLAGS_LIBSTYLE_C=      $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/stylec.pch" /YX"xp.h"
 CFLAGS_LIBJAR_C=        $(CFLAGS_DEFAULT) 
 CFLAGS_LIBLAYER_C=      $(CFLAGS_DEFAULT) 
@@ -323,11 +334,11 @@ CFLAGS_LIBDBM_C=        $(CFLAGS_DEFAULT)
 CFLAGS_PLUGIN_C=        $(CFLAGS_DEFAULT)
 CFLAGS_APPLET_C=        $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/lj.pch" /YX"lj.h"
 CFLAGS_EDTPLUG_C=       $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/le.pch" /YX"le.h"
-CFLAGS_LIBMOCHA_C=      $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/lm.pch" /YX"lm.h"
-CFLAGS_LAYOUT_CPP=      $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/editor.pch" /YX"editor.h"
+CFLAGS_LIBMOCHA_C=      $(CFLAGS_DEFAULT) /I$(DEPTH)\lib\libdom /Fp"$(OUTDIR)/lm.pch" /YX"lm.h"
+CFLAGS_LAYOUT_CPP=      $(CFLAGS_DEFAULT) /I$(DEPTH)\lib\libdom /Fp"$(OUTDIR)/editor.pch" /YX"editor.h"
 CFLAGS_PLUGIN_CPP=      $(CFLAGS_DEFAULT) /I$(DEPTH)\cmd\winfe /Fp"$(OUTDIR)/stdafx.pch" /YX"stdafx.h"
-CFLAGS_LIBPREF_C=                 $(CFLAGS_DEBUG)
-CFLAGS_WINFE_C=                 $(CFLAGS_DEFAULT)
+CFLAGS_LIBPREF_C=       $(CFLAGS_DEBUG)
+CFLAGS_WINFE_C=         $(CFLAGS_DEFAULT)
 !if "$(MOZ_BITS)"=="32"
 !if "$(MOZ_BCPRO)" == ""
 CFLAGS_WINFE_CPP=       $(CFLAGS_DEFAULT) /I$(DEPTH)\jpeg /Fp"$(OUTDIR)/stdafx.pch" /YX"stdafx.h"
@@ -489,11 +500,10 @@ LINK_LIBS= \
 !ifdef MOZ_LOC_INDEP
     $(DIST)\lib\li32.lib \
 !endif
-#!ifdef SMART_MAIL 
+#!if defined(MOZ_MAIL_NEWS) || defined(SMART_MAIL)
 #    $(DIST)\lib\mime.lib \
 #!endif
 !ifdef MOZ_MAIL_NEWS
-    $(DIST)\lib\mime.lib \
     $(DIST)\lib\msg.lib \
     $(DIST)\lib\addr.lib \
     $(DIST)\lib\neo.lib \
@@ -626,7 +636,7 @@ CINCLUDES= \
     /I$(DEPTH)\lib\layout \
     /I$(DEPTH)\lib\libstyle \
     /I$(DEPTH)\lib\liblayer\include \
-	/I$(DEPTH)\lib\libmsg \
+    /I$(DEPTH)\lib\libmsg \
     /I$(DEPTH)\lib\libcnv \
     /I$(DEPTH)\lib\libi18n \
     /I$(DEPTH)\lib\libparse \
@@ -692,11 +702,11 @@ CDISTINCLUDES3= \
     /I$(XPDIST)\public\schedulr \
     /I$(XPDIST)\public\xpcom \
 !ifdef MOZ_MAIL_NEWS
-	/I$(XPDIST)\public\mime \
-	/I$(XPDIST)\public\net \
+    /I$(XPDIST)\public\mime \
+    /I$(XPDIST)\public\net \
 !endif
 !ifdef MOZ_CALENDAR
-	/I$(XPDIST)\public\calendar \
+    /I$(XPDIST)\public\calendar \
 !endif
 #!ifdef EDITOR
 !ifdef JAVA_OR_NSJVM
@@ -722,7 +732,7 @@ CDISTINCLUDES2= \
     /I$(XPDIST)\public\jar \
 !endif
 !if defined(MOZ_NGLAYOUT)
-	/I$(XPDIST)\public\raptor \
+    /I$(XPDIST)\public\raptor \
 !endif
     /I$(XPDIST)\public\privacy \
     /I$(XPDIST)\public\util 
@@ -762,6 +772,9 @@ CDEFINES=/DXP_PC /Dx386 /D_WINDOWS /D_X86_ \
 !endif
 !if defined(EDITOR)
 	/DENDER \
+!endif
+!if defined(DOM)
+	/DDOM \
 !endif
 !if defined(MOZ_LIBTEST)
 	/DLAYPROBE_API \
@@ -873,6 +886,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\layout\laystyle.c
 	$(DEPTH)\lib\layout\laysel.c
 	$(DEPTH)\lib\layout\layspace.c
+	$(DEPTH)\lib\layout\layspan.c
 	$(DEPTH)\lib\layout\laysub.c
 	$(DEPTH)\lib\layout\laytable.c
 	$(DEPTH)\lib\layout\laytags.c
@@ -976,12 +990,22 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmisc\undo.c
 
 !ifndef MOZ_NGLAYOUT
+!ifdef DOM
+	$(DEPTH)\lib\libdom\domattr.c
+	$(DEPTH)\lib\libdom\domcore.c
+	$(DEPTH)\lib\libdom\domdoc.c
+	$(DEPTH)\lib\libdom\domelement.c
+	$(DEPTH)\lib\libdom\domnode.c
+	$(DEPTH)\lib\libdom\domstyle.c
+	$(DEPTH)\lib\libdom\domtext.c
+!endif
 	$(DEPTH)\lib\libmocha\et_mocha.c
 	$(DEPTH)\lib\libmocha\et_moz.c
 	$(DEPTH)\lib\libmocha\lm_applt.c
 	$(DEPTH)\lib\libmocha\lm_bars.c
 	$(DEPTH)\lib\libmocha\lm_cmpnt.c
 	$(DEPTH)\lib\libmocha\lm_doc.c
+	$(DEPTH)\lib\libmocha\lm_dom.c
 	$(DEPTH)\lib\libmocha\lm_embed.c
 	$(DEPTH)\lib\libmocha\lm_event.c
 	$(DEPTH)\lib\libmocha\lm_form.c
@@ -995,8 +1019,10 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmocha\lm_nav.c
 	$(DEPTH)\lib\libmocha\lm_plgin.c
 	$(DEPTH)\lib\libmocha\lm_screen.c
+	$(DEPTH)\lib\libmocha\lm_span.c
 	$(DEPTH)\lib\libmocha\lm_supdt.c
 	$(DEPTH)\lib\libmocha\lm_taint.c
+	$(DEPTH)\lib\libmocha\lm_trans.c
 	$(DEPTH)\lib\libmocha\lm_tree.c
 	$(DEPTH)\lib\libmocha\lm_trggr.c
 	$(DEPTH)\lib\libmocha\lm_url.c
@@ -2520,7 +2546,7 @@ LINK_CL:
     ddeml.lib +
     olecli.lib +
     olesvr.lib +
-	mmsystem.lib +
+    mmsystem.lib +
     shell.lib +
     ver.lib +
 !ifdef MOZ_LDAP
@@ -2534,7 +2560,7 @@ LINK_CL:
     $(DIST)\lib\libnsc16.lib +
     $(DIST)\lib\nsn16.lib +
     $(DIST)\lib\li16.lib +
-	$(DIST)\lib\prgrss16.lib +
+    $(DIST)\lib\prgrss16.lib +
 !ifdef EDITOR
 !ifdef JAVA_OR_NSJVM
     $(DIST)\lib\edtplug.lib +
@@ -2583,7 +2609,7 @@ LINK_CL:
     $(DIST)\lib\hook.lib +
 !endif
     $(DIST)\lib\png.lib +
-	$(DIST)\lib\sched16.lib +
+    $(DIST)\lib\sched16.lib +
     $(DIST)\lib\libreg16.lib +
     $(DIST)\lib\xpcom16.lib +
     $(DIST)\lib\rdf16.lib +
@@ -2603,7 +2629,7 @@ LINK_CL:
     $(DIST)\lib\network.lib +
     $(DIST)\lib\cnetinit.lib +
 !ifdef MOZ_MAIL_NEWS
-	$(DIST)\lib\mnrc16.lib +
+    $(DIST)\lib\mnrc16.lib +
 !endif
 !ifdef MOZ_MAIL_NEWS
     $(DIST)\lib\nntpurl.lib +
@@ -2618,6 +2644,9 @@ LINK_CL:
 !endif
 !ifdef MOZ_LDAP
     $(DIST)\lib\ldapurl.lib +
+!endif
+!ifdef SMART_MAIL 
+    $(DIST)\lib\mime.lib +
 !endif
 !ifdef MOZ_CALENDAR
     $(DIST)\lib\cal3240.lib +
