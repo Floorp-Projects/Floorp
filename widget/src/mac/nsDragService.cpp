@@ -326,6 +326,10 @@ printf("flavor data size is %ld\n", dataSize);
             return NS_ERROR_FAILURE;
           }
 	          
+          // the DOM only wants LF, so convert from MacOS line endings to DOM line
+          // endings.
+          nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &dataBuff, NS_REINTERPRET_CAST(int*, &dataSize) );
+        
           // put it into the transferable.
           nsCOMPtr<nsISupports> genericDataWrapper;
           nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, dataBuff, dataSize, getter_AddRefs(genericDataWrapper) );
