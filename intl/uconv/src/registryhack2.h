@@ -17,7 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-  mDecSize           = 27;
+  mDecSize           = 42;
   mDecArray          = new ConverterInfo [mDecSize];
 
   mDecArray[0].mCID  = &kISO88591ToUnicodeCID;
@@ -49,8 +49,24 @@
   mDecArray[24].mCID  = &kEUCTWToUnicodeCID;
   mDecArray[25].mCID  = &kGB2312ToUnicodeCID;
   mDecArray[26].mCID  = &kEUCKRToUnicodeCID;
+
+  mDecArray[27].mCID  = &kISO885914ToUnicodeCID;
+  mDecArray[28].mCID  = &kISO885915ToUnicodeCID;
+  mDecArray[29].mCID  = &kCP1258ToUnicodeCID;
+  mDecArray[30].mCID  = &kCP874ToUnicodeCID;
+  mDecArray[31].mCID  = &kMacCroatianToUnicodeCID;
+  mDecArray[32].mCID  = &kMacRomanianToUnicodeCID;
+  mDecArray[33].mCID  = &kMacCyrillicToUnicodeCID;
+  mDecArray[34].mCID  = &kMacUkrainianToUnicodeCID;
+  mDecArray[35].mCID  = &kMacIcelandicToUnicodeCID;
+  mDecArray[36].mCID  = &kARMSCII8ToUnicodeCID;
+  mDecArray[37].mCID  = &kTCVN5712ToUnicodeCID;
+  mDecArray[38].mCID  = &kVISCIIToUnicodeCID;
+  mDecArray[39].mCID  = &kVPSToUnicodeCID;
+  mDecArray[40].mCID  = &kKOI8RToUnicodeCID;
+  mDecArray[41].mCID  = &kKOI8UToUnicodeCID;
   
-  mEncSize           = 27;
+  mEncSize           = 42;
   mEncArray          = new ConverterInfo [mEncSize];
 
   mEncArray[0].mCID  = &kUnicodeToISO88591CID;
@@ -82,3 +98,19 @@
   mEncArray[24].mCID  = &kUnicodeToEUCTWCID;
   mEncArray[25].mCID  = &kUnicodeToGB2312CID;
   mEncArray[26].mCID  = &kUnicodeToEUCKRCID;
+
+  mEncArray[27].mCID  = &kUnicodeToISO885914CID;
+  mEncArray[28].mCID  = &kUnicodeToISO885915CID;
+  mEncArray[29].mCID  = &kUnicodeToCP1258CID;
+  mEncArray[30].mCID  = &kUnicodeToCP874CID;
+  mEncArray[31].mCID  = &kUnicodeToMacCroatianCID;
+  mEncArray[32].mCID  = &kUnicodeToMacRomanianCID;
+  mEncArray[33].mCID  = &kUnicodeToMacCyrillicCID;
+  mEncArray[34].mCID  = &kUnicodeToMacUkrainianCID;
+  mEncArray[35].mCID  = &kUnicodeToMacIcelandicCID;
+  mEncArray[36].mCID  = &kUnicodeToARMSCII8CID;
+  mEncArray[37].mCID  = &kUnicodeToTCVN5712CID;
+  mEncArray[38].mCID  = &kUnicodeToVISCIICID;
+  mEncArray[39].mCID  = &kUnicodeToVPSCID;
+  mEncArray[40].mCID  = &kUnicodeToKOI8RCID;
+  mEncArray[41].mCID  = &kUnicodeToKOI8UCID;
