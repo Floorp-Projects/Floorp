@@ -202,7 +202,14 @@ Contributor(s): ______________________________________. -->
 
   <menu accesskey="v" value="&viewMenu.label;">
     <menupopup>
-      <menuitem value="&toolbarsCmd.label;" oncommand="toolbar.visible=true"/>
+    	 <menu value="&toolbarsCmd.label;"  >
+		  	<menupopup> 
+		  		<menuitem value="&navbarCmd.label;" oncommand="toggleToolbar( 'nav-bar');" />
+		  		<menuitem value="&personalbarCmd.label;" oncommand="toggleToolbar('PersonalToolbar');" />
+		  		<menuitem value="&taskbarCmd.label;" oncommand="toggleToolbar('taskbar');" />
+		  	</menupopup>
+		  </menu>
+   
       <menuitem value="&sidebarCmd.label;" oncommand="sidebarShowHide();"/>
       <menuseparator />
       <menuitem value="&enlargeTextSizeCmd.label;" 

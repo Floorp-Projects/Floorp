@@ -65,6 +65,9 @@
 <!ENTITY walletChangePasswordCmd.label "Change Password...">
 <!ENTITY viewMenu.label "View">
 <!ENTITY toolbarsCmd.label "Toolbars">
+<!ENTITY navbarCmd.label "Navigation ToolBar">
+<!ENTITY personalbarCmd.label "Personal Toolbar">
+<!ENTITY taskbarCmd.label "Taskbar">
 <!-- LOCALIZATION NOTE   sidebarCmd.label: Do NOT localize below line -->
 <!ENTITY sidebarCmd.label "Sidebar">
 <!ENTITY enlargeTextSizeCmd.label "Enlarge Text Size">
