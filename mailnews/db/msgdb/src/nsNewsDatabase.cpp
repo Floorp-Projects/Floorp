@@ -28,7 +28,10 @@ nsNewsDatabase::nsNewsDatabase()
 
 nsNewsDatabase::~nsNewsDatabase()
 {
-  // do nothing
+  if (m_newsgroupSpec) {
+    delete m_newsgroupSpec;
+    m_newsgroupSpec = nsnull;
+  }
 }
 
 nsresult nsNewsDatabase::MessageDBOpenUsingURL(const char * groupURL)
