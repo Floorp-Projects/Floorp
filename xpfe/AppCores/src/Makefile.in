@@ -36,7 +36,6 @@ CPPSRCS= \
 	nsBaseAppCore.cpp       \
 	nsDOMPropsCore.cpp		\
 	nsDOMPropsCoreFactory.cpp	\
-	nsPrefsCore.cpp       \
 	nsSignonCore.cpp       \
 	nsCookieCore.cpp       \
 	nsWalletCore.cpp       \
@@ -49,7 +48,6 @@ CPPSRCS= \
 	nsToolbarCore.cpp       \
 	nsToolkitCore.cpp	\
 	nsBrowserAppCore.cpp       \
-	nsPrefsCoreFactory.cpp       \
 	nsSignonCoreFactory.cpp       \
 	nsCookieCoreFactory.cpp       \
 	nsWalletCoreFactory.cpp       \
@@ -63,7 +61,6 @@ CPPSRCS= \
 	nsJSAppCoresManager.cpp       \
 	nsJSDOMPropsCore.cpp		\
 	nsJSEditorAppCore.cpp       \
-	nsJSPrefsCore.cpp   \
 	nsJSSignonCore.cpp   \
 	nsJSCookieCore.cpp   \
 	nsJSWalletCore.cpp   \

@@ -25,31 +25,9 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 EXPORT_RESOURCE_SAMPLES = \
-  $(srcdir)/pref-advanced.html \
-	$(srcdir)/pref-applications.html \
-	$(srcdir)/pref-appearance.html \
-	$(srcdir)/pref-cache.html \
-	$(srcdir)/pref-colors.html \
-	$(srcdir)/pref-composer.html \
-	$(srcdir)/pref-download.html \
-	$(srcdir)/pref-fonts.html \
-	$(srcdir)/pref-languages.html \
-	$(srcdir)/pref-navigator.html \
-	$(srcdir)/pref-offline.html \
-	$(srcdir)/pref-proxies.html \
-	$(srcdir)/pref-publish.html \
-	$(srcdir)/pref-select.html \
-	$(srcdir)/pref-smart_browsing.html \
-	$(srcdir)/pref-smartupdate.html \
-	$(srcdir)/prefbottom.html \
-	$(srcdir)/PrefsWindow.html \
-	$(srcdir)/PrefsWindow.js \
 	$(srcdir)/SignonWindow.js \
 	$(srcdir)/CookieWindow.js \
 	$(srcdir)/WalletWindow.js \
-	$(srcdir)/preftree.css \
-	$(srcdir)/preftree.xul \
-	$(srcdir)/pref.css \
 	$(NULL)
 
 EXPORT_RESOURCE_TOOLBAR = \

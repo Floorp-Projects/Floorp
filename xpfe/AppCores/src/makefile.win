@@ -70,7 +70,6 @@ OBJS = \
     .\$(OBJDIR)\nsBaseAppCore.obj       \
     .\$(OBJDIR)\nsDOMPropsCore.obj       \
     .\$(OBJDIR)\nsDOMPropsCoreFactory.obj       \
-    .\$(OBJDIR)\nsPrefsCore.obj       \
     .\$(OBJDIR)\nsSignonCore.obj       \
     .\$(OBJDIR)\nsCookieCore.obj       \
     .\$(OBJDIR)\nsWalletCore.obj       \
@@ -83,7 +82,6 @@ OBJS = \
     .\$(OBJDIR)\nsToolkitCore.obj        \
     .\$(OBJDIR)\nsToolkitCoreFactory.obj \
     .\$(OBJDIR)\nsBrowserAppCore.obj       \
-    .\$(OBJDIR)\nsPrefsCoreFactory.obj       \
     .\$(OBJDIR)\nsSignonCoreFactory.obj       \
     .\$(OBJDIR)\nsCookieCoreFactory.obj       \
     .\$(OBJDIR)\nsWalletCoreFactory.obj       \
@@ -94,7 +92,6 @@ OBJS = \
     .\$(OBJDIR)\nsJSBaseAppCore.obj       \
     .\$(OBJDIR)\nsJSAppCoresManager.obj       \
     .\$(OBJDIR)\nsJSDOMPropsCore.obj   \
-    .\$(OBJDIR)\nsJSPrefsCore.obj   \
     .\$(OBJDIR)\nsJSSignonCore.obj   \
     .\$(OBJDIR)\nsJSCookieCore.obj   \
     .\$(OBJDIR)\nsJSWalletCore.obj   \
@@ -114,31 +111,6 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).lib $(DIST)\lib
-	$(MAKE_INSTALL) ..\xul\pref-advanced.html       $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref-applications.html   $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref-appearance.html       $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref-cache.html          $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref-colors.html         $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref-composer.html       $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref-download.html       $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref-fonts.html           $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref-languages.html      $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref-navigator.html      $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref-offline.html        $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref-proxies.html        $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref-publish.html        $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref-select.html         $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref-smart_browsing.html      $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref-smartupdate.html      $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\pref.css                 $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\prefbottom.html   $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\PrefsWindow.html   $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\PrefsWindow.js   $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\SignonWindow.js   $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\CookieWindow.js   $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\WalletWindow.js   $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\preftree.css   $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\preftree.xul   $(DIST)\bin\res\samples
 
 	$(MAKE_INSTALL) ..\xul\resources\Mail_SendMsg.gif $(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\Mail_GetMsg.gif  $(DIST)\bin\res\toolbar
