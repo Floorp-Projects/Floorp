@@ -270,7 +270,7 @@ function onSearchStop() {
 }
 
 function onResetSearch(event) {
-    onReset();
+    onReset(event);
     
     var tree = GetThreadTree();
     tree.treeBoxObject.view = null;
