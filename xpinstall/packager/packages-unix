@@ -255,6 +255,7 @@ bin/res/langGroups.properties
 bin/res/language.properties
 bin/res/html.css
 bin/res/quirk.css
+bin/res/viewsource.css
 bin/res/html/*
 bin/res/rdf/article.gif
 bin/res/rdf/document.gif

@@ -218,7 +218,8 @@ chrome\embed.jar
 ; res:
 ; 
 res\html.css   
-res\quirk.css  
+res\quirk.css
+res\viewsource.css
 res\ua.css
 res\forms.css
 res\builtin\*

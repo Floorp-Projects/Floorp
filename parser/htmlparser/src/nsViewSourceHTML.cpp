@@ -48,7 +48,6 @@
 #endif
 
 #define VIEW_SOURCE_HTML
-#define VIEW_SOURCE_COLORING
 
 #include "nsIDTDDebug.h"
 #include "nsViewSourceHTML.h"
@@ -65,13 +64,11 @@
 #include "nsHTMLEntities.h"
 #endif // VIEW_SOURCE_HTML
 
-#ifdef VIEW_SOURCE_COLORING
 // For Coloring pref only
 // If we aren't going to define it, then should save on bloat.
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-#endif // VIEW_SOURCE_COLORING
 
 #include "COtherDTD.h"
 #include "nsElementTable.h"
@@ -100,7 +97,7 @@ static int gErrorThreshold = 10;
 #endif
 
 #ifdef VIEW_SOURCE_HTML
-static const char* kPreStyle = "font-family: -moz-fixed; font-weight:normal; color:black; padding-top:4px; margin-left:4px;";
+static const char* kPreClass = "viewsource";
 #endif // VIEW_SOURCE_HTML
 
 /**
@@ -229,23 +226,21 @@ enum {
   VIEW_SOURCE_MARKUPDECLARATION = 12
 };
 
-#ifdef VIEW_SOURCE_COLORING
-static char* kElementStyles[] = {
-  "color: purple;  font-weight:bold;",
-  "color: purple;  font-weight:bold;",
-  "color: green; font-style:italic;",
-  "color: #CC0066;",
-  "color:steelblue; font-style:italic;",
-  "color:orchid; font-style:italic;",
-  "color:#FF4500; font-weight:normal;",
-  "font-weight: normal;",
-  "color: black; font-weight:bold;",
-  "color: blue; font-weight:normal;",
-  "display:block; background-color:#FFFFCC; width:90%; border:solid; border-width:1pt; font-family: Sans-serif;",
-  "font-weight: normal;",
-  "color:steelblue; font-style:italic;"
+static char* kElementClasses[] = {
+  "start-tag",
+  "end-tag",
+  "comment",
+  "cdata",
+  "doctype",
+  "pi",
+  "entity",
+  "text",
+  "attribute-name",
+  "attribute-value",
+  "summary",
+  "popup",
+  "markupdeclaration"  
 };
-#endif
 
 static char* kBeforeText[] = {
   "<",
@@ -305,6 +300,12 @@ CViewSourceHTML::CViewSourceHTML() : mTags(), mErrors() {
   mValue = VIEW_SOURCE_ATTRIBUTE_VALUE;
   mSummaryTag = VIEW_SOURCE_SUMMARY;
   mPopupTag = VIEW_SOURCE_POPUP;
+  nsresult result=NS_OK;
+  mSyntaxHighlight = PR_FALSE;
+  // This determines the value of the boolean syntax_highlight preference.
+  NS_WITH_SERVICE(nsIPref, thePrefsService, kPrefCID, &result);
+  if (NS_SUCCEEDED(result) && thePrefsService)
+      thePrefsService->GetBoolPref("view_source.syntax_highlight", &mSyntaxHighlight);
 #else
   mStartTag.AssignWithConversion("start");
   mEndTag.AssignWithConversion("end");
@@ -433,7 +434,7 @@ nsresult CViewSourceHTML::WillBuildModel(  const CParserContext& aParserContext,
   if((!aParserContext.mPrevContext) && (mSink)) {
 
     mTags.Truncate();
-    mErrors.AssignWithConversion(" HTML 4.0 Strict-DTD validation (enabled); [Should use Transitional?].\n");
+    mErrors.Assign(NS_LITERAL_STRING(" HTML 4.0 Strict-DTD validation (enabled); [Should use Transitional?].\n"));
 
     mValidator=aParserContext.mValidator;
     mDocType=aParserContext.mDocType;
@@ -483,12 +484,12 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
       // token allocator, because there are no attributes on the tokens.
       nsAutoString tag;
 
-      tag.AssignWithConversion("HTML");
+      tag.Assign(NS_LITERAL_STRING("HTML"));
       CStartToken htmlToken(tag, eHTMLTag_html);
       nsCParserNode htmlNode(&htmlToken,0,0/*stack token*/);
       mSink->OpenHTML(htmlNode);
 
-      tag.AssignWithConversion("BODY");
+      tag.Assign(NS_LITERAL_STRING("BODY"));
       CStartToken bodyToken(tag, eHTMLTag_body);
       nsCParserNode bodyNode(&bodyToken,0,0/*stack token*/);
       mSink->OpenBody(bodyNode);
@@ -501,7 +502,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
       nsTokenAllocator* theAllocator=mTokenizer->GetTokenAllocator();
       if(theAllocator) {
 #ifdef VIEW_SOURCE_HTML
-        tag.AssignWithConversion("PRE");
+        tag.Assign(NS_LITERAL_STRING("PRE"));
         CStartToken* theToken=NS_STATIC_CAST(CStartToken*,theAllocator->CreateTokenOfType(eToken_start,eHTMLTag_pre,tag));
 #else
         //now let's automatically open the root container...
@@ -514,8 +515,8 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
           nsCParserNode theNode(theToken,0,theAllocator);
      
 #ifdef VIEW_SOURCE_HTML
-          theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertASCIItoUCS2(kPreStyle));
-          theAttr->SetKey(NS_LITERAL_STRING("style"));
+          theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertASCIItoUCS2(kPreClass));
+          theAttr->SetKey(NS_LITERAL_STRING("class"));
 #else
           theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_LITERAL_STRING("http://www.mozilla.org/viewsource"));
           theAttr->SetKey(NS_LITERAL_STRING("xmlns"));
@@ -876,13 +877,6 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableStri
   nsresult result=NS_OK;
 
   CSharedVSContext& theContext=CSharedVSContext::GetSharedContext();
-#ifdef VIEW_SOURCE_COLORING
-  // This determines the value of the boolean syntax_highlight preference.
-  PRBool syntaxHighlight = PR_FALSE;
-  NS_WITH_SERVICE(nsIPref, thePrefsService, kPrefCID, &result);
-  if (NS_SUCCEEDED(result) && thePrefsService)
-      thePrefsService->GetBoolPref("view_source.syntax_highlight", &syntaxHighlight);
-#endif // VIEW_SOURCE_COLORING
 
   nsTokenAllocator* theAllocator=mTokenizer->GetTokenAllocator();
   NS_ASSERTION(0!=theAllocator,"Error: no allocator");
@@ -898,30 +892,24 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableStri
     mSink->AddLeaf(theNode);
   }
 
-#ifdef VIEW_SOURCE_COLORING
-  nsAutoString tag (NS_LITERAL_STRING("SPAN"));
-  CStartToken* theTagToken=NS_STATIC_CAST(CStartToken*,theAllocator->CreateTokenOfType(eToken_start,eHTMLTag_span,tag));
-#endif // VIEW_SOURCE_COLORING
+  CStartToken* theTagToken=NS_STATIC_CAST(CStartToken*,theAllocator->CreateTokenOfType(eToken_start,eHTMLTag_span,NS_LITERAL_STRING("SPAN")));
 #else
   CStartToken* theTagToken=NS_STATIC_CAST(CStartToken*,theAllocator->CreateTokenOfType(eToken_start,eHTMLTag_unknown,theXMLTagName));
 #endif // VIEW_SOURCE_HTML
 
-#ifdef VIEW_SOURCE_COLORING
-  if (syntaxHighlight)
+  if (mSyntaxHighlight)
   {
-  	theContext.mStartNode.Init(theTagToken,mLineNumber,theAllocator);
+    theContext.mStartNode.Init(theTagToken,mLineNumber,theAllocator);
 #ifdef VIEW_SOURCE_HTML
-    CAttributeToken* theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertASCIItoUCS2(kElementStyles[aTagType]));
-    theAttr->SetKey(NS_LITERAL_STRING("style"));
+    CAttributeToken* theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertASCIItoUCS2(kElementClasses[aTagType]));
+    theAttr->SetKey(NS_LITERAL_STRING("class"));
     theContext.mStartNode.AddAttribute(theAttr);
-  }
 #endif // VIEW_SOURCE_HTML
+  }
 
   STOP_TIMER();
 
   mSink->OpenContainer(theContext.mStartNode);  //emit <starttag>...
-
-#endif // VIEW_SOURCE_COLORING
 
 #ifdef rickgdebug
 
@@ -946,15 +934,13 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableStri
   }
 
 #ifdef VIEW_SOURCE_HTML
-#ifdef VIEW_SOURCE_COLORING
-  if (syntaxHighlight)
+  if (mSyntaxHighlight)
   {
     theContext.mStartNode.ReleaseAll(); 
     CEndToken theEndToken(eHTMLTag_span);
     theContext.mEndNode.Init(&theEndToken,mLineNumber,0/*stack token*/);
     mSink->CloseContainer(theContext.mEndNode);  //emit </starttag>...
   }
-#endif // VIEW_SOURCE_COLORING
   if (kAfterText[aTagType][0] != 0) {
     nsAutoString afterText;
     afterText.AssignWithConversion(kAfterText[aTagType]);

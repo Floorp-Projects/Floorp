@@ -48,6 +48,8 @@ static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 
 // URL for the "user agent" style sheet
 #define UA_CSS_URL "resource:/res/ua.css"
+// URL for the "view source" style sheet
+#define VIEW_SOURCE_CSS_URL "resource:/res/viewsource.css"
 
 // Factory code for creating variations on html documents
 
@@ -198,14 +200,28 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
   nsresult rv = NS_OK;
   if (!GetUAStyleSheet()) {
     // Load the UA style sheet
-    nsCOMPtr<nsIURI> uaURL;
-    rv = NS_NewURI(getter_AddRefs(uaURL), UA_CSS_URL);
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), UA_CSS_URL);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsICSSLoader> cssLoader(do_CreateInstance(kCSSLoaderCID,&rv));
       if (cssLoader) {
         PRBool complete;
-        rv = cssLoader->LoadAgentSheet(uaURL, nsLayoutModule::gUAStyleSheet, complete,
-                                       nsnull);
+        rv = cssLoader->LoadAgentSheet(uri, nsLayoutModule::gUAStyleSheet,
+                                       complete, nsnull);
+        if (NS_SUCCEEDED(rv)) {
+          // also cache the view source stylesheet
+          if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), VIEW_SOURCE_CSS_URL))) {
+            PRBool bHasSheet = PR_FALSE;
+            nsLayoutModule::gUAStyleSheet->
+                            ContainsStyleSheet(uri,
+                                               bHasSheet,
+                                               &nsLayoutModule::gViewSourceStyleSheet);
+            // assert if we found a stylesheet but it's nsnull -- should not happen
+            NS_ASSERTION(!bHasSheet || nsLayoutModule::gViewSourceStyleSheet,
+                         "gViewSourceStyleSheet must be set: ContainsStyleSheet is hosed");
+              
+          }
+        }
       }
     }
     if (NS_FAILED(rv)) {
@@ -261,6 +277,20 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
     else 
       aContentType=gXMLTypes[0];
 #endif
+
+    if (nsLayoutModule::gViewSourceStyleSheet) {
+#ifdef DEBUG
+      printf( "Enabling View Source StyleSheet\n");
+#endif
+      nsLayoutModule::gViewSourceStyleSheet->SetEnabled(PR_TRUE);
+    }
+  } else {
+    if (nsLayoutModule::gViewSourceStyleSheet) {
+#ifdef DEBUG
+      printf( "Disabling View Source StyleSheet\n");
+#endif
+      nsLayoutModule::gViewSourceStyleSheet->SetEnabled(PR_FALSE);
+    }
   }
 
   // Try html
