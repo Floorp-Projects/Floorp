@@ -216,126 +216,6 @@ loser:
 
 }
 
-#if 0
-/***********************************************************************
- * simpleInitialize
- *
- * Initializes NSPR and the RNG only.
- *
- * RETURNS
- *  PR_SUCCESS for success, PR_FAILURE otherwise.  If not successful,
- *  an exception will be thrown.
- */
-static PRStatus
-simpleInitialize(JNIEnv *env)
-{
-    /* initialize is synchronized, so this is thread-safe */
-    static PRBool initialized = PR_FALSE;
-
-    /* initialize values used to calculate concurrency */
-    PRUint32 mask = 0;
-    PRUint32 template = 0x00000001;
-    PRUintn  cpus = 0;
-    PRUintn  concurrency = 0;
-
-    if(initialized) {
-        return PR_SUCCESS;
-    }
-
-    /* On AIX, HP, and Linux, we need to do nasty signal handling in order
-     * to have NSPR play nice with the JVM and kernel.
-     */
-#if defined(AIX) || defined(HPUX) || defined(LINUX)
-    if( handleSigChild(env) != PR_SUCCESS ) {
-        return PR_FAILURE;
-    }
-#endif
-
-    /* NOTE:  Removed PR_Init() function since NSPR now self-initializes. */
-    /* PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 0); */
-
-    /* Obtain the mask containing the number of CPUs */
-    if( PR_GetThreadAffinityMask( PR_GetCurrentThread(), &mask ) ) {
-        JSS_throwMsg( env, SECURITY_EXCEPTION,
-                      "Failed to calculate number of CPUs" );
-        return PR_FAILURE;
-    }
-
-    /* Count the bits to calculate the number of CPUs in the machine */
-    while( mask != 0 ) {
-        cpus  += ( mask & template );
-        mask >>= 1;
-    }
-
-    /* Specify the concurrency */
-#if defined(WIN32) && !defined(WIN95)  /* WINNT (fiberous) */
-    /* Always specify at least a concurrency of 2 for (fiberous) Windows NT */
-    if( cpus <= 1 ) {
-        concurrency = 2;
-    } else {
-        concurrency = cpus;
-    }
-#else
-    if( cpus <= 1 ) {
-        concurrency = 1;
-    } else {
-        concurrency = cpus;
-    }
-#endif
-
-    /* Set the concurrency */
-    PR_SetConcurrency( concurrency );
-
-    RNG_RNGInit();
-    RNG_SystemInfoForRNG();
-
-    initialized = PR_TRUE;
-
-    return PR_SUCCESS;
-}
-
-/*
- * CryptoManager.initialize
- *
- * Initializes NSPR and the RNG only.
- */
-JNIEXPORT void JNICALL
-Java_org_mozilla_jss_CryptoManager_initializeNative
-  (JNIEnv *env, jclass clazz)
-{
-    if(simpleInitialize(env) != PR_SUCCESS ) {
-        PR_ASSERT( (*env)->ExceptionOccurred(env) );
-        return;
-    }
-}
-#endif
-
-#if 0
-/*
- * Callback for key database name.  Name is passed in through void* argument.
- */
-static char*
-keyDBNameCallback(void *arg, int dbVersion)
-{
-    PR_ASSERT(arg!=NULL);
-    if(dbVersion==3) {
-        return PL_strdup((char*)arg);
-    } else {
-        return PL_strdup("");
-    }
-}
-
-static char*
-certDBNameCallback(void *arg, int dbVersion)
-{
-    PR_ASSERT(arg!=NULL);
-    if(dbVersion == 7) {
-        return PL_strdup((char*)arg);
-    } else {
-        return PL_strdup("");
-    }
-}
-#endif
 
 /**********************************************************************
  * This is the PasswordCallback object that will be used to login
@@ -445,38 +325,39 @@ Java_org_mozilla_jss_CryptoManager_initializeAllNative
                         );
 
 
-    szConfigDir = (char*) (*env)->GetStringUTFChars(env, configDir, NULL);
-    if( certPrefix != NULL && keyPrefix != NULL && secmodName != NULL ) {
-        /*
-        * Set up arguments to NSS_Initialize
-        */
-        szCertPrefix = (char*) (*env)->GetStringUTFChars(env, certPrefix, NULL);
-        szKeyPrefix = (char*) (*env)->GetStringUTFChars(env, keyPrefix, NULL);
-        szSecmodName = (char*) (*env)->GetStringUTFChars(env, secmodName, NULL);
-        initFlags = 0;
-        if( readOnly ) {
-            initFlags |= NSS_INIT_READONLY;
-        }
+    if( ! NSS_IsInitialized() ) {
+        szConfigDir = (char*) (*env)->GetStringUTFChars(env, configDir, NULL);
+        if( certPrefix != NULL && keyPrefix != NULL && secmodName != NULL ) {
+            /*
+            * Set up arguments to NSS_Initialize
+            */
+            szCertPrefix = (char*) (*env)->GetStringUTFChars(env, certPrefix, NULL);
+            szKeyPrefix = (char*) (*env)->GetStringUTFChars(env, keyPrefix, NULL);
+            szSecmodName = (char*) (*env)->GetStringUTFChars(env, secmodName, NULL);
+            initFlags = 0;
+            if( readOnly ) {
+                initFlags |= NSS_INIT_READONLY;
+            }
 
-        /*
-        * Initialize NSS.
-        */
-        rv = NSS_Initialize(szConfigDir, szCertPrefix, szKeyPrefix,
-                szSecmodName, initFlags);
-    } else {
-        if( readOnly ) {
-            rv = NSS_Init(szConfigDir);
+            /*
+            * Initialize NSS.
+            */
+            rv = NSS_Initialize(szConfigDir, szCertPrefix, szKeyPrefix,
+                    szSecmodName, initFlags);
         } else {
-            rv = NSS_InitReadWrite(szConfigDir);
+            if( readOnly ) {
+                rv = NSS_Init(szConfigDir);
+            } else {
+                rv = NSS_InitReadWrite(szConfigDir);
+            }
+        }
+
+        if( rv != SECSuccess ) {
+            JSS_throwMsg(env, SECURITY_EXCEPTION,
+                "Unable to initialize security library");
+            goto finish;
         }
     }
-
-    if( rv != SECSuccess ) {
-        JSS_throwMsg(env, SECURITY_EXCEPTION,
-            "Unable to initialize security library");
-        goto finish;
-    }
-        
 
 	/*
 	 * Set default password callback.  This is the only place this
@@ -515,13 +396,6 @@ Java_org_mozilla_jss_CryptoManager_initializeAllNative
         PR_ASSERT(PR_FALSE);
     }
     JSS_javaVM = VMs[0];
-
-#if 0
-    if( NSS_SetDomesticPolicy() != SECSuccess ) {
-        JSS_throwMsg(env, SECURITY_EXCEPTION, "Unable to set domestic policy");
-        goto finish;
-    }
-#endif
 
     initialized = PR_TRUE;
 

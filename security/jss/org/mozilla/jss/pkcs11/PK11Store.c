@@ -56,64 +56,6 @@ typedef struct pk11KeyCallbackStr {
         void *wincx;
 } pk11KeyCallback;
 
-/* Traverse slots callback */
-typedef struct pk11TraverseSlotStr {
-    SECStatus (*callback)(PK11SlotInfo *,CK_OBJECT_HANDLE, void *);
-    void *callbackArg;
-    CK_ATTRIBUTE *findTemplate;
-    int templateCount;
-} pk11TraverseSlot;
-
-SECStatus pk11_DoKeys(PK11SlotInfo*, CK_OBJECT_HANDLE, void*);
-SECStatus PK11_TraverseSlot(PK11SlotInfo *, void*);
-
-/***********************************************************************
- * PK11_TraversePrivateKeysInSlot
- *
- * This is an HCL hack that traverses all the private keys on a slot.
- *
- * INPUTS
- *      slot
- *          The PKCS #11 slot whose private keys you want to traverse.
- *      callback
- *          A callback function that will be called for each key.
- *      arg
- *          An argument that will be passed to the callback function.
- */
-static SECStatus
-PK11_TraversePrivateKeysInSlot( PK11SlotInfo *slot,
-    SECStatus(* callback)(SECKEYPrivateKey*, void*), void *arg)
-{
-    pk11KeyCallback perKeyCB;
-    pk11TraverseSlot perObjectCB;
-    CK_OBJECT_CLASS privkClass = CKO_PRIVATE_KEY;
-    CK_ATTRIBUTE theTemplate[1];
-    int templateSize = 1;
-
-    theTemplate[0].type = CKA_CLASS;
-    theTemplate[0].pValue = &privkClass;
-    theTemplate[0].ulValueLen = sizeof(privkClass);
-
-    if(slot==NULL) {
-#ifdef DEBUG
-        PR_fprintf(PR_STDERR,
-            "Null slot passed to PK11_TraversePrivateKeysInSlot\n");
-        PR_ASSERT(PR_FALSE);
-#endif
-        return SECSuccess;
-    }
-
-    perObjectCB.callback = pk11_DoKeys;
-    perObjectCB.callbackArg = &perKeyCB;
-    perObjectCB.findTemplate = theTemplate;
-    perObjectCB.templateCount = templateSize;
-    perKeyCB.callback = callback;
-    perKeyCB.callbackArg = arg;
-    perKeyCB.wincx = NULL;
-
-    return PK11_TraverseSlot(slot, &perObjectCB);
-}
-
 /**********************************************************************
  * Callback information for keyTraversalCallback
  */

@@ -97,8 +97,7 @@ Java_org_mozilla_jss_pkcs11_PK11MessageDigest_initHMAC
     }
 
     /* copy the key, setting the CKA_SIGN attribute */
-    newKey = pk11_CopyToSlot(PK11_GetSlotFromKey(origKey), mech, CKA_SIGN,
-                origKey);
+    newKey = PK11_CopySymKeyForSigning(origKey, mech);
     if( newKey == NULL ) {
         JSS_throwMsg(env, DIGEST_EXCEPTION,
                         "Unable to set CKA_SIGN attribute on symmetric key");

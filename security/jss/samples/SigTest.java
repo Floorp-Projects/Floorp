@@ -78,8 +78,7 @@ public class SigTest {
 
 		try {
             CryptoManager.InitializationValues vals = new
-                CryptoManager.InitializationValues(args[0], "foobar-", "foobar-",
-                "../secmodule.db");
+                CryptoManager.InitializationValues(args[0]);
             CryptoManager.initialize(vals);
 		    manager = CryptoManager.getInstance();
 
