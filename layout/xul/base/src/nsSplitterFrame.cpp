@@ -77,7 +77,6 @@
 #include "nsContentCID.h"
 #include "nsStyleSet.h"
 
-const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 // was used in nsSplitterFrame::Init but now commented out
 //static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 PRInt32 realTimeDrag;
@@ -369,7 +368,6 @@ nsSplitterFrame::Init(nsPresContext*  aPresContext,
 
   nsIViewManager* viewManager = view->GetViewManager();
   viewManager->SetViewContentTransparency(view, PR_TRUE);
-  viewManager->SetViewZIndex(view, PR_FALSE, kMaxZ);
 
   if (!realTimeDrag) {
     // currently this only works on win32 and mac
