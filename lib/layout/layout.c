@@ -4916,7 +4916,10 @@ XP_TRACE(("Initializing new doc %d\n", doc_id));
             ((tag->is_end && last_node->type == NODE_TYPE_ELEMENT) ||
              last_node->type == NODE_TYPE_TEXT)) {
             /* mark the end LO_Element for the _last_ node */
-            LO_Element *eptr = state->line_list;
+            LO_Element *eptr;
+            if (ELEMENT_PRIV(last_node)->flags & STYLE_NODE_NEED_TO_POP_LAYER)
+                lo_EndLayer(context, state, PR_TRUE);
+            eptr = state->line_list;
             if (eptr) {
                 while (eptr->lo_any.next != NULL) {
                     eptr = eptr->lo_any.next;
