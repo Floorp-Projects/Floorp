@@ -3599,10 +3599,7 @@ BOOL CALLBACK nsWindow::DispatchStarvedPaints(HWND aWnd, LPARAM aMsg)
     if (GetUpdateRect(aWnd, NULL, FALSE)) {
         VERIFY(::UpdateWindow(aWnd));
     }
-  }
-  // Recursively check for invalidated descendant windows and
-  // dispatch synchronous paints.
-  ::EnumChildWindows(aWnd, nsWindow::DispatchStarvedPaints, aMsg);
+  }  
   return TRUE;
 }
 
@@ -3641,7 +3638,10 @@ void nsWindow::DispatchPendingEvents()
       parentWnd = ::GetParent(parentWnd);
     }
   
-    DispatchStarvedPaints(topWnd, NULL);
+    // Dispatch pending paints for all topWnd's descendant windows. 
+    // Note: EnumChildWindows enumerates all descendant windows not just
+    // it's children.
+    ::EnumChildWindows(topWnd, nsWindow::DispatchStarvedPaints, NULL);
   }
 }
 
