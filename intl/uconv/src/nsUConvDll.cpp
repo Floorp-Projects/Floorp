@@ -32,14 +32,17 @@
 #include "nsITextToSubURI.h"
 #include "nsTextToSubURI.h"
 #include "nsIServiceManager.h"
+#include "nsCharsetMenu.h"
+#include "rdf.h"
 #include "nsUConvDll.h"
-
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kTextToSubURICID, NS_TEXTTOSUBURI_CID);
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
+
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_CID(kCharsetMenuCID, NS_CHARSETMENU_CID);
+static NS_DEFINE_CID(kTextToSubURICID, NS_TEXTTOSUBURI_CID);
 
 PRInt32 g_InstanceCount = 0;
 PRInt32 g_LockCount = 0;
@@ -133,6 +136,17 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
     return res;
   }
 
+  if (aClass.Equals(kCharsetMenuCID)) {
+    nsIFactory *factory = new nsCharsetMenuFactory();
+	nsresult res = factory->QueryInterface(kIFactoryIID, (void**) aFactory);
+    if (NS_FAILED(res)) {
+      *aFactory = NULL;
+      delete factory;
+    }
+
+    return res;
+  }
+
   if (aClass.Equals(kTextToSubURICID)) {
     nsIFactory *factory = NEW_TEXTTOSUBURI_FACTORY();
 	nsresult res = factory->QueryInterface(kIFactoryIID, (void**) aFactory);
@@ -143,6 +157,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 
     return res;
   }
+
   return NS_NOINTERFACE;
 }
 
@@ -158,6 +173,12 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                            nsIComponentManager::GetIID(), 
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
+
+  rv = compMgr->RegisterComponent(kCharsetMenuCID, 
+      NS_CHARSETMENU_PID,
+      NS_RDF_DATASOURCE_PROGID_PREFIX NS_CHARSETMENU_PID, 
+      path, PR_TRUE, PR_TRUE);
+  if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
   rv = compMgr->RegisterComponent(kUnicodeDecodeHelperCID, 
       "Unicode Decode Helper",
