@@ -183,7 +183,7 @@ nsresult nsParseImapMessageURI(const char* uri, nsCString& folderURI, PRUint32 *
 		return NS_ERROR_NULL_POINTER;
 
 	nsCAutoString uriStr(uri);
-	PRInt32 keySeparator = uriStr.FindChar('#');
+	PRInt32 keySeparator = uriStr.RFindChar('#');
 	if(keySeparator != -1)
 	{
     PRInt32 keyEndSeparator = uriStr.FindCharInSet("/?&", 

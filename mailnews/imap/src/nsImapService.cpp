@@ -687,7 +687,7 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
       }
 
       nsCAutoString uriStr(aMessageURI);
-      PRInt32 keySeparator = uriStr.FindChar('#');
+      PRInt32 keySeparator = uriStr.RFindChar('#');
       if(keySeparator != -1)
       {
         PRInt32 keyEndSeparator = uriStr.FindCharInSet("/?&", 
