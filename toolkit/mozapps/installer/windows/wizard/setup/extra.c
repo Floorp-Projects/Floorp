@@ -2443,7 +2443,7 @@ HRESULT CleanupOrphanedGREs()
   }
 
   // Show message that orphaned GREs are being cleaned up
-  if(*sgProduct.greCleanupOrphansMessage != '\0');
+  if(*sgProduct.greCleanupOrphansMessage != '\0')
     ShowMessage(sgProduct.greCleanupOrphansMessage, TRUE);
 
   if(rv == WIZ_OK)
@@ -2589,7 +2589,7 @@ HRESULT CleanupOrphanedGREs()
     GlobalFree(greIDListToClean);
 
   // Hide message that orphaned GREs are being cleaned up
-  if(*sgProduct.greCleanupOrphansMessage != '\0');
+  if(*sgProduct.greCleanupOrphansMessage != '\0')
     ShowMessage(sgProduct.greCleanupOrphansMessage, FALSE);
 
   return(rv);
