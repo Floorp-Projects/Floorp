@@ -30,6 +30,9 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
+
+package org.mozilla.jss.tests;
+
 import java.io.*;
 import org.mozilla.jss.ssl.*;
 import org.mozilla.jss.*;
