@@ -100,7 +100,7 @@ NS_NewIsIndexFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 nsIsIndexFrame::nsIsIndexFrame()
 {
     //Shrink the area around it's contents
-  SetFlags(NS_BLOCK_SHRINK_WRAP);
+  SetFlags(NS_BLOCK_SHRINK_WRAP | NS_BLOCK_SPACE_MGR);
 }
 
 nsIsIndexFrame::~nsIsIndexFrame()
