@@ -436,6 +436,7 @@ PRBool nsMacEventHandler::HandleMouseUpEvent(
 	{
 		mLastWidgetHit->RemoveDeleteObserver(this);
 
+		mouseEvent.widget = mLastWidgetHit;
 		retVal |= mLastWidgetHit->DispatchMouseEvent(mouseEvent);
 		mLastWidgetHit = nsnull;
 	}
