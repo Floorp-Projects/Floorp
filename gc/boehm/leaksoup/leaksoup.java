@@ -37,25 +37,57 @@
 import java.io.*;
 import java.util.*;
 
+class Type {
+	String mName;
+	int mSize;
+	boolean mKnown;
+
+	Type(String name, int size, boolean known) {
+		mName = name;
+		mSize = size;
+		mKnown = known;
+	}
+
+	public int hashCode() {
+		return mName.hashCode() + mSize;
+	}
+
+	public boolean equals(Object obj) {
+		if (obj instanceof Type) {
+			Type t = (Type) obj;
+			return (t.mSize == mSize && t.mName.equals(mName));
+		}
+		return false;
+	}
+
+	public String toString() {
+		String typeName = "&LT;" + mName + "&GT;";
+		if (mKnown) {
+			return "<A HREF=\"http://lxr.mozilla.org/seamonkey/ident?i=" + mName + "\">" +
+					typeName + "</A>";
+		} else {
+			return typeName + " (" + mSize + ")";
+		}
+	}
+}
+
 class Leak {
 	String mAddress;
 	Object[] mReferences;
 	Object[] mCrawl;
 	int mRefCount;
-	int mSize;
-	String mType;
+	Type mType;
 
-	Leak(String addr, String type, Object[] refs, Object[] crawl, int size) {
+	Leak(String addr, Type type, Object[] refs, Object[] crawl) {
 		mAddress = addr;
 		mReferences = refs;
 		mCrawl = crawl;
 		mRefCount = 0;
-		mSize = size;
 		mType = type;
 	}
 
 	public String toString() {
-		return (mAddress + " [" + mRefCount + "] " + mType +  " (" + mSize + ") " + mType);
+		return ("<A HREF=\"#" + mAddress + "\">" + mAddress + "</A> [" + mRefCount + "] " + mType);
 	}
 	
 	static class Comparator implements QuickSort.Comparator {
@@ -104,31 +136,48 @@ class FileTable {
 		int length = mLines.length;
 		int minIndex = 0, maxIndex = length - 1;
 		int index = maxIndex / 2;
-		while (minIndex < maxIndex) {
+		while (minIndex <= maxIndex) {
 			Line line = mLines[index];
 			if (offset < line.mOffset) {
 				maxIndex = (index - 1);
 				index = (minIndex + maxIndex) / 2;
 			} else {
-				if (offset < (line.mOffset + line.mLength))
-					break;
+				if (offset < (line.mOffset + line.mLength)) {
+					return index;
+				}
 				minIndex = (index + 1);
 				index = (minIndex + maxIndex) / 2;
 			}
 		}
-		return (1 + index);
+		// this case shouldn't happen, but provides a helpful value to detect errors.
+		return -1;
 	}
 }
 
 public class leaksoup {
+	/**
+	 * Set by the "-blame" option when generating leak reports.
+	 */
+	static boolean USE_BLAME = false;
+
 	public static void main(String[] args) {
 		if (args.length == 0) {
 			System.out.println("usage:  leaksoup leaks");
 			System.exit(1);
 		}
 		
-		String inputName = args[0];
-	
+		String inputName = null;
+
+		for (int i = 0; i < args.length; i++) {
+			String arg = args[i];
+			if (arg.charAt(0) == '-') {
+				if (arg.equals("-blame"))
+					USE_BLAME = true;
+			} else {
+				inputName = arg;
+			}
+		}
+
 		try {
 			Vector vec = new Vector();
 			Hashtable table = new Hashtable();
@@ -138,7 +187,7 @@ public class leaksoup {
 			while (line != null) {
 				if (line.startsWith("0x")) {
 					String addr = line.substring(0, 10);
-					String type = line.substring(line.indexOf('<'), line.indexOf('>') + 1);
+					String name = line.substring(line.indexOf('<') + 1, line.indexOf('>'));
 					int size;
 					try {
 						String str = line.substring(line.indexOf('(') + 1, line.indexOf(')')).trim();
@@ -146,6 +195,7 @@ public class leaksoup {
 					} catch (NumberFormatException nfe) {
 						size = 0;
 					}
+					Type type = new Type(name, size, !name.equals("void*"));
 					
 					// read in fields.
 					vec.setSize(0);
@@ -162,9 +212,9 @@ public class leaksoup {
 					vec.copyInto(crawl);
 					
 					// record the leak.
-					table.put(addr, new Leak(addr, type, refs, crawl, size));
-					if (type.equals("<void*>"))
-						type = "(" + size + ") <void*>";
+					table.put(addr, new Leak(addr, type, refs, crawl));
+
+					// count the leak types in a histogram.
 					hist.record(type);
 				} else {
 					line = reader.readLine();
@@ -193,15 +243,15 @@ public class leaksoup {
 					}
 				}
 				leaks[leakCount++] = leak;
-				totalSize += leak.mSize;
+				totalSize += leak.mType.mSize;
 			}
 			
 			// be nice to the GC.
 			table.clear();
 			table = null;
 			
-			// store the leak report in inputName + ".soup"
-			PrintStream out = new PrintStream(new FileOutputStream(inputName + ".soup"));
+			// store the leak report in inputName + ".html"
+			PrintStream out = new PrintStream(new FileOutputStream(inputName + ".html"));
 			
 			// print the object histogram report.
 			printHistogram(out, hist);
@@ -217,6 +267,7 @@ public class leaksoup {
 	
 	static final String MOZILLA_BASE = "mozilla/";
 	static final String LXR_BASE = "http://lxr.mozilla.org/seamonkey/source/";
+	static final String BONSAI_BASE = "http://cvs-mirror.mozilla.org/webtools/bonsai/cvsblame.cgi?file=mozilla/";
 	
 	static String getFileLocation(Hashtable fileTables, String line) throws IOException {
 		int leftBracket = line.indexOf('[');
@@ -229,7 +280,7 @@ public class leaksoup {
 		int mozillaIndex = path.indexOf(MOZILLA_BASE);
 		String locationURL;
 		if (mozillaIndex > -1)
-			locationURL = LXR_BASE + path.substring(path.indexOf(MOZILLA_BASE) + MOZILLA_BASE.length());
+			locationURL = (USE_BLAME ? BONSAI_BASE : LXR_BASE) + path.substring(path.indexOf(MOZILLA_BASE) + MOZILLA_BASE.length());
 		else
 			locationURL = "file:///" + path;
 		int offset = 0;
@@ -243,8 +294,9 @@ public class leaksoup {
 			table = new FileTable("/" + path);
 			fileTables.put(path, table);
 		}
-		int lineNumber = table.getLine(offset);
-		return line.substring(0, leftBracket) + "[" + locationURL + "#" + lineNumber + "]";
+		int lineNumber = 1 + table.getLine(offset);
+		// return line.substring(0, leftBracket) + "[" + locationURL + "#" + lineNumber + "]";
+		return "<A HREF=\"" + locationURL + "#" + lineNumber + "\"TARGET=\"SOURCE\">" + line.substring(0, leftBracket) + "</A>";
 	}
 	
 	static void printLeaks(PrintStream out, Leak[] leaks, int leakCount, long totalSize) throws IOException {
@@ -252,8 +304,9 @@ public class leaksoup {
 		QuickSort sorter = new QuickSort(new Leak.Comparator());
 		sorter.sort(leaks);
 		
-		// store reduced leaks in "RuntimeLeaks.soup"
-		out.println("Leak Soup Report:");
+		// print leak graph.
+		out.println("<H2>Leak Summary</H2>");
+		out.println("<PRE>");
 		out.println("total objects leaked = " + leakCount);
 		out.println("total memory leaked  = " + totalSize + " bytes.");
 
@@ -261,7 +314,9 @@ public class leaksoup {
 
 		// now, print the report, sorted by reference count.
 		for (int i = 0; i < leakCount; i++) {
+			out.println("\n<HR>");
 			Leak leak = leaks[i];
+			out.println("<A NAME=\"" + leak.mAddress + "\"></A>");
 			out.println(leak);
 			// print object's fields:
 			Object[] refs = leak.mReferences;
@@ -276,8 +331,14 @@ public class leaksoup {
 				out.println(location);
 			}
 		}
+
+		out.println("</PRE>");
 	}
 	
+	/**
+	 * Sorts the bins of a histogram by (count * typeSize) to show the
+	 * most pressing leaks.
+	 */
 	static class HistComparator implements QuickSort.Comparator {
 		Histogram hist;
 		
@@ -286,7 +347,8 @@ public class leaksoup {
 		}
 	
 		public int compare(Object obj1, Object obj2) {
-			return (hist.count(obj1) - hist.count(obj2));
+			Type t1 = (Type) obj1, t2 = (Type) obj2;
+			return (hist.count(t2) * t1.mSize - hist.count(t2) * t2.mSize);
 		}
 	}
 
@@ -296,11 +358,13 @@ public class leaksoup {
 		QuickSort sorter = new QuickSort(new HistComparator(hist));
 		sorter.sort(objects);
 		
-		out.println("Leak Type Histogram:");
+		out.println("<H2>Leak Histogram:</H2>");
+		out.println("<PRE>");
 		int count = objects.length;
 		while (count > 0) {
 			Object object = objects[--count];
 			out.println(object.toString() + " : " + hist.count(object));
 		}
+		out.println("</PRE>");
 	}
 }
