@@ -122,8 +122,8 @@ ImageURLImpl::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
-NS_IMPL_ADDREF(ImageURLImpl)
-NS_IMPL_RELEASE(ImageURLImpl)
+NS_IMPL_THREADSAFE_ADDREF(ImageURLImpl)
+NS_IMPL_THREADSAFE_RELEASE(ImageURLImpl)
 
 void 
 ImageURLImpl::SetReader(ilINetReader *aReader)
