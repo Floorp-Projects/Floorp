@@ -126,7 +126,69 @@ function calendarManager( CalendarWindow )
 /*
 ** Launch the new calendar file dialog
 */
-calendarManager.prototype.launchAddCalendarDialog = function calMan_launchAddCalendarDialog( aName, aUrl )
+calendarManager.prototype.launchAddCalendarDialog = function calMan_launchAddCalendarDialog( aName )
+{
+   // set up a bunch of args to pass to the dialog
+   var ThisCalendarObject = new CalendarObject();
+   
+   if( aName )
+      ThisCalendarObject.name = aName;
+
+   var args = new Object();
+   args.mode = "new";
+
+   var thisManager = this;
+
+   var callback = function( ThisCalendarObject ) { thisManager.addServerDialogResponse( ThisCalendarObject ) };
+
+   args.onOk =  callback;
+   args.CalendarObject = ThisCalendarObject;
+
+   // open the dialog modally
+   openDialog("chrome://calendar/content/localCalDialog.xul", "caAddServer", "chrome,modal", args );
+}
+
+/*
+     ** Launch the edit calendar file dialog
+*/
+calendarManager.prototype.launchEditCalendarDialog = function calMan_launchEditCalendarDialog( )
+{
+   //get the currently selected calendar
+
+   // set up a bunch of args to pass to the dialog
+   var ThisCalendarObject = new CalendarObject();
+
+   var SelectedCalendarId = this.getSelectedCalendarId();
+   
+   var SelectedCalendar = this.rdf.getNode( SelectedCalendarId );
+   ThisCalendarObject.Id = SelectedCalendarId;
+   
+   ThisCalendarObject.name = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#name" );
+   ThisCalendarObject.path = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#path" );
+   ThisCalendarObject.active = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#active" );
+   ThisCalendarObject.remote = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#remote" );
+   ThisCalendarObject.remotePath = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" );
+   ThisCalendarObject.publishAutomatically = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" );
+   
+   var args = new Object();
+   args.mode = "edit";
+
+   var thisManager = this;
+
+   var callback = function( ThisCalendarObject ) { thisManager.editServerDialogResponse( ThisCalendarObject ) };
+
+   args.onOk =  callback;
+   args.CalendarObject = ThisCalendarObject;
+
+   // open the dialog modally
+   openDialog("chrome://calendar/content/localCalDialog.xul", "caEditServer", "chrome,modal", args );
+}
+
+
+/*
+** Launch the new calendar file dialog
+*/
+calendarManager.prototype.launchAddRemoteCalendarDialog = function calMan_launchAddCalendarDialog( aName, aUrl )
 {
    // set up a bunch of args to pass to the dialog
    var ThisCalendarObject = new CalendarObject();
@@ -157,7 +219,7 @@ calendarManager.prototype.launchAddCalendarDialog = function calMan_launchAddCal
 /*
      ** Launch the edit calendar file dialog
 */
-calendarManager.prototype.launchEditCalendarDialog = function calMan_launchEditCalendarDialog( )
+calendarManager.prototype.launchEditRemoteCalendarDialog = function calMan_launchEditCalendarDialog( )
 {
    //get the currently selected calendar
 
@@ -480,7 +542,7 @@ calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( C
          var CalendarNameWithExtension = arrayForNames[ arrayForNames.length - 1 ];
          var CalendarName = CalendarNameWithExtension.replace( ".ics", "" );
 
-         this.launchAddCalendarDialog( CalendarName, Channel.URI.spec );
+         this.launchAddRemoteCalendarDialog( CalendarName, Channel.URI.spec );
 
       }
       else

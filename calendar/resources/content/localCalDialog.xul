@@ -67,7 +67,7 @@
    <!-- Javascript includes -->
    
    <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-   <script type="application/x-javascript" src="chrome://calendar/content/serverDialog.js"/>
+   <script type="application/x-javascript" src="chrome://calendar/content/localCalDialog.js"/>
    
    <!-- Data used in JS from dtd -->
    
@@ -105,55 +105,27 @@
                         <textbox flex="1" id="server-name-textbox"/>
                     </row>
                     
-                    <!-- Remote Location -->    
+                    <!-- Location -->    
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
                             <description>&calendar.server.dialog.location.label;</description>
                         </hbox>
                         <hbox>
                            <textbox id="server-path-textbox" flex="1" /> 
+                           <button oncommand="launchFilePicker()" label="&calendar.server.dialog.browse.label;"/>
                         </hbox>
                     </row>
                     
-						  <!-- Local Location -->    
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <description>&calendar.server.dialog.local.location.label;</description>
-                        </hbox>
-                        <hbox>
-                           <textbox readonly="true" id="server-local-path-textbox" flex="1" /> 
-                        </hbox>
-                    </row>
-                    
-						  <!-- Username -->    
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <description>&calendar.server.dialog.username.label;</description>
-                        </hbox>
-                        <textbox flex="1" id="server-username-textbox"/>
-                    </row>
-                    
-                    <!-- Password -->    
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <description>&calendar.server.dialog.password.label;</description>
-                        </hbox>
-                        <textbox flex="1" id="server-password-textbox"/>
-                    </row>
-						  
-						  <!-- Publish Automatically -->    
+                    <!-- File Picker Button -->    
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end"/>
-                        <hbox>
-									<checkbox id="server-publish-checkbox"/>
-									<description flex="1">&calendar.server.dialog.publish.label;</description>
-								</hbox>
+                        <hbox style="max-width: 400px;"> 
+                           
+                           <description flex="1">&calendar.local.calendar.dialog.help.label;</description>
+                        </hbox>
                     </row>
                   </rows>
                </grid> 
-            
-            
       </vbox> <!-- standard-dialog-content -->
    </vbox> <!-- dialog-box -->
-
 </dialog>

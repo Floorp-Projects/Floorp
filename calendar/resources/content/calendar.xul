@@ -97,8 +97,10 @@
    <command id="modify_todo_command" oncommand="modifyToDoCommand( event )"/>
    <command id="delete_todo_command" oncommand="deleteToDoCommand()" disabled="true"/>
 
-   <command id="new_server_command" oncommand="gCalendarWindow.calendarManager.launchAddCalendarDialog()"/>
-   <command id="edit_server_command" oncommand="gCalendarWindow.calendarManager.launchEditCalendarDialog()"/>
+   <command id="new_local_calendar_command" oncommand="gCalendarWindow.calendarManager.launchAddCalendarDialog()"/>
+   <command id="edit_local_calendar_command" oncommand="gCalendarWindow.calendarManager.launchEditCalendarDialog()"/>
+   <command id="new_server_command" oncommand="gCalendarWindow.calendarManager.launchAddRemoteCalendarDialog()"/>
+   <command id="edit_server_command" oncommand="gCalendarWindow.calendarManager.launchEditRemoteCalendarDialog()"/>
    <command id="delete_server_command" oncommand="deleteCalendar()"/>
    <command id="find_new_calendar_command" oncommand="goFindNewCalendars()"/>
 
@@ -249,8 +251,8 @@
 
 <!-- CALENDAR LIST CONTEXT MENU -->
 <popup id="calendarlist-context-menu">
-   <menuitem label="&calendar.context.newserver.label;"     observes="new_server_command"/>
-   <menuitem label="&calendar.context.editserver.label;"     observes="edit_server_command"/>
+   <menuitem label="&calendar.context.newserver.label;"     observes="new_local_calendar_command"/>
+   <menuitem label="&calendar.context.editserver.label;"     observes="edit_local_calendar_command"/>
    <menuitem label="&calendar.context.deleteserver.label;"     observes="delete_server_command"/>
    <menuitem label="&calendar.context.refreshserver.label;" observes="refresh_remote_calendars"/>
 	<menuitem label="Publish Calendar" observes="publish_calendar"/>

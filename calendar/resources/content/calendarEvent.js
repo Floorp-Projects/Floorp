@@ -368,6 +368,7 @@ CalendarEventDataSource.prototype.getEventsDisplayForRange = function calEvent_g
    while( eventList.hasMoreElements() )
    {
       eventDisplays[ eventDisplays.length ] = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEventDisplay);
+      alert ( "in getEventsDisplayForRange "+new Date( eventDisplays[ 0 ].displayDate ) );
    }
 
    eventDisplays.sort( this.orderEventsByDisplayDate );

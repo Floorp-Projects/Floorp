@@ -254,10 +254,11 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
    {
       var calendarEventDisplay = monthEventList[ eventIndex ];
       
-      var eventDate = new Date( calendarEventDisplay.displayDate );
       // get the day box for the calendarEvent's day
-       var eventDayInView = Math.floor( (eventDate - this.firstDateOfView ) / (1000 * 60 * 60 * 24) ) ;
-      
+       var tempDate = new Date( calendarEventDisplay.displayDate );
+
+      var eventDayInView = Math.floor( tempDate.getDate( ) + this.firstDayOfWeek ) ;
+       alert( eventDayInView );
        var dayBoxItem = this.dayBoxItemArray[ eventDayInView ];       
             
       if( !dayBoxItem )
@@ -493,6 +494,8 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
    var firstDayOfWeek = firstDate.getDay() - Offset;
    if( firstDayOfWeek < 0 )
       firstDayOfWeek+=7;
+
+   this.firstDayOfWeek = firstDayOfWeek;
 
    var lastDayOfMonth = DateUtils.getLastDayOfMonth( newYear, newMonth );
    this.firstDateOfView = new Date( newYear, newMonth, 1 - firstDayOfWeek, 0, 0, 0 );

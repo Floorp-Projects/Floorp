@@ -40,31 +40,27 @@
 
 
 
-/***** calendar/calendarEventDialog.js
+/***** calendar/localCalDialog.js
 * AUTHOR
-*   Garth Smedley
+*   Mike Potter
 * REQUIRED INCLUDES 
-*   <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
-*   <script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"/>
 *
 * NOTES
-*   Code for the calendar's new/edit event dialog.
+*   Code for creating a new local calendar.
 *
 *  Invoke this dialog to create a new event as follows:
 
    var args = new Object();
    args.mode = "new";               // "new" or "edit"
    args.onOk = <function>;          // funtion to call when OK is clicked
-   args.calendarEvent = calendarEvent;    // newly creatd calendar event to be editted
     
-   calendar.openDialog("caNewEvent", "chrome://calendar/content/eventDialog.xul", true, args );
+   calendar.openDialog("caNewCalendar", "chrome://calendar/content/localCalDialog.xul", true, args );
 *
 *  Invoke this dialog to edit an existing event as follows:
 *
    var args = new Object();
    args.mode = "edit";                    // "new" or "edit"
    args.onOk = <function>;                // funtion to call when OK is clicked
-   args.calendarEvent = calendarEvent;    // javascript object containin the event to be editted
 
 * When the user clicks OK the onOk function will be called with a calendar event object.
 *
@@ -121,15 +117,7 @@ function loadCalendarServerDialog()
 
    document.getElementById( "server-name-textbox" ).value = gCalendarObject.name;
 
-   document.getElementById( "server-username-textbox" ).value = gCalendarObject.username;
-
-   document.getElementById( "server-password-textbox" ).value = gCalendarObject.password;
-
-   document.getElementById( "server-publish-checkbox" ).checked = gCalendarObject.publishAutomatically;
-
-   document.getElementById( "server-path-textbox" ).value = gCalendarObject.remotePath;
-   
-   document.getElementById( "server-local-path-textbox" ).value = gCalendarObject.path;
+   document.getElementById( "server-path-textbox" ).value = gCalendarObject.path;
    
    // start focus on title
    
@@ -149,13 +137,7 @@ function onOKCommand()
 {
    gCalendarObject.name = document.getElementById( "server-name-textbox" ).value;
 
-   gCalendarObject.remotePath = document.getElementById( "server-path-textbox" ).value;
-   
-   gCalendarObject.username = document.getElementById( "server-username-textbox" ).value;
-
-   gCalendarObject.password = document.getElementById( "server-password-textbox" ).value;
-
-   gCalendarObject.publishAutomatically = document.getElementById( "server-publish-checkbox" ).checked;
+   gCalendarObject.path = document.getElementById( "server-path-textbox" ).value;
 
    //TODO: check that the gCalendarObject.path is actually a file, if its not, create it.
    
@@ -164,4 +146,51 @@ function onOKCommand()
       
    // tell standard dialog stuff to close the dialog
    return true;
+}
+
+
+function launchFilePicker()
+{
+   // No show the 'Save As' dialog and ask for a filename to save to
+   const nsIFilePicker = Components.interfaces.nsIFilePicker;
+
+   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+
+   // caller can force disable of sand box, even if ON globally
+
+   fp.init(window, "Save", nsIFilePicker.modeSave);
+
+   var ServerName = document.getElementById( "server-name-textbox" ).value;
+
+   if( ServerName == "" )
+      fp.defaultString = "MozillaCalendarFile.ics";
+   else
+      fp.defaultString = "MozillaCalendar"+ServerName+".ics";
+   
+   fp.defaultExtension = "ics";
+
+   const filterCalendar    = "Calendar Files";
+   const extensionCalendar = ".ics";
+   fp.appendFilter( filterCalendar, "*" + extensionCalendar );
+   
+   fp.show();
+
+   if (fp.file && fp.file.path.length > 0)
+   {
+      document.getElementById( "server-path-textbox" ).value = fp.file.path;
+
+      gCalendarObject.path = fp.file.path;
+
+      if( document.getElementById( "server-name-textbox" ).value == "" )
+      {
+         var fullPathRegex = new RegExp(".*[/\\\\:]([^/\\\\:]+)[\.]ics$");
+            
+         var filename;
+          
+         if (fullPathRegex.test(fp.file.path))
+            filename = fp.file.path.replace(fullPathRegex, "$1");
+            
+         document.getElementById( "server-name-textbox" ).value = filename;
+      }
+   }
 }
