@@ -113,7 +113,7 @@ public class NativeJavaPackage extends ScriptableObject {
     public static Scriptable init(Scriptable scope)
         throws PropertyException
     {
-        NativeJavaPackage packages = new NativeJavaPackage.TopLevelPackage();
+        final NativeJavaPackage packages = new TopLevelPackage();
         packages.setPrototype(getObjectPrototype(scope));
         packages.setParentScope(scope);
 
@@ -131,17 +131,19 @@ public class NativeJavaPackage extends ScriptableObject {
             nameStart = nameEnd + 1;
         }
 
-        Method[] methods = FunctionObject.getMethodList(
-                               NativeJavaPackage.class);
-        Method m = FunctionObject.findSingleMethod(methods,
-                                                   "jsFunction_getClass");
-        FunctionObject f = new FunctionObject("getClass", m, scope);
+        JIFunction getClass = new JIFunction("getClass", 1) {
+            public Object call(Context fcx, Scriptable fscope,
+                               Scriptable thisObj, Object[] args)
+            {
+                return js_getClass(fcx, fscope, packages, args);
+            }
+        };
 
         // It's safe to downcast here since initStandardObjects takes
         // a ScriptableObject.
         ScriptableObject global = (ScriptableObject) scope;
 
-        global.defineProperty("getClass", f, ScriptableObject.DONTENUM);
+        getClass.defineAsProperty(global, ScriptableObject.DONTENUM);
         global.defineProperty("Packages", packages, ScriptableObject.DONTENUM);
         global.defineProperty("java", javaAlias, ScriptableObject.DONTENUM);
 
@@ -255,17 +257,15 @@ public class NativeJavaPackage extends ScriptableObject {
         return "[JavaPackage " + packageName + "]";
     }
 
-    public static Scriptable jsFunction_getClass(Context cx,
-                                                 Scriptable thisObj,
-                                                 Object[] args,
-                                                 Function funObj)
+    static final Scriptable js_getClass(Context cx, Scriptable scope,
+                                        NativeJavaPackage top, Object[] args)
     {
         if (args.length > 0  && args[0] instanceof Wrapper) {
-            Scriptable result = getTopLevelScope(thisObj);
+            Scriptable result = top;
             Class cl = ((Wrapper) args[0]).unwrap().getClass();
             // Evaluate the class name by getting successive properties of
             // the string to find the appropriate NativeJavaClass object
-            String name = "Packages." + cl.getName();
+            String name = cl.getName();
             int offset = 0;
             for (;;) {
                 int index = name.indexOf('.', offset);
@@ -285,7 +285,8 @@ public class NativeJavaPackage extends ScriptableObject {
             Context.getMessage0("msg.not.java.obj"));
     }
 
-    private Class findClass(Context cx, String className) {
+    private Class findClass(Context cx, String className)
+    {
         Class cl = null;
         ClassLoader loader = classLoader;
         if (loader == null) {
@@ -302,3 +303,4 @@ public class NativeJavaPackage extends ScriptableObject {
     private String packageName;
     private ClassLoader classLoader;
 }
+

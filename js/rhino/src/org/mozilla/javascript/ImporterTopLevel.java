@@ -85,7 +85,7 @@ public class ImporterTopLevel extends ScriptableObject {
     }
 
     private void init() {
-        (new ImporterFunctions(this)).define(this);
+        ImporterFunctions.setup(this);
     }
 
     public String getClassName() {
@@ -177,36 +177,38 @@ public class ImporterTopLevel extends ScriptableObject {
     private ObjArray importedPackages = new ObjArray();
 }
 
-final class ImporterFunctions implements Serializable, IdFunctionMaster
+final class ImporterFunctions extends JIFunction
 {
-    ImporterFunctions(ImporterTopLevel importer)
+    private ImporterFunctions(ImporterTopLevel importer, int id)
     {
         this.importer = importer;
+        this.id = id;
+        if (id == Id_importClass) {
+            initNameArity("importClass", 1);
+        } else {
+            if (id != Id_importPackage) Context.codeBug();
+            initNameArity("importPackage", 1);
+        }
+        defineAsProperty(importer);
     }
 
-    void define(Scriptable scope)
+    static void setup(ImporterTopLevel importer)
     {
-        IdFunction.define(scope, "importClass", this, Id_importClass);
-        IdFunction.define(scope, "importPackage", this, Id_importPackage);
+        new ImporterFunctions(importer, Id_importClass);
+        new ImporterFunctions(importer, Id_importPackage);
     }
 
-    public Object execMethod(int methodId, IdFunction function, Context cx,
-                             Scriptable scope, Scriptable thisObj,
-                             Object[] args)
+    public Object call(Context cx, Scriptable scope, Scriptable thisObj,
+                       Object[] args)
         throws JavaScriptException
     {
-        if (methodId == Id_importClass) {
+        if (id == Id_importClass) {
             importer.importClass(cx, thisObj, args);
         } else {
-            if (methodId != Id_importPackage) Context.codeBug();
+            if (id != Id_importPackage) Context.codeBug();
             importer.importPackage(cx, thisObj, args);
         }
         return Undefined.instance;
-    }
-
-    public int methodArity(int methodId)
-    {
-        return 1;
     }
 
     private static final int
@@ -214,4 +216,5 @@ final class ImporterFunctions implements Serializable, IdFunctionMaster
         Id_importPackage  =  2;
 
     private ImporterTopLevel importer;
+    private int id;
 }
