@@ -2459,105 +2459,107 @@ int CGenericFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_bConference = FEU_IsConfAppAvailable();
 
 	CMenu *pMenu=GetMenu();
+	if (pMenu)
+	{
 
-	#ifdef DEBUG_WHITEBOX
-		pMenu->AppendMenu(MF_STRING,IDS_WHITEBOX_MENU,"&WhiteBox");
+		#ifdef DEBUG_WHITEBOX
+			pMenu->AppendMenu(MF_STRING,IDS_WHITEBOX_MENU,"&WhiteBox");
+		#endif
+
+		CString communicatorStr, bookmarksStr, fileBookmarkStr;
+
+		//Communicator is always the second to last menu popup so adjust accordingly
+		int nWindowPosition = pMenu->GetMenuItemCount() - 2;
+
+		if(nWindowPosition != -1)
+		{
+			CMenu *pWindowMenu = pMenu->GetSubMenu(nWindowPosition);
+
+			// Check if we need to add the Calendar menu item
+
+			if(FEU_IsCalendarAvailable())
+			{
+				int nTaskBarPosition = WFE_FindMenuItem(pWindowMenu, ID_WINDOW_TASKBAR);
+
+				if(nTaskBarPosition != -1)
+					pWindowMenu->InsertMenu(nTaskBarPosition - 1, MF_BYPOSITION, ID_WINDOW_CALENDAR, szLoadString(IDS_CALENDAR_MENU));
+			}
+
+			if(FEU_IsIBMHostOnDemandAvailable())
+			{
+				int nTaskBarPosition = WFE_FindMenuItem(pWindowMenu, ID_WINDOW_TASKBAR);
+
+				if(nTaskBarPosition != -1)
+					pWindowMenu->InsertMenu(nTaskBarPosition - 1, MF_BYPOSITION, ID_WINDOW_IBMHOSTONDEMAND, szLoadString(IDS_IBMHOSTONDEMAND_MENU));
+			}
+
+ 			if(FEU_IsNetcasterAvailable())
+ 			{
+ 				int nTaskBarPosition = WFE_FindMenuItem(pWindowMenu, ID_WINDOW_TASKBAR);
+
+	#ifndef MOZ_TASKBAR
+				if (nTaskBarPosition == -1)
+					nTaskBarPosition = 2 ;  // Right below &Navigator on Lite version
+	#endif
+ 
+ 				if(nTaskBarPosition != -1)
+ 					pWindowMenu->InsertMenu(nTaskBarPosition - 1, MF_BYPOSITION, ID_WINDOW_NETCASTER, szLoadString(IDS_NETCASTER_MENU));
+ 			}
+ 
+			if(FEU_IsAimAvailable())
+ 			{
+ 				int nTaskBarPosition = WFE_FindMenuItem(pWindowMenu, ID_WINDOW_TASKBAR);
+ 
+ 				if(nTaskBarPosition != -1)
+ 					pWindowMenu->InsertMenu(nTaskBarPosition - 1, MF_BYPOSITION, ID_WINDOW_AIM, szLoadString(IDS_AIM_MENU));
+ 			}
+
+	#ifdef XP_WIN32
+			// We can start or activate LiveWire SiteManager
+			//  if we have a registration handle
+			if( bSiteMgrIsRegistered ){
+				int nTaskBarPosition = WFE_FindMenuItem(pWindowMenu, ID_WINDOW_TASKBAR);
+
+				if(nTaskBarPosition != -1)
+					pWindowMenu->InsertMenu(nTaskBarPosition - 1, MF_BYPOSITION, ID_ACTIVATE_SITE_MANAGER, szLoadString(IDS_SITE_MANAGER));
+			}
 	#endif
 
-	CString communicatorStr, bookmarksStr, fileBookmarkStr;
 
-	//Communicator is always the second to last menu popup so adjust accordingly
-	int nWindowPosition = pMenu->GetMenuItemCount() - 2;
+			// Replace the bookmark menu with a new menu that can have ON_DRAWITEM overridden
+			//BookMark is the First Popup in the Communicator Menu so loop through to find it.
+			UINT nBookmarksPosition = 0;
+			while(!pWindowMenu->GetSubMenu(nBookmarksPosition) && nBookmarksPosition < pWindowMenu->GetMenuItemCount())
+				nBookmarksPosition++;
 
-	if(nWindowPosition != -1)
-	{
-		CMenu *pWindowMenu = pMenu->GetSubMenu(nWindowPosition);
-
-		// Check if we need to add the Calendar menu item
-
-		if(FEU_IsCalendarAvailable())
-		{
-			int nTaskBarPosition = WFE_FindMenuItem(pWindowMenu, ID_WINDOW_TASKBAR);
-
-			if(nTaskBarPosition != -1)
-				pWindowMenu->InsertMenu(nTaskBarPosition - 1, MF_BYPOSITION, ID_WINDOW_CALENDAR, szLoadString(IDS_CALENDAR_MENU));
-		}
-
-		if(FEU_IsIBMHostOnDemandAvailable())
-		{
-			int nTaskBarPosition = WFE_FindMenuItem(pWindowMenu, ID_WINDOW_TASKBAR);
-
-			if(nTaskBarPosition != -1)
-				pWindowMenu->InsertMenu(nTaskBarPosition - 1, MF_BYPOSITION, ID_WINDOW_IBMHOSTONDEMAND, szLoadString(IDS_IBMHOSTONDEMAND_MENU));
-		}
-
- 		if(FEU_IsNetcasterAvailable())
- 		{
- 			int nTaskBarPosition = WFE_FindMenuItem(pWindowMenu, ID_WINDOW_TASKBAR);
-
-#ifndef MOZ_TASKBAR
-            if (nTaskBarPosition == -1)
-                nTaskBarPosition = 2 ;  // Right below &Navigator on Lite version
-#endif
- 
- 			if(nTaskBarPosition != -1)
- 				pWindowMenu->InsertMenu(nTaskBarPosition - 1, MF_BYPOSITION, ID_WINDOW_NETCASTER, szLoadString(IDS_NETCASTER_MENU));
- 		}
- 
-		if(FEU_IsAimAvailable())
- 		{
- 			int nTaskBarPosition = WFE_FindMenuItem(pWindowMenu, ID_WINDOW_TASKBAR);
- 
- 			if(nTaskBarPosition != -1)
- 				pWindowMenu->InsertMenu(nTaskBarPosition - 1, MF_BYPOSITION, ID_WINDOW_AIM, szLoadString(IDS_AIM_MENU));
- 		}
-
-#ifdef XP_WIN32
-        // We can start or activate LiveWire SiteManager
-        //  if we have a registration handle
-        if( bSiteMgrIsRegistered ){
-			int nTaskBarPosition = WFE_FindMenuItem(pWindowMenu, ID_WINDOW_TASKBAR);
-
-			if(nTaskBarPosition != -1)
-				pWindowMenu->InsertMenu(nTaskBarPosition - 1, MF_BYPOSITION, ID_ACTIVATE_SITE_MANAGER, szLoadString(IDS_SITE_MANAGER));
-        }
-#endif
-
-
-		// Replace the bookmark menu with a new menu that can have ON_DRAWITEM overridden
-		//BookMark is the First Popup in the Communicator Menu so loop through to find it.
-		UINT nBookmarksPosition = 0;
-		while(!pWindowMenu->GetSubMenu(nBookmarksPosition) && nBookmarksPosition < pWindowMenu->GetMenuItemCount())
-			nBookmarksPosition++;
-
-		if(nBookmarksPosition < pWindowMenu->GetMenuItemCount())
-		{
-			CMenu *pOldBookmarksMenu = pWindowMenu->GetSubMenu(nBookmarksPosition);
-			char bookmarksStr[30];
-
-			if(pOldBookmarksMenu)
+			if(nBookmarksPosition < pWindowMenu->GetMenuItemCount())
 			{
-				m_pBookmarksMenu=new CTreeMenu;
+				CMenu *pOldBookmarksMenu = pWindowMenu->GetSubMenu(nBookmarksPosition);
+				char bookmarksStr[30];
 
-				m_pBookmarksMenu->CreatePopupMenu();
-				
-				m_OriginalBookmarksGarbageList = new CTreeItemList;
+				if(pOldBookmarksMenu)
+				{
+					m_pBookmarksMenu=new CTreeMenu;
 
-				CopyMenu(pOldBookmarksMenu, m_pBookmarksMenu, m_OriginalBookmarksGarbageList);
-				pWindowMenu->GetMenuString(nBookmarksPosition, bookmarksStr, 30, MF_BYPOSITION);
-				pWindowMenu->DeleteMenu(nBookmarksPosition, MF_BYPOSITION);
-				pWindowMenu->InsertMenu(nBookmarksPosition, MF_BYPOSITION|MF_STRING|MF_POPUP, (UINT)m_pBookmarksMenu->GetSafeHmenu(), bookmarksStr);
+					m_pBookmarksMenu->CreatePopupMenu();
+					
+					m_OriginalBookmarksGarbageList = new CTreeItemList;
 
-				//FileBookmark is the First Popup in the BookMarks Menu so loop through to find it.
-				UINT nfileBookmarksPosition = 0;
-				while(!m_pBookmarksMenu->GetSubMenu(nfileBookmarksPosition) && nfileBookmarksPosition < m_pBookmarksMenu->GetMenuItemCount())
-					nfileBookmarksPosition++;
-				m_pFileBookmarkMenu = (CTreeMenu*)m_pBookmarksMenu->GetSubMenu(nfileBookmarksPosition);
+					CopyMenu(pOldBookmarksMenu, m_pBookmarksMenu, m_OriginalBookmarksGarbageList);
+					pWindowMenu->GetMenuString(nBookmarksPosition, bookmarksStr, 30, MF_BYPOSITION);
+					pWindowMenu->DeleteMenu(nBookmarksPosition, MF_BYPOSITION);
+					pWindowMenu->InsertMenu(nBookmarksPosition, MF_BYPOSITION|MF_STRING|MF_POPUP, (UINT)m_pBookmarksMenu->GetSafeHmenu(), bookmarksStr);
 
-				LoadBookmarkMenuBitmaps();
+					//FileBookmark is the First Popup in the BookMarks Menu so loop through to find it.
+					UINT nfileBookmarksPosition = 0;
+					while(!m_pBookmarksMenu->GetSubMenu(nfileBookmarksPosition) && nfileBookmarksPosition < m_pBookmarksMenu->GetMenuItemCount())
+						nfileBookmarksPosition++;
+					m_pFileBookmarkMenu = (CTreeMenu*)m_pBookmarksMenu->GetSubMenu(nfileBookmarksPosition);
+
+					LoadBookmarkMenuBitmaps();
+				}
 			}
 		}
-
 	}
 
 #ifdef MOZ_TASKBAR
