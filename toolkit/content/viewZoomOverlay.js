@@ -91,7 +91,9 @@ ZoomManager.prototype = {
   reduce : function() {
     this.jump(-1);
   },
-
+  reset : function() {
+    this.textZoom = 100;
+  },
   indexOf : function(aZoom) {
     var index = -1;
     if (this.isZoomInRange(aZoom)) {
