@@ -56,13 +56,14 @@ public:
 
 nsMsgCopyService::nsMsgCopyService()
 {
+	NS_INIT_REFCNT();
 }
 
 nsMsgCopyService::~nsMsgCopyService()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsMsgCopyService, kMsgCopyServiceCID);
+NS_IMPL_THREADSAFE_ISUPPORTS(nsMsgCopyService, nsIMsgCopyService::GetIID());
 
 NS_IMETHODIMP
 nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src foler */
