@@ -590,7 +590,9 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
         isVertical = PR_TRUE;
       }
 
-      // see if we are in display mode, and set largeop or largeopOnly
+      // set the largeop or largeopOnly flags to suitably cover all the
+      // 8 possible cases depending on whether displaystyle, largeop,
+      // stretchy are true or false (see bug 69325).
       // . largeopOnly is taken if largeop=true and stretchy=false
       // . largeop is taken if largeop=true and stretchy=true
       if (NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags) &&
