@@ -1,20 +1,20 @@
-debugger.o: debugger.cpp world.h utilities.h systemtypes.h hash.h \
- parser.h interpreter.h jstypes.h gc_allocator.h vmtypes.h numerics.h \
- icodegenerator.h
 gc_allocator.o: gc_allocator.cpp gc_allocator.h gc_container.h
 hash.o: hash.cpp hash.h utilities.h systemtypes.h
 icodegenerator.o: icodegenerator.cpp numerics.h utilities.h \
- systemtypes.h world.h hash.h parser.h vmtypes.h icodegenerator.h
+ systemtypes.h world.h hash.h parser.h vmtypes.h jstypes.h \
+ gc_allocator.h icodegenerator.h
 interpreter.o: interpreter.cpp interpreter.h utilities.h systemtypes.h \
- jstypes.h gc_allocator.h vmtypes.h world.h hash.h parser.h numerics.h \
- icodegenerator.h
+ jstypes.h gc_allocator.h icodegenerator.h parser.h vmtypes.h world.h \
+ hash.h numerics.h
 js2.o: js2.cpp world.h utilities.h systemtypes.h hash.h parser.h \
- interpreter.h jstypes.h gc_allocator.h vmtypes.h numerics.h \
- icodegenerator.h
+ interpreter.h jstypes.h gc_allocator.h icodegenerator.h vmtypes.h \
+ numerics.h
+jstypes.o: jstypes.cpp jstypes.h gc_allocator.h utilities.h \
+ systemtypes.h numerics.h
 numerics.o: numerics.cpp numerics.h utilities.h systemtypes.h
 parser.o: parser.cpp numerics.h utilities.h systemtypes.h parser.h \
  world.h hash.h
 utilities.o: utilities.cpp utilities.h systemtypes.h
 vmtypes.o: vmtypes.cpp utilities.h systemtypes.h vmtypes.h world.h \
- hash.h parser.h numerics.h
+ hash.h parser.h numerics.h jstypes.h gc_allocator.h
 world.o: world.cpp world.h utilities.h systemtypes.h hash.h parser.h
