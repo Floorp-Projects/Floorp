@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -59,6 +59,7 @@ nsWidget::nsWidget()
   mIsDestroying = PR_FALSE;
   mOnDestroyCalled = PR_FALSE;
   mIsToplevel = PR_FALSE;
+  mUpdateArea.SetRect(0, 0, 0, 0);
 }
 
 nsWidget::~nsWidget()
@@ -440,15 +441,13 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
     ::gtk_widget_queue_draw(mWidget);
 
 #ifdef DEBUG_pavlov
-  g_print("nsWidget::Invalidate(%i)\n", aIsSynchronous);
+  g_print("nsWidget::Invalidate(this=%p, %i)\n", this, aIsSynchronous);
 #endif
   return NS_OK;
 }
 
 NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
-  GdkRectangle nRect;
-  
   if (mWidget == nsnull) {
     return NS_OK;  // mWidget is null during printing
   }
@@ -461,20 +460,24 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
     return NS_ERROR_FAILURE;
   }
 
-  nRect.width = aRect.width;
-  nRect.height = aRect.height;
-  nRect.x = aRect.x;
-  nRect.y = aRect.y;
 
-  if ( aIsSynchronous)
+  if ( aIsSynchronous) {
+      GdkRectangle nRect;
+      nRect.width = aRect.width;
+      nRect.height = aRect.height;
+      nRect.x = aRect.x;
+      nRect.y = aRect.y;
       ::gtk_widget_draw(mWidget, &nRect);
-  else
+  } else {
+      mUpdateArea.UnionRect(mUpdateArea, aRect);
       ::gtk_widget_queue_draw_area(mWidget,
                                    aRect.x, aRect.y,
                                    aRect.width, aRect.height);
+  }
 
 #ifdef DEBUG_pavlov
-  g_print("nsWidget::Invalidate({x=%i,y=%i,w=%i,h=%i}, %i)\n", aRect.x, aRect.y, aRect.width, aRect.height, aIsSynchronous);
+  g_print("nsWidget::Invalidate(this=%p, {x=%i,y=%i,w=%i,h=%i}, %i)\n",
+          this, aRect.x, aRect.y, aRect.width, aRect.height, aIsSynchronous);
 #endif
 
   return NS_OK;
@@ -485,17 +488,33 @@ NS_METHOD nsWidget::Update(void)
   if (! mWidget)
     return NS_OK;
 
-  GdkRectangle foo;
-  foo.width = mBounds.width;
-  foo.height = mBounds.height;
-  foo.x = 0;
-  foo.y = 0;
+  if (mUpdateArea.width && mUpdateArea.height) {
+    if (!mIsDestroying) {
+      GdkRectangle nRect;
+      nRect.width = mUpdateArea.width;
+      nRect.height = mUpdateArea.height;
+      nRect.x = mUpdateArea.x;
+      nRect.y = mUpdateArea.y;
+#ifdef DEBUG_pavlov
+      g_print("nsWidget::Update(this=%p): update {%i,%i,%i,%i}\n",
+              this, mUpdateArea.x, mUpdateArea.y,
+              mUpdateArea.width, mUpdateArea.height);
+#endif
+      ::gtk_widget_draw(mWidget, &nRect);
 
-  if (!mIsDestroying) {
-    ::gtk_widget_draw(mWidget, &foo);
-    return NS_OK;
+      mUpdateArea.SetRect(0, 0, 0, 0);
+      return NS_OK;
+    }
+    else {
+      return NS_ERROR_FAILURE;
+    }
   }
-  return NS_ERROR_FAILURE;
+  else {
+#ifdef DEBUG_pavlov
+  g_print("nsWidget::Update(this=%p): avoided update of empty area\n", this);
+#endif
+  }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
