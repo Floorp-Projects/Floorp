@@ -28,9 +28,24 @@ CContextMenuAttachment::CContextMenuAttachment(LStream* inStream)
 //-----------------------------------
 {
 	*inStream >> mMenuID >> mTextTraitsID;
-	mHostView = dynamic_cast<LView*>(LAttachable::GetDefaultAttachable());
-	mHostCommander = dynamic_cast<LCommander*>(LAttachable::GetDefaultAttachable());
+	mHostView = dynamic_cast<LPane*>(LAttachable::GetDefaultAttachable());
 	Assert_(mHostView);
+	mHostCommander = dynamic_cast<LCommander*>(LAttachable::GetDefaultAttachable());
+	if ( !mHostCommander )
+		mHostCommander = LCommander::GetDefaultCommander();
+	Assert_(mHostCommander);
+}
+
+//-----------------------------------
+CContextMenuAttachment::CContextMenuAttachment ( ResIDT inMenuID, ResIDT inTextTraitsID )
+:	LAttachment(), mMenuID(inMenuID), mTextTraitsID(inTextTraitsID)
+//-----------------------------------
+{
+	mHostView = dynamic_cast<LPane*>(LAttachable::GetDefaultAttachable());
+	Assert_(mHostView);
+	mHostCommander = dynamic_cast<LCommander*>(LAttachable::GetDefaultAttachable());
+	if ( !mHostCommander )
+		mHostCommander = LCommander::GetDefaultCommander();
 	Assert_(mHostCommander);
 }
 
@@ -193,7 +208,6 @@ void CContextMenuAttachment::DoPopup(const SMouseDownEvent& inMouseDown, EClickS
 		{
 			Int16 saveFont = ::LMGetSysFontFam();
 			Int16 saveSize = ::LMGetSysFontSize();
-			StMercutioMDEFTextState theMercutioMDEFTextState;
 			if (mTextTraitsID)
 			{				
 				TextTraitsH traitsH = UTextTraits::LoadTextTraits(mTextTraitsID);

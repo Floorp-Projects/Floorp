@@ -43,11 +43,12 @@ class CContextMenuAttachment : public LAttachment
 //	This listens to mouse clicks, waits for timeout, handles popup menu etc. It will also
 // 	handle changing the cursor if called from within AdjustCursorSelf(), etc.
 //
-//	Must be attached via constructor, just like CPaneEnabler.
+//	Must be attached via constructor, just like CPaneEnabler. [This is _so_ not true (pinkerton)]
 //======================================
 {
 public:
 	enum { class_ID = 'CxMn', msg_ContextMenu = 'CxMn', msg_ContextMenuCursor = 'CxMC'};
+							CContextMenuAttachment(ResIDT inMenuID, ResIDT inTextTraitsID);
 							CContextMenuAttachment(LStream* inStream);
 	virtual					~CContextMenuAttachment();
 	
@@ -89,6 +90,6 @@ protected:
 private:
 	ResIDT			mMenuID;
 	ResIDT			mTextTraitsID;
-	LView*			mHostView;
+	LPane*			mHostView;
 	LCommander*		mHostCommander; // same as view, precast for convenience
 }; // class CContextMenuAttachment
