@@ -93,6 +93,8 @@ function filepickerLoad() {
       filterMenuList.selectedIndex = 0;
     var filterBox = document.getElementById("filterBox");
     filterBox.removeAttribute("hidden");
+
+    filterMenuList.selectedIndex = o.filterIndex;
   } else if (filePickerMode == nsIFilePicker.modeGetFolder) {
     outlinerView.showOnlyDirectories = true;
   }
@@ -166,6 +168,10 @@ function openOnOK()
     gotoDirectory(dir);
   retvals.file = dir;
   retvals.buttonStatus = nsIFilePicker.returnCancel;
+  
+  var filterMenuList = document.getElementById("filterMenuList");
+  retvals.filterIndex = filterMenuList.selectedIndex;
+  
   return false;
 }
 

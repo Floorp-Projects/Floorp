@@ -85,3 +85,11 @@
 <!ENTITY keepProgressDialogUpMsg.label "Keep this window open after the download is complete.">
 <!ENTITY openFolder.label "Reveal Location">
 <!ENTITY open.label "Launch File">
+
+<!-- LOCALIZATION NOTE (filesFolder):
+     This is the name of the folder that is created parallel to a HTML file 
+     when it is saved "With Images". The ^BASE^ section is replaced with the
+     leaf name of the file being saved (minus extension). -->
+<!ENTITY filesFolder  "^BASE^_files">
+
+

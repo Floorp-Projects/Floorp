@@ -31,6 +31,8 @@ var dialog;
 
 // the helperAppLoader is a nsIHelperAppLauncher object
 var helperAppLoader;
+var webBrowserPersist;
+var persistArgs;
 
 // random global variables...
 var completed = false;
@@ -67,13 +69,15 @@ var progressListener = {
         percentMsg = replaceInsert( percentMsg, 1, 100 );
         dialog.progressText.setAttribute("label", percentMsg);
 
-        processEndOfDownload();
+        const nsIWebBrowserPersist = Components.interfaces.nsIWebBrowserPersist;
+        if (helperAppLoader || webBrowserPersist &&
+            webBrowserPersist.currentState == nsIWebBrowserPersist.PERSIST_STATE_FINISHED)
+          setTimeout("processEndOfDownload()", 300);
       }
     },
 
     onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
     {
-
       if (!gRestartChecked) 
       {
         gRestartChecked = true;
@@ -281,11 +285,29 @@ function loadDialog()
 {
   var sourceUrlValue = {};
   var initialDownloadTimeValue = {};
-  // targetFile is global because we are going to want re-use later one...
-  targetFile =  helperAppLoader.getDownloadInfo(sourceUrlValue, initialDownloadTimeValue);
+  var sourceUrl = null;
+  
+   // targetFile is global because we are going to want re-use later one...
+  if (helperAppLoader) {
+    targetFile =  helperAppLoader.getDownloadInfo(sourceUrlValue, initialDownloadTimeValue);
 
-  var sourceUrl = sourceUrlValue.value;
-  startTime = initialDownloadTimeValue.value / 1000;
+    sourceUrl = sourceUrlValue.value;
+    startTime = initialDownloadTimeValue.value / 1000;
+  }
+  else if (webBrowserPersist) {
+    // When saving web pages, the file we're saving into is passed to us as a parameter.
+    try {
+      persistArgs.source.QueryInterface(Components.interfaces.nsIURI);
+      sourceUrl = persistArgs.source;
+    }
+    catch (e) {
+      sourceUrl = { spec: persistArgs.source.URL };
+    }
+  
+    // When saving web pages, we don't need to do anything special to receive the time
+    // at which the transfer started, so just assume it started 'now'.
+    startTime = ( new Date() ).getTime();  
+  }
 
   // set the elapsed time on the first pass...
   var now = ( new Date() ).getTime();
@@ -312,10 +334,15 @@ function replaceInsert( text, index, value ) {
 
 function onLoad() {
     // Set global variables.
-    helperAppLoader = window.arguments[0].QueryInterface( Components.interfaces.nsIHelperAppLauncher );
-
-    if ( !helperAppLoader ) {
-        dump( "Invalid argument to downloadProgress.xul\n" );
+    try {
+      helperAppLoader = window.arguments[0].QueryInterface( Components.interfaces.nsIHelperAppLauncher );
+    }
+    catch (e) {
+      webBrowserPersist = window.arguments[0].QueryInterface( Components.interfaces.nsIWebBrowserPersist );
+    }
+ 
+    if ( !helperAppLoader && !webBrowserPersist ) {
+        dump( "Invalid argument to helperAppDldProgress.xul\n" );
         window.close()
         return;
     }
@@ -342,11 +369,43 @@ function onLoad() {
     var object = this;
     doSetOKCancel("", function () { return object.onCancel();});
 
+    // set our web progress listener on the helper app launcher
+    if (helperAppLoader) 
+      helperAppLoader.setWebProgressListener(progressListener);
+    else if (webBrowserPersist) {
+      webBrowserPersist.progressListener = progressListener;
+      
+      persistArgs = window.arguments[1];
+      
+      targetFile = persistArgs.target;
+        
+      try {
+        var uri = persistArgs.source.QueryInterface(Components.interfaces.nsIURI);
+        webBrowserPersist.saveURI(uri, persistArgs.postData, targetFile);
+      }
+      catch (e) {
+        // Saving a Document, not a URI:
+        
+        // Create the local directory into which to save associated files. 
+        const lfContractID = "@mozilla.org/file/local;1";
+        const lfIID = Components.interfaces.nsILocalFile;
+        var filesFolder = Components .classes[lfContractID].createInstance(lfIID);
+        filesFolder.initWithUnicodePath(persistArgs.target.unicodePath);
+        
+        var nameWithoutExtension = filesFolder.leafName;
+        nameWithoutExtension = nameWithoutExtension.substring(0, nameWithoutExtension.lastIndexOf("."));
+        var filesFolderLeafName = getString("filesFolder");
+        filesFolderLeafName = filesFolderLeafName.replace(/\^BASE\^/, nameWithoutExtension);
+
+        filesFolder.leafName = filesFolderLeafName;
+        
+        filesFolder.create(lfIID.DIRECTORY_TYPE, 0644);
+        webBrowserPersist.saveDocument(persistArgs.source, targetFile, filesFolder);
+      }
+    }
+    
     // Fill dialog.
     loadDialog();
-
-    // set our web progress listener on the helper app launcher
-    helperAppLoader.setWebProgressListener(progressListener);
 
     if ( window.opener ) {
         moveToAlertPosition();
@@ -395,6 +454,10 @@ function onCancel ()
      }
 
      catch( exception ) {}
+   }
+   else if (webBrowserPersist)
+   {
+     webBrowserPersist.cancelSave();
    }
 
   // Close up dialog by returning true.
@@ -445,8 +508,10 @@ function setupPostProgressUI()
 // and enable the open and open folder buttons on the dialog.
 function processEndOfDownload()
 {
-  if (!keepProgressWindowUpBox.checked)
+  if (!keepProgressWindowUpBox.checked) {
     closeWindow(); // shut down, we are all done.
+    return;
+  }
 
   // o.t the user has asked the window to stay open so leave it open and enable the open and open new folder buttons
   setupPostProgressUI();

@@ -62,6 +62,7 @@ var gBrowser = null;
 
 // focused frame URL
 var gFocusedURL = null;
+var gFocusedDocument = null;
 
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
@@ -98,6 +99,7 @@ function contentAreaFrameFocus()
   var focusedWindow = document.commandDispatcher.focusedWindow;
   if (isDocumentFrame(focusedWindow)) {
     gFocusedURL = focusedWindow.location.href;
+    gFocusedDocument = focusedWindow.document;
   }
 }
 

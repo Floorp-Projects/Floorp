@@ -126,7 +126,7 @@
       <menuitem id="context-savepage"
                 label="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey;"
-                oncommand="gContextMenu.savePage();"/>
+                oncommand="saveDocument(window._content.document);"/>
       <menuitem id="context-saveframe"
                 label="&saveFrameCmd.label;"
                 accesskey="&saveFrameCmd.accesskey;"
