@@ -2000,7 +2000,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
   //Take care of mailto: url
   nsIWebShell * root= nsnull;
-  PRInt32 index = urlSpec.Find("mailto:");
+  PRInt32 index = urlSpec.Find("mailto:", PR_TRUE);
   PRBool  isMail= PR_FALSE, isBrowser = PR_FALSE;
   if (index == 0) {
      isMail = PR_TRUE;

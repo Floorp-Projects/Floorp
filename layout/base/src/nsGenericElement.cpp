@@ -1227,7 +1227,7 @@ nsGenericElement::TriggerLink(nsIPresContext& aPresContext,
     // mailto: protocol. Note: This s'd go away after  NECKO lands
   
     PRInt32 offset = -1;
-    offset = aURLSpec.Find("mailto");
+    offset = aURLSpec.Find("mailto", PR_TRUE);
     if (offset >= 0)
       absURLSpec = aURLSpec;
 
