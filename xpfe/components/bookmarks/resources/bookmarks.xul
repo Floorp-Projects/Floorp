@@ -24,6 +24,7 @@
     Ben Goodger <ben@netscape.com>
     Blake Ross <blakeross@telocity.com>
     Dean Tessman <dean_tessman@hotmail.com>
+    Mike Kowalski <mikejk@ameritech.net>
 
 -->
 
@@ -251,7 +252,7 @@
                      command="cmd_bm_delete"/>
     </toolbar>
 
-    <toolbar id="bookmarks-search">
+    <toolbar id="bookmarks-search" grippytooltiptext="&bookmarksSearch.tooltip;">
       <label value="&find.label;" accesskey="&find.accesskey;" control="search-box"/>
       <textbox id="search-box" flex="1"
                type="timed" timeout="500"
