@@ -38,7 +38,6 @@
 /* Structures for the typelib components */
 
 typedef struct XPTHeader XPTHeader;
-typedef struct XPTAnnotation XPTAnnotation;
 typedef struct XPTInterfaceDirectoryEntry XPTInterfaceDirectoryEntry;
 typedef struct XPTInterfaceDescriptor XPTInterfaceDescriptor;
 typedef struct XPTConstDescriptor XPTConstDescriptor;
@@ -50,6 +49,21 @@ typedef struct XPTString XPTString;
 typedef struct XPTAnnotation XPTAnnotation;
 typedef struct XPTAnnotationPrefix XPTAnnotationPrefix;
 typedef struct XPTPrivateAnnotation XPTPrivateAnnotation;
+#ifndef nsID_h__
+/*
+ * We can't include nsID.h, because it's full of C++ goop and we're not doing
+ * C++ here, so we define our own minimal struct.  We protect against multiple
+ * definitions of this struct, though, and use the same field naming.
+ */
+struct nsID {
+    PRUint32 m0;
+    PRUint16 m1;
+    PRUint16 m2;
+    PRUint8  m3[8];
+};
+
+typedef struct nsID nsID;
+#endif
 
 /*
  * Every XPCOM typelib file begins with a header.
@@ -74,8 +88,8 @@ struct XPTHeader {
  * using its IID.  No interface should appear more than once in the array.
  */
 struct XPTInterfaceDirectoryEntry {
-    uint128                iid;
-    char                   *name; 
+    nsID                   iid;
+    char                   *name;
     char                   *namespace;
     XPTInterfaceDescriptor *interface_descriptor;
 };
@@ -86,7 +100,7 @@ struct XPTInterfaceDirectoryEntry {
  * single XPCOM interface, including all of its methods. 
  */
 struct XPTInterfaceDescriptor {
-    XPTInterfaceDescriptorEntry *parent_interface;
+    XPTInterfaceDirectoryEntry  *parent_interface;
     uint16                      num_methods;
     XPTMethodDescriptor         *method_descriptors;
     uint16                      num_constants;
@@ -102,7 +116,6 @@ struct XPTString {
     uint16 length;
     char   *bytes;
 };
-#define XPT_STRING_SIZE (2 + 4)
 
 /* 
  * A TypeDescriptor is a variable-size record used to identify the type of a 
@@ -135,7 +148,7 @@ struct XPTTypeDescriptor {
         XPTInterfaceDirectoryEntry *interface;
         uint8                      argnum;
     } type;
-}
+};
 #define XPT_TD_SIZE (XPT_TDP_SIZE + 4)
 
 /*
@@ -169,7 +182,7 @@ struct XPTConstDescriptor {
         uint64    ui64; 
         uint16    wch;
         char      ch; 
-        XPTstring *string;
+        XPTString *string;
     } value; /* varies according to type */
 };
 #define XPT_CD_SIZE (4 + XPT_TD_SIZE + 8)
@@ -228,12 +241,10 @@ struct XPTPrivateAnnotation {
     XPTString creator;
     XPTString private_data;
 };
-#define XPT_PA_SIZE (4 + XPT_STRING_SIZE*2)
 
 struct XPTAnnotation {
     XPTAnnotationPrefix prefix;
     XPTPrivateAnnotation private;
 };
-#define XPT_A_SIZE (XPT_AP_SIZE + XPT_PA_SIZE)
 
 #endif /* __xpt_struct_h__ */
