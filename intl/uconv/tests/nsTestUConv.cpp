@@ -24,7 +24,15 @@
 #include "nsICharsetConverterManager.h"
 #include "nsConverterCID.h"
 
+#ifdef XP_UNIX
+#define UCONV_DLL       "libuconv.so"
+#else
+#ifdef XP_WIN
 #define UCONV_DLL       "uconv.dll"
+#else /* XP_MAC */
+#define UCONV_DLL       "UCONV_DLL"
+#endif
+#endif
 #define TABLE_SIZE1     5
 
 nsICharsetConverterManager * ccMan = NULL;
