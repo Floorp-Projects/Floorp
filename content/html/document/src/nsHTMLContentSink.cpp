@@ -862,7 +862,7 @@ static void
 SetForm(nsIHTMLContent* aContent, nsIDOMHTMLFormElement* aForm)
 {
   nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(aContent));
-  NS_ASSERTION(formControl, "nsIDOMHTMLFormElement doesnt implement nsIFormControl?");
+  NS_ASSERTION(formControl, "nsIDOMHTMLFormElement doesn't implement nsIFormControl?");
 
   formControl->SetForm(aForm);
 }
@@ -1090,7 +1090,7 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
   // table
   if (aNodeType == eHTMLTag_input) {
     rv = NS_NewHTMLInputElement(aResult, aNodeInfo, aFromParser);
-    if (!aInsideNoXXXTag) {
+    if (NS_SUCCEEDED(rv) && !aInsideNoXXXTag) {
       SetForm(*aResult, aForm);
     }
     return rv;
@@ -1098,7 +1098,7 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
 
   if (aNodeType == eHTMLTag_select) {
     rv = NS_NewHTMLSelectElement(aResult, aNodeInfo, aFromParser);
-    if (!aInsideNoXXXTag) {
+    if (NS_SUCCEEDED(rv) && !aInsideNoXXXTag) {
       SetForm(*aResult, aForm);
     }
     return rv;
@@ -1106,15 +1106,18 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
 
   rv = sContentCreatorCallbacks[aNodeType](aResult, aNodeInfo);
 
-  switch (aNodeType) {
-  case eHTMLTag_button:
-  case eHTMLTag_fieldset:
-  case eHTMLTag_label:
-  case eHTMLTag_legend:
-  case eHTMLTag_object:
-  case eHTMLTag_textarea:
-    if (!aInsideNoXXXTag) {
+  if (NS_SUCCEEDED(rv) && !aInsideNoXXXTag) {
+    switch (aNodeType) {
+    case eHTMLTag_button:
+    case eHTMLTag_fieldset:
+    case eHTMLTag_label:
+    case eHTMLTag_legend:
+    case eHTMLTag_object:
+    case eHTMLTag_textarea:
       SetForm(*aResult, aForm);
+      break;
+    default:
+      break;
     }
   }
 
