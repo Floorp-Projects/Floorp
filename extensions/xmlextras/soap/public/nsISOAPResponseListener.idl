@@ -31,7 +31,7 @@ interface nsISOAPResponse;
  * responses are expected.
  */
 
-[scriptable, uuid(99ec6692-535f-11d4-9a58-000064657374)]
+[scriptable, function, uuid(99ec6692-535f-11d4-9a58-000064657374)]
 interface nsISOAPResponseListener : nsISupports {
   /**
    * This method is invoked when we receive an asynchronous response to 

@@ -30,7 +30,7 @@ interface nsISOAPMessage;
  * is recieved on a transport.
  */
 
-[scriptable, uuid(99ec6696-535f-11d4-9a58-000064657374)]
+[scriptable, function, uuid(99ec6696-535f-11d4-9a58-000064657374)]
 interface nsISOAPTransportListener : nsISupports {
 
   /**
