@@ -35,7 +35,7 @@
 #define PKIM_H
 
 #ifdef DEBUG
-static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.5 $ $Date: 2001/10/19 18:16:44 $ $Name:  $";
+static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.6 $ $Date: 2001/10/19 20:06:28 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
@@ -243,6 +243,13 @@ NSS_EXTERN NSSTime *
 NSSTime_Now
 (
   NSSTime *timeOpt
+);
+
+NSS_EXTERN NSSTime *
+NSSTime_SetPRTime
+(
+  NSSTime *timeOpt,
+  PRTime prTime
 );
 
 NSS_EXTERN PRTime
