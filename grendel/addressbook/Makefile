@@ -16,6 +16,8 @@
 # Corporation.  Portions created by Netscape are Copyright (C) 1997
 # Netscape Communications Corporation.  All Rights Reserved.
 
+TOPDIR = ..
+
 SUBDIRS=			\
 	addresscard		\
 	$(NULL)

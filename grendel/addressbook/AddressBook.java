@@ -371,6 +371,8 @@ public class AddressBook extends JFrame {
                     DataModel dm = (DataModel) mTable.getModel ();
                     dm.reloadData (ds.getDomainName(), ds.getPort(), textToSearchFor);
 
+                    dm.fireTableDataChanged();
+
                     //repaint the table with results.
                     mTable.repaint();
                 }
@@ -385,7 +387,7 @@ public class AddressBook extends JFrame {
     private GrendelToolBar createToolbar() {
 
         GrendelToolBar toolBar = new GrendelToolBar();
-        addToolbarButton(toolBar, null,     "images/newcard.gif",       "Create a new card");
+        addToolbarButton(toolBar, new NewCard(),     "images/newcard.gif",       "Create a new card");
         addToolbarButton(toolBar, null,     "images/newlist.gif",       "Create a new list");
         addToolbarButton(toolBar, null,     "images/properties.gif",    "Edit the selected card");
         addToolbarButton(toolBar, null,     "images/newmsg.gif",        "New Message (Ctrl+M)");
@@ -429,9 +431,10 @@ public class AddressBook extends JFrame {
 
 
 //        JButton b = new JButton(new ImageIcon(aImageName));
-//      b.setToolTipText(aToolTip);
+      b.setToolTipText(aToolTip);
 //      b.setPad(new Insets(3,3,3,3));
-//        b.addActionListener(aActionListener);
+      if (aActionListener != null) {
+        b.addActionListener(aActionListener);}
 
         aToolBar.add(b);
     }
@@ -498,6 +501,15 @@ System.out.println ("got card");
                                         else if (attrName.equals ("mail")) {
                                             mail = attr.getValue();
                                         }
+
+                                        else if (attrName.equals ("sn")) {
+                                           phone = attr.getValue();
+                                        }
+
+                                        else if (attrName.equals ("city")) {
+                                           city = attr.getValue();
+                                        }
+
                                 }
 
                     //create this row for the table.

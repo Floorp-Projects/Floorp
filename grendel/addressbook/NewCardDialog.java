@@ -25,7 +25,7 @@ import java.util.*;
 
 import javax.swing.*;
 
-class NewCardDialog extends Dialog {
+class NewCardDialog extends JDialog {
 
     NewCardDialog(Frame aParent) {
         //FIX: Resource
@@ -33,10 +33,16 @@ class NewCardDialog extends Dialog {
 
 //        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        JComponent namePanel = createNamePanel ();
-        add (namePanel);
+        JTabbedPane tabbedPane = new JTabbedPane();
+        getContentPane().add(tabbedPane, BorderLayout.CENTER);
+        //add (tabbedPane);
 
-//        JComponent contactPanel = createContactPanel ();
+        JComponent namePanel = createNamePanel ();
+        tabbedPane.addTab("Name",null,namePanel,"Name Information");
+//        add (namePanel);
+
+        JComponent contactPanel = createContactPanel ();
+        tabbedPane.addTab("Contact",null,contactPanel,"Contact Information");
 //        add (contactPanel);
 
 //        JComponent netConfPanel = createNetConfPanel ();
@@ -44,31 +50,91 @@ class NewCardDialog extends Dialog {
 
         setResizable(false);
         setSize (716, 515);
+
+        addWindowListener(new AppCloser());
+    }
+
+    protected final class AppCloser extends WindowAdapter {
+        public void windowClosing(WindowEvent e) {
+            dispose();
+        }
     }
 
     private JPanel createNamePanel () {
         //the outer most panel has groove etched into it.
         JPanel pane = new JPanel(false);
-//        pane.setLayout (new BoxLayout(pane, BoxLayout.Y_AXIS));
+        pane.setLayout (new FlowLayout(FlowLayout.LEFT));
 
-        JTextField mFirstName = makeField ("First Name:", 20);
-        pane.add (mFirstName);
-/*
-        JTextField mLastName = makeField ("Last Name:", 20);
-        pane.add (mLastName);
+        JPanel namePane = new JPanel(false);
+        namePane.setLayout (new GridLayout(3,2));
 
-        JTextField mOrganization = makeField ("Organization:", 20);
-        pane.add (mOrganization);
+        makeField ("First Name:", 20, namePane);
+        makeField ("Last Name:", 20, namePane);
+        makeField ("Display Name:",20, namePane);
 
-        JTextField mTitle = makeField ("Title:", 20);
-        pane.add (mTitle);
+        pane.add (namePane);
 
-        JTextField mEmail = makeField ("Email Address:", 20);
-        pane.add (mEmail);
-*/
+
+        JPanel eMailPane = new JPanel(false);
+        eMailPane.setLayout (new GridLayout (2,2));
+
+        makeField ("Email Address:", 20, eMailPane);
+        makeField ("Nick Name:", 20, eMailPane);
+
+        pane.add (eMailPane);
+
+
+        JPanel phonePane = new JPanel(false);
+        phonePane.setLayout (new GridLayout (5,2));
+
+        makeField ("Work:", 20, phonePane);
+        makeField ("Home:", 20, phonePane);
+        makeField ("Fax:", 20, phonePane);
+        makeField ("Pager:", 20, phonePane);
+        makeField ("Cellular:", 20, phonePane);
+
+        pane.add (phonePane);
+
         return pane;
     }
 
+    private JPanel createContactPanel () {
+        //the outer most panel has groove etched into it.
+        JPanel pane = new JPanel(false);
+        pane.setLayout (new FlowLayout(FlowLayout.LEFT));
+
+        JPanel contactPane = new JPanel(false);
+        contactPane.setLayout (new GridLayout (3,2));
+
+        makeField ("Title:", 20, contactPane);
+        makeField ("Organization:", 20, contactPane);
+        makeField ("Department:", 20, contactPane);
+
+        pane.add (contactPane);
+
+        JPanel addressPane = new JPanel(false);
+        addressPane.setLayout (new GridLayout (6,2));
+
+        makeField ("Address:", 20, addressPane);
+        makeField ("City:", 20, addressPane);
+        makeField ("State:", 20, addressPane);
+        makeField ("ZIP:", 20, addressPane);
+        makeField ("Country:", 20, addressPane);
+        makeField ("URL:", 20, addressPane);
+
+        pane.add (addressPane);
+
+        return pane;
+    }
+
+    private void makeField (String aTitle, int aCol, JPanel aPanel) {
+        JLabel title = new JLabel (aTitle);
+        aPanel.add (title);
+
+        JTextField textField = new JTextField (aCol);
+        aPanel.add (textField);
+    }
+    
     private JTextField makeField (String aTitle, int aCol) {
 //        JPanel box = new JPanel (false);
         Box box = new Box (BoxLayout.X_AXIS);
