@@ -2632,6 +2632,9 @@ nsresult
 nsGlobalHistory::FindRow(mdb_column aCol,
                          const char *aValue, nsIMdbRow **aResult)
 {
+  if (! mStore)
+    return NS_ERROR_NOT_INITIALIZED;
+
   mdb_err err;
   PRInt32 len = PL_strlen(aValue);
   mdbYarn yarn = { (void*) aValue, len, len, 0, 0, nsnull };
