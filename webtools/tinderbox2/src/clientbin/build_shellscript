@@ -4,6 +4,13 @@
 
 # This script does not need to run under taint perl.
 
+# A generic build script for tinderbox.  This script will run any
+# sequence of shell command for building or testing an application.
+# Users create a configuration file which defines the steps needed to
+# build, the build environmental variables and other information which
+# tinderbox will need.
+
+
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -25,8 +32,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.3 $
-# $Date: 2001/03/08 18:13:32 $
+# $Revision: 1.4 $
+# $Date: 2001/03/19 23:33:43 $
 # $Author: kestes%tradinglinx.com $
 # $Name:  $
 
@@ -36,6 +43,9 @@
 use File::Basename;
 use Getopt::Long;
 use Sys::Hostname;
+use Symbol;
+use POSIX;
+use IPC::Open3;
 
 
 # Tinderbox libraries
@@ -190,7 +200,11 @@ sub set_static_vars {
   # minimum time between the start of consecutive builds.  Tinderbox
   # requires this to be grater then 5 mintues.
 
-  $MINIMUM_BUILD_MINUTES = 8;
+  $MINIMUM_BUILD_SECONDS = 8*60;
+
+  # The maximum amount of time between tinderbox reports
+
+  $REPORT_TINDERBOX_EVERY_SECONDS = 5*60;
 
   @ORIG_ARGV = @ARGV;
 
@@ -242,6 +256,9 @@ sub get_env {
   open (LOG , ">>$ERROR_LOG") ||
     die("Could not open logfile: $ERROR_LOG\n");
 
+  my($old_fh) = select(LOG);
+  $| = 1;
+  select($old_fh);
 
   $SIG{'__DIE__'} = \&fatal_error;
   $SIG{'__WARN__'} = \&log_warning;
@@ -498,6 +515,163 @@ EOF
   return 1;
 }
 
+
+sub nonblock {
+  
+  # unbuffer a fh so we can select on it
+  
+  my ($fh) = shift;
+  my $rc = '';
+  my $flags = '';
+  
+  $flags = fcntl($fh, F_GETFL, 0) ||
+    die("Could not get flags of socket: $fh : $!\n");
+  
+  $flags |= O_NONBLOCK;
+
+  $rc = fcntl($fh, F_SETFL, $flags) ||
+    die("Could not set flags of socket: $fh : $!\n");
+  
+  return 1;
+}
+
+
+sub system3 {
+
+# Lanuch a new child and wait for it to die.  This is like a call to
+# system but we get the stdout and stderr in addition to $?.
+
+# call the function like this 
+
+# my  ($wait_status, $log_out, $log_err) = 
+# open3(
+#     'cmd_vec' => [],
+#      );
+
+# cmd_vec is a command to run in execv format.  It is a list not a
+# string since we want the safe version of exec
+
+# the system3 function returns:
+
+# wait_status: the wait_status of the child process
+
+# log_out: the stdout that the child process wrote.
+
+# log_err: the stderr the child process wrote.
+
+  my (%args) = @_;
+
+  my $info =">> @{ $args{'cmd_vec'} }\n";
+  
+#  append_buildlog($info, '');
+
+  # start the process
+  
+  $fh_in  = gensym(); 
+  $fh_out = gensym(); 
+  $fh_err = gensym(); 
+
+  ($fh_in && $fh_out && $fh_err) || 
+    die ("Could not create new symbol, 'gensym()' object.\n");
+  
+  my $child_pid = IPC::Open3::open3(
+				    $fh_in,
+				    $fh_out,
+				    $fh_err,
+				    @{$args{'cmd_vec'}}
+				    );
+  
+  # this check should be redundant but better safe then sorry
+  
+  ($child_pid) || 
+      die ("Open3() did not start: '@{$cmd}'. $!\n");
+  
+  close($fh_in) || 
+    die("Could not close child stdin: $!\n");
+  
+  main::nonblock($fh_out);
+  main::nonblock($fh_err);
+  
+  my $reaped_pid = 0;
+  my $wait_status = 0;
+
+  # wait for child to die, but keep clearing out stdout and stderr
+  # buffers for process so we do not deadlock.  
+
+  while ($reaped_pid != $child_pid) {
+
+    sleep 1;
+
+    $SYSTEM3_LOOP_COUNT++;
+
+    my $new_out = '';
+    my $new_err = ''; 
+
+    my $rc = '';
+    
+    $reaped_pid = waitpid(-1, POSIX::WNOHANG);
+    
+    if ($reaped_pid == $child_pid) {
+      
+      # children sometimes signal when they are not dead.
+      # we do not care about that.
+      
+      $wait_status = $?;
+      if (!(POSIX::WIFEXITED($wait_status))) {
+	$reaped_pid = -1;
+      }
+      
+    }
+    
+    # do the reading after reaping so we are sure that we exit the
+    # loop only after draining the sockets.
+    
+    # I do not think we need to log $rc errors as they happen
+    # frequently and nothing seems wrong:
+    #      Resource temporarily unavailable file_handle
+    
+    do {
+      my $data_out = '';
+      $rc = sysread($fh_out, $data_out, POSIX::BUFSIZ, 0);
+      $new_out .= $data_out;
+    } until ($rc <= 0);
+    
+    do {
+      my $data_err = '';
+      $rc = sysread($fh_err, $data_err, POSIX::BUFSIZ, 0);
+      $new_err .= $data_err;
+    } until ($rc <= 0);
+
+    push @CMD_LOG, $new_out.$new_err;
+
+    if ($SYSTEM3_LOOP_COUNT > $REPORT_TINDERBOX_EVERY_SECONDS) {
+      $SYSTEM3_LOOP_COUNT = 0;
+      mail_tinderbox_cmdlog('building');
+    }
+
+  } # while pid
+  
+  ($reaped_pid != $child_pid) && 
+    warn("No Child pid recived. ".
+	 "reaped_pid: $reaped_pid, ".
+	 "child_pid: $child_pid, ".
+	 "wait_status: $wait_status, ".
+	 "cmd: @{$args{'cmd_vec'}}\n");
+  
+  # The reads are at the bottom of the loop so we do not need to do
+  # any more reading of the filehandles.
+
+  close($fh_out) || 
+      &$log_error("Could not close child stdout: $!\n");    
+  
+  close($fh_err) || 
+      &$log_error("Could not close child stderr: $!\n");
+  
+  return ($wait_status);
+} # system3
+
+
+
 # Run one phase of the build process and report the status, stop if
 # any command fails.
 
@@ -541,18 +715,22 @@ sub run_shell_commands {
     # command takes 30 minutes to run we can still send log updates to
     # the tinderbox server every 10 minutes.
     
-    open(CMD, "$shell_command 2>&1 |") or 
-      die("Could not run '$shell_command': $!\n");
+#    open(CMD, "$shell_command 2>&1 |") or 
+#      die("Could not run '$shell_command': $!\n");
     
-    my (@results) = <CMD>;
+#    my (@results) = <CMD>;
     
-    push @CMD_LOG, (@results);
+#    push @CMD_LOG, (@results);
     
-    close(CMD) or 
-      ($?) or
-	die("Could not close '$shell_command': $!\n");
+#    close(CMD) or 
+#      ($?) or
+#	die("Could not close '$shell_command': $!\n");
     
-    $shell_status = $?;
+#    $shell_status = $?;
+
+    $shell_status = system3(
+                          'cmd_vec' => [$shell_command],
+                         );
 
     ($shell_status) &&
       return $error_status;
@@ -571,16 +749,12 @@ sub run_shell_commands {
 sub slow_build_speed {
   
   my ($actual_build_seconds) = $END_TIME - $START_TIME;
-  my ($minimum_build_seconds) = 60 * $MINIMUM_BUILD_MINUTES;
   
-  my ($sleep_time) = 0;
-
-  if ($actual_build_seconds < $minimum_build_seconds) {
-    $sleep_time = $minimum_build_seconds - $actual_build_seconds;
+  if ($actual_build_seconds <  $MINIMUM_BUILD_SECONDS) {
+    my ($sleep_time) = $minimum_build_seconds - $actual_build_seconds;
+    sleep($sleep_time);
   }
 
-  sleep($sleep_time);
-  
   return 1;
 }
 
@@ -606,6 +780,7 @@ sub slow_build_speed {
 
     $START_TIME = time();
     $LOCAL_START_TIME = localtime($START_TIME);
+    $SYSTEM3_LOOP_COUNT = 0;
     
     my ($status);
     
