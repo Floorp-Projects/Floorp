@@ -2827,6 +2827,159 @@ nsresult nsMsgCompose::BodyContainsHTMLTag(nsIDOMNode *node,  PRBool *_retval)
     return rv;
 }
 
+nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
+{
+  nsresult rv;
+  
+  if (! m_editor)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIEditor> editor;
+  rv = m_editor->GetEditor(getter_AddRefs(editor));
+  if (NS_FAILED(rv) || nsnull == editor)
+    return rv;
+
+  nsCOMPtr<nsIDOMElement> rootElement;
+  rv = editor->GetRootElement(getter_AddRefs(rootElement));
+  if (NS_FAILED(rv) || nsnull == rootElement)
+    return rv;
+
+
+  //First look for the actual signature, if we have one
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIDOMNode> tempNode;
+  nsAutoString tagLocalName;
+
+  rv = rootElement->GetLastChild(getter_AddRefs(node));
+  if (NS_SUCCEEDED(rv) && nsnull != node)
+  {
+    if (m_composeHTML)
+    {
+      //In html, the signature is inside a div whith the class=signature, it's must be the last node
+      nsAutoString tagLocalName;
+      node->GetLocalName(tagLocalName);
+      if (tagLocalName.EqualsWithConversion("DIV"))
+      {
+        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
+        if (element)
+        {
+          nsAutoString attributeName;
+          nsAutoString attributeValue;
+          attributeName.AssignWithConversion("class");
+
+          rv = element->GetAttribute(attributeName, attributeValue);
+          if (NS_SUCCEEDED(rv))
+          {
+            if (attributeValue.EqualsWithConversion("signature", PR_TRUE))
+            {
+              //Now, I am sure I get the right node!
+              editor->BeginTransaction();
+              node->GetPreviousSibling(getter_AddRefs(tempNode));
+              rv = editor->DeleteNode(node);
+              if (NS_FAILED(rv))
+              {
+                editor->EndTransaction();
+                return rv;
+              }
+
+              //Also, remove the <br> right before the signature.
+              if (tempNode)
+              {
+                tempNode->GetLocalName(tagLocalName);
+                if (tagLocalName.EqualsWithConversion("BR"))
+                  editor->DeleteNode(tempNode);
+              }
+              editor->EndTransaction();
+           }
+          }
+        }
+      }
+    }
+    else
+    {
+      //In plain text, we have to walk back the dom look for the pattern <br>-- <br>
+      PRUint16 nodeType;
+      PRInt32 searchState = 0; //0=nothing, 1=br 2='-- '+br, 3=br+'-- '+br
+
+      do
+      {
+        node->GetNodeType(&nodeType);
+        node->GetLocalName(tagLocalName);
+        switch (searchState)
+        {
+          case 0: 
+            if (nodeType == nsIDOMNode::ELEMENT_NODE && tagLocalName.EqualsWithConversion("BR"))
+              searchState = 1;
+            break;
+
+          case 1:
+            searchState = 0;
+            if (nodeType == nsIDOMNode::TEXT_NODE)
+            {
+              nsString nodeValue;
+              node->GetNodeValue(nodeValue);
+              if (nodeValue.EqualsWithConversion("-- "))
+                searchState = 2;
+            }
+            else
+              if (nodeType == nsIDOMNode::ELEMENT_NODE && tagLocalName.EqualsWithConversion("BR"))
+              {
+                searchState = 1;
+                break;
+              }
+            break;
+
+          case 2:
+            if (nodeType == nsIDOMNode::ELEMENT_NODE && tagLocalName.EqualsWithConversion("BR"))
+              searchState = 3;
+            else
+              searchState = 0;               
+            break;
+        }
+
+        tempNode = node;
+      } while (searchState != 3 && NS_SUCCEEDED(tempNode->GetPreviousSibling(getter_AddRefs(node))) && node);
+      
+      if (searchState == 3)
+      {
+        //Now, I am sure I get the right node!
+        editor->BeginTransaction();
+        do
+        {
+          node->GetNextSibling(getter_AddRefs(tempNode));
+          rv = editor->DeleteNode(node);
+          if (NS_FAILED(rv))
+          {
+            editor->EndTransaction();
+            return rv;
+          }
+
+          node = tempNode;
+        } while (node);
+        editor->EndTransaction();
+      }
+    }
+  }
+
+  //Then add the new one if needed
+  nsAutoString aSignature;
+  ProcessSignature(identity, &aSignature);
+  TranslateLineEndings(aSignature);
+
+  if (!aSignature.IsEmpty())
+  {
+    editor->BeginTransaction();
+    editor->EndOfDocument();
+    if (m_composeHTML)
+      rv = m_editor->InsertSource(aSignature.GetUnicode());
+    else
+      rv = m_editor->InsertText(aSignature.GetUnicode());
+    editor->EndTransaction();
+  }
+
+  return rv;
+}
+
 nsresult nsMsgCompose::ResetNodeEventHandlers(nsIDOMNode *node)
 {
 	// Because event handler attributes set into a node before this node is inserted 

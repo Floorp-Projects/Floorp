@@ -150,6 +150,10 @@ interface nsIMsgCompose : nsISupports {
     */
     boolean BodyContainsHTMLTag(in nsIDOMNode node);
 
+    /* SetSignature: will replace the curr.
+    */
+    void SetSignature(in nsIMsgIdentity identity);
+
     /* ResetNodeEventHandlers: Temporary API to go around bug 26528. THis API will be removed when bug 26528 is fixed.
     */
     void ResetNodeEventHandlers(in nsIDOMNode node);
