@@ -30,16 +30,21 @@
 #ifndef _nsFontMetricsOS2_h
 #define _nsFontMetricsOS2_h
 
+#define INCL_WIN
+#define INCL_GPI
+#include <os2.h>
+
+#include "plhash.h"
 #include "nsIFontMetrics.h"
 #include "nsIFontEnumerator.h"
 #include "nsFont.h"
+#include "nsString.h"
+#include "nsUnitConversion.h"
+#include "nsIDeviceContext.h"
 #include "nsCRT.h"
-#include "nsIAtom.h"
-#include "nsCOMPtr.h"      //HCT-M15 
-
-class nsIRenderingContext;
-class nsDeviceContextOS2;
-class nsString;
+#include "nsDeviceContextOS2.h"
+#include "nsCOMPtr.h"
+#include "nsVoidArray.h"
 
 // An nsFontHandle is actually a pointer to one of these.
 // It knows how to select itself into a ps.
@@ -69,6 +74,13 @@ struct nsFontHandleOS2
 #define FM_DEFN_UGL767          0x0FF0   /* Chars in ATM fonts           */
 #define FM_DEFN_UGL1105         0x3FF0   /* Chars in bitmap fonts        */
 #endif
+
+class nsFontOS2
+{
+public:
+  char      mName[FACESIZE];
+};
+
 
 typedef struct nsGlobalFont
 {
@@ -113,6 +125,16 @@ class nsFontMetricsOS2 : public nsIFontMetrics
    NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
    NS_IMETHOD  GetFontHandle( nsFontHandle &aHandle);
 
+#ifndef XP_OS2
+  virtual nsFontOS2* FindGlobalFont(HPS aPS, PRUnichar aChar);
+#endif
+  virtual nsFontOS2* FindGenericFont(HPS aPS, PRUnichar aChar);
+  virtual nsFontOS2* FindLocalFont(HPS aPS, PRUnichar aChar);
+  virtual nsFontOS2* FindUserDefinedFont(HPS aPS, PRUnichar aChar);
+  nsFontOS2*         FindFont(HPS aPS, PRUnichar aChar);
+  virtual nsFontOS2* LoadGenericFont(HPS aPS, PRUnichar aChar, char** aName);
+  virtual nsFontOS2* LoadFont(HPS aPS, nsString* aName);
+
    // for drawing text
    PRUint32 GetDevMaxAscender() const { return mDevMaxAscent; }
    nscoord  GetSpaceWidth( nsIRenderingContext *aRContext);
@@ -122,6 +144,7 @@ class nsFontMetricsOS2 : public nsIFontMetrics
   static int gGlobalFontsCount;
 
   static nsGlobalFont* InitializeGlobalFonts(HPS aPS);
+   int mCodePage;
  
  protected:
    nsresult RealizeFont();
@@ -148,10 +171,24 @@ class nsFontMetricsOS2 : public nsIFontMetrics
    PRUint32 mDevMaxAscent;
 
    nsFontHandleOS2    *mFontHandle;
-   nsDeviceContextOS2 *mContext;    // sigh.. broken broken broken XP interfaces...
+   nsDeviceContextOS2 *mDeviceContext;
 
-   nsCOMPtr<nsIAtom>   mLangGroup;
+public:
+  nsStringArray       mFonts;
+  PRUint16            mFontsIndex;
+  nsVoidArray         mFontIsGeneric;
 
+  nsAutoString        mDefaultFont;
+  nsString            *mGeneric;
+  nsCOMPtr<nsIAtom>   mLangGroup;
+  nsAutoString        mUserDefined;
+
+  PRUint8 mTriedAllGenerics;
+  PRUint8 mIsUserDefined;
+protected:
+  static PLHashTable* InitializeFamilyNames(void);
+  static PLHashTable* gFamilyNames;
+  static PLHashTable* gFontWeights;
 };
 
 class nsFontEnumeratorOS2 : public nsIFontEnumerator
