@@ -117,8 +117,7 @@ NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
   pevent.eventStructType = NS_PAINT_EVENT;
   pevent.rect = new nsRect (mBounds.x, mBounds.y,
                             mBounds.width, mBounds.height);
-  // XXX fix this
-  pevent.time = 0;
+  pevent.time = PR_Now();    
 
 #ifdef TRACE_INVALIDATE
   printf("%4d nsWindow::Invalidate(this=%p,name=%s,xid=%p,sync=%s)\n",
@@ -145,8 +144,7 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   pevent.widget = this;
   pevent.eventStructType = NS_PAINT_EVENT;
   pevent.rect = new nsRect(aRect);
-  // XXX fix this
-  pevent.time = 0;
+  pevent.time = PR_Now();    
 
 #ifdef TRACE_INVALIDATE
   printf("%4d nsWidget::Invalidate(this=%p,name=%s,xid=%p,sync=%s,rect=%d,%d,%d,%d)\n",
@@ -179,9 +177,8 @@ NS_IMETHODIMP nsWindow::Update()
   pevent.widget = this;
   pevent.eventStructType = NS_PAINT_EVENT;
   pevent.rect = new nsRect (mBounds.x, mBounds.y,
-                            mBounds.height, mBounds.width);
-  // XXX fix this
-  pevent.time = 0;
+                            mBounds.width, mBounds.height);
+  pevent.time = PR_Now();    
   AddRef();
   OnPaint(pevent);
   Release();
