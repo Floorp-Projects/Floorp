@@ -89,5 +89,4 @@ build_coreconf:
 	cd $(CORE_DEPTH)/coreconf ;  $(MAKE)
 
 import::
-	rm -rf $(SOURCE_XP_DIR)/public/security
-	mv $(SOURCE_XP_DIR)/public/nss $(SOURCE_XP_DIR)/public/security
+	if test -d $(SOURCE_XP_DIR)/public/nss; then rm -rf $(SOURCE_XP_DIR)/public/security; mv $(SOURCE_XP_DIR)/public/nss $(SOURCE_XP_DIR)/public/security; fi
