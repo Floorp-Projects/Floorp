@@ -109,7 +109,7 @@ SECMODModuleList *SECMOD_NewModuleListElement(void) {
 static unsigned long internalFlags = SECMOD_RSA_FLAG|SECMOD_DSA_FLAG|
 	SECMOD_RC2_FLAG| SECMOD_RC4_FLAG|SECMOD_DES_FLAG|SECMOD_RANDOM_FLAG|
 	SECMOD_SHA1_FLAG|SECMOD_MD5_FLAG|SECMOD_MD2_FLAG|SECMOD_SSL_FLAG|
-	SECMOD_TLS_FLAG;
+	SECMOD_TLS_FLAG|SECMOD_AES_FLAG;
 
 /* create a Internal  module */
 SECMODModule *SECMOD_NewInternal(void) {
@@ -118,7 +118,7 @@ SECMODModule *SECMOD_NewInternal(void) {
 	{ 1, SECMOD_RSA_FLAG|SECMOD_DSA_FLAG|SECMOD_RC2_FLAG|
 	SECMOD_RC4_FLAG|SECMOD_DES_FLAG|SECMOD_RANDOM_FLAG|
 	SECMOD_SHA1_FLAG|SECMOD_MD5_FLAG|SECMOD_MD2_FLAG|
-	SECMOD_SSL_FLAG|SECMOD_TLS_FLAG, -1, 30, 0 };
+	SECMOD_SSL_FLAG|SECMOD_TLS_FLAG|SECMOD_AES_FLAG, -1, 30, 0 };
 
     intern = SECMOD_NewModule();
     if (intern == NULL) {
@@ -128,7 +128,7 @@ SECMODModule *SECMOD_NewInternal(void) {
     /*
      * make this module an internal module
      */
-    intern->commonName = "Netscape Internal PKCS #11 Module";
+    intern->commonName = "NSS Internal PKCS #11 Module";
     intern->internal = PR_TRUE;
     intern->slotInfoCount = 1;
     intern->slotInfo = &internSlotInfo;
@@ -149,7 +149,7 @@ SECMODModule *SECMOD_GetFIPSInternal(void) {
      * make this module a FIPS internal module
      */
     intern->slotInfo[0].slotID = 3; /* FIPS slot */
-    intern->commonName = "Netscape Internal FIPS PKCS #11 Module";
+    intern->commonName = "NSS Internal FIPS PKCS #11 Module";
     intern->isFIPS = PR_TRUE;
 
     return (intern);
