@@ -139,18 +139,10 @@ sub GenerateEmailInput {
     my $reporter = ($default{"emailreporter$id"} eq "1") ? "checked" : "";
     my $cc = ($default{"emailcc$id"} eq "1") ? "checked" : "";
 
-    if ($assignedto eq "" && $reporter eq "" && $cc eq "") {
-        if ($id eq "1") {
-            $assignedto = "checked";
-        } else {
-            $reporter = "checked";
-        }
-    }
-
     my $qapart = "";
+    my $qacontact = "";
     if (Param("useqacontact")) {
-        my $qacontact =
-            ($default{"emailqa_contact$id"} eq "1") ? "checked" : "";
+        $qacontact = ($default{"emailqa_contact$id"} eq "1") ? "checked" : "";
         $qapart = qq|
 <tr>
 <td></td>
@@ -160,6 +152,15 @@ sub GenerateEmailInput {
 </tr>
 |;
     }
+    if ($assignedto eq "" && $reporter eq "" && $cc eq "" &&
+          $qacontact eq "") {
+        if ($id eq "1") {
+            $assignedto = "checked";
+        } else {
+            $reporter = "checked";
+        }
+    }
+
 
     return qq|
 <table border=1 cellspacing=0 cellpadding=0>
