@@ -28,6 +28,9 @@ pref("news.show_pretty_names",              false);
 pref("mail.wrap_long_lines",                true);
 pref("news.wrap_long_lines",                true);
 pref("mail.inline_attachments",             true);
+// hidden pref for controlling if the user agent string
+// is displayed in the message pane or not...
+pref("mailnews.headers.showUserAgent",       false);
 
 // Mail server preferences, pop by default
 pref("mail.server_type",	0); 	// 0 pop, 1 imap,
