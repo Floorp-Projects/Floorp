@@ -33,6 +33,10 @@ class nsIWidget;
 class nsIWidgetController;
 class nsIDOMDocument;
 class nsIDOMNode;
+class nsIXULCommand;
+class nsIDOMCharacterData;
+class nsIDOMDocument;
+class nsIDOMHTMLInputElement;
 
 class nsWebShellWindow : public nsIWebShellContainer,
                          public nsIDocumentLoaderObserver
@@ -80,16 +84,24 @@ public:
   NS_IMETHOD OnConnectionsComplete();
 
 protected:
+  void UpdateButtonStatus(PRBool aIsBusy);
+  void SetCommandEnabled(const nsString & aCmdName, PRBool aState);
   void LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aDOMDoc);
-  nsIDOMNode * FindNamedParentFromDoc(nsIDOMDocument * aDomDoc, const nsString &aName) ;
+  nsIXULCommand *  FindCommandByName(const nsString & aCmdName);
+  nsIDOMNode *     FindNamedParentFromDoc(nsIDOMDocument * aDomDoc, const nsString &aName);
+  nsIDOMNode *     FindNamedDOMNode(const nsString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount);
+  nsIDOMDocument * GetNamedDOMDoc(const nsString & aWebShellName);
+  nsIDOMNode *     GetParentNodeFromDOMDoc(nsIDOMDocument * aDOMDoc);
 
   virtual ~nsWebShellWindow();
 
   static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
-  nsIWidget*   mWindow;
-  nsIWebShell* mWebShell;
-  nsIWidgetController* mController;
+  nsIWidget*               mWindow;
+  nsIWebShell*            mWebShell;
+  nsIWidgetController*    mController;
+  nsIDOMCharacterData*    mStatusText;
+  nsIDOMHTMLInputElement* mURLBarText;
 
   nsVoidArray mCommands;
 };

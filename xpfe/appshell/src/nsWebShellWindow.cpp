@@ -35,6 +35,7 @@
 
 #include "nsXULCommand.h"
 #include "nsIXULCommand.h"
+#include "nsIDOMCharacterData.h"
 
 // XXX: Only needed for the creation of the widget controller...
 #include "nsIDocumentViewer.h"
@@ -43,6 +44,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDocumentLoader.h"
+#include "nsIDOMHTMLInputElement.h"
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kWindowCID,           NS_WINDOW_CID);
@@ -62,6 +64,8 @@ static NS_DEFINE_IID(kIDOMDocumentIID,        NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID,            NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMElementIID,         NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIXULCommandIID,         NS_IXULCOMMAND_IID);
+static NS_DEFINE_IID(kIDOMCharacterDataIID,   NS_IDOMCHARACTERDATA_IID);
+static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 
 
@@ -75,6 +79,8 @@ nsWebShellWindow::nsWebShellWindow()
   mWebShell = nsnull;
   mWindow   = nsnull;
   mController = nsnull;
+  mStatusText = nsnull;
+  mURLBarText = nsnull;
 }
 
 
@@ -87,6 +93,8 @@ nsWebShellWindow::~nsWebShellWindow()
 
   NS_IF_RELEASE(mWindow);
   NS_IF_RELEASE(mController);
+  NS_IF_RELEASE(mStatusText);
+  NS_IF_RELEASE(mURLBarText);
 }
 
 
@@ -134,7 +142,7 @@ nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl,
   urlString = tmpStr;
 
   // XXX: need to get the default window size from prefs...
-  nsRect r(0, 0, 600, 600);
+  nsRect r(0, 0, 650, 618);
   
   nsWidgetInitData initData;
 
@@ -263,10 +271,48 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 }
 
 
+void 
+nsWebShellWindow::UpdateButtonStatus(PRBool aIsBusy)
+{
+  if (aIsBusy) {
+    SetCommandEnabled(nsAutoString("nsCmd:BrowserBack"), PR_FALSE);
+    SetCommandEnabled(nsAutoString("nsCmd:BrowserForward"), PR_FALSE);
+    SetCommandEnabled(nsAutoString("nsCmd:BrowserReload"), PR_FALSE);
+    SetCommandEnabled(nsAutoString("nsCmd:BrowserStop"), PR_TRUE);
+    SetCommandEnabled(nsAutoString("nsCmd:BrowserHome"), PR_FALSE);
+    SetCommandEnabled(nsAutoString("nsCmd:BrowserPrint"), PR_FALSE);
+  } else {
+    nsIWebShell* contentWS = nsnull;
+    mWebShell->FindChildWithName(nsAutoString("browser.webwindow"), contentWS);
+    SetCommandEnabled(nsAutoString("nsCmd:BrowserBack"), contentWS->CanBack() == NS_OK);
+    SetCommandEnabled(nsAutoString("nsCmd:BrowserForward"), contentWS->CanForward() == NS_OK);
+    SetCommandEnabled(nsAutoString("nsCmd:BrowserReload"), PR_TRUE);
+    SetCommandEnabled(nsAutoString("nsCmd:BrowserStop"), PR_FALSE);
+    SetCommandEnabled(nsAutoString("nsCmd:BrowserHome"), PR_TRUE);
+    SetCommandEnabled(nsAutoString("nsCmd:BrowserPrint"), PR_TRUE);
+    NS_RELEASE(contentWS);
+  }
+}
+
 NS_IMETHODIMP 
 nsWebShellWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
                               nsLoadType aReason)
 {
+  nsAutoString url(aURL);
+  nsAutoString gecko("Gecko - ");
+  gecko.Append(url);
+ 
+  mWindow->SetTitle(gecko);
+
+  if (nsnull != mURLBarText) {
+    mURLBarText->SetValue(url);
+  }
+  UpdateButtonStatus(PR_TRUE);
+  if (nsnull != mStatusText) {
+    nsAutoString msg(aURL);
+    msg.Append(" :Start");
+    mStatusText->SetData(msg);
+  }
   return NS_OK;
 }
 
@@ -280,8 +326,34 @@ NS_IMETHODIMP
 nsWebShellWindow::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
                                   PRInt32 aProgress, PRInt32 aProgressMax)
 {
+  if (nsnull != mStatusText) {
+    nsAutoString url(aURL);
+    url.Append(": progress ");
+    url.Append(aProgress, 10);
+    if (0 != aProgressMax) {
+      url.Append(" (out of ");
+      url.Append(aProgressMax, 10);
+      url.Append(")");
+    }
+    mStatusText->SetData(url);
+  }
   return NS_OK;
 }
+
+NS_IMETHODIMP 
+nsWebShellWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
+                             PRInt32 aStatus)
+{
+   
+  UpdateButtonStatus(PR_FALSE);
+  if (nsnull != mStatusText) {
+    nsAutoString msg(aURL);
+    msg.Append(" :Stop");
+    mStatusText->SetData(msg);
+  }
+  return NS_OK;
+}
+
 
 nsIDOMNode * nsWebShellWindow::FindNamedParentFromDoc(nsIDOMDocument * aDomDoc, const nsString &aName) 
 {
@@ -295,7 +367,7 @@ nsIDOMNode * nsWebShellWindow::FindNamedParentFromDoc(nsIDOMDocument * aDomDoc, 
       while (nsnull != node) {
         nsString name;
         node->GetNodeName(name);
-        printf("[%s]\n", name.ToNewCString());
+        //printf("[%s]\n", name.ToNewCString());
         if (name.Equals(aName)) {
           NS_ADDREF(node);
           NS_RELEASE(parent);
@@ -340,7 +412,7 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
           if (NS_OK == xulCmd->QueryInterface(kIXULCommandIID, (void**) &icmd)) {
             mCommands.AppendElement(icmd);
           }
-          printf("Commands[%s] value[%s]\n", name.ToNewCString(), value.ToNewCString());
+          //printf("Commands[%s] value[%s]\n", name.ToNewCString(), value.ToNewCString());
         }
         NS_RELEASE(element);
       }
@@ -375,7 +447,7 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
             nsIXULCommand* cmd = (nsIXULCommand*) mCommands.ElementAt(i);
             nsAutoString cmdName;
             cmd->GetName(cmdName);
-            printf("Cmd [%s] Node[%s]\n", cmdName.ToNewCString(), nodeCmd.ToNewCString());
+            //printf("Cmd [%s] Node[%s]\n", cmdName.ToNewCString(), nodeCmd.ToNewCString());
             if (nodeCmd.Equals(cmdName)) {
               printf("Linking up cmd to button [%s]\n", cmdName.ToNewCString());
               cmd->AddUINode(node);
@@ -407,21 +479,40 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
     NS_RELEASE(parentCmd);
   }
 
-  PRInt32 i, n = mCommands.Count();
+  /*PRInt32 i, n = mCommands.Count();
   for (i = 0; i < n; i++) {
     nsIXULCommand* cmd = (nsIXULCommand*) mCommands.ElementAt(i);
-    cmd->SetEnabled(PR_FALSE);
+    cmd->SetEnabled(PR_TRUE);
   }
-
-
+  SetCommandEnabled(nsAutoString("nsCmd:BrowserStop"), PR_FALSE);
+  */
+  UpdateButtonStatus(PR_FALSE);
 }
 
-NS_IMETHODIMP 
-nsWebShellWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
-                             PRInt32 aStatus)
+nsIXULCommand *  
+nsWebShellWindow::FindCommandByName(const nsString & aCmdName)
 {
+  PRInt32 i, n = mCommands.Count();
+  for (i = 0; i < n; i++) {
+    nsAutoString name;
+    nsIXULCommand* cmd = (nsIXULCommand*) mCommands.ElementAt(i);
+    cmd->GetName(name);
+    if (name.Equals(aCmdName)) {
+      NS_ADDREF(cmd);
+      return cmd;
+    }
+  }
+  return nsnull;
+}
 
-  return NS_OK;
+void  
+nsWebShellWindow::SetCommandEnabled(const nsString & aCmdName, PRBool aState)
+{
+  nsIXULCommand * cmd = FindCommandByName(aCmdName);
+  if (nsnull != cmd) {
+    cmd->SetEnabled(aState);
+    NS_RELEASE(cmd);
+  }
 }
 
 NS_IMETHODIMP 
@@ -458,17 +549,70 @@ NS_IMETHODIMP nsWebShellWindow::OnStartURLLoad(nsIURL* aURL, const char* aConten
 
 
 //----------------------------------------
-NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
+nsIDOMNode *  nsWebShellWindow::FindNamedDOMNode(const nsString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount)
 {
+  nsIDOMNode * node;
+  aParent->GetFirstChild(&node);
+  while (nsnull != node) {
+    nsString name;
+    node->GetNodeName(name);
+    //printf("FindNamedDOMNode[%s] %d == %d\n", name.ToNewCString(), aCount, aEndCount);
+    if (name.Equals(aName)) {
+      aCount++;
+      if (aCount == aEndCount) {
+        NS_ADDREF(node);
+        return node;
+      }
+    }
+    PRBool hasChildren;
+    node->HasChildNodes(&hasChildren);
+    if (hasChildren) {
+      nsIDOMNode * found = FindNamedDOMNode(aName, node, aCount, aEndCount);
+      if (nsnull != found) {
+        return found;
+      }
+    }
+    nsIDOMNode * oldNode = node;
+    oldNode->GetNextSibling(&node);
+    NS_RELEASE(oldNode);
+  }
+  NS_IF_RELEASE(node);
 
+  return nsnull;
+
+}
+
+//----------------------------------------
+nsIDOMNode * nsWebShellWindow::GetParentNodeFromDOMDoc(nsIDOMDocument * aDOMDoc)
+{
+  if (nsnull == aDOMDoc) {
+    return nsnull;
+  }
+
+  nsIDOMElement * element;
+  nsIDOMNode * node = nsnull;
+  aDOMDoc->GetDocumentElement(&element);
+  if (nsnull != element) {
+    if (NS_OK == element->QueryInterface(kIDOMNodeIID, (void**) &node)) {
+       // no errors 
+    }
+    NS_RELEASE(element);
+  }
+  return node;
+}
+
+//----------------------------------------
+nsIDOMDocument * nsWebShellWindow::GetNamedDOMDoc(const nsString & aWebShellName)
+{
+  nsIDOMDocument * domDoc = nsnull;
 
   // first get the toolbar child WebShell
-  nsIWebShell* toolbarChildWS = nsnull;
-  mWebShell->FindChildWithName(nsAutoString("browser.toolbar"), toolbarChildWS);
+  nsIWebShell* childWebShell = nsnull;
+  mWebShell->FindChildWithName(aWebShellName, childWebShell);
 
-  if (nsnull != toolbarChildWS) {
+  if (nsnull != childWebShell) {
     nsIContentViewer* cv = nsnull;
-    toolbarChildWS->GetContentViewer(&cv);
+    childWebShell->GetContentViewer(&cv);
     if (nsnull != cv) {
       nsIDocumentViewer* docv = nsnull;
       cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
@@ -476,25 +620,74 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
         nsIDocument * doc;
         docv->GetDocument(doc);
         if (nsnull != doc) {
-          nsIDOMDocument * domDoc;
           if (NS_OK == doc->QueryInterface(kIDOMDocumentIID, (void**) &domDoc)) {
-            nsIWebShell* contentWS = nsnull;
-            mWebShell->FindChildWithName(nsAutoString("browser.webwindow"), contentWS);
-            if (nsnull != contentWS) {
-              LoadCommands(contentWS, domDoc);
-              NS_RELEASE(contentWS);
-            }
-            NS_RELEASE(domDoc);
+            // no errors 
           }
-
           NS_RELEASE(doc);
         }
         NS_RELEASE(docv);
       }
       NS_RELEASE(cv);
     }
-    NS_IF_RELEASE(toolbarChildWS);
+    NS_IF_RELEASE(childWebShell);
   }
+  return domDoc;
+}
+
+//----------------------------------------
+NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
+{
+
+
+  ///////////////////////////////
+  // Find the Toolbar DOM  and Load all the commands
+  ///////////////////////////////
+  nsIDOMDocument * toolbarDOMDoc = GetNamedDOMDoc(nsAutoString("browser.toolbar"));
+  if (nsnull != toolbarDOMDoc) {
+    nsIDOMNode * parent = GetParentNodeFromDOMDoc(toolbarDOMDoc);
+    if (nsnull != parent) {
+      nsIWebShell* contentWS = nsnull;
+      mWebShell->FindChildWithName(nsAutoString("browser.webwindow"), contentWS);
+      if (nsnull != contentWS) {
+        LoadCommands(contentWS, toolbarDOMDoc);
+        PRInt32 count = 0;
+        nsIDOMNode * node = FindNamedDOMNode(nsAutoString("INPUT"), parent, count, 1);
+        if (nsnull != node) {
+          if (NS_OK == node->QueryInterface(kIDOMHTMLInputElementIID, (void**) &mURLBarText)) {
+             // no errors 
+          }
+          NS_RELEASE(node);
+        }
+        NS_RELEASE(contentWS);
+      }
+      NS_RELEASE(parent);
+    }
+    NS_RELEASE(toolbarDOMDoc);
+  }
+
+
+  ///////////////////////////////
+  // Find the Status Text DOM Node
+  ///////////////////////////////
+  nsIDOMDocument * statusDOMDoc = GetNamedDOMDoc(nsAutoString("browser.status"));
+  if (nsnull != statusDOMDoc) {
+    nsIDOMNode * parent = GetParentNodeFromDOMDoc(statusDOMDoc);
+    if (nsnull != parent) {
+      PRInt32 count = 0;
+      nsIDOMNode * statusNode = FindNamedDOMNode(nsAutoString("#text"), parent, count, 7);
+      if (nsnull != statusNode) {
+        nsIDOMCharacterData * charData;
+        if (NS_OK == statusNode->QueryInterface(kIDOMCharacterDataIID, (void**) &charData)) {
+          mStatusText = charData;
+          mStatusText->SetData(nsAutoString("Ready....."));
+        }
+        NS_RELEASE(statusNode);
+      }
+      NS_RELEASE(parent);
+    }
+    NS_RELEASE(statusDOMDoc);
+  }
+
   return NS_OK;
 }
 
