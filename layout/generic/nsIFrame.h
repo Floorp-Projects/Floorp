@@ -534,15 +534,29 @@ public:
    * This call is invoked when the value of a content objects's attribute
    * is changed. 
    * The first frame that maps that content is asked to deal
-   * with the change by generating an incremental reflow command.
+   * with the change by doing whatever is appropriate.
    *
    * @param aChild the content object
    * @param aAttribute the attribute whose value changed
+   * @param aHint the level of change that has already been dealt with
    */
   NS_IMETHOD  AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent*     aChild,
                                nsIAtom*        aAttribute,
                                PRInt32         aHint) = 0;
+
+  /**
+   * This call is invoked when the value of a content object's state
+   * is changed. 
+   * The first frame that maps that content is asked to deal
+   * with the change by doing whatever is appropriate.
+   *
+   * @param aChild the content object
+   * @param aHint the level of change that has already been dealt with
+   */
+  NS_IMETHOD  ContentStateChanged(nsIPresContext* aPresContext,
+                                  nsIContent*     aChild,
+                                  PRInt32         aHint) = 0;
 
   /**
    * Return how your frame can be split.
