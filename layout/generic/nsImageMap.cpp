@@ -142,7 +142,7 @@ static void logMessage(nsIContent*      aContent,
                        const nsAString& aCoordsSpec,
                        PRInt32          aFlags,
                        const char* aMessageName) {
-  nsIURL* documentURI = nsnull;
+  nsIURI* documentURI = nsnull;
   nsIDocument* doc = aContent->GetOwnerDoc();
   if (doc) {
     documentURI = doc->GetDocumentURI();
