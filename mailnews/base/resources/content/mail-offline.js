@@ -187,7 +187,8 @@ function GetOfflineMgrService()
   }
 }
 
-// return false if you want to prevent the offline state change
+// This function must always return false to prevent toggling of offline state because
+// we change the offline state ourselves
 function MailCheckBeforeOfflineChange()
 {
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
@@ -243,6 +244,6 @@ function MailCheckBeforeOfflineChange()
         break;
     }
   }
-  return true;
+  return false;
 }
 
