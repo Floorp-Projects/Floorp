@@ -18,7 +18,7 @@
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -39,17 +39,17 @@ public class Counter extends ScriptableObject {
     // The zero-argument constructor used by Rhino runtime to create instances
     public Counter() { }
 
-    // Method jsConstructor defines the JavaScript constructor 
+    // Method jsConstructor defines the JavaScript constructor
     public void jsConstructor(int a) { count = a; }
 
     // The class name is defined by the getClassName method
     public String getClassName() { return "Counter"; }
 
-    // The method jsGet_count defines the count property. 
+    // The method jsGet_count defines the count property.
     public int jsGet_count() { return count++; }
 
-    // Methods can be defined using the jsFunction_ prefix. Here we define 
-    //  resetCount for JavaScript. 
+    // Methods can be defined using the jsFunction_ prefix. Here we define
+    //  resetCount for JavaScript.
     public void jsFunction_resetCount() { count = 0; }
 
     private int count;

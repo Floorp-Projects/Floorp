@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -44,9 +44,9 @@ public class DynamicScopes {
      * Main entry point.
      *
      * Set up the shared scope and then spawn new threads that execute
-     * relative to that shared scope. Try compiling functions with and 
+     * relative to that shared scope. Try compiling functions with and
      * without dynamic scope to see the effect.
-     * 
+     *
      * The expected output is
      * <pre>
      * sharedScope
@@ -59,7 +59,7 @@ public class DynamicScopes {
      * The final three lines may be permuted in any order depending on
      * thread scheduling.
      */
-    public static void main(String[] args) 
+    public static void main(String[] args)
         throws JavaScriptException
     {
         Context cx = Context.enter();
@@ -72,8 +72,8 @@ public class DynamicScopes {
             cx.exit();
         }
     }
-    
-    static void runScripts(Context cx) 
+
+    static void runScripts(Context cx)
         throws JavaScriptException
     {
         // Initialize the standard objects (Object, Function, etc.)
@@ -87,7 +87,7 @@ public class DynamicScopes {
                         "function f() { return x; }";
         cx.evaluateString(scope, source, "MySource", 1, null);
 
-        // Now we spawn some threads that execute a script that calls the 
+        // Now we spawn some threads that execute a script that calls the
         // function 'f'. The scope chain looks like this:
         // <pre>
         //            ------------------
@@ -105,7 +105,7 @@ public class DynamicScopes {
         //            ------------------
         // </pre>
         // Both the shared scope and the per-thread scope have variables 'x'
-        // defined in them. If 'f' is compiled with dynamic scope enabled, 
+        // defined in them. If 'f' is compiled with dynamic scope enabled,
         // the 'x' from the per-thread scope will be used. Otherwise, the 'x'
         // from the shared scope will be used. The 'x' defined in 'g' (which
         // calls 'f') should not be seen by 'f'.
@@ -114,12 +114,12 @@ public class DynamicScopes {
         for (int i=0; i < threadCount; i++) {
             String script = "function g() { var x = 'local'; return f(); }" +
                             "java.lang.System.out.println(g());";
-            t[i] = new Thread(new PerThread(scope, script, 
+            t[i] = new Thread(new PerThread(scope, script,
                                             "thread" + i));
         }
         for (int i=0; i < threadCount; i++)
             t[i].start();
-        // Don't return in this thread until all the spawned threads have 
+        // Don't return in this thread until all the spawned threads have
         // completed.
         for (int i=0; i < threadCount; i++) {
             try {
@@ -128,15 +128,15 @@ public class DynamicScopes {
             }
         }
     }
-    
+
     static class PerThread implements Runnable {
-    
+
         PerThread(Scriptable scope, String script, String x) {
             this.scope = scope;
             this.script = script;
             this.x = x;
-        }   
-        
+        }
+
         public void run() {
             // We need a new Context for this thread.
             Context cx = Context.enter();
@@ -144,13 +144,13 @@ public class DynamicScopes {
                 // We can share the scope.
                 Scriptable threadScope = cx.newObject(scope);
                 threadScope.setPrototype(scope);
-                
-                // We want "threadScope" to be a new top-level 
-                // scope, so set its parent scope to null. This 
+
+                // We want "threadScope" to be a new top-level
+                // scope, so set its parent scope to null. This
                 // means that any variables created by assignments
                 // will be properties of "threadScope".
                 threadScope.setParentScope(null);
-                
+
                 // Create a JavaScript property of the thread scope named
                 // 'x' and save a value for it.
                 threadScope.put("x", threadScope, x);

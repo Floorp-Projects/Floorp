@@ -103,9 +103,9 @@ public class NativeFunction extends BaseFunction {
     protected String[] argNames;
     protected short argCount;
     protected short version;
-    
-    /** 
-     * True if this represents function constructed via Function() 
+
+    /**
+     * True if this represents function constructed via Function()
      * constructor
      */
     boolean fromFunctionConstructor;

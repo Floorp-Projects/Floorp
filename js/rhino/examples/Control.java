@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -38,7 +38,7 @@ import org.mozilla.javascript.*;
  * Example of controlling the JavaScript execution engine.
  *
  * We evaluate a script and then manipulate the result.
- * 
+ *
  */
 public class Control {
 
@@ -96,7 +96,7 @@ public class Control {
             System.out.println(fn.call(cx, scope, obj, new Object[0]));
         } catch (JavaScriptException e) {
             // ignore
-        } 
+        }
 
         cx.exit();
     }

@@ -62,7 +62,7 @@ class DefaultErrorReporter implements ErrorReporter {
         buf.append(')');
         return buf.toString();
     }
-    
+
     public void error(String message, String sourceName, int line,
                       String lineSource, int lineOffset)
     {

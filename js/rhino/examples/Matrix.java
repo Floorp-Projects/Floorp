@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -259,7 +259,7 @@ public class Matrix implements Scriptable {
     public boolean hasInstance(Scriptable value) {
         Scriptable proto = value.getPrototype();
         while (proto != null) {
-            if (proto.equals(this)) 
+            if (proto.equals(this))
                 return true;
             proto = proto.getPrototype();
         }

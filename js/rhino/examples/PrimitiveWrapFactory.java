@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -44,7 +44,7 @@ import org.mozilla.javascript.*;
  * converted to ECMA strings. Other types have the default behavior.
  * <p>
  * Note that calling "new java.lang.String('foo')" in JavaScript with this
- * wrap factory enabled will still produce a wrapped Java object since the 
+ * wrap factory enabled will still produce a wrapped Java object since the
  * WrapFactory.wrapNewObject method is not overridden.
  * <p>
  * The PrimitiveWrapFactory is enabled on a Context by calling setWrapFactory
@@ -52,8 +52,8 @@ import org.mozilla.javascript.*;
  */
 public class PrimitiveWrapFactory extends WrapFactory {
 
-  public Object wrap(Context cx, Scriptable scope, Object obj, 
-                     Class staticType) 
+  public Object wrap(Context cx, Scriptable scope, Object obj,
+                     Class staticType)
   {
     if (obj instanceof String || obj instanceof Number ||
         obj instanceof Boolean)

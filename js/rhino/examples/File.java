@@ -64,7 +64,7 @@ import java.util.Vector;
  * be wrapped as JavaScript exceptions when called from JavaScript,
  * and may be caught within JavaScript.
  *
- * @author Norris Boyd 
+ * @author Norris Boyd
  */
 public class File extends ScriptableObject {
 
@@ -88,7 +88,7 @@ public class File extends ScriptableObject {
      * to the use.
      */
     public static Scriptable jsConstructor(Context cx, Object[] args,
-                                           Function ctorObj, 
+                                           Function ctorObj,
                                            boolean inNewExpr)
     {
         File result = new File();
