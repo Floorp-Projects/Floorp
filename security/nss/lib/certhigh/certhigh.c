@@ -890,14 +890,19 @@ cert_ImportCAChain(SECItem *certs, int numcerts, SECCertUsage certUsage, PRBool 
 	    goto loser;
 	}
 	
-	/* get a default nickname for it */
-	nickname = CERT_MakeCANickname(cert);
+	/* if the cert is temp, make it perm; otherwise we're done */
+	if (cert->istemp) {
+	    /* get a default nickname for it */
+	    nickname = CERT_MakeCANickname(cert);
 
-	rv = CERT_AddTempCertToPerm(cert, nickname, &trust);
+	    rv = CERT_AddTempCertToPerm(cert, nickname, &trust);
 
-	/* free the nickname */
-	if ( nickname ) {
-	    PORT_Free(nickname);
+	    /* free the nickname */
+	    if ( nickname ) {
+		PORT_Free(nickname);
+	    }
+	} else {
+	    rv = SECSuccess;
 	}
 
 	CERT_DestroyCertificate(cert);
