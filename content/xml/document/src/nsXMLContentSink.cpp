@@ -1832,7 +1832,7 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
                       NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
       if (NS_FAILED(rv)) 
           return rv;
-      rv = securityManager->CheckLoadURI(mDocumentBaseURL, url);
+      rv = securityManager->CheckLoadURI(mDocumentBaseURL, url, PR_FALSE);
       if (NS_FAILED(rv)) 
           return rv;
 

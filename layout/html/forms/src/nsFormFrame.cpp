@@ -744,7 +744,8 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       nsCOMPtr<nsIURI> actionURL;
       if (NS_FAILED(result) ||
           NS_FAILED(result = NS_NewURI(getter_AddRefs(actionURL), href, docURL)) ||
-          NS_FAILED(result = securityManager->CheckLoadURI(docURL, actionURL))) 
+          NS_FAILED(result = securityManager->CheckLoadURI(docURL, actionURL,
+	                                                   PR_FALSE))) 
       {
         return result;
       }

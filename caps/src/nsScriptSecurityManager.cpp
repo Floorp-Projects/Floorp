@@ -440,7 +440,7 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx,
     nsCOMPtr<nsIURI> uri;
     if (NS_FAILED(codebase->GetURI(getter_AddRefs(uri)))) 
         return NS_ERROR_FAILURE;
-    if (NS_SUCCEEDED(CheckLoadURI(uri, aURI)))
+    if (NS_SUCCEEDED(CheckLoadURI(uri, aURI, PR_FALSE)))
         return NS_OK;
 
     // See if we're attempting to load a file: URI. If so, let a 
@@ -467,9 +467,21 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx,
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI,
-                                      nsIURI *aURI)
+nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
+                                      PRBool aDisallowFromMail)
 {
+    nsXPIDLCString fromScheme;
+    if (NS_FAILED(aFromURI->GetScheme(getter_Copies(fromScheme))))
+        return NS_ERROR_FAILURE;
+
+    if (aDisallowFromMail && 
+        (nsCRT::strcmp(fromScheme, "mailbox")  == 0 ||
+         nsCRT::strcmp(fromScheme, "imap")     == 0 ||
+         nsCRT::strcmp(fromScheme, "news")))
+    {
+        return NS_ERROR_DOM_BAD_URI;
+    }
+
     nsXPIDLCString scheme;
     if (NS_FAILED(aURI->GetScheme(getter_Copies(scheme))))
         return NS_ERROR_FAILURE;
@@ -485,9 +497,7 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI,
     }
 
     nsXPIDLCString scheme2;
-    if (NS_SUCCEEDED(aFromURI->GetScheme(getter_Copies(scheme2))) &&
-        nsCRT::strcmp(scheme, scheme2) == 0) 
-    {
+    if (nsCRT::strcmp(scheme, fromScheme) == 0) {
         // every scheme can access another URI from the same scheme
         return NS_OK;
     }
@@ -897,9 +907,9 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
                                                        source);
         Recycle(source);
         if (CheckConfirmDialog(message, check.GetUnicode(), &remember))
-	    canEnable = nsIPrincipal::ENABLE_GRANTED;
-	else
-	    canEnable = nsIPrincipal::ENABLE_DENIED;
+            canEnable = nsIPrincipal::ENABLE_GRANTED;
+        else
+            canEnable = nsIPrincipal::ENABLE_DENIED;
         PR_FREEIF(message);
         if (remember) {
             if (NS_FAILED(principal->SetCanEnableCapability(capability, canEnable)))
@@ -1137,14 +1147,6 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     nsCOMPtr<nsIPrincipal> subject;
     if (NS_FAILED(GetSubjectPrincipal(aCx, getter_AddRefs(subject))))
         return NS_ERROR_FAILURE;
-
-    // If native code or system principal, allow access
-    PRBool equals;
-    if (!subject || 
-        (NS_SUCCEEDED(subject->Equals(mSystemPrincipal, &equals)) && equals))
-    {
-        return NS_OK;
-    }
 
     nsCOMPtr<nsIPrincipal> object;
     if (NS_FAILED(GetObjectPrincipal(aCx, aObj, getter_AddRefs(object))))

@@ -1278,7 +1278,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
                   NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
   if (NS_FAILED(rv)) return rv;
-  rv = securityManager->CheckLoadURI(mOriginalURI, newURI);
+  rv = securityManager->CheckLoadURI(mOriginalURI, newURI, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 
   rv = serv->NewChannelFromURI(mVerb.GetBuffer(), newURI, mLoadGroup, 

@@ -895,7 +895,7 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
         if (NS_SUCCEEDED(rv)) 
           rv = NS_NewURI(getter_AddRefs(newURI), absURL, baseURI);           
         if (NS_SUCCEEDED(rv)) 
-          rv = securityManager->CheckLoadURI(baseURI, newURI);
+          rv = securityManager->CheckLoadURI(baseURI, newURI, PR_FALSE);
 
         if (NS_SUCCEEDED(rv)) {
           rv = mWebShell->LoadURL(absURL.GetUnicode());  // URL string with a default nsnull value for post Data
