@@ -28,9 +28,8 @@
 // nsSchemaBuiltinType implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchemaBuiltinType::nsSchemaBuiltinType(PRUint16 aBuiltinType,
-                                         const nsAReadableString& aNamespace)
-  : mBuiltinType(aBuiltinType), mNamespace(aNamespace)
+nsSchemaBuiltinType::nsSchemaBuiltinType(PRUint16 aBuiltinType)
+  : mBuiltinType(aBuiltinType)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -49,7 +48,7 @@ NS_IMPL_ISUPPORTS4_CI(nsSchemaBuiltinType,
 NS_IMETHODIMP 
 nsSchemaBuiltinType::GetTargetNamespace(nsAWritableString& aTargetNamespace)
 {
-  aTargetNamespace.Assign(mNamespace);
+  aTargetNamespace.Assign(NS_LITERAL_STRING(NS_SCHEMA_2001_NAMESPACE));
   
   return NS_OK;
 }

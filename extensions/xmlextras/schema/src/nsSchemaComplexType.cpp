@@ -292,7 +292,12 @@ nsSchemaComplexType::GetIsArray(PRBool* aIsArray)
 {
   NS_ENSURE_ARG_POINTER(aIsArray);
 
-  *aIsArray = (mArrayInfo != nsnull);
+  nsCOMPtr<nsISchemaComplexType> complexBase = do_QueryInterface(mBaseType);
+  if (complexBase) {
+    return complexBase->GetIsArray(aIsArray);
+  }
+
+  *aIsArray = PR_FALSE;
 
   return NS_OK;
 }
@@ -303,11 +308,16 @@ nsSchemaComplexType::GetArrayType(nsISchemaType** aArrayType)
 {
   NS_ENSURE_ARG_POINTER(aArrayType);
 
-  if (!mArrayInfo) {
-    return NS_ERROR_FAILURE;
+  *aArrayType = nsnull;
+  if (mArrayInfo) {
+    mArrayInfo->GetType(aArrayType);
   }
-
-  mArrayInfo->GetType(aArrayType);
+  else {
+    nsCOMPtr<nsISchemaComplexType> complexBase = do_QueryInterface(mBaseType);
+    if (complexBase) {
+      return complexBase->GetArrayType(aArrayType);
+    }
+  }
 
   return NS_OK;
 }
@@ -318,11 +328,16 @@ nsSchemaComplexType::GetArrayDimension(PRUint32* aDimension)
 {
   NS_ENSURE_ARG_POINTER(aDimension);
 
+  *aDimension = 0;
   if (!mArrayInfo) {
-    return NS_ERROR_FAILURE;
+    *aDimension = mArrayInfo->GetDimension();
   }
-
-  *aDimension = mArrayInfo->GetDimension();
+  else {
+    nsCOMPtr<nsISchemaComplexType> complexBase = do_QueryInterface(mBaseType);
+    if (complexBase) {
+      return complexBase->GetArrayDimension(aDimension);
+    }
+  }
 
   return NS_OK;
 }

@@ -311,7 +311,7 @@ public:
   LoadListener(nsSchemaLoader* aLoader,
                nsISchemaLoadListener* aListener,
                nsIXMLHttpRequest* aRequest);
-  ~LoadListener();
+  virtual ~LoadListener();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
@@ -487,9 +487,7 @@ nsBuiltinSchemaCollection::GetBuiltinType(const nsAReadableString& aName,
                                           nsISchemaType** aType)
 {
   nsresult rv = NS_OK;
-  nsAutoString concat(aName);
-  concat.Append(aNamespace);
-  nsStringKey key(concat);
+  nsStringKey key(aName);
   nsCOMPtr<nsISupports> sup = dont_AddRef(mBuiltinTypesHash.Get(&key));
   if (sup) {
     rv = CallQueryInterface(sup, aType);
@@ -637,8 +635,7 @@ nsBuiltinSchemaCollection::GetBuiltinType(const nsAReadableString& aName,
       return NS_ERROR_SCHEMA_UNKNOWN_TYPE;
     }
 
-    nsSchemaBuiltinType* builtin = new nsSchemaBuiltinType(typeVal,
-                                                           aNamespace);
+    nsSchemaBuiltinType* builtin = new nsSchemaBuiltinType(typeVal);
     if (!builtin) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -658,9 +655,7 @@ nsBuiltinSchemaCollection::GetSOAPType(const nsAReadableString& aName,
                                        nsISchemaType** aType)
 {
   nsresult rv = NS_OK;
-  nsAutoString concat(aNamespace);
-  concat.Append(aName);
-  nsStringKey key(concat);
+  nsStringKey key(aName);
   nsCOMPtr<nsISupports> sup = dont_AddRef(mSOAPTypeHash.Get(&key));
   if (sup) {
     rv = CallQueryInterface(sup, aType);
@@ -675,7 +670,7 @@ nsBuiltinSchemaCollection::GetSOAPType(const nsAReadableString& aName,
         return rv;
       }
 
-      nsSOAPArray* array = new nsSOAPArray(aNamespace, anyType);
+      nsSOAPArray* array = new nsSOAPArray(anyType);
       if (!array) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -686,7 +681,7 @@ nsBuiltinSchemaCollection::GetSOAPType(const nsAReadableString& aName,
       NS_ADDREF(*aType);
     }
     else if (aName.Equals(NS_LITERAL_STRING("arrayType"))) {
-      nsSOAPArrayType* arrayType = new nsSOAPArrayType(aNamespace);
+      nsSOAPArrayType* arrayType = new nsSOAPArrayType();
       if (!arrayType) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -1475,7 +1470,6 @@ nsSchemaLoader::ProcessComplexTypeBody(nsSchema* aSchema,
 
   *aContentModel = nsISchemaComplexType::CONTENT_MODEL_EMPTY;
 
-  nsCOMPtr<nsISchemaType> baseType;
   nsCOMPtr<nsISchemaModelGroup> modelGroup;
   
   while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),

@@ -23,9 +23,8 @@
 
 #include "nsSchemaPrivate.h"
 
-nsSOAPArray::nsSOAPArray(const nsAReadableString& aTargetNamespace,
-                         nsISchemaType* aAnyType)
-  : mTargetNamespace(aTargetNamespace), mAnyType(aAnyType)
+nsSOAPArray::nsSOAPArray(nsISchemaType* aAnyType)
+  : mAnyType(aAnyType)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -43,7 +42,7 @@ NS_IMPL_ISUPPORTS3_CI(nsSOAPArray,
 NS_IMETHODIMP 
 nsSOAPArray::GetTargetNamespace(nsAWritableString& aTargetNamespace)
 {
-  aTargetNamespace.Assign(mTargetNamespace);
+  aTargetNamespace.Assign(NS_LITERAL_STRING(NS_SOAP_1_2_ENCODING_NAMESPACE));
   return NS_OK;
 }
 
@@ -185,12 +184,11 @@ NS_IMETHODIMP
 nsSOAPArray::GetArrayDimension(PRUint32* aDimension)
 {
   NS_ENSURE_ARG_POINTER(aDimension);
-  *aDimension = 1;
+  *aDimension = 0;
   return NS_OK;
 }
 
-nsSOAPArrayType::nsSOAPArrayType(const nsAReadableString& aTargetNamespace)
-  : mTargetNamespace(aTargetNamespace)
+nsSOAPArrayType::nsSOAPArrayType()
 {
   NS_INIT_ISUPPORTS();
 }
@@ -209,7 +207,7 @@ NS_IMPL_ISUPPORTS4_CI(nsSOAPArrayType,
 NS_IMETHODIMP 
 nsSOAPArrayType::GetTargetNamespace(nsAWritableString& aTargetNamespace)
 {
-  aTargetNamespace.Assign(mTargetNamespace);
+  aTargetNamespace.Assign(NS_LITERAL_STRING(NS_SOAP_1_2_ENCODING_NAMESPACE));
   return NS_OK;
 }
 

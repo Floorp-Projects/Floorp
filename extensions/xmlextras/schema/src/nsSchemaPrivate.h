@@ -100,8 +100,7 @@ protected:
 class nsSchemaBuiltinType : public nsISchemaBuiltinType
 {
 public:
-  nsSchemaBuiltinType(PRUint16 aBuiltinType,
-                      const nsAReadableString& aName);
+  nsSchemaBuiltinType(PRUint16 aBuiltinType);
   virtual ~nsSchemaBuiltinType();
 
   NS_DECL_ISUPPORTS
@@ -112,7 +111,6 @@ public:
 
 protected:
   PRUint16 mBuiltinType;
-  nsString mNamespace;
 };
 
 class nsSchemaListType : public nsSchemaComponentBase,
@@ -213,6 +211,7 @@ public:
   
 protected:
   nsString mName;
+  PRPackedBool mAbstract;
   PRUint16 mContentModel;
   PRUint16 mDerivation;
   nsCOMPtr<nsISchemaType> mBaseType;
@@ -220,7 +219,6 @@ protected:
   nsCOMPtr<nsISchemaModelGroup> mModelGroup;
   nsSupportsArray mAttributes;
   nsSupportsHashtable mAttributesHash;
-  PRPackedBool mAbstract;
   nsComplexTypeArrayInfo* mArrayInfo;
 };
 
@@ -510,8 +508,7 @@ protected:
 class nsSOAPArray : public nsISchemaComplexType
 {
 public:
-  nsSOAPArray(const nsAReadableString& aTargetNamespace,
-              nsISchemaType* aAnyType);
+  nsSOAPArray(nsISchemaType* aAnyType);
   virtual ~nsSOAPArray();
 
   NS_DECL_ISUPPORTS
@@ -520,14 +517,13 @@ public:
   NS_DECL_NSISCHEMACOMPLEXTYPE
 
 protected:
-  nsString mTargetNamespace;
   nsCOMPtr<nsISchemaType> mAnyType;
 };
 
 class nsSOAPArrayType : public nsISchemaRestrictionType
 {
 public:
-  nsSOAPArrayType(const nsAReadableString& aTargetNamespace);
+  nsSOAPArrayType();
   virtual ~nsSOAPArrayType();
 
   NS_DECL_ISUPPORTS
@@ -535,9 +531,6 @@ public:
   NS_DECL_NSISCHEMATYPE
   NS_DECL_NSISCHEMASIMPLETYPE
   NS_DECL_NSISCHEMARESTRICTIONTYPE
-
-protected:
-  nsString mTargetNamespace;
 };
 
 #define NS_SCHEMA_CID                              \
