@@ -76,6 +76,7 @@ Rights Reserved.
   <commandset id="mailFileMenuItems"/>
   <commandset id="mailViewMenuItems"/>
   <commandset id="mailEditMenuItems"/>
+  <commandset id="mailEditContextMenuItems"/>
   <commandset id="mailSearchMenuItems"/>
   <commandset id="mailGoMenuItems"/>
   <commandset id="mailMessageMenuItems"/>

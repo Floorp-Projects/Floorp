@@ -121,9 +121,6 @@ Rights Reserved.
   <command id="cmd_cut"/>
   <command id="cmd_copy"/>
   <command id="cmd_paste"/>
-  <command id="cmd_copyLink"/>
-  <command id="cmd_copyImageLocation"/>
-  <command id="cmd_copyImageContents"/>
   <command id="cmd_delete"
          valueFolder="&deleteFolderCmd.label;"
          valueFolderAccessKey="&deleteFolderCmd.accesskey;"
@@ -139,6 +136,12 @@ Rights Reserved.
   <command id="cmd_selectAll"/>
   <command id="cmd_selectThread" oncommand="goDoCommand('cmd_selectThread')"/>
   <command id="cmd_selectFlagged" oncommand="goDoCommand('cmd_selectFlagged')"/>
+</commandset>
+
+<commandset id="mailEditContextMenuItems">
+  <command id="cmd_copyLink"/>
+  <command id="cmd_copyImageLocation"/>
+  <command id="cmd_copyImageContents"/>
 </commandset>
 
 <commandset id="mailSearchMenuItems"
