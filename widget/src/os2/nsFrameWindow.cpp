@@ -101,17 +101,11 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
 
    // Assume frames are toplevel.  Breaks if anyone tries to do MDI, which
    // is an extra bonus feature :-)
-   HWND hwndOwner;
-   if (hwndP) {
-      hwndOwner = hwndP;
-   } else {
-      hwndOwner = HWND_DESKTOP;
-   } /* endif */
    hwndFrame = WinCreateWindow( HWND_DESKTOP,
                                 WC_FRAME,
                                 0, 0,                  // text, style
                                 0, 0, 0, 0,            // position
-                                hwndOwner,
+                                hwndP ? hwndP : HWND_DESKTOP,
                                 HWND_TOP,
                                 0,                     // ID
                                 &fcd, 0);
