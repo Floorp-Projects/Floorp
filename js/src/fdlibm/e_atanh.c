@@ -49,9 +49,9 @@
 #include "fdlibm.h"
 
 #ifdef __STDC__
-static const double one = 1.0, huge = 1e300;
+static const double one = 1.0, really_big = 1e300;
 #else
-static double one = 1.0, huge = 1e300;
+static double one = 1.0, really_big = 1e300;
 #endif
 
 static double zero = 0.0;
@@ -73,7 +73,7 @@ static double zero = 0.0;
 	    return (x-x)/(x-x);
 	if(ix==0x3ff00000) 
 	    return x/zero;
-	if(ix<0x3e300000&&(huge+x)>zero) return x;	/* x<2**-28 */
+	if(ix<0x3e300000&&(really_big+x)>zero) return x;	/* x<2**-28 */
 	__HI(x) = ix;		/* x <- |x| */
 	if(ix<0x3fe00000) {		/* x < 0.5 */
 	    t = x+x;

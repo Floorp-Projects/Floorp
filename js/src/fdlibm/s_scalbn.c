@@ -43,7 +43,7 @@ static double
 #endif
 two54   =  1.80143985094819840000e+16, /* 0x43500000, 0x00000000 */
 twom54  =  5.55111512312578270212e-17, /* 0x3C900000, 0x00000000 */
-huge   = 1.0e+300,
+really_big   = 1.0e+300,
 tiny   = 1.0e-300;
 
 #ifdef __STDC__
@@ -66,12 +66,12 @@ tiny   = 1.0e-300;
 	    }
         if (k==0x7ff) return x+x;		/* NaN or Inf */
         k = k+n; 
-        if (k >  0x7fe) return huge*fd_copysign(huge,x); /* overflow  */
+        if (k >  0x7fe) return really_big*fd_copysign(really_big,x); /* overflow  */
         if (k > 0) 				/* normal result */
 	    {__HI(x) = (hx&0x800fffff)|(k<<20); return x;}
         if (k <= -54)
             if (n > 50000) 	/* in case integer overflow in n+k */
-		return huge*fd_copysign(huge,x);	/*overflow*/
+		return really_big*fd_copysign(really_big,x);	/*overflow*/
 	    else return tiny*fd_copysign(tiny,x); 	/*underflow*/
         k += 54;				/* subnormal result */
         __HI(x) = (hx&0x800fffff)|(k<<20);
