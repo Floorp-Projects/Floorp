@@ -343,7 +343,7 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CBookmarksFindDialog);
 	RegisterClass_(CPluginView);
 	RegisterClass_(LDividedView);
-	RegisterClass_(CNavCenterContextMenuAttachment);
+	RegisterClass_(CTreeViewContextMenuAttachment);
 	RegisterClass_(CNavCenterTitle);
 	RegisterClass_(CNavCenterCommandStrip);
 	
