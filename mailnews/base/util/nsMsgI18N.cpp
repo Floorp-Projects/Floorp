@@ -77,7 +77,7 @@ nsresult ConvertFromUnicode(const nsString& aCharset,
     return (NULL == *outCString) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
   }
 
-  nsAutoString convCharset;
+  nsAutoString convCharset("ISO-8859-1");
   nsresult res;
 
   // Resolve charset alias
@@ -87,9 +87,6 @@ nsresult ConvertFromUnicode(const nsString& aCharset,
     if (aAlias.Length()) {
       res = calias->GetPreferred(aAlias, convCharset);
     }
-  }
-  if (NS_FAILED(res)) {
-    return res;
   }
 
   NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
@@ -104,36 +101,27 @@ nsresult ConvertFromUnicode(const nsString& aCharset,
       PRInt32 unicharLength = inString.Length();
       PRInt32 dstLength;
       res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
-      // allocale an output buffer
-      *outCString = (char *) PR_Malloc(dstLength + 1);
-      if (nsnull != *outCString) {
-        PRInt32 oldUnicharLength = unicharLength;
-        char *tempCString = *outCString;
-        PRInt32 totalCLength = 0;
-        while (1) {
-          res = encoder->Convert(unichars, &unicharLength, tempCString, &dstLength);
-
-          // increment for destination
-          tempCString += dstLength;
-          totalCLength += dstLength;
-
-          // break: this is usually the case
-          // source length <= zero and no error or unrecoverable error
-          if (0 >= unicharLength || NS_ERROR_UENC_NOMAPPING != res) {
-            break;
+      if (NS_SUCCEEDED(res)) {
+        res = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
+        if (NS_SUCCEEDED(res)) {
+          // allocale an output buffer
+          *outCString = (char *) PR_Malloc(dstLength + 1);
+          if (nsnull != *outCString) {
+            **outCString = '\0';
+            res = encoder->Convert(unichars, &unicharLength, *outCString, &dstLength);
+            if (NS_SUCCEEDED(res)) {
+              PRInt32 finLen;
+              res = encoder->Finish((char *)(*outCString+dstLength), &finLen);
+              if (NS_SUCCEEDED(res)) {
+                dstLength += finLen;
+              }
+              (*outCString)[dstLength] = '\0';
+            }
           }
-          // could not map unicode to the destination charset
-          // increment for source unicode and continue
-          unichars += unicharLength;
-          oldUnicharLength -= unicharLength;   // adjust availabe buffer size
-          unicharLength = oldUnicharLength;
-          // reset the encoder
-          encoder->Reset();
+          else {
+            res = NS_ERROR_OUT_OF_MEMORY;
+          }
         }
-        (*outCString)[totalCLength] = '\0';
-      }
-      else {
-        res = NS_ERROR_OUT_OF_MEMORY;
       }
       NS_IF_RELEASE(encoder);
     }    
