@@ -375,22 +375,22 @@ function(aRow)
 }
 
 StyleRuleView.prototype.getCellText = 
-function(aRow, aColId) 
+function(aRow, aCol) 
 {
   if (aRow > this.rowCount) return "";
 
   // special case for the style attribute
   if (this.mStyleAttribute && aRow + 1 == this.rowCount) {
-    if (aColId == "olcRule") {
+    if (aCol.id == "olcRule") {
       return 'style=""';
     }
 
-    if (aColId == "olcFileURL") {
+    if (aCol.id == "olcFileURL") {
       // we ought to be able to get to the URL...
       return "";
     }
 
-    if (aColId == "olcLine") {
+    if (aCol.id == "olcLine") {
       return "";
     }
     return "";
@@ -399,7 +399,7 @@ function(aRow, aColId)
   var rule = this.getRuleAt(aRow);
   if (!rule) return "";
   
-  if (aColId == "olcRule") {
+  if (aCol.id == "olcRule") {
     switch (rule.type) {
       case CSSRule.STYLE_RULE:
         return rule.selectorText;
@@ -411,11 +411,11 @@ function(aRow, aColId)
     }
   }
 
-  if (aColId == "olcFileURL") {
+  if (aCol.id == "olcFileURL") {
     return rule.parentStyleSheet ? rule.parentStyleSheet.href : "";
   }
 
-  if (aColId == "olcLine") {
+  if (aCol.id == "olcLine") {
     return rule.type == CSSRule.STYLE_RULE ? this.mDOMUtils.getRuleLine(rule) : "";
   }
 
@@ -439,9 +439,9 @@ function()
 });
 
 StylePropsView.prototype.getCellProperties = 
-function(aRow, aColId, aProperties) 
+function(aRow, aCol, aProperties) 
 {
-  if (aColId == "olcPropPriority") {
+  if (aCol.id == "olcPropPriority") {
     var prop = this.mDec.item(aRow);
     if (this.mDec.getPropertyPriority(prop) == "important") {
       aProperties.AppendElement(this.createAtom("important"));
@@ -450,13 +450,13 @@ function(aRow, aColId, aProperties)
 }
 
 StylePropsView.prototype.getCellText = 
-function(aRow, aColId) 
+function(aRow, aCol) 
 {
   var prop = this.mDec.item(aRow);
   
-  if (aColId == "olcPropName") {
+  if (aCol.id == "olcPropName") {
     return prop;
-  } else if (aColId == "olcPropValue") {
+  } else if (aCol.id == "olcPropValue") {
     return this.mDec.getPropertyValue(prop)
   }
   

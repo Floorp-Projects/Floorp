@@ -1193,6 +1193,38 @@ public:
 };
 
 
+#ifdef MOZ_XUL
+// TreeColumns helper
+
+class nsTreeColumnsSH : public nsNamedArraySH
+{
+protected:
+  nsTreeColumnsSH(nsDOMClassInfoData* aData) : nsNamedArraySH(aData)
+  {
+  }
+
+  virtual ~nsTreeColumnsSH()
+  {
+  }
+
+  // Override nsArraySH::GetItemAt() since our list isn't a
+  // nsIDOMNodeList
+  virtual nsresult GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                             nsISupports **aResult);
+
+  // Override nsNamedArraySH::GetNamedItem()
+  virtual nsresult GetNamedItem(nsISupports *aNative, const nsAString& aName,
+                                nsISupports **aResult);
+
+public:
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsTreeColumnsSH(aData);
+  }
+};
+#endif
+
+
 // Event handler 'this' translator class, this is called by XPConnect
 // when a "function interface" (nsIDOMEventListener) is called, this
 // class extracts 'this' fomr the first argument to the called

@@ -251,7 +251,7 @@ function GetAndSelectExistingAttributeValue( attName, treeChildrenId )
   // Attribute doesn't exist in tree, so remove selection
   gDoOnSelectTree = false;
   try {
-    treeChildren.parentNode.treeBoxObject.selection.clearSelection();
+    treeChildren.parentNode.view.selection.clearSelection();
   } catch (e) {}
   gDoOnSelectTree = true;
 
@@ -348,12 +348,12 @@ function doHelpButton()
 function selectTreeItem(treeChildren, item)
 {
   var index = treeChildren.parentNode.contentView.getIndexOfItem(item);
-  treeChildren.parentNode.treeBoxObject.selection.select(index);
+  treeChildren.parentNode.view.selection.select(index);
 }
 
 function getSelectedItem(tree)
 {
-  if (tree.treeBoxObject.selection.count == 1)
+  if (tree.view.selection.count == 1)
     return tree.contentView.getItemAtIndex(tree.currentIndex);
   else
     return null;

@@ -400,7 +400,7 @@ nsPrefWindow.prototype =
           var index = panelTree.view.getIndexOfItem( selectItem );
           if (index == -1)
             return;
-          panelTree.treeBoxObject.selection.select( index );
+          panelTree.view.selection.select( index );
         }
 
   };

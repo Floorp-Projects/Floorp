@@ -153,7 +153,7 @@ nsXULTooltipListener::MouseOut(nsIDOMEvent* aMouseEvent)
       // reset special tree tracking
       if (mIsSourceTree) {
         mLastTreeRow = -1;
-        mLastTreeCol.Truncate();
+        mLastTreeCol = nsnull;
       }
 #endif
     }
@@ -347,28 +347,28 @@ nsXULTooltipListener::CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent)
     aMouseEvent->GetClientX(&x);
     aMouseEvent->GetClientY(&y);
     PRInt32 row;
-    nsXPIDLString colId, obj;
+    nsCOMPtr<nsITreeColumn> col;
+    nsCAutoString obj;
 
-    obx->GetCellAt(x, y, &row, getter_Copies(colId), getter_Copies(obj));
-    
+    obx->GetCellAt(x, y, &row, getter_AddRefs(col), obj);
+
     // determine if we are going to need a titletip
     // XXX check the disabletitletips attribute on the tree content
     mNeedTitletip = PR_FALSE;
-    if (row >= 0 && obj.Equals(NS_LITERAL_STRING("text"))) {
+    if (row >= 0 && obj.Equals(NS_LITERAL_CSTRING("text"))) {
       nsCOMPtr<nsITreeView> view;
       obx->GetView(getter_AddRefs(view));
       PRBool isCropped;
-      obx->IsCellCropped(row, colId, &isCropped);
+      obx->IsCellCropped(row, col, &isCropped);
       mNeedTitletip = isCropped;
     }
 
-    if (mCurrentTooltip && 
-        (row != mLastTreeRow || !mLastTreeCol.Equals(colId))) {
+    if (mCurrentTooltip && (row != mLastTreeRow || col != mLastTreeCol)) {
       HideTooltip();
     } 
 
     mLastTreeRow = row;
-    mLastTreeCol.Assign(colId);
+    mLastTreeCol = col;
   }
 }
 #endif
@@ -390,7 +390,7 @@ nsXULTooltipListener::ShowTooltip()
 #ifdef MOZ_XUL
       if (!mIsSourceTree) {
         mLastTreeRow = -1;
-        mLastTreeCol.Truncate();
+        mLastTreeCol = nsnull;
       }
 #endif
 
@@ -439,11 +439,10 @@ nsXULTooltipListener::ShowTooltip()
 #ifdef DEBUG_crap
 static void
 GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode, 
-                  PRInt32 aRow, nsAutoString aCol, PRInt32* aX, PRInt32* aY)
+                  PRInt32 aRow, nsITreeColumn* aCol, PRInt32* aX, PRInt32* aY)
 {
   PRInt32 junk;
-  const PRUnichar empty[] = {'\0'};
-  aTreeBox->GetCoordsForCellItem(aRow, aCol.get(), empty, aX, aY, &junk, &junk);
+  aTreeBox->GetCoordsForCellItem(aRow, aCol, NS_LITERAL_CSTRING(""), aX, aY, &junk, &junk);
   nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(aSourceNode));
   nsCOMPtr<nsIBoxObject> bx;
   xulEl->GetBoxObject(getter_AddRefs(bx));
@@ -457,13 +456,13 @@ GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode,
 
 static void
 SetTitletipLabel(nsITreeBoxObject* aTreeBox, nsIContent* aTooltip,
-                 PRInt32 aRow, nsAutoString aCol)
+                 PRInt32 aRow, nsITreeColumn* aCol)
 {
   nsCOMPtr<nsITreeView> view;
   aTreeBox->GetView(getter_AddRefs(view));
 
   nsAutoString label;
-  view->GetCellText(aRow, aCol.get(), label);
+  view->GetCellText(aRow, aCol, label);
   
   aTooltip->SetAttr(nsnull, nsXULAtoms::label, label, PR_TRUE);
 }
@@ -493,7 +492,7 @@ nsXULTooltipListener::LaunchTooltip(nsIContent* aTarget, PRInt32 aX, PRInt32 aY)
       GetSourceTreeBoxObject(getter_AddRefs(obx));
 #ifdef DEBUG_crap
       GetTreeCellCoords(obx, mSourceNode,
-                            mLastTreeRow, mLastTreeCol, &x, &y);
+                        mLastTreeRow, mLastTreeCol, &x, &y);
 #endif
 
       SetTitletipLabel(obx, mCurrentTooltip, mLastTreeRow, mLastTreeCol);

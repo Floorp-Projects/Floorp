@@ -987,9 +987,9 @@ CommandArrayEnumerator.prototype = {
 
 var BookmarksUtils = {
 
-  DROP_BEFORE: Components.interfaces.nsITreeView.inDropBefore,
-  DROP_ON    : Components.interfaces.nsITreeView.inDropOn,
-  DROP_AFTER : Components.interfaces.nsITreeView.inDropAfter,
+  DROP_BEFORE: Components.interfaces.nsITreeView.DROP_BEFORE,
+  DROP_ON    : Components.interfaces.nsITreeView.DROP_ON,
+  DROP_AFTER : Components.interfaces.nsITreeView.DROP_AFTER,
 
   _bundle        : null,
   _brandShortName: null,

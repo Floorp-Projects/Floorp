@@ -57,7 +57,7 @@ function Startup()
       bookmarksView.treeBoxObject.view.toggleOpenState(0);
   }
 
-  bookmarksView.treeBoxObject.selection.select(0);
+  bookmarksView.treeBoxObject.view.selection.select(0);
 
   windowNode.setAttribute("title", titleString);
 

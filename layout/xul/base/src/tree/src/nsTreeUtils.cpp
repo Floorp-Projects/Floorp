@@ -21,6 +21,8 @@
  *
  * Contributor(s):
  *   Chris Waterson <waterson@netscape.com>
+ *   Jan Varga <varga@nixcorp.com>
+ *   Nate Nielsen <nielsen@memberwebs.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -41,6 +43,9 @@
 #include "nsChildIterator.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"
+#include "nsINameSpaceManager.h"
+#include "nsXULAtoms.h"
+#include "nsINodeInfo.h"
 
 nsresult
 nsTreeUtils::TokenizeProperties(const nsAString& aProperties, nsISupportsArray* aPropertiesArray)
@@ -98,5 +103,96 @@ nsTreeUtils::GetImmediateChild(nsIContent* aContainer, nsIAtom* aTag,
   }
 
   *aResult = nsnull;
+  return NS_OK;
+}
+
+nsresult
+nsTreeUtils::GetDescendantChild(nsIContent* aContainer, nsIAtom* aTag, nsIContent** aResult)
+{
+  ChildIterator iter, last;
+  for (ChildIterator::Init(aContainer, &iter, &last); iter != last; ++iter) {
+    nsCOMPtr<nsIContent> child = *iter;
+    if (child->Tag() == aTag) {
+      NS_ADDREF(*aResult = child);
+      return NS_OK;
+    }
+    else {
+      nsresult rv = GetDescendantChild(child, aTag, aResult);
+      if(NS_FAILED(rv))
+        return rv;
+
+      if(*aResult)
+        return NS_OK;
+    }
+  }
+
+  *aResult = nsnull;
+  return NS_OK;
+}
+
+nsresult
+nsTreeUtils::UpdateSortIndicators(nsIContent* aColumn, const nsAString& aDirection)
+{
+  aColumn->SetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, aDirection, PR_TRUE);
+  aColumn->SetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, NS_LITERAL_STRING("true"), PR_TRUE);
+
+  // Unset sort attribute(s) on the other columns
+  nsIContent* parentContent = aColumn->GetParent();
+  if (parentContent) {
+    nsINodeInfo *ni = parentContent->GetNodeInfo();
+
+    if (ni && ni->Equals(nsXULAtoms::treecols, kNameSpaceID_XUL)) {
+      PRUint32 numChildren = parentContent->GetChildCount();
+      for (PRUint32 i = 0; i < numChildren; ++i) {
+        nsIContent *childContent = parentContent->GetChildAt(i);
+
+        if (childContent) {
+          ni = childContent->GetNodeInfo();
+
+          if (ni && ni->Equals(nsXULAtoms::treecol, kNameSpaceID_XUL) &&
+              childContent != aColumn) {
+            childContent->UnsetAttr(kNameSpaceID_None,
+                                    nsXULAtoms::sortDirection, PR_TRUE);
+            childContent->UnsetAttr(kNameSpaceID_None,
+                                    nsXULAtoms::sortActive, PR_TRUE);
+          }
+        }
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsTreeUtils::GetColumnIndex(nsIContent* aColumn, PRInt32* aResult)
+{
+  nsIContent* parentContent = aColumn->GetParent();
+  if (parentContent) {
+    nsINodeInfo *ni = parentContent->GetNodeInfo();
+
+    if (ni && ni->Equals(nsXULAtoms::treecols, kNameSpaceID_XUL)) {
+      PRUint32 numChildren = parentContent->GetChildCount();
+      PRInt32 colIndex = 0;
+      for (PRUint32 i = 0; i < numChildren; ++i) {
+        nsIContent *childContent = parentContent->GetChildAt(i);
+
+        if (childContent) {
+          ni = childContent->GetNodeInfo();
+
+          if (ni && ni->Equals(nsXULAtoms::treecol, kNameSpaceID_XUL)) {
+
+            if (childContent == aColumn) {
+              *aResult = colIndex;
+	      return NS_OK;
+            }
+            colIndex++;
+          }
+        }
+      }
+    }
+  }
+
+  *aResult = -1;
   return NS_OK;
 }

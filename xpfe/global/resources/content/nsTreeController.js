@@ -96,8 +96,10 @@ function nsTreeController_copy()
       // a container, ignore it.
       if (isContainer(this.tree, k))
         continue;
-      var pageUrl  = this.treeView.getCellText(k, "URL");        
-      var pageName = this.treeView.getCellText(k, "Name");
+      var col = this.tree.columns["URL"];
+      var pageUrl  = this.treeView.getCellText(k, col);
+      col = this.tree.columns["Name"];
+      var pageName = this.treeView.getCellText(k, col);
 
       url += "ID:{" + pageUrl + "};";
       url += "NAME:{" + pageName + "};";
@@ -246,7 +248,7 @@ nsTreeController.prototype =
   {
     if (this._treeSelection)
       return this._treeSelection;
-    return this._treeSelection = this.tree.treeBoxObject.view.selection;
+    return this._treeSelection = this.tree.view.selection;
   },
   get treeBuilder()
   {

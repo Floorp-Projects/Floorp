@@ -138,7 +138,7 @@ function Startup()
         folderItem = RDF.GetResource(window.arguments[2]);
       if (folderItem) {
         ind = bookmarkView.treeBuilder.getIndexOfResource(folderItem);
-        bookmarkView.treeBoxObject.selection.select(ind);
+        bookmarkView.treeBoxObject.view.selection.select(ind);
       }
       break;
     case "newBookmark":
@@ -168,7 +168,7 @@ function Startup()
         folderItem = bookmarkView.rdf.GetResource(gCreateInFolder);
         if (folderItem) {
           ind = bookmarkView.treeBuilder.getIndexOfResource(folderItem);
-          bookmarkView.treeBoxObject.selection.select(ind);
+          bookmarkView.treeBoxObject.view.selection.select(ind);
         }
       }
     }
@@ -179,7 +179,7 @@ function Startup()
   if (document.getElementById("bookmarknamegrid").hasAttribute("hidden")) {
     bookmarkView.tree.focus();
     if (bookmarkView.currentIndex == -1)
-      bookmarkView.treeBoxObject.selection.select(0);
+      bookmarkView.treeBoxObject.view.selection.select(0);
   }
   else {
     gFld_Name.select();
@@ -303,9 +303,9 @@ function useDefaultFolder ()
   var ind = bookmarkView.treeBuilder.getIndexOfResource(folder);
   if (ind != -1) {
     bookmarkView.tree.focus();
-    bookmarkView.treeBoxObject.selection.select(ind);
+    bookmarkView.treeBoxObject.view.selection.select(ind);
   } else {
-    bookmarkView.treeBoxObject.selection.clearSelection();
+    bookmarkView.treeBoxObject.view.selection.clearSelection();
   }
   gCreateInFolder = folder.Value;
 }

@@ -21,7 +21,8 @@
  *
  * Contributor(s):
  * Original Author: David W. Hyatt (hyatt@netscape.com)
- *  Ben Goodger <ben@netscape.com>
+ *   Ben Goodger <ben@netscape.com>
+ *   Jan Varga <varga@nixcorp.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -42,11 +43,17 @@
 
 interface nsITreeView;
 interface nsITreeSelection;
-interface nsIDOMEvent;
+interface nsITreeColumn;
+interface nsITreeColumns;
 
 [scriptable, uuid(44481385-B1DA-480a-9026-1F0232C4EE59)]
 interface nsITreeBoxObject : nsISupports
 {
+  /**
+   * Obtain the columns.
+   */
+  readonly attribute nsITreeColumns columns;
+
   /**
    * The view that backs the tree and that supplies it with its data.
    * It is dynamically settable, either using a view attribute on the
@@ -65,29 +72,9 @@ interface nsITreeBoxObject : nsISupports
   readonly attribute nsIDOMElement treeBody;
 
   /**
-   * Obtains the selection from the view.
-   */
-  readonly attribute nsITreeSelection selection;
-
-  /**
    * Obtain the height of a row.
    */
   readonly attribute long rowHeight;
-
-  /**
-   * Get the index of the specified column.
-   */
-  long getColumnIndex(in wstring colID);
-
-  /**
-   * Get the ID of the specified column.
-   */
-  AString getColumnID(in long colIndex);
-
-  /**
-   * Get the index of the primary column.
-   */
-  long getKeyColumnIndex();
 
   /**
    * Get the index of the first visible row.
@@ -102,7 +89,7 @@ interface nsITreeBoxObject : nsISupports
   /**
    * Gets the number of possible visible rows.
    */
-  long getPageCount();
+  long getPageLength();
 
   /**
    * Ensures that a row at a given index is visible.
@@ -133,10 +120,9 @@ interface nsITreeBoxObject : nsISupports
    * Invalidation methods for fine-grained painting control.
    */
   void invalidate();
-  void invalidateColumn(in wstring colID);
+  void invalidateColumn(in nsITreeColumn col);
   void invalidateRow(in long index);
-  void invalidateCell(in long row, in wstring colID);
-  void invalidatePrimaryCell(in long row);
+  void invalidateCell(in long row, in nsITreeColumn col);
   void invalidateRange(in long startIndex, in long endIndex);
 
   /**
@@ -151,18 +137,18 @@ interface nsITreeBoxObject : nsISupports
    * ChildElt is the pseudoelement hit: this can have values of
    * "cell", "twisty", "image", and "text".
    */
-  void getCellAt(in long x, in long y, out long row, out wstring colID, out wstring childElt);
+  void getCellAt(in long x, in long y, out long row, out nsITreeColumn col, out ACString childElt);
 
   /** 
    * Find the coordinates of an element within a specific cell. 
    */
-  void getCoordsForCellItem(in long row, in wstring colID, in wstring element, 
+  void getCoordsForCellItem(in long row, in nsITreeColumn col, in ACString element, 
                             out long x, out long y, out long width, out long height);
 
   /** 
    * Determine if the text of a cell is being cropped or not.
    */
-  boolean isCellCropped(in long row, in AString colID);
+  boolean isCellCropped(in long row, in nsITreeColumn col);
 
   /**
    * The view is responsible for calling these notification methods when
@@ -186,20 +172,7 @@ interface nsITreeBoxObject : nsISupports
   void endUpdateBatch();
 
   /**
-   * Drag handlers, installed from XBL, called when drags occur to handle painting
-   */
-  void onDragEnter ( in nsIDOMEvent event ) ;
-  void onDragExit ( in nsIDOMEvent event ) ;
-  void onDragOver ( in nsIDOMEvent event)  ;
-  void onDragDrop ( in nsIDOMEvent event ) ;
-  
-  /**
    * Called on a theme switch to flush out the tree's style and image caches.
    */
   void clearStyleAndImageCaches();
 };
-
-%{C++
-// Initializer,
-%}
-

@@ -94,7 +94,7 @@ StylesheetsViewer.prototype =
     this.mView = new StyleSheetsView(aObject);
     this.mOlBox.view = this.mView;
     this.mObsMan.dispatchEvent("subjectChange", { subject: aObject });
-    this.mOlBox.selection.select(0);
+    this.mView.selection.select(0);
   },
 
   initialize: function(aPane)
@@ -203,11 +203,11 @@ function(aRow, aDiff)
 }
 
 StyleSheetsView.prototype.getCellText = 
-function(aRow, aColId) 
+function(aRow, aCol) 
 {
-  if (aColId == "olcHref")
+  if (aCol.id == "olcHref")
     return this.mSheets[aRow].href;
-  else if (aColId == "olcRules")
+  else if (aCol.id == "olcRules")
     return this.mSheets[aRow].cssRules.length;
   return "";
 }

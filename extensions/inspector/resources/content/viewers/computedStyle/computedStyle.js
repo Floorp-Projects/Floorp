@@ -144,11 +144,11 @@ function ComputedStyleView(aObject)
 ComputedStyleView.prototype = new inBaseTreeView();
 
 ComputedStyleView.prototype.getCellText = 
-function(aRow, aColId) 
+function(aRow, aCol) 
 {
-  if (aColId == "olcStyleName") {
+  if (aCol.id == "olcStyleName") {
     return this.mStyleList.item(aRow);
-  } else if (aColId == "olcStyleValue") {
+  } else if (aCol.id == "olcStyleValue") {
     var prop = this.mStyleList.item(aRow);
     return this.mStyleList.getPropertyValue(prop);
   }

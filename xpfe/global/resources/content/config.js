@@ -67,9 +67,9 @@ var view = {
     if (!(index in gPrefView))
       return "";
     
-    var value = gPrefView[index][col];
+    var value = gPrefView[index][col.id];
 
-    switch (col) {
+    switch (col.id) {
       case "lockCol":           
         return gLockStrs[value];
       case "typeCol":
@@ -83,27 +83,26 @@ var view = {
     if (index in gPrefView)
       prop.AppendElement(gLockAtoms[gPrefView[index].lockCol]);
   },
-  getColumnProperties : function(col, elt, prop) {},
+  getColumnProperties : function(col, prop) {},
   treebox : null,
   selection : null,
   isContainer : function(index) { return false; },
   isContainerOpen : function(index) { return false; },
   isContainerEmpty : function(index) { return false; },
   isSorted : function() { return true; },
-  canDropOn : function(index) { return false; },
-  canDropBeforeAfter : function(index, before) { return false; },
-  drop : function(row,orientation) {},
+  canDrop : function(index, orienation) { return false; },
+  drop : function(row, orientation) {},
   setTree : function(out) { this.treebox = out; },
   getParentIndex: function(rowIndex) { return -1; },
   hasNextSibling: function(rowIndex, afterIndex) { return false; },
   getLevel: function(index) { return 1; },
-  getImageSrc: function(row, colID) { return ""; },
+  getImageSrc: function(row, col) { return ""; },
   toggleOpenState : function(index) {},
-  cycleHeader: function(colID, elt) {
+  cycleHeader: function(col) {
     var index = this.selection.currentIndex;
-    if (colID == gSortedColumn)
+    if (col.id == gSortedColumn)
       gSortDirection = -gSortDirection;
-    if (colID == gSortedColumn && gFastIndex == gPrefArray.length) {
+    if (col.id == gSortedColumn && gFastIndex == gPrefArray.length) {
       gPrefArray.reverse();
       if (gPrefView != gPrefArray)
         gPrefView.reverse();
@@ -120,18 +119,18 @@ var view = {
       }
       var old = document.getElementById(gSortedColumn);
       old.setAttribute("sortDirection", "");
-      gPrefArray.sort(gSortFunction = gSortFunctions[colID]);
+      gPrefArray.sort(gSortFunction = gSortFunctions[col.id]);
       if (gPrefView != gPrefArray) {
-        if (colID == gSortedColumn)
+        if (col.id == gSortedColumn)
           gPrefView.reverse();
         else
           gPrefView.sort(gSortFunction);
       }
-      gSortedColumn = colID;
+      gSortedColumn = col.id;
       if (pref)
         index = getIndexOfPref(pref);
     }
-    elt.setAttribute("sortDirection", gSortDirection > 0 ? "ascending" : "descending");
+    col.element.setAttribute("sortDirection", gSortDirection > 0 ? "ascending" : "descending");
     this.treebox.invalidate();
     if (index >= 0) {
       this.selection.select(index);
@@ -140,12 +139,13 @@ var view = {
     gFastIndex = gPrefArray.length;
   },
   selectionChanged : function() {},
-  cycleCell: function(row, colID) {},
-  isEditable: function(row, colID) {return false; },
-  setCellText: function(row, colID, value) {},
+  cycleCell: function(row, col) {},
+  isEditable: function(row, col) {return false; },
+  setCellValue: function(row, col, value) {},
+  setCellText: function(row, col, value) {},
   performAction: function(action) {},
   performActionOnRow: function(action, row) {},
-  performActionOnCell: function(action, row, colID) {},
+  performActionOnCell: function(action, row, col) {},
   isSeparator: function(index) {return false; }
 };
 

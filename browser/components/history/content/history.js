@@ -80,7 +80,8 @@ var historyDNDObserver = {
             return false;
         var builder = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
         var url = builder.getResourceAtIndex(currentIndex).ValueUTF8;
-        var title = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "Name");
+        var col = gHistoryTree.columns["Name"];
+        var title = gHistoryTree.view.getCellText(currentIndex, col);
 
         var htmlString = "<A HREF='" + url + "'>" + title + "</A>";
         aXferData.data = new TransferData();
@@ -129,7 +130,7 @@ function checkURLSecurity(aURL)
 
 function OpenURL(aWhere, event)
 {
-  var count = gHistoryTree.treeBoxObject.view.selection.count;
+  var count = gHistoryTree.view.selection.count;
   if (count != 1)
     return;
 
@@ -176,7 +177,8 @@ function SortBy(sortKey)
   var col = document.getElementById("Name");
   col.setAttribute("sort", sortKey);
   col.setAttribute("sortDirection", sortDirection);
-  gHistoryTree.treeBoxObject.view.cycleHeader(sortKey, col);
+  var column = gHistoryTree.columns.getColumnFor(col);
+  gHistoryTree.view.cycleHeader(column);
 }
 
 function IsFindResource(uri)
@@ -232,7 +234,7 @@ function Sort(groupingType)
 
 function historyAddBookmarks()
 {
-  var count = gHistoryTree.treeBoxObject.view.selection.count;
+  var count = gHistoryTree.view.selection.count;
   if (count != 1)
     return;
   
@@ -241,7 +243,8 @@ function historyAddBookmarks()
   var url = builder.getResourceAtIndex(currentIndex).ValueUTF8;
   
   //XXXBlake don't use getCellText
-  var title = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "Name");
+  var col = gHistoryTree.columns["Name"];
+  var title = gHistoryTree.view.getCellText(currentIndex, col);
   BookmarksUtils.addBookmark(url, title, undefined);
 }
 
@@ -256,7 +259,7 @@ function historyCopyLink()
 
 function buildContextMenu()
 {
-  var count = gHistoryTree.treeBoxObject.view.selection.count;
+  var count = gHistoryTree.view.selection.count;
   var openItem = document.getElementById("miOpen");
   var openItemInNewWindow = document.getElementById("miOpenInNewWindow");
   var openItemInNewTab = document.getElementById("miOpenInNewTab");

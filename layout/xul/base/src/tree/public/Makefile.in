@@ -29,8 +29,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= layout
 XPIDL_MODULE	= layout_xul_tree
 
-XPIDLSRCS=      nsITreeView.idl               \
-                nsITreeSelection.idl    \
+XPIDLSRCS=	nsITreeColumns.idl \
+		nsITreeView.idl \
+                nsITreeSelection.idl \
                 nsITreeBoxObject.idl \
                 nsITreeContentView.idl \
                 $(NULL)

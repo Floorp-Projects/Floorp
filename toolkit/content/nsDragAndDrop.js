@@ -375,7 +375,7 @@ var nsDragAndDrop = {
           region.init();
           var obo = tree.treeBoxObject;
           var bo = obo.treeBody.boxObject;
-          var obosel= obo.selection;
+          var sel= obo.view.selection;
 
           var rowX = bo.x;
           var rowY = bo.y;
@@ -385,7 +385,7 @@ var nsDragAndDrop = {
           //add a rectangle for each visible selected row
           for (var i = obo.getFirstVisibleRow(); i <= obo.getLastVisibleRow(); i ++)
           {
-            if (obosel.isSelected(i))
+            if (sel.isSelected(i))
               region.unionRect(rowX, rowY, rowWidth, rowHeight);
             rowY = rowY + rowHeight;
           }

@@ -120,9 +120,9 @@ var signonsTreeView = {
   getCellValue : function(row,column) {},
   getCellText : function(row,column){
     var rv="";
-    if (column=="siteCol") {
+    if (column.id=="siteCol") {
       rv = signons[row].host;
-    } else if (column=="userCol") {
+    } else if (column.id=="userCol") {
       rv = signons[row].user;
     }
     return rv;
@@ -130,10 +130,10 @@ var signonsTreeView = {
   isSeparator : function(index) {return false;},
   isSorted: function() { return false; },
   isContainer : function(index) {return false;},
-  cycleHeader : function(aColId, aElt) {},
-  getRowProperties : function(row,column,prop){},
-  getColumnProperties : function(column,columnElement,prop){},
-  getCellProperties : function(row,prop){}
+  cycleHeader : function(column) {},
+  getRowProperties : function(row,prop) {},
+  getColumnProperties : function(column,prop) {},
+  getCellProperties : function(row,column,prop) {}
  };
 var signonsTree;
 
@@ -254,7 +254,7 @@ var rejectsTreeView = {
   getCellValue : function(row,column) {},
   getCellText : function(row,column){
     var rv="";
-    if (column=="rejectCol") {
+    if (column.id=="rejectCol") {
       rv = rejects[row].host;
     }
     return rv;
@@ -262,10 +262,10 @@ var rejectsTreeView = {
   isSeparator : function(index) {return false;},
   isSorted: function() { return false; },
   isContainer : function(index) {return false;},
-  cycleHeader : function(aColId, aElt) {},
-  getRowProperties : function(row,column,prop){},
-  getColumnProperties : function(column,columnElement,prop){},
-  getCellProperties : function(row,prop){}
+  cycleHeader : function(column) {},
+  getRowProperties : function(row,prop) {},
+  getColumnProperties : function(column,prop) {},
+  getCellProperties : function(row,column,prop) {}
  };
 var rejectsTree;
 
@@ -385,7 +385,7 @@ function DeleteSelectedItemFromTree
   // Remove selected items from list (by setting them to null) and place in
   // deleted list.  At the same time, notify the tree of the row count changes.
 
-  var selection = box.selection;
+  var selection = box.view.selection;
   var oldSelectStart = table.length;
   box.beginUpdateBatch();
 
@@ -440,7 +440,7 @@ function DeleteSelectedItemFromTree
 
 function GetTreeSelections(tree) {
   var selections = [];
-  var select = tree.treeBoxObject.selection;
+  var select = tree.view.selection;
   if (select) {
     var count = select.getRangeCount();
     var min = new Object();
@@ -486,8 +486,8 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, 
       if (table[s].number == selectedNumber) {
         // update selection
         // note: we need to deselect before reselecting in order to trigger ...Selected()
-        tree.treeBoxObject.view.selection.select(-1);
-        tree.treeBoxObject.view.selection.select(s);
+        tree.view.selection.select(-1);
+        tree.view.selection.select(s);
         selectedRow = s;
         break;
       }

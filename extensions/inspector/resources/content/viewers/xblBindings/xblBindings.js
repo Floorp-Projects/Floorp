@@ -418,10 +418,10 @@ function MethodTreeView(aBinding)
 MethodTreeView.prototype = new inBaseTreeView();
 
 MethodTreeView.prototype.getCellText = 
-function(aRow, aColId) 
+function(aRow, aCol) 
 {
   var method = this.mMethods[aRow];
-  if (aColId == "olcMethodName") {
+  if (aCol.id == "olcMethodName") {
     var name = method.getAttribute("name");
     var params = method.getElementsByTagName("parameter");
     var pstr = "";
@@ -445,10 +445,10 @@ function PropTreeView(aBinding)
 PropTreeView.prototype = new inBaseTreeView();
 
 PropTreeView.prototype.getCellText = 
-function(aRow, aColId) 
+function(aRow, aCol) 
 {
   var prop = this.mProps[aRow];
-  if (aColId == "olcPropName") {
+  if (aCol.id == "olcPropName") {
     return prop.getAttribute("name");
   }
   
@@ -467,12 +467,12 @@ function HandlerTreeView(aBinding)
 HandlerTreeView.prototype = new inBaseTreeView();
 
 HandlerTreeView.prototype.getCellText = 
-function(aRow, aColId) 
+function(aRow, aCol) 
 {
   var handler = this.mHandlers[aRow];
-  if (aColId == "olcHandlerEvent") {
+  if (aCol.id == "olcHandlerEvent") {
     return handler.getAttribute("event");
-  } else if (aColId == "olcHandlerPhase") {
+  } else if (aCol.id == "olcHandlerPhase") {
     return handler.getAttribute("phase");
   }
   
@@ -500,12 +500,12 @@ function ResourceTreeView(aBinding)
 ResourceTreeView.prototype = new inBaseTreeView();
 
 ResourceTreeView.prototype.getCellText = 
-function(aRow, aColId) 
+function(aRow, aCol) 
 {
   var resource = this.mResources[aRow];
-  if (aColId == "olcResourceType") {
+  if (aCol.id == "olcResourceType") {
     return resource.localName;
-  } else if (aColId == "olcResourceSrc") {
+  } else if (aCol.id == "olcResourceSrc") {
     return resource.getAttribute("src");
   }
   

@@ -46,7 +46,8 @@ interface nsIDOMXULMultiSelectControlElement : nsIDOMXULSelectControlElement
   attribute DOMString selType;
 
   attribute nsIDOMXULSelectControlItemElement currentItem;
-  
+  attribute long currentIndex;
+
   readonly attribute nsIDOMNodeList selectedItems;
   
   void addItemToSelection(in nsIDOMXULSelectControlItemElement item);

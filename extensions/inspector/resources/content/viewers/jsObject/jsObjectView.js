@@ -86,11 +86,11 @@ JSObjectView.prototype =
   {
   },
   
-  getCellProperties: function(aIndex, aProperties)
+  getCellProperties: function(aIndex, aCol, aProperties)
   {
   },
   
-  getColumnProperties: function(aColId, aColElt, aProperties)
+  getColumnProperties: function(aCol, aProperties)
   {
   },
 
@@ -129,23 +129,23 @@ JSObjectView.prototype =
   {
   },
 
-  getImageSrc: function(aRow, aColId)
+  getImageSrc: function(aRow, aCol)
   {
   },
 
-  getProgressMode: function(aRow, aColId)
+  getProgressMode: function(aRow, aCol)
   {
   },
 
-  getCellValue: function(aRow, aColId)
+  getCellValue: function(aRow, aCol)
   {
   },
 
-  getCellText: function(aRow, aColId)
+  getCellText: function(aRow, aCol)
   {
     var object = null;
   
-    switch (aColId) {
+    switch (aCol.id) {
       case "olrCol1":
         return 1;
         break;
@@ -164,7 +164,7 @@ JSObjectView.prototype =
   {
   },
   
-  cycleHeader: function(aColId, aElt)
+  cycleHeader: function(aCol)
   {
   },
   
@@ -172,15 +172,19 @@ JSObjectView.prototype =
   {
   },
   
-  cycleCell: function(aRow, aColId)
+  cycleCell: function(aRow, aCol)
   {
   },
   
-  isEditable: function(aRow, aColId)
+  isEditable: function(aRow, aCol)
   {
   },
   
-  setCellText: function(aRow, aColId, aValue)
+  setCellValue: function(aRow, aCol, aValue)
+  {
+  },
+
+  setCellText: function(aRow, aCol, aValue)
   {
   },
   
@@ -192,7 +196,7 @@ JSObjectView.prototype =
   {
   },
   
-  performActionOnCell: function(aAction, aRow, aColId)
+  performActionOnCell: function(aAction, aRow, aCol)
   {
   },
   

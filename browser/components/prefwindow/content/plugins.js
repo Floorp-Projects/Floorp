@@ -257,7 +257,7 @@ PluginTypes.prototype = {
 
   getCellProperties: function (aRow, aCol, aProperties) 
   { 
-    if (aCol == "pluginEnabled") {
+    if (aCol.id == "pluginEnabled") {
       if (this._pluginTypes[aRow].pluginEnabled) 
         aProperties.AppendElement(this._enabledAtom);
     }
@@ -265,7 +265,7 @@ PluginTypes.prototype = {
   
   getImageSrc: function (aRow, aCol) 
   { 
-    if (aCol == "fileExtension") 
+    if (aCol.id == "fileExtension") 
       return "moz-icon://goat." + this._pluginTypes[aRow].MIMEInfo.primaryExtension + "?size=16";
     
     return null;
@@ -275,12 +275,12 @@ PluginTypes.prototype = {
   { 
     var mimeInfo = this._pluginTypes[aRow].MIMEInfo;
     
-    if (aCol == "fileType") {
+    if (aCol.id == "fileType") {
       var desc = mimeInfo.Description;
       // XXXben localize
       return desc || mimeInfo.primaryExtension.toUpperCase() + " file";
     }
-    else if (aCol == "fileExtension")
+    else if (aCol.id == "fileExtension")
       return mimeInfo.primaryExtension.toUpperCase();
 
     return "";    
@@ -288,7 +288,7 @@ PluginTypes.prototype = {
   
   cycleCell: function (aRow, aCol) 
   { 
-    if (aCol == "pluginEnabled") {
+    if (aCol.id == "pluginEnabled") {
       this._pluginTypes[aRow].pluginEnabled = !this._pluginTypes[aRow].pluginEnabled;
       gPluginTypesList.treeBoxObject.invalidateCell(aRow, aCol);
     }
@@ -302,8 +302,7 @@ PluginTypes.prototype = {
   isContainerEmpty: function (aRow) { return true; },
   isSeparator: function (aRow) { return false; },
   isSorted: function () { return false; },
-  canDropOn: function (aRow) { return false; },
-  canDropBeforeAfter: function (aRow, aBefore) { return false; },
+  canDrop: function (aRow, aOrientation) { return false; },
   drop: function (aRow, aOrientation) { },
   getParentIndex: function (aRow) { },
   hasNextSibling: function (aRow, aNextIndex) { },
@@ -312,15 +311,16 @@ PluginTypes.prototype = {
   getCellValue: function (aRow, aCol) { },
   setTree: function (aTree) { },
   toggleOpenState: function (aRow) { },
-  cycleHeader: function (aCol, aColElt) { },
+  cycleHeader: function (aCol) { },
   selectionChanged: function () { },
   isEditable: function (aRow, aCol) { },
+  setCellValue: function (aRow, aCol, aValue) { },
   setCellText: function (aRow, aCol, aValue) { },
   performAction: function (aAction) { },
   performActionOnRow: function (aAction, aRow) { },
   performActionOnCell: function (aAction, aRow, aCol) { },
   getRowProperties: function (aRow, aProperties) { },
-  getColumnProperties: function (aCol, aColElt, aProperties) { }
+  getColumnProperties: function (aCol, aProperties) { }
 
 };
 

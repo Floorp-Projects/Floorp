@@ -151,7 +151,7 @@ function onChangeHTMLAttribute()
 
 function ClearHTMLInputWidgets()
 {
-  gDialog.AddHTMLAttributeTree.treeBoxObject.selection.clearSelection();
+  gDialog.AddHTMLAttributeTree.view.selection.clearSelection();
   gDialog.AddHTMLAttributeNameInput.value ="";
   gDialog.AddHTMLAttributeValueInput.value = "";
   SetTextboxFocus(gDialog.AddHTMLAttributeNameInput);
@@ -163,7 +163,7 @@ function onSelectHTMLTreeItem()
     return;
 
   var tree = gDialog.AddHTMLAttributeTree;
-  if (tree && tree.treeBoxObject.selection.count)
+  if (tree && tree.view.selection.count)
   {
     var inputName = TrimString(gDialog.AddHTMLAttributeNameInput.value).toLowerCase();
     var selectedItem = getSelectedItem(tree);
@@ -374,7 +374,7 @@ function RemoveHTMLAttribute()
   var treechildren = gDialog.AddHTMLAttributeTree.lastChild;
 
   // We only allow 1 selected item
-  if (gDialog.AddHTMLAttributeTree.treeBoxObject.selection.count)
+  if (gDialog.AddHTMLAttributeTree.view.selection.count)
   {
     var item = getSelectedItem(gDialog.AddHTMLAttributeTree);
     var attr = GetTreeItemAttributeStr(item);

@@ -77,9 +77,6 @@ XUL_ATOM(description, "description")
 
   // The tree atoms
 XUL_ATOM(allowevents, "allowevents") // Lets events be handled on the cell contents or in menus.
-XUL_ATOM(scrollbarlist, "scrollbarlist") // An atom for internal use by the tree view
-XUL_ATOM(indent, "indent") // indicates that a cell should be indented
-XUL_ATOM(outer, "outer") // indicates that a treechildren is the outermost rowgroup
 XUL_ATOM(sizemode, "sizemode") // when set, measure strings to determine preferred width
 
 XUL_ATOM(open, "open") // Whether or not a menu, tree, etc. is open
@@ -95,8 +92,9 @@ XUL_ATOM(treerow, "treerow")
 XUL_ATOM(treeseparator, "treeseparator")
 XUL_ATOM(treecell, "treecell")
 
-XUL_ATOM(cycler, "cycler")
 XUL_ATOM(primary, "primary")
+XUL_ATOM(cycler, "cycler")
+XUL_ATOM(editable, "editable")
 XUL_ATOM(current, "current")
 XUL_ATOM(seltype, "seltype")
 XUL_ATOM(sorted, "sorted")
@@ -104,9 +102,9 @@ XUL_ATOM(dragSession, "dragSession")
 XUL_ATOM(dropOn, "dropOn")
 XUL_ATOM(dropBefore, "dropBefore")
 XUL_ATOM(dropAfter, "dropAfter")
+XUL_ATOM(checked, "checked")
 XUL_ATOM(progressNormal, "progressNormal")
 XUL_ATOM(progressUndetermined, "progressUndetermined")
-XUL_ATOM(progressNone, "progressNone")
 XUL_ATOM(odd, "odd")
 XUL_ATOM(even, "even")
 

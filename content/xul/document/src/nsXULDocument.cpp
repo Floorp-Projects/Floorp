@@ -3449,6 +3449,7 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
         builder->Init(aElement);
 
         // Create a <treechildren> if one isn't there already.
+        // XXXvarga what about attributes?
         nsCOMPtr<nsIContent> bodyContent;
         nsXULContentUtils::FindChildByTag(aElement, kNameSpaceID_XUL,
                                           nsXULAtoms::treechildren,

@@ -46,7 +46,7 @@ function Startup()
   initBMService();
   gOK = document.documentElement.getButton("accept");
   gBookmarkTree = document.getElementById("bookmarks-view");  
-  gBookmarkTree.treeBoxObject.selection.select(0);
+  gBookmarkTree.treeBoxObject.view.selection.select(0);
   gBookmarkTree.focus();
 }
 

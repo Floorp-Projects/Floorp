@@ -337,19 +337,23 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIAccessible> treeItemAccessible;
   nsXULTreeAccessible::GetTreeBoxObject(targetNode, getter_AddRefs(treeBox));
   if (treeBox) {
-    nsCOMPtr<nsITreeSelection> selection;
-    treeBox->GetSelection(getter_AddRefs(selection));
-    if (selection) {
-      selection->GetCurrentIndex(&treeIndex);
-      if (treeIndex >= 0) {
-        // XXX todo Kyle - fix bug 201922 so that tree is respohsible for keeping track
-        // of it's own accessibles. Then we'll ask the tree so we can reuse
-        // the accessibles already created.
-        nsCOMPtr<nsIWeakReference> weakEventShell(do_GetWeakReference(eventShell));
-        treeItemAccessible = new nsXULTreeitemAccessible(accessible, targetNode, 
-                                                         weakEventShell, treeIndex);
-        if (!treeItemAccessible)
-          return NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsITreeView> view;
+    treeBox->GetView(getter_AddRefs(view));
+    if (view) {
+      nsCOMPtr<nsITreeSelection> selection;
+      view->GetSelection(getter_AddRefs(selection));
+      if (selection) {
+        selection->GetCurrentIndex(&treeIndex);
+        if (treeIndex >= 0) {
+          // XXX todo Kyle - fix bug 201922 so that tree is responsible for keeping track
+          // of it's own accessibles. Then we'll ask the tree so we can reuse
+          // the accessibles already created.
+          nsCOMPtr<nsIWeakReference> weakEventShell(do_GetWeakReference(eventShell));
+          treeItemAccessible = new nsXULTreeitemAccessible(accessible, targetNode, 
+                                                           weakEventShell, treeIndex);
+          if (!treeItemAccessible)
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
       }
     }
   }

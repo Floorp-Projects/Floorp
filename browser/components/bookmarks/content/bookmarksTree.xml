@@ -264,7 +264,7 @@
 
       <property name="currentIndex">
         <getter><![CDATA[
-          return this.treeBoxObject.selection.currentIndex;
+          return this.tree.view.selection.currentIndex;
         ]]></getter>
       </property>
     
@@ -307,8 +307,8 @@
         <body><![CDATA[
           var index = this.treeBuilder.getIndexOfResource(aResource);
           if (index != -1) {
-            if (!this.treeBoxObject.selection.isSelected(index))
-              this.treeBoxObject.selection.toggleSelect(index);
+            if (!this.treeBoxObject.view.selection.isSelected(index))
+              this.treeBoxObject.view.selection.toggleSelect(index);
             return;
           }
          
@@ -333,7 +333,7 @@
 
           index = this.treeBuilder.getIndexOfResource(aResource);
           if (index != -1)
-            this.treeBoxObject.selection.toggleSelect(index);
+            this.treeBoxObject.view.selection.toggleSelect(index);
         ]]></body>
       </method>
 
@@ -352,13 +352,13 @@
           selection.item       = [];
           selection.parent     = [];
           selection.isExpanded = [];
-          var rangeCount = this.treeBoxObject.selection.getRangeCount();
+          var rangeCount = this.treeBoxObject.view.selection.getRangeCount();
           // workaround for bug 171547: if rowCount==0, rangeCount==1
           if (this.treeBuilder.rowCount > 0)
           for (var k = 0; k < rangeCount; ++k) {
             var rangeMin = {};
             var rangeMax = {};
-            this.treeBoxObject.selection.getRangeAt(k, rangeMin, rangeMax);
+            this.treeBoxObject.view.selection.getRangeAt(k, rangeMin, rangeMax);
             for (var i = rangeMin.value; i <= rangeMax.value; ++i) {
               var selectedItem   = this.getRowResource(i);
               var selectedParent = this.getParentResource(i);
@@ -493,11 +493,11 @@
 
       <method name="updateTreeSelection">
         <body><![CDATA[
-          this.treeBoxObject.selection.clearSelection();
+          this.treeBoxObject.view.selection.clearSelection();
           for (var i=0; i<this._itemToBeToggled.length; ++i) {
             index = this.treeBuilder.getIndexOfResource(this._itemToBeToggled[i]);
-            if (index != -1 && !this.treeBoxObject.selection.isSelected(index))
-              this.treeBoxObject.selection.toggleSelect(index);
+            if (index != -1 && !this.treeBoxObject.view.selection.isSelected(index))
+              this.treeBoxObject.view.selection.toggleSelect(index);
           }
         ]]></body>
       </method>
@@ -536,7 +536,7 @@
             return;
 
           if (this.clickCount == 2 && modifKey) {
-            this.treeBoxObject.selection.select(row);
+            this.treeBoxObject.view.selection.select(row);
             this._selection = this.getTreeSelection();
           }
           var selection = this._selection;
@@ -614,12 +614,12 @@
         {
           var selection = this.mOuter._selection;
           var target    = this.mOuter._target;
-          this.mOuter.treeBoxObject.selection.selectEventsSuppressed = true;
+          this.mOuter.treeBoxObject.view.selection.selectEventsSuppressed = true;
           this.mOuter._itemToBeToggled = [];
           
           switch (aCommand) {
           case "cmd_selectAll":
-            this.mOuter.treeBoxObject.selection.selectAll();
+            this.mOuter.treeBoxObject.view.selection.selectAll();
             break;
           case "cmd_bm_expandfolder":
             this.mOuter.treeBoxObject.view.toggleOpenState(this.mOuter.currentIndex);
@@ -629,7 +629,7 @@
             BookmarksController.doCommand(aCommand, selection, target);
             this.mOuter.restoreSelection(aCommand);
           }
-          this.mOuter.treeBoxObject.selection.selectEventsSuppressed = false;
+          this.mOuter.treeBoxObject.view.selection.selectEventsSuppressed = false;
         }
       })
       ]]></field>
@@ -652,15 +652,7 @@
       <field name="builderObserver"><![CDATA[
       ({
         mOuter: this,
-        canDropOn: function(index)
-        {
-          var dragSession = DS.getCurrentSession();
-          if (!dragSession)
-            return false;
-          var selection = BookmarksUtils.getSelectionFromXferData(dragSession);
-          return !selection.containsImmutable;
-        },
-        canDropBeforeAfter: function(index, before)
+        canDrop: function(index, orientation)
         {
           var dragSession = DS.getCurrentSession();
           if (!dragSession)
@@ -668,12 +660,14 @@
           var selection = BookmarksUtils.getSelectionFromXferData(dragSession);
           if (selection.containsImmutable)
             return false;
+          if (orientation == BookmarksUtils.DROP_ON)
+            return true;
 
           if (index != 0)
             return true;
           if (this.mOuter.getRowResource(index).Value != "NC:BookmarksRoot")
             return true;
-          return before? false:this.mOuter.treeBoxObject.view.isContainerOpen(0)
+          return orientation == BookmarksUtils.DROP_BEFORE ? false : this.mOuter.treeBoxObject.view.isContainerOpen(0)
         },
         onDrop: function(row, orientation)
         {  
@@ -693,7 +687,7 @@
           else {
             target = this.mOuter.getTreeTarget(rItem, rParent, orientation);
           }
-          this.mOuter.treeBoxObject.selection.selectEventsSuppressed = true;
+          this.mOuter.treeBoxObject.view.selection.selectEventsSuppressed = true;
           this.mOuter._itemToBeToggled = [];
           const kCopyAction = kDSIID.DRAGDROP_ACTION_COPY + kDSIID.DRAGDROP_ACTION_LINK;
 
@@ -705,7 +699,7 @@
             this.mOuter.updateTreeSelection();
           // use of a timer to speedup
           var This = this.mOuter;
-          setTimeout( function (){This.treeBoxObject.selection.selectEventsSuppressed = false}, 100)
+          setTimeout( function (){This.treeBoxObject.view.selection.selectEventsSuppressed = false}, 100)
           //dump("DND time:"+(Date.now()-date)+"\n")
         },
 
@@ -762,8 +756,6 @@
         },
         
         onCycleCell          : function (aItemIndex, aColumnID)          {},
-        isEditable           : function (aItemIndex, aColumnID)          {},
-        onSetCellText        : function (aItemIndex, aColumnID, aValue)  {},
         onPerformAction      : function (aAction)                        {},
         onPerformActionOnRow : function (aAction, aItemIndex)            {},
         onPerformActionOnCell: function (aAction, aItemIndex, aColumnID) {}

@@ -90,9 +90,9 @@ var cookiesTreeView = {
   getCellValue : function(row,column) {},
   getCellText : function(row,column){
     var rv="";
-    if (column=="domainCol") {
+    if (column.id=="domainCol") {
       rv = cookies[row].rawHost;
-    } else if (column=="nameCol") {
+    } else if (column.id=="nameCol") {
       rv = cookies[row].name;
     }
     return rv;
@@ -100,10 +100,10 @@ var cookiesTreeView = {
   isSeparator : function(index) {return false;},
   isSorted: function() { return false; },
   isContainer : function(index) {return false;},
-  cycleHeader : function(aColId, aElt) {},
-  getRowProperties : function(row,column,prop){},
-  getColumnProperties : function(column,columnElement,prop){},
-  getCellProperties : function(row,prop){}
+  cycleHeader : function(column) {},
+  getRowProperties : function(row,prop) {},
+  getColumnProperties : function(column,prop) {},
+  getCellProperties : function(row,column,prop) {}
  };
 
 function Cookie(number,name,value,isDomain,host,rawHost,path,isSecure,expires,

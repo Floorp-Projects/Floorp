@@ -58,7 +58,7 @@
            var obj = {};
            var select = this.parentNode.parentNode.parentNode;
            var box = select.treeBoxObject;
-           var selection = box.selection;
+           var selection = box.view.selection;
            box.getCellAt(event.clientX, event.clientY, row, col, obj);
 
            // save off the last selected row
@@ -86,7 +86,7 @@
          var obj = {};
          var select = this.parentNode.parentNode.parentNode;
          var box = select.treeBoxObject;
-         var selection = box.selection;
+         var selection = box.view.selection;
          box.getCellAt(event.clientX, event.clientY, row, col, obj);
 
          if (row.value == -1 || select.contentView.getItemAtIndex(row.value).disabled)
@@ -171,8 +171,8 @@
                 onget="return this.QueryInterface(Components.interfaces.nsISelectElement);"
                 readonly="true"/>
       <property name="currentIndex"
-                onget="return this.treeBoxObject.selection.currentIndex;"
-                onset="return this.treeBoxObject.selection.currentIndex=val;"/>
+                onget="return this.view.selection.currentIndex;"
+                onset="return this.view.selection.currentIndex=val;"/>
       <property name="singleSelection"
                 onget="return this.getAttribute('seltype') == 'single'"
                 readonly="true"/>
@@ -223,7 +223,7 @@
            var f = this.treeBoxObject.getFirstVisibleRow();
            var i = 0;
            if (f > 0) {
-             var p = this.treeBoxObject.getPageCount();
+             var p = this.treeBoxObject.getPageLength();
              if (f - p >= 0)
                i = aCurrentIndex - p;
              else
@@ -237,7 +237,7 @@
          <body><![CDATA[
            var l = this.view.rowCount - 1;
            var f = this.treeBoxObject.getFirstVisibleRow();
-           var p = this.treeBoxObject.getPageCount();
+           var p = this.treeBoxObject.getPageLength();
            var i = l;
            var lastTopRowIndex = l - p;
            if (f <= lastTopRowIndex) {
@@ -268,7 +268,7 @@
           if (i == -1)
             return;
           this.selectionHead = this.selectionTail = -1;
-          this.treeBoxObject.selection.timedSelect(i, 500);
+          this.view.selection.timedSelect(i, 500);
           this.treeBoxObject.ensureRowIsVisible(i);
           var selIndex = this.adjustIndexForNesting(i);
           this.selectElement.setOptionsSelectedByIndex(selIndex, selIndex, true, true,
@@ -286,7 +286,7 @@
             return;
           } catch (e) {}
           this.selectionHead = this.selectionTail = -1;
-          this.treeBoxObject.selection.timedSelect(i, 500);
+          this.view.selection.timedSelect(i, 500);
           this.treeBoxObject.ensureRowIsVisible(i);
           var selIndex = this.adjustIndexForNesting(i);
           this.selectElement.setOptionsSelectedByIndex(selIndex, selIndex, true, true, false,
@@ -305,7 +305,7 @@
           if (i == -1)
             return;
 
-          var selection = this.treeBoxObject.selection;
+          var selection = this.view.selection;
           var select = this.selectElement;
           var selIndex = this.adjustIndexForNesting(c);
 
@@ -345,7 +345,7 @@
             return;
           } catch (e) {}
  
-          var selection = this.treeBoxObject.selection;
+          var selection = this.view.selection;
           var select = this.selectElement;
           var selIndex = this.adjustIndexForNesting(c);
           var nextSelIndex = this.adjustIndexForNesting(i);
@@ -406,7 +406,7 @@
           var i = this.computePageUpIndex(c);
 
           this.treeBoxObject.scrollByPages(-1);
-          this.treeBoxObject.selection.timedSelect(i, 500);
+          this.view.selection.timedSelect(i, 500);
           var selIndex = this.adjustIndexForNesting(i);
           this.selectElement.setOptionsSelectedByIndex(selIndex, selIndex, true, true,
                                                        false, false);
@@ -424,7 +424,7 @@
           this.selectionHead = this.selectionTail = -1;
           var i = this.computePageDownIndex(c);
           this.treeBoxObject.scrollByPages(1);
-          this.treeBoxObject.selection.timedSelect(i, 500);
+          this.view.selection.timedSelect(i, 500);
           var selIndex = this.adjustIndexForNesting(i);
           this.selectElement.setOptionsSelectdByIndex(selIndex, selIndex, true, true,
                                                       false, false);
@@ -441,7 +441,7 @@
           if (this.getPrevOptionIndex(c) == -1)
             return;
           var box = this.treeBoxObject;
-          var selection = box.selection;
+          var selection = box.view.selection;
           var select = this.selectElement;
           var i = this.computePageUpIndex(c);
           box.scrollByPages(-1);
@@ -502,7 +502,7 @@
           var box = this.treeBoxObject;
           box.scrollByPages(1);
 
-          var selection = box.selection;
+          var selection = box.view.selection;
           var select = this.selectElement;
           var selIndex = this.adjustIndexForNesting(c);
           var selEndIndex = this.adjustIndexforNesting(i);
@@ -578,7 +578,7 @@
           this.selectionHead = this.selectionTail = -1;
 
           var box = this.treeBoxObject;
-          box.selection.timedSelect(firstOptionIndex, 500);
+          box.view.selection.timedSelect(firstOptionIndex, 500);
           var selIndex = this.adjustIndexForNesting(firstOptionIndex);
           this.selectElement.setOptionsSelectedByIndex(selIndex, selIndex, true, true,
                                                        false, false);
@@ -595,7 +595,7 @@
           if (lastOptionIndex == -1 || this.currentIndex == lastOptionIndex)
             return;
           this.selectionHead = this.selectionTail = -1;
-          box.selection.timedSelect(lastOptionIndex, 500);
+          box.view.selection.timedSelect(lastOptionIndex, 500);
           var selIndex = this.adjustIndexForNesting(lastOptionIndex);
           this.selectElement.setOptionsSelectedByIndex(selIndex, selIndex, true, true,
                                                        false, false);
@@ -615,7 +615,7 @@
               c == firstOptionIndex)
             return;
           var box = this.treeBoxObject;
-          var selection = box.selection;
+          var selection = box.view.selection;
           var select = this.selectElement;
           if (c != this.selectionTail) {
             selection.clearSelection();
@@ -641,7 +641,7 @@
           var lastOptionIndex = this.lastSelectableOption;
           if (lastOptionIndex == -1 || c == lastOptionIndex)
             return;
-          var selection = box.selection;
+          var selection = box.view.selection;
           var select = this.selectElement;
           if (c != this.selectionTail) {
             selection.clearSelection();
@@ -682,7 +682,7 @@
           var c = this.currentIndex;
           if (event.keyCode == ' '.charCodeAt(0)) {
             event.preventDefault();
-            var selection = this.treeBoxObject.selection;
+            var selection = this.view.selection;
             if (event.ctrlKey || !selection.isSelected(c)) {
               selection.toggleSelect(c);
               var selIndex = this.adjustIndexForNesting(c);

@@ -233,12 +233,12 @@ function selectTreeFolder()
 
 function selectFolder(aFolder)
 {
-  gBookmarksTree.treeBoxObject.selection.selectEventsSuppressed = true;
-  gBookmarksTree.treeBoxObject.selection.clearSelection();
+  gBookmarksTree.treeBoxObject.view.selection.selectEventsSuppressed = true;
+  gBookmarksTree.treeBoxObject.view.selection.clearSelection();
   gBookmarksTree.selectResource(aFolder);
   var index = gBookmarksTree.currentIndex;
   gBookmarksTree.treeBoxObject.ensureRowIsVisible(index);
-  gBookmarksTree.treeBoxObject.selection.selectEventsSuppressed = false;
+  gBookmarksTree.treeBoxObject.view.selection.selectEventsSuppressed = false;
 # triggers a select event that will provoke a call to selectTreeFolder()
 }
 

@@ -289,6 +289,7 @@
 #include "nsITreeContentView.h"
 #include "nsITreeView.h"
 #include "nsIXULTemplateBuilder.h"
+#include "nsITreeColumns.h"
 #endif
 #include "nsIDOMXPathEvaluator.h"
 
@@ -763,6 +764,14 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(NameList, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+#ifdef MOZ_XUL
+  NS_DEFINE_CLASSINFO_DATA(TreeColumn, nsDOMGenericSH,
+                           DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(TreeColumns, nsTreeColumnsSH,
+                           ARRAY_SCRIPTABLE_FLAGS)
+#endif
 
 #ifdef MOZ_SVG
   // SVG document
@@ -2085,6 +2094,16 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(NameList, nsIDOMNameList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNameList)
   DOM_CLASSINFO_MAP_END
+
+#ifdef MOZ_XUL
+  DOM_CLASSINFO_MAP_BEGIN(TreeColumn, nsITreeColumn)
+    DOM_CLASSINFO_MAP_ENTRY(nsITreeColumn)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(TreeColumns, nsITreeColumns)
+    DOM_CLASSINFO_MAP_ENTRY(nsITreeColumns)
+  DOM_CLASSINFO_MAP_END
+#endif
 
 #ifdef MOZ_SVG
 #define DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES \
@@ -6648,6 +6667,42 @@ nsCSSRuleListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 
   return rv;
 }
+
+
+#ifdef MOZ_XUL
+// TreeColumns helper
+
+nsresult
+nsTreeColumnsSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                           nsISupports **aResult)
+{
+  nsCOMPtr<nsITreeColumns> columns(do_QueryInterface(aNative));
+  NS_ENSURE_TRUE(columns, NS_ERROR_UNEXPECTED);
+
+  nsITreeColumn* column = nsnull; // Weak, transfer the ownership over to aResult
+  nsresult rv = columns->GetColumnAt(aIndex, &column);
+
+  *aResult = column;
+
+  return rv;
+}
+
+nsresult
+nsTreeColumnsSH::GetNamedItem(nsISupports *aNative,
+                              const nsAString& aName,
+                              nsISupports **aResult)
+{
+  nsCOMPtr<nsITreeColumns> columns(do_QueryInterface(aNative));
+  NS_ENSURE_TRUE(columns, NS_ERROR_UNEXPECTED);
+
+  nsITreeColumn* column = nsnull; // Weak, transfer the ownership over to aResult
+  nsresult rv = columns->GetNamedColumn(aName, &column);
+
+  *aResult = column;
+
+  return rv;
+}
+#endif
 
 
 // nsIDOMEventListener::HandleEvent() 'this' converter helper

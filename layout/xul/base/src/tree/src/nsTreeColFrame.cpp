@@ -47,7 +47,7 @@
 #include "nsIDocument.h"
 #include "nsIBoxObject.h"
 #include "nsIDOMElement.h"
-#include "nsTreeBodyFrame.h"
+#include "nsITreeColumns.h"
 
 //
 // NS_NewTreeColFrame
@@ -56,7 +56,7 @@
 //
 nsresult
 NS_NewTreeColFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, 
-                        nsIBoxLayout* aLayoutManager)
+                   nsIBoxLayout* aLayoutManager)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
@@ -88,10 +88,12 @@ nsTreeColFrame::Release(void)
 //
 NS_INTERFACE_MAP_BEGIN(nsTreeColFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
+
 // Constructor
 nsTreeColFrame::nsTreeColFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
-:nsBoxFrame(aPresShell, aIsRoot, aLayoutManager) 
-{}
+  : nsBoxFrame(aPresShell, aIsRoot, aLayoutManager) 
+{
+}
 
 // Destructor
 nsTreeColFrame::~nsTreeColFrame()
@@ -100,13 +102,19 @@ nsTreeColFrame::~nsTreeColFrame()
 
 NS_IMETHODIMP
 nsTreeColFrame::Init(nsIPresContext*  aPresContext,
-                         nsIContent*      aContent,
-                         nsIFrame*        aParent,
-                         nsStyleContext*  aContext,
-                         nsIFrame*        aPrevInFlow)
+                     nsIContent*      aContent,
+                     nsIFrame*        aParent,
+                     nsStyleContext*  aContext,
+                     nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-  InvalidateColumnCache(aPresContext);  
+  EnsureTree();
+  if (mTree) {
+    nsCOMPtr<nsITreeColumns> cols;
+    mTree->GetColumns(getter_AddRefs(cols));
+    if (cols)
+      cols->InvalidateColumns();
+  }
   return rv;
 }
 
@@ -184,8 +192,15 @@ nsTreeColFrame::AttributeChanged(nsIPresContext* aPresContext,
     EnsureTree();
     if (mTree)
       mTree->Invalidate();
-  } else if (aAttribute == nsXULAtoms::ordinal || aAttribute == nsXULAtoms::primary) {
-    InvalidateColumnCache(aPresContext);
+  }
+  else if (aAttribute == nsXULAtoms::ordinal || aAttribute == nsXULAtoms::primary) {
+    EnsureTree();
+    if (mTree) {
+      nsCOMPtr<nsITreeColumns> cols;
+      mTree->GetColumns(getter_AddRefs(cols));
+      if (cols)
+        cols->InvalidateColumns();
+    }
   }
 
   return rv;
@@ -206,25 +221,6 @@ nsTreeColFrame::EnsureTree()
       nsDoc->GetBoxObjectFor(elt, getter_AddRefs(boxObject));
 
       mTree = do_QueryInterface(boxObject);
-    }
-  }
-}
-
-void
-nsTreeColFrame::InvalidateColumnCache(nsIPresContext* aPresContext)
-{
-  EnsureTree();  
-  if (mTree) {
-    nsCOMPtr<nsIDOMElement> bodyEl;
-    mTree->GetTreeBody(getter_AddRefs(bodyEl));
-    nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(bodyEl);
-    if (bodyContent) {
-      nsIFrame* frame;
-      aPresContext->PresShell()->GetPrimaryFrameFor(bodyContent, &frame);
-      if (frame) {
-        nsTreeBodyFrame* oframe = NS_STATIC_CAST(nsTreeBodyFrame*, frame);
-        oframe->InvalidateColumnCache();
-      }
     }
   }
 }

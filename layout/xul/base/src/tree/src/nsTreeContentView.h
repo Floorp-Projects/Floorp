@@ -40,21 +40,16 @@
 #ifndef nsTreeContentView_h__
 #define nsTreeContentView_h__
 
-#include "nsCOMPtr.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsVoidArray.h"
-#include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsStubDocumentObserver.h"
-#include "nsITreeView.h"
 #include "nsITreeBoxObject.h"
-#include "nsITreeSelection.h"
+#include "nsITreeColumns.h"
+#include "nsITreeView.h"
 #include "nsITreeContentView.h"
-#include "nsStyleConsts.h"
+#include "nsITreeSelection.h"
 
-class Property;
-
-nsresult NS_NewTreeContentView(nsITreeContentView** aResult);
 
 class nsTreeContentView : public nsITreeView,
                           public nsITreeContentView,
@@ -63,7 +58,7 @@ class nsTreeContentView : public nsITreeView,
   public:
     nsTreeContentView(void);
 
-    virtual ~nsTreeContentView(void);
+    ~nsTreeContentView(void);
 
     friend nsresult NS_NewTreeContentView(nsITreeContentView** aResult);
 
@@ -109,15 +104,15 @@ class nsTreeContentView : public nsITreeView,
     void GetIndexInSubtree(nsIContent* aContainer, nsIContent* aContent, PRInt32* aResult);
     
     // Helper methods which we use to manage our plain array of rows.
-    void EnsureSubtree(PRInt32 aIndex, PRInt32* aCount);
+    PRInt32 EnsureSubtree(PRInt32 aIndex);
 
-    void RemoveSubtree(PRInt32 aIndex, PRInt32* aCount);
+    PRInt32 RemoveSubtree(PRInt32 aIndex);
 
-    void InsertRowFor(nsIContent* aParent, nsIContent* aContainer, nsIContent* aChild);
+    PRInt32 InsertRow(PRInt32 aParentIndex, PRInt32 aIndex, nsIContent* aContent);
 
-    void InsertRow(PRInt32 aParentIndex, PRInt32 aIndex, nsIContent* aContent, PRInt32* aCount);
+    void InsertRowFor(nsIContent* aParent, nsIContent* aChild);
 
-    void RemoveRow(PRInt32 aIndex, PRInt32* aCount);
+    PRInt32 RemoveRow(PRInt32 aIndex);
 
     void ClearRows();
     
@@ -132,7 +127,7 @@ class nsTreeContentView : public nsITreeView,
     void UpdateParentIndexes(PRInt32 aIndex, PRInt32 aSkip, PRInt32 aCount);
 
     // Content helpers.
-    nsresult GetNamedCell(nsIContent* aContainer, const PRUnichar* aColID, nsIContent** aResult);
+    nsIContent* GetCell(nsIContent* aContainer, nsITreeColumn* aCol);
 
   private:
     nsCOMPtr<nsITreeBoxObject>          mBoxObject;
