@@ -508,6 +508,12 @@ net_RegisterDefaultDecoders (void)
 
   NET_RegisterContentTypeConverter (IMAGE_PNG, FO_SAVE_AS_POSTSCRIPT,
 									NULL, IL_ViewStream);
+
+  NET_RegisterContentTypeConverter (IMAGE_ART, FO_SAVE_AS_POSTSCRIPT,
+									NULL, IL_ViewStream);
+  NET_RegisterContentTypeConverter (IMAGE_ART2, FO_SAVE_AS_POSTSCRIPT,
+									NULL, IL_ViewStream);
+
   NET_RegisterContentTypeConverter (IMAGE_XBM, FO_SAVE_AS_POSTSCRIPT,
 									NULL, IL_ViewStream);
   NET_RegisterContentTypeConverter (IMAGE_XBM2, FO_SAVE_AS_POSTSCRIPT,
@@ -657,6 +663,8 @@ net_RegisterDefaultEncodingDecoders (void)
   NET_RegisterAllEncodingConverters (IMAGE_PJPG,      FO_PRESENT);
   
   NET_RegisterAllEncodingConverters (IMAGE_PNG,      FO_PRESENT);
+  NET_RegisterAllEncodingConverters (IMAGE_ART,      FO_PRESENT);
+  NET_RegisterAllEncodingConverters (IMAGE_ART2,      FO_PRESENT);
   NET_RegisterAllEncodingConverters (IMAGE_XBM,       FO_PRESENT);
   NET_RegisterAllEncodingConverters (IMAGE_XBM2,      FO_PRESENT);
   NET_RegisterAllEncodingConverters (IMAGE_XBM3,      FO_PRESENT);
