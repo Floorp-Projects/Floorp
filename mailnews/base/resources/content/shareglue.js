@@ -34,8 +34,9 @@ function CharacterSet(){}
 
 function MessengerSetDefaultCharacterSet(aCharset)
 {
-    dump(aCharset);dump("\n");
-    messenger.SetDocumentCharset(aCharset);
+//    dump(aCharset);dump("\n");
+  messenger.SetDocumentCharset(aCharset);
+  msgWindow.mailCharacterSet = aCharset;
 
 // folder charset to be set by folder property not by charset menu
 //	var folderResource = GetSelectedFolderResource();
