@@ -729,8 +729,16 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
     // been filled into the stream as possible...
     //
     if (totalBytesWritten && mReadListener) {
-      mReadListener->OnDataAvailable(mReadContext, mReadStream, mSourceOffset, 
-                                     totalBytesWritten);
+      nsresult rv1;
+
+      rv1 = mReadListener->OnDataAvailable(mReadContext, mReadStream, mSourceOffset, 
+                                           totalBytesWritten);
+      //
+      // If the consumer returns failure, then cancel the operation...
+      //
+      if (NS_FAILED(rv1)) {
+        rv = rv1;
+      }
       mSourceOffset += totalBytesWritten;
     }
   }
