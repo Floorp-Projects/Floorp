@@ -299,16 +299,17 @@ nsXPCWrappedJSMethods::GetIID(nsIID** iid)
     NS_PRECONDITION(iid, "bad param");
 
     nsIAllocator* al;
-    void* p;
-
-    al = mWrapper->GetClass()->GetXPCContext()->GetXPConnect()->GetAllocator();
-    if(!al || NULL == (p = al->Alloc(sizeof(nsIID))))
+    if(NULL != (al = nsXPConnect::GetAllocator()))
     {
-        *iid = NULL;
-        return NS_ERROR_UNEXPECTED;
+        void* p = al->Alloc(sizeof(nsIID));
+        NS_RELEASE(al);
+        if(p)
+        {
+            memcpy(p, &mWrapper->GetIID(), sizeof(nsIID));
+            *iid = (nsIID*)p;
+            return NS_OK;
+        }
     }
-    NS_RELEASE(al);
-    memcpy(p, &mWrapper->GetIID(), sizeof(nsIID));
-    *iid = (nsIID*)p;
-    return NS_OK;
+    *iid = NULL;
+    return NS_ERROR_UNEXPECTED;
 }

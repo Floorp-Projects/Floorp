@@ -46,21 +46,16 @@ nsXPCWrappedJSClass::GetNewOrUsedClass(XPCContext* xpcc,
     }
     else
     {
-        nsXPConnect* xpc;
-        if((xpc = nsXPConnect::GetXPConnect()) != NULL)
+        nsIInterfaceInfoManager* iimgr;
+        if(NULL != (iimgr = nsXPConnect::GetInterfaceInfoManager()))
         {
-            nsIInterfaceInfoManager* iimgr;
-            if((iimgr = xpc->GetInterfaceInfoManager()) != NULL)
+            nsIInterfaceInfo* info;
+            if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, &info)))
             {
-                nsIInterfaceInfo* info;
-                if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, &info)))
-                {
-                    clazz = new nsXPCWrappedJSClass(xpcc, aIID, info);
-                    NS_RELEASE(info);
-                }
-                NS_RELEASE(iimgr);
+                clazz = new nsXPCWrappedJSClass(xpcc, aIID, info);
+                NS_RELEASE(info);
             }
-            NS_RELEASE(xpc);
+            NS_RELEASE(iimgr);
         }
     }
     return clazz;
