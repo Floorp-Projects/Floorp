@@ -419,6 +419,16 @@ PRUnichar& nsString::Last() const{
   else return gBadChar;
 }
 
+PRBool nsString::SetCharAt(PRUnichar aChar,PRInt32 anIndex){
+  PRBool result=PR_FALSE;
+  if(anIndex<mLength){
+    PRUnichar* theStr=(PRUnichar*)mStr;
+    theStr[anIndex]=aChar;
+    result=PR_TRUE;
+  }
+  return result;
+}
+
 /**
  * Create a new string by appending given string to this
  * @update	gess 7/27/98
