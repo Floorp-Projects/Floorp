@@ -2123,7 +2123,7 @@ PRBool PK11_HasRootCerts(PK11SlotInfo *slot) {
     return slot->hasRootCerts;
 }
 
-/* Get the module this slot is attatched to */
+/* Get the module this slot is attached to */
 SECMODModule *
 PK11_GetModule(PK11SlotInfo *slot)
 {
