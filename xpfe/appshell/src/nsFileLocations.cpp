@@ -63,6 +63,10 @@ static char* MakeUpperCase(char* aPath)
 }
 #endif
 
+#ifdef XP_MAC
+#pragma export on
+#endif
+
 //----------------------------------------------------------------------------------------
 nsSpecialFileSpec::nsSpecialFileSpec(Type aType)
 //----------------------------------------------------------------------------------------
@@ -224,6 +228,10 @@ void nsSpecialFileSpec::operator = (Type aType)
             break;    
     }
 } // nsSpecialFileSpec::operator =
+
+#ifdef XP_MAC
+#pragma export off
+#endif
 
 static NS_DEFINE_IID(kIFactoryIID,         NS_IFACTORY_IID);
 
