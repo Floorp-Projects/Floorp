@@ -47,7 +47,10 @@
 
 #include <errno.h>
 
+#ifdef XP_OS2_VACPP
+/* TODO RAMSEMs need to be written for GCC/EMX */
 #define USE_RAMSEM
+#endif
 
 #ifdef USE_RAMSEM
 #pragma pack(4)
@@ -75,15 +78,14 @@ APIRET _Optlink SemReleasex86(PRAMSEM, ULONG);
 #ifdef XP_OS2_EMX
 /*
  * EMX-specific tweaks:
- *    o Use stricmp instead of strcmpi.
  *    o Use errno rather than sock_errno()
  *    o Use close rather than soclose
  *    o Ignore sock_init calls.
  */
-#define strcmpi stricmp 
 #define sock_errno() errno
 #define soclose close
 #define sock_init()
+#include <string.h>
 #endif
 
 /*
@@ -308,11 +310,13 @@ extern PRInt32 _MD_SELECT(int nfds, fd_set *readfds, fd_set *writefds,
 #define _MD_FSYNC                     _PR_MD_FSYNC
 #define _MD_SET_FD_INHERITABLE        (_PR_MD_SET_FD_INHERITABLE)
 
+#ifdef _PR_HAVE_ATOMIC_OPS
 #define _MD_INIT_ATOMIC()
 #define _MD_ATOMIC_INCREMENT          _PR_MD_ATOMIC_INCREMENT
 #define _MD_ATOMIC_ADD                _PR_MD_ATOMIC_ADD
 #define _MD_ATOMIC_DECREMENT          _PR_MD_ATOMIC_DECREMENT
 #define _MD_ATOMIC_SET                _PR_MD_ATOMIC_SET
+#endif
 
 #define _MD_INIT_IO                   (_PR_MD_INIT_IO)
 #define _MD_PR_POLL                   (_PR_MD_PR_POLL)

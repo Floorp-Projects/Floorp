@@ -93,14 +93,6 @@ PRStatus
 _PR_MD_INIT_THREAD(PRThread *thread)
 {
    APIRET rv;
-#ifdef XP_OS2_EMX
-   /* disable SIGPIPE */
-   struct sigaction sa;
-   sa.sa_handler = SIG_IGN;
-   sa.sa_flags = 0;
-   sigemptyset( &sa.sa_mask);
-   sigaction( SIGPIPE, &sa, NULL);
-#endif
 
    if (thread->flags & (_PR_PRIMORDIAL | _PR_ATTACHED)) {
       _pr_SetThreadMDHandle(thread);
