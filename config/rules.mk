@@ -489,9 +489,9 @@ else
 AR_LIST		:= ar t
 AR_EXTRACT	:= ar x
 endif
-ifeq ($(OS_ARCH),OSF1)
-CLEANUP1	:= | egrep -v '(________64ELEL_)'
-CLEANUP2	:= rm -f ________64ELEL_
+ifneq (,$(filter OSF1 BSD_OS,$(OS_ARCH)))
+CLEANUP1	:= | egrep -v '(________64ELEL_|__.SYMDEF)'
+CLEANUP2	:= rm -f ________64ELEL_ __.SYMDEF
 else
 CLEANUP2	:= true
 endif
