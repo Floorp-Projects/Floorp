@@ -67,6 +67,7 @@ public:
   // static helper functions for nsIFormControls
   
   static PRBool GetDisabled(nsIFrame* aChildFrame, nsIContent* aContent = 0);
+  static PRBool GetReadonly(nsIFrame* aChildFrame, nsIContent* aContent = 0);
 
 protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);

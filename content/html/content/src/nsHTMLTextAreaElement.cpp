@@ -266,7 +266,7 @@ nsHTMLTextAreaElement::Select() // XXX not tested
   return NS_OK;
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, DefaultValue, defaultvalue, eSetAttrNotify_None)
+//NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, DefaultValue, defaultvalue, eSetAttrNotify_None)
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, AccessKey, accesskey, eSetAttrNotify_None)
 NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, Cols, cols, eSetAttrNotify_Reflow)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Disabled, disabled, eSetAttrNotify_Render)
@@ -274,6 +274,23 @@ NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, Name, name, eSetAttrNotify_Restart)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, ReadOnly, readonly, eSetAttrNotify_Render)
 NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, Rows, rows, eSetAttrNotify_Reflow)
 NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, TabIndex, tabindex, eSetAttrNotify_None)
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::GetDefaultValue(nsString& aDefaultValue)
+{
+  mInner.GetAttribute(nsHTMLAtoms::defaultvalue, aDefaultValue);                 
+  return NS_OK;                                                    
+}  
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::SetDefaultValue(const nsString& aDefaultValue)
+{
+  // trim leading whitespace 
+  static char whitespace[] = " \r\n\t";
+  nsString value(aDefaultValue);
+  value.Trim(whitespace, PR_TRUE, PR_FALSE);
+  return mInner.SetAttribute(nsHTMLAtoms::defaultvalue, value, PR_TRUE);
+}
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::StringToAttribute(nsIAtom* aAttribute,

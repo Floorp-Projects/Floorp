@@ -236,10 +236,19 @@ nsTextControlFrame::GetWidgetInitData(nsIPresContext& aPresContext)
 
   nsTextWidgetInitData* data = nsnull;
 
-  if (NS_FORM_INPUT_PASSWORD == type) {
+  PRBool readOnly = nsFormFrame::GetReadonly(this);
+
+  if ((NS_FORM_INPUT_PASSWORD == type) || readOnly) {
     data = new nsTextWidgetInitData();
-    data->clipChildren = PR_TRUE;
-    data->mIsPassword = PR_TRUE;
+    data->mIsPassword = PR_FALSE;
+    data->mIsReadOnly = PR_FALSE;
+    if (NS_FORM_INPUT_PASSWORD == type) {
+      data->clipChildren = PR_TRUE;
+      data->mIsPassword = PR_TRUE;
+    } 
+    if (readOnly) {
+      data->mIsReadOnly = PR_TRUE;
+    }
   }
 
   return data;
@@ -251,7 +260,7 @@ nsTextControlFrame::GetText(nsString* aText)
   nsresult result = NS_CONTENT_ATTR_NOT_THERE;
   PRInt32 type;
   GetType(&type);
-  if (NS_FORM_INPUT_TEXT == type) {
+  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
     nsIDOMHTMLInputElement* textElem = nsnull;
     result = mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&textElem);
     if ((NS_OK == result) && textElem) {
@@ -305,7 +314,9 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
     textArea->SetText(value, ignore);
     NS_RELEASE(textArea);
   }
-  mWidget->Enable(!nsFormFrame::GetDisabled(this));
+  if (nsFormFrame::GetDisabled(this)) {
+    mWidget->Enable(PR_FALSE);
+  }
 }
 
 PRInt32 
