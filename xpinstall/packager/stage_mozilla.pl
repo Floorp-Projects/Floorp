@@ -62,6 +62,6 @@ sub StageProduct
   StageUtils::CreateStage($aDirSrcDist, $dirStageProductName, $dirDistPackagesProductName, $aOsPkg);
 
   # consolidate the .xpt files for each xpi into one file
-  system("perl \"$dirMozPackager/xptlink.pl\" -source \"$aDirSrcDist\" --destination \"$dirStageProductName\" -o $aOsPkg --verbose");
+  system("perl \"$dirMozPackager/xptlink.pl\" --source \"$aDirSrcDist\" --destination \"$dirStageProductName\" -o $aOsPkg --verbose");
 }
 
