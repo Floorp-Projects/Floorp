@@ -324,9 +324,19 @@ PRBool nsCSSScanner::Next(PRInt32& aErrorCode, nsCSSToken& aToken)
     if ((ch == '.') || (ch == '+') || (ch == '-')) {
       PRInt32 nextChar = Peek(aErrorCode);
       if ((nextChar >= 0) && (nextChar <= 255)) {
-        if (((lexTable[nextChar] & IS_DIGIT) != 0) || 
-            (('.' == nextChar) && ('.' != ch))) {
+        if ((lexTable[nextChar] & IS_DIGIT) != 0) {
           return ParseNumber(aErrorCode, ch, aToken);
+        }
+        else if (('.' == nextChar) && ('.' != ch)) {
+          PRInt32 holdNext = Read(aErrorCode);
+          nextChar = Peek(aErrorCode);
+          if ((0 <= nextChar) && (nextChar <= 255)) {
+            if ((lexTable[nextChar] & IS_DIGIT) != 0) {
+              Pushback(holdNext);
+              return ParseNumber(aErrorCode, ch, aToken);
+            }
+          }
+          Pushback(holdNext);
         }
       }
     }
