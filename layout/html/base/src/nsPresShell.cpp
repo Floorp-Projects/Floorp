@@ -2648,21 +2648,26 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     }
   }
 
-  mPaintingSuppressed = PR_TRUE;
-  // Kick off a one-shot timer based off our pref value.  When this timer
-  // fires, if painting is still locked down, then we will go ahead and
-  // trigger a full invalidate and allow painting to proceed normally.
-  mPaintSuppressionTimer = do_CreateInstance("@mozilla.org/timer;1");
-  if (!mPaintSuppressionTimer)
-    // Uh-oh.  We must be out of memory.  No point in keeping painting locked down.
-    mPaintingSuppressed = PR_FALSE;
-  else {
-    // Initialize the timer.
-    PRInt32 delay = PAINTLOCK_EVENT_DELAY; // Use this value if we fail to get the pref value.
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-    if (prefs)
-      prefs->GetIntPref("nglayout.initialpaint.delay", &delay);
-    mPaintSuppressionTimer->Init(sPaintSuppressionCallback, this, delay, NS_PRIORITY_HIGHEST);
+  // For printing, we just immediately unsuppress.
+  PRBool isPaginated = PR_FALSE;
+  mPresContext->IsPaginated(&isPaginated);
+  if (!isPaginated) {
+    // Kick off a one-shot timer based off our pref value.  When this timer
+    // fires, if painting is still locked down, then we will go ahead and
+    // trigger a full invalidate and allow painting to proceed normally.
+    mPaintingSuppressed = PR_TRUE;
+    mPaintSuppressionTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (!mPaintSuppressionTimer)
+      // Uh-oh.  We must be out of memory.  No point in keeping painting locked down.
+      mPaintingSuppressed = PR_FALSE;
+    else {
+      // Initialize the timer.
+      PRInt32 delay = PAINTLOCK_EVENT_DELAY; // Use this value if we fail to get the pref value.
+      nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+      if (prefs)
+        prefs->GetIntPref("nglayout.initialpaint.delay", &delay);
+      mPaintSuppressionTimer->Init(sPaintSuppressionCallback, this, delay, NS_PRIORITY_HIGHEST);
+    }
   }
 
   return NS_OK; //XXX this needs to be real. MMP
