@@ -358,7 +358,7 @@
 		<titledbutton id="bugzilla-button" align="right" value="Bugzilla" 
 			onclick="window.frames[0].frames[1].location.href='http://bugzilla.mozilla.org'"/>
 		<titledbutton id="tinderbox-button" align="right" value="Tinderbox" 
-			onclick="window.frames[0].frames[1].location.href='http://cvs-mirror.mozilla.org/webtools/tinderbox/showbuilds.cgi?tree=SeaMonkey'"/>
+			onclick="window.frames[0].frames[1].location.href='http://cvs-mirror.mozilla.org/webtools/tinderbox/showbuilds.cgi?tree=SeaMonkey&amp;hours=12&amp;nocrap=1'"/>
 		<spring flex="100%"/>
 	</toolbar>
   </toolbox>
