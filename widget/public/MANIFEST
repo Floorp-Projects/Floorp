@@ -15,6 +15,7 @@ nsIComboBox.h
 nsIListBox.h
 nsIScrollbar.h
 nsGUIEvent.h
+nsEvent.h
 nsIRadioButton.h
 nsIMouseListener.h
 nsIEventListener.h

@@ -59,6 +59,7 @@ EXPORTS=\
   nsITextWidget.h \
   nsIScrollbar.h \
   nsGUIEvent.h \
+  nsEvent.h \
   nsIMouseListener.h \
   nsIEventListener.h \
   nsIMenuListener.h \
