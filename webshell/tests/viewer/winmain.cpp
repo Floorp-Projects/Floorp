@@ -49,6 +49,11 @@
 #include "nsIScriptContext.h"
 #include "nsDocLoader.h"
 
+// Selection Repaint includes
+#include "nsIPresShell.h"
+#include "nsIFrame.h"
+#include "nsIViewManager.h"
+
 // JSConsole window
 JSConsole *gConsole = NULL;
 
@@ -138,7 +143,7 @@ NS_IMETHODIMP DocObserver::SetTitle(const nsString& aTitle)
       ::SetWindowText(wd->window, cp);
       delete cp;
     }
-  } 
+  }
   return NS_OK;
 }
 
@@ -292,6 +297,80 @@ OpenHTMLFile(WindowData* wd)
   }
 }
 
+// Selects all the Content
+static void
+SelectAll(WindowData* wd)
+{
+  if (wd->ww != nsnull) {
+    nsIDocument* doc = wd->ww->GetDocument();
+    if (doc != nsnull) {
+      doc->SelectAll();
+      wd->ww->ShowFrameBorders(PR_FALSE);
+      /*PRInt32 numShells = doc->GetNumberOfShells();
+      for (PRInt32 i=0;i<numShells;i++) {
+        nsIPresShell   * shell   = doc->GetShellAt(i);
+        //nsIViewManager * viewMgr = shell->GetViewManager();
+        nsIFrame       * frame   = shell->GetRootFrame();
+        nsRect    rect;
+        nsIView * view;
+        nsPoint   pnt;
+        frame->GetOffsetFromView(pnt, view);
+        frame->GetRect(rect);
+        rect.x = pnt.x;
+        rect.y = pnt.y;
+        if (view != nsnull) {
+          nsIViewManager * viewMgr = view->GetViewManager();
+          if (viewMgr != nsnull) {
+            viewMgr->UpdateView(view, rect, 0);
+          }
+        }
+        NS_IF_RELEASE(shell);
+        //NS_IF_RELEASE(frame);
+      }*/
+
+      NS_IF_RELEASE(doc);
+    }
+  }
+}
+
+// Selects all the Content
+static void
+CopyTextContent(WindowData* wd, HWND aHWnd)
+{
+  HGLOBAL     hGlobalMemory;
+  PSTR        pGlobalMemory;
+
+  if (wd->ww != nsnull) {
+    nsIDocument* doc = wd->ww->GetDocument();
+    if (doc != nsnull) {
+      // Get Text from Selection
+      nsString text;
+      doc->GetSelectionText(text);
+
+      // Copy text to Global Memory Area
+      hGlobalMemory = (HGLOBAL)GlobalAlloc(GHND, text.Length()+1);
+      if (hGlobalMemory != NULL) {
+        pGlobalMemory = (PSTR) GlobalLock(hGlobalMemory);
+        char * str = text.ToNewCString();
+        char * s   = str;
+        for (int i=0;i<text.Length();i++) {
+          *pGlobalMemory++ = *s++;
+        }
+        delete str;
+
+        // Put data on Clipboard
+        GlobalUnlock(hGlobalMemory);
+        OpenClipboard(aHWnd);
+        EmptyClipboard();
+        SetClipboardData(CF_TEXT, hGlobalMemory);
+        CloseClipboard();
+      }
+
+      NS_IF_RELEASE(doc);
+    }
+  }
+}
+
 long PASCAL
 WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
 {
@@ -317,6 +396,23 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
 
     case VIEWER_FILE_OPEN:
       OpenHTMLFile(wd);
+      break;
+
+    case VIEWER_EDIT_CUT:
+      break;
+
+    case VIEWER_EDIT_COPY:
+      CopyTextContent(wd, hWnd);
+      break;
+
+    case VIEWER_EDIT_PASTE:
+      break;
+
+    case VIEWER_EDIT_SELECTALL:
+      SelectAll(wd);
+      break;
+
+    case VIEWER_EDIT_FINDINPAGE:
       break;
 
     case VIEWER_DEMO0:
@@ -375,7 +471,7 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
 
         // load the accelerator table for the console
         if (!JSConsole::sAccelTable) {
-          JSConsole::sAccelTable = LoadAccelerators(gInstance, 
+          JSConsole::sAccelTable = LoadAccelerators(gInstance,
                                                     MAKEINTRESOURCE(ACCELERATOR_TABLE));
         }
 
