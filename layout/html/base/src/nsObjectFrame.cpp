@@ -210,7 +210,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly)
 
   nsresult result = 
     nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
-				 (void **)&view);
+                                 (void **)&view);
   if (NS_OK != result) {
     return result;
   }
@@ -239,7 +239,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly)
       goto exit;            //XXX sue me. MMP
     }
 
-  #if 0
+#if 0
     // set the content's widget, so it can get content modified by the widget
     nsIWidget *widget;
     result = GetWidget(view, &widget);
@@ -250,7 +250,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly)
     } else {
       NS_ASSERTION(0, "could not get widget");
     }
-  #endif
+#endif
 
     viewMan->InsertChild(parView, view, 0);
 
@@ -299,8 +299,8 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   // the first time, mInstanceOwner will be null, so we a temporary default
   if(mInstanceOwner != nsnull)
   {
-	mInstanceOwner->GetWidth(&width);
-	mInstanceOwner->GetHeight(&height);
+    mInstanceOwner->GetWidth(&width);
+    mInstanceOwner->GetHeight(&height);
   }
 
   if (aReflowState.HaveFixedContentWidth()) {
@@ -446,13 +446,14 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
             nsIView *parentWithView;
             nsPoint origin;
 
-			// we need to recalculate this now that we have access to the nsPluginInstanceOwner
-			// and its size info (as set in the tag)
-			GetDesiredSize(&aPresContext, aReflowState, aMetrics);
-			if (nsnull != aMetrics.maxElementSize) {
-				aMetrics.maxElementSize->width = aMetrics.width;
-				aMetrics.maxElementSize->height = aMetrics.height;
-			}
+            // we need to recalculate this now that we have access to the nsPluginInstanceOwner
+            // and its size info (as set in the tag)
+            GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+            if (nsnull != aMetrics.maxElementSize) {
+//XXX              AddBorderPaddingToMaxElementSize(borderPadding);
+              aMetrics.maxElementSize->width = aMetrics.width;
+              aMetrics.maxElementSize->height = aMetrics.height;
+            }
 
             GetOffsetFromView(origin, parentWithView);
 
