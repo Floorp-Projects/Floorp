@@ -377,8 +377,8 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
         res = mEditor->GetPriorNode(node, PR_TRUE, getter_AddRefs(priorNode));
         if (NS_FAILED(res)) return res;
         
-        // if there is no prior node then cancel the deletion
-        if (!priorNode)
+        // if there is no prior node, or it's not in the body, then cancel the deletion
+        if (!priorNode || !InBody(priorNode))
         {
           *aCancel = PR_TRUE;
           return res;
@@ -426,8 +426,8 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
         res = mEditor->GetNextNode(node, PR_TRUE, getter_AddRefs(nextNode));
         if (NS_FAILED(res)) return res;
          
-        // if there is no next node then cancel the deletion
-        if (!nextNode)
+        // if there is no next node, or it's not in the body, then cancel the deletion
+        if (!nextNode || !InBody(nextNode))
         {
           *aCancel = PR_TRUE;
           return res;
@@ -1466,6 +1466,26 @@ nsHTMLEditRules::IsMailCite(nsIDOMNode *node)
   return PR_FALSE;
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// InBody: true if node is a descendant of the body
+//                  
+PRBool 
+nsHTMLEditRules::InBody(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null parent passed to nsHTMLEditRules::InBody");
+  nsCOMPtr<nsIDOMNode> tmp;
+  nsCOMPtr<nsIDOMNode> p = do_QueryInterface(node);
+
+  while (p && !IsBody(p))
+  {
+    if ( NS_FAILED(p->GetParentNode(getter_AddRefs(tmp))) || !tmp) // no parent, ran off top of tree
+      return PR_FALSE;
+    p = tmp;
+  }
+  if (p) return PR_TRUE;
+  return PR_FALSE;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // IsEmptyBlock: figure out if aNode is (or is inside) an empty block.

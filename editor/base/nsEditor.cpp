@@ -3185,7 +3185,7 @@ nsEditor::GetBlockNodeParent(nsIDOMNode *aNode)
 
   while (p && !IsBlockNode(p))
   {
-    if (NS_FAILED(p->GetParentNode(getter_AddRefs(tmp)))) // no parent, ran off top of tree
+    if ( NS_FAILED(p->GetParentNode(getter_AddRefs(tmp))) || !tmp) // no parent, ran off top of tree
       return p;
 
     p = tmp;
