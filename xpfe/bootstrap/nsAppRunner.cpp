@@ -623,7 +623,7 @@ static nsresult main1(int argc, char* argv[])
 static
 void DumpHelp(char *appname)
 {
-	printf("Usage: %s [ options ... ]\n", appname);
+	printf("Usage: %s [ options ... ] [URL]\n", appname);
   printf("       where options include:\n");
   printf("\n");
   printf("  -addressbook     Start with AddressBook window.\n");
@@ -631,23 +631,17 @@ void DumpHelp(char *appname)
   printf("  -compose         Start with mail compose window.\n");
   printf("  -edit            Start with editor.\n");
   printf("  -height <value>  Set height of startup window to <value>.\n");
-  printf("  -h               Print this message.\n");
-  printf("  -help            Print this message.\n");
+  printf("  -h or -help      Print this message.\n");
+  printf("  -installer       Start with 4.x migration window.\n");
   printf("  -mail            Start with mail window.\n");
   printf("  -news            Start with news window.\n");
   printf("  -pref            Start with pref window.\n");
   printf("  -width <value>   Set width of startup window to <value>.\n");
-  printf("  -v               Print %s version.\n", appname);
-  printf("  -version         Print %s version.\n", appname);
-  printf("\n");
+  printf("  -v or -version   Print %s version.\n", appname);
   printf("  -CreateProfile <profile>    Create and start with <profile>.\n");
   printf("  -ProfileWizard   Start with profile wizard.\n");
   printf("  -ProfileManager  Start with profile manager.\n");
   printf("  -SelectProfile   Start with profile selection dialog.\n");
-  printf("\n");
-  printf("Arguments which are not options are interpreted as either files or\n");
-  printf("URLs to be loaded.\n");
-  printf("\n");
 }
 
 static
