@@ -95,24 +95,18 @@
   border: 1px inset white;
 }
 
-
 /* Image URLs for all Editor toolbar buttons */
 
 #boldButton {
   list-style-image:url(chrome://editor/skin/images/bold.gif); 
-  font-weight: bold; 
 }
 
 #italicButton {
   list-style-image:url(chrome://editor/skin/images/italic.gif); 
-  /* font-weight: bold; */
-  font-style:  italic;
 }
 
 #underlineButton {
   list-style-image:url(chrome://editor/skin/images/underline.gif); 
-  font-weight: normal; 
-  text-decoration: underline;
 }
 
 #newButton {
