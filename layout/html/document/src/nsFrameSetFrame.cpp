@@ -191,7 +191,6 @@ protected:
 /*******************************************************************************
  * nsHTMLFramesetFrame
  ******************************************************************************/
-PRInt32 nsHTMLFramesetFrame::gMaxNumRowColSpecs = 25;
 PRBool  nsHTMLFramesetFrame::gDragInProgress = PR_FALSE;
 #define kFrameResizePref "layout.frames.force_resizability"
 #define DEFAULT_BORDER_WIDTH_PX 6
@@ -200,10 +199,8 @@ nsHTMLFramesetFrame::nsHTMLFramesetFrame()
   : nsHTMLContainerFrame()
 {
   mNumRows             = 0;
-  mRowSpecs            = nsnull;
   mRowSizes            = nsnull;
   mNumCols             = 0;
-  mColSpecs            = nsnull;
   mColSizes            = nsnull;
   mEdgeVisibility      = 0;
   mParentFrameborder   = eFrameborder_Yes; // default
@@ -229,14 +226,11 @@ nsHTMLFramesetFrame::nsHTMLFramesetFrame()
 nsHTMLFramesetFrame::~nsHTMLFramesetFrame()
 {
   delete [] mRowSizes;
-  delete [] mRowSpecs;
   delete [] mColSizes;
-  delete [] mColSpecs;
   delete[] mVerBorders;
   delete[] mHorBorders;
 
   mRowSizes = mColSizes = nsnull;
-  mRowSpecs = mColSpecs = nsnull;
 
   nsCOMPtr<nsIPrefBranchInternal> prefBranch =
     do_QueryReferent(mPrefBranchWeakRef);
@@ -299,7 +293,6 @@ nsHTMLFramesetFrame::Observe(nsISupports* aObject, const char* aAction,
       prefBranch->GetBoolPref(kFrameResizePref, &mForceFrameResizability);
     }
     RecalculateBorderResize();
-    mRect.width = mRect.height = -1;  // force a recalculation of frame sizes
     if (doc) {
       doc->AttributeChanged(mContent,
                             kNameSpaceID_None,
@@ -370,9 +363,15 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
   PRInt32 borderWidth = GetBorderWidth(aPresContext, PR_FALSE);
   nscolor borderColor = GetBorderColor();
  
-  // parse the rows= cols= data
-  ParseRowCol(aPresContext, nsHTMLAtoms::rows, mNumRows, &mRowSpecs);
-  ParseRowCol(aPresContext, nsHTMLAtoms::cols, mNumCols, &mColSpecs);
+  // Get the rows= cols= data
+  nsCOMPtr<nsIFrameSetElement> ourContent(do_QueryInterface(mContent));
+  NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
+  const nsFramesetSpec* rowSpecs = nsnull;
+  const nsFramesetSpec* colSpecs = nsnull;
+  result = ourContent->GetRowSpec(&mNumRows, &rowSpecs);
+  NS_ENSURE_SUCCESS(result, result);
+  result = ourContent->GetColSpec(&mNumCols, &colSpecs);
+  NS_ENSURE_SUCCESS(result, result);
   mRowSizes  = new nscoord[mNumRows];
   mColSizes  = new nscoord[mNumCols];
 
@@ -517,11 +516,11 @@ void nsHTMLFramesetFrame::Scale(nscoord  aDesired,
   * specifier - fixed sizes have the highest priority, percentage sizes have the next
   * highest priority and relative sizes have the lowest.
   */
-void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext, 
-                                          nscoord         aSize, 
-                                          PRInt32         aNumSpecs, 
-                                          nsFramesetSpec* aSpecs, 
-                                          nscoord*        aValues)
+void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext*       aPresContext, 
+                                          nscoord               aSize, 
+                                          PRInt32               aNumSpecs, 
+                                          const nsFramesetSpec* aSpecs, 
+                                          nscoord*              aValues)
 {
   PRInt32  fixedTotal = 0;
   PRInt32  numFixed = 0;
@@ -604,26 +603,30 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext,
   * each cell in the frameset.  Reverse of CalculateRowCol() behaviour.
   * This allows us to maintain the user size info through reflows.
   */
-void nsHTMLFramesetFrame::GenerateRowCol(nsIPresContext* aPresContext, 
-                                          nscoord         aSize, 
-                                          PRInt32         aNumSpecs, 
-                                          nsFramesetSpec* aSpecs, 
-                                          nscoord*        aValues)
+void nsHTMLFramesetFrame::GenerateRowCol(nsIPresContext*       aPresContext, 
+                                         nscoord               aSize, 
+                                         PRInt32               aNumSpecs, 
+                                         const nsFramesetSpec* aSpecs,
+                                         nscoord*              aValues,
+                                         nsString&             aNewAttr)
 {
   float t2p;
   aPresContext->GetTwipsToPixels(&t2p);
   PRInt32 i;
  
-  for (i = 0; i < aNumSpecs; i++) {   
+  for (i = 0; i < aNumSpecs; i++) {
+    if (!aNewAttr.IsEmpty())
+      aNewAttr.Append(PRUnichar(','));
+    
     switch (aSpecs[i].mUnit) {
       case eFramesetUnit_Fixed:
-        aSpecs[i].mValue = NSToCoordRound(t2p * aValues[i]);
+        aNewAttr.AppendInt(NSToCoordRound(t2p * aValues[i]));
         break;
       case eFramesetUnit_Percent: // XXX Only accurate to 1%, need 1 pixel
-        aSpecs[i].mValue = (100*aValues[i])/aSize;
-        break;
       case eFramesetUnit_Relative:
-        aSpecs[i].mValue = aValues[i];
+        // Add 0.5 to the percentage to make rounding work right.
+        aNewAttr.AppendInt(PRUint32((100.0*aValues[i])/aSize + 0.5)); 
+        aNewAttr.Append(PRUnichar('%'));
         break;
     }
   }
@@ -853,148 +856,6 @@ nsHTMLFramesetFrame::Paint(nsIPresContext*      aPresContext,
                                      aDirtyRect, aWhichLayer);
 }
 
-void nsHTMLFramesetFrame::ParseRowCol(nsIPresContext* aPresContext, nsIAtom* aAttrType, PRInt32& aNumSpecs, nsFramesetSpec** aSpecs) 
-{
-  nsHTMLValue value;
-  nsAutoString rowsCols;
-
-  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
-
-  if (content) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetHTMLAttribute(aAttrType, value)) {
-      if (eHTMLUnit_String == value.GetUnit()) {
-        value.GetStringValue(rowsCols);
-        nsFramesetSpec* specs = new nsFramesetSpec[gMaxNumRowColSpecs];
-        aNumSpecs = ParseRowColSpec(aPresContext, rowsCols, gMaxNumRowColSpecs, specs);
-        *aSpecs = new nsFramesetSpec[aNumSpecs];
-        for (int i = 0; i < aNumSpecs; i++) {
-          (*aSpecs)[i] = specs[i];
-        }
-        delete [] specs;
-        return;
-      }
-    }
-  }
-  aNumSpecs = 1; 
-  *aSpecs = new nsFramesetSpec[1];
-  aSpecs[0]->mUnit  = eFramesetUnit_Relative;
-  aSpecs[0]->mValue = 1;
-}
-
-/**
-  * Translate a "rows" or "cols" spec into an array of nsFramesetSpecs
-  */
-PRInt32 
-nsHTMLFramesetFrame::ParseRowColSpec(nsIPresContext* aPresContext,
-                                     nsString&       aSpec, 
-                                     PRInt32         aMaxNumValues, 
-                                     nsFramesetSpec* aSpecs) 
-{
-  static const PRUnichar ASTER('*');
-  static const PRUnichar PERCENT('%');
-  static const PRUnichar COMMA(',');
-
-  // remove whitespace (Bug 33699)
-  // also remove leading/trailing commas (bug 31482)
-  aSpec.StripChars(" \n\r\t");
-  aSpec.Trim(",");
-  
-  // Count the commas 
-  PRInt32 commaX = aSpec.FindChar(COMMA);
-  PRInt32 count = 1;
-  while (commaX >= 0) {
-    count++;
-    commaX = aSpec.FindChar(COMMA, commaX + 1);
-  }
-
-  if (count > aMaxNumValues) {
-    NS_ASSERTION(0, "Not enough space for values");
-    count = aMaxNumValues;
-  }
-
-  // Parse each comma separated token
-
-  PRInt32 start = 0;
-  PRInt32 specLen = aSpec.Length();
-
-  for (PRInt32 i = 0; i < count; i++) {
-    // Find our comma
-    commaX = aSpec.FindChar(COMMA, start);
-    PRInt32 end = (commaX < 0) ? specLen : commaX;
-
-    // Note: If end == start then it means that the token has no
-    // data in it other than a terminating comma (or the end of the spec)
-    aSpecs[i].mUnit = eFramesetUnit_Fixed;
-    if (end > start) {
-      PRInt32 numberEnd = end;
-      PRUnichar ch = aSpec.CharAt(numberEnd - 1);
-      if (ASTER == ch) {
-        aSpecs[i].mUnit = eFramesetUnit_Relative;
-        numberEnd--;
-      } else if (PERCENT == ch) {
-        aSpecs[i].mUnit = eFramesetUnit_Percent;
-        numberEnd--;
-        // check for "*%"
-        if (numberEnd > start) {
-          ch = aSpec.CharAt(numberEnd - 1);
-          if (ASTER == ch) {
-            aSpecs[i].mUnit = eFramesetUnit_Relative;
-            numberEnd--;
-          }
-        }
-      }
-
-      // Translate value to an integer
-      nsString token;
-      aSpec.Mid(token, start, numberEnd - start);
-
-      // Treat * as 1*
-      if ((eFramesetUnit_Relative == aSpecs[i].mUnit) &&
-        (0 == token.Length())) {
-        aSpecs[i].mValue = 1;
-      }
-
-      // Otherwise just convert to integer.
-      else {
-        PRInt32 err;
-        aSpecs[i].mValue = token.ToInteger(&err);
-        if (err) {
-          aSpecs[i].mValue = 0;
-        }
-      }
-
-      // Treat 0* as 1* in quirks mode (bug 40383)
-      nsCompatibility mode;
-      aPresContext->GetCompatibilityMode(&mode);
-      if (eCompatibility_NavQuirks == mode) {
-        if ((eFramesetUnit_Relative == aSpecs[i].mUnit) &&
-          (0 == aSpecs[i].mValue)) {
-          aSpecs[i].mValue = 1;
-        }
-      }
-        
-      // Catch zero and negative frame sizes for Nav compatability
-      // Nav resized absolute and relative frames to "1" and
-      // percent frames to an even percentage of the width
-      //
-      //if ((eCompatibility_NavQuirks == aMode) && (aSpecs[i].mValue <= 0)) {
-      //  if (eFramesetUnit_Percent == aSpecs[i].mUnit) {
-      //    aSpecs[i].mValue = 100 / count;
-      //  } else {
-      //    aSpecs[i].mValue = 1;
-      //  }
-      //} else {
-
-      // In standards mode, just set negative sizes to zero
-      if (aSpecs[i].mValue < 0) {
-        aSpecs[i].mValue = 0;
-      }
-      start = end + 1;
-    }
-  }
-  return count;
-}
-
 void 
 nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
                                       nsIPresContext*          aPresContext,
@@ -1164,12 +1025,15 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
   height -= (mNumRows - 1) * borderWidth;
   if (height < 0) height = 0;
 
-  if (!mDrag.mActive && ( (firstTime) ||
-                  ( (mRect.width != 0) && (mRect.height != 0) &&
-                    (aDesiredSize.width != 0) && (aDesiredSize.height != 0) &&
-                    ((aDesiredSize.width != mRect.width) || (aDesiredSize.height != mRect.height))) ) )  { 
-    CalculateRowCol(aPresContext, width, mNumCols, mColSpecs, mColSizes);
-    CalculateRowCol(aPresContext, height, mNumRows, mRowSpecs, mRowSizes);
+  if (!mDrag.mActive) {
+    nsCOMPtr<nsIFrameSetElement> ourContent(do_QueryInterface(mContent));
+    NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
+    const nsFramesetSpec* rowSpecs = nsnull;
+    const nsFramesetSpec* colSpecs = nsnull;
+    ourContent->GetRowSpec(&mNumRows, &rowSpecs);
+    ourContent->GetColSpec(&mNumCols, &colSpecs);
+    CalculateRowCol(aPresContext, width, mNumCols, colSpecs, mColSizes);
+    CalculateRowCol(aPresContext, height, mNumRows, rowSpecs, mRowSizes);
   }
 
   PRBool*        verBordersVis     = nsnull; // vertical borders visibility
@@ -1640,9 +1504,19 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext* aPresContext,
     mColSizes[mDragger->mPrevNeighbor] = mPrevNeighborOrigSize + change;
     mColSizes[mDragger->mNextNeighbor] = mNextNeighborOrigSize - change;
 
-    // Recompute the specs from the new sizes.
-    nscoord width = mRect.width - (mNumCols - 1) * GetBorderWidth(aPresContext, PR_TRUE);
-    GenerateRowCol(aPresContext, width, mNumCols, mColSpecs, mColSizes);
+    if (change != 0) {
+      // Recompute the specs from the new sizes.
+      nscoord width = mRect.width - (mNumCols - 1) * GetBorderWidth(aPresContext, PR_TRUE);
+      nsCOMPtr<nsIFrameSetElement> ourContent(do_QueryInterface(mContent));
+      NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
+      const nsFramesetSpec* colSpecs = nsnull;
+      ourContent->GetColSpec(&mNumCols, &colSpecs);
+      nsAutoString newColAttr;
+      GenerateRowCol(aPresContext, width, mNumCols, colSpecs, mColSizes,
+                     newColAttr);
+      // Setting the attr will trigger a reflow
+      mContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::cols, newColAttr, PR_TRUE);
+    }
   } else {
     change = aEvent->point.y - mFirstDragPoint.y;
     if (change > mNextNeighborOrigSize - mMinDrag) {
@@ -1653,9 +1527,19 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext* aPresContext,
     mRowSizes[mDragger->mPrevNeighbor] = mPrevNeighborOrigSize + change;
     mRowSizes[mDragger->mNextNeighbor] = mNextNeighborOrigSize - change;
 
-    // Recompute the specs from the new sizes.
-    nscoord height = mRect.height - (mNumRows - 1) * GetBorderWidth(aPresContext, PR_TRUE);
-    GenerateRowCol(aPresContext, height, mNumRows, mRowSpecs, mRowSizes);
+    if (change != 0) {
+      // Recompute the specs from the new sizes.
+      nscoord height = mRect.height - (mNumRows - 1) * GetBorderWidth(aPresContext, PR_TRUE);
+      nsCOMPtr<nsIFrameSetElement> ourContent(do_QueryInterface(mContent));
+      NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
+      const nsFramesetSpec* rowSpecs = nsnull;
+      ourContent->GetRowSpec(&mNumRows, &rowSpecs);
+      nsAutoString newRowAttr;
+      GenerateRowCol(aPresContext, height, mNumRows, rowSpecs, mRowSizes,
+                     newRowAttr);
+      // Setting the attr will trigger a reflow
+      mContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::rows, newRowAttr, PR_TRUE);
+    }
   }
 
   if (change != 0) {
@@ -1671,8 +1555,6 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext* aPresContext,
     if (!shell) {
       return;
     }
-
-    parentFrame->ReflowDirtyChild(shell, this);
 
     // Update the view immediately (make drag appear snappier)
     nsCOMPtr<nsIViewManager> vm;
