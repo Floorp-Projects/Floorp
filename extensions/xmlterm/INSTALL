@@ -52,7 +52,7 @@ to the right place.
 To recursively create all Makefiles from Makefile.in files, type the following
 in the "xmlterm" directory:
 
-./makemake -r
+config/makemake -r
 
 The file "config/xmlterm_config.mk" contains XMLterm specific configuration
 information that is needed in addition to any Mozilla configuration

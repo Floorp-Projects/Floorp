@@ -69,7 +69,7 @@ DIRS = base tests linetest
 else    # not STAND_ALONE
 
 # XMLterm currently works on Linux and SunOS only (testing on BSD family)
-ifneq (,$(filter Linux SunOS BSD,$(OS_ARCH)))
+ifneq (,$(filter Linux SunOS FreeBSD,$(OS_ARCH)))
 DIRS = base ui scripts doc tests
 else    # XMLterm not yet been ported to this platform; do nothing
 DIRS = 

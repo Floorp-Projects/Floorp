@@ -32,6 +32,8 @@
 
 # autoconf.mk: autoconf info for stand-alone LineTerm only
 
+OS_ARCH := $(shell uname)
+
 # C compiler
 CC  = gcc
 

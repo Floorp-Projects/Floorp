@@ -32,10 +32,11 @@
 
 /* ptystream.c: pseudo-TTY stream implementation
  * CPP options:
- *   LINUX:    for Linux2.0/glibc
- *   SOLARIS:  for Solaris2.6
- *   NOERRMSG: for suppressing all error messages
- *   DEBUG:    for printing some debugging output to STDERR
+ *   LINUX:     for Linux2.0/glibc
+ *   SOLARIS:   for Solaris2.6
+ *   BSDFAMILY: for FreeBSD, ...
+ *   NOERRMSG:  for suppressing all error messages
+ *   DEBUG:     for printing some debugging output to STDERR
  */
 
 /* system header files */
@@ -48,8 +49,11 @@
 
 #ifdef LINUX
 #define __USE_BSD  1
+#endif
+#if defined(LINUX) || defined(BSDFAMILY)
 #include <sys/ioctl.h>
 #endif
+
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -118,9 +122,11 @@ int pty_create(struct ptys *ptyp, char *const argv[],
   /* Open PTY */
   if (openPTY(ptyp, noblock) == -1) return -1;
 
+#ifndef BSDFAMILY
   /* Set default TTY size */
   if (pty_resize(ptyp, 24, 80, 0, 0) != 0)
     return -1;
+#endif
 
   if (errfd >= -1) {
     /* No STDERR pipe */
@@ -161,6 +167,12 @@ int pty_create(struct ptys *ptyp, char *const argv[],
 
     /* Attach child to slave TTY */
     if (attachToTTY(ptyp, errfd2, noecho) == -1) return -1;
+
+#ifdef BSDFAMILY
+    /* Set default TTY size */
+    if (pty_resize(NULL, 24, 80, 0, 0) != 0)
+      return -1;
+#endif
 
     /* Set default signal handling */
     signal(SIGINT, SIG_DFL);
@@ -233,21 +245,14 @@ int pty_close(struct ptys *ptyp)
 }
 
 
-/* resizes a pseudo-TTY */
+/* resizes a PTY; if ptyp is null, resizes file desciptor 0,
+ * returning 0 on success and -1 on error.
+ */
 int pty_resize(struct ptys *ptyp, int rows, int cols,
                                   int xpix, int ypix)
 {
   struct winsize wsize;
-
-  if (!ptyp) {
-    pty_error("pty_resize: NULL value for PTY structure", NULL);
-    return -1;
-  }
-
-  if (ioctl(ptyp->ptyFD, TIOCGWINSZ, &wsize ) == -1) {
-    pty_error("pty_resize: Failed to get TTY window size", NULL);
-    return -1;
-  }
+  int fd = ptyp ? ptyp->ptyFD : 0;
 
   /* Set TTY window size */
   wsize.ws_row = (unsigned short) rows;
@@ -255,7 +260,7 @@ int pty_resize(struct ptys *ptyp, int rows, int cols,
   wsize.ws_xpixel = (unsigned short) xpix;
   wsize.ws_ypixel = (unsigned short) ypix;
 
-  if (ioctl(ptyp->ptyFD, TIOCSWINSZ, &wsize ) == -1) {
+  if (ioctl(fd, TIOCSWINSZ, &wsize ) == -1) {
     pty_error("pty_resize: Failed to set TTY window size", NULL);
     return -1;
   }
@@ -405,6 +410,10 @@ static int attachToTTY(struct ptys *ptyp, int errfd, int noecho)
   for (fd = 3; fd < fdMax; fd++)
     close(fd);
 
+#ifdef BSDFAMILY
+  ioctl(0, TIOCSCTTY, 0);
+#endif
+
   /* Set process group */
   tcsetpgrp(0, sid);
 
@@ -450,6 +459,12 @@ static int setTTYAttr(int ttyFD, int noecho)
   tios.c_cc[VMIN]     = 1;    /* Wait for at least 1 char of input */
   tios.c_cc[VTIME]    = 0;    /* Wait indefinitely (block)  */
 
+#ifdef BSDFAMILY
+  tios.c_iflag = (BRKINT | IGNPAR | ICRNL | IXON
+                  | IMAXBEL);
+  tios.c_oflag = (OPOST | ONLCR);
+
+#else  /* !BSDFAMILY */
   /* Input modes */
   tios.c_iflag &= ~IUCLC;     /* Disable map of upper case input to lower*/
   tios.c_iflag &= ~IGNBRK;    /* Do not ignore break */
@@ -461,6 +476,8 @@ static int setTTYAttr(int ttyFD, int noecho)
   tios.c_oflag &= ~OLCUC;     /* Disable map of lower case output to upper */
                               /* No output delays */
   tios.c_oflag &= ~(NLDLY|CRDLY|TABDLY|BSDLY|VTDLY|FFDLY);
+
+#endif  /* !BSDFAMILY */
 
   /* control modes */
   tios.c_cflag |= (CS8 | CREAD);

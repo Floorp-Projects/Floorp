@@ -56,6 +56,11 @@ LIB_SUFFIX      = a
 RANLIB          = /bin/true
 endif
 
+ifeq ($(OS_ARCH),FreeBSD)
+LIB_SUFFIX      = a
+RANLIB          = /usr/bin/ranlib
+endif
+
 # C++ compiler
 CCC          = $(CXX)
 

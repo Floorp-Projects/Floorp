@@ -367,8 +367,16 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       case nsIDOMKeyEvent::DOM_VK_F9:
         JSCommand = "F9Key";
         break;
-      default: // ignore event without consuming
-        return NS_OK;
+      default: 
+        if ( (ctrlKey && (keyCode ==nsIDOMKeyEvent::DOM_VK_SPACE)) ||
+             (ctrlKey && shiftKey && (keyCode ==nsIDOMKeyEvent::DOM_VK_2)) ) {
+          // Hack to handle input of NUL characters in NUL-terminated strings
+          // See also: mozLineTerm::Write
+          keyChar = U_PRIVATE0;
+        } else {
+          // ignore event without consuming
+          return NS_OK;
+        }
       }
 
     } else if ((ctrlKey == PR_TRUE) && (altKey == PR_FALSE) &&

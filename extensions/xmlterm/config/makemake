@@ -17,7 +17,7 @@ foreach makefile ($makelist)
    echo $wd
 
    set top_srcdir = ""
-   while (${wd:t} != "mozilla")
+   while (("$wd" != "") && (${wd:t} != "mozilla"))
       if ("$top_srcdir" == "") then
          set top_srcdir = ".."
       else
@@ -27,8 +27,12 @@ foreach makefile ($makelist)
    end
 
    /bin/cp Makefile.in Makefile
-   globsub @srcdir@ @srcdir@ . Makefile
-   globsub @top_srcdir@ @top_srcdir@ $top_srcdir Makefile
+   ex -s Makefile << /EOF
+set nomagic
+g%@srcdir@%s%@srcdir@%.%gp
+g%@top_srcdir@%s%@top_srcdir@%${top_srcdir}%gp
+wq
+/EOF
 
    popd
 end

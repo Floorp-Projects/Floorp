@@ -56,10 +56,16 @@ SIMPLE_PROGRAMS = lterm ptytest unitest utf8conv
 DEFINES =
 
 # Libraries to be linked
-ifdef USE_NCURSES
-LIBS = -lncurses -lxmlterm -lpthread
+ifeq ($(OS_ARCH),FreeBSD)
+PTHREADLIBOPT = -pthread
 else
-LIBS = -lxmlterm -lpthread
+PTHREADLIBOPT = -lpthread
+endif
+
+ifdef USE_NCURSES
+LIBS = -lncurses -lxmlterm $(PTHREADLIBOPT)
+else
+LIBS = -lxmlterm $(PTHREADLIBOPT)
 endif
 
 include $(topsrcdir)/config/config.mk

@@ -324,6 +324,8 @@ size_t ucscspn(const UNICHAR* str, const UNICHAR* chars);
 #define U_NOBRKSPACE  0xA0U      /* no-break space */
 #define U_LATIN1HI    0xFFU      /* highest Latin1 extension character */
 
+#define U_PRIVATE0    0xE000U    /* first private use Unicode character */
+
 #define IS_ASCII_LETTER(x) ( (((x) >= (UNICHAR)U_A_CHAR) &&  \
                               ((x) <= (UNICHAR)U_Z_CHAR)) || \
                              (((x) >= (UNICHAR)U_a_CHAR) &&  \

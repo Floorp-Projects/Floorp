@@ -51,7 +51,7 @@ endif
 #
 # OS dependent options
 #
-ifneq (,$(filter-out Linux2.0 Linux2.2 SunOS5,$(OS_CONFIG)))
+ifneq (,$(filter-out Linux SunOS FreeBSD,$(OS_ARCH)))
 # Unsupported platform for PTY; use pipes for process communication
 NO_PTY = 1
 endif
@@ -62,6 +62,10 @@ endif
 
 ifeq ($(OS_CONFIG),SunOS5)
 DEFINES    += -DSOLARIS
+endif
+
+ifeq ($(OS_ARCH),FreeBSD)
+DEFINES    += -DBSDFAMILY
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
