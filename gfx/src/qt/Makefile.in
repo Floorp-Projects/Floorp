@@ -20,20 +20,13 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-MODULE=raptor 
-
 include $(DEPTH)/config/autoconf.mk
-
-include $(topsrcdir)/config/config.mk
 
 LIBRARY_NAME = gfx_qt
 
-REQUIRES=util img xpcom raptor netlib ps
+MODULE=raptor 
 
-#DEFINES += -D_IMPL_NS_GFXONXP 
-DEFINES += -D_IMPL_NS_GFXNONXP 
-CXXFLAGS += $(TK_CFLAGS)
-INCLUDES += $(TK_CFLAGS) -I$(srcdir)/..
+REQUIRES=util img xpcom raptor netlib ps
 
 CPPSRCS = \
 	nsDeviceContextQT.cpp \
@@ -46,11 +39,26 @@ CPPSRCS = \
 	nsRegionQT.cpp  \
 	nsRenderingContextQT.cpp \
 	$(NULL)
-#	nsGraphicsStateQT.cpp \
 
-#CSRCS = \
-#	nsPrintdQT.c
+ifndef MOZ_MONOLITHIC_TOOLKIT
+EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS)
+else
+EXTRA_DSO_LDOPTS += $(TK_LIBS)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
+ifndef MOZ_MONOLITHIC_TOOLKIT
+CXXFLAGS += $(MOZ_QT_CFLAGS)
+CFLAGS += $(MOZ_QT_CFLAGS)
+else
+CXXFLAGS += $(TK_CFLAGS)
+CFLAGS += $(TK_CFLAGS)
+endif
 
+DEFINES		+= -D_IMPL_NS_GFXNONXP
+
+INCLUDES	+= \
+		-I$(srcdir)/. \
+		-I$(srcdir)/.. \
+		$(NULL)

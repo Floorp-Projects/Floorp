@@ -55,7 +55,7 @@
 #include "nsISound.h"
 #include "nsIFileSpecWithUI.h"
 
-#if defined(XP_UNIX) && defined(TOOLKIT_EXORCISM)
+#if defined(XP_UNIX) && !defined(MOZ_MONOLITHIC_TOOLKIT)
 #include "nsIUnixToolkitService.h"
 #endif
 
@@ -210,7 +210,7 @@ static NS_DEFINE_CID(kCLiveconnectCID,             NS_CLIVECONNECT_CID);
 extern "C" void
 NS_SetupRegistry()
 {
-#if defined(XP_UNIX) && defined(TOOLKIT_EXORCISM)
+#if defined(XP_UNIX) && !defined(MOZ_MONOLITHIC_TOOLKIT)
   // On unix, the widget and gfx toolkit are not linked into the app.
   //
   // Instead, they are loaded at runtime courtesy of xpcom.
@@ -285,6 +285,7 @@ NS_SetupRegistry()
   
   NS_ASSERTION(rv == NS_OK,"Cannot obtain unix toolkit service.");
 
+
   nsString unixToolkitName = "error";
   nsString unixWidgetDllName = "error";
   nsString unixGfxDllName = "error";
@@ -321,7 +322,7 @@ NS_SetupRegistry()
 #define WIDGET_DLL (const char *) nsAutoCString(unixWidgetDllName)
 #define GFXWIN_DLL (const char *) nsAutoCString(unixGfxDllName)
 
-#endif /* defined(XP_UNIX) && defined(TOOLKIT_EXORCISM) */
+#endif /* defined(XP_UNIX) && !defined(MOZ_MONOLITHIC_TOOLKIT) */
 
 
   

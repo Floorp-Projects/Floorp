@@ -108,6 +108,7 @@ gfx/src/ps/Makefile
 gfx/src/motif/Makefile
 gfx/src/photon/Makefile
 gfx/src/rhapsody/Makefile
+gfx/src/qt/Makefile
 gfx/src/xlib/Makefile
 gfx/src/xlibrgb/Makefile
 gfx/tests/Makefile
@@ -356,6 +357,7 @@ widget/src/rhapsody/Makefile
 widget/src/unix_services/Makefile
 widget/src/unix_services/toolkit_service/Makefile
 widget/src/xlib/Makefile
+widget/src/qt/Makefile
 widget/src/xlib/window_service/Makefile
 widget/src/xpwidgets/Makefile
 widget/tests/Makefile
@@ -371,6 +373,7 @@ widget/timer/src/unix/Makefile
 widget/timer/src/unix/gtk/Makefile
 widget/timer/src/unix/motif/Makefile
 widget/timer/src/unix/xlib/Makefile
+widget/timer/src/unix/qt/Makefile
 #
 # New xpcom hiearchy
 #

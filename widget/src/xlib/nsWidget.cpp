@@ -191,7 +191,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
   mRequestedSize = aRect;
 
 
-#ifdef TOOLKIT_EXORCISM
+#ifndef MOZ_MONOLITHIC_TOOLKIT
   nsIXlibWindowService * xlibWindowService = nsnull;
 
    nsresult rv = nsServiceManager::GetService(kWindowServiceCID,
@@ -212,7 +212,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
 
     NS_RELEASE(xlibWindowService);
   }
-#endif /* TOOLKIT_EXORCISM */
+#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
   // call the native create function
   CreateNative(parent, mBounds);

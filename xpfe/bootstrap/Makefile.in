@@ -55,13 +55,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 BEOS_PROGRAM_RESOURCE = $(srcdir)/apprunner-beos.rsrc
 endif
 
-ifndef TOOLKIT_EXORCISM
-	UN_EXORCISED_WIDGET_FLAGS=$(MOZ_WIDGET_TOOLKIT_LDFLAGS)
-	UN_EXORCISED_GFX_FLAGS=$(MOZ_GFX_TOOLKIT_LDFLAGS)
-endif
-
-ifndef TOOLKIT_EXORCISM
-	UN_EXORCISED_TK_FLAGS=$(TK_LIBS)
+ifdef MOZ_MONOLITHIC_TOOLKIT
+	MONOLITHIC_WIDGET_FLAGS=$(MOZ_WIDGET_TOOLKIT_LDFLAGS)
+	MONOLITHIC_GFX_FLAGS=$(MOZ_GFX_TOOLKIT_LDFLAGS)
+	MONOLITHIC_TK_FLAGS=$(TK_LIBS)
 endif
 
 ifdef MOZ_OJI
@@ -69,9 +66,9 @@ OJI_LIBS=-loji -ljsj
 endif
 
 LIBS		+= \
-		$(UN_EXORCISED_WIDGET_FLAGS) \
+		$(MONOLITHIC_WIDGET_FLAGS) \
 		-lraptorgfx \
-		$(UN_EXORCISED_GFX_FLAGS) \
+		$(MONOLITHIC_GFX_FLAGS) \
 		$(TIMER_LIBS) \
 		-lmozreg \
 		-lraptorwebwidget \
@@ -88,7 +85,7 @@ LIBS		+= \
 		-lmozutil \
 		-lxpcom \
 		$(NSPR_LIBS) \
-		$(UN_EXORCISED_TK_FLAGS) \
+		$(MONOLITHIC_TK_FLAGS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

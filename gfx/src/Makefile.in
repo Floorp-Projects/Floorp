@@ -24,11 +24,11 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-ifneq (,$(filter gtk xlib motif,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk xlib motif qt,$(MOZ_WIDGET_TOOLKIT)))
 XLIB_RGB_DIRS = xlibrgb
 else
 
-ifdef TOOLKIT_EXORCISM
+ifndef MOZ_MONOLITHIC_TOOLKIT
 XLIB_RGB_DIRS = xlibrgb
 endif
 
@@ -36,7 +36,7 @@ endif
 
 DIRS = ps $(XLIB_RGB_DIRS) $(MOZ_GFX_TOOLKIT)
 
-ifdef TOOLKIT_EXORCISM
+ifndef MOZ_MONOLITHIC_TOOLKIT
 DIRS = ps $(XLIB_RGB_DIRS) 
 
 ifdef MOZ_ENABLE_GTK
@@ -49,6 +49,10 @@ endif
 
 ifdef MOZ_ENABLE_XLIB
   DIRS += xlib
+endif
+
+ifdef MOZ_ENABLE_QT
+  DIRS += qt
 endif
 
 else

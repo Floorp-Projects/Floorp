@@ -36,7 +36,7 @@ CPPSRCS		= \
 		nsImageMotif.cpp \
 		$(NULL)
 
-ifdef TOOLKIT_EXORCISM
+ifndef MOZ_MONOLITHIC_TOOLKIT
 EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(MOZ_MOTIF_LDFLAGS)
 else
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
@@ -44,7 +44,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef TOOLKIT_EXORCISM
+ifndef MOZ_MONOLITHIC_TOOLKIT
 CXXFLAGS += $(MOZ_MOTIF_CFLAGS)
 else
 CXXFLAGS += $(TK_CFLAGS)

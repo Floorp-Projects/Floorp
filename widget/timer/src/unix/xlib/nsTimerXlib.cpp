@@ -18,10 +18,10 @@
 
 #include "nsTimerXlib.h"
 
-#ifdef TOOLKIT_EXORCISM
+#ifndef MOZ_MONOLITHIC_TOOLKIT
 #include "nsIXlibWindowService.h"
 #include "nsIServiceManager.h"
-#endif /* TOOLKIT_EXORCISM */
+#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
 #include <unistd.h>
 #include <stdio.h>
@@ -30,13 +30,13 @@
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
-#ifdef TOOLKIT_EXORCISM
+#ifndef MOZ_MONOLITHIC_TOOLKIT
 static int  NS_TimeToNextTimeout(struct timeval *aTimer);
 static void NS_ProcessTimeouts(void);
 #else
 extern "C" int  NS_TimeToNextTimeout(struct timeval *aTimer);
 extern "C" void NS_ProcessTimeouts(void);
-#endif /* TOOLKIT_EXORCISM */
+#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
 nsTimerXlib *nsTimerXlib::gTimerList = NULL;
 struct timeval nsTimerXlib::gTimer = {0, 0};
@@ -213,15 +213,15 @@ nsTimerXlib::ProcessTimeouts(struct timeval *aNow)
   }
 }
 
-#ifdef TOOLKIT_EXORCISM
+#ifndef MOZ_MONOLITHIC_TOOLKIT
 static NS_DEFINE_IID(kWindowServiceCID,NS_XLIB_WINDOW_SERVICE_CID);
 static NS_DEFINE_IID(kWindowServiceIID,NS_XLIB_WINDOW_SERVICE_IID);
-#endif /* TOOLKIT_EXORCISM */
+#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
 nsresult
 nsTimerXlib::EnsureWindowService()
 {
-#ifdef TOOLKIT_EXORCISM
+#ifndef MOZ_MONOLITHIC_TOOLKIT
   nsIXlibWindowService * xlibWindowService = nsnull;
 
   nsresult rv = nsServiceManager::GetService(kWindowServiceCID,
@@ -237,19 +237,19 @@ nsTimerXlib::EnsureWindowService()
 
     NS_RELEASE(xlibWindowService);
   }
-#endif /* TOOLKIT_EXORCISM */
+#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
   return NS_OK;
 }
 
-#ifdef TOOLKIT_EXORCISM
+#ifndef MOZ_MONOLITHIC_TOOLKIT
 static
 #else
 extern "C"
-#endif /* TOOLKIT_EXORCISM */
+#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 int NS_TimeToNextTimeout(struct timeval *aTimer) 
 {
-#ifdef TOOLKIT_EXORCISM
+#ifndef MOZ_MONOLITHIC_TOOLKIT
   static int once = 1;
 
   if (once)
@@ -258,7 +258,7 @@ int NS_TimeToNextTimeout(struct timeval *aTimer)
 
     printf("NS_TimeToNextTimeout() lives!\n");
   }
-#endif /* TOOLKIT_EXORCISM */
+#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
   nsTimerXlib *timer;
   timer = nsTimerXlib::gTimerList;
@@ -290,15 +290,15 @@ int NS_TimeToNextTimeout(struct timeval *aTimer)
   }
 }
 
-#ifdef TOOLKIT_EXORCISM
+#ifndef MOZ_MONOLITHIC_TOOLKIT
 static
 #else
 extern "C"
-#endif /* TOOLKIT_EXORCISM */
+#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 void
 NS_ProcessTimeouts(void) 
 {
-#ifdef TOOLKIT_EXORCISM
+#ifndef MOZ_MONOLITHIC_TOOLKIT
   static int once = 1;
 
   if (once)
@@ -307,7 +307,7 @@ NS_ProcessTimeouts(void)
 
     printf("NS_ProcessTimeouts() lives!\n");
   }
-#endif /* TOOLKIT_EXORCISM */
+#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
   struct timeval now;
   now.tv_sec = 0;
@@ -315,7 +315,7 @@ NS_ProcessTimeouts(void)
   nsTimerXlib::ProcessTimeouts(&now);
 }
 
-#ifndef TOOLKIT_EXORCISM
+#ifdef MOZ_MONOLITHIC_TOOLKIT
 nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
@@ -330,4 +330,4 @@ nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
   
   return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
 }
-#endif /* TOOLKIT_EXORCISM */
+#endif /* MOZ_MONOLITHIC_TOOLKIT */

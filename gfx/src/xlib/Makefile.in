@@ -42,7 +42,7 @@ CPPSRCS =\
 	nsRenderingContextXlib.cpp \
 	$(NULL)
 
-ifdef TOOLKIT_EXORCISM
+ifndef MOZ_MONOLITHIC_TOOLKIT
 EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(MOZ_XLIB_LDFLAGS)
 else
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
@@ -50,7 +50,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef TOOLKIT_EXORCISM
+ifndef MOZ_MONOLITHIC_TOOLKIT
 CXXFLAGS += $(MOZ_XLIB_CFLAGS)
 else
 CXXFLAGS += $(TK_CFLAGS)

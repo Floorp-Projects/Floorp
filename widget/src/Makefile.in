@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 ## multiple implementations of widget can be built on the same
 ##  source tree.
 ##
-ifdef TOOLKIT_EXORCISM
+ifndef MOZ_MONOLITHIC_TOOLKIT
 DIRS = xpwidgets 
 
 ifdef MOZ_ENABLE_GTK
@@ -42,6 +42,10 @@ endif
 
 ifdef MOZ_ENABLE_XLIB
   DIRS += xlib
+endif
+
+ifdef MOZ_ENABLE_QT
+  DIRS += qt
 endif
 
 DIRS += unix_services

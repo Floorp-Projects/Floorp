@@ -57,9 +57,6 @@ NETLIB_LIBS	= -lneckoutil_s
 endif
 
 LIBS		= \
-		-lraptorgfx \
-		$(MOZ_GFX_TOOLKIT_LDFLAGS) \
-		$(TK_LIBS) \
 		-lpref \
 		-lsecfree \
 		-lmozjs \
