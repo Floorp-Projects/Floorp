@@ -35,13 +35,13 @@ static const PRBool gNoisy = PR_FALSE;
 
 
 PlaceholderTxn::PlaceholderTxn() :  EditAggregateTxn(), 
-                                    mPresShellWeak(nsnull), 
                                     mAbsorb(PR_TRUE), 
                                     mForwarding(nsnull),
                                     mIMETextTxn(nsnull),
                                     mCommitted(PR_FALSE),
                                     mStartSel(nsnull),
-                                    mEndSel()
+                                    mEndSel(),
+                                    mEditor(nsnull)
 {
   SetTransactionDescriptionID( kTransactionID );
   /* log description initialized in parent constructor */
@@ -74,16 +74,13 @@ NS_IMETHODIMP PlaceholderTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return EditAggregateTxn::QueryInterface(aIID, aInstancePtr);
 }
 
-NS_IMETHODIMP PlaceholderTxn::Init(nsWeakPtr aPresShellWeak, nsIAtom *aName, 
-                                   nsSelectionState *aSelState)
+NS_IMETHODIMP PlaceholderTxn::Init(nsIAtom *aName, nsSelectionState *aSelState, nsIEditor *aEditor)
 {
-  NS_ASSERTION(aPresShellWeak, "bad args");
-  if (!aPresShellWeak || !aSelState) return NS_ERROR_NULL_POINTER;
+  if (!aEditor || !aSelState) return NS_ERROR_NULL_POINTER;
 
-  mPresShellWeak = aPresShellWeak;
   mName = aName;
   mStartSel = aSelState;
-  
+  mEditor = aEditor;
   return NS_OK;
 }
 
@@ -100,10 +97,8 @@ NS_IMETHODIMP PlaceholderTxn::Undo(void)
   if (NS_FAILED(res)) return res;
   
   // now restore selection
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShellWeak);
-  if (!selCon) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIDOMSelection> selection;
-  res = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+  res = mEditor->GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
   if (!mStartSel) return NS_ERROR_NULL_POINTER;
@@ -119,10 +114,8 @@ NS_IMETHODIMP PlaceholderTxn::Redo(void)
   if (NS_FAILED(res)) return res;
   
   // now restore selection
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShellWeak);
-  if (!selCon) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIDOMSelection> selection;
-  res = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+  res = mEditor->GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
   res = mEndSel.RestoreSelection(selection);
@@ -272,10 +265,8 @@ NS_IMETHODIMP PlaceholderTxn::Commit()
 
 NS_IMETHODIMP PlaceholderTxn::RememberEndingSelection()
 {
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShellWeak);
-  if (!selCon) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIDOMSelection> selection;
-  nsresult res = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+  nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
   res = mEndSel.SaveSelection(selection);

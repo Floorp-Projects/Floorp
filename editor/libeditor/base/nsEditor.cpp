@@ -990,7 +990,7 @@ nsEditor::Do(nsITransaction *aTxn)
 
     // save off weak reference to placeholder txn
     mPlaceHolderTxn = getter_AddRefs( NS_GetWeakReference(plcTxn) );
-    plcTxn->Init(mPresShellWeak, mPlaceHolderName, mSelState);
+    plcTxn->Init(mPlaceHolderName, mSelState, this);
     mSelState = nsnull;  // placeholder txn took ownership of this pointer
 
     // finally we QI to an nsITransaction since that's what Do() expects
