@@ -5,8 +5,11 @@ be useful to you.
 
 This directory includes:
 
+       bug-bugzilla/ --  A standalone bug submission script.
+
    mysqld-watcher.pl --  This script can be installed as a frequent cron 
                          job to clean up stalled/dead queries.
+
          gnats2bz.pl --  A perl script to help import bugs from a GNATS 
                          database into a Bugzilla database.  Contributed by
                          Tom Schutter <tom@platte.com>
@@ -20,6 +23,7 @@ This directory includes:
  
         yp_nomail.sh --  Script you can run via cron that regularly updates
                          the nomail file for terminated employees 
+
 bugzilla_ldapsync.rb --  Script you can run via cron that queries an LDAP
                          server for e-mail addresses to add Bugzilla users
                          for. Will optionally disable Bugzilla users with
