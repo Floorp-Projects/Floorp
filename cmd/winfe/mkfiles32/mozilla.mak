@@ -997,6 +997,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmocha\lm_screen.c
 	$(DEPTH)\lib\libmocha\lm_supdt.c
 	$(DEPTH)\lib\libmocha\lm_taint.c
+	$(DEPTH)\lib\libmocha\lm_tree.c
 	$(DEPTH)\lib\libmocha\lm_trggr.c
 	$(DEPTH)\lib\libmocha\lm_url.c
 	$(DEPTH)\lib\libmocha\lm_win.c
