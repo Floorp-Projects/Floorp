@@ -399,6 +399,17 @@ library MOZILLACONTROLLib
         void OnTheaterMode([in] VARIANT_BOOL TheaterMode);
 	}
 
+    typedef
+    [
+        uuid(34A226E0-DF30-11CF-89A9-00A0C9054129),
+        helpstring("Constants for WebBrowser CommandStateChange")
+    ]
+    enum CommandStateChangeConstants {
+        [helpstring("Command Change")]      CSC_UPDATECOMMANDS  = 0xFFFFFFFF,
+        [helpstring("Navigate Forward")]    CSC_NAVIGATEFORWARD = 0x00000001,
+        [helpstring("Navigate Back")]       CSC_NAVIGATEBACK    = 0x00000002,
+    } CommandStateChangeConstants;
+
 	[
 		uuid(1339B54C-3453-11D2-93B9-000000000000),
 		helpstring("MozillaBrowser Class")
