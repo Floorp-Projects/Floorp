@@ -12,7 +12,7 @@
 <box align="horizontal" style="width:100%">
 	<spring style="width:5px"/>
 	<box style="border-width:0; border-bottom-width:2; border-style:solid">
-		<html:div style="font-size:150%; font-weight: bold; padding-top:2px"
+		<html:div style="font-size:150%; font-weight: bold; padding-top:2px; display: none"
 				  id="CardTitle">*</html:div>
 	</box>
 </box>
@@ -31,14 +31,14 @@
 		</box>
 		
 		<box id="cvbHome" align="vertical" class="CardView">
-			<html:div class="CardViewHeading">Home</html:div>
+			<html:div class="CardViewHeading" id="cvhHome">Home</html:div>
 			<spring class="CardViewHeadingSpace"/>
 			<html:div class="CardViewText" id="cvHomeAddress">*</html:div>
 			<html:div class="CardViewText" id="cvHomeCityStZip">*</html:div>
 		</box>
 		
 		<box id="cvbOther" align="vertical" class="CardView">
-			<html:div class="CardViewHeading">Other</html:div>
+			<html:div class="CardViewHeading" id="cvhOther">Other</html:div>
 			<html:div class="CardViewText" id="cvNotes">*</html:div>
 		</box>
 	</box>
@@ -47,7 +47,7 @@
 	
 	<box align="vertical" flex="50%">
 		<box id="cvbPhone" align="vertical" class="CardView">
-			<html:div class="CardViewHeading">Phone</html:div>
+			<html:div class="CardViewHeading" id="cvhPhone">Phone</html:div>
 			<spring class="CardViewHeadingSpace"/>
 			<html:div class="CardViewText" id="cvPhWork">*</html:div>
 			<html:div class="CardViewText" id="cvPhHome">*</html:div>
@@ -58,7 +58,7 @@
 		</box>
 		
 		<box id="cvbWork" align="vertical" class="CardView">
-			<html:div class="CardViewHeading">Work</html:div>
+			<html:div class="CardViewHeading" id="cvhWork">Work</html:div>
 			<spring class="CardViewHeadingSpace"/>
 			<html:div class="CardViewText" id="cvJobTitle">*</html:div>
 			<html:div class="CardViewText" id="cvOrganization">*</html:div>
