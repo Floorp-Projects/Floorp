@@ -148,7 +148,8 @@ interface nsIChannel : nsIRequest
      * of -1 indicates that the content length is unknown.
      *
      * Callers should prefer getting the "content-length" property
-     * using nsIPropertyBag2 as 64-bit value, if available.
+     * as 64-bit value by QIing the channel to nsIPropertyBag2,
+     * if that interface is exposed by the channel.
      */
     attribute long contentLength;
 
