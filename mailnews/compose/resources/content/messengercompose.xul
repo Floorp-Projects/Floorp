@@ -227,7 +227,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<menuseparator/>
 			<menuitem value="&pageInfoCmd.label;" disabled="true" accesskey="&pageInfoCmd.accesskey;" cmd="nsCmd:ComposeNYI"/>
 			<menuseparator/>
-			<menu value="&dcharMenu.label;">
+			<menu value="&dcharMenu.label;" oncreate="InitCharsetMenuCheckMark();">
 			<menupopup>
 			<menuitem id="ISO-8859-1" type="radio" name="charsetGroup" value="&dcharIso1Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
 			<menuitem id="ISO-8859-2" type="radio" name="charsetGroup" value="&dcharIso2Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>

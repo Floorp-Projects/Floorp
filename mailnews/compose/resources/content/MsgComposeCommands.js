@@ -339,15 +339,15 @@ function ComposeUnload(calledFromExit)
 
 function SetDocumentCharacterSet(aCharset)
 {
-	dump("SetDocumentCharacterSet Callback!\n");
-	dump(aCharset + "\n");
+  dump("SetDocumentCharacterSet Callback!\n");
+  dump(aCharset + "\n");
 
-	if (msgCompose) {
-		msgCompose.SetDocumentCharset(aCharset);
+  if (msgCompose) {
+    msgCompose.SetDocumentCharset(aCharset);
     currentMailSendCharset = aCharset;
   }
-	else
-		dump("Compose has not been created!\n");
+  else
+    dump("Compose has not been created!\n");
 }
 
 function SetDefaultMailSendCharacterSet()
@@ -378,11 +378,14 @@ function SetDefaultMailSendCharacterSet()
 
 function InitCharsetMenuCheckMark()
 {
+  // dump("msgCompose.compFields is " + msgCompose.compFields.GetCharacterSet() + "\n");
   // return if the charset is already set explitily
   if (currentMailSendCharset != null) {
     dump("already set to " + currentMailSendCharset + "\n");
     return;
   }
+
+  var menuitem; 
 
   // try to get preferences service
   var prefs = null;
@@ -395,13 +398,23 @@ function InitCharsetMenuCheckMark()
     dump("failed to get prefs service!\n");
     prefs = null;
   }
-
   var send_default_charset = prefs.CopyCharPref("mailnews.send_default_charset");
-  var menuitem = document.getElementById(send_default_charset);
-  if (menuitem)
-    menuitem.setAttribute('checked', 'true');
-  else
-    dump("getElementById failed for " + send_default_charset + "\n");
+
+  var compFieldsCharset = msgCompose.compFields.GetCharacterSet();
+  if (compFieldsCharset.toUpperCase() == "US-ASCII")
+    compFieldsCharset = "ISO-8859-1";
+  menuitem = document.getElementById(compFieldsCharset);
+
+  // charset may have been set implicitly in case of reply/forward
+  if (send_default_charset.toUpperCase() != compFieldsCharset.toUpperCase()) {
+    if (menuitem && menuitem.getAttribute('checked') == false) {
+      menuitem.setAttribute('checked', 'true');
+      return;
+    }
+  } 
+  menuitem = document.getElementById(send_default_charset);
+  if (menuitem) 
+    menuitem.setAttribute('checked', 'true'); 
 
   // Set a document charset to a default mail send charset.
   SetDocumentCharacterSet(send_default_charset);
