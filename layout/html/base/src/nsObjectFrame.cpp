@@ -89,8 +89,11 @@
 // XXX For temporary paint code
 #include "nsIStyleContext.h"
 
-//~~~ For image mime types
+//~~~ For mime types
 #include "nsMimeTypes.h"
+#include "nsIMIMEService.h"
+#include "nsCExternalHandlerService.h"
+#include "nsICategoryManager.h"
 
 #include "nsObjectFrame.h"
 #include "nsIObjectFrame.h"
@@ -417,6 +420,58 @@ void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
   }
 }
 
+void nsObjectFrame::IsSupportedDocument(nsIContent* aContent, PRBool* aDoc)
+{
+  *aDoc = PR_FALSE;
+  nsresult rv;
+  
+  if(aContent == nsnull)
+    return;
+
+  nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return;
+
+  nsAutoString type;
+  rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
+  if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (type.Length() > 0)) 
+  {
+    nsXPIDLCString value;
+    char * buf = ToNewCString(type);
+    rv = catman->GetCategoryEntry("Gecko-Content-Viewers",buf, getter_Copies(value));
+    nsMemory::Free(buf);
+
+    if (NS_SUCCEEDED(rv) && value && *value && (value.Length() > 0))
+      *aDoc = PR_TRUE;
+    return;
+  }
+
+  // if we don't have a TYPE= try getting the mime-type via the DATA= url
+  nsAutoString data;
+  rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, data);
+  if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (data.Length() > 0)) 
+  {
+    nsCOMPtr<nsIURI> uri;
+    nsCOMPtr<nsIURI> baseURL;
+
+    if (NS_FAILED(GetBaseURL(*getter_AddRefs(baseURL)))) return; // XXX NS_NewURI fails without base
+    rv = NS_NewURI(getter_AddRefs(uri), data, baseURL);
+    if (NS_FAILED(rv)) return;
+
+    nsCOMPtr<nsIMIMEService> mimeService = do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return;
+    
+    char * contentType;
+    rv = mimeService->GetTypeFromURI(uri, &contentType);
+    if (NS_FAILED(rv)) return;
+
+    nsXPIDLCString value;
+    rv = catman->GetCategoryEntry("Gecko-Content-Viewers",contentType, getter_Copies(value));
+
+    if (NS_SUCCEEDED(rv) && value && *value && (value.Length() > 0))
+      *aDoc = PR_TRUE;
+  }
+}
+
 NS_IMETHODIMP nsObjectFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                                  nsIAtom*        aListName,
                                                  nsIFrame*       aChildList)
@@ -459,6 +514,40 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
 
     rv = aNewFrame->Init(aPresContext, aContent, this, aContext, aPrevInFlow);
     if(rv == NS_OK)
+    {
+      nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame, aContext, nsnull, PR_FALSE);
+      mFrames.AppendFrame(this, aNewFrame);
+    }
+    else
+      aNewFrame->Destroy(aPresContext);
+
+    return rv; // bail at this point
+  }
+
+
+  // for now, we should try to do the same for "document" types and create
+  // and IFrame-like sub-frame
+  PRBool bDoc = PR_FALSE;
+  IsSupportedDocument(aContent, &bDoc);
+  
+  if(bDoc)
+  {
+    // fix up DATA= to SRC=
+    nsAutoString url;
+    if (NS_CONTENT_ATTR_HAS_VALUE != 
+         aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, url))
+      return rv;  // if DATA= is empty, what shall we do? bail for now...
+    aContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, url, PR_FALSE);
+
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    nsIFrame * aNewFrame = nsnull;
+    rv = NS_NewHTMLFrameOuterFrame(shell, &aNewFrame);
+    if(NS_FAILED(rv))
+      return rv;
+
+    rv = aNewFrame->Init(aPresContext, aContent, this, aContext, aPrevInFlow);
+    if(NS_SUCCEEDED(rv))
     {
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame, aContext, nsnull, PR_FALSE);
       mFrames.AppendFrame(this, aNewFrame);
@@ -728,7 +817,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
   // handle an image elsewhere
   nsIFrame * child = mFrames.FirstChild();
   if(child != nsnull)
-    return HandleImage(aPresContext, aMetrics, aReflowState, aStatus, child);
+    return HandleChild(aPresContext, aMetrics, aReflowState, aStatus, child);
   // if we are printing, bail for now
   nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
   if (thePrinterContext) return rv;
@@ -1152,7 +1241,7 @@ nsObjectFrame::ReinstantiatePlugin(nsIPresContext* aPresContext, nsHTMLReflowMet
 }
 
 nsresult
-nsObjectFrame::HandleImage(nsIPresContext*          aPresContext,
+nsObjectFrame::HandleChild(nsIPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aMetrics,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus,
