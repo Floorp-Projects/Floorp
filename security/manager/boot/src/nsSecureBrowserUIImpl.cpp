@@ -733,19 +733,27 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     {
       if (aState & STATE_SECURE_LOW || aState & STATE_SECURE_MED)
       {
+        PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+         ("SecureUI:%p: OnStateChange: subreq LOW\n", this));
         ++mSubRequestsLowSecurity;
       }
       else
       {
+        PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+         ("SecureUI:%p: OnStateChange: subreq HIGH\n", this));
         ++mSubRequestsHighSecurity;
       }
     }
     else if (aState & STATE_IS_BROKEN)
     {
+      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+       ("SecureUI:%p: OnStateChange: subreq BROKEN\n", this));
       ++ mSubRequestsBrokenSecurity;
     }
     else
     {
+      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+       ("SecureUI:%p: OnStateChange: subreq INSECURE\n", this));
       ++mSubRequestsNoSecurity;
     }
     
@@ -916,49 +924,49 @@ nsresult nsSecureBrowserUIImpl::FinishedLoadingStateChange(nsIRequest* aRequest)
       mSSLStatus = nsnull;
       mInfoTooltip.Truncate();
     }
+  }
 
-    if (mToplevelEventSink)
+  if (mToplevelEventSink)
+  {
+    PRInt32 newState = STATE_IS_INSECURE;
+
+    switch (newSecurityState)
     {
-      PRInt32 newState = STATE_IS_INSECURE;
+      case lis_broken_security:
+        newState = STATE_IS_BROKEN;
+        break;
 
-      switch (newSecurityState)
-      {
-        case lis_broken_security:
-          newState = STATE_IS_BROKEN;
-          break;
+      case lis_mixed_security:
+        newState = STATE_IS_BROKEN;
+        break;
 
-        case lis_mixed_security:
-          newState = STATE_IS_BROKEN;
-          break;
+      case lis_low_security:
+        newState = STATE_IS_SECURE | STATE_SECURE_LOW;
+        break;
 
-        case lis_low_security:
-          newState = STATE_IS_SECURE | STATE_SECURE_LOW;
-          break;
+      case lis_high_security:
+        newState = STATE_IS_SECURE | STATE_SECURE_HIGH;
+        break;
 
-        case lis_high_security:
-          newState = STATE_IS_SECURE | STATE_SECURE_HIGH;
-          break;
-
-        default:
-        case lis_no_security:
-          newState = STATE_IS_INSECURE;
-          break;
-        
-      }
-
-      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-             ("SecureUI:%p: FinishedLoadingStateChange: calling OnSecurityChange\n", this
-              ));
-
-      mToplevelEventSink->OnSecurityChange(aRequest, newState);
-    }
-    else
-    {
-      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-             ("SecureUI:%p: FinishedLoadingStateChange: NO mToplevelEventSink!\n", this
-              ));
+      default:
+      case lis_no_security:
+        newState = STATE_IS_INSECURE;
+        break;
 
     }
+
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+           ("SecureUI:%p: FinishedLoadingStateChange: calling OnSecurityChange\n", this
+            ));
+
+    mToplevelEventSink->OnSecurityChange(aRequest, newState);
+  }
+  else
+  {
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+           ("SecureUI:%p: FinishedLoadingStateChange: NO mToplevelEventSink!\n", this
+            ));
+
   }
 
   return NS_OK; 
