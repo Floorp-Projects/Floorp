@@ -37,8 +37,8 @@ include $(DEPTH)/config/autoconf.mk
 
 sysconfdir = $(DIST)/bin
 
-MODULE		= mozpng
-LIBRARY_NAME	= mozpng
+MODULE		= mozpango
+LIBRARY_NAME	= mozpango
 EXPORT_LIBRARY = 1
 
 CSRCS		= \
