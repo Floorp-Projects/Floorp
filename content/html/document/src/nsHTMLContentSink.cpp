@@ -493,7 +493,7 @@ HTMLContentSink::SinkTraceNode(PRUint32 aBit,
       dtd->IntTagToStringTag(nsHTMLTag(aNode.GetNodeType()), str);
       cp = str.ToCString(cbuf, sizeof(cbuf));
     } else {
-      cp = (const char*)flat;
+      cp = flat.get();
     }
     PR_LogPrint("%s: this=%p node='%s' stackPos=%d", aMsg, aThis, cp, aStackPos);
   }

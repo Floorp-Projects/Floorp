@@ -2948,12 +2948,12 @@ nsEditorShell::GetString(const PRUnichar *stringName, PRUnichar **_retval)
 
 
 // Use this version within the shell:
-void nsEditorShell::GetBundleString(const PRUnichar *stringName, nsString &outString)
+void nsEditorShell::GetBundleString(const nsAReadableString &stringName, nsAWritableString &outString)
 {
   outString.Truncate();
   
   nsXPIDLString   tempString;
-  if (NS_SUCCEEDED(GetString(stringName, getter_Copies(tempString))) && tempString)
+  if (NS_SUCCEEDED(GetString(nsPromiseFlatString(stringName).get(), getter_Copies(tempString))) && tempString)
     outString = tempString.get();
 }
 
@@ -4537,7 +4537,7 @@ nsEditorShell::InitSpellChecker()
       nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &result);
 
       if (NS_SUCCEEDED(result) && chromeRegistry)
-        result = chromeRegistry->GetSelectedLocale(NS_LITERAL_STRING("navigator"), &dictName);
+        result = chromeRegistry->GetSelectedLocale(NS_LITERAL_STRING("navigator").get(), &dictName);
     }
 
     if (NS_SUCCEEDED(result) && dictName && *dictName)
@@ -5216,7 +5216,7 @@ nsresult nsEditorShell::EndPageLoad(nsIDOMWindow *aDOMWindow,
         break;
     }
     
-    GetBundleString(stringID.GetUnicode(), alertMessage);
+    GetBundleString(stringID, alertMessage);
     Alert(alertLabel, alertMessage);
 
     nsCOMPtr<nsIBaseWindow> baseWindow;

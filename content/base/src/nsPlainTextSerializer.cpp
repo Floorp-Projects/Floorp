@@ -1385,7 +1385,7 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
         mEmptyLines=0;
         mAtFirstColumn = PR_TRUE;
         bol = newline+1;
-        if('\r' == aString[newline] && bol < totLen && '\n' == aString[bol]) {
+        if('\r' == *iter && bol < totLen && '\n' == *++iter) {
           // There was a CRLF in the input. This used to be illegal and
           // stripped by the parser. Apparently not anymore. Let's skip
           // over the LF.

@@ -250,7 +250,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
   // URI should use UTF-8
   // (see RFC2396 Uniform Resource Identifiers (URI): Generic Syntax)
 
-  char *escapedName = nsEscape(NS_ConvertUCS2toUTF8(name->GetUnicode()), url_Path);
+  char *escapedName = nsEscape(NS_ConvertUCS2toUTF8(*name).get(), url_Path);
   if (escapedName)
   {
     uri.Append(escapedName);
@@ -1762,7 +1762,7 @@ nsMsgLocalMailFolder::CopyFolderAcrossServer(nsIMsgFolder *destFolder, nsIMsgFol
   rv = destFolder->CreateSubfolder(folderName,msgWindow);
   if (NS_FAILED(rv)) return rv;
 
-  destFolder->FindSubFolder(NS_ConvertUCS2toUTF8(folderName.get()), getter_AddRefs(newFolder));
+  destFolder->FindSubFolder(NS_ConvertUCS2toUTF8(folderName.get()).get(), getter_AddRefs(newFolder));
   
   newMsgFolder = do_QueryInterface(newFolder,&rv);
   
@@ -3014,7 +3014,7 @@ nsMsgLocalMailFolder::setSubfolderFlag(PRUnichar* aFolderName,
   nsresult rv;
 
   nsCOMPtr<nsIFolder> folder;
-	rv = FindSubFolder(NS_ConvertUCS2toUTF8(aFolderName), getter_AddRefs(folder));
+	rv = FindSubFolder(NS_ConvertUCS2toUTF8(aFolderName).get(), getter_AddRefs(folder));
   
 	if (NS_FAILED(rv)) return rv;
 	if (!folder) return NS_ERROR_FAILURE;

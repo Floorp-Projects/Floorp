@@ -1352,11 +1352,11 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
     if (NS_SUCCEEDED(res)) {
       if (NS_SUCCEEDED(prefs->CopyUnicharPref("mail.charset.detector", &detector_name))) {
-        PL_strcat(detector_contractid, NS_ConvertUCS2toUTF8(detector_name));
+        PL_strcat(detector_contractid, NS_ConvertUCS2toUTF8(detector_name).get());
         PR_FREEIF(detector_name);
       }
       else if (NS_SUCCEEDED(prefs->GetLocalizedUnicharPref("intl.charset.detector", &detector_name))) {
-        PL_strcat(detector_contractid, NS_ConvertUCS2toUTF8(detector_name));
+        PL_strcat(detector_contractid, NS_ConvertUCS2toUTF8(detector_name).get());
         PR_FREEIF(detector_name);
       }
     }

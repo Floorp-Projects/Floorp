@@ -1355,7 +1355,7 @@ nsresult nsExternalHelperAppService::AddDefaultMimeTypesToCache()
     nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID));
     mimeInfo->SetFileExtensions(defaultMimeEntries[index].mFileExtensions);
     mimeInfo->SetMIMEType(defaultMimeEntries[index].mMimeType);
-    mimeInfo->SetDescription(NS_ConvertASCIItoUCS2(defaultMimeEntries[index].mDescription));
+    mimeInfo->SetDescription(NS_ConvertASCIItoUCS2(defaultMimeEntries[index].mDescription).get());
     mimeInfo->SetMacType(defaultMimeEntries[index].mMactype);
     mimeInfo->SetMacCreator(defaultMimeEntries[index].mMacCreator);
     AddMimeInfoToCache(mimeInfo);

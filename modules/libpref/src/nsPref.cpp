@@ -390,7 +390,7 @@ nsresult nsPref::useLockPrefFile()
     if (NS_SUCCEEDED(rv = GetLocalizedUnicharPref("browser.startup.homepage",
 			getter_Copies(prefVal)) && (prefVal))) 
     {
-        printf("\nStartup homepage %s \n", (const char *)NS_ConvertUCS2toUTF8(prefVal));
+        printf("\nStartup homepage %s \n", NS_ConvertUCS2toUTF8(prefVal).get());
     }
 #endif
 
@@ -516,7 +516,7 @@ nsresult nsPref::useLockPrefFile()
         }
 #ifdef DEBUG_tao
     GetLocalizedUnicharPref("browser.startup.homepage",getter_Copies(prefVal));
-    printf("\nStartup homepage %s \n", (const char *)NS_ConvertUCS2toUTF8(prefVal));
+    printf("\nStartup homepage %s \n", NS_ConvertUCS2toUTF8(prefVal).get());
 #endif
     }
     return rv;
@@ -637,8 +637,8 @@ static int PR_CALLBACK
 NotifyObserver(const char *newpref, void *data)
 {
     nsCOMPtr<nsIObserver> observer = NS_STATIC_CAST(nsIObserver *, data);
-    observer->Observe(observer, NS_LITERAL_STRING("nsPref:changed"),
-                      NS_ConvertASCIItoUCS2(newpref));
+    observer->Observe(observer, NS_LITERAL_STRING("nsPref:changed").get(),
+                      NS_ConvertASCIItoUCS2(newpref).get());
     return 0;
 }
 
@@ -815,7 +815,7 @@ NS_IMETHODIMP nsPref::SetCharPref(const char *pref,const char* value)
 NS_IMETHODIMP nsPref::SetUnicharPref(const char *pref, const PRUnichar *value)
 {
     if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
-    return SetCharPref(pref, NS_ConvertUCS2toUTF8(value));
+    return SetCharPref(pref, NS_ConvertUCS2toUTF8(value).get());
 }
 
 NS_IMETHODIMP nsPref::SetIntPref(const char *pref,PRInt32 value)
@@ -878,7 +878,7 @@ NS_IMETHODIMP nsPref::SetDefaultUnicharPref(const char *pref,
                                             const PRUnichar *value)
 {
     if (NS_FAILED(SecurePrefCheck(pref))) return NS_ERROR_FAILURE;
-    return SetDefaultCharPref(pref, NS_ConvertUCS2toUTF8(value));
+    return SetDefaultCharPref(pref, NS_ConvertUCS2toUTF8(value).get());
 }
 
 NS_IMETHODIMP nsPref::SetDefaultIntPref(const char *pref,PRInt32 value)

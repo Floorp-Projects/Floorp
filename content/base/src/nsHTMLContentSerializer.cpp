@@ -185,7 +185,7 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     nsXPIDLString sharedName;
     attrName->GetUnicode(getter_Shares(sharedName));
     if (nsCRT::strncmp(sharedName, 
-                       NS_ConvertASCIItoUCS2(kMozStr), 
+                       NS_ConvertASCIItoUCS2(kMozStr).get(), 
                        sizeof(kMozStr)-1) == 0) {
       continue;
     }
@@ -719,8 +719,7 @@ nsHTMLContentSerializer::StartIndentation(nsIAtom* aName,
 {
   if ((mDoFormat || aHasDirtyAttr) && !mPreLevel && !mColPos) {
     for (PRInt32 i = mIndent; --i >= 0; ) {
-      AppendToString(kIndentStr, -1, 
-                     aStr);
+      AppendToString(kIndentStr, aStr);
     }
   }
 
@@ -759,8 +758,7 @@ nsHTMLContentSerializer::EndIndentation(nsIAtom* aName,
 
   if ((mDoFormat || aHasDirtyAttr) && !mPreLevel && !mColPos) {
     for (PRInt32 i = mIndent; --i >= 0; ) {
-      AppendToString(kIndentStr, -1,
-                     aStr);
+      AppendToString(kIndentStr, aStr);
     }
   }
 }

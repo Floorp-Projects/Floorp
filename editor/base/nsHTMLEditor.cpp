@@ -1771,7 +1771,7 @@ nsHTMLEditor::Indent(const nsString& aIndent)
         // put a space in it so layout will draw the list item
         res = selection->Collapse(newBQ,0);
         if (NS_FAILED(res)) return res;
-        res = InsertText(NS_LITERAL_STRING(" "));
+        res = InsertText(NS_LITERAL_STRING(" ").get());
         if (NS_FAILED(res)) return res;
         // reposition selection to before the space character
         res = GetStartNodeAndOffset(selection, address_of(node), &offset);

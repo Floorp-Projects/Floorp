@@ -3258,7 +3258,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
                 numGroupsStr.AppendInt(mNumGroupsListed);
 
                 const PRUnichar *formatStrings[3] = { numGroupsStr.GetUnicode(), bytesStr.GetUnicode(), rateStr.GetUnicode() };
-                rv = bundle->FormatStringFromName(NS_LITERAL_STRING("bytesReceived"),
+                rv = bundle->FormatStringFromName(NS_LITERAL_STRING("bytesReceived").get(),
                                                   formatStrings, 3,
                                                   getter_Copies(statusString));
 
@@ -3962,7 +3962,7 @@ nsNNTPProtocol::SetCheckingForNewNewsStatus(PRInt32 current, PRInt32 total)
 
     const PRUnichar *formatStrings[] = { thisGroupStr.GetUnicode(),totalGroupStr.GetUnicode() };
 
-    rv = bundle->FormatStringFromName(NS_LITERAL_STRING("checkingForNewNews"),
+    rv = bundle->FormatStringFromName(NS_LITERAL_STRING("checkingForNewNews").get(),
                                                   formatStrings, 2,
                                                   getter_Copies(statusString));
     NS_ENSURE_SUCCESS(rv, rv);

@@ -144,7 +144,7 @@ class nsEditorShell :   public nsIEditorShell,
 
     // Get a string from the string bundle file. If the string is not found
     // this returns an empty string.
-    void            GetBundleString(const PRUnichar *stringName, nsString &outString);
+    void            GetBundleString(const nsAReadableString &stringName, nsAWritableString &outString);
     
     // Get the text of the <title> tag
     nsresult        GetDocumentTitleString(nsString& title);

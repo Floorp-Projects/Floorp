@@ -125,7 +125,7 @@ nsMimeConverter::DecodeMimePartIIStr(const nsString& header,
         mCharsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
       if (NS_SUCCEEDED(res)) {
         nsCOMPtr <nsIAtom>  charsetAtom;
-        res = mCharsetConverterManager->GetCharsetAtom(NS_ConvertASCIItoUCS2(charsetCstr), getter_AddRefs(charsetAtom));
+        res = mCharsetConverterManager->GetCharsetAtom(NS_ConvertASCIItoUCS2(charsetCstr).get(), getter_AddRefs(charsetAtom));
         if (NS_SUCCEEDED(res)) {
           if (charsetAtom != mDecoderCharsetAtom) {
             mDecoderCharsetAtom = charsetAtom;

@@ -1342,7 +1342,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     if (aProperty == kNC_URL && !IsFindResource(aSource)) {
       
       nsCOMPtr<nsIRDFLiteral> uriLiteral;
-      rv = gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(uri), getter_AddRefs(uriLiteral));
+      rv = gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(uri).get(), getter_AddRefs(uriLiteral));
       if (NS_FAILED(rv))    return(rv);
       *aTarget = uriLiteral;
       NS_ADDREF(*aTarget);
@@ -1356,7 +1356,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       // for sorting, we sort by uri, so just return the URI as a literal
       if (aProperty == kNC_NameSort) {
         nsCOMPtr<nsIRDFLiteral> uriLiteral;
-        rv = gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(uri),
+        rv = gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(uri).get(),
                                      getter_AddRefs(uriLiteral));
         if (NS_FAILED(rv))    return(rv);
         

@@ -32,6 +32,7 @@
 #include "nsIXPConnect.h"
 #include "nsISupportsPrimitives.h"
 #include "prprf.h"
+#include "nsReadableUtils.h"
 
 nsDefaultSOAPEncoder::nsDefaultSOAPEncoder()
 {
@@ -62,38 +63,38 @@ GetElementNameForType(PRInt32 aType, PRUnichar** name)
   switch (aType) {
     case nsISOAPParameter::PARAMETER_TYPE_NULL:
     case nsISOAPParameter::PARAMETER_TYPE_VOID:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kStructElementName));
+      *name = ToNewUnicode(nsLiteralCString(kStructElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_STRING:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kStringElementName));
+      *name = ToNewUnicode(nsLiteralCString(kStringElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_BOOLEAN:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kBooleanElementName));
+      *name = ToNewUnicode(nsLiteralCString(kBooleanElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_DOUBLE:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kDoubleElementName));
+      *name = ToNewUnicode(nsLiteralCString(kDoubleElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_FLOAT:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kFloatElementName));
+      *name = ToNewUnicode(nsLiteralCString(kFloatElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_LONG:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kLongElementName));
+      *name = ToNewUnicode(nsLiteralCString(kLongElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_INT:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kIntElementName));
+      *name = ToNewUnicode(nsLiteralCString(kIntElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_SHORT:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kShortElementName));
+      *name = ToNewUnicode(nsLiteralCString(kShortElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_BYTE:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kByteElementName));
+      *name = ToNewUnicode(nsLiteralCString(kByteElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_ARRAY:
     case nsISOAPParameter::PARAMETER_TYPE_JAVASCRIPT_ARRAY:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kArrayElementName));
+      *name = ToNewUnicode(nsLiteralCString(kArrayElementName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_JAVASCRIPT_OBJECT:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kStructElementName));
+      *name = ToNewUnicode(nsLiteralCString(kStructElementName));
       break;
   }
 }
@@ -102,34 +103,34 @@ static void
 GetTypeForElementName(const PRUnichar* name, PRInt32* aType)
 {
   *aType = nsISOAPParameter::PARAMETER_TYPE_NULL;
-  if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kStringElementName)) == 0) {
+  if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kStringElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_STRING;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kBooleanElementName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kBooleanElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_BOOLEAN;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kDoubleElementName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kDoubleElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_DOUBLE;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kFloatElementName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kFloatElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_FLOAT;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kLongElementName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kLongElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_LONG;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kIntElementName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kIntElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_INT;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kShortElementName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kShortElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_SHORT;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kByteElementName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kByteElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_BYTE;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kArrayElementName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kArrayElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_ARRAY;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kStructElementName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kStructElementName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_JAVASCRIPT_OBJECT;
   }
 }
@@ -156,35 +157,35 @@ GetXSDTypeForType(PRInt32 aType, PRUnichar** name)
       // This will have a xsi:null attribute instead
       break;
     case nsISOAPParameter::PARAMETER_TYPE_STRING:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kXSDStringName));
+      *name = ToNewUnicode(nsLiteralCString(kXSDStringName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_BOOLEAN:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kXSDBooleanName));
+      *name = ToNewUnicode(nsLiteralCString(kXSDBooleanName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_DOUBLE:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kXSDDoubleName));
+      *name = ToNewUnicode(nsLiteralCString(kXSDDoubleName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_FLOAT:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kXSDFloatName));
+      *name = ToNewUnicode(nsLiteralCString(kXSDFloatName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_LONG:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kXSDLongName));
+      *name = ToNewUnicode(nsLiteralCString(kXSDLongName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_INT:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kXSDIntName));
+      *name = ToNewUnicode(nsLiteralCString(kXSDIntName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_SHORT:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kXSDShortName));
+      *name = ToNewUnicode(nsLiteralCString(kXSDShortName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_BYTE:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kXSDByteName));
+      *name = ToNewUnicode(nsLiteralCString(kXSDByteName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_ARRAY:
     case nsISOAPParameter::PARAMETER_TYPE_JAVASCRIPT_ARRAY:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kSOAPEncArrayAttrName));
+      *name = ToNewUnicode(nsLiteralCString(kSOAPEncArrayAttrName));
       break;
     case nsISOAPParameter::PARAMETER_TYPE_JAVASCRIPT_OBJECT:
-      *name = nsCRT::strdup(NS_ConvertASCIItoUCS2(kXSDStructName));
+      *name = ToNewUnicode(nsLiteralCString(kXSDStructName));
       break;
   }  
 }
@@ -193,37 +194,37 @@ static void
 GetTypeForXSDType(const PRUnichar* name, PRInt32* aType)
 {
   *aType = nsISOAPParameter::PARAMETER_TYPE_NULL;
-  if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kXSDStringName)) == 0) {
+  if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDStringName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_STRING;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kXSDBooleanName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDBooleanName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_BOOLEAN;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kXSDDoubleName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDDoubleName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_DOUBLE;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kXSDFloatName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDFloatName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_FLOAT;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kXSDLongName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDLongName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_LONG;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kXSDIntName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDIntName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_INT;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kXSDShortName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDShortName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_SHORT;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kXSDByteName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDByteName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_BYTE;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kSOAPEncArrayAttrName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kSOAPEncArrayAttrName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_ARRAY;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kXSDStructName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDStructName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_JAVASCRIPT_OBJECT;
   }
-  else if (nsCRT::strcmp(name, NS_ConvertASCIItoUCS2(kXSDUrTypeName)) == 0) {
+  else if (nsLiteralString(name).Equals(NS_ConvertASCIItoUCS2(kXSDUrTypeName))) {
     *aType = nsISOAPParameter::PARAMETER_TYPE_UNKNOWN;
   }
 }
@@ -403,7 +404,7 @@ nsDefaultSOAPEncoder::SerializeJavaScriptObject(JSObject* obj,
           nsresult rv = newparam->SetValue(cx, val);
           if (NS_FAILED(rv)) return rv;
 
-          param->SetName(NS_ConvertASCIItoUCS2(name));
+          param->SetName(NS_ConvertASCIItoUCS2(name).get());
           
           nsCOMPtr<nsIDOMElement> child;
           rv = EncodeParameter(param, document, getter_AddRefs(child));
@@ -678,13 +679,13 @@ nsDefaultSOAPEncoder::DecodeParameter(nsIDOMElement* element,
     // Find the corresponding encoder
     nsCAutoString encoderContractid;
     encoderContractid.Assign(NS_SOAPENCODER_CONTRACTID_PREFIX);
-    encoderContractid.Append(NS_ConvertUCS2toUTF8(attrVal.GetUnicode()));
+    encoderContractid.Append(NS_ConvertUCS2toUTF8(attrVal));
 
     nsCOMPtr<nsISOAPEncoder> encoder = do_CreateInstance(encoderContractid);
     if (!encoder) return NS_ERROR_INVALID_ARG;
     
     return encoder->ElementToParameter(element, 
-                                       NS_ConvertUCS2toUTF8(attrVal.GetUnicode()),
+                                       NS_ConvertUCS2toUTF8(attrVal).get(),
                                        type,
                                        _retval);
   }
@@ -766,7 +767,7 @@ nsDefaultSOAPEncoder::DeserializeJavaScriptObject(nsIDOMElement *element,
     if (NS_FAILED(rv)) return rv;
 
     if (name) {
-      JS_SetProperty(cx, obj, NS_ConvertUCS2toUTF8(name), &val);
+      JS_SetProperty(cx, obj, NS_ConvertUCS2toUTF8(name).get(), &val);
     }
     else {
       JS_SetElement(cx, obj, (jsint)index, &val);
@@ -840,7 +841,7 @@ nsDefaultSOAPEncoder::DeserializeParameter(nsIDOMElement *element,
       
       float val;
       nsSOAPUtils::GetElementTextContent(element, text);
-      PR_sscanf(NS_ConvertUCS2toUTF8(text.GetUnicode()), "%f", &val);
+      PR_sscanf(NS_ConvertUCS2toUTF8(text).get(), "%f", &val);
       
       dub->SetData((double)val);
       value = dub;
@@ -854,7 +855,7 @@ nsDefaultSOAPEncoder::DeserializeParameter(nsIDOMElement *element,
 
       float val;
       nsSOAPUtils::GetElementTextContent(element, text);
-      PR_sscanf(NS_ConvertUCS2toUTF8(text.GetUnicode()), "%f", &val);
+      PR_sscanf(NS_ConvertUCS2toUTF8(text).get(), "%f", &val);
       
       flt->SetData(val);
       value = flt;
@@ -868,7 +869,7 @@ nsDefaultSOAPEncoder::DeserializeParameter(nsIDOMElement *element,
       
       PRInt64 val;
       nsSOAPUtils::GetElementTextContent(element, text);
-      PR_sscanf(NS_ConvertUCS2toUTF8(text.GetUnicode()), "%lld", &val);
+      PR_sscanf(NS_ConvertUCS2toUTF8(text).get(), "%lld", &val);
       
       isup64->SetData(val);
       value = isup64;
@@ -882,7 +883,7 @@ nsDefaultSOAPEncoder::DeserializeParameter(nsIDOMElement *element,
       
       PRInt32 val;
       nsSOAPUtils::GetElementTextContent(element, text);
-      PR_sscanf(NS_ConvertUCS2toUTF8(text.GetUnicode()), "%ld", &val);
+      PR_sscanf(NS_ConvertUCS2toUTF8(text).get(), "%ld", &val);
       
       isup32->SetData(val);
       value = isup32;
@@ -896,7 +897,7 @@ nsDefaultSOAPEncoder::DeserializeParameter(nsIDOMElement *element,
       
       PRInt16 val;
       nsSOAPUtils::GetElementTextContent(element, text);
-      PR_sscanf(NS_ConvertUCS2toUTF8(text.GetUnicode()), "%hd", &val);
+      PR_sscanf(NS_ConvertUCS2toUTF8(text).get(), "%hd", &val);
       
       isup16->SetData(val);
       value = isup16;
@@ -910,7 +911,7 @@ nsDefaultSOAPEncoder::DeserializeParameter(nsIDOMElement *element,
       
       char val;
       nsSOAPUtils::GetElementTextContent(element, text);
-      PR_sscanf(NS_ConvertUCS2toUTF8(text.GetUnicode()), "%c", &val);
+      PR_sscanf(NS_ConvertUCS2toUTF8(text).get(), "%c", &val);
       
       isup8->SetData(val);
       value = isup8;

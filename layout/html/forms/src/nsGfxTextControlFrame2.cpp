@@ -409,7 +409,7 @@ nsTextInputListener::Blur (nsIDOMEvent* aEvent)
 
   }  
   mFrame->GetText(&blurValue,PR_FALSE);
-  if (mFocusedValue.Compare(blurValue))//different fire onchange
+  if (Compare(mFocusedValue, blurValue))//different fire onchange
   {
     mFocusedValue = blurValue;
     mFrame->CallOnChange();

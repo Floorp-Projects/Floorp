@@ -329,12 +329,12 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion*
     REGERR               status;
     nsInstallVersion     regNameVersion;
     
-    status = VR_GetVersion( regName, &cVersion );
+    status = VR_GetVersion( NS_CONST_CAST(char *, regName.get()), &cVersion );
 
     /* if we got the version */
     if ( status == REGERR_OK ) 
     {
-        if ( VR_ValidateComponent( regName ) == REGERR_NOFILE ) 
+        if ( VR_ValidateComponent( NS_CONST_CAST(char *, regName.get()) ) == REGERR_NOFILE ) 
         {
             regNameVersion.Init(0,0,0,0);
         }
@@ -367,7 +367,7 @@ nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
     NS_ConvertUCS2toUTF8 regName(component);
     REGERR               status;
     
-    status = VR_GetVersion( regName, &cVersion );
+    status = VR_GetVersion( NS_CONST_CAST(char *, regName.get()), &cVersion );
 
     version.Truncate();
 

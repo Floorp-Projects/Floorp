@@ -118,7 +118,7 @@ MimeInlineText_initialize (MimeObject *obj)
             PRUnichar* value;
             rv = prefs->GetLocalizedUnicharPref("mailnews.view_default_charset", &value);
             if(NS_SUCCEEDED(rv)) {
-              text->defaultCharset = nsCRT::strdup(NS_ConvertUCS2toUTF8(value));
+              text->defaultCharset = NS_ConvertUCS2toUTF8(value).ToNewCString();
               nsMemory::Free(value);
             }
           }

@@ -575,7 +575,7 @@ PRInt32 nsImportFieldMap::FindFieldNum( const PRUnichar *pDesc)
 	nsString *	pStr;
 	for (PRInt32 i = 0; i < m_mozFieldCount; i++) {
 		pStr = (nsString *)m_descriptions.ElementAt( i);
-		if (!pStr->Compare( nsAutoString(pDesc)))
+		if (!Compare(*pStr, nsAutoString(pDesc)))
 			return( i);
 	}
 

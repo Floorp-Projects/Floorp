@@ -1046,7 +1046,7 @@ wallet_WriteToList(
           break;
         }
       }
-    } else if((mapElementPtr->item1.Compare(item1))==0) {
+    } else if(Compare(mapElementPtr->item1, item1)==0) {
       if (DUP_OVERWRITE==placement) {
         delete mapElement;
         mapElementPtr->item1 = item1;
@@ -1059,7 +1059,7 @@ wallet_WriteToList(
         added_to_list = PR_TRUE;
         break;
       }
-    } else if((mapElementPtr->item1.Compare(item1))>=0) {
+    } else if(Compare(mapElementPtr->item1, item1)>=0) {
       list->InsertElementAt(mapElement, i);
       added_to_list = PR_TRUE;
       break;
@@ -1093,7 +1093,7 @@ wallet_ReadFromList(
   PRInt32 count = LIST_COUNT(list);
   for (PRInt32 i=index; i<count; i++) {
     mapElementPtr = NS_STATIC_CAST(wallet_MapElement*, list->ElementAt(i));
-    if((mapElementPtr->item1.Compare(item1))==0) {
+    if(Compare(mapElementPtr->item1, item1)==0) {
       if (obscure) {
         if (NS_FAILED(Wallet_Decrypt(mapElementPtr->item2, item2))) {
           return PR_FALSE;

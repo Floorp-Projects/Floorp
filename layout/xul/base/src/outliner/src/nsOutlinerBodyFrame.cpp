@@ -832,7 +832,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
 
   // Now obtain the properties for our row.
   // XXX Automatically fill in the following props: open, container, selected, focused
-  PrefillPropertyArray(aRowIndex, NS_LITERAL_STRING(""));
+  PrefillPropertyArray(aRowIndex, NS_LITERAL_STRING("").get());
   mView->GetRowProperties(aRowIndex, mScratchArray);
 
   // Resolve style for the row.  It contains all the info we need to lay ourselves
@@ -887,7 +887,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
 
   // Now obtain the properties for our cell.
   // XXX Automatically fill in the following props: open, container, selected, focused, and the col ID.
-  PrefillPropertyArray(aRowIndex, NS_LITERAL_STRING(""));
+  PrefillPropertyArray(aRowIndex, NS_LITERAL_STRING("").get());
   mView->GetCellProperties(aRowIndex, aColumn->GetID(), mScratchArray);
 
   // Resolve style for the cell.  It contains all the info we need to lay ourselves

@@ -1146,7 +1146,7 @@ GlobalWindowImpl::SetTitle(const nsAReadableString& aTitle)
     if(type == nsIDocShellTreeItem::typeChrome) {
       nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
       if(docShellAsWin) {
-        docShellAsWin->SetTitle(nsPromiseFlatString(mTitle));
+        docShellAsWin->SetTitle(nsPromiseFlatString(mTitle).get());
       }
     }
   }

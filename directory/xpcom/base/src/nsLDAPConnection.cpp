@@ -416,14 +416,14 @@ nsLDAPConnection::Run(void)
 
             case LDAP_DECODING_ERROR:
                 consoleSvc->LogStringMessage(
-                    NS_LITERAL_STRING("LDAP: WARNING: decoding error; possible corrupt data received"));
+                    NS_LITERAL_STRING("LDAP: WARNING: decoding error; possible corrupt data received").get());
                 NS_WARNING("nsLDAPConnection::Run(): ldaperrno = "
                            "LDAP_DECODING_ERROR after ldap_result()");
                 break;
 
             case LDAP_NO_MEMORY:
                 consoleSvc->LogStringMessage(
-                    NS_LITERAL_STRING("LDAP: ERROR: couldn't allocate memory while getting async operation result"));
+                    NS_LITERAL_STRING("LDAP: ERROR: couldn't allocate memory while getting async operation result").get());
                 // punt and hope things work out better next time around
                 break;
 
@@ -431,7 +431,7 @@ nsLDAPConnection::Run(void)
                 // shouldn't happen; internal error
                 //
                 consoleSvc->LogStringMessage(
-                    NS_LITERAL_STRING("LDAP: DEBUG: ldaperrno set to unexpected value after ldap_result() call in nsLDAPConnection::Run()"));
+                    NS_LITERAL_STRING("LDAP: DEBUG: ldaperrno set to unexpected value after ldap_result() call in nsLDAPConnection::Run()").get());
                 NS_WARNING("nsLDAPConnection::Run(): ldaperrno set to "
                            "unexpected value after ldap_result() "
                            "call in nsLDAPConnection::Run()");
@@ -457,7 +457,7 @@ nsLDAPConnection::Run(void)
             msg = new nsLDAPMessage();
             if (!msg) {
                 consoleSvc->LogStringMessage(
-                    NS_LITERAL_STRING("LDAP: ERROR: couldn't allocate memory for new LDAP message; search entry dropped"));
+                    NS_LITERAL_STRING("LDAP: ERROR: couldn't allocate memory for new LDAP message; search entry dropped").get());
                 // punt and hope things work out better next time around
                 break;
             }
@@ -470,7 +470,7 @@ nsLDAPConnection::Run(void)
 
             case NS_ERROR_LDAP_DECODING_ERROR:
                 consoleSvc->LogStringMessage(
-                    NS_LITERAL_STRING("LDAP: WARNING: decoding error; possible corrupt data received"));
+                    NS_LITERAL_STRING("LDAP: WARNING: decoding error; possible corrupt data received").get());
                 NS_WARNING("nsLDAPConnection::Run(): ldaperrno = "
                            "LDAP_DECODING_ERROR after ldap_result()");
                 continue;
@@ -478,7 +478,7 @@ nsLDAPConnection::Run(void)
 
             case NS_ERROR_OUT_OF_MEMORY:
                 consoleSvc->LogStringMessage(
-                    NS_LITERAL_STRING("LDAP: ERROR: couldn't allocate memory for new LDAP message; search entry dropped"));
+                    NS_LITERAL_STRING("LDAP: ERROR: couldn't allocate memory for new LDAP message; search entry dropped").get());
                 // punt and hope things work out better next time around
                 continue;
                 break;
@@ -489,7 +489,7 @@ nsLDAPConnection::Run(void)
                 // shouldn't happen; internal error
                 //
                 consoleSvc->LogStringMessage(
-                    NS_LITERAL_STRING("LDAP: DEBUG: nsLDAPConnection::Run(): nsLDAPMessage::Init() returned unexpected value"));
+                    NS_LITERAL_STRING("LDAP: DEBUG: nsLDAPConnection::Run(): nsLDAPMessage::Init() returned unexpected value").get());
                 NS_WARNING("nsLDAPConnection::Run(): nsLDAPMessage::Init() "
                            "returned unexpected value.");
 
@@ -504,7 +504,7 @@ nsLDAPConnection::Run(void)
             rv = InvokeMessageCallback(msgHandle, msg, operationFinished);
             if (NS_FAILED(rv)) {
                 consoleSvc->LogStringMessage(
-                    NS_LITERAL_STRING("LDAP: ERROR: problem invoking message callback"));
+                    NS_LITERAL_STRING("LDAP: ERROR: problem invoking message callback").get());
                 NS_ERROR("LDAP: ERROR: problem invoking message callback");
                 // punt and hope things work out better next time around
                 continue;

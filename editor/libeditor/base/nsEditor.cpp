@@ -913,7 +913,7 @@ nsEditor::SaveFile(nsIFile *aFileSpec, PRBool aReplaceExisting,
   if (wrapColumn > 0)
     flags |= nsIDocumentEncoder::OutputWrap;
   rv = diskDoc->SaveFile(aFileSpec, aReplaceExisting, aSaveCopy, 
-                         aFormat.GetUnicode(), NS_LITERAL_STRING(""),
+                         aFormat.GetUnicode(), NS_LITERAL_STRING("").get(),
                          flags, wrapColumn);
   if (NS_SUCCEEDED(rv))
     DoAfterDocumentSave();

@@ -63,7 +63,7 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr, PRBool inAddIf
 
   // first check if it is already in our list.
   for ( MimeMapConstIterator it = mMappings.begin(); it != mMappings.end(); ++it ) {
-    if ( it->second == aMimeStr ) {
+    if ( it->second.Equals(aMimeStr) ) {
       format = it->first;
       break;
     }

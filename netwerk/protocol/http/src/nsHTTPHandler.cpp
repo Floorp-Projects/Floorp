@@ -693,7 +693,7 @@ nsHTTPHandler::InitUserAgentComponents()
     rv = mPrefs->GetLocalizedUnicharPref(UA_PREF_PREFIX "locale", 
         getter_Copies(uval));
     if (NS_SUCCEEDED(rv))
-        mAppLanguage = (const char*) NS_ConvertUCS2toUTF8(uval);
+        mAppLanguage = NS_ConvertUCS2toUTF8(uval);
     // Gather platform.
 #if defined(XP_OS2)
     mAppPlatform = "OS/2";
@@ -1474,7 +1474,7 @@ nsHTTPHandler::PrefsChanged(const char* pref)
         rv = mPrefs->GetLocalizedUnicharPref(INTL_ACCEPT_LANGUAGES, 
                 getter_Copies(acceptLanguages));
         if (NS_SUCCEEDED(rv))
-            SetAcceptLanguages(NS_ConvertUCS2toUTF8(acceptLanguages));
+            SetAcceptLanguages(NS_ConvertUCS2toUTF8(acceptLanguages).get());
 #if defined(DEBUG_tao_)
         printf("\n--> nsHTTPHandler::PrefsChanged: intl.accept_languages=%s\n",
                (const char *)NS_ConvertUCS2toUTF8(acceptLanguages));
@@ -1499,11 +1499,11 @@ nsHTTPHandler::PrefsChanged(const char* pref)
         rv = mPrefs->GetLocalizedUnicharPref(UA_PREF_PREFIX "locale", 
                                              getter_Copies(uval));
         if (NS_SUCCEEDED(rv)) {
-            mAppLanguage = (const char*) NS_ConvertUCS2toUTF8(uval);
+            mAppLanguage = NS_ConvertUCS2toUTF8(uval);
             //
 #if defined(DEBUG_tao_)
             printf("\n--> nsHTTPHandler::PrefsChanged:general.useragent.locale=%s\n",
-                   (const char*) NS_ConvertUCS2toUTF8(uval));
+                   NS_ConvertUCS2toUTF8(uval).get());
 #endif
             BuildUserAgent();
         }

@@ -708,7 +708,11 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
 nsresult 
 nsLoggingSink::QuoteText(const nsAReadableString& aValue, nsString& aResult) {
   aResult.Truncate();
-  const PRUnichar* cp = nsPromiseFlatString(aValue);
+    /*
+      if you're stepping through the string anyway, why not use iterators instead of forcing the string to copy?
+     */
+  nsPromiseFlatString flat(aValue);
+  const PRUnichar* cp = flat.get();
   const PRUnichar* end = cp + aValue.Length();
   while (cp < end) {
     PRUnichar ch = *cp++;

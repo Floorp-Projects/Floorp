@@ -429,7 +429,7 @@ nsresult nsMsgMessageDataSource::GetSenderName(const PRUnichar *sender, nsAutoSt
 
 		nsXPIDLCString name;
 
-    rv = mHeaderParser->ExtractHeaderAddressName("UTF-8", NS_ConvertUCS2toUTF8(sender), getter_Copies(name));
+    rv = mHeaderParser->ExtractHeaderAddressName("UTF-8", NS_ConvertUCS2toUTF8(sender).get(), getter_Copies(name));
     if (NS_SUCCEEDED(rv) && (const char*)name)
       senderUserName.Assign(NS_ConvertUTF8toUCS2(name));
 	}

@@ -1866,7 +1866,7 @@ nsDOMWindowPrompter::AlertCheck(const PRUnichar* dialogTitle,
 
   if (dialogTitle == nsnull) {
     PRUnichar *title;
-    rv = GetLocaleString(NS_ConvertASCIItoUCS2("Alert"), &title);
+    rv = GetLocaleString(NS_LITERAL_STRING("Alert").get(), &title);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     rv = mCommonDialogs->AlertCheck(mDOMWindow, title, text, checkMsg, checkValue);

@@ -354,8 +354,8 @@ nsIOService::SetOffline(PRBool offline)
         // don't care if notification fails
         if (observerService)
             (void)observerService->Notify(this,
-                                          NS_LITERAL_STRING("network:offline-status-changed"),
-                                          NS_LITERAL_STRING("offline"));
+                                          NS_LITERAL_STRING("network:offline-status-changed").get(),
+                                          NS_LITERAL_STRING("offline").get());
     }
     else if (!offline && mOffline) {
         // go online
@@ -371,8 +371,8 @@ nsIOService::SetOffline(PRBool offline)
         // don't care if notification fails
         if (observerService)
             (void)observerService->Notify(this,
-                                          NS_LITERAL_STRING("network:offline-status-changed"),
-                                          NS_LITERAL_STRING("online"));
+                                          NS_LITERAL_STRING("network:offline-status-changed").get(),
+                                          NS_LITERAL_STRING("online").get());
     }
     return NS_OK;
 }

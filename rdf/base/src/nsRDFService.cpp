@@ -775,7 +775,7 @@ RDFServiceImpl::GetUnicodeResource(const PRUnichar* aURI, nsIRDFResource** aReso
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
-    return GetResource(NS_ConvertUCS2toUTF8(aURI), aResource);
+    return GetResource(NS_ConvertUCS2toUTF8(aURI).get(), aResource);
 }
 
 

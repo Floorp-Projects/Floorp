@@ -428,7 +428,7 @@ char * nsMsgI18NGetDefaultMailCharset()
 	  if (NS_SUCCEEDED(res)) 
 	  {
   		//TODO: map to mail charset (e.g. Shift_JIS -> ISO-2022-JP) bug#3941.
-  		 retVal = nsCRT::strdup(NS_ConvertUCS2toUTF8(prefValue));
+  		 retVal = NS_ConvertUCS2toUTF8(prefValue).ToNewCString();
                  nsMemory::Free(prefValue);
 	  }
 	  else 
@@ -737,7 +737,7 @@ nsMsgI18NGetAcceptLanguage(void)
     res = prefs->GetLocalizedUnicharPref("intl.accept_languages", getter_Copies(prefValue));
 	  if (NS_SUCCEEDED(res) && prefValue) 
     {
-      PL_strncpy(lang, NS_ConvertUCS2toUTF8(prefValue), sizeof(lang));
+      PL_strncpy(lang, NS_ConvertUCS2toUTF8(prefValue).get(), sizeof(lang));
     }
 	  else 
 		  PL_strcpy(lang, "en");

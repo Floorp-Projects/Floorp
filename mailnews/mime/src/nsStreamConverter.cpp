@@ -188,7 +188,7 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
               nsCOMPtr<nsIMsgWindow> msgWindow;
               msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
               if (msgWindow)
-                msgWindow->SetMailCharacterSet(NS_ConvertASCIItoUCS2(*default_charset));
+                msgWindow->SetMailCharacterSet(NS_ConvertASCIItoUCS2(*default_charset).get());
             }
 
             // if the pref says always override and no manual override then set the folder charset to override

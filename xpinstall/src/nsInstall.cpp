@@ -34,7 +34,6 @@
 #include "nsIServiceManager.h"
 
 #include "nsHashtable.h"
-#include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsDirectoryService.h"
@@ -780,8 +779,8 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
     {
         if ( mUninstallPackage )
         {
-            VR_UninstallCreateNode( NS_ConvertUCS2toUTF8(mRegistryPackageName), 
-                                    NS_ConvertUCS2toUTF8(mUIName));
+            VR_UninstallCreateNode( NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(mRegistryPackageName).get()),
+                                    NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(mUIName).get()));
         }
 
         // Install the Component into the Version Registry.
@@ -791,13 +790,15 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
             nsCString path;
 
             mVersionInfo->ToString(versionString);
+            nsCAutoString versionCString;
+            versionCString.AssignWithConversion(versionString);
 
             if (mPackageFolder)
                 mPackageFolder->GetDirectoryPath(path);
 
-            VR_Install( NS_ConvertUCS2toUTF8(mRegistryPackageName), 
-                        (char*)path.get(),
-                        (char*)(const char*)nsAutoCString(versionString), 
+            VR_Install( NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(mRegistryPackageName).get()),
+                        NS_CONST_CAST(char *, path.get()),
+                        NS_CONST_CAST(char *, versionCString.get()),
                         PR_TRUE );
         }
 
@@ -953,9 +954,9 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
 
     NS_ConvertUCS2toUTF8 componentCString(tempString);
 
-    if((err = VR_GetDefaultDirectory( componentCString, sizeof(dir), dir )) != REGERR_OK)
+    if((err = VR_GetDefaultDirectory( NS_CONST_CAST(char *, componentCString.get()), sizeof(dir), dir )) != REGERR_OK)
     {
-        if((err = VR_GetPath( componentCString, sizeof(dir), dir )) == REGERR_OK)
+        if((err = VR_GetPath( NS_CONST_CAST(char *, componentCString.get()), sizeof(dir), dir )) == REGERR_OK)
         {
             int i;
 
@@ -1425,7 +1426,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     }
 
     if(REGERR_OK == VR_GetDefaultDirectory(
-                        NS_ConvertUCS2toUTF8(mRegistryPackageName), 
+                        NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(mRegistryPackageName).get()),
                         sizeof(szRegPackagePath), szRegPackagePath))
     {
         nsInstallFolder* folder = new nsInstallFolder();   

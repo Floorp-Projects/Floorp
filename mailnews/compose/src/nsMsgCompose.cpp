@@ -515,7 +515,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
     nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(kHeaderParserCID));
     if (parser) {
       // convert to UTF8 before passing to MakeFullAddress
-      parser->MakeFullAddress(nsnull, NS_ConvertUCS2toUTF8(fullName), email, &sender);
+      parser->MakeFullAddress(nsnull, NS_ConvertUCS2toUTF8(fullName).get(), email, &sender);
     }
   
 	if (!sender)
@@ -1542,7 +1542,7 @@ nsresult nsMsgCompose::ProcessReplyFlags()
     if (rdfService && !mOriginalMsgURI.IsEmpty())
     {
       nsCOMPtr<nsIRDFResource> resource;
-      rdfService->GetResource(NS_ConvertUCS2toUTF8(mOriginalMsgURI), getter_AddRefs(resource));
+      rdfService->GetResource(NS_ConvertUCS2toUTF8(mOriginalMsgURI).get(), getter_AddRefs(resource));
       nsCOMPtr<nsIMessage> messageResource (do_QueryInterface(resource));
       if (messageResource)
       {

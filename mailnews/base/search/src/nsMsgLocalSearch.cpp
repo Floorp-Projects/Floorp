@@ -687,7 +687,7 @@ nsresult nsMsgSearchOfflineMail::Search (PRBool *aDone)
       PRBool match = PR_FALSE;
       nsAutoString nullCharset, folderCharset;
       GetSearchCharsets(nullCharset, folderCharset);
-      const char *charset = NS_ConvertUCS2toUTF8(folderCharset);
+      const char *charset = NS_ConvertUCS2toUTF8(folderCharset).get();
       // Is this message a hit?
       err = MatchTermsForSearch (msgDBHdr, m_searchTerms, charset, m_scope, m_db, &match);
 

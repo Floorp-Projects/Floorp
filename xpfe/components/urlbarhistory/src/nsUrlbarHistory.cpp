@@ -554,7 +554,7 @@ nsUrlbarHistory::GetHostIndex(const PRUnichar * aPath, PRInt32 * aReturn)
     
     nsCOMPtr<nsIURL> pathURL=do_CreateInstance(kStandardURLCID, &rv);
     if (pathURL) {
-       pathURL->SetSpec(NS_ConvertUCS2toUTF8(aPath));
+       pathURL->SetSpec(NS_ConvertUCS2toUTF8(aPath).get());
        char *  host=nsnull, *preHost = nsnull, * filePath = nsnull;
        pathURL->GetHost(&host);
        pathURL->GetFilePath(&filePath);
@@ -637,7 +637,7 @@ nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, PRUnichar *
     nsresult rv;
     nsCOMPtr<nsIURL>  searchURL = do_CreateInstance(kStandardURLCID, &rv);
     if (searchURL) {
-        searchURL->SetSpec(NS_ConvertUCS2toUTF8(aSearchItem));
+        searchURL->SetSpec(NS_ConvertUCS2toUTF8(aSearchItem).get());
         nsXPIDLCString filePath;
         searchURL->GetFilePath(getter_Copies(filePath));
         // Don't bother checking for hostname if the search string
@@ -649,7 +649,7 @@ nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, PRUnichar *
           
     nsCOMPtr<nsIURL> matchURL = do_CreateInstance(kStandardURLCID, &rv);
     if (matchURL) {
-        matchURL->SetSpec(NS_ConvertUCS2toUTF8(aMatchStr));
+        matchURL->SetSpec(NS_ConvertUCS2toUTF8(aMatchStr).get());
         nsXPIDLCString filePath;
         matchURL->GetFilePath(getter_Copies(filePath));
         // If the match string doesn't have a filepath
