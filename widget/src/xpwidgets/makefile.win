@@ -47,6 +47,7 @@ OBJS=.\$(OBJDIR)\nsBaseWidget.obj  \
 	.\$(OBJDIR)\nsToolbarManager.obj  \
 	.\$(OBJDIR)\nsImageButton.obj  \
 	.\$(OBJDIR)\nsToolBar.obj  \
+	.\$(OBJDIR)\nsHTToolbarDataModel.obj  \
 	.\$(OBJDIR)\nsHTColumn.obj \
 	.\$(OBJDIR)\nsHTControlStripItem.obj \
 	.\$(OBJDIR)\nsHTTreeItem.obj \
