@@ -42,27 +42,14 @@ public:
   NS_IMETHOD     SetLabel(const nsString& aText);
   NS_IMETHOD     GetLabel(nsString& aBuffer);
 
-
-  NS_IMETHOD Create(nsIWidget *aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
-  NS_IMETHOD Create(nsNativeWidget aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
-
-
   virtual PRBool OnPaint(nsPaintEvent & aEvent);
   virtual PRBool OnResize(nsSizeEvent &aEvent);
 
   //virtual void PreCreateWidget(nsWidgetInitData *aInitData);
+
+protected:
+
+  NS_IMETHOD  nsDialog::CreateNative(GtkWidget *parentWindow);
 
 private:
   GtkWidget *mShell;

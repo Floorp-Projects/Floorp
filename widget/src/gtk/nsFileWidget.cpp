@@ -61,17 +61,11 @@ NS_METHOD   nsFileWidget:: Create(nsIWidget  *aParent,
   mTitle.Append(aTitle);
   mMode = aMode;
 
-  GtkWidget *parentWidget = nsnull;
+  nsRect tRect(0,0,0,0);
 
-  if (aParent) {
-    parentWidget = (GtkWidget *) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  } else {
-    parentWidget = (GtkWidget *) aInitData ;
-  }
-
-  InitToolkit(aToolkit, aParent);
-  InitDeviceContext(aContext, parentWidget);
-
+  //  BaseCreate(aParent, tRect, (EVENT_CALLBACK)nsnull, aContext, 
+  //            aAppShell, aToolkit, aInitData);
+ 
   NS_ALLOC_STR_BUF(title, aTitle, 256);
   mWidget = gtk_file_selection_new(title);
   NS_FREE_STR_BUF(title);

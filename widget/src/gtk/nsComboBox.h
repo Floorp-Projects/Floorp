@@ -50,22 +50,6 @@ public:
     NS_IMETHOD      SelectItem(PRInt32 aPosition);
     NS_IMETHOD      Deselect() ;
 
-    NS_IMETHOD      Create(nsIWidget *aParent,
-                     const nsRect &aRect,
-                     EVENT_CALLBACK aHandleEventFunction,
-                     nsIDeviceContext *aContext,
-                     nsIAppShell *aAppShell = nsnull,
-                     nsIToolkit *aToolkit = nsnull,
-                     nsWidgetInitData *aInitData = nsnull);
-
-    NS_IMETHOD      Create(nsNativeWidget aParent,
-                     const nsRect &aRect,
-                     EVENT_CALLBACK aHandleEventFunction,
-                     nsIDeviceContext *aContext,
-                     nsIAppShell *aAppShell = nsnull,
-                     nsIToolkit *aToolkit = nsnull,
-                     nsWidgetInitData *aInitData = nsnull);
-
     virtual PRBool  OnMove(PRInt32 aX, PRInt32 aY);
     virtual PRBool  OnPaint(nsPaintEvent & aEvent);
     virtual PRBool  OnResize(nsSizeEvent &aEvent);
@@ -76,6 +60,8 @@ public:
     NS_IMETHOD      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
 
 protected:
+    NS_IMETHOD  CreateNative(GtkWidget *parentWindow);
+
     GtkWidget  *mPullDownMenu;
     GtkWidget  *mOptionMenu;
   GList *mItems;

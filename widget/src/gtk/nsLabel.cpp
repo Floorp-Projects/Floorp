@@ -43,69 +43,20 @@ nsLabel::nsLabel() : nsWidget(), nsILabel()
 }
 
 
-NS_METHOD nsLabel::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
+//-------------------------------------------------------------------------
+//
+// Create the nativeLabel widget
+//
+//-------------------------------------------------------------------------
+NS_METHOD  nsLabel::CreateNative(GtkWidget *parentWindow)
 {
-  aParent->AddChild(this);
-  GtkWidget *parentWidget = nsnull;
-
-  if (aParent) {
-    parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
-  } else if (aAppShell) {
-    parentWidget = GTK_WIDGET(aAppShell->GetNativeData(NS_NATIVE_SHELL));
-  }
-
-  InitToolkit(aToolkit, aParent);
-  InitDeviceContext(aContext, parentWidget);
-
   unsigned char alignment = GetNativeAlignment();
 
   mWidget = gtk_label_new("");
  
 //  gtk_misc_set_alignment(GTK_MISC(mWidget), alignment);
 
-  gtk_widget_set_usize(GTK_WIDGET(mWidget), aRect.width, aRect.height);
-  gtk_layout_put(GTK_LAYOUT(aParent), mWidget, aRect.x, aRect.y);
-
-  gtk_object_set_user_data(GTK_OBJECT(mWidget), this);
-  gtk_widget_show(mWidget);
- 
-  /* we need add this to the parent, and set its width, etc */
-
-  /*
-  mWidget = ::XtVaCreateManagedWidget("label",
-                                    xmLabelWidgetClass,
-                                    parentWidget,
-                                    XmNwidth, aRect.width,
-                                    XmNheight, aRect.height,
-                                    XmNrecomputeSize, False,
-                                    XmNhighlightOnEnter, False,
-		                    XmNx, aRect.x,
-		                    XmNy, aRect.y,
-                                    XmNalignment, alignment,
-                                    nsnull);
-*/
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-
-  InitCallbacks("nsLabel");
   return NS_OK;
-}
-
-NS_METHOD nsLabel::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------

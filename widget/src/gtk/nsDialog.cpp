@@ -40,73 +40,16 @@ nsDialog::nsDialog() : nsWidget(), nsIDialog()
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsDialog::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
+//
+// Create the native GtkDialog widget
+//
+//-------------------------------------------------------------------------
+
+NS_METHOD  nsDialog::CreateNative(GtkWidget *parentWindow)
 {
-  aParent->AddChild(this);
-  GtkWidget *parentWidget = nsnull;
-
-  if (aParent) {
-    parentWidget = (GtkWidget *) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  } else if (aAppShell) {
-    parentWidget = (GtkWidget *) aAppShell->GetNativeData(NS_NATIVE_SHELL);
-  }
-
-  InitToolkit(aToolkit, aParent);
-  InitDeviceContext(aContext, parentWidget);
-
   mShell = gtk_dialog_new();
-/*
-  mShell = ::XtVaCreateManagedWidget("Dialog",
-                                    xmDialogShellWidgetClass,
-                                    parentWidget,
-                                    XmNwidth, aRect.width,
-                                    XmNheight, aRect.height,
-                                    XmNrecomputeSize, False,
-                                    XmNhighlightOnEnter, False,
-		                    XmNx, aRect.x,
-		                    XmNy, aRect.y,
-                                    nsnull);
-*/
-  // Must use newManageClass instead of xmDrawingAreaWidgetClass
-  // Drawing area will spontaneously resize to fit it's contents
-  // which is undesirable.
 
-  /*mWidget = mShell->vbox; */
-  /*
-  mWidget = ::XtVaCreateManagedWidget("drawingArea",
-                                    newManageClass,
-                                    mShell,
-                                    XmNwidth, aRect.width,
-                                    XmNheight, aRect.height,
-                                    XmNmarginHeight, 0,
-                                    XmNmarginWidth, 0,
-                                    XmNrecomputeSize, False,
-                                    XmNuserData, this,
-                                    nsnull);
-*/
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-
-  InitCallbacks("nsDialog");
   return NS_OK;
-
-}
-
-NS_METHOD nsDialog::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------

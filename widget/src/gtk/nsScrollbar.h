@@ -51,26 +51,13 @@ public:
     NS_IMETHOD SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                PRUint32 aPosition, PRUint32 aLineIncrement);
 
-  NS_IMETHOD Create(nsIWidget *aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
-
-  NS_IMETHOD Create(nsNativeWidget aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
-
 
     virtual PRBool    OnPaint(nsPaintEvent & aEvent);
     virtual PRBool    OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
     virtual PRBool    OnResize(nsSizeEvent &aEvent);
+
+protected:
+  NS_IMETHOD CreateNative(GtkWidget *parentWindow);
 
 private:
   int             mOrientation;

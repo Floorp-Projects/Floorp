@@ -43,30 +43,11 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget(), nsIScrollbar()
 
 //-------------------------------------------------------------------------
 //
-// Create
+// Create the native scrollbar widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::Create(nsIWidget* aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
+NS_METHOD nsScrollbar::CreateNative(GtkWidget *parentWindow)
 {
-  GtkWidget *parentWidget = nsnull;
-
-  // handle parent stuff
-  if (aParent) {
-    aParent->AddChild(this);
-    parentWidget = (GtkWidget*) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  } else if (aAppShell) {
-    parentWidget = (GtkWidget*) aAppShell->GetNativeData(NS_NATIVE_SHELL);
-  }
-
-  InitToolkit(aToolkit, aParent);
-  InitDeviceContext(aContext, parentWidget);
-
   // Create scrollbar, random default values
   mAdjustment = gtk_adjustment_new(0, 0, 100, 1, 25, 25);
 
@@ -76,30 +57,7 @@ NS_METHOD nsScrollbar::Create(nsIWidget* aParent,
     mWidget = gtk_vscrollbar_new(GTK_ADJUSTMENT(mAdjustment));
   }
 
-  // add to layout, set size
-  gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
-  gtk_widget_set_usize(mWidget, aRect.width, aRect.height);
-
-  gtk_object_set_user_data(GTK_OBJECT(mWidget), this);
-  gtk_widget_show(mWidget);
-
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-
-  InitCallbacks("nsScrollbar");
   return NS_OK;
-}
-
-NS_METHOD nsScrollbar::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  // not yet implemented
-  return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------

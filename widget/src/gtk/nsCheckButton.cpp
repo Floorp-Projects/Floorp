@@ -47,91 +47,14 @@ nsCheckButton::~nsCheckButton()
 
 //-------------------------------------------------------------------------
 //
-// nsCheckButton Creator
+// Create the native CheckButton widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsCheckButton::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
+NS_METHOD  nsCheckButton::CreateNative(GtkWidget *parentWindow)
 {
-  aParent->AddChild(this);
-  GtkWidget *parentWidget = nsnull;
-
-  if (aParent) {
-    parentWidget = (GtkWidget *) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  } else {
-    parentWidget = (GtkWidget *) aAppShell->GetNativeData(NS_NATIVE_SHELL);
-  }
-
-  InitToolkit(aToolkit, aParent);
-  InitDeviceContext(aContext, parentWidget);
-
   mWidget = gtk_check_button_new();
 
-  gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
-  gtk_widget_set_usize(mWidget, aRect.width, aRect.height);
-
-  gtk_object_set_user_data(GTK_OBJECT(mWidget), this);
-  gtk_widget_show(mWidget);
-      
-/*
-  mWidget = ::XtVaCreateManagedWidget("",
-                                    xmToggleButtonWidgetClass,
-                                    parentWidget,
-                                    XmNwidth, aRect.width,
-                                    XmNheight, aRect.height,
-                                    XmNrecomputeSize, False,
-                                    XmNhighlightOnEnter, False,
-                                    XmNx, aRect.x,
-                                    XmNy, aRect.y,
-                                    XmNresizeHeight, False,
-                                    XmNresizeWidth, False,
-                                    xmNmarginHeight, 0,
-                                    XmNmarginWidth, 0,
-                                    XmNadjustMargin, False,
-                                    XmNspacing, 0,
-                                    XmNisAligned, False,
-                                    XmNentryBorder, 0,
-                                    XmNborderWidth, 0,
-                                    0);
-*/
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-
-  InitCallbacks();
-/*
-  XtAddCallback(mWidget,
-                XmNarmCallback,
-                nsXtWidget_Toggle_ArmCallback,
-                this);
-
-  XtAddCallback(mWidget,
-                XmNdisarmCallback,
-                nsXtWidget_Toggle_DisArmCallback,
-                this);
-*/
-
   return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// nsCheckButton Creator
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsCheckButton::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  return NS_ERROR_FAILURE;
 }
 
 /**
