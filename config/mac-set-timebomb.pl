@@ -106,6 +106,12 @@ sub set_bomb {
 	unless ($warning_days < $bomb_days);
 
     my $now = time;
+
+#   MacPerl stores date and times from 1904 instead of 1970
+#   Let's do the timewarp again!
+
+    $now = $now + (66 * 365 * 24 * 60 * 60);
+
     my $bomb = $now + ($bomb_days * 24 * 60 * 60);
     my $warn = $now + ($warning_days * 24 * 60 * 60);
 
