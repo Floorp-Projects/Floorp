@@ -2670,6 +2670,37 @@ static PRBool IsEventSensitive(nsIAtom *aPseudo, nsIAtom *aContentTag, PRBool aS
                    (nsHTMLAtoms::body != aContentTag));
   }
 }
+
+
+static PRBool IsSignificantChild(nsIContent* aChild, PRBool aAcceptNonWhitespaceText)
+{
+  nsIAtom* tag;
+  aChild->GetTag(tag); // skip text & comments
+  if ((tag != nsLayoutAtoms::textTagName) && 
+      (tag != nsLayoutAtoms::commentTagName) &&
+      (tag != nsLayoutAtoms::processingInstructionTagName)) {
+    NS_IF_RELEASE(tag);
+    return PR_TRUE;
+  }
+  if (aAcceptNonWhitespaceText) {
+    if (tag == nsLayoutAtoms::textTagName) {  // skip only whitespace text
+	    nsITextContent* text = nsnull;
+	    if (NS_SUCCEEDED(aChild->QueryInterface(NS_GET_IID(nsITextContent), (void**)&text))) {
+	      PRBool  isWhite;
+	      text->IsOnlyWhitespace(&isWhite);
+	      NS_RELEASE(text);
+	      if (! isWhite) {
+	        NS_RELEASE(tag);
+	        return PR_TRUE;
+	      }
+	    }
+    }
+  }
+  NS_IF_RELEASE(tag);
+  return PR_FALSE;
+}
+
+
 static PRBool SelectorMatches(nsIPresContext* aPresContext,
                               nsCSSSelector* aSelector, nsIContent* aContent,
                               PRBool aTestState)
@@ -2773,15 +2804,9 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
             do {
               parent->ChildAt(++index, firstChild);
               if (firstChild) { // skip text & comments
-                nsIAtom* tag;
-                firstChild->GetTag(tag);
-                if ((tag != nsLayoutAtoms::textTagName) && 
-                    (tag != nsLayoutAtoms::commentTagName) &&
-                    (tag != nsLayoutAtoms::processingInstructionTagName)) {
-                  NS_IF_RELEASE(tag);
+                if (IsSignificantChild(firstChild, PR_FALSE)) {
                   break;
                 }
-                NS_IF_RELEASE(tag);
                 NS_RELEASE(firstChild);
               }
               else {
@@ -2801,28 +2826,10 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
             PRInt32 index = -1;
             do {
               parent->ChildAt(++index, firstChild);
-              if (firstChild) { // skip text & comments
-                nsIAtom* tag;
-                firstChild->GetTag(tag);
-                if ((tag != nsLayoutAtoms::textTagName) && 
-                    (tag != nsLayoutAtoms::commentTagName) &&
-                    (tag != nsLayoutAtoms::processingInstructionTagName)) {
-                  NS_IF_RELEASE(tag);
+              if (firstChild) { // skip whitespace text & comments
+                if (IsSignificantChild(firstChild, PR_TRUE)) {
                   break;
                 }
-                if (tag == nsLayoutAtoms::textTagName) {  // skip only whitespace text
-                  nsITextContent* text = nsnull;
-                  if (NS_SUCCEEDED(firstChild->QueryInterface(NS_GET_IID(nsITextContent), (void**)&text))) {
-                    PRBool  isWhite;
-                    text->IsOnlyWhitespace(&isWhite);
-                    NS_RELEASE(text);
-                    if (! isWhite) {
-                      NS_RELEASE(tag);
-                      break;
-                    }
-                  }
-                }
-                NS_IF_RELEASE(tag);
                 NS_RELEASE(firstChild);
               }
               else {
@@ -2833,6 +2840,30 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
           }
           result = PRBool(aContent == firstChild);
           NS_IF_RELEASE(firstChild);
+        }
+        else if (nsCSSAtoms::lastNodePseudo == pseudoClass->mAtom) {
+          nsIContent* lastChild = nsnull;
+          nsIContent* parent;
+          aContent->GetParent(parent);
+          if (parent) {
+            PRInt32 index;
+            parent->ChildCount(index);
+            do {
+              parent->ChildAt(--index, lastChild);
+              if (lastChild) { // skip whitespace text & comments
+                if (IsSignificantChild(lastChild, PR_TRUE)) {
+                  break;
+                }
+                NS_RELEASE(lastChild);
+              }
+              else {
+                break;
+              }
+            } while (1 == 1);
+            NS_RELEASE(parent);
+          }
+          result = PRBool(aContent == lastChild);
+          NS_IF_RELEASE(lastChild);
         }
         else if (nsCSSAtoms::rootPseudo == pseudoClass->mAtom) {
           nsIContent* parent;
