@@ -347,8 +347,8 @@ NS_IMETHODIMP nsMsgComposeAndSend::GetDefaultPrompt(nsIPrompt ** aPrompt)
   nsCOMPtr <nsIMsgMailSession> mailSession (do_GetService(NS_MSGMAILSESSION_CONTRACTID));
   if (mailSession)
   {
-  mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
-  if (msgWindow)
+    mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
+    if (msgWindow)
       rv = msgWindow->GetPromptDialog(aPrompt);
   }
   
@@ -3440,49 +3440,50 @@ nsMsgComposeAndSend::DeliverFileAsNews()
   
   if (mSendReport)
     mSendReport->SetCurrentProcess(nsIMsgSendReport::process_NNTP);
-
+  
   nsCOMPtr<nsIPrompt> promptObject;
   GetDefaultPrompt(getter_AddRefs(promptObject));
-
+  
   nsCOMPtr<nsINntpService> nntpService(do_GetService(NS_NNTPSERVICE_CONTRACTID, &rv));
-
+  
   if (NS_SUCCEEDED(rv) && nntpService) 
   {
     nsMsgDeliveryListener * aListener = new nsMsgDeliveryListener(SendDeliveryCallback, nsNewsDelivery, this);
     nsCOMPtr<nsIUrlListener> uriListener = do_QueryInterface(aListener);
     if (!uriListener)
       return NS_ERROR_OUT_OF_MEMORY;
-
-  // Note: Don't do a SetMsgComposeAndSendObject since we are in the same thread, and
-  // using callbacks for notification
-
-  nsCOMPtr<nsIFileSpec>fileToPost;
-  
-  rv = NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(fileToPost));
-  if (NS_FAILED(rv)) return rv;
-
-  // Tell the user we are posting the message!
-  nsXPIDLString msg; 
-  mComposeBundle->GetStringByID(NS_MSG_POSTING_MESSAGE, getter_Copies(msg));
-  SetStatusMessage( msg );
-
-  nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  if (!mailSession) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIMsgWindow>    msgWindow;
-
-//JFD TODO: we should use GetDefaultPrompt instead
-  rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
-  if(NS_FAILED(rv))
-    return rv;
-
+    
+    // Note: Don't do a SetMsgComposeAndSendObject since we are in the same thread, and
+    // using callbacks for notification
+    
+    nsCOMPtr<nsIFileSpec>fileToPost;
+    
+    rv = NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(fileToPost));
+    if (NS_FAILED(rv)) return rv;
+    
+    // Tell the user we are posting the message!
+    nsXPIDLString msg; 
+    mComposeBundle->GetStringByID(NS_MSG_POSTING_MESSAGE, getter_Copies(msg));
+    SetStatusMessage( msg );
+    
+    nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    if (!mailSession) return NS_ERROR_FAILURE;
+    
+    // JFD TODO: we should use GetDefaultPrompt instead
+    nsCOMPtr<nsIMsgWindow> msgWindow;
+    rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
+    // see bug #163139
+    // we might not have a msg window if only the compose window is open.
+    if(NS_FAILED(rv))
+      msgWindow = nsnull;
+    
     rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mCompFields->GetNewspostUrl(),
-                                  uriListener, msgWindow, nsnull);
-  if (NS_FAILED(rv)) return rv;
+      uriListener, msgWindow, nsnull);
+    if (NS_FAILED(rv)) return rv;
   }
-
+  
   return rv;
 }
 
