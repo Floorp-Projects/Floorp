@@ -22,27 +22,29 @@
 #ifndef nsBrowserInstance_h___
 #define nsBrowserInstance_h___
 
+// Helper Classes
+#include "nsCOMPtr.h"
+#include "nsWeakReference.h"
+
+// Interfaces Needed
 #include "nsIBrowserInstance.h"
+#include "nsIURIContentListener.h"
+#include "nsIDocumentLoaderObserver.h"
+
+ 
 
 #include "nsIAppShellComponentImpl.h"
 
 #include "nscore.h"
-#include "nsCOMPtr.h"
-#include "nsWeakReference.h"
 #include "nsString.h"
 #include "nsISupports.h"
 
 #include "nsIStreamObserver.h"
-#include "nsIDocumentLoaderObserver.h"
 #include "nsIObserver.h"
-#include "nsISessionHistory.h"
-#include "nsIURIContentListener.h"
 #include "nsICmdLineHandler.h"
 #include "nsIXULBrowserWindow.h"
-
-#ifdef DEBUG_radha
-#include "nsISHistory.h"
-#endif  
+#include "nsIWebProgressListener.h"
+#include "nsIWebShell.h"
 
 class nsIDocShell;
 class nsIScriptContext;
@@ -61,9 +63,10 @@ class nsIFindComponent;
 
 class nsBrowserInstance : public nsIBrowserInstance,
                           public nsIDocumentLoaderObserver,
-					                public nsISessionHistory,
                           public nsIURIContentListener,
-                          public nsSupportsWeakReference {
+                          public nsIWebProgressListener,
+                          public nsSupportsWeakReference 
+{
   public:
 
     nsBrowserInstance();
@@ -78,10 +81,10 @@ class nsBrowserInstance : public nsIBrowserInstance,
     // nsIDocumentLoaderObserver
     NS_DECL_NSIDOCUMENTLOADEROBSERVER
 
-    // nsISessionHistory
-    NS_DECL_NSISESSIONHISTORY
     // URI Content listener
     NS_DECL_NSIURICONTENTLISTENER
+
+    NS_DECL_NSIWEBPROGRESSLISTENER
 
   protected:
     nsresult InitializeSearch(nsIFindComponent*);
@@ -103,17 +106,11 @@ class nsBrowserInstance : public nsIBrowserInstance,
     nsIWebShellWindow  *mWebShellWin;								// weak reference
     nsIDocShell *       mDocShell;									// weak reference
     nsIDOMWindow*       mDOMWindow;                         // weak reference
-    nsIWebShell *       mContentAreaWebShell;				// weak reference
+    nsIDocShell *       mContentAreaDocShell;				// weak reference
     nsIDocumentLoader * mContentAreaDocLoader;          // weak reference
-
-    nsISessionHistory*  mSHistory;			           // this is a service
 
     nsCOMPtr<nsISupports>  mSearchContext;				// at last, something we really own
     nsInstanceCounter   mInstanceCounter;
-#ifdef DEBUG_radha
-	nsISHistory *       mNewSHistory;
-#endif  /* DEBUG_radha */
-	PRBool              mIsLoadingHistory;
 #ifdef DEBUG_warren
     PRIntervalTime      mLoadStartTime;
 #endif
