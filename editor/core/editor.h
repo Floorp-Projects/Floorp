@@ -39,7 +39,7 @@ public:
   /** The default destructor. This should suffice. Should this be pure virtual 
    *  for someone to derive from the nsEditor later? I dont believe so.
    */
-  ~nsEditor();
+  virtual ~nsEditor();
 
 /*BEGIN nsIEditor interfaces*/
 /*see the nsIEditor for more details*/
