@@ -6,10 +6,12 @@
 
 #//------------------------------------------------------------------------
 #//
-#// Specify the NS_DEPTH of the current directory relative to the
+#// Specify the depth of the current directory relative to the
 #// root of NS
 #//
+#// Need to include capi.lib in LLIBS later
 #//------------------------------------------------------------------------
+
 NS_DEPTH=..\..\..\..\..\
 
 DEPTH = $(NS_DEPTH)
@@ -20,5 +22,57 @@ DEPTH = $(NS_DEPTH)
 #//
 #//------------------------------------------------------------------------
 
+LIBRARY_NAME = nlsstub10
+
+LCFLAGS= -DLIBJULIAN $(LCFLAGS)
+
+DLLNAME         = nlsstub10
+PDBFILE         = $(DLLNAME).pdb
+MAPFILE         = $(DLLNAME).map
+#RESFILE        = $(DLLNAME).res
+DLL             =.\$(OBJDIR)\$(DLLNAME).dll
+MAKE_OBJ_TYPE   = DLL
+
+
+include <$(NS_DEPTH)/config/config.mak>
+
+REQUIRES=nspr
+
+OBJS = \
+        .\$(OBJDIR)\nlsloc.obj \
+        $(NULL)
+
+LLIBS = $(LLIBS) \
+    $(DIST)\lib\libnspr21.lib \
+    $(DIST)\lib\libplc21.lib \
+    $(NULL)
+
+LINCS=-I$(XPDIST)\public\nls
+
+#// From the old Manifest file
+CPPSRCS=nlsloc.cpp
+
+
+
+#//------------------------------------------------------------------------
+#//
+#// Include the common makefile rules
+#//
+#// Need to include capi.dll and capi.lib in libs later
+#//------------------------------------------------------------------------
+
 include <$(NS_DEPTH)/config/rules.mak>
+
+libs:: $(DLL)
+    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+
+
+
+
+
+
+
+
 

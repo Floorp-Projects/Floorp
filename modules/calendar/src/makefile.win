@@ -17,7 +17,11 @@ NS_DEPTH=..\..\
 !endif
 
 !ifdef MOZ_TREX
+!ifdef MOZ_TREX_FREE
+DIRS=nlsstub libcal
+!else
 DIRS=libcal
+!endif
 !else
 DIRS=libjulian
 !endif
