@@ -27,12 +27,48 @@
 
 #include "nsAEUtils.h"
 
+class nsDocLoadObserver;
 
 class AESpyglassSuiteHandler
 {
 public:
 	enum {
-		kOpenURLEvent		= 'OURL'
+		kSuiteSignature					= 'WWW!',
+				
+		kOpenURLEvent					= 'OURL',			// OpenURL
+		kRegisterURLEchoEvent		= 'RGUE',			// Register URL echo handler
+		kUnregisterURLEchoEvent	= 'UNRU',			// Unregister URL echo handler
+
+// the following are unhandled in Mozilla
+		kRegisterViewerEvent 		= 'RGVW',			// RegisterViewer
+		kUnregisterViewerEvent	= 'UNRV',			// UnregisterViewer
+		kShowFileEvent					= 'SHWF',			// ShowFile
+		kParseAnchorEvent			= 'PRSA',			// ParseAnchor
+		kSpyActivateEvent			= 'ACTV',			// Activate
+		kSpyListWindowsEvent		= 'LSTW',			// ListWindows
+		kGetWindowInfoEvent		= 'WNFO',			// GetWindowInfo
+		kRegisterWinCloseEvent	= 'RGWC',			// RegisterWindowClose
+		kUnregisterWinCloseEvent	= 'UNRC',			// UnregisterWindowClose
+		kRegisterProtocolEvent		= 'RGPR',			// RegisterProtocol
+		kUnregisterProtocolEvent	= 'UNRP',			// UnregisterProtocol
+		kCancelProgressEvent		= 'CNCL',			// Cancel download
+		kFindURLEvent					= 'FURL',			// Find the URL for the file
+
+// Spyglass send events
+
+		kSpyglassSendSignature	= 'WWW?',
+		kSendURLEchoEvent			= 'URLE'
+
+	};
+
+	// event params
+	enum {
+		kParamSaveToFileDest		= 'INTO',		// FSSpec save to file
+		kParamOpenInWindow		= 'WIND',		// long, target window (window ID)
+		kParamOpenFlags			= 'FLGS',		// long, Binary: any combination of 1, 2 and 4 is allowed: 1 and 2 mean force reload the document. 4 is ignored
+		kParamPostData			= 'POST',		// text, Form posting data
+		kParamPostType			= 'MIME',		// text, MIME type of the posting data. Defaults to application/x-www-form-urlencoded
+		kParamProgressApp			= 'PROG'		// 'psn ', Application that will display progress
 	};
 	
 						AESpyglassSuiteHandler();
@@ -43,10 +79,15 @@ public:
 protected:
 
 	void					HandleOpenURLEvent(AppleEvent *appleEvent, AppleEvent *reply);
+	
+	void					HandleRegisterURLEchoEvent(AppleEvent *appleEvent, AppleEvent *reply);
+	void					HandleUnregisterURLEchoEvent(AppleEvent *appleEvent, AppleEvent *reply);
+
+protected:
+
+    nsDocLoadObserver*  mDocObserver;
+    
 };
-
-
-
 
 
 

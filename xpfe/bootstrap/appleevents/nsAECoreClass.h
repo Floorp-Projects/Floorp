@@ -35,6 +35,10 @@
 
 #include "nsAEClassDispatcher.h"
 
+#include "nsAEMozillaSuiteHandler.h"
+#include "nsAEGetURLSuiteHandler.h"
+#include "nsAESpyglassSuiteHandler.h"
+
 class AEApplicationClass;
 class AEDocumentClass;
 class AEWindowClass;
@@ -42,13 +46,6 @@ class AEWindowClass;
 class AECoreClass
 {
 public:
-	
-	enum {
-		kAEMozillaSuite			= 'MOZZ',
-		kAEUrlSuite				= 'GURL',
-		kAESpyglassSuite			= 'WWW!'
-	};
-	
 	
 						AECoreClass(Boolean suspendEvents = false);	// throws OSErrs
 						~AECoreClass();
@@ -167,6 +164,10 @@ protected:
 	AEEventHandlerUPP		mGetURLSuiteHandlerUPP;
 	AEEventHandlerUPP		mSpyGlassSuiteHandlerUPP;
 
+        AEMozillaSuiteHandler      mMozillaSuiteHandler;
+        AEGetURLSuiteHandler      mGetURLSuiteHandler;
+        AESpyglassSuiteHandler   mSpyglassSuiteHandler;
+        
 	OSLAccessorUPP		mPropertyFromListAccessor;
 	OSLAccessorUPP		mAnythingFromAppAccessor;
 
