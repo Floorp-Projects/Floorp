@@ -161,16 +161,17 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
         return members.getIds(false);
     }
 
-    public static Object wrap(Scriptable scope, Object obj, Class staticType)
+    public static Object wrap(Scriptable scope, Object obj, Class staticType) {
+
+        Context cx = Context.getContext();
+        return cx.getWrapFactory().wrap(cx, scope, obj, staticType);
+    }
+
+    static Object defaultWrap(Context cx, Scriptable scope,
+                              Object obj, Class staticType)
     {
         if (obj == null)
             return obj;
-        Context cx = Context.getCurrentContext();
-        if (cx != null && cx.wrapHandler != null) {
-            Object result = cx.wrapHandler.wrap(scope, obj, staticType);
-            if (result != null)
-                return result;
-        }
         Class cls = obj.getClass();
         if (staticType != null && staticType.isPrimitive()) {
             if (staticType == Void.TYPE)

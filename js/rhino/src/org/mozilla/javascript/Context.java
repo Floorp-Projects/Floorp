@@ -1646,25 +1646,82 @@ public class Context {
         FunctionObject.setCachingEnabled(cachingEnabled);
     }
 
+    // Proxy to allow to use deprecated WrapHandler in place of WrapFactory
+    private static class WrapHandlerProxy extends WrapFactory {
+        WrapHandler _handler;
+
+        WrapHandlerProxy(WrapHandler handler) {
+            _handler = handler;
+        }
+
+        public Object wrap(Context cx, Scriptable scope,
+                           Object obj, Class staticType)
+        {
+            if (obj == null) { return obj; }
+            Object result = _handler.wrap(scope, obj, staticType);
+            if (result == null) {
+                result = super.wrap(cx, scope, obj, staticType);
+            }
+            return result;
+        }
+
+        public Scriptable wrapNewObject(Context cx, Scriptable scope,
+                                        Object obj)
+        {
+            Object wrap = _handler.wrap(scope, obj, obj.getClass());
+            if (wrap instanceof Scriptable) {
+                return (Scriptable)wrap;
+            }
+            if (wrap == null) {
+                return super.wrapNewObject(cx, scope, obj);
+            }
+            throw new RuntimeException
+                ("Please upgrade from WrapHandler to WrapFactory");
+        }
+    }
+
     /**
-     * Set a WrapHandler for this Context.
-     * <p>
-     * The WrapHandler allows custom object wrapping behavior for
-     * Java object manipulated with JavaScript.
-     * @see org.mozilla.javascript.WrapHandler
-     * @since 1.5 Release 2
+     * @deprecated  As of Rhino 1.5 Release 4, use
+     * {@link WrapFactory} and {@link #setWrapHandler(WrapFactory)}
      */
     public void setWrapHandler(WrapHandler wrapHandler) {
-        this.wrapHandler = wrapHandler;
+        WrapFactory proxy = (wrapHandler == null) ? null
+                             : new WrapHandlerProxy(wrapHandler);
+           setWrapFactory(proxy);
+    }
+
+    /**
+     * @deprecated  As of Rhino 1.5 Release 4, use
+     * {@link WrapFactory} and {@link #getWrapHandler(WrapFactory)}
+     */
+    public WrapHandler getWrapHandler() {
+        WrapHandlerProxy proxy = (WrapHandlerProxy)getWrapFactory();
+        return (proxy == null) ? null : proxy._handler;
+    }
+
+    /**
+     * Set a WrapFactory for this Context.
+     * <p>
+     * The WrapFactory allows custom object wrapping behavior for
+     * Java object manipulated with JavaScript.
+     * @see org.mozilla.javascript.WrapFactory
+     * @since 1.5 Release 4
+     */
+    public void setWrapFactory(WrapFactory wrapFactory) {
+        if (wrapFactory == null) throw new IllegalArgumentException();
+        this.wrapFactory = wrapFactory;
     }
 
     /**
      * Return the current WrapHandler, or null if none is defined.
      * @see org.mozilla.javascript.WrapHandler
-     * @since 1.5 Release 2
+     * @since 1.5 Release 4
      */
-    public WrapHandler getWrapHandler() {
-        return wrapHandler;
+    public WrapFactory getWrapFactory() {
+        if (wrapFactory == null) {
+            wrapFactory = new WrapFactory();
+        }
+        return wrapFactory;
     }
 
     /**
@@ -2209,7 +2266,7 @@ public class Context {
     private boolean generatingSource=true;
     private boolean compileFunctionsWithDynamicScopeFlag;
     private int optimizationLevel;
-    WrapHandler wrapHandler;
+    private WrapFactory wrapFactory;
     Debugger debugger;
     private Object debuggerData;
     private int enterCount;

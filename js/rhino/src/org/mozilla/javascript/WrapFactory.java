@@ -19,7 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Marshall Cline
+ * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -37,11 +37,48 @@
 
 package org.mozilla.javascript;
 
-/*
- * @deprecated  As of Rhino 1.5 Release 4, use {@link WrapFactory}
+/**
+ * Embeddings that wish to provide their own custom wrappings for Java
+ * objects may extend this call and call Context.setWrapFactory.
+ * XXX
+ * @see org.mozilla.javascript.Context#setWrapFactory(WrapFactory)
+ * @since 1.5 Release 4
  */
-public interface WrapHandler {
+public class WrapFactory {
 
-    public Object wrap(Scriptable scope, Object obj, Class staticType);
+    /**
+     * Wrap the object.
+     * <p>
+     * The value returned must be one of
+     * <UL>
+     * <LI>java.lang.Boolean</LI>
+     * <LI>java.lang.String</LI>
+     * <LI>java.lang.Number</LI>
+     * <LI>org.mozilla.javascript.Scriptable objects</LI>
+     * <LI>The value returned by Context.getUndefinedValue()</LI>
+     * <LI>null</LI>
+     * @param cx the current Context for this thread
+     * @param scope the scope of the executing script
+     * @param obj the object to be wrapped
+     * @staticType the static type of the object to be wrapped
+     * @return the wrapped value.
+     */
+    public Object wrap(Context cx, Scriptable scope,
+                       Object obj, Class staticType)
+    {
+        return NativeJavaObject.defaultWrap(cx, scope, obj, staticType);
+    }
+
+    /**
+     * Wrap an object newly created by a constructor call.
+     * @param cx the current Context for this thread
+     * @param scope the scope of the executing script
+     * @param obj the object to be wrapped
+     * @return the wrapped value.
+     */
+    public Scriptable wrapNewObject(Context cx, Scriptable scope, Object obj)
+    {
+        return (Scriptable)NativeJavaObject.defaultWrap(cx, scope, obj, null);
+    }
 
 }

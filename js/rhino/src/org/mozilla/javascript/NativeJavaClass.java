@@ -220,14 +220,9 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
         for (int i = 0; i < args.length; i++) {
             args[i] = NativeJavaObject.coerceType(paramTypes[i], args[i], true);
         }
+        Object instance;
         try {
-            // we need to force this to be wrapped, because construct _has_
-            // to return a scriptable
-            return
-                (Scriptable) NativeJavaObject.wrap(topLevel,
-                                                   ctor.newInstance(args),
-                                                   classObject);
-
+            instance = ctor.newInstance(args);
         } catch (InstantiationException instEx) {
             throw Context.reportRuntimeError2(
                 "msg.cant.instantiate",
@@ -243,6 +238,9 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
             throw Context.reportRuntimeError1(
                 "msg.java.internal.private", accessEx.getMessage());
         }
+        // we need to force this to be wrapped, because construct _has_
+        // to return a scriptable
+        return cx.getWrapFactory().wrapNewObject(cx, topLevel, instance);
     }
 
     public String toString() {

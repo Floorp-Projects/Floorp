@@ -241,7 +241,8 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                                    " expect = " + staticType);
             }
 
-            Object wrapped = NativeJavaObject.wrap(scope, retval, staticType);
+            Object wrapped = cx.getWrapFactory().wrap(cx, scope,
+                                                      retval, staticType);
 
             if (debug) {
                 Class actualType = (wrapped == null) ? null
@@ -342,8 +343,8 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                 if (arg instanceof Wrapper) {
                     arg = ((Wrapper)arg).unwrap();
                     if (!(arg instanceof Number)) {
-                        // Since numbers are internally represented as 
-                        // java.lang.Double, etc. then java.lang.Doubles are 
+                        // Since numbers are internally represented as
+                        // java.lang.Double, etc. then java.lang.Doubles are
                         // distinquished by being wrapped. Thus don't unwrap
                         // here or we'll get overloading wrong.
                         args[i] = arg;

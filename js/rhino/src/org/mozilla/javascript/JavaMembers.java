@@ -217,7 +217,7 @@ class JavaMembers {
                 if (method == null)
                     throw reportMemberNotFound(name);
                 Class[] types = method.getParameterTypes();
-                Object[] args = { NativeJavaObject.coerceType(types[0], value, 
+                Object[] args = { NativeJavaObject.coerceType(types[0], value,
                                                               true) };
                 method.invoke(javaObject, args);
             } catch (IllegalAccessException accessEx) {
