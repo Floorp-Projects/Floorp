@@ -1382,7 +1382,7 @@ void ClassFileSummary::updateVTable(Method &method)
  * has been resolved statically (this includes all special resolutions).
  * If the method must be resolved dynamically, return the Method object
  * corresponding to that method resolved for the class given by the
- * MethodRef or InterfaceMethodRef (really????) in the constant pool
+ * MethodRef or InterfaceMethodRef (really?) in the constant pool
  * at index cpi.
  */
 const Method *ClassFileSummary::lookupMethod(Uint8 type,
