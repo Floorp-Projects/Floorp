@@ -4235,12 +4235,12 @@ nsGlobalHistory::AutoCompleteSearch(const nsAString &aSearchString,
     AutoCompleteSortClosure closure;
     closure.history = this;
     closure.prefixCount = AUTOCOMPLETE_PREFIX_LIST_COUNT;
-    closure.prefixes[0] = NS_STATIC_CAST(nsAFlatString*, &prefixHWStr);
-    closure.prefixes[1] = NS_STATIC_CAST(nsAFlatString*, &prefixHStr);
-    closure.prefixes[2] = NS_STATIC_CAST(nsAFlatString*, &prefixHSWStr);
-    closure.prefixes[3] = NS_STATIC_CAST(nsAFlatString*, &prefixHSStr);
-    closure.prefixes[4] = NS_STATIC_CAST(nsAFlatString*, &prefixFFStr);
-    closure.prefixes[5] = NS_STATIC_CAST(nsAFlatString*, &prefixFStr);
+    closure.prefixes[0] = &prefixHWStr;
+    closure.prefixes[1] = &prefixHStr;
+    closure.prefixes[2] = &prefixHSWStr;
+    closure.prefixes[3] = &prefixHSStr;
+    closure.prefixes[4] = &prefixFFStr;
+    closure.prefixes[5] = &prefixFStr;
 
     // sort it
     resultArray.Sort(AutoCompleteSortComparison, NS_STATIC_CAST(void*, &closure));
