@@ -31,6 +31,7 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/sidebar-editor-rdf.dtd \
 	$(srcdir)/sidebar-editor.dtd \
 	$(srcdir)/viewSource.dtd \
+	$(srcdir)/editorOverlay.dtd \
 	$(NULL)
 
 install:: 
