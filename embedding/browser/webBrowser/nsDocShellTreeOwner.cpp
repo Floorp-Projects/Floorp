@@ -42,6 +42,7 @@
 
 nsDocShellTreeOwner::nsDocShellTreeOwner() : mWebBrowser(nsnull), 
    mTreeOwner(nsnull),
+   mPrimaryContentShell(nsnull),
    mWebBrowserChrome(nsnull),
    mOwnerProgressListener(nsnull),
    mOwnerWin(nsnull),
@@ -121,12 +122,15 @@ NS_IMETHODIMP nsDocShellTreeOwner::FindItemWithName(const PRUnichar* aName,
    return NS_OK;
 }
 
+ 
 NS_IMETHODIMP nsDocShellTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
    PRBool aPrimary, const PRUnichar* aID)
 {
    if(mTreeOwner)
       return mTreeOwner->ContentShellAdded(aContentShell, aPrimary, aID);
 
+   if (aPrimary)
+      mPrimaryContentShell = aContentShell;
    return NS_OK;
 }
 
@@ -134,7 +138,10 @@ NS_IMETHODIMP nsDocShellTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** 
 {
    NS_ENSURE_ARG_POINTER(aShell);
 
-   *aShell = mWebBrowser->mDocShellAsItem;
+   if (mTreeOwner)
+       return mTreeOwner->GetPrimaryContentShell(aShell);
+       
+   *aShell = (mPrimaryContentShell ? mPrimaryContentShell : mWebBrowser->mDocShellAsItem.get());  
    NS_IF_ADDREF(*aShell);
 
    return NS_OK;
@@ -229,7 +236,8 @@ NS_IMETHODIMP nsDocShellTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
 NS_IMETHODIMP nsDocShellTreeOwner::InitWindow(nativeWindow aParentNativeWindow,
    nsIWidget* aParentWidget, PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY)   
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->InitWindow(aParentNativeWindow, aParentWidget, aX, aY,
       aCX, aCY); 
@@ -237,42 +245,48 @@ NS_IMETHODIMP nsDocShellTreeOwner::InitWindow(nativeWindow aParentNativeWindow,
 
 NS_IMETHODIMP nsDocShellTreeOwner::Create()
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
    
    return mOwnerWin->Create();
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::Destroy()
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->Destroy();
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetPosition(PRInt32 aX, PRInt32 aY)
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->SetPosition(aX, aY);
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::GetPosition(PRInt32* aX, PRInt32* aY)
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
    
    return mOwnerWin->GetPosition(aX, aY);
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->SetSize(aCX, aCY, aRepaint);
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::GetSize(PRInt32* aCX, PRInt32* aCY)
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->GetSize(aCX, aCY);
 }
@@ -280,7 +294,8 @@ NS_IMETHODIMP nsDocShellTreeOwner::GetSize(PRInt32* aCX, PRInt32* aCY)
 NS_IMETHODIMP nsDocShellTreeOwner::SetPositionAndSize(PRInt32 aX, PRInt32 aY,
    PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->SetPositionAndSize(aX, aY, aCX, aCY, aRepaint);
 }
@@ -288,70 +303,80 @@ NS_IMETHODIMP nsDocShellTreeOwner::SetPositionAndSize(PRInt32 aX, PRInt32 aY,
 NS_IMETHODIMP nsDocShellTreeOwner::GetPositionAndSize(PRInt32* aX, PRInt32* aY,
    PRInt32* aCX, PRInt32* aCY)
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->GetPositionAndSize(aX, aY, aCX, aCY);
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::Repaint(PRBool aForce)
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->Repaint(aForce);
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::GetParentWidget(nsIWidget** aParentWidget)
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->GetParentWidget(aParentWidget);
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetParentWidget(nsIWidget* aParentWidget)
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->SetParentWidget(aParentWidget);
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::GetParentNativeWindow(nativeWindow* aParentNativeWindow)
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->GetParentNativeWindow(aParentNativeWindow);
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetParentNativeWindow(nativeWindow aParentNativeWindow)
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->SetParentNativeWindow(aParentNativeWindow);
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::GetVisibility(PRBool* aVisibility)
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->GetVisibility(aVisibility);
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetVisibility(PRBool aVisibility)
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->SetVisibility(aVisibility);
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::GetMainWidget(nsIWidget** aMainWidget)
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->GetMainWidget(aMainWidget);
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetFocus()
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->SetFocus();
 }
@@ -359,21 +384,24 @@ NS_IMETHODIMP nsDocShellTreeOwner::SetFocus()
 NS_IMETHODIMP nsDocShellTreeOwner::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
    PRBool* aTookFocus)
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->FocusAvailable(aCurrentFocus, aTookFocus);
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::GetTitle(PRUnichar** aTitle)
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->GetTitle(aTitle);
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::SetTitle(const PRUnichar* aTitle)
 {
-   NS_ENSURE_STATE(mOwnerWin);
+   if (!mOwnerWin)
+       return NS_ERROR_NULL_POINTER;
 
    return mOwnerWin->SetTitle(aTitle);
 }

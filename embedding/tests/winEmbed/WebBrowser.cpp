@@ -41,6 +41,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIInterfaceRequestor.h"
 
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
 
 nsresult
 ConvertDocShellToDOMWindow(nsIDocShell* aDocShell, nsIDOMWindow** aDOMWindow)
@@ -73,34 +75,39 @@ WebBrowser::~WebBrowser()
 }
 
 nsresult 
-WebBrowser::Init(nsNativeWidget widget)
+WebBrowser::Init(nsNativeWidget widget, nsIWebBrowserChrome* aTopWindow)
 {
     nsresult rv;
 
     mWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID, &rv);
     
-	if (NS_FAILED(rv))
-        return rv;
+	if (!mWebBrowser)
+        return NS_ERROR_FAILURE;
 
     mBaseWindow = do_QueryInterface(mWebBrowser);
-        
+    
+    mTopWindow = aTopWindow;
+    mWebBrowser->SetTopLevelWindow(aTopWindow);
+    
+    nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(mWebBrowser);
+    dsti->SetItemType(nsIDocShellTreeItem::typeChromeWrapper);
+     
     rv = mBaseWindow->InitWindow( widget,
                                   nsnull, 
                                   0, 
                                   0, 
                                   100, 
                                   100);
-
-    mWebBrowser->SetTopLevelWindow(nsnull);
-
+    
     mBaseWindow->Create();
     mBaseWindow->SetVisibility(PR_TRUE);
+
 
     return rv;
 }
 
 nsresult 
-WebBrowser::GetIWebBrowser(nsIWebBrowser **outBrowser)
+WebBrowser::GetWebBrowser(nsIWebBrowser **outBrowser)
 {
     *outBrowser = mWebBrowser;
     NS_IF_ADDREF(*outBrowser);

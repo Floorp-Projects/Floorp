@@ -65,6 +65,8 @@ protected:
    // Weak References
    nsWebBrowser*           mWebBrowser;
    nsIDocShellTreeOwner*   mTreeOwner;
+   nsIDocShellTreeItem*    mPrimaryContentShell; 
+
    nsIWebBrowserChrome*    mWebBrowserChrome;
    nsIWebProgressListener* mOwnerProgressListener;
    nsIBaseWindow*          mOwnerWin;

@@ -29,17 +29,19 @@
 
 #include "nsEmbedAPI.h"
 #include "WebBrowser.h"
+#include "WebBrowserChrome.h"
 
-nsresult CreateWebBrowser(WebBrowser **outBrowser);
+WebBrowser* CreateWebBrowser();
 
 
 
 #define MAX_LOADSTRING 100
 
 // Global Variables:
-HINSTANCE hInst;								// current instance
-TCHAR szTitle[MAX_LOADSTRING];								// The title bar text
-TCHAR szWindowClass[MAX_LOADSTRING];								// The title bar text
+HINSTANCE hInst;
+TCHAR szTitle[MAX_LOADSTRING];
+
+TCHAR szWindowClass[MAX_LOADSTRING];
 
 // Foward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
@@ -52,7 +54,7 @@ char gLastURI[100];
 int main ()
 {
  	
-    printf("\nYour embedded, man!\n\n");
+    printf("\nYou are embedded, man!\n\n");
     
     MSG msg;
 	HINSTANCE hInstance = GetModuleHandle(NULL);
@@ -67,8 +69,7 @@ int main ()
 
 // put up at lease on browser window ....
 /////////////////////////////////////////////////////////////
-    WebBrowser* newBrowser;
-	CreateWebBrowser(&newBrowser);
+    WebBrowser* newBrowser = CreateWebBrowser();
     if (!newBrowser) 
         return -1;
     newBrowser->GoTo("http://people.netscape.com/dougt");
@@ -126,7 +127,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
 
 
-nsresult CreateWebBrowser(WebBrowser **outBrowser)
+WebBrowser * CreateWebBrowser()
 {
 
     STARTUPINFO StartupInfo;
@@ -139,7 +140,7 @@ nsresult CreateWebBrowser(WebBrowser **outBrowser)
 
     WebBrowser *browser = new WebBrowser();
     if (! browser)
-        return NS_ERROR_FAILURE;
+        return NULL;
 
     HWND hWnd;
 
@@ -157,16 +158,16 @@ nsresult CreateWebBrowser(WebBrowser **outBrowser)
 
     if (!hWnd)
     {
-      return NS_ERROR_FAILURE;
+      return NULL;
     }
     
     SetWindowLong( hWnd, GWL_USERDATA, (LONG)browser);  // save the browser LONG_PTR.
 
+    WebBrowserChrome* chrome = nsnull;//new WebBrowserChrome();
 
-
-    if ( NS_FAILED( browser->Init(hWnd) ) )  // this will own hWnd
-        return NS_ERROR_FAILURE;
-
+    if ( NS_FAILED( browser->Init(hWnd, chrome) ) )  // this will own hWnd
+        return NULL;
+    
     RECT rect;
     GetClientRect(hWnd, &rect);
     rect.top += 32;
@@ -176,9 +177,7 @@ nsresult CreateWebBrowser(WebBrowser **outBrowser)
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
 
-    *outBrowser = browser;
-
-    return NS_OK;
+    return browser;
 }
 
 //
@@ -218,8 +217,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     gLastURI[0] = 0;
                     if (DialogBox(hInst, (LPCTSTR)MOZ_GetURI, hWnd, (DLGPROC)GetURI))
                     {
-                        WebBrowser* newBrowser;
-	                    CreateWebBrowser(&newBrowser);
+                        WebBrowser* newBrowser = CreateWebBrowser();
                         if (!newBrowser)
                             break;
                         newBrowser->GoTo(gLastURI);
@@ -230,8 +228,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     gLastURI[0] = 0;
                     if (DialogBox(hInst, (LPCTSTR)MOZ_GetURI, hWnd, (DLGPROC)GetURI))
                     {
-                        WebBrowser* newBrowser;
-	                    CreateWebBrowser(&newBrowser);
+                        WebBrowser* newBrowser = CreateWebBrowser();
                         if (!newBrowser)
                             break;
                         newBrowser->Edit(gLastURI);
