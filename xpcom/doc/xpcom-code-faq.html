@@ -136,9 +136,8 @@ to exist. Hence the notion of getting a service not creating one. (as opposed
 to the notion of Creating instances with the componentManager). ServiceManager
 is a convenience because components can technically force singletonism
 by making their factory return the same instance if one was created already.
-The
-other big use of ServiceManager is the (still unimplemented) notion of
-Shutting down a service.</font>
+The other big use of ServiceManager is the (still unimplemented) notion
+of Shutting down a service.</font>
 <p><b><i><font color="#000000">Client</font></i></b>
 <ul>
 <li>
@@ -147,6 +146,8 @@ component manager</font></i></li>
 
 <br>&nbsp;
 <p>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
 <p><font color="#000000">When a client knows that the component that they
 are trying to instantiate is a singleton, they need to call service manager
 instead of component manager. Clients dont have to worry about calling
@@ -159,6 +160,8 @@ opposed to Service Manager</font></i></li>
 
 <br>&nbsp;
 <p>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
 <p><font color="#000000">When a client wants a private instance of a component,
 they call the Component Manager. From the Clients point of view, a new
 xpcom object creation happens everytime they call CreateInstance() Anything
@@ -170,6 +173,8 @@ a singleton</font></i></li>
 
 <br>&nbsp;
 <p>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
 <p><font color="#000000">For now, the Client just has to know. There is
 no way of telling which component is a Service and which isn't. In fact,
 in todays xpcom (Mar 1999) any component can be accessed as a Service.
@@ -187,6 +192,8 @@ dp@netscape.com</a></font></b>
 
 <br>&nbsp;
 <p>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
 <p><font color="#000000">No. The notion of the ServiceManager is available
 only to Clients.</font>
 <p><font color="#000000">Note that at some points when a component wants
@@ -215,6 +222,8 @@ become a Service</font></i></li>
 
 <br>&nbsp;
 <p>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
 <p><font color="#000000">No. Again, the notion of a ServiceManager is available
 only to Clients.</font>
 <br><font color="#000000">-</font>
@@ -224,6 +233,8 @@ so clients can use it as one</font></i></li>
 
 <br>&nbsp;
 <p>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
 <p>No. There isn't a way other than a comment in the interface of the header
 file.</ul>
 </blockquote>
@@ -246,7 +257,9 @@ ProgIDs (not implemented yet).
 <li>
 <i>Should CreateInstance() calls use ProgID or CLSID</i></li>
 
-<p><br>ProgID is what Clients should use to CreateInstances. Clients should
+<br>&nbsp;
+<p>&nbsp;
+<p>ProgID is what Clients should use to CreateInstances. Clients should
 not even know about the CLSID unless they are hell bent on creating a particular
 implementation of a component.
 <br>-</ul>
@@ -255,7 +268,9 @@ implementation of a component.
 <li>
 <i>Should Components register with both a CID and ProgID</i></li>
 
-<p><br>Absolutely.</ul>
+<br>&nbsp;
+<p>&nbsp;
+<p>Absolutely.</ul>
 </blockquote>
 
 <h4>
@@ -263,10 +278,9 @@ implementation of a component.
 
 <blockquote>Since components are dynamically loaded only on demand, debugging
 them could be a hard. Here are some tips to debugging components.
-<p><b><i>Windows:&nbsp;VC5.0 VC6.0</i></b>
+<p><b><i>Windows: VC5.0 VC6.0</i></b>
 <ul>Include your component library in the Project->Settings, Additional
-Dll. drop down. After that breakpoints can be enabled.
-<br>&nbsp;</ul>
+Dll. drop down. After that breakpoints can be enabled.</ul>
 <b><i>Unix: gdb</i></b>
 <blockquote>Let the program run until you are sure that your component
 is loaded. Type Control-C. Now all symbols from your component will be
@@ -274,8 +288,10 @@ available in gdb. Put your breakpoints and restart the app. Gdb will complain
 that it cannot set the breakpoint, and that it is temporarily disabling
 it, but when the *.so is loaded, the breakpoint is enabled automatically.
 - &lt;<a href="erik@netscape.com">Eric Van Der Poel</a>>
-<br>&nbsp;</blockquote>
-<b><i>Mac:&nbsp;Codewarrior</i></b>
+<p>I think typing "dir components" (assuming you're in dist/bin) will also
+allow you to see the symbols in your stack the first time. - &lt;<a href="mailto:alecf@netscape.com">Alec
+Flett</a>></blockquote>
+<b><i>Mac: Codewarrior</i></b>
 <blockquote>Just open the appropriate .xSYM file in the debugger; the debugger
 will target the library when the application is run. - &lt;<a href="sfraser@netscape.com">Simon
 Fraser</a>></blockquote>
