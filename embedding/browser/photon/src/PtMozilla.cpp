@@ -54,6 +54,7 @@
 #include "nsIDOMWindow.h"
 #include "nsNetUtil.h"
 #include "nsMPFileLocProvider.h"
+#include "nsIFocusController.h"
 
 
 #include "nsIViewManager.h"
@@ -119,7 +120,7 @@ static void MozCreateWindow(PtMozillaWidget_t *moz)
 
     // Create the webbrowser window
 		moz->MyBrowser->WebBrowserAsWin = do_QueryInterface(moz->MyBrowser->WebBrowser);
-		rv = moz->MyBrowser->WebBrowserAsWin->InitWindow(PtWidgetParent(moz), nsnull, 0, 0, 200, 200 );
+		rv = moz->MyBrowser->WebBrowserAsWin->InitWindow( moz /* PtWidgetParent(moz) */, nsnull, 0, 0, 200, 200 );
 		rv = moz->MyBrowser->WebBrowserAsWin->Create();
 
 		// Configure what the web browser can and cannot do
@@ -264,6 +265,7 @@ static void mozilla_defaults( PtWidget_t *widget )
 {
 	PtMozillaWidget_t *moz = (PtMozillaWidget_t *) widget;
 	PtBasicWidget_t *basic = (PtBasicWidget_t *) widget;
+	PtContainerWidget_t *cntr = (PtContainerWidget_t*) widget;
 
 	moz->MyBrowser = new BrowserAccess();
 
@@ -282,6 +284,8 @@ static void mozilla_defaults( PtWidget_t *widget )
 	widget->resize_flags &= ~Pt_RESIZE_XY_BITS; // fixed size.
 	widget->anchor_flags = Pt_TOP_ANCHORED_TOP | Pt_LEFT_ANCHORED_LEFT | \
 			Pt_BOTTOM_ANCHORED_TOP | Pt_RIGHT_ANCHORED_LEFT | Pt_ANCHORS_INVALID;
+
+	cntr->flags |= Pt_CHILD_GETTING_FOCUS;
 }
 
 static void mozilla_destroy( PtWidget_t *widget ) {
@@ -290,6 +294,97 @@ static void mozilla_destroy( PtWidget_t *widget ) {
 	MozDestroyWindow( moz );
 	delete moz->MyBrowser;
 	}
+
+#if 0
+static int child_getting_focus( PtWidget_t *widget, PtWidget_t *child, PhEvent_t *ev ) {
+	PtMozillaWidget_t *moz = (PtMozillaWidget_t *) widget;
+
+/* ATENTIE */ printf( "!!!!!!!!!!!child_getting_focus\n\n\n" );
+
+//	PtSuperClassChildGettingFocus( PtContainer, widget, child, ev );
+
+	nsCOMPtr<nsPIDOMWindow> piWin;
+	moz->MyBrowser->WebBrowserContainer->GetPIDOMWindow( getter_AddRefs( piWin ) );
+	if( !piWin ) return Pt_CONTINUE;
+
+	piWin->Activate();
+
+	return Pt_CONTINUE;
+	}
+
+static int child_losing_focus( PtWidget_t *widget, PtWidget_t *child, PhEvent_t *ev ) {
+	PtMozillaWidget_t *moz = (PtMozillaWidget_t *) widget;
+
+/* ATENTIE */ printf( "!!!!!!!!!!!!child_losing_focus\n\n\n" );
+
+//	PtSuperClassChildLosingFocus( PtContainer, widget, child, ev );
+
+	nsCOMPtr<nsPIDOMWindow> piWin;
+	moz->MyBrowser->WebBrowserContainer->GetPIDOMWindow( getter_AddRefs( piWin ) );
+	if( !piWin ) return Pt_CONTINUE;
+
+	piWin->Deactivate();
+
+	// but the window is still active until the toplevel gets a focus out
+	nsCOMPtr<nsIFocusController> focusController;
+	piWin->GetRootFocusController(getter_AddRefs(focusController));
+	if( focusController ) focusController->SetActive( PR_TRUE );
+
+	return Pt_CONTINUE;
+	}
+
+static int got_focus( PtWidget_t *widget, PhEvent_t *event ) {
+  PtMozillaWidget_t *moz = (PtMozillaWidget_t *) widget;
+
+/* ATENTIE */ printf( ">>>>>>>>>>>>>>>>>>>got_focus\n\n\n" );
+
+  PtSuperClassGotFocus( PtContainer, widget, event );
+
+  nsCOMPtr<nsPIDOMWindow> piWin;
+  moz->MyBrowser->WebBrowserContainer->GetPIDOMWindow( getter_AddRefs( piWin ) );
+  if( !piWin ) return Pt_CONTINUE;
+
+  nsCOMPtr<nsIFocusController> focusController;
+  piWin->GetRootFocusController( getter_AddRefs( focusController ) );
+  if( focusController ) focusController->SetActive( PR_TRUE );
+
+  return Pt_CONTINUE;
+  }
+
+static int lost_focus( PtWidget_t *widget, PhEvent_t *event ) {
+  PtMozillaWidget_t *moz = (PtMozillaWidget_t *) widget;
+
+/* ATENTIE */ printf( "!!!!!!!!!!!!!!!!lost_focus\n\n\n" );
+
+  PtSuperClassLostFocus( PtContainer, widget, event );
+
+  nsCOMPtr<nsPIDOMWindow> piWin;
+  moz->MyBrowser->WebBrowserContainer->GetPIDOMWindow( getter_AddRefs( piWin ) );
+  if( !piWin ) return Pt_CONTINUE;
+
+  nsCOMPtr<nsIFocusController> focusController;
+  piWin->GetRootFocusController( getter_AddRefs( focusController ) );
+  if( focusController ) focusController->SetActive( PR_FALSE );
+
+  return Pt_CONTINUE;
+  }
+
+#endif
+
+static int child_getting_focus( PtWidget_t *widget, PtWidget_t *child, PhEvent_t *ev ) {
+	PtMozillaWidget_t *moz = (PtMozillaWidget_t *) widget;
+
+	nsCOMPtr<nsPIDOMWindow> piWin;
+	moz->MyBrowser->WebBrowserContainer->GetPIDOMWindow( getter_AddRefs( piWin ) );
+	if( !piWin ) return Pt_CONTINUE;
+
+	nsCOMPtr<nsIFocusController> focusController;
+	piWin->GetRootFocusController(getter_AddRefs(focusController));
+	if( focusController ) focusController->SetActive( PR_TRUE );
+
+	return Pt_CONTINUE;
+	}
+
 
 /* this callback is invoked when the user changes video modes - it will reallocate the off screen memory */
 static int mozilla_ev_info( PtWidget_t *widget, PhEvent_t *event ) {
@@ -1123,6 +1218,10 @@ PtWidgetClass_t *PtCreateMozillaClass( void )
 		{ Pt_SET_FLAGS, Pt_RECTANGULAR, Pt_RECTANGULAR },
 		{ Pt_SET_DESTROY_F, (long) mozilla_destroy },
 		{ Pt_SET_RAW_CALLBACKS, (long) &callback, 1 },
+		{ Pt_SET_CHILD_GETTING_FOCUS_F, ( long ) child_getting_focus },
+//		{ Pt_SET_CHILD_LOSING_FOCUS_F, ( long ) child_losing_focus },
+//		{ Pt_SET_GOT_FOCUS_F, ( long ) got_focus },
+//		{ Pt_SET_LOST_FOCUS_F, ( long ) lost_focus },
 		{ Pt_SET_RESOURCES, (long) resources },
 		{ Pt_SET_NUM_RESOURCES, sizeof( resources )/sizeof( resources[0] ) },
 		{ Pt_SET_DESCRIPTION, (long) "PtMozilla" },
