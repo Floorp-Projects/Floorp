@@ -274,7 +274,7 @@ protected:
 	virtual PRInt32	PublishMsgHeader();
 #ifdef DOING_FILTERS
 	virtual void	ApplyFilters(PRBool *pMoved);
-	virtual nsIMsgFolder *GetTrashFolder();
+	virtual nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
 	virtual nsresult	MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 											   nsIMsgDatabase *sourceDB, 
 											   char *destFolder,

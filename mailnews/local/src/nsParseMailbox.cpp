@@ -1547,12 +1547,24 @@ nsOutputFileStream * nsParseNewMailState::GetLogFile ()
 }
 
 
-nsIMsgFolder *nsParseNewMailState::GetTrashFolder()
+nsresult nsParseNewMailState::GetTrashFolder(nsIMsgFolder **pTrashFolder)
 {
-	nsIMsgFolder *foundTrash = nsnull;
-	return foundTrash;
-//	GetMaster()->GetLocalMailFolderTree()->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, &foundTrash, 1);
-//	return foundTrash ? foundTrash->GetMailFolderInfo() : (MSG_FolderInfoMail *)nsnull;
+	nsresult rv;
+	if (!pTrashFolder)
+		return NS_ERROR_NULL_POINTER;
+
+	if(m_rootFolder)
+	{
+		nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(m_rootFolder);
+		if (rootMsgFolder)
+		{
+			PRUint32 numFolders;
+			rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, pTrashFolder, 1, &numFolders);
+			if (*pTrashFolder)
+				NS_ADDREF(*pTrashFolder);
+		}
+	}
+	return rv;
 }
 
 void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
@@ -1562,16 +1574,19 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 	m_msgMovedByFilter = PR_FALSE;
 
 	nsIMsgDBHdr	*msgHdr = m_newMsgHdr;
-	nsCOMPtr <nsIMsgFolder> inbox;
+	nsIMsgFolder *inbox;
 	nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(m_rootFolder);
 	if (rootMsgFolder)
 	{
 		PRUint32 numFolders;
-		rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, getter_AddRefs(inbox), 1, &numFolders);
+		rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, &inbox, 1, &numFolders);
+		if (inbox)
+			NS_ADDREF(inbox);
 		char * headers = m_headers.GetBuffer();
 		PRUint32 headersSize = m_headers.GetBufferPos();
 		nsresult matchTermStatus = m_filterList->ApplyFiltersToHdr(nsMsgFilterInboxRule, msgHdr, inbox, 
 											m_mailDB, headers, headersSize, this);
+		NS_IF_RELEASE(inbox);
 	}
 
 	if (pMoved)
@@ -1598,6 +1613,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 	{
 		nsIMsgDBHdr	*msgHdr = m_newMsgHdr;
 		PRUint32 msgFlags;
+		nsString trashNameVal(eOneByte);
 
 		msgHdr->GetFlags(&msgFlags);
 
@@ -1606,33 +1622,21 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 		{
 		case nsMsgFilterActionDelete:
 		{
-#ifdef DOING_DELETE
-			MSG_IMAPFolderInfoMail *imapFolder = m_folder->GetIMAPFolderInfoMail();
-			PRBool serverIsImap  = GetMaster()->GetPrefs()->GetMailServerIsIMAP4();
-			PRBool deleteToTrash = !imapFolder || imapFolder->DeleteIsMoveToTrash();
-			PRBool showDeletedMessages = (!imapFolder) || imapFolder->ShowDeletedMessages();
-			if (deleteToTrash || !serverIsImap)
+			nsCOMPtr <nsIMsgFolder> trash;
+			// set value to trash folder
+			nsresult rv = GetTrashFolder(getter_AddRefs(trash));
+			if (NS_SUCCEEDED(rv) && trash)
 			{
-				// set value to trash folder
-				MSG_FolderInfoMail *mailTrash = GetTrashFolder();
-				if (mailTrash)
-					value = (void *) mailTrash->GetPathname();
-
-				msgHdr->OrFlags(MSG_FLAG_READ);	// mark read in trash.
+				// this sucks - but we need value to live past this scope
+				// so we use an nsString from above.
+				char *folderName = nsnull;
+				rv = trash->GetName(&folderName);
+				trashNameVal = folderName;
+				PR_FREEIF(folderName);
+				value = (void *) trashNameVal.GetBuffer();
 			}
-			else	// (!deleteToTrash && serverIsImap)
-			{
-				msgHdr->OrFlags(MSG_FLAG_READ | MSG_FLAG_IMAP_DELETED);
-				nsMsgKeyArray	keysToFlag;
 
-				keysToFlag.Add(msgHdr->GetMessageKey());
-				if (imapFolder)
-					imapFolder->StoreImapFlags(m_pane, kImapMsgSeenFlag | kImapMsgDeletedFlag, TRUE, keysToFlag, ((ParseIMAPMailboxState *) this)->GetFilterUrlQueue());
-				if (!showDeletedMessages)
-					msgMoved = TRUE;	// this will prevent us from adding the header to the db.
-
-			}
-#endif // DOING_DELETE
+			msgHdr->OrFlags(MSG_FLAG_READ, &newFlags);	// mark read in trash.
 		}
 		case nsMsgFilterActionMoveToFolder:
 			// if moving to a different file, do it.
