@@ -600,9 +600,11 @@ function updateGoMenu(goMenu)
   var builder = history.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
   
   var beforeItem = document.getElementById("endHistorySeparator");
-  beforeItem.hidden = false;
-
+  
   var nameResource = gRDF.GetResource(NC_NS + "Name");
+
+  var endSep = beforeItem;
+  var showSep = false;
 
   for (var i = count-1; i >= 0; i--) {
     var res = builder.getResourceAtIndex(i);
@@ -610,9 +612,14 @@ function updateGoMenu(goMenu)
     var titleRes = history.database.GetTarget(res, nameResource, true);
     if (!titleRes)
       continue;
+
+    showSep = true;
     var titleLiteral = titleRes.QueryInterface(Components.interfaces.nsIRDFLiteral);
     beforeItem = constructGoMenuItem(goMenu, beforeItem, url, titleLiteral.Value);
   }
+
+  if (showSep)
+    endSep.hidden = false;
 }
 
 function addGroupmarkAs()
