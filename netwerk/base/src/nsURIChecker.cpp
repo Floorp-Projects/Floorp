@@ -133,11 +133,17 @@ nsURIChecker::AsyncCheckURI(const nsACString &aURI,
         }
     }
 
-    // Hook us up to listen to redirects and the like
+    // Hook us up to listen to redirects and the like (this creates a reference
+    // cycle!)
     mChannel->SetNotificationCallbacks(this);
     
     // and start the request:
-    return mChannel->AsyncOpen(this, nsnull);
+    rv = mChannel->AsyncOpen(this, nsnull);
+
+    // break cycle if we fail to open the channel.
+    if (NS_FAILED(rv))
+        mChannel = nsnull;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -316,6 +322,13 @@ NS_IMETHODIMP
 nsURIChecker::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                              nsresult statusCode)
 {
+    // break reference cycle between us and the channel (see comment in
+    // AsyncCheckURI)
+    mChannel = nsnull;
+
+    // also a good idea to release our reference to the observer since it
+    // may be owning us as well.
+    mObserver = nsnull;
     return NS_OK;
 }
 
