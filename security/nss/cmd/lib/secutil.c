@@ -41,6 +41,7 @@
 #include "prerror.h"
 #include "prprf.h"
 #include "plgetopt.h"
+#include "prenv.h"
 
 #include "secutil.h"
 #include "secpkcs7.h"
