@@ -182,7 +182,7 @@ private:
     eStringBase =    eString,    // 00
     eOtherBase =     0x01,       // 01
     eAtomBase =      eAtom,      // 10
-    eIntegerBase =   0x03,       // 11
+    eIntegerBase =   0x03        // 11
   };
 
   struct MiscContainer
