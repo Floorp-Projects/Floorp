@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.8 $ $Date: 2001/10/15 18:19:03 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.9 $ $Date: 2001/10/17 14:40:20 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -204,9 +204,36 @@ nssCertificate_SetCertTrust
     return PR_SUCCESS;
 }
 
+#ifdef NSS_3_4_CODE
+static void make_nss3_nickname(NSSCertificate *c) 
+{
+    /* In NSS 3.4, the semantic is that nickname = token name + label */
+    PRStatus utf8rv;
+    NSSUTF8 *tokenName;
+    NSSUTF8 *label;
+    char *fullname;
+    PRUint32 len, tlen;
+    tokenName = nssToken_GetName(c->token);
+    label = c->nickname;
+    tlen = nssUTF8_Length(tokenName, &utf8rv); /* token name */
+    tlen += 1;                                 /* :          */
+    len = nssUTF8_Length(label, &utf8rv);      /* label      */
+    len += 1;                                  /* \0         */
+    len += tlen;
+    fullname = nss_ZAlloc(c->arena, len);
+    utf8rv = nssUTF8_CopyIntoFixedBuffer(tokenName, fullname, tlen, ':');
+    utf8rv = nssUTF8_CopyIntoFixedBuffer(label, fullname + tlen, 
+                                                len - tlen, '\0');
+    nss_ZFreeIf(c->nickname);
+    c->nickname = nssUTF8_Create(c->arena, 
+                                 nssStringType_UTF8String, 
+                                 fullname, len);
+}
+#endif
+
 /* Create a certificate from an object handle. */
 NSS_IMPLEMENT NSSCertificate *
-NSSCertificate_CreateFromHandle
+nssCertificate_CreateFromHandle
 (
   NSSArena *arenaOpt,
   CK_OBJECT_HANDLE object,
@@ -232,8 +259,10 @@ NSSCertificate_CreateFromHandle
 	return (NSSCertificate *)NULL;
     }
     rvCert->handle = object;
+    /* clean this up */
     rvCert->slot = slot;
     rvCert->token = slot->token;
+    rvCert->trustDomain = slot->token->trustDomain;
     nssrv = nssCKObject_GetAttributes(object, cert_template, template_size,
                                       rvCert->arena, session, slot);
     if (nssrv) {
@@ -250,6 +279,9 @@ NSSCertificate_CreateFromHandle
     NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[5], &rvCert->subject);
     NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[6], &rvCert->serial);
     /* get the email from an attrib */
+#ifdef NSS_3_4_CODE
+    make_nss3_nickname(rvCert);
+#endif
     nssCertificate_SetCertTrust(rvCert, session);
     return rvCert;
 loser:
@@ -352,10 +384,45 @@ nssCertificate_GetDecoding
 {
     if (!c->decoding) {
 	c->decoding = nssDecodedCert_Create(NULL, &c->encoding, c->type);
-	/* Now that it's decoded, make sure it's in the cache. */
-	nssTrustDomain_AddCertsToCache(c->trustDomain, &c, 1);
     }
     return c->decoding;
+}
+
+static NSSCertificate *
+find_issuer_cert_for_identifier(NSSCertificate *c, NSSItem *id)
+{
+    NSSCertificate *rvCert = NULL;
+    NSSCertificate **subjectCerts;
+    /* Find all certs with this cert's issuer as the subject */
+    subjectCerts = NSSTrustDomain_FindCertificatesBySubject(c->trustDomain,
+                                                            &c->issuer,
+                                                            NULL,
+                                                            0,
+                                                            NULL);
+    if (subjectCerts) {
+	NSSCertificate *p;
+	nssDecodedCert *dcp;
+	int i = 0;
+	/* walk the subject certs */
+	while ((p = subjectCerts[i++])) {
+	    dcp = nssCertificate_GetDecoding(p);
+	    if (dcp->hasThisIdentifier(dcp, id)) {
+		/* this cert has the correct identifier */
+		rvCert = p;
+		/* now free all the remaining subject certs */
+		while ((p = subjectCerts[++i])) {
+		    NSSCertificate_Destroy(p);
+		}
+		/* and exit */
+		break;
+	    } else {
+		/* cert didn't have the correct identifier, so free it */
+		NSSCertificate_Destroy(p);
+	    }
+	}
+	nss_ZFreeIf(subjectCerts);
+    }
+    return rvCert;
 }
 
 NSS_IMPLEMENT NSSCertificate **
@@ -382,8 +449,7 @@ NSSCertificate_BuildChain
 	dc = nssCertificate_GetDecoding(c);
 	issuerID = dc->getIssuerIdentifier(dc);
 	if (issuerID) {
-	    c = nssTrustDomain_FindCertificateByIdentifier(c->trustDomain, 
-	                                                   issuerID);
+	    c = find_issuer_cert_for_identifier(c, issuerID);
 	    nss_ZFreeIf(issuerID);
 	    if (!c) {
 #if 0
@@ -412,10 +478,11 @@ finish:
 	rvChain = rvOpt;
     } else {
 	rvChain = nss_ZNEWARRAY(arenaOpt, 
-	                        NSSCertificate *, nssList_Count(chain));
+	                        NSSCertificate *, nssList_Count(chain) + 1);
     }
     nssList_GetArray(chain, (void **)rvChain, rvLimit);
     nssList_Destroy(chain);
+    /* XXX now, the question is, cache all certs in the chain? */
     return rvChain;
 }
 

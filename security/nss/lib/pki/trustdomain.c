@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.9 $ $Date: 2001/10/12 17:54:50 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.10 $ $Date: 2001/10/17 14:40:27 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -211,8 +211,18 @@ NSSTrustDomain_FindTokenByName
   NSSUTF8 *tokenName
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+    PRStatus nssrv;
+    NSSUTF8 *myName;
+    NSSToken *tok = NULL;
+    for (tok  = (NSSToken *)nssListIterator_Start(td->tokens);
+         tok != (NSSToken *)NULL;
+         tok  = (NSSToken *)nssListIterator_Next(td->tokens))
+    {
+	myName = nssToken_GetName(tok);
+	if (nssUTF8_Equal(tokenName, myName, &nssrv)) break;
+    }
+    nssListIterator_Finish(td->tokens);
+    return tok;
 }
 
 NSS_IMPLEMENT NSSToken *
@@ -356,13 +366,39 @@ static PRStatus
 get_best_cert(NSSCertificate *c, void *arg)
 {
     struct get_best_cert_arg_str *best = (struct get_best_cert_arg_str *)arg;
+    nssDecodedCert *dc, *bestdc;
     if (!best->cert) {
 	/* This is the first matching cert found, so it is the best so far */
 	best->cert = c;
 	return PR_SUCCESS;
     }
+    dc = nssCertificate_GetDecoding(c);
+    bestdc = nssCertificate_GetDecoding(best->cert);
     /* usage */
+    /* XXX something like NSSUsage_MatchUsage() maybe? */
     /* time */
+    if (bestdc->isValidAtTime(bestdc, best->time)) {
+	/* The current best cert is valid at time */
+	if (!dc->isValidAtTime(dc, best->time)) {
+	    /* If the new cert isn't valid at time, it's not better */
+	    return PR_SUCCESS;
+	}
+    } else {
+	/* The current best cert is not valid at time */
+	if (dc->isValidAtTime(dc, best->time)) {
+	    /* If the new cert is valid at time, it's better */
+	    best->cert = c;
+	    return PR_SUCCESS;
+	}
+    }
+    /* either they are both valid at time, or neither valid; take the newer */
+    /* XXX later -- defer to policies */
+    if (bestdc->isNewerThan(bestdc, dc)) {
+	return PR_SUCCESS;
+    } else {
+	best->cert = c;
+	return PR_SUCCESS;
+    }
     /* policies */
     return PR_SUCCESS;
 }
@@ -371,6 +407,7 @@ static NSSCertificate *
 find_best_cert_for_template
 (
   NSSTrustDomain *td,
+  NSSToken *token,
   struct get_best_cert_arg_str *best,
   CK_ATTRIBUTE_PTR cktemplate,
   CK_ULONG ctsize
@@ -378,15 +415,23 @@ find_best_cert_for_template
 {
     PRStatus nssrv;
     NSSToken *tok;
-    for (tok  = (NSSToken *)nssListIterator_Start(td->tokens);
-         tok != (NSSToken *)NULL;
-         tok  = (NSSToken *)nssListIterator_Next(td->tokens))
-    {
-	nssrv = nssToken_FindCertificatesByTemplate(tok, NULL, best->cached,
+    if (token) {
+	nssrv = nssToken_FindCertificatesByTemplate(token, NULL, best->cached,
 	                                            cktemplate, ctsize,
-                                                    get_best_cert, &best);
+	                                            get_best_cert, best);
+    } else {
+	for (tok  = (NSSToken *)nssListIterator_Start(td->tokens);
+	     tok != (NSSToken *)NULL;
+	     tok  = (NSSToken *)nssListIterator_Next(td->tokens))
+	{
+	    nssrv = nssToken_FindCertificatesByTemplate(tok, NULL, best->cached,
+	                                                cktemplate, ctsize,
+	                                                get_best_cert, best);
+	}
+	nssListIterator_Finish(td->tokens);
     }
-    nssListIterator_Finish(td->tokens);
+    /* Cache the cert before returning */
+    nssTrustDomain_AddCertsToCache(td, &best->cert, 1);
     return best->cert;
 }
 
@@ -417,6 +462,7 @@ static NSSCertificate **
 find_all_certs_for_template
 (
   NSSTrustDomain *td,
+  NSSToken *token,
   struct collect_arg_str *ca,
   CK_ATTRIBUTE_PTR cktemplate,
   CK_ULONG ctsize
@@ -426,15 +472,21 @@ find_all_certs_for_template
     PRStatus nssrv;
     PRUint32 count;
     NSSToken *tok;
-    for (tok  = (NSSToken *)nssListIterator_Start(td->tokens);
-         tok != (NSSToken *)NULL;
-         tok  = (NSSToken *)nssListIterator_Next(td->tokens))
-    {
-	nssrv = nssToken_FindCertificatesByTemplate(tok, NULL, ca->list,
+    if (token) {
+	nssrv = nssToken_FindCertificatesByTemplate(token, NULL, ca->list,
 	                                            cktemplate, ctsize,
                                                     collect_certs, ca);
+    } else {
+	for (tok  = (NSSToken *)nssListIterator_Start(td->tokens);
+	     tok != (NSSToken *)NULL;
+	     tok  = (NSSToken *)nssListIterator_Next(td->tokens))
+	{
+	    nssrv = nssToken_FindCertificatesByTemplate(tok, NULL, ca->list,
+	                                                cktemplate, ctsize,
+                                                        collect_certs, ca);
+	}
+	nssListIterator_Finish(td->tokens);
     }
-    nssListIterator_Finish(td->tokens);
     count = nssList_Count(ca->list);
     if (ca->rvOpt) {
 	certs = ca->rvOpt;
@@ -442,7 +494,65 @@ find_all_certs_for_template
 	certs = nss_ZNEWARRAY(ca->arena, NSSCertificate *, count + 1);
     }
     nssrv = nssList_GetArray(ca->list, (void **)certs, count);
+    /* Cache the certs before returning */
+    nssTrustDomain_AddCertsToCache(td, certs, count);
     return certs;
+}
+
+/* XXX
+ * This is really a hack for PK11_ calls that want to specify the token to
+ * do lookups on (see PK11_FindCertFromNickname).  I don't think this
+ * is something we want to keep.
+ */
+NSS_IMPLEMENT NSSCertificate *
+nssTrustDomain_FindBestCertificateByNicknameForToken
+(
+  NSSTrustDomain *td,
+  NSSToken *token,
+  NSSUTF8 *name,
+  NSSTime *timeOpt, /* NULL for "now" */
+  NSSUsage *usage,
+  NSSPolicies *policiesOpt /* NULL for none */
+)
+{
+    NSSCertificate *rvCert = NULL;
+    PRStatus nssrv;
+    struct get_best_cert_arg_str best;
+    CK_ATTRIBUTE nick_template[] =
+    {
+	{ CKA_CLASS, NULL, 0 },
+	{ CKA_LABEL, NULL, 0 }
+    };
+    CK_ULONG ctsize;
+    nssList *nameList;
+    /* set up the search template */
+    ctsize = (CK_ULONG)(sizeof(nick_template) / sizeof(nick_template[0]));
+    NSS_CK_SET_ATTRIBUTE_ITEM(nick_template, 0, &g_ck_class_cert);
+    nick_template[1].pValue = (CK_VOID_PTR)name;
+    nick_template[1].ulValueLen = (CK_ULONG)nssUTF8_Length(name, &nssrv);
+    /* set the criteria for determining the best cert */
+    best.td = td;
+    best.cert = NULL;
+    best.time = (timeOpt) ? timeOpt : NSSTime_Now(NULL);
+    best.usage = usage;
+    best.policies = policiesOpt;
+    /* find all matching certs in the cache */
+    nameList = nssList_Create(NULL, PR_FALSE);
+    (void)nssTrustDomain_GetCertsForNicknameFromCache(td, name, nameList);
+    best.cached = nameList;
+    /* now find the best cert on tokens */
+    rvCert = find_best_cert_for_template(td, token, 
+                                         &best, nick_template, ctsize);
+    if (!rvCert) {
+	/* This is to workaround the fact that PKCS#11 doesn't specify
+	 * whether the '\0' should be included.  XXX Is that still true?
+	 */
+	nick_template[1].ulValueLen++;
+	rvCert = find_best_cert_for_template(td, token, 
+	                                     &best, nick_template, ctsize);
+    }
+    nssList_Destroy(nameList);
+    return rvCert;
 }
 
 NSS_IMPLEMENT NSSCertificate *
@@ -481,16 +591,59 @@ NSSTrustDomain_FindBestCertificateByNickname
     (void)nssTrustDomain_GetCertsForNicknameFromCache(td, name, nameList);
     best.cached = nameList;
     /* now find the best cert on tokens */
-    rvCert = find_best_cert_for_template(td, &best, nick_template, ctsize);
+    rvCert = find_best_cert_for_template(td, NULL, 
+                                         &best, nick_template, ctsize);
     if (!rvCert) {
 	/* This is to workaround the fact that PKCS#11 doesn't specify
 	 * whether the '\0' should be included.  XXX Is that still true?
 	 */
 	nick_template[1].ulValueLen++;
-	rvCert = find_best_cert_for_template(td, &best, nick_template, ctsize);
+	rvCert = find_best_cert_for_template(td, NULL, 
+	                                     &best, nick_template, ctsize);
     }
     nssList_Destroy(nameList);
     return rvCert;
+}
+
+/* XXX
+ * This is really a hack for PK11_ calls that want to specify the token to
+ * do lookups on (see PK11_FindCertsFromNickname).  I don't think this
+ * is something we want to keep.
+ */
+NSS_IMPLEMENT NSSCertificate **
+nssTrustDomain_FindCertificatesByNicknameForToken
+(
+  NSSTrustDomain *td,
+  NSSToken *token,
+  NSSUTF8 *name,
+  NSSCertificate *rvOpt[],
+  PRUint32 maximumOpt, /* 0 for no max */
+  NSSArena *arenaOpt
+)
+{
+    NSSCertificate **rvCerts = NULL;
+    PRStatus nssrv;
+    CK_ATTRIBUTE nick_template[] =
+    {
+	{ CKA_CLASS, NULL, 0 },
+	{ CKA_LABEL, NULL, 0 }
+    };
+    nssList *nickCerts;
+    struct collect_arg_str ca;
+    CK_ULONG ctsize;
+    ctsize = (CK_ULONG)(sizeof(nick_template) / sizeof(nick_template[0]));
+    NSS_CK_SET_ATTRIBUTE_ITEM(nick_template, 0, &g_ck_class_cert);
+    nick_template[1].pValue = (CK_VOID_PTR)name;
+    nick_template[1].ulValueLen = (CK_ULONG)nssUTF8_Length(name, &nssrv);
+    nickCerts = nssList_Create(NULL, PR_FALSE);
+    ca.list = nickCerts;
+    ca.maximum = maximumOpt;
+    ca.arena = arenaOpt;
+    ca.rvOpt = rvOpt;
+    rvCerts = find_all_certs_for_template(td, token, 
+                                          &ca, nick_template, ctsize);
+    nssList_Destroy(nickCerts);
+    return rvCerts;
 }
 
 NSS_IMPLEMENT NSSCertificate **
@@ -522,26 +675,10 @@ NSSTrustDomain_FindCertificatesByNickname
     ca.maximum = maximumOpt;
     ca.arena = arenaOpt;
     ca.rvOpt = rvOpt;
-    rvCerts = find_all_certs_for_template(td, &ca, nick_template, ctsize);
+    rvCerts = find_all_certs_for_template(td, NULL, 
+                                          &ca, nick_template, ctsize);
     nssList_Destroy(nickCerts);
     return rvCerts;
-}
-
-NSS_IMPLEMENT NSSCertificate *
-nssTrustDomain_FindCertificateByIdentifier
-(
-  NSSTrustDomain *td,
-  NSSItem *identifier
-)
-{
-    NSSCertificate *rvCert;
-    /* Try the cache */
-    rvCert = nssTrustDomain_GetCertForIdentifierFromCache(td, identifier);
-    if (!rvCert) {
-	/* uh, how to look up by id in PKCS#11? */
-	rvCert = NULL;
-    }
-    return rvCert;
 }
 
 NSS_IMPLEMENT NSSCertificate *
@@ -580,7 +717,7 @@ NSSTrustDomain_FindCertificateByIssuerAndSerialNumber
 	                                           cert_template, ctsize);
 	    if (object != CK_INVALID_KEY) {
 		/* Could not find cert, so create it */
-		rvCert = NSSCertificate_CreateFromHandle(NULL, object, 
+		rvCert = nssCertificate_CreateFromHandle(NULL, object, 
 		                                         NULL, tok->slot);
 		if (rvCert) {
 		    /* cache it */
@@ -625,7 +762,8 @@ NSSTrustDomain_FindBestCertificateBySubject
     (void)nssTrustDomain_GetCertsForSubjectFromCache(td, subject, subjectList);
     best.cached = subjectList;
     /* now find the best cert on tokens */
-    rvCert = find_best_cert_for_template(td, &best, subj_template, ctsize);
+    rvCert = find_best_cert_for_template(td, NULL, 
+                                         &best, subj_template, ctsize);
     nssList_Destroy(subjectList);
     return rvCert;
 }
@@ -658,7 +796,8 @@ NSSTrustDomain_FindCertificatesBySubject
     ca.maximum = maximumOpt;
     ca.arena = arenaOpt;
     ca.rvOpt = rvOpt;
-    rvCerts = find_all_certs_for_template(td, &ca, subj_template, ctsize);
+    rvCerts = find_all_certs_for_template(td, NULL, 
+                                          &ca, subj_template, ctsize);
     nssList_Destroy(subjectList);
     return rvCerts;
 }
@@ -721,7 +860,7 @@ NSSTrustDomain_FindCertificateByEncodedCertificate
 	                                           cert_template, ctsize);
 	    if (object != CK_INVALID_KEY) {
 		/* Could not find cert, so create it */
-		rvCert = NSSCertificate_CreateFromHandle(NULL, object, 
+		rvCert = nssCertificate_CreateFromHandle(NULL, object, 
 		                                         NULL, tok->slot);
 		if (rvCert) {
 		    /* cache it */

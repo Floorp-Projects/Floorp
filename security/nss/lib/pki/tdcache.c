@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.4 $ $Date: 2001/10/15 17:18:06 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.5 $ $Date: 2001/10/17 14:40:23 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -227,21 +227,23 @@ add_cert_to_cache(NSSTrustDomain *td, NSSCertificate *cert)
 	nssrv = nssHash_Add(td->cache->nickname, nickname, subjectList);
 	if (nssrv != PR_SUCCESS) goto loser;
 	/* email */
-	subjects = (nssList *)nssHash_Lookup(td->cache->email, cert->email);
-	if (subjects) {
-	    /* The email address is already hashed, add this subject list */
-	    nssrv = nssList_Add(subjects, subjectList);
-	    if (nssrv != PR_SUCCESS) goto loser;
-	} else {
-	    /* Create a new list of subject lists, add this subject */
-	    subjects = nssList_Create(td->arena, PR_TRUE);
-	    if (!subjects) goto loser;
-	    nssrv = nssList_Add(subjects, subjectList);
-	    if (nssrv != PR_SUCCESS) goto loser;
-	    /* Add the list of subject lists to the hash */
-	    email = nssUTF8_Duplicate(cert->email, td->arena);
-	    nssrv = nssHash_Add(td->cache->email, email, subjects);
-	    if (nssrv != PR_SUCCESS) goto loser;
+	if (cert->email) {
+	    subjects = (nssList *)nssHash_Lookup(td->cache->email, cert->email);
+	    if (subjects) {
+		/* The email address is already hashed, add this subject list */
+		nssrv = nssList_Add(subjects, subjectList);
+		if (nssrv != PR_SUCCESS) goto loser;
+	    } else {
+		/* Create a new list of subject lists, add this subject */
+		subjects = nssList_Create(td->arena, PR_TRUE);
+		if (!subjects) goto loser;
+		nssrv = nssList_Add(subjects, subjectList);
+		if (nssrv != PR_SUCCESS) goto loser;
+		/* Add the list of subject lists to the hash */
+		email = nssUTF8_Duplicate(cert->email, td->arena);
+		nssrv = nssHash_Add(td->cache->email, email, subjects);
+		if (nssrv != PR_SUCCESS) goto loser;
+	    }
 	}
     }
     nssrv = nssArena_Unmark(td->arena, mark);

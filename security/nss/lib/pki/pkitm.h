@@ -35,7 +35,7 @@
 #define PKITM_H
 
 #ifdef DEBUG
-static const char PKITM_CVS_ID[] = "@(#) $RCSfile: pkitm.h,v $ $Revision: 1.1 $ $Date: 2001/10/11 16:34:49 $ $Name:  $";
+static const char PKITM_CVS_ID[] = "@(#) $RCSfile: pkitm.h,v $ $Revision: 1.2 $ $Date: 2001/10/17 14:40:22 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -65,10 +65,12 @@ PR_BEGIN_EXTERN_C
 struct nssDecodedCertStr {
     NSSCertificateType type;
     void *data;
-    /* returns the unique identifier for the cert (usually issuer + serial) */
+    /* returns the unique identifier for the cert */
     NSSItem *  (*getIdentifier)(nssDecodedCert *dc);
     /* returns the unique identifier for this cert's issuer */
     NSSItem *  (*getIssuerIdentifier)(nssDecodedCert *dc);
+    /* is id the identifier for this cert? */
+    PRBool     (*hasThisIdentifier)(nssDecodedCert *dc, NSSItem *id);
     /* returns the cert usage */
     NSSUsage * (*getUsage)(nssDecodedCert *dc);
     /* is time within the validity period of the cert? */

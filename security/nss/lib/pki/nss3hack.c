@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: nss3hack.c,v $ $Revision: 1.1 $ $Date: 2001/10/11 16:34:44 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: nss3hack.c,v $ $Revision: 1.2 $ $Date: 2001/10/17 14:40:20 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -99,7 +99,7 @@ STAN_LoadDefaultNSS3TrustDomain
     td->tokenList = nssList_Create(td->arena, PR_TRUE);
     list = PK11_GetAllTokens(CKM_INVALID_MECHANISM, PR_FALSE, PR_FALSE, NULL);
     if (list) {
-#if 0
+#ifndef NSS_SOFTOKEN_MODULE_FOO
 	/* XXX this doesn't work until softoken is a true PKCS#11 mod */
 	for (le = list->head; le; le = le->next) {
 	    token = nssToken_CreateFromPK11SlotInfo(td, le->slot);
@@ -185,6 +185,19 @@ nss3certificate_getIssuerIdentifier(nssDecodedCert *dc)
     return rvID;
 }
 
+static PRBool
+nss3certificate_hasThisIdentifier(nssDecodedCert *dc, NSSItem *id)
+{
+    CERTCertificate *c = (CERTCertificate *)dc->data;
+    SECItem *subjectKeyID, authKeyID;
+    subjectKeyID = &c->subjectKeyID;
+    SECITEM_FROM_NSSITEM(&authKeyID, id);
+    if (SECITEM_CompareItem(subjectKeyID, &authKeyID) == SECEqual) {
+	return PR_TRUE;
+    }
+    return PR_FALSE;
+}
+
 static NSSUsage *
 nss3certificate_getUsage(nssDecodedCert *dc)
 {
@@ -231,6 +244,7 @@ nssDecodedPKIXCertificate_Create
     rvDC->data = (void *)CERT_DecodeDERCertificate(&secDER, PR_TRUE, NULL);
     rvDC->getIdentifier = nss3certificate_getIdentifier;
     rvDC->getIssuerIdentifier = nss3certificate_getIssuerIdentifier;
+    rvDC->hasThisIdentifier = nss3certificate_hasThisIdentifier;
     rvDC->getUsage = nss3certificate_getUsage;
     rvDC->isValidAtTime = nss3certificate_isValidAtTime;
     rvDC->isNewerThan = nss3certificate_isNewerThan;
@@ -269,13 +283,22 @@ get_nss3trust_from_cktrust(CK_TRUST t)
     return rt;
 }
 
+/* From pk11cert.c */
+extern PRBool
+PK11_IsUserCert(PK11SlotInfo *, CERTCertificate *, CK_OBJECT_HANDLE);
+
 static CERTCertTrust * 
-NSSTrust_GetCERTCertTrust(NSSTrust *t)
+nssTrust_GetCERTCertTrust(NSSTrust *t, CERTCertificate *cc)
 {
-    CERTCertTrust *rvTrust = nss_ZNEW(NULL, CERTCertTrust);
+    CERTCertTrust *rvTrust = PORT_ArenaAlloc(cc->arena, sizeof(CERTCertTrust));
     rvTrust->sslFlags = get_nss3trust_from_cktrust(t->serverAuth);
     rvTrust->emailFlags = get_nss3trust_from_cktrust(t->emailProtection);
     rvTrust->objectSigningFlags = get_nss3trust_from_cktrust(t->codeSigning);
+    if (PK11_IsUserCert(cc->slot, cc, cc->pkcs11ID)) {
+	rvTrust->sslFlags |= CERTDB_USER;
+	rvTrust->emailFlags |= CERTDB_USER;
+	rvTrust->objectSigningFlags |= CERTDB_USER;
+    }
     return rvTrust;
 }
 
@@ -287,23 +310,41 @@ STAN_GetCERTCertificate(NSSCertificate *c)
     if (!c->decoding) {
 	dc = nssDecodedPKIXCertificate_Create(NULL, &c->encoding);
 	c->decoding = dc;
-	/* decoded, so cache */
+	cc = (CERTCertificate *)dc->data;
+	/* fill other fields needed by NSS3 functions using CERTCertificate */
+	/* handle */
+	cc->pkcs11ID = c->handle;
+	/* nickname */
+	cc->nickname = PL_strdup(c->nickname);
+	/* emailAddr ??? */
+	/* slot (ownSlot ?) (addref ?) */
+	cc->slot = c->token->pk11slot;
+	/* trust */
+	cc->trust = nssTrust_GetCERTCertTrust(&c->trust, cc);
+	/* referenceCount  addref? */
+	/* subjectList ? */
+	/* pkcs11ID */
+	cc->pkcs11ID = c->handle;
+	/* pointer back */
+	cc->nssCertificate = c;
     } else {
 	dc = c->decoding;
+	cc = (CERTCertificate *)dc->data;
     }
-    /* fill other fields needed by NSS3 functions using CERTCertificate */
-    cc = (CERTCertificate *)dc->data;
-    /* nickname */
-    cc->nickname = PL_strdup(c->nickname);
-    /* emailAddr ??? */
-    /* slot */
-    cc->slot = c->token->pk11slot;
-    /* trust */
-    cc->trust = NSSTrust_GetCERTCertTrust(&c->trust);
-    /* referenceCount  addref? */
-    /* subjectList ? */
-    /* pkcs11ID */
-    cc->pkcs11ID = c->handle;
     return cc;
+}
+
+NSS_EXTERN NSSCertificate *
+STAN_GetNSSCertificate(CERTCertificate *cc)
+{
+    NSSCertificate *c;
+    c = cc->nssCertificate;
+    if (!c) {
+	/* i don't think this should happen.  but if it can, need to create
+	 * NSSCertificate from CERTCertificate values here.
+	 */
+	return NULL;
+    }
+    return c;
 }
 
