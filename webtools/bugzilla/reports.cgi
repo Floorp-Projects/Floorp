@@ -666,6 +666,9 @@ sub most_doomed_for_milestone {
 
     print "<center>\n<h1>";
     if( $FORM{'product'} ne "-All-" ) {
+        SendSQL("SELECT defaultmilestone FROM products WHERE product = " .
+                SqlQuote($FORM{'product'}));
+        $ms = FetchOneColumn();
         print "Most Doomed for $ms ($FORM{'product'})";
     } else {
         print "Most Doomed for $ms";
@@ -785,6 +788,9 @@ sub most_recently_doomed {
                                                      
     print "<center>\n<h1>";
     if( $FORM{'product'} ne "-All-" ) {
+        SendSQL("SELECT defaultmilestone FROM products WHERE product = " .
+                SqlQuote($FORM{'product'}));
+        $ms = FetchOneColumn();
         print "Most Recently Doomed ($FORM{'product'})";
     } else {
         print "Most Recently Doomed";
