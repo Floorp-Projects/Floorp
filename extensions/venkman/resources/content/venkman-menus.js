@@ -249,7 +249,7 @@ function createMainToolbar(document)
     var spec = console.menuSpecs["maintoolbar"];
     for (var i in spec.items)
     {
-        menuManager.appendToolbarItem (maintoolbar, null, spec.items[i]);
+        menuManager.appendToolbarItem (maintoolbar, null, spec.items[i][0]);
     }
 
     maintoolbar = document.getElementById("maintoolbar-outer");
