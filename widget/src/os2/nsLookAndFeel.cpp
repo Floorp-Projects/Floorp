@@ -144,8 +144,6 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor_infobackground:
       aColor = NS_RGB( 255, 255, 228);
       return res;
-//      idx = SYSCLR_ENTRYFIELD;
-//      break;
     case eColor_infotext:
       idx = SYSCLR_WINDOWTEXT;
       break;
@@ -183,13 +181,13 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       idx = SYSCLR_WINDOWTEXT;
       break;
     case eColor__moz_field:
-      idx = SYSCLR_WINDOW;
+      idx = SYSCLR_ENTRYFIELD;
       break;
     case eColor__moz_fieldtext:
       idx = SYSCLR_WINDOWTEXT;
       break;
     case eColor__moz_dialog:
-      idx = SYSCLR_BUTTONMIDDLE;
+      idx = SYSCLR_DIALOGBACKGROUND;
       break;
     case eColor__moz_dialogtext:
       idx = SYSCLR_WINDOWTEXT;
