@@ -1,0 +1,3 @@
+# target: EditorGuiManagerDebug.shlb
+mozilla/editor/guimgr/src/nsEditGuiManager.cpp
+mozilla/editor/guimgr/src/nsGuiManagerFactory.cpp
