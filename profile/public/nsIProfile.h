@@ -23,6 +23,10 @@
     { 0x9f, 0x5a, 0x00, 0x60, 0x08, 0xa6, 0xef, 0xe9 } \
   }
 
+#if defined(XP_PC) || defined(XP_MAC)
+#define NS_USING_PROFILES 1
+#endif
+
 /*
  * Return values
  */
@@ -37,15 +41,15 @@ public:
 	NS_IMETHOD Shutdown() = 0;
 
 	// Getters
-	NS_IMETHOD GetProfileDir(const char *profileName, nsFileSpec **profileDir) = 0;
+	NS_IMETHOD GetProfileDir(const char *profileName, nsFileSpec* profileDir) = 0;
 	NS_IMETHOD GetProfileCount(int *numProfiles) = 0;
 	NS_IMETHOD GetSingleProfile(char **profileName) = 0;
 	NS_IMETHOD GetCurrentProfile(char **profileName) = 0;
 	NS_IMETHOD GetFirstProfile(char **profileName) = 0;
-	NS_IMETHOD GetCurrentProfileDir(nsFileSpec **profileDir) = 0;
+	NS_IMETHOD GetCurrentProfileDir(nsFileSpec* profileDir) = 0;
 
 	// Setters
-	NS_IMETHOD SetProfileDir(char *profileName, nsFileSpec& profileDir) = 0;
+	NS_IMETHOD SetProfileDir(const char *profileName, const nsFileSpec& profileDir) = 0;
 };
 
 #endif /* nsIProfile_h__ */
