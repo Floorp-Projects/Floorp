@@ -807,6 +807,15 @@ XPPrinterList XpuGetPrinterList( const char *printer, int *res_list_count )
           for( i = 0 ; i < list_count ; i++ )
           {
             char *s;
+            
+            /* Workaround for http://bugzilla.mozilla.org/show_bug.cgi?id=193499 
+             * ("Xprint print/print preview crashes Mozilla") where the Solaris
+             * Xprt may create invalid entries (e.g. |XpGetPrinterList| will
+             * return |list[i].name==NULL| due to empty lines in the printer list.
+             */
+            if( !list[i].name )
+              continue;
+            
             rec_count++;
             rec = (XPPrinterRec *)realloc(rec, sizeof(XPPrinterRec)*rec_count);
             if( !rec ) /* failure */
