@@ -859,7 +859,7 @@ NS_IMETHODIMP nsMsgDBFolder::ShouldStoreMsgOffline(nsMsgKey msgKey, PRBool *resu
         if (NS_SUCCEEDED(rv) && incomingServer)
         {
           PRBool limitDownloadSize = PR_FALSE;
-          rv = incomingServer->GetLimitMessageSize(&limitDownloadSize);
+          rv = incomingServer->GetLimitOfflineMessageSize(&limitDownloadSize);
           NS_ENSURE_SUCCESS(rv, rv);
           if (limitDownloadSize)
           {
