@@ -154,25 +154,28 @@ void nsFileControlFrame::MouseClicked(nsIPresContext* aPresContext)
   textView->GetParent(parentView);
   nsIWidget* parentWidget = GetWindowTemp(parentView);
  
-  nsIFileWidget *fileWidget;
-
+  nsIFileWidget *fileWidget = nsnull;
+  
   nsString title("File Upload");
   nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget);
   
-  nsString titles[] = {"all files"};
-  nsString filters[] = {"*.*"};
-  fileWidget->SetFilterList(1, titles, filters);
+  if (fileWidget)
+  {
+	  nsString titles[] = {"all files"};
+	  nsString filters[] = {"*.*"};
+	  fileWidget->SetFilterList(1, titles, filters);
 
-  fileWidget->Create(parentWidget, title, eMode_load, nsnull, nsnull);
-  result = fileWidget->Show();
+	  fileWidget->Create(parentWidget, title, eMode_load, nsnull, nsnull);
+	  result = fileWidget->Show();
 
-  if (result) {
-    PRUint32 size;
-    nsString fileName;
-    fileWidget->GetFile(fileName);
-    textWidget->SetText(fileName,size);
+	  if (result) {
+	    PRUint32 size;
+	    nsString fileName;
+	    fileWidget->GetFile(fileName);
+	    textWidget->SetText(fileName,size);
+	  }
+	  NS_RELEASE(fileWidget);
   }
-  NS_RELEASE(fileWidget);
   NS_RELEASE(parentWidget);
   NS_RELEASE(textWidget);
   NS_RELEASE(widget);
