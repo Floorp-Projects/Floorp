@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   jeroen.dobbelaere@acunia.com
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -88,22 +89,14 @@ typedef enum {
 } uScanSubClassID;
 
 typedef struct  {
-        unsigned char MinHB;
-        unsigned char MinLB;
-        unsigned char MaxHB;
-        unsigned char MaxLB;
-} uShiftOut;
-
-typedef struct  {
-        unsigned char Min;
-        unsigned char Max;
-} uShiftIn;
-
-typedef struct  {
         unsigned char   classID;
         unsigned char   reserveLen;
-        uShiftIn        shiftin;
-        uShiftOut       shiftout;
+        unsigned char   shiftin_Min;
+        unsigned char   shiftin_Max;
+        unsigned char   shiftout_MinHB;
+        unsigned char   shiftout_MinLB;
+        unsigned char   shiftout_MaxHB;
+        unsigned char   shiftout_MaxLB;
 } uShiftCell;
 
 typedef struct  {

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   jeroen.dobbelaere@acunia.com
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -492,10 +493,10 @@ PRIVATE PRBool uCheckAndGenByTable(
     inL = (in & 0xff );
     for(i=0;i<itemnum;i++)
     {
-        if( ( inL >=  cell[i].shiftout.MinLB) &&
-            ( inL <=  cell[i].shiftout.MaxLB) &&
-            ( inH >=  cell[i].shiftout.MinHB) &&
-            ( inH <=  cell[i].shiftout.MaxHB) )
+        if( ( inL >=  cell[i].shiftout_MinLB) &&
+            ( inL <=  cell[i].shiftout_MaxLB) &&
+            ( inH >=  cell[i].shiftout_MinHB) &&
+            ( inH <=  cell[i].shiftout_MaxHB) )
         {
             if(outbuflen < cell[i].reserveLen)
                 return PR_FALSE;

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  jeroen.dobbelaere@acunia.com
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -91,7 +92,7 @@ PRIVATE const HitFormateFunc m_hit[uNumFormatTag] =
 #define uHit(format,in,cell)   (* m_hit[(format)])((in),(cell))
 #define uMap(format,in,uT,cell)  (* m_map[(format)])((in),(uT),(cell))
 #define uFillInfoCell(format,uT,cell,info)  (* m_fillinfo[(format)])((uT),(cell),(info))
-#define uGetMapCell(uT, item) ((uMapCell *)(((PRUint16 *)uT) + (uT)->offsetToMapCellArray) + (item))
+#define uGetMapCell(uT, item) ((uMapCell *)(((PRUint16 *)uT) + (uT)->offsetToMapCellArray + (item)*(UMAPCELL_SIZE/sizeof(PRUint16))))
 #define uGetFormat(uT, item) (((((PRUint16 *)uT) + (uT)->offsetToFormatArray)[(item)>> 2 ] >> (((item)% 4 ) << 2)) & 0x0f)
 
 /*=================================================================================

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  jeroen.dobbelaere@acunia.com
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -72,6 +73,8 @@ typedef struct  {
 		uFormat2	format2;
 	} fmt;
 } uMapCell;
+
+#define UMAPCELL_SIZE (3*sizeof(PRUint16))
 
 typedef struct  {
 	PRUint16 		itemOfList;
