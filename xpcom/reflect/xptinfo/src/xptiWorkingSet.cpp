@@ -28,13 +28,13 @@
 #define XPTI_STRUCT_ARENA_BLOCK_SIZE    (1024 * 1)
 #define XPTI_HASHTABLE_SIZE             128
 
-static PR_CALLBACK PLHashNumber
+PR_STATIC_CALLBACK(PLHashNumber)
 xpti_HashIID(const void *key)
 {
     return ((nsID*)key)->m0;        
 }
 
-static PR_CALLBACK PRIntn
+PR_STATIC_CALLBACK(PRIntn)
 xpti_CompareIIDs(const void *v1, const void *v2)
 {
     return (PRIntn) ((const nsID*)v1)->Equals(*((const nsID*)v2));        
@@ -57,7 +57,8 @@ xptiWorkingSet::xptiWorkingSet()
       mIIDTable(PL_NewHashTable(XPTI_HASHTABLE_SIZE, xpti_HashIID,
                                 xpti_CompareIIDs, PL_CompareValues,
                                 nsnull, nsnull)),
-      mMergeOffsetMap(nsnull)
+    mFileMergeOffsetMap(nsnull),
+    mZipItemMergeOffsetMap(nsnull)
 {
     // do nothing else...            
 }        
@@ -73,13 +74,13 @@ xptiWorkingSet::IsValid() const
             mIIDTable;          
 }
 
-static PR_CALLBACK PRIntn 
+PR_STATIC_CALLBACK(PRIntn)
 xpti_Remover(PLHashEntry *he, PRIntn i, void *arg)
 {
   return HT_ENUMERATE_REMOVE;
 }       
 
-static PR_CALLBACK PRIntn 
+PR_STATIC_CALLBACK(PRIntn)
 xpti_ReleaseAndRemover(PLHashEntry *he, PRIntn i, void *arg)
 {
   nsIInterfaceInfo* ii = (nsIInterfaceInfo*) he->value;
@@ -88,7 +89,7 @@ xpti_ReleaseAndRemover(PLHashEntry *he, PRIntn i, void *arg)
 }
  
 
-static PR_CALLBACK PRIntn 
+PR_STATIC_CALLBACK(PRIntn)
 xpti_Invalidator(PLHashEntry *he, PRIntn i, void *arg)
 {
   ((xptiInterfaceInfo*)he->value)->Invalidate();
@@ -169,6 +170,18 @@ xptiWorkingSet::~xptiWorkingSet()
     }
 }        
 
+PRUint32 
+xptiWorkingSet::FindFileWithName(const char* name)
+{
+    if(mFileArray)
+    {
+        for(PRUint32 i = 0; i < mFileCount;++i)
+            if(0 == PL_strcasecmp(name, mFileArray[i].GetName()))
+                return i;
+    }
+    return NOT_FOUND;
+}
+
 PRBool
 xptiWorkingSet::NewFileArray(PRUint32 count)
 {
@@ -204,6 +217,20 @@ xptiWorkingSet::ExtendFileArray(PRUint32 count)
     mFileArray = newArray;
     mMaxFileCount = count;
     return PR_TRUE;
+}
+
+/***************************************************************************/
+
+PRUint32 
+xptiWorkingSet::FindZipItemWithName(const char* name)
+{
+    if(mZipItemArray)
+    {
+        for(PRUint32 i = 0; i < mZipItemCount;++i)
+            if(0 == PL_strcasecmp(name, mZipItemArray[i].GetName()))
+                return i;
+    }
+    return NOT_FOUND;
 }
 
 PRBool

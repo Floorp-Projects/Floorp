@@ -48,12 +48,27 @@
 #include "nsQuickSort.h"
 #include "nsIZipReader.h"
 #include "nsIInputStream.h"
+#include "nsIPref.h"
 
 #include "plstr.h"
 #include "prprf.h"
+#include "prio.h"
+#include "prtime.h"
 
 #include <stdio.h>
 #include <stdarg.h>
+
+/***************************************************************************/
+
+#if 0 && defined(DEBUG_jband)
+#define LOG_RESOLVE(x) printf x
+#define LOG_LOAD(x)    printf x
+#define LOG_AUTOREG(x) do{printf x; xptiInterfaceInfoManager::WriteToLog x;}while(0)
+#else
+#define LOG_RESOLVE(x) ((void)0)
+#define LOG_LOAD(x)    ((void)0)
+#define LOG_AUTOREG(x) xptiInterfaceInfoManager::WriteToLog x
+#endif
 
 /***************************************************************************/
 
@@ -249,11 +264,15 @@ public:
             GetFileAt(typelib.GetFileIndex()).GetGuts();
     }
     
+    enum {NOT_FOUND = 0xffffffff};
+
     // FileArray stuff...
 
     PRUint32  GetFileCount() const {return mFileCount;}
     PRUint32  GetFileFreeSpace()
         {return mFileArray ? mMaxFileCount - mFileCount : 0;} 
+    
+    PRUint32 FindFileWithName(const char* name);
 
     xptiFile& GetFileAt(PRUint32 i) const 
     {
@@ -284,6 +303,8 @@ public:
     PRUint32  GetZipItemCount() const {return mZipItemCount;}
     PRUint32  GetZipItemFreeSpace()
         {return mZipItemArray ? mMaxZipItemCount - mZipItemCount : 0;} 
+
+    PRUint32 FindZipItemWithName(const char* name);
 
     xptiZipItem& GetZipItemAt(PRUint32 i) const 
     {
@@ -331,7 +352,8 @@ public:
     // XXX make these private with accessors
     PLHashTable*    mNameTable;
     PLHashTable*    mIIDTable;
-    PRUint32*       mMergeOffsetMap;    // always in an arena
+    PRUint32*       mFileMergeOffsetMap;    // always in an arena
+    PRUint32*       mZipItemMergeOffsetMap; // always in an arena
 };
 
 /***************************************************************************/
@@ -364,6 +386,43 @@ public:
 
 /***************************************************************************/
 
+// This class exists to help xptiInterfaceInfo store a 4-state (2 bit) value 
+// and a set of bitflags in one 8bit value. See below.
+
+class xptiInfoFlags
+{
+    enum {STATE_MASK = 3};
+public:
+    static uint8 GetStateMask()
+        {return uint8(STATE_MASK);}
+    
+    void Clear()
+        {mData = 0;}
+
+    uint8 GetData() const
+        {return mData;}
+
+    uint8 GetState() const 
+        {return mData & GetStateMask();}
+
+    void SetState(uint8 state) 
+        {mData &= ~GetStateMask(); mData |= state;}                                   
+
+    void SetFlagBit(uint8 flag, PRBool on) 
+        {if(on)
+            mData |= ~GetStateMask() & flag;
+         else
+            mData &= GetStateMask() | ~flag;}
+
+    PRBool GetFlagBit(uint8 flag) const 
+        {return (mData & flag) ? PR_TRUE : PR_FALSE;}
+
+private:
+    uint8 mData;    
+};
+
+/****************************************************/
+
 class xptiInterfaceInfo : public nsIInterfaceInfo
 {
 public:
@@ -376,9 +435,18 @@ public:
     xptiInterfaceInfo(const char* name,
                       const nsID& iid,
                       const xptiTypelib& typelib,
-                      xptiWorkingSet& aWorkingSet);
+                      xptiWorkingSet* aWorkingSet);
+
+    xptiInterfaceInfo(const xptiInterfaceInfo& r,
+                      const xptiTypelib& typelib,
+                      xptiWorkingSet* aWorkingSet);
 
     virtual ~xptiInterfaceInfo();
+
+    // We use mName[-1] (cast as a xptiInfoFlags) to hold the two bit state
+    // below and alos the bit flags that follow. If the states ever grow beyond 
+    // 2 bits then these flags need to be adjusted along with STATE_MASK in
+    // xptiInfoFlags.
 
     enum {
         NOT_RESOLVED          = 0,
@@ -386,24 +454,30 @@ public:
         FULLY_RESOLVED        = 2,
         RESOLVE_FAILED        = 3
     };
+    
+    // Additional bit flags...
+    enum {SCRIPTABLE = 4};
 
     PRBool IsValid() const 
         {return mName != nsnull;}
-    
-    char GetResolveState() const 
-        {return IsValid() ? mName[-1] : (char) RESOLVE_FAILED;}
+
+    uint8 GetResolveState() const 
+        {return IsValid() ? GetFlags().GetState() : (uint8) RESOLVE_FAILED;}
     
     PRBool IsFullyResolved() const 
-        {return GetResolveState() == (char) FULLY_RESOLVED;}
+        {return GetResolveState() == (uint8) FULLY_RESOLVED;}
 
     PRBool HasInterfaceRecord() const
         {int s = (int) GetResolveState(); 
-         return 
-            (s == PARTIALLY_RESOLVED || s == FULLY_RESOLVED) && mInterface;
-        }
+         return (s == PARTIALLY_RESOLVED || s == FULLY_RESOLVED) && mInterface;}
 
     const xptiTypelib&  GetTypelibRecord() const
         {return HasInterfaceRecord() ? mInterface->mTypelib : mTypelib;}
+
+    void   SetScriptableFlag(PRBool on)
+                {GetFlags().SetFlagBit(uint8(SCRIPTABLE),on);}
+    PRBool GetScriptableFlag() const
+                {return GetFlags().GetFlagBit(uint8(SCRIPTABLE));}
 
     const nsID* GetTheIID() const {return &mIID;}
     const char* GetTheName() const {return mName;}
@@ -422,14 +496,32 @@ public:
         }
 
 private:
+    void CopyName(const char* name,
+                  xptiWorkingSet* aWorkingSet);
+
+    xptiInfoFlags& GetFlags() const {return (xptiInfoFlags&) mName[-1];}    
+    xptiInfoFlags& GetFlags()       {return (xptiInfoFlags&) mName[-1];}    
+
     void SetResolvedState(int state) 
-        {NS_ASSERTION(IsValid(),"bad state"); mName[-1] = (char) state;}
+        {NS_ASSERTION(IsValid(),"bad state");
+         GetFlags().SetState(uint8(state));}
 
     PRBool Resolve(xptiWorkingSet* aWorkingSet = nsnull);
 
     PRBool EnsureResolved(xptiWorkingSet* aWorkingSet = nsnull)
         {return IsFullyResolved() ? PR_TRUE : Resolve(aWorkingSet);}
 
+    PRBool ScriptableFlagIsValid() const
+        {int s = (int) GetResolveState(); 
+         if((s == PARTIALLY_RESOLVED || s == FULLY_RESOLVED) && mInterface)
+            {
+                if(XPT_ID_IS_SCRIPTABLE(mInterface->mDescriptor->flags))
+                    return GetScriptableFlag();
+                return !GetScriptableFlag();
+            }
+         else return PR_TRUE;
+        }
+    
     NS_IMETHOD GetTypeInArray(const nsXPTParamInfo* param,
                               uint16 dimension,
                               const XPTTypeDescriptor** type);
@@ -449,20 +541,106 @@ class xptiManifest
 {
 public:
     static PRBool Read(xptiInterfaceInfoManager* aMgr,
-                       xptiWorkingSet&           aWorkingSet);
+                       xptiWorkingSet*           aWorkingSet);
 
     static PRBool Write(xptiInterfaceInfoManager* aMgr,
-                        xptiWorkingSet&           aWorkingSet);
+                        xptiWorkingSet*           aWorkingSet);
 
     xptiManifest(); // no implementation
 };
 
 /***************************************************************************/
 
-class xptiInterfaceInfoManager : public nsIInterfaceInfoManager
+class xptiEntrySink
+{
+public:
+
+    virtual PRBool 
+    FoundEntry(const char* entryName,
+               int index,
+               XPTHeader* header,
+               xptiWorkingSet* aWorkingSet) = 0;
+};
+
+class xptiZipLoader
+{
+public:
+    xptiZipLoader();  // not implemented
+
+    static PRBool 
+    EnumerateZipEntries(nsILocalFile* file,
+                        xptiEntrySink* sink,
+                        xptiWorkingSet* aWorkingSet);
+
+    static XPTHeader* 
+    ReadXPTFileFromZip(nsILocalFile* file,
+                       const char* entryName,
+                       xptiWorkingSet* aWorkingSet);
+
+private:    
+    static XPTHeader* 
+    ReadXPTFileFromOpenZip(nsIZipReader * zip,
+                           nsIZipEntry* entry,
+                           const char* entryName,
+                           xptiWorkingSet* aWorkingSet);
+};
+
+/***************************************************************************/
+
+class xptiFileType
+{
+public:
+    enum Type {UNKNOWN = -1, XPT = 0, ZIP = 1 };
+
+    static Type GetType(const char* name);
+
+    static PRBool IsUnknown(const char* name)
+        {return GetType(name) == UNKNOWN;}
+
+    static PRBool IsXPT(const char* name)
+        {return GetType(name) == XPT;}
+
+    static PRBool IsZip(const char* name)
+        {return GetType(name) == ZIP;}
+};
+
+/***************************************************************************/
+
+// We use this is as a fancy way to open a logfile to be used within the scope
+// of some given function where it is instantiated.
+ 
+class xptiAutoLog
+{
+public:    
+    xptiAutoLog();  // not implemented
+    xptiAutoLog(xptiInterfaceInfoManager* mgr,
+                nsILocalFile* logfile, PRBool append);
+    ~xptiAutoLog();
+private:
+    WriteTimestamp(PRFileDesc* fd, const char* msg);
+
+    xptiInterfaceInfoManager* mMgr;
+    PRFileDesc* mOldFileDesc;
+#ifdef DEBUG
+    PRFileDesc* m_DEBUG_FileDesc;
+#endif
+};
+
+/***************************************************************************/
+
+class xptiInterfaceInfoManager 
+    : public nsIInterfaceInfoManager,
+      public xptiEntrySink
 {
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINTERFACEINFOMANAGER
+
+    // implement xptiEntrySink
+    PRBool 
+    FoundEntry(const char* entryName,
+               int index,
+               XPTHeader* header,
+               xptiWorkingSet* aWorkingSet);
 
 public:
     virtual ~xptiInterfaceInfoManager();
@@ -470,67 +648,61 @@ public:
     static void FreeInterfaceInfoManager();
 
     xptiWorkingSet*  GetWorkingSet() {return &mWorkingSet;}
+    PRFileDesc*      GetOpenLogFile() {return mOpenLogFile;}
+    PRFileDesc*      SetOpenLogFile(PRFileDesc* fd) 
+        {PRFileDesc* temp = mOpenLogFile; mOpenLogFile = fd; return temp;}
 
     PRBool LoadFile(const xptiTypelib& aTypelibRecord,
                     xptiWorkingSet* aWorkingSet = nsnull);
 
     PRBool GetComponentsDir(nsILocalFile** aDir);
 
+    static void WriteToLog(const char *fmt, ...);
+
 private:
     xptiInterfaceInfoManager();
 
     enum AutoRegMode {
         NO_FILES_CHANGED = 0,
-        MAYBE_ONLY_ADDITIONS,
+        FILES_ADDED_ONLY,
         FULL_VALIDATION_REQUIRED
     };
 
     PRBool BuildFileList(nsISupportsArray** aFileList);
 
-    PRBool PopulateWorkingSetFromManifest(xptiWorkingSet& aWorkingSet);
-    PRBool WriteManifest(xptiWorkingSet& aWorkingSet);
+    nsILocalFile** BuildOrderedFileArray(nsISupportsArray* aFileList,
+                                         xptiWorkingSet* aWorkingSet);
 
-    XPTHeader* ReadXPTFile(nsILocalFile* aFile, xptiWorkingSet& aWorkingSet);
-
-    XPTHeader* ReadXPTFileFromZip(nsILocalFile* file,
-                                  const char* itemName,
-                                  xptiWorkingSet& aWorkingSet);
-
-    XPTHeader* ReadXPTFileFromOpenZip(nsIZipReader * zip,
-                                      nsIZipEntry* entry,
-                                      const char* itemName,
-                                      xptiWorkingSet& aWorkingSet);
-
+    XPTHeader* ReadXPTFile(nsILocalFile* aFile, xptiWorkingSet* aWorkingSet);
+    
     AutoRegMode DetermineAutoRegStrategy(nsISupportsArray* aFileList,
-                                         xptiWorkingSet& aWorkingSet);
+                                         xptiWorkingSet* aWorkingSet);
 
-    PRBool AttemptAddOnlyFromFileList(nsISupportsArray* aFileList,
-                                      xptiWorkingSet& aWorkingSet,
-                                      AutoRegMode* pmode);
+    PRBool AddOnlyNewFileFromFileList(nsISupportsArray* aFileList,
+                                      xptiWorkingSet* aWorkingSet);
 
     PRBool DoFullValidationMergeFromFileList(nsISupportsArray* aFileList,
-                                             xptiWorkingSet& aWorkingSet);
+                                             xptiWorkingSet* aWorkingSet);
 
-    PRBool VerifyAndAddInterfaceIfNew(xptiWorkingSet& aWorkingSet,
+    PRBool VerifyAndAddInterfaceIfNew(xptiWorkingSet* aWorkingSet,
                                       XPTInterfaceDirectoryEntry* iface,
                                       const xptiTypelib& typelibRecord,
                                       xptiInterfaceInfo** infoAdded);
 
-    PRBool MergeWorkingSets(xptiWorkingSet& aDestWorkingSet,
-                            xptiWorkingSet& aSrcWorkingSet);
+    PRBool MergeWorkingSets(xptiWorkingSet* aDestWorkingSet,
+                            xptiWorkingSet* aSrcWorkingSet);
+
+    void   LogStats(); 
 
     PRBool DEBUG_DumpFileList(nsISupportsArray* aFileList);
-    PRBool DEBUG_DumpFileListInWorkingSet(xptiWorkingSet& aWorkingSet);
+    PRBool DEBUG_DumpFileArray(nsILocalFile** aFileArray, PRUint32 count);
+    PRBool DEBUG_DumpFileListInWorkingSet(xptiWorkingSet* aWorkingSet);
 
 private:
     xptiWorkingSet          mWorkingSet;
+    nsCOMPtr<nsILocalFile>  mStatsLogFile;
+    nsCOMPtr<nsILocalFile>  mAutoRegLogFile;
+    PRFileDesc*             mOpenLogFile;
 };
-
-#if 0
-
-
-
-#endif
-
 
 #endif /* xptiprivate_h___ */

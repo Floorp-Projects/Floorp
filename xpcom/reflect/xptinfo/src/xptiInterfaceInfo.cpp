@@ -26,18 +26,16 @@
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(xptiInterfaceInfo, nsIInterfaceInfo)
 
-xptiInterfaceInfo::xptiInterfaceInfo(const char* name,
-                                 const nsID& iid,
-                                 const xptiTypelib& typelib,
-                                 xptiWorkingSet& aWorkingSet)
-    :   mIID(iid),
-        mName(nsnull),
-        mTypelib(typelib)
+void 
+xptiInterfaceInfo::CopyName(const char* name,
+                            xptiWorkingSet* aWorkingSet)
 {
-    NS_INIT_REFCNT();
+    NS_ASSERTION(name, "bad param!");
+    NS_ASSERTION(aWorkingSet, "bad param!");
+    NS_ASSERTION(!mName, "bad caller!");
 
     int len = PL_strlen(name);
-    char* ptr = (char*) XPT_MALLOC(aWorkingSet.GetStringArena(), len+2);
+    char* ptr = (char*) XPT_MALLOC(aWorkingSet->GetStringArena(), len+2);
     if(ptr)
     {
         mName = &ptr[1];
@@ -46,6 +44,36 @@ xptiInterfaceInfo::xptiInterfaceInfo(const char* name,
         // to zero out all mallocs. But... 
         mName[-1] = mName[len] = 0;
     }
+
+}        
+
+
+xptiInterfaceInfo::xptiInterfaceInfo(const char* name,
+                                     const nsID& iid,
+                                     const xptiTypelib& typelib,
+                                     xptiWorkingSet* aWorkingSet)
+    :   mIID(iid),
+        mName(nsnull),
+        mTypelib(typelib)
+{
+    NS_INIT_REFCNT();
+    CopyName(name, aWorkingSet);
+}
+
+xptiInterfaceInfo::xptiInterfaceInfo(const xptiInterfaceInfo& r,
+                                     const xptiTypelib& typelib,
+                                     xptiWorkingSet* aWorkingSet)
+    :   mIID(r.mIID),
+        mName(nsnull),
+        mTypelib(typelib)
+{
+    NS_INIT_REFCNT();
+    CopyName(r.mName, aWorkingSet);
+    if(IsValid() && r.IsValid())
+    {
+        mName[-1] = r.mName[-1]; // copy any flags
+        SetResolvedState(NOT_RESOLVED);   
+    }
 }
 
 xptiInterfaceInfo::~xptiInterfaceInfo()
@@ -53,7 +81,6 @@ xptiInterfaceInfo::~xptiInterfaceInfo()
     if(HasInterfaceRecord())
         delete mInterface;        
 }        
-
 
 PRBool 
 xptiInterfaceInfo::Resolve(xptiWorkingSet* aWorkingSet)
@@ -78,7 +105,7 @@ xptiInterfaceInfo::Resolve(xptiWorkingSet* aWorkingSet)
 
     if(resolvedState == NOT_RESOLVED)
     {
-        printf("~ partial resolve of %s\n", mName);
+        LOG_RESOLVE(("! begin    resolve of %s\n", mName));
         // Make a copy of mTypelib because the underlying memory will change!
         xptiTypelib typelib = mTypelib;
         
@@ -95,8 +122,6 @@ xptiInterfaceInfo::Resolve(xptiWorkingSet* aWorkingSet)
     NS_IF_RELEASE(mgr);
 
     NS_ASSERTION(GetResolveState() == PARTIALLY_RESOLVED, "bad state!");    
-        
-    printf("+ final resolve of %s\n", mName);
 
     // Finish out resolution by finding parent and Resolving it so
     // we can set the info we get from it.
@@ -129,6 +154,8 @@ xptiInterfaceInfo::Resolve(xptiWorkingSet* aWorkingSet)
             parent->mInterface->mDescriptor->num_constants;
 
     }
+    LOG_RESOLVE(("+ complete resolve of %s\n", mName));
+
     SetResolvedState(FULLY_RESOLVED);
     return PR_TRUE;
 }        
@@ -139,6 +166,8 @@ xptiInterfaceInfo::PartiallyResolve(XPTInterfaceDescriptor*  aDescriptor,
 {
     NS_ASSERTION(GetResolveState() == NOT_RESOLVED, "bad state");
 
+    LOG_RESOLVE(("~ partial  resolve of %s\n", mName));
+
     xptiInterfaceGuts* iface = 
         new xptiInterfaceGuts(aDescriptor, mTypelib, aWorkingSet);
 
@@ -146,6 +175,12 @@ xptiInterfaceInfo::PartiallyResolve(XPTInterfaceDescriptor*  aDescriptor,
         return PR_FALSE;
 
     mInterface = iface;
+
+    if(!ScriptableFlagIsValid())
+    {
+        NS_ASSERTION(0, "unexpected scriptable flag!");
+        SetScriptableFlag(XPT_ID_IS_SCRIPTABLE(mInterface->mDescriptor->flags));
+    }
     SetResolvedState(PARTIALLY_RESOLVED);
     return PR_TRUE;
 }
@@ -178,10 +213,17 @@ xptiInterfaceInfo::IsScriptable(PRBool* result)
 {
     NS_ASSERTION(result, "bad bad caller!");
 
+/*
     if(!EnsureResolved())
+    {
+        EnsureResolved();
         return NS_ERROR_UNEXPECTED;
+    }
+*/
 
-    *result = XPT_ID_IS_SCRIPTABLE(mInterface->mDescriptor->flags);
+    NS_ASSERTION(ScriptableFlagIsValid(), "scriptable flag out of sync!");   
+
+    *result = GetScriptableFlag();
     return NS_OK;
 }
 
