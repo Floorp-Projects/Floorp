@@ -56,6 +56,12 @@
           var engine = this.currentEngine;
           if (!engine)
             this.currentEngine = this.getDefaultEngine();
+          else {
+            var rEngine = this.RDF.GetResource(engine);
+            var rChild  = this.RDF.GetResource("http://home.netscape.com/NC-rdf#child");
+            if (!this.ISEARCHDS.hasArcIn(rEngine, rChild))
+              this.currentEngine = "__PhoenixFindInPage";
+          }
         ]]></body>
       </method>
 
