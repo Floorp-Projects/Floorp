@@ -44,6 +44,7 @@
 #include "nsIFrameLoader.h"
 
 class nsIContent;
+class nsIURI;
 
 class nsFrameLoader : public nsIFrameLoader
 {
@@ -58,6 +59,7 @@ private:
 
   NS_HIDDEN_(nsresult) EnsureDocShell();
   NS_HIDDEN_(void) GetURL(nsString& aURL);
+  NS_HIDDEN_(nsresult) CheckForRecursiveLoad(nsIURI* aURI);
 
   nsCOMPtr<nsIDocShell> mDocShell;
 
