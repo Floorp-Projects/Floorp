@@ -98,7 +98,7 @@ private:
   void RevertToNonUnicodeShellAPI();
 
   PRUint32 GetToolTipSize(); // available space for the tooltip string
-  nsresult ShowAlertMessage(const PRUnichar * aAlertText, const char * aFolderURI);
+  nsresult ShowAlertMessage(const PRUnichar * aAlertTitle, const PRUnichar * aAlertText, const char * aFolderURI);
   nsresult GetFirstFolderWithNewMail(char ** aFolderURI);
 
   nsresult GetStringBundle(nsIStringBundle **aBundle);

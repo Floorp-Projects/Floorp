@@ -497,7 +497,7 @@ nsresult nsMessengerWinIntegration::GetStringBundle(nsIStringBundle **aBundle)
   return rv;
 }
 
-nsresult nsMessengerWinIntegration::ShowAlertMessage(const PRUnichar * aAlertText, const char * aFolderURI)
+nsresult nsMessengerWinIntegration::ShowAlertMessage(const PRUnichar * aAlertTitle, const PRUnichar * aAlertText, const char * aFolderURI)
 {
   nsresult rv;
   
@@ -517,21 +517,10 @@ nsresult nsMessengerWinIntegration::ShowAlertMessage(const PRUnichar * aAlertTex
     nsCOMPtr<nsIAlertsService> alertsService (do_GetService(NS_ALERTSERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv))
     {
-      nsCOMPtr<nsIAlertListener> alertListener (do_QueryInterface(NS_STATIC_CAST(nsIMessengerOSIntegration*, this)));
-  
-      nsCOMPtr<nsIStringBundle> bundle; 
-      GetStringBundle(getter_AddRefs(bundle));
-      if (bundle)
-      {
-        nsXPIDLString alertTitle;
-        bundle->GetStringFromName(NS_LITERAL_STRING("newMail_Alert_Title").get(), getter_Copies(alertTitle));
-        rv = alertsService->ShowAlertNotification(NEW_MAIL_ALERT_ICON, alertTitle, aAlertText, PR_TRUE, 
-         NS_ConvertASCIItoUCS2(aFolderURI).get(), alertListener); 
-
-        mAlertInProgress = PR_TRUE;
-      }
-      else
-        rv = NS_ERROR_FAILURE;
+      nsCOMPtr<nsIAlertListener> alertListener (do_QueryInterface(NS_STATIC_CAST(nsIMessengerOSIntegration*, this))); 
+      rv = alertsService->ShowAlertNotification(NEW_MAIL_ALERT_ICON, aAlertTitle, aAlertText, PR_TRUE, 
+                                                NS_ConvertASCIItoUCS2(aFolderURI).get(), alertListener); 
+      mAlertInProgress = PR_TRUE;
     }
   }
 
@@ -571,7 +560,7 @@ NS_IMETHODIMP nsMessengerWinIntegration::OnAlertClickCallback(const PRUnichar * 
 void nsMessengerWinIntegration::FillToolTipInfo()
 {
   // iterate over all the folders in mFoldersWithNewMail
-  nsXPIDLCString userName;
+  nsXPIDLString accountName;
   nsXPIDLCString hostName; 
   nsAutoString toolTipText;
   nsAutoString animatedAlertText;
@@ -591,30 +580,27 @@ void nsMessengerWinIntegration::FillToolTipInfo()
     folder = do_QueryReferent(weakReference);
     if (folder)
     {
-      folder->GetUsername(getter_Copies(userName));
+      folder->GetPrettiestName(getter_Copies(accountName));
+
       numNewMessages = 0;   
       folder->GetNumNewMessages(PR_TRUE, &numNewMessages);
       nsCOMPtr<nsIStringBundle> bundle; 
       GetStringBundle(getter_AddRefs(bundle));
       if (bundle)
       { 
-        nsAutoString numNewMsgsText;
-        nsAutoString uniUsername;
-      
-        uniUsername.AssignWithConversion(userName); 
+        nsAutoString numNewMsgsText;     
         numNewMsgsText.AppendInt(numNewMessages);
 
         const PRUnichar *formatStrings[] =
         {
-          uniUsername.get(),
           numNewMsgsText.get(),       
         };
        
         nsXPIDLString finalText; 
         if (numNewMessages == 1)
-          bundle->FormatStringFromName(NS_LITERAL_STRING("biffNotification_message").get(), formatStrings, 2, getter_Copies(finalText));
+          bundle->FormatStringFromName(NS_LITERAL_STRING("biffNotification_message").get(), formatStrings, 1, getter_Copies(finalText));
         else
-          bundle->FormatStringFromName(NS_LITERAL_STRING("biffNotification_messages").get(), formatStrings, 2, getter_Copies(finalText));
+          bundle->FormatStringFromName(NS_LITERAL_STRING("biffNotification_messages").get(), formatStrings, 1, getter_Copies(finalText));
 
         // the alert message is special...we actually only want to show the first account with 
         // new mail in the alert. 
@@ -622,10 +608,12 @@ void nsMessengerWinIntegration::FillToolTipInfo()
           animatedAlertText = finalText;
 
         // only add this new string if it will fit without truncation....
-        if (maxTooltipSize >= toolTipText.Length() + finalText.Length() + 2)
+        if (maxTooltipSize >= toolTipText.Length() + accountName.Length() + finalText.Length() + 2)
         {
     	    if (index > 0)
             toolTipText.Append(NS_LITERAL_STRING("\n").get());
+          toolTipText.Append(accountName);
+          toolTipText.Append(NS_LITERAL_STRING(" "));
 		      toolTipText.Append(finalText);
         }
       } // if we got a bundle
@@ -636,7 +624,7 @@ void nsMessengerWinIntegration::FillToolTipInfo()
 
   if (!mBiffIconVisible)
   {
-    ShowAlertMessage(animatedAlertText.get(), "");
+    ShowAlertMessage(accountName, animatedAlertText.get(), "");
   }
   else
    GenericShellNotify( NIM_MODIFY);
