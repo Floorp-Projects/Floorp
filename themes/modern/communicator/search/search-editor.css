@@ -42,6 +42,7 @@
 	list-style-image:url("chrome://global/skin/simple-arrow-down-disabled.gif");
 }
 
+/*
 #add-button
   {
     list-style-image      : url("chrome://global/skin/simple-arrow-right.gif");
@@ -51,3 +52,4 @@
   {
     list-style-image      : url("chrome://global/skin/simple-arrow-left.gif");
   }
+*/

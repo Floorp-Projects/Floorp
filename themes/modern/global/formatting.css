@@ -74,15 +74,17 @@
     {
    	  border-top			  : 1px solid #7A8490;
       border-bottom         : 1px solid #FEFEFE; 
-      max-height: 2px;
-      margin	: 2px 3px;
+      height: 0px;
+      margin-top: 0.4em;
+      margin-bottom: 0.4em;
     }
   
   separator.groove[orient="vertical"] 
     {
       border-left: 1px solid #7A8490;
       border-right: 1px solid #FEFEFE;
-      margin	: 3px 2px;
+      margin-left: 0.4em;
+      margin-right: 0.4em;
     }
   
 /* groove separators (0 padding, for dividing effects) */  
