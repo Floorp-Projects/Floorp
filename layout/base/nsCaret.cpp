@@ -376,7 +376,8 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP nsCaret::ClearFrameRefs(nsIFrame* aFrame)
 {
-
+  EraseCaret(); // make sure that the caret is erased completely
+  
   if (mLastCaretFrame == aFrame)
   {
     mLastCaretFrame = nsnull;     // frames are not refcounted.
@@ -386,9 +387,6 @@ NS_IMETHODIMP nsCaret::ClearFrameRefs(nsIFrame* aFrame)
   
   mDrawn = PR_FALSE;    // assume that the view has been cleared, and ensure
                         // that we don't try to use the frame.
-  
-  // should we just call StopBlinking() here?
-  
   return NS_OK; 
 }
 
