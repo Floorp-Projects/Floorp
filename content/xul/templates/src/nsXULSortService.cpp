@@ -1927,7 +1927,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 			{
 				rv = trueParent->GetAttr(kNameSpaceID_None, nsXULAtoms::id, id);
 			}
-			if (id.IsEmpty())
+			if (!id.IsEmpty())
 			{
 				nsCOMPtr<nsIRDFResource>	containerRes;
 				rv = nsXULContentUtils::MakeElementResource(doc, id, getter_AddRefs(containerRes));
