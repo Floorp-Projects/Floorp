@@ -866,6 +866,8 @@ nsFrame::GetDataForTableSelection(nsMouseEvent *aMouseEvent, nsIContent **aParen
   nsresult result = NS_OK;
   PRBool foundCell = PR_FALSE;
   PRBool foundTable = PR_FALSE;
+  PRBool selectColumn = PR_FALSE;
+  PRBool selectRow = PR_FALSE;
 
   while (frame && NS_SUCCEEDED(result))
   {
@@ -875,6 +877,23 @@ nsFrame::GetDataForTableSelection(nsMouseEvent *aMouseEvent, nsIContent **aParen
     if (NS_SUCCEEDED(result) && cellElement)
     {
       foundCell = PR_TRUE;
+      PRInt32 colIndex, rowIndex;
+      result = cellElement->GetCellIndexes(rowIndex, colIndex);
+      // Give precedence to row over column
+      if (colIndex == 0)
+      {
+//printf(" * SelRow: x=%d, y=%d\n", aMouseEvent->point.x, aMouseEvent->point.y);
+        //TODO: We need to test for proximity to top border
+        // For now, just go into row selection mode
+        selectRow = PR_TRUE;
+      }
+      else if (rowIndex == 0)
+      {
+//printf(" * SelCol: x=%d, y=%d\n", aMouseEvent->point.x, aMouseEvent->point.y);
+        //TODO: We need to test for proximity to left border
+        // For now, just go into COLUMN selection mode
+        selectColumn = PR_TRUE;
+      }
       break;
     }
     else
@@ -887,6 +906,8 @@ nsFrame::GetDataForTableSelection(nsMouseEvent *aMouseEvent, nsIContent **aParen
       if (NS_SUCCEEDED(result) && tableElement)
       {
         foundTable = PR_TRUE;
+        //TODO: How can we select row when along left table edge
+        //  or select column when along top edge?
         break;
       } else {
         result = frame->GetParent(&frame);
@@ -918,14 +939,14 @@ nsFrame::GetDataForTableSelection(nsMouseEvent *aMouseEvent, nsIContent **aParen
 
   *aContentOffset = offset;
 
-  if (foundCell)
+  if (selectRow)
+    *aTarget = TABLESELECTION_ROW;
+  else if (selectColumn)
+    *aTarget = TABLESELECTION_COLUMN;
+  else if (foundCell)
     *aTarget = TABLESELECTION_CELL;
- 
-  if (foundTable)
-  {
-    //TODO: Put logic to find "hit" spots for selecting column or row here
+  else if (foundTable)
     *aTarget = TABLESELECTION_TABLE;
-  }
 
   return NS_OK;
 }

@@ -74,7 +74,7 @@
 #include "nsISelectionController.h"//for the enums
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
-//#define DEBUG_TABLE 1
+#define DEBUG_TABLE 1
 
 //static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kCGenContentIteratorCID, NS_GENERATEDCONTENTITERATOR_CID);
@@ -277,7 +277,7 @@ public:
   NS_IMETHOD SetMouseDownState(PRBool aState);
   NS_IMETHOD GetMouseDownState(PRBool *aState);
 
-  NS_IMETHOD GetTableCellSelection(PRBool *aState){if (aState){*aState = mSelectingTableCellMode; return NS_OK;}return NS_ERROR_NULL_POINTER;}
+  NS_IMETHOD GetTableCellSelection(PRBool *aState){if (aState){*aState = mSelectingTableCellMode != 0; return NS_OK;}return NS_ERROR_NULL_POINTER;}
   NS_IMETHOD GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor);
 
   NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection **aDomSelection);
@@ -336,23 +336,28 @@ private:
   nsDOMSelection *mDomSelections[nsISelectionController::NUM_SELECTIONTYPES];
   nsIScrollableView *GetScrollView(){return mScrollView;}
 
-  // Table selection support. Unfortunately, we can't get at nsITableCellLayout
-  //   and nsITableLayout through nsIFrame, so we have to duplicate editor code here
+  // Table selection support.
+  // Interfaces that let us get info based on cellmap locations
+  nsITableLayout* GetTableLayout(nsIContent *aTableContent);
+  nsITableCellLayout* GetCellLayout(nsIContent *aCellContent);
   nsresult SelectBlockOfCells(nsIContent *aEndNode);
+  nsresult SelectRowOrColumn(nsIContent *aCellContent, PRUint32 aTarget);
   nsresult GetCellIndexes(nsIContent *aCell, PRInt32 &aRowIndex, PRInt32 &aColIndex);
+
   nsresult GetFirstSelectedCellAndRange(nsIDOMNode **aCell, nsIDOMRange **aRange);
   nsresult GetNextSelectedCellAndRange(nsIDOMNode **aCell, nsIDOMRange **aRange);
   nsresult GetFirstCellNodeInRange(nsIDOMRange *aRange, nsIDOMNode **aCellNode);
   // aTableNode may be null if table isn't needed to be returned
   PRBool   IsInSameTable(nsIContent *aContent1, nsIContent *aContent2, nsIContent **aTableNode);
   nsresult GetParentTable(nsIContent *aCellNode, nsIContent **aTableNode);
+  nsresult SelectCellElement(nsIDOMElement* aCellElement);
   nsresult CreateAndAddRange(nsIDOMNode *aParentNode, PRInt32 aOffset);
 
   nsCOMPtr<nsIContent> mStartSelectedCell;
   nsCOMPtr<nsIContent> mEndSelectedCell;
-  PRBool  mSelectingTableCells;
-  PRBool  mSelectingTableCellMode;
-  PRInt32 mSelectedCellIndex;
+  PRBool   mSelectingTableCells;
+  PRUint32 mSelectingTableCellMode;
+  PRInt32  mSelectedCellIndex;
 
   //batching
   PRInt32 mBatching;
@@ -781,7 +786,7 @@ nsSelection::nsSelection()
   mHint = HINTLEFT;
   sInstanceCount ++;
   mSelectingTableCells = PR_FALSE;
-  mSelectingTableCellMode = PR_FALSE;
+  mSelectingTableCellMode = 0;
 
   mSelectedCellIndex = 0;
 //AUTO COPY REGISTRATION
@@ -1537,7 +1542,7 @@ nsSelection::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset,
   // Don't take focus when dragging off of a table
   if (!mSelectingTableCells)
   {
-    mSelectingTableCellMode = PR_FALSE;
+    mSelectingTableCellMode = 0;
     return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aContinueSelection, aMultipleSelection);
   }
   
@@ -1994,6 +1999,32 @@ static PRBool IsCell(nsIContent *aContent)
   return (tag != 0 && tag == nsSelection::sCellAtom);
 }
 
+nsITableCellLayout* 
+nsSelection::GetCellLayout(nsIContent *aCellContent)
+{
+  // Get frame for cell
+  nsIFrame  *cellFrame = nsnull;
+  nsresult result = GetTracker()->GetPrimaryFrameFor(aCellContent, &cellFrame);
+  if (!cellFrame) return nsnull;
+  nsITableCellLayout *cellLayoutObject = nsnull;
+  result = cellFrame->QueryInterface(NS_GET_IID(nsITableCellLayout), (void**)(&cellLayoutObject)); 
+  if (NS_FAILED(result)) return nsnull;
+  return cellLayoutObject;
+}
+
+nsITableLayout* 
+nsSelection::GetTableLayout(nsIContent *aTableContent)
+{
+  // Get frame for table
+  nsIFrame  *tableFrame = nsnull;
+  nsresult result = GetTracker()->GetPrimaryFrameFor(aTableContent, &tableFrame);
+  if (!tableFrame) return nsnull;
+  nsITableLayout *tableLayoutObject = nsnull;
+  result = tableFrame->QueryInterface(NS_GET_IID(nsITableLayout), (void**)(&tableLayoutObject)); 
+  if (NS_FAILED(result)) return nsnull;
+  return tableLayoutObject;
+}
+
 nsresult
 nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRUint32 aTarget, nsMouseEvent *aMouseEvent)
 {
@@ -2016,52 +2047,60 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
   nsCOMPtr<nsIDOMNode> selectedNode = do_QueryInterface(selectedContent);
   if (!selectedNode)  return NS_ERROR_FAILURE;
 
-  // Stack-class to wrap all table selection changes in 
-  //  BeginBatchChanges() / EndBatchChanges()
-  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
-  nsSelectionBatcher selectionBatcher(mDomSelections[index]);
-
   // When doing table selection, always set the direction to next
   //  so we can be sure that anchorNode's offset always points to the selected cell
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   mDomSelections[index]->SetDirection(eDirNext);
+
+  // Stack-class to wrap all table selection changes in 
+  //  BeginBatchChanges() / EndBatchChanges()
+  nsSelectionBatcher selectionBatcher(mDomSelections[index]);
 
   if (mSelectingTableCells)
   {
-#ifdef DEBUG_TABLE
-    printf("HandleTableSelection: dragging mouse\n");
-#endif
+    // We are drag-selecting
 
-    if (aTarget == TABLESELECTION_CELL)
+    if (aTarget != TABLESELECTION_TABLE)
     {
+      // aTarget can be any "cell mode",
+      //  so we can easily drag-select rows and columns 
+      // Once user gets the col or row hit area onclick,
+      //  they can drift into any cell to stay in col/row mode
+      //  (aTarget will be TABLESELECTION_CELL)
+
       // If dragging in the same cell as last event, do nothing
       if (mEndSelectedCell == selectedContent)
         return NS_OK;
 
+      if (mSelectingTableCellMode == TABLESELECTION_ROW ||
+          mSelectingTableCellMode == TABLESELECTION_COLUMN)
+      {
+
 #ifdef DEBUG_TABLE
-      printf("HandleTableSelection: Dragged into a new cell\n");
+        printf("HandleTableSelection: Dragged into a new column or row\n");
 #endif
-      // Reselect block of cells to new end location
-      return SelectBlockOfCells(selectedContent);
+        // Append anthor row or columns to the selection
+        return SelectRowOrColumn(selectedContent, mSelectingTableCellMode);
+      }
+      else if (mSelectingTableCellMode == TABLESELECTION_CELL)
+      {
+#ifdef DEBUG_TABLE
+        printf("HandleTableSelection: Dragged into a new cell\n");
+#endif
+        // Reselect block of cells to new end location
+        return SelectBlockOfCells(selectedContent);
+      }
     }
+    // Do nothing if dragging in table, but outside a cell
+    return NS_OK;
   }
   else 
   {
     // Not dragging  -- mouse event is a click
-#ifdef DEBUG_TABLE
-      printf("HandleTableSelection: CLICK event\n");
-#endif
-
-    if (aTarget == TABLESELECTION_TABLE)
-    {
-      //TODO: Currently selects when clicked between cells,
-      //  should we restrict to only around border?
-      //  *** How do we get location data for cell and click?
-      mSelectingTableCells = PR_FALSE;
-      mStartSelectedCell = nsnull;
-      mEndSelectedCell = nsnull;
 
 #ifdef DEBUG_cmanske
-#ifdef DEBUG_TABLE
+//#ifdef DEBUG_TABLE
+printf("HandleTableSelection: CLICK event\n");
 printf("HandleTableSelection: Selecting Table\n");
       {
         nsIFrame  *frame = nsnull;
@@ -2070,15 +2109,42 @@ printf("HandleTableSelection: Selecting Table\n");
         {
           nsRect rect1;
           frame->GetRect(rect1);
-printf("Table frame orgin: x=%d, y=%d\n", rect1.x, rect1.y);
+printf("Frame rect: x=%d, y=%d, right=%d, bottom=%d\n", rect1.x, rect1.y, rect1.XMost(), rect1.YMost());
           nsRect rect2 = rect1;
           mDomSelections[index]->GetFrameToRootViewOffset(frame, &rect2.x, &rect2.y);
 printf("Translated frame orgin: x=%d, y=%d\n", rect2.x, rect2.y);
 printf("Mouse was clicked at: x=%d, y=%d\n", aMouseEvent->point.x, aMouseEvent->point.y);
+printf("*** Widget-relative (refPoint): x=%d, y=%d\n", aMouseEvent->refPoint.x, aMouseEvent->refPoint.y);
         }
+/*
+  Useful frame methods:
+  GetRect(nsRect& aRect)
+  GetSize(nsSize& aSize)
+*/
       }
+//#endif
 #endif
-#endif
+
+    if (aTarget == TABLESELECTION_ROW || aTarget == TABLESELECTION_COLUMN)
+    {
+      // Start drag-selecting mode so multiple rows/cols can be selected
+      mSelectingTableCells = PR_TRUE;
+      mSelectingTableCellMode = aTarget; //only shut off on mouse up.
+      
+      // Force new selection block
+      mStartSelectedCell = nsnull;
+      mDomSelections[index]->ClearSelection();
+      return SelectRowOrColumn(selectedContent, aTarget);
+    }
+    else if (aTarget == TABLESELECTION_TABLE)
+    {
+      //TODO: We currently select entire table when clicked between cells,
+      //  should we restrict to only around border?
+      //  *** How do we get location data for cell and click?
+      mSelectingTableCells = PR_FALSE;
+      mStartSelectedCell = nsnull;
+      mEndSelectedCell = nsnull;
+
       // Select the table      
       mDomSelections[index]->ClearSelection();
       return CreateAndAddRange(parentNode, aContentOffset);
@@ -2117,10 +2183,7 @@ printf("Mouse was clicked at: x=%d, y=%d\n", aMouseEvent->point.x, aMouseEvent->
       result = parentContent->ChildAt(offset, *getter_AddRefs(childContent));
       if (NS_FAILED(result)) return result;
       if (childContent && IsCell(childContent))
-      {
           previousCellParent = parent;
-      }
-
 
       // We're done if we didn't find parent of a previously-selected cell
       if (!previousCellParent) break;
@@ -2176,7 +2239,7 @@ printf("Mouse was clicked at: x=%d, y=%d\n", aMouseEvent->point.x, aMouseEvent->
     if (NS_SUCCEEDED(result))
     {
       mSelectingTableCells = PR_TRUE;
-      mSelectingTableCellMode = PR_TRUE;//only shut off on normal mouse click.
+      mSelectingTableCellMode = TABLESELECTION_CELL;//only shut off on mouse up
 
       mStartSelectedCell = selectedContent;
       mEndSelectedCell = selectedContent;
@@ -2190,7 +2253,6 @@ nsSelection::SelectBlockOfCells(nsIContent *aEndCell)
 {
   if (!aEndCell) return NS_ERROR_NULL_POINTER;
   mEndSelectedCell = aEndCell;
-  
 
   nsCOMPtr<nsIDOMNode> cellNode;
   nsCOMPtr<nsIDOMRange> range;
@@ -2215,12 +2277,7 @@ nsSelection::SelectBlockOfCells(nsIContent *aEndCell)
 
   // Get TableLayout interface to access cell data based on cellmap location
   // frames are not ref counted, so don't use an nsCOMPtr
-  nsIFrame  *frame = nsnull;
-  result = GetTracker()->GetPrimaryFrameFor(table, &frame);
-  if (!frame) return NS_ERROR_FAILURE;
-  nsITableLayout *tableLayoutObject = nsnull;
-  result = frame->QueryInterface(NS_GET_IID(nsITableLayout), (void**)(&tableLayoutObject)); 
-  if (NS_FAILED(result)) return result;
+  nsITableLayout *tableLayoutObject = GetTableLayout(table);
   if (!tableLayoutObject) return NS_ERROR_FAILURE;
 
   // Remove selected cells outside of new block limits
@@ -2250,7 +2307,7 @@ nsSelection::SelectBlockOfCells(nsIContent *aEndCell)
     if (NS_FAILED(result)) return result;
   }
 
-  nsCOMPtr<nsIDOMElement> cell;
+  nsCOMPtr<nsIDOMElement> cellElement;
   PRInt32 rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool  isSelected;
 
@@ -2262,7 +2319,7 @@ nsSelection::SelectBlockOfCells(nsIContent *aEndCell)
     PRInt32 col = startColIndex;
     while(PR_TRUE)
     {
-      result = tableLayoutObject->GetCellDataAt(row, col, *getter_AddRefs(cell),
+      result = tableLayoutObject->GetCellDataAt(row, col, *getter_AddRefs(cellElement),
                                                 curRowIndex, curColIndex, rowSpan, colSpan, 
                                                 actualRowSpan, actualColSpan, isSelected);
       if (NS_FAILED(result)) return result;
@@ -2270,21 +2327,9 @@ nsSelection::SelectBlockOfCells(nsIContent *aEndCell)
       NS_ASSERTION(actualColSpan, "!actualColSpan is 0!");
 
       // Skip cells that are spanned from previous locations or are already selected
-      if (!isSelected && cell && row == curRowIndex && col == curColIndex)
+      if (!isSelected && cellElement && row == curRowIndex && col == curColIndex)
       {
-        cellNode = do_QueryInterface(cell);
-        nsCOMPtr<nsIDOMNode> parent;
-        result = cellNode->GetParentNode(getter_AddRefs(parent));
-        if (NS_FAILED(result)) return result;
-        if (!parent) return NS_ERROR_FAILURE;
-
-        // Get child offset
-        nsCOMPtr<nsIContent> parentContent = do_QueryInterface(parent);
-        nsCOMPtr<nsIContent> cellContent = do_QueryInterface(cell);
-        PRInt32 offset;
-        result = parentContent->IndexOf(cellContent, offset);
-        if (NS_FAILED(result)) return result;
-        result =  CreateAndAddRange(parent, offset);
+        result = SelectCellElement(cellElement);
         if (NS_FAILED(result)) return result;
       }
       // Done when we reach end column
@@ -2304,6 +2349,114 @@ nsSelection::SelectBlockOfCells(nsIContent *aEndCell)
   };
 
   return result;
+}
+
+nsresult
+nsSelection::SelectRowOrColumn(nsIContent *aCellContent, PRUint32 aTarget)
+{
+  if (!aCellContent) return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIContent> table;
+  nsresult result = GetParentTable(aCellContent, getter_AddRefs(table));
+  if (NS_FAILED(result)) return PR_FALSE;
+  if (!table) return NS_ERROR_NULL_POINTER;
+
+  // Get table and cell layout interfaces to access 
+  //   cell data based on cellmap location
+  // Frames are not ref counted, so don't use an nsCOMPtr
+  nsITableLayout *tableLayout = GetTableLayout(table);
+  if (!tableLayout) return NS_ERROR_FAILURE;
+  nsITableCellLayout *cellLayout = GetCellLayout(aCellContent);
+  if (!cellLayout) return NS_ERROR_FAILURE;
+
+  // Get location of target cell:      
+  PRInt32 rowIndex, colIndex, curRowIndex, curColIndex;
+  result = cellLayout->GetCellIndexes(rowIndex, colIndex);
+  if (NS_FAILED(result)) return result;
+
+  // Be sure we start at proper beginning
+  // (This allows us to select row or col given ANY cell!)
+  if (aTarget == TABLESELECTION_ROW)
+    colIndex = 0;
+  if (aTarget == TABLESELECTION_COLUMN)
+    rowIndex = 0;
+
+  nsCOMPtr<nsIDOMElement> cellElement;
+  nsCOMPtr<nsIDOMElement> firstCell;
+  nsCOMPtr<nsIDOMElement> lastCell;
+  PRInt32 rowSpan, colSpan, actualRowSpan, actualColSpan;
+  PRBool isSelected;
+
+  do {
+    // Loop through all cells in column or row to find first and last
+    result = tableLayout->GetCellDataAt(rowIndex, colIndex, *getter_AddRefs(cellElement),
+                                        curRowIndex, curColIndex, rowSpan, colSpan, 
+                                        actualRowSpan, actualColSpan, isSelected);
+    if (NS_FAILED(result)) return result;
+    if (cellElement)
+    {
+      if (!firstCell)
+        firstCell = cellElement;
+
+      lastCell = cellElement;
+
+      // Move to next cell in cellmap, skipping spanned locations
+      if (aTarget == TABLESELECTION_ROW)
+        colIndex += actualColSpan;
+      else
+        rowIndex += actualRowSpan;
+    }
+  }
+  while (cellElement);
+
+  // Use SelectBlockOfCells:
+  // This will replace existing selection,
+  //  but allow unselecting by dragging out of selected region
+  if (firstCell && lastCell)
+  {
+    if (!mStartSelectedCell)
+    {
+      // We are starting a new block, so select the first cell
+      result = SelectCellElement(firstCell);
+      if (NS_FAILED(result)) return result;
+    }
+    nsCOMPtr<nsIContent> lastCellContent = do_QueryInterface(lastCell);
+    return SelectBlockOfCells(lastCellContent);
+  }
+
+#if 0
+// This is a more efficient strategy that appends row to current selection,
+//  but doesn't allow dragging OFF of an existing selection to unselect!
+  do {
+    // Loop through all cells in column or row
+    result = tableLayout->GetCellDataAt(rowIndex, colIndex, *getter_AddRefs(cellElement),
+                                        curRowIndex, curColIndex, rowSpan, colSpan, 
+                                        actualRowSpan, actualColSpan, isSelected);
+    if (NS_FAILED(result)) return result;
+    // We're done when cell is not found
+    if (!cellElement) break;
+
+
+    // Check spans else we infinitely loop
+    NS_ASSERTION(actualColSpan, "actualColSpan is 0!");
+    NS_ASSERTION(actualRowSpan, "actualRowSpan is 0!");
+    
+    // Skip cells that are already selected or span from outside our region
+    if (!isSelected && rowIndex == curRowIndex && colIndex == curColIndex)
+    {
+      result = SelectCellElement(cellElement);
+      if (NS_FAILED(result)) return result;
+    }
+    // Move to next row or column in cellmap, skipping spanned locations
+    if (aTarget == TABLESELECTION_ROW)
+      colIndex += actualColSpan;
+    else
+      rowIndex += actualRowSpan;
+  }
+  while (cellElement);
+#endif
+
+  return NS_OK;
 }
 
 nsresult 
@@ -2420,13 +2573,7 @@ nsSelection::GetCellIndexes(nsIContent *aCell, PRInt32 &aRowIndex, PRInt32 &aCol
   aColIndex=0; // initialize out params
   aRowIndex=0;
 
-  nsIFrame *frame = nsnull;  // frames are not ref counted, so don't use an nsCOMPtr
-  nsresult result = GetTracker()->GetPrimaryFrameFor(aCell, &frame);
-  if (!frame) return NS_ERROR_FAILURE;
-
-  nsITableCellLayout *cellLayoutObject=nsnull; // again, frames are not ref-counted
-  result = frame->QueryInterface(NS_GET_IID(nsITableCellLayout), (void**)(&cellLayoutObject));
-  if (NS_FAILED(result)) return result;
+  nsITableCellLayout *cellLayoutObject = GetCellLayout(aCell);
   if (!cellLayoutObject)  return NS_ERROR_FAILURE;
   return cellLayoutObject->GetCellIndexes(aRowIndex, aColIndex);
 }
@@ -2484,6 +2631,24 @@ nsSelection::GetParentTable(nsIContent *aCell, nsIContent **aTable)
     parent = temp;
   }
   return result;
+}
+
+nsresult
+nsSelection::SelectCellElement(nsIDOMElement *aCellElement)
+{
+  nsCOMPtr<nsIDOMNode> cellNode = do_QueryInterface(aCellElement);
+  nsCOMPtr<nsIDOMNode> parent;
+  nsresult result = cellNode->GetParentNode(getter_AddRefs(parent));
+  if (NS_FAILED(result)) return result;
+  if (!parent) return NS_ERROR_FAILURE;
+
+  // Get child offset
+  nsCOMPtr<nsIContent> parentContent = do_QueryInterface(parent);
+  nsCOMPtr<nsIContent> cellContent = do_QueryInterface(aCellElement);
+  PRInt32 offset;
+  result = parentContent->IndexOf(cellContent, offset);
+  if (NS_FAILED(result)) return result;
+  return CreateAndAddRange(parent, offset);
 }
 
 nsresult
