@@ -405,6 +405,7 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 				mLastWidgetHit->RemoveDeleteObserver(this);
 
 			mLastWidgetHit = widgetHit;
+			mMouseInWidgetHit = PR_TRUE;
 
 			if (mLastWidgetHit)
 				mLastWidgetHit->AddDeleteObserver(this);
@@ -438,6 +439,7 @@ PRBool nsMacEventHandler::HandleMouseUpEvent(
 
 		mouseEvent.widget = mLastWidgetHit;
 		retVal |= mLastWidgetHit->DispatchMouseEvent(mouseEvent);
+
 		mLastWidgetHit = nsnull;
 	}
 
@@ -458,33 +460,48 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent(
 	nsMouseEvent mouseEvent;
 	ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, NS_MOUSE_MOVE);
 
-	nsWindow* widgetPointed = (nsWindow*)mouseEvent.widget;
-	if (widgetPointed != mLastWidgetPointed)
+	if (mLastWidgetHit)
 	{
-		if (mLastWidgetPointed != nsnull)
+		Point macPoint = aOSEvent.where;
+		::GlobalToLocal(&macPoint);
+		PRBool inWidgetHit = mLastWidgetHit->PointInWidget(macPoint);
+		if (inWidgetHit != mMouseInWidgetHit)
 		{
-			mLastWidgetPointed->RemoveDeleteObserver(this);
-
-			mouseEvent.widget = mLastWidgetPointed;
-				mouseEvent.message = NS_MOUSE_EXIT;
-				retVal |= mLastWidgetPointed->DispatchMouseEvent(mouseEvent);
-				mLastWidgetPointed = nsnull;
-			mouseEvent.widget = widgetPointed;
+			mouseEvent.message = (inWidgetHit ? NS_MOUSE_ENTER : NS_MOUSE_EXIT);
+			mMouseInWidgetHit = inWidgetHit;
 		}
-
-		if (widgetPointed != nsnull)
-		{
-			widgetPointed->AddDeleteObserver(this);
-
-			mLastWidgetPointed = widgetPointed;
-			mouseEvent.message = NS_MOUSE_ENTER;
-			retVal |= widgetPointed->DispatchMouseEvent(mouseEvent);
-		}
+		retVal |= mLastWidgetHit->DispatchMouseEvent(mouseEvent);
 	}
 	else
 	{
-		if (widgetPointed != nsnull)
-			retVal |= widgetPointed->DispatchMouseEvent(mouseEvent);
+		nsWindow* widgetPointed = (nsWindow*)mouseEvent.widget;
+		if (widgetPointed != mLastWidgetPointed)
+		{
+			if (mLastWidgetPointed)
+			{
+				mLastWidgetPointed->RemoveDeleteObserver(this);
+
+				mouseEvent.widget = mLastWidgetPointed;
+					mouseEvent.message = NS_MOUSE_EXIT;
+					retVal |= mLastWidgetPointed->DispatchMouseEvent(mouseEvent);
+					mLastWidgetPointed = nsnull;
+				mouseEvent.widget = widgetPointed;
+			}
+
+			if (widgetPointed)
+			{
+				widgetPointed->AddDeleteObserver(this);
+
+				mLastWidgetPointed = widgetPointed;
+				mouseEvent.message = NS_MOUSE_ENTER;
+				retVal |= widgetPointed->DispatchMouseEvent(mouseEvent);
+			}
+		}
+		else
+		{
+			if (widgetPointed)
+				retVal |= widgetPointed->DispatchMouseEvent(mouseEvent);
+		}
 	}
 
 	return retVal;
@@ -526,14 +543,31 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 	lastWhen  = aOSEvent.when;
 	lastWhere = aOSEvent.where;
 
-	// get the widget hit and its hit point
+	// get the widget hit and the hit point inside that widget
 	Point hitPoint = aOSEvent.where;
 	::SetPort(static_cast<GrafPort*>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY)));
 	::SetOrigin(0, 0);
 	::GlobalToLocal(&hitPoint);
 	nsPoint widgetHitPoint(hitPoint.h, hitPoint.v);
 
-	nsWindow* widgetHit = mTopLevelWidget->FindWidgetHit(hitPoint);
+	// if the mouse button is still down, send events to the last widget hit
+	nsWindow* widgetHit = nsnull;
+	if (mLastWidgetHit)
+	{
+ 		if (::StillDown() || aMessage == NS_MOUSE_LEFT_BUTTON_UP)
+	 		widgetHit = mLastWidgetHit;
+	 	else
+	 	{
+	 		// Patch: some widgets can eat mouseUp events (text widgets in TEClick, sbars in TrackControl).
+	 		// In that case, fall back to the normal case.
+	 		mLastWidgetHit->RemoveDeleteObserver(this);
+	 		mLastWidgetHit = nsnull;
+	 	}
+	}
+
+	if (! widgetHit)
+		widgetHit = mTopLevelWidget->FindWidgetHit(hitPoint);
+
 	if (widgetHit)
 	{
 		nsRect bounds;
