@@ -1472,6 +1472,8 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
 	cert->slot = PK11_ReferenceSlot(slot);
 	if (cert->nssCertificate) {
 	    cert->nssCertificate->token = slot->nssToken;
+	} else {
+	    cert->nssCertificate = STAN_GetNSSCertificate(cert);
 	}
     }
 
@@ -3297,11 +3299,14 @@ PK11_SaveSMimeProfile(PK11SlotInfo *slot, char *emailAddr, SECItem *derSubj,
 
     PK11_SETATTRS(attrs, CKA_SUBJECT, derSubj->data, derSubj->len); attrs++;
     PK11_SETATTRS(attrs, CKA_CLASS, &smimeClass, sizeof(smimeClass)); attrs++;
-    PK11_SETATTRS(attrs, CKA_NETSCAPE_SMIME_TIMESTAMP, profileTime->data,
-				profileTime->len); attrs++;
     PK11_SETATTRS(attrs, CKA_NETSCAPE_EMAIL, 
 				emailAddr, PORT_Strlen(emailAddr)+1); attrs++;
-    PK11_SETATTRS(attrs, CKA_VALUE,emailProfile->data,emailProfile->len); attrs++;
+    if (profileTime) {
+	PK11_SETATTRS(attrs, CKA_NETSCAPE_SMIME_TIMESTAMP, profileTime->data,
+	                                            profileTime->len); attrs++;
+	PK11_SETATTRS(attrs, CKA_VALUE,emailProfile->data,
+	                                            emailProfile->len); attrs++;
+    }
 
     if (slot == NULL) {
 	slot = PK11_GetInternalKeySlot();
