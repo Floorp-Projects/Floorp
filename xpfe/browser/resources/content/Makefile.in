@@ -40,6 +40,7 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/NetSupportAlert.xul \
 	$(srcdir)/NetSupportConfirmCheck.xul \
 	$(srcdir)/NetSupportPassword.xul \
+	$(srcdir)/NetSupportPrompt.xul \
 	$(srcdir)/NetSupportUserPAssword.xul \
 	$(NULL)
 
