@@ -55,9 +55,70 @@ extern int XP_SEC_MODULE_NO_LIB;
 extern PK11DefaultArrayEntry PK11_DefaultArray[];
 extern int num_pk11_default_mechanisms;
 
+static PRBool secmod_ModuleHasRoots(SECMODModule *module)
+{
+    int i;
+
+    for (i=0; i < module->slotInfoCount; i++) {
+	if (module->slotInfo[i].hasRootCerts) {
+	    return PR_TRUE;
+	}
+    }
+    return PR_FALSE;
+}
+
+
+/*
+ * The following code is an attempt to automagically find the external root
+ * module. NOTE: This code should be checked out on the MAC! There must be
+ * some cross platform support out there to help out with this?
+ */
+
+static char *dllnames[]= {
+	"roots.dll", "libroots.so","libroots.sl","Root Certs",
+	"roots.dll", "libroots.so","libroots.sl","Root Certs",
+	"nssckbi.dll","libnssckbi.so","libnssckbi.sl","NSS Builtin Root Certs",
+	"mozckbi.dll","libmozckbi.so","libmozckbi.sl","Mozilla Builtin Root Certs",
+	"netckbi.dll","libnetckbi.so","libnetckbi.sl","Netscape Builtin Root Certs",
+	0 };
+
+#define MAXDLLNAME 40
+
+/* Should we have platform ifdefs here??? */
+#define FILE_SEP '/'
+
+static void
+secmod_FindExternalRoot(char *dbname)
+{
+	char *path, *cp, **cur_name;
+	int len = PORT_Strlen(dbname);
+	int path_len;
+
+	
+	path = PORT_Alloc(len+MAXDLLNAME);
+	if (path == NULL) return;
+
+	/* back up to the top of the directory */
+	for (cp = &dbname[len]; cp != dbname && (*cp != FILE_SEP); cp--) ;
+	path_len = cp-dbname;
+	PORT_Memcpy(path,dbname,path_len);
+	path[path_len++] = FILE_SEP;
+
+	/* now walk our tree of dll names looking for the file of interest. */
+	for (cur_name= dllnames; *cur_name != 0; cur_name++) {
+	    PORT_Memcpy(&path[path_len],*cur_name,PORT_Strlen(*cur_name)+1);
+	    if (SECMOD_AddNewModule("Root Certs",path, 0, 0) == SECSuccess) {
+		break;
+	    }
+	}
+	PORT_Free(path);
+	return;
+}
+
 void SECMOD_init(char *dbname) {
     SECMODModuleList *thisModule;
     int found=0;
+    int rootFound=0;
     SECStatus rv = SECFailure;
 
 
@@ -80,6 +141,10 @@ void SECMOD_init(char *dbname) {
 	    internalModule = SECMOD_ReferenceModule(thisModule->module);
 	    break;
 	}
+	if (secmod_ModuleHasRoots(thisModule->module)) {
+	    rootFound++;
+	    break;
+	}
     }
 
     if (!found) {
@@ -98,6 +163,9 @@ void SECMOD_init(char *dbname) {
     if( rv != SECSuccess )
         internalModule = NULL;
 
+    if (! rootFound ) {
+	secmod_FindExternalRoot(dbname);
+    }
     /* Load each new module */
     for (thisModule = modules; thisModule ; thisModule = thisModule->next) {
         if( !( thisModule->module->internal ) )

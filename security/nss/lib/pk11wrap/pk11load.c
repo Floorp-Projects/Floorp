@@ -77,6 +77,48 @@ static CK_C_INITIALIZE_ARGS secmodLockFunctions = {
 };
 
 /*
+ * set the hasRootCerts flags in the module so it can be stored back
+ * into the database.
+ */
+void
+SECMOD_SetRootCerts(PK11SlotInfo *slot, SECMODModule *mod) {
+    PK11PreSlotInfo *psi = NULL;
+    int i;
+
+    if (slot->hasRootCerts) {
+	for (i=0; i < mod->slotInfoCount; i++) {
+	    if (slot->slotID == mod->slotInfo[i].slotID) {
+		psi = &mod->slotInfo[i];
+		break;
+	    }
+	}
+	if (psi == NULL) {
+	   /* allocate more slots */
+	   PK11PreSlotInfo *psi_list = (PK11PreSlotInfo *)
+		PORT_ArenaAlloc(mod->arena,
+			(mod->slotInfoCount+1)* sizeof(PK11PreSlotInfo));
+	   /* copy the old ones */
+	   if (mod->slotInfoCount > 0) {
+		PORT_Memcpy(psi_list,mod->slotInfo,
+				(mod->slotInfoCount)*sizeof(PK11PreSlotInfo));
+	   }
+	   /* assign psi to the last new slot */
+	   psi = &psi_list[mod->slotInfoCount];
+	   psi->slotID = slot->slotID;
+	   psi->askpw = 0;
+	   psi->timeout = 0;
+	   psi ->defaultFlags = 0;
+
+	   /* increment module count & store new list */
+	   mod->slotInfo = psi_list;
+	   mod->slotInfoCount++;
+	   
+	}
+	psi->hasRootCerts = 1;
+    }
+}
+
+/*
  * load a new module into our address space and initialize it.
  */
 SECStatus
@@ -189,6 +231,7 @@ SECMOD_LoadModule(SECMODModule *mod) {
 	    PK11_InitSlot(mod,slotIDs[i],mod->slots[i]);
 	    /* look down the slot info table */
 	    PK11_LoadSlotList(mod->slots[i],mod->slotInfo,mod->slotInfoCount);
+	    SECMOD_SetRootCerts(mod->slots[i],mod);
 	}
 	mod->slotCount = slotCount;
 	mod->slotInfoCount = 0;
