@@ -639,13 +639,13 @@ nsRDFDOMDataSource::getURIForNode(nsIDOMNode *node, char **uri)
       char *idstr = PR_smprintf("%8.8X", gCurrentId++);
       id = idstr;
       printf("Element has no ID. Assigning it %s\n", idstr);
+
       
-      element->SetAttribute(nsAutoString("id"), id);
     }
     else {
       printf("ID of this element is %s\n", id.ToNewCString());
     }
-    
+
     // leaks id.ToNewCString()
     *uri = PR_smprintf("dom://%s", id.ToNewCString());
   }

@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -18,16 +18,20 @@
  * Rights Reserved.
  */
 
-#include "nsISupports.idl"
-#include "domstubs.idl"
+#ifndef __nsRDFDOMResourceFactory_h
+#define __nsRDFDOMResourceFactory_h
 
-%{C++
-#include "nsIDOMWindow.h"
-#include "nsIDOMNode.h"
-%}
+#include "nsIRDFService.h"
 
-[scriptable, uuid(0b96297e-2459-11d3-8aad-006008948010)]
-interface nsIDOMDataSource : nsISupports {
-    void SetWindow(in nsIDOMWindow window);
-};
+/* {84a87046-57f4-11d3-9061-00a0c900d445} */
+#define NS_RDF_DOMRESOURCEFACTORY_CID \
+  {0x84a87046, 0x57f4, 0x11d3, \
+    { 0x90, 0x61, 0x0, 0xa0, 0xc9, 0x0, 0xd4, 0x45 }}
+  
 
+nsresult
+NS_NewRDFDOMResourceFactory(nsISupports* aOuter,
+                            const nsIID& iid,
+                            void **result);
+
+#endif
