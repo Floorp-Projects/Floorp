@@ -1172,13 +1172,15 @@ nsDOMEvent::InitUIEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg,
 }
 
 NS_IMETHODIMP
-nsDOMEvent::InitMouseEvent(const nsAReadableString& aTypeArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, 
-                           PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRInt32 aScreenXArg, PRInt32 aScreenYArg, 
-                           PRInt32 aClientXArg, PRInt32 aClientYArg, PRUint16 aButtonArg, PRUint16 aDetailArg)
+nsDOMEvent::InitMouseEvent(const nsAReadableString & aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, 
+                           nsIDOMAbstractView *aViewArg, PRUint16 aDetailArg, PRInt32 aScreenXArg, 
+                           PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, 
+                           PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, 
+                           PRBool aMetaKeyArg, PRUint16 aButtonArg, nsIDOMEventTarget *aRelatedTargetArg)
 {
   NS_ENSURE_SUCCESS(SetEventType(aTypeArg), NS_ERROR_FAILURE);
-  //mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
-  //mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
+  mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
+  mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
 
   if (mEvent->eventStructType == NS_MOUSE_EVENT) {
     nsMouseEvent* mouseEvent = NS_STATIC_CAST(nsMouseEvent*, mEvent);
@@ -1200,8 +1202,9 @@ nsDOMEvent::InitMouseEvent(const nsAReadableString& aTypeArg, PRBool aCtrlKeyArg
 
 NS_IMETHODIMP
 nsDOMEvent::InitKeyEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, 
-                         PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, 
-                         PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg, nsIDOMAbstractView* aViewArg)
+                         nsIDOMAbstractView* aViewArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, 
+                         PRBool aShiftKeyArg, PRBool aMetaKeyArg, 
+                         PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg)
 {
   NS_ENSURE_SUCCESS(SetEventType(aTypeArg), NS_ERROR_FAILURE);
   mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;

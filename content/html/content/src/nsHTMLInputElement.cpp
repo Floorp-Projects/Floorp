@@ -1692,7 +1692,7 @@ nsHTMLInputElement::FireEventForAccessibility(nsIPresContext* aPresContext,
   if ( !mutEvent )
     return NS_ERROR_FAILURE;
   nsAutoString empty;
-  mutEvent->InitMutationEvent( aEventType, PR_TRUE, PR_TRUE, nsnull, empty, empty, empty);
+  mutEvent->InitMutationEvent( aEventType, PR_TRUE, PR_TRUE, nsnull, empty, empty, empty, nsIDOMMutationEvent::MODIFICATION);
 
   // Set the target of the event to this nsHTMLInputElement, which should be checkbox content??
   nsCOMPtr<nsIPrivateDOMEvent> privEvent(do_QueryInterface(domEvent));

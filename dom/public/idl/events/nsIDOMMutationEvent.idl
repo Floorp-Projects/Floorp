@@ -42,5 +42,6 @@ interface nsIDOMMutationEvent : nsIDOMEvent
                                               in nsIDOMNode relatedNodeArg,
                                               in DOMString prevValueArg,
                                               in DOMString newValueArg,
-                                              in DOMString attrNameArg);
+                                              in DOMString attrNameArg,
+											  in unsigned short attrChangeArg);
 };

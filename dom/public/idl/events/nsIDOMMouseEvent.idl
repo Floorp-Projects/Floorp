@@ -42,14 +42,18 @@ interface nsIDOMMouseEvent : nsIDOMUIEvent
   readonly attribute nsIDOMEventTarget  relatedTarget;
 
   void                      initMouseEvent(in DOMString typeArg,
-                                           in boolean ctrlKeyArg,
-                                           in boolean altKeyArg,
-                                           in boolean shiftKeyArg,
-                                           in boolean metaKeyArg,
+										                       in boolean canBubbleArg,
+  										                     in boolean cancelableArg,
+                                           in nsIDOMAbstractView viewArg,
+                                           in unsigned short detailArg,
                                            in long screenXArg,
                                            in long screenYArg,
                                            in long clientXArg,
                                            in long clientYArg,
+  										                     in boolean ctrlKeyArg,
+                                           in boolean altKeyArg,
+                                           in boolean shiftKeyArg,
+                                           in boolean metaKeyArg,
                                            in unsigned short buttonArg,
-                                           in unsigned short detailArg);
+                                           in nsIDOMEventTarget relatedTargetArg);
 };
