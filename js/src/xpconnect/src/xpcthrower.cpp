@@ -291,7 +291,7 @@ XPCThrower::ThrowCOMError(JSContext* cx, unsigned long COMErrorCode,
         msg += NS_STATIC_CAST(const char *,
                               _bstr_t(exception->bstrSource, false));
         msg += " : ";
-        msg.AppendInt(COMErrorCode);
+        msg.AppendInt(NS_STATIC_CAST(PRUint32, COMErrorCode));
         msg += " - ";
         msg += NS_STATIC_CAST(const char *,
                               _bstr_t(exception->bstrDescription, false));
@@ -310,7 +310,7 @@ XPCThrower::ThrowCOMError(JSContext* cx, unsigned long COMErrorCode,
                 msg += NS_STATIC_CAST(const char *,src);
                 msg += " : ";
             }
-            msg.AppendInt(COMErrorCode, 16);
+            msg.AppendInt(NS_STATIC_CAST(PRUint32, COMErrorCode), 16);
             BSTR bstrDesc = NULL;
             if(SUCCEEDED(pError->GetDescription(&bstrDesc)) && bstrDesc)
             {
@@ -323,7 +323,7 @@ XPCThrower::ThrowCOMError(JSContext* cx, unsigned long COMErrorCode,
         {
             // No error object, so just report the result
             msg += "COM Error Result = ";
-            msg.AppendInt(COMErrorCode, 16);
+            msg.AppendInt(NS_STATIC_CAST(PRUint32, COMErrorCode), 16);
         }
     }
     
