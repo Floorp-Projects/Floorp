@@ -314,7 +314,7 @@
           </xul:box>
           <xul:box class="console-row-file" xbl:inherits="hidden=hideSource">
             <xul:label class="label" value="&errFile.label;"/>
-            <xul:box class="console-error-source" xbl:inherits="url"/>
+            <xul:box class="console-error-source" xbl:inherits="url,line"/>
             <spacer flex="1"/>
             <xul:label class="label" value="&errLine.label;"/>
             <xul:label class="label" xbl:inherits="value=line" flex="1"/>
@@ -390,9 +390,11 @@
 
     <handlers>
       <handler event="click"><![CDATA[
+          var url = this.getAttribute("url");
+          var line = getAttribute("line");  
           window.openDialog(
             "chrome://navigator/content/viewSource.xul", "_blank", 
-            "scrollbars,resizable,chrome,dialog=no", this.getAttribute("url"));
+            "scrollbars,resizable,chrome,dialog=no", url, null, null, line);
       ]]></handler>
     </handlers>
   </binding>

@@ -31,6 +31,7 @@ comm.jar:
 en-US.jar:
         locale/en-US/navigator/contents.rdf                 (resources/locale/en-US/contents.rdf)
         locale/en-US/navigator/viewSource.dtd               (resources/locale/en-US/viewSource.dtd)
+        locale/en-US/navigator/viewSource.properties        (resources/locale/en-US/viewSource.properties)
         locale/en-US/navigator/pageInfo.dtd                 (resources/locale/en-US/pageInfo.dtd)
         locale/en-US/navigator/pageInfo.properties          (resources/locale/en-US/pageInfo.properties)
         locale/en-US/navigator/navigator.dtd                (resources/locale/en-US/navigator.dtd)
