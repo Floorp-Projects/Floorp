@@ -1171,7 +1171,7 @@ function cmdMe(e)
 
     e.action = filterOutput (e.action, "ACTION", "ME!");
     display (e.action, "ACTION", "ME!", e.sourceObject);
-    e.sourceObject.act (fromUnicode(e.action, e.sourceObject));
+    e.sourceObject.act (e.action);
 }
 
 function cmdMotif(e)
@@ -1295,7 +1295,7 @@ function cmdQuery(e)
     {
         e.message = filterOutput(e.message, "PRIVMSG", "ME!");
         user.display(e.message, "PRIVMSG", "ME!", user);
-        user.say(fromUnicode(e.message, e.sourceObject));
+        user.say(e.message, e.sourceObject);
     }
 
     return user;
@@ -1307,7 +1307,7 @@ function cmdMsg(e)
 
     var msg = filterOutput(e.message, "PRIVMSG", "ME!");
     usr.display(e.message, "PRIVMSG", "ME!", usr);
-    usr.say(fromUnicode(e.message, e.sourceObject));
+    usr.say(e.message, e.sourceObject);
 }
 
 function cmdNick(e)
@@ -1556,7 +1556,7 @@ function cmdTopic(e)
     if (!e.newTopic)
         e.server.sendData ("TOPIC " + e.channel.name + "\n");
     else
-        e.channel.setTopic(fromUnicode(e.newTopic, e.channel));
+        e.channel.setTopic(e.newTopic);
 }
 
 function cmdAbout(e)

@@ -34,7 +34,7 @@
  *  Samuel Sieb, samuel@sieb.net, MIRC color codes, munger menu, and various
  */
 
-const __cz_version   = "0.9.35";
+const __cz_version   = "0.9.40";
 const __cz_condition = "yellow";
 
 var warn;
@@ -367,7 +367,7 @@ function processStartupURLs()
         "url" in window.arguments[0])
     {
         var url = window.arguments[0].url;
-        if (url.search(/^irc:\/?\/?$/i) == -1)
+        if (url.search(/^irc:\/?\/?\/?$/i) == -1)
         {
             /* if the url is not irc: irc:/ or irc://, then go to it. */
             gotoIRCURL(url);
@@ -515,10 +515,10 @@ function insertChannelLink (matchText, containerTag, eventData)
     }
     
     var encodedMatchText = fromUnicode(matchText, eventData.sourceObject);
-    var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
-                                           "html:a");
+    var anchor = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                          "html:a");
     anchor.setAttribute ("href", eventData.network.getURL() +
-                         escape(encodedMatchText));
+                         ecmaEscape(encodedMatchText));
     anchor.setAttribute ("class", "chatzilla-link");
     insertHyphenatedWord (matchText, anchor);
     containerTag.appendChild (anchor);
@@ -1310,7 +1310,7 @@ function gotoIRCURL (url)
     
     if (url.needpass)
     {
-        if ("pass" in url)
+        if (url.pass)
             pass = url.pass;
         else
             pass = window.prompt(getMsg(MSG_URL_PASSWORD, url.spec));
@@ -1399,7 +1399,7 @@ function gotoIRCURL (url)
             }
 
             var charset;
-            if ("charset" in url)
+            if (url.charset)
                 charset = url.charset;
                     
             targetObject = network.dispatch("join",
@@ -1424,7 +1424,7 @@ function gotoIRCURL (url)
                 targetObject.display(msg, "PRIVMSG", "ME!",
                                      client.currentObject);
             }
-            targetObject.say(fromUnicode(msg, targetObject));
+            targetObject.say(msg);
             setCurrentObject(targetObject);
         }
     }
@@ -2308,8 +2308,8 @@ function cli_say(msg)
         case "IRCUser":
         case "IRCChanUser":
             msg = filterOutput (msg, "PRIVMSG");
-            display (msg, "PRIVMSG", "ME!", client.currentObject);
-            client.currentObject.say(fromUnicode(msg));
+            display(msg, "PRIVMSG", "ME!", client.currentObject);
+            client.currentObject.say(msg);
             break;
 
         case "IRCClient":
@@ -2348,6 +2348,18 @@ function net_getprefmgr()
     }
     
     return this._prefManager;
+}
+
+CIRCServer.prototype.__defineGetter__("prefs", srv_getprefs);
+function srv_getprefs()
+{
+    return this.parent.prefs;
+}
+
+CIRCServer.prototype.__defineGetter__("prefManager", srv_getprefmgr);
+function srv_getprefmgr()
+{
+    return this.parent.prefManager;
 }
 
 CIRCChannel.prototype.__defineGetter__("prefs", chan_getprefs);
@@ -2558,12 +2570,12 @@ function __display(message, msgtype, sourceObj, destObj)
         var name;
         if (sourceObj)
         {
-            name = (sourceObj.TYPE == "CIRCChannel") ?
+            name = (sourceObj.TYPE == "IRCChannel") ?
                 sourceObj.unicodeName : sourceObj.name;
         }
         else
         {
-            name = (this.TYPE == "CIRCChannel") ?
+            name = (this.TYPE == "IRCChannel") ?
                 this.unicodeName : this.name;
         }
 
@@ -2792,7 +2804,7 @@ function __display(message, msgtype, sourceObj, destObj)
         
         try
         {
-            this.logFile.write(logText + "\n");
+            this.logFile.write(fromUnicode(logText + "\n", "utf-8"));
         }
         catch (ex)
         {

@@ -144,8 +144,8 @@ function mm_fromunicode(msg, charset)
     {
         if ("Finish" in this.ucConverter)
         {
-            msg = this.ucConverter.ConvertFromUnicode(msg);
-            this.ucConverter.Finish();
+            msg = this.ucConverter.ConvertFromUnicode(msg) +
+                this.ucConverter.Finish();
         }
         else
         {

@@ -573,7 +573,7 @@ function my_unknown (e)
         client.responseCodeMap[e.code] = "---";
     }
     
-    this.display (e.params.join(" "), e.code.toUpperCase());
+    this.display(toUnicode(e.params.join(" "), this), e.code.toUpperCase());
 }
 
 CIRCNetwork.prototype.on001 = /* Welcome! */
@@ -600,7 +600,7 @@ function my_showtonet (e)
     {
         case "004":
         case "005":
-            str = e.params.slice(3).join (" ");
+            str = e.params.slice(3).join(" ");
             break;
 
         case "001":
@@ -613,7 +613,7 @@ function my_showtonet (e)
                 // reconnect to any existing views
                 var source = client.viewsArray[v].source;
                 var details = getObjectDetails(client.viewsArray[v].source);
-                if (source.TYPE != "CIRCUser" &&
+                if (source.TYPE != "IRCUser" &&
                     "network" in details && details.network == this)
                 {
                     gotoIRCURL(source.getURL());
@@ -630,7 +630,12 @@ function my_showtonet (e)
                 delete this.pendingURLs;
             }
 
-            str = e.params[2];
+            str = e.decodeParam(2);
+            if ("onLogin" in this)
+            {
+                ev = new CEvent("network", "login", this, "onLogin");
+                client.eventPump.addEvent(ev);
+            }
             break;
             
         case "372":
@@ -641,27 +646,26 @@ function my_showtonet (e)
             /* no break */
 
         default:
-            var length = e.params.length;
-            str = e.params[length - 1];
+            str = e.decodeParam(e.params.length - 1);
             break;
     }
 
-    this.displayHere (p + str, e.code.toUpperCase());
+    this.displayHere(p + str, e.code.toUpperCase());
     
 }
 
 CIRCNetwork.prototype.onUnknownCTCPReply = 
 function my_ctcprunk (e)
 {
-    this.display (getMsg(MSG_FMT_CTCPREPLY,
-                         [e.CTCPCode, e.CTCPData, e.user.properNick]),
-                         "CTCP_REPLY", e.user, e.server.me);
+    this.display(getMsg(MSG_FMT_CTCPREPLY,
+                        [e.CTCPCode, e.CTCPData, e.user.properNick]),
+                 "CTCP_REPLY", e.user, e.server.me, this);
 }
 
 CIRCNetwork.prototype.onNotice = 
 function my_notice (e)
 {
-    this.display (toUnicode(e.params[2], this), "NOTICE", this, e.server.me);
+    this.display(e.decodeParam(2), "NOTICE", this, e.server.me);
 }
 
 CIRCNetwork.prototype.on303 = /* ISON (aka notify) reply */
@@ -816,12 +820,13 @@ function my_listrply (e)
     if (!("list" in this) || !("done" in this.list))
         this.listInit();
     ++this.list.count;
-    e.params[2] = toUnicode(e.params[2], this);
-    if (!(this.list.regexp) || e.params[2].match(this.list.regexp)
-                            || e.params[4].match(this.list.regexp))
+    
+    var chanName = e.decodeParam(2);
+    var topic = e.decodeParam(4);
+    if (!this.list.regexp || chanName.match(this.list.regexp) ||
+        topic.match(this.list.regexp))
     {
-        this.list.push([e.params[2], e.params[3], 
-                        toUnicode(e.params[4], this)]);
+        this.list.push([chanName, e.params[3], topic]);
     }
 }
 
@@ -840,7 +845,7 @@ function my_401 (e)
     }
     else
     {
-        display(e.params[3]);
+        display(toUnicode(e.params[3], this));
     }
 }
 
@@ -870,11 +875,11 @@ function my_352 (e)
     if (ary)
     {
         hops = Number(ary[1]);
-        desc = ary[2];
+        desc = toUnicode(ary[2], this);
     }
     else
     {
-        desc = e.params[length - 1];
+        desc = e.decodeParam(length - 1);
     }
     
     var status = e.params[7];
@@ -883,10 +888,10 @@ function my_352 (e)
     else if (e.params[7] == "H")
         status = MSG_HERE;
         
-    e.user.display (getMsg(MSG_WHO_MATCH,
+    e.user.display(getMsg(MSG_WHO_MATCH,
                            [e.params[6], e.params[3], e.params[4],
                             desc, status,
-                            toUnicode(e.params[2], this), 
+                            e.decodeParam(2), 
                             e.params[5], hops]), e.code, e.user);
     updateTitle (e.user);
     if ("whoMatches" in this)
@@ -914,11 +919,11 @@ function my_whoisreply (e)
         case 311:
             text = getMsg(MSG_WHOIS_NAME,
                           [nick, e.params[3], e.params[4],
-                           toUnicode(e.params[6], this)]);
+                           e.decodeParam(6)]);
             break;
             
         case 319:
-            var ary = stringTrim(e.params[3]).split(" ");
+            var ary = stringTrim(e.decodeParam(3)).split(" ");
             text = getMsg(MSG_WHOIS_CHANNELS, [nick, arraySpeak(ary)]);
             break;
             
@@ -950,8 +955,7 @@ function my_whoisreply (e)
 CIRCNetwork.prototype.on341 = /* invite reply */
 function my_341 (e)
 {
-    this.display (getMsg(MSG_YOU_INVITE, [e.params[2],
-                                          toUnicode(e.params[3], this)]),
+    this.display (getMsg(MSG_YOU_INVITE, [e.params[2], e.decodeParam(3)]),
                   "341");
 }
 
@@ -1044,7 +1048,7 @@ function my_netdisconnect (e)
             
             default:
                 msg = getMsg(MSG_CLOSE_STATUS,
-                             [this.name, e.server.hostname, e.server.port]);
+                             [this.getURL(), e.server.getURL(), e.disconnectStatus]);
                 reconnect = true;
                 break;
         }    
@@ -1098,8 +1102,7 @@ function my_umode (e)
     if ("user" in e && e.user)
         e.user.updateHeader();
 
-    display(getMsg(MSG_USER_MODE, [e.params[1], e.params[2]]),
-            MT_MODE);
+    display(getMsg(MSG_USER_MODE, [e.params[1], e.params[2]]), MT_MODE);
 }
 
 CIRCNetwork.prototype.onNick =
@@ -1139,20 +1142,20 @@ function chan_oninit ()
 CIRCChannel.prototype.onPrivmsg =
 function my_cprivmsg (e)
 {
+    var msg = e.decodeParam(2);
     
-    this.display (e.params[2], "PRIVMSG", e.user, this);
+    this.display (msg, "PRIVMSG", e.user, this);
     
     if ((typeof client.prefix == "string") &&
-        e.params[2].indexOf (client.prefix) == 0)
+        msg.indexOf (client.prefix) == 0)
     {
         try
         {
-            var v = eval(e.params[2].substring (client.prefix.length,
-                                                e.params[2].length));
+            var v = eval(msg.substring(client.prefix.length, msg.length));
         }
         catch (ex)
         {
-            this.say(fromUnicode(e.user.nick + ": " + String(ex), this));
+            this.say(e.user.nick + ": " + String(ex));
             return false;
         }
         
@@ -1170,8 +1173,8 @@ function my_cprivmsg (e)
             else
                 rsp += " ";
             
-            this.display (rsp + v, "PRIVMSG", e.server.me, this);
-            this.say (fromUnicode(rsp + v, this));
+            this.display(rsp + v, "PRIVMSG", e.server.me, this);
+            this.say(rsp + v, this);
         }
     }
 
@@ -1252,14 +1255,13 @@ function my_topic (e)
 CIRCChannel.prototype.onNotice =
 function my_notice (e)
 {
-    this.display (toUnicode(e.params[2], this),
-                  "NOTICE", e.user, this);   
+    this.display(e.decodeParam(2), "NOTICE", e.user, this);   
 }
 
 CIRCChannel.prototype.onCTCPAction =
 function my_caction (e)
 {
-    this.display (e.CTCPData, "ACTION", e.user, this);
+    this.display (toUnicode(e.CTCPData), "ACTION", e.user, this);
 }
 
 CIRCChannel.prototype.onUnknownCTCP =
@@ -1368,7 +1370,7 @@ function my_cmode (e)
 {
     if ("user" in e)
     {
-        var msg = toUnicode(e.params.slice(1).join(" "), this);
+        var msg = e.params.slice(1).join(" ");
         this.display (getMsg(MSG_MODE_CHANGED, [msg, e.user.properNick]),
                       "MODE", e.user, this);
     }
@@ -1451,7 +1453,7 @@ function my_cprivmsg (e)
         }    
     }
 
-    this.display (e.params[2], "PRIVMSG", e.user, e.server.me);
+    this.display(e.decodeParam(2), "PRIVMSG", e.user, e.server.me);
 }
 
 CIRCUser.prototype.onNick =
@@ -1477,13 +1479,13 @@ function my_unick (e)
 CIRCUser.prototype.onNotice =
 function my_notice (e)
 {
-    this.display (toUnicode(e.params[2], this), "NOTICE", this, e.server.me);   
+    this.display (e.decodeParam(2), "NOTICE", this, e.server.me);   
 }
 
 CIRCUser.prototype.onCTCPAction =
 function my_uaction (e)
 {
-    e.user.display (e.CTCPData, "ACTION", this, e.server.me);
+    e.user.display(toUnicode(e.CTCPData), "ACTION", this, e.server.me);
 }
 
 CIRCUser.prototype.onUnknownCTCP =

@@ -35,6 +35,7 @@
 
 const PREF_RELOAD = true;
 const PREF_WRITETHROUGH = true;
+const PREF_CHARSET = "utf-8";   // string prefs stored in this charset
 
 function PrefManager (branchName)
 {
@@ -211,7 +212,7 @@ function pm_s2a(string)
     
     var ary = string.split(/\s*;\s*/);
     for (var i = 0; i < ary.length; ++i)
-        ary[i] = unescape(ary[i]);
+        ary[i] = toUnicode(unescape(ary[i]), PREF_CHARSET);
 
     return ary;
 }
@@ -221,7 +222,7 @@ function pm_a2s(ary)
 {
     var escapedAry = new Array()
     for (var i = 0; i < ary.length; ++i)
-        escapedAry[i] = escape(ary[i]);
+        escapedAry[i] = escape(fromUnicode(ary[i], PREF_CHARSET));
 
     return escapedAry.join("; ");
 }
@@ -273,7 +274,8 @@ function pm_getpref(prefName, reload)
         else if (typeof defaultValue == "string" ||
                  defaultValue == null)
         {
-            realValue = this.prefBranch.getCharPref(prefName);
+            realValue = toUnicode(this.prefBranch.getCharPref(prefName),
+                                  PREF_CHARSET);
         }
     }
     catch (ex)
@@ -334,7 +336,7 @@ function pm_setpref(prefName, value)
     }
     else
     {
-        this.prefBranch.setCharPref(prefName, value);
+        this.prefBranch.setCharPref(prefName, fromUnicode(value, PREF_CHARSET));
     }
     
     this.prefService.savePrefFile(null);

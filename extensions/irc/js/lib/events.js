@@ -184,6 +184,7 @@ function ep_routeevent (e)
         e.level++;
         this.onHook (e);
         var destObject = e.destObject;
+        e.currentObject = destObject;
         e.destObject = (void 0);
         
         switch (typeof destObject[e.destMethod])

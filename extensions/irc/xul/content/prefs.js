@@ -143,7 +143,8 @@ function initPrefs()
 
 function pref_mungeName(name)
 {
-    return escape(name.replace(/\./g, "-").replace(/:/g, "_").toLowerCase());
+    var safeName = name.replace(/\./g, "-").replace(/:/g, "_").toLowerCase();
+    return ecmaEscape(safeName);
 }
 
 function getNetworkPrefManager(network)
