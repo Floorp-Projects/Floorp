@@ -362,7 +362,7 @@ Contributor(s): ______________________________________. -->
 	    <treecell>
 	      <treeindentation />
 	      <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"
-                 align="right" class="borderless"/>
+                 align="left" class="borderless"/>
 	    </treecell>
 	  </treerow>
 	</treeitem>
@@ -688,11 +688,11 @@ Contributor(s): ______________________________________. -->
   
    <toolbox id="main-toolbox">
     <toolbar class="main-bar" chromeclass="toolbar">
-		  <titledbutton id="back-button" align="bottom" value="&backButton.label;" onclick="BrowserBack()">	
+		  <titledbutton id="back-button" align="top" value="&backButton.label;" onclick="BrowserBack()">	
 				  <observes element="canGoBack" attribute="disabled" onChange="BrowserSetBack()"/>			
 	      </titledbutton>
 
-	      <titledbutton id="forward-button" align="bottom" value="&forwardButton.label;"
+	      <titledbutton id="forward-button" align="top" value="&forwardButton.label;"
 				onclick="BrowserForward()">
 				  <observes element="canGoForward" attribute="disabled" onChange="BrowserSetForward()"/>
 	      </titledbutton>
@@ -702,12 +702,12 @@ Contributor(s): ______________________________________. -->
         'Shift' key pressed state and pass on appropriate
          reload type. (The shift functionality is available. There's a shiftDown field
 		 in the event object.) -->
-	      <titledbutton id="reload-button" align="bottom" value="&reloadButton.label;" 
+	      <titledbutton id="reload-button" align="top" value="&reloadButton.label;" 
 				  onclick="BrowserReallyReload(0)">
 				  <observes element="canReload" attribute="disabled" onChange="BrowserSetReload()" />
 	      </titledbutton>
 
-	      <titledbutton id="stop-button" align="bottom" value="&stopButton.label;" 
+	      <titledbutton id="stop-button" align="top" value="&stopButton.label;" 
 				onclick="BrowserStop()">
 	        <observes element="canStop" attribute="disabled" onchange="BrowserCanStop()"/>
 	      </titledbutton>
@@ -719,10 +719,10 @@ Contributor(s): ______________________________________. -->
 			<spring flex="100%"/>
 	      </box>
 
-		<titledbutton id="translate-button" popup="translationlist" popupanchor="bottomleft" value="&translateButton.label;" align="bottom">
+		<titledbutton id="translate-button" popup="translationlist" popupanchor="bottomleft" value="&translateButton.label;" align="top">
 		</titledbutton>
 
-	      <titledbutton id="print-button" align="bottom" value="&printButton.label;"  
+	      <titledbutton id="print-button" align="top" value="&printButton.label;"  
 				onclick="BrowserPrint()">
 	        <observes element="canPrint" attribute="disabled"/>
 	      </titledbutton>
@@ -735,17 +735,17 @@ Contributor(s): ______________________________________. -->
     <toolbar class="main-bar" chromeclass="toolbar" datasources="rdf:bookmarks" id="NC:PersonalToolbarFolder">
 	<template>
 		<rule iscontainer="true">
-			<titledbutton uri="..." src="resource:/res/rdf/folder-closed.gif" value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" popup="bookmark-popup" />
+			<titledbutton uri="..." src="resource:/res/rdf/folder-closed.gif" value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" popup="bookmark-popup" />
 		</rule>
 		
 		<rule>
-			<titledbutton uri="..." src="resource:/res/toolbar/TB_Location.gif" value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" onclick="OpenBookmarkURL(event.target)" />
+			<titledbutton uri="..." src="resource:/res/toolbar/TB_Location.gif" value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" onclick="OpenBookmarkURL(event.target)" />
 		</rule>
 	</template>
 
-        	<titledbutton id="home-button" align="right" value="&homeButton.label;" 
+        	<titledbutton id="home-button" align="left" value="&homeButton.label;" 
 			onclick="BrowserHome()"/>
-		<titledbutton id="netscape-button" align="right" value="&netscapeButton.label;" 
+		<titledbutton id="netscape-button" align="left" value="&netscapeButton.label;" 
 			onclick="window.content.location.href='http://home.netscape.com'"/>
 		<spring flex="100%"/>
 	</toolbar>
@@ -777,9 +777,9 @@ Contributor(s): ______________________________________. -->
 		
 		<spring flex="100%"/>
 
-		<titledbutton align="right" value="&buildId.label;" style="font-family:sans-serif;font-size:2.5mm;"/>
+		<titledbutton align="left" value="&buildId.label;" style="font-family:sans-serif;font-size:2.5mm;"/>
 				
-		<titledbutton id="security-button" class="insecure" value="&security-button.label;" align="right" onclick="securityOff();"/>
+		<titledbutton id="security-button" class="insecure" value="&security-button.label;" align="left" onclick="securityOff();"/>
      </box>
   </box>
 
