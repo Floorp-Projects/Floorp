@@ -37,19 +37,24 @@ select[size]
   
 option
   {
-    font                  : button;  
+    font                  : list;  
     border                : 1px solid transparent;
     color                 : windowtext;
   }  
 
-/*  
-select option[selected]
+select[size] option[selected]
   {
     background-color      : highlight;
     color                 : highlighttext;
   }  
-*/
 
+select option[selected],
+select[size="1"] option[selected]
+  {
+    background-color      : transparent;
+    color                 : windowtext;
+  } 
+  
 /* menulist based select */
 
 select, select[size="1"]
@@ -60,7 +65,7 @@ select, select[size="1"]
     border-bottom         : 1px solid threedhighlight;
     background-color      : -moz-field;
     color                 : menutext;
-    font                  : pull-down-menu;
+    font                  : list;
     margin                : 1px 5px 2px 5px;
   }
 
