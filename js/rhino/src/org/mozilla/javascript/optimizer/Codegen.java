@@ -287,10 +287,11 @@ public class Codegen extends Interpreter {
         }
 
         if (hasScript) {
+            ScriptOrFnNode script = scriptOrFnNodes[0];
             cfw.addInterface("org/mozilla/javascript/Script");
-            generateScriptCtor(cfw);
+            generateScriptCtor(cfw, script);
             generateMain(cfw);
-            generateExecute(cfw);
+            generateExecute(cfw, script);
         }
 
         generateCallMethod(cfw);
@@ -304,8 +305,6 @@ public class Codegen extends Interpreter {
 
             boolean isFunction = (n.getType() == Token.FUNCTION);
 
-            generateInitImpl(cfw, n);
-
             BodyCodegen bodygen = new BodyCodegen();
             bodygen.cfw = cfw;
             bodygen.codegen = this;
@@ -315,6 +314,7 @@ public class Codegen extends Interpreter {
 
             if (n.getType() == Token.FUNCTION) {
                 OptFunctionNode fn = (OptFunctionNode)n;
+                generateFunctionInit(cfw, fn);
                 if (fn.isTargetOfDirectCall()) {
                     emitDirectConstructor(cfw, fn);
                 }
@@ -502,7 +502,7 @@ public class Codegen extends Interpreter {
         cfw.stopMethod((short)1, null);
     }
 
-    private void generateExecute(ClassFileWriter cfw)
+    private void generateExecute(ClassFileWriter cfw, ScriptOrFnNode script)
     {
         cfw.startMethod("exec",
                         "(Lorg/mozilla/javascript/Context;"
@@ -511,20 +511,12 @@ public class Codegen extends Interpreter {
                         (short)(ClassFileWriter.ACC_PUBLIC
                                 | ClassFileWriter.ACC_FINAL));
 
-        final byte ALOAD_CONTEXT = ByteCode.ALOAD_1;
-        final byte ALOAD_SCOPE = ByteCode.ALOAD_2;
-
-        // to begin a script, call the initScript method
-        cfw.addLoadThis();
-        cfw.add(ALOAD_CONTEXT);
-        cfw.add(ALOAD_SCOPE);
-        cfw.addInvoke(ByteCode.INVOKEVIRTUAL, cfw.getClassName(),
-                      getInitImplMethodName(scriptOrFnNodes[0]),
-                      INIT_SIGNATURE);
+        final int CONTEXT_ARG = 1;
+        final int SCOPE_ARG = 2;
 
         cfw.addLoadThis();
-        cfw.add(ALOAD_CONTEXT);
-        cfw.add(ALOAD_SCOPE);
+        cfw.addALoad(CONTEXT_ARG);
+        cfw.addALoad(SCOPE_ARG);
         cfw.add(ByteCode.DUP);
         cfw.add(ByteCode.ACONST_NULL);
         cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
@@ -541,16 +533,32 @@ public class Codegen extends Interpreter {
         cfw.stopMethod((short)3, null);
     }
 
-    private static void generateScriptCtor(ClassFileWriter cfw)
+    private void generateScriptCtor(ClassFileWriter cfw,
+                                    ScriptOrFnNode script)
     {
         cfw.startMethod("<init>", "()V", ClassFileWriter.ACC_PUBLIC);
-        cfw.add(ByteCode.ALOAD_0);
+
+        cfw.addLoadThis();
         cfw.addInvoke(ByteCode.INVOKESPECIAL, SUPER_CLASS_NAME,
                       "<init>", "()V");
         // set id to 0
         cfw.addLoadThis();
         cfw.addPush(0);
         cfw.add(ByteCode.PUTFIELD, cfw.getClassName(), ID_FIELD_NAME, "I");
+
+        // Call
+        // NativeFunction.initScriptFunction(version, "", varNamesArray, 0)
+
+        cfw.addLoadThis();
+        cfw.addPush(languageVersion);
+        cfw.addPush(""); // Function name
+        pushParamNamesArray(cfw, script);
+        cfw.addPush(0); // No parameters, only varnames
+        cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
+                    "org/mozilla/javascript/NativeFunction",
+                    "initScriptFunction",
+                    "(ILjava/lang/String;[Ljava/lang/String;I)V");
+
         cfw.add(ByteCode.RETURN);
         // 1 parameter = this
         cfw.stopMethod((short)1, null);
@@ -603,8 +611,8 @@ public class Codegen extends Interpreter {
             OptFunctionNode fn = (OptFunctionNode)scriptOrFnNodes[i];
             cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
                           mainClassName,
-                          getInitImplMethodName(fn),
-                          INIT_SIGNATURE);
+                          getFunctionInitMethodName(fn),
+                          FUNCTION_INIT_SIGNATURE);
             cfw.add(ByteCode.RETURN);
         }
 
@@ -612,104 +620,39 @@ public class Codegen extends Interpreter {
         cfw.stopMethod((short)4, null);
     }
 
-    private void generateInitImpl(ClassFileWriter cfw,
-                                  ScriptOrFnNode scriptOrFn)
+    private void generateFunctionInit(ClassFileWriter cfw,
+                                      OptFunctionNode fn)
     {
-        boolean isScript = (scriptOrFn.getType() == Token.SCRIPT);
-        OptFunctionNode fn;
-        if (!isScript) {
-            fn = (OptFunctionNode)scriptOrFn;
-        } else {
-            fn = null;
-        }
-
         final int CONTEXT_ARG = 1;
         final int SCOPE_ARG = 2;
-        cfw.startMethod(getInitImplMethodName(scriptOrFn),
-                        INIT_SIGNATURE,
+        cfw.startMethod(getFunctionInitMethodName(fn),
+                        FUNCTION_INIT_SIGNATURE,
                         (short)(ClassFileWriter.ACC_PRIVATE
                                 | ClassFileWriter.ACC_FINAL));
 
-        // Prepare stack to call NativeFunction.initScriptFunction
+        // Call NativeFunction.initScriptFunction
         cfw.addLoadThis();
         cfw.addPush(languageVersion);
-
-        if (fn != null) {
-            cfw.addPush(fn.getFunctionName());
-        } else {
-            cfw.addPush("");
-        }
-
-        // Push string array with the names of the parameters and the vars.
-        int paramAndVarCount = scriptOrFn.getParamAndVarCount();
-        if (paramAndVarCount == 0) {
-            cfw.add(ByteCode.GETSTATIC,
-                    "org/mozilla/javascript/ScriptRuntime",
-                    "emptyStrings", "[Ljava/lang/String;");
-        } else {
-            cfw.addPush(paramAndVarCount);
-            cfw.add(ByteCode.ANEWARRAY, "java/lang/String");
-            for (int i = 0; i != paramAndVarCount; ++i) {
-                cfw.add(ByteCode.DUP);
-                cfw.addPush(i);
-                cfw.addPush(scriptOrFn.getParamOrVarName(i));
-                cfw.add(ByteCode.AASTORE);
-            }
-        }
-
-        cfw.addPush(scriptOrFn.getParamCount());
-
+        cfw.addPush(fn.getFunctionName());
+        pushParamNamesArray(cfw, fn);
+        cfw.addPush(fn.getParamCount());
         cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
-                    "org/mozilla/javascript/NativeFunction",
-                    "initScriptFunction",
-                    "(ILjava/lang/String;[Ljava/lang/String;I)V");
+                      "org/mozilla/javascript/NativeFunction",
+                      "initScriptFunction",
+                      "(ILjava/lang/String;[Ljava/lang/String;I)V");
 
-        if (fn != null) {
-            cfw.addLoadThis();
-            cfw.addALoad(SCOPE_ARG);
-            cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
-                          "org/mozilla/javascript/ScriptableObject",
-                          "setParentScope",
-                          "(Lorg/mozilla/javascript/Scriptable;)V");
-        }
+        cfw.addLoadThis();
+        cfw.addALoad(SCOPE_ARG);
+        cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
+                      "org/mozilla/javascript/ScriptableObject",
+                      "setParentScope",
+                      "(Lorg/mozilla/javascript/Scriptable;)V");
 
         // precompile all regexp literals
-        int regexpCount = scriptOrFn.getRegexpCount();
+        int regexpCount = fn.getRegexpCount();
         if (regexpCount != 0) {
-            cfw.addLoadThis();
-            cfw.addPush(regexpCount);
-            cfw.add(ByteCode.ANEWARRAY,
-                    "org/mozilla/javascript/regexp/NativeRegExp");
-            // Loop invariant: it keeps stack this, new-array-ref
-            for (int i = 0; i != regexpCount; ++i) {
-                cfw.add(ByteCode.DUP);
-                cfw.addPush(i);
-
-                cfw.add(ByteCode.NEW,
-                            "org/mozilla/javascript/regexp/NativeRegExp");
-                cfw.add(ByteCode.DUP);
-
-                cfw.addALoad(CONTEXT_ARG);
-                cfw.addALoad(SCOPE_ARG);
-                cfw.addPush(scriptOrFn.getRegexpString(i));
-                String regexpFlags = scriptOrFn.getRegexpFlags(i);
-                if (regexpFlags == null) {
-                    cfw.add(ByteCode.ACONST_NULL);
-                } else {
-                    cfw.addPush(regexpFlags);
-                }
-                cfw.addPush(0);
-                cfw.addInvoke(ByteCode.INVOKESPECIAL,
-                              "org/mozilla/javascript/regexp/NativeRegExp",
-                              "<init>",
-                              "(Lorg/mozilla/javascript/Context;"
-                              +"Lorg/mozilla/javascript/Scriptable;"
-                              +"Ljava/lang/String;Ljava/lang/String;"
-                              +"Z"
-                              +")V");
-
-                cfw.add(ByteCode.AASTORE);
-            }
+        	cfw.addLoadThis();
+            pushRegExpArray(cfw, fn, CONTEXT_ARG, SCOPE_ARG);
             cfw.add(ByteCode.PUTFIELD, mainClassName,
                     REGEXP_ARRAY_FIELD_NAME, REGEXP_ARRAY_FIELD_TYPE);
         }
@@ -806,6 +749,72 @@ public class Codegen extends Interpreter {
 
         cfw.add(ByteCode.RETURN);
         cfw.stopMethod((short)0, null);
+    }
+
+    private static void pushParamNamesArray(ClassFileWriter cfw,
+                                            ScriptOrFnNode n)
+    {
+        // Push string array with the names of the parameters and the vars.
+        int paramAndVarCount = n.getParamAndVarCount();
+        if (paramAndVarCount == 0) {
+            cfw.add(ByteCode.GETSTATIC,
+                    "org/mozilla/javascript/ScriptRuntime",
+                    "emptyStrings", "[Ljava/lang/String;");
+        } else {
+            cfw.addPush(paramAndVarCount);
+            cfw.add(ByteCode.ANEWARRAY, "java/lang/String");
+            for (int i = 0; i != paramAndVarCount; ++i) {
+                cfw.add(ByteCode.DUP);
+                cfw.addPush(i);
+                cfw.addPush(n.getParamOrVarName(i));
+                cfw.add(ByteCode.AASTORE);
+            }
+        }
+    }
+
+    static void pushRegExpArray(ClassFileWriter cfw,
+                                ScriptOrFnNode n,
+                                int contextArg,
+                                int scopeArg)
+    {
+        // precompile all regexp literals
+        int regexpCount = n.getRegexpCount();
+        if (regexpCount == 0) badTree();
+
+        cfw.addPush(regexpCount);
+        cfw.add(ByteCode.ANEWARRAY,
+                "org/mozilla/javascript/regexp/NativeRegExp");
+
+        // Loop invariant: it keeps new-array-ref on stack top
+        for (int i = 0; i != regexpCount; ++i) {
+            cfw.add(ByteCode.DUP);
+            cfw.addPush(i);
+
+            cfw.add(ByteCode.NEW,
+                        "org/mozilla/javascript/regexp/NativeRegExp");
+            cfw.add(ByteCode.DUP);
+
+            cfw.addALoad(contextArg);
+            cfw.addALoad(scopeArg);
+            cfw.addPush(n.getRegexpString(i));
+            String regexpFlags = n.getRegexpFlags(i);
+            if (regexpFlags == null) {
+                cfw.add(ByteCode.ACONST_NULL);
+            } else {
+                cfw.addPush(regexpFlags);
+            }
+            cfw.addPush(0);
+            cfw.addInvoke(ByteCode.INVOKESPECIAL,
+                          "org/mozilla/javascript/regexp/NativeRegExp",
+                          "<init>",
+                          "(Lorg/mozilla/javascript/Context;"
+                          +"Lorg/mozilla/javascript/Scriptable;"
+                          +"Ljava/lang/String;Ljava/lang/String;"
+                          +"Z"
+                          +")V");
+
+            cfw.add(ByteCode.AASTORE);
+        }
     }
 
     void pushNumberAsObject(ClassFileWriter cfw, double num)
@@ -940,9 +949,9 @@ public class Codegen extends Interpreter {
         return sb.toString();
     }
 
-    String getInitImplMethodName(ScriptOrFnNode n)
+    String getFunctionInitMethodName(OptFunctionNode fn)
     {
-        return "_i"+getIndex(n);
+        return "_i"+getIndex(fn);
     }
 
     static RuntimeException badTree()
@@ -961,7 +970,7 @@ public class Codegen extends Interpreter {
     static final String REGEXP_ARRAY_FIELD_TYPE
         = "[Lorg/mozilla/javascript/regexp/NativeRegExp;";
 
-    static final String INIT_SIGNATURE
+    static final String FUNCTION_INIT_SIGNATURE
         =  "(Lorg/mozilla/javascript/Context;"
            +"Lorg/mozilla/javascript/Scriptable;"
            +")V";
@@ -1043,6 +1052,7 @@ class BodyCodegen
         argsLocal = -1;
         itsZeroArgArray = -1;
         itsOneArgArray = -1;
+        scriptRegexpLocal = -1;
         epilogueLabel = -1;
     }
 
@@ -1115,6 +1125,16 @@ class BodyCodegen
             itsLocalAllocationBase = (short)(argsLocal + 1);
             for (int i = 0; i < localCount; i++) {
                 reserveWordLocal(itsLocalAllocationBase + i);
+            }
+        }
+
+        if (fnCurrent == null) {
+            // See comments in visitRegexp
+            if (scriptOrFn.getRegexpCount() != 0) {
+                scriptRegexpLocal = getNewWordLocal();
+                Codegen.pushRegExpArray(cfw, scriptOrFn, contextLocal,
+                                        variableObjectLocal);
+                cfw.addAStore(scriptRegexpLocal);
             }
         }
 
@@ -1283,6 +1303,7 @@ class BodyCodegen
                 cfw.addAStore(itsOneArgArray);
             }
         }
+
     }
 
     private void generateEpilogue() {
@@ -3295,10 +3316,19 @@ class BodyCodegen
     private void visitRegexp(Node node)
     {
         int i = node.getExistingIntProp(Node.REGEXP_PROP);
-        cfw.addALoad(funObjLocal);
-        cfw.add(ByteCode.GETFIELD, codegen.mainClassName,
-                Codegen.REGEXP_ARRAY_FIELD_NAME,
-                Codegen.REGEXP_ARRAY_FIELD_TYPE);
+        // Scripts can not use REGEXP_ARRAY_FIELD_NAME since
+        // it it will make script.exec non-reentrant so they
+        // store regexp array in a local variable while
+        // functions always access precomputed REGEXP_ARRAY_FIELD_NAME
+        // not to consume locals
+        if (fnCurrent == null) {
+            cfw.addALoad(scriptRegexpLocal);
+        } else {
+            cfw.addALoad(funObjLocal);
+            cfw.add(ByteCode.GETFIELD, codegen.mainClassName,
+                    Codegen.REGEXP_ARRAY_FIELD_NAME,
+                    Codegen.REGEXP_ARRAY_FIELD_TYPE);
+        }
         cfw.addPush(i);
         cfw.add(ByteCode.AALOAD);
     }
@@ -3798,4 +3828,5 @@ class BodyCodegen
     private short funObjLocal;
     private short itsZeroArgArray;
     private short itsOneArgArray;
+    private short scriptRegexpLocal;
 }
