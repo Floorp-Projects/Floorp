@@ -468,6 +468,8 @@ struct _prefsCategory prefsCategories[] = {
 		XtNumber(prefsMailNews),
 		PAGE_TYPE_MAILNEWS,
 	},
+#endif // MOZ_MAIL_NEWS
+#ifdef EDITOR
 	{
 		CAT_EDITOR,               
 		CAT_RESNAME_EDITOR,               
@@ -479,7 +481,7 @@ struct _prefsCategory prefsCategories[] = {
 		XtNumber(prefsEditor),
 		PAGE_TYPE_EDITOR,
 	},
-#endif // MOZ_MAIL_NEWS
+#endif // EDITOR
 #ifdef PREFS_UNSUPPORTED
 	{
 		CAT_OFFLINE,               
@@ -1662,6 +1664,8 @@ void XFE_PrefsDialog::newPage(XFE_PrefsPage *&page,
 	case PAGE_TYPE_MAILNEWS_ADDRBOOK:
 		page = new XFE_PrefsPageMailNewsAddrBook(this);
 		break;
+#endif  // MOZ_MAIL_NEWS
+#ifdef EDITOR
 	case PAGE_TYPE_EDITOR:
 		page = new XFE_PrefsPageEditor(this);
 		break;
@@ -1674,7 +1678,7 @@ void XFE_PrefsDialog::newPage(XFE_PrefsPage *&page,
 	case PAGE_TYPE_DISKSPACE:
 		page = new XFE_PrefsPageDiskSpace(this);
 		break;
-#endif  // MOZ_MAIL_NEWS
+#endif  // EDITOR
 	case PAGE_TYPE_ADVANCED:
 		page = new XFE_PrefsPageGeneralAdvanced(this);
 		break;
