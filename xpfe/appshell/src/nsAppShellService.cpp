@@ -472,8 +472,12 @@ nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
     rv = window->Initialize((nsIWebShellWindow *) nsnull, mAppShell, aUrl,
                             anObserver, aCallbacks,
                             aInitialWidth, aInitialHeight);
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv))
+    {
+      // this does the AddRef of the return value
       rv = window->QueryInterface(kIWebShellWindowIID, (void **) &aResult);
+      
+      // the addref resulting from this is the owning addref for this window
       RegisterTopLevelWindow(window);
       if (showWindow)
 				window->Show(PR_TRUE);
