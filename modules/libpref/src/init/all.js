@@ -96,6 +96,7 @@ pref("editor.new_find", false);  // temporary
 pref("browser.urlbar.autoFill", false);
 pref("browser.urlbar.showPopup", true);
 pref("browser.urlbar.showSearch", true);
+pref("browser.urlbar.matchOnlyTyped", false);
 
 pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", false);
