@@ -382,7 +382,7 @@ pref("mailnews.ui.select_addresses_results.version", 1);
 // see abCommon.js and ABSearchDialog.js
 pref("mailnews.ui.advanced_directory_search_results.version", 1);                                         
 //If set to a number greater than 0, msg compose windows will be recycled in order to open them quickly
-pref("mail.compose.max_recycled_windows", 0); 
+pref("mail.compose.max_recycled_windows", 1); 
 
 // true makes it so we persist the open state of news server when starting up the 3 pane
 // this is costly, as it might result in network activity.
