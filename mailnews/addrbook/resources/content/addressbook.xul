@@ -135,7 +135,6 @@ Rights Reserved.
 				<menuseparator/>
         <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
         <menuitem id="printMenuItem" label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_PrintCard" command="cmd_PrintCard"/>
-				<menuseparator/>
 			</menupopup>
 		</menu>
 		
@@ -149,7 +148,7 @@ Rights Reserved.
 			          accesskey="&cardPropertiesCmd.accesskey;"
 				  key="key_CardProperties"
           command="cmd_CardProperties"/>
-			<menuseparator/>
+			<menuseparator id="menu_PrefsSeparator"/>
 			<menuitem id="menu_preferences" oncommand="goPreferences('addressbook.xul', 'chrome://messenger/content/addressbook/pref-addressing.xul')"/>
 		  </menupopup>
 		</menu>

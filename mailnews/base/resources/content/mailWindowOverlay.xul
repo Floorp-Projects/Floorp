@@ -869,7 +869,6 @@ Rights Reserved.
       <menuseparator/>
       <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
       <menuitem id="printMenuItem" key="key_print" label="&printCmd.label;" accesskey="&printCmd.accesskey;" observes="cmd_print"/>
-      <menuseparator/>
     </menupopup>
   </menu>
 

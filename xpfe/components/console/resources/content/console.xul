@@ -102,7 +102,6 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
     <menu id="menu_File">
       <menupopup id="menu_FilePopup">
         <menuitem id="menu_close"/>
-        <menuseparator/>
       </menupopup>
     </menu>
 

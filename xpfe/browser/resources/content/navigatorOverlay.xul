@@ -189,9 +189,8 @@
         <menuseparator/>
         <!-- Page setup gets inserted here on some platforms -->
         <menuitem id="printMenuItem" label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="printKb" command="Browser:Print"/>
-        <menuseparator />
+        <menuseparator/>
         <menuitem id="offlineGoOfflineCmd"/>
-        <menuseparator />
       </menupopup>
     </menu>
 
@@ -206,7 +205,7 @@
         <menuitem id="menu_delete"/>
         <menuseparator/>
         <menuitem id="menu_selectAll"/>
-        <menuseparator /> 
+        <menuseparator id="menu_PrefsSeparator"/> 
         <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
       </menupopup>
     </menu>

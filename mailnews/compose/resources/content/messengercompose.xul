@@ -208,7 +208,6 @@
           <menuseparator/>
           <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
           <menuitem id="printMenuItem" label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="key_print" command="cmd_print"/>
-          <menuseparator/>
         </menupopup>
       </menu>
       <menu id="menu_Edit">

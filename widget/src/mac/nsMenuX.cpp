@@ -370,7 +370,7 @@ nsMenuX :: InsertMenuItemWithTruncation ( nsAutoString & inItemLabel, PRUint32 i
 
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenuX::AddSeparator() 
+NS_METHOD nsMenuX::AddSeparator()
 {
   // HACK - We're not really appending an nsMenuItem but it 
   // needs to be here to make sure that event dispatching isn't off by one.
@@ -674,7 +674,7 @@ nsEventStatus nsMenuX::MenuConstruct(
       if ( tag == nsWidgetAtoms::menuitem )
         LoadMenuItem(this, child);
       else if ( tag == nsWidgetAtoms::menuseparator )
-        AddSeparator();
+        LoadSeparator(child);
       else if ( tag == nsWidgetAtoms::menu )
         LoadSubMenu(this, child);
     }
@@ -720,7 +720,7 @@ nsEventStatus nsMenuX::HelpMenuConstruct(
       if ( tag == nsWidgetAtoms::menuitem )
         LoadMenuItem(this, child);
       else if ( tag == nsWidgetAtoms::menuseparator )
-        AddSeparator();
+        LoadSeparator(child);
       else if ( tag == nsWidgetAtoms::menu )
         LoadSubMenu(this, child);
     }   
@@ -1047,6 +1047,19 @@ nsMenuX::LoadSubMenu( nsIMenu * pParentMenu, nsIContent* inMenuItemContent )
     nsCOMPtr<nsISupports> supports2 ( do_QueryInterface(pnsMenu) );
 	  pParentMenu->AddItem(supports2);
   }     
+}
+
+
+void
+nsMenuX::LoadSeparator ( nsIContent* inMenuItemContent ) 
+{
+  // if item should be hidden, bail
+  nsAutoString hidden;
+  inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, hidden);
+  if ( hidden == NS_LITERAL_STRING("true") )
+    return;
+
+  AddSeparator();
 }
 
 

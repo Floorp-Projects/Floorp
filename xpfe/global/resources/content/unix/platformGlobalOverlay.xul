@@ -13,7 +13,9 @@
 
     <!-- quit -->
     <menupopup id="menu_FilePopup">
-    <menuitem label="&quitApplicationCmd.label;" key="key_quit" accesskey="&quitApplicationCmd.accesskey;" command="cmd_quit"/>
+      <menuseparator id="menu_FileQuitSeparator"/>
+      <menuitem label="&quitApplicationCmd.label;" id="menu_FileQuitItem"
+                key="key_quit" accesskey="&quitApplicationCmd.accesskey;" command="cmd_quit"/>
     </menupopup>
     <key id="key_quit"  key="&quitApplicationCmd.key;" command="cmd_quit" modifiers="accel"/>
     <command id="cmd_quit" oncommand="goQuitApplication()"/>

@@ -304,7 +304,6 @@
            where "position" is assumed to be 14. Change that label if menu position changes.      -->
       <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
       <menuitem id="printMenuItem" accesskey="&fileprint.accesskey;" key="printkb" observes="cmd_print" label="&printCmd.label;"/>
-      <menuseparator/>
       <!-- The Exit/Quit item is merged from platformGlobalOverlay.xul -->
     </menupopup>
   </menu>
@@ -341,7 +340,7 @@
       <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_spelling" label="&checkSpellingCmd.label;"/>
       <menuitem id="menu_validate" observes="cmd_validate"
         label="&validateCmd.label;"/>
-      <menuseparator/>
+      <menuseparator id="menu_PrefsSeparator"/>
       <menuitem id="menu_preferences"                                                                  observes="cmd_preferences"/>
     </menupopup>
   </menu>

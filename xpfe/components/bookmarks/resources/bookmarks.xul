@@ -140,7 +140,7 @@
           <menuitem label="&command.newSeparator.label;"
                     accesskey="&command.newSeparator.accesskey;"
                     observes="cmd_newseparator"/>
-          <menuseparator/>
+				  <menuseparator/>
           <menuitem id="menu_close"/>
           <menuseparator/>
           <menuitem label="&menuitem.import.label;"
@@ -154,7 +154,6 @@
                     label="&command.properties.label;" 
                     accesskey="&command.properties.accesskey;" />
           <menuitem id="menu_sendPage" hidden="true"/>
-          <menuseparator/>
         </menupopup>
       </menu>
       <menu id="menu_Edit">
