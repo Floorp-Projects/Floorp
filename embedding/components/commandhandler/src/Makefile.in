@@ -33,6 +33,8 @@ REQUIRES	= string \
 		  content \
 		  xuldoc \
 		  caps \
+		  xpconnect \
+		  js \
 		  $(NULL)
 
 LIBRARY_NAME	= commandhandler_s
