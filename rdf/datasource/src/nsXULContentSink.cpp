@@ -405,6 +405,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
     NS_IF_RELEASE(mDocument);
     NS_IF_RELEASE(mParser);
     NS_IF_RELEASE(mFragmentRoot);
+    NS_IF_RELEASE(mCSSLoader);
 
     PR_FREEIF(mText);
 
