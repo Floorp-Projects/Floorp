@@ -870,7 +870,7 @@ nsresult nsViewer::ShowPrintPreview(nsIWebWidget* web, PRIntn aColumns)
       nsRect rr(0, 0, bounds.width, bounds.height);
 
       rv = NS_NewWebWidget(&wd->ww);
-      rv = wd->ww->Init(wd->windowWidget->GetNativeData(NS_NATIVE_WINDOW), rr, doc, cx);
+      rv = wd->ww->Init(wd->windowWidget->GetNativeData(NS_NATIVE_WIDGET), rr, doc, cx);
       wd->ww->Show();
       wd->observer = NewObserver(wd->ww);
 
@@ -1079,7 +1079,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   nsRect bounds;
   wd->windowWidget->GetBounds(bounds);
   nsRect rr(0, 0, bounds.width, bounds.height);
-  rv = wd->ww->Init(wd->windowWidget->GetNativeData(NS_NATIVE_WINDOW), rr);
+  rv = wd->ww->Init(wd->windowWidget->GetNativeData(NS_NATIVE_WIDGET), rr);
   wd->ww->Show();
   wd->observer = NewObserver(wd->ww);
 

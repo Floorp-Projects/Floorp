@@ -172,7 +172,7 @@ BOOL CreateRobotDialog(HWND hParent)
 void AddViewerMenu(HINSTANCE hInstance, nsIWidget* aWidget, LPCTSTR lpMenuName)
 {
   HMENU menu = ::LoadMenu(hInstance,lpMenuName);
-  HWND hwnd = aWidget->GetNativeData(NS_NATIVE_WINDOW);
+  HWND hwnd = aWidget->GetNativeData(NS_NATIVE_WIDGET);
   ::SetMenu(hwnd, menu);
 }
 
@@ -187,7 +187,7 @@ void nsWin32Viewer::AddMenu(nsIWidget* aMainWindow)
 
 void nsWin32Viewer::ShowConsole(WindowData* aWinData)
 {
-    HWND hWnd = aWinData->windowWidget->GetNativeData(NS_NATIVE_WINDOW);
+    HWND hWnd = aWinData->windowWidget->GetNativeData(NS_NATIVE_WIDGET);
     if (!gConsole) {
 
       // load the accelerator table for the console
@@ -223,7 +223,7 @@ void nsWin32Viewer::CloseConsole()
 void nsWin32Viewer::DoDebugRobot(WindowData* aWindata)
 {
  if ((nsnull != aWindata) && (nsnull != aWindata->ww)) {
-             if (CreateRobotDialog(aWindata->windowWidget->GetNativeData(NS_NATIVE_WINDOW)))
+             if (CreateRobotDialog(aWindata->windowWidget->GetNativeData(NS_NATIVE_WIDGET)))
              {
                 nsIDocument* doc = aWindata->ww->GetDocument();
                 if (nsnull!=doc) {
@@ -281,7 +281,7 @@ void nsWin32Viewer::CopyTextContent(WindowData* wd, HWND aHWnd)
 
 void nsWin32Viewer::CopySelection(WindowData* aWindata)
 {
-  CopyTextContent(aWindata, aWindata->windowWidget->GetNativeData(NS_NATIVE_WINDOW));
+  CopyTextContent(aWindata, aWindata->windowWidget->GetNativeData(NS_NATIVE_WIDGET));
 }
 
 void nsWin32Viewer::Stop()
