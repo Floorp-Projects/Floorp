@@ -40,7 +40,7 @@ use Bugzilla::Constants;
 use Bugzilla::Auth;
 
 use base qw(Exporter);
-@Bugzilla::User::EXPORT_OK = qw(insert_new_user);
+@Bugzilla::User::EXPORT = qw(insert_new_user is_available_username);
 
 ################################################################################
 # Functions
@@ -958,6 +958,40 @@ sub insert_new_user ($$) {
     return $password;
 }
 
+sub is_available_username ($;$) {
+    my ($username, $old_username) = @_;
+
+    if(&::DBname_to_id($username) != 0) {
+        return 0;
+    }
+
+    my $dbh = Bugzilla->dbh;
+    # $username is safe because it is only used in SELECT placeholders.
+    trick_taint($username);
+    # Reject if the new login is part of an email change which is
+    # still in progress
+    #
+    # substring/locate stuff: bug 165221; this used to use regexes, but that
+    # was unsafe and required weird escaping; using substring to pull out
+    # the new/old email addresses and locate() to find the delimeter (':')
+    # is cleaner/safer
+    my $sth = $dbh->prepare(
+        "SELECT eventdata FROM tokens WHERE tokentype = 'emailold'
+        AND SUBSTRING(eventdata, 1, (LOCATE(':', eventdata) - 1)) = ?
+        OR SUBSTRING(eventdata, (LOCATE(':', eventdata) + 1)) = ?");
+    $sth->execute($username, $username);
+
+    if (my ($eventdata) = $sth->fetchrow_array()) {
+        # Allow thru owner of token
+        if($old_username && ($eventdata eq "$old_username:$username")) {
+            return 1;
+        }
+        return 0;
+    }
+
+    return 1;
+}
+
 1;
 
 __END__
@@ -1182,6 +1216,19 @@ Params: $username (scalar, string) - The login name for the new user.
         $realname (scalar, string) - The full name for the new user.
 
 Returns: The password that we randomly generated for this user, in plain text.
+
+=item C<is_available_username>
+
+Returns a boolean indicating whether or not the supplied username is
+already taken in Bugzilla.
+
+Params: $username (scalar, string) - The full login name of the username 
+            that you are checking.
+        $old_username (scalar, string) - If you are checking an email-change
+            token, insert the "old" username that the user is changing from,
+            here. Then, as long as it's the right user for that token, he 
+            can change his username to $username. (That is, this function
+            will return a boolean true value).
 
 =back
 

@@ -375,39 +375,6 @@ sub GetVersionTable {
     $::VersionTableLoaded = 1;
 }
 
-# Validates a given username as a new username
-# returns 1 if valid, 0 if invalid
-sub ValidateNewUser {
-    my ($username, $old_username) = @_;
-
-    if(DBname_to_id($username) != 0) {
-        return 0;
-    }
-
-    my $sqluname = SqlQuote($username);
-
-    # Reject if the new login is part of an email change which is 
-    # still in progress
-    #
-    # substring/locate stuff: bug 165221; this used to use regexes, but that
-    # was unsafe and required weird escaping; using substring to pull out
-    # the new/old email addresses and locate() to find the delimeter (':')
-    # is cleaner/safer
-    SendSQL("SELECT eventdata FROM tokens WHERE tokentype = 'emailold' 
-     AND SUBSTRING(eventdata, 1, (LOCATE(':', eventdata) - 1)) = $sqluname 
-     OR SUBSTRING(eventdata, (LOCATE(':', eventdata) + 1)) = $sqluname");
-
-    if (my ($eventdata) = FetchSQLData()) {
-        # Allow thru owner of token
-        if($old_username && ($eventdata eq "$old_username:$username")) {
-            return 1;
-        }
-        return 0;
-    }
-
-    return 1;
-}
-
 sub GenerateRandomPassword {
     my $size = (shift or 10); # default to 10 chars if nothing specified
     return join("", map{ ('0'..'9','a'..'z','A'..'Z')[rand 62] } (1..$size));

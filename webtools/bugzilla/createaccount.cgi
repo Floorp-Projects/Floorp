@@ -30,7 +30,7 @@ use lib qw(.);
 
 require "CGI.pl";
 
-use Bugzilla::User qw(insert_new_user);
+use Bugzilla::User;
 
 # Shut up misguided -w warnings about "used only once":
 use vars qw(
@@ -61,7 +61,7 @@ if (defined($login)) {
     CheckEmailSyntax($login);
     $vars->{'login'} = $login;
     
-    if (!ValidateNewUser($login)) {
+    if (!is_available_username($login)) {
         # Account already exists        
         $template->process("account/exists.html.tmpl", $vars)
           || ThrowTemplateError($template->error());

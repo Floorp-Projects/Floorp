@@ -29,6 +29,7 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Search;
 use Bugzilla::Auth;
+use Bugzilla::User;
 
 require "CGI.pl";
 
@@ -122,7 +123,7 @@ sub SaveAccount {
             # Before changing an email address, confirm one does not exist.
             CheckEmailSyntax($new_login_name);
             trick_taint($new_login_name);
-            ValidateNewUser($new_login_name)
+            is_available_username($new_login_name)
               || ThrowUserError("account_exists", {email => $new_login_name});
 
             Bugzilla::Token::IssueEmailChangeToken($userid,$old_login_name,

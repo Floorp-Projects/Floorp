@@ -243,7 +243,7 @@ sub changeEmail {
     }
     # The new email address should be available as this was 
     # confirmed initially so cancel token if it is not still available
-    if (! ValidateNewUser($new_email,$old_email)) {
+    if (! is_available_username($new_email,$old_email)) {
         $vars->{'email'} = $new_email; # Needed for Bugzilla::Token::Cancel's mail
         Bugzilla::Token::Cancel($::token,"account_exists");
         ThrowUserError("account_exists", { email => $new_email } );

@@ -33,7 +33,7 @@ use strict;
 
 use Bugzilla::Config;
 use Bugzilla::Constants;
-use Bugzilla::User qw(insert_new_user);
+use Bugzilla::User;
 
 use Net::LDAP;
 
