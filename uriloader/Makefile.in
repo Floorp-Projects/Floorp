@@ -35,6 +35,12 @@
 #
 # ***** END LICENSE BLOCK *****
 
+#
+# uriloader is linked into the docshell module.
+#
+# Build in docshell/build to relink.
+#
+
 DEPTH		= ..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
