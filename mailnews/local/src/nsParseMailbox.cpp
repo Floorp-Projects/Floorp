@@ -1726,7 +1726,6 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	int err = 0;
 	nsIOFileStream *destFile;
 
-	// Make sure no one else is writing into this folder
 	nsCOMPtr <nsIFolder> destIFolder;
 	nsCOMPtr <nsIMsgFolder> lockedFolder;
 	m_rootFolder->FindSubFolder (destFolder, getter_AddRefs(destIFolder));
@@ -1738,6 +1737,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	nsCOMPtr <nsISupports> myISupports = dont_QueryInterface(myThis);
 
 //	NS_RELEASE(myThis);
+	// Make sure no one else is writing into this folder
 	if (lockedFolder && (err = lockedFolder->AcquireSemaphore (myISupports)) != 0)
 		return err;
 
