@@ -32,7 +32,7 @@ CPPSRCS		= \
 		nsCollationUnix.cpp \
 		nsDateTimeFormatUnix.cpp \
 		nsLocaleFactoryUnix.cpp \
-		nsLocaleSO.cpp \
+		nsLocaleModule.cpp \
 		nsPosixLocale.cpp \
 		nsPosixLocaleFactory.cpp \
 		$(NULL)
