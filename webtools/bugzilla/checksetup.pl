@@ -1621,9 +1621,9 @@ if ($sth->rows == 0) {
   if (-e "data/params") { 
     require "data/params"; # if they have a params file, use that
   }
-  if ($::params{emailregexp}) {
-    $mailcheckexp = $::params{emailregexp};
-    $mailcheck    = $::params{emailregexpdesc};
+  if ($::param{emailregexp}) {
+    $mailcheckexp = $::param{emailregexp};
+    $mailcheck    = $::param{emailregexpdesc};
   } else {
     $mailcheckexp = '^[^@]+@[^@]+\\.[^@]+$';
     $mailcheck    = 'A legal address must contain exactly one \'@\', 
