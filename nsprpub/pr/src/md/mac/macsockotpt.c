@@ -38,7 +38,6 @@
 #endif
 
 #include <OpenTptInternet.h>    // All the internet typedefs
-#include "macsocket.h"
 #include "primpl.h"
 
 typedef enum SndRcvOpCode {
