@@ -242,7 +242,10 @@ function MsgNewFolder()
 function MsgOpenAttachment() {}
 function MsgSaveAsFile() {}
 function MsgSaveAsTemplate() {}
-function MsgSendUnsentMsg() {}
+function MsgSendUnsentMsg() 
+{
+	messenger.SendUnsentMessages();
+}
 function MsgUpdateMsgCount() {}
 function MsgRenameFolder() {}
 function MsgEmptyTrash() {}
