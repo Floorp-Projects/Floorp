@@ -31,7 +31,7 @@
 <!ENTITY chooseApp.label       "Choose...">
 <!ENTITY chooseApp.accesskey   "c">
 
-<!ENTITY chooseAppFilePickerTitle "Choose Application">
+<!ENTITY chooseAppFilePickerTitle "Choose Helper Application">
 
 <!ENTITY badApp                 "The application you specified (&quot;#1&quot;) could not be found.  Check the file name or select another application.">
 <!ENTITY badApp.title           "Application not found">
