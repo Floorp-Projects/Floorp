@@ -589,6 +589,7 @@ nsOutlinerSelection::AdjustSelection(PRInt32 aIndex, PRInt32 aCount)
 
   nsOutlinerRange* newRange = nsnull;
 
+  PRBool selChanged = PR_FALSE;
   nsOutlinerRange* curr = mFirstRange;
   while (curr) {
     if (aCount > 0) {
@@ -600,12 +601,14 @@ nsOutlinerSelection::AdjustSelection(PRInt32 aIndex, PRInt32 aCount)
       else if (aIndex <= curr->mMin) {  
         // adjustment happens before the start of the range, so shift down
         ADD_NEW_RANGE(newRange, this, curr->mMin + aCount, curr->mMax + aCount);
+        selChanged = PR_TRUE;
       }
       else {
         // adjustment happen inside the range.
         // break apart the range and create two ranges
         ADD_NEW_RANGE(newRange, this, curr->mMin, aIndex - 1);
         ADD_NEW_RANGE(newRange, this, aIndex + aCount, curr->mMax + aCount);
+        selChanged = PR_TRUE;
       }
     }
     else {
@@ -616,6 +619,7 @@ nsOutlinerSelection::AdjustSelection(PRInt32 aIndex, PRInt32 aCount)
       }
       else {
         // remember, aCount is negative
+        selChanged = PR_TRUE;
         PRInt32 lastIndexOfAdjustment = aIndex - aCount - 1;
         if (aIndex <= curr->mMin) {
           if (lastIndexOfAdjustment < curr->mMin) {
@@ -647,7 +651,8 @@ nsOutlinerSelection::AdjustSelection(PRInt32 aIndex, PRInt32 aCount)
   mFirstRange = newRange;
 
   // Fire the select event
-  FireOnSelectHandler();
+  if (selChanged)
+    FireOnSelectHandler();
 
   return NS_OK;
 }
