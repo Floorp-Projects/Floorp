@@ -1891,7 +1891,7 @@ RDFPropertyTestNode::Retract(ConflictSet& aConflictSet,
                              MatchSet& aFirings,
                              MatchSet& aRetractions) const
 {
-    if (aProperty == mProperty) {
+    if (aProperty == mProperty.get()) {
         aConflictSet.Remove(Element(aSource, aProperty, aTarget), aFirings, aRetractions);
     }
 }
