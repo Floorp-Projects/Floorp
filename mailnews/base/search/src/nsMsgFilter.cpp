@@ -27,6 +27,14 @@
 
 static const char *kImapPrefix = "//imap:";
 
+nsMsgRuleAction::nsMsgRuleAction() : m_folderName(eOneByte)
+{
+}
+
+nsMsgRuleAction::~nsMsgRuleAction()
+{
+}
+
 
 nsMsgFilter::nsMsgFilter() : m_filterName(eOneByte)
 {

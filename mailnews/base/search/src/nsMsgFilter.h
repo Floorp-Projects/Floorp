@@ -24,14 +24,17 @@
 #include "nsIMsgFilter.h"
 
 
-typedef struct nsMsgRuleAction
+class nsMsgRuleAction
 {
+public:
+	nsMsgRuleAction();
+	virtual ~nsMsgRuleAction();
         nsMsgRuleActionType      m_type;
 		// this used to be a union - why bother?
         nsMsgPriority	m_priority;  /* priority to set rule to */
         nsString2		m_folderName;    /* Or some folder identifier, if such a thing is invented */
         nsString2		m_originalServerPath;
-} nsMsgRuleAction;
+} ;
 
 
 class nsMsgFilter : public nsIMsgFilter
