@@ -1068,8 +1068,8 @@ nsChromeRegistry::FollowArc(nsIRDFDataSource *aDataSource,
 
   nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(chromeBase));
   if (literal) {
-    nsXPIDLString s;
-    rv = literal->GetValue(getter_Copies(s));
+    const PRUnichar *s;
+    rv = literal->GetValueConst(&s);
     if (NS_FAILED(rv)) return rv;
     aResult.AssignWithConversion(s);
   }
@@ -1555,8 +1555,8 @@ NS_IMETHODIMP nsChromeRegistry::GetSelectedLocale(const PRUnichar *aPackageName,
     return NS_ERROR_FAILURE;
 
   // selectedProvider.mURI now looks like "urn:mozilla:locale:ja-JP:navigator"
-  nsXPIDLCString uri;
-  if (NS_FAILED(rv = resource->GetValue( getter_Copies(uri) ) ))
+  const char *uri;
+  if (NS_FAILED(rv = resource->GetValueConst(&uri)))
     return rv;
 
   // trim down to "urn:mozilla:locale:ja-JP"

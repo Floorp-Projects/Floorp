@@ -372,10 +372,8 @@ nsRDFXMLSerializer::SerializeChildAssertion(nsIOutputStream* aStream,
     nsCOMPtr<nsIRDFLiteral> literal;
 
     if ((resource = do_QueryInterface(aValue)) != nsnull) {
-        nsXPIDLCString s;
-        resource->GetValue(getter_Copies(s));
-
-        nsXPIDLCString docURI;
+        const char *s;
+        resource->GetValueConst(&s);
 
         nsAutoString uri = NS_ConvertUTF8toUCS2(s);
         rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mBaseURLSpec.get()), uri);
@@ -388,9 +386,9 @@ static const char kRDFResource2[] = "\"/>\n";
         rdf_BlockingWrite(aStream, kRDFResource2, sizeof(kRDFResource2) - 1);
     }
     else if ((literal = do_QueryInterface(aValue)) != nsnull) {
-        nsXPIDLString value;
-        literal->GetValue(getter_Copies(value));
-        nsAutoString s((const PRUnichar*) value);
+        const PRUnichar *value;
+        literal->GetValueConst(&value);
+        nsAutoString s(value);
 
         rdf_EscapeAmpersandsAndAngleBrackets(s);
 
@@ -714,8 +712,8 @@ nsRDFXMLSerializer::SerializeContainer(nsIOutputStream* aStream,
     // this because we never really know who else might be referring
     // to it...
 
-    nsXPIDLCString s;
-    if (NS_SUCCEEDED(aContainer->GetValue( getter_Copies(s) ))) {
+    const char *s;
+    if (NS_SUCCEEDED(aContainer->GetValueConst(&s))) {
         nsAutoString uri = NS_ConvertUTF8toUCS2(s);
         rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mBaseURLSpec.get()), uri);
 

@@ -197,9 +197,9 @@ ContainerEnumeratorImpl::HasMoreElements(PRBool* aResult)
         if (! nextValLiteral)
              continue;
 
-         nsXPIDLString nextValStr;
-         nextValLiteral->GetValue(getter_Copies(nextValStr));
-
+         const PRUnichar *nextValStr;
+         nextValLiteral->GetValueConst(&nextValStr);
+		 
          PRInt32 err;
          PRInt32 nextVal = nsAutoString(nextValStr).ToInteger(&err);
 
