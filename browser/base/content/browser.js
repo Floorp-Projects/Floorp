@@ -4647,7 +4647,7 @@ function asyncOpenWebPanel(event)
        break;
    }
    if (linkNode) {
-     var wrapper = new XPCNativeWrapper(linkNode, "href", "getAttribute()");
+     var wrapper = new XPCNativeWrapper(linkNode, "href", "getAttribute()", "ownerDocument");
      if (event.button == 0 && !event.ctrlKey && !event.shiftKey &&
          !event.altKey && !event.metaKey) {
        // A Web panel's links should target the main content area.  Do this
@@ -4655,13 +4655,24 @@ function asyncOpenWebPanel(event)
        // _main (the IE convention) or _content (the Mozilla convention).
        // The only reason we field _main and _content here is for the markLinkVisited
        // hack.
-       target = linkNode.getAttribute("target");
+       target = wrapper.getAttribute("target");
        if (fieldNormalClicks && 
            (!target || target == "_content" || target  == "_main")) 
          // IE uses _main, SeaMonkey uses _content, we support both
        {
-         if (!wrapper.href) return true;
-         if (linkNode.getAttribute("onclick")) return true;
+         if (!wrapper.href) 
+           return true;
+         if (wrapper.getAttribute("onclick")) 
+           return true;
+         // javascript links should be executed in the current browser
+         if (wrapper.href.substr(0, 11) === "javascript:")
+           return true;
+
+         var docWrapper = new XPCNativeWrapper(wrapper.ownerDocument, "location");
+         var locWrapper = new XPCNativeWrapper(docWrapper.location, "href");
+         if (!webPanelSecurityCheck(locWrapper.href, wrapper.href))
+           return false;
+
          var postData = { };
          var url = getShortcutOrURI(wrapper.href, postData);
          if (!url)

@@ -140,6 +140,21 @@ function urlSecurityCheck(url, doc)
   }
 }
 
+function webPanelSecurityCheck(aSourceURL, aDestURL) {
+  var sourceURI = makeURI(aSourceURL);
+  var destURI = makeURI(aDestURL);
+
+  const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
+  var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                         .getService(nsIScriptSecurityManager);
+  try {
+    secMan.checkLoadURI(sourceURI, destURI, nsIScriptSecurityManager.STANDARD);
+  } catch (e) {
+    return false;
+  }
+  return true;
+}
+
 function isContentFrame(aFocusedWindow)
 {
   if (!aFocusedWindow)
