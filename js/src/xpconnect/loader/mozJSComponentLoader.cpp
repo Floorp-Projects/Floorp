@@ -73,8 +73,16 @@ static JSClass gGlobalClass = {
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
 };
 
-mozJSComponentLoader::mozJSComponentLoader() :
-    mContext(NULL), mModules(NULL), mGlobals(NULL), mInitialized(PR_FALSE)
+mozJSComponentLoader::mozJSComponentLoader()
+    : mCompMgr(nsnull),
+      mSuperGlobal(nsnull),
+      mRuntime(nsnull),
+      mContext(nsnull),
+      mCompMgrWrapper(nsnull),
+      mModules(nsnull),
+      mGlobals(nsnull),
+      mXPCOMKey(0),
+      mInitialized(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -105,16 +113,19 @@ mozJSComponentLoader::~mozJSComponentLoader()
     }
 
     if (mGlobals) {
-        if (mContext)
-            PL_HashTableEnumerateEntries(mGlobals, RemoveRoot_enumerate, mContext);
+        if (mContext) {
+            PL_HashTableEnumerateEntries(mGlobals, RemoveRoot_enumerate,
+                                         mContext);
+        }
         PL_HashTableDestroy(mGlobals);
     }
 
     if (mContext) {
         JS_RemoveRoot(mContext, &mCompMgrWrapper);
         JS_RemoveRoot(mContext, &mSuperGlobal);
-        if (mXPC)
+        if (mXPC) {
             mXPC->AbandonJSContext(mContext);
+        }
         JS_DestroyContext(mContext);
     }
     mXPC = nsnull;
