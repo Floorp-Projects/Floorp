@@ -2,7 +2,7 @@
   FILE: icalcomponent.c
   CREATOR: eric 28 April 1999
   
-  $Id: icalcomponent.c,v 1.8 2002/04/29 15:14:40 mostafah%oeone.com Exp $
+  $Id: icalcomponent.c,v 1.9 2002/08/16 14:05:23 mostafah%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -795,7 +795,7 @@ time_t icalcomponent_convert_time(icalproperty *p)
 	maybe it can be changed to something better? */
 	
 	{
-#ifdef __sgi
+#ifdef __sgi || defined(__sun)
 		tzset();
 		offset = daylight ? altzone : timezone;
 #else
