@@ -200,12 +200,16 @@ layout/xul/content/src/Makefile
 lib/libpwcac/Makefile
 lib/xp/Makefile
 modules/libimg/Makefile
-modules/libimg/classes/Makefile
-modules/libimg/classes/netscape/Makefile
-modules/libimg/classes/netscape/libimg/Makefile
+# modules/libimg/classes/Makefile
+# modules/libimg/classes/netscape/Makefile
+# modules/libimg/classes/netscape/libimg/Makefile
 modules/libimg/png/Makefile
 modules/libimg/public/Makefile
+modules/libimg/public_com/Makefile
 modules/libimg/src/Makefile
+modules/libimg/gifcom/Makefile
+modules/libimg/jpgcom/Makefile
+modules/libimg/pngcom/Makefile  
 modules/libjar/Makefile
 modules/libpref/Makefile
 modules/libpref/admin/Makefile
