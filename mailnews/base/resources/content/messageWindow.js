@@ -150,6 +150,13 @@ function OnLoadMessageWindow()
 		}
 	}	
 
+  if (gCurrentMessageUri) {
+    SetUpToolbarButtons(gCurrentMessageUri);
+  }
+  else if (gCurrentFolderUri) {
+    SetUpToolbarButtons(gCurrentFolderUri);
+  }
+    
   setTimeout("OpenURL(gCurrentMessageUri);", 0);
   SetupCommandUpdateHandlers();
 
