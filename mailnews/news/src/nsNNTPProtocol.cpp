@@ -3892,6 +3892,7 @@ PRBool nsNNTPProtocol::CheckIfAuthor(nsISupports *aElement, void *data)
 PRInt32 nsNNTPProtocol::DoCancel()
 {
     int status = 0;
+    PRBool failure = PR_FALSE;
     nsresult rv = NS_OK;
     char *id = nsnull;
     char *subject = nsnull;
@@ -3991,6 +3992,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
           status = MK_NNTP_CANCEL_DISALLOWED;
           m_nextState = NEWS_ERROR; /* even though it worked */
           ClearFlag(NNTP_PAUSE_FOR_READ);
+          failure = PR_TRUE;
           goto FAIL;
       }
       else {
@@ -4017,11 +4019,13 @@ PRInt32 nsNNTPProtocol::DoCancel()
   if (confirmCancelResult != 1) {
       // they cancelled the cancel
       status = MK_NNTP_NOT_CANCELLED;
+      failure = PR_TRUE;
       goto FAIL;
   }  
   
   if (!subject || !other_random_headers || !body) {
 	  status = MK_OUT_OF_MEMORY;
+          failure = true;
 	  goto FAIL;
   }
   
@@ -4071,6 +4075,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
 		nsCAutoString errorText;
 		errorText.AppendInt(status);
 		AlertError(MK_TCP_WRITE_ERROR,(const char *)errorText);
+                failure = PR_TRUE;
 		goto FAIL;
 	}
 
@@ -4102,7 +4107,10 @@ PRInt32 nsNNTPProtocol::DoCancel()
 FAIL:
   NS_ASSERTION(m_newsFolder,"no news folder");
   if (m_newsFolder) {
-  	rv = m_newsFolder->CancelComplete();
+        if ( failure )
+             rv = m_newsFolder->CancelFailed();
+        else
+             rv = m_newsFolder->CancelComplete();
   }
   PR_FREEIF (id);
   PR_FREEIF (cancelInfo.old_from);
