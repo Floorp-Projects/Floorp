@@ -143,3 +143,10 @@ interface nsIMemory : nsISupports
  */
 #define NS_MEMORY_PRESSURE_ALLOC_FAILURE (NS_LITERAL_STRING("alloc-failure").get())
 %}
+
+%{C++
+/**
+ * ContractID for the global memory service:
+ */
+#define NS_MEMORY_CONTRACTID "@mozilla.org/xpcom/memory-service;1"
+%}
