@@ -584,52 +584,18 @@ const void
 nsInputFrame::GetFont(nsIPresContext* aPresContext, nsFont& aFont)
 {
   const nsStyleFont* styleFont = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-
-  // XXX this is a hack to determine if the font was set by ua.css. If it is "Courier New",
-  // and we are anything except a <input type=text> then assume that it was set by the backstop 
-  // and override it to a simulated user preference value of "Times New". Of course, there is 
-  // no way to actually set it to "Courier New" until this hack is obsoleted by fixing the style 
-  // system.
-
-  nsAutoString magicName("XXXHACK");
-  nscoord magicSize = 100 * 20;
-  nscoord size10 = 10 * 20;
-  nscoord size12 = 12 * 20;
+  aFont = styleFont->mFont;
+  nscoord fontSize = styleFont->mFont.size;
   nsAutoString fixedFont("Courier New");
   nsAutoString varFont("Times New Roman");
-
-  nscoord fontSize = styleFont->mFont.size;
   nsString type;
   ((nsInput*)mContent)->GetType(type);
 
-  // get the font family
-  if (styleFont->mFont.name.EqualsIgnoreCase(magicName)) {
-    nsFont* fakeFont;
-    if (type.EqualsIgnoreCase("text") || type.EqualsIgnoreCase("textarea") ||
-                                         type.EqualsIgnoreCase("password")) {
-      fakeFont = new nsFont(fixedFont, 0, 0, 240, 0, fontSize);
-    } 
-    else {
-      fakeFont = new nsFont(varFont, 0, 0, 240, 0, fontSize);
-    }
-    aFont = *fakeFont;
-    delete fakeFont;
-  } 
-  else {
-    aFont = styleFont->mFont;
-  }
-
-  // get the font size
   if (type.EqualsIgnoreCase("text") || type.EqualsIgnoreCase("textarea") ||
-                                         type.EqualsIgnoreCase("password")) {
-    aFont.size = (fontSize == magicSize) ? size12 : fontSize;
-  } 
-  else {
-    aFont.size = (fontSize == magicSize) ? size10 : fontSize;
-  }
-
-  if (type.EqualsIgnoreCase("browse")) {
-    aFont.weight = 999;
+                                       type.EqualsIgnoreCase("password")) {
+    aFont.name = fixedFont;
+  } else { 
+    aFont.name = varFont;
   }
 }
 
