@@ -23,7 +23,7 @@ public:
 	NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
 	NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus);
 	NS_IMETHOD NewWebShell(nsIWebShell *&aNewWebShell);
-  NS_IMETHOD FindWebshellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
+  NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
 };
 
 #endif

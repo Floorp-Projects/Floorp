@@ -102,7 +102,7 @@ CWebShellContainer::NewWebShell(nsIWebShell *&aNewWebShell)
 }
 
 NS_IMETHODIMP
-CWebShellContainer::FindWebshellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
+CWebShellContainer::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
 {
   return NS_ERROR_FAILURE;
 }
