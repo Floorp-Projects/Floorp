@@ -117,7 +117,6 @@
 #include "nsIExternalProtocolService.h"
 
 #include "nsIFocusController.h"
-#include "nsIEventStateManager.h"
 
 #include "nsITextToSubURI.h"
 
@@ -4611,22 +4610,6 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
                 NS_ENSURE_SUCCESS(oldMUDV->
                                   GetPrevDocCharacterSet(getter_Copies(prevDocCharset)),
                                   NS_ERROR_FAILURE);
-            }
-        }
-    }
-
-    // Eliminate the focus ring in the current docshell, which is 
-    // now a zombie. If we key navigate, it won't be within this
-    // docshell, until the newly loading document is displayed.
-    if (mItemType == typeContent) {
-        nsCOMPtr<nsIPresContext> presContext;
-        GetPresContext(getter_AddRefs(presContext));
-        if (presContext) {
-            nsCOMPtr<nsIEventStateManager> esm;
-            presContext->GetEventStateManager(getter_AddRefs(esm));
-            if (esm) {
-                esm->SetFocusedContent(nsnull);
-                esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
             }
         }
     }
