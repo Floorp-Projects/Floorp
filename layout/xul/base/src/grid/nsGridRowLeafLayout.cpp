@@ -90,8 +90,8 @@ nsGridRowLeafLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize&
     return nsGridRowLayout::GetPrefSize(aBox, aState, aSize); 
   else {
     nsresult rv = grid->GetPrefRowSize(aState, index, aSize, isRow);
-    AddBorderAndPadding(aBox, aSize);
-    AddInset(aBox, aSize);
+    //AddBorderAndPadding(aBox, aSize);
+    //AddInset(aBox, aSize);
     return rv;
   }
 }
@@ -207,25 +207,60 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
      nscoord min  = 0;
      nscoord max  = 0;
      nscoord flex  = 0;
+     nscoord left  = 0;
+     nscoord right  = 0;
+
+     current = new (aState) nsBoxSize();
 
      // !isRow is passed in to invert the behavor of these methods.
      grid->GetPrefRowHeight(aState, i, pref, !isRow); // GetPrefColumnWidth
      grid->GetMinRowHeight(aState, i, min, !isRow);   // GetMinColumnWidth
      grid->GetMaxRowHeight(aState, i, max, !isRow);   // GetMaxColumnWidth
      grid->GetRowFlex(aState, i, flex, !isRow);       // GetColumnFlex
+     grid->GetRowOffsets(aState, i, left, right, !isRow); // GetColumnOffsets
 
-     current = new (aState) nsBoxSize();
+     pref = pref - (left + right);
+     if (pref < 0)
+       pref = 0;
 
+     // if this is the first or last column. Take into account that
+     // our row could have a border that could affect our left or right
+     // padding from our columns. If the row has padding subtract it.
+     // would should always be able to garentee that our margin is smaller
+     // or equal to our left or right
+      if (i == 0 || i == count-1) {
+        nsMargin offset(0,0,0,0);
+        GetTotalMargin(aBox, offset, isRow);
+        // subtract from out left and right
+        if (i == 0) 
+        {
+          if (isRow)
+           left -= offset.left;
+          else
+           left -= offset.top;
+        }
+
+        if (i == count-1)
+        {
+          if (isRow)
+           right -= offset.right;
+          else
+           right -= offset.bottom;
+        }
+      }
+      
      // initialize the box size here 
      nsBox::BoundsCheck(min, pref, max);
+
 
      current->pref = pref;
      current->min = min;
      current->max = max;
      current->flex = flex;
      current->bogus = column->mIsBogus;
+     current->left = left + column->mTopMargin;
+     current->right = right + column->mBottomMargin;
 
-    
      if (!start) {
         start = current;
         last = start;
@@ -233,6 +268,9 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, ns
         last->next = current;
         last = current;
      }
+
+     if (child)
+       child->GetNextBox(&child);
 
    }
    aBoxSizes = start;
@@ -256,12 +294,11 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
      PRBool isRow = PR_FALSE;
      aBox->GetOrientation(isRow);
 
+     nsIBox* scrollbox = nsnull;
      aBox->GetParentBox(&aBox);
-
-     while (aBox) 
-     {
+     scrollbox = nsGrid::GetScrollBox(aBox);
        
-       nsCOMPtr<nsIScrollableFrame> scrollable = do_QueryInterface(aBox);
+       nsCOMPtr<nsIScrollableFrame> scrollable = do_QueryInterface(scrollbox);
        if (scrollable) {
 
           // get the clip rect and compare its size to the scrollframe.
@@ -272,7 +309,12 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
           nscoord diff = 0;
 
           nsRect ourRect;
-          aBox->GetBounds(ourRect);
+          nsMargin padding(0,0,0,0);
+          scrollbox->GetBounds(ourRect);
+          scrollbox->GetBorderAndPadding(padding);
+          ourRect.Deflate(padding);
+          scrollbox->GetInset(padding);
+          ourRect.Deflate(padding);
 
           if (isRow) {
             diff = ourRect.width - clipSize.width;
@@ -298,25 +340,9 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
             if (last) 
                 last->size -= diff;                         
           }
-       } else {
-          nsCOMPtr<nsIBoxLayout> layout;
-          aBox->GetLayoutManager(getter_AddRefs(layout));
-          nsCOMPtr<nsIGridPart> part = do_QueryInterface(layout);
-          if (part) {
-            nsGridLayout2* gridLayout = nsnull;
-            part->CastToGridLayout(&gridLayout);
-
-            if (gridLayout)
-            {
-              nsSprocketLayout::ComputeChildSizes(aBox, aState, aGivenSize, aBoxSizes, aComputedBoxSizes);
-              return;
-            }
-          }
        }
-       aBox->GetParentBox(&aBox);
-     }
   }
-
+      
   nsSprocketLayout::ComputeChildSizes(aBox, aState, aGivenSize, aBoxSizes, aComputedBoxSizes);
 
 }
@@ -376,5 +402,10 @@ nsGridRowLeafLayout::BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount)
   return NS_OK;
 }
 
-
+NS_IMETHODIMP
+nsGridRowLeafLayout::GetRowCount(PRInt32& aRowCount)
+{
+  aRowCount = 1;
+  return NS_OK;
+}
 

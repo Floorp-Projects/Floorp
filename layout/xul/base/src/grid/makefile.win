@@ -44,6 +44,9 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPPSRCS=					\
 	nsGridLayout2.cpp \
 	nsGridRowLayout.cpp \
+	nsGridRowLeafLayout.cpp \
+	nsGridRowLeafFrame.cpp \
+	nsGridRowGroupFrame.cpp \
 	nsGridRowLeaf.cpp \
 	nsGridRowGroupLayout.cpp \
     nsGrid.cpp \
@@ -55,6 +58,8 @@ CPP_OBJS=		\
     .\$(OBJDIR)\nsGridLayout2.obj \
     .\$(OBJDIR)\nsGridRowLayout.obj \
 	.\$(OBJDIR)\nsGridRowLeafLayout.obj \
+	.\$(OBJDIR)\nsGridRowLeafFrame.obj \
+	.\$(OBJDIR)\nsGridRowGroupFrame.obj \
 	.\$(OBJDIR)\nsGridRowGroupLayout.obj \
     .\$(OBJDIR)\nsGrid.obj \
     .\$(OBJDIR)\nsGridRow.obj \
@@ -75,6 +80,7 @@ LINCS= \
 EXPORTS = nsGridLayout2.h	\
           nsGridRowLayout.h \
           nsGridRowLeafLayout.h \
+          nsGridRowLeafFrame.h \
           nsGridRowGroupLayout.h \
           nsIGridPart.h \
           nsGrid.h \

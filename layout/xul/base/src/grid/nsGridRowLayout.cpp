@@ -48,6 +48,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsBox.h"
 #include "nsStackLayout.h"
+#include "nsGrid.h"
 
 nsGridRowLayout::nsGridRowLayout(nsIPresShell* aPresShell):nsSprocketLayout()
 {
@@ -78,7 +79,7 @@ nsGridRowLayout::ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aCh
 }
 
 NS_IMETHODIMP
-nsGridRowLayout::GetParentGridPart(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsIGridPart** aParentGridPart)
+nsGridRowLayout::GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPart** aParentGridPart)
 {
   // go up and find our parent gridRow. Skip and non gridRow
   // parents.
@@ -86,22 +87,26 @@ nsGridRowLayout::GetParentGridPart(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, n
   nsCOMPtr<nsIGridPart> parentGridRow;
   nsresult rv = NS_OK;
   *aParentGridPart = nsnull;
-  aBox->GetParentBox(&aBox);
   
-  while (aBox) {
-    aBox->GetLayoutManager(getter_AddRefs(layout));
-    parentGridRow = do_QueryInterface(layout, &rv);
-    if (NS_SUCCEEDED(rv) && parentGridRow) {
-      aParentBox = aBox;
+  // walk up through any scrollboxes
+  aBox = nsGrid::GetScrollBox(aBox);
+
+  // get the parent
+  aBox->GetParentBox(&aBox);
+
+  if (aBox)
+  {
+      aBox->GetLayoutManager(getter_AddRefs(layout));
+      parentGridRow = do_QueryInterface(layout);
       *aParentGridPart = parentGridRow.get();
+      *aParentBox = aBox;
       NS_IF_ADDREF(*aParentGridPart);
-      return rv;
-    }
-    aBox->GetParentBox(&aBox);
+      return NS_OK;
   }
 
-  aParentBox = nsnull;
   *aParentGridPart = nsnull;
+  *aParentBox = nsnull;
+  
   return rv;
 }
 
@@ -113,8 +118,8 @@ nsGridRowLayout::GetGrid(nsIBox* aBox, nsGrid** aList, PRInt32* aIndex, nsGridRo
    if (aRequestor == nsnull)
    {
       nsCOMPtr<nsIGridPart> parent;
-      nsCOMPtr<nsIBox> parentBox;
-      GetParentGridPart(aBox, parentBox, getter_AddRefs(parent));
+      nsIBox* parentBox; // nsIBox is implemented by nsIFrame and is not refcounted.
+      GetParentGridPart(aBox, &parentBox, getter_AddRefs(parent));
       if (parent)
          return parent->GetGrid(parentBox, aList, aIndex, this);
       else
@@ -130,15 +135,7 @@ nsGridRowLayout::GetGrid(nsIBox* aBox, nsGrid** aList, PRInt32* aIndex, nsGridRo
    while(child)
    {
      // if there is a scrollframe walk inside it to its child
-     nsCOMPtr<nsIBox> childBox = child;
-     nsCOMPtr<nsIScrollableFrame> scrollFrame = do_QueryInterface(child, &rv);
-     if (scrollFrame) {
-       nsIFrame* childFrame = nsnull;
-       scrollFrame->GetScrolledFrame(nsnull, childFrame);
-       if (!childFrame)
-         return NS_ERROR_FAILURE;
-       childBox = do_QueryInterface(childFrame);
-     }
+     nsIBox* childBox = nsGrid::GetScrolledBox(child);
 
      nsCOMPtr<nsIBoxLayout> layout;
      childBox->GetLayoutManager(getter_AddRefs(layout));
@@ -151,10 +148,13 @@ nsGridRowLayout::GetGrid(nsIBox* aBox, nsGrid** aList, PRInt32* aIndex, nsGridRo
           index = count;
           break;
        }
-     }
 
-     // add the index. 
-     count++;
+       PRInt32 c = 0;
+       gridRow->GetRowCount(c);
+       count += c;
+     } else 
+       count++;
+
      child->GetNextBox(&child);
    }
 
@@ -170,8 +170,8 @@ nsGridRowLayout::GetGrid(nsIBox* aBox, nsGrid** aList, PRInt32* aIndex, nsGridRo
    (*aIndex) += index;
 
    nsCOMPtr<nsIGridPart> parent;
-   nsCOMPtr<nsIBox> parentBox;
-   GetParentGridPart(aBox, parentBox, getter_AddRefs(parent));
+   nsIBox* parentBox; // nsIBox is implemented by nsIFrame and is not refcounted.
+   GetParentGridPart(aBox, &parentBox, getter_AddRefs(parent));
 
    if (parent)
       parent->GetGrid(parentBox, aList, aIndex, this);
@@ -190,6 +190,67 @@ NS_IMETHODIMP
 nsGridRowLayout::CastToGridLayout(nsGridLayout2** aGridLayout)
 {
   (*aGridLayout) = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGridRowLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow)
+{
+  // get our parents margin
+  nsMargin margin(0,0,0,0);
+  nsCOMPtr<nsIGridPart> part;
+  nsIBox* parent = nsnull;
+  GetParentGridPart(aBox, &parent, getter_AddRefs(part));
+
+  if (part && parent) {
+    // if we are the first or last child walk upward and add margins.
+
+    nsIBox* next = nsnull;
+    nsIBox* child = nsnull;
+
+    // make sure we check for a scrollbox
+    aBox = nsGrid::GetScrollBox(aBox);
+
+    // see if we have a next to see if we are last
+    aBox->GetNextBox(&next);
+
+    // get the parent first child to see if we are first
+    parent->GetChildBox(&child);
+
+    part->GetTotalMargin(parent,margin,aIsRow);
+
+    // if first or last
+    if (child == aBox || next == nsnull) {
+
+       // if its not the first child remove the top margin
+       // we don't need it.
+       if (child != aBox)
+       {
+          if (aIsRow)
+              margin.top = 0;
+          else 
+              margin.left = 0;
+       }
+
+       // if its not the last child remove the bottom margin
+       // we don't need it.
+       if (next != nsnull)
+       {
+          if (aIsRow)
+              margin.bottom = 0;
+          else 
+              margin.right = 0;
+       }
+
+    }
+  }
+    
+  aMargin = margin;
+
+  // add ours to it.
+  aBox->GetMargin(margin);
+  aMargin += margin;
+
   return NS_OK;
 }
 

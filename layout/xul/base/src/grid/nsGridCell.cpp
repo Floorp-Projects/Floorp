@@ -131,8 +131,8 @@ nsGridCell::GetMaxSize(nsBoxLayoutState& aState, nsSize& aMax)
   aMax.height = NS_INTRINSICSIZE;
 
   // take ours 2 children and add them up.
-  // we are as wide as the widest child plus its left offset
-  // we are tall as the tallest child plus its top offset
+  // we are as wide as the smallest child plus its left offset
+  // we are tall as the shortest child plus its top offset
 
   nsSize max(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
 

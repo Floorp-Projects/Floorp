@@ -35,45 +35,79 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- 
-  Author:
-  Eric D Vaughan
+//
+// Eric Vaughan
+// Netscape Communications
+//
+// See documentation in associated header file
+//
 
-**/
+#include "nsGridRowGroupFrame.h"
+#include "nsGridRowLeafLayout.h"
+#include "nsGridRow.h"
+#include "nsBoxLayoutState.h"
+#include "nsGridLayout2.h"
 
-#ifndef nsGridRowGroupLayout_h___
-#define nsGridRowGroupLayout_h___
-
-#include "nsGridRowLayout.h"
-
-class nsGridRowGroupLayout : public nsGridRowLayout
+nsresult
+NS_NewGridRowGroupFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
 {
-public:
+    NS_PRECONDITION(aNewFrame, "null OUT ptr");
+    if (nsnull == aNewFrame) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    nsGridRowGroupFrame* it = new (aPresShell) nsGridRowGroupFrame (aPresShell, aIsRoot, aLayoutManager);
+    if (nsnull == it)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-  friend nsresult NS_NewGridRowGroupLayout(nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout);
+    *aNewFrame = it;
+    return NS_OK;
 
-  NS_IMETHOD CastToRowGroupLayout(nsGridRowGroupLayout** aRowGroup);
-  NS_IMETHOD GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
-  NS_IMETHOD DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState);
-  NS_IMETHOD BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount);
-  NS_IMETHOD GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow);
-  NS_IMETHOD GetRowCount(PRInt32& aRowCount);
+} 
 
-protected:
-  nsGridRowGroupLayout(nsIPresShell* aShell);
-  virtual ~nsGridRowGroupLayout();
+nsGridRowGroupFrame::nsGridRowGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
+:nsBoxFrame(aPresShell, aIsRoot, aLayoutManager)
+{
 
-  NS_IMETHOD ChildAddedOrRemoved(nsIBox* aBox, nsBoxLayoutState& aState);
-  static void AddWidth(nsSize& aSize, nscoord aSize2, PRBool aIsRow);
+}
 
-private:
-  nsGridRow* mRowColumn;
-  PRInt32 mRowCount;
-};
+/**
+ * This is redefined because row groups have a funny property. If they are flexible
+ * then their flex must be equal to the sum of their children's flexes.
+ */
+NS_IMETHODIMP
+nsGridRowGroupFrame::GetFlex(nsBoxLayoutState& aState, nscoord& aFlex)
+{
+  // if we are flexible out flexibility is determined by our columns.
+  // so first get the our flex. If not 0 then our flex is the sum of
+  // our columns flexes.
 
-#endif
+  if (!DoesNeedRecalc(mFlex)) {
+     aFlex = mFlex;
+     return NS_OK;
+  }
+
+  nsBoxFrame::GetFlex(aState, aFlex);
+
+
+  if (aFlex == 0)
+    return NS_OK;
+
+  // ok we are flexible add up our children
+  nscoord totalFlex = 0;
+  nsIBox* child = nsnull;
+  GetChildBox(&child);
+  while (child)
+  {
+    PRInt32 flex = 0;
+    child->GetFlex(aState, flex);
+    totalFlex += flex;;
+    child->GetNextBox(&child);
+  }
+
+  aFlex = totalFlex;
+  mFlex = aFlex;
+
+  return NS_OK;
+}
+
 

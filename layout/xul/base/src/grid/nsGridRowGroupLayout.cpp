@@ -65,7 +65,7 @@ NS_NewGridRowGroupLayout( nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout)
   
 } 
 
-nsGridRowGroupLayout::nsGridRowGroupLayout(nsIPresShell* aPresShell):nsGridRowLayout(aPresShell)
+nsGridRowGroupLayout::nsGridRowGroupLayout(nsIPresShell* aPresShell):nsGridRowLayout(aPresShell), mRowCount(0)
 {
 }
 
@@ -190,32 +190,6 @@ nsGridRowGroupLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize&
   return rv;
 }
 
-NS_IMETHODIMP
-nsGridRowGroupLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)
-{
-  return nsGridRowLayout::Layout(aBox, aBoxLayoutState);
-}
-
-/*
- * Scrollframes are tranparent. We should always walk down into them.
- */
-nsIBox*
-nsGridRowGroupLayout::CheckForScrollFrame(nsIBox* aChild)
-{
-  // first see if it is a scrollframe. If so walk down into it and get the scrolled child
-      nsCOMPtr<nsIScrollableFrame> scrollFrame = do_QueryInterface(aChild);
-      if (scrollFrame) {
-         nsIFrame* scrolledFrame = nsnull;
-         scrollFrame->GetScrolledFrame(nsnull, scrolledFrame);
-         NS_ASSERTION(scrolledFrame,"Error no scroll frame!!");
-         nsCOMPtr<nsIBox> box = do_QueryInterface(scrolledFrame);
-         return box;
-      }
-
-      return aChild;
-}
-
-
 /*
  * Run down through our children dirtying them recursively.
  */
@@ -233,7 +207,7 @@ nsGridRowGroupLayout::DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)
     while(child) {
 
       // walk into scrollframes
-      deepChild = CheckForScrollFrame(child);
+      deepChild = nsGrid::GetScrolledBox(child);
 
       // walk into other monuments
       nsCOMPtr<nsIBoxLayout> layout;
@@ -257,6 +231,8 @@ NS_IMETHODIMP
 nsGridRowGroupLayout::CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount)
 {
   if (aBox) {
+    PRInt32 startCount = aRowCount;
+
     nsIBox* child = nsnull;
     aBox->GetChildBox(&child); 
     nsIBox* deepChild = child;
@@ -265,7 +241,7 @@ nsGridRowGroupLayout::CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32
     while(child) {
       
       // first see if it is a scrollframe. If so walk down into it and get the scrolled child
-      deepChild = CheckForScrollFrame(child);
+      deepChild = nsGrid::GetScrolledBox(child);
 
       nsCOMPtr<nsIBoxLayout> layout;
       deepChild->GetLayoutManager(getter_AddRefs(layout));
@@ -285,8 +261,17 @@ nsGridRowGroupLayout::CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32
       // if not a monument. Then count it. It will be a bogus row
       aRowCount++;
     }
+
+    mRowCount = aRowCount - startCount;
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGridRowGroupLayout::GetRowCount(PRInt32& aRowCount)
+{
+  aRowCount = mRowCount;
   return NS_OK;
 }
 
@@ -307,7 +292,7 @@ nsGridRowGroupLayout::BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount)
     while(child) {
       
       // first see if it is a scrollframe. If so walk down into it and get the scrolled child
-      deepChild = CheckForScrollFrame(child);
+      deepChild = nsGrid::GetScrolledBox(child);
 
       nsCOMPtr<nsIBoxLayout> layout;
       deepChild->GetLayoutManager(getter_AddRefs(layout));
@@ -343,6 +328,29 @@ nsGridRowGroupLayout::CastToRowGroupLayout(nsGridRowGroupLayout** aRowGroup)
 {
   (*aRowGroup) = this;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGridRowGroupLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow)
+{
+  // group have border and padding added to the total margin
+
+  nsresult rv = nsGridRowLayout::GetTotalMargin(aBox, aMargin, aIsRow);
+  
+  // make sure we have the scrollframe on the outside if it has one.
+  // thats where the border it.
+  aBox = nsGrid::GetScrollBox(aBox);
+
+  // add our border/padding to it
+  nsMargin borderPadding(0,0,0,0);
+  aBox->GetBorderAndPadding(borderPadding);
+
+  aMargin += borderPadding;
+  aBox->GetInset(borderPadding);
+
+  aMargin += borderPadding;
+
+  return rv;
 }
 
 

@@ -36,44 +36,38 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
- 
-  Author:
-  Eric D Vaughan
 
+  Eric D Vaughan
+  A frame that can have multiple children. Only one child may be displayed at one time. So the
+  can be flipped though like a deck of cards.
+ 
 **/
 
-#ifndef nsGridRowGroupLayout_h___
-#define nsGridRowGroupLayout_h___
+#ifndef nsGridRowGroupFrame_h___
+#define nsGridRowGroupFrame_h___
 
-#include "nsGridRowLayout.h"
+#include "nsBoxFrame.h"
 
-class nsGridRowGroupLayout : public nsGridRowLayout
+class nsGridRowGroupFrame : public nsBoxFrame
 {
 public:
 
-  friend nsresult NS_NewGridRowGroupLayout(nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout);
+  friend nsresult NS_NewGridRowGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayoutManager);
 
-  NS_IMETHOD CastToRowGroupLayout(nsGridRowGroupLayout** aRowGroup);
-  NS_IMETHOD GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
-  NS_IMETHOD DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState);
-  NS_IMETHOD BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount);
-  NS_IMETHOD GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsRow);
-  NS_IMETHOD GetRowCount(PRInt32& aRowCount);
+#ifdef NS_DEBUG
+  NS_IMETHOD GetFrameName(nsString& aResult) const
+  {
+      return MakeFrameName("nsGridRowGroup", aResult);
+  }
+#endif
 
-protected:
-  nsGridRowGroupLayout(nsIPresShell* aShell);
-  virtual ~nsGridRowGroupLayout();
+  nsGridRowGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager);
 
-  NS_IMETHOD ChildAddedOrRemoved(nsIBox* aBox, nsBoxLayoutState& aState);
-  static void AddWidth(nsSize& aSize, nscoord aSize2, PRBool aIsRow);
+  NS_IMETHOD GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex);
 
-private:
-  nsGridRow* mRowColumn;
-  PRInt32 mRowCount;
-};
+}; // class nsGridRowGroupFrame
+
+
 
 #endif
 
