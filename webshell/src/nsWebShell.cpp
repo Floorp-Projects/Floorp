@@ -21,6 +21,12 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
+#ifdef XP_OS2_VACPP
+// XXX every other file that pulls in _os2.h has no problem with HTMX there;
+// this one does; the problem may lie with the order of the headers below,
+// which is why this fix is here instead of in _os2.h
+typedef unsigned long HMTX;
+#endif
 #include "nsDocShell.h"
 #include "nsIWebShell.h"
 #include "nsIWebBrowserChrome.h"
@@ -100,7 +106,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #include <windows.h>
 #endif
 
