@@ -45,7 +45,10 @@ pref("toolkit.defaultChromeURI","chrome://calendar/content/");
 pref("browser.hiddenWindowChromeURL", "chrome://calendar/content/hiddenWindow.xul");
 pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul");
 pref("xpinstall.dialog.progress", "chrome://mozapps/content/downloads/downloads.xul");
-pref("xpinstall.dialog.progress.type", "Download:Manager");
+pref("xpinstall.dialog.progress.skin", "chrome://mozapps/content/extensions/extensions.xul?type=themes");
+pref("xpinstall.dialog.progress.chrome", "chrome://mozapps/content/extensions/extensions.xul?type=extensions");
+pref("xpinstall.dialog.progress.type.skin", "Extension:Manager-themes");
+pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager-extensions");
 
 pref("app.extensions.version", 
 #expand __APP_VERSION__
