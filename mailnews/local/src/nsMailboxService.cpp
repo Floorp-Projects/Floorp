@@ -108,7 +108,7 @@ nsresult nsMailboxService::ParseMailbox(nsFileSpec& aMailboxPath, nsIStreamListe
 		if (protocol)
 		{
 			NS_ADDREF(protocol);
-			rv = protocol->LoadURL(url, nsnull /* no consumers for this type of url */);
+			rv = protocol->LoadUrl(url, nsnull /* no consumers for this type of url */);
 			NS_RELEASE(protocol); // after loading, someone else will have a ref cnt on the mailbox
 		}
 
@@ -171,7 +171,7 @@ nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
 		// create a protocol instance to run the url..
 		nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
 		if (protocol)
-			rv = protocol->LoadURL(url, nsnull);
+			rv = protocol->LoadUrl(url, nsnull);
 
 		if (aURL)
 		{
@@ -223,7 +223,7 @@ nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
 		// create a protocol instance to run the url..
 		nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
 		if (protocol)
-			rv = protocol->LoadURL(url, aDisplayConsumer);
+			rv = protocol->LoadUrl(url, aDisplayConsumer);
 
 		if (aURL)
 		{
