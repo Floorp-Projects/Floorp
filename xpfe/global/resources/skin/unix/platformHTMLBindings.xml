@@ -36,6 +36,12 @@
         command="cmd_undo"/>
     <handler type="keypress" id="key_winredo" key="r" control="true"
         command="cmd_redo"/>
+    <handler type="keypress" id="key_altwincut" keycode="VK_DELETE" shift="true" control="false" alt="false"
+        command="cmd_cut"/>
+    <handler type="keypress" id="key_altwincopy" keycode="VK_INSERT" control="true" shift="false" alt="false"
+        command="cmd_copy"/>
+    <handler type="keypress" id="key_altwinpaste" keycode="VK_INSERT" shift="true" control="false" alt="false"
+        command="cmd_paste"/>
 
     <!-- navigating by word keys -->
     <handler type="keypress" id="key_home" keycode="VK_HOME" alt="false" shift="false" control="false"
@@ -91,6 +97,12 @@
         command="cmd_undo"/>
     <handler type="keypress" id="key_winredo" key="r" control="true"
         command="cmd_redo"/>
+    <handler type="keypress" id="key_altwincut" keycode="VK_DELETE" shift="true" control="false" alt="false"
+        command="cmd_cut"/>
+    <handler type="keypress" id="key_altwincopy" keycode="VK_INSERT" control="true" shift="false" alt="false"
+        command="cmd_copy"/>
+    <handler type="keypress" id="key_altwinpaste" keycode="VK_INSERT" shift="true" control="false" alt="false"
+        command="cmd_paste"/>
 
     <!-- Emacsish multi-line motion and delete keys -->
     <handler type="keypress" id="key_linedown" key="n" control="true"
@@ -112,9 +124,9 @@
     <handler type="keypress" id="key_rightcontrol" keycode="VK_RIGHT" control="true" alt="false" shift="false" 
         command="cmd_wordNext"/>
     <handler type="keypress" id="key_leftshiftcontrol" keycode="VK_LEFT" shift="true" control="true" alt="false"
-        command="cmd_wordPrevious"/>
+        command="cmd_selectWordPrevious"/>
     <handler type="keypress" id="key_rightshiftcontrol" keycode="VK_RIGHT" shift="true" control="true" alt="false"
-        command="cmd_wordNext"/>
+        command="cmd_selectWordNext"/>
     <handler type="keypress" id="key_redo" key="y" primary="true"
         command="cmd_redo"/>
     </handlers>
