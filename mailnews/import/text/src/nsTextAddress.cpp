@@ -21,7 +21,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIImportService.h"
-#include "nsIAddrDatabase.h"
+#include "nsAddrDatabase.h"
 #include "nsAbBaseCID.h"
 #include "nsIAbCard.h"
 #include "nsReadableUtils.h"

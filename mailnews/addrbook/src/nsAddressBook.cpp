@@ -43,7 +43,7 @@
 #include "nsAbBaseCID.h"
 #include "nsDirPrefs.h"
 #include "nsIAddrBookSession.h"
-#include "nsIAddrDatabase.h"
+#include "nsAddrDatabase.h"
 #include "nsIOutputStream.h"
 #include "nsIFileStreams.h"
 #include "msgCore.h"

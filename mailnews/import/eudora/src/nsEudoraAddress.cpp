@@ -19,7 +19,7 @@
 #include "nsCOMPtr.h"
 #include "nsEudoraAddress.h"
 
-#include "nsIAddrDatabase.h"
+#include "nsAddrDatabase.h"
 #include "nsABBaseCID.h"
 #include "nsIAbCard.h"
 #include "nsIServiceManager.h"

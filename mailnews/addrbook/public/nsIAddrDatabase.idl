@@ -41,13 +41,9 @@
 #include "nsIAbCard.idl"
 #include "nsIAbDirectory.idl"
 
-%{C++
-#include "mdb.h"
-%}
-
-[ptr] native nsIMdbTableRowCursor(nsIMdbTableRowCursor);
-[ptr] native nsIMdbEnv(nsIMdbEnv);
-[ptr] native nsIMdbRow(nsIMdbRow);
+interface nsIMdbTableRowCursor;
+interface nsIMdbEnv;
+interface nsIMdbRow;
 
 %{C++
 // this is the prefix we for attributes that are specific

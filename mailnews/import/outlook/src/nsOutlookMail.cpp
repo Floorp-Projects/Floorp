@@ -53,7 +53,7 @@
 #include "nsOutlookStringBundle.h"
 #include "nsABBaseCID.h"
 #include "nsIAbCard.h"
-#include "nsIAddrDatabase.h"
+#include "nsAddrDatabase.h"
 #include "OutlookDebugLog.h"
 #include "nsOutlookMail.h"
 #include "nsUnicharUtils.h"
