@@ -12,7 +12,7 @@ use strict;
 # They are not initialized here. The default values are after "__END__".
 $TreeSpecific::name = $TreeSpecific::build_target = $TreeSpecific::checkout_target = $TreeSpecific::clobber_target = $::Version = undef;
 
-$::Version = '$Revision: 1.102 $ ';
+$::Version = '$Revision: 1.103 $ ';
 
 {    
     TinderUtils::Setup();
@@ -31,6 +31,7 @@ sub tree_specific_overides {
 	$TreeSpecific::build_target = 'build_all_depend';
 	$TreeSpecific::checkout_target = 'checkout';
 	$TreeSpecific::clobber_target = 'distclean';
+	$TreeSpecific::extrafiles = '';
 	
 }
 
