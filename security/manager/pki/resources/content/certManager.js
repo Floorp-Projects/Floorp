@@ -88,7 +88,7 @@ function getSelectedTab()
     key = "?my_certs";
   } else if (selTabID == "websites_tab") {
     key = "?web_certs";
-  } else if (selTab == "ca_tab") {
+  } else if (selTabID == "ca_tab") {
     key = "?ca_certs";
   }  
   var context = helpURL + key;
