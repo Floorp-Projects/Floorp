@@ -1454,8 +1454,22 @@ function SetComposeWindowTitle(event)
 function ComposeCanClose()
 {
   if (sendOrSaveOperationInProgress)
-    return false;
-
+  {
+      if (promptService)
+      {
+        var promptTitle = gComposeMsgsBundle.getString("quitComposeWindowTitle");
+        var promptMsg = gComposeMsgsBundle.getString("quitComposeWindowMessage");
+        if (promptService.confirm(window, promptTitle, promptMsg))
+          {
+            msgCompose.Abort();
+            return true;
+          }
+        else 
+          {
+            return false;
+          }
+      }
+  }
 	// Returns FALSE only if user cancels save action
 	if (contentChanged || msgCompose.bodyModified)
 	{

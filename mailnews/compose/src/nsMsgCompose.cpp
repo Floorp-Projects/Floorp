@@ -775,6 +775,14 @@ nsresult nsMsgCompose::CloseWindow()
   	return rv;
 }
 
+nsresult nsMsgCompose::Abort()
+{
+  if (mMsgSend)
+    mMsgSend->Abort();
+
+  return NS_OK;
+}
+
 nsresult nsMsgCompose::GetEditor(nsIEditorShell * *aEditor) 
 { 
   *aEditor = m_editor;
@@ -2226,7 +2234,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
                              4.x' HTML editor, it will not be able to
                              break this HTML sig, if quoted (for the user to
                              interleave a comment). */
-  static const char      preopen[] = "<pre class=\"moz-signature\">";
+  static const char      preopen[] = "<pre class=\"moz-signature\" cols=$mailwrapcol>";
   static const char      preclose[] = "</pre>";
 
   if (imageSig)

@@ -136,7 +136,7 @@ function CompFields2Recipients(msgCompFields, msgType)
 
     //If it's a new message, we need to add an extrat empty recipient.
     var msgComposeType = Components.interfaces.nsIMsgCompType;
-    if (msgType == msgComposeType.New || top.MAX_RECIPIENTS == 0)
+    if (msgType == msgComposeType.New || msgComposeType.ForwardAsAttachment || msgComposeType.ForwardInline || top.MAX_RECIPIENTS == 0)
         _awSetInputAndPopup("", "addr_to", newTreeChildrenNode, templateNode);
     dump("replacing child in comp fields 2 recips \n");
       var parent = treeChildren.parentNode;

@@ -39,8 +39,6 @@
   
   <box class="box-smallheader" title="&pane.title;"/>
 
-  <titledbox orient="vertical">
-    <label><html>&sendMail.label;</html></label>
     <html>&sendMaildesc.label;</html>
 
     <radiogroup id="mailDefaultHTMLAction" orient="vertical" autostretch="never"
@@ -54,14 +52,13 @@
     
     <html>&override.label;</html>
 
-  </titledbox>
   <titledbox orient="vertical" flex="1">
     <label value="&domain.title;"/>
 
     <html>&domaindesc.label;</html>
   <box orient="horizontal" flex="1">
-    <titledbox orient="vertical" id="html_box" flex="1">
-     <label value = "&HTMLdomaintitle.label;"/>
+    <box orient="vertical" id="html_box" flex="1">
+     <html>&HTMLdomaintitle.label;</html>
       <tree class="inset" id="html_domains" flex="1"
             datasources="rdf:null" multiple="true"
             onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveDomains(htmlobj);">
@@ -80,9 +77,9 @@
         </button>
         <spring flex="1"/>
       </box>
-    </titledbox>
-  <titledbox orient="vertical" id="plaintext_box" flex="1">
-     <label value = "&PlainTexttitle.label;"/>
+    </box>
+  <box orient="vertical" id="plaintext_box" flex="1">
+     <html>&PlainTexttitle.label;</html>
       <tree class="inset" id="plaintext_domains" flex="1"
             datasources="rdf:null" multiple="true"
             onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveDomains(plainobj);">
@@ -101,7 +98,7 @@
         </button>
         <spring flex="1"/>
       </box>
-    </titledbox>
+    </box>
   </box>
   </titledbox>
 </window>

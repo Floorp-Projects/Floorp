@@ -124,6 +124,9 @@ interface nsIMsgCompose : nsISupports {
 
 	/* ... */
   void CloseWindow();
+
+  /* ... */
+  void Abort();
     
   /*
     AttachmentPrettyName will return only the leafName if the it's a file URL.
