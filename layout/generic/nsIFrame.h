@@ -183,6 +183,88 @@ public:
                                   nsIFrame*       aChildList) = 0;
 
   /**
+   * This method is responsible for appending frames to the frame
+   * list.  The implementation should do something with the new frames
+   * and then generate a reflow command.
+   *
+   * @param   aListName the name of the child list. A NULL pointer for the atom
+   *            name means the unnamed principal child list
+   * @param   aFrameList list of child frames to append
+   * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
+   *            name,
+   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame or if the
+   *            initial list of frames has already been set for that child list,
+   *          NS_OK otherwise
+   */
+  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aFrameList) = 0;
+
+  /**
+   * This method is responsible for inserting frames into the frame
+   * list.  The implementation should do something with the new frames
+   * and then generate a reflow command.
+   *
+   * @param   aListName the name of the child list. A NULL pointer for the atom
+   *            name means the unnamed principal child list
+   * @param   aPrevFrame the frame to insert frames <b>after</b>
+   * @param   aFrameList list of child frames to insert <b>after</b> aPrevFrame
+   * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
+   *            name,
+   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame or if the
+   *            initial list of frames has already been set for that child list,
+   *          NS_OK otherwise
+   */
+  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsIFrame*       aFrameList) = 0;
+
+  /**
+   * This method is responsible for replacing a frame in the frame
+   * list.  The implementation should do something with the new frame
+   * and then generate a reflow command. The implementation is responsible
+   * for destroying aOldFrame (the caller mustn't destroy aOldFrame).
+   *
+   * @param   aListName the name of the child list. A NULL pointer for the atom
+   *            name means the unnamed principal child list
+   * @param   aOldFrame the frame to remove
+   * @param   aNewFrame the frame to replace aOldFrame with
+   * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
+   *            name,
+   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame or if the
+   *            initial list of frames has already been set for that child list,
+   *          NS_OK otherwise
+   */
+  NS_IMETHOD ReplaceFrame(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aOldFrame,
+                          nsIFrame*       aNewFrame) = 0;
+
+  /**
+   * This method is responsible for removing a frame in the frame
+   * list.  The implementation should do something with the removed frame
+   * and then generate a reflow command. The implementation is responsible
+   * for destroying aOldFrame (the caller mustn't destroy aOldFrame).
+   *
+   * @param   aListName the name of the child list. A NULL pointer for the atom
+   *            name means the unnamed principal child list
+   * @param   aOldFrame the frame to remove
+   * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
+   *            name,
+   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame or if the
+   *            initial list of frames has already been set for that child list,
+   *          NS_OK otherwise
+   */
+  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
+                         nsIPresShell&   aPresShell,
+                         nsIAtom*        aListName,
+                         nsIFrame*       aOldFrame) = 0;
+
+  /**
    * Add this object's size information to the sizeof handler. Note that
    * this does <b>not</b> add in the size of content, style, or view's
    * (those are sized seperately).
