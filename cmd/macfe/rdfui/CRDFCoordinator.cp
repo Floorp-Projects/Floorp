@@ -243,10 +243,12 @@ void CRDFCoordinator::HandleNotification(
 			
 			// redraw the tree with new colors, etc
 			if ( view == mTreePane->GetHTView() ) {
+#if 0
+// Per pinkerton - remove completely once verified as unneeded
 				// if the new mode doesn't want selection, make sure there isn't one
 				if ( URDFUtilities::PropertyValueBool(node, gNavCenter->useSelection, true) == false )
 					mTreePane->UnselectAllCells();
-
+#endif
 				mTitleStrip->Refresh();
 				mTreePane->Refresh();
 				
