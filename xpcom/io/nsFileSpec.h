@@ -169,6 +169,8 @@
 #if defined(XP_OS2)
 #define INCL_DOS
 #define INCL_DOSERRORS
+#define INCL_WIN
+#define INCL_GPI
 #include <os2.h>
 #include <sys/types.h> // required for dirent.h
 #include "prio.h"
