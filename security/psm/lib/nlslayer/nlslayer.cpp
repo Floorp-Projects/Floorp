@@ -50,10 +50,10 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 
 static nsIUnicodeEncoder *encoderASCII = nsnull;
 
-#define TEXT_BUNDLE	    "resource:/ui/psm_text.properties"
-#define UI_BUNDLE		"resource:/ui/psm_ui.properties"
-#define BIN_BUNDLE		"resource:/ui/psm_bin.properties"
-#define DOC_BUNDLE		"resource:/ui/psm_doc.properties"
+#define TEXT_BUNDLE	    "resource:/psmdata/ui/psm_text.properties"
+#define UI_BUNDLE		"resource:/psmdata/ui/psm_ui.properties"
+#define BIN_BUNDLE		"resource:/psmdata/ui/psm_bin.properties"
+#define DOC_BUNDLE		"resource:/psmdata/ui/psm_doc.properties"
 
 extern "C" {
 static nsIStringBundle* nlsCreateBundle(char* bundleURL);
