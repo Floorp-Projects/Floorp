@@ -20,6 +20,7 @@
  the Initial Developer. All Rights Reserved.
 
  Contributor(s):
+   Stefan Borggraefe <Stefan.Borggraefe@gmx.de>
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -38,7 +39,6 @@
 <!ENTITY pane.title                           "Composition">
 <!ENTITY forwardReply.label                   "Forwarding Messages">
 <!ENTITY forwardMsg.label                     "Forward messages:">
-<!ENTITY forwardMsg.accesskey                 "F">
 <!ENTITY inline.label                         "Inline">
 <!ENTITY inline.accesskey                     "I">
 <!ENTITY asAttachment.label                   "As Attachment">
@@ -48,6 +48,11 @@
 <!ENTITY warnOnSendAccelKey.accesskey         "k">
 
 <!ENTITY sendingMessagesHeader.label          "Composing Messages">
+<!-- LOCALIZATION NOTE (autoSave.label): This will concatenate with
+     "xxx minutes", using a number and (autoSaveEnd.label). -->
+<!ENTITY autoSave.label                       "Automatically save the message every">
+<!ENTITY autoSave.accesskey                   "m">
+<!ENTITY autoSaveEnd.label                    "minutes">
 <!ENTITY spellCheck.label                     "Check spelling before sending">
 <!ENTITY spellCheck.accesskey                 "C">
 <!-- LOCALIZATION NOTE (wrapOutMsg.label): This will concatenate with "xxx characters", using a number and (char.label). -->
@@ -57,20 +62,17 @@
 <!ENTITY useMIME.label                        "For messages that contain 8-bit characters, use 'quoted printable' MIME encoding. Leave unchecked to send the messages as is.">
 <!ENTITY useMIME.accesskey                    "o">
 
-<!ENTITY sendDefaultCharset.label             "Character Encoding:">
-<!ENTITY sendDefaultCharset.accesskey         "r">
+<!ENTITY sendDefaultCharset.label             "Default Character Encoding:">
+<!ENTITY sendDefaultCharset.accesskey         "D">
 <!ENTITY replyInDefaultCharset.label          "Always use this default character encoding in replies. (When unchecked, only new messages use this default.)">
 <!ENTITY replyInDefaultCharset.accesskey      "r">
-<!ENTITY languagesTitle.label                 "Languages">
 
 <!ENTITY defaultMessagesHeader.label          "Defaults for HTML Messages">
 <!ENTITY font.label                           "Font:">
-<!ENTITY font.accesskey                       "n">
+<!ENTITY font.accesskey                       "F">
 <!ENTITY size.label                           "Size:">
 <!ENTITY size.accesskey                       "S">
 <!ENTITY fontColor.label                      "Text:">
 <!ENTITY fontColor.accesskey                  "T">
 <!ENTITY bgColor.label                        "Background:">
 <!ENTITY bgColor.accesskey                    "B">
-
-<!-- Tooltips -->  
