@@ -34,7 +34,9 @@ REQUIRES	= $(NULL)
 
 CPPSRCS		= \
 		nsCOMPtr.cpp \
+		nsDebug.cpp \
 		nsMemory.cpp \
+		nsWeakReference.cpp \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
@@ -43,7 +45,9 @@ LOCAL_INCLUDES	= \
 
 EXPORTS		= \
 		nsCOMPtr.h \
+		nsDebug.h \
 		nsMemory.h \
+		nsWeakReference.h \
 		$(NULL)
 
 XPIDLSRCS	= \

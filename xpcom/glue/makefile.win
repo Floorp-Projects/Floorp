@@ -29,7 +29,9 @@ LIBRARY_NAME=xpcomglue
 
 EXPORTS =                  \
         nsCOMPtr.h         \
+        nsDebug.h          \
         nsMemory.h         \
+        nsWeakReference.h  \
         $(NULL)			
 
 XPIDLSRCS =               \
@@ -47,7 +49,9 @@ LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 
 CPP_OBJS =                            \
         .\$(OBJDIR)\nsCOMPtr.obj      \
+        .\$(OBJDIR)\nsDebug.obj       \
         .\$(OBJDIR)\nsMemory.obj      \
+        .\$(OBJDIR)\nsWeakReference.obj \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
