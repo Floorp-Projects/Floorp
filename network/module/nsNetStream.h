@@ -45,7 +45,7 @@ public:
     nsIURL                *pURL;
     nsNetlibStream        *pNetStream;
     nsIStreamListener     *pConsumer;
-    PRBool                redirect;
+    nsISupports           *pContainer;
 };
 
 

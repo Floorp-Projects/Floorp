@@ -383,18 +383,21 @@ void FE_SetRefreshURLTimer(MWContext *pContext, uint32 seconds, char *pRefreshUR
     // modular_data points to a URL_Struct.
     pConn = (nsConnectionInfo*) pContext->modular_data->fe_data;
 
-    NS_PRECONDITION((pConn->pConsumer != nsnull), "Null pointer...");
+    NS_PRECONDITION((pConn != nsnull), "Null pointer...");
 
-    if (pConn->pConsumer) {
-
-        rv = pConn->pConsumer->QueryInterface(kRefreshURLIID, (void**)&IRefreshURL);
+    if (pConn) {
+        /* Get the pointer to the nsIRefreshURL from the nsISupports
+         * of the nsIContentViewerContainer the nsConnnectionInfo holds.
+         */
+        rv = pConn->pContainer->QueryInterface(kRefreshURLIID, (void**)&IRefreshURL);
 
         if(rv == NS_OK) {
             nsIURL* aURL;
             rv = NS_NewURL(&aURL, refreshURL);
-            if(rv == NS_OK) {
-                IRefreshURL->RefreshURL(aURL, seconds*1000, FALSE);
+            if (rv == NS_OK) {
+                rv = IRefreshURL->RefreshURL(aURL, seconds*1000, FALSE);
                 NS_RELEASE(IRefreshURL);
+                NS_RELEASE(aURL);
             }
         }
     }
