@@ -608,15 +608,21 @@ PRInt32 nsStr::Compare(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PR
       return 1;
     }
 
-    aCount = (aCount<0) ? minlen: MinInt(aCount,minlen);
-    result=(*gCompare[aDest.mCharSize][aSource.mCharSize])(aDest.mStr,aSource.mStr,aCount,aIgnoreCase);
+    PRInt32 theCount = (aCount<0) ? minlen: MinInt(aCount,minlen);
+    result=(*gCompare[aDest.mCharSize][aSource.mCharSize])(aDest.mStr,aSource.mStr,theCount,aIgnoreCase);
 
     if (0==result) {
-      if (aDest.mLength != aSource.mLength) {
-        //we think they match, but we've only compared minlen characters. 
-        //if the string lengths are different, then they don't really match.
-        result = (aDest.mLength<aSource.mLength) ? -1 : 1;
-      }
+      if(-1==aCount) {
+
+          //Since the caller didn't give us a length to test, and minlen characters matched,
+          //we have to assume that the longer string is greater.
+
+        if (aDest.mLength != aSource.mLength) {
+          //we think they match, but we've only compared minlen characters. 
+          //if the string lengths are different, then they don't really match.
+          result = (aDest.mLength<aSource.mLength) ? -1 : 1;
+        }
+      } //if
     }
 
   }
