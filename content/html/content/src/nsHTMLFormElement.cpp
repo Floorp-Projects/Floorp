@@ -936,8 +936,17 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild, const nsString& aNa
   } else {
     // Found something in the hash, check its type
     nsCOMPtr<nsIContent> content(do_QueryInterface(supports));
+    nsCOMPtr<nsIContent> newChild(do_QueryInterface(aChild));
 
     if (content) {
+      // Check if the new content is the same as the one we found in the
+      // hash, if it is then we leave it in the hash as it is, this will
+      // happen if a form control has both a name and an id with the same
+      // value
+      if (content == newChild) {
+        return NS_OK;
+      }
+
       // Found an element, create a list, add the element to the list and put
       // the list in the hash
       nsContentList *list = new nsContentList(nsnull);
@@ -946,8 +955,7 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild, const nsString& aNa
       list->Add(content);
 
       // Add the new child too
-      content = do_QueryInterface(aChild);
-      list->Add(content);
+      list->Add(newChild);
 
       nsCOMPtr<nsISupports> listSupports;
       list->QueryInterface(NS_GET_IID(nsISupports),
@@ -963,8 +971,13 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild, const nsString& aNa
       nsContentList *list = NS_STATIC_CAST(nsContentList *,
                                            (nsIDOMNodeList *)nodeList.get());
 
-      content = do_QueryInterface(aChild);
-      list->Add(content);
+      PRInt32 oldIndex = -1;
+      list->IndexOf(newChild, oldIndex);
+
+      // Add the new child only if it's not in our list already
+      if (oldIndex < 0) {
+        list->Add(newChild);
+      }
     }
   }
 
