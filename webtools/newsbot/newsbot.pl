@@ -169,15 +169,15 @@ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 xmlns="http://my.netscape.com/rdf/simple/0.9/">
 
   <channel>
-    <title>NewsBot</title>
+    <title>Mozilla NewsBot</title>
     <link>http://www.mozilla.org/newsbot/</link>
-    <description>Pointers to the hottest newsgroup threads.</description>
+    <description>Pointers to the hottest mozilla newsgroup threads.</description>
   </channel>
 
   <image>
     <title>Mozilla</title>
     <url>http://www.mozilla.org/images/hack.gif</url>
-    <link>http://www.mozilla.org</link>
+    <link>http://www.mozilla.org/newsbot/</link>
   </image>
 
 RDFHEAD
@@ -188,6 +188,7 @@ if ( $index > 15) {
     $index = 15;
     }
 for (my $i=$index; $i > 0 ; $i--) {
+#may need to substitute &amp;lt; for &lt; since rdf adds extra layer
     print ("  <item>\n");
     print ("    <title>" . $articles[$i]->{'Subject'} . "</title>\n");
     print ("    <link>http://www.dejanews.com/[LB=http://www.mozilla.org/]/msgid.xp?MID=&lt;" . $articles[$i]->{'Message-ID'} . "&gt;</link>\n");
