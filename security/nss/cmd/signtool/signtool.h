@@ -58,7 +58,7 @@
  * General Defines
  */
 #define JAR_BASE_END JAR_BASE + 100
-#define ERRX (1)	/* the exit code used on failure */
+#define ERRX (-1)	/* the exit code used on failure */
 #define FNSIZE 256	/* the maximum length for filenames */
 #define MAX_RSA_KEY_SIZE 4096
 #define DEFAULT_RSA_KEY_SIZE 1024
