@@ -1193,7 +1193,15 @@ operator!=( const U* lhs, const nsCOMPtr<T>& rhs )
   // better conversion for the other argument, define additional
   // |operator==| without the |const| on the raw pointer.
   // See bug 65664 for details.
-#ifndef CANT_RESOLVE_CPP_CONST_AMBIGUITY
+
+// This is defined by an autoconf test, but VC++ also has a bug that
+// prevents us from using these.  (It also, fortunately, has the bug
+// that we don't need them either.)
+#ifdef _MSC_VER
+#define NSCAP_DONT_PROVIDE_NONCONST_OPEQ
+#endif
+
+#ifndef NSCAP_DONT_PROVIDE_NONCONST_OPEQ
 template <class T, class U>
 inline
 NSCAP_BOOL
