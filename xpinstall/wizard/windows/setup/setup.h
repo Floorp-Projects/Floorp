@@ -232,6 +232,9 @@ typedef struct setupStruct
   LPSTR szProgramFolderName;
   LPSTR szProgramFolderPath;
   LPSTR szAlternateArchiveSearchPath;
+  LPSTR szSetupTitle0;
+  LPSTR szSetupTitle1;
+  LPSTR szSetupTitle2;
 } setupGen;
 
 typedef struct sinfoSmartDownload

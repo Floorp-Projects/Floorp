@@ -243,12 +243,18 @@ HRESULT Initialize(HINSTANCE hInstance)
   return(0);
 }
 
-void OutputTitle(HDC hDC, LPSTR szString)
+void OutputSetupTitle(HDC hDC)
 {
   COLORREF  crTitle;
   HFONT     hfontTmp;
   HFONT     hfontOld;
   int       nHeight;
+  int       iLine0x;
+  int       iLine0y;
+  int       iLine1x;
+  int       iLine1y;
+  int       iLine2x;
+  int       iLine2y;
 
   SetBkMode(hDC, TRANSPARENT);
   nHeight = -MulDiv(36, GetDeviceCaps(hDC, LOGPIXELSY), 72);
@@ -273,19 +279,31 @@ void OutputTitle(HDC hDC, LPSTR szString)
   }
 
   crTitle = GetTextColor(hDC);
+  iLine0x = 20;
+  iLine0y = 20;
+  iLine1x = iLine0x;
+  iLine1y = iLine0y - nHeight + 5;
+  iLine2x = iLine1x;
+  iLine2y = iLine1y - nHeight + 5;
 
   /* Set shadow color to black and draw shadow */
   if(SetTextColor(hDC, 0) == CLR_INVALID)
     PrintError("Invalid Color", ERROR_CODE_SHOW);
 
-  TextOut(hDC, 10+5, 10+5, szString, lstrlen(szString));
+  /* draw shadow */
+  TextOut(hDC, iLine0x + 5, iLine0y + 5, sgProduct.szSetupTitle0, lstrlen(sgProduct.szSetupTitle0));
+  TextOut(hDC, iLine1x + 5, iLine1y + 5, sgProduct.szSetupTitle1, lstrlen(sgProduct.szSetupTitle1));
+  TextOut(hDC, iLine2x + 5, iLine2y + 5, sgProduct.szSetupTitle2, lstrlen(sgProduct.szSetupTitle2));
 
   /* Set font color and draw; color format is 0x00bbggrr - where b is blue, g is green, and r is red */
   /* 0x00088808 - green */
   if(SetTextColor(hDC, 0x00EEEEEE) == CLR_INVALID)
     PrintError("Invalid Color", ERROR_CODE_SHOW);
 
-  TextOut(hDC, 10, 10, szString, lstrlen(szString));
+  /* draw text */
+  TextOut(hDC, iLine0x, iLine0y, sgProduct.szSetupTitle0, lstrlen(sgProduct.szSetupTitle0));
+  TextOut(hDC, iLine1x, iLine1y, sgProduct.szSetupTitle1, lstrlen(sgProduct.szSetupTitle1));
+  TextOut(hDC, iLine2x, iLine2y, sgProduct.szSetupTitle2, lstrlen(sgProduct.szSetupTitle2));
 
   SelectObject(hDC, hfontOld);
   DeleteObject(hfontTmp);
@@ -1093,6 +1111,12 @@ HRESULT InitSetupGeneral()
     return(1);
   if((szTempSetupPath                         = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((sgProduct.szSetupTitle0                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((sgProduct.szSetupTitle1                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((sgProduct.szSetupTitle2                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
 
   return(0);
 }
@@ -1105,6 +1129,9 @@ void DeInitSetupGeneral()
   FreeMemory(&(sgProduct.szProgramFolderPath));
   FreeMemory(&(sgProduct.szAlternateArchiveSearchPath));
   FreeMemory(&(szTempSetupPath));
+  FreeMemory(&(sgProduct.szSetupTitle0));
+  FreeMemory(&(sgProduct.szSetupTitle1));
+  FreeMemory(&(sgProduct.szSetupTitle2));
 }
 
 HRESULT InitSDObject()
@@ -2291,6 +2318,11 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("General", "Program Folder Name", "", szBuf, MAX_BUF, szFileIniConfig);
   DecriptString(sgProduct.szProgramFolderName, szBuf);
 
+  /* get setup title strings */
+  GetPrivateProfileString("General", "Setup Title0", "", sgProduct.szSetupTitle0, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("General", "Setup Title1", "", sgProduct.szSetupTitle1, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("General", "Setup Title2", "", sgProduct.szSetupTitle2, MAX_BUF, szFileIniConfig);
+
   /* Welcome dialog */
   GetPrivateProfileString("Dialog Welcome",             "Show Dialog",  "", szShowDialog,                    MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Welcome",             "Title",        "", diWelcome.szTitle,               MAX_BUF, szFileIniConfig);
@@ -2516,7 +2548,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
 
   hdc = GetDC(hWndMain);
 
-  OutputTitle(hdc, sgProduct.szProductName);
+  OutputSetupTitle(hdc);
   ReleaseDC(hWndMain, hdc);
 
   return(0);

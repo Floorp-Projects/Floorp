@@ -121,7 +121,7 @@ LRESULT CALLBACK DlgProcMain(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       // Add any drawing code here...
 
       PaintGradientShade(hWnd, hdc);
-      OutputTitle(hdc, sgProduct.szProductName);
+      OutputSetupTitle(hdc);
 
       EndPaint(hWnd, &ps);
       bReturn = FALSE;
