@@ -2114,7 +2114,7 @@ pk11_GetPrivKey(PK11Object *object,CK_KEY_TYPE key_type)
 	if (!priv && pubKey.data[0] == 0) {
 	    /* Because of legacy code issues, sometimes the public key has
 	     * a '0' prepended to it, forcing it to be unsigned.  The database
-	     * does not store that '0', so catch that failure here.
+	     * may not store that '0', so remove it and try again.
 	     */
 	    SECItem tmpPubKey;
 	    tmpPubKey.data = pubKey.data + 1;
