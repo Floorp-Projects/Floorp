@@ -616,8 +616,28 @@ NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar,
       menuElement->SetAttribute("open", "true");
 
     // Begin menuitem inner loop
+    
+    // Now get the kids. Retrieve our menupopup child.
+    nsCOMPtr<nsIDOMNode> menuPopupNode;
+    aMenuNode->GetFirstChild(getter_AddRefs(menuPopupNode));
+    while (menuPopupNode) {
+      nsCOMPtr<nsIDOMElement> menuPopupElement(do_QueryInterface(menuPopupNode));
+      if (menuPopupElement) {
+        nsString menuPopupNodeType;
+        menuPopupElement->GetNodeName(menuPopupNodeType);
+        if (menuPopupNodeType.Equals("menupopup"))
+          break;
+      }
+      nsCOMPtr<nsIDOMNode> oldMenuPopupNode(menuPopupNode);
+      oldMenuPopupNode->GetNextSibling(getter_AddRefs(menuPopupNode));
+    }
+
+    if (!menuPopupNode)
+      return NS_OK;
+
     nsCOMPtr<nsIDOMNode> menuitemNode;
-    aMenuNode->GetFirstChild(getter_AddRefs(menuitemNode));
+    menuPopupNode->GetFirstChild(getter_AddRefs(menuitemNode));
+
     while (menuitemNode) {
       nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
       if (menuitemElement) {
@@ -804,8 +824,28 @@ void nsWebShellWindow::LoadSubMenu(
 	NS_RELEASE(supports);
 
     // Begin menuitem inner loop
-    nsCOMPtr<nsIDOMNode> menuitemNode;
-    menuNode->GetFirstChild(getter_AddRefs(menuitemNode));
+    
+    // Now get the kids. Retrieve our menupopup child.
+    nsCOMPtr<nsIDOMNode> menuPopupNode;
+    menuNode->GetFirstChild(getter_AddRefs(menuPopupNode));
+    while (menuPopupNode) {
+      nsCOMPtr<nsIDOMElement> menuPopupElement(do_QueryInterface(menuPopupNode));
+      if (menuPopupElement) {
+        nsString menuPopupNodeType;
+        menuPopupElement->GetNodeName(menuPopupNodeType);
+        if (menuPopupNodeType.Equals("menupopup"))
+          break;
+      }
+      nsCOMPtr<nsIDOMNode> oldMenuPopupNode(menuPopupNode);
+      oldMenuPopupNode->GetNextSibling(getter_AddRefs(menuPopupNode));
+    }
+
+    if (!menuPopupNode)
+      return;
+
+  nsCOMPtr<nsIDOMNode> menuitemNode;
+  menuPopupNode->GetFirstChild(getter_AddRefs(menuitemNode));
+
     while (menuitemNode) {
       nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
       if (menuitemElement) {
@@ -955,7 +995,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
             nsString menuName;
             menuElement->GetNodeName(menuNodeType);
             if (menuNodeType.Equals("menu")) {
-              menuElement->GetAttribute(nsAutoString("name"), menuName);
+              menuElement->GetAttribute(nsAutoString("value"), menuName);
 
 #ifdef DEBUG_rods
               printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
@@ -975,10 +1015,10 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
         pnsMenuBar->Paint();
         
         // HACK for M4, should be removed by M5
-        #ifdef XP_MAC
+#ifdef XP_MAC
         Handle tempMenuBar = ::GetMenuBar(); // Get a copy of the menu list
 		pnsMenuBar->SetNativeData((void*)tempMenuBar);
-		#endif
+#endif
 
         // The parent owns the menubar, so we can release it		
 		NS_RELEASE(pnsMenuBar);
@@ -1798,7 +1838,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(nsAutoString("this"))); // XXX "this" is a small kludge for code reused
   if (menubarDOMDoc)
   {
-    #if defined XP_MAC || defined XP_BEOS
+#if defined XP_MAC || defined XP_BEOS
     LoadMenus(menubarDOMDoc, mWindow);
     // Context Menu test
     nsCOMPtr<nsIDOMElement> element;
@@ -1808,9 +1848,9 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
     int endCount = 0;
     contextMenuTest = FindNamedDOMNode(nsAutoString("contextmenu"), window, endCount, 1);
     // End Context Menu test
-    #else
+#else
     DynamicLoadMenus(menubarDOMDoc, mWindow);
-    #endif
+#endif
   }
 
   SetTitleFromXUL();
