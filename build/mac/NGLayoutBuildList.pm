@@ -1462,8 +1462,8 @@ sub BuildNeckoProjects()
 	BuildOneProject(":mozilla:netwerk:streamconv:macbuild:multiMixedConv.mcp",	"multiMixedConv$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
 	# security stuff
-	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp",			"PSMClient$D.o", "", 0, 0, 0);
-	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMProtocol.mcp",		"PSMProtocol$D.o", "", 0, 0, 0);	
+#	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp",			"PSMClient$D.o", "", 0, 0, 0);
+#	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMProtocol.mcp",		"PSMProtocol$D.o", "", 0, 0, 0);	
 
 	BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp",		"PSMGlue$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);	
 	
