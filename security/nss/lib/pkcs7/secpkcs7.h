@@ -34,14 +34,13 @@
 /*
  * Interface to the PKCS7 implementation.
  *
- * $Id: secpkcs7.h,v 1.1 2000/03/31 19:16:09 relyea%netscape.com Exp $
+ * $Id: secpkcs7.h,v 1.2 2001/01/04 00:44:27 wtc%netscape.com Exp $
  */
 
 #ifndef _SECPKCS7_H_
 #define _SECPKCS7_H_
 
 #include "seccomon.h"
-#include "mcom_db.h"	/* needed by certt.h */
 
 #include "secoidt.h"
 #include "secder.h"	/* needed by certt.h; XXX go away when possible */

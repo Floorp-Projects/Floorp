@@ -34,14 +34,13 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.6 2000/09/29 16:38:11 mcgreer%netscape.com Exp $
+ * $Id: cms.h,v 1.7 2001/01/04 00:44:29 wtc%netscape.com Exp $
  */
 
 #ifndef _CMS_H_
 #define _CMS_H_
 
 #include "seccomon.h"
-#include "mcom_db.h"	/* needed by certt.h */
 
 #include "secoidt.h"
 #include "secder.h"	/* needed by certt.h; XXX go away when possible */

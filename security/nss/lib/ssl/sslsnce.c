@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsnce.c,v 1.5 2001/01/03 19:50:48 larryh%netscape.com Exp $
+ * $Id: sslsnce.c,v 1.6 2001/01/04 00:44:30 wtc%netscape.com Exp $
  */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
@@ -93,6 +93,7 @@
 #include <syslog.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 #include "unix_err.h"
 
 #else /* XP_WIN32 */
