@@ -952,7 +952,7 @@ secu_PrintKeyFromCert(CERTCertificate *cert, void *data)
 
     cbdata = (struct secuCBData *)data;
     out = cbdata->file;
-    key = PK11_FindPrivateKeyFromCert(PK11_GetInternalKeySlot(), cert, cbdata->wincx);
+    key = PK11_FindPrivateKeyFromCert(cert->slot, cert, cbdata->wincx);
     if (!key) {
 	fprintf(out, "XXX could not extract key for %s.\n", cert->nickname);
 	return SECFailure;
