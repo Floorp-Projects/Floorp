@@ -18,7 +18,8 @@
       <property name="handleCtrlTab">
         <setter>
         <![CDATA[
-          this.setAttribute("handleCtrlTab", "true");
+          this.setAttribute("handleCtrlTab", val);
+          return val;
         ]]>
         </setter>
         <getter>
@@ -106,6 +107,25 @@
          }
          ]]>
       </handler>
+
+      <handler event="keypress" keycode="vk_page_up" modifiers="control">
+        <![CDATA[
+         if (this._tabs) {
+           this._tabs.advanceSelectedTab(-1);
+           event.preventDefault();
+         }
+         ]]>
+      </handler>
+
+      <handler event="keypress" keycode="vk_page_down" modifiers="control">
+        <![CDATA[
+         if (this._tabs) {
+           this._tabs.advanceSelectedTab(1);
+           event.preventDefault();
+         }
+         ]]>
+      </handler>
+
     </handlers>
   </binding>
 
