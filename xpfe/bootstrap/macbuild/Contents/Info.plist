@@ -6,15 +6,21 @@
 	<string>English</string>
 	<key>CFBundleExecutable</key>
 	<string>mozilla-bin</string>
+	<key>CFBundleGetInfoString</key>
+	<string>0.9.7+, Â© 1998-2002 The Mozilla Organization</string>
+	<key>CFBundleIconFile</key>
+	<string>mach</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>
-	<string>????</string>
+	<string>MOZZ</string>
 	<key>CFBundleVersion</key>
-	<string>0.1</string>
+	<string>0.9.7+</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>©1998-2002 The Mozilla Organization</string>
 </dict>
 </plist>
