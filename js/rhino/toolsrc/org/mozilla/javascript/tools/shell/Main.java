@@ -229,16 +229,17 @@ public class Main {
                 ("org.mozilla.javascript.tools.shell.JavaPolicySecurity");
             securityImpl = (SecurityProxy)cl.newInstance();
             return;
-        }catch (ClassNotFoundException ex) {
+        } catch (ClassNotFoundException ex) {
             exObj = ex;
-        }catch (IllegalAccessException ex) {
+        } catch (IllegalAccessException ex) {
             exObj = ex;
-        }catch (InstantiationException ex) {
+        } catch (InstantiationException ex) {
             exObj = ex;
-        }catch (LinkageError ex) {
+        } catch (LinkageError ex) {
             exObj = ex;
         }
-        throw new RuntimeException("Can not load security support: "+exObj);
+        throw Kit.initCause(new IllegalStateException(
+            "Can not load security support: "+exObj), exObj);
     }
 
     /**
