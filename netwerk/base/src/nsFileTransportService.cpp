@@ -207,9 +207,10 @@ nsFileTransportService::ProcessPendingRequests(void)
 nsresult
 nsFileTransportService::Shutdown(void)
 {
-    PR_Lock(mLock);
-    mShuttingDown = 1;
-    PR_Unlock(mLock);
+    if (mShuttingDown)
+        return NS_OK;
+
+    mShuttingDown = PR_TRUE;
 
     PRUint32 count;
     mSuspendedTransportList.Count(&count);

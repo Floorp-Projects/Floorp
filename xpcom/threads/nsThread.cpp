@@ -731,12 +731,17 @@ nsThreadPool::Shutdown()
            ("nsIThreadPool thread %p shutting down\n", th.get()));
     
     nsAutoLock lock(mLock);
+    if (mShuttingDown) {
+        NS_ERROR("Bug 166371 - Was Shutdown() called more than once,"
+                 " or did someone forget to call Init()?");
+        return NS_OK;
+    }
     mShuttingDown = PR_TRUE;
     rv = ProcessPendingRequests();
     NS_ASSERTION(NS_SUCCEEDED(rv), "ProcessPendingRequests failed");
     // keep trying... don't bail with an error here
 
-// fix Add assert that there are no more requests to be handled.
+    // fix Add assert that there are no more requests to be handled.
 
     // then interrupt the threads
     rv = mThreads->EnumerateForwards(nsThreadPool::InterruptThreads, nsnull);
@@ -745,13 +750,13 @@ nsThreadPool::Shutdown()
     if (NS_FAILED(rv)) return rv;
     
     while (PR_TRUE) {
-      rv = mThreads->Count(&count);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-      if (NS_FAILED(rv)) return rv;
-      if (count == 0 )
-          break;
-      PR_WaitCondVar(mThreadExit, PR_INTERVAL_NO_TIMEOUT);
-   }
+        rv = mThreads->Count(&count);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+        if (NS_FAILED(rv)) return rv;
+        if (count == 0 )
+            break;
+        PR_WaitCondVar(mThreadExit, PR_INTERVAL_NO_TIMEOUT);
+    }
     
     mThreads = nsnull;
     return rv;
