@@ -91,7 +91,9 @@ NS_METHOD nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
   gint x;
   gint y;
 
+#ifdef DEBUG_pavlov
   g_print("nsWindow::WidgetToScreen\n");
+#endif
   if (mIsToplevel && mShell)
   {
     if (mShell->window)
@@ -99,7 +101,9 @@ NS_METHOD nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
       gdk_window_get_origin(mWidget->window, &x, &y);
       aNewRect.x = x + aOldRect.x;
       aNewRect.y = y + aOldRect.y;
+#ifdef DEBUG_pavlov
       g_print("  x = %i, y = %i\n", x, y);
+#endif
     }
     else
       return NS_ERROR_FAILURE;
@@ -111,7 +115,9 @@ NS_METHOD nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
       gdk_window_get_origin(mWidget->window, &x, &y);
       aNewRect.x = x + aOldRect.x;
       aNewRect.y = y + aOldRect.y;
+#ifdef DEBUG_pavlov
       g_print("  x = %i, y = %i\n", x, y);
+#endif
     }
     else
       return NS_ERROR_FAILURE;
