@@ -257,7 +257,7 @@ calendarManager.prototype.deleteCalendar = function calMan_deleteCalendar( ThisC
 
 
    //remove the listitem
-   document.getElementById( "calendar-list-item-"+ThisCalendarObject.serverNumber ).parentNode.removeChild( document.getElementById( "calendar-list-item-"+ThisCalendarObject.serverNumber ) );
+   document.getElementById( "calendar-list-item-"+ThisCalendarObject.serverNumber ).parentNode.parentNode.removeChild( document.getElementById( "calendar-list-item-"+ThisCalendarObject.serverNumber ).parentNode );
    
    //TODO: remove the file completely
 }
