@@ -31,7 +31,7 @@ class JSIdentifier;
  */
 class JSScope {
 public:
-	/**
+    /**
 	 * Gets the enclosing scope of this scope (if any).
 	 * @return enclosing scope or JSNULL if none.
 	 */
