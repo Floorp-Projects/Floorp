@@ -1,4 +1,0 @@
-<!-- extracted from ./sidebar-browser.xul -->
-
-<!ENTITY sidebar.reload.label        "reload">
-<!ENTITY sidebar.customize.label     "customize...">
