@@ -1073,6 +1073,9 @@ RDFContentSinkImpl::AddProperties(const nsIParserNode& aNode,
         nsRDFParserUtils::StripAndConvert(v);
 
         nsAutoString k;
+        if (kNameSpaceID_Unknown == nameSpaceID) {
+          nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+        }
         GetNameSpaceURI(nameSpaceID, k);
         k.Append(attr->GetUnicode());
 

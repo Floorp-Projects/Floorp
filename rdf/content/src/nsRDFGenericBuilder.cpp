@@ -1643,6 +1643,9 @@ RDFGenericBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& a
     }
 
     // If we get here, it's a "vanilla" property: push its value into the graph.
+    if (kNameSpaceID_Unknown == attrNameSpaceID) {
+      attrNameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+    }
     nsCOMPtr<nsIRDFResource> property;
     if (NS_FAILED(rv = GetResource(attrNameSpaceID, attrNameAtom, getter_AddRefs(property)))) {
         NS_ERROR("unable to construct resource");
@@ -1746,6 +1749,9 @@ RDFGenericBuilderImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString
         // It's a "vanilla" property: push its value into the graph.
 
         nsCOMPtr<nsIRDFResource> property;
+        if (kNameSpaceID_Unknown == attrNameSpaceID) {
+          attrNameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+        }
         if (NS_FAILED(rv = GetResource(attrNameSpaceID, attrNameAtom, getter_AddRefs(property)))) {
             NS_ERROR("unable to construct resource");
             return rv;

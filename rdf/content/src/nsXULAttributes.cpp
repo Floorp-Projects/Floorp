@@ -442,6 +442,9 @@ nsXULAttributes::GetNamedItem(const nsString& aName, nsIDOMNode** aReturn)
     if (NS_FAILED(rv = mContent->ParseAttributeString(aName, name, nameSpaceID)))
         return rv;
 
+    if (kNameSpaceID_Unknown == nameSpaceID) {
+      nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+    }
     // XXX doing this instead of calling mContent->GetAttribute() will
     // make it a lot harder to lazily instantiate properties from the
     // graph. The problem is, how else do we get the named item?

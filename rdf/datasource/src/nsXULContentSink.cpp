@@ -1188,6 +1188,9 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode,
         nsIAtom* prefix = CutNameSpacePrefix(attr);
         if (prefix) {
             SplitQualifiedName(key, nameSpaceID, attr);
+            if (kNameSpaceID_Unknown == nameSpaceID) {
+              nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+            }
             NS_RELEASE(prefix);
         }
         else {

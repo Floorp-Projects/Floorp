@@ -879,6 +879,9 @@ RDFElementImpl::GetAttribute(const nsString& aName, nsString& aReturn)
         NS_WARNING("unable to parse attribute name");
         return rv;
     }
+    if (kNameSpaceID_Unknown == nameSpaceID) {
+      nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+    }
 
     GetAttribute(nameSpaceID, nameAtom, aReturn);
     NS_RELEASE(nameAtom);

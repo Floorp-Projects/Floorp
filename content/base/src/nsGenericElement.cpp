@@ -394,6 +394,9 @@ nsGenericElement::GetAttribute(const nsString& aName, nsString& aReturn)
   PRInt32 nameSpaceID;
 
   mContent->ParseAttributeString(aName, nameAtom, nameSpaceID);
+  if (kNameSpaceID_Unknown == nameSpaceID) {
+    nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+  }
   mContent->GetAttribute(nameSpaceID, nameAtom, aReturn);
   NS_RELEASE(nameAtom);
 
@@ -409,6 +412,9 @@ nsGenericElement::SetAttribute(const nsString& aName,
   nsresult result = NS_OK;
 
   mContent->ParseAttributeString(aName, nameAtom, nameSpaceID);
+  if (kNameSpaceID_Unknown == nameSpaceID) {
+    nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+  }
   result = mContent->SetAttribute(nameSpaceID, nameAtom, aValue, PR_TRUE);
   NS_RELEASE(nameAtom);
 
@@ -423,6 +429,9 @@ nsGenericElement::RemoveAttribute(const nsString& aName)
   nsresult result = NS_OK;
 
   mContent->ParseAttributeString(aName, nameAtom, nameSpaceID);
+  if (kNameSpaceID_Unknown == nameSpaceID) {
+    nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+  }
   result = mContent->UnsetAttribute(nameSpaceID, nameAtom, PR_TRUE);
   NS_RELEASE(nameAtom);
 

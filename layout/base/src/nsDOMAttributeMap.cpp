@@ -241,6 +241,9 @@ nsDOMAttributeMap::GetNamedItem(const nsString &aAttrName,
     nsAutoString normalizedName;
 
     mContent->ParseAttributeString(aAttrName, nameAtom, nameSpaceID);
+    if (kNameSpaceID_Unknown == nameSpaceID) {
+      nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+    }
     GetNormalizedName(nameSpaceID, nameAtom, normalizedName);
     result = GetNamedItemCommon(normalizedName, 
                                 nameSpaceID, 
@@ -279,6 +282,9 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
         // Get normalized attribute name
         attribute->GetName(name);
         mContent->ParseAttributeString(name, nameAtom, nameSpaceID);
+        if (kNameSpaceID_Unknown == nameSpaceID) {
+          nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+        }
         GetNormalizedName(nameSpaceID, nameAtom, name);
         name.ToCString(buf, sizeof(buf));
         result = GetNamedItemCommon(name, nameSpaceID, nameAtom, &oldAttribute);
@@ -361,6 +367,9 @@ nsDOMAttributeMap::RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)
       nsAutoString name;
 
       mContent->ParseAttributeString(aName, nameAtom, nameSpaceID);
+      if (kNameSpaceID_Unknown == nameSpaceID) {
+        nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+      }
       GetNormalizedName(nameSpaceID, nameAtom, name);
       name.ToCString(buf, sizeof(buf));
       result = GetNamedItemCommon(name, nameSpaceID, nameAtom, &attribute);

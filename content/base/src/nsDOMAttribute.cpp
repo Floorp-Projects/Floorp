@@ -22,6 +22,7 @@
 #include "nsIContent.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsITextContent.h"
+#include "nsINameSpaceManager.h"
 
 static NS_DEFINE_IID(kIDOMAttrIID, NS_IDOMATTR_IID);
 static NS_DEFINE_IID(kIDOMAttributePrivateIID, NS_IDOMATTRIBUTEPRIVATE_IID);
@@ -158,6 +159,9 @@ nsDOMAttribute::GetValue(nsString& aValue)
     nsresult attrResult;
 
     mContent->ParseAttributeString(mName, nameAtom, nameSpaceID);
+    if (kNameSpaceID_Unknown == nameSpaceID) {
+      nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+    }
     attrResult = mContent->GetAttribute(nameSpaceID, nameAtom, mValue);
     if (NS_CONTENT_ATTR_NOT_THERE == attrResult) {
       mValue.Truncate();
@@ -177,6 +181,9 @@ nsDOMAttribute::SetValue(const nsString& aValue)
     PRInt32 nameSpaceID;
 
     mContent->ParseAttributeString(mName, nameAtom, nameSpaceID);
+    if (kNameSpaceID_Unknown == nameSpaceID) {
+      nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+    }
     result = mContent->SetAttribute(nameSpaceID, nameAtom, aValue, PR_TRUE);
     NS_IF_RELEASE(nameAtom);
   }
@@ -199,6 +206,9 @@ nsDOMAttribute::GetSpecified(PRBool* aSpecified)
     PRInt32 nameSpaceID;
 
     mContent->ParseAttributeString(mName, nameAtom, nameSpaceID);    
+    if (kNameSpaceID_Unknown == nameSpaceID) {
+      nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+    }
     attrResult = mContent->GetAttribute(nameSpaceID, nameAtom, value);
     NS_IF_RELEASE(nameAtom);
     if (NS_CONTENT_ATTR_HAS_VALUE == attrResult) {
@@ -369,6 +379,9 @@ nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     PRInt32 nameSpaceID;
   
     mContent->ParseAttributeString(mName, nameAtom, nameSpaceID);    
+    if (kNameSpaceID_Unknown == nameSpaceID) {
+      nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+    }
     mContent->GetAttribute(nameSpaceID, nameAtom, value);
     newAttr = new nsDOMAttribute(nsnull, mName, value); 
   }
