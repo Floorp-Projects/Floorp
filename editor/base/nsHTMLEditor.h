@@ -98,6 +98,7 @@ public:
 // HTML Editing methods
   NS_IMETHOD AddBlockParent(nsString& aParentTag);
   NS_IMETHOD RemoveBlockParent();
+  NS_IMETHOD RemoveParent(const nsString &aParentTag);
 
   NS_IMETHOD InsertLink(nsString& aURL);
   NS_IMETHOD InsertImage(nsString& aURL,
