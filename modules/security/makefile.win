@@ -37,7 +37,7 @@ DEPTH=..\..
 #// DIRS          - There are subdirectories to process
 #//
 #//------------------------------------------------------------------------
-!ifdef NO_SECURITY
+!ifndef MOZ_SECURITY
 DIRS	= freenav
 !endif
 

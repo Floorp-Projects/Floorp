@@ -17,15 +17,6 @@
 
 DEPTH		= ../..
 
-ifndef NO_SECURITY
-DIRS		= nav
-
-ifdef MOZ_JAVA
-DIRS		+= java
-endif
-
-else
 DIRS		= freenav
-endif
 
 include $(DEPTH)/config/rules.mk

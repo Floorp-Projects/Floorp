@@ -42,7 +42,7 @@ include <$(DEPTH)/config/liteness.mak>
 #//
 #//------------------------------------------------------------------------
 DIRS=                   \
-!ifdef NO_SECURITY
+!ifndef MOZ_SECURITY
 	security        \
 !endif
 	libreg          \

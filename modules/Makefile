@@ -36,7 +36,7 @@ DIRS		= \
     progress \
 	$(NULL)
 
-ifdef NO_SECURITY
+ifndef MOZ_SECURITY
 DIRS +=	security
 endif
 
