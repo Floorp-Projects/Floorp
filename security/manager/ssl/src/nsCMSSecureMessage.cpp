@@ -55,6 +55,11 @@
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
 
+#include "prlog.h"
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gPIPNSSLog;
+#endif
+
 // Standard ISupports implementation
 // NOTE: Should these be the thread-safe versions?
 
@@ -81,6 +86,7 @@ nsCMSSecureMessage::~nsCMSSecureMessage()
 NS_IMETHODIMP nsCMSSecureMessage::
 GetCertByPrefID(const char *certID, char **_retval)
 {
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::GetCertByPrefID\n"));
   nsresult rv = NS_OK;
   CERTCertificate *cert = 0;
   nsXPIDLCString nickname;
@@ -90,7 +96,9 @@ GetCertByPrefID(const char *certID, char **_retval)
 
   static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
   nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) {
+    goto done;
+  }
 
   rv = prefs->GetCharPref(certID,
                           getter_Copies(nickname));
@@ -100,7 +108,11 @@ GetCertByPrefID(const char *certID, char **_retval)
   cert = CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(), (char*)nickname.get(), 
            certUsageEmailRecipient, PR_TRUE, ctx);
 
-  if (!cert) { goto done; }  /* Success, but no value */
+  if (!cert) { 
+    /* Success, but no value */
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::GetCertByPrefID - can't find user cert\n"));
+    goto done;
+  } 
 
   /* Convert the DER to a BASE64 String */
   encode(cert->derCert.data, cert->derCert.len, _retval);
@@ -115,6 +127,7 @@ done:
 nsresult nsCMSSecureMessage::
 DecodeCert(const char *value, nsIX509Cert ** _retval)
 {
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::DecodeCert\n"));
   nsresult rv = NS_OK;
   PRInt32 length;
   unsigned char *data = 0;
@@ -124,7 +137,10 @@ DecodeCert(const char *value, nsIX509Cert ** _retval)
   if (!value) { return NS_ERROR_FAILURE; }
 
   rv = decode(value, &data, &length);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::DecodeCert - can't decode cert\n"));
+    return rv;
+  }
 
   nsCOMPtr<nsIX509Cert> cert =  new nsNSSCertificate((char *)data, length);
 
@@ -139,6 +155,7 @@ DecodeCert(const char *value, nsIX509Cert ** _retval)
 nsresult nsCMSSecureMessage::
 SendMessage(const char *msg, const char *base64Cert, char ** _retval)
 {
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::SendMessage\n"));
   nsresult rv = NS_OK;
   CERTCertificate *cert = 0;
   NSSCMSMessage *cmsMsg = 0;
@@ -154,14 +171,25 @@ SendMessage(const char *msg, const char *base64Cert, char ** _retval)
 
   /* Step 0. Create a CMS Message */
   cmsMsg = NSS_CMSMessage_Create(NULL);
-  if (!cmsMsg) { rv = NS_ERROR_FAILURE; goto done; }
+  if (!cmsMsg) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::SendMessage - can't create NSSCMSMessage\n"));
+    rv = NS_ERROR_FAILURE;
+    goto done;
+  }
 
   /* Step 1.  Import the certificate into NSS */
   rv = decode(base64Cert, &certDER, &derLen);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::SendMessage - can't decode / import cert into NSS\n"));
+    goto done;
+  }
 
   cert = CERT_DecodeCertFromPackage((char *)certDER, derLen);
-  if (!cert) { rv = NS_ERROR_FAILURE; goto done; }
+  if (!cert) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::SendMessage - can't decode cert from package\n"));
+    rv = NS_ERROR_FAILURE;
+    goto done;
+  }
 
 #if 0
   cert->dbhandle = CERT_GetDefaultCertDB();  /* work-around */
@@ -173,24 +201,44 @@ SendMessage(const char *msg, const char *base64Cert, char ** _retval)
 
   /* Step 4. Build outer (enveloped) content */
   env = NSS_CMSEnvelopedData_Create(cmsMsg, SEC_OID_DES_EDE3_CBC, 0);
-  if (!env) { rv = NS_ERROR_FAILURE; goto done; }
+  if (!env) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::SendMessage - can't create envelope data\n"));
+    rv = NS_ERROR_FAILURE;
+    goto done;
+  }
 
   cinfo = NSS_CMSEnvelopedData_GetContentInfo(env);
   item.data = (unsigned char *)msg;
   item.len = strlen(msg);  /* XPCOM equiv?? */
   s = NSS_CMSContentInfo_SetContent_Data(cmsMsg, cinfo, 0, PR_FALSE);
-  if (s != SECSuccess) { rv = NS_ERROR_FAILURE; goto done; }
+  if (s != SECSuccess) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::SendMessage - can't set content data\n"));
+    rv = NS_ERROR_FAILURE;
+    goto done;
+  }
 
   rcpt = NSS_CMSRecipientInfo_Create(cmsMsg, cert);
-  if (!rcpt) { rv = NS_ERROR_FAILURE; goto done; }
+  if (!rcpt) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::SendMessage - can't create recipient info\n"));
+    rv = NS_ERROR_FAILURE;
+    goto done;
+  }
 
   s = NSS_CMSEnvelopedData_AddRecipient(env, rcpt);
-  if (s != SECSuccess) { rv = NS_ERROR_FAILURE; goto done; }
+  if (s != SECSuccess) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::SendMessage - can't add recipient\n"));
+    rv = NS_ERROR_FAILURE;
+    goto done;
+  }
 
   /* Step 5. Add content to message */
   cinfo = NSS_CMSMessage_GetContentInfo(cmsMsg);
   s = NSS_CMSContentInfo_SetContent_EnvelopedData(cmsMsg, cinfo, env);
-  if (s != SECSuccess) { rv = NS_ERROR_FAILURE; goto done; }
+  if (s != SECSuccess) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::SendMessage - can't set content enveloped data\n"));
+    rv = NS_ERROR_FAILURE;
+    goto done;
+  }
   
   /* Step 6. Encode */
   NSSCMSEncoderContext *ecx;
@@ -198,13 +246,25 @@ SendMessage(const char *msg, const char *base64Cert, char ** _retval)
   output.data = 0; output.len = 0;
   ecx = NSS_CMSEncoder_Start(cmsMsg, 0, 0, &output, arena,
             0, 0, 0, 0, 0, 0);
-  if (!ecx) { rv = NS_ERROR_FAILURE; goto done; }
+  if (!ecx) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::SendMessage - can't start cms encoder\n"));
+    rv = NS_ERROR_FAILURE;
+    goto done;
+  }
 
   s = NSS_CMSEncoder_Update(ecx, msg, strlen(msg));
-  if (s != SECSuccess) { rv = NS_ERROR_FAILURE; goto done; }
+  if (s != SECSuccess) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::SendMessage - can't update encoder\n"));
+    rv = NS_ERROR_FAILURE;
+    goto done;
+  }
 
   s = NSS_CMSEncoder_Finish(ecx);
-  if (s != SECSuccess) { rv = NS_ERROR_FAILURE; goto done; }
+  if (s != SECSuccess) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::SendMessage - can't finish encoder\n"));
+    rv = NS_ERROR_FAILURE;
+    goto done;
+  }
 
   /* Step 7. Base64 encode and return the result */
   rv = encode(output.data, output.len, _retval);
@@ -224,6 +284,7 @@ done:
 nsresult nsCMSSecureMessage::
 ReceiveMessage(const char *msg, char **_retval)
 {
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::ReceiveMessage\n"));
   nsresult rv = NS_OK;
   NSSCMSDecoderContext *dcx;
   unsigned char *der = 0;
@@ -234,17 +295,33 @@ ReceiveMessage(const char *msg, char **_retval)
 
   /* Step 1. Decode the base64 wrapper */
   rv = decode(msg, &der, &derLen);
-  if (NS_FAILED(rv)) goto done;
+  if (NS_FAILED(rv)) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::ReceiveMessage - can't base64 decode\n"));
+    goto done;
+  }
 
   dcx = NSS_CMSDecoder_Start(0, 0, 0, /* pw */ 0, ctx, /* key */ 0, 0);
-  if (!dcx) { rv = NS_ERROR_FAILURE; goto done; }
+  if (!dcx) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::ReceiveMessage - can't start decoder\n"));
+    rv = NS_ERROR_FAILURE;
+    goto done;
+  }
 
   (void)NSS_CMSDecoder_Update(dcx, (char *)der, derLen);
   cmsMsg = NSS_CMSDecoder_Finish(dcx);
-  if (!cmsMsg) { rv = NS_ERROR_FAILURE; goto done; } /* Memory leak on dcx?? */
+  if (!cmsMsg) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::ReceiveMessage - can't finish decoder\n"));
+    rv = NS_ERROR_FAILURE;
+    /* Memory leak on dcx?? */
+    goto done;
+  }
 
   content = NSS_CMSMessage_GetContent(cmsMsg);
-  if (!content) { rv = NS_ERROR_FAILURE; goto done; }
+  if (!content) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::ReceiveMessage - can't get content\n"));
+    rv = NS_ERROR_FAILURE;
+    goto done;
+  }
 
   /* Copy the data */
   *_retval = (char*)malloc(content->len+1);
@@ -273,6 +350,7 @@ loser:
 nsresult nsCMSSecureMessage::
 decode(const char *data, unsigned char **result, PRInt32 * _retval)
 {
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::decode\n"));
   nsresult rv = NS_OK;
   PRUint32 len = PL_strlen(data);
   int adjust = 0;
@@ -284,7 +362,11 @@ decode(const char *data, unsigned char **result, PRInt32 * _retval)
   }
 
   *result = (unsigned char *)PL_Base64Decode(data, len, NULL);
-  if (!*result) { rv = NS_ERROR_ILLEGAL_VALUE; goto loser; }
+  if (!*result) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::decode - error decoding base64\n"));
+    rv = NS_ERROR_ILLEGAL_VALUE;
+    goto loser;
+  }
 
   *_retval = (len*3)/4 - adjust;
 

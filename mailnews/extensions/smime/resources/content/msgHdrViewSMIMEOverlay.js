@@ -30,14 +30,17 @@ var smimeHeaderSink =
 { 
   signedStatus: function(aValidSignature)
   {
+    gSignedUINode.collapsed = false; 
+    gSMIMEContainer.collapsed = false; 
+
     if (aValidSignature)
     {
-      gSignedUINode.collapsed = false; 
-      gSMIMEContainer.collapsed = false; 
+      gSignedUINode.value = "<signed>";
     }
     else
     {
       // show a broken signature icon....
+      gSignedUINode.value = "<invalid signature>";
     }
 
     gSignedUIVisible = true;
@@ -45,14 +48,17 @@ var smimeHeaderSink =
 
   encryptionStatus: function(aValidEncryption)
   {
+    gEncryptedUINode.collapsed = false; 
+    gSMIMEContainer.collapsed = false; 
+
     if (aValidEncryption)
     {
-      gEncryptedUINode.collapsed = false; 
-      gSMIMEContainer.collapsed = false; 
+      gEncryptedUINode.value = "<encrypted>";
     }
     else
     {
       // show a broken encryption icon....
+      gEncryptedUINode.value = "<invalid encryption>";
     }
 
     gEncryptionUIVisible = true;
@@ -105,3 +111,6 @@ function msgHdrViewSMIMEOnLoad(event)
 
 addEventListener('messagepane-loaded', msgHdrViewSMIMEOnLoad, true);
 
+function showMessageSecurityInfo()
+{
+}

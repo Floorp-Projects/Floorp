@@ -29,8 +29,8 @@
   <hbox id="expandedHeaderView">
     <vbox id="smimeBox" insertafter="expandedHeaders">
       <spacer flex="1"/>
-      <label id="encryptedText" value="&lt;Encrypted&gt;" collapsed="true"/>
-      <label id="signedText"    value="&lt;Signed&gt;" collapsed="true"/>     
+      <label id="encryptedText" onclick="showMessageSecurityInfo();" collapsed="true"/>
+      <label id="signedText"    onclick="showMessageSecurityInfo();" collapsed="true"/>     
       <spacer flex="1"/>
     </vbox>
   </hbox>

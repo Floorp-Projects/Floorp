@@ -87,7 +87,8 @@ MimeEncryptedCMSClassInitialize(MimeEncryptedCMSClass *clazz)
 }
 
 
-typedef struct MimeCMSdata {
+typedef struct MimeCMSdata
+{
   int (*output_fn) (const char *buf, PRInt32 buf_size, void *output_closure);
   void *output_closure;
   nsCOMPtr<nsICMSDecoder> decoder_context;
@@ -99,6 +100,31 @@ typedef struct MimeCMSdata {
   MimeObject *self;
   PRBool parent_is_encrypted_p;
   PRBool parent_holds_stamp_p;
+  
+  MimeCMSdata()
+  :output_fn(nsnull),
+  output_closure(nsnull),
+  ci_is_encrypted(PR_FALSE),
+  sender_addr(nsnull),
+  decode_error(PR_FALSE),
+  verify_error(PR_FALSE),
+  self(nsnull),
+  parent_is_encrypted_p(PR_FALSE),
+  parent_holds_stamp_p(PR_FALSE)
+  {
+  }
+  
+  ~MimeCMSdata()
+  {
+    PR_FREEIF(sender_addr);
+
+    // Do an orderly release of nsICMSDecoder and nsICMSMessage //
+    if (decoder_context)
+    {
+      nsCOMPtr<nsICMSMessage> cinfo;
+      decoder_context->Finish(getter_AddRefs(cinfo));
+    }
+  }
 } MimeCMSdata;
 
 
@@ -311,10 +337,8 @@ MimeCMS_init(MimeObject *obj,
   if (!(obj && obj->options && output_fn)) return 0;
 
   opts = obj->options;
-  data = (MimeCMSdata *) PR_MALLOC(sizeof(*data));
+  data = new MimeCMSdata;
   if (!data) return 0;
-
-  nsCRT::memset(data, 0, sizeof(*data));
 
   data->self = obj;
   data->output_fn = output_fn;
@@ -371,8 +395,9 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
   MimeCMSdata *data = (MimeCMSdata *) crypto_closure;
   nsresult rv;
 
-  if (!data || !data->output_fn || !data->decoder_context)
-	return -1;
+  if (!data || !data->output_fn || !data->decoder_context) {
+  	return -1;
+  }
 
   /* Hand an EOF to the crypto library.  It may call data->output_fn.
 	 (Today, the crypto library has no flushing to do, but maybe there
@@ -384,6 +409,11 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
 
   PR_SetError(0, 0);
   rv = data->decoder_context->Finish(getter_AddRefs(data->content_info));
+
+  /* Is the content info encrypted? */
+  if (data->content_info) {
+    data->ci_is_encrypted = PR_TRUE;
+  }
 
   if (NS_FAILED(rv))
 	  data->verify_error = PR_GetError();
@@ -413,17 +443,17 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
         smimeHeaderSink = do_QueryInterface(securityInfo);
       if (smimeHeaderSink)
       {
-          smimeHeaderSink->EncryptionStatus(NS_SUCCEEDED(rv));
+          smimeHeaderSink->EncryptionStatus(
+            data->ci_is_encrypted 
+            && !data->verify_error
+            && !data->decode_error
+            && NS_SUCCEEDED(rv)
+          );
       }
     } // if channel
   } // if msd
 
   data->decoder_context = 0;
-
-  /* Is the content info encrypted? */
-  if (data->content_info) {
-    data->ci_is_encrypted = PR_TRUE;
-  }
 
   return 0;
 }
@@ -433,24 +463,8 @@ MimeCMS_free (void *crypto_closure)
 {
   MimeCMSdata *data = (MimeCMSdata *) crypto_closure;
   if (!data) return;
-
-  PR_FREEIF(data->sender_addr);
-
-  if (data->content_info)
-	{
-    // Free reference to nsICMSMessage //
-	  data->content_info = 0;
-	}
-
-  // Do an orderly release of nsICMSDecoder and nsICMSMessage //
-  if (data->decoder_context)
-	{
-    nsCOMPtr<nsICMSMessage> cinfo;
-    data->decoder_context->Finish(getter_AddRefs(cinfo));
-    data->decoder_context = 0;
-	}
-
-  PR_FREEIF(data);
+  
+  delete data;
 }
 
 char *
@@ -518,7 +532,7 @@ MimeCMS_generate (void *crypto_closure)
   PRBool self_signed_p = PR_FALSE;
   PRBool self_encrypted_p = PR_FALSE;
   PRBool union_encrypted_p = PR_FALSE;
-  PRBool good_p = PR_TRUE;
+  PRBool good_p = PR_FALSE;
   PRBool unverified_p = PR_FALSE;
 
   if (!data || !data->output_fn) return 0;
@@ -534,20 +548,21 @@ MimeCMS_generate (void *crypto_closure)
 		  PR_SetError(0, 0);
       good_p = data->content_info->VerifySignature();
 		  if (!good_p)
-			{
-			  if (!data->verify_error)
-				data->verify_error = PR_GetError();
-			  if (data->verify_error >= 0)
-				data->verify_error = -1;
-			}
+      {
+        if (!data->verify_error)
+          data->verify_error = PR_GetError();
+        if (data->verify_error >= 0)
+          data->verify_error = -1;
+      }
 		  else
 			{
 			  good_p = MimeCMSHeadersAndCertsMatch(data->self,
 													 data->content_info,
 													 &data->sender_addr);
-			  if (!good_p && !data->verify_error)
-				// data->verify_error = SEC_ERROR_CERT_ADDR_MISMATCH; XXX Fix later XXX //
-        data->verify_error = -1;
+			  if (!good_p && !data->verify_error) {
+          // data->verify_error = SEC_ERROR_CERT_ADDR_MISMATCH; XXX Fix later XXX //
+          data->verify_error = -1;
+        }
 			}
 		}
 
@@ -571,36 +586,37 @@ MimeCMS_generate (void *crypto_closure)
 	  /* No content info?  Something's horked.  Guess. */
 	  self_encrypted_p = PR_TRUE;
 	  union_encrypted_p = PR_TRUE;
-	  good_p = PR_FALSE;
 	  if (!data->decode_error && !data->verify_error)
-		data->decode_error = -1;
+  		data->decode_error = -1;
 	}
 
   unverified_p = data->self->options->missing_parts;
 
-  if (data->self && data->self->parent)
+  if (data->self && data->self->parent) {
 	  mime_set_crypto_stamp(data->self->parent, self_signed_p, self_encrypted_p);
-
+  }
 
   {
-	char *stamp_url = 0, *result = nsnull;
-	if (data->self)
-	{
-		if (unverified_p && data->self->options)
-			// stamp_url = IMAP_CreateReloadAllPartsUrl(data->self->options->url); XXX Fix later XXX //
-      stamp_url = nsnull;
-		else
-			stamp_url = MimeCMS_MakeSAURL(data->self);
-	}
+    char *stamp_url = 0, *result = nsnull;
+    if (data->self)
+    {
+	    if (unverified_p && data->self->options) {
+		    // stamp_url = IMAP_CreateReloadAllPartsUrl(data->self->options->url); XXX Fix later XXX //
+        stamp_url = nsnull;
+      }
+	    else {
+		    stamp_url = MimeCMS_MakeSAURL(data->self);
+      }
+    }
 
-	result =
-	  MimeHeaders_make_crypto_stamp (union_encrypted_p,
-									 self_signed_p,
-									 good_p,
-									 unverified_p,
-									 data->parent_holds_stamp_p,
-									 stamp_url);
-	PR_FREEIF(stamp_url);
-	return result;
+    result =
+	    MimeHeaders_make_crypto_stamp (union_encrypted_p,
+        self_signed_p,
+        good_p,
+        unverified_p,
+        data->parent_holds_stamp_p,
+        stamp_url);
+    PR_FREEIF(stamp_url);
+    return result;
   }
 }
