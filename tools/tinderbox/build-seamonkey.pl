@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.37 $ ';
+$Version = '$Revision: 1.38 $ ';
 
 
 sub PrintUsage {
@@ -19,6 +19,7 @@ Options:
   --compress             Use '-z3' for cvs.
   --example-config       Print an example 'tinderconfig.pl'.
   --noreport             Do not report status to tinderbox server.
+  --nofinalreport        Do not report final status, only start status.
   --notest               Do not run smoke tests.
   --timestamp            Pull by date.
    -tag TREETAG          Pull by tag (-r TREETAG).
@@ -57,6 +58,7 @@ sub ParseArgs {
     &PrintExampleConfig, exit if $arg eq '--example-config';
     &PrintUsage        , exit if $arg eq '--help' or $arg eq '-h';
     $ReportStatus = 0  , next if $arg eq '--noreport';
+    $ReportFinalStatus = 0  , next if $arg eq '--nofinalreport';
     $RunTest = 0       , next if $arg eq '--notest';
     $BuildOnce = 1     , next if $arg eq '--once';
     $UseTimeStamp = 1  , next if $arg eq '--timestamp';
@@ -204,8 +206,7 @@ sub GetSystemInfo {
 sub SetupEnv {
   umask 0;
   #$ENV{CVSROOT} = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
-  $ENV{LD_LIBRARY_PATH} = "$NSPRDir/lib:"
-     ."$BaseDir/$DirName/mozilla/${ObjDir}dist/bin:/usr/lib/png:"
+  $ENV{LD_LIBRARY_PATH} = "$BaseDir/$DirName/mozilla/${ObjDir}dist/bin:/usr/lib/png:"
      ."/usr/local/lib:$BaseDir/$DirName/mozilla/dist/bin";
   $ENV{DISPLAY} = $DisplayServer;
   $ENV{MOZCONFIG} = "$BaseDir/$MozConfigFileName" if $MozConfigFileName ne '';
@@ -481,13 +482,30 @@ sub BuildIt {
     
 	if (&BinaryExists($fe)) {
 	  if ($RunTest) {
-		print LOG "export binary exists, build successful. Testing...\n";
+		print LOG "export binary exists, build successful.\n";
+
+        # AliveTest.
+		print LOG "Running AliveTest ...\n";
+		print "Running AliveTest ...\n";
 		$BuildStatus = &RunAliveTest($fe);
+
+        # BloatTest.
 		if ($BuildStatus == 0 and $BloatStats) {
 		  $BuildStatusStr = 'success';
-		  print LOG "export binary exists, build successful. Gathering bloat stats...\n";
+		  print LOG "Running BloatTest ...\n";
+		  print "Running BloatTest ...\n";
 		  $BuildStatus = &RunBloatTest($fe);
 		}
+
+        # Run Editor test.
+		if ($BuildStatus == 0 and $EditorTest) {
+		  $BuildStatusStr = 'success';
+		  print LOG "Running EditorTest ...\n";
+          print "Running EditorTest ...\n";
+		  $BuildStatus = &RunFileBasedTest("TestOutSinks", 15, "FAILED");
+		}
+        
+
 	  } else {
 		print LOG "export binary exists, build successful. Skipping test.\n";
 		$BuildStatus = 0;
@@ -554,8 +572,10 @@ sub BuildIt {
     
     close LOG;
     close OUTLOG;
-    
-    system("$mail $Tinderbox_server < ${logfile}.last") if $ReportStatus;
+    if ($ReportStatus and $ReportFinalStatus) {
+	  system("$mail $Tinderbox_server < ${logfile}.last");
+	} 
+
     unlink("$logfile");
     
     # If this is a test run, set early_exit to 0. 
@@ -631,6 +651,26 @@ sub PrintEnv {
   }
 }
 
+# Parse a file for $token, given a file handle.
+# Return 1 if found, 0 otherwise.
+sub parse_file_for_token {
+  my ($filehandle, $token) = @_;
+  my $foundStatus = 0;
+  local $_;
+
+  while (<$filehandle>) {
+	chomp;
+    if (/$token/) {
+	  print "Found a \"$token\"!\n";
+      $foundStatus = 1;
+    }
+  }
+
+  return $foundStatus;
+}
+
+
+
 sub killer {
   &killproc($pid);
 }
@@ -650,6 +690,10 @@ sub killproc {
   return $status;
 }
 
+#
+# Start up Mozilla, test passes if Mozilla is still alive
+# after $waittime (seconds).
+#
 sub RunAliveTest {
   my ($fe) = @_;
   my $Binary;
@@ -717,7 +761,142 @@ sub RunAliveTest {
   close READRUNLOG;
   print LOG "--------------- End of AliveTest Output -------------------- \n";
   return 0;
-}
+
+} # RunAliveTest
+
+# Run a generic test that writes output
+# to stdout, save that output to a file,
+# parse the file looking for failure token and
+# report status based on that.  A hack, but should
+# be useful for many tests.
+#
+#     testBinary = Test we're gonna run, in dist/bin.
+# testTimeoutSec = Timeout for hung tests, minimum test time.
+#   failureToken = What string to look for in test output to 
+#                  determine failure.
+#
+# Note: I tried to merge this function with RunAliveTest(),
+#       the process flow control got too confusing :(  -mcafee
+#
+sub RunFileBasedTest {
+  my ($testBinary, $testTimeoutSec, $failureToken) = @_;
+  my $Binary;
+
+  print LOG "testBinary = ", $testBinary, "\n";
+
+  $ENV{LD_LIBRARY_PATH} = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
+  $ENV{MOZILLA_FIVE_HOME} = $ENV{LD_LIBRARY_PATH};
+
+  $BinaryDir = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
+  $Binary    = $BinaryDir . '/' . $testBinary;
+  $BinaryLog = $BuildDir . '/' .$testBinary . '.log';
+
+  # If we care about log files, clear the old log, if there is one.
+  unlink($BinaryLog);
+
+  print LOG "Binary = ", $Binary, "\n";
+  print "Binary = ", $Binary, "\n";
+
+  print LOG "BinaryLog = ", $BinaryLog, "\n";
+  print "BinaryLog = ", $BinaryLog, "\n";
+
+  # Fork off a child process.
+  $pid = fork;
+
+  unless ($pid) { # child
+	print "child\n";
+    print LOG "child\n";
+
+    print LOG "2:Binary = ", $Binary, "\n";
+    print "2:Binary = ", $Binary, "\n";
+
+
+	# The following set of lines makes stdout/stderr show up
+	# in the tinderbox logs.
+    $SaveHome = $ENV{HOME};
+    $ENV{HOME} = $BinaryDir;
+    open STDOUT, ">$BinaryLog";
+    select STDOUT; $| = 1; # make STDOUT unbuffered
+    open STDERR,">&STDOUT";
+    select STDERR; $| = 1; # make STDERR unbuffered
+	
+
+	# Timestamp when we're running the test.
+    print LOG `date`, "\n";
+    print `date`, "\n";
+
+	if (-e $Binary) {
+	  $cmd = "$testBinary";   
+	  print LOG $cmd, "\n";
+	  print $cmd, "\n";
+	  print LOG $cmd;
+	  chdir($BinaryDir);
+	  exec ($cmd);
+	} else {
+	  print LOG "ERROR: cannot run ", $Binary, ".\n";
+	  print "ERROR: cannot run ", $Binary, ".\n";
+	}
+
+    close STDOUT;
+    close STDERR;
+    $ENV{HOME} = $SaveHome;
+    die "Couldn't exec()";	
+  } else {
+	print "parent\n";
+    print LOG "parent\n";
+  }
+
+  # Set up a timer with a signal handler.
+  $SIG{ALRM} = \&killer;
+
+  # Wait $testTimeoutSec seconds, then kill the process if it's still alive.
+  alarm $testTimeoutSec;
+
+  $status = waitpid($pid, 0);
+
+  # Back to parent.
+
+  # Clear the alarm so we don't kill the next test!
+  alarm 0;
+
+  #
+  # Determine proper status, look in log file for failure token.
+  #
+
+  open TESTLOG, "<$BinaryLog" or die "Can't open $!";
+  $status = parse_file_for_token(*TESTLOG, $failureToken);
+  close TESTLOG;
+
+  print LOG "$testBinary exited with status $status\n";
+
+  #
+  # Write test output to log.
+  #
+  if ($status != 0) {
+    print LOG "$testBinary has crashed or quit.  Turn the tree orange now.\n";
+    print LOG "----------- failure output from ", $testBinary, " test --------------- \n";
+  } else {
+	print LOG "----------- success output from ", $testBinary, " test --------------- \n";
+  }
+
+  # Parse the test log, dumping lines into tinderbox log.
+  open READRUNLOG, "$BinaryLog";
+  while (<READRUNLOG>) {
+	print $_;
+	print LOG $_;
+  }
+  close READRUNLOG;
+  print LOG "--------------- End of ", $testBinary, " Output -------------------- \n";
+
+  # 0 = success, 333 = orange.
+  if ($status != 0) {
+    return 333;
+  } else {
+	return 0;
+  }
+
+} # RunFileBasedTest
+
 
 sub RunBloatTest {
   my ($fe) = @_;
@@ -823,6 +1002,9 @@ sub RunBloatTest {
   
 }
 
+
+
+
 __END__
 #- PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
 $BuildAdministrator = "$ENV{USER}\@$ENV{HOST}";
@@ -833,12 +1015,13 @@ $DisplayServer = ':0.0';
 
 #- Default values of command-line opts
 #-
-$BuildDepend  = 1;  # Depend or Clobber
-$ReportStatus = 1;  # Send results to server, or not
-$BuildOnce    = 0;  # Build once, don't send results to server
-$RunTest      = 1;  # Run the smoke tests on successful build, or not
-$UseTimeStamp = 1;  # Use the CVS 'pull-by-timestamp' option, or not
-$TestOnly     = 0;  # Only run tests, don't pull/build
+$BuildDepend       = 1;  # Depend or Clobber
+$ReportStatus      = 1;  # Send results to server, or not
+$ReportFinalStatus = 1;  # Finer control over $ReportStatus.
+$BuildOnce         = 0;  # Build once, don't send results to server
+$RunTest           = 1;  # Run the smoke tests on successful build, or not
+$UseTimeStamp      = 1;  # Use the CVS 'pull-by-timestamp' option, or not
+$TestOnly          = 0;  # Only run tests, don't pull/build
 
 #- Set these to what makes sense for your system
 $Make          = 'gmake'; # Must be GNU make
