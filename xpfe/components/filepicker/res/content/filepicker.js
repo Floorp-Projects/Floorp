@@ -375,16 +375,11 @@ function handleColumnClick(columnID) {
   }
   
   // remove the sort indicator from the rest of the columns
-  var currCol = document.getElementById("directoryOutliner").firstChild;
+  var currCol = sortedColumn.parentNode.firstChild;
   while (currCol) {
-    while (currCol && currCol.localName != "outlinercol")
-      currCol = currCol.nextSibling;
-    if (currCol) {
-      if (currCol != sortedColumn) {
-        currCol.removeAttribute("sortDirection");
-      }
-      currCol = currCol.nextSibling;
-    }
+    if (currCol != sortedColumn && currCol.localName == "outlinercol")
+      currCol.removeAttribute("sortDirection");
+    currCol = currCol.nextSibling;
   }
 }
 

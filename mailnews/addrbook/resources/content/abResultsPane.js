@@ -69,6 +69,8 @@ function AbResultsPaneOnClick(event)
        var outliner = GetAbResultsOutliner();
        // figure out what cell the click was in
        outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).getCellAt(event.clientX, event.clientY, row, colID, childElt);
+       if (row.value == -1)
+         return;
 
        if (event.detail == 2) {
          AbResultsPaneDoubleClick(gAbView.getCardFromRow(row.value));

@@ -847,6 +847,8 @@ function con_sourcesel (e)
         
         var outliner = console.sourceView.outliner;
         outliner.getCellAt(e.clientX, e.clientY, row, colID, childElt);        
+        if (row.value == -1)
+          return;
         console.sourceView.selectedIndex = row.value;
     }
 }
@@ -864,6 +866,8 @@ function con_sourceclick (e)
         
         var outliner = console.sourceView.outliner;
         outliner.getCellAt(e.clientX, e.clientY, row, colID, childElt);
+        if (row.value == -1)
+          return;
         
         colID = colID.value;
         row = row.value;

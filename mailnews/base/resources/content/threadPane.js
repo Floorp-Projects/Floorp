@@ -48,6 +48,8 @@ function ThreadPaneOnClick(event)
        var outliner = GetThreadOutliner();
        // figure out what cell the click was in
        outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).getCellAt(event.clientX, event.clientY, row, colID, childElt);
+       if (row.value == -1)
+         return;
 
        // if the cell is in a "cycler" column
        // or if the user double clicked on the twisty,

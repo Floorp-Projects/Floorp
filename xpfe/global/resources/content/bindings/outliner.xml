@@ -620,10 +620,9 @@
            // save off the last selected row
            this._lastSelectedRow = row.value;
 
-           try {
-             if (row.value >= b.view.rowCount) return;
-           } catch (e) { return; }
-            
+           if (row.value == -1)
+             return;
+
 		   if (obj.value != "twisty") {
 		     var column = document.getElementById(col.value);
 		     var cycler = column.hasAttribute('cycler');
@@ -649,9 +648,8 @@
          var b = this.parentNode.outlinerBoxObject;
          b.getCellAt(event.clientX, event.clientY, row, col, obj);
 
-         try {
-           if (row.value >= b.view.rowCount) return;
-         } catch (e) { return; }
+         if (row.value == -1)
+           return;
 
 		 if (obj.value == "twisty") {
            b.view.toggleOpenState(row.value);
@@ -692,9 +690,9 @@
            var b = this.parentNode.outlinerBoxObject;
            b.getCellAt(event.clientX, event.clientY, row, col, obj);
 
-           try {
-             if (row.value >= b.view.rowCount) return;
-           } catch (e) { return; }
+           if (row.value == -1)
+             return;
+
 		   var column = document.getElementById(col.value);
 		   var cycler = column.hasAttribute('cycler');
 

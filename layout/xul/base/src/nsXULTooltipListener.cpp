@@ -339,16 +339,12 @@ nsXULTooltipListener::CheckOutlinerBodyMove(nsIDOMMouseEvent* aMouseEvent)
     // XXX check the disabletitletips attribute on the outliner content
     mNeedTitletip = PR_FALSE;
 #ifdef DEBUG_crap
-    if (obj.Equals(NS_LITERAL_STRING("text"))) {
+    if (row >= 0 && obj.Equals(NS_LITERAL_STRING("text"))) {
       nsCOMPtr<nsIOutlinerView> view;
       mOutlinerBox->GetView(getter_AddRefs(view));
-      PRInt32 rowCount;
-      view->GetRowCount(&rowCount);
-      if (row < rowCount) {
-        PRBool isCropped;
-        mOutlinerBox->IsCellCropped(row, colId, &isCropped);
-        mNeedTitletip = isCropped;
-      }
+      PRBool isCropped;
+      mOutlinerBox->IsCellCropped(row, colId, &isCropped);
+      mNeedTitletip = isCropped;
     }
 #endif
 

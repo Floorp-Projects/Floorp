@@ -862,6 +862,8 @@ function FolderPaneOnClick(event)
     var col = {};
     var elt = {};
     folderOutliner.outlinerBoxObject.getCellAt(event.clientX, event.clientY, row, col, elt);
+    if (row.value == -1)
+      return;
 
     if (elt.value == "twisty")
     {

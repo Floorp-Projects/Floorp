@@ -67,9 +67,9 @@
            // save off the last selected row
            this._lastSelectedRow = row.value;
 
-           try {
-             if (row.value >= b.view.rowCount) return;
-           } catch (e) { return; }
+           if (row.value == -1)
+             return;
+
            if (!b.selection.isSelected(row.value)) {
              b.selection.select(row.value);
            }
@@ -88,9 +88,8 @@
          var b = this.parentNode.parentNode.parentNode.outlinerBoxObject;
          b.getCellAt(event.clientX, event.clientY, row, col, obj);
 
-         try {
-           if (row.value >= b.view.rowCount) return;
-         } catch (e) { return; }
+         if (row.value == -1)
+           return;
 
          var augment = event.ctrlKey || event.metaKey;
          if (event.shiftKey)

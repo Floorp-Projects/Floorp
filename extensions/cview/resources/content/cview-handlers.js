@@ -85,6 +85,9 @@ function onOutlinerResort (e, view)
     
     var obo = view.outliner;
     obo.getCellAt(e.clientX, e.clientY, rowIndex, colID, childElt);
+    if (row.value == -1)
+      return;
+
     var prop;
     switch (colID.value.substr(4))
     {

@@ -313,6 +313,8 @@ function SearchOnClick(event)
     var childElt = new Object;
 
     gSearchOutlinerBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
+    if (row.value == -1)
+      return;
 
     // if they are clicking on empty rows, drop the event 
     if (row.value + 1 > gSearchView.rowCount) return;

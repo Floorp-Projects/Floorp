@@ -344,6 +344,9 @@ function BeginDragFolderOutliner(event)
     var col = {};
     var elt = {};
     folderOutliner.outlinerBoxObject.getCellAt(event.clientX, event.clientY, row, col, elt);
+    if (row.value == -1)
+      return;
+
     var folderResource = GetFolderResource(folderOutliner, row.value);
 
     if (GetFolderAttribute(folderOutliner, folderResource, "IsServer") == "true")
