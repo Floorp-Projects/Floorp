@@ -28,15 +28,17 @@
 // (c) 2000, ActiveState corp.
 
 #include "PyXPCOM_std.h"
-#include "nsIFileSpec.h"
-#include "nsSpecialSystemDirectory.h"
 #include "nsIThread.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIModule.h"
+#include "nsIFile.h"
+#include "nsILocalFile.h"
 
 #ifdef XP_WIN
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
 #include "windows.h"
 #endif
 
@@ -124,34 +126,6 @@ done:
 
 // "boot-strap" methods - interfaces we need to get the base
 // interface support!
-
-static PyObject *
-PyXPCOMMethod_NS_LocateSpecialSystemDirectory(PyObject *self, PyObject *args)
-{
-	int typ;
-	if (!PyArg_ParseTuple(args, "i", &typ))
-		return NULL;
-	nsSpecialSystemDirectory systemDir((nsSpecialSystemDirectory::SystemDirectories)typ);
-	return PyString_FromString(systemDir.GetNativePathCString());
-}
-
-static PyObject *
-PyXPCOMMethod_NS_NewFileSpec(PyObject *self, PyObject *args)
-{
-	char *szspec = NULL;
-	if (!PyArg_ParseTuple(args, "|s", &szspec))
-		return NULL;
-	nsIFileSpec *spec = NULL;
-	nsresult nr;
-	Py_BEGIN_ALLOW_THREADS;
-	nr = NS_NewFileSpec(&spec);
-	if (NS_SUCCEEDED(nr) && spec && szspec)
-		nr = spec->SetNativePath(szspec);
-	Py_END_ALLOW_THREADS;
-	if (NS_FAILED(nr) || spec==nsnull)
-		return PyXPCOM_BuildPyException(nr);
-	return Py_nsISupports::PyObjectFromInterface(spec, NS_GET_IID(nsIFileSpec), PR_TRUE);
-}
 
 static PyObject *
 PyXPCOMMethod_NS_GetGlobalComponentManager(PyObject *self, PyObject *args)
@@ -434,9 +408,7 @@ extern PyObject *PyXPCOMMethod_IID(PyObject *self, PyObject *args);
 
 static struct PyMethodDef xpcom_methods[]=
 {
-	{"NS_LocateSpecialSystemDirectory", PyXPCOMMethod_NS_LocateSpecialSystemDirectory, 1},
 	{"NS_GetGlobalComponentManager", PyXPCOMMethod_NS_GetGlobalComponentManager, 1},
-	{"NS_NewFileSpec", PyXPCOMMethod_NS_NewFileSpec, 1},
 	{"XPTI_GetInterfaceInfoManager", PyXPCOMMethod_XPTI_GetInterfaceInfoManager, 1},
 	{"XPTC_InvokeByIndex", PyXPCOMMethod_XPTC_InvokeByIndex, 1},
 	{"GetGlobalServiceManager", PyXPCOMMethod_GetGlobalServiceManager, 1},
@@ -488,7 +460,7 @@ PRBool PyXPCOM_Globals_Ensure()
 			// not already initialized.
 
 			// We need to locate the Mozilla bin directory.
-#ifdef XP_WIN			
+#ifdef XP_WIN
 			// On Windows this by using "xpcom.dll"
 			
 			char landmark[MAX_PATH+1];
@@ -510,16 +482,11 @@ PRBool PyXPCOM_Globals_Ensure()
 #else
 			// Elsewhere, Mozilla can find it itself (we hope!)
 			nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
-#endif // XP_WIN			
+#endif // XP_WIN
 			if (NS_FAILED(rv)) {
 				PyErr_SetString(PyExc_RuntimeError, "The XPCOM subsystem could not be initialized");
 				return PR_FALSE;
 			}
-			// Also set the "special directory"
-#ifdef XP_WIN			
-			nsFileSpec spec(landmark);
-			nsSpecialSystemDirectory::Set(nsSpecialSystemDirectory::OS_CurrentProcessDirectory, &spec);
-#endif // XP_WIN			
 		}
 		// Even if xpcom was already init, we want to flag it as init!
 		bHaveInitXPCOM = PR_TRUE;

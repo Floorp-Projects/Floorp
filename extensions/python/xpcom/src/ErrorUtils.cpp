@@ -29,7 +29,7 @@
 
 #include "PyXPCOM_std.h"
 #include "nsReadableUtils.h"
-#include <nsFileStream.h>
+#include <nsIConsoleService.h>
 
 static char *PyTraceback_AsString(PyObject *exc_tb);
 
@@ -38,8 +38,10 @@ static char *PyTraceback_AsString(PyObject *exc_tb);
 
 void LogMessage(const char *prefix, const char *pszMessageText)
 {
-	nsOutputStream console;
-	console << prefix << pszMessageText;
+	nsCOMPtr<nsIConsoleService> consoleService = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+	NS_ABORT_IF_FALSE(consoleService, "Where is the console service?");
+	if (consoleService)
+		consoleService->LogStringMessage(NS_ConvertASCIItoUCS2(pszMessageText).get());
 }
 
 void LogMessage(const char *prefix, nsACString &text)

@@ -1352,6 +1352,9 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 			PRUint32 element_size = GetArrayElementSize(array_type);
 			int seq_length = PySequence_Length(val);
 			cb_this_buffer_pointer = seq_length * element_size;
+			if (cb_this_buffer_pointer==0) 
+				// prevent assertions allocing zero bytes.  Can't use NULL.
+				cb_this_buffer_pointer = 1; 
 			MAKE_VALUE_BUFFER(cb_this_buffer_pointer);
 			memset(this_buffer_pointer, 0, cb_this_buffer_pointer);
 			rc = FillSingleArray(this_buffer_pointer, val, seq_length, element_size, array_type&XPT_TDP_TAGMASK);
