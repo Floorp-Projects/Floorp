@@ -88,7 +88,37 @@ YBFE_GetJavaAppSize (MWContext * context,
 
 static void 
 YBFE_FreeEmbedElement (MWContext *context,
-			 LO_EmbedStruct *embed)
+					   LO_EmbedStruct *embed)
+{
+}
+
+static void 
+YBFE_CreateEmbedWindow (MWContext *context,
+						NPEmbeddedApp *app)
+{
+}
+
+static void 
+YBFE_SaveEmbedWindow (MWContext *context,
+					  NPEmbeddedApp *app)
+{
+}
+
+static void 
+YBFE_RestoreEmbedWindow (MWContext *context,
+						 NPEmbeddedApp *app)
+{
+}
+
+static void 
+YBFE_DestroyEmbedWindow (MWContext *context,
+						 NPEmbeddedApp *app)
+{
+}
+
+static void 
+YBFE_FreeBuiltinElement(MWContext *context,
+						LO_BuiltinStruct *embed)
 {
 }
 
@@ -141,6 +171,12 @@ YBFE_DisplayEmbed (MWContext * context,
 {
 }
 
+static void 
+YBFE_DisplayBuiltin (MWContext * context,
+					   int iLocation,
+					   LO_BuiltinStruct *builtin_struct)
+{
+}
 
 static void 
 YBFE_DisplayJavaApp (MWContext * context,
@@ -353,6 +389,26 @@ YBFE_Alert(MWContext *context,
 static XP_Bool 
 YBFE_Confirm(MWContext * context,
 	       const char * Msg)
+{
+  return FALSE;
+}
+
+static XP_Bool 
+YBFE_CheckConfirm(MWContext *pContext, 
+					const char *pConfirmMessage,
+					const char *pCheckMessage,
+					const char *pOKMessage,
+					const char *pCancelMessage,
+					XP_Bool *pChecked)
+{
+  return FALSE;
+}
+
+static XP_Bool 
+YBFE_SelectDialog(MWContext *pContext,
+					const char *pMessage,
+					const char **pList,
+					int16 *pCount)
 {
   return FALSE;
 }
