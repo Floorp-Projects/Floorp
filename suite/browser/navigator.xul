@@ -208,8 +208,9 @@ Contributor(s): ______________________________________. -->
 </html:script>
 
 <toolbox id="main-toolbox">
-		<!-- Menu -->
-  	<menubar id="main-menubar"/>
+
+  <!-- Menu -->
+  <menubar id="main-menubar"/>
 
   <toolbar id="nav-bar" class="main-bar" chromeclass="toolbar" persist="collapsed">
     <titledbutton id="back-button" align="top" value="&backButton.label;" observes="canGoBack" />  
@@ -303,14 +304,12 @@ Contributor(s): ______________________________________. -->
   </toolbar>
 </toolbox>
 
-	
 <!-- sidebar/toolbar/content/status -->
-<box id="sidebarparent" align="horizontal" flex="100%">
+<box id="sidebar-parent" align="horizontal" flex="100%">
   <!-- toolbar/content/status -->
  
-  <box id="sidebarbox" chromeclass="extrachrome" />
-  <splitter id="sidebarsplitter" collapse="before" persist="state hidden" chromeclass="extrachrome"
-    onclick="sidebarSaveState(this)"/>
+  <box id="sidebar-box" chromeclass="extrachrome"/>
+  <splitter id="sidebar-splitter" chromeclass="extrachrome" />
   
   <box id="appcontent" align="vertical" flex="100%">
 
