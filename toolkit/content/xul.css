@@ -601,6 +601,10 @@ progressmeter {
   -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter");
 }
 
+progressmeter[mode="undetermined"] {
+  -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter-undetermined");
+}
+
 /********** basic rule for anonymous content that needs to pass box properties through
  ********** to an insertion point parent that holds the real kids **************/
 
