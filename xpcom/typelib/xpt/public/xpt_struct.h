@@ -175,6 +175,9 @@ XPT_NewInterfaceDescriptor(uint32 parent_interface, uint32 num_methods,
 extern XPT_PUBLIC_API(PRBool)
 XPT_InterfaceDescriptorAddMethods(XPTInterfaceDescriptor *id, uint16 num);
 
+extern XPT_PUBLIC_API(PRBool)
+XPT_InterfaceDescriptorAddConsts(XPTInterfaceDescriptor *id, uint16 num);
+
 /*
  * This is our special string struct with a length value associated with it,
  * which means that it can contains embedded NULs.
