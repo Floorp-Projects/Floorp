@@ -74,6 +74,12 @@ var gFocusedDocument = null;
 const gButtonPrefListener =
 {
   domain: "browser.toolbars.showbutton",
+  init: function()
+  {
+    var array = pref.getChildList(this.domain, {});
+    for (var i in array)
+      this.observe(pref, "nsPref:changed", array[i]);
+  },
   observe: function(subject, topic, prefName)
   {
     // verify that we're changing a button pref
@@ -459,6 +465,9 @@ function Startup()
   }
 
   // Do all UI building here:
+
+  // Ensure button visibility matches prefs
+  gButtonPrefListener.init();
 
   // set home button tooltip text
   updateHomeButtonTooltip();
