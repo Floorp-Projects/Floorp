@@ -109,8 +109,6 @@ void*         GetMatchingXPCOMObject(JNIEnv* env, jobject aJavaObject);
 jobject       GetMatchingJavaObject(JNIEnv* env, void* aXPCOMObject);
 
 
-void ThrowXPCOMException(JNIEnv* env, int aFailureCode);
-
 nsresult GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
                               const nsXPTMethodInfo *methodInfo,
                               const nsXPTParamInfo &paramInfo,
@@ -119,9 +117,24 @@ nsresult GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
                               PRBool isFullVariantArray,
                               nsID &result);
 
+
 /*******************************
  *  JNI helper functions
  *******************************/
+
+/**
+ * Constructs and throws an XPCOMException.
+ *
+ * @param env         Java environment pointer
+ * @param aErrorCode  The error code returned by an XPCOM/Gecko function. Pass
+ *                    zero for the default behaviour.
+ * @param aMessage    A string that provides details for throwing this
+ *                    exception. Pass in <code>nsnull</code> for the default
+ *                    behaviour.
+ */
+void ThrowXPCOMException(JNIEnv* env, const nsresult aErrorCode,
+                         const char* aMessage);
+
 // java.lang.String to nsAString/nsACString
 nsAString* jstring_to_nsAString(JNIEnv* env, jstring aString);
 nsACString* jstring_to_nsACString(JNIEnv* env, jstring aString);
