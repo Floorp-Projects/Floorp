@@ -33,9 +33,8 @@
 # GPL.
 #
 
-DEPTH=..\..\..
-include <$(DEPTH)/config/config.mak>
-
-DIRS = src  resources
+DEPTH=..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
+
+
