@@ -92,7 +92,12 @@ ipcIOLayerConnect(PRFileDesc* fd, const PRNetAddr* a, PRIntervalTime timeout)
         return PR_FAILURE;
     }
 
-    if (st.st_uid != getuid() && st.st_uid != geteuid()) {
+    //
+    // on some systems (OSX), fstat returns an UID of 0.  this does not
+    // mean that the socket was created by root, but even if it were that
+    // would not be a security violation.  root must be trusted anyways.
+    //
+    if (st.st_uid != 0 && st.st_uid != getuid() && st.st_uid != geteuid()) {
         NS_ERROR("userid check failed");
         return PR_FAILURE;
     }
