@@ -128,7 +128,7 @@ GlobalWindowImpl::GlobalWindowImpl() :
   mNavigator(nsnull), mScreen(nsnull), mHistory(nsnull), mFrames(nsnull),
   mLocation(nsnull), mMenubar(nsnull), mToolbar(nsnull), mLocationbar(nsnull),
   mPersonalbar(nsnull), mStatusbar(nsnull), mScrollbars(nsnull),
-  mTimeouts(nsnull), mTimeoutInsertionPoint(nsnull), mRunningTimeout(nsnull),
+  mTimeouts(nsnull), mTimeoutInsertionPoint(&mTimeouts), mRunningTimeout(nsnull),
   mTimeoutPublicIdCounter(1), mTimeoutFiringDepth(0),
   mFirstDocumentLoad(PR_TRUE), mGlobalObjectOwner(nsnull), mDocShell(nsnull),
   mChromeEventHandler(nsnull)
@@ -3492,7 +3492,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
 {
   JSString *expr = nsnull;
   JSObject *funobj = nsnull;
-  nsTimeoutImpl *timeout, **insertion_point;
+  nsTimeoutImpl *timeout;
   jsdouble interval;
   PRInt64 now, delta;
 
@@ -3611,10 +3611,8 @@ NS_IMETHODIMP GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
   }
   timeout->window = this;
   NS_ADDREF(this);
-  insertion_point = (mTimeoutInsertionPoint == NULL)
-                    ? &mTimeouts : mTimeoutInsertionPoint;
 
-  InsertTimeoutIntoList(insertion_point, timeout);
+  InsertTimeoutIntoList(mTimeoutInsertionPoint, timeout);
   timeout->public_id = ++mTimeoutPublicIdCounter;
   *aReturn = timeout->public_id;
 
@@ -3940,7 +3938,7 @@ void GlobalWindowImpl::ClearAllTimeouts()
        newly-created timeouts in case the user adds a timeout,
        before we pop the stack back to RunTimeout. */
     if (mRunningTimeout == timeout)
-      mTimeoutInsertionPoint = nsnull;
+      mTimeoutInsertionPoint = &mTimeouts;
 
     next = timeout->next;
     if (timeout->timer) {
@@ -3960,6 +3958,7 @@ void GlobalWindowImpl::InsertTimeoutIntoList(nsTimeoutImpl **aList,
 {
   nsTimeoutImpl *to;
 
+  NS_ASSERTION(aList, "GlobalWindowImpl::InsertTimeoutIntoList null timeoutList");
   while ((to = *aList) != nsnull) {
     if (LL_CMP(to->when, >, aTimeout->when))
       break;
