@@ -188,13 +188,6 @@ js_ContextIterator(JSRuntime *rt, JSContext **iterp);
  * Report an exception, which is currently realized as a printf-style format
  * string and its arguments.
  */
-#ifdef va_start
-extern void
-js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap);
-extern void
-js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallBack callback,
-                         void *userRef, const uintN errorNumber, va_list ap);
-
 typedef enum JSErrNum {
 #define MSG_DEF(name, number, count, exception, format) \
     name = number,
@@ -203,13 +196,21 @@ typedef enum JSErrNum {
     JSErr_Limit
 } JSErrNum;
 
+extern const JSErrorFormatString *
+js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
+
+#ifdef va_start
+extern void
+js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap);
+extern void
+js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallBack callback,
+                         void *userRef, const uintN errorNumber, va_list ap);
+
 extern JSBool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallBack callback,
 				void *userRef, const uintN errorNumber, 
                                 char **message, JSErrorReport *reportp, 
                                 va_list ap);
-extern const JSErrorFormatString *
-js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
 #endif
 
 /*
