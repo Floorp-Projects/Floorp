@@ -612,7 +612,6 @@ NS_IMETHODIMP nsAddrDatabase::Open
 		pAddressBookDB->SetDbPath(pabName);
 		GetDBCache()->AppendElement(pAddressBookDB);
 		*pAddrDB = pAddressBookDB;
-		NS_IF_ADDREF(*pAddrDB);
 	}
 	else 
 	{
