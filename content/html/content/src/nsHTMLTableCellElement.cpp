@@ -90,6 +90,7 @@ protected:
   // This does not return a nsresult since all we care about is if we
   // found the row element that this cell is in or not.
   void GetRow(nsIDOMHTMLTableRowElement** aRow);
+  void GetTable(nsIContent** aTable);
 
   PRInt32 mColIndex;
 };
@@ -200,6 +201,31 @@ nsHTMLTableCellElement::GetRow(nsIDOMHTMLTableRowElement** aRow)
   }
 }
 
+// protected method
+void
+nsHTMLTableCellElement::GetTable(nsIContent** aTable)
+{
+  *aTable = nsnull;
+
+  nsCOMPtr<nsIContent> row;
+  GetParent(getter_AddRefs(row));
+  if (row) {
+    nsCOMPtr<nsIContent> section;
+    row->GetParent(getter_AddRefs(section));
+    if (section) {
+      nsCOMPtr<nsIAtom> tag;
+      section->GetTag(getter_AddRefs(tag));
+      if (tag == nsHTMLAtoms::table) {
+        // XHTML, without a row group
+        section.swap(*aTable);
+      } else {
+        // we have a row group.
+        section->GetParent(aTable);
+      }
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsHTMLTableCellElement::GetCellIndex(PRInt32* aCellIndex)
 {
@@ -244,32 +270,18 @@ nsHTMLTableCellElement::GetCellIndex(PRInt32* aCellIndex)
 NS_IMETHODIMP
 nsHTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
-  // get table, add its rules too
-  // XXX can we safely presume structure or do we need to QI on the way up?
-  // XXXldb This needs to handle the possibility (for XHTML) that
-  // there's no row-group.
-  nsCOMPtr<nsIContent> row;
-
-  GetParent(getter_AddRefs(row));
-
-  if (row) {
-    nsCOMPtr<nsIContent> section;
-
-    row->GetParent(getter_AddRefs(section));
-
-    if (section) {
-      nsCOMPtr<nsIContent> table;
-
-      section->GetParent(getter_AddRefs(table));
-
-      if (table) {
-        nsCOMPtr<nsIStyledContent> styledTable(do_QueryInterface(table));
-
-        if (styledTable) {
-          styledTable->WalkContentStyleRules(aRuleWalker);
-        }
-      }
-    }
+  // Add style information from the mapped attributes of the table
+  // element.  This depends on the strange behavior of the
+  // |MapAttributesIntoRule| in nsHTMLTableElement.cpp, which is
+  // technically incorrect since it's violating the nsIStyleRule
+  // contract.  However, things are OK (except for the incorrect
+  // dependence on display type rather than tag) since tables and cells
+  // match different, less specific, rules.
+  nsCOMPtr<nsIContent> table;
+  GetTable(getter_AddRefs(table));
+  nsCOMPtr<nsIStyledContent> styledTable(do_QueryInterface(table));
+  if (styledTable) {
+    styledTable->WalkContentStyleRules(aRuleWalker);
   }
 
   return nsGenericHTMLContainerElement::WalkContentStyleRules(aRuleWalker);
