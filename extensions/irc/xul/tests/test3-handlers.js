@@ -25,6 +25,7 @@ function onLoad()
 {
 
     initHost(client);
+    setOutputStyle ("default");
     initStatic();
     mainStep();
     
@@ -47,12 +48,45 @@ function onTBIClick (id)
     
 }
 
+function onToggleTraceHook()
+{
+    var h = client.eventPump.getHook ("event-tracer");
+    var caption;
+    
+    h.enabled = !h.enabled;
+    caption = h.enabled ? "Debug Messages (ON)" : "Debug Messages (OFF)";    
+    document.getElementById("menu-dmessages").setAttribute ("value", caption);
+    
+}   
+
+function onDoStyleChange (newStyle)
+{
+
+    if (newStyle == "other")
+        newStyle = window.prompt ("Enter style name");
+
+    if (newStyle)
+    {
+        setOutputStyle (newStyle);
+        setCurrentObject(client.currentObject);
+    }
+    
+}
+
 function onInputKeyUp (e)
 {
     
     switch (e.which)
     {        
         case 13: /* CR */
+            if (e.target.id != "input")
+            {
+                dd ("** KeyUp event came from the wrong place, faking it.");
+                dd ("** e.target (" + e.target + ", '" + e.target.id + "') " +
+                    " is of type '" + typeof e.target + "'");
+                e = new Object();
+                e.target = document.getElementById ("input");
+            }
             e.line = e.target.value;
             onInputCompleteLine (e);
             break;
@@ -106,48 +140,7 @@ function onInputCompleteLine(e)
                 ev.inputData =  ary[2] ? stringTrim(ary[2]) : "";
 
                 ev.target = client.currentObject;
-
-                switch (client.currentObject.TYPE) /* set up event props */
-                {
-                    case "IRCChannel":
-                        ev.channel = ev.target;
-                        ev.server = ev.channel.parent;
-                        ev.network = ev.server.parent;
-                        break;
-
-                    case "IRCUser":
-                        ev.user = ev.target;
-                        ev.server = ev.user.parent;
-                        ev.network = ev.server.parent;
-                        break;
-
-                    case "IRCChanUser":
-                        ev.user = ev.target;
-                        ev.channel = ev.user.parent;
-                        ev.server = ev.channel.parent;
-                        ev.network = ev.server.parent;
-                        break;
-
-                    case "IRCNetwork":
-                        ev.network = client.currentObject;
-                        if (ev.network.isConnected())
-                            ev.server = ev.network.primServ;
-                        break;
-
-                    case "IRCClient":
-                        if (client.lastNetwork)
-                        {
-                            ev.network = client.lastNetwork;
-                            if (ev.network.isConnected())
-                                ev.server = ev.network.primServ;
-                        }
-                        break;
-
-                    default:
-                        /* no setup for unknown object */
-                        
-                }
-
+                getObjectDetails (ev.target, ev);
                 client.eventPump.addEvent (ev);
             }
         }
@@ -173,8 +166,7 @@ function onInputCompleteLine(e)
             e.target.setAttribute("expanded", "NO");
             e.target.style.height = client.COLLAPSE_HEIGHT;
             e.target.value = "";
-            for (var i = 1; i < lines.length - 1; i++)
-                client.sayToCurrentTarget (lines[i]);
+            client.sayToCurrentTarget (lines[i]);
         }
     }
     
@@ -194,7 +186,7 @@ function cli_icommand (e)
             
         case 1:
             if (typeof client[ary[0].func] == "undefined")        
-                client.currentObject.display ("Sorry, '" + e.command +
+                client.currentObject.display ("Sorry, '" + ary[0].name +
                                               "' has not been implemented.", 
                                               "ERROR");
             else
@@ -238,7 +230,6 @@ function cli_ihelp (e)
         client.currentObject.display (ary[i].name + " " + ary[i].usage,
                                       "USAGE");
         client.currentObject.display (ary[i].help, "HELP");
-        client.currentObject.display ("", "HELP");
     }
 
     client.PRINT_DIRECTION = saveDir;
@@ -246,7 +237,39 @@ function cli_ihelp (e)
     return true;
     
 }
-            
+
+client.onInputTestDisplay =
+function cli_testdisplay (e)
+{
+
+    client.currentObject.display ("Hello World!", "HELLO");
+    client.currentObject.display ("Nothing is wrong.", "ERROR");
+    client.currentObject.display ("Use not, want not.", "USAGE");
+    client.currentObject.display ("Don't Panic", "HELP");
+    client.currentObject.display ("NOTICE this!", "NOTICE", "Mozilla");
+    client.currentObject.display ("And hear this.", "PRIVMSG", "Mozilla");
+    client.currentObject.display ("But dont do this?", "ACTION", "Mozilla");
+    client.currentObject.display ("or you'll get KICKed", "KICK", "Mozilla");
+    client.currentObject.display ("JOIN in the fun.", "JOIN", "Mozilla");
+    client.currentObject.display ("PART when you want.", "PART", "Mozilla");
+    client.currentObject.display ("But never QUIT", "QUIT", "Mozilla");
+
+    if (client.currentObject.TYPE == "IRCChannel")
+    {
+        var mynick = e.server.me.nick;
+        client.currentObject.display ("NOTICE this!", "NOTICE", "!ME");
+        client.currentObject.display ("And hear this.", "PRIVMSG", "!ME");
+        client.currentObject.display ("But dont do this?", "ACTION", "!ME");
+        client.currentObject.display ("or you'll get KICKed", "KICK", "!ME");
+        client.currentObject.display ("JOIN in the fun.", "JOIN", "!ME");
+        client.currentObject.display ("PART when you want.", "PART", "!ME");
+        client.currentObject.display ("But never QUIT", "QUIT", "!ME");
+    }
+
+    return true;
+    
+}   
+
 client.onInputNetwork =
 function clie_inetwork (e)
 {
@@ -254,14 +277,14 @@ function clie_inetwork (e)
         return false;
 
     var net = client.networks[e.inputData];
-    
+
     if (net)
     {
         client.lastNetwork = net;
         setCurrentObject (net);    
     }
     else
-    {        
+    {
         client.currentObject.display ("Unknown network '" + e.inputData + "'",
                                       "ERROR");
         return false;
@@ -298,7 +321,8 @@ function cli_iattach (e)
         net = client.networks[e.inputData];
         if (!net)
         {
-            client.display ("Unknown network '" + e.inputData + "'", "ERROR");
+            client.currentObject.display ("Unknown network '" +
+                                          e.inputData + "'", "ERROR");
             return false;
         }
         client.lastNetwork = net;
@@ -344,6 +368,10 @@ function cli_imsg (e)
 
     var usr = e.network.primServ.addUser(ary[1].toLowerCase());
 
+    if (!usr.messages)
+        usr.display ("Chat with " + usr.nick + " opened.", "INFO");
+    setCurrentObject (usr);
+    var msg = filterOutput(ary[2], "PRIVMSG", "!ME");
     usr.say (ary[2]);
 
     return true;
@@ -361,7 +389,7 @@ function cli_inick (e)
         e.server.sendData ('NICK ' + e.inputData + '\n');
     else
         CIRCNetwork.prototype.INITIAL_NICK = e.inputData;
-
+    
     return true;
     
     
@@ -403,7 +431,7 @@ function cli_iquote (e)
         return false;
     }
 
-    client.network.primServ.sendData (e.inputData + "\n");
+    e.server.sendData (e.inputData + "\n");
     
     return true;
     
@@ -525,7 +553,8 @@ function cli_itopic (e)
     {
         if (e.channel.topic)
         {
-            client.currentObject.display (e.channel.topic, "TOPIC");
+            client.currentObject.display ("Topic: " + e.channel.topic,
+                                          "TOPIC");
             client.currentObject.display ("Set by " + e.channel.topicBy +
                                           " on " + e.channel.topicDate + ".",
                                           "TOPIC");
@@ -538,6 +567,8 @@ function cli_itopic (e)
         if (!e.channel.setTopic(e.inputData))
             client.currentObject.display ("Could not set topic.", "ERROR");
     }
+
+    return true;
     
 }
             
@@ -561,11 +592,15 @@ function my_showtonet (e)
     var str = "";
 
     switch (e.code)
-    {        
+    {
         case 004:
             str = e.params.slice(1).join (" ");
             break;
 
+        case "NOTICE":
+            updateNetwork (e.network);
+            /* no break */
+            
         case 372:
         case 375:
         case 376:
@@ -579,6 +614,22 @@ function my_showtonet (e)
     }
 
     this.display (p + str, e.code.toUpperCase());
+    
+}
+
+CIRCNetwork.prototype.onPing =
+function my_netping (e)
+{
+
+    updateNetwork (e.network);
+    
+}
+
+CIRCNetwork.prototype.onPong =
+function my_netpong (e)
+{
+
+    updateNetwork (e.network);
     
 }
 
@@ -644,7 +695,21 @@ function my_366 (e)
         this.list.add (this.users[ary[u]].getDecoratedNick());
     
 }    
+
+CIRCChannel.prototype.onTopic = /* user changed topic */
+CIRCChannel.prototype.on332 = /* TOPIC reply */
+function my_topic (e)
+{
+
+    if (e.code == "TOPIC")
+        e.channel.display (e.channel.topicBy + " has changed the topic to '" +
+                           e.channel.topic + "'", "TOPIC");
     
+    updateChannel (e.channel);
+    
+}
+
+
 CIRCChannel.prototype.onNotice =
 function my_notice (e)
 {
@@ -690,6 +755,8 @@ function my_cjoin (e)
     }
     else
         this.list.add (e.user.getDecoratedNick());
+
+    updateChannel (e.channel);
     
 }
 
@@ -703,6 +770,8 @@ function my_cpart (e)
         this.display (e.user.properNick + " has left " + e.channel.name,
                       "PART");
     this.list.remove (e.user.getDecoratedNick());
+
+    updateChannel (e.channel);
     
 }
 
@@ -735,6 +804,8 @@ function my_ckick (e)
     
     this.list.listContainer.removeChild (e.user.getDecoratedNick());
 
+    updateChannel (e.channel);
+    
 }
 
 CIRCChannel.prototype.onChanMode =
@@ -747,6 +818,8 @@ function my_cmode (e)
 
     for (var u in e.usersAffected)
         e.usersAffected[u].updateDecoratedNick();
+
+    updateChannel (e.channel);
     
 }
 
@@ -757,8 +830,11 @@ function my_cnick (e)
 {
 
     if (userIsMe (e.user))
+    {
         this.display ("YOU are now known as " + e.user.properNick, "NICK",
                       "!ME");
+        updateNetwork();
+    }
     else
         this.display (e.oldNick + " is now known as " + e.user.properNick,
                       "NICK");
@@ -780,6 +856,8 @@ function my_cquit (e)
                       " (" + e.reason + ")", "QUIT");
 
     this.list.remove (e.user.getDecoratedNick());
+
+    updateChannel (e.channel);
     
 }
 
@@ -788,6 +866,15 @@ function my_cprivmsg (e)
 {
     
     this.display (e.meat, "PRIVMSG");
+    
+}
+
+CIRCUser.prototype.onNick =
+function my_unick (e)
+{
+
+    if (userIsMe(e.user))
+        updateNetwork();
     
 }
 

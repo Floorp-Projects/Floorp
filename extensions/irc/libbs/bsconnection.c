@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
+ *  Simon Fraser, smfr@netscape.com, Mac warning fixes 
  */
 
 #include "string.h"
@@ -136,7 +137,7 @@ bs_connection_send_string (BSConnectionClass *connection, const bschar *data)
 
     length =  strlen (data);
 
-    return bs_connection_send_data (connection, data, length);
+    return bs_connection_send_data (connection, (bschar *)data, length);
     
 }   
 

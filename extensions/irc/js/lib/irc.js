@@ -174,9 +174,6 @@ function net_connect (e)
         this.primChan.join();
     }
 
-    e.set = "server";
-    e.destObject = this.primServ;
-
     return true;
 
 }
@@ -1348,7 +1345,30 @@ function CIRCChanMode (parent)
 }
 
 CIRCChanMode.prototype.TYPE = "IRCChanMode";
+
+CIRCChanMode.prototype.getModeStr = 
+function chan_modestr (f)
+{
+    var str = "";
+
+    if (this.invite)
+        str += "i";
+    if (this.moderated)
+        str += "m";
+    if (!this.publicMessages)
+        str += "n";
+    if (!this.publicTopic)
+        str += "t";
+    if (this.pvt)
+        str += "p";
+
+    if (str)
+        str = "+" + str;
+
+    return str;
     
+}
+
 CIRCChanMode.prototype.setMode = 
 function chanm_mode (modestr)
 {

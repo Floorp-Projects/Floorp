@@ -68,7 +68,8 @@ function ep_hook(e)
   hook_loop:
     for (var h in hooks)
     {
-        if (!matchObject (e, hooks[h].pattern, hooks[h].neg))
+        if (!hooks[h].enabled ||
+            !matchObject (e, hooks[h].pattern, hooks[h].neg))
             continue hook_loop;
 
         e.hooks.push (hooks[h]);
@@ -86,15 +87,33 @@ function ep_hook(e)
 }
 
 CEventPump.prototype.addHook = 
-function ep_addhook(pattern, f, name, neg)
+function ep_addhook(pattern, f, name, neg, enabled)
 {
     
     if (typeof f != "function")
         return false;
 
+    if (typeof enabled == "undefined")
+        enabled = true;
+    else
+        enabled = Boolean(enabled);
+
     neg = Boolean(neg);
 
-    return this.hooks.push({pattern: pattern, f: f, name: name, neg: neg})-1;
+    return (this.hooks.push({pattern: pattern, f: f, name: name,
+                             neg: neg, enabled: enabled}) - 1);
+
+}
+
+CEventPump.prototype.getHook = 
+function ep_gethook(name)
+{
+
+    for (var h in this.hooks)
+        if (this.hooks[h].name.toLowerCase() == name.toLowerCase())
+            return this.hooks[h];
+
+    return;
 
 }
 
@@ -135,7 +154,6 @@ CEventPump.prototype.routeEvent =
 function ep_routeevent (e)
 {
     var count = 0;
-    var ddprefix = "";
 
     this.currentEvent = e;
         
@@ -156,7 +174,7 @@ function ep_routeevent (e)
                 }
                 catch (ex)
                 {
-                    dd ("Error routing event: " + ex.toSource());
+                    dd ("Error routing event: " + ex + " in " + e.destMethod);
                 }
                 if (count++ > this.MAX_EVENT_DEPTH)
                     throw "Too many events in chain";

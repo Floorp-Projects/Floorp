@@ -89,18 +89,18 @@ function http_poll (e)
             }
             else
             {
-                dd ("** Caught exception: '" + ex + "' while recieving " +
+                dd ("** Caught exception: '" + ex + "' while receiving " +
                     this.server + this.path);
                 this.state = "read-error";
             }
         }
     else
-        this.state = "recieve-timeout";
+        this.state = "receive-timeout";
 
     switch (this.state)
     {
         case "opened":
-        case "recieve-header":
+        case "receive-header":
             if (this.state == "opened")
                 this.headers = "";
             
@@ -108,7 +108,7 @@ function http_poll (e)
             if (c != -1)
             {
                 this.data = line.substr (c, line.length);
-                this.state = "recieve-data";
+                this.state = "receive-data";
                 line = line.substr (0, c);
 
                 c = this.data.search(/\<\/html\>/i);
@@ -127,28 +127,28 @@ function http_poll (e)
             {
                 this.docType = this.headers.substr (c, line.length);
                 if (this.state == "opened")
-                    this.state = "recieve-doctype";
+                    this.state = "receive-doctype";
                 this.headers = this.headers.substr (0, c);
             }
             
             if (this.state == "opened")
-                this.state = "recieve-header";
+                this.state = "receive-header";
             break;
 
-        case "recieve-doctype":
+        case "receive-doctype":
             var c = line.search (/\<html\>/i);
             if (c != -1)
             {
                 this.docType = stringTrim(this.docType);    
                 this.data = line.substr (c, line.length);
-                this.state = "recieve-data";
+                this.state = "receive-data";
                 line = line.substr (0, c);
             }
 
             this.docType += line;
             break;
 
-        case "recieve-data":
+        case "receive-data":
             this.data += line;
             var c = this.data.search(/\<\/html\>/i);
             if (c != -1)
@@ -156,7 +156,7 @@ function http_poll (e)
             break;
 
         case "read-error":
-        case "recieve-timeout":
+        case "receive-timeout":
             break;
             
         default:
@@ -197,16 +197,6 @@ function http_complete(e)
     return true;
 
 }
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -11,7 +11,7 @@
   for the specific language governing rights and limitations under the
   License. 
  
-  The Original Code is JSIRC Test Client #2
+  The Original Code is JSIRC Test Client #3
  
   The Initial Developer of the Original Code is New Dimensions Consulting,
   Inc. Portions created by New Dimensions Consulting, Inc. Copyright (C) 1999
@@ -48,9 +48,22 @@ resource:///irc/tests/test3.xul
 
 <toolbox>
   <menubar>
-    <menu value="File">
+    <menu value="Options">
       <menupopup>
-        <menuitem value="New" oncommand="dump('foo\n');"/>
+        <menuitem id="menu-dmessages" value="Debug Messages (OFF)"
+         oncommand="onToggleTraceHook()"/>
+        <menuseparator/>
+        <menu value="Style">
+          <menupopup>
+           <menuitem value="Default"
+            oncommand="onDoStyleChange('default')"/>
+           <menuitem value="Marble"
+            oncommand="onDoStyleChange('marble')"/>
+           <menuseparator/>
+           <menuitem value="Other..."
+            oncommand="onDoStyleChange('other')"/>
+          </menupopup>
+        </menu>
       </menupopup>
     </menu>
   </menubar>
@@ -61,17 +74,75 @@ resource:///irc/tests/test3.xul
   </toolbar>
 </toolbox>
 
-<box id="outer-box" align="horizontal" flex="1">
-  <html:div id="quickList" class="quick-list" flex="2">
-    hello
-  </html:div>
-  <splitter id="main-splitter" align="vertical"/>
-  <box align="vertical" flex="1">
-    <html:div id="output" class="output-window" flex="1">
-      hello
+<box id="outer-box" align="vertical" flex="1">
+  <box id="inner-box" align="horizontal" flex="1">
+    <html:div id="quickList" class="quick-list" flex="0" width="150px">
     </html:div>
-    <html:textarea id="input" class="input-window" flex="0"/>
+    <splitter id="main-splitter" align="vertical"/>
+    <box align="vertical" flex="1">
+      <html:iframe id="it-doesnt-matter-anyway" class="output-container"
+       src="about:blank" flex="1"/>
+      <html:textarea id="input" class="input-window"/>
+    </box>
   </box>
+  <html:div id="status-bar">
+    <html:table class="status-table">
+      <html:tr>
+        <html:td class="status-label">Network</html:td>
+        <html:td class="status-data">
+         <html:a id="net-name">(none)</html:a> 
+        </html:td>
+        <html:td class="status-label">Server</html:td>
+        <html:td class="status-data">
+          <html:a id="server-name">(none)</html:a>
+        </html:td>
+        <html:td class="status-label">Nickname</html:td>
+        <html:td class="status-data">
+          <html:a id="server-nick">(unknown)</html:a>
+        </html:td>
+        <html:td class="status-label">Lag</html:td>
+        <html:td class="status-data">
+          <html:a id="server-lag">-1</html:a>
+        </html:td>
+        <html:td class="status-label">Last Ping</html:td>
+        <html:td class="status-data">
+          <html:a id="last-ping">(never)</html:a>
+        </html:td>
+      </html:tr>
+      <html:tr>
+        <html:td class="status-label">Channel</html:td>
+        <html:td class="status-data">
+          <html:a id="channel-name">(none)</html:a>
+        </html:td>
+        <html:td class="status-label">Mode</html:td>
+        <html:td class="status-data">
+          <html:a id="channel-mode">(none)</html:a>
+        </html:td>
+        <html:td class="status-label">Users</html:td>
+        <html:td class="status-data">
+          <html:a id="channel-users">(none)</html:a>
+        </html:td>
+        <html:td class="status-label">Limit</html:td>
+        <html:td class="status-data">
+          <html:a id="channel-limit">(none)</html:a>
+        </html:td>
+        <html:td class="status-label">Key</html:td>
+        <html:td class="status-data">
+          <html:a id="channel-key">(none)</html:a>
+        </html:td>
+      </html:tr>
+      <html:tr>
+        <html:td class="status-label">Topic By</html:td>
+        <html:td class="status-data">
+          <html:a id="channel-topicby">(nobody)</html:a>
+        </html:td>
+        <html:td class="status-label">Topic</html:td>
+        <html:td class="status-data" colspan="7">
+          <html:a id="channel-topic">(none)</html:a>
+        </html:td>
+      </html:tr>
+    </html:table>
+  </html:div>
 </box>
 
 </window>

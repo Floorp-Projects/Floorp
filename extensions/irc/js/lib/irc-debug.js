@@ -25,7 +25,7 @@ function event_tracer (e)
         case "httpdoc":
             name = e.destObject.server + e.destObject.path;
             if (e.destObject.state != "complete")
-                data = "state: '" + e.destObject.state + "', recieved " +
+                data = "state: '" + e.destObject.state + "', received " +
                     e.destObject.data.length;
             else
                 dd ("document done:\n" + dumpObjectTree (this));

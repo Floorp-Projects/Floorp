@@ -1,30 +1,15 @@
-JS-IRC README file.
-
-Copyright (C) 1999 Robert Ginda; rginda@ndcico.com
-
+JavaScript IRC library, bot (runs in xpcshell), and client (runs in Mozilla.)
 
 Files You'll find...
 **-------------------------------------------
-jsirc/bslib
+irc/bslib
 
 basic-socket library.  NSPR socket functions wrapped in an object oriented
 C api.  Allows clients to connect to as many servers as desired, without
 having to worry about the messy details.
 
-'make main' in this directory to create the required .o files, and a
-sample test client.
-
 **-------------------------------------------
-jsirc/bslib/xpcom
-
-Really Lame XPCOM wrapper around the bslib.
-
-'make libbs' in this directory to create the xpcom component (libbs.so)
-and the XPCOM interface file (bsIConnection.xpt.)  Copy these files to
-MOZILLA_FIVE_HOME/components directory.
-
-**-------------------------------------------
-jsirc/js/lib
+irc/js/lib
 
 JavaScript library files, including...
 
@@ -64,7 +49,7 @@ over a Direct Client to Client (hence the name) connection.  Currently,
 only DCC-Chat is supported.  Adding the rest should be straightforward.
 
 **-------------------------------------------
-jsirc/js/tests
+irc/js/tests
 
 Scripts to test the various libraries including...
 
@@ -74,10 +59,6 @@ Tests the object pattern matching functionality of utils.js.  Also a good
 reference while learning the rules for matching an object against a group of
 pattern objects.  Object pattern matching is at the root of the hook
 functionality provided by events.js, so look here if you need a clue.
-
-toys.js
-
-Functions for making annoying colors in IRC.
 
 ircbot.js
 

@@ -19,69 +19,109 @@
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
  * 
- * Styles for UI, See test3-output-default.css for output window styles
+ * Styles for output window, See test3.css for UI styles
  *
  */
 
-#outer-box {
+body {
 
-    margin: 5px;
-
-}
-
-#main-splitter {
-
-    border: thin silver outset;
-    margin-left: 2px;
-    margin-right: 2px;
+    margin: 0px 0px 0px 0px;
+    background: url(xtal.jpg);
 
 }
 
-.status-table {
+/* output from a chat session (contains msgs) */
+.chat-view {
 
-    width: 100%;
-    font-weight: bold;
-
-}
-
-#status-bar {
-
-    margin-top: 5px;
-    border: thin silver inset;
+	vertical-align: text-bottom;
 
 }
 
-.status-label {
-    
-    text-align: right;
+/* common container for all portions of a message
+ * (contains msg-*s) */
+.msg {
+
+    font-size: 10pt;
+	font-family: sans-serif;
 
 }
 
-.status-data {
+.msg[user="!ME"] {
 
-    text-align: left;
-    color: brown;
-
-}
-
-/* Activity indicator buttons */
-.activity-button {
-    
-    font-weight: bold;
+	background: lightgrey;
 
 }
 
-/* input textbox */
-.input-window {
+/* message data in output window */
+.msg-data {
 
-    width: 100%;
+	font-weight: bold;
 
 }
 
-.output-container {
+.msg-data[msgtype="JOIN"],
+.msg-data[msgtype="PART"] {
 
-    border: thin silver inset;
-    width: 100%;
+	font-variant: small-caps;
+	color: darkslategrey;
+
+}
+
+.msg-data[msgtype="ACTION"] {
+
+	color: darkred;
+
+}
+
+.msg-data[msgtype="NOTICE"] {
+
+	color: green;
+
+}
+
+.msg-data[msgtype="KICK"] {
+
+	color: slategrey;
+
+}
+
+.msg-data[msgtype="QUIT"] {
+
+	color: brown;
+
+}
+
+/* nickname field in output */
+.msg-user {
+	
+    text-align: center;
+    vertical-align: middle;
+    color: blue;
+	font-weight: bold;
+    background: grey;
+
+}
+
+.msg-user[user="!ME"] {
+
+	color: green;
+
+}
+
+.msg-user[msgtype="ACTION"] {
+
+	font-style: italic;
+
+}
+
+/* Message type indicator in output window */
+.msg-type {
+
+    text-align: center;
+    vertical-align: middle;
+	color: brown;
+	font-weight: bold;
+    background: lightgrey;
 
 }
 

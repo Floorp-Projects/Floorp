@@ -62,11 +62,13 @@ TESTFILES = \
     .\xul\tests\csteel2.jpg \
 	.\xul\tests\test3.xul \
 	.\xul\tests\test3.css \
+	.\xul\tests\test3-output-default.css \
+	.\xul\tests\test3-output-marble.css \
 	.\xul\tests\test3-static.js \
 	.\xul\tests\test3-handlers.js \
 	.\xul\tests\test3-commands.js \
-	.\xul\tests\g_blue.gif \
-	.\xul\tests\g_blue_on.gif \
+	.\xul\tests\g_green.gif \
+	.\xul\tests\g_green_on.gif \
 	.\xul\tests\g_grey.gif \
 	.\xul\tests\g_grey_on.gif \
 	.\xul\tests\green-on.gif \

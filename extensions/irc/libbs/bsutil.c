@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
+ *  Simon Fraser, smfr@netscape.com, Mac warning fixes 
  */
 #include <string.h>
 
@@ -84,7 +85,7 @@ bs_util_resolve_host (const char *hostname, PRNetAddr *na)
     if (PR_FAILURE == rv)
         return rv;
 
-    return PR_EnumerateHostEnt (0, &he, 0, na);
+    return (PRStatus)PR_EnumerateHostEnt (0, &he, 0, na);
     
 }
 

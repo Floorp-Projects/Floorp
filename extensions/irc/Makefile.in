@@ -65,11 +65,13 @@ TESTFILES	= \
 		$(srcdir)/xul/tests/csteel2.jpg \
 		$(srcdir)/xul/tests/test3.xul \
 		$(srcdir)/xul/tests/test3.css \
+		$(srcdir)/xul/tests/test3-output-default.css \
+		$(srcdir)/xul/tests/test3-output-marble.css \
 		$(srcdir)/xul/tests/test3-static.js \
 		$(srcdir)/xul/tests/test3-handlers.js \
 		$(srcdir)/xul/tests/test3-commands.js \
-		$(srcdir)/xul/tests/g_blue.gif \
-		$(srcdir)/xul/tests/g_blue_on.gif \
+		$(srcdir)/xul/tests/g_green.gif \
+		$(srcdir)/xul/tests/g_green_on.gif \
 		$(srcdir)/xul/tests/g_grey.gif \
 		$(srcdir)/xul/tests/g_grey_on.gif \
 		$(srcdir)/xul/tests/green-on.gif \

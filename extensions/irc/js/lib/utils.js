@@ -34,7 +34,7 @@ else
     if (typeof dump == "function")
         dumpln = function (str) {dump (str + "\n");}
     else
-    dumpln = function () {} /* no suitable function */
+        dumpln = function () {} /* no suitable function */
 
 if (DEBUG)
     dd = dumpln;
@@ -44,7 +44,7 @@ else
 var jsenv = new Object();
 
 jsenv.HAS_XPCOM = ((typeof Components == "function") &&
-                  (typeof Components.classes == "function"));
+                   (typeof Components.classes == "function"));
 jsenv.HAS_JAVA = (typeof java == "object");
 jsenv.HAS_RHINO = (typeof defineClass == "function");
 jsenv.HAS_DOCUMENT = (typeof document == "object");
@@ -55,8 +55,7 @@ function dumpObject (o, pfx, sep)
     var s = "";
 
     sep = (typeof sep == "undefined") ? " = " : sep;
-    pfx = (typeof pfx == "undefined") ? "" : pfx;
-    
+    pfx = (typeof pfx == "undefined") ? "" : pfx;    
 
     for (p in o)
     {
@@ -149,6 +148,24 @@ function dumpObjectTree (o, recurse, compress, level)
     s += pfx + "*\n";
     
     return s;
+    
+}
+
+/*
+ * Clones an existing object (Only the enumerable properties
+ * of course.) use as a function..
+ * var c = Clone (obj);
+ * or a constructor...
+ * var c = new Clone (obj);
+ */
+function Clone (obj)
+{
+    robj = new Object();
+
+    for (var p in obj)
+        robj[p] = obj[p];
+
+    return robj;
     
 }
 
@@ -257,8 +274,8 @@ function stringTrim (s)
 {
     if (!s)
         return "";
-    s = s.replace (/^\s+/);
-    return s.replace (/\s+$/);
+    s = s.replace (/^\s+/, "");
+    return s.replace (/\s+$/, "");
     
 }
 
@@ -329,6 +346,26 @@ function randomRange (min, max)
     
     return rv;
 
+}
+
+function getStackTrace ()
+{
+
+    if (!jsenv.HAS_XPCOM)
+        return "No stack trace available.";
+
+    var frame = Components.stack.caller;
+    var str = "<top>";
+
+    while (frame)
+    {
+        var name = frame.functionName ? frame.functionName : "[anonymous]";
+        str += "\n" + name + "@" + frame.lineNumber;
+        frame = frame.caller;
+    }
+
+    return str;
+    
 }
 
 function getInterfaces (cls)

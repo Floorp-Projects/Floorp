@@ -34,6 +34,10 @@ function addCommands(commandObject)
          "Displays help on all commands matching <command-name>, if " +
          "<command-name> is not given, displays help on all commands");
 
+    add ("testdisplay", "onInputTestDisplay",
+         "",
+         "Displays a sample text.  Used to preview styles");
+
     add ("network", "onInputNetwork",
          "<network-name>",
          "Sets the current network to <network-name>");
@@ -47,6 +51,10 @@ function addCommands(commandObject)
          "<action>",
          "Performs an 'action' on the current channel.");
 
+    add ("msg", "onInputMsg",
+         "<user> <msg>",
+         "Sends a private message <msg> to the user <user>.");
+    
     add ("nick", "onInputNick",
          "<nickname>",
          "Changes your current nickname.");

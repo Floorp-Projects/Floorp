@@ -29,14 +29,14 @@ client.UPDATE_DELAY = 500;
 client.EXPAND_HEIGHT = "200px";
 client.COLLAPSE_HEIGHT = "25px";
 client.TYPE = "IRCClient";
-client.OP1_IMG = "g_blue_on.gif";    /* user is op image */
-client.OP0_IMG = "g_blue.gif"; /* user isnt op image */
+client.OP1_IMG = "g_green_on.gif";    /* user is op image */
+client.OP0_IMG = "g_green.gif"; /* user isnt op image */
 client.V1_IMG = "g_grey_on.gif";    /* user is voice image */
 client.V0_IMG = "g_grey.gif"; /* user isnt voide image */
 client.ACT_IMG = "green-on.gif";   /* view has activity image */
 client.NACT_IMG = "green-off.gif"; /* view has no activity image */
 client.CUR_IMG = "yellow-on.gif"; /* view is currently displayed */
-client.PRINT_DIRECTION = -1; /*1 => new messages at bottom, -1 => at top */
+client.PRINT_DIRECTION = 1; /*1 => new messages at bottom, -1 => at top */
                 
 client.name = "*client*";
 client.viewsArray = new Array();
@@ -117,7 +117,8 @@ function initHost(obj)
          * (the 4th param inverts the match) */
         obj.eventPump.addHook ([{type: "poll", set: /^(server|dcc-chat)$/},
                                {type: "event-end"}], event_tracer,
-                               "event-tracer", true /* negate */);
+                               "event-tracer", true /* negate */,
+                               false /* disable */);
     
 }
 
@@ -130,14 +131,168 @@ function mainStep()
     
 }
 
-function newInlineText (data, className)
+function getObjectDetails (obj, rv)
 {
-    var a = document.createElement ("html:a");
+    switch (obj.TYPE)
+    {
+        case "IRCChannel":
+            rv.channel = obj;
+            rv.server = rv.channel.parent;
+            rv.network = rv.server.parent;
+            break;
 
-    if (data)
-        a.appendChild (document.createTextNode (data));
-    if (typeof className != "undefined")
-        a.setAttribute ("class", className);
+        case "IRCUser":
+            rv.user = obj;
+            rv.server = rv.user.parent;
+            rv.network = rv.server.parent;
+            break;
+
+        case "IRCChanUser":
+            rv.user = obj;
+            rv.channel = rv.user.parent;
+            rv.server = rv.channel.parent;
+            rv.network = rv.server.parent;
+            break;
+
+        case "IRCNetwork":
+            rv.network = obj;
+            if (rv.network.isConnected())
+                rv.server = rv.network.primServ;
+            break;
+
+        case "IRCClient":
+            if (obj.lastNetwork)
+            {
+                rv.network = obj.lastNetwork;
+                if (rv.network.isConnected())
+                    rv.server = rv.network.primServ;
+            }
+            break;
+            
+        default:
+            /* no setup for unknown object */
+            break;
+    }
+}
+
+function setOutputStyle (style)
+{
+    var oc = top.frames[0].document;
+
+    oc.close();
+    oc.open();
+    oc.write ("<html><head>" +
+              "<LINK REL=StyleSheet " +
+              "HREF='resource:///irc/tests/test3-output-" + style + ".css' " +
+              "TYPE='text/css' MEDIA='screen'></head> " +
+              "<body><div id='output' class='output-window'></div></body>" +
+              "</html>");
+    
+    client.output = oc.getElementById ("output");
+    
+}
+
+function updateNetwork(obj)
+{
+    var o = new Object();
+    getObjectDetails (client.currentObject, o);
+
+    if (obj && obj != o.network)
+        return;
+    
+    var net = o.network ? o.network.name : "(none)";
+    var serv = "(none)", nick = "(unknown)", lag = "(unknown)",
+        ping = "(never)";
+    if (o.server)
+    {
+        serv  = o.server.connection.host;
+        if (o.server.me)
+            nick = o.server.me.properNick;
+        lag = (o.server.lag != -1) ? o.server.lag : "(unknown)";
+        if (o.server.lastPing)
+        {
+            var mins = o.server.lastPing.getMinutes();
+            if (mins.length == 1)
+                mins = "0" + mins;
+            ping = o.server.lastPing.getHours() + ":" + mins;
+        }
+        else
+            ping = "(never)";
+    }
+
+    document.getElementById ("net-name").firstChild.data = net;
+    document.getElementById ("server-name").firstChild.data = serv;
+    document.getElementById ("server-nick").firstChild.data = nick;
+    document.getElementById ("server-lag").firstChild.data = lag;
+    document.getElementById ("last-ping").firstChild.data = ping;
+    
+}
+
+function updateChannel (obj)
+{
+    if (obj && obj != client.currentObject)
+        return;
+    
+    var o = new Object();
+    getObjectDetails (client.currentObject, o);
+
+    var chan = "(none)", l = "(none)", k = "(none)", mode = "(none)",
+        users = 0, topicBy = "(nobody)", topic = "(unknown)";
+
+    if (o.channel)
+    {
+        chan = o.channel.name;
+        l = (o.channel.mode.limit != -1) ? o.channel.mode.limit : "(none)";
+        k = o.channel.mode.key ? o.channel.mode.key : "(none)";
+        mode = o.channel.mode.getModeStr();
+        if (!mode)
+            mode = "(none)";
+        users = o.channel.getUsersLength();
+        topic = o.channel.topic ? o.channel.topic : "(none)";
+        topicBy = o.channel.topicBy ? o.channel.topicBy : "(nobody)";
+    }
+    
+    document.getElementById ("channel-name").firstChild.data = chan;
+    document.getElementById ("channel-limit").firstChild.data = l;
+    document.getElementById ("channel-key").firstChild.data = k;
+    document.getElementById ("channel-mode").firstChild.data = mode;
+    document.getElementById ("channel-users").firstChild.data = users;
+    document.getElementById ("channel-topic").firstChild.data = topic;
+    document.getElementById ("channel-topicby").firstChild.data = topicBy;
+    
+}
+
+function newInlineText (data, className, tagName)
+{
+    if (typeof tagName == "undefined")
+        tagName = "html:a";
+    
+    var a = document.createElement (tagName);
+    a.setAttribute ("class", className);
+
+    switch (typeof data)
+    {
+        case "string":
+            a.appendChild (document.createTextNode (data));
+            break;
+            
+        case "object":
+            for (var p in data)
+                if (p != "data")
+                    a.setAttribute (p, data[p]);
+                else
+                    a.appendChild (document.createTextNode (data[p]));
+            break;
+
+        case "undefined":
+            break;
+
+        default:
+            dd ("** INVALID TYPE ('" + typeof data + "') passed to " +
+                "newInlineText.");
+            break;
+            
+    }
 
     return a;
     
@@ -155,22 +310,25 @@ function setCurrentObject (obj)
     if (tb)
         tb.setAttribute ("src", client.NACT_IMG);
 
-    var output = document.getElementById ("output");
-
-    output.removeChild (output.firstChild);
-    output.appendChild (obj.messages);
+    if (client.output.firstChild)
+        client.output.removeChild (client.output.firstChild);
+    client.output.appendChild (obj.messages);
 
     var quickList = document.getElementById ("quickList");
     if (!obj.list)
         obj.list = new CListBox();
-    
-    quickList.removeChild (quickList.firstChild);
+
+    if (quickList.firstChild)
+        quickList.removeChild (quickList.firstChild);
     quickList.appendChild (obj.list.listContainer);
         
     client.currentObject = obj;
     tb = getTBForObject(obj);
     if (tb)
         tb.setAttribute ("src", client.CUR_IMG);
+
+    updateNetwork();
+    updateChannel();
     
 }
 
@@ -178,9 +336,10 @@ function addHistory (source, obj)
 {
     if (!source.messages)
     {
-        source.messages = document.createElement ("span");
+        source.messages = document.createElement ("html:table");
         source.messages.setAttribute ("class", "chat-view");
         source.messages.setAttribute ("type", source.TYPE);
+        source.messages.setAttribute ("width", "100%");
         
         switch (source.TYPE)
         {
@@ -202,7 +361,10 @@ function addHistory (source, obj)
     }
 
     if (client.PRINT_DIRECTION == 1)
+    {
         source.messages.appendChild (obj);
+        window.frames[0].scrollTo(0, 100000);
+    }
     else
         source.messages.insertBefore (obj, source.messages.firstChild);
     
@@ -214,7 +376,10 @@ function addHistory (source, obj)
             source.messageCount++;
 
         if (source.messageCount > source.MAX_MESSAGES)
-            source.messages.removeChild (source.messages.lastChild);
+            if (client.PRINT_DIRECTION == 1)
+                source.messages.removeChild (source.messages.firstChild);
+            else
+                source.messages.removeChild (source.messages.lastChild);
     }
     
 }
@@ -330,25 +495,28 @@ function cli_display (message, msgtype)
 {
     var ary = message.split ("\n");
 
-    var msgContainer = newInlineText ("", "msg");
-    msgContainer.setAttribute ("network", "{LOCAL}");
-    msgContainer.setAttribute ("msgtype", msgtype);
+    var msgRow = newInlineText (
+        {network : "{LOCAL}", msgtype: msgtype}, "msg", "html:tr");
     
-    var msg = newInlineText ("[" + msgtype + "]", "msg-type");
-    msg.setAttribute ("network", "{LOCAL}");
-    msg.setAttribute ("msgtype", msgtype);
-    msgContainer.appendChild(msg);
+    var msg = newInlineText (
+        {data: "[" + msgtype + "]", network: "{LOCAL}", msgtype: msgtype},
+        "msg-type", "html:td");
 
+    msgRow.appendChild(msg);
+
+    var msgData = newInlineText (
+        {network: "{LOCAL}", msgtype: msgtype},
+        "msg-data", "html:td");
+    
     for (var l in ary)
     {
-        var msg = newInlineText (ary[l], "msg-data");
-        msg.setAttribute ("network", "{LOCAL}");
-        msg.setAttribute ("msgtype", msgtype);
-        msgContainer.appendChild(msg);
-        msgContainer.appendChild (document.createElement ("html:br"));
+        msgData.appendChild(newInlineText (ary[l]));
+        msgData.appendChild (document.createElement ("html:br"));
     }
 
-    addHistory (this, msgContainer);        
+    msgRow.appendChild (msgData);
+    
+    addHistory (this, msgRow);
     notifyActivity (this);
 
 }
@@ -368,27 +536,30 @@ function net_display (message, msgtype)
 {
     var ary = message.split ("\n");
 
-    var msgContainer = newInlineText ("", "msg");
-    msgContainer.setAttribute ("network", this.name);
-    msgContainer.setAttribute ("msgtype", msgtype);
+    var msgRow = newInlineText (
+        {network: this.name, msgtype: msgtype},
+        "msg", "html:tr");
+    
+    var msg = newInlineText (
+        {data: "[" + msgtype + "]", network: this.name, msgtype: msgtype},
+        "msg-type", "html:td");
 
-    var msg = newInlineText ("[" + msgtype + "]", "msg-type");
-    msg.setAttribute ("network", this.name);
-    msg.setAttribute ("msgtype", msgtype);
-    msgContainer.appendChild(msg);
+    msgRow.appendChild(msg);
         
+    var msgData = newInlineText (
+        {network: this.name, msgtype: msgtype}, "msg-data", "html:td");
+    
     for (var l in ary)
     {
-        var msg = newInlineText (ary[l], "msg-data");
-        msg.setAttribute ("network", this.name);
-        msg.setAttribute ("msgtype", msgtype);
-        msgContainer.appendChild(msg);
-        msgContainer.appendChild (document.createElement ("html:br"));
+        msgData.appendChild(newInlineText(ary[l]));
+        msgData.appendChild (document.createElement ("html:br"));
     }
 
-    addHistory (this, msgContainer);
+    msgRow.appendChild (msgData);
+    
+    addHistory (this, msgRow);
     notifyActivity (this);
-            
+
 }
 
 CIRCUser.prototype.getDecoratedNick =
@@ -447,35 +618,86 @@ function usr_updnick()
 }
 
 CIRCUser.prototype.display =
-function user_display(message, msgtype)
+function user_display(message, msgtype, sourceNick)
 {
     var ary = message.split ("\n");
 
-    dd ("user.display");
-
-    var msgContainer = newInlineText ("", "msg");
-    msgContainer.setAttribute ("network", this.parent.parent.name);
-    msgContainer.setAttribute ("user", this.nick);
-    msgContainer.setAttribute ("msgtype", msgtype);
-
-    var msg = newInlineText ("[" + msgtype + "]", "msg-type");
-    msg.setAttribute ("network", this.parent.parent.name);
-    msg.setAttribute ("user", this.nick);
-    msg.setAttribute ("msgtype", msgtype);
-    msgContainer.appendChild(msg);
-    
     if (this.TYPE == "IRCUser")
     {
+        var msgRow = newInlineText (
+            {network: this.parent.parent.name, user: this.nick,
+             msgtype: msgtype},
+            "msg", "html:tr");
+    
+        var nickText;
+        var realNick = (!sourceNick || sourceNick != "!ME") ? this.properNick :
+            this.parent.me.properNick;
+        
+        switch (msgtype)
+        {                
+                
+            case "ACTION":
+                nickText = newInlineText ("*" + realNick + "* ",
+                                          "msg-user", "html:td");
+                break;
+                
+            case "NOTICE":
+                nickText = newInlineText ("[" + realNick + "] ",
+                                          "msg-user", "html:td");
+                break;
+
+            case "PRIVMSG":
+                nickText = newInlineText ("<" + realNick + "> ",
+                                          "msg-user", "html:td");
+                break;
+                
+        }
+
+        if (nickText)
+        {
+            this.parity = (typeof this.parity != "undefined") ? this.parity :
+                false;
+        
+            if ((this.lastNickDisplayed) &&
+                (realNick != this.lastNickDisplayed))
+            {
+                this.parity = !this.parity;
+                this.lastNickDisplayed = realNick;
+            }
+            else
+                this.lastNickDisplayed = realNick;          
+        
+            nickText.setAttribute ("parity", (this.parity) ? "even" : "odd");
+            nickText.setAttribute ("network", this.parent.parent.name);
+            nickText.setAttribute ("user", this.nick);
+            nickText.setAttribute ("msgtype", msgtype);
+            msgRow.appendChild (nickText);   
+        }
+        else
+        {   
+            var msg = newInlineText (
+                {data: "[" + msgtype + "]", network: this.parent.parent.name,
+                 user: this.nick, msgtype: msgtype},
+                 "msg-type", "html:td");
+            
+            msgRow.appendChild (msg);
+        }
+        
+        var msgData = newInlineText (
+            {network: this.parent.parent.name, msgtype: msgtype},
+             "msg-data", "html:td");
+
+        msgData.setAttribute ("width", "100%");
+        
         for (var l in ary)
         {
-            var msg = newInlineText (ary[l], "msg-data");
-            msg.setAttribute ("network", this.parent.parent.name);
-            msg.setAttribute ("user", this.nick);
-            msg.setAttribute ("msgtype", msgtype);
-            msgContainer.appendChild(msg);
-            msgContainer.appendChild (document.createElement ("html:br"));
+            msgData.appendChild(newInlineText (ary[l]));
+            msgData.appendChild (document.createElement ("html:br"));
         }
-        addHistory (this, msgContainer);
+
+        msgRow.appendChild (msgData);
+        
+        addHistory (this, msgRow);
         notifyActivity (this);
 
     }
@@ -483,84 +705,98 @@ function user_display(message, msgtype)
     {
         this.parent.display (message, msgtype, this.nick);
     }
-    
+
 }
 
 CIRCChannel.prototype.display =
 function chan_display (message, msgtype, nick)
 {
     var ary = message.split ("\n");
+    var nickText;
 
-    dd ("channel.display");
+    var msgRow = newInlineText (
+        {network: this.parent.parent.name , channel: this.name, user: nick,
+         msgtype: msgtype},
+        "msg", "html:tr");
     
-    var msgContainer = newInlineText ("", "msg");
-    msgContainer.setAttribute ("network", this.parent.parent.name);
-    msgContainer.setAttribute ("channel", this.name);
-    msgContainer.setAttribute ("user", nick);
-    msgContainer.setAttribute ("msgtype", msgtype);
+    if (nick)
+    {
+        var realNick;
+        
+        if (this.users[nick])
+            realNick = this.users[nick].properNick;
+        else if (nick == "!ME")
+            realNick = this.parent.me.properNick;
+        else    
+            realNick = nick + "?";
+        
+        switch (msgtype)
+        {                
+                
+            case "ACTION":
+                nickText = newInlineText ("*" + realNick + "* ",
+                                          "msg-user", "html:td");
+                break;
+                
+            case "NOTICE":
+                nickText = newInlineText ("[" + realNick + "] ",
+                                          "msg-user", "html:td");
+                break;
 
-    var msg = newInlineText ("[" + msgtype + "]", "msg-type");
-    msg.setAttribute ("network", this.parent.parent.name);
-    msg.setAttribute ("channel", this.name);
-    msg.setAttribute ("user", nick);
-    msg.setAttribute ("msgtype", msgtype);
-    msgContainer.appendChild (msg);
+            case "PRIVMSG":
+                nickText = newInlineText ("<" + realNick + "> ",
+                                          "msg-user", "html:td");
+                break;
+                
+        }
+    }
+
+    if (nickText)
+    {
+        this.parity = (typeof this.parity != "undefined") ? this.parity : false;
+        
+        if ((this.lastNickDisplayed) &&
+            (nick != this.lastNickDisplayed))
+        {
+            this.parity = !this.parity;
+            this.lastNickDisplayed = nick;
+        }
+        else
+            this.lastNickDisplayed = nick;                
+
+        nickText.setAttribute ("parity", (this.parity) ? "even" : "odd");
+        nickText.setAttribute ("network", this.parent.parent.name);
+        nickText.setAttribute ("channel", this.name);
+        nickText.setAttribute ("user", nick);
+        nickText.setAttribute ("msgtype", msgtype);
+        msgRow.appendChild (nickText);   
+    }
+    else
+    {   
+        var msg = newInlineText (
+            {data: "[" + msgtype + "]", network: this.parent.parent.name,
+                       channel: this.name, user: nick, msgtype: msgtype},
+            "msg-type", "html:td");
+        
+        msgRow.appendChild (msg);
+    }
+
+    var msgData = newInlineText (
+            {network: this.parent.parent.name, channel: this.name,
+             user: nick, msgtype: msgtype},
+            "msg-data", "html:td");
+    
+    msgData.setAttribute ("parity", (this.parity) ? "even" : "odd");
     
     for (var l in ary)
     {
-        var msg = newInlineText (ary[l], "msg-data");
-        msg.setAttribute ("network", this.parent.parent.name);
-        msg.setAttribute ("channel", this.name);
-        msg.setAttribute ("user", nick);
-        msg.setAttribute ("msgtype", msgtype);
-        
-        if (nick)
-        {
-            var nickText;
-            var realNick = (nick == "!ME") ? this.parent.me.properNick
-                : this.users[nick].properNick;
-            
-            switch (msgtype)
-            {
-                
-                case "PRIVMSG":
-                    nickText = newInlineText ("<" + realNick + "> ",
-                                              "msg-user");
-                    break;
-                    
-                case "ACTION":
-                    nickText = newInlineText ("*" + realNick + "* ",
-                                              "msg-user");
-                    break;
-                    
-                case "NOTICE":
-                    nickText = newInlineText ("[" + realNick + "] ",
-                                              "msg-user");
-                    break;
-                    
-            }
-
-            if (nickText)
-            {
-                nickText.setAttribute ("network", this.parent.parent.name);
-                nickText.setAttribute ("channel", this.name);
-                nickText.setAttribute ("user", nick);
-                nickText.setAttribute ("msgtype", msgtype);
-                msgContainer.appendChild (nickText);
-            }
-
-            if (nick == "!ME")
-                addHistory (this.users[this.parent.me.nick], msgContainer);
-            else
-                addHistory (this.users[nick], msgContainer);
-            
-        }
-
-        msgContainer.appendChild (msg);
-        msgContainer.appendChild (document.createElement ("html:br"));
+        msgData.appendChild (newInlineText (ary[l]));
+        msgData.appendChild (document.createElement ("html:br"));
     }
 
-    addHistory (this, msgContainer);
+    msgRow.appendChild (msgData);
+    
+    addHistory (this, msgRow);
     notifyActivity (this);
 
 }
