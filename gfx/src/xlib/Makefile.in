@@ -87,7 +87,7 @@ ifdef HAVE_XIE
 CSRCS		+= XIE.c
 endif
 
-GARBAGE         += $(X11SHARED_LCPPSRCS) $(XPU_LCSRCS) $(wildcard *.$(OBJ_SUFFIX))
+GARBAGE         += $(X11SHARED_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk
 
@@ -131,8 +131,8 @@ LOCAL_INCLUDES	+= \
 		$(NULL)
 
 ifdef MOZ_ENABLE_XPRINT
-export:: $(addprefix $(srcdir)/../xprint/,$(XPU_LCSRCS)) $(addprefix $(srcdir)/../x11shared/,$(X11SHARED_LCPPSRCS))
-	$(INSTALL) $^ .
+#export:: $(addprefix $(srcdir)/../x11shared/,$(X11SHARED_LCPPSRCS))
+#	$(INSTALL) $^ .
 else
 # disabled until X11SHARED_LCPPSRCS becomes non-empty
 # export:: $(addprefix $(srcdir)/../x11shared/,$(X11SHARED_LCPPSRCS))
