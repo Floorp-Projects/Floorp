@@ -30,6 +30,7 @@
 #include "nsError.h"
 #include "nsICacheService.h"
 #include "nsCache.h"
+#include "nsCacheDevice.h"
 
 
 nsCacheEntry::nsCacheEntry(nsCString *          key,
@@ -68,6 +69,14 @@ nsCacheEntry::Fetched()
     mLastFetched = SecondsFromPRTime(PR_Now());
     ++mFetchCount;
     MarkEntryDirty();
+}
+
+
+const char *
+nsCacheEntry::GetDeviceID()
+{
+    if (mCacheDevice)  return mCacheDevice->GetDeviceID();
+    return nsnull;
 }
 
 
@@ -323,6 +332,17 @@ nsCacheEntryInfo::GetClientID(char ** clientID)
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     return ClientIDFromCacheKey(*mCacheEntry->Key(), clientID);
+}
+
+
+NS_IMETHODIMP
+nsCacheEntryInfo::GetDeviceID(char ** deviceID)
+{
+    NS_ENSURE_ARG_POINTER(deviceID);
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+    
+    *deviceID = nsCRT::strdup(mCacheEntry->GetDeviceID());
+    return *deviceID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 

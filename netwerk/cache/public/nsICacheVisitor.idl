@@ -101,6 +101,11 @@ interface nsICacheEntryInfo : nsISupports
     readonly attribute string  clientID;
 
     /**
+     * Get the id for the device that stores this cache entry.
+     */
+    readonly attribute string deviceID;
+
+    /**
      * Get the key identifying the cache entry.
      */
     readonly attribute string  key;

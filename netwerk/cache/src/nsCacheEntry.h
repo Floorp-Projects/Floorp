@@ -73,7 +73,7 @@ public:
 
     nsCacheDevice * CacheDevice()                            { return mCacheDevice;}
     void            SetCacheDevice( nsCacheDevice * device)  { mCacheDevice = device;}
-
+    const char *    GetDeviceID();
 
     /**
      * Data accessors

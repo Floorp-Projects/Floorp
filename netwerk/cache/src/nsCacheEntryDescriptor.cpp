@@ -80,36 +80,23 @@ nsCacheEntryDescriptor::GetClientID(char ** result)
 
 
 NS_IMETHODIMP
+nsCacheEntryDescriptor::GetDeviceID(char ** result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
+    *result = nsCRT::strdup(mCacheEntry->GetDeviceID());
+    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+
+NS_IMETHODIMP
 nsCacheEntryDescriptor::GetKey(char ** result)
 {
     NS_ENSURE_ARG_POINTER(result);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     return ClientKeyFromCacheKey(*(mCacheEntry->Key()), result);
-
-#if 0
-    nsCString * key;
-    nsresult    rv = NS_OK;
-
-    *result = nsnull;
-    key = mCacheEntry->Key();
-
-    nsReadingIterator<char> start;
-    key->BeginReading(start);
-        
-    nsReadingIterator<char> end;
-    key->EndReading(end);
-        
-    if (FindCharInReadable(':', start, end)) {
-        ++start;  // advance past clientID ':' delimiter
-        *result = ToNewCString( Substring(start, end));
-        if (!*result) rv = NS_ERROR_OUT_OF_MEMORY;
-    } else {
-        NS_ASSERTION(PR_FALSE, "FindCharInRead failed to find ':'");
-        rv = NS_ERROR_UNEXPECTED;
-    }
-    return rv;
-#endif
 }
 
 
