@@ -23,6 +23,8 @@
 #include "nsNSSComponent.h"
 #include "nsCrypto.h"
 #include "nsKeygenHandler.h"
+#include "nsKeygenThread.h"
+#include "nsINSSDialogs.h"
 #include "nsNSSCertificate.h"
 #include "nsPKCS12Blob.h"
 #include "nsPK11TokenDB.h"
@@ -595,6 +597,10 @@ cryptojs_generateOneKeyPair(JSContext *cx, nsKeyPairInfo *keyPairInfo,
                             PK11SlotInfo *slot, PRBool willEscrow)
                             
 {
+  nsIGeneratingKeypairInfoDialogs * dialogs;
+  nsKeygenThread *KeygenRunnable = 0;
+  nsCOMPtr<nsIKeygenThread> runnable;
+
   PRUint32 mechanism = cryptojs_convert_to_mechanism(keyPairInfo->keyGenType);
   void *keyGenParams = nsConvertToActualKeyGenParams(mechanism, params, 
                                                      (params) ? nsCRT::strlen(params):0, 
@@ -634,10 +640,45 @@ cryptojs_generateOneKeyPair(JSContext *cx, nsKeyPairInfo *keyPairInfo,
     isPerm = PR_TRUE;
   }
 
-  keyPairInfo->privKey = PK11_GenerateKeyPair(slot, mechanism, keyGenParams,
-                                              &keyPairInfo->pubKey, isPerm, 
-                                              isPerm, uiCxt);
+  rv = getNSSDialogs((void**)&dialogs,
+                     NS_GET_IID(nsIGeneratingKeypairInfoDialogs));
+
+  if (NS_SUCCEEDED(rv)) {
+    KeygenRunnable = new nsKeygenThread();
+    if (KeygenRunnable) {
+      NS_ADDREF(KeygenRunnable);
+    }
+  }
+
+  if (NS_FAILED(rv) || !KeygenRunnable) {
+    rv = NS_OK;
+    keyPairInfo->privKey = PK11_GenerateKeyPair(slot, mechanism, keyGenParams,
+                                                &keyPairInfo->pubKey, isPerm, 
+                                                isPerm, uiCxt);
+  } else {
+    KeygenRunnable->SetParams( slot, mechanism, keyGenParams, isPerm, isPerm, uiCxt );
+
+    runnable = do_QueryInterface(KeygenRunnable);
+
+    if (runnable) {
+      rv = dialogs->DisplayGeneratingKeypairInfo(uiCxt, runnable);
+
+      // We call join on the thread, 
+      // so we can be sure that no simultaneous access to the passed parameters will happen.
+      KeygenRunnable->Join();
+
+      NS_RELEASE(dialogs);
+      if (!NS_FAILED(rv)) {
+        rv = KeygenRunnable->GetParams(&keyPairInfo->privKey, &keyPairInfo->pubKey);
+      }
+    }
+  }
+
   nsFreeKeyGenParams(mechanism, keyGenParams);
+
+  if (KeygenRunnable) {
+    NS_RELEASE(KeygenRunnable);
+  }
 
   if (!keyPairInfo->privKey || !keyPairInfo->pubKey) {
     if (intSlot)

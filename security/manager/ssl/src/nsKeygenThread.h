@@ -26,15 +26,6 @@
 
 #include "nsIKeygenThread.h"
 
-struct GenerateKeypairParameters
-{
-  SECKEYPrivateKey *privateKey;
-  SECKEYPublicKey *publicKey;
-  PK11SlotInfo *slot;
-  PRUint32 keyGenMechanism;
-  void *params;
-};
-
 class nsKeygenThread : public nsIKeygenThread
 {
 private:
@@ -45,11 +36,19 @@ private:
   PRBool iAmRunning;
   PRBool keygenReady;
   PRBool statusDialogClosed;
-  
+  PRBool alreadyReceivedParams;
+
+  SECKEYPrivateKey *privateKey;
+  SECKEYPublicKey *publicKey;
+  PK11SlotInfo *slot;
+  PRUint32 keyGenMechanism;
+  void *params;
+  PRBool isPerm;
+  PRBool isSensitive;
+  void *wincx;
+
   PRThread *threadHandle;
   
-  GenerateKeypairParameters *params;
-
 public:
   nsKeygenThread();
   virtual ~nsKeygenThread();
@@ -57,10 +56,17 @@ public:
   NS_DECL_NSIKEYGENTHREAD
   NS_DECL_ISUPPORTS
 
-  // This transfers a reference of parameters to the thread
-  // The parameters will not be copied, the caller keeps ownership.
-  // Once the thread is finished, the original instance will be accessed 
-  void SetParams(GenerateKeypairParameters *p);
+  void SetParams(
+    PK11SlotInfo *a_slot,
+    PRUint32 a_keyGenMechanism,
+    void *a_params,
+    PRBool a_isPerm,
+    PRBool a_isSensitive,
+    void *a_wincx );
+
+  nsresult GetParams(
+    SECKEYPrivateKey **a_privateKey,
+    SECKEYPublicKey **a_publicKey);
   
   void Join(void);
 
