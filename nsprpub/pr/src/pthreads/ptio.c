@@ -40,8 +40,10 @@
 #if defined(_PR_PTHREADS)
 
 #if defined(_PR_POLL_WITH_SELECT)
+#if !(defined(HPUX) && defined(_USE_BIG_FDS))
 /* set fd limit for select(), before including system header files */
 #define FD_SETSIZE (16 * 1024)
+#endif
 #endif
 
 #include <pthread.h>
@@ -3344,11 +3346,6 @@ PR_IMPLEMENT(PRFileDesc*) PR_AllocFileDesc(
 {
     PRFileDesc *fd = _PR_Getfd();
 
-    /*
-     * Assert that the file descriptor is small enough to fit in the
-     * fd_set passed to select
-     */
-    PR_ASSERT(osfd < FD_SETSIZE);
     if (NULL == fd) goto failed;
 
     fd->methods = methods;
@@ -4037,43 +4034,65 @@ static PRInt32 _pr_poll_with_select(
                     {
                         if (0 == ready)
                         {
+                            PRBool add_to_rd = PR_FALSE;
+                            PRBool add_to_wr = PR_FALSE;
+                            PRBool add_to_ex = PR_FALSE;
+
                             selectfd[index] = bottom->secret->md.osfd;
                             if (in_flags_read & PR_POLL_READ)
                             {
                                 pds[index].out_flags |=
                                     _PR_POLL_READ_SYS_READ;
-								FD_SET(bottom->secret->md.osfd, &rd);
-								rdp = &rd;
+                                add_to_rd = PR_TRUE;
                             }
                             if (in_flags_read & PR_POLL_WRITE)
                             {
                                 pds[index].out_flags |=
                                     _PR_POLL_READ_SYS_WRITE;
-								FD_SET(bottom->secret->md.osfd, &wr);
-								wrp = &wr;
+                                add_to_wr = PR_TRUE;
                             }
                             if (in_flags_write & PR_POLL_READ)
                             {
                                 pds[index].out_flags |=
                                     _PR_POLL_WRITE_SYS_READ;
-								FD_SET(bottom->secret->md.osfd, &rd);
-								rdp = &rd;
+                                add_to_rd = PR_TRUE;
                             }
                             if (in_flags_write & PR_POLL_WRITE)
                             {
                                 pds[index].out_flags |=
                                     _PR_POLL_WRITE_SYS_WRITE;
-								FD_SET(bottom->secret->md.osfd, &wr);
-								wrp = &wr;
+                                add_to_wr = PR_TRUE;
                             }
-                            if (pds[index].in_flags & PR_POLL_EXCEPT) {
-								FD_SET(bottom->secret->md.osfd, &ex);
-								exp = &ex;
-							}
-							if ((selectfd[index] > maxfd) &&
-									(pds[index].out_flags ||
-									(pds[index].in_flags & PR_POLL_EXCEPT)))
-								maxfd = selectfd[index];
+                            if (pds[index].in_flags & PR_POLL_EXCEPT)
+                            {
+                                add_to_ex = PR_TRUE;
+                            }
+                            if ((selectfd[index] > maxfd) &&
+                                    (add_to_rd || add_to_wr || add_to_ex))
+                            {
+                                maxfd = selectfd[index];
+                                /*
+                                 * If maxfd is too large to be used with
+                                 * select, fall back to calling poll.
+                                 */
+                                if (maxfd >= FD_SETSIZE)
+                                    break;
+                            }
+                            if (add_to_rd)
+                            {
+                                FD_SET(bottom->secret->md.osfd, &rd);
+                                rdp = &rd;
+                            }
+                            if (add_to_wr)
+                            {
+                                FD_SET(bottom->secret->md.osfd, &wr);
+                                wrp = &wr;
+                            }
+                            if (add_to_ex)
+                            {
+                                FD_SET(bottom->secret->md.osfd, &ex);
+                                exp = &ex;
+                            }
                         }
                     }
                     else
@@ -4098,7 +4117,7 @@ static PRInt32 _pr_poll_with_select(
         }
         if (0 == ready)
         {
-			if ((maxfd + 1) > FD_SETSIZE)
+			if (maxfd >= FD_SETSIZE)
 			{
 				/*
 				 * maxfd too large to be used with select, fall back to
