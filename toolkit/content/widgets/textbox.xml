@@ -132,7 +132,7 @@
             eval(this.callback);
           }
         ]]>
-      </handler>          
+      </handler>
     </handlers>
   </binding>
 

@@ -15,3 +15,4 @@ en-US.jar:
 +        locale/en-US/global/charset.dtd                    (locale/charset.dtd)
 +        locale/en-US/global/finddialog.dtd                 (locale/finddialog.dtd)
 +        locale/en-US/global/finddialog.properties          (locale/finddialog.properties)
++        locale/en-US/global/brand.dtd                      (locale/brand.dtd)
