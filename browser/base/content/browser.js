@@ -323,6 +323,17 @@ function Startup()
       if ((screen.availWidth / 2) >= 800)
         defaultWidth = (screen.availWidth / 2) - 20;
       defaultHeight = screen.availHeight - 10;
+#ifdef MOZ_WIDGET_GTK
+#define USE_HEIGHT_ADJUST
+#endif
+#ifdef MOZ_WIDGET_GTK2
+#define USE_HEIGHT_ADJUST
+#endif
+#ifdef USE_HEIGHT_ADJUST
+      // On X, we're not currently able to account for the size of the window
+      // border.  Use 28px as a guess (titlebar + bottom window border)
+      defaultHeight -= 28;
+#endif
     }
     document.documentElement.setAttribute("width", defaultWidth);
     document.documentElement.setAttribute("height", defaultHeight);
