@@ -51,8 +51,11 @@ public:
   virtual nsresult Do(nsITransaction *aTransaction);
   virtual nsresult Undo(void);
   virtual nsresult Redo(void);
+  virtual nsresult Clear(void);
   virtual nsresult GetNumberOfUndoItems(PRInt32 *aNumItems);
   virtual nsresult GetNumberOfRedoItems(PRInt32 *aNumItems);
+  virtual nsresult PeekUndoStack(nsITransaction **aTransaction);
+  virtual nsresult PeekRedoStack(nsITransaction **aTransaction);
   virtual nsresult Write(nsIOutputStream *aOutputStream);
   virtual nsresult AddListener(nsITransactionListener *aListener);
   virtual nsresult RemoveListener(nsITransactionListener *aListener);
