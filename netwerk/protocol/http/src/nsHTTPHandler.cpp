@@ -236,6 +236,7 @@ nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
         if (NS_FAILED(rv)) return rv;
         rv = url->SetSpec((char*)aSpec);
     }
+    if (NS_FAILED(rv)) return rv;
 
     nsIURI* realUrl = nsnull;
     
