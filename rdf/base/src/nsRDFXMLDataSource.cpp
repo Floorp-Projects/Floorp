@@ -1073,7 +1073,7 @@ RDFXMLDataSourceImpl::EndLoad(void)
         // Make sure to hold a strong reference to the observer so
         // that it doesn't go away in this call if it removes itself
         // as an observer
-        nsIRDFXMLSinkObserver* obs = mObservers[i];
+        nsCOMPtr<nsIRDFXMLSinkObserver> obs = mObservers[i];
 
         if (obs) {
             obs->OnEndLoad(this);
