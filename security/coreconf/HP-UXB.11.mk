@@ -62,8 +62,6 @@ ifndef NS_USE_GCC
 	    OS_CFLAGS	+= -Aa +e +DA2.0W +DS2.0 +DChpux
 	    endif
 	endif
-# Next line replaced by generic name handling in arch.mk
-#	COMPILER_TAG    = _64
     else
 	ifeq ($(OS_TEST), ia64)
 	    OS_CFLAGS	+= -Aa +e +p +DD32
