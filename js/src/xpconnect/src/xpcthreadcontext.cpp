@@ -37,52 +37,6 @@
 
 #include "xpcprivate.h"
 
-JS_STATIC_DLL_CALLBACK(void)
-xpc_StackDtorCB(void* ptr)
-{
-    nsDeque* myStack = (nsDeque*) ptr;
-    if(myStack)
-        delete myStack;
-}
-
-static nsDeque*
-GetMyStack()
-{
-#define BAD_TLS_INDEX ((PRUintn) -1)
-    nsDeque* myStack;
-    static PRUintn index = BAD_TLS_INDEX;
-    if(index == BAD_TLS_INDEX)
-    {
-        if(PR_FAILURE == PR_NewThreadPrivateIndex(&index, xpc_StackDtorCB))
-        {
-            NS_ASSERTION(0, "PR_NewThreadPrivateIndex failed!");
-            return nsnull;
-        }
-    }
-
-    myStack = (nsDeque*) PR_GetThreadPrivate(index);
-    if(!myStack)
-    {
-        if(nsnull != (myStack = new nsDeque(nsnull)))
-        {
-            if(PR_FAILURE == PR_SetThreadPrivate(index, myStack))
-            {
-                NS_ASSERTION(0, "PR_SetThreadPrivate failed!");
-                delete myStack;
-                myStack = nsnull;
-            }
-        }
-        else
-        {
-            NS_ASSERTION(0, "new nsDeque failed!");
-        }
-    }
-    return myStack;
-}
-
-
-/***************************************************************************/
-
 /*
 * This object holds state that we don't want to lose!
 *
@@ -91,7 +45,7 @@ GetMyStack()
 * is using it.
 */
 
-NS_IMPL_ISUPPORTS1(nsXPCThreadJSContextStackImpl, nsIJSContextStack)
+NS_IMPL_ISUPPORTS2(nsXPCThreadJSContextStackImpl, nsIThreadJSContextStack, nsIJSContextStack)
 
 static nsXPCThreadJSContextStackImpl* gXPCThreadJSContextStack = nsnull;
 
@@ -144,7 +98,7 @@ nsXPCThreadJSContextStackImpl::GetCount(PRInt32 *aCount)
     if(!aCount)
         return NS_ERROR_NULL_POINTER;
 
-    nsDeque* myStack = GetMyStack();
+    nsDeque* myStack = GetStackForCurrentThread();
 
     if(!myStack)
     {
@@ -163,7 +117,7 @@ nsXPCThreadJSContextStackImpl::Peek(JSContext * *_retval)
     if(!_retval)
         return NS_ERROR_NULL_POINTER;
 
-    nsDeque* myStack = GetMyStack();
+    nsDeque* myStack = GetStackForCurrentThread();
 
     if(!myStack)
     {
@@ -183,7 +137,7 @@ nsXPCThreadJSContextStackImpl::Peek(JSContext * *_retval)
 NS_IMETHODIMP
 nsXPCThreadJSContextStackImpl::Pop(JSContext * *_retval)
 {
-    nsDeque* myStack = GetMyStack();
+    nsDeque* myStack = GetStackForCurrentThread();
 
     if(!myStack)
     {
@@ -205,11 +159,160 @@ nsXPCThreadJSContextStackImpl::Pop(JSContext * *_retval)
 NS_IMETHODIMP
 nsXPCThreadJSContextStackImpl::Push(JSContext * cx)
 {
-    nsDeque* myStack = GetMyStack();
+    nsDeque* myStack = GetStackForCurrentThread();
 
     if(!myStack)
         return NS_ERROR_FAILURE;
 
     myStack->Push(cx);
     return NS_OK;
+}
+
+/* readonly attribute JSContext SafeJSContext; */
+NS_IMETHODIMP 
+nsXPCThreadJSContextStackImpl::GetSafeJSContext(JSContext * *aSafeJSContext)
+{
+    NS_ASSERTION(aSafeJSContext, "loser!");
+
+    xpcPerThreadData* data = xpcPerThreadData::GetData();
+    if(!data)
+    {
+        *aSafeJSContext = nsnull;
+        return NS_ERROR_FAILURE;
+    }
+
+    JSContext* ptr = *aSafeJSContext = data->GetSafeJSContext();
+    return ptr ? NS_OK : NS_ERROR_FAILURE;
+}
+
+/***************************************************************************/
+
+xpcPerThreadData::xpcPerThreadData()
+    :   mException(nsnull),
+        mJSContextStack(new nsDeque(nsnull)),
+        mSafeJSContext(nsnull)
+{
+    // empty...
+}
+
+xpcPerThreadData::~xpcPerThreadData()
+{
+    NS_IF_RELEASE(mException);
+    if(mJSContextStack)
+        delete mJSContextStack;
+    if(mSafeJSContext)
+        JS_DestroyContext(mSafeJSContext);
+}
+
+PRBool 
+xpcPerThreadData::IsValid() const 
+{
+    return mJSContextStack != nsnull;
+}
+
+nsIXPCException*
+xpcPerThreadData::GetException()
+{
+    NS_IF_ADDREF(mException);
+    return mException;
+}
+
+void
+xpcPerThreadData::SetException(nsIXPCException* aException)
+{
+    NS_IF_ADDREF(aException);
+    NS_IF_RELEASE(mException);
+    mException = aException;
+}
+
+nsDeque*
+xpcPerThreadData::GetJSContextStack()
+{
+    return mJSContextStack;
+}
+
+/**************************/
+
+static JSClass global_class = {
+    "global_for_xpcPerThreadData_SafeJSContext", 0,
+    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
+};
+
+JSContext*
+xpcPerThreadData::GetSafeJSContext()
+{
+    if(!mSafeJSContext)
+    {
+        JSRuntime *rt;
+        nsCOMPtr<nsIJSRuntimeService> rtsvc = 
+            do_GetService("nsJSRuntimeService");
+        if(rtsvc && NS_SUCCEEDED(rtsvc->GetRuntime(&rt)) && rt)
+        {
+            nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
+            if(xpc)
+            {
+                mSafeJSContext = JS_NewContext(rt, 8192);
+                if(mSafeJSContext)
+                {
+                    JSObject *glob;
+                    glob = JS_NewObject(mSafeJSContext, &global_class, NULL, NULL);
+                    if(!glob || 
+                       !JS_InitStandardClasses(mSafeJSContext, glob) ||
+                       NS_FAILED(xpc->InitClasses(mSafeJSContext, glob)))
+                    {
+                        JS_DestroyContext(mSafeJSContext);
+                        mSafeJSContext = nsnull;
+                    }
+                }
+            }
+        }
+    }
+    return mSafeJSContext;
+}        
+
+JS_STATIC_DLL_CALLBACK(void)
+xpc_ThreadDataDtorCB(void* ptr)
+{
+    xpcPerThreadData* data = (xpcPerThreadData*) ptr;
+    if(data)
+        delete data;
+}
+
+// static 
+xpcPerThreadData*
+xpcPerThreadData::GetData()
+{
+    static const PRUintn BAD_TLS_INDEX = (PRUintn) -1;
+    static PRUintn index = BAD_TLS_INDEX;
+    xpcPerThreadData* data;
+    if(index == BAD_TLS_INDEX)
+    {
+        if(PR_FAILURE == PR_NewThreadPrivateIndex(&index, xpc_ThreadDataDtorCB))
+        {
+            NS_ASSERTION(0, "PR_NewThreadPrivateIndex failed!");
+            index = BAD_TLS_INDEX;
+            return nsnull;
+        }
+    }
+
+    data = (xpcPerThreadData*) PR_GetThreadPrivate(index);
+    if(!data)
+    {
+        data = new xpcPerThreadData();
+        if(!data || !data->IsValid())
+        {
+            NS_ASSERTION(0, "new xpcPerThreadData() failed!");
+            if(data) 
+                delete data;
+            return nsnull;
+        }
+        if(PR_FAILURE == PR_SetThreadPrivate(index, data))
+        {
+            NS_ASSERTION(0, "PR_SetThreadPrivate failed!");
+            delete data;
+            return nsnull;
+        }
+    }
+    return data;
 }

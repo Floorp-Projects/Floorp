@@ -40,8 +40,16 @@
 [uuid(c67d8270-3189-11d3-9885-006008962422)]
 interface nsIJSContextStack : nsISupports
 {
-    readonly attribute PRInt32  Count;
-    JSContext                   Peek();
-    JSContext                   Pop();
-    void                        Push(in JSContext cx);
+    readonly attribute PRInt32  count;
+    JSContext                   peek();
+    JSContext                   pop();
+    void                        push(in JSContext cx);
+};
+
+[uuid(a1339ae0-05c1-11d4-8f92-0010a4e73d9a)]
+interface nsIThreadJSContextStack : nsIJSContextStack
+{
+    /* inherits methods of nsIJSContextStack */
+    
+    readonly attribute JSContext safeJSContext;
 };
