@@ -205,6 +205,9 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 {
     nsresult rv;
 
+    NS_ASSERTION(!Scope->GetRuntime()->GetThreadRunningGC(), 
+                 "XPCWrappedNative::GetNewOrUsed called during GC");
+
     nsCOMPtr<nsISupports> identity(do_QueryInterface(Object));
     if(!identity)
     {
@@ -745,17 +748,18 @@ NS_INTERFACE_MAP_BEGIN(XPCWrappedNative)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPConnectWrappedNative)
 NS_INTERFACE_MAP_END_THREADSAFE
 
+NS_IMPL_THREADSAFE_ADDREF(XPCWrappedNative)
+NS_IMPL_THREADSAFE_RELEASE(XPCWrappedNative)
 
 /*
  *  Wrapped Native lifetime management is messy!
  *
  *  - At creation we push the refcount to 2 (only one of which is owned by
  *    the native caller that caused the wrapper creation).
- *  - Whenever the refcount goes from 1 -> 2 we root mFlatJSObject.
- *  - Whenever the refcount goes from 2 -> 1 we unroot mFlatJSObject
- *    (in this state *no* native callers own a reference to the wrapper).
+ *  - During the JS GC Mark phase we mark any wrapper with a refcount > 1.
  *  - The *only* thing that can make the wrapper get destroyed is the
- *    finalization of mFlatJSObject.
+ *    finalization of mFlatJSObject. And *that* should only happen if the only
+ *    reference is the single extra (internal) reference we hold.
  *
  *  - The wrapper has a pointer to the nsISupports 'view' of the wrapped native
  *    object i.e... mIdentity. This is held until the wrapper's refcount goes
@@ -798,42 +802,6 @@ NS_INTERFACE_MAP_END_THREADSAFE
  *    mJSObjects at this point because we have no guarentee of the *order* of
  *    finalization within a given gc cycle.
  */
-
-nsrefcnt
-XPCWrappedNative::AddRef(void)
-{
-    nsrefcnt cnt = (nsrefcnt) PR_AtomicIncrement((PRInt32*)&mRefCnt);
-    NS_LOG_ADDREF(this, cnt, "XPCWrappedNative", sizeof(*this));
-    if(2 == cnt && IsValid())
-    {
-        XPCJSRuntime* rt = GetRuntime();
-        if(rt)
-            JS_AddNamedRootRT(rt->GetJSRuntime(), &mFlatJSObject,
-                              "XPCWrappedNative::mFlatJSObject");
-    }
-    return cnt;
-}
-
-nsrefcnt
-XPCWrappedNative::Release(void)
-{
-    NS_PRECONDITION(0 != mRefCnt, "dup release");
-    nsrefcnt cnt = (nsrefcnt) PR_AtomicDecrement((PRInt32*)&mRefCnt);
-    NS_LOG_RELEASE(this, cnt, "XPCWrappedNative");
-    if(0 == cnt)
-    {
-        NS_ASSERTION(!mFlatJSObject,"Caller is releasing internally owned reference!");
-        NS_DELETEXPCOM(this);
-        return 0;
-    }
-    if(1 == cnt && IsValid())
-    {
-        XPCJSRuntime* rt = GetRuntime();
-        if(rt)
-            JS_RemoveRootRT(rt->GetJSRuntime(), &mFlatJSObject);
-    }
-    return cnt;
-}
 
 void
 XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx, JSObject *obj)
