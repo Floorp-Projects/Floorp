@@ -141,5 +141,5 @@
 
 <!ENTITY helpMenu.accesskey            "H">
 
-<!ENTITY walletPasswordManager.label     "Password Manager">
+<!ENTITY walletPasswordManager.label     "パスワードマネージャ">
 <!ENTITY walletPasswordManager.accesskey "p">
