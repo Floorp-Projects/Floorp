@@ -22,7 +22,7 @@
 #include "nsByteArrayInputStream.h"
 #include "nsIAllocator.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsByteArrayInputStream, nsIInputStream, nsIBaseStream)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsByteArrayInputStream, nsIInputStream, nsIBaseStream, nsIByteArrayInputStream)
 
 nsByteArrayInputStream::nsByteArrayInputStream (char *buffer, PRUint32 bytes)
     : _buffer (buffer), _nbytes (bytes), _pos (0)
