@@ -213,6 +213,7 @@ sub GetBugText {
     $::bug{'voterlist'} = join(',', @voterlist);
 
     if (Param("prettyasciimail")) {
+        $^A = "";
         my $temp = formline <<'END',$::bug{'short_desc'},$id,$::bug{'product'},$::bug{'bug_status'},$::bug{'version'},$::bug{'resolution'},$::bug{'rep_platform'},$::bug{'bug_severity'},$::bug{'op_sys'},$::bug{'priority'},$::bug{'component'},$::bug{'assigned_to'},$::bug{'reporter'},$qa_contact,DescCC(\@cclist),$target_milestone,${status_whiteboard},$::bug{'bug_file_loc'},DescDependencies($id);
 +============================================================================+
 | @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< |
