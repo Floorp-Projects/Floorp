@@ -2,4 +2,5 @@
 
 <!-- LOCALIZATION NOTE : FILE UI for the outer parts of the Prefs dialog -->
 <!ENTITY  prefWindow.title            "Preferences">
-<!ENTITY  categoryHeader.label        "Category">
+<!ENTITY  categoryHeader              "Category">
+
