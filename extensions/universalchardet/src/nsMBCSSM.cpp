@@ -315,53 +315,63 @@ SMModel GB2312SMModel = {
 };
 */
 
+// the following state machine data was created by perl script in 
+// intl/chardet/tools. It should be the same as in PSM detector.
 static PRUint32 GB18030_cls [ 256 / 8 ] = {
-//PCK4BITS(0,1,1,1,1,1,1,1),  // 00 - 07 
 PCK4BITS(1,1,1,1,1,1,1,1),  // 00 - 07 
 PCK4BITS(1,1,1,1,1,1,0,0),  // 08 - 0f 
 PCK4BITS(1,1,1,1,1,1,1,1),  // 10 - 17 
 PCK4BITS(1,1,1,0,1,1,1,1),  // 18 - 1f 
 PCK4BITS(1,1,1,1,1,1,1,1),  // 20 - 27 
 PCK4BITS(1,1,1,1,1,1,1,1),  // 28 - 2f 
-PCK4BITS(1,1,1,1,1,1,1,1),  // 30 - 37 
-PCK4BITS(1,1,1,1,1,1,1,1),  // 38 - 3f 
-PCK4BITS(3,3,3,3,3,3,3,3),  // 40 - 47 
-PCK4BITS(3,3,3,3,3,3,3,3),  // 48 - 4f 
-PCK4BITS(3,3,3,3,3,3,3,3),  // 50 - 57 
-PCK4BITS(3,3,3,3,3,3,3,3),  // 58 - 5f 
-PCK4BITS(3,3,3,3,3,3,3,3),  // 60 - 67 
-PCK4BITS(3,3,3,3,3,3,3,3),  // 68 - 6f 
-PCK4BITS(3,3,3,3,3,3,3,3),  // 70 - 77 
-PCK4BITS(3,3,3,3,3,3,3,1),  // 78 - 7f 
-PCK4BITS(3,2,2,2,2,2,2,2),  // 80 - 87 
-PCK4BITS(2,2,2,2,2,2,2,2),  // 88 - 8f 
-PCK4BITS(2,2,2,2,2,2,2,2),  // 90 - 97 
-PCK4BITS(2,2,2,2,2,2,2,2),  // 98 - 9f 
-PCK4BITS(2,2,2,2,2,2,2,2),  // a0 - a7 
-PCK4BITS(2,2,2,2,2,2,2,2),  // a8 - af 
-PCK4BITS(2,2,2,2,2,2,2,2),  // b0 - b7 
-PCK4BITS(2,2,2,2,2,2,2,2),  // b8 - bf 
-PCK4BITS(2,2,2,2,2,2,2,2),  // c0 - c7 
-PCK4BITS(2,2,2,2,2,2,2,2),  // c8 - cf 
-PCK4BITS(2,2,2,2,2,2,2,2),  // d0 - d7 
-PCK4BITS(2,2,2,2,2,2,2,2),  // d8 - df 
-PCK4BITS(2,2,2,2,2,2,2,2),  // e0 - e7 
-PCK4BITS(2,2,2,2,2,2,2,2),  // e8 - ef 
-PCK4BITS(2,2,2,2,2,2,2,2),  // f0 - f7 
-PCK4BITS(2,2,2,2,2,2,2,0)   // f8 - ff 
+PCK4BITS(3,3,3,3,3,3,3,3),  // 30 - 37 
+PCK4BITS(3,3,1,1,1,1,1,1),  // 38 - 3f 
+PCK4BITS(2,2,2,2,2,2,2,2),  // 40 - 47 
+PCK4BITS(2,2,2,2,2,2,2,2),  // 48 - 4f 
+PCK4BITS(2,2,2,2,2,2,2,2),  // 50 - 57 
+PCK4BITS(2,2,2,2,2,2,2,2),  // 58 - 5f 
+PCK4BITS(2,2,2,2,2,2,2,2),  // 60 - 67 
+PCK4BITS(2,2,2,2,2,2,2,2),  // 68 - 6f 
+PCK4BITS(2,2,2,2,2,2,2,2),  // 70 - 77 
+PCK4BITS(2,2,2,2,2,2,2,4),  // 78 - 7f 
+PCK4BITS(5,6,6,6,6,6,6,6),  // 80 - 87 
+PCK4BITS(6,6,6,6,6,6,6,6),  // 88 - 8f 
+PCK4BITS(6,6,6,6,6,6,6,6),  // 90 - 97 
+PCK4BITS(6,6,6,6,6,6,6,6),  // 98 - 9f 
+PCK4BITS(6,6,6,6,6,6,6,6),  // a0 - a7 
+PCK4BITS(6,6,6,6,6,6,6,6),  // a8 - af 
+PCK4BITS(6,6,6,6,6,6,6,6),  // b0 - b7 
+PCK4BITS(6,6,6,6,6,6,6,6),  // b8 - bf 
+PCK4BITS(6,6,6,6,6,6,6,6),  // c0 - c7 
+PCK4BITS(6,6,6,6,6,6,6,6),  // c8 - cf 
+PCK4BITS(6,6,6,6,6,6,6,6),  // d0 - d7 
+PCK4BITS(6,6,6,6,6,6,6,6),  // d8 - df 
+PCK4BITS(6,6,6,6,6,6,6,6),  // e0 - e7 
+PCK4BITS(6,6,6,6,6,6,6,6),  // e8 - ef 
+PCK4BITS(6,6,6,6,6,6,6,6),  // f0 - f7 
+PCK4BITS(6,6,6,6,6,6,6,0)   // f8 - ff 
 };
 
 
-static PRUint32 GB18030_st [ 2] = {
-PCK4BITS(eError,eStart,     3,eStart,eError,eError,eError,eError),//00-07 
-PCK4BITS(eItsMe,eItsMe,eItsMe,eItsMe,eError,eError,eStart,eStart) //08-0f 
+static PRUint32 GB18030_st [ 6] = {
+PCK4BITS(eError,eStart,eStart,eStart,eStart,eStart,     3,eError),//00-07 
+PCK4BITS(eError,eError,eError,eError,eError,eError,eItsMe,eItsMe),//08-0f 
+PCK4BITS(eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eError,eError,eStart),//10-17 
+PCK4BITS(     4,eError,eStart,eStart,eError,eError,eError,eError),//18-1f 
+PCK4BITS(eError,eError,     5,eError,eError,eError,eItsMe,eError),//20-27 
+PCK4BITS(eError,eError,eStart,eStart,eStart,eStart,eStart,eStart) //28-2f 
 };
 
-static PRUint32 GB18030CharLenTable[] = {0, 1, 2, 0};
+// To be accurate, the length of class 6 can be either 2 or 4. 
+// But it is not necessary to discriminate between the two since 
+// it is used for frequency analysis only, and we are validing 
+// each code range there as well. So it is safe to set it to be 
+// 2 here. 
+static PRUint32 GB18030CharLenTable[] = {0, 1, 1, 1, 1, 1, 2};
 
 SMModel GB18030SMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, GB18030_cls },
-   4,
+   7,
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, GB18030_st },
   GB18030CharLenTable,
   "GB18030",
