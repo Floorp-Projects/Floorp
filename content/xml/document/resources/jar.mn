@@ -5,4 +5,4 @@ comm.jar:
     content/communicator/xml/XMLPrettyPrint.xsl                 (XMLPrettyPrint.xsl)
 
 en-US.jar:
-    locale/en-US/communicator/xml/prettyprint.dtd               (locale/en-US/pretty-print.dtd)
+    locale/en-US/communicator/xml/prettyprint.dtd               (locale/en-US/prettyprint.dtd)
