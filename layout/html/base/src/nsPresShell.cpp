@@ -106,6 +106,7 @@
 #include "nsIObserverService.h" // for reflow observation
 #include "nsIDocShell.h"        // for reflow observation
 #include "nsIDOMRange.h"
+#include "nsLayoutErrors.h"
 #ifdef MOZ_PERF_METRICS
 #include "nsITimeRecorder.h"
 #endif
@@ -3353,7 +3354,7 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
                                 0, //irrelavent since we set outsidelimit 
                                 outsideLimit
                                 );
-    if (NS_COMFALSE == result) //NS_COMFALSE should ALSO break
+    if (NS_POSITION_BEFORE_TABLE == result) //NS_POSITION_BEFORE_TABLE should ALSO break
       break;
     if (NS_OK != result || !pos.mResultFrame ) 
       return result?result:NS_ERROR_FAILURE;

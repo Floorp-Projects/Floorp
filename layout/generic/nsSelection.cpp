@@ -4528,9 +4528,6 @@ nsSelection::GetHint(HINT *aHintRight)
 
 
 
-/** DeleteFromDocument
- *  will return NS_OK if it handles the event or NS_COMFALSE if not.
- */
 NS_IMETHODIMP
 nsSelection::DeleteFromDocument()
 {
@@ -5017,7 +5014,7 @@ nsTypedSelection::RemoveItem(nsIDOMRange *aItem)
       return NS_OK;
     }
   }
-  return NS_COMFALSE;
+  return NS_OK;
 }
 
 

@@ -231,7 +231,7 @@ public:
 
   NS_METHOD GetID(nsIAtom*& aResult) const;
   NS_METHOD GetClasses(nsVoidArray& aArray) const;
-  NS_METHOD HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
+  NS_METHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
 
   NS_METHOD Clone(nsHTMLAttributes** aInstancePtrResult) const;
 

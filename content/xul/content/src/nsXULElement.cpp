@@ -3784,7 +3784,7 @@ nsXULElement::GetClasses(nsVoidArray& aArray) const
     return NS_ERROR_NULL_POINTER; // XXXwaterson kooky error code to return, but...
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(PRBool)
 nsXULElement::HasClass(nsIAtom* aClass, PRBool /*aCaseSensitive*/) const
 {
     // XXXwaterson if we decide to lazily fault the class list in
@@ -3793,9 +3793,9 @@ nsXULElement::HasClass(nsIAtom* aClass, PRBool /*aCaseSensitive*/) const
         return Attributes()->HasClass(aClass);
 
     if (mPrototype)
-        return nsClassList::HasClass(mPrototype->mClassList, aClass) ? NS_OK : NS_COMFALSE;
+        return nsClassList::HasClass(mPrototype->mClassList, aClass);
 
-    return NS_COMFALSE;
+    return PR_FALSE;
 }
 
 NS_IMETHODIMP

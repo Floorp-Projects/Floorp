@@ -45,11 +45,6 @@ class nsIDOMElement;
 #define NS_ITABLELAYOUT_IID \
  { 0xa9222e6b, 0x437e, 0x11d3, { 0xb2, 0x27, 0x0, 0x40, 0x95, 0xe2, 0x7a, 0x10 }}
 
-
-#define NS_TABLELAYOUT_CELL_NOT_FOUND \
-  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT, 3)
-
-
 /**
  * nsITableLayout
  * interface for layout objects that act like tables.

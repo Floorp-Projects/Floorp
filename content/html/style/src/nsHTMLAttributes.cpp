@@ -1433,7 +1433,7 @@ nsHTMLAttributes::GetClasses(nsVoidArray& aArray) const
   return NS_OK;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(PRBool)
 nsHTMLAttributes::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
 {
   NS_PRECONDITION(aClass, "unexpected null pointer");
@@ -1442,7 +1442,7 @@ nsHTMLAttributes::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
     if (aCaseSensitive) {
       do {
         if (classList->mAtom == aClass)
-          return NS_OK;
+          return PR_TRUE;
         classList = classList->mNext;
       } while (classList);
     } else {
@@ -1457,12 +1457,12 @@ nsHTMLAttributes::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
         classList->mAtom->GetUnicode(&class2Buf);
         nsDependentString class2(class2Buf);
         if (class1.Equals(class2, nsCaseInsensitiveStringComparator()))
-          return NS_OK;
+          return PR_TRUE;
         classList = classList->mNext;
       } while (classList);
     }
   }
-  return NS_COMFALSE;
+  return PR_FALSE;
 }
 
 #ifdef UNIQUE_ATTR_SUPPORT

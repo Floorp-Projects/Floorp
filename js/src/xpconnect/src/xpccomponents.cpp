@@ -173,7 +173,7 @@ nsXPCComponents_Interfaces::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
             
             while(1)
             {
-                if(NS_COMFALSE == e->IsDone() &&
+                if(NS_ENUMERATOR_FALSE == e->IsDone() &&
                    NS_SUCCEEDED(e->CurrentItem(getter_AddRefs(isup))) && isup)
                 {
                     e->Next();

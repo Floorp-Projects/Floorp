@@ -75,6 +75,7 @@
 #include "prenv.h"
 #include "plstr.h"
 #include "nsGUIEvent.h"
+#include "nsLayoutErrors.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -6051,7 +6052,7 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
 
     if (resultFrame)
     {
-      if (NS_COMFALSE == result)
+      if (NS_POSITION_BEFORE_TABLE == result)
       {
         nsCOMPtr<nsISelectionController> selCon;
         result = GetSelectionController(aPresContext, getter_AddRefs(selCon));

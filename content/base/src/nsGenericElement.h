@@ -415,7 +415,7 @@ public:
   // nsIStyledContent interface methods
   NS_IMETHOD GetID(nsIAtom*& aResult) const;
   NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
-  NS_IMETHOD HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
+  NS_IMETHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD GetInlineStyleRule(nsIStyleRule** aStyleRule);
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,

@@ -737,10 +737,10 @@ nsXULAttributes::GetClasses(nsVoidArray& aArray) const
     return nsClassList::GetClasses(mClassList, aArray);
 }
 
-nsresult 
+PRBool 
 nsXULAttributes::HasClass(nsIAtom* aClass) const
 {
-    return nsClassList::HasClass(mClassList, aClass) ? NS_OK : NS_COMFALSE;
+    return nsClassList::HasClass(mClassList, aClass);
 }
 
 nsresult nsXULAttributes::SetClassList(nsClassList* aClassList)

@@ -593,7 +593,7 @@ PLDHashTableEnumeratorImpl::IsDone()
     if (!mCount || (mCurrent == mCount))
         return NS_OK;
 
-    return NS_COMFALSE;
+    return NS_ENUMERATOR_FALSE;
 }
 
 NS_IMETHODIMP 

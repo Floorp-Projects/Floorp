@@ -62,6 +62,7 @@
 #include "nsCSSRendering.h"
 #include "nsTransform2D.h"
 #include "nsRegion.h"
+#include "nsLayoutErrors.h"
 
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 

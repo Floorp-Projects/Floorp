@@ -42,6 +42,7 @@
 #include "nsISupports.h"
 #include "nsEvent.h"
 #include "nsAString.h"
+#include "nsContentErrors.h"
 
 // Forward declarations
 class nsIAtom;
@@ -545,17 +546,5 @@ public:
   NS_IMETHOD DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,PRBool aDumpAll=PR_TRUE) const = 0;
 #endif
 };
-
-// nsresult codes for GetAttr
-/** Returned if the attr exists and has a value */
-#define NS_CONTENT_ATTR_HAS_VALUE NS_OK
-
-/** Returned if the attr exists but has no value */
-#define NS_CONTENT_ATTR_NO_VALUE \
-  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT,0)
-
-/** Returned if the attr does not exist */
-#define NS_CONTENT_ATTR_NOT_THERE \
-  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT,1)
 
 #endif /* nsIContent_h___ */

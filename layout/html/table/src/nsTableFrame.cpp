@@ -75,6 +75,7 @@
 #include "nsHTMLReflowCommand.h"
 #include "nsIFrameManager.h"
 #include "nsCSSRendering.h"
+#include "nsLayoutErrors.h"
 
 
 
