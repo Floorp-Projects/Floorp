@@ -88,7 +88,7 @@ private:
     void MakeDirty();
     nsresult ResolveAndStat(PRBool resolveTerminal);
     nsresult ResolvePath(const char* workingPath, PRBool resolveTerminal, char** resolvedPath);
-
+    
     nsresult CopyMove(nsIFile *newParentDir, const char *newName, PRBool followSymlinks, PRBool move);
     nsresult CopySingleFile(nsIFile *source, nsIFile* dest, const char * newName, PRBool followSymlinks, PRBool move);
 
