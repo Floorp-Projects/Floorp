@@ -205,10 +205,15 @@ NS_IMETHODIMP nsAutoConfig::Observe(nsISupports *aSubject,
         rv = DownloadAutoCfg();
 
         // We are done with AutoConfig, removing it from the observer list
-        nsCOMPtr<nsIObserverService> observerService =
-            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-        if (observerService) 
-            rv = observerService->RemoveObserver(this,NS_LITERAL_STRING("profile-after-change").get());
+
+        // Commenting out the RemoveObserver code, it is causing 
+        // nsIObserverService to skip the next element.  bug 94349
+
+        /* nsCOMPtr<nsIObserverService> observerService =
+           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+           if (observerService) 
+           rv = observerService->RemoveObserver(this,NS_LITERAL_STRING("profile-after-change").get());
+        */
     }  
    
     return rv;
