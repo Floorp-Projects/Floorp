@@ -17,6 +17,7 @@
  */
 
 #include "nsIMsgIncomingServer.h"
+#include "nsIPref.h"
 
 /*
  * base class for nsIMsgIncomingServer - derive your class from here
@@ -48,6 +49,10 @@ class nsMsgIncomingServer : public nsIMsgIncomingServer {
   NS_IMETHOD GetUserName(char * *aUserName);
   NS_IMETHOD SetUserName(char * aUserName);
 
+  /* attribute boolean rememberPassword; */
+  NS_IMETHOD GetRememberPassword(PRBool *aRememberPassword);
+  NS_IMETHOD SetRememberPassword(PRBool aRememberPassword);
+  
   NS_IMETHOD GetPassword(char * *aPassword);
   NS_IMETHOD SetPassword(char * aPassword);
   
@@ -58,6 +63,10 @@ class nsMsgIncomingServer : public nsIMsgIncomingServer {
   /* attribute long biffMinutes; */
   NS_IMETHOD GetBiffMinutes(PRInt32 *aBiffMinutes);
   NS_IMETHOD SetBiffMinutes(PRInt32 aBiffMinutes);
+
+  /* attribute boolean downloadOnBiff; */
+  NS_IMETHOD GetDownloadOnBiff(PRBool *aDownloadOnBiff);
+  NS_IMETHOD SetDownloadOnBiff(PRBool aDownloadOnBiff);
 
 private:
   nsIPref *m_prefs;

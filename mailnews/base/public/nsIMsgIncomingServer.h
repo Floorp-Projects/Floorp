@@ -6,7 +6,6 @@
 #define __gen_nsIMsgIncomingServer_h__
 
 #include "nsISupports.h" /* interface nsISupports */
-#include "nsIPref.h" /* interface nsIPref */
 #include "nsID.h" /* interface nsID */
 
 #ifdef XPIDL_JS_STUBS
@@ -41,9 +40,17 @@ class nsIMsgIncomingServer : public nsISupports {
   NS_IMETHOD GetUserName(char * *aUserName) = 0;
   NS_IMETHOD SetUserName(char * aUserName) = 0;
 
+  /* attribute boolean rememberPassword; */
+  NS_IMETHOD GetRememberPassword(PRBool *aRememberPassword) = 0;
+  NS_IMETHOD SetRememberPassword(PRBool aRememberPassword) = 0;
+
   /* attribute string password; */
   NS_IMETHOD GetPassword(char * *aPassword) = 0;
   NS_IMETHOD SetPassword(char * aPassword) = 0;
+
+  /* attribute boolean downloadOnBiff; */
+  NS_IMETHOD GetDownloadOnBiff(PRBool *aDownloadOnBiff) = 0;
+  NS_IMETHOD SetDownloadOnBiff(PRBool aDownloadOnBiff) = 0;
 
   /* attribute boolean doBiff; */
   NS_IMETHOD GetDoBiff(PRBool *aDoBiff) = 0;

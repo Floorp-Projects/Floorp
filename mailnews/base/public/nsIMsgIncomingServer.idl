@@ -17,7 +17,6 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIPref.idl"
 
 /* Interface for incoming mail/news host */
 
@@ -29,8 +28,11 @@ interface nsIMsgIncomingServer : nsISupports {
   attribute string prettyName;
   attribute string hostName;
   attribute string userName;
+  attribute boolean rememberPassword;
   attribute string password;
+
+  attribute boolean downloadOnBiff;
   attribute boolean doBiff;
   attribute long biffMinutes;
-  
+
 };
