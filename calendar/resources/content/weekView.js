@@ -358,12 +358,12 @@ WeekView.prototype.createEventBox = function ( calItem )
 
     var boxLeft = document.getElementById("week-tree-day-"+index+"-item-"+startHour).boxObject.x - 
                   document.getElementById( "week-view-content-box" ).boxObject.x +
-                  ( /*calendarEventDisplay.startDrawSlot*/1 * eventSlotWidth ) 
-                  - 2;
+                  ( /*calendarEventDisplay.startDrawSlot*/1 * eventSlotWidth );
     eventBox.setAttribute("left", boxLeft);
    
     // set the event box to be of class week-view-event-class and the appropriate calendar-color class
     //this.setEventboxClass(eventBox, calItem, "week-view");
+    eventBox.setAttribute("class", "week-view-event-class");
   
     eventBox.setAttribute("eventbox", "weekview");
     eventBox.setAttribute("dayindex", index + 1);
