@@ -860,7 +860,6 @@ PRBool nsWindow::HandleEvent( PtCallbackInfo_t* aCbInfo )
   PRBool     result = PR_FALSE; // call the default nsWindow proc
   PhEvent_t* event = aCbInfo->event;
 
-#if 1
     switch ( event->type )
     {
 	default:
@@ -869,134 +868,6 @@ PRBool nsWindow::HandleEvent( PtCallbackInfo_t* aCbInfo )
 	}
 	
 	return result;
-#else
-    switch ( event->type )
-    {
-      case Ph_EV_KEY:
-       {
-	    PhKeyEvent_t* keyev = (PhKeyEvent_t*) PhGetData( event );
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::HandleEvent keyev=<%p>\n", keyev));
-		result = DispatchKeyEvent(keyev);
-       }
-        break;
-
-      case Ph_EV_PTR_MOTION_BUTTON:
-      case Ph_EV_PTR_MOTION_NOBUTTON:
-       {
-	    PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( event );
-	    nsMouseEvent   theMouseEvent;
-
-        if( ptrev )
-        {
-          ScreenToWidget( ptrev->pos );
- 	      InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_MOVE );
-          //result = DispatchMouseEvent( ptrev->pos, NS_MOUSE_MOVE );
-          result = DispatchMouseEvent(theMouseEvent);
-        }
-       }
-	    break;
-
-      case Ph_EV_BUT_PRESS:
-       {
-	    PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( event );
-        nsMouseEvent   theMouseEvent;
-		
-        if( ptrev )
-        {
-          printf( "nsWindow::HandleEvent Window mouse click: (%ld,%ld)\n", ptrev->pos.x, ptrev->pos.y );
-
-          ScreenToWidget( ptrev->pos );
-          if( ptrev->buttons & Ph_BUTTON_SELECT ) // Normally the left mouse button
-          {
-            if( ptrev->click_count == 2 )
-            {
-		      InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_LEFT_DOUBLECLICK );
-            }
-            else
-			{
-			  InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_LEFT_BUTTON_DOWN );
-            }
-          }
-          else if( ptrev->buttons & Ph_BUTTON_MENU ) // the right button
-          {
-            if( ptrev->click_count == 2 )
-		      InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_RIGHT_DOUBLECLICK );
-            else
-		      InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_RIGHT_BUTTON_DOWN );
-          }
-          else // middle button
-          {
-            if( ptrev->click_count == 2 )
-              InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_MIDDLE_DOUBLECLICK );
-            else
-              InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_MIDDLE_BUTTON_DOWN );
-          }
-
-		  result = DispatchMouseEvent(theMouseEvent);
-        }
-       }
-	    break;
-
-      case Ph_EV_BUT_RELEASE:
-       {
-	    PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( event );
-        nsMouseEvent      theMouseEvent;
-
-        if (event->subtype==Ph_EV_RELEASE_REAL)
-		{
-          if (ptrev)
-          {
-            ScreenToWidget( ptrev->pos );
-            if ( ptrev->buttons & Ph_BUTTON_SELECT ) // Normally the left mouse button
-              InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_LEFT_BUTTON_UP );
-            else if( ptrev->buttons & Ph_BUTTON_MENU ) // the right button
-              InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_RIGHT_BUTTON_UP );
-            else // middle button
-              InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_MIDDLE_BUTTON_UP );
-
-            result = DispatchMouseEvent(theMouseEvent);
-
-          }
-        }
-       }
-	    break;
-      case Ph_EV_BOUNDARY:
-        switch( event->subtype )
-        {
-          case Ph_EV_PTR_ENTER:
-            result = DispatchStandardEvent( NS_MOUSE_ENTER );
-            break;
-          case Ph_EV_PTR_LEAVE:
-            result = DispatchStandardEvent( NS_MOUSE_EXIT );
-            break;
-        }
-        break;
-
-      case Ph_EV_WM:
-       {
-	    PhWindowEvent_t* wmev = (PhWindowEvent_t*) PhGetData( event );
-   	    printf("nsWindow::HandleEvent Ph_EV_WM  this=<%p> subtype=<%d> vent_f=<%d>\n",
-		  this, event->subtype, wmev->event_f);
-        switch( wmev->event_f )
-        {
-          case Ph_WM_FOCUS:
-            if ( wmev->event_state == Ph_WM_EVSTATE_FOCUS )
-              result = DispatchStandardEvent(NS_GOTFOCUS);
-            else
-              result = DispatchStandardEvent(NS_LOSTFOCUS);
-            break;
-        }
-       }
-	    break;
-
-      case Ph_EV_EXPOSE:
-   	    printf("nsWindow::HandleEvent Ph_EV_EXPOSE this=<%p> subtype=<%d>\n", this, event->subtype );
-        result = PR_TRUE;
-      	break;
-    }
-
-  return result;
-#endif
 }
 
 
@@ -1058,8 +929,8 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc area+offset=<%d,%d,%d,%d>
 #if 0
     rect = damage->rect;
 #else
- 
-    PhTile_t *top = damage->next;
+//    PhTile_t *top = damage->next;
+    PhTile_t *top = damage;
     rect = top->rect;	
     top=top->next;
     while (top)
@@ -1100,6 +971,7 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc clipped damage <%d,%d,%d,
     nsDmg.height = rect.lr.y - rect.ul.y + 1;
 
 PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc nsDmg <%d,%d,%d,%d>\n", nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height));
+printf("nsWindow::RawDrawFunc nsDmg <%d,%d,%d,%d>\n", nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height);
 
     if(( nsDmg.width <= 0 ) || ( nsDmg.height <= 0 ))
       return;
@@ -1109,19 +981,15 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc nsDmg <%d,%d,%d,%d>\n", n
 
     pev.rect = &nsDmg;
     pev.eventStructType = NS_PAINT_EVENT;
+
 #if 1
 	pev.point.x = nsDmg.x;
 	pev.point.y = nsDmg.y;
 
     PRInt32 x,y,w,h;
 	pWin->mUpdateArea->GetBoundingBox(&x,&y,&w,&h);
-PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc MUpdateArea BoundingBox <%d,%d,%d,%d>\n", x,y,w,h));
 
     pev.rect = new nsRect(nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height);
-//  pev.rect = new nsRect(x,y,w,h);
-
-//#endif
-//#if 0
 
   // call the event callback
   if (pWin->mEventCallback) 

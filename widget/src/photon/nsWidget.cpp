@@ -1388,7 +1388,7 @@ void nsWidget::InitMouseEvent(PhPointerEvent_t *aPhButtonEvent,
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::InitMouseEvent \n"));
 
- printf("nsWidget::InitMouseEvent click_count=%d\n", aPhButtonEvent->click_count);
+//printf("nsWidget::InitMouseEvent click_count=%d\n", aPhButtonEvent->click_count);
 
   anEvent.message = aEventType;
   anEvent.widget  = aWidget;
@@ -1414,7 +1414,7 @@ void nsWidget::InitMouseEvent(PhPointerEvent_t *aPhButtonEvent,
 //-------------------------------------------------------------------------
 PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
 {
-  printf("nsWidget::DispatchMouseEvent \n");
+//printf("nsWidget::DispatchMouseEvent \n");
 
   PRBool result = PR_FALSE;
   if (nsnull == mEventCallback && nsnull == mMouseListener) {
@@ -1647,7 +1647,7 @@ PRUint32 nsWidget::nsConvertKey(unsigned long keysym, PRBool *aIsChar )
   for (int i = 0; i < length; i++) {
     if (nsKeycodes[i].keysym == keysym)
     {
-      printf("nsWidget::nsConvertKey - Converted <%x> to <%x>\n", keysym, nsKeycodes[i].vkCode);
+      //printf("nsWidget::nsConvertKey - Converted <%x> to <%x>\n", keysym, nsKeycodes[i].vkCode);
       if (aIsChar)
         *aIsChar = (nsKeycodes[i].isChar);
       return (nsKeycodes[i].vkCode);
@@ -1678,8 +1678,8 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
 	
 	keysym = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
 
-    printf("nsWidget::InitKeyEvent EventType=<%d> key_cap=<%lu> converted=<%lu> IsChar=<%d>\n",
-	     aEventType, aPhKeyEvent->key_cap, keysym, IsChar);
+//    printf("nsWidget::InitKeyEvent EventType=<%d> key_cap=<%lu> converted=<%lu> IsChar=<%d>\n",
+//	     aEventType, aPhKeyEvent->key_cap, keysym, IsChar);
 
     anEvent.keyCode =  (keysym  & 0x00FF);
 
@@ -1711,8 +1711,8 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
 	
 
 
-  printf("nsWidget::InitKeyEvent Modifiers Valid=<%d,%d,%d> Shift=<%d> Control=<%d> Alt=<%d> Meta=<%d>\n", 
-    (aPhKeyEvent->key_flags & Pk_KF_Scan_Valid), (aPhKeyEvent->key_flags & Pk_KF_Sym_Valid), (aPhKeyEvent->key_flags & Pk_KF_Cap_Valid), anEvent.isShift, anEvent.isControl, anEvent.isAlt, anEvent.isMeta);
+//  printf("nsWidget::InitKeyEvent Modifiers Valid=<%d,%d,%d> Shift=<%d> Control=<%d> Alt=<%d> Meta=<%d>\n", 
+//    (aPhKeyEvent->key_flags & Pk_KF_Scan_Valid), (aPhKeyEvent->key_flags & Pk_KF_Sym_Valid), (aPhKeyEvent->key_flags & Pk_KF_Cap_Valid), anEvent.isShift, anEvent.isControl, anEvent.isAlt, anEvent.isMeta);
   }
 }
 
@@ -1738,7 +1738,7 @@ PRBool  nsWidget::DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent)
 
   if ( PtIsFocused(mWidget) != 2)
   {
-     printf("nsWidget::DispatchKeyEvent Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(mWidget));
+     //printf("nsWidget::DispatchKeyEvent Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(mWidget));
      return PR_FALSE;
   }
   
@@ -1748,14 +1748,14 @@ PRBool  nsWidget::DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent)
        || ( aPhKeyEvent->key_cap == Pk_Control_R )
      )
   {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::DispatchKeyEvent Ignoring SHIFT, CONTROL and ALT keypress\n"));
+    //PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::DispatchKeyEvent Ignoring SHIFT, CONTROL and ALT keypress\n"));
     return PR_TRUE;
   }
 
   nsWindow *w = (nsWindow *) this;
   
-printf("nsWidget::DispatchKeyEvent KeyEvent Info: this=<%p> key_flags=<%lu> key_mods=<%lu>  key_sym=<%lu> key_cap=<%lu> key_scan=<%d> Focused=<%d>\n",
-	this, aPhKeyEvent->key_flags, aPhKeyEvent->key_mods, aPhKeyEvent->key_sym, aPhKeyEvent->key_cap, aPhKeyEvent->key_scan, PtIsFocused(mWidget));
+//printf("nsWidget::DispatchKeyEvent KeyEvent Info: this=<%p> key_flags=<%lu> key_mods=<%lu>  key_sym=<%lu> key_cap=<%lu> key_scan=<%d> Focused=<%d>\n",
+//	this, aPhKeyEvent->key_flags, aPhKeyEvent->key_mods, aPhKeyEvent->key_sym, aPhKeyEvent->key_cap, aPhKeyEvent->key_scan, PtIsFocused(mWidget));
 	
 
   w->AddRef();
@@ -1765,7 +1765,7 @@ printf("nsWidget::DispatchKeyEvent KeyEvent Info: this=<%p> key_flags=<%lu> key_
     printf("nsWidget::DispatchKeyEvent Before Key Down \n");
     InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_DOWN);
     result = w->OnKey(keyEvent); 
-    printf("nsWidget::DispatchKeyEvent after Key_Down event result=<%d>\n", result);
+    //printf("nsWidget::DispatchKeyEvent after Key_Down event result=<%d>\n", result);
 
     printf("nsWidget::DispatchKeyEvent Before Key Press\n");
     InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_PRESS);
@@ -1773,9 +1773,9 @@ printf("nsWidget::DispatchKeyEvent KeyEvent Info: this=<%p> key_flags=<%lu> key_
   }
   else if (aPhKeyEvent->key_flags & Pk_KF_Key_Repeat)
   {
-     printf("nsWidget::DispatchKeyEvent Before Key Press\n");
-     InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_PRESS);
-     result = w->OnKey(keyEvent);   
+    printf("nsWidget::DispatchKeyEvent Before Key Press\n");
+    InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_PRESS);
+    result = w->OnKey(keyEvent);   
   }
   else if (PkIsKeyDown(aPhKeyEvent->key_flags) == 0)
   {
@@ -1786,7 +1786,7 @@ printf("nsWidget::DispatchKeyEvent KeyEvent Info: this=<%p> key_flags=<%lu> key_
 
   w->Release();
 
-  printf("nsWidget::DispatchKeyEvent after events result=<%d>\n", result);
+  //printf("nsWidget::DispatchKeyEvent after events result=<%d>\n", result);
  
   return result;
 }
@@ -1818,7 +1818,6 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
 {
   PRBool  result = PR_FALSE; // call the default nsWindow proc
 
-#if 1
     PhEvent_t* event = aCbInfo->event;
     switch ( event->type )
     {
@@ -1871,28 +1870,15 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
           ScreenToWidget( ptrev->pos );
           if( ptrev->buttons & Ph_BUTTON_SELECT ) // Normally the left mouse button
           {
-            if( ptrev->click_count == 2 )
-            {
-		      InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_LEFT_DOUBLECLICK );
-            }
-            else
-			{
-			  InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_LEFT_BUTTON_DOWN );
-            }
+			InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_LEFT_BUTTON_DOWN );
           }
           else if( ptrev->buttons & Ph_BUTTON_MENU ) // the right button
           {
-            if( ptrev->click_count == 2 )
-		      InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_RIGHT_DOUBLECLICK );
-            else
-		      InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_RIGHT_BUTTON_DOWN );
+			InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_RIGHT_BUTTON_DOWN );
           }
           else // middle button
           {
-            if( ptrev->click_count == 2 )
-              InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_MIDDLE_DOUBLECLICK );
-            else
-              InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_MIDDLE_BUTTON_DOWN );
+			InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_MIDDLE_BUTTON_DOWN );
           }
 
 		  result = DispatchMouseEvent(theMouseEvent);
@@ -1959,90 +1945,6 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
     }
 
   return result;
-#else
-  PtWidget_t *parent = PtFindContainer( mWidget );
-  nsWidget * parentWidget = (nsWidget *) GetInstance( parent );
-
-
-  // When we get menu selections, dispatch the menu command (event) AND IF there is
-  // a menu listener, call "listener->MenuSelected(event)"
-
-  if( aCbInfo->reason == Pt_CB_RAW )
-  {
-    PhEvent_t* event = aCbInfo->event;
-
-    switch( event->type )
-    {
-
-    case Ph_EV_BUT_PRESS:
-      {
-      PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( event );
-
-      if( ptrev )
-      {
-        ptrev->pos.x = 1;
-        ptrev->pos.y = 1;
-        if( ptrev->buttons & Ph_BUTTON_SELECT ) // Normally the left mouse button
-        {
-          if( ptrev->click_count == 2 )
-            result = DispatchMouseEvent( ptrev->pos, NS_MOUSE_LEFT_DOUBLECLICK );
-          else
-            result = DispatchMouseEvent( ptrev->pos, NS_MOUSE_LEFT_BUTTON_DOWN );
-        }
-        else if( ptrev->buttons & Ph_BUTTON_MENU ) // the right button
-        {
-          if( ptrev->click_count == 2 )
-            result = DispatchMouseEvent( ptrev->pos, NS_MOUSE_RIGHT_DOUBLECLICK );
-          else
-            result = DispatchMouseEvent( ptrev->pos, NS_MOUSE_RIGHT_BUTTON_DOWN );
-        }
-        else // middle button
-        {
-          if( ptrev->click_count == 2 )
-            result = DispatchMouseEvent( ptrev->pos, NS_MOUSE_MIDDLE_DOUBLECLICK );
-          else
-            result = DispatchMouseEvent( ptrev->pos, NS_MOUSE_MIDDLE_BUTTON_DOWN );
-        }
-      }
-      }
-      break;
-
-    case Ph_EV_BUT_RELEASE:
-      {
-      PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( event );
-
-      if (event->subtype==Ph_EV_RELEASE_REAL)
-      if( ptrev )
-      {
-        ptrev->pos.x = 1;
-        ptrev->pos.y = 1;
-        if( ptrev->buttons & Ph_BUTTON_SELECT ) // Normally the left mouse button
-          result = DispatchMouseEvent( ptrev->pos, NS_MOUSE_LEFT_BUTTON_UP );
-        else if( ptrev->buttons & Ph_BUTTON_MENU ) // the right button
-          result = DispatchMouseEvent( ptrev->pos, NS_MOUSE_RIGHT_BUTTON_UP );
-        else // middle button
-          result = DispatchMouseEvent( ptrev->pos, NS_MOUSE_MIDDLE_BUTTON_UP );
-      }
-      }
-      break;
-
-    case Ph_EV_BOUNDARY:
-      switch( event->subtype )
-      {
-      case Ph_EV_PTR_ENTER:
-        result = DispatchStandardEvent( NS_MOUSE_ENTER );
-        break;
-      case Ph_EV_PTR_LEAVE:
-        result = DispatchStandardEvent( NS_MOUSE_EXIT );
-        break;
-      }
-      break;
-    }
-  }
-
-//  return result;
-  return PR_TRUE;
-#endif
 }
 
 
@@ -2194,6 +2096,9 @@ void nsWidget::UpdateWidgetDamage()
         extent.ul.y = temp_rect.y + area.pos.y;
         extent.lr.x = extent.ul.x + temp_rect.width - 1;
         extent.lr.y = extent.ul.y + temp_rect.height - 1;
+
+printf("nsWidget::UpdateWidgetDamaged this=<%p> extent=(%d,%d,%d,%d)\n", this, extent.ul.x, extent.ul.y, extent.lr.x, extent.lr.y);
+
         PtDamageExtent( mWidget, &extent );
       }
     }
@@ -2331,9 +2236,17 @@ int nsWidget::GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t
 {
   nsWidget *pWidget = (nsWidget *) data;
 
+
+  if ( PtIsFocused(widget) != 2)
+  {
+     printf("nsWidget::GetFocusCallback Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(widget));
+     return Pt_CONTINUE;
+  }
+
   PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::GetFocusCallback pWidget=<%p>\n", pWidget));
 
   pWidget->DispatchStandardEvent(NS_GOTFOCUS);
+
   return Pt_CONTINUE;
 }
 
@@ -2342,7 +2255,14 @@ int nsWidget::LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_
 {
   nsWidget *pWidget = (nsWidget *) data;
 
+  if ( PtIsFocused(widget) != 2)
+  {
+     printf("nsWidget::GetFocusCallback Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(widget));
+     return Pt_CONTINUE;
+  }
+  
   PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::LostFocusCallback pWidget=<%p>\n", pWidget));
+
   pWidget->DispatchStandardEvent(NS_LOSTFOCUS);
 
   return Pt_CONTINUE;
