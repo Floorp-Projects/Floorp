@@ -36,11 +36,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 pref("browser.hiddenWindowChromeURL", "chrome://messenger/content/hiddenWindow.xul");
-
 pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search=");
 
 pref("general.useragent.vendor", "Thunderbird");
-pref("general.useragent.vendorSub", "0.5a");
+pref("general.useragent.vendorSub",
+#expand __APP_VERSION__
+);
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
 

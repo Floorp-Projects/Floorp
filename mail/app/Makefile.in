@@ -85,15 +85,6 @@ LIBS = \
 
 include $(topsrcdir)/config/config.mk
 
-
-## HACK ALERT...I can't seem to get the console to go away in optimized builds
-## the MOZWINCONSOLE lines above are doing anything...for now, force the right
-## subsytem
-
-ifndef MOZ_DEBUG
-WIN32_EXE_LDFLAGS += /SUBSYSTEM:WINDOWS
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool gdi32)
 RCINCLUDE = splash.rc
@@ -109,6 +100,9 @@ RESFILE=splashos2.res
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+APP_VERSION = $(shell cat $(srcdir)/../config/version.txt)
+DEFINES += -DAPP_VERSION=\"$(APP_VERSION)\"
 
 ifeq ($(OS_ARCH),WINNT)
 #
@@ -187,6 +181,7 @@ install:: thunderbird
 	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
 
 GARBAGE += thunderbird
+GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, all.js thunderbird.js mailnews.js)
 endif
 
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
@@ -215,10 +210,15 @@ endif
 
 libs:: $(PROGRAM)
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
-	rsync -a $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app
-	rsync -aL $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
+	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app
+	sed -e "s/APP_VERSION/$(APP_VERSION)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
+	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
+	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
+	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
 	cp -RL $(srcdir)/macbuild/mach.icns $(DIST)/$(APP_NAME).app/Contents/Resources/mach.icns
 	echo -n APPLMOZM > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
+#       remove CVS dirs from packaged app
+	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
 
 clean clobber::
 	rm -rf $(DIST)/$(APP_NAME).app
