@@ -996,9 +996,11 @@ fe_SetDocPosition (MWContext *context, unsigned long x, unsigned long y)
       if (!frame_scrolling_yes)
       {
 	y = 0;
-	XtUnmanageChild (CONTEXT_DATA (context)->vscroll);
-	fe_hack_scrollbar (CONTEXT_DATA (context)->vscroll,
+        if (CONTEXT_DATA(context)->vscroll) {
+	  XtUnmanageChild (CONTEXT_DATA (context)->vscroll);
+	  fe_hack_scrollbar (CONTEXT_DATA (context)->vscroll,
 			   1, 1, 1, 1, 0);
+      }
       }
     }
   else
@@ -1018,9 +1020,11 @@ fe_SetDocPosition (MWContext *context, unsigned long x, unsigned long y)
       if (!frame_scrolling_yes)
       {
 	x = 0;
-	XtUnmanageChild (CONTEXT_DATA (context)->hscroll);
-	fe_hack_scrollbar (CONTEXT_DATA (context)->hscroll,
+        if (CONTEXT_DATA (context)->hscroll) {
+	  XtUnmanageChild (CONTEXT_DATA (context)->hscroll);
+	  fe_hack_scrollbar (CONTEXT_DATA (context)->hscroll,
 			   1, 1, 1, 1, 0);
+        }
       }
     }
   else
