@@ -80,6 +80,9 @@ static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #endif
 
+// Interface for "unknown content type handler" component/service.
+#include "nsIUnknownContentTypeHandler.h"
+
 // Stuff to implement file download dialog.
 #include "nsIXULWindowCallbacks.h"
 #include "nsIDocumentObserver.h"
@@ -135,8 +138,6 @@ static nsresult setAttribute( nsIWebShell *shell,
 /////////////////////////////////////////////////////////////////////////
 // nsBrowserAppCore
 /////////////////////////////////////////////////////////////////////////
-
-nsIFindComponent *nsBrowserAppCore::mFindComponent = 0;
 
 nsBrowserAppCore::nsBrowserAppCore()
 {
@@ -740,11 +741,6 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
   if (! aWin)
     return NS_ERROR_NULL_POINTER;
 
-#if 0
-  if (!mContentWindow) {
-    return NS_ERROR_FAILURE;
-  }
-#endif  /* 0 */
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
   if (!globalObj) {
     return NS_ERROR_FAILURE;
@@ -968,393 +964,6 @@ done:
    return NS_OK;
 }
 
-// Notice: This is only a temporary home for nsFileDownloadDialog!
-// It will be moving to it's own component .h/.cpp file soon.
-struct nsFileDownloadDialog : public nsIXULWindowCallbacks,
-                                     nsIStreamListener,
-                                     nsIDocumentObserver {
-    // Declare implementation of ISupports stuff.
-    NS_DECL_ISUPPORTS
-
-    // Declare implementations of nsIXULWindowCallbacks interface functions.
-    NS_IMETHOD ConstructBeforeJavaScript(nsIWebShell *aWebShell);
-    NS_IMETHOD ConstructAfterJavaScript(nsIWebShell *aWebShell) { return NS_OK; }
-
-    // Declare implementations of nsIStreamListener/nsIStreamObserver functions.
-    NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo) { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength);
-    NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-    NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-    NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-    NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
-
-    // Declare implementations of nsIDocumentObserver functions.
-    NS_IMETHOD BeginUpdate(nsIDocument *aDocument) { return NS_OK; }
-    NS_IMETHOD EndUpdate(nsIDocument *aDocument) { return NS_OK; }
-    NS_IMETHOD BeginLoad(nsIDocument *aDocument) { return NS_OK; }
-    NS_IMETHOD EndLoad(nsIDocument *aDocument) { return NS_OK; }
-    NS_IMETHOD BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell) { return NS_OK; }
-    NS_IMETHOD EndReflow(nsIDocument *aDocument, nsIPresShell* aShell) { return NS_OK; }
-    NS_IMETHOD ContentChanged(nsIDocument *aDocument,
-                              nsIContent* aContent,
-                              nsISupports* aSubContent) { return NS_OK; }
-    NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,
-                                    nsIContent* aContent1,
-                                    nsIContent* aContent2) { return NS_OK; }
-    // This one we care about; see implementation below.
-    NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
-                                nsIContent*  aContent,
-                                nsIAtom*     aAttribute,
-                                PRInt32      aHint);
-    NS_IMETHOD ContentAppended(nsIDocument *aDocument,
-                               nsIContent* aContainer,
-                               PRInt32     aNewIndexInContainer) { return NS_OK; }
-    NS_IMETHOD ContentInserted(nsIDocument *aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer) { return NS_OK; }
-    NS_IMETHOD ContentReplaced(nsIDocument *aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aOldChild,
-                               nsIContent* aNewChild,
-                               PRInt32 aIndexInContainer) { return NS_OK; }
-    NS_IMETHOD ContentRemoved(nsIDocument *aDocument,
-                              nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndexInContainer) { return NS_OK; }
-    NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
-                               nsIStyleSheet* aStyleSheet) { return NS_OK; }
-    NS_IMETHOD StyleSheetRemoved(nsIDocument *aDocument,
-                                 nsIStyleSheet* aStyleSheet) { return NS_OK; }
-    NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
-                                              nsIStyleSheet* aStyleSheet,
-                                              PRBool aDisabled) { return NS_OK; }
-    NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
-                                nsIStyleSheet* aStyleSheet,
-                                nsIStyleRule* aStyleRule,
-                                PRInt32 aHint) { return NS_OK; }
-    NS_IMETHOD StyleRuleAdded(nsIDocument *aDocument,
-                              nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule) { return NS_OK; }
-    NS_IMETHOD StyleRuleRemoved(nsIDocument *aDocument,
-                                nsIStyleSheet* aStyleSheet,
-                                nsIStyleRule* aStyleRule) { return NS_OK; }
-    NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument) { return NS_OK; }
-
-    // nsFileDownloadDialog stuff
-    nsFileDownloadDialog( nsIURL *aURL, const char *aContentType );
-    virtual ~nsFileDownloadDialog() { delete mOutput; delete [] mBuffer; }
-    void OnSave();
-    void OnMore();
-    void OnPick();
-    void OnClose();
-    void OnStart();
-    void OnStop();
-    void SetWindow( nsIWebShellWindow *aWindow );
-
-private:
-    nsCOMPtr<nsIURL> mUrl;
-    nsCOMPtr<nsIWebShell> mWebShell;
-    nsCOMPtr<nsIWebShellWindow> mWindow;
-    nsOutputFileStream *mOutput;
-    nsString         mContentType;
-    nsFileSpec       mFileName;
-    PRUint32         mBufLen;
-    char *           mBuffer;
-    PRBool           mStopped;
-    enum { kPrompt, kProgress } mMode;
-}; // nsFileDownloadDialog
-
-// Standard implementations of addref/release.
-NS_IMPL_ADDREF( nsFileDownloadDialog );
-NS_IMPL_RELEASE( nsFileDownloadDialog );
-
-NS_IMETHODIMP 
-nsFileDownloadDialog::QueryInterface(REFNSIID aIID,void** aInstancePtr)
-{
-  if (aInstancePtr == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // Always NULL result, in case of failure
-  *aInstancePtr = NULL;
-
-  if (aIID.Equals(nsIDocumentObserver::GetIID())) {
-    *aInstancePtr = (void*) ((nsIDocumentObserver*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsIXULWindowCallbacks::GetIID())) {
-    *aInstancePtr = (void*) ((nsIXULWindowCallbacks*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return NS_ERROR_NO_INTERFACE;
-}
-
-// ctor
-nsFileDownloadDialog::nsFileDownloadDialog( nsIURL *aURL, const char *aContentType )
-        : mUrl( nsDontQueryInterface<nsIURL>(aURL) ),
-          mWebShell(),
-          mWindow(),
-          mOutput(0),
-          mBufLen( 8192 ),
-          mBuffer( new char[ mBufLen ] ),
-          mStopped( PR_FALSE ),
-          mContentType( aContentType ),
-          mMode( kPrompt ) {
-    // Initialize ref count.
-    NS_INIT_REFCNT();
-}
-
-// Do startup stuff from C++ side.
-NS_IMETHODIMP
-nsFileDownloadDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell) {
-    nsresult rv = NS_OK;
-
-    // Save web shell pointer.
-    mWebShell = nsDontQueryInterface<nsIWebShell>( aWebShell );
-
-    // Store instance information into dialog's DOM.
-    const char *loc = 0;
-    mUrl->GetSpec( &loc );
-    setAttribute( mWebShell, "data.location", "value", loc );
-    setAttribute( mWebShell, "data.contentType", "value", mContentType );
-
-    // If showing download progress, make target file name known.
-    if ( mMode == kProgress ) {
-        setAttribute( mWebShell, "data.fileName", "value", nsString((const char*)mFileName) );
-    }
-
-    // Add as observer of the xul document.
-    nsCOMPtr<nsIContentViewer> cv;
-    rv = mWebShell->GetContentViewer(getter_AddRefs(cv));
-    if ( cv ) {
-        // Up-cast.
-        nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-        if ( docv ) {
-            // Get the document from the doc viewer.
-            nsCOMPtr<nsIDocument> doc;
-            rv = docv->GetDocument(*getter_AddRefs(doc));
-            if ( doc ) {
-                doc->AddObserver( this );
-            } else {
-                if (APP_DEBUG) printf("GetDocument failed, rv=0x%X\n",(int)rv);
-            }
-        } else {
-            if (APP_DEBUG) printf("Upcast to nsIDocumentViewer failed\n");
-        }
-    } else {
-        if (APP_DEBUG) printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
-    }
-
-    return rv;
-}
-
-NS_IMETHODIMP
-nsFileDownloadDialog::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength) {
-    nsresult rv = NS_OK;
-
-    // Check for download cancelled by user.
-    if ( mStopped ) {
-        // Close the output file.
-        if ( mOutput ) {
-            mOutput->close();
-        }
-        // Close the input stream.
-        aIStream->Close();
-    } else {
-        // Allocate buffer space.
-        if ( aLength > mBufLen ) {
-            char *oldBuffer = mBuffer;
-    
-            mBuffer = new char[ aLength ];
-    
-            if ( mBuffer ) {
-                // Use new (bigger) buffer.
-                mBufLen = aLength;
-                // Delete old (smaller) buffer.
-                delete [] oldBuffer;
-            } else {
-                // Keep the one we've got.
-                mBuffer = oldBuffer;
-            }
-        }
-    
-        // Read the data.
-        PRUint32 bytesRead;
-        rv = aIStream->Read( mBuffer, ( mBufLen > aLength ) ? aLength : mBufLen, &bytesRead );
-    
-        if ( NS_SUCCEEDED(rv) ) {
-            // Write the data just read to the output stream.
-            if ( mOutput ) {
-                mOutput->write( mBuffer, bytesRead );
-            }
-        } else {
-            printf( "Error reading stream, rv=0x%X\n", (int)rv );
-        }
-    }
-
-    return rv;
-}
-
-NS_IMETHODIMP
-nsFileDownloadDialog::OnStartBinding(nsIURL* aURL, const char *aContentType) {
-    nsresult rv = NS_OK;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileDownloadDialog::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) {
-    nsresult rv = NS_OK;
-    char buf[16];
-    PR_snprintf( buf, sizeof buf, "%lu", aProgressMax );
-    setAttribute( mWebShell, "data.progress", "max", buf );
-    PR_snprintf( buf, sizeof buf, "%lu", aProgress );
-    setAttribute( mWebShell, "data.progress", "value", buf );
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileDownloadDialog::OnStatus(nsIURL* aURL, const PRUnichar* aMsg) {
-    nsresult rv = NS_OK;
-    nsString msg = aMsg;
-    setAttribute( mWebShell, "data.status", "value", aMsg );
-    return NS_OK;
-}
-
-// Utility function to close a window given a root nsIWebShell.
-static void closeWindow( nsIWebShellWindow *aWebShellWindow ) {
-    if ( aWebShellWindow ) {
-        // crashes!
-        aWebShellWindow->Close();
-    }
-}
-
-NS_IMETHODIMP
-nsFileDownloadDialog::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg) {
-    nsresult rv = NS_OK;
-    // Close the output file.
-    if ( mOutput ) {
-        mOutput->close();
-    }
-    // Signal UI that download is complete.
-    setAttribute( mWebShell, "data.progress", "completed", "true" );
-    return rv;
-}
-
-// Handle attribute changing; we only care about the element "data.execute"
-// which is used to signal command execution from the UI.
-NS_IMETHODIMP
-nsFileDownloadDialog::AttributeChanged( nsIDocument *aDocument,
-                                        nsIContent*  aContent,
-                                        nsIAtom*     aAttribute,
-                                        PRInt32      aHint ) {
-    nsresult rv = NS_OK;
-    // Look for data.execute command changing.
-    nsString id;
-    nsCOMPtr<nsIAtom> atomId = nsDontQueryInterface<nsIAtom>( NS_NewAtom("id") );
-    aContent->GetAttribute( kNameSpaceID_None, atomId, id );
-    if ( id == "data.execute" ) {
-        nsString cmd;
-        nsCOMPtr<nsIAtom> atomCommand = nsDontQueryInterface<nsIAtom>( NS_NewAtom("command") );
-        // Get requested command.
-        aContent->GetAttribute( kNameSpaceID_None, atomCommand, cmd );
-        // Reset (immediately, to prevent feedback loop).
-        aContent->SetAttribute( kNameSpaceID_None, atomCommand, "", PR_FALSE );
-        if ( cmd == "save" ) {
-            OnSave();
-        } else if ( cmd == "more" ) {
-            OnMore();
-        } else if ( cmd == "pick" ) {
-            OnPick();
-        } else if ( cmd == "start" ) {
-            OnStart();
-        } else if ( cmd == "stop" ) {
-            OnStop();
-        } else if ( cmd == "close" ) {
-            OnClose();
-        } else {
-        }
-    }
-
-    return rv;
-}
-
-// OnSave
-void
-nsFileDownloadDialog::OnSave() {
-    // Prompt user for file name.
-    nsCOMPtr<nsIFileWidget> fileWidget;
-  
-    nsString title("Save File");
-
-    nsComponentManager::CreateInstance( kCFileWidgetCID,
-                                        nsnull,
-                                        kIFileWidgetIID,
-                                        (void**)getter_AddRefs(fileWidget) );
-    if (fileWidget) {
-      nsFileSpec fileSpec;
-      nsFileDlgResults result = fileWidget->PutFile( nsnull, title, fileSpec );
-      if ( result == nsFileDlgResults_OK || result == nsFileDlgResults_Replace ) {
-        // Save the stream into the specified file...
-        mFileName = fileSpec;
-        mMode = kProgress;
-        nsString progressXUL = "resource:/res/samples/downloadProgress.xul";
-        mWebShell->LoadURL( progressXUL.GetUnicode() );
-        // Open output file stream.
-        mOutput = new nsOutputFileStream( mFileName );
-      }
-    }
-}
-
-// OnMore
-void
-nsFileDownloadDialog::OnMore() {
-    printf( "nsFileDownloadDialog::OnMore not implemented yet\n" );
-}
-
-// OnPick
-void
-nsFileDownloadDialog::OnPick() {
-    printf( "nsFileDownloadDialog::OnPick not implemented yet\n" );
-}
-
-void
-nsFileDownloadDialog::OnClose() {
-    // Close the window.
-    closeWindow( mWindow );
-}
-
-void
-nsFileDownloadDialog::OnStart() {
-    if ( mMode == kProgress ) {
-        // Load source stream into file.
-        nsINetService *inet = 0;
-        nsresult rv = nsServiceManager::GetService( kNetServiceCID,
-                                                    kINetServiceIID,
-                                                    (nsISupports**)&inet );
-        if (NS_OK == rv) {
-            rv = inet->OpenStream(mUrl, this);
-            nsServiceManager::ReleaseService(kNetServiceCID, inet);
-        } else {
-            if ( APP_DEBUG ) { printf( "Error getting Net Service, rv=0x%X\n", (int)rv ); }
-        }
-    }
-}
-
-void
-nsFileDownloadDialog::OnStop() {
-    // Stop the netlib xfer.
-    mStopped = PR_TRUE;
-}
-
-void
-nsFileDownloadDialog::SetWindow( nsIWebShellWindow *aWindow ) {
-    mWindow = nsDontQueryInterface<nsIWebShellWindow>(aWindow);
-}
-
 NS_IMETHODIMP
 nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader, 
                                            nsIURL *aURL,
@@ -1365,46 +974,23 @@ nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader,
     // Turn off the indicators in the chrome.
     setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
 
-    // Note: The following code is broken.  It should rightfully be loading
-    // some "unknown content type handler" component and giving it control.
-    // We will change this as soon as nsFileDownloadDialog is moved to a
-    // separate component or components.
+    // Get "unknown content type handler" and have it handle this.
+    nsIUnknownContentTypeHandler *handler;
+    rv = nsServiceManager::GetService( NS_IUNKNOWNCONTENTTYPEHANDLER_PROGID,
+                                       nsIUnknownContentTypeHandler::GetIID(),
+                                       (nsISupports**)&handler );
 
-    // Get app shell service.
-    nsIAppShellService *appShell;
-    rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                      kIAppShellServiceIID,
-                                      (nsISupports**)&appShell);
+    if ( NS_SUCCEEDED( rv ) ) {
+        /* Have handler take care of this. */
+        rv = handler->HandleUnknownContentType( aURL, aContentType, loader );
 
-    if ( NS_SUCCEEDED(rv) ) {
-        // Open "Save to disk" dialog.
-        nsIWebShellWindow *newWindow;
-
-        // Make url for dialog xul.
-        nsIURL *url;
-        rv = NS_NewURL( &url, "resource:/res/samples/unknownContent.xul" );
-
-        if ( NS_SUCCEEDED(rv) ) {
-            // Create "save to disk" nsIXULCallbacks...
-            nsFileDownloadDialog *dialog = new nsFileDownloadDialog( aURL, aContentType );
-
-            rv = appShell->CreateTopLevelWindow( nsnull,
-                                                 url,
-                                                 PR_TRUE,
-                                                 newWindow,
-                                                 nsnull,
-                                                 dialog,
-                                                 425,
-                                                 200 );
-
-            // Give find dialog the window pointer (if it worked).
-            if ( NS_SUCCEEDED(rv) ) {
-                dialog->SetWindow( newWindow );
-            }
-
-            NS_RELEASE(url);
-        }
-        nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+        // Release the unknown content type handler service object.
+        nsServiceManager::ReleaseService( NS_IUNKNOWNCONTENTTYPEHANDLER_PROGID, handler );
+    } else {
+        #ifdef NS_DEBUG
+        printf( "%s %d: GetService failed for unknown content type handler, rv=0x%08X\n",
+                __FILE__, (int)__LINE__, (int)rv );
+        #endif
     }
 
     return rv;
@@ -1449,59 +1035,6 @@ nsBrowserAppCore::OnEndURLLoad(nsIDocumentLoader* loader,
 
    return NS_OK;
 }
-
-
-#if 0
-NS_IMETHODIMP 
-nsBrowserAppCore::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
-{
-    setAttribute( mWebShell, "Browser:Throbber", "busy", "true" );
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsBrowserAppCore::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
-                                  PRInt32 aProgress, PRInt32 aProgressMax)
-{
-
-  return rv;
-}
-
-NS_IMETHODIMP 
-nsBrowserAppCore::EndLoadURL(nsIWebShell* aWebShell, const PRUnichar* aURL,
-                             PRInt32 aStatus)
-{
-    // Update global history.
-    NS_ASSERTION(mGHistory != nsnull, "history not initialized");
-    if (mGHistory) {
-        nsresult rv;
-
-        nsAutoString url(aURL);
-        char* urlSpec = url.ToNewCString();
-        do {
-            if (NS_FAILED(rv = mGHistory->AddPage(urlSpec, /* XXX referrer? */ nsnull, PR_Now()))) {
-                NS_ERROR("unable to add page to history");
-                break;
-            }
-
-            const PRUnichar* title;
-            if (NS_FAILED(rv = aWebShell->GetTitle(&title))) {
-                NS_ERROR("unable to get doc title");
-                break;
-            }
-
-            if (NS_FAILED(rv = mGHistory->SetPageTitle(urlSpec, title))) {
-                NS_ERROR("unable to set doc title");
-                break;
-            }
-        } while (0);
-        delete[] urlSpec;
-    }
-
-    setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
-    return NS_OK;
-}
-#endif  /* 0 */
 
 NS_IMETHODIMP    
 nsBrowserAppCore::NewWindow()
@@ -1590,7 +1123,6 @@ nsBrowserAppCore::OpenWindow()
 
   nsString title("Open File");
   if (NS_OK == nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget)) {
-  
     nsString titles[] = {"All Readable Files", "HTML Files",
                          "XML Files", "Image Files", "All Files"};
     nsString filters[] = {"*.htm; *.html; *.xml; *.gif; *.jpg; *.jpeg; *.png",
@@ -1599,7 +1131,6 @@ nsBrowserAppCore::OpenWindow()
                           "*.gif; *.jpg; *.jpeg; *.png",
                           "*.*"};
     fileWidget->SetFilterList(5, titles, filters);
-
 
     nsFileSpec fileSpec;
     if (fileWidget->GetFile(nsnull, title, fileSpec) == nsFileDlgResults_OK) {
@@ -1689,63 +1220,15 @@ nsBrowserAppCore::Exit()
 }
 
 void
-nsBrowserAppCore::InitializeSearch() {
+nsBrowserAppCore::InitializeSearch( nsIFindComponent *finder ) {
     nsresult rv = NS_OK;
 
-    // First, get find component (if we haven't done so already).
-    if ( !mFindComponent ) {
-        // Ultimately, should be something like appShell->GetComponent().
-        rv = nsComponentManager::CreateInstance( NS_IFINDCOMPONENT_PROGID,
-                                                 0,
-                                                 nsIFindComponent::GetIID(),
-                                                 (void**)&mFindComponent );
-        if ( NS_SUCCEEDED( rv ) ) {
-            // Initialize the find component.
-            nsIAppShellService *appShell = 0;
-            rv = nsServiceManager::GetService( kAppShellServiceCID,
-                                               nsIAppShellService::GetIID(),
-                                               (nsISupports**)&appShell );
-            if ( NS_SUCCEEDED( rv ) ) {
-                // Initialize the find component.
-                mFindComponent->Initialize( appShell, 0 );
-                // Release the app shell.
-                nsServiceManager::ReleaseService( kAppShellServiceCID, appShell );
-            } else {
-                #ifdef NS_DEBUG
-                printf( "nsBrowserAppCore::InitializeSearch failed, GetService rv=0x%X\n", (int)rv );
-                #endif
-                // Couldn't initialize it, so release it.
-                mFindComponent->Release();
-            }
-        } else {
-            #ifdef NS_DEBUG
-            printf( "nsBrowserAppCore::InitializeSearch failed, CreateInstace rv=0x%X\n", (int)rv );
-            #endif
-        }
-    }
-
-    if ( NS_SUCCEEDED( rv ) && !mSearchContext ) {
+    if ( finder && !mSearchContext ) {
         // Create the search context for this browser window.
-        nsresult rv = mFindComponent->CreateContext( mContentAreaWebShell, &mSearchContext );
+        rv = finder->CreateContext( mContentAreaWebShell, &mSearchContext );
         if ( NS_FAILED( rv ) ) {
             #ifdef NS_DEBUG
             printf( "%s %d CreateContext failed, rv=0x%X\n",
-                    __FILE__, (int)__LINE__, (int)rv );
-            #endif
-        }
-    }
-}
-
-//Obsolete, to be removed.
-void
-nsBrowserAppCore::ResetSearchContext() {
-    // Test if we've created the search context yet.
-    if ( mFindComponent && mSearchContext ) {
-        // OK, reset it.
-        nsresult rv = mFindComponent->ResetContext( mSearchContext, mContentAreaWebShell );
-        if ( NS_FAILED( rv ) ) {
-            #ifdef NS_DEBUG
-            printf( "%s %d ResetContext failed, rv=0x%X\n",
                     __FILE__, (int)__LINE__, (int)rv );
             #endif
         }
@@ -1756,12 +1239,27 @@ NS_IMETHODIMP
 nsBrowserAppCore::Find() {
     nsresult rv = NS_OK;
 
-    // Make sure we've initialized searching for this document.
-    InitializeSearch();
+    // Get find component.
+    nsIFindComponent *finder;
+    rv = nsServiceManager::GetService( NS_IFINDCOMPONENT_PROGID,
+                                       nsIFindComponent::GetIID(),
+                                       (nsISupports**)&finder );
+    if ( NS_SUCCEEDED( rv ) ) {
+        // Make sure we've initialized searching for this document.
+        InitializeSearch( finder );
 
-    // Perform find via find component.
-    if ( mFindComponent && mSearchContext ) {
-        rv = mFindComponent->Find( mSearchContext );
+        // Perform find via find component.
+        if ( finder && mSearchContext ) {
+            rv = finder->Find( mSearchContext );
+        }
+
+        // Release the service.
+        nsServiceManager::ReleaseService( NS_IFINDCOMPONENT_PROGID, finder );
+    } else {
+        #ifdef NS_DEBUG
+            printf( "%s %d: GetService failed for find component, rv=0x08%X\n",
+                    __FILE__, (int)__LINE__, (int)rv );
+        #endif
     }
 
     return rv;
@@ -1771,12 +1269,27 @@ NS_IMETHODIMP
 nsBrowserAppCore::FindNext() {
     nsresult rv = NS_OK;
 
-    // Make sure we've initialized searching for this document.
-    InitializeSearch();
+    // Get find component.
+    nsIFindComponent *finder;
+    rv = nsServiceManager::GetService( NS_IFINDCOMPONENT_PROGID,
+                                       nsIFindComponent::GetIID(),
+                                       (nsISupports**)&finder );
+    if ( NS_SUCCEEDED( rv ) ) {
+        // Make sure we've initialized searching for this document.
+        InitializeSearch( finder );
 
-    // Perform find next via find component.
-    if ( mFindComponent && mSearchContext ) {
-        rv = mFindComponent->FindNext( mSearchContext );
+        // Perform find via find component.
+        if ( finder && mSearchContext ) {
+            rv = finder->FindNext( mSearchContext );
+        }
+
+        // Release the service.
+        nsServiceManager::ReleaseService( NS_IFINDCOMPONENT_PROGID, finder );
+    } else {
+        #ifdef NS_DEBUG
+            printf( "%s %d: GetService failed for find component, rv=0x08%X\n",
+                    __FILE__, (int)__LINE__, (int)rv );
+        #endif
     }
 
     return rv;
@@ -1821,53 +1334,6 @@ nsBrowserAppCore::DoDialog()
   return rv;
 }
 
-#if 0
-NS_IMETHODIMP
-nsBrowserAppCore::OnStartBinding(nsIURL* aURL, const char *aContentType)
-{
-  nsresult rv = NS_OK;
-  const char *urlString = 0;
-  aURL->GetSpec( &urlString );
-  if ( urlString ) { 
-    setAttribute( mWebShell, "Browser:OnStartBinding", "content-type", aContentType );
-    setAttribute( mWebShell, "Browser:OnStartBinding", "url", urlString );
-  }
-  return rv;
-}
-
-
-NS_IMETHODIMP
-nsBrowserAppCore::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
-{
-return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsBrowserAppCore::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
-{
-  nsresult rv = setAttribute( mWebShell, "Browser:Status", "text", aMsg );
-  return rv;
-}
-
-
-NS_IMETHODIMP
-nsBrowserAppCore::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
-{
-  nsresult rv = NS_OK;
-  const char *urlString = 0;
-  aURL->GetSpec( &urlString );
-  if ( urlString ) { 
-    char status[256];
-    PR_snprintf( status, sizeof status, "0x%08X", (int) aStatus );
-    setAttribute( mWebShell, "Browser:OnStopBinding", "status", status );
-    setAttribute( mWebShell, "Browser:OnStopBinding", "text", aMsg );
-    setAttribute( mWebShell, "Browser:OnStopBinding", "url", urlString );
-  }
-  return rv;
-}
-
-#endif /* 0 */
 //----------------------------------------------------------------------
 
 NS_IMETHODIMP_(void)

@@ -33,6 +33,14 @@
 #include "nsWebShellWindow.h"
 #include "nsIGlobalHistory.h"
 
+#include "nsIAppShellComponent.h"
+#include "nsIRegistry.h"
+#include "nsIEnumerator.h"
+#include "nsICmdLineService.h"
+#ifdef NS_DEBUG
+#include "prprf.h"    
+#endif
+
 /* For Javascript Namespace Access */
 #include "nsDOMCID.h"
 #include "nsIScriptNameSetRegistry.h"
@@ -75,7 +83,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Initialize(void);
+  NS_IMETHOD Initialize(nsICmdLineService*aCmdLineService);
   NS_IMETHOD Run(void);
   NS_IMETHOD Shutdown(void);
   NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow * aParent,
@@ -103,8 +111,13 @@ public:
 protected:
   virtual ~nsAppShellService();
 
+  void InitializeComponent( const nsCID &aComponentCID );
+  void ShutdownComponent( const nsCID &aComponentCID );
+  void EnumerateComponents( void (nsAppShellService::*function)(const nsCID&) );
+
   nsIAppShell* mAppShell;
   nsISupportsArray* mWindowList;
+  nsICmdLineService* mCmdLineService;
 };
 
 
@@ -114,12 +127,14 @@ nsAppShellService::nsAppShellService()
 
   mAppShell     = nsnull;
   mWindowList   = nsnull;
+  mCmdLineService = nsnull;
 }
 
 nsAppShellService::~nsAppShellService()
 {
   NS_IF_RELEASE(mAppShell);
   NS_IF_RELEASE(mWindowList);
+  NS_IF_RELEASE(mCmdLineService);
 }
 
 
@@ -130,7 +145,7 @@ NS_IMPL_ISUPPORTS(nsAppShellService, kIAppShellServiceIID);
 
 
 NS_IMETHODIMP
-nsAppShellService::Initialize(void)
+nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
 {
   nsresult rv;
 #ifdef XP_PC
@@ -140,6 +155,10 @@ nsAppShellService::Initialize(void)
 #ifdef MOZ_FULLCIRCLE
   FCInitialize();
 #endif
+  // Remember cmd line service.
+  mCmdLineService = aCmdLineService;
+  NS_IF_ADDREF( mCmdLineService );
+
   // Create the Event Queue for the UI thread...
   nsIEventQueueService* eventQService;
   rv = nsServiceManager::GetService(kEventQueueServiceCID,
@@ -197,10 +216,174 @@ nsAppShellService::Initialize(void)
 
   rv = mAppShell->Create(0, nsnull);
 
+  if (NS_FAILED(rv)) {
+      goto done;
+  }
+
+  // Initialize each registered component.
+  EnumerateComponents( InitializeComponent );
+
 done:
   return rv;
 }
 
+// Apply function (Initialize/Shutdown) to each app shell component.
+void
+nsAppShellService::EnumerateComponents( void (nsAppShellService::*function)( const nsCID& ) ) {
+    nsresult rv;
+    nsIRegistry *registry = 0;
+    nsIRegistry::Key key;
+    nsIEnumerator *components = 0;
+    const char *failed = "GetService";
+    if ( NS_SUCCEEDED( ( rv = nsServiceManager::GetService( NS_REGISTRY_PROGID,
+                                                          nsIRegistry::GetIID(),
+                                                          (nsISupports**)&registry ) ) )
+         &&
+         ( failed = "Open" )
+         &&
+         NS_SUCCEEDED( ( rv = registry->Open() ) )
+         &&
+         ( failed = "GetSubtree" )
+         &&
+         NS_SUCCEEDED( ( rv = registry->GetSubtree( nsIRegistry::Common,
+                                                    NS_IAPPSHELLCOMPONENT_KEY,
+                                                    &key ) ) )
+         &&
+         ( failed = "EnumerateSubtrees" )
+         &&
+         NS_SUCCEEDED( ( rv = registry->EnumerateSubtrees( key,
+                                                           &components ) ) )
+         &&
+         ( failed = "First" )
+         &&
+         NS_SUCCEEDED( ( rv = components->First() ) ) ) {
+        // Enumerate all subtrees
+        while ( NS_SUCCEEDED( rv ) && !components->IsDone() ) {
+            nsISupports *base;
+            
+            rv = components->CurrentItem( &base );
+            if ( NS_SUCCEEDED( rv ) ) {
+                // Get specific interface.
+                nsIRegistryNode *node;
+                nsIID nodeIID = NS_IREGISTRYNODE_IID;
+                rv = base->QueryInterface( nodeIID, (void**)&node );
+                // Test that result.
+                if ( NS_SUCCEEDED( rv ) ) {
+                    // Get node name.
+                    char *name;
+                    rv = node->GetName( &name );
+                    if ( NS_SUCCEEDED( rv ) ) {
+                        // If this is a CID of a component; apply function to it.
+                        nsCID cid;
+                        if ( cid.Parse( name ) ) {
+                            (this->*function)( cid );
+                        } else {
+                            // Not a valid CID, ignore it.
+                        }
+                    } else {
+                        // Unable to get subkey name, ignore it.
+                    }
+                    // Release the node.
+                    NS_RELEASE( node );
+                } else {
+                    // Unable to convert item to registry node, ignore it.
+                }
+
+                // Release the current (generic) item.
+                NS_RELEASE( base );
+            } else {
+                // Unable to get current item, ignore it.
+            }
+
+            // Go on to next component, if this fails, we quit.
+            rv = components->Next();
+        }
+    } else {
+        // Unable to set up for subkey enumeration.
+        #ifdef NS_DEBUG
+            PR_fprintf( PR_STDOUT, "Unable to enumerator app shell components, %s rv=0x%08X\n",
+                        failed, (int)rv );
+        #endif
+    }
+
+    // Clean up.
+    if ( registry ) {
+        // Registry was accessed, close it.
+        registry->Close();
+
+        // Release enumerator (if necessary).
+        NS_IF_RELEASE( components );
+
+        // Release nsIRegistry service.
+        nsServiceManager::ReleaseService( NS_REGISTRY_PROGID, registry );
+    }
+
+    return;
+}
+
+void
+nsAppShellService::InitializeComponent( const nsCID &aComponentCID ) {
+    // Attempt to create instance of the component.
+    nsIAppShellComponent *component;
+    nsresult rv = nsComponentManager::CreateInstance( aComponentCID,
+                                                      0,
+                                                      nsIAppShellComponent::GetIID(),
+                                                      (void**)&component );
+    if ( NS_SUCCEEDED( rv ) ) {
+        // Then tell it to initialize (it may RegisterService itself).
+        rv = component->Initialize( this, mCmdLineService );
+        #ifdef NS_DEBUG
+            char *name = aComponentCID.ToString();
+            PR_fprintf( PR_STDOUT, "Initialized app shell component %s, rv=0x%08X\n",
+                        name, (int)rv );
+            delete [] name;
+        #endif
+        // Release it (will live on if it registered itself as service).
+        component->Release();
+    } else {
+        // Error creating component.
+        #ifdef NS_DEBUG
+            char *name = aComponentCID.ToString();
+            PR_fprintf( PR_STDOUT, "Error creating app shell component %s, rv=0x%08X\n",
+                        name, (int)rv );
+            delete [] name;
+        #endif
+    }
+
+    return;
+}
+
+void
+nsAppShellService::ShutdownComponent( const nsCID &aComponentCID ) {
+    // Attempt to create instance of the component (must be a service).
+    nsIAppShellComponent *component;
+    nsresult rv = nsServiceManager::GetService( aComponentCID,
+                                                nsIAppShellComponent::GetIID(),
+                                                (nsISupports**)&component );
+    if ( NS_SUCCEEDED( rv ) ) {
+        // Instance accessed, tell it to shutdown.
+        rv = component->Shutdown();
+        #ifdef NS_DEBUG
+            char *name = aComponentCID.ToString();
+            PR_fprintf( PR_STDOUT, "Shut down app shell component %s, rv=0x%08X\n",
+                        name, (int)rv );
+            delete [] name;
+        #endif
+        // Release the service.
+        nsServiceManager::ReleaseService( aComponentCID, component );
+    } else {
+        // Error getting component service (perhaps due to that component not being
+        // a service).
+        #ifdef NS_DEBUG
+            char *name = aComponentCID.ToString();
+            PR_fprintf( PR_STDOUT, "Unable to shut down app shell component %s, rv=0x%08X\n",
+                        name, (int)rv );
+            delete [] name;
+        #endif
+    }
+
+    return;
+}
 
 NS_IMETHODIMP
 nsAppShellService::Run(void)
@@ -213,6 +396,9 @@ nsAppShellService::Shutdown(void)
 {
 
 #if 1
+  // Shutdown all components.
+  EnumerateComponents( ShutdownComponent );
+
   mAppShell->Exit();
 #else
   while (mWindowList->Count() > 0) {

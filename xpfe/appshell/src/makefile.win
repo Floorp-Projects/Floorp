@@ -61,7 +61,9 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\appcores              \
       -I$(PUBLIC)\netlib		\
       -I$(PUBLIC)\rdf			\
-	  -I$(PUBLIC)\pics
+	  -I$(PUBLIC)\pics \
+	  -I$(PUBLIC)\xpfe\components \
+	  $(NULL)
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = nsappshell

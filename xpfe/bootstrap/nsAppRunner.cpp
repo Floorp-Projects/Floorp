@@ -341,7 +341,7 @@ int main(int argc, char* argv[])
   /*
    * Initialize the Shell...
    */
-  rv = appShell->Initialize();
+  rv = appShell->Initialize( cmdLineArgs );
   if (NS_FAILED(rv)) {
     goto done;
   }

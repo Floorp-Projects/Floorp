@@ -77,6 +77,13 @@ nsDownloadProgressDialog::nsDownloadProgressDialog( nsIURL *aURL,
     NS_INIT_REFCNT();
 }
 
+// dtor
+nsDownloadProgressDialog::~nsDownloadProgressDialog() {
+    // Delete dynamically allocated members (file and buffer).
+    delete mOutput;
+    delete [] mBuffer;
+}
+
 // Open the dialog.
 NS_IMETHODIMP
 nsDownloadProgressDialog::Show() {
