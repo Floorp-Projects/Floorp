@@ -1070,7 +1070,7 @@ void nsBrowserWindow::DoFind()
   nsString findHTML("resource:/res/samples/find.html");
   //nsString findHTML("resource:/res/samples/find-table.html");
   nsRect rect(0, 0, 510, 170);
-  //nsRect rect(0, 0, 480, 150);
+  //nsRect rect(0, 0, 480, 127);
   nsString title("Find");
 
   nsXPBaseWindow * dialog = nsnull;
