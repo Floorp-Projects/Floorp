@@ -185,11 +185,11 @@
   <box id="outer-box" align="vertical">
     <toolbox>
       <toolbar>
-		    <titledbutton id="ParagraphPopup" value="Paragraph" class="popup" align="left" popup="ParagraphMenu"/>
-		    <titledbutton id="FontFacePopup" value="Font" class="popup" align="left" popup="FontFaceMenu"/>
-		    <titledbutton id="FontSizePopup" value="Size" class="popup" align="left" popup="FontSizeMenu"/>
-		    <titledbutton id="TextColorPopup" src="chrome://editor/skin/images/ED_TextColor.gif" class="popup" popup="TextColorMenu"/>
-		    <titledbutton id="BackColorPopup" src="chrome://editor/skin/images/ED_BackColor.gif" class="popup" popup="BackColorMenu"/>
+		    <titledbutton id="ParagraphPopup" value="Paragraph" class="popup" align="left" popupanchor="bottomleft" popup="ParagraphMenu"/>
+		    <titledbutton id="FontFacePopup" value="Font" class="popup" align="left" popupanchor="bottomleft" popup="FontFaceMenu"/>
+		    <titledbutton id="FontSizePopup" value="Size" class="popup" align="left" popupanchor="bottomleft" popup="FontSizeMenu"/>
+		    <titledbutton id="TextColorPopup" src="chrome://editor/skin/images/ED_TextColor.gif" class="popup" popupanchor="bottomleft" popup="TextColorMenu"/>
+		    <titledbutton id="BackColorPopup" src="chrome://editor/skin/images/ED_BackColor.gif" class="popup" popupanchor="bottomleft" popup="BackColorMenu"/>
         <titledbutton id="BoldButton" src="chrome://editor/skin/images/ED_Bold.gif" align="bottom" onclick="EditorApplyStyle('b')">
 		      <observes element="Editor:Style:IsBold" attribute="bold" onchange="onBoldChange()"/>
         </titledbutton>
