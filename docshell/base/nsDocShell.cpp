@@ -2965,6 +2965,9 @@ nsDocShell::Destroy()
         mDocLoader->SetContainer(nsnull);
     }
 
+    delete mEditorData;
+    mEditorData = 0;
+
     // Save the state of the current document, before destroying the window.
     // This is needed to capture the state of a frameset when the new document
     // causes the frameset to be destroyed...
@@ -3009,9 +3012,6 @@ nsDocShell::Destroy()
         mContentListener->SetParentContentListener(nsnull);
         NS_RELEASE(mContentListener);
     }
-    
-    delete mEditorData;
-    mEditorData = 0;
 
     return NS_OK;
 }
