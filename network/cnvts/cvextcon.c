@@ -37,6 +37,10 @@
 								/* file for its prototype. */
 #endif
 
+#ifdef NTO
+#include <sys/select.h>			/* For definition of fd_set */
+#endif
+
 typedef struct _CVG_DataObject {
   NET_StreamClass *next_stream;	/* Where the output goes */
   pid_t pid;					/* process in which the filter is running */
