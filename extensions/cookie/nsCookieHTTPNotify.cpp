@@ -57,11 +57,11 @@ nsCookieHTTPNotify::nsCookieHTTPNotify()
 NS_IMETHODIMP
 nsCookieHTTPNotify::Init()
 {
-    mCookieHeader = NS_NewAtom("cookie");
+    mCookieHeader = getter_AddRefs(NS_NewAtom("cookie"));
     if (!mCookieHeader) return NS_ERROR_OUT_OF_MEMORY;
-    mSetCookieHeader = NS_NewAtom("set-cookie");
+    mSetCookieHeader = getter_AddRefs(NS_NewAtom("set-cookie"));
     if (!mSetCookieHeader) return NS_ERROR_OUT_OF_MEMORY;
-    mExpiresHeader = NS_NewAtom("date");
+    mExpiresHeader = getter_AddRefs(NS_NewAtom("date"));
     if (!mExpiresHeader) return NS_ERROR_OUT_OF_MEMORY;
 
     // Register to handing http requests and responses
