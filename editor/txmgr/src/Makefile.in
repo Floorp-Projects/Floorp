@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= txmgr
 LIBRARY_NAME	= txmgr
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string editor
+REQUIRES	= xpcom string
 
 CPPSRCS		= \
 		nsTransactionItem.cpp \

@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkconevents_s
-REQUIRES	= xpcom string dom js locale widget caps xpconnect docshell webshell pref necko rdf uriloader htmlparser view
+REQUIRES	= xpcom string dom js locale widget caps xpconnect docshell webshell pref necko uriloader htmlparser view
 
 CPPSRCS		= \
 		nsEventListenerManager.cpp \

@@ -30,7 +30,7 @@ MODULE		= walletviewers
 LIBRARY_NAME	= walletviewers
 SHORT_LIBNAME	= wlltvwrs
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string wallet dom js layout widget
+REQUIRES	= xpcom string dom js
 
 CPPSRCS		= nsWalletViewerFactory.cpp
 

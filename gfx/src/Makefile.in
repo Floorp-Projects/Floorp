@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkgfx
-REQUIRES	= xpcom string img widget util dom locale view necko pref js timer uriloader
+REQUIRES	= xpcom string img widget util dom locale view necko pref timer uriloader
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 DIRS		=

@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= msgbase
 XPIDL_MODULE	= msgsearch
 LIBRARY_NAME	= msgsearch_s
-REQUIRES	= xpcom string mailnews msgdb msgbaseutil necko mime appshell msgimap rdf msglocal intl locale pref js timer msgnews txmgr
+REQUIRES	= xpcom string mailnews msgdb msgbaseutil necko mime appshell msgimap rdf msglocal intl locale pref timer msgnews txmgr
 
 CPPSRCS		= \
 		nsMsgFilterService.cpp \

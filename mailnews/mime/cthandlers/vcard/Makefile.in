@@ -30,7 +30,7 @@ MODULE		= vcard
 LIBRARY_NAME	= vcard
 IS_COMPONENT	= 1
 HAS_EXTRAEXPORTS	= 1
-REQUIRES	= xpcom string mime msgbase msgbaseutil uconv necko intl locale pref js
+REQUIRES	= xpcom string mime msgbase msgbaseutil uconv necko intl locale pref
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = msgbsutl

@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE=appcomps
 LIBRARY_NAME	= autocomplete_s
-REQUIRES	= xpcom string layout dom js
+REQUIRES	= xpcom string layout dom
 
 CPPSRCS		= nsAutoComplete.cpp
 

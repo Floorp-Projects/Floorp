@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= txtsvc
 LIBRARY_NAME	= txtsvc
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string editor layout dom js locale widget
+REQUIRES	= xpcom string editor layout dom widget
 
 CPPSRCS		= \
 		nsFindAndReplace.cpp \

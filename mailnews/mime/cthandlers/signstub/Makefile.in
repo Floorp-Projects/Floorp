@@ -30,7 +30,7 @@ MODULE		= signed
 LIBRARY_NAME	= signed
 IS_COMPONENT	= 1
 HAS_EXTRAEXPORTS	= 1
-REQUIRES	= xpcom string mime msgbase msgbaseutil pref js necko uconv intl locale
+REQUIRES	= xpcom string mime msgbase pref necko uconv intl locale
 
 CPPSRCS		= \
 		mimexpcom.cpp \

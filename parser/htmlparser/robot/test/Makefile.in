@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= htmlrobot$(BIN_SUFFIX)
-REQUIRES	= xpcom string htmlparser webshell necko view widget layout dom
+REQUIRES	= xpcom string htmlparser webshell
 
 CPPSRCS		= RobotMain.cpp
 

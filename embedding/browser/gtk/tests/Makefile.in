@@ -25,7 +25,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES	= xpcom string dom js locale layout pref
+REQUIRES	= xpcom string dom
 
 CPPSRCS		= \
 		TestGtkEmbed.cpp \

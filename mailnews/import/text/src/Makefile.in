@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= impText
 LIBRARY_NAME	= impText
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string mailnews import intl locale necko addrbook pref js mork
+REQUIRES	= xpcom string import intl locale necko addrbook pref mork
 
 CPPSRCS		= 	nsTextFactory.cpp 				\
         		nsTextStringBundle.cpp			\

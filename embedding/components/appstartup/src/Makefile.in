@@ -26,7 +26,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= embedcomponents
 LIBRARY_NAME	= appstartupnotifier_s
-REQUIRES	= xpcom webbrwsr embed_base string
+REQUIRES	= xpcom string
 
 CPPSRCS		= nsAppStartupNotifier.cpp \
                   $(NULL)

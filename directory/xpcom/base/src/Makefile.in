@@ -42,7 +42,7 @@ MODULE		= mozldap
 LIBRARY_NAME	= mozldap
 SHORT_LIBNAME	= mozldap
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string necko mime
+REQUIRES	= xpcom string necko
 
 
 CPPSRCS		= \

@@ -30,7 +30,7 @@ MODULE		= mimeemitter
 LIBRARY_NAME	= mimeemitter
 SHORT_LIBNAME	= emitter
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string mime necko pref js intl locale msgbase msgbaseutil
+REQUIRES	= xpcom string mime necko pref intl locale msgbase
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = msgbsutl

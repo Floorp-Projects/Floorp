@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES	= xpcom string txmgr
+REQUIRES	= xpcom txmgr
 
 PROGRAM		= TestTXMgr$(BIN_SUFFIX)
 
