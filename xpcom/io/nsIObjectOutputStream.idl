@@ -48,7 +48,7 @@
 interface nsIObjectOutputStream : nsIBinaryOutputStream
 {
     /**
-     * Write the object whose "root" or XPCOM-identity nsISupports at aObject.
+     * Write the object whose "root" or XPCOM-identity nsISupports is aObject.
      * The cause for writing this object is a strong or weak reference, so the
      * aIsStrongRef argument must tell which kind of pointer is being followed
      * here during serialization.
