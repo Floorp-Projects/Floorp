@@ -744,6 +744,8 @@ embedding/components/build/Makefile
 embedding/components/windowwatcher/Makefile
 embedding/components/windowwatcher/public/Makefile
 embedding/components/windowwatcher/src/Makefile
+embedding/components/ui/Makefile
+embedding/components/ui/helperAppDlg/Makefile
 embedding/config/Makefile
 embedding/tests/gtkEmbed/Makefile
 "
