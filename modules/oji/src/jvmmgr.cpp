@@ -354,6 +354,7 @@ JVM_IsLiveConnectEnabled(void)
 }
 
 
+static
 JVMSecurityStack *
 findPrevNode(JSStackFrame  *pCurrentFrame)
 {
