@@ -199,14 +199,14 @@
 
     <content> 
       <RDF:Description about="chrome://bookmarks/content/">
-	    <base>resource:/res/samples/</base>
+	    <base>resource:/chrome/bookmarks/content/default/</base>
          <main>bookmarks.xul</main> 
       </RDF:Description> 
     </content> 
 
     <skin> 
       <RDF:Description about="chrome://bookmarks/skin/">
-        <base>resource:/res/samples/</base>
+        <base>resource:/chrome/bookmarks/skin/default/</base>
         <main>bookmarks.css</main> 
       </RDF:Description> 
     </skin> 
