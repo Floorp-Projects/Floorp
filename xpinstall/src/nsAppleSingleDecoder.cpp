@@ -26,6 +26,44 @@
 #endif
 
 
+#ifdef dougt
+
+OSErr DTSetAPPL(constStr255Param volName,
+                short vRefNum,
+                OSType creator,
+                long applParID,
+                Str255 applName)
+{
+    OSErr error;
+    UniversalFMPB *pb = NULL;
+    short dtRefNum;
+    Boolean realVRefNum;
+
+    /* get the real vRefnum */
+    error = DetermineVRefNum(volName, vRefNum, &realVRefNum);
+    if (error == noErr)
+    {
+        error = DTOpen(volName, vRefNum, &dtRefNum, &newDTDatabase);
+        if (error == noErr && !newDTDatabase)
+        {
+            pb = (UniversalFMPB*) NewPtrClear( sizeof(UniversalFMPB) );
+            
+            if (pb==NULL) return -1;
+
+            pb->dtPB.ioNamePtr      =   appleName;
+            pb->dtPB.ioDTRefNum     =   dtRefNum;
+            pb->dtPB.ioDirID        =   appParID;
+            pb->dtPB.ioFileCreator  =   creator;
+
+            error = PBDTAddAPPLSync(&pb->dtPB);
+            
+            if (pb) DisposePtr((Ptr)pb);
+        }
+    }
+}
+
+#endif
+
 /*----------------------------------------------------------------------*
  *   Constructors/Destructor
  *----------------------------------------------------------------------*/
@@ -405,7 +443,22 @@ nsAppleSingleDecoder::ProcessFinderInfo(ASEntry inEntry)
 	pb.hFileInfo.ioFDirIndex = 0;	/* use ioNamePtr and ioDirID */
 	pb.hFileInfo.ioFlXFndrInfo = info.ioFlXFndrInfo;
 	err = PBSetCatInfo(&pb, false);
-	
+    
+    
+#ifdef DOUGT
+    if (info.ioFlFndrInfo.fdType == 'APPL')
+    {
+        // need to register in desktop database or bad things will happen
+
+        DTSetAPPL(  NULL, 
+                    mOutSpec.vRefNum,
+                    info.ioFlFndrInfo.fdCreator,
+                    mOutSpec.parID,
+                    mOutSpec.name );
+
+    }
+#endif
+
 	return err;
 }
 
