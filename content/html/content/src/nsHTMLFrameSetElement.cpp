@@ -180,7 +180,7 @@ nsHTMLFrameSetElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 {
   if ((aAttribute == nsHTMLAtoms::rows) ||
       (aAttribute == nsHTMLAtoms::cols)) {
-    aHint = NS_STYLE_HINT_REFLOW;
+    aHint = NS_STYLE_HINT_FRAMECHANGE;
   }
   else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     aHint = NS_STYLE_HINT_CONTENT;
