@@ -348,6 +348,7 @@ xpcom/libxpt/xptcall/public/Makefile
 xpcom/libxpt/xptcall/src/Makefile
 xpcom/libxpt/xptcall/src/md/Makefile
 xpcom/libxpt/xptcall/src/md/unix/Makefile
+xpcom/libxpt/xptcall/src/md/test/Makefile
 xpcom/libxpt/xptcall/tests/Makefile
 xpcom/libxpt/xptinfo/Makefile
 xpcom/libxpt/xptinfo/public/Makefile
