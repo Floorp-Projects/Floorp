@@ -60,6 +60,7 @@ for my $msg (sort { $a <=> $b } $folder->message_list) {
     my $submitter = $entity->get('From'); chomp($submitter);
     $submitter =~ s/</&lt;/g;
     $submitter =~ s/>/&gt;/g;
+    $submitter =~ s/&/&amp;/g;
     my $submitdate = $entity->get('Date'); chomp($submitdate);
 
     #
@@ -95,6 +96,7 @@ for my $msg (sort { $a <=> $b } $folder->message_list) {
              $summary =~ s/^--.*//ms;
              $summary =~ s/</&lt;/mg;
              $summary =~ s/>/&gt;/mg;
+             $summary =~ s/&/&amp;/g;
              $summary =~ s/(http:\/\/([\S])+)/<A HREF=\"$1\">$1<\/A>/mg;
              $summary =~ s/(ftp:\/\/([\S])+)/<A HREF=\"$1\">$1<\/A>/mg;
              $summary =~ s/&lt;(([\S])+@([\S])+)&gt;/&lt;<A HREF=\"mailto:$1\">$1<\/A>&gt;/mg;
@@ -120,6 +122,7 @@ for my $msg (sort { $a <=> $b } $folder->message_list) {
     my $subject = $1;
     $subject =~ s/</&lt;/g;
     $subject =~ s/>/&gt;/g;
+    $subject =~ s/&/&amp;/g;
     $news  =~ /^Date: ([^\n]+)/m;
     my $date = $1;
 
