@@ -50,34 +50,35 @@ nsDiskCacheRecord* nsDiskCacheMap::GetRecord(PRUint32 hashNumber)
     return oldestRecord;
 }
 
-void nsDiskCacheMap::DeleteRecord(PRUint32 hashNumber)
+
+void nsDiskCacheMap::DeleteRecord(nsDiskCacheRecord* deletedRecord)
 {
+    PRUint32 hashNumber = deletedRecord->HashNumber();
     nsDiskCacheBucket& bucket = mBuckets[(hashNumber & (kBucketsPerTable - 1))];
-    for (int r = 0; r < kRecordsPerBucket; ++r) {
-        nsDiskCacheRecord* record = &bucket.mRecords[r];
-        if (record->HashNumber() == hashNumber) {
-            nsDiskCacheRecord* deletedRecord = record;
-            nsDiskCacheRecord* lastRecord = nsnull;
-            // XXX use binary search to find the end, much quicker.
-            // find the last record, to fill in the deleted record.
-            for (int j = r + 1; j < kRecordsPerBucket; ++j) {
-                record = &bucket.mRecords[j];
-                if (record->HashNumber() == 0) {
-                    lastRecord = record - 1;
-                    break;
-                }
-            }
-            // copy the last record, to the newly deleted record.
-            if (lastRecord && deletedRecord != lastRecord) {
-                *deletedRecord = *lastRecord;
-                deletedRecord = lastRecord;
-            }
-            // mark record as free.
-            deletedRecord->SetHashNumber(0);
+    NS_ASSERTION(deletedRecord >= &bucket.mRecords[0] &&
+                 deletedRecord < &bucket.mRecords[kRecordsPerBucket],
+                 "invalid record to delete.");
+    nsDiskCacheRecord* limit = &bucket.mRecords[kRecordsPerBucket];
+    nsDiskCacheRecord* lastRecord = nsnull;
+    // XXX use binary search to find the end, much quicker.
+    // find the last record, to fill in the deleted record.
+    for (nsDiskCacheRecord* record = deletedRecord + 1; record < limit; ++record) {
+        if (record->HashNumber() == 0) {
+            lastRecord = record - 1;
             break;
         }
     }
+    // copy the last record, to the newly deleted record.
+    if (lastRecord && deletedRecord != lastRecord) {
+        *deletedRecord = *lastRecord;
+        deletedRecord = lastRecord;
+    }
+    // mark record as free.
+    deletedRecord->SetHashNumber(0);
+    // reduce the number of entries.
+    mHeader.mEntryCount--;
 }
+
 
 nsresult nsDiskCacheMap::Read(nsIInputStream* input)
 {

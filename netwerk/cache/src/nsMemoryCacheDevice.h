@@ -67,8 +67,9 @@ public:
  
 private:
     friend class nsMemoryCacheDeviceInfo;
-    void      AdjustMemoryLimits(PRUint32  softLimit, PRUint32  hardLimit);
-    void      EvictEntriesIfNecessary(void);
+    void      AdjustMemoryLimits( PRUint32  softLimit, PRUint32  hardLimit);
+    void      EvictEntry( nsCacheEntry * entry );
+    void      EvictEntriesIfNecessary();
 
     nsCacheEntryHashTable   mMemCacheEntries;
     PRCList                 mEvictionList;

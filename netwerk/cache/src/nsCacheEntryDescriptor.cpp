@@ -395,12 +395,12 @@ nsCacheEntryDescriptor::SetMetaDataElement(const char *key, const char *value)
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetMetaDataEnumerator(nsISimpleEnumerator ** result)
+nsCacheEntryDescriptor::VisitMetaData(nsICacheMetaDataVisitor * visitor)
 {
-    NS_ENSURE_ARG_POINTER(result);
+    NS_ENSURE_ARG_POINTER(visitor);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mCacheEntry->VisitMetaDataElements(visitor);
 }
 
 

@@ -18,7 +18,8 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
- *    Gordon Sheridan, 22-February-2001
+ *    Gordon Sheridan, <gordon@netscape.com>
+ *    Patrick C. Beard <beard@netscape.com>
  */
 
 #include "nsMemoryCacheDevice.h"
@@ -155,6 +156,10 @@ nsMemoryCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 #if debug
         // XXX verify we've removed it from mMemCacheEntries & eviction list
 #endif
+        // update statistics
+        mTotalSize    -= entry->Size();
+        --mEntryCount;
+
         delete entry;
         return NS_OK;
     }
@@ -177,15 +182,17 @@ nsMemoryCacheDevice::BindEntry(nsCacheEntry * entry)
 {
     NS_ASSERTION(PR_CLIST_IS_EMPTY(entry),"entry is already on a list!");
 
-    // append entry to the eviction list
-    PR_APPEND_LINK(entry, &mEvictionList);
+	if (!entry->IsDoomed()) {
+        // append entry to the eviction list
+	    PR_APPEND_LINK(entry, &mEvictionList);
 
-    // add entry to hashtable of mem cache entries
-    nsresult  rv = mMemCacheEntries.AddEntry(entry);
-    if (NS_FAILED(rv)) {
-        PR_REMOVE_AND_INIT_LINK(entry);
-        return rv;
-    }
+        // add entry to hashtable of mem cache entries
+        nsresult  rv = mMemCacheEntries.AddEntry(entry);
+        if (NS_FAILED(rv)) {
+            PR_REMOVE_AND_INIT_LINK(entry);
+            return rv;
+        }
+	}
 
     // add size of entry to memory totals
     ++mEntryCount;
@@ -206,10 +213,6 @@ nsMemoryCacheDevice::DoomEntry(nsCacheEntry * entry)
 
     // remove entry from our eviction list
     PR_REMOVE_AND_INIT_LINK(entry);
-
-    // adjust our totals
-    mTotalSize    -= entry->Size();
-    mInactiveSize -= entry->Size();
 }
 
 
@@ -277,6 +280,25 @@ nsMemoryCacheDevice::AdjustMemoryLimits(PRUint32  softLimit, PRUint32  hardLimit
 
 
 void
+nsMemoryCacheDevice::EvictEntry(nsCacheEntry * entry)
+{
+    // remove entry from our hashtable
+    mMemCacheEntries.RemoveEntry(entry);
+    
+    // remove entry from the eviction list
+    PR_REMOVE_AND_INIT_LINK(entry);
+    
+    // update statistics
+    PRUint32 memoryRecovered = entry->Size();
+    mTotalSize    -= memoryRecovered;
+    mInactiveSize -= memoryRecovered;
+    --mEntryCount;
+
+    delete entry;
+}
+
+
+void
 nsMemoryCacheDevice::EvictEntriesIfNecessary(void)
 {
     nsCacheEntry * entry, * next;
@@ -293,20 +315,8 @@ nsMemoryCacheDevice::EvictEntriesIfNecessary(void)
             continue;
         }
 
-        // remove entry from our hashtable
-        mMemCacheEntries.RemoveEntry(entry);
-
-        // remove entry from the eviction list
         next = (nsCacheEntry *)PR_NEXT_LINK(entry);
-        PR_REMOVE_AND_INIT_LINK(entry);
-        
-        // update statistics
-        PRUint32 memoryRecovered = entry->Size();
-        mTotalSize    -= memoryRecovered;
-        mInactiveSize -= memoryRecovered;
-        --mEntryCount;
-
-        delete entry;
+        EvictEntry(entry);
         entry = next;
 
         if ((mTotalSize < mHardLimit) && (mInactiveSize < mSoftLimit))
@@ -353,7 +363,26 @@ nsMemoryCacheDevice::Visit(nsICacheVisitor * visitor)
 nsresult
 nsMemoryCacheDevice::EvictEntries(const char * clientID)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsCacheEntry * entry;
+    PRUint32 prefixLength = nsCRT::strlen(clientID);
+
+    PRCList * elem = PR_LIST_HEAD(&mEvictionList);
+    while (elem != &mEvictionList) {
+        entry = (nsCacheEntry *)elem;
+        elem = PR_NEXT_LINK(elem);
+        
+        const char * key = entry->Key()->get();
+        if (clientID && nsCRT::strncmp(clientID, key, prefixLength) != 0)
+            continue;
+        
+        if (entry->IsInUse()) {
+            nsresult rv = nsCacheService::GlobalInstance()->DoomEntry_Locked(entry);
+            if (NS_FAILED(rv)) return rv;
+        } else {
+            EvictEntry(entry);
+        }
+    }
+    return NS_OK;
 }
 
 

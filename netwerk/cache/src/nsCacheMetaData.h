@@ -31,6 +31,8 @@
 #include "nsString.h"
 // #include "nsAReadableString.h"
 
+class nsICacheMetaDataVisitor;
+
 typedef struct {
     nsCString *  key;
     nsCString *  value;
@@ -65,6 +67,8 @@ public:
     
     nsresult              UnflattenMetaData(char * data, PRUint32 size);
 
+    nsresult              VisitElements(nsICacheMetaDataVisitor * visitor);
+
 private:
     // PLDHashTable operation callbacks
     static const void *   PR_CALLBACK GetKey( PLDHashTable *table, PLDHashEntryHdr *entry);
@@ -90,16 +94,21 @@ private:
                                                     void *arg);
 
     static
-    PLDHashOperator       PR_CALLBACK AccumulateElements(PLDHashTable *table,
+    PLDHashOperator       PR_CALLBACK AccumulateElement(PLDHashTable *table,
                                                          PLDHashEntryHdr *hdr,
                                                          PRUint32 number,
                                                          void *arg);
 
     static
-    PLDHashOperator       PR_CALLBACK FreeElements(PLDHashTable *table,
+    PLDHashOperator       PR_CALLBACK FreeElement(PLDHashTable *table,
                                                    PLDHashEntryHdr *hdr,
                                                    PRUint32 number,
                                                    void *arg);
+    static
+    PLDHashOperator       PR_CALLBACK VisitElement(PLDHashTable *table,
+                                                    PLDHashEntryHdr *hdr,
+                                                    PRUint32 number,
+                                                    void *arg);
 
     // member variables
     static PLDHashTableOps ops;

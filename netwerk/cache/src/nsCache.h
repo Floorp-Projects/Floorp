@@ -33,13 +33,23 @@
 #include "nsAReadableString.h"
 #include "prtime.h"
 #include "nsError.h"
+#include "prlog.h"
 
-#if 0
-          // Convert PRTime to unix-style time_t, i.e. seconds since the epoch
-PRUint32  ConvertPRTimeToSeconds(PRTime time64);
-
-          // Convert unix-style time_t, i.e. seconds since the epoch, to PRTime
-PRTime    ConvertSecondsToPRTime(PRUint32 seconds);
+// PR_LOG args = "format string", arg, arg, ...
+#if defined(PR_LOGGING)
+extern PRLogModuleInfo * gCacheLog;
+void   CacheLogInit();
+#define CACHE_LOG_INIT()        CacheLogInit()
+#define CACHE_LOG_ALWAYS(args)  PR_LOG(gCacheLog, PR_LOG_ALWAYS, args)
+#define CACHE_LOG_ERROR(args)   PR_LOG(gCacheLog, PR_LOG_ERROR, args)
+#define CACHE_LOG_WARNING(args) PR_LOG(gCacheLog, PR_LOG_WARNING, args)
+#define CACHE_LOG_DEBUG(args)   PR_LOG(gCacheLog, PR_LOG_DEBUG, args)
+#else
+#define CACHE_LOG_INIT()        {}
+#define CACHE_LOG_ALWAYS(args)  {}
+#define CACHE_LOG_ERROR(args)   {}
+#define CACHE_LOG_WARNING(args) {}
+#define CACHE_LOG_DEBUG(args)   {}
 #endif
 
 

@@ -31,6 +31,8 @@ interface nsISimpleEnumerator;
 interface nsICacheListener;
 interface nsITransport;
 interface nsIFile;
+interface nsICacheMetaDataVisitor;
+
 
 [scriptable, uuid(49c1a11d-f5d2-4f09-8262-551e64908ada)]
 interface nsICacheEntryDescriptor : nsICacheEntryInfo
@@ -116,6 +118,20 @@ interface nsICacheEntryDescriptor : nsICacheEntryInfo
     string getMetaDataElement(in string key);
     void   setMetaDataElement(in string key, in string value);
     
-    nsISimpleEnumerator getMetaDataEnumerator(); /* todo */
+    /**
+     * Visitor will be called with key/value pair for each meta data element.
+     */
+    void   visitMetaData(in nsICacheMetaDataVisitor  visitor);
 };
 
+
+
+[scriptable, uuid(22f9a49c-3cf8-4c23-8006-54efb11ac562)]
+interface nsICacheMetaDataVisitor : nsISupports
+{
+    /**
+     * Called for each key/value pair in the meta data for a cache entry
+     */
+    boolean visitMetaDataElement(in string  key,
+                                 in string  value);
+};
