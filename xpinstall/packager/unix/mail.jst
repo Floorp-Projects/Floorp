@@ -39,9 +39,6 @@ if (verifyDiskSpace(communicatorFolder, srDest))
     registerChrome(CONTENT | DELAYED_CHROME,
                    getFolder("Chrome","messenger.jar"),
                    "content/messenger-smime/");
-    registerChrome(LOCALE | DELAYED_CHROME, 
-                   getFolder("Chrome","messenger.jar"), 
-                   "locale/en-US/messenger-smime/");
 
     if (err==SUCCESS)
     {
