@@ -1096,13 +1096,13 @@ Timing=pre smartupdate
 
 [Cleanup Previous Product RegKeys]
 Reg Key Root0=HKEY_LOCAL_MACHINE
-Product Name0=Mozilla
-Product Reg Key0=Software\Mozilla.org\Mozilla
+Product Name0=$ProductName$
+Product Reg Key0=Software\$CompanyName$\$ProductName$
 Current Version0=$UserAgent$
 
 Reg Key Root1=HKEY_CURRENT_USER
-Product Name1=Mozilla
-Product Reg Key1=Software\Mozilla.org\Mozilla
+Product Name1=$ProductName$
+Product Reg Key1=Software\$CompanyName$\$ProductName$
 Current Version1=$UserAgent$
 
 [Strings]
