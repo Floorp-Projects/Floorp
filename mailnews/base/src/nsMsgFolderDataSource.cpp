@@ -1014,19 +1014,19 @@ nsMsgFolderDataSource::createFolderSpecialNode(nsIMsgFolder *folder,
   nsAutoString specialFolderString;
   
   if(flags & MSG_FOLDER_FLAG_INBOX)
-    specialFolderString.AssignWithConversion("Inbox");
+    specialFolderString = NS_LITERAL_STRING("Inbox");
   else if(flags & MSG_FOLDER_FLAG_TRASH)
-    specialFolderString.AssignWithConversion("Trash");
+    specialFolderString = NS_LITERAL_STRING("Trash");
   else if(flags & MSG_FOLDER_FLAG_QUEUE)
-    specialFolderString.AssignWithConversion("Unsent Messages");
+    specialFolderString = NS_LITERAL_STRING("Unsent Messages");
   else if(flags & MSG_FOLDER_FLAG_SENTMAIL)
-    specialFolderString.AssignWithConversion("Sent");
+    specialFolderString = NS_LITERAL_STRING("Sent");
   else if(flags & MSG_FOLDER_FLAG_DRAFTS)
-    specialFolderString.AssignWithConversion("Drafts");
+    specialFolderString = NS_LITERAL_STRING("Drafts");
   else if(flags & MSG_FOLDER_FLAG_TEMPLATES)
-    specialFolderString.AssignWithConversion("Templates");
+    specialFolderString = NS_LITERAL_STRING("Templates");
   else
-    specialFolderString.AssignWithConversion("none");
+    specialFolderString = NS_LITERAL_STRING("none");
   
   createNode(specialFolderString, target, getRDFService());
   return NS_OK;
@@ -1467,7 +1467,8 @@ nsMsgFolderDataSource::GetNumMessagesNode(PRInt32 numMessages, nsIRDFNode **node
 		createIntNode(numMessages, node, getRDFService());
 	else if(numMessages == -1)
 	{
-		nsAutoString unknownMessages; unknownMessages.AssignWithConversion("???");
+		nsAutoString unknownMessages; 
+        unknownMessages = NS_LITERAL_STRING("???");
 		createNode(unknownMessages, node, getRDFService());
 	}
 	else
@@ -1481,7 +1482,8 @@ nsMsgFolderDataSource::GetNumMessagesNode(PRInt32 numMessages, nsIRDFNode **node
 nsresult
 nsMsgFolderDataSource::createSubfoldersHaveUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target)
 {
-	nsAutoString unknownMessages; unknownMessages.AssignWithConversion("true");
+	nsAutoString unknownMessages; 
+    unknownMessages = NS_LITERAL_STRING("true");
 	createNode(unknownMessages, target, getRDFService());
 
 	return NS_OK;
