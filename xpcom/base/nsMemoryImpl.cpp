@@ -197,6 +197,9 @@ nsMemoryImpl::Startup()
 nsresult 
 nsMemoryImpl::Shutdown()
 {
+    // set mObservers to null just to be conservative:
+    ((nsMemoryImpl*)gMemory)->mObservers = nsnull;
+
     NS_RELEASE(gMemory);
     gMemory = nsnull;
     return NS_OK;
