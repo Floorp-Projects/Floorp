@@ -61,7 +61,8 @@ class nsISimpleEnumerator;
 
 // {1f34bc80-1bc7-11d6-a384-d705dd0746fc}
 #define NS_CONTENTAREADRAGDROP_CID             \
-{ 0x1f34bc80, 0x1bc7, 0x11d6, { 0xa3, 0x84, 0xd7, 0x05, 0xdd, 0x07, 0x46, 0xfc } }
+{ 0x1f34bc80, 0x1bc7, 0x11d6, \
+  { 0xa3, 0x84, 0xd7, 0x05, 0xdd, 0x07, 0x46, 0xfc } }
 
 #define NS_CONTENTAREADRAGDROP_CONTRACTID "@mozilla.org:/content/content-area-dragdrop;1"
 
@@ -69,9 +70,10 @@ class nsISimpleEnumerator;
 //
 // class nsContentAreaDragDrop
 //
-// The class that listens to the chrome events handles anything related
-// to drag and drop. Registers itself with the DOM with AddChromeListeners()
-// and removes itself with RemoveChromeListeners().
+// The class that listens to the chrome events handles anything
+// related to drag and drop. Registers itself with the DOM with
+// AddChromeListeners() and removes itself with
+// RemoveChromeListeners().
 //
 class nsContentAreaDragDrop : public nsIDOMDragListener,
                               public nsIDragDropHandler,
@@ -82,41 +84,48 @@ public:
   NS_DECL_NSIDRAGDROPHANDLER
   NS_DECL_NSIFLAVORDATAPROVIDER
   
-  nsContentAreaDragDrop ( ) ;
-  virtual ~nsContentAreaDragDrop ( ) ;
+  nsContentAreaDragDrop();
+  virtual ~nsContentAreaDragDrop();
 
-    // nsIDOMDragListener
-  NS_IMETHOD DragEnter(nsIDOMEvent* aMouseEvent) ;
-  NS_IMETHOD DragOver(nsIDOMEvent* aMouseEvent) ;
-  NS_IMETHOD DragExit(nsIDOMEvent* aMouseEvent) ;
-  NS_IMETHOD DragDrop(nsIDOMEvent* aMouseEvent) ;
-  NS_IMETHOD DragGesture(nsIDOMEvent* aMouseEvent) ;
-  NS_IMETHOD HandleEvent(nsIDOMEvent *event) ;
+  // nsIDOMDragListener
+  NS_IMETHOD DragEnter(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD DragOver(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD DragExit(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD DragDrop(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD DragGesture(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD HandleEvent(nsIDOMEvent *event);
 
 private:
 
-    // Add/remove the relevant listeners
+  // Add/remove the relevant listeners
   nsresult AddDragListener();
   nsresult RemoveDragListener();
 
-    // utility routines
-  static void NormalizeSelection(nsIDOMNode* inBaseNode, nsISelection* inSelection);
-  static void GetEventDocument(nsIDOMEvent* inEvent, nsIDOMDocument** outDocument);
+  // utility routines
+  static void NormalizeSelection(nsIDOMNode* inBaseNode,
+                                 nsISelection* inSelection);
+  static void GetEventDocument(nsIDOMEvent* inEvent,
+                               nsIDOMDocument** outDocument);
 
   static nsresult SaveURIToFile(nsAString& inSourceURIString,
                                 nsIFile* inDestFile);
   
-  nsresult CreateTransferable(nsIDOMEvent* inMouseEvent, nsITransferable** outTrans);
-  void ExtractURLFromData(const nsACString & inFlavor, nsISupports* inDataWrapper, PRUint32 inDataLen,
-                           nsAString & outURL);
-  nsresult GetHookEnumeratorFromEvent(nsIDOMEvent* inEvent, nsISimpleEnumerator** outEnumerator);
+  nsresult CreateTransferable(nsIDOMEvent* inMouseEvent,
+                              nsITransferable** outTrans);
+  void ExtractURLFromData(const nsACString & inFlavor,
+                          nsISupports* inDataWrapper, PRUint32 inDataLen,
+                          nsAString & outURL);
+  nsresult GetHookEnumeratorFromEvent(nsIDOMEvent* inEvent,
+                                      nsISimpleEnumerator** outEnumerator);
 
   PRPackedBool mListenerInstalled;
 
   nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;
-  nsIWebNavigation* mNavigator;                     // weak ref, this is probably my owning webshell
 
-}; // class nsContentAreaDragDrop
+  // weak ref, this is probably my owning webshell
+  nsIWebNavigation* mNavigator;
+
+};
 
 
 
