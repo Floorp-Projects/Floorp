@@ -586,7 +586,6 @@ _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
 	}
   if (!in_anim) {
     fprintf (stdout, "\"\n};\n\n");
-	if (iconIsNotUsedInMozLite) fprintf (stdout, "#endif /* !MOZ_LITE */\n");
     fprintf (stdout, "#endif /* %s */\n\n", macro);
   }
 
@@ -851,7 +850,6 @@ MKICON_GetImage(char *file)
 	}
 
       fprintf (stdout, "#ifdef %s\n", macro);
-	  if (iconIsNotUsedInMozLite) fprintf (stdout, "#ifndef MOZ_LITE\n");
       fprintf (stdout, "\nstruct fe_icon_data %s = {\n", s);
     }
 
@@ -928,13 +926,6 @@ process_filename(char* filename)
     char* p;
 
 	inactive_icon_p = (strstr(filename, ".i.gif") != NULL);
-
-	if (p = strstr(filename, " LITE")) {
-	  *p = '\0';
-	  iconIsNotUsedInMozLite = FALSE;
-	} else {
-	  iconIsNotUsedInMozLite = TRUE;
-	}
 
     p = strrchr(filename, '/') ? (strrchr(filename, '/') + 1) : filename;
 
