@@ -129,6 +129,7 @@ sub pickos {
         /Mozilla.*\(.*;.*; SunOS 5.*\)/ && do {return "Solaris";};
         /Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
         /Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
+        /Mozilla.*\(.*;.*; BSD\/OS.*\)/ && do {return "BSDI";};
         /Mozilla.*\(Win16.*\)/          && do {return "Windows 3.1";};
         /Mozilla.*\(Win95.*\)/          && do {return "Windows 95";};
         /Mozilla.*\(WinNT.*\)/          && do {return "Windows NT";};
