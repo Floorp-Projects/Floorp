@@ -146,7 +146,7 @@
             <children/>
           </xul:outlinerchildren>
         </xul:hbox>
-        <xul:scrollbar orient="vertical" class="outliner-scrollbar" collapsed="true"/>
+        <xul:scrollbar orient="vertical" class="select-scrollbar" disabled="true"/>
       </xul:outlinerrows>
     </content>
 
@@ -614,13 +614,13 @@
     <handlers>
       <handler event="underflow">
         <![CDATA[
-          this.childNodes[1].collapsed = true;
+          this.childNodes[1].setAttribute("disabled", true);
           event.preventBubble();
         ]]>
       </handler>
       <handler event="overflow">
         <![CDATA[
-          this.childNodes[1].collapsed = false;
+          this.childNodes[1].removeAttribute("disabled");
           event.preventBubble();
         ]]>
       </handler>

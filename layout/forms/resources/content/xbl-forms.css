@@ -74,6 +74,9 @@ xul|*.select-outlinerbody {
   display: -moz-box;
 }
 
+xul|*.select-scrollbar[disabled="true"] {
+  visibility: hidden;
+}
 
 input[type="checkbox"] {
   -moz-binding: url("chrome://forms/content/checkbox.xml#checkbox");
