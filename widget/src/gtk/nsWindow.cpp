@@ -250,11 +250,9 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                      GTK_SIGNAL_FUNC(handle_delete_event),
                      this);
 
-#ifdef NEW_CLIPBOARD_SUPPORT
+    // XXX Hack, give the clipboard class a pointer to
+    // any top-level window, how about mShell.
     nsClipboard::SetTopLevelWidget(mShell);
-#else
-    nsSelectionMgr::SetTopLevelWidget(mShell);
-#endif
   }
 
   // Force cursor to default setting
