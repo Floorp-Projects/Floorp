@@ -154,7 +154,8 @@ static HHOOK        gMsgFilterHook = NULL;
 static HHOOK        gCallProcHook  = NULL;
 static HHOOK        gCallMouseHook = NULL;
 static PRPackedBool gProcessHook   = PR_FALSE;
-
+static UINT         gRollupMsgId   = 0;
+static UINT         gHookTimerId   = 0;
 ////////////////////////////////////////////////////
 
 
@@ -921,6 +922,7 @@ nsWindow :: DealWithPopups ( UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESU
 
         // Tell hook to stop processing messages
         gProcessHook = PR_FALSE;
+        gRollupMsgId = 0;
 
         // return TRUE tells Windows that the event is consumed, 
         // false allows the event to be dispatched
@@ -5557,6 +5559,22 @@ MSGFEventMsgInfo gMSGFEvents[] = {
 
 
 //-------------------------------------------------------------------------
+// Scedules a timer for a window, so we can rollup after processing the hook event
+void nsWindow::ScheduleHookTimer(HWND aWnd, UINT aMsgId)
+{
+  // In some cases multiple hooks may be schedule
+  // so ignore any other requests once one timer is scheduled
+  if (gHookTimerId == 0) {
+    // Remember the message ID to be used later
+    gRollupMsgId = aMsgId;
+    // Schedule native timer for doing the rollup after 
+    // this event is done being processed
+    gHookTimerId = ::SetTimer( NULL, 0, 0, (TIMERPROC)HookTimerForPopups );
+    NS_ASSERTION(gHookTimerId, "Timer couldn't be created.");
+  }
+}
+
+//-------------------------------------------------------------------------
 // Process Menu messages 
 // Rollup when when is clicked
 LRESULT CALLBACK nsWindow::MozSpecialMsgFilter(int code, WPARAM wParam, LPARAM lParam)
@@ -5583,8 +5601,7 @@ LRESULT CALLBACK nsWindow::MozSpecialMsgFilter(int code, WPARAM wParam, LPARAM l
 
   if (gProcessHook && code == MSGF_MENU) {
     MSG* pMsg = (MSG*)lParam;
-    LRESULT result;
-    DealWithPopups (pMsg->message, pMsg->wParam, pMsg->lParam, &result) ;
+    ScheduleHookTimer( pMsg->hwnd, pMsg->message);
   }
 
   return ::CallNextHookEx(gMsgFilterHook, code, wParam, lParam);
@@ -5600,9 +5617,7 @@ LRESULT CALLBACK nsWindow::MozSpecialMouseProc(int code, WPARAM wParam, LPARAM l
     if (wParam == WM_LBUTTONDOWN) {
       nsIWidget* mozWin = (nsIWidget*)GetNSWindowPtr(ms->hwnd);
       if (mozWin == NULL) {
-        nsIWidget* rollupWidget = gRollupWidget;
-        LRESULT result;
-        DealWithPopups (wParam, NULL, NULL, &result);
+        ScheduleHookTimer( ms->hwnd, (UINT)wParam);
       }
     }
   }
@@ -5626,8 +5641,7 @@ LRESULT CALLBACK nsWindow::MozSpecialWndProc(int code, WPARAM wParam, LPARAM lPa
     if (cwpt->message == WM_MOVING || 
         cwpt->message == WM_SIZING || 
         cwpt->message == WM_GETMINMAXINFO) {
-      LRESULT result;
-      DealWithPopups (cwpt->message, cwpt->wParam, cwpt->lParam, &result);
+      ScheduleHookTimer( cwpt->hwnd, (UINT)cwpt->message);
     }
   }
 
@@ -5712,3 +5726,30 @@ void nsWindow::UnregisterSpecialDropdownHooks()
   }
 }
 
+//-------------------------------------------------------------------------
+// This timer is designed to only fire one time at most each time a "hook" function
+// is used to rollup the dropdown
+// In some cases, the timer may be scheduled from the hook, but that hook event or 
+// a subsequent event may roll up the dropdown before this timer function is executed.
+//
+// For example, if an MFC control takes focus, the combobox will lose focus and rollup
+// before this function fires.
+//
+VOID CALLBACK nsWindow::HookTimerForPopups( HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime ) 
+{
+  if (gHookTimerId != 0) {
+    // if the window is NULL then we need to use the ID to kill the timer
+    BOOL status = ::KillTimer(NULL, gHookTimerId);
+    NS_ASSERTION(status, "Hook Timer was not killed.");
+    gHookTimerId = 0;
+  }
+
+  if (gRollupMsgId != 0) {
+    // Note: DealWithPopups does the check to make sure that 
+    // gRollupListener and gRollupWidget are not NULL
+    LRESULT popupHandlingResult;
+    DealWithPopups(gRollupMsgId, 0, 0, &popupHandlingResult);
+    gRollupMsgId = 0;
+  }
+
+}
