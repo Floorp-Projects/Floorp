@@ -844,6 +844,8 @@ handle_gdk_event (GdkEvent *event, gpointer data)
 
       nsWindow *window = (nsWindow *)gtk_object_get_data (object, "nsWindow");
       GtkWidget *current_grab = gtk_grab_get_current();
+
+      // if there's a grab in progress, make sure to send it right to that widget.
       if (window->GrabInProgress()) {
         goto handle_as_superwin;
       }
@@ -881,7 +883,7 @@ handle_gdk_event (GdkEvent *event, gpointer data)
               handle_key_release_event (NULL, &event->key, window);
               break;
             default:
-              window->HandleEvent (event);
+              window->HandleGDKEvent (event);
             }
           return;
         }

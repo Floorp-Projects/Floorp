@@ -97,6 +97,7 @@ public:
   virtual void         OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent);
   virtual void         InstallFocusInSignal(GtkWidget * aWidget);
   virtual void         InstallFocusOutSignal(GtkWidget * aWidget);
+  void                 HandleGDKEvent(GdkEvent *event);
 #endif /* USE_SUPERWIN */
 
   gint                 ConvertBorderStyles(nsBorderStyle bs);

@@ -26,6 +26,8 @@
 
 #include <gdk/gdkx.h>
 #include <gtk/gtkprivate.h>
+// XXX FTSO nsWebShell
+#include <gdk/gdkprivate.h>
 
 #include <X11/Xatom.h>   // For XA_STRING
 
@@ -198,7 +200,7 @@ NS_IMETHODIMP nsWindow::Destroy()
   if (PR_FALSE == mOnDestroyCalled) {
     nsWidget::OnDestroy();
   }
-  
+
   if (mMozArea) {
     /* destroy the moz area.  the superwin will be destroyed by that mozarea */
     gtk_widget_destroy(mMozArea);
@@ -832,6 +834,27 @@ nsWindow::InstallFocusOutSignal(GtkWidget * aWidget)
 				GTK_SIGNAL_FUNC(nsWindow::FocusOutSignal));
 }
 
+void 
+nsWindow::HandleGDKEvent(GdkEvent *event)
+{
+  switch (event->any.type)
+    {
+    case GDK_MOTION_NOTIFY:
+      OnMotionNotifySignal (&event->motion);
+      break;
+    case GDK_BUTTON_PRESS:
+    case GDK_2BUTTON_PRESS:
+    case GDK_3BUTTON_PRESS:
+      OnButtonPressSignal (&event->button);
+      break;
+    case GDK_BUTTON_RELEASE:
+      OnButtonReleaseSignal (&event->button);
+      break;
+    default:
+      break;
+    }
+}
+
 #endif /* USE_SUPERWIN */
 
 void
@@ -1171,10 +1194,21 @@ void * nsWindow::GetNativeData(PRUint32 aDataType)
 #ifdef USE_SUPERWIN
   if (aDataType == NS_NATIVE_WINDOW)
   {
-    if (mSuperWin)
+    if (mSuperWin) {
+      GdkWindowPrivate *private_window = (GdkWindowPrivate *)mSuperWin->bin_window;
+      if (private_window->destroyed == PR_TRUE) {
+        return NULL;
+      }
       return (void *)mSuperWin->bin_window;
+    }
   }
   else if (aDataType == NS_NATIVE_WIDGET) {
+    if (mSuperWin) {
+      GdkWindowPrivate *private_window = (GdkWindowPrivate *)mSuperWin->bin_window;
+      if (private_window->destroyed == PR_TRUE) {
+        return NULL;
+      }
+    }
     return (void *)mSuperWin;
   }
 #else
@@ -1986,7 +2020,6 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     }
     gdk_superwin_resize(mSuperWin, aWidth, aHeight);
   }
-  // XXX chris
   if (mIsToplevel || mListenForResizes) {
     //g_print("sending resize event\n");
     nsSizeEvent sevent;

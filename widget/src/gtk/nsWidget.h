@@ -163,7 +163,6 @@ public:
     
   // Utility functions
 
-  void       HandleEvent(GdkEvent *event);
   PRBool     ConvertStatus(nsEventStatus aStatus);
   PRBool     DispatchMouseEvent(nsMouseEvent& aEvent);
   PRBool     DispatchStandardEvent(PRUint32 aMsg);
