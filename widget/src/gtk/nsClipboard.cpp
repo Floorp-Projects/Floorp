@@ -1353,7 +1353,7 @@ checkEventProc(Display *display, XEvent *event, XPointer arg)
 
     GdkWindow *cbWindow = gdk_window_lookup(event->xany.window);
     if (cbWindow) {
-      GtkWidget *cbWidget = NULL;
+      GtkWidget *cbWidget = nsnull;
       gdk_window_get_user_data(cbWindow, (gpointer *)&cbWidget);
       if (cbWidget && GTK_IS_WIDGET(cbWidget)) {
         context->cbWidget = cbWidget;
@@ -1372,7 +1372,7 @@ PRBool nsClipboard::FindSelectionNotifyEvent()
 {
   Display *xDisplay = GDK_DISPLAY();
   checkEventContext context;
-  context.cbWidget = NULL;
+  context.cbWidget = nsnull;
   context.selAtom = gdk_atom_intern("GDK_SELECTION", FALSE);
 
   // Send X events which are relevant to the ongoing selection retrieval
@@ -1413,7 +1413,7 @@ PRBool nsClipboard::FindSelectionNotifyEvent()
 #else
     tv.tv_sec = 0;
     tv.tv_usec = kClipboardTimeout;
-    select_result = select(cnumber, &select_set, NULL, NULL, &tv);
+    select_result = select(cnumber, &select_set, nsnull, nsnull, &tv);
 #endif
   } while (select_result == 1);
 
