@@ -416,30 +416,20 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     kidFrame->WillReflow(*aPresContext);
     kidFrame->MoveTo(x, kidMargin.top);
 
-    if (NS_UNCONSTRAINEDSIZE == aState.availSize.width)
-    {
-      // Reflow the child into the available space
-      nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
-                                   eReflowReason_Resize);
-      status = ReflowChild(kidFrame, aPresContext, desiredSize,
-                           kidReflowState);
-      nsCellLayoutData *kidLayoutData = new nsCellLayoutData((nsTableCellFrame *)kidFrame, &desiredSize, pKidMaxElementSize);
-      ((nsTableCellFrame *)kidFrame)->SetCellLayoutData(kidLayoutData);
-    }
-    else
-    { // we're in a constrained situation, so get the avail width from the known column widths
-      nsCellLayoutData *cellData = aState.tableFrame->GetCellLayoutData((nsTableCellFrame *)kidFrame);
-      PRInt32 cellStartingCol = ((nsTableCellFrame *)kidFrame)->GetColIndex();
-      PRInt32 cellColSpan = ((nsTableCellFrame *)kidFrame)->GetColSpan();
-      nscoord availWidth = 0;
-      for (PRInt32 numColSpan=0; numColSpan<cellColSpan; numColSpan++)
-        availWidth += aState.tableFrame->GetColumnWidth(cellStartingCol+numColSpan);
+    // at this point, we know the column widths.  
+    // so we get the avail width from the known column widths
+    nsCellLayoutData *cellData = aState.tableFrame->GetCellLayoutData((nsTableCellFrame *)kidFrame);
+    PRInt32 cellStartingCol = ((nsTableCellFrame *)kidFrame)->GetColIndex();
+    PRInt32 cellColSpan = ((nsTableCellFrame *)kidFrame)->GetColSpan();
+    nscoord availWidth = 0;
+    for (PRInt32 numColSpan=0; numColSpan<cellColSpan; numColSpan++)
+      availWidth += aState.tableFrame->GetColumnWidth(cellStartingCol+numColSpan);
 
-      kidAvailSize.width = availWidth;
-      nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
-                                   eReflowReason_Resize);
-      status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
-    }
+    kidAvailSize.width = availWidth;
+    nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
+                                 eReflowReason_Resize);
+    status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
+
     if (gsDebug1)
     {
       if (nsnull!=pKidMaxElementSize)
@@ -942,6 +932,9 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
   LastChild(prevKidFrame);  // XXX remember this...
 
   for (;;) {
+
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE==aState.availSize.width, "bad size");
+
     // Get the next content object
     nsIContent* cell = mContent->ChildAt(kidIndex);
     if (nsnull == cell) {
@@ -995,13 +988,6 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
 
     // If we're constrained compute the origin for the child frame
     nscoord x = margin.left;
-    if (NS_UNCONSTRAINEDSIZE!=aState.availSize.width)
-    {
-      // Adjust the running x-offset, taking into account intruders (cells from prior rows with rowspans > 1)
-      PRInt32 cellColIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
-      for (PRInt32 colIndex=0; colIndex<cellColIndex; colIndex++)
-            x += aState.tableFrame->GetColumnWidth(colIndex);
-    }
 
     // Try to reflow the child into the available space. It might not
     // fit or might need continuing.
@@ -1012,28 +998,12 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
     // Inform the child it's being reflowed
     kidFrame->WillReflow(*aPresContext);
     kidFrame->MoveTo(x, topMargin);
-    if (NS_UNCONSTRAINEDSIZE == aState.availSize.width)
-    {
-      nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
-                                   eReflowReason_Initial);
-      // Reflow the child into the available space
-      status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
-      nsCellLayoutData *kidLayoutData = new nsCellLayoutData((nsTableCellFrame *)kidFrame, &desiredSize, pKidMaxElementSize);
-      ((nsTableCellFrame *)kidFrame)->SetCellLayoutData(kidLayoutData);
-    }
-    else
-    { // we're in a constrained situation, so get the avail width from the known column widths
-      nsCellLayoutData *cellData = aState.tableFrame->GetCellLayoutData((nsTableCellFrame *)kidFrame);
-      PRInt32 cellStartingCol = ((nsTableCellFrame *)kidFrame)->GetColIndex();
-      PRInt32 cellColSpan = ((nsTableCellFrame *)kidFrame)->GetColSpan();
-      nscoord availWidth = 0;
-      for (PRInt32 numColSpan=0; numColSpan<cellColSpan; numColSpan++)
-        availWidth += aState.tableFrame->GetColumnWidth(cellStartingCol+numColSpan);
-      NS_ASSERTION(0<availWidth, "illegal width for this column");
-      kidAvailSize.width = availWidth;
-      nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize, eReflowReason_Initial);
-      status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
-    }
+    nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
+                                 eReflowReason_Initial);
+    // Reflow the child into the available space (always unconstrained space)
+    status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
+    nsCellLayoutData *kidLayoutData = new nsCellLayoutData((nsTableCellFrame *)kidFrame, &desiredSize, pKidMaxElementSize);
+    ((nsTableCellFrame *)kidFrame)->SetCellLayoutData(kidLayoutData);
     if (nsnull!=pKidMaxElementSize)
     {
       if (gsDebug1) 
