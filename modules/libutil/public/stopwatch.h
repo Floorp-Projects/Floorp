@@ -2,6 +2,7 @@
 #define __STOPWATCH_H
 #include "nscore.h"
 #include "prlog.h"
+#include "nsDeque.h"
 
 const double gTicks = 1.0e-7;
 
@@ -65,10 +66,13 @@ private:
    double         fTotalCpuTime;    //total cpu time
    double         fTotalRealTime;   //total real time
    EState         fState;           //stopwatch state
-   EState         fSavedState;      //last saved state
+   nsDeque*       mSavedStates;     //stack of saved states
+   PRBool         mCreatedStack;    //Initially false.  Set to true in first SaveState() call.
 
 public:
    Stopwatch();
+   virtual ~Stopwatch();
+
    void           Start(PRBool reset = PR_TRUE);
    void           Stop();
    void           Continue();
