@@ -1958,7 +1958,10 @@ wallet_InitializeCurrentURL(nsIDocument * doc) {
 #else
   const char* host;
 #endif
-  url->GetHost(&host);
+  nsresult rv = url->GetHost(&host);
+  if (NS_FAILED(rv)) {
+    return;
+  }
   nsAutoString urlName = nsAutoString(host);
 #ifdef NECKO
   nsCRT::free(host);
