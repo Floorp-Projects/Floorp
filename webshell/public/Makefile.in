@@ -37,6 +37,7 @@ EXPORTS =					\
     nsIClipboardCommands.h      \
 	nsIURLListener.h            \
 	nsweb.h					\
+	nsIDocStreamLoaderFactory.h		\
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

@@ -36,6 +36,7 @@ EXPORTS =				\
 	nsIXULParentDocument.h	\
 	nsIXULChildDocument.h	\
 	nsIXULDocumentInfo.h	\
+	nsIStreamLoadableDocument.h	\
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
