@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+
+/** Rhino parser */
+
+
 package org.mozilla.javascript;
 
 import org.mozilla.javascript.ErrorReporter;
