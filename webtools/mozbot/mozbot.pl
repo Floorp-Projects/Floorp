@@ -302,6 +302,41 @@ sub on_msg
     $self->privmsg ($nick, "unknown command \"$cmd\". " . &bot_hi ($nick));
     }
 
+
+
+# Call longmsg with bits of messages.  They will be appended together using 
+# "..." as a spacer.  Call flushlongmsg when you're done.
+
+
+sub longmsg
+{
+    my $MAXPROTOCOLLENGTH = 255;
+    my ($self, $text) = (@_);
+    if (!defined $::longtext) {
+        $::longtext = "";
+    }
+    if (length($::longtext) + length($text) + 5 > $MAXPROTOCOLLENGTH) {
+        flushlongmsg($self);
+    }
+    if ($::longtext eq "") {
+        $::longtext = $text;
+    } else {
+        $::longtext .= " ... " . $text;
+    }
+}
+
+
+sub flushlongmsg
+{
+    my ($self) = (@_);
+    if ($::longtext ne "") {
+        $self->privmsg($channel, $::longtext);
+        $::longtext = "";
+    }
+}
+    
+
+
 sub on_public
     {
   my ($self, $event) = @_;
@@ -326,34 +361,37 @@ sub on_public
             }
 				elsif ($cmd =~ /^(slashdot|sd|\/\.)/)
 					{
-					$self->privmsg ($channel, "Headlines from http://slashdot.org:");
+					longmsg($self,
+                            "Headlines from http://slashdot.org:");
 					if ($#slashdot == -1)
 						{
-						$self->privmsg ($channel, "- no slashdot headlines yet -");
+						longmsg ($self, "- no slashdot headlines yet -");
 						}
 					else
 						{
 						foreach (@slashdot)
 							{
-							$self->privmsg ($channel, $_);
+							longmsg ($self, $_);
 							}
 						}
+                    flushlongmsg($self);
 					}
 				elsif ($cmd =~ /^(zine|mozillazine|mz)/)
 					{
-					$self->privmsg ($channel, 
+					longmsg ($self, 
 						"Headlines from mozillaZine (http://www.mozillazine.org/)");
 					if ($#mozillazine == -1)
 						{
-						$self->privmsg ($channel, "- sorry, no mozillazine headlines -");
+						longmsg ($self, "- sorry, no mozillazine headlines -");
 						}
 					else
 						{
 						foreach (@mozillazine)
 							{
-							$self->privmsg ($channel, $_);
+							longmsg ($self, $_);
 							}
 						}
+                    flushlongmsg($self);
 					}
         elsif ($cmd =~ /^(hi|hello|lo|sup)/)
             {
