@@ -30,7 +30,9 @@
  * use <FONT color=> to color the different syntactical parts
  * of the HTML stream
  */
+#ifndef MODULAR_NETLIB
 #include "pa_parse.h"
+#endif
 #include "xpgetstr.h"
 #include "intl_csi.h"
 #define VIEW_SOURCE_TARGET_WINDOW_NAME "%ViewSourceWindow"
@@ -56,7 +58,9 @@ typedef struct _DataObject {
     StatesEnum state;
     char tag[MAXTAGLEN+1];
     uint tag_index;
+#ifndef MODULAR_NETLIB
     int  tag_type;
+#endif
     PRBool in_broken_html;
 } DataObject;
 
@@ -79,11 +83,13 @@ PRIVATE char *net_BeginColorHTMLTag (DataObject *obj)
 {
 	char *new_markup = 0;
 
+#ifndef MODULAR_NETLIB
 	if (obj->tag_type == P_SCRIPT)
 	  {
 		StrAllocCopy(new_markup, "</XMP><PRE>");
 		obj->tag_type = P_UNKNOWN;
 	  }
+#endif
 	StrAllocCat(new_markup, BEGIN_TAG_MARKUP);
 	StrAllocCat(new_markup, "&lt;");
 	StrAllocCat(new_markup, BEGIN_TAG_NAME_MARKUP);
@@ -102,6 +108,7 @@ PRIVATE char *net_EndColorHTMLTag (DataObject *obj)
 	  }
 	StrAllocCat(new_markup, "&gt;");
 	StrAllocCat(new_markup, END_TAG_MARKUP);
+#ifndef MODULAR_NETLIB
 	if (obj->tag_type == P_SCRIPT)
 	  {
 		StrAllocCat(new_markup, "</PRE><XMP>");
@@ -111,6 +118,7 @@ PRIVATE char *net_EndColorHTMLTag (DataObject *obj)
 	  {
 		obj->state = IN_CONTENT;
 	  }
+#endif
 	return new_markup;
 }
 
@@ -199,7 +207,9 @@ PRIVATE int net_ColorHTMLWrite (NET_StreamClass *stream, CONST char *s, int32 l)
 					StrAllocCat(new_markup, tiny_buf);
 					obj->state = IN_TAG;
 					obj->tag[obj->tag_index] = '\0';
+#ifndef MODULAR_NETLIB
 					obj->tag_type = pa_tokenize_tag(obj->tag);
+#endif
 				  }
 				else if(*cp == '>')
 				  {
@@ -582,7 +592,9 @@ net_ColorHTMLStream (int         format_out,
 	obj->state = IN_CONTENT;
 
 	obj->next_stream = next_stream;
+#ifndef MODULAR_NETLIB
 	obj->tag_type = P_UNKNOWN;
+#endif
 
     new_stream->name           = "HTML Colorer";
     new_stream->complete       = (MKStreamCompleteFunc) net_ColorHTMLComplete;

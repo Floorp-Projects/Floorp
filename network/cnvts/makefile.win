@@ -41,16 +41,16 @@ MISCDEP=$(LLIBS)
 OBJS=   \
 	.\$(OBJDIR)\cvactive.obj	\
 	.\$(OBJDIR)\cvchunk.obj		\
-!ifndef MODULAR_NETLIB
 	.\$(OBJDIR)\cvcolor.obj		\
-	.\$(OBJDIR)\cvmime.obj		\
-	.\$(OBJDIR)\cvpics.obj		\
-!endif
 	.\$(OBJDIR)\cvdisk.obj		\
 	.\$(OBJDIR)\cvsimple.obj	\
 	.\$(OBJDIR)\cvunzip.obj		\
 	.\$(OBJDIR)\cvjscfg.obj		\
 	.\$(OBJDIR)\txview.obj		\
+!ifndef MODULAR_NETLIB
+	.\$(OBJDIR)\cvmime.obj		\
+	.\$(OBJDIR)\cvpics.obj		\
+!endif
 	$(NULL)
 
 
