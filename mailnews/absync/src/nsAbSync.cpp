@@ -989,7 +989,7 @@ nsAbSync::ErrorFromServer(char **errString)
 
 // If this returns true, we are done with the data...
 PRBool
-nsAbSync::DecoderDone()
+nsAbSync::EndOfStream()
 {
   if ( (!*mProtocolOffset) )
     return PR_TRUE;
@@ -1000,34 +1000,34 @@ nsAbSync::DecoderDone()
 nsresult        
 nsAbSync::ProcessOpReturn()
 {
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 nsresult        
 nsAbSync::ProcessNewRecords()
 {
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 nsresult        
 nsAbSync::ProcessDeletedRecords()
 {
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 nsresult        
 nsAbSync::ProcessLastChange()
 {
   char      *aLine = nsnull;
-
-  if (NS_FAILED(AdvanceToNextLine()))
+ 
+  if (EndOfStream())
     return NS_ERROR_FAILURE;
 
-  if (NS_SUCCEEDED(ExtractCurrentLine(&aLine)))
+  if ( (aLine = ExtractCurrentLine()) != nsnull)
   {
-    if (aLine)
+    if (*aLine)
     {
-      mLastChangeNum = nsCRT::atoi(nsString(aLine).GetUnicode());
+      mLastChangeNum = atoi(aLine);
       PR_FREEIF(aLine);
     }
     return NS_OK;
@@ -1036,49 +1036,83 @@ nsAbSync::ProcessLastChange()
     return NS_ERROR_FAILURE;
 }
 
-nsresult        
-nsAbSync::ExtractCurrentLine(char   **aLine)
+char *        
+nsAbSync::ExtractCurrentLine()
 {
   nsString    extractString = ""; 
 
-  *aLine = nsnull;
-  while (*mProtocolOffset)
+  while ( (*mProtocolOffset) && 
+          ( (*mProtocolOffset != CR) && (*mProtocolOffset != LF) )
+        )
   {
-    while ( (*mProtocolOffset != CR) && (*mProtocolOffset == LF) )
-    {
-      extractString.Append(*mProtocolOffset);
-      mProtocolOffset++;
-    }
+    extractString.Append(mProtocolOffset, 1);
+    mProtocolOffset++;
   }
 
   if (!*mProtocolOffset)
-    return NS_ERROR_FAILURE;
+    return nsnull;
   else
-    return NS_OK;
+  {
+    while ( (*mProtocolOffset) && 
+            (*mProtocolOffset != LF) )
+            mProtocolOffset++;
+
+    if (*mProtocolOffset == LF)
+      mProtocolOffset++;
+
+    return extractString.ToNewCString();
+  }
 }
 
 nsresult        
 nsAbSync::AdvanceToNextLine()
 {
-  while (*mProtocolOffset)
+  // First, find first CR or LF...
+  while ( (*mProtocolOffset) && 
+          ( (*mProtocolOffset != CR) && (*mProtocolOffset != LF) )
+        )
   {
-    while ( (*mProtocolOffset != CR) && (*mProtocolOffset != LF) )
+    mProtocolOffset++;
+  }
+
+  // now, make sure we are past the LF...
+  if (*mProtocolOffset)
+  {
+    while ( (*mProtocolOffset) && 
+            (*mProtocolOffset != LF) )
+        mProtocolOffset++;
+    
+    if (*mProtocolOffset == LF)
       mProtocolOffset++;
   }
 
-  if (!*mProtocolOffset)
-    return NS_ERROR_FAILURE;
+  return NS_OK;   // at end..but this is ok...
+}
 
-  while (*mProtocolOffset)
+nsresult
+nsAbSync::AdvanceToNextSection()
+{
+  // If we are sitting on a section...bump past it...
+  mProtocolOffset++;
+  while (!EndOfStream() && *mProtocolOffset != '~')
+    AdvanceToNextLine();
+  return NS_OK;
+}
+
+// See if we are sitting on a particular tag...and eat if if we are
+PRBool          
+nsAbSync::TagHit(char *aTag)
+{
+  if ((!aTag) || (!*aTag))
+    return PR_FALSE;
+  
+  if (!nsCRT::strncasecmp(mProtocolOffset, aTag, nsCRT::strlen(aTag)))
   {
-    while ( (*mProtocolOffset == CR) || (*mProtocolOffset == LF) )
-      mProtocolOffset++;
+    AdvanceToNextLine();
+    return PR_TRUE;
   }
-
-  if (!*mProtocolOffset)
-    return NS_ERROR_FAILURE;
   else
-    return NS_OK;
+    return PR_FALSE;
 }
 
 PRBool
@@ -1086,17 +1120,18 @@ nsAbSync::ParseNextSection()
 {
   nsresult      rv = NS_OK;
 
-  while ( (*mProtocolOffset == CR) || (*mProtocolOffset == LF) )
-    mProtocolOffset++;
-
-  if (!nsCRT::strncasecmp(mProtocolOffset, SERVER_OP_RETURN, nsCRT::strlen(SERVER_OP_RETURN)))
+  if (TagHit(SERVER_OP_RETURN))
     rv = ProcessOpReturn();
-  else if (!nsCRT::strncasecmp(mProtocolOffset, SERVER_NEW_RECORDS, nsCRT::strlen(SERVER_NEW_RECORDS)))
+  else if (TagHit(SERVER_NEW_RECORDS))
     rv = ProcessNewRecords();
-  else if (!nsCRT::strncasecmp(mProtocolOffset, SERVER_DELETED_RECORDS, nsCRT::strlen(SERVER_DELETED_RECORDS)))
+  else if (TagHit(SERVER_DELETED_RECORDS))
     rv = ProcessDeletedRecords();
-  else if (!nsCRT::strncasecmp(mProtocolOffset, SERVER_LAST_CHANGED, nsCRT::strlen(SERVER_LAST_CHANGED)))
+  else if (TagHit(SERVER_LAST_CHANGED))
     rv = ProcessLastChange();
+
+  // If this is a failure, then get to the next section!
+  if (NS_FAILED(rv))
+    AdvanceToNextSection();
 
   return PR_TRUE;
 }
@@ -1130,7 +1165,7 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
     return NS_ERROR_FAILURE;
   }
 
-  while ( (!DecoderDone()) && (parseOk) )
+  while ( (!EndOfStream()) && (parseOk) )
   {
     parseOk = ParseNextSection();
   }

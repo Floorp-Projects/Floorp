@@ -174,10 +174,12 @@ private:
   // The following is for protocol parsing
   ///////////////////////////////////////////////
   PRBool          ErrorFromServer(char **errString);      // Return true if the server returned an error...
-  PRBool          DecoderDone();                          // If this returns true, we are done with the data...
+  PRBool          EndOfStream();                          // If this returns true, we are done with the data...
   PRBool          ParseNextSection();                     // Deal with next section
   nsresult        AdvanceToNextLine();
-  nsresult        ExtractCurrentLine(char **aLine);
+  nsresult        AdvanceToNextSection();
+  char            *ExtractCurrentLine();
+  PRBool          TagHit(char *aTag);                     // See if we are sitting on a particular tag...and eat if if we are
 
   nsresult        ProcessOpReturn();
   nsresult        ProcessNewRecords();
