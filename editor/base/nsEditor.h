@@ -360,7 +360,8 @@ protected:
 
 public:
 
-  static nsString& GetTextNodeTag();
+  /** return the string that represents text nodes in the content tree */
+  static nsresult GetTextNodeTag(nsString& aOutString);
 
   /** 
    * SplitNode() creates a new node identical to an existing node, and split the contents between the two nodes

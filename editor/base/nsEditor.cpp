@@ -123,7 +123,7 @@ const char* nsEditor::kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 const char* nsEditor::kMOZEditorBogusNodeValue="TRUE";
 
 #ifdef NS_DEBUG_EDITOR
-static PRBool gNoisy = PR_FALSE;
+static PRBool gNoisy = PR_TRUE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
@@ -1355,11 +1355,20 @@ NS_IMETHODIMP nsEditor::ScrollIntoView(PRBool aScrollToBegin)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
-nsString& nsEditor::GetTextNodeTag()
+/** static helper method */
+nsresult nsEditor::GetTextNodeTag(nsString& aOutString)
 {
-  static nsString gTextNodeTag("special text node tag");
-  return gTextNodeTag;
+  aOutString = "";
+  static nsString *gTextNodeTag=nsnull;
+  if (!gTextNodeTag)
+  {
+    gTextNodeTag = new nsString("special text node tag");
+    if (!gTextNodeTag) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  aOutString = *gTextNodeTag;
+  return NS_OK;
 }
 
 
@@ -1398,7 +1407,10 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert)
         if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(&offset)) && selectedNode)
         {
           nsCOMPtr<nsIDOMNode> newNode;
-          result = CreateNode(GetTextNodeTag(), selectedNode, offset, 
+          nsAutoString textNodeTag;
+          result = GetTextNodeTag(textNodeTag);
+          if (NS_FAILED(result)) { return result; }
+          result = CreateNode(textNodeTag, selectedNode, offset, 
                               getter_AddRefs(newNode));
           if (NS_SUCCEEDED(result) && newNode)
           {
@@ -1720,7 +1732,10 @@ NS_IMETHODIMP nsEditor::DoInitialInsert(const nsString & aStringToInsert)
       // create transaction to insert the text node, 
       // and create a transaction to insert the text
       CreateElementTxn *txn;
-      result = CreateTxnForCreateElement(GetTextNodeTag(), node, 0, &txn);
+      nsAutoString textNodeTag;
+      result = GetTextNodeTag(textNodeTag);
+      if (NS_FAILED(result)) { return result; }
+      result = CreateTxnForCreateElement(textNodeTag, node, 0, &txn);
       if ((NS_SUCCEEDED(result)) && txn)
       {
         result = Do(txn);
@@ -2885,7 +2900,10 @@ nsEditor::SetInputMethodText(const nsString& aStringToInsert, nsIPrivateTextRang
       if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(&offset)) && selectedNode)
       {
         nsCOMPtr<nsIDOMNode> newNode;
-        result = CreateNode(GetTextNodeTag(), selectedNode, offset+1,getter_AddRefs(newNode));
+        nsAutoString textNodeTag;
+        result = GetTextNodeTag(textNodeTag);
+        if (NS_FAILED(result)) { return result; }
+        result = CreateNode(textNodeTag, selectedNode, offset+1,getter_AddRefs(newNode));
         if (NS_SUCCEEDED(result) && newNode)
         {
           nsCOMPtr<nsIDOMCharacterData>newTextNode;
@@ -2933,7 +2951,10 @@ NS_IMETHODIMP nsEditor::DoInitialInputMethodInsert(const nsString & aStringToIns
       // create transaction to insert the text node, 
       // and create a transaction to insert the text
       CreateElementTxn *txn;
-      result = CreateTxnForCreateElement(GetTextNodeTag(), node, 0, &txn);
+      nsAutoString textNodeTag;
+      result = GetTextNodeTag(textNodeTag);
+      if (NS_FAILED(result)) { return result; }
+      result = CreateTxnForCreateElement(textNodeTag, node, 0, &txn);
       if ((NS_SUCCEEDED(result)) && txn)
       {
         result = Do(txn);

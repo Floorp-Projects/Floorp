@@ -76,7 +76,11 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
 	if (NS_FAILED(result)) return result;
 	if (!doc) return NS_ERROR_NULL_POINTER;
 
-  if (nsEditor::GetTextNodeTag() == mTag) 
+  nsAutoString textNodeTag;
+  result = nsEditor::GetTextNodeTag(textNodeTag);
+  if (NS_FAILED(result)) { return result; }
+
+  if (textNodeTag == mTag) 
   {
     const nsString stringData;
     nsCOMPtr<nsIDOMText>newTextNode;
