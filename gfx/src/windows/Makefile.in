@@ -62,9 +62,10 @@ REQUIRES	= xpcom \
 		  necko \
 		  content \
 		  layout \
-      dom \
+		  dom \
 		  debug \
 		  imglib2 \
+		  windowwatcher \
 		  $(NULL)
 
 CPPSRCS		= \
