@@ -516,7 +516,9 @@ nsViewerApp::AfterDispatch()
 #include "nsIURL.h"
 
 #ifndef XP_PC
+#ifndef XP_MAC
 #define _MAX_PATH 512
+#endif
 #endif
 
 #define DEBUG_EMPTY "(none)"
