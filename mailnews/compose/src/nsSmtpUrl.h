@@ -20,6 +20,7 @@
 #define nsSmtpUrl_h__
 
 #include "nsISmtpUrl.h"
+#include "nsCOMPtr.h"
 #include "nsINetlibURL.h" /* this should be temporary until Network N2 project lands */
 #include "nsIUrlListenerManager.h"
 
@@ -160,7 +161,7 @@ protected:
     nsISupports*    m_container;
 
 	// manager of all of current url listeners....
-	nsIUrlListenerManager * m_urlListeners;
+	nsCOMPtr<nsIUrlListenerManager> m_urlListeners;
 
 	/* Smtp specific event sinks */
 	nsString	m_userPassword;

@@ -78,20 +78,15 @@ nsSmtpUrl::nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup) :
     m_search = nsnull;
 	m_errorMessage = nsnull;
 	m_runningUrl = PR_FALSE;
-
-	nsServiceManager::GetService(kUrlListenerManagerCID, nsIUrlListenerManager::GetIID(),
-								 (nsISupports **)&m_urlListeners);
+	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsIUrlListenerManager::GetIID(), (void **) getter_AddRefs(m_urlListeners));
  
     m_container = aContainer;
     NS_IF_ADDREF(m_container);
-    //  ParseURL(aSpec, aURL);      // XXX whh
 }
  
 nsSmtpUrl::~nsSmtpUrl()
 {
 	CleanupSmtpState(); 
-
-	NS_IF_RELEASE(m_urlListeners);
 
     NS_IF_RELEASE(m_container);
 	PR_FREEIF(m_errorMessage);
@@ -105,10 +100,6 @@ nsSmtpUrl::~nsSmtpUrl()
     PR_FREEIF(m_file);
     PR_FREEIF(m_ref);
     PR_FREEIF(m_search);
-    if (nsnull != m_URL_s) 
-	{
-//        NET_DropURLStruct(m_URL_s);
-    }
 }
   
 NS_IMPL_THREADSAFE_ADDREF(nsSmtpUrl);
