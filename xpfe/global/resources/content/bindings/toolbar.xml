@@ -171,7 +171,7 @@
     </resources>
 
     <content>
-      <xul:toolbargrippy xbl:inherits="tooltiptext=grippytooltiptext,last-toolbar,hidden=grippyhidden"
+      <xul:toolbargrippy xbl:inherits="last-toolbar,hidden=grippyhidden"
                          tbattr="toolbar-grippy" class="toolbar-grippy"/>
       <xul:hbox flex="1" class="toolbar-holder" xbl:inherits="collapsed,last-toolbar" align="center">
         <children/>
