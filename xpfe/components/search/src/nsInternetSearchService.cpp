@@ -2245,18 +2245,30 @@ NS_IMETHODIMP
 InternetSearchDataSource::RememberLastSearchText(const PRUnichar *escapedSearchStr)
 {
 	nsresult		rv;
-	nsCOMPtr<nsIRDFLiteral>	textLiteral;
-	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(escapedSearchStr, getter_AddRefs(textLiteral))))
+
+	nsCOMPtr<nsIRDFNode>	textNode;
+	if (NS_SUCCEEDED(rv = mInner->GetTarget(kNC_LastSearchRoot, kNC_LastText, PR_TRUE,
+		getter_AddRefs(textNode))))
 	{
-		nsCOMPtr<nsIRDFNode>	textNode;
-		if (NS_SUCCEEDED(rv = mInner->GetTarget(kNC_LastSearchRoot, kNC_LastText, PR_TRUE,
-			getter_AddRefs(textNode))) && (rv != NS_RDF_NO_VALUE))
+		if (escapedSearchStr != nsnull)
 		{
-			mInner->Change(kNC_LastSearchRoot, kNC_LastText, textNode, textLiteral);
+			nsresult		temprv;
+			nsCOMPtr<nsIRDFLiteral>	textLiteral;
+			if (NS_SUCCEEDED(temprv = gRDFService->GetLiteral(escapedSearchStr, getter_AddRefs(textLiteral))))
+			{
+				if (rv != NS_RDF_NO_VALUE)
+				{
+					mInner->Change(kNC_LastSearchRoot, kNC_LastText, textNode, textLiteral);
+				}
+				else
+				{
+					mInner->Assert(kNC_LastSearchRoot, kNC_LastText, textLiteral, PR_TRUE);
+				}
+			}
 		}
-		else
+		else if (rv != NS_RDF_NO_VALUE)
 		{
-			mInner->Assert(kNC_LastSearchRoot, kNC_LastText, textLiteral, PR_TRUE);
+			rv = mInner->Unassert(kNC_LastSearchRoot, kNC_LastText, textNode);
 		}
 	}
 	return(rv);
@@ -2331,7 +2343,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 
 			// extension for engines which can have multiple "actions"
 			if (NS_FAILED(rv = GetData(dataUni, "browser", 0, "alsomatch", action)))	continue;
-			if (shortURL.EqualsIgnoreCase(action))
+			if (action.Find(shortURL, PR_TRUE) >= 0)
 			{
 				foundEngine = PR_TRUE;
 				break;
@@ -2359,48 +2371,81 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 			queryStr.AssignWithConversion("&");
 			queryStr += userVar;
 			queryStr.AppendWithConversion("=");
-			if ((queryOffset = searchURL.Find(queryStr, PR_TRUE )) < 0)
-				return(NS_RDF_NO_VALUE);
+			queryOffset = searchURL.Find(queryStr, PR_TRUE);
 		}
-		
+
 		nsAutoString	searchText;
-		PRInt32		andOffset;
-		searchURL.Right(searchText, searchURL.Length() - queryOffset - queryStr.Length());
-
-		if ((andOffset = searchText.FindChar(PRUnichar('&'))) >= 0)
+		if (queryOffset >= 0)
 		{
-			searchText.Truncate(andOffset);
+			PRInt32		andOffset;
+			searchURL.Right(searchText, searchURL.Length() - queryOffset - queryStr.Length());
+
+			if ((andOffset = searchText.FindChar(PRUnichar('&'))) >= 0)
+			{
+				searchText.Truncate(andOffset);
+			}
 		}
-		if (searchText.Length() < 1)	return(NS_RDF_NO_VALUE);
-
-		// forget about any previous search results
-		ClearResults();
-
-		// remember the text of the last search
-		RememberLastSearchText(searchText.GetUnicode());
-
-		// construct the search query uri
-		engineURI.InsertWithConversion("internetsearch:engine=", 0);
-		engineURI.AppendWithConversion("&text=");
-		engineURI += searchText;
-
-		// remember the last search query
-		const PRUnichar	*uriUni = engineURI.GetUnicode();
-		nsCOMPtr<nsIRDFLiteral>	uriLiteral;
-		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(uriUni, getter_AddRefs(uriLiteral))))
+		if (searchText.Length() > 0)
 		{
-			rv = mInner->Assert(kNC_LastSearchRoot, kNC_Ref, uriLiteral, PR_TRUE);
-		}
+			// remember the text of the last search
+			RememberLastSearchText(searchText.GetUnicode());
+
+			// construct the search query uri
+			engineURI.InsertWithConversion("internetsearch:engine=", 0);
+			engineURI.AppendWithConversion("&text=");
+			engineURI += searchText;
 
 #ifdef	DEBUG_SEARCH_OUTPUT
-		char	*engineMatch = searchText.ToNewCString();
-		if (engineMatch)
-		{
-			printf("FindInternetSearchResults: found a search engine match: '%s'\n\n", engineMatch);
-			delete [] engineMatch;
-			engineMatch = nsnull;
-		}
+			char	*engineMatch = searchText.ToNewCString();
+			if (engineMatch)
+			{
+				printf("FindInternetSearchResults: search for: '%s'\n\n",
+					engineMatch);
+				Recycle(engineMatch);
+				engineMatch = nsnull;
+			}
 #endif
+		}
+		else
+		{
+			// not able to determine engine URI, so just use the search URL
+			engineURI = searchURL;
+
+			// clear the text of the last search
+			RememberLastSearchText(nsnull);
+		}
+
+		// update "#Ref" on LastSearchRoot
+		nsCOMPtr<nsIRDFNode>	oldNode;
+		if (NS_SUCCEEDED(rv = mInner->GetTarget(kNC_LastSearchRoot, kNC_Ref, PR_TRUE,
+			getter_AddRefs(oldNode))))
+		{
+			if (engineURI.Length() > 0)
+			{
+				const PRUnichar	*uriUni = engineURI.GetUnicode();
+				nsCOMPtr<nsIRDFLiteral>	uriLiteral;
+				nsresult		temprv;
+				if ((uriUni) && (NS_SUCCEEDED(temprv = gRDFService->GetLiteral(uriUni,
+					getter_AddRefs(uriLiteral)))))
+				{
+					if (rv != NS_RDF_NO_VALUE)
+					{
+						rv = mInner->Change(kNC_LastSearchRoot, kNC_Ref, oldNode, uriLiteral);
+					}
+					else
+					{
+						rv = mInner->Assert(kNC_LastSearchRoot, kNC_Ref, uriLiteral, PR_TRUE);
+					}
+				}
+			}
+			else
+			{
+				rv = mInner->Unassert(kNC_LastSearchRoot, kNC_Ref, oldNode);
+			}
+		}
+
+		// forget about any previous search results
+		ClearResults(PR_FALSE);
 
 		// do the search
 		DoSearch(nsnull, engine, searchURL, nsAutoString());
@@ -2414,7 +2459,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 
 
 NS_IMETHODIMP
-InternetSearchDataSource::ClearResults(void)
+InternetSearchDataSource::ClearResults(PRBool flushLastSearchRef)
 {
 	if (!mInner)	return(NS_ERROR_UNEXPECTED);
 
@@ -2439,15 +2484,18 @@ InternetSearchDataSource::ClearResults(void)
 		}
 	}
 
-	// forget the last search query
-	nsCOMPtr<nsIRDFNode>	lastTarget;
-	if (NS_SUCCEEDED(rv = mInner->GetTarget(kNC_LastSearchRoot, kNC_Ref,
-		PR_TRUE, getter_AddRefs(lastTarget))) && (rv != NS_RDF_NO_VALUE))
+	if (flushLastSearchRef == PR_TRUE)
 	{
-		nsCOMPtr<nsIRDFLiteral>	lastLiteral = do_QueryInterface(lastTarget);
-		if (lastLiteral)
+		// forget the last search query
+		nsCOMPtr<nsIRDFNode>	lastTarget;
+		if (NS_SUCCEEDED(rv = mInner->GetTarget(kNC_LastSearchRoot, kNC_Ref,
+			PR_TRUE, getter_AddRefs(lastTarget))) && (rv != NS_RDF_NO_VALUE))
 		{
-			rv = mInner->Unassert(kNC_LastSearchRoot, kNC_Ref, lastLiteral);
+			nsCOMPtr<nsIRDFLiteral>	lastLiteral = do_QueryInterface(lastTarget);
+			if (lastLiteral)
+			{
+				rv = mInner->Unassert(kNC_LastSearchRoot, kNC_Ref, lastLiteral);
+			}
 		}
 	}
 
@@ -2584,7 +2632,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 		return(NS_ERROR_FAILURE);
 
 	// forget about any previous search results
-	ClearResults();
+	ClearResults(PR_TRUE);
 
 	// forget about any previous search sites
 	ClearResultSearchSites();
@@ -4144,6 +4192,12 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			if (resultListStart >= 0)
 			{
 				htmlResults.Cut(0, resultListStart + resultListStartStr.Length());
+			}
+			else if (useAllHREFsFlag == PR_FALSE)
+			{
+				// if we have multiple <INTERPRET> sections but can't find the start
+				// of a result list block, just continue on with the the next block
+				continue;
 			}
 		}
 		if (resultListEndStr.Length() > 0)
