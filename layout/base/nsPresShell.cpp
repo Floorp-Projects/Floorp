@@ -1728,6 +1728,48 @@ NS_IMETHODIMP
 PresShell::ScrollFrameIntoView(nsIFrame *aFrame){
   if (!aFrame)
     return NS_ERROR_NULL_POINTER;
+    
+  // Before we scroll the frame into view, ask the command dispatcher
+  // if we're resetting focus because a window just got an activate
+  // event. If we are, we do not want to scroll the frame into view.
+  // Example: The user clicks on an anchor, and then deactivates the 
+  // window. When they reactivate the window, the expected behavior
+  // is not for the anchor link to scroll back into view. That is what
+  // this check is preventing.
+  // XXX: The dependency on the command dispatcher needs to be fixed.
+  nsCOMPtr<nsIContent> content;
+  aFrame->GetContent(getter_AddRefs(content));
+  if(content) {
+    nsCOMPtr<nsIDocument> document;
+    content->GetDocument(*getter_AddRefs(document));
+    if(document){
+      nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
+	  nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
+	  document->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+      nsCOMPtr<nsIDOMWindow> rootWindow;
+      nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
+      if(ourWindow) {
+        ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
+        if(rootWindow) {
+          nsCOMPtr<nsIDOMDocument> rootDocument;
+          rootWindow->GetDocument(getter_AddRefs(rootDocument));
+
+          nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
+          if (xulDoc) {
+            // See if we have a command dispatcher attached.
+            xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
+            if (commandDispatcher) {
+              PRBool dontScroll;
+              commandDispatcher->GetSuppressFocusScroll(&dontScroll);
+              if(dontScroll)
+                return NS_OK;
+			}
+		  }
+		}
+	  }
+    }
+  }
+    
   if (IsScrollingEnabled())
     return ScrollFrameIntoView(aFrame, NS_PRESSHELL_SCROLL_ANYWHERE,
                                NS_PRESSHELL_SCROLL_ANYWHERE);
@@ -2376,6 +2418,47 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   nsresult rv = NS_OK;
   if (!aFrame) {
     return NS_ERROR_NULL_POINTER;
+  }
+
+  // Before we scroll the frame into view, ask the command dispatcher
+  // if we're resetting focus because a window just got an activate
+  // event. If we are, we do not want to scroll the frame into view.
+  // Example: The user clicks on an anchor, and then deactivates the 
+  // window. When they reactivate the window, the expected behavior
+  // is not for the anchor link to scroll back into view. That is what
+  // this check is preventing.
+  // XXX: The dependency on the command dispatcher needs to be fixed.
+  nsCOMPtr<nsIContent> content;
+  aFrame->GetContent(getter_AddRefs(content));
+  if(content) {
+    nsCOMPtr<nsIDocument> document;
+    content->GetDocument(*getter_AddRefs(document));
+    if(document){
+      nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
+	  nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
+	  document->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+      nsCOMPtr<nsIDOMWindow> rootWindow;
+      nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
+      if(ourWindow) {
+        ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
+        if(rootWindow) {
+          nsCOMPtr<nsIDOMDocument> rootDocument;
+          rootWindow->GetDocument(getter_AddRefs(rootDocument));
+
+          nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
+          if (xulDoc) {
+            // See if we have a command dispatcher attached.
+            xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
+            if (commandDispatcher) {
+              PRBool dontScroll;
+              commandDispatcher->GetSuppressFocusScroll(&dontScroll);
+              if(dontScroll)
+                return NS_OK;
+			}
+		  }
+		}
+	  }
+    }
   }
 
   if (mViewManager) {
