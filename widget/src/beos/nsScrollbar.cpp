@@ -236,6 +236,9 @@ NS_METHOD nsScrollbar::GetLineIncrement(PRUint32& aSize)
 NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                 PRUint32 aPosition, PRUint32 aLineIncrement)
 {
+	mScrollbar->LockLooper();
+	mScrollbar->SetResizingMode(B_FOLLOW_NONE);
+	mScrollbar->UnlockLooper();
 	SetMaxRange(aMaxRange);
 	SetThumbSize(aThumbSize);
 	SetPosition(aPosition);
