@@ -18,6 +18,23 @@
 
 
 /***********************************************************************
+  GENERAL STRING ISSUES:
+
+    1. nsStrings and nsAutoString are always null terminated. 
+    2. If you try to set a null char (via SetChar()) a new length is set
+    3. nsCStrings can be upsampled into nsString without data loss
+    4. Char searching is faster than string searching. Use char interfaces
+       if your needs will allow it.
+    5. It's easy to use the stack for nsAutostring buffer storage (fast too!).
+       See the CBufDescriptor class in nsStr.h
+    6. It's ONLY ok to provide non-null-terminated buffers to Append() and Insert()
+       provided you specify a 0<n value for the optional count argument.
+    7. Downsampling from nsString to nsCString is lossy -- don't do it!
+
+ ***********************************************************************/
+
+
+/***********************************************************************
   MODULE NOTES:
 
   This version of the nsString class offers many improvements over the
@@ -67,7 +84,7 @@ nsCString(const char* aCString,PRInt32 aLength=-1,nsIMemoryAgent* anAgent=0);
  * This constructor accepts a unichar string
  * @param   aCString is a ptr to a 2-byte cstr
  */
-nsCString(const PRUnichar* aString,PRInt32 aLength=1,nsIMemoryAgent* anAgent=0);
+nsCString(const PRUnichar* aString,PRInt32 aLength=-1,nsIMemoryAgent* anAgent=0);
 
 /**
  * This is a copy constructor that accepts an nsStr
@@ -139,16 +156,6 @@ void Truncate(PRInt32 anIndex=0);
  */
 PRBool IsOrdered(void) const;
 
-/**
- *  Determine whether or not the characters in this
- *  string are in store as 1 or 2 byte (unicode) strings.
- *  
- *  @return  TRUE if ordered.
- */
-PRBool IsUnicode(void) const {
-  PRBool result=PRBool(mCharSize==eTwoByte);
-  return result;
-}
 
 /**
  *  Determine whether or not this string has a length of 0
@@ -176,7 +183,6 @@ PRUnichar Last(void) const;
 
 PRBool SetCharAt(PRUnichar aChar,PRUint32 anIndex);
 
-//operator nsStr&() {return *this;}
 
 /**********************************************************************
   String creation methods...
@@ -187,7 +193,7 @@ PRBool SetCharAt(PRUnichar aChar,PRUint32 anIndex);
  * @param   aString -- 2nd string to be appended
  * @return  new string
  */
-nsSubsumeCStr operator+(const nsStr& aString);
+nsSubsumeCStr operator+(const nsCString& aString);
 
 /**
  * create a new string by adding this to the given buffer.
@@ -196,36 +202,19 @@ nsSubsumeCStr operator+(const nsStr& aString);
  */
 nsSubsumeCStr operator+(const char* aCString);
 
-/**
- * create a new string by adding this to the given wide buffer.
- * @param   aString is a ptr to UC-string to be added to this
- * @return  newly created string
- */
-nsSubsumeCStr operator+(const PRUnichar* aString);
 
 /**
  * create a new string by adding this to the given char.
  * @param   aChar is a char to be added to this
  * @return  newly created string
  */
+nsSubsumeCStr operator+(PRUnichar aChar);
 nsSubsumeCStr operator+(char aChar);
 
-/**
- * create a new string by adding this to the given char.
- * @param   aChar is a unichar to be added to this
- * @return  newly created string
- */
-nsSubsumeCStr operator+(PRUnichar aChar);
 
 /**********************************************************************
   Lexomorphic transforms...
  *********************************************************************/
-
-/**
- * Converts all chars in given string to UCS2
- * which ensure that the lower 256 chars are correct.
- */
-void ToUCS2(PRUint32 aStartOffset);
 
 /**
  * Converts chars in this to lowercase
@@ -380,7 +369,6 @@ PRInt32   ToInteger(PRInt32* aErrorCode,PRUint32 aRadix=kRadix10) const;
  * 
  */
 nsCString& SetString(const char* aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
-nsCString& SetString(const PRUnichar* aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
 nsCString& SetString(const nsStr& aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
 
 /**
@@ -390,23 +378,20 @@ nsCString& SetString(const nsStr& aString,PRInt32 aLength=-1) {return Assign(aSt
             if you want me to determine its length
  * @return  this
  */
-nsCString& Assign(const nsStr& aString,PRInt32 aCount=-1);
+nsCString& Assign(const nsCString& aString,PRInt32 aCount=-1);
 nsCString& Assign(const char* aString,PRInt32 aCount=-1);
-nsCString& Assign(const PRUnichar* aString,PRInt32 aCount=-1);
-nsCString& Assign(char aChar);
 nsCString& Assign(PRUnichar aChar);
+nsCString& Assign(char aChar);
 
 /**
  * here come a bunch of assignment operators...
  * @param   aString: string to be added to this
  * @return  this
  */
-nsCString& operator=(const nsStr& aString) {return Assign(aString);}
 nsCString& operator=(const nsCString& aString) {return Assign(aString);}
-nsCString& operator=(char aChar) {return Assign(aChar);}
 nsCString& operator=(PRUnichar aChar) {return Assign(aChar);}
+nsCString& operator=(char aChar) {return Assign(aChar);}
 nsCString& operator=(const char* aCString) {return Assign(aCString);}
-nsCString& operator=(const PRUnichar* aString) {return Assign(aString);}
 #ifdef AIX
 nsCString& operator=(const nsSubsumeCStr& aSubsumeString);  // AIX requires a const here
 #else
@@ -418,11 +403,10 @@ nsCString& operator=(nsSubsumeCStr& aSubsumeString);
  * @param   aString : string to be appended to this
  * @return  this
  */
-nsCString& operator+=(const nsStr& aString){return Append(aString,aString.mLength);}
+nsCString& operator+=(const nsCString& aString){return Append(aString,aString.mLength);}
 nsCString& operator+=(const char* aCString) {return Append(aCString);}
-//nsCString& operator+=(char aChar){return Append(aChar);}
-nsCString& operator+=(const PRUnichar* aUCString) {return Append(aUCString);}
 nsCString& operator+=(PRUnichar aChar){return Append(aChar);}
+nsCString& operator+=(char aChar){return Append(aChar);}
 
 /*
  *  Appends n characters from given string to this,
@@ -431,7 +415,6 @@ nsCString& operator+=(PRUnichar aChar){return Append(aChar);}
  *  @param   aString is the source to be appended to this
  *  @return  number of chars copied
  */
-nsCString& Append(const nsStr& aString) {return Append(aString,aString.mLength);}
 nsCString& Append(const nsCString& aString) {return Append(aString,aString.mLength);}
  
 
@@ -440,14 +423,12 @@ nsCString& Append(const nsCString& aString) {return Append(aString,aString.mLeng
  *  
  *  @param   aString is the source to be appended to this
  *  @param   aCount -- number of chars to copy; -1 tells us to compute the strlen for you
- *            WARNING: If you provide a count>0, we don't double check the actual string length!
  *  @return  number of chars copied
  */
-nsCString& Append(const nsStr& aString,PRInt32 aCount);
+nsCString& Append(const nsCString& aString,PRInt32 aCount);
 nsCString& Append(const char* aString,PRInt32 aCount=-1);
-nsCString& Append(const PRUnichar* aString,PRInt32 aCount=-1);
-nsCString& Append(char aChar);
 nsCString& Append(PRUnichar aChar);
+nsCString& Append(char aChar);
 nsCString& Append(PRInt32 aInteger,PRInt32 aRadix=10); //radix=8,10 or 16
 nsCString& Append(float aFloat);
              
@@ -491,11 +472,10 @@ PRUint32 Right(nsCString& aCopy,PRInt32 aCount) const;
  *  
  *  @param  aCopy -- String to be inserted into this
  *  @param  anOffset -- insertion position within this str
- *  @param  aCount -- number of chars to insert; -1 tells us to compute the strlen for you
- *          WARNING: If you provide a count>0, we don't double check the actual string length!
+ *  @param  aCount -- number of chars to be copied from aCopy
  *  @return number of chars inserted into this.
  */
-nsCString& Insert(const nsStr& aCopy,PRUint32 anOffset,PRInt32 aCount=-1);
+nsCString& Insert(const nsCString& aCopy,PRUint32 anOffset,PRInt32 aCount=-1);
 
 /**
  * Insert a given string into this string at
@@ -503,12 +483,9 @@ nsCString& Insert(const nsStr& aCopy,PRUint32 anOffset,PRInt32 aCount=-1);
  *
  * @param   aString* to be inserted into this string
  * @param   anOffset is insert pos in str 
- * @param   aCount -- number of chars to insert; -1 tells us to compute the strlen for you
- *          WARNING: If you provide a count>0, we don't double check the actual string length!
  * @return  the number of chars inserted into this string
  */
 nsCString& Insert(const char* aChar,PRUint32 anOffset,PRInt32 aCount=-1);
-nsCString& Insert(const PRUnichar* aChar,PRUint32 anOffset,PRInt32 aCount=-1);
 
 /**
  * Insert a single char into this string at
@@ -519,6 +496,7 @@ nsCString& Insert(const PRUnichar* aChar,PRUint32 anOffset,PRInt32 aCount=-1);
  * @return  the number of chars inserted into this string
  */
 nsCString& Insert(PRUnichar aChar,PRUint32 anOffset);
+nsCString& Insert(char aChar,PRUint32 anOffset);
 
 /*
  *  This method is used to cut characters in this string
@@ -636,7 +614,7 @@ virtual PRInt32 Compare(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRI
  * @return  TRUE or FALSE
  */
 PRBool  operator==(const nsStr &aString) const;
-PRBool  operator==(const char *aString) const;
+PRBool  operator==(const char* aString) const;
 PRBool  operator==(const PRUnichar* aString) const;
 
 /**
@@ -704,30 +682,6 @@ PRBool  EqualsIgnoreCase(const char* aString,PRInt32 aCount=-1) const;
 PRBool  EqualsIgnoreCase(const PRUnichar* aString,PRInt32 aCount=-1) const;
 
 
-/**
- *  Determine if given char is a valid space character
- *  
- *  @param   aChar is character to be tested
- *  @return  TRUE if is valid space char
- */
-static  PRBool IsSpace(PRUnichar ch);
-
-/**
- *  Determine if given char in valid alpha range
- *  
- *  @param   aChar is character to be tested
- *  @return  TRUE if in alpha range
- */
-static  PRBool IsAlpha(PRUnichar ch);
-
-/**
- *  Determine if given char is valid digit
- *  
- *  @param   aChar is character to be tested
- *  @return  TRUE if char is a valid digit
- */
-static  PRBool IsDigit(PRUnichar ch);
-
 static  void        Recycle(nsCString* aString);
 static  nsCString*  CreateString(void);
 
@@ -752,7 +706,7 @@ public:
 
     nsCAutoString();
     nsCAutoString(const char* aString,PRInt32 aLength=-1);
-    nsCAutoString(CSharedStrBuffer& aBuffer);
+    nsCAutoString(CBufDescriptor& aBuffer);
     nsCAutoString(const PRUnichar* aString,PRInt32 aLength=-1);
     nsCAutoString(const nsStr& aString);
     nsCAutoString(const nsCAutoString& aString);
@@ -765,11 +719,10 @@ public:
     nsCAutoString(PRUnichar aChar);
     virtual ~nsCAutoString();
 
-    nsCAutoString& operator=(const nsStr& aString) {nsCString::Assign(aString); return *this;}
-    nsCAutoString& operator=(const char* aCString) {nsCString::operator=(aCString); return *this;}
-    nsCAutoString& operator=(char aChar) {nsCString::operator=(aChar); return *this;}
-    nsCAutoString& operator=(const PRUnichar* aBuffer) {nsCString::operator=(aBuffer); return *this;}
-    nsCAutoString& operator=(PRUnichar aChar) {nsCString::operator=(aChar); return *this;}
+    nsCAutoString& operator=(const nsCString& aString) {nsCString::Assign(aString); return *this;}
+    nsCAutoString& operator=(const char* aCString) {nsCString::Assign(aCString); return *this;}
+    nsCAutoString& operator=(PRUnichar aChar) {nsCString::Assign(aChar); return *this;}
+    nsCAutoString& operator=(char aChar) {nsCString::Assign(aChar); return *this;}
 
     /**
      * Retrieve the size of this string
