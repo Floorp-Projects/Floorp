@@ -159,7 +159,6 @@ nsIMAP4TestDriver::nsIMAP4TestDriver(PLEventQueue *queue)
 
 NS_IMPL_ADDREF(nsIMAP4TestDriver)
 NS_IMPL_RELEASE(nsIMAP4TestDriver)
-// NS_IMPL_ISUPPORTS(nsIMAP4TestDriver, nsIUrlListener::GetIID())
 
 nsresult 
 nsIMAP4TestDriver::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -192,17 +191,11 @@ nsresult nsIMAP4TestDriver::InitializeProtocol(const char * urlString)
 {
 	nsresult rv = 0;
 
-	// this is called when we don't have a url nor a protocol instance yet...
-	// use service manager to get an imap 4 url...
-	rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
-                                            nsIImapUrl::GetIID(), (void **)
-                                            &m_url);
+	// we used to create an imap url here...but I don't think we need to.
+	// we should create the url before we run each unique imap command...
+
 	// now create a protocol instance...
-	if (NS_SUCCEEDED(rv) && m_url)
-    {
-		m_url->SetImapLog(this);
-		rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull, nsIImapProtocol::GetIID(), (void **) &m_IMAP4Protocol);
-    }
+	rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull, nsIImapProtocol::GetIID(), (void **) &m_IMAP4Protocol);
 	if (NS_SUCCEEDED(rv))
     {
 		m_protocolInitialized = PR_TRUE;
@@ -225,7 +218,6 @@ nsresult nsIMAP4TestDriver::RunDriver()
 	{
 		if (!m_runningURL) // if we aren't running the url anymore, ask ueser for another command....
 		{
-			NS_IF_RELEASE(m_url); // release the old one before we run a new one...
 			status = ReadAndDispatchCommand();
 		}  // if running url
 #ifdef XP_UNIX
@@ -319,8 +311,10 @@ nsresult nsIMAP4TestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode)
 		rv = aUrl->QueryInterface(nsIMsgMailNewsUrl::GetIID(), (void **) mailUrl);
 		if (NS_SUCCEEDED(rv))
 		{
+			// our url must be done so release it...
+			NS_IF_RELEASE(m_url);
+			m_url = nsnull;
 			mailUrl->UnRegisterListener(this);
-			NS_RELEASE(mailUrl);
 		}
 	}
 
@@ -388,7 +382,7 @@ nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 {
 	nsresult rv = NS_OK;
 
-	PL_strcpy(m_command, "LOGON");
+	PL_strcpy(m_command, "?capability");
 	// prompt for the command to run ....
 	printf("Enter IMAP command to run [%s]: ", m_command);
 	scanf("%[^\n]", m_command);
@@ -400,19 +394,22 @@ nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 
 	if (m_protocolInitialized == PR_FALSE)
 		rv = InitializeProtocol(m_urlString);
-    if (!m_url)
-        rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
-                                                nsIImapUrl::GetIID(), (void **)
-                                                &m_url);
+
+	// create a url to process the request.
+    rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
+                                            nsIImapUrl::GetIID(), (void **)
+                                            &m_url);
 	if (NS_SUCCEEDED(rv) && m_url)
     {
         m_url->SetImapLog(this);
 		rv = m_url->SetSpec(m_urlString); // reset spec
+		m_url->RegisterListener(this);
     }
 	
 	if (NS_SUCCEEDED(rv))
 	{
 		rv = m_IMAP4Protocol->LoadUrl(m_url, nsnull /* probably need a consumer... */);
+		m_runningURL = PR_TRUE; // we are now running a url...
 	} // if user provided the data...
 
 	return rv;
