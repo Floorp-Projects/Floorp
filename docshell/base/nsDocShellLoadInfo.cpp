@@ -30,7 +30,8 @@
 nsDocShellLoadInfo::nsDocShellLoadInfo()
 {
 	NS_INIT_REFCNT();
-  mLoadType = nsIDocShellLoadInfo::loadNormal;
+   mLoadType = nsIDocShellLoadInfo::loadNormal;
+   mInheritOwner = PR_FALSE;
 }
 
 nsDocShellLoadInfo::~nsDocShellLoadInfo()
@@ -80,6 +81,20 @@ NS_IMETHODIMP nsDocShellLoadInfo::GetOwner(nsISupports** aOwner)
 NS_IMETHODIMP nsDocShellLoadInfo::SetOwner(nsISupports* aOwner)
 {
    mOwner = aOwner;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellLoadInfo::GetInheritOwner(PRBool* aInheritOwner)
+{
+   NS_ENSURE_ARG_POINTER(aInheritOwner);
+
+   *aInheritOwner = mInheritOwner;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellLoadInfo::SetInheritOwner(PRBool aInheritOwner)
+{
+   mInheritOwner = aInheritOwner;
    return NS_OK;
 }
 

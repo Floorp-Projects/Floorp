@@ -887,19 +887,32 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
   nsCOMPtr<nsIURI> baseURI;
   rv = aPresContext->GetBaseURL(getter_AddRefs(baseURI));
 
-  // Get origin URL (from script, or default to base)
+  // Get docshell and create load info
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mSubShell));
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+  docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+  NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+
+  // Get referring URL
   nsCOMPtr<nsIURI> referrer;
   nsCOMPtr<nsIPrincipal> principal;
   rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
+  // If we were called from script, get the referring URL from the script
   if (principal) {
     nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
     if (codebase) {
       rv = codebase->GetURI(getter_AddRefs(referrer));
       NS_ENSURE_SUCCESS(rv, rv);
     }
+    // Pass the script principal to the docshell
+    nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
+    loadInfo->SetOwner(owner);
   }
-  if (!referrer) {
+  if (!referrer) { // We're not being called form script, tell the docshell
+                   // to inherit an owner from the current document.
+    loadInfo->SetInheritOwner(PR_TRUE);
     referrer = baseURI;
   }
 
@@ -910,15 +923,6 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
   rv = secMan->CheckLoadURI(referrer, newURI, PR_FALSE);
   if (NS_FAILED(rv))
     return rv; // We're not
-
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mSubShell));
-  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-  docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
-  NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
-
-  loadInfo->SetReferrer(referrer);
 
   rv = docShell->LoadURI(uri, loadInfo);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");

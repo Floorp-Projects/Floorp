@@ -831,12 +831,10 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
         nsCOMPtr<nsIURI> uri;
         NS_NewURI(getter_AddRefs(uri), nsLiteralString(aURLSpec), nsnull);
 
-        nsCOMPtr<nsISupports> owner;
-        GetCurrentDocumentOwner(getter_AddRefs(owner));
 #ifdef SH_IN_FRAMES
-		InternalLoad(uri, mCurrentURI, owner, target, aPostDataStream, nsIDocShellLoadInfo::loadLink, nsnull); 
+		InternalLoad(uri, mCurrentURI, nsnull, PR_TRUE, target, aPostDataStream, nsIDocShellLoadInfo::loadLink, nsnull); 
 #else
-        InternalLoad(uri, mCurrentURI, owner, target, aPostDataStream, nsIDocShellLoadInfo::loadLink); 
+        InternalLoad(uri, mCurrentURI, nsnull, PR_TRUE, target, aPostDataStream, nsIDocShellLoadInfo::loadLink); 
 #endif  /* SH_IN_FRAMES */
       }
       break;

@@ -2941,23 +2941,17 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext *cx,
   newDocShellItem->SetName(nameSpecified ? name.GetUnicode() : nsnull);
 
   nsCOMPtr<nsIDocShell> newDocShell(do_QueryInterface(newDocShellItem));
-  if (uriToLoad) {
+  if (uriToLoad) { // Get script principal and pass to docshell
     nsCOMPtr<nsIPrincipal> principal;
     if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
       return NS_ERROR_FAILURE;
-    nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
 
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-    if (codebase) {
+    if (principal) {
+      nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
       newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
       NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
-
-      nsresult rv;
-      nsCOMPtr<nsIURI> codebaseURI;
-      if (NS_FAILED(rv = codebase->GetURI(getter_AddRefs(codebaseURI))))
-        return rv;
-
-      loadInfo->SetReferrer(codebaseURI);
+      loadInfo->SetOwner(owner);
     }
     newDocShell->LoadURI(uriToLoad, loadInfo);
   }

@@ -47,6 +47,7 @@ protected:
 protected:
    nsCOMPtr<nsIURI>                 mReferrer;
    nsCOMPtr<nsISupports>            mOwner;
+   PRBool                           mInheritOwner;
    nsDocShellInfoLoadType           mLoadType;
    nsCOMPtr<nsISHEntry>             mSHEntry;
 };

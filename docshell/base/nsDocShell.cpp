@@ -233,6 +233,7 @@ nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
   nsresult rv;
   nsCOMPtr<nsIURI> referrer;
   nsCOMPtr<nsISupports> owner;
+  PRBool inheritOwner = PR_FALSE;
   nsCOMPtr<nsISHEntry> shEntry;
   nsDocShellInfoLoadType loadType = nsIDocShellLoadInfo::loadNormal;
 
@@ -243,6 +244,7 @@ nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
     aLoadInfo->GetReferrer(getter_AddRefs(referrer));
     aLoadInfo->GetLoadType(&loadType);
     aLoadInfo->GetOwner(getter_AddRefs(owner));
+    aLoadInfo->GetInheritOwner(&inheritOwner);
     aLoadInfo->GetSHEntry(getter_AddRefs(shEntry));
   }
 
@@ -272,7 +274,7 @@ nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
   if (shEntry) {
     rv = LoadHistoryEntry(shEntry, loadType);
   } else {
-    rv = InternalLoad(aURI, referrer, owner, nsnull, nsnull, loadType, nsnull);
+    rv = InternalLoad(aURI, referrer, owner, inheritOwner, nsnull, nsnull, loadType, nsnull);
   }
 
   return rv;
@@ -1376,7 +1378,7 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
    }
    else {
 	   //May be one of those <META> charset reloads in a composer or Messenger
-      return InternalLoad(mCurrentURI, mReferrerURI, nsnull, nsnull, 
+      return InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, nsnull, 
       nsnull, type);
 
    }
@@ -1386,7 +1388,7 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
    // If this really keeps the crash from re-occuring, may be this can stay. However 
    // there is no major difference between this one and the one inside #if 0
    
-   return InternalLoad(mCurrentURI, mReferrerURI, nsnull, nsnull, 
+   return InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, nsnull, 
       nsnull, type);
 #endif /* 0 */
 
@@ -1406,7 +1408,7 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
 
    UpdateCurrentSessionHistory();
 
-   NS_ENSURE_SUCCESS(InternalLoad(mCurrentURI, mReferrerURI, nsnull, nsnull, 
+   NS_ENSURE_SUCCESS(InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, nsnull, 
       nsnull, type), NS_ERROR_FAILURE);
    return NS_OK;
 #endif  /* SH_IN_FRAMES  */
@@ -2742,11 +2744,13 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 //*****************************************************************************   
 #ifdef SH_IN_FRAMES
 NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
-   nsISupports* aOwner, const char* aWindowTarget, nsIInputStream* aPostData, 
+   nsISupports* aOwner, PRBool aInheritOwner,
+   const char* aWindowTarget, nsIInputStream* aPostData, 
    nsDocShellInfoLoadType aLoadType, nsISHEntry * aSHEntry)
 #else
 NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
-   nsISupports* aOwner, const char* aWindowTarget, nsIInputStream* aPostData, 
+   nsISupports* aOwner, PRBool aInheritOwner,
+   const char* aWindowTarget, nsIInputStream* aPostData, 
    nsDocShellInfoLoadType aLoadType)
 #endif
 {
@@ -2804,8 +2808,8 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
     nsURILoadCommand  loadCmd = nsIURILoader::viewNormal;
     if(nsIDocShellLoadInfo::loadLink == aLoadType)
         loadCmd = nsIURILoader::viewUserClick;
-    NS_ENSURE_SUCCESS(DoURILoad(aURI, aReferrer, aOwner, loadCmd, aWindowTarget, 
-        aPostData), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(DoURILoad(aURI, aReferrer, aOwner, aInheritOwner,
+                                loadCmd, aWindowTarget, aPostData), NS_ERROR_FAILURE);
 
     return NS_OK;
 }
@@ -3068,10 +3072,10 @@ NS_IMETHODIMP nsDocShell::GetCurrentDocumentOwner(nsISupports** aOwner)
 }
 
 NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,  
-   nsISupports* aOwner, nsURILoadCommand aLoadCmd, const char* aWindowTarget, 
-   nsIInputStream* aPostData)
+   nsISupports* aOwner, PRBool aInheritOwner, nsURILoadCommand aLoadCmd,
+   const char* aWindowTarget, nsIInputStream* aPostData)
 {
-
+  static const char jsSchemeName[] = "javascript";
   // if the load cmd is a user click....and we are supposed to try using
   // external default protocol handlers....then try to see if we have one for
   // this protocol
@@ -3080,7 +3084,7 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
     nsXPIDLCString urlScheme;
     aURI->GetScheme(getter_Copies(urlScheme));
     // don't do it for javascript urls!
-    if (urlScheme && nsCRT::strcasecmp("javascript", urlScheme))
+    if (urlScheme && nsCRT::strcasecmp(jsSchemeName, urlScheme))
     {
       nsCOMPtr<nsIExternalProtocolService> extProtService (do_GetService(NS_EXTERNALPROTOCOLSERVICE_PROGID));
       PRBool haveHandler = PR_FALSE;
@@ -3139,34 +3143,29 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
       }
       else
       {
-        // If an owner was not provided, we want to inherit the principal from the current document iff we 
-        // are dealing with a JS or a data url.
-        nsCOMPtr<nsISupports> owner = aOwner;
-        nsCOMPtr<nsIStreamIOChannel> ioChannel(do_QueryInterface(channel));
-        if(ioChannel) // Might be a javascript: URL load, need to set owner
-        {
-           static const char jsSchemeName[] = "javascript";
-           char* scheme;
-           aURI->GetScheme(&scheme);
-           if (PL_strcasecmp(scheme, jsSchemeName) == 0)
-           {
-             if (!owner)  // only try to call GetCurrentDocumentOwner if we are a JS url or a data url (hence the code duplication)
-               GetCurrentDocumentOwner(getter_AddRefs(owner));
+          // iff we are dealing with a JS or a data url, we may need an inherited owner.
+          // This is either aOwner or, if aInheritOwner is true, the owner of the
+          // current document.
+          nsCOMPtr<nsISupports> owner = aOwner;
+          PRBool isJSOrData = PR_FALSE;
+          nsCOMPtr<nsIStreamIOChannel> ioChannel(do_QueryInterface(channel));
+          if(ioChannel) // Might be a javascript: URL load, need to set owner
+          {
+              nsXPIDLCString scheme;
+              aURI->GetScheme(getter_Copies(scheme));
+              isJSOrData = (PL_strcasecmp(scheme, jsSchemeName) == 0);
+          }
+          else
+          { // Also set owner for data: URLs
+              nsCOMPtr<nsIDataChannel> dataChannel(do_QueryInterface(channel));
+              isJSOrData = (dataChannel != nsnull);
+          }
+          if (isJSOrData)
+          {
+              if (aInheritOwner && !owner)
+                  GetCurrentDocumentOwner(getter_AddRefs(owner));
               channel->SetOwner(owner);
-           }
-           if (scheme)
-               nsCRT::free(scheme);
-        }
-        else
-        { // Also set owner for data: URLs
-           nsCOMPtr<nsIDataChannel> dataChannel(do_QueryInterface(channel));
-           if (dataChannel)
-           {
-             if (!owner)
-               GetCurrentDocumentOwner(getter_AddRefs(owner));
-             channel->SetOwner(owner);
-           }
-        }
+          }
       }
 
    NS_ENSURE_SUCCESS(DoChannelLoad(channel, aLoadCmd, aWindowTarget, uriLoader), NS_ERROR_FAILURE);
@@ -3696,10 +3695,10 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
     
 
 #ifdef SH_IN_FRAMES
-   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, nsnull, postData, aLoadType, aEntry),
+   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, PR_TRUE, nsnull, postData, aLoadType, aEntry),
       NS_ERROR_FAILURE);
 #else
-   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, nsnull, postData, nsIDocShellLoadInfo::loadHistory),
+   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, PR_TRUE,  nsnull, postData, nsIDocShellLoadInfo::loadHistory),
       NS_ERROR_FAILURE);
 #endif 
 

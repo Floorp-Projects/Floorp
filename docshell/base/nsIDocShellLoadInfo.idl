@@ -47,6 +47,12 @@ interface nsIDocShellLoadInfo : nsISupports
     */
     attribute nsISupports owner;
 
+    /*
+      If this attribute is true and no owner is specified, copy the owner from
+      the referring document. 
+    */
+    attribute boolean inheritOwner;
+
     /* these are load type enums... */
    const long loadNormal = 0;					// Normal Load
    const long loadNormalReplace = 1;			// Normal Load but replaces current history slot
