@@ -183,7 +183,7 @@ protected:
   PRPackedBool mCanceled;
 
   // have we received information from the user about how they want to dispose of this content...
-  PRPackedBool mReceivedDispostionInfo;
+  PRPackedBool mReceivedDispositionInfo;
   PRPackedBool mStopRequestIssued; 
   PRPackedBool mProgressListenerInitialized;
   PRInt64 mTimeDownloadStarted;

@@ -727,7 +727,7 @@ nsExternalAppHandler::nsExternalAppHandler()
 {
   NS_INIT_ISUPPORTS();
   mCanceled = PR_FALSE;
-  mReceivedDispostionInfo = PR_FALSE;
+  mReceivedDispositionInfo = PR_FALSE;
   mStopRequestIssued = PR_FALSE;
   mDataBuffer = (char *) nsMemory::Alloc((sizeof(char) * DATA_BUFFER_SIZE));
   mProgressListenerInitialized = PR_FALSE;
@@ -764,7 +764,8 @@ NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListene
   // progress window so set the appropriate flag, even though
   // aWebProgressListener might be null
   
-  mProgressListenerInitialized = PR_TRUE;
+  if (mReceivedDispositionInfo)
+    mProgressListenerInitialized = PR_TRUE;
 
   // Go ahead and register the progress listener....
 
@@ -1161,7 +1162,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   {
     // do this first! make sure we don't try to take an action until the user tells us what they want to do
     // with it...
-    mReceivedDispostionInfo = PR_FALSE; 
+    mReceivedDispositionInfo = PR_FALSE; 
 
     // invoke the dialog!!!!! use mWindowContext as the window context parameter for the dialog request
     mDialog = do_CreateInstance( NS_IHELPERAPPLAUNCHERDLG_CONTRACTID, &rv );
@@ -1173,7 +1174,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   }
   else
   {
-    mReceivedDispostionInfo = PR_TRUE; // no need to wait for a response from the user
+    mReceivedDispositionInfo = PR_TRUE; // no need to wait for a response from the user
 
     // We need to do the save/open immediately, then.
     PRInt32 action = nsIMIMEInfo::saveToDisk;
@@ -1607,7 +1608,7 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
   mMimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
 
   // The helper app dialog has told us what to do.
-  mReceivedDispostionInfo = PR_TRUE;
+  mReceivedDispositionInfo = PR_TRUE;
 
   if (!aNewFileLocation)
   {
@@ -1701,7 +1702,7 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
   // user has chosen to launch using an application, fire any refresh tags now...
   ProcessAnyRefreshTags(); 
   
-  mReceivedDispostionInfo = PR_TRUE; 
+  mReceivedDispositionInfo = PR_TRUE; 
   if (mMimeInfo && aApplication)
     mMimeInfo->SetPreferredApplicationHandler(aApplication);
 
