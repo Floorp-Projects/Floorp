@@ -1138,7 +1138,9 @@ Wallet_Decrypt(const nsString& crypt, nsString& text) {
 
   /* convert text from UTF8 to unichar */
   PRUnichar c1, c2, c3;
-  text.SetLength(0);
+  text.Truncate(0);
+  text.SetCapacity(2 * crypt.Length());
+  
   for (PRUint32 i=0; i<PL_strlen(UTF8textCString); ) {
     c1 = (PRUnichar)UTF8textCString[i++];    
     if ((c1 & 0x80) == 0x00) {
@@ -1290,13 +1292,9 @@ wallet_ReadFromList(
   nsVoidArray*& itemList,
   nsVoidArray*& list,
   PRBool obscure,
-  PRInt32* index = 0)
+  PRInt32& index)
 {
-  PRInt32 localIndex = 0;
-  if (!index)
-    index = &localIndex;
-  
-  if (!list || (*index == -1)) {
+  if (!list || (index == -1)) {
     return PR_FALSE;
   }
 
@@ -1304,7 +1302,7 @@ wallet_ReadFromList(
   wallet_MapElement * ptr;
   item1.ToLowerCase();
   PRInt32 count = LIST_COUNT(list);
-  for (PRInt32 i=*index; i<count; i++) {
+  for (PRInt32 i=index; i<count; i++) {
     ptr = NS_STATIC_CAST(wallet_MapElement*, list->ElementAt(i));
     if((ptr->item1.Compare(item1))==0) {
       if (obscure) {
@@ -1315,16 +1313,29 @@ wallet_ReadFromList(
         item2 = nsAutoString(ptr->item2);
       }
       itemList = ptr->itemList;
-      *index = i+1;
-      if (*index == count) {
-        *index = -1;
+      index = i+1;
+      if (index == count) {
+        index = -1;
       }
       return PR_TRUE;
     }
   }
-  *index = 0;
+  index = 0;
   return PR_FALSE;
 }
+
+PRBool
+wallet_ReadFromList(
+  nsAutoString item1,
+  nsAutoString& item2,
+  nsVoidArray*& itemList,
+  nsVoidArray*& list,
+  PRBool obscure)
+{
+  PRInt32 index = 0;
+  return wallet_ReadFromList(item1, item2, itemList, list, obscure, index);
+}
+
 
 /*************************************************************/
 /* The following routines are for reading/writing utf8 files */
@@ -1925,7 +1936,7 @@ static PRInt32 FieldToValue(
     /* schema name found, now fetch value from schema/value table */ 
     PRInt32 index2 = index;
     if ((index >= 0) &&
-        wallet_ReadFromList(schema, value, itemList, wallet_SchemaToValue_list, PR_TRUE, &index2)) {
+        wallet_ReadFromList(schema, value, itemList, wallet_SchemaToValue_list, PR_TRUE, index2)) {
       /* value found, prefill it into form */
       index = index2;
       return 0;
@@ -1937,7 +1948,7 @@ static PRInt32 FieldToValue(
         index = 0;
       }
       PRInt32 index4 = 0;
-      while (wallet_ReadFromList(schema, dummy2, itemList2, wallet_SchemaConcat_list, PR_FALSE, &index4)) {
+      while (wallet_ReadFromList(schema, dummy2, itemList2, wallet_SchemaConcat_list, PR_FALSE, index4)) {
         /* concatenation rules exist, generate value as a concatenation */
         wallet_Sublist * ptr1;
         value.SetLength(0);
@@ -1946,11 +1957,11 @@ static PRInt32 FieldToValue(
         if (dummy2.Length() > 0) {
           PRInt32 index5 = 0;
           for (PRInt32 j=0; j>index; j -= 2) {
-            if (!wallet_ReadFromList(dummy2, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, &index5)) {
+            if (!wallet_ReadFromList(dummy2, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, index5)) {
               break;
             }
           }
-          if (wallet_ReadFromList(dummy2, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, &index5)) {
+          if (wallet_ReadFromList(dummy2, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, index5)) {
             value += value2;
           }
         }
@@ -1966,12 +1977,12 @@ static PRInt32 FieldToValue(
            */
           PRInt32 index3 = 0;
           for (PRInt32 j=0; j>index; j -= 2) {
-            if (!wallet_ReadFromList(ptr1->item, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, &index3)) {
+            if (!wallet_ReadFromList(ptr1->item, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, index3)) {
               break;
             }
           }
 
-          if (wallet_ReadFromList(ptr1->item, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, &index3)) {
+          if (wallet_ReadFromList(ptr1->item, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, index3)) {
             if (value.Length()>0) {
               value.AppendWithConversion(" ");
             }
@@ -1997,7 +2008,7 @@ static PRInt32 FieldToValue(
     temp.AppendWithConversion(":");
     temp.Append(field);
 
-    if (wallet_ReadFromList(temp, value, itemList, wallet_SchemaToValue_list, PR_TRUE, &index2)) {
+    if (wallet_ReadFromList(temp, value, itemList, wallet_SchemaToValue_list, PR_TRUE, index2)) {
       /* value found, prefill it into form */
       schema = field;
       index = index2;
@@ -2073,12 +2084,10 @@ wallet_GetPrefills(
         nsVoidArray* itemList;
 
         /* get schema name from vcard attribute if it exists */
-        nsIDOMElement * element;
-        result = elementNode->QueryInterface(kIDOMElementIID, (void**)&element);
-        if ((NS_SUCCEEDED(result)) && (nsnull != element)) {
+        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
+        if (element) {
           nsAutoString vcard; vcard.AssignWithConversion("VCARD_NAME");
           result = element->GetAttribute(vcard, schema);
-          NS_RELEASE(element);
         }
 
         /*
@@ -2618,7 +2627,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, c
     /* is this a new value for the schema */
     PRInt32 index = 0;
     PRInt32 lastIndex = index;
-    while(wallet_ReadFromList(schema, oldValue, dummy, wallet_SchemaToValue_list, PR_TRUE, &index)) {
+    while(wallet_ReadFromList(schema, oldValue, dummy, wallet_SchemaToValue_list, PR_TRUE, index)) {
       if (oldValue == value) {
         /*
          * Remove entry from wallet_SchemaToValue_list and then reinsert.  This will
@@ -2660,7 +2669,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, c
     concat_param.AppendWithConversion(":");
     concat_param.Append(field);
 
-    while(wallet_ReadFromList(concat_param, oldValue, dummy, wallet_SchemaToValue_list, PR_TRUE, &index)) {
+    while(wallet_ReadFromList(concat_param, oldValue, dummy, wallet_SchemaToValue_list, PR_TRUE, index)) {
       if (oldValue == value) {
         /*
          * Remove entry from wallet_SchemaToValue_list and then reinsert.  This will
@@ -3013,7 +3022,7 @@ WLLT_PrefillReturn(const nsString& results)
         PRInt32 index = 0;
         PRInt32 lastIndex = index;
         nsVoidArray* dummy;
-        while(wallet_ReadFromList(*ptr->schema, oldValue, dummy, wallet_SchemaToValue_list, PR_TRUE, &index)) {
+        while(wallet_ReadFromList(*ptr->schema, oldValue, dummy, wallet_SchemaToValue_list, PR_TRUE, index)) {
           if (oldValue == *ptr->value) {
             wallet_MapElement * mapElement =
               (wallet_MapElement *) (wallet_SchemaToValue_list->ElementAt(lastIndex));
@@ -3056,7 +3065,8 @@ WLLT_PrefillReturn(const nsString& results)
  * get the form elements on the current page and prefill them if possible
  */
 PUBLIC nsresult
-WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
+WLLT_Prefill(nsIPresShell* shell, PRBool quick)
+{
   nsAutoString urlName;
 
   /* create list of elements that can be prefilled */
@@ -3067,44 +3077,51 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
 
   /* starting with the present shell, get each form element and put them on a list */
   nsresult result;
-  if (nsnull != shell) {
-    nsIDocument* doc = nsnull;
-    result = shell->GetDocument(&doc);
-    if (NS_SUCCEEDED(result)) {
-      nsIURI* url;
-      url = doc->GetDocumentURL();
+  if (nsnull != shell)
+  {
+    nsCOMPtr<nsIDocument> doc;
+    shell->GetDocument(getter_AddRefs(doc));
+    if (doc)
+    {
+      nsCOMPtr<nsIURI> url = getter_AddRefs(doc->GetDocumentURL());
       if (url) {
         wallet_GetHostFile(url, urlName);
-        NS_RELEASE(url);
       }
       wallet_Initialize(PR_TRUE);
       gEncryptionFailure = PR_FALSE;
       wallet_InitializeCurrentURL(doc);
-      nsIDOMHTMLDocument* htmldoc = nsnull;
-      result = doc->QueryInterface(kIDOMHTMLDocumentIID, (void**)&htmldoc);
-      if ((NS_SUCCEEDED(result)) && (nsnull != htmldoc)) {
-        nsIDOMHTMLCollection* forms = nsnull;
-        htmldoc->GetForms(&forms);
-        if (nsnull != forms) {
+      
+      nsCOMPtr<nsIDOMHTMLDocument> htmldoc = do_QueryInterface(doc);
+      if (htmldoc)
+      {
+        nsCOMPtr<nsIDOMHTMLCollection> forms;
+        htmldoc->GetForms(getter_AddRefs(forms));
+        if (forms)
+        {
           PRUint32 numForms;
           forms->GetLength(&numForms);
-          for (PRUint32 formX = 0; (formX < numForms) && !gEncryptionFailure; formX++) {
-            nsIDOMNode* formNode = nsnull;
-            forms->Item(formX, &formNode);
-            if (nsnull != formNode) {
-              nsIDOMHTMLFormElement* formElement = nsnull;
-              result = formNode->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElement);
-              if ((NS_SUCCEEDED(result)) && (nsnull != formElement)) {
-                nsIDOMHTMLCollection* elements = nsnull;
-                result = formElement->GetElements(&elements);
-                if ((NS_SUCCEEDED(result)) && (nsnull != elements)) {
+          for (PRUint32 formX = 0; (formX < numForms) && !gEncryptionFailure; formX++)
+          {
+            nsCOMPtr<nsIDOMNode> formNode;
+            forms->Item(formX, getter_AddRefs(formNode));
+            if (formNode)
+            {
+              nsCOMPtr<nsIDOMHTMLFormElement> formElement = do_QueryInterface(formNode);
+              if (formElement)
+              {
+                nsCOMPtr<nsIDOMHTMLCollection> elements;
+                result = formElement->GetElements(getter_AddRefs(elements));
+                if (elements)
+                {
                   /* got to the form elements at long last */
                   PRUint32 numElements;
                   elements->GetLength(&numElements);
-                  for (PRUint32 elementX = 0; (elementX < numElements) && !gEncryptionFailure; elementX++) {
-                    nsIDOMNode* elementNode = nsnull;
-                    elements->Item(elementX, &elementNode);
-                    if (nsnull != elementNode) {
+                  for (PRUint32 elementX = 0; (elementX < numElements) && !gEncryptionFailure; elementX++)
+                  {
+                    nsCOMPtr<nsIDOMNode> elementNode;
+                    elements->Item(elementX, getter_AddRefs(elementNode));
+                    if (elementNode)
+                    {
                       wallet_PrefillElement * prefillElement;
                       PRInt32 index = 0;
                       wallet_PrefillElement * firstElement = nsnull;
@@ -3136,25 +3153,21 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
                           delete prefillElement;
                           break;
                         }
-                      }
+                      } // for
+                      
                       if (numberOfElements>0) {
                         firstElement->count = numberOfElements;
                       }
-                      NS_RELEASE(elementNode);
                     }
-                  }
-                  NS_RELEASE(elements);
+                    
+                  } // for
+                  
                 }
-                NS_RELEASE(formElement);
               }
-              NS_RELEASE(formNode);
             }
           }
-          NS_RELEASE(forms);
         }
-        NS_RELEASE(htmldoc);
       }
-      NS_RELEASE(doc);
     }
   }
 
