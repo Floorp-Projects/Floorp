@@ -30,7 +30,6 @@ XPIDLSRCS =               \
   .\nsIAppShell.idl \
   .\nsIBaseWindow.idl \
   .\nsIFilePicker.idl          \
-  .\nsIFileSpecWithUI.idl          \
   .\nsISound.idl          \
   .\nsIToolkit.idl        \
   .\nsITransferable.idl          \
@@ -51,7 +50,6 @@ EXPORTS=\
   nsIFontSizeIterator.h \
   nsIFontNameIterator.h \
   nsIFontRetrieverService.h \
-  nsIFileWidget.h            \
   nsIWidget.h \
   nsIKBStateControl.h \
   nsIButton.h \

@@ -23,7 +23,6 @@
 
 #include "nsWidgetSupport.h"
 #include "nsRect.h"
-#include "nsIFileWidget.h"
 #include "nsIAppShell.h"
 #include "nsIButton.h"
 #include "nsIEventListener.h"

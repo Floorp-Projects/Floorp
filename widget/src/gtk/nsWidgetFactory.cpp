@@ -30,7 +30,6 @@
 #include "nsWindow.h"
 #include "nsButton.h"
 #include "nsCheckButton.h"
-#include "nsFileWidget.h"
 #include "nsTextWidget.h"
 #include "nsAppShell.h"
 #include "nsToolkit.h"
@@ -42,7 +41,6 @@
 #include "nsHTMLFormatConverter.h"
 #include "nsFontRetrieverService.h"
 #include "nsDragService.h"
-#include "nsFileSpecWithUIImpl.h"
 #include "nsScrollbar.h"
 #include "nsSound.h"
 #ifdef IBMBIDI
@@ -55,7 +53,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsButton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCheckButton)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileWidget)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextWidget)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
@@ -67,7 +64,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontRetrieverService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileSpecWithUIImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 #ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
@@ -149,10 +145,6 @@ static nsModuleComponentInfo components[] =
     NS_CHECKBUTTON_CID,
     "@mozilla.org/widgets/checkbutton/gtk;1",
     nsCheckButtonConstructor },
-  { "Gtk File Widget",
-    NS_FILEWIDGET_CID,
-    "@mozilla.org/widgets/filewidget/gtk;1",
-    nsFileWidgetConstructor },
   { "Gtk Horiz Scrollbar",
     NS_HORZSCROLLBAR_CID,
     "@mozilla.org/widgets/horizscroll/gtk;1",
@@ -212,18 +204,13 @@ static nsModuleComponentInfo components[] =
     NS_DRAGSERVICE_CID,
     //    "@mozilla.org/widget/dragservice/gtk;1",
     "@mozilla.org/widget/dragservice;1",
-    nsDragServiceConstructor },
+    nsDragServiceConstructor }
 #ifdef IBMBIDI
-    { "Gtk Bidi Keyboard",
+    , { "Gtk Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
-    nsBidiKeyboardConstructor },
+    nsBidiKeyboardConstructor }
 #endif // IBMBIDI
-  { "File Spec with UI",
-    NS_FILESPECWITHUI_CID,
-    //    "@mozilla.org/widget/filespecwithui/gtk;1",
-    "@mozilla.org/filespecwithui;1",
-    nsFileSpecWithUIImplConstructor }
 };
 
 PR_STATIC_CALLBACK(void)

@@ -35,7 +35,6 @@
 #include "nsClipboardHelper.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
-#include "nsFileSpecWithUIImpl.h"
 #include "nsScrollbar.h"
 
 #ifdef IBMBIDI
@@ -52,7 +51,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileSpecWithUIImpl)
 #ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #endif
@@ -158,17 +156,13 @@ static nsModuleComponentInfo components[] =
   { "Qt Drag Service",
     NS_DRAGSERVICE_CID,
     "@mozilla.org/widget/dragservice;1",
-    nsDragServiceConstructor },
+    nsDragServiceConstructor }
 #ifdef IBMBIDI
-    { "Qt Bidi Keyboard",
+    , { "Qt Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
-    nsBidiKeyboardConstructor },
+    nsBidiKeyboardConstructor }
 #endif // IBMBIDI
-  { "File Spec with UI",
-    NS_FILESPECWITHUI_CID,
-    "@mozilla.org/filespecwithui;1",
-    nsFileSpecWithUIImplConstructor }
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetQTModule,components)

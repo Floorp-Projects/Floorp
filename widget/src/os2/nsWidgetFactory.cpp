@@ -51,7 +51,6 @@
 #include "nsDragService.h"
 #include "nsILocalFile.h"
 #include "nsFilePicker.h"
-#include "nsFileWidget.h"
 #include "nsFontRetrieverService.h"
 #include "nsFontSizeIterator.h"
 #include "nsLookAndFeel.h"
@@ -78,7 +77,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCanvas)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileWidget)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontRetrieverService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFrameWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
@@ -262,10 +260,6 @@ static nsModuleComponentInfo components[] =
     NS_FILEPICKER_CID,
     "@mozilla.org/filepicker;1",
     nsFilePickerConstructor },
-  { "OS/2 File Widget",
-    NS_FILEWIDGET_CID,
-    "@mozilla.org/widget/filewidget/os2;1",
-    nsFileWidgetConstructor },
   { "OS/2 Font Retriever Service",
     NS_FONTRETRIEVERSERVICE_CID,
     "@mozilla.org/widget/fontretrieverservice/os2;1",

@@ -35,7 +35,6 @@
 #include "nsCheckButton.h"
 #include "nsTextWidget.h"
 #include "nsFilePicker.h"
-#include "nsFileWidget.h"
 #include "nsLookAndFeel.h"
 #include "nsLabel.h"
 #include "nsFontRetrieverService.h"
@@ -56,7 +55,6 @@ static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
 static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
 static NS_DEFINE_IID(kCCheckButton,   NS_CHECKBUTTON_CID);
-static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCFilePicker,    NS_FILEPICKER_CID);
 static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
@@ -169,9 +167,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCCheckButton)) {
         inst = (nsISupports*)(nsWindow *)new nsCheckButton();
-    }
-    else if (mClassID.Equals(kCFileOpen)) {
-        inst = (nsISupports*)new nsFileWidget();
     }
     else if (mClassID.Equals(kCFilePicker)) {
         inst = (nsISupports*)(nsBaseFilePicker*)new nsFilePicker();

@@ -39,6 +39,7 @@
 #include <StorageKit.h>
 #include <Message.h>
 #include <Window.h>
+#include <String.h>
 
 class nsFilePicker : public nsBaseFilePicker
 {
@@ -81,6 +82,52 @@ protected:
   nsCOMPtr<nsILocalFile> mDisplayDirectory;
   PRInt16                mSelectedType;
 
+};
+
+class nsFilePanelBeOS : public BLooper, public BFilePanel
+{  
+public:
+  nsFilePanelBeOS(file_panel_mode mode,
+                  uint32 node_flavors,
+                  bool allow_multiple_selection,
+                  bool modal,
+                  bool hide_when_done);
+  virtual ~nsFilePanelBeOS();
+  
+  virtual void MessageReceived(BMessage *message);
+  virtual void WaitForSelection();
+  
+  virtual bool IsOpenSelected() {
+    return (SelectedActivity() == OPEN_SELECTED);
+  }
+  virtual bool IsSaveSelected() {
+    return (SelectedActivity() == SAVE_SELECTED);
+  }
+  virtual bool IsCancelSelected() {
+    return (SelectedActivity() == CANCEL_SELECTED);
+  }
+  virtual uint32 SelectedActivity();
+  
+  virtual BList *OpenRefs() { return &mOpenRefs; }
+  virtual BString SaveFileName() { return mSaveFileName; }
+  virtual entry_ref SaveDirRef() { return mSaveDirRef; }
+  
+  enum {
+    NOT_SELECTED    = 0,
+    OPEN_SELECTED   = 1,
+    SAVE_SELECTED   = 2,
+    CANCEL_SELECTED = 3
+  };
+    
+protected:
+  
+  sem_id wait_sem ;
+  uint32 mSelectedActivity;
+  bool mIsSelected;
+  BString mSaveFileName;
+  entry_ref mSaveDirRef;
+  BList mOpenRefs;
+  
 };
 
 #endif // nsFilePicker_h__

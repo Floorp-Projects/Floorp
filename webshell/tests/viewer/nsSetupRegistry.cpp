@@ -41,7 +41,6 @@
 #include "nsSpecialSystemDirectory.h"
 
 #include "nsISound.h"
-#include "nsIFileSpecWithUI.h"
 
 #include "prprf.h"
 #include "prmem.h"
@@ -80,8 +79,6 @@ static NS_DEFINE_IID(kCFontRetrieverServiceCID,  NS_FONTRETRIEVERSERVICE_CID);
 static NS_DEFINE_IID(kCTimerCID,            NS_TIMER_CID);
 static NS_DEFINE_IID(kCTimerManagerCID,            NS_TIMERMANAGER_CID);
 static NS_DEFINE_IID(kSoundCID,            NS_SOUND_CID);
-static NS_DEFINE_CID(kFileSpecWithUICID, NS_FILESPECWITHUI_CID);
-static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCFilePickerCID, NS_FILEPICKER_CID);
 static NS_DEFINE_IID(kCPopUpCID,NS_POPUP_CID);
 
@@ -130,7 +127,6 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCVScrollbarCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCHScrollbarCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCDialogCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCFileWidgetCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCChildCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCPopUpCID,NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCAppShellCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -143,8 +139,6 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCDragServiceCID,          "Drag Service", "@mozilla.org/widget/dragservice;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFontRetrieverServiceCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kSoundCID,   "Sound Services", "@mozilla.org/sound;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kFileSpecWithUICID, NS_FILESPECWITHUI_CLASSNAME, 
-                                           NS_FILESPECWITHUI_CONTRACTID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFilePickerCID, "FilePicker", "@mozilla.org/filepicker;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
 #ifdef XP_PC
   nsComponentManager::RegisterComponentLib(kCTimerCID, "Timer", "@mozilla.org/timer;1", WIDGET_DLL, PR_FALSE, PR_FALSE);

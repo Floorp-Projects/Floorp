@@ -23,7 +23,6 @@
 
 #include "nsWidgetSupport.h"
 #include "nsRect.h"
-#include "nsIFileWidget.h"
 #include "nsIAppShell.h"
 #include "nsIButton.h"
 #include "nsIEventListener.h"
@@ -41,7 +40,6 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
-static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);

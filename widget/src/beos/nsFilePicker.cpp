@@ -33,8 +33,6 @@
 #include "nsIFileChannel.h"
 #include "nsIStringBundle.h"
 
-#include "nsFileWidget.h"
-
 #include <Window.h>
 #include <View.h>
 

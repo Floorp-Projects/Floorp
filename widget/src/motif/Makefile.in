@@ -37,7 +37,6 @@ CPPSRCS		= \
 		nsBidiKeyboard.cpp \
 		nsButton.cpp \
 		nsCheckButton.cpp \
-		nsFileWidget.cpp \
 		nsLabel.cpp \
 		nsLookAndFeel.cpp \
 		nsMenu.cpp \

@@ -39,7 +39,6 @@ CPPSRCS		= \
 		nsHTMLFormatConverter.cpp \
 		nsBaseDragService.cpp \
 		nsBaseClipboard.cpp \
-		nsFileSpecWithUIImpl.cpp \
 		nsPrimitiveHelpers.cpp \
 		nsXPLookAndFeel.cpp \
 		nsClipboardHelper.cpp \
