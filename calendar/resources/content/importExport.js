@@ -220,65 +220,82 @@ function createUniqueID()
 }
 
 
-/**** insertEvents
- *
- * Takes an array of events and adds the evens one by one to the calendar
+/**** 
+ * calendarEventArray: array of calendar event objects.
+ * silent: If silent, adds them all to selected (or default) calendar.
+ *   else shows new event dialog on each event, using selected (or default)
+ *   calendar as the initial calendar in dialog.
+ * calendarPath (optional): if present, overrides selected calendar.
+ *   Value is calendarPath from another item in calendar list.
  */
- 
-function addEventsToCalendar( calendarEventArray, silent, ServerName )
+function addEventsToCalendar( calendarEventArray, silent, calendarPath )
 {
-   gICalLib.batchMode = true;
+  if( ! calendarPath ) // null, "", or false
+  {
+    calendarPath = getSelectedCalendarPathOrDefault();
+  }
 
-   for(var i = 0; i < calendarEventArray.length; i++)
-   {
+  gICalLib.batchMode = true;
+  try
+  { 
+
+    for(var i = 0; i < calendarEventArray.length; i++)
+    {
       calendarEvent = calendarEventArray[i];
-         
+
       // Check if event with same ID already in Calendar. If so, import event with new ID.
-      if( gICalLib.fetchEvent( calendarEvent.id ) != null ) {
-         calendarEvent.id = createUniqueID( );
+      if( gICalLib.fetchEvent( calendarEvent.id ) != null )
+      {
+        calendarEvent.id = createUniqueID( );
       }
 
       // the start time is in zulu time, need to convert to current time
       if(calendarEvent.allDay != true)
+      {
         convertZuluToLocalEvent( calendarEvent );
+      }
 
-      // open the event dialog with the event to add
       if( silent )
       {
-         if( ServerName == null || ServerName == "" || ServerName == false )
-         {
-            //see if there's a server selected in the calendar window first
-            //get the selected calendar
-            if( document.getElementById( "list-calendars-listbox" ) )
-            {
-               var selectedCalendarItem = document.getElementById( "list-calendars-listbox" ).selectedItem;
-            
-               if( selectedCalendarItem )
-               {
-                  ServerName = selectedCalendarItem.getAttribute( "calendarPath" );
-               }
-               else
-               {
-                  //otherwise use the default
-                  ServerName = gCalendarWindow.calendarManager.getDefaultServer();
-               }
-            }
-            else
-            {
-               //otherwise use the default
-               ServerName = gCalendarWindow.calendarManager.getDefaultServer();
-            }
-         }
-         // LINAGORA (We need to see the new added event in the window and to update remote cal)
-         addEventDialogResponse( calendarEvent, ServerName );
-         /* gICalLib.addEvent( calendarEvent, ServerName ); */
+        // LINAGORA (We need to see the new added event in the window and to update remote cal)
+        addEventDialogResponse( calendarEvent, calendarPath );
+        /* gICalLib.addEvent( calendarEvent, calendarPath ); */
       }
       else
-         editNewEvent( calendarEvent );
-   }
-
-   gICalLib.batchMode = false;   
+      {
+        // open the event dialog with the event to add, calls addEventDialogResponse on OK.
+        editNewEvent( calendarEvent, calendarPath );
+      }
+    }
+  } 
+  finally
+  {
+    gICalLib.batchMode = false;
+  }
 }
+
+/** Return the calendarPath of the calendar selected in list-calendars-listbox,
+    or the default calendarPath if none selected. **/
+function getSelectedCalendarPathOrDefault()
+{
+  var calendarPath = null;
+  //see if there's a server selected in the calendar window first
+  //get the selected calendar
+  if( document.getElementById( "list-calendars-listbox" ) )
+  {
+    var selectedCalendarItem = document.getElementById( "list-calendars-listbox" ).selectedItem;
+    if( selectedCalendarItem )
+    {
+      calendarPath = selectedCalendarItem.getAttribute( "calendarPath" );
+    }
+  }
+  if( ! calendarPath ) // null, "", or false
+  {
+    calendarPath = gCalendarWindow.calendarManager.getDefaultServer();
+  }
+  return calendarPath;
+}
+
 
 /** oeDateTime is an oeDateTime object, not a javascript date **/
 function convertZuluToLocalOEDateTime( oeDateTime )
