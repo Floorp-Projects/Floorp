@@ -78,6 +78,8 @@ protected:
   static nsHashtable* gFontInfoList;
 public:
   static bool GetMacFontNumber(const nsString& aFontName, short &fontNum);
+
+	static const PRUint32		kPixelsPerInch;
 };
 
 #endif /* nsDeviceContextMac_h___ */

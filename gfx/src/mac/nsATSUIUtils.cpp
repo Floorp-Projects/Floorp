@@ -419,8 +419,10 @@ ATSUTextLayout nsATSUIToolkit::GetTextLayout()
 
 		mContext->GetDevUnitsToAppUnits(dev2app);
  		Fixed size = FloatToFixed( roundf(float(fontsize) / dev2app));
+#if DONT_USE_FONTS_SMALLER_THAN_9
  		if( FixRound ( size ) < 9 )
  			size = X2Fix(9);
+#endif
 
 		theTag[1] = kATSUSizeTag;
 		theValueSize[1] = (ByteCount) sizeof(Fixed);

@@ -273,8 +273,10 @@ NS_EXPORT void nsFontMetricsMac::GetNativeTextStyle(nsIFontMetrics& inMetrics,
 	inDevContext.GetDevUnitsToAppUnits(dev2app);
 	short		textSize = float(aFont->size) / dev2app;
 
+#if DONT_USE_FONTS_SMALLER_THAN_9
 	if (textSize < 9)
 		textSize = 9;
+#endif
 	
 	Style textFace = normal;
 	switch (aFont->style)
