@@ -20,10 +20,11 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Bill Law    <law@netscape.com>
- *  Syd Logan   <syd@netscape.com> added turbo mode stuff
- *  Joe Elwell  <jelwell@netscape.com>
- *  Håkan Waara <hwaara@chello.se>
+ *  Bill Law       <law@netscape.com>
+ *  Syd Logan      <syd@netscape.com> added turbo mode stuff
+ *  Joe Elwell     <jelwell@netscape.com>
+ *  Håkan Waara    <hwaara@chello.se>
+ *  Aaron Kaluszka <ask@swva.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -91,6 +92,7 @@ const char *jpgExts[]  = { ".jpg", ".jpeg", ".jfif", ".pjpeg", ".pjp", 0 };
 const char *gifExts[]  = { ".gif", 0 };
 const char *pngExts[]  = { ".png", 0 };
 const char *mngExts[]  = { ".mng", 0 };
+const char *xbmExts[]  = { ".xbm", 0 };
 const char *bmpExts[]  = { ".bmp", 0 };
 const char *icoExts[]  = { ".ico", 0 };
 const char *xmlExts[]  = { ".xml", 0 };
@@ -102,7 +104,8 @@ static FileTypeRegistryEntry
     jpg(   jpgExts,  "MozillaJPEG",  "JPEG Image",          "jpegfile" ),
     gif(   gifExts,  "MozillaGIF",   "GIF Image",           "giffile" ),
     png(   pngExts,  "MozillaPNG",   "PNG Image",           "pngfile" ),
-    mng(   mngExts,  "MozillaMNG",   "MNG Image",           ""),
+    mng(   mngExts,  "MozillaMNG",   "MNG Image",           "" ),
+    xbm(   xbmExts,  "MozillaXBM",   "XBM Image",           "xbmfile" ),
     bmp(   bmpExts,  "MozillaBMP",   "BMP Image",           "" ),
     ico(   icoExts,  "MozillaICO",   "Icon",                "icofile" ),
     xml(   xmlExts,  "MozillaXML",   "XML Document",        "xmlfile" ),
@@ -157,6 +160,7 @@ DEFINE_GETTER_AND_SETTER( IsHandlingJPEG,   mHandleJPEG   )
 DEFINE_GETTER_AND_SETTER( IsHandlingGIF,    mHandleGIF    )
 DEFINE_GETTER_AND_SETTER( IsHandlingPNG,    mHandlePNG    )
 DEFINE_GETTER_AND_SETTER( IsHandlingMNG,    mHandleMNG    )
+DEFINE_GETTER_AND_SETTER( IsHandlingXBM,    mHandleXBM    )
 DEFINE_GETTER_AND_SETTER( IsHandlingBMP,    mHandleBMP    )
 DEFINE_GETTER_AND_SETTER( IsHandlingICO,    mHandleICO    )
 DEFINE_GETTER_AND_SETTER( IsHandlingXML,    mHandleXML    )
@@ -208,6 +212,7 @@ nsWindowsHooks::GetSettings( nsWindowsHooksSettings **result ) {
     prefs->mHandleGIF    = BoolRegistryEntry( "isHandlingGIF"    );
     prefs->mHandlePNG    = BoolRegistryEntry( "isHandlingPNG"    );
     prefs->mHandleMNG    = BoolRegistryEntry( "isHandlingMNG"    );
+    prefs->mHandleXBM    = BoolRegistryEntry( "isHandlingXBM"    );
     prefs->mHandleBMP    = BoolRegistryEntry( "isHandlingBMP"    );
     prefs->mHandleICO    = BoolRegistryEntry( "isHandlingICO"    );
     prefs->mHandleXML    = BoolRegistryEntry( "isHandlingXML"    );
@@ -319,6 +324,8 @@ nsWindowsHooksSettings::GetRegistryMatches( PRBool *_retval ) {
          ||
          misMatch( mHandleMNG,    mng )
          ||
+         misMatch( mHandleXBM,    xbm )
+         ||
          misMatch( mHandleBMP,    bmp )
          ||
          misMatch( mHandleICO,    ico )
@@ -372,6 +379,7 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent,
             settings->mHandleGIF    = PR_TRUE;
             settings->mHandlePNG    = PR_TRUE;
             settings->mHandleMNG    = PR_TRUE;
+            settings->mHandleXBM    = PR_TRUE;
             settings->mHandleBMP    = PR_FALSE;
             settings->mHandleICO    = PR_FALSE;
             settings->mHandleXML    = PR_TRUE;
@@ -559,6 +567,7 @@ nsWindowsHooks::SetSettings(nsIWindowsHooksSettings *prefs) {
     putPRBoolIntoRegistry( "isHandlingGIF",    prefs, &nsIWindowsHooksSettings::GetIsHandlingGIF );
     putPRBoolIntoRegistry( "isHandlingPNG",    prefs, &nsIWindowsHooksSettings::GetIsHandlingPNG );
     putPRBoolIntoRegistry( "isHandlingMNG",    prefs, &nsIWindowsHooksSettings::GetIsHandlingMNG );
+    putPRBoolIntoRegistry( "isHandlingXBM",    prefs, &nsIWindowsHooksSettings::GetIsHandlingXBM );
     putPRBoolIntoRegistry( "isHandlingBMP",    prefs, &nsIWindowsHooksSettings::GetIsHandlingBMP );
     putPRBoolIntoRegistry( "isHandlingICO",    prefs, &nsIWindowsHooksSettings::GetIsHandlingICO );
     putPRBoolIntoRegistry( "isHandlingXML",    prefs, &nsIWindowsHooksSettings::GetIsHandlingXML );
@@ -609,6 +618,11 @@ nsWindowsHooks::SetRegistry() {
         (void) mng.set();
     } else {
         (void) mng.reset();
+    }
+    if ( prefs->mHandleXBM ) {
+        (void) xbm.set();
+    } else {
+        (void) xbm.reset();
     }
     if ( prefs->mHandleBMP ) {
         (void) bmp.set();

@@ -16,7 +16,8 @@
  * Reserved.
  *
  * Contributor(s):
- *  Bill Law    <law@netscape.com>
+ *  Bill Law       <law@netscape.com>
+ *  Aaron Kaluszka <ask@swva.net>
  */
 
 // Turn this on to get debug output.
@@ -103,6 +104,7 @@ function Startup() {
                                                 "isHandlingGIF",
                                                 "isHandlingPNG",
                                                 "isHandlingMNG",
+                                                "isHandlingXBM",
                                                 "isHandlingBMP",
                                                 "isHandlingICO",
                                                 "isHandlingXML",

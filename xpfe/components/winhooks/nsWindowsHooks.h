@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Aaron Kaluszka <ask@swva.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -84,6 +85,7 @@ private:
         PRBool mHandleGIF;
         PRBool mHandlePNG;
         PRBool mHandleMNG;
+        PRBool mHandleXBM;
         PRBool mHandleBMP;
         PRBool mHandleICO;
         PRBool mHandleXML;

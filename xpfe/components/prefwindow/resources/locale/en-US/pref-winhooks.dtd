@@ -15,6 +15,8 @@
 <!ENTITY png.accesskey   "P">
 <!ENTITY mng.label       "MNG images">
 <!ENTITY mng.accesskey   "M">
+<!ENTITY xbm.label       "XBM images">
+<!ENTITY xbm.accesskey   "A">
 <!ENTITY bmp.label       "BMP images">
 <!ENTITY bmp.accesskey   "B">
 <!ENTITY ico.label       "ICO images">

@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Bill Law    <law@netscape.com>
+ *  Bill Law       <law@netscape.com>
+ *  Aaron Kaluszka <ask@swva.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -133,6 +134,7 @@ interface nsIWindowsHooksSettings : nsISupports {
     attribute boolean isHandlingGIF;
     attribute boolean isHandlingPNG;
     attribute boolean isHandlingMNG;
+    attribute boolean isHandlingXBM;
     attribute boolean isHandlingBMP;
     attribute boolean isHandlingICO;
     attribute boolean isHandlingXML;
