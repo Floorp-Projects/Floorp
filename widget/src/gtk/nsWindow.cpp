@@ -253,7 +253,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                      this);
 
 #ifdef NEW_CLIPBOARD_SUPPORT
-    // Call SetTopLevelWidget here? 
+    nsClipboard::SetTopLevelWidget(mShell);
 #else
     nsSelectionMgr::SetTopLevelWidget(mShell);
 #endif
