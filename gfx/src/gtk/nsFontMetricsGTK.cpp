@@ -4166,7 +4166,8 @@ do_BreakGetTextDimensions(const nsFontSwitchGTK *aFontSwitch,
       // Find the nearest place to break that is less than or equal to
       // the estimated break offset
       breakIndex = data->mPrevBreakState_BreakIndex;
-      while (data->mBreaks[breakIndex + 1] <= estimatedBreakOffset) {
+      while (breakIndex + 1 < data->mNumBreaks &&
+             data->mBreaks[breakIndex + 1] <= estimatedBreakOffset) {
         ++breakIndex;
       }
 
