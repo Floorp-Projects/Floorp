@@ -779,6 +779,8 @@ nsresult nsHTTPChannel::Init()
 nsresult
 nsHTTPChannel::OpenCacheEntry()
 {
+    LOG(("nsHTTPChannel::OpenCacheEntry [this=%x]", this));
+
     // make sure we're not abusing this function
     NS_ENSURE_TRUE(mHandler, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(!mCacheEntry, NS_ERROR_FAILURE);
@@ -810,6 +812,8 @@ nsresult
 nsHTTPChannel::CheckCache()
 {
     nsresult rv;
+
+    LOG(("nsHTTPChannel::CheckCache [this=%x entry=%x]", this, mCacheEntry.get()));
 		
     // Be pessimistic: Assume cache entry has no useful data
     mCachedContentIsAvailable = mCachedContentIsValid = PR_FALSE;
@@ -829,9 +833,9 @@ nsHTTPChannel::CheckCache()
         return NS_OK; // no data to read... must go to net
 
     // consider load attributes that effect storage policy
-    if (mLoadAttributes & nsIChannel::CACHE_AS_FILE)
-        mCacheEntry->SetStoragePolicy(nsICache::STORE_ON_DISK_AS_FILE);
-    else if (mLoadAttributes & nsIChannel::INHIBIT_PERSISTENT_CACHING)
+    //if (mLoadAttributes & nsIChannel::CACHE_AS_FILE)
+    //    mCacheEntry->SetStoragePolicy(nsICache::STORE_ON_DISK_AS_FILE);
+    //else if (mLoadAttributes & nsIChannel::INHIBIT_PERSISTENT_CACHING)
         mCacheEntry->SetStoragePolicy(nsICache::STORE_IN_MEMORY);
 #else
     // If this is the first time we've been called for this channel,
@@ -961,9 +965,8 @@ nsHTTPChannel::CheckCache()
     // If validation is inhibited, we'll just use whatever data is in
     // the cache, regardless of whether or not it has expired.
     if (mLoadAttributes & nsIChannel::VALIDATE_NEVER) {
-        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-              ("nsHTTPChannel::checkCache() [this=%x].\t"
-               "obeying VALIDATE_NEVER\n", this));
+        LOG(("nsHTTPChannel::checkCache() [this=%x].\t"
+             "obeying VALIDATE_NEVER\n", this));
         mCachedContentIsValid = PR_TRUE;
         return NS_OK;
      }
@@ -1074,6 +1077,10 @@ nsHTTPChannel::CheckCache()
     else
         mCachedContentIsValid = !doIfModifiedSince;
 
+    LOG(("nsHTTPChannel::CheckCache [this=%x if-modified-since=%d"
+        " cached-content-is-valid=%d]\n",
+        this, doIfModifiedSince, mCachedContentIsValid));
+
     return NS_OK;
 }
 
@@ -1150,6 +1157,7 @@ nsHTTPChannel::CacheAbort(PRUint32 statusCode)
 {
     nsresult rv = NS_OK;
     if (mCacheEntry) {
+        LOG(("nsHTTPChannel::CacheAbort [this=%x] Dooming cache entry!\n", this));
 #ifdef MOZ_NEW_CACHE
         // Doom the cache entry.
         rv = mCacheEntry->Doom();
@@ -1190,6 +1198,9 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
     nsresult rv;
     NS_ENSURE_ARG_POINTER(aListener);
 
+    LOG(("nsHTTPChannel::CacheReceivedResponse [this=%x entry=%x]\n",
+        this, mCacheEntry.get()));
+
     // If caching is disabled, there will be no cache entry
     if (!mCacheEntry)
         return NS_OK;
@@ -1200,7 +1211,7 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
     // Store secure data in memory only
     rv = GetSecurityInfo(getter_AddRefs(securityInfo));
     if (NS_SUCCEEDED(rv) && securityInfo)
-        ; // store in memory 
+        mCacheEntry->SetStoragePolicy(nsICache::STORE_IN_MEMORY);
 #else
     // ruslan/hack: don't cache secure connections in case of the persistent cache
     PRBool dontCache = (mCacheEntry->GetSecurityInfo(getter_AddRefs(securityInfo))
@@ -1243,8 +1254,11 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
         PRInt32 offset;
         nsCAutoString cacheControlHeader(NS_STATIC_CAST(const char *, header));
         offset = cacheControlHeader.Find("no-store", PR_TRUE);
-        if (offset != kNotFound)
+        if (offset != kNotFound) {
+            LOG(("nsHTTPChannel::CacheRecievedResponse [this=%x] Not caching since"
+                " response has \"Cache-Control: no-store\"\n", this));
             return NS_OK;
+        }
     }
 
     // Although 'Pragma:no-cache' is not a standard HTTP response header (it's
@@ -1255,8 +1269,11 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
         PRInt32 offset;
         nsCAutoString pragmaHeader(NS_STATIC_CAST(const char *, header));
         offset = pragmaHeader.Find("no-cache", PR_TRUE);
-        if (offset != kNotFound)
+        if (offset != kNotFound) {
+            LOG(("nsHTTPChannel::CacheRecievedResponse [this=%x] Not caching since"
+                " response has \"Pragma: no-cache\"\n", this));
             return NS_OK;
+        }
     }
 
 #ifndef MOZ_NEW_CACHE
@@ -2344,6 +2361,8 @@ nsHTTPChannel::ProcessStatusCode(void)
         if ((statusCode == 200) || (statusCode == 203)) {
             nsCOMPtr<nsIStreamListener> listener2;
             rv = CacheReceivedResponse(listener, getter_AddRefs(listener2));
+            LOG(("nsHTTPChannel::ProcessStatusCode [this=%x http-status=%x] "
+                " CacheReceivedResponse returned %u\n", this, statusCode, rv));
             if (NS_SUCCEEDED(rv) && listener2)
                 listener = listener2;
         }
@@ -2372,6 +2391,8 @@ nsHTTPChannel::ProcessStatusCode(void)
         if ((statusCode == 300) || (statusCode == 301)) {
             nsCOMPtr<nsIStreamListener> listener2;
             rv = CacheReceivedResponse(listener, getter_AddRefs(listener2));
+            LOG(("nsHTTPChannel::ProcessStatusCode [this=%x http-status=%x] "
+                " CacheReceivedResponse returned %u\n", this, statusCode, rv));
             if (NS_SUCCEEDED(rv) && listener2)
                 listener = listener2;
         }
