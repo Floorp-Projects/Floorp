@@ -939,6 +939,7 @@ NS_IMETHODIMP nsNNTPProtocol::AsyncOpen(nsIStreamListener *listener, nsISupports
   // the memory cache or the local msg cache.
   if (mailnewsUrl && (m_newsAction == nsINntpUrl::ActionFetchArticle || m_newsAction == nsINntpUrl::ActionFetchPart))
   {
+
     SetupPartExtractorListener(m_channelListener);
     if (ReadFromLocalCache())
      return NS_OK;
@@ -1108,8 +1109,23 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
             rv = m_nntpServer->SubscribeToNewsgroup(group.get());
             containsGroup = PR_TRUE;
           }
-          else
-            return rv;
+          else {
+            // XXX FIX ME
+            // the way news is current written, we've already opened the socket
+            // and initialized the connection.
+            //
+            // until that is fixed, when the user cancels an autosubscribe, we've got to close it and clean up after ourselves
+            //
+            // see bug http://bugzilla.mozilla.org/show_bug.cgi?id=108293
+            // another problem, autosubscribe urls are ending up as cache entries
+            // because the default action on nntp urls is ActionFetchArticle
+            //
+            // see bug http://bugzilla.mozilla.org/show_bug.cgi?id=108294
+            if (m_runningURL)
+              DoomCacheEntryForRunningUrl();
+
+            return CloseConnection();
+          }
         }
 
         // If we have a group (since before, or just subscribed), set the m_newsFolder.
@@ -1167,22 +1183,24 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 
 }
 
+nsresult nsNNTPProtocol::DoomCacheEntryForRunningUrl()
+{
+  nsCOMPtr <nsICacheEntryDescriptor> memCacheEntry;
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+  if (mailnewsurl)
+    mailnewsurl->GetMemCacheEntry(getter_AddRefs(memCacheEntry));
+  if (memCacheEntry)
+    memCacheEntry->Doom();
+  return NS_OK;
+}
+
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIRequest *request, nsISupports * aContext, nsresult aStatus)
 {
     // If failed, remove incomplete cache entry (and it'll be reloaded next time).
     if (NS_FAILED(aStatus) && m_runningURL)
-    {
-#ifdef DEBUG_CAVIN
-        printf("*** Status failed in nsNNTPProtocol::OnStopRequest(), so clean up cache entry for the running url.");
-#endif
-        nsCOMPtr <nsICacheEntryDescriptor> memCacheEntry;
-        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-        if (mailnewsurl)
-          mailnewsurl->GetMemCacheEntry(getter_AddRefs(memCacheEntry));
-        if (memCacheEntry)
-          memCacheEntry->Doom();
-    }
+      DoomCacheEntryForRunningUrl();
+      
 
     nsMsgProtocol::OnStopRequest(request, aContext, aStatus);
 
@@ -2212,16 +2230,8 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
         // the message for offline use (or at least not displaying it)
         PRBool savingArticleOffline = (m_channelListener == nsnull);
 
-        nsCOMPtr <nsICacheEntryDescriptor> memCacheEntry;
         if (m_runningURL)
-        {
-          nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-          if (mailnewsurl)
-            mailnewsurl->GetMemCacheEntry(getter_AddRefs(memCacheEntry));
-          // invalidate mem cache entry.
-          if (memCacheEntry)
-            memCacheEntry->Doom();
-        }
+          DoomCacheEntryForRunningUrl();
 
         if (NS_SUCCEEDED(rv) && group_name && !savingArticleOffline) {
             MarkCurrentMsgRead();

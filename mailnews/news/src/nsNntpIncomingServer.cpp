@@ -57,6 +57,7 @@
 #include "nsIPrompt.h"
 #include "nsIStringBundle.h"
 #include "nntpCore.h"
+#include "nsIWindowWatcher.h"
 
 #define INVALID_VERSION         0
 #define VALID_VERSION           1
@@ -392,11 +393,8 @@ nsNntpIncomingServer::WriteNewsrcFile()
                     nsXPIDLCString newsrcLine;
                     rv = newsFolder->GetNewsrcLine(getter_Copies(newsrcLine));
                     if (NS_SUCCEEDED(rv) && ((const char *)newsrcLine)) {
+                        // write the line to the newsrc file
                         newsrcStream << (const char *)newsrcLine;
-#ifdef DEBUG_NEWS
-                        printf("writing to newsrc file:\n");
-                        printf("%s",(const char *)newsrcLine);
-#endif /* DEBUG_NEWS */
                     }
                 }
             }
@@ -1566,13 +1564,20 @@ NS_IMETHODIMP
 nsNntpIncomingServer::GroupNotFound(nsIMsgWindow *aMsgWindow, const char *aName, PRBool aOpening)
 {
   NS_ENSURE_ARG_POINTER(aName);
-  NS_ENSURE_ARG_POINTER(aMsgWindow);
 
   nsresult rv;
-
   nsCOMPtr <nsIPrompt> prompt;
-  rv = aMsgWindow->GetPromptDialog(getter_AddRefs(prompt));
-  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (aMsgWindow) {
+    rv = aMsgWindow->GetPromptDialog(getter_AddRefs(prompt));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "no prompt from the msg window");
+  }
+
+  if (!prompt) {
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    rv = wwatch->GetNewPrompter(nsnull, getter_AddRefs(prompt));
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
 
   nsCOMPtr <nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID,&rv);
   NS_ENSURE_SUCCESS(rv,rv);
