@@ -4015,8 +4015,9 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
     if ( nsHTMLEditUtils::IsListItem(curNode)
          || nsHTMLEditUtils::IsList(curNode))
     {
+      res = RemoveAlignment(curNode, *alignType, PR_TRUE);
+      if (NS_FAILED(res)) return res;
       if (useCSS) {
-        RemoveAlignment(curNode, *alignType, PR_TRUE);
         nsCOMPtr<nsIDOMElement> curElem = do_QueryInterface(curNode);
         NS_NAMED_LITERAL_STRING(attrName, "align");
         PRInt32 count;
@@ -7501,7 +7502,7 @@ nsHTMLEditRules::RemoveAlignment(nsIDOMNode * aNode, nsAReadableString & aAlignT
     res = mHTMLEditor->NodeIsBlockStatic(child, &isBlock);
     if (NS_FAILED(res)) return res;
 
-    if (isBlock || nsHTMLEditUtils::IsHR(child))
+    if ((isBlock && !nsHTMLEditUtils::IsDiv(child)) || nsHTMLEditUtils::IsHR(child))
     {
       // the current node is a block element
       nsCOMPtr<nsIDOMElement> curElem = do_QueryInterface(child);
@@ -7530,20 +7531,45 @@ nsHTMLEditRules::RemoveAlignment(nsIDOMNode * aNode, nsAReadableString & aAlignT
         if (NS_FAILED(res)) return res;
       }
     }
-    else if (nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("center")))
+    else if (nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("center"))
+             || nsHTMLEditUtils::IsDiv(child))
     {
-      // this is a CENTER element and we have to remove it
+      // this is a CENTER or a DIV element and we have to remove it
       // first remove children's alignment
       res = RemoveAlignment(child, aAlignType, PR_TRUE);
       if (NS_FAILED(res)) return res;
 
-      // we may have to insert BRs in first and last position of CENTER's children
-      // if the nodes before/after are not blocks and not BRs
-      res = MakeSureElemStartsOrEndsOnCR(child);
-      if (NS_FAILED(res)) return res;
+      if (useCSS && nsHTMLEditUtils::IsDiv(child))
+      {
+        // if we are in CSS mode and if the element is a DIV, let's remove it
+        // if it does not carry any style hint (style attr, class or ID)
+        nsAutoString dummyCssValue;
+        mHTMLEditor->mHTMLCSSUtils->RemoveCSSInlineStyle(child, nsIEditProperty::cssTextAlign, dummyCssValue);
+        nsCOMPtr<nsIDOMElement> childElt = do_QueryInterface(child);
+        PRBool hasStyleOrIdOrClass;
+        res = mHTMLEditor->HasStyleOrIdOrClass(childElt, &hasStyleOrIdOrClass);
+        if (NS_FAILED(res)) return res;
+        if (!hasStyleOrIdOrClass)
+        {
+          // we may have to insert BRs in first and last position of DIV's children
+          // if the nodes before/after are not blocks and not BRs
+          res = MakeSureElemStartsOrEndsOnCR(child);
+          if (NS_FAILED(res)) return res;
+          res = mHTMLEditor->RemoveContainer(child);
+          if (NS_FAILED(res)) return res;
+        }
+      }
+      else
+      {
+        // we may have to insert BRs in first and last position of element's children
+        // if the nodes before/after are not blocks and not BRs
+        res = MakeSureElemStartsOrEndsOnCR(child);
+        if (NS_FAILED(res)) return res;
 
-      res = mHTMLEditor->RemoveContainer(child);
-      if (NS_FAILED(res)) return res;
+        // in HTML mode, let's remove the element
+        res = mHTMLEditor->RemoveContainer(child);
+        if (NS_FAILED(res)) return res;
+      }
     }
     child = tmp;
   }
@@ -7562,18 +7588,23 @@ nsHTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode, PRBool aStarts)
   nsresult res;
   if (aStarts)
   {
-    res = aNode->GetFirstChild(getter_AddRefs(child));
+    res = mHTMLEditor->GetFirstEditableChild(aNode, address_of(child));
   }
   else
   {
-    res = aNode->GetLastChild(getter_AddRefs(child));
+    res = mHTMLEditor->GetLastEditableChild(aNode, address_of(child));
   }
   if (NS_FAILED(res)) return res;
   if (!child) return NS_OK;
   PRBool isChildBlock;
   res = mHTMLEditor->NodeIsBlockStatic(child, &isChildBlock);
   if (NS_FAILED(res)) return res;
-  if (!isChildBlock)
+  PRBool foundCR = PR_FALSE;
+  if (isChildBlock || nsTextEditUtils::IsBreak(child))
+  {
+    foundCR = PR_TRUE;
+  }
+  else
   {
     nsCOMPtr<nsIDOMNode> sibling;
     if (aStarts)
@@ -7585,7 +7616,6 @@ nsHTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode, PRBool aStarts)
       res = mHTMLEditor->GetNextHTMLSibling(aNode, address_of(sibling));
     }
     if (NS_FAILED(res)) return res;
-    PRBool foundCR = PR_FALSE;
     if (sibling)
     {
       PRBool isBlock;
@@ -7600,24 +7630,24 @@ nsHTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode, PRBool aStarts)
     {
       foundCR = PR_TRUE;
     }
-    if (!foundCR)
+  }
+  if (!foundCR)
+  {
+    nsCOMPtr<nsIDOMNode> brNode;
+    PRInt32 offset = 0;
+    if (!aStarts)
     {
-      nsCOMPtr<nsIDOMNode> brNode;
-      PRInt32 offset = 0;
-      if (!aStarts)
-      {
-        nsCOMPtr<nsIDOMNodeList> childNodes;
-        res = aNode->GetChildNodes(getter_AddRefs(childNodes));
-        if (NS_FAILED(res)) return res;
-        if (!childNodes) return NS_ERROR_NULL_POINTER;
-        PRUint32 childCount;
-        res = childNodes->GetLength(&childCount);
-        if (NS_FAILED(res)) return res;
-        offset = childCount;
-      }
-      res = mHTMLEditor->CreateBR(aNode, offset, address_of(brNode));
+      nsCOMPtr<nsIDOMNodeList> childNodes;
+      res = aNode->GetChildNodes(getter_AddRefs(childNodes));
       if (NS_FAILED(res)) return res;
+      if (!childNodes) return NS_ERROR_NULL_POINTER;
+      PRUint32 childCount;
+      res = childNodes->GetLength(&childCount);
+      if (NS_FAILED(res)) return res;
+      offset = childCount;
     }
+    res = mHTMLEditor->CreateBR(aNode, offset, address_of(brNode));
+    if (NS_FAILED(res)) return res;
   }
   return NS_OK;
 }
@@ -7643,10 +7673,10 @@ nsHTMLEditRules::AlignBlock(nsIDOMElement * aElement, const nsAReadableString * 
     return NS_OK;
   }
 
-  RemoveAlignment(node, *aAlignType, aContentsOnly);
+  nsresult res = RemoveAlignment(node, *aAlignType, aContentsOnly);
+  if (NS_FAILED(res)) return res;
   NS_NAMED_LITERAL_STRING(attr, "align");
   PRBool useCSS;
-  nsresult res;
   mHTMLEditor->IsCSSEnabled(&useCSS);
   if (useCSS) {
     // let's use CSS alignment; we use margin-left and margin-right for tables

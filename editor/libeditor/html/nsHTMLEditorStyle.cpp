@@ -697,19 +697,8 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
                                                       &propertyValue);
         // remove the node if it is a span, if its style attribute is empty or absent,
         // and if it does not have a class nor an id
-        nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
-        nsAutoString styleVal;
-        PRBool isStyleSet;
-        res = GetAttributeValue(elem,  NS_LITERAL_STRING("style"), styleVal, &isStyleSet);
-        if (NS_FAILED(res)) return res;
-        if (NodeIsType(aNode, nsIEditProperty::span) && (!isStyleSet || (0 == styleVal.Length()))) {
-          PRBool hasClassOrId ;
-          res = mHTMLCSSUtils->HasClassOrID(elem, hasClassOrId);
-          if (!hasClassOrId) {
-            res = RemoveContainer(aNode);
-            if (NS_FAILED(res)) return res;
-          }
-        }
+        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
+        res = RemoveElementIfNoStyleOrIdOrClass(element, nsIEditProperty::span);
       }
     }
   }  
@@ -1822,3 +1811,41 @@ nsHTMLEditor::IsCSSEnabled(PRBool *aIsCSSEnabled)
   return NS_OK;
 }
 
+nsresult
+nsHTMLEditor::HasStyleOrIdOrClass(nsIDOMElement * aElement, PRBool *aHasStyleOrIdOrClass)
+{
+  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsIDOMNode> node  = do_QueryInterface(aElement);
+
+
+  // remove the node if its style attribute is empty or absent,
+  // and if it does not have a class nor an id
+  nsAutoString styleVal;
+  PRBool isStyleSet;
+  *aHasStyleOrIdOrClass = PR_TRUE;
+  nsresult res = GetAttributeValue(aElement,  NS_LITERAL_STRING("style"), styleVal, &isStyleSet);
+  if (NS_FAILED(res)) return res;
+  if (!isStyleSet || (0 == styleVal.Length())) {
+    res = mHTMLCSSUtils->HasClassOrID(aElement, *aHasStyleOrIdOrClass);
+    if (NS_FAILED(res)) return res;
+  }
+  return res;
+}
+
+nsresult
+nsHTMLEditor::RemoveElementIfNoStyleOrIdOrClass(nsIDOMElement * aElement, nsIAtom * aTag)
+{
+  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsIDOMNode> node  = do_QueryInterface(aElement);
+
+  // early way out if node is not the right kind of element
+  if (!NodeIsType(node, aTag)) {
+    return NS_OK;
+  }
+  PRBool hasStyleOrIdOrClass;
+  nsresult res = HasStyleOrIdOrClass(aElement, &hasStyleOrIdOrClass);
+  if (!hasStyleOrIdOrClass) {
+    res = RemoveContainer(node);
+  }
+  return res;
+}

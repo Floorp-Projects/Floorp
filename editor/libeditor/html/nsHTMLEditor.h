@@ -720,6 +720,8 @@ protected:
                              PRBool *aAny, 
                              PRBool *aAll,
                              nsAWritableString *outValue);
+  nsresult HasStyleOrIdOrClass(nsIDOMElement * aElement, PRBool *aHasStyleOrIdOrClass);
+  nsresult RemoveElementIfNoStyleOrIdOrClass(nsIDOMElement * aElement, nsIAtom * aTag);
 
 // Data members
 protected:
