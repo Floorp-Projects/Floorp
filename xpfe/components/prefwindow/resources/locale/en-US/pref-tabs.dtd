@@ -4,7 +4,6 @@
 <!ENTITY background.label "Load links in the background">
 <!ENTITY openTabs.label "Open tabs instead of windows for">
 <!ENTITY middleClick.label "Middle-click or control-click of links in a Web page">
-<!ENTITY windowOpen.label "Windows opened by the Web page">
 <!ENTITY urlbarWinUnix.label "Control+Enter in the Location bar">
 <!ENTITY urlbarMac.label "Command+Enter in the Location bar">
 
