@@ -60,8 +60,10 @@ namespace ICG {
         :   topRegister(0), 
             registerBase(0), 
             maxRegister(0), 
-            statementLabelBase(0), 
-            exceptionRegister(NotARegister)
+            parameterCount(0),
+            exceptionRegister(NotARegister),
+            switchRegister(NotARegister),
+            variableList(new VariableList())
     { 
         iCode = new InstructionStream(); 
         if (hasTryStatement) 
@@ -71,8 +73,12 @@ namespace ICG {
             char num[8]; 
             sprintf(num, "%.2d", i);
             appendChars(s, num, strlen(num));
-            allocateVariable(world->identifiers[s]);
+            if (switchRegister == NotARegister)
+                switchRegister = allocateVariable(world->identifiers[s]);
+            else
+                allocateVariable(world->identifiers[s]);
         }
+        labelSet = new StatementLabels();
     }
 
 
@@ -197,6 +203,7 @@ namespace ICG {
     Register ICodeGenerator::op(ICodeOp op, Register source)
     {
         Register dest = getRegister();
+        ASSERT(source != NotARegister);    
         Compare *instr = new Compare (op, dest, source);
         iCode->push_back(instr);
         return dest;
@@ -204,19 +211,23 @@ namespace ICG {
         
     void ICodeGenerator::move(Register destination, Register source)
     {
-         Move *instr = new Move(destination, source);
-         iCode->push_back(instr);
+        ASSERT(destination != NotARegister);    
+        ASSERT(source != NotARegister);    
+        Move *instr = new Move(destination, source);
+        iCode->push_back(instr);
     } 
 
     void ICodeGenerator::complement(Register destination, Register source)
     {
-         Not *instr = new Not(destination, source);
-         iCode->push_back(instr);
+        Not *instr = new Not(destination, source);
+        iCode->push_back(instr);
     } 
 
     Register ICodeGenerator::op(ICodeOp op, Register source1, 
                                 Register source2)
     {
+        ASSERT(source1 != NotARegister);    
+        ASSERT(source2 != NotARegister);    
         Register dest = getRegister();
         Arithmetic *instr = new Arithmetic(op, dest, source1, source2);
         iCode->push_back(instr);
@@ -314,8 +325,6 @@ namespace ICG {
 
     void ICodeGenerator::beginWhileStatement(uint32)
     {
-        resetTopRegister();
-  
         WhileCodeState *ics = new WhileCodeState(this);
         addStitcher(ics);
 
@@ -359,7 +368,7 @@ namespace ICG {
 
         delete ics;
 
-        resetTopRegister();
+        resetStatement();
     }
 
     /********************************************************************/
@@ -423,13 +432,13 @@ namespace ICG {
             setLabel(ics->breakLabel);
 
         delete ics;
+        resetStatement();
     }
 
     /********************************************************************/
 
     void ICodeGenerator::beginDoStatement(uint32)
     {
-        resetTopRegister();
         DoCodeState *ics = new DoCodeState(this);
         addStitcher(ics);
   
@@ -463,7 +472,7 @@ namespace ICG {
 
         delete ics;
 
-        resetTopRegister();
+        resetStatement();
     }
 
     /********************************************************************/
@@ -471,19 +480,15 @@ namespace ICG {
     void ICodeGenerator::beginSwitchStatement(uint32, Register expression)
     {
         // stash the control expression value
-        resetTopRegister();
-        Register control = op(MOVE, expression);
-    /*
-        XXXX this register needs to belong to the 'variable' set so that
-        it is preserved across statements. Then we can drop having to 
-        keep the registe rbase in the icodestate.
-        
-    */
+
+        // hmmm, need to track depth of nesting here....
+        move(switchRegister, expression);
+
         // build an instruction stream for the case statements, the case
         // expressions are generated into the main stream directly, the
         // case statements are then added back in afterwards.
         InstructionStream *x = new InstructionStream();
-        SwitchCodeState *ics = new SwitchCodeState(control, this);
+        SwitchCodeState *ics = new SwitchCodeState(switchRegister++, this);
         ics->swapStream(x);
         addStitcher(ics);
     }
@@ -495,7 +500,7 @@ namespace ICG {
         ASSERT(ics->stateKind == Switch_state);
 
         Label *caseLabel = getLabel();
-        Register r = op(COMPARE_EQ, expression, ics->controlExpression);
+        Register r = op(COMPARE_EQ, expression, ics->controlValue);
         branchConditional(caseLabel, r);
 
         // mark the case in the Case Statement stream 
@@ -571,6 +576,10 @@ namespace ICG {
             setLabel(ics->breakLabel);
 
         delete ics;
+        
+        --switchRegister;
+
+        resetStatement();
     }
 
 
@@ -611,7 +620,7 @@ namespace ICG {
         }
     
         delete ics;
-        resetTopRegister();
+        resetStatement();
     }
 
     /************************************************************************/
@@ -639,23 +648,19 @@ namespace ICG {
     void ICodeGenerator::breakStatement(uint32 /* pos */,
                                         const StringAtom &label)
     {
-        uint32 statementLabelCeiling = statementLabels.size();
-        
         for (std::vector<ICodeState *>::reverse_iterator p =
                     stitcher.rbegin(); p != stitcher.rend(); p++) {
-
-            for (std::vector<const StringAtom *>::iterator lbl =
-                    statementLabels.begin() + (*p)->statementLabelBase;
-                    lbl != statementLabels.begin() + statementLabelCeiling;
-                    lbl++) {
-                if ((*lbl) == &label) {
-		    if ((*p)->breakLabel == NULL)
-			(*p)->breakLabel = getLabel();
-                    branch((*p)->breakLabel);
-                    return;
+            if ((*p)->labelSet) {
+                for (StatementLabels::iterator i = (*p)->labelSet->begin();
+                            i != (*p)->labelSet->end(); i++) {
+                    if ((*i) == &label) {
+		                if ((*p)->breakLabel == NULL)
+			                (*p)->breakLabel = getLabel();
+                        branch((*p)->breakLabel);
+                        return;
+                    }
                 }
             }
-            statementLabelCeiling = (*p)->statementLabelBase;
         }
         NOT_REACHED("no break target available");
     }
@@ -682,23 +687,19 @@ namespace ICG {
     void ICodeGenerator::continueStatement(uint32 /* pos */,
                                            const StringAtom &label)
     {
-        uint32 statementLabelCeiling = statementLabels.size();
-        
         for (std::vector<ICodeState *>::reverse_iterator p =
                     stitcher.rbegin(); p != stitcher.rend(); p++) {
-
-            for (std::vector<const StringAtom *>::iterator lbl =
-                    statementLabels.begin() + (*p)->statementLabelBase;
-                    lbl != statementLabels.begin() + statementLabelCeiling;
-                    lbl++) {
-                if ((*lbl) == &label) {
-		    if ((*p)->continueLabel == NULL)
-			(*p)->continueLabel = getLabel();
-                    branch((*p)->continueLabel);
-                    return;
+            if ((*p)->labelSet) {
+                for (StatementLabels::iterator i = (*p)->labelSet->begin();
+                            i != (*p)->labelSet->end(); i++) {
+                    if ((*i) == &label) {
+        		        if ((*p)->continueLabel == NULL)
+		            	    (*p)->continueLabel = getLabel();
+                        branch((*p)->continueLabel);
+                        return;
+                    }
                 }
             }
-            statementLabelCeiling = (*p)->statementLabelBase;
         }
         NOT_REACHED("no continue target available");
     }
@@ -733,6 +734,7 @@ namespace ICG {
         stitcher.pop_back();
         if (ics->beyondCatch)
             setLabel(ics->beyondCatch);
+        resetStatement();
     }
 
     void ICodeGenerator::beginCatchStatement(uint32 /* pos */)

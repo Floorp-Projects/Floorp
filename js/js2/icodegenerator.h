@@ -60,6 +60,8 @@ namespace ICG {
         For_state,
         Try_state
     };
+
+    typedef std::vector<const StringAtom *> StatementLabels;
     
     class ICodeState {
     public :
@@ -72,18 +74,23 @@ namespace ICG {
         { ASSERT(false); return NULL;}
         
         StateKind stateKind;
-        Register registerBase;
         uint32 statementLabelBase;
         Label *breakLabel;
         Label *continueLabel;
+        StatementLabels *labelSet;
     };
+
+    typedef std::map<String, Register, std::less<String> > VariableList;
     
+
     class ICodeModule {
     public:
         ICodeModule(InstructionStream *iCode, uint32 maxRegister) :
             its_iCode(iCode), itsMaxRegister(maxRegister) { }
         
         InstructionStream *its_iCode;
+        VariableList *itsVariables;
+        uint32  itsParameterCount;
         uint32  itsMaxRegister;
     };
     
@@ -99,30 +106,37 @@ namespace ICG {
         InstructionStream *iCode;
         LabelList labels;
         std::vector<ICodeState *> stitcher;
-        std::vector<const StringAtom *> statementLabels;
+        StatementLabels *labelSet;
+        
+        Register topRegister;           // highest (currently) alloacated register
+        Register registerBase;          // start of registers available for expression temps
+        uint32   maxRegister;           // highest (ever) allocated register
+        uint32   parameterCount;        // number of parameters declared for the function
+                                        // these must come before any variables declared.
+        Register exceptionRegister;     // reserved to carry the exception object, only has a value
+                                        // for functions that contain try/catch statements.
+        Register switchRegister;        // register containing switch control value for most 
+                                        // recently in progress switch statement.
+        VariableList *variableList;     // name|register pair for each variable
+        
+        
         
         void markMaxRegister() \
         { if (topRegister > maxRegister) maxRegister = topRegister; }
         
         Register getRegister() \
         { return topRegister++; }
+
         void resetTopRegister() \
-        { markMaxRegister(); topRegister = stitcher.empty() ? registerBase :
-            stitcher.back()->registerBase; }
+        { markMaxRegister(); topRegister = registerBase; }
         
         void addStitcher(ICodeState *ics) \
-	    { stitcher.push_back(ics); statementLabelBase = statementLabels.size(); }
+	    { stitcher.push_back(ics); }
 	
 	    ICodeOp getBranchOp() \
         { return (iCode->empty()) ? NOP : iCode->back()->getBranchOp(); }
 
-        Register topRegister;
-        Register registerBase;        
-        uint32   maxRegister;
-	    uint32   statementLabelBase;
-        Register exceptionRegister;     // reserved to carry the exception object
-        std::map<String, Register, std::less<String> >    variableList;
-        
+
         void setLabel(Label *label);
         void setLabel(InstructionStream *stream, Label *label);
         
@@ -136,9 +150,14 @@ namespace ICG {
             { iCode->push_back(new Try(catchLabel, finallyLabel)); }
         void endTry()
             { iCode->push_back(new Endtry()); }
+        
+        void resetStatement()
+        { if (labelSet) { delete labelSet; labelSet = NULL; } resetTopRegister(); }
 
     public:
-        ICodeGenerator(World *world = NULL, bool hasTryStatement = false, uint32 switchStatementNesting = 0);
+        ICodeGenerator(World *world = NULL, 
+                            bool hasTryStatement = false, 
+                            uint32 switchStatementNesting = 0);
         
         virtual ~ICodeGenerator() { if (iCode) delete iCode; }
         
@@ -147,7 +166,11 @@ namespace ICG {
         ICodeModule *complete();
 
         Register allocateVariable(StringAtom& name) 
-        { Register result = getRegister(); variableList[name] = result; registerBase = topRegister; return result; }
+        { Register result = getRegister(); (*variableList)[name] = result; 
+            registerBase = topRegister; return result; }
+
+        Register allocateParameter(StringAtom& name) 
+        { parameterCount++; return allocateVariable(name); }
         
         Formatter& print(Formatter& f);
         
@@ -174,9 +197,10 @@ namespace ICG {
         Register getElement(Register base, Register index);
         void setElement(Register base, Register index, Register value);
         
-        Register getRegisterBase()      { return topRegister; }
-        InstructionStream *get_iCode()  { return iCode; }
-        uint32 getStatementLabelBase()  { return statementLabelBase; }
+        Register getRegisterBase()                  { return topRegister; }
+        InstructionStream *get_iCode()              { return iCode; }
+        StatementLabels *getStatementLabels()       { return labelSet; labelSet = NULL; }
+
         
         Label *getLabel();
         
@@ -189,11 +213,12 @@ namespace ICG {
         // The ICG will enforce correct nesting and closing.
         
         // expression statements
-        void beginStatement(uint32 /*pos*/) { resetTopRegister(); }
+        void beginStatement(uint32 /*pos*/) { }
+        void endStatement() { resetStatement(); }
         
         void returnStatement() { iCode->push_back(new ReturnVoid()); }
         void returnStatement(Register result) \
-            { iCode->push_back(new Return(result)); }
+            { iCode->push_back(new Return(result)); resetStatement(); }
         
         void beginWhileStatement(uint32 pos);
         void endWhileExpression(Register condition);
@@ -230,8 +255,8 @@ namespace ICG {
         void endSwitchStatement();
 
         void beginLabelStatement(uint32 /* pos */, const StringAtom &label)
-        { statementLabels.push_back(&label); }
-        void endLabelStatement() { statementLabels.pop_back(); }
+        { labelSet->push_back(&label); }
+        void endLabelStatement() { labelSet->pop_back(); }
 
         void continueStatement(uint32 pos);
         void breakStatement(uint32 pos);
@@ -336,7 +361,7 @@ namespace ICG {
         { if (breakLabel == NULL) breakLabel = icg->getLabel(); 
         return breakLabel; }
 
-        Register controlExpression;
+        Register controlValue;
         Label *defaultLabel;
         InstructionStream *caseStatementsStream;
     };
@@ -351,13 +376,13 @@ namespace ICG {
     };
 
     inline ICodeState::ICodeState(StateKind kind, ICodeGenerator *icg) 
-        : stateKind(kind), registerBase(icg->getRegisterBase()),
-          statementLabelBase(icg->getStatementLabelBase()), breakLabel(NULL),
-          continueLabel(NULL) { }
+        : stateKind(kind),         
+          breakLabel(NULL), continueLabel(NULL), 
+          labelSet(icg->getStatementLabels()) { }
 
     inline SwitchCodeState::SwitchCodeState(Register control,
                                             ICodeGenerator *icg)
-        : ICodeState(Switch_state, icg), controlExpression(control),
+        : ICodeState(Switch_state, icg), controlValue(control),
           defaultLabel(NULL), caseStatementsStream(icg->get_iCode()) {}
 
     inline WhileCodeState::WhileCodeState(ICodeGenerator *icg) 
