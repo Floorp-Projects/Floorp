@@ -27,6 +27,8 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <!-- Context menu -->
+  <!-- XXX: Replace strres.js when nsContextMenu.js is converted -->
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript">
     // Global variable that holds the nsContextMenu instance.
     var contextMenu = null;
