@@ -31,6 +31,7 @@ class nsIStyleSheet;
 
 class nsIStreamObserver;
 class nsIPostData;
+class nsIContentViewer;
 class nsIDeviceContext;
 
 // IID for the nsWebWidget interface
@@ -53,6 +54,10 @@ NS_IMETHOD LoadURL(const nsString& aURLSpec,
                    nsIStreamObserver* aObserver,
                    nsIPostData* aPostData=nsnull) = 0;
 
+NS_IMETHOD GetContentViewer(nsIContentViewer*& aResult) = 0;
+
+  //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  // XXX from here on down is a mess
 
   // Create a native window for this web widget; may be called once
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
@@ -102,20 +107,6 @@ NS_IMETHOD LoadURL(const nsString& aURLSpec,
   virtual void Hide() = 0;
 
   virtual nsIDocument* GetDocument() = 0;
-
-  virtual void DumpContent(FILE* out = nsnull) = 0;
-
-  virtual void DumpFrames(FILE* out = nsnull) = 0;
-
-  virtual void DumpStyleSheets(FILE* out = nsnull) = 0;
-
-  virtual void DumpStyleContexts(FILE* out = nsnull) = 0;
-
-  virtual void DumpViews(FILE* out = nsnull) = 0;
-
-  virtual void ShowFrameBorders(PRBool aEnable) = 0;
-
-  virtual PRBool GetShowFrameBorders() = 0;
 
   NS_IMETHOD GetDOMDocument(nsIDOMDocument** aDocument) = 0;
                                                 
