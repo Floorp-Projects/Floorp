@@ -71,8 +71,10 @@ dhwEnsureImageHlpInitialized()
     HMODULE module = ::LoadLibrary("DBGHELP.DLL");
     if (!module) {
       DWORD dw = GetLastError();
-      printf("DumpStack Error: DBGHELP.DLL wasn't found. "
-             "GetLastError() returned 0x%8.8X\n", dw);
+      printf("DumpStack Error: DBGHELP.DLL wasn't found. GetLastError() returned 0x%8.8X\n"
+             "                 This DLL is needed for succeessfully implementing trace-malloc.\n"
+             "                 This dll ships by default on Win2k. Disabling trace-malloc functionality.\n"
+             , dw);
       return PR_FALSE;
     }
 

@@ -356,6 +356,9 @@ private:
 PR_IMPLEMENT(void)
 StartupHooker()
 {
+  if (!dhwEnsureSymInitialized())
+    return;
+
   //run through get all hookers
   DHWImportHooker &loadlibraryW = DHWImportHooker::getLoadLibraryWHooker();
   DHWImportHooker &loadlibraryExW = DHWImportHooker::getLoadLibraryExWHooker();
