@@ -22,7 +22,8 @@
 #    Chris McAfee <mcafee@netscape.com>
 #    Daniel Brooks <db48x@yahoo.com>
 #    Gervase Markham <gerv@gerv.net>
-<?xml-stylesheet href="chrome://browser/content/pageInfo.css" type="text/css"?>
+
+<?xml-stylesheet href="chrome://browser/skin/pageInfo.css" type="text/css"?>
 
 <!DOCTYPE window [
   <!ENTITY % pageInfoDTD SYSTEM "chrome://browser/locale/pageInfo.dtd">

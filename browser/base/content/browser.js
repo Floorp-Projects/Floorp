@@ -3215,7 +3215,6 @@ nsContextMenu.prototype = {
                              ( 'dateTime' in elem && elem.dateTime ) ) )               ||
                          ( 'title' in elem && elem.title )                             ||
                          ( 'lang' in elem && elem.lang ) ) {
-                        dump("On metadata item.\n");
                         this.onMetaDataItem = true;
                     }
                 }
@@ -3429,7 +3428,7 @@ nsContextMenu.prototype = {
     },
     // Open Metadata window for node
     showMetadata : function () {
-        window.openDialog(  "chrome://navigator/content/metadata.xul",
+        window.openDialog(  "chrome://browser/content/metaData.xul",
                             "_blank",
                             "scrollbars,resizable,chrome,dialog=no",
                             this.target);
