@@ -935,15 +935,14 @@ void nsFileSpec::operator = (const nsPersistentFileDescriptor& inDescriptor)
 //----------------------------------------------------------------------------------------
 {
 
-    nsSimpleCharString data;
-    PRInt32 dataSize;
-    inDescriptor.GetData(data, dataSize);
+    nsCAutoString data;
+    inDescriptor.GetData(data);
     
 #if defined(XP_MAC)
-    char* decodedData = PL_Base64Decode((const char*)data, (int)dataSize, nsnull);
+    char* decodedData = PL_Base64Decode(data.get(), data.Length(), nsnull);
     // Cast to an alias record and resolve.
     AliasHandle aliasH = nsnull;
-    mError = NS_FILE_RESULT(PtrToHand(decodedData, &(Handle)aliasH, (dataSize * 3) / 4));
+    mError = NS_FILE_RESULT(PtrToHand(decodedData, &(Handle)aliasH, (data.Length() * 3) / 4));
     PR_Free(decodedData);
     if (NS_FAILED(mError))
         return; // not enough memory?
@@ -953,7 +952,7 @@ void nsFileSpec::operator = (const nsPersistentFileDescriptor& inDescriptor)
     DisposeHandle((Handle) aliasH);
     mPath.SetToEmpty();
 #else
-    mPath = data;
+    mPath = data.get();
     mError = NS_OK;
 #endif
 }
@@ -1214,32 +1213,17 @@ nsPersistentFileDescriptor::~nsPersistentFileDescriptor()
 } // nsPersistentFileDescriptor::~nsPersistentFileDescriptor
 
 //----------------------------------------------------------------------------------------
-void nsPersistentFileDescriptor::GetData(nsSimpleCharString& outData) const
+void nsPersistentFileDescriptor::GetData(nsAFlatCString& outData) const
 //----------------------------------------------------------------------------------------
 {
-    outData = mDescriptorString;
+    outData.Assign(mDescriptorString, mDescriptorString.Length());
 }
 
 //----------------------------------------------------------------------------------------
-void nsPersistentFileDescriptor::SetData(const nsSimpleCharString& inData)
+void nsPersistentFileDescriptor::SetData(const nsAFlatCString& inData)
 //----------------------------------------------------------------------------------------
 {
-    SetData(inData, inData.Length());
-}
-
-//----------------------------------------------------------------------------------------
-void nsPersistentFileDescriptor::GetData(nsSimpleCharString& outData, PRInt32& outSize) const
-//----------------------------------------------------------------------------------------
-{
-    outSize = mDescriptorString.Length();
-    outData = mDescriptorString;
-}
-
-//----------------------------------------------------------------------------------------
-void nsPersistentFileDescriptor::SetData(const nsSimpleCharString& inData, PRInt32 inSize)
-//----------------------------------------------------------------------------------------
-{
-    mDescriptorString.CopyFrom((const char*)inData, inSize);
+    mDescriptorString.CopyFrom(inData.get(), inData.Length());
 }
 
 //----------------------------------------------------------------------------------------

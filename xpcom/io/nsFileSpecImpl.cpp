@@ -172,9 +172,9 @@ NS_IMETHODIMP nsFileSpecImpl::GetPersistentDescriptorString(char * *aPersistentD
 	if (mFileSpec.Failed())
 		return mFileSpec.Error();
 	nsPersistentFileDescriptor desc(mFileSpec);
-	nsSimpleCharString data;
+  nsCAutoString data;
 	desc.GetData(data);
-	*aPersistentDescriptorString = nsCRT::strdup((const char*) data);
+	*aPersistentDescriptorString = ToNewCString(data);
 	if (!*aPersistentDescriptorString)
 		return NS_ERROR_OUT_OF_MEMORY;
 	return NS_OK;
@@ -185,7 +185,7 @@ NS_IMETHODIMP nsFileSpecImpl::SetPersistentDescriptorString(const char * aPersis
 //----------------------------------------------------------------------------------------
 {
 	nsPersistentFileDescriptor desc(mFileSpec);
-	desc.SetData(aPersistentDescriptorString);
+	desc.SetData(nsDependentCString(aPersistentDescriptorString));
 	mFileSpec = desc;
 	return NS_OK;
 }
