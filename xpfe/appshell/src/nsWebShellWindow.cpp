@@ -284,13 +284,15 @@ nsWebShellWindow::UpdateButtonStatus(PRBool aIsBusy)
   } else {
     nsIWebShell* contentWS = nsnull;
     mWebShell->FindChildWithName(nsAutoString("browser.webwindow"), contentWS);
-    SetCommandEnabled(nsAutoString("nsCmd:BrowserBack"), contentWS->CanBack() == NS_OK);
-    SetCommandEnabled(nsAutoString("nsCmd:BrowserForward"), contentWS->CanForward() == NS_OK);
-    SetCommandEnabled(nsAutoString("nsCmd:BrowserReload"), PR_TRUE);
-    SetCommandEnabled(nsAutoString("nsCmd:BrowserStop"), PR_FALSE);
-    SetCommandEnabled(nsAutoString("nsCmd:BrowserHome"), PR_TRUE);
-    SetCommandEnabled(nsAutoString("nsCmd:BrowserPrint"), PR_TRUE);
-    NS_RELEASE(contentWS);
+    if(nsnull != contentWS){
+      SetCommandEnabled(nsAutoString("nsCmd:BrowserBack"), contentWS->CanBack() == NS_OK);
+      SetCommandEnabled(nsAutoString("nsCmd:BrowserForward"), contentWS->CanForward() == NS_OK);
+      SetCommandEnabled(nsAutoString("nsCmd:BrowserReload"), PR_TRUE);
+      SetCommandEnabled(nsAutoString("nsCmd:BrowserStop"), PR_FALSE);
+      SetCommandEnabled(nsAutoString("nsCmd:BrowserHome"), PR_TRUE);
+      SetCommandEnabled(nsAutoString("nsCmd:BrowserPrint"), PR_TRUE);
+      NS_RELEASE(contentWS);
+    }
   }
 }
 
