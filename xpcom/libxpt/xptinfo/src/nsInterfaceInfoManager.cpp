@@ -18,7 +18,11 @@
 
 /* Implementation of nsIInterfaceInfo. */
 
+#ifdef XP_MAC
+#include <stat.h>
+#else
 #include <sys/stat.h>
+#endif
 #include "nscore.h"
 
 #include "nsISupports.h"
