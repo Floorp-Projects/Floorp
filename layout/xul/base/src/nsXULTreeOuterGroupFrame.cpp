@@ -945,23 +945,15 @@ nsXULTreeOuterGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aU
   nsCOMPtr<nsIContent> parentContent;
   if (aUpwardHint) {
     aUpwardHint->GetParent(*getter_AddRefs(parentContent));
-    if (!parentContent) {
-      NS_ERROR("Parent content should not be NULL!");
+    NS_ASSERTION(parentContent, "Parent content null in the upward hint of FPRC\n");
+    if (!parentContent)
       return;
-    }
     parentContent->IndexOf(aUpwardHint, index);
   }
   else if (aDownwardHint) {
     parentContent = dont_QueryInterface(aDownwardHint);
     parentContent->ChildCount(index);
   }
-
-  /* Let me see inside the damn nsCOMptrs
-  nsIAtom* aAtom;
-  parentContent->GetTag(aAtom);
-  nsAutoString result;
-  aAtom->ToString(result);
-  */
 
   for (PRInt32 i = index-1; i >= 0; i--) {
     nsCOMPtr<nsIContent> childContent;
@@ -1009,6 +1001,10 @@ nsXULTreeOuterGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aU
         return;
     }
   }
+
+  NS_ASSERTION(parentContent, "Parent content null at the end of FPRC\n");
+  if (!parentContent)
+    return;
 
   nsCOMPtr<nsIAtom> tag;
   parentContent->GetTag(*getter_AddRefs(tag));
@@ -1100,41 +1096,26 @@ nsXULTreeOuterGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
   if (mRowHeight)
     rows = GetAvailableHeight()/mRowHeight;
   PRInt32 bottomIndex = mCurrentIndex + rows;
-  if (!IsFixedRowSize())
-    bottomIndex-=2;
-
+  
   // if row is visible, ignore
-  if (mCurrentIndex <= aRowIndex && aRowIndex <= bottomIndex)
+  if (mCurrentIndex <= aRowIndex && aRowIndex < bottomIndex)
     return;
 
   // Check to be sure we're not scrolling off the bottom of the tree
-  PRInt32 newIndex = aRowIndex;
-  
-  PRInt32 delta = mCurrentIndex > newIndex ? mCurrentIndex - newIndex : newIndex - mCurrentIndex;
-  PRBool up = newIndex < mCurrentIndex;
-  if (up)
-    mCurrentIndex = newIndex;
+  PRInt32 delta;
+
+  PRBool up = aRowIndex < mCurrentIndex;
+  if (up) {
+    mCurrentIndex = aRowIndex;
+    delta = mCurrentIndex - aRowIndex;
+  }
   else {
-    // Scroll just enough to bring the newIndex into view.
-    PRInt32 adjustment = newIndex - rows;
-    if (!IsFixedRowSize())
-      adjustment++;
-    delta = adjustment - mCurrentIndex;
-    mCurrentIndex = adjustment;
+    // Bring it just into view.
+    delta = 1 + (aRowIndex-bottomIndex);
+    mCurrentIndex += delta; 
   }
 
   InternalPositionChanged(up, delta);
-
-  /*
-  // This change has to happen immediately.
-  if (mLayingOut) {
-    PostReflowCallback();
-  }
-  else {
-    //nsBoxLayoutState state(mPresContext);
-    //MarkDirtyChildren(state);
-  }
-  */
 }
 
 void
@@ -1228,7 +1209,7 @@ nsXULTreeOuterGroupFrame::IndexOfItem(nsIContent* aRoot, nsIContent* aContent,
 NS_IMETHODIMP
 nsXULTreeOuterGroupFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
 {
-  // Now dirty the world.s
+  // Now dirty the world.
   nsCOMPtr<nsIContent> tree;
   mContent->GetParent(*getter_AddRefs(tree));
   
@@ -1266,6 +1247,7 @@ nsXULTreeOuterGroupFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlus
   mReflowCallbackPosted = PR_FALSE;
 
   *aFlushFlag = PR_TRUE;
+  
   return NS_OK;
 }
 

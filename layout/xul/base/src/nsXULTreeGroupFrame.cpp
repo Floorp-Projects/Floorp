@@ -475,7 +475,7 @@ void nsXULTreeGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
     PRInt32 vis;
     mOuterFrame->GetNumberOfVisibleRows(&vis);
 
-    if (index + vis >= rowCount) {
+    if (index > 0 && index + vis >= rowCount) {
       // Danger, Will Robinson, danger! We need to scroll backwards.
       mOuterFrame->ClearRowGroupInfo();
       PRInt32 newCount = mOuterFrame->GetRowCount();
