@@ -526,7 +526,7 @@
 	  
 	  <html:td width="80" valign="middle">
 	  <titledbutton src="resource:/res/toolbar/TB_Print.gif" align="bottom" value="Print"  
-				onclick="window.frames[0].print()">
+				onclick="">
 	        <observes element="canPrint" attribute="disabled"/>
 	      </titledbutton>
           <titledbutton id="Throbber" style="list-style-image:url(resource:/res/throbber/anims00.gif);" onclick="window.frames[0].home()">
