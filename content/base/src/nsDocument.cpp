@@ -697,7 +697,7 @@ nsIArena* nsDocument::GetArena()
   return mArena;
 }
 
-nsresult
+NS_IMETHODIMP
 nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 {
   nsresult rv = NS_OK;

@@ -654,6 +654,13 @@ NS_IMPL_RELEASE(nsXULDocument);
 // nsIDocument interface
 //
 
+NS_IMETHODIMP
+nsXULDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
+{
+    NS_NOTREACHED("Reset");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsIArena*
 nsXULDocument::GetArena()
 {

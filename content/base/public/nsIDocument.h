@@ -302,6 +302,8 @@ public:
   NS_IMETHOD GetBindingManager(nsIBindingManager** aResult) = 0;
 
   NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager) = 0;
+
+  NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) = 0;
 };
 
 

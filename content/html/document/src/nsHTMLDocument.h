@@ -58,6 +58,8 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
+  NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
+
   NS_IMETHOD GetContentType(nsAWritableString& aContentType) const;
 
   NS_IMETHOD CreateShell(nsIPresContext* aContext,
@@ -133,8 +135,6 @@ public:
   // From nsJSScriptObject interface, implemented by nsDocument
   virtual PRBool Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
                          PRBool *aDidDefineProperty);
-
-  virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 
   /*
    * Returns true if document.domain was set for this document

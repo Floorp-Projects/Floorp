@@ -49,6 +49,8 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
+  NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
+
   NS_IMETHOD GetContentType(nsAWritableString& aContentType) const;
 
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
@@ -99,8 +101,6 @@ public:
   NS_IMETHOD OnHeadersAvailable(nsISupports *aContext);
   NS_IMETHOD OnRedirect(nsISupports *aContext, nsIURI *aNewLocation);
 
-
-  virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 protected:
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);  // subclass hook for sheet ordering
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);

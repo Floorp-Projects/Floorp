@@ -114,6 +114,8 @@ public:
     // nsIDocument interface
     virtual nsIArena* GetArena();
 
+    NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
+
     NS_IMETHOD GetContentType(nsAWritableString& aContentType) const;
 
     NS_IMETHOD StartDocumentLoad(const char* aCommand,

@@ -134,6 +134,8 @@ public:
 
   virtual nsIArena* GetArena();
 
+  NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
+
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
                                nsIChannel* aChannel,
                                nsILoadGroup* aLoadGroup,
@@ -426,7 +428,6 @@ public:
   virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
   virtual void      Finalize(JSContext *aContext, JSObject *aObj);
 
-  virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
   virtual nsresult SetDocumentURL(nsIURI* aURI);
 
 protected:
