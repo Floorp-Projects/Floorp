@@ -41,7 +41,7 @@ NS_DEF_PTR(nsIStyleContext);
 
 
 #ifdef NS_DEBUG
-static PRBool gsDebug = PR_TRUE;
+static PRBool gsDebug = PR_FALSE;
 static PRBool gsDebugNT = PR_FALSE;
 //#define   NOISY_STYLE
 //#define NOISY_FLOW
