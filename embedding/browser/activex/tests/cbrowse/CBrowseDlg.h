@@ -112,6 +112,7 @@ protected:
 	afx_msg void OnViewOpenInNewWindow();
 	afx_msg void OnUpdateViewEditmode(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewOpenInNewWindow(CCmdUI* pCmdUI);
+	afx_msg void OnFilePagesetup();
 	//}}AFX_MSG
 	afx_msg void OnEditBold();
 	afx_msg void OnEditItalic();

@@ -102,7 +102,7 @@ STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "CBrowse"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     PUSHBUTTON      "<",IDC_BACKWARD,7,7,10,13
     PUSHBUTTON      ">",IDC_FORWARD,20,7,10,13
@@ -202,6 +202,7 @@ BEGIN
     BEGIN
         MENUITEM "Sa&ve As...",                 ID_FILE_SAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Page Setup...",               ID_FILE_PAGESETUP
         MENUITEM "&Print Page",                 ID_FILE_PRINT
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_FILE_EXIT
