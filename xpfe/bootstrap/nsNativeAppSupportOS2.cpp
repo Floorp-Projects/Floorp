@@ -1095,14 +1095,23 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
     NS_ENSURE_ARG( aResult );
     NS_ENSURE_TRUE( mInstance == 0, NS_ERROR_NOT_INITIALIZED );
 
+    PRBool useDDE = PR_TRUE;
+
     nsresult rv = NS_ERROR_FAILURE;
     *aResult = PR_FALSE;
 
+    for ( int i = 1; i < __argc; i++ ) {
+        if ( strcmp( "-nodde", __argv[i] ) == 0 ||
+             strcmp( "/nodde", __argv[i] ) == 0 ) {
+            useDDE = PR_FALSE;
+        }
+    }
+
     // Grab mutex first.
-	int retval;
-	UINT id = ID_DDE_APPLICATION_NAME;
-	char nameBuf[ 128 ];
-	retval = WinLoadString( NULLHANDLE, NULLHANDLE, id, sizeof(nameBuffer), nameBuffer );
+    int retval;
+    UINT id = ID_DDE_APPLICATION_NAME;
+    char nameBuf[ 128 ];
+    retval = WinLoadString( NULLHANDLE, NULLHANDLE, id, sizeof(nameBuffer), nameBuffer );
     if ( retval == 0 ) {
         // No app name; just keep running.
         *aResult = PR_TRUE;
@@ -1144,8 +1153,10 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
         // We will be server.
         rv = msgWindow.Create();
         if ( NS_SUCCEEDED( rv ) ) {
-            // Start up DDE server.
-            this->StartDDE();
+            if (useDDE) {
+                // Start up DDE server.
+                this->StartDDE();
+            }
             // Tell caller to spin message loop.
             *aResult = PR_TRUE;
         }
