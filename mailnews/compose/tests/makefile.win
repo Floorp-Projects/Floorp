@@ -21,7 +21,8 @@
 
 DEPTH=..\..\..
 
-DIRS=compose smtp sendpage
+# smtp is not built as smtpTest is obsolete
+DIRS=compose sendpage
 DIRS=$(DIRS) compose2 geturl sendlater 
 
 include <$(DEPTH)\config\rules.mak>
