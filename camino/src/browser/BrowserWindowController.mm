@@ -1012,7 +1012,7 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 //
 - (void)updateLock:(unsigned int)inSecurityState
 {
-  switch ( inSecurityState ) {
+  switch ( inSecurityState & 0x000000FF ) {
     case nsIWebProgressListener::STATE_IS_INSECURE:
       [mLock setImage:[BrowserWindowController insecureIcon]];
       break;
@@ -1037,7 +1037,7 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 {
   static NSImage* sSecureIcon = nil;
   if ( !sSecureIcon )
-    sSecureIcon = [NSImage imageNamed:@"historyicon"];
+    sSecureIcon = [NSImage imageNamed:@"security_lock"];
   return sSecureIcon;
 }
 
@@ -1045,7 +1045,7 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 {
   static NSImage* sBrokenIcon = nil;
   if ( !sBrokenIcon )
-    sBrokenIcon = [NSImage imageNamed:@"smallbookmark"];
+    sBrokenIcon = [NSImage imageNamed:@"security_broken"];
   return sBrokenIcon;
 }
 

@@ -469,6 +469,8 @@
 				F5179420027F3F2901A967DF,
 				F5179423028275B901A967DF,
 				F57F20730299A02301000106,
+				F540BD1B029ED15301026D5D,
+				F540BD1D029ED17901026D5D,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -721,6 +723,8 @@
 			children = (
 				F557149D023B46BF010001CA,
 				F557149E023B46BF010001CA,
+				F540BD1A029ED15301026D5D,
+				F540BD1C029ED17901026D5D,
 			);
 			isa = PBXGroup;
 			name = Graphics;
@@ -1857,6 +1861,28 @@
 		};
 		F53F5AEC02448BC9010001CA = {
 			fileRef = F53F5AEA02448BC8010001CA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F540BD1A029ED15301026D5D = {
+			isa = PBXFileReference;
+			path = security_lock.tif;
+			refType = 4;
+		};
+		F540BD1B029ED15301026D5D = {
+			fileRef = F540BD1A029ED15301026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F540BD1C029ED17901026D5D = {
+			isa = PBXFileReference;
+			path = security_broken.tif;
+			refType = 4;
+		};
+		F540BD1D029ED17901026D5D = {
+			fileRef = F540BD1C029ED17901026D5D;
 			isa = PBXBuildFile;
 			settings = {
 			};
