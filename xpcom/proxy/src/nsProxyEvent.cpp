@@ -265,10 +265,10 @@ nsProxyObject::Release(void)
   NS_PRECONDITION(0 != mRefCnt, "dup release");             
 
   nsrefcnt count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);
+  NS_LOG_RELEASE(this, count, "nsProxyObject");
 
   if (count == 0)
   {
-       NS_LOG_RELEASE(this, mRefCnt, "nsProxyObject");
        mRefCnt = 1; /* stabilize */
 
         PRBool callDirectly;
