@@ -49,7 +49,8 @@ enum Install_slots
   INSTALL_ARGUMENTS       = -6,
   INSTALL_URL             = -7,
   INSTALL_STATUSSENT      = -8,
-  INSTALL_INSTALL         = -9
+  INSTALL_INSTALL         = -9,
+  INSTALL_INSTALLED_FILES = -10
 };
 
 /***********************************************************************/
@@ -133,6 +134,10 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           *vp = OBJECT_TO_JSVAL(obj);
           break;
         
+      case INSTALL_INSTALLED_FILES:
+          *vp = BOOLEAN_TO_JSVAL( a->InInstallTransaction() );
+          break;
+
       default:
         return JS_TRUE;
     }
@@ -2489,6 +2494,7 @@ static JSPropertySpec InstallProperties[] =
   {"url",               INSTALL_URL,                JSPROP_ENUMERATE | JSPROP_READONLY},
   {"_statusSent",       INSTALL_STATUSSENT,         JSPROP_READONLY},
   {"Install",           INSTALL_INSTALL,            JSPROP_READONLY},
+  {"_installedFiles",   INSTALL_INSTALLED_FILES,    JSPROP_READONLY},
   {0}
 };
 

@@ -254,9 +254,11 @@ class nsInstall
         void       SetInstallURL(const nsString& url);
 
         PRBool     GetStatusSent() { return mStatusSent; }
+        PRBool     InInstallTransaction(void) { return mInstalledFiles != nsnull; }
         
         PRInt32    Alert(nsString& string);
         PRInt32    Confirm(nsString& string, PRBool* aReturn);
+        void       InternalAbort(PRInt32 errcode);
 
 
 
@@ -305,7 +307,6 @@ class nsInstall
         PRBool      BadRegName(const nsString& regName);
         PRInt32     SaveError(PRInt32 errcode);
 
-        void        InternalAbort(PRInt32 errcode);
         void        CleanUp();
 
         PRInt32     OpenJARFile(void);
