@@ -67,7 +67,12 @@ class nsCaret : public nsICaret,
 		nsresult			StartBlinking();
 		nsresult			StopBlinking();
 		
-		void					GetViewForRendering(nsPoint &viewOffset, nsIView* &outView);
+		enum EViewCoordinates {
+			eTopLevelWindowCoordinates,
+			eViewCoordinates
+		};
+		
+		void					GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordType, nsPoint &viewOffset, nsIView* &outView);
 		PRBool				SetupDrawingFrameAndOffset();
 		void					RefreshDrawCaret(nsIView *aView, nsIRenderingContext& inRendContext, const nsRect& aDirtyRect);
 		void 					DrawCaretWithContext(nsIRenderingContext& inRendContext);
