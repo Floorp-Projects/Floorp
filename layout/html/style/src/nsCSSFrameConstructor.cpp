@@ -6552,7 +6552,7 @@ nsCSSFrameConstructor::IsScrollable(nsPresContext*       aPresContext,
   switch (aDisplay->mOverflow) {
   	case NS_STYLE_OVERFLOW_SCROLL:
   	case NS_STYLE_OVERFLOW_AUTO:
-  	case NS_STYLE_OVERFLOW_SCROLLBARS_NONE:
+  	case NS_STYLE_OVERFLOW_HIDDEN:
   	case NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL:
   	case NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL:
 	    return PR_TRUE;

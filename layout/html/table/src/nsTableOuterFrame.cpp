@@ -334,8 +334,8 @@ nsTableOuterFrame::Paint(nsPresContext*      aPresContext,
   // If overflow is hidden then set the clip rect so that children
   // don't leak out of us
   PRUint8 overflow = GetStyleDisplay()->mOverflow;
-  PRBool clip = overflow == NS_STYLE_OVERFLOW_HIDDEN ||
-                overflow == NS_STYLE_OVERFLOW_SCROLLBARS_NONE;
+  PRBool clip = overflow == NS_STYLE_OVERFLOW_CLIP ||
+                overflow == NS_STYLE_OVERFLOW_HIDDEN;
   if (clip) {
     aRenderingContext.PushState();
     SetOverflowClipRect(aRenderingContext);

@@ -3035,7 +3035,7 @@ nsGenericHTMLElement::MapScrollingAttributeInto(const nsMappedAttributes* aAttri
         case NS_STYLE_FRAME_OFF:
         case NS_STYLE_FRAME_NOSCROLL:
         case NS_STYLE_FRAME_NO:
-          mappedValue = NS_STYLE_OVERFLOW_SCROLLBARS_NONE;
+          mappedValue = NS_STYLE_OVERFLOW_HIDDEN;
           break;
       
         case NS_STYLE_FRAME_AUTO:

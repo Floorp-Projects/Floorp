@@ -1634,12 +1634,12 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   if (!IsSingleLineTextControl()) {
     // We can't just inherit the overflow because setting visible overflow will
     // crash when the number of lines exceeds the height of the textarea and
-    // setting -moz-hidden-unscrollable overflow (NS_STYLE_OVERFLOW_HIDDEN)
+    // setting -moz-hidden-unscrollable overflow (NS_STYLE_OVERFLOW_CLIP)
     // doesn't paint the caret for some reason.
     const nsStyleDisplay* disp = GetStyleDisplay();
     if (disp->mOverflow != NS_STYLE_OVERFLOW_AUTO &&  // this is the default
         disp->mOverflow != NS_STYLE_OVERFLOW_VISIBLE &&
-        disp->mOverflow != NS_STYLE_OVERFLOW_HIDDEN) {
+        disp->mOverflow != NS_STYLE_OVERFLOW_CLIP) {
       rv = divContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::style,
                                NS_LITERAL_STRING("overflow: inherit;"),
                                PR_FALSE);

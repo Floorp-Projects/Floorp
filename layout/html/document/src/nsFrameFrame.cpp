@@ -649,7 +649,7 @@ nsSubDocumentFrame::ShowDocShell()
     PRInt32 scrolling = GetStyleDisplay()->mOverflow;
     PRInt32 scrollX, scrollY;
     switch (scrolling) {
-      case NS_STYLE_OVERFLOW_SCROLLBARS_NONE:
+      case NS_STYLE_OVERFLOW_CLIP:
         scrollX = NS_STYLE_OVERFLOW_HIDDEN;
         scrollY = NS_STYLE_OVERFLOW_HIDDEN;
         break;

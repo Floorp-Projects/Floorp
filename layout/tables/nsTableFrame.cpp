@@ -1363,8 +1363,8 @@ nsTableFrame::PaintChildren(nsPresContext*      aPresContext,
 
 {
   PRUint8 overflow = GetStyleDisplay()->mOverflow;
-  PRBool clip = overflow == NS_STYLE_OVERFLOW_HIDDEN ||
-                overflow == NS_STYLE_OVERFLOW_SCROLLBARS_NONE;
+  PRBool clip = overflow == NS_STYLE_OVERFLOW_CLIP ||
+                overflow == NS_STYLE_OVERFLOW_HIDDEN;
   // If overflow is hidden then set the clip rect so that children don't
   // leak out of us. Note that because overflow'-clip' only applies to
   // the content area we do this after painting the border and background
@@ -2076,7 +2076,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
   if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
     aDesiredSize.mMaximumWidth = GetPreferredWidth();
   }
-  if (NS_STYLE_OVERFLOW_HIDDEN != aReflowState.mStyleDisplay->mOverflow) {
+  if (NS_STYLE_OVERFLOW_CLIP != aReflowState.mStyleDisplay->mOverflow) {
     // collapsed border may leak out
     nsMargin bcMargin = GetBCMargin(aPresContext);
     nsRect tableRect(0, 0, aDesiredSize.width, aDesiredSize.height) ;
