@@ -62,6 +62,7 @@ protected:
     nsCOMPtr<nsIStreamListener>         mRealListener;
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
+    PRUint32                            mLoadAttributes;
 };
 
 #endif // nsInputStreamChannel_h__
