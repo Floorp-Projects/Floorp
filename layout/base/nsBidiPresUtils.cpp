@@ -787,22 +787,21 @@ nsBidiPresUtils::RemoveBidiContinuation(nsPresContext* aPresContext,
   nsIFrame* thisFramesNextBidiFrame;
   nsIFrame* previousFramesNextBidiFrame;
 
-  nsFrameManager* frameManager = presShell->FrameManager();
-  thisFramesNextBidiFrame = NS_STATIC_CAST(nsIFrame*,
-    frameManager->GetFrameProperty(aFrame, nsLayoutAtoms::nextBidi, 0));
+  thisFramesNextBidiFrame =
+    NS_STATIC_CAST(nsIFrame*, aFrame->GetProperty(nsLayoutAtoms::nextBidi));
 
   if (thisFramesNextBidiFrame) {
     // Remove nextBidi property, associated with the current frame
     // and with all of its prev-in-flow.
     frame = aFrame;
     do {
-      frameManager->RemoveFrameProperty(frame, nsLayoutAtoms::nextBidi);
+      frame->DeleteProperty(nsLayoutAtoms::nextBidi);
       frame->GetPrevInFlow(&frame);
       if (!frame) {
         break;
       }
-      previousFramesNextBidiFrame = NS_STATIC_CAST(nsIFrame*,
-        frameManager->GetFrameProperty(frame, nsLayoutAtoms::nextBidi, 0));
+      previousFramesNextBidiFrame =
+        NS_STATIC_CAST(nsIFrame*, frame->GetProperty(nsLayoutAtoms::nextBidi));
     } while (thisFramesNextBidiFrame == previousFramesNextBidiFrame);
   } // if (thisFramesNextBidiFrame)
 }

@@ -55,9 +55,6 @@
 #include "nsChangeHint.h"
 #include "nsFrameManagerBase.h"
 
-// Option flags for GetFrameProperty() member function
-#define NS_IFRAME_MGR_REMOVE_PROP   0x0001
-
 /**
  * Frame manager interface. The frame manager serves two purposes:
  * <li>provides a service for mapping from content to frame and from
@@ -222,68 +219,6 @@ public:
                                         nsIStatefulFrame::SpecialStateID aID =
                                                       nsIStatefulFrame::eNoID);
 
-  /**
-   * Gets a property value for a given frame.
-   *
-   * @param   aFrame          the frame with the property
-   * @param   aPropertyName   property name as an atom
-   * @param   aOptions        optional flags
-   *                            NS_IFRAME_MGR_REMOVE_PROP removes the property
-   * @param   aResult         NS_OK if the property is set,
-   *                            NS_IFRAME_MGR_PROP_NOT_THERE is it is not set
-   * @param   aPropertyValue  the property value or 0 if the
-                                property is not set
-   * @return  The property value or 0 if the property is not set
-   */
-
-  NS_HIDDEN_(void*) GetFrameProperty(const nsIFrame* aFrame,
-                                     nsIAtom*        aPropertyName,
-                                     PRUint32        aOptions,
-                                     nsresult*       aResult = nsnull);
-
-  /**
-   * Sets the property value for a given frame.
-   *
-   * A frame may only have one property value at a time for a given property
-   * name. The existing property value (if there is one) is overwritten, and
-   * the old value destroyed
-   *
-   * @param   aFrame            the frame to set the property on
-   * @param   aPropertyName     property name as an atom
-   * @param   aPropertyValue    the property value
-   * @param   aPropertyDtorFunc when setting a property you can specify the
-   *                            dtor function (can be NULL) that will be used
-   *                            to destroy the property value. There can be
-   *                            only one dtor function for a given property
-   *                            name
-   * @return  NS_OK if successful,
-   *          NS_IFRAME_MGR_PROP_OVERWRITTEN if there is an existing property
-   *            value that was overwritten,
-   *          NS_ERROR_INVALID_ARG if the dtor function does not match the
-   *            existing dtor function
-   */
-
-  NS_HIDDEN_(nsresult) SetFrameProperty(const nsIFrame*         aFrame,
-                                        nsIAtom*                aPropertyName,
-                                        void*                   aPropertyValue,
-                                        NSFramePropertyDtorFunc aPropDtorFunc);
-
-  /**
-   * Removes a property and destroys its property value by calling the dtor
-   * function associated with the property name.
-   *
-   * When a frame is destroyed any remaining properties are automatically
-   * removed.
-   *
-   * @param   aFrame          the frame to set the property on
-   * @param   aPropertyName   property name as an atom
-   * @return  NS_OK if the property is successfully removed,
-   *          NS_IFRAME_MGR_PROP_NOT_THERE if the property is not set
-   */
-
-  NS_HIDDEN_(nsresult) RemoveFrameProperty(const nsIFrame* aFrame,
-                                           nsIAtom*        aPropertyName);
-
 #ifdef NS_DEBUG
   /**
    * DEBUG ONLY method to verify integrity of style tree versus frame tree
@@ -312,10 +247,6 @@ private:
     FindPostedEventFor(nsIFrame* aFrame);
 
   NS_HIDDEN_(void) DequeuePostedEventFor(nsIFrame* aFrame);
-  NS_HIDDEN_(void) DestroyPropertyList(nsPresContext* aPresContext);
-  NS_HIDDEN_(PropertyList*) GetPropertyListFor(nsIAtom* aPropertyName) const;
-  NS_HIDDEN_(void) RemoveAllPropertiesFor(nsPresContext *aPresContext,
-                                          nsIFrame       *aFrame);
 
   static NS_HIDDEN_(void)
     HandlePLEvent(CantRenderReplacedElementEvent* aEvent);

@@ -570,8 +570,7 @@ nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect, PRBool aRemoveOv
     // it if necessary.
     if (aRemoveOverflowArea && (frame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)) {
       // remove the previously stored overflow area 
-      frame->GetPresContext()->FrameManager()->
-        RemoveFrameProperty(frame, nsLayoutAtoms::overflowAreaProperty);
+      frame->DeleteProperty(nsLayoutAtoms::overflowAreaProperty);
       frame->RemoveStateBits(NS_FRAME_OUTSIDE_CHILDREN);
     }
 
