@@ -49,6 +49,7 @@
 #include "nsIFontMetrics.h"
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
+#include "nsISelectControlFrame.h"
 
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
@@ -61,16 +62,21 @@ static NS_DEFINE_IID(kComboCID, NS_COMBOBOX_CID);
 static NS_DEFINE_IID(kListCID, NS_LISTBOX_CID);
 static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
+static NS_DEFINE_IID(kISelectControlFrameIID, NS_ISELECTCONTROLFRAME_IID);
 
  
 class nsOption;
 
-class nsNativeSelectControlFrame : public nsNativeFormControlFrame {
+class nsNativeSelectControlFrame : public nsNativeFormControlFrame,
+                                   public nsISelectControlFrame
+{
 private:
 	typedef nsNativeFormControlFrame Inherited;
 
 public:
   nsNativeSelectControlFrame();
+
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("SelectControl", aResult);
@@ -138,8 +144,13 @@ public:
                                      nsIContent*     aChild,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aHint);
+
+  // nsISelectControlFrame
+  NS_IMETHOD AddOption(PRInt32 aIndex);
+  NS_IMETHOD RemoveOption(PRInt32 aIndex);
+
 protected:
-  PRUint32 mNumRows;
+  PRInt32 mNumRows;
 
   nsIDOMHTMLSelectElement* GetSelect();
   nsIDOMHTMLCollection* GetOptions(nsIDOMHTMLSelectElement* aSelect = nsnull);
@@ -159,16 +170,20 @@ protected:
 
   // Store the state of the options in a local array whether the widget is 
   // GFX-rendered or not.  This is used to detect changes in MouseClicked
-  PRUint32 mNumOptions;
+  PRInt32 mNumOptions;
   PRBool* mOptionSelected;
 
   // Accessor methods for mOptionsSelected and mNumOptions
-  void GetOptionSelected(PRUint32 index, PRBool* aValue);
-  void SetOptionSelected(PRUint32 index, PRBool aValue);
+  void GetOptionSelected(PRInt32 index, PRBool* aValue);
+  void SetOptionSelected(PRInt32 index, PRBool aValue);
   void GetOptionSelectedFromWidget(PRInt32 index, PRBool* aValue);
 
   // Free our locally cached option array
   ~nsNativeSelectControlFrame();
+
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 };
 
 nsresult
@@ -201,6 +216,20 @@ nsNativeSelectControlFrame::~nsNativeSelectControlFrame()
 {
   if (mOptionSelected)
     delete[] mOptionSelected;
+}
+
+nsresult
+nsNativeSelectControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kISelectControlFrameIID)) {
+    *aInstancePtr = (void*) ((nsISelectControlFrame*) this);
+    return NS_OK;
+  }
+  return Inherited::QueryInterface(aIID, aInstancePtr);
 }
 
 nscoord 
@@ -327,7 +356,8 @@ nsNativeSelectControlFrame::GetDesiredSize(nsIPresContext*          aPresContext
   PRInt32 maxWidth = 1;
   PRUint32 numOptions;
   options->GetLength(&numOptions);
-  for (PRUint32 i = 0; i < numOptions; i++) {
+  
+  for (PRInt32 i = 0; i < (PRInt32)numOptions; i++) {
     nsIDOMHTMLOptionElement* option = GetOption(*options, i);
     if (option) {
       //option->CompressContent();
@@ -396,7 +426,7 @@ nsNativeSelectControlFrame::GetDesiredSize(nsIPresContext*          aPresContext
     ? NSIntPixelsToTwips(25, p2t*scale)
     : (scrollbarWidth + NSIntPixelsToTwips(2, p2t*scale));
 #else
-  needScrollbar = ((mNumRows < numOptions) || mIsComboBox);
+  needScrollbar = ((mNumRows < (PRInt32)numOptions) || mIsComboBox);
 #endif
   // account for vertical scrollbar, if present  
   if (!widthExplicit && needScrollbar) {
@@ -893,7 +923,7 @@ nsNativeSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
 
   // Calculate the width of the scrollbar
   PRInt32 scrollbarWidth;
-  if (numOptions > mNumRows) {
+  if ((PRInt32)numOptions > mNumRows) {
     float sbWidth;
     float sbHeight;
     context->GetCanonicalPixelScale(scale);
@@ -927,7 +957,7 @@ nsNativeSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
 
   nsIDOMNode* node;
   nsIDOMHTMLOptionElement* option;
-  for (PRUint32 i = 0; i < numOptions; i++) {
+  for (PRInt32 i = 0; i < (PRInt32)numOptions; i++) {
     options->Item(i, &node);
     if (node) {
       nsresult result = node->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option);
@@ -942,11 +972,11 @@ nsNativeSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
           if ((selectedIndex == -1) && (i == 0)) {
             PaintOption(PR_FALSE, aPresContext, aRenderingContext, text, x, y, inside, textHeight);
           }
-          else if ((PRUint32)selectedIndex == i) {
+          else if (selectedIndex == i) {
             PaintOption(PR_FALSE, aPresContext, aRenderingContext, text, x, y, inside, textHeight);
           }
 
-          if ((-1 == selectedIndex && (0 == i)) || ((PRUint32)selectedIndex == i)) {
+          if ((-1 == selectedIndex && (0 == i)) || (selectedIndex == i)) {
             i = numOptions;
           }
 
@@ -983,7 +1013,7 @@ nsNativeSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
 
   aRenderingContext.PopState(clipEmpty);
   // Draw Scrollbars
-  if (numOptions > mNumRows) {
+  if ((PRInt32)numOptions > mNumRows) {
     //const nsStyleColor* myColor =
     //  (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
 
@@ -1060,7 +1090,7 @@ nsNativeSelectControlFrame::ControlChanged(nsIPresContext* aPresContext)
           changed = PR_TRUE;
         }
         // Update the locally cached array
-        for (PRUint32 i=0; i < mNumOptions; i++)
+        for (PRInt32 i=0; i < mNumOptions; i++)
           SetOptionSelected(i, PR_FALSE);
         SetOptionSelected(viewIndex, PR_TRUE);
         
@@ -1072,9 +1102,9 @@ nsNativeSelectControlFrame::ControlChanged(nsIPresContext* aPresContext)
       if (!(NS_OK == result) || !listBox) {
         return;
       }
-      PRUint32 numSelected = listBox->GetSelectedCount();
+      PRInt32 numSelected = listBox->GetSelectedCount();
       PRInt32* selOptions = nsnull;
-      if (numSelected >= 0) {
+      if (numSelected > 0) {
         selOptions = new PRInt32[numSelected];
         listBox->GetSelectedIndices(selOptions, numSelected);
       }
@@ -1082,14 +1112,14 @@ nsNativeSelectControlFrame::ControlChanged(nsIPresContext* aPresContext)
 
       // XXX Assume options are sorted in selOptions
 
-      PRUint32 selIndex = 0;
-      PRUint32 nextSel = 0;
+      PRInt32 selIndex = 0;
+      PRInt32 nextSel = 0;
       if ((nsnull != selOptions) && (numSelected > 0)) {
         nextSel = selOptions[selIndex];
       }
 
       // Step through each option in local cache
-      for (PRUint32 i=0; i < mNumOptions; i++) {
+      for (PRInt32 i=0; i < mNumOptions; i++) {
         PRBool selectedInLocalCache = PR_FALSE;
         PRBool selectedInView = (i == nextSel);
         GetOptionSelected(i, &selectedInLocalCache);
@@ -1123,7 +1153,7 @@ nsNativeSelectControlFrame::ControlChanged(nsIPresContext* aPresContext)
 }
 
 // Get the selected state from the local cache (not widget)
-void nsNativeSelectControlFrame::GetOptionSelected(PRUint32 indx, PRBool* aValue)
+void nsNativeSelectControlFrame::GetOptionSelected(PRInt32 indx, PRBool* aValue)
 {
   if (nsnull != mOptionSelected) {
     if (mNumOptions >= indx) {
@@ -1180,7 +1210,7 @@ void nsNativeSelectControlFrame::GetOptionSelectedFromWidget(PRInt32 indx, PRBoo
 }
 
 // Update the locally cached selection state (not widget)
-void nsNativeSelectControlFrame::SetOptionSelected(PRUint32 indx, PRBool aValue)
+void nsNativeSelectControlFrame::SetOptionSelected(PRInt32 indx, PRBool aValue)
 {
   if (nsnull != mOptionSelected) {
     if (mNumOptions >= indx) {
@@ -1215,7 +1245,7 @@ NS_IMETHODIMP nsNativeSelectControlFrame::SetProperty(nsIAtom* aName, const nsSt
       return NS_ERROR_INVALID_ARG; // Couldn't convert to integer
 
     // Update local cache of selected values
-    for (PRUint32 i=0; i < mNumOptions; i++)
+    for (PRInt32 i=0; i < mNumOptions; i++)
       SetOptionSelected(i, PR_FALSE);
     SetOptionSelected(selectedIndex, PR_TRUE);
 
@@ -1227,19 +1257,19 @@ NS_IMETHODIMP nsNativeSelectControlFrame::SetProperty(nsIAtom* aName, const nsSt
       listWidget->SelectItem(selectedIndex);
       NS_RELEASE(listWidget);
     }
-  } else if (nsHTMLAtoms::option == aName) { // Add or Remove an option
-    nsString aValCopy(aValue);
-    aValCopy.Trim("ar",PR_TRUE,PR_FALSE); // Chop off leading a or r
-    PRInt32 error = 0;
-    PRUint32 actionIndex = aValCopy.ToInteger(&error, 10);
-    if (error) return NS_ERROR_INVALID_ARG; // Couldn't convert to integer
+  } else {
+    return Inherited::SetProperty(aName, aValue);
+  }
+  return NS_OK;
+}
 
+NS_IMETHODIMP nsNativeSelectControlFrame::AddOption(PRInt32 aIndex)
+{
     // Grab the content model information (merge with postcreatewidget code?)
     nsIDOMHTMLCollection* options = GetOptions();
     if (!options) return NS_ERROR_UNEXPECTED;
 
     // Save the cache data structure
-    PRUint32 saveNumOptions = mNumOptions;
     PRBool* saveOptionSelected = mOptionSelected;
     PRBool selected = PR_FALSE;
     nsString text(" ");
@@ -1251,14 +1281,13 @@ NS_IMETHODIMP nsNativeSelectControlFrame::SetProperty(nsIAtom* aName, const nsSt
       return NS_ERROR_UNEXPECTED;
     }
 
-    if (!aValue.Find("a")) { // First character is "a" = add an option
       mNumOptions++;
       mOptionSelected = new PRBool[mNumOptions];
       if (!mOptionSelected) return NS_ERROR_OUT_OF_MEMORY;
 
       // Copy saved local cache into new local cache
-      for (PRUint32 i=0, j=0; j < mNumOptions; i++,j++) {
-        if (i == actionIndex) { // At the point of insertion
+      for (PRInt32 i=0, j=0; j < mNumOptions; i++,j++) {
+        if (i == aIndex) { // At the point of insertion
 
           // Get the correct selected value and text of the option
           nsIDOMNode* node = nsnull;
@@ -1292,8 +1321,52 @@ NS_IMETHODIMP nsNativeSelectControlFrame::SetProperty(nsIAtom* aName, const nsSt
       }
 
       // Update widget
-      listWidget->AddItemAt(text, actionIndex);
-    } else {
+      listWidget->AddItemAt(text, aIndex);
+
+    // Select options as needed (this is needed for Windows at least)
+    // Note, as mentioned above, we can't restore selection if option is
+    // replaced - no index is reported back to us - use DefaultSelected instead
+    listWidget->Deselect();
+    PRInt32 selectedIndex = -1;
+    for (PRInt32 k=0; k < mNumOptions; k++) {
+      GetOptionSelected(k, &selected);
+      if (selected) {
+        listWidget->SelectItem(k);
+        selectedIndex = k;
+      }
+    }
+    if (mIsComboBox && (mNumOptions > 0) && (selectedIndex == -1)) {
+      listWidget->SelectItem(0);
+      SetOptionSelected(0, PR_TRUE);
+    }
+
+    NS_RELEASE(options);
+    NS_RELEASE(listWidget);
+    if (saveOptionSelected)
+      delete [] saveOptionSelected;
+      
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsNativeSelectControlFrame::RemoveOption(PRInt32 aIndex)
+{
+    // Grab the content model information (merge with postcreatewidget code?)
+    nsIDOMHTMLCollection* options = GetOptions();
+    if (!options) return NS_ERROR_UNEXPECTED;
+
+    // Save the cache data structure
+    PRUint32 saveNumOptions = mNumOptions;
+    PRBool* saveOptionSelected = mOptionSelected;
+    PRBool selected = PR_FALSE;
+    nsString text(" ");
+
+    // Grab the widget (we need to update it)
+    nsIListWidget* listWidget;
+    nsresult result = mWidget->QueryInterface(kListWidgetIID, (void **) &listWidget);
+    if ((NS_FAILED(result)) || (nsnull == listWidget)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
       mNumOptions--;
       if (mNumOptions) {
         mOptionSelected = new PRBool[mNumOptions];
@@ -1302,21 +1375,21 @@ NS_IMETHODIMP nsNativeSelectControlFrame::SetProperty(nsIAtom* aName, const nsSt
         mOptionSelected = nsnull;
       }
       // If we got the index, remove just that one option, like this:
-      if (actionIndex >= 0) {
+      if (aIndex >= 0) {
         // Copy saved local cache into new local cache
-        for (PRUint32 i=0, j=0; j < mNumOptions; i++,j++) {
-          if (i == (PRUint32)actionIndex) i++; // At the point of insertion
+        for (PRInt32 i=0, j=0; j < mNumOptions; i++,j++) {
+          if (i == aIndex) i++; // At the point of deletion
           mOptionSelected[j]=saveOptionSelected[i];
         }
 
         // Update widget
-        listWidget->RemoveItemAt(actionIndex);
+        listWidget->RemoveItemAt(aIndex);
 
       // No index, so we'll have to remove all options and recreate. (Performance hit)
       // We also loose the status of what has been selected.
       } else {
         // Remove all stale options
-        PRUint32 i;
+        PRInt32 i;
         for (i=saveNumOptions; i>=0; i--) {
           listWidget->RemoveItemAt(i);
         }
@@ -1350,13 +1423,13 @@ NS_IMETHODIMP nsNativeSelectControlFrame::SetProperty(nsIAtom* aName, const nsSt
           listWidget->AddItemAt(text, i);
         }
       }
-    }
+
     // Select options as needed (this is needed for Windows at least)
     // Note, as mentioned above, we can't restore selection if option is
     // replaced - no index is reported back to us - use DefaultSelected instead
     listWidget->Deselect();
     PRInt32 selectedIndex = -1;
-    for (PRUint32 i=0; i < mNumOptions; i++) {
+    for (PRInt32 i=0; i < mNumOptions; i++) {
       GetOptionSelected(i, &selected);
       if (selected) {
         listWidget->SelectItem(i);
@@ -1372,10 +1445,8 @@ NS_IMETHODIMP nsNativeSelectControlFrame::SetProperty(nsIAtom* aName, const nsSt
     NS_RELEASE(listWidget);
     if (saveOptionSelected)
       delete [] saveOptionSelected;
-  } else {
-    return Inherited::SetProperty(aName, aValue);
-  }
-  return NS_OK;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsNativeSelectControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
