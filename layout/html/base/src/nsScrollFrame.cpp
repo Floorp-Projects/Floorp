@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsHTMLParts.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
 #include "nsIReflowCommand.h"
