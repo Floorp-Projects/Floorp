@@ -495,7 +495,7 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
   mShown = bState;
 
 
-  // don't show if we are too big
+  // don't show if we are too small
   if (mIsTooSmall && bState == PR_FALSE)
     return NS_OK;
 
@@ -642,7 +642,10 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
 
-  // ignore resizes smaller than or equal to 1x1 for everything except not-yet-shown toplevel windows
+  // code to keep the window from showing before it has been moved or resized
+
+  // if we are resized to 1x1 or less, we will hide the window.  Show(TRUE) will be ignored until a
+  // larger resize has happened
   if (aWidth <= 1 || aHeight <= 1)
   {
     if (mIsToplevel && mShell)
