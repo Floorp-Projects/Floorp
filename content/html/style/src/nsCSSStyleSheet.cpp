@@ -3181,8 +3181,8 @@ PRBool CascadeSizeEnumFunc(nsHashKey* aKey, void *aCascade, void *aData)
   if(cascade->mWeightedRules){
     nsCOMPtr<nsIAtom> weightedRulesSizeTag;
     weightedRulesSizeTag = getter_AddRefs(NS_NewAtom("CascadeWeightedRules"));
-    CascadeSizeEnumData stateData(pData->handler,pData->uniqueItems,weightedRulesSizeTag);
-    cascade->mWeightedRules->EnumerateForwards(WeightedRulesSizeEnumFunc, &stateData);
+    CascadeSizeEnumData stateData2(pData->handler,pData->uniqueItems,weightedRulesSizeTag);
+    cascade->mWeightedRules->EnumerateForwards(WeightedRulesSizeEnumFunc, &stateData2);
   }
   return PR_TRUE;
 }
@@ -3225,13 +3225,13 @@ void CSSRuleProcessor::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
 
   // sheets first
   if(mSheets && uniqueItems->AddItem(mSheets)){
-    PRUint32 sheetCount, curSheet, localSize;
+    PRUint32 sheetCount, curSheet, localSize2;
     mSheets->Count(&sheetCount);
     for(curSheet=0; curSheet < sheetCount; curSheet++){
       nsICSSStyleSheet *pSheet = (nsICSSStyleSheet *)mSheets->ElementAt(curSheet);
       if(pSheet && uniqueItems->AddItem((void*)pSheet)){
-        pSheet->SizeOf(aSizeOfHandler, localSize);
-        // XXX aSize += localSize;
+        pSheet->SizeOf(aSizeOfHandler, localSize2);
+        // XXX aSize += localSize2;
       }
     }
   }
@@ -3245,8 +3245,8 @@ void CSSRuleProcessor::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     if(count > 0){
       aSize += sizeof(PLHashEntry) * count;
       // now go ghrough each RuleCascade in the table
-      nsCOMPtr<nsIAtom> tag = getter_AddRefs(NS_NewAtom("RuleCascade"));
-      CascadeSizeEnumData data(aSizeOfHandler, uniqueItems, tag);
+      nsCOMPtr<nsIAtom> tag2 = getter_AddRefs(NS_NewAtom("RuleCascade"));
+      CascadeSizeEnumData data(aSizeOfHandler, uniqueItems, tag2);
       mMediumCascadeTable->Enumerate(CascadeSizeEnumFunc, &data);
     }
   }

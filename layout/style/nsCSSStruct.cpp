@@ -3787,8 +3787,6 @@ void CSSDeclarationImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSiz
     return;
   }
 
-  PRUint32 localSize=0;
-
   // create a tag for this instance
   nsCOMPtr<nsIAtom> tag;
   tag = getter_AddRefs(NS_NewAtom("CSSDeclarationImpl"));
