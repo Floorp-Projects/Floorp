@@ -66,13 +66,19 @@ nsresult nsMsgThreadsWithUnreadDBView::AddMsgToThreadNotInView(nsIMsgThread *thr
   PRUint32 newFlags;
   msgHdr->GetFlags(&msgFlags);
   GetFirstMessageHdrToDisplayInThread(threadHdr, getter_AddRefs(parentHdr));
-	if (parentHdr && (ensureListed || !(msgFlags & MSG_FLAG_READ)))
-	{
-		parentHdr->OrFlags(MSG_VIEW_FLAG_HASCHILDREN | MSG_VIEW_FLAG_ISTHREAD, &newFlags);
-		if (!(m_viewFlags & nsMsgViewFlagsType::kUnreadOnly))
-			parentHdr->OrFlags(MSG_FLAG_ELIDED, &newFlags);
-		rv = AddHdr(parentHdr);
-	}
+  if (parentHdr && (ensureListed || !(msgFlags & MSG_FLAG_READ)))
+  {
+    PRUint32 orFlags = MSG_VIEW_FLAG_ISTHREAD;
+    PRUint32 numChildren;
+    threadHdr->GetNumChildren(&numChildren);
+    if (numChildren > 1)
+      orFlags |= MSG_VIEW_FLAG_HASCHILDREN;
+
+    parentHdr->OrFlags(orFlags, &newFlags);
+    if (!(m_viewFlags & nsMsgViewFlagsType::kUnreadOnly))
+      parentHdr->OrFlags(MSG_FLAG_ELIDED, &newFlags);
+    rv = AddHdr(parentHdr);
+  }
   return rv;
 }
 
@@ -111,7 +117,12 @@ nsresult nsMsgWatchedThreadsWithUnreadDBView::AddMsgToThreadNotInView(nsIMsgThre
     GetFirstMessageHdrToDisplayInThread(threadHdr, getter_AddRefs(parentHdr));
     if (parentHdr && (ensureListed || !(msgFlags & MSG_FLAG_READ)))
     {
-      parentHdr->OrFlags(MSG_FLAG_ELIDED | MSG_VIEW_FLAG_HASCHILDREN | MSG_VIEW_FLAG_ISTHREAD, &newFlags);
+      PRUint32 orFlags = MSG_VIEW_FLAG_ISTHREAD | MSG_FLAG_ELIDED;
+      PRUint32 numChildren;
+      threadHdr->GetNumChildren(&numChildren);
+      if (numChildren > 1)
+        orFlags |= MSG_VIEW_FLAG_HASCHILDREN;
+      parentHdr->OrFlags(orFlags, &newFlags);
       rv = AddHdr(parentHdr);
     }
   }
