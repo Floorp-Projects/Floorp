@@ -150,6 +150,8 @@ public:
 
     NS_IMETHOD AwaitLoadDone(nsIXULDocument* aDocument, PRBool* aResult);
     NS_IMETHOD NotifyLoadDone();
+    
+    NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager);
 
     // nsIScriptGlobalObjectOwner methods
     NS_DECL_NSISCRIPTGLOBALOBJECTOWNER
@@ -167,6 +169,8 @@ protected:
 
     PRPackedBool mLoaded;
     nsCOMPtr<nsICollection> mPrototypeWaiters;
+
+    nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
 
     nsXULPrototypeDocument();
     virtual ~nsXULPrototypeDocument();
@@ -233,10 +237,19 @@ nsXULPrototypeDocument::Init()
     nsresult rv;
 
     rv = NS_NewISupportsArray(getter_AddRefs(mStyleSheetReferences));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = NS_NewISupportsArray(getter_AddRefs(mOverlayReferences));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mNodeInfoManager = do_CreateInstance(NS_NODEINFOMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsINameSpaceManager> nsmgr;
+    rv = NS_NewNameSpaceManager(getter_AddRefs(nsmgr));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mNodeInfoManager->Init(nsnull, nsmgr);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
 }
@@ -352,7 +365,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     if ((nsXULPrototypeNode::Type)type != nsXULPrototypeNode::eType_Element)
         return NS_ERROR_FAILURE;
 
-    rv |= mRoot->Deserialize(aStream, scriptContext, mURI);
+    rv |= mRoot->Deserialize(aStream, scriptContext, mURI, mNodeInfoManager);
     rv |= NotifyLoadDone();
 
     return rv;
@@ -427,7 +440,9 @@ nsXULPrototypeDocument::GetURI(nsIURI** aResult)
 NS_IMETHODIMP
 nsXULPrototypeDocument::SetURI(nsIURI* aURI)
 {
-    mURI = dont_QueryInterface(aURI);
+    NS_PRECONDITION(mNodeInfoManager, "missing nodeInfoManager");
+    mURI = aURI;
+    mNodeInfoManager->SetDocumentURL(aURI);
     return NS_OK;
 }
 
@@ -539,6 +554,13 @@ nsXULPrototypeDocument::SetDocumentPrincipal(nsIPrincipal* aPrincipal)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULPrototypeDocument::GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager)
+{
+    *aNodeInfoManager = mNodeInfoManager;
+    NS_IF_ADDREF(*aNodeInfoManager);
+    return NS_OK;
+}
 
 
 NS_IMETHODIMP

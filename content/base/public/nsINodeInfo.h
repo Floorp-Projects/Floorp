@@ -66,6 +66,7 @@
 class nsINodeInfoManager;
 class nsINameSpaceManager;
 class nsIDocument;
+class nsIURI;
 
 
 // IID for the nsINodeInfo interface
@@ -365,6 +366,18 @@ public:
    * manager.
    */
   NS_IMETHOD GetDocument(nsIDocument*& aDocument) = 0;
+
+  /**
+   * Gets the url of the document associated with this.
+   */
+  NS_IMETHOD GetDocumentURL(nsIURI** aURL) = 0;
+  
+  /**
+   * Sets the url of the nodeinfo manager. This should only be called when
+   * this nodeinfo manager isn't connected to an nsIDocument.
+   */
+  NS_IMETHOD SetDocumentURL(nsIURI* aURL) = 0;
+  
 };
 
 extern nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult);

@@ -57,6 +57,7 @@ class nsVoidArray;
 class nsXULPrototypeElement;
 class nsIXULDocument;
 class nsIScriptGlobalObject;
+class nsINodeInfoManager;
 
 // {187A63D0-8337-11d3-BE47-00104BDE6048}
 #define NS_IXULPROTOTYPEDOCUMENT_IID \
@@ -91,6 +92,8 @@ public:
 
     NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aResult) = 0;
     NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal) = 0;
+
+    NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager) = 0;
 
     NS_IMETHOD AwaitLoadDone(nsIXULDocument* aDocument, PRBool* aResult) = 0;
     NS_IMETHOD NotifyLoadDone() = 0;

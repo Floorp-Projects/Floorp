@@ -377,10 +377,16 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
                                 nsIDOMNode *aUnTrustedNode)
 {
   NS_PRECONDITION(aTrustedNode, "There must be a trusted node");
-  // In most cases this is a document, so lets try that first
-  nsCOMPtr<nsIDocument> doc1 = do_QueryInterface(aTrustedNode);
 
-  if (!doc1) {
+  /*
+   * Get hold of each node's document or uri
+   */
+
+  // In most cases this is a document, so lets try that first
+  nsCOMPtr<nsIDocument> trustedDoc = do_QueryInterface(aTrustedNode);
+  nsCOMPtr<nsIURI> trustedUri;
+
+  if (!trustedDoc) {
 #ifdef DEBUG
     nsCOMPtr<nsIContent> trustCont = do_QueryInterface(aTrustedNode);
     NS_ASSERTION(trustCont,
@@ -389,14 +395,31 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
     nsCOMPtr<nsIDOMDocument> domDoc;
     aTrustedNode->GetOwnerDocument(getter_AddRefs(domDoc));
     if (!domDoc) {
-      // aTrustedNode isn't part of a document so we can't check security
-      // against it.
+      // In theory this should never happen. But since theory and reality are
+      // different for XUL elements we'll try to get the URI from the
+      // nsINodeInfoManager.
 
-      return NS_ERROR_UNEXPECTED;
+      nsCOMPtr<nsIContent> cont = do_QueryInterface(aTrustedNode);
+      NS_ENSURE_TRUE(cont, NS_ERROR_UNEXPECTED);
+      
+      nsCOMPtr<nsINodeInfo> ni;
+      cont->GetNodeInfo(*getter_AddRefs(ni));
+      NS_ENSURE_TRUE(ni, NS_ERROR_UNEXPECTED);
+      
+      nsCOMPtr<nsINodeInfoManager> nimgr;
+      ni->GetNodeInfoManager(*getter_AddRefs(nimgr));
+      nimgr->GetDocumentURL(getter_AddRefs(trustedUri));
+      
+      if (!trustedUri) {
+        // Can't get uri of aTrustedNode so we can't check security against it
+
+        return NS_ERROR_UNEXPECTED;
+      }
     }
-    doc1 = do_QueryInterface(domDoc);
-
-    NS_ASSERTION(doc1, "QI to nsIDocument failed");
+    else {
+      trustedDoc = do_QueryInterface(domDoc);
+      NS_ASSERTION(trustedDoc, "QI to nsIDocument failed");
+    }
   }
 
 
@@ -405,12 +428,13 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
   // a node is potentially expensive.
   nsCOMPtr<nsIContent> content = do_QueryInterface(aUnTrustedNode);
 
-  nsCOMPtr<nsIDocument> doc2;
+  nsCOMPtr<nsIDocument> unTrustedDoc;
+  nsCOMPtr<nsIURI> unTrustedUri;
 
   if (!content) {
-    doc2 = do_QueryInterface(aUnTrustedNode);
+    unTrustedDoc = do_QueryInterface(aUnTrustedNode);
 
-    if (!doc2) {
+    if (!unTrustedDoc) {
       // aUnTrustedNode is neither a nsIContent nor an nsIDocument, something
       // weird is going on...
 
@@ -419,44 +443,63 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
       return NS_ERROR_UNEXPECTED;
     }
   }
-
-  if (!doc2) {
+  else {
     nsCOMPtr<nsIDOMDocument> domDoc;
     aUnTrustedNode->GetOwnerDocument(getter_AddRefs(domDoc));
     if (!domDoc) {
-      // aUnTrustedNode is not part of a document, let any caller access it.
-      return NS_OK;
+      // if we can't get a doc then lets try to get uri through nodeinfo
+      // manager
+      nsCOMPtr<nsINodeInfo> ni;
+      content->GetNodeInfo(*getter_AddRefs(ni));
+      if (!ni) {
+        // we can't get to the uri so we'll give up and give the caller access
+
+        return NS_OK;
+      }
+      
+      nsCOMPtr<nsINodeInfoManager> nimgr;
+      ni->GetNodeInfoManager(*getter_AddRefs(nimgr));
+      nimgr->GetDocumentURL(getter_AddRefs(unTrustedUri));
+      if (!unTrustedUri) {
+        // we can't get to the uri so we'll give up and give the caller access
+
+        return NS_OK;
+      }
     }
-
-    doc2 = do_QueryInterface(domDoc);
-
-    NS_ASSERTION(doc2, "QI to nsIDocument failed");
+    else {
+      unTrustedDoc = do_QueryInterface(domDoc);
+      NS_ASSERTION(unTrustedDoc, "QI to nsIDocument failed");
+    }
   }
 
-  if (doc1 == doc2)
+  /*
+   * Compare the uris
+   */
+
+  // If they are in the same document then everything is just fine
+  if (trustedDoc == unTrustedDoc && trustedDoc)
     return NS_OK;
 
-  nsCOMPtr<nsIURI> uri1;
-  doc1->GetDocumentURL(getter_AddRefs(uri1));
-
-  // If the trusted node doesn't have a uri we can't check security against it
-  if (!uri1) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+  if (!trustedUri) {
+    trustedDoc->GetDocumentURL(getter_AddRefs(trustedUri));
+    // If the trusted node doesn't have a uri we can't check security against it
+    if (!trustedUri) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
   }
-
   // Chrome can do anything
   PRBool isChrome;
-  nsresult rv = uri1->SchemeIs("chrome", &isChrome);
+  nsresult rv = trustedUri->SchemeIs("chrome", &isChrome);
   if (NS_SUCCEEDED(rv) && isChrome) {
       return NS_OK;
   }
 
-  nsCOMPtr<nsIURI> uri2;
-  doc2->GetDocumentURL(getter_AddRefs(uri2));
-  
-  // The untrusted node doesn't have a uri so we'll allow it to be accessed.
-  if (!uri2) {
-    return NS_OK;
+  if (!unTrustedUri) {
+    unTrustedDoc->GetDocumentURL(getter_AddRefs(unTrustedUri));
+    // If the untrusted node doesn't have a uri we'll allow it to be accessed.
+    if (!unTrustedUri) {
+      return NS_OK;
+    }
   }
 
   // If there isn't a security manager it is probably because it is not
@@ -465,7 +508,7 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
     return NS_OK;
   }
 
-  return sSecurityManager->CheckSameOriginURI(uri1, uri2);
+  return sSecurityManager->CheckSameOriginURI(trustedUri, unTrustedUri);
 }
 
 // static

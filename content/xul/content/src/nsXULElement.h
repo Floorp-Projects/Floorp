@@ -204,7 +204,8 @@ public:
                                nsIScriptContext* aContext) = 0;
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptContext* aContext,
-                                 nsIURI* aDocumentURI) = 0;
+                                 nsIURI* aDocumentURI,
+                                 nsINodeInfoManager* aNimgr) = 0;
 
     void AddRef() { mRefCnt++; };
     void Release() 
@@ -260,7 +261,8 @@ public:
                                nsIScriptContext* aContext);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptContext* aContext,
-                                 nsIURI* aDocumentURI);
+                                 nsIURI* aDocumentURI,
+                                 nsINodeInfoManager* aNimgr);
 
     PRInt32                  mNumChildren;
     nsXULPrototypeNode**     mChildren;           // [OWNER]
@@ -278,25 +280,10 @@ public:
 
     static void ReleaseGlobals() 
     { 
-        NS_IF_RELEASE(sNodeInfoManager); 
         NS_IF_RELEASE(sCSSParser);
     }
 
 protected:
-    static nsINodeInfoManager* GetNodeInfoManager()
-    {
-        if (!sNodeInfoManager) {
-            CallCreateInstance(NS_NODEINFOMANAGER_CONTRACTID, &sNodeInfoManager);
-
-            nsCOMPtr<nsINameSpaceManager> nsmgr;
-            NS_NewNameSpaceManager(getter_AddRefs(nsmgr));
-
-            sNodeInfoManager->Init(nsnull, nsmgr);
-        }
-        return sNodeInfoManager;
-    }
-    static nsINodeInfoManager* sNodeInfoManager;
-
     static nsICSSParser* GetCSSParser()
     {
         if (!sCSSParser)
@@ -320,9 +307,11 @@ public:
                                nsIScriptContext* aContext);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptContext* aContext,
-                                 nsIURI* aDocumentURI);
+                                 nsIURI* aDocumentURI,
+                                 nsINodeInfoManager* aNimgr);
     virtual nsresult DeserializeOutOfLineScript(nsIObjectInputStream* aInput,
-                                                nsIScriptContext* aContext);
+                                                nsIScriptContext* aContext,
+                                                nsINodeInfoManager* aNimgr);
 
     nsresult Compile(const PRUnichar* aText, PRInt32 aTextLength,
                      nsIURI* aURI, PRInt32 aLineNo,
@@ -370,7 +359,8 @@ public:
                                nsIScriptContext* aContext);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptContext* aContext,
-                                 nsIURI* aDocumentURI);
+                                 nsIURI* aDocumentURI,
+                                 nsINodeInfoManager* aNimgr);
 
     nsString                 mValue;
 };

@@ -154,7 +154,6 @@
 class nsIWebShell;
 
 // Global object maintenance
-nsINodeInfoManager* nsXULPrototypeElement::sNodeInfoManager = nsnull;
 nsICSSParser* nsXULPrototypeElement::sCSSParser = nsnull;
 nsIXULPrototypeCache* nsXULPrototypeScript::sXULPrototypeCache = nsnull;
 nsIXBLService * nsXULElement::gXBLService = nsnull;
@@ -4986,8 +4985,10 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
 nsresult
 nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                                    nsIScriptContext* aContext, 
-                                   nsIURI* aDocumentURI)
+                                   nsIURI* aDocumentURI,
+                                   nsINodeInfoManager* aNimgr)
 {
+    NS_PRECONDITION(aNimgr, "missing nsINodeInfoManager");
     nsresult rv;
 
     PRUint32 number;
@@ -5001,8 +5002,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
     nsXPIDLString qualifiedName;
     rv |= aStream->ReadWStringZ(getter_Copies(qualifiedName));
 
-    nsINodeInfoManager* nimgr = GetNodeInfoManager();
-    rv |= nimgr->GetNodeInfo(qualifiedName, namespaceURI, *getter_AddRefs(mNodeInfo));
+    rv |= aNimgr->GetNodeInfo(qualifiedName, namespaceURI, *getter_AddRefs(mNodeInfo));
 
     // Read Attributes
     rv |= aStream->Read32(&number);
@@ -5019,8 +5019,8 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
             rv |= aStream->ReadWStringZ(getter_Copies(attributeNamespaceURI));
             rv |= aStream->ReadWStringZ(getter_Copies(attributeName));
 
-            rv |= nimgr->GetNodeInfo(attributeName, attributeNamespaceURI, 
-                                     *getter_AddRefs(mAttributes[i].mNodeInfo));
+            rv |= aNimgr->GetNodeInfo(attributeName, attributeNamespaceURI, 
+                                      *getter_AddRefs(mAttributes[i].mNodeInfo));
 
             rv |= aStream->ReadWStringZ(getter_Copies(attributeValue));
             mAttributes[i].mValue.SetValue(attributeValue);
@@ -5067,7 +5067,8 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                     return NS_ERROR_OUT_OF_MEMORY;
                 child->mType = childType;
 
-                rv |= child->Deserialize(aStream, aContext, aDocumentURI);
+                rv |= child->Deserialize(aStream, aContext, aDocumentURI,
+                                         aNimgr);
                 break;
             case eType_Text:
                 child = new nsXULPrototypeText(-1);
@@ -5075,7 +5076,8 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                     return NS_ERROR_OUT_OF_MEMORY;
                 child->mType = childType;
           
-                rv |= child->Deserialize(aStream, aContext, aDocumentURI);
+                rv |= child->Deserialize(aStream, aContext, aDocumentURI,
+                                         aNimgr);
                 break;
             case eType_Script:
                 // language version obtained during deserialization.
@@ -5087,12 +5089,14 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                 nsXULPrototypeScript* script = NS_STATIC_CAST(nsXULPrototypeScript*, child);
                 if (script) {
                     rv |= aStream->ReadBoolean(&script->mOutOfLine);
-                    if (! script->mOutOfLine)
-                        rv |= script->Deserialize(aStream, aContext, aDocumentURI);
+                    if (! script->mOutOfLine) {
+                        rv |= script->Deserialize(aStream, aContext,
+                                                  aDocumentURI, aNimgr);
+                    }
                     else {
                         rv |= aStream->ReadObject(PR_TRUE, getter_AddRefs(script->mSrcURI));
 
-                        rv |= script->DeserializeOutOfLineScript(aStream, aContext);
+                        rv |= script->DeserializeOutOfLineScript(aStream, aContext, aNimgr);
                     }
                 }
 
@@ -5219,7 +5223,8 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
 nsresult
 nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
                                   nsIScriptContext* aContext, 
-                                  nsIURI* aDocumentURI)
+                                  nsIURI* aDocumentURI,
+                                  nsINodeInfoManager* aNimgr)
 {
     NS_TIMELINE_MARK_FUNCTION("chrome js deserialize");
     nsresult rv;
@@ -5305,7 +5310,8 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
 
 nsresult
 nsXULPrototypeScript::DeserializeOutOfLineScript(nsIObjectInputStream* aInput,
-                                                 nsIScriptContext* aContext)
+                                                 nsIScriptContext* aContext,
+                                                 nsINodeInfoManager* aNimgr)
 {
     // Keep track of FastLoad failure via rv, so we can
     // AbortFastLoads if things look bad.
@@ -5366,7 +5372,7 @@ nsXULPrototypeScript::DeserializeOutOfLineScript(nsIObjectInputStream* aInput,
             // We're better off slow-loading than bailing out due to a
             // FastLoad error.
             if (NS_SUCCEEDED(rv))
-                rv = Deserialize(objectInput, aContext, nsnull);
+                rv = Deserialize(objectInput, aContext, nsnull, aNimgr);
 
             if (NS_SUCCEEDED(rv) && mSrcURI) {
                 rv = fastLoadService->EndMuxedDocument(mSrcURI);
@@ -5526,7 +5532,8 @@ nsXULPrototypeText::Serialize(nsIObjectOutputStream* aStream,
 nsresult
 nsXULPrototypeText::Deserialize(nsIObjectInputStream* aStream,
                                 nsIScriptContext* aContext, 
-                                nsIURI* aDocumentURI)
+                                nsIURI* aDocumentURI,
+                                nsINodeInfoManager* aNimgr)
 {
     nsresult rv;
 
