@@ -83,12 +83,103 @@ function EditorStartup(editorType)
   
   dump("EditorAppCore windows have been set.\n");
   SetupToolbarElements();
-
+  
   // Set focus to the edit window
   // This still doesn't work!
   // It works after using a toolbar button, however!
   contentWindow.focus();
 }
+
+function TestMenuCreation()
+{
+  var menubar = document.getElementById("MainMenuBar");
+  var fileMenu = menubar.firstChild;
+  var filePopup = fileMenu.firstChild;
+  
+  dump("File menu "+ fileMenu + "\n");
+  
+  var newChild = document.createElement("menuitem");
+  newChild.setAttribute("value", "testing");
+  newChild.setAttribute("id", "testItem");
+  dump(newChild);
+  filePopup.appendChild(newChild);
+  
+  // now try and find it
+  var someItem = document.getElementById("testItem");
+  if (!someItem)
+    dump("Failed to find new menu item\n");
+}
+
+
+function GenerateFormatToolbar()
+{
+  var toolbarButtons = [
+  
+    // bold button
+    {
+      "id"          : "boldButton",
+      "value"       : "B",
+      "onclick"     : "EditorToggleStyle('bold')"
+    },
+    
+    // italics button
+    {
+      "id"          : "italicButton",
+      "value"       : "I"
+    },
+  
+    // underline button
+    {
+      "id"          : "underlineButton",
+      "value"       : "U"
+    },
+
+    // ul button
+    {
+      "id"          : "ulButton",
+      "src"         : "chrome://editor/skin/images/ED_Bullets.gif",
+      "align"       : "bottom"
+    },
+
+    // ol button
+    {
+      "id"          : "olButton",
+      "src"         : "chrome://editor/skin/images/ED_Numbers.gif",
+      "align"       : "bottom"
+    },
+  
+  ];
+  
+  
+  var toolbar = document.getElementById("FormatToolbar");
+
+  for (i = 0; i < toolbarButtons.length; i ++)
+  {
+    var newChild = document.createElement("titledbutton");
+    var thisButton = toolbarButtons[i];
+    
+    for (prop in thisButton)
+    {
+      var theValue = thisButton[prop];
+      newChild.setAttribute(prop, theValue);
+    }
+    
+    toolbar.appendChild(newChild);
+  }
+  
+  // append a spring
+  
+  var theSpring = document.createElement("spring");
+  theSpring.setAttribute("flex", "100%");
+  toolbar.appendChild(theSpring);
+
+  // testing
+  var boldButton = document.getElementById("boldButton");
+  if (!boldButton)
+    dump("Failed to find button\n");
+  
+}
+
 
 function SetupToolbarElements()
 {
@@ -100,6 +191,11 @@ function SetupToolbarElements()
   }
   toolbar.boldButton = document.getElementById("BoldButton");
   toolbar.IsBold = document.getElementById("Editor:Style:IsBold");
+}
+
+function _EditorNotImplemented()
+{
+  dump("Function not implemented\n");
 }
 
 function EditorShutdown()
@@ -353,7 +449,7 @@ function EditorToggleStyle(styleName)
   // see if the style is already set by looking at the observer node,
   // which is the appropriate button
   var theButton = document.getElementById(styleName + "Button");
-  
+  dump("Toggling style " + styleName + "\n");
   if (theButton)
   {
     var isOn = theButton.getAttribute(styleName);
@@ -366,7 +462,7 @@ function EditorToggleStyle(styleName)
   }
   else
   {
-    dump("No button found for the " + styleName + " style");
+    dump("No button found for the " + styleName + " style\n");
   }
 }
 

@@ -14,7 +14,7 @@
 <!ENTITY printSetupCmd.label ".Print Setup...">
 <!ENTITY printPreviewCmd.label "Print Preview">
 <!ENTITY printCmd.label "Print...">
-<!ENTITY quitCmd.label "Quit">
+<!ENTITY exitCmd.label "Quit">
 
 <!-- Edit menu items -->
 <!ENTITY editMenu.label "Edit">
@@ -267,7 +267,7 @@
 <!ENTITY fileprintpreview.accesskey "r">
 <!ENTITY fileprint.accesskey "p">
 <!ENTITY fileclose.accesskey "c">
-<!ENTITY filequit.accesskey "q">
+<!ENTITY fileexit.accesskey "q">
 <!ENTITY editmenu.accesskey "e">
 <!ENTITY editundo.accesskey "u">
 <!ENTITY editredo.accesskey "r">
