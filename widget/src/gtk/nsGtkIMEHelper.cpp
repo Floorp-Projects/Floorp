@@ -302,11 +302,8 @@ void nsIMEPreedit::SetPreeditString(const XIMText *aText,
       case XIMUnderline:
         *pFeedbackAttr = NS_TEXTRANGE_CONVERTEDTEXT;
         break;
-      case XIMHighlight:
-        *pFeedbackAttr = NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
-        break;
       default:
-        *pFeedbackAttr = NS_TEXTRANGE_RAWINPUT;
+        *pFeedbackAttr = NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
       }
     }
     mIMECompAttr->Insert((const char*)feedbackAttr,
