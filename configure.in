@@ -560,12 +560,34 @@ AC_SUBST(XLIBS)
 
 dnl Check for GLib and libIDL.
 dnl ========================================================
+SKIP_IDL_CHECK="no"
+
+dnl RedHat 6.0 (Hedwig) ships with orbit which includes libIDL
+if test -f /etc/redhat-release
+then
+	if egrep "Hedwig" /etc/redhat-release >/dev/null
+	then
+		if test -x /usr/bin/orbit-config
+		then
+			SKIP_IDL_CHECK="yes"
+			BUILD_XPIDL=1
+			LIBIDL_CFLAGS="-I/usr/lib/glib/include"
+			LIBIDL_LIBS="-lglib"
+			AC_SUBST(LIBIDL_CFLAGS)
+			AC_SUBST(LIBIDL_LIBS)
+		fi
+	fi
+fi
+
+if test "$SKIP_IDL_CHECK" = "no"
+then
 AM_PATH_LIBIDL($LIBIDL_VERSION,BUILD_XPIDL=1,
   [echo libIDL $LIBIDL_VERSION or higher is required.]
   [echo Get yourself a RPM or source package from ftp://ftp.mozilla.org/]
   [echo before your tree is HOSED.]
   [echo See http://www.rpi.edu/~veliaa/libIDL/ for more information.]
   [AC_MSG_ERROR(libIDL not installed.)])
+fi
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
