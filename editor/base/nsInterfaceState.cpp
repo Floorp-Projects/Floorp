@@ -28,6 +28,7 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDiskDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMSelection.h"
 
 #include "nsITextEditor.h"
 #include "nsIHTMLEditor.h"
@@ -100,6 +101,18 @@ nsInterfaceState::Init(nsISupports* aEditor, nsIWebShell *aChromeWebShell)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsInterfaceState::NotifyDocumentCreated()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInterfaceState::NotifyDocumentWillBeDestroyed()
+{
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsInterfaceState::NotifyDocumentStateChanged(PRBool aNowDirty)
@@ -128,6 +141,9 @@ nsInterfaceState::NotifySelectionChanged()
   // update the paragraph format popup
   rv = UpdateParagraphState("Editor:Paragraph:Format", "format", mParagraphFormat);
   
+  // update the list buttons
+  rv = UpdateListState("Editor:Paragraph:List", "ol");
+
   return NS_OK;
 }
 
@@ -155,6 +171,33 @@ nsInterfaceState::UpdateParagraphState(const char* observerName, const char* att
   }
   
   return NS_OK;
+}
+
+nsresult
+nsInterfaceState::UpdateListState(const char* observerName, const char* tagName)
+{
+  nsresult  rv = NS_ERROR_NO_INTERFACE;
+
+  nsCOMPtr<nsIDOMSelection>  domSelection;
+  {
+    nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+    editor->GetSelection(getter_AddRefs(domSelection));
+  }
+
+  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+  if (htmlEditor)
+  {
+    nsAutoString  tagStr(tagName);
+    
+    nsCOMPtr<nsIDOMNode>       domNode;
+    if (domSelection)
+      domSelection->GetAnchorNode(getter_AddRefs(domNode));
+    
+    nsCOMPtr<nsIDOMElement> parentElement;
+    rv = htmlEditor->GetElementOrParentByTagName(tagStr, domNode, getter_AddRefs(parentElement));
+  }
+
+  return rv;
 }
 
 nsresult
@@ -194,7 +237,7 @@ nsInterfaceState::UpdateTextState(const char* tagName, const char* observerName,
   PRBool    firstOfSelectionHasProp = PR_FALSE;
   PRBool    anyOfSelectionHasProp = PR_FALSE;
   PRBool    allOfSelectionHasProp = PR_FALSE;
-
+  
   nsCOMPtr<nsIAtom> styleAtom = getter_AddRefs(NS_NewAtom(tagName));
 
   nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
@@ -209,13 +252,14 @@ nsInterfaceState::UpdateTextState(const char* tagName, const char* observerName,
       rv = htmlEditor->GetTextProperty(styleAtom, nsnull, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
   }
  
-  if (firstOfSelectionHasProp != ioState)
+  PRBool    &behaviour = allOfSelectionHasProp;			// change this to alter the behaviour
+  if (behaviour != ioState)
   {
-    rv = SetNodeAttribute(observerName, attributeName, firstOfSelectionHasProp ? "true" : "false");
+    rv = SetNodeAttribute(observerName, attributeName, behaviour ? "true" : "false");
 	  if (NS_FAILED(rv))
 	    return rv;
 	  
-	  ioState = firstOfSelectionHasProp;
+	  ioState = behaviour;
   }
   
   return rv;
