@@ -2922,8 +2922,14 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 
 	nsAutoString	encodingStr, queryEncodingStr, resultEncodingStr;
 
-	GetData(dataUni, "interpret", 0, "resultEncoding", encodingStr);	// decimal string values
-	MapEncoding(encodingStr, resultEncodingStr);
+	// first look for "interpret/charset"... if that isn't specified,
+	// then fall back to looking for "interpret/resultEncoding" (a decimal)
+	GetData(dataUni, "interpret", 0, "charset", resultEncodingStr);
+	if (resultEncodingStr.Length() < 1)
+	{
+		GetData(dataUni, "interpret", 0, "resultEncoding", encodingStr);	// decimal string values
+		MapEncoding(encodingStr, resultEncodingStr);
+	}
 	// rjc note: ignore "interpret/resultTranslationEncoding" as well as
 	// "interpret/resultTranslationFont" since we always convert results to Unicode
 	if (resultEncodingStr.Length() > 0)
