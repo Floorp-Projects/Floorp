@@ -42,22 +42,31 @@
 
 function calMemoryCalendar() {
     this.wrappedJSObject = this;
+    this.mObservers = { };
+    this.mItems = { };
 }
 
-calMemoryCalendar.prototype = {
-    //
-    // private members
-    //
-    mObservers: Array(),
-    mItems: Array(),
+function makeOccurrence(item, start, end)
+{
+    var occ = Components.classes["@mozilla.org/calendar/item-occurrence;1"].
+        createInstance(calIItemOccurrence);
+    // XXX poor form
+    occ.wrappedJSObject.item = item;
+    occ.wrappedJSObject.occurrenceStartDate = item.startDate;
+    occ.wrappedJSObject.occurrenceEndDate = item.endDate;
+    return occ;
+}
 
+// END_OF_TIME needs to be the max value a PRTime can be
+const END_OF_TIME = 0x7fffffffffffffff;
+
+calMemoryCalendar.prototype = {
     //
     // nsISupports interface
     // 
     QueryInterface: function (aIID) {
         if (!aIID.equals(Components.interfaces.nsISupports) &&
-            !aIID.equals(Components.interfaces.calICalendar))
-        {
+            !aIID.equals(Components.interfaces.calICalendar)) {
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
 
@@ -102,9 +111,9 @@ calMemoryCalendar.prototype = {
 
     // void addItem( in calIItemBase aItem, in calIOperationListener aListener );
     addItem: function (aItem, aListener) {
-        if (aItem.id == null) {
+        if (aItem.id == null)
             aItem.id = "uuid:" + (new Date()).getTime();
-        }
+
         if (this.mItems[aItem.id] != null) {
             // is this an error?
             if (aListener)
@@ -133,8 +142,7 @@ calMemoryCalendar.prototype = {
     // void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
     modifyItem: function (aItem, aListener) {
         if (aItem.id == null ||
-            this.mItems[aItem.id] == null)
-        {
+            this.mItems[aItem.id] == null) {
             // this is definitely an error
             if (aListener)
                 aListener.onOperationComplete (this,
@@ -163,8 +171,7 @@ calMemoryCalendar.prototype = {
     // void deleteItem( in string id, in calIOperationListener aListener );
     deleteItem: function (aId, aListener) {
         if (aId == null ||
-            this.mItems[aId] == null)
-        {
+            this.mItems[aId] == null) {
             if (aListener)
                 aListener.onOperationComplete (this,
                                                Components.results.NS_ERROR_FAILURE,
@@ -195,8 +202,7 @@ calMemoryCalendar.prototype = {
             return;
 
         if (aId == null ||
-            this.mItems[aId] == null)
-        {
+            this.mItems[aId] == null) {
             aListener.onOperationComplete(this,
                                           Components.results.NS_ERROR_FAILURE,
                                           aListener.GET,
@@ -251,8 +257,7 @@ calMemoryCalendar.prototype = {
 
         var itemsFound = Array();
         var startTime = 0;
-        // endTime needs to be the max value a PRTime can be
-        var endTime = 0x7fffffffffffffff;
+        var endTime = END_OF_TIME;
         if (aRangeStart)
             startTime = aRangeStart.utcTime;
         if (aRangeEnd)
@@ -281,7 +286,7 @@ calMemoryCalendar.prototype = {
 
         // completed?
         var itemCompletedFilter = ((aItemFilter & calICalendar.ITEM_FILTER_COMPLETED_YES) != 0);
-        var itemNotCompletedFilter = ((aItemFilter & calICalendar.ITEM_FILTER_COMPLETED_YES) != 0);
+        var itemNotCompletedFilter = ((aItemFilter & calICalendar.ITEM_FILTER_COMPLETED_NO) != 0);
 
         // return occurrences?
         var itemReturnOccurrences = ((aItemFilter & calICalendar.ITEM_FILTER_CLASS_OCCURRENCES) != 0);
@@ -289,58 +294,45 @@ calMemoryCalendar.prototype = {
         //  if aCount != 0, we don't attempt to sort anything, and
         //  instead return the first aCount items that match.
 
-        for (var i = 0; i < this.mItems.length; i++) {
+        for (var i in this.mItems) {
             var item = this.mItems[i];
             var itemtoadd = null;
+            if (itemTypeFilter && !(item instanceof itemTypeFilter))
+                continue;
 
-            if (itemTypeFilter)
-                item = item.QueryInterface(itemTypeFilter);
-
-            if (item) {
-                var itemStartTime = 0;
-                var itemEndTime = 0;
-
-                var tmpitem = item;
-                if ((tmpitem = item.QueryInterface(calIEvent)) != null)
-                {
-                    itemStartTime = tmpitem.startDate.utcTime;
-                    itemEndTime = tmpitem.endDate.utcTime;
-
-                    if (itemReturnOccurrences) {
-                        itemtoadd = Components.classes["@mozilla.org/calendar/item-occurrence;1"].createInstance(calIItemOccurrence);
-                        itemtoadd.wrappedJSObject.item = item;
-                        itemtoadd.wrappedJSObject.occurrenceStartDate = tmpitem.startDate;
-                        itemtoadd.wrappedJSObject.occurrenceEndDate = tmpitem.endDate;
-                    }
-                } else if ((tmpitem = item.QueryInterface(calITodo)) != null)
-                {
-                    // if it's a todo, also filter based on completeness
-                    if (tmpitem.percentComplete == 100 && !itemCompletedFilter)
-                        continue;
-                    else if (tmpitem.percentComplete < 100 && !itemNotCompletedFilter)
-                        continue;
-
-                    itemStartTime = tmpitem.entryTime.utcTime;
-                    itemEndTime = tmpitem.entryTime.utcTime;
-
-                    if (itemReturnOccurrences) {
-                        itemtoadd = Components.classes["@mozilla.org/calendar/item-occurrence;1"].createInstance(calIItemOccurrence);
-                        itemtoadd.wrappedJSObject.item = item;
-                        itemtoadd.wrappedJSObject.occurrenceStartDate = tmpitem.entryTime;
-                        itemtoadd.wrappedJSObject.occurrenceEndDate = tmpitem.entryTime;
-                    }
-                } else {
-                    // XXX unknown item type, wth do we do?
+            var itemStartTime = 0;
+            var itemEndTime = 0;
+            
+            var tmpitem = item;
+            if (item instanceof calIEvent) {
+                tmpitem = item.QueryInterface(calIEvent);
+                itemStartTime = item.startDate.utcTime || 0
+                itemEndTime = item.endDate.utcTime || END_OF_TIME;
+                
+                if (itemReturnOccurrences)
+                    itemtoadd = makeOccurrence(item, item.startDate, item.endDate);
+            } else if (item instanceof calITodo) {
+                // if it's a todo, also filter based on completeness
+                if (item.percentComplete == 100 && !itemCompletedFilter)
                     continue;
-                }
+                else if (item.percentComplete < 100 && !itemNotCompletedFilter)
+                    continue;
+                    
+                itemEndTime = itemStartTime = item.entryTime.utcTime || 0;
+                
+                if (itemReturnOccurrences)
+                    itemtoadd = makeOccurrence(item, item.entryTime, item.entryTime);
+            } else {
+                // XXX unknown item type, wth do we do?
+                continue;
+            }
 
-                // determine whether any endpoint falls within the range
-                if (itemStartTime <= endTime && itemEndTime >= startTime) {
-                    if (itemtoadd == null)
-                        itemtoadd = item;
-
-                    itemsFound.push(itemtoadd);
-                }
+            // determine whether any endpoint falls within the range
+            if (itemStartTime <= endTime && itemEndTime >= startTime) {
+                if (itemtoadd == null)
+                    itemtoadd = item;
+                
+                itemsFound.push(itemtoadd);
             }
 
             if (aCount && itemsFound.length >= aCount)
