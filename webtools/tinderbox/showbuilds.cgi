@@ -772,7 +772,9 @@ sub do_panel {
 
     my @keys = sort keys %build;
     my $keycount = @keys;
-    my $tm = &print_time(time);
+
+    my (undef,$minute,$hour,$mday,$mon,undef) = localtime(time());
+    my $tm = sprintf("%d/%d&nbsp;%d:%02d",$mon+1,$mday,$hour,$minute);
 
     print q(<body BGCOLOR="#FFFFFF" TEXT="#000000" 
                   LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000");
