@@ -112,6 +112,8 @@
             command="cmd_textZoomEnlarge" modifiers="accel"/>
         <key id="key_textZoomReduce" key="&textZoomReduceCmd.commandkey;"
             command="cmd_textZoomReduce" modifiers="accel"/>
+        <key id="key_textZoomReset" key="&textZoomResetCmd.commandkey;"
+            oncommand="ZoomManager.prototype.getInstance().reset();" modifiers="accel"/>
         <key id="key_toggleSidebar" keycode="VK_F9" command="Help:ToggleSidebar"/>
         <key id="key_viewNextHelpPanel" keycode="VK_TAB" 
              oncommand="showRelativePanel(true);" modifiers="control"/>
