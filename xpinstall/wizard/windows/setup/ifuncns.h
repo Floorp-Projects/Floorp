@@ -61,5 +61,8 @@ BOOL        WinRegNameExists(HKEY hkRootKey, LPSTR szKey, LPSTR szName);
 HRESULT     FileCopySequential(LPSTR szSourcePath, LPSTR szDestPath, LPSTR szFilename);
 HRESULT     ProcessCopyFileSequential(DWORD dwTiming);
 void        UpdateInstallLog(LPSTR szKey, LPSTR szDir);
+int         RegisterDll32(char *File);
+HRESULT     FileSelfRegister(LPSTR szFilename, LPSTR szDestination);
+HRESULT     ProcessSelfRegisterFile(DWORD dwTiming);
 
 #endif
