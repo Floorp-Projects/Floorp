@@ -211,6 +211,19 @@ const gTabOpenObserver = {
 };
 #endif
 
+const gSessionHistoryObserver = {
+  observe: function(subject, topic, data)
+  {
+    if (topic != "browser:purge-session-history")
+      return;
+
+    var backCommand = document.getElementById("Browser:Back");
+    backCommand.setAttribute("disabled", "true");
+    var fwdCommand = document.getElementById("Browser:Forward");
+    fwdCommand.setAttribute("disabled", "true");
+  }
+};
+
 function Startup()
 {
   gBrowser = document.getElementById("content");
@@ -221,9 +234,8 @@ function Startup()
     uriToLoad = window.arguments[0];
   gIsLoadingBlank = uriToLoad == "about:blank";
 
-  if (!gIsLoadingBlank) {
+  if (!gIsLoadingBlank)
     prepareForStartup();
-  }
 
 #ifdef ENABLE_PAGE_CYCLER
   appCore.startPageCycler();
@@ -353,6 +365,12 @@ function prepareForStartup()
 
 function delayedStartup()
 {
+  var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+  os.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
+  
+  // We have to do this because we manually hook up history for the first browser in prepareForStartup
+  os.addObserver(gBrowser.browsers[0], "browser:purge-session-history", false);
+
   gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefService);
   gPrefService = gPrefService.getBranch(null);

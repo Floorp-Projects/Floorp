@@ -39,7 +39,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="browser" extends="xul:browser">
-    <implementation type="application/x-javascript" implements="nsIAccessibleProvider">
+    <implementation type="application/x-javascript" implements="nsIAccessibleProvider, nsIObserver">
       <property name="accessible">
         <getter>
           <![CDATA[
@@ -436,7 +436,8 @@
             if (!this.hasAttribute("disablehistory")) {
               // wire up session history
               this.webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance(Components.interfaces.nsISHistory);
-
+              var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+              os.addObserver(this, "browser:purge-session-history", false);
               // enable global history
               this.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
             }
@@ -490,7 +491,20 @@
           ]]>
         </body>
       </method>
-
+      
+      <method name="observe">
+        <parameter name="aSubject"/>
+        <parameter name="aTopic"/>
+        <parameter name="aState"/>
+        <body>
+          <![CDATA[
+            if (aTopic != "browser:purge-session-history")
+              return;
+            this.sessionHistory.PurgeHistory(this.sessionHistory.count);
+          ]]>
+        </body>
+      </method>
+          
       <field name="_AUTOSCROLL_SPEED">3</field>
       <field name="_AUTOSCROLL_SNAP">10</field>
       <field name="_clientFrameDoc">null</field>
