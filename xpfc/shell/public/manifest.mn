@@ -7,8 +7,8 @@
 # The copyright notice(s) in this Source Code does not indicate actual or
 # intended publication of this Source Code.
 #
-GDEPTH = ../../../../..
-DEPTH = ../../../../..
+GDEPTH = ../../..
+DEPTH = ../../..
 
 EXPORTS = \
 	nsIApplicationShell.h \
