@@ -1249,7 +1249,7 @@ PRInt32 CSkippedContentToken::Consume(PRUnichar aChar,CScanner& aScanner) {
  */
 class CTagTableVerifier {
 public:
-  CTagTableVerifier::CTagTableVerifier(){
+  CTagTableVerifier(){
     PRInt32  count=sizeof(gHTMLTagTable)/sizeof(HTMLTagEntry);
     PRInt32 i,j;
     for(i=1;i<count-1;i++)
@@ -1336,7 +1336,7 @@ const char* GetTagName(PRInt32 aTag) {
  */
 class CAttributeTableVerifier {
 public:
-  CAttributeTableVerifier::CAttributeTableVerifier(){
+  CAttributeTableVerifier(){
     PRInt32  count=sizeof(gHTMLAttributeTable)/sizeof(HTMLAttrEntry);
     PRInt32 i,j;
     for(i=1;i<count-1;i++)
