@@ -87,6 +87,9 @@ public:
   NS_IMETHOD    GetButton(PRUint32* aButton);
   NS_IMETHOD    SetButton(PRUint32 aButton);
 
+  NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble);
+  NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble);
+
   // nsIDOMNSEvent interface
   NS_IMETHOD    GetLayerX(PRInt32* aLayerX);
   NS_IMETHOD    SetLayerX(PRInt32 aLayerX);

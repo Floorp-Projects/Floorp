@@ -251,6 +251,16 @@ NS_METHOD nsDOMEvent::SetButton(PRUint32 aButton)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_METHOD nsDOMEvent::GetCancelBubble(PRBool* aCancelBubble)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_METHOD nsDOMEvent::SetCancelBubble(PRBool aCancelBubble)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 // nsINSEventInterface
 NS_METHOD nsDOMEvent::GetLayerX(PRInt32* aLayerX)
 {
