@@ -1713,7 +1713,7 @@ nsMsgParseURLHost(const char *url)
     return nsnull;
   
   rv = workURI->GetHost(&retVal);
-  delete workURI;
+  NS_IF_RELEASE(workURI);
   if (NS_FAILED(rv))
     return nsnull;
   else
