@@ -1682,7 +1682,7 @@ public class Context {
 
     /**
      * @deprecated  As of Rhino 1.5 Release 4, use
-     * {@link WrapFactory} and {@link #setWrapHandler(WrapFactory)}
+     * {@link WrapFactory} and {@link #setWrapFactory(WrapFactory)}
      */
     public void setWrapHandler(WrapHandler wrapHandler) {
         if (wrapHandler == null) {
@@ -1694,7 +1694,7 @@ public class Context {
 
     /**
      * @deprecated  As of Rhino 1.5 Release 4, use
-     * {@link WrapFactory} and {@link #getWrapHandler(WrapFactory)}
+     * {@link WrapFactory} and {@link #getWrapFactory()}
      */
     public WrapHandler getWrapHandler() {
         WrapFactory f = getWrapFactory();
