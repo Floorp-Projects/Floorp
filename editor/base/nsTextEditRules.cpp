@@ -50,8 +50,8 @@ static NS_DEFINE_CID(kCContentIteratorCID,   NS_CONTENTITERATOR_CID);
 
 nsTextEditRules::nsTextEditRules(PRUint32 aFlags)
 : mEditor(nsnull)
-, mFlags(aFlags)
 {
+  SetFlags(aFlags);
 }
 
 nsTextEditRules::~nsTextEditRules()
