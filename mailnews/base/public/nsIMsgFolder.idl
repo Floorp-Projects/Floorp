@@ -27,7 +27,6 @@
 %}
 interface nsIMessage;
 native nsNativeFileSpec(nsNativeFileSpec*);
-interface nsIMessage;
 
 [uuid(85e39ff0-b248-11d2-b7ef-00805f05ffa5)]
 interface nsIMsgFolder : nsIFolder {
@@ -44,6 +43,7 @@ interface nsIMsgFolder : nsIFolder {
 	nsIEnumerator GetMessages();
 	nsIEnumerator GetThreads();
 	nsIMsgThread GetThreadForMessage(in nsIMessage message);
+	boolean HasMessage(in nsIMessage message);
   nsIEnumerator GetVisibleSubFolders();
 	attribute string prettyName;
 	readonly attribute string prettiestName;
@@ -122,6 +122,7 @@ interface nsIMsgFolder : nsIFolder {
     boolean IsLocked();
 
 	nsIMessage CreateMessageFromMsgDBHdr(in nsIMsgDBHdr msgDBHdr);
+	void GetNewMessages();
 };
 
 

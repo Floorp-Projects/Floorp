@@ -7,16 +7,12 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIDOMWindow.h" /* interface nsIDOMWindow */
-#include "nsISupportsArray.h" /* interface nsISupportsArray */
 #include "nsIDOMXULElement.h" /* interface nsIDOMXULElement */
-#include "nsICollection.h" /* interface nsICollection */
 #include "nsRDFInterfaces.h" /* interface nsRDFInterfaces */
-#include "nsrootidl.h" /* interface nsrootidl */
-#include "nsIEnumerator.h" /* interface nsIEnumerator */
 #include "nsIDOMXULTreeElement.h" /* interface nsIDOMXULTreeElement */
 #include "nsIDOMBaseAppCore.h" /* interface nsIDOMBaseAppCore */
 #include "nsIDOMNodeList.h" /* interface nsIDOMNodeList */
-#include "nsISimpleEnumerator.h" /* interface nsISimpleEnumerator */
+#include "nsrootidl.h"
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
@@ -34,8 +30,8 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMMSGAPPCORE_IID)
 
-  /* void GetNewMail (); */
-  NS_IMETHOD GetNewMail() = 0;
+  /* void GetNewMessages (in nsIRDFCompositeDataSource database, in nsIDOMXULElement folder); */
+  NS_IMETHOD GetNewMessages(nsIRDFCompositeDataSource *database, nsIDOMXULElement *folder) = 0;
 
   /* void Open3PaneWindow (); */
   NS_IMETHOD Open3PaneWindow() = 0;

@@ -11,7 +11,6 @@
 #include "MailNewsTypes.h" /* interface MailNewsTypes */
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsIFolderListener.h" /* interface nsIFolderListener */
-#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
 #include "nsIMsgHdr.h" /* interface nsIMsgHdr */
 #include "nsIFolder.h" /* interface nsIFolder */
@@ -50,6 +49,9 @@ class nsIMsgFolder : public nsIFolder {
 
   /* nsIMsgThread GetThreadForMessage (in nsIMessage message); */
   NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **_retval) = 0;
+
+  /* boolean HasMessage (in nsIMessage message); */
+  NS_IMETHOD HasMessage(nsIMessage *message, PRBool *_retval) = 0;
 
   /* nsIEnumerator GetVisibleSubFolders (); */
   NS_IMETHOD GetVisibleSubFolders(nsIEnumerator **_retval) = 0;
@@ -211,6 +213,9 @@ class nsIMsgFolder : public nsIFolder {
 
   /* nsIMessage CreateMessageFromMsgDBHdr (in nsIMsgDBHdr msgDBHdr); */
   NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **_retval) = 0;
+
+  /* void GetNewMessages (); */
+  NS_IMETHOD GetNewMessages() = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
