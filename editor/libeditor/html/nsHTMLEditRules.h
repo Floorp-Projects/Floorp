@@ -91,6 +91,7 @@ protected:
   static PRBool IsOrderedList(nsIDOMNode *aNode);
   static PRBool IsBlockquote(nsIDOMNode *aNode);
   static PRBool IsAnchor(nsIDOMNode *aNode);
+  static PRBool IsImage(nsIDOMNode *aNode);
   static PRBool IsDiv(nsIDOMNode *aNode);
   static PRBool IsNormalDiv(nsIDOMNode *aNode);
   static PRBool IsMozDiv(nsIDOMNode *aNode);
@@ -143,10 +144,10 @@ protected:
   nsresult AdjustSpecialBreaks();
   nsresult AdjustWhitespace(nsIDOMSelection *aSelection);
   nsresult AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirection aAction);
-  nsresult FindNearTextNode(nsIDOMNode *aSelNode, 
-                            PRInt32 aSelOffset, 
-                            nsIEditor::EDirection aDirection,
-                            nsCOMPtr<nsIDOMNode> *outTextNode);
+  nsresult FindNearSelectableNode(nsIDOMNode *aSelNode, 
+                                  PRInt32 aSelOffset, 
+                                  nsIEditor::EDirection aDirection,
+                                  nsCOMPtr<nsIDOMNode> *outSelectableNode);
   nsresult RemoveEmptyNodes();
   nsresult DoTextNodeWhitespace(nsIDOMCharacterData *aTextNode, PRInt32 aStart, PRInt32 aEnd);
   nsresult UpdateDocChangeRange(nsIDOMRange *aRange);
