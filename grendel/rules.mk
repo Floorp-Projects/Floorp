@@ -27,10 +27,15 @@
 # setenv CLASSPATH ${CLASSPATH}:/u/jwz/src/mozilla/grendel
 # setenv CLASSPATH ${CLASSPATH}:/u/jwz/tmp/grendel/javamail-1.1/mail.jar
 # setenv CLASSPATH ${CLASSPATH}:/u/jwz/tmp/grendel/jaf/activation.jar
-# setenv CLASSPATH ${CLASSPATH}:/u/jwz/tmp/grendel/swing-1.0.3/swingall.jar
+# setenv CLASSPATH ${CLASSPATH}:/u/jwz/tmp/grendel/swing-1.1/swingall.jar
 
+# Set these to the correct paths on your system
+MOZILLA_BUILD = /disk2/mozilla
+GRENDEL_BUILD = /disk2/mozilla/grendel
+MOZILLA_HOME = /usr/local/netscape-4.5
+JAVAC	= /usr/local/jdk117_v1a/bin/javac
+CLASSPATH = /usr/local/jdk117_v1a/lib/classes.zip:/usr/local/swing-1.1/swingall.jar:/usr/local/javamail-1.1/mail.jar:/usr/local/jaf/activation.jar:/usr/local/xml-ea2/xml.jar:$(MOZILLA_HOME)/java/classes/ifc11.jar:$(MOZILLA_HOME)/java/classes/ldap10.jar:$(MOZILLA_BUILD):$(GRENDEL_BUILD)
 
-JAVAC	= javac
 RM	= rm -f
 
 OBJS	= $(subst .java,.class,$(SRCS))
@@ -38,9 +43,10 @@ OBJS	= $(subst .java,.class,$(SRCS))
 .SUFFIXES: .java .class
 
 .java.class:
-	$(JAVAC) $*.java
+	$(JAVAC) -g -classpath $(CLASSPATH) $*.java
 
 all:: $(OBJS)
+
 
 #clean::
 #	$(RM) $(OBJS)
