@@ -86,7 +86,7 @@ function commonDialogOnLoad()
     {
       case 2:
         var password2Container = document.getElementById("password2EditField");
-        password2Container.removeAttribute("hidden");
+        password2Container.removeAttribute("collapsed");
         var password2Field = document.getElementById("dialog.password2");
         password2Field.value = param.GetString(7);
         
@@ -159,13 +159,13 @@ function setCheckbox (aChkMsg, aChkValue)
 function unHideElementByID (aElementID)
 {
   var element = document.getElementById(aElementID);
-  element.removeAttribute("hidden");
+  element.removeAttribute("collapsed");
 }
 
 function hideElementById (aElementID)
 {
   var element = document.getElementById(aElementID)
-  element.setAttribute("hidden", "true");
+  element.setAttribute("collapsed", "true");
 }
 
 function onCheckboxClick(aCheckboxElement)

@@ -26,15 +26,15 @@
       <box id="info.box" flex="1" orient="vertical" style="max-width: 45em;"/>
 
       <!-- edit fields -->
-      <box orient="vertical" id="loginEditField" hidden="true">
+      <box orient="vertical" id="loginEditField" collapsed="true">
         <text class="label" id="login.text" value="&editfield0.label;" for="dialog.loginname"/>
         <textfield tabindex="0" type="text" id="dialog.loginname" flex="1"/>
       </box>
-      <box orient="vertical" id ="password1EditField" hidden="true">
+      <box orient="vertical" id ="password1EditField" collapsed="true">
         <text class="label" id="password1.text" value="&editfield1.label;" for="dialog.password1"/>
         <textfield tabindex="1" type="password" id="dialog.password1" flex="1"/>
       </box>
-      <box orient="vertical" id="password2EditField" hidden="true">
+      <box orient="vertical" id="password2EditField" collapsed="true">
         <text class="label" id="password2.text" value="&editfield2.label;" for="dialog.password2"/>
         <textfield tabindex="1" type="password" id="dialog.password2" flex="1"/>
       </box>
@@ -42,7 +42,7 @@
       <spring flex="1"/>
       
       <!-- checkbox -->
-      <box id="checkboxContainer" hidden="true" autostretch="never">
+      <box id="checkboxContainer" collapsed="true" autostretch="never">
         <checkbox id="checkbox" oncommand="onCheckboxClick(this)" style="max-width: 40em;"/>
       </box>
     </box>
