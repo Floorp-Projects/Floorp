@@ -308,6 +308,10 @@ nsresult nsBufferedStream::Write(const char *aBuf,
         *aWriteCount = aLen;
         m_DataLength += aLen;
     }
+    else if (m_bIsClosed)
+    {
+        rv = NS_BASE_STREAM_CLOSED;
+    }
 
 done:
     UnlockStream();
