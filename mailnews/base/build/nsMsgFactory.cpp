@@ -38,6 +38,10 @@
 #include "nsIUrlListenerManager.h"
 #include "nsUrlListenerManager.h"
 
+#include "nsMsgMailSession.h"
+
+static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
+
 static NS_DEFINE_CID(kCUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 
 static NS_DEFINE_CID(kCMessengerCID, NS_MESSENGER_CID);
@@ -182,6 +186,12 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
 		if (listener) // we need to pick up a ref cnt...
 			listener->QueryInterface(nsIUrlListenerManager::GetIID(), (void **) &inst);
 	}
+	else if (mClassID.Equals(kCMsgMailSessionCID))
+	{
+		nsMsgMailSession * session = new nsMsgMailSession();
+		if (session)
+			session->QueryInterface(nsIMsgMailSession::GetIID(), (void **) &inst);
+	}
 
 	// End of checking the interface ID code....
 	if (inst) 
@@ -275,6 +285,12 @@ NSRegisterSelf(nsISupports* serviceMgr, const char* path)
                                        path,
                                        PR_TRUE, PR_TRUE);
 #endif
+  rv = nsRepository::RegisterComponent(kCMsgMailSessionCID,
+									   "Mail Session",
+									   nsnull,
+									   path,
+									   PR_TRUE, PR_TRUE);
+
   printf("mailnews registering from %s\n",path);
   return rv;
 }
@@ -292,6 +308,7 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char* path)
   rv = nsRepository::UnregisterComponent(kCMsgGroupRecordCID, path);
 #endif
   rv = nsRepository::UnregisterComponent(kCMsgFolderEventCID, path);
+  rv = nsRepository::UnregisterComponent(kCMsgMailSessionCID, path);
   return rv;
 }
 
