@@ -108,7 +108,7 @@ my %map = (
   'mozMapi32',          'mailnews/mapi',
   'mozpango',           'intl/ctl/src/pangoLite',
   'mozpango-thaix',     'intl/ctl/src/thaiShaper',
-  'mozpango-dvngx',     'intl/ctl/src/hindShaper',
+  'mozpango-dvngx',     'intl/ctl/src/hindiShaper',
   'mozucth',            'xpfe/components/ucth',
   'mozxfer',            'xpfe/components/xfer',
   'mpfilelocprovider',  'modules/mpfilelocprovider',
