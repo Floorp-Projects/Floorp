@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE window SYSTEM "chrome://sql/locale/sqlPrefsOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://sql/locale/sqlPrefsOverlay.dtd">
 
 <overlay id="sqlPrefsOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

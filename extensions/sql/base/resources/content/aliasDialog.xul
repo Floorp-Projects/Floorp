@@ -2,7 +2,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://sql/locale/aliasDialog.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://sql/locale/aliasDialog.dtd">
 
 <dialog id="aliasDialog"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

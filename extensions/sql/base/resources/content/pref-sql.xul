@@ -2,7 +2,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://sql/locale/pref-sql.dtd">
+<!DOCTYPE page SYSTEM "chrome://sql/locale/pref-sql.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   headertitle="&header.label;"
