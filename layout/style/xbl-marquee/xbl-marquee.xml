@@ -204,7 +204,12 @@
             if ((this.directionField == "up") || (this.directionField == "down"))
             {
               // "", 0 and empty height should default to 200px
-              var height = (this.getAttribute("height") != "0" && this.getAttribute("height")) || "200px";
+              var height =
+                (this.getAttribute("height") != "0" &&
+                 this.getAttribute("height")) ||
+                (document.defaultView.getComputedStyle(this,"").height != "0px" &&
+                 document.defaultView.getComputedStyle(this,"").height) ||
+                 "200px";
 
               // support % heights
               if (/%/.test(height)) {
