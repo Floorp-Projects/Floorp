@@ -441,6 +441,7 @@ httpparse_parse_params(HTTPRequest *req)
     PRInt32 numParams, i;
 
     numParams = httpparse_count_params(req);
+    SSM_DEBUG("Found %d params\n", numParams);
     req->paramNames = (char **) PR_Calloc(numParams+1, sizeof(char *));
     if (!req->paramNames)
         goto loser;
@@ -477,7 +478,6 @@ httpparse_parse_params(HTTPRequest *req)
         
         /* Now, copy the value. */
         req->paramValues[i] = start;
-
         /* If we have more params to process, 
            tie off the end of this parameter value. */
         if (i != (numParams-1))
@@ -491,6 +491,8 @@ httpparse_parse_params(HTTPRequest *req)
             *c++ = '\0';
             start = c; /* get ready to mark off next parameter */
         }
+        SSM_DEBUG("Param Name: %s, Param Value: %s\n", req->paramNames[i],
+                                                       req->paramValues[i]);
     }
     goto done;
  loser:
@@ -1136,7 +1138,7 @@ SSM_HTTPSendUTF8String(HTTPRequest *req, char *str)
     PRInt32 len;
     PRInt32 numSent;
     SSMStatus rv = SSM_FAILURE;
-
+    SSM_DEBUG("Sending the following string to the client:\n%s\n",str);
     /* Extract the text from the UnicodeString and send it. */
     if (str)
     {
@@ -1620,11 +1622,14 @@ SSM_HTTPMonitorResourceHandler(HTTPRequest *req)
                              SSM_DATA_PROVIDER_OPEN, 0, NULL,
                              PR_TRUE);
             }
+            /* Now, wait for something/someone to shut down 
+               the target object's threads. */
+            /* Currently only KEYGEN_CONTEXT supports this, so if it
+             * isn't a KEYGEN_CONTEXT, don't block 'cause bad things 
+             * may happen.
+             */
+            SSM_WaitForResourceShutdown(target);
         }
-
-        /* Now, wait for something/someone to shut down 
-           the target object's threads. */
-        SSM_WaitForResourceShutdown(target);
         SSM_FreeResource(target);
     }
 
