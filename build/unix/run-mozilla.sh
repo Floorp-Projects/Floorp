@@ -28,7 +28,7 @@
 ## This script is meant to run a mozilla program from the mozilla
 ## source tree.  This is mostly useful to folks hacking on mozilla.
 ##
-## A mozilla program is currently either viewer or apprunner.  The
+## A mozilla program is currently either viewer or mozilla-bin.  The
 ## default is viewer.
 ##
 ## The script will setup all the environment voodoo needed to make
@@ -59,7 +59,7 @@
 ##
 #
 cmdname=`basename $0`
-MOZ_APPRUNNER_NAME="apprunner"
+MOZ_APPRUNNER_NAME="mozilla-bin"
 MOZ_VIEWER_NAME="viewer"
 MOZ_DIST_BIN=""
 MOZ_PROGRAM=""
@@ -88,17 +88,17 @@ Usage:  ${cmdname} [options] [program]
 
     ${cmdname} viewer
 
-  Run the apprunner
+  Run the mozilla-bin binary
 
-    ${cmdname} apprunner
+    ${cmdname} mozilla-bin
 
   Debug the viewer in a debugger
 
     ${cmdname} -g viewer
 
-  Debug the apprunner in gdb
+  Debug the mozilla-bin binary in gdb
 
-    ${cmdname} -g apprunner -d gdb
+    ${cmdname} -g mozilla-bin -d gdb
 
 EOF
 	return 0
@@ -283,7 +283,7 @@ then
 	then
 		MOZ_PROGRAM=$MOZ_VIEWER_NAME
 	##
-	## Try apprunner
+	## Try mozilla-bin
 	## 
 	else
 		moz_test_binary $MOZ_APPRUNNER_NAME
