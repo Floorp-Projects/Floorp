@@ -63,7 +63,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext)
     buffer.AppendWithConversion("<html>\n<head><title> Index of "); //FIX i18n.
     buffer.AppendWithConversion(mCurrentPath);
     buffer.StripChar('/', buffer.Length() - 1);
-    buffer.AppendWithConversion("</title></head>\n<body>\n");
+    buffer.AppendWithConversion("</title></head>\n<body><pre>\n");
 
     buffer.AppendWithConversion("<H1> Index of "); //FIX i18n.
     buffer.AppendWithConversion(mCurrentPath);
