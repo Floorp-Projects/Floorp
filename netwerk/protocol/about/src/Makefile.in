@@ -37,6 +37,7 @@ CPPSRCS		= \
 		nsAboutProtocolModule.cpp \
 		nsAboutBlank.cpp \
 		nsAboutBloat.cpp \
+		nsAboutCredits.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)

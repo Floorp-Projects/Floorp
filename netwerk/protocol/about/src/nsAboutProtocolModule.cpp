@@ -26,6 +26,7 @@
 #include "nsAboutProtocolHandler.h"
 #include "nsAboutBlank.h"
 #include "nsAboutBloat.h"
+#include "nsAboutCredits.h"
 
 static nsModuleComponentInfo components[] = 
 {
@@ -47,6 +48,11 @@ static nsModuleComponentInfo components[] =
      nsAboutBloat::Create
    },
 
+   { "about:credits",
+     NS_ABOUT_CREDITS_MODULE_CID,
+     NS_ABOUT_MODULE_PROGID_PREFIX "credits",
+     nsAboutCredits::Create
+   },
 };
 
 NS_IMPL_NSGETMODULE("nsAboutProtocolModule", components);
