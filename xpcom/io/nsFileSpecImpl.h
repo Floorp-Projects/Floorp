@@ -135,6 +135,7 @@ class NS_COM nsFileSpecImpl
 	NS_IMETHOD SetFileContents(char*);
 
 	NS_IMETHOD GetFileSpec(nsFileSpec *aFileSpec);
+    NS_IMETHOD setFromFileSpec(const nsFileSpec& aFileSpec);
 
 	/* boolean eof (); */
 	NS_IMETHOD eof(PRBool *_retval);

@@ -476,6 +476,14 @@ NS_IMETHODIMP nsFileSpecImpl::GetFileSpec(nsFileSpec *aFileSpec)
 }
 
 //----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsFileSpecImpl::setFromFileSpec(const nsFileSpec& aFileSpec)
+//----------------------------------------------------------------------------------------
+{
+	mFileSpec = aFileSpec;
+	return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsFileSpecImpl::eof(PRBool *_retval)
 //----------------------------------------------------------------------------------------
 {
@@ -686,7 +694,7 @@ NS_METHOD nsFileSpecImpl::Create(nsISupports* outer, const nsIID& aIID, void* *a
 }
 
 //----------------------------------------------------------------------------------------
-nsresult NS_NewFileSpecWithSpec(nsFileSpec aSrcFileSpec, nsIFileSpec **result)
+nsresult NS_NewFileSpecWithSpec(const nsFileSpec& aSrcFileSpec, nsIFileSpec **result)
 //----------------------------------------------------------------------------------------
 {
 	if (!result)
