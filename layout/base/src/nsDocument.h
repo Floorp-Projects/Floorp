@@ -24,12 +24,10 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIDOMEventCapturer.h"
+#include "nsXIFConverter.h"
 
 class nsISelection;
-class nsXIFConverter;
 class nsIEventListenerManager;
-struct nsCSSSelector;
-class  nsICSSDeclaration;
 class  nsIParser;
 
 class nsPostData : public nsIPostData {
@@ -191,15 +189,13 @@ public:
     * Converts the document or a selection of the 
     * document to XIF (XML Interchange Format)
     * and places the result in aBuffer.
-    
-    * NOTE: we may way to place the result in a stream,
-    * but we will use a string for now -- gpk
-  */
-  virtual void ToXIF(nsString & aBuffer, PRBool aUseSelection);
-  
-  virtual void CSSSelectorToXIF(nsXIFConverter& aConverter, nsCSSSelector& aSelector);
-  virtual void CSSDeclarationToXIF(nsXIFConverter& aConverter, nsICSSDeclaration& aDeclaration);
-  virtual void StyleSheetsToXIF(nsXIFConverter& aConverter);
+    */
+  virtual void CreateXIF(nsString & aBuffer, PRBool aUseSelection);
+  virtual void ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
+  virtual void BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
+  virtual void ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
+  virtual void FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
+
 
 public:
   
@@ -254,9 +250,19 @@ public:
                             nsIDOMEvent* aDOMEvent,
                             nsEventStatus& aEventStatus);
 
+
+  virtual PRBool IsInRange(nsIContent *aStartContent, nsIContent* aEndContent, nsIContent* aContent) const;
+  virtual PRBool IsBefore(nsIContent *aNewContent, nsIContent* aCurrentContent) const;
+  virtual nsIContent* GetPrevContent(nsIContent *aContent) const;
+  virtual nsIContent* GetNextContent(nsIContent *aContent) const;
+
+protected:
+  nsIContent* FindContent( nsIContent* aStartNode,
+                          nsIContent* aTest1, 
+                          nsIContent* aTest2) const;
+
 protected:
   virtual void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);  // subclass hook
-  virtual void ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
 
   nsDocument();
   virtual ~nsDocument(); 

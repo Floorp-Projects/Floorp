@@ -34,7 +34,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsIEventStateManager.h"
 
-#define DO_SELECTION 0
+#define DO_SELECTION 1
 
 #include "nsIDOMText.h"
 #include "nsSelectionRange.h"
@@ -65,12 +65,17 @@ PRInt32      fTrackerAddListMax = 0;
 PRBool  gTrackerDebug   = PR_FALSE;
 PRBool  gCalcDebug      = PR_FALSE;
 
+nsIDocument      *gDoc = nsnull;
+
 // [HACK] Foward Declarations
 void BuildContentList(nsIContent*aContent);
+/*
 PRBool IsInRange(nsIContent * aStartContent, nsIContent * aEndContent, nsIContent * aContent);
 PRBool IsBefore(nsIContent * aNewContent, nsIContent * aCurrentContent);
 nsIContent * GetPrevContent(nsIContent * aContent);
 nsIContent * GetNextContent(nsIContent * aContent);
+*/
+
 void RefreshContentFrames(nsIPresContext& aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
 void ForceDrawFrame(nsFrame * aFrame);
 void resetContentTrackers();
@@ -491,19 +496,26 @@ NS_METHOD nsFrame::Paint(nsIPresContext&      aPresContext,
     return NS_OK;
   }
 
+  nsIPresShell       * shell     = aPresContext.GetShell();
+  nsIDocument        * doc       = shell->GetDocument();
   if (mSelectionRange == nsnull) { // Get Selection Object
-    nsIPresShell     * shell     = aPresContext.GetShell();
-    nsIDocument      * doc       = shell->GetDocument();
     nsISelection     * selection = doc->GetSelection();
 
     mSelectionRange = selection->GetRange(); 
 
     clearAfterPaint = PR_TRUE;
-    NS_RELEASE(shell);
     NS_RELEASE(selection);
   }
 
-  if (IsInRange(mSelectionRange->GetStartContent(), mSelectionRange->GetEndContent(), content)) {
+  PRBool inRange = doc->IsInRange(mSelectionRange->GetStartContent(), mSelectionRange->GetEndContent(), content);
+  
+  if (PR_TRUE == inRange)
+    cout << "IN" << endl;
+  else
+    cout << "OUT" << endl;
+
+
+  if (inRange) {
     nsRect rect;
     GetRect(rect);
     rect.width--;
@@ -518,7 +530,8 @@ NS_METHOD nsFrame::Paint(nsIPresContext&      aPresContext,
     mSelectionRange = nsnull;
   }
   NS_RELEASE(content);
-
+  NS_RELEASE(doc);
+  NS_RELEASE(shell);
 #endif
   return NS_OK;
 }
@@ -593,15 +606,14 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
 #if DO_SELECTION 
   nsFrame          * currentFrame   = aFrame;
   nsIPresShell     * shell          = aPresContext.GetShell();
-  nsIDocument      * doc            = shell->GetDocument();
-  nsISelection     * selection      = doc->GetSelection();
+  
+  gDoc            = shell->GetDocument();
+  nsISelection     * selection      = gDoc->GetSelection();
   nsMouseEvent     * mouseEvent     = (nsMouseEvent *)aEvent;
 
   mSelectionRange = selection->GetRange();
   
-  NS_RELEASE(shell);
-  NS_RELEASE(doc);
-  NS_RELEASE(selection);
+ 
 
 
   PRInt32 offset = 0;
@@ -637,13 +649,25 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
 
   if (gSelectionDebug) printf("****** Shift[%s]\n", (mouseEvent->isShift?"Down":"Up"));
 
-  if (IsInRange(mSelectionRange->GetStartContent(), mSelectionRange->GetEndContent(), newContent)) {
+  PRBool inRange = gDoc->IsInRange(mSelectionRange->GetStartContent(), mSelectionRange->GetEndContent(), newContent);  
+  PRBool isBefore = gDoc->IsBefore(newContent,startContent);  
+
+#if 1
+  if (PR_TRUE == inRange)
+    cout << "IN" << endl;
+  else if (PR_TRUE == isBefore)
+    cout << "BEFORE" << endl;
+  else 
+    cout << "AFTER" << endl;
+#endif
+
+  if (inRange) {
     //resetContentTrackers();
     if (gTrackerDebug) printf("Adding split range to removed selection. Shift[%s]\n", (mouseEvent->isShift?"Down":"Up"));
 
     if (mouseEvent->isShift) {
-      nsIContent * prevContent = GetPrevContent(newContent);
-      nsIContent * nextContent = GetNextContent(newContent);
+      nsIContent * prevContent = gDoc->GetPrevContent(newContent);
+      nsIContent * nextContent = gDoc->GetNextContent(newContent);
 
       addRangeToSelectionTrackers(mSelectionRange->GetStartContent(), prevContent, kInsertInRemoveList);
       addRangeToSelectionTrackers(nextContent, mSelectionRange->GetEndContent(), kInsertInRemoveList);
@@ -658,15 +682,15 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
       addRangeToSelectionTrackers(newContent, newContent, kInsertInAddList); // add to selection
     }
     
-  } else if (IsBefore(newContent, startContent)) {
+  } else if (isBefore) {
     if (mouseEvent->isShift) {
       if (mStartSelectionPoint->IsAnchor()) {
         if (gSelectionDebug) printf("New Content is before,  Start will now be end\n");
 
         addRangeToSelectionTrackers(mSelectionRange->GetStartContent(), mSelectionRange->GetEndContent(), kInsertInRemoveList); // removed from selection
 
-        nsIContent * prevContent = GetPrevContent(newContent);
-        nsIContent * nextContent = GetNextContent(newContent);
+        nsIContent * prevContent = gDoc->GetPrevContent(newContent);
+        nsIContent * nextContent = gDoc->GetNextContent(newContent);
 
         mEndSelectionPoint->SetPoint(mStartSelectionPoint->GetContent(), mStartSelectionPoint->GetOffset(), PR_TRUE);
         mStartSelectionPoint->SetPoint(newContent, mStartPos, PR_FALSE);
@@ -698,8 +722,8 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
         
         addRangeToSelectionTrackers(mSelectionRange->GetStartContent(), mSelectionRange->GetEndContent(), kInsertInRemoveList); // removed from selection
 
-        nsIContent * prevContent = GetPrevContent(newContent);
-        nsIContent * nextContent = GetNextContent(newContent);
+        nsIContent * prevContent = gDoc->GetPrevContent(newContent);
+        nsIContent * nextContent = gDoc->GetNextContent(newContent);
 
         mStartSelectionPoint->SetPoint(mEndSelectionPoint->GetContent(), mEndSelectionPoint->GetOffset(), PR_TRUE);
         mEndSelectionPoint->SetPoint(newContent, mStartPos, PR_FALSE);
@@ -759,6 +783,8 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
   ForceDrawFrame(this);
 
   NS_RELEASE(newContent);
+  NS_RELEASE(shell);
+  NS_RELEASE(selection);
 
 #endif
   aEventStatus = nsEventStatus_eIgnore;
@@ -803,7 +829,7 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
 
         AdjustPointsInNewContent(aPresContext, aEvent, aFrame);
 
-      } else if (IsBefore(newContent, currentContent)) {
+      } else if (gDoc->IsBefore(newContent, currentContent)) {
         if (gSelectionDebug) printf("HandleDrag::New Frame, is Before.\n");
 
         resetContentTrackers();
@@ -881,6 +907,7 @@ NS_METHOD nsFrame::HandleRelease(nsIPresContext& aPresContext,
   mDoingSelection = PR_FALSE;
 #endif
   aEventStatus = nsEventStatus_eIgnore;
+  NS_IF_RELEASE(gDoc);
   return NS_OK;
 }
 
@@ -1606,6 +1633,13 @@ void nsFrame::NewContentIsBefore(nsIPresContext& aPresContext,
   //    and the mouse is "before" the anchor in the content
   //    and each new piece of content is being added to the selection
 
+  nsIPresShell       * shell     = aPresContext.GetShell();
+  nsIDocument        * doc       = shell->GetDocument();
+  PRBool inRange = doc->IsInRange(mStartSelectionPoint->GetContent(), mEndSelectionPoint->GetContent(), aNewContent);  
+  if (PR_TRUE == inRange)
+    cout << "IN" << endl;
+  else
+    cout << "OUT" << endl;
 
   // Check to see if the new content is in the selection
   if (IsInRange(mStartSelectionPoint->GetContent(), mEndSelectionPoint->GetContent(), aNewContent)) {
@@ -1704,6 +1738,14 @@ void nsFrame::NewContentIsAfter(nsIPresContext& aPresContext,
   //
 
   // Check to see if the new content is in the selection
+  nsIPresShell       * shell     = aPresContext.GetShell();
+  nsIDocument        * doc       = shell->GetDocument();
+  PRBool inRange = doc->IsInRange(mStartSelectionPoint->GetContent(), mEndSelectionPoint->GetContent(), aNewContent);  
+  if (PR_TRUE == inRange)
+    cout << "IN" << endl;
+  else
+    cout << "OUT" << endl;
+
   if (IsInRange(mStartSelectionPoint->GetContent(), mEndSelectionPoint->GetContent(), aNewContent)) {
 
     // Case #3 - Remove Content (from Start)

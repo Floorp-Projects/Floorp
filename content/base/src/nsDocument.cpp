@@ -993,159 +993,12 @@ void nsDocument::GetSelectionText(nsString & aText) {
 }
 
 
-void nsDocument::CSSSelectorToXIF(nsXIFConverter& aConverter, nsCSSSelector& aSelector)
-{
-  nsString s;
 
-  nsCSSSelector* next = aSelector.mNext;
-
-  if (nsnull != next)
-    CSSSelectorToXIF(aConverter,*next);
-
-  aConverter.BeginCSSSelector();
- 
-  if (aSelector.mTag != nsnull)
-  {
-    aSelector.mTag->ToString(s);
-    aConverter.AddCSSTag(s);
-  }
-
-  if (aSelector.mID != nsnull)
-  {
-    aSelector.mID->ToString(s);
-    aConverter.AddCSSID(s);
-  }
-  
-  if (aSelector.mClass != nsnull)
-  {
-    aSelector.mClass->ToString(s);
-    aConverter.AddCSSClass(s);
-  }
-  
-  if (aSelector.mPseudoClass != nsnull)
-  {
-    aSelector.mPseudoClass->ToString(s);
-    aConverter.AddCSSPsuedoClass(s);
-  }
-  aConverter.EndCSSSelector();
-
-}
-
-
-void nsDocument::CSSDeclarationToXIF(nsXIFConverter& aConverter, nsICSSDeclaration& aDeclaration)
-{
-  PRInt32    propId;
-  nsCSSValue value;
-  nsString   name;
-  nsString   str;
-
-
-
-  aConverter.BeginCSSDeclarationList();
-  for (propId = 0; propId < PROP_MAX; propId++)
-  {
-    switch(propId)
-    {
-      case PROP_BACKGROUND:
-      case PROP_BORDER:
-      case PROP_CLIP:
-      case PROP_FONT:
-      case PROP_LIST_STYLE:
-      case PROP_MARGIN:
-      case PROP_PADDING:
-      case PROP_BACKGROUND_POSITION:
-      case PROP_BORDER_TOP:
-      case PROP_BORDER_RIGHT:
-      case PROP_BORDER_BOTTOM:
-      case PROP_BORDER_LEFT:
-      case PROP_BORDER_COLOR:
-      case PROP_BORDER_STYLE:
-      case PROP_BORDER_WIDTH:
-        break;
-
-      default:
-        aDeclaration.GetValue(propId,value);
-        if (value.GetUnit() != eHTMLUnit_Null)
-        {
-          aConverter.BeginCSSDeclaration();
-          name = nsCSSProps::kNameTable[propId].name;
-          value.ToCSSString(str,propId);
-          aConverter.AddCSSDeclaration(name,str);
-          aConverter.EndCSSDeclaration();
-        }
-    }
-  }
-  aConverter.EndCSSDeclarationList();
-}
-
-
-void nsDocument::StyleSheetsToXIF(nsXIFConverter& aConverter)
-{
- 
-  PRInt32     count = GetNumberOfStyleSheets();
-  nsIURL&      docURL = *mDocumentURL;
-
-  for (PRInt32 index = 0; index < count; index++)
-  {
-    nsIStyleSheet*          sheet = GetStyleSheetAt(index);
-    nsICSSStyleSheet*       cssSheet = nsnull;
-    
-    if (sheet != nsnull)
-    {
-      nsIURL& sheetURL = *sheet->GetURL();
-      
-      if (!(sheetURL == docURL))
-        break;
-      
-      nsresult  isCss = sheet->QueryInterface(kICSSStyleSheetIID, (void**)&cssSheet);
-      if ((isCss == NS_OK) && (cssSheet != nsnull))
-      {
-        PRInt32           ruleCount = cssSheet->StyleRuleCount();
-        PRInt32           ruleIndex;
-        nsICSSStyleRule*  rule = nsnull;
-
-        aConverter.BeginCSSStyleSheet();
-        for (ruleIndex = 0; ruleIndex < ruleCount; ruleIndex++)
-        {
-          if (NS_OK == cssSheet->GetStyleRuleAt(ruleIndex, rule))
-          {
-            aConverter.BeginCSSRule();
-
-              if (nsnull != rule)
-              {
-                nsCSSSelector* selector = rule->FirstSelector();
-          
-                if (nsnull != selector)
-                  CSSSelectorToXIF(aConverter,*selector);
-  
-                nsICSSDeclaration* declaration = rule->GetDeclaration();
-                if (nsnull != declaration)
-                  CSSDeclarationToXIF(aConverter,*declaration);
-
-                NS_IF_RELEASE(declaration);
-                NS_IF_RELEASE(rule);
-              } // ruleAt
-
-            aConverter.EndCSSRule();
-          } // for loop
-        }
-        aConverter.EndCSSStyleSheet();
-        NS_RELEASE(cssSheet);
-      } // css_sheet
-      NS_RELEASE(sheet);
-    } // sheet
-  }
-}
-
-
-
-void nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
+void nsDocument::BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
   nsIContent* content = nsnull;
-  nsresult isContent = aNode->QueryInterface(kIContentIID, (void**)&content);
-  nsIDOMElement* element = nsnull;
-  nsresult isElement = aNode->QueryInterface(kIDOMElementIID, (void**)&element);
-  PRBool isSynthetic = PR_TRUE;
+  nsresult    isContent = aNode->QueryInterface(kIContentIID, (void**)&content);
+  PRBool      isSynthetic = PR_TRUE;
 
   // Begin Conversion
   if (NS_OK == isContent) 
@@ -1156,50 +1009,50 @@ void nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
       content->BeginConvertToXIF(aConverter);
       content->DoConvertToXIF(aConverter);
     }
+    NS_RELEASE(content);
   }
-  
-  
+}
+
+void nsDocument::ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
+{
   // Iterate through the children, convertion child nodes
   nsresult result = NS_OK;
-  nsIDOMNode* node = nsnull;
-  result = aNode->GetFirstChild(&node);
+  nsIDOMNode* child = nsnull;
+  result = aNode->GetFirstChild(&child);
     
-  while ((result == NS_OK) && (node != nsnull))
+  while ((result == NS_OK) && (child != nsnull))
   { 
-    nsIDOMNode* temp = node;
-    ToXIF(aConverter,node);
-    result = node->GetNextSibling(&node);
+    nsIDOMNode* temp = child;
+    ToXIF(aConverter,child);
+    result = child->GetNextSibling(&child);
     NS_RELEASE(temp);
   }
+}
 
-  if (NS_OK == isContent && PR_FALSE == isSynthetic)
-  {
-    nsIAtom* tag = content->GetTag();
-    if (tag != nsnull)
-    {
-      if (tag != nsnull) 
-      {
-        nsString str;
-        tag->ToString(str);
-        if (str.EqualsIgnoreCase("Head"))
-          StyleSheetsToXIF(aConverter);
-      }
-    }
-  }
+void nsDocument::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
+{
+  nsIContent* content = nsnull;
+  nsresult    isContent = aNode->QueryInterface(kIContentIID, (void**)&content);
+  PRBool      isSynthetic = PR_TRUE;
 
   if (NS_OK == isContent) 
   {
+    content->IsSynthetic(isSynthetic);
     if (PR_FALSE == isSynthetic)
       content->FinishConvertToXIF(aConverter);
     NS_RELEASE(content);
   }
-  if (NS_OK == isElement)
-  {
-    NS_RELEASE(element);
-  }
 }
 
-void nsDocument::ToXIF(nsString & aBuffer, PRBool aUseSelection)
+
+void nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
+{
+  BeginConvertToXIF(aConverter,aNode);
+  ConvertChildrenToXIF(aConverter,aNode);
+  FinishConvertToXIF(aConverter,aNode);
+}
+
+void nsDocument::CreateXIF(nsString & aBuffer, PRBool aUseSelection)
 {
   
   nsXIFConverter  converter(aBuffer);
@@ -1224,4 +1077,103 @@ void nsDocument::ToXIF(nsString & aBuffer, PRBool aUseSelection)
 
   converter.Write();
   
+}
+
+
+nsIContent* nsDocument::FindContent( nsIContent* aStartNode,
+                                    nsIContent* aTest1, 
+                                    nsIContent* aTest2) const
+{
+  PRInt32       count = aStartNode->ChildCount();
+  PRInt32       index;
+
+  for(index = 0; index < count;index++)
+  {
+    nsIContent* child = aStartNode->ChildAt(index);
+    nsIContent* content = FindContent(child,aTest1,aTest2);
+    if (content != nsnull)
+      return content;
+    if (child == aTest1 || child == aTest2)
+      return child;
+  }
+  return nsnull;
+}
+
+PRBool nsDocument::IsInRange(nsIContent *aStartContent, nsIContent* aEndContent, nsIContent* aContent) const
+{
+  PRBool  result;
+
+  if (aStartContent == aEndContent) 
+  {
+    return PRBool(aContent == aStartContent);
+  }
+  else if (aStartContent == aContent || aEndContent == aContent)
+  {
+    result = PR_TRUE;
+  }
+  else
+  {
+    result = IsBefore(aStartContent,aContent);
+    if (result == PR_TRUE)
+      result = IsBefore(aContent,aEndContent);
+  }
+  return result;
+
+}
+
+
+PRBool nsDocument::IsBefore(nsIContent *aNewContent, nsIContent* aCurrentContent) const
+{
+
+  PRBool result = PR_FALSE;
+
+  if (nsnull != aNewContent && nsnull != aCurrentContent && aNewContent != aCurrentContent)
+  {
+    nsIContent* test = FindContent(mRootContent,aNewContent,aCurrentContent);
+    if (test == aNewContent)
+      result = PR_TRUE;
+  }
+  return result;
+}
+
+nsIContent* nsDocument::GetPrevContent(nsIContent *aContent) const
+{
+  nsIContent* result = nsnull;
+ 
+  // Look at previous sibling
+
+  if (nsnull != aContent)
+  {
+    nsIContent* parent = aContent->GetParent();
+    if (parent != nsnull && parent != mRootContent)
+    {
+      PRInt32     index = parent->IndexOf(aContent);
+      if (index > 0)
+        result = parent->ChildAt(index-1);
+      else
+        result = GetPrevContent(parent);
+    }
+  }
+  return result;
+}
+
+nsIContent* nsDocument::GetNextContent(nsIContent *aContent) const
+{
+  nsIContent* result = nsnull;
+   
+  if (nsnull != aContent)
+  {
+    // Look at next sibling
+    nsIContent* parent = aContent->GetParent();
+    if (parent != nsnull && parent != mRootContent)
+    {
+      PRInt32     index = parent->IndexOf(aContent);
+      PRInt32     count = parent->ChildCount();
+      if (index+1 < count)
+        result = parent->ChildAt(index+1);
+      else
+        result = GetNextContent(parent);
+    }
+  }
+  return result;
 }

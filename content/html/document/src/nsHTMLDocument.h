@@ -19,12 +19,13 @@
 #define nsHTMLDocument_h___
 
 #include "nsDocument.h"
+#include "nsMarkupDocument.h"
 #include "nsIHTMLDocument.h"
 
 class nsIHTMLStyleSheet;
 class nsIViewerContainer;
 
-class nsHTMLDocument : public nsDocument {
+class nsHTMLDocument : public nsMarkupDocument {
 public:
   nsHTMLDocument();
   virtual ~nsHTMLDocument();

@@ -30,6 +30,7 @@
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
 #include "nsColor.h"
+#include "nsStyleConsts.h"
 
 // XXX TODO:
 // - rework aErrorCode stuff: switch over to nsresult
