@@ -154,8 +154,9 @@ Rights Reserved.
 
       <!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
       <splitter collapse="after" persist="state" 
+		onmouseup="OnMouseUpThreadAndMessagePaneSplitter()"
                 id="threadpane-splitter" orient="vertical" autostretch="never">
-        <grippy onclick="OnClickThreadAndMessagePaneSplitter()"/>
+        <grippy onclick="OnClickThreadAndMessagePaneSplitterGrippy()"/>
       </splitter>
       
       <box id="messagepanebox" align="vertical" flex="3" persist="collapsed height" class="window-focusborder" focusring="false" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);">

@@ -642,16 +642,16 @@ function GetTotalCountElement()
 	gTotalCount = totalCount;
 	return totalCount;
 }
+
 function IsThreadAndMessagePaneSplitterCollapsed()
 {
-	var splitter = GetThreadAndMessagePaneSplitter();
-	if(splitter)
-	{
-		var state  = splitter.getAttribute('state');
-		return (state == "collapsed");
+  var messagePane = GetMessagePane();
+  try {
+    return (messagePane.getAttribute("collapsed") == "true");
 	}
-	else
+  catch (ex) {
 		return false;
+  }
 }
 
 function FindMessenger()

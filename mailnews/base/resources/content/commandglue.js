@@ -583,11 +583,7 @@ function CreateDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
 
   // based on the collapsed state of the thread pane/message pane splitter,
   // supress message display if appropriate.
-  var collapsed = IsThreadAndMessagePaneSplitterCollapsed();
-  if (collapsed)
-    gDBView.supressMsgDisplay = true;
-  else
-    gDBView.supressMsgDisplay = false;
+  gDBView.supressMsgDisplay = IsThreadAndMessagePaneSplitterCollapsed();
 
   UpdateSortIndicators(gCurSortType, sortOrder);
   PersistViewAttributesOnFolder();
@@ -680,30 +676,22 @@ function GetSelectedFolderResource()
 	return folderResource;
 }
 
-//Called when the splitter in between the thread and message panes is clicked.
-function OnClickThreadAndMessagePaneSplitter()
-{
-  var collapsed = IsThreadAndMessagePaneSplitterCollapsed();
-  // collapsed is the previous state, so we must be expanding
-  // the splitter if collapsed is true
-  if (gDBView)
+function OnMouseUpThreadAndMessagePaneSplitter()
   {
-    if (!collapsed)
-      gDBView.supressMsgDisplay = true;
-    else
-      gDBView.supressMsgDisplay = false;
+  if (gDBView) {
+    // the collapsed state is the state after we released the mouse 
+    // so we take it as it is
+    gDBView.supressMsgDisplay = IsThreadAndMessagePaneSplitterCollapsed();
+  }
   }
 
-/*
-  dump("We are in OnClickThreadAndMessagePaneSplitter()\n");
-  var collapsed = IsThreadAndMessagePaneSplitterCollapsed();
-  //collapsed is the previous state so we know we are opening.
-  if(collapsed)
+function OnClickThreadAndMessagePaneSplitterGrippy()
   {
-    LoadSelectionIntoMessagePane();
-    setTimeout("ScrollToMessage(new,true,true);",0);
+  if (gDBView) {
+    // the collapsed state is the state when we clicked on the grippy
+    // not when afterwards, so we need to reverse this value
+    gDBView.supressMsgDisplay = !IsThreadAndMessagePaneSplitterCollapsed();
    }
-*/
 }
 
 function FolderPaneSelectionChange()
