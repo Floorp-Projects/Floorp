@@ -88,8 +88,8 @@ public:
 	/* boolean WantsProgress (); */
 	NS_IMETHOD WantsProgress(PRBool *_retval);
 
-        /* boolean BeginImport (in nsISupportsWString successLog, in nsISupportsWString errorLog, in boolean isAddrLocHome); */
-        NS_IMETHOD BeginImport(nsISupportsWString *successLog, nsISupportsWString *errorLog, PRBool isAddrLocHome, PRBool *_retval) ;
+    /* boolean BeginImport (in nsISupportsWString successLog, in nsISupportsWString errorLog, in boolean isAddrLocHome); */
+    NS_IMETHOD BeginImport(nsISupportsWString *successLog, nsISupportsWString *errorLog, PRBool isAddrLocHome, PRBool *_retval) ;
 
 	/* boolean ContinueImport (); */
 	NS_IMETHOD ContinueImport(PRBool *_retval);
@@ -809,49 +809,28 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 		NS_WITH_PROXIED_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, NS_UI_THREAD_EVENTQ, &rv);
 		if (NS_SUCCEEDED(rv)) {
 			nsCOMPtr<nsIRDFResource>	parentResource;
-			char *parentUri = PR_smprintf( "%s", kAllDirectoryRoot);
-			rv = rdfService->GetResource( parentUri, getter_AddRefs(parentResource));
+			rv = rdfService->GetResource( kAllDirectoryRoot, getter_AddRefs(parentResource));
 			nsCOMPtr<nsIAbDirectory> parentDir;
+			/*
+			 * TODO
+			 * This may not be required in the future since the 
+			 * primary listeners of the nsIAbDirectory will be
+			 * RDF directory datasource which propagates events to
+			 * RDF Observers. In the future the RDF directory datasource
+			 * will proxy the observers because asynchronous directory
+			 * implementations, such as LDAP, will assert results from
+			 * a thread other than the UI thread.
+			 *
+			 */
 			rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID( nsIAbDirectory),
-										parentResource, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( parentDir));
-			if (parentUri)
-				PR_smprintf_free(parentUri);
+				parentResource, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( parentDir));
 			if (parentDir)
 		       	{
-				PRUint32 prefCount = 2;
-				char **prefNames = (char **) nsMemory::Alloc(prefCount * (sizeof (char *)));
-				if (!prefNames)
-					return nsnull;
-
-				PRUnichar ** prefValues = (PRUnichar **) nsMemory::Alloc(prefCount * (sizeof(PRUnichar *)));
-				if (!prefValues)
-					return nsnull;
-					
-				prefNames[0] = PR_smprintf("description");
-				prefNames[1] = PR_smprintf("fileName");
-					
-				prefValues[0] = (PRUnichar *)name;
-	
-				char *fileName = (*dbPath).GetLeafName();
-				PRInt32 descLength = PL_strlen(fileName);
-				NS_ConvertUTF8toUCS2 temp((const char *)fileName, descLength);
-				prefValues[1] = nsCRT::strdup(temp.get());
-
-				parentDir->CreateNewDirectory((unsigned int )prefCount, (const char** )prefNames, (const PRUnichar** )prefValues);
+				nsCAutoString URI("moz-abmdbdirectory://");
+				URI.Append((*dbPath).GetLeafName());
+				parentDir->CreateDirectoryByURI(name, URI.get (), PR_FALSE);
 
           delete dbPath;
-
-				if (fileName)
-					nsCRT::free(fileName);
-				if (prefNames[0])
-					PR_smprintf_free(prefNames[0]);
-				if (prefNames[1])
-					PR_smprintf_free(prefNames[1]);
-				if (prefNames)
-					nsMemory::Free(prefNames);
-				if (prefValues)
-					nsMemory::Free(prefValues);
-				
 			}
 
 			IMPORT_LOG0( "Added new address book to the UI\n");
@@ -920,6 +899,21 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 					if (pDestDB) {
 						PRUnichar *pSuccess = nsnull;
 						PRUnichar *pError = nsnull;
+
+						/*
+						if (pData->fieldMap) {
+							PRInt32		sz = 0;
+							PRInt32		mapIndex;
+							PRBool		active;
+							pData->fieldMap->GetMapSize( &sz);
+							IMPORT_LOG1( "**** Field Map Size: %d\n", (int) sz);
+							for (PRInt32 i = 0; i < sz; i++) {
+								pData->fieldMap->GetFieldMap( i, &mapIndex);
+								pData->fieldMap->GetFieldActive( i, &active);
+								IMPORT_LOG3( "Field map #%d: index=%d, active=%d\n", (int) i, (int) mapIndex, (int) active);
+							}
+						}
+						*/
 
 						rv = pData->addressImport->ImportAddressBook(	book, 
 																	pDestDB, // destination

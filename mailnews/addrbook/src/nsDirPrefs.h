@@ -39,14 +39,14 @@ PRInt32 INTL_ConvertFromUnicode(const PRUnichar* uniBuffer,
 
 /* RDF roor for all types of address books */
 /* use this to get all directories, create new directory*/
-#define kAllDirectoryRoot          "abdirectory://" 
+#define kAllDirectoryRoot          "moz-abdirectory://" 
 
-#define kMDBCardRoot               "abmdbcard://"
-#define kMDBDirectoryRoot          "abmdbdirectory://"
+#define kMDBCardRoot               "moz-abmdbcard://"
+#define kMDBDirectoryRoot          "moz-abmdbdirectory://"
 #define kPersonalAddressbook       "abook.mab"
-#define kPersonalAddressbookUri    "abmdbdirectory://abook.mab"
+#define kPersonalAddressbookUri    "moz-abmdbdirectory://abook.mab"
 #define kCollectedAddressbook      "history.mab"
-#define kCollectedAddressbookUri   "abmdbdirectory://history.mab"
+#define kCollectedAddressbookUri   "moz-abmdbdirectory://history.mab"
 
 
 /* DIR_Server.dirType */
@@ -54,7 +54,9 @@ typedef enum
 {
 	LDAPDirectory,
 	HTMLDirectory,
-	PABDirectory
+    PABDirectory,
+    MAPIDirectory,
+    FixedQueryLDAPDirectory = 777
 } DirectoryType;
 
 typedef enum
@@ -194,6 +196,7 @@ typedef struct DIR_Server
 	DirectoryType dirType;	
 	PRInt16   csid;				/* LDAP entries' codeset (normally UTF-8) */
 	char    *locale;			/* the locale associated with the address book or directory */
+    char    *uri;       // URI of the address book
 
 	/* Flags */
 	/* TBD: All the PRBool fields should eventually merge into "flags" */

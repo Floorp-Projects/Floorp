@@ -21,4 +21,5 @@
 #
 
 nsDirPrefs.h
+nsAbDirFactoryService.h
 

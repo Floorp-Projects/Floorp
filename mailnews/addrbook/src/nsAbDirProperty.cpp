@@ -71,6 +71,22 @@ NS_IMETHODIMP nsAbDirProperty::QueryInterface(REFNSIID aIID, void** aResult)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* readonly attribute long operations; */
+NS_IMETHODIMP nsAbDirProperty::GetOperations(PRInt32 *aOperations)
+{
+	/*
+	 * Default is to support all operations.
+	 * Inheriting implementations may override
+	 * to reduce supported operations
+	 *
+	 */
+	*aOperations = nsIAbDirectory::opRead |
+		nsIAbDirectory::opWrite |
+		nsIAbDirectory::opSearch;
+
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsAbDirProperty::GetDirName(PRUnichar **aDirName)
 {
 	if (aDirName)
@@ -270,4 +286,7 @@ NS_IMETHODIMP nsAbDirProperty::AddCard(nsIAbCard *childCard, nsIAbCard **_retval
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP nsAbDirProperty::DropCard(nsIAbCard *childCard, nsIAbCard **_retval)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+NS_IMETHODIMP nsAbDirProperty::GetTotalCards(PRBool subDirectoryCount, PRUint32 *_retval)
 { return NS_ERROR_NOT_IMPLEMENTED; }

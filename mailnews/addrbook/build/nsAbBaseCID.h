@@ -26,6 +26,7 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
+#include "nsAbDirFactoryService.h"
 
 //
 // nsAddressBook
@@ -73,7 +74,7 @@
 // nsAbBSDirectory
 //
 #define NS_ABDIRECTORY_CONTRACTID \
-  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "abdirectory"
+  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "moz-abdirectory"
 
 #define NS_ABDIRECTORY_CID             	 			\
 { /* {012D3C24-1DD2-11B2-BA79-B4AD359FC461}*/			\
@@ -86,7 +87,7 @@
 // nsAbMDBDirectory
 //
 #define NS_ABMDBDIRECTORY_CONTRACTID \
-  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "abmdbdirectory"
+  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "moz-abmdbdirectory"
 
 #define NS_ABMDBDIRECTORY_CID             		\
 { /* {e618f894-1dd1-11b2-889c-9aaefaa90dde}*/		\
@@ -98,7 +99,7 @@
 // nsAbMDBCard
 //
 #define NS_ABMDBCARD_CONTRACTID \
-  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "abmdbcard"
+  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "moz-abmdbcard"
 
 #define NS_ABMDBCARD_CID				\
 { /* {f578a5d2-1dd1-11b2-8841-f45cc5e765f8} */		\
@@ -204,6 +205,145 @@
 {	/* ff04c8e6-501e-11d3-ffcc-0060b0fc0444 */		\
 	0xff04c8e6, 0x501e, 0x11d3,						\
 	{0xff, 0xcc, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0x44}	\
+}
+
+//
+// directory factory service
+//
+#define NS_ABDIRFACTORYSERVICE_CONTRACTID \
+  "@mozilla.org/addressbook/directory-factory-service;1"
+
+#define NS_ABDIRFACTORYSERVICE_CID				\
+{ /* {F8B212F2-742B-4A48-B7A0-4C44D4DDB121}*/			\
+	0xF8B212F2, 0x742B, 0x4A48,				\
+	{0xB7, 0xA0, 0x4C, 0x44, 0xD4, 0xDD, 0xB1, 0x21}	\
+}
+
+//
+// mdb directory factory
+//
+#define NS_ABMDBDIRFACTORY_CONTRACTID \
+  NS_AB_DIRECTORY_FACTORY_CONTRACTID_PREFIX "moz-abmdbdirectory"
+
+#define NS_ABMDBDIRFACTORY_CID				\
+{ /* {E1CB9C8A-722D-43E4-9D7B-7CCAE4B0338A}*/			\
+	0xE1CB9C8A, 0x722D, 0x43E4,				\
+	{0x9D, 0x7B, 0x7C, 0xCA, 0xE4, 0xB0, 0x33, 0x8A}	\
+}
+
+#ifdef XP_WIN
+//
+// nsAbOutlookDirectory
+//
+#define NS_ABOUTLOOKDIRECTORY_CONTRACTID \
+  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "moz-aboutlookdirectory"
+
+#define NS_ABOUTLOOKDIRECTORY_CID                       \
+{ /* {9cc57822-0599-4c47-a399-1c6fa185a05c}*/           \
+        0x9cc57822, 0x0599, 0x4c47,                     \
+        {0xa3, 0x99, 0x1c, 0x6f, 0xa1, 0x85, 0xa0, 0x5c}        \
+}
+
+//
+// nsAbOutlookCard
+//
+#define NS_ABOUTLOOKCARD_CONTRACTID \
+  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "moz-aboutlookcard"
+
+#define NS_ABOUTLOOKCARD_CID                                    \
+{ /* {32cf9734-4ee8-4f5d-acfc-71b75eee1819}*/           \
+        0x32cf9734, 0x4ee8, 0x4f5d,                     \
+        {0xac, 0xfc, 0x71, 0xb7, 0x5e, 0xee, 0x18, 0x19}        \
+}
+
+//
+// Outlook directory factory
+//
+#define NS_ABOUTLOOKDIRFACTORY_CONTRACTID \
+  NS_AB_DIRECTORY_FACTORY_CONTRACTID_PREFIX "moz-aboutlookdirectory"
+
+#define NS_ABOUTLOOKDIRFACTORY_CID                                \
+{ /* {558ccc0f-2681-4dac-a066-debd8d26faf6}*/                   \
+        0x558ccc0f, 0x2681, 0x4dac,                             \
+        {0xa0, 0x66, 0xde, 0xbd, 0x8d, 0x26, 0xfa, 0xf6}        \
+}
+#endif
+
+//
+//  Addressbook Query support
+//
+
+#define NS_ABDIRECTORYQUERYARGUMENTS_CONTRACTID \
+  "@mozilla.org/addressbook/directory/query-arguments;1"
+
+#define NS_ABDIRECTORYQUERYARGUMENTS_CID                          \
+{ /* {f7dc2aeb-8e62-4750-965c-24b9e09ed8d2} */        \
+  0xf7dc2aeb, 0x8e62, 0x4750,                     \
+  { 0x96, 0x5c, 0x24, 0xb9, 0xe0, 0x9e, 0xd8, 0xd2 }  \
+}
+
+
+#define NS_BOOLEANCONDITIONSTRING_CONTRACTID \
+  "@mozilla.org/boolean-expression/condition-string;1"
+
+#define NS_BOOLEANCONDITIONSTRING_CID                         \
+{ /* {ca1944a9-527e-4c77-895d-d0466dd41cf5} */        \
+  0xca1944a9, 0x527e, 0x4c77, \
+    { 0x89, 0x5d, 0xd0, 0x46, 0x6d, 0xd4, 0x1c, 0xf5 } \
+}
+
+
+#define NS_BOOLEANEXPRESSION_CONTRACTID \
+  "@mozilla.org/boolean-expression/n-peer;1"
+
+#define NS_BOOLEANEXPRESSION_CID                         \
+{ /* {2c2e75c8-6f56-4a50-af1c-72af5d0e8d41} */        \
+  0x2c2e75c8, 0x6f56, 0x4a50, \
+    { 0xaf, 0x1c, 0x72, 0xaf, 0x5d, 0x0e, 0x8d, 0x41 } \
+}
+
+#define NS_ABDIRECTORYQUERYPROXY_CONTRACTID                     \
+        "@mozilla.org/addressbook/directory-query/proxy;1"      
+
+#define NS_ABDIRECTORYQUERYPROXY_CID                            \
+{ /* {E162E335-541B-43B4-AAEA-FE591E240CAF}*/                   \
+        0xE162E335, 0x541B, 0x43B4,                             \
+        {0xAA, 0xEA, 0xFE, 0x59, 0x1E, 0x24, 0x0C, 0xAF}        \
+}
+
+// nsAbLDAPDirectory
+//
+#define NS_ABLDAPDIRECTORY_CONTRACTID \
+  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "moz-abldapdirectory"
+
+#define NS_ABLDAPDIRECTORY_CID             			\
+{ /* {783E2777-66D7-4826-9E4B-8AB58C228A52}*/			\
+	0x783E2777, 0x66D7, 0x4826,				\
+	{0x9E, 0x4B, 0x8A, 0xB5, 0x8C, 0x22, 0x8A, 0x52}	\
+}
+
+//
+// nsAbLDAPCard
+//
+#define NS_ABLDAPCARD_CONTRACTID \
+  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "moz-abldapcard"
+
+#define NS_ABLDAPCARD_CID					\
+{ /* {10307B01-EBD6-465F-B972-1630410F70E6}*/			\
+	0x10307B01, 0xEBD6, 0x465F,				\
+	{0xB9, 0x72, 0x16, 0x30, 0x41, 0x0F, 0x70, 0xE6}	\
+}
+
+//
+// LDAP directory factory
+//
+#define NS_ABLDAPDIRFACTORY_CONTRACTID \
+  NS_AB_DIRECTORY_FACTORY_CONTRACTID_PREFIX "moz-abldapdirectory"
+
+#define NS_ABLDAPDIRFACTORY_CID                                \
+{  /* {8e3701af-8828-426c-84ac-124825c778f8} */			\
+        0x8e3701af, 0x8828, 0x426c,                             \
+        {0x84, 0xac, 0x12, 0x48, 0x25, 0xc7, 0x78, 0xf8}        \
 }
 
 #endif // nsAbBaseCID_h__

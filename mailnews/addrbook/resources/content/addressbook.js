@@ -3,25 +3,48 @@ var addressbook = 0;
 var gUpdateCardView = 0;
 var gAddressBookBundle;
 
-var gAddressBookSession;
 var gTotalCardsElement = null;
 
-var addressBookListener = {
-  onItemAdded: function(parentItem, item)
-  { UpdateAddDeleteCounts(); },
+var addressBookObserver = {
+  onAssert: function(aDataSource, aSource, aProperty, aTarget)
+  {
+    UpdateAddDeleteCounts();
+  },
 
-  onItemRemoved: function(parentItem, item)
-  { UpdateAddDeleteCounts(); },
+  onUnassert: function(aDataSource, aSource, aProperty, aTarget)
+  {
+    UpdateAddDeleteCounts();
+  },
 
-  onItemPropertyChanged: function(item, property, oldValue, newValue) {}
+  onChange: function(aDataSource, aSource, aProperty, aOldTarget, aNewTarget)
+  { },
+
+  onMove: function(aDataSource,
+                aOldSource,
+                aNewSource,
+                aProperty,
+                aTarget)
+  {},
+
+  beginUpdateBatch: function(aDataSource)
+  {},
+
+  endUpdateBatch: function(aDataSource)
+  {}
 }
 
 function OnUnloadAddressBook()
 {
-  if (gAddressBookSession)
-  {
-    gAddressBookSession.removeAddressBookListener(addressBookListener);
-  }
+	try
+	{
+		var dataSource = top.rdf.GetDataSource("rdf:addressdirectory");
+		dataSource.RemoveObserver (addressBookObserver);
+	}
+	catch (ex)
+	{
+		dump(ex + "\n");
+		dump("Error removing from RDF datasource\n");
+	}
 }
 
 function OnLoadAddressBook()
@@ -32,15 +55,6 @@ function OnLoadAddressBook()
 	top.addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance();
 	top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
 	top.gUpdateCardView = UpdateCardView;
-
-  try {
-    gAddressBookSession = Components.classes["@mozilla.org/addressbook/services/session;1"].getService(Components.interfaces.nsIAddrBookSession);
-    gAddressBookSession.addAddressBookListener(addressBookListener);
-	} 
-  catch (ex) 
-  {
-    dump("Error adding to address book session\n");
-  }
 
 	InitCommonJS();
 	GetCurrentPrefs();
@@ -59,6 +73,17 @@ function OnLoadAddressBook()
 
 	//workaround - add setTimeout to make sure dynamic overlays get loaded first
 	setTimeout('SelectFirstAddressBook()',0);
+
+	try
+	{
+		var dataSource = top.rdf.GetDataSource("rdf:addressdirectory");
+		dataSource.AddObserver (addressBookObserver);
+	}
+	catch (ex)
+	{
+		dump(ex + "\n");
+		dump("Error adding to RDF datasource\n");
+	}
 }
 
 
@@ -301,14 +326,14 @@ function AbDeleteDirectory()
         // check to see if personal or collected address books is selected for deletion.
         // if yes, prompt the user an appropriate message saying these cannot be deleted
         // if no, mark the selected items for deletion
-        if ((selArray[i].getAttribute("id") != "abmdbdirectory://history.mab") &&
-             (selArray[i].getAttribute("id") != "abmdbdirectory://abook.mab"))
+        if ((selArray[i].getAttribute("id") != "moz-abmdbdirectory://history.mab") &&
+             (selArray[i].getAttribute("id") != "moz-abmdbdirectory://abook.mab"))
         {
             var parent = selArray[i].parentNode.parentNode;
             if (parent)
             {
                 if (parent == dirTree)
-                    var parentId = "abdirectory://";
+                    var parentId = "moz-abdirectory://";
                 else	
                     var parentId = parent.getAttribute("id");
 
@@ -384,7 +409,7 @@ function UpdateStatusCardCounts(uri)
       {
         try
         {
-          var totalCards = top.addressbook.getTotalCards(uri);
+          var totalCards = parentDir.getTotalCards(false);
           SetTotalCardStatus(parentDir.dirName, totalCards);
         }
         catch(ex)

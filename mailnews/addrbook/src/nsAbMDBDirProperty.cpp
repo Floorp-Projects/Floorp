@@ -135,40 +135,6 @@ NS_IMETHODIMP nsAbMDBDirProperty::CopyDBMailList(nsIAbMDBDirectory* srcListDB)
 }
 
 
-
-
-
-
-// nsIAbDirectory methods
-
-NS_IMETHODIMP nsAbMDBDirProperty::EditMailListToDatabase(const char *uri)
-{
-	nsresult rv = NS_OK;
-
-	nsCOMPtr<nsIAddrDatabase>  listDatabase;  
-
-	nsCOMPtr<nsIAddressBook> addresBook(do_GetService(kAddrBookCID, &rv)); 
-	if (NS_SUCCEEDED(rv))
-		rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(listDatabase));
-
-	if (listDatabase)
-	{
-		listDatabase->EditMailList(this, PR_TRUE);
-		listDatabase->Commit(kLargeCommit);
-		listDatabase = null_nsCOMPtr();
-
-		return NS_OK;
-
-	}
-	else
-		return NS_ERROR_FAILURE;
-}
-
-
-
-
-
-
 // nsIAbMDBDirectory NOT IMPLEMENTED methods
 
 /* nsIAbCard addChildCards (in string uriName); */

@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): Paul Sandoz
@@ -480,23 +480,6 @@ NS_IMETHODIMP nsAbMDBCardProperty::EditCardToDatabase(const char *uri)
 	else
 		return NS_ERROR_FAILURE;
 }
-
-NS_IMETHODIMP nsAbMDBCardProperty::GetCollationKey(const PRUnichar *str, PRUnichar **key)
-{
-	nsresult rv = NS_OK;
-	nsAutoString resultStr;
-
-	if (mCardDatabase)
-	{
-		rv = mCardDatabase->CreateCollationKey(str, resultStr);
-		*key = resultStr.ToNewUnicode();
-	}
-	else
-		rv = NS_ERROR_FAILURE;
-
-	return rv;
-}
-
 
 
 

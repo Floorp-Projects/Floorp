@@ -25,7 +25,6 @@
 #include "nsISupportsArray.idl"
 
 [ptr] native nsFileSpec(nsFileSpec);
-[ptr] native DIR_Server(DIR_Server);
 
 %{C++
 #include "nsFileSpec.h"
@@ -35,11 +34,26 @@
 [scriptable, uuid(AA920C90-1DD1-11B2-96D3-AA81268ADAFC)]
 interface nsIAbDirectory : nsISupports {
 
+	// Types of operation
+	// Perform linear reading of directory card
+	// content
+	const long opRead		= 1;
+	// Perform modification and deletion on a
+	// directories content
+	const long opWrite		= 2;
+	// Perform searching on a directory card
+	// content via the uri format:
+	// 	scheme://path?query
+	const long opSearch		= 4;
+
+	// The supported operations
+	readonly attribute long operations;
+
 	// The name of the directory
     attribute wstring dirName;
     attribute unsigned long  lastModifiedDate;
 
-	// Defines wether this directory is a mail
+	// Defines whether this directory is a mail
 	// list or not
 	attribute PRBool isMailList;
 
@@ -58,11 +72,16 @@ interface nsIAbDirectory : nsISupports {
 	// preferences
 	void deleteDirectory(in nsIAbDirectory dierctory);
 
-	// Delete the 
+	// Delete the array of cards
 	void deleteCards(in nsISupportsArray cards);
 
 
 	// Check if directory contains card
+	// If the implementation is asynchronous the card
+	// may not yet have arrived. If it is in the process
+	// of obtaining cards the method will throw an
+	// NS_ERROR_NOT_AVAILABLE exception if the card
+	// cannot be found.
 	boolean hasCard(in nsIAbCard cards);
 
 	// Check if directory contains directory
@@ -124,5 +143,12 @@ interface nsIAbDirectory : nsISupports {
 
     /* create a directory by passing the display name and address book uri */
 	void CreateDirectoryByURI(in wstring displayName, in string uri, in boolean migrating);
+
+	// Returns the total number of cards
+	// If the implementation is asynchronous the total number
+	// is representative of the current number of cards obtained
+	// For example a search on LDAP will return card asynchronously
+	// and may take n seconds to complete the search.
+	unsigned long getTotalCards(in boolean subDirectoryCount);
 
 };

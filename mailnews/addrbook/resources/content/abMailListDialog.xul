@@ -43,7 +43,7 @@ Rights Reserved.
   <hbox autostretch="never" valign="center">
     <text for="abPopup" value="&addToAddressBook.label;"/>
     <menulist id="abPopup">
-      <menupopup id="abPopup-menupopup" ref="abdirectory://" datasources="rdf:addressdirectory">
+      <menupopup id="abPopup-menupopup" ref="moz-abdirectory://" datasources="rdf:addressdirectory">
         <template> 
         <rule nc:IsMailList="false">
           <menuitem uri="..."

@@ -35,20 +35,13 @@
  */
 class nsAbRDFDataSource : public nsIRDFDataSource
 {
-private:
-	nsCOMPtr<nsISupportsArray> mObservers;
-	PRBool		mInitialized;
-
-	// The cached service managers
-
-	nsIRDFService*	mRDFService;
-
 public:
-  
 	NS_DECL_ISUPPORTS
-  NS_DECL_NSIRDFDATASOURCE
-	nsAbRDFDataSource(void);
-	virtual ~nsAbRDFDataSource(void);
+	NS_DECL_NSIRDFDATASOURCE
+
+	nsAbRDFDataSource();
+	virtual ~nsAbRDFDataSource();
+
 	virtual nsresult Init();
   
 protected:
@@ -56,16 +49,38 @@ protected:
 	nsresult createNode(nsString& str, nsIRDFNode **node);
 	nsresult createNode(PRUint32 value, nsIRDFNode **node);
 
-	nsresult NotifyPropertyChanged(nsIRDFResource *resource, nsIRDFResource *propertyResource,
-									const PRUnichar *oldValue, const PRUnichar *newValue);
+	nsresult NotifyPropertyChanged(
+		nsIRDFResource *resource,
+		nsIRDFResource *propertyResource,
+		const PRUnichar *oldValue,
+		const PRUnichar *newValue);
 
-	nsresult NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
-							 nsIRDFNode *object, PRBool assert, PRBool change);
+	nsresult NotifyObservers(
+		nsIRDFResource *subject,
+		nsIRDFResource *property,
+		nsIRDFNode *object,
+		PRBool assert,
+		PRBool change);
+
+	nsresult CreateProxyObservers ();
+
+	nsresult CreateProxyObserver (
+		nsIRDFObserver* observer,
+		nsIRDFObserver** proxyObserver);
 
 	static PRBool assertEnumFunc(nsISupports *aElement, void *aData);
 	static PRBool unassertEnumFunc(nsISupports *aElement, void *aData);
 	static PRBool changeEnumFunc(nsISupports *aElement, void *aData);
 
+private:
+	nsCOMPtr<nsISupportsArray> mObservers;
+	nsCOMPtr<nsISupportsArray> mProxyObservers;
+	PRBool mInitialized;
+
+	// The cached service managers
+	nsIRDFService*	mRDFService;
+
+	PRLock* mLock;
 };
 
 #endif

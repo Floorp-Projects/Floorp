@@ -51,6 +51,15 @@ CPPSRCS		= \
 		nsAbMDBCard.cpp \
 		nsAbBSDirectory.cpp \
 		nsAddbookUrl.cpp    \
+		nsAbDirFactoryService.cpp	\
+		nsAbMDBDirFactory.cpp	\
+		nsAbUtils.cpp	\
+                nsAbDirectoryQuery.cpp    \
+                nsAbDirectoryQueryProxy.cpp    \
+                nsAbDirSearchListener.cpp \
+                nsAbBooleanExpression.cpp \
+                nsAbDirectoryRDFResource.cpp \
+                nsAbQueryStringToExpression.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -73,7 +82,32 @@ EXPORTS		= \
 		nsAbMDBCardProperty.h \
 		nsAbMDBCard.h \
 		nsAbBSDirectory.h \
+		nsAbDirFactoryService.h	\
+		nsAbMDBDirFactory.h	\
+		nsAbDirectoryQuery.h    \
+		nsAbDirectoryQueryProxy.h    \
+                nsAbDirSearchListener.h \
+		nsAbBooleanExpression.h \
+                nsAbDirectoryRDFResource.h \
 		$(NULL)
+
+ifdef MOZ_LDAP_XPCOM
+REQUIRES	+= mozldap
+
+EXPORTS		+= nsAbLDAPDirectoryQuery.h \
+		nsAbLDAPDirectory.h \
+		nsAbLDAPDirFactory.h \
+		nsAbLDAPCard.h \
+		$(NULL)
+
+CPPSRCS		+= nsAbLDAPDirectory.cpp \
+		nsAbLDAPDirFactory.cpp	\
+                nsAbLDAPCard.cpp \
+                nsAbLDAPProperties.cpp \
+                nsAbLDAPDirectoryQuery.cpp \
+                nsAbBoolExprToLDAPFilter.cpp \
+		$(NULL)
+endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

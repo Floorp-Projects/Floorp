@@ -35,8 +35,8 @@
 
 #include "nsIPref.h"
 #include "nsIAbDirectory.h"
+#include "nsIAddressBook.h"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsAbCardProperty::nsAbCardProperty(void)
@@ -223,8 +223,25 @@ NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, PRUnichar **v
     else if (!PL_strcmp(attrname, kNotesColumn))
 		GetNotes(value);
     else if (!PL_strcmp(attrname, kPreferMailFormatColumn))
-    {	// PreferMailFormat is interger, not a string
-    	return NS_OK;
+    {
+        PRUint32 format = nsIAbPreferMailFormat::unknown;
+        GetPreferMailFormat(&format);
+        nsString formatStr;
+        switch (format) {
+        case nsIAbPreferMailFormat::unknown :
+            formatStr.AssignWithConversion("unknown");
+            break;
+        case nsIAbPreferMailFormat::plaintext :
+            formatStr.AssignWithConversion("plaintext");
+            break;
+        case nsIAbPreferMailFormat::html :
+            formatStr.AssignWithConversion("html");
+            break;
+        default :
+            formatStr.AssignWithConversion("unknown");
+            break;
+        }
+        *value = (PRUnichar *) formatStr.ToNewUnicode ();
     }
     
 	/* else handle pass down attribute */
@@ -310,11 +327,19 @@ NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const PRUnich
     else if (!PL_strcmp(attrname, kCompanyColumn))
 		rv = SetCompany((PRUnichar *)value);
     else if (!PL_strcmp(attrname, kPreferMailFormatColumn))
-    		{	// PreferMailFormat is interger, not a string
-    		return NS_OK;
-    		}
+   	{
+        PRUint32 format = nsIAbPreferMailFormat::unknown;
+        nsString formatStr(value);
+        if (formatStr.CompareWithConversion("unknown", PR_TRUE))
+            format = nsIAbPreferMailFormat::unknown;
+        if (formatStr.CompareWithConversion("plaintext", PR_TRUE))
+            format = nsIAbPreferMailFormat::plaintext;
+        if (formatStr.CompareWithConversion("html", PR_TRUE))
+            format = nsIAbPreferMailFormat::html;
+        SetPreferMailFormat(format);
+    }
     else
-		rv = NS_ERROR_FAILURE;
+        rv = NS_ERROR_FAILURE;
 
     return rv;
 }
@@ -629,7 +654,7 @@ nsAbCardProperty::GetName(PRUnichar * *aName)
     nsresult rv = NS_OK;
 	// get name depend on "mail.addr_book.lastnamefirst" 
 	// 0= displayname, 1= lastname first, 2=firstname first
-    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
+	nsCOMPtr<nsIPref> pPref = do_GetService(NS_PREF_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
 	PRInt32 lastNameFirst = 0;
@@ -816,6 +841,22 @@ NS_IMETHODIMP nsAbCardProperty::DropCardToDatabase(const char *uri, nsIAbCard **
 	return rv;
 }
 
+NS_IMETHODIMP nsAbCardProperty::GetCollationKey(const PRUnichar *str, PRUnichar **key)
+{
+	nsresult rv;
+
+	if (!addressBook)
+	{
+		// Keep a local copy of the addressBook service
+		// for performance reasons
+		addressBook = do_GetService (NS_ADDRESSBOOK_CONTRACTID, &rv);
+		NS_ENSURE_SUCCESS(rv, rv);       
+	}
+
+	rv = addressBook->CreateCollationKey(str, key);
+
+	return rv;
+}
 
 // nsIAbCard NOT IMPLEMENTED methods
 
@@ -825,11 +866,6 @@ NS_IMETHODIMP nsAbCardProperty::EditCardToDatabase(const char *uri)
 }
 
 NS_IMETHODIMP nsAbCardProperty::GetPrintCardUrl(char * *aPrintCardUrl)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetCollationKey(const PRUnichar *str, PRUnichar **key)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -1,0 +1,65 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Sun
+ * Microsystems, Inc.  Portions created by Sun are
+ * Copyright (C) 2001 Sun Microsystems, Inc. All
+ * Rights Reserved.
+ *
+ * Created by: Paul Sandoz   <paul.sandoz@sun.com> 
+ *
+ * Contributor(s): Csaba Borbola <csaba.borbola@sun.com>
+ *                   
+ */
+
+#include "nsISupports.idl"
+#include "nsIEnumerator.idl"
+
+interface nsIAbDirectory;
+
+[scriptable, uuid(C2308606-1DD1-11B2-87D4-85FCA9B1DC08)]
+interface nsIAbDirFactory : nsISupports
+{
+    /**
+     * Instantiate new top level address book
+     * directories given an array of property names
+     * and values. More than one directory may be
+     * returned depending on the implementation
+     * and integration with the associated address book
+     * sources
+     *
+     * @param propertiesSize
+     *        The number of properties
+     * @param propertyNamesArray
+     *        The array of property names
+     * @param propertyValuesArray
+     *        The array of property values
+     * @return
+     *        Enumeration of nsIAbDirectory
+     *        interfaces
+     */
+    nsISimpleEnumerator createDirectory (
+        in unsigned long propertiesSize,
+        [array, size_is(propertiesSize)]
+        in string propertyNamesArray,
+        [array, size_is(propertiesSize)]
+        in wstring propertyValuesArray);
+
+    /**
+     * Delete a top level address book directory
+     * 
+     */
+    void deleteDirectory (in nsIAbDirectory directory);
+};
+

@@ -1,0 +1,153 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Sun
+ * Microsystems, Inc.  Portions created by Sun are
+ * Copyright (C) 2001 Sun Microsystems, Inc. All
+ * Rights Reserved.
+ *
+ * Created by: Paul Sandoz   <paul.sandoz@sun.com> 
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+#include "nsISupportsArray.idl"
+
+typedef long nsAbBooleanConditionType;
+
+/**
+ * Condition types
+ *
+ * Constants defining the types of condition
+ * to obtain a boolean result of TRUE or FALSE
+ *
+ */
+[scriptable, uuid(F51387B1-5AEF-4A1C-830E-7CD3B02366CE)]
+interface nsIAbBooleanConditionTypes
+{
+    const long Exists        = 0;
+    const long DoesNotExist        = 1;
+    const long Contains        = 2;
+    const long DoesNotContain    = 3;
+    const long Is            = 4;
+    const long IsNot        = 5;
+    const long BeginsWith        = 6;
+    const long EndsWith        = 7;
+    const long LessThan        = 8;
+    const long GreaterThan        = 9;
+    const long SoundsLike        = 10;
+    const long RegExp        = 11;
+};
+
+
+typedef long nsAbBooleanOperationType;
+
+/*
+ * Operation types
+ *
+ * Constants defining the boolean operation that
+ * should be performed between two boolean expressions
+ *
+ */
+interface nsIAbBooleanOperationTypes
+{
+    const long AND        = 0;
+    const long OR        = 1;
+    const long NOT        = 2;
+};
+
+
+/**
+ * String condition
+ *
+ * A string condition represents a leaf node in a
+ * boolean expression tree and represents
+ * test which will return TRUE or FALSE
+ *
+ * Condition is an expression which is a
+ * leaf node in a boolean expression tree
+ *
+ */
+[scriptable, uuid(C3869D72-CFD0-45F0-A0EC-3F67D83C7110)]
+interface nsIAbBooleanConditionString : nsISupports
+{
+    /**
+     * The condition for how the a value
+     * should be compared
+     *
+     */
+    attribute nsAbBooleanConditionType condition;
+
+    /**
+     * The lhs of the condition
+     *
+     * Represents a property name which
+     * should be evaluated to obtain the
+     * lhs.
+     *
+     */
+    attribute string name;
+
+    /**
+     * The rhs of the condition
+     *
+     * <name> [condition] value
+     *
+     */ 
+    attribute wstring value;
+};
+
+/**
+ * N Boolean expression type
+ *
+ * Supports Unary Binary and N boolean expressions
+ *
+ * An operation represents a node in a boolean
+ * expression tree which may contain one or more
+ * child conditions or expressions
+ *
+ */
+[scriptable, uuid(67F87C44-2C63-41A2-9545-AFF1D9F09623)]
+interface nsIAbBooleanExpression: nsISupports
+{
+    /**
+     * The boolean operation to be applied to
+     * results of all evaluated expressions
+     *
+     */
+    attribute nsAbBooleanOperationType operation;
+
+    /**
+     * List of peer expressions
+     *
+     * e1 [op] e2 [op] .... en
+     *
+     */
+    attribute nsISupportsArray expressions;
+
+    /**
+     * expressions attribute defined explicitly as an
+     * array of nsISupports
+     *
+     */
+    void asetExpressions (in unsigned long aExpressionsSize,
+        [array, size_is(aExpressionsSize)]
+        in nsISupports aExpressionsArray);
+    void agetExpressions (out unsigned long aExpressionsSize,
+        [retval, array, size_is(aExpressionsSize)]
+        out nsISupports aExpressionsArray);
+
+};
+

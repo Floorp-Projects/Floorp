@@ -47,5 +47,7 @@ interface nsIAddressBook : nsISupports {
 	boolean mailListNameExistsInDB(in wstring name, in string URI);
 	boolean mailListNameExists(in wstring name);
 	unsigned long getTotalCards(in string URI);
+
+	void createCollationKey(in wstring source, out wstring result);
 };
 

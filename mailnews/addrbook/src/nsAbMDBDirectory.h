@@ -35,18 +35,28 @@
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsDirPrefs.h"
+#include "nsIAbDirectorySearch.h"
+#include "nsAbDirSearchListener.h"
+#include "nsHashtable.h"
 
  /* 
   * Address Book Directory
   */ 
 
-class nsAbMDBDirectory: public nsAbMDBRDFResource, public nsAbMDBDirProperty
+class nsAbMDBDirectory:
+	public nsAbMDBRDFResource,	// nsIRDFResource
+	public nsAbMDBDirProperty,	// nsIAbDirectory, nsIAbMDBDirectory
+	public nsIAbDirectorySearch,
+	public nsAbDirSearchListenerContext
 {
 public: 
 	nsAbMDBDirectory(void);
 	virtual ~nsAbMDBDirectory(void);
 
 	NS_DECL_ISUPPORTS_INHERITED
+
+	// nsIRDFResource methods:
+	NS_IMETHOD Init(const char* aURI);
 
 	// nsIAbMDBDirectory methods
 	NS_IMETHOD ClearDatabase();
@@ -69,12 +79,20 @@ public:
 	NS_IMETHOD AddMailList(nsIAbDirectory *list);
 	NS_IMETHOD AddCard(nsIAbCard *card, nsIAbCard **_retval);
 	NS_IMETHOD DropCard(nsIAbCard *card, nsIAbCard **_retval);
+	NS_IMETHOD EditMailListToDatabase(const char *uri);
+	NS_IMETHOD GetTotalCards(PRBool subDirectoryCount, PRUint32 *_retval);
 
 	// nsIAddrDBListener methods:
 	NS_IMETHOD OnCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator);
 	NS_IMETHOD OnCardEntryChange(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator);
 	NS_IMETHOD OnListEntryChange(PRUint32 abCode, nsIAbDirectory *list, nsIAddrDBListener *instigator);
 
+	// nsIAbDirectorySearch methods
+	NS_DECL_NSIABDIRECTORYSEARCH
+
+	// nsAbDirSearchListenerContext methods
+	nsresult OnSearchFinished (PRInt32 result);
+	nsresult OnSearchFoundCard (nsIAbCard* card);
 
 	PRBool IsMailingList(){ return (mIsMailingList == 1); }
 
@@ -94,6 +112,16 @@ protected:
 	nsCOMPtr<nsISupportsArray> mSubDirectories;
 	PRBool mInitialized;
 	PRInt16 mIsMailingList;
+
+	PRBool mIsValidURI;
+	PRBool mIsQueryURI;
+	nsCString mPath;
+	nsCString mQueryString;
+	nsCString mURINoQuery;
+
+	PRInt32 mContext;
+	PRBool mPerformingQuery;
+	nsSupportsHashtable mSearchCache;
 };
 
 #endif

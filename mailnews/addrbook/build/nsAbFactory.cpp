@@ -44,6 +44,9 @@
 #include "nsAbMDBDirectory.h"
 #include "nsAbMDBCard.h"
 
+#include "nsAbDirFactoryService.h"
+#include "nsAbMDBDirFactory.h"
+
 #include "nsAddrDatabase.h"
 #include "nsAddressBook.h"
 #include "nsAddrBookSession.h"
@@ -52,6 +55,22 @@
 #include "nsAbAddressCollecter.h"
 #include "nsAddbookProtocolHandler.h"
 #include "nsAddbookUrl.h"
+
+#ifdef XP_WIN
+#include "nsAbOutlookDirectory.h"
+#include "nsAbOutlookCard.h"
+#include "nsAbOutlookDirFactory.h"
+#endif
+
+#include "nsAbDirectoryQuery.h"
+#include "nsAbBooleanExpression.h"
+#include "nsAbDirectoryQueryProxy.h"
+
+#if defined(MOZ_LDAP_XPCOM)
+#include "nsAbLDAPDirectory.h"
+#include "nsAbLDAPCard.h"
+#include "nsAbLDAPDirFactory.h"
+#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddressBook)
 
@@ -71,6 +90,27 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddrBookSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbAutoCompleteSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbAddressCollecter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddbookUrl)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirFactoryService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbMDBDirFactory)
+
+#ifdef XP_WIN
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbOutlookDirectory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbOutlookCard)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbOutlookDirFactory)
+#endif
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirectoryQueryArguments)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbBooleanConditionString)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbBooleanExpression)
+
+#if defined(MOZ_LDAP_XPCOM)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPDirectory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPCard)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPDirFactory)
+#endif
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirectoryQueryProxy)
 
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddbookProtocolHandler)
 
@@ -148,10 +188,75 @@ static nsModuleComponentInfo components[] =
     NS_ADDBOOKURL_CID,
     NS_ADDBOOKURL_CONTRACTID,
     nsAddbookUrlConstructor },
+    
   { "The addbook Protocol Handler", 
     NS_ADDBOOK_HANDLER_CID,
     NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "addbook",
-    nsAddbookProtocolHandler::Create }
+    nsAddbookProtocolHandler::Create },
+
+  { "The directory factory service interface",
+    NS_ABDIRFACTORYSERVICE_CID,
+    NS_ABDIRFACTORYSERVICE_CONTRACTID,
+    nsAbDirFactoryServiceConstructor },
+
+  { "The MDB directory factory interface",
+    NS_ABMDBDIRFACTORY_CID,
+    NS_ABMDBDIRFACTORY_CONTRACTID,
+    nsAbMDBDirFactoryConstructor },
+
+#ifdef XP_WIN
+  { "Address OUTLOOK Book Directory",
+    NS_ABOUTLOOKDIRECTORY_CID,
+    NS_ABOUTLOOKDIRECTORY_CONTRACTID,
+    nsAbOutlookDirectoryConstructor },
+
+  { "Address OUTLOOK Book Card",
+    NS_ABOUTLOOKCARD_CID,
+    NS_ABOUTLOOKCARD_CONTRACTID,
+    nsAbOutlookCardConstructor },
+
+  { "The outlook factory Interface", 
+    NS_ABOUTLOOKDIRFACTORY_CID,
+    NS_ABOUTLOOKDIRFACTORY_CONTRACTID,
+    nsAbOutlookDirFactoryConstructor },
+#endif
+
+  { "The addbook query arguments", 
+    NS_ABDIRECTORYQUERYARGUMENTS_CID,
+    NS_ABDIRECTORYQUERYARGUMENTS_CONTRACTID,
+    nsAbDirectoryQueryArgumentsConstructor },
+    
+  { "The query boolean condition string", 
+    NS_BOOLEANCONDITIONSTRING_CID,
+    NS_BOOLEANCONDITIONSTRING_CONTRACTID,
+    nsAbBooleanConditionStringConstructor },
+    
+  { "The query n-peer expression", 
+    NS_BOOLEANEXPRESSION_CID,
+    NS_BOOLEANEXPRESSION_CONTRACTID,
+    nsAbBooleanExpressionConstructor },
+
+#if defined(MOZ_LDAP_XPCOM)
+  { "Address LDAP Book Directory",
+    NS_ABLDAPDIRECTORY_CID,
+    NS_ABLDAPDIRECTORY_CONTRACTID,
+    nsAbLDAPDirectoryConstructor },
+
+  { "Address LDAP Book Card",
+    NS_ABLDAPCARD_CID,
+    NS_ABLDAPCARD_CONTRACTID,
+    nsAbLDAPCardConstructor },
+
+  { "Address LDAP factory Interface", 
+    NS_ABLDAPDIRFACTORY_CID,
+    NS_ABLDAPDIRFACTORY_CONTRACTID,
+    nsAbLDAPDirFactoryConstructor },
+#endif
+
+  { "The directory query proxy interface",
+    NS_ABDIRECTORYQUERYPROXY_CID,
+    NS_ABDIRECTORYQUERYPROXY_CONTRACTID,
+    nsAbDirectoryQueryProxyConstructor }
 };
 
 NS_IMPL_NSGETMODULE(nsAbModule, components)

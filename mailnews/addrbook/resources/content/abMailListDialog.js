@@ -178,7 +178,7 @@ function OnLoadMailList()
     if ( window.arguments[0].selectedAB )
       selectedAB = window.arguments[0].selectedAB;
     else
-      selectedAB = "abmdbdirectory://abook.mab";
+      selectedAB = "moz-abmdbdirectory://abook.mab";
   }
 
   // set popup with address book names

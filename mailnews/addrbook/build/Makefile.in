@@ -37,6 +37,11 @@ REQUIRES	= xpcom string addrbook necko msgcompose mime msgbase rdf rdfutil docsh
 CPPSRCS		= nsAbFactory.cpp
 EXPORTS		= nsAbBaseCID.h
 
+ifdef MOZ_LDAP_XPCOM
+REQUIRES	+= mozldap
+DEFINES		+= -DMOZ_LDAP_XPCOM
+endif
+
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/libaddrbook_s.$(LIB_SUFFIX) \
 	$(NULL)

@@ -1,0 +1,90 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Sun
+ * Microsystems, Inc.  Portions created by Sun are
+ * Copyright (C) 2001 Sun Microsystems, Inc. All
+ * Rights Reserved.
+ *
+ * Contributor(s): Paul Sandoz <paul.sandoz@sun.com>
+ */
+
+#include "nsAbDirectoryRDFResource.h"
+#include "nsIURL.h"
+#include "nsNetCID.h"
+#include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
+#include "nsString.h"
+
+#include "nsAbQueryStringToExpression.h"
+#include "nsAbBoolExprToLDAPFilter.h"
+
+
+
+nsAbDirectoryRDFResource::nsAbDirectoryRDFResource () :
+    nsRDFResource (),
+    mIsValidURI (PR_FALSE),
+    mIsQueryURI (PR_FALSE)
+{
+}
+
+nsAbDirectoryRDFResource::~nsAbDirectoryRDFResource ()
+{
+}
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsAbDirectoryRDFResource, nsRDFResource)
+
+NS_IMETHODIMP nsAbDirectoryRDFResource::Init(const char* aURI)
+{
+    nsresult rv;
+    rv = nsRDFResource::Init (aURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mURINoQuery = aURI;
+
+    nsCOMPtr<nsIURI> uri = do_CreateInstance (NS_STANDARDURL_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = uri->SetSpec(aURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mIsValidURI = PR_TRUE;
+
+    nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsXPIDLCString queryString;
+    rv = url->GetEscapedQuery (getter_Copies(queryString));
+
+    nsXPIDLCString path;
+    rv = url->GetPath (getter_Copies(path));
+    mPath = path;
+
+    PRUint32 queryStringLength;
+    if (queryString.get () && (queryStringLength = nsCRT::strlen (queryString)))
+    {
+        int pathLength = nsCRT::strlen (path) - queryStringLength - 1;
+        mPath.Truncate (pathLength);
+
+        mURINoQuery.Truncate (mURINoQuery.Length () - queryStringLength - 1);
+
+        mQueryString = queryString;
+
+        mIsQueryURI = PR_TRUE;
+    }
+
+    return rv;
+}
+

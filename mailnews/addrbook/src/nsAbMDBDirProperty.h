@@ -50,8 +50,6 @@ public:
 	NS_DECL_ISUPPORTS
 	NS_DECL_NSIABMDBDIRECTORY
 
-	// nsIAbDirectory methods
-	NS_IMETHODIMP EditMailListToDatabase(const char *uri);
 protected:
 
 	PRUint32 m_dbRowID;

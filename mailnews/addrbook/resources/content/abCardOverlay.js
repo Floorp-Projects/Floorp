@@ -43,7 +43,7 @@ function OnLoadNewCard()
     if ("selectedAB" in window.arguments[0])
       editCard.selectedAB = window.arguments[0].selectedAB;
     else
-      editCard.selectedAB = "abmdbdirectory://abook.mab";
+      editCard.selectedAB = "moz-abmdbdirectory://abook.mab";
 
     // we may have been given properties to pre-initialize the window with....
     // we'll fill these in here...

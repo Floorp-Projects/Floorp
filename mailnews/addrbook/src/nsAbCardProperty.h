@@ -33,6 +33,7 @@
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
+#include "nsIAddressBook.h"
 #include "nsIAddrDatabase.h"
 
  /* 
@@ -91,11 +92,13 @@ protected:
 	nsString m_Custom4;
 	nsString m_Note;
 	PRUint32 m_LastModDate;
- PRUint32 m_Key;
+	PRUint32 m_Key;
 	PRUint32 m_PreferMailFormat;
 
 	PRBool   m_bIsMailList;
 	char*    m_MailListURI;
+
+	nsCOMPtr<nsIAddressBook> addressBook;
 };
 
 #endif

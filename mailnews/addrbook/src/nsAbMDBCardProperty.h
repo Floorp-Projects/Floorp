@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): Paul Sandoz
@@ -41,7 +41,6 @@ public:
 	// nsIAbCard methods
 	NS_IMETHODIMP GetPrintCardUrl(char * *aPrintCardUrl);
 	NS_IMETHODIMP EditCardToDatabase(const char *uri);
-	NS_IMETHODIMP GetCollationKey(const PRUnichar *str, PRUnichar **key);
 
 protected:
 	nsresult GetCardDatabase(const char *uri);

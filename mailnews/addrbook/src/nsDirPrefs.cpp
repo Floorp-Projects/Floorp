@@ -379,7 +379,7 @@ static nsresult dir_ConvertToMabFileName()
 					DIR_SavePrefsForOneServer(newServer);
 
 					PR_FREEIF (server->fileName);
-					server->fileName = PL_strdup(kPersonalAddressbook);
+                    server->fileName = nsCRT::strdup(kPersonalAddressbook);
 					DIR_SavePrefsForOneServer(server);
 				}
 			}
@@ -466,7 +466,7 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, P
 		server->position = count + 1;
 
 		if (fileName)
-			server->fileName = PL_strdup(fileName);
+            server->fileName = nsCRT::strdup(fileName);
 		else
 			DIR_SetFileName(&server->fileName, kPersonalAddressbook);
 
@@ -520,7 +520,7 @@ nsresult DIR_InitServerWithType(DIR_Server * server, DirectoryType dirType)
 	DIR_InitServer(server);
 	if (dirType == LDAPDirectory)
 	{
-		server->columnAttributes = PL_strdup(kDefaultLDAPColumnHeaders);
+        server->columnAttributes = nsCRT::strdup(kDefaultLDAPColumnHeaders);
 		server->dirType = LDAPDirectory;
 		server->isOffline = PR_TRUE;
 		server->csid = CS_UTF8;
@@ -528,7 +528,7 @@ nsresult DIR_InitServerWithType(DIR_Server * server, DirectoryType dirType)
 	}
 	else if (dirType == PABDirectory)
 	{
-		server->columnAttributes = PL_strdup(kDefaultPABColumnHeaders);
+        server->columnAttributes = nsCRT::strdup(kDefaultPABColumnHeaders);
 		server->dirType = PABDirectory;
 		server->isOffline = PR_FALSE;
 		server->csid = CS_UTF8;
@@ -554,6 +554,7 @@ nsresult DIR_InitServer (DIR_Server *server)
 		server->position = kDefaultPosition;
 		server->csid = CS_UTF8;
 		server->locale = nsnull;
+        server->uri = nsnull;
 	}
 	return NS_OK;
 }
@@ -569,7 +570,7 @@ DIR_DescriptionCode DIR_ValidateDirectoryDescription(nsVoidArray * wholeList, DI
 		{
 			DIR_Server *s = (DIR_Server *)(dir_ServerList->ElementAt(i));
 			/* don't check the description if it is the same directory as the one we are comparing against */
-			if (s != serverToValidate && s->description && !PL_strcasecmp(s->description, serverToValidate->description))
+            if (s != serverToValidate && s->description && !nsCRT::strcasecmp(s->description, serverToValidate->description))
 				return DIR_DuplicateDescription;
 		}
 
@@ -590,7 +591,7 @@ static DIR_Attribute *DIR_CopyAttribute (DIR_Attribute *inAttribute)
 	{
 		PRInt32 count = 0;
 		outAttribute->id = inAttribute->id;
-		outAttribute->prettyName = PL_strdup(inAttribute->prettyName);
+        outAttribute->prettyName = nsCRT::strdup(inAttribute->prettyName);
 		while (inAttribute->attrNames[count])
 			count++;
 		outAttribute->attrNames = (char**) PR_Malloc((count + 1) * sizeof(char*));
@@ -598,7 +599,7 @@ static DIR_Attribute *DIR_CopyAttribute (DIR_Attribute *inAttribute)
 		{
 			PRInt32 i;
 			for (i = 0; i < count; i++)
-				outAttribute->attrNames[i] = PL_strdup(inAttribute->attrNames[i]);
+                outAttribute->attrNames[i] = nsCRT::strdup(inAttribute->attrNames[i]);
 			outAttribute->attrNames[i] = nsnull;
 		}
 	}
@@ -612,7 +613,7 @@ static DIR_Filter *DIR_CopyFilter (DIR_Filter *inFilter)
 	if (outFilter)
 	{
 		outFilter->flags = inFilter->flags;
-		outFilter->string = PL_strdup(inFilter->string);
+        outFilter->string = nsCRT::strdup(inFilter->string);
 	}
 	return outFilter;
 }
@@ -628,7 +629,7 @@ static nsresult dir_CopyTokenList (char **inList, PRInt32 inCount, char ***outLi
 		{
 			PRInt32 i;
 			for (i = 0; i < inCount; i++)
-				(*outList)[i] = PL_strdup (inList[i]);
+                (*outList)[i] = nsCRT::strdup (inList[i]);
 			*outCount = inCount;
 		}
 		else
@@ -645,15 +646,15 @@ static DIR_ReplicationInfo *dir_CopyReplicationInfo (DIR_ReplicationInfo *inInfo
 	{
 		outInfo->lastChangeNumber = inInfo->lastChangeNumber;
 		if (inInfo->description)
-			outInfo->description = PL_strdup (inInfo->description);
+            outInfo->description = nsCRT::strdup (inInfo->description);
 		if (inInfo->fileName)
-			outInfo->fileName = PL_strdup (inInfo->fileName);
+            outInfo->fileName = nsCRT::strdup (inInfo->fileName);
 		if (inInfo->dataVersion)
-			outInfo->dataVersion = PL_strdup (inInfo->dataVersion);
+            outInfo->dataVersion = nsCRT::strdup (inInfo->dataVersion);
 		if (inInfo->syncURL)
-			outInfo->syncURL = PL_strdup (inInfo->syncURL);
+            outInfo->syncURL = nsCRT::strdup (inInfo->syncURL);
 		if (inInfo->filter)
-			outInfo->filter = PL_strdup (inInfo->filter);
+            outInfo->filter = nsCRT::strdup (inInfo->filter);
 		dir_CopyTokenList (inInfo->excludedAttributes, inInfo->excludedAttributesCount,
 			&outInfo->excludedAttributes, &outInfo->excludedAttributesCount);
 	}
@@ -671,49 +672,49 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 
 			if (in->prefName)
 			{
-				(*out)->prefName = PL_strdup(in->prefName);
+                (*out)->prefName = nsCRT::strdup(in->prefName);
 				if (!(*out)->prefName)
 					err = NS_ERROR_OUT_OF_MEMORY;
 			}
 
 			if (in->description)
 			{
-				(*out)->description = PL_strdup(in->description);
+                (*out)->description = nsCRT::strdup(in->description);
 				if (!(*out)->description)
 					err = NS_ERROR_OUT_OF_MEMORY;
 			}
 
 			if (in->serverName)
 			{
-				(*out)->serverName = PL_strdup(in->serverName);
+                (*out)->serverName = nsCRT::strdup(in->serverName);
 				if (!(*out)->serverName)
 					err = NS_ERROR_OUT_OF_MEMORY;
 			}
 
 			if (in->searchBase)
 			{
-				(*out)->searchBase = PL_strdup(in->searchBase);
+                (*out)->searchBase = nsCRT::strdup(in->searchBase);
 				if (!(*out)->searchBase)
 					err = NS_ERROR_OUT_OF_MEMORY;
 			}
 
 			if (in->fileName)
 			{
-				(*out)->fileName = PL_strdup(in->fileName);
+                (*out)->fileName = nsCRT::strdup(in->fileName);
 				if (!(*out)->fileName)
 					err = NS_ERROR_OUT_OF_MEMORY;
  			}
 
 			if (in->columnAttributes)
 			{
-				(*out)->columnAttributes = PL_strdup(in->columnAttributes);
+                (*out)->columnAttributes = nsCRT::strdup(in->columnAttributes);
 				if (!(*out)->columnAttributes)
 					err = NS_ERROR_OUT_OF_MEMORY;
 			}
 
 			if (in->locale)
 			{
-				(*out)->locale = PL_strdup(in->locale);
+                (*out)->locale = nsCRT::strdup(in->locale);
 				if (!(*out)->locale)
 					err = NS_ERROR_OUT_OF_MEMORY;
 			}
@@ -734,13 +735,13 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 			(*out)->savePassword = in->savePassword;
 			if (in->authDn)
 			{
-				(*out)->authDn = PL_strdup (in->authDn);
+                (*out)->authDn = nsCRT::strdup (in->authDn);
 				if (!(*out)->authDn)
 					err = NS_ERROR_OUT_OF_MEMORY;
 			}
 			if (in->password)
 			{
-				(*out)->password = PL_strdup (in->password);
+                (*out)->password = nsCRT::strdup (in->password);
 				if (!(*out)->password)
 					err = NS_ERROR_OUT_OF_MEMORY;
 			}
@@ -800,7 +801,7 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 
 			if (in->autoCompleteFilter)
 			{
-				(*out)->autoCompleteFilter = PL_strdup(in->autoCompleteFilter);
+                (*out)->autoCompleteFilter = nsCRT::strdup(in->autoCompleteFilter);
 				if (!(*out)->autoCompleteFilter)
 					err = NS_ERROR_OUT_OF_MEMORY;
 			}
@@ -827,9 +828,9 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 				&(*out)->uriAttributes, &(*out)->uriAttributesCount);
 
 			if (in->customDisplayUrl)
-				(*out)->customDisplayUrl = PL_strdup (in->customDisplayUrl);
+                (*out)->customDisplayUrl = nsCRT::strdup (in->customDisplayUrl);
 			if (in->searchPairList)
-				(*out)->searchPairList = PL_strdup (in->searchPairList);
+                (*out)->searchPairList = nsCRT::strdup (in->searchPairList);
 
 			(*out)->refCount = 1;
 		}
@@ -1730,6 +1731,8 @@ DIR_PrefId DIR_AtomizePrefName(const char *prefname)
 		rc = idUri;
 		break;
 
+
+
 	case 'v': /* vlvDisabled */
 		rc = idVLVDisabled;
 		break;
@@ -1750,7 +1753,7 @@ static PRBool dir_AreLDAPServersSame (DIR_Server *first, DIR_Server *second, PRB
 
 	if (first->serverName && second->serverName)
 	{
-		if (PL_strcasecmp (first->serverName, second->serverName) == 0) 
+        if (nsCRT::strcasecmp (first->serverName, second->serverName) == 0) 
 		{
 			if (first->port == second->port) 
 			{
@@ -1760,7 +1763,7 @@ static PRBool dir_AreLDAPServersSame (DIR_Server *first, DIR_Server *second, PRB
 				/* otherwise check the strings */
 				else if (   first->searchBase
 				         && second->searchBase
-				         && PL_strcasecmp (first->searchBase, second->searchBase) == 0)
+                         && nsCRT::strcasecmp (first->searchBase, second->searchBase) == 0)
 					return PR_TRUE;
 			}
 		}
@@ -1785,7 +1788,7 @@ static PRBool dir_AreServersSame (DIR_Server *first, DIR_Server *second, PRBool 
 			{
 				PR_ASSERT(first->fileName && second->fileName);
 				if (first->fileName && second->fileName)
-					if (PL_strcasecmp(first->fileName, second->fileName) == 0)
+                    if (nsCRT::strcasecmp(first->fileName, second->fileName) == 0)
 						return PR_TRUE;
 
 				return PR_FALSE;
@@ -1817,8 +1820,8 @@ DIR_Server *DIR_LookupServer(char *serverName, PRInt32 port, char *searchBase)
 	{
 		server = (DIR_Server *)dir_ServerList->ElementAt(i);
 		if (   server->port == port
-			&& server->serverName && PL_strcasecmp(server->serverName, serverName) == 0
-		    && server->searchBase && PL_strcasecmp(server->searchBase, searchBase) == 0)
+            && server->serverName && nsCRT::strcasecmp(server->serverName, serverName) == 0
+            && server->searchBase && nsCRT::strcasecmp(server->searchBase, searchBase) == 0)
 		{
 			return server;
 		}
@@ -1921,6 +1924,7 @@ static nsresult dir_DeleteServerContents (DIR_Server *server)
 		PR_FREEIF (server->password);
 		PR_FREEIF (server->columnAttributes);
 		PR_FREEIF (server->locale);
+        PR_FREEIF (server->uri);
 
 		if (server->customFilters)
 		{
@@ -2168,7 +2172,7 @@ static char *DIR_GetStringPref(const char *prefRoot, const char *prefLeaf, char 
 		if (!PL_strcmp(value, "(null)")) 
 		{
 			PR_FREEIF(value); /* free old value because we are going to give it a new value.... */
-			value = defaultValue ? PL_strdup(defaultValue) : nsnull;
+            value = defaultValue ? nsCRT::strdup(defaultValue) : nsnull;
 		}
 		if (PL_strlen(value) == 0)
 		{
@@ -2179,7 +2183,7 @@ static char *DIR_GetStringPref(const char *prefRoot, const char *prefLeaf, char 
 	else
 	{
 		PR_FREEIF(value); /* the pref may have generated an error but we still might have something in value...... */
-		value = defaultValue ? PL_strdup(defaultValue) : nsnull;
+        value = defaultValue ? nsCRT::strdup(defaultValue) : nsnull;
 	}
 	return value;
 }
@@ -2214,7 +2218,7 @@ static char *DIR_GetLocalizedStringPref
 		INTL_ConvertFromUnicode(wvalue, unicharLength, &value);
 	}
 	else
-		value = defaultValue ? PL_strdup(defaultValue) : nsnull;
+        value = defaultValue ? nsCRT::strdup(defaultValue) : nsnull;
 
 	return value;
 }
@@ -2265,23 +2269,23 @@ nsresult DIR_AttributeNameToId(DIR_Server *server, const char *attrName, DIR_Att
 	switch (attrName[0])
 	{
 	case 'a':
-		if (!PL_strcasecmp(attrName, "auth"))
+        if (!nsCRT::strcasecmp(attrName, "auth"))
 			*id = auth;
 		else
 			status = NS_ERROR_FAILURE;
 		break;
 	case 'b':
-		if (!PL_strcasecmp(attrName, "businesscategory"))
+        if (!nsCRT::strcasecmp(attrName, "businesscategory"))
 			*id = businesscategory;
 		else
 			status = NS_ERROR_FAILURE;
 		break;
 	case 'c' :
-		if (!PL_strcasecmp(attrName, "cn"))
+        if (!nsCRT::strcasecmp(attrName, "cn"))
 			*id = cn;
-		else if (!PL_strcasecmp(attrName, "carlicense"))
+        else if (!nsCRT::strcasecmp(attrName, "carlicense"))
 			*id = carlicense;
-		else if (!PL_strncasecmp(attrName, "custom", 6))
+        else if (!nsCRT::strncasecmp(attrName, "custom", 6))
 		{
 			switch (attrName[6])
 			{
@@ -2297,94 +2301,94 @@ nsresult DIR_AttributeNameToId(DIR_Server *server, const char *attrName, DIR_Att
 			status = NS_ERROR_FAILURE;
 		break;
 	case 'd':
-		if (!PL_strcasecmp(attrName, "departmentnumber"))
+        if (!nsCRT::strcasecmp(attrName, "departmentnumber"))
 			*id = departmentnumber;
 		else
-			if (!PL_strcasecmp(attrName, "description"))
+            if (!nsCRT::strcasecmp(attrName, "description"))
 				*id = description;
 		else
 			status = NS_ERROR_FAILURE;
 		break;
 	case 'e':
-		if (!PL_strcasecmp(attrName, "employeetype"))
+        if (!nsCRT::strcasecmp(attrName, "employeetype"))
 			*id = employeetype;
 		else
 			status = NS_ERROR_FAILURE;
 		break;
 	case 'f':
-		if (!PL_strcasecmp(attrName, "facsimiletelephonenumber"))
+        if (!nsCRT::strcasecmp(attrName, "facsimiletelephonenumber"))
 			*id = facsimiletelephonenumber;
 		else
 			status = NS_ERROR_FAILURE;
 		break;
 	case 'g':
-		if (!PL_strcasecmp(attrName, "givenname"))
+        if (!nsCRT::strcasecmp(attrName, "givenname"))
 			*id = givenname; 
 		else
 			status = NS_ERROR_FAILURE;
 		break;
 	case 'h':
-		if (!PL_strcasecmp(attrName, "homephone"))
+        if (!nsCRT::strcasecmp(attrName, "homephone"))
 			*id = homephone;
 		else
 			status = NS_ERROR_FAILURE;
 		break;
 	case 'l':
-		if (!PL_strcasecmp(attrName, "l"))
+        if (!nsCRT::strcasecmp(attrName, "l"))
 			*id = l;
 		else
 			status = NS_ERROR_FAILURE;
 		break;
 	case 'm':
-		if (!PL_strcasecmp(attrName, "mail"))
+        if (!nsCRT::strcasecmp(attrName, "mail"))
 			*id = mail;
-		else if (!PL_strcasecmp(attrName, "manager"))
+        else if (!nsCRT::strcasecmp(attrName, "manager"))
 			*id = manager;
-		else if (!PL_strcasecmp(attrName, "mobiletelephonenumber"))
+        else if (!nsCRT::strcasecmp(attrName, "mobiletelephonenumber"))
 			*id = mobiletelephonenumber;
 		else
 			status = NS_ERROR_FAILURE;
 		break;
 	case 'n':
-		if (!PL_strcasecmp(attrName, "nickname"))
+        if (!nsCRT::strcasecmp(attrName, "nickname"))
 			*id = nickname;
 		else
 			status = NS_ERROR_FAILURE;
 		break;
 	case 'o':
-		if (!PL_strcasecmp(attrName, "o"))
+        if (!nsCRT::strcasecmp(attrName, "o"))
 			*id = o;
-		else if (!PL_strcasecmp(attrName, "ou"))
+        else if (!nsCRT::strcasecmp(attrName, "ou"))
 			*id = ou;
-		else if (!PL_strcasecmp(attrName, "objectclass"))
+        else if (!nsCRT::strcasecmp(attrName, "objectclass"))
 			*id = objectclass;
 		else
 			status = NS_ERROR_FAILURE;
 		break;
 	case 'p':
-		if (!PL_strcasecmp(attrName, "pager"))
+        if (!nsCRT::strcasecmp(attrName, "pager"))
 			*id = pager;
-		else if (!PL_strcasecmp(attrName, "postalcode"))
+        else if (!nsCRT::strcasecmp(attrName, "postalcode"))
 			*id = postalcode;
-		else if (!PL_strcasecmp(attrName, "postaladdress"))
+        else if (!nsCRT::strcasecmp(attrName, "postaladdress"))
 			*id = postaladdress;
 		else
 			status = NS_ERROR_FAILURE;
 		break;
 	case 's': 
-		if (!PL_strcasecmp(attrName, "street"))
+        if (!nsCRT::strcasecmp(attrName, "street"))
 			*id = street;
-		else if (!PL_strcasecmp(attrName, "sn"))
+        else if (!nsCRT::strcasecmp(attrName, "sn"))
 			*id = sn;
-		else if (!PL_strcasecmp(attrName, "secretary"))
+        else if (!nsCRT::strcasecmp(attrName, "secretary"))
 			*id = secretary;
 		else
 			status = NS_ERROR_FAILURE;
 		break;
 	case 't':
-		if (!PL_strcasecmp(attrName, "telephonenumber"))
+        if (!nsCRT::strcasecmp(attrName, "telephonenumber"))
 			*id = telephonenumber;
-		else if (!PL_strcasecmp(attrName, "title"))
+        else if (!nsCRT::strcasecmp(attrName, "title"))
 			*id = title;
 		else
 			status = NS_ERROR_FAILURE;
@@ -2424,7 +2428,7 @@ static nsresult DIR_AddCustomAttribute(DIR_Server *server, const char *attrName,
 
 	if (NS_SUCCEEDED(status))
 	{
-		char *scratchAttr = PL_strdup(jsAttrForTokenizing);
+        char *scratchAttr = nsCRT::strdup(jsAttrForTokenizing);
 		DIR_Attribute *attrStruct = (DIR_Attribute*) PR_Malloc(sizeof(DIR_Attribute));
 		if (!server->customAttributes)
 			server->customAttributes = new nsVoidArray();
@@ -2438,7 +2442,7 @@ static nsresult DIR_AddCustomAttribute(DIR_Server *server, const char *attrName,
 
 			/* Try to pull out the pretty name into the struct */
 			attrStruct->id = id;
-			attrStruct->prettyName = PL_strdup(XP_STRTOK(scratchAttr, ":")); 
+            attrStruct->prettyName = nsCRT::strdup(XP_STRTOK(scratchAttr, ":")); 
 
 			/* Count up the attribute names */
 			while ((attrToken = XP_STRTOK(nsnull, ", ")) != nsnull)
@@ -2452,7 +2456,7 @@ static nsresult DIR_AddCustomAttribute(DIR_Server *server, const char *attrName,
 			{
 				PRInt32 i = 0;
 				while ((attrToken = XP_STRTOK(nsnull, ", ")) != nsnull)
-					attrStruct->attrNames[i++] = PL_strdup(attrToken);
+                    attrStruct->attrNames[i++] = nsCRT::strdup(attrToken);
 				attrStruct->attrNames[i] = nsnull; /* null-terminate the array */
 			}
 
@@ -2480,7 +2484,7 @@ PRInt32 DIR_GetNumAttributeIDsForColumns(DIR_Server * server)
 	char * marker = nsnull;
 	if (server && server->columnAttributes)
 	{
-		buffer = PL_strdup(server->columnAttributes);
+        buffer = nsCRT::strdup(server->columnAttributes);
 		if (buffer)
 		{
 			marker = buffer;
@@ -2509,7 +2513,7 @@ nsresult DIR_GetAttributeIDsForColumns(DIR_Server *server, DIR_AttributeId ** id
 	{
 		if (server->columnAttributes) 
 		{
-			columnIDs = PL_strdup(server->columnAttributes);
+            columnIDs = nsCRT::strdup(server->columnAttributes);
 			numItems = DIR_GetNumAttributeIDsForColumns(server);
 		}
 
@@ -2572,7 +2576,7 @@ static nsresult dir_CreateTokenListFromWholePref(const char *pref, char ***outLi
 			char *token = XP_STRTOK(commaSeparatedList, ", ");
 			for (i = 0; i < *outCount; i++)
 			{
-				(*outList)[i] = PL_strdup(token);
+                (*outList)[i] = nsCRT::strdup(token);
 				token = XP_STRTOK(nsnull, ", ");
 			}
 		}
@@ -2799,7 +2803,7 @@ static void DIR_ConvertServerFileName(DIR_Server* pServer)
 #else
 	newLeafName = XP_STRRCHR (leafName, '/');
 #endif
-	pServer->fileName = newLeafName ? PL_strdup(newLeafName + 1) : PL_strdup(leafName);
+    pServer->fileName = newLeafName ? nsCRT::strdup(newLeafName + 1) : nsCRT::strdup(leafName);
 	if (leafName) PR_Free(leafName);
 }
 
@@ -2819,7 +2823,7 @@ void DIR_SetFileName(char** fileName, const char* defaultName)
 		dbPath->MakeUnique(defaultName);
 		char* file = nsnull;
 		file = dbPath->GetLeafName();
-		*fileName = PL_strdup(file);
+        *fileName = nsCRT::strdup(file);
 		if (file)
 			nsCRT::free(file);
 
@@ -2861,7 +2865,7 @@ char * dir_ConvertDescriptionToPrefName(DIR_Server * server)
 	}
 
 	if (destIndex) /* have at least one character in the file name? */
-		fileName = PL_strdup(fileNameBuf);
+        fileName = nsCRT::strdup(fileNameBuf);
 
 	return fileName;
 }
@@ -2881,7 +2885,7 @@ void DIR_SetServerFileName(DIR_Server *server, const char* leafName)
 
 		/* set default personal address book file name*/
 		if (server->position == 1)
-			server->fileName = PL_strdup(kPersonalAddressbook);
+            server->fileName = nsCRT::strdup(kPersonalAddressbook);
 		else
 		{
 			/* now use the pref name as the file name since we know the pref name
@@ -2892,7 +2896,7 @@ void DIR_SetServerFileName(DIR_Server *server, const char* leafName)
 				/* extract just the pref name part and not the ldap tree name portion from the string */
 				numHeaderBytes = PL_strlen(PREF_LDAP_SERVER_TREE_NAME) + 1; /* + 1 for the '.' b4 the name */
 				if (PL_strlen(prefName) > numHeaderBytes) 
-					tempName = PL_strdup(prefName + numHeaderBytes);
+                    tempName = nsCRT::strdup(prefName + numHeaderBytes);
 
 				if (tempName)
 				{
@@ -2927,7 +2931,7 @@ void DIR_GetServerFileName(char** filename, const char* leafName)
 
 	nativeName = WH_FileName(realLeafName, xpAddrBookNew);
 	urlName = XP_PlatformFileToURL(nativeName);
-	(*filename) = PL_strdup(urlName + PL_strlen("file://"));
+    (*filename) = nsCRT::strdup(urlName + PL_strlen("file://"));
 	if (urlName) PR_Free(urlName);
 #elif defined(XP_WIN)
 	/* jefft -- Bug 73349. To allow users share same address book.
@@ -2970,7 +2974,7 @@ char *DIR_CreateServerPrefName (DIR_Server *server, char *name)
 	PRBool isUnique = PR_FALSE;
 
 	if (name)
-		leafName = PL_strdup(name);
+        leafName = nsCRT::strdup(name);
 	else
 		leafName = dir_ConvertDescriptionToPrefName (server);
 	if (leafName)
@@ -2989,7 +2993,7 @@ char *DIR_CreateServerPrefName (DIR_Server *server, char *name)
 				PRInt16 i = 0; 
 				while ( (pPref->NextChild(children, &i, &child)) == NS_OK && isUnique)
 				{
-					if (!PL_strcasecmp(child, prefName) ) /* are they the same name?? */
+                    if (!nsCRT::strcasecmp(child, prefName) ) /* are they the same name?? */
 						isUnique = PR_FALSE;
 				}
 				PR_FREEIF(children);
@@ -3083,6 +3087,11 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
 	if (server->fileName && *server->fileName)
 		DIR_ConvertServerFileName(server);
 
+    // the string "s" is the default uri ( <scheme> + "://" + <filename> )
+    nsCString s(kMDBDirectoryRoot);
+    s.Append (server->fileName);
+    server->uri = DIR_GetStringPref (prefstring, "uri", tempstring, s.get ());
+    
 	server->lastSearchString = DIR_GetStringPref (prefstring, "searchString", tempstring, "");
 
 	/* This is where site-configurable attributes and filters are read from JavaScript */
@@ -3240,10 +3249,13 @@ static nsresult dir_GetPrefsFrom45Branch(nsVoidArray **list, nsVoidArray **obsol
 			if (server)
 			{
 				DIR_InitServer(server);
-				server->prefName = PL_strdup(child);
+                server->prefName = nsCRT::strdup(child);
 				DIR_GetPrefsForOneServer(server, PR_FALSE, PR_FALSE);
 				if (   server->description && server->description[0]
-					&& (   server->dirType == PABDirectory
+                    && (   (server->dirType == PABDirectory || 
+                        server->dirType == MAPIDirectory ||
+                        server->dirType == FixedQueryLDAPDirectory)  
+                        
 					    || (server->serverName  && server->serverName[0])))
 				{
 					if (!dir_IsServerDeleted(server))
@@ -3343,7 +3355,7 @@ nsresult DIR_GetServerPreferences(nsVoidArray** list)
 							/* Copy any new prefs out of the new server.
 							 */
 							PR_FREEIF(oldServer->prefName);
-							oldServer->prefName  = PL_strdup(newServer->prefName);
+                            oldServer->prefName  = nsCRT::strdup(newServer->prefName);
 							/* since the pref name has now been set, we can generate a proper
 							   file name in case we don't have one already */
 							if (!oldServer->fileName || !*oldServer->fileName)
@@ -3559,14 +3571,14 @@ static void DIR_SetStringPref (const char *prefRoot, const char *prefLeaf, char 
 		char *userPref = nsnull;
 		if (PREF_NOERROR == pPref->CopyCharPref (scratch, &userPref))
 		{
-			if (value && (defaultValue ? PL_strcasecmp(value, defaultValue) : value != defaultValue))
+            if (value && (defaultValue ? nsCRT::strcasecmp(value, defaultValue) : value != defaultValue))
 				prefErr = pPref->SetCharPref (scratch, value);
 			else
 				DIR_ClearStringPref (scratch); 
 		}
 		else
 		{
-			if (value && (defaultValue ? PL_strcasecmp(value, defaultValue) : value != defaultValue))
+            if (value && (defaultValue ? nsCRT::strcasecmp(value, defaultValue) : value != defaultValue))
 				prefErr = pPref->SetCharPref (scratch, value); 
 		}
 
@@ -4236,7 +4248,7 @@ static DIR_Filter *DIR_LookupFilter (DIR_Server *server, const char *filter)
 	for (i = 0; i < count; i++)
 	{
 		if ((walkFilter = (DIR_Filter *)list->ElementAt(i)) != nsnull)
-			if (!PL_strcasecmp(filter, walkFilter->string))
+            if (!nsCRT::strcasecmp(filter, walkFilter->string))
 				return walkFilter;
 	}
 	return nsnull;
@@ -4301,7 +4313,7 @@ PRBool DIR_IsDnAttribute (DIR_Server *s, const char *attrib)
 		PRInt32 i;
 		for (i = 0; i < s->dnAttributesCount; i++)
 		{
-			if (!PL_strcasecmp(attrib, s->dnAttributes[i]))
+            if (!nsCRT::strcasecmp(attrib, s->dnAttributes[i]))
 				return PR_TRUE;
 		}
 	}
@@ -4313,16 +4325,16 @@ PRBool DIR_IsDnAttribute (DIR_Server *s, const char *attrib)
 		switch (tolower(attrib[0]))
 		{
 		case 'm':
-			if (!PL_strcasecmp(attrib, "manager") || 
-				!PL_strcasecmp(attrib, "member"))
+            if (!nsCRT::strcasecmp(attrib, "manager") || 
+                !nsCRT::strcasecmp(attrib, "member"))
 				return PR_TRUE;
 			break;
 		case 'o':
-			if (!PL_strcasecmp(attrib, "owner"))
+            if (!nsCRT::strcasecmp(attrib, "owner"))
 				return PR_TRUE;
 			break;
 		case 'u':
-			if (!PL_strcasecmp(attrib, "uniquemember"))
+            if (!nsCRT::strcasecmp(attrib, "uniquemember"))
 				return PR_TRUE;
 			break;
 		}
@@ -4341,7 +4353,7 @@ PRBool DIR_IsAttributeExcludedFromHtml (DIR_Server *s, const char *attrib)
 		PRInt32 i;
 		for (i = 0; i < s->suppressedAttributesCount; i++)
 		{
-			if (!PL_strcasecmp(attrib, s->suppressedAttributes[i]))
+            if (!nsCRT::strcasecmp(attrib, s->suppressedAttributes[i]))
 				return PR_TRUE;
 		}
 	}
@@ -4360,7 +4372,7 @@ PRBool DIR_IsUriAttribute (DIR_Server *s, const char *attrib)
 		PRInt32 i;
 		for (i = 0; i < s->uriAttributesCount; i++)
 		{
-			if (!PL_strcasecmp(attrib, s->uriAttributes[i]))
+            if (!nsCRT::strcasecmp(attrib, s->uriAttributes[i]))
 				return PR_TRUE;
 		}
 	}
@@ -4372,12 +4384,12 @@ PRBool DIR_IsUriAttribute (DIR_Server *s, const char *attrib)
 		switch (tolower(attrib[0]))
 		{
 		case 'l':
-        	if (   !PL_strcasecmp(attrib, "labeleduri")
-                || !PL_strcasecmp(attrib, "labeledurl"))
+            if (   !nsCRT::strcasecmp(attrib, "labeleduri")
+                || !nsCRT::strcasecmp(attrib, "labeledurl"))
 				return PR_TRUE;
 			break;
 		case 'u':
-			if (!PL_strcasecmp(attrib, "url"))
+            if (!nsCRT::strcasecmp(attrib, "url"))
 				return PR_TRUE;
 			break;
 		}
@@ -4395,7 +4407,7 @@ void DIR_SetAuthDN (DIR_Server *s, const char *dn)
 	if (s->authDn && !PL_strcmp(dn, s->authDn))
 		return; /* no change - no need to broadcast */
 
-	tmp = PL_strdup (dn);
+    tmp = nsCRT::strdup (dn);
 	if (tmp)
 	{
 		/* Always remember the authDn in the DIR_Server, so that users only
@@ -4421,7 +4433,7 @@ void DIR_SetPassword (DIR_Server *s, const char *password)
 	if (s->password && !PL_strcmp(password, s->password))
 		return; /* no change - no need to broadcast */
 
-	tmp = PL_strdup (password);
+    tmp = nsCRT::strdup (password);
 	if (tmp)
 	{
 		/* Always remember the password in the DIR_Server, so that users only
@@ -4446,15 +4458,15 @@ PRBool DIR_IsEscapedAttribute (DIR_Server *s, const char *attrib)
 	switch (tolower(attrib[0]))
 	{
 	case 'p':
-		if (!PL_strcasecmp(attrib, "postaladdress"))
+        if (!nsCRT::strcasecmp(attrib, "postaladdress"))
 			return PR_TRUE;
 		break;
 	case 'f': 
-		if (!PL_strcasecmp(attrib, "facsimiletelephonenumber"))
+        if (!nsCRT::strcasecmp(attrib, "facsimiletelephonenumber"))
 			return PR_TRUE;
 		break;
 	case 'o':
-		if (!PL_strcasecmp(attrib, "othermail"))
+        if (!nsCRT::strcasecmp(attrib, "othermail"))
 			return PR_TRUE;
 		break;
 	}
@@ -4595,5 +4607,5 @@ char *DIR_ConvertFromServerCharSet(DIR_Server *server, char *src, PRInt16 dstCSI
 
 char *DIR_ConvertString(PRInt16 srcCSID, PRInt16 dstCSID, const char *string)
 {
-	return PL_strdup(string);
+    return nsCRT::strdup(string);
 }

@@ -35,6 +35,10 @@ EXPORTS=								\
 ################################################################################
 ## library
 
+!if !defined(DISABLE_LDAP)
+LCFLAGS = $(LCFLAGS) -DMOZ_LDAP_XPCOM
+!endif
+
 CPP_OBJS=								\
 			.\$(OBJDIR)\nsAbFactory.obj	\
 			$(NULL)

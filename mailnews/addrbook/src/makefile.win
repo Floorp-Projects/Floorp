@@ -46,7 +46,23 @@ EXPORTS=								\
 			nsAbMDBCardProperty.h \
 			nsAbMDBCard.h \
 			nsAbBSDirectory.h \
+			nsAbOutlookDirFactory.h \
+			nsAbDirFactoryService.h	\
 			nsAddbookUrl.h  \
+			nsAbOutlookDirectory.h \
+			nsAbOutlookCard.h \
+			nsAbMDBDirFactory.h	\
+			nsAbDirectoryQuery.h    \
+			nsAbDirectoryQueryProxy.h    \
+			nsAbDirSearchListener.h    \
+!if !defined(DISABLE_LDAP)
+			nsAbLDAPDirectoryQuery.h \
+			nsAbLDAPDirectory.h \
+			nsAbLDAPDirFactory.h	\
+			nsAbLDAPCard.h \
+!endif
+			nsAbDirectoryRDFResource.h \
+			nsAbBooleanExpression.h \
 			$(NULL)
 
 ################################################################################
@@ -74,6 +90,27 @@ CPP_OBJS=										\
     .\$(OBJDIR)\nsAbMDBCard.obj \
     .\$(OBJDIR)\nsAbBSDirectory.obj \
     .\$(OBJDIR)\nsAddbookUrl.obj    \
+    .\$(OBJDIR)\nsAbDirFactoryService.obj	\
+    .\$(OBJDIR)\nsAbMDBDirFactory.obj	\
+    .\$(OBJDIR)\nsAbOutlookDirectory.obj \
+    .\$(OBJDIR)\nsAbOutlookCard.obj \
+    .\$(OBJDIR)\nsAbOutlookDirFactory.obj \
+    .\$(OBJDIR)\nsMapiAddressBook.obj \
+    .\$(OBJDIR)\nsAbUtils.obj	\
+    .\$(OBJDIR)\nsAbDirectoryQuery.obj    \
+    .\$(OBJDIR)\nsAbDirectoryQueryProxy.obj    \
+    .\$(OBJDIR)\nsAbDirSearchListener.obj    \
+!if !defined(DISABLE_LDAP)
+    .\$(OBJDIR)\nsAbLDAPDirectory.obj \
+    .\$(OBJDIR)\nsAbLDAPDirFactory.obj	\
+    .\$(OBJDIR)\nsAbLDAPCard.obj \
+    .\$(OBJDIR)\nsAbLDAPProperties.obj \
+    .\$(OBJDIR)\nsAbLDAPDirectoryQuery.obj \
+    .\$(OBJDIR)\nsAbBoolExprToLDAPFilter.obj \
+!endif
+    .\$(OBJDIR)\nsAbBooleanExpression.obj \
+    .\$(OBJDIR)\nsAbDirectoryRDFResource.obj \
+    .\$(OBJDIR)\nsAbQueryStringToExpression.obj \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

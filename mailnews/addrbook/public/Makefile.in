@@ -44,6 +44,12 @@ XPIDLSRCS	= \
 		nsIAbAddressCollecter.idl \
 		nsIAbUpgrader.idl \
 		nsIAddbookUrl.idl \
+		nsIAbDirFactory.idl	\
+		nsIAbDirFactoryService.idl	\
+                nsIAbDirectoryQueryProxy.idl \
+		nsIAbDirectoryQuery.idl	\
+		nsIAbBooleanExpression.idl \
+		nsIAbDirectorySearch.idl \
 		$(NULL)
 ifdef MOZ_LDAP_XPCOM
 XPIDLSRCS       += nsILDAPPrefsService.idl

@@ -27,7 +27,7 @@ Rights Reserved.
   <!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
   <tree id="dirTree" 
       class="abDirectory" 
-      ref="abdirectory://"
+      ref="moz-abdirectory://"
       datasources="rdf:addressdirectory"
       containment="http://home.netscape.com/NC-rdf#child"
       ignore="http://home.netscape.com/NC-rdf#CardChild"

@@ -14,17 +14,18 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): Paul Sandoz
+ * Contributor(s): Paul Sandoz   <paul.sandoz@sun.com> 
+ *		   Csaba Borbola <csaba.borbola@sun.com>
  */
 
 #include "nsAbBSDirectory.h"
+#include "nsAbUtils.h"
 
 #include "nsRDFCID.h"
 #include "nsIRDFService.h"
-#include "nsIRDFResource.h"
 
 #include "nsDirPrefs.h"
 #include "nsAbBaseCID.h"
@@ -33,12 +34,14 @@
 #include "nsAddrDatabase.h"
 #include "nsIAddrBookSession.h"
 #include "nsIAbMDBDirectory.h"
-#include "nsHashtable.h"
 #include "nsIAbUpgrader.h"
 #include "nsIMessengerMigrator.h"
+#include "nsAbDirFactoryService.h"
+#include "nsAbMDBDirFactory.h"
 
 #include "prmem.h"
 #include "prprf.h"
+
 
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -47,6 +50,11 @@ static NS_DEFINE_CID(kAddrBookCID, NS_ADDRESSBOOK_CID);
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kMessengerMigratorCID, NS_MESSENGERMIGRATOR_CID);
+
+const char* kDescriptionPropertyName	= "description";
+const char* kFileNamePropertyName	= "filename";
+const char* kURIPropertyName		= "uri";
+const char* kMigratingPropertyName	= "migrating";
 
 nsAbBSDirectory::nsAbBSDirectory()
 	: nsRDFResource(),
@@ -71,30 +79,6 @@ nsAbBSDirectory::~nsAbBSDirectory()
 
 NS_IMPL_ISUPPORTS_INHERITED(nsAbBSDirectory, nsRDFResource, nsIAbDirectory)
 
-
-nsresult nsAbBSDirectory::AddDirectory(const char *uriName, nsIAbDirectory **childDir)
-{
-	if (!childDir || !uriName)
-		return NS_ERROR_NULL_POINTER;
-
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-	
-	nsCOMPtr<nsIRDFResource> res;
-	rv = rdf->GetResource(uriName, getter_AddRefs(res));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-	nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(res, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-	mSubDirectories->AppendElement(directory);
-	*childDir = directory;
-	NS_IF_ADDREF(*childDir);
-	 
-	return rv;
-}
-
 nsresult nsAbBSDirectory::NotifyItemAdded(nsISupports *item)
 {
 	nsresult rv = NS_OK;
@@ -116,186 +100,253 @@ nsresult nsAbBSDirectory::NotifyItemDeleted(nsISupports *item)
 	return NS_OK;
 }
 
+nsresult nsAbBSDirectory::CreateDirectoriesFromFactory(
+	const char* URI,
+	DIR_Server* server,
+	PRUint32 propertiesSize,
+	const char** propertyNameArray,
+	const PRUnichar** propertyValueArray,
+	PRBool notify)
+{
+	nsresult rv;
 
+	// Get the directory factory service
+	nsCOMPtr<nsIAbDirFactoryService> dirFactoryService = 
+			do_GetService(NS_ABDIRFACTORYSERVICE_CONTRACTID,&rv);
+	NS_ENSURE_SUCCESS (rv, rv);
+		
+	// Get the directory factory from the URI
+	nsCOMPtr<nsIAbDirFactory> dirFactory;
+	rv = dirFactoryService->GetDirFactory (URI, getter_AddRefs(dirFactory));
+	NS_ENSURE_SUCCESS (rv, rv);
+
+	// Create the directories
+	nsCOMPtr<nsISimpleEnumerator> newDirEnumerator;
+	rv = dirFactory->CreateDirectory(propertiesSize,
+		propertyNameArray,
+		propertyValueArray,
+		getter_AddRefs(newDirEnumerator));
+	NS_ENSURE_SUCCESS (rv, rv);
+
+	// Enumerate through the directories adding them
+	// to the sub directories array
+	PRBool hasMore;
+	while (NS_SUCCEEDED(newDirEnumerator->HasMoreElements(&hasMore)) && hasMore)
+	{
+		nsCOMPtr<nsISupports> newDirSupports;
+		rv = newDirEnumerator->GetNext(getter_AddRefs(newDirSupports));
+		if(NS_FAILED(rv))
+			continue;
+			
+		nsCOMPtr<nsIAbDirectory> childDir = do_QueryInterface(newDirSupports, &rv); 
+		if(NS_FAILED(rv))
+			continue;
+
+		// Define realtion ship between the preference
+		// entry and the directory
+		nsVoidKey key((void *)childDir);
+		mServers.Put (&key, (void *)server);
+
+		mSubDirectories->AppendElement(childDir);
+
+		// Inform the listener, i.e. the RDF directory data
+		// source that a new address book has been added
+		if (notify == PR_TRUE)
+			NotifyItemAdded(childDir);
+	}
+
+	return NS_OK;
+}
 
 NS_IMETHODIMP nsAbBSDirectory::GetChildNodes(nsIEnumerator* *result)
 {
 	if (!mInitialized) 
-	{/*
-    nsresult rv;
-	  nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_CONTRACTID, &rv);
-  	if (NS_SUCCEEDED(rv) && abUpgrader) 
-    {
-	    nsCOMPtr <nsIMessengerMigrator> migrator = do_GetService(kMessengerMigratorCID, &rv);
-      if (NS_SUCCEEDED(rv) || migrator)
- 	      migrator->UpgradePrefs();
-    }*/
+	{
+		nsresult rv;
+	    nsCOMPtr<nsIAbDirFactoryService> dirFactoryService = 
+			do_GetService(NS_ABDIRFACTORYSERVICE_CONTRACTID,&rv);
+		NS_ENSURE_SUCCESS (rv, rv);
 
-		if (!PL_strcmp(mURI, kAllDirectoryRoot) && GetDirList())
+		if (!GetDirList())
+			return NS_ERROR_FAILURE;
+		
+		PRInt32 count = GetDirList()->Count();
+		for (PRInt32 i = 0; i < count; i++)
 		{
-			PRInt32 count = GetDirList()->Count();
-			/* check: only show personal address book for now */
-			/* not showing 4.x address book unitl we have the converting done */
-			PRInt32 i;
-			for (i = 0; i < count; i++)
+			DIR_Server *server = (DIR_Server *)GetDirList()->ElementAt(i);
+
+			NS_ConvertUTF8toUCS2 fileName (server->fileName);
+			PRInt32 pos = fileName.Find("na2");
+			if (pos >= 0) // check: this is a 4.x file, remove when conversion is done
+				continue;
+			
+			nsHashtable propertySet;
+
+			// Set the description property
+			nsCStringKey descriptionKey (kDescriptionPropertyName, -1, nsCStringKey::NEVER_OWN);
+			NS_ConvertUTF8toUCS2 description (server->description);
+			propertySet.Put (&descriptionKey, (void* )description.get ());
+			
+			// Set the file name property
+			nsCStringKey fileNameKey (kFileNamePropertyName, -1, nsCStringKey::NEVER_OWN);
+			propertySet.Put (&fileNameKey, (void* )fileName.get ());
+			
+			// Set the uri property
+			nsCStringKey URIKey (kURIPropertyName, -1, nsCStringKey::NEVER_OWN);
+			nsCAutoString URIUTF8 (server->uri);
+			// This is in case the uri is never set
+			// in the nsDirPref.cpp code.
+			if (!server->uri)
 			{
-				DIR_Server *server = (DIR_Server *)GetDirList()->ElementAt(i);
-
-				if (server->dirType == PABDirectory)
-				{
-					nsAutoString name; name.AssignWithConversion(server->fileName);
-					PRInt32 pos = name.Find("na2");
-					if (pos >= 0) /* check: this is a 4.x file, remove when conversion is done */
-						continue;
-
-					char* uriStr = nsnull;
-					uriStr = PR_smprintf("%s%s", kMDBDirectoryRoot, server->fileName);
-					if (uriStr == nsnull) 
-						return NS_ERROR_OUT_OF_MEMORY;
-
-					nsCOMPtr<nsIAbDirectory> childDir;
-					AddDirectory(uriStr, getter_AddRefs(childDir));
-					nsCOMPtr<nsIAbMDBDirectory> dbchildDir(do_QueryInterface(childDir));
-
-					if (uriStr)
-						PR_smprintf_free(uriStr);
-					if (childDir)
-					{
-						PRUnichar *unichars = nsnull;
-						PRInt32 descLength = PL_strlen(server->description);
-						INTL_ConvertToUnicode((const char *)server->description, 
-							descLength, (void**)&unichars);
-						childDir->SetDirName(unichars);
-						PR_FREEIF(unichars);
-
-						nsVoidKey key((void *)childDir);
-						mServers.Put (&key, (void *)server);
-
-					}
-					nsresult rv = NS_OK;
-					nsCOMPtr<nsIAddrDatabase>  listDatabase;  
-
-					nsCOMPtr<nsIAddrBookSession> abSession = 
-					         do_GetService(kAddrBookSessionCID, &rv); 
-					if (NS_SUCCEEDED(rv))
-					{
-						nsFileSpec* dbPath;
-						abSession->GetUserProfileDirectory(&dbPath);
-
-						nsAutoString file; file.AssignWithConversion(server->fileName);
-						(*dbPath) += file;
-
-						nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
-						         do_GetService(kAddressBookDBCID, &rv);
-
-						if (NS_SUCCEEDED(rv) && addrDBFactory)
-							rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(listDatabase), PR_TRUE);
-						if (NS_SUCCEEDED(rv) && listDatabase)
-						{
-							listDatabase->GetMailingListsFromDB(childDir);
-						}
-
-              delete dbPath;
-					}
-				}
+				URIUTF8 = kMDBDirectoryRoot;
+				URIUTF8.Append (server->fileName);
 			}
 
+            /*
+             * Check that we are not converting from a
+             * a 4.x address book file e.g. pab.na2
+            */
+            nsCAutoString uriName (URIUTF8.get());
+            pos = uriName.Find("na2");
+            if (pos >= 0) 
+            {
+                const char* tempFileName = nsnull;
+                const char* uri = URIUTF8.get ();
+                if (PL_strstr(uri, kMDBDirectoryRoot)) // for moz-abmdbdirectory://
+                {
+                    tempFileName = &(uri[PL_strlen(kMDBDirectoryRoot)]);
+                    uriName.ReplaceSubstring (tempFileName,server->fileName);
+                }
+            }
+
+			NS_ConvertUTF8toUCS2 URIUCS2 (uriName.get ());
+			propertySet.Put (&URIKey, (void* )URIUCS2.get ());
+			
+			// Convert the hastable (property set) to pointer
+			// arrays, using the array guards
+			CharPtrArrayGuard factoryPropertyNames (PR_FALSE);
+			PRUnicharPtrArrayGuard factoryPropertyValues (PR_FALSE);
+			HashtableToPropertyPtrArrays::Convert (propertySet,
+				factoryPropertyNames.GetSizeAddr (),
+				factoryPropertyNames.GetArrayAddr (),
+				factoryPropertyValues.GetArrayAddr ());	
+			*(factoryPropertyNames.GetSizeAddr ()) = factoryPropertyNames.GetSize ();
+
+			// Create the directories
+			rv = CreateDirectoriesFromFactory (uriName.get (),
+				server,
+				factoryPropertyNames.GetSize (),
+				factoryPropertyNames.GetArray(),
+				factoryPropertyValues.GetArray(),
+				PR_FALSE);
 		}
+
 		mInitialized = PR_TRUE;
 	}
 	return mSubDirectories->Enumerate(result);
 }
 
-NS_IMETHODIMP nsAbBSDirectory::CreateNewDirectory(PRUint32 prefCount, const char **prefName, const PRUnichar **prefValue)
+nsresult nsAbBSDirectory::CreateNewDirectory(nsHashtable &propertySet, const char *uri, DIR_Server* server)
 {
-	if (!*prefValue || !*prefName)
-		return NS_ERROR_NULL_POINTER;
-	
-	PRUnichar *unicharDescription = nsnull;
-	char *charFileName = nsnull;
-	PRBool migrating = PR_FALSE;
-	char *charMigrate = nsnull;
 	nsresult rv;
 
-	for (PRUint32 jk=0; jk < prefCount; jk++)
-	{
-		switch (tolower(prefName[jk][0]))
-		{
-		case 'd':
-			if (!nsCRT::strcasecmp(prefName[jk], "description"))
-			{
-				unicharDescription = (PRUnichar *)prefValue[jk];
-			}
-			break;
-		case 'f':
-			if (!nsCRT::strcasecmp(prefName[jk], "fileName"))
-			{
-				nsString descString(prefValue[jk]);
-				PRInt32 unicharLength = descString.Length();
-				INTL_ConvertFromUnicode(prefValue[jk], unicharLength, &charFileName);
-			}
-			break;
-		case 'm':
-			if (!nsCRT::strcasecmp(prefName[jk], "migrating"))
-			{
-				nsString descString(prefValue[jk]);
-				PRInt32 unicharLength = descString.Length();
-				INTL_ConvertFromUnicode(prefValue[jk], unicharLength, &charMigrate);
-				if (!nsCRT::strcasecmp(charMigrate, "true"))
-				{
-					migrating = PR_TRUE;
-				}
-			}
-			break;			
-		}
-	}
+	// Convert the hastable (property set) to pointer
+	// arrays, using the array guards
+	// This is done because the original hashtable
+	// has been modified (added the uri and changed
+	// the file name)
+	CharPtrArrayGuard factoryPropertyNames (PR_FALSE);
+	PRUnicharPtrArrayGuard factoryPropertyValues (PR_FALSE);
+	HashtableToPropertyPtrArrays::Convert (propertySet,
+		factoryPropertyNames.GetSizeAddr (),
+		factoryPropertyNames.GetArrayAddr (),
+		factoryPropertyValues.GetArrayAddr ());	
+	*(factoryPropertyNames.GetSizeAddr ()) = factoryPropertyNames.GetSize ();
 
-	if (unicharDescription == nsnull)
-	{
-		rv = NS_ERROR_NULL_POINTER;
-	}
-	else
-	{
-    rv = CreateDirectoryPAB(unicharDescription, charFileName, migrating);
-	}
-
-	if (charFileName)
-		nsMemory::Free(charFileName);
-	if (charMigrate)
-		nsMemory::Free(charMigrate);
+	// Create the directories
+	rv = CreateDirectoriesFromFactory (uri,
+		server,
+		factoryPropertyNames.GetSize (),
+		factoryPropertyNames.GetArray(),
+		factoryPropertyValues.GetArray());
 
 	return rv;
 }
 
-nsresult nsAbBSDirectory::CreateDirectoryPAB(const PRUnichar *displayName, const char *fileName,  PRBool migrating)
+NS_IMETHODIMP nsAbBSDirectory::CreateNewDirectory(PRUint32 propCount, const char **propName, const PRUnichar **propValue)
 {
-  if (!displayName )
-  {
-    return NS_ERROR_NULL_POINTER;
-  }
+	/*
+	 * TODO
+	 * This procedure is still MDB specific
+	 * due to the dependence on the current
+	 * nsDirPref.cpp code
+	 *
+	 */
 
-  DIR_Server * server = nsnull;
-  DirectoryType dirType = PABDirectory;
+	if (!propValue || !propName)
+		return NS_ERROR_NULL_POINTER;
 
-  DIR_AddNewAddressBook(displayName, fileName, migrating, dirType, &server);
+	if (propCount == 0)
+		return NS_ERROR_FAILURE;
 
-  char *uri = PR_smprintf("%s%s",kMDBDirectoryRoot, server->fileName);
+	nsresult rv;
 
-  nsCOMPtr<nsIAbDirectory> newDir;
-  nsresult rv = AddDirectory(uri, getter_AddRefs(newDir));
+	// Create hash table from property arrays
+	nsHashtable propertySet;
+	rv = PropertyPtrArraysToHashtable::Convert (propertySet, propCount, propName, propValue);
+	NS_ENSURE_SUCCESS (rv, rv);
 
-  if (uri)
-    PR_smprintf_free(uri);
-  if (NS_SUCCEEDED(rv) && newDir)
-  {
-    newDir->SetDirName((PRUnichar *)displayName);
-    nsVoidKey key((void *)newDir);
-    mServers.Put (&key, (void *)server);
-    NotifyItemAdded(newDir);
-    return NS_OK;
-  }
-  else
-    return NS_ERROR_FAILURE;
+	// Get description property
+	nsCStringKey descriptionKey (kDescriptionPropertyName, -1, nsCStringKey::NEVER_OWN);
+	const PRUnichar* description = (PRUnichar* )propertySet.Get (&descriptionKey);
+
+	// Get file name property
+	nsCStringKey fileNameKey (kFileNamePropertyName, -1, nsCStringKey::NEVER_OWN);
+	const PRUnichar* fileName = (PRUnichar* )propertySet.Get (&fileNameKey);
+	NS_ConvertUCS2toUTF8 fileNameUTF8(fileName);
+
+	// Get migrating property
+	nsCStringKey migratingKey (kMigratingPropertyName, -1, nsCStringKey::NEVER_OWN);
+	const PRUnichar* migrating = (PRUnichar* )propertySet.Get (&migratingKey);
+	PRBool is_migrating = PR_FALSE;
+	if (migrating && nsCRT::strcmp (migrating, "true"))
+		is_migrating = PR_TRUE;
+
+	/*
+	 * The creation of the address book in the preferences
+	 * is very MDB implementation specific.
+	 * If the fileName attribute is null then it will
+	 * create an appropriate file name.
+	 * Somehow have to resolve this issue so that it
+	 * is more general.
+	 *
+	 */
+	DIR_Server* server = nsnull;
+	rv = DIR_AddNewAddressBook(description,
+			(fileNameUTF8.Length ()) ? fileNameUTF8.get () : nsnull,
+			is_migrating,
+			PABDirectory,
+			&server);
+	NS_ENSURE_SUCCESS (rv, rv);
+
+
+	// Update the file name property
+	NS_ConvertUTF8toUCS2 fileNameUCS2(server->fileName);
+	propertySet.Put (&fileNameKey, (void* )fileNameUCS2.get ());
+	
+	// Add the URI property
+	nsAutoString URI;
+	URI.AssignWithConversion (kMDBDirectoryRoot);
+	URI.Append (fileNameUCS2);
+	nsCStringKey URIKey (kURIPropertyName, -1, nsCStringKey::NEVER_OWN);
+	propertySet.Put (&URIKey, (void* )URI.get ());
+
+	// Get the directory factory from the URI
+	NS_ConvertUCS2toUTF8 URIUTF8(URI);
+
+	rv = CreateNewDirectory (propertySet, URIUTF8.get (), server);
+
+	return rv;
 }
 
 NS_IMETHODIMP nsAbBSDirectory::CreateDirectoryByURI(const PRUnichar *displayName, const char *uri, PRBool migrating)
@@ -303,29 +354,65 @@ NS_IMETHODIMP nsAbBSDirectory::CreateDirectoryByURI(const PRUnichar *displayName
 	if (!displayName || !uri)
 		return NS_ERROR_NULL_POINTER;
 
+	nsresult rv = NS_OK;
+
+	const char* fileName = nsnull;
+	if (PL_strstr(uri, kMDBDirectoryRoot)) // for moz-abmdbdirectory://
+		fileName = &(uri[nsCRT::strlen(kMDBDirectoryRoot)]);
+
 	DIR_Server * server = nsnull;
-	DirectoryType dirType = PABDirectory;
-  const char* fileName = nsnull;
-  if (PL_strstr(uri, kMDBDirectoryRoot)) // for abmdbdirectory://
-  {
-    fileName = &(uri[PL_strlen(kMDBDirectoryRoot)]);
-    dirType = PABDirectory;
-  }
-  DIR_AddNewAddressBook(displayName, fileName, migrating, dirType, &server);
+	rv = DIR_AddNewAddressBook(displayName, fileName, migrating, PABDirectory, &server);
+	NS_ENSURE_SUCCESS(rv,rv);
 
-	nsCOMPtr<nsIAbDirectory> newDir;
-	nsresult rv = AddDirectory(uri, getter_AddRefs(newDir));
 
-	if (NS_SUCCEEDED(rv) && newDir)
+	nsHashtable propertySet;
+
+	// Set the description property
+	nsCStringKey descriptionKey (kDescriptionPropertyName, -1, nsCStringKey::NEVER_OWN);
+	propertySet.Put (&descriptionKey, (void* )displayName);
+	
+	// Set the file name property
+	nsCStringKey fileNameKey (kFileNamePropertyName, -1, nsCStringKey::NEVER_OWN);
+	NS_ConvertUTF8toUCS2 fileNameUCS2 (server->fileName);
+	propertySet.Put (&fileNameKey, (void* )fileNameUCS2.get ());
+	
+	// Set the uri property
+	nsCStringKey URIKey (kURIPropertyName, -1, nsCStringKey::NEVER_OWN);
+	NS_ConvertUTF8toUCS2 URIUCS2 (uri);
+	propertySet.Put (&URIKey, (void* )URIUCS2.get ());
+
+	rv = CreateNewDirectory (propertySet, uri, server); 
+
+	return rv;
+}
+
+
+
+struct GetDirectories
+{
+		GetDirectories (DIR_Server* aServer) :
+				mServer (aServer)
+		{
+			NS_NewISupportsArray(getter_AddRefs(directories));
+		}
+
+		nsCOMPtr<nsISupportsArray> directories;
+		DIR_Server* mServer;
+};
+
+PRBool GetDirectories_getDirectory (nsHashKey *aKey, void *aData, void* closure)
+{
+	GetDirectories* getDirectories = (GetDirectories* )closure;
+
+	DIR_Server* server = (DIR_Server*) aData;
+	if (server == getDirectories->mServer)
 	{
-		newDir->SetDirName((PRUnichar *)displayName);
-		nsVoidKey key((void *)newDir);
-		mServers.Put (&key, (void *)server);
-		NotifyItemAdded(newDir);
-		return NS_OK;
+			nsVoidKey* voidKey = (nsVoidKey* )aKey;
+			nsIAbDirectory* directory = (nsIAbDirectory* )voidKey->GetValue ();
+			getDirectories->directories->AppendElement (directory);
 	}
-	else
-		return NS_ERROR_FAILURE;
+
+	return PR_TRUE;
 }
 
 NS_IMETHODIMP nsAbBSDirectory::DeleteDirectory(nsIAbDirectory *directory)
@@ -333,51 +420,51 @@ NS_IMETHODIMP nsAbBSDirectory::DeleteDirectory(nsIAbDirectory *directory)
 	nsresult rv = NS_OK;
 	
 	if (!directory)
-		return NS_ERROR_FAILURE;
-
-	nsCOMPtr<nsIAbMDBDirectory> dbdirectory(do_QueryInterface(directory, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+		return NS_ERROR_NULL_POINTER;
 
 	DIR_Server *server = nsnull;
 	nsVoidKey key((void *)directory);
 	server = (DIR_Server* )mServers.Get (&key);
 
-	if (server)
-	{	//it's an address book		
+	if (!server)
+		return NS_ERROR_FAILURE;
 
-		nsISupportsArray* pAddressLists;
-		directory->GetAddressLists(&pAddressLists);
-		if (pAddressLists)
-		{	//remove mailing list node
-			PRUint32 total;
-			rv = pAddressLists->Count(&total);
-			if (total)
-			{
-				PRInt32 i;
-				for (i = total - 1; i >= 0; i--)
-				{
-					nsCOMPtr<nsISupports> pSupport = getter_AddRefs(pAddressLists->ElementAt(i));
-					if (pSupport)
-					{
-						nsCOMPtr<nsIAbDirectory> listDir(do_QueryInterface(pSupport, &rv));
-						nsCOMPtr<nsIAbMDBDirectory> dblistDir(do_QueryInterface(pSupport, &rv));
-						if (listDir && dblistDir)
-						{
-							directory->DeleteDirectory(listDir);
-							dblistDir->RemoveElementsFromAddressList();
-						}
-					}
-					pAddressLists->RemoveElement(pSupport);
-				}
-			}
-		}
-		DIR_DeleteServerFromList(server);
-		mServers.Remove(&key);
-		dbdirectory->ClearDatabase();
+	GetDirectories getDirectories (server);
+	mServers.Enumerate (GetDirectories_getDirectory, (void *)&getDirectories);
 
-		rv = mSubDirectories->RemoveElement(directory);
-		NotifyItemDeleted(directory);
+	DIR_DeleteServerFromList(server);
+	
+	nsCOMPtr<nsIAbDirFactoryService> dirFactoryService = 
+			do_GetService(NS_ABDIRFACTORYSERVICE_CONTRACTID,&rv);
+	NS_ENSURE_SUCCESS (rv, rv);
+
+	PRUint32 count;
+	rv = getDirectories.directories->Count (&count);
+	NS_ENSURE_SUCCESS(rv, rv);
+
+	for (PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsIAbDirectory> d;
+		getDirectories.directories->GetElementAt (i, getter_AddRefs(d));
+
+		nsVoidKey k((void *)d);
+		mServers.Remove(&k);
+
+		rv = mSubDirectories->RemoveElement(d);
+		NotifyItemDeleted(d);
+
+		nsCOMPtr<nsIRDFResource> resource (do_QueryInterface (d, &rv));
+		const char* uri;
+		resource->GetValueConst (&uri);
+
+		nsCOMPtr<nsIAbDirFactory> dirFactory;
+		rv = dirFactoryService->GetDirFactory (uri, getter_AddRefs(dirFactory));
+		if (NS_FAILED(rv))
+				continue;
+
+		rv = dirFactory->DeleteDirectory(d);
 	}
+
 	return rv;
 }
 

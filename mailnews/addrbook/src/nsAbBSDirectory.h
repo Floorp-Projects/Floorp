@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): Paul Sandoz
@@ -26,8 +26,8 @@
 
 #include "nsRDFResource.h"
 #include "nsAbDirProperty.h"
-#include "nsHashtable.h"
 
+#include "nsHashtable.h"
 #include "nsISupportsArray.h"
 
 class nsAbBSDirectory : public nsRDFResource, public nsAbDirProperty
@@ -52,7 +52,17 @@ protected:
 
 	nsresult NotifyItemAdded(nsISupports *item);
 	nsresult NotifyItemDeleted(nsISupports *item);
-  nsresult CreateDirectoryPAB(const PRUnichar *displayName, const char *fileName,  PRBool migrating);
+	nsresult CreateDirectoriesFromFactory(
+		const char* URI,
+		DIR_Server* server,
+		PRUint32 propertiesSize,
+		const char** propertyNameArray,
+		const PRUnichar** propertyValueArray,
+		PRBool notify = PR_TRUE);
+
+	nsresult CreateNewDirectory(nsHashtable &propertySet, 
+		const char *uri,
+        DIR_Server* server);
 
 protected:
 	PRBool mInitialized;

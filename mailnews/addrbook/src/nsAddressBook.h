@@ -31,6 +31,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsICmdLineHandler.h"
 #include "nsIComponentManager.h"
+#include "nsICollation.h"
 
 #define NC_RDF_NEWABCARD			"http://home.netscape.com/NC-rdf#NewCard"
 #define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
@@ -57,6 +58,7 @@ protected:
 
 private:
 	 nsIDocShell        *mDocShell;            // weak reference
+	nsCOMPtr<nsICollation> mCollationKeyGenerator;
 };
 
 #endif
