@@ -87,6 +87,7 @@ XPIDLSRCS	= \
 		nsIRollupListener.idl \
 		nsIMenuRollup.idl \
 		nsIBaseWindow.idl \
+		nsIXRemoteClient.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
