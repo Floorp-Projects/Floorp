@@ -447,8 +447,12 @@ struct PK11SSLMACInfoStr {
 #define pk11_SlotFromSession(sp) ((sp)->slot)
 #define pk11_isToken(id) (((id) & PK11_TOKEN_MASK) == PK11_TOKEN_MAGIC)
 
+/* the session hash multiplier (see bug 201081) */
+#define SHMULTIPLIER 1791398085
+
 /* queueing helper macros */
-#define pk11_hash(value,size) ((value) & (size-1))/*size must be a power of 2*/
+#define pk11_hash(value,size) \
+	((PRUint32)((value) * SHMULTIPLIER) & (size-1))
 #define pk11queue_add(element,id,head,hash_size) \
 	{ int tmp = pk11_hash(id,hash_size); \
 	(element)->next = (head)[tmp]; \
