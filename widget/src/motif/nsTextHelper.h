@@ -20,16 +20,17 @@
 
 #include "nsITextWidget.h"
 #include "nsWindow.h"
+#include <Xm/Xm.h>
 
 /**
  * Base class for nsTextAreaWidget and nsTextWidget
  */
 
-class nsTextHelper : public nsWindow
+class nsTextHelper 
 {
 
 public:
-    nsTextHelper(nsISupports *aOuter);
+    nsTextHelper(Widget aWidget);
     virtual ~nsTextHelper();
 
     virtual void      SelectAll();
@@ -48,7 +49,7 @@ public:
     virtual PRBool    AutoErase();
 
 protected:
-
+    Widget  mWidget;
     PRBool  mIsPassword;
     PRBool  mIsReadOnly;
 
