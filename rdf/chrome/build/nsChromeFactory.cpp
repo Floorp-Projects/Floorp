@@ -24,9 +24,7 @@
 #include "rdf.h"
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
-#ifdef NECKO
 #include "nsChromeProtocolHandler.h"
-#endif
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
