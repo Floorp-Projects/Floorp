@@ -19,76 +19,74 @@
 * Contributor(s): pschwartau@netscape.com  
 * Date: 28 December 2000
 *
-*
 * SUMMARY: Testing regular expressions containing the ? character.
 * Arose from Bugzilla bug 57572: "RegExp with ? matches incorrectly"
 *
+*  See http://bugzilla.mozilla.org/show_bug.cgi?id=57572
 */
 //-------------------------------------------------------------------------------------------------
 var bug = 57572;
-var summary = 'Testing regular expressions containing "?"';
-var statprefix = 'regexp = '; var statmiddle =  ', string = '; var statsuffix = ', $=';
-var cnSingleQuote = "'"; var cnEmptyString = ''; var cnSingleSpace = ' ';
-var i = -1; var j = -1;
+var summary = 'Testing regular expressions containing "?"\n';
+var cnEmptyString = ''; var cnSingleSpace = ' ';
 var pattern = ''; var patterns = new Array();
 var string = ''; var strings = new Array();
-var actual = '';  var actuals = new Array();
-var expect = ''; expects = new Array();
+var actualmatch = '';  var actualmatches = new Array();
+var expectedmatch = ''; var expectedmatches = new Array();
 
 
 pattern = /(\S+)?(.*)/; 
 string = 'Test this';
-actual = string.match(pattern);
-expect = Array(string,  'Test',  ' this');  //single space in front of  'this'
+actualmatch = string.match(pattern);
+expectedmatch = Array(string,  'Test',  ' this');  //single space in front of  'this'
 addThis();
 
 pattern = /(\S+)? ?(.*)/;  //single space between the ? characters
 string= 'Test this';
-actual = string.match(pattern);
-expect = Array(string,  'Test',  'this');  //NO space in front of  'this'
+actualmatch = string.match(pattern);
+expectedmatch = Array(string,  'Test',  'this');  //NO space in front of  'this'
 addThis(); 
 
 pattern = /(\S+)????(.*)/;   
 string= 'Test this';
-actual = string.match(pattern);
-expect = Array(string, cnEmptyString, string);
+actualmatch = string.match(pattern);
+expectedmatch = Array(string, cnEmptyString, string);
 addThis(); 
 
 pattern = /(\S+)?(.*)/; 
 string = 'Stupid phrase, with six - (short) words';
-actual = string.match(pattern);
-expect = Array(string,  'Stupid',  ' phrase, with six - (short) words');  //single space in front of 'phrase'
+actualmatch = string.match(pattern);
+expectedmatch = Array(string,  'Stupid',  ' phrase, with six - (short) words');  //single space in front of 'phrase'
 addThis(); 
 
 pattern = /(\S+)? ?(.*)/;  //single space between the ? characters
 string = 'Stupid phrase, with six - (short) words';
-actual = string.match(pattern);
-expect = Array(string,  'Stupid',  'phrase, with six - (short) words');  //NO space in front of 'phrase'
+actualmatch = string.match(pattern);
+expectedmatch = Array(string,  'Stupid',  'phrase, with six - (short) words');  //NO space in front of 'phrase'
 addThis(); 
 
 // let's add an extra back-reference this time - three instead of two -
 pattern = /(\S+)?( ?)(.*)/;  //single space before second ? character
 string = 'Stupid phrase, with six - (short) words';
-actual = string.match(pattern);
-expect = Array(string,  'Stupid', cnSingleSpace, 'phrase, with six - (short) words'); 
+actualmatch = string.match(pattern);
+expectedmatch = Array(string,  'Stupid', cnSingleSpace, 'phrase, with six - (short) words'); 
 addThis(); 
 
 pattern = /^(\S+)?( ?)(B+)$/;  //single space before second ? character
 string = 'AAABBB';
-actual = string.match(pattern);
-expect = Array(string,  'AAABB', cnEmptyString,  'B');  
+actualmatch = string.match(pattern);
+expectedmatch = Array(string,  'AAABB', cnEmptyString,  'B');  
 addThis(); 
 
 pattern = /(\S+)?(!?)(.*)/;
 string = 'WOW !!! !!!';
-actual = string.match(pattern);
-expect = Array(string, 'WOW', cnEmptyString,  ' !!! !!!');
+actualmatch = string.match(pattern);
+expectedmatch = Array(string, 'WOW', cnEmptyString,  ' !!! !!!');
 addThis(); 
 
 pattern = /(.+)?(!?)(!+)/;
 string = 'WOW !!! !!!';
-actual = string.match(pattern);
-expect = Array(string, 'WOW !!! !!', cnEmptyString,  '!');
+actualmatch = string.match(pattern);
+expectedmatch = Array(string, 'WOW !!! !!', cnEmptyString,  '!');
 addThis(); 
 
 
@@ -104,8 +102,8 @@ function addThis()
   i++;
   patterns[i] = pattern;
   strings[i] = string;
-  actuals[i] = actual;
-  expects[i] = expect;
+  actualmatches[i] = actualmatch;
+  expectedmatches[i] = expectedmatch;
 }
 
 
@@ -114,27 +112,6 @@ function test()
   enterFunc ('test'); 
   printBugNumber (bug);
   printStatus (summary);
-  
-  for (i=0; i != patterns.length; i++)
-  {
-    // expects[i] and actuals[i] are array objects. Compare them element-by-element -
-    for (j=0; j !=actuals[i].length; j++)
-    {
-      reportCompare (expects[i][j], actuals[i][j], getStatus(i, j));
-    }
-  }
- 
+  testRegExp(patterns, strings, actualmatches, expectedmatches);
   exitFunc ('test');
-}
-
-
-function getStatus(i, j)
-{
-  return (statprefix  +  quote(patterns[i])  +  statmiddle  +  quote(strings[i])  +  statsuffix  +  j ); 
-}
-
-
-function quote(text)
-{
-  return (cnSingleQuote  +  text  +  cnSingleQuote);
 }
