@@ -2883,15 +2883,64 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
     // get the root view
-    nsIView *rootView = nsnull; // views are not ref counted
-    NS_ENSURE_SUCCESS(vm->GetRootView(rootView), NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
+    nsIView *view = nsnull; // views are not ref counted
+    NS_ENSURE_SUCCESS(vm->GetRootView(view), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
 
-    // convert the view's visibility attribute to a bool
+    nsRect viewBounds;
+    view->GetBounds(viewBounds);
+    printf("rootView: dim=(%d,%d)\n", viewBounds.width, viewBounds.height);
+
+    // if our root view is hidden, we are not visible
     nsViewVisibility vis;
-    NS_ENSURE_SUCCESS(rootView->GetVisibility(vis), NS_ERROR_FAILURE);
-    *aVisibility = nsViewVisibility_kHide == vis ? PR_FALSE : PR_TRUE;
+    NS_ENSURE_SUCCESS(view->GetVisibility(vis), NS_ERROR_FAILURE);
+    if (vis == nsViewVisibility_kHide) {
+        *aVisibility = PR_FALSE;
+        return NS_OK;
+    }
 
+    // otherwise, we must walk up the document and view trees checking
+    // for a hidden view.
+
+    nsCOMPtr<nsIDocShellTreeItem> treeItem = this;
+    nsCOMPtr<nsIDocShellTreeItem> parentItem;
+    treeItem->GetParent(getter_AddRefs(parentItem));
+    while (parentItem) {
+        nsCOMPtr<nsIDocShell> parentDS = do_QueryInterface(parentItem);
+        nsCOMPtr<nsIPresShell> pPresShell;
+        parentDS->GetPresShell(getter_AddRefs(pPresShell));
+        nsCOMPtr<nsIContent> shellContent;
+        nsCOMPtr<nsISupports> shellISupports = do_QueryInterface(treeItem);
+        pPresShell->FindContentForShell(shellISupports, getter_AddRefs(shellContent));
+        NS_ASSERTION(shellContent, "subshell not in the map");
+
+        nsIFrame* frame;
+        pPresShell->GetPrimaryFrameFor(shellContent, &frame);
+        if (frame) {
+            nsCOMPtr<nsIPresContext> pc;
+            pPresShell->GetPresContext(getter_AddRefs(pc));
+            frame->GetView(pc, &view);
+            if (!view) {
+                nsIFrame* parentWithView;
+                frame->GetParentWithView(pc, &parentWithView);
+                parentWithView->GetView(pc, &view);
+            }
+
+            while (view) {
+                view->GetVisibility(vis);
+                if (vis == nsViewVisibility_kHide) {
+                    *aVisibility = PR_FALSE;
+                    return NS_OK;
+                }
+                view->GetParent(view);
+            }
+        }
+
+        treeItem = parentItem;
+        treeItem->GetParent(getter_AddRefs(parentItem));
+    }
+
+    *aVisibility = PR_TRUE;
     return NS_OK;
 }
 
