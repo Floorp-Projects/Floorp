@@ -29,6 +29,8 @@
 #include "nsIGtkEmbed.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIBaseWindow.h"
+// this will go away when the URIContentListener crap can go away
+#include "nsIURIContentListener.h"
 #include "nsIInterfaceRequestor.h"
 
 // include our gtk stuff here
@@ -37,6 +39,8 @@
 class GtkMozEmbedChrome : public nsIGtkEmbed,
                           public nsIWebBrowserChrome,
                           public nsIBaseWindow,
+// this will go away when the URIContentListener crap can go away
+                          public nsIURIContentListener,
                           public nsIInterfaceRequestor
 {
 public:
@@ -56,6 +60,9 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
 
   NS_DECL_NSIWEBBROWSERCHROME
+
+// this will go away when the URIContentListener crap can go away
+  NS_DECL_NSIURICONTENTLISTENER
 
   NS_DECL_NSIBASEWINDOW
 

@@ -21,6 +21,7 @@
 
 #include "GtkMozEmbedChrome.h"
 #include "nsCWebBrowser.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kWebBrowserCID, NS_WEBBROWSER_CID);
 
@@ -64,6 +65,7 @@ NS_INTERFACE_MAP_BEGIN(GtkMozEmbedChrome)
    NS_INTERFACE_MAP_ENTRY(nsIGtkEmbed)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
+   NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
 NS_INTERFACE_MAP_END
 
@@ -187,6 +189,86 @@ NS_IMETHODIMP GtkMozEmbedChrome::ShowAsModal(void)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+// nsIURIContentListener
+
+NS_IMETHODIMP GtkMozEmbedChrome::OnStartURIOpen(nsIURI *aURI, const char *aWindowTarget, PRBool *aAbortOpen)
+{
+  g_print("GtkMozEmbedChrome::OnStartURIOpen\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
+{
+  g_print("GtkMozEmbedChrome::GetProtocolHandler\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::DoContent(const char *aContentType, nsURILoadCommand aCommand,
+					   const char *aWindowTarget, nsIChannel *aOpenedChannel,
+					   nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
+{
+  g_print("GtkMozEmbedChrome::DoContent\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::IsPreferred(const char *aContentType, nsURILoadCommand aCommand,
+					     const char *aWindowTarget, char **aDesiredContentType,
+					     PRBool *aCanHandleContent)
+{
+  g_print("GtkMozEmbedChrome::IsPreferred\n");
+  NS_ENSURE_ARG_POINTER(aCanHandleContent);
+  if (aContentType)
+  {
+    g_print("checking content type %s\n", aContentType);
+    if (nsCRT::strcasecmp(aContentType,  "text/html") == 0
+        || nsCRT::strcasecmp(aContentType, "text/xul") == 0
+        || nsCRT::strcasecmp(aContentType, "text/rdf") == 0 
+        || nsCRT::strcasecmp(aContentType, "text/xml") == 0
+        || nsCRT::strcasecmp(aContentType, "text/css") == 0
+        || nsCRT::strcasecmp(aContentType, "image/gif") == 0
+        || nsCRT::strcasecmp(aContentType, "image/jpeg") == 0
+        || nsCRT::strcasecmp(aContentType, "image/png") == 0
+        || nsCRT::strcasecmp(aContentType, "image/tiff") == 0
+        || nsCRT::strcasecmp(aContentType, "application/http-index-format") == 0)
+      *aCanHandleContent = PR_TRUE;
+  }
+  else
+    *aCanHandleContent = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::CanHandleContent(const char *aContentType, nsURILoadCommand aCommand,
+						  const char *aWindowTarget, char **aDesiredContentType,
+						  PRBool *_retval)
+{
+  g_print("GtkMozEmbedChrome::CanHandleContent\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::GetLoadCookie(nsISupports * *aLoadCookie)
+{
+  g_print("GtkMozEmbedChrome::GetLoadCookie\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::SetLoadCookie(nsISupports * aLoadCookie)
+{
+  g_print("GtkMozEmbedChrome::SetLoadCookie\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::GetParentContentListener(nsIURIContentListener * *aParentContentListener)
+{
+  g_print("GtkMozEmbedChrome::GetParentContentListener\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::SetParentContentListener(nsIURIContentListener * aParentContentListener)
+{
+  g_print("GtkMozEmbedChrome::SetParentContentListener\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 // nsIBaseWindow interface
 
