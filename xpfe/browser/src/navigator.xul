@@ -415,21 +415,21 @@
     }
   }
 
-  function WalletSafeFillin(window.frames[0].frames[1])
+  function WalletSafeFillin()
   {
     if (appCore != null) {
       dump("Wallet Safe Fillin\n");
-      appCore.walletSafeFillin();
+      appCore.walletSafeFillin(window.frames[0].frames[1]);
     } else {
       dump("BrowserAppCore has not been created!\n");
     }
   }
 
-  function WalletQuickFillin(window.frames[0].frames[1])
+  function WalletQuickFillin()
   {
     if (appCore != null) {
       dump("Wallet Quick Fillin\n");
-      appCore.walletQuickFillin();
+      appCore.walletQuickFillin(window.frames[0].frames[1]);
     } else {
       dump("BrowserAppCore has not been created!\n");
     }
