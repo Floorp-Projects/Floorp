@@ -274,45 +274,43 @@ nsStyleContext::GetBorderPaddingFor(nsStyleBorderPadding& aBorderPadding)
 // style data!  Do not use this function unless you absolutely have to!  You should avoid
 // this at all costs! -dwh
 nsStyleStruct* 
-nsStyleContext::GetUniqueStyleData(nsIPresContext* aPresContext, const nsStyleStructID& aSID)
+nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
 {
-  nsStyleStruct* result = nsnull;
+  // If we already own the struct and no kids could depend on it, then
+  // just return it.  (We leak in this case if there are kids -- and this
+  // function really shouldn't be called for style contexts that could
+  // have kids depending on the data.  ClearStyleData would be OK, but
+  // this test for no mChild or mEmptyChild doesn't catch that case.)
+  const nsStyleStruct *current = GetStyleData(aSID);
+  if (!mChild && !mEmptyChild &&
+      !(mBits & nsCachedStyleData::GetBitForSID(aSID)) &&
+      mCachedStyleData.GetStyleData(aSID))
+    return NS_CONST_CAST(nsStyleStruct*, current);
+
+  nsStyleStruct* result;
+  nsIPresContext *presContext = PresContext();
   switch (aSID) {
-  case eStyleStruct_Display: {
-    const nsStyleDisplay* dis = GetStyleDisplay();
-    nsStyleDisplay* newDis = new (aPresContext) nsStyleDisplay(*dis);
-    SetStyle(aSID, newDis);
-    result = newDis;
-    mBits &= ~NS_STYLE_INHERIT_BIT(Display);
+
+#define UNIQUE_CASE(c_)                                                       \
+  case eStyleStruct_##c_:                                                     \
+    result = new (presContext) nsStyle##c_(                                   \
+      * NS_STATIC_CAST(const nsStyle##c_ *, current));                        \
     break;
-  }
-  case eStyleStruct_Background: {
-    const nsStyleBackground* bg = GetStyleBackground();
-    nsStyleBackground* newBG = new (aPresContext) nsStyleBackground(*bg);
-    SetStyle(aSID, newBG);
-    result = newBG;
-    mBits &= ~NS_STYLE_INHERIT_BIT(Background);
-    break;
-  }
-  case eStyleStruct_Text: {
-    const nsStyleText* text = GetStyleText();
-    nsStyleText* newText = new (aPresContext) nsStyleText(*text);
-    SetStyle(aSID, newText);
-    result = newText;
-    mBits &= ~NS_STYLE_INHERIT_BIT(Text);
-    break;
-  }
-  case eStyleStruct_TextReset: {
-    const nsStyleTextReset* reset = GetStyleTextReset();
-    nsStyleTextReset* newReset = new (aPresContext) nsStyleTextReset(*reset);
-    SetStyle(aSID, newReset);
-    result = newReset;
-    mBits &= ~NS_STYLE_INHERIT_BIT(TextReset);
-    break;
-  }
+
+  UNIQUE_CASE(Display)
+  UNIQUE_CASE(Background)
+  UNIQUE_CASE(Text)
+  UNIQUE_CASE(TextReset)
+
+#undef UNIQUE_CASE
+
   default:
     NS_ERROR("Struct type not supported.  Please find another way to do this if you can!\n");
+    return nsnull;
   }
+
+  SetStyle(aSID, result);
+  mBits &= ~nsCachedStyleData::GetBitForSID(aSID);
 
   return result;
 }
@@ -377,7 +375,7 @@ nsStyleContext::ApplyStyleFixups(nsIPresContext* aPresContext)
     if (text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER ||
         text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT)
     {
-      nsStyleText* uniqueText = (nsStyleText*)GetUniqueStyleData(aPresContext, eStyleStruct_Text);
+      nsStyleText* uniqueText = (nsStyleText*)GetUniqueStyleData(eStyleStruct_Text);
       uniqueText->mTextAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
     }
   }
@@ -618,6 +616,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
     (int)bg->mBackgroundFlags,
     (int)bg->mBackgroundRepeat,
     (long)bg->mBackgroundColor,
+    // XXX These aren't initialized unless flags are set:
     (long)bg->mBackgroundXPosition.mCoord, // potentially lossy on some platforms
     (long)bg->mBackgroundYPosition.mCoord, // potentially lossy on some platforms
     URICString(bg->mBackgroundImage).get());

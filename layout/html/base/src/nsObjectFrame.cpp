@@ -1175,7 +1175,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
     // for a replaced object frame, clear our vertical alignment style info, see bug 36997
     nsStyleTextReset* text = NS_STATIC_CAST(nsStyleTextReset*,
-      mStyleContext->GetUniqueStyleData(mPresContext,  eStyleStruct_TextReset));
+      mStyleContext->GetUniqueStyleData(eStyleStruct_TextReset));
     text->mVerticalAlign.SetNormalValue();
 
     //check for alternative content with CantRenderReplacedElement()
