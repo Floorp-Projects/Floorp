@@ -1135,8 +1135,15 @@ nsHTTPChannel::Open(void)
 
         // If the data in the cache is usable, i.e it hasn't expired, then
         // there's no need to request a socket transport.
-        if (mCachedContentIsValid)
+        if (mCachedContentIsValid) {
+            // The channel is being restarted by the HTTP protocol handler
+            // and the cache data is usable, so start pumping the data from
+            // the cache...
+            if (!mOpenObserver) {
+                rv = ReadFromCache(0, -1);
+            }
             return NS_OK;
+        }
     }
 
     rv = mHandler->RequestTransport(mURI, this, 
