@@ -469,12 +469,14 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         nsCOMPtr<nsIDOMDocument> domDoc;
         nsCOMPtr<nsIDocument> document;
         focusedWindow->GetDocument(getter_AddRefs(domDoc));
-        document = do_QueryInterface(domDoc);
-        nsCOMPtr<nsIPresShell> shell;
-        nsCOMPtr<nsIPresContext> context;
-        shell = getter_AddRefs(document->GetShellAt(0));
-        shell->GetPresContext(getter_AddRefs(context));
-        focusContent->SetFocus(context);
+        if (domDoc) {
+          document = do_QueryInterface(domDoc);
+          nsCOMPtr<nsIPresShell> shell;
+          nsCOMPtr<nsIPresContext> context;
+          shell = getter_AddRefs(document->GetShellAt(0));
+          shell->GetPresContext(getter_AddRefs(context));
+          focusContent->SetFocus(context);
+        }
       }       
 
       if (commandDispatcher) {
