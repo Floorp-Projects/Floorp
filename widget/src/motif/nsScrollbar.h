@@ -64,10 +64,14 @@ public:
                                   PRUint32 aPosition, PRUint32 aLineIncrement);
 
     virtual PRBool    OnPaint(nsPaintEvent & aEvent);
-    virtual PRBool    OnScroll(PRUint32 scrollCode, PRUint32 cPos);
+    virtual PRBool    OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
     virtual PRBool    OnResize(nsRect &aWindowRect);
 
 private:
+
+  PRUint32 mLineIncrement;
+  int      mOrientation;
+
   // this should not be public
   static PRInt32 GetOuterOffset() {
     return offsetof(nsScrollbar,mAggWidget);

@@ -102,8 +102,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
                                           const nsIID &aIID,  
                                           void **aResult)  
 {  
-fprintf(stderr, "_________________________________\n");
-fprintf(stderr, "Entering Eidget Factory\n");fflush(stderr);
     if (aResult == NULL) {  
         return NS_ERROR_NULL_POINTER;  
     }  
@@ -125,15 +123,13 @@ fprintf(stderr, "Entering Eidget Factory\n");fflush(stderr);
     }
     else if (mClassID.Equals(kCVertScrollbarCID)) {
         inst = (nsIWidget*)new nsScrollbar(aOuter, PR_TRUE);
-        fprintf(stderr, "Created Vert Scrollbar\n");
     }
     else if (mClassID.Equals(kCHorzScrollbarCID)) {
         inst = (nsIWidget*)new nsScrollbar(aOuter, PR_FALSE);
-        fprintf(stderr, "Created Horz Scrollbar\n");
     }
     else if (aIID.Equals(kIScrollbar)) {
         inst = (nsIWidget*)nsnull;
-        fprintf(stderr, "------ kIScrollbar Scrollbar\n");
+        fprintf(stderr, "------ NOT CreatingkIScrollbar Scrollbar\n");
     }
     else if (aIID.Equals(kIWidget)) {
         inst = (nsIWidget*)new nsWindow(aOuter);
@@ -179,7 +175,6 @@ nsresult nsWidgetFactory::LockFactory(PRBool aLock)
 // return the proper factory to the caller
 extern "C" NS_WIDGET nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
 {
-fprintf(stderr, "**** Factory created\n");
     if (nsnull == aFactory) {
         return NS_ERROR_NULL_POINTER;
     }

@@ -67,11 +67,11 @@ public:
     virtual void            Show(PRBool bState);
     virtual void            Move(PRUint32 aX, PRUint32 aY);
     virtual void            Resize(PRUint32 aWidth,
-                                   PRUint32 aHeight);
+                                   PRUint32 aHeight, PRBool aRepaint);
     virtual void            Resize(PRUint32 aX,
                                    PRUint32 aY,
                                    PRUint32 aWidth,
-                                   PRUint32 aHeight);
+                                   PRUint32 aHeight, PRBool aRepaint);
     virtual void            Enable(PRBool bState);
     virtual void            SetFocus(void);
     virtual void            GetBounds(nsRect &aRect);
@@ -113,7 +113,7 @@ public:
     virtual PRBool          OnKey(PRUint32 aEventType, PRUint32 aKeyCode);
 
     virtual PRBool          DispatchFocus(PRUint32 aEventType);
-    virtual PRBool          OnScroll(PRUint32 scrollCode, PRUint32 cPos);
+    virtual PRBool          OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
 
 protected:
   void InitCallbacks();
@@ -174,11 +174,11 @@ public: \
     virtual void            Show(PRBool bState); \
     virtual void            Move(PRUint32 aX, PRUint32 aY); \
     virtual void            Resize(PRUint32 aWidth, \
-                                   PRUint32 aHeight); \
+                                   PRUint32 aHeight, PRBool aRepaint); \
     virtual void            Resize(PRUint32 aX, \
                                    PRUint32 aY, \
                                    PRUint32 aWidth, \
-                                   PRUint32 aHeight); \
+                                   PRUint32 aHeight, PRBool aRepaint); \
     virtual void            Enable(PRBool bState); \
     virtual void            SetFocus(void); \
     virtual void            GetBounds(nsRect &aRect); \
@@ -208,7 +208,6 @@ public: \
     virtual void            AddEventListener(nsIEventListener * aListener); \
     virtual void            BeginResizingChildren(void); \
     virtual void            EndResizingChildren(void); \
-    static  PRBool          ConvertStatus(nsEventStatus aStatus); \
     virtual PRBool          DispatchEvent(nsGUIEvent* event); \
     virtual PRBool          DispatchMouseEvent(nsMouseEvent aEvent); \
     virtual void            OnDestroy(); \
@@ -216,7 +215,7 @@ public: \
     virtual PRBool          OnResize(nsRect &aWindowRect); \
     virtual PRBool          OnKey(PRUint32 aEventType, PRUint32 aKeyCode); \
     virtual PRBool          DispatchFocus(PRUint32 aEventType); \
-    virtual PRBool          OnScroll(PRUint32 scrollCode, PRUint32 cPos); 
+    virtual PRBool          OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos); 
 
 
 #define BASE_IWIDGET_IMPL(_classname, _aggname) \
@@ -285,16 +284,16 @@ public: \
         GET_OUTER()->Move(aX, aY); \
     } \
     void _classname::_aggname::Resize(PRUint32 aWidth, \
-                PRUint32 aHeight) \
+                PRUint32 aHeight, PRBool aRepaint) \
     { \
-        GET_OUTER()->Resize(aWidth, aHeight); \
+        GET_OUTER()->Resize(aWidth, aHeight, aRepaint); \
     } \
     void _classname::_aggname::Resize(PRUint32 aX, \
                 PRUint32 aY, \
                 PRUint32 aWidth, \
-                PRUint32 aHeight) \
+                PRUint32 aHeight, PRBool aRepaint) \
     { \
-        GET_OUTER()->Resize(aX, aY, aWidth, aHeight); \
+        GET_OUTER()->Resize(aX, aY, aWidth, aHeight, aRepaint); \
     } \
     void _classname::_aggname::Enable(PRBool bState) \
     { \
@@ -440,9 +439,9 @@ public: \
     { \
       return GET_OUTER()->DispatchFocus(aEventType); \
     } \
-    PRBool _classname::_aggname::OnScroll(PRUint32 scrollCode, PRUint32 cPos) \
+    PRBool _classname::_aggname::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos) \
     { \
-      GET_OUTER()->OnScroll(scrollCode, cPos); \
+      GET_OUTER()->OnScroll(aEvent, cPos); \
     }
 
 

@@ -20,7 +20,10 @@
 #include "nsToolkit.h"
 #include "nsGUIEvent.h"
 #include "nsUnitConversion.h"
- #include <Xm/ScrollBar.h>
+#include <Xm/ScrollBar.h>
+
+#include "nsXtEventHandler.h"
+
 //-------------------------------------------------------------------------
 //
 // nsScrollbar constructor
@@ -28,11 +31,12 @@
 //-------------------------------------------------------------------------
 nsScrollbar::nsScrollbar(nsISupports *aOuter, PRBool aIsVertical) : nsWindow(aOuter)
 {
-    //mPositionFlag  = (aIsVertical) ? SBS_VERT : SBS_HORZ;
+    mOrientation  = (aIsVertical) ? XmVERTICAL : XmHORIZONTAL;
     //mScaleFactor   = 1.0;
-    //mLineIncrement = 0;
+    mLineIncrement = 0;
     //mBackground    = ::GetSysColor(COLOR_SCROLLBAR);
     //mBrush         = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
+
 }
 //-------------------------------------------------------------------------
 //
@@ -58,23 +62,50 @@ void nsScrollbar::Create(nsIWidget *aParent,
 
 fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
-  mWidget = ::XtVaCreateManagedWidget("button",
+  int procDir = mOrientation == XmVERTICAL? XmMAX_ON_BOTTOM:XmMAX_ON_RIGHT;
+
+fprintf(stderr, "mOrient %d %d %d %d\n", mOrientation, XmVERTICAL, XmMAX_ON_BOTTOM, procDir);
+  mWidget = ::XtVaCreateManagedWidget("scrollbar",
                                     xmScrollBarWidgetClass,
                                     parentWidget,
+                                    XmNorientation, mOrientation,
+                                    XmNprocessingDirection, procDir,
                                     XmNwidth, aRect.width,
                                     XmNheight, aRect.height,
                                     XmNrecomputeSize, False,
                                     XmNhighlightOnEnter, False,
+                                    XmNminimum, 0,
+                                    XmNmaximum, 100,
                                     XmNx, aRect.x,
                                     XmNy, aRect.y,
                                     nsnull);
 
-fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
+fprintf(stderr, "Scrollbar 0x%x  this 0x%x\n", mWidget, this);
 
   // save the event callback function
   mEventCallback = aHandleEventFunction;
 
   //InitCallbacks();
+  XtAddCallback(mWidget,
+                XmNdragCallback,
+                nsXtWidget_Scrollbar_Callback,
+                this);
+
+  XtAddCallback(mWidget,
+                XmNdecrementCallback,
+                nsXtWidget_Scrollbar_Callback,
+                this);
+
+  XtAddCallback(mWidget,
+                XmNincrementCallback,
+                nsXtWidget_Scrollbar_Callback,
+                this);
+
+  XtAddCallback(mWidget,
+                XmNvalueChangedCallback,
+                nsXtWidget_Scrollbar_Callback,
+                this);
+
 
 }
 
@@ -128,11 +159,13 @@ nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 void nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 {
-    //if (aEndRange > 32767)
-        //mScaleFactor = aEndRange / 32767.0;
-    //if (mWnd) {
-        //VERIFY(::SetScrollRange(mWnd, SB_CTL, 0, NS_TO_INT_ROUND(aEndRange / mScaleFactor), TRUE));
-    //}
+    fprintf(stderr, "Setting Max Range to %d 0x%x\n", aEndRange, mWidget);
+    int max = aEndRange;
+    XtVaGetValues(mWidget, XmNmaximum, &max);
+    fprintf(stderr, "Max is %d\n", max);
+
+    max = aEndRange;
+    XtVaSetValues(mWidget, XmNmaximum, max);
 }
 
 
@@ -143,13 +176,10 @@ void nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 //-------------------------------------------------------------------------
 PRUint32 nsScrollbar::GetMaxRange()
 {
-    //int startRange, endRange;
-    //if (mWnd) {
-        //VERIFY(::GetScrollRange(mWnd, SB_CTL, &startRange, &endRange));
-    //}
+    int maxRange = 0;
+    XtVaGetValues(mWidget, XmNmaximum, &maxRange);
 
-    //return (PRUint32)NS_TO_INT_ROUND(endRange * mScaleFactor);
-    return 0;
+    return (PRUint32)maxRange;
 }
 
 
@@ -160,7 +190,13 @@ PRUint32 nsScrollbar::GetMaxRange()
 //-------------------------------------------------------------------------
 void nsScrollbar::SetPosition(PRUint32 aPos)
 {
-    //::SetScrollPos(mWnd, SB_CTL, NS_TO_INT_ROUND(aPos / mScaleFactor), TRUE);
+    fprintf(stderr, "Setting SetPosition to %d 0x%x\n", aPos, mWidget);
+    int pos = aPos;
+    XtVaGetValues(mWidget, XmNvalue, &pos);
+    fprintf(stderr, "pos is %d\n", pos);
+
+    pos = aPos;
+    XtVaSetValues(mWidget, XmNvalue, pos);
 }
 
 
@@ -171,7 +207,10 @@ void nsScrollbar::SetPosition(PRUint32 aPos)
 //-------------------------------------------------------------------------
 PRUint32 nsScrollbar::GetPosition()
 {
-    return (PRUint32)0;//NS_TO_INT_ROUND(::GetScrollPos(mWnd, SB_CTL) * mScaleFactor);
+    int pagePos = 0;
+    XtVaGetValues(mWidget, XmNvalue, &pagePos);
+
+    return (PRUint32)pagePos;
 }
 
 
@@ -182,13 +221,7 @@ PRUint32 nsScrollbar::GetPosition()
 //-------------------------------------------------------------------------
 void nsScrollbar::SetThumbSize(PRUint32 aSize)
 {
-    //if (mWnd) {
-        //SCROLLINFO si;
-        //si.cbSize = sizeof(SCROLLINFO);
-        //si.fMask = SIF_PAGE;
-        //si.nPage = NS_TO_INT_ROUND(aSize / mScaleFactor);
-        //::SetScrollInfo(mWnd, SB_CTL, &si, TRUE);
-    //}
+    XtVaSetValues(mWidget, XmNpageIncrement, (int)aSize);
 }
 
 
@@ -199,15 +232,10 @@ void nsScrollbar::SetThumbSize(PRUint32 aSize)
 //-------------------------------------------------------------------------
 PRUint32 nsScrollbar::GetThumbSize()
 {
-    //if (mWnd) {
-        //SCROLLINFO si;
-        //si.cbSize = sizeof(SCROLLINFO);
-        //si.fMask = SIF_PAGE;
-        //VERIFY(::GetScrollInfo(mWnd, SB_CTL, &si));
-        //return (PRUint32)NS_TO_INT_ROUND(si.nPage * mScaleFactor);
-    //}
+    int pageSize = 0;
+    XtVaGetValues(mWidget, XmNpageIncrement, &pageSize);
 
-    return 0;
+    return (PRUint32)pageSize;
 }
 
 
@@ -218,7 +246,7 @@ PRUint32 nsScrollbar::GetThumbSize()
 //-------------------------------------------------------------------------
 void nsScrollbar::SetLineIncrement(PRUint32 aSize)
 {
-    //mLineIncrement = NS_TO_INT_ROUND(aSize / mScaleFactor);
+    mLineIncrement = aSize;
 }
 
 
@@ -229,7 +257,7 @@ void nsScrollbar::SetLineIncrement(PRUint32 aSize)
 //-------------------------------------------------------------------------
 PRUint32 nsScrollbar::GetLineIncrement()
 {
-    return (PRUint32)0;//NS_TO_INT_ROUND(mLineIncrement * mScaleFactor);
+    return mLineIncrement;
 }
 
 
@@ -241,21 +269,14 @@ PRUint32 nsScrollbar::GetLineIncrement()
 void nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                 PRUint32 aPosition, PRUint32 aLineIncrement)
 {
-    //if (aMaxRange > 32767)
-        //mScaleFactor = aMaxRange / 32767.0;
 
-    //if (mWnd) {
-        //SCROLLINFO si;
-        //si.cbSize = sizeof(SCROLLINFO);
-        //si.fMask = SIF_PAGE | SIF_POS | SIF_RANGE;
-        //si.nPage = NS_TO_INT_ROUND(aThumbSize / mScaleFactor);
-        //si.nPos = NS_TO_INT_ROUND(aPosition / mScaleFactor);
-        //si.nMin = 0;
-        //si.nMax = NS_TO_INT_ROUND(aMaxRange / mScaleFactor);
-        //::SetScrollInfo(mWnd, SB_CTL, &si, TRUE);
-    //}
+    XtVaSetValues(mWidget, XmNincrement, aLineIncrement,
+                           XmNmaximum,   aMaxRange,
+                           XmNminimum,   0,
+                           XmNpageIncrement, aThumbSize,
+                           XmNvalue,     aPosition);
 
-    //mLineIncrement = NS_TO_INT_ROUND(aLineIncrement / mScaleFactor);
+    mLineIncrement = aLineIncrement;
 }
 
 
@@ -281,11 +302,12 @@ PRBool nsScrollbar::OnResize(nsRect &aWindowRect)
 // Deal with scrollbar messages (actually implemented only in nsScrollbar)
 //
 //-------------------------------------------------------------------------
-PRBool nsScrollbar::OnScroll(PRUint32 scrollCode, PRUint32 cPos)
+PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
     PRBool result = PR_TRUE;
     int newPosition;
-/*
+    fprintf(stderr, "Scrollbar %d pos %d\n", aEvent.message, cPos);
+#if 0
     switch (scrollCode) {
 
         // scroll one line right or down
@@ -293,7 +315,8 @@ PRBool nsScrollbar::OnScroll(PRUint32 scrollCode, PRUint32 cPos)
         //case SB_LINERIGHT: 
         case SB_LINEDOWN: 
         {
-            newPosition = ::GetScrollPos(mWnd, SB_CTL) + mLineIncrement;
+            XtVaGetValues(mWidget, XmNvalue, &newPosition);
+            newPosition += mLineIncrement;
             PRUint32 max = GetMaxRange() - GetThumbSize();
             if (newPosition > (int)max) 
                 newPosition = (int)max;
@@ -467,7 +490,7 @@ PRBool nsScrollbar::OnScroll(PRUint32 scrollCode, PRUint32 cPos)
             break;
         }
     }
-*/
+#endif
     return result;
 }
 

@@ -95,9 +95,8 @@ void nsXtWidget_ButtonReleaseMask_EventHandler(Widget w, XtPointer p, XEvent * e
 void nsXtWidget_ButtonMotionMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
   nsWindow * widgetWindow = (nsWindow *) p ;
-  //fprintf(stderr, "nsXtWidget_ButtonMotionMask_EventHandler\n");
   nsMouseEvent mevent;
-  nsXtWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_LEFT_BUTTON_UP);
+  nsXtWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_MOVE);
   widgetWindow->DispatchMouseEvent(mevent);
 }
 
@@ -105,30 +104,82 @@ void nsXtWidget_ButtonMotionMask_EventHandler(Widget w, XtPointer p, XEvent * ev
 void nsXtWidget_MotionMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
   nsWindow * widgetWindow = (nsWindow *) p ;
-  //fprintf(stderr, "nsXtWidget_MotionMask_EventHandler\n");
-  nsGUIEvent mevent;
-  nsXtWidget_InitNSEvent(event, p, mevent, NS_MOUSE_MOVE);
-  widgetWindow->DispatchEvent(&mevent);
+  nsMouseEvent mevent;
+  nsXtWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_MOVE);
+  widgetWindow->DispatchMouseEvent(mevent);
 }
 
 //==============================================================
 void nsXtWidget_EnterMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
   nsWindow * widgetWindow = (nsWindow *) p ;
-  fprintf(stderr, "***************** nsXtWidget_EnterMask_EventHandler\n");
-  nsGUIEvent mevent;
-  nsXtWidget_InitNSEvent(event, p, mevent, NS_MOUSE_ENTER);
-  widgetWindow->DispatchEvent(&mevent);
+  nsMouseEvent mevent;
+  nsXtWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_ENTER);
+  widgetWindow->DispatchMouseEvent(mevent);
 }
 
 //==============================================================
 void nsXtWidget_LeaveMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
   nsWindow * widgetWindow = (nsWindow *) p ;
-  fprintf(stderr, "***************** nsXtWidget_LeaveMask_EventHandler\n");
-  nsGUIEvent mevent;
-  nsXtWidget_InitNSEvent(event, p, mevent, NS_MOUSE_EXIT);
-  widgetWindow->DispatchEvent(&mevent);
+  //fprintf(stderr, "***************** nsXtWidget_LeaveMask_EventHandler\n");
+  nsMouseEvent mevent;
+  nsXtWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_EXIT);
+  widgetWindow->DispatchMouseEvent(mevent);
+}
+
+//==============================================================
+void nsXtWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data)
+{
+  nsWindow * widgetWindow = (nsWindow *) p ;
+  //fprintf(stderr, "***************** nsXtWidget_Scrollbar_Callback\n");
+
+  nsScrollbarEvent sevent;
+
+  XmScrollBarCallbackStruct * cbs = (XmScrollBarCallbackStruct*) call_data;
+fprintf(stderr, "Callback struct 0x%x\n", cbs);fflush(stderr);
+
+  sevent.widget  = (nsWindow *) p;
+  if (cbs->event != nsnull) {
+    sevent.point.x = cbs->event->xbutton.x;
+    sevent.point.y = cbs->event->xbutton.y;
+  } else {
+    sevent.point.x = 0;
+    sevent.point.y = 0;
+  }
+  sevent.time    = 0; //TBD
+
+  switch (cbs->reason) {
+
+    case XmCR_INCREMENT:
+      sevent.message = NS_SCROLLBAR_LINE_NEXT;
+      break;
+
+    case XmCR_DECREMENT:
+      sevent.message = NS_SCROLLBAR_LINE_PREV;
+      break;
+
+    case XmCR_PAGE_INCREMENT:
+      sevent.message = NS_SCROLLBAR_PAGE_NEXT;
+      break;
+
+    case XmCR_PAGE_DECREMENT:
+      sevent.message = NS_SCROLLBAR_PAGE_PREV;
+      break;
+
+    case XmCR_DRAG:
+      sevent.message = NS_SCROLLBAR_POS;
+      break;
+
+    case XmCR_VALUE_CHANGED:
+      sevent.message = NS_SCROLLBAR_POS;
+      break;
+
+    default:
+      fprintf(stderr, "In Default processing for scrollbar reason is [%d]\n", cbs->reason);
+      break;
+  }
+  widgetWindow->OnScroll(sevent, cbs->value);
 }
 
 
