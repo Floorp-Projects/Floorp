@@ -296,3 +296,4 @@ nsMsgPrintEngine::SetupObserver()
     mWebShell->SetDocLoaderObserver(observer);
   } 
 }
+
