@@ -389,7 +389,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
       // XXX progressive? ;)
       // not really progressive according to the state machine... -saari
       jpeg_start_output(&mInfo, mInfo.input_scan_number);
-      OutputScanlines(-1);
+      if (OutputScanlines(-1) == PR_FALSE)
+        return NS_OK; /* I/O suspension */
       jpeg_finish_output(&mInfo);
       mState = JPEG_DONE;
     }
@@ -416,42 +417,6 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     break;
   }
 
-  /* We may need to do some setup of our own at this point before reading
-   * the data.  After jpeg_start_decompress() we have the correct scaled
-   * output image dimensions available, as well as the output colormap
-   * if we asked for color quantization.
-   * In this example, we need to make an output work buffer of the right size.
-   */ 
-  /* JSAMPLEs per row in output buffer */
-#if 0
-  int row_stride = mInfo.output_width * mInfo.output_components; /* physical row width in output buffer */
-
-  /* Make a one-row-high sample array that will go away when done with image */
-  JSAMPARRAY buffer = (*mInfo.mem->alloc_sarray)       /* Output row buffer */
-		((j_common_ptr) &mInfo, JPOOL_IMAGE, row_stride, 1);
-
-  /* Step 6: while (scan lines remain to be read) */
-  /*           jpeg_read_scanlines(...); */
-
-  /* Here we use the library's state variable cinfo.output_scanline as the
-   * loop counter, so that we don't have to keep track ourselves.
-   */
-  while (mInfo.output_scanline < mInfo.output_height) {
-    /* jpeg_read_scanlines expects an array of pointers to scanlines.
-     * Here the array is only one element long, but you could ask for
-     * more than one scanline at a time if that's more convenient.
-     */
-    (void) jpeg_read_scanlines(&mInfo, buffer, 1); /*XXX can have I/O suspension! */
-    /* Assume put_scanline_someplace wants a pointer and sample count. */
-    mFrame->SetImageData(buffer[0], row_stride, row_stride*mInfo.output_scanline /* XXX ??? */);
-
-
-    nsRect r(0, mInfo.output_scanline, mInfo.output_width, 1);
-    mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
-
-  }
-#endif
-
   return NS_OK;
 }
 
@@ -459,13 +424,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 int
 nsJPEGDecoder::OutputScanlines(int num_scanlines)
 {
-  int input_exhausted = PR_FALSE;
   int pass = 0;
   
-#ifdef DEBUG
-  PRUintn start_scanline = mInfo.output_scanline;
-#endif
-
   if (mState == JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT)
       pass = -1;
   else
@@ -481,32 +441,26 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
       else
         ns = jpeg_read_scanlines(&mInfo, mSamples, 1); /* XXX can have I/O suspension */
         
-#if 0
-      ILTRACE(15,("il:jpeg: scanline %d, ns = %d",
-                  mInfo.output_scanline, ns));
-#endif
       if (ns != 1) {
-//          ILTRACE(5,("il:jpeg: suspending scanline"));
-          input_exhausted = TRUE;
-          goto done;
+        return PR_FALSE;
       }
 
       /* If grayscale image ... */
       if (mInfo.output_components == 1) {
-          JSAMPLE j, *j1, *j1end, *j3;
+        JSAMPLE j, *j1, *j1end, *j3;
 
-          /* Convert from grayscale to RGB. */
-          j1 = mSamples[0];
-          j1end = j1 + mInfo.output_width;
-          j3 = mSamples3[0];
-          while (j1 < j1end) {
-              j = *j1++;
-              j3[0] = j;
-              j3[1] = j;
-              j3[2] = j;
-              j3 += 3;
-          }
-          samples = mSamples3[0];
+        /* Convert from grayscale to RGB. */
+        j1 = mSamples[0];
+        j1end = j1 + mInfo.output_width;
+        j3 = mSamples3[0];
+        while (j1 < j1end) {
+          j = *j1++;
+          j3[0] = j;
+          j3[1] = j;
+          j3[2] = j;
+          j3 += 3;
+        }
+        samples = mSamples3[0];
       } else {        /* 24-bit color image */
         //JSAMPLE j, *j1, *j1end, *j3;
         
@@ -537,17 +491,13 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
         samples,             // data
         mInfo.output_width * 3,  // length
         (mInfo.output_scanline-1) * bpr); // offset
-#if 0
-      ic->imgdcb->ImgDCBHaveRow( 0, samples, 0, mInfo.output_width, mInfo.output_scanline-1,
-                  1, ilErase, pass);
-#endif
+
+      nsRect r(0, mInfo.output_scanline, mInfo.output_width, 1);
+      mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
+
   }
 
-  input_exhausted = FALSE;
-
-done:
-  
-  return input_exhausted;
+  return PR_TRUE;
 }
 
 
