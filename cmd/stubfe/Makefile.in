@@ -17,7 +17,7 @@
 #
 ######################################################################
 #
-# Makefile for tubbed-out FE, modeled after XFE Makefile.
+# Makefile for stubbed-out FE, modeled after XFE Makefile.
 #
 
 DEPTH		= ../..
@@ -394,7 +394,7 @@ DEFINES		+= -DNEW_DECODERS
 #
 
 ifdef BUILD_OFFICIAL
-EXTRA_REL_FILES	+= $(DIST)/bin/vreg $(srcdir)/l10n/us/xp/bookmark.htm
+EXTRA_REL_FILES	+= $(DIST)/bin/vreg $(topsrcdir)/l10n/us/xp/bookmark.htm
 endif
 
 # Only SunOS4 needs two versions NIS and DNS.

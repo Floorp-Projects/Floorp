@@ -27,6 +27,8 @@ LIBRARY_NAME	= lay
 
 EXPORTS		= laylayer.h layout.h lo_funcs.h
 
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+
 CSRCS		= bullet.c \
 		  clipline.c \
 		  layarena.c \
@@ -57,7 +59,11 @@ CSRCS		= bullet.c \
 		  laytrav.c \
                   $(NULL)
 
-REQUIRES	= parse style js layer applet nspr security dbm img util jtools edtplug java hook pref libfont lay rdf network htmldlgs privacy oji ojiimpl xpcom
+REQUIRES	= parse style js layer applet nspr security dbm img util jtools edtplug java hook pref libfont lay rdf network htmldlgs privacy mocha oji ojiimpl xpcom
+
+ifdef DOM
+REQUIRES	+= dom
+endif
 
 include $(topsrcdir)/config/config.mk
 
@@ -85,18 +91,20 @@ CPPSRCS		= streams.cpp \
 		  $(NULL)
 endif
 
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
-
 include $(topsrcdir)/config/rules.mk
+
+ifdef DOM
+DEFINES += -DDOM=1
+endif
 
 ifneq ($(OS_ARCH),OS2)
 $(OBJDIR)/laymocha.o: laymocha.c
 	@$(MAKE_OBJDIR)
-	$(CC) -o $@ -c $(CFLAGS) -I$(topsrcdir)/mocha/include $<
+	$(CC) -o $@ -c $(CFLAGS) -I$(srcdir)/mocha/include $<
 else
 $(OBJDIR)/laymocha.o: laymocha.c
 	@$(MAKE_OBJDIR)
-	$(CC) -Fo$@ -c $(CFLAGS) -I$(topsrcdir)/mocha/include $<
+	$(CC) -Fo$@ -c $(CFLAGS) -I$(srcdir)/mocha/include $<
 endif
 
 $(LIBRARY): $(OBJS)

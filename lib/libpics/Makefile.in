@@ -19,8 +19,8 @@
 
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -36,6 +36,6 @@ CSRCS		= cslabel.c \
 		  picsapi.c \
 		  $(NULL)
 
-REQUIRES	= js nspr dbm img layer util pref security
+REQUIRES	= js nspr dbm img layer util pref security httpurl network
 
 include $(topsrcdir)/config/rules.mk

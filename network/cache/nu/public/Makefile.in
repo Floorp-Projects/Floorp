@@ -17,12 +17,13 @@
 
 DEPTH=../../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS =               \
+	nsMonitorable.h		\
 	nsMemModule.h 		\
 	nsCacheManager.h 	\
     nsDiskModule.h 		\
@@ -32,7 +33,7 @@ EXPORTS =               \
 	nsCachePref.h		\
         $(NULL)
 
-EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
+EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 MODULE = cache
 
