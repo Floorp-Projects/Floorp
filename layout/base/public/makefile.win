@@ -84,6 +84,7 @@ EXPORTS =				\
 	nsIContentSerializer.h \
 	nsIHTMLToTextSink.h \
 	nsIScrollableViewProvider.h \
+  nsIPrintContext.h \
 	$(NULL)
 
 MODULE=layout_base

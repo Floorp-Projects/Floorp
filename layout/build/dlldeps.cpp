@@ -25,6 +25,7 @@
 
 #include "nsString.h"
 #include "nsIPresShell.h"
+#include "nsIPrintContext.h"
 #include "nsIPresContext.h"
 #include "nsIStyleSet.h"
 #include "nsIDocument.h"
@@ -36,9 +37,10 @@ void XXXNeverCalled()
   nsIPresShell* ps;
   NS_NewPresShell(&ps);
   nsIPresContext* cx;
+  nsIPrintContext *px;
   NS_NewGalleyContext(&cx);
   NS_NewPrintPreviewContext(&cx);
-  NS_NewPrintContext(&cx);
+  NS_NewPrintContext(&px);
   nsIStyleSet* ss;
   NS_NewStyleSet(&ss);
   nsIDocument* doc;

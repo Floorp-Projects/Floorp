@@ -377,10 +377,6 @@ extern NS_LAYOUT nsresult
 extern NS_LAYOUT nsresult
   NS_NewPrintPreviewContext(nsIPresContext** aInstancePtrResult);
 
-// Factory method to create a "paginated" presentation context for
-// printing
-extern NS_LAYOUT nsresult
-  NS_NewPrintContext(nsIPresContext** aInstancePtrResult);
 
 
 #ifdef MOZ_REFLOW_PERF
