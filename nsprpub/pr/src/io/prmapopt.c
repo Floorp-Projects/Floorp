@@ -92,6 +92,7 @@ PRStatus PR_CALLBACK _PR_SocketGetSocketOption(PRFileDesc *fd, PRSocketOptionDat
             case PR_SockOpt_Reuseaddr:
             case PR_SockOpt_Keepalive:
             case PR_SockOpt_NoDelay:
+            case PR_SockOpt_Broadcast:
             {
 #ifdef WIN32 /* Winsock */
                 BOOL value;
@@ -242,6 +243,7 @@ PRStatus PR_CALLBACK _PR_SocketSetSocketOption(PRFileDesc *fd, const PRSocketOpt
             case PR_SockOpt_Reuseaddr:
             case PR_SockOpt_Keepalive:
             case PR_SockOpt_NoDelay:
+            case PR_SockOpt_Broadcast:
             {
 #ifdef WIN32 /* Winsock */
                 BOOL value;
@@ -454,14 +456,14 @@ PRStatus _PR_MapOptionName(
         0, SO_LINGER, SO_REUSEADDR, SO_KEEPALIVE, SO_RCVBUF, SO_SNDBUF,
         IP_TTL, IP_TOS, IP_ADD_MEMBERSHIP, IP_DROP_MEMBERSHIP,
         IP_MULTICAST_IF, IP_MULTICAST_TTL, IP_MULTICAST_LOOP,
-        TCP_NODELAY, TCP_MAXSEG
+        TCP_NODELAY, TCP_MAXSEG, SO_BROADCAST
     };
     static PRInt32 socketLevels[PR_SockOpt_Last] =
     {
         0, SOL_SOCKET, SOL_SOCKET, SOL_SOCKET, SOL_SOCKET, SOL_SOCKET,
         IPPROTO_IP, IPPROTO_IP, IPPROTO_IP, IPPROTO_IP,
         IPPROTO_IP, IPPROTO_IP, IPPROTO_IP,
-        IPPROTO_TCP, IPPROTO_TCP
+        IPPROTO_TCP, IPPROTO_TCP, SOL_SOCKET
     };
 
     if ((optname < PR_SockOpt_Linger)

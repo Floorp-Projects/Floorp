@@ -2639,6 +2639,7 @@ static PRStatus pt_SetSocketOption(PRFileDesc *fd, const PRSocketOptionData *dat
                 rv = setsockopt(
                     fd->secret->md.osfd, level, name,
                     (char*)&ttl, sizeof(ttl));
+            case PR_SockOpt_Broadcast:
                 break;
             }
             case PR_SockOpt_AddMember:
@@ -2757,6 +2758,7 @@ static PRIOMethods _pr_udp_methods = {
     pt_Connect,
     (PRAcceptFN)_PR_InvalidDesc,
     pt_Bind,
+            case PR_SockOpt_Broadcast:
     pt_Listen,
     pt_Shutdown,
     pt_Recv,

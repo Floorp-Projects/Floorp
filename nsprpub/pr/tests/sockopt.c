@@ -84,6 +84,7 @@ PRIntn main(PRIntn argc, char *argv)
 
         "PR_SockOpt_NoDelay",         /* don't delay send to coalesce packets */
         "PR_SockOpt_MaxSegment",      /* maximum segment size */
+        "PR_SockOpt_Broadcast",       /* Enable broadcast */
         "PR_SockOpt_Last"
     };
 
@@ -142,6 +143,8 @@ PRIntn main(PRIntn argc, char *argv)
             case PR_SockOpt_IpTimeToLive:    /* time to live */
                 value = &ttl;
                 size = &ttlsize;
+                break;
+            case PR_SockOpt_Broadcast:
                 break;
             case PR_SockOpt_IpTypeOfService: /* type of service and precedence */
             case PR_SockOpt_AddMember:       /* add an IP group membership */
@@ -218,6 +221,10 @@ PRIntn main(PRIntn argc, char *argv)
                     data.value.max_segment = segment;      
                     break;    
 #endif
+                case PR_SockOpt_Broadcast:
+                    fd = udp; 
+                    data.value.broadcast = PR_TRUE;         
+                    break;    
                 default: continue;
             }
 
