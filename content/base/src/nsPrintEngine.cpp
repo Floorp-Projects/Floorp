@@ -2402,26 +2402,16 @@ nsPrintEngine::SetupToPrintContent(nsIDeviceContext*     aDContext,
     doSetPixelScale = PR_TRUE;
   }
 
-  // If we are doing "shrink to fit" then request that the first
-  // reflow is constrained
-  if (mPrt->mShrinkToFit && !ppIsShrinkToFit) {
-    mPrt->mPrintOptions->SetDoUncontrainedReflow(PR_TRUE);
-  }
-
   // Here we reflow all the PrintObjects
   nsresult rv = ReflowDocList(mPrt->mPrintObject, doSetPixelScale, mPrt->mShrinkToFit);
   CHECK_RUNTIME_ERROR_CONDITION(nsIDebugObject::PRT_RUNTIME_REFLOWDOCLIST, rv, NS_ERROR_FAILURE);
   if (NS_FAILED(rv)) {
-    mPrt->mPrintOptions->SetDoUncontrainedReflow(PR_FALSE);
     return NS_ERROR_FAILURE;
   }
 
   // Here is where we do the extra reflow for shrinking the content
   // But skip this step if we are in PrintPreview
   if (mPrt->mShrinkToFit && !ppIsShrinkToFit) {
-    // Turn off the request for unconstrained reflow
-    mPrt->mPrintOptions->SetDoUncontrainedReflow(PR_FALSE);
-
     // Now look for the PO that has the smallest percent for shrink to fit
     if (mPrt->mPrintDocList->Count() > 1 && mPrt->mPrintObject->mFrameType == eFrameSet) {
       nsPrintObject* smallestPO = FindSmallestSTF();
@@ -2437,8 +2427,8 @@ nsPrintEngine::SetupToPrintContent(nsIDeviceContext*     aDContext,
 
     // Only Shrink if we are smaller
     if (mPrt->mShrinkRatio < 0.998f) {
-      // Clamp Shrink to Fit to 50%
-      mPrt->mShrinkRatio = PR_MAX(mPrt->mShrinkRatio, 0.5f);
+      // Clamp Shrink to Fit to 30%
+      mPrt->mShrinkRatio = PR_MAX(mPrt->mShrinkRatio, 0.30f);
 
       for (PRInt32 i=0;i<mPrt->mPrintDocList->Count();i++) {
         nsPrintObject* po = (nsPrintObject*)mPrt->mPrintDocList->ElementAt(i);

@@ -91,29 +91,32 @@ NS_IMETHODIMP nsPageContentFrame::Reflow(nsIPresContext*   aPresContext,
       nsSize  maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
       nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame, maxSize);
 
-      // Check to see if we need to do an unconstrained reflow
-      // If so, then cache the size the page was SUPPOSE to be reflowed to
-      // so we can use it later to determine a percentage.
-      PRBool doUnconstrained = PR_FALSE;
-      if (mPD && mPD->mPrintOptions) {
-        mPD->mPrintOptions->GetDoUncontrainedReflow(&doUnconstrained);
-        if (doUnconstrained) {
-          mPD->mPageContextSize = aReflowState.availableWidth;
-          maxSize.width = NS_UNCONSTRAINEDSIZE;
-          kidReflowState.availableWidth = NS_UNCONSTRAINEDSIZE;
-          kidReflowState.mComputedWidth = NS_UNCONSTRAINEDSIZE;
-        }
-      }
+      mPD->mPageContentSize  = aReflowState.availableWidth;
 
       // Reflow the page content area to get the child's desired size
       ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, 0, 0, 0, aStatus);
 
-      // This is where we cache the true uncontrained size of the document
-      // each page may end up with a different constrained size, 
-      // so we must only keep the largest size of all the pages
-      if (doUnconstrained) {
-        if (mPD->mPageContextSizeUC == 0 || mPD->mPageContextSizeUC < aDesiredSize.width) {
-          mPD->mPageContextSizeUC = aDesiredSize.width;
+      // The document element's background should cover the entire canvas, so
+      // take into account the combined area and any space taken up by
+      // absolutely positioned elements
+      nsMargin      border(0,0,0,0);
+      nsMargin      padding(0,0,0,0);
+      nsFrameState  kidState;
+
+      // Ignore the return values for these
+      // Typically they are zero and if they fail 
+      // we should keep going anyway, there impact is small
+      kidReflowState.mStyleBorder->GetBorder(border);
+      kidReflowState.mStylePadding->GetPadding(padding);
+      frame->GetFrameState(&kidState);
+
+      // First check the combined area
+      if (NS_FRAME_OUTSIDE_CHILDREN & kidState) {
+        // The background covers the content area and padding area, so check
+        // for children sticking outside the child frame's padding edge
+        nscoord paddingEdgeX = aDesiredSize.width - border.right - padding.right;
+        if (aDesiredSize.mOverflowArea.XMost() > aDesiredSize.width) {
+          mPD->mPageContentXMost =  aDesiredSize.mOverflowArea.XMost() + border.right + padding.right;
         }
       }
 

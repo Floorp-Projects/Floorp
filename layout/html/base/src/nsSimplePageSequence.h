@@ -68,8 +68,8 @@ public:
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   nsCOMPtr<nsIPrintOptions> mPrintOptions;
 
-  nscoord      mPageContextSizeUC;     // unconstrained size (width)
-  nscoord      mPageContextSize;       // constrained size   (width)
+  nscoord      mPageContentXMost;      // xmost size from Reflow(width)
+  nscoord      mPageContentSize;       // constrained size (width)
 };
 
 // Simple page sequence frame class. Used when we're in paginated mode

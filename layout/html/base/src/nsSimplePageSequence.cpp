@@ -107,7 +107,9 @@ nsSharedPageData::nsSharedPageData() :
   mShadowSize(0,0),
   mDeadSpaceMargin(0,0,0,0),
   mExtraMargin(0,0,0,0),
-  mEdgePaperMargin(0,0,0,0)
+  mEdgePaperMargin(0,0,0,0),
+  mPageContentSize(0),
+  mPageContentXMost(0)
 {
 }
 
@@ -1141,8 +1143,8 @@ nsSimplePageSequenceFrame::GetSTFPercent(float& aSTFPercent)
 {
   NS_ENSURE_TRUE(mPageData, NS_ERROR_UNEXPECTED);
   aSTFPercent = 1.0f;
-  if (mPageData && (mPageData->mPageContextSizeUC > mPageData->mPageContextSize)) {
-    aSTFPercent = float(mPageData->mPageContextSize) / float(mPageData->mPageContextSizeUC);
+  if (mPageData && (mPageData->mPageContentXMost > mPageData->mPageContentSize)) {
+    aSTFPercent = float(mPageData->mPageContentSize) / float(mPageData->mPageContentXMost);
   }
   return NS_OK;
 }
