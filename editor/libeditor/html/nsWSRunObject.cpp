@@ -680,7 +680,6 @@ nsWSRunObject::GetWSNodes()
   nsresult res = NS_OK;
   
   nsCOMPtr<nsIDOMNode> blockParent, curStartNode, curEndNode;
-  PRInt32 curStartOffset, curEndOffset;
   if (IsBlockNode(mNode)) blockParent = mNode;
   else blockParent = mHTMLEditor->GetBlockNodeParent(mNode);
 
@@ -726,10 +725,9 @@ nsWSRunObject::GetWSNodes()
       // we didnt find beginning of whitespace.  remember this text node
       // (and offset 0) as the extent to which we have looked back.
       curStartNode = mNode;
-      curStartOffset = 0;
     }
   }
-
+  PRInt32 curStartOffset=0;
   nsCOMPtr<nsIDOMNode> priorNode;
   while (!mStartNode)
   {
@@ -862,7 +860,7 @@ nsWSRunObject::GetWSNodes()
       mStartReason = eThisBlock;
     } 
   }
-  
+  PRInt32 curEndOffset=0;  
   // then look ahead to find following ws nodes
   if (mHTMLEditor->IsTextNode(mNode))
   {
