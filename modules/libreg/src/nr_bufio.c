@@ -57,8 +57,9 @@
 #define ENDS_IN_BUF(f,c) (((f->fpos + c) > (PRUint32)f->datastart) && \
                          ((f->fpos + c) <= (PRUint32)(f->datastart+f->datasize)))
 
-
-
+#if DEBUG_dougt
+static num_reads = 0;
+#endif
 
 
 #define BUFIO_BUFSIZE   0x10000
@@ -196,6 +197,9 @@ int bufio_Close(BufioFile* file)
             PR_Free( file->data );
 
         PR_DELETE( file );
+#if DEBUG_dougt
+        printf(" --- > Buffered registry read fs hits (%d)\n", num_reads);
+#endif
     }
 
     return retval;
@@ -329,6 +333,9 @@ PRUint32 bufio_Read(BufioFile* file, char* dest, PRUint32 count)
 
                 if ( fseek( file->fd, file->fpos, SEEK_SET ) == 0 )
                 {
+#if DEBUG_dougt
+                    ++num_reads;
+#endif
                     bytesRead = fread(dest+bytesCopied, 1, leftover, file->fd);
                     file->fpos += bytesRead;
                     retcount += bytesRead;
@@ -388,7 +395,12 @@ PRUint32 bufio_Read(BufioFile* file, char* dest, PRUint32 count)
         {
             /* leftover data doesn't fit so skip buffering */
             if ( fseek( file->fd, file->fpos, SEEK_SET ) == 0 )
+            {
                 bytesRead = fread(dest, 1, leftover, file->fd);
+#if DEBUG_dougt
+                ++num_reads;
+#endif        
+            }
             else
                 bytesRead = 0;
         }
@@ -589,6 +601,9 @@ static PRBool _bufio_loadBuf( BufioFile* file, PRUint32 count )
         return PR_FALSE;
     else
     {
+#if DEBUG_dougt
+        ++num_reads;
+#endif
         bytesRead = fread( file->data, 1, BUFIO_BUFSIZE, file->fd );
         file->datastart  = startBuf;
         file->datasize   = bytesRead;
