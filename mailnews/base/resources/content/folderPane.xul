@@ -51,6 +51,9 @@
 	          ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
 			  HasUnreadMessages="rdf:http://home.netscape.com/NC-rdf#HasUnreadMessages"
 			  SubfoldersHaveUnreadMessages="rdf:http://home.netscape.com/NC-rdf#SubfoldersHaveUnreadMessages"
+			  CanRename="rdf:http://home.netscape.com/NC-rdf#CanRename"
+			  CanCreateSubfolders="rdf:http://home.netscape.com/NC-rdf#CanCreateSubfolders"
+			  CanSubscribe="rdf:http://home.netscape.com/NC-rdf#CanSubscribe"
 			  persist="threaded open">
 		  	  <treerow >
 					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#FolderTreeName"/>

@@ -271,6 +271,20 @@ Rights Reserved.
 <!ENTITY contextAddSenderToAddressBook.label "Add Sender To Address Book">
 <!ENTITY contextAddAllToAddressBook.label "Add All To Address Book">
 
+<!-- Folder Pane Context Menu -->
+<!ENTITY folderContextGetMessages.label "Get Messages for Account">
+<!ENTITY folderContextOpenNewWindow.label "Open in New Window">
+<!ENTITY folderContextRename.label "Rename">
+<!ENTITY folderContextRemove.label "Remove">
+<!ENTITY folderContextEmptyTrash.label "Empty This Trash Can Now">
+<!ENTITY folderContextSendUnsentMessages.label "Send Unsent Messages...">
+<!ENTITY folderContextUnsubscribe.label "Unsubscribe From Newsgroup...">
+<!ENTITY folderContextMarkNewsgroupRead.label "Mark Newsgroup Read">
+<!ENTITY folderContextNew.label "New">
+<!ENTITY folderContextSubscribe.label "Subscribe...">
+<!ENTITY folderContextSearchMessages.label "Search Messages...">
+<!ENTITY folderContextProperties.label "Properties...">
+
 <!-- Message Header View Popup -->
 <!ENTITY AddToAddressBook.label "Add Address To Address Book">
 <!ENTITY SendMailTo.label "Send Mail To">

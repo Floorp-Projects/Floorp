@@ -255,14 +255,65 @@ Rights Reserved.
 			  accesskey=""
 			  oncommand="MsgAddAllToAddressBook();"/>
 	</popup>
-
+    <popup id="folderPaneContext" oncreate="return fillFolderPaneContextMenu();" >
+		<menuitem id="folderPaneContext-getMessages"
+			  value="&folderContextGetMessages.label;"
+			  accesskey=""
+			  oncommand="MsgGetMessage();"/>
+		<menuitem id="folderPaneContext-openNewWindow"
+			  value="&folderContextOpenNewWindow.label;"
+			  accesskey=""
+			  oncommand="MsgOpenNewWindowForFolder();"/>
+		<menuitem id="folderPaneContext-rename"
+			  value="&folderContextRename.label;"
+			  accesskey=""
+			  oncommand="MsgRenameFolder();"/>
+		<menuitem id="folderPaneContext-remove"
+			  value="&folderContextRemove.label;"
+			  accesskey=""
+			  oncommand="MsgDeleteFolder();"/>
+		<menuitem id="folderPaneContext-emptyTrash"
+			  value="&folderContextEmptyTrash.label;"
+			  accesskey=""
+			  oncommand="MsgEmptyTrash();"/>
+		<menuitem id="folderPaneContext-sendUnsentMessages"
+			  value="&folderContextSendUnsentMessages.label;"
+			  accesskey=""
+			  oncommand="MsgSendUnsentMsg();"/>
+		<menuitem id="folderPaneContext-unsubscribe"
+			  value="&folderContextUnsubscribe.label;"
+			  accesskey=""
+			  oncommand="MsgUnsubscribe();"/>
+		<menuitem id="folderPaneContext-markFolderRead"
+			  value="&folderContextMarkNewsgroupRead.label;"
+			  accesskey=""
+			  oncommand="MsgMarkFolderRead();"/>
+		<menuseparator id="folderPaneContext-sep-edit"/>
+		<menuitem id="folderPaneContext-new"
+			  value="&folderContextNew.label;"
+			  accesskey=""
+			  oncommand="MsgNewFolder();"/>
+		<menuitem id="folderPaneContext-subscribe"
+			  value="&folderContextSubscribe.label;"
+			  accesskey=""
+			  oncommand="MsgSubscribe();"/>
+		<menuseparator id="folderPaneContext-sep-new"/>
+		<menuitem id="folderPaneContext-searchMessages"
+			  value="&folderContextSearchMessages.label;"
+			  accesskey=""
+			  oncommand="MsgSearchMessages();"/>
+		<menuseparator id="folderPaneContext-sep-search"/>
+		<menuitem id="folderPaneContext-properties"
+			  value="&folderContextProperties.label;"
+			  accesskey=""
+			  oncommand="MsgFolderProperties();"/>
+	</popup>
   <popup id="emailAddressPopup"  popupanchor="bottomleft">
       <menuitem value="&AddToAddressBook.label;"
                 oncommand="AddNodeToAddressBook(document.popupNode)"/>
       <menuitem value="&SendMailTo.label;"
                 oncommand="SendMailToNode(document.popupNode)"/>
   </popup>
-
 </popupset>
 
         <menubar>
@@ -725,7 +776,7 @@ Rights Reserved.
 		              persist="state">
 		 		<html:div class="panel-bar">&mail-sidebar-header.label;</html:div>
 		    </splitter>
-            <tree id="folderTree"/>
+            <tree id="folderTree" context="folderPaneContext"/>
           </box>
           
           <splitter id="sidebar-splitter"/>

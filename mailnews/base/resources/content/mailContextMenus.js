@@ -71,6 +71,166 @@
 	return(true);
 }
 
+function fillFolderPaneContextMenu()
+{
+	var tree = GetFolderTree();
+	var selectedItems = tree.selectedItems;
+	var numSelected = selectedItems.length;
+
+    var popupNode = document.getElementById('folderPaneContext');
+
+	var targetFolder = document.popupNode.parentNode.parentNode;
+	if (targetFolder.getAttribute('selected') != 'true')
+	{
+      tree.selectItem(targetFolder);
+    }
+
+	var isServer = targetFolder.getAttribute('IsServer') == 'true';
+	var serverType = targetFolder.getAttribute('ServerType');
+	var specialFolder = targetFolder.getAttribute('SpecialFolder');
+
+	ShowMenuItem("folderPaneContext-getMessages", (numSelected <= 1) && (isServer && (serverType != 'nntp')));
+	EnableMenuItem("folderPaneContext-getMessages", true);
+
+	ShowMenuItem("folderPaneContext-openNewWindow", (numSelected <= 1) && !isServer);
+	EnableMenuItem("folderPaneContext-openNewWindow", (false));
+
+	SetupRenameMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
+	SetupRemoveMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
+
+	ShowMenuItem("folderPaneContext-emptyTrash", (numSelected <= 1) && (specialFolder == 'Trash'));
+	EnableMenuItem("folderPaneContext-emptyTrash", true);
+
+	ShowMenuItem("folderPaneContext-sendUnsentMessages", (numSelected <= 1) && (specialFolder == 'Unsent Messages'));
+	EnableMenuItem("folderPaneContext-sendUnsentMessages", true);
+
+	ShowMenuItem("folderPaneContext-unsubscribe", (numSelected <= 1) && ((serverType == 'nntp') && !isServer));
+	EnableMenuItem("folderPaneContext-unsubscribe", false);
+
+	ShowMenuItem("folderPaneContext-markFolderRead", (numSelected <= 1) && ((serverType == 'nntp') && !isServer));
+	EnableMenuItem("folderPaneContext-markFolderRead", false);
+
+	ShowMenuItem("folderPaneContext-sep-edit", (numSelected <= 1));
+
+	SetupNewMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
+
+	ShowMenuItem("folderPaneContext-subscribe", (numSelected <= 1) && (serverType == 'nntp'));
+	EnableMenuItem("folderPaneContext-subscribe", true);
+
+	ShowMenuItem("folderPaneContext-sep-new", ((numSelected<=1) && (specialFolder != "Unsent Messages")));
+
+	ShowMenuItem("folderPaneContext-searchMessages", (numSelected<=1));
+	EnableMenuItem("folderPaneContext-searchMessages", false);
+
+	ShowMenuItem("folderPaneContext-sep-search", (numSelected<=1));
+
+	SetupPropertiesMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
+	return(true);
+}
+
+function SetupRenameMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder)
+{
+	var isSpecialFolder = specialFolder != 'none';
+	var isMail = serverType != 'nntp';
+	var canRename = (targetFolder.getAttribute('CanRename') == "true");
+
+	ShowMenuItem("folderPaneContext-rename", (numSelected <= 1) && (isServer || canRename));
+	EnableMenuItem("folderPaneContext-rename", !isServer);
+
+	if(isServer)
+	{
+		if(isMail)
+		{
+			SetMenuItemValue("folderPaneContext-rename", Bundle.GetStringFromName("renameAccount"));
+		}
+		else
+		{
+			SetMenuItemValue("folderPaneContext-rename", Bundle.GetStringFromName("renameNewsAccount"));
+		}
+	}
+	else if(canRename)
+	{
+		SetMenuItemValue("folderPaneContext-rename", Bundle.GetStringFromName("renameFolder"));
+	}
+}
+
+function SetupRemoveMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder)
+{
+	var isMail = serverType != 'nntp';
+	var isInbox = specialFolder == "Inbox";
+	var isTrash = specialFolder == "Trash";
+	var isUnsent = specialFolder == "Unsent Messages";
+	var showRemove = (numSelected <=1) && (isServer || (isMail && (!(isInbox || isTrash || isUnsent))));
+
+
+	ShowMenuItem("folderPaneContext-remove", showRemove);
+	EnableMenuItem("folderPaneContext-remove", false);
+
+	if(isServer)
+	{
+		if(isMail)
+		{
+			SetMenuItemValue("folderPaneContext-remove", Bundle.GetStringFromName("removeAccount"));
+		}
+		else
+		{
+			SetMenuItemValue("folderPaneContext-remove", Bundle.GetStringFromName("removeNewsAccount"));
+		}
+	}
+	else if(isMail && !(isInbox || isTrash || isUnsent))
+	{
+		SetMenuItemValue("folderPaneContext-remove", Bundle.GetStringFromName("removeFolder"));
+	}
+}
+
+function SetupNewMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder)
+{
+	var canCreateNew = targetFolder.getAttribute('CanCreateSubfolders') == 'true';
+	var showNew = (numSelected <=1) && (serverType != 'nntp') && canCreateNew;
+	ShowMenuItem("folderPaneContext-new", showNew);
+	EnableMenuItem("folderPaneContext-new", true);
+	if(showNew)
+	{
+		if(isServer)
+			SetMenuItemValue("folderPaneContext-new", Bundle.GetStringFromName("newFolder"));
+		else
+			SetMenuItemValue("folderPaneContext-new", Bundle.GetStringFromName("newSubfolder"));
+	}
+
+}
+
+function SetupPropertiesMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder)
+{
+	ShowMenuItem("folderPaneContext-properties", (numSelected <=1));
+	EnableMenuItem("folderPaneContext-properties", false);
+
+	if(isServer)
+	{
+		SetMenuItemValue("folderPaneContext-properties", Bundle.GetStringFromName("accountProperties"));
+	}
+	else if(specialFolder == 'Inbox')
+	{
+		SetMenuItemValue("folderPaneContext-properties", Bundle.GetStringFromName("inboxProperties"));
+	}
+	else if(specialFolder == 'Trash')
+	{
+		SetMenuItemValue("folderPaneContext-properties", Bundle.GetStringFromName("trashProperties"));
+	}
+	else if(specialFolder == 'Unsent Messages')
+	{
+		SetMenuItemValue("folderPaneContext-properties", Bundle.GetStringFromName("unsentMessagesProperties"));
+	}
+	else if(serverType == 'nntp')
+	{
+		SetMenuItemValue("folderPaneContext-properties", Bundle.GetStringFromName("newsgroupProperties"));
+	}
+	else
+	{
+		SetMenuItemValue("folderPaneContext-properties", Bundle.GetStringFromName("folderProperties"));
+	}
+
+}
+
 function ShowMenuItem(id, showItem)
 {
 	var item = document.getElementById(id);
@@ -89,3 +249,10 @@ function EnableMenuItem(id, enableItem)
 	}
 }
 
+function SetMenuItemValue(id, value)
+{
+	var item = document.getElementById(id);
+	if(item)
+		item.setAttribute('value', value);
+
+}
