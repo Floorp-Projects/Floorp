@@ -64,6 +64,9 @@ case "$build_action" in
       if test -f mozconfig; then
         echo "Found mozconfig..."
         nohup ./build-seamonkey.pl --$build_type --mozconfig mozconfig &
+      elif test -f .mozconfig; then
+        echo "Found .mozconfig..."
+        nohup ./build-seamonkey.pl --$build_type --mozconfig .mozconfig &
       else
         nohup ./build-seamonkey.pl --$build_type &
       fi
