@@ -234,15 +234,6 @@ public: // other morkNode methods
   mork_bool IsHeapNode() const
   { return mNode_Usage == morkUsage_kHeap; }
 
-  mork_bool IsStackNode() const
-  { return mNode_Usage == morkUsage_kStack; }
-
-  mork_bool IsGlobalNode() const
-  { return mNode_Usage == morkUsage_kGlobal; }
-
-  mork_bool IsMemberNode() const
-  { return mNode_Usage == morkUsage_kMember; }
-
   mork_bool IsOpenNode() const
   { return mNode_Access == morkAccess_kOpen; }
 

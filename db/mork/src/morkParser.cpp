@@ -955,7 +955,6 @@ morkBuf* morkParser::ReadValue(morkEnv* ev)
 void morkParser::ReadDictForm(morkEnv *ev)
 {
   int nextChar;
-  morkStream* s = mParser_Stream;
   nextChar = this->NextChar(ev);
   if (nextChar == '(')
   {
@@ -995,7 +994,6 @@ void morkParser::ReadCellForm(morkEnv *ev, int c)
 {
   MORK_ASSERT (c == morkStore_kFormColumn);
   int nextChar;
-  morkStream* s = mParser_Stream;
   nextChar = this->NextChar(ev);
   int cellForm;
 

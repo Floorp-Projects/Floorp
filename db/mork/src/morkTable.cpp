@@ -76,10 +76,6 @@
 #include "morkRow.h"
 #endif
 
-#ifndef _ORKINTABLE_
-#include "orkinTable.h"
-#endif
-
 #ifndef _MORKTABLEROWCURSOR_
 #include "morkTableRowCursor.h"
 #endif
@@ -88,9 +84,6 @@
 #include "morkRowObject.h"
 #endif
 
-#ifndef _ORKINTABLEROWCURSOR_
-#include "orkinTableRowCursor.h"
-#endif
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 // ````` ````` ````` ````` ````` 

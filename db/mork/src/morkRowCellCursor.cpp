@@ -210,7 +210,6 @@ morkRowCellCursor::GetRow(nsIMdbEnv* mev, nsIMdbRow** acqRow)
 {
   mdb_err outErr = 0;
   nsIMdbRow* outRow = 0;
-  morkRow* row = 0;
   morkEnv* ev = morkEnv::FromMdbEnv(mev);
   if ( ev )
   {

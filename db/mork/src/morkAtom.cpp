@@ -395,7 +395,10 @@ morkBookAtom::HashFormAndBody(morkEnv* ev) const
     body = ((const morkFarBookAtom*) this)->mFarBookAtom_Body;
   }
   else
+  {
     this->NonBookAtomTypeError(ev);
+    return 0;
+  }
   
   const mork_u1* end = body + size;
   while ( body < end )
@@ -442,7 +445,10 @@ morkBookAtom::EqualFormAndBody(morkEnv* ev, const morkBookAtom* inAtom) const
     form = ((const morkFarBookAtom*) inAtom)->mFarBookAtom_Form;
   }
   else
+  {
     inAtom->NonBookAtomTypeError(ev);
+    return morkBool_kFalse;
+  }
 
   const mork_u1* thisBody = 0; // body of bytes in this to compare
   mork_size thisSize; // the number of bytes in this to compare

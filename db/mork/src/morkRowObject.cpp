@@ -56,10 +56,6 @@
 #include "morkEnv.h"
 #endif
 
-#ifndef _ORKINROW_
-#include "orkinRow.h"
-#endif
-
 #ifndef _MORKSTORE_
 #include "morkStore.h"
 #endif
@@ -72,8 +68,8 @@
 #include "morkCellObject.h"
 #endif
 
-#ifndef _ORKINROWCELLCURSOR_
-#include "orkinRowCellCursor.h"
+#ifndef _MORKROW_
+#include "morkRow.h"
 #endif
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
@@ -314,11 +310,9 @@ morkRowObject::NewCell( // get cell for specified column, or add new one
   nsIMdbCell** acqCell)
 {
   mdb_err outErr = 0;
-  nsIMdbCell* outCell = 0;
   morkEnv* ev = morkEnv::FromMdbEnv(mev);
   if ( ev )
   {
-    mork_pos pos = 0;
     GetCell(mev, inColumn, acqCell);
     if ( !*acqCell )
     {
@@ -443,7 +437,6 @@ morkRowObject::AddRow( // add all cells in another row to this one
   morkEnv* ev = morkEnv::FromMdbEnv(mev);
   if ( ev )
   {
-    morkRow* source = 0;
     morkRow* unsafeSource = (morkRow*) ioSourceRow; // unsafe cast
 //    if ( unsafeSource->CanUseRow(mev, morkBool_kFalse, &outErr, &source) )
     {
@@ -463,7 +456,6 @@ morkRowObject::SetRow( // make exact duplicate of another row
   morkEnv* ev = morkEnv::FromMdbEnv(mev);
   if ( ev )
   {
-    morkRow* source = 0;
     morkRowObject *sourceObject = (morkRowObject *) ioSourceRow; // unsafe cast
     morkRow* unsafeSource = sourceObject->mRowObject_Row;
 //    if ( unsafeSource->CanUseRow(mev, morkBool_kFalse, &outErr, &source) )
@@ -662,7 +654,6 @@ morkRowObject::RowObjectRowNotSelfError(morkEnv* ev)
 nsIMdbRow*
 morkRowObject::AcquireRowHandle(morkEnv* ev) // mObject_Handle
 {
-  nsIMdbRow* outRow = 0;
   AddRef();
   return this;
 }

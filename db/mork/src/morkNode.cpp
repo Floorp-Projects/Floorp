@@ -428,7 +428,6 @@ nsIMdbFile_SlotStrongFile(nsIMdbFile* self, morkEnv* ev, nsIMdbFile** ioSlot)
   // then self is put into slot *ioSlot.  Note self can be nil, so we take
   // expression 'nsIMdbFile_SlotStrongFile(0, ev, &slot)'.
 {
-  nsIMdbEnv* menv = ev->AsMdbEnv();
   nsIMdbFile* file = *ioSlot;
   if ( self != file )
   {
