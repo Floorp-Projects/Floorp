@@ -54,5 +54,5 @@ EXPORTS =				\
 include <$(DEPTH)\config\rules.mak>
 
 !ifdef IBMBIDI
-  EXPORTS += nsBidiUtils.h
+  EXPORTS = $(EXPORTS) nsBidiUtils.h
 !endif
