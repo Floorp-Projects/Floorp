@@ -29,6 +29,7 @@
 #include "nsIEventListener.h"
 #include "nsIMenuListener.h"
 #include "nsIToolkit.h"
+#include "nsIAppShell.h"
 #include "nsStringUtil.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
@@ -127,7 +128,7 @@ protected:
   void*             mClientData;
   EVENT_CALLBACK    mEventCallback;
   nsIDeviceContext  *mContext;
-  nsIAppShell       *mAppShell;
+  nsCOMPtr<nsIAppShell> mAppShell;
   nsIToolkit        *mToolkit;
   nsIMouseListener  *mMouseListener;
   nsIEventListener  *mEventListener;

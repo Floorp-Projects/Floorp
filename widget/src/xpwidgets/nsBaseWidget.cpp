@@ -22,7 +22,6 @@
  */
 
 #include "nsBaseWidget.h"
-#include "nsIAppShell.h"
 #include "nsIDeviceContext.h"
 #include "nsCOMPtr.h"
 #include "nsIMenuListener.h"
@@ -59,7 +58,6 @@ nsBaseWidget::nsBaseWidget()
 :	mClientData(nsnull)
 ,	mEventCallback(nsnull)
 ,	mContext(nsnull)
-,	mAppShell(nsnull)
 ,	mToolkit(nsnull)
 ,	mMouseListener(nsnull)
 ,	mEventListener(nsnull)
@@ -155,8 +153,7 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
     
   }
   
-  mAppShell = aAppShell;
-  NS_IF_ADDREF(mAppShell);
+  mAppShell = aAppShell;    // addrefs
   
   // save the event callback function
   mEventCallback = aHandleEventFunction;
@@ -489,8 +486,9 @@ nsIDeviceContext* nsBaseWidget::GetDeviceContext()
 
 nsIAppShell *nsBaseWidget::GetAppShell()
 {
-  NS_IF_ADDREF(mAppShell);
-  return mAppShell;
+  nsIAppShell*  theAppShell = mAppShell;
+  NS_IF_ADDREF(theAppShell);
+  return theAppShell;
 }
 
 
@@ -504,7 +502,7 @@ void nsBaseWidget::OnDestroy()
   // release references to device context, toolkit, and app shell
   NS_IF_RELEASE(mContext);
   NS_IF_RELEASE(mToolkit);
-  NS_IF_RELEASE(mAppShell);
+  mAppShell = nsnull;     // clear out nsCOMPtr
 }
 
 

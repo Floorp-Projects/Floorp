@@ -184,12 +184,7 @@ nsWindow::~nsWindow()
 	}
 }
 
-NS_IMPL_ADDREF(nsWindow);
-NS_IMPL_RELEASE(nsWindow);
-
-NS_INTERFACE_MAP_BEGIN(nsWindow)
-  NS_INTERFACE_MAP_ENTRY(nsIKBStateControl)
-NS_INTERFACE_MAP_END_INHERITING(nsBaseWidget)
+NS_IMPL_ISUPPORTS_INHERITED1(nsWindow, nsBaseWidget, nsIKBStateControl);
 
 //-------------------------------------------------------------------------
 //
