@@ -6610,7 +6610,7 @@ bad_server_cert_expired_content:
 
 
 bad_server_cert_expired_top_type="text/html"
-bad_server_cert_expired_hdrs=""
+bad_server_cert_expired_top_hdrs=""
 bad_server_cert_expired_top_content:
 {top_frame bad_server_cert_expired_title,alert1gif,35,35}
 :bad_server_cert_expired_top_content
@@ -6736,7 +6736,7 @@ bad_server_cert_domain_content:
 
 
 bad_server_cert_domain_top_type="text/html"
-bad_server_cert_domain_hdrs=""
+bad_server_cert_domain_top_hdrs=""
 bad_server_cert_domain_top_content:
 {top_frame bad_server_cert_domain_title,alert1gif,35,35}
 :bad_server_cert_domain_top_content
