@@ -584,7 +584,12 @@ nsViewerApp::OpenWindow()
   bw->SetApp(this);
   bw->Init(mAppShell, mPrefs, nsRect(0, 0, 620, 400), PRUint32(~0), mAllowPlugins);
   bw->Show();
-  mCrawler->SetBrowserWindow(bw);
+  nsIBrowserWindow*	bwCurrent;
+  mCrawler->GetBrowserWindow(&bwCurrent);
+  if (!bwCurrent) {
+	  mCrawler->SetBrowserWindow(bw);
+  }
+  NS_IF_RELEASE(bwCurrent);
 
   if (mDoPurify) {
     for (PRInt32 i = 0; i < mRepeatCount; i++) {
@@ -617,9 +622,14 @@ nsViewerApp::OpenWindow()
 NS_IMETHODIMP
 nsViewerApp::CloseWindow(nsBrowserWindow* aBrowserWindow)
 {
-	aBrowserWindow->Close();
-	NS_RELEASE(aBrowserWindow);
-  mCrawler->SetBrowserWindow(nsnull);
+  aBrowserWindow->Close();
+  nsIBrowserWindow* bw;
+  mCrawler->GetBrowserWindow(&bw);
+  if (bw == aBrowserWindow) {
+    mCrawler->SetBrowserWindow(nsnull);
+  }
+  NS_IF_RELEASE(bw);
+  NS_RELEASE(aBrowserWindow);
 
   return NS_OK;
 }
