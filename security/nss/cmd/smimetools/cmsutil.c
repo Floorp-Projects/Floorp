@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.18 2000/12/07 18:38:27 mcgreer%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.19 2000/12/11 18:42:58 mcgreer%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -1064,8 +1064,6 @@ main(int argc, char **argv)
 			progName, optstate->value);
 		exit(1);
 	    }
-	    SECU_FileToItem(&input, inFile);
-	    PR_Close(inFile);
 	    break;
 
 	case 'c':
@@ -1143,6 +1141,10 @@ main(int argc, char **argv)
 	      
 	}
     }
+
+    SECU_FileToItem(&input, inFile);
+    if (inFile != PR_STDIN)
+	PR_Close(inFile);
 #ifdef DEBUG
     fprintf(stderr, "received commands\n");
 #endif
