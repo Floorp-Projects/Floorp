@@ -19,7 +19,7 @@
  *
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
- * Contributor(s): 
+ * Contributor(s): Brendan Eich (brendan@mozilla.org)
  */
 
 #include "nsCOMPtr.h"
@@ -118,16 +118,43 @@ NS_IMPL_ISUPPORTS1(nsXBLAttributeEntry, nsIXBLAttributeEntry)
 PR_STATIC_CALLBACK(void)
 XBLFinalize(JSContext *cx, JSObject *obj)
 {
-  nsJSUtils::nsGenericFinalize(cx, obj);
+  nsXBLJSClass* c = NS_STATIC_CAST(nsXBLJSClass*, ::JS_GetClass(cx, obj));
+  c->Drop();
 }
 
-//
-// XULElement constructor
-//
-PR_STATIC_CALLBACK(JSBool)
-XBLBindingCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+nsXBLJSClass::nsXBLJSClass(const nsCString& aClassName)
 {
-  return JS_FALSE;
+  memset(this, 0, sizeof(nsXBLJSClass));
+  next = prev = NS_STATIC_CAST(JSCList*, this);
+  name = nsXPIDLCString::Copy(aClassName);
+  addProperty = delProperty = setProperty = getProperty = ::JS_PropertyStub;
+  enumerate = ::JS_EnumerateStub;
+  resolve = ::JS_ResolveStub;
+  convert = ::JS_ConvertStub;
+  finalize = XBLFinalize;
+}
+
+nsrefcnt
+nsXBLJSClass::Destroy()
+{
+  NS_ASSERTION(next == prev && prev == NS_STATIC_CAST(JSCList*, this),
+               "referenced nsXBLJSClass is on LRU list already!?");
+
+  if (nsXBLService::gClassLRUListLength >= nsXBLService::gClassLRUListQuota) {
+    // Over LRU list quota, just unhash and delete this class.
+    if (nsXBLService::gClassTable) {
+      nsStringKey key(name);
+      (nsXBLService::gClassTable)->Remove(&key);
+    }
+    delete this;
+  } else {
+    // Put this most-recently-used class on end of the LRU-sorted freelist.
+    JSCList* mru = NS_STATIC_CAST(JSCList*, this);
+    JS_APPEND_LINK(mru, &nsXBLService::gClassLRUList);
+    nsXBLService::gClassLRUListLength++;
+  }
+
+  return 0;
 }
 
 // Static initialization
@@ -216,10 +243,10 @@ NS_IMPL_ISUPPORTS1(nsXBLBinding, nsIXBLBinding)
 
 // Constructors/Destructors
 nsXBLBinding::nsXBLBinding(void)
-: mAttributeTable(nsnull),
-  mInsertionPointTable(nsnull),
+: mFirstHandler(nsnull),
   mIsStyleBinding(PR_TRUE),
-  mFirstHandler(nsnull)
+  mAttributeTable(nsnull),
+  mInsertionPointTable(nsnull)
 {
   NS_INIT_REFCNT();
   gRefCnt++;
@@ -955,7 +982,7 @@ nsXBLBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool
       if (!aRemoveFlag) {
         // Construct a new text node and insert it.
         nsAutoString value;
-        nsresult result = mBoundElement->GetAttribute(aNameSpaceID, aAttribute, value);
+        mBoundElement->GetAttribute(aNameSpaceID, aAttribute, value);
         if (!value.IsEmpty()) {
           nsCOMPtr<nsIDOMText> textNode;
           nsCOMPtr<nsIDocument> doc;
@@ -1018,9 +1045,9 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
               // XXX Sanity check to make sure our class name matches
               // Pull ourselves out of the proto chain.
               JSContext* jscontext = (JSContext*)context->GetNativeContext();
-              JSObject* ourProto = JS_GetPrototype(jscontext, scriptObject);
-              JSObject* grandProto = JS_GetPrototype(jscontext, ourProto);
-              JS_SetPrototype(jscontext, scriptObject, grandProto);
+              JSObject* ourProto = ::JS_GetPrototype(jscontext, scriptObject);
+              JSObject* grandProto = ::JS_GetPrototype(jscontext, ourProto);
+              ::JS_SetPrototype(jscontext, scriptObject, grandProto);
             }
           }
         }
@@ -1065,69 +1092,84 @@ nsXBLBinding::InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
 
   // First ensure our JS class is initialized.
   JSContext* jscontext = (JSContext*)aContext->GetNativeContext();
-  JSObject* proto = nsnull;
-  JSObject* constructor = nsnull;
-  JSObject* parent_proto = nsnull;
-  JSObject* global = JS_GetGlobalObject(jscontext);
+  JSObject* global = ::JS_GetGlobalObject(jscontext);
   jsval vp;
+  JSObject* proto;
 
-  if ((PR_TRUE != JS_LookupProperty(jscontext, global, aClassName, &vp)) ||
-      !JSVAL_IS_OBJECT(vp) ||
-      ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||
-      (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
-      !JSVAL_IS_OBJECT(vp)) {
+  if ((! ::JS_LookupProperty(jscontext, global, aClassName, &vp)) ||
+      JSVAL_IS_PRIMITIVE(vp)) {
     // We need to initialize the class.
     
-    JSClass* c;
+    nsXBLJSClass* c;
     void* classObject;
     nsStringKey key(aClassName);
     classObject = (nsXBLService::gClassTable)->Get(&key);
 
-    if (classObject)
-      c = (JSClass*)classObject;
-    else {
-      // We need to create a struct for this class.
-      c = new JSClass;
-      memset(c, 0, sizeof(JSClass));
-      c->name = nsXPIDLCString::Copy(aClassName);
-      c->flags = JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS;
-      c->addProperty = c->delProperty = c->setProperty = c->getProperty = JS_PropertyStub;
-      c->enumerate = JS_EnumerateStub;
-      c->resolve = JS_ResolveStub;
-      c->convert = JS_ConvertStub;
-      c->finalize = XBLFinalize;
+    if (classObject) {
+      c = NS_STATIC_CAST(nsXBLJSClass*, classObject);
+
+      // If c is on the LRU list (i.e., not linked to itself), remove it now!
+      JSCList* link = NS_STATIC_CAST(JSCList*, c);
+      if (c->next != link) {
+        JS_REMOVE_AND_INIT_LINK(link);
+        nsXBLService::gClassLRUListLength--;
+      }
+    } else {
+      if (JS_CLIST_IS_EMPTY(&nsXBLService::gClassLRUList)) {
+        // We need to create a struct for this class.
+        c = new nsXBLJSClass(aClassName);
+        if (!c)
+          return NS_ERROR_OUT_OF_MEMORY;
+      } else {
+        // Pull the least recently used class struct off the list.
+        JSCList* lru = (nsXBLService::gClassLRUList).next;
+        JS_REMOVE_AND_INIT_LINK(lru);
+        nsXBLService::gClassLRUListLength--;
+
+        // Remove any mapping from the old name to the class struct.
+        c = NS_STATIC_CAST(nsXBLJSClass*, lru);
+        nsStringKey oldKey(c->name);
+        (nsXBLService::gClassTable)->Remove(&oldKey);
+
+        // Change the class name and we're done.
+        nsMemory::Free(c->name);
+        c->name = nsXPIDLCString::Copy(aClassName);
+      }
 
       // Add c to our table.
       (nsXBLService::gClassTable)->Put(&key, (void*)c);
     }
     
-    // Retrieve the current prototype for the JS object.
-    parent_proto = JS_GetPrototype(jscontext, object);
-    proto = JS_InitClass(jscontext,     // context
-                         global,        // global object
-                         parent_proto,  // parent proto 
-                         c,      // JSClass
-                         XBLBindingCtor,            // JSNative ctor
-                         0,             // ctor args
-                         nsnull,  // proto props
-                         nsnull,     // proto funcs
-                         nsnull,        // ctor props (static)
-                         nsnull);       // ctor funcs (static)
-    if (nsnull == proto) {
-      return NS_ERROR_FAILURE;
+    // Retrieve the current prototype of the JS object.
+    JSObject* parent_proto = ::JS_GetPrototype(jscontext, object);
+
+    // Make a new object prototyped by parent_proto and parented by global.
+    proto = ::JS_InitClass(jscontext,           // context
+                           global,              // global object
+                           parent_proto,        // parent proto 
+                           c,                   // JSClass
+                           NULL,                // JSNative ctor
+                           0,                   // ctor args
+                           nsnull,              // proto props
+                           nsnull,              // proto funcs
+                           nsnull,              // ctor props (static)
+                           nsnull);             // ctor funcs (static)
+    if (!proto) {
+      (nsXBLService::gClassTable)->Remove(&key);
+      delete c;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    // The prototype holds a strong reference to its class struct.
+    c->Hold();
     *aClassObject = (void*)proto;
   }
-  else if ((nsnull != constructor) && JSVAL_IS_OBJECT(vp)) {
-    proto = JSVAL_TO_OBJECT(vp);
-  }
   else {
-    return NS_ERROR_FAILURE;
+    proto = JSVAL_TO_OBJECT(vp);
   }
 
   // Set the prototype of our object to be the new class.
-  JS_SetPrototype(jscontext, object, proto);
+  ::JS_SetPrototype(jscontext, object, proto);
 
   return NS_OK;
 }
