@@ -24,16 +24,23 @@ package netscape.oji;
 
 import java.awt.Container;
 import java.awt.Graphics;
+import java.awt.Toolkit;
 
 public class AWTUtils {
 	/**
 	 * Prints the components of a specified Container.
 	 */
 	public static void printContainer(Container container, Object notifier) {
+		// print the specified container.
 		Graphics g = container.getGraphics();
 		g.drawString("AWTUtils.printContainer()", 0, 12);
 		container.print(g);
 		g.dispose();
+		
+		// try to flush the graphics pipeline.
+		Toolkit tk = Toolkit.getDefaultToolkit();
+		tk.sync();
+
 		// if caller is waiting for this to complete, then notify.
 		if (notifier != null) {
 			synchronized(notifier) {
