@@ -375,7 +375,7 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   nsCAutoString nativeFullName;
   // For now, we use 'A' APIs (see bug 240272,  239279)
   NS_CopyUnicodeToNative(brandFullName, nativeFullName);
-  SetRegKey(key1.get(), "", nativeFullName.get(), PR_TRUE, backupKey, aClaimAllTypes);
+  SetRegKey(key1.get(), "", nativeFullName.get(), PR_TRUE, backupKey, aClaimAllTypes, aForAllUsers);
   
   // Set the Options menu item title
   nsXPIDLString brandShortName;
@@ -394,7 +394,7 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   // For now, we use 'A' APIs (see bug 240272,  239279)
   NS_CopyUnicodeToNative(optionsTitle, nativeTitle);
   
-  SetRegKey(key2.get(), "", nativeTitle.get(), PR_TRUE, backupKey, aClaimAllTypes);
+  SetRegKey(key2.get(), "", nativeTitle.get(), PR_TRUE, backupKey, aClaimAllTypes, aForAllUsers);
 
   // Refresh the Shell
   ::SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, NULL,
