@@ -1484,7 +1484,7 @@ extern JS_PUBLIC_API(JSString *)
 JS_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
 
 /*
- * Convert a dependent string into an indepenent one.  This function does not
+ * Convert a dependent string into an independent one.  This function does not
  * change the string's mutability, so the thread safety comments above apply.
  */
 extern JS_PUBLIC_API(const jschar *)
