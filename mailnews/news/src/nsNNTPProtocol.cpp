@@ -584,7 +584,8 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
 	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
 	m_dataBufSize = OUTPUT_BUFFER_SIZE;
 
-	m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, CRLF, PR_TRUE /* create new lines */);
+  if (!m_lineStreamBuffer)
+	  m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, CRLF, PR_TRUE /* create new lines */);
 
 	m_nextState = SEND_FIRST_NNTP_COMMAND;
   m_nextStateAfterResponse = NNTP_CONNECT;
@@ -5034,6 +5035,9 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 NS_IMETHODIMP nsNNTPProtocol::CloseConnection()
 {
 	SendData(nsnull, NNTP_CMD_QUIT); // this will cause OnStopRequest get called, which will call CloseSocket()
+  // break some cycles
+  m_newsHost = nsnull;
+  m_nntpServer = nsnull;
   return NS_OK;
 }
 
@@ -5081,7 +5085,18 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
     PR_FREEIF(m_cancelID);  
     m_cancelID = nsnull;
     
+  mDisplayInputStream = nsnull;
+  mDisplayOutputStream = nsnull;
+  m_channelListener = nsnull;
+  m_channelContext = nsnull;
+  m_loadGroup = nsnull;
+  mProgressEventSink = nsnull;
+  SetOwner(nsnull);
+
 	m_runningURL = null_nsCOMPtr();
+  m_url = null_nsCOMPtr();
+  m_originalUrl = null_nsCOMPtr();
+
   m_connectionBusy = PR_FALSE;
   return NS_OK;
 }

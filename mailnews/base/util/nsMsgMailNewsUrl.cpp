@@ -104,6 +104,7 @@ nsresult nsMsgMailNewsUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
 		else
 		{
 			m_urlListeners->OnStopRunningUrl(this, aExitCode);
+      m_loadGroup = nsnull; // try to break circular refs.
 		}
 	}
   else

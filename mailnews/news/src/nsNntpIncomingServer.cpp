@@ -409,10 +409,13 @@ nsNntpIncomingServer::CloseCachedConnections()
     if (NS_FAILED(rv)) return rv;
     for (PRUint32 i = 0; i < cnt; i++) 
 	  {
-      aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
+      aSupport = getter_AddRefs(m_connectionCache->ElementAt(0));
       connection = do_QueryInterface(aSupport);
 		  if (connection)
+      {
     	  rv = connection->CloseConnection();
+        RemoveConnection(connection);
+      }
 	  }
   }
   rv = WriteNewsrcFile();
