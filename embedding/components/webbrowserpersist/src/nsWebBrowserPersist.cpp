@@ -671,15 +671,14 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(
     // 1) aren't canceling
     // 2) we haven't triggered the save (which we only want to trigger once)
     // 3) we aren't serializing (which will call it inside SerializeNextFile)
-    if (mOutputMap.Count() == 0 && !mCancel && !mStartSaving 
-    && !mSerializingOutput)
+    if (mOutputMap.Count() == 0 && !mCancel && !mStartSaving && !mSerializingOutput)
     {
         nsresult rv = SaveDocuments();
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
     }
 
     PRBool completed = PR_FALSE;
-    if (mOutputMap.Count() == 0 && mUploadList.Count() == 0)
+    if (mOutputMap.Count() == 0 && mUploadList.Count() == 0 && !mCancel)
     {
         // if no documents left in mDocList, --> done
         // if we have no files left to serialize and no error result, --> done
