@@ -77,17 +77,42 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP nsContentTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
 {
-   NS_ENSURE_ARG_POINTER(aSink);
+  NS_ENSURE_ARG_POINTER(aSink);
+  *aSink = 0;
 
-   if(aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)))
-      *aSink = NS_STATIC_CAST(nsIWebBrowserChrome*, this);
-   else if(aIID.Equals(NS_GET_IID(nsIPrompt)))
-      return mXULWindow->GetInterface(aIID, aSink);
-   else
-      return QueryInterface(aIID, aSink);
+  if(aIID.Equals(NS_GET_IID(nsIWebBrowserChrome))) {
+    nsIWebBrowserChrome *us = NS_STATIC_CAST(nsIWebBrowserChrome *, this);
+    NS_ADDREF(us);
+    *aSink = (void **) us;
+    return NS_OK;
+  }
+  if(aIID.Equals(NS_GET_IID(nsIPrompt)))
+    return mXULWindow->GetInterface(aIID, aSink);
 
-   NS_IF_ADDREF(((nsISupports*)*aSink));
-   return NS_OK;   
+  if (aIID.Equals(NS_GET_IID(nsIDocShellTreeItem))) {
+    nsCOMPtr<nsIDocShell> shell;
+    mXULWindow->GetDocShell(getter_AddRefs(shell));
+    if (shell) {
+      nsIDocShellTreeItem *result;
+      CallQueryInterface(shell, &result);
+      *aSink = result;
+      return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMWindow))) {
+    nsCOMPtr<nsIDocShellTreeItem> shell;
+    mXULWindow->GetPrimaryContentShell(getter_AddRefs(shell));
+    if (shell) {
+      nsCOMPtr<nsIInterfaceRequestor> thing(do_QueryInterface(shell));
+      if (thing)
+        return thing->GetInterface(aIID, aSink);
+    }
+    return NS_ERROR_FAILURE;
+  }
+
+  return QueryInterface(aIID, aSink);
 }
 
 //*****************************************************************************
