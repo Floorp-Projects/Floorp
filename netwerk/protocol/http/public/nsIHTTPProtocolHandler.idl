@@ -42,6 +42,11 @@ interface nsIHTTPProtocolHandler : nsIProtocolHandler
     const unsigned long ENCODE_ADD_CRLF    = (1 << 0);
     const unsigned long ENCODE_QUOTE_LINES = (1 << 1);
 
+	const unsigned long ALLOW_KEEPALIVE			= 1;
+	const unsigned long	ALLOW_PIPELINING		= 2;
+	const unsigned long ALLOW_PROXY_KEEPALIVE	= 4;
+	const unsigned long ALLOW_PROXY_PIPELINING	= 8;
+
     /**
      *
      */
@@ -144,8 +149,8 @@ interface nsIHTTPProtocolHandler : nsIProtocolHandler
      */
     attribute wstring misc;
 
-	attribute boolean doKeepAlive;
-	attribute unsigned long keepAliveTimeout;
+	readonly attribute unsigned	long capabilities;
+	readonly attribute unsigned long keepAliveTimeout;
 };
 
 %{C++

@@ -1016,11 +1016,8 @@ nsHTTPChannel::ReadFromCache()
 #endif /* PR_LOGGING */
 
     // Create a cache transport to read the cached response...
-    nsCOMPtr<nsIChannel> cacheTransport;
-    rv = mCacheEntry->NewChannel(mLoadGroup, getter_AddRefs(cacheTransport));
+    rv = mCacheEntry -> NewChannel(mLoadGroup, getter_AddRefs (mCacheTransport));
     if (NS_FAILED(rv)) return rv;
-
-    mRequest->SetTransport(cacheTransport);
 
     // Fake it so that HTTP headers come from cached versions
     SetResponse(mCachedResponse);
@@ -1040,7 +1037,7 @@ nsHTTPChannel::ReadFromCache()
     FinishedResponseHeaders();
 
     // Pump the cache data downstream
-    rv = cacheTransport->AsyncRead(listener, mResponseContext);
+    rv = mCacheTransport->AsyncRead(listener, mResponseContext);
     NS_RELEASE(listener);
     if (NS_FAILED(rv)) {
         ResponseCompleted(nsnull, rv, 0);
@@ -1059,6 +1056,11 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
 
     // If caching is disabled, there will be no cache entry
     if (!mCacheEntry)
+        return NS_OK;
+
+    // ruslan/hack: don't cache secure connections for now
+    nsCOMPtr<nsISupports> securityInfo;
+    if (GetSecurityInfo (getter_AddRefs (securityInfo)) && securityInfo)
         return NS_OK;
 
     // If the current response is itself from the cache rather than the network
@@ -1917,11 +1919,8 @@ nsHTTPChannel::ProcessNotModifiedResponse (nsIStreamListener *aListener)
     SetResponse(mCachedResponse);
 
     // Create a cache transport to read the cached response...
-    nsCOMPtr<nsIChannel> cacheTransport;
-    rv = mCacheEntry->NewChannel(mLoadGroup, getter_AddRefs(cacheTransport));
-    if (NS_FAILED(rv)) return rv;
-
-    mRequest->SetTransport(cacheTransport);
+    rv = mCacheEntry -> NewChannel (mLoadGroup, getter_AddRefs (mCacheTransport));
+    if (NS_FAILED (rv)) return rv;
 
     // Create a new HTTPCacheListener...
     nsHTTPResponseListener *cacheListener;
@@ -1934,7 +1933,7 @@ nsHTTPChannel::ProcessNotModifiedResponse (nsIStreamListener *aListener)
     cacheListener->SetListener(aListener);
     mResponseDataListener = aListener;
 
-    rv = cacheTransport->AsyncRead(cacheListener, mResponseContext);
+    rv = mCacheTransport->AsyncRead(cacheListener, mResponseContext);
     if (NS_FAILED(rv)) {
       ResponseCompleted(cacheListener, rv, nsnull);
     }
@@ -2088,7 +2087,7 @@ nsresult DupString(char* *o_Dest, const char* i_Src)
 }
 
 NS_IMETHODIMP 
-nsHTTPChannel::GetUsingProxy(PRBool *aUsingProxy)
+nsHTTPChannel::GetUsingProxy (PRBool *aUsingProxy)
 {
     if (!aUsingProxy)
         return NS_ERROR_NULL_POINTER;

@@ -56,9 +56,9 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 b
     :
     mMethod(i_Method),
     mVersion(HTTP_ONE_ZERO),
-    mKeepAliveTimeout (2*60),
+    mCapabilities (0),
+    mKeepAliveTimeout (0),
     mAttempts (0),
-    mDoKeepAlive(PR_FALSE),
     mRequestSpec(0),
     mHandler (i_Handler),
     mBufferSegmentSize(bufferSegmentSize),
@@ -79,8 +79,7 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 b
            this, (const char *)urlCString));
 #endif
   
-    mHandler -> GetHttpVersion      (  &mVersion  );
-    mHandler -> GetDoKeepAlive      (&mDoKeepAlive);
+    mHandler -> GetHttpVersion      (&mVersion);
     mHandler -> GetKeepAliveTimeout (&mKeepAliveTimeout);
 }
     
@@ -174,7 +173,8 @@ nsresult nsHTTPRequest::WriteRequest ()
     if (!mTransport)
     {
         rv = mHandler -> RequestTransport (mURI, mConnection, mBufferSegmentSize, mBufferMaxSize, 
-                                           getter_AddRefs (mTransport), 
+                                           getter_AddRefs (mTransport),
+                                           &mCapabilities,
                                            mAttempts ? TRANSPORT_OPEN_ALWAYS : TRANSPORT_REUSE_ALIVE);
 
         if (NS_FAILED (rv))
@@ -481,8 +481,7 @@ nsHTTPRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Context,
         if (trans)
             trans  -> GetReuseCount (&wasKeptAlive);
 
-        mTransport -> SetNotificationCallbacks (nsnull);
-        mHandler   -> ReleaseTransport (mTransport, PR_FALSE);
+        mHandler   -> ReleaseTransport (mTransport, 0);
         mTransport = null_nsCOMPtr ();
 
         if (wasKeptAlive)
@@ -527,15 +526,7 @@ nsresult nsHTTPRequest::GetTransport (nsIChannel **aTransport)
     *aTransport = mTransport;
     return NS_OK;
 }
-/*
-nsresult nsHTTPRequest::ReleaseTransport(nsIChannel *aTransport)
-{
-    if (aTransport == mTransport.get()) {
-        mTransport = 0;
-    }
-    return NS_OK;
-}
-*/
+
 nsresult nsHTTPRequest::GetHeaderEnumerator(nsISimpleEnumerator** aResult)
 {
     return mHeaders.GetEnumerator (aResult);
@@ -644,7 +635,7 @@ nsHTTPRequest::formHeaders ()
             SetHeader (nsHTTPAtoms::Accept_Encoding, acceptEncodings);
     }
 
-    if (mDoKeepAlive)
+    if (mCapabilities & (nsIHTTPProtocolHandler::ALLOW_KEEPALIVE|nsIHTTPProtocolHandler::ALLOW_PROXY_KEEPALIVE))
     {
         char *p = PR_smprintf ("%d", mKeepAliveTimeout);
         
