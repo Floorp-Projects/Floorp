@@ -32,7 +32,7 @@
 
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["browserCacheMemoryCache", "browserCacheDiskCache", "browserCacheDirectory", "browserCacheCheckDocFrequency"];
+    _elementIDs = ["browserCacheMemoryCache", "browserCacheDiskCache", "browserCacheCheckDocFrequency"];
   ]]>
   </script>
   
