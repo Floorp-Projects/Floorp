@@ -78,6 +78,10 @@ nsWindow::nsWindow() : nsBaseWidget()
     mHitSubMenus        = new nsVoidArray();
 //    mVScrollbar         = nsnull;
 
+    mWindowType         = eWindowType_child;
+    mBorderStyle        = eBorderStyle_default;
+    mBorderlessParent   = 0;
+
 #ifdef DRAG_DROP
     mDragDrop           = nsnull;
     mDropTarget         = nsnull;
@@ -434,7 +438,14 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
                       nsWidgetInitData *aInitData,
                       nsNativeWidget aNativeParent)
 {
-    BaseCreate(aParent, aRect, aHandleEventFunction, aContext, 
+    nsIWidget *baseParent = aInitData &&
+                 (aInitData->mWindowType == eWindowType_dialog ||
+                  aInitData->mWindowType == eWindowType_toplevel) ?
+                  nsnull : aParent;
+	
+    mIsTopWidgetWindow = (nsnull == baseParent);
+
+    BaseCreate(baseParent, aRect, aHandleEventFunction, aContext, 
        aAppShell, aToolkit, aInitData);
 
     // Switch to the "main gui thread" if necessary... This method must
@@ -475,29 +486,88 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
        parent = (BView *)aNativeParent;
     }
 
+    if (nsnull != aInitData) {
+      SetWindowType(aInitData->mWindowType);
+      SetBorderStyle(aInitData->mBorderStyle);
+    }
+
+//		NEED INPLEMENT
+//    DWORD style = WindowStyle();
+//		NEED INPLEMENT
+//    DWORD extendedStyle = WindowExStyle();
+
+	mBorderlessParent = NULL;
+    if (mWindowType == eWindowType_popup) {
+      mBorderlessParent = parent;
+      // Don't set the parent of a popup window. 
+      parent = NULL;
+    } else if (nsnull != aInitData) {
+      // See if the caller wants to explictly set clip children and clip siblings
+      if (aInitData->clipChildren) {
+//		NEED INPLEMENT
+//        style |= WS_CLIPCHILDREN;
+      } else {
+//		NEED INPLEMENT
+//        style &= ~WS_CLIPCHILDREN;
+      }
+      if (aInitData->clipSiblings) {
+//		NEED INPLEMENT
+//        style |= WS_CLIPSIBLINGS;
+      }
+    }
+
     mView = CreateBeOSView();
-	if(parent)
-	{
-               bool mustunlock=false;
+
+    if (mWindowType == eWindowType_dialog) {
+		// create window (dialog)
+		BRect winrect = BRect(aRect.x, aRect.y, aRect.x + aRect.width - 1, aRect.y + aRect.height - 1);
+		winrect.OffsetBy( 10, 30 );
+		nsWindowBeOS *w = new nsWindowBeOS(this,
+				winrect,
+				"", B_TITLED_WINDOW_LOOK, B_FLOATING_APP_WINDOW_FEEL,
+				B_WILL_ACCEPT_FIRST_CLICK | B_ASYNCHRONOUS_CONTROLS);
+		w->AddChild(mView);
+
+		// FIXME: we have to use the window size because
+		// the window might not like sizes less then 30x30 or something like that
+		mView->MoveTo(0, 0);
+		mView->ResizeTo(w->Bounds().Width(), w->Bounds().Height());
+		mView->SetResizingMode(B_FOLLOW_ALL);
+		w->Run();
+	} else
+	if (parent) {
+		// create view only
+		bool mustunlock=false;
 
 		if(parent->LockLooper())
 			mustunlock = true;
 
 		parent->AddChild(mView);
 		mView->MoveTo(aRect.x, aRect.y);
-               mView->ResizeTo(aRect.width-1, GetHeight(aRect.height)-1);
+		mView->ResizeTo(aRect.width-1, GetHeight(aRect.height)-1);
 
 		if(mustunlock)
 			parent->UnlockLooper();
-	}
-	else
-	{
-		// create window
+	} else {
+		// create window (normal or popup)
 		BRect winrect = BRect(aRect.x, aRect.y, aRect.x + aRect.width - 1, aRect.y + aRect.height - 1);
-		winrect.OffsetBy( 10, 30 );
-		nsWindowBeOS *w = new nsWindowBeOS(this,
+		nsWindowBeOS *w;
+		
+		if (mWindowType == eWindowType_popup && mBorderlessParent) {
+			// popup window : no border
+			w = new nsWindowBeOS(this,
 				winrect,
-				"", B_TITLED_WINDOW_LOOK, B_NORMAL_WINDOW_FEEL, B_ASYNCHRONOUS_CONTROLS);
+				"", B_NO_BORDER_WINDOW_LOOK, B_FLOATING_APP_WINDOW_FEEL,
+				B_WILL_ACCEPT_FIRST_CLICK | B_ASYNCHRONOUS_CONTROLS);
+		} else {
+			// normal window :normal look & feel
+			winrect.OffsetBy( 10, 30 );
+			w = new nsWindowBeOS(this,
+				winrect,
+				"", B_TITLED_WINDOW_LOOK, B_NORMAL_WINDOW_FEEL,
+				B_WILL_ACCEPT_FIRST_CLICK | B_ASYNCHRONOUS_CONTROLS);
+		}
+		
 		w->AddChild(mView);
 
 		// FIXME: we have to use the window size because
@@ -698,8 +768,11 @@ NS_METHOD nsWindow::Show(PRBool bState)
 
 		if(PR_FALSE == bState)
 		{
-			mView->Hide();
-			if(havewindow)
+			// BWindow and BView's Show() and Hide() can be nested,
+			// while Mozilla doesn't.
+			if (!mView->IsHidden())
+				mView->Hide();
+			if(havewindow && !mView->Window()->IsHidden())
 				mView->Window()->Hide();
 		}
 		else
@@ -758,6 +831,16 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 
 	if(mView)
 	{
+		// Popup window should be placed relative to its parent window.
+		if (mWindowType == eWindowType_popup && mBorderlessParent) {
+			BWindow *parentwindow = mBorderlessParent->Window();
+			if (parentwindow && parentwindow->Lock()) {
+				BPoint p = parentwindow->ConvertToScreen(BPoint(aX,aY));
+				aX = (nscoord)p.x;
+				aY = (nscoord)p.y;
+				parentwindow->Unlock();
+			}
+		}
 		if(mView->LockLooper())
 			mustunlock = true;
 
@@ -1755,409 +1838,6 @@ NS_METHOD nsWindow::EnableFileDrop(PRBool aEnable)
 #endif
   return NS_OK;
 }
-
-#if 0
-//-------------------------------------------------------------------------
-//
-// Process all nsWindows messages
-//
-//-------------------------------------------------------------------------
-PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue)
-{
-    static BOOL firstTime = TRUE;                // for mouse wheel logic
-    static int  iDeltaPerLine, iAccumDelta ;     // for mouse wheel logic
-    ULONG       ulScrollLines ;                  // for mouse wheel logic
-
-    PRBool        result = PR_FALSE; // call the default nsWindow proc
-    nsPaletteInfo palInfo;
-    *aRetValue = 0;
-
-    switch (msg) {
-
-        case WM_COMMAND: {
-          WORD wNotifyCode = HIWORD(wParam); // notification code 
-          if (wNotifyCode == 0) { // Menu selection
-            nsMenuEvent event;
-            event.mCommand = LOWORD(wParam);
-            event.eventStructType = NS_MENU_EVENT;
-            InitEvent(event, NS_MENU_SELECTED);
-            result = DispatchWindowEvent(&event);
-            if (mMenuBar) {
-              PRUint32 i, count;
-              mMenuBar->GetMenuCount(count);
-              for (i=0;i<count;i++) {
-                nsIMenu * menu;
-                mMenuBar->GetMenuAt(i, menu);
-                nsIMenuItem * menuItem = FindMenuItem(menu, event.mCommand);
-                if (menuItem) {
-                  nsIMenuListener * listener;
-                  if (NS_OK == menuItem->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
-                    listener->MenuSelected(event);
-                    NS_RELEASE(listener);
-                  }
-                  NS_RELEASE(menuItem);
-                }
-                NS_RELEASE(menu);
-              }
-            }
-            NS_RELEASE(event.widget);
-          }
-        }
-        break;
-
-        
-        case WM_NOTIFY:
-            // TAB change
-          {
-            LPNMHDR pnmh = (LPNMHDR) lParam;
-
-            switch (pnmh->code) {
-              case TCN_SELCHANGE: {
-                DispatchStandardEvent(NS_TABCHANGE);
-                result = PR_TRUE;
-              }
-              break;
-
-              case TTN_SHOW: {
-                  nsTooltipEvent event;
-                  InitEvent(event, NS_SHOW_TOOLTIP);
-                  event.tipIndex = (PRUint32)wParam;
-                  event.eventStructType = NS_TOOLTIP_EVENT;
-                  result = DispatchWindowEvent(&event);
-                  NS_RELEASE(event.widget);
-              }
-              break;
-
-              case TTN_POP:
-                result = DispatchStandardEvent(NS_HIDE_TOOLTIP);
-                break;
-            }
-          }
-          break;
-
-        case WM_MOVE: // Window moved 
-          {
-            PRInt32 x = (PRInt32)LOWORD(lParam); // horizontal position in screen coordinates 
-            PRInt32 y = (PRInt32)HIWORD(lParam); // vertical position in screen coordinates 
-            result = OnMove(x, y); 
-          }
-          break;
-
-        case WM_DESTROY:
-            // clean up.
-            OnDestroy();
-            result = PR_TRUE;
-            break;
-
-        case WM_PAINT:
-            result = OnPaint();
-            break;
-
-        case WM_KEYUP: 
-
-            mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
-            mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
-            mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-            {
-            LONG data = (LONG)lParam;
-            LONG newdata = (data & 0x00FF00);
-            //LONG newdata2 = (data & 0xFFFF00F);
-            int x = 0;
-            }
-            result = OnKey(NS_KEY_UP, wParam, LOWORD(lParam), HIWORD(lParam));
-            break;
-
-        case WM_KEYDOWN:
-
-            mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
-            mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
-            mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-
-            result = OnKey(NS_KEY_DOWN, wParam, LOWORD(lParam), HIWORD(lParam));
-            break;
-
-        // say we've dealt with erase background if widget does
-        // not need auto-erasing
-        case WM_ERASEBKGND: 
-            if (! AutoErase()) {
-              *aRetValue = 1;
-              result = PR_TRUE;
-            } 
-            break;
-
-        case WM_MOUSEMOVE:
-            //RelayMouseEvent(msg,wParam, lParam); 
-            result = DispatchMouseEvent(NS_MOUSE_MOVE);
-            break;
-
-        case WM_LBUTTONDOWN:
-            //RelayMouseEvent(msg,wParam, lParam); 
-            result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN);
-            break;
-
-        case WM_LBUTTONUP:
-            //RelayMouseEvent(msg,wParam, lParam); 
-            result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_UP);
-            break;
-
-        case WM_LBUTTONDBLCLK:
-            result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN);
-            if (result == PR_FALSE)
-              result = DispatchMouseEvent(NS_MOUSE_LEFT_DOUBLECLICK);
-            break;
-
-        case WM_MBUTTONDOWN:
-            result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN);
-            break;
-
-        case WM_MBUTTONUP:
-            result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_UP);
-            break;
-
-        case WM_MBUTTONDBLCLK:
-            result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN);           
-            break;
-
-        case WM_RBUTTONDOWN:
-            result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN);            
-            break;
-
-        case WM_RBUTTONUP:
-            result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_UP);
-            break;
-
-        case WM_RBUTTONDBLCLK:
-            result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN);
-            if (result == PR_FALSE)
-              result = DispatchMouseEvent(NS_MOUSE_RIGHT_DOUBLECLICK);                      
-            break;
-
-        case WM_HSCROLL:
-        case WM_VSCROLL: 
-	          // check for the incoming nsWindow handle to be null in which case
-	          // we assume the message is coming from a horizontal scrollbar inside
-	          // a listbox and we don't bother processing it (well, we don't have to)
-	          if (lParam) {
-                nsWindow* scrollbar = (nsWindow*)::GetWindowLong((BWindow *)lParam, GWL_USERDATA);
-
-		            if (scrollbar) {
-		                result = scrollbar->OnScroll(LOWORD(wParam), (short)HIWORD(wParam));
-		            }
-	          }
-            break;
-
-        case WM_CTLCOLORLISTBOX:
-        case WM_CTLCOLOREDIT:
-        case WM_CTLCOLORBTN:
-        //case WM_CTLCOLORSCROLLBAR: //XXX causes a the scrollbar to be drawn incorrectly
-        case WM_CTLCOLORSTATIC:
-	          if (lParam) {
-              nsWindow* control = (nsWindow*)::GetWindowLong((BWindow *)lParam, GWL_USERDATA);
-		          if (control) {
-                control->SetUpForPaint((HDC)wParam);
-		            *aRetValue = (LPARAM)control->OnControlColor();
-              }
-	          }
-    
-            result = PR_TRUE;
-            break;
-
-        case WM_SETFOCUS:
-            result = DispatchFocus(NS_GOTFOCUS);
-            break;
-
-        case WM_KILLFOCUS:
-            result = DispatchFocus(NS_LOSTFOCUS);
-            break;
-
-        case WM_WINDOWPOSCHANGED: 
-        {
-            WINDOWPOS *wp = (LPWINDOWPOS)lParam;
-
-            // We only care about a resize, so filter out things like z-order
-            // changes. Note: there's a WM_MOVE handler above which is why we're
-            // not handling them here...
-            if (0 == (wp->flags & SWP_NOSIZE)) {
-              // XXX Why are we using the client size area? If the size notification
-              // is for the client area then the origin should be (0,0) and not
-              // the window origin in screen coordinates...
-              RECT r;
-              ::GetWindowRect(mView, &r);
-              PRInt32 newWidth, newHeight;
-              newWidth = PRInt32(r.right - r.left);
-              newHeight = PRInt32(r.bottom - r.top);
-              nsRect rect(wp->x, wp->y, newWidth, newHeight);
-              //if (newWidth != mBounds.width)
-              {
-                RECT drect;
-
-                //getting wider
-
-                drect.left = wp->x + mBounds.width;
-                drect.top = wp->y;
-                drect.right = drect.left + (newWidth - mBounds.width);
-                drect.bottom = drect.top + newHeight;
-
-//                ::InvalidateRect(mView, NULL, FALSE);
-//                ::InvalidateRect(mView, &drect, FALSE);
-                ::RedrawWindow(mView, &drect, NULL,
-                               RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
-              }
-              //if (newHeight != mBounds.height)
-              {
-                RECT drect;
-
-                //getting taller
-
-                drect.left = wp->x;
-                drect.top = wp->y + mBounds.height;
-                drect.right = drect.left + newWidth;
-                drect.bottom = drect.top + (newHeight - mBounds.height);
-
-//                ::InvalidateRect(mView, NULL, FALSE);
-//                ::InvalidateRect(mView, &drect, FALSE);
-                ::RedrawWindow(mView, &drect, NULL,
-                               RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
-              }
-              mBounds.width  = newWidth;
-              mBounds.height = newHeight;
-              ///nsRect rect(wp->x, wp->y, wp->cx, wp->cy);
-
-              // recalculate the width and height
-              // this time based on the client area
-              if (::GetClientRect(mView, &r)) {
-                rect.width  = PRInt32(r.right - r.left);
-                rect.height = PRInt32(r.bottom - r.top);
-              }
-              result = OnResize(rect);
-            }
-            break;
-        }
-#if 0 // these are needed for now
-        case WM_INITMENU: {
-          printf("WM_INITMENU\n");
-          } break;
-
-        case WM_INITMENUPOPUP: {
-          printf("WM_INITMENUPOPUP\n");
-          } break;
-#endif
-
-#if 0
-        case WM_MENUSELECT: 
-          if (mMenuBar) {
-            MenuHasBeenSelected((HMENU)lParam, (UINT)LOWORD(wParam), (UINT)HIWORD(wParam), (UINT) LOWORD(wParam));
-          }
-          break;
-#endif
-
-        case WM_SETTINGCHANGE:
-          firstTime = TRUE;
-          // Fall through
-        case WM_MOUSEWHEEL: {
-         if (firstTime) {
-           firstTime = FALSE;
-            //printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ WM_SETTINGCHANGE\n");
-            SystemParametersInfo (104, 0, &ulScrollLines, 0) ;
-            //SystemParametersInfo (SPI_GETWHEELSCROLLLINES, 0, &ulScrollLines, 0) ;
-          
-            // ulScrollLines usually equals 3 or 0 (for no scrolling)
-            // WHEEL_DELTA equals 120, so iDeltaPerLine will be 40
-
-            if (ulScrollLines)
-              iDeltaPerLine = WHEEL_DELTA / ulScrollLines ;
-            else
-              iDeltaPerLine = 0 ;
-            //printf("ulScrollLines %d  iDeltaPerLine %d\n", ulScrollLines, iDeltaPerLine);
-
-            if (msg == WM_SETTINGCHANGE) {
-              return 0;
-            }
-         }
-         BWindow * scrollbar = NULL;
-         if (nsnull != mVScrollbar) {
-           scrollbar = (BWindow *)mVScrollbar->GetNativeData(NS_NATIVE_WINDOW);
-         }
-         if (scrollbar) {
-            if (iDeltaPerLine == 0)
-              break ;
-
-            iAccumDelta += (short) HIWORD (wParam) ;     // 120 or -120
-
-            while (iAccumDelta >= iDeltaPerLine) {    
-              //printf("iAccumDelta %d\n", iAccumDelta);
-              SendMessage (mView, WM_VSCROLL, SB_LINEUP, (LONG)scrollbar) ;
-              iAccumDelta -= iDeltaPerLine ;
-            }
-
-            while (iAccumDelta <= -iDeltaPerLine) {
-              //printf("iAccumDelta %d\n", iAccumDelta);
-              SendMessage (mView, WM_VSCROLL, SB_LINEDOWN, (LONG)scrollbar) ;
-              iAccumDelta += iDeltaPerLine ;
-            }
-         }
-            return 0 ;
-      } break;
-
-
-#if 0
-        case WM_PALETTECHANGED:
-            if ((BWindow *)wParam == mView) {
-                // We caused the WM_PALETTECHANGED message so avoid realizing
-                // another foreground palette
-                result = PR_TRUE;
-                break;
-            }
-            // fall thru...
-
-        case WM_QUERYNEWPALETTE:
-            mContext->GetPaletteInfo(palInfo);
-            if (palInfo.isPaletteDevice && palInfo.palette) {
-                HDC hDC = ::GetDC(mView);
-                HPALETTE hOldPal = ::SelectPalette(hDC, (HPALETTE)palInfo.palette, FALSE);
-                
-                // Realize the drawing palette
-                int i = ::RealizePalette(hDC);
-
-                // Did any of our colors change?
-                if (i > 0) {
-                  // Yes, so repaint
-                  ::InvalidateRect(mView, (LPRECT)NULL, TRUE);
-                }
-
-                ::SelectPalette(hDC, hOldPal, TRUE);
-                ::RealizePalette(hDC);
-                ::ReleaseDC(mView, hDC);
-                *aRetValue = TRUE;
-            }
-            result = PR_TRUE;
-            break;
-
-        case WM_DROPFILES: {
-          HDROP hDropInfo = (HDROP) wParam;
-	        UINT nFiles = ::DragQueryFile(hDropInfo, (UINT)-1, NULL, 0);
-
-	        for (UINT iFile = 0; iFile < nFiles; iFile++) {
-		        TCHAR szFileName[_MAX_PATH];
-		        ::DragQueryFile(hDropInfo, iFile, szFileName, _MAX_PATH);
-            printf("szFileName [%s]\n", szFileName);
-            nsAutoString fileStr(szFileName);
-            nsEventStatus status;
-            nsDragDropEvent event;
-            InitEvent(event, NS_DRAGDROP_EVENT);
-            event.mType      = nsDragDropEventStatus_eDrop;
-            event.mIsFileURL = PR_FALSE;
-            event.mURL       = (PRUnichar *)fileStr.GetUnicode();
-            DispatchEvent(&event, status);
-	        }
-        } break;
-#endif
-    }
-
-    return result;
-}
-#endif
-
 
 //-------------------------------------------------------------------------
 //

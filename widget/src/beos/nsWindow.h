@@ -190,6 +190,9 @@ protected:
 #endif
 
 	BView		*mView;
+	
+	PRBool      mIsTopWidgetWindow;
+	BView		*mBorderlessParent;
 
     PRBool      mIsDestroying;
     PRBool      mOnDestroyCalled;
