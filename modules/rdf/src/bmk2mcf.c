@@ -166,6 +166,8 @@ parseNextBkBlob (RDFFile f, char* blob, int32 size)
 void
 parseNextBkToken (RDFFile f, char* token)
 {
+  int16 pos;
+
  /*	printf(token); */
   if (token[0] == '<') {
     bkStateTransition(f, token);
@@ -198,6 +200,10 @@ parseNextBkToken (RDFFile f, char* token)
 			  RDF_RESOURCE_TYPE, true);
 */
     } else if (f->status == IN_ITEM_DESCRIPTION) {
+      if ((pos = charSearch(0x0D, token)) >=0)
+      {
+      	token[pos] = '\0';
+      }
       addDescription(f, f->lastItem, token);
     }
   }
@@ -276,32 +282,36 @@ newLeafBkItem (RDFFile f, char* token)
   char* addDate = NULL;
   char* lastVisit = NULL;
   char* lastModified = NULL;
-  uint8 current = 0;
   int32 len = strlen(token); 
-  int32 n = 0;
+  int32 n = 0, cmdIndex = 0;
   char c = token[n++];
   PRBool inString = false;
   RDF_Resource newR;
   
   while (n < len) {
+    if ((inString == false) && ((c == ' ') || (c == '\t'))) {
+      cmdIndex = n;
+    }
     if (c == '"') {
       if (inString) {
 	token[n-1] = '\0';
 	inString = false;
       } else {
 	inString = true;
-	if (current == 0) {
+	if (startsWith("HREF=", &token[cmdIndex])) {
 	  url = &token[n];
-	} else if (current == 1) {
+	  }
+	else if (startsWith("ADD_DATE=", &token[cmdIndex])) {
 	  addDate = &token[n];
-	} else if (current == 2) {
+	  }
+	else if (startsWith("LAST_VISIT=", &token[cmdIndex])) {
 	  lastVisit = &token[n];
-	} else if (current == 3) {
+	  }
+	else if (startsWith("LAST_MODIFIED=", &token[cmdIndex])) {
 	  lastModified = &token[n];
+	  }
 	}
-	current++;
       }
-    }
     c = token[n++];
   }
   if (url == NULL) return;
