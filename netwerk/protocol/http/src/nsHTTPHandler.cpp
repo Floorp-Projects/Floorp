@@ -17,12 +17,12 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: Gagan Saksena <gagan@netscape.com>
- *
  * Contributor(s): 
+ *   Gagan Saksena <gagan@netscape.com> (original author)
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Christopher Blizzard <blizzard@mozilla.org>
  *   Darin Fisher <darin@netscape.com>
+ *   Adrian Havill <havill@redhat.com>
  */
 
 #include "nspr.h"
@@ -86,6 +86,7 @@ PRLogModuleInfo* gHTTPLog = nsnull;
 static PRInt32 PR_CALLBACK HTTPPrefsCallback(const char* pref, void* instance);
 static const char NETWORK_PREFS[] = "network.";
 static const char INTL_ACCEPT_LANGUAGES[] = "intl.accept_languages";
+static const char INTL_ACCEPT_CHARSET[] = "intl.charset.default";
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
@@ -364,244 +365,376 @@ nsHTTPHandler::GetAcceptLanguages(char* *o_AcceptLanguages)
     }
 }
 
-NS_IMETHODIMP
-nsHTTPHandler::SetAcceptEncodings(const char* i_AcceptEncodings) 
+/**
+ *  Allocates a C string into that contains a character set/encoding list
+ *  notated with HTTP "q" values for output with a HTTP Accept-Charset
+ *  header. If the UTF-8 character set is not present, it will be added.
+ *  If a wildcard catch-all is not present, it will be added. If more than
+ *  one charset is set (as of 2001-02-07, only one is used), they will be
+ *  comma delimited and with q values set for each charset in decending order.
+ *
+ *  Ex: passing: "euc-jp"
+ *      returns: "euc-jp, utf-8; q=0.667, *; q=0.667"
+ *
+ *      passing: "UTF-8"
+ *      returns: "UTF-8, *"
+ */
+
+static char *
+PrepareAcceptCharset(const char *i_AcceptCharset)
 {
-    CRTFREEIF (mAcceptEncodings);
-    if (i_AcceptEncodings)
-    {
-        mAcceptEncodings = nsCRT::strdup(i_AcceptEncodings);
-        return (mAcceptEncodings == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    PRUint32 n, size, wrote;
+    PRInt32 available;
+    double q, dec;
+    char *p, *p2, *token, *q_Accept;
+    char *o_AcceptCharset;
+    const char *acceptable, *comma;
+    PRBool add_utf = PR_FALSE;
+    PRBool add_asterick = PR_FALSE;
+
+    if (i_AcceptCharset == nsnull)
+        acceptable = "";
+    else
+        acceptable = i_AcceptCharset;
+    o_AcceptCharset = nsCRT::strdup(acceptable);
+    if (nsnull == o_AcceptCharset)
+        return nsnull;
+    for (p = o_AcceptCharset, n = size = 0; '\0' != *p; p++) {
+        if (*p == ',') n++;
+            size++;
     }
-    return NS_OK;
+
+    // only add "utf-8" and "*" to the list if they aren't
+    // already specified.
+
+    if (PL_strcasestr(acceptable, "utf-8") == NULL) {
+        n++;
+        add_utf = PR_TRUE;
+    }
+    if (PL_strstr(acceptable, "*") == NULL) {
+        n++;
+        add_asterick = PR_TRUE;
+    }
+
+    available = size + ++n * 11 + 1;
+    q_Accept = new char[available];
+    if ((char *) 0 == q_Accept)
+        return nsnull;
+    *q_Accept = '\0';
+    q = 1.0;
+    dec = q / (double) n;
+    n = 0;
+    p2 = q_Accept;
+    for (token = nsCRT::strtok(o_AcceptCharset, ",", &p);
+         token != (char *) 0;
+         token = nsCRT::strtok(p, ",", &p)) {
+        while (*token == ' ' || *token == '\x9') token++;
+        char* trim;
+        trim = PL_strpbrk(token, "; \x9");
+        if (trim != (char*)0)  // remove "; q=..." if present
+            *trim = '\0';
+
+        if (*token != '\0') {
+            comma = n++ != 0 ? ", " : ""; // delimiter if not first item
+            if (q < 0.9995)
+                wrote = PR_snprintf(p2, available, "%s%s; q=%1.3f", comma, token, q);
+            else
+                wrote = PR_snprintf(p2, available, "%s%s", comma, token);
+            q -= dec;
+            p2 += wrote;
+            available -= wrote;
+            NS_ASSERTION(available > 0, "allocated string not long enough");
+        }
+    }
+    if (add_utf) {
+        comma = n++ != 0 ? ", " : ""; // delimiter if not first item
+        if (q < 0.9995)
+            wrote = PR_snprintf(p2, available, "%sutf-8; q=%1.3f", comma, q);
+        else
+            wrote = PR_snprintf(p2, available, "%sutf-8", comma);
+        q -= dec;
+        p2 += wrote;
+        available -= wrote;
+        NS_ASSERTION(available > 0, "allocated string not long enough");
+    }
+    if (add_asterick) {
+        comma = n++ != 0 ? ", " : ""; // delimiter if not first item
+
+        // keep q of "*" equal to the lowest q value
+        // in the event of a tie between the q of "*" and a non-wildcard
+        // the non-wildcard always receives preference.
+
+        q += dec;
+        if (q < 0.9995) {
+            wrote = PR_snprintf(p2, available, "%s*; q=%1.3f", comma, q);
+        }
+        else
+            wrote = PR_snprintf(p2, available, "%s*", comma);
+        available -= wrote;
+        p2 += wrote;
+        NS_ASSERTION(available > 0, "allocated string not long enough");
+    }
+    nsCRT::free(o_AcceptCharset);
+
+    // change alloc from C++ new/delete to nsCRT::strdup's way
+    o_AcceptCharset = nsCRT::strdup(q_Accept);
+#if defined DEBUG_havill
+    printf("Accept-Charset: %s\n", q_Accept);
+#endif
+    if (nsnull == o_AcceptCharset)
+        return nsnull;
+    delete [] q_Accept;
+    return o_AcceptCharset;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetAcceptEncodings(char* *o_AcceptEncodings)
+nsHTTPHandler::GetAcceptCharset(char **acceptCharset)
 {
-    if (!o_AcceptEncodings)
-        return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(acceptCharset);
     
-    if (mAcceptEncodings)
-    {
-        *o_AcceptEncodings = nsCRT::strdup(mAcceptEncodings);
-        return (*o_AcceptEncodings == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    if (mAcceptCharsetPrepped) {
+        *acceptCharset = nsCRT::strdup(mAcceptCharsetPrepped);
+        return *acceptCharset ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     }
-    else
-    {
-        *o_AcceptEncodings = nsnull;
+    else {
+        *acceptCharset = nsnull;
         return NS_OK;
     }
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetHttpVersion(unsigned int i_HttpVersion) 
+nsHTTPHandler::SetAcceptCharset(const char *acceptCharset) 
 {
-	mHttpVersion = i_HttpVersion;
+    CRTFREEIF(mAcceptCharset);
+    CRTFREEIF(mAcceptCharsetPrepped);
+    if (acceptCharset) {
+        mAcceptCharset = nsCRT::strdup(acceptCharset);
+        if (!mAcceptCharset)
+            return NS_ERROR_OUT_OF_MEMORY;
+        mAcceptCharsetPrepped = PrepareAcceptCharset(acceptCharset);
+        if (!mAcceptCharsetPrepped)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetHttpVersion(unsigned int * o_HttpVersion)
+nsHTTPHandler::SetAcceptEncodings(const char *acceptEncodings) 
 {
-    if (!o_HttpVersion)
-        return NS_ERROR_NULL_POINTER;
+    CRTFREEIF (mAcceptEncodings);
+    if (acceptEncodings) {
+        mAcceptEncodings = nsCRT::strdup(acceptEncodings);
+        return mAcceptEncodings ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    }
+    return NS_OK;
+}
 
-    *o_HttpVersion = mHttpVersion;
+NS_IMETHODIMP
+nsHTTPHandler::GetAcceptEncodings(char **acceptEncodings)
+{
+    NS_ENSURE_ARG_POINTER(acceptEncodings);
+    
+    if (mAcceptEncodings) {
+        *acceptEncodings = nsCRT::strdup(mAcceptEncodings);
+        return *acceptEncodings ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    }
+    else {
+        *acceptEncodings = nsnull;
+        return NS_OK;
+    }
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::SetHttpVersion(unsigned int httpVersion) 
+{
+	mHttpVersion = httpVersion;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetHttpVersion(unsigned int *httpVersion)
+{
+    NS_ENSURE_ARG_POINTER(httpVersion);
+    *httpVersion = mHttpVersion;
 	return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetCapabilities(PRUint32 * o_Capabilities)
+nsHTTPHandler::GetCapabilities(PRUint32 *caps)
 {
-    if (!o_Capabilities)
-        return NS_ERROR_NULL_POINTER;
-
-    *o_Capabilities = mCapabilities;
+    NS_ENSURE_ARG_POINTER(caps);
+    *caps = mCapabilities;
 	return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetKeepAliveTimeout(unsigned int * o_keepAliveTimeout)
+nsHTTPHandler::GetKeepAliveTimeout(unsigned int *timeout)
 {
-    if (!o_keepAliveTimeout)
-        return NS_ERROR_NULL_POINTER;
-
-    *o_keepAliveTimeout = mKeepAliveTimeout;
+    NS_ENSURE_ARG_POINTER(timeout);
+    *timeout = mKeepAliveTimeout;
 	return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetAuthEngine(nsAuthEngine** o_AuthEngine)
+nsHTTPHandler::GetAuthEngine(nsAuthEngine **authEngine)
 {
-  *o_AuthEngine = &mAuthEngine;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTTPHandler::GetAppName(PRUnichar* *aAppName)
-{
-    *aAppName = mAppName.ToNewUnicode();
-    if (!*aAppName) return NS_ERROR_OUT_OF_MEMORY;
+    *authEngine = &mAuthEngine;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetAppVersion(PRUnichar* *aAppVersion) 
+nsHTTPHandler::GetAppName(PRUnichar **appName)
 {
-    *aAppVersion = mAppVersion.ToNewUnicode();
-    if (!*aAppVersion) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    *appName = mAppName.ToNewUnicode();
+    return *appName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetVendor(PRUnichar* *aVendor)
+nsHTTPHandler::GetAppVersion(PRUnichar **appVersion) 
 {
-    *aVendor = mVendor.ToNewUnicode();
-    if (!*aVendor) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    *appVersion = mAppVersion.ToNewUnicode();
+    return *appVersion ? NS_OK : NS_ERROR_OUT_OF_MEMORY; 
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetVendor(const PRUnichar* aVendor)
+nsHTTPHandler::GetVendor(PRUnichar **vendor)
 {
-    mVendor.AssignWithConversion(aVendor);
+    *vendor = mVendor.ToNewUnicode();
+    return *vendor ? NS_OK : NS_ERROR_OUT_OF_MEMORY; 
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::SetVendor(const PRUnichar *vendor)
+{
+    mVendor.AssignWithConversion(vendor);
     return BuildUserAgent();
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetVendorSub(PRUnichar* *aVendorSub)
+nsHTTPHandler::GetVendorSub(PRUnichar **vendorSub)
 {
-    *aVendorSub = mVendorSub.ToNewUnicode();
-    if (!*aVendorSub) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    *vendorSub = mVendorSub.ToNewUnicode();
+    return *vendorSub ? NS_OK : NS_ERROR_OUT_OF_MEMORY; 
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetVendorSub(const PRUnichar* aVendorSub)
+nsHTTPHandler::SetVendorSub(const PRUnichar *vendorSub)
 {
-    mVendorSub.AssignWithConversion(aVendorSub);
+    mVendorSub.AssignWithConversion(vendorSub);
     return BuildUserAgent();
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetVendorComment(PRUnichar* *aComment)
+nsHTTPHandler::GetVendorComment(PRUnichar **comment)
 {
-    *aComment = mVendorComment.ToNewUnicode();
-    if (!*aComment) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    *comment = mVendorComment.ToNewUnicode();
+    return *comment ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetVendorComment(const PRUnichar* aComment)
+nsHTTPHandler::SetVendorComment(const PRUnichar *comment)
 {
-    mVendorComment.AssignWithConversion(aComment);
+    mVendorComment.AssignWithConversion(comment);
     return BuildUserAgent();
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetProduct(PRUnichar* *aProduct)
+nsHTTPHandler::GetProduct(PRUnichar **product)
 {
-    *aProduct = mProduct.ToNewUnicode();
-    if (!*aProduct) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    *product = mProduct.ToNewUnicode();
+    return *product ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetProduct(const PRUnichar* aProduct)
+nsHTTPHandler::SetProduct(const PRUnichar *product)
 {
-    mProduct.AssignWithConversion(aProduct);
+    mProduct.AssignWithConversion(product);
     return BuildUserAgent();
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetProductSub(PRUnichar* *aProductSub)
+nsHTTPHandler::GetProductSub(PRUnichar **productSub)
 {
-    *aProductSub = mProductSub.ToNewUnicode();
-    if (!*aProductSub) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    *productSub = mProductSub.ToNewUnicode();
+    return *productSub ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetProductSub(const PRUnichar* aProductSub)
+nsHTTPHandler::SetProductSub(const PRUnichar *productSub)
 {
-    mProductSub.AssignWithConversion(aProductSub);
+    mProductSub.AssignWithConversion(productSub);
     return BuildUserAgent();
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetProductComment(PRUnichar* *aComment)
+nsHTTPHandler::GetProductComment(PRUnichar **comment)
 {
-    *aComment = mProductComment.ToNewUnicode();
-    if (!*aComment) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    *comment = mProductComment.ToNewUnicode();
+    return *comment ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetProductComment(const PRUnichar* aComment)
+nsHTTPHandler::SetProductComment(const PRUnichar *comment)
 {
-    mProductComment.AssignWithConversion(aComment);
+    mProductComment.AssignWithConversion(comment);
     return BuildUserAgent();
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetLanguage(PRUnichar* *aLanguage)
+nsHTTPHandler::GetLanguage(PRUnichar **language)
 {
-    *aLanguage = mAppLanguage.ToNewUnicode();
-    if (!*aLanguage) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    *language = mAppLanguage.ToNewUnicode();
+    return *language ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetLanguage(const PRUnichar* aLanguage)
+nsHTTPHandler::SetLanguage(const PRUnichar *language)
 {
-    mAppLanguage.AssignWithConversion(aLanguage);
+    mAppLanguage.AssignWithConversion(language);
     return BuildUserAgent();
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetPlatform(PRUnichar* *aPlatform)
+nsHTTPHandler::GetPlatform(PRUnichar **platform)
 {
-    *aPlatform = mAppPlatform.ToNewUnicode();
-    if (!*aPlatform) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    *platform = mAppPlatform.ToNewUnicode();
+    return *platform ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetOscpu(PRUnichar* *aOSCPU)
+nsHTTPHandler::GetOscpu(PRUnichar **oscpu)
 {
-    *aOSCPU = mAppOSCPU.ToNewUnicode();
-    if (!*aOSCPU) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    *oscpu = mAppOSCPU.ToNewUnicode();
+    return *oscpu ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetUserAgent(PRUnichar* *aUserAgent)
+nsHTTPHandler::GetUserAgent(PRUnichar **userAgent)
 {
     if (mAppUserAgent.IsEmpty()) return NS_ERROR_NOT_INITIALIZED;
-    *aUserAgent = mAppUserAgent.ToNewUnicode();
-    if (!*aUserAgent) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    *userAgent = mAppUserAgent.ToNewUnicode();
+    return *userAgent ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetMisc(PRUnichar* *aMisc)
+nsHTTPHandler::GetMisc(PRUnichar **misc)
 {
-    *aMisc = mAppMisc.ToNewUnicode();
-    if (!*aMisc) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    *misc = mAppMisc.ToNewUnicode();
+    return *misc ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetMisc(const PRUnichar* aMisc)
+nsHTTPHandler::SetMisc(const PRUnichar *misc)
 {
-    mAppMisc.AssignWithConversion(NS_STATIC_CAST(const PRUnichar*, aMisc));
+    mAppMisc.AssignWithConversion(NS_STATIC_CAST(const PRUnichar*, misc));
     return BuildUserAgent();
 }
 
 nsHTTPHandler::nsHTTPHandler():
     mAcceptLanguages(nsnull),
     mAcceptEncodings(nsnull),
+    mAcceptCharset(nsnull),
+    mAcceptCharsetPrepped(nsnull),
     mHttpVersion(HTTP_ONE_ONE),
     mCapabilities(DEFAULT_ALLOWED_CAPABILITIES ),
     mKeepAliveTimeout(DEFAULT_KEEP_ALIVE_TIMEOUT),
@@ -791,6 +924,8 @@ nsHTTPHandler::Init()
                 HTTPPrefsCallback, (void*)this);
     mPrefs->RegisterCallback(UA_PREF_PREFIX "override", 
                 HTTPPrefsCallback, (void*)this);
+    mPrefs->RegisterCallback(INTL_ACCEPT_CHARSET, 
+                HTTPPrefsCallback, (void*)this);
     mPrefs->RegisterCallback(UA_PREF_PREFIX "locale", 
                 HTTPPrefsCallback, (void*)this);
     mPrefs->RegisterCallback(UA_PREF_PREFIX "misc",
@@ -858,13 +993,14 @@ nsHTTPHandler::~nsHTTPHandler()
     // Release the Atoms used by the HTTP protocol...
     nsHTTPAtoms::ReleaseAtoms();
 
-    if (mPrefs) 
-    {
+    if (mPrefs) {
         mPrefs->UnregisterCallback(NETWORK_PREFS, 
                 HTTPPrefsCallback, (void*)this);
         mPrefs->UnregisterCallback(INTL_ACCEPT_LANGUAGES, 
                 HTTPPrefsCallback, (void*)this);
         mPrefs->UnregisterCallback(UA_PREF_PREFIX "override", 
+                HTTPPrefsCallback, (void*)this);
+        mPrefs->UnregisterCallback(INTL_ACCEPT_CHARSET, 
                 HTTPPrefsCallback, (void*)this);
         mPrefs->UnregisterCallback(UA_PREF_PREFIX "locale", 
                 HTTPPrefsCallback, (void*)this);
@@ -872,9 +1008,11 @@ nsHTTPHandler::~nsHTTPHandler()
                 HTTPPrefsCallback, (void *)this);
     }
 
-    CRTFREEIF (mAcceptLanguages);
-    CRTFREEIF (mAcceptEncodings);
-    CRTFREEIF (mScheme);
+    CRTFREEIF(mAcceptCharset);
+    CRTFREEIF(mAcceptCharsetPrepped);
+    CRTFREEIF(mAcceptLanguages);
+    CRTFREEIF(mAcceptEncodings);
+    CRTFREEIF(mScheme);
 }
 
 nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
@@ -1486,6 +1624,18 @@ nsHTTPHandler::PrefsChanged(const char* pref)
 #if defined(DEBUG_tao_)
         printf("\n--> nsHTTPHandler::PrefsChanged: intl.accept_languages=%s\n",
                (const char *)NS_ConvertUCS2toUTF8(acceptLanguages));
+#endif
+    }
+    if ( (bChangedAll)|| !PL_strcmp(pref, INTL_ACCEPT_CHARSET) ) // intl.charset.default
+    {
+        nsXPIDLString acceptCharset;
+        rv = mPrefs->GetLocalizedUnicharPref(INTL_ACCEPT_CHARSET, 
+                getter_Copies(acceptCharset));
+        if (NS_SUCCEEDED(rv))
+            SetAcceptCharset(NS_ConvertUCS2toUTF8(acceptCharset).get());
+#if defined(DEBUG_tao)
+        printf("\n--> nsHTTPHandler::PrefsChanged: intl.charset.default=%s\n",
+               (const char *)NS_ConvertUCS2toUTF8(acceptCharset));
 #endif
     }
 

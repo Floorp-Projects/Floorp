@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Gagan Saksena <gagan@netscape.com> (original author)
  *   Darin Fisher <darin@netscape.com>
+ *   Adrian Havill <havill@redhat.com>
  */
 
 #ifndef nsHTTPHandler_h__
@@ -169,7 +170,9 @@ protected:
 
     char*               mAcceptLanguages;
     char*               mAcceptEncodings;
-    PRUint32			mHttpVersion;
+    char*               mAcceptCharset;
+    char*               mAcceptCharsetPrepped;
+    PRUint32            mHttpVersion;
     nsAuthEngine        mAuthEngine;
     
     PRUint32            mCapabilities;
