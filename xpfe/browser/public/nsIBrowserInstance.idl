@@ -1,0 +1,80 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code,
+ * released March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ *
+ * Contributors:
+ *     William A. Law <law@netscape.com>
+ */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+[scriptable, uuid(8AF0FA40-598D-11d3-806A-00600811A9C3)]
+interface nsIBrowserInstance : nsISupports {
+
+    // History.
+    void back();
+    void forward();
+    void reload(in PRUint32 reloadType);
+    void stop();
+    void loadUrl(in wstring url);
+    void loadInitialPage();
+    void backButtonPopup();
+    void forwardButtonPopup();
+    void gotoHistoryIndex(in PRInt32 index);
+    
+    // Wallet (should reside elsewhere, somehow).
+    void walletPreview(in nsIDOMWindow win, in nsIDOMWindow form);
+    void cookieViewer(in nsIDOMWindow win);
+    void signonViewer(in nsIDOMWindow win);
+    void walletEditor(in nsIDOMWindow win);
+    void walletChangePassword();
+    void walletQuickFillin(in nsIDOMWindow win);
+    void walletRequestToCapture(in nsIDOMWindow win);
+    void walletSamples();
+    
+    // Infrastructure.
+    void init();
+    void setToolbarWindow( in nsIDOMWindow aWindow );
+    void setContentWindow( in nsIDOMWindow aWindow );
+    void setWebShellWindow( in nsIDOMWindow aWindow );
+    void SetDocumentCharset(in wstring charset);
+    
+    // File.
+    void newWindow();
+    void openWindow();
+    void printPreview();
+
+    // Edit.
+    void copy();
+    void print();
+    void close();
+    void exit();
+
+    // View.
+    attribute boolean isViewSource;
+    
+    // Search.
+    void find();
+    void findNext();
+};
+
+%{C++
+#define NS_IBROWSERINSTANCE_PROGID "component://netscape/appshell/component/browser/instance"
+%}
