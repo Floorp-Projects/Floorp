@@ -35,8 +35,8 @@ var gToolboxChanged = false;
 
 function onLoad()
 {
-  gToolboxDocument = window.opener.document;
-  gToolbox = gToolboxDocument.getElementsByTagName("toolbox")[0];
+  gToolbox = window.arguments[0];
+  gToolboxDocument = gToolbox.ownerDocument;
   
   gToolbox.addEventListener("draggesture", onToolbarDragGesture, false);
   gToolbox.addEventListener("dragover", onToolbarDragOver, false);
@@ -63,7 +63,6 @@ function initDialog()
   
   var mode = gToolbox.getAttribute("mode");
   document.getElementById("modelist").value = mode;
-
   var iconSize = gToolbox.getAttribute("iconsize");
   document.getElementById("smallicons").checked = iconSize == "small";
 
@@ -88,7 +87,7 @@ function slideOpen()
 {
   if (window.outerHeight <= kWindowHeight) {
     window.outerHeight += kAnimateIncrement;
-    setTimeout(slideOpen, 10);
+    setTimeout(slideOpen, 20);
   } else {
     initDialog();
   }
@@ -120,13 +119,13 @@ function removeToolboxListeners()
 }
 
 /**
- * Invoke a callback on our parent window to notify it that
- * the dialog is done and going away.
+ * Invoke a callback on the toolbox to notify it that the dialog is done
+ * and going away.
  */
 function notifyParentComplete()
 {
-  if ("onToolbarCustomizeComplete" in window.opener.top)
-    window.opener.top.onToolbarCustomizeComplete();
+  if ("customizeDone" in gToolbox)
+    gToolbox.customizeDone(gToolboxChanged);
 }
 
 /**
@@ -700,9 +699,12 @@ var toolbarDNDObserver =
   onDragOver: function (aEvent, aFlavour, aDragSession)
   {
     var toolbar = aEvent.target;
-    while (toolbar && toolbar.localName != "toolbar")
+    var dropTarget = aEvent.target;
+    while (toolbar && toolbar.localName != "toolbar") {
+      dropTarget = toolbar;
       toolbar = toolbar.parentNode;
-
+    }
+    
     var previousDragItem = gCurrentDragOverItem;
 
     // Make sure we are dragging over a customizable toolbar.
@@ -711,19 +713,19 @@ var toolbarDNDObserver =
       return;
     }
     
-    if (aEvent.target.localName == "toolbar") {
-      gCurrentDragOverItem = aEvent.target;
+    if (dropTarget.localName == "toolbar") {
+      gCurrentDragOverItem = dropTarget;
     } else {
-      var dropTargetWidth = aEvent.target.boxObject.width;
-      var dropTargetX = aEvent.target.boxObject.x;
+      var dropTargetWidth = dropTarget.boxObject.width;
+      var dropTargetX = dropTarget.boxObject.x;
 
       gCurrentDragOverItem = null;
       if (aEvent.clientX > (dropTargetX + (dropTargetWidth / 2))) {
-        gCurrentDragOverItem = aEvent.target.nextSibling;
+        gCurrentDragOverItem = dropTarget.nextSibling;
         if (!gCurrentDragOverItem)
           gCurrentDragOverItem = toolbar;
       } else
-        gCurrentDragOverItem = aEvent.target;
+        gCurrentDragOverItem = dropTarget;
     }    
 
     if (previousDragItem && gCurrentDragOverItem != previousDragItem) {
