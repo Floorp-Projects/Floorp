@@ -40,10 +40,10 @@ public:
                    const nsRect& aDirtyRect);
 
   // nsIInlineReflow
-  NS_IMETHOD FindTextRuns(nsLineLayout&     aLineLayout,
+  NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout,
                           nsIReflowCommand* aReflowCommand);
-  NS_IMETHOD InlineReflow(nsLineLayout&        aLineLayout,
-                          nsReflowMetrics&     aDesiredSize,
+  NS_IMETHOD InlineReflow(nsLineLayout& aLineLayout,
+                          nsReflowMetrics& aDesiredSize,
                           const nsReflowState& aReflowState);
 
 protected:
@@ -87,20 +87,21 @@ BRFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 }
 
 NS_METHOD
-BRFrame::Paint(nsIPresContext&      aPresContext,
+BRFrame::Paint(nsIPresContext& aPresContext,
                nsIRenderingContext& aRenderingContext,
-               const nsRect&        aDirtyRect)
+               const nsRect& aDirtyRect)
 {
   if (nsIFrame::GetShowFrameBorders()) {
     float p2t = aPresContext.GetPixelsToTwips();
+    nscoord five = NSIntPixelsToTwips(5, p2t);
     aRenderingContext.SetColor(NS_RGB(0, 255, 255));
-    aRenderingContext.FillRect(0, 0, NSIntPixelsToTwips(5, p2t), mRect.height);
+    aRenderingContext.FillRect(0, 0, five, five*2);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-BRFrame::FindTextRuns(nsLineLayout&     aLineLayout,
+BRFrame::FindTextRuns(nsLineLayout& aLineLayout,
                       nsIReflowCommand* aReflowCommand)
 {
   aLineLayout.EndTextRun();
@@ -108,25 +109,17 @@ BRFrame::FindTextRuns(nsLineLayout&     aLineLayout,
 }
 
 NS_IMETHODIMP
-BRFrame::InlineReflow(nsLineLayout&         aLineLayout,
-                      nsReflowMetrics&      aMetrics,
-                      const nsReflowState&  aReflowState)
+BRFrame::InlineReflow(nsLineLayout& aLineLayout,
+                      nsReflowMetrics& aMetrics,
+                      const nsReflowState& aReflowState)
 {
   if (nsnull != aMetrics.maxElementSize) {
     aMetrics.maxElementSize->width = 0;
     aMetrics.maxElementSize->height = 0;
   }
-
-  // We have no width, but we're the height of the default font
-  const nsStyleFont* font = (const nsStyleFont*)
-    mStyleContext->GetStyleData(eStyleStruct_Font);
-  nsIFontMetrics* fm = aLineLayout.mPresContext.GetMetricsFor(font->mFont);
-
-  fm->GetMaxAscent(aMetrics.ascent);
-  fm->GetMaxDescent(aMetrics.descent);
-  aMetrics.height = aMetrics.ascent + aMetrics.descent;
+  aMetrics.height = 0;
   aMetrics.width = 0;
-  NS_RELEASE(fm);
+  aLineLayout.SetBRFrame(this);
 
   // Return our inline reflow status
   const nsStyleDisplay* display = (const nsStyleDisplay*)
@@ -135,7 +128,6 @@ BRFrame::InlineReflow(nsLineLayout&         aLineLayout,
   if (NS_STYLE_CLEAR_NONE == breakType) {
     breakType = NS_STYLE_CLEAR_LINE;
   }
-
   return NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |
     NS_INLINE_MAKE_BREAK_TYPE(breakType);
 }
