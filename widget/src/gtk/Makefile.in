@@ -68,6 +68,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_UNFORCE_ALL) \
 		$(MOZ_COMPONENT_LIBS) \
 		-lraptorgfx \
+		$(MOZ_TIMER_LIBS) \
 		$(NULL)
 
 ifndef MOZ_MONOLITHIC_TOOLKIT
