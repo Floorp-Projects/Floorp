@@ -44,6 +44,7 @@ CPPSRCS =				\
 	nsTreeFrame.cpp \
 	nsTreeIndentationFrame.cpp \
 	nsTreeCellFrame.cpp \
+	nsProgressMeterFrame.cpp \
 	$(NULL)
 
 EXPORTS = \
