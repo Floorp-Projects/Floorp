@@ -9,7 +9,7 @@
 
   function StartUp()
   {
-    appCore = AppCoresManager.Find("MailAppCore");  
+    appCore = XPAppCoresManager.Find("MailAppCore");  
     if (appCore==null) {
       appCore = new MailCore();
       if (appCore != null) {
@@ -24,7 +24,7 @@
   function SendMailMessage()
   {
     dump("SendMailMessage!\n");
-    var appCore = AppCoresManager.Find("MailAppCore");
+    var appCore = XPAppCoresManager.Find("MailAppCore");
     if (appCore != null) {
 	  dump("Mail was sent!\n");
 	  appCore.SendMail(window.parent.frames[1].document.forms[0].elements[1].value, 
