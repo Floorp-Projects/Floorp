@@ -28,16 +28,19 @@ include $(topsrcdir)/config/rules.mk
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
   BASEBROWSER = basebrowser-mac-macho
+  CLIENTMANIFEST = client-mac-macho
   _PLATFORM = unix
 else
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
   BASEBROWSER = basebrowser-win
   BASEBROWSER_SUPP = basebrowser-win-supp
+  CLIENTMANIFEST = client-win
   _PLATFORM = dos
   WINAPP=mfcembed
   #WINAPP=winembed
 else
   BASEBROWSER = basebrowser-unix
+  CLIENTMANIFEST = client-unix
   _PLATFORM = unix
 endif
 endif
@@ -66,6 +69,9 @@ libs:: embed_chrome
 ifeq ($(OS_ARCH),WINNT)
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(BASEBROWSER_SUPP) -o $(_PLATFORM) -v
 endif
+	if test -f "$(srcdir)/$(CLIENTMANIFEST)"; then \
+		$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(CLIENTMANIFEST) -o $(_PLATFORM) -v; \
+	fi
 	$(NSINSTALL) -t $(srcdir)/installed-chrome.txt $(DIST)/Embed/chrome
 	$(NSINSTALL) -t $(srcdir)/readme.html $(DIST)/Embed
 ifeq ($(OS_ARCH),WINNT)
