@@ -62,6 +62,16 @@ public:
     virtual ~nsDirIndexParser();
     nsresult Init();
 
+    enum fieldType {
+        FIELD_UNKNOWN = 0, // MUST be 0
+        FIELD_FILENAME,
+        FIELD_DESCRIPTION,
+        FIELD_CONTENTLENGTH,
+        FIELD_LASTMODIFIED,
+        FIELD_CONTENTTYPE,
+        FIELD_FILETYPE
+    };
+
 protected:
     nsCOMPtr<nsIDirIndexListener> mListener;
 
@@ -75,16 +85,6 @@ protected:
     nsresult ProcessData(nsIRequest *aRequest, nsISupports *aCtxt);
     nsresult ParseFormat(const char* buf);
     nsresult ParseData(nsIDirIndex* aIdx, char* aDataStr);
-
-    enum fieldType {
-        FIELD_UNKNOWN = 0, // MUST be 0
-        FIELD_FILENAME,
-        FIELD_DESCRIPTION,
-        FIELD_CONTENTLENGTH,
-        FIELD_LASTMODIFIED,
-        FIELD_CONTENTTYPE,
-        FIELD_FILETYPE
-    };
 
     struct Field {
         const char *mName;
