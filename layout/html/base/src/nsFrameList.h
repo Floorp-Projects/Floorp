@@ -126,6 +126,8 @@ public:
 
   void VerifyParent(nsIFrame* aParent) const;
 
+  void List(FILE* out) const;
+
 protected:
   nsIFrame* mFirstChild;
 };
