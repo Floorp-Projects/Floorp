@@ -1,3 +1,4 @@
+
 interface EditorAppCore : BaseAppCore
 {
 /* IID: { 0x9afff72b, 0xca9a, 0x11d2, \
@@ -14,8 +15,8 @@ interface EditorAppCore : BaseAppCore
 	void setEditorType(in DOMString editorType);
 	void setTextProperty(in DOMString prop, in DOMString attr, in DOMString value);
 	void removeTextProperty(in DOMString prop, in DOMString attr);
-	
-	void getTextProperty(in DOMString prop, in DOMString attr, in DOMString value, out boolean firstHas, out boolean anyHas, out boolean allHas);
+		
+	void getTextProperty(in DOMString prop, in DOMString attr, in DOMString value, out DOMString firstHas, out DOMString anyHas, out DOMString allHas);
 	
 	void undo();
 	void redo();
