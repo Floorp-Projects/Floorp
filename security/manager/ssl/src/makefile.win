@@ -93,3 +93,5 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
     $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+    $(MAKE_INSTALL) $(DIST)\lib\nssckbi.dll $(DIST)\bin
+
