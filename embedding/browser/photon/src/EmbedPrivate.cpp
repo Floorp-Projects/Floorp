@@ -955,7 +955,6 @@ static void mozilla_set_default_pref( nsIPref *pref )
 //	pref->SetIntPref( "browser.cache.check_doc_frequency", 2 );
 	pref->SetBoolPref( "browser.cache.disk.enable", PR_TRUE );
 	pref->SetIntPref( "browser.cache.disk.capacity", 5000 );
-	pref->SetIntPref( "network.http.connect.timeout", 2400 );
 	pref->SetIntPref( "network.http.max-connections", 4 );
 	pref->SetIntPref( "network.proxy.http_port", 80 );
 	pref->SetIntPref( "network.proxy.ftp_port", 80 );
