@@ -31,7 +31,6 @@ LIBRARY_NAME	= mozutil_s
 REQUIRES	= xpcom \
 		  $(NULL)
 
-CSRCS		= obs.c
 CPPSRCS		= stopwatch.cpp
 
 FORCE_STATIC_LIB = 1

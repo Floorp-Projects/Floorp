@@ -31,8 +31,7 @@ XPIDL_MODULE	= util
 
 PACKAGE_FILE = libutil.pkg
 
-EXPORTS		= $(srcdir)/xp_obs.h \
-              $(srcdir)/stopwatch.h \
+EXPORTS		= $(srcdir)/stopwatch.h \
 			  $(srcdir)/nsTimer.h
 
 include $(topsrcdir)/config/rules.mk
