@@ -17,6 +17,7 @@ public:
 	NS_IMETHOD LockFactory(PRBool aLock);
 
 	// nsIPlugin overrides
+	NS_IMETHOD CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, const char* aPluginMIMEType, void **aResult);
 	NS_IMETHOD Initialize();
     NS_IMETHOD Shutdown(void);
     NS_IMETHOD GetMIMEDescription(const char* *resultingDesc);

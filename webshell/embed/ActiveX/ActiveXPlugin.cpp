@@ -146,6 +146,11 @@ static const char *gpszMime = "application/x-oleobject:smp:Mozilla ActiveX Contr
 static const char *gpszPluginName = "Mozilla ActiveX Control Plug-in";
 static const char *gpszPluginDesc = "ActiveX control host";
 
+NS_IMETHODIMP CActiveXPlugin::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, const char* aPluginMIMEType, void **aResult)
+{
+	return CreateInstance(aOuter, aIID, aResult);
+}
+
 NS_IMETHODIMP CActiveXPlugin::Initialize()
 {
 	return NS_OK;
