@@ -31,7 +31,7 @@
  *   -- 20000326
  *     -- added Mozilla integration code
  *
- * $Id: URIUtils.h,v 1.8 2000/08/27 06:00:59 kvisco%ziplink.net Exp $
+ * $Id: URIUtils.h,v 1.9 2000/08/27 17:24:04 axel%pike.org Exp $
  */
 
 #include "TxString.h"
@@ -57,7 +57,7 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
  * A utility class for URI handling
  * Not yet finished, only handles file URI at this point
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.8 $ $Date: 2000/08/27 06:00:59 $
+ * @version $Revision: 1.9 $ $Date: 2000/08/27 17:24:04 $
  *
 **/
 
