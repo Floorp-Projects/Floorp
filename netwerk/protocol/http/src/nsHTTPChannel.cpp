@@ -1136,7 +1136,7 @@ nsHTTPChannel::CheckCache()
 
         LOG(("Content-length=%d, CacheEntryDataSize=%u\n", contentLength, size));
 
-        if (size != contentLength) {
+        if (size != (PRUint32) contentLength) {
             NS_WARNING("Cached data size does not match the Content-Length header");
             return NS_OK; // must re-fetch
         }
@@ -1338,6 +1338,31 @@ nsHTTPChannel::ResponseIsCacheable()
             LOG(("Not caching since response has \"Pragma: no-cache\"\n"));
             return PR_FALSE;
         }
+    }
+    str = 0;
+
+    // From section 13.9 of RFC2616: "caches MUST NOT treat responses to URLs
+    // [containing a "?" in the rel_path part] as fresh unless the server 
+    // provides an explicit expiration time."  An explicit expiration time
+    // can be specified either via the "Cache-Control: max-age" or "Expires"
+    // headers.
+    nsCOMPtr<nsIURL> url = do_QueryInterface(mURI);
+    // Check for a non-empty query string...
+    if (url)
+        url->GetQuery(getter_Copies(str));
+    if (str && *str) {
+        PRBool avail = PR_FALSE;
+        PRUint32 value;
+        // If "Cache-Control: max-age" is present...
+        mResponse->GetMaxAge(&value, &avail);
+        if (avail) return PR_TRUE;
+        // If "Expires" is present...
+        mResponse->GetExpiresValue(&value, &avail);
+        if (avail) return PR_TRUE;
+        // Else, this response is not cacheable!
+        LOG(("Not caching since request is for an URL with a '?' and the "
+             "server has not explicitly provided an expiration time\n"));
+        return PR_FALSE;
     }
 
     return PR_TRUE;
