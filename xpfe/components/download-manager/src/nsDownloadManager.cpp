@@ -853,6 +853,7 @@ nsDownload::GetTransferInformation(PRInt32* aCurr, PRInt32* aMax)
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebProgressListener
 
+PRInt32 i = 0;
 NS_IMETHODIMP
 nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
                                nsIRequest *aRequest,
@@ -867,11 +868,12 @@ nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
 
   // filter notifications since they come in so frequently
   PRTime delta;
-  LL_SUB(delta, PR_Now(), mLastUpdate);
-  if (delta < INTERVAL && aMaxTotalProgress != -1 && aCurTotalProgress < aMaxTotalProgress)
+  PRTime now = PR_Now();
+  LL_SUB(delta, now, mLastUpdate);
+  if (LL_CMP(delta, <, INTERVAL) && aMaxTotalProgress != -1 && aCurTotalProgress < aMaxTotalProgress)
     return NS_OK;
 
-  mLastUpdate = PR_Now();
+  mLastUpdate = now;
 
   if (mDownloadState == NOTSTARTED) {
     char* persistentDescriptor;

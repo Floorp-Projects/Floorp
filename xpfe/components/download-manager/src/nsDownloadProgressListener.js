@@ -84,8 +84,9 @@ nsDownloadProgressListener.prototype = {
       // Get current time.
       var now = ( new Date() ).getTime();
       // If interval hasn't elapsed, ignore it.
-      if ( now - this.lastUpdate < interval && aMaxTotalProgress != "-1" &&  parseInt(aCurTotalProgress) < parseInt(aMaxTotalProgress) )
+      if ( now - this.lastUpdate < interval && aMaxTotalProgress != "-1" &&  parseInt(aCurTotalProgress) < parseInt(aMaxTotalProgress) ) {
         return;
+      }
 
       // Update this time.
       this.lastUpdate = now;
