@@ -3033,7 +3033,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
   nsresult rv = NS_OK;
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::AddDocTypeDecl()\n"));
   MOZ_TIMER_START(mWatch);
-
+ 
   mHTMLDocument->SetDTDMode((nsDTDMode)aMode);
 
   nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(mHTMLDocument));
@@ -3712,7 +3712,7 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
 		mHTMLDocument->GetDTDMode(mode);
 
 		PRBool isStyleSheet = PR_FALSE;			// see bug 18817
-		if (eDTDMode_NoQuirks == mode) {
+		if (eDTDMode_noquirks== mode) {
 			if (mimeType.EqualsIgnoreCase("text/css")) {
 				isStyleSheet = PR_TRUE;					// strict mode + good mime type
 			}
