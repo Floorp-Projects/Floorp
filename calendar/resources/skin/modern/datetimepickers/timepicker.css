@@ -58,10 +58,10 @@
   background-image: url("chrome://calendar/skin/datetimepickers/clock_disabled.gif");
 }
 .timepicker-button-class:hover {
-  background-image: url("chrome://calendar/skin/datetimepickers/clock_hover.gif");
+  background-image: url("chrome://calendar/skin/datetimepickers/clock_hover.png");
 }
 .timepicker-button-class:hover:active {
-  background-image: url("chrome://calendar/skin/datetimepickers/clock_down.gif");
+  background-image: url("chrome://calendar/skin/datetimepickers/clock_down.png");
 }
 .menu-right {
   visibility : hidden;

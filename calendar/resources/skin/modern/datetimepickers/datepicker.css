@@ -21,11 +21,11 @@
 }
 
 .datepicker-button-class:hover {
-  background-image : url( "chrome://calendar/skin/datetimepickers/calendar_hover.gif" );
+  background-image : url( "chrome://calendar/skin/datetimepickers/calendar_hover.png" );
 }
 
 .datepicker-button-class:hover:active {
-  background-image : url( "chrome://calendar/skin/datetimepickers/calendar_down.gif" );
+  background-image : url( "chrome://calendar/skin/datetimepickers/calendar_down.png" );
 }
 
 .menu-right {
