@@ -433,19 +433,6 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
       s1bitGC = gdk_gc_new_with_values(mAlphaPixmap, &gcv, GDK_GC_FUNCTION);
     }
 
-    // does this code do anything other than cause a few problems?
-#if 0
-    nsIRegion *clipRegion = nsnull;
-    if (NS_SUCCEEDED(aContext.GetClipRegion(&clipRegion)))
-    {
-      GdkRegion *region;
-      clipRegion->GetNativeRegion((void*)region);
-      XSetRegion(GDK_DISPLAY(), gc, ((GdkRegionPrivate*)region)->xregion);
-      XSetClipOrigin(GDK_DISPLAY(), gc, -aX, -aY);
-    }
-    NS_RELEASE(clipRegion);
-#endif
-
     XPutImage(dpy, pixmap, GDK_GC_XGC(s1bitGC), x_image, 0, 0, 0, 0,
               aWidth, aHeight);
 
@@ -468,14 +455,7 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 
     gc = gdk_gc_new(mAlphaPixmap);
     gdk_gc_set_function(gc, GDK_COPY_INVERT);
-#if 0
-    if (NS_SUCCEEDED(aContext.GetClipRegion(&clipRegion)))
-    {
-      GdkRegion *region;
-      clipRegion->GetNativeRegion((void*&)region);
-      gdk_gc_set_clip_region(gc, region);
-    }
-#endif
+
     img = gdk_image_new_bitmap(gdk_rgb_get_visual(), mAlphaBits, aWidth, aHeight);
     GDK_IMAGE_XIMAGE(img)->bits_per_pixel = 1;
     GDK_IMAGE_XIMAGE(img)->bytes_per_line = mAlphaRowBytes;
