@@ -60,6 +60,11 @@ interface nsIPK11Token : nsISupports
   void logout();
 
   /*
+   * Reset password
+   */
+  void reset();
+
+  /*
    * Password information
    */
   readonly attribute long minimumPasswordLength;

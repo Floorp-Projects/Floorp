@@ -165,6 +165,13 @@ NS_IMETHODIMP nsPK11Token::Logout()
   return NS_OK;
 }
 
+/* void reset (); */
+NS_IMETHODIMP nsPK11Token::Reset()
+{
+  PK11_ResetToken(mSlot, 0);
+  return NS_OK;
+}
+
 /* readonly attribute long minimumPasswordLength; */
 NS_IMETHODIMP nsPK11Token::GetMinimumPasswordLength(PRInt32 *aMinimumPasswordLength)
 {
