@@ -365,8 +365,11 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
         }
     }
 
-    NS_IF_RELEASE(mClass);
-    NS_IF_RELEASE(mOuter);
+    if(IsValid())
+    {
+        NS_IF_RELEASE(mClass);
+        NS_IF_RELEASE(mOuter);
+    }
 }
 
 nsXPCWrappedJS*
