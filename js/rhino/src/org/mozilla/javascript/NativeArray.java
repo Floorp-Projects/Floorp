@@ -392,7 +392,7 @@ public class NativeArray extends IdScriptable {
                                       .getProp(obj, "length", obj));
     }
 
-    static boolean hasLengthProperty(Object obj) {
+    private static boolean hasLengthProperty(Object obj) {
         if (obj instanceof NativeString || obj instanceof NativeArray) {
             return true;
         } else if (!(obj instanceof Scriptable) || obj == Undefined.instance) {
@@ -1004,6 +1004,7 @@ public class NativeArray extends IdScriptable {
     private static Scriptable jsFunction_concat(Context cx, Scriptable scope,
                                                 Scriptable thisObj,
                                                 Object[] args)
+        throws JavaScriptException
     {
         /* Concat tries to keep the definition of an array as general
          * as possible; if it finds that an object has a numeric
@@ -1016,7 +1017,8 @@ public class NativeArray extends IdScriptable {
 
         // create an empty Array to return.
         scope = getTopLevelScope(scope);
-        Scriptable result = ScriptRuntime.newObject(cx, scope, "Array", null);
+        Function ctor = ScriptRuntime.getExistingCtor(cx, scope, "Array");
+        Scriptable result = ctor.construct(cx, scope, ScriptRuntime.emptyArgs);
         long length;
         long slot = 0;
 
