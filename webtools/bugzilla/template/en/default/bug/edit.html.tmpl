@@ -185,7 +185,7 @@
             [% IF bug.milestoneurl %]
               <a href="[% bug.milestoneurl FILTER html %]">
             [% END %]
-            <u>T</u>arget Milestone</a>:
+            <u>T</u>arget Milestone:
             [% "</a>" IF bug.milestoneurl %]
           </b>
         </td>
@@ -504,7 +504,7 @@
       <input type="radio" name="knob" value="reassign"> 
       <a href="bug_status.html#assigned_to">Reassign</a> bug to
       <input name="assigned_to" size="32" 
-             onchange="if ((this.value != '[% bug.assigned_to_email FILTER js %]') && 
+             onchange="if ((this.value != '[% bug.assigned_to.email FILTER js %]') && 
                             (this.value != '')) {
                          document.changeform.knob[[% knum %]].checked=true; 
                        }"  

@@ -143,7 +143,7 @@ sub initBug  {
                        "assigned_to", "reporter", "bug_file_loc", "short_desc",
                        "target_milestone", "qa_contact", "status_whiteboard", 
                        "creation_ts", "delta_ts", "votes",
-                       "reporter_accessible", "cclist_accessible".
+                       "reporter_accessible", "cclist_accessible",
                        "estimated_time", "remaining_time")
       {
         $fields{$field} = shift @row;
@@ -233,9 +233,9 @@ sub initBug  {
   if (@depends) {
       $self->{'dependson'} = \@depends;
   }  
-  my @blocks = EmitDependList("dependson", "blocked", $bug_id);
-  if (@blocks) {
-    $self->{'blocks'} = \@blocks;
+  my @blocked = EmitDependList("dependson", "blocked", $bug_id);
+  if (@blocked) {
+    $self->{'blocked'} = \@blocked;
   }
 
   return $self;
@@ -454,7 +454,7 @@ sub emitXML {
     }
   }
 
-  foreach my $field ("dependson", "blocks", "cc") {
+  foreach my $field ("dependson", "blocked", "cc") {
     if (defined $self->{$field}) {
       for (my $i=0 ; $i < @{$self->{$field}} ; $i++) {
         $xml .= "  <$field>" . $self->{$field}[$i] . "</$field>\n";
