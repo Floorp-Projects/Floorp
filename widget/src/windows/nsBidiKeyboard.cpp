@@ -48,8 +48,14 @@ NS_IMETHODIMP nsBidiKeyboard::SetLangFromBidiLevel(PRUint8 aLevel)
       return result;
   }
 
-  if (!::LoadKeyboardLayout((aLevel & 1) ? mRTLKeyboard : mLTRKeyboard, KLF_ACTIVATE))
-    return NS_ERROR_FAILURE;
+  // call LoadKeyboardLayout() only if the target keyboard layout is different from the current
+  char currentLocaleName[KL_NAMELENGTH];
+  strcpy(currentLocaleName, (aLevel & 1) ? mRTLKeyboard : mLTRKeyboard);
+  if (strcmp(mCurrentLocaleName, currentLocaleName)) {
+    if (!::LoadKeyboardLayout(currentLocaleName, KLF_ACTIVATE | KLF_SUBSTITUTE_OK)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
 #endif
   return NS_OK;
 }
@@ -59,17 +65,18 @@ NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
   *aIsRTL = PR_FALSE;
 #ifdef IBMBIDI
   HKL  currentLocale;
-  char currentLocaleName[KL_NAMELENGTH];
-  
+ 
   currentLocale = ::GetKeyboardLayout(0);
   *aIsRTL = IsRTLLanguage(currentLocale);
   
-  ::GetKeyboardLayoutName(currentLocaleName);
+  if (!::GetKeyboardLayoutName(mCurrentLocaleName))
+    return NS_ERROR_FAILURE;
+
   // The language set by the user overrides the default language for that direction
   if (*aIsRTL)
-    strcpy(mRTLKeyboard, currentLocaleName);
+    strcpy(mRTLKeyboard, mCurrentLocaleName);
   else
-    strcpy(mLTRKeyboard, currentLocaleName);
+    strcpy(mLTRKeyboard, mCurrentLocaleName);
 #endif
   return NS_OK;
 }
@@ -84,6 +91,7 @@ nsresult nsBidiKeyboard::EnumerateKeyboards()
   int keyboards;
   HKL far* buf;
   HKL locale;
+  char localeName[KL_NAMELENGTH];
   
   // GetKeyboardLayoutList with 0 as first parameter returns the number of keyboard layouts available
   keyboards = ::GetKeyboardLayoutList(0, nsnull);
@@ -110,6 +118,22 @@ nsresult nsBidiKeyboard::EnumerateKeyboards()
       sprintf(mLTRKeyboard, "%.*x", KL_NAMELENGTH - 1, LANGIDFROMLCID(locale));
   }
   PR_Free(buf);
+
+  // Get the current keyboard layout and use it for either mRTLKeyboard or
+  // mLTRKeyboard as appropriate. If the user has many keyboard layouts
+  // installed this prevents us from arbitrarily resetting the current
+  // layout (bug 80274)
+  locale = ::GetKeyboardLayout(0);
+  if (!::GetKeyboardLayoutName(localeName))
+    return NS_ERROR_FAILURE;
+
+  if (IsRTLLanguage(locale)) {
+    strcpy(mRTLKeyboard, localeName);
+  }
+  else {
+    strcpy(mLTRKeyboard, localeName);
+  }
+
   return NS_OK;
 }
 
