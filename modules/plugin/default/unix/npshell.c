@@ -44,6 +44,7 @@
 #include "npapi.h"
 #include "nullplugin.h"
 #include "strings.h"
+#include "plstr.h"
 
 /***********************************************************************
  *
@@ -91,6 +92,7 @@ NPP_GetJavaClass()
 void
 NPP_Shutdown(void)
 {
+  destroyPixmap();
 }
 
 NPError 
@@ -135,23 +137,22 @@ NPP_New(NPMIMEType pluginType,
         argc --;
         if (argv[argc] != NULL)
         {
-        if (!strcasecmp(argn[argc], "PLUGINSPAGE"))
+        if (!PL_strcasecmp(argn[argc], "PLUGINSPAGE"))
             This->pluginsPageUrl = strdup(argv[argc]);
-        else if (!strcasecmp(argn[argc], "PLUGINURL"))
+        else if (!PL_strcasecmp(argn[argc], "PLUGINURL"))
             This->pluginsFileUrl = strdup(argv[argc]);
-        else if (!strcasecmp(argn[argc], "CODEBASE"))
+        else if (!PL_strcasecmp(argn[argc], "CODEBASE"))
             This->pluginsPageUrl = strdup(argv[argc]);
-        else if (!strcasecmp(argn[argc], "CLASSID"))
+        else if (!PL_strcasecmp(argn[argc], "CLASSID"))
             This->pluginsFileUrl = strdup(argv[argc]);
-        else if (!strcasecmp(argn[argc], "HIDDEN"))
-            This->pluginsHidden = (!strcasecmp(argv[argc],
+        else if (!PL_strcasecmp(argn[argc], "HIDDEN"))
+            This->pluginsHidden = (!PL_strcasecmp(argv[argc],
             "TRUE"));
         }
     }
 
     return NPERR_NO_ERROR;
 }
-
 
 NPError 
 NPP_Destroy(NPP instance, NPSavedData** save)
@@ -165,6 +166,8 @@ NPP_Destroy(NPP instance, NPSavedData** save)
     This = (PluginInstance*) instance->pdata;
 
     if (This != NULL) {
+	if (This->dialogBox)
+	   destroyWidget(This);
         if (This->type)
             NPN_MemFree(This->type);
         if (This->pluginsPageUrl)
@@ -221,10 +224,8 @@ NPP_SetWindow(NPP instance, NPWindow* window)
       This->visual = ws_info->visual;
       This->depth = ws_info->depth;
       This->colormap = ws_info->colormap;
-      if (This->exists != TRUE) {
-          This->exists = FALSE;
-          makeWidget(This);
-      }
+      makePixmap(This);
+      makeWidget(This);
     }
     return NPERR_NO_ERROR;
 }
