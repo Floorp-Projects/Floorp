@@ -209,7 +209,7 @@ protected:
                                       {
                                          mEOF = atEnd;
                                       }
-   virtual PRBool                     get_at_eof()
+   virtual PRBool                     get_at_eof() const
                                       {
                                           return mEOF;
                                       }
@@ -343,7 +343,7 @@ public:
                                       }
 protected:
 
-   virtual PRBool                     get_at_eof()
+   virtual PRBool                     get_at_eof() const
                                       {
                                           PRBool result;
                                           if (mFile)
@@ -417,7 +417,7 @@ public:
 
 protected:
 
-   virtual PRBool                     get_at_eof()
+   virtual PRBool                     get_at_eof() const
                                       {
                                           return nsFileClient::get_at_eof();
                                       }
@@ -487,7 +487,7 @@ public:
 
 protected:
 
-   virtual PRBool                     get_at_eof()
+   virtual PRBool                     get_at_eof() const
                                       {
                                           return nsFileClient::get_at_eof();
                                       }
