@@ -53,7 +53,6 @@ nsDrawingSurfaceXlibImpl::nsDrawingSurfaceXlibImpl()
   NS_INIT_REFCNT();
   PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlibImpl::nsDrawingSurfaceXlibImpl()\n"));
   mDrawable = 0;
-  mDestroyDrawable = PR_FALSE;
   mImage = nsnull;
   mXlibRgbHandle = nsnull;
   mDisplay = nsnull;
@@ -78,7 +77,7 @@ nsDrawingSurfaceXlibImpl::~nsDrawingSurfaceXlibImpl()
 {
   PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlibImpl::~nsDrawingSurfaceXlibImpl()\n"));
   // if it's been labeled as destroy, it's a pixmap.
-  if (mDestroyDrawable) {
+  if (mDrawable!=None && mIsOffscreen) {
     XFreePixmap(mDisplay, mDrawable);
   }
   if (mImage) {
