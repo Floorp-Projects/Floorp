@@ -457,6 +457,12 @@ nsHTMLAreaElement::SetHash(const nsAString& aHash)
 }
 
 NS_IMETHODIMP
+nsHTMLAreaElement::ToString(nsAString& aSource)
+{
+  return GetHref(aSource);
+}
+
+NS_IMETHODIMP
 nsHTMLAreaElement::GetLinkState(nsLinkState &aState)
 {
   aState = mLinkState;

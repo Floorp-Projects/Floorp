@@ -39,7 +39,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(a6cf911b-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(3dce9071-f3b9-4280-a6ee-776cdfe3dd9e)]
 interface nsIDOMNSHTMLAreaElement : nsISupports
 {
   attribute DOMString        protocol;
@@ -49,4 +49,6 @@ interface nsIDOMNSHTMLAreaElement : nsISupports
   attribute DOMString        search;
   attribute DOMString        port;
   attribute DOMString        hash;
+
+  DOMString                 toString();
 };
