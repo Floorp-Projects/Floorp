@@ -1657,6 +1657,12 @@ nsXULElement::GetNewListenerManager(nsIEventListenerManager **aResult)
                                         (void**) aResult);
 }
 
+NS_IMETHODIMP
+nsXULElement::HandleEvent(nsIDOMEvent *aEvent)
+{
+  return NS_ERROR_FAILURE;
+}
+
 
 
 //----------------------------------------------------------------------

@@ -3794,6 +3794,12 @@ nsXULDocument::GetNewListenerManager(nsIEventListenerManager **aResult)
                                         (void**) aResult);
 }
 
+NS_IMETHODIMP
+nsXULDocument::HandleEvent(nsIDOMEvent *aEvent)
+{
+  return NS_ERROR_FAILURE;
+}
+
 nsresult
 nsXULDocument::CaptureEvent(const nsString& aType)
 {

@@ -1437,23 +1437,23 @@ NS_IMETHODIMP GlobalWindowImpl::CaptureEvents(PRInt32 aEventFlags)
 {
    nsCOMPtr<nsIEventListenerManager> manager;
 
-   GetListenerManager(getter_AddRefs(manager));
-   if(manager)
-      {
-      // manager->CaptureEvent(aListener);
+   if (NS_SUCCEEDED(GetListenerManager(getter_AddRefs(manager)))) {
+      manager->CaptureEvent(aEventFlags);
       return NS_OK;
-      }
+   }
 
    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP GlobalWindowImpl::ReleaseEvents(PRInt32 aEventFlags)
 {
-   if(mListenerManager)
-      {
-      //mListenerManager->ReleaseEvent(aListener);
+   nsCOMPtr<nsIEventListenerManager> manager;
+
+   if (NS_SUCCEEDED(GetListenerManager(getter_AddRefs(manager)))) {
+      manager->ReleaseEvent(aEventFlags);
       return NS_OK;
-      }
+   }
+
    return NS_ERROR_FAILURE;
 }
 
@@ -2022,6 +2022,11 @@ NS_IMETHODIMP GlobalWindowImpl::GetListenerManager(nsIEventListenerManager **aIn
 NS_IMETHODIMP GlobalWindowImpl::GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult)
 {
    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP GlobalWindowImpl::HandleEvent(nsIDOMEvent *aEvent)
+{
+  return NS_ERROR_FAILURE;
 }
 
 //*****************************************************************************

@@ -37,43 +37,6 @@ class nsIDOMNode;
 class nsIDOMNSUIEvent : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSUIEVENT_IID; return iid; }
-  enum {
-    MOUSEDOWN = 1,
-    MOUSEUP = 2,
-    MOUSEOVER = 4,
-    MOUSEOUT = 8,
-    MOUSEMOVE = 16,
-    MOUSEDRAG = 32,
-    CLICK = 64,
-    DBLCLICK = 128,
-    KEYDOWN = 256,
-    KEYUP = 512,
-    KEYPRESS = 1024,
-    DRAGDROP = 2048,
-    FOCUS = 4096,
-    BLUR = 8192,
-    SELECT = 16384,
-    CHANGE = 32768,
-    RESET = 65536,
-    SUBMIT = 131072,
-    SCROLL = 262144,
-    LOAD = 524288,
-    UNLOAD = 1048576,
-    XFER_DONE = 2097152,
-    ABORT = 4194304,
-    ERROR = 8388608,
-    LOCATE = 16777216,
-    MOVE = 33554432,
-    RESIZE = 67108864,
-    FORWARD = 134217728,
-    HELP = 268435456,
-    BACK = 536870912,
-    TEXT = 1073741824,
-    ALT_MASK = 1,
-    CONTROL_MASK = 2,
-    SHIFT_MASK = 4,
-    META_MASK = 8
-  };
 
   NS_IMETHOD    GetLayerX(PRInt32* aLayerX)=0;
 

@@ -157,6 +157,7 @@ public:
                                const nsIID& aIID);
   nsresult GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
   nsresult GetNewListenerManager(nsIEventListenerManager** aInstancePtrResult);
+  nsresult HandleEvent(nsIDOMEvent *aEvent);
 
   // nsIDOMEventTarget interface
   nsresult AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
@@ -448,6 +449,9 @@ public:
   }                                                                             \
   NS_IMETHOD GetNewListenerManager(nsIEventListenerManager** aResult) {         \
     return _g.GetNewListenerManager(aResult);                                   \
+  }                                                                             \
+  NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent) {                                 \
+    return _g.HandleEvent(aEvent);                                              \
   }                                                                             \
   NS_IMETHOD AddEventListener(const nsString& aType,                            \
                               nsIDOMEventListener* aListener,                   \

@@ -132,6 +132,7 @@ public:
                                     const nsIID& aIID);
    NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
    NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult);
+   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
 
    // nsPIDOMWindow
    NS_IMETHOD GetPrivateParent(nsPIDOMWindow** aResult);

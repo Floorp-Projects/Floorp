@@ -201,8 +201,7 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
 
   for (int i=0; i<(*listeners)->Count(); i++) {
     ls = (nsListenerStruct*)(*listeners)->ElementAt(i);
-    if (ls->mListener == aListener) {
-      ls->mFlags |= aFlags;
+    if (ls->mListener == aListener && ls->mFlags == aFlags) {
       ls->mSubType |= aSubType;
       found = PR_TRUE;
       break;
@@ -229,6 +228,7 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
       ls->mListener = aListener;
       ls->mFlags = aFlags;
       ls->mSubType = aSubType;
+      ls->mSubTypeCapture = NS_EVENT_BITS_NONE;
       ls->mHandlerIsString = 0;
       (*listeners)->InsertElementAt((void*)ls, (*listeners)->Count());
       NS_ADDREF(aListener);
@@ -253,7 +253,7 @@ nsresult nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListe
 
   for (int i=0; i<(*listeners)->Count(); i++) {
     ls = (nsListenerStruct*)(*listeners)->ElementAt(i);
-    if (ls->mListener == aListener) {
+    if (ls->mListener == aListener && ls->mFlags == aFlags) {
       ls->mFlags &= ~aFlags;
       ls->mSubType &= ~aSubType;
       if (ls->mFlags == NS_EVENT_FLAG_NONE && ls->mSubType == NS_EVENT_BITS_NONE) {
@@ -512,12 +512,16 @@ nsresult nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext,
     nsIID iid;
     result = GetIdentifiersForType(aName, iid, &flags);
     if (NS_SUCCEEDED(result)) {
+      //Set flag to indicate possible need for compilation later
       if (aIsString) {
         ls->mHandlerIsString |= flags;
       }
       else {
         ls->mHandlerIsString &= ~flags;
       }
+
+      //Set subtype flags based on event
+      ls->mSubType |= flags;
     }
   }
 
@@ -606,64 +610,80 @@ nsresult nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *a
 nsresult
 nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
                                            nsIDOMEvent* aDOMEvent,
-                                           PRUint32 aSubType)
+                                           PRUint32 aSubType,
+                                           PRUint32 aPhaseFlags)
 {
   nsresult result = NS_OK;
 
   // If this is a script handler and we haven't yet
   // compiled the event handler itself
-  if ((aListenerStruct->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) &&
-      (aListenerStruct->mHandlerIsString & aSubType)) {
-    nsCOMPtr<nsIJSEventListener> jslistener = do_QueryInterface(aListenerStruct->mListener);
-    if (jslistener) {
-      nsCOMPtr<nsIScriptObjectOwner> owner;
-      nsCOMPtr<nsIScriptContext> scriptCX;
-      result = jslistener->GetEventTarget(getter_AddRefs(scriptCX), getter_AddRefs(owner));
+  if (aListenerStruct->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) {
+    // If we're not in the capture phase we must *NOT* have capture flags
+    // set.  Compiled script handlers are one or the other, not both.
+    if (aPhaseFlags & NS_EVENT_FLAG_BUBBLE && !aPhaseFlags & NS_EVENT_FLAG_INIT) {
+      if (aListenerStruct->mSubTypeCapture & aSubType) {
+        return result;
+      }
+    }
+    // If we're in the capture phase we must have capture flags set.
+    else if (aPhaseFlags & NS_EVENT_FLAG_CAPTURE && !aPhaseFlags & NS_EVENT_FLAG_INIT) {
+      if (!(aListenerStruct->mSubTypeCapture & aSubType)) {
+        return result;
+      }
+    }
 
-      if (NS_SUCCEEDED(result)) {
-        JSObject* jsobj;
-        result = owner->GetScriptObject(scriptCX, (void**)&jsobj);
+    if (aListenerStruct->mHandlerIsString & aSubType) {
+      nsCOMPtr<nsIJSEventListener> jslistener = do_QueryInterface(aListenerStruct->mListener);
+      if (jslistener) {
+        nsCOMPtr<nsIScriptObjectOwner> owner;
+        nsCOMPtr<nsIScriptContext> scriptCX;
+        result = jslistener->GetEventTarget(getter_AddRefs(scriptCX), getter_AddRefs(owner));
+
         if (NS_SUCCEEDED(result)) {
-          nsAutoString eventString;
-          if (NS_SUCCEEDED(aDOMEvent->GetType(eventString))) {
-            eventString.Insert("on", 0, 2);
-            nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(eventString));
+          JSObject* jsobj;
+          result = owner->GetScriptObject(scriptCX, (void**)&jsobj);
+          if (NS_SUCCEEDED(result)) {
+            nsAutoString eventString;
+            if (NS_SUCCEEDED(aDOMEvent->GetType(eventString))) {
+              eventString.Insert("on", 0, 2);
+              nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(eventString));
 
-            nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner = do_QueryInterface(owner);
-            void* handler = nsnull;
+              nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner = do_QueryInterface(owner);
+              void* handler = nsnull;
 
-            if (handlerOwner) {
-              result = handlerOwner->GetCompiledEventHandler(atom, &handler);
-              if (NS_SUCCEEDED(result) && handler) {
-                result = scriptCX->BindCompiledEventHandler(jsobj, atom, handler);
-                aListenerStruct->mHandlerIsString &= ~aSubType;
+              if (handlerOwner) {
+                result = handlerOwner->GetCompiledEventHandler(atom, &handler);
+                if (NS_SUCCEEDED(result) && handler) {
+                  result = scriptCX->BindCompiledEventHandler(jsobj, atom, handler);
+                  aListenerStruct->mHandlerIsString &= ~aSubType;
+                }
               }
-            }
 
-            if (aListenerStruct->mHandlerIsString & aSubType) {
-              // This should never happen for anything but content
-              // XXX I don't like that we have to reference content
-              // from here. The alternative is to store the event handler
-              // string on the JS object itself.
-              nsCOMPtr<nsIContent> content = do_QueryInterface(owner);
-              NS_ASSERTION(content, "only content should have event handler attributes");
-              if (content) {
-                nsAutoString handlerBody;
-                result = content->GetAttribute(kNameSpaceID_None, atom, handlerBody);
-                if (NS_SUCCEEDED(result)) {
-                  if (handlerOwner) {
-                    // Always let the handler owner compile the event
-                    // handler, as it may want to use a special
-                    // context or scope object.
-                    result = handlerOwner->CompileEventHandler(scriptCX, jsobj, atom, handlerBody, &handler);
+              if (aListenerStruct->mHandlerIsString & aSubType) {
+                // This should never happen for anything but content
+                // XXX I don't like that we have to reference content
+                // from here. The alternative is to store the event handler
+                // string on the JS object itself.
+                nsCOMPtr<nsIContent> content = do_QueryInterface(owner);
+                NS_ASSERTION(content, "only content should have event handler attributes");
+                if (content) {
+                  nsAutoString handlerBody;
+                  result = content->GetAttribute(kNameSpaceID_None, atom, handlerBody);
+                  if (NS_SUCCEEDED(result)) {
+                    if (handlerOwner) {
+                      // Always let the handler owner compile the event
+                      // handler, as it may want to use a special
+                      // context or scope object.
+                      result = handlerOwner->CompileEventHandler(scriptCX, jsobj, atom, handlerBody, &handler);
+                    }
+                    else {
+                      result = scriptCX->CompileEventHandler(jsobj, atom, handlerBody,
+                                                             (handlerOwner != nsnull),
+                                                             &handler);
+                    }
+                    if (NS_SUCCEEDED(result))
+                      aListenerStruct->mHandlerIsString &= ~aSubType;
                   }
-                  else {
-                    result = scriptCX->CompileEventHandler(jsobj, atom, handlerBody,
-                                                           (handlerOwner != nsnull),
-                                                           &handler);
-                  }
-                  if (NS_SUCCEEDED(result))
-                    aListenerStruct->mHandlerIsString &= ~aSubType;
                 }
               }
             }
@@ -814,7 +834,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
                 }
               }
             }
@@ -860,7 +880,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
                 }
               }
             }
@@ -925,7 +945,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                   break;
               }
               if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                ret = HandleEventSubType(ls, *aDOMEvent, subType);
+                ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
               }
             }
           }
@@ -960,7 +980,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                   correctSubType = PR_TRUE;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
                 }
               }
             }
@@ -1026,7 +1046,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
                 }
               }
             }
@@ -1082,7 +1102,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
                 }
               }
             }
@@ -1168,7 +1188,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
                 }
               }
             }
@@ -1225,7 +1245,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
                 }
               }
             }
@@ -1259,7 +1279,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                   correctSubType = PR_TRUE;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
                 }
               }
             }
@@ -1338,7 +1358,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || dragStruct->mSubType == NS_EVENT_BITS_DRAG_NONE)
-                  ret = HandleEventSubType(dragStruct, *aDOMEvent, subType);
+                  ret = HandleEventSubType(dragStruct, *aDOMEvent, subType, aFlags);
               }
             }
           }
@@ -1433,7 +1453,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
                 }
               }
             }
@@ -1474,9 +1494,9 @@ nsresult nsEventListenerManager::CreateEvent(nsIPresContext* aPresContext,
 * @param an event listener
 */
 
-nsresult nsEventListenerManager::CaptureEvent(nsIDOMEventListener *aListener)
+nsresult nsEventListenerManager::CaptureEvent(PRInt32 aEventTypes)
 {
-  return NS_OK;
+  return FlipCaptureBit(aEventTypes, PR_TRUE);
 }             
 
 /**
@@ -1484,8 +1504,214 @@ nsresult nsEventListenerManager::CaptureEvent(nsIDOMEventListener *aListener)
 * @param an event listener
 */
 
-nsresult nsEventListenerManager::ReleaseEvent(nsIDOMEventListener *aListener)
+nsresult nsEventListenerManager::ReleaseEvent(PRInt32 aEventTypes)
 {
+  return FlipCaptureBit(aEventTypes, PR_FALSE);
+}
+
+nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aInitCapture)
+{
+  nsIID iid;
+  nsListenerStruct *ls;
+
+  if (aEventTypes & nsIDOMEvent::MOUSEDOWN) {
+    iid = kIDOMMouseListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSE_MOUSEDOWN; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSE_MOUSEDOWN;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::MOUSEUP) {
+    iid = kIDOMMouseListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSE_MOUSEUP; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSE_MOUSEUP;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::MOUSEOVER) {
+    iid = kIDOMMouseListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSE_MOUSEOVER; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSE_MOUSEOVER;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::MOUSEOUT) {
+    iid = kIDOMMouseListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSE_MOUSEOUT; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSE_MOUSEOUT;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::MOUSEMOVE) {
+    iid = kIDOMMouseMotionListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSEMOTION_MOUSEMOVE; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSEMOTION_MOUSEMOVE;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::CLICK) {
+    iid = kIDOMMouseListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSE_CLICK; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSE_CLICK;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::DBLCLICK) {
+    iid = kIDOMMouseListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSE_DBLCLICK; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSE_DBLCLICK;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::KEYDOWN) {
+    iid = kIDOMKeyListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_KEY_KEYDOWN; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_KEY_KEYDOWN;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::KEYUP) {
+    iid = kIDOMKeyListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_KEY_KEYUP; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_KEY_KEYUP;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::KEYPRESS) {
+    iid = kIDOMKeyListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_KEY_KEYPRESS; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_KEY_KEYPRESS;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  /*if (aEventTypes & nsIDOMEvent::DRAGDROP) {
+    iid = NS_GET_IID(nsIDOMDragListener);
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSE_MOUSEDOWN; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSE_MOUSEDOWN;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::MOUSEDRAG) {
+    iid = kIDOMMouseListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_MOUSE_MOUSEDOWN; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_MOUSE_MOUSEDOWN;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }*/
+  if (aEventTypes & nsIDOMEvent::FOCUS) {
+    iid = kIDOMFocusListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_FOCUS_FOCUS; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_FOCUS_FOCUS;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::BLUR) {
+    iid = kIDOMFocusListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_FOCUS_BLUR; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_FOCUS_BLUR;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::SELECT) {
+    iid = kIDOMFormListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_FORM_SELECT; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_FORM_SELECT;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::CHANGE) {
+    iid = kIDOMFormListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_FORM_CHANGE; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_FORM_CHANGE;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::RESET) {
+    iid = kIDOMFormListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_FORM_RESET; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_FORM_RESET;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::SUBMIT) {
+    iid = kIDOMFormListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_FORM_SUBMIT; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_FORM_SUBMIT;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::LOAD) {
+    iid = kIDOMLoadListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_LOAD_LOAD; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_LOAD_LOAD;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::UNLOAD) {
+    iid = kIDOMLoadListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_LOAD_UNLOAD; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_LOAD_UNLOAD;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::ABORT) {
+    iid = kIDOMLoadListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_LOAD_ABORT; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_LOAD_ABORT;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::ERROR) {
+    iid = kIDOMLoadListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_LOAD_ERROR; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_LOAD_ERROR;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
   return NS_OK;
 }
 

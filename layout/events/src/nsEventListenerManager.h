@@ -35,11 +35,12 @@ typedef struct {
   nsIDOMEventListener* mListener;
   PRUint8 mFlags;
   PRUint8 mSubType;
-  PRUint32 mHandlerIsString;
+  PRUint8 mHandlerIsString;
+  PRUint8 mSubTypeCapture;
 } nsListenerStruct;
 
 //Flag must live higher than all event flags in nsGUIEvent.h
-#define NS_PRIV_EVENT_FLAG_SCRIPT 0x10
+#define NS_PRIV_EVENT_FLAG_SCRIPT 0x20
 
 /*
  * Event listener manager
@@ -84,8 +85,8 @@ public:
                                                const nsIID& aIID);
 
 
-  virtual nsresult CaptureEvent(nsIDOMEventListener *aListener);
-  virtual nsresult ReleaseEvent(nsIDOMEventListener *aListener);
+  virtual nsresult CaptureEvent(PRInt32 aEventTypes);
+  virtual nsresult ReleaseEvent(PRInt32 aEventTypes);
 
   virtual nsresult HandleEvent(nsIPresContext* aPresContext, 
                                nsEvent* aEvent, 
@@ -104,12 +105,14 @@ public:
 protected:
   nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,
                               nsIDOMEvent* aDOMEvent,
-                              PRUint32 aSubType);
+                              PRUint32 aSubType,
+                              PRUint32 aPhaseFlags);
   nsListenerStruct* FindJSEventListener(REFNSIID aIID);
   nsresult SetJSEventListener(nsIScriptContext *aContext, nsIScriptObjectOwner *aOwner, nsIAtom* aName, REFNSIID aIID, PRBool aIsString);
   nsresult AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 aFlags, PRInt32 aSubType);
   nsresult RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 aFlags, PRInt32 aSubType);
   void ReleaseListeners(nsVoidArray** aListeners, PRBool aScriptOnly);
+  nsresult FlipCaptureBit(PRInt32 aEventTypes, PRBool aInitCapture);
 
   nsVoidArray* mEventListeners;
   nsVoidArray* mMouseListeners;

@@ -117,23 +117,22 @@ public:
                                nsIDOMEvent** aDOMEvent) = 0;
 
   /**
-  * Captures all events designated for descendant objects at the current level.
-  * @param an event listener
+  * Changes script listener of specified event types from bubbling listeners to capturing listeners.
+  * @param event types
   */
-  virtual nsresult CaptureEvent(nsIDOMEventListener *aListener) = 0;
+  virtual nsresult CaptureEvent(PRInt32 aEventTypes) = 0;
 
   /**
-  * Releases all events designated for descendant objects at the current level.
-  * @param an event listener
+  * Changes script listener of specified event types from capturing listeners to bubbling listeners.
+  * @param event types
   */
-  virtual nsresult ReleaseEvent(nsIDOMEventListener *aListener) = 0;
+  virtual nsresult ReleaseEvent(PRInt32 aEventTypes) = 0;
 
   /**
   * Removes all event listeners registered by this instance of the listener
   * manager.
   */
   virtual nsresult RemoveAllListeners(PRBool aScriptOnly) = 0;
-
 };
 
 extern NS_HTML nsresult NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult);
