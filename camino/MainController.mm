@@ -173,7 +173,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(IBAction)newTab:(id)aSender
 {
-  [[[mApplication mainWindow] windowController] newTab:YES];
+  [(BrowserWindowController*)[[mApplication mainWindow] windowController] newTab:YES];
 }
 
 -(IBAction)closeTab:(id)aSender
@@ -554,7 +554,6 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
         /* ... many more items go here ... */
         action == @selector(printPage:) ||
         action == @selector(findInPage:) ||
-        action == @selector(doStop:) ||
         action == @selector(doReload:) ||
         action == @selector(biggerTextSize:) ||
         action == @selector(smallerTextSize:) ||
@@ -575,17 +574,23 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
       return NO;
   }
   
-  // check what the state of the toolbar should be, but only if there is a browser
-  // window open
+  // check what the state of the personal toolbar should be, but only if there is a browser
+  // window open. Popup windows that have the personal toolbar removed should always gray
+  // out this menu.
   if (action == @selector(toggleBookmarksToolbar:)) {
     if ([self isMainWindowABrowserWindow]) {
-      float height = [[[[mApplication mainWindow] windowController] bookmarksToolbar] frame].size.height;
-      BOOL toolbarShowing = (height > 0);
-      if (toolbarShowing)
-        [mBookmarksToolbarMenuItem setTitle: NSLocalizedString(@"Hide Bookmarks Toolbar",@"")];
+      NSView* bookmarkToolbar = [[[mApplication mainWindow] windowController] bookmarksToolbar];
+      if ( bookmarkToolbar ) {
+        float height = [bookmarkToolbar frame].size.height;
+        BOOL toolbarShowing = (height > 0);
+        if (toolbarShowing)
+          [mBookmarksToolbarMenuItem setTitle: NSLocalizedString(@"Hide Bookmarks Toolbar",@"")];
+        else
+          [mBookmarksToolbarMenuItem setTitle: NSLocalizedString(@"Show Bookmarks Toolbar",@"")];
+        return YES;
+      }
       else
-        [mBookmarksToolbarMenuItem setTitle: NSLocalizedString(@"Show Bookmarks Toolbar",@"")];
-      return YES;
+        return NO;
     }
     else
       return NO;
@@ -600,6 +605,12 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     return NO;
   }
 
+  if ( action == @selector(doStop:) ) {
+    if ([self isMainWindowABrowserWindow])
+      return [[[[mApplication mainWindow] windowController] getBrowserWrapper] isBusy];
+    else
+      return NO;
+  }
   if ( action == @selector(goBack:) || action == @selector(goForward:) ) {
     if ([self isMainWindowABrowserWindow]) {
       CHBrowserView* browserView = [[[[mApplication mainWindow] windowController] getBrowserWrapper] getBrowserView];
@@ -609,7 +620,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
         return [browserView canGoForward];
     }
     else
-        return NO;
+      return NO;
   }
   
   // default return

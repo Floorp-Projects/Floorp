@@ -260,16 +260,17 @@ static NSArray* sToolbarDefaults = nil;
 
     [mPersonalToolbar initializeToolbar];
     if ( mChromeMask && !(mChromeMask & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR) ) {
-      // remove the personal toolbar and adjust the content area upwards
+      // remove the personal toolbar and adjust the content area upwards. Removing it
+      // from the parent view releases it, so we have to clear out the member var.
       float height = [mPersonalToolbar frame].size.height;
       [mPersonalToolbar removeFromSuperview];
       [mTabBrowser setFrame:NSMakeRect([mTabBrowser frame].origin.x, [mTabBrowser frame].origin.y,
                                [mTabBrowser frame].size.width, [mTabBrowser frame].size.height + height)];
+      mPersonalToolbar = nil;
     }
     else if (![self shouldShowBookmarkToolbar]) {
       [mPersonalToolbar showBookmarksToolbar:NO];
     }
-    
 }
 
 - (void)drawerWillOpen: (NSNotification*)aNotification
@@ -1288,7 +1289,7 @@ static NSArray* sToolbarDefaults = nil;
   }  
 }
 
-- (NSView*) bookmarksToolbar
+- (CHBookmarksToolbar*) bookmarksToolbar
 {
   return mPersonalToolbar;
 }
