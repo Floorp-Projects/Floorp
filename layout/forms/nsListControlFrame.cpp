@@ -3831,20 +3831,24 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       while ((selectedIndex < startedAtIndex && loopedAround) || !loopedAround) {
         nsCOMPtr<nsIDOMHTMLOptionElement>optionElement = getter_AddRefs(GetOption(*options, selectedIndex));
         if (optionElement) {
-          nsAutoString text;
-          if (NS_OK == optionElement->GetText(text)) {
-            text.ToLowerCase();
-            PRUnichar firstChar = text.CharAt(0);
-            if (firstChar == (PRUnichar)code) {
-              mOldSelectedIndex = mSelectedIndex;
-              mSelectedIndex    = selectedIndex;
-              SingleSelection();
-              if (nsnull != mComboboxFrame && mIsAllFramesHere) {
-                mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, mSelectedIndex); // dispatch event
-              } else {
-                UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
+          PRBool isDisabled = PR_FALSE;
+          optionElement->GetDisabled(&isDisabled);
+          if (!isDisabled) {
+            nsAutoString text;
+            if (NS_OK == optionElement->GetText(text)) {
+              text.ToLowerCase();
+              PRUnichar firstChar = text.CharAt(0);
+              if (firstChar == (PRUnichar)code) {
+                mOldSelectedIndex = mSelectedIndex;
+                mSelectedIndex    = selectedIndex;
+                SingleSelection();
+                if (nsnull != mComboboxFrame && mIsAllFramesHere) {
+                  mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, mSelectedIndex); // dispatch event
+                } else {
+                  UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
+                }
+                break;
               }
-              break;
             }
           }
         }
