@@ -211,6 +211,7 @@ nsIAtom* nsHTMLAtoms::summary;
 nsIAtom* nsHTMLAtoms::suppress;
 nsIAtom* nsHTMLAtoms::tabindex;
 nsIAtom* nsHTMLAtoms::table;
+nsIAtom* nsHTMLAtoms::tablePseudo;
 nsIAtom* nsHTMLAtoms::tabstop;
 nsIAtom* nsHTMLAtoms::target;
 nsIAtom* nsHTMLAtoms::tbody;
@@ -441,6 +442,7 @@ void nsHTMLAtoms::AddrefAtoms()
     suppress = NS_NewAtom("SUPPRESS");
     tabindex = NS_NewAtom("TABINDEX");
     table = NS_NewAtom("TABLE");
+    tablePseudo = NS_NewAtom(":TABLE");
     tabstop = NS_NewAtom("TABSTOP");
     target = NS_NewAtom("TARGET");
     tbody = NS_NewAtom("TBODY");
@@ -663,6 +665,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(summary);
     NS_RELEASE(suppress);
     NS_RELEASE(table);
+    NS_RELEASE(tablePseudo);
     NS_RELEASE(tabstop);
     NS_RELEASE(target);
     NS_RELEASE(tbody);
