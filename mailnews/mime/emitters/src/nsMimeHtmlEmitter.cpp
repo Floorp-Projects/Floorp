@@ -54,7 +54,6 @@ nsresult NS_NewMimeHtmlDisplayEmitter(const nsIID& iid, void **result)
  */
 nsMimeHtmlDisplayEmitter::nsMimeHtmlDisplayEmitter()
 {
-  mFormat = nsMimeOutput::nsMimeMessageBodyQuoting;
   mFirst = PR_TRUE;
   mSkipAttachment = PR_FALSE; 
 }
@@ -111,7 +110,7 @@ nsresult
 nsMimeHtmlDisplayEmitter::GetHeaderSink(nsIMsgHeaderSink ** aHeaderSink)
 {
   nsresult rv = NS_OK;
-  if (!mHeaderSink)
+  if ( (mChannel) && (!mHeaderSink) )
   {
     nsCOMPtr<nsIURI> uri;
     mChannel->GetURI(getter_AddRefs(uri));
@@ -266,7 +265,7 @@ nsMimeHtmlDisplayEmitter::StartAttachmentInBody(const char *name, const char *co
   else
     mSkipAttachment = PR_FALSE;
 
-  if (mFirst)
+  if (!mFirst)
     UtilityWrite("<HR WIDTH=\"90%\" SIZE=4>");
 
   mFirst = PR_FALSE;

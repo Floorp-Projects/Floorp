@@ -160,7 +160,8 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
   PRBool skipScanning = (!conv) ||
                         (obj->options && obj->options->force_user_charset) || 
                         (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting)) ||
-                        (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting));
+                        (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting)) ||
+                        (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs));
     
   if (!skipScanning)
   {

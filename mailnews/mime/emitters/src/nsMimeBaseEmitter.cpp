@@ -57,12 +57,14 @@ nsMimeBaseEmitter::nsMimeBaseEmitter()
   NS_INIT_REFCNT(); 
 
   // Initialize data output vars...
+  mFirstHeaders = PR_TRUE;
   mBufferMgr = NULL;
   mTotalWritten = 0;
   mTotalRead = 0;
   mInputStream = nsnull;
   mOutStream = nsnull;
   mOutListener = nsnull;
+  mChannel = nsnull;
 
   // Display output control vars...
   mDocHeader = PR_FALSE;
@@ -83,13 +85,11 @@ nsMimeBaseEmitter::nsMimeBaseEmitter()
 
   // HTML Header Data...
   mHTMLHeaders = "";
+  mCharset = "";
 
   // Init the body...
   mBodyStarted = PR_FALSE;
   mBody = "";
-
-  // Setup format for output...
-  mFormat = nsMimeOutput::nsMimeMessageXULDisplay;
 
   // This is needed for conversion of I18N Strings...
   nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
@@ -283,7 +283,7 @@ nsMimeBaseEmitter::SetPipe(nsIInputStream * aInputStream, nsIOutputStream *outSt
 // anything to the stream since these may be image data
 // output streams, etc...
 NS_IMETHODIMP       
-nsMimeBaseEmitter::Initialize(nsIURI *url, nsIChannel * aChannel)
+nsMimeBaseEmitter::Initialize(nsIURI *url, nsIChannel * aChannel, PRInt32 aFormat)
 {
   // set the url
   mURL = url;
@@ -295,6 +295,7 @@ nsMimeBaseEmitter::Initialize(nsIURI *url, nsIChannel * aChannel)
   // Counters for output stream
   mTotalWritten = 0;
   mTotalRead = 0;
+  mFormat = aFormat;
 
   return NS_OK;
 }
@@ -475,6 +476,7 @@ nsMimeBaseEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const c
   if (mDocHeader)
     UpdateCharacterSet(outCharset);
 
+  mCharset = outCharset;
   return NS_OK; 
 }
 
@@ -549,7 +551,7 @@ nsMimeBaseEmitter::AddHeaderField(const char *field, const char *value)
   {
     ptr->name = nsCRT::strdup(field);
 
-    if (mDocHeader)
+    if ( (mDocHeader) || (mFormat != nsMimeOutput::nsMimeMessageSaveAs) )
       ptr->value = nsCRT::strdup(value);
     else
       ptr->value = nsAutoString(value).ToNewUTF8String();
@@ -580,19 +582,23 @@ nsMimeBaseEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
   if (!EmitThisHeaderForPrefSetting(mHeaderDisplayType, field))
     return NS_OK;
 
-  if (mUnicodeConverter)
+  if ( (mUnicodeConverter) && (mFormat != nsMimeOutput::nsMimeMessageSaveAs) )
   {
-    nsAutoString unicodeHeaderValue;
-    nsAutoString charset ("UTF-8");
+    nsAutoString  unicodeHeaderValue;
+    nsAutoString  charset ("UTF-8");
+    char          *tValue = nsnull;
 
     // we're going to need a converter to convert
     nsresult rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, unicodeHeaderValue);
-    char *tValue = unicodeHeaderValue.ToNewCString();
-    if (!tValue)
-      return NS_OK;
+    if (NS_SUCCEEDED(rv))
+    {
+      tValue = unicodeHeaderValue.ToNewCString();
+      if (!tValue)
+        return NS_OK;
 
-    newValue = nsEscapeHTML(tValue);
-    PR_FREEIF(tValue);
+      newValue = nsEscapeHTML(tValue);
+      PR_FREEIF(tValue);
+    }
   }
   else
   {
@@ -605,7 +611,10 @@ nsMimeBaseEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
   mHTMLHeaders.Append("<TR>");
   mHTMLHeaders.Append("<TD>");
 
-  mHTMLHeaders.Append("<DIV CLASS=\"headerdisplayname\" style=\"display:inline;\">");
+  if (mFormat == nsMimeOutput::nsMimeMessageSaveAs)
+    mHTMLHeaders.Append("<B>");
+  else
+    mHTMLHeaders.Append("<DIV CLASS=\"headerdisplayname\" style=\"display:inline;\">");
 
   // Here is where we are going to try to L10N the tagName so we will always
   // get a field name next to an emitted header value. Note: Default will always
@@ -625,7 +634,10 @@ nsMimeBaseEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
   }
 
   mHTMLHeaders.Append(": ");
-  mHTMLHeaders.Append("</DIV>");
+  if (mFormat == nsMimeOutput::nsMimeMessageSaveAs)
+    mHTMLHeaders.Append("</B>");
+  else
+    mHTMLHeaders.Append("</DIV>");
 
   // Now write out the actual value itself and move on!
   //
@@ -641,7 +653,14 @@ nsMimeBaseEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
 nsresult
 nsMimeBaseEmitter::WriteHeaderFieldHTMLPrefix()
 {
-  mHTMLHeaders.Append("<BR><HR WIDTH=\"90%\" SIZE=4><BR>");
+  // This mess is for Save As operations...
+  if (  ( (mFormat == nsMimeOutput::nsMimeMessageSaveAs) && (!mFirstHeaders) ) ||   // RICHIE: Goes away when we have the 
+        ( (mFormat == nsMimeOutput::nsMimeMessageQuoting) && (!mFirstHeaders) ) ||  // HTML-TEXT stream converter interface
+        ( (mFormat != nsMimeOutput::nsMimeMessageSaveAs) && (mFormat != nsMimeOutput::nsMimeMessageQuoting) )
+     )
+    mHTMLHeaders.Append("<BR><HR WIDTH=\"90%\" SIZE=4><BR>");
+
+  mFirstHeaders = PR_FALSE;
   mHTMLHeaders.Append("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=\"100%\">"); 
   return NS_OK;
 }

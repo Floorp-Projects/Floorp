@@ -273,7 +273,8 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
   //
   PRBool  doConvert = PR_TRUE;
   // Don't convert vCard data
-  if ( (obj->content_type) && (!PL_strcasecmp(obj->content_type, TEXT_VCARD)) )
+  if ( ( (obj->content_type) && (!PL_strcasecmp(obj->content_type, TEXT_VCARD)) ) ||
+       (obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs) )
     doConvert = PR_FALSE;
     
   // Only convert if the user prefs is false 

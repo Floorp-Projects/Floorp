@@ -1935,7 +1935,7 @@ ERROR_OUT:
 #include "nsICharsetConverterManager.h"
 
 nsresult
-ConvertBufToPlainText(nsString &aConBuf, const char *charSet)
+ConvertBufToPlainText(nsString &aConBuf)
 {
   nsresult    rv;
   nsString    convertedText;
@@ -1967,7 +1967,6 @@ ConvertBufToPlainText(nsString &aConBuf, const char *charSet)
         converterFlags |= nsIDocumentEncoder::OutputFormatFlowed;
     }    
     
-    nsAutoString charSetStr(charSet);
     rv = NS_New_HTMLToTXT_SinkStream((nsIHTMLContentSink **)&sink, &convertedText, wrapWidth, converterFlags);
     if (sink && NS_SUCCEEDED(rv)) 
     {  

@@ -128,7 +128,7 @@ char        *GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
                                        nsIMsgIdentity *identity);
                                        
 // File calls...
-nsresult    ConvertBufToPlainText(nsString &aConBuf, const char *charSet);
+nsresult    ConvertBufToPlainText(nsString &aConBuf);
 
 // Conversion...
 void        DoLineEndingConJob(char *aBuf, PRUint32 aLen);

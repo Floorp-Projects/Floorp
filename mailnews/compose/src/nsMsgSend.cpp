@@ -1998,9 +1998,9 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
       // sniff the file and see if we can figure it out.
       if ( (m_attachments[i].m_type) &&  (*m_attachments[i].m_type) ) 
       {
-        if (PL_strcasecmp(m_attachments[i].m_type, TEXT_HTML) == 0)
+        if ( (PL_strcasecmp(m_attachments[i].m_type, TEXT_HTML) == 0) && (preloaded_attachments[i].file_spec) )
         {
-          char *tmpCharset = (char *)nsMsgI18NParseMetaCharset(m_attachments[i].mFileSpec);
+          char *tmpCharset = (char *)nsMsgI18NParseMetaCharset(preloaded_attachments[i].file_spec);
           if (tmpCharset[0] != '\0')
           {
             PR_FREEIF(m_attachments[i].m_charset);

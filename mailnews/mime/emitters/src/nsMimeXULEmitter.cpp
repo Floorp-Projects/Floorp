@@ -71,8 +71,6 @@ nsMimeXULEmitter::nsMimeXULEmitter()
   mBody = "";
   mBodyStarted = PR_FALSE;
 
-  mFormat = nsMimeOutput::nsMimeMessageXULDisplay;
-
   if (mPrefs)
     mPrefs->GetIntPref("mailnews.max_header_display_length", &mCutoffValue);
 

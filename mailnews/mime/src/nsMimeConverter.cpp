@@ -129,6 +129,17 @@ nsMimeConverter::EncodeMimePartIIStr_UTF8(const char    *header,
   }
 }
 
+// Apply charset conversion to a given buffer. The conversion is done by an unicode round trip.
+nsresult
+nsMimeConverter::ConvertCharset(const PRBool autoDetection, const char* from_charset, const char* to_charset,
+                                const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength,
+                                PRInt32* numUnConverted)
+{
+  return MIME_ConvertCharset(autoDetection, from_charset, to_charset, inBuffer, inLength, 
+                             outBuffer, outLength, numUnConverted);
+}
+
+
 nsresult 
 nsMimeConverter::B64EncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure, 
                    MimeEncoderData **returnEncoderData) 

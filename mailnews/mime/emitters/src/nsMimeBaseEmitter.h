@@ -142,12 +142,14 @@ protected:
   // For body caching...
   PRBool              mBodyStarted;
   nsCString           mBody;
+  PRBool              mFirstHeaders;
 
   // For the format being used...
   PRInt32             mFormat;
 
   // For I18N Conversion...
   nsCOMPtr<nsIMimeConverter> mUnicodeConverter;
+  nsString            mCharset;
 };
 
 #endif /* _nsMimeBaseEmitter_h_ */

@@ -1103,9 +1103,9 @@ QuotingOutputStreamListener::ConvertToPlainText()
 {
 nsresult  rv = NS_OK;
 
-  rv += ConvertBufToPlainText(mCitePrefix, "UTF-8");
-  rv += ConvertBufToPlainText(mMsgBody, "UTF-8");
-  rv += ConvertBufToPlainText(mSignature, "UTF-8");
+  rv += ConvertBufToPlainText(mCitePrefix);
+  rv += ConvertBufToPlainText(mMsgBody);
+  rv += ConvertBufToPlainText(mSignature);
   return rv;
 }
 
@@ -1702,7 +1702,7 @@ nsMsgCompose::ConvertHTMLToText(nsFileSpec& aSigFile, nsString &aSigData)
   if (NS_FAILED(rv))
     return rv;
 
-  ConvertBufToPlainText(origBuf, nsnull);
+  ConvertBufToPlainText(origBuf);
   aSigData = origBuf;
   return NS_OK;
 }

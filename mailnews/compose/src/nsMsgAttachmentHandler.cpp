@@ -899,7 +899,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 
       if (NS_SUCCEEDED(LoadDataFromFile(*mFileSpec, conData)))
       {
-        if (NS_SUCCEEDED(ConvertBufToPlainText(conData, m_charset)))
+        if (NS_SUCCEEDED(ConvertBufToPlainText(conData)))
         {
           mFileSpec->Delete(PR_FALSE);
 

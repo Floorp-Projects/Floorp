@@ -1367,6 +1367,7 @@ MimeObject_output_init(MimeObject *obj, const char *content_type)
     if ( (obj->options) && 
          ( (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting) || 
            (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting) || 
+           (obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs) || 
            (obj->options->format_out == nsMimeOutput::nsMimeMessagePrintOutput) ) ) 
       ResetChannelCharset(obj); 
 

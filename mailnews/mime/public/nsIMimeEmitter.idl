@@ -45,7 +45,7 @@ interface nsMimeHeaderDisplayTypes
 interface nsIMimeEmitter : nsISupports{
 
     // These will be called to start and stop the total operation
-    void    Initialize(in nsIURI url, in nsIChannel aChannel);
+    void    Initialize(in nsIURI url, in nsIChannel aChannel, in long aFormat);
     void    Complete();
 
     // Set the output stream/listener for processed data.

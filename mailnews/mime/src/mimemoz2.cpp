@@ -468,6 +468,7 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
 
     if ( (opt->format_out == nsMimeOutput::nsMimeMessageQuoting) || 
          (opt->format_out == nsMimeOutput::nsMimeMessageBodyQuoting) || 
+         (opt->format_out == nsMimeOutput::nsMimeMessageSaveAs) || 
          (opt->format_out == nsMimeOutput::nsMimeMessagePrintOutput) )
     {
       mimeEmitterAddAttachmentField(opt, HEADER_CONTENT_DESCRIPTION, tmp->description);
@@ -1200,6 +1201,7 @@ mime_bridge_create_display_stream(
       msd->options->fancy_links_p = PR_TRUE;
       break;
 
+	case nsMimeOutput::nsMimeMessageSaveAs:         // Save As operations
 	case nsMimeOutput::nsMimeMessageQuoting:        // all HTML quoted/printed output
   case nsMimeOutput::nsMimeMessagePrintOutput:
       msd->options->fancy_headers_p = PR_TRUE;
@@ -1266,7 +1268,7 @@ mime_bridge_create_display_stream(
   msd->options->set_html_state_fn     = mime_set_html_state_fn;
 
   if ( format_out == nsMimeOutput::nsMimeMessageQuoting || format_out == nsMimeOutput::nsMimeMessageBodyQuoting || 
-       format_out == nsMimeOutput::nsMimeMessagePrintOutput )
+       format_out == nsMimeOutput::nsMimeMessagePrintOutput || format_out == nsMimeOutput::nsMimeMessageSaveAs )
   {
     msd->options->charset_conversion_fn = mime_insert_html_convert_charset;
   }
@@ -1649,8 +1651,31 @@ ResetChannelCharset(MimeObject *obj)
     if ( (ct) && (msd) && (msd->channel) ) 
     { 
       char *ptr = PL_strstr(ct, "charset="); 
-      if (ptr) 
+      if (ptr)
+      {
+        // First, setup the channel!
         msd->channel->SetContentType(ct); 
+
+        // Second, if this is a Save As operation, then we need to convert
+        // to override the output charset!
+        mime_stream_data  *msd = GetMSD(obj->options);
+        if ( (msd) && (msd->format_out == nsMimeOutput::nsMimeMessageSaveAs) )
+        {
+          // Extract the charset alone
+          char  *cSet = nsCRT::strdup(ptr+8);
+          if (cSet)
+          {
+            char *ptr2 = cSet;
+            while ( (*cSet) && (*cSet != ' ') && (*cSet != ';') && (*cSet != CR) && (*cSet != LF) )
+              ptr2++;
+            
+            if (*cSet)
+              obj->options->override_charset = nsCRT::strdup(cSet);
+
+            PR_FREEIF(cSet);
+          }
+        }
+      }
       PR_FREEIF(ct); 
     } 
   } 

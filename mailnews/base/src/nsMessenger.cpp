@@ -32,6 +32,7 @@
 #include "nsIStringStream.h"
 #include "nsEscape.h"
 #include "nsXPIDLString.h"
+#include "nsTextFormatter.h"
 
 // necko
 #include "nsMimeTypes.h"
@@ -52,7 +53,7 @@
 #include "nsIContentViewerFile.h"
 #include "nsIContentViewer.h" 
 
-/* rhp - for access to webshell */
+/* for access to webshell */
 #include "nsIDOMWindow.h"
 #include "nsIBrowserWindow.h"
 #include "nsIWebShellWindow.h"
@@ -92,6 +93,11 @@
 #include "nsITransaction.h"
 #include "nsMsgTxn.h"
 
+// charset conversions
+#include "nsMsgMimeCID.h"
+#include "nsIMimeConverter.h"
+
+static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
@@ -105,6 +111,71 @@ static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 #endif
 
 #define FOUR_K 4096
+
+//
+// Convert an nsString buffer to plain text...
+//
+#include "nsIParser.h"
+#include "nsParserCIID.h"
+#include "nsHTMLToTXTSinkStream.h"
+#include "CNavDTD.h"
+#include "nsICharsetConverterManager.h"
+#include "nsIDocumentEncoder.h"
+
+nsresult
+ConvertBufToPlainText(nsString &aConBuf)
+{
+  nsresult    rv;
+  nsString    convertedText;
+  nsIParser   *parser;
+
+  if (aConBuf == "")
+    return NS_OK;
+
+  static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+  rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
+                                          kCParserIID, (void **)&parser);
+  if (NS_SUCCEEDED(rv) && parser)
+  {
+    nsHTMLToTXTSinkStream     *sink = nsnull;
+    PRUint32 converterFlags = 0;
+    PRUint32 wrapWidth = 72;
+    
+    converterFlags |= nsIDocumentEncoder::OutputFormatted;
+    
+    rv = NS_New_HTMLToTXT_SinkStream((nsIHTMLContentSink **)&sink, &convertedText, wrapWidth, converterFlags);
+    if (sink && NS_SUCCEEDED(rv)) 
+    {  
+        sink->DoFragment(PR_TRUE);
+        parser->SetContentSink(sink);
+
+        nsIDTD* dtd = nsnull;
+        rv = NS_NewNavHTMLDTD(&dtd);
+        if (NS_SUCCEEDED(rv)) 
+        {
+          parser->RegisterDTD(dtd);
+          rv = parser->Parse(aConBuf, 0, "text/html", PR_FALSE, PR_TRUE);           
+        }
+        NS_IF_RELEASE(dtd);
+        NS_IF_RELEASE(sink);
+    }
+
+    NS_RELEASE(parser);
+
+    //
+    // Now if we get here, we need to get from ASCII text to 
+    // UTF-8 format or there is a problem downstream...
+    //
+    if (NS_SUCCEEDED(rv))
+    {
+      aConBuf = convertedText;
+    }
+  }
+
+  return rv;
+}
 
 // ***************************************************
 // jefft - this is a rather obscured class serves for Save Message As File,
@@ -130,6 +201,12 @@ public:
     char *m_dataBuffer;
     nsCOMPtr<nsIChannel> m_channel;
     nsXPIDLCString m_templateUri;
+
+    // rhp: For character set handling
+    PRBool        m_doCharsetConversion;
+    nsString      m_charset;
+    nsString      m_outputFormat;
+    nsString      m_msgBuffer;
 };
 
 //
@@ -517,7 +594,12 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
                   NS_ADDREF(aListener);
                   nsCOMPtr<nsIURI> aURL;
                   nsAutoString urlString = url;
-                  urlString += "?header=none";
+
+                  if (saveAsFileType == 2)  // RICHIE - text hack, ugh!
+                    urlString += "?header=quote";
+                  else
+                    urlString += "?header=saveas";
+
                   char *urlCString = urlString.ToNewCString();
                   rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
                   nsCRT::free(urlCString);
@@ -542,18 +624,26 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
                     NS_RELEASE(aListener);
                     goto done;
                   }
-                  nsAutoString from, to;
+                  nsAutoString from;
                   from = MESSAGE_RFC822;
-                  to = saveAsFileType == 1 ? TEXT_HTML : TEXT_PLAIN;
+                  aListener->m_outputFormat = saveAsFileType == 1 ? TEXT_HTML : TEXT_PLAIN;
+
+                  // Mark the fact that we need to do charset handling/text conversion!
+                  if (aListener->m_outputFormat == TEXT_PLAIN)
+                    aListener->m_doCharsetConversion = PR_TRUE;
+
                   NS_WITH_SERVICE(nsIStreamConverterService,
                                   streamConverterService,  
                                   kIStreamConverterServiceCID, &rv);
-                  nsCOMPtr<nsISupports> channelSupport =
-                    do_QueryInterface(aListener->m_channel);
+                  nsCOMPtr<nsISupports> channelSupport = do_QueryInterface(aListener->m_channel);
                   nsCOMPtr<nsIStreamListener> convertedListener;
                   rv = streamConverterService->AsyncConvertData(
-                    from.GetUnicode(), to.GetUnicode(), aListener,
-                    channelSupport, getter_AddRefs(convertedListener));
+                                      from.GetUnicode(), 
+                                      // RICHIE - we should be able to go RFC822 to TXT, but not until
+                                      // Bug #1775 is fixed. aListener->m_outputFormat.GetUnicode() 
+                                      nsString(TEXT_HTML).GetUnicode(), 
+                                      aListener,
+                                      channelSupport, getter_AddRefs(convertedListener));
                   if (NS_SUCCEEDED(rv))
                     messageService->DisplayMessage(url, convertedListener,mMsgWindow,
                                                    nsnull, nsnull);
@@ -1229,6 +1319,12 @@ nsSaveAsListener::nsSaveAsListener(nsIFileSpec* aSpec)
     if (aSpec)
       m_fileSpec = do_QueryInterface(aSpec);
     m_dataBuffer = nsnull;
+
+    // rhp: for charset handling
+    m_doCharsetConversion = PR_FALSE;
+    m_charset = "";
+    m_outputFormat = "";
+    m_msgBuffer = "";
 }
 
 nsSaveAsListener::~nsSaveAsListener()
@@ -1339,13 +1435,46 @@ NS_IMETHODIMP
 nsSaveAsListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aSupport,
                                 nsresult status, const PRUnichar* aMsg)
 {
-    // close down the file stream and release ourself
+  nsresult    rv = NS_OK;
+
+  // rhp: If we are doing the charset conversion magic, this is different
+  // processing, otherwise, its just business as usual.
+  //
+  if ( (m_doCharsetConversion) && (m_fileSpec) )
+  {
+    char        *conBuf = nsnull;
+    PRUint32    conLength = 0; 
+
+    // If we need text/plain, then we need to convert the HTML and then convert
+    // to the systems charset
+    //
+    if (m_outputFormat == TEXT_PLAIN)
+    {
+      ConvertBufToPlainText(m_msgBuffer);
+      rv = ConvertFromUnicode(msgCompFileSystemCharset(), m_msgBuffer, &conBuf);
+      if ( NS_SUCCEEDED(rv) && (conBuf) )
+        conLength = nsCRT::strlen(conBuf);
+    }
+
+    if ( (NS_SUCCEEDED(rv)) && (conBuf) )
+    {
+      PRUint32      writeCount;
+      rv = m_outputStream->Write(conBuf, conLength, &writeCount);
+      if (conLength != writeCount)
+        rv = NS_ERROR_FAILURE;
+    }
+
+    PR_FREEIF(conBuf);
+  }
+
+  // close down the file stream and release ourself
   if (m_fileSpec)
   {
     m_fileSpec->Flush();
     m_fileSpec->CloseStream();
     m_outputStream = null_nsCOMPtr();
   }
+  
   Release(); // all done kill ourself
   return NS_OK;
 }
@@ -1367,9 +1496,39 @@ nsSaveAsListener::OnDataAvailable(nsIChannel* aChannel,
     {
       if (maxReadCount > available)
         maxReadCount = available;
+      nsCRT::memset(m_dataBuffer, 0, FOUR_K+1);
       rv = inStream->Read(m_dataBuffer, maxReadCount, &readCount);
-      if (NS_SUCCEEDED(rv))
-        rv = m_outputStream->Write(m_dataBuffer, readCount, &writeCount);
+
+      // rhp:
+      // Ok, here is where we need to see if any conversion needs to be
+      // done on this data as we write it out to disk. The logic of what
+      // type of conversion should be done by now and it should just be 
+      // a matter of mashing the bits.
+      // 
+      if ( (m_doCharsetConversion) && (m_outputFormat == TEXT_PLAIN) )
+      {
+        if (NS_SUCCEEDED(rv) && readCount > 0)
+        {
+          PRUnichar       *u = nsnull; 
+          nsAutoString    fmt("%s");
+          
+          u = nsTextFormatter::smprintf(fmt.GetUnicode(), m_dataBuffer); // this converts UTF-8 to UCS-2 
+          if (u)
+          {
+            PRInt32   newLen = nsCRT::strlen(u);
+            m_msgBuffer.Append(u, newLen);
+            PR_FREEIF(u);
+          }
+          else
+            m_msgBuffer.Append(m_dataBuffer, readCount);
+        }
+      }
+      else
+      {
+        if (NS_SUCCEEDED(rv))
+          rv = m_outputStream->Write(m_dataBuffer, readCount, &writeCount);
+      }
+
       available -= readCount;
     }
   }

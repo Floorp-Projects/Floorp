@@ -347,9 +347,6 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
         </template>
 		</menu>	    
 
-	   	<menuitem value="&uuEncodeCmd.label;" accesskey="&uuEncodeCmd.accesskey;" oncommand="UUEncodeMenuSelect();"/>
-    	<menuseparator/>
-    	
 		<menuitem value="&addSignatureCmd.label;" disabled="true" oncommand=""/>    	
 		<menuitem value="&attachVCardCmd.label;" disabled="true" accesskey="&attachVCardCmd.accesskey;" oncommand="AttachVCard()"/>    	
     </menupopup>

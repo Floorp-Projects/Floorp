@@ -114,8 +114,6 @@
 <!ENTITY highestPriorityCmd.label "Highest">
 
 <!ENTITY returnReceiptCmd.label "Return receipt">
-<!ENTITY uuEncodeCmd.label "Uuencode instead of MIME for Attachments">
-	<!ENTITY uuEncodeCmd.accesskey "U">
 
 <!ENTITY outputFormatMenu.label "Format">
 <!ENTITY askmeFormatCmd.label ".Ask me">
