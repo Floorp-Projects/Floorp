@@ -129,6 +129,10 @@ include($config['app_path'].'/includes/message.inc.php');
 						<td class="label"><label for="show">Results Per Page:</label></td>
 						<td><input id="show" name="show" value="<?php if ($_GET['show']){ print $_GET['show']; } else { ?>25<?php } ?>" onfocus="if(this.value=='YYYY-MM-DD'){this.value=''}" type="text"></td>
 					</tr>
+					<tr>
+						<td class="label"><label for="count">Get Agregate:</label></td>
+						<td><input type="checkbox" id="count" name="count" <?php if ($_GET['show']){ ?>checked="checked" <?PHP } ?>></td>
+					</tr>
 				</table>
 			</td>
 		</tr>
@@ -173,7 +177,7 @@ include($config['app_path'].'/includes/message.inc.php');
 <?php if ($userlib->isLoggedIn()){ ?>
 Welcome <?php print $_SESSION['user_realname']; ?> | <a href="logout">Logout</a>
 <?php } else { ?>
-You are not <a href="login">logged in</a>	
+You are not <a href="login">logged in</a>
 <?php } ?>
 </div>
 

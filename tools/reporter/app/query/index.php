@@ -46,7 +46,7 @@ include($config['app_path'].'/includes/message.inc.php');
 
 //  Ascending or Descending
 if (!$_GET['ascdesc']){
-	$ascdesc = 'asc';
+	$ascdesc = 'desc';
 } else {
 	$ascdesc = $_GET['ascdesc'];
 }
@@ -83,6 +83,12 @@ $selected = array('report_id' => 'Report ID', 'host_hostname' => 'Host', 'report
 if (isset($_GET['count'])){
 	$selected['count'] = 'Number';
 	unset($selected['report_id']);
+
+	// Hardcode host_id
+	$_GET['count'] = 'host_id'; // XXX we just hardcode this (just easier for now, and all people will be doing);
+
+	//Sort by
+	$orderby = 'count';
 }
 
 // Build SELECT clause of SQL
@@ -246,8 +252,14 @@ $totalresults = $totalresults[0];
 			  		else if (substr($key, 0, 5) == "COUNT"){
 			  			print $row['count'];			  		
 			  		} else {
-			  			if($key == $_GET['count']){
-			  				?><a href="<?php print $config['app_url']; ?>/query/?<?PHP print $_GET['count'].'='.$row[$key]; ?>&submit_query=true">
+			  			if(($key == $_GET['count']) || ($key == 'host_hostname' && $_GET['count'] == 'host_id')){
+			  				if ($key == 'host_hostname' && $_GET['count'] == 'host_id'){
+			  					$subquery = 'host_hostname='.$row['host_hostname'];
+			  				}
+			  				else {
+			  					$subquery = $_GET['count'].'='.$row[$key];
+			  				}
+			  				?><a href="<?php print $config['app_url']; ?>/query/?<?PHP print $subquery; ?>&submit_query=true">
 			  				<?PHP print $row[$key]; ?></a>
 			  	<?PHP   }
 			  			else {
