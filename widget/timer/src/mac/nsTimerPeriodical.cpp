@@ -83,7 +83,9 @@ nsresult nsTimerPeriodical::RemoveTimer(nsTimerImpl * aTimer)
   RemoveTimerFromList(aTimer, mTimers);
   RemoveTimerFromList(aTimer, mReadyTimers);
 
-  NS_IF_RELEASE(aTimer);
+  if (aTimer && !aTimer->mTimerSpent)   // if we haven't fired the timer, release it
+    NS_IF_RELEASE(aTimer);
+  
   return NS_OK;
 }
 
@@ -174,6 +176,7 @@ void nsTimerPeriodical::FireAndReprimeTimer(nsTimerImpl* aTimer)
   }
   else
   {
+    aTimer->mTimerSpent = PR_TRUE;
     NS_RELEASE(aTimer);   // this timer is dead
   }
 }
