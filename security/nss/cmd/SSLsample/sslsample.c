@@ -272,8 +272,8 @@ myGetClientAuthData(void *arg,
 		    secStatus = SECFailure;
 		    break;
 		}
-		CERT_FreeNicknames(names);
 	    } /* for loop */
+	    CERT_FreeNicknames(names);
 	}
     }
 
