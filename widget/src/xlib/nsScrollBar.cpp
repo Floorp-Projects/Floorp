@@ -273,8 +273,8 @@ NS_IMETHODIMP nsScrollbar::Show(PRBool bState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScrollbar::Resize(PRUint32 aWidth,
-                                  PRUint32 aHeight,
+NS_IMETHODIMP nsScrollbar::Resize(PRInt32 aWidth,
+                                  PRInt32 aHeight,
                                   PRBool   aRepaint)
 {
   nsWidget::Resize(aWidth, aHeight, aRepaint);
@@ -283,10 +283,10 @@ NS_IMETHODIMP nsScrollbar::Resize(PRUint32 aWidth,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScrollbar::Resize(PRUint32 aX,
-                                  PRUint32 aY,
-                                  PRUint32 aWidth,
-                                  PRUint32 aHeight,
+NS_IMETHODIMP nsScrollbar::Resize(PRInt32 aX,
+                                  PRInt32 aY,
+                                  PRInt32 aWidth,
+                                  PRInt32 aHeight,
                                   PRBool   aRepaint)
 {
   nsWidget::Resize(aX, aY, aWidth, aHeight, aRepaint);

@@ -39,13 +39,13 @@ public:
   PRBool     OnResize           (nsSizeEvent &event);
   PRBool     DispatchMouseEvent (nsMouseEvent &aEvent);
   NS_IMETHOD Show               (PRBool bState);
-  NS_IMETHOD Resize             (PRUint32 aWidth,
-                                 PRUint32 aHeight,
+  NS_IMETHOD Resize             (PRInt32 aWidth,
+                                 PRInt32 aHeight,
                                  PRBool   aRepaint);
-  NS_IMETHOD Resize             (PRUint32 aX,
-                                 PRUint32 aY,
-                                 PRUint32 aWidth,
-                                 PRUint32 aHeight,
+  NS_IMETHOD Resize             (PRInt32 aX,
+                                 PRInt32 aY,
+                                 PRInt32 aWidth,
+                                 PRInt32 aHeight,
                                  PRBool   aRepaint);
   
   // nsIScrollBar implementation
