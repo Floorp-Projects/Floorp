@@ -23,6 +23,7 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsINameSpaceManager.h"
 #include "nsIMenu.h"
 #include "nsIMenuItem.h"
 #include "nsIContent.h"
@@ -234,7 +235,8 @@ nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWin
                             void * menubarNode, void * aWebShell )
 {
   mWebShellWeakRef = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWebShell*, aWebShell)));
-  mDOMNode  = NS_STATIC_CAST(nsIDOMNode*, menubarNode);   // strong ref
+  nsIDOMNode* aDOMNode  = NS_STATIC_CAST(nsIDOMNode*, menubarNode);
+  mMenuBarContent = do_QueryInterface(aDOMNode);           // strong ref
 
   Create(aParentWindow);
 
@@ -275,7 +277,9 @@ nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWin
           if ( menuIDstring == NS_LITERAL_STRING("menu_Help") ) {
             nsMenuEvent event;
             MenuHandle handle = nsnull;
+#if !TARGET_CARBON
             ::HMGetHelpMenuHandle(&handle);
+#endif
             event.mCommand = (unsigned int) handle;
             nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(pnsMenu));
             listener->MenuSelected(event);
@@ -343,7 +347,7 @@ NS_METHOD nsMenuBarX::AddMenu(nsIMenu * aMenu)
     aMenu->GetMenuContent(getter_AddRefs(menu));
     nsAutoString menuHidden;
     menu->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::hidden, menuHidden);
-    if( menuHidden != NS_LITERAL_STRING("true"))
+    if( menuHidden != NS_LITERAL_STRING("true")) {
       Str255 title;
       ::InsertMenuItem(mRootMenu, ::GetMenuTitle(menuRef, title), mNumMenus);
       OSStatus status = ::SetMenuItemHierarchicalMenu(mRootMenu, mNumMenus, menuRef);
@@ -508,8 +512,7 @@ NS_IMETHODIMP
 nsMenuBarX::ContentAppended( nsIDocument * aDocument, nsIContent  * aContainer,
                               PRInt32 aNewIndexInContainer)
 {
- nsCOMPtr<nsIContent> me ( do_QueryInterface(mDOMNode) );
-  if ( aContainer == me.get() ) {
+  if ( aContainer == mMenuBarContent ) {
     //Register(aContainer, );
     //InsertMenu ( aNewIndexInContainer );
   }
@@ -602,8 +605,7 @@ NS_IMETHODIMP
 nsMenuBarX::ContentRemoved( nsIDocument * aDocument, nsIContent * aContainer,
                             nsIContent * aChild, PRInt32 aIndexInContainer )
 {  
-  nsCOMPtr<nsIContent> me ( do_QueryInterface(mDOMNode) );
-  if ( aContainer == me.get() ) {
+  if ( aContainer == mMenuBarContent ) {
     Unregister(aChild);
     RemoveMenu ( aIndexInContainer );
   }
@@ -629,8 +631,7 @@ NS_IMETHODIMP
 nsMenuBarX::ContentInserted( nsIDocument * aDocument, nsIContent * aContainer,
                             nsIContent * aChild, PRInt32 aIndexInContainer )
 {  
-  nsCOMPtr<nsIContent> me ( do_QueryInterface(mDOMNode) );
-  if ( aContainer == me.get() ) {
+  if ( aContainer == mMenuBarContent ) {
     //Register(aChild, );
     //InsertMenu ( aIndexInContainer );
   }

@@ -554,9 +554,8 @@ nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
         }
 
         // Open the node.
-        nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
-        if (domElement)
-            domElement->SetAttribute(NS_LITERAL_STRING("open"), NS_LITERAL_STRING("true"));
+        mMenuContent->SetAttribute(kNameSpaceID_None, nsWidgetAtoms::open, NS_LITERAL_STRING("true"), PR_TRUE);
+      
 
         // Fire our oncreate handler. If we're told to stop, don't build the menu at all
         PRBool keepProcessing = OnCreate();
@@ -575,10 +574,10 @@ nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
                 return nsEventStatus_eConsumeNoDefault;
             }
             if (mIsHelpMenu) {
-                HelpMenuConstruct(aMenuEvent, nsnull /* mParentWindow */, mDOMNode, webShell);	      
+                HelpMenuConstruct(aMenuEvent, nsnull /* mParentWindow */, nsnull, webShell);	      
                 mConstructed = true;
             } else {
-                MenuConstruct(aMenuEvent, nsnull /* mParentWindow */, mDOMNode,   webShell);
+                MenuConstruct(aMenuEvent, nsnull /* mParentWindow */, nsnull, webShell);
                 mConstructed = true;
             }	
         } else {
@@ -793,7 +792,7 @@ NS_METHOD nsMenuX::IsHelpMenu(PRBool* aIsHelpMenu)
 * Get GetMenuContent
 *
 */
-NS_METHOD nsMenu::GetMenuContent(nsIContent ** aMenuContent)
+NS_METHOD nsMenuX::GetMenuContent(nsIContent ** aMenuContent)
 {
   NS_ENSURE_ARG_POINTER(aMenuContent);
   NS_IF_ADDREF(*aMenuContent = mMenuContent);
@@ -1048,7 +1047,7 @@ nsMenuX::OnCreate()
     return PR_FALSE;
   }
   nsCOMPtr<nsIPresContext> presContext;
-  MenuHelpers::WebShellToPresContext(webShell, getter_AddRefs(presContext) );
+  MenuHelpersX::WebShellToPresContext(webShell, getter_AddRefs(presContext) );
   if ( presContext ) {
     nsresult rv = NS_OK;
     nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
@@ -1145,7 +1144,7 @@ nsMenuX::OnDestroy()
   GetMenuPopupContent(getter_AddRefs(popupContent));
 
   nsCOMPtr<nsIPresContext> presContext;
-  MenuHelpers::WebShellToPresContext (webShell, getter_AddRefs(presContext) );
+  MenuHelpersX::WebShellToPresContext (webShell, getter_AddRefs(presContext) );
   if (presContext )  {
     nsresult rv = NS_OK;
     nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
@@ -1168,7 +1167,7 @@ nsMenuX::OnDestroy()
 // it (so the strcmp won't kill us).
 //
 void
-nsMenu::GetMenuPopupContent(nsIContent** aResult)
+nsMenuX::GetMenuPopupContent(nsIContent** aResult)
 {
   if (!aResult )
     return;
@@ -1267,7 +1266,7 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
     mNeedsRebuild = PR_TRUE;
    
     nsAutoString valueString;
-    domElement->GetAttribute(NS_LITERAL_STRING("disabled"), valueString);
+    mMenuContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::disabled, valueString);
     if(valueString == NS_LITERAL_STRING("true"))
       SetEnabled(PR_FALSE);
     else
@@ -1278,7 +1277,7 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
   else if(aAttribute == nsWidgetAtoms::label) {
     mNeedsRebuild = PR_TRUE;
     
-    domElement->GetAttribute(NS_LITERAL_STRING("label"), mLabel);
+    mMenuContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, mLabel);
 
     // reuse the existing menu, to avoid invalidating root menu bar.
     NS_ASSERTION(mMacMenuHandle != NULL, "nsMenuX::AttributeChanged: invalid menu handle.");

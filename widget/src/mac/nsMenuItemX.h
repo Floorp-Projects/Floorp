@@ -84,7 +84,7 @@ public:
 
 protected:
 
-  void UncheckRadioSiblings ( nsIDOMElement* inCheckedElement ) ;
+  void UncheckRadioSiblings ( nsIContent* inCheckedElement ) ;
 
   nsString        mLabel;
   nsString        mKeyEquivalent;

@@ -35,6 +35,8 @@
 #include "nsINameSpaceManager.h"
 #include "nsWidgetAtoms.h"
 #include "nsIServiceManager.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 
 #include "nsStringUtil.h"
 
@@ -269,7 +271,7 @@ NS_METHOD nsMenuItemX::DoCommand()
   nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
   if (!webShell)
     return nsEventStatus_eConsumeNoDefault;
-  MenuHelpers::WebShellToPresContext(webShell, getter_AddRefs(presContext));
+  MenuHelpersX::WebShellToPresContext(webShell, getter_AddRefs(presContext));
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
@@ -337,7 +339,7 @@ NS_METHOD nsMenuItemX::GetShortcutChar(nsString &aText)
 // uncheck them all.
 //
 void
-nsMenuItemX :: UncheckRadioSiblings(nsIDOMElement* inCheckedElement)
+nsMenuItemX :: UncheckRadioSiblings(nsIContent* inCheckedContent)
 {
   nsAutoString myGroupName;
   inCheckedContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::name, myGroupName);
