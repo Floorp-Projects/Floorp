@@ -224,7 +224,7 @@ RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 	int					i, len, compsDone = 0, numXPIs, currXPICount = 0, instChoice = gControls->opt->instChoice-1;
 	Boolean				isCurrXPI = false, indeterminateFlag = false;
 	Str255				installingStr;
-	StringPtr           pTargetSubfolder = "\p"; /* subfodler is optional so init empty */
+	StringPtr           pTargetSubfolder = "\p"; /* subfolder is optional so init empty */
 	long                dummyDirID = 0;
 	
     err = FSMakeFSSpec(vRefNum, dirID, kViewerFolder, &xpiStubDirSpec); /* xpistub dir */
