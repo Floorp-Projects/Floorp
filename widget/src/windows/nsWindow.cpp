@@ -1857,7 +1857,7 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
                            this,
                            nsnull,
                            aIsSynchronous,
-                           "noname",
+                           nsCAutoString("noname"),
                            (PRInt32) mWnd);
 #endif // NS_DEBUG
       
@@ -1891,7 +1891,7 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
                          this,
                          &aRect,
                          aIsSynchronous,
-                         "noname",
+                         nsCAutoString("noname"),
                          (PRInt32) mWnd);
 #endif // NS_DEBUG
 
@@ -3596,7 +3596,7 @@ PRBool nsWindow::OnPaint()
           debug_DumpPaintEvent(stdout,
                                this,
                                &event,
-                               "noname",
+                               nsCAutoString("noname"),
                                (PRInt32) mWnd);
 #endif // NS_DEBUG
 
