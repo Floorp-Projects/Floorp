@@ -272,7 +272,7 @@ nsContextMenu.prototype = {
             } else if ( this.target.getAttribute( "background" ) ) {
                  this.hasBGImage = true;
                  // Convert background attribute to absolute URL.
-                 this.bgImageURL = this.makeURLAbsolute( this.target.baseURI,
+                 this.bgImageURL = this.makeURLAbsolute( this.target.ownerDocument,
                                                          this.target.getAttribute( "background" ) );
             } else if ( "HTTPIndex" in _content &&
                         _content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
@@ -378,7 +378,7 @@ nsContextMenu.prototype = {
                 if ( !this.hasBGImage && elem.background ) {
                     this.hasBGImage = true;
                     // Convert background attribute to absolute URL.
-                    this.bgImageURL = this.makeURLAbsolute( elem.baseURI,
+                    this.bgImageURL = this.makeURLAbsolute( elem.ownerDocument,
                                                             elem.background );
                 }
             }
