@@ -21,7 +21,10 @@
  * Alec Flett <alecf@netscape.com>
  */
 
-#include "nsIMsgHdr.idl"
+#include "nsISupports.idl"
+
+interface nsIMsgHdr;
+interface nsIMsgSearchSession;
 
 // when a search is run, this interface is passed in as a listener
 // on the search.
@@ -29,5 +32,21 @@
 interface nsIMsgSearchHitNotify : nsISupports
 {
   void onSearchHit(in nsIMsgHdr header);
+
+  /*
+   * until we can encode searches with a URI, this will be an
+   * out-of-bound way to connect a set of search terms to a datasource
+   */
+
+  /**
+   * searchSession - the current search session that's running
+   * for this listener
+   */
+  attribute nsIMsgSearchSession searchSession;
+
+  /**
+   * a unique URI that refers to the search session
+   */
+  readonly attribute string searchSessionURI;
 };
 
