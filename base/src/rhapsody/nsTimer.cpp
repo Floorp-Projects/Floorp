@@ -27,6 +27,25 @@
 // make this work.  Stubs to compile things for now.
 //
 
+#if 0
+Michael Hanni <mhanni@sprintmail.com> suggests:
+
+  I understand that nsTimer.cpp in base/rhapsody/ needs to be completed,
+  yes? Wouldn't this code just use some NSTimers in the NSRunLoop?
+
+  Timer = [NSTimer timerWithTimeInterval:0.02 //seconds
+                target:self
+                selector:@selector(doThis:)
+                userInfo:nil
+                repeats:YES];
+  [[NSRunLoop currentRunLoop] addTimer:Timer
+    forMode:NSDefaultRunLoopMode];
+
+  I only looked at nsTimer.cpp briefly, but could something like this work
+  if imbedded in all that c++? ;-)
+
+#endif
+
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
 extern void nsTimerExpired(void *aCallData);
