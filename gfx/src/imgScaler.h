@@ -20,8 +20,13 @@
  *   Tim Rowley <tor@cs.brown.edu>
  */
 
-void RectStretch(long xs1,long ys1,long xs2,long ys2,
-		 long xd1,long yd1,long xd2,long yd2,
-		 unsigned char *aSrcImage, unsigned aSrcStride,
-		 unsigned char *aDstImage, unsigned aDstStride,
-		 unsigned aDepth);
+#include "nsComObsolete.h"
+
+NS_GFX_(void)
+RectStretch(unsigned aSrcWidth, unsigned aSrcHeight,
+	    unsigned aDstWidth, unsigned aDstHeight,
+	    unsigned aStartColumn, unsigned aStartRow,
+	    unsigned aEndColumn, unsigned aEndRowe,
+	    unsigned char *aSrcImage, unsigned aSrcStride,
+	    unsigned char *aDstImage, unsigned aDstStride,
+	    unsigned aDepth);

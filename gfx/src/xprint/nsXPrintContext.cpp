@@ -1166,8 +1166,9 @@ nsXPrintContext::DrawImageBitsScaled(xGC *xgc, nsIImage *aImage,
     return NS_ERROR_FAILURE;
   }
 
-  RectStretch(aSX, aSY, aSX+aSWidth-1, aSY+aSHeight-1,
-              0, 0, (aDWidth-1), (aDHeight-1),
+  RectStretch(aSWidth, aSHeight,
+              aDWidth, aDHeight,
+              0, 0, aDWidth-1, aDHeight-1,
               srcimg_data, srcimg_bytes_per_line,
               dstimg_data, dstimg_bytes_per_line,
               imageDepth);

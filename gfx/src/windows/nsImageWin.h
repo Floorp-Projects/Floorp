@@ -171,7 +171,10 @@ private:
    */
   void CreateDDB(nsDrawingSurface aSurface);
 
-  void DrawComposited24(unsigned char *aBits, int aX, int aY, int aWidth, int aHeight);
+  void DrawComposited24(unsigned char *aBits,
+                        PRUint8 *aImageRGB, PRUint32 aStrideRGB,
+                        PRUint8 *aImageAlpha, PRUint32 aStrideAlpha,
+                        int aWidth, int aHeight);
   nsresult DrawComposited(HDC TheHDC, int aDX, int aDY, int aDWidth, int aDHeight,
                           int aSX, int aSY, int aSWidth, int aSHeight);
   static PRBool CanAlphaBlend(void);
