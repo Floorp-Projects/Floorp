@@ -18,7 +18,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(c29db6a1-d195-11d2-bcf1-00805f0e1353)]
+[scriptable, uuid(85c86e4c-6a6c-11d3-9a55-004005263078)]
 interface nsIPrefMigration: nsISupports
 {
   void processPrefs(in string oldProfilePathStr, in string newProfilePathStr);

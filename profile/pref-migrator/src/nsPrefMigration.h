@@ -20,8 +20,6 @@
 #ifndef nsPrefMigration_h___
 #define nsPrefMigration_h___
 
-#include "nsPrefMigrationIIDs.h"
-#include "nsIPrefMigration.h"
 
 #include "nscore.h"
 #include "nsIFactory.h"
@@ -31,12 +29,13 @@
 #include "nsIServiceManager.h" 
 #include "nsCOMPtr.h"
 #include "nsIFileSpec.h"
-#include "nsPrefMigrationIIDs.h"
+#include "nsPrefMigrationCIDs.h"
+#include "nsIPrefMigration.h"
 
 class nsPrefMigration: public nsIPrefMigration, public nsIShutdownListener
 {
     public:
-      NS_DEFINE_STATIC_CID_ACCESSOR(NS_PrefMigration_CID) 
+      NS_DEFINE_STATIC_CID_ACCESSOR(NS_PREFMIGRATION_CID) 
 
       nsPrefMigration();
       virtual ~nsPrefMigration();
