@@ -1746,11 +1746,16 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
 
   result = mContent->GetParent(*aNewContent);
   if (*aNewContent){
-    result = (*aNewContent)->IndexOf(mContent, aContentOffset);
+    
+    PRInt32 contentOffset(aContentOffset); //temp to hold old value in case of failure
+    
+    result = (*aNewContent)->IndexOf(mContent, contentOffset);
     if (NS_FAILED(result) || aContentOffset < 0) 
     {
       return (result?result:NS_ERROR_FAILURE);
     }
+    aContentOffset = contentOffset; //its clear save the result
+
     aBeginFrameContent = PR_TRUE;
     if (thisRect.Contains(aPoint))
       aContentOffsetEnd = aContentOffset +1;
@@ -2467,15 +2472,15 @@ nsFrame::GetSelectionController(nsIPresContext *aPresContext, nsISelectionContro
   if (state & NS_FRAME_INDEPENDENT_SELECTION) 
   {
     nsIFrame *tmp = this;
-    while (tmp)
+    nsresult result = tmp->GetParent(&tmp);//start one up from this one on the parent chain
+    while (NS_SUCCEEDED(result) && tmp)
     {
       nsIGfxTextControlFrame2 *tcf;
       if (NS_SUCCEEDED(tmp->QueryInterface(NS_GET_IID(nsIGfxTextControlFrame2),(void**)&tcf)))
       {
         return tcf->GetSelectionContr(aSelCon);
       }
-      if (NS_FAILED(tmp->GetParent(&tmp)))
-        break;
+      result = NS_FAILED(tmp->GetParent(&tmp));
     }
   }
   nsCOMPtr<nsIPresShell> shell;
@@ -3532,6 +3537,8 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
   if (NS_FAILED(result))
     return result;
 
+  nsIFrame *traversedFrame = this;
+
   nsIFrame *firstFrame;
   nsIFrame *lastFrame;
   nsRect  nonUsedRect;
@@ -3558,6 +3565,25 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
   else
 #endif
   {
+    //check to see if "this" is a blockframe if so we need to advance the linenum immediately
+    //only if its dir is "next"
+    if (aPos->mDirection == eDirNext)
+    {
+      nsCOMPtr<nsILineIteratorNavigator> tempLi; 
+      if (NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(tempLi))))
+      {
+        thisLine++;
+        result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,nonUsedRect,
+                           &lineFlags);
+        if (NS_SUCCEEDED(result) && firstFrame)
+          traversedFrame = firstFrame;
+        else
+        {
+          return NS_ERROR_FAILURE;
+        }
+      }
+    }
+
     result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,nonUsedRect,
                          &lineFlags);
     if (NS_FAILED(result))
@@ -3620,16 +3646,18 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
                                 aPresContext, 
                                 (lineJump && lineIsRTL)
                                 ? (aPos->mDirection == eDirNext) ? lastFrame : firstFrame
-                                : this);
+                                : traversedFrame);
 #else
-  result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF, aPresContext, this);
+  //if we are a container frame we MUST init with last leaf for eDirNext
+  //
+  result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF, aPresContext, traversedFrame);
 #endif
   if (NS_FAILED(result))
     return result;
   nsISupports *isupports = nsnull;
+  nsRect testRect;
 #ifdef IBMBIDI
   nsIFrame *newFrame;
-  nsRect testRect;
   while (testRect.IsEmpty()) {
     if (lineIsRTL && lineJump) 
       if (aPos->mDirection == eDirPrevious)
@@ -3875,6 +3903,7 @@ nsFrame::GetLastLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame)
   nsIFrame *child = *aFrame;
   nsresult result;
   nsIFrame *lookahead = nsnull;
+  //if we are a block frame then go for the last line of 'this'
   while (1){
     result = child->FirstChild(aPresContext, nsnull, &lookahead);
     if (NS_FAILED(result) || !lookahead)
