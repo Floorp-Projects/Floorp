@@ -39,7 +39,7 @@
 -->
   <keyset id="keyset"/>
            
-  <html:iframe id="it-doesnt-matter-anyway" class="output-container"
+  <iframe id="it-doesnt-matter-anyway" class="output-container"
        type="content" src="chrome://communicator/locale/wallet/privacy.html" flex="1"/>
 
 
