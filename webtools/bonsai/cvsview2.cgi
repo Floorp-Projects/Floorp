@@ -400,9 +400,9 @@ my $opt_subdir;
 foreach my $option (split(/&/, $query_string)) {
     die("command $opt_command: garbled option $option\n")
         if ($option !~ /^([^=]+)=(.*)/);
+    eval('$opt_' . $1 . '=' . SqlQuote($2));
     die("bogus characters in options")
         if ($option !~ /^[\w\-\.\+\/\,\:\=]+$/ );
-    eval('$opt_' . $1 . '=' . SqlQuote($2));
 }
 
 if (defined($opt_branch) && $opt_branch eq 'HEAD' ) { $opt_branch = ''; }
