@@ -66,7 +66,9 @@
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsISearchService.h"
+#include "nsWeakReference.h"
 #include "nsIBookmarksService.h"
+
 
 #ifdef	XP_MAC
 #include "Files.h"
@@ -244,7 +246,8 @@ NS_NewInternetSearchContext(nsIRDFResource *aParent, nsIRDFResource *aEngine,
 
 
 class InternetSearchDataSource : public nsIInternetSearchService,
-				 public nsIRDFDataSource, public nsIStreamListener
+				 public nsIRDFDataSource, public nsIStreamListener,
+         public nsSupportsWeakReference
 {
 private:
 static PRInt32				gRefCnt;
@@ -615,11 +618,17 @@ InternetSearchDataSource::resolveSearchCategoryEngineURI(nsIRDFResource *engine,
 
 ////////////////////////////////////////////////////////////////////////
 
+NS_IMPL_ADDREF(InternetSearchDataSource);
+NS_IMPL_RELEASE(InternetSearchDataSource);
 
-
-NS_IMPL_ISUPPORTS4(InternetSearchDataSource, nsIInternetSearchService, 
-		nsIRDFDataSource, nsIStreamListener, nsIStreamObserver);
-
+NS_INTERFACE_MAP_BEGIN(InternetSearchDataSource)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInternetSearchService)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+   NS_INTERFACE_MAP_ENTRY(nsIInternetSearchService)
+   NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
+   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+NS_INTERFACE_MAP_END
 
 
 NS_METHOD
