@@ -260,7 +260,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   if ((nsnull==aDoc) || (nsnull==aPresShell))
     return NS_ERROR_NULL_POINTER;
 
-  mDoc = aDoc;
+  mDoc = do_QueryInterface(aDoc);
   mPresShell = aPresShell;
   NS_ADDREF(mPresShell);
   mPresShell->GetViewManager(&mViewManager);
@@ -301,14 +301,14 @@ nsEditor::EnableUndo(PRBool aEnable)
         printf("ERROR: Failed to get TransactionManager instance.\n");
         return NS_ERROR_NOT_AVAILABLE;
       }
-      mTxnMgr = txnMgr; // CreateInstance refCounted the instance for us, remember it in an nsCOMPtr
+      mTxnMgr = do_QueryInterface(txnMgr); // CreateInstance refCounted the instance for us, remember it in an nsCOMPtr
     }
   }
   else
   { // disable the transaction manager if it is enabled
     if (mTxnMgr)
     {
-      mTxnMgr = nsnull;
+      mTxnMgr = do_QueryInterface(nsnull);
     }
   }
 
@@ -483,7 +483,7 @@ nsEditor::GetFirstNodeOfType(nsIDOMNode *aStartNode, const nsString &aTag, nsIDO
       return NS_ERROR_NULL_POINTER;
   }
   else
-    node=aStartNode;
+    node = do_QueryInterface(aStartNode);
 
   *aResult = nsnull;
   nsCOMPtr<nsIDOMNode> childNode;
@@ -550,7 +550,7 @@ nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
     }
   }
   else if (nsIDOMNode::TEXT_NODE == mType) {
-    answer = aNode;
+    answer = do_QueryInterface(aNode);
   }
 
     // OK, now return the answer, if any
