@@ -16,13 +16,11 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 200
+ * Portions created by the Initial Developer are Copyright (C) 1999
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Alec Flett <alecf@netscape.com>
- *   Dan Matejka <danm@netscape.com>
- *   Robert Churchill <rjc@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -38,44 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIRDFDataSource.h"
-#include "nsIWindowMediatorListener.h"
-#include "nsIWindowDataSource.h"
+#include "nsISupports.idl"
+#include "nsIDOMWindowInternal.idl"
 
-#include "nsIRDFService.h"
-#include "nsIRDFContainer.h"
-#include "nsHashtable.h"
-
-class nsWindowDataSource : public nsIRDFDataSource,
-                           public nsIWindowMediatorListener,
-                           public nsIWindowDataSource
+// interface for accessing RDF-specific data from the window datasource
+[scriptable, uuid(3722A5B9-5323-4ed0-BB1A-8299F27A4E89)]
+interface nsIWindowDataSource : nsISupports
 {
- public:
-    nsWindowDataSource() { NS_INIT_ISUPPORTS(); }
-    virtual ~nsWindowDataSource();
-
-    nsresult Init();
-    
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWINDOWMEDIATORLISTENER
-    NS_DECL_NSIWINDOWDATASOURCE
-    NS_DECL_NSIRDFDATASOURCE
-
- private:
-
-    // mapping of window -> RDF resource
-    nsSupportsHashtable mWindowResources;
-
-    static PRUint32 windowCount;
-    static PRUint32 gRefCnt;
-    
-    static nsIRDFDataSource* mInner;
-    static nsIRDFContainer* mContainer;
-
-    static nsIRDFResource* kNC_Name;
-    static nsIRDFResource* kNC_KeyIndex;
-    static nsIRDFResource* kNC_WindowRoot;
-    static nsIRDFService* gRDFService;
+    /**
+     * for the given resource name, return the window
+     */
+    nsIDOMWindowInternal getWindowForResource(in string inResource);
 };
-
-             
