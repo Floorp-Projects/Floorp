@@ -43,38 +43,40 @@ DIRS += tests
 endif
 
 CPPSRCS =                  \
-	nsToolkit.cpp           \
 	nsAppShell.cpp          \
-	nsLookAndFeel.cpp       \
-	nsWindow.cpp            \
-	nsCanvas.cpp            \
-	nsFrameWindow.cpp       \
-	nsScrollbar.cpp         \
-	nsEntryField.cpp        \
-	nsTextArea.cpp          \
 	nsBaseList.cpp          \
+	nsCanvas.cpp            \
+	nsCheckbutton.cpp       \
+	nsClipboard.cpp         \
 	nsCombobox.cpp          \
-	nsListbox.cpp           \
-	nsTooltipWidget.cpp     \
+	nsContextMenu.cpp       \
+	nsDirPicker.cpp         \
+	nsDragService.cpp       \
+	nsEntryField.cpp        \
+	nsFSTree.cpp            \
 	nsFileDialog.cpp        \
-	nsTooltipManager.cpp    \
+	nsFontServices.cpp      \
+	nsFrameWindow.cpp       \
 	nsLabel.cpp             \
+	nsListbox.cpp           \
+	nsLookAndFeel.cpp       \
+	nsMenu.cpp              \
+	nsMenuBase.cpp          \
+	nsMenuItem.cpp          \
+	nsMenubar.cpp           \
+	nsModule.cpp            \
 	nsPushbutton.cpp        \
 	nsRadiobutton.cpp       \
-	nsCheckbutton.cpp       \
-	nsMenuBase.cpp          \
-	nsMenubar.cpp           \
-	nsMenu.cpp              \
-	nsMenuItem.cpp          \
+	nsScrollbar.cpp         \
+	nsSound.cpp             \
 	nsTabWidget.cpp         \
-	nsModule.cpp            \
-	nsFontServices.cpp      \
-	nsFSTree.cpp            \
-	nsDirPicker.cpp         \
-	nsContextMenu.cpp       \
-	nsClipboard.cpp         \
-	nsDragService.cpp       \
-	nsSound.cpp
+	nsTextArea.cpp          \
+	nsToolkit.cpp           \
+	nsTooltipManager.cpp    \
+	nsTooltipWidget.cpp     \
+	nsWidgetFactory.cpp     \
+	nsWindow.cpp            \
+	$(NULL)
 
 CSRCS = tabctrl.c
 

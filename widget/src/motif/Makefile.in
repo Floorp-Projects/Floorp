@@ -38,50 +38,29 @@ INCLUDES+= -I$(srcdir)/../xpwidgets -I$(srcdir)/../motif -I$(srcdir)/.
 INCLUDES += $(TK_CFLAGS)
 
 CPPSRCS= \
-	nsMenuBar.cpp \
+	nsAppShell.cpp \
+	nsButton.cpp \
+	nsCheckButton.cpp \
+	nsComboBox.cpp \
+	nsFileWidget.cpp \
+	nsLabel.cpp \
+	nsListBox.cpp \
+	nsLookAndFeel.cpp \
 	nsMenu.cpp \
+	nsMenuBar.cpp \
 	nsMenuItem.cpp \
 	nsPopUpMenu.cpp \
-	nsComboBox.cpp \
-	nsTextHelper.cpp \
-	nsTextAreaWidget.cpp \
-	nsTextWidget.cpp \
-	nsListBox.cpp \
 	nsRadioButton.cpp \
-	nsFileWidget.cpp \
-	nsCheckButton.cpp \
 	nsScrollbar.cpp \
-	nsButton.cpp \
-	nsAppShell.cpp \
-	nsLookAndFeel.cpp \
+	nsTextAreaWidget.cpp \
+	nsTextHelper.cpp \
+	nsTextWidget.cpp \
 	nsToolkit.cpp \
-	nsLabel.cpp \
+	nsWidgetFactory.cpp \
 	nsWindow.cpp \
 	nsXtEventHandler.cpp \
 	nsXtManageWidget.cpp \
 	$(NULL)
-
-CPP_OBJS=				\
- ./$(OBJDIR)/nsPopUpMenu.o  \
- ./$(OBJDIR)/nsComboBox.o		\
- ./$(OBJDIR)/nsFileWidget.o		\
- ./$(OBJDIR)/nsTextHelper.o		\
- ./$(OBJDIR)/nsTextAreaWidget.o		\
- ./$(OBJDIR)/nsTextWidget.o		\
- ./$(OBJDIR)/nsListBox.o		\
- ./$(OBJDIR)/nsRadioButton.o		\
- ./$(OBJDIR)/nsFileWidget.o		\
- ./$(OBJDIR)/nsCheckButton.o		\
- ./$(OBJDIR)/nsScrollbar.o		\
- ./$(OBJDIR)/nsButton.o		        \
- ./$(OBJDIR)/nsScrollbar.o		\
- ./$(OBJDIR)/nsAppShell.o		\
- ./$(OBJDIR)/nsLookAndFeel.o		\
- ./$(OBJDIR)/nsToolkit.o		\
- ./$(OBJDIR)/nsLabel.o			\
- ./$(OBJDIR)/nsWindow.o		\
- ./$(OBJDIR)/nsXtEventHandler.o		\
- $(NULL)
 
 TARGETS = $(LIBRARY)
 
