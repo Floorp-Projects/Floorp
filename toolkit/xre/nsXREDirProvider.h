@@ -66,13 +66,6 @@ public:
   // the responsibility of the apprunner.
   nsresult SetProfileDir(nsIFile* aProfileDir);
 
-  // Causes any attempts to retrieve an enumeration of directories for the
-  // "ComsDL" property to return a list of directories specified in the 
-  // "components.ini" manifest in the profile/application directories.
-  // This results in component registration at those locations during 
-  // XPCOM startup. 
-  void RegisterExtraComponents();
-
   void DoShutdown();
 
   nsresult GetProfileDefaultsDir(nsIFile* *aResult);
@@ -89,7 +82,6 @@ protected:
   nsCOMPtr<nsIFile>      mXULAppDir;
   nsCOMPtr<nsIFile>      mProfileDir;
   PRBool                 mProfileNotified;
-  PRBool                 mRegisterExtraComponents;
 };
 
 #endif

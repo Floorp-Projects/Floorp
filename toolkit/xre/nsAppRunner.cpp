@@ -1994,11 +1994,6 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
         // in "components.ini" which we have just discovered changed since the
         // last time the application was run. 
         RemoveComponentRegistries(lf);
-        
-        // Tell the dir provider to supply the list of components locations 
-        // specified in "components.ini" when it is asked for the "ComsDL"
-        // enumeration.
-        dirProvider.RegisterExtraComponents();
       }
       // Nothing need be done for the normal startup case.
     }
