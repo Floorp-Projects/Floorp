@@ -548,6 +548,8 @@ private:
 
 static nsAttentionTimerMonitor *gAttentionTimerMonitor = 0;
 
+PRBool gIsDestroyingAny = PR_FALSE;
+
 //-------------------------------------------------------------------------
 //
 // nsISupport stuff
@@ -1387,7 +1389,11 @@ NS_METHOD nsWindow::Destroy()
     mEventCallback = nsnull;
     if (gAttentionTimerMonitor)
       gAttentionTimerMonitor->KillTimer(mWnd);
+
+    gIsDestroyingAny = PR_TRUE;
     VERIFY(::DestroyWindow(mWnd));
+    gIsDestroyingAny = PR_FALSE;
+
     mWnd = NULL;
     //our windows can be subclassed by
     //others and these namless, faceless others
@@ -3730,6 +3736,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         }
 
       case WM_SETFOCUS:
+
+        if(!gIsDestroyingAny) { 
         result = DispatchFocus(NS_GOTFOCUS, isMozWindowTakingFocus);
         if(gJustGotActivate) {
           gJustGotActivate = PR_FALSE;
@@ -3739,7 +3747,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         if (nsWindow::gIsAccessibilityOn && !mRootAccessible && mIsTopWidgetWindow) 
           CreateRootAccessible();
 #endif
-
+        } else {
+          nsToolkit *toolkit = NS_STATIC_CAST(nsToolkit *, mToolkit);
+          VERIFY(::PostMessage(toolkit->GetDispatchWindow(), WM_SETFOCUS,
+                     wParam, lParam));
+        }
         break;
 
       case WM_KILLFOCUS:
