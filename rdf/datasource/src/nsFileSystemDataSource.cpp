@@ -1169,7 +1169,8 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
     }
 #endif
 
-#ifdef  XP_WIN
+#if defined (XP_WIN) && !defined (WINCE)
+
     PRInt32         driveType;
     char            drive[32];
     PRInt32         volNum;
