@@ -41,6 +41,7 @@
 #include "nsIImageObserver.h"
 #include "nsIImageRequest.h"
 #include "nsIView.h"
+#include "nsIModel.h"
 
 CLASS_EXPORT_XPFC nsXPFCCanvas : public nsIXPFCCanvas,
                                  public nsIXPFCObserver,
@@ -69,6 +70,9 @@ public:
 
   NS_IMETHOD_(nsString&) GetLabel();
   NS_IMETHOD             SetLabel(nsString& aString);
+
+  NS_IMETHOD_(nsIModel *)   GetModel();
+  NS_IMETHOD                SetModel(nsIModel * aModel);
 
   NS_IMETHOD  SetBounds(const nsRect& aBounds);
   NS_IMETHOD_(void) GetBounds(nsRect& aRect);
@@ -274,6 +278,7 @@ private:
   nsFont          mFont;
   PRUint32        mTabID;
   PRUint32        mTabGroup;
+  nsIModel *      mModel;
 
 protected:
 

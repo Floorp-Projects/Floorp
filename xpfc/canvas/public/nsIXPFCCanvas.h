@@ -31,6 +31,8 @@
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
 
+class nsIModel;
+
 // IID for the nsIXPFCCanvas interface
 #define NS_IXPFC_CANVAS_IID   \
 { 0x6bc9da40, 0xe9e7, 0x11d1,    \
@@ -92,6 +94,13 @@ public:
    */
   NS_IMETHOD_(nsILayout *)  GetLayout() = 0;
   NS_IMETHOD                SetLayout(nsILayout * aLayout) = 0;
+
+  /**
+   * Get a pointer to the object implementing the nsIModel interface for this canvas
+   * @result nsIModel pointer, nsnull if no model object assigned, else a pointer to the model object
+   */
+  NS_IMETHOD_(nsIModel *)   GetModel() = 0;
+  NS_IMETHOD                SetModel(nsIModel * aModel) = 0;
 
   /**
    * Get the Name of this canvas, relative to itself
