@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -788,32 +789,55 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     if (PREF_CHANGED(HTTP_PREF("request.max-start-delay"))) {
         rv = prefs->GetIntPref(HTTP_PREF("request.max-start-delay"), &val);
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv)) {
             mMaxRequestDelay = (PRUint16) CLAMP(val, 0, 0xffff);
+            if (mConnMgr)
+                mConnMgr->UpdateParam(nsHttpConnectionMgr::MAX_REQUEST_DELAY,
+                                      mMaxRequestDelay);
+        }
     }
 
     if (PREF_CHANGED(HTTP_PREF("max-connections"))) {
         rv = prefs->GetIntPref(HTTP_PREF("max-connections"), &val);
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv)) {
             mMaxConnections = (PRUint16) CLAMP(val, 1, 0xffff);
+            if (mConnMgr)
+                mConnMgr->UpdateParam(nsHttpConnectionMgr::MAX_CONNECTIONS,
+                                      mMaxRequestDelay);
+        }
     }
 
     if (PREF_CHANGED(HTTP_PREF("max-connections-per-server"))) {
         rv = prefs->GetIntPref(HTTP_PREF("max-connections-per-server"), &val);
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv)) {
             mMaxConnectionsPerServer = (PRUint8) CLAMP(val, 1, 0xff);
+            if (mConnMgr) {
+                mConnMgr->UpdateParam(nsHttpConnectionMgr::MAX_CONNECTIONS_PER_HOST,
+                                      mMaxConnectionsPerServer);
+                mConnMgr->UpdateParam(nsHttpConnectionMgr::MAX_CONNECTIONS_PER_PROXY,
+                                      mMaxConnectionsPerServer);
+            }
+        }
     }
 
     if (PREF_CHANGED(HTTP_PREF("max-persistent-connections-per-server"))) {
         rv = prefs->GetIntPref(HTTP_PREF("max-persistent-connections-per-server"), &val);
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv)) {
             mMaxPersistentConnectionsPerServer = (PRUint8) CLAMP(val, 1, 0xff);
+            if (mConnMgr)
+                mConnMgr->UpdateParam(nsHttpConnectionMgr::MAX_PERSISTENT_CONNECTIONS_PER_HOST,
+                                      mMaxPersistentConnectionsPerServer);
+        }
     }
 
     if (PREF_CHANGED(HTTP_PREF("max-persistent-connections-per-proxy"))) {
         rv = prefs->GetIntPref(HTTP_PREF("max-persistent-connections-per-proxy"), &val);
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv)) {
             mMaxPersistentConnectionsPerProxy = (PRUint8) CLAMP(val, 1, 0xff);
+            if (mConnMgr)
+                mConnMgr->UpdateParam(nsHttpConnectionMgr::MAX_PERSISTENT_CONNECTIONS_PER_PROXY,
+                                      mMaxPersistentConnectionsPerProxy);
+        }
     }
 
     if (PREF_CHANGED(HTTP_PREF("sendRefererHeader"))) {
@@ -887,8 +911,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     if (PREF_CHANGED(HTTP_PREF("pipelining.maxrequests"))) {
         rv = prefs->GetIntPref(HTTP_PREF("pipelining.maxrequests"), &val);
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv)) {
             mMaxPipelinedRequests = CLAMP(val, 1, NS_HTTP_MAX_PIPELINED_REQUESTS);
+            if (mConnMgr)
+                mConnMgr->UpdateParam(nsHttpConnectionMgr::MAX_PIPELINED_REQUESTS,
+                                      mMaxPipelinedRequests);
+        }
     }
 
     if (PREF_CHANGED(HTTP_PREF("proxy.pipelining"))) {
@@ -1548,8 +1576,6 @@ nsHttpHandler::Observe(nsISupports *subject,
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
         if (prefBranch)
             PrefsChanged(prefBranch, NS_ConvertUCS2toUTF8(data).get());
-        
-        // XXX should probably shutdown and init the conn mgr.
     }
     else if (strcmp(topic, "profile-change-net-teardown")    == 0 ||
              strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)    == 0) {
