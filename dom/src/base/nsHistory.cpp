@@ -28,6 +28,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
 #include "nsISHistory.h"
 #include "nsISHEntry.h"
@@ -166,16 +167,34 @@ HistoryImpl::Forward()
 NS_IMETHODIMP    
 HistoryImpl::Go(JSContext* cx, jsval* argv, PRUint32 argc)
 {
-	  nsresult result = NS_OK;
-   nsCOMPtr<nsISHistory>  sHistory;
-   
-   //Get nsIWebNavigation from docshell
-   nsCOMPtr<nsIWebNavigation>   webNav(do_QueryInterface(mDocShell));
-   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+	 nsresult result = NS_OK;
+     nsCOMPtr<nsISHistory>  sHistory;
+     
+    NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
+    /* The docshell we have may or may not be
+     * the root docshell. So, get a handle to 
+     * SH from the root docshell;
+     */
+    // QI mDocShell to nsIDocShellTreeItem
+    nsCOMPtr<nsIDocShellTreeItem> dsTreeItem(do_QueryInterface(mDocShell));
+    NS_ENSURE_TRUE(dsTreeItem, NS_ERROR_FAILURE);
  
-   //Get sHistory from nsIWebNavigation
-   webNav->GetSessionHistory(getter_AddRefs(sHistory));
-   NS_ENSURE_TRUE(sHistory, NS_ERROR_FAILURE);
+    // Get the root DocShell from it
+    nsCOMPtr<nsIDocShellTreeItem> root;
+    dsTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
+    NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
+    
+    //QI root to nsIWebNavigation
+    nsCOMPtr<nsIWebNavigation>   webNav(do_QueryInterface(root));
+     NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+   
+    //Get  SH from nsIWebNavigation
+    webNav->GetSessionHistory(getter_AddRefs(sHistory));
+     NS_ENSURE_TRUE(sHistory, NS_ERROR_FAILURE);
+ 
+    // QI SHistory to nsIWebNavigation
+    nsCOMPtr<nsIWebNavigation> shWebnav(do_QueryInterface(sHistory));
+    NS_ENSURE_TRUE(shWebnav, NS_ERROR_FAILURE);
  
    if (argc > 0) {
      if (JSVAL_IS_INT(argv[0])) {
