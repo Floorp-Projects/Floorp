@@ -2306,15 +2306,6 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
 		HJ41792
 	}
 
-  // If no subject was specified, use default one
-  pStr = fields->GetSubject();
-  if (!pStr || !*pStr)
-  {
-    nsXPIDLString msg; 
-    mComposeBundle->GetStringByID(NS_MSG_NO_SUBJECT_WAS_SPECIFIED, getter_Copies(msg));
-  	mCompFields->SetSubject(msg);
-  }
-  
   // Now, we will look for a URI defined as the default FCC pref. If this is set,
   // then SetFcc will use this value. The FCC field is a URI for the server that 
   // will hold the "Sent" folder...the 
