@@ -269,6 +269,14 @@ char* MacFileHelpers::MacPathFromUnixPath(const char* unixPath, Boolean hexDecod
                 }
                 continue;
             }
+            else if (c == '/' && cprev == '/')
+            {
+            	// Hmm. A 'run on' path with two slashes right next to each other.
+            	// This is an illegal path, but, hey, we'll be tough and try to
+            	// deal with it (especially since '::' has loaded semantics in
+            	// a Mac path)
+            	continue;
+            }
             *dst++ = c;
         } while (c);
         if (hexDecode)
