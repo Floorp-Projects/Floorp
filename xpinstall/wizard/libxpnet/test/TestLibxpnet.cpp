@@ -226,6 +226,7 @@ main(int argc, char **argv)
             fprintf(stderr, "Like, uhm, dude!  I don't get you.  ");
             fprintf(stderr, "See usage...\n");
             usage(argv[0]);
+            return 1;
         }
     }
     
