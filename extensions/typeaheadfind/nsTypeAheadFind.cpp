@@ -115,12 +115,14 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #define NS_FIND_CONTRACTID "@mozilla.org/embedcomp/rangefind;1"
 
 nsTypeAheadFind* nsTypeAheadFind::mInstance = nsnull;
+PRInt32 nsTypeAheadFind::gAccelKey = -1;  // magic value of -1 indicates unitialized state
 
 
 nsTypeAheadFind::nsTypeAheadFind(): 
   mLinksOnlyPref(PR_FALSE), mLinksOnly(PR_FALSE), mIsTypeAheadOn(PR_FALSE), 
-  mCaretBrowsingOn(PR_FALSE), mIsRepeatingSameChar(PR_FALSE), mLiteralTextSearchOnly(PR_FALSE),
-  mKeepSelectionOnCancel(PR_FALSE), mDontTryExactMatch(PR_FALSE), mTimeoutLength(0),
+  mCaretBrowsingOn(PR_FALSE), mIsRepeatingSameChar(PR_FALSE), mIsRepeatingFind(PR_FALSE),
+  mLiteralTextSearchOnly(PR_FALSE), mKeepSelectionOnCancel(PR_FALSE), 
+  mDontTryExactMatch(PR_FALSE), mTimeoutLength(0),
   mFind(do_CreateInstance(NS_FIND_CONTRACTID)), 
   mFindService(do_GetService("@mozilla.org/find/find_service;1"))
 {
@@ -136,8 +138,8 @@ nsTypeAheadFind::nsTypeAheadFind():
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (mFind && prefs) {
     AddRef();
+
     // ----------- Set search options ---------------
-    mFind->SetFindBackwards(PR_FALSE);
     mFind->SetCaseSensitive(PR_FALSE);
     mFind->SetWordBreaker(nsnull);
 
@@ -147,6 +149,9 @@ nsTypeAheadFind::nsTypeAheadFind():
     // ----------- Listen to prefs ------------------
     prefs->RegisterCallback("accessibility.typeaheadfind", (PrefChangedFunc)nsTypeAheadFind::TypeAheadFindPrefsReset, NS_STATIC_CAST(void*, this));
     prefs->RegisterCallback("accessibility.browsewithcaret", (PrefChangedFunc)nsTypeAheadFind::TypeAheadFindPrefsReset, NS_STATIC_CAST(void*, this));
+
+    // ----------- Get accel key --------------------
+    prefs->GetIntPref("ui.key.accelKey", &gAccelKey);
   }
 }
 
@@ -469,7 +474,19 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
       NS_FAILED(keyEvent->GetMetaKey(&isMeta)))
     return NS_ERROR_FAILURE;
 
-  if ((isAlt && !isShift) || isCtrl || isMeta)
+  PRBool isFindNext = PR_FALSE, isReverse = PR_FALSE;
+  if (charCode == 'g' && !mTypeAheadBuffer.IsEmpty() && isAlt + isMeta + isCtrl == 1 && (
+     (nsTypeAheadFind::gAccelKey == nsIDOMKeyEvent::DOM_VK_CONTROL && isCtrl) || 
+     (nsTypeAheadFind::gAccelKey == nsIDOMKeyEvent::DOM_VK_ALT     && isAlt ) || 
+     (nsTypeAheadFind::gAccelKey == nsIDOMKeyEvent::DOM_VK_META    && isMeta))) {
+    // We steal Accel+G (find next) and Accel+Shift+G (find prev), avoid early return
+    aEvent->PreventDefault(); // If back space is normally used for a command, don't do it
+    isFindNext = PR_TRUE;
+    isReverse = isShift;
+    mIsRepeatingSameChar = PR_FALSE;
+    mIsRepeatingFind = PR_TRUE;
+  }
+  else if ((isAlt && !isShift) || isCtrl || isMeta)
     return NS_OK;  // Ignore most modified keys, but alt+shift may be used for entering foreign chars
 
   // ---------- Get document/presshell/prescontext/selection/etc. ------------
@@ -532,7 +549,7 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     mDontTryExactMatch = PR_FALSE;
   }
   // ----------- Printable characters --------------
-  else {
+  else if (!isFindNext) {
     PRUnichar uniChar = ToLowerCase(NS_STATIC_CAST(PRUnichar, charCode));
     PRInt32 bufferLength = mTypeAheadBuffer.Length();
     if (uniChar < ' ')
@@ -574,6 +591,9 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
 
   nsresult rv = NS_ERROR_FAILURE;
 
+  // ----------- Set search options ---------------
+  mFind->SetFindBackwards(isReverse);
+
   if (!mDontTryExactMatch)    // Regular find, not repeated char find
     rv = FindItNow(PR_FALSE, mLinksOnly, isFirstVisiblePreferred, isBackspace); // Prefer to find exact match
 #ifndef NO_LINK_CYCLE_ON_SAME_CHAR
@@ -599,23 +619,6 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     DisplayStatus(PR_TRUE, PR_FALSE);    // display success status
 
     // ------- Store current find string for regular find usage: find-next or find dialog text field ------
-    if (mFindService) {
-#ifdef RESTORE_SEARCH
-      // Store old find settings for later restoration
-      if (mTypeAheadBuffer.Length() == 1 && mOldSearchString.IsEmpty()) {
-        mFindService->GetSearchString(mOldSearchString);
-        mFindService->GetWrapFind(&mOldWrapSetting);
-        mFindService->GetMatchCase(&mOldCaseSetting);
-        mFindService->GetEntireWord(&mOldWordSetting);
-        mFindService->GetFindBackwards(&mOldDirectionSetting);
-      }
-#endif
-      mFindService->SetSearchString(mTypeAheadBuffer);
-      mFindService->SetWrapFind(PR_TRUE);
-      mFindService->SetMatchCase(PR_FALSE);
-      mFindService->SetEntireWord(PR_FALSE);
-      mFindService->SetFindBackwards(PR_FALSE);
-    }
 
     if (mTypeAheadBuffer.Length() == 1) {  // If first letter, store where the first find succeeded (mStartFindRange)
       mStartFindRange = nsnull;
@@ -868,7 +871,7 @@ nsresult nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer, PRBool aI
   else {
     PRInt32 startOffset;
     nsCOMPtr<nsIDOMNode> startNode;
-    if (aIsRepeatingSameChar) {
+    if (aIsRepeatingSameChar || mIsRepeatingFind) {
       currentSelectionRange->GetEndContainer(getter_AddRefs(startNode));
       currentSelectionRange->GetEndOffset(&startOffset);
     }
@@ -1022,24 +1025,13 @@ void nsTypeAheadFind::CancelFind()
     nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mFocusedWeakShell));
     if (!mKeepSelectionOnCancel && presShell)
       mFocusedDocSelection->CollapseToStart();
-#ifdef RESTORE_SEARCH
-    // Restore old find settings
-    // not working to well, because timer cancels find
-    // which is returns Ctrl+G to old find
-    if (mFindService && !mOldSearchString.IsEmpty()) {
-      mFindService->SetSearchString(mOldSearchString);
-      mFindService->SetWrapFind(mOldWrapSetting);
-      mFindService->SetMatchCase(mOldCaseSetting);
-      mFindService->SetEntireWord(mOldWordSetting);
-      mFindService->SetFindBackwards(mOldDirectionSetting);
-    }
-#endif
   }
   mLinksOnly = mLinksOnlyPref;
 
   // These will be initialized to their true values after the first character is typed
   mCaretBrowsingOn = PR_FALSE;
   mIsRepeatingSameChar = PR_FALSE;
+  mIsRepeatingFind = PR_FALSE;
   mLiteralTextSearchOnly = PR_FALSE;
   mDontTryExactMatch = PR_FALSE;
   mStartFindRange = nsnull;
