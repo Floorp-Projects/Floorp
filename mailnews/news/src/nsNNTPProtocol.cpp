@@ -69,6 +69,8 @@
 #include "nsINetSupportDialogService.h"
 #include "nsIMsgAccountManager.h"
 
+#include "nsIPrompt.h"
+
 #define PREF_NEWS_MAX_ARTICLES "news.max_articles"
 #define PREF_NEWS_MARK_OLD_READ "news.mark_old_read"
 
@@ -2207,16 +2209,16 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 
 void nsNNTPProtocol::ParseHeaderForCancel(char *buf)
 {
-    nsString header(buf, eOneByte);
+    nsCString header(buf);
     PRInt32 colon = header.FindChar(':');
     if (!colon)
 		return;
 
-    nsString value("", eOneByte);
+    nsCString value("");
     header.Right(value, header.Length() - colon -1);
     value.StripWhitespace();
-      
-    switch (header[0]) {
+    
+    switch (header.First()) {
     case 'F': case 'f':
         if (header.Find("From") == 0) {
             if (m_cancelFromHdr) PR_FREEIF(m_cancelFromHdr);
@@ -3821,11 +3823,7 @@ PRInt32 nsNNTPProtocol::Cancel()
   cancelInfo.old_from = m_cancelFromHdr;
   cancelInfo.from = nsnull;
 
-#ifdef NECKO
   NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
-#else
-  NS_WITH_SERVICE(nsINetSupportDialogService,dialog,kCNetSupportDialogCID,&rv);
-#endif
   if (NS_FAILED(rv)) return -1;  /* unable to get the dialog service */
 
   PR_ASSERT (id && newsgroups);
@@ -3842,10 +3840,8 @@ PRInt32 nsNNTPProtocol::Cancel()
   other_random_headers = (char *) PR_Malloc (L + 20);
   body = (char *) PR_Malloc (PL_strlen (XP_AppCodeName) + 100);
   
-  // i18N people:  don't panic because these are eOneByte strings.  as soon
-  // as I get string bundles working, these will go away.
-  nsString alertText("",eOneByte);
-  nsString confirmText(UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_CONFIRM, eOneByte);
+  nsString alertText("");
+  nsString confirmText(UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_CONFIRM);
 
   PRInt32 confirmCancelResult = 0;
 
@@ -3879,9 +3875,9 @@ PRInt32 nsNNTPProtocol::Cancel()
           if (dialog) {
               // until #7770 is fixed, we can't do dialogs on Linux from here
 #if defined(BUG_7770_FIXED)
-              rv = dialog->Alert(alertText);
+              rv = dialog->Alert(alertText.GetUnicode());
 #else
-              printf("%s\n",alertText.GetBuffer());
+              printf("%s\n",UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_DISALLOWED);
 #endif /* BUG_7770_FIXED */
           }
           
@@ -3910,9 +3906,9 @@ PRInt32 nsNNTPProtocol::Cancel()
   if (dialog) {
       // until #7770 is fixed, we can't do dialogs on UNIX from here
 #if defined(BUG_7770_FIXED)
-      rv = dialog->Confirm(confirmText, &confirmCancelResult);
+      rv = dialog->Confirm(confirmText.GetUnicode(), &confirmCancelResult);
 #else
-      printf("%s\n", confirmText.GetBuffer());
+      printf("%s\n", UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_CONFIRM);
       confirmCancelResult = 1;
 #endif /* BUG_7770_FIXED */
   }
@@ -3983,9 +3979,9 @@ PRInt32 nsNNTPProtocol::Cancel()
     if (dialog) {
         // until #7770 is fixed, we can't do dialogs on Linux from here
 #if defined(BUG_7770_FIXED)
-        rv = dialog->Alert(alertText);
+        rv = dialog->Alert(alertText.GetUnicode());
 #else
-        printf("%s\n", alertText.GetBuffer());
+        printf("%s\n", UNTIL_STRING_BUNDLES_MK_MSG_MESSAGE_CANCELLED);
 #endif /* BUG_7770_FIXED */
     }
 
