@@ -40,7 +40,7 @@
 #ifndef NSCOMPRESSEDCHARMAP_H
 #define NSCOMPRESSEDCHARMAP_H
 #include "prtypes.h"
-
+#include "nsICharRepresentable.h"
 
 #define ALU_SIZE PR_BITS_PER_LONG
 //#define ALU_SIZE 16
@@ -67,7 +67,7 @@ extern PRUint16* CreateEmptyCCMap();
 extern PRUint16* MapToCCMap(PRUint32* aMap);
 extern PRUint16* MapperToCCMap(nsICharRepresentable *aMapper);
 extern void FreeCCMap(PRUint16* &aMap);
-extern PRBool NextNonEmptyCCMapPage(PRUint16 *, PRUint16 *);
+extern PRBool NextNonEmptyCCMapPage(PRUint16 *, PRUint32 *);
 extern PRBool IsSameCCMap(PRUint16* ccmap1, PRUint16* ccmap2);
 #ifdef DEBUG
 void printCCMap(PRUint16* aCCMap);
@@ -101,17 +101,22 @@ MapToCCMapExt(PRUint32* aBmpPlaneMap, PRUint32** aOtherPlaneMaps, PRUint32 aOthe
 //  (256*16 max pages)  =  4400 PRUint16
 #define CCMAP_MAX_LEN (16+16+16+256+4096)
 
+// non-bmp unicode support extension
+#define EXTENDED_UNICODE_PLANES    16
+
 class nsCompressedCharMap {
 public:
   nsCompressedCharMap();
+  ~nsCompressedCharMap();
 
   PRUint16* NewCCMap();
   PRUint16* FillCCMap(PRUint16* aCCMap);
   PRUint16  GetSize() {return mUsedLen;};
-  void      SetChar(PRUint16);
+  void      SetChar(PRUint32);
   void      SetChars(PRUint16*);
   void      SetChars(PRUint16, ALU_TYPE*);
   void      SetChars(PRUint32*);
+  void      Extend() {mExtended = PR_TRUE;} // enable surrogate area
 
 protected:
   union {
@@ -122,6 +127,11 @@ protected:
   PRUint16 mUsedLen;   // in PRUint16
   PRUint16 mAllOnesPage;
 
+  PRBool mExtended;
+
+  // for surrogate support
+  PRUint32* mExtMap[EXTENDED_UNICODE_PLANES+1];
+  PRUint32  mMap[UCS2_MAP_LEN];
 };
 
 //
@@ -295,7 +305,7 @@ protected:
 #define CCMAP_TOTAL_PAGES    CCMAP_POW2(CCMAP_BITS_PER_UPPER_LOG2 \
                                        +CCMAP_BITS_PER_MID_LOG2)
 
-#define CCMAP_BEGIN_AT_START_OF_MAP 0xFFFF
+#define CCMAP_BEGIN_AT_START_OF_MAP 0xFFFFFFFF
 
 //
 // Finally, build up the macro to test the bit for a given char
@@ -323,9 +333,6 @@ protected:
 #define CCMAP_SURROGATE_FLAG         0x0001  
 #define CCMAP_NONE_FLAG              0x0000
 
-// non-bmp unicode support extension
-#define EXTENDED_UNICODE_PLANES    16
-
 // get plane number from ccmap, bmp excluded, so plane 1's number is 0.
 #define CCMAP_PLANE_FROM_SURROGATE(h)  ((((PRUint16)(h) - (PRUint16)0xd800) >> 6) + 1)
 
@@ -345,5 +352,4 @@ protected:
 #define CCMAP_HAS_CHAR_EXT(m, ucs4)  (((ucs4)&0xffff0000) ?  \
                                       (CCMAP_FLAG(m) & CCMAP_SURROGATE_FLAG) && CCMAP_HAS_CHAR(CCMAP_FOR_PLANE_EXT((m), CCMAP_PLANE(ucs4)), (ucs4) & 0xffff) : \
                                       CCMAP_HAS_CHAR(m, (PRUnichar)(ucs4)) )
-
 #endif // NSCOMPRESSEDCHARMAP_H 

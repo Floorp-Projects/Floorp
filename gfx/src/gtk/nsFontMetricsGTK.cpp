@@ -73,6 +73,8 @@
 #include <X11/Xatom.h>
 #include <gdk/gdk.h>
 
+#define IS_SURROGATE(u)      (u > 0x10000)
+
 #define UCS2_NOMAPPING 0XFFFD
 
 #ifdef PR_LOGGING 
@@ -1479,6 +1481,7 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     return NS_ERROR_FAILURE;
   }
 
+
   mCurrentFont = mWesternFont;
 
   RealizeFont();
@@ -1823,7 +1826,7 @@ nsFontMetricsGTK::LocateFont(PRUint32 aChar, PRInt32 & aCount)
   // see if one of our loaded fonts can represent the character
   for (i = 0; i < aCount; ++i) {
     font = (nsFontGTK*)mLoadedFonts[i];
-    if (CCMAP_HAS_CHAR(font->mCCMap, aChar))
+    if (CCMAP_HAS_CHAR_EXT(font->mCCMap, aChar))
       return font;
   }
 
@@ -1865,7 +1868,7 @@ nsFontMetricsGTK::ResolveForwards(const PRUnichar        *aString,
   //This if block is meant to speedup the process in normal situation, when
   //most characters can be found in first font
   if (currFont == mLoadedFonts[0]) {
-    while (currChar < lastChar && CCMAP_HAS_CHAR(currFont->mCCMap,*currChar))
+    while (currChar < lastChar && CCMAP_HAS_CHAR_EXT(currFont->mCCMap,*currChar))
       ++currChar;
     fontSwitch.mFontGTK = currFont;
     if (!(*aFunc)(&fontSwitch, firstChar, currChar - firstChar, aData))
@@ -2346,7 +2349,7 @@ DumpTree(void)
 struct nsFontSearch
 {
   nsFontMetricsGTK* mMetrics;
-  PRUnichar         mChar;
+  PRUint32          mChar;
   nsFontGTK*        mFont;
 };
 
@@ -3131,12 +3134,12 @@ nsFontMetricsGTK::FindNearestSize(nsFontStretch* aStretch, PRUint16 aSize)
 
 static PRBool
 SetFontCharsetInfo(nsFontGTK *aFont, nsFontCharSetInfo* aCharSet,
-                   PRUnichar aChar)
+                   PRUint32 aChar)
 {
   if (aCharSet->mCharSet) {
     aFont->mCCMap = aCharSet->mCCMap;
     // check that the font is not empty
-    if (CCMAP_HAS_CHAR(aFont->mCCMap, aChar)) {
+    if (CCMAP_HAS_CHAR_EXT(aFont->mCCMap, aChar)) {
       aFont->LoadFont();
       if (!aFont->GetXFont()) {
         return PR_FALSE;
@@ -3188,7 +3191,7 @@ nsFontMetricsGTK::GetAASBBaseFont(nsFontStretch* aStretch,
 
 nsFontGTK*
 nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
-  nsFontCharSetInfo* aCharSet, PRUnichar aChar, const char *aName)
+  nsFontCharSetInfo* aCharSet, PRUint32 aChar, const char *aName)
 {
   if (aStretch->mFreeTypeFaceID) {
     //FREETYPE_FONT_PRINTF(("mFreeTypeFaceID = 0x%p", aStretch->mFreeTypeFaceID));
@@ -3216,6 +3219,11 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
     ftfont->mCharSetInfo = &ISO106461;
     //FREETYPE_FONT_PRINTF(("add the ftfont"));
     return AddToLoadedFontsList(ftfont);
+  }
+
+  if (IS_SURROGATE(aChar)) {
+    // SURROGATE is only supported by FreeType
+    return nsnull;
   }
 
   PRBool use_scaled_font = PR_FALSE;
@@ -3444,13 +3452,24 @@ nsFontMetricsGTK::GetWidth  (const PRUnichar* aString, PRUint32 aLength,
     PRUint32 start = 0;
     PRUint32 i;
 
-    for (i = 0; i < aLength; i++) {
-        PRUnichar c = aString[i];
+    PRUint32 extraSurrogateLength;
+    for (i = 0; i < aLength; i+=1+extraSurrogateLength) {
+        PRUint32 c = aString[i];
+        extraSurrogateLength=0;
+
+        if(i < aLength-1 && IS_HIGH_SURROGATE(c) && IS_LOW_SURROGATE(aString[i+1])) {
+          // if surrogate, make UCS4 code point from high aString[i] and
+          // low surrogate aString[i+1]
+          c = SURROGATE_TO_UCS4(c, aString[i+1]);
+
+          // skip aString[i+1], it is already used as low surrogate
+          extraSurrogateLength = 1;
+        }
         nsFontGTK* currFont = nsnull;
         nsFontGTK** font = mLoadedFonts;
         nsFontGTK** end = &mLoadedFonts[mLoadedFontsCount];
         while (font < end) {
-            if (CCMAP_HAS_CHAR((*font)->mCCMap, c)) {
+            if (CCMAP_HAS_CHAR_EXT((*font)->mCCMap, c)) {
                 currFont = *font;
                 goto FoundFont; // for speed -- avoid "if" statement
             }
@@ -3611,13 +3630,23 @@ nsFontMetricsGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
     PRUint32 start = 0;
     PRUint32 i;
 
-    for (i = 0; i < aLength; i++) {
-        PRUnichar c = aString[i];
+    PRUint32 extraSurrogateLength;
+    for (i = 0; i < aLength; i+=1+extraSurrogateLength) {
+        PRUint32 c = aString[i];
+        extraSurrogateLength=0;
+        if(i < aLength-1 && IS_HIGH_SURROGATE(c) && IS_LOW_SURROGATE(aString[i+1])) {
+          // if surrogate, make UCS4 code point from high aString[i] and
+          // low surrogate aString[i+1]
+          c = SURROGATE_TO_UCS4(c, aString[i+1]);
+ 
+          // skip aString[i+1], it is already used as low surrogate
+          extraSurrogateLength = 1;
+        }
         nsFontGTK* currFont = nsnull;
         nsFontGTK** font = mLoadedFonts;
         nsFontGTK** lastFont = &mLoadedFonts[mLoadedFontsCount];
         while (font < lastFont) {
-            if (CCMAP_HAS_CHAR((*font)->mCCMap, c)) {
+            if (CCMAP_HAS_CHAR_EXT((*font)->mCCMap, c)) {
                 currFont = *font;
                 goto FoundFont; // for speed -- avoid "if" statement
             }
@@ -3787,15 +3816,24 @@ nsFontMetricsGTK::GetBoundingMetrics(const PRUnichar *aString,
     PRBool firstTime = PR_TRUE;
     PRUint32 start = 0;
     PRUint32 i;
-
-    for (i = 0; i < aLength; i++) {
-        PRUnichar c = aString[i];
+    PRUint32 extraSurrogateLength;
+    for (i = 0; i < aLength; i+=1+extraSurrogateLength) {
+        PRUint32 c = aString[i];
+        extraSurrogateLength=0;
+        if(i < aLength-1 && IS_HIGH_SURROGATE(c) && IS_LOW_SURROGATE(aString[i+1])) {
+          // if surrogate, make UCS4 code point from high aString[i] and
+          // low surrogate aString[i+1]
+          c = SURROGATE_TO_UCS4(c, aString[i+1]);
+ 
+          // skip aString[i+1], it is already used as low surrogate
+          extraSurrogateLength = 1;
+        }
         nsFontGTK* currFont = nsnull;
         nsFontGTK** font = mLoadedFonts;
         nsFontGTK** end = &mLoadedFonts[mLoadedFontsCount];
 
         while (font < end) {
-            if (CCMAP_HAS_CHAR((*font)->mCCMap, c)) {
+            if (CCMAP_HAS_CHAR_EXT((*font)->mCCMap, c)) {
                 currFont = *font;
                 goto FoundFont; // for speed -- avoid "if" statement
             }
@@ -3872,14 +3910,24 @@ nsFontMetricsGTK::GetTextDimensions (const PRUnichar* aString,
     PRUint32 start = 0;
     PRUint32 i;
 
-    for (i = 0; i < aLength; i++) {
-        PRUnichar c = aString[i];
+    PRUint32 extraSurrogateLength;
+    for (i = 0; i < aLength; i+=1+extraSurrogateLength) {
+        PRUint32 c = aString[i];
+        extraSurrogateLength=0;
+        if(i < aLength-1 && IS_HIGH_SURROGATE(c) && IS_LOW_SURROGATE(aString[i+1])) {
+          // if surrogate, make UCS4 code point from high aString[i] and
+          // low surrogate aString[i+1]
+          c = SURROGATE_TO_UCS4(c, aString[i+1]);
+ 
+          // skip aString[i+1], it is already used as low surrogate
+          extraSurrogateLength = 1;
+        }
         nsFontGTK* currFont = nsnull;
         nsFontGTK** font = mLoadedFonts;
         nsFontGTK** end = &mLoadedFonts[mLoadedFontsCount];
 
         while (font < end) {
-            if (CCMAP_HAS_CHAR((*font)->mCCMap, c)) {
+            if (CCMAP_HAS_CHAR_EXT((*font)->mCCMap, c)) {
                 currFont = *font;
                 goto FoundFont; // for speed -- avoid "if" statement
             }
@@ -4722,7 +4770,7 @@ SetCharsetLangGroup(nsFontCharSetInfo* aCharSetInfo)
   } while (0)
 
 nsFontGTK*
-nsFontMetricsGTK::SearchNode(nsFontNode* aNode, PRUnichar aChar)
+nsFontMetricsGTK::SearchNode(nsFontNode* aNode, PRUint32 aChar)
 {
   if (aNode->mDummy) {
     return nsnull;
@@ -4738,6 +4786,12 @@ nsFontMetricsGTK::SearchNode(nsFontNode* aNode, PRUnichar aChar)
    * loading a font with the same map.
    */
   if (charSetInfo->mCharSet) {
+    // if SURROGATE char, ignore charSetInfo->mCCMap checking
+    // because the exact ccmap is never created before loading
+    // NEED TO FIX: need better way
+    if (IS_SURROGATE(aChar) ) {
+      goto check_done;
+    }
     PRUint16* ccmap = charSetInfo->mCCMap;
     if (ccmap) {
       for (int i = 0; i < mLoadedFontsCount; i++) {
@@ -4756,6 +4810,8 @@ nsFontMetricsGTK::SearchNode(nsFontNode* aNode, PRUnichar aChar)
       return nsnull;
     }
   }
+
+check_done:
 
   aNode->FillStyleHoles();
   nsFontStyle* style = aNode->mStyles[mStyleIndex];
@@ -5584,7 +5640,7 @@ FFRESubstituteEncoding(nsACString &aFFREName,
 }
 
 nsFontGTK*
-nsFontMetricsGTK::TryNodes(nsACString &aFFREName, PRUnichar aChar)
+nsFontMetricsGTK::TryNodes(nsACString &aFFREName, PRUint32 aChar)
 {
   FIND_FONT_PRINTF(("        TryNodes aFFREName = %s", 
                         PromiseFlatCString(aFFREName).get()));
@@ -5613,7 +5669,7 @@ nsFontMetricsGTK::TryNodes(nsACString &aFFREName, PRUnichar aChar)
 }
 
 nsFontGTK*
-nsFontMetricsGTK::TryNode(nsCString* aName, PRUnichar aChar)
+nsFontMetricsGTK::TryNode(nsCString* aName, PRUint32 aChar)
 {
   FIND_FONT_PRINTF(("        TryNode aName = %s", (*aName).get()));
   //
@@ -5676,7 +5732,7 @@ nsFontMetricsGTK::TryNode(nsCString* aName, PRUnichar aChar)
 }
 
 nsFontGTK* 
-nsFontMetricsGTK::TryLangGroup(nsIAtom* aLangGroup, nsCString* aName, PRUnichar aChar)
+nsFontMetricsGTK::TryLangGroup(nsIAtom* aLangGroup, nsCString* aName, PRUint32 aChar)
 {
   //
   // for this family check related registry-encoding (for the language)
@@ -5691,7 +5747,7 @@ nsFontMetricsGTK::TryLangGroup(nsIAtom* aLangGroup, nsCString* aName, PRUnichar 
 }
 
 nsFontGTK*
-nsFontMetricsGTK::TryFamily(nsCString* aName, PRUnichar aChar)
+nsFontMetricsGTK::TryFamily(nsCString* aName, PRUint32 aChar)
 {
   //
   // check the patterh "*-familyname-registry-encoding" for language
@@ -5725,7 +5781,7 @@ nsFontMetricsGTK::TryFamily(nsCString* aName, PRUnichar aChar)
 }
 
 nsFontGTK*
-nsFontMetricsGTK::TryAliases(nsCString* aAlias, PRUnichar aChar)
+nsFontMetricsGTK::TryAliases(nsCString* aAlias, PRUint32 aChar)
 {
   nsCStringKey key(*aAlias);
   char* name = (char*) gAliases->Get(&key);
@@ -5738,7 +5794,7 @@ nsFontMetricsGTK::TryAliases(nsCString* aAlias, PRUnichar aChar)
 }
 
 nsFontGTK*
-nsFontMetricsGTK::FindUserDefinedFont(PRUnichar aChar)
+nsFontMetricsGTK::FindUserDefinedFont(PRUint32 aChar)
 {
   if (mIsUserDefined) {
     FIND_FONT_PRINTF(("        FindUserDefinedFont"));
@@ -5753,7 +5809,7 @@ nsFontMetricsGTK::FindUserDefinedFont(PRUnichar aChar)
 }
 
 nsFontGTK*
-nsFontMetricsGTK::FindStyleSheetSpecificFont(PRUnichar aChar)
+nsFontMetricsGTK::FindStyleSheetSpecificFont(PRUint32 aChar)
 {
   FIND_FONT_PRINTF(("    FindStyleSheetSpecificFont"));
   while (mFontsIndex < mFonts.Count()) {
@@ -5860,7 +5916,7 @@ PrefEnumCallback(const char* aName, void* aClosure)
 }
 
 nsFontGTK*
-nsFontMetricsGTK::FindStyleSheetGenericFont(PRUnichar aChar)
+nsFontMetricsGTK::FindStyleSheetGenericFont(PRUint32 aChar)
 {
   FIND_FONT_PRINTF(("    FindStyleSheetGenericFont"));
   nsFontGTK* font;
@@ -5932,16 +5988,16 @@ if (gAllowDoubleByteSpecialChars) {
         sub_font->mCCMap = gDoubleByteSpecialCharsCCMap;
         AddToLoadedFontsList(sub_font);
       }
-      if (western_font && CCMAP_HAS_CHAR(western_font->mCCMap, aChar)) {
+      if (western_font && CCMAP_HAS_CHAR_EXT(western_font->mCCMap, aChar)) {
         return western_font;
       }
-      else if (symbol_font && CCMAP_HAS_CHAR(symbol_font->mCCMap, aChar)) {
+      else if (symbol_font && CCMAP_HAS_CHAR_EXT(symbol_font->mCCMap, aChar)) {
         return symbol_font;
       }
-      else if (euro_font && CCMAP_HAS_CHAR(euro_font->mCCMap, aChar)) {
+      else if (euro_font && CCMAP_HAS_CHAR_EXT(euro_font->mCCMap, aChar)) {
         return euro_font;
       }
-      else if (sub_font && CCMAP_HAS_CHAR(sub_font->mCCMap, aChar)) {
+      else if (sub_font && CCMAP_HAS_CHAR_EXT(sub_font->mCCMap, aChar)) {
         FIND_FONT_PRINTF(("      transliterate special chars for single byte docs"));
         return sub_font;
       }
@@ -5992,7 +6048,7 @@ if (gAllowDoubleByteSpecialChars) {
 }
 
 nsFontGTK*
-nsFontMetricsGTK::FindAnyFont(PRUnichar aChar)
+nsFontMetricsGTK::FindAnyFont(PRUint32 aChar)
 {
   FIND_FONT_PRINTF(("    FindAnyFont"));
   // XXX If we get to this point, that means that we have exhausted all the
@@ -6025,11 +6081,11 @@ nsFontMetricsGTK::FindAnyFont(PRUnichar aChar)
 }
 
 nsFontGTK*
-nsFontMetricsGTK::FindSubstituteFont(PRUnichar aChar)
+nsFontMetricsGTK::FindSubstituteFont(PRUint32 aChar)
 {
   if (!mSubstituteFont) {
     for (int i = 0; i < mLoadedFontsCount; i++) {
-      if (CCMAP_HAS_CHAR(mLoadedFonts[i]->mCCMap, 'a')) {
+      if (CCMAP_HAS_CHAR_EXT(mLoadedFonts[i]->mCCMap, 'a')) {
         mSubstituteFont = new nsFontGTKSubstitute(mLoadedFonts[i]);
         break;
       }
@@ -6063,7 +6119,7 @@ nsFontMetricsGTK::FindSubstituteFont(PRUnichar aChar)
 //
 
 nsFontGTK* 
-nsFontMetricsGTK::FindLangGroupPrefFont(nsIAtom* aLangGroup, PRUnichar aChar)
+nsFontMetricsGTK::FindLangGroupPrefFont(nsIAtom* aLangGroup, PRUint32 aChar)
 { 
   nsFontGTK* font;
   //
@@ -6132,7 +6188,7 @@ nsFontMetricsGTK::FindLangGroupPrefFont(nsIAtom* aLangGroup, PRUnichar aChar)
 }
 
 nsFontGTK*
-nsFontMetricsGTK::FindLangGroupFont(nsIAtom* aLangGroup, PRUnichar aChar, nsCString *aName)
+nsFontMetricsGTK::FindLangGroupFont(nsIAtom* aLangGroup, PRUint32 aChar, nsCString *aName)
 {
   nsFontGTK* font;
 
@@ -6207,7 +6263,7 @@ nsFontMetricsGTK::FindLangGroupFont(nsIAtom* aLangGroup, PRUnichar aChar, nsCStr
  * for the characters (FindSubstituteFont).
  */
 nsFontGTK*
-nsFontMetricsGTK::FindFont(PRUnichar aChar)
+nsFontMetricsGTK::FindFont(PRUint32 aChar)
 {
   FIND_FONT_PRINTF(("\nFindFont(%c/0x%04x)", aChar, aChar));
 

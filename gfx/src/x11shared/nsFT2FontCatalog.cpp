@@ -1303,7 +1303,7 @@ nsFT2FontCatalog::NewFceFromFontFile(FT_Library aFreeTypeLibrary,
                                      const char *aFontFileName,
                                      int aFaceIndex, int * aNumFaces)
 {
-  int i, len;
+  PRUint32 i, len;
   nsFontCatalogEntry *fce;
   FT_Error fterror;
   FT_Face face = nsnull;
@@ -1360,14 +1360,27 @@ nsFT2FontCatalog::NewFceFromFontFile(FT_Library aFreeTypeLibrary,
   }
   else {
     for (i=0; i < face->num_charmaps; i++) {
-      if (   (face->charmaps[i]->platform_id == TT_PLATFORM_MICROSOFT)
-          && (face->charmaps[i]->encoding_id == TT_MS_ID_UNICODE_CS)) {
-        fce->mFlags = FCE_FLAGS_ISVALID | FCE_FLAGS_UNICODE;
-        rv = mFt2->SetCharmap(face, face->charmaps[i]);
-        if (NS_FAILED(rv)) {
-          FONT_SCAN_PRINTF(("failed to select unicode charmap"));
-          goto cleanup_and_return;
+
+      if (face->charmaps[i]->platform_id == TT_PLATFORM_MICROSOFT) {
+        if (face->charmaps[i]->encoding_id == TT_MS_ID_UNICODE_CS) {
+          fce->mFlags = FCE_FLAGS_ISVALID | FCE_FLAGS_UNICODE;
+          fterror = mFt2->SetCharmap(face, face->charmaps[i]);
+          if (fterror) {
+            FONT_SCAN_PRINTF(("failed to select unicode charmap"));
+            goto cleanup_and_return;
+          }
         }
+#if defined(TT_MS_ID_UCS_4)
+          else if (face->charmaps[i]->encoding_id == TT_MS_ID_UCS_4) {
+          fce->mFlags = FCE_FLAGS_ISVALID | FCE_FLAGS_UNICODE | FCE_FLAGS_SURROGATE;
+          fterror = mFt2->SetCharmap(face, face->charmaps[i]);
+          if (fterror) {
+            FONT_SCAN_PRINTF(("failed to select unicode charmap"));
+            goto cleanup_and_return;
+          }
+          break;
+        }
+#endif
       }
     }
   }
@@ -1420,20 +1433,46 @@ nsFT2FontCatalog::NewFceFromFontFile(FT_Library aFreeTypeLibrary,
       fce->mEmbeddedBitmapHeights[i] = face->available_sizes[i].height;
   }
 
-  if (fce->mFlags & FCE_FLAGS_UNICODE) {
-    /* get the Unicode char map */
-    blank_chars = 0;
+  if ((fce->mFlags & FCE_FLAGS_UNICODE) || (fce->mFlags & FCE_FLAGS_SURROGATE)) {
+    if (fce->mFlags & FCE_FLAGS_SURROGATE) {
+      ccmapObj.Extend();
+    }
+
+    // check fast methods are defined
+    PRBool has_fast_methods;
+    mFt2->SupportsExtFunc(&has_fast_methods);
+
+    PRBool scan_done = PR_FALSE;
+    if (has_fast_methods) {
+      mFt2->GetFirstChar(face, &glyph_index, (FT_ULong*)&i);
+      if (glyph_index == 0) {
+        // no glyph in the font
+        scan_done = PR_TRUE;
+      }
+    } else {
+      i=0;
+    }
+
     len = NUM_UNICODE_CHARS;
+    if(fce->mFlags & FCE_FLAGS_SURROGATE) {
+      len = 0xFFFFF;
+    }
+
+    blank_chars = 0;
     slot = face->glyph;
     FONT_SCAN_PRINTF(("            "));
-    for (i=0; i<len; i++) {
-      mFt2->GetCharIndex(face, (FT_ULong)i, &glyph_index);
-      //FONT_CATALOG_PRINTF(("i=%d, glyph_index=%d", i, glyph_index));
-      if (!glyph_index)
-        continue;
+
+    while (!scan_done && i < len) {
+      if (!has_fast_methods) {
+        mFt2->GetCharIndex(face, (FT_ULong)i, &glyph_index);
+        //FONT_CATALOG_PRINTF(("i=%d, glyph_index=%d", i, glyph_index));
+        if (glyph_index == 0) {
+          goto next_char;
+        }
+      }
       if (gFontDebug & NS_FONT_DEBUG_FONT_SCAN) {
         if ((num_checked % 1000) == 0) {
-          FONT_SCAN_PRINTF(("\b\b\b\b\b\b\b\b\b\b\b\b%5d glyphs", num_checked));
+          FONT_SCAN_PRINTF(("\b\b\b\b\b\b\b\b\b\b\b\b\b\b%7d glyphs", num_checked));
         }
       }
       num_checked++;
@@ -1443,7 +1482,7 @@ nsFT2FontCatalog::NewFceFromFontFile(FT_Library aFreeTypeLibrary,
       if (NS_FAILED(rv)) {
         FONT_CATALOG_PRINTF(("error loading %d (glyph index = %d)", 
                     i, glyph_index));
-        continue;
+        goto next_char;
       }
       if (slot->format == ft_glyph_format_outline) {
         //FONT_CATALOG_PRINTF(("n_contours=%d", slot->outline.n_contours));
@@ -1456,7 +1495,7 @@ nsFT2FontCatalog::NewFceFromFontFile(FT_Library aFreeTypeLibrary,
           mFt2->DoneGlyph(glyph);
           if((bbox.xMax==0) && (bbox.xMin==0)
              && (bbox.yMax==0) && (bbox.yMin==0)) {
-            continue;
+            goto next_char;
           }
           FONT_SCAN_PRINTF(("no contours %d (glyph index = %d)\n", i, 
                             glyph_index));
@@ -1472,7 +1511,7 @@ nsFT2FontCatalog::NewFceFromFontFile(FT_Library aFreeTypeLibrary,
           FONT_CATALOG_PRINTF(("continue at line %d", __LINE__));
           FONT_SCAN_PRINTF(("empty bitmap %d (glyph index = %d)\n", 
                              i, glyph_index));
-          continue;
+          goto next_char;
         }
       }
       else {
@@ -1480,15 +1519,28 @@ nsFT2FontCatalog::NewFceFromFontFile(FT_Library aFreeTypeLibrary,
       }
       ccmapObj.SetChar(i);
       fce->mNumUsableGlyphs++;
+next_char:
+      if (has_fast_methods) {
+         FT_ULong ncharcode;
+         mFt2->GetNextChar(face, (FT_ULong)i, &glyph_index, &ncharcode);
+         i = ncharcode;
+         if (glyph_index == 0) {
+           // no more glyph in the font
+           scan_done = PR_TRUE;
+         }
+      } else {
+        i++;
+      }
     }
     if (gFontDebug & NS_FONT_DEBUG_FONT_SCAN) {
-      FONT_SCAN_PRINTF(("\b\b\b\b\b\b\b\b\b\b\b\b%5d glyphs", num_checked));
+      FONT_SCAN_PRINTF(("\b\b\b\b\b\b\b\b\b\b\b\b\b\b%7d glyphs", num_checked));
       if (blank_chars) {
         FONT_SCAN_PRINTF((" (%d invalid)", blank_chars));
       }
     }
     if (fce->mNumUsableGlyphs == 0)
       fce->mFlags |= FCE_FLAGS_ISVALID;
+
     fce->mCCMap = ccmapObj.NewCCMap();
   }
   else if (fce->mFlags & FCE_FLAGS_SYMBOL) {
@@ -1555,7 +1607,7 @@ nsFT2FontCatalog::NewFceFromSummary(nsNameValuePairDB *aDB)
   nsFontCatalogEntry *fce = nsnull;
   long longVal;
   unsigned long uLongVal;
-  int num, intVal;
+  int num, intVal, i;
   nsCompressedCharMap ccmapObj;
 
   fce = (nsFontCatalogEntry *)calloc(1, sizeof(nsFontCatalogEntry));
@@ -1566,6 +1618,7 @@ nsFT2FontCatalog::NewFceFromSummary(nsNameValuePairDB *aDB)
     FONT_CATALOG_PRINTF(("file garbled: expected begin=Font_, got %s", type));
     goto cleanup_and_return;
   }
+
   while (aDB->GetNextElement(&name, &value) > 0) {
     if (STRMATCH(name,"FamilyName")) {
       if (fce->mFamilyName) {
@@ -1583,12 +1636,15 @@ nsFT2FontCatalog::NewFceFromSummary(nsNameValuePairDB *aDB)
                 fce->mFontFileName?fce->mFontFileName:""));
         goto cleanup_and_return;
       }
-      num = sscanf(value, "%lu", &uLongVal);
+      num = sscanf(value, "%lx", &uLongVal);
       if (num != 1) {
         FONT_CATALOG_PRINTF(("failed to parse Flags (%s)",value));
         goto cleanup_and_return;
       }
       fce->mFlags = uLongVal;
+      if (fce->mFlags & FCE_FLAGS_SURROGATE) {
+        ccmapObj.Extend();
+      }
     }
     else if (STRMATCH(name,"FontFileName")) {
       if (fce->mFontFileName) {
@@ -1822,6 +1878,7 @@ nsFT2FontCatalog::NewFceFromSummary(nsNameValuePairDB *aDB)
   }
 
   fce->mCCMap = ccmapObj.NewCCMap();
+
   if (!fce->mCCMap) {
     FONT_CATALOG_PRINTF(("missing char map"));
     goto cleanup_and_return;
@@ -1855,7 +1912,8 @@ nsFT2FontCatalog::NewFceFromSummary(nsNameValuePairDB *aDB)
     goto cleanup_and_return;
   }
   if (fce->mFlags&FCE_FLAGS_ISVALID 
-      && (fce->mFlags & FCE_FLAGS_UNICODE) && (fce->mNumUsableGlyphs == 0)) {
+      && ((fce->mFlags & FCE_FLAGS_UNICODE) || (fce->mFlags & FCE_FLAGS_SURROGATE))
+      && (fce->mNumUsableGlyphs == 0)) {
     FONT_CATALOG_PRINTF(("missing num usable glyphs"));
     goto cleanup_and_return;
   }
@@ -1889,7 +1947,7 @@ nsFT2FontCatalog::ParseCCMapLine(nsCompressedCharMap *aCCMapObj, long base,
 {
   int i, j, len;
   unsigned int byte;
-  PRUint16 pagechar = (PRUint16)base;
+  PRUint32 pagechar = (PRUint32)base;
 
   // check we have the right number of chars
   len = strlen(valString);
@@ -1942,7 +2000,7 @@ nsFT2FontCatalog::PrintCCMap(nsNameValuePairDB *aDB, PRUint16 *aCCMap)
   if (!aCCMap)
     return;
 
-  PRUint16 page = CCMAP_BEGIN_AT_START_OF_MAP;
+  PRUint32 page = CCMAP_BEGIN_AT_START_OF_MAP;
   while (NextNonEmptyCCMapPage(aCCMap, &page)) {
     //FONT_CATALOG_PRINTF(("page starting at 0x%04x has chars", page));
     PrintPageBits(aDB, aCCMap, page);
@@ -2044,7 +2102,7 @@ nsFT2FontCatalog::PrintPageBits(nsNameValuePairDB *aDB, PRUint16 *aCCMap,
   for (i=0; i<(CCMAP_BITS_PER_PAGE/8); i++) {
     unsigned char val = 0;
     for (int j=0; j<8; j++) {
-      if (CCMAP_HAS_CHAR(aCCMap, pagechar)) {
+      if (CCMAP_HAS_CHAR_EXT(aCCMap, pagechar)) {
         val |= 1 << j;
       }
       pagechar++;

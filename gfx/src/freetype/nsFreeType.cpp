@@ -41,6 +41,7 @@
 #include "nsIPref.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
+#include "nsICharRepresentable.h"
 #include "nsCompressedCharMap.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIRenderingContext.h"
@@ -75,6 +76,7 @@ nsHashtable* nsFreeType2::sFontFamilies = nsnull;
 nsHashtable* nsFreeType2::sRange1CharSetNames = nsnull;
 nsHashtable* nsFreeType2::sRange2CharSetNames = nsnull;
 nsICharsetConverterManager2* nsFreeType2::sCharSetManager = nsnull;
+PRBool       nsFreeType2::gHasExtFunc = PR_TRUE;
 
 extern nsulCodePageRangeCharSetName ulCodePageRange1CharSetNames[];
 extern nsulCodePageRangeCharSetName ulCodePageRange2CharSetNames[];
@@ -96,24 +98,26 @@ static NS_DEFINE_CID(kCharSetManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 //
 #define NS_FT2_OFFSET(f) (int)&((nsFreeType2*)0)->f
 FtFuncList nsFreeType2::FtFuncs [] = {
-  {"FT_Done_Face",            NS_FT2_OFFSET(nsFT_Done_Face)},
-  {"FT_Done_FreeType",        NS_FT2_OFFSET(nsFT_Done_FreeType)},
-  {"FT_Done_Glyph",           NS_FT2_OFFSET(nsFT_Done_Glyph)},
-  {"FT_Get_Char_Index",       NS_FT2_OFFSET(nsFT_Get_Char_Index)},
-  {"FT_Get_Glyph",            NS_FT2_OFFSET(nsFT_Get_Glyph)},
-  {"FT_Get_Sfnt_Table",       NS_FT2_OFFSET(nsFT_Get_Sfnt_Table)},
-  {"FT_Glyph_Get_CBox",       NS_FT2_OFFSET(nsFT_Glyph_Get_CBox)},
-  {"FT_Init_FreeType",        NS_FT2_OFFSET(nsFT_Init_FreeType)},
-  {"FT_Load_Glyph",           NS_FT2_OFFSET(nsFT_Load_Glyph)},
-  {"FT_New_Face",             NS_FT2_OFFSET(nsFT_New_Face)},
-  {"FT_Outline_Decompose",    NS_FT2_OFFSET(nsFT_Outline_Decompose)},
-  {"FT_Set_Charmap",          NS_FT2_OFFSET(nsFT_Set_Charmap)},
-  {"FTC_Image_Cache_Lookup",  NS_FT2_OFFSET(nsFTC_Image_Cache_Lookup)},
-  {"FTC_Manager_Lookup_Size", NS_FT2_OFFSET(nsFTC_Manager_Lookup_Size)},
-  {"FTC_Manager_Done",        NS_FT2_OFFSET(nsFTC_Manager_Done)},
-  {"FTC_Manager_New",         NS_FT2_OFFSET(nsFTC_Manager_New)},
-  {"FTC_Image_Cache_New",     NS_FT2_OFFSET(nsFTC_Image_Cache_New)},
-  {nsnull,                    0},
+  {"FT_Done_Face",            NS_FT2_OFFSET(nsFT_Done_Face),            PR_TRUE},
+  {"FT_Done_FreeType",        NS_FT2_OFFSET(nsFT_Done_FreeType),        PR_TRUE},
+  {"FT_Done_Glyph",           NS_FT2_OFFSET(nsFT_Done_Glyph),           PR_TRUE},
+  {"FT_Get_Char_Index",       NS_FT2_OFFSET(nsFT_Get_Char_Index),       PR_TRUE},
+  {"FT_Get_Glyph",            NS_FT2_OFFSET(nsFT_Get_Glyph),            PR_TRUE},
+  {"FT_Get_Sfnt_Table",       NS_FT2_OFFSET(nsFT_Get_Sfnt_Table),       PR_TRUE},
+  {"FT_Glyph_Get_CBox",       NS_FT2_OFFSET(nsFT_Glyph_Get_CBox),       PR_TRUE},
+  {"FT_Init_FreeType",        NS_FT2_OFFSET(nsFT_Init_FreeType),        PR_TRUE},
+  {"FT_Load_Glyph",           NS_FT2_OFFSET(nsFT_Load_Glyph),           PR_TRUE},
+  {"FT_New_Face",             NS_FT2_OFFSET(nsFT_New_Face),             PR_TRUE},
+  {"FT_Outline_Decompose",    NS_FT2_OFFSET(nsFT_Outline_Decompose),    PR_TRUE},
+  {"FT_Set_Charmap",          NS_FT2_OFFSET(nsFT_Set_Charmap),          PR_TRUE},
+  {"FTC_Image_Cache_Lookup",  NS_FT2_OFFSET(nsFTC_Image_Cache_Lookup),  PR_TRUE},
+  {"FTC_Manager_Lookup_Size", NS_FT2_OFFSET(nsFTC_Manager_Lookup_Size), PR_TRUE},
+  {"FTC_Manager_Done",        NS_FT2_OFFSET(nsFTC_Manager_Done),        PR_TRUE},
+  {"FTC_Manager_New",         NS_FT2_OFFSET(nsFTC_Manager_New),         PR_TRUE},
+  {"FTC_Image_Cache_New",     NS_FT2_OFFSET(nsFTC_Image_Cache_New),     PR_TRUE},
+  {"FT_Get_First_Char",       NS_FT2_OFFSET(nsFT_Get_First_Char),       PR_FALSE},
+  {"FT_Get_Next_Char",        NS_FT2_OFFSET(nsFT_Get_Next_Char),        PR_FALSE},
+  {nsnull,                    0, 0},
 };
 
 nsTTFontEncoderInfo FEI_Adobe_Symbol_Encoding = {
@@ -204,7 +208,7 @@ nsFreeType2::GetCharIndex(FT_Face face, FT_ULong charcode, FT_UInt *index)
   *index = nsFT_Get_Char_Index(face, charcode);
   return NS_OK;
 } 
- 
+
 NS_IMETHODIMP
 nsFreeType2::GetGlyph(FT_GlyphSlot slot, FT_Glyph *glyph)
 { 
@@ -315,6 +319,29 @@ nsFreeType2::ImageCacheNew(FTC_Manager manager, FTC_Image_Cache *cache)
   // call the FreeType2 function via the function pointer
   FT_Error error = nsFTC_Image_Cache_New(manager, cache);
   return error ? NS_ERROR_FAILURE : NS_OK;
+} 
+
+NS_IMETHODIMP
+nsFreeType2::GetFirstChar(FT_Face face, FT_UInt *gindex, FT_ULong *charcode)
+{ 
+  // call the FreeType2 function via the function pointer
+  *charcode = nsFT_Get_First_Char(face, gindex);
+  return NS_OK;
+} 
+
+NS_IMETHODIMP
+nsFreeType2::GetNextChar(FT_Face face, FT_ULong charcode, FT_UInt *gindex, FT_ULong *ncharcode)
+{ 
+  // call the FreeType2 function via the function pointer
+  *ncharcode = nsFT_Get_Next_Char(face, charcode, gindex);
+  return NS_OK;
+} 
+
+NS_IMETHODIMP
+nsFreeType2::SupportsExtFunc(PRBool *res)
+{ 
+  *res = gHasExtFunc;
+  return NS_OK;
 } 
  
 NS_IMETHODIMP
@@ -621,15 +648,22 @@ nsFreeType2::LoadSharedLib()
     return PR_FALSE;
   }
 
+  // checking FT_Get_First_Char() and FT_Get_Next_Char() for fast lookup methods
+  gHasExtFunc = PR_TRUE;
   FtFuncList *p;
   PRFuncPtr func;
   void *ptr = this;
   for (p=FtFuncs; p->FuncName; p++) {
     func = PR_FindFunctionSymbol(mSharedLib, p->FuncName);
     if (!func) {
-      NS_WARNING("nsFreeType2::LoadSharedLib Error");
-      ClearFunctions();
-      return PR_FALSE;
+      if (p->Required == PR_TRUE) {
+        NS_WARNING("nsFreeType2::LoadSharedLib Error");
+        ClearFunctions();
+        return PR_FALSE;
+      } else {
+        // should not return, but disable fast lookup methods
+        gHasExtFunc = PR_FALSE;
+      }
     }
     *((PRFuncPtr*)((char*)ptr+p->FuncOffset)) = func;
   }
@@ -720,6 +754,9 @@ PRUint16*
 nsFreeType2::GetCCMap(nsFontCatalogEntry *aFce)
 {
   nsCompressedCharMap ccmapObj;
+  if (aFce->mFlags & FCE_FLAGS_SURROGATE) {
+    ccmapObj.Extend();
+  }
   ccmapObj.SetChars(aFce->mCCMap);
   return ccmapObj.NewCCMap();
 }
@@ -954,15 +991,32 @@ nsFreeTypeFaceRequester(FTC_FaceID face_id, FT_Library lib,
     platform_id = ffei->mEncodingInfo->mCmapPlatformID;
     encoding_id = ffei->mEncodingInfo->mCmapEncoding;
   }
+
   for (int i=0; i < face->num_charmaps; i++) {
-    if (   (face->charmaps[i]->platform_id == platform_id)
-        && (face->charmaps[i]->encoding_id == encoding_id)) {
-      rv = ft2->SetCharmap(face, face->charmaps[i]);
-      if (NS_FAILED(rv)) {
-        FREETYPE_PRINTF(("failed to set cmap"));
-        ft2->DoneFace(face);
-        *aFace = nsnull;
-        fterror = 1;
+    if (face->charmaps[i]->platform_id == platform_id) {
+#if defined(TT_MS_ID_UCS_4)
+      if (face->charmaps[i]->encoding_id == TT_MS_ID_UCS_4) {
+        rv = ft2->SetCharmap(face, face->charmaps[i]);
+        if (NS_FAILED(rv)) {
+          FREETYPE_PRINTF(("failed to set cmap"));
+          ft2->DoneFace(face);
+          *aFace = nsnull;
+          fterror = 1;
+        }
+        // UCS_4 is the most prefered cmap since it supports surrogates
+        // so stop here to avoid the possibly of getting UNICODE_CS which
+        // is the 2nd prefered choice.
+        break;
+      } else
+#endif /* defined(TT_MS_ID_UCS_4) */
+      if (face->charmaps[i]->encoding_id == encoding_id) {
+        rv = ft2->SetCharmap(face, face->charmaps[i]);
+        if (NS_FAILED(rv)) {
+          FREETYPE_PRINTF(("failed to set cmap"));
+          ft2->DoneFace(face);
+          *aFace = nsnull;
+          fterror = 1;
+        }
       }
     }
   }

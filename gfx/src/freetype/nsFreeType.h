@@ -63,9 +63,10 @@ typedef struct {
   PRUint16     *mCCMap;       // compressed char map
 } nsFontCatalogEntry;
 
-#define FCE_FLAGS_ISVALID 0x01
-#define FCE_FLAGS_UNICODE 0x02
-#define FCE_FLAGS_SYMBOL  0x04
+#define FCE_FLAGS_ISVALID    0x01
+#define FCE_FLAGS_UNICODE    0x02
+#define FCE_FLAGS_SYMBOL     0x04
+#define FCE_FLAGS_SURROGATE  0x08
 #define FREE_IF(x) if(x) free((void*)x)
 
 typedef struct {
@@ -110,6 +111,9 @@ typedef FT_Error (*FTC_Manager_New_t)(FT_Library, FT_UInt, FT_UInt, FT_ULong,
                        FTC_Face_Requester, FT_Pointer, FTC_Manager*);
 typedef FT_Error (*FTC_Image_Cache_New_t)(FTC_Manager, FTC_Image_Cache*);
 
+typedef FT_ULong (*FT_Get_First_Char_t)(FT_Face, FT_UInt*);
+typedef FT_ULong (*FT_Get_Next_Char_t)(FT_Face, FT_ULong, FT_UInt*);
+
 class nsFreeTypeFace;
 
 nsFreeTypeFace * nsFreeTypeGetFaceID(nsFontCatalogEntry *aFce);
@@ -117,6 +121,7 @@ nsFreeTypeFace * nsFreeTypeGetFaceID(nsFontCatalogEntry *aFce);
 typedef struct {
   const char *FuncName;
   int  FuncOffset;
+  const PRBool Required;
 } FtFuncList;
 
 // class nsFreeType class definition
@@ -155,9 +160,12 @@ protected:
   FTC_Manager_Done_t        nsFTC_Manager_Done;
   FTC_Manager_New_t         nsFTC_Manager_New;
   FTC_Image_Cache_New_t     nsFTC_Image_Cache_New;
+  FT_Get_First_Char_t       nsFT_Get_First_Char;
+  FT_Get_Next_Char_t        nsFT_Get_Next_Char;
+
   // this array needs to be big enough to hold all the function pointers
   // plus one extra for the null at the end
-  static FtFuncList FtFuncs[18];
+  static FtFuncList FtFuncs[20];
   
 protected:
   PRBool mEnableFreeType2;
@@ -171,6 +179,7 @@ public:
   static double  gAATTDarkTextGain;
   static PRInt32 gAntiAliasMinimum;
   static PRInt32 gEmbeddedBitmapMaximumHeight;
+  static PRBool  gHasExtFunc;
 
 protected:
   void ClearGlobals();
@@ -216,6 +225,8 @@ public:
                   { return mFce->mNumEmbeddedBitmaps; } ;
   PRUint16 *GetCCMap();
   nsFontCatalogEntry* GetFce() { return mFce; };
+
+  PRBool mHasExtendFuncs;
 
 protected:
   nsFontCatalogEntry *mFce;

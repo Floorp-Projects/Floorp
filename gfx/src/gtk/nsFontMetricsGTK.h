@@ -167,8 +167,8 @@ public:
   void LoadFont(void);
   PRBool IsEmptyFont(XFontStruct*);
 
-  inline int SupportsChar(PRUnichar aChar)
-    { return mCCMap && CCMAP_HAS_CHAR(mCCMap, aChar); };
+  inline int SupportsChar(PRUint32 aChar)
+    { return mCCMap && CCMAP_HAS_CHAR_EXT(mCCMap, aChar); };
 
   virtual GdkFont* GetGDKFont(void);
   virtual nsXFont* GetXFont(void);
@@ -260,21 +260,21 @@ public:
   NS_IMETHOD  ResolveForwards(const PRUnichar* aString, PRUint32 aLength,
                               nsFontSwitchCallbackGTK aFunc, void* aData);
 
-  nsFontGTK*  FindFont(PRUnichar aChar);
-  nsFontGTK*  FindUserDefinedFont(PRUnichar aChar);
-  nsFontGTK*  FindStyleSheetSpecificFont(PRUnichar aChar);
-  nsFontGTK*  FindStyleSheetGenericFont(PRUnichar aChar);
-  nsFontGTK*  FindLangGroupPrefFont(nsIAtom* aLangGroup, PRUnichar aChar);
-  nsFontGTK*  FindLangGroupFont(nsIAtom* aLangGroup, PRUnichar aChar, nsCString* aName);
-  nsFontGTK*  FindAnyFont(PRUnichar aChar);
-  nsFontGTK*  FindSubstituteFont(PRUnichar aChar);
+  nsFontGTK*  FindFont(PRUint32 aChar);
+  nsFontGTK*  FindUserDefinedFont(PRUint32 aChar);
+  nsFontGTK*  FindStyleSheetSpecificFont(PRUint32 aChar);
+  nsFontGTK*  FindStyleSheetGenericFont(PRUint32 aChar);
+  nsFontGTK*  FindLangGroupPrefFont(nsIAtom* aLangGroup, PRUint32 aChar);
+  nsFontGTK*  FindLangGroupFont(nsIAtom* aLangGroup, PRUint32 aChar, nsCString* aName);
+  nsFontGTK*  FindAnyFont(PRUint32 aChar);
+  nsFontGTK*  FindSubstituteFont(PRUint32 aChar);
 
-  nsFontGTK*  SearchNode(nsFontNode* aNode, PRUnichar aChar);
-  nsFontGTK*  TryAliases(nsCString* aName, PRUnichar aChar);
-  nsFontGTK*  TryFamily(nsCString* aName, PRUnichar aChar);
-  nsFontGTK*  TryNode(nsCString* aName, PRUnichar aChar);
-  nsFontGTK*  TryNodes(nsACString &aFFREName, PRUnichar aChar);
-  nsFontGTK*  TryLangGroup(nsIAtom* aLangGroup, nsCString* aName, PRUnichar aChar);
+  nsFontGTK*  SearchNode(nsFontNode* aNode, PRUint32 aChar);
+  nsFontGTK*  TryAliases(nsCString* aName, PRUint32 aChar);
+  nsFontGTK*  TryFamily(nsCString* aName, PRUint32 aChar);
+  nsFontGTK*  TryNode(nsCString* aName, PRUint32 aChar);
+  nsFontGTK*  TryNodes(nsACString &aFFREName, PRUint32 aChar);
+  nsFontGTK*  TryLangGroup(nsIAtom* aLangGroup, nsCString* aName, PRUint32 aChar);
 
   nsFontGTK*  AddToLoadedFontsList(nsFontGTK* aFont);
   nsFontGTK*  FindNearestSize(nsFontStretch* aStretch, PRUint16 aSize);
@@ -282,7 +282,7 @@ public:
                               nsFontCharSetInfo* aCharSet);
   nsFontGTK*  PickASizeAndLoad(nsFontStretch* aStretch,
                                nsFontCharSetInfo* aCharSet, 
-                               PRUnichar aChar,
+                               PRUint32 aChar,
                                const char *aName);
 
   // nsIFontMetricsGTK (calls from the font rendering layer)
