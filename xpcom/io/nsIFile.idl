@@ -220,6 +220,22 @@ interface nsIFile : nsISupports
      */
     boolean isSpecial(); 
     
+
+        
+    /**
+      * clone()
+      *
+      * This function will allocate and initialize a nsIFile object to the
+      * exact location of the |this| nsIFile.
+      * 
+      *   @param file
+      *          A nsIFile which this object will be initialize
+      *          with.
+      *
+      */
+    
+    nsIFile clone();
+
     /**
      *  Will determine if the inFile equals this.
      */

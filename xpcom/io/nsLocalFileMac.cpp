@@ -145,24 +145,14 @@ class nsDirEnumerator : public nsISimpleEnumerator
                     return NS_OK;
                 }
 
-                nsCOMPtr<nsILocalFile> file;
-
-                rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
-                                                        nsnull, 
-                                                        nsCOMTypeInfo<nsILocalFile>::GetIID(), 
-                                                        getter_AddRefs(file));
-                if (NS_FAILED(rv)) 
-                    return rv;
-        
-                rv = file->InitWithFile(mParent);
-                if (NS_FAILED(rv)) 
-                    return rv;
+                nsCOMPtr<nsIFile> file;
+                mParent->Clone(getter_AddRefs(file));
             
                 rv = file->AppendPath(entry->name);
                 if (NS_FAILED(rv)) 
                     return rv;
             
-                mNext = file;
+                mNext = do_QueryInterface(file);
             }
             *result = mNext != nsnull;
             return NS_OK;
@@ -245,31 +235,32 @@ nsLocalFile::MakeDirty()
     mStatDirty       = PR_TRUE;
 }
 
-
 NS_IMETHODIMP  
-nsLocalFile::InitWithKey(const char *fileKey)
+nsLocalFile::Clone(nsIFile **file)
 {
-    MakeDirty();
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP  
-nsLocalFile::InitWithFile(nsIFile *file)
-{
-    MakeDirty();
     NS_ENSURE_ARG(file);
+    *file = nsnull;
 
-    // Until we have a version that extracts the FSSpec from the donor nsIFile just
-    // grab the 
+    nsCOMPtr<nsILocalFile> localFile;
+    nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
+                                                     nsnull, 
+                                                     nsCOMTypeInfo<nsILocalFile>::GetIID(), 
+                                                     getter_AddRefs(localFile));
+    if (NS_FAILED(rv)) 
+        return rv;
+    
     char* aFilePath;
-    file->GetPath(&aFilePath);
+    GetPath(&aFilePath);
 
-    // Be paranoid and see if we got a null string for the path
-    if (aFilePath == nsnull)
-        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-
-    mWorkingPath.SetString(aFilePath);
+    rv = localFile->InitWithPath(aFilePath);
+    
     nsAllocator::Free(aFilePath);
+    
+    if (NS_FAILED(rv)) 
+        return rv;
+    
+    *file = localFile;
+    NS_ADDREF(*file);
     
     return NS_OK;
 }
@@ -292,6 +283,11 @@ nsLocalFile::InitWithPath(const char *filePath)
     return NS_OK;
 }
 
+NS_IMETHODIMP  
+nsLocalFile::Open(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
+{
+   return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP  
 nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
@@ -612,18 +608,8 @@ nsLocalFile::CopyMove(nsIFile *newParentDir, const char *newName, PRBool followS
     {
         // create a new target destination in the new parentDir;
         nsCOMPtr<nsILocalFile> target;
+        newParentDir->Clone(getter_AddRefs(target));
 
-        rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
-                                                nsnull, 
-                                                nsCOMTypeInfo<nsILocalFile>::GetIID(), 
-                                                getter_AddRefs(target));
-        if (NS_FAILED(rv)) 
-            return rv;
-
-        rv = target->InitWithFile(newParentDir);
-        if (NS_FAILED(rv)) 
-            return rv;
-        
         char *allocatedNewName;
         if (!newName)
         {
