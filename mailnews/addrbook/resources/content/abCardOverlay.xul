@@ -90,8 +90,10 @@ Rights Reserved.
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:input id="SendPlainText" type="checkbox"/>
-							<html:label for="SendPlainText">&SendPlainText.label;</html:label>
+							<box class="CardEditWidth">
+								<html:input id="SendPlainText" type="checkbox"/>
+								<html:label for="SendPlainText">&SendPlainText.label;</html:label>
+							</box>
 						</box>
 					</box>
 				</html:fieldset>
@@ -159,10 +161,12 @@ Rights Reserved.
 						<box align="horizontal">
 							<spring flex="100%"/>
 							<html:label for="HomeState">&HomeState.label;</html:label>
-							<html:input id="HomeState" type="text" class="CardEdit" style="min-width:1em; width:4em"/>
-							<spring style="width:1.5em"/>
-							<html:label for="HomeZipCode">&HomeZipCode.label;</html:label>
-							<html:input id="HomeZipCode" type="text" class="CardEdit" style="min-width:1em; width:5em"/>
+							<box class="CardEditWidth">
+								<html:input id="HomeState" type="text" class="CardEdit" style="min-width:1em; width:8em"/>
+								<spring flex="100%"/>
+								<html:label for="HomeZipCode">&HomeZipCode.label;</html:label>
+								<html:input id="HomeZipCode" type="text" class="CardEdit" style="min-width:1em; width:8em"/>
+							</box>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
@@ -212,10 +216,12 @@ Rights Reserved.
 						<box align="horizontal">
 							<spring flex="100%"/>
 							<html:label for="WorkState">&WorkState.label;</html:label>
-							<html:input id="WorkState" type="text" class="CardEdit" style="min-width:1em; width:4em"/>
-							<spring style="width:1.5em"/>
-							<html:label for="WorkZipCode">&WorkZipCode.label;</html:label>
-							<html:input id="WorkZipCode" type="text" class="CardEdit" style="min-width:1em; width:5em"/>
+							<box class="CardEditWidth">
+								<html:input id="WorkState" type="text" class="CardEdit" style="min-width:1em; width:8em"/>
+								<spring flex="100%"/>
+								<html:label for="WorkZipCode">&WorkZipCode.label;</html:label>
+								<html:input id="WorkZipCode" type="text" class="CardEdit" style="min-width:1em; width:8em"/>
+							</box>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>

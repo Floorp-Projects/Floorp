@@ -20,19 +20,19 @@ Rights Reserved.
  
 /* CardEdit styles - used in the Card Edit Dialog */
 
-box[class="CardEdit"] {
-	margin: 5px;
-	padding: 5px;
-	border: 2px groove white;
+box[class="CardEditWidth"] {
+	width        : 24.4em;
+	margin-left  : 0px;
+	margin-right : 8px;
 }
 
 input[class="CardEdit"] {
-	/*height       : 12px;*/
-	width        : 25em;
-	margin-left  : 0px;
-	margin-right : 0px;
-	/*margin-top   : 0px;
-	margin-bottom: 0px;*/
+	width         : 25em;
+	height        : 1.5em;
+	margin        : 0px;
+	padding       : 0px;
+	padding-right : 0px;
+	min-height    : 1.5em;
 }
 
 
