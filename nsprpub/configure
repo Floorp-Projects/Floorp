@@ -3239,7 +3239,7 @@ EOF
 
     fi
 
-    if echo "$OS_RELEASE" | egrep '^(B.10.30|B.11.00)' >/dev/null; then
+    if echo "$OS_RELEASE" | egrep '^(B.10.30|B.11.00|B.11.11)' >/dev/null; then
         cat >> confdefs.h <<\EOF
 #define HAVE_POINTER_LOCALTIME_R 1
 EOF
@@ -3298,7 +3298,7 @@ EOF
         DEFAULT_IMPL_STRATEGY=_PTH
     fi
 
-    if test "$OS_RELEASE" = "B.11.00"; then
+    if echo "$OS_RELEASE" | egrep '^(B.11.00|B.11.11)' >/dev/null; then
         cat >> confdefs.h <<\EOF
 #define HPUX10 1
 EOF
@@ -5482,7 +5482,7 @@ s%\[%\\&%g
 s%\]%\\&%g
 s%\$%$$%g
 EOF
-DEFS=`sed -f conftest.defs confdefs.h | tr '\012' ' '| tr '\015' ' '`
+DEFS=`sed -f conftest.defs confdefs.h | tr '\012' ' ' | tr '\015' ' '`
 rm -f conftest.defs
 
 
