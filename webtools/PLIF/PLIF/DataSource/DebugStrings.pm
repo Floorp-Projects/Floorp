@@ -44,75 +44,77 @@ sub getDefaultString {
     my($app, $protocol, $string) = @_;
     # this is protocol agnostic stuff :-)
     if ($string eq 'debug.dumpVars') {
-        return ('COSES', '1', <<eof);
-<!--
- !
- !  This example will dump every single string passed into it. For
- !  example, if you pass it a hash with one item 'data' containing two
- !  items 'a' and '(b)' with 'a' containing 'hello' and '(b)'
- !  containing an array of two values 'wonderful' and 'world', you
- !  would get as output the following (note that special characters
- !  '(' and ')' are automatically sanitised by COSES to '[' and ']'):
- !
- !     coses: last condition = 0
- !     coses: white space = 1
- !     data.a = hello
- !     data.[b].1 = wonderful
- !     data.[b].2 = world
- !
- !  This example uses almost all the features of COSES, and so is
- !  quite a useful example to study. (It doesn't use all of the values
- !  of <set>'s attributes, the escaping attributes of <text>, nor the
- !  special '.length' and '.coses: original key' hidden keys.) It's
- !  also a great help when debugging! You can use it at any point in a
- !  COSES document merely by nesting it, so you can, for example,
- !  study what is happening with a <set> statement. If you declare
- !  this example as having the name 'debug.dumpVars' then to embed it
- !  you would do:
- !
- !     <include href="debug.dumpVars"/>
- !
- !  This example is covered by the same license terms as COSES itself.
- !  Author: Ian Hickson
- !
- !-->
-<text xmlns="http://bugzilla.mozilla.org/coses"
-      xml:space="default"> <!-- trim whitespace -->
-  <with variable="prefix">
-    <if lvalue="((prefix))" condition="is" rvalue="scalar">
-      <text value="  (prefix)"/> = <text value="((prefix))"/><br/>
-    </if>
-    <if lvalue="((prefix))" condition="is not" rvalue="scalar">
-      <set variable="index" value="((prefix))" source="keys" order="case insensitive lexical">
-        <if lvalue="(index)" condition="=~" rvalue="'[\.\(\)]">
-          <!-- this can only be hit if COSES has been told to not 
-               sanitise keys with special characters -->
-          <text value="  (prefix).|(index)| is inaccessible"/><br/>
-        </if>
-        <else>
-          <set variable="prefix" value="(prefix).(index)">
-            <include href="debug.dumpVars"/>
-            <!-- if ((prefix)) is an array, then
-                    ((prefix).length) would give the length of the array
-                 if ((prefix)) is a hash element, then
-                    ((prefix).coses: original key) would give the
-                    original name of the hash key, even if it contained
-                    characters like '.' or '()'.
-             -->
-          </set>
-        </else>
-      </set>
-      <else>
-        <text value="  (prefix)"/><br/>
-      </else>
-    </if>
-  </with>
-  <without variable="prefix">
-    <set variable="prefix" value="()" source="keys" order="lexical">
-      <include href="debug.dumpVars"/>
-    </set>
-  </without>
-</text>
+        return ('TemplateToolkit', '1', <<eof);
+[%-
+
+  MACRO debugDumpVarsEscape(key) BLOCK;
+    IF key.search('[\\\\ \\\.\']');
+      '\'';
+       key.replace('\\\\', '\\\\')
+          .replace(' ',    '\\ ')
+          .replace('\\\.', '\\.')
+          .replace('\'',   '\\\'');
+      '\'';
+    ELSE;
+      key;
+    END;
+  END;
+
+  # prime the stack with the root variables
+  SET debugDumpVarsStack = [];
+  FOREACH debugDumpVarsKey = keys;
+   NEXT IF debugDumpVarsKey == '_DEBUG' or # TemplateToolkit builtins
+           debugDumpVarsKey == '_PARENT' or
+           debugDumpVarsKey == 'component' or
+           debugDumpVarsKey == 'dec' or
+           debugDumpVarsKey == 'debugDumpVarsEscape' or
+           debugDumpVarsKey == 'inc' or
+           debugDumpVarsKey == 'debugDumpVarsStack' or
+           debugDumpVarsKey == 'template';
+   SET debugDumpVarsKeyEscaped = debugDumpVarsEscape(debugDumpVarsKey);
+   debugDumpVarsStack.push([debugDumpVarsKeyEscaped, \$debugDumpVarsKey]);
+  END;
+
+  # go through the stack putting it into a hash
+  SET debugDumpVarsMaxLength = 0;
+  SET debugDumpVarsVariables = {};
+  WHILE debugDumpVarsStack.size;
+   SET frame = debugDumpVarsStack.pop;
+   SET key = frame.0;
+   SET variable = frame.1;
+   IF (variable.ref == 'HASH');
+     FOREACH subkey = variable.keys;
+       SET name = key _ '.' _ debugDumpVarsEscape(subkey);
+       debugDumpVarsStack.push([name, variable.\$subkey]);
+     END;
+   ELSIF (variable.ref == 'ARRAY');
+     SET index = variable.max;
+     FOREACH item = variable;
+       SET name = key _ '.' _ index;
+       debugDumpVarsStack.push([name, item]);
+       SET index = index + 1;
+     END;
+   ELSE;
+     debugDumpVarsVariables.\${key} = variable;
+     IF key.length > debugDumpVarsMaxLength;
+       debugDumpVarsMaxLength = key.length;
+     END;
+   END;
+  END;
+
+  MACRO debugDumpVarsPad BLOCK;
+    key | padright(debugDumpVarsMaxLength);
+  END;
+
+  SET debugDumpVarsMaxLengthIndent = debugDumpVarsMaxLength + 7;
+  FOREACH debugDumpVarsVariables;
+    '  ';
+    debugDumpVarsPad(key).replace(' ', '.');
+    '...: ';
+    value | indentlines(0, debugDumpVarsMaxLengthIndent); "\n";
+  END;
+
+-%]
 eof
     } else {
         return;
