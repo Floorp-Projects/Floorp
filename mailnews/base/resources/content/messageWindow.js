@@ -563,6 +563,7 @@ var MessageWindowController =
 			case "cmd_shiftDelete":
       case "button_print":
 			case "cmd_print":
+			case "cmd_printpreview":
 		  case "cmd_printSetup":
 			case "cmd_saveAsFile":
 			case "cmd_saveAsTemplate":
@@ -638,6 +639,7 @@ var MessageWindowController =
 			case "cmd_forwardAttachment":
 			case "cmd_editAsNew":
 			case "cmd_print":
+			case "cmd_printpreview":
       case "button_print":
 			case "cmd_saveAsFile":
 			case "cmd_saveAsTemplate":
@@ -767,10 +769,13 @@ var MessageWindowController =
 				MsgDeleteMessageFromMessageWindow(false, true);
 				break;
 		  case "cmd_printSetup":
-		    goPageSetup();
+		    NSPrintSetup();
 		    break;
 			case "cmd_print":
 				PrintEnginePrint();
+				break;
+			case "cmd_printpreview":
+				PrintEnginePrintPreview();
 				break;
 			case "cmd_saveAsFile":
 				MsgSaveAsFile();

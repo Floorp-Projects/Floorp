@@ -1364,11 +1364,8 @@ function GetPrintSettings()
   return gPrintSettings;
 }
 
-function PrintEnginePrint()
+function PrintEnginePrintInternal(messageList, numMessages, doPrintPreview, msgType)
 {
-    var messageList = GetSelectedMessages();
-    var numMessages = messageList.length;
-
     if (numMessages == 0) {
         dump("PrintEnginePrint(): No messages selected.\n");
         return false;
@@ -1377,12 +1374,24 @@ function PrintEnginePrint()
     if (gPrintSettings == null) {
       gPrintSettings = GetPrintSettings();
     }
-
     printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
                                           "",
                                           "chrome,dialog=no,all,centerscreen",
-                                          numMessages, messageList, statusFeedback, gPrintSettings);
+                                          numMessages, messageList, statusFeedback, gPrintSettings, doPrintPreview, msgType, window);
     return true;
+
+}
+
+function PrintEnginePrint()
+{
+    var messageList = GetSelectedMessages();
+    return PrintEnginePrintInternal(messageList, messageList.length, false, Components.interfaces.nsIMsgPrintEngine.MNAB_PRINT_MSG);
+}
+
+function PrintEnginePrintPreview()
+{
+    var messageList = GetSelectedMessages();
+    return PrintEnginePrintInternal(messageList, 1, true, Components.interfaces.nsIMsgPrintEngine.MNAB_PRINTPREVIEW_MSG);
 }
 
 function IsMailFolderSelected()

@@ -247,6 +247,7 @@ var DefaultController =
 			case "cmd_openMessage":
       case "button_print":
 			case "cmd_print":
+			case "cmd_printpreview":
 			case "cmd_printSetup":
 			case "cmd_saveAsFile":
 			case "cmd_saveAsTemplate":
@@ -364,6 +365,13 @@ var DefaultController =
              gDBView.getCommandStatus(nsMsgViewCommandType.cmdRequiringMsgBody, enabled, checkStatus);
               return enabled.value;
           }
+        }
+        return false;
+      case "cmd_printpreview":
+	      if ( GetNumSelectedMessages() == 1 && gDBView)
+        {
+           gDBView.getCommandStatus(nsMsgViewCommandType.cmdRequiringMsgBody, enabled, checkStatus);
+           return enabled.value;
         }
         return false;
       case "cmd_printSetup":
@@ -576,10 +584,13 @@ var DefaultController =
                 MsgOpenSelectedMessages();
 				return;
 			case "cmd_printSetup":
-			  goPageSetup();
+			  NSPrintSetup();
 			  return;
 			case "cmd_print":
 				PrintEnginePrint();
+				return;
+			case "cmd_printpreview":
+				PrintEnginePrintPreview();
 				return;
 			case "cmd_saveAsFile":
 				MsgSaveAsFile();

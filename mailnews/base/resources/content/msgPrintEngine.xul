@@ -30,14 +30,22 @@ Rights Reserved.
         xmlns:nc="http://home.netscape.com/NC-rdf#"
         onload="OnLoadPrintEngine()"
         onunload="OnUnloadPrintEngine()"
-        width="500"
+        width="750"
         height="500"
+        screenX="10" screenY="10"
+        persist="width height screenX screenY sizemode"
         windowtype="mail:printEngine">
 
-<!-- XXX: utilityOverlay.xul uses strres.js - once it is converted, this should be  removed-->
-<script src="chrome://global/content/strres.js"/>
-<script src="chrome://messenger/content/msgPrintEngine.js"/>
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  </stringbundleset>
+
+  <!-- XXX: utilityOverlay.xul uses strres.js - once it is converted, this should be  removed-->
+  <script src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
+  <script src="chrome://messenger/content/msgPrintEngine.js"/>
 
   <!-- The main display frame -->
-  <iframe id="printengine" style="height: 0px" flex="1" name="printengine" type="content" src="about:blank" />
+  <browser id="content" type="content-primary" name="content" src="about:blank" flex="1" disablehistory="true" disablesecurity="true"/>
 </window>

@@ -45,6 +45,7 @@ Rights Reserved.
 <script src="chrome://messenger/content/mail-offline.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
 
 <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
@@ -92,6 +93,7 @@ Rights Reserved.
     <command id="cmd_openMessage" oncommand="goDoCommand('cmd_openMessage')" disabled="true"/>
     <command id="cmd_printSetup" oncommand="goDoCommand('cmd_printSetup')" disabled="true"/>
     <command id="cmd_print" oncommand="goDoCommand('cmd_print')" disabled="true"/>
+    <command id="cmd_printpreview" oncommand="goDoCommand('cmd_printpreview')" disabled="true"/>
     <command id="cmd_saveAsFile" oncommand="goDoCommand('cmd_saveAsFile')" disabled="true"/>
     <command id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')" disabled="true"/>    
     <command id="cmd_getNextNMessages" oncommand="goDoCommand('cmd_getNextNMessages')" disabled="true"/>
@@ -105,7 +107,7 @@ Rights Reserved.
   <command id="cmd_quit"/>
   <!--The cmd_createFilterFromPopup is used to notify the email context popup -->
   <command id="cmd_createFilterFromPopup"/>
-  <!-- <command id="cmd_pageSetup"/>-->
+  <command id="cmd_pageSetup"/>
   <command id="cmd_search" oncommand="goDoCommand('cmd_search')" disabled="true"/>
 </commandset>
 <commandset id="mailViewMenuItems"
@@ -226,6 +228,7 @@ Rights Reserved.
   <command id="button_mark"/>
   <command id="button_getNewMessages"/>
   <command id="button_print"/>
+  <command id="button_printpreview"/>
   <command id="button_next"/>
   <command id="button_file"/>
   <command id="cmd_delete"/>
@@ -567,6 +570,9 @@ Rights Reserved.
         label="&contextPrint.label;"
         accesskey="&contextPrint.accesskey;"
         oncommand="PrintEnginePrint();"/>
+    <menuitem id="threadPaneContext-printpreview"
+        label="&contextPrintPreview.label;"
+        oncommand="PrintEnginePrintPreview();"/>
     <menuitem id="threadPaneContext-delete"
         command="cmd_delete"/>
   </popup>
@@ -1001,8 +1007,9 @@ Rights Reserved.
       </menu>
 
       <menuseparator/>
-      <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
+      <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>
       <menuitem id="printMenuItem" key="key_print" label="&printCmd.label;" accesskey="&printCmd.accesskey;" observes="cmd_print"/>
+      <menuitem id="printPreviewMenuItem" label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" observes="cmd_printpreview"/>
     </menupopup>
   </menu>
 

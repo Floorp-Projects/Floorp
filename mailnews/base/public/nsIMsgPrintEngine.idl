@@ -40,14 +40,35 @@
 
 interface nsIDOMWindowInternal;
 interface nsIPrintSettings;
+interface nsIObserver;
+interface nsIWebBrowserPrint;
 
 [scriptable, uuid(91FD6B10-E0BC-11d3-8F97-000064657374)]
 interface nsIMsgPrintEngine : nsISupports {
+    /**
+     * Print/PrintPreview Msg Type
+     */
+    const short MNAB_START                 = 0;
+    const short MNAB_PRINT_MSG             = 0;
+    const short MNAB_PRINTPREVIEW_MSG      = 1;
+    const short MNAB_PRINT_AB_CARD         = 2;
+    const short MNAB_PRINTPREVIEW_AB_CARD  = 3;
+    const short MNAB_PRINT_ADDRBOOK        = 4;
+    const short MNAB_PRINTPREVIEW_ADDRBOOK = 5;
+    const short MNAB_END                   = 6;
+
     void setWindow(in nsIDOMWindowInternal ptr);
+    void setParentWindow(in nsIDOMWindowInternal ptr);
     void showWindow(in boolean aShow);
     void setStatusFeedback(in nsIMsgStatusFeedback feedback);
     void setPrintURICount(in PRInt32 aCount);
     void addPrintURI(in wstring aURI);
     void startPrintOperation(in nsIPrintSettings aPS);
+    void setStartupPPObserver(in nsIObserver startupPPObs);
+    void setMsgType(in long aMsgType);
+
+    attribute boolean doPrintPreview;
+    readonly attribute nsIWebBrowserPrint webBrowserPrint;
+
 };
 

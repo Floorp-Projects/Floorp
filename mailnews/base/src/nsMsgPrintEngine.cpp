@@ -46,6 +46,13 @@
 #include "nsIWebShellWindow.h"
 #include "nsIWidget.h"
 #include "nsIWebShellWindow.h"
+#include "nsIPref.h"
+
+// For PLEvents
+#include "plevent.h"
+#include "nsIEventQueue.h"
+#include "nsIEventQueueService.h"
+#include "nsIServiceManager.h"
 
 // Interfaces Needed
 #include "nsIBaseWindow.h"
@@ -54,12 +61,18 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIWebNavigation.h"
 #include "nsIChannel.h"
+#include "nsIContentViewerFile.h"
+#include "nsIPrintingPromptService.h"
+
+const char* kPrintingPromptService = "@mozilla.org/embedcomp/printingprompt-service;1";
 
 /////////////////////////////////////////////////////////////////////////
 // nsMsgPrintEngine implementation
 /////////////////////////////////////////////////////////////////////////
 
-nsMsgPrintEngine::nsMsgPrintEngine()
+nsMsgPrintEngine::nsMsgPrintEngine() :
+  mIsDoingPrintPreview(PR_FALSE),
+  mMsgInx(nsIMsgPrintEngine::MNAB_START)
 {
   mCurrentlyPrintingURI = -1;
   NS_INIT_ISUPPORTS();
@@ -71,9 +84,10 @@ nsMsgPrintEngine::~nsMsgPrintEngine()
 }
 
 // Implement AddRef and Release
-NS_IMPL_ISUPPORTS3(nsMsgPrintEngine,
+NS_IMPL_ISUPPORTS4(nsMsgPrintEngine,
                          nsIMsgPrintEngine, 
                          nsIWebProgressListener, 
+                         nsIObserver,
                          nsISupportsWeakReference);
 
 // nsIWebProgressListener implementation
@@ -109,6 +123,13 @@ nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
         if (domWindow.get() != mMsgDOMWin.get()) {
           return NS_OK;
         }
+      }
+      nsCOMPtr<nsIWebProgressListener> wpl(do_QueryInterface(mPrintPromptService));
+      if (wpl) {
+        wpl->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP|nsIWebProgressListener::STATE_IS_DOCUMENT, nsnull);
+        mPrintProgressListener = nsnull;
+        mPrintProgress         = nsnull;
+        mPrintProgressParams   = nsnull;
       }
 
       PRBool isPrintingCancelled = PR_FALSE;
@@ -152,48 +173,15 @@ nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
             }
           }
 
-          mDocShell->GetContentViewer(getter_AddRefs(mContentViewer));  
-          if (mContentViewer) 
+          // If something bad happens here (menaing we can fire the PLEvent, highly unlikely)
+          // we will still ask the msg to print, but if the user "cancels" out of the 
+          // print dialog the hidden print window will not be "closed"
+          if (!FirePrintEvent()) 
           {
-            mWebBrowserPrint = do_QueryInterface(mContentViewer);
-            if (mWebBrowserPrint) 
-            {
-              if (!mPrintSettings) 
-              {
-                mWebBrowserPrint->GetGlobalPrintSettings(getter_AddRefs(mPrintSettings));
-              }
-              mPrintSettings->SetPrintSilent(mCurrentlyPrintingURI != 0);
-              rv = mWebBrowserPrint->Print(mPrintSettings, (nsIWebProgressListener *)this);
-
-              if (NS_FAILED(rv))
-              {
-                mWebBrowserPrint = nsnull;
-                mContentViewer = nsnull;
-                PRBool isPrintingCancelled = PR_FALSE;
-                if (mPrintSettings)
-                {
-                  mPrintSettings->GetIsCancelled(&isPrintingCancelled);
-                }
-                if (!isPrintingCancelled) 
-                {
-                  StartNextPrintOperation();
-                } 
-                else 
-                {
-                  mWindow->Close();
-                }
-              }
-              else
-              {
-                // Tell the user we started printing...
-                msg = GetString(NS_LITERAL_STRING("PrintingMessage").get());
-                SetStatusMessage( msg );
-                CRTFREEIF(msg)
-              }
-            }
+            PrintMsgWindow();
           }
         } else {
-          StartNextPrintOperation();
+          FireStartNextEvent();
           rv = NS_OK;
         }
       } 
@@ -275,7 +263,7 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindowInternal *aWin)
   NS_ENSURE_TRUE(rootAsNode, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocShellTreeItem> childItem;
-  rootAsNode->FindChildWithName(NS_LITERAL_STRING("printengine").get(), PR_TRUE, PR_FALSE, nsnull,
+  rootAsNode->FindChildWithName(NS_LITERAL_STRING("content").get(), PR_TRUE, PR_FALSE, nsnull,
     getter_AddRefs(childItem));
 
   mDocShell = do_QueryInterface(childItem);
@@ -285,6 +273,14 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindowInternal *aWin)
 
   return NS_OK;
 }
+
+/* void setParentWindow (in nsIDOMWindowInternal ptr); */
+NS_IMETHODIMP nsMsgPrintEngine::SetParentWindow(nsIDOMWindowInternal *ptr)
+{
+  mParentWindow = ptr;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsMsgPrintEngine::ShowWindow(PRBool aShow)
@@ -358,6 +354,89 @@ nsMsgPrintEngine::StartPrintOperation(nsIPrintSettings* aPS)
   return StartNextPrintOperation();
 }
 
+//----------------------------------------------------------------------
+// Set up to use the "pluggable" Print Progress Dialog
+nsresult
+nsMsgPrintEngine::ShowProgressDialog(PRBool aIsForPrinting, PRBool& aDoNotify)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  // default to not notifying, that if something here goes wrong
+  // or we aren't going to show the progress dialog we can straight into 
+  // reflowing the doc for printing.
+  aDoNotify = PR_FALSE;
+
+  // Assume we can't do progress and then see if we can
+  PRBool showProgressDialog = PR_FALSE;
+
+  // if it is already being shown then don't bother to find out if it should be
+  // so skip this and leave mShowProgressDialog set to FALSE
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv)) 
+  {
+    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+    if (NS_SUCCEEDED(rv)) 
+    {
+      prefBranch->GetBoolPref("print.show_print_progress", &showProgressDialog);
+    }
+  }
+
+  // Turning off the showing of Print Progress in Prefs overrides
+  // whether the calling PS desire to have it on or off, so only check PS if 
+  // prefs says it's ok to be on.
+  if (showProgressDialog) 
+  {
+    mPrintSettings->GetShowPrintProgress(&showProgressDialog);
+  }
+
+  // Now open the service to get the progress dialog
+  // If we don't get a service, that's ok, then just don't show progress
+  if (showProgressDialog) {
+    if (!mPrintPromptService) 
+    {
+      mPrintPromptService = do_GetService(kPrintingPromptService);
+    }
+    if (mPrintPromptService) 
+    {
+      nsCOMPtr<nsIDOMWindow> domWin = mParentWindow;
+      if (!domWin) 
+      {
+        domWin = mWindow;
+      }
+
+      rv = mPrintPromptService->ShowProgress(domWin, mWebBrowserPrint, mPrintSettings, this, aIsForPrinting,
+                                            getter_AddRefs(mPrintProgressListener), 
+                                            getter_AddRefs(mPrintProgressParams), 
+                                            &aDoNotify);
+      if (NS_SUCCEEDED(rv)) {
+
+        showProgressDialog = mPrintProgressListener != nsnull && mPrintProgressParams != nsnull;
+
+        if (showProgressDialog) 
+        {
+          nsIWebProgressListener* wpl = NS_STATIC_CAST(nsIWebProgressListener*, mPrintProgressListener.get());
+          NS_ASSERTION(wpl, "nsIWebProgressListener is NULL!");
+          NS_ADDREF(wpl);
+          PRUnichar *msg = nsnull;
+          if (mIsDoingPrintPreview) {
+            GetString(NS_LITERAL_STRING("LoadingMailMsgForPrintPreview").get());
+          } else {
+            GetString(NS_LITERAL_STRING("LoadingMailMsgForPrint").get());
+          }
+          if (msg) 
+          {
+            mPrintProgressParams->SetDocTitle(msg);
+            nsCRT:free(msg);
+          }
+        }
+      }
+    }
+  }
+  return rv;
+}
+
+
 NS_IMETHODIMP
 nsMsgPrintEngine::StartNextPrintOperation()
 {
@@ -387,7 +466,7 @@ nsMsgPrintEngine::StartNextPrintOperation()
     return StartNextPrintOperation();
 
   nsString *uri = mURIArray.StringAt(mCurrentlyPrintingURI);
-  rv = FireThatLoadOperation(uri);
+  rv = FireThatLoadOperationStartup(uri);
   if (NS_FAILED(rv))
     return StartNextPrintOperation();
   else
@@ -406,6 +485,33 @@ nsMsgPrintEngine::SetStatusFeedback(nsIMsgStatusFeedback *aFeedback)
 
 #define ADDBOOK_URL_PREFIX     "addbook:"
 #define ADDBOOK_URL_PREFIX_LEN 8
+
+NS_IMETHODIMP
+nsMsgPrintEngine::FireThatLoadOperationStartup(nsString *uri)
+{
+  if (uri) 
+  {
+    mLoadURI = *uri;
+  } 
+  else 
+  {
+    mLoadURI.SetLength(0);
+  }
+
+  PRBool   notify = PR_FALSE;
+  nsresult rv     = NS_ERROR_FAILURE;
+  // Don't show dialog if we are out of URLs
+  //if ( mCurrentlyPrintingURI < mURIArray.Count() && !mIsDoingPrintPreview)
+  if ( mCurrentlyPrintingURI < mURIArray.Count())
+  {
+    rv = ShowProgressDialog(!mIsDoingPrintPreview, notify);
+  }
+  if (NS_FAILED(rv) || !notify) 
+  {
+    return FireThatLoadOperation(uri);
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsMsgPrintEngine::FireThatLoadOperation(nsString *uri)
@@ -483,7 +589,8 @@ nsMsgPrintEngine::SetupObserver()
   {
     nsCOMPtr<nsIWebProgress> progress(do_GetInterface(mDocShell));
     NS_ASSERTION(progress, "we were expecting a nsIWebProgress");
-    if (progress) {
+    if (progress) 
+    {
       (void) progress->AddProgressListener((nsIWebProgressListener *)this,
                                         nsIWebProgress::NOTIFY_STATE_DOCUMENT);
     }
@@ -532,4 +639,227 @@ nsMsgPrintEngine::GetString(const PRUnichar *aStringName)
     return ptrv;
   else
     return nsCRT::strdup(aStringName);
+}
+
+//-----------------------------------------------------------
+void
+nsMsgPrintEngine::PrintMsgWindow()
+{
+  const char* kMsgKeys[] = {"PrintingMessage",  "PrintPreviewMessage",
+                            "PrintingCard",     "PrintPreviewCard",
+                            "PrintingAddrBook", "PrintPreviewAddrBook"};
+
+  mDocShell->GetContentViewer(getter_AddRefs(mContentViewer));  
+  if (mContentViewer) 
+  {
+    mWebBrowserPrint = do_QueryInterface(mContentViewer);
+    if (mWebBrowserPrint) 
+    {
+      if (!mPrintSettings) 
+      {
+        mWebBrowserPrint->GetGlobalPrintSettings(getter_AddRefs(mPrintSettings));
+      }
+      nsresult rv;
+      if (mIsDoingPrintPreview) 
+      {
+        if (mStartupPPObs) {
+          mStartupPPObs->Observe(nsnull, nsnull, nsnull);
+        }
+      } 
+      else 
+      {
+        mPrintSettings->SetPrintSilent(mCurrentlyPrintingURI != 0);
+        nsCOMPtr<nsIContentViewerFile> contentViewerFile(do_QueryInterface(mWebBrowserPrint));
+        if (contentViewerFile && mParentWindow) 
+        {
+          rv = contentViewerFile->PrintWithParent(mParentWindow, mPrintSettings, (nsIWebProgressListener *)this);
+        } 
+        else 
+        {
+          rv = mWebBrowserPrint->Print(mPrintSettings, (nsIWebProgressListener *)this);
+        }
+      }
+
+      if (NS_FAILED(rv))
+      {
+        mWebBrowserPrint = nsnull;
+        mContentViewer = nsnull;
+        PRBool isPrintingCancelled = PR_FALSE;
+        if (mPrintSettings)
+        {
+          mPrintSettings->GetIsCancelled(&isPrintingCancelled);
+        }
+        if (!isPrintingCancelled) 
+        {
+          StartNextPrintOperation();
+        } 
+        else 
+        {
+          mWindow->Close();
+        }
+      }
+      else
+      {
+        // Tell the user we started printing...
+        PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2(kMsgKeys[mMsgInx]).get());
+        SetStatusMessage( msg );
+        CRTFREEIF(msg)
+      }
+    }
+  }
+}
+
+//---------------------------------------------------------------
+//-- PLEvent Notification
+//---------------------------------------------------------------
+//-----------------------------------------------------------
+PRBool
+FireEvent(nsMsgPrintEngine* aMPE, PLHandleEventProc handler, PLDestroyEventProc destructor)
+{
+  static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+
+  nsCOMPtr<nsIEventQueueService> event_service = do_GetService(kEventQueueServiceCID);
+
+  if (!event_service) 
+  {
+    NS_WARNING("Failed to get event queue service");
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIEventQueue> event_queue;
+
+  event_service->GetThreadEventQueue(NS_CURRENT_THREAD,
+                                     getter_AddRefs(event_queue));
+
+  if (!event_queue) 
+  {
+    NS_WARNING("Failed to get event queue from service");
+    return PR_FALSE;
+  }
+
+  PLEvent *event = new PLEvent;
+
+  if (!event) 
+  {
+    NS_WARNING("Out of memory?");
+    return PR_FALSE;
+  }
+
+  PL_InitEvent(event, aMPE, handler, destructor);
+
+  // The event owns the msgPrintEngine pointer now.
+  NS_ADDREF(aMPE);
+
+  event_queue->PostEvent(event);
+  return PR_TRUE;
+}
+
+void PR_CALLBACK HandlePLEventPrintMsgWindow(PLEvent* aEvent)
+{
+  nsMsgPrintEngine *msgPrintEngine = (nsMsgPrintEngine*)PL_GetEventOwner(aEvent);
+
+  NS_ASSERTION(msgPrintEngine, "The event owner is null.");
+  if (msgPrintEngine) 
+  {
+    msgPrintEngine->PrintMsgWindow();
+  }
+}
+
+//------------------------------------------------------------------------
+void PR_CALLBACK DestroyPLEventPrintMsgWindow(PLEvent* aEvent)
+{
+  nsMsgPrintEngine *msgPrintEngine = (nsMsgPrintEngine*)PL_GetEventOwner(aEvent);
+  NS_IF_RELEASE(msgPrintEngine);
+
+  delete aEvent;
+}
+
+//-----------------------------------------------------------
+PRBool
+nsMsgPrintEngine::FirePrintEvent()
+{
+  return FireEvent(this, (PLHandleEventProc)::HandlePLEventPrintMsgWindow, 
+                         (PLDestroyEventProc)::DestroyPLEventPrintMsgWindow);
+}
+
+void PR_CALLBACK HandlePLEventStartNext(PLEvent* aEvent)
+{
+  nsMsgPrintEngine *msgPrintEngine = (nsMsgPrintEngine*)PL_GetEventOwner(aEvent);
+
+  NS_ASSERTION(msgPrintEngine, "The event owner is null.");
+  if (msgPrintEngine) 
+  {
+    msgPrintEngine->StartNextPrintOperation();
+  }
+}
+
+//------------------------------------------------------------------------
+void PR_CALLBACK DestroyPLEventStartNext(PLEvent* aEvent)
+{
+  nsMsgPrintEngine *msgPrintEngine = (nsMsgPrintEngine*)PL_GetEventOwner(aEvent);
+  NS_IF_RELEASE(msgPrintEngine);
+
+  delete aEvent;
+}
+
+//-----------------------------------------------------------
+PRBool
+nsMsgPrintEngine::FireStartNextEvent()
+{
+  return FireEvent(this, (PLHandleEventProc)::HandlePLEventStartNext, 
+                         (PLDestroyEventProc)::DestroyPLEventStartNext);
+}
+
+/* void setStartupPPObserver (in nsIObserver startupPPObs); */
+NS_IMETHODIMP nsMsgPrintEngine::SetStartupPPObserver(nsIObserver *startupPPObs)
+{
+  mStartupPPObs = startupPPObs;
+  return NS_OK;
+}
+
+/* attribute boolean doPrintPreview; */
+NS_IMETHODIMP nsMsgPrintEngine::GetDoPrintPreview(PRBool *aDoPrintPreview)
+{
+  NS_ENSURE_ARG_POINTER(aDoPrintPreview);
+  *aDoPrintPreview = mIsDoingPrintPreview;
+  return NS_OK;
+}
+NS_IMETHODIMP nsMsgPrintEngine::SetDoPrintPreview(PRBool aDoPrintPreview)
+{
+  mIsDoingPrintPreview = aDoPrintPreview;
+  return NS_OK;
+}
+
+/* readonly attribute nsIWebBrowserPrint webBrowserPrint; */
+NS_IMETHODIMP nsMsgPrintEngine::GetWebBrowserPrint(nsIWebBrowserPrint * *aWebBrowserPrint)
+{
+  NS_ENSURE_ARG_POINTER(aWebBrowserPrint);
+  *aWebBrowserPrint = nsnull;
+
+  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
+  mDocShell->GetContentViewer(getter_AddRefs(mContentViewer));  
+  NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
+  mWebBrowserPrint = do_QueryInterface(mContentViewer);
+  NS_ENSURE_TRUE(mWebBrowserPrint, NS_ERROR_FAILURE);
+
+  NS_ADDREF(*aWebBrowserPrint = mWebBrowserPrint);
+
+  return NS_OK;
+}
+
+/* void setMsgType (in long aMsgType); */
+NS_IMETHODIMP nsMsgPrintEngine::SetMsgType(PRInt32 aMsgType)
+{
+  if (mMsgInx >= nsIMsgPrintEngine::MNAB_START && mMsgInx < nsIMsgPrintEngine::MNAB_END) 
+  {
+    mMsgInx = aMsgType;
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+/*=============== nsIObserver Interface ======================*/
+NS_IMETHODIMP nsMsgPrintEngine::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
+{
+  return FireThatLoadOperation(&mLoadURI);
 }
