@@ -62,8 +62,9 @@ Contributor(s): ______________________________________. -->
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     width="200" height="200" align="vertical" style="border: thin solid black; width:100%;height:100%"> 
   <box align="horizontal">
-    <spring flex="100%"/>
+    <spring flex="50%"/>
     <titledbutton class="borderless" value="close" onclick="window.close();" />
+    <spring flex="50%"/>
   </box>
   <html:script src="chrome://bookmarks/content/bookmark-popup.js" />
   <tree id="bmpopuptree" context="contextual"
@@ -188,7 +189,7 @@ Contributor(s): ______________________________________. -->
 		    </menupopup> 
 		  </menu> 
 		  <menuseparator /> 
-		  <menuitem value="&selectAllCmd.label;" oncommand="BrowserReload();"/> 
+		  <menuitem value="&selectAllCmd.label;" oncommand="BrowserSelectAll();"/> 
 		  <menuseparator /> 
 		  <menuitem value="&preferences.label;" oncommand="DoPreferences();"/>
 	  </menupopup>
