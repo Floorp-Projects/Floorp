@@ -1767,6 +1767,14 @@ if ($next_bug) {
         # next.html.tmpl includes edit.html.tmpl, and therefore we
         # need $bug defined in $vars.
         $vars->{'bug'} = $bug;
+
+        # And we need to determine if Patch Viewer is installed, for
+        # Diff link (NB: Duplicate code with show_bug.cgi.)
+        eval {
+            require PatchReader;
+            $vars->{'patchviewerinstalled'} = 1;
+        };
+
         $template->process("bug/process/next.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
 
