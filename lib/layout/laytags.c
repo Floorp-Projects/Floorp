@@ -4449,7 +4449,7 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 				}
 				else
 				{
-					lo_SetSoftLineBreakState(context,state,FALSE,1);
+					lo_SetLineBreakState(context,state,FALSE,LO_LINEFEED_BREAK_HARD, 1, FALSE);
 				}
 				state->x = state->left_margin;
 			}
