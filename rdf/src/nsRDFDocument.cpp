@@ -1140,10 +1140,11 @@ nsRDFDocument::CreateChildren(nsIRDFContent* element)
 
         NS_RELEASE(assertions);
         NS_RELEASE(property);
-
-        if (NS_FAILED(rv))
-            break;
     }
+
+    if (rv = NS_ERROR_RDF_CURSOR_EMPTY)
+        // This is a normal return code from nsIRDFCursor::Advance()
+        rv = NS_OK;
 
 done:
     NS_IF_RELEASE(resource);

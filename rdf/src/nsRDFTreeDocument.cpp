@@ -402,6 +402,10 @@ RDFTreeDocumentImpl::AddColumnsFromContainer(nsIContent* parent,
             break;
     }
 
+    if (rv == NS_ERROR_RDF_CURSOR_EMPTY)
+        // This is a "normal" return code from nsIRDFCursor::Advance().
+        rv = NS_OK;
+
 done:
     NS_IF_RELEASE(cursor);
     NS_IF_RELEASE(NC_Title);
@@ -472,6 +476,10 @@ RDFTreeDocumentImpl::AddColumnsFromMultiAttributes(nsIContent* parent,
         if (NS_FAILED(rv))
             break;
     }
+
+    if (rv == NS_ERROR_RDF_CURSOR_EMPTY)
+        // This is a reasonable return code from nsIRDFCursor::Advance()
+        rv = NS_OK;
 
     // XXX Now search for an "order" property and apply it to the
     // above to sort them...

@@ -149,11 +149,16 @@ MultiCursor::AdvanceImpl(void)
         }
 
         do {
-            // If we can't advance the current cursor, then it's
-            // depleted. Break out of this loop and advance to the
-            // next cursor.
-            if (NS_FAILED(rv = mCurrentCursor->Advance()))
+            if (NS_FAILED(rv = mCurrentCursor->Advance())) {
+                // If we can't advance the current cursor, then either
+                // a catastrophic error occurred, or it's depleted. If
+                // it's just depleted break out of this loop and
+                // advance to the next cursor.
+                if (rv != NS_ERROR_RDF_CURSOR_EMPTY)
+                    return rv;
+
                 break;
+            }
 
             // Even if the current cursor has more elements, we still
             // need to check that the current element isn't masked by
@@ -424,6 +429,7 @@ nsresult
 SimpleDBArcsOutCursorImpl::IsCurrentNegatedBy(nsIRDFDataSource* ds0,
                                               PRBool* result)
 {
+    *result = PR_FALSE; // XXX always?
     return NS_OK;
 }
 

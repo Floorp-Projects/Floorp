@@ -307,7 +307,7 @@ PropertyCursorImpl::PropertyCursorImpl(PropertyListElement* first,
                                        nsIRDFResource* predicate,
                                        PRBool tv)
     : mFirst(first),
-      mNext(first),
+      mNext(nsnull),
       mDataSource(ds),
       mSubject(subject),
       mPredicate(predicate),
@@ -334,20 +334,26 @@ PropertyCursorImpl::Advance(void)
 {
     if (! mNext) {
         mNext = mFirst;
+        
+        do {
+            if (mNext->GetTruthValue() == mTruthValue)
+                return NS_OK;
+
+            mNext = mNext->GetNext();
+        } while (mNext != mFirst);
     }
     else {
         mNext = mNext->GetNext();
+
+        while (mNext != mFirst) {
+            if (mNext->GetTruthValue() == mTruthValue)
+                return NS_OK;
+
+            mNext = mNext->GetNext();
+        }
     }
 
-    while (1) {
-        if (mNext == mFirst)
-            return NS_ERROR_UNEXPECTED;
-
-        if (mNext->GetTruthValue() == mTruthValue)
-            return NS_OK;
-
-        mNext = mNext->GetNext();
-    }
+    return NS_ERROR_RDF_CURSOR_EMPTY;
 }
 
 
@@ -464,11 +470,11 @@ NS_IMETHODIMP
 ArcsOutCursorImpl::Advance(void)
 {
     if (! mProperties || ! mProperties->Count())
-        return NS_ERROR_UNEXPECTED;
+        return NS_ERROR_RDF_CURSOR_EMPTY;
 
     PRInt32 index = mProperties->Count() - 1;
     if (index < 0)
-        return NS_ERROR_UNEXPECTED;
+        return NS_ERROR_RDF_CURSOR_EMPTY;
 
     NS_IF_RELEASE(mCurrent);
 
