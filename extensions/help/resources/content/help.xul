@@ -22,8 +22,8 @@
 <window id="help"
    windowtype="mozilla:help"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   width="640"
-   height="550"
+   width="480"
+   height="360"
    persist="width height screenX screenY"
    onload="init();" >
 
