@@ -51,6 +51,10 @@
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIHTMLContentContainer.h"
+#include "nsIPresShell.h"
+#include "nsIStyleSet.h"
+#include "nsISupportsArray.h"
+#include "nsICSSLoader.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
@@ -192,6 +196,9 @@ protected:
                               nsAutoString aProvider,
                               nsIRDFContainer *aContainer,
                               nsIRDFDataSource *aDataSource);
+
+    static void RemoveStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument);
+
 private:
     NS_IMETHOD ReallyRemoveOverlayFromDataSource(const PRUnichar *aDocURI, char *aOverlayURI);
     NS_IMETHOD LoadDataSource(const nsCAutoString &aFileName, nsIRDFDataSource **aResult,
@@ -820,9 +827,16 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
     return NS_OK;
 
   nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
+  nsCOMPtr<nsICSSLoader> cssLoader;
+  container->GetCSSLoader(*getter_AddRefs(cssLoader));
 
-  // Iterate over the style sheets.
+  // Build an array of nsIURIs of style sheets we need to load.
+  nsCOMPtr<nsISupportsArray> urls;
+  NS_NewISupportsArray(getter_AddRefs(urls));
+
   PRInt32 count = document->GetNumberOfStyleSheets();
+  
+  // Iterate over the style sheets.
   for (PRInt32 i = 0; i < count; i++) {
     // Get the style sheet
     nsCOMPtr<nsIStyleSheet> styleSheet = getter_AddRefs(document->GetStyleSheetAt(i));
@@ -839,12 +853,28 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
     nsCOMPtr<nsIStyleSheet> inl = do_QueryInterface(inlineSheet);
     if ((attr.get() != styleSheet.get()) &&
       (inl.get() != styleSheet.get())) {
-      // Reload the style sheet asynchronously.
+      // Get the URI and add it to our array.
+      nsCOMPtr<nsIURI> uri;
+      styleSheet->GetURL(*getter_AddRefs(uri));
+      urls->AppendElement(uri);
+      
+      // Remove the sheet. 
+      count--;
+      i--;
+      RemoveStyleSheet(styleSheet, document);
     }
   }
   
-  // Remove all of our sheets.
-  
+  // Iterate over the URL array and kick off an asynchronous load of the
+  // sheets for our doc.
+  PRUint32 urlCount;
+  urls->Count(&urlCount);
+  for (PRUint32 j = 0; j < urlCount; j++) {
+    nsCOMPtr<nsISupports> supports = getter_AddRefs(urls->ElementAt(j));
+    nsCOMPtr<nsIURL> url = do_QueryInterface(supports);
+    
+  }
+
   // Get our frames object
 
   // Walk the frames
@@ -855,6 +885,19 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
   return NS_OK;
 }
 
+void nsChromeRegistry::RemoveStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
+{
+  PRInt32 count = aDocument->GetNumberOfShells();
+  for (PRInt32 i = 0; i < count; i++) {
+    nsCOMPtr<nsIPresShell> shell = getter_AddRefs(aDocument->GetShellAt(i));
+
+    nsCOMPtr<nsIStyleSet> set;
+    shell->GetStyleSet(getter_AddRefs(set));
+    if (set) {
+      set->RemoveDocStyleSheet(aSheet);
+    }
+  }
+}
 
 NS_IMETHODIMP nsChromeRegistry::ApplyTheme(const PRUnichar *themeFileName)
 {
