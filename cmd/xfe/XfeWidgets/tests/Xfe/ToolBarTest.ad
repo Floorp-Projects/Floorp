@@ -33,10 +33,11 @@ ToolBarTest*foreground:	Black
 ToolBarTest*ToolBar.leftAttachment:			attach_form
 ToolBarTest*ToolBar.topAttachment:			attach_form
 ToolBarTest*ToolBar.bottomAttachment:		attach_none
-ToolBarTest*ToolBar.rightAttachment:		attach_none
+ToolBarTest*ToolBar.rightAttachment:		attach_form
 ToolBarTest*ToolBar.leftOffset:				5
 ToolBarTest*ToolBar.rightOffset:			5
 ToolBarTest*ToolBar.topOffset:				5
+ToolBarTest*ToolBar.rightOffset:			5
 ToolBarTest*ToolBar.shadowThickness:		1
 ToolBarTest*ToolBar.shadowType:				shadow_out
 ToolBarTest*ToolBar.background:				Gray70
