@@ -91,7 +91,7 @@
 
 
 <keyset>
-  <key id="delete_key" keycode="VK_DELETE" observes="delete_command" oncommand="unifinderRemoveCommand( true )"/>
+  <key id="delete_key" keycode="VK_DELETE" observes="delete_command" oncommand="unifinderDeleteCommand( true )"/>
 </keyset>
 
 <!-- Javascript DTD To Variable -->
@@ -119,8 +119,8 @@
 
 <popup id="context-menu">
    <menuitem label="&calendar.context.newevent;" oncommand="newEventCommand()"/>
-   <menuitem label="&calendar.context.modifyevent;" observes="modify_command" oncommand="unifinderModifyCommand()"/>
-   <menuitem label="&calendar.context.deleteevent;" observes="delete_command" oncommand="unifinderRemoveCommand()"/>
+   <menuitem label="&calendar.context.modifyevent;" observes="modify_command" oncommand="unifinderEditCommand()"/>
+   <menuitem label="&calendar.context.deleteevent;" observes="delete_command" oncommand="unifinderDeleteCommand()"/>
    <menuseparator/>
    <menuitem label="&calendar.context.gototoday;" oncommand="gCalendarWindow.goToToday()"/>
    <menuseparator/>
@@ -147,14 +147,16 @@
           grippytooltip="aTooltip" grippytooltiptext="&navigationToolbar.tooltip;"
           tbalign="stretch">
           
-          <toolbarbutton class="toolbarbutton-1" id="calendar-new-event-button"      label="&calendar.newevent.button.label;"        tooltip="aTooltip" tooltiptext="&calendar.newevent.button.tooltip;"     oncommand="newEventCommand()"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-new-event-button"      label="&calendar.newevent.button.label;"        tooltiptext="&calendar.newevent.button.tooltip;"     oncommand="newEventCommand()"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-edit-event-button"     label="&calendar.edit.button.label;"            tooltiptext="&calendar.edit.button.tooltip;"         oncommand="unifinderEditCommand()" observes="modify_command"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-delete-event-button"   label="&calendar.delete.button.label;"          tooltiptext="&calendar.delete.button.tooltip;"       oncommand="unifinderDeleteCommand()" observes="delete_command"/>
           <toolbarseparator class="toolbarseparator-primary"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-choose-date-button"    label="&calendar.choosedate.button.label;"      tooltip="aTooltip" tooltiptext="&calendar.choosedate.button.tooltip;"   onmousedown="prepareChooseDate()" popup="oe-date-picker-popup"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-go-to-today-button"    label="&calendar.gototoday.button.label;"       tooltip="aTooltip" tooltiptext="&calendar.gototoday.button.tooltip;"    oncommand="gCalendarWindow.goToToday()"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-choose-date-button"    label="&calendar.choosedate.button.label;"      tooltiptext="&calendar.choosedate.button.tooltip;"   onmousedown="prepareChooseDate()" popup="oe-date-picker-popup"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-go-to-today-button"    label="&calendar.gototoday.button.label;"       tooltiptext="&calendar.gototoday.button.tooltip;"    oncommand="gCalendarWindow.goToToday()"/>
           <toolbarseparator class="toolbarseparator-primary"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-day-view-button"       label="&calendar.dayview.button.label;"         tooltip="aTooltip" tooltiptext="&calendar.dayview.button.tooltip;"      oncommand="gCalendarWindow.switchToDayView()"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-week-view-button"      label="&calendar.weekview.button.label;"        tooltip="aTooltip" tooltiptext="&calendar.weekview.button.tooltip;"     oncommand="gCalendarWindow.switchToWeekView()"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-month-view-button"     label="&calendar.monthview.button.label;"       tooltip="aTooltip" tooltiptext="&calendar.monthview.button.tooltip;"    oncommand="gCalendarWindow.switchToMonthView()"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-day-view-button"       label="&calendar.dayview.button.label;"         tooltiptext="&calendar.dayview.button.tooltip;"      oncommand="gCalendarWindow.switchToDayView()"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-week-view-button"      label="&calendar.weekview.button.label;"        tooltiptext="&calendar.weekview.button.tooltip;"     oncommand="gCalendarWindow.switchToWeekView()"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-month-view-button"     label="&calendar.monthview.button.label;"       tooltiptext="&calendar.monthview.button.tooltip;"    oncommand="gCalendarWindow.switchToMonthView()"/>
           <spacer flex="1"/>
           <hbox id="throbber-box" align="center">
              <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
@@ -174,34 +176,11 @@
    	<hbox id="calendar-content-box" flex="1">
 
          <vbox flex="1">
-            <toolbox>
-               <toolbar class="unifinder-toolbar chromeclass-toolbar" flex="1">
-                  <button orient="vertical" observes="delete_command" class="unifinder-remove-button plain" tooltiptext="&calendar.tools.delete.tooltip;" label="&calendar.delete.label;" oncommand="unifinderRemoveCommand()"/>
-                  <button orient="vertical" observes="modify_command" class="unifinder-modify-button plain" tooltiptext="&calendar.tools.modify.tooltip;" label="&calendar.modify.label;" oncommand="unifinderModifyCommand()"/>
-               </toolbar>
-            </toolbox>
-            <box flex="1">
-               <tabbox class="unifinder-tab-box" orient="vertical" flex="1" persist="selectedTab">
-                   <tabs>
-                      <tab label="&calendar.main.tab.label;" />
-                      <tab label="&calendar.search.tab.label;" />
-                   </tabs>
-                   
-                   <tabpanels flex="1">
-                      <tabpanel id="unifinder-categories-box" flex="1">
-                         <listbox id="unifinder-categories-tree" seltype="multiple" onselect="unifinderClickEvent( this )" class="unifinder-tree-class" flex="1"/>
-                      </tabpanel>
-               
-                      <tabpanel orient="vertical" flex="1">
-                         <box align="center">
-                            <label control="unifinder-search-field" value="&calendar.search.options.searchfor;"/>
-                            <textbox id="unifinder-search-field" onkeypress="unifinderSearchKeyPress( this, event )" flex="1"/>
-                         </box>
-                         <listbox id="unifinder-search-results-tree" seltype="multiple" onselect="unifinderClickEvent( this )" class="unifinder-tree-class" flex="1"/>
-                      </tabpanel>
-                   </tabpanels>
-               </tabbox>
+            <box align="center">
+               <label control="unifinder-search-field" value="&calendar.search.options.searchfor;"/>
+               <textbox id="unifinder-search-field" onkeypress="unifinderSearchKeyPress( this, event )" flex="1"/>
             </box>
+            <listbox id="unifinder-search-results-tree" seltype="multiple" onselect="unifinderClickEvent( this )" class="unifinder-tree-class" flex="1"/>
          </vbox>
        
    		<splitter collapse="before" persist="state hidden collapsed"

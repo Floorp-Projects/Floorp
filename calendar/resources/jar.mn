@@ -105,7 +105,6 @@ calendar.jar:
     skin/modern/calendar/remove_down.png (skin/modern/remove_down.png)
     skin/modern/calendar/remove_hover.png (skin/modern/remove_hover.png)
     skin/modern/calendar/remove_up.png (skin/modern/remove_up.png)
-    skin/modern/calendar/unifinder.css (skin/modern/unifinder.css)
     skin/classic/calendar/all_day_event.gif (skin/classic/all_day_event.gif)
     skin/classic/calendar/all_day_event_down.gif (skin/classic/all_day_event_down.gif)
     skin/classic/calendar/all_day_event_hover.gif (skin/classic/all_day_event_hover.gif)
@@ -174,4 +173,3 @@ calendar.jar:
     skin/classic/calendar/remove_down.png (skin/classic/remove_down.png)
     skin/classic/calendar/remove_hover.png (skin/classic/remove_hover.png)
     skin/classic/calendar/remove_up.png (skin/classic/remove_up.png)
-    skin/classic/calendar/unifinder.css (skin/classic/unifinder.css)

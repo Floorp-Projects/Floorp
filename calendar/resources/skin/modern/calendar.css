@@ -94,6 +94,59 @@
     list-style-image        : url("chrome://calendar/skin/newitem_down.gif");
   }
 
+/*--------------------------------------------------------------------
+ *   edit event button
+ *-------------------------------------------------------------------*/
+
+#calendar-edit-event-button 
+{
+    padding-top:	1px;
+   list-style-image        : url("chrome://calendar/skin/modify_up.png");
+}
+
+#calendar-edit-event-button[disabled="true"],
+#calendar-edit-event-button[disabled="true"]:hover,
+#calendar-edit-event-button[disabled="true"]:hover:active
+{
+   list-style-image        : url("chrome://calendar/skin/modify_disabled.png");
+}
+
+#calendar-edit-event-button:hover
+{
+    list-style-image       : url("chrome://calendar/skin/modify_hover.png");
+}
+
+#calendar-edit-event-button:hover:active
+{
+    list-style-image       : url("chrome://calendar/skin/modify_down.png");
+}
+
+/*--------------------------------------------------------------------
+ *   delete event button
+ *-------------------------------------------------------------------*/
+
+#calendar-delete-event-button
+{
+    padding-top:	1px;
+	list-style-image        : url("chrome://calendar/skin/remove_up.png");
+}
+  
+#calendar-delete-event-button[disabled="true"],
+#calendar-delete-event-button[disabled="true"]:hover,
+#calendar-delete-event-button[disabled="true"]:hover:active
+{
+	list-style-image        : url("chrome://calendar/skin/remove_disabled.png");
+}
+
+#calendar-delete-event-button:hover
+{
+    list-style-image       : url("chrome://calendar/skin/remove_hover.png");
+}
+
+#calendar-delete-event-button:hover:active
+{
+    list-style-image       : url("chrome://calendar/skin/remove_down.png");
+}
 
 /*--------------------------------------------------------------------
  *   Go To Today button
@@ -1029,4 +1082,30 @@
 #calendar-bar > .toolbar-holder > .toolbar-primary-icon {
   background-image: url("chrome://calendar/skin/calendar_topbar.gif");
 }
+
+.unifinder-tree-class > listitem[selected="true"] 
+{
+   background-color     : white;
+   color                : black;
+   border               : none;
+}
+
+.unifinder-tree-class > listitem[selected="true"] > listcell
+{
+   border                  : none;
+}
+
+.unifinder-tree-class > listitem[selected="true"] > listcell > .unifinder-treecell-box-class
+{
+   background-color        : #d5e3f2; 
+}
+
+.unifinder-treecell-box-class
+{
+   padding              : 2px;
+   padding-left         : 4px;
+   font-family          : Arial, Helvetica;
+   -moz-box-align       : start;
+}
+
 

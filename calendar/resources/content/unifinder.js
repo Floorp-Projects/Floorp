@@ -52,15 +52,9 @@ function unifinderInit( CalendarWindow )
    {
       onSelectionChanged : function( EventSelectionArray )
       {
-         var CategoriesTree = document.getElementById( "unifinder-categories-tree" );
-         
-         CategoriesTree.setAttribute( "suppressonselect", "true" );
-         
          var SearchTree = document.getElementById( "unifinder-search-results-tree" );
          
          SearchTree.setAttribute( "suppressonselect", "true" );
-
-         CategoriesTree.clearSelection();
 
          SearchTree.clearSelection();
          
@@ -68,29 +62,19 @@ function unifinderInit( CalendarWindow )
          {
             for( i = 0; i < EventSelectionArray.length; i++ )
             {
-               var CategoriesTreeItem = document.getElementById( "unifinder-treeitem-"+EventSelectionArray[i].id );
-
                var SearchTreeItem = document.getElementById( "search-unifinder-treeitem-"+EventSelectionArray[i].id );
                
-               //you need this for when an event is added.  It doesn't yet exist.
-               if( CategoriesTreeItem )
-                  CategoriesTree.addItemToSelection( CategoriesTreeItem );
-   
                //you need this for when an event is added. It doesn't yet exist.
                if( SearchTreeItem )
                   SearchTree.addItemToSelection( SearchTreeItem );
             }
          }
          dump( "\nAllow on select now!" );
-         CategoriesTree.removeAttribute( "suppressonselect" );
-         
          SearchTree.removeAttribute( "suppressonselect" );
       }
    }
       
    gCalendarWindow.EventSelection.addObserver( unifinderEventSelectionObserver );
-
-
 }
 
 
@@ -189,21 +173,9 @@ function unifinderRefesh()
 {
    var eventTable = gEventSource.getAllEvents();
    
-   refreshCategoriesTree( eventTable );
-   
    refreshSearchTree( eventTable );
 
    unifinderSearchKeyPress( document.getElementById( 'unifinder-search-field' ), null );
-}
-
-
-/**
-*   Redraw the event tree
-*/
-
-function refreshCategoriesTree( eventTable )
-{
-   refreshEventTree( eventTable, "unifinder-categories-tree" );
 }
 
 
@@ -274,12 +246,12 @@ function unifinderClickEvent( CallingListBox )
 }
 
 /**
-*  This is called from the unifinder's modify command
+*  This is called from the unifinder's edit command
 */
 
-function unifinderModifyCommand()
+function unifinderEditCommand()
 {
-   var SelectedItem = document.getElementById( "unifinder-categories-tree" ).selectedItems[0];
+   var SelectedItem = document.getElementById( "unifinder-search-results-tree" ).selectedItems[0];
 
    if( SelectedItem )
    {
@@ -301,10 +273,10 @@ function unifinderModifyCommand()
 
 
 /**
-*  This is called from the unifinder's remove command
+*  This is called from the unifinder's delete command
 */
 
-function unifinderRemoveCommand( DoNotConfirm )
+function unifinderDeleteCommand( DoNotConfirm )
 {
    var SelectedItems = gCalendarWindow.EventSelection.selectedEvents;
    

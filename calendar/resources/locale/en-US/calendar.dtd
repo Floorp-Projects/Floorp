@@ -83,9 +83,9 @@
 
 <!ENTITY event.alarm.checkbox.label "Remind me again in " >
 
-<!ENTITY event.title.alarm         "ALARM" >
-<!ENTITY event.title.new         "NEW EVENT" >
-<!ENTITY event.title.edit        "EDIT EVENT" >
+<!ENTITY event.title.alarm         "Alarm" >
+<!ENTITY event.title.new         "New Event" >
+<!ENTITY event.title.edit        "Edit Event" >
 
 <!ENTITY event.tip.new         "Create a new event." >
 <!ENTITY event.tip.edit        "Edit an existing event." >
@@ -99,22 +99,24 @@
 <!ENTITY calendar.flat.topbar.weekview         "Week View" >
 <!ENTITY calendar.flat.topbar.monthview        "Month View" >
 
-<!ENTITY calendar.tools.delete.tooltip         "Delete Event" >
-<!ENTITY calendar.tools.modify.tooltip         "Edit Event" >
-
-<!ENTITY calendar.delete.label         "Delete" >
-<!ENTITY calendar.modify.label         "Edit" >
-
 <!ENTITY calendar.newevent.button.tooltip         "Create New Calendar Event" >
+<!ENTITY calendar.delete.button.tooltip           "Delete Event" >
+<!ENTITY calendar.edit.button.tooltip             "Edit Event" >
+
 <!ENTITY calendar.gototoday.button.tooltip        "Go To Today" >
 <!ENTITY calendar.choosedate.button.tooltip       "Pick Date To Go To" >
+
 <!ENTITY calendar.dayview.button.tooltip          "Switch To Day View" >
 <!ENTITY calendar.weekview.button.tooltip         "Switch To Week View" >
 <!ENTITY calendar.monthview.button.tooltip        "Switch To Month View" >
 
 <!ENTITY calendar.newevent.button.label         "New Event" >
+<!ENTITY calendar.delete.button.label           "Delete" >
+<!ENTITY calendar.edit.button.label             "Edit" >
+
 <!ENTITY calendar.gototoday.button.label        "Today" >
 <!ENTITY calendar.choosedate.button.label       "Choose Date" >
+
 <!ENTITY calendar.dayview.button.label          "Day" >
 <!ENTITY calendar.weekview.button.label         "Week" >
 <!ENTITY calendar.monthview.button.label        "Month" >
@@ -125,7 +127,7 @@
 <!ENTITY calendar.main.tab.label        "Events" >
 <!ENTITY calendar.search.tab.label			        "Search">
 
-<!ENTITY calendar.search.options.searchfor			"Search For">
+<!ENTITY calendar.search.options.searchfor			"Event contains:">
 
 <!ENTITY calendar.portlet.outliner.titlecol "Title" >
 <!ENTITY calendar.portlet.outliner.datecol  "Date" >
