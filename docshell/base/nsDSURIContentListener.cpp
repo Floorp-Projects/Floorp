@@ -180,16 +180,13 @@ NS_IMETHODIMP nsDSURIContentListener::CanHandleContent(const char* aContentType,
 NS_IMETHODIMP
 nsDSURIContentListener::GetLoadCookie(nsISupports ** aLoadCookie)
 {
-  *aLoadCookie = mDocShell->mLoadCookie;
-  NS_IF_ADDREF(*aLoadCookie);
-  return NS_OK;
+  return mDocShell->GetLoadCookie(aLoadCookie);
 }
 
 NS_IMETHODIMP
 nsDSURIContentListener::SetLoadCookie(nsISupports * aLoadCookie)
 {
-  mDocShell->mLoadCookie = aLoadCookie;
-  return NS_OK;
+  return mDocShell->SetLoadCookie(aLoadCookie);
 }
 
 NS_IMETHODIMP 
