@@ -19,10 +19,11 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
+[% filtered_summary = bugsummary FILTER html %]
 [% INCLUDE global/header 
   title = "View All Attachments for Bug #$bugid"
   h1 = "View All Attachments for <a href=\"show_bug.cgi?id=$bugid\">Bug #$bugid</a>"
-  h2 = bugsummary
+  h2 = filtered_summary
   style = "
     th { text-align: right; vertical-align: top; }
     td { text-align: left; vertical-align: top; }
@@ -67,7 +68,7 @@
           <i>none</i>
         [% ELSE %]
           [% FOREACH s = a.statuses %]
-            [% s %]<br>
+            [% s FILTER html %]<br>
           [% END %]
         [% END %]
         </nobr>

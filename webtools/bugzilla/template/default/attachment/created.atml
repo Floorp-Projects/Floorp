@@ -28,7 +28,7 @@
   <tr>
     <td>
       <h2>
-        <a title="[% description %]" href="attachment.cgi?id=[% attachid %]&action=edit">Attachment #[% attachid %]</a> 
+        <a title="[% description FILTER html %]" href="attachment.cgi?id=[% attachid %]&action=edit">Attachment #[% attachid %]</a> 
         to <a href="show_bug.cgi?id=[% bugid %]">Bug #[% bugid %]</a> Created
       </h2>
 

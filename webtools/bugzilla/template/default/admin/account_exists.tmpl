@@ -25,8 +25,8 @@
 
 <form method="get" action="token.cgi">
   <input type="hidden" name="a" value="reqpw" />
-  <input type="hidden" name="loginname" value="[% login %]" />
-  A Bugzilla account for <tt>[% login %]</tt> already exists. If you
+  <input type="hidden" name="loginname" value="[% login FILTER html %]" />
+  A Bugzilla account for <tt>[% login FILTER html %]</tt> already exists. If you
   are the account holder and have forgotten your password, 
   <input type="submit" value="submit a request to change it" />.
 </form>

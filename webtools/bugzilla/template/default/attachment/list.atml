@@ -43,7 +43,7 @@
         [% IF attachment.ispatch %]
           <i>patch</i>
         [% ELSE %]
-          [% attachment.contenttype %]
+          [% attachment.contenttype FILTER html %]
         [% END %]
       </td>
 
@@ -55,7 +55,7 @@
           <i>none</i>
         [% ELSE %]
           [% FOREACH s = attachment.statuses %]
-            [% s %]<br>
+            [% s FILTER html %]<br>
           [% END %]
         [% END %]
         </nobr>

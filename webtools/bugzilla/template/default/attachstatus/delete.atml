@@ -20,6 +20,9 @@
   #                 Jeff Hedlund <jeff.hedlund@matrixsi.com>
   #%]
 
+[%# Filter off the name here to be used multiple times below %]
+[% name = name FILTER html %]
+
 [% INCLUDE global/header 
   title = "Confirm Delete of Attachment Status '$name'" 
 %]

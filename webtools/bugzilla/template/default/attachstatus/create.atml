@@ -58,7 +58,7 @@
       <td>
         <select name="product">
           [% FOREACH item = products %]
-            <option value="[% item %]">[% item %]</option>
+            <option value="[% item FILTER html %]">[% item FILTER html %]</option>
           [% END %]
         </select>
       </td>

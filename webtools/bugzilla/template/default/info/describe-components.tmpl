@@ -19,9 +19,10 @@
   # Contributor(s): Bradley Baetz <bbaetz@student.usyd.edu.au>
   #%]
 
+[% filtered_product = product FILTER html %]
 [% INCLUDE global/header 
-  title = "Components for $product" 
-  h2 = product %]
+  title = "Components for $product"
+  h2 = filtered_product %]
 
 [% IF Param("useqacontact") %]
   [% numcols = 3 %]
@@ -70,7 +71,7 @@
     </td>
     <td>
       <a href="mailto:[% comp.initialowner %][% Param('emailsuffix') %]">
-      [% comp.initialowner %]</a>
+      [% comp.initialowner FILTER html %]</a>
     </td>
     [% IF Param("useqacontact") %]
       <td>

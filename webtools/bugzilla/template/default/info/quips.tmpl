@@ -27,7 +27,7 @@
 [% IF added_quip %]
   <p>
     <font color="red">
-      Your quip '<tt>[% added_quip %]</tt>' has been added.
+      Your quip '<tt>[% added_quip FILTER html %]</tt>' has been added.
     </font>
   </p>
 [% END %]

@@ -96,7 +96,7 @@
       <td colspan="2">
       [% IF Param('usetargetmilestone') %]
           <b>Target Milestone:</b>&nbsp;
-          [% bug.target_milestone %]
+          [% bug.target_milestone FILTER html %]
       [% END %]
       </td>
     </tr>
@@ -109,14 +109,14 @@
     
     <tr>
       <td colspan="4">
-        <b>Summary:</b>&nbsp;[% bug.short_desc %]
+        <b>Summary:</b>&nbsp;[% bug.short_desc FILTER html %]
       </td>
     </tr>
      
     [% IF use_keywords %]
       <tr>
         <td colspan="4">
-          <b>Keywords: </b>&nbsp;[% bug.keywords %]
+          <b>Keywords: </b>&nbsp;[% bug.keywords FILTER html %]
         </td>
       </tr>
     [% END %]
@@ -151,6 +151,6 @@
 [% BLOCK cell %]
   <td>
     <b>[% attr.description%]:</b>&nbsp;
-    [% bug.${attr.name} %]
+    [% bug.${attr.name} FILTER html %]
   </td>
 [% END %]

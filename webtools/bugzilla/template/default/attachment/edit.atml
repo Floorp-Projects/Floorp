@@ -153,10 +153,10 @@
       <td width="25%">
         <small>
         <b>Description:</b><br>
-          <textarea rows="3" cols="25" name="description" wrap="soft">[% description %]</textarea><br>
+          <textarea rows="3" cols="25" name="description" wrap="soft">[% description FILTER html %]</textarea><br>
 
         <b>MIME Type:</b><br>
-          <input type="text" size="20" name="contenttypeentry" value="[% contenttype %]"><br>
+          <input type="text" size="20" name="contenttypeentry" value="[% contenttype FILTER html %]"><br>
 
         <b>Flags:</b><br>
           <input type="checkbox" name="ispatch" value="1"[% " checked" IF ispatch %]>patch
@@ -165,7 +165,7 @@
         [% IF statusdefs.size %]
           <b>Status:</b><br>
             [% FOREACH def = statusdefs %]
-                <input type="checkbox" name="status" value="[% def.id %]"[% " checked" IF statuses.${def.id} %]>[% def.name %]<br>
+                <input type="checkbox" name="status" value="[% def.id %]"[% " checked" IF statuses.${def.id} %]>[% def.name FILTER html %]<br>
             [% END %]
         [% END %]
 

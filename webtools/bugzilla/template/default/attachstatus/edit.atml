@@ -35,14 +35,14 @@
     <tr>
       <th>Name:</th>
       <td>
-        <input type="text" name="name" value="[% name %]" size="50" maxlength="50">
+        <input type="text" name="name" value="[% name FILTER html %]" size="50" maxlength="50">
       </td>
     </tr>
 
     <tr>
       <th>Description:</th>
       <td>
-        <textarea name="desc" rows="4" cols="50">[% desc %]</textarea>
+        <textarea name="desc" rows="4" cols="50">[% desc FILTER html %]</textarea>
       </td>
     </tr>
 
@@ -56,7 +56,7 @@
     <tr>
       <th>Product:</th>
       <td>
-        [% product %]
+        [% product FILTER html %]
       </td>
     </tr>
 

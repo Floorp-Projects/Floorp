@@ -34,10 +34,11 @@
   #                displaying anything, and can contain an optional custom
   #                message if required (which Perl still evaluates as True).
   #%]
- 
+
+[% filtered_login = login FILTER html %]
 [% INCLUDE global/header
    title = "User Preferences"
-   h2 = login
+   h2 = filtered_login
    style = "td.selected_tab {
               border-width: 2px 2px 0px;
               border-style: solid; 

@@ -43,7 +43,7 @@
       <td>[% statusdef.name FILTER html %]</td>
       <td>[% statusdef.description FILTER html %]</td>
       <td>[% statusdef.sortkey %]</td>
-      <td>[% statusdef.product %]</td>
+      <td>[% statusdef.product FILTER html %]</td>
       <td>
         <a href="editattachstatuses.cgi?action=edit&id=[% statusdef.id %]">
             Edit</a>

@@ -69,7 +69,7 @@
       [% IF new_login_name %]
         <tr>
           <th align="right">Pending email address:</th>
-          <td>[% new_login_name %]</td>
+          <td>[% new_login_name FILTER html %]</td>
         </tr>
         <tr>
           <th align="right">Change request expires:</th>

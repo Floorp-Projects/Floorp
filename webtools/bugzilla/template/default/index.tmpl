@@ -56,7 +56,7 @@ function addSidebar() {
 [% IF username %]
   <a href="[% PerformSubsts(Param('mybugstemplate'), subst) %]">My Bugs</a><br>
   <a href="userprefs.cgi">Change password or user preferences</a><br>
-  <a href="relogin.cgi">Logout [% username %]</a><br>
+  <a href="relogin.cgi">Logout [% username FILTER html %]</a><br>
 [% ELSE %]
   <a href="query.cgi?GoAheadAndLogIn=1">Log in to an existing account</a><br>
   <a href="createaccount.cgi">Open a new Bugzilla account</a><br>

@@ -246,8 +246,8 @@
   <select name="resolution" onchange="document.forms.changeform.knob[[% knum %]].checked=true">
     [% FOREACH resolution = resolutions %]
       [% NEXT IF !resolution %]
-      <option value="[% resolution %]" [% selected IF resolution == "FIXED" %]>
-        [% resolution %]
+      <option value="[% resolution FILTER html %]" [% selected IF resolution == "FIXED" %]>
+        [% resolution FILTER html %]
       </option>
     [% END %]
   </select><br />
@@ -279,7 +279,7 @@
   Reassign</A> bugs to
 </label>
 <input name="assigned_to" 
-       value="[% user %]"
+       value="[% user FILTER html %]"
        onchange="document.forms.changeform.knob[[% knum %]].checked = true;"
        size="32"><br />
 
