@@ -79,7 +79,7 @@ $(LIB1): $(CPP_OBJS)
 
 $(PROG1): $(LIB1) bloatblame.c
 
-$(PROG2): $(LIB1) spacetrace.c
+$(PROG2): $(LIB1) spacetrace.c spacecategory.c
 
 $(PROG3): $(LIB1) leakstats.c
 

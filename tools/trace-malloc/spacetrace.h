@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *    Garrett Arch Blythe, 31-October-2001
+ *    Suresh Duddi <dp@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -121,6 +122,21 @@
 #define ST_SUBSTRING_MATCH_MAX 5
 
 /*
+** Max Number of patterns per rule
+*/
+#define ST_MAX_PATTERNS_PER_RULE 16
+
+/*
+** Rule pointers and child pointers are allocated in steps of ST_ALLOC_STEP
+*/
+#define ST_ALLOC_STEP 16
+
+/*
+** Name of the root category. Appears in UI.
+*/
+#define ST_ROOT_CATEGORY_NAME "All"
+
+/*
 ** Set the desired resolution of the timevals.
 ** The resolution is just mimicking what is recorded in the trace-malloc
 **  output, and that is currently milliseconds.
@@ -136,6 +152,13 @@
 #define ST_MICROVAL_PRINTABLE(timeval) ((PRFloat64)(timeval) / (PRFloat64)ST_MICROVAL_RESOLUTION)
 #define ST_MICROVAL_PRINTABLE64(timeval) ((PRFloat64)((PRInt64)(timeval)) / (PRFloat64)ST_MICROVAL_RESOLUTION)
 #define ST_MICROVAL_MAX ((PRUint32)-1 - ((PRUint32)-1 % ST_MICROVAL_RESOLUTION))
+
+/*
+** Forward Declaration
+*/
+typedef struct __struct_STCategoryNode STCategoryNode;
+typedef struct __struct_STCategoryRule STCategoryRule;
+
 
 /*
 ** STAllocEvent
@@ -285,7 +308,78 @@ typedef struct __struct_STRun
         ** Callsites like to keep some information.
         */
         STCallsiteStats mStats;
+
 } STRun;
+
+/*
+** Categorize allocations
+**
+** The objective is to have a tree of categories with each leaf node of the tree
+** matching a set of callsites that belong to the category. Each category can
+** signify a functional area like say css and hence the user can browse this
+** tree looking for how much of each of these are live at an instant.
+*/
+
+/*
+** STCategoryNode
+*/
+
+struct __struct_STCategoryNode
+{
+        /*
+        ** Category name
+        */
+        const char *categoryName;
+
+        /*
+        ** Pointer to parent node. NULL for Root.
+        */
+        STCategoryNode *parent;
+
+        /*
+        ** For non-leaf nodes, an array of children node pointers.
+        ** NULL if leaf node.
+        */
+        STCategoryNode** children;
+        PRUint32 nchildren;
+
+        /*
+        ** For leaf nodes, the Run
+        */
+        STRun *run;
+};
+
+
+struct __struct_STCategoryRule
+{
+        /*
+        ** The pattern for the rule. Patterns are an array of strings.
+        ** A callsite needs to pass substring match for all the strings.
+        */
+        char* pats[ST_MAX_PATTERNS_PER_RULE];
+        PRUint32 npats;
+
+        /*
+        ** Category name that this rule belongs to
+        */
+        const char* categoryName;
+
+        /*
+        ** The node this should be categorized into
+        */
+        STCategoryNode* node;
+
+};
+
+
+/*
+** CategoryName to Node mapping table
+*/
+typedef struct __struct_STCategoryMapEntry {
+    STCategoryNode* node;
+    const char * categoryName;
+} STCategoryMapEntry;
+
 
 /*
 ** STOptions
@@ -386,6 +480,17 @@ typedef struct __struct_STOptions
         ** Restrict callsite backtraces to those containing text.
         */
         char* mRestrictText[ST_SUBSTRING_MATCH_MAX];
+
+        /*
+        ** File containing rules to categorize allocations
+        */
+        char* mCategoryFile;
+
+        /*n
+        ** Category to focus report on. NULL if not focussing on a category.
+        */
+        char *mCategoryName;
+
 } STOptions;
 
 /*
@@ -429,6 +534,11 @@ typedef struct __struct_STCache
         ** Pre sorted run.
         */
         STRun* mSortedRun;
+   
+        /*
+        ** Category the mSortedRun belongs to. NULL if not to any category.
+        */
+        const char *mCategoryName;
 
         /*
         ** Footprint graph cache.
@@ -514,6 +624,33 @@ typedef struct __struct_STGlobals
         */
         PRUint32 mPeakMemoryUsed;
         PRUint32 mMemoryUsed;
+
+        /*
+        ** A list of rules for categorization read in from the mCategoryFile
+        */
+       STCategoryRule** mCategoryRules;
+       PRUint32 mNRules;
+
+       /*
+       ** CategoryName to Node mapping table
+       */
+       STCategoryMapEntry** mCategoryMap;
+       PRUint32 mNCategoryMap;
+
+       /*
+       ** Categorized allocations. For now we support only one tree.
+       */
+       STCategoryNode mCategoryRoot;
 } STGlobals;
 
+
+/*
+** Function prototypes
+*/
+extern STRun* createRun(PRUint32 aStamp);
+extern void freeRun(STRun* aRun);
+extern int initCategories(STGlobals* g);
+extern int categorizeRun(const STRun* aRun, STGlobals* g);
+extern STCategoryNode* findCategoryNode(const char *catName, STGlobals *g);
+extern int freeCategories(STGlobals* g);
 #endif /* spacetrace_h__ */
