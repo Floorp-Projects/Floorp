@@ -100,7 +100,20 @@ function appendMessage(messageObject)
 {
     var c = document.getElementById("console");
     var e = document.createElement("message");
-    var t = document.createTextNode(messageObject.message);
+    var text;
+    try {
+        // Try to QI it to a script error to get more info.
+        var scripterror =
+            messageObject.QueryInterface(Components.interfaces.nsIScriptError);
+
+        text = scripterror.sourceName + " line " + scripterror.lineNumber +
+            ": " + scripterror.message;
+    } catch (exn) {
+        // QI failed, just try to treat it as an nsIConsoleMessage
+        text = messageObject.message;
+    }
+
+    var t = document.createTextNode(text);
     e.appendChild(t);
     c.appendChild(e);
 }

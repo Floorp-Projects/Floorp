@@ -24,7 +24,6 @@
 #include "nsIConsoleListener.idl"
 #include "nsIConsoleMessage.idl"
 
-
 [scriptable, uuid(a647f184-1dd1-11b2-a9d1-8537b201161b)]
 interface nsIConsoleService : nsISupports
 {
@@ -52,5 +51,6 @@ interface nsIConsoleService : nsISupports
 #define NS_CONSOLESERVICE_CID \
 { 0x7e3ff85c, 0x1dd2, 0x11b2, { 0x8d, 0x4b, 0xeb, 0x45, 0x2c, 0xb0, 0xff, 0x40 }}
 
-#define NS_CONSOLESERVICE_PROGID "consoleservice"
+#define NS_CONSOLESERVICE_PROGID "mozilla.consoleservice.1"
 %}
+
