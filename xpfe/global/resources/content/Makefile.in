@@ -78,6 +78,14 @@ CHROME_CONTENT= \
 		wizardOverlay.js \
 		wizardOverlay.xul \
 		treePopups.js \
+		content.css \
+		htmlBindings.xml \
+		menulistBindings.xml \
+		radioBindings.xml \
+		tabBindings.xml \
+		treeBindings.xml \
+		xulBIndings.xml \
+		xul.css \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

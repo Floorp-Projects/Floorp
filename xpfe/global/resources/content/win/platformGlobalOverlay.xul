@@ -16,6 +16,7 @@
 	<menupopup id="menu_FilePopup">
 		<menuitem value="&quitApplicationCmd.label;" key="key_quit" accesskey="&quitApplicationCmd.accesskey;" observes="cmd_quit"/>
 	</menupopup>
+
 	<key id="key_quit" xulkey="true" key="&quitApplicationCmd.key;" observes="cmd_quit"/>
  	<broadcaster id="cmd_quit" oncommand="goQuitApplication()"/>
 	

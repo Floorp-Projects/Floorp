@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+
+<bindings id="tabBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="tabcontrol" extends="xul:box">
+    <content orient="vertical">
+      <children/>
+    </content>
+  </binding>
+
+  <binding id="tabbox" extends="xul:box">
+    <interface>
+      <property name="selectedTab">
+        <getter>
+        <![CDATA[
+          for (var i = 0; i < this.childNodes.length; i++)
+            {
+              if (this.childNodes[i].selected || 
+                  this.childNodes[i].getAttribute("selected") == "true")
+                return this.childNodes[i];
+            }
+        ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+          if (!val.selected) val.selected = true;
+          for (var i = 0; i < this.childNodes.length; i++)
+            {
+              if (this.childNodes[i] != val && this.childNodes[i].selected)
+                {
+                  this.childNodes[i].selected = false;
+                  this.childNodes[i].removeAttribute("selected");
+                }
+            }
+          return val;
+        ]]>
+        </setter>
+      </property>
+    </interface>
+  </binding>
+  
+  <binding id="tabpanel" extends="xul:deck">
+    <interface>
+      <method name="switchTab">
+        <argument name="aTabElement"/>
+        <body>
+        <![CDATA[
+          var tabbox = this.parentNode.getElementsByTagName("tabbox");
+          tabbox = tabbox.length ? tabbox[0] : null;
+          tabbox.child
+        ]]>
+        </body>
+      </method>
+    </interface>
+  </binding>
+
+  <binding id="tab" extends="xul:stack">
+    <content>
+      <xul:box class="tab-stack-lower">
+        <xul:image class="tab-stack-lower-image" inherits="src"/>
+        <xul:text class="tab-stack-lower-text" inherits="value,accesskey,crop"/>
+      </xul:box>
+      <xul:box class="tab-stack-upper">
+        <xul:image class="tab-stack-upper-image" inherits="src"/>
+        <xul:text class="tab-stack-upper-text" inherits="value,accesskey,crop"/>
+      </xul:box>
+    </content>
+    <interface>
+      <property name="tabbox" 
+                onget="return this.getAttribute('tabbox');"
+                onset="this.setAttribute('tabbox', val); return val;"/>
+      <!-- XXX -->                
+      <property name="selected" 
+                onget="return this.getAttribute('selected');"
+                onset="this.setAttribute('selected', val); return val;"/>
+    </interface>
+    <handlers>
+      <handler type="command">
+      <![CDATA[
+        var tabboxID = this.getAttribute("tabbox");
+        var tabbox = tabboxID != "" ? this.getElementsById(tabboxID) : this.parentNode;
+        tabbox.selectedTab = this;
+        if (!this.selected) this.selected = true;
+        var tabpanel = this.parentNode.parentNode.getElementsByTagName("tabpanel");
+        tabpanel = tabpanel.length ? tabpanel[0] : null;
+        if (tabpanel) tabpanel.switchTab(this);
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+  
+</bindings>
+

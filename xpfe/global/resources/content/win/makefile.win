@@ -31,6 +31,7 @@ CHROME_CONTENT = \
 	.\platformInputBindings.xul \
 	.\platformTextAreaBindings.xul \
 	.\platformEditorBindings.xul \
+	.\platformHTMLBindings.xml \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

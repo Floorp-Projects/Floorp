@@ -33,3 +33,12 @@ wizardOverlay.js
 wizardOverlay.xul
 treePopups.js
 mozilla.html
+content.css
+htmlBindings.xml
+menulistBindings.xml
+radioBindings.xml
+tabBindings.xml
+treeBindings.xml
+xulBindings.xml
+xul.css
+
