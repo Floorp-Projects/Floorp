@@ -12,11 +12,11 @@ titledbutton[class=grippy] {
  border: 0px; 
  margin: 0px; 
  padding: 0px; 
- list-style-image:url(resource:/res/toolbar/grippy.gif);
+ list-style-image:url(resource:/res/toolbar/grippy-horizontal-after.gif);
 }
 
 titledbutton[class=grippy][open=true] {
- list-style-image:url(resource:/res/toolbar/grippyO.gif);
+ list-style-image:url(resource:/res/toolbar/grippy-horizontal-before.gif);
 }
 
 titledbutton[class=grippy]:hover {
