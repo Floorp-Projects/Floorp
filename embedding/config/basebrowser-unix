@@ -81,6 +81,9 @@ components/mozbrwsr.xpt
 components/webBrowser_core.xpt
 components/webBrowser_setup.xpt
 
+; find functionality
+components/libtxtsvc.so
+components/txtsvc.xpt
 
 ; gfx
 components/libtimer_gtk.so
