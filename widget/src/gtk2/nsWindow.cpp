@@ -41,6 +41,7 @@
 #include "nsIMenuRollup.h"
 
 #include "nsGtkKeyUtils.h"
+#include "nsGtkCursors.h"
 
 #include <gtk/gtkwindow.h>
 #include <gdk/gdkx.h>
@@ -56,6 +57,7 @@ static nsWindow  *get_window_for_gtk_widget(GtkWidget *widget);
 static nsWindow  *get_window_for_gdk_window(GdkWindow *window);
 static nsWindow  *get_owning_window_for_gdk_window(GdkWindow *window);
 static GtkWidget *get_gtk_widget_for_gdk_window(GdkWindow *window);
+static GdkCursor *get_gtk_cursor(nsCursor aCursor);
 
 /* callbacks from widgets */
 static gboolean expose_event_cb           (GtkWidget *widget,
@@ -92,6 +94,9 @@ static gboolean visibility_notify_event_cb(GtkWidget *widget,
 static PRBool                 gJustGotActivate = PR_FALSE;
 nsCOMPtr  <nsIRollupListener> gRollupListener;
 nsWeakPtr                     gRollupWindow;
+
+// cursor cache
+GdkCursor *gCursorCache[eCursor_count_up_down + 1];
 
 nsWindow::nsWindow()
 {
@@ -403,8 +408,31 @@ nsWindow::SetFont(const nsFont &aFont)
 NS_IMETHODIMP
 nsWindow::SetCursor(nsCursor aCursor)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // if we're not the toplevel window pass up the cursor request to
+  // the toplevel window to handle it.
+  if (!mContainer) {
+    GtkWidget *widget =
+      get_gtk_widget_for_gdk_window(mDrawingarea->inner_window);
+    nsWindow *window = get_window_for_gtk_widget(widget);
+    return window->SetCursor(aCursor);
+  }
+
+  // Only change cursor if it's actually been changed
+  if (aCursor != mCursor) {
+    GdkCursor *newCursor = NULL;
+    
+    newCursor = get_gtk_cursor(aCursor);
+    
+    if (nsnull != newCursor) {
+      mCursor = aCursor;
+      gdk_window_set_cursor(GTK_WIDGET(mContainer)->window, newCursor);
+      XFlush(GDK_DISPLAY());
+    }
+  }
+
+  return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsWindow::Validate()
@@ -1651,6 +1679,139 @@ get_gtk_widget_for_gdk_window(GdkWindow *window)
     return NULL;
 
   return GTK_WIDGET(user_data);
+}
+
+/* static */
+GdkCursor *
+get_gtk_cursor(nsCursor aCursor)
+{
+  GdkPixmap *cursor;
+  GdkPixmap *mask;
+  GdkColor fg, bg;
+  GdkCursor *gdkcursor = nsnull;
+  PRUint8 newType = 0xff;
+  
+  if ((gdkcursor = gCursorCache[aCursor])) {
+    return gdkcursor;
+  }
+
+  switch (aCursor) {
+  case eCursor_standard:
+    gdkcursor = gdk_cursor_new(GDK_LEFT_PTR);
+    break;
+  case eCursor_wait:
+    gdkcursor = gdk_cursor_new(GDK_WATCH);
+    break;
+  case eCursor_select:
+    gdkcursor = gdk_cursor_new(GDK_XTERM);
+    break;
+  case eCursor_hyperlink:
+    gdkcursor = gdk_cursor_new(GDK_HAND2);
+    break;
+  case eCursor_sizeWE:
+    /* GDK_SB_H_DOUBLE_ARROW <==>.  The ideal choice is: =>||<= */
+    gdkcursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
+    break;
+  case eCursor_sizeNS:
+    /* Again, should be =>||<= rotated 90 degrees. */
+    gdkcursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
+    break;
+  case eCursor_sizeNW:
+    gdkcursor = gdk_cursor_new(GDK_TOP_LEFT_CORNER);
+    break;
+  case eCursor_sizeSE:
+    gdkcursor = gdk_cursor_new(GDK_BOTTOM_RIGHT_CORNER);
+    break;
+  case eCursor_sizeNE:
+    gdkcursor = gdk_cursor_new(GDK_TOP_RIGHT_CORNER);
+    break;
+  case eCursor_sizeSW:
+    gdkcursor = gdk_cursor_new(GDK_BOTTOM_LEFT_CORNER);
+    break;
+  case eCursor_arrow_north:
+  case eCursor_arrow_north_plus:
+    gdkcursor = gdk_cursor_new(GDK_TOP_SIDE);
+    break;
+  case eCursor_arrow_south:
+  case eCursor_arrow_south_plus:
+    gdkcursor = gdk_cursor_new(GDK_BOTTOM_SIDE);
+    break;
+  case eCursor_arrow_west:
+  case eCursor_arrow_west_plus:
+    gdkcursor = gdk_cursor_new(GDK_LEFT_SIDE);
+    break;
+  case eCursor_arrow_east:
+  case eCursor_arrow_east_plus:
+    gdkcursor = gdk_cursor_new(GDK_RIGHT_SIDE);
+    break;
+  case eCursor_crosshair:
+    gdkcursor = gdk_cursor_new(GDK_CROSSHAIR);
+    break;
+  case eCursor_move:
+    gdkcursor = gdk_cursor_new(GDK_FLEUR);
+    break;
+  case eCursor_help:
+    newType = MOZ_CURSOR_QUESTION_ARROW;
+    break;
+  case eCursor_copy: // CSS3
+    newType = MOZ_CURSOR_COPY;
+    break;
+  case eCursor_alias:
+    newType = MOZ_CURSOR_ALIAS;
+    break;
+  case eCursor_context_menu:
+    newType = MOZ_CURSOR_CONTEXT_MENU;
+    break;
+  case eCursor_cell:
+    gdkcursor = gdk_cursor_new(GDK_PLUS);
+    break;
+  case eCursor_grab:
+    newType = MOZ_CURSOR_HAND_GRAB;
+    break;
+  case eCursor_grabbing:
+    newType = MOZ_CURSOR_HAND_GRABBING;
+    break;
+  case eCursor_spinning:
+    newType = MOZ_CURSOR_SPINNING;
+    break;
+  case eCursor_count_up:
+  case eCursor_count_down:
+  case eCursor_count_up_down:
+    // XXX: these CSS3 cursors need to be implemented
+    gdkcursor = gdk_cursor_new(GDK_LEFT_PTR);
+    break;
+  default:
+    NS_ASSERTION(aCursor, "Invalid cursor type");
+    break;
+  }
+  
+  // if by now we dont have a xcursor, this means we have to make a
+  // custom one
+  if (!gdkcursor) {
+    NS_ASSERTION(newType != 0xff,
+		 "Unknown cursor type and no standard cursor");
+    
+    gdk_color_parse("#000000", &fg);
+    gdk_color_parse("#ffffff", &bg);
+    
+    cursor = gdk_bitmap_create_from_data(NULL,
+                                         (char *)GtkCursors[newType].bits,
+                                         32, 32);
+    mask   = gdk_bitmap_create_from_data(NULL,
+                                         (char *)GtkCursors[newType].mask_bits,
+                                         32, 32);
+    
+    gdkcursor = gdk_cursor_new_from_pixmap(cursor, mask, &fg, &bg,
+                                           GtkCursors[newType].hot_x,
+                                           GtkCursors[newType].hot_y);
+
+    gdk_bitmap_unref(mask);
+    gdk_bitmap_unref(cursor);
+  }
+
+  gCursorCache[aCursor] = gdkcursor;
+
+  return gdkcursor;
 }
 
 // gtk callbacks
