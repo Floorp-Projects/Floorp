@@ -3191,9 +3191,9 @@ nsBrowserWindow::DisplayReflowStats(PRBool aIsOn)
     SetBoolPref("layout.reflow.showframecounts",aIsOn);
     ForceRefresh();
 #else
-    fprintf(out,"***********************************\n");
-    fprintf(out, "Sorry, you have built with MOZ_REFLOW_PERF=1\n");
-    fprintf(out,"***********************************\n");
+    printf("***********************************\n");
+    printf("Sorry, you have built with MOZ_REFLOW_PERF=1\n");
+    printf("***********************************\n");
 #endif
     NS_RELEASE(shell);
   }
