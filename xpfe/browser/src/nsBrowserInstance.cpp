@@ -1510,15 +1510,6 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
 
   nsAutoString urlStr(url);
 
-
-  nsAutoString kStartDocumentLoad("StartDocumentLoad");
-  rv = observer->Notify(mContentWindow,
-                        kStartDocumentLoad.GetUnicode(),
-                        urlStr.GetUnicode());
-
-  // XXX Ignore rv for now. They are using nsIEnumerator instead of
-  // nsISimpleEnumerator.
-
 #ifdef DEBUG_warren
   char* urls;
   aURL->GetSpec(&urls);
@@ -1531,6 +1522,35 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
   nsCRT::free(urls);
 #endif
 
+  // Check if this notification is for a frame
+  PRBool isFrame=PR_FALSE;
+  nsIContentViewerContainer *   container=nsnull;
+  aLoader->GetContainer(&container);
+  if (container) {
+     nsCOMPtr<nsIWebShell>   ws(do_QueryInterface(container));
+	 if (ws) {
+		 nsIWebShell *  parent=nsnull;
+		 ws->GetParent(parent);
+		 if (parent) 
+			 isFrame = PR_TRUE;
+		 NS_IF_RELEASE(parent);
+     }
+  }
+  NS_IF_RELEASE(container);
+
+  if (!isFrame) {
+    nsAutoString kStartDocumentLoad("StartDocumentLoad");
+    rv = observer->Notify(mContentWindow,
+                        kStartDocumentLoad.GetUnicode(),
+                        urlStr.GetUnicode());
+
+    // XXX Ignore rv for now. They are using nsIEnumerator instead of
+    // nsISimpleEnumerator.
+    // set the url string in the urlbar only for toplevel pages, not for frames
+	setAttribute( mWebShell, "urlbar", "value", url);
+  }
+
+
   // Kick start the throbber
   setAttribute( mWebShell, "Browser:Throbber", "busy", "true" );
 
@@ -1540,9 +1560,6 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
   //Disable the reload button
   setAttribute(mWebShell, "canReload", "disabled", "true");
   
-  // set the url string in the urlbar
-  setAttribute( mWebShell, "urlbar", "value", url);  
-
 #ifdef NECKO
   nsCRT::free(url);
 #endif
