@@ -1,5 +1,6 @@
 J S C   R E A D M E   F I L E
-Jeff Dyer, Dec-1-2000
+Jeff Dyer, Mountain View Compiler Company
+Dec-15-2000
 
 OVERVIEW
 
@@ -19,11 +20,11 @@ installed on your system. If it is correctly installed, you can type
 
 followed by a bunch of other documentation text.
 
-NOTE: I've only tried to build on NT40 using Java 1.3.0_01. You may
-get different results in different environments.
+NOTE: I've only tried to build on NT40 using Java2 1.3.0_01. You may
+get different results in different environments. 
 
 Go to the directory ./build/java, and run your favorite make
-utility. Such as with the command:
+utility, such as:
 
 	make
 
@@ -75,6 +76,10 @@ ISSUES
 * Intermediate form of references, classes, and interfaces.
 
 CHANGES
+
+Dec-15-2000
+-----------
+Removed dependency on sun.tools packages.
 
 Dec-1-2000
 ----------
