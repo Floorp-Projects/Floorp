@@ -51,7 +51,7 @@ function Startup()
 {
   gData = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-themes.xul"];
   var list = document.getElementById( "skinsList" );
-  if (gData.loaded) {
+  if ("loaded" in gData && "themeIndex" in gData) {
     list.selectedIndex = gData.themeIndex;    
     return;
   }
