@@ -11168,7 +11168,7 @@ if test "${enable_homedir+set}" = set; then
     if echo "$enableval" | grep "\/" >/dev/null; then
     { echo "configure: error: "Homedir must be single relative path."" 1>&2; exit 1; }
   else 
-    cat >> confdefs.h <<\EOF
+    cat >> confdefs.h <<EOF
 #define MOZ_USER_DIR "$enableval"
 EOF
 
