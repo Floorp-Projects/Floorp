@@ -42,7 +42,7 @@ private:
   //Helper funcs
   char* AddSecPolicyPrefix(JSContext *cx, char *pref_str);
   char* GetSitePolicy(const char *org);
-  JSBool CheckForPrivilege(JSContext *cx, char *prop_name, int priv_code);
+  PRInt32 CheckForPrivilege(JSContext *cx, char *prop_name, int priv_code);
   JSBool ContinueOnViolation(JSContext *cx, int pref_code);
   JSBool CheckForPrivilegeContinue(JSContext *cx, char *prop_name, int priv_code, int pref_code);
 
