@@ -212,7 +212,7 @@ nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext*      aPresContext,
 {
   float p2t;
   float t2p;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetPixelsToTwips(&p2t);
   aPresContext->GetTwipsToPixels(&t2p);
 
   nscoord ascent;
