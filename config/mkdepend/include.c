@@ -28,6 +28,10 @@ in this Software without prior written authorization from The Open Group.
 
 #include "def.h"
 
+#ifdef _MSC_VER
+#define S_ISDIR(m) (((m) & _S_IFDIR) == _S_IFDIR)
+#endif
+
 extern struct	inclist	inclist[ MAXFILES ],
 			*inclistp;
 extern char	*includedirs[ ];
@@ -264,7 +268,7 @@ struct inclist *inc_path(file, include, dot)
 	 * then check the exact path provided.
 	 */
 	if (!found && (dot || *include == '/')) {
-		if (stat(include, &st) == 0) {
+		if (stat(include, &st) == 0 && !S_ISDIR(st.st_mode)) {
 			ip = newinclude(include, include);
 			found = TRUE;
 		}
@@ -288,7 +292,7 @@ struct inclist *inc_path(file, include, dot)
 			strcpy(path + (p-file) + 1, include);
 		}
 		remove_dotdot(path);
-		if (stat(path, &st) == 0) {
+		if (stat(path, &st) == 0 && !S_ISDIR(st.st_mode)) {
 			ip = newinclude(path, include);
 			found = TRUE;
 		}
@@ -304,7 +308,7 @@ struct inclist *inc_path(file, include, dot)
 		for (pp = includedirs; *pp; pp++) {
 			sprintf(path, "%s/%s", *pp, include);
 			remove_dotdot(path);
-			if (stat(path, &st) == 0) {
+			if (stat(path, &st) == 0 && !S_ISDIR(st.st_mode)) {
 				ip = newinclude(path, include);
 				found = TRUE;
 				break;
