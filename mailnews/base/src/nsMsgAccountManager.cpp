@@ -741,13 +741,16 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
   if (!aDefaultAccount) return NS_ERROR_NULL_POINTER;
 
   if (!m_defaultAccount) {
+    PRUint32 count;
 #ifdef DEBUG_ACCOUNTMANAGER
     printf("No default account. Looking for one..\n");
-    PRUint32 count;
     m_accounts->Count(&count);
     printf("There are %d accounts\n", count);
 #endif
-    if (count == 0) return NS_ERROR_FAILURE;
+    if (count == 0) {
+      *aDefaultAccount=nsnull;
+      return NS_OK;
+    }
 
     nsCOMPtr<nsISupports> element;
     rv = m_accounts->GetElementAt(0, getter_AddRefs(element));
