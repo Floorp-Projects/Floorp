@@ -887,7 +887,7 @@ function parseOutlookTextField(args, textIndexName, eventFields)
 {
   var textString = (textIndexName in args? eventFields[args[textIndexName]] : "");
   if (textString)
-    return textString.replace("\"\"", "\"");
+    return textString.replace(/""/g, "\"");
   else
     return textString; // null or empty
 }
