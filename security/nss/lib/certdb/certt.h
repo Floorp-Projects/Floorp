@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.12 2001/11/08 20:46:02 ian.mcgreer%sun.com Exp $
+ * $Id: certt.h,v 1.13 2001/11/21 18:00:09 relyea%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -821,8 +821,11 @@ SEC_ASN1_CHOOSER_DECLARE(CERT_CertificateRequestTemplate)
 SEC_ASN1_CHOOSER_DECLARE(CERT_CertificateTemplate)
 SEC_ASN1_CHOOSER_DECLARE(CERT_CrlTemplate)
 SEC_ASN1_CHOOSER_DECLARE(CERT_IssuerAndSNTemplate)
+SEC_ASN1_CHOOSER_DECLARE(CERT_NameTemplate)
 SEC_ASN1_CHOOSER_DECLARE(CERT_SetOfSignedCrlTemplate)
 SEC_ASN1_CHOOSER_DECLARE(CERT_SignedDataTemplate)
+SEC_ASN1_CHOOSER_DECLARE(CERT_SubjectPublicKeyInfoTemplate)
+SEC_ASN1_CHOOSER_DECLARE(SEC_SignedCertificateTemplate)
 
 SEC_END_PROTOS
 

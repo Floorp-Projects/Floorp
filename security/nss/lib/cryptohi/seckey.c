@@ -141,6 +141,7 @@ const SEC_ASN1Template SECKEY_KEAParamsTemplate[] = {
 
 SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_DSAPublicKeyTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_RSAPublicKeyTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(CERT_SubjectPublicKeyInfoTemplate)
 
 
 /* Create an RSA key pair is any slot able to do so.

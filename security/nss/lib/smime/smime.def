@@ -183,3 +183,16 @@ SEC_PKCS7Encode;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.4 {     # NSS 3.4. release
+;+    global:
+;+# FOR PSM
+CERT_DecodeCertFromPackage;
+NSS_CMSSignedData_SetDigestValue;
+NSS_CMSMessage_IsSigned;
+NSS_SMIMESignerInfo_SaveSMIMEProfile;
+SEC_PKCS7CopyContentInfo;
+SEC_PKCS7VerifyDetachedSignature;
+SECMIME_DecryptionAllowed;
+;+    local:
+;+       *;
+;+};

@@ -47,7 +47,6 @@ ifeq ($(OS_ARCH), WINNT)
 SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
 IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
 
-DLLFLAGS += -DEF:ssl.def
 RES = $(OBJDIR)/ssl.res
 RESNAME = ssl.rc
 
@@ -70,38 +69,3 @@ EXTRA_SHARED_LIBS += \
 	-lnspr4 \
 	$(NULL)
 endif
-
-
-ifeq ($(OS_ARCH),SunOS)
-MAPFILE = $(OBJDIR)/sslmap.sun
-ALL_TRASH += $(MAPFILE)
-MKSHLIB += -M $(MAPFILE)
-endif
-
-ifeq ($(OS_ARCH),AIX)
-MAPFILE = $(OBJDIR)/sslmap.aix
-ALL_TRASH += $(MAPFILE)
-EXPORT_RULES = -bexport:$(MAPFILE)
-endif
-
-ifeq ($(OS_ARCH),HP-UX)
-MAPFILE = $(OBJDIR)/sslmap.hp
-ALL_TRASH += $(MAPFILE)
-MKSHLIB += -c $(MAPFILE)
-endif
-
-ifeq ($(OS_ARCH), OSF1)
-MAPFILE = $(OBJDIR)/sslmap.osf
-ALL_TRASH += $(MAPFILE)
-MKSHLIB += -hidden -input $(MAPFILE)
-endif
-
-ifeq ($(OS_ARCH),Linux)
-MAPFILE = $(OBJDIR)/sslmap.linux
-ALL_TRASH += $(MAPFILE)
-MKSHLIB += -Wl,--version-script,$(MAPFILE)
-endif
-
-
-	
-

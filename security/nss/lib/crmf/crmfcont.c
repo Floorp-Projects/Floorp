@@ -361,7 +361,7 @@ crmf_create_arch_rem_gen_privkey(PRBool archiveRemGenPrivKey)
     }
     dummy = SEC_ASN1EncodeItem(NULL, 
 			       &newArchOptions->option.archiveRemGenPrivKey,
-			       &value, SEC_BooleanTemplate);
+			       &value, SEC_ASN1_GET(SEC_BooleanTemplate));
     PORT_Assert (dummy == &newArchOptions->option.archiveRemGenPrivKey);
     if (dummy != &newArchOptions->option.archiveRemGenPrivKey) {
         SECITEM_FreeItem (dummy, PR_TRUE);
@@ -999,7 +999,7 @@ crmf_get_pkiarchiveoptions_subtemplate(CRMFControl *inControl)
     switch (inControl->tag) {
     case SEC_OID_PKIX_REGCTRL_REGTOKEN:
     case SEC_OID_PKIX_REGCTRL_AUTHENTICATOR:
-        retTemplate = SEC_UTF8StringTemplate;
+        retTemplate = SEC_ASN1_GET(SEC_UTF8StringTemplate);
 	break;
     case SEC_OID_PKIX_REGCTRL_PKI_ARCH_OPTIONS:
         retTemplate = crmf_get_pkiarchive_subtemplate(inControl);

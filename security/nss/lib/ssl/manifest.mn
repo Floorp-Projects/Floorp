@@ -49,6 +49,7 @@ EXPORTS = \
 	$(NULL)
 
 MODULE = security
+MAPFILE = $(OBJDIR)/ssl.def
 
 CSRCS = \
 	emulate.c \

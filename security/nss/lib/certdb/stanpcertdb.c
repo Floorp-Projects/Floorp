@@ -126,7 +126,7 @@ done:
 }
 
 SECStatus
-CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
+__CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
 		       CERTCertTrust *trust)
 {
     NSSCertificate *c = STAN_GetNSSCertificate(cert);
@@ -154,6 +154,13 @@ CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
     }
     */
     return SECFailure;
+}
+
+SECStatus
+CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
+		       CERTCertTrust *trust)
+{
+    return __CERT_AddTempCertToPerm(cert, nickname, trust);
 }
 
 CERTCertificate *

@@ -39,10 +39,13 @@
 
 SEC_ASN1_MKSUB(SECOID_AlgorithmIDTemplate)
 SEC_ASN1_MKSUB(SEC_AnyTemplate)
+SEC_ASN1_MKSUB(SEC_NullTemplate)
 SEC_ASN1_MKSUB(SEC_BitStringTemplate)
 SEC_ASN1_MKSUB(SEC_IntegerTemplate)
 SEC_ASN1_MKSUB(SEC_OctetStringTemplate)
 SEC_ASN1_MKSUB(SEC_UTCTimeTemplate)
+SEC_ASN1_MKSUB(CERT_SubjectPublicKeyInfoTemplate)
+SEC_ASN1_MKSUB(CERT_NameTemplate)
 
 /* 
  * It's all implicit tagging.
@@ -85,7 +88,7 @@ static const SEC_ASN1Template CRMFOptionalValidityTemplate[] = {
 };
 
 static const SEC_ASN1Template crmfPointerToNameTemplate[] = {
-    { SEC_ASN1_POINTER, 0, CERT_NameTemplate},
+    { SEC_ASN1_POINTER | SEC_ASN1_XTRN, 0, SEC_ASN1_SUB(CERT_NameTemplate)},
     { 0 }
 };
 
@@ -110,9 +113,10 @@ static const SEC_ASN1Template CRMFCertTemplateTemplate[] = {
    { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | 
      SEC_ASN1_EXPLICIT | SEC_ASN1_CONSTRUCTED | 5, 
      offsetof (CRMFCertTemplate, subject), crmfPointerToNameTemplate },
-   { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_POINTER | 6, 
+   { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_POINTER | 
+     SEC_ASN1_XTRN | 6, 
      offsetof (CRMFCertTemplate, publicKey), 
-     CERT_SubjectPublicKeyInfoTemplate }, 
+     SEC_ASN1_SUB(CERT_SubjectPublicKeyInfoTemplate) }, 
    { SEC_ASN1_NO_STREAM | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_OPTIONAL | 
      SEC_ASN1_XTRN | 7,
      offsetof (CRMFCertTemplate, issuerUID), 
@@ -170,15 +174,16 @@ static const SEC_ASN1Template CRMFPOPOSigningKeyInputTemplate[] = {
       offsetof(CRMFPOPOSigningKeyInput, authInfo.sender) },
     { SEC_ASN1_BIT_STRING | SEC_ASN1_OPTIONAL | 1,
       offsetof (CRMFPOPOSigningKeyInput, authInfo.publicKeyMAC) },
-    { SEC_ASN1_INLINE, offsetof(CRMFPOPOSigningKeyInput, publicKey), 
-      CERT_SubjectPublicKeyInfoTemplate },
+    { SEC_ASN1_INLINE | SEC_ASN1_XTRN, 
+      offsetof(CRMFPOPOSigningKeyInput, publicKey), 
+      SEC_ASN1_SUB(CERT_SubjectPublicKeyInfoTemplate) },
     { 0 }
 };
 
 const SEC_ASN1Template CRMFRAVerifiedTemplate[] = {
-    { SEC_ASN1_CONTEXT_SPECIFIC | 0, 
+    { SEC_ASN1_CONTEXT_SPECIFIC | 0 | SEC_ASN1_XTRN, 
       0,
-      SEC_NullTemplate },
+      SEC_ASN1_SUB(SEC_NullTemplate) },
     { 0 }
 };
 

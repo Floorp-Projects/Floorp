@@ -36,7 +36,7 @@
  * Encoding Rules).  The routines are found in and used extensively by the
  * security library, but exported for other use.
  *
- * $Id: secasn1.h,v 1.4 2001/05/02 20:14:46 wtc%netscape.com Exp $
+ * $Id: secasn1.h,v 1.5 2001/11/21 18:00:28 relyea%netscape.com Exp $
  */
 
 #ifndef _SECASN1_H_
@@ -264,13 +264,16 @@ extern const SEC_ASN1Template SEC_SkipTemplate[];
 */
 SEC_ASN1_CHOOSER_DECLARE(SEC_AnyTemplate)
 SEC_ASN1_CHOOSER_DECLARE(SEC_BMPStringTemplate)
+SEC_ASN1_CHOOSER_DECLARE(SEC_BooleanTemplate)
 SEC_ASN1_CHOOSER_DECLARE(SEC_BitStringTemplate)
 SEC_ASN1_CHOOSER_DECLARE(SEC_GeneralizedTimeTemplate)
 SEC_ASN1_CHOOSER_DECLARE(SEC_IA5StringTemplate)
 SEC_ASN1_CHOOSER_DECLARE(SEC_IntegerTemplate)
+SEC_ASN1_CHOOSER_DECLARE(SEC_NullTemplate)
 SEC_ASN1_CHOOSER_DECLARE(SEC_ObjectIDTemplate)
 SEC_ASN1_CHOOSER_DECLARE(SEC_OctetStringTemplate)
 SEC_ASN1_CHOOSER_DECLARE(SEC_UTCTimeTemplate)
+SEC_ASN1_CHOOSER_DECLARE(SEC_UTF8StringTemplate)
 
 SEC_ASN1_CHOOSER_DECLARE(SEC_PointerToAnyTemplate)
 SEC_ASN1_CHOOSER_DECLARE(SEC_PointerToOctetStringTemplate)

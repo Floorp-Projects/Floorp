@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.10 2001/11/02 00:10:55 ddrinan%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.11 2001/11/21 18:00:28 relyea%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -2965,14 +2965,17 @@ const SEC_ASN1Template SEC_SkipTemplate[] = {
 */
 SEC_ASN1_CHOOSER_IMPLEMENT(SEC_AnyTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(SEC_BMPStringTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SEC_BooleanTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(SEC_BitStringTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(SEC_IA5StringTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(SEC_GeneralizedTimeTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(SEC_IntegerTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SEC_NullTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(SEC_ObjectIDTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(SEC_OctetStringTemplate)
-SEC_ASN1_CHOOSER_IMPLEMENT(SEC_UTCTimeTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(SEC_PointerToAnyTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(SEC_PointerToOctetStringTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(SEC_SetOfAnyTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SEC_UTCTimeTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SEC_UTF8StringTemplate)
 
