@@ -62,6 +62,7 @@ class NS_COM nsHashKey {
     enum nsHashKeyType {
         UnknownKey,
         SupportsKey,
+        PRUint32Key,
         VoidKey,
         IDKey,
         CStringKey,
@@ -225,6 +226,31 @@ class NS_COM nsISupportsKey : public nsHashKey {
 
     nsISupportsKey(nsIObjectInputStream* aStream, nsresult *aResult);
     nsresult Write(nsIObjectOutputStream* aStream) const;
+};
+
+
+class nsPRUint32Key : public nsHashKey {
+protected:
+    PRUint32 mKey;
+public:
+    nsPRUint32Key(PRUint32 key) {
+#ifdef DEBUG
+        mKeyType = PRUint32Key;
+#endif
+        mKey = key;
+    }
+
+    PRUint32 HashCode(void) const {
+        return mKey;
+    }
+
+    PRBool Equals(const nsHashKey *aKey) const {
+        return mKey == ((const nsPRUint32Key *) aKey)->mKey;
+    }
+    nsHashKey *Clone() const {
+        return new nsPRUint32Key(mKey);
+    }
+    PRUint32 GetValue() { return mKey; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
