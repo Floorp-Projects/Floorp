@@ -932,11 +932,6 @@
 	margin						: 0px 15px;
 }
 
-#week-view-day-gradient
-{
-   list-style-image              : url( "chrome://calendar/skin/day_left_gradient.png"  );
-}	
-
 /* Week View: Controls */
 
 #week-controls-box
