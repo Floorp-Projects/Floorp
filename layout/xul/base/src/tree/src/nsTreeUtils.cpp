@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsOutlinerUtils.h"
+#include "nsChildIterator.h"
 
 nsresult
 nsOutlinerUtils::TokenizeProperties(const nsAString& aProperties, nsISupportsArray* aPropertiesArray)
@@ -82,11 +83,9 @@ nsOutlinerUtils::TokenizeProperties(const nsAString& aProperties, nsISupportsArr
 nsresult
 nsOutlinerUtils::GetImmediateChild(nsIContent* aContainer, nsIAtom* aTag, nsIContent** aResult)
 {
-  PRInt32 childCount;
-  aContainer->ChildCount(childCount);
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> child;
-    aContainer->ChildAt(i, *getter_AddRefs(child));
+  ChildIterator iter, last;
+  for (ChildIterator::Init(aContainer, &iter, &last); iter != last; ++iter) {
+    nsCOMPtr<nsIContent> child = *iter;
     nsCOMPtr<nsIAtom> tag;
     child->GetTag(*getter_AddRefs(tag));
     if (tag == aTag) {

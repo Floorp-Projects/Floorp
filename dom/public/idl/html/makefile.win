@@ -94,6 +94,7 @@ XPIDLSRCS =					\
 	.\nsIDOMNSHTMLOptionCollectn.idl	\
 	.\nsIDOMNSHTMLSelectElement.idl		\
 	.\nsIDOMNSHTMLTextAreaElement.idl	\
+	.\nsIDOMNSXBLFormControl.idl		\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

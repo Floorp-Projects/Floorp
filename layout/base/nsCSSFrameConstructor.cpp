@@ -105,6 +105,7 @@
 #include "nsIXULDocument.h"
 #include "nsIPrintPreviewContext.h"
 #include "nsIDOMMutationEvent.h"
+#include "nsChildIterator.h"
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
@@ -122,11 +123,6 @@ static NS_DEFINE_CID(kAttributeContentCID, NS_ATTRIBUTECONTENT_CID);
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
 #endif
-
-// XXX - temporary, this is for GfxList View
-#include "nsViewsCID.h"
-#include "nsWidgetsCID.h"
-// to here
 
 #include "nsInlineFrame.h"
 #include "nsBlockFrame.h"
@@ -923,157 +919,6 @@ nsMathMLmtableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame)
 }
 #endif // MOZ_MATHML
 
-//----------------------------------------------------------------------
-//
-// XBL insertion points
-//
-
-/**
- * Helper class for iterating children during frame construction.
- * This class should always be used in lieu of the straight content
- * node APIs, since it handles XBL-generated anonymous content as
- * well.
- */
-class ChildIterator
-{
-protected:
-  nsCOMPtr<nsIContent> mContent;
-  PRUint32 mIndex;
-  nsCOMPtr<nsIDOMNodeList> mNodes;
-
-public:
-  ChildIterator()
-    : mIndex(0) {}
-
-  ChildIterator(const ChildIterator& aOther)
-    : mContent(aOther.mContent),
-      mIndex(aOther.mIndex),
-      mNodes(aOther.mNodes) {}
-
-  ChildIterator& operator=(const ChildIterator& aOther) {
-    mContent = aOther.mContent;
-    mIndex = aOther.mIndex;
-    mNodes = aOther.mNodes;
-    return *this;
-  }
-
-  ChildIterator& operator++() {
-    ++mIndex;
-    return *this;
-  }
-
-  ChildIterator operator++(int) {
-    ChildIterator result(*this);
-    ++mIndex;
-    return result;
-  }
-
-  ChildIterator& operator--() {
-    --mIndex;
-    return *this;
-  }
-
-  ChildIterator operator--(int) {
-    ChildIterator result(*this);
-    --mIndex;
-    return result;
-  }
-
-  already_AddRefed<nsIContent> get() const {
-    nsIContent* result = nsnull;
-    if (mNodes) {
-      nsCOMPtr<nsIDOMNode> node;
-      mNodes->Item(mIndex, getter_AddRefs(node));
-      CallQueryInterface(node, &result);
-    }
-    else 
-      mContent->ChildAt(PRInt32(mIndex), result);
-
-    return result;
-  }
-
-  already_AddRefed<nsIContent> operator*() const { return get(); }
-
-  PRBool operator==(const ChildIterator& aOther) const {
-    return mContent == aOther.mContent && mIndex == aOther.mIndex;
-  }
-
-  PRBool operator!=(const ChildIterator& aOther) const {
-    return !aOther.operator==(*this);
-  }
-
-  PRUint32 index() {
-    return mIndex;
-  }
-
-  void seek(PRUint32 aIndex) {
-#ifdef DEBUG
-    // Make sure that aIndex is reasonable
-    PRUint32 length;
-    if (mNodes)
-      mNodes->GetLength(&length);
-    else
-      mContent->ChildCount(NS_REINTERPRET_CAST(PRInt32&, length));
-
-    NS_ASSERTION(PRInt32(aIndex) >= 0 && aIndex <= length, "out of bounds");
-#endif
-
-    mIndex = aIndex;
-  }
-
-  /**
-   * Create a pair of ChildIterators for a content node. aFirst will
-   * point to the first child of aContent; aLast will point one past
-   * the last child of aContent.
-   */
-  static nsresult Init(nsIContent*    aContent,
-                       ChildIterator* aFirst,
-                       ChildIterator* aLast);
-};
-
-nsresult
-ChildIterator::Init(nsIContent*    aContent,
-                    ChildIterator* aFirst,
-                    ChildIterator* aLast)
-{
-  NS_PRECONDITION(aContent != nsnull, "no content");
-  if (! aContent)
-    return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIDocument> doc;
-  aContent->GetDocument(*getter_AddRefs(doc));
-  NS_ASSERTION(doc != nsnull, "element not in the document");
-  if (! doc)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIBindingManager> mgr;
-  doc->GetBindingManager(getter_AddRefs(mgr));
-  if (! mgr)
-    return NS_ERROR_FAILURE;
-
-  // If this node has XBL children, then use them. Otherwise, just use
-  // the vanilla content APIs.
-  nsCOMPtr<nsIDOMNodeList> nodes;
-  mgr->GetXBLChildNodesFor(aContent, getter_AddRefs(nodes));
-
-  PRUint32 length;
-  if (nodes)
-    nodes->GetLength(&length);
-  else
-    aContent->ChildCount((PRInt32&) length);
-
-  aFirst->mContent = aContent;
-  aLast->mContent  = aContent;
-  aFirst->mIndex   = 0;
-  aLast->mIndex    = length;
-  aFirst->mNodes   = nodes;
-  aLast->mNodes    = nodes;
-
-  return NS_OK;
-}
-
-// -----------------------------------------------------------
-
 /**
  * If the parent frame is a |tableFrame| and the child is a
  * |captionFrame|, then we want to insert the frames beneath the
@@ -1246,11 +1091,14 @@ nsCSSFrameConstructor::Init(nsIDocument* aDocument)
 
   mDocument = aDocument; // not refcounted!
 
-  // This initializes the Gfx Scrollbar Prefs booleans
+  // This initializes the Prefs booleans
   mGotGfxPrefs = PR_FALSE;
+  mGotXBLFormPrefs = PR_FALSE;
   mHasGfxScrollbars = PR_FALSE;
+  mUseXBLForms = PR_FALSE;
 
   HasGfxScrollbars();
+  UseXBLForms();
 
   return NS_OK;
 }
@@ -4011,7 +3859,9 @@ nsCSSFrameConstructor::HasGfxScrollbars()
   if (!mGotGfxPrefs) {
     nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
     if (pref) {
-      pref->GetBoolPref("nglayout.widget.gfxscrollbars", &mHasGfxScrollbars);
+      PRBool hasGfxScroll = PR_FALSE; // use a temp since we have a PRPackedBool
+      pref->GetBoolPref("nglayout.widget.gfxscrollbars", &hasGfxScroll);
+      mHasGfxScrollbars = hasGfxScroll;
       mGotGfxPrefs = PR_TRUE;
     } else {
       mHasGfxScrollbars = PR_FALSE;
@@ -4022,6 +3872,22 @@ nsCSSFrameConstructor::HasGfxScrollbars()
   // we no longer support native scrollbars. Except in form elements. So 
   // we always return true
   return PR_TRUE;
+}
+
+PRBool
+nsCSSFrameConstructor::UseXBLForms()
+{
+  if (!mGotXBLFormPrefs) {
+    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
+    if (pref) {
+      PRBool useXBLForms = PR_FALSE; // use a temp since we have a PRPackedBool
+      pref->GetBoolPref("nglayout.debug.enable_xbl_forms", &useXBLForms);
+      mUseXBLForms = useXBLForms;
+      mGotXBLFormPrefs = PR_TRUE;
+    }
+  }
+
+  return mUseXBLForms;
 }
 
 nsresult
@@ -4572,14 +4438,24 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
     rv = ConstructTextControlFrame(aPresShell, aPresContext, newFrame, aContent);
   }
   else if (nsHTMLAtoms::select == aTag) {
-    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+    if (UseXBLForms()) {
+      static PRBool loadedSelectBinding = PR_FALSE;
+      if (!loadedSelectBinding) {
+        loadedSelectBinding = PR_TRUE;
+        nsCOMPtr<nsIXBLBinding> binding;
+        nsCAutoString bindingUrl("chrome://forms/content/select.xml#select");
+        gXBLService->GetBinding(aContent, bindingUrl, getter_AddRefs(binding));
+      }
+    } else {
+      if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+        ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+      }
+      isReplaced = PR_TRUE;
+      rv = ConstructSelectFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
+                                aTag, aStyleContext, newFrame,  processChildren,
+                                isAbsolutelyPositioned, frameHasBeenInitialized,
+                                isFixedPositioned, aFrameItems);
     }
-    isReplaced = PR_TRUE;
-    rv = ConstructSelectFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                              aTag, aStyleContext, newFrame,  processChildren,
-                              isAbsolutelyPositioned, frameHasBeenInitialized,
-                              isFixedPositioned, aFrameItems);
   }
   else if (nsHTMLAtoms::object == aTag) {
     if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
@@ -5764,10 +5640,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
   return rv;
 }
 #endif
-
-static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
-
-
 
 nsresult
 nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell* aPresShell, 
@@ -7900,7 +7772,8 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
         tag == nsXULAtoms::outlinerseparator ||
         tag == nsXULAtoms::outlinerchildren ||
         tag == nsXULAtoms::outlinerrow ||
-        tag == nsXULAtoms::outlinercell)
+        tag == nsXULAtoms::outlinercell ||
+        (UseXBLForms() && tag == nsHTMLAtoms::option))
       return NS_OK;
 
     PRBool treeChildren = tag.get() == nsXULAtoms::treechildren;
@@ -8488,7 +8361,8 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
         tag == nsXULAtoms::outlinerseparator ||
         tag == nsXULAtoms::outlinerchildren ||
         tag == nsXULAtoms::outlinerrow ||
-        tag == nsXULAtoms::outlinercell)
+        tag == nsXULAtoms::outlinercell ||
+        (UseXBLForms() && tag == nsHTMLAtoms::option))
       return NS_OK;
 
     PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
@@ -9368,7 +9242,8 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
         tag == nsXULAtoms::outlinerseparator ||
         tag == nsXULAtoms::outlinerchildren ||
         tag == nsXULAtoms::outlinerrow ||
-        tag == nsXULAtoms::outlinercell)
+        tag == nsXULAtoms::outlinercell ||
+        (UseXBLForms() && tag == nsHTMLAtoms::option))
       return NS_OK;
 
     PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Jan Varga (varga@utcru.sk)
+ *   Brian Ryner <bryner@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -49,6 +50,7 @@
 #include "nsIOutlinerBoxObject.h"
 #include "nsIOutlinerSelection.h"
 #include "nsIOutlinerContentView.h"
+#include "nsISelectElement.h"
 
 class Property;
 
@@ -150,6 +152,9 @@ class nsOutlinerContentView : public nsIOutlinerView,
 
     void SerializeSeparator(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex, nsVoidArray& aRows);
 
+    void SerializeOption(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex,
+                         nsVoidArray& aRows);
+
     void GetIndexInSubtree(nsIContent* aContainer, nsIContent* aContent, PRInt32* aResult);
     
     // Helper methods which we use to manage our plain array of rows.
@@ -178,13 +183,19 @@ class nsOutlinerContentView : public nsIOutlinerView,
 
     nsresult ParseProperties(nsIContent* aContent, Property** aProperty);
 
+    void GetSelectElement();
   private:
     nsCOMPtr<nsIOutlinerBoxObject>      mBoxObject;
     nsCOMPtr<nsIOutlinerSelection>      mSelection;
     nsCOMPtr<nsIContent>                mRoot;
+    nsCOMPtr<nsISelectElement>          mSelectElement;
     nsIDocument*                        mDocument;      // WEAK
     nsFixedSizeAllocator                mAllocator;
     nsVoidArray                         mRows;
+
+    PRPackedBool                        mHasCheckedSelect;
+    PRPackedBool                        mUpdateSelection;
+    PRPackedBool                        mIgnoreOptionSelected;
 };
 
 #endif // nsOutlinerContentView_h__

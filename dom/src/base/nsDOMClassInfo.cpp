@@ -107,6 +107,7 @@
 
 // HTMLSelectElement helper includes
 #include "nsIDOMHTMLSelectElement.h"
+#include "nsIDOMNSXBLFormControl.h"
 
 // HTMLEmbed/ObjectElement helper includes
 #include "nsIPluginInstance.h"
@@ -260,6 +261,8 @@
 #include "nsISelection.h"
 #include "nsIBoxObject.h"
 #include "nsIOutlinerSelection.h"
+#include "nsIOutlinerContentView.h"
+#include "nsIOutlinerView.h"
 #include "nsIXMLHttpRequest.h"
 #include "nsIDOMSerializer.h"
 #include "nsIDOMParser.h"
@@ -670,6 +673,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(BoxObject, nsDOMGenericSH,
                            DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(OutlinerSelection, nsDOMGenericSH,
+                           DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(OutlinerContentView, nsDOMGenericSH,
                            DEFAULT_SCRIPTABLE_FLAGS)
 
   // Crypto classes
@@ -1521,6 +1526,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(HTMLSelectElement, nsIDOMHTMLSelectElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLSelectElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLSelectElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSXBLFormControl)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -1724,6 +1730,11 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(OutlinerSelection, nsIOutlinerSelection)
     DOM_CLASSINFO_MAP_ENTRY(nsIOutlinerSelection)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(OutlinerContentView, nsIOutlinerContentView)
+    DOM_CLASSINFO_MAP_ENTRY(nsIOutlinerContentView)
+    DOM_CLASSINFO_MAP_ENTRY(nsIOutlinerView)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Crypto, nsIDOMCrypto)

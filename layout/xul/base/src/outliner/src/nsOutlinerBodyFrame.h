@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *  Dean Tessman <dean_tessman@hotmail.com>
+ *  Brian Ryner <bryner@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -158,8 +159,8 @@ class nsOutlinerColumn {
   PRUint32 mCropStyle;
   PRUint32 mTextAlignment;
   
-  PRBool mIsPrimaryCol;
-  PRBool mIsCyclerCol;
+  PRPackedBool mIsPrimaryCol;
+  PRPackedBool mIsCyclerCol;
 
   nsIFrame* mColFrame;
   nsIContent* mColElement;
@@ -175,8 +176,7 @@ public:
   nsIContent* GetElement() { return mColElement; };
 
   nscoord GetWidth();
-  const PRUnichar* GetID() { return mID.get(); };
-  void GetID(nsString& aID) { aID = mID; };
+  const nsAFlatString& GetID() { return mID; };
 
   void GetIDAtom(nsIAtom** aResult) { *aResult = mIDAtom; NS_IF_ADDREF(*aResult); };
 
@@ -233,6 +233,9 @@ class nsOutlinerBodyFrame : public nsLeafBoxFrame, public nsIOutlinerBoxObject, 
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOUTLINERBOXOBJECT
+
+  // nsIBox
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
 
   // nsICSSPseudoComparator
   NS_IMETHOD PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult);
@@ -393,6 +396,13 @@ protected:
   // Cache the box object
   void EnsureBoxObject();
 
+  // Get the base element, <outliner> or <select>
+  nsresult GetBaseElement(nsIContent** aElement);
+
+  void GetCellWidth(PRInt32 aRow, const nsAString& aColID, nscoord& aDesiredSize,
+                    nscoord& aCurrentSize);
+  nscoord CalcMaxRowWidth(nsBoxLayoutState& aState);
+
 protected: // Data Members
   // Our cached pres context.
   nsIPresContext* mPresContext;
@@ -404,9 +414,6 @@ protected: // Data Members
   // from the view.
   nsCOMPtr<nsIOutlinerView> mView;    
   
-  // Whether or not we're currently focused.
-  PRBool mFocused;
-
   // A cache of all the style contexts we have seen for rows and cells of the tree.  This is a mapping from
   // a list of atoms to a corresponding style context.  This cache stores every combination that
   // occurs in the tree, so for n distinct properties, this cache could have 2 to the n entries
@@ -437,9 +444,7 @@ protected: // Data Members
   nsRect mInnerBox;
   PRInt32 mRowHeight;
   PRInt32 mIndentation;
-
-  // An indicator that columns have changed and need to be rebuilt
-  PRBool mColumnsDirty;
+  nscoord mStringWidth;
 
   // A scratch array used when looking up cached style contexts.
   nsCOMPtr<nsISupportsArray> mScratchArray;
@@ -459,17 +464,25 @@ protected: // Data Members
   
   PRInt32 mDropRow;               // the row the mouse is hovering over during a drop
   DropOrientation mDropOrient;    // where we want to draw feedback (above/below/on this row) if allowed
-  PRBool mDropAllowed;            // if the drop is actually allowed here or not. we draw if this is true
-  PRBool mIsSortRectDrawn;        // have we already drawn the sort rectangle?
-  PRBool mAlreadyUndrewDueToScroll;   // we undraw early during auto-scroll; did we do this already?
-  
-  nsCOMPtr<nsIDragSession> mDragSession;
-  nsCOMPtr<nsIRenderingContext> mRenderingContext;
-  
+  // Whether or not we're currently focused.
+  PRPackedBool mFocused;
+
+  // An indicator that columns have changed and need to be rebuilt
+  PRPackedBool mColumnsDirty;
+
+  PRPackedBool mDropAllowed;            // if the drop is actually allowed here or not. we draw if this is true
+  PRPackedBool mAlreadyUndrewDueToScroll;   // we undraw early during auto-scroll; did we do this already?
+
+  // Do we have a fixed number of onscreen rows?
+  PRPackedBool mHasFixedRowCount;
+
+  PRPackedBool mVerticalOverflow;
+
   // timer for opening spring-loaded folders
   nsCOMPtr<nsITimer> mOpenTimer;
   PRInt32 mOpenTimerRow;
 
-  PRPackedBool mVerticalOverflow;
-
+  nsCOMPtr<nsIDragSession> mDragSession;
+  nsCOMPtr<nsIRenderingContext> mRenderingContext;
+  
 }; // class nsOutlinerBodyFrame

@@ -732,10 +732,10 @@ protected:
                         PRBool                   aIsFixedPositioned,
                         PRBool                   aCreateBlock);
 
-  // Probes the PresContext for the boolean value "nglayout.widget.gfxscrollbars"
-  //
+  // cache the "nglayout.widget.gfxscrollbars" pref
   PRBool HasGfxScrollbars();
-
+  // cache the "nglayout.debug.enable_xbl_forms" pref
+  PRBool UseXBLForms();
 
   nsresult RecreateFramesForContent(nsIPresContext* aPresContext,
                                     nsIContent* aContent, PRBool aInlineStyle = PR_FALSE,
@@ -986,8 +986,10 @@ protected:
   nsIFrame*           mGfxScrollFrame;
 
   // Cached Prefs
-  PRBool              mGotGfxPrefs;
-  PRBool              mHasGfxScrollbars;
+  PRPackedBool        mGotGfxPrefs;
+  PRPackedBool        mGotXBLFormPrefs;
+  PRPackedBool        mHasGfxScrollbars;
+  PRPackedBool        mUseXBLForms;
 
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
 

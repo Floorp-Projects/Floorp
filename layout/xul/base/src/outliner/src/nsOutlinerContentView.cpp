@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Jan Varga (varga@utcru.sk)
+ *   Brian Ryner <bryner@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -40,9 +41,14 @@
 #include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIDOMDocument.h"
 #include "nsOutlinerUtils.h"
 #include "nsOutlinerContentView.h"
+#include "nsChildIterator.h"
+#include "nsIDOMHTMLOptionElement.h"
+#include "nsIDOMClassInfo.h"
+#include "nsISelectElement.h"
 
 
 // A content model view implementation for the outliner.
@@ -147,7 +153,8 @@ class Row
 // document's observer list.
 
 nsOutlinerContentView::nsOutlinerContentView(void) :
-  mBoxObject(nsnull), mSelection(nsnull), mRoot(nsnull), mDocument(nsnull)
+  mBoxObject(nsnull), mSelection(nsnull), mRoot(nsnull), mDocument(nsnull),
+  mHasCheckedSelect(PR_FALSE), mUpdateSelection(PR_FALSE), mIgnoreOptionSelected(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
 
@@ -177,12 +184,16 @@ NS_NewOutlinerContentView(nsIOutlinerContentView** aResult)
   return NS_OK;
 }
 
+NS_IMPL_ADDREF(nsOutlinerContentView)
+NS_IMPL_RELEASE(nsOutlinerContentView)
 
-NS_IMPL_ISUPPORTS3(nsOutlinerContentView,
-                   nsIOutlinerView,
-                   nsIOutlinerContentView,
-                   nsIDocumentObserver);
-
+NS_INTERFACE_MAP_BEGIN(nsOutlinerContentView)
+  NS_INTERFACE_MAP_ENTRY(nsIOutlinerView)
+  NS_INTERFACE_MAP_ENTRY(nsIOutlinerContentView)
+  NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIOutlinerContentView)
+  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(OutlinerContentView)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 nsOutlinerContentView::GetRowCount(PRInt32* aRowCount)
@@ -204,6 +215,17 @@ NS_IMETHODIMP
 nsOutlinerContentView::SetSelection(nsIOutlinerSelection* aSelection)
 {
   mSelection = aSelection;
+  if (mUpdateSelection) {
+    mUpdateSelection = PR_FALSE;
+
+    mSelection->SetSelectEventsSuppressed(PR_TRUE);
+    for (PRInt32 i = 0; i < mRows.Count(); ++i) {
+      Row* row = (Row*)mRows[i];
+      if (row->mContent->HasAttr(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo))
+        mSelection->ToggleSelect(i);
+    }
+    mSelection->SetSelectEventsSuppressed(PR_FALSE);
+  }
 
   return NS_OK;
 }
@@ -416,13 +438,28 @@ nsOutlinerContentView::GetCellText(PRInt32 aRow, const PRUnichar* aColID, nsAStr
   _retval.SetCapacity(0);
 
   Row* row = (Row*)mRows[aRow];
-  nsCOMPtr<nsIContent> realRow;
-  nsOutlinerUtils::GetImmediateChild(row->mContent, nsXULAtoms::outlinerrow, getter_AddRefs(realRow));
-  if (realRow) {
-    nsCOMPtr<nsIContent> cell;
-    GetNamedCell(realRow, aColID, getter_AddRefs(cell));
-    if (cell) {
-      cell->GetAttr(kNameSpaceID_None, nsHTMLAtoms::label, _retval);
+
+  // Check for a "label" attribute - this is valid on an <outlineritem>
+  // or an <option>, with a single implied column.
+  if (NS_SUCCEEDED(row->mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::label, _retval))
+      && !_retval.IsEmpty())
+    return NS_OK;
+
+  nsCOMPtr<nsIAtom> rowTag;
+  row->mContent->GetTag(*getter_AddRefs(rowTag));
+  if (rowTag == nsHTMLAtoms::option) {
+    // Use the text node child as the label
+    nsCOMPtr<nsIDOMHTMLOptionElement> elem = do_QueryInterface(row->mContent);
+    elem->GetText(_retval);
+    return NS_OK;
+  } else if (rowTag == nsXULAtoms::outlineritem) {
+    nsCOMPtr<nsIContent> realRow;
+    nsOutlinerUtils::GetImmediateChild(row->mContent, nsXULAtoms::outlinerrow, getter_AddRefs(realRow));
+    if (realRow) {
+      nsCOMPtr<nsIContent> cell;
+      GetNamedCell(realRow, aColID, getter_AddRefs(cell));
+      if (cell)
+        cell->GetAttr(kNameSpaceID_None, nsHTMLAtoms::label, _retval);
     }
   }
 
@@ -575,6 +612,103 @@ nsOutlinerContentView::GetIndexOfItem(nsIDOMElement* aItem, PRInt32* _retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsOutlinerContentView::Select(PRInt32 aIndex)
+{
+  if (!mHasCheckedSelect)
+    GetSelectElement();
+
+  mIgnoreOptionSelected = PR_TRUE;
+  mSelectElement->SetOptionsSelectedByIndex(aIndex, aIndex, PR_TRUE,
+                                            PR_FALSE, PR_FALSE, nsnull);
+  mIgnoreOptionSelected = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOutlinerContentView::SelectAll()
+{
+  if (!mHasCheckedSelect)
+    GetSelectElement();
+
+  mIgnoreOptionSelected = PR_TRUE;
+  mSelectElement->SetOptionsSelectedByIndex(0, mRows.Count() - 1, PR_TRUE,
+                                            PR_FALSE, PR_FALSE, nsnull);
+  mIgnoreOptionSelected = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOutlinerContentView::Deselect(PRInt32 aIndex)
+{
+  if (!mHasCheckedSelect)
+    GetSelectElement();
+
+  mIgnoreOptionSelected = PR_TRUE;
+  mSelectElement->SetOptionsSelectedByIndex(aIndex, aIndex, PR_FALSE,
+                                            PR_FALSE, PR_FALSE, nsnull);
+  mIgnoreOptionSelected = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOutlinerContentView::DeselectAll()
+{
+  if (!mHasCheckedSelect)
+    GetSelectElement();
+
+  mIgnoreOptionSelected = PR_TRUE;
+  mSelectElement->SetOptionsSelectedByIndex(0, mRows.Count() - 1, PR_FALSE,
+                                            PR_FALSE, PR_FALSE, nsnull);
+  mIgnoreOptionSelected = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOutlinerContentView::SelectRange(PRInt32 aStart, PRInt32 aEnd)
+{
+  if (!mHasCheckedSelect)
+    GetSelectElement();
+
+  mIgnoreOptionSelected = PR_TRUE;
+  mSelectElement->SetOptionsSelectedByIndex(aStart, aEnd, PR_TRUE,
+                                            PR_FALSE, PR_FALSE, nsnull);
+  mIgnoreOptionSelected = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOutlinerContentView::DeselectRange(PRInt32 aStart, PRInt32 aEnd)
+{
+  if (!mHasCheckedSelect)
+    GetSelectElement();
+
+  mIgnoreOptionSelected = PR_TRUE;
+  mSelectElement->SetOptionsSelectedByIndex(aStart, aEnd, PR_FALSE,
+                                            PR_FALSE, PR_FALSE, nsnull);
+  mIgnoreOptionSelected = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOutlinerContentView::DeselectAllBut(PRInt32 aIndex)
+{
+  if (!mHasCheckedSelect)
+    GetSelectElement();
+
+  mIgnoreOptionSelected = PR_TRUE;
+  mSelectElement->SetOptionsSelectedByIndex(aIndex, aIndex, PR_TRUE,
+                                            PR_TRUE, PR_FALSE, nsnull);
+  mIgnoreOptionSelected = PR_FALSE;
+    
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsOutlinerContentView::BeginUpdate(nsIDocument *aDocument)
@@ -704,6 +838,17 @@ nsOutlinerContentView::AttributeChanged(nsIDocument *aDocument,
           }
         }
       }
+    }
+  }
+  else if (tag == nsHTMLAtoms::option) {
+    if (aAttribute == nsLayoutAtoms::optionSelectedPseudo && !mIgnoreOptionSelected) {
+      PRInt32 index = FindContent(aContent);
+      if (index == -1)
+        return NS_OK;
+
+      NS_ASSERTION(mSelection, "Need to handle optionSelected change with no OutlinerSelection");
+      if (mSelection)
+          mSelection->ToggleSelect(index);
     }
   }
 
@@ -905,11 +1050,9 @@ nsOutlinerContentView::DocumentWillBeDestroyed(nsIDocument *aDocument)
 void
 nsOutlinerContentView::Serialize(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex, nsVoidArray& aRows)
 {
-  PRInt32 childCount;
-  aContent->ChildCount(childCount);
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> content;
-    aContent->ChildAt(i, *getter_AddRefs(content));
+  ChildIterator iter, last;
+  for (ChildIterator::Init(aContent, &iter, &last); iter != last; ++iter) {
+    nsCOMPtr<nsIContent> content = *iter;
     nsCOMPtr<nsIAtom> tag;
     content->GetTag(*getter_AddRefs(tag));
     PRInt32 count = aRows.Count();
@@ -917,6 +1060,8 @@ nsOutlinerContentView::Serialize(nsIContent* aContent, PRInt32 aParentIndex, PRI
       SerializeItem(content, aParentIndex, aIndex, aRows);
     else if (tag == nsXULAtoms::outlinerseparator)
       SerializeSeparator(content, aParentIndex, aIndex, aRows);
+    else if (tag == nsHTMLAtoms::option)
+      SerializeOption(content, aParentIndex, aIndex, aRows);
     *aIndex += aRows.Count() - count;
   }
 }
@@ -966,13 +1111,25 @@ nsOutlinerContentView::SerializeSeparator(nsIContent* aContent, PRInt32 aParentI
 }
 
 void
+nsOutlinerContentView::SerializeOption(nsIContent* aContent, PRInt32 aParentIndex,
+                                       PRInt32* aIndex, nsVoidArray& aRows)
+{
+  Row* row = Row::Create(mAllocator, aContent, aParentIndex);
+  aRows.AppendElement(row);
+
+  // This will happen before the OutlinerSelection is hooked up.  So, cache the selected
+  // state in the row properties and update the selection when it is attached.
+
+  if (aContent->HasAttr(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo))
+    mUpdateSelection = PR_TRUE;
+}
+
+void
 nsOutlinerContentView::GetIndexInSubtree(nsIContent* aContainer, nsIContent* aContent, PRInt32* aIndex)
 {
-  PRInt32 childCount;
-  aContainer->ChildCount(childCount);
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> content;
-    aContainer->ChildAt(i, *getter_AddRefs(content));
+  ChildIterator iter, last;
+  for (ChildIterator::Init(aContainer, &iter, &last); iter != last; ++iter) {
+    nsCOMPtr<nsIContent> content = *iter;
     if (content == aContent)
       break;
 
@@ -1162,12 +1319,10 @@ nsOutlinerContentView::GetNamedCell(nsIContent* aContainer, const PRUnichar* aCo
   // Traverse through cells, try to find the cell by "ref" attribute or by cell
   // index in a row. "ref" attribute has higher priority.
   *aResult = nsnull;
-  PRInt32 childCount;
-  aContainer->ChildCount(childCount);
   PRInt32 j = 0;
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> cell;
-    aContainer->ChildAt(i, *getter_AddRefs(cell));
+  ChildIterator iter, last;
+  for (ChildIterator::Init(aContainer, &iter, &last); iter != last; ++iter) {
+    nsCOMPtr<nsIContent> cell = *iter;
     nsCOMPtr<nsIAtom> tag;
     cell->GetTag(*getter_AddRefs(tag));
     if (tag == nsXULAtoms::outlinercell) {
@@ -1230,3 +1385,21 @@ nsOutlinerContentView::ParseProperties(nsIContent* aContent, Property** aPropert
 
   return NS_OK;
 }
+
+void
+nsOutlinerContentView::GetSelectElement()
+{
+  nsCOMPtr<nsIContent> parent = mRoot;
+  nsCOMPtr<nsIAtom> tag;
+  nsCOMPtr<nsIContent> temp;
+
+  while (parent && NS_SUCCEEDED(parent->GetTag(*getter_AddRefs(tag)))
+         && tag != nsXULAtoms::outliner && tag != nsHTMLAtoms::select) {
+    temp = parent;
+    temp->GetParent(*getter_AddRefs(parent));
+  }
+
+  if (parent && tag == nsHTMLAtoms::select)
+    mSelectElement = do_QueryInterface(parent);
+}
+

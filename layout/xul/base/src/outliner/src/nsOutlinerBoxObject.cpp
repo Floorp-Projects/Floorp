@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  * Original Author: David W. Hyatt (hyatt@netscape.com)
+ *  Brian Ryner <bryner@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -44,6 +45,7 @@
 #include "nsOutlinerBodyFrame.h"
 #include "nsIAtom.h"
 #include "nsXULAtoms.h"
+#include "nsChildIterator.h"
 
 class nsOutlinerBoxObject : public nsIOutlinerBoxObject, public nsBoxObject
 {
@@ -75,9 +77,8 @@ nsOutlinerBoxObject::SetDocument(nsIDocument* aDocument)
   NS_ASSERTION(aDocument == nsnull, "SetDocument called with non-null document");
 
   // Drop the view's ref to us.
-  nsAutoString view(NS_LITERAL_STRING("view"));
   nsCOMPtr<nsISupports> suppView;
-  GetPropertyAsSupports(view.get(), getter_AddRefs(suppView));
+  GetPropertyAsSupports(NS_LITERAL_STRING("view").get(), getter_AddRefs(suppView));
   nsCOMPtr<nsIOutlinerView> outlinerView(do_QueryInterface(suppView));
   if (outlinerView)
     outlinerView->SetOutliner(nsnull); // Break the circular ref between the view and us.
@@ -109,19 +110,17 @@ NS_IMETHODIMP nsOutlinerBoxObject::Init(nsIContent* aContent, nsIPresShell* aPre
 
 static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
 {
-  nsCOMPtr<nsIAtom> tag;
-  aParent->GetTag(*getter_AddRefs(tag));
-  if (tag.get() == nsXULAtoms::outlinerbody) {
-    *aResult = aParent;
-    NS_IF_ADDREF(*aResult);
-  }
-  else {
-    PRInt32 count;
-    aParent->ChildCount(count);
-    for (PRInt32 i = 0; i < count; i++) {
-      nsCOMPtr<nsIContent> child;
-      aParent->ChildAt(i, *getter_AddRefs(child));
-      FindBodyElement(child, aResult);
+  ChildIterator iter, last;
+  for (ChildIterator::Init(aParent, &iter, &last); iter != last; ++iter) {
+    nsCOMPtr<nsIContent> content = *iter;
+    nsCOMPtr<nsIAtom> tag;
+    content->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::outlinerbody) {
+      *aResult = content;
+      NS_ADDREF(*aResult);
+      break;
+    } else {
+      FindBodyElement(content, aResult);
       if (*aResult)
         break;
     }
@@ -131,10 +130,8 @@ static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
 inline nsIOutlinerBoxObject*
 nsOutlinerBoxObject::GetOutlinerBody()
 {
-  nsAutoString outlinerbody(NS_LITERAL_STRING("outlinerbody"));
-
   nsCOMPtr<nsISupports> supp;
-  GetPropertyAsSupports(outlinerbody.get(), getter_AddRefs(supp));
+  GetPropertyAsSupports(NS_LITERAL_STRING("outlinerbody").get(), getter_AddRefs(supp));
 
   if (supp) {
     nsCOMPtr<nsIOutlinerBoxObject> body(do_QueryInterface(supp));
@@ -159,7 +156,7 @@ nsOutlinerBoxObject::GetOutlinerBody()
   // It's a frame. Refcounts are irrelevant.
   nsCOMPtr<nsIOutlinerBoxObject> body;
   frame->QueryInterface(NS_GET_IID(nsIOutlinerBoxObject), getter_AddRefs(body));
-  SetPropertyAsSupports(outlinerbody.get(), body);
+  SetPropertyAsSupports(NS_LITERAL_STRING("outlinerbody").get(), body);
   return body;
 }
 

@@ -39,6 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMNSHTMLSelectElement.h"
+#include "nsIDOMNSXBLFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -61,6 +62,8 @@
 #include "nsISelectControlFrame.h"
 #include "nsIDOMNSHTMLOptionCollectn.h"
 #include "nsGUIEvent.h"
+#include "nsIBoxObject.h"
+#include "nsIDOMNSDocument.h"
 
 // PresState
 #include "nsVoidArray.h"
@@ -119,6 +122,7 @@ private:
 class nsHTMLSelectElement : public nsGenericHTMLContainerFormElement,
                             public nsIDOMHTMLSelectElement,
                             public nsIDOMNSHTMLSelectElement,
+                            public nsIDOMNSXBLFormControl,
                             public nsISelectElement
 {
 public:
@@ -142,6 +146,9 @@ public:
 
   // nsIDOMNSHTMLSelectElement
   NS_DECL_NSIDOMNSHTMLSELECTELEMENT
+
+  // nsIDOMNSXBLFormControl
+  NS_DECL_NSIDOMNSXBLFORMCONTROL
 
   // nsIContent
   NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify, 
@@ -332,6 +339,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLSelectElement,
                                     nsGenericHTMLContainerFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLSelectElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLSelectElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSXBLFormControl)
   NS_INTERFACE_MAP_ENTRY(nsISelectElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLSelectElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -1861,6 +1869,18 @@ nsHTMLSelectElement::RestoreState(nsIPresContext* aPresContext,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLSelectElement::GetBoxObject(nsIBoxObject** aResult)
+{
+  *aResult = nsnull;
+
+  if (!mDocument)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(mDocument));
+  return nsDoc->GetBoxObjectFor(NS_STATIC_CAST(nsIDOMElement*, this), aResult);
 }
 
 nsresult

@@ -59,6 +59,7 @@ CPP_OBJS =					        \
         .\$(OBJDIR)\nsCSSFrameConstructor.obj           \
 	.\$(OBJDIR)\nsCSSRendering.obj 		        \
         .\$(OBJDIR)\nsFrameContentIterator.obj          \
+        .\$(OBJDIR)\nsChildIterator.obj			\
 	$(NULL)
 
 LINCS= \

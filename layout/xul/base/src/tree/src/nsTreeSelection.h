@@ -18,6 +18,7 @@
  * 
  * Contributor(s):
  *   David W. Hyatt <hyatt@netscape.com> (Original Author)
+ *   Brian Ryner <bryner@netscape.com>
  */
 
 #ifndef nsOutlinerSelection_h__
@@ -27,6 +28,8 @@
 #include "nsITimer.h"
 
 class nsIOutlinerBoxObject;
+class nsIOutlinerContentView;
+
 struct nsOutlinerRange;
 
 class nsOutlinerSelection : public nsIOutlinerSelection
@@ -44,6 +47,16 @@ protected:
   nsresult FireOnSelectHandler();
   static void SelectCallback(nsITimer *aTimer, void *aClosure);
   PRBool SingleSelection();
+
+  // Content view notification
+  nsresult GetContentView(nsIOutlinerContentView** aView);
+  void ContentViewSelect(PRInt32 aIndex);
+  void ContentViewSelectAll();
+  void ContentViewDeselect(PRInt32 aIndex);
+  void ContentViewDeselectAll();
+  void ContentViewSelectRange(PRInt32 aStart, PRInt32 aEnd);
+  void ContentViewDeselectRange(PRInt32 aStart, PRInt32 aEnd);
+  void ContentViewDeselectAllBut(PRInt32 aIndex);
 
 protected:
   // Members
