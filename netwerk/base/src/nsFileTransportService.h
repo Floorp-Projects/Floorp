@@ -55,7 +55,9 @@ public:
     nsSupportsArray mSuspendedTransportList;
     
 protected:
+    PRBool                      mShuttingDown;
     nsCOMPtr<nsIThreadPool>     mPool;
+    PRLock*                     mLock;
 };
 
 #endif /* nsFileTransportService_h___ */

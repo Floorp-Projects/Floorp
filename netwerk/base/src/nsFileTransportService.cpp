@@ -38,7 +38,9 @@
 nsFileTransportService::nsFileTransportService()    :
     mConnectedTransports (0),
     mTotalTransports (0),
-    mInUseTransports (0)
+    mInUseTransports (0),
+    mShuttingDown(PR_FALSE),
+    mLock(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -53,11 +55,20 @@ nsFileTransportService::Init()
                           NS_FILE_TRANSPORT_WORKER_COUNT_MIN,
                           NS_FILE_TRANSPORT_WORKER_COUNT_MAX,
                           NS_FILE_TRANSPORT_WORKER_STACK_SIZE);
-    return rv;
+    if (NS_FAILED(rv))
+        return rv;
+
+    mLock = PR_NewLock();
+    if (!mLock)
+        return NS_ERROR_FAILURE;
+
+    return NS_OK;
 }
 
 nsFileTransportService::~nsFileTransportService()
 {
+    if (mLock)
+        PR_DestroyLock(mLock);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsFileTransportService, nsFileTransportService);
@@ -151,6 +162,10 @@ nsFileTransportService::ProcessPendingRequests(void)
 nsresult
 nsFileTransportService::Shutdown(void)
 {
+    PR_Lock(mLock);
+    mShuttingDown = 1;
+    PR_Unlock(mLock);
+
     PRUint32 count;
     mSuspendedTransportList.Count(&count);
 
@@ -175,6 +190,11 @@ nsFileTransportService::DispatchRequest(nsIRunnable* runnable)
 nsresult 
 nsFileTransportService::AddSuspendedTransport(nsITransport* trans)
 {
+    nsAutoLock lock(mLock);
+
+    if (mShuttingDown)
+        return NS_ERROR_FAILURE;
+
     NS_STATIC_CAST(nsISupportsArray*, &mSuspendedTransportList)->AppendElement(trans);
     return NS_OK;
 }
@@ -182,6 +202,11 @@ nsFileTransportService::AddSuspendedTransport(nsITransport* trans)
 nsresult 
 nsFileTransportService::RemoveSuspendedTransport(nsITransport* trans)
 {
+    nsAutoLock lock(mLock);
+
+    if (mShuttingDown)
+        return NS_ERROR_FAILURE;
+
     NS_STATIC_CAST(nsISupportsArray*, &mSuspendedTransportList)->RemoveElement(trans);
     return NS_OK;
 }
