@@ -26,6 +26,9 @@ Contributor(s):
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://navigator/content/navigator.css" type="text/css"?>
 
+<?xul-overlay href="chrome://navigator/content/platformNavigationBindings.xul"?>
+<?xul-overlay href="chrome://communicator/content/platformCommunicatorOverlay.xul"?>
+
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
@@ -35,8 +38,6 @@ Contributor(s):
 %globalRegionDTD;
 <!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charset.dtd" >
 %charsetDTD;
-<!ENTITY % platformCommunicationDTD SYSTEM "chrome://communicator-platform/locale/platformCommunicatorOverlay.dtd">
-%platformCommunicationDTD;
 ]>
 
 <window id="main-window"
@@ -75,7 +76,6 @@ Contributor(s):
   <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
   <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
-  <stringbundle id="bundle_bookmarks" src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
   
   <commandset commandupdater="true"
               events="focus"
@@ -116,7 +116,7 @@ Contributor(s):
   <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
   <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
   <command id="Browser:Print" oncommand="BrowserPrint();"/>
-  <command id="cmd_quit" oncommand="goQuitApplication()"/>
+  <command id="cmd_quit"/>
   <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
   <command id="cmd_closeWindow" oncommand="BrowserCloseWindow()"/>
 
@@ -182,9 +182,9 @@ Contributor(s):
     <key id="openFileKb"         key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage"       key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
     <key id="printKb"            key="&printCmd.commandkey;" command="Browser:Print"  modifiers="accel"/>
-    <key id="key_close"  key="&closeCmd.key;" command="cmd_close" modifiers="accel"/>
-    <key id="key_closeWindow"  key="&closeCmd.key;" command="cmd_closeWindow" modifiers="accel,shift"/>
-    <key id="key_quit"  key="&quitApplicationCmd.key;" command="cmd_quit" modifiers="accel"/>
+    <key id="key_close"/>
+    <key id="key_closeWindow"/>
+    <key id="key_quit"/>
 
     <key id="key_undo"
          key="&undoCmd.key;"
@@ -201,8 +201,8 @@ Contributor(s):
     <key id="key_paste"
          key="&pasteCmd.key;"
          modifiers="accel"/>
-    <key id="key_delete" keycode="VK_DELETE" command="cmd_delete"/>
-    <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
+    <key id="key_delete"/>
+    <key id="key_selectAll"/>
   
     <key id="key_reload"  key="&reloadCmd.commandkey;" oncommand="BrowserReload();" modifiers="accel"/>
     <key key="&reloadCmd.commandkey;" oncommand="BrowserReloadSkipCache();" modifiers="accel,shift"/>
@@ -220,23 +220,7 @@ Contributor(s):
     <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key                          key="&textZoomEnlargeCmd.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
-    <!-- back and forward accelerators on Windows, strangely enough, are
-         Alt+Left arrow and Alt+Right arrow. -->
-    <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="alt"/>
-    <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="alt"/>
-
-    <!-- Supporting IE forward and back accelerators out of courtesy
-         to transitioning IE users -->
-    <key keycode="VK_BACK" command="Browser:Back"/>
-    <key keycode="VK_BACK" command="Browser:Forward" modifiers="shift"/>
-
-    <!-- Supporting IE 'refresh' shortcut key -->
-    <key keycode="VK_F5" oncommand="BrowserReload();"/>
-    <key keycode="VK_F5" modifiers="control" oncommand="BrowserReloadSkipCache();"/>
-
-    <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
-
-    <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
+    <keyset id="navigationKeys"/>  
   </keyset>
   
   <popup id="backMenu" position="after_start" onpopupshowing="return BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
@@ -428,7 +412,7 @@ Contributor(s):
             <menuitem command="cmd_newNavigatorTab" key="key_newNavigatorTab"
                       label="&tabCmd.label;" accesskey="&tabCmd.accesskey;"/>
             <menuitem label="&openFileCmd.label;" accesskey="&openFileCmd.accesskey;" key="openFileKb" command="Browser:OpenFile"/>
-            <menuitem id="menu_close" label="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" command="cmd_close"/>
+            <menuitem id="menu_close"/>
             <menuitem id="menu_closeWindow" hidden="true" command="cmd_closeWindow" key="key_closeWindow" label="&closeWindow.label;"/>
             <menuseparator/>
             <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
@@ -437,9 +421,6 @@ Contributor(s):
             <menuitem label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" oncommand="BrowserPrintSetup();"/>
             <menuitem label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" oncommand="BrowserPrintPreview();"/>
             <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="printKb" command="Browser:Print"/>
-            <menuseparator/>
-	    <menuitem label="&quitApplicationCmd.label;"
-	              key="key_quit" accesskey="&quitApplicationCmd.accesskey;" command="cmd_quit"/>
           </menupopup>
         </menu>
     
