@@ -5509,8 +5509,6 @@ const char * const sSelectPageNextString = "cmd_selectPageNext";
 const char * const sSelectMoveTopString = "cmd_selectMoveTop";
 const char * const sSelectMoveBottomString = "cmd_selectMoveBottom";
 
-const char * const sToggleBrowseWithCaretString = "cmd_toggleBrowseWithCaret";
-
 NS_IMPL_ADDREF(nsDOMWindowController)
 NS_IMPL_RELEASE(nsDOMWindowController)
 
@@ -5530,6 +5528,16 @@ nsDOMWindowController::nsDOMWindowController(nsIDOMWindowInternal *aWindow)
   nsCOMPtr<nsIEventStateManager> esm;
   if (NS_SUCCEEDED(GetEventStateManager(getter_AddRefs(esm))))
     esm->ResetBrowseWithCaret(&mBrowseWithCaret);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+  if (prefs)
+    prefs->RegisterCallback("accessibility.browsewithcaret", (PrefChangedFunc)nsDOMWindowController::BrowseWithCaretPrefCallback, (void*)this);
+}
+
+nsDOMWindowController::~nsDOMWindowController()
+{
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+  if (prefs) 
+    prefs->UnregisterCallback("accessibility.browsewithcaret", (PrefChangedFunc)nsDOMWindowController::BrowseWithCaretPrefCallback, (void*)this);
 }
 
 nsresult
@@ -5556,19 +5564,18 @@ nsDOMWindowController::GetEventStateManager(nsIEventStateManager **aEventStateMa
   return NS_ERROR_FAILURE;
 }
 
-void
-nsDOMWindowController::ToggleBrowseWithCaret()
+int PR_CALLBACK
+nsDOMWindowController::BrowseWithCaretPrefCallback(const char* aPrefName, void* instance_data)
 {
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-  if (prefs) {
-    PRBool prefBrowseWithCaret = PR_FALSE;
-    prefs->GetBoolPref("accessibility.browsewithcaret", &prefBrowseWithCaret);
-    prefs->SetBoolPref("accessibility.browsewithcaret", !prefBrowseWithCaret);
-  }
+  nsDOMWindowController* domWindowController = (nsDOMWindowController*)instance_data;
+  NS_ASSERTION(domWindowController, "bad instance data");
 
   nsCOMPtr<nsIEventStateManager> esm;
-  if (NS_SUCCEEDED(GetEventStateManager(getter_AddRefs(esm))))
-    esm->ResetBrowseWithCaret(&mBrowseWithCaret);
+
+  if (NS_SUCCEEDED(domWindowController->GetEventStateManager(getter_AddRefs(esm))))
+    esm->ResetBrowseWithCaret(&domWindowController->mBrowseWithCaret);
+
+  return 0;  // PREF_OK
 }
 
 nsresult
@@ -5713,8 +5720,7 @@ nsDOMWindowController::SupportsCommand(const nsAString& aCommand,
       commandName.Equals(sSelectPagePreviousString) ||
       commandName.Equals(sSelectPageNextString) ||
       commandName.Equals(sSelectMoveTopString) ||
-      commandName.Equals(sSelectMoveBottomString) ||
-      commandName.Equals(sToggleBrowseWithCaretString)
+      commandName.Equals(sSelectMoveBottomString)
       )
     *outSupported = PR_TRUE;
 
@@ -5771,8 +5777,6 @@ nsDOMWindowController::DoCommand(const nsAString & aCommand)
       }
     }
   }
-  else if (commandName.Equals(sToggleBrowseWithCaretString)) 
-    ToggleBrowseWithCaret();
 
   return rv;
 }

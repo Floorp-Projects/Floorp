@@ -438,12 +438,13 @@ class nsDOMWindowController : public nsIController
 {
 public:
 	nsDOMWindowController( nsIDOMWindowInternal* aWindow );
+  ~nsDOMWindowController();
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTROLLER
 
 private:
   nsresult GetEventStateManager(nsIEventStateManager **esm);
-  void ToggleBrowseWithCaret();
+  static int PR_CALLBACK BrowseWithCaretPrefCallback(const char* aPrefName, void* instance_data);
   nsresult GetPresShell(nsIPresShell **aPresShell);
 	nsresult GetEditInterface( nsIContentViewerEdit** aEditInterface);
   nsresult GetSelectionController(nsISelectionController ** aSelCon);

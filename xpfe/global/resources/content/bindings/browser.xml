@@ -228,6 +228,31 @@
                 onget="return this.webNavigation.document;"
                 readonly="true"/>
 
+      <field name="mPrefs" readonly="true">
+        Components.classes['@mozilla.org/preferences-service;1']
+                  .getService(Components.interfaces.nsIPrefService)
+                  .getBranch(null);
+      </field>
+
+      <field name="_mStrBundle">null</field>
+
+      <property name="mStrBundle">
+        <getter>
+        <![CDATA[
+          if (!this._mStrBundle) {
+            // need to create string bundle manually instead of using <xul:stringbundle/>
+            // see bug 63370 for details
+            var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
+                                  .getService(Components.interfaces.nsILocaleService);
+            var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                  .getService(Components.interfaces.nsIStringBundleService);
+            var bundleURL = "chrome://global/locale/tabbrowser.properties";
+            this._mStrBundle = stringBundleService.createBundle(bundleURL, localeService.GetApplicationLocale());
+          }
+          return this._mStrBundle;
+        ]]></getter>
+      </property>
+
       <method name="addProgressListener">
         <parameter name="aListener"/>
         <body>
@@ -297,6 +322,38 @@
         ]]>
       </destructor>
     </implementation>
+
+    <handlers>
+      <handler event="keypress" keycode="VK_F7">
+        <![CDATA[
+          // Toggle browse with caret mode
+          var browseWithCaretOn = this.mPrefs.getBoolPref("accessibility.browsewithcaret");
+          if (this.mPrefs.getBoolPref("accessibility.warn_on_browsewithcaret") && !browseWithCaretOn) {
+            var buttonPressed = {value:1};
+            var checkValue = {value:false};
+            promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+
+            promptService.confirmEx(window, 
+              this.mStrBundle.GetStringFromName('browsewithcaret.checkWindowTitle'), 
+              this.mStrBundle.GetStringFromName('browsewithcaret.checkLabel'),
+              (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) +
+              (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
+              this.mStrBundle.GetStringFromName('browsewithcaret.checkButtonLabel'),
+              null, null,
+              this.mStrBundle.GetStringFromName('browsewithcaret.checkMsg'), 
+              checkValue, buttonPressed);
+            if (!buttonPressed || buttonPressed.value != 0)
+              return;
+            if (checkValue.value)
+              this.mPrefs.setBoolPref("accessibility.warn_on_browsewithcaret", false);
+          }
+
+          // Toggle the pref
+          this.mPrefs.setBoolPref("accessibility.browsewithcaret",!browseWithCaretOn);
+          }
+        ]]>
+      </handler>
+    </handlers>
 
   </binding>
 
