@@ -217,8 +217,12 @@ namespace JSTypes {
         {
             return mPrototype;
         }
+
+        void printProperties(Formatter& f) const;
     };
     
+    Formatter& operator<<(Formatter& f, const JSObject& obj);
+
     /**
      * Private representation of a JavaScript array.
      */
@@ -369,7 +373,10 @@ namespace JSTypes {
         
         const JSValue& getVariable(const String& name)
         {
-            return getProperty(name);
+            const JSValue& ret = getProperty(name);
+            if (ret.isUndefined() && mParent) 
+                return mParent->getVariable(name);
+            return ret;
         }
         
         JSValue& setVariable(const String& name, const JSValue& value)

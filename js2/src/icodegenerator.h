@@ -49,19 +49,22 @@ namespace ICG {
     
     
     typedef std::map<String, Register, std::less<String> > VariableList;
-    
+    typedef std::pair<uint32, uint32> InstructionMapping;
+    typedef std::vector<InstructionMapping *> InstructionMap;
+   
 
     class ICodeModule {
     public:
         ICodeModule(InstructionStream *iCode, VariableList *variables,
-                    uint32 maxRegister, uint32 maxParameter) :
+                    uint32 maxRegister, uint32 maxParameter, InstructionMap *instructionMap) :
             its_iCode(iCode), itsVariables(variables),
             itsParameterCount(maxParameter), itsMaxRegister(maxRegister),
-            mID(++sMaxID) { }
+            mID(++sMaxID), mInstructionMap(instructionMap) { }
         ~ICodeModule()
         {
             delete its_iCode;
             delete itsVariables;
+            delete mInstructionMap;
         }
 
         Formatter& print(Formatter& f);
@@ -71,6 +74,8 @@ namespace ICG {
         uint32 itsParameterCount;
         uint32 itsMaxRegister;
         uint32 mID;
+        InstructionMap *mInstructionMap;
+
         static uint32 sMaxID;
         
     };
@@ -111,16 +116,15 @@ namespace ICG {
         uint32   maxRegister;           // highest (ever) allocated register
         uint32   parameterCount;        // number of parameters declared for the function
                                         // these must come before any variables declared.
-        Register exceptionRegister;     // reserved to carry the exception object, only has a value
-                                        // for functions that contain try/catch statements.
-        Register switchRegister;        // register containing switch control value for most 
-                                        // recently in progress switch statement.
+        Register exceptionRegister;     // reserved to carry the exception object.
         VariableList *variableList;     // name|register pair for each variable
 
-        World *mWorld;                  // used to register strings
-        
-        LabelStack mLabelStack;
-        
+        World *mWorld;                  // used to register strings        
+        LabelStack mLabelStack;         // stack of LabelEntry objects, one per nested looping construct
+        InstructionMap *mInstructionMap;// maps source position to instruction index
+
+        bool mWithinWith;               // state from genStmt that indicates generating code beneath a with statement
+
         void markMaxRegister() \
         { if (topRegister > maxRegister) maxRegister = topRegister; }
         
@@ -130,61 +134,75 @@ namespace ICG {
         void resetTopRegister() \
         { markMaxRegister(); topRegister = registerBase; }
         
-	    ICodeOp getBranchOp() \
-        { return (iCode->empty()) ? NOP : iCode->back()->getBranchOp(); }
-
 
         void setLabel(Label *label);
         
         void jsr(Label *label)  { iCode->push_back(new Jsr(label)); }
         void rts()              { iCode->push_back(new Rts()); }
         void branch(Label *label);
-        void branchConditional(Label *label, Register condition);
-        void branchNotConditional(Label *label, Register condition);
-        void branchTrue(Label *label, Register condition);
-        void branchFalse(Label *label, Register condition);
+        GenericBranch *branchTrue(Label *label, Register condition);
+        GenericBranch *branchFalse(Label *label, Register condition);
         
         void beginTry(Label *catchLabel, Label *finallyLabel)
             { iCode->push_back(new Tryin(catchLabel, finallyLabel)); }
         void endTry()
             { iCode->push_back(new Tryout()); }
+
+        void beginWith(Register obj)
+            { iCode->push_back(new Within(obj)); }
+        void endWith()
+            { iCode->push_back(new Without()); }
         
+
         void resetStatement() { resetTopRegister(); }
 
+        void setRegisterForVariable(const StringAtom& name, Register r) 
+        { (*variableList)[name] = r; }
+
+
+        void startStatement(uint32 pos) { mInstructionMap->push_back(new InstructionMapping(pos, iCode->size())); }
+
         ICodeOp mapExprNodeToICodeOp(ExprNode::Kind kind);
+
+        Register grabRegister(const StringAtom& name) 
+        {
+            Register result = getRegister(); 
+            (*variableList)[name] = result; 
+            registerBase = topRegister;
+            return result;
+        }
     
     public:
-        ICodeGenerator(World *world = NULL, 
-                            bool hasTryStatement = false, 
-                            uint32 switchStatementNesting = 0);
+        ICodeGenerator(World *world = NULL);
         
         ~ICodeGenerator()
         {
-            if (iCodeOwner)
+            if (iCodeOwner) {
                 delete iCode;
+                delete mInstructionMap;
+            }
         }
                 
         ICodeModule *complete();
 
-        Register genExpr(ExprNode *p, bool needBoolValueInBranch = false,
+        Register genExpr(ExprNode *p, 
+                    bool needBoolValueInBranch = false, 
                     Label *trueBranch = NULL, 
                     Label *falseBranch = NULL);
         Register genStmt(StmtNode *p, LabelSet *currentLabelSet = NULL);
 
 
-        void addInstruction(Instruction *i) { iCode->push_back(i); }
+        void returnStmt(Register r);
+        void throwStmt(Register r)
+        { iCode->push_back(new Throw(r)); }
 
-
-        Register allocateVariable(const StringAtom& name) 
-        { Register result = getRegister(); (*variableList)[name] = result; 
-            registerBase = topRegister; return result; }
-
+        Register allocateVariable(const StringAtom& name);
         Register findVariable(const StringAtom& name)
         { VariableList::iterator i = variableList->find(name);
         return (i == variableList->end()) ? NotARegister : (*i).second; }
         
         Register allocateParameter(const StringAtom& name) 
-        { parameterCount++; return allocateVariable(name); }
+        { parameterCount++; return grabRegister(name); }
         
         Formatter& print(Formatter& f);
         

@@ -107,30 +107,6 @@ namespace VM {
         return f;
     }
 
-    ICodeOp Instruction::getBranchOp()
-    {
-        // XXX FIXME, convert to table lookup or arithmetic after the dust settles
-        switch (mOpcode) {
-        case COMPARE_EQ:
-//            return BRANCH_EQ;
-        case COMPARE_NE:
-//            return BRANCH_NE;
-        case COMPARE_GE:
-//            return BRANCH_GE;
-        case COMPARE_GT:
-//            return BRANCH_GT;
-        case COMPARE_LE:
-//            return BRANCH_LE;
-        case COMPARE_LT:
-//            return BRANCH_LT;
-        case TEST:
-            return BRANCH_TRUE;
-        default:
-            NOT_REACHED("Unexpected branch code");
-            return NOP;
-        }
-    }
-
 } /* namespace VM */
 } /* namespace JavaScript */
 
