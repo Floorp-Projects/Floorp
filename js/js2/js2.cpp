@@ -22,13 +22,23 @@
 // JS2 shell.
 //
 
+#if 0
+#define DEBUGGER_FOO
+#define INTERPRET_INPUT
+#else
+#undef DEBUGGER_FOO
+#undef INTERPRET_INPUT
+#endif
+
 #include <assert.h>
 
 #include "world.h"
 #include "interpreter.h"
 #include "icodegenerator.h"
 
+#ifdef DEBUGGER_FOO
 #include "debugger.h"
+#endif
         
 #if defined(XP_MAC) && !defined(XP_MAC_MPW)
 #include <SIOUX.h>
@@ -80,16 +90,30 @@ static bool promptLine(LineReader &inReader, string &s, const char *prompt)
 
 
 JavaScript::World world;
-JavaScript::Debugger::Shell jsd(world, stdin, JavaScript::stdOut,
-                                JavaScript::stdOut);
-
+/* "filename" of the console */
+const String ConsoleName = widenCString("<console>");
 const bool showTokens = false;
 
+#ifdef DEBUGGER_FOO    
+Reader *sourceReader; /* Reader for console file */
+
+static
+const Reader *ResolveFile (const String& fileName)
+{
+    if (fileName == ConsoleName)
+        return sourceReader;
+    else
+        return 0;
+}
+
+JavaScript::Debugger::Shell jsd(world, stdin, JavaScript::stdOut,
+                                JavaScript::stdOut, &ResolveFile);
+#endif
 
 static JSValue print(const JSValues &argv)
 {
     size_t n = argv.size();
-    if (n > 1) {                // the 'this' parameter in un-interesting
+    if (n > 1) {                // the 'this' parameter is un-interesting
         stdOut << argv[1];
         for (size_t i = 2; i < n; ++i)
             stdOut << ' ' << argv[i];
@@ -99,9 +123,10 @@ static JSValue print(const JSValues &argv)
 }
 
 
-static void genCode(Context &cx, StmtNode *p)
+static void genCode(Context &cx, StmtNode *p, const String &fileName)
 {
     ICodeGenerator icg(&cx.getWorld(), cx.getGlobalObject());
+    
     icg.isScript();
     TypedRegister ret(NotARegister, &None_Type);
     while (p) {
@@ -110,29 +135,36 @@ static void genCode(Context &cx, StmtNode *p)
         p = p->next;
     }
     icg.returnStmt(ret);
-//    stdOut << '\n';
-//    stdOut << icg;
-    JSValue result = cx.interpret(icg.complete(), JSValues());
+
+    ICodeModule *icm = icg.complete();
+    icm->setFileName (fileName);
+
+    JSValue result = cx.interpret(icm, JSValues());
     stdOut << "result = " << result << "\n";
+
+    delete icm;
+    
 }
 
 static void readEvalPrint(FILE *in, World &world)
 {
     JSScope glob;
     Context cx(world, &glob);
+#ifdef DEBUGGER_FOO
+    jsd.attachToContext (&cx);
+#endif
     StringAtom& printName = world.identifiers[widenCString("print")];
     glob.defineNativeFunction(printName, print);
 
     String buffer;
     string line;
-    String sourceLocation = widenCString("console");
     LineReader inReader(in);
         
     while (promptLine(inReader, line, buffer.empty() ? "js> " : "> ")) {
         appendChars(buffer, line.data(), line.size());
         try {
             Arena a;
-            Parser p(world, a, buffer, sourceLocation);
+            Parser p(world, a, buffer, ConsoleName);
                 
             if (showTokens) {
                 Lexer &l = p.lexer;
@@ -158,9 +190,13 @@ static void readEvalPrint(FILE *in, World &world)
                 	f.end();
                 }
         	    stdOut << '\n';
-#if 0
-				// Generate code for parsedStatements, which is a linked list of zero or more statements
-                genCode(cx, parsedStatements);
+#ifdef INTERPRET_INPUT
+#ifdef DEBUGGER_FOO
+                sourceReader = &(p.lexer.reader);
+#endif
+				// Generate code for parsedStatements, which is a linked 
+                // list of zero or more statements
+                genCode(cx, parsedStatements, ConsoleName);
 #endif
             }
             clear(buffer);
@@ -170,7 +206,7 @@ static void readEvalPrint(FILE *in, World &world)
              * of input rather than printing the error message. */
             if (!(e.hasKind(Exception::syntaxError) &&
                   e.lineNum && e.pos == buffer.size() &&
-                  e.sourceFile == sourceLocation)) {
+                  e.sourceFile == ConsoleName)) {
                 stdOut << '\n' << e.fullMessage();
                 clear(buffer);
             }

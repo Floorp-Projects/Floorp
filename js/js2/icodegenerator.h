@@ -49,14 +49,14 @@ namespace ICG {
     using namespace JSTypes;
     
     typedef std::map<String, TypedRegister, std::less<String> > VariableList;
-    typedef std::pair<uint32, uint32> InstructionMapping;
-    typedef std::vector<InstructionMapping *> InstructionMap;
+    typedef std::map<uint32, uint32, std::less<uint32> > InstructionMap;
    
 
     class ICodeModule {
     public:
         ICodeModule(InstructionStream *iCode, VariableList *variables,
-                    uint32 maxRegister, uint32 maxParameter, InstructionMap *instructionMap) :
+                    uint32 maxRegister, uint32 maxParameter,
+                    InstructionMap *instructionMap) :
             its_iCode(iCode), itsVariables(variables),
             itsParameterCount(maxParameter), itsMaxRegister(maxRegister),
             mID(++sMaxID), mInstructionMap(instructionMap) { }
@@ -68,6 +68,8 @@ namespace ICG {
         }
 
         Formatter& print(Formatter& f);
+        void setFileName (String aFileName) { mFileName = aFileName; }
+        String getFileName () { return mFileName; }
         
         InstructionStream *its_iCode;
         VariableList *itsVariables;
@@ -75,6 +77,7 @@ namespace ICG {
         uint32 itsMaxRegister;
         uint32 mID;
         InstructionMap *mInstructionMap;
+        String mFileName;
 
         static uint32 sMaxID;
         
@@ -122,7 +125,8 @@ namespace ICG {
         World *mWorld;                  // used to register strings
         JSScope *mGlobal;               // the scope for compiling within
         LabelStack mLabelStack;         // stack of LabelEntry objects, one per nested looping construct
-        InstructionMap *mInstructionMap;// maps source position to instruction index
+                                        // maps source position to instruction index
+        InstructionMap *mInstructionMap;
 
         bool mWithinWith;               // state from genStmt that indicates generating code beneath a with statement
 
@@ -162,8 +166,8 @@ namespace ICG {
         void setRegisterForVariable(const StringAtom& name, TypedRegister r) 
         { (*variableList)[name] = r; }
 
-
-        void startStatement(uint32 pos) { mInstructionMap->push_back(new InstructionMapping(pos, iCode->size())); }
+        void startStatement(uint32 pos)
+        { (*mInstructionMap)[iCode->size()] = pos; }
 
         ICodeOp mapExprNodeToICodeOp(ExprNode::Kind kind);
 
@@ -203,6 +207,8 @@ namespace ICG {
         void returnStmt();
         void throwStmt(TypedRegister r)
         { iCode->push_back(new Throw(r)); }
+        void debuggerStmt()
+        { iCode->push_back(new Debugger()); }
 
         TypedRegister allocateVariable(const StringAtom& name);
         TypedRegister allocateVariable(const StringAtom& name, const StringAtom& typeName);

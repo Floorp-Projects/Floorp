@@ -53,7 +53,7 @@ namespace Interpreter {
             EV_NONE     = 0x0000,
             EV_STEP     = 0x0001,
             EV_THROW    = 0x0002,
-            EV_TRAP     = 0x0004,
+            EV_DEBUG    = 0x0004,
             EV_ALL      = 0xffff
         };
     

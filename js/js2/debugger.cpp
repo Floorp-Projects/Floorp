@@ -153,23 +153,68 @@ registers, or set the value of a single register."},
                 shell_cmds[i][2] << "\n";
     }
     
-    static void
-    showCurrentOp(Context* cx, Formatter &aOut)
+    void
+    Shell::showSourceAtPC (Context *cx, InstructionIterator pc)
+    {
+        if (!mResolveFileCallback)
+        {
+            mErr << 
+                "Source not available.  (Debugger not properly initialized.)\n";
+            return;
+        }
+
+        ICodeModule *iCode = cx->getICode();
+
+        String fn = iCode->getFileName();
+        const Reader *reader = mResolveFileCallback(fn);
+        if (!reader)
+        {
+            mErr << "Source not available.\n";
+            return;
+        }
+
+        InstructionMap::iterator pos_iter =
+            iCode->mInstructionMap->find (pc - iCode->its_iCode->begin());
+        if (pos_iter == iCode->mInstructionMap->end())
+        {
+            mErr << "Can't find that PC in the map.\n";
+            return;
+        }
+        
+        uint32 lineNum = reader->posToLineNum (pos_iter->second);
+        const char16 *lineBegin, *lineEnd;
+
+        reader->getLine (lineNum, lineBegin, lineEnd);
+        String sourceLine (lineBegin, lineEnd);
+        
+        mOut << fn << ":" << lineNum << "  " << sourceLine << "\n";
+        
+    }
+
+    void
+    Shell::showOpAtPC(Context* cx, InstructionIterator pc)
     {
         ICodeModule *iCode = cx->getICode();
-        JSValues &registers = cx->getRegisters();
-        InstructionIterator pc = cx->getPC();
 
-        printFormat(aOut, "trace [%02u:%04u]: ",
+        if ((pc < iCode->its_iCode->begin()) ||
+            (pc >= iCode->its_iCode->end()))
+        {
+            mErr << "PC Out Of Range.";
+            return;
+        }
+
+        JSValues &registers = cx->getRegisters();
+
+        printFormat(mOut, "trace [%02u:%04u]: ",
                     iCode->mID, (pc - iCode->its_iCode->begin()));
         Instruction* i = *pc;
         stdOut << *i;
         if (i->op() != BRANCH && i->count() > 0) {
-            aOut << " [";
+            mOut << " [";
             i->printOperands(stdOut, registers);
-            aOut << "]\n";
+            mOut << "]\n";
         } else {
-            aOut << '\n';
+            mOut << '\n';
         }
     }    
 
@@ -178,7 +223,10 @@ registers, or set the value of a single register."},
     {
 
         if (mTraceFlag)
-            showCurrentOp (cx, mOut);
+        {
+            showSourceAtPC (cx, cx->getPC());
+            showOpAtPC (cx, cx->getPC());
+        }
             
         if (!(mStopMask & event))
             return;

@@ -1211,7 +1211,12 @@ void ICodeGenerator::preprocess(StmtNode *p)
                 genStmt(t->finally);
         }
         break;
+
+    default:
+        break;
+        
    }
+
 }
 
 TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
@@ -1280,6 +1285,8 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                             hasMethods = true;
                         }
                         break;
+                    default:
+                        break;
                     }
                     s = s->next;
                 }
@@ -1345,6 +1352,11 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
         {
             ExprStmtNode *e = static_cast<ExprStmtNode *>(p);
             throwStmt(genExpr(e->expr));
+        }
+        break;
+    case StmtNode::Debugger:
+        {
+            debuggerStmt();
         }
         break;
     case StmtNode::Return:
@@ -1590,7 +1602,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                 invoke the finally handler on the (exceptional) way out of the
                 try block assuming there are no catch clauses.
             */
-            Register ex = NotARegister;
+            /*Register ex = NotARegister;*/
             TryStmtNode *t = static_cast<TryStmtNode *>(p);
             Label *catchLabel = (t->catches) ? getLabel() : NULL;
             Label *finallyInvoker = (t->finally) ? getLabel() : NULL;
@@ -1629,6 +1641,10 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
         }
         break;
 
+    case StmtNode::empty:
+        /* nada */
+        break;
+        
     default:
         NOT_REACHED("unimplemented statement kind");
     }
@@ -1647,9 +1663,9 @@ Formatter& ICodeGenerator::print(Formatter& f)
     f << "  Src  :  Instr" << "\n";
     for (InstructionMap::iterator i = mInstructionMap->begin(); i != mInstructionMap->end(); i++)
     {
-        printDec( f, (*i)->first, 6);
+        printDec( f, (*i).first, 6);
         f << " : ";
-        printDec( f, (*i)->second, 6);
+        printDec( f, (*i).second, 6);
         f << "\n";
 //        f << (*i)->first << " : " << (*i)->second << "\n";
     }
