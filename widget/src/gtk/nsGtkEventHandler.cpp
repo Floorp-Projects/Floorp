@@ -86,6 +86,7 @@ struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_COMMA,      GDK_comma },
   { NS_VK_PERIOD,     GDK_period },
   { NS_VK_SLASH,      GDK_slash },
+  { NS_VK_BACK_SLASH, GDK_backslash },
 //XXX: How do you get a BACK_QUOTE?  NS_VK_BACK_QUOTE, GDK_backquote,
   { NS_VK_OPEN_BRACKET, GDK_bracketleft },
   { NS_VK_CLOSE_BRACKET, GDK_bracketright },
