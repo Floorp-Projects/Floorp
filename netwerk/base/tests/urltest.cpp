@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#ifdef XP_WIN
+#ifdef WIN32
 #include <windows.h>
 #endif
 
