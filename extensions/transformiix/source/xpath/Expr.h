@@ -25,7 +25,7 @@
  *     - changed constant short declarations in many of the classes
  *       with enumerations, commented with //--LF
  *
- * $Id: Expr.h,v 1.5 2000/06/11 11:42:46 Peter.VanderBeken%pandora.be Exp $
+ * $Id: Expr.h,v 1.6 2000/08/26 04:29:09 Peter.VanderBeken%pandora.be Exp $
  */
 
 
@@ -44,7 +44,7 @@
 /*
   XPath class definitions.
   Much of this code was ported from XSL:P.
-  @version $Revision: 1.5 $ $Date: 2000/06/11 11:42:46 $
+  @version $Revision: 1.6 $ $Date: 2000/08/26 04:29:09 $
 */
 
 #ifndef TRANSFRMX_EXPR_H
@@ -104,6 +104,22 @@ public:
     virtual void sortByDocumentOrder(NodeSet* nodes) = 0;
 
 }; //-- ContextState
+
+
+/**
+ * A class that returns the relevant namespace URI for a node.
+**/
+class NamespaceResolver {
+
+public:
+
+    /**
+     * Returns the namespace URI for the given name
+    **/ 
+    virtual void getNameSpaceURI(String& name, String& nameSpaceURI) = 0;
+
+}; //-- NamespaceResolver
+
 
 /**
  * A Base Class for all XSL Expressions
