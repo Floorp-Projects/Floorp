@@ -91,26 +91,18 @@ nsGfxButtonControlFrame::GetType() const
 
 // Special check for the browse button of a file input.
 //
-// Since this is actually type "NS_FORM_INPUT_BUTTON", we
-// can't tell if it is part of a file input by the type.
-// We'll return PR_TRUE if either:
-// (a) type is NS_FORM_BROWSE or
-// (b) type is NS_FORM_INPUT_BUTTON and our parent is a file input
+// We'll return PR_TRUE if type is NS_FORM_INPUT_BUTTON and our parent
+// is a file input.
 PRBool
 nsGfxButtonControlFrame::IsFileBrowseButton(PRInt32 type)
 {
   PRBool rv = PR_FALSE;
-  if (NS_FORM_BROWSE == type) {
-    rv = PR_TRUE;
-  }
-  else if (NS_FORM_INPUT_BUTTON == type) {
+  if (NS_FORM_INPUT_BUTTON == type) {
     // Check to see if parent is a file input
     nsCOMPtr<nsIFormControl> formCtrl =
       do_QueryInterface(mContent->GetParent());
 
-    if (formCtrl && formCtrl->GetType() == NS_FORM_INPUT_FILE) {
-      rv = PR_TRUE;
-    }
+    rv = formCtrl && formCtrl->GetType() == NS_FORM_INPUT_FILE;
   }
   return rv;
 }
