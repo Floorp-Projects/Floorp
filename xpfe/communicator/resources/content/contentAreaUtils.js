@@ -108,8 +108,10 @@ function openTopBrowserWith(url)
   var browserWin = windowMediator.getMostRecentWindow("navigator:browser");
 
   // if there's an existing browser window, open this url in one
-  if (browserWin)
+  if (browserWin) {
     browserWin.getBrowser().loadURI(url); // Just do a normal load.
+    browserWin.focus();
+  }
   else
     window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url, null, null);
 }
