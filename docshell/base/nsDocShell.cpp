@@ -1103,6 +1103,8 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
    if ( aReloadType == nsIWebNavigation::reloadBypassProxyAndCache )
    	type = loadReloadBypassProxyAndCache;
    
+   UpdateCurrentSessionHistory();
+
    NS_ENSURE_SUCCESS(InternalLoad(mCurrentURI, mReferrerURI, nsnull, nsnull, 
       nsnull, type), NS_ERROR_FAILURE);
 
