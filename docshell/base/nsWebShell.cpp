@@ -86,8 +86,15 @@ static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 
 #ifdef DEBUG
 #undef NOISY_LINKS
+#undef NOISY_WEBSHELL_LEAKS
 #else
 #undef NOISY_LINKS
+#undef NOISY_WEBSHELL_LEAKS
+#endif
+
+#ifdef NOISY_WEBSHELL_LEAKS
+#undef DETECT_WEBSHELL_LEAKS
+#define DETECT_WEBSHELL_LEAKS
 #endif
 
 #ifdef NS_DEBUG
@@ -609,12 +616,18 @@ nsresult nsWebShell::DestroyPluginHost(void)
 
 //----------------------------------------------------------------------
 
+MOZ_DECL_CTOR(nsWebShell);
+
 // Note: operator new zeros our memory
 nsWebShell::nsWebShell()
 {
+  MOZ_CTOR(nsWebShell);
 #ifdef DETECT_WEBSHELL_LEAKS
   // We're counting the number of |nsWebShells| to help find leaks
   ++gNumberOfWebShells;
+#endif
+#ifdef NOISY_WEBSHELL_LEAKS
+  printf("WEBSHELL+ = %d\n", gNumberOfWebShells);
 #endif
 
   NS_INIT_REFCNT();
@@ -643,6 +656,7 @@ nsWebShell::nsWebShell()
 
 nsWebShell::~nsWebShell()
 {
+  MOZ_DTOR(nsWebShell);
   if (nsnull != mHistoryService) {
     nsServiceManager::ReleaseService(kGlobalHistoryCID, mHistoryService);
     mHistoryService = nsnull;
@@ -702,6 +716,9 @@ nsWebShell::~nsWebShell()
 #ifdef DETECT_WEBSHELL_LEAKS
   // We're counting the number of |nsWebShells| to help find leaks
   --gNumberOfWebShells;
+#endif
+#ifdef NOISY_WEBSHELL_LEAKS
+  printf("WEBSHELL- = %d\n", gNumberOfWebShells);
 #endif
 }
 
