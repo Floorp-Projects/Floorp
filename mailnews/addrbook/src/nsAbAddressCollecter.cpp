@@ -48,7 +48,6 @@ NS_IMPL_ISUPPORTS1(nsAbAddressCollecter, nsIAbAddressCollecter)
 static const char *PREF_COLLECT_EMAIL_ADDRESS = "mail.collect_email_address";
 static const char *PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT = "mail.collect_email_address_enable_size_limit";
 static const char *PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT = "mail.collect_email_address_size_limit";
-#define OVERSIZED_CAB_LIMIT 2
 
 nsAbAddressCollecter::nsAbAddressCollecter()
 {
@@ -177,46 +176,30 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 				}
 				else //address is already in the CAB
 				{
-					SetNamesForCard(existingCard, curName);
-					existingCard->EditCardToDatabase(kCollectedAddressbookUri);
-
-					if(sizeLimitEnabled) {
+					if(sizeLimitEnabled) 
+					{
 						//remove card from ab, and
-						m_historyAB->DeleteCard( existingCard, PR_FALSE );
+						m_historyAB->DeleteCard( existingCard, PR_TRUE );
 						SetNamesForCard(existingCard, curName);
 						//append it to the bottom.
 						existingCard->AddCardToDatabase(kCollectedAddressbookUri);
 					}
+					else
+					{
+						SetNamesForCard(existingCard, curName);
+						existingCard->EditCardToDatabase(kCollectedAddressbookUri);
+					}
 				}
 
-				if(sizeLimitEnabled) {
+				if(sizeLimitEnabled) 
+				{
 					PRUint32 count = 0;
-
 					rv = m_historyAB->GetCardCount( &count );
 
-					if( (count > (PRUint32)maxCABsize) && (count <= (PRUint32)maxCABsize + OVERSIZED_CAB_LIMIT) ){
-						nsCOMPtr<nsISupports> obj = nsnull;
-						nsIEnumerator *cardEnum = nsnull;
-							
-						m_historyAB->EnumerateCards(m_historyDirectory, &cardEnum);
+					if( count > (PRUint32)maxCABsize )
+						rv = m_historyAB->RemoveExtraCardsInCab(count, maxCABsize);
 
-						cardEnum->First();
-
-						while( --count >= (PRUint32) maxCABsize ){
-							cardEnum->CurrentItem(getter_AddRefs(obj));
-
-							existingCard = do_QueryInterface(obj, &rv);
-
-							m_historyAB->DeleteCard(existingCard, PR_FALSE);
-
-							cardEnum->Next();
-						}
-
-						if(cardEnum)
-							delete cardEnum;
-					} 
 				} //if sizeLimitEnabled
-	
 			}
 			curName += strlen(curName) + 1;
 			curAddress += strlen(curAddress) + 1;

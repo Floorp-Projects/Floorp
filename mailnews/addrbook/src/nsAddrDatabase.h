@@ -239,6 +239,7 @@ public:
 	NS_IMETHOD FindMailListbyUnicodeName(const PRUnichar *listName, PRBool *exist);
 
 	NS_IMETHOD GetCardCount(PRUint32 *count);
+	NS_IMETHOD RemoveExtraCardsInCab(PRUint32 cardTotal, PRUint32 nCabMax);
 
 	//////////////////////////////////////////////////////////////////////////////
 	// nsAddrDatabase methods:
@@ -289,10 +290,10 @@ protected:
 	void GetCharStringYarn(char* str, struct mdbYarn* strYarn);
 	void GetStringYarn(nsString* str, struct mdbYarn* strYarn);
 	void GetIntYarn(PRUint32 nValue, struct mdbYarn* intYarn);
-	mdb_err AddCharStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, const char* str);
-	mdb_err AddStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, nsString* str);
-	mdb_err AddIntColumn(nsIMdbRow* cardRow, mdb_column inColumn, PRUint32 nValue);
-	mdb_err AddBoolColumn(nsIMdbRow* cardRow, mdb_column inColumn, PRBool bValue);
+	nsresult AddCharStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, const char* str);
+	nsresult AddStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, nsString* str);
+	nsresult AddIntColumn(nsIMdbRow* cardRow, mdb_column inColumn, PRUint32 nValue);
+	nsresult AddBoolColumn(nsIMdbRow* cardRow, mdb_column inColumn, PRBool bValue);
 	nsresult GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken, nsString& str);
 	nsresult GetIntColumn(nsIMdbRow *cardRow, mdb_token outToken, 
 							PRUint32* pValue, PRUint32 defaultValue);

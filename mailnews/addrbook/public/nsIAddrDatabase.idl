@@ -72,6 +72,7 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	PRBool findMailListbyUnicodeName(in wstring listName);
 
 	void getCardCount(out PRUint32 count);
+	void RemoveExtraCardsInCab(in PRUint32 cardTotal, in PRUint32 cabMax);
 
 	void setAnonymousStringAttribute(in string attrname, in string value);
 	string getAnonymousStringAttribute(in string attrname);
