@@ -657,7 +657,7 @@ PR_IMPLEMENT(PRStatus) PR_Interrupt(PRThread *thred)
     thred->state |= PT_THREAD_ABORTED;
 
     cv = thred->waiting;
-    if (NULL != cv)
+    if ((NULL != cv) && !thred->interrupt_blocked)
     {
         PRIntn rv = pthread_cond_broadcast(&cv->cv);
         PR_ASSERT(0 == rv);
