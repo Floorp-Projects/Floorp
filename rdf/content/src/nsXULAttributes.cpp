@@ -696,7 +696,6 @@ nsXULAttributes::GetNamedItem(const nsAReadableString& aName,
     // XXX nameSpaceID only used in dead code (that was giving us a warning).
     // XXX I'd remove it completely, but maybe it is a useful reminder???
     // PRInt32 nameSpaceID;
-    nsIAtom* name;
     nsCOMPtr<nsINodeInfo> inpNodeInfo;
 
     if (NS_FAILED(rv = mContent->NormalizeAttributeString(aName, *getter_AddRefs(inpNodeInfo))))
@@ -720,7 +719,6 @@ nsXULAttributes::GetNamedItem(const nsAReadableString& aName,
         }
     }
 
-    NS_RELEASE(name);
     return NS_OK;
 }
 
