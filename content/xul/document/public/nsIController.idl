@@ -62,9 +62,9 @@ interface nsICommandParams;
 interface nsICommandController : nsISupports
 {
   
-  void        getCommandState( in string command, in nsICommandParams aCommandParams);
+  void        getCommandStateWithParams( in string command, in nsICommandParams aCommandParams);
     
-  void        doCommand(in string command, in nsICommandParams aCommandParams);
+  void        doCommandWithParams(in string command, in nsICommandParams aCommandParams);
 
 };
 
