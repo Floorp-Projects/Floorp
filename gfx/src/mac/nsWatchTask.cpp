@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 #include "nsWatchTask.h"
 #include <LowMem.h>
 #include <Appearance.h>
@@ -67,10 +66,6 @@ nsWatchTask :: nsWatchTask ( )
 
 nsWatchTask :: ~nsWatchTask ( ) 
 {
-#if !TARGET_CARBON
-  if ( mInstallSucceeded )
-    ::VRemove ( (QElemPtr)&mTask );
-#endif
   InitCursor();
 }
 
@@ -85,23 +80,6 @@ nsWatchTask :: ~nsWatchTask ( )
 void
 nsWatchTask :: Start ( )
 {
-#if !TARGET_CARBON
-  // get the watch cursor and lock it high
-  CursHandle watch = ::GetCursor ( watchCursor );
-  if ( !watch )
-    return;
-  mWatchCursor = **watch;
-  
-  // setup the task
-  mTask.qType = vType;
-  mTask.vblAddr = NewVBLProc((VBLProcPtr)DoWatchTask);
-  mTask.vblCount = kRepeatInterval;
-  mTask.vblPhase = 0;
-  
-  // install it
-  mInstallSucceeded = ::VInstall((QElemPtr)&mTask) == noErr;
-#endif
-
 } // Start
 
 
@@ -121,11 +99,7 @@ nsWatchTask :: DoWatchTask ( nsWatchTask* inSelf )
 {
   if ( inSelf->mChecksum == 'mozz' ) {
     if ( !inSelf->mSuspended  ) {
-#if TARGET_CARBON
- 	  PRBool busy = inSelf->mBusy;
-#else
- 	  PRBool busy = inSelf->mBusy && LMGetCrsrBusy();
-#endif   
+ 	  PRBool busy = inSelf->mBusy;  
       if ( !busy ) {
         if ( ::TickCount() - inSelf->mTicks > kTicksToShowWatch ) {
           ::SetCursor ( &(inSelf->mWatchCursor) );
@@ -137,12 +111,7 @@ nsWatchTask :: DoWatchTask ( nsWatchTask* inSelf )
       
       // next frame in cursor animation    
       ++inSelf->mAnimation;
-    }
-    
-#if !TARGET_CARBON
-    // reset the task to fire again
-    inSelf->mTask.vblCount = kRepeatInterval;
-#endif    
+    }    
   } // if valid checksum
   
 } // DoWatchTask

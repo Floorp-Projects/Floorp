@@ -34,6 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include <Script.h>
 #include "nsDeviceContextMac.h"
 #include "plhash.h"
@@ -45,6 +46,7 @@
 #include "nsIUnicodeEncoder.h"
 #include "nsCompressedCharMap.h"
 #include "nsMacUnicodeFontInfo.h"
+
 #define BAD_FONT_NUM	-1
 #define BAD_SCRIPT 0x7f
 

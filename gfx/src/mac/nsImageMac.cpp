@@ -47,7 +47,7 @@
 #include "imgScaler.h"
 
 #if 0
-#if TARGET_CARBON
+
 // useful region debugging code.
 static OSStatus PrintRgnRectProc(UInt16 message, RgnHandle rgn, const Rect *inRect, void *refCon)
 {
@@ -81,7 +81,6 @@ static void PrintRegionOutline(RgnHandle inRgn)
   UInt32    rectCount = 0;  
   ::QDRegionToRects(inRgn, kQDParseRegionFromTopLeft, sCountRectProc, &rectCount);
 }
-#endif // TARGET_CARBON
 #endif
 
 #pragma mark -

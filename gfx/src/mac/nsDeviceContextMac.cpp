@@ -38,11 +38,7 @@
 
 #include "nsDeviceContextMac.h"
 #include "nsRenderingContextMac.h"
-#if TARGET_CARBON
 #include "nsDeviceContextSpecX.h"
-#else
-#include "nsDeviceContextSpecMac.h"
-#endif
 #include "nsIPrintingContext.h"
 #include "nsString.h"
 #include "nsHashtable.h"
@@ -648,11 +644,6 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceContextFor(nsIDeviceContextSpec *aDev
 	
 	::GetPort(&curPort);
 
-#if !TARGET_CARBON
-	THPrint thePrintRecord = ((nsDeviceContextSpecMac*)aDevice)->mPrtRec;
-	pix_Inch = (**thePrintRecord).prInfo.iHRes;
-	macDC->mPageRect = (**thePrintRecord).prInfo.rPage;	
-#else
     nsCOMPtr<nsIPrintingContext> printingContext = do_QueryInterface(aDevice);
     if (printingContext) {
         if (NS_FAILED(printingContext->GetPrinterResolution(&pix_Inch)))
@@ -663,7 +654,7 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceContextFor(nsIDeviceContextSpec *aDev
         pageRect.top = top, pageRect.left = left;
         pageRect.bottom = bottom, pageRect.right = right;
     }
-#endif
+
 
 	((nsDeviceContextMac*)aContext)->Init(curPort);
 
@@ -688,23 +679,11 @@ NS_IMETHODIMP nsDeviceContextMac::BeginDocument(PRUnichar * aTitle,
                                                 PRInt32     aStartPage, 
                                                 PRInt32     aEndPage)
 {
-#if !TARGET_CARBON
-GrafPtr	thePort;
- 
- 	if(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrintManagerOpen) {
- 		::GetPort(&mOldPort);
- 		thePort = (GrafPtr)::PrOpenDoc(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrtRec,nsnull,nsnull);
-  	((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrinterPort = (TPrPort*)thePort;
-  	SetPort(thePort);
-  }
-  return NS_OK;
-#else
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsIPrintingContext> printingContext = do_QueryInterface(mSpec);
     if (printingContext)
         rv = printingContext->BeginDocument(aStartPage, aEndPage);
     return rv;
-#endif
 }
 
 
@@ -714,19 +693,11 @@ GrafPtr	thePort;
  */
 NS_IMETHODIMP nsDeviceContextMac::EndDocument(void)
 {
-#if !TARGET_CARBON
- 	if(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrintManagerOpen){
- 		::SetPort(mOldPort);
-		::PrCloseDoc(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrinterPort);
-	}
-    return NS_OK;
-#else
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsIPrintingContext> printingContext = do_QueryInterface(mSpec);
     if (printingContext)
         rv = printingContext->EndDocument();
     return rv;
-#endif
 }
 
 /** ---------------------------------------------------
@@ -745,17 +716,11 @@ NS_IMETHODIMP nsDeviceContextMac::AbortDocument(void)
  */
 NS_IMETHODIMP nsDeviceContextMac::BeginPage(void)
 {
-#if !TARGET_CARBON
- 	if(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrintManagerOpen) 
-		::PrOpenPage(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrinterPort,nsnull);
-  return NS_OK;
-#else
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsIPrintingContext> printingContext = do_QueryInterface(mSpec);
     if (printingContext)
         rv = printingContext->BeginPage();
     return rv;
-#endif
 }
 
 
