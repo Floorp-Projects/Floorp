@@ -19,7 +19,6 @@
 
 #define NS_IMPL_IDS
 
-//#define USE_INTEL_IMPLEMENTATION 
 
 #include "pratom.h"
 #include "nsIComponentManager.h"
@@ -30,6 +29,8 @@
 #include "nsICharsetConverterInfo.h"
 #include "nsUCvCnCID.h"
 #include "nsUCvCnDll.h"
+#include "nsGBKToUnicode.h"
+#include "nsUnicodeToGBK.h"
 #include "nsGB2312ToUnicodeV2.h"
 #include "nsUnicodeToGB2312V2.h"
 #include "nsGB2312ToUnicode.h"
@@ -82,23 +83,39 @@ FactoryData g_FactoryData[] =
 {
   {
     &kGB2312ToUnicodeCID,
-#ifdef USE_INTEL_IMPLEMENTATION 
-    nsGB2312ToUnicodeV2::CreateInstance,
-#else
     nsGB2312ToUnicode::CreateInstance,
-#endif
     "GB2312",
     "Unicode"
   },
   {
     &kUnicodeToGB2312CID,
-#ifdef USE_INTEL_IMPLEMENTATION 
-    nsUnicodeToGB2312V2::CreateInstance,
-#else
     nsUnicodeToGB2312::CreateInstance,
-#endif
     "Unicode",
     "GB2312"
+  },
+  {
+    &kCP936ToUnicodeCID,
+    nsGB2312ToUnicodeV2::CreateInstance,
+    "windows-936",
+    "Unicode"
+  },
+  {
+    &kUnicodeToCP936CID,
+    nsUnicodeToGB2312V2::CreateInstance,
+    "Unicode",
+    "windows-936"
+  },
+  {
+    &kGBKToUnicodeCID,
+    nsGBKToUnicode::CreateInstance,
+    "x-gbk",
+    "Unicode"
+  },
+  {
+    &kUnicodeToGBKCID,
+    nsUnicodeToGBK::CreateInstance,
+    "Unicode",
+    "x-gbk"
   },
   {
     &kUnicodeToGB2312GLCID,
