@@ -25,6 +25,7 @@
 
 #include "nsIEventStateManager.h"
 #include "nsGUIEvent.h"
+#include "nsIContent.h"
 class nsIDocument;
 class nsIScrollableView;
 class nsISelfScrollingFrame;
