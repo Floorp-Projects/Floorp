@@ -2512,6 +2512,12 @@ PRInt16   r,g,b;
         aBorderStyle.GetBorderColor(aSide,sideColor);
         aRenderingContext.SetColor ( MakeBevelColor (aSide, border_Style, bgColor->mBackgroundColor,sideColor, PR_TRUE));
         }
+      case NS_STYLE_BORDER_STYLE_DOTTED:
+      case NS_STYLE_BORDER_STYLE_DASHED:
+        // break;   This is here until dotted and dashed are supported.  It is ok to have
+        // dotted and dashed render in solid until this style is supported.  This code should
+        // be moved when it is supported so that the above outset and inset will fall into the 
+        // solid code below....
       case NS_STYLE_BORDER_STYLE_SOLID:
         polypath[0].x = aPoints[0].x;
         polypath[0].y = aPoints[0].y;
@@ -2558,9 +2564,6 @@ PRInt16   r,g,b;
       case NS_STYLE_BORDER_STYLE_NONE:
       case NS_STYLE_BORDER_STYLE_HIDDEN:
       case NS_STYLE_BORDER_STYLE_BLANK:
-        break;
-      case NS_STYLE_BORDER_STYLE_DOTTED:
-      case NS_STYLE_BORDER_STYLE_DASHED:
         break;
       case NS_STYLE_BORDER_STYLE_RIDGE:
       case NS_STYLE_BORDER_STYLE_GROOVE:
