@@ -87,14 +87,14 @@ public:
                                                nsIStyleContext* aParentContext,
                                                PRBool aForceUnique = PR_FALSE);
 
-  NS_IMETHODIMP ConstructFrame(nsIPresContext* aPresContext,
+  NS_IMETHOD ConstructFrame(nsIPresContext* aPresContext,
+                            nsIContent*     aContent,
+                            nsIFrame*       aParentFrame,
+                            nsIFrame*&      aFrameSubTree);
+  NS_IMETHOD ReconstructFrames(nsIPresContext* aPresContext,
                                nsIContent*     aContent,
                                nsIFrame*       aParentFrame,
-                               nsIFrame*&      aFrameSubTree);
-  NS_IMETHOD  ReconstructFrames(nsIPresContext* aPresContext,
-                                nsIContent*     aContent,
-                                nsIFrame*       aParentFrame,
-                                nsIFrame*       aFrameSubTree);
+                               nsIFrame*       aFrameSubTree);
   NS_IMETHOD ContentAppended(nsIPresContext* aPresContext,
                              nsIContent*     aContainer,
                              PRInt32         aNewIndexInContainer);
@@ -121,6 +121,18 @@ public:
                               PRInt32 aHint); // See nsStyleConsts fot hint values
 
   // xxx style rules enumeration
+
+  // Style change notifications
+  NS_IMETHOD StyleRuleChanged(nsIPresContext* aPresContext,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule,
+                              PRInt32 aHint); // See nsStyleConsts fot hint values
+  NS_IMETHOD StyleRuleAdded(nsIPresContext* aPresContext,
+                            nsIStyleSheet* aStyleSheet,
+                            nsIStyleRule* aStyleRule);
+  NS_IMETHOD StyleRuleRemoved(nsIPresContext* aPresContext,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule);
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0);
 
@@ -727,7 +739,31 @@ StyleSetImpl::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 
-// xxx style rules enumeration
+// Style change notifications
+NS_IMETHODIMP
+StyleSetImpl::StyleRuleChanged(nsIPresContext* aPresContext,
+                               nsIStyleSheet* aStyleSheet,
+                               nsIStyleRule* aStyleRule,
+                               PRInt32 aHint)
+{
+  return mFrameConstructor->StyleRuleChanged(aPresContext, aStyleSheet, aStyleRule, aHint);
+}
+
+NS_IMETHODIMP
+StyleSetImpl::StyleRuleAdded(nsIPresContext* aPresContext,
+                             nsIStyleSheet* aStyleSheet,
+                             nsIStyleRule* aStyleRule)
+{
+  return mFrameConstructor->StyleRuleAdded(aPresContext, aStyleSheet, aStyleRule);
+}
+
+NS_IMETHODIMP
+StyleSetImpl::StyleRuleRemoved(nsIPresContext* aPresContext,
+                               nsIStyleSheet* aStyleSheet,
+                               nsIStyleRule* aStyleRule)
+{
+  return mFrameConstructor->StyleRuleRemoved(aPresContext, aStyleSheet, aStyleRule);
+}
 
 void StyleSetImpl::List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets)
 {

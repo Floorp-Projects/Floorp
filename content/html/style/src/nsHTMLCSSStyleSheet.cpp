@@ -29,6 +29,7 @@
 #include "nsICSSStyleRule.h"
 #include "nsIStyleContext.h"
 #include "nsIPresContext.h"
+#include "nsIDocument.h"
 
 static NS_DEFINE_IID(kIHTMLCSSStyleSheetIID, NS_IHTML_CSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
@@ -37,22 +38,26 @@ static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 
 class BodyFixupRule : public nsIStyleRule {
 public:
-  BodyFixupRule();
+  BodyFixupRule(nsIHTMLCSSStyleSheet* aSheet);
   ~BodyFixupRule();
 
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aValue) const;
   NS_IMETHOD HashValue(PRUint32& aValue) const;
+  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   // Strength is an out-of-band weighting, always 0 here
   NS_IMETHOD GetStrength(PRInt32& aStrength);
 
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  nsIHTMLCSSStyleSheet* mSheet;
 };
 
-BodyFixupRule::BodyFixupRule()
+BodyFixupRule::BodyFixupRule(nsIHTMLCSSStyleSheet* aSheet)
+  : mSheet(aSheet)
 {
   NS_INIT_REFCNT();
 }
@@ -74,6 +79,14 @@ NS_IMETHODIMP
 BodyFixupRule::HashValue(PRUint32& aValue) const
 {
   aValue = (PRUint32)(this);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BodyFixupRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
+{
+  NS_IF_ADDREF(mSheet);
+  aSheet = mSheet;
   return NS_OK;
 }
 
@@ -115,11 +128,26 @@ public:
   void* operator new(size_t size, nsIArena* aArena);
   void operator delete(void* ptr);
 
-  HTMLCSSStyleSheetImpl(nsIURL* aURL);
+  HTMLCSSStyleSheetImpl(nsIURL* aURL, nsIDocument* aDocument);
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
+
+  // basic style sheet data
+  NS_IMETHOD GetURL(nsIURL*& aURL) const;
+  NS_IMETHOD GetTitle(nsString& aTitle) const;
+  NS_IMETHOD GetType(nsString& aType) const;
+  NS_IMETHOD GetMediumCount(PRInt32& aCount) const;
+  NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsString& aMedium) const;
+
+  NS_IMETHOD GetEnabled(PRBool& aEnabled) const;
+  NS_IMETHOD SetEnabled(PRBool aEnabled);
+
+  // style sheet owner info
+  NS_IMETHOD GetParentSheet(nsIStyleSheet*& aParent) const;  // will be null
+  NS_IMETHOD GetOwningDocument(nsIDocument*& aDocument) const;
+  NS_IMETHOD SetOwningDocument(nsIDocument* aDocument);
 
   virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
                                 nsIContent* aContent,
@@ -131,8 +159,6 @@ public:
                                 nsIAtom* aPseudoTag,
                                 nsIStyleContext* aParentContext,
                                 nsISupportsArray* aResults);
-
-  virtual nsIURL* GetURL(void);
 
   // XXX style rule enumerations
 
@@ -150,8 +176,9 @@ protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
 
-  nsIURL*       mURL;
-  nsIStyleRule* mBodyRule;
+  nsIURL*         mURL;
+  nsIDocument*    mDocument;
+  BodyFixupRule*  mBodyRule;
 };
 
 
@@ -191,9 +218,10 @@ void HTMLCSSStyleSheetImpl::operator delete(void* ptr)
 
 
 
-HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl(nsIURL* aURL)
+HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl(nsIURL* aURL, nsIDocument* aDocument)
   : nsIHTMLCSSStyleSheet(),
     mURL(aURL),
+    mDocument(aDocument),
     mBodyRule(nsnull)
 {
   NS_INIT_REFCNT();
@@ -203,7 +231,10 @@ HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl(nsIURL* aURL)
 HTMLCSSStyleSheetImpl::~HTMLCSSStyleSheetImpl()
 {
   NS_RELEASE(mURL);
-  NS_IF_RELEASE(mBodyRule);
+  if (nsnull != mBodyRule) {
+    mBodyRule->mSheet = nsnull;
+    NS_RELEASE(mBodyRule);
+  }
 }
 
 NS_IMPL_ADDREF(HTMLCSSStyleSheetImpl)
@@ -274,11 +305,8 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     htmlContent->GetTag(tag);
     if (tag == nsHTMLAtoms::body) {
       if (nsnull == mBodyRule) {
-        BodyFixupRule*  bodyRule = new BodyFixupRule();
-        if ((nsnull != bodyRule) && 
-            (NS_OK != bodyRule->QueryInterface(kIStyleRuleIID, (void**)&mBodyRule))) {
-          delete bodyRule;
-        }
+        mBodyRule = new BodyFixupRule(this);
+        NS_IF_ADDREF(mBodyRule);
       }
       if (nsnull != mBodyRule) {
         aResults->AppendElement(mBodyRule);
@@ -301,10 +329,78 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
   return 0;
 }
 
-nsIURL* HTMLCSSStyleSheetImpl::GetURL(void)
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::GetURL(nsIURL*& aURL) const
 {
-  NS_ADDREF(mURL);
-  return mURL;
+  NS_IF_ADDREF(mURL);
+  aURL = mURL;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::GetTitle(nsString& aTitle) const
+{
+  aTitle.Truncate();
+  aTitle.Append("Internal HTML/CSS Style Sheet");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::GetType(nsString& aType) const
+{
+  aType.Truncate();
+  aType.Append("text/html");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::GetMediumCount(PRInt32& aCount) const
+{
+  aCount = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::GetMediumAt(PRInt32 aIndex, nsString& aMedium) const
+{
+  aMedium.Truncate();
+  return NS_ERROR_INVALID_ARG;
+}
+
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::GetEnabled(PRBool& aEnabled) const
+{
+  aEnabled = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::SetEnabled(PRBool aEnabled)
+{ // these can't be disabled
+  return NS_OK;
+}
+
+// style sheet owner info
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::GetParentSheet(nsIStyleSheet*& aParent) const
+{
+  aParent = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::GetOwningDocument(nsIDocument*& aDocument) const
+{
+  NS_IF_ADDREF(mDocument);
+  aDocument = mDocument;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::SetOwningDocument(nsIDocument* aDocument)
+{
+  mDocument = aDocument;
+  return NS_OK;
 }
 
 void HTMLCSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
@@ -322,13 +418,14 @@ void HTMLCSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 }
 
 NS_HTML nsresult
-  NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult, nsIURL* aURL)
+  NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult, nsIURL* aURL,
+                          nsIDocument* aDocument)
 {
   if (aInstancePtrResult == nsnull) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  HTMLCSSStyleSheetImpl*  it = new HTMLCSSStyleSheetImpl(aURL);
+  HTMLCSSStyleSheetImpl*  it = new HTMLCSSStyleSheetImpl(aURL, aDocument);
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;

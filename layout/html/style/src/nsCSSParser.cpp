@@ -198,11 +198,11 @@ public:
 
   NS_IMETHOD GetInfoMask(PRUint32& aResult);
 
-  NS_IMETHOD SetStyleSheet(nsIStyleSheet* aSheet);
+  NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet);
 
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
-                   nsIURL*          aInputURL,
-                   nsIStyleSheet*&        aResult);
+                   nsIURL*                aInputURL,
+                   nsICSSStyleSheet*&     aResult);
 
   NS_IMETHOD ParseDeclarations(const nsString& aDeclaration,
                                nsIURL*         aBaseURL,
@@ -364,24 +364,19 @@ CSSParserImpl::GetInfoMask(PRUint32& aResult)
 }
 
 NS_METHOD
-CSSParserImpl::SetStyleSheet(nsIStyleSheet* aSheet)
+CSSParserImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null ptr");
   if (nsnull == aSheet) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  // Make sure the sheet supports the correct interface!
-  static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
-  nsICSSStyleSheet* cssSheet;
-  nsresult rv = aSheet->QueryInterface(kICSSStyleSheetIID, (void**)&cssSheet);
-  if (NS_OK != rv) {
-    return rv;
+  if (aSheet != mSheet) {
+    // Switch to using the new sheet
+    NS_IF_RELEASE(mSheet);
+    mSheet = aSheet;
+    NS_ADDREF(mSheet);
   }
-
-  // Switch to using the new sheet
-  NS_IF_RELEASE(mSheet);
-  mSheet = cssSheet;
 
   return NS_OK;
 }
@@ -389,7 +384,7 @@ CSSParserImpl::SetStyleSheet(nsIStyleSheet* aSheet)
 NS_METHOD
 CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
                      nsIURL*                aInputURL,
-                     nsIStyleSheet*&        aResult)
+                     nsICSSStyleSheet*&     aResult)
 {
   if (nsnull == mSheet) {
     NS_NewCSSStyleSheet(&mSheet, aInputURL);
@@ -425,9 +420,8 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
   mScanner = nsnull;
   NS_IF_RELEASE(mURL);
 
-  nsIStyleSheet* sheet = nsnull;
-  mSheet->QueryInterface(kIStyleSheetIID, (void**)&sheet);
-  aResult = sheet;
+  aResult = mSheet;
+  NS_ADDREF(aResult);
 
   return NS_OK;
 }
@@ -711,15 +705,11 @@ NS_IMETHODIMP CSSParserImpl::ProcessImport(const nsString& aURLSpec)
           nsICSSParser* parser;
           rv = NS_NewCSSParser(&parser);
           if (NS_OK == rv) {
-            nsIStyleSheet* childSheet = nsnull;
+            nsICSSStyleSheet* childSheet = nsnull;
             rv = parser->Parse(uin, url, childSheet);
             NS_RELEASE(parser);
             if ((NS_OK == rv) && (nsnull != childSheet)) {
-              nsICSSStyleSheet* cssChild = nsnull;
-              if (NS_OK == childSheet->QueryInterface(kICSSStyleSheetIID, (void**)&cssChild)) {
-                mSheet->AppendStyleSheet(cssChild);
-                NS_RELEASE(cssChild);
-              }
+              mSheet->AppendStyleSheet(childSheet);
             }
             NS_IF_RELEASE(childSheet);
           }

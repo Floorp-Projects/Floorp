@@ -195,7 +195,7 @@ nsImageDocument::StartDocumentLoad(nsIURL* aURL,
   // Create style attribute style sheet
   nsresult rv;
   nsIHTMLCSSStyleSheet* styleAttrSheet;
-  rv = NS_NewHTMLCSSStyleSheet(&styleAttrSheet, aURL);
+  rv = NS_NewHTMLCSSStyleSheet(&styleAttrSheet, aURL, this);
   if (NS_OK != rv) {
     return rv;
   }
@@ -203,7 +203,7 @@ nsImageDocument::StartDocumentLoad(nsIURL* aURL,
   NS_RELEASE(styleAttrSheet);
 
   // Create html attribute style sheet
-  rv = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL);
+  rv = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL, this);
   if (NS_OK != rv) {
     return rv;
   }

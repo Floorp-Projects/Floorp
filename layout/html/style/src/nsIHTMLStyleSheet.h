@@ -27,6 +27,7 @@ class nsString;
 class nsHTMLValue;
 class nsIHTMLAttributes;
 class nsIHTMLContent;
+class nsIDocument;
 
 // IID for the nsIHTMLStyleSheet interface {bddbd1b0-c5cc-11d1-8031-006008159b5a}
 #define NS_IHTML_STYLE_SHEET_IID     \
@@ -57,6 +58,7 @@ public:
 };
 
 extern NS_HTML nsresult
-  NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURL* aURL);
+  NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURL* aURL, 
+                       nsIDocument* aDocument);
 
 #endif /* nsIHTMLStyleSheet_h___ */

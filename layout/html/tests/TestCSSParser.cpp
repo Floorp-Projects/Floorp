@@ -17,7 +17,7 @@
  */
 #include <stdio.h>
 #include "nsICSSParser.h"
-#include "nsIStyleSheet.h"
+#include "nsICSSStyleSheet.h"
 #include "nsIStyleRule.h"
 #include "nsIURL.h"
 #include "nsIInputStream.h"
@@ -128,7 +128,7 @@ int main(int argc, char** argv)
       }
 
       // Parse the input and produce a style set
-      nsIStyleSheet* sheet;
+      nsICSSStyleSheet* sheet;
       rv = css->Parse(uin, url, sheet);
       if (NS_OK == rv) {
         if (verbose) {

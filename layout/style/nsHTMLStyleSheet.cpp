@@ -53,13 +53,14 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 class HTMLAnchorRule : public nsIStyleRule {
 public:
-  HTMLAnchorRule();
+  HTMLAnchorRule(nsIHTMLStyleSheet* aSheet);
   ~HTMLAnchorRule();
 
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aValue) const;
   NS_IMETHOD HashValue(PRUint32& aValue) const;
+  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   // Strength is an out-of-band weighting, always 0 here
   NS_IMETHOD GetStrength(PRInt32& aStrength);
 
@@ -67,10 +68,12 @@ public:
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
-  nscolor mColor;
+  nscolor             mColor;
+  nsIHTMLStyleSheet*  mSheet;
 };
 
-HTMLAnchorRule::HTMLAnchorRule()
+HTMLAnchorRule::HTMLAnchorRule(nsIHTMLStyleSheet* aSheet)
+  : mSheet(aSheet)
 {
   NS_INIT_REFCNT();
 }
@@ -92,6 +95,14 @@ NS_IMETHODIMP
 HTMLAnchorRule::HashValue(PRUint32& aValue) const
 {
   aValue = (PRUint32)(mColor);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLAnchorRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
+{
+  NS_IF_ADDREF(mSheet);
+  aSheet = mSheet;
   return NS_OK;
 }
 
@@ -201,11 +212,27 @@ public:
   void* operator new(size_t size, nsIArena* aArena);
   void operator delete(void* ptr);
 
-  HTMLStyleSheetImpl(nsIURL* aURL);
+  HTMLStyleSheetImpl(nsIURL* aURL, nsIDocument* aDocument);
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
+
+  // nsIStyleSheet api
+  NS_IMETHOD GetURL(nsIURL*& aURL) const;
+  NS_IMETHOD GetTitle(nsString& aTitle) const;
+  NS_IMETHOD GetType(nsString& aType) const;
+  NS_IMETHOD GetMediumCount(PRInt32& aCount) const;
+  NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsString& aMedium) const;
+
+  NS_IMETHOD GetEnabled(PRBool& aEnabled) const;
+  NS_IMETHOD SetEnabled(PRBool aEnabled);
+
+  // style sheet owner info
+  NS_IMETHOD GetParentSheet(nsIStyleSheet*& aParent) const;  // will be null
+  NS_IMETHOD GetOwningDocument(nsIDocument*& aDocument) const;
+
+  NS_IMETHOD SetOwningDocument(nsIDocument* aDocumemt);
 
   virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
                                 nsIContent* aContent,
@@ -217,8 +244,6 @@ public:
                                 nsIAtom* aPseudoTag,
                                 nsIStyleContext* aParentContext,
                                 nsISupportsArray* aResults);
-
-  virtual nsIURL* GetURL(void);
 
   NS_IMETHOD SetLinkColor(nscolor aColor);
   NS_IMETHOD SetActiveLinkColor(nscolor aColor);
@@ -278,7 +303,17 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
-  // XXX style rule enumerations
+  // Style change notifications
+  NS_IMETHOD StyleRuleChanged(nsIPresContext* aPresContext,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule,
+                              PRInt32 aHint); // See nsStyleConsts fot hint values
+  NS_IMETHOD StyleRuleAdded(nsIPresContext* aPresContext,
+                            nsIStyleSheet* aStyleSheet,
+                            nsIStyleRule* aStyleRule);
+  NS_IMETHOD StyleRuleRemoved(nsIPresContext* aPresContext,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule);
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -361,11 +396,12 @@ protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
 
-  nsIURL*         mURL;
-  HTMLAnchorRule* mLinkRule;
-  HTMLAnchorRule* mVisitedRule;
-  HTMLAnchorRule* mActiveRule;
-  nsHashtable     mAttrTable;
+  nsIURL*             mURL;
+  nsIDocument*        mDocument;
+  HTMLAnchorRule*     mLinkRule;
+  HTMLAnchorRule*     mVisitedRule;
+  HTMLAnchorRule*     mActiveRule;
+  nsHashtable         mAttrTable;
   nsIHTMLAttributes*  mRecycledAttrs;
 };
 
@@ -406,9 +442,10 @@ void HTMLStyleSheetImpl::operator delete(void* ptr)
 
 
 
-HTMLStyleSheetImpl::HTMLStyleSheetImpl(nsIURL* aURL)
+HTMLStyleSheetImpl::HTMLStyleSheetImpl(nsIURL* aURL, nsIDocument* aDocument)
   : nsIHTMLStyleSheet(),
     mURL(aURL),
+    mDocument(aDocument),
     mLinkRule(nsnull),
     mVisitedRule(nsnull),
     mActiveRule(nsnull),
@@ -421,9 +458,18 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(nsIURL* aURL)
 HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
 {
   NS_RELEASE(mURL);
-  NS_IF_RELEASE(mLinkRule);
-  NS_IF_RELEASE(mVisitedRule);
-  NS_IF_RELEASE(mActiveRule);
+  if (nsnull != mLinkRule) {
+    mLinkRule->mSheet = nsnull;
+    NS_RELEASE(mLinkRule);
+  }
+  if (nsnull != mVisitedRule) {
+    mVisitedRule->mSheet = nsnull;
+    NS_RELEASE(mVisitedRule);
+  }
+  if (nsnull != mActiveRule) {
+    mActiveRule->mSheet = nsnull;
+    NS_RELEASE(mActiveRule);
+  }
   NS_IF_RELEASE(mRecycledAttrs);
 }
 
@@ -556,17 +602,85 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 }
 
 
-nsIURL* HTMLStyleSheetImpl::GetURL(void)
+  // nsIStyleSheet api
+NS_IMETHODIMP
+HTMLStyleSheetImpl::GetURL(nsIURL*& aURL) const
 {
-  NS_ADDREF(mURL);
-  return mURL;
+  NS_IF_ADDREF(mURL);
+  aURL = mURL;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::GetTitle(nsString& aTitle) const
+{
+  aTitle.Truncate();
+  aTitle.Append("Internal HTML Style Sheet");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::GetType(nsString& aType) const
+{
+  aType.Truncate();
+  aType.Append("text/html");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::GetMediumCount(PRInt32& aCount) const
+{
+  aCount = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::GetMediumAt(PRInt32 aIndex, nsString& aMedium) const
+{
+  aMedium.Truncate();
+  return NS_ERROR_INVALID_ARG;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::GetEnabled(PRBool& aEnabled) const
+{
+  aEnabled = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::SetEnabled(PRBool aEnabled)
+{ // these can't be disabled
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::GetParentSheet(nsIStyleSheet*& aParent) const
+{
+  aParent = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::GetOwningDocument(nsIDocument*& aDocument) const
+{
+  NS_IF_ADDREF(mDocument);
+  aDocument = mDocument;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::SetOwningDocument(nsIDocument* aDocument)
+{
+  mDocument = aDocument;
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP HTMLStyleSheetImpl::SetLinkColor(nscolor aColor)
 {
   if (nsnull == mLinkRule) {
-    mLinkRule = new HTMLAnchorRule();
+    mLinkRule = new HTMLAnchorRule(this);
     if (nsnull == mLinkRule) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -579,7 +693,7 @@ NS_IMETHODIMP HTMLStyleSheetImpl::SetLinkColor(nscolor aColor)
 NS_IMETHODIMP HTMLStyleSheetImpl::SetActiveLinkColor(nscolor aColor)
 {
   if (nsnull == mActiveRule) {
-    mActiveRule = new HTMLAnchorRule();
+    mActiveRule = new HTMLAnchorRule(this);
     if (nsnull == mActiveRule) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -592,7 +706,7 @@ NS_IMETHODIMP HTMLStyleSheetImpl::SetActiveLinkColor(nscolor aColor)
 NS_IMETHODIMP HTMLStyleSheetImpl::SetVisitedLinkColor(nscolor aColor)
 {
   if (nsnull == mVisitedRule) {
-    mVisitedRule = new HTMLAnchorRule();
+    mVisitedRule = new HTMLAnchorRule(this);
     if (nsnull == mVisitedRule) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -712,7 +826,7 @@ HTMLStyleSheetImpl::EnsureSingleAttributes(nsIHTMLAttributes*& aAttributes,
         aSingleAttrs->SetMappingFunction(aMapFunc);
       }
       else {
-        result = NS_NewHTMLAttributes(&aSingleAttrs, aMapFunc);
+        result = NS_NewHTMLAttributes(&aSingleAttrs, this, aMapFunc);
       }
     }
     else {
@@ -2403,6 +2517,77 @@ HTMLStyleSheetImpl::AttributeChanged(nsIPresContext* aPresContext,
   return result;
 }
 
+  // Style change notifications
+NS_IMETHODIMP
+HTMLStyleSheetImpl::StyleRuleChanged(nsIPresContext* aPresContext,
+                                     nsIStyleSheet* aStyleSheet,
+                                     nsIStyleRule* aStyleRule,
+                                     PRInt32 aHint)
+{
+  nsIPresShell* shell = aPresContext->GetShell();
+  nsIFrame* frame = shell->GetRootFrame();
+
+  PRBool reframe  = PR_FALSE;
+  PRBool reflow   = PR_FALSE;
+  PRBool render   = PR_FALSE;
+  PRBool restyle  = PR_FALSE;
+  switch (aHint) {
+    default:
+    case NS_STYLE_HINT_UNKNOWN:
+    case NS_STYLE_HINT_FRAMECHANGE:
+      reframe = PR_TRUE;
+    case NS_STYLE_HINT_REFLOW:
+      reflow = PR_TRUE;
+    case NS_STYLE_HINT_VISUAL:
+      render = PR_TRUE;
+    case NS_STYLE_HINT_CONTENT:
+      restyle = PR_TRUE;
+      break;
+    case NS_STYLE_HINT_AURAL:
+      break;
+  }
+
+  if (restyle) {
+    nsIStyleContext* sc;
+    frame->GetStyleContext(sc);
+    sc->RemapStyle(aPresContext);
+    NS_RELEASE(sc);
+  }
+
+  // XXX hack, skip the root and scrolling frames
+  frame->FirstChild(nsnull, frame);
+  frame->FirstChild(nsnull, frame);
+  if (reframe) {
+    NS_NOTYETIMPLEMENTED("frame change reflow");
+  }
+  else if (reflow) {
+    StyleChangeReflow(aPresContext, frame, nsnull);
+  }
+  else if (render) {
+    ApplyRenderingChangeToTree(aPresContext, frame);
+  }
+
+  NS_RELEASE(shell);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::StyleRuleAdded(nsIPresContext* aPresContext,
+                                   nsIStyleSheet* aStyleSheet,
+                                   nsIStyleRule* aStyleRule)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::StyleRuleRemoved(nsIPresContext* aPresContext,
+                                     nsIStyleSheet* aStyleSheet,
+                                     nsIStyleRule* aStyleRule)
+{
+  return NS_OK;
+}
+
 
 void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 {
@@ -2419,13 +2604,14 @@ void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 }
 
 NS_HTML nsresult
-NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURL* aURL)
+NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURL* aURL, 
+                     nsIDocument* aDocument)
 {
   if (aInstancePtrResult == nsnull) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  HTMLStyleSheetImpl  *it = new HTMLStyleSheetImpl(aURL);
+  HTMLStyleSheetImpl  *it = new HTMLStyleSheetImpl(aURL, aDocument);
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;

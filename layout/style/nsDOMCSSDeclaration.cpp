@@ -37,6 +37,7 @@ nsDOMCSSDeclaration::~nsDOMCSSDeclaration()
 NS_IMPL_ADDREF(nsDOMCSSDeclaration);
 NS_IMPL_RELEASE(nsDOMCSSDeclaration);
 
+static NS_DEFINE_IID(kIDOMCSS2PropertiesIID, NS_IDOMCSS2PROPERTIES_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -49,6 +50,12 @@ nsDOMCSSDeclaration::QueryInterface(REFNSIID aIID,
   NS_PRECONDITION(nsnull != aInstancePtr, "null ptr");
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kIDOMCSS2PropertiesIID)) {
+    nsIDOMCSS2Properties *tmp = this;
+    AddRef();
+    *aInstancePtr = (void*) tmp;
+    return NS_OK;
   }
   if (aIID.Equals(kIDOMCSSStyleDeclarationIID)) {
     nsIDOMCSSStyleDeclaration *tmp = this;
@@ -83,12 +90,12 @@ nsDOMCSSDeclaration::GetScriptObject(nsIScriptContext* aContext,
 
     res = GetParent(&parent);
     if (NS_OK == res) {
-      nsISupports *supports = (nsISupports *)(nsIDOMCSSStyleDeclaration *)this;
+      nsISupports *supports = (nsISupports *)(nsIDOMCSS2Properties *)this;
       // XXX Should be done through factory
-      res = NS_NewScriptCSSStyleDeclaration(aContext, 
-                                            supports,
-                                            parent, 
-                                            (void**)&mScriptObject);
+      res = NS_NewScriptCSS2Properties(aContext, 
+                                       supports,
+                                       parent, 
+                                       (void**)&mScriptObject);
       NS_RELEASE(parent);
     }
   }
@@ -101,6 +108,20 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::SetScriptObject(void* aScriptObject)
 {
   mScriptObject = aScriptObject;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsDOMCSSDeclaration::GetCssText(nsString& aCssText)
+{
+  // XXX TBI
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsDOMCSSDeclaration::SetCssText(const nsString& aCssText)
+{
+  // XXX TBI
   return NS_OK;
 }
 
@@ -650,6 +671,18 @@ nsDOMCSSDeclaration::SetCounterReset(const nsString& aCounterReset)
 }
 
 NS_IMETHODIMP
+nsDOMCSSDeclaration::GetCssFloat(nsString& aCssFloat)
+{
+  return GetPropertyValue("float", aCssFloat);
+}
+
+NS_IMETHODIMP
+nsDOMCSSDeclaration::SetCssFloat(const nsString& aCssFloat)
+{
+  return SetProperty("float", aCssFloat, "");
+}
+
+NS_IMETHODIMP
 nsDOMCSSDeclaration::GetCue(nsString& aCue)
 {
   return GetPropertyValue("cue", aCue);
@@ -743,18 +776,6 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::SetEmptyCells(const nsString& aEmptyCells)
 {
   return SetProperty("empty-cells", aEmptyCells, "");
-}
-
-NS_IMETHODIMP
-nsDOMCSSDeclaration::GetStyleFloat(nsString& aStyleFloat)
-{
-  return GetPropertyValue("style-float", aStyleFloat);
-}
-
-NS_IMETHODIMP
-nsDOMCSSDeclaration::SetStyleFloat(const nsString& aStyleFloat)
-{
-  return SetProperty("style-float", aStyleFloat, "");
 }
 
 NS_IMETHODIMP

@@ -21,7 +21,7 @@
 #include "nslayout.h"
 #include "nsISupports.h"
 class nsIStyleRule;
-class nsIStyleSheet;
+class nsICSSStyleSheet;
 class nsIUnicharInputStream;
 class nsIURL;
 class nsString;
@@ -40,11 +40,11 @@ public:
 
   // Set a style sheet for the parser to fill in. The style sheet must
   // implement the nsICSSStyleSheet interface
-  NS_IMETHOD SetStyleSheet(nsIStyleSheet* aSheet) = 0;
+  NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet) = 0;
 
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
-                   nsIURL*          aInputURL,
-                   nsIStyleSheet*&        aResult) = 0;
+                   nsIURL*                aInputURL,
+                   nsICSSStyleSheet*&     aResult) = 0;
 
   // Parse declarations assuming that the outer curly braces have
   // already been accounted for. aBaseURL is the base url to use for

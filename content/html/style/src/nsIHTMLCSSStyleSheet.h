@@ -31,6 +31,7 @@ public:
 };
 
 extern NS_HTML nsresult
-  NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult, nsIURL* aURL);
+  NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult, nsIURL* aURL,
+                          nsIDocument* aDocument);
 
 #endif /* nsIHTMLCSSStyleSheet_h___ */

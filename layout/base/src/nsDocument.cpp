@@ -123,6 +123,16 @@ public:
   NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
                                         nsIStyleSheet* aStyleSheet,
                                         PRBool aDisabled) { return NS_OK; }
+  NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule,
+                              PRInt32 aHint) { return NS_OK; }
+  NS_IMETHOD StyleRuleAdded(nsIDocument *aDocument,
+                            nsIStyleSheet* aStyleSheet,
+                            nsIStyleRule* aStyleRule) { return NS_OK; }
+  NS_IMETHOD StyleRuleRemoved(nsIDocument *aDocument,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule) { return NS_OK; }
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
   // nsIScriptObjectOwner interface
@@ -438,12 +448,7 @@ nsDocument::~nsDocument()
   index = mStyleSheets.Count();
   while (--index >= 0) {
     nsIStyleSheet* sheet = (nsIStyleSheet*) mStyleSheets.ElementAt(index);
-    nsICSSStyleSheet* css;
-    nsresult rv = sheet->QueryInterface(kICSSStyleSheetIID, (void **)&css);
-    if (NS_SUCCEEDED(rv)) {
-      css->SetDocument(nsnull);
-      NS_RELEASE(css);
-    }
+    sheet->SetOwningDocument(nsnull);
     NS_RELEASE(sheet);
   }
 
@@ -541,12 +546,7 @@ nsDocument::StartDocumentLoad(nsIURL *aURL,
   PRInt32 index = mStyleSheets.Count();
   while (--index >= 0) {
     nsIStyleSheet* sheet = (nsIStyleSheet*) mStyleSheets.ElementAt(index);
-    nsICSSStyleSheet* css;
-    nsresult rv = sheet->QueryInterface(kICSSStyleSheetIID, (void **)&css);
-    if (NS_SUCCEEDED(rv)) {
-      css->SetDocument(nsnull);
-      NS_RELEASE(css);
-    }
+    sheet->SetOwningDocument(nsnull);
     NS_RELEASE(sheet);
   }
   mStyleSheets.Clear();
@@ -718,33 +718,34 @@ void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
   NS_PRECONDITION(nsnull != aSheet, "null arg");
   mStyleSheets.AppendElement(aSheet);
   NS_ADDREF(aSheet);
-  nsICSSStyleSheet* css;
-  nsresult rv = aSheet->QueryInterface(kICSSStyleSheetIID, (void **)&css);
-  if (NS_SUCCEEDED(rv)) {
-    css->SetDocument(this);
-    NS_RELEASE(css);
-  }
+  aSheet->SetOwningDocument(this);
 
-  PRInt32 count = mPresShells.Count();
-  PRInt32 index;
-  for (index = 0; index < count; index++) {
-    nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
-    nsIStyleSet* set = shell->GetStyleSet();
-    if (nsnull != set) {
-      AddStyleSheetToSet(aSheet, set);
-      NS_RELEASE(set);
+  PRBool enabled = PR_TRUE;
+  aSheet->GetEnabled(enabled);
+
+  if (enabled) {
+    PRInt32 count = mPresShells.Count();
+    PRInt32 index;
+    for (index = 0; index < count; index++) {
+      nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
+      nsIStyleSet* set = shell->GetStyleSet();
+      if (nsnull != set) {
+        AddStyleSheetToSet(aSheet, set);
+        NS_RELEASE(set);
+      }
     }
-  }
 
-  count = mObservers.Count();
-  for (index = 0; index < count; index++) {
-    nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
-    observer->StyleSheetAdded(this, aSheet);
+    // XXX should observers be notified for disabled sheets??? I think not, but I could be wrong
+    count = mObservers.Count();
+    for (index = 0; index < count; index++) {
+      nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
+      observer->StyleSheetAdded(this, aSheet);
+    }
   }
 }
 
 void nsDocument::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
-                                            PRBool mDisabled)
+                                            PRBool aDisabled)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
   PRInt32 count;
@@ -757,7 +758,7 @@ void nsDocument::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
       nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
       nsIStyleSet* set = shell->GetStyleSet();
       if (nsnull != set) {
-        if (mDisabled) {
+        if (aDisabled) {
           set->RemoveDocStyleSheet(aSheet);
         }
         else {
@@ -771,7 +772,7 @@ void nsDocument::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
   count = mObservers.Count();
   for (index = 0; index < count; index++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
-    observer->StyleSheetDisabledStateChanged(this, aSheet, mDisabled);
+    observer->StyleSheetDisabledStateChanged(this, aSheet, aDisabled);
   }
 }
 
@@ -928,6 +929,42 @@ nsDocument::AttributeChanged(nsIContent* aChild,
   }
   return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRule,
+                             PRInt32 aHint)
+{
+  PRInt32 count = mObservers.Count();
+  for (PRInt32 i = 0; i < count; i++) {
+    nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
+    observer->StyleRuleChanged(this, aStyleSheet, aStyleRule, aHint);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::StyleRuleAdded(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRule)
+{
+  PRInt32 count = mObservers.Count();
+  for (PRInt32 i = 0; i < count; i++) {
+    nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
+    observer->StyleRuleAdded(this, aStyleSheet, aStyleRule);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::StyleRuleRemoved(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRule)
+{
+  PRInt32 count = mObservers.Count();
+  for (PRInt32 i = 0; i < count; i++) {
+    nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
+    observer->StyleRuleRemoved(this, aStyleSheet, aStyleRule);
+  }
+  return NS_OK;
+}
+
 
 nsresult nsDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {

@@ -46,6 +46,7 @@
 #include "nsIDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsICSSParser.h"
+#include "nsICSSStyleSheet.h"
 #include "nsLayoutCID.h"
 
 /* Forward declarations.... */
@@ -197,7 +198,7 @@ public:
                                   nsIContentViewer** aDocViewer);
 };
 
-static nsIStyleSheet* gUAStyleSheet;
+static nsICSSStyleSheet* gUAStyleSheet;
 
 nsDocFactoryImpl::nsDocFactoryImpl()
 {
@@ -535,7 +536,7 @@ nsresult nsDocFactoryImpl::InitUAStyleSheet()
         NS_RELEASE(in);
       }
       else {
-//        printf("open of %s failed: error=%x\n", UA_CSS_URL, ec);
+        printf("open of %s failed: error=%x\n", UA_CSS_URL, ec);
         rv = NS_ERROR_ILLEGAL_VALUE;  // XXX need a better error code here
       }
 

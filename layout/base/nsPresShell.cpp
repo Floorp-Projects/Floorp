@@ -21,6 +21,7 @@
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
 #include "nsIStyleSet.h"
+#include "nsICSSStyleSheet.h" // XXX for UA sheet loading hack, can this go away please?
 #include "nsIStyleContext.h"
 #include "nsFrame.h"
 #include "nsIReflowCommand.h"
@@ -193,6 +194,16 @@ public:
   NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
                                             nsIStyleSheet* aStyleSheet,
                                             PRBool aDisabled);
+  NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule,
+                              PRInt32 aHint);
+  NS_IMETHOD StyleRuleAdded(nsIDocument *aDocument,
+                            nsIStyleSheet* aStyleSheet,
+                            nsIStyleRule* aStyleRule);
+  NS_IMETHOD StyleRuleRemoved(nsIDocument *aDocument,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule);
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
   // nsIPresShell
@@ -231,6 +242,8 @@ public:
 
 protected:
   ~PresShell();
+
+  nsresult ReconstructFrames(void);
 
 #ifdef NS_DEBUG
   void VerifyIncrementalReflow();
@@ -902,17 +915,8 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   return rv;
 }
 
-NS_IMETHODIMP
-PresShell::StyleSheetAdded(nsIDocument *aDocument,
-                           nsIStyleSheet* aStyleSheet)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PresShell::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
-                                          nsIStyleSheet* aStyleSheet,
-                                          PRBool aDisabled)
+nsresult
+PresShell::ReconstructFrames(void)
 {
   nsresult rv = NS_OK;
   if (nsnull != mRootFrame) {
@@ -933,6 +937,57 @@ PresShell::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
   }
   return rv;
 }
+
+NS_IMETHODIMP
+PresShell::StyleSheetAdded(nsIDocument *aDocument,
+                           nsIStyleSheet* aStyleSheet)
+{
+  return ReconstructFrames();
+}
+
+NS_IMETHODIMP
+PresShell::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
+                                          nsIStyleSheet* aStyleSheet,
+                                          PRBool aDisabled)
+{
+  return ReconstructFrames();
+}
+
+NS_IMETHODIMP
+PresShell::StyleRuleChanged(nsIDocument *aDocument,
+                            nsIStyleSheet* aStyleSheet,
+                            nsIStyleRule* aStyleRule,
+                            PRInt32 aHint) 
+{
+  EnterReflowLock();
+  nsresult  rv = mStyleSet->StyleRuleChanged(mPresContext, aStyleSheet,
+                                             aStyleRule, aHint);
+  ExitReflowLock();
+  return rv;
+}
+
+NS_IMETHODIMP
+PresShell::StyleRuleAdded(nsIDocument *aDocument,
+                          nsIStyleSheet* aStyleSheet,
+                          nsIStyleRule* aStyleRule) 
+{ 
+  EnterReflowLock();
+  nsresult  rv = mStyleSet->StyleRuleAdded(mPresContext, aStyleSheet, aStyleRule);
+  ExitReflowLock();
+  return rv;
+}
+
+NS_IMETHODIMP
+PresShell::StyleRuleRemoved(nsIDocument *aDocument,
+                            nsIStyleSheet* aStyleSheet,
+                            nsIStyleRule* aStyleRule) 
+{ 
+  EnterReflowLock();
+  nsresult  rv = mStyleSet->StyleRuleRemoved(mPresContext, aStyleSheet, aStyleRule);
+  ExitReflowLock();
+  return rv;
+}
+
 
 NS_IMETHODIMP
 PresShell::DocumentWillBeDestroyed(nsIDocument *aDocument)
@@ -1116,8 +1171,8 @@ NS_IMETHODIMP PresShell :: ResizeReflow(nsIView *aView, nscoord aWidth, nscoord 
 #include "nsIScrollableView.h"
 #include "nsIDeviceContext.h"
 #include "nsIURL.h"
-#include "nsICSSParser.h"
-#include "nsIStyleSheet.h"
+//#include "nsICSSParser.h"
+//#include "nsIStyleSheet.h"
 
 static NS_DEFINE_IID(kViewManagerCID, NS_VIEW_MANAGER_CID);
 static NS_DEFINE_IID(kIViewManagerIID, NS_IVIEWMANAGER_IID);

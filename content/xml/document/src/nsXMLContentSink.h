@@ -32,7 +32,6 @@ class nsIContent;
 class nsVoidArray;
 class nsIXMLDocument;
 class nsIUnicharInputStream;
-class nsIStyleSheet;
 
 typedef enum {
   eXMLContentSinkState_InProlog,
@@ -79,8 +78,7 @@ protected:
   void StartLayout();
 
   nsresult LoadStyleSheet(nsIURL* aURL,
-                          nsIUnicharInputStream* aUIN,
-                          PRBool aInline);
+                          nsIUnicharInputStream* aUIN);
   nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
                      PRBool* aDidFlush=nsnull);
 
@@ -119,7 +117,6 @@ protected:
   PRInt32 mNestLevel;
   nsVoidArray* mContentStack;
 
-  nsIStyleSheet* mStyleSheet;
   nsScrollPreference mOriginalScrollPreference;
 
   PRUnichar* mText;
