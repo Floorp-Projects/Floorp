@@ -1394,6 +1394,13 @@ NS_IMETHODIMP nsRenderingContextWin :: FillArc(nscoord aX, nscoord aY, nscoord a
   return NS_OK;
 }
 
+// This must be called to clamp string lengths to 8K for Win95/98/ME.
+inline void CheckLength(PRUint32 *aLength)
+{
+  if (gIsWIN95 && *aLength > 8192)
+    *aLength = 8192;
+}
+
 NS_IMETHODIMP nsRenderingContextWin :: GetWidth(char ch, nscoord& aWidth)
 {
   char buf[1];
@@ -1427,6 +1434,7 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const char* aString,
       return mFontMetrics->GetSpaceWidth(aWidth);
     }
 
+    CheckLength(&aLength);
     SetupFontAndColor();
     nscoord pxWidth = mCurrFontWin->GetWidth(mDC, aString, aLength);
     aWidth = NSToCoordRound(float(pxWidth) * mP2T);
@@ -1473,6 +1481,7 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
 {
   if (!mFontMetrics) return NS_ERROR_FAILURE;
 
+  CheckLength(&aLength);
   SetupFontAndColor();
 
   nsFontMetricsWin* metrics = (nsFontMetricsWin*)mFontMetrics;
@@ -1506,6 +1515,7 @@ nsRenderingContextWin::GetTextDimensions(const char*       aString,
 
   if (nsnull != mFontMetrics) {
     // Setup the font and foreground color
+    CheckLength((PRUint32*)&aLength);
     SetupFontAndColor();
 
     // If we need to back up this state represents the last place we could
@@ -1906,6 +1916,7 @@ nsRenderingContextWin::GetTextDimensions(const PRUnichar*  aString,
 {
   if (!mFontMetrics) return NS_ERROR_FAILURE;
 
+  CheckLength((PRUint32*)&aLength);
   SetupFontAndColor();
 
   nsFontMetricsWin* metrics = (nsFontMetricsWin*)mFontMetrics;
@@ -2110,6 +2121,7 @@ nsRenderingContextWin::GetTextDimensions(const PRUnichar*  aString,
   aDimensions.Clear();
   if (!mFontMetrics) return NS_ERROR_FAILURE;
 
+  CheckLength(&aLength);
   SetupFontAndColor();
 
   nsFontMetricsWin* metrics = (nsFontMetricsWin*)mFontMetrics;
@@ -2139,6 +2151,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const char *aString, PRUint32 
   PRInt32 x = aX;
   PRInt32 y = aY;
 
+  CheckLength(&aLength);
   SetupFontAndColor();
 
   INT dxMem[500];
@@ -2235,6 +2248,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUi
 {
   if (!mFontMetrics) return NS_ERROR_FAILURE;
 
+  CheckLength(&aLength);
   SetupFontAndColor();
 
   nsFontMetricsWin* metrics = (nsFontMetricsWin*)mFontMetrics;
@@ -2280,6 +2294,7 @@ nsRenderingContextWin::GetBoundingMetrics(const char*        aString,
   aBoundingMetrics.Clear();
   if (!mFontMetrics) return NS_ERROR_FAILURE;
 
+  CheckLength(&aLength);
   SetupFontAndColor();
   nsresult rv = mCurrFontWin->GetBoundingMetrics(mDC, aString, aLength, aBoundingMetrics);
 
@@ -2341,6 +2356,7 @@ nsRenderingContextWin::GetBoundingMetrics(const PRUnichar*   aString,
   aBoundingMetrics.Clear();
   if (!mFontMetrics) return NS_ERROR_FAILURE;
 
+  CheckLength(&aLength);
   SetupFontAndColor();
 
   nsFontMetricsWin* metrics = (nsFontMetricsWin*)mFontMetrics;
