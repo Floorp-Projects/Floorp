@@ -2129,20 +2129,17 @@ var nsValidateCommand =
     }
     else
     {
-      var vwin2 = window.open("http://validator.w3.org/",
-                             "EditorValidate");
-      // Window loads asynchronously, so pass control to the load listener:
-      vwin2.addEventListener("load", this.validateWebPageLoaded, false);
+      var vwin2 = window.open("http://validator.w3.org/check?uri="
+                              + URL2Validate
+                              + "&doctype=Inline",
+                              "EditorValidate");
+      // This does the validation, no need to wait for page loaded.
     }
   },
   validateFilePageLoaded: function(event)
   {
     event.target.forms[0].uploaded_file.value = URL2Validate;
   },
-  validateWebPageLoaded: function(event)
-  {
-    event.target.forms[0].uri.value = URL2Validate;
-  }
 };
 
 var nsCheckLinksCommand =
