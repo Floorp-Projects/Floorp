@@ -41,22 +41,30 @@ END_COM_MAP()
 
 	// Attach to the specified script engine	
 	virtual HRESULT Attach(CLSID clsidScriptEngine);
-	// Attach to the VBScript engine
+	// Helper to attach to the VBScript engine
 	virtual HRESULT AttachVBScript();
-	// Attach to the JScript engine
+	// Helper to attach to the JScript engine
 	virtual HRESULT AttachJScript();
 	// Detach from the script engine
 	virtual HRESULT Detach();
+	// Return the current state of the script engine
+	virtual SCRIPTSTATE GetScriptState() const
+	{
+		return m_ssScriptState;
+	}
 
 	// Parse the specified script
-	virtual HRESULT ParseScriptText(const tstring &szScript);
+	virtual HRESULT ParseScriptText(const TCHAR *szScript);
+	// Parse the specified script from a file
+	virtual HRESULT ParseScriptFile(const TCHAR *szFile);
 	// Add object to script address space
-	virtual HRESULT AddNamedObject(const tstring &szName, IUnknown *pObject, BOOL bGlobalMembers = FALSE);
+	virtual HRESULT AddNamedObject(const TCHAR *szName, IUnknown *pObject, BOOL bGlobalMembers = FALSE);
 	// Play the script
 	virtual HRESULT PlayScript();
 	// Stop the script
 	virtual HRESULT StopScript();
 
+public:
 	// IActiveScriptSite
     virtual HRESULT STDMETHODCALLTYPE GetLCID(/* [out] */ LCID __RPC_FAR *plcid);
     virtual HRESULT STDMETHODCALLTYPE GetItemInfo(/* [in] */ LPCOLESTR pstrName, /* [in] */ DWORD dwReturnMask, /* [out] */ IUnknown __RPC_FAR *__RPC_FAR *ppiunkItem, /* [out] */ ITypeInfo __RPC_FAR *__RPC_FAR *ppti);

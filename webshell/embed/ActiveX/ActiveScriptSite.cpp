@@ -17,7 +17,8 @@
  */
 
 #include "stdafx.h"
-
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "ActiveScriptSite.h"
 
 
@@ -91,14 +92,14 @@ HRESULT CActiveScriptSite::AttachJScript()
 }
 
 
-HRESULT CActiveScriptSite::AddNamedObject(const tstring &szName, IUnknown *pObject, BOOL bGlobalMembers)
+HRESULT CActiveScriptSite::AddNamedObject(const TCHAR *szName, IUnknown *pObject, BOOL bGlobalMembers)
 {
 	if (m_spIActiveScript == NULL)
 	{
 		return E_UNEXPECTED;
 	}
 
-	if (pObject == NULL || szName.empty())
+	if (pObject == NULL || szName == NULL)
 	{
 		return E_INVALIDARG;
 	}
@@ -122,8 +123,7 @@ HRESULT CActiveScriptSite::AddNamedObject(const tstring &szName, IUnknown *pObje
 		dwFlags |= SCRIPTITEM_GLOBALMEMBERS;
 	}
 
-
-	hr = m_spIActiveScript->AddNamedItem(T2OLE(szName.c_str()), dwFlags);
+	hr = m_spIActiveScript->AddNamedItem(T2OLE(szName), dwFlags);
 
 	if (FAILED(hr))
 	{
@@ -135,7 +135,41 @@ HRESULT CActiveScriptSite::AddNamedObject(const tstring &szName, IUnknown *pObje
 }
 
 
-HRESULT CActiveScriptSite::ParseScriptText(const tstring &szScript)
+HRESULT CActiveScriptSite::ParseScriptFile(const TCHAR *szFile)
+{
+	USES_CONVERSION;
+	const char *pszFileName = T2CA(szFile);
+	
+	// Stat the file and get its length;
+	struct _stat cStat;
+	_stat(pszFileName, &cStat);
+
+	// Allocate a buffer
+	size_t nBufSize = cStat.st_size + 1;
+	char *pBuffer = (char *) malloc(nBufSize);
+	if (pBuffer == NULL)
+	{
+		return E_OUTOFMEMORY;
+	}
+	memset(pBuffer, 0, nBufSize);
+
+	// Read the script into the buffer and parse it
+	HRESULT hr = E_FAIL;
+	FILE *f = fopen(pszFileName, "rb");
+	if (f)
+	{
+		fread(pBuffer, 1, nBufSize - 1, f);
+		hr = ParseScriptText(A2T(pBuffer));
+		fclose(f);
+	}
+
+	free(pBuffer);
+
+	return hr;
+}
+
+
+HRESULT CActiveScriptSite::ParseScriptText(const TCHAR *szScript)
 {
 	if (m_spIActiveScript == NULL)
 	{
@@ -154,7 +188,7 @@ HRESULT CActiveScriptSite::ParseScriptText(const tstring &szScript)
 		HRESULT hr;
 
 		hr = spIActiveScriptParse->ParseScriptText(
-					T2OLE(szScript.c_str()),
+					T2OLE(szScript),
 					NULL, NULL, NULL, dwCookie, 0, dwFlags,
 					&vResult, &cExcepInfo);
 
