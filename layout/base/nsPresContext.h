@@ -47,6 +47,11 @@ class nsIEventStateManager;
 class nsIPresContext : public nsISupports {
 public:
   /**
+   * Initialize the presentation context from a particular device.
+   */
+  virtual nsresult Init(nsIDeviceContext* aDeviceContext) = 0;
+
+  /**
    * Set the presentation shell that this context is bound to.
    * A presentation context may only be bound to a single shell.
    */

@@ -37,6 +37,7 @@ class nsIViewManager;
 class nsString;
 class nsIWebWidget;
 class nsIDOMEvent;
+class nsIDeviceContext;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \

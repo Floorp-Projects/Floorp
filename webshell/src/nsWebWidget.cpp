@@ -46,6 +46,8 @@
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
+#include "nsIDeviceContext.h"
+#include "nsGfxCIID.h"
 
 #define UA_CSS_URL "resource:/res/ua.css"
 
@@ -66,10 +68,10 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Init(nsNativeWindow aParent,
+  virtual nsresult Init(nsNativeWidget aParent,
                         const nsRect& aBounds,
                         nsScrollPreference aScrolling = nsScrollPreference_kAuto);
-  virtual nsresult Init(nsNativeWindow aParent,
+  virtual nsresult Init(nsNativeWidget aParent,
                         const nsRect& aBounds,
                         nsIDocument* aDocument,
                         nsIPresContext* aPresContext,
@@ -119,7 +121,7 @@ public:
 private:
   nsresult ProvideDefaultHandlers();
   void ForceRefresh();
-  nsresult MakeWindow(nsNativeWindow aParent, const nsRect& aBounds,
+  nsresult MakeWindow(nsNativeWidget aParent, const nsRect& aBounds,
                       nsScrollPreference aScrolling);
   nsresult InitUAStyleSheet(void);
   nsresult CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aStyleSet);
@@ -139,6 +141,7 @@ private:
   nsVoidArray mChildren;
   //static nsIWebWidget* gRootWebWidget;
   nsString* mName;
+  nsIDeviceContext *mDeviceContext;
 
   friend class WebWidgetImpl;
 };
@@ -203,6 +206,7 @@ printf("del %d ", this);
 
   NS_IF_RELEASE(mScriptContext);
   NS_IF_RELEASE(mScriptGlobal);
+  NS_IF_RELEASE(mDeviceContext);
 }
 
 void Check(WebWidgetImpl* ww) 
@@ -327,7 +331,7 @@ nsIWebWidget* WebWidgetImpl::GetTarget(const nsString& aName)
 }
 
 
-nsresult WebWidgetImpl::MakeWindow(nsNativeWindow aNativeParent,
+nsresult WebWidgetImpl::MakeWindow(nsNativeWidget aNativeParent,
                                    const nsRect& aBounds,
                                    nsScrollPreference aScrolling)
 {
@@ -390,15 +394,34 @@ nsresult WebWidgetImpl::MakeWindow(nsNativeWindow aNativeParent,
   return rv;
 }
 
-nsresult WebWidgetImpl::Init(nsNativeWindow aNativeParent,
+nsresult WebWidgetImpl::Init(nsNativeWidget aNativeParent,
                              const nsRect& aBounds,
                              nsScrollPreference aScrolling)
 {
   // Create presentation context
-  nsresult rv = NS_NewGalleyContext(&mPresContext);
+
+  static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
+  static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+
+  nsresult rv = NSRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mDeviceContext);
+
+  if (NS_OK == rv) {
+    mDeviceContext->Init(aNativeParent);
+    mDeviceContext->SetDevUnitsToAppUnits(mDeviceContext->GetDevUnitsToTwips());
+    mDeviceContext->SetAppUnitsToDevUnits(mDeviceContext->GetTwipsToDevUnits());
+    mDeviceContext->SetGamma(1.7f);
+
+    NS_ADDREF(mDeviceContext);
+  }
+
+  rv = NS_NewGalleyContext(&mPresContext);
+
   if (NS_OK != rv) {
     return rv;
   }
+
+  mPresContext->Init(mDeviceContext);
+
   return MakeWindow(aNativeParent, aBounds, aScrolling);
 }
 
@@ -443,7 +466,7 @@ nsresult WebWidgetImpl::InitUAStyleSheet(void)
   return rv;
 }
 
-nsresult WebWidgetImpl::Init(nsNativeWindow aNativeParent,
+nsresult WebWidgetImpl::Init(nsNativeWidget aNativeParent,
                              const nsRect& aBounds,
                              nsIDocument* aDocument,
                              nsIPresContext* aPresContext,

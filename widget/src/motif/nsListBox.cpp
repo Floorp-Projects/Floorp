@@ -289,7 +289,7 @@ void nsListBox::Create(nsIWidget *aParent,
 // nsListBox Creator
 //
 //-------------------------------------------------------------------------
-void nsListBox::Create(nsNativeWindow aParent,
+void nsListBox::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,

@@ -77,7 +77,7 @@ void nsButton::Create(nsIWidget *aParent,
 
 }
 
-void nsButton::Create(nsNativeWindow aParent,
+void nsButton::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,

@@ -420,6 +420,19 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
 
 #endif
 
+  nsIDeviceContext *dx;
+  
+  static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
+  static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+
+  nsresult rv = NSRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&dx);
+
+  if (NS_OK == rv) {
+    dx->Init(nsnull);
+    dx->SetDevUnitsToAppUnits(dx->GetDevUnitsToTwips());
+    dx->SetAppUnitsToDevUnits(dx->GetTwipsToDevUnits());
+  }
+
   nsIPresContext * pc = nsnull;
   nsresult status = NS_NewGalleyContext(&pc);
   if ((NS_FAILED(status)) ||  nsnull==pc)
@@ -427,6 +440,8 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
     fprintf(out, "bad galley pc");
     NS_ASSERTION(PR_FALSE, "bad galley pc");
   }
+
+  pc->Init(dx);
 
   // create a view manager
   nsIViewManager * vm = nsnull;
@@ -501,6 +516,7 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
     fprintf(out, "bad paginated pc");
     NS_ASSERTION(PR_FALSE, "");
   }
+  pc->Init(dx);
   aDoc->CreateCorrectContent(rows, cols);
   CreateGeometry(aDoc, pc);
   VerifyGeometry(aDoc, pc);

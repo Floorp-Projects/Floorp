@@ -363,7 +363,7 @@ void nsComboBox::Create(nsIWidget *aParent,
 // nsComboBox Creator
 //
 //-------------------------------------------------------------------------
-void nsComboBox::Create(nsNativeWindow aParent,
+void nsComboBox::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,

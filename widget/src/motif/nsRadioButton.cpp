@@ -144,7 +144,7 @@ void nsRadioButton::Create(nsIWidget *aParent,
 // nsRadioButton Creator
 //
 //-------------------------------------------------------------------------
-void nsRadioButton::Create(nsNativeWindow aParent,
+void nsRadioButton::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,

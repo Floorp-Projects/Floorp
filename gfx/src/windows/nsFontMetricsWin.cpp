@@ -32,6 +32,12 @@ nsFontMetricsWin :: ~nsFontMetricsWin()
     delete mFont;
     mFont = nsnull;
   }
+
+  if (NULL != mFontHandle)
+  {
+    ::DeleteObject(mFontHandle);
+    mFontHandle = NULL;
+  }
 }
 
 NS_IMPL_ISUPPORTS(nsFontMetricsWin, kIFontMetricsIID)
@@ -39,12 +45,11 @@ NS_IMPL_ISUPPORTS(nsFontMetricsWin, kIFontMetricsIID)
 // Note: The presentation context has a reference to this font
 // metrics, therefore avoid circular references by not AddRef'ing the
 // presentation context.
-nsresult nsFontMetricsWin :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
+nsresult nsFontMetricsWin :: Init(const nsFont& aFont, nsIDeviceContext *aContext)
 {
   mFont = new nsFont(aFont);
-  mContext = aCX;
 
-  RealizeFont();
+  RealizeFont(aContext);
 
   return NS_OK;
 }
@@ -88,7 +93,7 @@ const char* nsFontMetricsWin::MapFamilyToFont(const nsString& aLogicalFontName)
   return "Arial";/* XXX for now */
 }
 
-void nsFontMetricsWin::RealizeFont()
+void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
 {
   // Fill in logFont structure; stolen from awt
   LOGFONT logFont;
@@ -110,7 +115,7 @@ void nsFontMetricsWin::RealizeFont()
     ? FW_BOLD : FW_NORMAL;
   logFont.lfItalic = (mFont->style & NS_FONT_STYLE_ITALIC)
     ? TRUE : FALSE;
-  float t2p = mContext->GetAppUnitsToDevUnits();
+  float t2p = aContext->GetAppUnitsToDevUnits();
   logFont.lfHeight = (LONG)(-mFont->size * t2p);
   strncpy(logFont.lfFaceName,
           MapFamilyToFont(mFont->name),
@@ -121,12 +126,12 @@ void nsFontMetricsWin::RealizeFont()
 //fprintf(stderr, "fFontHandle=%x\n", fFontHandle);
 
   // Find font metrics and character widths
-  HWND win = ::GetDesktopWindow();
+  HWND win = (HWND)aContext->GetNativeWidget();
   HDC dc = ::GetDC(win);
-  ::SelectObject(dc, (HGDIOBJ) mFontHandle);
+  HFONT oldfont = ::SelectObject(dc, (HGDIOBJ) mFontHandle);
 
   // Get font metrics
-  float p2t = mContext->GetDevUnitsToAppUnits();
+  float p2t = aContext->GetDevUnitsToAppUnits();
   TEXTMETRIC metrics;
   ::GetTextMetrics(dc, &metrics);
   mHeight = nscoord(metrics.tmHeight * p2t);

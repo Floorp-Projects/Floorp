@@ -66,7 +66,7 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 // Hide the native window systems real window type so as to avoid
 // including native window system types and api's. This is necessary
 // to ensure cross-platform code.
-typedef void* nsNativeWindow;
+typedef void* nsNativeWidget;
 
 /**
  * Border styles
@@ -158,7 +158,7 @@ class nsIWidget : public nsISupports {
      * @param     aRect     the widget dimension
      * @param     aHandleEventFunction the event handler callback function
      */
-    virtual void Create(nsNativeWindow aParent,
+    virtual void Create(nsNativeWidget aParent,
                         const nsRect &aRect,
                         EVENT_CALLBACK aHandleEventFunction,
                         nsIDeviceContext *aContext,

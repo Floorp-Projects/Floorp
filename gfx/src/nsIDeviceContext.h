@@ -23,6 +23,7 @@
 #include "nsIRenderingContext.h"
 #include "nsCoord.h"
 #include "nsRect.h"
+#include "nsIWidget.h"
 
 class nsIView;
 class nsIRenderingContext;
@@ -41,7 +42,7 @@ typedef void * nsNativeDeviceContext;
 class nsIDeviceContext : public nsISupports
 {
 public:
-  virtual nsresult Init(nsNativeDeviceContext aNativeDeviceContext) = 0;
+  virtual nsresult Init(nsNativeWidget aWidget) = 0;
 
   virtual nsIRenderingContext * CreateRenderingContext(nsIView *aView) = 0;
   virtual nsresult InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWindow) = 0;
@@ -91,7 +92,7 @@ public:
   //XXX the return from this really needs to be ref counted somehow. MMP
   virtual PRUint8 * GetGammaTable(void) = 0;
 
-  virtual nsNativeDeviceContext GetNativeDeviceContext(void) = 0;
+  virtual nsNativeWidget GetNativeWidget(void) = 0;
 };
 
 #endif /* nsIDeviceContext_h___ */

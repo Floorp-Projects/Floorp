@@ -66,7 +66,7 @@ nsDeviceContextUnix :: nsDeviceContextUnix()
   mGreenOffset = 0;
   mBlueOffset = 0;
 
-  mNativeDisplay = nsnull;
+  mNativeWidget = nsnull;
 
   mDepth = 0 ;
   mColormap = 0 ;
@@ -84,38 +84,24 @@ nsDeviceContextUnix :: ~nsDeviceContextUnix()
   NS_IF_RELEASE(mFontCache);
 
   if (mSurface) delete mSurface;
-
-  if (mNativeDisplay)
-    ::XCloseDisplay((Display *)mNativeDisplay);
-
 }
 
 NS_IMPL_QUERY_INTERFACE(nsDeviceContextUnix, kDeviceContextIID)
 NS_IMPL_ADDREF(nsDeviceContextUnix)
 NS_IMPL_RELEASE(nsDeviceContextUnix)
 
-nsNativeDeviceContext gNativeDeviceContext = nsnull;
-
-nsresult nsDeviceContextUnix :: Init(nsNativeDeviceContext aNativeDeviceContext)
+nsresult nsDeviceContextUnix :: Init(nsNativeWidget aNativeWidget)
 {
   for (PRInt32 cnt = 0; cnt < 256; cnt++)
     mGammaTable[cnt] = cnt;
 
-
   // XXX We really need to have Display passed to us since it could be specified
   //     not from the environment, which is the one we use here.
-  if (aNativeDeviceContext == nsnull)
-    mNativeDisplay = ::XOpenDisplay(nsnull);
-  if (gNativeDeviceContext == nsnull) {
-    gNativeDeviceContext = mNativeDisplay;
-  }
 
-  if (mNativeDisplay == nsnull) {
-    mNativeDisplay = gNativeDeviceContext;
-  }
+  mNativeWidget = aNativeWidget;
 
-  mTwipsToPixels = (((float)::XDisplayWidth((Display *)mNativeDisplay, DefaultScreen((Display *)mNativeDisplay))) /
-		    ((float)::XDisplayWidthMM((Display *)mNativeDisplay,DefaultScreen((Display *)mNativeDisplay) )) * 25.4) / 
+  mTwipsToPixels = (((float)::XDisplayWidth(XtDisplay((Widget)mNativeWidget), DefaultScreen(XtDisplay((Widget)mNativeWidget)))) /
+		    ((float)::XDisplayWidthMM(XtDisplay((Widget)mNativeWidget),DefaultScreen(XtDisplay((Widget)mNativeWidget)) )) * 25.4) / 
     NS_POINTS_TO_TWIPS_FLOAT(72.0f);
     
   mPixelsToTwips = 1.0f / mTwipsToPixels;
@@ -191,6 +177,98 @@ nsIRenderingContext * nsDeviceContextUnix :: CreateRenderingContext(nsIView *aVi
 nsresult nsDeviceContextUnix :: InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
 {
   return (aContext->Init(this, aWin));
+}
+
+nsIFontCache* nsDeviceContextUnix::GetFontCache()
+{
+  if (nsnull == mFontCache) {
+    if (NS_OK != CreateFontCache()) {
+      return nsnull;
+    }
+  }
+  NS_ADDREF(mFontCache);
+  return mFontCache;
+}
+
+nsresult nsDeviceContextUnix::CreateFontCache()
+{
+  nsresult rv = NS_NewFontCache(&mFontCache);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  mFontCache->Init(this);
+  return NS_OK;
+}
+
+void nsDeviceContextUnix::FlushFontCache()
+{
+  NS_RELEASE(mFontCache);
+}
+
+
+nsIFontMetrics* nsDeviceContextUnix::GetMetricsFor(const nsFont& aFont)
+{
+  if (nsnull == mFontCache) {
+    if (NS_OK != CreateFontCache()) {
+      return nsnull;
+    }
+  }
+  return mFontCache->GetMetricsFor(aFont);
+}
+
+void nsDeviceContextUnix :: SetZoom(float aZoom)
+{
+  mZoom = aZoom;
+}
+
+float nsDeviceContextUnix :: GetZoom() const
+{
+  return mZoom;
+}
+
+nsDrawingSurface nsDeviceContextUnix :: GetDrawingSurface(nsIRenderingContext &aContext)
+{
+  return aContext.CreateDrawingSurface(nsnull);
+}
+
+float nsDeviceContextUnix :: GetGamma(void)
+{
+  return mGammaValue;
+}
+
+void nsDeviceContextUnix :: SetGamma(float aGamma)
+{
+  if (aGamma != mGammaValue)
+  {
+    //we don't need to-recorrect existing images for this case
+    //so pass in 1.0 for the current gamma regardless of what it
+    //really happens to be. existing images will get a one time
+    //re-correction when they're rendered the next time. MMP
+
+    SetGammaTable(mGammaTable, 1.0f, aGamma);
+
+    mGammaValue = aGamma;
+  }
+}
+
+PRUint8 * nsDeviceContextUnix :: GetGammaTable(void)
+{
+  //XXX we really need to ref count this somehow. MMP
+
+  return mGammaTable;
+}
+
+void nsDeviceContextUnix :: SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma)
+{
+  double fgval = (1.0f / aCurrentGamma) * (1.0f / aNewGamma);
+
+  for (PRInt32 cnt = 0; cnt < 256; cnt++)
+    aTable[cnt] = (PRUint8)(pow((double)cnt * (1. / 256.), fgval) * 255.99999999);
+}
+
+nsNativeWidget nsDeviceContextUnix :: GetNativeWidget(void)
+{
+  return mNativeWidget;
 }
 
 PRUint32 nsDeviceContextUnix :: ConvertPixel(nscolor aColor)
@@ -421,104 +499,11 @@ void nsDeviceContextUnix :: InstallColormap()
 
   }
   
-
-}
-
-nsIFontCache* nsDeviceContextUnix::GetFontCache()
-{
-  if (nsnull == mFontCache) {
-    if (NS_OK != CreateFontCache()) {
-      return nsnull;
-    }
-  }
-  NS_ADDREF(mFontCache);
-  return mFontCache;
-}
-
-nsresult nsDeviceContextUnix::CreateFontCache()
-{
-  nsresult rv = NS_NewFontCache(&mFontCache);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  mFontCache->Init(this);
-  return NS_OK;
-}
-
-void nsDeviceContextUnix::FlushFontCache()
-{
-  NS_RELEASE(mFontCache);
-}
-
-
-nsIFontMetrics* nsDeviceContextUnix::GetMetricsFor(const nsFont& aFont)
-{
-  if (nsnull == mFontCache) {
-    if (NS_OK != CreateFontCache()) {
-      return nsnull;
-    }
-  }
-  return mFontCache->GetMetricsFor(aFont);
-}
-
-void nsDeviceContextUnix :: SetZoom(float aZoom)
-{
-  mZoom = aZoom;
-}
-
-float nsDeviceContextUnix :: GetZoom() const
-{
-  return mZoom;
-}
-
-nsDrawingSurface nsDeviceContextUnix :: GetDrawingSurface(nsIRenderingContext &aContext)
-{
-  return ( aContext.CreateDrawingSurface(nsnull));
 }
 
 nsDrawingSurface nsDeviceContextUnix :: GetDrawingSurface()
 {
-  return (mSurface);
-}
-
-float nsDeviceContextUnix :: GetGamma(void)
-{
-  return mGammaValue;
-}
-
-void nsDeviceContextUnix :: SetGamma(float aGamma)
-{
-  if (aGamma != mGammaValue)
-  {
-    //we don't need to-recorrect existing images for this case
-    //so pass in 1.0 for the current gamma regardless of what it
-    //really happens to be. existing images will get a one time
-    //re-correction when they're rendered the next time. MMP
-
-    SetGammaTable(mGammaTable, 1.0f, aGamma);
-
-    mGammaValue = aGamma;
-  }
-}
-
-PRUint8 * nsDeviceContextUnix :: GetGammaTable(void)
-{
-  //XXX we really need to ref count this somehow. MMP
-
-  return mGammaTable;
-}
-
-void nsDeviceContextUnix :: SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma)
-{
-  double fgval = (1.0f / aCurrentGamma) * (1.0f / aNewGamma);
-
-  for (PRInt32 cnt = 0; cnt < 256; cnt++)
-    aTable[cnt] = (PRUint8)(pow((double)cnt * (1. / 256.), fgval) * 255.99999999);
-}
-
-nsNativeDeviceContext nsDeviceContextUnix :: GetNativeDeviceContext()
-{
-  return ((nsNativeDeviceContext)mNativeDisplay);
+  return mSurface;
 }
 
 

@@ -1580,8 +1580,22 @@ int main(int argc, char** argv)
   // Create test document and presentation context
   MyDocument *myDoc = new MyDocument();
   nsIPresContext* presContext;
+  nsIDeviceContext *dx;
+  
+  static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
+  static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+
+  nsresult rv = NSRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&dx);
+
+  if (NS_OK == rv) {
+    dx->Init(nsull);
+    dx->SetDevUnitsToAppUnits(dx->GetDevUnitsToTwips());
+    dx->SetAppUnitsToDevUnits(dx->GetTwipsToDevUnits());
+  }
 
   NS_NewGalleyContext(&presContext);
+
+  presContext->Init(dx);
 
   // Test basic reflowing of unmapped children
   if (!TestReflowUnmapped(presContext)) {

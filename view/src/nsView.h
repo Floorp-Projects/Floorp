@@ -46,7 +46,7 @@ public:
 						nsIView *aParent,
 						const nsCID *aWindowIID = nsnull,
             nsWidgetInitData *aWidgetInitData = nsnull,
-						nsNativeWindow aNative = nsnull,
+						nsNativeWidget aNative = nsnull,
 						PRInt32 aZIndex = 0,
 						const nsViewClip *aClip = nsnull,
 						float aOpacity = 1.0f,

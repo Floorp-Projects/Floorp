@@ -59,6 +59,8 @@
 #include "nsIPresShell.h"
 #include "nsISizeOfHandler.h"
 #include "nsIViewManager.h"
+#include "nsGfxCIID.h"
+#include "nsIDeviceContext.h"
 
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
@@ -866,12 +868,31 @@ nsresult nsViewer::ShowPrintPreview(nsIWebWidget* web, PRIntn aColumns)
     nsIDocument* doc = web->GetDocument();
     if (nsnull != doc) {
       nsIPresContext* cx;
-      nsresult rv = NS_NewPrintPreviewContext(&cx);
+      nsIDeviceContext* dx;
+
+      WindowData* wd = CreateTopLevel("Print Preview", 500, 300);
+
+      static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
+      static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+
+      nsresult rv = NSRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&dx);
+
+      if (NS_OK == rv) {
+        dx->Init(wd->windowWidget->GetNativeData(NS_NATIVE_WIDGET));
+        dx->SetDevUnitsToAppUnits(dx->GetDevUnitsToTwips());
+        dx->SetAppUnitsToDevUnits(dx->GetTwipsToDevUnits());
+        dx->SetGamma(1.7f);
+
+        NS_ADDREF(dx);
+      }
+
+      rv = NS_NewPrintPreviewContext(&cx);
+
       if (NS_OK != rv) {
         return rv;
       }
 
-      WindowData* wd = CreateTopLevel("Print Preview", 500, 300);
+      cx->Init(dx);
   
       nsRect bounds;
       wd->windowWidget->GetBounds(bounds);
@@ -882,6 +903,7 @@ nsresult nsViewer::ShowPrintPreview(nsIWebWidget* web, PRIntn aColumns)
       wd->ww->Show();
       wd->observer = NewObserver(wd->ww);
 
+      NS_RELEASE(dx);
       NS_RELEASE(cx);
       NS_RELEASE(doc);
     }

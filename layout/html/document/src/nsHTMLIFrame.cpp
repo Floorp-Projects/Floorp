@@ -317,7 +317,7 @@ void nsHTMLIFrameFrame::CreateWebWidget(nsSize aSize, nsString& aURL)
   NS_RELEASE(view);
   nsRect webBounds(0, 0, NS_TO_INT_ROUND(aSize.width * t2p), 
                    NS_TO_INT_ROUND(aSize.height * t2p));
-  mWebWidget->Init(widget->GetNativeData(NS_NATIVE_WINDOW), webBounds, 
+  mWebWidget->Init(widget->GetNativeData(NS_NATIVE_WIDGET), webBounds, 
                    content->GetScrolling());
   NS_RELEASE(widget);
 

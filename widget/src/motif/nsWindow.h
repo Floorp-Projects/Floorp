@@ -60,7 +60,7 @@ public:
                                      nsIDeviceContext *aContext,
                                      nsIToolkit *aToolkit = nsnull,
                                      nsWidgetInitData *aInitData = nsnull);
-    virtual void            Create(nsNativeWindow aParent,
+    virtual void            Create(nsNativeWidget aParent,
                                      const nsRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,
                                      nsIDeviceContext *aContext,
@@ -137,7 +137,7 @@ public:
     char gInstanceClassName[256];
 protected:
   void InitCallbacks(char * aName = nsnull);
-  void CreateWindow(nsNativeWindow aNativeParent, nsIWidget *aWidgetParent,
+  void CreateWindow(nsNativeWidget aNativeParent, nsIWidget *aWidgetParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -219,7 +219,7 @@ public: \
                                      nsIDeviceContext *aContext, \
                                      nsIToolkit *aToolkit = nsnull, \
                                      nsWidgetInitData *aInitData = nsnull); \
-    virtual void            Create(nsNativeWindow aParent, \
+    virtual void            Create(nsNativeWidget aParent, \
                                      const nsRect &aRect, \
                                      EVENT_CALLBACK aHandleEventFunction, \
                                      nsIDeviceContext *aContext, \
@@ -306,7 +306,7 @@ public: \
     { \
         GET_OUTER()->Create(aParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData); \
     } \
-    void _classname::_aggname::Create(nsNativeWindow aParent, \
+    void _classname::_aggname::Create(nsNativeWidget aParent, \
                  const nsRect &aRect, \
                  EVENT_CALLBACK aHandleEventFunction, \
                  nsIDeviceContext *aContext, \

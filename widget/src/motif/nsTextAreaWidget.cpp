@@ -93,7 +93,7 @@ void nsTextAreaWidget::Create(nsIWidget *aParent,
 }
 
 //-------------------------------------------------------------------------
-void nsTextAreaWidget::Create(nsNativeWindow aParent,
+void nsTextAreaWidget::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,

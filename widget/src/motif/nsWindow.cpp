@@ -224,7 +224,7 @@ nsWindow::~nsWindow()
 // aNativeParent is equal to aWidgetParent->GetNativeData(NS_NATIVE_WIDGET)
 //-------------------------------------------------------------------------
 
-void nsWindow::CreateWindow(nsNativeWindow aNativeParent, 
+void nsWindow::CreateWindow(nsNativeWidget aNativeParent, 
                       nsIWidget *aWidgetParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
@@ -463,7 +463,7 @@ void nsWindow::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-    CreateWindow((nsNativeWindow)((aParent) ? aParent->GetNativeData(NS_NATIVE_WIDGET) : 0), aParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData);
+    CreateWindow((nsNativeWidget)((aParent) ? aParent->GetNativeData(NS_NATIVE_WIDGET) : 0), aParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData);
 }
 
 //-------------------------------------------------------------------------
@@ -471,7 +471,7 @@ void nsWindow::Create(nsIWidget *aParent,
 // create with a native parent
 //
 //-------------------------------------------------------------------------
-void nsWindow::Create(nsNativeWindow aParent,
+void nsWindow::Create(nsNativeWidget aParent,
                          const nsRect &aRect,
                          EVENT_CALLBACK aHandleEventFunction,
                          nsIDeviceContext *aContext,

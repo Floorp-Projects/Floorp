@@ -65,7 +65,7 @@ public:
   virtual void SetGamma(float aGamma);
   virtual PRUint8 * GetGammaTable(void);
 
-  virtual nsNativeDeviceContext GetNativeDeviceContext(void) ;
+  virtual nsNativeWidget GetNativeWidget(void);
 protected:
   ~nsDeviceContextWin();
 
@@ -81,6 +81,7 @@ protected:
   HDC               mSurface;
   float             mGammaValue;
   PRUint8           *mGammaTable;
+  nsNativeWidget    mWidget;
 };
 
 #endif /* nsDeviceContextWin_h___ */
