@@ -57,9 +57,10 @@ interface nsIRDFXMLParser : nsISupports
 
     /**
      * Parse a string of RDF/XML
-     * @parram aSink the RDF datasource that will receive the data
+     * @param aSink the RDF datasource that will receive the data
      * @param aBaseURI the base URI used to resolve relative
      *   references in the RDF/XML
+     * @param aSource a UTF8 string containing RDF/XML data.
      */
-    void parseString(in nsIRDFDataSource aSink, in nsIURI aBaseURI, in DOMString aSource);
+    void parseString(in nsIRDFDataSource aSink, in nsIURI aBaseURI, in AUTF8String aSource);
 };

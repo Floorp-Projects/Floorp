@@ -108,7 +108,7 @@ nsRDFXMLParser::ParseAsync(nsIRDFDataSource* aSink, nsIURI* aBaseURI, nsIStreamL
 }
 
 NS_IMETHODIMP
-nsRDFXMLParser::ParseString(nsIRDFDataSource* aSink, nsIURI* aBaseURI, const nsAString& aString)
+nsRDFXMLParser::ParseString(nsIRDFDataSource* aSink, nsIURI* aBaseURI, const nsACString& aString)
 {
     nsresult rv;
 
@@ -142,7 +142,7 @@ nsRDFXMLParser::ParseString(nsIRDFDataSource* aSink, nsIURI* aBaseURI, const nsA
         return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIInputStream> stream;
-    rv = NS_NewStringInputStream(getter_AddRefs(stream), aString);
+    rv = NS_NewCStringInputStream(getter_AddRefs(stream), aString);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> channel;
