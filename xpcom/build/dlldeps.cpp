@@ -42,11 +42,21 @@
 #include "xptcall.h"
 #include "nsIFileSpec.h"
 #include "nsIGenericFactory.h"
+#include "nsAVLTree.h"
 
+class dummyComparitor: public nsAVLNodeComparitor {
+public:
+  virtual PRInt32 operator()(void* anItem1,void* anItem2)
+  {
+    return 0;
+  }
+}; 
 
 void XXXNeverCalled()
 {
+    dummyComparitor dummy;
     nsVoidArray();
+    nsAVLTree(dummy, nsnull);
     NS_GetNumberOfAtoms();
     nsFileURL(NULL);
     NS_NewPipe(NULL, NULL, 0, 0, 0, NULL);

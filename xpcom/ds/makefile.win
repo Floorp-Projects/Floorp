@@ -24,6 +24,7 @@ MODULE = xpcom
 ## exports
 
 EXPORTS =                          \
+        nsAVLTree.h                \
         nsBTree.h                  \
         nsCRT.h                    \
         nsDeque.h                  \
@@ -80,6 +81,7 @@ LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 CPP_OBJS =                                        \
         .\$(OBJDIR)\nsArena.obj                   \
         .\$(OBJDIR)\nsAtomTable.obj               \
+        .\$(OBJDIR)\nsAVLTree.obj                 \
         .\$(OBJDIR)\nsBTree.obj                   \
         .\$(OBJDIR)\nsBuffer.obj                  \
         .\$(OBJDIR)\nsByteBuffer.obj              \

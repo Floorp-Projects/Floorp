@@ -1,3 +1,4 @@
+nsAVLTree.h
 nsBTree.h
 nsCRT.h
 nsDeque.h
