@@ -628,4 +628,4 @@ namespace ICG {
         
 } // namespace ICG
     
-}; // namespace JavaScript
+} // namespace JavaScript
