@@ -1074,25 +1074,40 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
             }
           }
 
-          if(theChildAgrees) {
-              //This code is here to allow DT/DD (or similar) to close arbitrary stuff between
-              //this instance and a prior one on the stack. I had to add this because
-              //(for now) DT is inline, and fontstyle's can contain them (until Res-style code works)
-            if(gHTMLElements[aChildTag].HasSpecialProperty(kMustCloseSelf)){
-              theChildAgrees=CanBeContained(aChildTag,*mBodyContext);
-            }
-          }
-        }
+          if(theChildAgrees && theChildIsContainer) {
+            if (theParentTag!=aChildTag) {
+              
+              PRInt32 theChildIndex=GetIndexOfChildOrSynonym(*mBodyContext,aChildTag);
+              
+              if((kNotFound<theChildIndex) && (theChildIndex<theIndex)) {
+
+              /*-------------------------------------------------------------------------------------
+                Here's a tricky case from bug 22596:  <h5><li><h5>
+
+                How do we know that the 2nd <h5> should close the <LI> rather than nest inside the <LI>?
+                (Afterall, the <h5> is a legal child of the <LI>).
+              
+                The way you know is that there is no root between the two, so the <h5> binds more
+                tightly to the 1st <h5> than to the <LI>.
+               -------------------------------------------------------------------------------------*/
+
+                theChildAgrees=CanBeContained(aChildTag,*mBodyContext);
+                if(!theChildAgrees) {
+                  int x=10;
+                }
+              } //if
+            } //if
+          } //if
+        } //if parentcontains
 
         if(!(theParentContains && theChildAgrees)) {
           if (!CanPropagate(theParentTag,aChildTag,theParentContains)) { 
-             if(theChildIsContainer || (!theParentContains)){ 
-              if(!gHTMLElements[aChildTag].CanAutoCloseTag(theParentTag)) {
+            if(theChildIsContainer || (!theParentContains)){ 
+              if((!theChildAgrees) && (!gHTMLElements[aChildTag].CanAutoCloseTag(*mBodyContext,aChildTag))) {
                 // Closing the tags above might cause non-compatible results.
                 // Ex. <TABLE><TR><TD><TBODY>Text</TD></TR></TABLE>. 
-                // In the example above <TBODY> is badly misplaced. To be backwards
-                // compatible we should not attempt to close the tags above it, for
-                // the contents inside the table might get thrown out of the table.
+                // In the example above <TBODY> is badly misplaced, but 
+                // we should not attempt to close the tags above it, 
                 // The safest thing to do is to discard this tag.     
                 return result;
               }
@@ -1632,8 +1647,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
         }
         else {
           eHTMLTags theParentTag=mBodyContext->Last();
-          if((kNotFound==GetIndexOfChildOrSynonym(*mBodyContext,theChildTag)) ||
-             (!gHTMLElements[theChildTag].CanAutoCloseTag(theParentTag))) {
+          if(kNotFound==GetIndexOfChildOrSynonym(*mBodyContext,theChildTag)) {
 
             PopStyle(theChildTag);
 
@@ -2116,7 +2130,6 @@ NS_IMETHODIMP CNavDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* 
 PRBool CNavDTD::CanPropagate(eHTMLTags aParentTag,eHTMLTags aChildTag,PRBool aParentContains)  {
   PRBool    result=PR_FALSE;
   PRBool    theParentContains=(-1==aParentContains) ? CanContain(aParentTag,aChildTag) : aParentContains;
-  eHTMLTags theTempTag=eHTMLTag_unknown;
 
   if(aParentTag==aChildTag) {
     return result;
@@ -3010,10 +3023,13 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
 #ifdef  ENABLE_RESIDUALSTYLE
 
         PRBool theTagIsStyle=nsHTMLElement::IsResidualStyleTag(theTag);
-        PRBool theTargetTagIsStyle=nsHTMLElement::IsResidualStyleTag(aTarget);
-        PRBool theStyleDoesntLeakOut=gHTMLElements[theParent].HasSpecialProperty(kNoStyleLeaksOut);
+        PRBool theStyleDoesntLeakOut = gHTMLElements[aTarget].HasSpecialProperty(kNoStyleLeaksOut);
+        //  (aClosedByStartTag) ? gHTMLElements[aTarget].HasSpecialProperty(kNoStyleLeaksOut) 
+        //                      :  gHTMLElements[theParent].HasSpecialProperty(kNoStyleLeaksOut);
 
-        if(mStyleHandlingEnabled && theTagIsStyle) {
+        if(theTagIsStyle) {
+
+          PRBool theTargetTagIsStyle=nsHTMLElement::IsResidualStyleTag(aTarget);
 
           if(aClosedByStartTag) { 
 
@@ -3095,8 +3111,8 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
             }
           }
         } //if
-        else {
-          
+        else { 
+          //the tag is not a style tag...
           if(theChildStyleStack) {
             if(theStyleDoesntLeakOut) {
               RecycleNodes(theChildStyleStack);

@@ -104,13 +104,13 @@ TagList  gULKids={2,{eHTMLTag_li,eHTMLTag_p}};
 //*********************************************************************************************
 
 TagList  gRootTags={4,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table,eHTMLTag_applet}};
-TagList  gTableRootTags={3,{eHTMLTag_body,eHTMLTag_table,eHTMLTag_applet}};
+TagList  gTableRootTags={6,{eHTMLTag_applet,eHTMLTag_body,eHTMLTag_dl,eHTMLTag_ol,eHTMLTag_td,eHTMLTag_ul}};
 TagList  gHTMLRootTags={1,{eHTMLTag_unknown}};
-
+ 
 TagList  gLIRootTags={7,{eHTMLTag_ul,eHTMLTag_ol,eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_p,eHTMLTag_body,eHTMLTag_td}};
 
 TagList  gOLRootTags={3,{eHTMLTag_body,eHTMLTag_li,eHTMLTag_td}};
-TagList  gTDRootTags={3,{eHTMLTag_tr,eHTMLTag_tbody,eHTMLTag_table}};
+TagList  gTDRootTags={5,{eHTMLTag_tr,eHTMLTag_tbody,eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_table}};
 TagList  gNoframeRoot={2,{eHTMLTag_body,eHTMLTag_frameset}};
 
 //*********************************************************************************************
@@ -128,6 +128,7 @@ TagList  gDivAutoClose={1,{eHTMLTag_p}};
 
 TagList  gHeadingTags={6,{eHTMLTag_h1,eHTMLTag_h2,eHTMLTag_h3,eHTMLTag_h4,eHTMLTag_h5,eHTMLTag_h6}};
 
+TagList  gTableCloseTags={6,{eHTMLTag_td,eHTMLTag_tr,eHTMLTag_th,eHTMLTag_tbody,eHTMLTag_thead,eHTMLTag_tfoot}};
 TagList  gTRCloseTags={3,{eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th}};
 TagList  gTDCloseTags={2,{eHTMLTag_td,eHTMLTag_th}};
 TagList  gDTCloseTags={3,{eHTMLTag_dt,eHTMLTag_dd,eHTMLTag_p}};
@@ -160,7 +161,7 @@ void Initialize(eHTMLTags aTag,
                 TagList*  aAutocloseStart,    
                 TagList*  aAutocloseEnd,      
                 TagList*  aSynonymousTags,    
-                TagList*  aDontAutocloseEnd,  
+                TagList*  aAutoCloseBlockers,  
                 int       aParentBits,        
                 int       aInclusionBits, 
                 int       aExclusionBits,     
@@ -179,7 +180,7 @@ void Initialize(eHTMLTags aTag,
   gHTMLElements[aTag].mAutocloseStart=aAutocloseStart;
   gHTMLElements[aTag].mAutocloseEnd=aAutocloseEnd;
   gHTMLElements[aTag].mSynonymousTags=aSynonymousTags;
-  gHTMLElements[aTag].mDontAutocloseEnd=aDontAutocloseEnd;
+  gHTMLElements[aTag].mAutoCloseBlockers=aAutoCloseBlockers;
   gHTMLElements[aTag].mParentBits=aParentBits;
   gHTMLElements[aTag].mInclusionBits=aInclusionBits;
   gHTMLElements[aTag].mExclusionBits=aExclusionBits;
@@ -1095,7 +1096,7 @@ void InitializeElementTable(void) {
       /*tag*/                             eHTMLTag_table,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gTableRootTags,&gTableRootTags,	
-      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*autoclose starttags and endtags*/ 0,&gTableCloseTags,0,0,
       /*parent,incl,exclgroups*/          kBlock, kNone, (kSelf|kInlineEntity),	
       /*special props, prop-range*/       (kOmitWS|kBadContentWatch|kNoStyleLeaksIn|kNoStyleLeaksOut), 2,
       /*special parents,kids,skip*/       0,&gTableKids,eHTMLTag_unknown);
@@ -1325,7 +1326,7 @@ int nsHTMLElement::GetSynonymousGroups(eHTMLTags aTag) {
   }
 
   if(eHTMLTag_font==aTag)  //hack for backward compatibility
-    result+=kFontStyle;
+    result&=kFontStyle;
 
   return result;
 }
@@ -1724,19 +1725,42 @@ PRBool nsHTMLElement::CanContainSelf(void) const {
 }
 
 /**
- * 
- * @update	harishd 09/20/99
- * @param 
- * @return
+ * This method is called to determine (once and for all) whether a start tag
+ * can close another tag on the stack. This method will return
+ * false if something prevents aParentTag from closing.
+ *
+ * @update	gess 12/20/99
+ * @param   aContext is the tag stack we're testing against
+ * @param   aChildTag is the child we're trying to close
+ * @param   aCount is the number tags we should test
+ * @return  TRUE if we can autoclose the start tag; FALSE otherwise
  */
-PRBool nsHTMLElement::CanAutoCloseTag(eHTMLTags aTag) const{
-  PRBool result=PR_TRUE;
-  if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_xmp)) {
-    TagList* theTagList=gHTMLElements[mTagID].mDontAutocloseEnd;
-    if(theTagList) {
-      result=!FindTagInSet(aTag,theTagList->mTags,theTagList->mCount);
-    }
-  }
+PRBool nsHTMLElement::CanAutoCloseTag(nsDTDContext& aContext,eHTMLTags aChildTag) const{
+
+  PRInt32 thePos=aContext.GetCount(); 
+  PRBool  result=PR_FALSE;
+  eHTMLTags thePrevTag=eHTMLTag_unknown;
+
+  for(thePos=aContext.GetCount()-1;thePos>0;thePos--) {
+    thePrevTag=aContext.TagAt(thePos);
+    switch(thePrevTag) {
+      case eHTMLTag_applet:
+      case eHTMLTag_td:                  
+        thePos=0;
+        result=PR_FALSE;
+        break;
+      case eHTMLTag_body:
+        result=aChildTag!=thePrevTag;
+        thePos=0;
+      default:
+        if(aChildTag==thePrevTag) {
+          result=PR_TRUE;
+          thePos=0;
+        }
+        break;
+    } //switch
+  } //for
+  
   return result;
 }
 
@@ -1835,11 +1859,21 @@ PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
         return PR_FALSE;
     }
 
+
+#if 0
+      //the older version; replaced in december by rickg
     if(gHTMLElements[aChild].IsBlockEntity()){
       if(nsHTMLElement::IsBlockParent(mTagID)){
         return PR_TRUE;
       }
     }
+#else
+    if(gHTMLElements[aChild].IsBlockCloser(aChild)){
+      if(nsHTMLElement::IsBlockParent(mTagID)){
+        return PR_TRUE;
+      }
+    }
+#endif
 
     if(nsHTMLElement::IsInlineEntity(aChild)){
       if(nsHTMLElement::IsInlineParent(mTagID)){

@@ -85,6 +85,12 @@ public:
   eHTMLTags       Last() const;
   void            Empty(void); 
 
+  /**
+   * Find the first instance of given tag on the stack.
+   * @update	gess 12/14/99
+   * @param   aTag
+   * @return  index of tag, or kNotFound if not found
+   */
   inline PRInt32 FirstOf(eHTMLTags aTag) const {
     PRInt32 index=-1;
     
@@ -98,6 +104,13 @@ public:
     return kNotFound;
   }
 
+
+  /**
+   * Find the last instance of given tag on the stack.
+   * @update	gess 12/14/99
+   * @param   aTag
+   * @return  index of tag, or kNotFound if not found
+   */
   inline PRInt32 LastOf(eHTMLTags aTag) const {
     PRInt32 index=mCount;
     while(--index>=0) {
@@ -338,10 +351,11 @@ struct TagList {
 };
 
 /**
- * 
- * @update	gess 01/04/99
- * @param  
- * @return
+ * Find the last member of given taglist on the given context
+ * @update	gess 12/14/99
+ * @param   aContext
+ * @param   aTagList
+ * @return  index of tag, or kNotFound if not found
  */
 inline PRInt32 LastOf(nsDTDContext& aContext,TagList& aTagList){
   int max = aContext.GetCount();
@@ -356,10 +370,12 @@ inline PRInt32 LastOf(nsDTDContext& aContext,TagList& aTagList){
 }
  
 /**
- * 
- * @update	gess 01/04/99
- * @param 
- * @return
+ * Find the first member of given taglist on the given context
+ * @update	gess 12/14/99
+ * @param   aContext
+ * @param   aStartOffset
+ * @param   aTagList
+ * @return  index of tag, or kNotFound if not found
  */
 inline PRInt32 FirstOf(nsDTDContext& aContext,PRInt32 aStartOffset,TagList& aTagList){
   int max = aContext.GetCount();
