@@ -2056,61 +2056,81 @@ pk11_getDefSlotName(CK_SLOT_ID slotID)
     return buf;
 }
 
-static CK_ULONG nscSlotCount = 0;
-static CK_SLOT_ID_PTR nscSlotList = NULL;
-static CK_ULONG nscSlotListSize = 0;
-static PLHashTable *nscSlotHashTable = NULL;
+static CK_ULONG nscSlotCount[2] = {0 , 0};
+static CK_SLOT_ID_PTR nscSlotList[2] = {NULL, NULL};
+static CK_ULONG nscSlotListSize[2] = {0, 0};
+static PLHashTable *nscSlotHashTable[2] = {NULL, NULL};
+
+static int
+pk11_GetModuleIndex(CK_SLOT_ID slotID)
+{
+    if ((slotID == FIPS_SLOT_ID) || (slotID > 100)) {
+	return NSC_FIPS_MODULE;
+    }
+    return NSC_NON_FIPS_MODULE;
+}
 
 /* look up a slot structure from the ID (used to be a macro when we only
  * had two slots) */
 PK11Slot *
 pk11_SlotFromID(CK_SLOT_ID slotID)
 {
-    return (PK11Slot *)PL_HashTableLookupConst(nscSlotHashTable, (void *)slotID);
+    int index = pk11_GetModuleIndex(slotID);
+    return (PK11Slot *)PL_HashTableLookupConst(nscSlotHashTable[index], 
+							(void *)slotID);
 }
 
 PK11Slot *
 pk11_SlotFromSessionHandle(CK_SESSION_HANDLE handle)
 {
-    CK_ULONG slotIDIndex = (handle >> 24) & 0xff;
+    CK_ULONG slotIDIndex = (handle >> 24) & 0x7f;
+    CK_ULONG moduleIndex = (handle >> 31) & 1;
 
-    if (slotIDIndex >= nscSlotCount) {
+    if (slotIDIndex >= nscSlotCount[moduleIndex]) {
 	return NULL;
     }
 
-    return pk11_SlotFromID(nscSlotList[slotIDIndex]);
+    return pk11_SlotFromID(nscSlotList[moduleIndex][slotIDIndex]);
 }
  
-PK11Slot * pk11_NewSlotFromID(CK_SLOT_ID slotID)
+PK11Slot * pk11_NewSlotFromID(CK_SLOT_ID slotID, int moduleIndex)
 {
     PK11Slot *slot = NULL;
     PLHashEntry *entry;
+    int index;
 
-    if (nscSlotList == NULL) {
-	nscSlotListSize = NSC_SLOT_LIST_BLOCK_SIZE;
-	nscSlotList = (CK_SLOT_ID *)
-			PORT_ZAlloc(nscSlotListSize*sizeof(CK_SLOT_ID));
-	if (nscSlotList == NULL) {
+    index = pk11_GetModuleIndex(slotID);
+
+    /* make sure the slotID for this module is valid */
+    if (moduleIndex != index) {
+	return NULL;
+    }
+
+    if (nscSlotList[index] == NULL) {
+	nscSlotListSize[index] = NSC_SLOT_LIST_BLOCK_SIZE;
+	nscSlotList[index] = (CK_SLOT_ID *)
+		PORT_ZAlloc(nscSlotListSize[index]*sizeof(CK_SLOT_ID));
+	if (nscSlotList[index] == NULL) {
 	    return NULL;
 	}
     }
-    if (nscSlotCount >= nscSlotListSize) {
-	CK_SLOT_ID* oldNscSlotList = nscSlotList;
-	CK_ULONG oldNscSlotListSize = nscSlotListSize;
-	nscSlotListSize += NSC_SLOT_LIST_BLOCK_SIZE;
-	nscSlotList = (CK_SLOT_ID *) PORT_Realloc(oldNscSlotList,
-					nscSlotListSize*sizeof(CK_SLOT_ID));
-	if (nscSlotList == NULL) {
-            nscSlotList = oldNscSlotList;
-            nscSlotListSize = oldNscSlotListSize;
+    if (nscSlotCount[index] >= nscSlotListSize[index]) {
+	CK_SLOT_ID* oldNscSlotList = nscSlotList[index];
+	CK_ULONG oldNscSlotListSize = nscSlotListSize[index];
+	nscSlotListSize[index] += NSC_SLOT_LIST_BLOCK_SIZE;
+	nscSlotList[index] = (CK_SLOT_ID *) PORT_Realloc(oldNscSlotList,
+				nscSlotListSize[index]*sizeof(CK_SLOT_ID));
+	if (nscSlotList[index] == NULL) {
+            nscSlotList[index] = oldNscSlotList;
+            nscSlotListSize[index] = oldNscSlotListSize;
             return NULL;
 	}
     }
 
-    if (nscSlotHashTable == NULL) {
-	nscSlotHashTable = PL_NewHashTable(64,pk11_HashNumber,PL_CompareValues,
-					PL_CompareValues, NULL, 0);
-	if (nscSlotHashTable == NULL) {
+    if (nscSlotHashTable[index] == NULL) {
+	nscSlotHashTable[index] = PL_NewHashTable(64,pk11_HashNumber,
+				PL_CompareValues, PL_CompareValues, NULL, 0);
+	if (nscSlotHashTable[index] == NULL) {
 	    return NULL;
 	}
     }
@@ -2120,13 +2140,13 @@ PK11Slot * pk11_NewSlotFromID(CK_SLOT_ID slotID)
 	return NULL;
     }
 
-    entry = PL_HashTableAdd(nscSlotHashTable,(void *)slotID,slot);
+    entry = PL_HashTableAdd(nscSlotHashTable[index],(void *)slotID,slot);
     if (entry == NULL) {
 	PORT_Free(slot);
 	return NULL;
     }
-    slot->index = nscSlotCount;
-    nscSlotList[nscSlotCount++] = slotID;
+    slot->index = (nscSlotCount[index] & 0x7f) | ((index << 7) & 0x80);
+    nscSlotList[index][nscSlotCount[index]++] = slotID;
 
     return slot;
 }
@@ -2135,11 +2155,11 @@ PK11Slot * pk11_NewSlotFromID(CK_SLOT_ID slotID)
  * initialize one of the slot structures. figure out which by the ID
  */
 CK_RV
-PK11_SlotInit(char *configdir,pk11_token_parameters *params)
+PK11_SlotInit(char *configdir,pk11_token_parameters *params, int moduleIndex)
 {
     int i;
     CK_SLOT_ID slotID = params->slotID;
-    PK11Slot *slot = pk11_NewSlotFromID(slotID);
+    PK11Slot *slot = pk11_NewSlotFromID(slotID, moduleIndex);
     PRBool needLogin = !params->noKeyDB;
     CK_RV crv;
 
@@ -2314,23 +2334,23 @@ NSC_ModuleDBFunc(unsigned long function,char *parameters, void *args)
     return rvstr;
 }
 
-static void nscFreeAllSlots()
+static void nscFreeAllSlots(int moduleIndex)
 {
     /* free all the slots */
     PK11Slot *slot = NULL;
     CK_SLOT_ID slotID;
     int i;
 
-    if (nscSlotList) {
-	CK_ULONG tmpSlotCount = nscSlotCount;
-	CK_SLOT_ID_PTR tmpSlotList = nscSlotList;
-	PLHashTable *tmpSlotHashTable = nscSlotHashTable;
+    if (nscSlotList[moduleIndex]) {
+	CK_ULONG tmpSlotCount = nscSlotCount[moduleIndex];
+	CK_SLOT_ID_PTR tmpSlotList = nscSlotList[moduleIndex];
+	PLHashTable *tmpSlotHashTable = nscSlotHashTable[moduleIndex];
 
 	/* now clear out the statics */
-	nscSlotList = NULL;
-	nscSlotCount = 0;
-	nscSlotHashTable = NULL;
-	nscSlotListSize = 0;
+	nscSlotList[moduleIndex] = NULL;
+	nscSlotCount[moduleIndex] = 0;
+	nscSlotHashTable[moduleIndex] = NULL;
+	nscSlotListSize[moduleIndex] = 0;
 
 	for (i=0; i < (int) tmpSlotCount; i++) {
 	    slotID = tmpSlotList[i];
@@ -2346,7 +2366,7 @@ static void nscFreeAllSlots()
     }
 }
 
-static PRBool nsc_init = PR_FALSE;
+
 /* NSC_Initialize initializes the Cryptoki library. */
 CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 {
@@ -2354,10 +2374,7 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
     SECStatus rv;
     CK_C_INITIALIZE_ARGS *init_args = (CK_C_INITIALIZE_ARGS *) pReserved;
     int i;
-
-    if (nsc_init) {
-	return CKR_CRYPTOKI_ALREADY_INITIALIZED;
-    }
+    int moduleIndex = isFIPS? NSC_FIPS_MODULE : NSC_NON_FIPS_MODULE;
 
     rv = RNG_RNGInit();         /* initialize random number generator */
     if (rv != SECSuccess) {
@@ -2392,34 +2409,47 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 
 	for (i=0; i < paramStrings.token_count; i++) {
 	    crv = 
-		PK11_SlotInit(paramStrings.configdir, &paramStrings.tokens[i]);
+		PK11_SlotInit(paramStrings.configdir, &paramStrings.tokens[i],
+			moduleIndex);
 	    if (crv != CKR_OK) {
-                nscFreeAllSlots();
+                nscFreeAllSlots(moduleIndex);
                 break;
             }
 	}
 loser:
 	secmod_freeParams(&paramStrings);
     }
-    nsc_init = (PRBool) (crv == CKR_OK);
 
     return crv;
 }
 
+static PRBool nsc_init = PR_FALSE;
 CK_RV NSC_Initialize(CK_VOID_PTR pReserved)
 {
-    return nsc_CommonInitialize(pReserved,PR_FALSE);
+    CK_RV crv;
+    if (nsc_init) {
+	return CKR_CRYPTOKI_ALREADY_INITIALIZED;
+    }
+    crv = nsc_CommonInitialize(pReserved,PR_FALSE);
+    nsc_init = (PRBool) (crv == CKR_OK);
+    return crv;
 }
 
 /* NSC_Finalize indicates that an application is done with the 
  * Cryptoki library.*/
-CK_RV NSC_Finalize (CK_VOID_PTR pReserved)
+CK_RV nsc_CommonFinalize (CK_VOID_PTR pReserved, PRBool isFIPS)
 {
-    if (!nsc_init) {
+    
+
+    nscFreeAllSlots(isFIPS ? NSC_FIPS_MODULE : NSC_NON_FIPS_MODULE);
+
+    /* don't muck with the globals is our peer is still initialized */
+    if (isFIPS && nsc_init) {
 	return CKR_OK;
     }
-
-    nscFreeAllSlots();
+    if (!isFIPS && nsf_init) {
+	return CKR_OK;
+    }
 
     nsslowcert_DestroyGlobalLocks();
 
@@ -2444,6 +2474,23 @@ CK_RV NSC_Finalize (CK_VOID_PTR pReserved)
     return CKR_OK;
 }
 
+/* NSC_Finalize indicates that an application is done with the 
+ * Cryptoki library.*/
+CK_RV NSC_Finalize (CK_VOID_PTR pReserved)
+{
+    CK_RV crv;
+
+    if (!nsc_init) {
+	return CKR_OK;
+    }
+
+    crv = nsc_CommonFinalize (pReserved, PR_FALSE);
+
+    nsc_init = (PRBool) !(crv == CKR_OK);
+
+    return crv;
+}
+
 extern const char __nss_softokn_rcsid[];
 extern const char __nss_softokn_sccsid[];
 
@@ -2465,14 +2512,23 @@ CK_RV  NSC_GetInfo(CK_INFO_PTR pInfo)
 
 
 /* NSC_GetSlotList obtains a list of slots in the system. */
+CK_RV nsc_CommonGetSlotList(CK_BBOOL tokenPresent, 
+	CK_SLOT_ID_PTR	pSlotList, CK_ULONG_PTR pulCount, int moduleIndex)
+{
+    *pulCount = nscSlotCount[moduleIndex];
+    if (pSlotList != NULL) {
+	PORT_Memcpy(pSlotList,nscSlotList[moduleIndex],
+				nscSlotCount[moduleIndex]*sizeof(CK_SLOT_ID));
+    }
+    return CKR_OK;
+}
+
+/* NSC_GetSlotList obtains a list of slots in the system. */
 CK_RV NSC_GetSlotList(CK_BBOOL tokenPresent,
 	 		CK_SLOT_ID_PTR	pSlotList, CK_ULONG_PTR pulCount)
 {
-    *pulCount = nscSlotCount;
-    if (pSlotList != NULL) {
-	PORT_Memcpy(pSlotList,nscSlotList,nscSlotCount*sizeof(CK_SLOT_ID));
-    }
-    return CKR_OK;
+    return nsc_CommonGetSlotList(tokenPresent, pSlotList, pulCount, 
+							NSC_NON_FIPS_MODULE);
 }
 	
 /* NSC_GetSlotInfo obtains information about a particular slot in the system. */
