@@ -97,7 +97,6 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../xml/parser/XMLParser.$(OBJ_SUFFIX) \
   ../xslt/txOutputFormat.$(OBJ_SUFFIX) \
   ../xslt/Names.$(OBJ_SUFFIX) \
-  ../xslt/Numbering.$(OBJ_SUFFIX) \
   ../xslt/ProcessorState.$(OBJ_SUFFIX) \
   ../xslt/txHTMLOutput.$(OBJ_SUFFIX) \
   ../xslt/txRtfHandler.$(OBJ_SUFFIX) \
@@ -105,6 +104,8 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../xslt/txTextOutput.$(OBJ_SUFFIX) \
   ../xslt/txUnknownHandler.$(OBJ_SUFFIX) \
   ../xslt/txXMLOutput.$(OBJ_SUFFIX) \
+  ../xslt/txXSLTNumber.$(OBJ_SUFFIX) \
+  ../xslt/txXSLTNumberCounters.$(OBJ_SUFFIX) \
   ../xslt/txXSLTPatterns.$(OBJ_SUFFIX) \
   ../xslt/txPatternParser.$(OBJ_SUFFIX) \
   ../xslt/XSLTProcessor.$(OBJ_SUFFIX) \

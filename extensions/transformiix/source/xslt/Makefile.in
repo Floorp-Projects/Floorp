@@ -46,11 +46,12 @@ REQUIRES	= string \
 endif
 
 CPPSRCS = Names.cpp \
-        Numbering.cpp \
         txOutputFormat.cpp \
         ProcessorState.cpp \
         txRtfHandler.cpp \
         txTextHandler.cpp \
+        txXSLTNumber.cpp \
+        txXSLTNumberCounters.cpp \
         txXSLTPatterns.cpp \
         txPatternParser.cpp \
         XSLTProcessor.cpp

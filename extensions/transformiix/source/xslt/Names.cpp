@@ -45,7 +45,6 @@ const String XSL_MIME_TYPE("text/xsl");
 const String ASCENDING_VALUE("ascending");
 const String DESCENDING_VALUE("descending");
 const String LOWER_FIRST_VALUE("lower-first");
-const String MULTIPLE_VALUE("multiple");
 const String NUMBER_VALUE("number");
 const String PRESERVE_VALUE("preserve");
 const String TEXT_VALUE("text");

@@ -72,6 +72,10 @@ public:
      */
     void append(UNICODE_CHAR aSource);
     void append(const String& aSource);
+    void append(const UNICODE_CHAR* aSource, PRUint32 aLength);
+#ifndef TX_EXE
+    void append(const nsAString& aSource);
+#endif
 
     /*
      * Insert aSource at aOffset in this string.
@@ -181,10 +185,11 @@ public:
     operator const nsAString&() const;
 #endif
 
-private:
 #ifndef TX_EXE
+private:
     nsString mString;
 #else
+protected:
     /*
      * Make sure the string buffer can hold aCapacity characters.
      */
@@ -223,6 +228,17 @@ public:
 };
 
 #ifdef TX_EXE
+
+/*
+ * Class for converting char*s into Strings
+ */
+
+class NS_ConvertASCIItoUCS2 : public String
+{
+public:
+    explicit NS_ConvertASCIItoUCS2(const char* aSource);
+};
+
 /*
  * A helper class for getting a char* buffer out of a String.
  * Don't use this directly, use NS_LossyConvertUCS2toASCII which

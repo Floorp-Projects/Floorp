@@ -75,6 +75,16 @@ inline void String::append(const String& aSource)
   mString.Append(aSource.mString);
 }
 
+inline void String::append(const UNICODE_CHAR* aSource, PRUint32 aLength)
+{
+  mString.Append(aSource, aLength);
+}
+
+inline void String::append(const nsAString& aSource)
+{
+  mString.Append(aSource);
+}
+
 inline void String::insert(PRUint32 aOffset,
                            UNICODE_CHAR aSource)
 {

@@ -62,6 +62,19 @@ typedef PRUint32 nsresult;
 #define NS_ERROR_ILLEGAL_VALUE             ((nsresult) 0x80070057L)
 #define NS_ERROR_INVALID_ARG               NS_ERROR_ILLEGAL_VALUE
 
+#define NS_ENSURE_TRUE(value, result) \
+    do {                              \
+        if (!(value)) {               \
+            return (result);          \
+        }                             \
+    } while(0)
+
+#define NS_ENSURE_FALSE(value, result) \
+    NS_ENSURE_TRUE(!(value), result)
+
+#define NS_ENSURE_SUCCESS(value, result) \
+    NS_ENSURE_TRUE(NS_SUCCEEDED(value), result)
+
 #else // TX_EXE
 
 #include "nsError.h"
