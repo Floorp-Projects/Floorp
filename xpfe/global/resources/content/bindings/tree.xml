@@ -591,8 +591,8 @@
       </handler>
       <handler event="keypress">
         <![CDATA[
+         var c = this.currentIndex;
          if (event.keyCode == ' '.charCodeAt(0)) {
-           var c = this.currentIndex;
            if (!this.treeBoxObject.selection.isSelected(c))
              this.treeBoxObject.selection.toggleSelect(c);
          }
@@ -610,7 +610,6 @@
            
            var primarycol = this.treeBoxObject.getKeyColumnIndex();
            var colID = this.treeBoxObject.getColumnID(primarycol);
-           var c = this.currentIndex;
            var rowCount = this.treeBoxObject.view.rowCount;
            var start = 1;
            
