@@ -39,13 +39,13 @@ Contributors:
       hidecolumnpicker="true"
       onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('addrbook-select');"
       onclick="DirPaneClick(event);"
-      ondblclick="DirPaneDoubleClick();"
+      ondblclick="DirPaneDoubleClick(event);"
       onblur="goOnEvent(this,'blur')"
       ondragover="nsDragAndDrop.dragOver(event, abDirTreeObserver);"
       ondragdrop="nsDragAndDrop.drop(event, abDirTreeObserver);">
       
     <treecols>
-      <treecol id="DirCol" flex="1" primary="true" hideheader="true"/>
+      <treecol id="DirCol" flex="1" primary="true" label="&dirTreeHeader.label;"/>
     </treecols>
     
     <template>

@@ -48,7 +48,6 @@ var gSearchInput;
 var gPrintSettings = null;
 var gDirTree;
 var gSearchBox;
-var gAbResultsTree;
 var gCardViewBox;
 var gCardViewBoxEmail1;
 
@@ -539,7 +538,6 @@ function onEnterInSearchBar()
 function SwitchPaneFocus(event)
 {
   var focusedElement    = WhichPaneHasFocus();
-  var abResultsTree     = GetAbResultsTree();
   var cardViewBox       = GetCardViewBox();
   var cardViewBoxEmail1 = GetCardViewBoxEmail1();
   var searchBox         = GetSearchBox();
@@ -548,9 +546,9 @@ function SwitchPaneFocus(event)
 
   if (event && event.shiftKey)
   {
-    if (focusedElement == abResultsTree && searchBox.getAttribute('hidden') != 'true')
+    if (focusedElement == gAbResultsTree && searchBox.getAttribute('hidden') != 'true')
       searchInput.focus();
-    else if ((focusedElement == abResultsTree || focusedElement == searchBox) && !IsDirPaneCollapsed())
+    else if ((focusedElement == gAbResultsTree || focusedElement == searchBox) && !IsDirPaneCollapsed())
       dirTree.focus();
     else if (focusedElement != cardViewBox && !IsCardViewAndAbResultsPaneSplitterCollapsed())
     {
@@ -560,13 +558,13 @@ function SwitchPaneFocus(event)
         cardViewBox.focus();    
     }
     else 
-      abResultsTree.focus();
+      gAbResultsTree.focus();
   }
   else
   {
     if (focusedElement == searchBox)
-      abResultsTree.focus();
-    else if (focusedElement == abResultsTree && !IsCardViewAndAbResultsPaneSplitterCollapsed())
+      gAbResultsTree.focus();
+    else if (focusedElement == gAbResultsTree && !IsCardViewAndAbResultsPaneSplitterCollapsed())
     {
       if(cardViewBoxEmail1)
         cardViewBoxEmail1.focus();
@@ -578,13 +576,12 @@ function SwitchPaneFocus(event)
     else if (searchBox.getAttribute('hidden') != 'true')
       searchInput.focus();
     else
-      abResultsTree.focus();
+      gAbResultsTree.focus();
   }
 }
 
 function WhichPaneHasFocus()
 {
-  var abResultsTree     = GetAbResultsTree();
   var cardViewBox       = GetCardViewBox();
   var searchBox         = GetSearchBox();
   var dirTree           = GetDirTree();
@@ -594,7 +591,7 @@ function WhichPaneHasFocus()
   {
     var nodeId = currentNode.getAttribute('id');
 
-    if(currentNode == abResultsTree ||
+    if(currentNode == gAbResultsTree ||
        currentNode == cardViewBox ||
        currentNode == searchBox ||
        currentNode == dirTree)
@@ -625,13 +622,6 @@ function GetSearchBox()
   if (!gSearchBox)
     gSearchBox = document.getElementById('searchBox');
   return gSearchBox;
-}
-
-function GetAbResultsTree()
-{
-  if (!gAbResultsTree)
-    gAbResultsTree = document.getElementById('abResultsTree');
-  return gAbResultsTree;
 }
 
 function GetCardViewBox()

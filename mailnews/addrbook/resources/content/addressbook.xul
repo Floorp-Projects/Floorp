@@ -27,7 +27,6 @@ Contributor(s):
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/addressbook/abDirTreeOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/addressbook/abResultsPaneOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/addressbook/abCardViewOverlay.xul"?>
@@ -90,7 +89,6 @@ Contributor(s):
     <command id="cmd_cut"/>
     <command id="cmd_selectAll"/>
     <commandset id="tasksCommands"/>
-    <command id="toggleSidebar"/>
 </commandset>
 
 <broadcasterset id="abBroadcasters">
@@ -120,7 +118,6 @@ Contributor(s):
   <key id="key_copy"/>
   <key id="key_paste"/>
   <key id="key_selectAll"/>
-  <key id="showHideSidebar"/>
   <key id="key_properties" key="&propertiesCmd.key;" command="cmd_properties" modifiers="accel"/>
 
   <!-- Tab/F6 Keys -->
@@ -131,8 +128,6 @@ Contributor(s):
   <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);" modifiers="shift"/>
   <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);"/>
 </keyset>
-
-<popup id="sidebarPopup"/>
 
 <toolbox class="toolbox-top">
     <menubar id="ab-menubar" grippytooltiptext="&menuBar.tooltip;">
@@ -329,14 +324,14 @@ Contributor(s):
   </toolbox>
 
   <!-- The main address book three pane -->
-  <hbox  flex="1" style="min-width:150px">
-    <!-- sidebar with dir tree -->
-    <vbox id="sidebar-box">
-        <sidebarheader type="box" class="sidebarheader-main" label="&addressbook-sidebar-header.label;"/>
-      
-      <tree id="dirTree" flex="1"/>
+  <hbox flex="1">
+    <vbox id="dirTreeBox" persist="width collapsed">
+      <tree id="dirTree" style="min-width:150px" flex="1" persist="width"/>
     </vbox>
-    <splitter id="sidebar-splitter" collapse="before" persist="state"/>
+
+    <splitter id="dirTree-splitter" collapse="before" persist="state">
+      <grippy/>
+    </splitter>
     
     <vbox flex="1" style="min-width:100px">
 

@@ -38,9 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gResultsTree = 0;
 var dirTree = 0;
 var abList = 0;
+var gAbResultsTree = null;
 var gAbView = null;
 
 var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
@@ -150,7 +150,12 @@ var DirPaneController =
 
     switch (command) {
       case "cmd_selectAll":
-        return true;
+        // the dirTree pane
+        // only handles single selection
+        // so we forward select all to the results pane
+        // but if there is no gAbView
+        // don't bother sending to the results pane
+        return (gAbView != null);
       case "cmd_delete":
       case "button_delete":
         if (command == "cmd_delete")
@@ -196,10 +201,8 @@ var DirPaneController =
   {
     switch (command) {
       case "cmd_selectAll":
-        if (dirTree)
-          dirTree.treeBoxObject.selection.selectAll();
+        SendCommandToResultsPane(command);
         break;
-
       case "cmd_delete":
       case "button_delete":
         if (dirTree)
@@ -218,6 +221,15 @@ var DirPaneController =
       goSetMenuValue("cmd_delete", "valueDefault");
   }
 };
+
+function SendCommandToResultsPane(command)
+{
+  ResultsPaneController.doCommand(command);
+
+  // if we are sending the command so the results pane
+  // we should focus the results pane
+  gAbResultsTree.focus();
+}
 
 function AbEditSelectedDirectory()
 {
@@ -261,7 +273,7 @@ function InitCommonJS()
 {
   dirTree = document.getElementById("dirTree");
   abList = document.getElementById("addressbookList");
-  gResultsTree = document.getElementById("abResultsTree");
+  gAbResultsTree = document.getElementById('abResultsTree');
 }
 
 // builds prior to 12-08-2001 did not use an tree for
@@ -299,8 +311,8 @@ function SetupAbCommandUpdateHandlers()
     dirTree.controllers.appendController(DirPaneController);
 
   // results pane
-  if (gResultsTree)
-    gResultsTree.controllers.appendController(ResultsPaneController);
+  if (gAbResultsTree)
+    gAbResultsTree.controllers.appendController(ResultsPaneController);
 }
 
 function AbDelete()
@@ -556,8 +568,16 @@ function GetSelectedAbCards()
 
 function SelectFirstAddressBook()
 {
-  dirTree.treeBoxObject.selection.select(0);
-  ChangeDirectoryByURI(GetSelectedDirectory());
+  // this can fail if the dirTree box is collapsed at startup
+  // and only the results pane (and card view pane) are showing
+  try {
+    dirTree.treeBoxObject.selection.select(0);
+    ChangeDirectoryByURI(GetSelectedDirectory());
+  }
+  catch (ex) {
+    ChangeDirectoryByURI(kPersonalAddressbookURI);
+    gAbResultsTree.focus();
+  }
 }
 
 function SelectFirstCard()
@@ -573,6 +593,10 @@ function DirPaneClick(event)
   if (event.button != 0)
     return;
 
+  // if the user clicks on the header / trecol, do nothing
+  if (event.originalTarget.localName == "treecol")
+    return;
+
   var searchInput = document.getElementById("searchInput");
   // if there is a searchInput element, and it's not blank 
   // then we need to act like the user cleared the
@@ -583,8 +607,12 @@ function DirPaneClick(event)
   }
 }
 
-function DirPaneDoubleClick()
+function DirPaneDoubleClick(event)
 {
+  // if the user clicks on the header / trecol, do nothing
+  if (event.originalTarget.localName == "treecol")
+    return;
+
   if (dirTree && dirTree.treeBoxObject.selection && dirTree.treeBoxObject.selection.count == 1)
     AbEditSelectedDirectory();
 }
@@ -597,18 +625,7 @@ function DirPaneSelectionChange()
 
 function GetAbResultsBoxObject()
 {
-  return GetAbResultsTree().treeBoxObject;
-}
-
-var gAbResultsTree = null;
-
-function GetAbResultsTree()
-{
-  if (gAbResultsTree) 
-    return gAbResultsTree;
-
-  gAbResultsTree = document.getElementById('abResultsTree');
-  return gAbResultsTree;
+  return gAbResultsTree.treeBoxObject;
 }
 
 function CloseAbView()
@@ -754,7 +771,7 @@ function UpdateSortIndicators(colID, sortDirection)
 
   // remove the sort indicator from all the columns
   // except the one we are sorted by
-  var currCol = GetAbResultsTree().firstChild.firstChild;
+  var currCol = gAbResultsTree.firstChild.firstChild;
   while (currCol) {
     if (currCol != sortedColumn && currCol.localName == "treecol")
       currCol.removeAttribute("sortDirection");
@@ -764,10 +781,8 @@ function UpdateSortIndicators(colID, sortDirection)
 
 function InvalidateResultsPane()
 {
-  var tree = GetAbResultsTree();
-  if (tree) {
-    tree.treeBoxObject.invalidate();
-  }
+  if (gAbResultsTree)
+    gAbResultsTree.treeBoxObject.invalidate();
 }
 
 function AbNewList(abListItem)
@@ -779,22 +794,29 @@ function AbNewList(abListItem)
 
 function GetSelectedAddressBookDirID(abListItem)
 {
-  var selectedAB = 0;
-  var abDirEntries = document.getElementById(abListItem);
+  var selectedAB;
+  // this can fail if the dirTree box is collapsed at startup
+  // and only the results pane (and card view pane) are showing
+  try {
+    var abDirEntries = document.getElementById(abListItem);
 
-  if (abDirEntries && abDirEntries.localName == "tree" && abDirEntries.currentIndex >= 0) {
-    var selected = abDirEntries.contentView.getItemAtIndex(abDirEntries.currentIndex);
-    selectedAB = selected.id;
+    if (abDirEntries && abDirEntries.localName == "tree" && abDirEntries.currentIndex >= 0) {
+      var selected = abDirEntries.contentView.getItemAtIndex(abDirEntries.currentIndex);
+      selectedAB = selected.id;
+    }
+
+    // request could be coming from the context menu of addressbook panel in sidebar
+    // addressbook dirs are listed as menu item. So, get the selected item id.
+    if (!selectedAB && abDirEntries && abDirEntries.localName == "menulist" && abDirEntries.selectedItem)
+      selectedAB = abDirEntries.selectedItem.getAttribute("id");
+
+    // if we do not have a selected ab still, use personal addressbook
+    if (!selectedAB)
+      selectedAB = kPersonalAddressbookURI;
   }
-
-  // request could be coming from the context menu of addressbook panel in sidebar
-  // addressbook dirs are listed as menu item. So, get the selected item id.
-  if (!selectedAB && abDirEntries && abDirEntries.localName == "menulist" && abDirEntries.selectedItem)
-    selectedAB = abDirEntries.selectedItem.getAttribute("id");
-
-  // if we do not have a selected ab still, use personal addressbook
-  if (!selectedAB)
+  catch (ex) {
     selectedAB = kPersonalAddressbookURI;
+  }
   return selectedAB;
 }
 
@@ -913,11 +935,18 @@ function DirPaneHasFocus()
 
 function GetSelectedDirectory()
 {
-  if (dirTree.currentIndex < 0)
-    return null;
+  // this can fail if the dirTree box is collapsed at startup
+  // and only the results pane (and card view pane) are showing
+  try {
+    if (dirTree.currentIndex < 0)
+      return null;
 
-  var selected = dirTree.contentView.getItemAtIndex(dirTree.currentIndex);
-  return selected.id;
+    var selected = dirTree.contentView.getItemAtIndex(dirTree.currentIndex);
+    return selected.id;
+  }
+  catch (ex) {
+    return kPersonalAddressbookURI;
+  }
 }
 
 function onAbSearchKeyPress(event)

@@ -99,8 +99,6 @@ Rights Reserved.
 <!ENTITY throbber.tooltip                               "Go to the &vendorShortName; home page">
 <!ENTITY clearButton.tooltip                            "Clear the search criteria and show all entries">
 <!ENTITY advancedButton.tooltip                         "Advanced address search">
-<!-- Sidebar -->  
-<!ENTITY addressbook-sidebar-header.label               "Address Books">  
 
 <!-- Status Bar -->  
 <!ENTITY  statusText.label "">

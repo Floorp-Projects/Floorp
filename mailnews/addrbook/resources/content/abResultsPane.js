@@ -68,9 +68,8 @@ function AbResultsPaneOnClick(event)
        var colID = new Object;
        var childElt = new Object;
 
-       var tree = GetAbResultsTree();
        // figure out what cell the click was in
-       tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
+       gAbResultsTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
        if (row.value == -1)
          return;
 
