@@ -2213,7 +2213,6 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
            (kNC_BiffState == property) ||
            (kNC_HasUnreadMessages == property) ||
            (kNC_NoSelect == property)  ||
-           (kNC_NoSelect == property)  ||
            (kNC_Synchronize == property) ||
            (kNC_SyncDisabled == property) ||
            (kNC_CanSearchMessages == property))
