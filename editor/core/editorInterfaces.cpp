@@ -20,6 +20,7 @@
 #include "editor.h"
 #include "ChangeAttributeTxn.h"
 #include "InsertTextTxn.h"
+#include "DeleteTextTxn.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMCharacterData.h"
@@ -91,12 +92,6 @@ nsresult
 nsEditorKeyListener::GetCharFromKeyCode(PRUint32 aKeyCode, PRBool aIsShift, char *aChar)
 {
   /* This is completely temporary to get this working while I check out Unicode conversion code. */
-#ifdef XP_MAC
-  if (aChar) {
-    *aChar = (char)aKeyCode;
-    return NS_OK;
-    }
-#else
   if (aKeyCode >= 0x41 && aKeyCode <= 0x5A) {
     if (aIsShift) {
       *aChar = (char)aKeyCode;
@@ -110,7 +105,6 @@ nsEditorKeyListener::GetCharFromKeyCode(PRUint32 aKeyCode, PRBool aIsShift, char
       *aChar = (char)aKeyCode;
       return NS_OK;
   }
-#endif
   return NS_ERROR_FAILURE;
 }
 
@@ -134,7 +128,43 @@ nsEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
     {
       switch(keyCode) {
       case nsIDOMEvent::VK_BACK:
+        {
+          // XXX: for now, just grab the first text node
+          nsCOMPtr<nsIDOMNode> currentNode;
+          nsCOMPtr<nsIDOMNode> textNode;
+          nsCOMPtr<nsIDOMCharacterData> text;
+          if (NS_SUCCEEDED(mEditor->GetCurrentNode(getter_AddRefs(currentNode))) && 
+              NS_SUCCEEDED(mEditor->GetFirstTextNode(currentNode,getter_AddRefs(textNode))) && 
+              NS_SUCCEEDED(textNode->QueryInterface(kIDOMCharacterDataIID, getter_AddRefs(text)))) 
+          {
+            // XXX: for now, just append the text
+            PRUint32 offset;
+            text->GetLength(&offset);
+            DeleteTextTxn *txn;
+            txn = new DeleteTextTxn(mEditor, text, offset-1, 1);
+            mEditor->ExecuteTransaction(txn);
+          }
+        }
         break;
+
+      case nsIDOMEvent::VK_DELETE:
+        {
+          // XXX: for now, just grab the first text node
+          nsCOMPtr<nsIDOMNode> currentNode;
+          nsCOMPtr<nsIDOMNode> textNode;
+          nsCOMPtr<nsIDOMCharacterData> text;
+          if (NS_SUCCEEDED(mEditor->GetCurrentNode(getter_AddRefs(currentNode))) && 
+              NS_SUCCEEDED(mEditor->GetFirstTextNode(currentNode,getter_AddRefs(textNode))) && 
+              NS_SUCCEEDED(textNode->QueryInterface(kIDOMCharacterDataIID, getter_AddRefs(text)))) 
+          {
+            // XXX: for now, just append the text
+            DeleteTextTxn *txn;
+            txn = new DeleteTextTxn(mEditor, text, 0, 1);
+            mEditor->ExecuteTransaction(txn);
+          }
+        }
+        break;
+
       case nsIDOMEvent::VK_RETURN:
         // Need to implement creation of either <P> or <BR> nodes.
         mEditor->Commit(ctrlKey);
@@ -149,6 +179,7 @@ nsEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
               key.ToLowerCase();
             }
 
+            // XXX: for now, just grab the first text node
             nsCOMPtr<nsIDOMNode> currentNode;
             nsCOMPtr<nsIDOMNode> textNode;
             nsCOMPtr<nsIDOMCharacterData> text;
