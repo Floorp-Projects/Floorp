@@ -248,11 +248,16 @@ XFE_ToolbarButton::popup(XEvent *event)
     }
 	HT_Resource		entry = getHtResource();
     HT_View         view  = HT_GetView(entry);
+    HT_Pane         pane  = HT_GetPane(view);
+
+    //URDFUtilities::StHTEventMasking noEvents(pane, HT_EVENT_NO_NOTIFICATION_MASK);
+    HT_SetSelectedView(pane, view);
+    HT_SetSelection(entry);
 
     _popup = new XFE_RDFPopupMenu("popup",
                                    FE_GetToplevelWidget(),
                                    view,
-                                   TRUE,   // isWorkspace
+                                   FALSE,   // isWorkspace
                                    FALSE); // background commands
 		
 	_popup->position(event);
