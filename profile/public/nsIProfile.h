@@ -65,11 +65,17 @@ public:
 	// Setters
 	NS_IMETHOD SetProfileDir(const char *profileName, const nsFileSpec& profileDir) = 0;
 
+	// Migrate 4.x profile information
+	NS_IMETHOD MigrateProfileInfo() = 0;
+
     // Creators
     NS_IMETHOD CreateNewProfile(char* data) = 0;
 	NS_IMETHOD RenameProfile(const char* aOldName, const char* aNewName) = 0;  
 	NS_IMETHOD DeleteProfile(const char* aProfileName) = 0; 
 	NS_IMETHOD GetProfileList(nsString& aProfileList) = 0;
+	NS_IMETHOD StartCommunicator(const char* aProfileName) = 0;
+	NS_IMETHOD GetCurrProfile(nsString& currProfile) = 0;
+	NS_IMETHOD MigrateProfile(const char* aProfileName) = 0;
 };
 
 #endif /* nsIProfile_h__ */
