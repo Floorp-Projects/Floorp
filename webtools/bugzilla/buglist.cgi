@@ -760,10 +760,15 @@ if (exists $ENV{'HTTP_USER_AGENT'} && $ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/
     # especially during page reload.
     $serverpush = 1;
 
-    print "Content-type: multipart/x-mixed-replace;boundary=thisrandomstring\n\n";
-    print "--thisrandomstring\n";
-    print "Content-type: text/html\n\n";
-    print "<p>Please stand by ... <p>\n";
+    print qq{Content-type: multipart/x-mixed-replace;boundary=thisrandomstring\n
+--thisrandomstring
+Content-type: text/html\n
+<html><head><title>Bugzilla is pondering your query</title>
+<style type="text/css">
+    .psb { margin-top: 20%; text-align: center; }
+</style></head><body>
+<h1 class="psb">Please stand by ...</h1></body></html>
+    };
     # Note! HTML header is complete!
 } else {
     print "Content-type: text/html\n";
@@ -772,7 +777,6 @@ if (exists $ENV{'HTTP_USER_AGENT'} && $ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/
     print "Content-disposition: inline; filename=bugzilla_bug_list.html\n";
     # Note! Don't finish HTML header yet!  Only one newline so far!
 }
-
 sub DefCol {
     my ($name, $k, $t, $s, $q) = (@_);
 
