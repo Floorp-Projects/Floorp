@@ -836,8 +836,6 @@ InitCrypto(char *cert_dir, PRBool readOnly)
     static int	prior = 0;
     PK11SlotInfo * slotinfo;
 
-    CERTCertDBHandle * db;
-
     if (prior == 0) {
 	/* some functions such as OpenKeyDB expect this path to be
 	 * implicitly set prior to calling */
