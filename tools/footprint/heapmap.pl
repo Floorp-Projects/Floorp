@@ -47,7 +47,7 @@ while(<>)
         }
         next;
     }
-    elsif (/  FREE block at ([0-9A-F]*) of size ([0-9]*) overhead ([0-9]*)/)
+    elsif (/ *FREE block at ([0-9A-Fa-f]*) of size *([0-9]*) overhead *([0-9]*)/)
     {
         $freeCount++;
         $freeBytes += $2;
@@ -57,7 +57,7 @@ while(<>)
         # this is a candidate for compaction.
         $prevFree = $2;
     }
-    elsif (/ USED block at ([0-9A-F]*) of size ([0-9]*) overhead ([0-9]*)/)
+    elsif (/ *USED block at ([0-9A-Fa-f]*) of size *([0-9]*) overhead *([0-9]*)/)
     {
         $usedCount++;
         $usedBytes += $2;
