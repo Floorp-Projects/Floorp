@@ -33,6 +33,22 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeDynamicManager resource names										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNdynamicChildren					"dynamicChildren"
+#define XmNlinkNode							"linkNode"
+#define XmNmaxDynamicChildrenHeight			"maxDynamicChildrenHeight"
+#define XmNmaxDynamicChildrenWidth			"maxDynamicChildrenWidth"
+#define XmNminDynamicChildrenHeight			"minDynamicChildrenHeight"
+#define XmNminDynamicChildrenWidth			"minDynamicChildrenWidth"
+#define XmNnumDynamicChildren				"numDynamicChildren"
+#define XmNnumManagedDynamicChildren		"numManagedDynamicChildren"
+#define XmNtotalDynamicChildrenHeight		"totalDynamicChildrenHeight"
+#define XmNtotalDynamicChildrenWidth		"totalDynamicChildrenWidth"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeDynamicManager class names										*/
 /*																		*/
 /*----------------------------------------------------------------------*/

@@ -27,7 +27,6 @@
 
 #include <Xfe/CaptionP.h>
 #include <Xfe/Button.h>
-#include <Xm/RepType.h>
 
 #define MESSAGE1 "Widget is not an XfeCaption."
 #define MESSAGE2 "XmNtitleDirection is not XmSTRING_DIRECTION_L_TO_R or XmSTRING_DIRECTION_R_TO_L."
@@ -100,9 +99,7 @@ static void		LayoutChildOnly			(Widget);
 /* RepType registration functions										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void		RegisterCaptionLayout				(void);
-static void		RegisterCaptionHorizontalAlignment	(void);
-static void		RegisterCaptionVerticalAlignment	(void);
+static void		CaptionRegisterRepTypes				(void);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -412,9 +409,7 @@ static void
 ClassInitialize()
 {
 	/* Register XfeCaption Representation Types */
-	RegisterCaptionLayout();
-	RegisterCaptionHorizontalAlignment();
-	RegisterCaptionVerticalAlignment();
+	CaptionRegisterRepTypes();
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -862,43 +857,36 @@ LayoutChildOnly	(Widget w)
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void
-RegisterCaptionLayout(void)
+CaptionRegisterRepTypes(void)
 {
-    static String names[] = 
+    static String child_names[] = 
     { 
 		"caption_child_on_bottom",
 		"caption_child_on_left",
 		"caption_child_on_right",
-		"caption_child_on_top"
+		"caption_child_on_top",
+		NULL
     };
     
-    XmRepTypeRegister(XmRCaptionLayout,names,NULL,XtNumber(names));
-}
-/*----------------------------------------------------------------------*/
-static void
-RegisterCaptionHorizontalAlignment(void)
-{
-    static String names[] = 
+    static String vertical_names[] = 
     { 
 		"caption_vertical_alignment_left",
 		"caption_vertical_alignment_center",
-		"caption_vertical_alignment_right"
+		"caption_vertical_alignment_right",
+		NULL
     };
     
-    XmRepTypeRegister(XmRCaptionVerticalAlignment,names,NULL,XtNumber(names));
-}
-/*----------------------------------------------------------------------*/
-static void
-RegisterCaptionVerticalAlignment(void)
-{
-    static String names[] = 
+    static String horizontal_names[] = 
     { 
 		"caption_vertical_alignment_bottom",
 		"caption_vertical_alignment_center",
-		"caption_vertical_alignment_top"
+		"caption_vertical_alignment_top",
+		NULL
     };
     
-    XmRepTypeRegister(XmRCaptionVerticalAlignment,names,NULL,XtNumber(names));
+    XfeRepTypeRegister(XmRCaptionLayout,child_names);
+    XfeRepTypeRegister(XmRCaptionVerticalAlignment,vertical_names);
+    XfeRepTypeRegister(XmRCaptionVerticalAlignment,horizontal_names);
 }
 /*----------------------------------------------------------------------*/
 

@@ -38,6 +38,31 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeDashBoard resource names											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNdockCallback						"dockCallback"
+#define XmNfloatingMapCallback				"floatingMapCallback"
+#define XmNfloatingUnmapCallback			"floatingUnmapCallback"
+#define XmNundockCallback					"undockCallback"
+
+#define XmNdocked							"docked"
+#define XmNdockedTaskBar					"dockedTaskBar"
+#define XmNfloatingShell					"floatingShell"
+#define XmNfloatingTarget					"floatingTarget"
+#define XmNfloatingTaskBar					"floatingTaskBar"
+#define XmNprogressBar						"progressBar"
+#define XmNshowDockedTaskBar				"showDockedTaskBar"
+#define XmNstatusBar						"statusBar"
+#define XmNtoolBar							"toolBar"
+#define XmNundockPixmap						"undockPixmap"
+
+#define XmCDocked							"Docked"
+#define XmCShowDockedTaskBar				"ShowDockedTaskBar"
+#define XmCUndockPixmap						"UndockPixmap"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeDashBoard components												*/
 /*																		*/
 /*----------------------------------------------------------------------*/

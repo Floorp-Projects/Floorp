@@ -49,7 +49,6 @@ EXPORTS			= \
 				ToolTipP.h \
 				ToolTipShell.h \
 				ToolTipShellP.h \
-				ToolTipStringDefs.h \
 				$(NULL)
 
 

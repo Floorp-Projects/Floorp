@@ -33,6 +33,37 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeTab resource names												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNbottomPixmap					"bottomPixmap"
+#define XmNbottomRaisedPixmap			"bottomRaisedPixmap"
+#define XmNhorizontalPixmap				"horizontalPixmap"
+#define XmNhorizontalRaisedPixmap		"horizontalRaisedPixmap"
+#define XmNleftPixmap					"leftPixmap"
+#define XmNleftRaisedPixmap				"leftRaisedPixmap"
+#define XmNrightPixmap					"rightPixmap"
+#define XmNrightRaisedPixmap			"rightRaisedPixmap"
+#define XmNtopPixmap					"topPixmap"
+#define XmNtopRaisedPixmap				"topRaisedPixmap"
+#define XmNverticalPixmap				"verticalPixmap"
+#define XmNverticalRaisedPixmap			"verticalRaisedPixmap"
+
+#define XmCBottomPixmap					"BottomPixmap"
+#define XmCBottomRaisedPixmap			"BottomRaisedPixmap"
+#define XmCHorizontalPixmap				"HorizontalPixmap"
+#define XmCHorizontalRaisedPixmap		"HorizontalRaisedPixmap"
+#define XmCLeftPixmap					"LeftPixmap"
+#define XmCLeftRaisedPixmap				"LeftRaisedPixmap"
+#define XmCRightPixmap					"RightPixmap"
+#define XmCRightRaisedPixmap			"RightRaisedPixmap"
+#define XmCTopPixmap					"TopPixmap"
+#define XmCTopRaisedPixmap				"TopRaisedPixmap"
+#define XmCVerticalPixmap				"VerticalPixmap"
+#define XmCVerticalRaisedPixmap			"VerticalRaisedPixmap"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeTab class names													*/
 /*																		*/
 /*----------------------------------------------------------------------*/

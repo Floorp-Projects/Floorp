@@ -28,7 +28,6 @@
 #define _XfeFind_h_
 
 #include <Xm/Xm.h>								/* Motif public defs	*/
-#include <Xfe/StringDefs.h>						/* Xfe public str defs	*/
 #include <Xfe/Defaults.h>						/* Xfe default res vals	*/
 
 #include <assert.h>								/* Assert				*/

@@ -28,8 +28,41 @@
 #define _XfeToolBox_h_
 
 #include <Xfe/DynamicManager.h>
+#include <Xfe/ToolBar.h>
+#include <Xfe/Tab.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeToolBox resource names											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNcloseCallback					"closeCallback"
+#define XmNdragAllowCallback				"dragAllowCallback"
+#define XmNdragEndCallback					"dragEndCallback"
+#define XmNnewItemCallback					"newItemCallback"
+#define XmNopenCallback						"openCallback"
+#define XmNsnapCallback						"snapCallback"
+#define XmNswapCallback						"swapCallback"
+
+/* Things that conflict with Motif 2.x */
+#if XmVersion < 2000
+#define XmNdragStartCallback				"dragStartCallback"
+#endif
+
+#define XmNclosedTabs						"closedTabs"
+#define XmNdragButton						"dragButton"
+#define XmNdragCursor						"dragCursor"
+#define XmNopen								"open"
+#define XmNopenedTabs						"openedTabs"
+#define XmNswapThreshold					"swapThreshold"
+#define XmNtabOffset						"TabOffset"
+
+#define XmCDragButton						"DragButton"
+#define XmCDragCursor						"DragCursor"
+#define XmCOpen								"Open"
+#define XmCSwapThreshold					"SwapThreshold"
 
 /*----------------------------------------------------------------------*/
 /*																		*/

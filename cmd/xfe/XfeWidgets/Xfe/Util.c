@@ -45,6 +45,8 @@
 #include <Xm/ToggleB.h>
 #include <Xm/ToggleBG.h>
 
+#include <Xm/RepType.h>
+
 #define MESSAGE0 "XfeInstancePointer() called with non XfePrimitive or XfeManager widget."
 
 /*----------------------------------------------------------------------*/
@@ -694,3 +696,47 @@ XfeIsPrivateComponent(Widget w)
 }
 /*----------------------------------------------------------------------*/
 
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Representation type utilities										 */
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ Boolean
+XfeRepTypeCheck(Widget				w,
+				String				rep_type,
+				unsigned char *		address,
+				unsigned char		fallback)
+/*----------------------------------------------------------------------*/
+{
+	Boolean result = True;
+
+	assert( address != NULL );
+
+	if (!XmRepTypeValidValue(XmRepTypeGetId(rep_type),*address,w))
+	{
+		result = False;
+
+		*address = fallback;
+	}
+
+	return result;
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeRepTypeRegister(String rep_type,String * names)
+{
+	Cardinal num_names = 0;
+
+	assert( rep_type != NULL );
+
+	while(names[num_names] != NULL)
+	{
+		num_names++;
+	}
+
+	assert( num_names > 0 );
+
+    XmRepTypeRegister(rep_type,names,NULL,num_names);
+}
+/*----------------------------------------------------------------------*/

@@ -376,7 +376,7 @@ ClassInitialize()
     /*XfeRegisterConverters();*/
 
     /* Register Representation Types */
-    XfeRegisterRepresentationTypes();
+    /* XfeRegisterRepresentationTypes(); */
 }
 /*----------------------------------------------------------------------*/
 static void

@@ -33,6 +33,37 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeCascade resource names											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNsubmenuTearCallback				"submenuTearCallback"
+
+#define XmNallowTearOff					"allowTearOff"
+#define XmNcascadeArrowDirection		"cascadeArrowDirection"
+#define XmNcascadeArrowLocation			"cascadeArrowLocation"
+#define XmNcascadeArrowHeight			"cascadeArrowHeight"
+#define XmNcascadeArrowWidth			"cascadeArrowWidth"
+#define XmNdrawCascadeArrow				"drawCascadeArrow"
+#define XmNtorn							"torn"
+#define XmNmatchSubMenuWidth			"matchSubMenuWidth"
+#define XmNsubMenuAlignment				"subMenuAlignment"
+#define XmNsubMenuLocation				"subMenuLocation"
+#define XmNtornShellTitle				"tornShellTitle"
+
+#define XmCCascadeArrowDirection		"CascadeArrowDirection"
+#define XmCCascadeArrowHeight			"CascadeArrowHeight"
+#define XmCCascadeArrowLocation			"CascadeArrowLocation"
+#define XmCSubMenuAlignment				"SubMenuAlignment"
+#define XmCCascadeArrowWidth			"CascadeArrowWidth"
+#define XmCDrawCascadeArrow				"DrawCascadeArrow"
+#define XmCMatchSubMenuWidth			"MatchSubMenuWidth"
+#define XmCSubMenuLocation				"SubMenuLocation"
+#define XmCTornShellTitle				"TornShellTitle"
+
+#define XmRLocationType					"LocationType"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XmRLocationType														*/
 /*																		*/
 /*----------------------------------------------------------------------*/

@@ -28,9 +28,35 @@
 #define _XfeCaption_h_
 
 #include <Xfe/Manager.h>
-#include <Xfe/CaptionStringDefs.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeCaption resource names											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNcaptionLayout				"captionLayout"
+#define XmNchild						"child"
+#define XmNchildResize					"childResize"
+#define XmNmaxChildHeight				"maxChildHeight"
+#define XmNmaxChildWidth				"maxChildWidth"
+#define XmNtitleDirection				"titleDirection"
+#define XmNtitleHorizontalAlignment		"TitleHorizontalAlignment"
+#define XmNtitleVerticalAlignment		"TitleVerticalAlignment"
+
+#define XmCCaptionHorizontalAlignment	"CaptionHorizontalAlignment"
+#define XmCCaptionLayout				"CaptionLayout"
+#define XmCCaptionVerticalAlignment		"CaptionVerticalAlignment"
+#define XmCChild						"Child"
+#define XmCChildResize					"ChildResize"
+#define XmCMaxChildHeight				"MaxChildHeight"
+#define XmCMaxChildWidth				"MaxChildWidth"
+#define XmCTitleDirection				"TitleDirection"
+
+#define XmRCaptionHorizontalAlignment	"CaptionHorizontalAlignment"
+#define XmRCaptionLayout				"CaptionLayout"
+#define XmRCaptionVerticalAlignment		"CaptionVerticalAlignment"
 
 /*----------------------------------------------------------------------*/
 /*																		*/

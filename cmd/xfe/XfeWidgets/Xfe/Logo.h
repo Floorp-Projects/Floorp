@@ -33,6 +33,27 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeLogo resource names												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNanimationCallback				"animationCallback"
+
+#define XmNanimationInterval				"animationInterval"
+#define XmNresetWhenIdle					"resetWhenIdle"
+#define XmRPixmapTable						"PixmapTable"
+#define XmNnumAnimationPixmaps			"numAnimationPixmaps"
+#define XmNcurrentPixmapIndex			"currentPixmapIndex"
+#define XmNanimationPixmaps				"animationPixmaps"
+#define XmNanimationRunning				"animationRunning"
+
+#define XmCAnimationInterval				"AnimationInterval"
+#define XmCAnimationPixmaps					"AnimationPixmaps"
+#define XmCCurrentPixmapIndex				"CurrentPixmapIndex"
+#define XmCNumAnimationPixmaps				"NumAnimationPixmaps"
+#define XmCResetWhenIdle					"ResetWhenIdle"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeLogo class names													*/
 /*																		*/
 /*----------------------------------------------------------------------*/

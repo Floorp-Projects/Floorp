@@ -54,7 +54,6 @@ EXPORTS			= \
 				CaptionP.h \
 				TextCaption.h \
 				TextCaptionP.h \
-				CaptionStringDefs.h \
 				$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

@@ -35,6 +35,30 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeToolScroll resource names											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNarrowDisplayPolicy				"arrowDisplayPolicy"
+#define XmNarrowPlacement					"arrowPlacement"
+#define XmNbackwardArrow					"backwardArrow"
+#define XmNclipArea							"clipArea"
+#define XmNclipShadowThickness				"clipShadowThickness"
+#define XmNclipShadowType					"clipShadowType"
+#define XmNforwardArrow						"forwardArrow"
+#define XmNtoolBarPosition					"toolBarPosition"
+
+#define XmCArrowDisplayPolicy				"ArrowDisplayPolicy"
+#define XmCArrowPlacement					"ArrowPlacement"
+#define XmCBackwardArrow					"BackwardArrow"
+#define XmCClipArea							"ClipArea"
+#define XmCForwardArrow						"ForwardArrow"
+#define XmCToolBarPosition					"ToolBarPosition"
+
+#define XmRArrowDisplayPolicy				XmRScrollBarDisplayPolicy
+#define XmRToolScrollArrowPlacement			"ToolScrollArrowPlacement"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XmRarrowPlacement													*/
 /*																		*/
 /*----------------------------------------------------------------------*/

@@ -34,6 +34,48 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeToolBar resource names											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+
+#define XmNactiveButton						"activeButton"
+#define XmNallowWrap						"allowWrap"
+#define XmNchildForceHeight					"childForceHeight"
+#define XmNchildForceWidth					"childForceWidth"
+#define XmNchildUsePreferredHeight			"childUsePreferredHeight"
+#define XmNchildUsePreferredWidth			"childUsePreferredWidth"
+#define XmNdynamicIndicator					"dynamicIndicator"
+#define XmNindicatorLocation				"indicatorLocation"
+#define XmNindicatorPosition				"indicatorPosition"
+#define XmNindicatorThreshold				"indicatorThreshold"
+#define XmNmaxNumColumns					"maxNumColumns"
+#define XmNmaxNumRows						"maxNumRows"
+#define XmNselectedButton					"selectedButton"
+#define XmNtoggleBehavior					"toggleBehavior"
+#define XmNtoolBar							"toolBar"
+#define XmNseparatorThickness			"separatorThickness"
+
+#define XmCActiveButton						"ActiveButton"
+#define XmCChildForceHeight					"ChildForceHeight"
+#define XmCChildForceWidth					"ChildForceWidth"
+#define XmCChildUsePreferredHeight			"ChildUsePreferredHeight"
+#define XmCSeparatorThickness			"SeparatorThickness"
+#define XmCChildUsePreferredWidth			"ChildUsePreferredWidth"
+#define XmCDynamicIndicator					"DynamicIndicator"
+#define XmCIndicatorLocation				"IndicatorLocation"
+#define XmCIndicatorPosition				"IndicatorPosition"
+#define XmCIndicatorThreshold				"IndicatorThreshold"
+#define XmCMaxNumColumns					"MaxNumColumns"
+#define XmCMaxNumRows						"MaxNumRows"
+#define XmCSelectedButton					"SelectedButton"
+#define XmCToggleBehavior					"ToggleBehavior"
+
+#define XmRToolBarIndicatorLocation			"ToolBarIndicatorLocation"
+#define XmRToolBarSelectionPolicy			"ToolBarSelectionPolicy"
+#define XmRToolBarToggleBehavior			"ToolBarToggleBehavior"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XmRToolBarSelectionType												*/
 /*																		*/
 /*----------------------------------------------------------------------*/

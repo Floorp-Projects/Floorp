@@ -72,6 +72,7 @@ XfeMin((bp)->pixmap_rect.height,(_lp)->label_rect.height)
 /* Core class methods													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
+static void		ClassInitialize	(void);
 static void		ClassPartInit	(WidgetClass);
 static void 	Initialize		(Widget,Widget,ArgList,Cardinal *);
 static void 	Destroy			(Widget);
@@ -568,7 +569,7 @@ _XFE_WIDGET_CLASS_RECORD(button,Button) =
 		(WidgetClass) &xfeLabelClassRec,		/* superclass         	*/
 		"XfeButton",							/* class_name         	*/
 		sizeof(XfeButtonRec),					/* widget_size        	*/
-		NULL,									/* class_initialize   	*/
+		ClassInitialize,						/* class_initialize		*/
 		ClassPartInit,							/* class_part_initialize*/
 		FALSE,                                  /* class_inited       	*/
 		Initialize,                             /* initialize         	*/
@@ -697,8 +698,58 @@ DefaultRaiseBackground(Widget w,int offset,XrmValue * value)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeButtonRegisterRepTypes(void)
+{
+    static String layout_names[] = 
+    { 
+		"button_label_only",
+		"button_label_on_bottom",
+		"button_label_on_left",
+		"button_label_on_right",
+		"button_label_on_top",
+		"button_pixmap_only",
+		NULL
+    };
+
+    static String trigger_names[] = 
+    { 
+		"button_trigger_anywhere",
+		"button_trigger_label",
+		"button_trigger_pixmap",
+		"button_trigger_either",
+		"button_trigger_neither",
+		NULL
+    };
+    
+    static String type_names[] = 
+    { 
+		"button_none",
+		"button_push",
+		"button_toggle",
+		NULL
+    };
+    
+    XfeRepTypeRegister(XmRButtonLayout,layout_names);
+    XfeRepTypeRegister(XmRButtonTrigger,trigger_names);
+    XfeRepTypeRegister(XmRButtonType,type_names);
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* Core class methods													*/
 /*																		*/
+/*----------------------------------------------------------------------*/
+static void
+ClassInitialize()
+{
+	/* Register XfeButton representation types */
+	XfeButtonRegisterRepTypes();
+}
 /*----------------------------------------------------------------------*/
 static void
 ClassPartInit(WidgetClass wc)

@@ -34,6 +34,36 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeFrameShell resource names											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNbeforeResizeCallback				"beforeResizeCallback"
+#define XmNdeleteWindowCallback				"deleteWindowCallback"
+#define XmNmoveCallback						"moveCallback"
+#define XmNsaveYourselfCallback				"saveYourselfCallback"
+#define XmNtitleChangedCallback				"titleChangedCallback"
+
+#define XmNstartIconic						"startIconic"
+#define XmNtrackPosition					"trackPosition"
+#define XmNtrackSaveYourself				"trackSaveYourself"
+#define XmNhasBeenMapped				"hasBeenMapped"
+#define XmNbypassShell					"bypassShell"
+#define XmNtrackSize						"trackSize"
+#define XmNtrackDeleteWindow			"trackDeleteWindow"
+#define XmNtrackEditres					"trackEditres"
+#define XmNtrackMapping					"trackMapping"
+
+#define XmCBypassShell						"BypassShell"
+#define XmCStartIconic						"StartIconic"
+#define XmCTrackEditres						"TrackEditres"
+#define XmCTrackMapping						"TrackMapping"
+#define XmCTrackPosition					"TrackPosition"
+#define XmCTrackSaveYourself				"TrackSaveYourself"
+#define XmCTrackSize						"TrackSize"
+
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeBox class names													*/
 /*																		*/
 /*----------------------------------------------------------------------*/

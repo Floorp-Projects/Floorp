@@ -41,7 +41,7 @@ typedef void	(*XfeLinkedApplyProc)		(XtPointer		item,
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeLinkedTestFunc type											*/
+/* XfeLinkedTestFunc type												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 typedef Boolean	(*XfeLinkedTestFunc)		(XtPointer		item,
@@ -49,7 +49,7 @@ typedef Boolean	(*XfeLinkedTestFunc)		(XtPointer		item,
 	
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeLinkedCompareFunc												*/
+/* XfeLinkedCompareFunc													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 typedef int	(*XfeLinkedCompareFunc)			(XtPointer		one,
@@ -160,13 +160,17 @@ XfeLinkedFindNodeByItem			(XfeLinked					list,
 								 XtPointer					item);
 /*----------------------------------------------------------------------*/
 extern XfeLinkNode		
-XfeLinkedIndex					(XfeLinked					list,
+XfeLinkedNodeAtIndex			(XfeLinked					list,
 								 Cardinal					i);
 /*----------------------------------------------------------------------*/
 extern Boolean			
 XfeLinkedPosition				(XfeLinked					list,
 								 XtPointer					item,
 								 Cardinal *					pos);
+/*----------------------------------------------------------------------*/
+extern XtPointer
+XfeLinkedItemAtIndex			(XfeLinked					list,
+								 Cardinal					i);
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/

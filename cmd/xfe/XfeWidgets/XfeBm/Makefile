@@ -36,7 +36,6 @@ CSRCS			= \
 				BmButton.c \
 				BmCascade.c \
 				BmGlobal.c \
-				BmRepType.c \
 				$(NULL)
 
 REQUIRES		=\

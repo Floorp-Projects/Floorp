@@ -47,6 +47,7 @@
 /* Core class methods													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
+static void		ClassInitialize		(void);
 static void 	Initialize		(Widget,Widget,ArgList,Cardinal *);
 static void 	Destroy			(Widget);
 static Boolean	SetValues		(Widget,Widget,Widget,ArgList,Cardinal *);
@@ -89,6 +90,13 @@ static void 	DescendantDragMotion	(Widget,Widget,int,int);
 static void		LayoutVertical		(Widget);
 static void		LayoutHorizontal	(Widget);
 static void		LayoutToolBar		(Widget);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void ToolScrollRegisterRepTypes(void);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -234,7 +242,7 @@ _XFE_WIDGET_CLASS_RECORD(toolscroll,ToolScroll) =
 		(WidgetClass) &xfeOrientedClassRec,		/* superclass       	*/
 		"XfeToolScroll",						/* class_name       	*/
 		sizeof(XfeToolScrollRec),				/* widget_size      	*/
-		NULL,									/* class_initialize 	*/
+		ClassInitialize,						/* class_initialize		*/
 		NULL,									/* class_part_initialize*/
 		FALSE,                                  /* class_inited     	*/
 		Initialize,                             /* initialize       	*/
@@ -357,8 +365,35 @@ _XFE_WIDGET_CLASS(toolscroll,ToolScroll);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void
+ToolScrollRegisterRepTypes(void)
+{
+    static String placement_names[] = 
+    { 
+		"tool_scroll_arrow_placement_both",
+		"tool_scroll_arrow_placement_end",
+		"tool_scroll_arrow_placement_start",
+		NULL
+    };
+    
+    XfeRepTypeRegister(XmRToolScrollArrowPlacement,placement_names);
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* Core class methods													*/
 /*																		*/
+/*----------------------------------------------------------------------*/
+static void
+ClassInitialize()
+{
+	/* Register XfeToolBox representation types */
+	ToolScrollRegisterRepTypes();
+}
 /*----------------------------------------------------------------------*/
 static void
 Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)

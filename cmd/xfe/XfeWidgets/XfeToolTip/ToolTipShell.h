@@ -28,10 +28,30 @@
 #define _XfeToolTipShell_h_
 
 #include <Xfe/BypassShell.h>
-#include <Xfe/ToolTipStringDefs.h>
 #include <Xfe/Button.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeToolTipShell resource names										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNtoolTipCallback				"toolTipCallback"
+
+#define XmNtoolTipLabel					"toolTipLabel"
+#define XmNtoolTipPlacement				"toolTipPlacement"
+#define XmNtoolTipTimeout				"toolTipTimeout"
+#define XmNtoolTipType					"toolTipType"
+#define XmNtoolTipHorizontalOffset		"toolTipHorizontalOffset"
+#define XmNtoolTipVerticalOffset		"toolTipVerticalOffset"
+
+#define XmCToolTipPlacement				"ToolTipPlacement"
+#define XmCToolTipTimeout				"ToolTipTimeout"
+#define XmCToolTipType					"ToolTipType"
+
+#define XmRToolTipPlacement				"ToolTipPlacement"
+#define XmRToolTipType					"ToolTipType"
 
 /*----------------------------------------------------------------------*/
 /*																		*/

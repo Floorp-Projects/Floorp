@@ -33,6 +33,26 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeProgressBar resource names										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNbarColor						"barColor"
+#define XmNcylonInterval				"cylonInterval"
+#define XmNcylonOffset					"cylonOffset"
+#define XmNcylonRunning					"cylonRunning"
+#define XmNendPercent					"endPercent"
+#define XmNstartPercent					"startPercent"
+#define XmNcylonWidth					"cylonWidth"
+
+#define XmCBarColor						"BarColor"
+#define XmCCylonInterval				"CylonInterval"
+#define XmCCylonOffset					"CylonOffset"
+#define XmCCylonWidth					"CylonWidth"
+#define XmCEndPercent					"EndPercent"
+#define XmCStartPercent					"StartPercent"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeProgressBar class names											*/
 /*																		*/
 /*----------------------------------------------------------------------*/

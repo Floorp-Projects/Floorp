@@ -33,6 +33,35 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeLabel resource names												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNselectionChangedCallback		"selectionChangedCallback"
+
+#define XmNeditModifiers				"editModifiers"
+#define XmNlabelDirection				"labelDirection"
+#define XmNselected						"selected"
+#define XmNselectionModifiers			"selectionModifiers"
+#define XmNselectionColor				"selectionColor"
+#define XmNtruncateLabel				"truncateLabel"
+#define XmNlabelAlignment				"labelAlignment"
+#define XmNtruncateProc					"truncateProc"
+#define XmNunderlineThickness			"underlineThickness"
+
+#define XmCEditModifiers				"EditModifiers"
+#define XmCFontItemLabels				"FontItemLabels"
+#define XmCLabelAlignment				"LabelAlignment"
+#define XmCLabelDirection				"LabelDirection"
+#define XmCSelectionModifiers			"SelectionModifiers"
+#define XmCSelected						"Selected"
+#define XmCSelectionColor				"SelectionColor"
+#define XmCTruncateLabel				"TruncateLabel"
+#define XmCTruncateProc					"TruncateProc"
+
+#define XmRModifiers					"Modifiers"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeLabel class names													*/
 /*																		*/
 /*----------------------------------------------------------------------*/

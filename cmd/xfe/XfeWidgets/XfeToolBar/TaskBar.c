@@ -259,7 +259,7 @@ _XFE_WIDGET_CLASS_RECORD(taskbar,TaskBar) =
 	{
 		XfeInheritBitGravity,					/* bit_gravity				*/
 		PreferredGeometry,						/* preferred_geometry		*/
-		XfeInheritUpdateBoundary,					/* update_boundary				*/
+		XfeInheritUpdateBoundary,				/* update_boundary			*/
 		XfeInheritUpdateChildrenInfo,			/* update_children_info		*/
 		XfeInheritLayoutWidget,					/* layout_widget			*/
 		NULL,									/* accept_static_child		*/

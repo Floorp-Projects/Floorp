@@ -34,7 +34,21 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeBox class names													*/
+/* XfeOriented resource names											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNallowDrag					"allowDrag"
+#define XmNdragInProgress				"dragInProgress"
+#define XmNhorizontalCursor				"horizontalCursor"
+#define XmNverticalCursor				"verticalCursor"
+
+#define XmCDragInProgress				"DragInProgress"
+#define XmCHorizontalCursor				"HorizontalCursor"
+#define XmCVerticalCursor				"VerticalCursor"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeOriented class names												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 externalref WidgetClass xfeOrientedWidgetClass;
@@ -44,7 +58,7 @@ typedef struct _XfeOrientedRec *			XfeOrientedWidget;
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeBox subclass test macro											*/
+/* XfeOriented subclass test macro										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 #define XfeIsOriented(w)	XtIsSubclass(w,xfeOrientedWidgetClass)

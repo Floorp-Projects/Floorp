@@ -29,27 +29,17 @@
 
 #include <Xfe/DynamicManagerP.h>
 
-#define MESSAGE0 "XfeDynamicManager is an abstract class and cannot be instanciated."
-#define MESSAGE1 "No XmNorderFunction installed."
-#define MESSAGE2 "XmNselectedChildren is a Read-Only resource."
-#define MESSAGE3 "XmNnumSelected is a Read-Only resource."
-#define MESSAGE4 "XmNindex is a read-only reasource."
 #define MESSAGE5 "Widget is not an XfeDynamicManager"
-#define MESSAGE6 "XmNpreferredHeight is a read-only resource."
-#define MESSAGE7 "XmNpreferredWidth is a read-only resource."
-#define MESSAGE8 "XmNnumPopupChildren is a read-only resource."
-#define MESSAGE9 "XmNpopupChildren is a read-only resource."
-#define MESSAGE11 "The XmNx position of a child cannot be set explicitly."
-#define MESSAGE12 "The XmNy position of a child cannot be set explicitly."
-#define MESSAGE13 "The XmNborderWidth of a child cannot be set explicitly."
 #define MESSAGE14 "Cannot accept new child '%s'."
-#define MESSAGE15 "XmNnumPrivateComponents is a read-only resource."
-#define MESSAGE16 "XmNlayableChildren is a read-only resource."
-#define MESSAGE17 "XmNnumLayableChildren is a read-only resource."
-#define MESSAGE18 "The %s class does not support XmNlayableChildren."
-#define MESSAGE19 "The %s class does not support XmNnumLayableChildren."
-#define MESSAGE20 "XmNprivateComponent is a read-only resource."
 #define MESSAGE21 "XmNlinkNode is a read-only resource."
+#define MESSAGE70 "XmNdynamicChildren is a read-only resource."
+#define MESSAGE71 "XmNnumDynamicChildren is a read-only resource."
+#define MESSAGE72 "XmNmaxDynamicWidth is a read-only resource."
+#define MESSAGE73 "XmNmaxDynamicHeight is a read-only resource."
+#define MESSAGE74 "XmNminDynamicWidth is a read-only resource."
+#define MESSAGE75 "XmNminDynamicHeight is a read-only resource."
+#define MESSAGE76 "XmNtotalDynamicWidth is a read-only resource."
+#define MESSAGE77 "XmNtotalDynamicHeight is a read-only resource."
 
 #define MIN_LAYOUT_WIDTH	10
 #define MIN_LAYOUT_HEIGHT	10
@@ -63,7 +53,6 @@ static void		CoreInitialize		(Widget,Widget,ArgList,Cardinal *);
 static void		CoreClassPartInit	(WidgetClass);
 static void		CoreDestroy			(Widget);
 static Boolean	CoreSetValues		(Widget,Widget,Widget,ArgList,Cardinal *);
-static void		CoreGetValuesHook	(Widget,ArgList,Cardinal *);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -228,7 +217,7 @@ static XtResource constraint_resources[] =
     },
     { 
 		XmNlinkNode,
-		XmCLinkNode,
+		XmCReadOnly,
 		XmRPointer,
 		sizeof(XfeLinkNode),
 		XtOffsetOf(XfeDynamicManagerConstraintRec , xfe_dynamic_manager . link_node),
@@ -266,7 +255,7 @@ _XFE_WIDGET_CLASS_RECORD(dynamicmanager,DynamicManager) =
 		CoreSetValues,							/* set_values			*/
 		NULL,									/* set_values_hook		*/
 		XtInheritSetValuesAlmost,				/* set_values_almost	*/
-		CoreGetValuesHook,						/* get_values_hook		*/
+		NULL,									/* get_values_hook		*/
 		NULL,									/* accept_focus			*/
 		XtVersion,								/* version				*/
 		NULL,									/* callback_private		*/
@@ -401,7 +390,7 @@ CoreSetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 	{
 		_XfemDynamicChildren(nw) = _XfemDynamicChildren(ow);
       
-		_XfeWarning(nw,MESSAGE16);
+		_XfeWarning(nw,MESSAGE70);
 	}
 
 	/* XmNnumDynamicChildren */
@@ -409,36 +398,58 @@ CoreSetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 	{
 		_XfemNumDynamicChildren(nw) = _XfemNumDynamicChildren(ow);
       
-		_XfeWarning(nw,MESSAGE17);
+		_XfeWarning(nw,MESSAGE71);
+	}
+
+	/* XmNmaxDynamicWidth */
+	if (_XfemMaxDynamicWidth(nw) != _XfemMaxDynamicWidth(ow))
+	{
+		_XfemMaxDynamicWidth(nw) = _XfemMaxDynamicWidth(ow);
+      
+		_XfeWarning(nw,MESSAGE72);
+	}
+
+	/* XmNmaxDynamicHeight */
+	if (_XfemMaxDynamicHeight(nw) != _XfemMaxDynamicHeight(ow))
+	{
+		_XfemMaxDynamicHeight(nw) = _XfemMaxDynamicHeight(ow);
+      
+		_XfeWarning(nw,MESSAGE73);
+	}
+
+	/* XmNminDynamicWidth */
+	if (_XfemMinDynamicWidth(nw) != _XfemMinDynamicWidth(ow))
+	{
+		_XfemMinDynamicWidth(nw) = _XfemMinDynamicWidth(ow);
+      
+		_XfeWarning(nw,MESSAGE74);
+	}
+
+	/* XmNminDynamicHeight */
+	if (_XfemMinDynamicHeight(nw) != _XfemMinDynamicHeight(ow))
+	{
+		_XfemMinDynamicHeight(nw) = _XfemMinDynamicHeight(ow);
+      
+		_XfeWarning(nw,MESSAGE75);
+	}
+
+	/* XmNtotalDynamicWidth */
+	if (_XfemTotalDynamicWidth(nw) != _XfemTotalDynamicWidth(ow))
+	{
+		_XfemTotalDynamicWidth(nw) = _XfemTotalDynamicWidth(ow);
+      
+		_XfeWarning(nw,MESSAGE76);
+	}
+
+	/* XmNtotalDynamicHeight */
+	if (_XfemTotalDynamicHeight(nw) != _XfemTotalDynamicHeight(ow))
+	{
+		_XfemTotalDynamicHeight(nw) = _XfemTotalDynamicHeight(ow);
+      
+		_XfeWarning(nw,MESSAGE77);
 	}
 
 	return _XfeManagerChainSetValues(ow,rw,nw,xfeDynamicManagerWidgetClass);
-}
-/*----------------------------------------------------------------------*/
-static void
-CoreGetValuesHook(Widget w,ArgList av,Cardinal * pac)
-{
-	Cardinal i;
-	
-	for (i = 0; i < *pac; i++)
-	{
-		/* XmNdynamicChildren */
-		if (strcmp(av[i].name,XmNdynamicChildren) == 0)
-		{
-			/* av[i] = NULL */
-			_XfeGetValuesCastAndAssign(av,i,NULL);
-
-			_XfeArgWarning(w,MESSAGE18,XfeClassNameForWidget(w));
-		}
-		/* XmNnumDynamicChildren */
-		else if (strcmp(av[i].name,XmNnumDynamicChildren) == 0)
-		{
-			/* av[i] = 0 */
-			_XfeGetValuesCastAndAssign(av,i,0);
-			
-			_XfeArgWarning(w,MESSAGE19,XfeClassNameForWidget(w));
-		}      
-	}
 }
 /*----------------------------------------------------------------------*/
 
@@ -471,6 +482,10 @@ CompositeInsertChild(Widget child)
 
 		/* Add the child to the dynamic children list */
 		XfeLinkedInsertAtTail(_XfemDynamicChildren(w),child);
+
+		/* Update the dynamic children count */
+		_XfemNumDynamicChildren(w) = 
+			XfeLinkedCount(_XfemDynamicChildren(w));
 
         /* Call XmManager's XtComposite InsertChild to do the Xt magic */
         (*xmManagerClassRec.composite_class.insert_child)(child);
@@ -518,8 +533,12 @@ CompositeDeleteChild(Widget child)
 		if (node != NULL)
 		{
 			XfeLinkedRemoveNode(_XfemDynamicChildren(w),node);
-		}
 
+			/* Update the dynamic children count */
+			_XfemNumDynamicChildren(w) = 
+				XfeLinkedCount(_XfemDynamicChildren(w));
+		}
+		
         /* Delete the dynamic child */
         need_layout = _XfeDynamicManagerDeleteDynamicChild(child);
 		
@@ -650,7 +669,7 @@ UpdateDynamicChildrenInfo(Widget w)
 							   &_XfemTotalDynamicHeight(w),
 							   &_XfemNumManagedDynamicChildren(w));
 
-	_XfemNumDynamicChildren(w) = XfeLinkedCount(_XfemDynamicChildren(w));
+/* 	_XfemNumDynamicChildren(w) = XfeLinkedCount(_XfemDynamicChildren(w)); */
 
 #if 0
 	printf("UpdateDynamicChildrenInfo(%s): max = (%d,%d)\t\ttotal = (%d,%d)\n",

@@ -99,6 +99,13 @@ static Dimension		GetHeight		(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void	PrimitiveRegisterRepTypes	(void);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfePrimitive Resources												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -490,6 +497,26 @@ _XFE_WIDGET_CLASS(primitive,Primitive);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void
+PrimitiveRegisterRepTypes(void)
+{
+    static String buffer_names[] = 
+    { 
+		"buffer_shared",
+		"buffer_none",
+		"buffer_private",
+		NULL
+    };
+    
+    XfeRepTypeRegister(XmRBufferType,buffer_names);
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* Core Class Methods													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -499,8 +526,8 @@ ClassInitialize()
 	/* Register Xfe Converters */
 	XfeRegisterConverters();
 	
-	/* Register Representation Types */
-	XfeRegisterRepresentationTypes();
+	/* Register XfePrimitive Types */
+	PrimitiveRegisterRepTypes();
 }
 /*----------------------------------------------------------------------*/
 static void

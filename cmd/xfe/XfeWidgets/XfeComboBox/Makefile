@@ -47,7 +47,6 @@ REQUIRES		= \
 EXPORTS			= \
 				ComboBox.h \
 				ComboBoxP.h \
-				ComboBoxStringDefs.h \
 				FancyBox.h \
 				FancyBoxP.h \
 				$(NULL)

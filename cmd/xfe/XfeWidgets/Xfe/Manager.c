@@ -53,10 +53,18 @@
 #define MESSAGE21 "XmNlinkNode is a read-only resource."
 
 #define MESSAGE50 "XmNcomponentChildren is a read-only resource."
-#define MESSAGE51 "XmNstaticChildren is a read-only resource."
-#define MESSAGE52 "XmNnumComponentChildren is a read-only resource."
-#define MESSAGE53 "XmNnumStaticChildren is a read-only resource."
+#define MESSAGE51 "XmNnumComponentChildren is a read-only resource."
+#define MESSAGE52 "XmNmaxComponentWidth is a read-only resource."
+#define MESSAGE53 "XmNmaxComponentHeight is a read-only resource."
+#define MESSAGE54 "XmNtotalComponentWidth is a read-only resource."
+#define MESSAGE55 "XmNtotalComponentHeight is a read-only resource."
 
+#define MESSAGE60 "XmNstaticChildren is a read-only resource."
+#define MESSAGE61 "XmNnumStaticChildren is a read-only resource."
+#define MESSAGE62 "XmNmaxStaticWidth is a read-only resource."
+#define MESSAGE63 "XmNmaxStaticHeight is a read-only resource."
+#define MESSAGE64 "XmNtotalStaticWidth is a read-only resource."
+#define MESSAGE65 "XmNtotalStaticHeight is a read-only resource."
 
 #define MIN_LAYOUT_WIDTH	10
 #define MIN_LAYOUT_HEIGHT	10
@@ -340,6 +348,42 @@ static const XtResource resources[] =
 		XmRImmediate, 
 		(XtPointer) 0
     },
+	{ 
+		XmNmaxComponentChildrenWidth,
+		XmCDimension,
+		XmRDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . max_component_width),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
+	{ 
+		XmNmaxComponentChildrenHeight,
+		XmCDimension,
+		XmRDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . max_component_height),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
+	{ 
+		XmNtotalComponentChildrenWidth,
+		XmCDimension,
+		XmRDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . total_component_width),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
+	{ 
+		XmNtotalComponentChildrenHeight,
+		XmCDimension,
+		XmRDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . total_component_height),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
 
 	/* Static children resources */
 	{ 
@@ -357,6 +401,42 @@ static const XtResource resources[] =
 		XmRCardinal,
 		sizeof(Cardinal),
 		XtOffsetOf(XfeManagerRec , xfe_manager . num_static_children),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
+	{ 
+		XmNmaxStaticChildrenWidth,
+		XmCDimension,
+		XmRDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . max_static_width),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
+	{ 
+		XmNmaxStaticChildrenHeight,
+		XmCDimension,
+		XmRDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . max_static_height),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
+	{ 
+		XmNtotalStaticChildrenWidth,
+		XmCDimension,
+		XmRDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . total_static_width),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
+	{ 
+		XmNtotalStaticChildrenHeight,
+		XmCDimension,
+		XmRDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . total_static_height),
 		XmRImmediate, 
 		(XtPointer) 0
     },
@@ -618,7 +698,7 @@ CoreClassInitialize()
     XfeRegisterConverters();
 
     /* Register Representation Types */
-    XfeRegisterRepresentationTypes();
+/*     XfeRegisterRepresentationTypes(); */
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -742,7 +822,7 @@ static void
 CoreResize(Widget w)
 {
 #ifdef DEBUG
-	XfeDebugPrintfFunction(w,"CoreResize",NULL);
+/* 	XfeDebugPrintfFunction(w,"CoreResize",NULL); */
 #endif
 
     /* Obtain the Prefered Geometry */
@@ -831,16 +911,6 @@ CoreSetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 		_XfeWarning(nw,MESSAGE9);
 	}
 
-#if 0
-	/* num_private_components */
-	if (_XfemNumComponentChildren(nw) != _XfemNumComponentChildren(ow))
-	{
-		_XfemNumComponentChildren(nw) = _XfemNumComponentChildren(ow);
-      
-		_XfeWarning(nw,MESSAGE15);
-	}
-#endif
-
 	/* XmNcomponentChildren */
 	if (_XfemComponentChildren(nw) != _XfemComponentChildren(ow))
 	{
@@ -854,7 +924,39 @@ CoreSetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 	{
 		_XfemNumComponentChildren(nw) = _XfemNumComponentChildren(ow);
       
+		_XfeWarning(nw,MESSAGE51);
+	}
+
+	/* XmNmaxComponentWidth */
+	if (_XfemMaxComponentWidth(nw) != _XfemMaxComponentWidth(ow))
+	{
+		_XfemMaxComponentWidth(nw) = _XfemMaxComponentWidth(ow);
+      
 		_XfeWarning(nw,MESSAGE52);
+	}
+
+	/* XmNmaxComponentHeight */
+	if (_XfemMaxComponentHeight(nw) != _XfemMaxComponentHeight(ow))
+	{
+		_XfemMaxComponentHeight(nw) = _XfemMaxComponentHeight(ow);
+      
+		_XfeWarning(nw,MESSAGE53);
+	}
+	
+	/* XmNtotalComponentWidth */
+	if (_XfemTotalComponentWidth(nw) != _XfemTotalComponentWidth(ow))
+	{
+		_XfemTotalComponentWidth(nw) = _XfemTotalComponentWidth(ow);
+      
+		_XfeWarning(nw,MESSAGE54);
+	}
+
+	/* XmNtotalComponentHeight */
+	if (_XfemTotalComponentHeight(nw) != _XfemTotalComponentHeight(ow))
+	{
+		_XfemTotalComponentHeight(nw) = _XfemTotalComponentHeight(ow);
+      
+		_XfeWarning(nw,MESSAGE55);
 	}
 
 	/* XmNstaticChildren */
@@ -862,7 +964,7 @@ CoreSetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 	{
 		_XfemStaticChildren(nw) = _XfemStaticChildren(ow);
       
-		_XfeWarning(nw,MESSAGE52);
+		_XfeWarning(nw,MESSAGE60);
 	}
 
 	/* XmNnumStaticChildren */
@@ -870,7 +972,39 @@ CoreSetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 	{
 		_XfemNumStaticChildren(nw) = _XfemNumStaticChildren(ow);
       
-		_XfeWarning(nw,MESSAGE53);
+		_XfeWarning(nw,MESSAGE61);
+	}
+
+	/* XmNmaxStaticWidth */
+	if (_XfemMaxStaticWidth(nw) != _XfemMaxStaticWidth(ow))
+	{
+		_XfemMaxStaticWidth(nw) = _XfemMaxStaticWidth(ow);
+      
+		_XfeWarning(nw,MESSAGE62);
+	}
+
+	/* XmNmaxStaticHeight */
+	if (_XfemMaxStaticHeight(nw) != _XfemMaxStaticHeight(ow))
+	{
+		_XfemMaxStaticHeight(nw) = _XfemMaxStaticHeight(ow);
+      
+		_XfeWarning(nw,MESSAGE63);
+	}
+
+	/* XmNtotalStaticWidth */
+	if (_XfemTotalStaticWidth(nw) != _XfemTotalStaticWidth(ow))
+	{
+		_XfemTotalStaticWidth(nw) = _XfemTotalStaticWidth(ow);
+      
+		_XfeWarning(nw,MESSAGE64);
+	}
+
+	/* XmNtotalStaticHeight */
+	if (_XfemTotalStaticHeight(nw) != _XfemTotalStaticHeight(ow))
+	{
+		_XfemTotalStaticHeight(nw) = _XfemTotalStaticHeight(ow);
+      
+		_XfeWarning(nw,MESSAGE65);
 	}
 
 	/* height */
@@ -1053,6 +1187,10 @@ CompositeInsertChild(Widget child)
 		/* Add the child to the component children list */
 		XfeLinkedInsertAtTail(_XfemComponentChildren(w),child);
 
+		/* Update the component children count */
+		_XfemNumComponentChildren(w) = 
+			XfeLinkedCount(_XfemComponentChildren(w));
+
         /* Call XmManager's CompositeInsertChild to do the Xt magic */
         (*mwc->composite_class.insert_child)(child);
 	}
@@ -1091,6 +1229,10 @@ CompositeInsertChild(Widget child)
 		
 		/* Add the child to the static children list */
 		XfeLinkedInsertAtTail(_XfemStaticChildren(w),child);
+
+		/* Update the static children count */
+		_XfemNumStaticChildren(w) = 
+			XfeLinkedCount(_XfemStaticChildren(w));
 
         /* Call XmManager's CompositeInsertChild to do the Xt magic */
         (*mwc->composite_class.insert_child)(child);
@@ -1165,6 +1307,10 @@ CompositeDeleteChild(Widget child)
 		if (node != NULL)
 		{
 			XfeLinkedRemoveNode(_XfemComponentChildren(w),node);
+
+			/* Update the component children count */
+			_XfemNumComponentChildren(w) = 
+				XfeLinkedCount(_XfemComponentChildren(w));
 		}
 	}
 	/*
@@ -1185,6 +1331,10 @@ CompositeDeleteChild(Widget child)
 		if (node != NULL)
 		{
 			XfeLinkedRemoveNode(_XfemStaticChildren(w),node);
+
+			/* Update the static children count */
+			_XfemNumStaticChildren(w) = 
+				XfeLinkedCount(_XfemStaticChildren(w));
 		}
 
         /* Delete the static child */

@@ -60,6 +60,15 @@ XfeCreateBmButton			(Widget			parent,
 							 Cardinal		count);
 /*----------------------------------------------------------------------*/
 
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern void
+XfeBmButtonRegisterRepTypes		(void);
+
 XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end BmButton.h		*/

@@ -33,6 +33,17 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeToolTip resource names											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNdocumentationString			"documentationString"
+#define XmNtipString					"tipString"
+
+#define XmCDocumentationString			"DocumentationString"
+#define XmCTipString					"TipString"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* ToolTip label callback structure										*/
 /*																		*/
 /*----------------------------------------------------------------------*/

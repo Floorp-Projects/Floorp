@@ -194,71 +194,43 @@ _XfeManagerGetChildrenInfo(Widget			w,
 /* extern */ void
 _XfeManagerUpdateComponentChildrenInfo(Widget w)
 {
-#if 0
-	Dimension	max_width = 0;
-	Dimension	max_height = 0;
-	Dimension	min_width = 0;
-	Dimension	min_height = 0;
-	Dimension	total_width = 0;
-	Dimension	total_height = 0;
-	Cardinal	num_managed = 0;
-#endif
-
-	if (_XfemComponentChildren(w) == NULL)
+	if (_XfemComponentChildren(w) != NULL)
 	{
 		return;
 	}
 
-#if 0
 	_XfeManagerGetChildrenInfo(w,
 							   _XfemComponentChildren(w),
 							   XfeCHILDREN_INFO_ALIVE|XfeCHILDREN_INFO_MANAGED,
 							   NULL,
-							   &max_width,
-							   &max_height,
-							   &min_width,
-							   &min_height,
-							   &total_width,
-							   &total_height,
-							   &num_managed);
-#endif
-
-	_XfemNumComponentChildren(w) = XfeLinkedCount(_XfemComponentChildren(w));
+							   &_XfemMaxComponentWidth(w),
+							   &_XfemMaxComponentHeight(w),
+							   NULL,
+							   NULL,
+							   NULL,
+							   NULL,
+							   NULL);
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
 _XfeManagerUpdateStaticChildrenInfo(Widget w)
 {
-#if 0
-	Dimension	max_width = 0;
-	Dimension	max_height = 0;
-	Dimension	min_width = 0;
-	Dimension	min_height = 0;
-	Dimension	total_width = 0;
-	Dimension	total_height = 0;
-	Cardinal	num_managed = 0;
-#endif
-
-	if (_XfemStaticChildren(w) == NULL)
+	if (_XfemStaticChildren(w) != NULL)
 	{
 		return;
 	}
 
-#if 0	
 	_XfeManagerGetChildrenInfo(w,
 							   _XfemStaticChildren(w),
 							   XfeCHILDREN_INFO_ALIVE|XfeCHILDREN_INFO_MANAGED,
 							   NULL,
-							   &max_width,
-							   &max_height,
-							   &min_width,
-							   &min_height,
-							   &total_width,
-							   &total_height,
-							   &num_managed);
-#endif
-
-	_XfemNumStaticChildren(w) = XfeLinkedCount(_XfemStaticChildren(w));
+							   &_XfemMaxStaticWidth(w),
+							   &_XfemMaxStaticHeight(w),
+							   NULL,
+							   NULL,
+							   NULL,
+							   NULL,
+							   NULL);
 }
 /*----------------------------------------------------------------------*/
 

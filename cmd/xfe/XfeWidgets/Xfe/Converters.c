@@ -26,6 +26,8 @@
 
 #include <Xfe/XfeP.h>
 
+#include <Xfe/Label.h>
+
 #include <string.h> /* for strncasecmp() */
 
 /*----------------------------------------------------------------------*/

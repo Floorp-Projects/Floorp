@@ -49,7 +49,6 @@ EXPORTS			= \
 				CaptionP.h \
 				TextCaption.h \
 				TextCaptionP.h \
-				CaptionStringDefs.h \
 				$(NULL)
 
 include $(DEPTH)/config/rules.mk

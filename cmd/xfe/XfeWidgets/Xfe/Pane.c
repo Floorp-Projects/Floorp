@@ -60,6 +60,7 @@
 /* Core class methods													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
+static void		ClassInitialize		(void);
 static void 	Initialize			(Widget,Widget,ArgList,Cardinal *);
 static void 	Destroy				(Widget);
 static Boolean	SetValues			(Widget,Widget,Widget,ArgList,Cardinal *);
@@ -181,6 +182,13 @@ static Boolean	FindTestIsAttachment	(Widget,XtPointer);
 /*----------------------------------------------------------------------*/
 static void		DefaultPaneChildType			(Widget,int,XrmValue *);
 static void		DefaultPaneChildAttachment		(Widget,int,XrmValue *);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void	PaneRegisterRepTypes(void);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -562,7 +570,7 @@ _XFE_WIDGET_CLASS_RECORD(pane,Pane) =
 		(WidgetClass) &xfeOrientedClassRec,		/* superclass			*/
 		"XfePane",								/* class_name			*/
 		sizeof(XfePaneRec),						/* widget_size			*/
-		NULL,									/* class_initialize		*/
+		ClassInitialize,						/* class_initialize		*/
 		NULL,									/* class_part_initialize*/
 		FALSE,									/* class_inited			*/
 		Initialize,								/* initialize			*/
@@ -788,11 +796,60 @@ DefaultPaneChildAttachment(Widget child,int offset,XrmValue * value)
 }
 /*----------------------------------------------------------------------*/
 
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void
+PaneRegisterRepTypes(void)
+{
+    static String drag_names[] = 
+    { 
+		"pane_drag_preserve_one",
+		"pane_drag_preserve_two",
+		"pane_drag_preserve_ratio",
+		NULL
+    };
+   
+
+    static String attachment_names[] = 
+    { 
+		"pane_child_attach_none",
+		"pane_child_attach_bottom",
+		"pane_child_attach_left",
+		"pane_child_attach_right",
+		"pane_child_attach_top",
+		NULL
+    };
+    
+    static String sash_names[] = 
+    { 
+		"pane_sash_double_line",
+		"pane_sash_filled_rectangle",
+		"pane_sash_live",
+		"pane_sash_rectangle",
+		"pane_sash_single_line",
+		NULL
+    };
+
+    XfeRepTypeRegister(XmRPaneDragMode,drag_names);
+    XfeRepTypeRegister(XmRPaneChildAttachment,attachment_names);
+    XfeRepTypeRegister(XmRPaneSashType,sash_names);
+}
+/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* Core Class methods													*/
 /*																		*/
+/*----------------------------------------------------------------------*/
+static void
+ClassInitialize()
+{
+	/* Register XfePane representation types */
+	PaneRegisterRepTypes();
+}
 /*----------------------------------------------------------------------*/
 static void
 Initialize(Widget rw,Widget nw,ArgList av,Cardinal * ac)

@@ -61,6 +61,7 @@
 /* Core class methods													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
+static void		ClassInitialize		(void);
 static void 	CoreInitialize		(Widget,Widget,ArgList,Cardinal *);
 static void 	CoreDestroy			(Widget);
 static Boolean	CoreSetValues		(Widget,Widget,Widget,ArgList,Cardinal *);
@@ -104,6 +105,13 @@ static void		LayoutTopView		(Widget);
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void		DefaultChromeChildType			(Widget,int,XrmValue *);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void ChromRegisterRepTypes(void);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -279,7 +287,7 @@ _XFE_WIDGET_CLASS_RECORD(chrome,Chrome) =
 		(WidgetClass) &xfeManagerClassRec,		/* superclass			*/
 		"XfeChrome",							/* class_name			*/
 		sizeof(XfeChromeRec),					/* widget_size			*/
-		NULL,									/* class_initialize		*/
+		ClassInitialize,						/* class_initialize		*/
 		NULL,									/* class_part_initialize*/
 		FALSE,									/* class_inited			*/
 		CoreInitialize,							/* initialize			*/
@@ -434,8 +442,41 @@ DefaultChromeChildType(Widget child,int offset,XrmValue * value)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void
+ChromRegisterRepTypes(void)
+{
+    static String chrome_names[] = 
+    { 
+		"chrome_bottom_view",
+		"chrome_center_view",
+		"chrome_dash_board",
+		"chrome_ignore",
+		"chrome_left_view",
+		"chrome_menu_bar",
+		"chrome_right_view",
+		"chrome_tool_box",
+		"chrome_top_view",
+		NULL
+    };
+    
+    XfeRepTypeRegister(XmRChromeChildType,chrome_names);
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* Core Class methods													*/
 /*																		*/
+/*----------------------------------------------------------------------*/
+static void
+ClassInitialize()
+{
+	/* Register XfeChrome representation types */
+	ChromRegisterRepTypes();
+}
 /*----------------------------------------------------------------------*/
 static void
 CoreInitialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)

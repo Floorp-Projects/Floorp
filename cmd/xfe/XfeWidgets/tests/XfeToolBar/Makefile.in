@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 CSRCS			= \
+				ChromeTest.c \
 				DashBoardTest.c \
 				TaskBarTestOne.c \
 				TaskBarTestTwo.c \

@@ -49,6 +49,7 @@
 /* Core class methods													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
+static void		ClassInitialize		(void);
 static void 	Initialize		(Widget,Widget,ArgList,Cardinal *);
 static void 	Destroy			(Widget);
 static Boolean	SetValues		(Widget,Widget,Widget,ArgList,Cardinal *);
@@ -74,6 +75,13 @@ static void	DrawArrow				(Widget,XEvent *,Region,XRectangle *);
 /* Component Preparation codes											*/
 /*																		*/
 /*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void	ArrowRegisterRepTypes(void);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -207,7 +215,7 @@ _XFE_WIDGET_CLASS_RECORD(arrow,Arrow) =
 		(WidgetClass) &xfeButtonClassRec,		/* superclass         	*/
 		"XfeArrow",								/* class_name         	*/
 		sizeof(XfeArrowRec),					/* widget_size        	*/
-		NULL,									/* class_initialize   	*/
+		ClassInitialize,						/* class_initialize		*/
 		NULL,									/* class_part_initialize*/
 		FALSE,                                  /* class_inited       	*/
 		Initialize,                             /* initialize         	*/
@@ -297,8 +305,36 @@ _XFE_WIDGET_CLASS(arrow,Arrow);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void
+ArrowRegisterRepTypes(void)
+{
+    static String arrow_names[] = 
+    { 
+		"arrow_pointer",
+		"arrow_pointer_base",
+		"arrow_triangle",
+		"arrow_triangle_base",
+        NULL
+    };
+    
+/*    XfeRepTypeRegister(XmRArrowType,arrow_names); */
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* Core class methods													*/
 /*																		*/
+/*----------------------------------------------------------------------*/
+static void
+ClassInitialize()
+{
+	/* Register XfeArrow representation types */
+	ArrowRegisterRepTypes();
+}
 /*----------------------------------------------------------------------*/
 static void
 Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)

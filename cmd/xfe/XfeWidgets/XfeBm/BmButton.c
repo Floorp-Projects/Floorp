@@ -265,6 +265,26 @@ _XFE_WIDGET_CLASS(bmbutton,BmButton);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeBmButtonRegisterRepTypes(void)
+{
+    static String accent_names[] = 
+    { 
+		"accent_box",
+		"accent_none",
+		"accent_underline",
+		NULL
+    };
+    
+    XfeRepTypeRegister(XmRAccentType,accent_names);
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* Core Class methods													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -272,7 +292,7 @@ static void
 ClassInitialize()
 {
 	/* Register Bm Representation Types */
-	XfeBmRegisterRepresentationTypes();
+	XfeBmButtonRegisterRepTypes();
 }
 /*----------------------------------------------------------------------*/
 static void

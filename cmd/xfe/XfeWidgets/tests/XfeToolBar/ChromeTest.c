@@ -239,6 +239,8 @@ create_chrome(Widget parent,String name)
 
 	XtSetSensitive(menu_bar,False);
 
+#if 1
+
 	_dash_board = XfeCreateLoadedDashBoard(
 		chrome,					/* pw				*/
 		"DashBoard",			/* name				*/
@@ -255,6 +257,7 @@ create_chrome(Widget parent,String name)
 		NULL,					/* task_bar_out		*/
 		NULL,					/* tool_items_out	*/
 		NULL);					/* task_items_out	*/
+#endif
 
 	_tool_box = create_tool_box(chrome,"ToolBox");
 
@@ -315,7 +318,7 @@ create_chrome(Widget parent,String name)
 										 10,
 										 False,
 										 NULL,0);
-	
+
 	return chrome;
 }
 /*----------------------------------------------------------------------*/

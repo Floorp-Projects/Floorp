@@ -36,7 +36,6 @@
 /* so many headers.  The convenient organization is worth the penalty.	*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#include <Xfe/StringDefs.h>						/* Xfe public str defs	*/
 #include <Xfe/Defaults.h>						/* Xfe default res vals	*/
 #include <Xfe/ChildrenUtil.h>					/* Children utils		*/
 #include <Xfe/Converters.h>						/* Converters			*/
@@ -46,7 +45,6 @@
 #include <Xfe/Geometry.h>						/* Geometry utils		*/
 #include <Xfe/ListUtil.h>						/* List utils			*/
 #include <Xfe/MenuUtil.h>						/* Menu/RowCol utils	*/
-#include <Xfe/RepType.h>						/* Representation types	*/
 #include <Xfe/Resources.h>						/* Resource utils		*/
 #include <Xfe/ShellUtil.h>						/* Shell utils			*/
 #include <Xfe/StringUtil.h>						/* XmString  utils		*/
@@ -412,6 +410,22 @@ XfeEventGetModifiers			(XEvent *			event);
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern Boolean		XfeIsPrivateComponent	(Widget	w);
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Representation type utilities										 */
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern Boolean
+XfeRepTypeCheck					(Widget				w,
+								 String				rep_type,
+								 unsigned char *	address,
+								 unsigned char		fallback);
+/*----------------------------------------------------------------------*/
+extern void
+XfeRepTypeRegister				(String				rep_type,
+								 String *			names);
 /*----------------------------------------------------------------------*/
 
 XFE_END_CPLUSPLUS_PROTECTION

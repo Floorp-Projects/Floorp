@@ -25,7 +25,6 @@
 /*----------------------------------------------------------------------*/
 
 #include <Xfe/ToolTipShellP.h>
-#include <Xm/RepType.h>
 
 #define MESSAGE1 "Widget is not an XfeToolTipShell."
 #define MESSAGE2 "XmNtoolTupWidget is a read-only resource."
@@ -52,19 +51,18 @@ static Widget		LabelCreate				(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Rep type registration functions										*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-static void			RegisterToolTipPlacement	(void);
-static void			RegisterToolTipType			(void);
-
-/*----------------------------------------------------------------------*/
-/*																		*/
 /* Screen functions functions											*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 static int			ScreenGetSpaceBelow			(Widget);
 static int			ScreenGetSpaceAbove			(Widget);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void			ToolTipShellRegisterRepTypes	(void);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -222,6 +220,35 @@ _XFE_WIDGET_CLASS_RECORD(tooltipshell,ToolTipShell) =
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void
+ToolTipShellRegisterRepTypes(void)
+{
+    static String place_names[] = 
+    { 
+		"tool_tip_place_bottom",
+		"tool_tip_place_left",
+		"tool_tip_place_right",
+		"tool_tip_place_top",
+        NULL
+    };
+
+    static String tip_names[] = 
+    { 
+		"tool_tip_editable",
+		"tool_tip_read_only",
+        NULL
+    };
+
+    XfeRepTypeRegister(XmRToolTipPlacement,place_names);
+    XfeRepTypeRegister(XmRToolTipType,tip_names);
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* xfeToolTipShellWidgetClass declaration.								*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -236,8 +263,7 @@ static void
 ClassInitialize()
 {
 	/* Register XfeToolTip Representation Types */
-    RegisterToolTipPlacement();
-    RegisterToolTipType();
+    ToolTipShellRegisterRepTypes();
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -335,40 +361,6 @@ GetValuesHook(Widget w,ArgList args,Cardinal* nargs)
     }
 }
 /*----------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Rep type registration functions										*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-static void
-RegisterToolTipPlacement(void)
-{
-    static String names[] = 
-    { 
-		"tool_tip_place_bottom",
-		"tool_tip_place_left",
-		"tool_tip_place_right",
-		"tool_tip_place_top"
-    };
-
-    XmRepTypeRegister(XmRToolTipPlacement,names,NULL,XtNumber(names));
-}
-/*----------------------------------------------------------------------*/
-static void
-RegisterToolTipType(void)
-{
-    static String names[] = 
-    { 
-		"tool_tip_editable",
-		"tool_tip_read_only"
-    };
-
-    XmRepTypeRegister(XmRToolTipType,names,NULL,XtNumber(names));
-}
-/*----------------------------------------------------------------------*/
-
-
 
 /*----------------------------------------------------------------------*/
 /*																		*/

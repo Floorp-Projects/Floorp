@@ -230,13 +230,16 @@ XfeCreateLoadedDashBoard(Widget				pw,
 										 dash_board,
 										 NULL);
 
+#if 1
 	task_bar = XfeCreateLoadedTaskBar(dash_board,
 									  "TaskBar",
 									  task_large,
 									  task_prefix,
 									  task_cb,
-									  task_count,
+									  1,
 									  task_items_out);
+#endif
+
 	if (tool_bar_out)
 		*tool_bar_out = tool_bar;
 

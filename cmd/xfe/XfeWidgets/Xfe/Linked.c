@@ -538,7 +538,7 @@ XfeLinkedTail(XfeLinked list)
 /*																		*/
 /*----------------------------------------------------------------------*/
 /* extern */ XfeLinkNode
-XfeLinkedIndex(XfeLinked list,Cardinal i)
+XfeLinkedNodeAtIndex(XfeLinked list,Cardinal i)
 {
 	XfeLinkNode	node;
 	Cardinal	index = 0;
@@ -577,6 +577,19 @@ XfeLinkedPosition(XfeLinked list,XtPointer item,Cardinal * pos)
 	}
 
 	return False;
+}
+/*----------------------------------------------------------------------*/
+/* extern */ XtPointer
+XfeLinkedItemAtIndex(XfeLinked list,Cardinal i)
+{
+	XfeLinkNode	node = XfeLinkedNodeAtIndex(list,i);
+
+	if (node != NULL)
+	{
+		return node->item;
+	}
+
+	return (XtPointer) NULL;
 }
 /*----------------------------------------------------------------------*/
 

@@ -33,6 +33,18 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeFontChooser resource names										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNfontItemFonts				"fontItemFonts"
+#define XmNfontItemLabels				"fontItemLabels"
+#define XmNnumFontItems					"numFontItems"
+
+#define XmCFontItemFonts				"FontItemFonts"
+#define XmCNumFontItems					"NumFontItems"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeFontChooser class names											*/
 /*																		*/
 /*----------------------------------------------------------------------*/

@@ -33,6 +33,21 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeTaskBar resource names											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNactionCallback					"actionCallback"
+
+#define XmNactionButton					"actionButton"
+#define XmNactionPixmap						"actionPixmap"
+#define XmNshowActionButton					"showActionButton"
+#define XmNactionCursor					"actionCursor"
+
+#define XmCActionPixmap						"ActionPixmap"
+#define XmCShowActionButton					"ShowActionButton"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeBox class names													*/
 /*																		*/
 /*----------------------------------------------------------------------*/

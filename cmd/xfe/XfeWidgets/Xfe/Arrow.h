@@ -33,6 +33,17 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeArrow resource names												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNarrowHeight					"arrowHeight"
+#define XmNarrowWidth					"arrowWidth"
+
+#define XmCArrowHeight					"ArrowHeight"
+#define XmCArrowWidth					"ArrowWidth"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XmRArrowType															*/
 /*																		*/
 /*----------------------------------------------------------------------*/

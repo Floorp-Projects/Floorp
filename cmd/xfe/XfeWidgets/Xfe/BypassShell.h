@@ -34,7 +34,19 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeBox class names													*/
+/* XfeBypassShell resource names										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNbeforeRealizeCallback			"beforeRealizeCallback"
+#define XmNfirstMapCallback					"firstMapCallback"
+
+#define XmNignoreExposures				"ignoreExposures"
+
+#define XmCIgnoreExposures				"IgnoreExposures"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeBypassShell class names											*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 externalref WidgetClass xfeBypassShellWidgetClass;
@@ -44,7 +56,7 @@ typedef struct _XfeBypassShellRec *				XfeBypassShellWidget;
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeBox subclass test macro											*/
+/* XfeBypassShell subclass test macro									*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 #define XfeIsBypassShell(w)	XtIsSubclass(w,xfeBypassShellWidgetClass)

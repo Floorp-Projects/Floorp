@@ -37,12 +37,15 @@
 #include <Xfe/Arrow.h>
 #include <Xfe/Button.h>
 #include <Xfe/Cascade.h>
-#include <Xfe/FrameShell.h>
 #include <Xfe/Label.h>
 #include <Xfe/Logo.h>
+#include <Xfe/ProgressBar.h>
+
+#include <Xfe/Divider.h>
 #include <Xfe/Oriented.h>
 #include <Xfe/Pane.h>
-#include <Xfe/ProgressBar.h>
+
+#include <Xfe/FrameShell.h>
 
 #include <Xfe/BmButton.h>
 #include <Xfe/BmCascade.h>

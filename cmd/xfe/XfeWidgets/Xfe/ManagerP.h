@@ -131,11 +131,19 @@ typedef struct _XfeManagerPart
 
 	/* Component children resources */
 	XfeLinked			component_children;		/* Component children	*/
-	Cardinal			num_component_children;	/* Num Component children*/
+	Cardinal			num_component_children;	/* Num component children*/
+	Dimension			max_component_width;	/* Max component width	*/
+	Dimension			max_component_height;	/* Max component height	*/
+	Dimension			total_component_width;	/* Total component width*/
+	Dimension			total_component_height;	/* Total component height*/
 	
 	/* Static children resources */
 	XfeLinked			static_children;		/* Static children		*/
 	Cardinal			num_static_children;	/* Num Static children	*/
+	Dimension			max_static_width;		/* Max static width		*/
+	Dimension			max_static_height;		/* Max static height	*/
+	Dimension			total_static_width;		/* Total static width	*/
+	Dimension			total_static_height;	/* Total static height	*/
 
 	/* Debug resources */
 #ifdef DEBUG
@@ -535,11 +543,35 @@ _XfeManagerApplyProcToChildren			(Widget					w,
 #define _XfemNumComponentChildren(w) \
 (((XfeManagerWidget) (w))->xfe_manager . num_component_children)
 /*----------------------------------------------------------------------*/
+#define _XfemMaxComponentWidth(w) \
+(((XfeManagerWidget) (w))->xfe_manager . max_component_width)
+/*----------------------------------------------------------------------*/
+#define _XfemMaxComponentHeight(w) \
+(((XfeManagerWidget) (w))->xfe_manager . max_component_height)
+/*----------------------------------------------------------------------*/
+#define _XfemTotalComponentWidth(w) \
+(((XfeManagerWidget) (w))->xfe_manager . total_component_width)
+/*----------------------------------------------------------------------*/
+#define _XfemTotalComponentHeight(w) \
+(((XfeManagerWidget) (w))->xfe_manager . total_component_height)
+/*----------------------------------------------------------------------*/
 #define _XfemStaticChildren(w) \
 (((XfeManagerWidget) (w))->xfe_manager . static_children)
 /*----------------------------------------------------------------------*/
 #define _XfemNumStaticChildren(w) \
 (((XfeManagerWidget) (w))->xfe_manager . num_static_children)
+/*----------------------------------------------------------------------*/
+#define _XfemMaxStaticWidth(w) \
+(((XfeManagerWidget) (w))->xfe_manager . max_static_width)
+/*----------------------------------------------------------------------*/
+#define _XfemMaxStaticHeight(w) \
+(((XfeManagerWidget) (w))->xfe_manager . max_static_height)
+/*----------------------------------------------------------------------*/
+#define _XfemTotalStaticWidth(w) \
+(((XfeManagerWidget) (w))->xfe_manager . total_static_width)
+/*----------------------------------------------------------------------*/
+#define _XfemTotalStaticHeight(w) \
+(((XfeManagerWidget) (w))->xfe_manager . total_static_height)
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
@@ -553,6 +585,22 @@ _XfeManagerApplyProcToChildren			(Widget					w,
 #define _XfemStaticChildrenCount(w) \
 (_XfemStaticChildren(w) ? XfeLinkedCount(_XfemStaticChildren(w)) : 0)
 /*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Component children indexing macro										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define _XfemComponentChildrenIndex(w,i) \
+(_XfemComponentChildren(w) ? XfeLinkedItemAtIndex(_XfemComponentChildren(w),i) : NULL)
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Static children indexing macro										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define _XfemStaticChildrenIndex(w,i) \
+(_XfemStaticChildren(w) ? XfeLinkedItemAtIndex(_XfemStaticChildren(w),i) : NULL)
 
 /*----------------------------------------------------------------------*/
 /*																		*/

@@ -61,6 +61,7 @@
 /* Core class methods													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
+static void		ClassInitialize		(void);
 static void		ClassPartInit	(WidgetClass);
 static void 	Initialize		(Widget,Widget,ArgList,Cardinal *);
 static void 	Destroy			(Widget);
@@ -180,6 +181,13 @@ static Boolean	IndicatorIsShown			(Widget);
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void		EditTextCreate			(Widget);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void ToolBarRegisterRepTypes(void);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -492,7 +500,7 @@ _XFE_WIDGET_CLASS_RECORD(toolbar,ToolBar) =
 		(WidgetClass) &xfeOrientedClassRec,		/* superclass			*/
 		"XfeToolBar",							/* class_name			*/
 		sizeof(XfeToolBarRec),					/* widget_size			*/
-		NULL,									/* class_initialize		*/
+		ClassInitialize,						/* class_initialize		*/
 		ClassPartInit,							/* class_part_initialize*/
 		FALSE,									/* class_inited			*/
 		Initialize,								/* initialize			*/
@@ -627,8 +635,58 @@ _XFE_WIDGET_CLASS(toolbar,ToolBar);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void
+ToolBarRegisterRepTypes(void)
+{
+    static String select_names[] = 
+    { 
+		"tool_bar_select_none",
+		"tool_bar_select_single",
+		"tool_bar_select_multiple",
+		NULL
+    };
+	
+    static String toggle_names[] = 
+    { 
+		"tool_bar_toggle_one_or_more",
+		"tool_bar_toggle_only_one",
+		"tool_bar_toggle_zero_or_more",
+		"tool_bar_toggle_zero_or_one",
+		NULL
+    };
+
+    static String location_names[] = 
+    { 
+		"indicator_location_none",
+		"indicator_location_beginning",
+		"indicator_location_end",
+		"indicator_location_middle",
+		NULL
+    };
+	
+    XfeRepTypeRegister(XmRToolBarSelectionPolicy,select_names);
+    XfeRepTypeRegister(XmRToolBarToggleBehavior,toggle_names);
+    XfeRepTypeRegister(XmRToolBarIndicatorLocation,location_names);
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* Core class methods													*/
 /*																		*/
+/*----------------------------------------------------------------------*/
+static void
+ClassInitialize()
+{
+	/* Register XfeButton representation types */
+	XfeButtonRegisterRepTypes();
+
+	/* Register XfeToolBar representation types */
+	ToolBarRegisterRepTypes();
+}
 /*----------------------------------------------------------------------*/
 static void
 ClassPartInit(WidgetClass wc)

@@ -81,6 +81,7 @@ CSRCS			= \
 				Cursor.c \
 				Debug.c \
 				DialogUtil.c \
+				Divider.c \
 				Draw.c \
 				DynamicManager.c \
 				Find.c \
@@ -100,7 +101,6 @@ CSRCS			= \
 				Primitive.c \
 				Private.c \
 				ProgressBar.c \
-				RepType.c \
 				Resources.c \
 				SetValues.c \
 				ShellUtil.c \
@@ -129,6 +129,8 @@ EXPORTS			= \
 				Debug.h \
 				Defaults.h \
 				DialogUtil.h \
+				Divider.h \
+				DividerP.h \
 				Draw.h \
 				DynamicManager.h \
 				DynamicManagerP.h \
@@ -157,10 +159,8 @@ EXPORTS			= \
 				PrimitiveP.h \
 				ProgressBar.h \
 				ProgressBarP.h \
-				RepType.h \
 				Resources.h \
 				ShellUtil.h \
-				StringDefs.h \
 				StringUtil.h \
 				WmUtil.h \
 				Xfe.h \

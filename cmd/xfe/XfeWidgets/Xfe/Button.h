@@ -33,6 +33,65 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeButton resource names												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNbutton3DownCallback				"button3DownCallback"
+#define XmNbutton3UpCallback				"button3UpCallback"
+
+#define XmNarmForeground					"armForeground"
+#define XmNdeterminate						"determinate"
+#define XmNinsensitivePixmapMask			"insensitivePixmapMask"
+#define XmNtransparentCursor				"transparentCursor"
+#define XmNraiseBackground				"raiseBackground"
+#define XmNraiseBorderThickness			"raiseBorderThickness"
+#define XmNarmBackground				"armBackground"
+#define XmNarmOffset					"armOffset"
+#define XmNarmed						"armed"
+#define XmNemulateMotif					"emulateMotif"
+#define XmNarmedPixmap					"armedPixmap"
+#define XmNarmedPixmapMask				"armedPixmapMask"
+#define XmNbuttonLayout					"buttonLayout"
+#define XmNpixmapMask					"pixmapMask"
+#define XmNbuttonTrigger				"buttonTrigger"
+#define XmNraiseForeground				"raiseForeground"
+#define XmNinsensitivePixmap			"insensitivePixmap"
+#define XmNfillOnEnter					"fillOnEnter"
+#define XmNraiseOffset					"raiseOffset"
+#define XmNraiseOnEnter					"raiseOnEnter"
+#define XmNraised						"raised"
+#define XmNraisedPixmap					"raisedPixmap"
+#define XmNraisedPixmapMask				"raisedPixmapMask"
+
+#define XmCArmBackground					"ArmBackground"
+#define XmCArmForeground					"ArmForeground"
+#define XmCArmOffset						"ArmOffset"
+#define XmCArmedPixmap						"ArmedPixmap"
+#define XmCArmedPixmapMask					"ArmedPixmapMask"
+#define XmCButtonTrigger					"ButtonTrigger"
+#define XmCFillOnEnter					"FillOnEnter"
+#define XmCDeterminate						"Determinate"
+#define XmCDragButton						"DragButton"
+#define XmCEmulateMotif						"EmulateMotif"
+#define XmCInsensitivePixmap				"InsensitivePixmap"
+#define XmCArmed						"Armed"
+#define XmCButtonLayout					"ButtonLayout"
+#define XmCInsensitivePixmapMask			"InsensitivePixmapMask"
+#define XmCPixmapMask						"PixmapMask"
+#define XmCRaiseBackground					"RaiseBackground"
+#define XmCRaiseForeground					"RaiseForeground"
+#define XmCRaisedPixmap						"RaisedPixmap"
+#define XmCRaisedPixmapMask					"RaisedPixmapMask"
+#define XmCUnderlineThickness				"UnderlineThickness"
+
+#define XmRButtonLayout					"ButtonLayout"
+#define XmRButtonTrigger				"ButtonTrigger"
+#define XmCRaiseBorderThickness			"RaiseBorderThickness"
+#define XmCRaiseOnEnter					"RaiseOnEnter"
+#define XmCRaised						"Raised"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XmRButtonType														*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -127,6 +186,14 @@ XfeButtonAcceptXY			(Widget				w,
 							 int				x,
 							 int				y);
 /*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeButton Rep type registration function								*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern void
+XfeButtonRegisterRepTypes		(void);
 
 XFE_END_CPLUSPLUS_PROTECTION
 

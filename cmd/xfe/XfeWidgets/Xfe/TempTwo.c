@@ -116,8 +116,8 @@ static XtResource resources[] =
 {					
     /* Cursor resources */
 	{
-		XmNhorizontalCursor,
-		XmCHorizontalCursor,
+		"XmNhorizontalCursor",
+		"XmCHorizontalCursor",
 		XmRCursor,
 		sizeof(Cursor),
 		XtOffsetOf(XfeTempTwoRec , xfe_temp_two . horizontal_cursor),
@@ -125,8 +125,8 @@ static XtResource resources[] =
 		"sb_h_double_arrow"
 	},
 	{
-		XmNverticalCursor,
-		XmCVerticalCursor,
+		"XmNverticalCursor",
+		"XmCVerticalCursor",
 		XmRCursor,
 		sizeof(Cursor),
 		XtOffsetOf(XfeTempTwoRec , xfe_temp_two . vertical_cursor),
@@ -136,8 +136,8 @@ static XtResource resources[] =
 
     /* Color resources */
 	{
-		XmNsashColor,
-		XmCSashColor,
+		"XmNsashColor",
+		"XmCSashColor",
 		XmRPixel,
 		sizeof(Pixel),
 		XtOffsetOf(XfeTempTwoRec , xfe_temp_two . sash_color),
@@ -146,8 +146,8 @@ static XtResource resources[] =
 	},
 
     { 
-		XmNseparatorThickness,
-		XmCSeparatorThickness,
+		"XmNseparatorThickness",
+		"XmCSeparatorThickness",
 		XmRInt,
 		sizeof(int),
 		XtOffsetOf(XfeTempTwoRec , xfe_temp_two . separator_thickness),
@@ -210,24 +210,6 @@ static XtResource resources[] =
 		XmRImmediate, 
 		(XtPointer) 0
     },
-	{
-		XmNchildUsePreferredHeight,
-		XmCChildUsePreferredHeight,
-		XmRBoolean,
-		sizeof(Boolean),
-		XtOffsetOf(XfeTempTwoRec , xfe_temp_two . child_use_pref_height),
-		XmRImmediate, 
-		(XtPointer) False
-	},
-	{
-		XmNchildUsePreferredWidth,
-		XmCChildUsePreferredWidth,
-		XmRBoolean,
-		sizeof(Boolean),
-		XtOffsetOf(XfeTempTwoRec , xfe_temp_two . child_use_pref_width),
-		XmRImmediate, 
-		(XtPointer) False
-	},
 
     /* Force all the margins to 0 */
     { 

@@ -33,6 +33,48 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfePrimitive resource names											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNenterCallback					"enterCallback"
+#define XmNleaveCallback					"leaveCallback"
+
+#define XmNpretendSensitive					"pretendSensitive"
+#define XmNusePreferredHeight				"usePreferredHeight"
+#define XmNusePreferredWidth				"usePreferredWidth"
+#define XmNpreferredHeight					"preferredHeight"
+#define XmNpreferredWidth					"preferredWidth"
+#define XmNbufferType						"bufferType"
+#define XmNcursor							"cursor"
+#define XmNpointerInside					"pointerInside"
+#define XmNcursorOn							"cursorOn"
+#define XmNinstancePointer					"instancePointer"
+#define XmNpopupChildren					"popupChildren"
+#define XmNnumPopupChildren					"numPopupChildren"
+
+#define XmCPretendSensitive					"PretendSensitive"
+#define XmCUsePreferredHeight				"UsePreferredHeight"
+#define XmCUsePreferredWidth				"UsePreferredWidth"
+#define XmCBufferType						"BufferType"
+#define XmCInstancePointer					"InstancePointer"
+
+#define XmRBufferType						"BufferType"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Resources shared by more than one sub class.							*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNdragThreshold					"dragThreshold"
+#define XmNpoppedUp							"poppedUp"
+#define XmNtitleFontList					"titleFontList"
+
+#define XmCDragThreshold					"DragThreshold"
+#define XmCTitleFontList					"TitleFontList"
+#define XmCTitleFontList					"TitleFontList"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XmRBufferType														*/
 /*																		*/
 /*----------------------------------------------------------------------*/

@@ -28,9 +28,34 @@
 #define _XfeComboBox_h_
 
 #include <Xfe/Manager.h>
-#include <Xfe/ComboBoxStringDefs.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeComboBox resource names											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNarrow						"arrow"
+#define XmNlistFontList					"listFontList"
+#define XmNshareShell					"shareShell"
+#define XmNshell						"shell"
+#define XmNtitleShadowThickness			"titleShadowThickness"
+#define XmNtitleShadowType				"titleShadowType"
+#define XmCListFontList					"ListFontList"
+#define XmCShareShell					"ShareShell"
+
+/* Things that conflict with Motif 2.x */
+#if XmVersion < 2000
+#define XmNcomboBoxType					"comboBoxType"
+#define XmCComboBoxType					"ComboBoxType"
+#define XmRComboBoxType					"ComboBoxType"
+#endif
+
+/* Things that conflict elsewhere */
+#ifndef XmNlist
+#define XmNlist							"list"
+#endif
 
 /*----------------------------------------------------------------------*/
 /*																		*/

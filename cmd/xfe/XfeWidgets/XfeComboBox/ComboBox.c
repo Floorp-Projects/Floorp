@@ -34,7 +34,6 @@
 
 #include <Xm/TextF.h>
 #include <Xm/List.h>
-#include <Xm/RepType.h>
 
 #include <Xfe/Button.h>
 #include <Xfe/Arrow.h>
@@ -122,13 +121,6 @@ static Widget		ArrowCreate			(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Rep type registration functions										*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-static void			RegisterComboBoxType	(void);
-
-/*----------------------------------------------------------------------*/
-/*																		*/
 /* List functions														*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -194,6 +186,13 @@ static void			DefaultTitleShadowThickness	(Widget,int,XrmValue *);
 /*----------------------------------------------------------------------*/
 static void			SyntheticGetListItems		(Widget,int, XtArgVal *);
 static void			SyntheticGetListItemCount	(Widget,int, XtArgVal *);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void			ComboBoxRegisterRepTypes	(void);
 
 #if 0
 /*
@@ -685,7 +684,7 @@ static void
 ClassInitialize()
 {
 	/* Register XfeComboBox Representation Types */
-    RegisterComboBoxType();
+    ComboBoxRegisterRepTypes();
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -1219,15 +1218,16 @@ LayoutTitle(Widget w)
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void
-RegisterComboBoxType(void)
+ComboBoxRegisterRepTypes(void)
 {
-    static String names[] = 
+    static String box_names[] = 
     { 
 		"combo_box_editable",
-		"combo_box_read_only"
+		"combo_box_read_only",
+        NULL
     };
 
-    XmRepTypeRegister(XmRComboBoxType,names,NULL,XtNumber(names));
+    XfeRepTypeRegister(XmRComboBoxType,box_names);
 }
 /*----------------------------------------------------------------------*/
 

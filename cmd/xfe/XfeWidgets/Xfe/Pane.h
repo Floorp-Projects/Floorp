@@ -34,6 +34,60 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfePane resource names												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNallowExpand					"allowExpand"
+#define XmNalwaysVisible				"alwaysVisible"
+#define XmNattachmentOneBottom			"attachmentOneBottom"
+#define XmNattachmentOneLeft			"attachmentOneLeft"
+#define XmNattachmentOneRight			"attachmentOneRight"
+#define XmNattachmentOneTop				"attachmentOneTop"
+#define XmNattachmentTwoBottom			"attachmentTwoBottom"
+#define XmNattachmentTwoLeft			"attachmentTwoLeft"
+#define XmNpaneChildAttachment			"paneChildAttachment"
+#define XmNpaneChildType				"paneChildType"
+#define XmNpaneSashType					"paneSashType"
+#define XmNattachmentTwoRight			"attachmentTwoRight"
+#define XmNsashColor					"sashColor"
+#define XmNsashOffset					"sashOffset"
+#define XmNsashPosition					"sashPosition"
+#define XmNsashSpacing					"sashSpacing"
+#define XmNsashThickness				"sashThickness"
+#define XmNchildOne						"childOne"
+#define XmNchildTwo						"childTwo"
+#define XmNattachmentTwoTop				"attachmentTwoTop"
+#define XmNpaneDragMode					"paneDragMode"
+#define XmNsashAlwaysVisible			"sashAlwaysVisible"
+#define XmNsashShadowType				"sashShadowType"
+
+#define XmCAlwaysVisible				"AlwaysVisible"
+#define XmCAttachmentOneBottom			"AttachmentOneBottom"
+#define XmCAttachmentOneLeft			"AttachmentOneLeft"
+#define XmCAttachmentOneRight			"AttachmentOneRight"
+#define XmCAttachmentOneTop				"AttachmentOneTop"
+#define XmCAttachmentTwoBottom			"AttachmentTwoBottom"
+#define XmCAttachmentTwoLeft			"AttachmentTwoLeft"
+#define XmCAttachmentTwoRight			"AttachmentTwoRight"
+#define XmCAttachmentTwoTop				"AttachmentTwoTop"
+#define XmCChildOne						"ChildOne"
+#define XmCChildTwo						"ChildTwo"
+#define XmCSashColor					"SashColor"
+#define XmCPaneChildAttachment			"PaneChildAttachment"
+#define XmCPaneChildType				"PaneChildType"
+#define XmCPaneDragMode					"PaneDragMode"
+#define XmCPaneSashType					"PaneSashType"
+#define XmCSashAlwaysVisible			"SashAlwaysVisible"
+#define XmCSashSpacing					"SashSpacing"
+#define XmCSashThickness				"SashThickness"
+
+#define XmRPaneChildAttachment			"PaneChildAttachment"
+#define XmRPaneChildType				"PaneChildType"
+#define XmRPaneDragMode					"PaneDragMode"
+#define XmRPaneSashType					"PaneSashType"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XmRPaneChildType														*/
 /*																		*/
 /*----------------------------------------------------------------------*/

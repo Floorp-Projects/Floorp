@@ -88,14 +88,14 @@ typedef struct _XfeTaskBarPart
 /*----------------------------------------------------------------------*/
 typedef struct _XfeTaskBarRec
 {
-    CorePart				core;
+	CorePart				core;
     CompositePart			composite;
     ConstraintPart			constraint;
     XmManagerPart			manager;
     XfeManagerPart			xfe_manager;
     XfeDynamicManagerPart	xfe_dynamic_manager;
-    XfeToolBarPart			xfe_tool_bar;
     XfeOrientedPart			xfe_oriented;
+    XfeToolBarPart			xfe_tool_bar;
     XfeTaskBarPart			xfe_task_bar;
 } XfeTaskBarRec;
 

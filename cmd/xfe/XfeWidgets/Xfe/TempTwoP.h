@@ -89,9 +89,6 @@ typedef struct _XfeTempTwoPart
 	Dimension			raise_border_thickness;	/* Raise border thickness*/
     Boolean				raised;					/* Raised ?				*/
 
-	Boolean				child_use_pref_width;	/* child use pref width	*/
-	Boolean				child_use_pref_height;	/* child use pref height*/
-
     /* Private data -- Dont even look past this comment -- */
 	GC					temp_GC;				/* Temp GC				*/
 	XRectangle			temp_rect;				/* Temp rect			*/

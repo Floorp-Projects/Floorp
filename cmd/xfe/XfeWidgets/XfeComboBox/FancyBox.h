@@ -33,7 +33,14 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeBox class names													*/
+/* XfeFancyBox resource names											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNicon							"icon"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeFancyBox class names												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 externalref WidgetClass xfeFancyBoxWidgetClass;
@@ -43,7 +50,7 @@ typedef struct _XfeFancyBoxRec *				XfeFancyBoxWidget;
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeBox subclass test macro											*/
+/* XfeFancyBox subclass test macro										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 #define XfeIsFancyBox(w)	XtIsSubclass(w,xfeFancyBoxWidgetClass)

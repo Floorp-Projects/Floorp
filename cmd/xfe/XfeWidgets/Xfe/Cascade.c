@@ -69,6 +69,7 @@
 /* Core class methods													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
+static void		ClassInitialize		(void);
 static void 	Initialize		(Widget,Widget,ArgList,Cardinal *);
 static void 	Destroy			(Widget);
 static Boolean	SetValues		(Widget,Widget,Widget,ArgList,Cardinal *);
@@ -112,6 +113,13 @@ static void		InvokeTearCallback	(Widget,XEvent *,Boolean);
 static void	SubMenuEH				(Widget,XtPointer,XEvent *,Boolean *);
 static void	SubMenuTearCB			(Widget,XtPointer,XtPointer);
 static void	UnGrabEH				(Widget,XtPointer,XEvent *,Boolean *);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void CascadeRegisterRepTypes(void);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -342,7 +350,7 @@ _XFE_WIDGET_CLASS_RECORD(cascade,Cascade) =
 		(WidgetClass) &xfeButtonClassRec,		/* superclass         	*/
 		"XfeCascade",							/* class_name         	*/
 		sizeof(XfeCascadeRec),					/* widget_size        	*/
-		NULL,									/* class_initialize   	*/
+		ClassInitialize,						/* class_initialize		*/
 		NULL,									/* class_part_initialize*/
 		FALSE,                                  /* class_inited       	*/
 		Initialize,                             /* initialize         	*/
@@ -432,8 +440,40 @@ _XFE_WIDGET_CLASS(cascade,Cascade);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void
+CascadeRegisterRepTypes(void)
+{
+    static String location_names[] = 
+    { 
+		"location_east",
+		"location_north",
+		"location_north_east",
+		"location_north_west",
+		"location_south",
+		"location_south_east",
+		"location_south_west",
+		"location_west",
+		NULL
+    };
+
+    XfeRepTypeRegister(XmRLocationType,location_names);
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* Core class methods													*/
 /*																		*/
+/*----------------------------------------------------------------------*/
+static void
+ClassInitialize()
+{
+	/* Register XfeCascade representation types */
+	CascadeRegisterRepTypes();
+}
 /*----------------------------------------------------------------------*/
 static void
 Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)

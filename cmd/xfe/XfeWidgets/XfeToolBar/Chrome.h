@@ -36,6 +36,24 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeChrome resource names												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define XmNtoolBox						"toolBox"
+#define XmNcenterView					"centerView"
+#define XmNtopView						"topView"
+#define XmNbottomView					"bottomView"
+#define XmNleftView						"leftView"
+#define XmNrightView					"rightView"
+#define XmNdashBoard					"dashBoard"
+#define XmNchromeChildType				"chromeChildType"
+
+#define XmCChromeChildType				"ChromeChildType"
+
+#define XmRChromeChildType				"ChromeChildType"
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XmRChromeChildType													*/
 /*																		*/
 /*----------------------------------------------------------------------*/

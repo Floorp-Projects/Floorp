@@ -214,6 +214,14 @@ _XfeDynamicManagerChildrenInfo				(Widget			w,
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Dynamic children indexing macro										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define _XfemDynamicChildrenIndex(w,i) \
+(_XfemDynamicChildren(w) ? XfeLinkedItemAtIndex(_XfemDynamicChildren(w),i) : NULL)
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeDynamicManager child constraint part access macro					*/
 /*																		*/
 /*----------------------------------------------------------------------*/

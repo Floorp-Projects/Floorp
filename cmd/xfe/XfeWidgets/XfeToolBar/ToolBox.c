@@ -27,6 +27,7 @@
 #include <stdio.h>
 
 #include <Xfe/ToolBoxP.h>
+
 #include <Xfe/Button.h>
 #include <Xfe/Tab.h>
 #include <Xm/Form.h>
@@ -60,6 +61,7 @@
 /* Core class methods													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
+static void		ClassInitialize		(void);
 static void 	Initialize		(Widget,Widget,ArgList,Cardinal *);
 static void 	Destroy			(Widget);
 static Boolean	SetValues		(Widget,Widget,Widget,ArgList,Cardinal *);
@@ -568,7 +570,7 @@ _XFE_WIDGET_CLASS_RECORD(toolbox,ToolBox) =
 		(WidgetClass) &xfeDynamicManagerClassRec,/* superclass       	*/
 		"XfeToolBox",							/* class_name       	*/
 		sizeof(XfeToolBoxRec),					/* widget_size      	*/
-		NULL,									/* class_initialize 	*/
+		NULL,									/* class_initialize		*/
 		NULL,									/* class_part_initialize*/
 		FALSE,                                  /* class_inited     	*/
 		Initialize,                             /* initialize       	*/

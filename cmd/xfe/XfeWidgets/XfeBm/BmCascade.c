@@ -25,6 +25,7 @@
 /*----------------------------------------------------------------------*/
 
 #include <Xfe/BmCascadeP.h>
+#include <Xm/RepType.h>
 #include <Xfe/BmButtonP.h>
 #include <Xfe/Cascade.h>
 #include <Xfe/ManagerP.h>
@@ -287,7 +288,7 @@ static void
 ClassInitialize()
 {
 	/* Register Bm Representation Types */
-	XfeBmRegisterRepresentationTypes();
+	XfeBmButtonRegisterRepTypes();
 }
 /*----------------------------------------------------------------------*/
 static void
