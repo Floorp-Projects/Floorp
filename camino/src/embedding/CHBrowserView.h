@@ -48,6 +48,9 @@ class nsIWebBrowser;
 class nsIDOMNode;
 class nsIDOMEvent;
 class nsIWebBrowserFind;
+class nsIEventSink;
+class nsIDragHelperService;
+
 
 // Protocol implemented by anyone interested in progress
 // related to a BrowserView. A listener should explicitly
@@ -101,6 +104,9 @@ enum {
   nsIWebBrowser* _webBrowser;
   nsCocoaBrowserListener* _listener;
   NSWindow* mWindow;
+  nsIEventSink* mEventSink;
+  
+  nsIDragHelperService* mDragHelper;
 }
 
 // NSView overrides

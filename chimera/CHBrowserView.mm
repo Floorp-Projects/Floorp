@@ -51,6 +51,7 @@
 #include "nsIURI.h"
 #include "nsIDOMWindow.h"
 #include "nsWeakReference.h"
+#include "nsIWidget.h"
 
 // XPCOM and String includes
 #include "nsCRT.h"
@@ -80,6 +81,10 @@
 #include "nsISHEntry.h"
 #include "nsNetUtil.h"
 #include "nsIContextMenuListener.h"
+
+typedef unsigned int DragReference;
+#include "nsIDragHelperService.h"
+
 
 // Cut/copy/paste
 #include "nsIClipboardCommands.h"
@@ -959,6 +964,17 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress,
         baseWin->InitWindow((NSView*)self, nsnull, 0, 0,
                             frame.size.width, frame.size.height);
         baseWin->Create();
+        
+        nsCOMPtr<nsIWidget> topLevel;
+        baseWin->GetMainWidget(getter_AddRefs(topLevel));
+        nsCOMPtr<nsIEventSink> sink = do_QueryInterface(topLevel);
+        mEventSink = sink.get();
+        NS_IF_ADDREF(mEventSink);
+        NS_ASSERTION(mEventSink, "Couldn't get event sink!");
+
+  // register the view as a drop site for text, files, and urls. 
+        [self registerForDraggedTypes:
+                [NSArray arrayWithObjects:NSStringPboardType, NSURLPboardType, NSFilenamesPboardType, nil]];
     }
   return self;
 }
@@ -975,6 +991,7 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress,
   
   NS_RELEASE(_listener);
   NS_IF_RELEASE(_webBrowser);
+  NS_IF_RELEASE(mEventSink);
   
   nsCocoaBrowserService::BrowserClosed();
   
@@ -1410,6 +1427,55 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress,
     return [[self superview] getNativeWindow];
   }
 }
+
+
+- (unsigned int)draggingEntered:(id <NSDraggingInfo>)sender
+{
+  nsCOMPtr<nsIDragHelperService> helper(do_GetService("@mozilla.org/widget/draghelperservice;1"));
+  mDragHelper = helper.get();
+  NS_IF_ADDREF(mDragHelper);
+  NS_ASSERTION ( mDragHelper, "Couldn't get a drag service, we're in biiig trouble" );
+  
+  if ( mDragHelper )
+    mDragHelper->Enter ( [sender draggingSequenceNumber], mEventSink );
+
+  return NSDragOperationCopy;
+}
+
+- (void)draggingExited:(id <NSDraggingInfo>)sender
+{
+  if ( mDragHelper ) {
+    mDragHelper->Leave ( [sender draggingSequenceNumber], mEventSink );
+    NS_RELEASE(mDragHelper);     
+  }
+}
+
+- (unsigned int)draggingUpdated:(id <NSDraggingInfo>)sender
+{
+  PRBool dropAllowed = PR_FALSE;
+  if ( mDragHelper )
+    mDragHelper->Tracking ( [sender draggingSequenceNumber], mEventSink, &dropAllowed );
+
+  NSLog(@"Drop allowed is %d", dropAllowed);
+  return dropAllowed ? NSDragOperationCopy : NSDragOperationNone;
+}
+
+- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
+{
+  return YES;
+}
+
+- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
+{
+  NSLog(@"Drag DROP!");
+  
+  PRBool dragAccepted = PR_FALSE;
+  if ( mDragHelper )
+    mDragHelper->Drop ( [sender draggingSequenceNumber], mEventSink, &dragAccepted );
+
+  return dragAccepted;
+}	
+
 
 @end
 
