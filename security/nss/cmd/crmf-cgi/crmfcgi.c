@@ -41,7 +41,7 @@
 #include "crmf.h"
 #include "base64.h"
 #include "secasn1.h"
-#include "crypto.h"
+#include "cryptohi.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
