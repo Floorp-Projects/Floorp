@@ -23,9 +23,14 @@
 #include "URDFUtilities.h"
 
 #include "xp_mem.h"
+#include "xp_rgb.h"
 #include "ufilemgr.h" // for CFileMgr::GetURLFromFileSpec
 #include "uprefd.h" // for CPrefs::GetFolderSpec & globHistoryName
 #include "PascalString.h" // for CStr255
+#include "macgui.h"
+
+#include "CBrowserWindow.h"
+#include "CNSContext.h"
 
 
 Boolean URDFUtilities::sIsInited = false;
@@ -102,6 +107,161 @@ Uint32 URDFUtilities::GetContainerSize(HT_Resource container)
 	}
 	return result;
 }
+
+
+//
+// SetupBackgroundColor
+//
+// Given a HT token for a particular color and an AppearanceManager theme brush, set the 
+// background color to the appropriate color (using HT color first, and AM color as a fallback).
+//
+bool
+URDFUtilities :: SetupBackgroundColor ( HT_Resource inNode, void* inHTToken, ThemeBrush inBrush )
+{
+	Assert_(inNode != NULL);
+
+	bool usingHTColor = false;
+	char* color = NULL;
+	PRBool success = HT_GetNodeData ( inNode, inHTToken, HT_COLUMN_STRING, &color );
+	if ( success && color ) {
+		uint8 red, green, blue;
+		if ( XP_ColorNameToRGB(color, &red, &green, &blue) == 0 ) {
+			RGBColor theBackground = UGraphics::MakeRGBColor(red, green, blue);
+			::RGBBackColor ( &theBackground );
+			usingHTColor = true;
+		}
+		else
+			::SetThemeBackground ( inBrush, 8, false );		
+	}
+	else
+		::SetThemeBackground ( inBrush, 8, false );
+
+	return usingHTColor;
+	
+} // SetupBackgroundColor
+
+
+//
+// SetupForegroundColor
+//
+// Given a HT token for a particular color and an AppearanceManager theme brush, set the 
+// foreground color to the appropriate color (using HT color first, and AM color as a fallback).
+//
+bool
+URDFUtilities :: SetupForegroundColor ( HT_Resource inNode, void* inHTToken, ThemeBrush inBrush )
+{
+	Assert_(inNode != NULL);
+
+	bool usingHTColor = false;
+	char* color = NULL;
+	PRBool success = HT_GetNodeData ( inNode, inHTToken, HT_COLUMN_STRING, &color );
+	if ( success && color ) {
+		uint8 red, green, blue;
+		if ( XP_ColorNameToRGB(color, &red, &green, &blue) == 0 ) {
+			RGBColor theForeground = UGraphics::MakeRGBColor(red, green, blue);
+			::RGBForeColor ( &theForeground );
+			usingHTColor = true;
+		}
+		else
+			::SetThemePen ( inBrush, 8, false );		
+	}
+	else
+		::SetThemePen ( inBrush, 8, false );
+
+	return usingHTColor;
+
+} // SetupForegroundColor
+
+
+//
+// SetupForegroundTextColor
+//
+// Given a HT token for a particular color and an AppearanceManager theme brush, set the 
+// foreground color to the appropriate color (using HT color first, and AM color as a fallback).
+//
+bool
+URDFUtilities :: SetupForegroundTextColor ( HT_Resource inNode, void* inHTToken, ThemeTextColor inBrush )
+{
+	Assert_(inNode != NULL);
+
+	bool usingHTColor = false;
+	char* color = NULL;
+	PRBool success = HT_GetNodeData ( inNode, inHTToken, HT_COLUMN_STRING, &color );
+	if ( success && color ) {
+		uint8 red, green, blue;
+		if ( XP_ColorNameToRGB(color, &red, &green, &blue) == 0 ) {
+			RGBColor theForeground = UGraphics::MakeRGBColor(red, green, blue);
+			::RGBForeColor ( &theForeground );
+			usingHTColor = true;
+		}
+		else
+			::SetThemeTextColor ( inBrush, 8, false );		
+	}
+	else
+		::SetThemeTextColor ( inBrush, 8, false );
+
+	return usingHTColor;
+
+} // SetupForegroundTextColor
+
+//
+// LaunchNode
+// LaunchURL
+//
+// Passes the node/url to HT which will try to handle loading it
+//
+
+bool
+URDFUtilities :: LaunchNode ( HT_Resource inNode )
+{
+	MWContext* topContext = FindBrowserContext();	
+	return HT_Launch ( inNode, topContext );
+
+} // LaunchNode
+
+bool
+URDFUtilities :: LaunchURL ( const char* inURL, CBrowserWindow* inBrowser )
+{
+	MWContext* currentContext = NULL;
+	HT_Pane paneToDisplayThings = NULL;
+	
+	// if no browser is passed in, try to find the topmost one
+	if ( !inBrowser ) {
+		CWindowMediator* theMediator = CWindowMediator::GetWindowMediator();
+		inBrowser = dynamic_cast<CBrowserWindow*>(theMediator->FetchTopWindow(WindowType_Browser, regularLayerType, false));
+	}
+	
+	// Even though we looked, there may not be a browser open. If we have one, extract
+	// the relevants bits from it.
+	if ( inBrowser ) {
+		paneToDisplayThings = inBrowser->HTPane();
+		currentContext = *(inBrowser->GetWindowContext());
+	}
+	
+	return HT_LaunchURL ( paneToDisplayThings, const_cast<char*>(inURL), currentContext ) ;
+
+} // LaunchURL
+
+
+//
+// FindBrowserContext
+//
+// Tries to find a top-level context that is a browser window. If one cannot be found, 
+// returns NULL
+//
+MWContext*
+URDFUtilities :: FindBrowserContext ( )
+{
+	MWContext* currentContext = NULL;
+	CWindowMediator* theMediator = CWindowMediator::GetWindowMediator();
+	CNetscapeWindow* theTopWindow =
+			dynamic_cast<CNetscapeWindow*>(theMediator->FetchTopWindow(WindowType_Browser, regularLayerType, false));
+	if (theTopWindow)
+		return *(theTopWindow->GetWindowContext());
+
+	return NULL;
+
+} // FindBrowserContext
 
 
 //

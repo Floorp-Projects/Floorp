@@ -23,6 +23,11 @@
 #include "rdf.h"
 #include "htrdf.h"
 
+#include <Appearance.h>
+
+class CBrowserWindow;
+
+
 class URDFUtilities
 {
 	public:
@@ -38,6 +43,17 @@ class URDFUtilities
 		static Uint32			HTRowToPPRow ( TableIndexT inHTRow )
 			{ return inHTRow + 1; }
 
+			// set fg/bg/text fg colors based on the presence of assertions in HT for a node. Use
+			// AM color as a fallback if no color specified in HT. Returns true if the HT color
+			// is used.
+		static bool SetupBackgroundColor ( HT_Resource inNode, void* inHTToken, ThemeBrush inBrush ) ;
+		static bool SetupForegroundColor ( HT_Resource inNode, void* inHTToken, ThemeBrush inBrush ) ;
+		static bool SetupForegroundTextColor ( HT_Resource inNode, void* inHTToken, ThemeTextColor inBrush ) ;
+
+			// call these before starting to load any URLs. HT may know how to handle them mo-better.
+		static bool LaunchNode ( HT_Resource inNode ) ;
+		static bool LaunchURL  ( const char* inURL, CBrowserWindow* inBrowser = NULL ) ;
+		
 			// Change HT's event masking for the lifetime of this class
 		class StHTEventMasking
 		{
@@ -51,5 +67,9 @@ class URDFUtilities
 		};
 		
 	protected:
+
+		static MWContext* FindBrowserContext ( ) ;
+	
 		static Boolean			sIsInited;
+
 };
