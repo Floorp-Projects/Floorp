@@ -235,9 +235,9 @@ function SubscribeOnLoad()
 
 	SetUpServerMenu();
 
-	SetUpTree(false);
+  SetUpTree(false);
 
-    gNameField.focus();
+  gNameField.focus();
 }
 
 function subscribeOK()

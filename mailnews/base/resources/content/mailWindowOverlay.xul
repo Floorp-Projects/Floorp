@@ -421,7 +421,7 @@ Rights Reserved.
               </menupopup>
             </menu>
           </menupopup>
-        </rule> 
+        </rule>
         <rule nc:NoSelect="true">
           <menupopup>
             <menuitem uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
@@ -489,7 +489,7 @@ Rights Reserved.
               </menupopup>
             </menu>
           </menupopup>
-        </rule> 
+        </rule>
         <rule nc:NoSelect="true">
           <menupopup>
             <menuitem uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
@@ -761,7 +761,7 @@ Rights Reserved.
               </menupopup>
             </menu>
           </menupopup>
-        </rule> 
+        </rule>
         <rule nc:NoSelect="true">
           <menupopup>
             <menuitem uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
@@ -829,7 +829,7 @@ Rights Reserved.
               </menupopup>
             </menu>
           </menupopup>
-        </rule> 
+        </rule>
         <rule nc:NoSelect="true">
           <menupopup>
             <menuitem uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
@@ -1027,10 +1027,11 @@ Rights Reserved.
           <menuitem id="menu_newEditor"/>
         </menupopup>
       </menu>
-      <menuitem id="openMessageWindowMenuitem" label="&openMessageWindowCmd.label;"
-        observes="cmd_openMessage"
-        accesskey="&openMessageWindowCmd.accesskey;"
-        key="key_openMessage"/>
+      <menuitem id="openMessageFileMenuitem" label="&openMessageFileCmd.label;"
+        observes="cmd_openFileMessage"
+        key="key_openFileMessage"
+        accesskey="&openMessageFileCmd.accesskey;"
+        oncommand="MsgOpenFromFile();"/>
       <menu id="fileAttachmentMenu" label="&openAttachmentCmd.label;" accesskey="&openAttachmentCmd.accesskey;">
         <menupopup id="attachmentMenuList" onpopupshowing="FillAttachmentListPopup(this);"/>
       </menu>
@@ -1306,21 +1307,21 @@ Rights Reserved.
       <menuitem id="goStartPage" label="&startPageCmd.label;" accesskey="&startPageCmd.accesskey;" oncommand="HideMessageHeaderPane();loadStartPage();"/>
     </menupopup>
   </menu>
-  
+
   <menu label="&msgMenu.label;" accesskey="&msgMenu.accesskey;" >
   <menupopup onpopupshowing="InitMessageMenu();">
     <menuitem label="&newMsgCmd.label;"
     accesskey="&newMsgCmd.accesskey;"
     key="key_newMessage"
     oncommand="MsgNewMessage(null);"/>
-    <menuitem id="replyMainMenu" label="&replyMsgCmd.label;" 
+    <menuitem id="replyMainMenu" label="&replyMsgCmd.label;"
       accesskey="&replyMsgCmd.accesskey;"
       key="key_reply"
       observes="cmd_reply"/>
-    <menuitem id="replySenderMainMenu" label="&replySenderCmd.label;" 
+    <menuitem id="replySenderMainMenu" label="&replySenderCmd.label;"
       accesskey="&replySenderCmd.accesskey;"
       observes="cmd_replySender"/>
-    <menuitem id="replyNewsgroupMainMenu" label="&replyNewsgroupCmd.label;" 
+    <menuitem id="replyNewsgroupMainMenu" label="&replyNewsgroupCmd.label;"
       accesskey="&replyNewsgroupCmd.accesskey;"
       key="key_reply"
       observes="cmd_replyGroup"/>
@@ -1338,16 +1339,20 @@ Rights Reserved.
         <menuitem label="&forwardAsAttachmentCmd.label;" accesskey="&forwardAsAttachmentCmd.accesskey;" observes="cmd_forwardAttachment"/>
       </menupopup>
     </menu>
-        <menuitem label="&editMsgAsNewCmd.label;"
-            accesskey="&editMsgAsNewCmd.accesskey;"
-            key="key_editAsNew"
-            observes="cmd_editAsNew"/>
-    <menuseparator/>
+    <menuitem label="&editMsgAsNewCmd.label;"
+      accesskey="&editMsgAsNewCmd.accesskey;"
+      key="key_editAsNew"
+      observes="cmd_editAsNew"/>
+    <menuitem id="openMessageWindowMenuitem" label="&openMessageWindowCmd.label;"
+      observes="cmd_openMessage"
+      accesskey="&openMessageWindowCmd.accesskey;"
+      key="key_openMessage"/>
+   <menuseparator/>
     <menu label="&moveMsgMenu.label;" accesskey="&moveMsgMenu.accesskey;" id="moveMenu" datasources="rdf:null"
      sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
      sortDirection="ascending">
       <menupopup/>
-      <template> 
+      <template>
       <rule nc:NoSelect="true" iscontainer="true" isempty="false">
           <menupopup>
             <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name">
@@ -1357,7 +1362,7 @@ Rights Reserved.
               </menupopup>
             </menu>
           </menupopup>
-        </rule> 
+        </rule>
         <rule nc:NoSelect="true">
           <menupopup>
             <menuitem uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
@@ -1372,7 +1377,7 @@ Rights Reserved.
              IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
              ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
               <menupopup>
-                <menuitem label="&fileHereMenu.label;" accesskey="&fileHereMenu.accesskey;" 
+                <menuitem label="&fileHereMenu.label;" accesskey="&fileHereMenu.accesskey;"
                   oncommand="MsgMoveMessage(event.target.parentNode.parentNode)"/>
                 <menuseparator/>
               </menupopup>
@@ -1575,7 +1580,7 @@ Rights Reserved.
 
 <menu id="tasksMenu">
   <menupopup id="taskPopup" onpopupshowing="document.commandDispatcher.updateCommands('create-menu-tasks')">
-    <menuitem label="&searchMailCmd.label;" 
+    <menuitem label="&searchMailCmd.label;"
               key="key_searchMail" 
               accesskey="&searchMailCmd.accesskey;" 
               oncommand="MsgSearchMessages();"/>

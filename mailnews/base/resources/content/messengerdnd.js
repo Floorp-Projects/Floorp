@@ -46,7 +46,7 @@ var nsIDragService = Components.interfaces.nsIDragService;
 function debugDump(msg)
 {
   // uncomment for noise
-  //dump(msg+"\n");
+  // dump(msg+"\n");
 }
 
 function CanDropOnFolderTree(index)
