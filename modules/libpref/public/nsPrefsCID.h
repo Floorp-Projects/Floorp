@@ -44,7 +44,6 @@
  * determine that.
  *
  * INTERFACES THAT MUST BE IMPLEMENTED:
- *   nsISupports
  *   nsIPrefSecurityCheck
  */
 #define NS_GLOBAL_PREF_SECURITY_CHECK "@mozilla.org/globalprefsecuritycheck;1"
