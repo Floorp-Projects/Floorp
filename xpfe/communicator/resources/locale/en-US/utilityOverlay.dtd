@@ -70,3 +70,13 @@
 <!ENTITY aboutCmd.accesskey				"A">
 <!ENTITY aboutCommPluginsCmd.label			"About Plug-ins">
 <!ENTITY aboutCommPluginsCmd.accesskey			"p">
+
+<!ENTITY direct.label                                   "Online (proxy: none)">
+<!ENTITY direct.accesskey                               "n">
+<!ENTITY manual.label                                   "Online (proxy: manual)">
+<!ENTITY manual.accesskey                               "m">
+<!ENTITY pac.label                                      "Online (proxy: auto)">
+<!ENTITY pac.accesskey                                  "a">
+
+<!ENTITY proxy.label                                    "Proxy Configuration...">
+<!ENTITY proxy.accesskey                                "C">

@@ -336,4 +336,7 @@ Contributor(s):
     <statusbarpanel class="statusbarpanel-iconic" id="security-button"
                     onclick="BrowserPageInfo(null, 'securityTab')"/>
   </statusbar> 
+  <popupset>
+    <popup id="networkProperties"/>
+  </popupset>
 </window>
