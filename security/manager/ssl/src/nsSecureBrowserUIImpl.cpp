@@ -50,6 +50,7 @@
 #include "nsIContent.h"
 #include "nsIWebProgress.h"
 #include "nsIChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsIURI.h"
 #include "nsISecurityEventSink.h"
@@ -330,14 +331,10 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       return NS_OK;
     }
 
-    nsXPIDLCString temp;
-    aURI->GetSpec(getter_Copies(temp));
-
-    if (!nsCRT::strncmp((const char*) temp, "file:", 5) ||
-        !nsCRT::strncmp((const char*) temp, "jar:", 4) ||
-        !nsCRT::strncmp((const char*) temp, "javascript:", 10) ||
-        !nsCRT::strcmp((const char*) temp, "about:layout-dummy-request") ||
-        !nsCRT::strcmp((const char*) temp, "about:parser-dummy-request")) {
+    // We are only interested in HTTP requests.
+    nsCOMPtr<nsIHttpChannel> channel;
+    channel = do_QueryInterface(aRequest);
+    if (channel == nsnull) {
       return NS_OK;
     }
 
