@@ -18,6 +18,13 @@ IGNORE_MANIFEST=1
 THIS_MAKEFILE=nglayout.mak
 THAT_MAKEFILE=makefile.win
 
+!if !defined(MODULAR_NETLIB) || !defined(STANDALONE_IMAGE_LIB)
+ERR_MSG = ^
+You need to set MODULAR_NETLIB=1 and STANDALONE_IMAGE_LIB=1 ^
+in your environment.
+!ERROR $(ERR_MSG)
+!endif
+
 !if !defined(MOZ_TOP)
 #enable builds from changed top level directories
 MOZ_TOP=mozilla
