@@ -51,8 +51,12 @@ static PRLogModuleInfo *gIOThreadPoolLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gIOThreadPoolLog, PR_LOG_DEBUG, args)
 
+// this number specifies the maximum number of threads.
 #define MAX_THREADS 4
-#define THREAD_IDLE_TIMEOUT PR_SecondsToInterval(10)
+
+// this number specifies how long to wait before killing an idle thread.  it's
+// important to pick a large enough value here to minimize thread churn.
+#define IDLE_TIMEOUT PR_SecondsToInterval(60)
 
 #define PLEVENT_FROM_LINK(_link) \
     ((PLEvent*) ((char*) (_link) - offsetof(PLEvent, link)))
@@ -236,14 +240,29 @@ nsIOThreadPool::ThreadFunc(void *arg)
         nsAutoLock lock(pool->mLock);
 
         for (;;) {
-            // never wait if we are shutting down; always process queued events...
-            if (PR_CLIST_IS_EMPTY(&pool->mEventQ) && !pool->mShutdown) {
+            PRIntervalTime start = PR_IntervalNow(), timeout = IDLE_TIMEOUT;
+            //
+            // wait for one or more of the following to occur:
+            //  (1) the event queue has an event to process
+            //  (2) the shutdown flag has been set
+            //  (3) the thread has been idle for too long
+            //
+            // PR_WaitCondVar will return when any of these conditions is true.
+            //
+            while (PR_CLIST_IS_EMPTY(&pool->mEventQ) && !pool->mShutdown) {
                 pool->mNumIdleThreads++;
-                PR_WaitCondVar(pool->mIdleThreadCV, THREAD_IDLE_TIMEOUT);
+                PR_WaitCondVar(pool->mIdleThreadCV, timeout);
                 pool->mNumIdleThreads--;
+
+                PRIntervalTime delta = PR_IntervalNow() - start;
+                if (delta >= timeout)
+                    break;
+                timeout -= delta;
+                start += delta;
             }
 
-            // if the queue is still empty, then kill this thread...
+            // if the queue is still empty, then kill this thread (either we
+            // are shutting down or the thread exceeded the idle timeout)...
             if (PR_CLIST_IS_EMPTY(&pool->mEventQ))
                 break;
 
