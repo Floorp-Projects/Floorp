@@ -69,7 +69,7 @@ var gFocusedURL = null;
 function loadEventHandlers(event)
 {
   // Filter out events that are not about the document load we are interested in
-  if (event.target == _content.document) {
+  if (event.originalTarget == _content.document) {
     UpdateBookmarksLastVisitedDate(event);
     UpdateInternetSearchResults(event);
     checkForDirectoryListing();
