@@ -120,6 +120,11 @@ public:
                              nsIFactory *aFactory,
                              PRBool aReplace) = 0;
 
+  // Register the component loader for a given type.
+  NS_IMETHOD RegisterComponentLoader(const char *aType,
+                                     const char *aProgID,
+                                     PRBool aReplace) = 0;
+
   // Manually register a dynamically loaded component.
   // The libraryPersistentDescriptor is what gets passed to the library
   // self register function from ComponentManager. The format of this string

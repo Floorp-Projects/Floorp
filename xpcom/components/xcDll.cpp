@@ -118,25 +118,6 @@ nsDll::Init(nsIFileSpec *dllSpec)
         m_status = DLL_INVALID_PARAM;
         return;
     }
-#ifdef XP_UNIX
-    /* on Unix, symlinks are fair game too; XXX move to nsFileSpec? */
-    if (!isFile) {
-#ifdef DEBUG_shaver
-        char *pathName;
-        m_dllSpec->GetNativePath(&pathName);
-        fprintf(stderr, "%s is not a file ", pathName);
-        nsAllocator::Free(pathName);
-#endif
-        if (NS_FAILED(m_dllSpec->IsSymlink(&isFile))) {
-            m_status = DLL_INVALID_PARAM;
-            return;
-        }
-#ifdef DEBUG_shaver
-        fputs(isFile ? "but it's a symlink\n" : "and it's not a symlink\n",
-              stderr);
-#endif
-    }
-#endif /* XP_UNIX */
 
     if (isFile == PR_FALSE)
     {
@@ -251,10 +232,6 @@ nsDll::HasChanged()
     if (NS_FAILED(rv) || aSize != m_size)
       return PR_TRUE;
 
-#ifdef DEBUG_shaver
-    fprintf(stderr, "%s not changed (%d/%d\n)",
-            GetNativePath(), m_modDate, m_size);
-#endif
     return PR_FALSE;
 }
 
