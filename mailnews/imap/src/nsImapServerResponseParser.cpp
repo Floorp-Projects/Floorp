@@ -2034,6 +2034,11 @@ PRBool nsImapServerResponseParser::GetFillingInShell()
 	return (m_shell != nsnull);
 }
 
+PRBool nsImapServerResponseParser::GetDownloadingHeaders()
+{
+	return fDownloadingHeaders;
+}
+
 // Tells the server state parser to use a previously cached shell.
 void	nsImapServerResponseParser::UseCachedShell(nsIMAPBodyShell *cachedShell)
 {

@@ -125,6 +125,7 @@ public:
     virtual PRUint16  SettablePermanentFlags() { return fSettablePermanentFlags;};
 	void SetFlagState(nsImapFlagAndUidState *state);
 
+	PRBool GetDownloadingHeaders();
 	PRBool GetFillingInShell();
 	void	UseCachedShell(nsIMAPBodyShell *cachedShell);
     void SetHostSessionList(nsIImapHostSessionList *aHostSession);

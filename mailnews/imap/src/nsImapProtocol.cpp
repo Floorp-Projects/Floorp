@@ -1601,7 +1601,13 @@ void nsImapProtocol::BeginMessageDownLoad(
 		si->content_type = PL_strdup(content_type);
 		if (si->content_type)
 		{
-            if (m_imapMessage) 
+
+			if (GetServerStateParser().GetDownloadingHeaders())
+			{
+				if (m_imapMailFolder)
+					m_imapMailFolder->SetupHeaderParseStream(this, si);
+			}
+			else if (m_imapMessage) 
             {
                 m_imapMessage->SetupMsgWriteStream(this, si);
 				WaitForFEEventCompletion();
@@ -2175,7 +2181,13 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
 {
     NS_ASSERTION(downloadLineDontDelete, 
                  "Oops... null msg line info not good");
-    if (m_imapMessage && downloadLineDontDelete)
+
+	if (GetServerStateParser().GetDownloadingHeaders())
+	{
+		if (m_imapMailFolder && downloadLineDontDelete)
+			m_imapMailFolder->ParseAdoptedHeaderLine(this, downloadLineDontDelete);
+	}
+    else if (m_imapMessage && downloadLineDontDelete)
         m_imapMessage->ParseAdoptedMsgLine(this, downloadLineDontDelete);
 
     // ***** We need to handle the psuedo interrupt here *****
@@ -2310,7 +2322,12 @@ void nsImapProtocol::NormalMessageEndDownload()
 	    m_downloadLineCache.ResetCache();
     }
 
-    if (m_imapMessage)
+	if (GetServerStateParser().GetDownloadingHeaders())
+	{
+		if (m_imapMailFolder)
+			m_imapMailFolder->NormalEndHeaderParseStream(this);
+	}
+	else if (m_imapMessage)
         m_imapMessage->NormalEndMsgWriteStream(this);
 
 }
@@ -2328,7 +2345,12 @@ void nsImapProtocol::AbortMessageDownLoad()
 	    m_downloadLineCache.ResetCache();
     }
 
-    if (m_imapMessage)
+	if (GetServerStateParser().GetDownloadingHeaders())
+	{
+		if (m_imapMailFolder)
+			m_imapMailFolder->AbortHeaderParseStream(this);
+	}
+	else if (m_imapMessage)
         m_imapMessage->AbortMsgWriteStream(this);
 
 }

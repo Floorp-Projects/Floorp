@@ -57,6 +57,7 @@
 #include "nsMsgDatabase.h"
 
 #include "nsImapFlagAndUidState.h"
+#include "nsParseMailbox.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -267,6 +268,7 @@ protected:
 
 	nsIImapUrl * m_url; 
 	nsIImapProtocol * m_IMAP4Protocol; // running protocol instance
+	nsParseMailMessageState *m_msgParser ;
 
 	PRBool	    m_runTestHarness;
 	PRBool		m_runningURL;	// are we currently running a url? this flag is set to false when the url finishes...
@@ -622,7 +624,7 @@ void nsIMAP4TestDriver::PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, 
 				aProtocol->NotifyHdrsToDownload(theKeys, total /*keysToFetch.GetSize() */);
 			// now, tell it we don't need any bodies.
 			if (aProtocol)
-				aProtocol->NotifyHdrsToDownload(NULL, 0);
+				aProtocol->NotifyBodysToDownload(NULL, 0);
         }
         else
         {
@@ -700,13 +702,21 @@ NS_IMETHODIMP nsIMAP4TestDriver::SetupHeaderParseStream(nsIImapProtocol* aProtoc
                                StreamInfo* aStreamInfo)
 {
     printf("**** nsIMAP4TestDriver::SetupHeaderParseStream\r\n");
-    return NS_OK;
+	m_msgParser = new nsParseMailMessageState;
+	if (m_msgParser)
+	{
+		m_msgParser->m_state =  MBOX_PARSE_HEADERS;           
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP nsIMAP4TestDriver::ParseAdoptedHeaderLine(nsIImapProtocol* aProtocol,
                                msg_line_info* aMsgLineInfo)
 {
     printf("**** nsIMAP4TestDriver::ParseAdoptedHeaderLine\r\n");
+	m_msgParser->ParseFolderLine(aMsgLineInfo->adoptedMessageLine, PL_strlen(aMsgLineInfo->adoptedMessageLine));
     return NS_OK;
 }
 
