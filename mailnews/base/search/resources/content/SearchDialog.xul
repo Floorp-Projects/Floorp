@@ -108,6 +108,8 @@ Rights Reserved.
             <menubutton id="fileMessageButton" label="&fileButton.label;"
                         observes="file_message_button"
                         oncommand="MoveMessageInSearch(event.target)" 
+                        sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+                        sortDirection="ascending"
                         datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
                         ref="msgaccounts:/">
         <menupopup/>

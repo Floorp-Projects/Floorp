@@ -289,7 +289,12 @@
               <menuitem type="radio" name="priority" label="&highestPriorityCmd.label;" accesskey="&highestPriorityCmd.accesskey;" id="highest"/>
             </menupopup>
           </menu>
-          <menu label="&fileCarbonCopyCmd.label;" accesskey="&fileCarbonCopyCmd.accesskey;" id="fccMenu" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/">
+          <menu id="fccMenu" label="&fileCarbonCopyCmd.label;" 
+             accesskey="&fileCarbonCopyCmd.accesskey;" 
+             sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+             sortDirection="ascending"
+             datasources="rdf:msgaccountmanager rdf:mailnewsfolders" 
+             ref="msgaccounts:/">
             <menupopup/>
             <template> 
               <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
