@@ -68,7 +68,8 @@
 #define XPCOM_DLL  "xpcom32.dll"
 #else
 #ifdef XP_MAC
-#include "nsMacRepository.h"
+#define NETLIB_DLL "NETLIB_DLL"
+#define XPCOM_DLL "XPCOM_DLL"
 #else
 #define NETLIB_DLL "libnetlib.so"
 #define XPCOM_DLL  "libxpcom.so"

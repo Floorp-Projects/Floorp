@@ -30,19 +30,6 @@ use Moz::MacCVS;
                  );
 
 
-# NGLayoutBuildList builds the nglayout project
-# it is configured by setting the following variables in the caller:
-# Usage:
-# caller variables that affect behaviour:
-# DEBUG     : 1 if we are building a debug version
-# 3-part build process: checkout, dist, and build_projects
-# Hack alert:
-# NGLayout defines are located in :mozilla:config:mac:NGLayoutConfigInclude.h
-# An alias "MacConfigInclude.h" to this file is created inside dist:config
-# Note that the name of alias is different than the name of the file. This
-# is to trick CW into including NGLayout defines 
-
-
 #//--------------------------------------------------------------------------------------------------
 #// assert that we are in the correct directory for the build
 #//--------------------------------------------------------------------------------------------------
@@ -517,10 +504,6 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:lib:mac:Instrumentation:MANIFEST",               "$distdirectory:mac:inst:");
 
     #INCLUDE
-
-    #// To get out defines in all the project, dummy alias NGLayoutConfigInclude.h into MacConfigInclude.h
-    MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h", ":mozilla:dist:config:MacConfigInclude.h");
-
     InstallFromManifest(":mozilla:include:MANIFEST",                               "$distdirectory:include:");
 
     #INTL
