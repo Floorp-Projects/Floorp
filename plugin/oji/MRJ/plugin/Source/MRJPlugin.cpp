@@ -276,13 +276,11 @@ NS_METHOD MRJPlugin::Initialize()
 			mThreadManager->GetCurrentThread(&mPluginThreadID);
 	}
 
-#ifndef MRJPLUGIN_4X
 	// create a console, only if there's user interface for it.
 	if (thePluginManager2 != NULL) {
 		mConsole = new MRJConsole(this);
 		mConsole->AddRef();
 	}
-#endif
 
 	return result;
 }
