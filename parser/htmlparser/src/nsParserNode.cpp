@@ -223,7 +223,9 @@ PRInt32 nsCParserNode::GetTokenType(void) const{
  *  @param   
  *  @return  int -- representing attribute count
  */
-PRInt32 nsCParserNode::GetAttributeCount(void) const{
+PRInt32 nsCParserNode::GetAttributeCount(PRBool askToken) const{
+  if(PR_TRUE==askToken)
+    return mToken->GetAttributeCount();
   return mAttributeCount;
 }
 
