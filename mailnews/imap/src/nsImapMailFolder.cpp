@@ -1434,14 +1434,14 @@ nsImapMailFolder::AllocateUidStringFromKeyArray(nsMsgKeyArray &keyArray, nsCStri
     return rv;
 }
 
-nsresult nsImapMailFolder::MarkMessagesImapDeleted(nsMsgKeyArray *keyArray, nsIMsgDatabase *db)
+nsresult nsImapMailFolder::MarkMessagesImapDeleted(nsMsgKeyArray *keyArray, PRBool deleted, nsIMsgDatabase *db)
 {
   PRBool allKeysImapDeleted;
   db->AllMsgKeysImapDeleted(keyArray, &allKeysImapDeleted);
 	for (PRUint32 kindex = 0; kindex < keyArray->GetSize(); kindex++)
 	{
 		nsMsgKey key = keyArray->ElementAt(kindex);
-    db->MarkImapDeleted(key, !allKeysImapDeleted, nsnull);
+    db->MarkImapDeleted(key, deleted || !allKeysImapDeleted, nsnull);
   }
   return NS_OK;
 }
@@ -1498,8 +1498,28 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
 				deleteImmediatelyNoTrash = PR_TRUE;
 		}
 	}
+  if (msgWindow)
+  {
+    nsCOMPtr <nsITransactionManager> txnMgr;
+
+    msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
+
+    if (txnMgr) SetTransactionManager(txnMgr);
+  }
+    
+
   if ((NS_SUCCEEDED(rv) && deleteImmediatelyNoTrash) || deleteModel == nsMsgImapDeleteModels::IMAPDelete )
   {
+    nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
+        this, &srcKeyArray, messageIds.GetBuffer(), nsnull,
+        PR_TRUE, isMove, m_eventQueue, nsnull);
+    if (!undoMsgTxn) return NS_ERROR_OUT_OF_MEMORY;
+    undoMsgTxn->SetTransactionType(nsIMessenger::eDeleteMsg);
+    // we're adding this undo action before the delete is successful. This is evil,
+    // but 4.5 did it as well.
+    if (m_transactionManager)
+      m_transactionManager->Do(undoMsgTxn);
+
     rv = StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, srcKeyArray);
     if (NS_SUCCEEDED(rv))
     {
@@ -1507,7 +1527,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
       {
         if (deleteModel == nsMsgImapDeleteModels::IMAPDelete) 
         {
-          MarkMessagesImapDeleted(&srcKeyArray, mDatabase);
+          MarkMessagesImapDeleted(&srcKeyArray, PR_TRUE, mDatabase);
         }
         else
         {
@@ -1520,15 +1540,6 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
   }
   else
   {
-    if (msgWindow)
-    {
-      nsCOMPtr <nsITransactionManager> txnMgr;
-
-      msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
-
-      if (txnMgr) SetTransactionManager(txnMgr);
-    }
-      
     if(trashFolder)
 	  {
       nsCOMPtr<nsIMsgFolder> srcFolder;
@@ -3200,7 +3211,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                   if (!ShowDeletedMessages())
                     srcDB->DeleteMessages(&srcKeyArray, nsnull);
                   else
-                    MarkMessagesImapDeleted(&srcKeyArray, srcDB);
+                    MarkMessagesImapDeleted(&srcKeyArray, PR_TRUE, srcDB);
                 }
                 // even if we're showing deleted messages, 
                 // we still need to notify FE so it will show the imap deleted flag
@@ -3213,10 +3224,33 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
           }
           break;
         case nsIImapUrl::nsImapSubtractMsgFlags:
+          {
           // this isn't really right - we'd like to know we were 
           // deleting a message to start with, but it probably
           // won't do any harm.
+            imapMessageFlagsType flags = 0;
+            imapUrl->GetMsgFlags(&flags);
+            if (flags & kImapMsgDeletedFlag && !DeleteIsMoveToTrash())
+            {
+              nsCOMPtr<nsIMsgDatabase> db;
+              rv = GetMsgDatabase(nsnull, getter_AddRefs(db));
+              if (NS_SUCCEEDED(rv) && db)
+              {
+                nsMsgKeyArray keyArray;
+                char *keyString;
+                imapUrl->CreateListOfMessageIdsString(&keyString);
+                if (keyString)
+                {
+                  ParseUidString(keyString, keyArray);
+                  MarkMessagesImapDeleted(&keyArray, PR_FALSE, db);
+                  db->Commit(nsMsgDBCommitType::kLargeCommit);
+                  nsCRT::free(keyString);
+                }
+              }
+            }
             NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+
+          }
 
           break;
         case nsIImapUrl::nsImapAddMsgFlags:
@@ -3231,23 +3265,14 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                 {
                     nsMsgKeyArray keyArray;
                     char *keyString = nsnull;
-                    PRInt32 id = -1;
                     imapUrl->CreateListOfMessageIdsString(&keyString);
-                    char *newString = nsnull, *idToken = nsnull;;
                     if (keyString)
                     {
-                        idToken = nsCRT::strtok(keyString, ", ",
-                                                &newString);
-                        while (idToken != nsnull)
-                        {
-                            id = atoi(idToken);
-                            keyArray.Add(id);
-                            idToken = nsCRT::strtok(newString, ", ", &newString);
-                        }
-                        db->DeleteMessages(&keyArray, nsnull);
-                        db->SetSummaryValid(PR_TRUE);
-                        db->Commit(nsMsgDBCommitType::kLargeCommit);
-                        nsCRT::free(keyString);
+                      ParseUidString(keyString, keyArray);
+                      db->DeleteMessages(&keyArray, nsnull);
+                      db->SetSummaryValid(PR_TRUE);
+                      db->Commit(nsMsgDBCommitType::kLargeCommit);
+                      nsCRT::free(keyString);
                     }
                 }
             }

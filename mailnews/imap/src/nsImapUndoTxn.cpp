@@ -73,7 +73,12 @@ nsImapMoveCopyMsgTxn::Init(
 			m_undoString.AssignWithConversion("Undo Move Messages");
 			m_redoString.AssignWithConversion("Redo Move Messages");
 		}
-		else
+		else if (!dstFolder)
+    {
+			m_undoString.AssignWithConversion("Undo Imap Deletes");
+			m_redoString.AssignWithConversion("Redo Imap Deletes");
+    }
+    else
 		{
 			m_undoString.AssignWithConversion("Undo Copy Messages");
 			m_redoString.AssignWithConversion("Redo Copy Messages");
@@ -86,6 +91,11 @@ nsImapMoveCopyMsgTxn::Init(
 			m_undoString.AssignWithConversion("Undo Move Message");
 			m_redoString.AssignWithConversion("Redo Move Message");
 		}
+		else if (!dstFolder)
+    {
+			m_undoString.AssignWithConversion("Undo Imap Deletes");
+			m_redoString.AssignWithConversion("Redo Imap Deletes");
+    }
 		else
 		{
 			m_undoString.AssignWithConversion("Undo Copy Message");
@@ -157,7 +167,7 @@ nsImapMoveCopyMsgTxn::Undo(void)
 	nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
 	if (NS_FAILED(rv)) return rv;
-	if (m_isMove)
+	if (m_isMove || !m_dstFolder)
     {
         if (m_srcIsPop3)
         {

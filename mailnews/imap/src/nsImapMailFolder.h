@@ -273,7 +273,7 @@ protected:
 
 	nsresult SyncFlags(nsIImapFlagAndUidState *flagState);
 
-  nsresult MarkMessagesImapDeleted(nsMsgKeyArray *keyArray, nsIMsgDatabase *db);
+  nsresult MarkMessagesImapDeleted(nsMsgKeyArray *keyArray, PRBool deleted, nsIMsgDatabase *db);
 
 	void UpdatePendingCounts(PRBool countUnread, PRBool missingAreRead);
 	void SetIMAPDeletedFlag(nsIMsgDatabase *mailDB, const nsMsgKeyArray &msgids, PRBool markDeleted);
