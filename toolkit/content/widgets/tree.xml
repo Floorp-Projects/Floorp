@@ -88,12 +88,6 @@
         true
 #endif
       </field>
-      <field name="selectionHead">
-        -1
-      </field>
-      <field name="selectionTail">
-        -1
-      </field>
       <property name="enableColumnDrag"
                 onget="return this.hasAttribute('enableColumnDrag');"
                 onset="if (val) this.setAttribute('enableColumnDrag', 'true');
@@ -285,8 +279,6 @@
          var c = this.currentIndex;
          if (c == -1 || c == 0)
            return;
-         this.selectionHead = -1;
-         this.selectionTail = -1;
          this.view.selection.timedSelect(c-1, this._selectDelay);
          this.treeBoxObject.ensureRowIsVisible(c-1);
         ]]>
@@ -297,8 +289,6 @@
          try { if (c+1 == this.treeBoxObject.view.rowCount)
            return;
          } catch (e) {}
-         this.selectionHead = -1;
-         this.selectionTail = -1;
          this.view.selection.timedSelect(c+1, this._selectDelay);
          this.treeBoxObject.ensureRowIsVisible(c+1);
         ]]>
@@ -310,21 +300,8 @@
          var c = this.currentIndex;
          if (c == -1 || c == 0)
            return;
-         if (c == this.selectionTail) {
-           if (this.selectionHead < this.selectionTail) {
-             this.view.selection.toggleSelect(c);
-             this.currentIndex = c - 1;
-           }
-           else {
-             this.view.selection.toggleSelect(c - 1);
-           }
-         }
-         else {
-           this.view.selection.clearSelection();
-           this.selectionHead = c;
-           this.view.selection.rangedSelect(c, c - 1, true);
-         }
-         this.selectionTail = c - 1;
+         // Extend the selection from the existing pivot, if any
+         this.view.selection.rangedSelect(-1, c - 1, false);
          this.treeBoxObject.ensureRowIsVisible(c - 1);
         ]]>
       </handler>
@@ -336,21 +313,8 @@
          try { if (c+1 == this.treeBoxObject.view.rowCount)
            return;
          } catch (e) {}
-         if (c == this.selectionTail) {
-           if (this.selectionHead > this.selectionTail) {
-             this.view.selection.toggleSelect(c);
-             this.currentIndex = c + 1;
-           }
-           else
-             this.view.selection.toggleSelect(c + 1);
-         }
-         else {
-           this.view.selection.clearSelection();
-           this.selectionHead = c;
-           this.view.selection.rangedSelect(c, c + 1, true);
-         }
-         this.selectionTail = c + 1;
-         this.treeBoxObject.ensureRowIsVisible(c + 1);
+         // Extend the selection from the existing pivot, if any
+         this.view.selection.rangedSelect(-1, c + 1, false);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_up" modifiers="control">
@@ -381,8 +345,6 @@
          var c = this.currentIndex;
          if (c == 0)
            return;
-         this.selectionHead = -1;
-         this.selectionTail = -1;
          var f = this.treeBoxObject.getFirstVisibleRow();
          var i = 0;
          if (f > 0) {
@@ -406,8 +368,6 @@
          var l = this.treeBoxObject.view.rowCount - 1;
          if (c == l)
            return;
-         this.selectionHead = -1;
-         this.selectionTail = -1;
          var f = this.treeBoxObject.getFirstVisibleRow();
          var p = this.treeBoxObject.getPageLength();
          var i = l;
@@ -439,26 +399,8 @@
              i = c - f;
            this.treeBoxObject.scrollByPages(-1);
          }
-         if (c == this.selectionTail) {
-           if (this.selectionHead < this.selectionTail) {
-             if (i < this.selectionHead) {
-               this.view.selection.clearRange(c, this.selectionHead + 1);
-               this.view.selection.rangedSelect(this.selectionHead - 1, i, true);
-             }
-             else {
-               this.view.selection.clearRange(c, i + 1);
-               this.currentIndex = i;
-             }
-           }
-           else
-             this.view.selection.rangedSelect(c - 1, i, true);
-         }
-         else {
-           this.view.selection.clearSelection();
-           this.selectionHead = c;
-           this.view.selection.rangedSelect(c, i, true);
-         }
-         this.selectionTail = i;
+         // Extend the selection from the existing pivot, if any
+         this.view.selection.rangedSelect(-1, i, false);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_down" modifiers="shift">
@@ -480,26 +422,8 @@
              i = lastTopRowIndex + c - f + 1;
            this.treeBoxObject.scrollByPages(1);
          }
-         if (c == this.selectionTail) {
-           if (this.selectionHead > this.selectionTail) {
-             if (i > this.selectionHead) {
-               this.view.selection.clearRange(c, this.selectionHead - 1);
-               this.view.selection.rangedSelect(this.selectionHead + 1, i, true);
-             }
-             else {
-               this.view.selection.clearRange(c, i - 1);
-               this.currentIndex = i;
-             }
-           }
-           else
-             this.view.selection.rangedSelect(c + 1, i, true);
-         }
-         else {
-           this.view.selection.clearSelection();
-           this.selectionHead = c;
-           this.view.selection.rangedSelect(c, i, true);
-         }
-         this.selectionTail = i;
+         // Extend the selection from the existing pivot, if any
+         this.view.selection.rangedSelect(-1, i, false);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_up" modifiers="control">
@@ -542,22 +466,14 @@
       </handler>
       <handler event="keypress" keycode="vk_home">
         <![CDATA[
-         if (this.currentIndex == 0)
-           return;
-         this.selectionHead = -1;
-         this.selectionTail = -1;
-         this.view.selection.select(0);
+         this.view.selection.timedSelect(0, this._selectDelay);
          this.treeBoxObject.ensureRowIsVisible(0);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_end">
         <![CDATA[
          var l = this.treeBoxObject.view.rowCount - 1;
-         if (this.currentIndex == l)
-           return;
-         this.selectionHead = -1;
-         this.selectionTail = -1;
-         this.view.selection.select(l);
+         this.view.selection.timedSelect(l, this._selectDelay);
          this.treeBoxObject.ensureRowIsVisible(l);
         ]]>
       </handler>
@@ -565,15 +481,8 @@
         <![CDATA[
          if (this.view.selection.single)
            return;
-         var c = this.currentIndex;
-         if (c == 0)
-           return;
-         if (c != this.selectionTail) {
-           this.view.selection.clearSelection();
-           this.selectionHead = c;
-         }
-         this.view.selection.rangedSelect(c, 0, true);
-         this.selectionTail = 0;
+         // Extend the selection from the existing pivot, if any
+         this.view.selection.rangedSelect(-1, 0, false);
          this.treeBoxObject.ensureRowIsVisible(0);
         ]]>
       </handler>
@@ -581,23 +490,14 @@
         <![CDATA[
          if (this.view.selection.single)
            return;
-         var c = this.currentIndex;
          var l = this.treeBoxObject.view.rowCount - 1;
-         if (c == l)
-           return;
-         if (c != this.selectionTail) {
-           this.view.selection.clearSelection();
-           this.selectionHead = c;
-         }
-         this.view.selection.rangedSelect(c, l, true);
-         this.selectionTail = l;
+         // Extend the selection from the existing pivot, if any
+         this.view.selection.rangedSelect(-1, l, false);
          this.treeBoxObject.ensureRowIsVisible(l);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_home" modifiers="control">
         <![CDATA[
-         if (this.currentIndex == 0)
-           return;
          this.currentIndex = 0;
          this.treeBoxObject.ensureRowIsVisible(0);
         ]]>
@@ -605,8 +505,6 @@
       <handler event="keypress" keycode="vk_end" modifiers="control">
         <![CDATA[
          var l = this.treeBoxObject.view.rowCount - 1;
-         if (this.currentIndex == l)
-           return;
          this.currentIndex = l;
          this.treeBoxObject.ensureRowIsVisible(l);
         ]]>
@@ -654,8 +552,6 @@
              var cellText = this.view.getCellText(l, keyCol);
              cellText = cellText.substring(0, length).toLowerCase();
              if (cellText == incrementalString) {
-               this.selectionHead = -1;
-               this.selectionTail = -1;
                this.view.selection.timedSelect(l, this._selectDelay);
                this.treeBoxObject.ensureRowIsVisible(l);
                break;
@@ -1019,7 +915,7 @@
   <binding id="treecol" extends="chrome://global/content/bindings/tree.xml#treecol-base">
     <content>
       <xul:label class="treecol-text" xbl:inherits="crop,value=label" flex="1" crop="right"/>
-      <xul:image class="treecol-sortdirection" xbl:inherits="sortDirection"/>
+      <xul:image class="treecol-sortdirection" xbl:inherits="sortDirection,hidden=hideheader"/>
     </content>
     <implementation implements="nsIAccessibleProvider">
       <property name="accessible">
