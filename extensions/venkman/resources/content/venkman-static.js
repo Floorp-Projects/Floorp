@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const __vnk_version        = "0.9.81";
+const __vnk_version        = "0.9.82";
 const __vnk_requiredLocale = "0.9.81";
 var   __vnk_versionSuffix  = "";
 
@@ -652,12 +652,22 @@ function fetchLaunchCount()
         }
     };
     
-    var r = new XMLHttpRequest();
-    r.onload = onLoad;
-    r.open ("GET",
-            __vnk_counter_url + "?local=" + console.prefs["startupCount"] +
-            "&version=" + __vnk_version);
-    r.send (null);
+    try
+    {
+        var r = new XMLHttpRequest();
+        r.onload = onLoad;
+        r.open ("GET",
+                __vnk_counter_url + "?local=" + console.prefs["startupCount"] +
+                "&version=" + __vnk_version);
+        r.send (null);
+    }
+    catch (ex)
+    {
+        // Oops. Probably missing the xmlextras extension, can't really do 
+        // much about that.
+        display(getMsg(MSN_LAUNCH_COUNT,
+                       [console.prefs["startupCount"], MSG_VAL_UNKNOWN]));
+    }
 }
     
 console.__defineGetter__ ("userAgent", con_ua);
