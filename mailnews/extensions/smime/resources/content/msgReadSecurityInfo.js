@@ -145,10 +145,11 @@ function onLoad()
     document.getElementById("signatureLabel").value = 
       bundle.getString(sigInfoLabel);
 
+    var label;
     if (sigInfoHeader) {
-      var l = document.getElementById("signatureHeader");
-      l.collapsed = false;
-      l.value = bundle.getString(sigInfoHeader);
+      label = document.getElementById("signatureHeader");
+      label.collapsed = false;
+      label.value = bundle.getString(sigInfoHeader);
     }
     
     var str;
@@ -189,12 +190,11 @@ function onLoad()
       bundle.getString(encInfoLabel);
 
     if (encInfoHeader) {
-      var l = document.getElementById("encryptionHeader");
-      l.collapsed = false;
-      l.value = bundle.getString(encInfoHeader);
+      label = document.getElementById("encryptionHeader");
+      label.collapsed = false;
+      label.value = bundle.getString(encInfoHeader);
     }
     
-    var str;
     if (encInfo) {
       str = bundle.getString(encInfo);
     }
