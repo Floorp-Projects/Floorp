@@ -592,7 +592,7 @@ char *FormatNumber(PRInt32 num)
 **
 ** Apply alignment and overhead to size to figure out actual byte size
 */
-PRUint32 actualByteSize(PRUint32 retval)
+PRUint32 actualByteSize(STOptions* inOptions, PRUint32 retval)
 {
     /*
     ** Need to bump the result by our alignment and overhead.
@@ -608,11 +608,11 @@ PRUint32 actualByteSize(PRUint32 retval)
         PRUint32 over = 0;
 
         eval = retval - 1;
-        if(0 != globals.mOptions.mAlignBy)
+        if(0 != inOptions->mAlignBy)
         {
-            over = eval % globals.mOptions.mAlignBy;
+            over = eval % inOptions->mAlignBy;
         }
-        retval = eval + globals.mOptions.mOverhead + globals.mOptions.mAlignBy - over;
+        retval = eval + inOptions->mOverhead + inOptions->mAlignBy - over;
     }
 
     return retval;
@@ -625,7 +625,7 @@ PRUint32 actualByteSize(PRUint32 retval)
 ** Might expand in the future to report size at a given time.
 ** For now, just use last relevant event.
 */
-PRUint32 byteSize(STAllocation* aAlloc)
+PRUint32 byteSize(STOptions* inOptions, STAllocation* aAlloc)
 {
     PRUint32 retval = 0;
 
@@ -643,7 +643,7 @@ PRUint32 byteSize(STAllocation* aAlloc)
         }
         while(0 == retval && 0 != index);
     }
-    return actualByteSize(retval);
+    return actualByteSize(inOptions, retval);
 }
 
 
@@ -666,7 +666,7 @@ int recalculateAllocationCost(STRun* aRun, STAllocation* aAllocation, PRBool upd
     if(0 != aRun->mStats.mStamp)
     {
         PRUint32 timeval = aAllocation->mMaxTimeval - aAllocation->mMinTimeval;
-        PRUint32 size = byteSize(aAllocation);
+        PRUint32 size = byteSize(&globals.mOptions, aAllocation);
         PRUint64 weight64 = LL_INIT(0, 0);
         PRUint32 heapCost = aAllocation->mHeapRuntimeCost;
         PRUint64 timeval64 = LL_INIT(0, 0);
@@ -977,7 +977,7 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions)
                 /*
                 ** Check byte size restrictions.
                 */
-                bytesize = byteSize(current);
+                bytesize = byteSize(&globals.mOptions, current);
                 if(bytesize < aOptions->mSizeMin)
                 {
                     continue;
@@ -1132,10 +1132,10 @@ int compareAllocations(const void* aAlloc1, const void* aAlloc2, void* aContext)
                     PRUint64 timeval164 = LL_INIT(0, 0);
                     PRUint64 timeval264 = LL_INIT(0, 0);
 
-                    LL_UI2L(bytesize164, byteSize(alloc1));
+                    LL_UI2L(bytesize164, byteSize(&globals.mOptions, alloc1));
                     LL_UI2L(timeval164, (alloc1->mMaxTimeval - alloc1->mMinTimeval));
                     LL_MUL(weight164, bytesize164, timeval164);
-                    LL_UI2L(bytesize264, byteSize(alloc2));
+                    LL_UI2L(bytesize264, byteSize(&globals.mOptions, alloc2));
                     LL_UI2L(timeval264, (alloc2->mMaxTimeval - alloc2->mMinTimeval));
                     LL_MUL(weight264, bytesize264, timeval264);
 
@@ -1152,8 +1152,8 @@ int compareAllocations(const void* aAlloc1, const void* aAlloc2, void* aContext)
 
                 case ST_SIZE:
                 {
-                    PRUint32 size1 = byteSize(alloc1);
-                    PRUint32 size2 = byteSize(alloc2);
+                    PRUint32 size1 = byteSize(&globals.mOptions, alloc1);
+                    PRUint32 size2 = byteSize(&globals.mOptions, alloc2);
 
                     if(size1 < size2)
                     {
@@ -1576,9 +1576,9 @@ STAllocation* allocationTracker(PRUint32 aTimeval, char aType, PRUint32 aHeapRun
     static int compactor = 1;
     const int frequency = 10000;
     PRUint32 actualSize, actualOldSize = 0;
-    actualSize = actualByteSize(aSize);
+    actualSize = actualByteSize(&globals.mOptions, aSize);
     if (aOldSize)
-        actualOldSize = actualByteSize(aOldSize);
+        actualOldSize = actualByteSize(&globals.mOptions, aOldSize);
 
     if(NULL != aCallsite)
     {
@@ -2679,7 +2679,7 @@ int displayTopAllocations(STRequest* inRequest, STRun* aRun, int aWantCallsite)
                 if(NULL != current)
                 {
                     PRUint32 lifespan = current->mMaxTimeval - current->mMinTimeval;
-                    PRUint32 size = byteSize(current);
+                    PRUint32 size = byteSize(&globals.mOptions, current);
                     PRUint32 heapCost = current->mHeapRuntimeCost;
                     PRUint64 weight64 = LL_INIT(0, 0);
                     PRUint64 size64 = LL_INIT(0, 0);
@@ -2797,7 +2797,7 @@ int displayMemoryLeaks(STRequest* inRequest, STRun* aRun)
                 if(TM_EVENT_FREE != current->mEvents[current->mEventCount - 1].mEventType)
                 {
                     PRUint32 lifespan = current->mMaxTimeval - current->mMinTimeval;
-                    PRUint32 size = byteSize(current);
+                    PRUint32 size = byteSize(&globals.mOptions, current);
                     PRUint32 heapCost = current->mHeapRuntimeCost;
                     PRUint64 weight64 = LL_INIT(0, 0);
                     PRUint64 size64 = LL_INIT(0, 0);
@@ -3023,7 +3023,7 @@ int displayAllocationDetails(STRequest* inRequest, STAllocation* aAllocation)
     if(NULL != aAllocation)
     {
         PRUint32 traverse = 0;
-        PRUint32 bytesize = byteSize(aAllocation);
+        PRUint32 bytesize = byteSize(&globals.mOptions, aAllocation);
         PRUint32 timeval = aAllocation->mMaxTimeval - aAllocation->mMinTimeval;
         PRUint32 heapCost = aAllocation->mHeapRuntimeCost;
         PRUint64 weight64 = LL_INIT(0, 0);
@@ -3637,7 +3637,7 @@ int graphFootprint(STRequest* inRequest, STRun* aRun)
                 {
                     if(timeval >= aRun->mAllocations[loop]->mMinTimeval && timeval <= aRun->mAllocations[loop]->mMaxTimeval)
                     {
-                        YData[traverse] += byteSize(aRun->mAllocations[loop]);
+                        YData[traverse] += byteSize(&globals.mOptions, aRun->mAllocations[loop]);
                     }
                 }
             }
@@ -3835,7 +3835,7 @@ int graphTimeval(STRequest* inRequest, STRun* aRun)
                 {
                     if(prevTimeval < aRun->mAllocations[loop]->mMinTimeval && timeval >= aRun->mAllocations[loop]->mMinTimeval)
                     {
-                        YData[traverse] += byteSize(aRun->mAllocations[loop]);
+                        YData[traverse] += byteSize(&globals.mOptions, aRun->mAllocations[loop]);
                     }
                 }
             }
@@ -4036,7 +4036,7 @@ int graphLifespan(STRequest* inRequest, STRun* aRun)
 
                     if(prevTimeval < lifespan && timeval >= lifespan)
                     {
-                        YData[traverse] += byteSize(aRun->mAllocations[loop]);
+                        YData[traverse] += byteSize(&globals.mOptions, aRun->mAllocations[loop]);
                     }
                 }
             }
@@ -4238,7 +4238,7 @@ int graphWeight(STRequest* inRequest, STRun* aRun)
                         PRUint64 lifespan64 = LL_INIT(0, 0);
                         PRUint64 weight64 = LL_INIT(0, 0);
 
-                        LL_UI2L(size64, byteSize(aRun->mAllocations[loop]));
+                        LL_UI2L(size64, byteSize(&globals.mOptions, aRun->mAllocations[loop]));
                         LL_UI2L(lifespan64, (aRun->mAllocations[loop]->mMaxTimeval - aRun->mAllocations[loop]->mMinTimeval));
                         LL_MUL(weight64, size64, lifespan64);
 
@@ -5610,7 +5610,7 @@ void handleClient(void* inArg)
                 **      mime type, otherwise, say it is text/html. 
                 */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
-                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.32 2002/05/12 04:17:55 blythe%netscape.com Exp $", crlf);
+                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.33 2002/05/12 04:46:22 blythe%netscape.com Exp $", crlf);
                 PR_fprintf(aFD, "Content-type: ");
                 if(NULL != strstr(start, ".png"))
                 {
