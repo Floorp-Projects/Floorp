@@ -44,9 +44,7 @@
  *
  */
 #include "nsIDOMDocument.h"
-#include "nsIContent.h"
 #include "nsIDOMRange.h"
-#include "nsISelection.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
@@ -54,9 +52,20 @@
 #include "nsIServiceManager.h"
 #include "nsFIXptr.h"
 #include "nsCRT.h"
+#include "nsString.h"
 
 #include "nsContentCID.h"
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
+
+nsFIXptr::nsFIXptr()
+{
+}
+
+nsFIXptr::~nsFIXptr()
+{
+}
+
+NS_IMPL_ISUPPORTS1(nsFIXptr, nsIFIXptrEvaluator)
 
 // Get nth child element
 static nsresult
@@ -289,7 +298,7 @@ GetRange(nsIDOMDocument *aDocument, const nsAString& aExpression,
  * @param aExpression The FIXptr expression string to evaluate.
  * @param aRange      The resulting range.
  */
-nsresult 
+NS_IMETHODIMP
 nsFIXptr::Evaluate(nsIDOMDocument *aDocument,
                    const nsAString& aExpression,
                    nsIDOMRange **aRange)

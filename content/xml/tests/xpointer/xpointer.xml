@@ -74,6 +74,8 @@ function xp(str, event)
     event.target.parentNode.insertBefore(elem, event.target.nextSibling);
   }
 }
+
+alert(new XPointerResult());
 ]]>
 </html:script>
 </doc>

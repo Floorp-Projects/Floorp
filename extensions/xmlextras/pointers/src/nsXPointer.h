@@ -40,24 +40,32 @@
 #ifndef nsXPointer_h__
 #define nsXPointer_h__
 
-#include "nsAString.h"
 #include "nsIXPointer.h"
+#include "nsIModifyableXPointer.h"
+#include "nsIDOMRange.h"
+#include "nsCOMArray.h"
 
-class nsXPointer {
-  nsXPointer();
-  ~nsXPointer();
+class nsXPointerResult : public nsIModifyableXPointerResult {
 public:
-  /**
-   * Evaluate an XPointer expression.
-   *
-   * @param aDocument   The document in which to evaluate.
-   * @param aExpression The XPointer expression string to evaluate.
-   * @param aResult     The result.
-   */
-  static nsresult Evaluate(nsIDOMDocument *aDocument,
-                           const nsAString& aExpression,
-                           nsIXPointerResult **aResult);
-  
+  nsXPointerResult();
+  virtual ~nsXPointerResult();
+
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIXPOINTERRESULT
+  NS_DECL_NSIMODIFYABLEXPOINTERRESULT
+
+private:
+  nsCOMArray<nsIDOMRange> mArray;
+};
+
+class nsXPointer : public nsIXPointerEvaluator {
+public:
+  nsXPointer();
+  virtual ~nsXPointer();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIXPOINTEREVALUATOR
 };
 
 #endif

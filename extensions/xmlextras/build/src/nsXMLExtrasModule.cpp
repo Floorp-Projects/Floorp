@@ -51,6 +51,8 @@
 #include "prprf.h"
 #include "nsIDOMClassInfo.h"
 #include "nsCRT.h"
+#include "nsFIXptr.h"
+#include "nsXPointer.h"
 
 #include "nsSOAPHeaderBlock.h"
 #include "nsSOAPParameter.h"
@@ -80,6 +82,9 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLHttpRequest)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFIXptr)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPointer)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPointerResult)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsGenericInterfaceInfoSet)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableInterfaceInfo)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebScriptsAccess)
@@ -87,6 +92,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebScriptsAccess)
 NS_DECL_DOM_CLASSINFO(XMLSerializer)
 NS_DECL_DOM_CLASSINFO(XMLHttpRequest)
 NS_DECL_DOM_CLASSINFO(DOMParser)
+NS_DECL_DOM_CLASSINFO(XPointerResult)
 
 /* 6fb64081-1da6-11d6-a7f2-9babb25552bc */
 #define XMLEXTRAS_DOMCI_EXTENSION_CID   \
@@ -112,6 +118,10 @@ NS_DOMCI_EXTENSION(XMLExtras)
     NS_DOMCI_EXTENSION_ENTRY_BEGIN(DOMParser)
         NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMParser)
     NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(DOMParser, PR_TRUE, &kDOMParserCID)
+
+    NS_DOMCI_EXTENSION_ENTRY_BEGIN(XPointerResult)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIXPointerResult)
+    NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(XPointerResult, PR_TRUE, nsnull)
 NS_DOMCI_EXTENSION_END
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPCall)
@@ -199,6 +209,28 @@ NS_DECL_CLASSINFO(nsWebScriptsAccess)
 #define NS_SCRIPTABLE_INTERFACE_INFO_CID  \
   { 0xed150a6a, 0x4592, 0x4e2c,           \
     { 0x82, 0xf8, 0x70, 0xc8, 0xd6, 0x5f, 0x74, 0xd2 } }
+
+#define NS_XPOINTER_RESULT_CID                       \
+{ /* 31CC4700-FC53-41d2-90D4-8D608F67AD39 */         \
+  0x31cc4700, 0xfc53, 0x41d2,                        \
+{ 0x90, 0xd4, 0x8d, 0x60, 0x8f, 0x67, 0xad, 0x39 } }
+#define NS_XPOINTER_RESULT_CONTRACTID \
+"@mozilla.org/xmlextras/xpointerresult;1"
+
+// {CD6BD59C-75C8-451b-831B-B81B7C03DC53}
+#define NS_FIXPTR_EVALUATOR_CID \
+  { 0xcd6bd59c, 0x75c8, 0x451b, \
+    { 0x83, 0x1b, 0xb8, 0x1b, 0x7c, 0x3, 0xdc, 0x53 } }
+#define NS_FIXPTR_EVALUATOR_CONTRACTID \
+"@mozilla.org/xmlextras/fixptrevaluator;1"
+
+// {07AC4E3A-EE18-4e37-B29F-532BE4BE0609}
+#define NS_XPOINTER_EVALUATOR_CID \
+  { 0x7ac4e3a, 0xee18, 0x4e37, \
+    { 0xb2, 0x9f, 0x53, 0x2b, 0xe4, 0xbe, 0x6, 0x9 } }
+#define NS_XPOINTER_EVALUATOR_CONTRACTID \
+"@mozilla.org/xmlextras/xpointerevaluator;1"
+
 
 class nsXMLExtrasNameset : public nsISupports
 {
@@ -290,6 +322,12 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
 
   rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
                                 "DOMParser",
+                                XMLEXTRAS_DOMCI_EXTENSION_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
+                                "XPointerResult",
                                 XMLEXTRAS_DOMCI_EXTENSION_CONTRACTID,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -392,6 +430,12 @@ static const nsModuleComponentInfo components[] = {
     nsXMLHttpRequestConstructor },
   { "DOM Parser", NS_DOMPARSER_CID, NS_DOMPARSER_CONTRACTID,
     nsDOMParserConstructor },
+  { "FIXptr Evaluator", NS_FIXPTR_EVALUATOR_CID, NS_FIXPTR_EVALUATOR_CONTRACTID,
+    nsFIXptrConstructor },
+  { "XPointer Evaluator", NS_XPOINTER_EVALUATOR_CID, NS_XPOINTER_EVALUATOR_CONTRACTID,
+    nsXPointerConstructor },
+  { "XPointer Result", NS_XPOINTER_RESULT_CID, NS_XPOINTER_RESULT_CONTRACTID,
+    nsXPointerResultConstructor },
   { "XML Extras DOMCI Extender",
     XMLEXTRAS_DOMCI_EXTENSION_CID, XMLEXTRAS_DOMCI_EXTENSION_CONTRACTID,
     NS_DOMCI_EXTENSION_CONSTRUCTOR(XMLExtras) },

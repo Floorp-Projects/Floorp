@@ -47,27 +47,15 @@
 #ifndef nsFIXptr_h__
 #define nsFIXptr_h__
 
-class nsIDOMDocument;
-class nsIDOMRange;
-class nsISelection;
+#include "nsIFIXptr.h"
 
-#include "nsString.h"
-
-class nsFIXptr {
-  nsFIXptr();  // Use the static members for now
-  ~nsFIXptr();
-
+class nsFIXptr : public nsIFIXptrEvaluator {
 public:
-  /**
-   * Evaluate a FIXptr expression.
-   *
-   * @param aDocument   The document in which to evaluate.
-   * @param aExpression The FIXptr expression string to evaluate.
-   * @param aRange      The range.
-   */
-  static nsresult Evaluate(nsIDOMDocument *aDocument,
-                           const nsAString& aExpression,
-                           nsIDOMRange **aRange);
+  nsFIXptr();
+  virtual ~nsFIXptr();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFIXPTREVALUATOR
 };
 
 #endif

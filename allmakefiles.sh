@@ -1177,6 +1177,8 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/xmlextras/base/Makefile
             extensions/xmlextras/base/src/Makefile
             extensions/xmlextras/base/public/Makefile
+            extensions/xmlextras/pointers/Makefile
+            extensions/xmlextras/pointers/src/Makefile
             extensions/xmlextras/build/Makefile
             extensions/xmlextras/build/src/Makefile
             extensions/xmlextras/interfaceinfo/Makefile

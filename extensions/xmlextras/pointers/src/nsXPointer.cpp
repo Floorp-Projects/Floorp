@@ -60,9 +60,9 @@
 
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMRange.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMClassInfo.h"
 #include "nsCOMPtr.h"
 #include "nsXPointer.h"
 #include "nsIModifyableXPointer.h"
@@ -70,26 +70,10 @@
 #include "nsISupportsUtils.h"
 #include "nsIXPointer.h"
 #include "nsFIXptr.h"
-#include "nsCOMArray.h"
 #include "nsIServiceManager.h"
-#include "nsContentUtils.h"
 
 #include "nsContentCID.h"
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
-
-class nsXPointerResult : public nsIModifyableXPointerResult {
-public:
-  nsXPointerResult();
-  virtual ~nsXPointerResult();
-
-  NS_DECL_ISUPPORTS
-
-  NS_DECL_NSIXPOINTERRESULT
-  NS_DECL_NSIMODIFYABLEXPOINTERRESULT
-
-private:
-  nsCOMArray<nsIDOMRange> mArray;
-};
 
 nsXPointerResult::nsXPointerResult()
 {
@@ -103,7 +87,7 @@ NS_INTERFACE_MAP_BEGIN(nsXPointerResult)
   NS_INTERFACE_MAP_ENTRY(nsIXPointerResult)
   NS_INTERFACE_MAP_ENTRY(nsIModifyableXPointerResult)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XPointerResult)
+  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XPointerResult)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsXPointerResult)
@@ -278,6 +262,8 @@ nsXPointer::~nsXPointer()
 {
 }
 
+NS_IMPL_ISUPPORTS1(nsXPointer, nsIXPointerEvaluator)
+
 static nsresult GetNextSchemeNameAndData(nsString& aExpression,
                                          nsString &aScheme,
                                          nsString& aData)
@@ -335,8 +321,7 @@ static nsresult GetNextSchemeNameAndData(nsString& aExpression,
   return NS_OK;
 }
 
-
-nsresult
+NS_IMETHODIMP
 nsXPointer::Evaluate(nsIDOMDocument *aDocument,
                      const nsAString& aExpression,
                      nsIXPointerResult **aResult)
@@ -379,7 +364,10 @@ nsXPointer::Evaluate(nsIDOMDocument *aDocument,
       // Check there are no parenthesis (legal in FIXptr data).
       if (data.FindChar('(') < 0) {
         nsCOMPtr<nsIDOMRange> range;
-        rv = nsFIXptr::Evaluate(aDocument, data, getter_AddRefs(range));
+        nsCOMPtr<nsIFIXptrEvaluator> e(new nsFIXptr());
+        if (!e)
+          return NS_ERROR_OUT_OF_MEMORY;
+        rv = e->Evaluate(aDocument, data, getter_AddRefs(range));
         if (NS_FAILED(rv))
           break;
         if (range) {
@@ -388,7 +376,10 @@ nsXPointer::Evaluate(nsIDOMDocument *aDocument,
       }
     } else if (scheme.Equals(fixptr)) {
       nsCOMPtr<nsIDOMRange> range;
-      rv = nsFIXptr::Evaluate(aDocument, data, getter_AddRefs(range));
+      nsCOMPtr<nsIFIXptrEvaluator> e(new nsFIXptr());
+      if (!e)
+        return NS_ERROR_OUT_OF_MEMORY;
+      rv = e->Evaluate(aDocument, data, getter_AddRefs(range));
       if (NS_FAILED(rv))
         break;
       if (range) {
