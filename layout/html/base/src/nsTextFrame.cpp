@@ -1902,9 +1902,13 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
                                PRInt32& aOffset)
 
 {
-  if (!aRendContext || !aNewContent) {
+  // pre-condition tests
+  NS_PRECONDITION(aPresContext && aRendContext && aNewContent, "null arg");
+  if (!aPresContext || !aRendContext || !aNewContent) {
     return NS_ERROR_NULL_POINTER;
   }
+  // initialize out param
+  *aNewContent = nsnull;
 
   TextStyle ts(aPresContext, *aRendContext, mStyleContext);
   if (!ts.mSmallCaps && !ts.mWordSpacing && !ts.mLetterSpacing && !ts.mJustifying) {
@@ -1914,6 +1918,22 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   nsPoint origin;
   GetOffsetFromView(aPresContext, origin, &view);
 
+  /* This if clause is the cause of much pain.  If aNewContent is set, then any
+   * code path that returns an error must set aNewContent to null before returning,
+   * or risk the caller unknowingly decrementing aNewContent inappropriately.
+   * Here's what Robert O'Callahan has to say on the matter:
+        If I'm not mistaken, in GetPositionSlowly, the values of aNewContent and
+        aOffset set in the conditional "if (aPoint.x - origin.x < 0)" are
+        overwritten on all successful return paths. Since they should never be
+        used by the caller if the function fails, that entire "if" statement is
+        --- or should be --- a no-op. Come to think of it, it doesn't make sense
+        either; setting aOffset to zero is nonsense.
+
+        I recommend you just delete that "if" statement.
+   * 
+   * If this clause is removed, then some of the bullet-proofing code
+   * prefaced with "bug 56704" comments can be removed as well.
+   */
   if (aPoint.x - origin.x < 0)
   {
       *aNewContent = mContent;
@@ -1926,6 +1946,9 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   nsAutoIndexBuffer indexBuffer;
   nsresult rv = indexBuffer.GrowTo(mContentLength + 1);
   if (NS_FAILED(rv)) {
+    // If we've already assigned aNewContent, make sure to 0 it out here.
+    // See bug 56704.
+    *aNewContent = nsnull;
     return rv;
   }
 
@@ -1938,6 +1961,12 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
 
   numSpaces = PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
   if (textLength <= 0) {
+    // If we've already assigned aNewContent, make sure to 0 it out here.
+    // aNewContent is undefined in the case that we return a failure,
+    // If we were to return a valid pointer,  we risk decrementing that node's 
+    // ref count an extra time by the caller.  
+    // See bug 56704 for more details.
+    *aNewContent = nsnull;
     return NS_ERROR_FAILURE;
   }
 
@@ -2679,6 +2708,14 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
                          PRInt32&        aContentOffsetEnd)
 
 {
+  // pre-condition tests
+  NS_PRECONDITION(aCX && aNewContent, "null arg");
+  if (!aCX || !aNewContent) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  // initialize out param
+  *aNewContent = nsnull;
+
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aCX->GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell) {
