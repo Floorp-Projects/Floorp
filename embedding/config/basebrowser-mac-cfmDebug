@@ -174,6 +174,7 @@ Essential Files:NSS3Debug.shlb
 Essential Files:SMIME3Debug.shlb
 Essential Files:Softoken3Debug.shlb
 Essential Files:SSL3Debug.shlb
+Essential Files:NSSckbiDebug.shlb
 
 ; appcomps
 ; Optional - only if you want global history (requires mork) or
