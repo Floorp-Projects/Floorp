@@ -60,8 +60,6 @@
 #include "nsIPref.h"
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-#define PLUGIN_PATH 	"MOZ_PLUGIN_PATH"	
-
 /* Local helper functions */
  
 ///////////////////////////////////////////////////////////////////////////////
