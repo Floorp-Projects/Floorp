@@ -436,6 +436,8 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
         // XXX if navigator_quirks_mode (only body in html supports background)
         AddBaseTagInfo(content);     
         break;
+      default:  // eliminate warnings
+        break;
     }
   }
 
@@ -491,6 +493,8 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
             break;
           case eHTMLTag_base:
             ProcessBaseTag(content);
+            break;
+          default: // eliminate warnings
             break;
         }
       }
