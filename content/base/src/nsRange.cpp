@@ -2597,8 +2597,9 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
   nsCOMPtr<nsIDOMDocument> domDocument;
 
   result = content->GetDocument(*getter_AddRefs(document));
-  domDocument = do_QueryInterface(document, &result);
-  NS_ENSURE_SUCCESS(result, result);
+  if (document && NS_SUCCEEDED(result)) {
+    domDocument = do_QueryInterface(document, &result);
+  }
 
   nsVoidArray tagStack;
   nsCOMPtr<nsIDOMNode> parent = mStartParent;
