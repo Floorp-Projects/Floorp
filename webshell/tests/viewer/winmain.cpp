@@ -414,6 +414,20 @@ CopyTextContent(WindowData* wd, HWND aHWnd)
 
 void yieldProc(const char * str)
 {
+  // Process messages
+  MSG msg;
+  while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
+    GetMessage(&msg, NULL, 0, 0);
+    if (!JSConsole::sAccelTable ||
+        !gConsole ||
+        !gConsole->GetMainWindow() ||
+        !TranslateAccelerator(gConsole->GetMainWindow(), JSConsole::sAccelTable, &msg)) {
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+      /* Pump Netlib... */
+      NET_PollSockets();
+    }
+  }
 }
 
 long PASCAL
