@@ -52,6 +52,8 @@
   <stringbundle id="bookmarksbundle"
                 src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
 
+  <broadcaster id="showaddgroup" hidden="true"/>
+
   <separator id="nameseparator" class="thin"/>
   
   <grid id="bookmarknamegrid">
@@ -76,9 +78,22 @@
         <textbox id="url" oninput="onFieldInput();"/>
         <spacer/>
       </row>
+      <row observes="showaddgroup">
+        <separator class="thin"/>
+        <separator class="thin"/>
+        <spacer/>
+      </row>
+      <row observes="showaddgroup">
+        <spacer/>
+        <hbox pack="start">
+          <checkbox id="addgroup" label="&addGroup.label;"
+                    accesskey="&addGroup.accesskey;" oncommand="toggleGroup();"/>
+        </hbox>
+        <spacer/>
+      </row>
     </rows>
   </grid>
-  
+
   <separator id="createinseparator"/>
 
   <vbox id="folderbox" flex="1">

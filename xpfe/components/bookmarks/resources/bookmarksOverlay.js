@@ -862,6 +862,39 @@ var BookmarksUtils = {
     return BMSvc.createFolderWithDetails(aTitle, aParentFolder, ix);
   },
 
+
+  addBookmarkForTabBrowser: function( aTabBrowser )
+  {
+    var tabsInfo = [];
+    var currentTabInfo = { name: "", url: "", charset: null };
+
+    const activeBrowser = aTabBrowser.selectedBrowser;
+    const browsers = aTabBrowser.browsers;
+    for (var i = 0; i < browsers.length; ++i) {
+      var webNav = browsers[i].webNavigation;
+      var url = webNav.currentURI.spec;
+      var name = "";
+      var charset;
+      try {
+        var doc = webNav.document;
+        name = doc.title || url;
+        charset = doc.characterSet;
+      } catch (e) {
+        name = url;
+      }
+
+      tabsInfo[i] = { name: name, url: url, charset: charset };
+
+      if (browsers[i] == activeBrowser)
+        currentTabInfo = tabsInfo[i];
+    }
+
+    openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "",
+               "centerscreen,chrome,dialog=yes,resizable,dependent",
+               currentTabInfo.name, currentTabInfo.url, null,
+               currentTabInfo.charset, "addGroup", tabsInfo);
+  },
+
   addBookmarkForBrowser: function (aDocShell, aShowDialog)
   {
     // Bug 52536: We obtain the URL and title from the nsIWebNavigation 

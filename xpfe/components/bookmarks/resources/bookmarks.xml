@@ -1807,7 +1807,7 @@
           var groupTarget = this.db.GetTarget(this.treeBuilder.getResourceAtIndex(this.treeBoxObject.selection.currentIndex), 
                                               groupRes, true);
 
-          if (groupTarget && !aOpenGroups)
+          if (groupTarget && (!aOpenGroups || aEvent.detail > 1))
             return;
           
           if (!groupTarget && this.treeBoxObject.view.isContainer(this.treeBoxObject.selection.currentIndex)) {
@@ -1845,7 +1845,7 @@
                 else 
                   urlValue = "about:blank";
                 
-                var w = openDialog (this._browserURL, "_blank", "chrome,all,dialog=no", urlValue);
+                var w = openDialog(this._browserURL, "_blank", "chrome,all,dialog=no", urlValue);
                 if (groupTarget)
                   w.OpenBookmarkGroupFromResource(this.treeBuilder.getResourceAtIndex(k),
                                                   this.db, this.rdf);

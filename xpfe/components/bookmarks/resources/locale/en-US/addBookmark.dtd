@@ -39,6 +39,8 @@
 <!ENTITY button.defaultfolder.label "Use Default">
 <!ENTITY button.defaultfolder.accesskey "d">
 <!ENTITY selectFolder.label         "Choose Folder">
+<!ENTITY addGroup.label             "File as group">
+<!ENTITY addGroup.accesskey         "F">
 
 
 

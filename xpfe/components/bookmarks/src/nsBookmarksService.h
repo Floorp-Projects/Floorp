@@ -134,7 +134,11 @@ protected:
                            nsIRDFResource* aNewURL);
 
 	nsresult getLocaleString(const char *key, nsString &str);
-	
+
+        nsresult CreateFolderWithDetails(const PRUnichar* aName, 
+                                         nsIRDFResource* aParentFolder, PRInt32 aIndex,
+                                         nsIRDFResource** aResult, PRBool aIsGroup);
+
 	nsresult LoadBookmarks();
 	nsresult initDatasource();
 

@@ -144,8 +144,9 @@
     <!-- Bookmarks Menu -->
     <command id="Browser:AddBookmark" label="&addCurPageCmd.label;" accesskey="&addCurPageCmd.accesskey;" 
              oncommand="BookmarksUtils.addBookmarkForBrowser(document.getElementById('content').webNavigation, false);"/>
-    <command id="Browser:AddBookmarkAs" label="&addCurPageAsCmd.label;" accesskey="&addCurPageAsCmd.accesskey;" 
-             oncommand="BookmarksUtils.addBookmarkForBrowser(document.getElementById('content').webNavigation, true);"/>
+    <command id="Browser:AddBookmarkAs" label="&addCurPageAsCmd.label;"
+             accesskey="&addCurPageAsCmd.accesskey;"
+             oncommand="addBookmarkAs();"/>
     <command id="Browser:ManageBookmark" label="&manBookmarksCmd.label;" accesskey="&manBookmarksCmd.accesskey;" 
              oncommand="BrowserEditBookmarks();" />
   
