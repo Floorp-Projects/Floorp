@@ -27,32 +27,28 @@
 
 typedef PRUint32 nsOperatorFlags;
 
-typedef PRUint32 nsStretchDirection;
+// define the bits used to handle the operator
 
-#define NS_STRETCH_DIRECTION_HORIZONTAL   0
-#define NS_STRETCH_DIRECTION_VERTICAL     1
+#define NS_MATHML_OPERATOR_MUTABLE   0x80000000 // the very first bit
 
-// Structure used for a char's size and alignment information.
-struct nsCharMetrics {
-//  nscoord leading;
-  nscoord width, height;
-  nscoord ascent, descent;
-};
 
 // define the bits used in the operator dictionary
 
-#define NS_MATHML_OPERATOR_FORM  0x3 // the last two bits tell us the form
+#define NS_MATHML_OPERATOR_FORM  0x3 // the very last two bits tell us the form
 #define     NS_MATHML_OPERATOR_FORM_INFIX   1
 #define     NS_MATHML_OPERATOR_FORM_PREFIX  2
 #define     NS_MATHML_OPERATOR_FORM_POSTFIX 3
-#define NS_MATHML_OPERATOR_STRETCHY      (1 << 2)
-#define NS_MATHML_OPERATOR_FENCE         (1 << 3)
-#define NS_MATHML_OPERATOR_ACCENT        (1 << 4)
-#define NS_MATHML_OPERATOR_LARGEOP       (1 << 5)
-#define NS_MATHML_OPERATOR_SEPARATOR     (1 << 6)
-#define NS_MATHML_OPERATOR_MOVABLELIMITS (1 << 7)
+#define NS_MATHML_OPERATOR_STRETCHY      (1<<2)
+#define NS_MATHML_OPERATOR_FENCE         (1<<3)
+#define NS_MATHML_OPERATOR_ACCENT        (1<<4)
+#define NS_MATHML_OPERATOR_LARGEOP       (1<<5)
+#define NS_MATHML_OPERATOR_SEPARATOR     (1<<6)
+#define NS_MATHML_OPERATOR_MOVABLELIMITS (1<<7)
 
 // Macros that retrieve those bits
+
+#define NS_MATHML_OPERATOR_IS_MUTABLE(_flags) \
+  (NS_MATHML_OPERATOR_MUTABLE == ((_flags) & NS_MATHML_OPERATOR_MUTABLE))
 
 #define NS_MATHML_OPERATOR_GET_FORM(_flags) \
   ((_flags) & NS_MATHML_OPERATOR_FORM)
