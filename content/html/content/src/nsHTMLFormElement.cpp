@@ -491,12 +491,28 @@ nsHTMLFormElement::SetTarget(const nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLFormElement::Submit()
 {
-  // Submit without calling event handlers. (bug 76694)
+  // Send the submit event
   nsresult rv = NS_OK;
   nsCOMPtr<nsIPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
   if (presContext) {
-    rv = DoSubmitOrReset(presContext, nsnull, NS_FORM_SUBMIT);
+    if (InNavQuirksMode(mDocument)) {
+      // QUIRKS MODE: submit without calling event handlers. (bug 144534,
+      // original code added in bug 76694)
+      rv = DoSubmitOrReset(presContext, nsnull, NS_FORM_SUBMIT);
+    } else {
+      nsCOMPtr<nsIPresShell> presShell;
+      presContext->GetShell(getter_AddRefs(presShell));
+      if (presShell) {
+        nsFormEvent event;
+        event.eventStructType = NS_FORM_EVENT;
+        event.message         = NS_FORM_SUBMIT;
+        event.originator      = nsnull;
+        nsEventStatus status  = nsEventStatus_eIgnore;
+        presShell->HandleEventWithTarget(&event, nsnull, this,
+                                         NS_EVENT_FLAG_INIT, &status);
+      }
+    }
   }
   return rv;
 }
@@ -504,12 +520,22 @@ nsHTMLFormElement::Submit()
 NS_IMETHODIMP
 nsHTMLFormElement::Reset()
 {
-  // Reset without calling event handlers.
+  // Send the reset event
   nsresult rv = NS_OK;
   nsCOMPtr<nsIPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
   if (presContext) {
-    rv = DoSubmitOrReset(presContext, nsnull, NS_FORM_RESET);
+    nsCOMPtr<nsIPresShell> presShell;
+    presContext->GetShell(getter_AddRefs(presShell));
+    if (presShell) {
+      nsFormEvent event;
+      event.eventStructType = NS_FORM_EVENT;
+      event.message         = NS_FORM_RESET;
+      event.originator      = nsnull;
+      nsEventStatus status  = nsEventStatus_eIgnore;
+      presShell->HandleEventWithTarget(&event, nsnull, this,
+                                       NS_EVENT_FLAG_INIT, &status);
+    }
   }
   return rv;
 }
