@@ -555,11 +555,11 @@ EOF
 WARNING! You have not entered a value for the "webservergroup" parameter
 in localconfig. This means that certain files and directories which need
 to be editable by both you and the webserver must be world writable, and
-other files (including the localconfig file which stores your databasa
+other files (including the localconfig file which stores your database
 password) must be world readable. This means that _anyone_ who can obtain
 local access to this machine can do whatever they want to your Bugzilla
-installation, and is probably also able to run arbitary Perl as the user the
-webserver runs as.
+installation, and is probably also able to run arbitrary Perl code as the
+user that the webserver runs as.
 
 You really, really, really need to change this setting.
 ********************************************************************************
