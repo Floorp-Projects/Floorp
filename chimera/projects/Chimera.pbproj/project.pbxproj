@@ -4043,6 +4043,8 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>0.3.0</string>
+	<key>NSAppleScriptEnabled</key>
+	<true/>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
