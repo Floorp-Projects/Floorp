@@ -126,6 +126,11 @@ FeedItem.prototype =
     this.mURL = uri.spec;
   },
 
+  set date (aVal)
+  {
+    this.mDate = aVal;
+  },
+
   get identity ()
   {
     return this.feed.name + ": " + this.title + " (" + this.id + ")"
