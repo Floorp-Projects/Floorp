@@ -6,3 +6,11 @@ jaas.jar
 
 jnet.jar and jsse.jar
     required for JSSESocketFactory.java compilation
+
+jss32_stub.jar
+    required for JSSSocketFactory.java compilation
+
+    jss32_stub.jar is created from the mozilla JSS 3.2 jss32.jar
+    (see http://www.mozilla.org/projects/security/pki/jss/jss_release_3.2.html)
+    by extracting only the classes used for JSSSocketFactory.java compilation.
+    At runtime you must have jss32.jar if you intend to use JSSSocketFactory.
