@@ -42,6 +42,7 @@ LINCS=-I..\public -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
       -I$(PUBLIC)\plugin -I$(PUBLIC)\java -I$(PUBLIC)\pref -I$(PUBLIC)\profile \
       -I$(PUBLIC)\js -I$(DEPTH)\include -I$(PUBLIC)\jsurl \
       -I$(PUBLIC)\editor -I$(PUBLIC)\rdf \
+      -I$(PUBLIC)\xpfe\components \
       -I$(PUBLIC)\walletlib \
       -I$(PUBLIC)\oji \
       -I$(PUBLIC)\uconv \
