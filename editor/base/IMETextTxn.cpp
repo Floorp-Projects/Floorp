@@ -164,7 +164,7 @@ NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
   //
   IMETextTxn*  otherTxn = nsnull;
   result = aTransaction->QueryInterface(IMETextTxn::GetCID(),(void**)&otherTxn);
-  if (otherTxn && NS_SUCCEEDED(NS_OK))
+  if (otherTxn && NS_SUCCEEDED(result))
   {
     //
     //  we absorbe the next IME transaction by adopting it's insert string as our own
