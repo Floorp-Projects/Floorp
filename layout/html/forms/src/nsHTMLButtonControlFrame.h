@@ -43,26 +43,18 @@
 #include "nsFormControlHelper.h"
 #include "nsIFormControlFrame.h"
 #include "nsHTMLParts.h"
-#include "nsIFormControl.h"
 
-#include "nsIRenderingContext.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsStyleContext.h"
 #include "nsLeafFrame.h"
 #include "nsCSSRendering.h"
 #include "nsISupports.h"
-#include "nsHTMLAtoms.h"
-#include "nsIImage.h"
 #include "nsStyleConsts.h"
-#include "nsIWidget.h"
 #include "nsIComponentManager.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
-#include "nsViewsCID.h"
-#include "nsColor.h"
-#include "nsIDocument.h"
 #include "nsButtonFrameRenderer.h"
+
+class nsIRenderingContext;
 
 class nsHTMLButtonControlFrame : public nsHTMLContainerFrame,
                                  public nsIFormControlFrame 
