@@ -129,7 +129,6 @@ var gDownloadsPane = {
 
     var customDirPref = document.getElementById("browser.download.dir");
     var customIndex = customDirPref.value ? this._fileToIndex(customDirPref.value) : 0;
-    
     if (folderListPref.value == 0 || customIndex == 0)
       downloadFolder.label = bundlePreferences.getString("desktopFolderName");
     else if (folderListPref.value == 1 || customIndex == 1) 
@@ -147,6 +146,12 @@ var gDownloadsPane = {
     downloadFolder.image = "moz-icon://" + urlspec + "?size=16";
     
     return undefined;
+  },
+  
+  writeFolderList: function ()
+  {
+    var currentDirPref = document.getElementById("browser.download.downloadDir");
+    return this._fileToIndex(currentDirPref.value);
   },
   
   showWhenStartingPrefChanged: function ()
