@@ -2266,7 +2266,7 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
          if ( !(fsFlags & KC_VIRTUALKEY) || 
               ((fsFlags & KC_CHAR) && (pressEvent.keyCode == 0)) )
          {
-            pressEvent.isShift = PR_FALSE;
+//            pressEvent.isShift = PR_FALSE;
             pressEvent.keyCode = 0;
          }
          else if (usVKey == VK_SPACE)
@@ -2278,9 +2278,9 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
             pressEvent.charCode = 0;
          }
       }
+      rc = DispatchWindowEvent( &pressEvent);
    }
 
-   rc = DispatchWindowEvent( &pressEvent);
    NS_RELEASE( pressEvent.widget);
    return rc;
 }
