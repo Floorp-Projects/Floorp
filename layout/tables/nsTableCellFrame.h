@@ -271,6 +271,16 @@ protected:
 
   virtual PRBool ParentDisablesSelection() const; //override default behavior
 
+  /**
+   * GetSelfOverflow says what effect the cell should have on its own
+   * overflow area.  In the separated borders model this should just be
+   * the frame's size (as it is for most frames), but in the collapsed
+   * borders model (for which nsBCTableCellFrame overrides this virtual
+   * method), it considers the extents of the collapsed border so we
+   * handle invalidation correctly for dynamic border changes.
+   */
+  virtual void GetSelfOverflow(nsRect& aOverflowArea);
+
 private:  
 
   // All these methods are support methods for RecalcLayoutData
@@ -449,6 +459,8 @@ public:
   void SetBorderWidth(const nsMargin& aBorder);
   void SetBorderWidth(PRUint8 aSide, nscoord aPixelValue);
 
+  virtual void GetSelfOverflow(nsRect& aOverflowArea);
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
@@ -465,6 +477,8 @@ protected:
 
 private:
   
+  // These are the half of the border width that goes inside the cell
+  // boundary, in pixels.
   PRUint32 mTopBorder:    8;
   PRUint32 mRightBorder:  8;
   PRUint32 mBottomBorder: 8;
@@ -472,6 +486,3 @@ private:
 };
 
 #endif
-
-
-
