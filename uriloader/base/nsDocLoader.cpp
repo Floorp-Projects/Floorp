@@ -97,54 +97,6 @@ static NS_DEFINE_IID(kIStreamListenerIID,          NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIContentViewerContainerIID,  NS_ICONTENT_VIEWER_CONTAINER_IID);
 static NS_DEFINE_CID(kGenericFactoryCID,           NS_GENERICFACTORY_CID);
 
-/* Forward declarations.... */
-class nsDocLoaderImpl;
-
-
-/* 
- * The nsDocumentBindInfo contains the state required when a single document
- * is being loaded...  Each instance remains alive until its target URL has 
- * been loaded (or aborted).
- *
- * The Document Loader maintains a list of nsDocumentBindInfo instances which 
- * represents the set of documents actively being loaded...
- */
-class nsDocumentBindInfo : public nsIStreamListener
-{
-public:
-    nsDocumentBindInfo();
-
-    nsresult Init(nsDocLoaderImpl* aDocLoader,
-                  const char *aCommand, 
-                  nsISupports* aContainer,
-                  nsISupports* aExtraInfo);
-
-    NS_DECL_ISUPPORTS
-
-    nsresult Bind(nsIURI *aURL, 
-                  nsILoadGroup* aLoadGroup, 
-                  nsIInputStream *postDataStream,
-                  const PRUnichar* aReferrer=nsnull);
-
-    // nsIStreamObserver methods:
-    NS_DECL_NSISTREAMOBSERVER
-
-	// nsIStreamListener methods:
-    NS_DECL_NSISTREAMLISTENER
-
-protected:
-    virtual ~nsDocumentBindInfo();
-
-protected:
-    char*               m_Command;
-    nsCOMPtr<nsISupports>  m_Container;
-    nsCOMPtr<nsISupports>  m_ExtraInfo;
-    nsCOMPtr<nsIStreamListener> m_NextStream;
-    nsDocLoaderImpl*    m_DocLoader;
-};
-
-
-
 
 /****************************************************************************
  * nsDocLoaderImpl implementation...
@@ -206,14 +158,6 @@ public:
     NS_DECL_NSISTREAMOBSERVER
 
     // Implementation specific methods...
-    nsresult CreateContentViewer(const char *aCommand,
-                                 nsIChannel* channel,
-                                 const char* aContentType, 
-                                 nsISupports* aContainer,
-                                 nsISupports* aExtraInfo,
-                                 nsIStreamListener** aDocListener,
-                                 nsIContentViewer** aDocViewer);
-
 protected:
     virtual ~nsDocLoaderImpl();
 
@@ -403,47 +347,6 @@ nsDocLoaderImpl::CreateDocumentLoader(nsIDocumentLoader** anInstance)
   return rv;
 }
 
-nsresult
-nsDocLoaderImpl::CreateContentViewer(const char *aCommand,
-                                     nsIChannel* channel,
-                                     const char* aContentType, 
-                                     nsISupports* aContainer,
-                                     nsISupports* aExtraInfo,
-                                     nsIStreamListener** aDocListenerResult,
-                                     nsIContentViewer** aDocViewerResult)
-{
-    // Lookup class-id for the command plus content-type combination
-    nsCID cid;
-    char id[500];
-    PR_snprintf(id, sizeof(id),
-                NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "%s/%s",
-                aCommand ? aCommand : "view",/* XXX bug! shouldn't b needed!*/
-                aContentType);
-    nsresult rv = nsComponentManager::ProgIDToCLSID(id, &cid);
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
-
-    // Create an instance of the document-loader-factory object
-    nsIDocumentLoaderFactory* factory;
-    rv = nsComponentManager::CreateInstance(cid, (nsISupports *)nsnull,
-                                            kIDocumentLoaderFactoryIID, 
-                                            (void **)&factory);
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
-
-    // Now create an instance of the content viewer
-    rv = factory->CreateInstance(aCommand, 
-                                 channel, mLoadGroup,
-                                 aContentType,
-                                 aContainer,
-                                 aExtraInfo, aDocListenerResult,
-                                 aDocViewerResult);
-    NS_RELEASE(factory);
-    return rv;
-}
-
 NS_IMETHODIMP
 nsDocLoaderImpl::LoadOpenedDocument(nsIChannel * aOpenedChannel, 
                                   const char * aCommand,
@@ -452,54 +355,12 @@ nsDocLoaderImpl::LoadOpenedDocument(nsIChannel * aOpenedChannel,
                                   nsIURI * aReffererUrl,
                                   nsIStreamListener ** aContentHandler)
 {
-  // mscott - there's a big flaw here...we'll proably need to reset the 
-  // loadgroupon the channel to theloadgroup associated with the content
-  // viewer container since that's the new guy whose actually going to be
-  // receiving the content
-  nsresult rv = NS_OK;
-
-  nsDocumentBindInfo* loader = nsnull;
-  if (!aOpenedChannel)
-    return NS_ERROR_NULL_POINTER;
-
-  NS_NEWXPCOM(loader, nsDocumentBindInfo);
-  if (nsnull == loader)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(loader);
-  loader->Init(this,           // DocLoader
-               aCommand,       // Command
-               aContainer,     // Viewer Container
-               /* aExtraInfo */ nsnull);    // Extra Info
-
-  loader->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aContentHandler);
-
-  /*
-   * Set the flag indicating that the document loader is in the process of
-   * loading a document.  This flag will remain set until the 
-   * OnConnectionsComplete(...) notification is fired for the loader...
-   */
-  mIsLoadingDocument = PR_TRUE;
-
-  // let's try resetting the load group if we need to...
-  nsCOMPtr<nsILoadGroup> aCurrentLoadGroup;
-  rv = aOpenedChannel->GetLoadGroup(getter_AddRefs(aCurrentLoadGroup));
-  if (NS_SUCCEEDED(rv))
-  {
-    if (aCurrentLoadGroup.get() != mLoadGroup.get())
-      aOpenedChannel->SetLoadGroup(mLoadGroup);
-  }
-
-  NS_RELEASE(loader);
-  return rv;
+  NS_ASSERTION(0, "This method is OBSOLETE!!");
+  return NS_ERROR_FAILURE;
 }
 
 
 static NS_DEFINE_CID(kURILoaderCID, NS_URI_LOADER_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-
-  // start up prefs
-  
 
 NS_IMETHODIMP
 nsDocLoaderImpl::LoadDocument(nsIURI * aUri, 
@@ -511,124 +372,61 @@ nsDocLoaderImpl::LoadDocument(nsIURI * aUri,
                               const PRUint32 aLocalIP,
                               const PRUnichar* aReferrer)
 {
-  nsresult rv = NS_OK;
+  nsresult rv = NS_ERROR_FAILURE;
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv); 
-  PRBool useURILoader = PR_FALSE;
-  if (NS_SUCCEEDED(rv))
-    prefs->GetBoolPref("browser.uriloader", &useURILoader);
-
-  nsXPIDLCString aUrlScheme;
-  if (aUri)
+  if (aUri) {
+    nsXPIDLCString aUrlScheme;
     aUri->GetScheme(getter_Copies(aUrlScheme));
 
-  // temporary hack alert! whether uri loading is turned on or off,
-  // I want mailto urls to properly get sent to the uri loader because
-  // it works so well...=)
-  // so for now, if the protocol scheme is mailto, for useURILoader to true
-  if (nsCRT::strcasecmp(aUrlScheme, "mailto") == 0)
-    useURILoader = PR_TRUE;
+    nsCOMPtr<nsISupports> openContext = do_QueryInterface(mLoadGroup);
 
-  // right now, uri dispatching is only hooked up to work with imap, mailbox and
-  //  news urls...so as a hack....check the protocol scheme and only call the 
-  // dispatching code for those schemes which work with uri dispatching...
-  if (useURILoader && aUri)
-  { 
-     nsCOMPtr<nsISupports> aOpenContext = do_QueryInterface(mLoadGroup);
+    // let's try uri dispatching...
+    NS_WITH_SERVICE(nsIURILoader, pURILoader, kURILoaderCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-      // let's try uri dispatching...
-      NS_WITH_SERVICE(nsIURILoader, pURILoader, kURILoaderCID, &rv);
-      if (NS_SUCCEEDED(rv)) 
-      {
+    /*
+     * Set the flag indicating that the document loader is in the process of
+     * loading a document.  This flag will remain set until the 
+     * OnConnectionsComplete(...) notification is fired for the loader...
+     */
+    mIsLoadingDocument = PR_TRUE;
 
-          /*
-           * Set the flag indicating that the document loader is in the process of
-           * loading a document.  This flag will remain set until the 
-           * OnConnectionsComplete(...) notification is fired for the loader...
-           */
-           mIsLoadingDocument = PR_TRUE;
+    nsURILoadCommand loadCmd = nsIURILoader::viewNormal;
+    if (nsCRT::strcasecmp(aCommand, "view-link-click") == 0)
+      loadCmd = nsIURILoader::viewUserClick;
+    else if (nsCRT::strcasecmp(aCommand, "view-source") == 0)
+      loadCmd = nsIURILoader::viewSource;
 
-           nsURILoadCommand loadCmd = nsIURILoader::viewNormal;
-           if (nsCRT::strcasecmp(aCommand, "view-link-click") == 0)
-             loadCmd = nsIURILoader::viewUserClick;
-           else if (nsCRT::strcasecmp(aCommand, "view-source") == 0)
-             loadCmd = nsIURILoader::viewSource;
+    // temporary hack for post data...eventually this snippet of code
+    // should be moved into the layout call when callers go through the
+    // uri loader directly!
 
-        // temporary hack for post data...eventually this snippet of code
-        // should be moved into the layout call when callers go through the
-        // uri loader directly!
+    if (aPostDataStream) {
+      // query for private post data stream interface
+      nsCOMPtr<nsPIURILoaderWithPostData>  postLoader = do_QueryInterface(pURILoader, &rv);
+      if (NS_SUCCEEDED(rv))
+        rv = postLoader->OpenURIWithPostData(aUri, 
+                                             loadCmd,
+                                             nsnull /* window target */,
+                                             aContainer,
+                                             nsnull /* referring uri */,
+                                             aPostDataStream,
+                                             mLoadGroup,
+                                             getter_AddRefs(openContext));
+                                         
+    }
+    else
+      rv = pURILoader->OpenURI(aUri, loadCmd, nsnull /* window target */, 
+                               aContainer,
+                               nsnull /* refferring URI */, 
+                               mLoadGroup, 
+                               getter_AddRefs(openContext));
 
-        if (aPostDataStream)
-        {
-          // query for private post data stream interface
-          nsCOMPtr<nsPIURILoaderWithPostData>  postLoader = do_QueryInterface(pURILoader, &rv);
-          if (NS_SUCCEEDED(rv))
-            rv = postLoader->OpenURIWithPostData(aUri, 
-                                                 loadCmd,
-                                                 nsnull /* window target */,
-                                                 aContainer,
-                                                 nsnull /* referring uri */,
-                                                 aPostDataStream,
-                                                 mLoadGroup,
-                                                 getter_AddRefs(aOpenContext));
-                                             
-        }
-        else
-          rv = pURILoader->OpenURI(aUri, loadCmd, nsnull /* window target */, 
-                                   aContainer,
-                                   nsnull /* refferring URI */, 
-                                   mLoadGroup, 
-                                   getter_AddRefs(aOpenContext));
-        if (aOpenContext)
-          mLoadGroup = do_QueryInterface(aOpenContext);
-      }
-      
-      return rv;
-  } // end try uri loader code
+    if (openContext) {
+      mLoadGroup = do_QueryInterface(openContext);
+    }
+  } 
 
-  nsDocumentBindInfo* loader = nsnull;
-  if (!aUri)
-    return NS_ERROR_NULL_POINTER;
-
-#if defined(DEBUG)
-  nsXPIDLCString urlSpec;
-  aUri->GetSpec(getter_Copies(urlSpec));
-  PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-         ("DocLoader:%p: LoadDocument(...) called for %s.", 
-          this, (const char *) urlSpec));
-#endif /* DEBUG */
-
-  /* Check for initial error conditions... */
-  if (nsnull == aContainer) {
-      rv = NS_ERROR_NULL_POINTER;
-      goto done;
-  }
-
-  // Save the command associated with this load...
-  mCommand = aCommand;
-
-  NS_NEWXPCOM(loader, nsDocumentBindInfo);
-  if (nsnull == loader) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-      goto done;
-  }
-  NS_ADDREF(loader);
-  loader->Init(this,           // DocLoader
-               aCommand,       // Command
-               aContainer,     // Viewer Container
-               aExtraInfo);    // Extra Info
-
-  /*
-   * Set the flag indicating that the document loader is in the process of
-   * loading a document.  This flag will remain set until the 
-   * OnConnectionsComplete(...) notification is fired for the loader...
-   */
-  mIsLoadingDocument = PR_TRUE;
-
-  rv = loader->Bind(aUri, mLoadGroup, aPostDataStream, aReferrer);
-
-done:
-  NS_RELEASE(loader);
   return rv;
 }
 
@@ -1185,283 +983,6 @@ void nsDocLoaderImpl::FireOnEndURLLoad(nsDocLoaderImpl* aLoadInitiator,
   }
 }
 
-
-/****************************************************************************
- * nsDocumentBindInfo implementation...
- ****************************************************************************/
-
-nsDocumentBindInfo::nsDocumentBindInfo()
-{
-    NS_INIT_REFCNT();
-
-    m_Command = nsnull;
-    m_DocLoader = nsnull;
-}
-
-nsresult
-nsDocumentBindInfo::Init(nsDocLoaderImpl* aDocLoader,
-                         const char *aCommand, 
-                         nsISupports* aContainer,
-                         nsISupports* aExtraInfo)
-{
-    m_Command    = (nsnull != aCommand) ? PL_strdup(aCommand) : nsnull;
-
-    m_DocLoader = aDocLoader;
-    NS_ADDREF(m_DocLoader);
-
-    m_Container = aContainer;  // This does an addref
-
-    m_ExtraInfo = aExtraInfo;  // This does an addref
-
-    return NS_OK;
-}
-
-nsDocumentBindInfo::~nsDocumentBindInfo()
-{
-    if (m_Command) {
-        PR_Free(m_Command);
-    }
-    m_Command = nsnull;
-
-    NS_RELEASE   (m_DocLoader);
-}
-
-/*
- * Implementation of ISupports methods...
- */
-NS_IMPL_ADDREF(nsDocumentBindInfo);
-NS_IMPL_RELEASE(nsDocumentBindInfo);
-
-nsresult
-nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
-                                   void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aInstancePtrResult = NULL;
-
-  if (aIID.Equals(kIStreamObserverIID)) {
-    *aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIStreamListenerIID)) {
-    *aInstancePtrResult = (void*) ((nsIStreamListener*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsISupports*) this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-nsresult nsDocumentBindInfo::Bind(nsIURI* aURL, 
-                                  nsILoadGroup *aLoadGroup,
-                                  nsIInputStream *postDataStream,
-                                  const PRUnichar* aReferrer)
-{
-  nsresult rv = NS_OK;
-
-  // XXXbe this knows that m_Container implements nsIWebShell
-  nsCOMPtr<nsIInterfaceRequestor> capabilities = do_QueryInterface(m_Container);
-  nsCOMPtr<nsIChannel> channel;
-  rv = NS_OpenURI(getter_AddRefs(channel), aURL, aLoadGroup, capabilities);
-  if (NS_FAILED(rv)) return rv;
-
-  if (postDataStream || aReferrer)
-  {
-      nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(channel));
-      if (httpChannel)
-      {
-          if (postDataStream) {
-              httpChannel->SetRequestMethod(HM_POST);
-              httpChannel->SetPostDataStream(postDataStream);
-          }
-          if (aReferrer) {
-              // Referer - misspelled, but per the HTTP spec
-              nsCAutoString str = aReferrer;
-              nsCOMPtr<nsIAtom> key = NS_NewAtom("referer");
-              httpChannel->SetRequestHeader(key, str.GetBuffer());
-          }
-      }
-  }
-
-  rv = channel->AsyncRead(0, -1, nsnull, this);
-
-  return rv;
-}
-
-
-NS_IMETHODIMP
-nsDocumentBindInfo::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
-{
-    nsresult rv = NS_OK;
-    nsIContentViewer* viewer = nsnull;
-
-    nsCOMPtr<nsIURI> aURL;
-    rv = channel->GetURI(getter_AddRefs(aURL));
-    if (NS_FAILED(rv)) return rv;
-    char* aContentType = nsnull;
-    rv = channel->GetContentType(&aContentType);
-    if (NS_FAILED(rv)) return rv;
-
-#if defined(DEBUG)
-    char* spec;
-    (void)aURL->GetSpec(&spec);
-
-    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-           ("DocumentBindInfo:%p OnStartRequest(...) called for %s.  Content-type is %s\n",
-            this, spec, aContentType));
-    nsCRT::free(spec);
-#endif /* DEBUG */
-
-    if (nsnull == m_NextStream) {
-        /*
-         * Now that the content type is available, create a document
-         * (and viewer) of the appropriate type...
-         */
-        if (m_DocLoader) {
-
-            rv = m_DocLoader->CreateContentViewer(m_Command, 
-                                                  channel,
-                                                  aContentType, 
-                                                  m_Container,
-                                                  m_ExtraInfo,
-                                                  getter_AddRefs(m_NextStream), 
-                                                  &viewer);
-        } else {
-            rv = NS_ERROR_NULL_POINTER;
-        }
-
-        if (NS_FAILED(rv)) {
-            printf("DocLoaderFactory: Unable to create ContentViewer for command=%s, content-type=%s\n", m_Command ? m_Command : "(null)", aContentType);
-            nsCOMPtr<nsIContentViewerContainer> 
-               cvContainer(do_QueryInterface(m_Container));
-            if ( cvContainer ) {
-                // Give content container a chance to do something with this URL.
-                rv = cvContainer->HandleUnknownContentType( (nsIDocumentLoader*) m_DocLoader, channel, aContentType, m_Command );
-            }
-            // Stop the binding.
-            // This crashes on Unix/Mac... Stop();
-            goto done;
-        }
-
-        /*
-         * Give the document container the new viewer...
-         */
-        nsCOMPtr<nsIContentViewerContainer> 
-                                 cvContainer(do_QueryInterface(m_Container));
-        if (cvContainer) {
-            viewer->SetContainer(m_Container);
-
-            rv = cvContainer->Embed(viewer, m_Command, m_ExtraInfo);
-            if (NS_FAILED(rv)) {
-                goto done;
-            }
-        }
-    }
-
-    /*
-     * Pass the OnStartRequest(...) notification out to the document 
-     * IStreamListener.
-     */
-    if (nsnull != m_NextStream) {
-        rv = m_NextStream->OnStartRequest(channel, ctxt);
-    }
-
-  done:
-    NS_IF_RELEASE(viewer);
-    nsCRT::free(aContentType);
-    return rv;
-}
-
-
-NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
-                                              nsIInputStream *aStream, 
-                                              PRUint32 sourceOffset, 
-                                              PRUint32 aLength)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIURI> aURL;
-    rv = channel->GetURI(getter_AddRefs(aURL));
-    if (NS_FAILED(rv)) return rv;
-
-#if defined(DEBUG)
-    char* spec;
-    (void)aURL->GetSpec(&spec);
-
-    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-           ("DocumentBindInfo:%p: OnDataAvailable(...) called for %s.  Bytes available: %d.\n", 
-            this, spec, aLength));
-    nsCRT::free(spec);
-#endif /* DEBUG */
-
-    if (nsnull != m_NextStream) {
-       /*
-        * Bump the refcount in case the stream gets destroyed while the data
-        * is being processed...  If Stop(...) is called the stream could be
-        * freed prematurely :-(
-        *
-        * Currently this can happen if javascript loads a new URL 
-        * (via nsIWebShell::LoadURL) during the parse phase... 
-        */
-        nsCOMPtr<nsIStreamListener> listener(m_NextStream);
-
-        rv = listener->OnDataAvailable(channel, ctxt, aStream, sourceOffset, aLength);
-    } else {
-      rv = NS_BINDING_FAILED;
-    }
-
-    return rv;
-}
-
-
-NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
-                                            nsresult aStatus, const PRUnichar *aMsg)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIURI> aURL;
-    rv = channel->GetURI(getter_AddRefs(aURL));
-    if (NS_FAILED(rv)) return rv;
-
-#if defined(DEBUG)
-    char* spec;
-    (void)aURL->GetSpec(&spec);
-    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-           ("DocumentBindInfo:%p: OnStopRequest(...) called for %s.  Status: %d.\n", 
-            this, spec, aStatus));
-    nsCRT::free(spec);
-#endif // DEBUG
-
-    if (NS_FAILED(aStatus)) {
-        char *url;
-        aURL->GetSpec(&url);
-
-        if (aStatus == NS_ERROR_UNKNOWN_HOST)
-            printf("Error: Unknown host: %s\n", url);
-        else if (aStatus == NS_ERROR_MALFORMED_URI)
-            printf("Error: Malformed URI: %s\n", url);
-        else if (NS_FAILED(aStatus))
-            printf("Error: Can't load: %s (%x)\n", url, aStatus);
-        nsCRT::free(url);
-    }
-
-    if (nsnull != m_NextStream) {
-        rv = m_NextStream->OnStopRequest(channel, ctxt, aStatus, aMsg);
-    }
-
-    m_NextStream = nsnull;  // Release our stream we are holding
-
-    return rv;
-}
 
 
 
