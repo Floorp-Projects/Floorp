@@ -71,7 +71,6 @@ CnsICommandMgr::~CnsICommandMgr()
 {
 }
 
-
 // 1st column: command; 2nd column: DoCommand state, 3rd column: CmdParam state; 
 CommandTest CommandTable[] = {
 	{"cmd_bold",   "",    "state_all", PR_TRUE, 50000,    5.798,     "hello",						 "HELLO"},
