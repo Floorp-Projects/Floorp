@@ -93,8 +93,6 @@ class nsXBLBinding: public nsIXBLBinding
   NS_IMETHOD MarkForDeath();
   NS_IMETHOD MarkedForDeath(PRBool* aResult);
 
-  NS_IMETHOD ImplementsInterface(REFNSIID aIID, PRBool* aResult);
-
 public:
   nsXBLBinding(nsIXBLPrototypeBinding* aProtoBinding);
   virtual ~nsXBLBinding();

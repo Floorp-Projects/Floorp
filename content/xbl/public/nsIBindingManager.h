@@ -100,8 +100,6 @@ public:
 
   NS_IMETHOD InheritsStyle(nsIContent* aContent, PRBool* aResult) = 0;
   NS_IMETHOD FlushChromeBindings() = 0;
-
-  NS_IMETHOD GetBindingImplementation(nsIContent* aContent, void* aScriptObject, REFNSIID aIID, void** aResult)=0;
 };
 
 #endif // nsIBinding_Manager_h__
