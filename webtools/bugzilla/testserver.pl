@@ -43,7 +43,7 @@ if ($^O !~ /MSWin32/i) {
     foreach my $pscmd (@pscmds) {
         open PH, "$pscmd 2>/dev/null |";
         while (my $line = <PH>) {
-            if ($line =~ /^(?:\S*\/)?httpd\s+(\d+)$/) {
+            if ($line =~ /^(?:\S*\/)?(?:httpd|apache)\s+(\d+)$/) {
                 $sgid = $1 if $1 > $sgid;
             }
         }
@@ -76,7 +76,9 @@ Please refer to the webserver configuration section of the Bugzilla guide.
 If you are using virtual hosts or suexec, this warning may not apply.\n";
     }
 } elsif ($^O !~ /MSWin32/i) {
-   print "TEST-???? Could not identify group webserver is using.\n";
+   print
+"TEST-WARNING Failed to find the GID for the 'httpd' process, unable
+to validate webservergroup.\n";
 }
 
 
