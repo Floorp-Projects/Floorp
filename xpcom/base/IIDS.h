@@ -29,19 +29,19 @@ nsIFrame = { /* a6cf9050-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9051-15b3-11d2-932e-00805f8add32 */
+nsIHTMLContentSink = { /* a6cf9051-15b3-11d2-932e-00805f8add32 */
     0xa6cf9051,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9052-15b3-11d2-932e-00805f8add32 */
+nsIContentSink = { /* a6cf9052-15b3-11d2-932e-00805f8add32 */
     0xa6cf9052,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9053-15b3-11d2-932e-00805f8add32 */
+nsIDTD = { /* a6cf9053-15b3-11d2-932e-00805f8add32 */
     0xa6cf9053,
     0x15b3,
     0x11d2,
