@@ -415,9 +415,9 @@ PR_EXTERN(PrefResult) PREF_CopyPrefsTree(const char *srcRoot, const char *destRo
 ** file.  The two types need to be in sync for now.  Certain
 ** compilers were having problems with multiple definitions.
 */
-#ifndef nsIPref_h__
+#ifndef __gen_nsIPref_h__
 typedef int (*PrefChangedFunc) (const char *, void *); 
-#endif /* nsIPref_h__ */
+#endif /* __gen_nsIPref_h__ */
 
 /*
 // <font color=blue>
