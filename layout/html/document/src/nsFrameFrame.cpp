@@ -239,14 +239,15 @@ nsHTMLFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
 
-  // XXX this needs to be changed from (200,200) to a better default for inline frames
-  if (aReflowState.HaveFixedContentWidth()) {
+  // XXX this needs to be changed from (200,200) to a better default
+  // for inline frames
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.computedWidth) {
     aDesiredSize.width = aReflowState.computedWidth;
   }
   else {
     aDesiredSize.width = NSIntPixelsToTwips(200, p2t);
   }
-  if (aReflowState.HaveFixedContentHeight()) {
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.computedHeight) {
     aDesiredSize.height = aReflowState.computedHeight;
   }
   else {
