@@ -444,3 +444,23 @@ toolbar[iconsize="small"] #button-next[disabled] {
 #junkIcon {
   list-style-image: url("chrome://messenger/skin/icons/folder-junk.png");
 }
+
+/* ::::: remote content bar status rules ::::: */
+
+#remoteContentMessage {
+  font-weight: bold;
+}
+
+#remoteContentImage {
+  list-style-image: url("chrome://messenger/skin/icons/mail-toolbar-small.png"); /* temporary artwork!! */
+  -moz-image-region: rect(0px 168px 24px 144px);
+  padding-left: 3px;
+}
+
+#remoteContentBar {
+  border-bottom: 1px solid;
+  -moz-border-bottom-colors: #000000;
+  -moz-appearance: toolbox;
+  background-color: -moz-Dialog;
+  color: black;
+}
