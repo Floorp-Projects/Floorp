@@ -31,11 +31,10 @@ MISCDEP=                        \
 
 
 OBJS =					    \
-	.\$(OBJDIR)\winmain.obj		    \
-	.\$(OBJDIR)\nsViewer.obj	    \
+	.\$(OBJDIR)\nsWinMain.obj	    \
+	.\$(OBJDIR)\nsViewerApp.obj	    \
 	.\$(OBJDIR)\JSConsole.obj	    \
 	.\$(OBJDIR)\nsBrowserWindow.obj	    \
-	.\$(OBJDIR)\nsDocLoader.obj	    \
 	.\$(OBJDIR)\nsEditorInterfaces.obj  \
 	.\$(OBJDIR)\nsEditorMode.obj	    \
 	.\$(OBJDIR)\nsSetupRegistry.obj	    \
