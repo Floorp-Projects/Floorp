@@ -291,6 +291,8 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGAnimatedString_id,
   eDOMClassInfo_SVGImageElement_id,
   eDOMClassInfo_SVGStyleElement_id,
+  eDOMClassInfo_SVGAnimatedPreserveAspectRatio_id,
+  eDOMClassInfo_SVGPreserveAspectRatio_id,
 #endif //MOZ_SVG
   
   // This one better be the last one in this list

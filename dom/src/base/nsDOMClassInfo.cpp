@@ -299,6 +299,7 @@
 #include "nsIDOMSVGAnimatedLengthList.h"
 #include "nsIDOMSVGAnimatedPoints.h"
 #include "nsIDOMSVGAnimatedPathData.h"
+#include "nsIDOMSVGAnimPresAspRatio.h"
 #include "nsIDOMSVGAnimTransformList.h"
 #include "nsIDOMSVGCircleElement.h"
 #include "nsIDOMSVGEllipseElement.h"
@@ -320,6 +321,7 @@
 #include "nsIDOMSVGPointList.h"
 #include "nsIDOMSVGPolygonElement.h"
 #include "nsIDOMSVGPolylineElement.h"
+#include "nsIDOMSVGPresAspectRatio.h"
 #include "nsIDOMSVGSVGElement.h"
 #include "nsIDOMSVGTextElement.h"
 #include "nsIDOMSVGTransformable.h"
@@ -883,6 +885,10 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)  
   NS_DEFINE_CLASSINFO_DATA(SVGStyleElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)  
+  NS_DEFINE_CLASSINFO_DATA(SVGAnimatedPreserveAspectRatio, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGPreserveAspectRatio, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif  
 };
 
@@ -2361,6 +2367,14 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
     
+  DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedPreserveAspectRatio, nsIDOMSVGAnimatedPreserveAspectRatio)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedPreserveAspectRatio)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGPreserveAspectRatio, nsIDOMSVGPreserveAspectRatio)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPreserveAspectRatio)
+  DOM_CLASSINFO_MAP_END
+
 #endif //MOZ_SVG
 
 #ifdef NS_DEBUG
