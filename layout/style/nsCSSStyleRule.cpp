@@ -1675,7 +1675,7 @@ MapDeclarationFontInto(nsICSSDeclaration* aDeclaration,
               case eSystemAttr_Font_Button:
               case eSystemAttr_Font_List:
                 font->mFont.name.AssignWithConversion("sans-serif");
-                font->mFont.size = defaultFont.size - NSIntPointsToTwips(2);
+                font->mFont.size = PR_MAX(defaultFont.size - NSIntPointsToTwips(2), 0);
                 break;
             }
 #endif
