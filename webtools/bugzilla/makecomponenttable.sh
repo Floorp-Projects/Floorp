@@ -106,6 +106,7 @@ insert into components (value, program, initialowner) values ("Event Handling", 
 insert into components (value, program, initialowner) values ("Form Submission", "NGLayout", "karnaze@netscape.com");
 insert into components (value, program, initialowner) values ("HTMLFrames", "NGLayout", "karnaze@netscape.com");
 insert into components (value, program, initialowner) values ("HTMLTables", "NGLayout", "buster@netscape.com");
+insert into components (value, program, initialowner) values ("Layout", "NGLayout", "kipp@netscape.com");
 insert into components (value, program, initialowner) values ("Networking Library", "NGLayout", "valeski@netscape.com");
 insert into components (value, program, initialowner) values ("Parser", "NGLayout", "rickg@netscape.com");
 insert into components (value, program, initialowner) values ("Plug-ins", "NGLayout", "michaelp@netscape.com");
