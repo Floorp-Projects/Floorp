@@ -161,7 +161,7 @@ public:
 
  	virtual PRBool			DispatchWindowEvent(nsGUIEvent& event);
  	virtual PRBool			DispatchWindowEvent(nsGUIEvent &event,nsEventStatus &aStatus);
-  	virtual nsresult		HandleUpdateEvent();
+  	virtual nsresult		HandleUpdateEvent(RgnHandle regionToValidate);
   	virtual void			AcceptFocusOnClick(PRBool aBool) { mAcceptFocusOnClick = aBool;};
   	PRBool					AcceptFocusOnClick() { return mAcceptFocusOnClick;};
 	void 					Flash(nsPaintEvent	&aEvent);

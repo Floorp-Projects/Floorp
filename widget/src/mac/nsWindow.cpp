@@ -1057,10 +1057,14 @@ NS_IMETHODIMP	nsWindow::Update()
 	static PRBool  reentrant = PR_FALSE;
 
 	if (reentrant)
-		HandleUpdateEvent();
+		HandleUpdateEvent(nil);
 	else
 	{
 		reentrant = PR_TRUE;
+
+		StRegionFromPool regionToValidate;
+		if (!regionToValidate)
+			return NS_ERROR_OUT_OF_MEMORY;
 
 		// make a copy of the window update rgn
 		StRegionFromPool saveUpdateRgn;
@@ -1073,7 +1077,7 @@ NS_IMETHODIMP	nsWindow::Update()
 		StPortSetter portSetter(mWindowPtr);
 
 		::BeginUpdate(mWindowPtr);
-		HandleUpdateEvent();
+		HandleUpdateEvent(regionToValidate);
 		::EndUpdate(mWindowPtr);
 
 		// restore the window update rgn
@@ -1082,17 +1086,11 @@ NS_IMETHODIMP	nsWindow::Update()
 		// ::CopyRgn(saveUpdateRgn, ((WindowRecord*)mWindowPtr)->updateRgn);
 		::InvalWindowRgn(mWindowPtr, saveUpdateRgn);
 #else
-		::CopyRgn(saveUpdateRgn, ((WindowRecord*)mWindowPtr)->updateRgn);
+	  ::CopyRgn(saveUpdateRgn, ((WindowRecord*)mWindowPtr)->updateRgn);
 #endif
 
-		// validate the rect of the widget we have just drawn
-		nsRect bounds = mBounds;
-		LocalToWindowCoordinate(bounds);
-		Rect macRect;
-		nsRectToMacRect(bounds, macRect);
-
-		::ValidWindowRect(mWindowPtr, &macRect);
-
+    ::ValidWindowRgn(mWindowPtr, regionToValidate);
+    
 		reentrant = PR_FALSE;
 	}
 
@@ -1219,7 +1217,7 @@ nsWindow :: CountUpdateRect (Rect *inDirtyRect, void* inData)
 //		Must be called between BeginUpdate/EndUpdate: the window visRgn
 //		is expected to be set to whatever needs to be drawn.
 //-------------------------------------------------------------------------
-nsresult nsWindow::HandleUpdateEvent()
+nsresult nsWindow::HandleUpdateEvent(RgnHandle regionToValidate)
 {
 	if (! mVisible)
 		return NS_OK;
@@ -1297,6 +1295,10 @@ nsresult nsWindow::HandleUpdateEvent()
       printf("update took %g microseconds.\n", double(finish - start));
     }
 #endif
+
+    // Copy updateRgn to regionToValidate
+    if (regionToValidate)
+      ::CopyRgn(updateRgn, regionToValidate);
 	}
 	return NS_OK;
 }
