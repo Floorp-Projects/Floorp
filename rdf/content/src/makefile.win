@@ -60,6 +60,7 @@ LINCS=  -I$(PUBLIC)\rdf          \
         -I$(PUBLIC)\lwbrk        \
         -I$(PUBLIC)\js           \
         -I$(PUBLIC)\dom          \
+        -I$(PUBLIC)\locale       \
         -I$(DEPTH)\rdf\base\src  \
         -I$(DEPTH)\layout\html\base\src \
         $(NULL)
