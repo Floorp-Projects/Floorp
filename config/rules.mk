@@ -1096,7 +1096,7 @@ install:: $(addprefix "INSTALL-", $(CHROME_CONTENT))
 
 # Pseudo-target specifying how to install content files.
 $(addprefix "INSTALL-", $(CHROME_CONTENT)) :
-	$(INSTALL) $(subst "INSTALL-", , $@) $(CHROME_DIST)/$(CHROME_CONTENT_DIR)/$(subst "INSTALL-",,$(@D))
+	$(INSTALL) $(subst "INSTALL-",,$(CHROME_SOURCE_DIR)/$@) $(CHROME_DIST)/$(CHROME_CONTENT_DIR)/$(subst "INSTALL-",,$(@D))
 
 # Clobber content files.
 clobber:: $(addprefix "CLOBBER-", $(CHROME_CONTENT))
@@ -1121,7 +1121,7 @@ install:: $(addprefix "INSTALL-", $(CHROME_SKIN))
 
 # Pseudo-target specifying how to install chrome files.
 $(addprefix "INSTALL-", $(CHROME_SKIN)) :
-	$(INSTALL) $(subst "INSTALL-", , $@) $(CHROME_DIST)/$(CHROME_SKIN_DIR)/$(subst "INSTALL-",,$(@D))
+	$(INSTALL) $(subst "INSTALL-",,$(CHROME_SOURCE_DIR)/$@) $(CHROME_DIST)/$(CHROME_SKIN_DIR)/$(subst "INSTALL-",,$(@D))
 
 # Clobber content files.
 clobber:: $(addprefix "CLOBBER-", $(CHROME_SKIN))
@@ -1146,7 +1146,7 @@ install:: $(addprefix "INSTALL-", $(CHROME_L10N))
 
 # Pseudo-target specifying how to install l10n files.
 $(addprefix "INSTALL-", $(CHROME_L10N)) :
-	$(INSTALL) $(subst "INSTALL-", , $@) $(CHROME_DIST)/$(CHROME_L10N_DIR)/$(subst "INSTALL-",,$(@D))
+	$(INSTALL) $(subst "INSTALL-",,$(CHROME_SOURCE_DIR)/$@) $(CHROME_DIST)/$(CHROME_L10N_DIR)/$(subst "INSTALL-",,$(@D))
 
 # Clobber l10n files.
 clobber:: $(addprefix "CLOBBER-", $(CHROME_L10N))
