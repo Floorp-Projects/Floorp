@@ -58,6 +58,13 @@ typedef enum
 
 - (NSString *)stringByRemovingCharactersInSet:(NSCharacterSet*)characterSet;
 - (NSString *)stringByReplacingCharactersInSet:(NSCharacterSet*)characterSet withString:(NSString*)string;
-- (NSString*)stringByTruncatingTo:(int)maxCharacters at:(ETruncationType)truncationType;
+- (NSString *)stringByTruncatingTo:(unsigned int)maxCharacters at:(ETruncationType)truncationType;
+
+@end
+
+@interface NSMutableString (ChimeraMutableStringUtils)
+
+- (void)truncateTo:(unsigned)maxCharacters at:(ETruncationType)truncationType;
+- (void)truncateToWidth:(float)maxWidth at:(ETruncationType)truncationType withAttributes:(NSDictionary *)attributes;
 
 @end

@@ -35,11 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import <AppKit/AppKit.h>		// for NSStringDrawing.h
 #import "NSString+Utils.h"
 
 #include "nsString.h"
 #include "nsPromiseFlatString.h"
 #include "nsCRT.h"
+
 
 @implementation NSString (ChimeraStringUtils)
 
@@ -70,12 +72,12 @@
   return [self stringWithCharacters:flatString.get() length:flatString.Length()];
 }
 
-#define ASSIGN_STACK_BUFFER_CHARACTERS	256
+#define ASSIGN_STACK_BUFFER_CHARACTERS  256
 
 - (void)assignTo_nsAString:(nsAString&)ioString
 {
-  PRUnichar			stackBuffer[ASSIGN_STACK_BUFFER_CHARACTERS];
-  PRUnichar*		buffer = stackBuffer;
+  PRUnichar     stackBuffer[ASSIGN_STACK_BUFFER_CHARACTERS];
+  PRUnichar*    buffer = stackBuffer;
   
   // XXX maybe fix this to use SetLength(0), SetLength(len), and a writing iterator.
   unsigned int len = [self length];
@@ -87,7 +89,7 @@
       return;
   }
 
-  [self getCharacters: buffer];		// does not null terminate
+  [self getCharacters: buffer];   // does not null terminate
   ioString.Assign(buffer, len);
   
   if (buffer != stackBuffer)
@@ -129,43 +131,99 @@
   return cleanString;
 }
 
-- (NSString*)stringByTruncatingTo:(int)maxCharacters at:(ETruncationType)truncationType
+- (NSString*)stringByTruncatingTo:(unsigned in)maxCharacters at:(ETruncationType)truncationType
 {
   if ([self length] > maxCharacters)
   {
-      NSMutableString *croppedString = [self mutableCopy];
-      NSRange replaceRange;
-      replaceRange.length = [self length] - maxCharacters;
-
-      switch (truncationType)
-      {
-        case kTruncateAtStart:
-          replaceRange.location = 0;
-          break;
-
-        case kTruncateAtMiddle:
-          replaceRange.location = maxCharacters / 2;
-          break;
-
-        case kTruncateAtEnd:
-          replaceRange.location = maxCharacters;
-          break;
-
-        default:
-#if DEBUG
-          NSLog(@"Unknown truncation type in stringByTruncatingTo::");
-#endif          
-          break;
-      }
-      
-      [croppedString replaceCharactersInRange:replaceRange withString:[NSString ellipsisString]];
-      return croppedString;
+    NSMutableString *mutableCopy = [self mutableCopy];
+    [mutableCopy truncateTo:maxCharacters at:truncationType];
+    return [mutableCopy autorelease];
   }
-  else
+
+  return [[self copy] autorelease];
+}
+
+@end
+
+
+@implementation NSMutableString (ChimeraMutableStringUtils)
+
+- (void)truncateTo:(unsigned)maxCharacters at:(ETruncationType)truncationType
+{
+  if ([self length] > maxCharacters)
   {
-    return [[self copy] autorelease];
+  NSRange replaceRange;
+  replaceRange.length = [self length] - maxCharacters;
+
+  switch (truncationType)
+  {
+    case kTruncateAtStart:
+      replaceRange.location = 0;
+      break;
+
+    case kTruncateAtMiddle:
+      replaceRange.location = maxCharacters / 2;
+      break;
+
+    case kTruncateAtEnd:
+      replaceRange.location = maxCharacters;
+      break;
+
+    default:
+#if DEBUG
+      NSLog(@"Unknown truncation type in stringByTruncatingTo::");
+#endif          
+      replaceRange.location = maxCharacters;
+      break;
+  }
+  
+  [self replaceCharactersInRange:replaceRange withString:[NSString ellipsisString]];
   }
 }
 
+
+- (void)truncateToWidth:(float)maxWidth at:(ETruncationType)truncationType withAttributes:(NSDictionary *)attributes
+{
+  // First check if we have to truncate at all.
+  if ([self sizeWithAttributes:attributes].width > maxWidth)
+  {
+    // Essentially, we perform a binary search on the string length
+    // which fits best into maxWidth.
+
+    float width;
+    int lo = 0;
+    int hi = [self length];
+    int mid;
+
+    // Make a backup copy of the string so that we can restore it if we fail low.
+    NSMutableString *backup = [self mutableCopy];
+    
+    while (hi >= lo)
+    {
+      mid = (hi + lo) / 2;
+      
+      // Cut to mid chars and calculate the resulting width
+      [self truncateTo:mid at:truncationType];
+      width = [self sizeWithAttributes:attributes].width;
+      
+      if (width > maxWidth) {
+        // Fail high - string is still to wide. For the next cut, we can simply
+        // work on the already cut string, so we don't restore using the backup. 
+        hi = mid - 1;
+      } else if (width == maxWidth) {
+        // Perfect match, abort the search.
+        break;
+      } else {
+        // Fail low - we cut off to much. Restore the string before cutting again.
+        lo = mid + 1;
+        [self setString:backup];
+      }
+    }
+    // Perform the final cut (unless this was already a perfect match).
+    if (width != maxWidth)
+      [self truncateTo:hi at:truncationType];
+    [backup release];
+  }
+}
 
 @end
