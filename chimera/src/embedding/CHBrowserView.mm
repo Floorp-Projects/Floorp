@@ -1434,12 +1434,11 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress,
 {
   NSPoint localPoint = [self convertPoint:inPoint fromView:[inWind contentView]];
   NSView<mozView>* hitView = [self hitTest:localPoint];
-  if ( [hitView conformsToProtocol:@protocol(mozView)]) {
+  if ( [hitView conformsToProtocol:@protocol(mozView)] ) {
     nsCOMPtr<nsIEventSink> sink (do_QueryInterface([hitView widget]));
     *outSink = sink.get();
     NS_IF_ADDREF(*outSink);
   }
-  else printf("couldn't find a view\n");
 }
 
 
