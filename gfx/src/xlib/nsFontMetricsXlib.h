@@ -110,6 +110,11 @@ public:
   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
+  NS_IMETHOD GetEmHeight(nscoord &);
+  NS_IMETHOD GetEmAscent(nscoord &);
+  NS_IMETHOD GetEmDescent(nscoord &);
+  NS_IMETHOD GetMaxHeight(nscoord &);
+  
   virtual nsresult GetSpaceWidth(nscoord &aSpaceWidth);
 
 #ifdef FONT_SWITCHING
