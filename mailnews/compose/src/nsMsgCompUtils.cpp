@@ -792,6 +792,23 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
     }
   }
 
+
+  // Add format=flowed as in RFC 2646 unless asked to not do that.
+  PRBool sendFlowed = PR_TRUE;   /* rhp - add this  */
+  if(type && !PL_strcasecmp(type, "text/plain") && prefs)
+  {
+    prefs->GetBoolPref("mail.send_plaintext_flowed", &sendFlowed);
+    if (sendFlowed)
+			PUSH_STRING ("; format=flowed");
+		else
+    {
+      // This is the same as no format at all.
+			PUSH_STRING ("; format=fixed");
+    }
+
+  }
+    
+
 	if (x_mac_type && *x_mac_type) {
 		PUSH_STRING ("; x-mac-type=\"");
 		PUSH_STRING (x_mac_type);

@@ -415,7 +415,17 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
 		PRUnichar *bodyText = NULL;
     nsString format(contentType);
     PRUint32 flags = nsIDocumentEncoder::OutputFormatted;
-		
+
+    nsresult rv2;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv2);
+    if (NS_SUCCEEDED(rv2)) {
+      PRBool sendflowed;
+      rv2=prefs->GetBoolPref("mailnews.send_plaintext_flowed", &sendflowed);
+      if(!(NS_SUCCEEDED(rv2) && !sendflowed))
+        // Unless explicitly forbidden...
+        flags |= nsIDocumentEncoder::OutputFormatFlowed;
+    }
+    
     rv = m_editor->GetContentsAs(format.GetUnicode(), flags, &bodyText);
 		
     if (NS_SUCCEEDED(rv) && NULL != bodyText)
