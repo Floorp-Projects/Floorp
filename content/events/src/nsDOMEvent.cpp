@@ -137,10 +137,11 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
   NS_IF_ADDREF(mPresContext);
 
   if (aEvent) {
-    mEventIsInternal = PR_FALSE;
     mEvent = aEvent;
   }
   else {
+    mEventIsInternal = PR_TRUE;
+
     //Allocate internal event
     nsAutoString eventType(aEventType);
     if (eventType.EqualsIgnoreCase("MouseEvents")) {
@@ -1153,7 +1154,7 @@ nsDOMEvent::SetEventType(const nsAReadableString& aEventTypeArg)
   } 
   else {
     mEvent->message = NS_USER_DEFINED_EVENT;
-    mEvent->userType = nsStringKey(aEventTypeArg).Clone();
+    mEvent->userType = new nsStringKey(aEventTypeArg);
   }
   return NS_OK;
 }
