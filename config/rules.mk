@@ -467,8 +467,10 @@ endif
 $(SIMPLE_PROGRAMS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EXTRA_DEPS)
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) $(WRAP_MALLOC_CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
+	$(MOZ_POST_PROGRAM_COMMAND) $@
 else
 	$(CC) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
+	$(MOZ_POST_PROGRAM_COMMAND) $@
 endif
 
 #
@@ -524,20 +526,17 @@ endif
 	$(AR) $(OBJS) $(LOBJS) $(SUB_LOBJS)
 	$(RANLIB) $@
 	@rm -f foodummyfilefoo $(SUB_LOBJS)
-	$(MOZ_POST_AR_LIB_COMMAND) $@
 else
 ifdef OS2_IMPLIB
 $(LIBRARY): $(OBJS) $(DEF_FILE)
 	rm -f $@
 	$(IMPLIB) $@ $(DEF_FILE)
 	$(RANLIB) $@
-	$(MOZ_POST_AR_LIB_COMMAND) $@
 else
 $(LIBRARY): $(OBJS)
 	rm -f $@
 	$(AR) $(LIBOBJS),,
 	$(RANLIB) $@
-	$(MOZ_POST_AR_LIB_COMMAND) $@
 endif
 endif
 
