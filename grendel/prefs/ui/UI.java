@@ -16,7 +16,7 @@
  * <edwin@woudt.nl>.  Portions created by Edwin Woudt are 
  * Copyright (C) 1999 Edwin Woudt.  All Rights Reserved.
  *
- * Contributors: 
+ * Contributors:  Jeff Galyan <talisman@anamorphic.com> 
  */
 
 package grendel.prefs.ui;
@@ -56,34 +56,48 @@ import grendel.ui.UnifiedMessageDisplayManager;
 
 public class UI extends JFrame {
 
+  private static boolean DEBUG = true;
+
   UIPrefs prefs = UIPrefs.GetMaster();
 
   JRadioButton rb1, rb2, rb3, rb4, rb5;
   JCheckBox    cbTooltips;
   JComboBox    cbLandF;
+  // BUGFIX: Fonts were too big (may be specific to Linux JVM,
+  //         but this is a safe bet for a Font). --Jeff
+  Font baseFont = new Font("Helvetica", Font.PLAIN, 12);
   
   public static void main(String argv[]) {
     
     UI ui = new UI();
-    ui.show();
+    // Edwin: the show() method is deprecated as of JDK 1.1
+    // use setVisible(boolean) instead --Jeff
+    ui.setVisible(true);
     
   }
  
   public UI() {
     
     super();
-    
+    // Edwin: explicitly setting the window size and using a null layout
+    // manager to hardcode pixel coordinates for UI components is by 
+    // definition not cross-platform compatible. Consider using a 
+    // GridBagLayout instead. Also, the layout isn't very consistent in terms
+    // of placement of components. --Jeff
     setSize(500,354);
     setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     getContentPane().setLayout(null);
 
     JLabel label = new JLabel("Choose your window layout:");
+    label.setFont(baseFont);
     label.setBounds(12,12,label.getPreferredSize().width,label.getPreferredSize().height);
     getContentPane().add(label);
     label = new JLabel("Look and Feel");
+    label.setFont(baseFont);
     label.setBounds(12,148,label.getPreferredSize().width,label.getPreferredSize().height);
     getContentPane().add(label);
     label = new JLabel("Note: Grendel must be restarted to see any changes");
+    label.setFont(baseFont);
     label.setBounds(12,294,label.getPreferredSize().width,label.getPreferredSize().height);
     getContentPane().add(label);
 
@@ -130,19 +144,23 @@ public class UI extends JFrame {
     bg.add(rb1); bg.add(rb2); bg.add(rb3); bg.add(rb4); bg.add(rb5);
 
     cbTooltips = new JCheckBox("Show tooltips");
+    cbTooltips.setFont(baseFont);
     cbTooltips.setBounds(12,100,cbTooltips.getPreferredSize().width, cbTooltips.getPreferredSize().height);
     getContentPane().add(cbTooltips);
 
     cbLandF = new JComboBox(new LAFListModel());
+    cbLandF.setFont(baseFont);
     cbLandF.setBounds(100,144,300,cbLandF.getPreferredSize().height);
     getContentPane().add(cbLandF);
 
     JButton button = new JButton("Cancel");
+    button.setFont(baseFont);
     button.setBounds(334,290,68,button.getPreferredSize().height);
     button.addActionListener(new CancelActionListener());
     button.setMargin(new Insets(0,0,0,0));
     getContentPane().add(button);
     button = new JButton("Finish");
+    button.setFont(baseFont);
     button.setBounds(414,290,68,button.getPreferredSize().height);
     button.addActionListener(new FinishActionListener());
     button.setMargin(new Insets(0,0,0,0));
@@ -207,7 +225,9 @@ public class UI extends JFrame {
     	
       setData();
       prefs.writePrefs();
-      hide();
+      // Edwin: the hide() method is deprecated as of JDK 1.1
+      // use setVisible(boolean) instead --Jeff
+      setVisible(false);
       dispose();
     	
     }
@@ -218,7 +238,7 @@ public class UI extends JFrame {
   
     public void actionPerformed(ActionEvent e) {
     	
-      hide();
+      setVisible(false);
       dispose();
     	
     }
@@ -228,22 +248,41 @@ public class UI extends JFrame {
   class LAFListModel extends AbstractListModel implements ComboBoxModel {
     LookAndFeel fLAFs[] = null;
     Object selection = null;
+    String os_name = System.getProperty("os.name");
 
     LAFListModel() {
       UIManager.LookAndFeelInfo[] info = 
         UIManager.getInstalledLookAndFeels();
-      fLAFs = new LookAndFeel[info.length];
+      Vector LAFVec = new Vector();
       for (int i = 0; i < info.length; i++) {
         try {
           String name = info[i].getClassName();
-          Class c = Class.forName(name);
-          fLAFs[i] = (LookAndFeel)c.newInstance();
-          if (fLAFs[i].getDescription().equals(prefs.getLookAndFeel())) {
-            selection = fLAFs[i].getDescription();
+          if ((name.endsWith("WindowsLookAndFeel") && !os_name.startsWith("Win")) 
+              || (name.endsWith("MacLookAndFeel") && !os_name.startsWith("Mac"))) {
+            // don't add it to the list
+          } else {
+            Class c = Class.forName(name);
+            LAFVec.addElement((LookAndFeel)c.newInstance());
           }
         } catch (Exception e){
+          // Edwin: please at least provide a static private boolean at 
+          // class scope to test if we want debug output so if we get 
+          // exceptions where we don't expect them, we can handle them
+          // gracefully (and hopefully find out what's causing them).
+          // We can always set DEBUG to "false" for a release.  --Jeff
+          if (DEBUG) {
+            e.printStackTrace();
+          }
         }
       }
+      fLAFs = new LookAndFeel[LAFVec.size()];
+      for (int j = 0; j < LAFVec.size(); j++) {
+        fLAFs[j] = (LookAndFeel)LAFVec.elementAt(j);
+        if (fLAFs[j].getDescription().equals(prefs.getLookAndFeel())) {
+          selection = fLAFs[j].getDescription();
+        }
+      }
+      setFont(baseFont);
     }
 
     public int getSize() {
@@ -257,6 +296,7 @@ public class UI extends JFrame {
       if (fLAFs != null && index < fLAFs.length) {
         // this is a hack. the toString() returns a string which is
         // best described as "unwieldly"
+        // Actually, I would say this is the right way to do this. --Jeff
         return fLAFs[index].getDescription();
       }
       return null;
