@@ -224,7 +224,7 @@ sub PropagateAllFlags($)
   my($build_array) = @_;
   
   # if "all" is set, set all the flags to 1
-  unless ($build_array->[0][0] eq "all") { die "Error: 'all' must come first in the build array\n"; }
+  unless ($build_array->[0][0] eq "all") { die "Error: 'all' must come first in the flags array\n"; }
   
   if ($build_array->[0][1] == 1)
   {
