@@ -84,7 +84,7 @@ char *SEC_GetPassword(FILE *input, FILE *output, char *prompt,
 {
     char phrase[200];
     int infd = fileno(input);
-#ifdef _WINDOWS
+#if defined(_WINDOWS) || defined(OS2)
     int isTTY = (input == stdin);
 #else
     int isTTY = isatty(infd);
