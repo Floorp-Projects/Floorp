@@ -35,22 +35,38 @@ import org.mozilla.util.ParameterCheck;
 import java.io.File;
 import java.io.FileNotFoundException;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Properties;
+
+
 /**
  *
- *  <B>BrowserControlFactory</B> creates concrete instances of BrowserControl
-
- * <B>Lifetime And Scope</B> <P>
-
- * This is a static class, it is neven instantiated.
-
+ *  <p><B>BrowserControlFactory</B> uses a discovery algorithm to find
+ *  an implementation of {@link BrowserControlFactoryInterface}.  All of
+ *  the public static methods in this class simply call through to this
+ *  implemenatation instance.</p>
  *
- * @version $Id: BrowserControlFactory.java,v 1.7 2002/10/01 00:39:20 edburns%acm.org Exp $
+ * <p>The discovery mechanism used is to look try to load a resource
+ * called
+ * <code>META-INF/services/org.mozilla.webclient.BrowserControlFactoryInterface</code>.
+ * If the resource is found, interpret it as a <code>Properties</code>
+ * file and read out its first line.  Interpret the first line as the
+ * fully qualified class name of a class that implements {@link
+ * BrowserControlFactoryInterface}.  The named class must have a public
+ * no-arg constructor.</p>
+ *
+ *
+ * @version $Id: BrowserControlFactory.java,v 1.8 2003/09/06 06:26:45 edburns%acm.org Exp $
  * 
- * @see	org.mozilla.webclient.test.EmbeddedMozilla
-
+ *
  */
 
-public class BrowserControlFactory extends Object
+public class BrowserControlFactory extends Object 
 {
 //
 // Protected Constants
@@ -60,24 +76,13 @@ public class BrowserControlFactory extends Object
 // Class Variables
 //
 
-    private static boolean appDataHasBeenSet = false;
-    private static Class browserControlCanvasClass = null;
-    private static String platformCanvasClassName = null;
-    private static String browserType = null;
-
-//
-// Instance Variables
-//
-
-// Attribute Instance Variables
-
-// Relationship Instance Variables
+private static BrowserControlFactoryInterface instance = null;
 
 //
 // Constructors and Initializers    
 //
 
-public BrowserControlFactory()
+private BrowserControlFactory()
 {
     Assert.assert_it(false, "This class shouldn't be constructed.");
 }
@@ -88,179 +93,97 @@ public BrowserControlFactory()
 
 public static void setAppData(String absolutePathToNativeBrowserBinDir) throws FileNotFoundException, ClassNotFoundException
 {
-    BrowserControlFactory.setAppData(BrowserControl.BROWSER_TYPE_NATIVE, absolutePathToNativeBrowserBinDir);
+    getInstance().setAppData(BrowserControl.BROWSER_TYPE_NATIVE, absolutePathToNativeBrowserBinDir);
 }
-
-
-    /**
-
-     * This method is used to set per-application instance data, such as
-     * the location of the browser binary.
-
-     * @param myBrowserType.  Either "native" or "nonnative"
-
-     * @param absolutePathToNativeBrowserBinDir the path to the bin dir
-     * of the native browser, including the bin.  ie:
-     * "D:\Projects\mozilla\dist\win32_d.obj\bin"
-
-     */
 
 public static void setAppData(String myBrowserType, String absolutePathToNativeBrowserBinDir) throws FileNotFoundException, ClassNotFoundException
 {
-    browserType = myBrowserType;
-    if (!appDataHasBeenSet) {
-        // figure out the correct value for platformCanvasClassName
-        if (browserType.equals(BrowserControl.BROWSER_TYPE_NON_NATIVE)) {
-            platformCanvasClassName = "org.mozilla.webclient.wrapper_nonnative.JavaBrowserControlCanvas";
-        }
-        else {
-            ParameterCheck.nonNull(absolutePathToNativeBrowserBinDir);
-            
-            // verify that the directory exists:
-            File binDir = new File(absolutePathToNativeBrowserBinDir);
-            if (!binDir.exists()) {
-                throw new FileNotFoundException("Directory " + absolutePathToNativeBrowserBinDir + " is not found.");
-            }
-            
-            // This hack is necessary for Sun Bug #4303996
-            java.awt.Canvas c = new java.awt.Canvas();
-            platformCanvasClassName = determinePlatformCanvasClassName();
-        }
-        // end of figuring out the correct value for platformCanvasClassName
-        if (platformCanvasClassName != null) {
-            browserControlCanvasClass = Class.forName(platformCanvasClassName);
-        }
-        else {
-            throw new ClassNotFoundException("Could not determine BrowserControlCanvas class to load\n");
-        }
-        
-        try {
-            BrowserControlImpl.appInitialize(browserType, absolutePathToNativeBrowserBinDir);
-        }
-        catch (Exception e) {
-            throw new ClassNotFoundException("Can't initialize native browser: " + 
-                                             e.getMessage());
-        }
-        appDataHasBeenSet = true;
-    }
+    getInstance().setAppData(myBrowserType, absolutePathToNativeBrowserBinDir);
 }
 
 public static void appTerminate() throws Exception
 {
-    BrowserControlImpl.appTerminate();
+    getInstance().appTerminate();
 }
 
 public static BrowserControl newBrowserControl() throws InstantiationException, IllegalAccessException, IllegalStateException
 {
-    if (!appDataHasBeenSet) {
-        throw new IllegalStateException("Can't create BrowserControl instance: setAppData() has not been called.");
-    }
-    Assert.assert_it(null != browserControlCanvasClass);
-    
-    BrowserControlCanvas newCanvas = null;
-    BrowserControl result = null; 
-    newCanvas = (BrowserControlCanvas) browserControlCanvasClass.newInstance();
-    if (null != newCanvas &&
-        null != (result = new BrowserControlImpl(browserType, newCanvas))) {
-        newCanvas.initialize(result);
-    }
-
+    BrowserControl result = null;
+    result = getInstance().newBrowserControl();
     return result;
 }
-
-/**
-
- * BrowserControlFactory.deleteBrowserControl is called with a
- * BrowserControl instance obtained from
- * BrowserControlFactory.newBrowserControl.  This method renders the
- * argument instance completely un-usable.  It should be called when the
- * BrowserControl instance is no longer needed.  This method simply
- * calls through to the non-public BrowserControlImpl.delete() method.
-
- * @see org.mozilla.webclient.ImplObject#delete
-
- */
 
 public static void deleteBrowserControl(BrowserControl toDelete)
 {
-    ParameterCheck.nonNull(toDelete);
-    ((BrowserControlImpl)toDelete).delete();
+    getInstance().deleteBrowserControl(toDelete);
 }
 
 //
-// General Methods
-//
+// helper methods
+// 
 
-/**
-
- * Called from setAppData() in the native case.  This method simply
- * figures out the proper name for the class that is the
- * BrowserControlCanvas. 
-
- * @return  "org.mozilla.webclient.wrapper_native.win32.Win32BrowserControlCanvas" or "org.mozilla.webclient.wrapper_native.gtk.GtkBrowserControlCanvas"
-
- */
-
-private static String determinePlatformCanvasClassName()
+protected static BrowserControlFactoryInterface getInstance() 
 {
-    String result = null;
-    // cause the native library to be loaded
-    // PENDING(edburns): do some magic to determine the right kind of
-    // MozWebShellCanvas to instantiate
-    
-    // How about this:
-    // I try loading sun.awt.windows.WDrawingSurfaceInfo. If it doesn't
-    // load, then I try loading sun.awt.motif.MDrawingSufaceInfo. If
-    // none loads, then I return a error message.
-    // If you think up of a better way, let me know.
-    // -- Mark
-    // Here is what I think is a better way: query the os.name property.
-    // This works in JDK1.4, as well.
-    // -- edburns
+    if (null != instance) {
+        return instance;
+    }
 
-    String osName = System.getProperty("os.name");
-    
-    if (null != osName) {
-       if (-1 != osName.indexOf("indows")) {
-           result = "org.mozilla.webclient.wrapper_native.win32.Win32BrowserControlCanvas";
-       }
-       else {
-           result = "org.mozilla.webclient.wrapper_native.gtk.GtkBrowserControlCanvas";
-       }
+    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    if (classLoader == null) {
+        throw new RuntimeException("Context ClassLoader");
     }
     
-    return result;
-}
-
-// ----UNIT_TEST_START
-
-//
-// Test methods
-//
-
-public static void main(String [] args)
-{
-    System.out.println("doing asserts");
-    Assert.setEnabled(true);
-    Log.setApplicationName("BrowserControlFactory");
-    Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlFactory.java,v 1.7 2002/10/01 00:39:20 edburns%acm.org Exp $");
-
-    BrowserControlCanvas canvas = null;
-    BrowserControl control = null;
+    BufferedReader reader = null;
+    InputStream stream = null;
+    String 
+        className = null,
+        resourceName = "META-INF/services/org.mozilla.webclient.BrowserControlFactoryInterface";
     try {
-        BrowserControlFactory.setAppData("nonnative", args[0]);
-        control = BrowserControlFactory.newBrowserControl();
-        Assert.assert_it(control != null);
-        canvas = (BrowserControlCanvas) control.queryInterface("webclient.BrowserControlCanvas");
-        Assert.assert_it(canvas != null);
+        stream = classLoader.getResourceAsStream(resourceName);
+        if (stream != null) {
+            // Deal with systems whose native encoding is possibly
+            // different from the way that the services entry was created
+            try {
+                reader =
+                    new BufferedReader(new InputStreamReader(stream,
+                                                             "UTF-8"));
+            } catch (UnsupportedEncodingException e) {
+                reader = new BufferedReader(new InputStreamReader(stream));
+            }
+            className = reader.readLine();
+            reader.close();
+            reader = null;
+            stream = null;
+        }
+    } catch (IOException e) {
+    } catch (SecurityException e) {
+    } finally {
+        if (reader != null) {
+            try {
+                reader.close();
+            } catch (Throwable t) {
+                ;
+            }
+            reader = null;
+            stream = null;
+        }
+        if (stream != null) {
+            try {
+                stream.close();
+            } catch (Throwable t) {
+                ;
+            }
+            stream = null;
+        }
     }
-    catch (Exception e) {
-        System.out.println("\n BrowserControl not getting created \n");
-        System.out.println(e.getMessage());
+    if (null != className) {
+        try {
+            Class clazz = classLoader.loadClass(className);
+            instance = (BrowserControlFactoryInterface) (clazz.newInstance());
+        } catch (Exception e) {
+        }
     }
+    return instance;
 }
-
-// ----UNIT_TEST_END
 
 } // end of class BrowserControlFactory

@@ -30,7 +30,7 @@
 
   <property name="Name" value="webclient"/>
   <property name="name" value="webclient"/>
-  <property name="version" value="20020916"/>
+  <property name="version" value="20030906"/>
 
 <!-- ************ Per user local properties ******************************* -->
 
@@ -85,8 +85,12 @@
 
       <include name="org/mozilla/webclient/*"/>
       <include name="org/mozilla/webclient/wrapper_native/*"/>
+      <include name="org/mozilla/webclient/impl/**"/>
       <include name="org/mozilla/webclient/test/*"/>
     </javac>
+
+    <mkdir dir="${build.home}/META-INF/services"/>
+    <echo file="${build.home}/META-INF/services/org.mozilla.webclient.BrowserControlFactoryInterface">org.mozilla.webclient.impl.BrowserControlFactoryImpl</echo>
 
   </target>
 

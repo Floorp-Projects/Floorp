@@ -3,7 +3,7 @@
  SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
 -->
 
-<project name="Webclient Unit Tests" default="test.local" basedir=".">
+<project name="Webclient Unit Tests" default="run.test" basedir=".">
 
 <!--
         This is a generic build.xml file for Ant that is used to run the
@@ -75,7 +75,7 @@
 
     <path id="test.classpath">
       <pathelement location="${junit.jar}"/>
-      <pathelement location="${build.home}/classes"/>
+      <pathelement location="${build.home}"/>
       <pathelement location="${out.test.dir}/classes"/>
     </path>
 
@@ -86,6 +86,8 @@
         Compile unit tests
 -->
     <target name="compile.test">
+
+        <echo message="${build.home}"/>
 
         <mkdir  dir="${out.test.dir}/classes"/>
 
@@ -125,6 +127,7 @@
             <jvmarg value="-Djava.library.path=${myenv.MOZILLA_FIVE_HOME}:${myenv.MOZILLA_FIVE_HOME}/components"/>
             <jvmarg value="-DNSPR_LOG_MODULES=${myenv.NSPR_LOG_MODULES}"/>
             <jvmarg value="-DNSPR_LOG_FILE=${myenv.NSPR_LOG_FILE}"/>
+            <jvmarg value="-DBROWSER_BIN_DIR=${myenv.MOZILLA_FIVE_HOME}"/>
             <jvmarg line="${debug.jvm.args}"/>
 
 
@@ -132,7 +135,11 @@
 
             <formatter type="plain" usefile="false"/>
 
+            <test name="org.mozilla.webclient.BrowserControlFactoryTest"/>
+<!-- non-running tests 
+
             <test name="org.mozilla.webclient.wrapper_native.gtk.TestGtkBrowserControlCanvas"/>
+-->
 
         </junit>
 

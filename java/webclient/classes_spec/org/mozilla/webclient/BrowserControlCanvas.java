@@ -52,7 +52,7 @@ import java.awt.*;
 
  * See concrete subclasses for scope info.
 
- * @version $Id: BrowserControlCanvas.java,v 1.5 2003/04/09 17:42:30 edburns%acm.org Exp $
+ * @version $Id: BrowserControlCanvas.java,v 1.6 2003/09/06 06:26:45 edburns%acm.org Exp $
 
  * @see	org.mozilla.webclient.win32.Win32BrowserControlCanvas
 
@@ -114,7 +114,8 @@ protected BrowserControlCanvas ()
 	
 } // BrowserControlCanvas() ctor
 
-protected void initialize(BrowserControl controlImpl)
+// PENDING(edburns): make this protected again
+public void initialize(BrowserControl controlImpl)
 {
     ParameterCheck.nonNull(controlImpl);
     webShell = controlImpl;

@@ -1,5 +1,5 @@
 /*
- * $Id: WebclientTestCase.java,v 1.1 2002/10/01 00:39:28 edburns%acm.org Exp $
+ * $Id: WebclientTestCase.java,v 1.2 2003/09/06 06:26:50 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -43,7 +43,7 @@ import junit.framework.TestCase;
  *
  * <B>Lifetime And Scope</B> <P>
  *
- * @version $Id: WebclientTestCase.java,v 1.1 2002/10/01 00:39:28 edburns%acm.org Exp $
+ * @version $Id: WebclientTestCase.java,v 1.2 2003/09/06 06:26:50 edburns%acm.org Exp $
  * 
  * @see	Blah
  * @see	Bloo
@@ -133,6 +133,16 @@ protected void verifyLogModuleValueIsAtLeastN(String logModuleName, int n)
 	
 }
 
+protected void verifyBinDirSet()
+{
+    assertTrue("BROWSER_BIN_DIR is not set",
+	       null != System.getProperty("BROWSER_BIN_DIR"));
+}
+
+protected String getBrowserBinDir() {
+    return System.getProperty("BROWSER_BIN_DIR");
+}
+
 /**
 
 * assertTrue that NSPR_LOG_FILE is set.
@@ -162,6 +172,7 @@ protected void verifyPreconditions()
     // make sure we have at least PR_LOG_DEBUG set
     verifyLogModuleValueIsAtLeastN(WEBCLIENTSTUB_LOG_MODULE, 4);
     verifyLogModuleValueIsAtLeastN(WEBCLIENT_LOG_MODULE, 4);
+    verifyBinDirSet();
     if (sendOutputToFile()) {
 	verifyOutputFileIsSet();
     }
