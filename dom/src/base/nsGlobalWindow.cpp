@@ -218,6 +218,7 @@ GlobalWindowImpl::GlobalWindowImpl()
     mIsDocumentLoaded(PR_FALSE),
     mFullScreen(PR_FALSE),
     mIsClosed(PR_FALSE),
+    mOpenerWasCleared(PR_FALSE),
     mLastMouseButtonAction(LL_ZERO),
     mGlobalObjectOwner(nsnull),
     mDocShell(nsnull),
@@ -1461,6 +1462,9 @@ GlobalWindowImpl::SetOpener(nsIDOMWindowInternal* aOpener)
   if (aOpener && !IsCallerChrome()) {
     return NS_OK;
   }
+  if (mOpener && !aOpener)
+    mOpenerWasCleared = PR_TRUE;
+
   mOpener = aOpener;
 
   return NS_OK;
@@ -3294,7 +3298,7 @@ GlobalWindowImpl::Close()
   // Don't allow scripts from content to close windows
   // that were not opened by script
   nsresult rv;
-  if (!mOpener) {
+  if (!mOpener && !mOpenerWasCleared) {
     nsCOMPtr<nsIScriptSecurityManager> secMan(
       do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv)) {
