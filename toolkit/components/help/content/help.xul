@@ -106,6 +106,8 @@
             command="Help:FindAgain" modifiers="accel"/>
         <key id="key_closeWindow" key="&closeWindow.commandkey;"
             command="cmd_closeWindow" modifiers="accel"/>
+        <key id="key_closeWindow2" keycode="VK_ESCAPE"
+            command="cmd_closeWindow"/>
         <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"
             command="cmd_textZoomEnlarge" modifiers="accel"/>
         <key id="key_textZoomEnlarge2" key="&textZoomEnlargeCmd.commandkey2;"
