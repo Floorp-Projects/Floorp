@@ -53,10 +53,12 @@
 
 #include <stdio.h>
 
+#ifndef XP_MAC
 extern "C" char *fe_GetConfigDir(void) {
   printf("XXX: return /tmp for fe_GetConfigDir\n");
   return strdup("/tmp");
 }
+#endif
 
 char *  gLogFileName   = "selftest.txt";
 FILE *  gFD             = nsnull;
@@ -103,8 +105,8 @@ char * gFailedMsg = NULL;
 #endif
 
 #ifdef XP_MAC
-#define WIDGET_DLL "raptorwidget.shlb"
-#define GFX_DLL "libgfxunix.so"
+#define WIDGET_DLL "WIDGET_DLL"
+#define GFX_DLL "GFXWIN_DLL"
 #define TEXT_HEIGHT 30
 #endif
 
@@ -155,6 +157,7 @@ static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
 
 
 // interface ids
+static NS_DEFINE_IID(kIWindowIID, 				NS_IWINDOW_IID);
 static NS_DEFINE_IID(kISupportsIID,       NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWidgetIID,         NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIButtonIID,         NS_IBUTTON_IID);
@@ -547,7 +550,7 @@ nsEventStatus PR_CALLBACK ListBoxTestHandleEvent(nsGUIEvent *aEvent)
 nsEventStatus PR_CALLBACK MultiListBoxTestHandleEvent(nsGUIEvent *aEvent)
 {
   nsIButton * btn;
-  if (aEvent->message != NS_MOUSE_LEFT_BUTTON_UP) {
+  if (gMultiListBox == nsnull || aEvent->message != NS_MOUSE_LEFT_BUTTON_UP) {
     return nsEventStatus_eIgnore;
   }
   nsString str("Multi-ListBox");
@@ -1144,19 +1147,30 @@ nsEventStatus PR_CALLBACK DoSelfTests(nsGUIEvent *aEvent)
 
   textSelfTest(gFD, "Password Text", passwordText);
   
-  nsIListWidget* widget;
-  if (NS_OK == listBox->QueryInterface(kIListWidgetIID,(void**)&widget))
-  {
-    listSelfTest(gFD, "ListBox", widget);
-    NS_RELEASE(widget);
+	if (listBox)
+	{
+	  nsIListWidget* widget;
+	  if (NS_OK == listBox->QueryInterface(kIListWidgetIID,(void**)&widget))
+	  {
+	    listSelfTest(gFD, "ListBox", widget);
+	    NS_RELEASE(widget);
+	  }
   }
-  if (NS_OK == comboBox->QueryInterface(kIListWidgetIID,(void**)&widget))
-  {
-    listSelfTest(gFD, "ComboBox", widget);
-    NS_RELEASE(widget);
-  }
-  multiListSelfTest(gFD, "Multi-ListBox", gMultiListBox);
 
+	if (comboBox)
+	{
+	  nsIListWidget* widget;
+	  if (NS_OK == comboBox->QueryInterface(kIListWidgetIID,(void**)&widget))
+	  {
+	    listSelfTest(gFD, "ComboBox", widget);
+	    NS_RELEASE(widget);
+	  }
+  }
+
+	if (gMultiListBox)
+	{
+	  multiListSelfTest(gFD, "Multi-ListBox", gMultiListBox);
+	}
   return nsEventStatus_eIgnore;
 
 }
@@ -1166,6 +1180,9 @@ nsEventStatus PR_CALLBACK DoSelfTests(nsGUIEvent *aEvent)
  */
 nsresult WidgetTest(int *argc, char **argv)
 {
+    char str[256];
+    int i;
+
     // Open global test log file
     gFD = fopen(gLogFileName, "w");
     if (gFD == nsnull) {
@@ -1223,7 +1240,7 @@ nsresult WidgetTest(int *argc, char **argv)
     //
     // create the main window
     //
-    nsRepository::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, (void**)&window);
+    nsRepository::CreateInstance(kCWindowCID, nsnull, kIWindowIID, (void**)&window);
     nsRect rect(100, 100, 600, 700);
     window->Create((nsIWidget*) nsnull, rect, HandleEvent, 
                    (nsIDeviceContext *) nsnull,
@@ -1463,7 +1480,6 @@ nsresult WidgetTest(int *argc, char **argv)
     nsString succeededLabel("Succeeded");
     button->SetLabel(succeededLabel);
     
-
     //
     // create a listbox widget
     //
@@ -1471,13 +1487,14 @@ nsresult WidgetTest(int *argc, char **argv)
     x = saveX;
     rect.SetRect(x, y, 150, 100);  
     nsRepository::CreateInstance(kCListBoxCID, nsnull, kIListBoxIID, (void**)&listBox);
-    NS_CreateListBox(window,listBox,rect,HandleEvent);
-    char str[256];
-    int i;
-    for (i=0;i<NUM_COMBOBOX_ITEMS;i++) {
-      sprintf(str, "%s %d", "List Item", i);
-      nsString listStr1(str);
-      listBox->AddItemAt(listStr1, i);
+    if (listBox)
+    {
+	    NS_CreateListBox(window,listBox,rect,HandleEvent);
+	    for (i=0;i<NUM_COMBOBOX_ITEMS;i++) {
+	      sprintf(str, "%s %d", "List Item", i);
+	      nsString listStr1(str);
+	      listBox->AddItemAt(listStr1, i);
+	    }
     }
 
     x += rect.width+5;
@@ -1486,24 +1503,23 @@ nsresult WidgetTest(int *argc, char **argv)
     x = 5;
     y += rect.height + 5;
 
-
     //
     // create a multi-selection listbox widget
     //
-
     rect.SetRect(x, y, 150, 100);  
-//#ifdef XP_PC
     nsRepository::CreateInstance(kCListBoxCID, nsnull, kIListBoxIID, (void**)&gMultiListBox);
-      // Notice the extra agrument PR_TRUE below which indicates that
-      // the list widget is multi-select
-    gMultiListBox->SetMultipleSelection(PR_TRUE);
-    NS_CreateListBox(window,gMultiListBox,rect,HandleEvent);
-    for (i=0;i<NUM_COMBOBOX_ITEMS;i++) {
-      sprintf(str, "%s %d", "Multi List Item", i);
-      nsString listStr1(str);
-      gMultiListBox->AddItemAt(listStr1, i);
+    if (gMultiListBox)
+    {
+	      // Notice the extra agrument PR_TRUE below which indicates that
+	      // the list widget is multi-select
+	    gMultiListBox->SetMultipleSelection(PR_TRUE);
+	    NS_CreateListBox(window,gMultiListBox,rect,HandleEvent);
+	    for (i=0;i<NUM_COMBOBOX_ITEMS;i++) {
+	      sprintf(str, "%s %d", "Multi List Item", i);
+	      nsString listStr1(str);
+	      gMultiListBox->AddItemAt(listStr1, i);
+	    }
     }
-//#endif
 
     x = createTestButton(window, kSetSelection,    x+150, y, 125, MultiListBoxTestHandleEvent);
     x = createTestButton(window, kRemoveSelection, x+5,   y, 125, MultiListBoxTestHandleEvent);
@@ -1516,13 +1532,13 @@ nsresult WidgetTest(int *argc, char **argv)
     // create a tab widget
     //
     rect.SetRect(300, 500, 200, 50);  
-#ifdef XP_PC
     nsRepository::CreateInstance(kCTabWidgetCID, nsnull, kITabWidgetIID, (void**)&tabWidget);
-    NS_CreateTabWidget(window,tabWidget,rect,HandleTabEvent);
-    nsString tabs[] = {"low", "medium", "high" };
-   
-    tabWidget->SetTabs(3, tabs);
-#endif
+    if (tabWidget)
+    {
+	    NS_CreateTabWidget(window,tabWidget,rect,HandleTabEvent);
+	    nsString tabs[] = {"low", "medium", "high" };
+	    tabWidget->SetTabs(3, tabs);
+    }
 
     //
     // create a Radio button
@@ -1557,13 +1573,15 @@ nsresult WidgetTest(int *argc, char **argv)
     rect.SetRect(x, y, 120, 100);  
 
     nsRepository::CreateInstance(kCComboBoxCID, nsnull, kIComboBoxIID, (void**)&comboBox);
-    NS_CreateComboBox(window,comboBox,rect,HandleEvent);
-    for (i=0;i<NUM_COMBOBOX_ITEMS;i++) {
-      sprintf(str, "%s %d", "List Item", i);
-      nsString listStr1(str);
-      comboBox->AddItemAt(listStr1, i);
+    if (comboBox)
+    {
+	    NS_CreateComboBox(window,comboBox,rect,HandleEvent);
+	    for (i=0;i<NUM_COMBOBOX_ITEMS;i++) {
+	      sprintf(str, "%s %d", "List Item", i);
+	      nsString listStr1(str);
+	      comboBox->AddItemAt(listStr1, i);
+	    }
     }
-    //NS_RELEASE(comboBox);
 
     x = createTestButton(window, kSetSelection,    x+125, y, 125, ComboTestHandleEvent);
     x = createTestButton(window, kRemoveSelection, x+5,   y, 125, ComboTestHandleEvent);
