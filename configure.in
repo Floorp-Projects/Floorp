@@ -527,8 +527,7 @@ case "$target" in
     TK_LIBS='-lbe -lroot'
     MOZ_TIMER_LIBS='$(DIST)/lib/libtimer_beos.so'
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-multichar"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-multichar -Wno-ctor-dtor-pr
-ivacy"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-multichar -Wno-ctor-dtor-privacy"
     ;;
 
 *-bsdi*)

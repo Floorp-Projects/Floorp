@@ -449,6 +449,7 @@ nsresult nsDll::Shutdown(void)
 
 void nsDll::BreakAfterLoad(const char *nsprPath)
 {
+#ifndef XP_BEOS
 #ifdef DEBUG
     static PRBool firstTime = PR_TRUE;
     static nsCString breakList[16];
@@ -496,5 +497,6 @@ void nsDll::BreakAfterLoad(const char *nsprPath)
 #endif
         }
 #endif /* DEBUG */
+#endif /* !XP_BEOS */
     return;
 }
