@@ -227,6 +227,7 @@ static GtkTargetEntry target_table[] = {
   { "text/plain", 0, TARGET_STRING },
   { "application/x-rootwin-drop", 0, TARGET_ROOTWIN }
 };
+
 static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
 
 
@@ -253,59 +254,13 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                  GDK_POINTER_MOTION_MASK);
 
 
-  if (!parentWidget) {
-
-    // mainWindow = gtk_window_new(mBorderStyle);
-    mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_default_size(GTK_WINDOW(mShell), 
-                                mBounds.width,
-                                mBounds.height);
-    gtk_widget_show (mShell);
-
-    // Now that the window is up, change the window manager hints
-    // associated with it so that its resizable (smaller). Note that
-    // the numbers chosen here are arbitrary. The application really
-    // needs a hand in this.
-    GdkGeometry geom;
-    geom.min_width = 50;
-    geom.min_height = 50;
-    geom.base_width = mBounds.width;
-    geom.base_height = mBounds.height;
-    geom.width_inc = 1;
-    geom.height_inc = 1;
-    gtk_window_set_geometry_hints(GTK_WINDOW(mShell), mShell, &geom,
-                                  (GdkWindowHints) (GDK_HINT_MIN_SIZE |
-                                                    GDK_HINT_RESIZE_INC));
-
-    // VBox for the menu, etc.
-    mVBox = gtk_vbox_new(PR_FALSE, 0);
-    gtk_widget_show (mVBox);
-    gtk_container_add(GTK_CONTAINER(mShell), mVBox);
-    gtk_box_pack_start(GTK_BOX(mVBox), mWidget, PR_TRUE, PR_TRUE, 0);
-
-    // Distinguish top-level windows from child windows
-    mIsToplevel = PR_TRUE;
-
-    gtk_signal_connect(GTK_OBJECT(mShell),
-                     "delete_event",
-                     GTK_SIGNAL_FUNC(handle_delete_event),
-                     this);
-
-    // XXX Hack, give the clipboard class a pointer to
-    // any top-level window, how about mShell.
-    nsClipboard::SetTopLevelWidget(mShell);
-  }
-
-
 
   if (mBorderStyle == GTK_WINDOW_POPUP)
   {
-
     mShell = gtk_window_new(GTK_WINDOW_POPUP);
     gtk_window_set_default_size(GTK_WINDOW(mShell), 
                                 mBounds.width,
                                 mBounds.height);
-    gtk_widget_show (mShell);
 
     gtk_container_add(GTK_CONTAINER(mShell), mWidget);
 
@@ -324,6 +279,28 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
     // any top-level window, how about mShell.
     nsClipboard::SetTopLevelWidget(mShell);
   }
+
+  else if (!parentWidget) {
+    // mainWindow = gtk_window_new(mBorderStyle);
+    mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+
+    // VBox for the menu, etc.
+    mVBox = gtk_vbox_new(PR_FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(mShell), mVBox);
+    gtk_box_pack_start(GTK_BOX(mVBox), mWidget, PR_TRUE, PR_TRUE, 0);
+
+    // Distinguish top-level windows from child windows
+    mIsToplevel = PR_TRUE;
+
+    gtk_signal_connect(GTK_OBJECT(mShell),
+                     "delete_event",
+                     GTK_SIGNAL_FUNC(handle_delete_event),
+                     this);
+
+    // XXX Hack, give the clipboard class a pointer to
+    // any top-level window, how about mShell.
+    nsClipboard::SetTopLevelWidget(mShell);
+  }
   
   // Force cursor to default setting
   gtk_widget_set_name(mWidget, "nsWindow");
@@ -335,6 +312,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                      GTK_DEST_DEFAULT_ALL,
                      target_table, n_targets - 1, /* no rootwin */
                      GdkDragAction(GDK_ACTION_COPY | GDK_ACTION_MOVE));
+
 
   return NS_OK;
 }
@@ -617,6 +595,54 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar* aMenuBar)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// Hide or show this component
+//
+//-------------------------------------------------------------------------
+
+NS_METHOD nsWindow::Show(PRBool bState)
+{
+  g_print("nsWindow::Show(%i)   %p\n", bState, this);
+
+  if (!mWidget)
+    return NS_OK; // Will be null durring printing
+
+
+  if (bState)
+  {
+    ::gtk_widget_show(mWidget);
+    g_print("  showing mWidget\n");
+
+    if (mIsToplevel && mShell)
+    {
+      ::gtk_widget_show(mVBox);
+      g_print("  showing mVBox\n");
+      ::gtk_widget_show(mShell);
+      g_print("  showing mShell\n");
+    }
+  }
+  else
+  {
+    ::gtk_widget_hide(mWidget);
+    g_print("  hiding mWidget\n");
+    if (mIsToplevel && mShell)
+    {
+      ::gtk_widget_hide(mShell);
+      g_print("  hiding mShell\n");
+      ::gtk_widget_hide(mVBox);
+      g_print("  hiding mVBox\n");
+    }    
+    // For some strange reason, gtk_widget_hide() does not seem to
+    // unmap the window.
+    ::gtk_widget_unmap(mWidget);
+  }
+
+  mShown = bState;
+
+  return NS_OK;
+}
+
 NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
 {
   if (!mMenuBar)
@@ -633,6 +659,94 @@ NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
   else
     gtk_widget_hide(menubar);
 
+  return NS_OK;
+}
+
+NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
+{
+  // not implimented for toplevel windows
+
+  if (!mIsToplevel)
+  {
+    if (mWidget) {
+      ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
+    }
+  }
+
+  return NS_OK;
+}
+
+
+NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+{
+#if 0
+  printf("nsWidget::Resize %s (%p) to %d %d\n",
+         mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)", this,
+         aWidth, aHeight);
+#endif
+
+  // ignore resizes smaller than or equal to 1x1
+  if (aWidth <= 1 || aHeight <= 1)
+    return NS_OK;
+  
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
+
+
+  if (mWidget) {
+    mWidget->allocation.width = aWidth;
+    mWidget->allocation.height = aHeight;
+
+    // toplevel window?  if so, we should resize it as well.
+    if (mIsToplevel && mShell)
+    {
+      mShell->allocation.width = aWidth;
+      mShell->allocation.height = aHeight;
+
+      if (mShell->window)
+        ::gdk_window_resize(mShell->window, aWidth, aHeight);
+      else
+      {
+        g_print("nsWindow::Resize on toplevel window with null gdkwindow for parent -- window not realized\n");
+        gtk_widget_realize(mShell);
+        if (mShell->window)
+          gdk_window_resize(mShell->window, aWidth, aHeight);
+        else
+          g_print("still not working..grrr\n");
+
+        if (GTK_WIDGET_VISIBLE (mShell))
+          ::gtk_widget_queue_draw (mShell);
+
+      }
+
+#if 0 // why the hell does this code not work?
+      ::gtk_widget_set_usize(mShell, aWidth, aHeight);
+      if (aRepaint)
+      {
+        if (GTK_WIDGET_VISIBLE (mShell))
+          ::gtk_widget_queue_draw (mShell);
+      }
+#endif
+    }
+
+    ::gtk_widget_set_usize(mWidget, aWidth, aHeight);
+
+    if (aRepaint) {
+      if (GTK_WIDGET_VISIBLE (mWidget)) {
+        ::gtk_widget_queue_draw (mWidget);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+
+NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
+                           PRUint32 aHeight, PRBool aRepaint)
+{
+  Resize(aWidth,aHeight,aRepaint);
+  Move(aX,aY);
   return NS_OK;
 }
 
