@@ -848,8 +848,6 @@ NS_METHOD nsToolbar::GetPreferredConstrainedSize(PRInt32& aSuggestedWidth, PRInt
     aWidth = currentSize + mMargin + maxRowSize;
   }
 
-  printf("aHeight: %d\n", aHeight);
-
   return NS_OK;
 }
 
