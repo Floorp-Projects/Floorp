@@ -615,8 +615,9 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(PRInt32           aWidthInd
   PRInt32 numAutoCols       = 0;
 
   nscoord spacingX = mTableFrame->GetCellSpacingX();
+  PRInt32 spanX;
   // accumulate the various divisors to be used later
-  for (PRInt32 spanX = 0; spanX < aColSpan; spanX++) {
+  for (spanX = 0; spanX < aColSpan; spanX++) {
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(aColIndex + spanX);
     if (!colFrame) continue;
     nscoord minWidth = PR_MAX(colFrame->GetMinWidth(), 0);
