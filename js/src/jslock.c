@@ -459,6 +459,9 @@ js_SetupLocks(int l, int g)
     return 1;
 }
 
+// pull in the cleanup function from jsdtoa.c
+extern void js_FinishDtoa(void);
+
 void
 js_CleanupLocks()
 {
@@ -484,6 +487,7 @@ js_CleanupLocks()
         PR_DestroyLock(_compare_and_swap_lock);
         _compare_and_swap_lock = NULL;
 #endif
+        js_FinishDtoa();
     }
 }
 

@@ -1072,6 +1072,17 @@ static void InitDtoa(void)
 }
 #endif
 
+void js_FinishDtoa(void)
+{
+#ifdef JS_THREADSAFE
+    if (initialized == JS_TRUE) 
+    {
+        PR_DestroyLock(freelist_lock);
+        PR_DestroyLock(p5s_lock);
+        initialized = JS_FALSE;
+    }
+#endif
+}
 
 /* nspr2 watcom bug ifdef omitted */
 
