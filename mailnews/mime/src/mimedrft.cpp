@@ -298,77 +298,106 @@ CreateCompositionFields(const char        *from,
                         nsIMsgCompFields  **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-
+  
   nsresult rv;
   *_retval = nsnull;
-
-  char *val;
+  
   nsCOMPtr<nsIMsgCompFields> cFields = do_CreateInstance(NS_MSGCOMPFIELDS_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(cFields, NS_ERROR_OUT_OF_MEMORY);
-
+  
   // Now set all of the passed in stuff...
   cFields->SetCharacterSet(charset);
-
-  val = MIME_DecodeMimeHeader(from, charset, PR_FALSE, PR_TRUE);
-  cFields->SetFrom(NS_ConvertUTF8toUCS2(val ? val : from).get());
-  PR_FREEIF(val);
-
-  val = MIME_DecodeMimeHeader(subject, charset, PR_FALSE, PR_TRUE);
-  cFields->SetSubject(NS_ConvertUTF8toUCS2(val ? val : subject).get());
-  PR_FREEIF(val);
-
-  val = MIME_DecodeMimeHeader(reply_to, charset, PR_FALSE, PR_TRUE);
-  cFields->SetReplyTo(NS_ConvertUTF8toUCS2(val ? val : reply_to).get());
-  PR_FREEIF(val);
-
-  val = MIME_DecodeMimeHeader(to, charset, PR_FALSE, PR_TRUE);
-  cFields->SetTo(NS_ConvertUTF8toUCS2(val ? val : to).get());
-  PR_FREEIF(val);
-
-  val = MIME_DecodeMimeHeader(cc, charset, PR_FALSE, PR_TRUE);
-  cFields->SetCc(NS_ConvertUTF8toUCS2(val ? val : cc).get());
-  PR_FREEIF(val);
-
-  val = MIME_DecodeMimeHeader(bcc, charset, PR_FALSE, PR_TRUE);
-  cFields->SetBcc(NS_ConvertUTF8toUCS2(val ? val : bcc).get());
-  PR_FREEIF(val);
-
-  val = MIME_DecodeMimeHeader(fcc, charset, PR_FALSE, PR_TRUE);
-  cFields->SetFcc(NS_ConvertUTF8toUCS2(val ? val : fcc).get());
-  PR_FREEIF(val);
-
-  val = MIME_DecodeMimeHeader(newsgroups, charset, PR_FALSE, PR_TRUE);
-  cFields->SetNewsgroups(val ? val : newsgroups);
-  PR_FREEIF(val);
-
-  val = MIME_DecodeMimeHeader(followup_to, charset, PR_FALSE, PR_TRUE);
-  cFields->SetFollowupTo(val ? val : followup_to);
-  PR_FREEIF(val);
-
-  val = MIME_DecodeMimeHeader(organization, charset, PR_FALSE, PR_TRUE);
-  cFields->SetOrganization(NS_ConvertUTF8toUCS2(val ? val : organization).get());
-  PR_FREEIF(val);
-
-  val = MIME_DecodeMimeHeader(references, charset, PR_FALSE, PR_TRUE);
-  cFields->SetReferences(val ? val : references);
-  PR_FREEIF(val);
-
-  val = MIME_DecodeMimeHeader(other_random_headers, charset, PR_FALSE, PR_TRUE);
-  cFields->SetOtherRandomHeaders(NS_ConvertUTF8toUCS2(val ? val : other_random_headers).get());
-  PR_FREEIF(val);
-
-  val = MIME_DecodeMimeHeader(priority, charset, PR_FALSE, PR_TRUE);
-  cFields->SetPriority(val ? val : priority);
-  PR_FREEIF(val);
-
-  val = MIME_DecodeMimeHeader(newspost_url, charset, PR_FALSE, PR_TRUE);
-  cFields->SetNewspostUrl(val ? val : newspost_url);
-  PR_FREEIF(val);
-
+  
+  char *val;
+  
+  if (from) {
+    val = MIME_DecodeMimeHeader(from, charset, PR_FALSE, PR_TRUE);
+    cFields->SetFrom(NS_ConvertUTF8toUCS2(val ? val : from).get());
+    PR_FREEIF(val);
+  }
+  
+  if (subject) {
+    val = MIME_DecodeMimeHeader(subject, charset, PR_FALSE, PR_TRUE);
+    cFields->SetSubject(NS_ConvertUTF8toUCS2(val ? val : subject).get());
+    PR_FREEIF(val);
+  }
+  
+  if (reply_to) {
+    val = MIME_DecodeMimeHeader(reply_to, charset, PR_FALSE, PR_TRUE);
+    cFields->SetReplyTo(NS_ConvertUTF8toUCS2(val ? val : reply_to).get());
+    PR_FREEIF(val);
+  }
+  
+  if (to) {
+    val = MIME_DecodeMimeHeader(to, charset, PR_FALSE, PR_TRUE);
+    cFields->SetTo(NS_ConvertUTF8toUCS2(val ? val : to).get());
+    PR_FREEIF(val);
+  }
+  
+  if (cc) {
+    val = MIME_DecodeMimeHeader(cc, charset, PR_FALSE, PR_TRUE);
+    cFields->SetCc(NS_ConvertUTF8toUCS2(val ? val : cc).get());
+    PR_FREEIF(val);
+  }
+  
+  if (bcc) {
+    val = MIME_DecodeMimeHeader(bcc, charset, PR_FALSE, PR_TRUE);
+    cFields->SetBcc(NS_ConvertUTF8toUCS2(val ? val : bcc).get());
+    PR_FREEIF(val);
+  }
+  
+  if (fcc) {
+    val = MIME_DecodeMimeHeader(fcc, charset, PR_FALSE, PR_TRUE);
+    cFields->SetFcc(NS_ConvertUTF8toUCS2(val ? val : fcc).get());
+    PR_FREEIF(val);
+  }
+  
+  if (newsgroups) {
+    val = MIME_DecodeMimeHeader(newsgroups, charset, PR_FALSE, PR_TRUE);
+    cFields->SetNewsgroups(val ? val : newsgroups);
+    PR_FREEIF(val);
+  }
+  
+  if (followup_to) {
+    val = MIME_DecodeMimeHeader(followup_to, charset, PR_FALSE, PR_TRUE);
+    cFields->SetFollowupTo(val ? val : followup_to);
+    PR_FREEIF(val);
+  }
+  
+  if (organization) {
+    val = MIME_DecodeMimeHeader(organization, charset, PR_FALSE, PR_TRUE);
+    cFields->SetOrganization(NS_ConvertUTF8toUCS2(val ? val : organization).get());
+    PR_FREEIF(val);
+  }
+  
+  if (references) {
+    val = MIME_DecodeMimeHeader(references, charset, PR_FALSE, PR_TRUE);
+    cFields->SetReferences(val ? val : references);
+    PR_FREEIF(val);
+  }
+  
+  if (other_random_headers) {
+    val = MIME_DecodeMimeHeader(other_random_headers, charset, PR_FALSE, PR_TRUE);
+    cFields->SetOtherRandomHeaders(NS_ConvertUTF8toUCS2(val ? val : other_random_headers).get());
+    PR_FREEIF(val);
+  }
+  
+  if (priority) {
+    val = MIME_DecodeMimeHeader(priority, charset, PR_FALSE, PR_TRUE);
+    cFields->SetPriority(val ? val : priority);
+    PR_FREEIF(val);
+  }
+  
+  if (newspost_url) {
+    val = MIME_DecodeMimeHeader(newspost_url, charset, PR_FALSE, PR_TRUE);
+    cFields->SetNewspostUrl(val ? val : newspost_url);
+    PR_FREEIF(val);
+  }
+  
   *_retval = cFields;
   NS_IF_ADDREF(*_retval);
-
+  
   return rv;
 }
 
