@@ -2331,7 +2331,13 @@ CSSStyleSheetImpl::GetMedia(nsIDOMMediaList** aMedia)
 NS_IMETHODIMP    
 CSSStyleSheetImpl::GetOwnerRule(nsIDOMCSSRule** aOwnerRule)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG_POINTER(aOwnerRule);
+  *aOwnerRule = nsnull;
+
+  // TBI: This should return the owner rule once the style system knows about
+  // owning rules...
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
