@@ -141,7 +141,7 @@
             <treecol id="nameColumn" persist="hidden" flex="1" primary="true" label="..."
                      sort="?LeafName"/>
             <splitter class="tree-splitter"/>
-            <treecol id="subscribedColumn" persist="hidden" label="&subscribedHeader.label;"
+            <treecol id="subscribedColumn" persist="hidden" cycler="true" label="&subscribedHeader.label;"
                      sort="?Subscribed"/>
             <!-- commenting out until bug 38906 is fixed 
             <splitter class="tree-splitter"/>
@@ -158,7 +158,7 @@
          <treecols>
            <treecol id="nameColumn2" persist="hidden" flex="1" primary="true" label="..." />
            <splitter class="tree-splitter"/>
-           <treecol id="subscribedColumn2" persist="hidden" label="&subscribedHeader.label;" />
+           <treecol id="subscribedColumn2" persist="hidden" cycler="true" label="&subscribedHeader.label;" />
            <!-- commenting out until bug 38906 is fixed 
            <splitter class="tree-splitter"/>
            <treecol id="messagesColumn2" persist="hidden" label="&messagesHeader.label;" /> -->
