@@ -2511,7 +2511,10 @@ nsRenderingContextXlib::DrawImage(imgIContainer *aImage, const nsRect & aSrcRect
 }
 
 NS_IMETHODIMP
-nsRenderingContextXlib::GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer)
+nsRenderingContextXlib::GetBackbuffer(const nsRect &aRequestedSize,
+                                      const nsRect &aMaxSize,
+                                      PRBool aForBlending,
+                                      nsIDrawingSurface* &aBackbuffer)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetBackbuffer()\n"));
   /* Do not cache the backbuffer. On X11 it is more efficient to allocate

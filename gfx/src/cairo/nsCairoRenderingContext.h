@@ -179,6 +179,7 @@ public:
     NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
     NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize,
                              const nsRect &aMaxSize,
+                             PRBool aForBlending,
                              nsIDrawingSurface* &aBackbuffer);
     NS_IMETHOD ReleaseBackbuffer(void);
     NS_IMETHOD DestroyCachedBackbuffer(void);

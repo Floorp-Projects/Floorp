@@ -95,7 +95,7 @@ typedef enum
 
 // IID for the nsIRenderingContext interface
 #define NS_IRENDERING_CONTEXT_IID \
- { 0x0974d74c, 0x9000, 0x47ca,{0x86, 0xdb, 0x35, 0xb9, 0x05, 0xde, 0xa3, 0x5d}}
+ { 0xd91f728b, 0xd7f4, 0x4e19,{0x8b, 0xdd, 0x98, 0x99, 0x3f, 0xdf, 0xec, 0xc6}}
 
 //----------------------------------------------------------------------
 
@@ -693,9 +693,10 @@ public:
    *
    * @param aRequestedSize size of the backbuffer area requested
    * @param aMaxSize maximum size that may be requested for the backbuffer
+   * @param aForBlending parameter telling if the buffer will be used for blending
    * @param aBackbuffer drawing surface used as the backbuffer
    */
-  NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer) = 0;
+  NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, PRBool aForBlending, nsIDrawingSurface* &aBackbuffer) = 0;
 
   /**
    * Release a drawing surface used as the backbuffer
