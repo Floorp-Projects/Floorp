@@ -234,7 +234,7 @@ NS_METHOD nsMenuItem::SetEnabled(PRBool aIsEnabled)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::GetEnabled(PRBool *aIsEnabled)
 {
-  aIsEnabled = GTK_WIDGET_IS_SENSITIVE(mMenuItem);
+  *aIsEnabled = GTK_WIDGET_IS_SENSITIVE(mMenuItem);
 
   return NS_OK;
 }
