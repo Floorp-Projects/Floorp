@@ -49,4 +49,4 @@ def WrapObject(ob, iid, policy = None, bWrapClient = 1):
 def NS_GetModule( serviceManager, nsIFile ):
     import loader
     iid = _xpcom.IID_nsIModule
-    return WrapObject(loader.MakePythonComponentLoaderModule(serviceManager, nsIFile), iid)
+    return WrapObject(loader.MakePythonComponentLoaderModule(serviceManager, nsIFile), iid, bWrapClient = 0)
