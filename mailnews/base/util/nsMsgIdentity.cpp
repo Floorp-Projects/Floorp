@@ -329,3 +329,16 @@ NS_IMPL_IDPREF_STR(SmtpHostname, "smtp_server");
 NS_IMPL_IDPREF_STR(SmtpUsername, "smtp_name");
 NS_IMPL_IDPREF_BOOL(AttachVCard, "attach_vcard");
 NS_IMPL_IDPREF_BOOL(AttachSignature, "attach_signature");
+
+NS_IMPL_IDPREF_BOOL(DoFcc, "fcc");
+NS_IMPL_IDPREF_STR(FccFolder, "fcc_folder");
+
+NS_IMPL_IDPREF_BOOL(BccSelf, "bcc_self");
+NS_IMPL_IDPREF_BOOL(BccOthers, "bcc_other");
+NS_IMPL_IDPREF_STR (BccList, "bcc_other_list");
+
+NS_IMPL_IDPREF_STR (DraftFolder, "draft_folder");
+NS_IMPL_IDPREF_STR (StationaryFolder, "stationary_folder");
+NS_IMPL_IDPREF_STR (JunkMailFolder, "spam_folder");
+
+

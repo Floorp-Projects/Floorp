@@ -73,5 +73,16 @@ interface nsIMsgIdentity : nsISupports {
   attribute string smtpHostname;
   attribute string smtpUsername;
 
+  attribute boolean doFcc;
+  attribute string fccFolder;
+  
+  attribute boolean bccSelf;
+  attribute boolean bccOthers;
+  attribute string bccList;
+
+  attribute string draftFolder;
+  attribute string stationaryFolder;
+  attribute string junkMailFolder;
+  
   wstring toString();
 };
