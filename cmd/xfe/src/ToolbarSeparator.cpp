@@ -29,6 +29,7 @@
 
 #include "ToolbarSeparator.h"
 
+#include <Xfe/Xfe.h>
 #include <Xm/Separator.h>
 
 //////////////////////////////////////////////////////////////////////////
@@ -56,28 +57,6 @@ XFE_ToolbarSeparator::initialize()
 	Widget separator = createBaseWidget(getParent(),getName());
 
 	setBaseWidget(separator);
-}
-//////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////
-//
-// Sensitive interface
-//
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_ToolbarSeparator::setSensitive(Boolean state)
-{
-	XP_ASSERT( isAlive() );
-
-	XtSetSensitive(m_widget,state);
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ Boolean
-XFE_ToolbarSeparator::isSensitive()
-{
-	XP_ASSERT( isAlive() );
-	
-	return XtIsSensitive(m_widget);
 }
 //////////////////////////////////////////////////////////////////////////
 
@@ -126,8 +105,8 @@ XFE_ToolbarSeparator::configure()
 //
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
-XFE_ToolbarSeparator::tipStringObtain(XmString *	stringReturn,
-								   Boolean *	needToFreeString)
+XFE_ToolbarSeparator::tipStringObtain(XmString *	/* stringReturn */,
+									  Boolean *		/* needToFreeString */)
 {
 // 	XP_ASSERT( isAlive() );
 	
@@ -136,8 +115,8 @@ XFE_ToolbarSeparator::tipStringObtain(XmString *	stringReturn,
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
-XFE_ToolbarSeparator::docStringObtain(XmString *	stringReturn,
-								   Boolean *	needToFreeString)
+XFE_ToolbarSeparator::docStringObtain(XmString *	/* stringReturn */,
+									  Boolean *		/* needToFreeString */)
 {
 // 	XP_ASSERT( isAlive() );
 	
