@@ -24,6 +24,7 @@
 #include "nsString.h"
 
 class nsIAtom;
+class nsICSSLoader;
 
 #define NS_IXMLDOCUMENT_IID \
  { 0xa6cf90ca, 0x15b3, 0x11d2, \
