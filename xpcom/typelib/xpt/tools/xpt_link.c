@@ -145,10 +145,6 @@ main(int argc, char **argv)
         
         if (flen > 0) {
             size_t rv = fread(whole, 1, flen, in);
-            if (rv < 0) {
-                perror("FAILED: reading typelib file");
-                return 1;
-            }
             if (rv < flen) {
                 fprintf(stderr, "short read (%d vs %d)! ouch!\n", rv, flen);
                 return 1;
