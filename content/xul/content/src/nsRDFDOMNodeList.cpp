@@ -30,7 +30,6 @@
 
 #include "nsDOMCID.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMHTMLCollection.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
@@ -45,90 +44,6 @@ static NS_DEFINE_IID(kIDOMNodeListIID,            NS_IDOMNODELIST_IID);
 static NS_DEFINE_IID(kIDOMScriptObjectFactoryIID, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID);
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,  NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-
-////////////////////////////////////////////////////////////////////////
-//
-
-class RDFHTMLCollectionImpl : public nsIDOMHTMLCollection
-{
-private:
-    nsRDFDOMNodeList* mOuter;
-
-public:
-    RDFHTMLCollectionImpl(nsRDFDOMNodeList* aOuter);
-    virtual ~RDFHTMLCollectionImpl();
-
-    // nsISupports interface
-    NS_IMETHOD_(nsrefcnt) AddRef(void);
-    NS_IMETHOD_(nsrefcnt) Release(void);
-    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aResult);
-    
-    // nsIDOMHTMLCollection interface
-    NS_DECL_IDOMHTMLCOLLECTION
-};
-
-
-RDFHTMLCollectionImpl::RDFHTMLCollectionImpl(nsRDFDOMNodeList* aOuter)
-    : mOuter(aOuter)
-{
-}
-
-RDFHTMLCollectionImpl::~RDFHTMLCollectionImpl(void)
-{
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-RDFHTMLCollectionImpl::AddRef(void)
-{
-    return mOuter->AddRef();
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-RDFHTMLCollectionImpl::Release(void)
-{
-    return mOuter->Release();
-}
-
-NS_IMETHODIMP
-RDFHTMLCollectionImpl::QueryInterface(REFNSIID aIID, void** aResult)
-{
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    if (aIID.Equals(nsIDOMHTMLCollection::GetIID())) {
-        *aResult = NS_STATIC_CAST(nsIDOMHTMLCollection*, this);
-        NS_ADDREF(this);
-        return NS_OK;
-    }
-    else {
-        return mOuter->QueryInterface(aIID, aResult);
-    }
-}
-
-
-NS_IMETHODIMP
-RDFHTMLCollectionImpl::GetLength(PRUint32* aLength)
-{
-    return mOuter->GetLength(aLength);
-}
-
-
-NS_IMETHODIMP
-RDFHTMLCollectionImpl::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
-{
-    return mOuter->Item(aIndex, aReturn);
-}
-
-
-NS_IMETHODIMP
-RDFHTMLCollectionImpl::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////
 // ctors & dtors
@@ -197,15 +112,6 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
         NS_ADDREF(this);
         return NS_OK;
     }
-    else if (aIID.Equals(nsIDOMHTMLCollection::GetIID())) {
-        // Aggregate this interface
-        if (! mInner) {
-            if (! (mInner = new RDFHTMLCollectionImpl(this)))
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        return mInner->QueryInterface(aIID, aResult);
-    }
     return NS_NOINTERFACE;
 }
 
@@ -262,10 +168,10 @@ nsRDFDOMNodeList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObje
         if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
                                                            kIDOMScriptObjectFactoryIID,
                                                            (nsISupports **)&factory))) {
-            rv = factory->NewScriptHTMLCollection(aContext, 
-                                                  (nsISupports*)(nsIDOMNodeList*)this, 
-                                                  global, 
-                                                  (void**)&mScriptObject);
+            rv = factory->NewScriptNodeList(aContext, 
+                                            (nsISupports*)(nsIDOMNodeList*)this, 
+                                            global, 
+                                            (void**)&mScriptObject);
 
             nsServiceManager::ReleaseService(kDOMScriptObjectFactoryCID, factory);
         }
