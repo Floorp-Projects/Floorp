@@ -212,7 +212,12 @@ class nsDOMIterator
     nsresult Init(nsIDOMNode* aNode);
     void ForEach(nsDomIterFunctor& functor) const;
     nsresult MakeList(nsBoolDomIterFunctor& functor,
-                      nsCOMArray<nsIDOMNode>& outArrayOfNodes) const;
+                      nsCOMArray<nsIDOMNode>& outArrayOfNodes) const
+    {
+      NS_PRECONDITION(outArrayOfNodes.Count() == 0,
+                      "Calling MakeList on non-empty list!");
+      return AppendList(functor, outArrayOfNodes);
+    };
     nsresult AppendList(nsBoolDomIterFunctor& functor,
                         nsCOMArray<nsIDOMNode>& arrayOfNodes) const;
   protected:
