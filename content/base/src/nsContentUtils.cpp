@@ -89,36 +89,51 @@ nsIParserService *nsContentUtils::sParserService = nsnull;
 nsINameSpaceManager *nsContentUtils::sNameSpaceManager = nsnull;
 nsIIOService *nsContentUtils::sIOService = nsnull;
 
+PRBool nsContentUtils::sInitialized = PR_FALSE;
+
 // static
 nsresult
 nsContentUtils::Init()
 {
-  NS_ENSURE_TRUE(!sXPConnect, NS_ERROR_ALREADY_INITIALIZED);
+  if (sInitialized) {
+    NS_WARNING("Init() called twice");
 
-  nsresult rv = CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
+    return NS_OK;
+  }
+
+  nsresult rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
+                               &sSecurityManager);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-                      &sSecurityManager);
+  rv = NS_GetNameSpaceManager(&sNameSpaceManager);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
   if (NS_FAILED(rv)) {
-    // We can run without a security manager, so don't return early.
-    sSecurityManager = nsnull;
+    // We could be a standalone DOM engine without JS, so no
+    // nsIXPConnect is actually ok...
+
+    sXPConnect = nsnull;
   }
 
-  rv = CallGetService(NS_IOSERVICE_CONTRACTID, &sIOService);
-  if (NS_FAILED(rv)) {
-    // If this fails, that's ok
-    sIOService = nsnull;
-  }
-  
   rv = CallGetService(kJSStackContractID, &sThreadJSContextStack);
-  if (NS_FAILED(rv)) {
-    sThreadJSContextStack = nsnull;
+  if (NS_FAILED(rv) && sXPConnect) {
+    // However, if we can't get a context stack after getting
+    // an nsIXPConnect, things are broken, so let's fail here.
 
     return rv;
   }
 
-  return NS_GetNameSpaceManager(&sNameSpaceManager);
+  rv = CallGetService(NS_IOSERVICE_CONTRACTID, &sIOService);
+  if (NS_FAILED(rv)) {
+    // This makes life easier, but we can live without it.
+
+    sIOService = nsnull;
+  }
+
+  sInitialized = PR_TRUE;
+
+  return NS_OK;
 }
 
 /**
@@ -387,6 +402,8 @@ nsContentUtils::CopyNewlineNormalizedUnicodeTo(nsReadingIterator<PRUnichar>& aSr
 void
 nsContentUtils::Shutdown()
 {
+  sInitialized = PR_FALSE;
+
   NS_IF_RELEASE(sDOMScriptObjectFactory);
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecurityManager);
@@ -501,12 +518,6 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
 {
   NS_PRECONDITION(aTrustedNode, "There must be a trusted node");
 
-  // If there isn't a security manager it is probably because it is not
-  // installed so we don't care about security anyway
-  if (!sSecurityManager) {
-    return NS_OK;
-  }
-
   PRBool isSystem = PR_FALSE;
   sSecurityManager->SubjectPrincipalIsSystem(&isSystem);
   if (isSystem) {
@@ -603,12 +614,6 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
 PRBool
 nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
 {
-  if (!sSecurityManager) {
-    // No security manager available, let any calls go through...
-
-    return PR_TRUE;
-  }
-
   nsCOMPtr<nsIPrincipal> subjectPrincipal;
   sSecurityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
 
@@ -900,10 +905,6 @@ nsContentUtils::GetDocumentFromCaller(nsIDOMDocument** aDocument)
 PRBool
 nsContentUtils::IsCallerChrome()
 {
-  if (!sSecurityManager) {
-    return PR_FALSE;
-  }
-
   PRBool is_caller_chrome = PR_FALSE;
   nsresult rv = sSecurityManager->SubjectPrincipalIsSystem(&is_caller_chrome);
   if (NS_FAILED(rv)) {
