@@ -33,7 +33,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.7 2002/10/05 02:24:23 jpierre%netscape.com Exp $
+ * $Id: certi.h,v 1.8 2002/10/23 20:50:51 nelsonb%netscape.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -181,6 +181,12 @@ struct CRLCacheStr {
 
 SECStatus InitCRLCache(void);
 SECStatus ShutdownCRLCache(void);
+
+/* Returns a pointer to an environment-like string, a series of
+** null-terminated strings, terminated by a zero-length string.
+** This function is intended to be internal to NSS.
+*/
+extern char * cert_GetCertificateEmailAddresses(CERTCertificate *cert);
 
 #endif /* _CERTI_H_ */
 

@@ -716,6 +716,8 @@ SECKEY_CopyPublicKey;
 ;+};
 ;+NSS_3.7 { 	# NSS 3.7 release
 ;+    global:
+CERT_GetFirstEmailAddress;
+CERT_GetNextEmailAddress;
 CERT_VerifySignedDataWithPubKeyInfo;
 ;+    local:
 ;+       *;

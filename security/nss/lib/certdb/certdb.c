@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.44 2002/10/03 03:34:36 jpierre%netscape.com Exp $
+ * $Id: certdb.c,v 1.45 2002/10/23 20:50:51 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -862,7 +862,7 @@ CERT_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
     }
 
     /* set the email address */
-    cert->emailAddr = CERT_GetCertificateEmailAddress(cert);
+    cert->emailAddr = cert_GetCertificateEmailAddresses(cert);
     
     /* initialize the subjectKeyID */
     rv = cert_GetKeyID(cert);

@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.26 2002/10/18 21:58:18 nelsonb%netscape.com Exp $
+ * $Id: cert.h,v 1.27 2002/10/23 20:50:51 nelsonb%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -705,6 +705,11 @@ extern char *CERT_GetCommonName(CERTName *name);
 extern char *CERT_GetCertificateEmailAddress(CERTCertificate *cert);
 
 extern char *CERT_GetCertEmailAddress(CERTName *name);
+
+extern const char * CERT_GetFirstEmailAddress(CERTCertificate * cert);
+
+extern const char * CERT_GetNextEmailAddress(CERTCertificate * cert, 
+                                             const char * prev);
 
 extern char *CERT_GetCommonName(CERTName *name);
 
