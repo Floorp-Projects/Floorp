@@ -31,6 +31,8 @@
 #include "prmem.h"
 #include "nsPluginDefs.h"
 
+#include "nsString.h"
+
 /* Load a string stored as RCDATA in a resource segment */
 /* Returned string needs to be PR_Free'd by caller */
 static char *LoadRCDATAString( HMODULE hMod, ULONG resid)
@@ -137,7 +139,7 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
           (0 == strnicmp( &(leafname[len - 4]), ".dll", 4)) &&
           (0 == strnicmp( leafname, "np", 2)))
       {
-        rc = PR_TRUE;
+        return PR_TRUE;
       }
     }
     return PR_FALSE;
@@ -145,8 +147,8 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
 
 // nsPluginFile implementation
 
-nsPluginFile::nsPluginFile(nsFile* spec)
-: mPlugin(spec)
+nsPluginFile::nsPluginFile(nsIFile* file)
+: mPlugin(file)
 {}
 
 nsPluginFile::~nsPluginFile()
@@ -173,7 +175,10 @@ nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
    char       failure[ CCHMAXPATH] = "";
    APIRET     ret;
 
-   const char* path = this->GetCString();
+   const char* path;
+   nsCAutoString temp;
+   mPlugin->GetNativePath(temp);
+   path = temp.get();
    ret = DosLoadModule( failure, CCHMAXPATH, path, &hPlug);
 
    while( ret == NO_ERROR)
