@@ -287,7 +287,7 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
   }
     
   // Get a script code and charset name from locale, if available
-  if (NS_SUCCEEDED(res) && !loceleStr.IsEmpty()) {
+  if (NS_SUCCEEDED(res) && !localeStr.IsEmpty()) {
     mLocale.Assign(localeStr); // cache locale name
 
     nsCOMPtr <nsIMacLocale> macLocale = do_GetService(NS_MACLOCALE_CONTRACTID, &res);
