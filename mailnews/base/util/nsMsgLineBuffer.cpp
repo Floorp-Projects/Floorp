@@ -245,8 +245,10 @@ PRInt32 nsMsgLineBuffer::FlushLastLine()
 // read but unprocessed stream data in a buffer. 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-nsMsgLineStreamBuffer::nsMsgLineStreamBuffer(PRUint32 aBufferSize, PRBool aAllocateNewLines, PRBool aEatCRLFs) 
-											: m_eatCRLFs(aEatCRLFs), m_allocateNewLines(aAllocateNewLines)
+nsMsgLineStreamBuffer::nsMsgLineStreamBuffer(PRUint32 aBufferSize, const char * aEndOfLineToken, 
+											 PRBool aAllocateNewLines, PRBool aEatCRLFs) 
+											: m_eatCRLFs(aEatCRLFs), m_allocateNewLines(aAllocateNewLines),
+											  m_endOfLineToken(aEndOfLineToken)
 {
 	NS_PRECONDITION(aBufferSize > 0, "invalid buffer size!!!");
 	m_dataBuffer = nsnull;
@@ -276,7 +278,7 @@ nsMsgLineStreamBuffer::~nsMsgLineStreamBuffer()
 // Note to people wishing to modify this function: Be *VERY CAREFUL* this is a critical function used by all of
 // our mail protocols including imap, nntp, and pop. If you screw it up, you could break a lot of stuff.....
 
-char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRBool &aPauseForMoreData)
+char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint32 &aNumBytesInLine, PRBool &aPauseForMoreData)
 {
 	// try to extract a line from m_inputBuffer. If we don't have an entire line, 
 	// then read more bytes out from the stream. If the stream is empty then wait
@@ -284,12 +286,15 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRBool
 
 	NS_PRECONDITION(m_startPos && m_dataBufferSize > 0, "invalid input arguments for read next line from input");
 	
+	// initialize out values
 	aPauseForMoreData = PR_FALSE;
+	aNumBytesInLine = 0;
 	char * endOfLine = nsnull;
-	PRUint32 numBytesInBuffer = PL_strlen(m_startPos);
 
+	PRUint32 numBytesInBuffer = PL_strlen(m_startPos);
+	
 	if (numBytesInBuffer > 0) // any data in our internal buffer?
-		endOfLine = PL_strstr(m_startPos, CRLF); // see if we already have a line ending...
+		endOfLine = PL_strstr(m_startPos, m_endOfLineToken); // see if we already have a line ending...
 
 	// it's possible that we got here before the first time we receive data from the server
 	// so aInputStream will be nsnull...
@@ -321,14 +326,15 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRBool
 
 		// okay, now that we've tried to read in more data from the stream, look for another end of line 
 		// character 
-		endOfLine = PL_strstr(m_startPos, CRLF);
+		endOfLine = PL_strstr(m_startPos, m_endOfLineToken);
+
 	}
 
 	// okay, now check again for endOfLine.
 	if (endOfLine)
 	{
 		if (!m_eatCRLFs)
-			endOfLine += 2; // count for CRLF
+			endOfLine += PL_strlen(m_endOfLineToken); // count for CRLF
 
 		// PR_CALLOC zeros out the allocated line
 		char* newLine = (char*) PR_CALLOC(endOfLine-m_startPos+1);
@@ -336,9 +342,10 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRBool
 			return nsnull;
 
 		nsCRT::memcpy(newLine, m_startPos, endOfLine-m_startPos); // copy the string into the new line buffer
+		aNumBytesInLine = endOfLine - m_startPos;
 
 		if (m_eatCRLFs)
-			endOfLine += 2; // advance past CRLF if we haven't already done so...
+			endOfLine += PL_strlen(m_endOfLineToken); // advance past CRLF if we haven't already done so...
 
 		// now we need to update the data buffer to go past the line we just read out. 
 		if (PL_strlen(endOfLine) <= 0) // if no more data in the buffer, then just zero out the buffer...

@@ -82,21 +82,28 @@ class nsMsgLineStreamBuffer
 {
 public:
 	// aBufferSize -- size of the buffer you want us to use for buffering stream data
+	// aEndOfLinetoken -- The delimeter string to be used for determining the end of line. This 
+	//				      allows us to parse platform specific end of line endings by making it
+	//					  a parameter.
 	// aAllocateNewLines -- PR_TRUE if you want calls to ReadNextLine to allocate new memory for the line. 
 	//						if false, the char * returned is just a ptr into the buffer. Subsequent calls to
 	//						ReadNextLine will alter the data so your ptr only has a life time of a per call.
 	// aEatCRLFs  -- PR_TRUE if you don't want to see the CRLFs on the lines returned by ReadNextLine. 
 	//				 PR_FALSE if you do want to see them.
-	nsMsgLineStreamBuffer(PRUint32 aBufferSize, PRBool aAllocateNewLines, PRBool aEatCRLFs = PR_TRUE); // specify the size of the buffer you want the class to use....
+	nsMsgLineStreamBuffer(PRUint32 aBufferSize, const char * aEndOfLineToken, PRBool aAllocateNewLines, PRBool aEatCRLFs = PR_TRUE); // specify the size of the buffer you want the class to use....
 	virtual ~nsMsgLineStreamBuffer();
 
 	// Caller must free the line returned using PR_Free
-	char * ReadNextLine(nsIInputStream * aInputStream, PRBool &aPauseForMoreData);
+	// aEndOfLinetoken -- delimeter used to denote the end of a line.
+	// aNumBytesInLine -- The number of bytes in the line returned
+	// aPauseForMoreData -- There is not enough data in the stream to make a line at this time...
+	char * ReadNextLine(nsIInputStream * aInputStream, PRUint32 &anumBytesInLine, PRBool &aPauseForMoreData);
 protected:
 	PRBool m_eatCRLFs;
 	PRBool m_allocateNewLines;
 	char * m_dataBuffer;
 	char * m_startPos;
+	const char * m_endOfLineToken;
 	PRUint32 m_dataBufferSize;
 };
 
