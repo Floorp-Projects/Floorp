@@ -731,12 +731,11 @@ Identifier0=Site0
 ;*** LOCALIZE ME BABY ***
 Description0=Default
 ;*** LOCALIZE ME BABY ***
-Domain0=ftp://sweetlou.mcom.com$RedirectServerPath$
-;Domain0=ftp://ftp.netscape.com/pub/netscape6/english/6_PR3/windows/win32
+Domain0=$RedirIniUrl$
 
 Identifier1=Site1
 ;*** LOCALIZE ME BABY ***
 Description1=North America
 ;*** LOCALIZE ME BABY ***
-Domain1=ftp://ftp.mozilla.org/pub/mozilla/win32
+Domain1=$RedirIniUrl$
 

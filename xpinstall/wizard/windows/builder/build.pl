@@ -40,6 +40,21 @@ if($ENV{MOZ_SRC} eq "")
   exit(1);
 }
 
+$inXpiURL = "";
+$inRedirIniURL = "";
+
+ParseArgv(@ARGV);
+if($inXpiURL eq "")
+{
+  # archive url not supplied, set it to default values
+  $inXpiURL      = "ftp://not.supplied.com";
+}
+if($inRedirIniURL eq "")
+{
+  # redirect url not supplied, set it to default value.
+  $inRedirIniURL = $inXpiURL;
+}
+
 $DEPTH         = "$ENV{MOZ_SRC}\\mozilla";
 $cwdBuilder    = "$DEPTH\\xpinstall\\wizard\\windows\\builder";
 $cwdBuilder    =~ s/\//\\/g; # convert slashes to backslashes for Dos commands to work
@@ -59,9 +74,9 @@ mkdir("$cwdDist\\stage", 775);
 system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin -d $cwdDist\\stage -f $cwdPackager\\packages-win -o dos -v");
 
 chdir("$cwdPackager\\windows");
-if(system("perl makeall.pl $ver $cwdDist\\stage $cwdDistWin\\install"))
+if(system("perl makeall.pl $ver $cwdDist\\stage $cwdDistWin\\install -aurl $inXpiURL -rurl $inRedirIniURL"))
 {
-  print "\n Error: perl makeall.pl $ver $cwdDist\\stage $cwdDistWin\\install\n";
+  print "\n Error: perl makeall.pl $ver $cwdDist\\stage $cwdDistWin\\install $inXpiURL $inRedirIniURL\n";
   exit(1);
 }
 
@@ -91,6 +106,57 @@ print "**\n";
 print "\n";
 
 exit(0);
+
+sub PrintUsage
+{
+  die "usage: $0 [options]
+
+       options available are:
+
+           -h    - this usage.
+
+           -aurl - ftp or http url for where the archives (.xpi, exe, .zip, etx...) are.
+                   ie: ftp://my.ftp.com/mysoftware/version1.0/xpi
+
+           -rurl - ftp or http url for where the redirect.ini file is located at.
+                   ie: ftp://my.ftp.com/mysoftware/version1.0
+                   
+                   This url can be the same as the archive url.
+                   If -rurl is not supplied, it will be assumed that the redirect.ini
+                   file is at -arul.
+       \n";
+}
+
+sub ParseArgv
+{
+  my(@myArgv) = @_;
+  my($counter);
+
+  for($counter = 0; $counter <= $#myArgv; $counter++)
+  {
+    if($myArgv[$counter] =~ /^[-,\/]h$/i)
+    {
+      PrintUsage();
+    }
+    elsif($myArgv[$counter] =~ /^[-,\/]aurl$/i)
+    {
+      if($#myArgv >= ($counter + 1))
+      {
+        ++$counter;
+        $inXpiURL = $myArgv[$counter];
+        $inRedirIniURL = $inXpiURL;
+      }
+    }
+    elsif($myArgv[$counter] =~ /^[-,\/]rurl$/i)
+    {
+      if($#myArgv >= ($counter + 1))
+      {
+        ++$counter;
+        $inRedirIniURL = $myArgv[$counter];
+      }
+    }
+  }
+}
 
 sub GetCwd
 {

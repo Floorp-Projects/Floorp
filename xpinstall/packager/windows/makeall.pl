@@ -36,16 +36,7 @@ if($ENV{MOZ_SRC} eq "")
 # Make sure there are at least three arguments
 if($#ARGV < 2)
 {
-  die "usage: $0 <default version> <staging path> <dist install path>
-
-       default version   : y2k compliant based date version.
-                           ie: 5.0.0.2000040413
-
-       staging path      : full path to where the components are staged at
-
-       dist install path : full path to where the dist install dir is at.
-                           ie: d:\\builds\\mozilla\\dist\\win32_o.obj\\install
-       \n";
+  PrintUsage();
 }
 
 require "$ENV{MOZ_SRC}\\mozilla\\config\\zipcfunc.pl";
@@ -54,8 +45,20 @@ $inDefaultVersion     = $ARGV[0];
 $inStagePath          = $ARGV[1];
 $inDistPath           = $ARGV[2];
 
-$inRedirIniUrl        = "ftp://not.needed.yet.until.release.eng.is.ready";
-$inXpiURL             = "ftp://not.needed.yet.until.release.eng.is.ready";
+$inXpiURL = "";
+$inRedirIniURL = "";
+
+ParseArgv(@ARGV);
+if($inXpiURL eq "")
+{
+  # archive url not supplied, set it to default values
+  $inXpiURL      = "ftp://not.supplied.com";
+}
+if($inRedirIniURL eq "")
+{
+  # redirect url not supplied, set it to default value.
+  $inRedirIniURL = $inXpiURL;
+}
 
 $seiFileNameGeneric   = "nsinstall.exe";
 $seiFileNameSpecific  = "mozilla-win32-installer.exe";
@@ -281,19 +284,74 @@ if((!(-e "$ENV{MOZ_SRC}\\redist\\microsoft\\system\\msvcrt.dll")) ||
 # end of script
 exit(0);
 
+sub PrintUsage
+{
+  die "usage: $0 <default version> <staging path> <dist install path> [options]
+
+       default version   : y2k compliant based date version.
+                           ie: 5.0.0.2000040413
+
+       staging path      : full path to where the components are staged at
+
+       dist install path : full path to where the dist install dir is at.
+                           ie: d:\\builds\\mozilla\\dist\\win32_o.obj\\install
+
+       options include:
+           -aurl <archive url>      : either ftp:// or http:// url to where the
+                                      archives (.xpi, .exe, .zip, etc...) reside
+
+           -rurl <redirect.ini url> : either ftp:// or http:// url to where the
+                                      redirec.ini resides.  If not supplied, it
+                                      will be assumed to be the same as archive
+                                      url.
+       \n";
+}
+
+sub ParseArgv
+{
+  my(@myArgv) = @_;
+  my($counter);
+
+  # The first 3 arguments are required, so start on the 4th.
+  for($counter = 3; $counter <= $#myArgv; $counter++)
+  {
+    if($myArgv[$counter] =~ /^[-,\/]h$/i)
+    {
+      PrintUsage();
+    }
+    elsif($myArgv[$counter] =~ /^[-,\/]aurl$/i)
+    {
+      if($#myArgv >= ($counter + 1))
+      {
+        ++$counter;
+        $inXpiURL = $myArgv[$counter];
+        $inRedirIniURL = $inXpiURL;
+      }
+    }
+    elsif($myArgv[$counter] =~ /^[-,\/]rurl$/i)
+    {
+      if($#myArgv >= ($counter + 1))
+      {
+        ++$counter;
+        $inRedirIniURL = $myArgv[$counter];
+      }
+    }
+  }
+}
+
 sub MakeConfigFile
 {
   # Make config.ini file
-  if(system("perl makecfgini.pl config.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniUrl $inXpiURL"))
+  if(system("perl makecfgini.pl config.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniURL $inXpiURL"))
   {
-    print "\n Error: perl makecfgini.pl config.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniUrl $inXpiURL\n";
+    print "\n Error: perl makecfgini.pl config.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniURL $inXpiURL\n";
     return(1);
   }
 
   # Make redirect.ini file
-  if(system("perl makecfgini.pl redirect.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniUrl $inXpiURL"))
+  if(system("perl makecfgini.pl redirect.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniURL $inXpiURL"))
   {
-    print "\n Error: perl makecfgini.pl redirect.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniUrl $inXpiURL\n";
+    print "\n Error: perl makecfgini.pl redirect.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniURL $inXpiURL\n";
     return(1);
   }
   return(0);
