@@ -467,15 +467,7 @@ XFE_RDFMenuToolbarBase::entryActivated(Widget w, HT_Resource entry)
     {
         if (XFE_RDFUtils::ht_IsFECommand(entry)) 
         {
-//            Cardinal numparams = 1;
-            CommandType cmd;
-
-            // Hack an open page dialog until we fix the urlbar
-            if (HT_IsURLBar(entry)) {
-                cmd = xfeCmdOpenPage;
-            } else {
-                cmd = XFE_RDFUtils::ht_GetFECommand(entry);
-            }
+            CommandType cmd = XFE_RDFUtils::ht_GetFECommand(entry);
 
             XFE_CommandInfo info(XFE_COMMAND_EVENT_ACTION,
                                  w, 
@@ -494,9 +486,14 @@ XFE_RDFMenuToolbarBase::entryActivated(Widget w, HT_Resource entry)
         }
         else if (!HT_IsContainer(entry) && !HT_IsSeparator(entry))
         {
-            char *s = HT_GetNodeURL(entry);
-            URL_Struct *url = NET_CreateURLStruct (s, NET_DONT_RELOAD);
-            fe_reuseBrowser (_frame->getContext(), url);
+            MWContext *		context = _frame->getContext();
+
+            // Let HT handle the launch first
+            if (!HT_Launch(entry, context)) {
+                char *s = HT_GetNodeURL(entry);
+                URL_Struct *url = NET_CreateURLStruct (s, NET_DONT_RELOAD);
+                fe_reuseBrowser (context, url);
+            }
         }
     }
 }
