@@ -44,6 +44,7 @@
 #include "ApplIDs.h"
 #include "CBrowserWindow.h"
 #include "CBrowserShell.h"
+#include "CBrowserChrome.h"
 #include "CWindowCreator.h"
 #include "CUrlField.h"
 #include "CThrobber.h"
@@ -73,6 +74,8 @@
 #include "macstdlibextras.h"
 #include "SIOUX.h"
 #include "nsNetUtil.h"
+#include "nsIWindowWatcher.h"
+#include "nsIDOMWindow.h"
 
 #include <TextServices.h>
 
@@ -138,6 +141,10 @@ CBrowserApp::CBrowserApp()
 
 #ifdef USE_PROFILES
     mRefCnt = 1;
+#endif
+
+#if TARGET_CARBON
+  InstallCarbonEventHandlers();
 #endif
 
 	if ( PP_PowerPlant::UEnvironment::HasFeature( PP_PowerPlant::env_HasAppearance ) ) {
@@ -318,7 +325,7 @@ CBrowserApp::MakeMenuBar()
     LApplication::MakeMenuBar();
     
     // Insert a menu which is not in the menu bar but which contains
-    // items which appear in contextual menus. We have to do this hack
+    // items which appear only in contextual menus. We have to do this hack
     // because LCMAttachment::AddCommand needs a command which is in
     // some LMenu in order to get the text for a contextual menu item.
     
@@ -417,6 +424,9 @@ CBrowserApp::ObeyCommand(
 
 	switch (inCommand) {
 	
+		case PP_PowerPlant::cmd_About:
+      break;
+      	
 		case PP_PowerPlant::cmd_New:
 			{			
        			LWindow *theWindow = CWindowCreator::CreateWindowInternal(nsIWebBrowserChrome::CHROME_DEFAULT, -1, -1);
@@ -455,6 +465,38 @@ CBrowserApp::ObeyCommand(
 			}
 			break;
 
+        case PP_PowerPlant::cmd_Preferences:
+        {
+            nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+            ThrowIfNil_(wwatch);
+                
+            // Note: We're not making this window modal even though it looks like a modal
+            // dialog (has OK and Cancel buttons). Reason is, the help window which can
+            // be opened from the prefs dialog is non-modal. If the prefs dialog was modal,
+            // the help window would be stuck behind it in the non-modal layer.
+            
+            // And, since its non-modal, we have to check for an already open prefs window
+            // and just select it rather than making a new one.
+            nsCOMPtr<nsIDOMWindow> extantPrefsWindow;
+            wwatch->GetWindowByName(NS_LITERAL_STRING("_prefs").get(), nsnull, getter_AddRefs(extantPrefsWindow));
+            if (extantPrefsWindow) {
+                // activate the window
+                LWindow *extantPrefsLWindow = CBrowserChrome::GetLWindowForDOMWindow(extantPrefsWindow);
+                ThrowIfNil_(extantPrefsLWindow);
+                extantPrefsLWindow->Select();
+            }
+            else {
+                nsCOMPtr<nsIDOMWindow> domWindow;
+                wwatch->OpenWindow(nsnull,
+                                  "chrome://communicator/content/pref/pref.xul",
+                                  "_prefs",
+                                  "centerscreen,chrome,dialog,titlebar",
+                                  nsnull,
+                                  getter_AddRefs(domWindow));
+            }
+        }
+        break;
+
 		// Any that you don't handle, such as cmd_About and cmd_Quit,
 		// will be passed up to LApplication
 		default:
@@ -482,7 +524,10 @@ CBrowserApp::FindCommandStatus(
 
 	switch (inCommand) {
 	
-		// Return menu item status according to command messages.
+		case PP_PowerPlant::cmd_About:
+			outEnabled = false;
+      break;
+      
 		case PP_PowerPlant::cmd_New:
 			outEnabled = true;
 			break;
@@ -491,6 +536,10 @@ CBrowserApp::FindCommandStatus(
 		case cmd_OpenDirectory:
 			outEnabled = true;
 			break;
+
+		case PP_PowerPlant::cmd_Preferences:
+			outEnabled = true;
+			break;		
 
 		// Any that you don't handle, such as cmd_About and cmd_Quit,
 		// will be passed up to LApplication
@@ -519,6 +568,67 @@ Boolean CBrowserApp::AttemptQuitSelf(SInt32 inSaveOption)
     
    return true;
 }
+
+#if TARGET_CARBON
+
+void CBrowserApp::InstallCarbonEventHandlers()
+{
+    EventTypeSpec appEventList[] = {{kEventClassCommand, kEventCommandProcess},
+                                    {kEventClassCommand, kEventCommandUpdateStatus}};
+
+    InstallApplicationEventHandler(NewEventHandlerUPP(AppEventHandler), 2, appEventList, this, NULL);                                    
+}
+
+pascal OSStatus CBrowserApp::AppEventHandler(EventHandlerCallRef aHandlerChain,
+                                             EventRef event,
+                                             void* userData)
+{
+    HICommand       command;
+    OSStatus        result = eventNotHandledErr; /* report failure by default */
+
+    if (::GetEventParameter(event, kEventParamDirectObject, 
+                            typeHICommand, NULL, sizeof(HICommand), 
+                            NULL, &command) != noErr)
+        return result;
+
+    switch (::GetEventKind(event))
+    {
+        case kEventCommandProcess:
+            {
+                switch (command.commandID)
+                {
+                    case kHICommandPreferences:
+                        CBrowserApp *theApp = reinterpret_cast<CBrowserApp*>(userData);
+                        theApp->ObeyCommand(PP_PowerPlant::cmd_Preferences, nsnull);
+                        result = noErr;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            break;
+
+        case kEventCommandUpdateStatus:
+            {
+                switch (command.commandID)
+                {
+                    case kHICommandPreferences:
+                        ::EnableMenuCommand(nsnull, kHICommandPreferences);
+                        result = noErr;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            break;
+
+        default:
+            break; 
+    }
+    return result;
+}
+
+#endif // TARGET_CARBON
 
 nsresult CBrowserApp::InitializePrefs()
 {

@@ -132,8 +132,6 @@ LWindow* CWindowCreator::CreateWindowInternal(PRUint32 inChromeFlags,
     UInt32 windowAttrs = (windAttr_Enabled | windAttr_Targetable);
     if (chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_DIALOG)
     {
-        windowAttrs |= windAttr_Modal;
-
         if (chromeFlags & nsIWebBrowserChrome::CHROME_TITLEBAR)
         {
             windowDefProc = kWindowMovableModalDialogProc;
@@ -144,8 +142,6 @@ LWindow* CWindowCreator::CreateWindowInternal(PRUint32 inChromeFlags,
     }
     else
     {
-        windowAttrs |= windAttr_Regular;    
-
         if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE)
         {
             windowDefProc = kWindowGrowDocumentProc;
@@ -157,6 +153,11 @@ LWindow* CWindowCreator::CreateWindowInternal(PRUint32 inChromeFlags,
         if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_CLOSE)
             windowAttrs |= windAttr_CloseBox;
     }
+
+    if (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL)
+        windowAttrs |= windAttr_Modal;
+    else
+        windowAttrs |= windAttr_Regular;    
     
     theWindow = new CBrowserWindow(LCommander::GetTopCommander(), globalBounds, "\p", windowDefProc, windowAttrs, window_InFront);
     ThrowIfNil_(theWindow);
