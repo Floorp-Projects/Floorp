@@ -57,7 +57,7 @@
 
 #if defined(XP_OS2)
   /* Added definitions for DebugBreak() for 2 different OS/2 compilers.  Doing
-   * the int3 on purpose for Visual Age so that a developer can step over the
+   * the int3 on purpose so that a developer can step over the
    * instruction if so desired.  Not always possible if trapping due to exception
    * handling IBM-AKR
    */
@@ -66,12 +66,7 @@
   #include <string.h>
   
   #if defined(DEBUG)
-   #if defined(XP_OS2_VACPP)
-    #include <builtin.h>
-    #define DebugBreak() { _interrupt(3); }
-   #else
     #define DebugBreak() { asm("int $3"); }
-   #endif
   #else
     #define DebugBreak()
   #endif /* DEBUG */

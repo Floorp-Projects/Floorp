@@ -44,11 +44,7 @@ NO_DIST_INSTALL	= 1
 include $(topsrcdir)/config/rules.mk
 
 
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-LDFLAGS += /PM:PM
-else
 LDFLAGS += -Zlinker /PM:PM
-endif
 
 libs:: $(PROGRAM)
 	$(INSTALL) $(PROGRAM) $(DIST)/install

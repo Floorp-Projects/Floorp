@@ -48,21 +48,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#if !defined(XP_OS2_VACPP)
 #include <unistd.h>
-#endif
 #include <sys/stat.h>
 #include "pathsub.h"
 
 #ifdef USE_REENTRANT_LIBC
 #include <libc_r.h>
-#endif
-
-#if defined(XP_OS2_VACPP)
-#include <direct.h>
-#include <io.h>
-#include <sys/utime.h>
-#include <sys/types.h>
 #endif
 
 #ifdef SUNOS4

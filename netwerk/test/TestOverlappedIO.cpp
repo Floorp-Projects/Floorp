@@ -265,11 +265,7 @@ main(int argc, char* argv[])
 {
     nsresult rv;
 
-#ifdef XP_OS2_VACPP
-    signal(SIGSEGV, (_SigFunc)sighandler);
-#else
     signal(SIGSEGV, sighandler);
-#endif
 
 #if defined(PR_LOGGING)
     gTestSocketIOLog = PR_NewLogModule("TestSocketIO");

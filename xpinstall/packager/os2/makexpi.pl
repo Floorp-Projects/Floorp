@@ -72,8 +72,6 @@ sub RecursiveModify
             {
                 # Make sure it is not read only
                 system("chmod 755 $entry");
-                # DLLRNAME it
-                system("dllrname $entry CPPRMI36=MOZRMI36");
             }
         }
 
@@ -102,15 +100,6 @@ $inDestPath       =~ s/\//\\/g;
 if(!(-e "$inStagePath\\$inComponentName"))
 {
   die "invalid path: $inStagePath\\$inComponentName\n";
-}
-
-if($inComponentName =~ /xpcom/i)
-{
-  # copy cpprmi36.dll to xpcom dir
-  if(-e "$ENV{VACPP365}\\runtime\\cpprmi36.dll")
-  {
-    system("cp $ENV{VACPP365}\\runtime\\cpprmi36.dll $inStagePath\\$inComponentName\\bin");
-  }
 }
 
 # check for existance of .js script
