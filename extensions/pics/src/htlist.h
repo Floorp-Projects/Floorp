@@ -106,7 +106,7 @@ SIZE OF A LIST
    
  */
 #define         HTList_isEmpty(me)              (me ? me->next == NULL : YES)
-extern int      HTList_count                    (HTList *me);
+extern PRInt32      HTList_count                    (HTList *me);
 /*
 
 REFERENCE LIST ELEMENTS BY INDEX
@@ -115,8 +115,8 @@ REFERENCE LIST ELEMENTS BY INDEX
    This is for example the case if an element can be registered multiple times.
    
  */
-extern int      HTList_indexOf  (HTList *me, void *object);
-extern void *   HTList_objectAt (HTList *me, int position);
+extern PRInt32      HTList_indexOf  (HTList *me, void *object);
+extern void *   HTList_objectAt (HTList *me, PRInt32 position);
 /*
 
 FIND LIST ELEMENTS
@@ -158,6 +158,6 @@ PR_END_EXTERN_C
    
    ___________________________________
    
-                            @(#) $Id: htlist.h,v 1.1 1999/03/18 22:32:49 neeti%netscape.com Exp $
+                            @(#) $Id: htlist.h,v 1.2 1999/05/07 05:26:11 neeti%netscape.com Exp $
                                                                                           
     */

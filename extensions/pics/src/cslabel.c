@@ -90,7 +90,7 @@ struct CSLabel_s {
 
     ServiceInfo_t * pCurrentServiceInfo;
     Label_t * pCurrentLabel;
-    int currentLabelNumber;
+    PRInt32 currentLabelNumber;
     HTList * pCurrentLabelTree;
     SingleLabel_t * pCurrentSingleLabel;
     LabelRating_t * pCurrentLabelRating;
@@ -242,7 +242,7 @@ PRIVATE StateToken_t SingleLabel_stateTokens[] = {
      {"label extension", SubState_A, Punct_LPAREN,     0, "extension", 0,  0,   &Extension_targetObject, SubState_N, Command_NONE, 0},
      {   "label option", SubState_A,  Punct_WHITE, &getOption,      0, 0,  0, &SingleLabel_targetObject, SubState_B, Command_NONE, 0},
      {     "ratingword", SubState_A, Punct_LPAREN,     0, "r", "ratings",  0, &LabelRating_targetObject, SubState_N, Command_NONE, 0},
-     {   "option value", SubState_B,  Punct_WHITE, &getOptionValue, 0, 0,  0, &SingleLabel_targetObject, SubState_A, Command_CLOSE, 0}
+     {   "option value", SubState_B,  Punct_WHITE, &getOptionValue, 0, 0,  0, &SingleLabel_targetObject, SubState_A, Command_CLOSE, 0} 
     };
 
 PRIVATE StateToken_t LabelRating_stateTokens[] = {
@@ -346,7 +346,7 @@ PRIVATE StateToken_t ExtensionData_stateTokens[] = {
     };
 
 
-PRIVATE void init_target_obj(TargetObject_t *obj, char *note, Open_t *pOpen, Close_t *pClose, Destroy_t *pDestroy, StateToken_t *stateToken, int stateTokenCount, CSParseTC_t targetChange)
+PRIVATE void init_target_obj(TargetObject_t *obj, char *note, Open_t *pOpen, Close_t *pClose, Destroy_t *pDestroy, StateToken_t *stateToken, PRInt32 stateTokenCount, CSParseTC_t targetChange)
 {
     obj->note = note;
     obj->pOpen = pOpen;
@@ -359,11 +359,11 @@ PRIVATE void init_target_obj(TargetObject_t *obj, char *note, Open_t *pOpen, Clo
 
 PRIVATE void CSinitialize_global_data(void)
 {
-	static PRBool first_time=TRUE;
+	static PRBool first_time=PR_TRUE;
 	
 	if(first_time)
 	{
-		first_time = FALSE;
+		first_time = PR_FALSE;
 		
 		init_target_obj(&LabelList_targetObject, "LabelList", &LabelList_open, &LabelList_close, &LabelList_destroy, LabelList_stateTokens, raysize(LabelList_stateTokens), CSLLTC_LIST);
 		init_target_obj(&ServiceInfo_targetObject, "ServiceInfo", ServiceInfo_open, &ServiceInfo_close, &ServiceInfo_destroy, ServiceInfo_stateTokens, raysize(ServiceInfo_stateTokens), CSLLTC_SERVICE);
@@ -657,7 +657,7 @@ PUBLIC char * CSLabel_getServiceName(CSLabel_t * pCSLabel)
        SVal_value(&pCSLabel->pCurrentServiceInfo->rating_service): 0;}
 PUBLIC Label_t * CSLabel_getLabel(CSLabel_t * pCSLabel)
     {return pCSLabel->pCurrentLabel;}
-PUBLIC int CSLabel_getLabelNumber(CSLabel_t * pCSLabel)
+PUBLIC PRInt32 CSLabel_getLabelNumber(CSLabel_t * pCSLabel)
     {return pCSLabel->currentLabelNumber;}
 PUBLIC SingleLabel_t * CSLabel_getSingleLabel(CSLabel_t * pCSLabel)
     {return pCSLabel->pCurrentSingleLabel;}
@@ -674,7 +674,7 @@ PUBLIC char * CSLabel_getRatingStr(CSLabel_t * pCSLabel)
     HTList * ranges;
     Range_t * curRange;
     FVal_t fVal;
-    int count = 0;
+    PRInt32 count = 0;
     fVal = CSLabel_getLabelRating(pCSLabel)->value;
     if (FVal_initialized(&fVal))
         return FVal_toStr(&fVal);
@@ -746,7 +746,7 @@ PRIVATE StateRet_t parseErrorHandler(CSParse_t * pCSParse, const char * token, c
 PRIVATE PRBool charSetOK(CSParse_t * pCSParse, char * checkMe, CharSet_t set)
 {
 	if(!checkMe)
-		return FALSE;
+		return PR_FALSE;
 
     for (;*checkMe;checkMe++) {
         if (set & CharSet_ALPHAS && 
@@ -790,9 +790,9 @@ PRIVATE PRBool charSetOK(CSParse_t * pCSParse, char * checkMe, CharSet_t set)
              *checkMe == '/' || *checkMe == '-'))
             continue;
         pCSParse->pParseContext->pTokenError = checkMe;
-        return FALSE;
+        return PR_FALSE;
     }
-    return TRUE;
+    return PR_TRUE;
 }
 #endif /* !NO_CHAR_TEST */
 
@@ -1454,7 +1454,7 @@ PUBLIC CSError_t CSLabel_iterateServices(CSLabel_t * pCSLabel, CSLabel_callback_
 {
     HTList * serviceInfos;
     CSError_t ret = CSError_OK;
-    int count = 0;
+    PRInt32 count = 0;
     if (!pIteratorCB ||
         !pCSLabel ||
         !pCSLabel->pCSLLData->serviceInfos)
@@ -1480,7 +1480,7 @@ PUBLIC CSError_t CSLabel_iterateLabels(CSLabel_t * pCSLabel, CSLabel_callback_t 
 {
     HTList * labels;
     CSError_t ret= CSError_OK;
-    int count = 0;
+    PRInt32 count = 0;
     if (!pIteratorCB ||
         !pCSLabel ||
         !pCSLabel->pCurrentServiceInfo ||
@@ -1501,7 +1501,7 @@ PUBLIC CSError_t CSLabel_iterateLabels(CSLabel_t * pCSLabel, CSLabel_callback_t 
 PUBLIC CSError_t CSLabel_iterateSingleLabels(CSLabel_t * pCSLabel, CSLabel_callback_t * pIteratorCB, State_Parms_t * pParms, const char * identifier, void * pVoid)
 {
     CSError_t ret= CSError_OK;
-    int count = 0;
+    PRInt32 count = 0;
     if (!pIteratorCB ||
         !pCSLabel ||
         !pCSLabel->pCurrentServiceInfo ||
@@ -1532,7 +1532,7 @@ PUBLIC CSError_t CSLabel_iterateLabelRatings(CSLabel_t * pCSLabel, CSLabel_callb
 {
     HTList * labelRatings;
     CSError_t ret = CSError_OK;
-    int count = 0;
+    PRInt32 count = 0;
     if (!pIteratorCB ||
         !pCSLabel ||
         !pCSLabel->pCurrentServiceInfo ||
@@ -1554,7 +1554,7 @@ PUBLIC CSError_t CSLabel_iterateLabelRatings(CSLabel_t * pCSLabel, CSLabel_callb
 
 /* R A N G E   T E S T I N G - check that label values fall within acceptable user ranges */
 /* CSLabel_ratingsIncludeFVal - find out if current rating in pCSLabel encompases userValue
- * return: int stating how far it is from fitting.
+ * return: PRInt32 stating how far it is from fitting.
  */
 PUBLIC FVal_t CSLabel_ratingsIncludeFVal(CSLabel_t * pCSLabel, FVal_t * userValue)
 {

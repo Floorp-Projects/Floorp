@@ -122,7 +122,7 @@ extern CSLabel_t * CSLabel_copy(CSLabel_t * old);
 extern void CSLabel_free(CSLabel_t * me);
 
 extern char * CSLabel_getServiceName(CSLabel_t * pCSLabel);
-extern int CSLabel_getLabelNumber(CSLabel_t * pCSLabel);
+extern PRInt32 CSLabel_getLabelNumber(CSLabel_t * pCSLabel);
 extern char * CSLabel_getRatingName(CSLabel_t * pCSLabel);
 extern char * CSLabel_getRatingStr(CSLabel_t * pCSLabel);
 extern Range_t * CSLabel_getLabelRatingRange(CSLabel_t * pCSLabel);

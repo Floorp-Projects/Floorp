@@ -52,7 +52,7 @@ with copyright holders.
 #include "cslutils.h"
 #include "csparse.h"
 
-PUBLIC int ParseDebug = 0;	/* For use with LablPars and RatPars */
+PUBLIC PRInt32 ParseDebug = 0;	/* For use with LablPars and RatPars */
 
 PUBLIC PRBool BVal_readVal(BVal_t * pBVal, const char * valueStr)
 {
@@ -120,14 +120,14 @@ PUBLIC float FVal_value(const FVal_t * pFVal)
 PRIVATE PRBool FVal_lessThan(const FVal_t * pSmall, const FVal_t * pBig)
 {
     if (pBig->stat == FVal_UNINITIALIZED || pSmall->stat == FVal_UNINITIALIZED)
-        return FALSE;
+        return PR_FALSE;
     if (pBig->stat == FVal_POSITIVE_INF || pSmall->stat == FVal_NEGATIVE_INF) {
         if (pSmall->stat == FVal_POSITIVE_INF)
-            return FALSE;
-        return TRUE;
+            return PR_FALSE;
+        return PR_TRUE;
     }
     if (pBig->stat == FVal_NEGATIVE_INF || pSmall->stat == FVal_POSITIVE_INF) {
-        return FALSE;
+        return PR_FALSE;
     }
     return pSmall->value < pBig->value;
 }
@@ -188,7 +188,7 @@ PUBLIC void FVal_setInfinite(FVal_t * pFVal, PRBool negative)
     pFVal->stat = negative ? FVal_NEGATIVE_INF : FVal_POSITIVE_INF;
 }
 
-PUBLIC int FVal_isInfinite(const FVal_t * pFVal)
+PUBLIC PRInt32 FVal_isInfinite(const FVal_t * pFVal)
 {
     return (pFVal->stat == FVal_POSITIVE_INF ? 1 : pFVal->stat == FVal_NEGATIVE_INF ? -1 : 0);
 }
@@ -236,13 +236,13 @@ PUBLIC void SVal_clear(SVal_t * pSVal)
 }
 
 #if 0
-    int year;
-    int month;
-    int day;
-    int hour;
-    int minute;
-    int timeZoneHours;
-    int timeZoneMinutes;
+    PRInt32 year;
+    PRInt32 month;
+    PRInt32 day;
+    PRInt32 hour;
+    PRInt32 minute;
+    PRInt32 timeZoneHours;
+    PRInt32 timeZoneMinutes;
 #endif
 PUBLIC PRBool DVal_readVal(DVal_t * pDVal, const char * valueStr)
 {
@@ -277,7 +277,7 @@ PUBLIC PRBool DVal_initialized(const DVal_t * pDVal)
     return (pDVal->initialized != NO);
 }
 
-PUBLIC int DVal_compare(const DVal_t * a, const DVal_t * b)
+PUBLIC PRInt32 DVal_compare(const DVal_t * a, const DVal_t * b)
 {
     if (a->year > b->year) return 1;
     if (a->year < b->year) return -1;
@@ -416,9 +416,9 @@ PRIVATE StateRet_t callErrorHandler(CSParse_t * pCSParse,
  *  NowIn_END - expect no more text or parens
  *  NowIn_ERROR - 
  */
-PUBLIC CSDoMore_t CSParse_parseChunk (CSParse_t * pCSParse, const char * ptr, int len, void * pVoid)
+PUBLIC CSDoMore_t CSParse_parseChunk (CSParse_t * pCSParse, const char * ptr, PRInt32 len, void * pVoid)
 {
-    int i;
+    PRInt32 i;
     if (!len || !ptr)
         return CSDoMore_error;
     for (i = 0; i < len; i++) {
@@ -557,7 +557,7 @@ PRIVATE char * CSParse_subState2str(SubState_t subState)
     else if (subState == SubState_X)
         PL_strcpy(space, "X");
     else {
-        int i;
+        PRInt32 i;
 	SubState_t comp;
 	char ch[] = "A";
 	for (i = 1, comp = SubState_A; i < (sizeof(SubState_t)*8 - 1); i++, (*ch)++, comp<<=1)
@@ -567,7 +567,7 @@ PRIVATE char * CSParse_subState2str(SubState_t subState)
     return space;
 }
 
-PRIVATE int ParseTrace(const char * fmt, ...)
+PRIVATE PRInt32 ParseTrace(const char * fmt, ...)
 {
     va_list pArgs;
 
@@ -585,7 +585,7 @@ PUBLIC NowIn_t CSParse_targetParser(CSParse_t * pCSParse, char demark, void * pV
     PRBool failedOnPunct = NO;
     char * token = 0;
     StateRet_t ret = StateRet_OK;
-    int i;
+    PRInt32 i;
 static NowIn_t lastRet = NowIn_END;
 
 	/* changed by montulli@netscape.com 11/29/97 
@@ -651,7 +651,7 @@ static NowIn_t lastRet = NowIn_END;
 			return NowIn_ERROR;
     
 	if (pStateToken->command & (Command_OPEN|Command_CLOSE) && pCSParse->pParseContext->pTargetChangeCallback) {
-	    ParseTrace("%3d", pStateToken->command & Command_CLOSE ? -(int)pTargetObject->targetChange : pTargetObject->targetChange);
+	    ParseTrace("%3d", pStateToken->command & Command_CLOSE ? -(PRInt32)pTargetObject->targetChange : pTargetObject->targetChange);
 	    if ((*pCSParse->pParseContext->pTargetChangeCallback)(pCSParse, pTargetObject, pTargetObject->targetChange, 
 		(PRBool)(pStateToken->command & Command_CLOSE), pVoid) == StateRet_ERROR)
 		return NowIn_ERROR;

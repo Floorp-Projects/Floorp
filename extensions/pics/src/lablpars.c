@@ -35,11 +35,11 @@ with copyright holders.
 #include "csll.h"	/* to define states in stateChange */
 #include "csparse.h"
 
-int Total;
+PRInt32 Total;
 
-extern int ParseDebug;
+extern PRInt32 ParseDebug;
 
-extern int SEC_ERROR_NO_MEMORY;
+extern PRInt32 SEC_ERROR_NO_MEMORY;
 
 
 PRIVATE
@@ -52,7 +52,7 @@ CSError_t spit(char* text, CSLabel_t * pCSMR, PRBool closed)
 LabelTargetCallback_t targetCallback;
 StateRet_t targetCallback(CSLabel_t * pCSMR, CSParse_t * pCSParse, CSLLTC_t target, PRBool closed, void * pVoid)
 {
-    int change = closed ? -target : target;
+    PRInt32 change = closed ? -target : target;
 
     Total += change;
     if (!ParseDebug)
@@ -113,7 +113,7 @@ StateRet_t parseErrorHandler(CSLabel_t * pCSLabel, CSParse_t * pCSParse,
 /* #if 1 */
 #if 0
 /* use this main to test input with a series of labels, each on a line. */
-int main(int argc, char** argv)
+PRInt32 main(PRInt32 argc, char** argv)
 {
     char lineBuf[512];
     CSParse_t * pCSParse = 0;
@@ -132,7 +132,7 @@ int main(int argc, char** argv)
         ParseDebug = 1;
     pCSParse = CSParse_newLabel(&targetCallback, &parseErrorHandler);
     while (fgets(lineBuf, sizeof(lineBuf), input)){
-        int len;
+        PRInt32 len;
 	char * ptr;
 	for (ptr = lineBuf; *ptr; ptr++)
 	    if (*ptr == ';') {
@@ -156,7 +156,7 @@ int main(int argc, char** argv)
 	    last = CSDoMore_done;
 	} else {
 	    printf("%s ", lineBuf); if (ParseDebug) printf("\n");
-	    switch (last = CSParse_parseChunk(pCSParse, lineBuf, (int) PL_strlen(lineBuf), 0)) {
+	    switch (last = CSParse_parseChunk(pCSParse, lineBuf, (PRInt32) PL_strlen(lineBuf), 0)) {
 	    case CSDoMore_done:
 	        printf("= %d - parsing end\n", Total);
 		break;
@@ -181,7 +181,7 @@ int main(int argc, char** argv)
 #if 0
 
 /* use this main to test input of a label list spread out over multiple lines*/
-int main(int argc, char** argv)
+PRInt32 main(PRInt32 argc, char** argv)
 {
     char lineBuf[512];
     while (gets(lineBuf)){
@@ -192,7 +192,7 @@ int main(int argc, char** argv)
 	printf("%s", lineBuf);
         pCSParse = CSParse_newLabel(&targetCallback, &parseErrorHandler);
         if (CSParse_parseChunk(pCSParse, lineBuf, 
-			       (int)PL_strlen(lineBuf), 0) != CSDoMore_done) {
+			       (PRInt32)PL_strlen(lineBuf), 0) != CSDoMore_done) {
 	    printf("parsing end error\n");
 	    break;
 	}
@@ -204,7 +204,7 @@ int main(int argc, char** argv)
 #endif
 
 #if 0 /* a not-needed but often useful sample implementation of HTTrace */
-int HTTrace(const char * fmt, ...)
+PRInt32 HTTrace(const char * fmt, ...)
 {
     va_list pArgs;
     va_start(pArgs, fmt);

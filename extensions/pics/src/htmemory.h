@@ -61,6 +61,9 @@ with copyright holders.
  */
 #ifndef HTMEMORY_H
 #define HTMEMORY_H
+
+PR_BEGIN_EXTERN_C
+
 /*
 
 ALLOCATION, REALLOCATION AND DE-ALLOCATION
@@ -169,12 +172,15 @@ extern void HTMemory_outofmem(char * name, char * file, unsigned long line);
 /*
 
  */
+
+PR_END_EXTERN_C
+
 #endif /* HTMEMORY_H */
 /*
 
    
    ___________________________________
    
-                           @(#) $Id: htmemory.h,v 1.1 1999/03/18 22:32:49 neeti%netscape.com Exp $
+                           @(#) $Id: htmemory.h,v 1.2 1999/05/07 05:26:11 neeti%netscape.com Exp $
                                                                                           
     */
