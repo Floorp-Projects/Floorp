@@ -65,7 +65,7 @@
 #endif
 
 #ifdef XP_OS2
-#include "nsIOS2Locale.h"
+#include "nsOS2Locale.h"
 #include "nsCollationOS2.h"
 #include "nsDateTimeFormatOS2.h"
 #endif
