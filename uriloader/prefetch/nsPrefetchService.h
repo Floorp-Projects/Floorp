@@ -75,6 +75,8 @@ public:
 
 private:
 
+    void     AddProgressListener();
+    void     RemoveProgressListener();
     nsresult EnqueueURI(nsIURI *aURI, nsIURI *aReferrerURI);
     nsresult DequeueURI(nsIURI **aURI, nsIURI **aReferrerURI);
     void     EmptyQueue();

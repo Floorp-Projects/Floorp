@@ -37,7 +37,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["browserCacheMemoryCache", "browserCacheDiskCache", "browserCacheCheckDocFrequency"];
+    var _elementIDs = ["browserCacheDiskCache", "browserCacheCheckDocFrequency", "enablePrefetch"];
   ]]>
   </script>
   
@@ -50,62 +50,53 @@
     
     <description>&cachePara;</description>
 
-    <grid>
-      <columns>
-        <column/>
-        <column flex="1"/>
-        <column/>
-      </columns>
-      
-      <rows>
-        <row align="center">
-          <label value="&memCache.label;" accesskey="&memCache.accesskey;" control="browserCacheMemoryCache"/>
-          <hbox align="center">
-            <textbox id="browserCacheMemoryCache" size="8" preftype="int"
-                       prefstring="browser.cache.memory.capacity"/>
-            <label value="&kbytes;"/>
-          </hbox>
-          <button label="&clearMemCache.label;" accesskey="&clearMemCache.accesskey;"
-                  oncommand="prefClearMemCache();"
-                  id="clearMemCache"
-                  prefstring="pref.advanced.cache.disable_button.clear_memory"/>
-        </row>
-        <row align="center">
-          <label value="&diskCache.label;" accesskey="&diskCache.accesskey;" control="browserCacheDiskCache"/>
-          <hbox align="center">
-            <textbox id="browserCacheDiskCache" size="8" preftype="int"
-                       prefstring="browser.cache.disk.capacity" prefattribute="value"/>
-            <label value="&kbytes;"/>
-          </hbox>
-          <button label="&clearDiskCache.label;" accesskey="&clearDiskCache.accesskey;"
-                  oncommand="prefClearDiskCache();"
-                  id="clearDiskCache"
-                  prefstring="pref.advanced.cache.disable_button.clear_disk"/>
-        </row>
-      </rows>
-    </grid>
+    <hbox flex="1" align="center">
+      <label value="&diskCache.label;" accesskey="&diskCache.accesskey;" control="browserCacheDiskCache"/>
+      <textbox id="browserCacheDiskCache" size="8" preftype="int"
+                  prefstring="browser.cache.disk.capacity" prefattribute="value"/>
+      <label value="&kbytes;"/>
+      <button label="&clearDiskCache.label;" accesskey="&clearDiskCache.accesskey;"
+              oncommand="prefClearDiskAndMemCache();"
+              id="clearDiskCache"
+              prefstring="pref.advanced.cache.disable_button.clear_disk"/>
+    </hbox>
 
-    <hbox align="center">
+    <vbox>
       <label value="&diskCacheFolder.label;"/>
-      <textbox id="browserCacheDiskCacheFolder" flex="1" readonly="true" class="uri-element"/>
-    </hbox>
-    <hbox align="center" pack="end">
-      <button label="&chooseDiskCacheFolder.label;" accesskey="&chooseDiskCacheFolder.accesskey;"
+      <hbox align="center" flex="1">
+        <textbox id="browserCacheDiskCacheFolder" flex="1" readonly="true" class="uri-element"/>
+        <button label="&chooseDiskCacheFolder.label;" accesskey="&chooseDiskCacheFolder.accesskey;"
               oncommand="prefCacheSelectFolder();" id="chooseDiskCacheFolder"/>
-    </hbox>
+      </hbox>
+    </vbox>
     <description>&diskCacheFolderExplanation;</description>
 
     <separator class="thin"/>
     
     <description>&docCache;</description>
-    <vbox align="start">
-      <radiogroup id="browserCacheCheckDocFrequency" prefstring="browser.cache.check_doc_frequency">
-        <radio value="1" label="&everyTimeRadio.label;" accesskey="&everyTimeRadio.accesskey;"/>
-        <radio value="3" label="&autoRadio.label;" accesskey="&autoRadio.accesskey;"/>
-        <radio value="0" label="&oncePsessionRadio.label;" accesskey="&oncePsessionRadio.accesskey;"/>
-        <radio value="2" label="&neverRadio.label;" accesskey="&neverRadio.accesskey;"/>
+    <hbox align="start">
+      <radiogroup id="browserCacheCheckDocFrequency" orient="horizontal" prefstring="browser.cache.check_doc_frequency">
+        <vbox flex="1">
+          <radio value="1" label="&everyTimeRadio.label;" accesskey="&everyTimeRadio.accesskey;"/>
+          <radio value="3" label="&autoRadio.label;" accesskey="&autoRadio.accesskey;"/>
+        </vbox>
+        <vbox flex="1">
+          <radio value="0" label="&oncePsessionRadio.label;" accesskey="&oncePsessionRadio.accesskey;"/>
+          <radio value="2" label="&neverRadio.label;" accesskey="&neverRadio.accesskey;"/>
+        </vbox>
       </radiogroup>
-    </vbox>
+    </hbox>
 
+  </groupbox>
+
+  <groupbox id="prefetch">
+    <caption id="prefetchLabel" label="&prefetchTitle.label;"/>
+    <vbox id="prefetchBox" align="start">
+      <checkbox id="enablePrefetch" label="&enablePrefetch.label;" accesskey="&enablePrefetch.accesskey;"
+                prefstring="network.prefetch-next" />
+      <!-- <vbox class="indent" flex="1">
+        <description>&prefetchDesc.label;</description>
+      </vbox> -->
+    </vbox>
   </groupbox>
 </page>
