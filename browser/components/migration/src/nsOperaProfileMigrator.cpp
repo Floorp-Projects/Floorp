@@ -1118,9 +1118,13 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
     aBundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchUrlDesc").get(),
                                   descStrings, 2, getter_Copies(keywordDesc));
 
+    // XXX We don't know for sure how Opera deals with IDN hostnames in URL.
+    // Assuming it's in UTF-8 is rather safe because it covers two cases 
+    // (UTF-8 and ASCII) out of three cases (the last is a non-UTF-8
+    // multibyte encoding).
     rv = aBMS->CreateBookmarkInContainer(nameStr.get(), 
-                                         url.get(), 
-                                         NS_ConvertUTF8toUCS2(keyword).get(), 
+                                         NS_ConvertUTF8toUTF16(url).get(), 
+                                         NS_ConvertUTF8toUTF16(keyword).get(), 
                                          keywordDesc.get(), 
                                          nsnull, 
                                          keywordsFolder,
@@ -1265,11 +1269,15 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
         onToolbar = PR_TRUE;
       break;
     case LineType_NL: {
+      // XXX We don't know for sure how Opera deals with IDN hostnames in URL.
+      // Assuming it's in UTF-8 is rather safe because it covers two cases 
+      // (UTF-8 and ASCII) out of three cases (the last is a non-UTF-8
+      // multibyte encoding).
       nsCOMPtr<nsIRDFResource> itemRes;
       if (entryType == EntryType_BOOKMARK) {
         if (!name.IsEmpty() && !url.IsEmpty()) {
           rv = aBMS->CreateBookmarkInContainer(name.get(), 
-                                               url.get(), 
+                                               NS_ConvertUTF8toUTF16(url).get(), 
                                                keyword.get(), 
                                                description.get(), 
                                                nsnull, 
