@@ -164,8 +164,8 @@ nsHTTPHandler::MakeAbsoluteUrl(const char* i_URL,
 
 NS_METHOD
 nsHTTPHandler::NewUrl(const char* i_URL,
-                        nsIURL* i_BaseURL,
-                        nsIURL* *o_Result) const
+                        nsIURL* *o_Result,
+                        nsIURL* i_BaseURL) const
 {
     //todo clean this up...
     nsresult rv;
