@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.28 2002/04/22 19:08:44 relyea%netscape.com Exp $
+ * $Id: certdb.c,v 1.29 2002/04/22 20:27:52 ian.mcgreer%sun.com Exp $
  */
 
 #include "nssilock.h"
@@ -2029,10 +2029,10 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
 	/* decode all of the certs into the temporary DB */
 	for ( i = 0, fcerts= 0; i < ncerts; i++) {
 	    certs[fcerts] = CERT_NewTempCertificate(certdb,
-		                                        derCerts[i],
-		                                        NULL,
-		                                        PR_FALSE,
-		                                        PR_TRUE);
+	                                            derCerts[i],
+	                                            NULL,
+	                                            PR_FALSE,
+	                                            PR_TRUE);
 	    if (certs[fcerts]) fcerts++;
 	}
 
@@ -2046,11 +2046,9 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
 		     * otherwise if there are more than one cert, we don't
 		     * know which cert it belongs to.
 		     */
-		    rv = PK11_ImportCert(intSlot,certs[i],
-				CK_INVALID_HANDLE,NULL,PR_TRUE);
+		    rv = CERT_AddTempCertToPerm(certs[i], NULL, NULL);
 		} else {
-		    rv = PK11_ImportCert(intSlot,certs[i],
-				CK_INVALID_HANDLE,nickname,PR_TRUE);
+		    rv = CERT_AddTempCertToPerm(certs[i], nickname, NULL);
 		}
 		if (rv == SECSuccess) {
 		    CERT_SaveImportedCert(certs[i], usage, caOnly, NULL);
