@@ -41,6 +41,7 @@ LIBRARY_NAME=basedocshell_s
 CPP_OBJS=											\
 		.\$(OBJDIR)\nsDocShell.obj			\
 		.\$(OBJDIR)\nsDSURIContentListener.obj	\
+		.\$(OBJDIR)\nsDSWebProgressListener.obj	\
 		$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
