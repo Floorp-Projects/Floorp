@@ -71,12 +71,14 @@ protected:
   PRInt16                mMode;
   nsCString              mFile;
   nsString               mDefault;
-  nsString               mFilterList;
+  nsStringArray          mFilters;
+  nsStringArray          mTitles;
   nsIUnicodeEncoder*     mUnicodeEncoder;
   nsIUnicodeDecoder*     mUnicodeDecoder;
   nsCOMPtr<nsILocalFile> mDisplayDirectory;
   PRInt16                mSelectedType;
-
+  char    pszFDFileExists[256];
+  char    pszFDSaveCaption[256];
 };
 
 #endif // nsFilePicker_h__
