@@ -304,13 +304,17 @@ NS_IMETHODIMP nsWebBrowserChrome::GetDimensions(PRUint32 aFlags, PRInt32 *aX, PR
   mBrowserWindow->GetPositionAndSize(&x, &y, &cx, &cy);
   if (aFlags & DIM_FLAGS_POSITION)
   {
-    *aX = x;
-    *aY = y;
+    if(aX)
+      *aX = x;
+    if(aY)
+      *aY = y;
   }
   if (aFlags & DIM_FLAGS_SIZE_INNER || aFlags & DIM_FLAGS_SIZE_OUTER)
   {
-    *aCX = cx;
-    *aCY = cy;
+    if(aCX)
+      *aCX = cx;
+    if(aCY)
+      *aCY = cy;
   }
   return NS_OK;
 }
