@@ -282,6 +282,8 @@ protected:
   PRPackedBool mComputeMaxElementSize;
   PRUint8 mTextAlign;
 
+  PRUint8 mPlacedFloaters;
+  
   // The amount of text indent that we applied to this line, needed for
   // max-element-size calculation.
   nscoord mTextIndent;
@@ -296,7 +298,6 @@ protected:
 
   nsLineBox* mLineBox;
 
-  PRUint8 mPlacedFloaters;
   PRInt32 mTotalPlacedFrames;
   nsDeque mWordFrames;
 
@@ -341,13 +342,12 @@ protected:
     nsMargin mBorderPadding;
     nsMargin mOffsets;
 
-    // Other state we use
-    PRUint8 mVerticalAlign;
-
     // state for text justification
     PRInt32 mJustificationNumSpaces;
     PRInt32 mJustificationNumLetters;
-
+    
+    // Other state we use
+    PRUint8 mVerticalAlign;
 
 // PerFrameData flags
 #define PFD_RELATIVEPOS                 0x00000001
