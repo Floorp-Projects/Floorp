@@ -244,8 +244,6 @@ function email_enableButtons()
   }
   var enableViewButton=document.getElementById('email_viewButton');
   enableViewButton.setAttribute("disabled",toggle);
-  var enableEditButton=document.getElementById('email_editButton');
-  enableEditButton.setAttribute("disabled",toggle);
   var enableDeleteButton=document.getElementById('email_deleteButton');
   enableDeleteButton.setAttribute("disabled",toggle);
 }
