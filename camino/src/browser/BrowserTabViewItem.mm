@@ -68,6 +68,7 @@ const double kJaguarAppKitVersion = 663;
   float           mImageSpace;
   float           mImageAlpha;
   float           mRightGutter;           // leave space for an icon on the right
+  BOOL            mImageIsVisible;
 }
 
 - (id)initTextCell:(NSString*)aString;
@@ -77,6 +78,7 @@ const double kJaguarAppKitVersion = 663;
 - (void)setImageSpace:(float)space;
 - (void)setImageAlpha:(float)alpha;
 - (void)setRightGutter:(float)rightPadding;
+- (void)setImageVisible:(BOOL)visible;
 
 - (void)setImage:(NSImage *)anImage;
 - (NSImage *)image;
@@ -93,6 +95,7 @@ const double kJaguarAppKitVersion = 663;
     mImagePadding = 0;
     mImageSpace = 2;
     mRightGutter = 0.0;
+    mImageIsVisible = NO;
   }
   return self;
 }
@@ -111,6 +114,7 @@ const double kJaguarAppKitVersion = 663;
     cell->mTruncLabelString = nil;
     cell->mLabelStringWidth = -1;
     cell->mRightGutter = mRightGutter;
+    cell->mImageIsVisible = mImageIsVisible;
     return cell;
 }
 
@@ -124,7 +128,7 @@ const double kJaguarAppKitVersion = 663;
   float imageWidth = NSHeight(cellFrame) - 2 * mImagePadding;
   NSDivideRect(cellFrame, &imageRect, &textRect, imageWidth, NSMinXEdge);
   
-  if (mImage)
+  if (mImage && mImageIsVisible)
   {
     NSRect imageSrcRect = NSZeroRect;
     imageSrcRect.size = [mImage size];    
@@ -176,6 +180,11 @@ const double kJaguarAppKitVersion = 663;
     [mImage release];
     mImage = [anImage retain];
   }
+}
+
+- (void)setImageVisible:(BOOL)visible
+{
+  mImageIsVisible = visible;
 }
 
 - (NSImage *)image
@@ -468,7 +477,7 @@ const double kJaguarAppKitVersion = 663;
       [mProgressWheel setStyle:NSProgressIndicatorSpinningStyle];
       [mProgressWheel setUsesThreadedAnimation:YES];
       [mProgressWheel setDisplayedWhenStopped:NO];
-      [mProgressWheel setAutoresizingMask:NSViewMinXMargin];
+      [mProgressWheel setAutoresizingMask:NSViewMaxXMargin];
     }
     else
       mProgressWheel = nil;
@@ -484,6 +493,7 @@ const double kJaguarAppKitVersion = 663;
     [mCloseButton setTarget:self];
     [mCloseButton setAction:@selector(closeTab)];
     [mCloseButton setAutoresizingMask:NSViewMinXMargin];
+    [mTabContentsView addSubview:mCloseButton];
 
     [[self tabView] setAutoresizesSubviews:YES];
 
@@ -549,7 +559,7 @@ const double kJaguarAppKitVersion = 663;
 - (void)relocateTabContents:(NSRect)inRect
 {
   [mTabContentsView setFrame:inRect];
-  [mProgressWheel setFrame:NSMakeRect(inRect.size.width - 16, 0, 16, 16)];
+  [mProgressWheel setFrame:NSMakeRect(0, 0, 16, 16)];
   [mCloseButton setFrame:NSMakeRect(inRect.size.width - 16, 0, 16, 16)];
 }
 
@@ -595,9 +605,10 @@ const double kJaguarAppKitVersion = 663;
 
 - (void)startLoadAnimation
 {
-  // remove close from tab view
-  [mCloseButton removeFromSuperview];
-
+  // supress the tab icon while the spinner is over it
+  [[mTabContentsView labelCell] setImageVisible: NO];
+  [mTabContentsView setNeedsDisplay:YES];
+  
   // add spinner to tab view and start animation
   [mTabContentsView addSubview:mProgressWheel];
   [mProgressWheel startAnimation:self];
@@ -605,12 +616,13 @@ const double kJaguarAppKitVersion = 663;
 
 - (void)stopLoadAnimation
 {
+  // show the tab icon
+  [[mTabContentsView labelCell] setImageVisible: YES];
+  [mTabContentsView setNeedsDisplay:YES];
+  
   // stop animation and remove spinner from tab view
   [mProgressWheel stopAnimation:self];
   [mProgressWheel removeFromSuperview];
-
-  // add close button to tab view
-  [mTabContentsView addSubview:mCloseButton];
 }
 
 #pragma mark -
