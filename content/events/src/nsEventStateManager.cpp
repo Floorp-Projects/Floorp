@@ -38,8 +38,6 @@
 #include "nsIWebShell.h"
 #include "nsIFocusableContent.h"
 #include "nsIScrollableView.h"
-#include "nsIDOMSelection.h"
-#include "nsIFrameSelection.h"
 
 static NS_DEFINE_IID(kIEventStateManagerIID, NS_IEVENTSTATEMANAGER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -161,22 +159,8 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
   case NS_MOUSE_LEFT_BUTTON_UP:
   case NS_MOUSE_MIDDLE_BUTTON_UP:
   case NS_MOUSE_RIGHT_BUTTON_UP:
-    {
-      ret = CheckForAndDispatchClick(aPresContext, (nsMouseEvent*)aEvent, aStatus);
-      SetContentState(nsnull, NS_EVENT_STATE_ACTIVE);
-      nsCOMPtr<nsIPresShell> shell;
-      nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
-      if (NS_SUCCEEDED(rv) && shell){
-        nsCOMPtr<nsIDOMSelection> selection;
-        rv = shell->GetSelection(getter_AddRefs(selection));
-        if (NS_SUCCEEDED(rv) && selection){
-          nsCOMPtr<nsIFrameSelection> frameSel;
-          frameSel = do_QueryInterface(selection);
-          if (frameSel)
-            frameSel->SetMouseDownState(PR_FALSE);
-        }
-      }
-    }
+    ret = CheckForAndDispatchClick(aPresContext, (nsMouseEvent*)aEvent, aStatus);
+    SetContentState(nsnull, NS_EVENT_STATE_ACTIVE);
     break;
   case NS_KEY_DOWN:
     ret = DispatchKeyPressEvent(aPresContext, (nsKeyEvent*)aEvent, aStatus);
