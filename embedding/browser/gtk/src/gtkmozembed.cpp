@@ -271,8 +271,8 @@ GtkMozEmbedPrivate::Init(GtkMozEmbed *aEmbed)
   NS_ADDREF(newChromeProgress);
   newContentProgress->Init(aEmbed);
   newChromeProgress->Init(aEmbed);
-  mContentProgress = do_QueryInterface(newContentProgress);
-  mChromeProgress = do_QueryInterface(newChromeProgress);
+  mContentProgress = do_QueryInterface((nsIWebProgressListener*)newContentProgress);
+  mChromeProgress = do_QueryInterface((nsIWebProgressListener*)newChromeProgress);
   // and the ref in the private struct is the owning ref
   NS_RELEASE(newChromeProgress);
   NS_RELEASE(newContentProgress);
@@ -1869,8 +1869,7 @@ GtkMozEmbedContentProgress::~GtkMozEmbedContentProgress(void)
 NS_IMPL_ADDREF(GtkMozEmbedContentProgress)
 NS_IMPL_RELEASE(GtkMozEmbedContentProgress)
 NS_INTERFACE_MAP_BEGIN(GtkMozEmbedContentProgress)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebProgressListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
@@ -1990,8 +1989,7 @@ GtkMozEmbedChromeProgress::~GtkMozEmbedChromeProgress(void)
 NS_IMPL_ADDREF(GtkMozEmbedChromeProgress)
 NS_IMPL_RELEASE(GtkMozEmbedChromeProgress)
 NS_INTERFACE_MAP_BEGIN(GtkMozEmbedChromeProgress)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebProgressListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
