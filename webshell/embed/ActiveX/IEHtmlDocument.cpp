@@ -19,6 +19,8 @@
 #include "IEHtmlDocument.h"
 #include "IEHtmlElementCollection.h"
 
+static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+
 CIEHtmlDocument::CIEHtmlDocument()
 {
 }
@@ -39,6 +41,18 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_Script(IDispatch __RPC_FAR *__RPC
 // IHTMLDocument2 methods
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_all(IHTMLElementCollection __RPC_FAR *__RPC_FAR *p)
 {
+	// Get the associated document
+	nsIDOMNode *pIDOMNode = nsnull;
+	if (m_pIDOMNode != nsnull)
+	{
+		m_pIDOMNode->QueryInterface(kIDOMNodeIID, (void **) &pIDOMNode);
+	}
+	if (pIDOMNode == nsnull)
+	{
+		return E_UNEXPECTED;
+	}
+
+	// Validate parameters
 	if (p == NULL)
 	{
 		return E_INVALIDARG;
@@ -47,15 +61,15 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_all(IHTMLElementCollection __RPC_
 	*p = NULL;
 
 	CIEHtmlElementCollectionInstance *pCollection = NULL;
-	CIEHtmlElementCollectionInstance::CreateInstance(&pCollection);
-	if (pCollection == NULL)
+	CIEHtmlElementCollection::CreateFromParentNode(pIDOMNode, (CIEHtmlElementCollection **) &pCollection);
+	if (pCollection)
 	{
-		return E_OUTOFMEMORY;
+		pCollection->AddRef();
+		*p = pCollection;
 	}
 
-	// TODO get everything from NG and make some elements!
+	pIDOMNode->Release();
 
-	pCollection->QueryInterface(IID_IHTMLElementCollection, (void **) p);
 	return S_OK;
 }
 

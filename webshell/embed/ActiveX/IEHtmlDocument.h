@@ -18,7 +18,9 @@
 #ifndef IEHTMLDOCUMENT_H
 #define IEHTMLDOCUMENT_H
 
-class CIEHtmlDocument :	public CComObjectRootEx<CComSingleThreadModel>,
+#include "IEHtmlNode.h"
+
+class CIEHtmlDocument :	public CIEHtmlNode,
 						public IDispatchImpl<IHTMLDocument2, &IID_IHTMLDocument2, &LIBID_MSHTML>
 {
 public:

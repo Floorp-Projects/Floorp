@@ -42,8 +42,9 @@ OBJS =                                 \
 	.\$(OBJDIR)\ControlSite.obj        \
 	.\$(OBJDIR)\ControlSiteIPFrame.obj \
 	.\$(OBJDIR)\PropertyBag.obj        \
-	.\$(OBJDIR)\IEHtmlElement.obj      \
+	.\$(OBJDIR)\IEHtmlNode.obj         \
 	.\$(OBJDIR)\IEHtmlElementCollection.obj \
+	.\$(OBJDIR)\IEHtmlElement.obj      \
 	.\$(OBJDIR)\IEHtmlDocument.obj     \
 !ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
 	.\$(OBJDIR)\ActiveXPlugin.obj      \
@@ -94,7 +95,7 @@ LLIBS = $(MYLIBS)               \
  shell32.lib                    \
  -SUBSYSTEM:windows
 
-LCFLAGS = /D "WIN32" /GX /FR
+LCFLAGS = /D "WIN32" /GX /FR /U "ClientWallet"
 LFLAGS = /DLL
 
 include <$(DEPTH)\config\rules.mak>
@@ -128,11 +129,13 @@ ControlSite.cpp \
 ControlSiteIPFrame.cpp \
 PropertyBag.cpp : StdAfx.h PropertyBag.h ControlSite.h ControlSiteIPFrame.h
 
-IEHtmlElement.cpp : StdAfx.h IEHtmlElement.h
+IEHtmlNode.cpp : StdAfx.h IEHtmlNode.h
 
 IEHtmlElementCollection.cpp : StdAfx.h IEHtmlElementCollection.h
 
-IEHtmlDocument.cpp : StdAfx.h IEHtmlDocument.h
+IEHtmlElement.cpp : StdAfx.h IEHtmlNode.h IEHtmlElement.h
+
+IEHtmlDocument.cpp : StdAfx.h IEHtmlNode.h IEHtmlDocument.h
 
 MozillaControl.cpp \
 MozillaBrowser.cpp \

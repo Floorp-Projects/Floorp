@@ -730,10 +730,10 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 
 	// Extract the launch flags parameter
 	LONG lFlags = 0;
-	if (Flags)
+	if (Flags && Flags->vt != VT_EMPTY && Flags->vt != VT_NULL)
 	{
 		CComVariant vFlags;
-		if (VariantChangeType(Flags, &vFlags, 0, VT_I4) != S_OK)
+		if (vFlags.ChangeType(VT_I4, Flags) != S_OK)
 		{
 			NG_ASSERT(0);
 			return E_INVALIDARG;
@@ -966,6 +966,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Document(IDispatch __RPC_FAR *__R
 
 	*ppDisp = NULL;
 
+	// Get hold of the DOM document
+	nsIDOMDocument *pIDOMDocument = nsnull;
+	if (FAILED(GetDOMDocument(&pIDOMDocument)) || pIDOMDocument == nsnull)
+	{
+		return E_UNEXPECTED;
+	}
+
 	CIEHtmlDocumentInstance *pDocument = NULL;
 	CIEHtmlDocumentInstance::CreateInstance(&pDocument);
 	if (pDocument == NULL)
@@ -974,8 +981,10 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Document(IDispatch __RPC_FAR *__R
 	}
 
 	pDocument->QueryInterface(IID_IDispatch, (void **) ppDisp);
+	pDocument->SetDOMNode(pIDOMDocument);
+	pIDOMDocument->Release();
 
-	return E_NOINTERFACE;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_TopLevelContainer(VARIANT_BOOL __RPC_FAR *pBool)
@@ -1633,6 +1642,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate2(VARIANT __RPC_FAR *URL, VAR
 	{
 		NG_ASSERT(0);
 		return E_UNEXPECTED;
+	}
+
+	if (URL == NULL)
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
 	}
 
 	CComVariant vURLAsString;

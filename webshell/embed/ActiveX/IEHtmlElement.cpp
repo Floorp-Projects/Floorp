@@ -19,7 +19,9 @@
 #include "stdafx.h"
 
 #include "IEHtmlElement.h"
+#include "IEHtmlElementCollection.h"
 
+static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 
 CIEHtmlElement::CIEHtmlElement()
 {
@@ -29,7 +31,6 @@ CIEHtmlElement::CIEHtmlElement()
 CIEHtmlElement::~CIEHtmlElement()
 {
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // IHTMLElement implementation
@@ -56,7 +57,13 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::put_className(BSTR v)
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_className(BSTR __RPC_FAR *p)
 {
-	return E_NOTIMPL;
+	if (p == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	// TODO
+	*p = SysAllocString(OLESTR(""));
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::put_id(BSTR v)
@@ -66,12 +73,28 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::put_id(BSTR v)
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_id(BSTR __RPC_FAR *p)
 {
-	return E_NOTIMPL;
+	if (p == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	// TODO
+	*p = SysAllocString(OLESTR(""));
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_tagName(BSTR __RPC_FAR *p)
 {
-	return E_NOTIMPL;
+	if (p == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	nsString sNodeName;
+	m_pIDOMNode->GetNodeName(sNodeName);
+
+	USES_CONVERSION;
+	*p = SysAllocString(W2COLE((const PRUnichar *) sNodeName));
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_parentElement(IHTMLElement __RPC_FAR *__RPC_FAR *p)
@@ -466,6 +489,35 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_children(IDispatch __RPC_FAR *__RP
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_all(IDispatch __RPC_FAR *__RPC_FAR *p)
 {
-	return E_NOTIMPL;
+	// Get the associated document
+	nsIDOMNode *pIDOMNode = nsnull;
+	if (m_pIDOMNode != nsnull)
+	{
+		m_pIDOMNode->QueryInterface(kIDOMNodeIID, (void **) &pIDOMNode);
+	}
+	if (pIDOMNode == nsnull)
+	{
+		return E_UNEXPECTED;
+	}
+
+	// Validate parameters
+	if (p == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	*p = NULL;
+
+	CIEHtmlElementCollectionInstance *pCollection = NULL;
+	CIEHtmlElementCollection::CreateFromParentNode(pIDOMNode, (CIEHtmlElementCollection **) &pCollection);
+	if (pCollection)
+	{
+		pCollection->AddRef();
+		*p = pCollection;
+	}
+
+	pIDOMNode->Release();
+
+	return S_OK;
 }
 

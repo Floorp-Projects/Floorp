@@ -93,7 +93,10 @@ typedef long int32;
 #include "nsCRT.h"
 
 #include "nsIDocumentViewer.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
 
 // Mozilla control headers
 #include "resource.h"
