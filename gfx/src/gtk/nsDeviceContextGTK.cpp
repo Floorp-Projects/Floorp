@@ -45,17 +45,11 @@ nsDeviceContextGTK::nsDeviceContextGTK()
   mPaletteInfo.sizePalette = 0;
   mPaletteInfo.numReserved = 0;
   mPaletteInfo.palette = NULL;
-  mColormap = nsnull;
   mNumCells = 0;
 }
 
 nsDeviceContextGTK::~nsDeviceContextGTK()
 {
-  if (mColormap) 
-    {
-      gdk_colormap_unref(mColormap);
-      mColormap = nsnull;
-    }
 }
 
 NS_IMPL_QUERY_INTERFACE(nsDeviceContextGTK, kDeviceContextIID)

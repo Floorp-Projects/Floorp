@@ -34,7 +34,7 @@
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
 
-#include "nsDrawingSurfaceGTK.h"
+#include "nsOldDrawingSurfaceGTK.h"
 #include "nsRegionGTK.h"
 
 #include <gtk/gtk.h>
