@@ -74,7 +74,6 @@ protected:
 
 	nsCOMPtr<nsIDOMWindowInternal>              mWindow;
     nsCOMPtr<nsIDOMElement>             mSecurityButton;
-    nsCOMPtr<nsIDOMElement>             mCertificateAuthorityDisplay;
 	nsCOMPtr<nsIDocumentLoaderObserver> mOldWebShellObserver;
     nsCOMPtr<nsIPref>                   mPref;
     nsCOMPtr<nsIStringBundle>           mStringBundle;
@@ -97,6 +96,7 @@ protected:
     nsresult CheckPost(nsIURI *actionURL, PRBool *okayToPost);
     nsresult IsURLHTTPS(nsIURI* aURL, PRBool *value);
     nsresult IsURLfromPSM(nsIURI* aURL, PRBool *value);
+    nsresult SetBrokenLockIcon(PRBool removeValue = PR_FALSE);
 };
 
 
