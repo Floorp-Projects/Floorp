@@ -281,16 +281,6 @@ static const nsModuleComponentInfo components[] = {
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"video/x-mng", 
-    nsBrowserContentHandlerConstructor 
-  },
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/x-jng", 
-    nsBrowserContentHandlerConstructor 
-  },
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
     NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/x-xbitmap", 
     nsBrowserContentHandlerConstructor 
   },

@@ -77,7 +77,6 @@ dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
 MOZPNG=10200
-MOZMNG="((1<<16)|(0<<8)|(0))"
 MOZZLIB=1.0.0
 NSPR_VERSION=4
 
@@ -504,8 +503,6 @@ MOZ_ZLIB_CFLAGS=
 MOZ_ZLIB_LIBS='-L$(DIST)/lib -lmozz'
 MOZ_PNG_CFLAGS=
 MOZ_PNG_LIBS='-L$(DIST)/lib -lmozpng'
-MOZ_MNG_CFLAGS=
-MOZ_MNG_LIBS='-L$(DIST)/lib -lmozmng'
 
 MOZ_JS_LIBS='-L$(DIST)/bin -lmozjs'
 XPCOM_LIBS='-L$(DIST)/bin -lxpcom'
@@ -1007,7 +1004,6 @@ case "$target" in
         MOZ_JPEG_LIBS='-L$(DIST)/lib -ljpeg$(MOZ_BITS)$(VERSION_NUMBER)'
         MOZ_ZLIB_LIBS='-L$(DIST)/lib -lmozz'
         MOZ_PNG_LIBS='-L$(DIST)/lib -lpng'
-        MOZ_MNG_LIBS='-L$(DIST)/lib -lmng'
         MOZ_JS_LIBS='-L$(DIST)/lib -ljs$(MOZ_BITS)$(VERSION_NUMBER)'
         XPCOM_LIBS='-L$(DIST)/lib -lxpcom'
         DLL_PREFIX=
@@ -1050,7 +1046,6 @@ case "$target" in
         MOZ_JPEG_LIBS='$(DIST)/lib/jpeg$(MOZ_BITS)$(VERSION_NUMBER).lib'
         MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.lib'
         MOZ_PNG_LIBS='$(DIST)/lib/png.lib'
-        MOZ_MNG_LIBS='$(DIST)/lib/mng.lib'
         MOZ_JS_LIBS='$(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
         XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
@@ -1332,7 +1327,6 @@ case "$target" in
         MOZ_JPEG_LIBS='$(DIST)/lib/mozjpeg.$(LIB_SUFFIX)'
         MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.$(LIB_SUFFIX)'
         MOZ_PNG_LIBS='$(DIST)/lib/mozpng.$(LIB_SUFFIX)'
-        MOZ_MNG_LIBS='$(DIST)/lib/mozmng.$(LIB_SUFFIX)'
         MOZ_WIDGET_TOOLKIT_LDFLAGS='$(DIST)/lib/wdgt$(MOZ_WIDGET_TOOLKIT)'
         MOZ_GFX_TOOLKIT_LDFLAGS='$(DIST)/lib/gfx_$(MOZ_WIDGET_TOOLKIT)'
     fi
@@ -3044,53 +3038,6 @@ if test "${PNG_DIR}" -a -d "${PNG_DIR}" -a "$SYSTEM_PNG" = 1; then
     PNG_LIBS="-L${PNG_DIR}/lib ${PNG_LIBS}"
 fi
 
-dnl system MNG Support
-dnl ========================================================
-MOZ_ARG_WITH_STRING(system-mng, 
-[  --with-system-mng[=PFX]
-                          Use system libmng [installed at prefix PFX]],
-    MNG_DIR=$withval)
-
-_SAVE_CFLAGS=$CFLAGS
-_SAVE_LDFLAGS=$LDFLAGS
-_SAVE_LIBS=$LIBS
-CFLAGS="$ZLIB_CFLAGS $CFLAGS"
-LDFLAGS="$ZLIB_LIBS -lz $LDFLAGS"
-if test -n "${MNG_DIR}"; then
-    CFLAGS="-I${MNG_DIR}/include $CFLAGS"
-    LDFLAGS="-L${MNG_DIR}/lib $LDFLAGS"
-fi
-if test -z "$MNG_DIR" -o "$MNG_DIR" = no; then
-    SYSTEM_MNG=
-else
-    AC_CHECK_LIB(mng, mng_initialize, [SYSTEM_MNG=1 MNG_LIBS="-lmng $MNG_LIBS"],
-                 SYSTEM_MNG=, $MNG_LIBS)
-fi
-if test "$SYSTEM_MNG" = 1; then
-    LIBS="$MNG_LIBS $LIBS"
-    AC_TRY_RUN(
-	#include <stdio.h>
-	#include <sys/types.h>
-	#include <libmng.h>
-	int main () {
-	    #if (((MNG_VERSION_MAJOR)<<16)|((MNG_VERSION_MINOR)<<8)|(MNG_VERSION_RELEASE)) >= $MOZMNG
-		exit(0);
-	    #else
-		exit(1);
-	    #endif
-	}
-	, SYSTEM_MNG=1, [SYSTEM_MNG= MNG_CFLAGS= MNG_LIBS=], SYSTEM_MNG= ) 
-    rm -f core
-fi
-CFLAGS=$_SAVE_CFLAGS
-LDFLAGS=$_SAVE_LDFLAGS
-LIBS=$_SAVE_LIBS
-
-if test "${MNG_DIR}" -a -d "${MNG_DIR}" -a "$SYSTEM_MNG" = 1; then
-    MNG_CFLAGS="-I${MNG_DIR}/include"
-    MNG_LIBS="-L${MNG_DIR}/lib ${MNG_LIBS}"
-fi
-
 fi # SKIP_LIBRARY_CHECKS
 
 dnl ========================================================
@@ -3643,7 +3590,7 @@ fi
 dnl ========================================================
 dnl Image decoders
 dnl ========================================================
-MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp mng xbm"
+MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm"
 case "$target_os" in
 cygwin*|mingw*|msvc*|mks*|os2*)
     MOZ_IMG_DECODERS_DEFAULT="$MOZ_IMG_DECODERS_DEFAULT icon"
@@ -5152,7 +5099,6 @@ dnl fi
 AC_SUBST(SYSTEM_MAKEDEPEND)
 AC_SUBST(SYSTEM_JPEG)
 AC_SUBST(SYSTEM_PNG)
-AC_SUBST(SYSTEM_MNG)
 AC_SUBST(SYSTEM_ZLIB)
 
 AC_SUBST(JPEG_CFLAGS)
@@ -5161,8 +5107,6 @@ AC_SUBST(ZLIB_CFLAGS)
 AC_SUBST(ZLIB_LIBS)
 AC_SUBST(PNG_CFLAGS)
 AC_SUBST(PNG_LIBS)
-AC_SUBST(MNG_CFLAGS)
-AC_SUBST(MNG_LIBS)
 
 AC_SUBST(MOZ_JPEG_CFLAGS)
 AC_SUBST(MOZ_JPEG_LIBS)
@@ -5170,8 +5114,6 @@ AC_SUBST(MOZ_ZLIB_CFLAGS)
 AC_SUBST(MOZ_ZLIB_LIBS)
 AC_SUBST(MOZ_PNG_CFLAGS)
 AC_SUBST(MOZ_PNG_LIBS)
-AC_SUBST(MOZ_MNG_CFLAGS)
-AC_SUBST(MOZ_MNG_LIBS)
 
 AC_SUBST(NSPR_CFLAGS)
 AC_SUBST(NSPR_LIBS)

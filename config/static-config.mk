@@ -56,7 +56,6 @@ endif
 
 STATIC_EXTRA_LIBS	+= \
 		$(PNG_LIBS) \
-		$(MNG_LIBS) \
 		$(JPEG_LIBS) \
 		$(ZLIB_LIBS) \
 		$(NULL)
