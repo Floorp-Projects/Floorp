@@ -339,7 +339,8 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext& aPresContext, nsGUI
         lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
  
       // dispatch to the frame
-      mGestureDownFrame->HandleEvent(aPresContext, &event, status);   
+      if ( mGestureDownFrame )
+        mGestureDownFrame->HandleEvent(aPresContext, &event, status);   
 
       StopTrackingDragGesture();              
     }
@@ -563,9 +564,12 @@ nsEventStateManager::SetPresContext(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
 {
-  if (aFrame == mLastMouseOverFrame) {
+  if (aFrame == mLastMouseOverFrame)
     mLastMouseOverFrame = nsnull;
-  }
+  if (aFrame == mLastDragOverFrame)
+    mLastDragOverFrame = nsnull;
+  if (aFrame == mGestureDownFrame)
+    mGestureDownFrame = nsnull;
   if (aFrame == mCurrentTarget) {
     if (aFrame) {
       aFrame->GetContent(&mCurrentTargetContent);
@@ -647,10 +651,9 @@ nsEventStateManager::UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint,
     aStatus = nsEventStatus_eConsumeDoDefault;
   }
 
-  nsIWidget* window;
-  aTargetFrame->GetWindow(&aPresContext, &window);
+  nsCOMPtr<nsIWidget> window;
+  aTargetFrame->GetWindow(&aPresContext, getter_AddRefs(window));
   window->SetCursor(c);
-  NS_RELEASE(window);
 }
 
 void
@@ -661,12 +664,12 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
     {
       if (mLastMouseOverFrame != mCurrentTarget) {
         //We'll need the content, too, to check if it changed separately from the frames.
-        nsIContent *lastContent = nsnull;
-        nsIContent *targetContent;
+        nsCOMPtr<nsIContent> lastContent;
+        nsCOMPtr<nsIContent> targetContent;
 
-        mCurrentTarget->GetContent(&targetContent);
+        mCurrentTarget->GetContent(getter_AddRefs(targetContent));
 
-        if (nsnull != mLastMouseOverFrame) {
+        if (mLastMouseOverFrame) {
           //fire mouseout
           nsEventStatus status = nsEventStatus_eIgnore;
           nsMouseEvent event;
@@ -678,7 +681,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
           event.refPoint = aEvent->refPoint;
 
           //The frame has change but the content may not have.  Check before dispatching to content
-          mLastMouseOverFrame->GetContent(&lastContent);
+          mLastMouseOverFrame->GetContent(getter_AddRefs(lastContent));
 
           if (lastContent != targetContent) {
             //XXX This event should still go somewhere!!
@@ -688,7 +691,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
           }
 
           //Now dispatch to the frame
-          if (nsnull != mLastMouseOverFrame) {
+          if (mLastMouseOverFrame) {
             //XXX Get the new frame
             mLastMouseOverFrame->HandleEvent(aPresContext, &event, status);   
           }
@@ -707,7 +710,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         //The frame has change but the content may not have.  Check before dispatching to content
         if (lastContent != targetContent) {
           //XXX This event should still go somewhere!!
-          if (nsnull != targetContent) {
+          if (targetContent) {
             targetContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
           }
 
@@ -717,13 +720,10 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         }
 
         //Now dispatch to the frame
-        if (nsnull != mCurrentTarget) {
+        if (mCurrentTarget) {
           //XXX Get the new frame
           mCurrentTarget->HandleEvent(aPresContext, &event, status);
         }
-
-        NS_IF_RELEASE(lastContent);
-        NS_IF_RELEASE(targetContent);
 
         mLastMouseOverFrame = mCurrentTarget;
       }
@@ -744,16 +744,15 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         event.point = aEvent->point;
         event.refPoint = aEvent->refPoint;
 
-        nsIContent *lastContent;
-        mLastMouseOverFrame->GetContent(&lastContent);
+        nsCOMPtr<nsIContent> lastContent;
+        mLastMouseOverFrame->GetContent(getter_AddRefs(lastContent));
 
-        if (nsnull != lastContent) {
+        if (lastContent) {
           lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
 
           if (nsEventStatus_eConsumeNoDefault != status) {
             SetContentState(nsnull, NS_EVENT_STATE_HOVER);
           }
-          NS_RELEASE(lastContent);
         }
 
 
@@ -778,10 +777,9 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
     {
       if (mLastDragOverFrame != mCurrentTarget) {
         //We'll need the content, too, to check if it changed separately from the frames.
-        nsIContent *lastContent = nsnull;
-        nsIContent *targetContent;
-
-        mCurrentTarget->GetContent(&targetContent);
+        nsCOMPtr<nsIContent> lastContent;
+        nsCOMPtr<nsIContent> targetContent;
+        mCurrentTarget->GetContent(getter_AddRefs(targetContent));
 
         if ( mLastDragOverFrame ) {
           //fire drag exit
@@ -795,21 +793,21 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
           event.refPoint = aEvent->refPoint;
 
           //The frame has change but the content may not have.  Check before dispatching to content
-          mLastDragOverFrame->GetContent(&lastContent);
+          mLastDragOverFrame->GetContent(getter_AddRefs(lastContent));
 
-          if (lastContent != targetContent) {
+          if ( lastContent != targetContent ) {
             //XXX This event should still go somewhere!!
             if (lastContent)
               lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+
+            // clear the drag hover
+            if (status != nsEventStatus_eConsumeNoDefault )
+              SetContentState(nsnull, NS_EVENT_STATE_DRAGOVER);
           }
 
-#if 0
-          if (nsEventStatus_eConsumeNoDefault != status) {
-            SetContentState(nsnull, NS_EVENT_STATE_DRAGOVER);
-          }
-#endif
-         //Now dispatch to the frame
-          mLastDragOverFrame->HandleEvent(aPresContext, &event, status);   
+          // Finally dispatch exit to the frame
+          if ( mLastDragOverFrame )
+            mLastDragOverFrame->HandleEvent(aPresContext, &event, status);   
         }
 
         //fire drag enter
@@ -823,36 +821,35 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
         event.refPoint = aEvent->refPoint;
 
         //The frame has change but the content may not have.  Check before dispatching to content
-        if (lastContent != targetContent) {
+        if ( lastContent != targetContent ) {
           //XXX This event should still go somewhere!!
           if ( targetContent ) 
             targetContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
 
-          if (nsEventStatus_eConsumeNoDefault != status) {
+          // set drag hover on this frame
+          if ( status != nsEventStatus_eConsumeNoDefault )
             SetContentState(targetContent, NS_EVENT_STATE_DRAGOVER);
-          }
         }
 
-       //Now dispatch to the frame
+        // Finally dispatch to the frame
         if (mCurrentTarget) {
           //XXX Get the new frame
           mCurrentTarget->HandleEvent(aPresContext, &event, status);
         }
 
-        NS_IF_RELEASE(lastContent);
-        NS_IF_RELEASE(targetContent);
-
         mLastDragOverFrame = mCurrentTarget;
       }
     }
     break;
+    
   case NS_DRAGDROP_DROP:
   case NS_DRAGDROP_EXIT:
     {
       //This is actually the window mouse exit event.  Such a think does not
       // yet exist but it will need to eventually.
-      if (nsnull != mLastDragOverFrame) {
-        //fire mouseout
+      if ( mLastDragOverFrame ) {
+
+        // fire mouseout
         nsEventStatus status = nsEventStatus_eIgnore;
         nsMouseEvent event;
         event.eventStructType = NS_DRAGDROP_EVENT;
@@ -862,19 +859,17 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
         event.point = aEvent->point;
         event.refPoint = aEvent->refPoint;
 
-        nsIContent *lastContent;
-        mLastDragOverFrame->GetContent(&lastContent);
-
-        if (nsnull != lastContent) {
+        // dispatch to content via DOM
+        nsCOMPtr<nsIContent> lastContent;
+        mLastDragOverFrame->GetContent(getter_AddRefs(lastContent));
+        if ( lastContent ) {
           lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
-          if (nsEventStatus_eConsumeNoDefault != status) {
+          if ( status != nsEventStatus_eConsumeNoDefault )
             SetContentState(nsnull, NS_EVENT_STATE_DRAGOVER);
-          }
-          NS_RELEASE(lastContent);
         }
 
-        //Now dispatch to the frame
-        if (nsnull != mLastDragOverFrame) {
+        // Finally dispatch to the frame
+        if ( mLastDragOverFrame ) {
           //XXX Get the new frame
           mLastDragOverFrame->HandleEvent(aPresContext, &event, status);   
           mLastDragOverFrame = nsnull;
