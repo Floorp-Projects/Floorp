@@ -40,10 +40,12 @@ EXPORT_RESOURCE_SAMPLES := \
 	$(srcdir)/samples/gear1.gif \
 	$(srcdir)/samples/rock_gra.gif \
 	$(srcdir)/samples/bg.jpg \
+	$(NULL)
 
 EXPORT_RESOURCE_THROBBER := \
-	$(wildcard $(srcdir)/throbber/anim*.gif)
-
+	$(srcdir)/throbber/anim.gif \
+	$(srcdir)/throbber/anims00.gif \
+	$(NULL)
 
 TOOLKIT_GFX_LIB		:= -lgfx$(MOZ_TOOLKIT)
 TOOLKIT_WIDGET_LIB	:= -lwidget$(MOZ_TOOLKIT)

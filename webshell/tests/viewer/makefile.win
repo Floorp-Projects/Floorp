@@ -158,35 +158,6 @@ install:: $(PROGRAM)
 	$(MAKE_INSTALL) samples\treeTest1.css $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) throbber\anim.gif $(DIST)\bin\res\throbber
 	$(MAKE_INSTALL) throbber\anims00.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims01.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims02.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims03.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims04.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims05.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims06.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims07.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims08.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims09.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims10.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims11.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims12.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims13.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims14.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims15.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims16.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims17.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims18.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims19.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims20.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims21.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims22.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims23.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims24.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims25.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims26.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims27.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims28.gif $(DIST)\bin\res\throbber
-	$(MAKE_INSTALL) throbber\anims29.gif $(DIST)\bin\res\throbber
 
 clobber::
 	rm -f $(DIST)\bin\viewer.exe
@@ -222,16 +193,3 @@ clobber::
 	rm -f $(DIST)\bin\res\samples\test_lbox.html
 	rm -f $(DIST)\bin\res\throbber\anim.gif
 	rm -f $(DIST)\bin\res\throbber\anims00.gif
-	rm -f $(DIST)\bin\res\throbber\anims01.gif
-	rm -f $(DIST)\bin\res\throbber\anims02.gif
-	rm -f $(DIST)\bin\res\throbber\anims03.gif
-	rm -f $(DIST)\bin\res\throbber\anims04.gif
-	rm -f $(DIST)\bin\res\throbber\anims05.gif
-	rm -f $(DIST)\bin\res\throbber\anims06.gif
-	rm -f $(DIST)\bin\res\throbber\anims07.gif
-	rm -f $(DIST)\bin\res\throbber\anims08.gif
-	rm -f $(DIST)\bin\res\throbber\anims09.gif
-	rm -f $(DIST)\bin\res\throbber\anims10.gif
-	rm -f $(DIST)\bin\res\throbber\anims11.gif
-	rm -f $(DIST)\bin\res\throbber\anims12.gif
-	rm -f $(DIST)\bin\res\throbber\anims13.gif
