@@ -34,4 +34,41 @@
 #define XP_STRTOK                 	strtok
 
 /* see mozilla/xpcom/public/nsError.h for details */
-#define NS_ERROR_MODULE_MAIL 16
+#define NS_ERROR_MODULE_MAILNEWS 16
+
+/*
+ * NS_ERROR macros - use these macros to generate error constants
+ * to be used by XPCOM interfaces and possibly other useful things
+ * do not use these macros in your code - declare error macros for
+ * each specific error you need.
+ *
+ * for example:
+ * #define NS_MSG_ERROR_NO_SUCH_FOLDER NS_MSG_GENERATE_FAILURE(4)
+ * 
+ */
+
+/* use these routines to generate error values */
+#define NS_MSG_GENERATE_RESULT(severity, value) \
+NS_ERROR_GENERATE(severity, NS_ERROR_MODULE_MAILNEWS, value)
+
+#define NS_MSG_GENERATE_SUCCESS(value) \
+NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_MAILMEWS, value)
+
+#define NS_MSG_GENERATE_FAILURE(value) \
+NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
+
+/* these are shortcuts to generate simple errors with a zero value */
+#define NS_MSG_SUCCESS NS_MSG_GENERATE_SUCCESS(0)
+#define NS_MSG_FAILURE NS_MSG_GENERATE_FAILURE(0)
+
+
+/* for retrieving information out of messenger nsresults */
+
+#define NS_IS_MSG_ERROR(err) \
+ (NS_ERROR_GET_MODULE(err) == NS_ERROR_MODULE_MAILNEWS)
+
+#define NS_MSG_SUCCEEDED(err) \
+ (NS_IS_MSG_ERROR(err) && NS_SUCCEEDED(err))
+
+#define NS_MSG_FAILED(err) \
+ (NS_IS_MSG_ERROR(err) && NS_FAILED(err))
