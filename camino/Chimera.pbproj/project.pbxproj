@@ -934,6 +934,18 @@
 			settings = {
 			};
 		};
+		A7AC092704161E7200A967F8 = {
+			isa = PBXFileReference;
+			name = libmozz.dylib;
+			path = ../dist/Embed/libmozz.dylib;
+			refType = 2;
+		};
+		A7AC092804161EDB00A967F8 = {
+			fileRef = A7AC092704161E7200A967F8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		A7DF2C6003C3C83E00A80196 = {
 			isa = PBXFileReference;
 			name = xmlextras.xpt;
@@ -10158,6 +10170,7 @@
 				F6BD638101B30EA301A962F7,
 				F6BD638201B30EA301A962F7,
 				F6BD638701B30F5301A962F7,
+				A7AC092704161E7200A967F8,
 				F5F14E9602A5A43A01A967F3,
 				F5461CBB03AAC25C01A96660,
 				F5247C2F0228B5E7013DD99A,
@@ -10184,6 +10197,7 @@
 				F6BD638E01B30F5301A962F7,
 				F5F14E9802A5A43A01A967F3,
 				F50DCB4402C2856101A967F3,
+				A7AC092804161EDB00A967F8,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
