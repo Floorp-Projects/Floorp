@@ -50,7 +50,7 @@ REQUIRES	= js \
 		  uriloader \
 		  necko \
 		  commandhandler \
-		  content_xul \
+		  xuldoc \
 		  $(NULL)
 
 CPPSRCS		= nsModule.cpp
