@@ -534,7 +534,7 @@ nsJARChannel::EnsureJARFileAvailable(OnJARFileAvailableFun onJARFileAvailable,
     }
 
   error:
-    if (mLoadGroup) {
+    if (NS_FAILED(rv) && mLoadGroup) {
         nsresult rv2 = mLoadGroup->RemoveChannel(this, nsnull, rv, nsnull); // XXX fix error message
         NS_ASSERTION(NS_SUCCEEDED(rv2), "RemoveChannel failed");
     }

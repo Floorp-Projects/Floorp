@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -296,8 +296,21 @@ NS_IMETHODIMP
 nsJARURI::Resolve(const char *relativePath, char **result)
 {
     nsresult rv;
+
+    if (!relativePath) return NS_ERROR_NULL_POINTER;
+
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString scheme;
+    rv = serv->ExtractScheme(relativePath, nsnull, nsnull, getter_Copies(scheme));
+    if (NS_SUCCEEDED(rv)) {
+        // then aSpec is absolute
+        *result = nsCRT::strdup(relativePath);
+        if (*result == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+        return NS_OK;
+    }
 
     nsCAutoString path(mJAREntry);
     PRInt32 pos = path.RFind("/");
