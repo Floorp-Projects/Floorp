@@ -1,0 +1,54 @@
+<?xml version="1.0"?> 
+
+<!-- 
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+  
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+  
+  The Original Code is Mozilla Communicator client code, released
+  March 31, 1998.
+  
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation. Portions created by Netscape are
+  Copyright (C) 1998-1999 Netscape Communications Corporation. All
+  Rights Reserved.
+  
+  Contributor(s): 
+    Simeon Morrison <smorrison@gte.com>
+    Chris McAfee <mcafee@netscape.com>
+-->
+
+<?xml-stylesheet href="chrome://navigator/skin/navigator.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://navigator/locale/viewSource.dtd" >
+<window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&mainWindow.title;" 
+	titlemodifier="&mainWindow.titlemodifier;" 
+        titlepreface="&mainWindow.preface;"
+        titlemenuseparator ="&mainWindow.titlemodifierseperator;"  
+	windowtype="Browser:view-source"
+	onload="onLoadPageInfo()"
+	align="vertical" width="600" height="480"> 
+
+<html:script src="chrome://navigator/content/pageInfo.js"></html:script>
+
+  <box id="cont" orient="vertical" flex="1" style="margin: 1em; min-width: 1px; min-height: 1px;">
+    <html:div class="title">The document has the following structure:</html:div>
+    <box orient="vertical" id="documentinfo">
+      <html:div id="titletext">Title: </html:div>
+      <html:div id="urltext">URL: </html:div>
+      <html:div id="lastmodifiedtext">Last Modified: </html:div>
+    </box>
+  <!-- trees are appended here -->
+  </box>
+<!-- for testing, use this iframe, and change the page access point in pageInfo.js
+  <html:iframe src="file:///tmp/so.html" name="content" width="0" height="0"/>
+-->
+</window>
