@@ -343,3 +343,13 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken) {
   return result;
 }
 
+
+/**
+ * 
+ * @update	gess8/4/98
+ * @param 
+ * @return
+ */
+nsITokenRecycler* CWellFormedDTD::GetTokenRecycler(void){
+  return 0;
+}

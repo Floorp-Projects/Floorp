@@ -500,14 +500,6 @@ private:
 
 
     /**
-     * Called to cause delegate to create a token of given type.
-     * @update	gpk 06/18/98
-     * @param   aType represents the kind of token you want to create.
-     * @return  new token or NULL
-     */
-     CToken* CreateTokenOfType(eHTMLTokenTypes aType);
-
-    /**
      * Retrieve the next TAG from the given scanner.
      * @update	gpk 06/18/98
      * @param   aScanner is the input source
@@ -627,6 +619,12 @@ private:
     void            PopAndDelete();
 
 
+    /**
+     * Retrieve a ptr to the global token recycler...
+     * @update	gess8/4/98
+     * @return  ptr to recycler (or null)
+     */
+    virtual nsITokenRecycler* GetTokenRecycler(void);
 
 protected:
 

@@ -71,6 +71,7 @@ const char*     GetTagName(PRInt32 aTag);
  */
 class CHTMLToken : public CToken {
 public:
+
                         CHTMLToken(eHTMLTags aTag);
                         CHTMLToken(const nsString& aString);
     virtual void        SetStringValue(const char* name);
@@ -99,6 +100,7 @@ class CStartToken: public CHTMLToken {
             PRBool      IsEmpty(void);
             void        SetEmpty(PRBool aValue);
     virtual void        DebugDumpSource(ostream& out);
+    virtual void        Reinitialize(PRInt32 aTag, const nsString& aString);
   
   protected:
             PRBool      mAttributed;      
@@ -225,6 +227,7 @@ class CAttributeToken: public CHTMLToken {
     virtual void          DebugDumpToken(ostream& out);
     virtual void          DebugDumpSource(ostream& out);
             PRBool        mLastAttribute;
+    virtual void          Reinitialize(PRInt32 aTag, const nsString& aString);
 
   protected:
              nsString mTextKey;

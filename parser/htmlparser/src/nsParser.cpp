@@ -93,7 +93,7 @@ public:
 
   void RegisterDTD(nsIDTD* aDTD){
     CDTDFinder theFinder(aDTD);
-    if(!mDTDDeque.ForEach(theFinder))
+    if(!mDTDDeque.FirstThat(theFinder))
       mDTDDeque.Push(aDTD);
   }
   
@@ -383,6 +383,20 @@ PRInt32 nsParser::DidBuildModel(PRInt32 anErrorCode) {
     result=mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext));
   }
 
+  //Now it's time to recycle our used tokens.
+  //The current context has a deque full of them,
+  //and the ones that preceed currentpos are no
+  //longer needed. Let's recycle them.
+  nsDeque&  theDeque=mParserContext->mTokenDeque;
+  nsITokenRecycler* theRecycler=mParserContext->mDTD->GetTokenRecycler();
+  if(theRecycler) {
+    CToken* theToken=(CToken*)theDeque.Pop();
+    while(theToken) {
+      theRecycler->RecycleToken(theToken);
+      theToken=(CToken*)theDeque.Pop();
+    }
+  }
+
   return result;
 }
 
@@ -554,23 +568,6 @@ PRInt32 nsParser::BuildModel() {
   while((kNoError==result) && ((*mParserContext->mCurrentPos<e))){
     mMinorIteration++;
     CToken* theToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
- 
-    /**************************************************************************
-      The point of this code to serve as a testbed for parser reentrancy.
-      If you set recurse=1, we go reentrant, passing a text string of HTML onto 
-      the parser for inline processing, just like javascript/DOM would do it.
-      And guess what? It worked the first time!
-      Uncomment the following code to enable the test: 
-
-      int recurse=0;
-      if(recurse){
-          nsString theString("  this is just a great big empty string  ");
-//        nsString theString("<P>doc.write");
-//        nsString theString("<table border=1><tr><td BGCOLOR=blue>cell</td></tr></table>");
-        Parse(theString,PR_TRUE);
-      }
-      */
-
     theMarkPos=*mParserContext->mCurrentPos;
     ++(*mParserContext->mCurrentPos);    
     result=theRootDTD->HandleToken(theToken);
@@ -578,9 +575,25 @@ PRInt32 nsParser::BuildModel() {
       theRootDTD->Verify(kEmptyString);
   }
 
-  if(kInterrupted==result)
+  if(kInterrupted==result) {
     *mParserContext->mCurrentPos=theMarkPos;
 
+    //Now it's time to recycle our used tokens.
+    //The current context has a deque full of them,
+    //and the ones that preceed currentpos are no
+    //longer needed. Let's recycle them.
+    nsITokenRecycler* theRecycler=theRootDTD->GetTokenRecycler();
+    if(theRecycler) {
+      nsDeque&  theDeque=mParserContext->mTokenDeque;
+      CToken* theCurrentToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
+      CToken* theToken=(CToken*)theDeque.Peek();
+      while(theToken && (theToken!=theCurrentToken)) {
+        theDeque.Pop();
+        theRecycler->RecycleToken(theToken);
+      }
+    }
+  }
+  
   return result;
 }
 

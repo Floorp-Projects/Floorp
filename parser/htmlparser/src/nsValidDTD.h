@@ -210,7 +210,14 @@ class CValidDTD : public nsIDTD {
      *  @return  PR_TRUE if parent can contain child
      */
     virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild);
-	
+
+    /**
+     * Retrieve a ptr to the global token recycler...
+     * @update	gess8/4/98
+     * @return  ptr to recycler (or null)
+     */
+    virtual nsITokenRecycler* GetTokenRecycler(void);
+    
 protected:
 
     

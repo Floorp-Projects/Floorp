@@ -505,14 +505,6 @@ private:
 
 
     /**
-     * Called to cause delegate to create a token of given type.
-     * @update	gess 5/11/98
-     * @param   aType represents the kind of token you want to create.
-     * @return  new token or NULL
-     */
-     CToken* CreateTokenOfType(eHTMLTokenTypes aType);
-
-    /**
      * Retrieve the next TAG from the given scanner.
      * @update	gess 5/11/98
      * @param   aScanner is the input source

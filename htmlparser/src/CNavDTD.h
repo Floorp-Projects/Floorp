@@ -443,6 +443,8 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     nsresult HandleScriptToken(CToken* aToken, nsCParserNode& aNode);
     nsresult HandleStyleToken(CToken* aToken);
 
+    virtual  nsITokenRecycler* GetTokenRecycler(void);
+
 
 protected:
 
@@ -550,14 +552,6 @@ protected:
         the tokenization phase.
      ****************************************************/
 
-
-    /**
-     * Called to cause delegate to create a token of given type.
-     * @update	gess 5/11/98
-     * @param   aType represents the kind of token you want to create.
-     * @return  new token or NULL
-     */
-     CToken* CreateTokenOfType(eHTMLTokenTypes aType);
 
     /**
      * The following methods consume a particular type
