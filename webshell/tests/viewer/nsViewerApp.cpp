@@ -1027,7 +1027,8 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
 #else
         const char * str;
 #endif
-        nsresult rv = doc->GetDocumentURL()->GetSpec(&str);
+        nsCOMPtr<nsIURI> uri = dont_AddRef(doc->GetDocumentURL());
+        nsresult rv = uri->GetSpec(&str);
         if (NS_FAILED(rv)) {
           return rv;
         }
