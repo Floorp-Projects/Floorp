@@ -49,30 +49,37 @@ Contributor(s):
         <columns><column/><column/></columns>
         <rows>
           <row align="center">
-            <label value="&findField.label;"/>
+            <label value="&findField.label;" accesskey="&findField.accesskey;" control="dialog.findInput"/>
             <textbox id="dialog.findInput" oninput="doEnabling();"/>
           </row>
           <row align="center">
-            <label value="&replaceField.label;"/>
+            <label value="&replaceField.label;" accesskey="&replaceField.accesskey;" control="dialog.replaceInput"/>
             <textbox id="dialog.replaceInput" oninput="doEnabling();"/>
           </row>
           <row align="start">
             <spacer/>
             <vbox align="start">
               <spacer class="bigspacer"/>
-              <checkbox id="dialog.caseSensitive" label="&caseSensitiveCheckbox.label;"/>
-              <checkbox id="dialog.wrap" label="&wrapCheckbox.label;"/>
-              <checkbox id="dialog.searchBackwards" label="&backwardsCheckbox.label;"/>
+              <checkbox id="dialog.caseSensitive" label="&caseSensitiveCheckbox.label;" 
+                  accesskey="&caseSensitiveCheckbox.accesskey;"/>
+              <checkbox id="dialog.wrap" label="&wrapCheckbox.label;" 
+                  accesskey="&wrapCheckbox.accesskey;"/>
+              <checkbox id="dialog.searchBackwards" label="&backwardsCheckbox.label;" 
+                  accesskey="&backwardsCheckbox.accesskey;"/>
             </vbox>
           </row>
         </rows>
       </grid>
     </vbox>
     <vbox>
-      <button id="findNext" label="&findNextButton.label;" oncommand="onFindNext();" default="true"/>
-      <button id="replace" label="&replaceButton.label;" oncommand="onReplace();"/>
-      <button id="replaceAndFind" label="&replaceAndFindButton.label;" oncommand="onReplace(); onFindNext();"/>
-      <button id="replaceAll" label="&replaceAllButton.label;" oncommand="onReplaceAll();"/>
+      <button id="findNext" label="&findNextButton.label;" accesskey="&findNextButton.accesskey;" 
+          oncommand="onFindNext();" default="true"/>
+      <button id="replace" label="&replaceButton.label;" accesskey="&replaceButton.accesskey;" 
+          oncommand="onReplace();"/>
+      <button id="replaceAndFind" label="&replaceAndFindButton.label;" 
+          accesskey="&replaceAndFindButton.accesskey;" oncommand="onReplace(); onFindNext();"/>
+      <button id="replaceAll" label="&replaceAllButton.label;" 
+          accesskey="&replaceAllButton.accesskey;" oncommand="onReplaceAll();"/>
       <button dlgtype="cancel" label="&closeButton.label;"/>
     </vbox>
   </hbox>
