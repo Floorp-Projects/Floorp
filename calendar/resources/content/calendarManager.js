@@ -260,8 +260,9 @@ calendarManager.prototype.launchEditRemoteCalendarDialog = function calMan_launc
 */
 calendarManager.prototype.addServerDialogResponse = function calMan_addServerDialogResponse( CalendarObject )
 {
-   var name = "calendar"+this.rootContainer.getSubNodes().length;
-        
+   var now = new Date();
+   var name = "calendar"+now.getTime();
+
    CalendarObject.active = true;
    CalendarObject.remotePath = CalendarObject.remotePath.replace( "webcal:", "http:" );
 
