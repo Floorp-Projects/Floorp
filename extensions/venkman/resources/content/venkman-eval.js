@@ -40,18 +40,19 @@ function con_eval(__s)
 
     try
     {
-        return eval(__s); 
+        return eval(__s);
     }
     catch (__ex)
     {
         dd ("doEval caught: " + __ex);
         
-        if (__ex.fileName && __ex.fileName.search (/venkman-eval.js$/) != -1)
+        if (__ex && __ex.fileName &&
+            __ex.fileName.search (/venkman-eval.js$/) != -1)
         {
             __ex.fileName = MSG_VAL_CONSOLE;
             __ex.lineNumber = 1;
         }
         throw __ex;
-    }        
+    }
 }
 
