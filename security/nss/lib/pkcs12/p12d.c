@@ -1408,6 +1408,12 @@ SEC_PKCS12DecoderVerify(SEC_PKCS12DecoderContext *p12dcx)
 	return SECFailure;
     }
 
+    rv = SEC_ASN1DecoderFinish(p12dcx->pfxDcx);
+    p12dcx->pfxDcx = NULL;
+    if(rv != SECSuccess) {
+	return rv;
+    }
+
     /* check the signature or the mac depending on the type of
      * integrity used.
      */
