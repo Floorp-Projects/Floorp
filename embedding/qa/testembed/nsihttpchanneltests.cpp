@@ -68,22 +68,22 @@ void CnsIHttpChannelTests::OnStartTests(UINT nMenuID)
 			RunAllTests();
 			break ;
 		case ID_INTERFACES_NSIHTTPCHANNEL_SETREQUESTMETHOD :
-			SetRequestMethodTest(theHttpChannel, 2);
+			SetRequestMethodTest(theHttpChannel, "PUT", 2);
 			break ;
 		case ID_INTERFACES_NSIHTTPCHANNEL_GETREQUESTMETHOD :
 			GetRequestMethodTest(theHttpChannel, 2);
 			break ;
 		case ID_INTERFACES_NSIHTTPCHANNEL_SETREFERRER :
-			SetReferrerTest(theHttpChannel, 2);
+			SetReferrerTest(theHttpChannel, "https://www.sun.com", 2);
 			break ;
 		case ID_INTERFACES_NSIHTTPCHANNEL_GETREFERRER :
 			GetReferrerTest(theHttpChannel, 2);
 			break ;
 		case ID_INTERFACES_NSIHTTPCHANNEL_SETREQUESTHEADER :
-			SetRequestHeaderTest(theHttpChannel, 2);
+			SetRequestHeaderTest(theHttpChannel, "Content-Type", "text/html", 2);
 			break ;
 		case ID_INTERFACES_NSIHTTPCHANNEL_GETREQUESTHEADER :
-			GetRequestHeaderTest(theHttpChannel, 2);
+			GetRequestHeaderTest(theHttpChannel, "Content-Type", 2);
 			break ;
 		case ID_INTERFACES_NSIHTTPCHANNEL_VISITREQUESTHEADERS :
 			VisitRequestHeadersTest(theHttpChannel, 2);
@@ -121,13 +121,19 @@ void CnsIHttpChannelTests::RunAllTests()
 	   QAOutput("Didn't get nsIHttpChannel object. RunAllTests not run.", 1);
 	   return;
 	}
-
-	SetRequestMethodTest(theHttpChannel, 1);
+	QAOutput("   nsIHttpChannel request tests:");
+	SetRequestMethodTest(theHttpChannel, "POST", 1);
 	GetRequestMethodTest(theHttpChannel, 1);
-	SetReferrerTest(theHttpChannel, 1);
+	SetRequestMethodTest(theHttpChannel, "HEAD", 1);
+	GetRequestMethodTest(theHttpChannel, 1);
+	SetReferrerTest(theHttpChannel, "http://www.cisco.com", 1);
 	GetReferrerTest(theHttpChannel, 1);
-	SetRequestHeaderTest(theHttpChannel, 1);
-	GetRequestHeaderTest(theHttpChannel, 1);
+	SetRequestHeaderTest(theHttpChannel, "Cookie", "TheCookie", 1);
+	GetRequestHeaderTest(theHttpChannel, "Cookie", 1);
+	SetRequestHeaderTest(theHttpChannel, "Content-Type", "text/xml", 1);
+	GetRequestHeaderTest(theHttpChannel, "Content-Type", 1);
+	SetRequestHeaderTest(theHttpChannel, "Content-Length", "10000", 1);
+	GetRequestHeaderTest(theHttpChannel, "Content-Length", 1);
 	VisitRequestHeadersTest(theHttpChannel, 1);
 	SetAllowPipeliningTest(theHttpChannel, PR_FALSE, 1);
 	SetAllowPipeliningTest(theHttpChannel, PR_TRUE, 1);
@@ -144,12 +150,14 @@ void CnsIHttpChannelTests::RunAllTests()
 }
 
 void  CnsIHttpChannelTests::SetRequestMethodTest(nsIHttpChannel *theHttpChannel,
+												 const char * requestType,
 												 PRInt16 displayMode)
 { 
 	// SetRequestMethod
 	// try "GET", "PUT", "HEAD", or "POST"
-	rv = theHttpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
+	rv = theHttpChannel->SetRequestMethod(nsDependentCString(requestType));
 	RvTestResult(rv, "SetRequestMethod()", displayMode);
+	RvTestResultDlg(rv, "SetRequestMethod() test", true);
 }
 
 void  CnsIHttpChannelTests::GetRequestMethodTest(nsIHttpChannel *theHttpChannel,
@@ -159,22 +167,25 @@ void  CnsIHttpChannelTests::GetRequestMethodTest(nsIHttpChannel *theHttpChannel,
 	nsCAutoString method;
 	rv = theHttpChannel->GetRequestMethod(method);
 	RvTestResult(rv, "GetRequestMethod()", displayMode);
+	RvTestResultDlg(rv, "GetRequestMethod() test");
 	// if (method.Equals("POST")
 	FormatAndPrintOutput("GetRequestMethod method = ", method, displayMode);
 }
 
 void CnsIHttpChannelTests::SetReferrerTest(nsIHttpChannel *theHttpChannel,
+												 const char *theUrl,
 												 PRInt16 displayMode)
 {
 	// SetReferrer
 	nsCAutoString theSpec;
-	theSpec = "http://www.cisco.com";
+	theSpec = theUrl;
 
 	NS_NewURI(getter_AddRefs(theURI), theSpec);
 	if (!theURI) 	
 	   QAOutput("Didn't get URI object. Test failed.", 2);
 	rv = theHttpChannel->SetReferrer(theURI);
 	RvTestResult(rv, "SetReferrer()", displayMode);
+	RvTestResultDlg(rv, "SetReferrer() test");
 }
 
 void CnsIHttpChannelTests::GetReferrerTest(nsIHttpChannel *theHttpChannel,
@@ -182,8 +193,10 @@ void CnsIHttpChannelTests::GetReferrerTest(nsIHttpChannel *theHttpChannel,
 {
 	// GetReferrer
 	nsCAutoString theSpec;
+
 	rv = theHttpChannel->GetReferrer(getter_AddRefs(theURI));
 	RvTestResult(rv, "GetReferrer()", displayMode);
+	RvTestResultDlg(rv, "GetReferrer() test");
 	if (!theURI)
 	   QAOutput("Didn't get nsIURI object. Test failed.", displayMode);
 	else {
@@ -193,26 +206,30 @@ void CnsIHttpChannelTests::GetReferrerTest(nsIHttpChannel *theHttpChannel,
 }
 
 void  CnsIHttpChannelTests::SetRequestHeaderTest(nsIHttpChannel *theHttpChannel,
+												 const char *requestType,
+												 const char *headerVal,
 												 PRInt16 displayMode)
 {
 	// SetRequestHeader
 	// try {"Content-Type","text/xml"}, {"Content-Length", 10000}, and
 	//     {"Accept"), NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"),
-	const char *headerVal = "TheCookie";
-    rv = theHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Cookie"),
+    rv = theHttpChannel->SetRequestHeader(nsDependentCString(requestType),
                                          nsDependentCString(headerVal),
                                          PR_FALSE);
 	RvTestResult(rv, "SetRequestHeader()", displayMode);
+	RvTestResultDlg(rv, "SetRequestHeader() test");
 }
 
 void  CnsIHttpChannelTests::GetRequestHeaderTest(nsIHttpChannel *theHttpChannel,
+												 const char *requestType,
 												 PRInt16 displayMode)
 {
 	// GetRequestHeader
 	nsCAutoString header;
 	// could be set to "referrer"
-	rv = theHttpChannel->GetRequestHeader(NS_LITERAL_CSTRING("Cookie"), header);
+	rv = theHttpChannel->GetRequestHeader(nsDependentCString(requestType), header);
 	RvTestResult(rv, "GetRequestHeader()", displayMode);
+	RvTestResultDlg(rv, "GetRequestHeader() test");
 	FormatAndPrintOutput("GetRequestHeader type = ", header, displayMode);
 }
 
@@ -226,6 +243,7 @@ void  CnsIHttpChannelTests::VisitRequestHeadersTest(nsIHttpChannel *theHttpChann
 
 	rv = theHttpChannel->VisitRequestHeaders(theVisitor);
 	RvTestResult(rv, "VisitRequestHeaders()", displayMode);
+	RvTestResultDlg(rv, "VisitRequestHeaders() test");
 }
 
 void  CnsIHttpChannelTests::SetAllowPipeliningTest(nsIHttpChannel *theHttpChannel,
@@ -234,6 +252,7 @@ void  CnsIHttpChannelTests::SetAllowPipeliningTest(nsIHttpChannel *theHttpChanne
 {
 	rv = theHttpChannel->SetAllowPipelining(mAllowPipelining);
 	RvTestResult(rv, "SetAllowPipelining()", displayMode);
+	RvTestResultDlg(rv, "SetAllowPipelining() test");
 	FormatAndPrintOutput("SetAllowPipelining value = ", mAllowPipelining, displayMode);
 
 	rv = theHttpChannel->GetAllowPipelining(&mAllowPipelining);
@@ -247,6 +266,7 @@ void  CnsIHttpChannelTests::GetAllowPipeliningTest(nsIHttpChannel *theHttpChanne
 
 	rv = theHttpChannel->GetAllowPipelining(&mAllowPipelining);
 	RvTestResult(rv, "GetAllowPipelining()", displayMode);
+	RvTestResultDlg(rv, "GetAllowPipelining() test");
 	FormatAndPrintOutput("GetAllowPipelining value = ", mAllowPipelining, displayMode);
 }
 
@@ -256,6 +276,7 @@ void  CnsIHttpChannelTests::SetRedirectionLimitTest(nsIHttpChannel *theHttpChann
 {
 	rv = theHttpChannel->SetRedirectionLimit(mRedirectionLimit);
 	RvTestResult(rv, "SetRedirectionLimit()", displayMode);
+	RvTestResultDlg(rv, "SetRedirectionLimit() test");
 }
 
 void  CnsIHttpChannelTests::GetRedirectionLimitTest(nsIHttpChannel *theHttpChannel,
@@ -265,6 +286,7 @@ void  CnsIHttpChannelTests::GetRedirectionLimitTest(nsIHttpChannel *theHttpChann
 
 	rv = theHttpChannel->GetRedirectionLimit(&mRedirectionLimit);
 	RvTestResult(rv, "GetRedirectionLimit()", displayMode);
+	RvTestResultDlg(rv, "GetRedirectionLimit() test");
 	FormatAndPrintOutput("GetRedirectionLimit value = ", mRedirectionLimit, displayMode);
 }
 
@@ -277,9 +299,10 @@ void CnsIHttpChannelTests::CallResponseTests(nsIHttpChannel *theHttpChannel,
 	GetResponseStatusTest(theHttpChannel, displayMode);
 	GetResponseStatusTextTest(theHttpChannel, displayMode);
 	GetRequestSucceededTest(theHttpChannel, displayMode);
-	SetResponseHeaderTest(theHttpChannel, "Refresh", "", PR_TRUE, displayMode);
+	GetResponseHeaderTest(theHttpChannel, "Set-Cookie", displayMode);
+	SetResponseHeaderTest(theHttpChannel, "Refresh", "1001", PR_TRUE, displayMode);
 	GetResponseHeaderTest(theHttpChannel, "Refresh", displayMode);
-	SetResponseHeaderTest(theHttpChannel, "Set-Cookie", "", PR_FALSE, displayMode);
+	SetResponseHeaderTest(theHttpChannel, "Set-Cookie", "MyCookie", PR_TRUE, displayMode);
 	GetResponseHeaderTest(theHttpChannel, "Set-Cookie", displayMode);
 	SetResponseHeaderTest(theHttpChannel, "Cache-control", "no-cache", PR_FALSE, displayMode);
 	GetResponseHeaderTest(theHttpChannel, "Cache-control", displayMode);
@@ -324,7 +347,7 @@ void CnsIHttpChannelTests::GetResponseHeaderTest(nsIHttpChannel *theHttpChannel,
 {
 	nsCAutoString mResponse;
 
-	rv = theHttpChannel->GetResponseHeader(NS_LITERAL_CSTRING(responseType), mResponse);
+	rv = theHttpChannel->GetResponseHeader(nsDependentCString(responseType), mResponse);
 	RvTestResult(rv, "GetResponseHeader()", displayMode);
 	FormatAndPrintOutput("GetResponseHeader = ", mResponse, displayMode);
 	FormatAndPrintOutput("GetResponseHeader response type = ", responseType, displayMode);
@@ -335,8 +358,8 @@ void CnsIHttpChannelTests::SetResponseHeaderTest(nsIHttpChannel *theHttpChannel,
 												 const char * value,
 												 PRBool merge, PRInt16 displayMode)
 {															// Refresh
-	rv = theHttpChannel->SetResponseHeader(NS_LITERAL_CSTRING(responseType),
-                                           NS_LITERAL_CSTRING(value), merge);
+	rv = theHttpChannel->SetResponseHeader(nsDependentCString(responseType),
+                                           nsDependentCString(value), merge);
 	RvTestResult(rv, "SetResponseHeader()", displayMode);
 	FormatAndPrintOutput("SetResponseHeader value = ", value, displayMode);
 	FormatAndPrintOutput("SetResponseHeader response type = ", responseType, displayMode);
