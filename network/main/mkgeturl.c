@@ -1894,7 +1894,7 @@ net_get_protocol_impl(int for_url_type)
 			return net_proto_impls[count].impl;
 	}
 
-//	PR_ASSERT(0);  /* should always find one */
+/*	PR_ASSERT(0);  *//* should always find one */
 	return NULL; 
 }
 
