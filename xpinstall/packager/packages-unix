@@ -355,7 +355,7 @@ bin/components/msgmdn.xpt
 bin/components/mdn-service.js
 bin/components/libbayesflt.so
 bin/components/mailview.xpt
-bin/components/mailview.so
+bin/components/libmailview.so
 
 ; window icons
 bin/chrome/icons/default/abcardWindow*.xpm
