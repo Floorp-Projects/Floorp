@@ -25,7 +25,6 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIWidget.h"
-#include "nsIBrowserWindow.h"
 #include "nsIPref.h"
 #include "plevent.h"
 #include "prmem.h"
@@ -59,6 +58,15 @@
 #include "nsIXULWindow.h"
 #include "nsIContentHandler.h"
 #include "nsIBrowserInstance.h"
+
+// Interfaces Needed
+#include "nsIXULWindow.h"
+#include "nsIWebBrowserChrome.h"
+
+
+#ifndef XP_MAC
+#include "nsTimeBomb.h"
+#endif
 
 #if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_CMD_LINE
@@ -214,7 +222,7 @@ static nsresult OpenChromURL( const char * urlstr, PRInt32 height = NS_SIZETOCON
 
    nsCOMPtr<nsIXULWindow> newWindow;
  	rv = appShell->CreateTopLevelWindow(nsnull, url,
-                                      PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
+                                      PR_TRUE, PR_TRUE, nsIWebBrowserChrome::allChrome,
                                       width, height,
                                       getter_AddRefs(newWindow));
   return rv;

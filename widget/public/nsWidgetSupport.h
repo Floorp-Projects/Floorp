@@ -41,7 +41,6 @@ class nsIWidget;
 class nsICheckButton;
 class nsIScrollbar;
 class nsITextWidget;
-class nsIBrowserWindow;
 
 // These are a series of support methods which help in the creation
 // of widgets. They are not needed, but are provided as a convenience
