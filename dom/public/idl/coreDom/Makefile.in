@@ -47,7 +47,7 @@ IDLSRCS =				\
 
 
 XPCOM_DESTDIR=$(DEPTH)/dom/public/coreDom
-JSSTUB_DESTDIR=$(DEPTH)/dom/src/coreDom
+JSSTUB_DESTDIR=$(DEPTH)/dom/src/coreDOM
 
 GENXDIR=genx
 GENJSDIR=genjs
