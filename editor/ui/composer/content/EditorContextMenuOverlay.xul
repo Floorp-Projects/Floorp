@@ -23,7 +23,6 @@
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-<?xul-overlay href="chrome://editor/content/EditorCommandsOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
 

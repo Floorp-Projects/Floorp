@@ -31,7 +31,6 @@ CHROME_CONTENT = \
 	.\editor.js \
 	.\ComposerCommands.js \
 	.\EditorCommandsDebug.js \
-	.\EditorCommandsOverlay.xul \
 	.\EditorContextMenu.js \
 	.\EditorContextMenuOverlay.xul \
 	.\EditorInitPage.html \
