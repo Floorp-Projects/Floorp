@@ -43,6 +43,7 @@ nsConnectionInfo::nsConnectionInfo(nsIURL *aURL,
     pURL       = aURL;
     pNetStream = aStream;
     pConsumer  = aNotify;
+    redirect   = PR_FALSE;
 
     if (NULL != pURL) {
         pURL->AddRef();

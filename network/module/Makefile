@@ -37,12 +37,13 @@ REQUIRES		= raptor js dbm nspr security pref xpcom util img \
 
 EXPORTS = nsIStreamListener.h           \
           nsINetService.h               \
-	  nsINetSupport.h		\
+	      nsINetSupport.h		\
           nsIURL.h                      \
           nsIRelatedLinks.h             \
           nsIPostToServer.h             \
           nsIHttpUrl.h                  \
           nsINetContainerApplication.h  \
+          nsIRefreshUrl.h               \
           $(NULL)
 
 include $(DEPTH)/config/config.mk

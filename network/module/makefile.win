@@ -24,12 +24,13 @@ IGNORE_MANIFEST = 1
 MODULE  = netlib
 EXPORTS = nsIStreamListener.h           \
           nsINetService.h               \
-	  nsINetSupport.h		\
+          nsINetSupport.h		        \
           nsIURL.h                      \
           nsIPostToServer.h             \
           nsIHttpUrl.h                  \
           nsIRelatedLinks.h             \
           nsINetContainerApplication.h  \
+          nsIRefreshUrl.h               \
           $(NULL)
 
 DIRS = tests

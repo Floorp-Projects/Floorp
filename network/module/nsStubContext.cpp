@@ -491,13 +491,19 @@ void stub_complete(NET_StreamClass *stream)
     pConn->pNetStream->Release();
     pConn->pNetStream = NULL;
 
+
     /* Notify the Data Consumer that the Binding has completed... */
     if (pConn->pConsumer) {
         nsAutoString status;
 
-        pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_SUCCEEDED, status);
-        pConn->pConsumer->Release();
-        pConn->pConsumer = NULL;
+        /* If we're redirecting, we don't want to release/null the pConsumer. */
+        if (URL_s->refresh_url) {
+            pConn->redirect = PR_TRUE;
+        } else {
+            pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_SUCCEEDED, status);
+            pConn->pConsumer->Release();
+            pConn->pConsumer = NULL;
+        }
     }
 
     /* Release the URL_Struct hanging off of the data_object */

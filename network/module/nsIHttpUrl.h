@@ -35,6 +35,19 @@
 
 struct nsIHttpUrl : public nsISupports
 {
+    /**
+      * Parse the mime header into the url struct.
+      * This method is intended to be used when an HTML META tag is encoutered
+      * with the type http-equiv. In this case, the http-equiv header should
+      * be added to the url in netlib, immediately after the http-equiv meta
+      * tag is encoutered.
+      * 
+      * @param shell The shell loading this url.
+      * @param url The url to parse the mime header into.
+      * @param name The name of the mime header.
+      * @param value The value of the mime header.
+      */
+    NS_IMETHOD AddMimeHeader(const char *name, const char *value) = 0;
 };
 
 
