@@ -39,10 +39,9 @@
 #include "nsINetSupportDialogService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMHTMLDocument.h"
-//#include "xp_mem.h"
+#include "xp_mem.h"
 #include "prmem.h"
 #include "prprf.h"  
-#include "nsVoidArray.h"
 
 static NS_DEFINE_IID(kIPrefServiceIID, NS_IPREF_IID);
 static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
@@ -582,13 +581,13 @@ si_StrippedURL (char* URLName) {
   char *s, *t;
 
   /* check for null URLName */
-  if (URLName == NULL || PL_strlen(URLName) == 0) {
+  if (URLName == NULL || XP_STRLEN(URLName) == 0) {
     return NULL;
   }
 
   /* remove protocol */
   s = URLName;
-  s = (char*) PL_strchr(s+1, '/');
+  s = (char*) XP_STRCHR(s+1, '/');
   if (s && *s == '/' && *(s+1) == '/') {
     s += 2;
   }
@@ -600,25 +599,25 @@ si_StrippedURL (char* URLName) {
 
   /* remove everything after hostname */
   s = result;
-  s = (char*) PL_strchr(s, '/');
+  s = (char*) XP_STRCHR(s, '/');
   if (s) {
     *s = '\0';
   }
 
   /* remove everything after and including first question mark */
   s = result;
-  s = (char*) PL_strchr(s, '?');
+  s = (char*) XP_STRCHR(s, '?');
   if (s) {
     *s = '\0';
   }
 
   /* remove socket number from result */
   s = result;
-  while ((s = (char*) PL_strchr(s+1, ':'))) {
+  while ((s = (char*) XP_STRCHR(s+1, ':'))) {
     /* s is at next colon */
     if (*(s+1) != '/') {
       /* and it's not :// so it must be start of socket number */
-      if ((t = (char*) PL_strchr(s+1, '/'))) {
+      if ((t = (char*) XP_STRCHR(s+1, '/'))) {
         /* t is at slash terminating the socket number */
         do {
           /* copy remainder of t to s */
@@ -630,7 +629,7 @@ si_StrippedURL (char* URLName) {
   }
 
   /* all done */
-  if (PL_strlen(result)) {
+  if (XP_STRLEN(result)) {
     return result;
   } else {
     return PL_strdup(empty);
@@ -640,8 +639,8 @@ si_StrippedURL (char* URLName) {
 /* remove terminating CRs or LFs */
 PRIVATE void
 si_StripLF(char* buffer) {
-  while ((buffer[PL_strlen(buffer)-1] == '\n') || (buffer[PL_strlen(buffer)-1] == '\r')) {
-    buffer[PL_strlen(buffer)-1] = '\0';
+  while ((buffer[XP_STRLEN(buffer)-1] == '\n') || (buffer[XP_STRLEN(buffer)-1] == '\r')) {
+    buffer[XP_STRLEN(buffer)-1] = '\0';
   }
 }
 
@@ -651,7 +650,7 @@ si_Randomize(char * password) {
   PRIntervalTime random;
   int i;
   const char * hexDigits = "0123456789AbCdEf";
-  if (PL_strcmp(password, "********") == 0) {
+  if (XP_STRCMP(password, "********") == 0) {
     random = PR_IntervalNow();
     for (i=0; i<8; i++) {
       password[i] = hexDigits[random%16];
@@ -672,13 +671,13 @@ typedef struct _SignonDataStruct {
 } si_SignonDataStruct;
 
 typedef struct _SignonUserStruct {
-  nsVoidArray * signonData_list;
+  XP_List * signonData_list;
 } si_SignonUserStruct;
 
 typedef struct _SignonURLStruct {
   char * URLName;
   si_SignonUserStruct* chosen_user; /* this is a state variable */
-  nsVoidArray * signonUser_list;
+  XP_List * signonUser_list;
 } si_SignonURLStruct;
 
 
@@ -687,8 +686,8 @@ typedef struct _RejectStruct {
   char * userName;
 } si_Reject;
 
-PRIVATE nsVoidArray * si_signon_list=0;
-PRIVATE nsVoidArray * si_reject_list=0;
+PRIVATE XP_List * si_signon_list=0;
+PRIVATE XP_List * si_reject_list=0;
 
 PRIVATE PRBool si_signon_list_changed = PR_FALSE;
 
@@ -699,22 +698,21 @@ PRIVATE PRBool si_signon_list_changed = PR_FALSE;
  */
 PRIVATE si_SignonURLStruct *
 si_GetURL(char * URLName) {
+  XP_List * list_ptr = si_signon_list;
   si_SignonURLStruct * url;
   char *strippedURLName = 0;
   if (!URLName) {
     /* no URLName specified, return first URL (returns NULL if not URLs) */
-    return (si_SignonURLStruct *) (si_signon_list->ElementAt(0));
+    return (si_SignonURLStruct *) XP_ListNextObject(list_ptr);
   }
   strippedURLName = si_StrippedURL(URLName);
-  PRInt32 urlCount = si_signon_list->Count();
-  for (PRInt32 i=0; i<urlCount; i++) {
-    url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i));
-    if(url->URLName && !PL_strcmp(strippedURLName, url->URLName)) {
-      PR_Free(strippedURLName);
+  while((url = (si_SignonURLStruct *) XP_ListNextObject(list_ptr))!=0) {
+    if(url->URLName && !XP_STRCMP(strippedURLName, url->URLName)) {
+      XP_FREE(strippedURLName);
       return url;
     }
   }
-  PR_Free(strippedURLName);
+  XP_FREE(strippedURLName);
   return (NULL);
 }
 
@@ -724,6 +722,8 @@ si_RemoveUser(char *URLName, char *userName, PRBool save) {
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
+  XP_List * user_ptr;
+  XP_List * data_ptr;
 
   /* do nothing if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()) {
@@ -741,21 +741,19 @@ si_RemoveUser(char *URLName, char *userName, PRBool save) {
   }
 
   /* free the data in each node of the specified user node for this URL */
+  user_ptr = url->signonUser_list;
   if (userName == NULL) {
 
     /* no user specified so remove the first one */
-    user = (si_SignonUserStruct *) (url->signonUser_list->ElementAt(0));
+    user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr);
 
   } else {
 
     /* find the specified user */
-    PRInt32 userCount = url->signonUser_list->Count();
-    for (PRInt32 i=0; i<userCount; i++) {
-      user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i));
-      PRInt32 dataCount = user->signonData_list->Count();
-      for (PRInt32 i=0; i<dataCount; i++) {
-        data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
-        if (PL_strcmp(data->value, userName)==0) {
+    while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
+      data_ptr = user->signonData_list;
+      while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
+        if (XP_STRCMP(data->value, userName)==0) {
           goto foundUser;
         }
       }
@@ -766,23 +764,22 @@ si_RemoveUser(char *URLName, char *userName, PRBool save) {
   }
 
   /* free the items in the data list */
-  PRInt32 dataCount = user->signonData_list->Count();
-  for (PRInt32 i=0; i<dataCount; i++) {
-    data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
-    PR_Free(data->name);
-    PR_Free(data->value);
+  data_ptr = user->signonData_list;
+  while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
+    XP_FREE(data->name);
+    XP_FREE(data->value);
   }
 
   /* free the data list */
-  delete user->signonData_list;
+  XP_ListDestroy(user->signonData_list);
 
   /* free the user node */
-  url->signonUser_list->RemoveElement(user);
+  XP_ListRemoveObject(url->signonUser_list, user);
 
   /* remove this URL if it contains no more users */
-  if (url->signonUser_list->Count() == 0) {
-    PR_Free(url->URLName);
-    si_signon_list->RemoveElement(url);
+  if (XP_ListCount(url->signonUser_list) == 0) {
+    XP_FREE(url->URLName);
+    XP_ListRemoveObject(si_signon_list, url);
   }
 
   /* write out the change to disk */
@@ -801,6 +798,8 @@ si_CheckForUser(char *URLName, char *userName) {
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
+  XP_List * user_ptr;
+  XP_List * data_ptr;
 
   /* do nothing if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()) {
@@ -818,13 +817,11 @@ si_CheckForUser(char *URLName, char *userName) {
   }
 
   /* find the specified user */
-  PRInt32 userCount = url->signonUser_list->Count();
-  for (PRInt32 i=0; i<userCount; i++) {
-    user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i));
-    PRInt32 dataCount = user->signonData_list->Count();
-    for (PRInt32 i=0; i<dataCount; i++) {
-      data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
-      if (PL_strcmp(data->value, userName)==0) {
+  user_ptr = url->signonUser_list;
+  while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
+    data_ptr = user->signonData_list;
+    while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
+      if (XP_STRCMP(data->value, userName)==0) {
         si_unlock_signon_list();
         return PR_TRUE;
       }
@@ -846,6 +843,8 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
   si_SignonURLStruct* url;
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
+  XP_List * data_ptr=0;
+  XP_List * user_ptr=0;
 
   /* get to node for this URL */
   url = si_GetURL(URLName);
@@ -853,14 +852,15 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
 
     /* node for this URL was found */
     PRInt32 user_count;
-    if ((user_count = url->signonUser_list->Count()) == 1) {
+     user_ptr = url->signonUser_list;
+     if ((user_count = XP_ListCount(user_ptr)) == 1) {
 
       /* only one set of data exists for this URL so select it */
-      user = (si_SignonUserStruct *) (url->signonUser_list->ElementAt(0));
+      user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr);
       url->chosen_user = user;
 
     } else if (pickFirstUser) {
-      user = (si_SignonUserStruct *) (url->signonUser_list->ElementAt(0));
+      user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr);
       url->chosen_user = user;
 
     } else {
@@ -869,8 +869,8 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
       char ** list2;
       si_SignonUserStruct** users;
       si_SignonUserStruct** users2;
-      list = (char**)PR_Malloc(user_count*sizeof(char*));
-      users = (struct _SignonUserStruct **) PR_Malloc(user_count*sizeof(si_SignonUserStruct*));
+      list = (char**)XP_ALLOC(user_count*sizeof(char*));
+      users = (struct _SignonUserStruct **) XP_ALLOC(user_count*sizeof(si_SignonUserStruct*));
       list2 = list;
       users2 = users;
 
@@ -880,11 +880,10 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
        * ordering of users in the list we present for selection will disagree
        */
       user_count = 0;
-      PRInt32 userCount = url->signonUser_list->Count();
-      for (PRInt32 i=0; i<userCount; i++) {
-        user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i));
+      while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
+        data_ptr = user->signonData_list;
         /* consider first data node to be the identifying item */
-        data = (si_SignonDataStruct *) (user->signonData_list->ElementAt(0));
+        data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
         if (PL_strcmp(data->name, userText)) {
           /* name of current data item does not match name in data node */
           continue;
@@ -896,11 +895,12 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
         url = si_GetURL(URLName);
         if (url == NULL) {
           /* This will happen if user fails to unlock database in SI_LoadSignonData above */
-          PR_Free(list);
-          PR_Free(users);
+          XP_FREE(list);
+          XP_FREE(users);
           return NULL;
         }
       }
+      user_ptr = url->signonUser_list;
 
       /* step through set of user nodes for this URL and create list of
        * first data node of each (presumably that is the user name).
@@ -908,11 +908,10 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
        * most-recently-used so the first one in the list is the most
        * likely one to be chosen.
        */
-      PRInt32 userCount2 = url->signonUser_list->Count();
-      for (PRInt32 i2=0; i2<userCount2; i2++) {
-        user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i2));
+      while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
+        data_ptr = user->signonData_list;
         /* consider first data node to be the identifying item */
-        data = (si_SignonDataStruct *) (user->signonData_list->ElementAt(0));
+        data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
         if (PL_strcmp(data->name, userText)) {
           /* name of current data item does not match name in data node */
           continue;
@@ -926,7 +925,8 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
       if (user_count == 0) {
         /* not first data node for any saved user, so simply pick first user */
         if (url->chosen_user) {
-          user = (si_SignonUserStruct *) (url->signonUser_list->ElementAt(0));
+          user_ptr = url->signonUser_list;
+          user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr);
         } else {
           /* no user selection had been made for first data node */
           user = NULL;
@@ -941,15 +941,15 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
         }
         user = users[user_count]; /* this is the selected item */
         /* item selected is now most-recently used, put at head of list */
-        url->signonUser_list->RemoveElement(user);
-        url->signonUser_list->InsertElementAt(user, 0);
+        XP_ListRemoveObject(url->signonUser_list, user);
+        XP_ListAddObject(url->signonUser_list, user);
       } else {
         user = NULL;
       }
       PR_FREEIF(selectUser);
       url->chosen_user = user;
-      PR_Free(list);
-      PR_Free(users);
+      XP_FREE(list);
+      XP_FREE(users);
 
       /* if we don't remove the URL from the cache at this point, the
        * cached copy will be brought containing the last-used username
@@ -980,6 +980,9 @@ si_GetURLAndUserForChangeForm(char* password)
   si_SignonURLStruct* url;
   si_SignonUserStruct* user;
   si_SignonDataStruct * data;
+  XP_List * url_ptr = 0;
+  XP_List * user_ptr = 0;
+  XP_List * data_ptr = 0;
   PRInt32 user_count;
 
   char ** list;
@@ -991,40 +994,36 @@ si_GetURLAndUserForChangeForm(char* password)
 
   /* get count of total number of user nodes at all url nodes */
   user_count = 0;
-  PRInt32 urlCount = si_signon_list->Count();
-  for (PRInt32 i=0; i<urlCount; i++) {
-    url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i));
-    PRInt32 userCount = url->signonUser_list->Count();
-    for (PRInt32 i=0; i<userCount; i++) {
-      user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i));
+  url_ptr = si_signon_list;
+  while((url = (si_SignonURLStruct *) XP_ListNextObject(url_ptr))!=0) {
+    user_ptr = url->signonUser_list;
+    while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
       user_count++;
     }
   }
 
   /* allocate lists for maximumum possible url and user names */
-  list = (char**)PR_Malloc(user_count*sizeof(char*));
-  users = (struct _SignonUserStruct **) PR_Malloc(user_count*sizeof(si_SignonUserStruct*));
-  urls = (struct _SignonURLStruct **)PR_Malloc(user_count*sizeof(si_SignonUserStruct*));
+  list = (char**)XP_ALLOC(user_count*sizeof(char*));
+  users = (struct _SignonUserStruct **) XP_ALLOC(user_count*sizeof(si_SignonUserStruct*));
+  urls = (struct _SignonURLStruct **)XP_ALLOC(user_count*sizeof(si_SignonUserStruct*));
   list2 = list;
   users2 = users;
   urls2 = urls;
     
   /* step through set of URLs and users and create list of each */
   user_count = 0;
-  PRInt32 urlCount2 = si_signon_list->Count();
-  for (PRInt32 i2=0; i2<urlCount2; i2++) {
-    url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i2));
-    PRInt32 userCount = url->signonUser_list->Count();
-    for (PRInt32 i=0; i<userCount; i++) {
-      user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i));
+  url_ptr = si_signon_list;
+  while((url = (si_SignonURLStruct *) XP_ListNextObject(url_ptr))!=0) {
+    user_ptr = url->signonUser_list;
+    while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
+      data_ptr = user->signonData_list;
       /* find saved password and see if it matches password user just entered */
-      PRInt32 dataCount = user->signonData_list->Count();
-      for (PRInt32 i=0; i<dataCount; i++) {
-        data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
+      while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
         if (data->isPassword && !PL_strcmp(data->value, password)) {
           /* passwords match so add entry to list */
           /* consider first data node to be the identifying item */
-          data = (si_SignonDataStruct *) (user->signonData_list->ElementAt(0));
+          data_ptr = user->signonData_list;
+          data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
           *list2 = 0;
           StrAllocCopy(*list2, url->URLName);
           StrAllocCat(*list2,": ");
@@ -1049,8 +1048,8 @@ si_GetURLAndUserForChangeForm(char* password)
      * to the head of the user list so that it can be favored for
      * re-use the next time this form is encountered
      */
-    url->signonUser_list->RemoveElement(user);
-    url->signonUser_list->InsertElementAt(user, 0);
+    XP_ListRemoveObject(url->signonUser_list, user);
+    XP_ListAddObject(url->signonUser_list, user);
     si_signon_list_changed = PR_TRUE;
     si_SaveSignonDataLocked(PR_TRUE);
   } else {
@@ -1060,11 +1059,11 @@ si_GetURLAndUserForChangeForm(char* password)
 
   /* free allocated strings */
   while (--list2 > list) {
-    PR_Free(*list2);
+    XP_FREE(*list2);
   }
-  PR_Free(list);
-  PR_Free(users);
-  PR_Free(urls);
+  XP_FREE(list);
+  XP_FREE(users);
+  XP_FREE(urls);
   return user;
 }
 
@@ -1099,7 +1098,7 @@ si_FreeReject(si_Reject * reject) {
   if(!reject) {
       return;
   }
-  si_reject_list->RemoveElement(reject);
+  XP_ListRemoveObject(si_reject_list, reject);
   PR_FREEIF(reject->URLName);
   PR_FREEIF(reject->userName);
   PR_Free(reject);
@@ -1107,13 +1106,13 @@ si_FreeReject(si_Reject * reject) {
 
 PRIVATE PRBool
 si_CheckForReject(char * URLName, char * userName) {
+  XP_List * list_ptr;
   si_Reject * reject;
 
   si_lock_signon_list();
   if (si_reject_list) {
-    PRInt32 rejectCount = si_reject_list->Count();
-    for (PRInt32 i=0; i<rejectCount; i++) {
-      reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(i));
+    list_ptr = si_reject_list;
+    while((reject = (si_Reject *) XP_ListNextObject(list_ptr))!=0) {
       if(!PL_strcmp(userName, reject->userName) && !PL_strcmp(URLName, reject->URLName)) {
         si_unlock_signon_list();
         return PR_TRUE;
@@ -1141,9 +1140,11 @@ si_PutReject(char * URLName, char * userName, PRBool save) {
      *  determine this by testing "save" since only SI_LoadSignonData
      *  passes in a value of PR_FALSE for "save".
      */
+    XP_List * list_ptr;
     if (save) {
       si_lock_signon_list();
     }
+    list_ptr = si_reject_list;
 
     StrAllocCopy(URLName2, URLName);
     StrAllocCopy(userName2, userName);
@@ -1151,7 +1152,7 @@ si_PutReject(char * URLName, char * userName, PRBool save) {
     reject->userName = userName2;
 
     if(!si_reject_list) {
-      si_reject_list = new nsVoidArray();
+      si_reject_list = XP_ListNew();
       if(!si_reject_list) {
         PR_Free(reject->URLName);
         PR_Free(reject->userName);
@@ -1166,23 +1167,19 @@ si_PutReject(char * URLName, char * userName, PRBool save) {
     /* add it to the list in alphabetical order */
     si_Reject * tmp_reject;
     PRBool rejectAdded = PR_FALSE;
-    PRInt32 rejectCount = si_reject_list->Count();
-    for (PRInt32 i = 0; i<rejectCount; ++i) {
-      tmp_reject = NS_STATIC_CAST(si_Reject *, si_reject_list->ElementAt(i));
-      if (tmp_reject) {
-        if (PL_strcasecmp(reject->URLName, tmp_reject->URLName)<0) {
-          si_reject_list->InsertElementAt(reject, i);
-          rejectAdded = PR_TRUE;
-          break;
-        }
+    while((tmp_reject = (si_Reject *) XP_ListNextObject(list_ptr))!=0) {
+      if (PL_strcmp (reject->URLName, tmp_reject->URLName)<0) {
+        XP_ListInsertObject (si_reject_list, tmp_reject, reject);
+        rejectAdded = PR_TRUE;
+        break;
       }
     }
     if (!rejectAdded) {
-      si_reject_list->AppendElement(reject);
+      XP_ListAddObjectToEnd (si_reject_list, reject);
     }
 #else
     /* add it to the end of the list */
-    si_reject_list->AppendElement(reject);
+    XP_ListAddObjectToEnd (si_reject_list, reject);
 #endif
 
     if (save) {
@@ -1214,6 +1211,10 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
   int j;
+  XP_List * list_ptr;
+  XP_List * user_ptr;
+  XP_List * data_ptr;
+  si_SignonURLStruct * tmp_URL_ptr;
   PRBool mismatch;
   int i;
 
@@ -1221,7 +1222,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
   for (i=0; i<submit->value_cnt; i++) {
     if ((((uint8*)submit->type_array)[i] == FORM_TYPE_PASSWORD) &&
         (!((char **)(submit->value_array))[i] ||
-        !PL_strlen( ((char **)(submit->value_array)) [i])) ) {
+        !XP_STRLEN( ((char **)(submit->value_array)) [i])) ) {
       return;
     }
   }
@@ -1241,7 +1242,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
 
   /* make sure the signon list exists */
   if(!si_signon_list) {
-    si_signon_list = new nsVoidArray();
+    si_signon_list = XP_ListNew();
     if(!si_signon_list) {
       if (save) {
         si_unlock_signon_list();
@@ -1254,7 +1255,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
   if ((url = si_GetURL(URLName)) == NULL) {
 
     /* doesn't exist so allocate new node to be put into signon list */
-    url = PR_NEW(si_SignonURLStruct);
+    url = XP_NEW(si_SignonURLStruct);
     if (!url) {
       if (save) {
         si_unlock_signon_list();
@@ -1265,41 +1266,37 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
     /* fill in fields of new node */
     url->URLName = si_StrippedURL(URLName);
     if (!url->URLName) {
-      PR_Free(url);
+      XP_FREE(url);
       if (save) {
         si_unlock_signon_list();
       }
       return;
     }
 
-    url->signonUser_list = new nsVoidArray();
+    url->signonUser_list = XP_ListNew();
     if(!url->signonUser_list) {
-      PR_Free(url->URLName);
-      PR_Free(url);
+      XP_FREE(url->URLName);
+      XP_FREE(url);
     }
 
     /* put new node into signon list */
 
 #ifdef alphabetize
     /* add it to the list in alphabetical order */
-    si_SignonURLStruct * tmp_URL;
-    PRInt32 urlCount = si_signon_list->Count();
-    for (PRInt32 i = 0; i<urlCount; ++i) {
-      tmp_URL = NS_STATIC_CAST(si_SignonURLStruct *, si_signon_list->ElementAt(i));
-      if (tmp_URL) {
-        if (PL_strcasecmp(url->URLName, tmp_URL->URLName)<0) {
-          si_signon_list->InsertElementAt(url, i);
-          added_to_list = PR_TRUE;
-          break;
-        }
+    list_ptr = si_signon_list;
+    while((tmp_URL_ptr = (si_SignonURLStruct *) XP_ListNextObject(list_ptr))!=0) {
+      if(PL_strcmp(url->URLName,tmp_URL_ptr->URLName)<0) {
+        XP_ListInsertObject(si_signon_list, tmp_URL_ptr, url);
+        added_to_list = PR_TRUE;
+        break;
       }
     }
     if (!added_to_list) {
-      si_signon_list->AppendElement(url);
+      XP_ListAddObjectToEnd (si_signon_list, url);
     }
 #else
     /* add it to the end of the list */
-    si_signon_list->AppendElement(url);
+    XP_ListAddObjectToEnd (si_signon_list, url);
 #endif
   }
 
@@ -1310,15 +1307,11 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
    * see if a user node with data list matching new data already exists
    * (password fields will not be checked for in this matching)
    */
-  PRInt32 userCount = url->signonUser_list->Count();
-  for (PRInt32 i2=0; i2<userCount; i2++) {
-    user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i2));
+  user_ptr = url->signonUser_list;
+  while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
+    data_ptr = user->signonData_list;
     j = 0;
-    PRInt32 dataCount = user->signonData_list->Count();
-    for (PRInt32 i=0; i<dataCount; i++) {
-      data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
-
-
+    while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
       mismatch = PR_FALSE;
 
       /* skip non text/password fields */
@@ -1332,18 +1325,18 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
       if ((j < submit->value_cnt) &&
           (data->isPassword ==
             (((uint8*)submit->type_array)[j]==FORM_TYPE_PASSWORD)) &&
-            (!PL_strcmp(data->name, ((char **)submit->name_array)[j]))) {
+            (!XP_STRCMP(data->name, ((char **)submit->name_array)[j]))) {
 
         /* success, now check for match on value field if not password */
         if (!submit->value_array[j]) {
           /* special case a null value */
-          if (!PL_strcmp(data->value, "")) {
+          if (!XP_STRCMP(data->value, "")) {
             j++; /* success */
           } else {
             mismatch = PR_TRUE;
             break; /* value mismatch, try next user */
           }
-        } else if (!PL_strcmp(data->value, ((char **)submit->value_array)[j])
+        } else if (!XP_STRCMP(data->value, ((char **)submit->value_array)[j])
             || data->isPassword) {
           j++; /* success */
         } else {
@@ -1367,10 +1360,9 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
        */
 
       /* update the saved password values */
+      data_ptr = user->signonData_list;
       j = 0;
-      PRInt32 dataCount = user->signonData_list->Count();
-      for (PRInt32 i=0; i<dataCount; i++) {
-        data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
+      while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
 
         /* skip non text/password fields */
         while ((j < submit->value_cnt) &&
@@ -1381,7 +1373,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
 
         /* update saved password */
         if ((j < submit->value_cnt) && data->isPassword) {
-          if (PL_strcmp(data->value, ((char **)submit->value_array)[j])) {
+          if (XP_STRCMP(data->value, ((char **)submit->value_array)[j])) {
             si_signon_list_changed = PR_TRUE;
             StrAllocCopy(data->value, ((char **)submit->value_array)[j]);
             si_Randomize(data->value);
@@ -1395,8 +1387,8 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
        * to the head of the user list so that it can be favored for
        * re-use the next time this form is encountered
        */
-      url->signonUser_list->RemoveElement(user);
-      url->signonUser_list->InsertElementAt(user, 0);
+      XP_ListRemoveObject(url->signonUser_list, user);
+      XP_ListAddObject(url->signonUser_list, user);
 
       /* return */
       if (save) {
@@ -1409,16 +1401,16 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
   }
 
   /* user node with current data not found so create one */
-  user = PR_NEW(si_SignonUserStruct);
+  user = XP_NEW(si_SignonUserStruct);
   if (!user) {
     if (save) {
       si_unlock_signon_list();
     }
     return;
   }
-  user->signonData_list = new nsVoidArray();
+  user->signonData_list = XP_ListNew();
   if(!user->signonData_list) {
-    PR_Free(user);
+    XP_FREE(user);
     if (save) {
       si_unlock_signon_list();
     }
@@ -1435,10 +1427,10 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
     }
 
     /* create signon data node */
-    data = PR_NEW(si_SignonDataStruct);
+    data = XP_NEW(si_SignonDataStruct);
     if (!data) {
-      delete user->signonData_list;
-      PR_Free(user);
+      XP_ListDestroy(user->signonData_list);
+      XP_FREE(user);
     }
     data->isPassword = (((uint8 *)submit->type_array)[j] == FORM_TYPE_PASSWORD);
     name = 0; /* so that StrAllocCopy doesn't free previous name */
@@ -1455,7 +1447,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
       si_Randomize(data->value);
     }
     /* append new data node to end of data list */
-    user->signonData_list->InsertElementAt(data, 0);
+    XP_ListAddObjectToEnd (user->signonData_list, data);
   }
 
   /* append new user node to front of user list for matching URL */
@@ -1467,12 +1459,12 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
      * we will be reversing the order when reading in.
      */
   if (save) {
-    url->signonUser_list->InsertElementAt(user, 0);
+    XP_ListAddObject(url->signonUser_list, user);
     si_signon_list_changed = PR_TRUE;
     si_SaveSignonDataLocked(PR_TRUE);
     si_unlock_signon_list();
   } else {
-    url->signonUser_list->AppendElement(user);
+    XP_ListAddObjectToEnd(url->signonUser_list, user);
   }
 }
 
@@ -1604,7 +1596,7 @@ SI_LoadSignonData(PRBool fullLoad) {
     }
     si_StripLF(buffer);
     si_PutReject(URLName, buffer, PR_FALSE);
-    PR_Free (URLName);
+    XP_FREE (URLName);
   }
 
   /* initialize the submit structure */
@@ -1662,7 +1654,7 @@ SI_LoadSignonData(PRBool fullLoad) {
     }
 
     /* store the info for this URL into memory-resident data structure */
-    if (!URLName || PL_strlen(URLName) == 0) {
+    if (!URLName || XP_STRLEN(URLName) == 0) {
       badInput = PR_TRUE;
     }
     if (!badInput) {
@@ -1670,10 +1662,10 @@ SI_LoadSignonData(PRBool fullLoad) {
     }
 
     /* free up all the allocations done for processing this URL */
-    PR_Free(URLName);
+    XP_FREE(URLName);
     for (i=0; i<submit.value_cnt; i++) {
-      PR_Free(name_array[i]);
-      PR_Free(value_array[i]);
+      XP_FREE(name_array[i]);
+      XP_FREE(value_array[i]);
     }
     if (badInput) {
       si_unlock_signon_list();
@@ -1720,6 +1712,9 @@ si_WriteLine(nsOutputFileStream strm, nsOutputFileStream strmx, char * lineBuffe
 
 PRIVATE int
 si_SaveSignonDataLocked(PRBool fullSave) {
+  XP_List * list_ptr;
+  XP_List * user_ptr;
+  XP_List * data_ptr;
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
@@ -1785,9 +1780,8 @@ si_SaveSignonDataLocked(PRBool fullSave) {
 
   /* write out reject list */
   if (si_reject_list) {
-    PRInt32 rejectCount = si_reject_list->Count();
-    for (PRInt32 i=0; i<rejectCount; i++) {
-      reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(i));
+    list_ptr = si_reject_list;
+    while((reject = (si_Reject *) XP_ListNextObject(list_ptr))!=0) {
       si_WriteLine(strm, strmx, reject->URLName, FALSE);
       si_WriteLine(strm, strmx, reject->userName, FALSE);
     }
@@ -1801,20 +1795,17 @@ si_SaveSignonDataLocked(PRBool fullSave) {
 
   /* write out each URL node */
   if((si_signon_list)) {
-    PRInt32 urlCount = si_signon_list->Count();
-    for (PRInt32 i=0; i<urlCount; i++) {
-      url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i));
+    list_ptr = si_signon_list;
+    while((url = (si_SignonURLStruct *) XP_ListNextObject(list_ptr)) != NULL) {
+      user_ptr = url->signonUser_list;
 
       /* write out each user node of the URL node */
-      PRInt32 userCount = url->signonUser_list->Count();
-      for (PRInt32 i=0; i<userCount; i++) {
-        user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i));
+      while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr)) != NULL) {
         si_WriteLine(strm, strmx, url->URLName, FALSE);
+        data_ptr = user->signonData_list;
 
         /* write out each data node of the user node */
-        PRInt32 dataCount = user->signonData_list->Count();
-        for (PRInt32 i=0; i<dataCount; i++) {
-          data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
+        while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr)) != NULL) {
           if (data->isPassword) {
             si_WriteChar(strm, '*');
             si_WriteLine(strm, strmx, data->name, FALSE);
@@ -1887,29 +1878,29 @@ si_OkToSave(char *URLName, char *userName) {
     PR_FREEIF(message);
     si_SetNotificationPref(PR_TRUE);
     if (!si_ConfirmYN(notification)) {
-      PR_Free (notification);
+      XP_FREE (notification);
       SI_SetBoolPref(pref_rememberSignons, PR_FALSE);
       return PR_FALSE;
     }
     SI_SetBoolPref(pref_rememberSignons, PR_TRUE); /* this is unnecessary */
-    PR_Free (notification);
+    XP_FREE (notification);
   }
 
   strippedURLName = si_StrippedURL(URLName);
   if (si_CheckForReject(strippedURLName, userName)) {
-    PR_Free(strippedURLName);
+    XP_FREE(strippedURLName);
     return PR_FALSE;
   }
 
   char * message = Wallet_Localize("WantToSavePassword?");
   if (!si_ConfirmYN(message)) {
     si_PutReject(strippedURLName, userName, PR_TRUE);
-    PR_Free(strippedURLName);
+    XP_FREE(strippedURLName);
     PR_FREEIF(message);
     return PR_FALSE;
   }
   PR_FREEIF(message);
-  PR_Free(strippedURLName);
+  XP_FREE(strippedURLName);
   return PR_TRUE;
 }
 
@@ -1967,13 +1958,14 @@ SINGSIGN_RememberSignonData
   } else if (passwordCount == 3) {
     /* three-password form is a change-of-password request */
 
+    XP_List * data_ptr;
     si_SignonDataStruct* data;
     si_SignonUserStruct* user;
 
     /* make sure all passwords are non-null and 2nd and 3rd are identical */
     if (!submit.value_array[pswd[0]] || ! submit.value_array[pswd[1]] ||
         !submit.value_array[pswd[2]] ||
-        PL_strcmp(((char **)submit.value_array)[pswd[1]],
+        XP_STRCMP(((char **)submit.value_array)[pswd[1]],
           ((char **)submit.value_array)[pswd[2]])) {
       return;
     }
@@ -1995,9 +1987,8 @@ SINGSIGN_RememberSignonData
       si_unlock_signon_list();
       return;
     }
-    PRInt32 dataCount = user->signonData_list->Count();
-    for (PRInt32 i=0; i<dataCount; i++) {
-      data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
+    data_ptr = user->signonData_list;
+    while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
       if (data->isPassword) {
         break;
       }
@@ -2013,7 +2004,7 @@ SINGSIGN_RememberSignonData
      * same length as "generate".)
      */
     si_Randomize(((char **)submit.value_array)[pswd[1]]);
-    PL_strcpy(((char **)submit.value_array)[pswd[2]],((char **)submit.value_array)[pswd[1]]);
+    XP_STRCPY(((char **)submit.value_array)[pswd[2]],((char **)submit.value_array)[pswd[1]]);
     StrAllocCopy(data->value, ((char **)submit.value_array)[pswd[1]]);
     si_signon_list_changed = PR_TRUE;
     si_SaveSignonDataLocked(PR_TRUE);
@@ -2025,6 +2016,7 @@ PUBLIC void
 SINGSIGN_RestoreSignonData (char* URLName, char* name, char** value) {
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
+  XP_List * data_ptr=0;
 
   /* do nothing if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
@@ -2046,15 +2038,16 @@ SINGSIGN_RestoreSignonData (char* URLName, char* name, char** value) {
   if (user) {
     SI_LoadSignonData(PR_TRUE); /* this destroys "user" so need to recalculate it */
     user = si_GetUser(URLName, PR_TRUE, NULL);
-    data = (si_SignonDataStruct *) (user->signonData_list->ElementAt(0)); /* 1st item on form */
-    if(data->isPassword && name && PL_strcmp(data->name, name)==0) {
+    data_ptr = user->signonData_list; /* this is first item on form */
+    data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
+    if(data->isPassword && name && XP_STRCMP(data->name, name)==0) {
       /* current item is first item on form and is a password */
       user = (URLName, MK_SIGNON_PASSWORDS_FETCH);
       if (user) {
         /* user has confirmed it's a change-of-password form */
-        PRInt32 dataCount = user->signonData_list->Count();
-        for (PRInt32 i=1; i<dataCount; i++) {
-          data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
+        data_ptr = user->signonData_list;
+        data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
+        while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
           if (data->isPassword) {
             *value = data->value;
             si_unlock_signon_list();
@@ -2088,10 +2081,9 @@ if (!keySet) user=0; else
     SI_LoadSignonData(TRUE); /* this destroys user so need to recaculate it */
     user = si_GetUser(URLName, PR_TRUE, name);
     if (user) { /* this should always be true but just in case */
-      PRInt32 dataCount = user->signonData_list->Count();
-      for (PRInt32 i=0; i<dataCount; i++) {
-        data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
-        if(name && PL_strcmp(data->name, name)==0) {
+      data_ptr = user->signonData_list;
+      while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
+        if(name && XP_STRCMP(data->name, name)==0) {
           *value = data->value;
           si_unlock_signon_list();
           return;
@@ -2140,8 +2132,8 @@ si_RememberSignonDataFromBrowser(char* URLName, char* username, char* password) 
   si_PutData(URLName, &submit, PR_TRUE);
 
   /* Free up the data memory just allocated */
-  PR_Free(value_array[0]);
-  PR_Free(value_array[1]);
+  XP_FREE(value_array[0]);
+  XP_FREE(value_array[1]);
 }
 
 PUBLIC void
@@ -2160,6 +2152,7 @@ si_RestoreOldSignonDataFromBrowser
     (char* URLName, PRBool pickFirstUser, char** username, char** password) {
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
+  XP_List * data_ptr=0;
 
   /* get the data from previous time this URL was visited */
   si_lock_signon_list();
@@ -2175,12 +2168,11 @@ si_RestoreOldSignonDataFromBrowser
   user = si_GetUser(URLName, pickFirstUser, "username");
 
   /* restore the data from previous time this URL was visited */
-  PRInt32 dataCount = user->signonData_list->Count();
-  for (PRInt32 i=0; i<dataCount; i++) {
-    data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
-    if(PL_strcmp(data->name, "username")==0) {
+  data_ptr = user->signonData_list;
+  while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
+    if(XP_STRCMP(data->name, "username")==0) {
       StrAllocCopy(*username, data->value);
-    } else if(PL_strcmp(data->name, "password")==0) {
+    } else if(XP_STRCMP(data->name, "password")==0) {
       StrAllocCopy(*password, data->value);
     }
   }
@@ -2200,7 +2192,7 @@ SINGSIGN_PromptUsernameAndPassword
   /* do the FE thing if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
     status = si_PromptUsernameAndPassword(copyOfPrompt, username, password);
-    PR_FREEIF(copyOfPrompt);
+    XP_FREEIF(copyOfPrompt);
     return status;
   }
 
@@ -2216,7 +2208,7 @@ SINGSIGN_PromptUsernameAndPassword
   }
 
   /* cleanup and return */
-  PR_FREEIF(copyOfPrompt);
+  XP_FREEIF(copyOfPrompt);
   return status;
 }
 
@@ -2234,7 +2226,7 @@ SINGSIGN_PromptPassword
   /* do the FE thing if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
     result = si_PromptPassword(copyOfPrompt);
-    PR_FREEIF(copyOfPrompt);
+    XP_FREEIF(copyOfPrompt);
     return result;
   }
 
@@ -2262,8 +2254,8 @@ SINGSIGN_PromptPassword
    * In this call to SI_Password, the real password gets saved in place
    * of the dummy one.
    */
-  if (password && PL_strlen(password) && PL_strcmp(password, " ")) {
-    PR_FREEIF(copyOfPrompt);
+  if (password && XP_STRLEN(password) && XP_STRCMP(password, " ")) {
+    XP_FREEIF(copyOfPrompt);
     return password;
   }
 
@@ -2290,13 +2282,13 @@ SINGSIGN_PromptPassword
   }
 
   /* remember these values for next time */
-  if (password && PL_strlen(password) && si_OkToSave(urlname, username)) {
+  if (password && XP_STRLEN(password) && si_OkToSave(urlname, username)) {
     si_RememberSignonDataFromBrowser (urlname, username, password);
   }
 
   /* cleanup and return */
-  PR_FREEIF(username);
-  PR_FREEIF(copyOfPrompt);
+  XP_FREEIF(username);
+  XP_FREEIF(copyOfPrompt);
   return password;
 }
 
@@ -2316,12 +2308,12 @@ SINGSIGN_Prompt (char *prompt, char* defaultUsername, char *URLName)
   /* do the FE thing if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
     result = si_Prompt(copyOfPrompt, defaultUsername);
-    PR_FREEIF(copyOfPrompt);
+    XP_FREEIF(copyOfPrompt);
     return result;
   }
 
   /* get previous username used */
-  if (!defaultUsername || !PL_strlen(defaultUsername)) {
+  if (!defaultUsername || !XP_STRLEN(defaultUsername)) {
     si_RestoreOldSignonDataFromBrowser(URLName, PR_FALSE, &username, &password);
   } else {
      StrAllocCopy(username, defaultUsername);
@@ -2331,8 +2323,8 @@ SINGSIGN_Prompt (char *prompt, char* defaultUsername, char *URLName)
   result = si_Prompt(copyOfPrompt, username);
 
   /* remember this username for next time */
-  if (result && PL_strlen(result)) {
-    if (username && (PL_strcmp(username, result) == 0)) {
+  if (result && XP_STRLEN(result)) {
+    if (username && (XP_STRCMP(username, result) == 0)) {
       /*
        * User is re-using the same user name as from previous time
        * so keep the previous password as well
@@ -2349,9 +2341,9 @@ SINGSIGN_Prompt (char *prompt, char* defaultUsername, char *URLName)
   }
 
   /* cleanup and return */
-  PR_FREEIF(username);
-  PR_FREEIF(password);
-  PR_FREEIF(copyOfPrompt);
+  XP_FREEIF(username);
+  XP_FREEIF(password);
+  XP_FREEIF(copyOfPrompt);
   return result;
 }
 
@@ -2417,7 +2409,7 @@ SI_FindValueInArgs(nsAutoString results, char* name) {
   nsAutoString value;
   PRInt32 start, length;
   start = results.Find(name);
-  PR_ASSERT(start >= 0);
+  XP_ASSERT(start >= 0);
   if (start < 0) {
     return nsAutoString("").ToNewCString();
   }
@@ -2432,6 +2424,10 @@ Wallet_SignonViewerReturn (nsAutoString results);
 
 PUBLIC void
 SINGSIGN_SignonViewerReturn (nsAutoString results) {
+  XP_List *url_ptr;
+  XP_List *user_ptr;
+  XP_List *data_ptr;
+  XP_List *reject_ptr;
   si_SignonURLStruct *url;
   si_SignonURLStruct *URLToDelete = 0;
   si_SignonUserStruct* user;
@@ -2449,17 +2445,16 @@ SINGSIGN_SignonViewerReturn (nsAutoString results) {
    */
   char * gone = SI_FindValueInArgs(results, "|goneS|");
   userNumber = 0;
-  PRInt32 urlCount = si_signon_list->Count();
-  for (PRInt32 i=0; i<urlCount; i++) {
-    url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i));
-    PRInt32 userCount = url->signonUser_list->Count();
-    for (PRInt32 i=0; i<userCount; i++) {
-      user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i));
+  url_ptr = si_signon_list;
+  while ((url = (si_SignonURLStruct *) XP_ListNextObject(url_ptr))) {
+    user_ptr = url->signonUser_list;
+    while ((user = (si_SignonUserStruct *)XP_ListNextObject(user_ptr))) {
       if (SI_InSequence(gone, userNumber)) {
         if (userToDelete) {
 
           /* get to first data item -- that's the user name */
-          data = (si_SignonDataStruct *) (userToDelete->signonData_list->ElementAt(0));
+          data_ptr = userToDelete->signonData_list;
+          data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
           /* do the deletion */
           si_RemoveUser(URLToDelete->URLName, data->value, PR_TRUE);
         }
@@ -2471,7 +2466,8 @@ SINGSIGN_SignonViewerReturn (nsAutoString results) {
   }
   if (userToDelete) {
     /* get to first data item -- that's the user name */
-    data = (si_SignonDataStruct *) (userToDelete->signonData_list->ElementAt(0));
+    data_ptr = userToDelete->signonData_list;
+    data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
 
     /* do the deletion */
     si_RemoveUser(URLToDelete->URLName, data->value, PR_TRUE);
@@ -2487,9 +2483,8 @@ SINGSIGN_SignonViewerReturn (nsAutoString results) {
   gone = SI_FindValueInArgs(results, "|goneR|");
   rejectNumber = 0;
   si_lock_signon_list();
-  PRInt32 rejectCount = si_reject_list->Count();
-  for (PRInt32 i2=0; i2<rejectCount; i2++) {
-    reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(i2));
+  reject_ptr = si_reject_list;
+  while ((reject = (si_Reject *) XP_ListNextObject(reject_ptr))) {
     if (SI_InSequence(gone, rejectNumber)) {
       if (rejectToDelete) {
         si_FreeReject(rejectToDelete);
@@ -2516,8 +2511,11 @@ SINGSIGN_SignonViewerReturn (nsAutoString results) {
 PUBLIC void
 SINGSIGN_GetSignonListForViewer(nsString& aSignonList)
 {
-  char *buffer = (char*)PR_Malloc(BUFLEN2);
+  char *buffer = (char*)XP_ALLOC(BUFLEN2);
   int g = 0, signonNum;
+  XP_List *url_ptr;
+  XP_List *user_ptr;
+  XP_List *data_ptr;
   si_SignonURLStruct *url;
   si_SignonUserStruct * user;
   si_SignonDataStruct* data;
@@ -2526,16 +2524,14 @@ SINGSIGN_GetSignonListForViewer(nsString& aSignonList)
   si_RegisterSignonPrefCallbacks();
 
   buffer[0] = '\0';
+  url_ptr = si_signon_list;
   signonNum = 0;
-  PRInt32 urlCount = si_signon_list->Count();
-  for (PRInt32 i=0; i<urlCount; i++) {
-    url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i));
-    PRInt32 userCount = url->signonUser_list->Count();
-    for (PRInt32 i=0; i<userCount; i++) {
-      user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i));
-
+  while ( (url=(si_SignonURLStruct *) XP_ListNextObject(url_ptr)) ) {
+    user_ptr = url->signonUser_list;
+    while ( (user=(si_SignonUserStruct *) XP_ListNextObject(user_ptr)) ) {
       /* first data item for user is the username */
-      data = (si_SignonDataStruct *) (user->signonData_list->ElementAt(0));
+      data_ptr = user->signonData_list;
+      data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
       g += PR_snprintf(buffer+g, BUFLEN2-g,
 "%c        <OPTION value=%d>%s:%s</OPTION>\n",
         BREAK,
@@ -2553,18 +2549,18 @@ SINGSIGN_GetSignonListForViewer(nsString& aSignonList)
 PUBLIC void
 SINGSIGN_GetRejectListForViewer(nsString& aRejectList)
 {
-  char *buffer = (char*)PR_Malloc(BUFLEN2);
+  char *buffer = (char*)XP_ALLOC(BUFLEN2);
   int g = 0, rejectNum;
+  XP_List *reject_ptr;
   si_Reject *reject;
 
   /* force loading of the signons file */
   si_RegisterSignonPrefCallbacks();
 
   buffer[0] = '\0';
+  reject_ptr = si_reject_list;
   rejectNum = 0;
-  PRInt32 rejectCount = si_reject_list->Count();
-  for (PRInt32 i=0; i<rejectCount; i++) {
-    reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(i));
+  while ( (reject=(si_Reject *) XP_ListNextObject(reject_ptr)) ) {
     g += PR_snprintf(buffer+g, BUFLEN2-g,
 "%c        <OPTION value=%d>%s:%s</OPTION>\n",
       BREAK,
@@ -2690,7 +2686,7 @@ si_LoadSignonDataFromKeychain() {
       buffer[actualSize] = 0;
 
       /* parse for '=' which separates the name and value */
-      for (i = 0; i < PL_strlen(buffer); i++) {
+      for (i = 0; i < XP_STRLEN(buffer); i++) {
         if (buffer[i] == '=') {
           value = &buffer[i+1];
           buffer[i] = 0;
@@ -2717,7 +2713,7 @@ si_LoadSignonDataFromKeychain() {
     buffer[actualSize] = 0;
     if (!reject) {
       /* parse for '=' which separates the name and value */
-      for (i = 0; i < PL_strlen(buffer); i++) {
+      for (i = 0; i < XP_STRLEN(buffer); i++) {
         if (buffer[i] == '=') {
           value = &buffer[i+1];
           buffer[i] = 0;
@@ -2737,7 +2733,7 @@ si_LoadSignonDataFromKeychain() {
       }
       submit.value_cnt++;
       /* store the info for this URL into memory-resident data structure */
-      if (!URLName || PL_strlen(URLName) == 0) {
+      if (!URLName || XP_STRLEN(URLName) == 0) {
         badInput = PR_TRUE;
       }
       if (!badInput) {
@@ -2746,15 +2742,15 @@ si_LoadSignonDataFromKeychain() {
 
       /* free up all the allocations done for processing this URL */
       for (i = 0; i < submit.value_cnt; i++) {
-        PR_Free(name_array[i]);
-        PR_Free(value_array[i]);
+        XP_FREE(name_array[i]);
+        XP_FREE(value_array[i]);
       }
     } else {
       /* reject */
       si_PutReject(URLName, buffer, PR_FALSE);
     }
     reject = PR_FALSE; /* reset reject flag */
-    PR_Free(URLName);
+    XP_FREE(URLName);
     KCReleaseItemRef( &itemRef );
     status = KCFindNextItem( searchRef, &itemRef);
   }
@@ -2795,6 +2791,9 @@ PRIVATE int
 si_SaveSignonDataInKeychain() {
   char* account = nil;
   char* password = nil;
+  XP_List * list_ptr;
+  XP_List * user_ptr;
+  XP_List * data_ptr;
   si_SignonURLStruct * URL;
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
@@ -2807,9 +2806,8 @@ si_SaveSignonDataInKeychain() {
 
   /* save off the reject list */
   if (si_reject_list) {
-    PRInt32 rejectCount = <si_reject_list->Count();
-    for (PRInt32 i=0; i<rejectCount; i++) {
-      reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(i));
+    list_ptr = si_reject_list;
+    while((reject = (si_Reject *) XP_ListNextObject(list_ptr))!=0) {
       status = kcaddinternetpassword
         (reject->URLName, nil,
          reject->userName,
@@ -2846,37 +2844,34 @@ si_SaveSignonDataInKeychain() {
 
   /* save off the passwords */
   if((si_signon_list)) {
-    PRInt32 urlCount = si_signon_list->Count();
-    for (PRInt32 i=0; i<urlCount; i++) {
-      URL = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i));
+    list_ptr = si_signon_list;
+    while((URL = (si_SignonURLStruct *) XP_ListNextObject(list_ptr)) != NULL) {
+      user_ptr = URL->signonUser_list;
 
       /* add each user node of the URL node */
-      PRInt32 userCount = URL->signonUser_list->Count();
-      for (PRInt32 i=0; i<userCount; i++) {
-        user = NS_STATIC_CAST(si_SignonUserStruct*, URL->signonUser_list->ElementAt(i));
+      while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr)) != NULL) {
+        data_ptr = user->signonData_list;
 
         /* write out each data node of the user node */
-        PRInt32 count = user->signonData_list->Count();
-        for (PRInt32 i=0; i<count; i++) {
-          data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
+        while((data=(si_SignonDataStruct *) XP_ListNextObject(data_ptr)) != NULL) {
           char* attribute = nil;
           if (data->isPassword) {
-            password = PR_Malloc(PL_strlen(data->value) + PL_strlen(data->name) + 2);
+            password = XP_ALLOC(XP_STRLEN(data->value) + XP_STRLEN(data->name) + 2);
             if (!password) {
               return (-1);
             }
             attribute = password;
           } else {
-            account = PR_Malloc( PL_strlen(data->value) + PL_strlen(data->name) + 2);
+            account = XP_ALLOC( XP_STRLEN(data->value) + XP_STRLEN(data->name) + 2);
             if (!account) {
-              PR_Free(password);
+              XP_FREE(password);
               return (-1);
             }
             attribute = account;
           }
-          PL_strcpy(attribute, data->name);
-          PL_strcat(attribute, "=");
-          PL_strcat(attribute, data->value);
+          XP_STRCPY(attribute, data->name);
+          XP_STRCAT(attribute, "=");
+          XP_STRCAT(attribute, data->value);
         }
         /* if it's already there, we just want to change the password */
         status = kcfindinternetpassword
@@ -2891,7 +2886,7 @@ si_SaveSignonDataInKeychain() {
              &actualLength,
              &itemRef);
         if (status == noErr) {
-          status = KCSetData(itemRef, PL_strlen(password), password);
+          status = KCSetData(itemRef, XP_STRLEN(password), password);
           if (status != noErr) {
             return(status);
           }
@@ -2906,15 +2901,15 @@ si_SaveSignonDataInKeychain() {
              kAnyPort,
              kNetscapeProtocolType,
              kAnyAuthType,
-             PL_strlen(password),
+             XP_STRLEN(password),
              password,
              nil);
         }
         if (account) {
-          PR_Free(account);
+          XP_FREE(account);
         }
         if (password) {
-          PR_Free(password);
+          XP_FREE(password);
         } 
         account = password = nil;
         if (status != noErr) {
