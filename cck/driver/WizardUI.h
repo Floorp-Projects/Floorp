@@ -19,6 +19,7 @@
 // WizardUI.h : header file
 //
 #include "ProgressDialog.h"
+#include "WizardTypes.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CWizardUI dialog
@@ -73,6 +74,13 @@ public:
 	void UpdateGlobals();
 	void DestroyCurrentScreenWidgets();
 	//void DoBuildInstallers();
+
+	BOOL ActCommand(WIDGET *curWidget);
+	BOOL SortList(WIDGET *curWidget);
+	BOOL NewConfig(WIDGET *curWidget);
+	BOOL BrowseFile(WIDGET *curWidget);
+	BOOL BrowseDir(WIDGET *curWidget);
+	BOOL Progress();
 
 	// Dlls related stuff
 	HINSTANCE hModule;
