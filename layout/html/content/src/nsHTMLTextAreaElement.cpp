@@ -95,7 +95,7 @@ public:
   NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
 
   // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
+  NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_USING_GENERIC(mInner)
 
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
@@ -195,6 +195,20 @@ nsHTMLTextAreaElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+}
+
+// nsIContent
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::SetParent(nsIContent* aParent)
+{
+  return mInner.SetParentForFormControls(aParent, this, mForm);
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+{
+  return mInner.SetDocumentForFormControls(aDocument, aDeep, this, mForm);
 }
 
 NS_IMETHODIMP
