@@ -102,10 +102,10 @@ extern JSObject *
 js_InitScriptClass(JSContext *cx, JSObject *obj);
 
 extern JSBool
-js_InitRuntimeScriptState(JSContext *cx);
+js_InitScriptGlobals();
 
 extern void
-js_FinishRuntimeScriptState(JSContext *cx);
+js_FreeScriptGlobals();
 
 extern const char *
 js_SaveScriptFilename(JSContext *cx, const char *filename);
