@@ -73,6 +73,7 @@ nsWidget *nsWidget::focusWindow = NULL;
 nsIRollupListener *nsWidget::gRollupListener = nsnull;
 nsIWidget         *nsWidget::gRollupWidget = nsnull;
 PRBool             nsWidget::gRollupConsumeRollupEvent = PR_FALSE;
+PRBool             nsWidget::mGDKHandlerInstalled = PR_FALSE;
 
 //
 // Keep track of the last widget being "dragged"
@@ -142,14 +143,18 @@ nsWidget::nsWidget()
   
   sWidgetCount++;
 
-
-
   mIMEEnable = PR_TRUE;
   mIC = nsnull;
   mIMECompositionUniString = nsnull;
   mIMECompositionUniStringSize = 0;
   mListenForResizes = PR_FALSE;
   mHasFocus = PR_FALSE;
+  if (mGDKHandlerInstalled == PR_FALSE) {
+    mGDKHandlerInstalled = PR_TRUE;
+    // It is most convenient for us to intercept our events after
+    // they have been converted to GDK, but before GTK+ gets them
+    gdk_event_handler_set (handle_gdk_event, NULL, NULL);
+  }
 }
 
 nsWidget::~nsWidget()
@@ -174,6 +179,11 @@ nsWidget::~nsWidget()
     mIMECompositionUniString = nsnull;
   }
   NS_ASSERTION(!ModalWidgetList::Find(this), "destroying widget without first clearing modality.");
+#ifdef NS_DEBUG
+  if (mIsToplevel) {
+    g_print("nsWidget::~nsWidget() of toplevel: %d widgets still exist.\n", sWidgetCount);
+  }
+#endif
 }
 
 

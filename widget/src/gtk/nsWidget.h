@@ -421,6 +421,10 @@ private:
   static nsILookAndFeel *sLookAndFeel;
   static PRUint32 sWidgetCount;
 
+  // this will keep track of whether or not the gdk handler
+  // is installed yet
+  static PRBool mGDKHandlerInstalled;
+
   //
   // Keep track of the last widget being "dragged"
   //
