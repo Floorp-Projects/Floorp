@@ -631,6 +631,7 @@ PRBool IsLoosePI(nsString& aBuffer,PRInt32 anOffset,PRInt32 aCount) {
   return result;
 }
 
+
 /**
  *  This is called when it's time to find out 
  *  what mode the parser/DTD should run for this document.
@@ -698,6 +699,9 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
 
   PRInt32 theLTPos=aBuffer.FindChar(kLessThan,PR_FALSE,theOffset); 
   PRInt32 theGTPos=aBuffer.FindChar(kGreaterThan,PR_FALSE,theOffset);
+
+  PRInt32 theMajorVersion=3;
+  PRInt32 theMinorVersion=0;
 
   if((kNotFound!=theGTPos) && (kNotFound!=theLTPos)) {  
 
@@ -772,7 +776,6 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
                     //and now check the version number...
 
                     PRInt32 theVersionPos=aBuffer.FindCharInSet("1234567890",theMLTagPos);
-                    PRInt32 theMajorVersion=3;
 
                     if((0<=theVersionPos) && (theVersionPos<theGTPos)) {
                       nsAutoString theNum;
@@ -780,9 +783,13 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
                       if(theTerminal) {
                         aBuffer.Mid(theNum,theVersionPos,theTerminal-theVersionPos);
                       }
-                      else aBuffer.Mid(theNum,theVersionPos,3);
+                      else aBuffer.Mid(theNum,theVersionPos,4);
                       PRInt32 theErr=0;
                       theMajorVersion=theNum.ToInteger(&theErr);
+                      if('.'==theNum[1]) {
+                        theNum.Cut(0,2);
+                        theMinorVersion=theNum.ToInteger(&theErr);
+                      }
 
                       if((0==theErr) && (3<theMajorVersion) && (theMajorVersion<100)) {
                         if(IsLoosePI(aBuffer,theVersionPos+2,20)) 
@@ -826,6 +833,9 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
             aParseMode=eDTDMode_quirks;  //degrade because the systemID is missing.
         }
       }
+      else if((eDTDMode_transitional==thePublicID) && (eDTDMode_strict==theSystemID)) {
+        aParseMode=(4<=theMajorVersion) ? eDTDMode_strict : eDTDMode_quirks;        
+      }
       else {
         //ack! The doctype is badly formed (system and public ID's contradict).
         //let's switch back to default compatibility mode...
@@ -864,7 +874,7 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
 
   if(eDTDMode_transitional==aParseMode) {
     if(eHTML4Text==aDocType)
-      aParseMode=eDTDMode_quirks;
+      aParseMode=(0==theMinorVersion) ? eDTDMode_quirks: eDTDMode_strict;
 //    else if(eXHTMLText==aDocType)
 //      aParseMode=eDTDMode_strict;
   }
@@ -873,6 +883,7 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
 
 }
 
+ 
 /**
  *  This is called when it's time to find out 
  *  what mode the parser/DTD should run for this document.
@@ -1229,10 +1240,11 @@ NS_IMETHODIMP nsParser::CreateCompatibleDTD(nsIDTD** aDTD,
 
 }
 
-
 //#define TEST_DOCTYPES 
 #ifdef TEST_DOCTYPES
 static const char* doctypes[] = {
+
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\" \"http://www.w3.org/TR/html4/frameset.dtd\">",
 
     //here are the XHTML doctypes we'll treat accordingly...
 
@@ -1242,7 +1254,6 @@ static const char* doctypes[] = {
   
     //here are a few HTML doctypes we'll treat as strict...
 
-  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">",
   "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\">",
   "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\">",
   "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">",
@@ -1265,7 +1276,6 @@ static const char* doctypes[] = {
     //these we treat as transitional (unless it's disabled)...
 
   "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">",
-  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\" \"http://www.w3.org/TR/html4/frameset.dtd\">",
   "<!DOCTYPE \"-//W3C//DTD HTML 4.01 Transitional//EN\">",
   "<!DOCTYPE \"-//W3C//DTD HTML 4.1 Frameset//EN\">", 
   "<!DOCTYPE \"-//W3C//DTD HTML 4.0 Transitional//EN\">", 
@@ -1278,6 +1288,10 @@ static const char* doctypes[] = {
 
     //these we treat as compatible with quirks... (along with any other we encounter)...
 
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.02 Transitional//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">",
+
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.00 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">",
   "<!DOCTYPE \"-//W3C//DTD HTML 6.01 Transitional//EN\">",
   "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" >",
   "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\">",
