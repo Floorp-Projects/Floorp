@@ -56,11 +56,11 @@ function constructResults()
   results = results + "      <td> <b> Result </b> </td>";
   results = results + "    </tr>";
   results = results + "    <tr bgcolor = '" + mozloadcolor + "'>";
-  results = results + "      <td> Mozilla Image Loaded </td>";
+  results = results + "      <td> Mozilla Image Loaded[GIF] </td>";
   results = results + "      <td>" + mozload + "</td>";
   results = results + "    </tr>";
   results = results + "    <tr bgcolor = '" + seamonkeyloadcolor + "'>";
-  results = results + "      <td> SeaMonkey Image Loaded </td>";
+  results = results + "      <td> SeaMonkey Image Loaded[JPEG] </td>";
   results = results + "      <td>" + seamonkeyload + "</td>";
   results = results + "    </tr>";
   results = results + "    <tr bgcolor = '" + pageloadcolor + "'>";
@@ -118,7 +118,7 @@ function testPage()
 {
   document.write('<center><b> This is a Test Page </b></center>');
 
-  document.write('<center><img src="mozilla-banner.gif" height=58 width=600 onLoad = "mozillaimageLoaded();"></center>');
+  document.write('<center><img src="images/mozilla-banner.gif" height=58 width=600 onLoad = "mozillaimageLoaded();"></center>');
   document.write('<br> <br>');
 
   document.write('<table bgcolor="blue" border="4">');
@@ -136,7 +136,7 @@ function testPage()
   document.write('</table>');
 
   document.write('<center>');
-  document.write('<img SRC="9709TUANP.jpg" height=183 width=300 onLoad = "seamonkeyimageLoaded();">');
+  document.write('<img SRC="images/seamonkey.jpg" height=183 width=300 onLoad = "seamonkeyimageLoaded();">');
   document.write('</center>');
 }
 </script>
