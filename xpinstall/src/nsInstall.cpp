@@ -1125,7 +1125,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     if (szRegPackageName == nsnull)
     {
         *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
-        return NS_FALSE;
+        return PR_FALSE;
     }
 
     *szRegPackagePath = '0';
