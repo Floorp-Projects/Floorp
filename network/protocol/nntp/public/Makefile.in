@@ -23,17 +23,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS= \
-		nsIMsgNewsHost.h \
-		nsIMsgXOVERParser.h \
-		nsIMsgNewsArticleList.h \
-		nsIMsgNewsgroup.h \
-		$(NULL)
-
-IDLSRCS=	\
-		nsIMsgNewsHost.idl \
-		nsIMsgXOVERParser.idl \
-		nsIMsgNewsArticleList.idl \
-		nsIMsgNewsgroup.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
