@@ -192,7 +192,6 @@ NS_IMETHODIMP nsDeviceContextWin::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
       ::GetPaletteEntries(hDefaultPalette, 10, 10, &logPal->palPalEntry[COLOR_CUBE_SIZE + 10]);
   
       // Now set the color cube entries.
-      // XXX Need to gamma correct the palette entries...
       PALETTEENTRY* entry = &logPal->palPalEntry[10];
       NI_RGB*       map = colorSpace->cmap.map + 10;
       for (PRInt32 i = 0; i < COLOR_CUBE_SIZE; i++) {
