@@ -223,8 +223,8 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       }
     }
     
-    htmlEditor->EditorKeyPress(keyEvent);
-    ScrollSelectionIntoView();
+    if (NS_SUCCEEDED(htmlEditor->EditorKeyPress(keyEvent)))
+      ScrollSelectionIntoView();
   }
   else
     ScrollSelectionIntoView();
