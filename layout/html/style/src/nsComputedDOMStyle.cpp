@@ -75,6 +75,7 @@ private:
 
   nsresult GetDisplay(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
 
+  nsresult GetBehavior(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsCOMPtr<nsIPresShell> mPresShell;
   nsCOMPtr<nsIContent> mContent;
   nsString mPseudo;
@@ -217,8 +218,18 @@ NS_IMETHODIMP
 nsComputedDOMStyle::GetPropertyValue(const nsString& aPropertyName,
                                      nsString& aReturn)
 {
-  // TBI
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  nsCOMPtr<nsIDOMCSSValue> val;
+
+  aReturn.Truncate();
+
+  nsresult rv = GetPropertyCSSValue(aPropertyName, getter_AddRefs(val));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (val) {
+    rv = val->GetCssText(aReturn);
+  }
+
+  return rv;
 }
 
 
@@ -238,6 +249,8 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsString& aPropertyName,
   nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
 
   switch (prop) {
+  case eCSSProperty_behavior :
+    rv = GetBehavior(frame, *getter_AddRefs(val)); break;
   case eCSSProperty_display :
     rv = GetDisplay(frame, *getter_AddRefs(val)); break;
   case eCSSProperty_width :
@@ -257,10 +270,10 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsString& aPropertyName,
   }
 
   if (val) {
-    val->QueryInterface(NS_GET_IID(nsIDOMCSSValue), (void **)aReturn);
+    rv = val->QueryInterface(NS_GET_IID(nsIDOMCSSValue), (void **)aReturn);
   }
 
-  return NS_OK;
+  return rv;
 }
 
 
@@ -344,11 +357,47 @@ nsComputedDOMStyle::GetBackgroundRepeat(nsString& aBackgroundRepeat)
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
-NS_IMETHODIMP
-nsComputedDOMStyle::GetBehavior(nsString& aBehavior)
+#endif
+
+nsresult
+nsComputedDOMStyle::GetBehavior(nsIFrame *aFrame,
+                                nsIDOMCSSPrimitiveValue*& aValue)
 {
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  nsISupports *tmp = NS_STATIC_CAST(nsIComputedDOMStyle *, this);
+
+  nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue(tmp, mT2P);
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  nsStyleUserInterface uiStyle;
+  const nsStyleUserInterface* ui = nsnull;
+
+  if (aFrame) {
+    aFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)ui);
+  } else {
+    nsCOMPtr<nsIPresContext> presCtx;
+    mPresShell->GetPresContext(getter_AddRefs(presCtx));
+    NS_ENSURE_TRUE(presCtx, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIStyleContext> styleCtx;
+    presCtx->ResolveStyleContextFor(mContent, nsnull, PR_FALSE,
+                                    getter_AddRefs(styleCtx));
+    NS_ENSURE_TRUE(styleCtx, NS_ERROR_FAILURE);
+
+    styleCtx->GetStyle(eStyleStruct_UserInterface, uiStyle);
+    ui = &uiStyle;
+  }
+
+  if (ui) {
+    val->SetString(ui->mBehavior);
+  } else {
+    val->SetString("");
+  }
+
+  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
+                             (void **)&aValue);
 }
+
+#if 0
 
 NS_IMETHODIMP
 nsComputedDOMStyle::GetBorder(nsString& aBorder)
