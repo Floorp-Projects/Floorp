@@ -58,6 +58,7 @@ CPPSRCS = 				\
 	nsTLSSocketProvider.cpp		\
 	nsSDR.cpp			\
 	nsPK11TokenDB.cpp		\
+	nsNSSCertificate.cpp		\
 	$(NULL)
 
 REQUIRES = nspr security

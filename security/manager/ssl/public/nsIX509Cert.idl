@@ -38,7 +38,9 @@
 [scriptable, uuid(f0980f60-ee3d-11d4-998b-00b0d02354a0)]
 interface nsIX509Cert : nsISupports {
   /*
-   * We'l add methods as we need them.
+   * attributes for certs
    */
+  readonly attribute wstring commonName;
+  
 };
 

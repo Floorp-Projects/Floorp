@@ -1,29 +1,29 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+/*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- *
+ * 
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *
- * The Original Code is mozilla.org code.
- *
+ * 
+ * The Original Code is the Netscape security libraries.
+ * 
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation.  Portions created by Netscape are 
+ * Copyright (C) 2000 Netscape Communications Corporation.  All
  * Rights Reserved.
- *
+ * 
  * Contributor(s):
- *   Javier Delgadillo <javi@netscape.com>
- *
+ *  Ian McGreer <mcgreer@netscape.com>
+ *  Javier Delgadillo <javi@netscape.com>
+ * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
- * "GPL"), in which case the provisions of the GPL are applicable
- * instead of those above.  If you wish to allow use of your
+ * "GPL"), in which case the provisions of the GPL are applicable 
+ * instead of those above.  If you wish to allow use of your 
  * version of this file only under the terms of the GPL and not to
  * allow others to use your version of this file under the MPL,
  * indicate your decision by deleting the provisions above and
@@ -31,27 +31,31 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
+ *
  */
 
-#include "nsISupports.idl"
+#ifndef _NS_NSSCERTIFICATE_H_
+#define _NS_NSSCERTIFICATE_H_
 
-interface nsIX509Cert;
-interface nsIChannelSecurityInfo;
+#include "nsIX509Cert.h"
+#include "prtypes.h"
+#include "cert.h"
+#include "secitem.h"
 
-[scriptable, uuid(86960956-edb0-11d4-998b-00b0d02354a0)]
-interface nsIBadCertListener : nsISupports {
+/* Certificate */
+class nsNSSCertificate : public nsIX509Cert 
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIX509CERT
 
-  const short UNINIT_ADD_FLAG = -1;
-  const short ADD_TRUSTED_FOR_SESSION =1;
-  const short ADD_TRUSTED_PERMANENTLY = 2;
-  boolean unknownIssuer(in nsIChannelSecurityInfo socketInfo, 
-                        in nsIX509Cert cert,
-                        out short certAddType);
+  nsNSSCertificate(const char *certDER, int derLen);
+  nsNSSCertificate(CERTCertificate *cert);
+  /* from a request? */
+  virtual ~nsNSSCertificate();
 
-  boolean mismatchDomain(in nsIChannelSecurityInfo socketInfo,
-                         in nsIX509Cert cert);
-
-  boolean certExpired(in nsIChannelSecurityInfo socketInfo,
-                      in nsIX509Cert cert);
+private:
+  CERTCertificate *mCert;
 };
 
+#endif /* _NS_NSSCERTIFICATE_H_ */
