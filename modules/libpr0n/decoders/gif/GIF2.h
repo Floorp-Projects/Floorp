@@ -22,6 +22,8 @@
 #ifndef _GIF_H_
 #define _GIF_H_
 
+extern "C" {
+
 /* gif2.h  
    The interface for the GIF87/89a decoder. 
 */
@@ -318,6 +320,8 @@ extern int GIFCallback_DestroyTransparentPixel();
 */
 extern int GIFCallback_HaveDecodedRow();
 extern int GIFCallback_HaveImageAll();
+
+}
 
 #endif
 
