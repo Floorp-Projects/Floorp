@@ -6,8 +6,8 @@
 #		 on the tinderbox status page.
 
 
-# $Revision: 1.19 $ 
-# $Date: 2002/05/10 21:38:03 $ 
+# $Revision: 1.20 $ 
+# $Date: 2002/05/10 21:49:33 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
@@ -224,16 +224,16 @@ sub format_input_page {
   
   if (@ASSOCIATIONS) {
     
-    push @out, ( 
-                h3("Associated with"),
-                p(),
-                radio_group(
-                            -name=>'associations', 
-                            -value=>[@ASSOCIATIONS], 
-                            # -default=>,
-                            ),
-                p(),
-               )
+      push @out, ( 
+                   h3("Associated with"),
+                   p(),
+                   checkbox_group(
+                                  -name=>'associations', 
+                                  -value=>[@ASSOCIATIONS], 
+                                  # -default=>,
+                                  ),
+                   p(),
+                   );
   } # end if
   
   push @out, (
