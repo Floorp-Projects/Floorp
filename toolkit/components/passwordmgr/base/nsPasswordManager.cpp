@@ -597,8 +597,8 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
   doc->GetDocumentURL(getter_AddRefs(uri));
 
   nsCAutoString realm;
-  if (uri)
-    uri->GetPrePath(realm);
+  if (!GetPasswordRealm(uri, realm))
+    return NS_OK;
 
   SignonHashEntry* hashEnt;
   if (!mSignonTable.Get(realm, &hashEnt))
@@ -718,7 +718,9 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
   aFormNode->GetDocument()->GetDocumentURL(getter_AddRefs(uri));
 
   nsCAutoString realm;
-  uri->GetPrePath(realm);
+  if (!GetPasswordRealm(uri, realm))
+    return NS_OK;
+
   PRInt32 rejectValue;
   if (mRejectTable.Get(realm, &rejectValue)) {
     // The user has opted to never save passwords for this site.
@@ -1130,7 +1132,10 @@ nsPasswordManager::AutoCompleteSearch(const nsAString& aSearchString,
     doc->GetDocumentURL(getter_AddRefs(uri));
 
     nsCAutoString realm;
-    uri->GetPrePath(realm);
+    if (!GetPasswordRealm(uri, realm)) {
+      *aResult = nsnull;
+      return NS_OK;
+    }
 
     // Get all of the matches into an array that we can sort.
 
@@ -1576,7 +1581,8 @@ nsPasswordManager::FillPassword(nsIDOMEvent* aEvent)
   doc->GetDocumentURL(getter_AddRefs(documentURL));
 
   nsCAutoString realm;
-  documentURL->GetPrePath(realm);
+  if (!GetPasswordRealm(documentURL, realm))
+    return NS_OK;
 
   nsAutoString userValue;
   userField->GetValue(userValue);
@@ -1629,8 +1635,30 @@ nsPasswordManager::AttachToInput(nsIDOMHTMLInputElement* aElement)
   mAutoCompleteInputs.Put(aElement, 1);
 }
 
-//////////////////////////////////////
-// nsSingleSignonPrompt
+PRBool
+nsPasswordManager::GetPasswordRealm(nsIURI* aURI, nsACString& aRealm)
+{
+  // Note: this _is_ different from getting the uri's prePath!
+  // We don't want to include a username or password that's part of the
+  // URL in the host key... it will cause lookups to work incorrectly, and will
+  // also cause usernames and passwords to be stored in cleartext.
+
+  nsCAutoString buffer;
+  aURI->GetScheme(buffer);
+
+  aRealm.Append(buffer);
+  aRealm.Append(NS_LITERAL_CSTRING("://"));
+
+  aURI->GetHostPort(buffer);
+  if (buffer.IsEmpty()) {
+    // The scheme does not support hostnames, so don't attempt to save/restore
+    // any signon data. (see bug 159484)
+    return PR_FALSE;
+  }
+
+  aRealm.Append(buffer);
+  return PR_TRUE;
+}
 
 /* static */ void
 nsPasswordManager::GetLocalizedString(const nsAString& key,

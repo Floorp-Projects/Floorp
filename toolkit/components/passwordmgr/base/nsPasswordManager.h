@@ -155,6 +155,7 @@ protected:
 
   nsresult FillPassword(nsIDOMEvent* aEvent);
   void AttachToInput(nsIDOMHTMLInputElement* aElement);
+  PRBool GetPasswordRealm(nsIURI* aURI, nsACString& aRealm);
 
   static PLDHashOperator PR_CALLBACK FindEntryEnumerator(const nsACString& aKey,
                                                          SignonHashEntry* aEntry,
