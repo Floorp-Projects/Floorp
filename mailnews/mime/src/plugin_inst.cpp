@@ -362,13 +362,13 @@ nsresult MimePluginInstance::Write(const char* aBuf, PRUint32 aCount,
     char        outBuf[1024];
 char *output = "\
 <HTML>\
-<FRAMESET ROWS=\"30%,70%\">\
+<FRAMESET ROWS=\"30%%,70%%\">\
 <FRAME NAME=messageHeader SRC=\"%s?header=only\">\
 <FRAME NAME=messageBody SRC=\"%s?header=none\">\
 </FRAMESET>\
 </HTML>";
 
-    sprintf(outBuf, output, mURL, mURL);
+    PR_snprintf(outBuf, sizeof(outBuf), output, mURL, mURL);
     if (mEmitter)
       mEmitter->Write(outBuf, PL_strlen(outBuf), &written);
     mTotalRead += written;
