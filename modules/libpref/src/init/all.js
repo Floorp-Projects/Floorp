@@ -305,8 +305,6 @@ pref("capability.policy.default.Window.fullScreen", "noAccess");
 pref("capability.policy.default.Window.history", "allAccess");
 pref("capability.policy.default.Window.length", "allAccess");
 pref("capability.policy.default.Window.location", "allAccess");
-// window.openDialog is insecure and must be made inaccessible from web scripts - see bug 56009
-pref("capability.policy.default.Window.openDialog", "noAccess");
 pref("capability.policy.default.Window.opener", "allAccess");
 pref("capability.policy.default.Window.parent", "allAccess");
 pref("capability.policy.default.Window.self", "allAccess");
