@@ -207,6 +207,8 @@ function con_icommand (e)
 console.onInputBreak =
 function cli_ibreak(e)
 {    
+    var i;
+    
     if (!e.inputData)
     {  /* if no input data, just list the breakpoints */
         var bplist = console.breakpoints.childData;
@@ -218,7 +220,7 @@ function cli_ibreak(e)
         }
         
         display (getMsg(MSN_BP_HEADER, bplist.length));
-        for (var i = 0; i < bplist.length; ++i)
+        for (i = 0; i < bplist.length; ++i)
         {
             var bpr = bplist[i];
             display (getMsg(MSN_BP_LINE, [i, bpr.fileName, bpr.line,
@@ -241,7 +243,7 @@ function cli_ibreak(e)
         return false;
     }
     
-    for (var i in matchingFiles)
+    for (i in matchingFiles)
         setBreakpoint (matchingFiles[i], ary[2]);
     
     return true;
@@ -292,7 +294,7 @@ function cli_icommands (e)
     if (!console.frames)
     {
         display (MSG_ERR_NO_STACK, MT_ERROR);
-        return false;
+        return;
     }
     cont();
 }

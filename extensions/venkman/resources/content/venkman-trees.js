@@ -1113,7 +1113,7 @@ console.stackView.getCellProperties =
 function sv_cellprops (index, colID, properties)
 {
     if (colID != "stack-col-0")
-        return;
+        return null;
     
     var row = this.childData.locateChildByVisualRow(index);
     if (row)
@@ -1136,7 +1136,7 @@ console.projectView.getCellProperties =
 function pv_cellprops (index, colID, properties)
 {
     if (colID != "project-col-0")
-        return;
+        return null;
     
     var row = this.childData.locateChildByVisualRow(index);
     if (row)

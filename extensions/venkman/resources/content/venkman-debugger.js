@@ -596,7 +596,7 @@ function XXXsetSourceFunctionMarks (url)
     if (!source || !scriptArray)
     {
         dd ("Can't set function marks for " + url);
-        return false;
+        return;
     }
     
     for (var i = 0; i < scriptArray.length; ++i)
@@ -726,7 +726,7 @@ function disableBreakpointByNumber (number)
     if (!bpr)
     {
         display (getMsg(MSN_ERR_BP_NOINDEX, number, MT_ERROR));
-        return 0;
+        return;
     }
 
     bpr.enabled = false;

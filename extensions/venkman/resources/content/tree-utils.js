@@ -1064,6 +1064,12 @@ function tov_isctrempt (index)
     return !row || !row.childData;
 }
 
+TreeOView.prototype.isSeparator =
+function tov_isseparator (index)
+{
+    return false;
+}
+
 TreeOView.prototype.getParentIndex =
 function tov_getpi (index)
 {
