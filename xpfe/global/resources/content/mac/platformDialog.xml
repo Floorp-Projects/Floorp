@@ -17,8 +17,8 @@
         <xul:button dlgtype="extra2" class="dialog-button" hidden="true" label=""/>
         <xul:button dlgtype="extra1" class="dialog-button" hidden="true" label=""/>
         <xul:spacer flex="1"/>
-        <xul:button dlgtype="cancel" class="dialog-button" hidden="true"/>
-        <xul:button dlgtype="accept" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="cancel" class="dialog-button"/>
+        <xul:button dlgtype="accept" class="dialog-button"/>
       </xul:hbox>
     </content>
 
