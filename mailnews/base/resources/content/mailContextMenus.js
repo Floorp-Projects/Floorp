@@ -272,6 +272,7 @@ function fillFolderPaneContextMenu()
   var specialFolder = GetFolderAttribute(folderTree, folderResource, "SpecialFolder");
   var canSubscribeToFolder = (serverType == "nntp") || (serverType == "imap");
   var isNewsgroup = !isServer && serverType == 'nntp';
+  var isMailFolder = !isServer && serverType != 'nntp';
   var canGetMessages =  (isServer && (serverType != "nntp") && (serverType !="none")) || isNewsgroup;
 
   EnableMenuItem("folderPaneContext-properties", true);
@@ -312,7 +313,7 @@ function fillFolderPaneContextMenu()
 
 // End of News folder context menu =======================================
 
-  ShowMenuItem("folderPaneContext-markMailFolderAllRead", (numSelected <= 1) && ! isNewsgroup);
+  ShowMenuItem("folderPaneContext-markMailFolderAllRead", (numSelected <= 1) && isMailFolder);
   EnableMenuItem("folderPaneContext-markMailFolderAllRead", true);
 
   ShowMenuItem("folderPaneContext-searchMessages", (numSelected<=1));
