@@ -163,8 +163,8 @@ class nsIParser : public nsISupports {
      ******************************************************************************************/
     virtual PRBool    EnableParser(PRBool aState) = 0;
     virtual PRBool    IsParserEnabled() = 0;
-    virtual nsresult  Parse(nsIURL* aURL,nsIStreamObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE) = 0;
-    virtual nsresult	Parse(nsIInputStream& aStream, PRBool aEnableVerify=PR_FALSE) = 0;
+    virtual nsresult  Parse(nsIURL* aURL,nsIStreamObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE, void* aKey=0) = 0;
+    virtual nsresult	Parse(nsIInputStream& aStream, PRBool aEnableVerify=PR_FALSE, void* aKey=0) = 0;
     virtual nsresult  Parse(nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify,PRBool aLastCall) = 0;
 
     virtual PRBool    IsValidFragment(nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType)=0;

@@ -165,7 +165,7 @@ friend class CTokenHandler;
      * @param   aListener is a listener to forward notifications to
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aEnableVerify=PR_FALSE);
+    virtual nsresult Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aEnableVerify=PR_FALSE, void* aKey=0);
 
     /**
      * Cause parser to parse input from given stream 
@@ -173,7 +173,7 @@ friend class CTokenHandler;
      * @param   aStream is the i/o source
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(nsIInputStream& aStream,PRBool aEnableVerify=PR_FALSE);
+    virtual nsresult Parse(nsIInputStream& aStream,PRBool aEnableVerify=PR_FALSE, void* aKey=0);
 
     /**
      * @update	gess5/11/98
