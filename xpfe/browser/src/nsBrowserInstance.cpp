@@ -276,7 +276,9 @@ public:
     nsString data(someData);
     if (data.Find(mLastRequest) == 0) {
       char* dataStr = data.ToNewCString();
-      printf("########## PageCycler loaded: %s\n", dataStr);
+      printf("########## PageCycler loaded (%d ms): %s\n", 
+             PR_IntervalToMilliseconds(PR_IntervalNow() - mIntervalTime), 
+             dataStr);
       nsCRT::free(dataStr);
 
       nsAutoString url;
@@ -340,6 +342,7 @@ public:
     const PRUnichar* url = self->mLastRequest.GetUnicode();
     printf("########## PageCycler starting: %s\n", NS_ConvertUCS2toUTF8(url).get());
 
+    self->mIntervalTime = PR_IntervalNow();
     self->mAppCore->LoadUrl(url);
 
     // start new timer
@@ -381,7 +384,7 @@ public:
   }
 
 protected:
-  nsBrowserInstance*     mAppCore;
+  nsBrowserInstance*    mAppCore;
   nsFileSpec            mFile;
   char*                 mBuffer;
   char*                 mCursor;
@@ -389,6 +392,7 @@ protected:
   nsCOMPtr<nsITimer>    mShutdownTimer;
   PRUint32              mTimeoutValue;
   PRUint32              mWaitValue;
+  PRIntervalTime        mIntervalTime;
 };
 
 NS_IMPL_ADDREF(PageCycler)
