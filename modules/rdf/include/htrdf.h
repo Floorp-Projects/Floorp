@@ -142,6 +142,7 @@ typedef HT_NotificationStruct* HT_Notification;
 #define	HT_EVENT_COLUMN_SHOW			0x01000000UL
 #define	HT_EVENT_COLUMN_HIDE			0x02000000UL
 #define HT_EVENT_VIEW_MODECHANGED		0x04000000UL
+#define HT_EVENT_VIEW_WINDOWTYPE_CHANGED 0x04000000UL
 
 #define HT_EVENT_NO_NOTIFICATION_MASK           0x00000000UL
 #define HT_EVENT_DEFAULT_NOTIFICATION_MASK      0xFFFFFFFFUL
@@ -150,6 +151,12 @@ typedef HT_NotificationStruct* HT_Notification;
 /*-----------------------------------------------------------------------*/
 /*                    View/Pane Creation / Destruction / Management           */
 /*-----------------------------------------------------------------------*/
+
+/* Window Types for Panes */
+#define HT_POPUP_WINDOW			0
+#define HT_DOCKED_WINDOW		1
+#define HT_STANDALONE_WINDOW	2
+#define HT_EMBEDDED_WINDOW		3
 
 PR_PUBLIC_API(HT_Pane) HT_PaneFromResource(RDF_Resource r, HT_Notification n, PRBool autoFlush, PRBool autoOpen, PRBool useColumns);
 
@@ -293,10 +300,10 @@ PR_PUBLIC_API(PRBool)	HT_IsNodeDataEditable(HT_Resource node,
 PR_PUBLIC_API(HT_Error) HT_SetNodeData (HT_Resource node, void *token,
 					uint32 tokenType, void *data);
 PR_PUBLIC_API(HT_Error) HT_SetNodeName (HT_Resource node, void *data);
-PR_PUBLIC_API(HT_Error) HT_ToggleTreeMode(HT_View view);
-PR_PUBLIC_API(PRBool) HT_InNavigationMode(HT_View view);
-PR_PUBLIC_API(HT_Error) HT_SetTreeStateForButton(HT_Resource node, char* state);
-PR_PUBLIC_API(char*) HT_GetTreeStateForButton(HT_Resource node);
+PR_PUBLIC_API(HT_Error) HT_SetTreeStateForButton(HT_Resource node, int state);
+PR_PUBLIC_API(int) HT_GetTreeStateForButton(HT_Resource node);
+PR_PUBLIC_API(HT_Error) HT_SetWindowType(HT_Pane pane, int windowType);
+PR_PUBLIC_API(int) HT_GetWindowType(HT_Pane pane);
 
 /*
  * HT_GetLargeIconURL / HT_GetSmallIconURL

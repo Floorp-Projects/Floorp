@@ -5256,14 +5256,15 @@ HT_GetTemplateData(HT_Resource node, void* token, uint32 tokenType, void **nodeD
 	
 	/* Use the template instead */
 	
-	/* Figure out which template to use based on the current mode of this view. */
+	/* Figure out which template to use based on the current window state of this view. */
 	if (HT_GetPane(HT_GetView(node))->toolbar)
 		return HT_GetNodeData(HT_TopNode(HT_GetSelectedView(gChromeTemplate)),
 							  token, tokenType, nodeData);
-	if (HT_InNavigationMode(HT_GetView(node)))
-		return HT_GetNodeData(HT_TopNode(HT_GetSelectedView(gNavigationTemplate)), 
+	if (HT_GetPane(HT_GetView(node))->windowType == HT_STANDALONE_WINDOW)
+		return HT_GetNodeData(HT_TopNode(HT_GetSelectedView(gManagementTemplate)),
 							  token, tokenType, nodeData);
-	return HT_GetNodeData(HT_TopNode(HT_GetSelectedView(gManagementTemplate)),
+	else
+		return HT_GetNodeData(HT_TopNode(HT_GetSelectedView(gNavigationTemplate)), 
 							  token, tokenType, nodeData);
 }
 
@@ -5515,7 +5516,7 @@ HT_IsNodeDataEditable(HT_Resource node, void *token, uint32 tokenType)
 			(token == gNavCenter->RDF_smallPressedIcon) || (token == gNavCenter->RDF_largePressedIcon) ||
 			(token == gNavCenter->buttonTooltipText) || (token == gNavCenter->buttonStatusbarText) ||
 			(token == gNavCenter->urlBar) || (token == gNavCenter->urlBarWidth) || 
-			(token == gNavCenter->buttonTreeMode) || (token == gNavCenter->buttonTreeState) ||
+			(token == gNavCenter->buttonTreeState) ||
 			(token == gNavCenter->useInlineEditing) || (token == gNavCenter->useSingleClick) ||
 			(token == gNavCenter->loadOpenState) || (token == gNavCenter->saveOpenState) ||
 			(token == gNavCenter->useSelection) || (token == gNavCenter->controlStripFGColor) ||
@@ -5561,90 +5562,24 @@ HT_IsNodeDataEditable(HT_Resource node, void *token, uint32 tokenType)
 	return(canEditFlag);
 }
 
-
-
-PR_PUBLIC_API(PRBool)
-HT_InNavigationMode(HT_View view)
-{
-	char* answer;
-	XP_ASSERT(view != NULL);
-
-	/* First check this view. */
-	if (HT_GetNodeData(HT_TopNode(view), gNavCenter->buttonTreeMode, HT_COLUMN_STRING, &answer))
-	{
-		return XP_STRCASECMP("Management", answer);
-	}
-
-	/* Need to check the chrome default template to determine which mode is dominant
-		by default */
-	if (HT_GetNodeData(HT_TopNode(HT_GetSelectedView(gChromeTemplate)), 
-						  gNavCenter->buttonTreeMode, HT_COLUMN_STRING, &answer))
-	{
-		return XP_STRCASECMP("Management", answer);
-	}
-
-	return PR_TRUE;
-}
-
-
-	
-PR_PUBLIC_API(HT_Error)
-HT_ToggleTreeMode(HT_View view)
-{
-	HT_Resource nodeToModify;
-	HT_Error result;
-	char* data;
-
-	XP_ASSERT(view != NULL);
-
-	/* Query this node for its current state. */
-	if (HT_GetNodeData(HT_TopNode(view), gNavCenter->buttonTreeMode, HT_COLUMN_STRING, &data))
-		nodeToModify = HT_TopNode(view);
-	else 
-	{
-		nodeToModify = HT_TopNode(HT_GetSelectedView(gChromeTemplate));
-		HT_GetNodeData(HT_TopNode(HT_GetSelectedView(gChromeTemplate)), 
-							gNavCenter->buttonTreeMode, HT_COLUMN_STRING, &data);
-	}
-
-	if ((data != NULL) && XP_STRCASECMP("Navigation", data))
-	{
-		result = HT_SetNodeData(nodeToModify, gNavCenter->buttonTreeMode, HT_COLUMN_STRING, 
-						"Navigation");
-		resynchItem(nodeToModify, gNavCenter->buttonTreeMode, (void*)("Navigation"), TRUE);
-	}
-
-	else 
-	{
-		result = HT_SetNodeData(nodeToModify, gNavCenter->buttonTreeMode, HT_COLUMN_STRING,
-						"Management");
-		resynchItem(nodeToModify, gNavCenter->buttonTreeMode, (void*)("Management"), TRUE);
-	}
-
-	sendNotification(HT_TopNode(view),  HT_EVENT_VIEW_MODECHANGED);
-
-	return result;
-}
-
-
-
-PR_PUBLIC_API(char*)
+PR_PUBLIC_API(int)
 HT_GetTreeStateForButton(HT_Resource node)
 {
 	char* answer = NULL;
 	
 	if (HT_GetTemplateData(node, gNavCenter->buttonTreeState, HT_COLUMN_STRING, &answer))
 	{
-		return answer;
+		if (!XP_STRCASECMP(answer, "Docked"))
+			return HT_DOCKED_WINDOW;
 	}
 
-	return "Popup";
+	return HT_POPUP_WINDOW;
 }
 
 
 	
 PR_PUBLIC_API(HT_Error)
-HT_SetTreeStateForButton(HT_Resource node, char* state)
+HT_SetTreeStateForButton(HT_Resource node, int state)
 {
 	HT_Resource nodeToModify;
 	void* data;
@@ -5654,10 +5589,32 @@ HT_SetTreeStateForButton(HT_Resource node, char* state)
 		nodeToModify = node;
 	else nodeToModify = HT_TopNode(HT_GetSelectedView(gChromeTemplate));
 
-	return HT_SetNodeData(nodeToModify, gNavCenter->buttonTreeState, HT_COLUMN_STRING,
-						  state);
+	if (state == HT_DOCKED_WINDOW)
+		return HT_SetNodeData(nodeToModify, gNavCenter->buttonTreeState, HT_COLUMN_STRING,
+						  "Docked");
+	else if (state == HT_POPUP_WINDOW)
+		return HT_SetNodeData(nodeToModify, gNavCenter->buttonTreeState, HT_COLUMN_STRING,
+						  "Popup");
+
+	return HT_NoErr;
 }
 
+PR_PUBLIC_API(int)
+HT_GetWindowType(HT_Pane pane)
+{
+	return pane->windowType;
+}
+
+PR_PUBLIC_API(HT_Error)
+HT_SetWindowType(HT_Pane pane, int windowType)
+{
+	XP_ASSERT(pane != NULL);
+	XP_ASSERT(pane->selectedView != NULL);
+
+	pane->windowType = windowType;
+	sendNotification(HT_TopNode(pane->selectedView),  HT_EVENT_VIEW_MODECHANGED);
+	return HT_NoErr;
+}
 
 /* XXX HT_NodeDisplayString is obsolete! Don't use. */
 
@@ -6039,7 +5996,7 @@ htIsPropertyInMoreOptions(RDF_Resource r)
 	    (r == gNavCenter->RDF_smallPressedIcon) || (r == gNavCenter->RDF_largePressedIcon) ||
 	    (r == gNavCenter->buttonTooltipText) || (r == gNavCenter->buttonStatusbarText) ||
 	    (r == gNavCenter->urlBar) || (r == gNavCenter->urlBarWidth) || 
-		(r == gNavCenter->buttonTreeMode) || (r == gNavCenter->buttonTreeState) ||
+		(r == gNavCenter->buttonTreeState) ||
 		(r == gNavCenter->useInlineEditing) || (r == gNavCenter->useSingleClick) ||
 		(r == gNavCenter->loadOpenState) || (r == gNavCenter->saveOpenState) ||
 		(r == gNavCenter->useSelection) || (r == gNavCenter->controlStripFGColor) ||

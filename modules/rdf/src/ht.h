@@ -62,7 +62,6 @@
 
 #define HTDEL				remoteStoreRemove
 
-
 	/* external string references in allxpstr */
 extern	int	RDF_HTML_STR, RDF_HTML_STR_1, RDF_HTML_STR_2, RDF_HTML_STR_3;
 extern	int	RDF_HTML_STR_4, RDF_HTML_STR_5, RDF_HTML_STR_NUMBER;
@@ -123,6 +122,7 @@ typedef struct _HT_PaneStruct {
 	PRBool				toolbar;
 	PRBool				bookmarkmenu;
 	PRBool				special;
+	int					windowType;
 	char				*windowURL;
 	char				*htdburl;
 	RDFT				htdb;

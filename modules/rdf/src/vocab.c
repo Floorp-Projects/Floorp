@@ -270,7 +270,6 @@ createNavCenterVocab () {
   gNavCenter->titleBarShowText = newResource("titleBarShowText", 0 /* XXX */);
 
   /* Buttons */
-  gNavCenter->buttonTreeMode = newResource("buttonTreeMode", 0 /* XXX */);
   gNavCenter->buttonTreeState = newResource("buttonTreeState", 0 /* XXX */);
 
   /* Cookies */

@@ -189,7 +189,6 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource urlBar; /* Whether or not the button is a URL bar. */
   RDF_Resource urlBarWidth; /* The width of the URL bar. */
   
-  RDF_Resource buttonTreeMode; /* The tree mode (navigation, management) for the button. */
   RDF_Resource buttonTreeState; /* The tree state (docked, popup) for a button. */
 
   RDF_Resource controlStripFGColor; /* The tree's control strip foreground */
