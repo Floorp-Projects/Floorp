@@ -120,7 +120,9 @@ public:
 
 protected:
 	nsresult ParseFolder(nsFileSpec& path);
-  nsresult CreateSubFolders(void);
+	nsresult CreateSubFolders(nsFileSpec &path);
+	nsresult AddDirectorySeparator(nsFileSpec &path);
+
 
 protected:
   nsNativeFileSpec mPath;

@@ -117,13 +117,10 @@ nsShouldIgnoreFile(nsString& name)
 }
 
 nsresult
-nsMsgLocalMailFolder::CreateSubFolders(void)
+nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 {
   nsresult rv = NS_OK;
   nsAutoString currentFolderName;
-  nsFileSpec path;
-  rv = GetPath(path);
-  if (NS_FAILED(rv)) return rv;
 
   nsIRDFService* rdf;
   rv = nsServiceManager::GetService(kRDFServiceCID,
@@ -198,17 +195,11 @@ nsMsgLocalMailFolder::Enumerate(nsIEnumerator* *result)
                                     (nsIBidirectionalEnumerator**)result);
 }
 
-NS_IMETHODIMP
-nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
+nsresult
+nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
 {
-  if (!mInitialized) {
-    nsFileSpec path;
-    nsresult rv = GetPath(path);
-    if (NS_FAILED(rv)) return rv;
-
-    // we have to treat the root folder specially, because it's name
-    // doesn't end with .sbd
-    if (nsCRT::strcmp(mURI, kMailboxRootURI) == 0) {
+	nsresult rv = NS_OK;
+	if (nsCRT::strcmp(mURI, kMailboxRootURI) == 0) {
       // don't concat the full separator with .sbd
     }
     else {
@@ -226,11 +217,28 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
       path = str;
     }
 
+	return rv;
+}
+
+NS_IMETHODIMP
+nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
+{
+  if (!mInitialized) {
+    nsFileSpec path;
+    nsresult rv = GetPath(path);
+    if (NS_FAILED(rv)) return rv;
+	
+	rv = AddDirectorySeparator(path);
+	if(NS_FAILED(rv)) return rv;
+
+    // we have to treat the root folder specially, because it's name
+    // doesn't end with .sbd
+
     PRInt32 newFlags = MSG_FOLDER_FLAG_MAIL;
     if (path.IsDirectory()) {
       newFlags |= (MSG_FOLDER_FLAG_DIRECTORY | MSG_FOLDER_FLAG_ELIDED);
       SetFlag(newFlags);
-      rv = CreateSubFolders();
+      rv = CreateSubFolders(path);
     }
     else {
       UpdateSummaryTotals();
