@@ -845,7 +845,7 @@ void nsImapServerResponseParser::mailbox(mailbox_spec *boxSpec)
 		NS_ASSERTION(boxSpec->connection->GetCurrentUrl(), "box spec has connection with null url");
 		//boxSpec->hostName = nsnull;
 		//if (boxSpec->connection && boxSpec->connection->GetCurrentUrl())
-		boxSpec->connection->GetCurrentUrl()->AllocateCannonicalPath(boxname, boxSpec->hierarchySeparator, &boxSpec->allocatedPathName);
+		boxSpec->connection->GetCurrentUrl()->AllocateCanonicalPath(boxname, boxSpec->hierarchySeparator, &boxSpec->allocatedPathName);
 		boxSpec->connection->GetCurrentUrl()->GetHost(&boxSpec->hostName);
 		PR_FREEIF( boxname);
 		// storage for the boxSpec is now owned by server connection
@@ -2206,7 +2206,7 @@ struct mailbox_spec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const 
 			char *convertedName = fServerConnection.CreateUtf7ConvertedString(mailboxNameToConvert, PR_FALSE);
 			if (convertedName)
 	    	{
-	    		fServerConnection.GetCurrentUrl()->AllocateCannonicalPath(convertedName, returnSpec->hierarchySeparator, &convertedMailboxName);
+	    		fServerConnection.GetCurrentUrl()->AllocateCanonicalPath(convertedName, returnSpec->hierarchySeparator, &convertedMailboxName);
 	    		PR_Free(convertedName);
 	    	}
 	    }
