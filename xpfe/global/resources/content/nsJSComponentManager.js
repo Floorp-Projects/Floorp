@@ -65,7 +65,7 @@ var nsJSComponentManager = {
       try
         {
           var iid = Components.interfaces[aIID];
-          return Components.classes[aID].getService(iid);
+          return Components.classesByID[aID].getService(iid);
         }
       catch(e)
         {
