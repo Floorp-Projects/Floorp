@@ -2447,7 +2447,8 @@ nsCSSFrameConstructor::GetParentFrame(nsIPresShell*            aPresShell,
   aIsPseudoParent = PR_FALSE;
 
   if (nsLayoutAtoms::tableOuterFrame == aChildFrameType) { // table child
-    if (IsTableRelated(parentFrameType.get(), PR_TRUE)) { // need pseudo cell parent
+    if (IsTableRelated(parentFrameType.get(), PR_TRUE) &&
+        (nsLayoutAtoms::tableCaptionFrame != parentFrameType.get()) ) { // need pseudo cell parent
       rv = GetPseudoCellFrame(aPresShell, aPresContext, aTableCreator, aState, aParentFrameIn);
       if (NS_FAILED(rv)) return rv;
       pseudoParentFrame = pseudoFrames.mCellInner.mFrame;
