@@ -3080,8 +3080,23 @@ nsBookmarksService::GetSynthesizedType(nsIRDFResource *aNode, nsIRDFNode **aType
     PRBool isContainer = PR_FALSE;
     (void)gRDFC->IsSeq(mInner, aNode, &isContainer);
 
-    *aType = isContainer ? kNC_Folder : kNC_Bookmark;
-      NS_ADDREF(*aType);
+    if (isContainer)
+    {
+      *aType =  kNC_Folder;
+    }
+	else
+	{
+#if defined(XP_BEOS)
+      //solution for BeOS - bookmarks are stored as file attributes. 
+      PRBool isBookmarkedFlag = PR_FALSE;
+      rv = IsBookmarkedInternal(aNode, &isBookmarkedFlag);
+      if (!isBookmarkedFlag || NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE))
+        *aType = kNC_URL;
+      else
+#endif
+       *aType = kNC_Bookmark;	
+    }
+    NS_ADDREF(*aType);
   }
   return(NS_OK);
 }
@@ -4798,13 +4813,15 @@ nsBookmarksService::LoadBookmarks()
   //
   // pref. See bug 22642 for details. 
   //
+  PRBool useDynamicSystemBookmarks;
 #ifdef XP_BEOS
-  PRBool useDynamicSystemBookmarks = PR_TRUE;
+  // always dynamic in BeOS
+  useDynamicSystemBookmarks = PR_TRUE;
 #else
-  PRBool useDynamicSystemBookmarks = PR_FALSE;
-#endif
+  useDynamicSystemBookmarks = PR_FALSE;
   if (bookmarksPrefs)
     bookmarksPrefs->GetBoolPref("import_system_favorites", &useDynamicSystemBookmarks);
+#endif
 
   char* systemBookmarksURL = nsnull;
 #if defined(XP_WIN) || defined(XP_BEOS)
