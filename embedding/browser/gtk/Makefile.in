@@ -25,10 +25,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS=src
-
-ifdef ENABLE_TESTS
-DIRS += tests
-endif
+DIRS=src tests
 
 include $(topsrcdir)/config/rules.mk
