@@ -49,17 +49,19 @@
 #include "nsIFrame.h"
 
 #include "nsIWebShell.h"
-extern nsresult NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
-                                 nsIAtom* aTag, nsIWebShell* aWebShell);  // XXX move
-extern nsresult NS_NewHTMLFrame(nsIHTMLContent** aInstancePtrResult,
-                                 nsIAtom* aTag, nsIWebShell* aWebShell);  // XXX move
-extern nsresult NS_NewHTMLFrameset(nsIHTMLContent** aInstancePtrResult,
-                                 nsIAtom* aTag, nsIWebShell* aWebShell);  // XXX move
-
-// XXX attribute values have entities in them - use the parsers expander!
 
 // XXX Go through a factory for this one
 #include "nsICSSParser.h"
+
+#define XXX_ART_HACK 1
+
+static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
+static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
+static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
+static NS_DEFINE_IID(kIHTTPUrlIID, NS_IHTTPURL_IID);
+static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
+
+//----------------------------------------------------------------------
 
 #ifdef NS_DEBUG
 static PRLogModuleInfo* gSinkLogModuleInfo;
@@ -100,29 +102,22 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_IID(kIHTTPUrlIID, NS_IHTTPURL_IID);
-static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
-static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
-static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
-static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
+class SinkContext;
 
 class HTMLContentSink : public nsIHTMLContentSink {
 public:
-
-  HTMLContentSink();
-  ~HTMLContentSink();
-
   void* operator new(size_t size) {
     void* rv = ::operator new(size);
     nsCRT::zero(rv, size);
     return (void*) rv;
   }
 
+  HTMLContentSink();
+  ~HTMLContentSink();
+
   nsresult Init(nsIDocument* aDoc,
                 nsIURL* aURL,
                 nsIWebShell* aContainer);
-  nsIHTMLContent* GetCurrentContainer(eHTMLTags* aType);
-  nsIHTMLContent* GetTableParent();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -134,7 +129,9 @@ public:
   NS_IMETHOD WillResume(void);
 
   // nsIHTMLContentSink
-  NS_IMETHOD PushMark();
+  NS_IMETHOD BeginContext(PRInt32 aID);
+  NS_IMETHOD EndContext(PRInt32 aID);
+  NS_IMETHOD SetContext(PRInt32 aID);
   NS_IMETHOD SetTitle(const nsString& aValue);
   NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
   NS_IMETHOD CloseHTML(const nsIParserNode& aNode);
@@ -152,130 +149,819 @@ public:
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
 
-protected:
-
-  void StartLayout();
-
-  void ReflowNewContent();
-
-  //----------------------------------------------------------------------
-  // Leaf tag handler routines that translate a leaf tag into a
-  // content object, processing all of the tag attributes.
-
-  nsresult ProcessAREATag(const nsIParserNode& aNode);
-  nsresult ProcessBASETag(const nsIParserNode& aNode);
-  nsresult ProcessMETATag(const nsIParserNode& aNode);
-  nsresult ProcessSTYLETag(const nsIParserNode& aNode);
-  nsresult ProcessSCRIPTTag(const nsIParserNode& aNode);
-  nsresult ProcessLINKTag(const nsIParserNode& aNode);
-
-  nsresult ProcessBRTag(nsIHTMLContent** aInstancePtrResult,
-                        const nsIParserNode& aNode);
-  nsresult ProcessEMBEDTag(nsIHTMLContent** aInstancePtrResult,
-                           const nsIParserNode& aNode);
-  nsresult ProcessFrameTag(nsIHTMLContent** aInstancePtrResult,
-                           const nsIParserNode& aNode);
-  nsresult ProcessHRTag(nsIHTMLContent** aInstancePtrResult,
-                        const nsIParserNode& aNode);
-  nsresult ProcessINPUTTag(nsIHTMLContent** aInstancePtrResult,
-                           const nsIParserNode& aNode);
-  nsresult ProcessIMGTag(nsIHTMLContent** aInstancePtrResult,
-                         const nsIParserNode& aNode);
-  nsresult ProcessSPACERTag(nsIHTMLContent** aInstancePtrResult,
-                            const nsIParserNode& aNode);
-  nsresult ProcessCOLTag(nsIHTMLContent** aInstancePtrResult,
-                         const nsIParserNode& aNode);
-  nsresult ProcessTEXTAREATag(nsIHTMLContent** aInstancePtrResult,
-                              const nsIParserNode& aNode);
-  nsresult ProcessWBRTag(nsIHTMLContent** aInstancePtrResult,
-                         const nsIParserNode& aNode);
-
-  //----------------------------------------------------------------------
-
-  nsresult ProcessOpenSELECTTag(nsIHTMLContent** aInstancePtrResult,
-                                const nsIParserNode& aNode);
-  nsresult ProcessCloseSELECTTag(const nsIParserNode& aNode);
-  nsresult ProcessOpenOPTIONTag(nsIHTMLContent** aInstancePtrResult,
-	                            const nsIParserNode& aNode);
-  nsresult ProcessCloseOPTIONTag(const nsIParserNode& aNode);
-  nsresult ProcessOPTIONTagContent(const nsIParserNode& aNode);
-
-  nsresult ProcessIFRAMETag(nsIHTMLContent** aInstancePtrResult,
-                            const nsIParserNode& aNode);
-  nsresult ProcessFRAMESETTag(nsIHTMLContent** aInstancePtrResult,
-                            const nsIParserNode& aNode);
-  //----------------------------------------------------------------------
-
-  PRBool FlushText();
-
-  nsresult AddText(const nsString& aText, nsIHTMLContent** aContent);
-
-  void AppendToCorrectParent(nsHTMLTag aParentTag,
-                             nsIHTMLContent* aParent,
-                             nsHTMLTag aChildTag,
-                             nsIHTMLContent* aChild,
-                             PRBool aAllowReflow);
-
-  void GetAttributeValueAt(const nsIParserNode& aNode,
-                           PRInt32 aIndex,
-                           nsString& aResult);
-
-  PRBool FindAttribute(const nsIParserNode& aNode,
-                       const nsString& aKeyName,
-                       nsString& aResult);
-
-  nsresult AddAttributes(const nsIParserNode& aNode,
-                         nsIHTMLContent* aInstancePtrResult);
-
-  void AddBaseTagInfo(nsIHTMLContent* aContent);
-
-  nsIHTMLContent* GetBodyOrFrameset() { if (mBody) return mBody; else return mFrameset; }
-
-  nsresult LoadStyleSheet(nsIURL* aURL,
-                          nsIUnicharInputStream* aUIN,
-                          PRBool aInline);
-
-  void ScrollToRef();
-
   nsIDocument* mDocument;
   nsIURL* mDocumentURL;
-
-  eHTMLTags mNodeStack[100];/* XXX */
-  nsIHTMLContent* mContainerStack[100];/* XXX */
-  PRInt32 mStackPos;
-  nsString* mTitle;
-  nsString mBaseHREF;
-  nsString mBaseTarget;
-  nsIStyleSheet* mStyleSheet;
-  nsIFormManager* mCurrentForm;
-  nsIImageMap* mCurrentMap;
-  nsIHTMLContent* mCurrentSelect;
-  nsIHTMLContent* mCurrentOption;
-  nsIDOMText* mCurrentText;
+  nsIWebShell* mWebShell;
 
   nsIHTMLContent* mRoot;
   nsIHTMLContent* mBody;
   nsIHTMLContent* mFrameset;
   nsIHTMLContent* mHead;
+  nsString* mTitle;
 
-  PRTime mLastUpdateTime;
-  PRTime mUpdateDelta;
-  PRBool mLayoutStarted;
   PRInt32 mInMonolithicContainer;
-  nsIWebShell* mWebShell;
+  PRBool mDirty;
+  nsIFormManager* mCurrentForm;
+  nsIImageMap* mCurrentMap;
+
+  SinkContext** mContexts;
+  PRInt32 mNumContexts;
+  nsVoidArray mContextStack;
+  SinkContext* mCurrentContext;
+  SinkContext* mHeadContext;
 
   nsString* mRef;
   nsScrollPreference mOriginalScrollPreference;
   PRBool mNotAtRef;
   nsIHTMLContent* mRefContent;
 
-  // XXX The parser needs to keep track of body tags and frameset tags 
-  // and tell the content sink if they are to be ignored. For example, in nav4
-  // <html><body><frameset> ignores the frameset and 
-  // <html><frameset><body> ignores the body
+  nsString mBaseHREF;
+  nsString mBaseTarget;
+
+  nsIStyleSheet* mStyleSheet;
+
+  void StartLayout();
+
+  void ScrollToRef();
+
+  void ReflowNewContent();
+
+  void AddBaseTagInfo(nsIHTMLContent* aContent);
+
+  nsresult LoadStyleSheet(nsIURL* aURL,
+                          nsIUnicharInputStream* aUIN,
+                          PRBool aInline);
+
+  // Routines for tags that require special handling
+  nsresult ProcessATag(const nsIParserNode& aNode, nsIHTMLContent* aContent);
+  nsresult ProcessAREATag(const nsIParserNode& aNode);
+  nsresult ProcessBASETag(const nsIParserNode& aNode);
+  nsresult ProcessLINKTag(const nsIParserNode& aNode);
+  nsresult ProcessMETATag(const nsIParserNode& aNode);
+  nsresult ProcessSCRIPTTag(const nsIParserNode& aNode);
+  nsresult ProcessSTYLETag(const nsIParserNode& aNode);
 };
 
-// Note: operator new zeros our memory
+class SinkContext {
+public:
+  SinkContext(HTMLContentSink* aSink);
+  ~SinkContext();
+
+  // Normally when OpenContainer's are done the container is not
+  // appended to it's parent until the container is closed. By setting
+  // pre-append to true, the container will be appended when it is
+  // created.
+  void SetPreAppend(PRBool aPreAppend) {
+    mPreAppend = PR_TRUE;
+  }
+
+  nsresult Begin(nsHTMLTag aNodeType, nsIHTMLContent* aRoot);
+  nsresult OpenContainer(const nsIParserNode& aNode);
+  nsresult CloseContainer(const nsIParserNode& aNode);
+  nsresult AddLeaf(const nsIParserNode& aNode);
+  nsresult End();
+
+  nsresult GrowStack();
+  nsresult AddText(const nsString& aText);
+  nsresult FlushText(PRBool* aDidFlush = nsnull);
+
+  nsresult AddOptionText(const nsIParserNode& aNode);
+
+  void MaybeMarkSinkDirty();
+
+  HTMLContentSink* mSink;
+  PRBool mPreAppend;
+
+  struct Node {
+    nsHTMLTag mType;
+    nsIHTMLContent* mContent;
+    PRUint32 mFlags;
+  };
+
+// Node.mFlags
+#define APPENDED 0x1
+
+  Node* mStack;
+  PRInt32 mStackSize;
+  PRInt32 mStackPos;
+
+  PRUnichar* mText;
+  PRInt32 mTextLength;
+  PRInt32 mTextSize;
+
+  nsIHTMLContent* mCurrentSelect;
+  nsIHTMLContent* mCurrentOption;
+};
+
+//----------------------------------------------------------------------
+
+// Temporary factory code to create content objects
+
+// XXX attribute values have entities in them - use the parsers expander!
+static void
+GetAttributeValueAt(const nsIParserNode& aNode,
+                    PRInt32 aIndex,
+                    nsString& aResult)
+{
+  // Copy value
+  const nsString& value = aNode.GetValueAt(aIndex);
+  aResult.Truncate();
+  aResult.Append(value);
+
+  // strip quotes if present
+  PRUnichar first = aResult.First();
+  if ((first == '"') || (first == '\'')) {
+    if (aResult.Last() == first) {
+      aResult.Cut(0, 1);
+      PRInt32 pos = aResult.Length() - 1;
+      if (pos >= 0) {
+        aResult.Cut(pos, 1);
+      }
+    } else {
+      // Mismatched quotes - leave them in
+    }
+  }
+}
+
+static PRBool
+FindAttribute(const nsIParserNode& aNode,
+              const nsString& aKeyName,
+              nsString& aResult)
+{
+  PRInt32 ac = aNode.GetAttributeCount();
+  for (PRInt32 i = 0; i < ac; i++) {
+    const nsString& key = aNode.GetKeyAt(i);
+    if (key.EqualsIgnoreCase(aKeyName)) {
+      // Get value and remove mandatory quotes
+      GetAttributeValueAt(aNode, i, aResult);
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+static nsresult
+AddAttributes(const nsIParserNode& aNode,
+              nsIHTMLContent* aContent)
+{
+  nsIContent* content = (nsIContent*) aContent;
+
+  // Add tag attributes to the content attributes
+  nsAutoString k, v;
+  PRInt32 ac = aNode.GetAttributeCount();
+  for (PRInt32 i = 0; i < ac; i++) {
+    // Get upper-cased key
+    const nsString& key = aNode.GetKeyAt(i);
+    k.Truncate();
+    k.Append(key);
+    k.ToUpperCase();
+    
+    // Get value and remove mandatory quotes
+    GetAttributeValueAt(aNode, i, v);
+
+    // Add attribute to content
+    content->SetAttribute(k, v);
+  }
+  return NS_OK;
+}
+
+/**
+ * Factory subroutine to create all of the html content objects.
+ */
+static nsresult
+CreateContentObject(const nsIParserNode& aNode,
+                    nsHTMLTag aNodeType,
+                    nsIFormManager* aForm,
+                    nsIWebShell* aWebShell,
+                    nsIHTMLContent** aResult)
+{
+  // Find/create auto for the tag name
+  nsAutoString tmp;
+  if (eHTMLTag_userdefined == aNodeType) {
+    tmp.Append(aNode.GetText());
+    tmp.ToUpperCase();
+  }
+  else {
+    tmp.Append(NS_EnumToTag(aNodeType));
+  }
+  nsIAtom* atom = NS_NewAtom(tmp);
+  if (nsnull == atom) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Create content object for the given tag
+  nsresult rv = NS_OK;
+  switch (aNodeType) {
+  case eHTMLTag_applet:
+    rv = NS_NewHTMLApplet(aResult, atom);
+    break;
+  case eHTMLTag_body:
+    rv = NS_NewBodyPart(aResult, atom);
+    break;
+  case eHTMLTag_br:
+    rv = NS_NewHTMLBreak(aResult, atom);
+    break;
+  case eHTMLTag_caption:
+    rv = NS_NewTableCaptionPart(aResult, atom);
+    break;
+  case eHTMLTag_col:
+    rv = NS_NewTableColPart(aResult, atom);
+    break;
+  case eHTMLTag_colgroup:
+    rv = NS_NewTableColGroupPart(aResult, atom);
+    break;
+  case eHTMLTag_embed:
+    rv = NS_NewHTMLEmbed(aResult, atom);
+    break;
+//    case eHTMLTag_form:
+//      rv = NS_NewHTMLForm(aResult, atom);
+//      break;
+  case eHTMLTag_frame:
+    rv = NS_NewHTMLFrame(aResult, atom, aWebShell);
+    break;
+  case eHTMLTag_frameset:
+    rv = NS_NewHTMLFrameset(aResult, atom, aWebShell);
+    break;
+  case eHTMLTag_hr:
+    rv = NS_NewHRulePart(aResult, atom);
+    break;
+  case eHTMLTag_iframe:
+    rv = NS_NewHTMLIFrame(aResult, atom, aWebShell);
+    break;
+  case eHTMLTag_img:
+#ifdef XXX_ART_HACK
+    {
+      /* HACK - Jim Dunn 8/6
+       * Check to see if this is an ART image type
+       * If so then process it using the ART plugin
+       * Otherwise treat it like a normal image
+       */
+
+      PRBool bArt = PR_FALSE;
+      nsAutoString v;
+      PRInt32 ac = aNode.GetAttributeCount();
+      for (PRInt32 i = 0; i < ac; i++)    /* Go through all of this tag's attributes */
+      {
+        const nsString& key = aNode.GetKeyAt(i);
+
+        if (!key.Compare("SRC", PR_TRUE))   /* Find the SRC (source) tag */
+        {
+          const nsString& key2 = aNode.GetValueAt(i);
+
+          v.Truncate();
+          v.Append(key2);
+          v.ToLowerCase();
+          if (-1 != v.Find(".art"))   /* See if it has an ART extension */
+          {
+            bArt = PR_TRUE;    /* Treat this like an embed */
+            break;
+          }
+        }
+        if (!key.Compare("TYPE", PR_TRUE))  /* Find the TYPE (mimetype) tag */
+        {
+          const nsString& key2 = aNode.GetValueAt(i);
+
+          v.Truncate();
+          v.Append(key2);
+          v.ToLowerCase();
+          if ((-1 != v.Find("image/x-art"))   /* See if it has an ART Mimetype */
+              || (-1 != v.Find("image/art"))
+              || (-1 != v.Find("image/x-jg")))
+          {
+            bArt = PR_TRUE;    /* Treat this like an embed */
+            break;
+          }
+        }
+      }
+      if (bArt)
+        rv = NS_NewHTMLEmbed(aResult, atom);
+      else
+        rv = NS_NewHTMLImage(aResult, atom);
+    }
+#else
+    rv = NS_NewHTMLImage(aResult, atom);
+#endif /* XXX */
+    break;
+  case eHTMLTag_input:
+  {
+    nsAutoString val;
+    if (FindAttribute(aNode, "type", val)) {
+      if (val.EqualsIgnoreCase("submit")) {
+        rv = NS_NewHTMLInputSubmit(aResult, atom, aForm);
+      }
+      else if (val.EqualsIgnoreCase("reset")) {
+        rv = NS_NewHTMLInputReset(aResult, atom, aForm);
+      }
+      else if (val.EqualsIgnoreCase("button")) {
+        rv = NS_NewHTMLInputButton(aResult, atom, aForm);
+      }
+      else if (val.EqualsIgnoreCase("checkbox")) {
+        rv = NS_NewHTMLInputCheckbox(aResult, atom, aForm);
+      }
+      else if (val.EqualsIgnoreCase("file")) {
+        rv = NS_NewHTMLInputFile(aResult, atom, aForm);
+      }
+      else if (val.EqualsIgnoreCase("hidden")) {
+        rv = NS_NewHTMLInputHidden(aResult, atom, aForm);
+      }
+      else if (val.EqualsIgnoreCase("image")) {
+        rv = NS_NewHTMLInputImage(aResult, atom, aForm);
+      }
+      else if (val.EqualsIgnoreCase("password")) {
+        rv = NS_NewHTMLInputPassword(aResult, atom, aForm);
+      }
+      else if (val.EqualsIgnoreCase("radio")) {
+        rv = NS_NewHTMLInputRadio(aResult, atom, aForm);
+      }
+      else if (val.EqualsIgnoreCase("text")) {
+        rv = NS_NewHTMLInputText(aResult, atom, aForm);
+      }
+      else {
+        rv = NS_NewHTMLInputText(aResult, atom, aForm);
+      }
+    }
+    else {
+      rv = NS_NewHTMLInputText(aResult, atom, aForm);
+    }
+  }
+  break;
+  case eHTMLTag_meta:
+    rv = NS_NewHTMLMeta(aResult, atom);
+    break;
+  case eHTMLTag_object:
+    rv = NS_NewHTMLObject(aResult, atom);
+    break;
+  case eHTMLTag_option:
+    rv = NS_NewHTMLOption(aResult, atom);
+    break;
+  case eHTMLTag_select:
+    rv = NS_NewHTMLSelect(aResult, atom, aForm);
+    break;
+  case eHTMLTag_spacer:
+    rv = NS_NewHTMLSpacer(aResult, atom);
+    break;
+  case eHTMLTag_table:
+    rv = NS_NewTablePart(aResult, atom);
+    break;
+  case eHTMLTag_tbody:
+  case eHTMLTag_thead:
+  case eHTMLTag_tfoot:
+    rv = NS_NewTableRowGroupPart(aResult, atom);
+    break;
+  case eHTMLTag_td:
+  case eHTMLTag_th:
+    rv = NS_NewTableCellPart(aResult, atom);
+    break;
+  case eHTMLTag_textarea:
+  {
+    const nsString& content = aNode.GetSkippedContent();
+    nsresult rv = NS_NewHTMLTextArea(aResult, atom, aForm);
+    if (NS_OK == rv) {
+      // If the text area has some content, give it to it now
+      if (content.Length() > 0) {
+        nsIFormControl* ctrl;
+        rv = (*aResult)->QueryInterface(kIFormControlIID, (void **)&ctrl);
+        if (NS_OK == rv) {
+          ctrl->SetContent(content);
+          NS_RELEASE(ctrl);
+        }
+      }
+    }
+  }
+  break;
+  case eHTMLTag_tr:
+    rv = NS_NewTableRowPart(aResult, atom);
+    break;
+  case eHTMLTag_wbr:
+    rv = NS_NewHTMLWordBreak(aResult, atom);
+    break;
+  default:
+    rv = NS_NewHTMLContainer(aResult, atom);
+    break;
+
+  case eHTMLTag_title:
+    NS_NOTREACHED("illegal CreateContentObject call");
+    break;
+  }
+  NS_RELEASE(atom);
+
+  return rv;
+}
+
+//----------------------------------------------------------------------
+
+// XXX make sure all slots are initialized
+SinkContext::SinkContext(HTMLContentSink* aSink)
+{
+  mSink = aSink;
+  mStack = nsnull;
+  mPreAppend = PR_FALSE;
+  mStackSize = 0;
+  mStackPos = 0;
+  mText = nsnull;
+  mTextLength = 0;
+  mTextSize = 0;
+  mCurrentOption = nsnull;
+  mCurrentSelect = nsnull;
+}
+
+SinkContext::~SinkContext()
+{
+  if (nsnull != mStack) {
+    for (PRInt32 i = 0; i < mStackPos; i++) {
+      NS_RELEASE(mStack[i].mContent);
+    }
+    delete [] mStack;
+  }
+  if (nsnull != mText) {
+    delete [] mText;
+  }
+  NS_IF_RELEASE(mCurrentOption);
+  NS_IF_RELEASE(mCurrentSelect);
+}
+
+nsresult
+SinkContext::Begin(nsHTMLTag aNodeType, nsIHTMLContent* aRoot)
+{
+  if (1 > mStackSize) {
+    nsresult rv = GrowStack();
+    if (NS_OK != rv) {
+      return rv;
+    }
+  }
+
+  mStack[0].mType = aNodeType;
+  mStack[0].mContent = aRoot;
+  mStack[0].mFlags = APPENDED;
+  NS_ADDREF(aRoot);
+  mStackPos = 1;
+  mTextLength = 0;
+
+  return NS_OK;
+}
+
+void
+SinkContext::MaybeMarkSinkDirty()
+{
+  if (!mSink->mDirty &&
+      (2 == mStackPos) &&
+      (mSink->mBody == mStack[1].mContent)) {
+    // We just finished adding something to the body
+    mSink->mDirty = PR_TRUE;
+  }
+}
+
+nsresult
+SinkContext::OpenContainer(const nsIParserNode& aNode)
+{
+  FlushText();
+
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "SinkContext::OpenContainer", aNode);
+
+  nsresult rv;
+  if (mStackPos + 1 > mStackSize) {
+    rv = GrowStack();
+    if (NS_OK != rv) {
+      return rv;
+    }
+  }
+
+  // Create new container content object
+  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
+  nsIHTMLContent* content;
+  rv = CreateContentObject(aNode, nodeType,
+                           mSink->mCurrentForm,
+                           mSink->mFrameset ? mSink->mWebShell : nsnull,
+                           &content);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  mStack[mStackPos].mType = nodeType;
+  mStack[mStackPos].mContent = content;
+  mStack[mStackPos].mFlags = 0;
+  content->SetDocument(mSink->mDocument);
+  if (mPreAppend) {
+    NS_ASSERTION(mStackPos > 0, "container w/o parent");
+    nsIHTMLContent* parent = mStack[mStackPos-1].mContent;
+    parent->AppendChildTo(content, PR_FALSE);
+    mStack[mStackPos].mFlags |= APPENDED;
+  }
+  mStackPos++;
+  rv = AddAttributes(aNode, content);
+  if (NS_OK != rv) {
+    return rv;
+  }
+
+
+  // Special handling for certain tags
+  switch (nodeType) {
+  case eHTMLTag_a:
+    mSink->ProcessATag(aNode, content);
+    break;
+  case eHTMLTag_select:
+    NS_IF_RELEASE(mCurrentSelect);
+    mCurrentSelect = content;
+    NS_IF_ADDREF(content);
+    break;
+  case eHTMLTag_option:
+    NS_IF_RELEASE(mCurrentOption);
+    mCurrentOption = content;
+    NS_IF_ADDREF(content);
+    break;
+  case eHTMLTag_table:
+    mSink->mInMonolithicContainer++;
+    break;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+SinkContext::CloseContainer(const nsIParserNode& aNode)
+{
+  FlushText();
+
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "SinkContext::CloseContainer", aNode);
+
+  --mStackPos;
+  nsHTMLTag nodeType = mStack[mStackPos].mType;
+  nsIHTMLContent* content = mStack[mStackPos].mContent;
+  content->Compact();
+
+  // Add container to its parent if we haven't already done it
+  if (0 == (mStack[mStackPos].mFlags & APPENDED)) {
+    NS_ASSERTION(mStackPos > 0, "container w/o parent");
+    nsIHTMLContent* parent = mStack[mStackPos-1].mContent;
+    parent->AppendChildTo(content, PR_FALSE);
+  }
+  NS_IF_RELEASE(content);
+
+  // Special handling for certain tags
+  switch (nodeType) {
+  case eHTMLTag_option:
+    NS_IF_RELEASE(mCurrentOption);
+    break; 
+  case eHTMLTag_select:
+    NS_IF_RELEASE(mCurrentSelect);
+    break;
+  case eHTMLTag_table:
+    mSink->mInMonolithicContainer--;
+    break;
+  }
+
+  // Mark sink dirty if it can safely reflow something
+  MaybeMarkSinkDirty();
+
+  return NS_OK;
+}
+
+nsresult
+SinkContext::AddLeaf(const nsIParserNode& aNode)
+{
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "SinkContext::AddLeaf", aNode);
+
+  nsresult rv = NS_OK;
+
+  // XXX temporary hack until option layout code can find content
+  // the proper way.
+  if (eHTMLTag_option == mStack[mStackPos-1].mType) {
+    return AddOptionText(aNode);
+  }
+
+  switch (aNode.GetTokenType()) {
+  case eToken_start:
+    {
+      FlushText();
+
+      // Create new leaf content object
+      nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
+      nsIHTMLContent* content;
+      rv = CreateContentObject(aNode, nodeType,
+                               mSink->mCurrentForm, mSink->mWebShell,
+                               &content);
+      if (NS_OK != rv) {
+        return rv;
+      }
+      rv = AddAttributes(aNode, content);
+      if (NS_OK != rv) {
+        NS_RELEASE(content);
+        return rv;
+      }
+      switch (nodeType) {
+      case eHTMLTag_img:
+        mSink->AddBaseTagInfo(content);
+        break;
+      }
+
+      // Add new leaf to its parent
+      NS_ASSERTION(mStackPos > 0, "leaf w/o container");
+      nsIHTMLContent* parent = mStack[mStackPos-1].mContent;
+      parent->AppendChildTo(content, PR_FALSE);
+      NS_IF_RELEASE(content);
+
+      // Mark sink dirty if it can safely reflow something
+      MaybeMarkSinkDirty();
+    }
+    break;
+
+  case eToken_text:
+  case eToken_whitespace:
+  case eToken_newline:
+    return AddText(aNode.GetText());
+
+  case eToken_entity:
+    {
+      nsAutoString tmp;
+      PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
+      if (unicode < 0) {
+        return AddText(aNode.GetText());
+      }
+      return AddText(tmp);
+    }
+
+  case eToken_skippedcontent:
+    break;
+  }
+  return rv;
+}
+
+nsresult
+SinkContext::End()
+{
+  NS_ASSERTION(mStackPos == 1, "insufficient close container calls");
+
+  for (PRInt32 i = 0; i < mStackPos; i++) {
+    NS_RELEASE(mStack[i].mContent);
+  }
+  mStackPos = 0;
+  mTextLength = 0;
+
+  return NS_OK;
+}
+
+nsresult
+SinkContext::GrowStack()
+{
+  PRInt32 newSize = mStackSize * 2;
+  if (0 == newSize) {
+    newSize = 32;
+  }
+  Node* stack = new Node[newSize];
+  if (nsnull == stack) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  if (0 != mStackPos) {
+    memcpy(stack, mStack, sizeof(Node) * mStackPos);
+    delete [] mStack;
+  }
+  mStack = stack;
+  mStackSize = newSize;
+  return NS_OK;
+}
+
+/**
+ * Add textual content to the current running text buffer. If the text buffer
+ * overflows, flush out the text by creating a text content object and adding
+ * it to the content tree.
+ */
+// XXX If we get a giant string grow the buffer instead of chopping it up???
+nsresult
+SinkContext::AddText(const nsString& aText)
+{
+  PRInt32 addLen = aText.Length();
+  if (0 == addLen) {
+    return NS_OK;
+  }
+
+  // Create buffer when we first need it
+  if (0 == mTextSize) {
+    mText = new PRUnichar[4096];
+    if (nsnull == mText) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    mTextSize = 4096;
+  }
+//  else if (mTextLength + addLen > mTextSize) {
+//  }
+
+  // Copy data from string into our buffer; flush buffer when it fills up
+  PRInt32 offset = 0;
+  while (0 != addLen) {
+    PRInt32 amount = mTextSize - mTextLength;
+    if (amount > addLen) {
+      amount = addLen;
+    }
+    if (0 == amount) {
+      nsresult rv = FlushText();
+      if (NS_OK != rv) {
+        return rv;
+      }
+    }
+    memcpy(&mText[mTextLength], aText.GetUnicode() + offset,
+           sizeof(PRUnichar) * amount);
+    mTextLength += amount;
+    offset += amount;
+    addLen -= amount;
+  }
+
+  return NS_OK;
+}
+
+/**
+ * Flush any buffered text out by creating a text content object and
+ * adding it to the content.
+ */
+nsresult
+SinkContext::FlushText(PRBool* aDidFlush)
+{
+  nsresult rv = NS_OK;
+  PRBool didFlush = PR_FALSE;
+  if (0 != mTextLength) {
+    nsIHTMLContent* content;
+    rv = NS_NewHTMLText(&content, mText, mTextLength);
+    if (NS_OK == rv) {
+      // Add text to its parent
+      NS_ASSERTION(mStackPos > 0, "leaf w/o container");
+      nsIHTMLContent* parent = mStack[mStackPos - 1].mContent;
+      parent->AppendChildTo(content, PR_FALSE);
+      NS_RELEASE(content);
+
+      // Mark sink dirty if it can safely reflow something
+      MaybeMarkSinkDirty();
+    }
+    mTextLength = 0;
+    didFlush = PR_TRUE;
+  }
+  if (nsnull != aDidFlush) {
+    *aDidFlush = didFlush;
+  }
+  return rv;
+}
+
+nsresult
+SinkContext::AddOptionText(const nsIParserNode& aNode)
+{
+  if ((nsnull != mCurrentSelect) && (nsnull != mCurrentOption)) {
+    nsIFormControl* control = nsnull;
+    mCurrentOption->QueryInterface(kIFormControlIID, (void **)&control);
+    if (nsnull != control) {
+      // Get current content and append on the new content
+      nsAutoString currentText;
+      control->GetContent(currentText);
+
+      switch (aNode.GetTokenType()) {
+      case eToken_text:
+      case eToken_whitespace:
+      case eToken_newline:
+        currentText.Append(aNode.GetText());
+        break;
+
+      case eToken_entity:
+        {
+          nsAutoString tmp2("");
+          PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp2);
+          if (unicode < 0) {
+            currentText.Append(aNode.GetText());
+          } else {
+            currentText.Append(tmp2);
+          }
+        }
+        break;
+      }
+      control->SetContent(currentText);
+      NS_RELEASE(control);
+    }
+  }
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+
+nsresult
+NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
+                      nsIDocument* aDoc,
+                      nsIURL* aURL,
+                      nsIWebShell* aWebShell)
+{
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  HTMLContentSink* it = new HTMLContentSink();
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsresult rv = it->Init(aDoc, aURL, aWebShell);
+  if (NS_OK != rv) {
+    delete it;
+    return rv;
+  }
+  return it->QueryInterface(kIHTMLContentSinkIID, (void **)aResult);
+}
+
 HTMLContentSink::HTMLContentSink()
 {
 #ifdef NS_DEBUG
@@ -283,29 +969,45 @@ HTMLContentSink::HTMLContentSink()
     gSinkLogModuleInfo = PR_NewLogModule("htmlcontentsink");
   }
 #endif
-
-  // Set the first update delta to be 50ms
-  LL_I2L(mUpdateDelta, PR_USEC_PER_MSEC * 50);
-
   mNotAtRef = PR_TRUE;
 }
- 
+
 HTMLContentSink::~HTMLContentSink()
 {
   NS_IF_RELEASE(mHead);
   NS_IF_RELEASE(mBody);
   NS_IF_RELEASE(mFrameset);
   NS_IF_RELEASE(mRoot);
+
   NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mDocumentURL);
+  NS_IF_RELEASE(mWebShell);
+
   NS_IF_RELEASE(mStyleSheet);
   NS_IF_RELEASE(mCurrentForm);
   NS_IF_RELEASE(mCurrentMap);
-  NS_IF_RELEASE(mCurrentSelect);
-  NS_IF_RELEASE(mCurrentOption);
-  NS_IF_RELEASE(mWebShell);
   NS_IF_RELEASE(mRefContent);
 
+  for (PRInt32 i = 0; i < mNumContexts; i++) {
+    SinkContext* sc = mContexts[i];
+    sc->End();
+    delete sc;
+    if (sc == mCurrentContext) {
+      mCurrentContext = nsnull;
+    }
+  }
+  if (nsnull != mContexts) {
+    delete [] mContexts;
+  }
+  if (mCurrentContext == mHeadContext) {
+    mCurrentContext = nsnull;
+  }
+  if (nsnull != mCurrentContext) {
+    delete mCurrentContext;
+  }
+  if (nsnull != mHeadContext) {
+    delete mHeadContext;
+  }
   if (nsnull != mTitle) {
     delete mTitle;
   }
@@ -314,104 +1016,178 @@ HTMLContentSink::~HTMLContentSink()
   }
 }
 
+NS_IMPL_ISUPPORTS(HTMLContentSink, NS_IHTML_CONTENT_SINK_IID)
+
 nsresult
 HTMLContentSink::Init(nsIDocument* aDoc,
-                      nsIURL* aDocURL,
-                      nsIWebShell* aWebShell)
+                      nsIURL* aURL,
+                      nsIWebShell* aContainer)
 {
-  NS_IF_RELEASE(mDocument);
   mDocument = aDoc;
-  NS_IF_ADDREF(mDocument);
+  NS_IF_ADDREF(aDoc);
+  mDocumentURL = aURL;
+  NS_IF_ADDREF(aURL);
+  mWebShell = aContainer;
+  NS_IF_ADDREF(aContainer);
 
-  NS_IF_RELEASE(mDocumentURL);
-  mDocumentURL = aDocURL;
-  NS_IF_ADDREF(mDocumentURL);
+  // Make root part
+  nsresult rv = NS_NewRootPart(&mRoot, mDocument);
+  if (NS_OK != rv) {
+    return rv;
+  }
 
-  NS_IF_RELEASE(mWebShell);
-  mWebShell = aWebShell;
-  NS_IF_ADDREF(mWebShell);
+  // Make head part
+  nsIAtom* atom = NS_NewAtom("HEAD");
+  if (nsnull == atom) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  rv = NS_NewHTMLHead(&mHead, atom);
+  NS_RELEASE(atom);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  mRoot->AppendChildTo(mHead, PR_FALSE);
+
+  mCurrentContext = new SinkContext(this);
+  mCurrentContext->Begin(eHTMLTag_html, mRoot);
+  mContextStack.AppendElement(mCurrentContext);
 
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::Init: this=%p url='%s'",
-              this, aDocURL->GetSpec()));
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS(HTMLContentSink,kIHTMLContentSinkIID)
-
-NS_IMETHODIMP
-HTMLContentSink::OpenHTML(const nsIParserNode& aNode)
-{
-  FlushText();
-
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenHTML", aNode);
-  NS_PRECONDITION(0 == mStackPos, "bad stack pos");
-
-  mNodeStack[0] = (eHTMLTags)aNode.GetNodeType();
-  mContainerStack[0] = mRoot;
-  mStackPos = 1;
+              this, aURL->GetSpec()));
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
+HTMLContentSink::WillBuildModel(void)
 {
-  FlushText();
+  // Notify document that the load is beginning
+  mDocument->BeginLoad();
+  return NS_OK;
+}
 
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseHTML", aNode);
-
-  // XXX this is the way it used to be
-  //NS_ASSERTION(mStackPos > 0, "bad bad");
-  //mNodeStack[--mStackPos] = eHTMLTag_unknown;
-  if (mStackPos > 0) {
-    mNodeStack[--mStackPos] = eHTMLTag_unknown;
+NS_IMETHODIMP
+HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
+{
+  if (nsnull == mTitle) {
+    ((nsHTMLDocument*)mDocument)->SetTitle("");
   }
 
-  NS_IF_RELEASE(mCurrentForm);
+  // XXX this is silly; who cares?
+  PRInt32 i, ns = mDocument->GetNumberOfShells();
+  for (i = 0; i < ns; i++) {
+    nsIPresShell* shell = mDocument->GetShellAt(i);
+    if (nsnull != shell) {
+      nsIViewManager* vm = shell->GetViewManager();
+      if(vm) {
+        vm->SetQuality(nsContentQuality(aQualityLevel));
+      }
+      NS_RELEASE(vm);
+      NS_RELEASE(shell);
+    }
+  }
 
-  return NS_OK; 
-}
+  SINK_TRACE(SINK_TRACE_REFLOW,
+             ("HTMLContentSink::DidBuildModel: layout new content"));
+  ReflowNewContent();
 
-NS_IMETHODIMP
-HTMLContentSink::OpenHead(const nsIParserNode& aNode)
-{
-  FlushText();
+  // XXX sigh
+  ScrollToRef();
 
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenHead", aNode);
-
-  mNodeStack[mStackPos] = (eHTMLTags)aNode.GetNodeType();
-  mContainerStack[mStackPos] = mHead;
-  mStackPos++;
+  mDocument->EndLoad();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLContentSink::CloseHead(const nsIParserNode& aNode)
+HTMLContentSink::WillInterrupt()
 {
-  FlushText();
-
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseHead", aNode);
-
-  NS_ASSERTION(mStackPos > 0, "bad bad");
-  mNodeStack[--mStackPos] = eHTMLTag_unknown;
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::WillInterrupt: this=%p", this));
+  if (mDirty && !mInMonolithicContainer) {
+    mDocument->ContentAppended(mBody);
+    mDirty = PR_FALSE;
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLContentSink::PushMark()
+HTMLContentSink::WillResume()
 {
+  SINK_TRACE(SINK_TRACE_CALLS,
+             ("HTMLContentSink::WillResume: this=%p", this));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::BeginContext(PRInt32 aID)
+{
+  NS_PRECONDITION(aID >= 0, "bad context ID");
+
+  // Create new context
+  SinkContext* sc = new SinkContext(this);
+  if (nsnull == sc) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Put it into our context array. Grow the array if necessary.
+  if (aID >= mNumContexts) {
+    PRInt32 newSize = aID + 10;
+    SinkContext** contexts = new SinkContext*[newSize];
+    if (nsnull == contexts) {
+      delete sc;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    memset(contexts, 0, sizeof(SinkContext*) * newSize);
+    if (0 != mNumContexts) {
+      memcpy(contexts, mContexts, sizeof(SinkContext*) * mNumContexts);
+      delete [] mContexts;
+    }
+    mNumContexts = newSize;
+    mContexts = contexts;
+  }
+  mContexts[aID] = sc;
+
+  // Push the old current context and make the new context the current one
+  mContextStack.AppendElement(mCurrentContext);
+  mCurrentContext = sc;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::EndContext(PRInt32 aID)
+{
+  NS_PRECONDITION((aID >= 0) && (aID < mNumContexts) &&
+                  (mCurrentContext == mContexts[aID]), "bad context ID");
+
+  // Destroy the context
+  SinkContext* sc = mCurrentContext;
+  sc->End();
+  delete sc;
+  mContexts[aID] = nsnull;
+
+  // Pop off the previous context and make it our current context
+  PRInt32 n = mContextStack.Count() - 1;
+  mCurrentContext = (SinkContext*) mContextStack.ElementAt(n);
+  mContextStack.RemoveElementAt(n);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::SetContext(PRInt32 aID)
+{
+  NS_PRECONDITION((aID >= 0) && (aID < mNumContexts), "bad context ID");
+  SinkContext* sc = mContexts[aID];
+  mCurrentContext = sc;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLContentSink::SetTitle(const nsString& aValue)
 {
-  FlushText();
+  NS_ASSERTION(mCurrentContext == mHeadContext, "SetTitle not in head");
 
   if (nsnull == mTitle) {
     mTitle = new nsString(aValue);
@@ -434,52 +1210,78 @@ HTMLContentSink::SetTitle(const nsString& aValue)
 }
 
 NS_IMETHODIMP
+HTMLContentSink::OpenHTML(const nsIParserNode& aNode)
+{
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::OpenHTML", aNode);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
+{
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::CloseHTML", aNode);
+  if (nsnull != mHeadContext) {
+    mHeadContext->End();
+    delete mHeadContext;
+    mHeadContext = nsnull;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::OpenHead(const nsIParserNode& aNode)
+{
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::OpenHead", aNode);
+  if (nsnull == mHeadContext) {
+    mHeadContext = new SinkContext(this);
+    if (nsnull == mHeadContext) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    mHeadContext->SetPreAppend(PR_TRUE);
+    nsresult rv = mHeadContext->Begin(eHTMLTag_head, mHead);
+    if (NS_OK != rv) {
+      return rv;
+    }
+  }
+  mContextStack.AppendElement(mCurrentContext);
+  mCurrentContext = mHeadContext;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::CloseHead(const nsIParserNode& aNode)
+{
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::CloseHead", aNode);
+  PRInt32 n = mContextStack.Count() - 1;
+  mCurrentContext = (SinkContext*) mContextStack.ElementAt(n);
+  mContextStack.RemoveElementAt(n);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HTMLContentSink::OpenBody(const nsIParserNode& aNode)
 {
-  FlushText();
+  NS_PRECONDITION(nsnull == mBody, "parser called OpenBody twice");
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenBody", aNode);
 
-  mNodeStack[mStackPos] = (eHTMLTags)aNode.GetNodeType();
-
-  // Make body container
-NS_ASSERTION(nsnull == mBody, "yikes");
-  NS_IF_RELEASE(mBody);
-  nsIAtom* atom = NS_NewAtom("BODY");
-  if (nsnull == atom) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult rv = NS_NewBodyPart(&mBody, atom);
-  NS_RELEASE(atom);
+  // Open body. Note that we pre-append the body to the root so that
+  // incremental reflow during document loading will work properly.
+  mCurrentContext->SetPreAppend(PR_TRUE);
+  nsresult rv = mCurrentContext->OpenContainer(aNode);
+  mCurrentContext->SetPreAppend(PR_FALSE);
   if (NS_OK != rv) {
     return rv;
   }
+  mBody = mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
+  NS_ADDREF(mBody);
 
-  mContainerStack[mStackPos] = mBody;
-  mStackPos++;
-
-  // Add attributes to the body content object, but only if it's really a body
-  // tag that is triggering the OpenBody.
-  if (eHTMLTag_body == aNode.GetNodeType()) {
-    AddAttributes(aNode, mBody);
-    // XXX If the body already existed and has been reflowed somewhat
-    // then we need to trigger a style change
-  }
-
-  if (!mLayoutStarted) {
-    // XXX This has to be done now that the body is in because we
-    // don't know how to handle a content-appended reflow if the
-    // root has no children
-    SINK_TRACE(SINK_TRACE_REFLOW,
-               ("HTMLContentSink::OpenBody: start layout"));
-
-    // This is done here instead of earlier because we need the
-    // attributes from the real body tag before we initiate reflow.
-    mRoot->AppendChildTo(mBody, PR_FALSE);
-    StartLayout();
-  }
-
+  StartLayout();
   return NS_OK;
 }
 
@@ -489,79 +1291,46 @@ HTMLContentSink::CloseBody(const nsIParserNode& aNode)
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::CloseBody", aNode);
 
-  if (FlushText()) {
+  PRBool didFlush;
+  nsresult rv = mCurrentContext->FlushText(&didFlush);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  mCurrentContext->CloseContainer(aNode);
+
+  if (didFlush) {
     // Trigger a reflow for the flushed text
     mDocument->ContentAppended(mBody);
   }
 
-  NS_ASSERTION(mStackPos > 0, "bad bad");
-  mNodeStack[--mStackPos] = eHTMLTag_unknown;
-
-  // Reflow any lingering content
-
   return NS_OK;
 }
 
-static NS_DEFINE_IID(kIFormManagerIID, NS_IFORMMANAGER_IID);
-
+// XXX add code to place form into the content model
 NS_IMETHODIMP
 HTMLContentSink::OpenForm(const nsIParserNode& aNode)
 {
-  FlushText();
+  mCurrentContext->FlushText();
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenForm", aNode);
 
   // Close out previous form if it's there
-  if (nsnull != mCurrentForm) {
-	  NS_RELEASE(mCurrentForm);
-    mCurrentForm = nsnull;
-  }
+  NS_IF_RELEASE(mCurrentForm);
 
-  nsresult rv;
-  nsAutoString classID;
-  if (FindAttribute(aNode, "classid", classID)) {
-    // Translate classid string into an nsID
-    char cbuf[50];
-    classID.ToCString(cbuf, sizeof(cbuf));
-    nsID clid;
-    if (clid.Parse(cbuf)) {
-      // Create a form manager using the repository
-      nsIFactory* fac;
-      rv = NSRepository::FindFactory(clid, &fac);
-      if (NS_OK == rv) {
-        rv = fac->CreateInstance(nsnull, kIFormManagerIID,
-                                 (void**)&mCurrentForm);
-#ifdef NS_DEBUG
-        if (NS_OK != rv) {
-          printf("OpenForm: can't create form manager instance: %d\n", rv);
-        }
-#endif
-        NS_RELEASE(fac);
-      }
-      else {
-#ifdef NS_DEBUG
-        printf("OpenForm: can't find '%s' in the repository\n", cbuf);
-#endif
-      }
-    }
-    else {
-#ifdef NS_DEBUG
-      printf("OpenForm: classID is invalid: '%s'\n", cbuf);
-#endif
-    }
+  // Create new form
+  nsAutoString tmp("FORM");
+  nsIAtom* atom = NS_NewAtom(tmp);
+  if (nsnull == atom) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  if (nsnull == mCurrentForm) {
-    // Create new form
-    nsAutoString tmp("FORM");
-    nsIAtom* atom = NS_NewAtom(tmp);
-    rv = NS_NewHTMLForm(&mCurrentForm, atom);
-    NS_RELEASE(atom);
-  }
+  nsresult rv = NS_NewHTMLForm(&mCurrentForm, atom);
+  NS_RELEASE(atom);
 
   if (NS_OK == rv) {
-    // Add tag attributes to the form
+    // XXX replace with AddAttributes when form's implement nsIHTMLContent
+    // Add tag attributes to the form; we can't use AddAttributes
+    // because mCurrentForm is not an nsIHTMLContent (yet).
     nsAutoString k, v;
     PRInt32 ac = aNode.GetAttributeCount();
     for (PRInt32 i = 0; i < ac; i++) {
@@ -575,6 +1344,7 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
       GetAttributeValueAt(aNode, i, v);
       mCurrentForm->SetAttribute(k, v);
     }
+
     // XXX Temporary code till forms become real content
     // Add the form to the document
     ((nsHTMLDocument*)mDocument)->AddForm(mCurrentForm);
@@ -588,88 +1358,59 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
   return NS_OK;
 }
 
+// XXX MAYBE add code to place close form tag into the content model
+// for navigator layout compatability.
 NS_IMETHODIMP
 HTMLContentSink::CloseForm(const nsIParserNode& aNode)
 {
-  FlushText();
-
+  mCurrentContext->FlushText();
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::CloseForm", aNode);
-
-  if (nsnull != mCurrentForm) {
-	  NS_RELEASE(mCurrentForm);
-    mCurrentForm = nsnull;
-  }
+  NS_IF_RELEASE(mCurrentForm);
   return NS_OK;
 }
 
-// XXX this is a copy of OpenBody, consolidate!
 NS_IMETHODIMP
 HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
 {
-  FlushText();
-
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenFrameset", aNode);
 
-  mNodeStack[mStackPos] = (eHTMLTags)aNode.GetNodeType();
-
-  // Make frameset container
-  NS_IF_RELEASE(mFrameset);
-  nsIAtom* atom = NS_NewAtom("FRAMESET");
-  if (nsnull == atom) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsresult rv = mCurrentContext->OpenContainer(aNode);
+  if ((NS_OK == rv) && (nsnull == mFrameset)) {
+    mFrameset = mCurrentContext->mStack[mCurrentContext->mStackPos-1].mContent;
+    NS_ADDREF(mFrameset);
   }
-  nsresult rv = NS_NewHTMLFrameset(&mFrameset, atom, nsnull);
-  mFrameset->SetDocument(mDocument);
-  NS_RELEASE(atom);
-  if (NS_OK != rv) {
-    return rv;
-  }
-
-  mContainerStack[mStackPos] = mFrameset;
-  mStackPos++;
-
-  // Add attributes to the frameset content object
-  AddAttributes(aNode, mFrameset);
-
-  return NS_OK;
+  mInMonolithicContainer++;
+  return rv;
 }
 
 NS_IMETHODIMP
 HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
 {
-  FlushText();
-
-  mRoot->AppendChildTo(mFrameset, PR_TRUE);
-
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::CloseFrameset", aNode);
 
-  NS_ASSERTION(mStackPos > 0, "bad bad");
-  mNodeStack[--mStackPos] = eHTMLTag_unknown;
-
-  // Reflow any lingering content
-  if (!mLayoutStarted) {
+  SinkContext* sc = mCurrentContext;
+  nsIHTMLContent* fs = sc->mStack[sc->mStackPos-1].mContent;
+  PRBool done = fs == mFrameset;
+  nsresult rv = sc->CloseContainer(aNode);
+  if (done) {
     StartLayout();
   }
-
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
 HTMLContentSink::OpenMap(const nsIParserNode& aNode)
 {
-  FlushText();
+  mCurrentContext->FlushText();
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenMap", aNode);
 
-  // Close out previous form if it's there
-  if (nsnull != mCurrentMap) {
-	  NS_RELEASE(mCurrentMap);
-    mCurrentMap = nsnull;
-  }
+  // Close out previous map if it's there
+  NS_IF_RELEASE(mCurrentMap);
 
   nsAutoString tmp("MAP");
   nsIAtom* atom = NS_NewAtom(tmp);
@@ -683,8 +1424,11 @@ HTMLContentSink::OpenMap(const nsIParserNode& aNode)
       name.StripWhitespace();
       mCurrentMap->SetName(name);
     }
+
     // Add the map to the document
     ((nsHTMLDocument*)mDocument)->AddImageMap(mCurrentMap);
+
+    // XXX Add a content object for the map too
   }
   return rv;
 }
@@ -692,459 +1436,149 @@ HTMLContentSink::OpenMap(const nsIParserNode& aNode)
 NS_IMETHODIMP
 HTMLContentSink::CloseMap(const nsIParserNode& aNode)
 {
-  FlushText();
-
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::CloseMap", aNode);
-
-  if (nsnull != mCurrentMap) {
-	  NS_RELEASE(mCurrentMap);
-    mCurrentMap = nsnull;
-  }
+  NS_IF_RELEASE(mCurrentMap);
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
 {
-  FlushText();
-
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenContainer", aNode);
-
-  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());/* XXX bad parser api */
-  nsAutoString tmp;
-  if (eHTMLTag_userdefined == nodeType) {
-    tmp.Append(aNode.GetText());
-    tmp.ToUpperCase();
+  // XXX work around parser bug
+  if (eHTMLTag_frameset == aNode.GetNodeType()) {
+    return OpenFrameset(aNode);
   }
-  else {
-    tmp.Append(NS_EnumToTag(nodeType));
-  }
-  nsIAtom* atom = NS_NewAtom(tmp);
-
-  eHTMLTags parentType;
-  nsIHTMLContent* parent = GetCurrentContainer(&parentType);
-  switch (parentType) {
-  case eHTMLTag_select:
-    break;
-  case eHTMLTag_option:
-    break;
-  }
-
-  nsresult rv;
-  nsIHTMLContent* container = nsnull;
-  switch (nodeType) {
-  case eHTMLTag_map:
-    NS_NOTREACHED("bad parser: map != container");
-    break;
-
-  case eHTMLTag_applet:
-    rv = NS_NewHTMLApplet(&container, atom);
-    break;
-
-  case eHTMLTag_object:
-    rv = NS_NewHTMLObject(&container, atom);
-    break;
-
-  case eHTMLTag_table:
-    rv = NS_NewTablePart(&container, atom);
-    mInMonolithicContainer++;
-    break;
-
-  case eHTMLTag_caption:
-    rv = NS_NewTableCaptionPart(&container, atom);
-    break;
-
-  case eHTMLTag_tr:
-    rv = NS_NewTableRowPart(&container, atom);
-    break;
-
-  case eHTMLTag_tbody:
-  case eHTMLTag_thead:
-  case eHTMLTag_tfoot:
-    rv = NS_NewTableRowGroupPart(&container, atom);
-    break;
-
-  case eHTMLTag_colgroup:
-    rv = NS_NewTableColGroupPart(&container, atom);
-    break;
-
-  case eHTMLTag_td:
-  case eHTMLTag_th:
-    rv = NS_NewTableCellPart(&container, atom);
-    break;
-
-  case eHTMLTag_select:
-    rv = ProcessOpenSELECTTag(&container, aNode);
-    break;
-
-  case eHTMLTag_option:
-    rv = ProcessOpenOPTIONTag(&container, aNode);
-    break;
-
-  case eHTMLTag_iframe:
-    rv = ProcessIFRAMETag(&container, aNode);
-    break;
-
-  case eHTMLTag_frameset:
-    if (!mFrameset) {
-      rv = OpenFrameset(aNode);  // top level frameset
-    } else {
-      rv = ProcessFRAMESETTag(&container, aNode);
-    }
-    break;
-
-  case eHTMLTag_layer:
-    rv = NS_NewHTMLLayer(&container, atom);
-    break;
-
-  default:
-    rv = NS_NewHTMLContainer(&container, atom);
-    break;
-  }
-
-  // XXX for now assume that if it's a container, it's a simple container
-  mNodeStack[mStackPos] = (eHTMLTags) aNode.GetNodeType();
-  mContainerStack[mStackPos] = container;
-
-  if (nsnull != container) {
-    container->SetDocument(mDocument);
-    rv = AddAttributes(aNode, container);
-    if (eHTMLTag_a == nodeType) {
-      AddBaseTagInfo(container);
-      if ((nsnull != mRef) && (nsnull == mRefContent)) {
-        nsHTMLValue value;
-        container->GetAttribute(nsHTMLAtoms::name, value);
-        if (eHTMLUnit_String == value.GetUnit()) {
-          nsAutoString tmp;
-          value.GetStringValue(tmp);
-          if (mRef->EqualsIgnoreCase(tmp)) {
-            // Winner. We just found the content that is the named anchor
-            mRefContent = container;
-            NS_ADDREF(container);
-          }
-        }
-      }
-    }
-    mStackPos++;
-  }
-
-  NS_RELEASE(atom);
-  return rv;
+  return mCurrentContext->OpenContainer(aNode);
 }
 
 NS_IMETHODIMP
 HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
 {
-  FlushText();
-
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseContainer", aNode);
-
-  switch (aNode.GetNodeType()) {
-  case eHTMLTag_map:
-    NS_NOTREACHED("bad parser: map's in CloseContainer");
-    NS_IF_RELEASE(mCurrentMap);
-    return NS_OK;
-  case eHTMLTag_body:
-  case eHTMLTag_html:
-  case eHTMLTag_head:
-    NS_NOTREACHED("bad parser: calling CloseContainer for bad tag");
-    return NS_OK;
+  // XXX work around parser bug
+  if (eHTMLTag_frameset == aNode.GetNodeType()) {
+    return CloseFrameset(aNode);
   }
+  return mCurrentContext->CloseContainer(aNode);
+}
 
-  // XXX we could assert things about the top tag name
-  if (0 == mStackPos) {
-    // Can't pop empty stack
-    return NS_OK;
-  }
+NS_IMETHODIMP
+HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
+{
+  nsresult rv;
 
-  --mStackPos;
-  nsIHTMLContent* container = mContainerStack[mStackPos];
-  mNodeStack[mStackPos] = eHTMLTag_unknown;
-  mContainerStack[mStackPos] = nsnull;
-
-
-  nsIHTMLContent* parent = nsnull;
-
-  switch (aNode.GetNodeType()) {
-  case eHTMLTag_option:
-    ProcessCloseOPTIONTag(aNode);
+  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
+  switch (nodeType) {
+  case eHTMLTag_area:
+    mCurrentContext->FlushText();
+    rv = ProcessAREATag(aNode);
     break;
 
-  case eHTMLTag_select:
-    ProcessCloseSELECTTag(aNode); // add fall through
+  case eHTMLTag_base:
+    mCurrentContext->FlushText();
+    rv = ProcessBASETag(aNode);
     break;
 
-  case eHTMLTag_table:
-    mInMonolithicContainer--;
+  case eHTMLTag_link:
+    mCurrentContext->FlushText();
+    rv = ProcessLINKTag(aNode);
+    break;
+
+  case eHTMLTag_meta:
+    mCurrentContext->FlushText();
+    rv = ProcessMETATag(aNode);
+    break;
+
+  case eHTMLTag_style:
+    mCurrentContext->FlushText();
+    rv = ProcessSTYLETag(aNode);
+    break;
+
+  case eHTMLTag_script:
+    mCurrentContext->FlushText();
+    rv = ProcessSCRIPTTag(aNode);
+    break;
+
+  default:
+    rv = mCurrentContext->AddLeaf(aNode);
     break;
   }
-
-  if (nsnull != container) {
-    // Now that this container is complete, append it to it's parent
-    eHTMLTags parentType;
-    parent = GetCurrentContainer(&parentType);
-    container->Compact();
-    // don't append the top level frameset to its parent, this was done in OpenFrameset
-    // XXX this is necessary because the parser is calling OpenContainer, CloseContainer
-    // on framesets. It should be calling OpenFrameset.
-    if (container == mFrameset) {
-      return CloseFrameset(aNode);
-    }
-
-    if (nsnull != parent) {
-      PRBool allowReflow = parent == GetBodyOrFrameset();
-#ifdef NS_DEBUG
-      if (allowReflow) {
-        SINK_TRACE(SINK_TRACE_REFLOW,
-                   ("HTMLContentSink::CloseContainer: reflow after append"));
-      }
-#endif
-      
-      AppendToCorrectParent(parentType, parent,
-                            (nsHTMLTag) aNode.GetNodeType(), container,
-                            allowReflow);
-#ifdef NS_DEBUG
-      if (allowReflow && (((PRInt32)gSinkLogModuleInfo->level) > 127)) {
-        mRoot->List(stdout, 0);
-        PRInt32 i, ns = mDocument->GetNumberOfShells();
-        for (i = 0; i < ns; i++) {
-          nsIPresShell* shell = mDocument->GetShellAt(i);
-          if (nsnull != shell) {
-            nsIViewManager* vm = shell->GetViewManager();
-            if(vm) {
-              nsIView* rootView;
-              vm->GetRootView(rootView);
-              nsRect rect;
-              rootView->GetBounds(rect);
-              rect.x = 0;
-              rect.y = 0;
-              vm->UpdateView(rootView, rect, NS_VMREFRESH_IMMEDIATE);
-            }
-            NS_RELEASE(vm);
-            NS_RELEASE(shell);
-          }
-        }
-        printf("tick...\n");
-        PR_Sleep(PR_SecondsToInterval(3));
-      }
-#endif
-#if XXX
-      if (parent == GetBodyOrFrameset()) {
-        // We just closed a child of the body off. Trigger a
-        // content-appended reflow if enough time has elapsed
-        PRTime now = PR_Now();
-        /* XXX this expression doesn't compile on the Mac
-           kipp said it had to do with a type issue.
-           if (now - mLastUpdateTime >= mUpdateDelta) {
-           mLastUpdateTime = now;
-           mUpdateDelta += mUpdateDelta;
-           ReflowNewContent();
-           }*/
-      }
-#endif
-    }
-NS_ASSERTION(container != mBody, "whoops");
-    NS_RELEASE(container);
-  }
-
-  return NS_OK;
+  return rv;
 }
-
-/**
- * This method gets called when the parser begins the process
- * of building the content model via the content sink.
- *
- * @update 5/7/98 gess
- */     
-NS_IMETHODIMP
-HTMLContentSink::WillBuildModel(void)
-{
-  // Make root part
-  NS_IF_RELEASE(mRoot);
-  nsresult rv = NS_NewRootPart(&mRoot, mDocument);
-  if (NS_OK != rv) {
-    return rv;
-  }
-
-  // Make head container
-  NS_IF_RELEASE(mHead);
-  nsIAtom* atom = NS_NewAtom("HEAD");
-  if (nsnull == atom) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  rv = NS_NewHTMLHead(&mHead, atom);
-  NS_RELEASE(atom);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  mRoot->AppendChildTo(mHead, PR_FALSE);
-
-  // Notify document that the load is beginning
-  mDocument->BeginLoad();
-
-  return NS_OK;
-}
-
-
-/**
- * This method gets called when the parser concludes the process
- * of building the content model via the content sink.
- *
- * @param  aQualityLevel describes how well formed the doc was.
- *         0=GOOD; 1=FAIR; 2=POOR;
- * @update 6/21/98 gess
- */     
-NS_IMETHODIMP
-HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
-{
-  if (nsnull == mTitle) {
-    ((nsHTMLDocument*)mDocument)->SetTitle("");
-  }
-
-  PRInt32 i, ns = mDocument->GetNumberOfShells();
-  for (i = 0; i < ns; i++) {
-    nsIPresShell* shell = mDocument->GetShellAt(i);
-    if (nsnull != shell) {
-      nsIViewManager* vm = shell->GetViewManager();
-      if(vm) {
-        vm->SetQuality(nsContentQuality(aQualityLevel));
-      }
-      NS_RELEASE(vm);
-      NS_RELEASE(shell);
-    }
-  }
-
-// XXX sigh
-ScrollToRef();
-
-  SINK_TRACE(SINK_TRACE_REFLOW,
-             ("HTMLContentSink::DidBuildModel: layout new content"));
-  ReflowNewContent();
-  mDocument->EndLoad();
-
-  return NS_OK;
-}
-
-/**
- * This method gets called when the parser gets i/o blocked,
- * and wants to notify the sink that it may be a while before
- * more data is available.
- *
- * @update 5/7/98 gess
- */     
-NS_IMETHODIMP
-HTMLContentSink::WillInterrupt(void)
-{
-  SINK_TRACE(SINK_TRACE_CALLS,
-             ("HTMLContentSink::WillInterrupt: this=%p", this));
-  return NS_OK;
-}
-
-/**
- * This method gets called when the parser i/o gets unblocked,
- * and we're about to start dumping content again to the sink.
- *
- * @update 5/7/98 gess
- */     
-NS_IMETHODIMP
-HTMLContentSink::WillResume(void)
-{
-  SINK_TRACE(SINK_TRACE_CALLS,
-             ("HTMLContentSink::WillResume: this=%p", this));
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
 
 void
 HTMLContentSink::StartLayout()
 {
-  if (!mLayoutStarted) {
+  PRInt32 i, ns = mDocument->GetNumberOfShells();
+  for (i = 0; i < ns; i++) {
+    nsIPresShell* shell = mDocument->GetShellAt(i);
+    if (nsnull != shell) {
+      // Make shell an observer for next time
+      shell->BeginObservingDocument();
+
+      // Resize-reflow this time
+      nsIPresContext* cx = shell->GetPresContext();
+      nsRect r;
+      cx->GetVisibleArea(r);
+      shell->ResizeReflow(r.width, r.height);
+      NS_RELEASE(cx);
+
+      // Now trigger a refresh
+      nsIViewManager* vm = shell->GetViewManager();
+      if (nsnull != vm) {
+        vm->EnableRefresh();
+        NS_RELEASE(vm);
+      }
+
+      NS_RELEASE(shell);
+    }
+  }
+
+  // If the document we are loading has a reference or it is a top level
+  // frameset document, disable the scroll bars on the views.
+  const char* ref = mDocumentURL->GetRef();
+  if (nsnull != ref) {
+    mRef = new nsString(ref);
+  }
+  PRBool topLevelFrameset = PR_FALSE;
+  if (mFrameset && mWebShell) {
+    nsIWebShell* rootWebShell;
+    mWebShell->GetRootWebShell(rootWebShell);
+    if (mWebShell == rootWebShell) {
+      topLevelFrameset = PR_TRUE;
+    }
+    NS_IF_RELEASE(rootWebShell);
+  }
+
+  if ((nsnull != ref) || topLevelFrameset) {
+    // XXX support more than one presentation-shell here
+
+    // Get initial scroll preference and save it away; disable the
+    // scroll bars.
     PRInt32 i, ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
       nsIPresShell* shell = mDocument->GetShellAt(i);
       if (nsnull != shell) {
-        // Make shell an observer for next time
-        shell->BeginObservingDocument();
-
-        // Resize-reflow this time
-        nsIPresContext* cx = shell->GetPresContext();
-        nsRect r;
-        cx->GetVisibleArea(r);
-        shell->ResizeReflow(r.width, r.height);
-        NS_RELEASE(cx);
-
-        // Now trigger a refresh
         nsIViewManager* vm = shell->GetViewManager();
         if (nsnull != vm) {
-          vm->EnableRefresh();
+          nsIView* rootView = nsnull;
+          vm->GetRootView(rootView);
+          if (nsnull != rootView) {
+            nsIScrollableView* sview = nsnull;
+            rootView->QueryInterface(kIScrollableViewIID, (void**) &sview);
+            if (nsnull != sview) {
+              mOriginalScrollPreference = (topLevelFrameset) 
+                ? nsScrollPreference_kNeverScroll 
+                : sview->GetScrollPreference();
+              sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
+            }
+          }
           NS_RELEASE(vm);
         }
-
         NS_RELEASE(shell);
       }
     }
-
-    // If the document we are loading has a reference or it is a top level
-    // frameset document, disable the scroll bars on the views.
-    const char* ref = mDocumentURL->GetRef();
-    if (nsnull != ref) {
-      mRef = new nsString(ref);
-    }
-    PRBool topLevelFrameset = PR_FALSE;
-    if (mFrameset && mWebShell) {
-      nsIWebShell* rootWebShell;
-      mWebShell->GetRootWebShell(rootWebShell);
-      if (mWebShell == rootWebShell) {
-        topLevelFrameset = PR_TRUE;
-      }
-      NS_IF_RELEASE(rootWebShell);
-    }
-
-    if ((nsnull != ref) || topLevelFrameset) {
-      // XXX support more than one presentation-shell here
-
-      // Get initial scroll preference and save it away; disable the
-      // scroll bars.
-      PRInt32 i, ns = mDocument->GetNumberOfShells();
-      for (i = 0; i < ns; i++) {
-        nsIPresShell* shell = mDocument->GetShellAt(i);
-        if (nsnull != shell) {
-          nsIViewManager* vm = shell->GetViewManager();
-          if (nsnull != vm) {
-            nsIView* rootView;
-            vm->GetRootView(rootView);
-            if (nsnull != rootView) {
-              nsIScrollableView* sview = nsnull;
-              rootView->QueryInterface(kIScrollableViewIID, (void**) &sview);
-              if (nsnull != sview) {
-                mOriginalScrollPreference = (topLevelFrameset) 
-                  ? nsScrollPreference_kNeverScroll 
-                  : sview->GetScrollPreference();
-                sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
-              }
-            }
-            NS_RELEASE(vm);
-          }
-          NS_RELEASE(shell);
-        }
-      }
-    }
-
-    mLayoutStarted = PR_TRUE;
   }
-}
-
-void
-HTMLContentSink::ReflowNewContent()
-{
-  // Trigger reflows in each of the presentation shells
-  mDocument->ContentAppended(mBody);
-//  ScrollToRef();
 }
 
 void
@@ -1160,7 +1594,7 @@ HTMLContentSink::ScrollToRef()
         if (nsnull != frame) {
           nsIViewManager* vm = shell->GetViewManager();
           if (nsnull != vm) {
-            nsIView* rootView;
+            nsIView* rootView = nsnull;
             vm->GetRootView(rootView);
             if (nsnull != rootView) {
               nsIScrollableView* sview = nsnull;
@@ -1201,437 +1635,12 @@ NS_RELEASE(cx);
   }
 }
 
-nsIHTMLContent*
-HTMLContentSink::GetCurrentContainer(eHTMLTags* aType)
-{
-  nsIHTMLContent* parent;
-  if (mStackPos <= 2) {     // assume HTML and BODY/FRAMESET are on the stack
-    if (mBody) {
-      parent = mBody;
-      *aType = eHTMLTag_body;
-    } else {
-      parent = mFrameset;
-      *aType = eHTMLTag_frameset;
-    }
-  } else {
-    parent = mContainerStack[mStackPos - 1];
-    *aType = mNodeStack[mStackPos - 1];
-  }
-  return parent;
-}
-
-//----------------------------------------------------------------------
-
-// Leaf tag handling code
-
-NS_IMETHODIMP HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
-{
-  NS_ASSERTION(mStackPos > 0, "bad parser");
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::AddLeaf", aNode);
-
-  // Check for nodes that require special handling
-  switch (aNode.GetNodeType()) {
-  case eHTMLTag_style:
-    FlushText();
-    ProcessSTYLETag(aNode);
-    return NS_OK;
-
-  case eHTMLTag_script:
-    // XXX SCRIPT tag evaluation is currently turned off till we
-    // get more scripts working.
-    FlushText();
-    ProcessSCRIPTTag(aNode);
-    return NS_OK;
-
-  case eHTMLTag_area:
-    FlushText();
-    ProcessAREATag(aNode);
-    return NS_OK;
-
-  case eHTMLTag_meta:
-    // Add meta objects to the head object
-    FlushText();
-    ProcessMETATag(aNode);
-    return NS_OK;
-
-  case eHTMLTag_base:
-    ProcessBASETag(aNode);
-    return NS_OK;
-
-  case eHTMLTag_link:
-    ProcessLINKTag(aNode);
-    return NS_OK;
-  }
-
-  eHTMLTags parentType;
-  nsIHTMLContent* parent = GetCurrentContainer(&parentType);
-
-  switch (parentType) {
-  /*case eHTMLTag_table:
-  case eHTMLTag_tr:
-  case eHTMLTag_tbody:
-  case eHTMLTag_thead:
-  case eHTMLTag_tfoot:
-    // XXX Discard leaf content (those annoying \n's really) in
-    // table's or table rows
-    return PR_TRUE;
-  */
-  case eHTMLTag_option:
-    FlushText();
-    ProcessOPTIONTagContent(aNode);
-    return NS_OK;
-
-  case eHTMLTag_select:
-    // Discard content in a select that's not an option
-    if (eHTMLTag_option != aNode.GetNodeType()) {
-      return NS_OK;
-    }
-    break;
-  }
-
-  PRBool sleazyTextHackXXX = PR_FALSE;
-
-  nsresult rv = NS_OK;
-  nsIHTMLContent* leaf = nsnull;
-  switch (aNode.GetTokenType()) {
-  case eToken_start:
-    switch (aNode.GetNodeType()) {
-    case eHTMLTag_br:
-      FlushText();
-      rv = ProcessBRTag(&leaf, aNode);
-      break;
-    case eHTMLTag_frame:
-      FlushText();
-      rv = ProcessFrameTag(&leaf, aNode);
-      break;
-    case eHTMLTag_hr:
-      FlushText();
-      rv = ProcessHRTag(&leaf, aNode);
-      break;
-    case eHTMLTag_input:
-      FlushText();
-      rv = ProcessINPUTTag(&leaf, aNode);
-      break;
-    case eHTMLTag_img:
-      FlushText();
-#ifndef XXX
-      {
-        /* HACK - Jim Dunn 8/6
-         * Check to see if this is an ART image type
-         * If so then process it using the ART plugin
-         * Otherwise treat it like a normal image
-         */
-
-        PRBool bArt = PR_FALSE;
-        nsAutoString v;
-        PRInt32 ac = aNode.GetAttributeCount();
-        for (PRInt32 i = 0; i < ac; i++)    /* Go through all of this tag's attributes */
-        {
-            const nsString& key = aNode.GetKeyAt(i);
-
-            if (!key.Compare("SRC", PR_TRUE))   /* Find the SRC (source) tag */
-            {
-                const nsString& key2 = aNode.GetValueAt(i);
-
-                v.Truncate();
-                v.Append(key2);
-                v.ToLowerCase();
-                if (-1 != v.Find(".art"))   /* See if it has an ART extension */
-                {
-                    bArt = PR_TRUE;    /* Treat this like an embed */
-                    break;
-                }
-            }
-            if (!key.Compare("TYPE", PR_TRUE))  /* Find the TYPE (mimetype) tag */
-            {
-                const nsString& key2 = aNode.GetValueAt(i);
-
-                v.Truncate();
-                v.Append(key2);
-                v.ToLowerCase();
-                if ((-1 != v.Find("image/x-art"))   /* See if it has an ART Mimetype */
-                 || (-1 != v.Find("image/art"))
-                 || (-1 != v.Find("image/x-jg")))
-                {
-                    bArt = PR_TRUE;    /* Treat this like an embed */
-                    break;
-                }
-            }
-        }
-        if (bArt)
-            rv = ProcessEMBEDTag(&leaf, aNode);
-        else
-            rv = ProcessIMGTag(&leaf, aNode);
-      }
-#else
-      rv = ProcessIMGTag(&leaf, aNode);
-#endif /* XXX */
-      break;
-    case eHTMLTag_spacer:
-      FlushText();
-      rv = ProcessSPACERTag(&leaf, aNode);
-      break;
-    case eHTMLTag_textarea:
-      FlushText();
-      ProcessTEXTAREATag(&leaf, aNode);
-      break;
-    case eHTMLTag_embed:
-      FlushText();
-      rv = ProcessEMBEDTag(&leaf, aNode);
-      break;
-    case eHTMLTag_col:
-      rv = ProcessCOLTag(&leaf, aNode);
-      break;
-    }
-    break;
-
-  case eToken_text:
-  case eToken_whitespace:
-  case eToken_newline:
-    rv = AddText(aNode.GetText(), &leaf);
-    sleazyTextHackXXX = PR_TRUE;
-    break;
-
-  case eToken_entity:
-    {
-      nsAutoString tmp;
-      PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
-      if (unicode < 0) {
-        rv = AddText(aNode.GetText(), &leaf);
-      }
-      else {
-        rv = AddText(tmp, &leaf);
-      }
-      sleazyTextHackXXX = PR_TRUE;
-    }
-    break;
-
-  case eToken_skippedcontent:
-    break;
-  }
-
-  if (NS_OK == rv) {
-    if (nsnull != leaf) {
-      if (nsnull != parent) {
-        AppendToCorrectParent(parentType, parent,
-                              (nsHTMLTag) aNode.GetNodeType(), leaf,
-                              PR_FALSE);
-        if (sleazyTextHackXXX) {
-          // XXX Prevent incremental reflows on the text as it pours in
-          leaf->SetDocument(nsnull);
-        }
-      } else {
-        // XXX drop stuff on the floor that doesn't have a container!
-        // Bad parser!
-      }
-    }
-  }
-  NS_IF_RELEASE(leaf);
-
-  return rv;
-}
-
-// Special handling code to push unexpected table content out of the
-// table and into the table's parent, just before the table. Because
-// the table is a container, it will not have been added to it's
-// parent yet so we can just append the inappropriate content.
 void
-HTMLContentSink::AppendToCorrectParent(nsHTMLTag aParentTag,
-                                       nsIHTMLContent* aParent,
-                                       nsHTMLTag aChildTag,
-                                       nsIHTMLContent* aChild,
-                                       PRBool aAllowReflow)
+HTMLContentSink::ReflowNewContent()
 {
-  nsIHTMLContent* realParent = aParent;
-
-  // These are the tags that are allowed in a table
-  static char tableTagSet[] = {
-    eHTMLTag_tbody, eHTMLTag_thead, eHTMLTag_tfoot,
-    eHTMLTag_tr, eHTMLTag_col, eHTMLTag_colgroup,
-    eHTMLTag_caption,/* XXX ok? */
-    0,
-  };
-
-  // These are the tags that are allowed in a tbody/thead/tfoot
-  static char tbodyTagSet[] = {
-    eHTMLTag_tr,
-    eHTMLTag_caption,/* XXX ok? */
-    0,
-  };
-
-  // These are the tags that are allowed in a colgroup
-  static char colgroupTagSet[] = {
-    eHTMLTag_col,
-    0,
-  };
-
-  // These are the tags that are allowed in a tr
-  static char trTagSet[] = {
-    eHTMLTag_td, eHTMLTag_th,
-    0,
-  };
-
-  switch (aParentTag) {
-  case eHTMLTag_table:
-    if (0 == strchr(tableTagSet, aChildTag)) {
-      realParent = GetTableParent();
-    }
-    break;
-
-  case eHTMLTag_tbody:
-  case eHTMLTag_thead:
-  case eHTMLTag_tfoot:
-    if (0 == strchr(tbodyTagSet, aChildTag)) {
-      realParent = GetTableParent();
-    }
-    break;
-
-  case eHTMLTag_col:
-    realParent = GetTableParent();
-    break;
-
-  case eHTMLTag_colgroup:
-    if (0 == strchr(colgroupTagSet, aChildTag)) {
-      realParent = GetTableParent();
-    }
-    break;
-
-  case eHTMLTag_tr:
-    if (0 == strchr(trTagSet, aChildTag)) {
-      realParent = GetTableParent();
-    }
-    break;
-
-  default:
-    break;
-  }
-
-  realParent->AppendChildTo(aChild, aAllowReflow);
-  if (aAllowReflow) {
-//    ScrollToRef();
-  }
-}
-
-// Find the parent of the currently open table
-nsIHTMLContent*
-HTMLContentSink::GetTableParent()
-{
-  PRInt32 sp = mStackPos - 1;
-  while (sp >= 0) {
-    switch (mNodeStack[sp]) {
-    case eHTMLTag_table:
-    case eHTMLTag_tr:
-    case eHTMLTag_tbody:
-    case eHTMLTag_thead:
-    case eHTMLTag_tfoot:
-    case eHTMLTag_col:
-    case eHTMLTag_colgroup:
-      break;
-    default:
-      return mContainerStack[sp];
-    }
-    sp--;
-  }
-  return GetBodyOrFrameset();
-}
-
-nsresult
-HTMLContentSink::AddText(const nsString& aText, nsIHTMLContent** aContent)
-{
-  nsresult rv;
-  if (nsnull != mCurrentText) {
-    mCurrentText->Append((nsString&)aText);/* XXX fix dom text api!!! */
-    *aContent = nsnull;
-    rv = NS_OK;
-  }
-  else {
-    static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-    rv = NS_NewHTMLText(aContent, aText.GetUnicode(), aText.Length());
-    if (NS_OK == rv) {
-      (*aContent)->QueryInterface(kIDOMTextIID, (void**) &mCurrentText);
-    }
-  }
-  return rv;
-}
-
-PRBool
-HTMLContentSink::FlushText()
-{
-  if (nsnull != mCurrentText) {
-    // XXX sleazyTextHackXXX repair document pointer in text object
-    nsIContent* content = nsnull;
-    mCurrentText->QueryInterface(kIContentIID, (void**) &content);
-    content->SetDocument(mDocument);
-    NS_RELEASE(content);
-    NS_RELEASE(mCurrentText);
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-void HTMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
-                                          PRInt32 aIndex,
-                                          nsString& aResult)
-{
-  // Copy value
-  const nsString& value = aNode.GetValueAt(aIndex);
-  aResult.Truncate();
-  aResult.Append(value);
-
-  // strip quotes if present
-  PRUnichar first = aResult.First();
-  if ((first == '"') || (first == '\'')) {
-    if (aResult.Last() == first) {
-      aResult.Cut(0, 1);
-      PRInt32 pos = aResult.Length() - 1;
-      if (pos >= 0) {
-        aResult.Cut(pos, 1);
-      }
-    } else {
-      // Mismatched quotes - leave them in
-    }
-  }
-}
-
-PRBool HTMLContentSink::FindAttribute(const nsIParserNode& aNode,
-                                      const nsString& aKeyName,
-                                      nsString& aResult)
-{
-  PRInt32 ac = aNode.GetAttributeCount();
-  for (PRInt32 i = 0; i < ac; i++) {
-    const nsString& key = aNode.GetKeyAt(i);
-    if (key.EqualsIgnoreCase(aKeyName)) {
-      // Get value and remove mandatory quotes
-      GetAttributeValueAt(aNode, i, aResult);
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
-}
-
-nsresult HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
-                                        nsIHTMLContent* aInstancePtrResult)
-{
-  nsIContent* content = (nsIContent*) aInstancePtrResult;
-
-  // Add tag attributes to the content attributes
-  nsAutoString k, v;
-  PRInt32 ac = aNode.GetAttributeCount();
-  for (PRInt32 i = 0; i < ac; i++) {
-    // Get upper-cased key
-    const nsString& key = aNode.GetKeyAt(i);
-    k.Truncate();
-    k.Append(key);
-    k.ToUpperCase();
-    
-    // Get value and remove mandatory quotes
-    GetAttributeValueAt(aNode, i, v);
-
-    content->SetAttribute(k, v);
-  }
-
-  return NS_OK;
+  // Trigger reflows in each of the presentation shells
+  mDocument->ContentAppended(mBody);
+//XXX  ScrollToRef();
 }
 
 void
@@ -1647,7 +1656,30 @@ HTMLContentSink::AddBaseTagInfo(nsIHTMLContent* aContent)
   }
 }
 
-nsresult HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
+nsresult
+HTMLContentSink::ProcessATag(const nsIParserNode& aNode,
+                             nsIHTMLContent* aContent)
+{
+  AddBaseTagInfo(aContent);
+  if ((nsnull != mRef) && (nsnull == mRefContent)) {
+    nsHTMLValue value;
+    aContent->GetAttribute(nsHTMLAtoms::name, value);
+    if (eHTMLUnit_String == value.GetUnit()) {
+      nsAutoString tmp;
+      value.GetStringValue(tmp);
+      if (mRef->EqualsIgnoreCase(tmp)) {
+        // Winner. We just found the content that is the named anchor
+        mRefContent = aContent;
+        NS_ADDREF(aContent);
+      }
+    }
+  }
+  return NS_OK;
+}
+
+// XXX add area content object to map content object instead
+nsresult
+HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
 {
   if (nsnull != mCurrentMap) {
     nsAutoString shape, coords, href, target(mBaseTarget), alt;
@@ -1682,7 +1714,8 @@ nsresult HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
   return NS_OK;
 }
 
-nsresult HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
+nsresult
+HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
 {
   PRInt32 ac = aNode.GetAttributeCount();
   for (PRInt32 i = 0; i < ac; i++) {
@@ -1697,146 +1730,131 @@ nsresult HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
 }
 
 nsresult
+HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
+{
+  nsresult  result = NS_OK;
+  PRInt32   index;
+  PRInt32   count = aNode.GetAttributeCount();
+
+  nsAutoString href;
+  nsAutoString rel; 
+  nsAutoString title; 
+  nsAutoString type; 
+
+  for (index = 0; index < count; index++) {
+    const nsString& key = aNode.GetKeyAt(index);
+    if (key.EqualsIgnoreCase("href")) {
+      GetAttributeValueAt(aNode, index, href);
+      href.StripWhitespace();
+    }
+    else if (key.EqualsIgnoreCase("rel")) {
+      GetAttributeValueAt(aNode, index, rel);
+      rel.CompressWhitespace();
+    }
+    else if (key.EqualsIgnoreCase("title")) {
+      GetAttributeValueAt(aNode, index, title);
+      title.CompressWhitespace();
+    }
+    else if (key.EqualsIgnoreCase("type")) {
+      GetAttributeValueAt(aNode, index, type);
+      type.StripWhitespace();
+    }
+  }
+
+  if (rel.EqualsIgnoreCase("stylesheet")) {
+    if (type.EqualsIgnoreCase("text/css")) {
+      nsIURL* url = nsnull;
+      nsIUnicharInputStream* uin = nsnull;
+      nsAutoString absURL;
+      nsIURL* docURL = mDocument->GetDocumentURL();
+      result = NS_MakeAbsoluteURL(docURL, mBaseHREF, href, absURL);
+      if (NS_OK != result) {
+        return result;
+      }
+      NS_RELEASE(docURL);
+      result = NS_NewURL(&url, nsnull, absURL);
+      if (NS_OK != result) {
+        return result;
+      }
+      PRInt32 ec;
+      nsIInputStream* iin = url->Open(&ec);
+      if (nsnull == iin) {
+        NS_RELEASE(url);
+        return (nsresult) ec;/* XXX fix url->Open */
+      }
+      result = NS_NewConverterStream(&uin, nsnull, iin);
+      NS_RELEASE(iin);
+      if (NS_OK != result) {
+        NS_RELEASE(url);
+        return result;
+      }
+
+      result = LoadStyleSheet(url, uin, PR_FALSE);
+      NS_RELEASE(uin);
+      NS_RELEASE(url);
+    }
+  }
+
+  return result;
+}
+
+nsresult
 HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 {
-  nsresult rv = NS_OK;
-  nsIHttpUrl* httpUrl=nsnull;
-  nsString header("HTTP-EQUIV"), result;
-  char *value=nsnull, *name=nsnull;
-
   if (nsnull != mHead) {
+    // Create content object
     nsAutoString tmp("META");
     nsIAtom* atom = NS_NewAtom(tmp);
-
-    nsIHTMLContent* it = nsnull;
-    rv = NS_NewHTMLMeta(&it, atom) ;
+    if (nsnull == atom) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    nsIHTMLContent* it;
+    nsresult rv = NS_NewHTMLMeta(&it, atom);
+    NS_RELEASE(atom);
     if (NS_OK == rv) {
+      // Add in the attributes and add the meta content object to the
+      // head container.
       rv = AddAttributes(aNode, it);
+      if (NS_OK != rv) {
+        NS_RELEASE(it);
+        return rv;
+      }
       mHead->AppendChildTo(it, PR_FALSE);
 
-      // Handle the Refresh Case. We could also handle 
-      // the other http-equiv cases here such as "Content-type".
-      it->GetAttribute(header, result);
-      if(result.EqualsIgnoreCase("REFRESH")) {
-          header="CONTENT";
-          it->GetAttribute(header, result);
-          if(result.Length() > 0) {
-              value=result.ToNewCString();
-              if (!value) {
-                  NS_RELEASE(atom);
-                  return NS_ERROR_OUT_OF_MEMORY;
-              }
-          }
-          header="REFRESH";
-          name=header.ToNewCString();
-          if (!name) {
-              delete value;
-              NS_RELEASE(atom);
+      // If we are processing an HTTP url, handle the Refresh Case. We
+      // could also handle the other http-equiv cases here such as
+      // "Content-type".
+      nsIHttpUrl* httpUrl = nsnull;
+      rv = mDocumentURL->QueryInterface(kIHTTPUrlIID, (void **)&httpUrl);
+      if (NS_OK == rv) {
+        nsAutoString result;
+        it->GetAttribute(nsHTMLAtoms::httpEquiv, result);
+        if (result.EqualsIgnoreCase("REFRESH")) {
+          it->GetAttribute(nsHTMLAtoms::content, result);
+          if (result.Length() > 0) {
+            char* value = result.ToNewCString();
+            if (!value) {
+              NS_RELEASE(it);
               return NS_ERROR_OUT_OF_MEMORY;
+            }
+            httpUrl->AddMimeHeader("REFRESH", value);
+            delete value;
           }
-          rv = mDocumentURL->QueryInterface(kIHTTPUrlIID, (void **)&httpUrl);
-          if(rv == NS_OK) {
-              httpUrl->AddMimeHeader(name, value);
-              NS_RELEASE(httpUrl);
-              delete name;
-              delete value;
-          }
+        }
+        NS_RELEASE(httpUrl);
       }
 
       NS_RELEASE(it);
     }
-
-    NS_RELEASE(atom);
   }
 
-  return rv;
-}
-
-nsresult HTMLContentSink::ProcessBRTag(nsIHTMLContent** aInstancePtrResult,
-                                       const nsIParserNode& aNode)
-{
-  nsresult rv = NS_OK;
-  nsAutoString tmp("BR");
-  nsIAtom* atom = NS_NewAtom(tmp);
-  rv = NS_NewHTMLBreak(aInstancePtrResult, atom);
-  if (NS_OK == rv) {
-    rv = AddAttributes(aNode, *aInstancePtrResult);
-  }
-  NS_RELEASE(atom);
-  return rv;
-}
-nsresult HTMLContentSink::ProcessEMBEDTag(nsIHTMLContent** aInstancePtrResult,
-                                          const nsIParserNode& aNode)
-{
-  nsresult rv = NS_OK;
-  nsAutoString tmp("EMBED");
-  nsIAtom* atom = NS_NewAtom(tmp);
-  rv = NS_NewHTMLEmbed(aInstancePtrResult, atom);
-  if (NS_OK == rv) {
-    rv = AddAttributes(aNode, *aInstancePtrResult);
-  }
-  NS_RELEASE(atom);
-  return rv;
-}
-
-nsresult HTMLContentSink::ProcessHRTag(nsIHTMLContent** aInstancePtrResult,
-                                       const nsIParserNode& aNode)
-{
-  nsresult rv = NS_OK;
-  nsAutoString tmp("HR");
-  nsIAtom* atom = NS_NewAtom(tmp);
-  rv = NS_NewHRulePart(aInstancePtrResult, atom);
-  if (NS_OK == rv) {
-    rv = AddAttributes(aNode, *aInstancePtrResult);
-  }
-  NS_RELEASE(atom);
-  return rv;
-}
-
-nsresult HTMLContentSink::ProcessIMGTag(nsIHTMLContent** aInstancePtrResult,
-                                        const nsIParserNode& aNode)
-{
-  nsAutoString tmp("IMG");
-  nsIAtom* atom = NS_NewAtom(tmp);
-  nsresult rv = NS_NewHTMLImage(aInstancePtrResult, atom);
-  if (NS_OK == rv) {
-    rv = AddAttributes(aNode, *aInstancePtrResult);
-    AddBaseTagInfo(*aInstancePtrResult);
-  }
-
-  NS_RELEASE(atom);
-  return rv;
-}
-
-nsresult HTMLContentSink::ProcessSPACERTag(nsIHTMLContent** aInstancePtrResult,
-                                           const nsIParserNode& aNode)
-{
-  nsAutoString tmp("SPACER");
-  nsIAtom* atom = NS_NewAtom(tmp);
-  nsresult rv = NS_NewHTMLSpacer(aInstancePtrResult, atom);
-  if (NS_OK == rv) {
-    rv = AddAttributes(aNode, *aInstancePtrResult);
-  }
-  NS_RELEASE(atom);
-  return rv;
-}
-
-nsresult HTMLContentSink::ProcessCOLTag(nsIHTMLContent** aInstancePtrResult,
-                                        const nsIParserNode& aNode)
-{
-  nsAutoString tmp("COL");
-  nsIAtom* atom = NS_NewAtom(tmp);
-  nsresult rv = NS_NewTableColPart(aInstancePtrResult, atom);
-  if (NS_OK == rv) {
-    rv = AddAttributes(aNode, *aInstancePtrResult);
-  }
-  NS_RELEASE(atom);
-  return rv;
+  return NS_OK;
 }
 
 #define SCRIPT_BUF_SIZE 1024
 
-nsresult HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
+nsresult
+HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
   PRInt32 i, ac = aNode.GetAttributeCount();
@@ -1947,10 +1965,11 @@ nsresult HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 }
 
 // 3 ways to load a style sheet: inline, style src=, link tag
-  // XXX What does nav do if we have SRC= and some style data inline?
-
+// XXX What does nav do if we have SRC= and some style data inline?
 // XXX This code and ProcessSCRIPTTag share alot in common; clean that up!
-nsresult HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
+
+nsresult
+HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
   PRInt32 i, ac = aNode.GetAttributeCount();
@@ -2021,78 +2040,10 @@ nsresult HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   return rv;
 }
 
-nsresult HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
-{
-  nsresult  result = NS_OK;
-  PRInt32   index;
-  PRInt32   count = aNode.GetAttributeCount();
-
-  nsAutoString href;
-  nsAutoString rel; 
-  nsAutoString title; 
-  nsAutoString type; 
-
-  for (index = 0; index < count; index++) {
-    const nsString& key = aNode.GetKeyAt(index);
-    if (key.EqualsIgnoreCase("href")) {
-      GetAttributeValueAt(aNode, index, href);
-      href.StripWhitespace();
-    }
-    else if (key.EqualsIgnoreCase("rel")) {
-      GetAttributeValueAt(aNode, index, rel);
-      rel.CompressWhitespace();
-    }
-    else if (key.EqualsIgnoreCase("title")) {
-      GetAttributeValueAt(aNode, index, title);
-      title.CompressWhitespace();
-    }
-    else if (key.EqualsIgnoreCase("type")) {
-      GetAttributeValueAt(aNode, index, type);
-      type.StripWhitespace();
-    }
-  }
-
-  if (rel.EqualsIgnoreCase("stylesheet")) {
-    if (type.EqualsIgnoreCase("text/css")) {
-      nsIURL* url = nsnull;
-      nsIUnicharInputStream* uin = nsnull;
-      nsAutoString absURL;
-      nsIURL* docURL = mDocument->GetDocumentURL();
-      result = NS_MakeAbsoluteURL(docURL, mBaseHREF, href, absURL);
-      if (NS_OK != result) {
-        return result;
-      }
-      NS_RELEASE(docURL);
-      result = NS_NewURL(&url, nsnull, absURL);
-      if (NS_OK != result) {
-        return result;
-      }
-      PRInt32 ec;
-      nsIInputStream* iin = url->Open(&ec);
-      if (nsnull == iin) {
-        NS_RELEASE(url);
-        return (nsresult) ec;/* XXX fix url->Open */
-      }
-      result = NS_NewConverterStream(&uin, nsnull, iin);
-      NS_RELEASE(iin);
-      if (NS_OK != result) {
-        NS_RELEASE(url);
-        return result;
-      }
-
-      result = LoadStyleSheet(url, uin, PR_FALSE);
-      NS_RELEASE(uin);
-      NS_RELEASE(url);
-    }
-  }
-
-  return result;
-}
-
-
-nsresult HTMLContentSink::LoadStyleSheet(nsIURL* aURL,
-                                         nsIUnicharInputStream* aUIN,
-                                         PRBool aInline)
+nsresult
+HTMLContentSink::LoadStyleSheet(nsIURL* aURL,
+                                nsIUnicharInputStream* aUIN,
+                                PRBool aInline)
 {
   /* XXX use repository */
   nsICSSParser* parser;
@@ -2128,283 +2079,4 @@ nsresult HTMLContentSink::LoadStyleSheet(nsIURL* aURL,
     NS_RELEASE(parser);
   }
   return rv;
-}
-
-
-nsresult HTMLContentSink::ProcessINPUTTag(nsIHTMLContent** aInstancePtrResult,
-                                          const nsIParserNode& aNode)
-{
-  nsAutoString tmp("INPUT");
-  nsIAtom* atom = NS_NewAtom(tmp);
-
-  nsresult rv = NS_ERROR_NOT_INITIALIZED;
-
-  // Find type attribute and then create the appropriate form element
-  nsAutoString val;
-  if (FindAttribute(aNode, "type", val)) {
-    if (val.EqualsIgnoreCase("submit")) {
-      rv = NS_NewHTMLInputSubmit(aInstancePtrResult, atom, mCurrentForm);
-    }
-    else if (val.EqualsIgnoreCase("reset")) {
-      rv = NS_NewHTMLInputReset(aInstancePtrResult, atom, mCurrentForm);
-    }
-    else if (val.EqualsIgnoreCase("button")) {
-      rv = NS_NewHTMLInputButton(aInstancePtrResult, atom, mCurrentForm);
-    }
-    else if (val.EqualsIgnoreCase("checkbox")) {
-      rv = NS_NewHTMLInputCheckbox(aInstancePtrResult, atom, mCurrentForm);
-    }
-    else if (val.EqualsIgnoreCase("file")) {
-      rv = NS_NewHTMLInputFile(aInstancePtrResult, atom, mCurrentForm);
-    }
-    else if (val.EqualsIgnoreCase("hidden")) {
-      rv = NS_NewHTMLInputHidden(aInstancePtrResult, atom, mCurrentForm);
-    }
-    else if (val.EqualsIgnoreCase("image")) {
-      rv = NS_NewHTMLInputImage(aInstancePtrResult, atom, mCurrentForm);
-    }
-    else if (val.EqualsIgnoreCase("password")) {
-      rv = NS_NewHTMLInputPassword(aInstancePtrResult, atom, mCurrentForm);
-    }
-    else if (val.EqualsIgnoreCase("radio")) {
-      rv = NS_NewHTMLInputRadio(aInstancePtrResult, atom, mCurrentForm);
-    }
-    else if (val.EqualsIgnoreCase("text")) {
-      rv = NS_NewHTMLInputText(aInstancePtrResult, atom, mCurrentForm);
-    }
-    else if (val.EqualsIgnoreCase("frameset1")) {  // TEMP hack XXX
-      //      rv = NS_NewHTMLFrameset(aInstancePtrResult, atom, mWebWidget, 1);
-    }
-    else if (val.EqualsIgnoreCase("frameset2")) {  // TEMP hack XXX
-      // rv = NS_NewHTMLFrameset(aInstancePtrResult, atom, mWebWidget, 2);
-    }
-    else if (val.EqualsIgnoreCase("frameset3")) {  // TEMP hack XXX
-      // rv = NS_NewHTMLFrameset(aInstancePtrResult, atom, mWebWidget, 3);
-    }
-    else {
-      rv = NS_NewHTMLInputText(aInstancePtrResult, atom, mCurrentForm); // XXX fix this on branch
-    }
-  }
-
-  if (NS_ERROR_NOT_INITIALIZED == rv) {
-    // Create textfield when no type is specified
-    rv = NS_NewHTMLInputText(aInstancePtrResult, atom, mCurrentForm);
-  }
-
-  if ((NS_OK == rv) && (nsnull != *aInstancePtrResult)) {
-    // Add remaining attributes from the tag
-    rv = AddAttributes(aNode, *aInstancePtrResult);
-  }
-
-  NS_RELEASE(atom);
-  return rv;
-}
-
-nsresult HTMLContentSink::ProcessFrameTag(nsIHTMLContent** aInstancePtrResult,
-                                          const nsIParserNode& aNode)
-{
-  // XXX kipp was here: ignore frame tags that aren't in a frameset!
-  nsresult rv = NS_OK;
-  if (nsnull != mFrameset) {
-    nsAutoString tmp("FRAME");
-    nsIAtom* atom = NS_NewAtom(tmp);
-
-    rv = NS_NewHTMLFrame(aInstancePtrResult, atom, mWebShell);
-    if (NS_OK == rv) {
-      rv = AddAttributes(aNode, *aInstancePtrResult);
-    }
-
-    NS_RELEASE(atom);
-  }
-  return rv;
-}
-
-nsresult
-HTMLContentSink::ProcessTEXTAREATag(nsIHTMLContent** aInstancePtrResult,
-                                    const nsIParserNode& aNode)
-{
-  nsAutoString tmp("TEXTAREA");
-  nsIAtom* atom = NS_NewAtom(tmp);
-
-  const nsString& content = aNode.GetSkippedContent();
-
-  nsresult rv = NS_NewHTMLTextArea(aInstancePtrResult, atom, mCurrentForm);
-  if ((NS_OK == rv) && (nsnull != *aInstancePtrResult)) {
-    // Add remaining attributes from the tag
-    rv = AddAttributes(aNode, *aInstancePtrResult);
-    if (0 < content.Length()) {
-      nsIFormControl* control;
-      rv = (*aInstancePtrResult)->QueryInterface(kIFormControlIID, (void **)&control);
-      if (NS_OK == rv) {
-        control->SetContent(content);
-        NS_RELEASE(control);
-      }
-    }
-  }
-
-  NS_RELEASE(atom);
-  return rv;
-}
-
-nsresult
-HTMLContentSink::ProcessOpenSELECTTag(nsIHTMLContent** aInstancePtrResult,
-                                      const nsIParserNode& aNode)
-{
-  nsAutoString tmp("SELECT");
-  nsIAtom* atom = NS_NewAtom(tmp);
-
-  if (nsnull != mCurrentSelect) {
-    NS_RELEASE(mCurrentSelect);
-  }
-  nsresult rv = NS_NewHTMLSelect(&mCurrentSelect, atom, mCurrentForm);
-  if ((NS_OK == rv) && (nsnull != mCurrentSelect)) {
-    // Add remaining attributes from the tag
-    //rv = AddAttributes(aNode, mCurrentSelect);
-    *aInstancePtrResult = mCurrentSelect;
-  }
-
-  NS_RELEASE(atom);
-  return rv;
-}
-
-nsresult
-HTMLContentSink::ProcessCloseSELECTTag(const nsIParserNode& aNode)
-{
-  NS_IF_RELEASE(mCurrentSelect);
-  mCurrentSelect = nsnull;
-  return NS_OK;
-}
-
-nsresult
-HTMLContentSink::ProcessOpenOPTIONTag(nsIHTMLContent** aInstancePtrResult,
-                                      const nsIParserNode& aNode)
-{
-  nsresult rv = NS_OK;
-  if (nsnull != mCurrentSelect) {
-    if (nsnull != mCurrentOption) {
-      NS_RELEASE(mCurrentOption);
-    }
-    nsAutoString tmp("OPTION");
-    nsIAtom* atom = NS_NewAtom(tmp);
-    rv = NS_NewHTMLOption(&mCurrentOption, atom);
-    if ((NS_OK == rv) && (nsnull != mCurrentSelect)) {
-      // Add another reference to the option since we remember it both
-      // on our container stack and in mCurrentOption
-      NS_ADDREF(mCurrentOption);
-
-      // Add remaining attributes from the tag
-      //rv = AddAttributes(aNode, mCurrentOption);
-	    *aInstancePtrResult = mCurrentOption;
-    }
-    NS_RELEASE(atom);
-  }
-  return rv;
-}
-
-nsresult
-HTMLContentSink::ProcessCloseOPTIONTag(const nsIParserNode& aNode)
-{
-  NS_IF_RELEASE(mCurrentOption);
-  mCurrentOption = nsnull;
-  return NS_OK;
-}
-
-nsresult
-HTMLContentSink::ProcessOPTIONTagContent(const nsIParserNode& aNode)
-{
-  if ((nsnull != mCurrentSelect) && (nsnull != mCurrentOption)) {
-    nsIFormControl* control = nsnull;
-    mCurrentOption->QueryInterface(kIFormControlIID, (void **)&control);
-    if (nsnull != control) {
-      // Get current content and append on the new content
-      nsAutoString currentText;
-      control->GetContent(currentText);
-
-      switch (aNode.GetTokenType()) {
-      case eToken_text:
-      case eToken_whitespace:
-      case eToken_newline:
-        currentText.Append(aNode.GetText());
-        break;
-
-      case eToken_entity:
-        {
-          nsAutoString tmp2("");
-          PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp2);
-          if (unicode < 0) {
-            currentText.Append(aNode.GetText());
-          } else {
-            currentText.Append(tmp2);
-          }
-        }
-        break;
-      }
-      control->SetContent(currentText);
-      NS_RELEASE(control);
-    }
-  }
-  return NS_OK;
-}
-
-nsresult
-HTMLContentSink::ProcessIFRAMETag(nsIHTMLContent** aInstancePtrResult,
-                                      const nsIParserNode& aNode)
-{
-  nsAutoString tmp("IFRAME");
-  nsIAtom* atom = NS_NewAtom(tmp);
-
-  nsresult rv = NS_NewHTMLIFrame(aInstancePtrResult, atom, mWebShell);
-
-  NS_RELEASE(atom);
-  return rv;
-}
-
-nsresult
-HTMLContentSink::ProcessFRAMESETTag(nsIHTMLContent** aInstancePtrResult,
-                                      const nsIParserNode& aNode)
-{
-  nsAutoString tmp("FRAMESET");
-  nsIAtom* atom = NS_NewAtom(tmp);
-
-  nsresult rv = NS_NewHTMLFrameset(aInstancePtrResult, atom, mWebShell);
-
-  NS_RELEASE(atom);
-  return rv;
-}
-
-nsresult HTMLContentSink::ProcessWBRTag(nsIHTMLContent** aInstancePtrResult,
-                                        const nsIParserNode& aNode)
-{
-  nsAutoString tmp("WBR");
-  nsIAtom* atom = NS_NewAtom(tmp);
-  nsresult rv = NS_NewHTMLWordBreak(aInstancePtrResult, atom);
-  if (NS_OK == rv) {
-    rv = AddAttributes(aNode, *aInstancePtrResult);
-  }
-  NS_RELEASE(atom);
-  return rv;
-}
-
-
-//----------------------------------------------------------------------
-
-nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
-                               nsIDocument* aDoc,
-                               nsIURL* aURL,
-                               nsIWebShell* aWebShell)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  HTMLContentSink* it = new HTMLContentSink();
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult rv = it->Init(aDoc, aURL, aWebShell);
-  if (NS_OK != rv) {
-    delete it;
-    return rv;
-  }
-  return it->QueryInterface(kIHTMLContentSinkIID, (void **)aInstancePtrResult);
 }
