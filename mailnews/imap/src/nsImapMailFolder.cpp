@@ -539,6 +539,32 @@ NS_IMETHODIMP nsImapMailFolder::GetThreadForMessage(nsIMessage *message,
     return rv;
 }
 
+//This needs to be moved up into common base class.
+NS_IMETHODIMP
+nsImapMailFolder::HasMessage(nsIMessage *message, PRBool *hasMessage)
+{
+	if(!hasMessage)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult rv = GetDatabase();
+
+	if(NS_SUCCEEDED(rv))
+	{
+		nsCOMPtr<nsIMsgDBHdr> msgDBHdr, msgDBHdrForKey;
+		nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(message, &rv));
+		nsMsgKey key;
+		if(NS_SUCCEEDED(rv))
+			rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
+		if(NS_SUCCEEDED(rv))
+			rv = msgDBHdr->GetMessageKey(&key);
+		if(NS_SUCCEEDED(rv))
+			rv = m_mailDatabase->ContainsKey(key, hasMessage);
+		
+	}
+	return rv;
+
+}
+
 NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 {
 	nsresult rv = NS_OK;

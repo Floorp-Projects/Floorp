@@ -66,6 +66,7 @@ public:
     NS_IMETHOD GetMessages(nsIEnumerator* *result);
 	NS_IMETHOD GetThreads(nsIEnumerator** threadEnumerator);
 	NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread);
+	NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
 
     
 	NS_IMETHOD CreateSubfolder(const char *folderName);
