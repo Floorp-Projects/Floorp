@@ -53,6 +53,10 @@
 #include "nsRDFCID.h"
 #include "nsNetUtil.h"
 #include "nsMsgMimeCID.h"
+#include "nsIMsgMailSession.h"
+#include "nsIMsgMailNewsUrl.h"
+#include "nsMsgBaseCID.h"
+
 
 // CID's needed
 static NS_DEFINE_CID(kPrefCID,            NS_PREF_CID);
@@ -132,7 +136,7 @@ nsresult
 nsMsgDraft::ProcessDraftOrTemplateOperation(const PRUnichar *msgURI, nsMimeOutputType aOutType, 
                                             nsIMsgIdentity * identity, nsIMessage **aMsgToReplace)
 {
-nsresult  rv;
+  nsresult  rv;
 
   mOutType = aOutType;
 
@@ -193,6 +197,28 @@ nsresult  rv;
   nsCOMPtr<nsIURI> aURL;
   rv = CreateStartupUrl(mURI, getter_AddRefs(aURL));
 
+  // HACK: if we are forwarding a message and that message used a charset over ride
+  // (as speciifed in the top most window (assuming the reply originated from that window)
+  // then use that over ride charset instead of the charset specified in the message
+	nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_PROGID);          
+  nsXPIDLString mailCharset;
+  if (mailSession)
+  {
+    nsCOMPtr<nsIMsgWindow>    msgWindow;
+    mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
+    if (msgWindow)
+    {
+      
+      msgWindow->GetMailCharacterSet(getter_Copies(mailCharset));
+      if (mailCharset)
+      {
+        nsCOMPtr<nsIMsgI18NUrl> i18nUrl(do_QueryInterface(aURL));
+        if (i18nUrl)
+          i18nUrl->SetCharsetOverRide(mailCharset);
+      }
+    }
+  }
+
   nsCOMPtr<nsIChannel> dummyChannel;
   rv = NS_NewInputStreamChannel(getter_AddRefs(dummyChannel), aURL, nsnull, nsnull, -1);
   if (NS_FAILED(mimeParser->AsyncConvertData(nsnull, nsnull, nsnull, dummyChannel)))
@@ -212,7 +238,7 @@ nsresult  rv;
     *aMsgToReplace = GetIMessageFromURI(msgURI);
 
   // Now, just plug the two together and get the hell out of the way!
-  rv = mMessageService->DisplayMessage(mURI, convertedListener, nsnull, nsnull, nsnull, nsnull);
+  rv = mMessageService->DisplayMessage(mURI, convertedListener, nsnull, nsnull, mailCharset, nsnull);
 
   ReleaseMessageServiceFromURI(mURI, mMessageService);
   mMessageService = nsnull;
