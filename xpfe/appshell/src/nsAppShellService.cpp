@@ -62,6 +62,8 @@ static NS_DEFINE_IID(kPICSCID, NS_PICS_CID);
 
 #include "nsMetaCharsetCID.h"
 #include "nsIMetaCharsetService.h"
+#include "nsXMLEncodingCID.h"
+#include "nsIXMLEncodingService.h"
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellCID,          NS_APPSHELL_CID);
@@ -69,6 +71,7 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_IID(kMetaCharsetCID, NS_META_CHARSET_CID);
+static NS_DEFINE_IID(kXMLEncodingCID, NS_XML_ENCODING_CID);
 
 
 /* Define Interface IDs */
@@ -222,6 +225,19 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
       goto done;
    }
    rv = nsServiceManager::ReleaseService(kMetaCharsetCID, metacharset);
+
+  nsIXMLEncodingService* xmlencoding;
+  rv = nsServiceManager::GetService(kXMLEncodingCID,
+                                    nsIXMLEncodingService::GetIID(),
+                                     (nsISupports **) &xmlencoding);
+   if(NS_FAILED(rv)) {
+      goto done;
+   }
+   rv = xmlencoding->Start();
+   if(NS_FAILED(rv)) {
+      goto done;
+   }
+   rv = nsServiceManager::ReleaseService(kXMLEncodingCID, xmlencoding);
 
   // Create widget application shell
   rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID,
