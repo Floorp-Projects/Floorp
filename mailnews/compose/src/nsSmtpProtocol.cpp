@@ -1081,7 +1081,6 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 					if (bsize < 100) // i chose 100 arbitrarily.
 					{
 						nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-						PRUint32 bufferSize = PL_strlen(buffer);
 						if (*buffer)
 							SendData(url, buffer);
 						buffer[0] = '\0';
