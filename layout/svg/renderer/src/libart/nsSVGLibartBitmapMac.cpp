@@ -253,21 +253,26 @@ nsSVGLibartBitmapMac::Flush()
   if (ireq) {
     nsCOMPtr<nsIImage> img(do_GetInterface(ireq));
 
-    if (!img->GetIsRowOrderTopToBottom()) {
-      // XXX we need to flip the image. This is silly. Blt should take
-      // care of it
-      int stride = img->GetLineStride();
-      int height = GetHeight();
-      PRUint8* bits = img->GetBits();
-      PRUint8* rowbuf = new PRUint8[stride];
-      for (int row=0; row<height/2; ++row) {
-        memcpy(rowbuf, bits+row*stride, stride);
-        memcpy(bits+row*stride, bits+(height-1-row)*stride, stride);
-        memcpy(bits+(height-1-row)*stride, rowbuf, stride);
+    // need to flip the words
+    int stride = img->GetLineStride();
+    int height = GetHeight();
+    int width = GetWidth();
+    PRUint8* bits = img->GetBits();
+    PRUint8* rowbuf = new PRUint8[stride];
+    for (int row = 0; row < height; row++) {
+      PRUint8 *src = bits + row * stride;
+      PRUint8 *dst = rowbuf + 3;
+      for (int x = 0; x < width; x++) {
+        *dst-- = *src++;
+        *dst-- = *src++;
+        *dst-- = *src++;
+        *dst   = *src++;
+        dst += 7;
       }
-      delete[] rowbuf;
+      memcpy(bits + row * stride, rowbuf, stride);
     }
-    
+    delete[] rowbuf;
+
     nsRect r(0, 0, GetWidth(), GetHeight());
     img->ImageUpdated(ctx, nsImageUpdateFlags_kBitsChanged, &r);
   }

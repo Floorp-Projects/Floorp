@@ -218,7 +218,7 @@ nsSVGLibartCanvas::Clear(nscolor color)
     case nsISVGLibartBitmap::PIXEL_FORMAT_32_ABGR:
     {
       NS_ASSERTION(mBitmap->GetLineStride() == 4*mBitmap->GetWidth(), "strange pixel format");
-      PRUint32 pixel = (blue<<16)+(green<<8)+red;
+      PRUint32 pixel = (blue<<24)+(green<<16)+(red<<8)+0xff;
       PRUint32 *dest = (PRUint32*)mBitmap->GetBits();
       PRUint32 *end  = dest+mBitmap->GetWidth()*mBitmap->GetHeight();
       while (dest!=end)
@@ -302,14 +302,10 @@ nsSVGLibartCanvas::GetArtColor(nscolor rgb, ArtColor& artColor)
       artColor[2] = ART_PIX_MAX_FROM_8(NS_GET_B(rgb));
       break;
     case nsISVGLibartBitmap::PIXEL_FORMAT_24_BGR:
+    case nsISVGLibartBitmap::PIXEL_FORMAT_32_ABGR:
       artColor[0] = ART_PIX_MAX_FROM_8(NS_GET_B(rgb));
       artColor[1] = ART_PIX_MAX_FROM_8(NS_GET_G(rgb));
       artColor[2] = ART_PIX_MAX_FROM_8(NS_GET_R(rgb));
-      break;
-    case nsISVGLibartBitmap::PIXEL_FORMAT_32_ABGR:
-      artColor[3] = ART_PIX_MAX_FROM_8(NS_GET_R(rgb));
-      artColor[2] = ART_PIX_MAX_FROM_8(NS_GET_G(rgb));
-      artColor[1] = ART_PIX_MAX_FROM_8(NS_GET_B(rgb));
       break;
     default:
       NS_ERROR("unknown pixel format");
