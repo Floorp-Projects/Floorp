@@ -351,6 +351,66 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
 }
 
 NS_IMETHODIMP 
+nsHTMLEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
+{
+  nsresult result;
+
+  result = nsEditor::SetDocumentCharacterSet(characterSet);
+
+  // update META charset tag
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIDOMDocument>domdoc;
+    result = GetDocument(getter_AddRefs(domdoc));
+    if (NS_SUCCEEDED(result) && nsnull != domdoc) {
+      const nsString tag("meta");
+      nsString newValue;
+      nsCOMPtr<nsIDOMNodeList>nodeList;
+      nsCOMPtr<nsIDOMNode>node; 
+      nsCOMPtr<nsIDOMElement>element;
+      PRBool newMetaCharset = PR_TRUE;
+
+      // get a list of META tags
+      result = domdoc->GetElementsByTagName(tag, getter_AddRefs(nodeList));
+      if (NS_SUCCEEDED(result) && nsnull != nodeList) {
+        PRUint32 listLength = 0;
+        (void) nodeList->GetLength(&listLength);
+
+        for (PRUint32 i = 0; i < listLength; i++) {
+          nodeList->Item(i, getter_AddRefs(node));
+          if (nsnull == node) continue;
+          element = do_QueryInterface(node);
+          if (nsnull == element) continue;
+
+          const nsString content("charset=");
+          nsString currentValue;
+
+          if (NS_FAILED(element->GetAttribute("http-equiv", currentValue))) continue;
+
+          if (kNotFound != currentValue.Find("content-type", PR_TRUE)) {
+            if (NS_FAILED(element->GetAttribute("content", currentValue))) continue;
+
+            PRInt32 offset = currentValue.Find(content.GetUnicode(), PR_TRUE);
+            if (kNotFound != offset) {
+              newValue.SetString(currentValue, offset); // copy current value before "charset=" (e.g. text/html)
+              newValue.Append(content);
+              newValue.Append(characterSet);
+              result = element->SetAttribute("content", newValue);
+              newMetaCharset = PR_FALSE;
+              break;
+            }
+          }
+        }
+      }
+      if (newMetaCharset) {
+        ;// TODO: create a new tag
+      }
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP 
 nsHTMLEditor::PostCreate()
 {
   nsresult result = InstallEventListeners();

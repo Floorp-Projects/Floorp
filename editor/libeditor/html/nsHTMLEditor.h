@@ -183,6 +183,8 @@ public:
   /** prepare the editor for use */
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell, PRUint32 aFlags);
   
+  NS_IMETHOD SetDocumentCharacterSet(const PRUnichar* characterSet);
+
   /** we override this here to install event listeners */
   NS_IMETHOD PostCreate();
 
