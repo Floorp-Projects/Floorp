@@ -351,7 +351,7 @@ NS_IMETHODIMP nsImageFrame::OnStartContainer(imgIRequest *aRequest, nsIPresConte
      *   one frame = 1
      *   one loop = 2
      */
-    nsImageAnimation animateMode = eImageAnimation_Normal; //default value
+    PRUint16 animateMode = imgIContainer::kNormalAnimMode; //default value
     nsresult rv = aPresContext->GetImageAnimationMode(&animateMode);
     if (NS_SUCCEEDED(rv))
       aImage->SetAnimationMode(animateMode);
