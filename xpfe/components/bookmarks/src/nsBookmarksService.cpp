@@ -2617,35 +2617,6 @@ nsBookmarksService::Release()
 
 
 
-
-NS_IMETHODIMP
-nsBookmarksService::QueryInterface(REFNSIID aIID, void **aResult)
-{
-	NS_PRECONDITION(aResult != nsnull, "null ptr");
-	if (! aResult)
-		return NS_ERROR_NULL_POINTER;
-
-	if (aIID.Equals(NS_GET_IID(nsIBookmarksService)) ||
-	    aIID.Equals(kISupportsIID))
-	{
-		*aResult = NS_STATIC_CAST(nsIBookmarksService*, this);
-	}
-	else if (aIID.Equals(NS_GET_IID(nsIRDFDataSource))) {
-		*aResult = NS_STATIC_CAST(nsIRDFDataSource*, this);
-	}
-	else if (aIID.Equals(NS_GET_IID(nsIRDFRemoteDataSource))) {
-		*aResult = NS_STATIC_CAST(nsIRDFRemoteDataSource*, this);
-	}
-	else {
-		*aResult = nsnull;
-		return NS_NOINTERFACE;
-	}
-
-	NS_ADDREF(this);
-	return NS_OK;
-}
-
-
 NS_IMPL_QUERY_INTERFACE6(nsBookmarksService, 
 			 nsIBookmarksService,
 			 nsIRDFDataSource,
