@@ -832,7 +832,7 @@ nsLocalFile::SetLastModificationDate(PRInt64 aLastModTime)
     CHECK_mPath();
 
     int result;
-    if (aLastModTime) {
+    if (! LL_IS_ZERO(aLastModTime)) {
         VALIDATE_STAT_CACHE();
         struct utimbuf ut;
         ut.actime = mCachedStat.st_atime;
