@@ -1,3 +1,4 @@
+#ifndef MOZ_XUL_APP
 comm.jar:
   content/communicator/downloadmanager/downloadmanager.xul
   content/communicator/downloadmanager/downloadmanager.js
@@ -5,4 +6,4 @@ comm.jar:
 en-US.jar:
   locale/en-US/communicator/downloadmanager/downloadmanager.dtd        (locale/en-US/downloadmanager.dtd)
   locale/en-US/communicator/downloadmanager/downloadmanager.properties (locale/en-US/downloadmanager.properties)
-
+#endif
