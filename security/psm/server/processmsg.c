@@ -54,6 +54,7 @@
 #include "protocolshr.h"
 #include "msgthread.h"
 #include "pk11sdr.h"
+#include "sdrres.h"
 
 #define SSL_SC_RSA              0x00000001L
 #define SSL_SC_MD2              0x00000010L
@@ -140,39 +141,47 @@ sdrencrypt(SSMControlConnection *ctrl, SECItem *msg)
   PK11SlotInfo *slot = PK11_GetInternalKeySlot();
   EncryptRequestMessage request;
   EncryptReplyMessage reply;
-  void *ctx;
   SECStatus s;
+  SSMResourceID id;
+  SSMResource *res = NULL;
 
   SSM_DEBUG("sdrEncrypt\n");
 
-  request.keyid.data = 0;
-  request.data.data = 0;
-  request.ctx.data = 0;
+  request.keyid.data = NULL;
+  request.data.data = NULL;
+  request.ctx.data = NULL;
 
-  reply.item.data = 0;
-
-  /* Make sure user has initialized database password */
-  if (PK11_NeedUserInit(slot)) {
-    SSM_DEBUG("Calling SSM_SetUserPassword\n");
-    rv = SSM_SetUserPassword(slot, &ctrl->super.super);
-    SSM_DEBUG("SSM_SetUserPassword returns %d\n", rv);
-    if (rv != SSM_SUCCESS) { rv = SSM_ERR_NEED_USER_INIT_DB; goto loser; }
-  }
-
-  if (PK11_Authenticate(PK11_GetInternalKeySlot(), PR_TRUE, ctrl) != SECSuccess) {
-    rv = SSM_ERR_BAD_DB_PASSWORD;
-    goto loser;
-  }
+  reply.item.data = NULL;
 
   /* Decode the message (frees message data) */
   crv = CMT_DecodeMessage(EncryptRequestTemplate, &request, (CMTItem*)msg);
   if (crv != CMTSuccess) { rv = SSM_FAILURE; goto loser; }
 
-/*  ctx = CMT_CopyItemToPtr(request.ctx); need to put this in an resource */
-  ctx = 0;
+  /* Create a resource for handling UI events */
+  rv = SSM_CreateResource(SSM_RESTYPE_SDR_CONTEXT, 0, ctrl, &id, &res);
+  if (rv != SSM_SUCCESS) goto loser;
+
+  /* Set client context field for UI events
+   * NOTE: the resource will be deleted before the request data
+   * is freed
+   */
+  res->m_clientContext = request.ctx;
+
+  /* Make sure user has initialized database password */
+  if (PK11_NeedUserInit(slot)) {
+    SSM_DEBUG("Calling SSM_SetUserPassword\n");
+    rv = SSM_SetUserPassword(slot, res);
+    SSM_DEBUG("SSM_SetUserPassword returns %d\n", rv);
+    if (rv != SSM_SUCCESS) { rv = SSM_ERR_NEED_USER_INIT_DB; goto loser; }
+  }
+
+  if (PK11_Authenticate(PK11_GetInternalKeySlot(), PR_TRUE, res) != SECSuccess) {
+    rv = SSM_ERR_BAD_DB_PASSWORD;
+    goto loser;
+  }
 
   s = PK11SDR_Encrypt((SECItem*)&request.keyid, (SECItem*)&request.data, 
-          (SECItem*)&reply.item, ctx);
+          (SECItem*)&reply.item, res);
   SSM_DEBUG("Encrypt returns %d\n", s);
   SSM_DEBUG("  -> Item: %lx (%d)\n", reply.item.data, reply.item.len);
 
@@ -182,10 +191,11 @@ sdrencrypt(SSMControlConnection *ctrl, SECItem *msg)
   if (crv != CMTSuccess) { rv = SSM_FAILURE; goto loser;  /* Unknown error */ }
 
 loser:
-  if (request.keyid.data) free(request.keyid.data);
-  if (request.data.data) free(request.data.data);
-  if (request.ctx.data) free(request.ctx.data);
-  if (reply.item.data) free(reply.item.data);
+  if (res) SSM_FreeResource(res);
+  if (request.keyid.data) PR_Free(request.keyid.data);
+  if (request.data.data) PR_Free(request.data.data);
+  if (request.ctx.data) PR_Free(request.ctx.data);
+  if (reply.item.data) PR_Free(reply.item.data);
 
   return rv;
 }
@@ -198,21 +208,34 @@ sdrdecrypt(SSMControlConnection *ctrl, SECItem *msg)
   SECStatus s;
   DecryptRequestMessage request;
   DecryptReplyMessage reply;
+  SSMResourceID id;
+  SSMResource *res = NULL;
 
-  request.data.data = 0;
-  request.ctx.data = 0;
+  request.data.data = NULL;
+  request.ctx.data = NULL;
+  reply.item.data = NULL;
 
   SSM_DEBUG("sdrDecrypt\n");
 
   crv = CMT_DecodeMessage(DecryptRequestTemplate, &request, (CMTItem*)msg);
   if (crv != CMTSuccess) { rv = SSM_FAILURE; goto loser; }
 
-  if (PK11_Authenticate(PK11_GetInternalKeySlot(), PR_TRUE, ctrl) != SECSuccess) {
+  /* Create a resource for handling UI events */
+  rv = SSM_CreateResource(SSM_RESTYPE_SDR_CONTEXT, 0, ctrl, &id, &res);
+  if (rv != SSM_SUCCESS) goto loser;
+
+  /* Set client context field for UI events
+   * NOTE: the resource will be deleted before the request data
+   * is freed
+   */
+  res->m_clientContext = request.ctx;
+
+  if (PK11_Authenticate(PK11_GetInternalKeySlot(), PR_TRUE, res) != SECSuccess) {
     rv = SSM_ERR_BAD_DB_PASSWORD;
     goto loser;
   }
 
-  s = PK11SDR_Decrypt((SECItem*)&request.data, (SECItem*)&reply.item, 0);
+  s = PK11SDR_Decrypt((SECItem*)&request.data, (SECItem*)&reply.item, res);
   if (s != SECSuccess) { rv = SSM_FAILURE; goto loser; }
 
   msg->type = SSM_SDR_DECRYPT_REPLY;
@@ -220,9 +243,10 @@ sdrdecrypt(SSMControlConnection *ctrl, SECItem *msg)
   if (crv != CMTSuccess) { rv = SSM_FAILURE; goto loser;  /* Unknown error */ }
 
 loser:
-  if (request.data.data) free(request.data.data);
-  if (request.ctx.data) free(request.ctx.data);
-  if (reply.item.data) free(reply.item.data);
+  if (res) SSM_FreeResource(res);
+  if (request.data.data) PR_Free(request.data.data);
+  if (request.ctx.data) PR_Free(request.ctx.data);
+  if (reply.item.data) PR_Free(reply.item.data);
 
   return rv;
 }
@@ -233,6 +257,8 @@ sdrChangePassword(SSMControlConnection *ctrl, SECItem *msg)
   SSMStatus rv = SSM_SUCCESS;
   SingleItemMessage req;
   PK11SlotInfo *slot = PK11_GetInternalKeySlot();
+  SSMResourceID id;
+  SSMResource *res = NULL;
 
   SSM_DEBUG("sdrChangePassword\n");
 
@@ -243,13 +269,22 @@ sdrChangePassword(SSMControlConnection *ctrl, SECItem *msg)
     goto loser;
   }
 
-  /* Should decode the item here to get context */
+  /* Create a resource for handling UI events */
+  rv = SSM_CreateResource(SSM_RESTYPE_SDR_CONTEXT, 0, ctrl, &id, &res);
+  if (rv != SSM_SUCCESS) goto loser;
+
+  /* Set client context field for UI events
+   * NOTE: the resource will be deleted before the request data
+   * is freed
+   */
+  res->m_clientContext = req.item;
   
   /* Invoke the UI for setting password */
-  rv = SSM_SetUserPassword(slot, &ctrl->super.super);
+  rv = SSM_SetUserPassword(slot, res);
 
 loser:
-  if (req.item.data) free(req.item.data);
+  if (res) SSM_FreeResource(res);
+  if (req.item.data) PR_Free(req.item.data);
 
   return rv;
 }
