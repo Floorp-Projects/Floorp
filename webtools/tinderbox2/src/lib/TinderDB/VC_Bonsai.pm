@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.54 $ 
-# $Date: 2002/05/07 02:34:58 $ 
+# $Revision: 1.55 $ 
+# $Date: 2002/05/07 02:47:43 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.54 $ )[1];
+$VERSION = ( qw $Revision: 1.55 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -668,11 +668,13 @@ sub status_table_row {
   my ($db_index, $last_treestate, $authors) =
       cell_data($tree, $NEXT_DB{$tree}, $row_times->[$row_index]);
   
+  $LAST_TREESTATE{$tree} = $last_treestate || $LAST_TREESTATE{$tree};
+  $last_treestate = $LAST_TREESTATE{$tree};
+  
   if (%{$authors}) {
 
       $NEXT_DB{$tree} = $db_index;
       $NEXT_ROW{$tree} = $row_index + 1;
-      $LAST_TREESTATE{$tree} = $last_treestate || $LAST_TREESTATE{$tree};
 
       my ($mindate) = $row_times->[$row_index], 
       my ($maxdate);
@@ -718,7 +720,6 @@ sub status_table_row {
 
       $NEXT_ROW{$tree} = $row_index + $rowspan;
       $NEXT_DB{$tree} = $db_index;
-      $LAST_TREESTATE{$tree} = $last_treestate || $LAST_TREESTATE{$tree};
 
       my @html= render_empty_cell($LAST_TREESTATE{$tree}, $rowspan);
       return @html;
