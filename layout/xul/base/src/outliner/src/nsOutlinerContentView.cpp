@@ -869,8 +869,34 @@ nsOutlinerContentView::ContentRemoved(nsIDocument *aDocument,
                                      nsIContent* aChild,
                                      PRInt32 aIndexInContainer)
 {
+  // Make sure this notification concerns us.
+  // First check the tag to see if it's one that we care about.
   nsCOMPtr<nsIAtom> tag;
   aChild->GetTag(*getter_AddRefs(tag));
+
+  if ((tag != nsXULAtoms::outlineritem) &&
+      (tag != nsXULAtoms::outlinerseparator) &&
+      (tag != nsHTMLAtoms::option) &&
+      (tag != nsXULAtoms::outlinerchildren) &&
+      (tag != nsXULAtoms::outlinerrow) &&
+      (tag != nsXULAtoms::outlinercell))
+    return NS_OK;
+
+  // If we have a legal tag, go up to the outliner/select and make sure
+  // that it's ours.
+  nsCOMPtr<nsIContent> element = aContainer;
+  nsCOMPtr<nsIAtom> parentTag;
+  
+  while (element) {
+    element->GetTag(*getter_AddRefs(parentTag));
+    if (parentTag == nsXULAtoms::outliner || parentTag == nsHTMLAtoms::select)
+      if (element == mRoot) // this is for us, stop looking
+        break;
+      else // this is not for us, we can bail out
+        return NS_OK;
+    nsCOMPtr<nsIContent> temp = element;
+    temp->GetParent(*getter_AddRefs(element));
+  }
 
   if (tag == nsXULAtoms::outlineritem ||
       tag == nsXULAtoms::outlinerseparator ||
