@@ -517,23 +517,27 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
   // all the matching elements
   numPrefs = prefArray.Count();
 
-  outArray = (char **)nsMemory::Alloc(numPrefs * sizeof(char *));
-  if (!outArray)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  for (dwIndex = 0; dwIndex < numPrefs; ++dwIndex) {
-  	theElement = (char *)prefArray.ElementAt(dwIndex);
-    outArray[dwIndex] = (char *)nsMemory::Clone(theElement, strlen(theElement) + 1);
- 
-    if (!outArray[dwIndex]) {
-      // we ran out of memory... this is annoying
-      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(dwIndex, outArray);
+  if (numPrefs) {
+    outArray = (char **)nsMemory::Alloc(numPrefs * sizeof(char *));
+    if (!outArray)
       return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
 
+    for (dwIndex = 0; dwIndex < numPrefs; ++dwIndex) {
+      theElement = (char *)prefArray.ElementAt(dwIndex);
+      outArray[dwIndex] = (char *)nsMemory::Clone(theElement, strlen(theElement) + 1);
+ 
+      if (!outArray[dwIndex]) {
+        // we ran out of memory... this is annoying
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(dwIndex, outArray);
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+    *aChildArray = outArray;
+  } else {
+    *aChildArray = nsnull;
+  } /* endif */
   *aCount = numPrefs;
-  *aChildArray = outArray;
+
   return NS_OK;
 }
 
