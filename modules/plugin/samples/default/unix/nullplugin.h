@@ -82,13 +82,10 @@ typedef struct _PluginInstance
 
 typedef struct _MimeTypeElement
 {
-    PluginInstance *pinst;
+    NPMIMEType value;
     struct _MimeTypeElement *next;
 } MimeTypeElement;
 
 /* Extern functions */
 extern void makeWidget(PluginInstance *This);
 extern NPMIMEType dupMimeType(NPMIMEType type);
-extern void destroyWidget(PluginInstance *This);
-extern void makePixmap(PluginInstance *This);
-
