@@ -15,6 +15,10 @@ TemplateToolkit
     <a href="?command=loginRequestAccount">Create Account</a>
 [%- END %]
    </p>
+
+   <pre>
+    [%- INCLUDE debug.dumpVars | html %]
+   </pre>
   </div>
  </body>
 </html>
