@@ -248,28 +248,30 @@ nsSHistory::PrintHistory()
               nsCOMPtr<nsILayoutHistoryState> layoutHistoryState;
               nsCOMPtr<nsIURI>  uri;
               PRUnichar *  title;
-              char * titleCStr=nsnull;
+              
               nsXPIDLCString  url;
 
               entry->GetLayoutHistoryState(getter_AddRefs(layoutHistoryState));
               entry->GetURI(getter_AddRefs(uri));
-              entry->GetTitle(&title);
-
-              nsString titlestr(title);
-              titleCStr = titlestr.ToNewCString();
+              entry->GetTitle(&title);              
               
 			  if (uri)
                  uri->GetSpec(getter_Copies(url));
 
               #if 0
+			  char * titleCStr=nsnull;
+
+			  nsString titlestr(title);
+              titleCStr = titlestr.ToNewCString();
               printf("**** SH Transaction #%d, Entry = %x\n", index, entry.get());
               printf("\t\t URL = %s\n", url);
               printf("\t\t Title = %s\n", titleCStr);
               printf("\t\t layout History Data = %x\n", layoutHistoryState);
+			  Recycle(titleCStr);
               #endif
       
               Recycle(title);
-              Recycle(titleCStr);
+              
 
               nsCOMPtr<nsISHTransaction> next;
               rv = txn->GetNext(getter_AddRefs(next));
