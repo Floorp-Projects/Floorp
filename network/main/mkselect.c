@@ -29,6 +29,7 @@
 
 #include "mkutils.h"
 #include "mkselect.h"
+#include "nslocks.h"
 
 typedef enum {
 	ConnectSelect,
@@ -61,6 +62,12 @@ net_add_select(SelectType stType, PRFileDesc *prFD)
 
 #define CONNECT_FLAGS (PR_POLL_READ | PR_POLL_EXCEPT | PR_POLL_WRITE)
 #define READ_FLAGS    (PR_POLL_READ | PR_POLL_EXCEPT)
+
+  /* 
+   * Make sure this function is called inside of the LIBNET lock since
+   * it modifies global data structures...
+   */
+  PR_ASSERT(LIBNET_IS_LOCKED());
 
     /*  Go through the list, make sure that there is not already an entry for fd. */
 	for(count=0; count < fd_set_size; count++)
@@ -100,6 +107,12 @@ PRIVATE void
 net_remove_select(SelectType stType, PRFileDesc *prFD)
 {
 	unsigned int count;
+
+  /* 
+   * Make sure this function is called inside of the LIBNET lock since
+   * it modifies global data structures...
+   */
+  PR_ASSERT(LIBNET_IS_LOCKED());
 
     /*  Go through the list */
 	for(count=0; count < fd_set_size; count++)
@@ -158,19 +171,29 @@ NET_PollSockets(void)
 	static PRIntervalTime interval = 0;
 	register unsigned int itmp;
 
+  /*
+   * Enter the LIBNET lock to protect the poll_desc_array and other global
+   * data structures used by NET_PollSockets(...)
+   */
+  LIBNET_LOCK();
+
 	if(net_calling_all_the_time_count)
   		NET_ProcessNet(NULL, NET_EVERYTIME_TYPE);
 		
 	if(!interval)
 		interval = PR_MillisecondsToInterval(1); 
 
-	if(1 > fd_set_size)
+  if(1 > fd_set_size) {
+    LIBNET_UNLOCK();
 		return FALSE;
+  }
 
 	itmp = PR_Poll(poll_desc_array, fd_set_size, interval);
 
-	if(itmp < 1)
+  if(itmp < 1) {
+    LIBNET_UNLOCK();
 		return TRUE; /* potential for doing stuff in the future. */
+  }
 
 	/* for now call on all active sockets. */
 	/* if this is too much call only one, but reorder the list each time. */
@@ -180,6 +203,7 @@ NET_PollSockets(void)
 			NET_ProcessNet(poll_desc_array[itmp].fd, NET_SOCKET_FD);
 	}
 
+  LIBNET_UNLOCK();
 	return TRUE;
 }
 
