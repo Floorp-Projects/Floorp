@@ -32,7 +32,7 @@ class nsIMenuListener;
  * Native Win32 button wrapper
  */
 
-class nsContextMenu : public nsIContextMenu
+class nsContextMenu : public nsIContextMenu, public nsIMenuListener
 {
 
 public:
@@ -45,7 +45,11 @@ public:
   NS_IMETHOD Create(nsISupports * aParent);
   NS_IMETHOD GetParent(nsISupports *&aParent);
 
-  NS_IMETHOD SetMenu(nsIMenu * aMenu);
+  nsEventStatus MenuConstruct(const nsMenuEvent &aMenuEvent,
+                              nsIWidget         *aParentWindow, 
+                              void              *menubarNode,
+                              void              *aWebShell);
+  nsEventStatus MenuDestruct(const nsMenuEvent &aMenuEvent);
 
   NS_IMETHOD GetNativeData(void** aData);
 
@@ -62,19 +66,41 @@ public:
 
 
 protected:
-  nsIMenu    *mMenu;
+  void LoadMenuItem(nsIMenu             *pParentMenu,
+                    nsIDOMElement       *menuitemElement,
+                    nsIDOMNode          *menuitemNode,
+                    unsigned short       menuitemIndex,
+                    nsIWebShell         *aWebShell);
   
-  nsIWidget  *mParent;
+  void LoadSubMenu(nsIMenu              *pParentMenu,
+                   nsIDOMElement        *menuElement,
+                   nsIDOMNode           *menuNode);
+
+  void LoadMenuItem(nsIContextMenu      *pParentMenu,
+                    nsIDOMElement       *menuitemElement,
+                    nsIDOMNode          *menuitemNode,
+                    unsigned short       menuitemIndex,
+                    nsIWebShell         *aWebShell);
   
-  nsIDOMNode    * mDOMNode;
-  nsIWebShell   * mWebShell;
-  nsIDOMElement * mDOMElement;
+  void LoadSubMenu(nsIContextMenu       *pParentMenu,
+                   nsIDOMElement        *menuElement,
+                   nsIDOMNode           *menuNode);
 
-  nsString        mAlignment;
-  nsString        mAnchorAlignment;
+  nsIMenu               *mMenu;
+  
+  nsIWidget             *mParent;
+  
+  nsIDOMNode            *mDOMNode;
+  nsIWebShell           *mWebShell;
+  nsIDOMElement         *mDOMElement;
+  nsIMenuListener       *mListener;
+  PRBool                mConstructed;
 
-  PRInt32         mX;
-  PRInt32         mY;
+  nsString              mAlignment;
+  nsString              mAnchorAlignment;
+
+  PRInt32               mX;
+  PRInt32               mY;
 };
 
 #endif // nsContextMenu_h__
