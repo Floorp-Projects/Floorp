@@ -36,7 +36,9 @@ public:
   NS_DECL_ISUPPORTS
 
   virtual nsresult Init();
+#ifdef MOZ_WIDGET_GTK
   static void Shutdown();
+#endif
 
   virtual void SetTo(const nsIRegion &aRegion);
   virtual void SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
@@ -55,20 +57,23 @@ public:
   NS_IMETHOD FreeRects(nsRegionRectSet *aRects);
   NS_IMETHOD GetNativeRegion(void *&aRegion) const;
   NS_IMETHOD GetRegionComplexity(nsRegionComplexity &aComplexity) const;
-
-  GdkRegion *CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   NS_IMETHOD GetNumRects(PRUint32 *aRects) const;
 
 protected:
+#ifdef MOZ_WIDGET_GTK
   GdkRegion *gdk_region_copy(GdkRegion *region);
-  GdkRegion *gdk_region_from_rect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+  GdkRegion *gdk_region_from_rect(PRInt32 aX, PRInt32 aY,
+                                  PRInt32 aWidth, PRInt32 aHeight);
 
 private:
   inline GdkRegion *GetCopyRegion();
   inline void SetRegionEmpty();
 
-  GdkRegion *mRegion;
   static GdkRegion *copyRegion;
+#endif
+private:
+
+  GdkRegion *mRegion;
 };
 
 #endif  // nsRegionGTK_h___ 

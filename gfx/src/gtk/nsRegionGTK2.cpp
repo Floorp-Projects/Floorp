@@ -80,7 +80,7 @@ void nsRegionGTK::SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
   GdkRectangle rect;
   rect.x = aX;
   rect.y = aY;
-  rect.width= aWidth;
+  rect.width = aWidth;
   rect.height = aHeight;
 
   mRegion = gdk_region_rectangle(&rect);
@@ -156,8 +156,8 @@ void nsRegionGTK::Subtract(const nsIRegion &aRegion)
     if (mRegion) {
       gdk_region_subtract(mRegion, pRegion->mRegion);
     } else {
-      NS_WARNING("subtracting from a non-region?");
       mRegion = gdk_region_new();
+      gdk_region_subtract(mRegion, pRegion->mRegion);
     }
   }
 }
@@ -165,19 +165,22 @@ void nsRegionGTK::Subtract(const nsIRegion &aRegion)
 void nsRegionGTK::Subtract(PRInt32 aX, PRInt32 aY,
                            PRInt32 aWidth, PRInt32 aHeight)
 {
+  GdkRectangle rect;
+  rect.x = aX;
+  rect.y = aY;
+  rect.width = aWidth;
+  rect.height = aHeight;
+  GdkRegion *tRegion = gdk_region_rectangle(&rect);
+
   if (mRegion) {
-    GdkRectangle rect;
-    rect.x = aX;
-    rect.y = aY;
-    rect.width = aWidth;
-    rect.height = aHeight;
-    GdkRegion *tRegion = gdk_region_rectangle(&rect);
     gdk_region_subtract(mRegion, tRegion);
-    gdk_region_destroy(tRegion);
   } else {
     NS_WARNING("subtracting from a non-region?");
     mRegion = gdk_region_new();
+    gdk_region_subtract(mRegion, tRegion);
   }
+
+  gdk_region_destroy(tRegion);
 }
 
 PRBool nsRegionGTK::IsEmpty(void)

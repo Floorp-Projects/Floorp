@@ -65,7 +65,9 @@ private:
   PRCList GCFreeList;
   void free_cache_entry(PRCList *clist);
   void move_cache_entry(PRCList *clist);
+#ifdef MOZ_WIDGET_GTK
   static GdkRegion * gdk_region_copy(GdkRegion *region);
+#endif
   static GdkRegion *copyRegion;
   void ReportStats();
 

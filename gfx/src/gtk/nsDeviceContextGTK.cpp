@@ -59,6 +59,10 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 
+#ifdef MOZ_WIDGET_GTK
+#include "gdksuperwin.h"
+#endif /* MOZ_WIDGET_GTK */
+
 #include <X11/Xatom.h>
 
 #include "nsDeviceContextSpecG.h"
@@ -72,7 +76,11 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #define GDK_DEFAULT_FONT1 "-*-helvetica-medium-r-*--*-120-*-*-*-*-iso8859-1"
 #define GDK_DEFAULT_FONT2 "-*-fixed-medium-r-*-*-*-120-*-*-*-*-*-*"
+
+#ifdef MOZ_WIDGET_GTK
+// this is specific to gtk 1.2
 extern GdkFont *default_font;
+#endif /* MOZ_WIDGET_GTK */
 
 /**
  * A singleton instance of nsSystemFontsGTK is created by the first
@@ -89,7 +97,7 @@ class nsSystemFontsGTK {
     const nsFont& GetButtonFont() { return mButtonFont; }
 
   private:
-    nsresult GetSystemFontInfo(GdkFont* iFont, nsFont* aFont,
+    nsresult GetSystemFontInfo(GtkStyle *aStyle, nsFont* aFont,
                                float aPixelsToTwips) const;
 
     /*
@@ -165,6 +173,8 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
     return NS_ERROR_FAILURE;
   }
 
+#ifdef MOZ_WIDGET_GTK
+
   if (aNativeWidget) {
     // superwin?
     if (GDK_IS_SUPERWIN(aNativeWidget)) {
@@ -179,6 +189,20 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
       mDeviceWindow = NS_STATIC_CAST(GdkWindow *, aNativeWidget);
     }
   }
+
+#endif /* MOZ_WIDGET_GTK */
+
+#ifdef MOZ_WIDGET_GTK2
+
+  if (aNativeWidget) {
+    // can only be a gdk window
+    if (GDK_IS_WINDOW(aNativeWidget))
+      mDeviceWindow = GDK_WINDOW(aNativeWidget);
+    else 
+      NS_WARNING("unsupported native widget type!");
+  }
+
+#endif
 
   nsCOMPtr<nsIScreen> screen;
   mScreenManager->GetPrimaryScreen ( getter_AddRefs(screen) );
@@ -223,6 +247,10 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   sb = gtk_vscrollbar_new(NULL);
   gtk_widget_ref(sb);
   gtk_object_sink(GTK_OBJECT(sb));
+#ifdef MOZ_WIDGET_GTK2
+  gtk_widget_ensure_style(sb);
+  gtk_widget_queue_resize(sb);
+#endif /* MOZ_WIDGET_GTK2 */
   gtk_widget_size_request(sb,&req);
   mScrollbarWidth = req.width;
   gtk_widget_destroy(sb);
@@ -231,6 +259,10 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   sb = gtk_hscrollbar_new(NULL);
   gtk_widget_ref(sb);
   gtk_object_sink(GTK_OBJECT(sb));
+#ifdef MOZ_WIDGET_GTK2
+  gtk_widget_ensure_style(sb);
+  gtk_widget_queue_resize(sb);
+#endif /* MOZ_WIDGET_GTK2 */
   gtk_widget_size_request(sb,&req);
   mScrollbarHeight = req.height;
   gtk_widget_destroy(sb);
@@ -639,7 +671,7 @@ nsSystemFontsGTK::nsSystemFontsGTK(float aPixelsToTwips)
   gtk_widget_realize(label);
 
   GtkStyle *style = gtk_widget_get_style(label);
-  GetSystemFontInfo(style->font, &mDefaultFont, aPixelsToTwips);
+  GetSystemFontInfo(style, &mDefaultFont, aPixelsToTwips);
 
   gtk_widget_destroy(window);  // no unref, windows are different
 
@@ -655,7 +687,7 @@ nsSystemFontsGTK::nsSystemFontsGTK(float aPixelsToTwips)
   gtk_widget_realize(entry);
 
   style = gtk_widget_get_style(entry);
-  GetSystemFontInfo(style->font, &mFieldFont, aPixelsToTwips);
+  GetSystemFontInfo(style, &mFieldFont, aPixelsToTwips);
 
   gtk_widget_destroy(window);  // no unref, windows are different
 
@@ -663,6 +695,8 @@ nsSystemFontsGTK::nsSystemFontsGTK(float aPixelsToTwips)
   GtkWidget *accel_label = gtk_accel_label_new("M");
   GtkWidget *menuitem = gtk_menu_item_new();
   GtkWidget *menu = gtk_menu_new();
+  gtk_object_ref(GTK_OBJECT(menu));
+  gtk_object_sink(GTK_OBJECT(menu));
 
   gtk_container_add(GTK_CONTAINER(menuitem), accel_label);
   gtk_menu_append(GTK_MENU(menu), menuitem);
@@ -673,7 +707,7 @@ nsSystemFontsGTK::nsSystemFontsGTK(float aPixelsToTwips)
   gtk_widget_realize(accel_label);
 
   style = gtk_widget_get_style(accel_label);
-  GetSystemFontInfo(style->font, &mMenuFont, aPixelsToTwips);
+  GetSystemFontInfo(style, &mMenuFont, aPixelsToTwips);
 
   gtk_widget_unref(menu);
 
@@ -694,7 +728,7 @@ nsSystemFontsGTK::nsSystemFontsGTK(float aPixelsToTwips)
   gtk_widget_realize(label);
 
   style = gtk_widget_get_style(label);
-  GetSystemFontInfo(style->font, &mButtonFont, aPixelsToTwips);
+  GetSystemFontInfo(style, &mButtonFont, aPixelsToTwips);
 
   gtk_widget_destroy(window);  // no unref, windows are different
 
@@ -774,9 +808,15 @@ GetFontSize(XFontStruct *aFontStruct, float aPixelsToTwips)
 }
 
 nsresult
-nsSystemFontsGTK::GetSystemFontInfo(GdkFont* iFont, nsFont* aFont, float aPixelsToTwips) const
+nsSystemFontsGTK::GetSystemFontInfo(GtkStyle *aStyle, nsFont* aFont, float aPixelsToTwips) const
 {
-  GdkFont *theFont = iFont;
+#ifdef MOZ_WIDGET_GTK
+  GdkFont *theFont = aStyle->font;
+#endif /* MOZ_WIDGET_GTK */
+
+#ifdef MOZ_WIDGET_GTK2
+  GdkFont *theFont = gtk_style_get_font(aStyle);
+#endif /* MOZ_WIDGET_GTK2 */
 
   aFont->style       = NS_FONT_STYLE_NORMAL;
   aFont->weight      = NS_FONT_WEIGHT_NORMAL;
@@ -785,9 +825,11 @@ nsSystemFontsGTK::GetSystemFontInfo(GdkFont* iFont, nsFont* aFont, float aPixels
   // do we have the default_font defined by GTK/GDK then
   // we use it, if not then we load helvetica, if not then
   // we load fixed font else we error out.
+#ifdef MOZ_WIDGET_GTK
   if (!theFont)
     theFont = default_font; // GTK default font
-  
+#endif
+
   if (!theFont)
     theFont = ::gdk_font_load( GDK_DEFAULT_FONT1 );
   

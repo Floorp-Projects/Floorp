@@ -1709,14 +1709,15 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
 
     nsRect tmpRect(0,0,aTileRect.width, aTileRect.height);
 
-    tileImg = gdk_pixmap_new(mImagePixmap, aTileRect.width, 
+    tileImg = gdk_pixmap_new(nsnull, aTileRect.width, 
                              aTileRect.height, drawing->GetDepth());
     TilePixmap(mImagePixmap, tileImg, aSXOffset, aSYOffset, tmpRect,
                tmpRect, PR_FALSE);
 
 
     // tile alpha mask
-    tileMask = gdk_pixmap_new(mAlphaPixmap, aTileRect.width, aTileRect.height, mAlphaDepth);
+    tileMask = gdk_pixmap_new(nsnull, aTileRect.width, aTileRect.height,
+                              mAlphaDepth);
     TilePixmap(mAlphaPixmap, tileMask, aSXOffset, aSYOffset, tmpRect,
                tmpRect, PR_FALSE);
 
