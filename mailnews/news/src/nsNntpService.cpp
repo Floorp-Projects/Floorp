@@ -562,8 +562,7 @@ nsNntpService::DecomposeNewsMessageURI(const char * aMessageURI, nsIMsgFolder **
           msgWindows->Count(&numMsgWindows);
           for (PRUint32 windowIndex = 0; windowIndex < numMsgWindows; windowIndex++)
           {
-            nsCOMPtr <nsIMsgWindow> msgWindow;
-            rv = msgWindows->QueryElementAt(windowIndex, NS_GET_IID(nsIMsgWindow), getter_AddRefs(msgWindow));
+            nsCOMPtr <nsIMsgWindow> msgWindow = do_QueryElementAt(msgWindows, windowIndex);
             NS_ENSURE_SUCCESS(rv, rv);
             nsCOMPtr <nsIMsgFolder> openFolder;
             msgWindow->GetOpenFolder(getter_AddRefs(openFolder));
@@ -643,7 +642,7 @@ nsNntpService::GetFolderFromUri(const char *aUri, nsIMsgFolder **aFolder)
   rv = rootFolder->GetChildNamed(NS_ConvertASCIItoUCS2(path.get() + 1).get() /* skip the leading slash */, getter_AddRefs(subFolder));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  return subFolder->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aFolder);
+  return CallQueryInterface(subFolder, aFolder);
 }
 
 NS_IMETHODIMP
@@ -991,11 +990,10 @@ nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames,
     
   NS_LOCK_INSTANCE();
   
-  nsresult rv = NS_OK;
+  nsresult rv;
   
-  nsCOMPtr <nsINntpUrl> nntpUrl = do_CreateInstance(NS_NNTPURL_CONTRACTID,&rv);
+  nsCOMPtr <nsINntpUrl> nntpUrl = do_CreateInstance(NS_NNTPURL_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
-  if (!nntpUrl) return NS_ERROR_FAILURE;
 
   rv = nntpUrl->SetNewsAction(nsINntpUrl::ActionPostArticle);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -1028,7 +1026,7 @@ nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames,
   NS_ENSURE_SUCCESS(rv,rv);
 		
   if (_retval)
-	  nntpUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
+    rv = CallQueryInterface(nntpUrl, _retval);
     
   NS_UNLOCK_INSTANCE();
 
@@ -1417,16 +1415,19 @@ NS_IMETHODIMP nsNntpService::NewURI(const nsACString &aSpec,
                                     nsIURI *aBaseURI,
                                     nsIURI **_retval)
 {
-	nsresult rv = NS_OK;
+    nsresult rv;
 
-    nsCOMPtr <nsINntpUrl> nntpUrl = do_CreateInstance(NS_NNTPURL_CONTRACTID,&rv);
+    nsCOMPtr<nsINntpUrl> nntpUrl = do_CreateInstance(NS_NNTPURL_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
-    if (!nntpUrl) return NS_ERROR_FAILURE;
 
-	nntpUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
+    nsCOMPtr<nsIURI> nntpUri = do_QueryInterface(nntpUrl, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-	(*_retval)->SetSpec(aSpec);
-	return rv;
+    rv = nntpUri->SetSpec(aSpec);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    NS_ADDREF(*_retval = nntpUri);
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsNntpService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
@@ -1438,7 +1439,7 @@ NS_IMETHODIMP nsNntpService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 	  rv = nntpProtocol->Initialize(aURI, nsnull);
   if (NS_FAILED(rv)) return rv;
 
-  return nntpProtocol->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
+  return CallQueryInterface(nntpProtocol, _retval);
 }
 
 NS_IMETHODIMP
