@@ -39,7 +39,7 @@
 
 <!-- Event Menu -->
 <!ENTITY event.menu.title                       "Gebeurtenis">
-<!ENTITY eventMenuCmd.accesskey                 "@">
+<!ENTITY eventMenuCmd.accesskey                 "G">
 
 <!ENTITY event.new.event                        "Nieuwe gebeurtenis…">
 <!ENTITY event.new.event.key                    "N">
@@ -67,9 +67,9 @@
 <!ENTITY event.delete.tasks                     "Verwijder geselecteerd(e) ta(a)k(en)">
 <!ENTITY event.delete.tasks.accesskey           "T">
 
-<!ENTITY event.mail.event                       "Mail geselecteerd(e) gebeurtenis(sen)…">
+<!ENTITY event.mail.event                       "Geselecteerd(e) gebeurtenis(sen)…verzenden">
 <!ENTITY event.mail.event.key                   "M">
-<!ENTITY event.mail.event.accesskey             "M">
+<!ENTITY event.mail.event.accesskey             "V">
 
 <!ENTITY calendar.print.label                   "Gebeurtenissen afdrukken...">
 <!ENTITY calendar.print.key                     "P">
@@ -86,7 +86,7 @@
 <!ENTITY calendar.import.accesskey              "I">
 
 <!ENTITY calendar.wizard.label                  "Start assistent">
-<!ENTITY calendar.wizard.accesskey              "@">
+<!ENTITY calendar.wizard.accesskey              "S">
 
 <!ENTITY calendar.export.label                  "Exporteer geselecteerde gebeurtenissen...">
 <!ENTITY calendar.export.accesskey              "E">
@@ -139,28 +139,28 @@
 <!ENTITY goNextCmd.accesskey                    "L">
 
 <!ENTITY taskMenu.label                         "Taken">
-<!ENTITY taskMenu.accesskey                     "@">
+<!ENTITY taskMenu.accesskey                     "K">
 
 <!ENTITY toolsMenu.label                        "Gereedschappen">
 <!ENTITY toolsMenu.accesskey                    "R">
 
 <!ENTITY javaScriptConsoleCmd.label             "JavaScript Console">
-<!ENTITY javaScriptConsoleCmd.accesskey         "@">
+<!ENTITY javaScriptConsoleCmd.accesskey         "S">
 
 <!ENTITY navigatorCmd.label                     "Bladerprogramma">
-<!ENTITY navigatorCmd.accesskey                 "@">
+<!ENTITY navigatorCmd.accesskey                 "B">
 
 <!ENTITY messengerCmd.label                     "Mail">
-<!ENTITY messengerCmd.accesskey                 "@">
+<!ENTITY messengerCmd.accesskey                 "M">
 
 <!ENTITY addressBookCmd.label                   "Adressenboek">
-<!ENTITY addressBookCmd.accesskey               "@">
+<!ENTITY addressBookCmd.accesskey               "A">
 
 <!ENTITY helpMenu.label                         "Hulp">
 <!ENTITY helpMenu.accesskey                     "H">
 
-<!ENTITY walletPasswordManager.label            "Password Manager">
-<!ENTITY walletPasswordManager.accesskey        "p">
+<!ENTITY walletPasswordManager.label            "Wachtwoordenbeheerder">
+<!ENTITY walletPasswordManager.accesskey        "W">
 
 <!-- Toolbar items -->
 <!ENTITY fileMenu.label                         "Bestand">
@@ -180,8 +180,8 @@
 <!ENTITY aboutCmd.accesskey                     "M">
 
 <!-- Mac OS X "Window" menu items -->
-<!ENTITY windowMenu.label                       "Window">
-<!ENTITY minimizeWindow.label                   "Minimize">
+<!ENTITY windowMenu.label                       "Venster">
+<!ENTITY minimizeWindow.label                   "Minimaliseren">
 <!ENTITY zoomWindow.label                       "Zoom">
 <!ENTITY minimizeWindow.key                     "M">
-<!ENTITY bringAllToFront.label                  "Bring All to Front">
+<!ENTITY bringAllToFront.label                  "Alle op de voorgrond brengen">

@@ -162,7 +162,7 @@
 <!ENTITY event.title.alarm         "Waarschuwing" >
 <!ENTITY event.title.new         "Nieuwe gebeurtenis" >
 <!ENTITY event.title.edit        "Bewerk gebeurtenis" >
-<!ENTITY event.title.heading        "Calendar Alarm" >
+<!ENTITY event.title.heading        "Calendar waarschuwing" >
 
 <!ENTITY onthe-text            "Op de ">
 <!ENTITY last-text             "Laatste ">
@@ -221,10 +221,10 @@
 <!ENTITY calendar.events.filter.month.label "Gebeurtenissen in de komende maand">
 <!ENTITY calendar.events.filter.future.label "Alle komende gebeurtenissen">
 <!ENTITY calendar.events.filter.current.label "Momenteel geselecteerde dag">
-<!ENTITY calendar.events.filter.next7Days.label "Events in the Next 7 Days">
-<!ENTITY calendar.events.filter.next14Days.label "Events in the Next 14 Days">
-<!ENTITY calendar.events.filter.next31Days.label "Events in the Next 31 Days">
-<!ENTITY calendar.events.filter.thisCalendarMonth.label "Events in this Calendar Month">
+<!ENTITY calendar.events.filter.next7Days.label "Gebeurtenissen in de komende 7 dagen">
+<!ENTITY calendar.events.filter.next14Days.label "Gebeurtenissen in de komende 14 dagen">
+<!ENTITY calendar.events.filter.next31Days.label "Gebeurtenissen in de komende 31 dagen">
+<!ENTITY calendar.events.filter.thisCalendarMonth.label "Gebeurtenissen in de deze maand">
 
 <!ENTITY calendar.unifinder.tree.done.label          "Voltooid">
 <!ENTITY calendar.unifinder.tree.priority.label      "Prioriteit">
@@ -281,10 +281,10 @@
 <!ENTITY calendar.subscribe.button.label           "Aanmelden" >
 <!ENTITY calendar.publish.button.label             "Publiceren" >
 
-<!ENTITY calendar.localreload.button.label   "Local Reload" >
-<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
-<!ENTITY calendar.remotereload.button.label   "Reload" >
-<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
+<!ENTITY calendar.localreload.button.label   "Lokaal verversen" >
+<!ENTITY calendar.localreload.button.tooltip  "Ververs alle lokale kalenders" >
+<!ENTITY calendar.remotereload.button.label   "Verversen" >
+<!ENTITY calendar.remotereload.button.tooltip   "Ververs alle kalenders op afstand" >
 
 <!ENTITY calendar.dayview.button.label          "Dagoverzicht" >
 <!ENTITY calendar.weekview.button.label         "Weekoverzicht" >
@@ -333,8 +333,8 @@
 <!-- customizable toolbars -->
 <!ENTITY calendar.context.customize.label             "Aanpassen">
 <!ENTITY calendar.context.customize.accesskey         "A">
-<!ENTITY calendar.menu.customize.label                "Customize Toolbars">
-<!ENTITY calendar.menu.customize.accesskey            "C">
+<!ENTITY calendar.menu.customize.label                "Werkbalken aanpassen">
+<!ENTITY calendar.menu.customize.accesskey            "W">
 <!ENTITY calendar.maintoolbar.name                    "Hoofdwerkbalk">
 <!ENTITY calendar.maintoolbar.accesskey               "H">
 
@@ -370,11 +370,11 @@
 <!ENTITY calendar.context.multiweekview.label        "Naar meerdere wekenoverzicht overschakelen">
 <!ENTITY calendar.context.multiweekview.accesskey    "E">
 <!ENTITY calendar.context.reload.label                "Herladen">
-<!ENTITY calendar.context.reload.accesskey            "@">
+<!ENTITY calendar.context.reload.accesskey            "R">
 <!ENTITY calendar.context.emailevent.label            "Email geselecteerd(e) gebeurtenis(sen)">
 <!ENTITY calendar.context.emailevent.accesskey        "L">
 <!ENTITY calendar.context.emailtask.label             "Email taak">
-<!ENTITY calendar.context.emailtask.accesskey         "@">
+<!ENTITY calendar.context.emailtask.accesskey         "I">
 
 <!-- Task Context Menu -->
 <!ENTITY calendar.context.progress.label              "Voortgang">
@@ -402,8 +402,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "B">
 <!ENTITY calendar.context.deleteserver.label           "Verwijder kalender">
 <!ENTITY calendar.context.deleteserver.accesskey       "V">
-<!ENTITY calendar.context.refreshserver.label          "Ververs kalenders op andere computer(s)">
-<!ENTITY calendar.context.refreshserver.accesskey      "C">
+<!ENTITY calendar.context.reloadserver.label           "Ververs kalenders op andere computer(s)">
+<!ENTITY calendar.context.reloadserver.accesskey       "C">
 <!ENTITY calendar.context.publish.label                "Publiceer volledige kalender">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
