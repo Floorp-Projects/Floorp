@@ -153,7 +153,7 @@ NS_IMETHODIMP oeDateTimeImpl::GetTime(PRTime *retval)
 NS_IMETHODIMP oeDateTimeImpl::ToString(char **retval)
 {
     char tmp[20];
-    sprintf( tmp, "%04d/%02d/%02d %02d:%02d:%02d" , m_datetime.year, m_datetime.month, m_datetime.day, m_datetime.hour, m_datetime.minute, 0 );
+    sprintf( tmp, "%04d/%02d/%02d %02d:%02d:%02d" , m_datetime.year, m_datetime.month, m_datetime.day, m_datetime.hour, m_datetime.minute, m_datetime.second );
     *retval= (char*) nsMemory::Clone( tmp, strlen(tmp)+1);
     return NS_OK;
 }

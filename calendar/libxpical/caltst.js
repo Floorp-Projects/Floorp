@@ -123,6 +123,11 @@ function TestAll()
 	   gTodoObserver = new Observer();
 	   iCalLib.addTodoObserver( gTodoObserver );
    }
+   if( !TestTimeConversion() ) {
+	   alert( "Stopped Test" );
+	   return;
+   }
+
    iCalLib.setServer( DEFAULT_SERVER );
    var id = TestAddEvent();
    if( id == 0 ) {
@@ -146,6 +151,52 @@ function TestAll()
    TestDeleteTodo( id );
    TestFilterTodo( id );
    alert( "Finished Test" );
+}
+
+function TestTimeConversion() {
+	netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+	var dateTimeComponent = Components.classes["@mozilla.org/oedatetime;1"].createInstance();
+	dateTime = dateTimeComponent.QueryInterface(Components.interfaces.oeIDateTime);
+	var date1 = new Date();
+	dateTime.setTime( date1 );
+	var date1inms = parseInt( date1.getTime()/1000 );
+	if( (dateTime.getTime()/1000) != date1inms ) {
+		alert( "TestTimeConversion(): Step1 failed" );
+		return false;
+	}
+	date1 = new Date( 1970, 0, 1, 0, 0, 0 );
+	dateTime.setTime( date1 );
+	date1inms = parseInt( date1.getTime()/1000 );
+	if( (dateTime.getTime()/1000) != date1inms ) {
+		alert( "TestTimeConversion(): Step2 failed" );
+		return false;
+	}
+	date1 = new Date( 1969, 11, 31, 23, 59, 59 );
+	dateTime.setTime( date1 );
+	date1inms = parseInt( date1.getTime()/1000 );
+	if( (dateTime.getTime()/1000) != date1inms ) {
+		alert( "TestTimeConversion(): Step3 failed" );
+		return false;
+	}
+	date1 = new Date( 1969, 11, 31, 19, 0, 0 );
+	dateTime.setTime( date1 );
+	date1inms = parseInt( date1.getTime()/1000 );
+	if( (dateTime.getTime()/1000) != date1inms ) {
+		alert( "TestTimeConversion(): Step4 failed" );
+		return false;
+	}
+	date1 = new Date( 1962, 7, 03, 0, 0, 0 );
+	dateTime.setTime( date1 );
+	date1inms = parseInt( date1.getTime()/1000 );
+	if( (dateTime.getTime()/1000) != date1inms ) {
+		alert( "TestTimeConversion(): Step5 failed" );
+		return false;
+	}
+	if( dateTime.hour != date1.getHours() ) {
+		alert( "TestTimeConversion(): Step6 failed" );
+		return false;
+	}
+	return true;
 }
 
 function TestAddEvent()

@@ -73,6 +73,8 @@ icaltimetype ConvertFromPrtime( PRTime indate ) {
     outdate.hour = ext.tm_hour;
     outdate.minute = ext.tm_min;
     outdate.second = ext.tm_sec;
+    if( ext.tm_year <= 1969 && ext.tm_params.tp_dst_offset == 3600 )//Assume that daylight time saving was not in effect before 1970
+        icaltime_adjust( &outdate, 0, -1, 0, 0 );
 
     return outdate;
 }
@@ -91,6 +93,8 @@ PRTime ConvertToPrtime ( icaltimetype indate ) {
 
     PRTime result = PR_ImplodeTime( &ext );
     PR_ExplodeTime( result, PR_LocalTimeParameters, &ext);
+    if( ext.tm_year <= 1969 && ext.tm_params.tp_dst_offset == 3600 ) //Assume that daylight time saving was not in effect before 1970
+        ext.tm_params.tp_dst_offset = 0;
     ext.tm_year = indate.year;
     ext.tm_month = indate.month - 1;
     ext.tm_mday = indate.day;
