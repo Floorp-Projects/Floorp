@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.10 $ $Date: 2001/10/12 17:54:48 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.11 $ $Date: 2001/10/17 14:39:11 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -202,6 +202,15 @@ nssToken_AddRef
     return tok;
 }
 
+NSS_IMPLEMENT NSSUTF8 *
+nssToken_GetName
+(
+  NSSToken *tok
+)
+{
+    return tok->name;
+}
+
 NSS_IMPLEMENT PRStatus
 nssToken_DeleteStoredObject
 (
@@ -296,7 +305,7 @@ collect_certs_callback(NSSToken *t, nssSession *session,
 {
     NSSCertificate *cert;
     struct collect_arg_str *ca = (struct collect_arg_str *)arg;
-    cert = NSSCertificate_CreateFromHandle(ca->arena, h, session, t->slot);
+    cert = nssCertificate_CreateFromHandle(ca->arena, h, session, t->slot);
     if (!cert) {
 	goto loser;
     }
@@ -339,7 +348,7 @@ retrieve_cert(NSSToken *t, nssSession *session, CK_OBJECT_HANDLE h, void *arg)
     }
     if (!cert) {
 	/* Could not find cert, so create it */
-	cert = NSSCertificate_CreateFromHandle(NULL, h, session, t->slot);
+	cert = nssCertificate_CreateFromHandle(NULL, h, session, t->slot);
 	if (!cert) {
 	    goto loser;
 	}
