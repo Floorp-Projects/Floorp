@@ -85,14 +85,14 @@ rdf_complete(NET_StreamClass *stream)
          freeMem(fs);
        }
        if (uf != NULL)  {
-/*
+#ifdef MOZ_SMARTUPDATE
           checkForAutoUpdate((void *)FE_GetRDFContext(),
                           uf,
                           fSize, /* File size */
                           3000,  /* byte range */
                           10000  /* Interval in msecs */
                           );
-*/
+#endif
           freeMem(uf);
        }
     } 
