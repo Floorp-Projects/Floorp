@@ -910,6 +910,11 @@ sub InstallNonChromeResources()
     # QA Menu
     _InstallResources(":mozilla:intl:strres:tests:MANIFEST",            "$resource_dir");
 
+    # install builtin XBL bindings
+    my($builtin_dir) = "$resource_dir" . "builtin:";
+    MakeAlias(":mozilla:layout:xbl:builtin:htmlbindings.xml",                      "$builtin_dir");
+    MakeAlias(":mozilla:layout:xbl:builtin:mac:platformHTMLBindings.xml",          "$builtin_dir");
+
     print("--- End Resource copying ----\n");
 }
 
