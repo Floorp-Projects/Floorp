@@ -36,7 +36,7 @@ public:
 
   CreateElementTxn(nsEditor *aEditor,
                    nsIDOMDocument *aDoc,
-                   nsString& aTag,
+                   const nsString& aTag,
                    nsIDOMNode *aParent,
                    PRUint32 aOffsetInParent);
 

@@ -52,19 +52,6 @@ public:
 
   virtual nsresult GetRedoString(nsString **aString);
 
- // helper static methods.  maybe move these into editor class.
-
-  /** */
-  static  nsresult SplitNode(nsIDOMNode * aNode,
-                             PRInt32      aOffset,
-                             nsIDOMNode * aNewNode,
-                             nsIDOMNode * aParent);
-
-  static nsresult JoinNodes(nsIDOMNode * aNodeToKeep,
-                                     nsIDOMNode * aNodeToJoin,
-                                     nsIDOMNode * aParent,
-                                     PRBool       aNodeToKeepIsFirst);
-
 protected:
 
   nsEditor *mEditor;

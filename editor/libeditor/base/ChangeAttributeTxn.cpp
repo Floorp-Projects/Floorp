@@ -18,6 +18,7 @@
 
 #include "ChangeAttributeTxn.h"
 #include "editor.h"
+#include "nsIDOMElement.h"
 
 // note that aEditor is not refcounted
 ChangeAttributeTxn::ChangeAttributeTxn(nsEditor *aEditor,
@@ -54,9 +55,9 @@ nsresult ChangeAttributeTxn::Do(void)
 
   // now set the attribute to the new value
   if (PR_FALSE==mRemoveAttribute)
-   result = mEditor->SetAttribute(mElement, mAttribute, mValue);
+    result = mElement->SetDOMAttribute(mAttribute, mValue);
   else
-   result = mEditor->RemoveAttribute(mElement, mAttribute);
+   result = mElement->RemoveAttribute(mAttribute);
 
   return result;
 }
@@ -65,13 +66,9 @@ nsresult ChangeAttributeTxn::Undo(void)
 {
   nsresult result=NS_OK;
   if (PR_TRUE==mAttributeWasSet)
-  {
-    result = mEditor->SetAttribute(mElement, mAttribute, mUndoValue);
-  }
+    result = mElement->SetDOMAttribute(mAttribute, mUndoValue);
   else
-  {
-    result = mEditor->RemoveAttribute(mElement, mAttribute);
-  }
+    result = mElement->RemoveAttribute(mAttribute);
 
   return result;
 }
@@ -81,9 +78,9 @@ nsresult ChangeAttributeTxn::Redo(void)
   nsresult result;
 
   if (PR_FALSE==mRemoveAttribute)
-   result = mEditor->SetAttribute(mElement, mAttribute, mValue);
+   result = mElement->SetDOMAttribute(mAttribute, mValue);
   else
-   result = mEditor->RemoveAttribute(mElement, mAttribute);
+   result = mElement->RemoveAttribute(mAttribute);
 
   return result;
 }

@@ -19,7 +19,6 @@
 #include "SplitElementTxn.h"
 #include "editor.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
 
 // note that aEditor is not refcounted
@@ -55,7 +54,7 @@ nsresult SplitElementTxn::Do(void)
     // insert the new node
     if ((NS_SUCCEEDED(result)) && (nsnull!=mParent))
     {
-      result = EditTxn::SplitNode(mNode, mOffset, mNewNode, mParent);
+      result = mEditor->SplitNode(mNode, mOffset, mNewNode, mParent);
     }
   }
   return result;
@@ -64,13 +63,13 @@ nsresult SplitElementTxn::Do(void)
 nsresult SplitElementTxn::Undo(void)
 {
   // this assumes Do inserted the new node in front of the prior existing node
-  nsresult result = EditTxn::JoinNodes(mNode, mNewNode, mParent, PR_FALSE);
+  nsresult result = mEditor->JoinNodes(mNode, mNewNode, mParent, PR_FALSE);
   return result;
 }
 
 nsresult SplitElementTxn::Redo(void)
 {
-  nsresult result = EditTxn::SplitNode(mNode, mOffset, mNewNode, mParent);
+  nsresult result = mEditor->SplitNode(mNode, mOffset, mNewNode, mParent);
   return result;
 }
 

@@ -23,6 +23,8 @@
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMAttr.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMNodeList.h"
 #include "nsIDocument.h"
 #include "nsRepository.h"
 #include "nsIServiceManager.h"
@@ -31,6 +33,12 @@
 #include "nsTransactionManagerCID.h"
 #include "nsITransactionManager.h"
 #include "nsIAtom.h"
+
+// transactions the editor knows how to build
+#include "ChangeAttributeTxn.h"
+#include "CreateElementTxn.h"
+#include "InsertTextTxn.h"
+#include "DeleteTextTxn.h"
 
 
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
@@ -307,8 +315,16 @@ nsEditor::GetProperties(PROPERTIES **)
 nsresult 
 nsEditor::SetAttribute(nsIDOMElement *aElement, const nsString& aAttribute, const nsString& aValue)
 {
-  return aElement->SetDOMAttribute(aAttribute, aValue);
+  nsresult result;
+  if (nsnull != aElement)
+  {
+    ChangeAttributeTxn *txn = new ChangeAttributeTxn(this, aElement, aAttribute, aValue, PR_FALSE);
+    if (nsnull!=txn)
+      result = ExecuteTransaction(txn);  
+  }
+  return result;
 }
+
 
 nsresult 
 nsEditor::GetAttributeValue(nsIDOMElement *aElement, 
@@ -334,10 +350,16 @@ nsEditor::GetAttributeValue(nsIDOMElement *aElement,
 nsresult 
 nsEditor::RemoveAttribute(nsIDOMElement *aElement, const nsString& aAttribute)
 {
-  return aElement->RemoveAttribute(aAttribute);
+  nsresult result;
+  if (nsnull != aElement)
+  {
+    nsString value;
+    ChangeAttributeTxn *txn = new ChangeAttributeTxn(this, aElement, aAttribute, value, PR_TRUE);
+    if (nsnull!=txn)
+      result = ExecuteTransaction(txn);  
+  }
+  return result;
 }
-
-
 
 nsresult
 nsEditor::Commit(PRBool aCtrlKey)
@@ -557,6 +579,158 @@ nsEditor::Redo()
   {
     result = mTxnMgr->Redo();
   }
+  return result;
+}
+
+nsresult nsEditor::Delete(PRBool aForward, PRUint32 aCount)
+{
+  return NS_OK;
+}
+
+nsresult nsEditor::CreateElement(const nsString& aTag,
+                                 nsIDOMNode *    aParent,
+                                 PRInt32         aPosition)
+{
+  nsresult result;
+  if (nsnull != aParent)
+  {
+    CreateElementTxn *txn = new CreateElementTxn(this, mDomInterfaceP, aTag, aParent, aPosition);
+    if (nsnull!=txn)
+      result = ExecuteTransaction(txn);  
+  }
+  return result;
+}
+
+nsresult nsEditor::InsertText(nsIDOMCharacterData *aElement,
+                              PRUint32             aOffset,
+                              const nsString&      aStringToInsert)
+{
+  nsresult result;
+  if (nsnull != aElement)
+  {
+    InsertTextTxn *txn = new InsertTextTxn(this, aElement, aOffset, aStringToInsert);
+    if (nsnull!=txn)
+      result = ExecuteTransaction(txn);  
+  }
+  return result;
+}
+
+nsresult nsEditor::DeleteText(nsIDOMCharacterData *aElement,
+                              PRUint32             aOffset,
+                              PRUint32             aLength)
+{
+  nsresult result;
+  if (nsnull != aElement)
+  {
+    DeleteTextTxn *txn = new DeleteTextTxn(this, aElement, aOffset, aLength);
+    if (nsnull!=txn)
+      result = ExecuteTransaction(txn);  
+  }
+  return result;
+}
+
+nsresult 
+nsEditor::SplitNode(nsIDOMNode * aNode,
+                    PRInt32      aOffset,
+                    nsIDOMNode*  aNewNode,
+                    nsIDOMNode*  aParent)
+{
+  nsresult result;
+  NS_ASSERTION(((nsnull!=aNode) &&
+                (nsnull!=aNewNode) &&
+                (nsnull!=aParent)),
+                "null arg");
+  if ((nsnull!=aNode) &&
+      (nsnull!=aNewNode) &&
+      (nsnull!=aParent))
+  {
+    nsCOMPtr<nsIDOMNode> resultNode;
+    result = aParent->InsertBefore(aNewNode, aNode, getter_AddRefs(resultNode));
+    if (NS_SUCCEEDED(result))
+    {
+      // split the children between the 2 nodes
+      // at this point, nNode has all the children
+      if (0<=aOffset) // don't bother unless we're going to move at least one child
+      {
+        nsCOMPtr<nsIDOMNodeList> childNodes;
+        result = aParent->GetChildNodes(getter_AddRefs(childNodes));
+        if ((NS_SUCCEEDED(result)) && (childNodes))
+        {
+          PRInt32 i=0;
+          for ( ; ((NS_SUCCEEDED(result)) && (i<aOffset)); i++)
+          {
+            nsCOMPtr<nsIDOMNode> childNode;
+            result = childNodes->Item(i, getter_AddRefs(childNode));
+            if ((NS_SUCCEEDED(result)) && (childNode))
+            {
+              result = aNode->RemoveChild(childNode, getter_AddRefs(resultNode));
+              if (NS_SUCCEEDED(result))
+              {
+                result = aNewNode->AppendChild(childNode, getter_AddRefs(resultNode));
+              }
+            }
+          }
+        }        
+      }
+    }
+    else result = NS_ERROR_NULL_POINTER;
+  }
+  return result;
+}
+
+nsresult
+nsEditor::JoinNodes(nsIDOMNode * aNodeToKeep,
+                    nsIDOMNode * aNodeToJoin,
+                    nsIDOMNode * aParent,
+                    PRBool       aNodeToKeepIsFirst)
+{
+  nsresult result;
+  NS_ASSERTION(((nsnull!=aNodeToKeep) &&
+                (nsnull!=aNodeToJoin) &&
+                (nsnull!=aParent)),
+                "null arg");
+  if ((nsnull!=aNodeToKeep) &&
+      (nsnull!=aNodeToJoin) &&
+      (nsnull!=aParent))
+  {
+    nsCOMPtr<nsIDOMNodeList> childNodes;
+    result = aNodeToJoin->GetChildNodes(getter_AddRefs(childNodes));
+    if ((NS_SUCCEEDED(result)) && (childNodes))
+    {
+      PRUint32 i;
+      PRUint32 childCount=0;
+      childNodes->GetLength(&childCount);
+      nsCOMPtr<nsIDOMNode> firstNode; //only used if aNodeToKeepIsFirst is false
+      if (PR_FALSE==aNodeToKeepIsFirst)
+      { // remember the first child in aNodeToKeep, we'll insert all the children of aNodeToJoin in front of it
+        result = aNodeToKeep->GetFirstChild(getter_AddRefs(firstNode));  
+        // GetFirstChild returns nsnull firstNode if aNodeToKeep has no children, that's ok.
+      }
+      nsCOMPtr<nsIDOMNode> resultNode;
+      for (i=0; ((NS_SUCCEEDED(result)) && (i<childCount)); i++)
+      {
+        nsCOMPtr<nsIDOMNode> childNode;
+        result = childNodes->Item(i, getter_AddRefs(childNode));
+        if ((NS_SUCCEEDED(result)) && (childNode))
+        {
+          if (PR_TRUE==aNodeToKeepIsFirst)
+          { // append children of aNodeToJoin
+            result = aNodeToKeep->AppendChild(childNode, getter_AddRefs(resultNode)); 
+          }
+          else
+          { // prepend children of aNodeToJoin
+            result = aNodeToKeep->InsertBefore(childNode, firstNode, getter_AddRefs(resultNode));
+          }
+        }
+      }
+      if (NS_SUCCEEDED(result))
+      { // delete the extra node
+        result = aParent->RemoveChild(aNodeToJoin, getter_AddRefs(resultNode));
+      }
+    }
+  }
+  else
+    result = NS_ERROR_NULL_POINTER;
   return result;
 }
 
