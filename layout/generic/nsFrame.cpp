@@ -3412,18 +3412,20 @@ nsPeekOffsetStruct nsIFrame::GetExtremeCaretPosition(PRBool aStart)
   if (!content)
     return result;
   
-  // special case: if this is a br element, position the caret before it,
-  // not after it (perhaps the same exception should be made for some
-  // other elements?)
+  // special case: if this is not a __moz_text element,
+  // position the caret to the offset of its parent instead
+  // (position the caret to non-text element may make the caret missing)
 
   nsIAtom* tag = content->Tag();
-  if (tag == nsHTMLAtoms::br) {
+  if (tag != nsLayoutAtoms::textTagName) {
     // special case in effect
     nsIContent* parent = content->GetParent();
-    NS_ASSERTION(parent,"<br> element has no parent!");
+    NS_ASSERTION(parent,"element has no parent!");
     if (parent) {
       result.mResultContent = parent;
       result.mContentOffset = parent->IndexOf(content);
+      if (!aStart)
+        result.mContentOffset++; // go to end of this frame
       return result;
     }
   }
@@ -3432,7 +3434,7 @@ nsPeekOffsetStruct nsIFrame::GetExtremeCaretPosition(PRBool aStart)
 
   PRInt32 start, end;
   nsresult rv;
-  rv = GetOffsets(start,end);
+  rv = resultFrame->GetOffsets(start,end);
   if (NS_SUCCEEDED(rv)) {
     result.mContentOffset = aStart ? start : end;
   }
@@ -4502,11 +4504,16 @@ nsFrame::GetLastLeaf(nsPresContext* aPresContext, nsIFrame **aFrame)
     child = child->GetFirstChild(nsnull);
     if (!child)
       return;//nothing to do
-    while (child->GetNextSibling())
-      child = child->GetNextSibling();
+    nsIFrame* siblingFrame;
+    nsIContent* content;
+    //ignore anonymous elements, e.g. mozTableAdd* mozTableRemove*
+    //see bug 278197 comment #12 #13 for details
+    while ((siblingFrame = child->GetNextSibling()) &&
+           (content = siblingFrame->GetContent()) &&
+           !content->IsNativeAnonymous())
+      child = siblingFrame;
     *aFrame = child;
   }
-  *aFrame = child;
 }
 
 void
