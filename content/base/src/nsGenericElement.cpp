@@ -765,9 +765,9 @@ nsGenericElement::GetDOMAttribute(const nsString& aName, nsString& aReturn)
   // XXX need to parse namespace from name
   // XXX need to uppercase name if HTML namespace
   nsIAtom* nameAtom = NS_NewAtom(aName);
-  mContent->GetAttribute(kNameSpaceID_None, nameAtom, aReturn);
+  nsresult rv = mContent->GetAttribute(kNameSpaceID_None, nameAtom, aReturn);
   NS_RELEASE(nameAtom);
-  return NS_OK;
+  return rv;
 }
 
 nsresult
@@ -777,9 +777,9 @@ nsGenericElement::SetDOMAttribute(const nsString& aName,
   // XXX need to parse namespace from name
   // XXX need to uppercase name if HTML namespace
   nsIAtom* nameAtom = NS_NewAtom(aName);
-  mContent->SetAttribute(kNameSpaceID_None, nameAtom, aValue, PR_TRUE);
+  nsresult rv = mContent->SetAttribute(kNameSpaceID_None, nameAtom, aValue, PR_TRUE);
   NS_RELEASE(nameAtom);
-  return NS_OK;
+  return rv;
 }
 
 nsresult
@@ -788,9 +788,9 @@ nsGenericElement::RemoveAttribute(const nsString& aName)
   // XXX need to parse namespace from name
   // XXX need to uppercase name if HTML namespace
   nsIAtom* nameAtom = NS_NewAtom(aName);
-  mContent->UnsetAttribute(kNameSpaceID_None, nameAtom, PR_TRUE);
+  nsresult rv = mContent->UnsetAttribute(kNameSpaceID_None, nameAtom, PR_TRUE);
   NS_RELEASE(nameAtom);
-  return NS_OK;
+  return rv;
 }
 
 nsresult
