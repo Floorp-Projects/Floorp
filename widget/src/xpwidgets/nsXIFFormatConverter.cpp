@@ -131,9 +131,14 @@ nsXIFFormatConverter::GetOutputDataFlavors(nsISupportsArray **_retval)
     rv = AddFlavorToList ( *_retval, kHTMLMime );
     if ( NS_FAILED(rv) )
       return rv;
+#if NOT_NOW
+// pinkerton
+// no one uses this flavor right now, so it's just slowing things down. If anyone cares I
+// can put it back in.
     rv = AddFlavorToList ( *_retval, kAOLMailMime );
     if ( NS_FAILED(rv) )
       return rv;
+#endif
     rv = AddFlavorToList ( *_retval, kUnicodeMime );
     if ( NS_FAILED(rv) )
       return rv;
