@@ -46,6 +46,7 @@
 //
 
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
 #include "nsClipboard.h"
 
 #include "nsVoidArray.h"

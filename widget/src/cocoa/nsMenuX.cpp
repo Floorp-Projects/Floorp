@@ -55,6 +55,7 @@
 #include "nsIMenuCommandDispatcher.h"
 
 #include "nsString.h"
+#include "nsCRT.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "plstr.h"
