@@ -20,7 +20,7 @@
 
   <binding id="text-label" extends="chrome://global/content/bindings/text.xml#text-base">
     <implementation>
-      <property name="accesskey" onget="return this.getAttribute('accesskey');"
+      <property name="accessKey" onget="return this.getAttribute('accesskey');"
                                  onset="this.setAttribute('accesskey', val); return val;"/>
       <property name="control" onget="return this.getAttribute('control');"
                                onset="this.setAttribute('control', val); return val;"/>
