@@ -117,22 +117,7 @@ SetCSSFontFaceRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!secMan)
         return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
-      case CSSFONTFACERULE_STYLE:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSFONTFACERULE_STYLE, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMCSSStyleDeclaration* prop;
-          if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                  kICSSStyleDeclarationIID, NS_ConvertASCIItoUCS2("CSSStyleDeclaration"),
-                                                  cx, *vp)) {
-            rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
-          }
-      
-          rv = a->SetStyle(prop);
-          NS_IF_RELEASE(prop);
-        }
-        break;
-      }
+      case 0:
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
@@ -202,7 +187,7 @@ JSClass CSSFontFaceRuleClass = {
 //
 static JSPropertySpec CSSFontFaceRuleProperties[] =
 {
-  {"style",    CSSFONTFACERULE_STYLE,    JSPROP_ENUMERATE},
+  {"style",    CSSFONTFACERULE_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

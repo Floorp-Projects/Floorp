@@ -39,18 +39,21 @@ CPPSRCS		= \
 		nsJSCharacterData.cpp \
 		nsJSDocument.cpp \
 		nsJSDocumentFragment.cpp \
+		nsJSDocumentStyle.cpp \
 		nsJSDocumentType.cpp \
+		nsJSDocumentView.cpp \
 		nsJSElement.cpp \
 		nsJSEntity.cpp \
 		nsJSEntityReference.cpp \
+		nsJSMediaList.cpp \
 		nsJSNamedNodeMap.cpp \
 		nsJSNode.cpp \
 		nsJSNodeList.cpp \
 		nsJSNotation.cpp \
 		nsJSProcessingInstruction.cpp \
-		nsJSText.cpp \
 		nsJSStyleSheet.cpp \
-		nsJSStyleSheetCollection.cpp \
+		nsJSStyleSheetList.cpp \
+		nsJSText.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

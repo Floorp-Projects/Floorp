@@ -38,9 +38,9 @@ CPPSRCS		= \
 		nsJSCSSMediaRule.cpp \
 		nsJSCSSPageRule.cpp \
 		nsJSCSSRule.cpp \
+		nsJSCSSRuleList.cpp \
 		nsJSCSSStyleDeclaration.cpp \
 		nsJSCSSStyleRule.cpp \
-		nsJSCSSStyleRuleCollection.cpp \
 		nsJSCSSStyleSheet.cpp \
 		nsJSCSSUnknownRule.cpp \
 		nsJSCSSValue.cpp \

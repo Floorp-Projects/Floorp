@@ -28,27 +28,27 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
-class nsIDOMDocument;
+class nsIDOMDocumentView;
 
 #define NS_IDOMABSTRACTVIEW_IID \
  { 0xf51ebade, 0x8b1a, 0x11d3, \
-  { 0xaa, 0xe7, 0x00, 0x10, 0x83, 0x01, 0x23, 0xb4 } } 
+ { 0xaa, 0xe7, 0x00, 0x10, 0x83, 0x01, 0x23, 0xb4 } } 
 
 class nsIDOMAbstractView : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMABSTRACTVIEW_IID; return iid; }
 
-  NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument)=0;
+  NS_IMETHOD    GetDocument(nsIDOMDocumentView** aDocument)=0;
 };
 
 
 #define NS_DECL_IDOMABSTRACTVIEW   \
-  NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument);  \
+  NS_IMETHOD    GetDocument(nsIDOMDocumentView** aDocument);  \
 
 
 
 #define NS_FORWARD_IDOMABSTRACTVIEW(_to)  \
-  NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument) { return _to GetDocument(aDocument); } \
+  NS_IMETHOD    GetDocument(nsIDOMDocumentView** aDocument) { return _to GetDocument(aDocument); } \
 
 
 #endif // nsIDOMAbstractView_h__

@@ -16,9 +16,9 @@ CPPSRCS =				\
   nsJSCSSMediaRule.cpp \
   nsJSCSSPageRule.cpp \
   nsJSCSSRule.cpp \
+  nsJSCSSRuleList.cpp \
   nsJSCSSStyleDeclaration.cpp \
   nsJSCSSStyleRule.cpp \
-  nsJSCSSStyleRuleCollection.cpp  \
   nsJSCSSStyleSheet.cpp \
   nsJSCSSUnknownRule.cpp \
   nsJSCSSValue.cpp \
@@ -31,9 +31,9 @@ CPP_OBJS=						\
   .\$(OBJDIR)\nsJSCSSMediaRule.obj \
   .\$(OBJDIR)\nsJSCSSPageRule.obj \
   .\$(OBJDIR)\nsJSCSSRule.obj \
+  .\$(OBJDIR)\nsJSCSSRuleList.obj \
   .\$(OBJDIR)\nsJSCSSStyleDeclaration.obj \
   .\$(OBJDIR)\nsJSCSSStyleRule.obj \
-  .\$(OBJDIR)\nsJSCSSStyleRuleCollection.obj \
   .\$(OBJDIR)\nsJSCSSStyleSheet.obj \
   .\$(OBJDIR)\nsJSCSSUnknownRule.obj \
   .\$(OBJDIR)\nsJSCSSValue.obj \

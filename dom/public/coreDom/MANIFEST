@@ -32,15 +32,14 @@ nsIDOMDocumentType.h
 nsIDOMDocumentView.h
 nsIDOMElement.h
 nsIDOMEntity.h
+nsIDOMEntityReference.h
 nsIDOMMediaList.h
 nsIDOMNotation.h
 nsIDOMNSDocument.h
-nsIDOMEntityReference.h
 nsIDOMNode.h
 nsIDOMNamedNodeMap.h
 nsIDOMNodeList.h
 nsIDOMProcessingInstruction.h
 nsIDOMStyleSheet.h
-nsIDOMStyleSheetCollection.h
 nsIDOMStyleSheetList.h
 nsIDOMText.h

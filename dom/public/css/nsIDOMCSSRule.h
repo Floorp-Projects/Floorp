@@ -28,6 +28,7 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
+class nsIDOMCSSRule;
 class nsIDOMCSSStyleSheet;
 
 #define NS_IDOMCSSRULE_IID \
@@ -40,10 +41,11 @@ public:
   enum {
     UNKNOWN_RULE = 0,
     STYLE_RULE = 1,
-    IMPORT_RULE = 2,
-    MEDIA_RULE = 3,
-    FONT_FACE_RULE = 4,
-    PAGE_RULE = 5
+    CHARSET_RULE = 2,
+    IMPORT_RULE = 3,
+    MEDIA_RULE = 4,
+    FONT_FACE_RULE = 5,
+    PAGE_RULE = 6
   };
 
   NS_IMETHOD    GetType(PRUint16* aType)=0;
@@ -51,7 +53,9 @@ public:
   NS_IMETHOD    GetCssText(nsString& aCssText)=0;
   NS_IMETHOD    SetCssText(const nsString& aCssText)=0;
 
-  NS_IMETHOD    GetSheet(nsIDOMCSSStyleSheet** aSheet)=0;
+  NS_IMETHOD    GetParentStyleSheet(nsIDOMCSSStyleSheet** aParentStyleSheet)=0;
+
+  NS_IMETHOD    GetParentRule(nsIDOMCSSRule** aParentRule)=0;
 };
 
 
@@ -59,7 +63,8 @@ public:
   NS_IMETHOD    GetType(PRUint16* aType);  \
   NS_IMETHOD    GetCssText(nsString& aCssText);  \
   NS_IMETHOD    SetCssText(const nsString& aCssText);  \
-  NS_IMETHOD    GetSheet(nsIDOMCSSStyleSheet** aSheet);  \
+  NS_IMETHOD    GetParentStyleSheet(nsIDOMCSSStyleSheet** aParentStyleSheet);  \
+  NS_IMETHOD    GetParentRule(nsIDOMCSSRule** aParentRule);  \
 
 
 
@@ -67,7 +72,8 @@ public:
   NS_IMETHOD    GetType(PRUint16* aType) { return _to GetType(aType); } \
   NS_IMETHOD    GetCssText(nsString& aCssText) { return _to GetCssText(aCssText); } \
   NS_IMETHOD    SetCssText(const nsString& aCssText) { return _to SetCssText(aCssText); } \
-  NS_IMETHOD    GetSheet(nsIDOMCSSStyleSheet** aSheet) { return _to GetSheet(aSheet); } \
+  NS_IMETHOD    GetParentStyleSheet(nsIDOMCSSStyleSheet** aParentStyleSheet) { return _to GetParentStyleSheet(aParentStyleSheet); } \
+  NS_IMETHOD    GetParentRule(nsIDOMCSSRule** aParentRule) { return _to GetParentRule(aParentRule); } \
 
 
 extern "C" NS_DOM nsresult NS_InitCSSRuleClass(nsIScriptContext *aContext, void **aPrototype);

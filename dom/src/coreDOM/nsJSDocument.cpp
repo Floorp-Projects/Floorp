@@ -35,17 +35,20 @@
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMDocumentView.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMProcessingInstruction.h"
+#include "nsIDOMAbstractView.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMCDATASection.h"
-#include "nsIDOMStyleSheetCollection.h"
 #include "nsIDOMText.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentType.h"
+#include "nsIDOMStyleSheetList.h"
 #include "nsIDOMEntityReference.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIDOMDocumentStyle.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMRange.h"
@@ -56,17 +59,20 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIDocumentViewIID, NS_IDOMDOCUMENTVIEW_IID);
 static NS_DEFINE_IID(kIAttrIID, NS_IDOMATTR_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIProcessingInstructionIID, NS_IDOMPROCESSINGINSTRUCTION_IID);
+static NS_DEFINE_IID(kIAbstractViewIID, NS_IDOMABSTRACTVIEW_IID);
 static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kICDATASectionIID, NS_IDOMCDATASECTION_IID);
-static NS_DEFINE_IID(kIStyleSheetCollectionIID, NS_IDOMSTYLESHEETCOLLECTION_IID);
 static NS_DEFINE_IID(kITextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMImplementationIID, NS_IDOMDOMIMPLEMENTATION_IID);
 static NS_DEFINE_IID(kIDocumentTypeIID, NS_IDOMDOCUMENTTYPE_IID);
+static NS_DEFINE_IID(kIStyleSheetListIID, NS_IDOMSTYLESHEETLIST_IID);
 static NS_DEFINE_IID(kIEntityReferenceIID, NS_IDOMENTITYREFERENCE_IID);
 static NS_DEFINE_IID(kINSDocumentIID, NS_IDOMNSDOCUMENT_IID);
+static NS_DEFINE_IID(kIDocumentStyleIID, NS_IDOMDOCUMENTSTYLE_IID);
 static NS_DEFINE_IID(kICommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
 static NS_DEFINE_IID(kIRangeIID, NS_IDOMRANGE_IID);
@@ -79,10 +85,11 @@ enum Document_slots {
   DOCUMENT_DOCTYPE = -1,
   DOCUMENT_IMPLEMENTATION = -2,
   DOCUMENT_DOCUMENTELEMENT = -3,
-  NSDOCUMENT_WIDTH = -4,
-  NSDOCUMENT_HEIGHT = -5,
-  NSDOCUMENT_STYLESHEETS = -6,
-  NSDOCUMENT_CHARACTERSET = -7
+  DOCUMENTSTYLE_STYLESHEETS = -4,
+  DOCUMENTVIEW_DEFAULTVIEW = -5,
+  NSDOCUMENT_WIDTH = -6,
+  NSDOCUMENT_HEIGHT = -7,
+  NSDOCUMENT_CHARACTERSET = -8
 };
 
 /***********************************************************************/
@@ -144,6 +151,46 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case DOCUMENTSTYLE_STYLESHEETS:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENTSTYLE_STYLESHEETS, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMStyleSheetList* prop;
+          nsIDOMDocumentStyle* b;
+          if (NS_OK == a->QueryInterface(kIDocumentStyleIID, (void **)&b)) {
+            rv = b->GetStyleSheets(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case DOCUMENTVIEW_DEFAULTVIEW:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENTVIEW_DEFAULTVIEW, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMAbstractView* prop;
+          nsIDOMDocumentView* b;
+          if (NS_OK == a->QueryInterface(kIDocumentViewIID, (void **)&b)) {
+            rv = b->GetDefaultView(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
       case NSDOCUMENT_WIDTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_WIDTH, PR_FALSE);
@@ -173,26 +220,6 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             rv = b->GetHeight(&prop);
             if(NS_SUCCEEDED(rv)) {
             *vp = INT_TO_JSVAL(prop);
-            }
-            NS_RELEASE(b);
-          }
-          else {
-            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
-          }
-        }
-        break;
-      }
-      case NSDOCUMENT_STYLESHEETS:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_STYLESHEETS, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMStyleSheetCollection* prop;
-          nsIDOMNSDocument* b;
-          if (NS_OK == a->QueryInterface(kINSDocumentIID, (void **)&b)) {
-            rv = b->GetStyleSheets(&prop);
-            if(NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
             }
             NS_RELEASE(b);
           }
@@ -1017,9 +1044,10 @@ static JSPropertySpec DocumentProperties[] =
   {"doctype",    DOCUMENT_DOCTYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"implementation",    DOCUMENT_IMPLEMENTATION,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"documentElement",    DOCUMENT_DOCUMENTELEMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"styleSheets",    DOCUMENTSTYLE_STYLESHEETS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"defaultView",    DOCUMENTVIEW_DEFAULTVIEW,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"width",    NSDOCUMENT_WIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"height",    NSDOCUMENT_HEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"styleSheets",    NSDOCUMENT_STYLESHEETS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"characterSet",    NSDOCUMENT_CHARACTERSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };

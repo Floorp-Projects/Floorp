@@ -35,6 +35,7 @@
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
 #include "nsIDOMCSSImportRule.h"
+#include "nsIDOMMediaList.h"
 #include "nsIDOMCSSStyleSheet.h"
 
 
@@ -42,6 +43,7 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kICSSImportRuleIID, NS_IDOMCSSIMPORTRULE_IID);
+static NS_DEFINE_IID(kIMediaListIID, NS_IDOMMEDIALIST_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_IDOMCSSSTYLESHEET_IID);
 
 //
@@ -89,10 +91,11 @@ GetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSIMPORTRULE_MEDIA, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          rv = a->GetMedia(prop);
+          nsIDOMMediaList* prop;
+          rv = a->GetMedia(&prop);
           if (NS_SUCCEEDED(rv)) {
-            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
           }
         }
         break;
@@ -143,30 +146,7 @@ SetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!secMan)
         return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
-      case CSSIMPORTRULE_HREF:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSIMPORTRULE_HREF, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
-      
-          rv = a->SetHref(prop);
-          
-        }
-        break;
-      }
-      case CSSIMPORTRULE_MEDIA:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSIMPORTRULE_MEDIA, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
-      
-          rv = a->SetMedia(prop);
-          
-        }
-        break;
-      }
+      case 0:
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
@@ -236,8 +216,8 @@ JSClass CSSImportRuleClass = {
 //
 static JSPropertySpec CSSImportRuleProperties[] =
 {
-  {"href",    CSSIMPORTRULE_HREF,    JSPROP_ENUMERATE},
-  {"media",    CSSIMPORTRULE_MEDIA,    JSPROP_ENUMERATE},
+  {"href",    CSSIMPORTRULE_HREF,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"media",    CSSIMPORTRULE_MEDIA,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"styleSheet",    CSSIMPORTRULE_STYLESHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };

@@ -29,9 +29,8 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMStyleSheet.h"
 
-class nsIDOMNode;
-class nsIDOMStyleSheet;
-class nsIDOMCSSStyleRuleCollection;
+class nsIDOMCSSRule;
+class nsIDOMCSSRuleList;
 
 #define NS_IDOMCSSSTYLESHEET_IID \
  { 0xa6cf90c2, 0x15b3, 0x11d2, \
@@ -41,17 +40,9 @@ class nsIDOMCSSStyleSheet : public nsIDOMStyleSheet {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSSTYLESHEET_IID; return iid; }
 
-  NS_IMETHOD    GetOwningNode(nsIDOMNode** aOwningNode)=0;
+  NS_IMETHOD    GetOwnerRule(nsIDOMCSSRule** aOwnerRule)=0;
 
-  NS_IMETHOD    GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet)=0;
-
-  NS_IMETHOD    GetHref(nsString& aHref)=0;
-
-  NS_IMETHOD    GetTitle(nsString& aTitle)=0;
-
-  NS_IMETHOD    GetMedia(nsString& aMedia)=0;
-
-  NS_IMETHOD    GetCssRules(nsIDOMCSSStyleRuleCollection** aCssRules)=0;
+  NS_IMETHOD    GetCssRules(nsIDOMCSSRuleList** aCssRules)=0;
 
   NS_IMETHOD    InsertRule(const nsString& aRule, PRUint32 aIndex, PRUint32* aReturn)=0;
 
@@ -60,24 +51,16 @@ public:
 
 
 #define NS_DECL_IDOMCSSSTYLESHEET   \
-  NS_IMETHOD    GetOwningNode(nsIDOMNode** aOwningNode);  \
-  NS_IMETHOD    GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet);  \
-  NS_IMETHOD    GetHref(nsString& aHref);  \
-  NS_IMETHOD    GetTitle(nsString& aTitle);  \
-  NS_IMETHOD    GetMedia(nsString& aMedia);  \
-  NS_IMETHOD    GetCssRules(nsIDOMCSSStyleRuleCollection** aCssRules);  \
+  NS_IMETHOD    GetOwnerRule(nsIDOMCSSRule** aOwnerRule);  \
+  NS_IMETHOD    GetCssRules(nsIDOMCSSRuleList** aCssRules);  \
   NS_IMETHOD    InsertRule(const nsString& aRule, PRUint32 aIndex, PRUint32* aReturn);  \
   NS_IMETHOD    DeleteRule(PRUint32 aIndex);  \
 
 
 
 #define NS_FORWARD_IDOMCSSSTYLESHEET(_to)  \
-  NS_IMETHOD    GetOwningNode(nsIDOMNode** aOwningNode) { return _to GetOwningNode(aOwningNode); } \
-  NS_IMETHOD    GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet) { return _to GetParentStyleSheet(aParentStyleSheet); } \
-  NS_IMETHOD    GetHref(nsString& aHref) { return _to GetHref(aHref); } \
-  NS_IMETHOD    GetTitle(nsString& aTitle) { return _to GetTitle(aTitle); } \
-  NS_IMETHOD    GetMedia(nsString& aMedia) { return _to GetMedia(aMedia); } \
-  NS_IMETHOD    GetCssRules(nsIDOMCSSStyleRuleCollection** aCssRules) { return _to GetCssRules(aCssRules); } \
+  NS_IMETHOD    GetOwnerRule(nsIDOMCSSRule** aOwnerRule) { return _to GetOwnerRule(aOwnerRule); } \
+  NS_IMETHOD    GetCssRules(nsIDOMCSSRuleList** aCssRules) { return _to GetCssRules(aCssRules); } \
   NS_IMETHOD    InsertRule(const nsString& aRule, PRUint32 aIndex, PRUint32* aReturn) { return _to InsertRule(aRule, aIndex, aReturn); }  \
   NS_IMETHOD    DeleteRule(PRUint32 aIndex) { return _to DeleteRule(aIndex); }  \
 

@@ -50,7 +50,8 @@ static NS_DEFINE_IID(kICSSStyleSheetIID, NS_IDOMCSSSTYLESHEET_IID);
 enum CSSRule_slots {
   CSSRULE_TYPE = -1,
   CSSRULE_CSSTEXT = -2,
-  CSSRULE_SHEET = -3
+  CSSRULE_PARENTSTYLESHEET = -3,
+  CSSRULE_PARENTRULE = -4
 };
 
 /***********************************************************************/
@@ -97,12 +98,25 @@ GetCSSRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case CSSRULE_SHEET:
+      case CSSRULE_PARENTSTYLESHEET:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSRULE_SHEET, PR_FALSE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSRULE_PARENTSTYLESHEET, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
           nsIDOMCSSStyleSheet* prop;
-          rv = a->GetSheet(&prop);
+          rv = a->GetParentStyleSheet(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
+        }
+        break;
+      }
+      case CSSRULE_PARENTRULE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSRULE_PARENTRULE, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMCSSRule* prop;
+          rv = a->GetParentRule(&prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
@@ -226,7 +240,8 @@ static JSPropertySpec CSSRuleProperties[] =
 {
   {"type",    CSSRULE_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"cssText",    CSSRULE_CSSTEXT,    JSPROP_ENUMERATE},
-  {"sheet",    CSSRULE_SHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"parentStyleSheet",    CSSRULE_PARENTSTYLESHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"parentRule",    CSSRULE_PARENTRULE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -290,6 +305,9 @@ extern "C" NS_DOM nsresult NS_InitCSSRuleClass(nsIScriptContext *aContext, void 
 
       vp = INT_TO_JSVAL(nsIDOMCSSRule::STYLE_RULE);
       JS_SetProperty(jscontext, constructor, "STYLE_RULE", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMCSSRule::CHARSET_RULE);
+      JS_SetProperty(jscontext, constructor, "CHARSET_RULE", &vp);
 
       vp = INT_TO_JSVAL(nsIDOMCSSRule::IMPORT_RULE);
       JS_SetProperty(jscontext, constructor, "IMPORT_RULE", &vp);

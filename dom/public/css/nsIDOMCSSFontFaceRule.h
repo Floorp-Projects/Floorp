@@ -40,19 +40,16 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSFONTFACERULE_IID; return iid; }
 
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle)=0;
-  NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle)=0;
 };
 
 
 #define NS_DECL_IDOMCSSFONTFACERULE   \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);  \
-  NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle);  \
 
 
 
 #define NS_FORWARD_IDOMCSSFONTFACERULE(_to)  \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { return _to GetStyle(aStyle); } \
-  NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle) { return _to SetStyle(aStyle); } \
 
 
 extern "C" NS_DOM nsresult NS_InitCSSFontFaceRuleClass(nsIScriptContext *aContext, void **aPrototype);

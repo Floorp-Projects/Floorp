@@ -148,7 +148,7 @@ public:
    NS_IMETHOD Deactivate();
 
    // nsIDOMAbstractView
-   //NS_IMETHOD GetDocument(nsIDOMDocument** aDocument);
+   NS_IMETHOD GetDocument(nsIDOMDocumentView** aDocumentView);
 
 public:
    // Object Management
