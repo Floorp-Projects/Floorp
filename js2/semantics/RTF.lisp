@@ -491,6 +491,7 @@
 
 (defparameter *division-widths*
   '((:nowrap . 0)
+    (:wrap . 0)
     (:level . 4)
     (:level-wide . 4)
     (:algorithm . 0)
@@ -501,6 +502,7 @@
 
 (defparameter *division-style-specializations*
   '((:nowrap . t)
+    (:wrap . t)
     (:level (:statement . :statement-1)
             (:statement-1 . :statement-2)
             (:statement-2 . :statement-3)
@@ -1008,8 +1010,9 @@
 
 
 ; Return a freshly consed list of rtf-items that represent the characters in the string except that
-; spaces are replaced by nonbreakable spaces.
-(defun convert-rtf-string-spaces-to-nbsps (string)
+; spaces are replaced by the symbol given by space, which should be either '~ (for nonbreaking
+; spaces) or :space (for breaking spaces).
+(defun convert-rtf-string-spaces (string space)
   (let ((rtf-items nil))
     (labels
       ((escape-remainder (start)
@@ -1018,37 +1021,42 @@
              (progn
                (unless (= i start)
                  (push (subseq string start i) rtf-items))
-               (push '~ rtf-items)
+               (push space rtf-items)
                (escape-remainder (1+ i)))
              (push (if (zerop start) string (subseq string start)) rtf-items)))))
       (escape-remainder 0)
       (nreverse rtf-items))))
 
 
-; Destructively convert spaces inside strings in rtf-item into nonbreakable spaces.
+; Destructively convert spaces inside strings in rtf-item into the symbol given by space,
+; which should be either '~ (for nonbreaking spaces) or :space (for breaking spaces).
 ; Return a freshly consed list of the results.
-(defun convert-rtf-item-spaces-to-nbsps (rtf-item)
+(defun convert-rtf-item-spaces (rtf-item space)
   (cond
    ((stringp rtf-item)
-    (convert-rtf-string-spaces-to-nbsps rtf-item))
+    (convert-rtf-string-spaces rtf-item space))
    ((or (characterp rtf-item) (symbolp rtf-item) (integerp rtf-item))
     (list rtf-item))
    ((consp rtf-item)
-    (list (convert-rtf-list-spaces-to-nbsps rtf-item)))
+    (list (convert-rtf-list-spaces rtf-item space)))
    (t (error "Bad rtf-item: ~S" rtf-item))))
 
 
-; Destructively convert spaces inside strings in rtf-list into nonbreakable spaces.
-(defun convert-rtf-list-spaces-to-nbsps (rtf-list)
-  (mapcan #'convert-rtf-item-spaces-to-nbsps rtf-list))
+; Destructively convert spaces inside strings in rtf-list into the symbol given by space,
+; which should be either '~ (for nonbreaking spaces) or :space (for breaking spaces).
+(defun convert-rtf-list-spaces (rtf-list space)
+  (mapcan #'(lambda (rtf-item) (convert-rtf-item-spaces rtf-item space))
+          rtf-list))
 
 
-(defun depict-nowrap-rtf-style (rtf-stream emitter)
+; Destructively convert spaces inside strings emitted by emitter into the symbol given by space,
+; which should be either '~ (for nonbreaking spaces) or :space (for breaking spaces).
+(defun depict-wrap-nowrap-rtf-style (rtf-stream emitter space)
   (let ((saved-tail (rtf-stream-tail rtf-stream)))
     (setf (rtf-stream-pretail rtf-stream) nil)
     (prog1
       (funcall emitter rtf-stream)
-      (setf (cdr saved-tail) (convert-rtf-list-spaces-to-nbsps (cdr saved-tail)))
+      (setf (cdr saved-tail) (convert-rtf-list-spaces (cdr saved-tail) space))
       (setf (rtf-stream-tail rtf-stream) (last saved-tail))
       (setf (rtf-stream-pretail rtf-stream) nil))))
 
@@ -1063,9 +1071,10 @@
       (decf (rtf-stream-logical-line-width rtf-stream) width)
       (push division-style (rtf-stream-enclosing-styles rtf-stream))
       (prog1
-        (if (eq division-style :nowrap)
-          (depict-nowrap-rtf-style rtf-stream emitter)
-          (funcall emitter rtf-stream))
+        (case division-style
+          (:nowrap (depict-wrap-nowrap-rtf-style rtf-stream emitter '~))
+          (:wrap (depict-wrap-nowrap-rtf-style rtf-stream emitter :space))
+          (t (funcall emitter rtf-stream)))
         (pop (rtf-stream-enclosing-styles rtf-stream))
         (incf (rtf-stream-logical-line-width rtf-stream) width)))))
 
@@ -1162,18 +1171,20 @@
 
 (defmethod depict-char-style-f ((rtf-stream rtf-stream) char-style emitter)
   (assert-true (>= (markup-stream-level rtf-stream) *markup-stream-content-level*))
-  (if char-style
-    (let ((inner-rtf-stream (make-rtf-stream (rtf-stream-env rtf-stream)
-                                             *markup-stream-content-level*
-                                             (rtf-stream-logical-line-width rtf-stream)
-                                             (rtf-stream-logical-position rtf-stream)
-                                             (rtf-stream-enclosing-styles rtf-stream))))
-      (assert-true (symbolp char-style))
-      (markup-stream-append1 inner-rtf-stream char-style)
-      (prog1
-        (funcall emitter inner-rtf-stream)
-        (rtf-stream-append-or-inline-block rtf-stream (markup-stream-unexpanded-output inner-rtf-stream))))
-    (funcall emitter rtf-stream)))
+  (case char-style
+    ((nil) (funcall emitter rtf-stream))
+    (:nowrap (depict-wrap-nowrap-rtf-style rtf-stream emitter '~))
+    (:wrap (depict-wrap-nowrap-rtf-style rtf-stream emitter :space))
+    (t (let ((inner-rtf-stream (make-rtf-stream (rtf-stream-env rtf-stream)
+                                                *markup-stream-content-level*
+                                                (rtf-stream-logical-line-width rtf-stream)
+                                                (rtf-stream-logical-position rtf-stream)
+                                                (rtf-stream-enclosing-styles rtf-stream))))
+         (assert-true (symbolp char-style))
+         (markup-stream-append1 inner-rtf-stream char-style)
+         (prog1
+           (funcall emitter inner-rtf-stream)
+           (rtf-stream-append-or-inline-block rtf-stream (markup-stream-unexpanded-output inner-rtf-stream)))))))
 
 
 (defmethod ensure-no-enclosing-style ((rtf-stream rtf-stream) style)
