@@ -195,6 +195,7 @@ nsPrefWindow.prototype =
                   {
                     if (elementID == "initialized") continue;
                     var itemObject = pageData[elementID];
+                    if (typeof(itemObject) != "object") break;
                     if ( "prefstring" in itemObject && itemObject.prefstring )
                       {
                         var elt = itemObject.localname;
