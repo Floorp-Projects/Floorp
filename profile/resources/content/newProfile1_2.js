@@ -91,7 +91,7 @@ function chooseProfileFolder( aRootFolder )
     var folderText = document.getElementById("ProfileDir");
     dump("*** setting rootFolderAttribute to " + aRootFolder + "\n");
     folderText.setAttribute( "rootFolder", aRootFolder );
-    if ( aRootFolder != top.profile.defaultProfileParentDir.nativePath )
+    if ( aRootFolder != top.profile.defaultProfileParentDir.path )
       document.getElementById( "useDefault" ).removeAttribute("disabled");
     updateProfileName();
   }
@@ -142,9 +142,9 @@ function setDisplayToDefaultFolder()
   try {
     fileSpec = top.profile.defaultProfileParentDir; 
     if ( fileSpec )
-      fileSpec = fileSpec.QueryInterface( Components.interfaces.nsIFileSpec );
+      fileSpec = fileSpec.QueryInterface( Components.interfaces.nsIFile );
     if ( fileSpec )
-      profileDisplay.setAttribute("rootFolder", fileSpec.nativePath );
+      profileDisplay.setAttribute("rootFolder", fileSpec.path );
 
 
   }
