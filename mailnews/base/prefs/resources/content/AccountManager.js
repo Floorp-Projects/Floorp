@@ -572,7 +572,10 @@ function setFormElementValue(formElement, value) {
   var type = formElement.tagName;
   if (type == "checkbox") {
     if (value == undefined) {
-      formElement.checked = formElement.defaultChecked;
+      if (formElement.defaultChecked)
+        formElement.checked = formElement.defaultChecked;
+      else
+        formElement.checked = false;
     } else {
       if (formElement.getAttribute("reversed"))
         formElement.checked = !value;
@@ -605,15 +608,18 @@ function setFormElementValue(formElement, value) {
       } catch (ex) {
         dump("Still need to fix uninitialized filespec problem!\n");
       }
-    } else
-      formElement.value = formElement.defaultValue;
+    } else {
+      if (formElement.defaultValue)
+        formElement.value = formElement.defaultValue;
 
   }
 
   // let the form figure out what to do with it
   else {
-    if (value == undefined)
-      formElement.value = formElement.defaultValue;
+    if (value == undefined) {
+      if (formElement.defaultValue)
+        formElement.value = formElement.defaultValue;
+    }
     else
       formElement.value = value;
   }
