@@ -43,13 +43,6 @@ typedef enum { NP_FullPage = 1, NP_Embedded } NPPageType;
 typedef void* NPReference;
 #define NPRefFromStart ((NPReference)NULL)
 
-/* This ifdef should probably be replaced by something more generic like
- * #if defined(JAVA_OR_OJI) || defined(XP_MAC) -cls
- */
-#ifndef USE_AUTOCONF
-#define ANTHRAX
-#endif
-
 /* it's lame that this is supposed to support more than plugins but
 it has plugin specific junk (wdata) in it -jg */
 
