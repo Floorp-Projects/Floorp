@@ -2001,7 +2001,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     rv = nsHttpHandler::get()->GetIOService(getter_AddRefs(ioService));
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_CheckPortSafety(port, "http", ioService); // FIX - other schemes?
+    rv = NS_CheckPortSafety(port, "http", ioService); // this works for https
     if (NS_FAILED(rv))
         return rv;
     
