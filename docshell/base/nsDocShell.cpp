@@ -2239,9 +2239,10 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
    
    NS_ENSURE_SUCCESS(StopCurrentLoads(), NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(DoURILoad(aURI, (loadLink == aLoadType) ? 
-      nsIURILoader::viewUserClick : nsIURILoader::viewNormal, aWindowTarget),
-      NS_ERROR_FAILURE);
+   nsURILoadCommand  loadCmd = nsIURILoader::viewNormal;
+   if(loadLink == aLoadType)
+      loadCmd = nsIURILoader::viewUserClick;
+   NS_ENSURE_SUCCESS(DoURILoad(aURI, loadCmd, aWindowTarget), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
