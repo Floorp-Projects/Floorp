@@ -127,6 +127,9 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
 {
   // null selection is legal
   if (!aInfo || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
+#if defined(DEBUG_ftang)
+  printf("nsTextEditRules::WillDoAction action= %d", aInfo->action);
+#endif
 
   *aCancel = PR_FALSE;
   *aHandled = PR_FALSE;
