@@ -179,9 +179,6 @@ nsresult
 NS_NewGfxScrollFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIDocument* aDocument, PRBool aIsRoot);
 
 nsresult
-NS_NewTabFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-
-nsresult
 NS_NewDeckFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayoutManager = nsnull);
 
 nsresult
@@ -6026,15 +6023,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       rv = NS_NewDeckFrame(aPresShell, &newFrame);
     }
     // End of DECK CONSTRUCTION logic
-
-    // TAB CONSTRUCTION
-    else if (aTag == nsXULAtoms::tab) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewTabFrame(aPresShell, &newFrame);
-    }
-    // End of TAB CONSTRUCTION logic
-
     // SLIDER CONSTRUCTION
     else if (aTag == nsXULAtoms::slider) {
       processChildren = PR_TRUE;
