@@ -23,7 +23,9 @@
  *   a production of ye olde bard Ben Goodger and his Merry XUL Widget Crewe.
  *  =>> MODIFICATIONS MUST BE REVIEWED BY ben@netscape.com!!! <<=
  **/
- 
+
+var wsm;
+
 function nsWidgetStateManager ( aFrameID )
   {
    
@@ -62,7 +64,7 @@ function nsWidgetStateManager ( aFrameID )
               if( !(aItemID in this.pageData[aPageTag]) )
                 this.pageData[aPageTag][aItemID] = [];
               return this.pageData[aPageTag][aItemID];
-            },
+            }
       }
   
     this.contentID    = aFrameID;
@@ -84,7 +86,7 @@ function nsWidgetStateManager ( aFrameID )
         textfield:
           {  get: wsm.get_Textfield,   set: wsm.set_Textfield     },
         default_handler:
-          {  get: wsm.get_Default,     set: wsm.set_Default       },
+          {  get: wsm.get_Default,     set: wsm.set_Default       }
       }
    
     // extra attributes to scan and save.
@@ -113,9 +115,10 @@ nsWidgetStateManager.prototype =
             //    used to build a list of elements to persist. <-- performant
             // 2) otherwise, all elements with 'wsm_persist' set to true
             //    are persisted <-- non-performant.
+           var elements;
            if( '_elementIDs' in this.contentArea )
               {
-                var elements = [];
+                elements = [];
                 for( var i = 0; i < this.contentArea._elementIDs.length; i++ )
                   {
                     var elt = this.contentArea.document.getElementById( this.contentArea._elementIDs[i] );
@@ -131,12 +134,12 @@ nsWidgetStateManager.prototype =
               }
             else 
               {
-                var elements = this.contentArea.document.getElementsByAttribute( "wsm_persist", "true" );
+                elements = this.contentArea.document.getElementsByAttribute( "wsm_persist", "true" );
               }
-            for( var i = 0; i < elements.length; i++ )
+            for( var ii = 0; ii < elements.length; ii++ )
               {
-                var elementID   = elements[i].id;
-                var elementType = elements[i].localName;
+                var elementID   = elements[ii].id;
+                var elementType = elements[ii].localName;
                 if (!(aPageTag in this.dataManager.pageData) )
                     this.dataManager.pageData[aPageTag] = [];
                 this.dataManager.pageData[aPageTag][elementID] = [];
@@ -323,7 +326,7 @@ nsWidgetStateManager.prototype =
           var element = wsm.contentArea.document.getElementById( aElementID );
           var dataObject = wsm.generic_Get( element );
           return dataObject ? dataObject : null;
-        },
+        }
   }
 
   
