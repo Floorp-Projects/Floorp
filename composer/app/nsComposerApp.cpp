@@ -56,9 +56,12 @@ int main(int argc, char* argv[])
 char* splash_xpm[] = {0};
 #endif
 
-#ifdef XP_WIN
+#if defined XP_WIN && !defined __GNUC__
 // We need WinMain in order to not be a console app.  This function is
 // unused if we are a console application.
+//
+// However, if using MingW on Win32, we can't use this as GCC complains
+// about the use of main.
 int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int )
 {
     // Do the real work.
