@@ -31,6 +31,8 @@
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
+<?xul-overlay href="chrome://sidebar/content/sidebarOverlay.xul"?>
+<?xml-stylesheet href="chrome://sidebar/skin/sidebarOverlay.css" type="text/css"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorAppShell.dtd"> 
 
@@ -57,6 +59,14 @@
 	<!-- keys are appended from the overlay -->
   <keyset id="defaultKeySet"/>
 
+<!-- sidebar/toolbar/content/status -->
+<box id="sidebar-parent" align="horizontal" flex="100%">
+  <!-- toolbar/content/status -->
+ 
+  <box id="sidebar-box" chromeclass="extrachrome"/>
+  <splitter id="sidebar-splitter" chromeclass="extrachrome" />
+  
+  <box id="appcontent" align="vertical" flex="100%">
   <toolbox id="EditorToolbars">
     <menubar>
     <menu id="fileMenu"/>
@@ -195,9 +205,11 @@
     </toolbar>
     </toolbox>
 
-    <html:iframe id="content-frame" src="chrome://navigator/content/contentframe.xul" flex="100%" />
+    <html:iframe type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
 
     <!-- status bar, from editorOverlay.xul -->
     <box id="EditorStatusBar" />
+  </box>
+</box>
 
 </window>
