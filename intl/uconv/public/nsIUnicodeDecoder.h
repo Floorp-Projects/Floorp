@@ -28,6 +28,8 @@
 NS_DECLARE_ID(kIUnicodeDecoderIID,
   0xb2f178e1, 0x832a, 0x11d2, 0x8a, 0x8e, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
+// XXX deprecated
+/*---------- BEGIN DEPRECATED */ 
 #define NS_EXACT_LENGTH \
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_UCONV, 11)
 
@@ -39,11 +41,23 @@ NS_DECLARE_ID(kIUnicodeDecoderIID,
 
 #define NS_ERROR_ILLEGAL_INPUT \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 14)
+/*---------- END DEPRECATED */ 
+
+// XXX make us hex! (same digits though)
+#define NS_OK_UDEC_EXACTLENGTH      \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_UCONV, 11)
+
+#define NS_OK_UDEC_MOREINPUT        \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_UCONV, 12)
+
+#define NS_OK_UDEC_MOREOUTPUT       \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_UCONV, 13)
+
+#define NS_ERROR_UDEC_ILLEGALINPUT  \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 14)
 
 /**
  * Interface for a Converter from a Charset into Unicode.
- *
- * XXX Rename error value macros; unify with the Encoder ones
  *
  * @created         23/Nov/1998
  * @author  Catalin Rotaru [CATA]
@@ -114,9 +128,7 @@ public:
    * Finishes the conversion. The converter has the possibility to write some 
    * extra data and flush its final state.
    *
-   * XXX Change this method's signature to:
-   * Finish(aDest, aDestLen)
-   * XXX Delete this method: it is useless.
+   * XXX Deprecated.
    *
    * @param aDest       [OUT] the destination data buffer
    * @param aDestOffset [IN] the offset in the destination data buffer
@@ -157,6 +169,8 @@ public:
    * Specify what to do when an illegal input sequence is encountered.
    * - stop and signal error
    * - recover and continue (default)
+   *
+   * XXX Deprecated
    *
    * @param aOrder      [IN] the behavior; taken from the enum
    */
