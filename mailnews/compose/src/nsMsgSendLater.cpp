@@ -323,7 +323,8 @@ nsMsgSendLater::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 // This is the listener class for the send operation. We have to create this class 
 // to listen for message send completion and eventually notify the caller
 ////////////////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS1(SendOperationListener, nsIMsgSendListener)
+NS_IMPL_ISUPPORTS2(SendOperationListener, nsIMsgSendListener,
+                   nsIMsgCopyServiceListener)
 
 SendOperationListener::SendOperationListener(void) 
 { 
@@ -406,16 +407,55 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
 
       ++(mSendLater->mTotalSentSuccessfully);
     }
+  }
 
-    // Regardless, we will still keep trying to send the rest...
+  return rv;
+}
+
+// nsIMsgCopyServiceListener
+
+nsresult
+SendOperationListener::OnStartCopy(void)
+{
+  return NS_OK;
+}
+
+nsresult
+SendOperationListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
+{
+  return NS_OK;
+}
+
+nsresult
+SendOperationListener::SetMessageKey(PRUint32 aKey)
+{
+  NS_NOTREACHED("SendOperationListener::SetMessageKey()");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+SendOperationListener::GetMessageId(nsCString * aMessageId)
+{
+  NS_NOTREACHED("SendOperationListener::GetMessageId()\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+SendOperationListener::OnStopCopy(nsresult aStatus)
+{
+  if (mSendLater) {
+    // Regardless of the success of the copy we will still keep trying
+    // to send the rest...
+    nsresult rv;
     rv = mSendLater->StartNextMailFileSend();
     if (NS_FAILED(rv))
-      mSendLater->NotifyListenersOnStopSending(rv, nsnull, mSendLater->mTotalSendCount, 
+      mSendLater->NotifyListenersOnStopSending(rv, nsnull,
+                                               mSendLater->mTotalSendCount, 
                                                mSendLater->mTotalSentSuccessfully);
     NS_RELEASE(mSendLater);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
