@@ -39,9 +39,9 @@
 #define nsIMenu_h__
 
 #include "nsISupports.h"
-#include "nsString.h"
-#include "nsIDocShell.h"
+#include "nsStringFwd.h"
 
+class nsIDocShell;
 class nsIMenuBar;
 class nsIMenu;
 class nsIMenuItem;
