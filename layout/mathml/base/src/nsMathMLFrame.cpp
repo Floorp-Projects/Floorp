@@ -534,7 +534,7 @@ GetMathMLAttributeStyleSheet(nsIPresContext* aPresContext,
   nsCOMPtr<nsICSSStyleSheet> cssSheet(do_CreateInstance(kCSSStyleSheetCID));
   if (!cssSheet)
     return;
-  cssSheet->Init(uri);
+  cssSheet->SetURL(uri);
   nsCOMPtr<nsIDOMCSSStyleSheet> domSheet(do_QueryInterface(cssSheet));
   if (domSheet) {
     PRUint32 index;

@@ -286,7 +286,6 @@ protected:
   // access to
   nsresult ParseSheet(nsIUnicharInputStream* aStream,
                       SheetLoadData* aLoadData,
-                      nsIURI* aSheetURI,
                       PRBool& aCompleted);
 
 public:
