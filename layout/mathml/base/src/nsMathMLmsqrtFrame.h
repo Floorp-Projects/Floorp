@@ -83,7 +83,7 @@ protected:
   
   virtual PRIntn GetSkipSides() const { return 0; }
 
-  nsMathMLChar mSqrtChar, mSqrtBar;
+  nsMathMLChar mSqrChar, mBarChar;
 };
 
 #endif /* nsMathMLmsqrtFrame_h___ */

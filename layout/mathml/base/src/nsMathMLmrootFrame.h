@@ -71,7 +71,7 @@ protected:
   
   virtual PRIntn GetSkipSides() const { return 0; }
 
-  nsMathMLChar mSqrtChar, mSqrtBar;
+  nsMathMLChar mSqrChar, mBarChar;
 };
 
 #endif /* nsMathMLmrootFrame_h___ */

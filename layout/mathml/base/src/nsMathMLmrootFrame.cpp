@@ -60,13 +60,13 @@ NS_NewMathMLmrootFrame(nsIFrame** aNewFrame)
 }
 
 nsMathMLmrootFrame::nsMathMLmrootFrame() :
-  mSqrtChar(),
-  mSqrtBar()
+  mSqrChar(),
+  mBarChar()
 {
    nsAutoString sqr(PRUnichar(0x221A)),
                 bar(PRUnichar(0xF8E5));
-   mSqrtChar.SetData(sqr);
-   mSqrtBar.SetData(bar);
+   mSqrChar.SetData(sqr);
+   mBarChar.SetData(bar);
 }
 
 nsMathMLmrootFrame::~nsMathMLmrootFrame()
@@ -99,9 +99,9 @@ nsMathMLmrootFrame::Paint(nsIPresContext&      aPresContext,
 
   if (NS_SUCCEEDED(rv) && NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     // paint the sqrt symbol
-    rv = mSqrtChar.Paint(aPresContext, aRenderingContext, mStyleContext);
+    rv = mSqrChar.Paint(aPresContext, aRenderingContext, mStyleContext);
     // paint the overline bar
-    rv = mSqrtBar.Paint(aPresContext, aRenderingContext, mStyleContext);
+    rv = mBarChar.Paint(aPresContext, aRenderingContext, mStyleContext);
   }
 
   return rv;
@@ -182,17 +182,17 @@ nsMathMLmrootFrame::Reflow(nsIPresContext&          aPresContext,
   nscoord dx, dy;
 
   // radical symbol  
-  renderingContext.GetBoundingMetrics(mSqrtChar.GetUnicode(), PRUint32(1), bmSqr);
+  renderingContext.GetBoundingMetrics(mSqrChar.GetUnicode(), PRUint32(1), bmSqr);
   nscoord widthSqr = bmSqr.width; // width of the radical symbol
 
   // overline bar
-  renderingContext.GetBoundingMetrics(mSqrtBar.GetUnicode(), PRUint32(1), bmBar);
+  renderingContext.GetBoundingMetrics(mBarChar.GetUnicode(), PRUint32(1), bmBar);
   nscoord heightBar = bmBar.ascent - bmBar.descent; // height of the overline bar
 
   // Stretch the sqrt symbol to the appropriate height if it is not big enough.
   nsCharMetrics contSize(aDesiredSize);
   nsCharMetrics desSize(fontDescent, fontAscent, widthSqr, fontAscent + fontDescent);
-  mSqrtChar.Stretch(aPresContext, renderingContext, mStyleContext,
+  mSqrChar.Stretch(aPresContext, renderingContext, mStyleContext,
                     NS_STRETCH_DIRECTION_VERTICAL, contSize, desSize);
   widthSqr = desSize.width;
   if (aDesiredSize.ascent < desSize.ascent) {
@@ -212,7 +212,7 @@ nsMathMLmrootFrame::Reflow(nsIPresContext&          aPresContext,
   contSize = nsCharMetrics(aDesiredSize);
   desSize = nsCharMetrics(fontDescent, fontAscent, bmBar.rightBearing-bmBar.leftBearing, fontAscent + fontDescent);
   nsCharMetrics oldSize = desSize;
-  mSqrtBar.Stretch(aPresContext, renderingContext, mStyleContext,
+  mBarChar.Stretch(aPresContext, renderingContext, mStyleContext,
                    NS_STRETCH_DIRECTION_HORIZONTAL, contSize, desSize);
 
   dy = bmBar.ascent - fontAscent;
@@ -252,8 +252,8 @@ nsMathMLmrootFrame::Reflow(nsIPresContext&          aPresContext,
  
   child[0]->SetRect(&aPresContext, rect[0]);
   child[1]->SetRect(&aPresContext, rect[1]);
-  mSqrtChar.SetRect(rect[2]);
-  mSqrtBar.SetRect(rect[3]);
+  mSqrChar.SetRect(rect[2]);
+  mBarChar.SetRect(rect[3]);
 
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = aDesiredSize.width;
