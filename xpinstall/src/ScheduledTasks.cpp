@@ -286,6 +286,17 @@ PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
                                                                   //   changed during the MoveTo call
         if (NS_FAILED(rv)) result = nsInstall::UNEXPECTED_ERROR;
         rv = renamedDoomedFile->MoveToNative(parent, uniqueLeafName);        
+        if (NS_FAILED(rv))
+            return nsInstall::UNEXPECTED_ERROR;
+
+        // The implementation of MoveToNative() on some platforms (osx and win32) resets
+        // the object to the 'moved to' filename.  This is incorrect behavior.  This
+        // implementation will be fixed in the future.  We need to take into account that
+        // fix by setting renamedDoomedFile to the filename that it was moved to above.
+        // See bug 200024.
+        rv = renamedDoomedFile->SetNativeLeafName(uniqueLeafName);        
+        if (NS_FAILED(rv))
+            return nsInstall::UNEXPECTED_ERROR;
 
 #ifdef XP_MACOSX
         rv = doomedFileLocal->InitWithNativePath(doomedFilePath);
@@ -318,6 +329,17 @@ PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
             NS_WARNING("File unpacked into a non-dest dir" );
             replacementFile->GetNativeLeafName(leafname);
             rv = replacementFile->MoveToNative(parentofFinalFile, leafname);
+            if (NS_FAILED(rv))
+                return nsInstall::UNEXPECTED_ERROR;
+
+            // The implementation of MoveToNative() on some platforms (osx and win32) resets
+            // the object to the 'moved to' filename.  This is incorrect behavior.  This
+            // implementation will be fixed in the future.  We need to take into account that
+            // fix by setting renamedDoomedFile to the filename that it was moved to above.
+            // See bug 200024.
+            rv = renamedDoomedFile->SetNativeLeafName(leafname);        
+            if (NS_FAILED(rv))
+                return nsInstall::UNEXPECTED_ERROR;
         }
         	
         rv = doomedFile->GetNativeLeafName(leafname);
