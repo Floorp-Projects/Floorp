@@ -2708,7 +2708,16 @@ CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
 NS_IMETHODIMP
 nsFontEnumeratorWin::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
 {
-  if ((!aCount) || (!aResult)) {
+  if (aCount) {
+    *aCount = 0;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aResult) {
+    *aResult = nsnull;
+  }
+  else {
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -2831,7 +2840,19 @@ NS_IMETHODIMP
 nsFontEnumeratorWin::EnumerateFonts(const char* aLangGroup,
   const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult)
 {
-  if ((!aLangGroup) || (!aGeneric) || (!aCount) || (!aResult)) {
+  if ((!aLangGroup) || (!aGeneric)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aCount) {
+    *aCount = 0;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aResult) {
+    *aResult = nsnull;
+  }
+  else {
     return NS_ERROR_NULL_POINTER;
   }
 
