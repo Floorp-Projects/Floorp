@@ -69,6 +69,13 @@
 
 #include "nsTextTransformer.h"
 #include "nsRange.h"
+#include "nsGenericElement.h"
+#ifdef INCLUDE_XUL
+#include "nsBulletinBoardLayout.h"
+#include "nsRepeatService.h"
+#include "nsSprocketLayout.h"
+#include "nsStackLayout.h"
+#endif
 #include "nsIHTTPProtocolHandler.h"
 #include "gbdate.h"
 #include "nsContentPolicyUtils.h"
@@ -254,6 +261,16 @@ nsLayoutModule::Shutdown()
   if (!mInitialized) {
     return;
   }
+
+#ifdef INCLUDE_XUL
+  nsBulletinBoardLayout::Shutdown();
+  nsRepeatService::Shutdown();
+  nsSprocketLayout::Shutdown();
+  nsStackLayout::Shutdown();
+#endif
+
+  nsRange::Shutdown();
+  nsGenericElement::Shutdown();
     
   // Release all of our atoms
   nsColorNames::ReleaseTable();
@@ -276,8 +293,6 @@ nsLayoutModule::Shutdown()
 #endif
 
   nsTextTransformer::Shutdown();
-
-  nsRange::Shutdown();
 
   NS_IF_RELEASE(gRegistry);
   NS_IF_RELEASE(gUAStyleSheet);
