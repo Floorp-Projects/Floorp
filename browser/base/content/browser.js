@@ -3309,7 +3309,7 @@ nsContextMenu.prototype = {
     },
     // Save URL of clicked-on link.
     saveLink : function () {
-        saveURL( this.linkURL(), this.linkText(), null, true, true );
+        saveURL( this.linkURL(), this.linkText(), null, true, false );
     },
     sendLink : function () {
         MailIntegration.sendMessage( this.linkURL(), "" ); // we don't know the title of the link so pass in an empty string
