@@ -41,14 +41,15 @@ void nsFileSpecHelpers::Canonify(char*& ioPath, PRBool inMakeDirs)
 //----------------------------------------------------------------------------------------
 {
   if (!ioPath)
-    return;
+      return;
   
-  if (inMakeDirs) {
-    const int mode = 0700;
-    char* unixStylePath = nsFileSpecHelpers::StringDup(ioPath);
-    nsFileSpecHelpers::NativeToUnix(unixStylePath);
-    nsFileSpecHelpers::MakeAllDirectories(unixStylePath, mode);
-    delete[] unixStylePath;
+  if (inMakeDirs)
+  {
+      const int mode = 0700;
+      char* unixStylePath = nsFileSpecHelpers::StringDup(ioPath);
+      nsFileSpecHelpers::NativeToUnix(unixStylePath);
+      nsFileSpecHelpers::MakeAllDirectories(unixStylePath, mode);
+      delete[] unixStylePath;
   }
   char buffer[_MAX_PATH];
   errno = 0;
@@ -57,7 +58,7 @@ void nsFileSpecHelpers::Canonify(char*& ioPath, PRBool inMakeDirs)
 
   NS_ASSERTION( canonicalPath[0] != '\0', "Uh oh...couldn't convert" );
   if (canonicalPath[0] == '\0')
-    return;
+      return;
 
   nsFileSpecHelpers::StringAssign(ioPath, canonicalPath);
 }
@@ -188,6 +189,27 @@ PRBool nsFileSpec::Exists() const
 	struct stat st;
 	return 0 == stat(mPath, &st); 
 } // nsFileSpec::Exists
+
+//----------------------------------------------------------------------------------------
+void nsFileSpec::GetModDate(TimeStamp& outStamp) const
+//----------------------------------------------------------------------------------------
+{
+	struct stat st;
+    if (stat(mPath, &st) == 0) 
+        outStamp = st.st_mtime; 
+    else
+        outStamp = 0;
+} // nsFileSpec::GetModDate
+
+//----------------------------------------------------------------------------------------
+PRUint32 nsFileSpec::GetFileSize() const
+//----------------------------------------------------------------------------------------
+{
+	struct stat st;
+    if (stat(mPath, &st) == 0) 
+        return (PRUint32)st.st_size; 
+    return 0;
+} // nsFileSpec::GetFileSize
 
 //----------------------------------------------------------------------------------------
 PRBool nsFileSpec::IsFile() const
