@@ -64,6 +64,7 @@ endif
 
 EXTRA_DSO_LDOPTS += \
 	$(MOZ_COMPONENT_LIBS) \
+	$(MOZ_XPCOM_OBSOLETE_LIBS) \
 	-L$(DIST)/lib \
 	$(EXTRA_DSO_LIBS) \
 	$(NULL)
