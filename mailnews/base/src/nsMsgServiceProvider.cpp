@@ -95,14 +95,14 @@ nsMsgServiceProviderService::Init()
         rv = tmpdataFilesDir->FromFileSpec(dataFilesDir);
         NS_ENSURE_SUCCESS(rv,rv);
 
-        if ((const char*)lc_name)
+        if ((const PRUnichar*)lc_name)
             tmpdataFilesDir->AppendRelativeUnixPath(NS_ConvertUCS2toUTF8(lc_name));
         NS_ENSURE_SUCCESS(rv,rv);
         rv = tmpdataFilesDir->Exists(&isexists);
         NS_ENSURE_SUCCESS(rv,rv);
         if (isexists) {
             // use locale provider instead
-            if ((const char*)lc_name)
+            if ((const PRUnichar*)lc_name)
                 dataFilesDir->AppendRelativeUnixPath(NS_ConvertUCS2toUTF8(lc_name));
             NS_ENSURE_SUCCESS(rv,rv);
         }
