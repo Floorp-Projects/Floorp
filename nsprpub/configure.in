@@ -1687,6 +1687,7 @@ mips-sony-newsos*)
             CFLAGS="$CFLAGS -xs"
             CXXFLAGS="$CXXFLAGS -xs"
         fi
+        _OPTIMIZE_FLAGS=-xO4
     fi
     if test -n "$USE_64" && test -z "$GNU_CC"; then
         CC="$CC -xarch=v9"
