@@ -678,13 +678,13 @@ endsWith (const char* pattern, const char* uuid)
   short l2 = PL_strlen(uuid);
   short index;
 
-  if (l2 < l1) return false;
+  if (l2 < l1) return PR_FALSE;
 
   for (index = 1; index <= l1; index++) {
-    if (toupper(pattern[l1-index]) != toupper(uuid[l2-index])) return false;
+    if (toupper(pattern[l1-index]) != toupper(uuid[l2-index])) return PR_FALSE;
   }
 
-  return true;
+  return PR_TRUE;
 }
 
 static void
