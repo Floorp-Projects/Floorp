@@ -446,6 +446,12 @@ NS_METHOD nsMenu::GetNativeData(void ** aData)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+NS_METHOD nsMenu::SetNativeData(void * aData)
+{
+  return NS_OK;
+}
+
 GtkWidget *nsMenu::GetNativeParent()
 {
   void * voidData; 

@@ -469,6 +469,13 @@ NS_METHOD nsMenu::GetNativeData(void ** aData)
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenu::SetNativeData(void * aData)
+
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddMenuListener(nsIMenuListener * aMenuListener)
 {
   NS_IF_RELEASE(mListener);
