@@ -186,7 +186,7 @@ int ReplaceINIFile()
 
 	CString copycat = "copycat.bat";
 	ofstream cc(copycat);
-	cc << command2 <<"\n";
+	cc << command2 <<"\necho off \ncls\n";
 	cc.close();
 	CString command3 ="copycat.bat";
 
@@ -194,6 +194,8 @@ int ReplaceINIFile()
 	ExecuteCommand((char *)(LPCTSTR) command3, SW_SHOW, INFINITE);
 
 	DeleteFile("copycat.bat");
+	CString unzipN6 = quotes +rootPath + "unzip.exe"+ quotes + "-o" + spaces + quotes + zipName + quotes;
+	ExecuteCommand((char *)(LPCTSTR) unzipN6, SW_SHOW, INFINITE);
 	DeleteFile(zipName);
 
 	SetCurrentDirectory(olddir);
