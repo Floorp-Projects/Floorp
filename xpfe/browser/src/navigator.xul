@@ -1,6 +1,6 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="xul.css" type="text/css"?> 
-<?xml-stylesheet href="navigator.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 
 <!DOCTYPE window> 
 
