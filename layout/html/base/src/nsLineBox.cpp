@@ -92,6 +92,7 @@ nsLineBox::Reset(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock)
   mFlags.mBlock = aIsBlock;
 }
 
+#ifdef DEBUG
 static void
 ListFloaters(FILE* out, PRInt32 aIndent, const nsFloaterCacheList& aFloaters)
 {
@@ -104,8 +105,12 @@ ListFloaters(FILE* out, PRInt32 aIndent, const nsFloaterCacheList& aFloaters)
       fprintf(out, "placeholder@%p ", ph);
       nsIFrame* frame = ph->GetOutOfFlowFrame();
       if (nsnull != frame) {
-        frame->GetFrameName(frameName);
-        fputs(frameName, out);
+        nsIFrameDebug*  frameDebug;
+
+        if (NS_SUCCEEDED(frame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+          frameDebug->GetFrameName(frameName);
+          fputs(frameName, out);
+        }
       }
       fprintf(out, " %s region={%d,%d,%d,%d} combinedArea={%d,%d,%d,%d}",
               fc->mIsCurrentLineFloater ? "cl" : "bcl",
@@ -119,6 +124,7 @@ ListFloaters(FILE* out, PRInt32 aIndent, const nsFloaterCacheList& aFloaters)
     fc = fc->Next();
   }
 }
+#endif
 
 char*
 nsLineBox::StateToString(char* aBuf, PRInt32 aBufSize) const
@@ -132,6 +138,7 @@ nsLineBox::StateToString(char* aBuf, PRInt32 aBufSize) const
   return aBuf;
 }
 
+#ifdef DEBUG
 void
 nsLineBox::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
@@ -159,7 +166,11 @@ nsLineBox::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
   nsIFrame* frame = mFirstChild;
   PRInt32 n = GetChildCount();
   while (--n >= 0) {
-    frame->List(aPresContext, out, aIndent + 1);
+    nsIFrameDebug*  frameDebug;
+
+    if (NS_SUCCEEDED(frame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      frameDebug->List(aPresContext, out, aIndent + 1);
+    }
     frame->GetNextSibling(&frame);
   }
 
@@ -171,6 +182,7 @@ nsLineBox::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
   }
   fputs(">\n", out);
 }
+#endif
 
 nsIFrame*
 nsLineBox::LastChild() const

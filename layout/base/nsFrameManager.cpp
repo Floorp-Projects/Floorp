@@ -819,8 +819,12 @@ DumpContext(nsIFrame* aFrame, nsIStyleContext* aContext)
   if (aFrame) {
     fputs("frame: ", stdout);
     nsAutoString  name;
-    aFrame->GetFrameName(name);
-    fputs(name, stdout);
+    nsIFrameDebug*  frameDebug;
+
+    if (NS_SUCCEEDED(aFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      frameDebug->GetFrameName(name);
+      fputs(name, stdout);
+    }
     fprintf(stdout, " (%p)", aFrame);
   }
   if (aContext) {

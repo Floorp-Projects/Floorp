@@ -862,42 +862,7 @@ public:
    */
   NS_IMETHOD  Scrolled(nsIView *aView) = 0;
 
-  // Debugging
-  NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const = 0;
 
-  /**
-   * Get a printable from of the name of the frame type.
-   */
-  NS_IMETHOD  GetFrameName(nsString& aResult) const = 0;
-
-  /**
-   * Called to dump out regression data that describes the layout
-   * of the frame and it's children, and so on. The format of the
-   * data is dictated to be XML (using a specific DTD); the
-   * specific kind of data dumped is up to the frame itself, with
-   * the caveat that some base types are defined.
-   * For more information, see XXX.
-   */
-  NS_IMETHOD  DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) = 0;
-
-  /**
-   * Get the size of the frame object. The size value should include
-   * all subordinate data referenced by the frame that is not
-   * accounted for by child frames. However, this value should not
-   * include the content objects, style contexts, views or other data
-   * that lies logically outside the frame system.
-   *
-   * If the implementation so chooses, instead of returning the total
-   * subordinate data it may instead use the sizeof handler to store
-   * away subordinate data under its own key so that the subordinate
-   * data may be tabulated independently of the frame itself.
-   *
-   * The caller is responsible for recursing over all child-lists that
-   * the frame supports.
-   */
-  NS_IMETHOD  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const = 0;
-
-  NS_IMETHOD  VerifyTree() const = 0;
 
   /** Selection related calls
    */
@@ -927,45 +892,6 @@ public:
    *  @param aPOS is defined in nsIFrameSelection
    */
   NS_IMETHOD  PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) = 0;
-
-  /**
-   * See if tree verification is enabled. To enable tree verification add
-   * "frameverifytree:1" to your NSPR_LOG_MODULES environment variable
-   * (any non-zero debug level will work). Or, call SetVerifyTreeEnable
-   * with PR_TRUE.
-   */
-  static NS_LAYOUT PRBool GetVerifyTreeEnable();
-
-  /**
-   * Set the verify-tree enable flag.
-   */
-  static NS_LAYOUT void SetVerifyTreeEnable(PRBool aEnabled);
-
-  /**
-   * See if style tree verification is enabled. To enable style tree 
-   * verification add "styleverifytree:1" to your NSPR_LOG_MODULES 
-   * environment variable (any non-zero debug level will work). Or, 
-   * call SetVerifyStyleTreeEnable with PR_TRUE.
-   */
-  static NS_LAYOUT PRBool GetVerifyStyleTreeEnable();
-
-  /**
-   * Set the verify-style-tree enable flag.
-   */
-  static NS_LAYOUT void SetVerifyStyleTreeEnable(PRBool aEnabled);
-
-  /**
-   * The frame class and related classes share an nspr log module
-   * for logging frame activity.
-   *
-   * Note: the log module is created during library initialization which
-   * means that you cannot perform logging before then.
-   */
-  static NS_LAYOUT PRLogModuleInfo* GetLogModuleInfo();
-
-  // Show frame borders when rendering
-  static NS_LAYOUT void ShowFrameBorders(PRBool aEnable);
-  static NS_LAYOUT PRBool GetShowFrameBorders();
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;

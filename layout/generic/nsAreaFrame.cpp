@@ -378,13 +378,13 @@ nsAreaFrame::DidReflow(nsIPresContext& aPresContext,
 /////////////////////////////////////////////////////////////////////////////
 // Diagnostics
 
+#ifdef NS_DEBUG
 NS_IMETHODIMP
 nsAreaFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Area", aResult);
 }
 
-#ifdef DEBUG
 NS_IMETHODIMP
 nsAreaFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {

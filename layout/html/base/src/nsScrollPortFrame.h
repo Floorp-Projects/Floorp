@@ -86,7 +86,9 @@ public:
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   
+#ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
 
   // nsIBox methods
   NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);

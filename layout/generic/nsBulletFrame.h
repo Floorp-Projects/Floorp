@@ -44,7 +44,9 @@ public:
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+#ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
 
   // nsIHTMLReflow
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,

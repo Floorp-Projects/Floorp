@@ -40,10 +40,13 @@ class nsFontPickerFrame : public nsLeafFrame
 public:
   nsFontPickerFrame();
 
-    // nsIFrame overrides
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("FontPickerFrame", aResult);
   }
+#endif
+
+  // nsIFrame overrides
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,

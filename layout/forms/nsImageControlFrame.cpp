@@ -74,9 +74,11 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("ImageControl", aResult);
   }
+#endif
 
   NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
                        nsPoint&        aPoint,

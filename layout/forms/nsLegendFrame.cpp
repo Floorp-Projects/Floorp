@@ -90,8 +90,10 @@ PRInt32 nsLegendFrame::GetAlign()
   return intValue;
 }
 
+#ifdef NS_DEBUG
 NS_IMETHODIMP
 nsLegendFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Legend", aResult);
 }
+#endif

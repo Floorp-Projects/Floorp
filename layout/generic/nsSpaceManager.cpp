@@ -23,7 +23,9 @@
 #include "nsVoidArray.h"
 #include "nsIFrame.h"
 #include "nsString.h"
-
+#ifdef DEBUG
+#include "nsIFrameDebug.h"
+#endif
 static NS_DEFINE_IID(kISpaceManagerIID, NS_ISPACEMANAGER_IID);
 
 /////////////////////////////////////////////////////////////////////////////
@@ -904,18 +906,22 @@ nsSpaceManager::ClearRegions()
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsSpaceManager::List(FILE* out)
 {
-#ifdef DEBUG
   nsAutoString tmp;
 
   fprintf(out, "SpaceManager@%p", this);
   if (mFrame) {
-    mFrame->GetFrameName(tmp);
-    fprintf(out, " frame=");
-    fputs(tmp, out);
-    fprintf(out, "@%p", mFrame);
+    nsIFrameDebug*  frameDebug;
+
+    if (NS_SUCCEEDED(mFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      frameDebug->GetFrameName(tmp);
+      fprintf(out, " frame=");
+      fputs(tmp, out);
+      fprintf(out, "@%p", mFrame);
+    }
   }
   fprintf(out, " xy=%d,%d <\n", mX, mY);
   if (mBandList.IsEmpty()) {
@@ -928,10 +934,14 @@ nsSpaceManager::List(FILE* out)
               band->mLeft, band->mTop, band->mRight, band->mBottom,
               band->mNumFrames);
       if (1 == band->mNumFrames) {
-        band->mFrame->GetFrameName(tmp);
-        fprintf(out, " frame=");
-        fputs(tmp, out);
-        fprintf(out, "@%p", band->mFrame);
+        nsIFrameDebug*  frameDebug;
+
+        if (NS_SUCCEEDED(band->mFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+          frameDebug->GetFrameName(tmp);
+          fprintf(out, " frame=");
+          fputs(tmp, out);
+          fprintf(out, "@%p", band->mFrame);
+        }
       }
       else if (1 < band->mNumFrames) {
         fprintf(out, "\n    ");
@@ -940,9 +950,13 @@ nsSpaceManager::List(FILE* out)
         for (i = 0; i < n; i++) {
           nsIFrame* frame = (nsIFrame*) a->ElementAt(i);
           if (frame) {
-            frame->GetFrameName(tmp);
-            fputs(tmp, out);
-            fprintf(out, "@%p ", frame);
+            nsIFrameDebug*  frameDebug;
+
+            if (NS_SUCCEEDED(frame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+              frameDebug->GetFrameName(tmp);
+              fputs(tmp, out);
+              fprintf(out, "@%p ", frame);
+            }
           }
         }
       }
@@ -951,9 +965,9 @@ nsSpaceManager::List(FILE* out)
     } while (band != mBandList.Head());
   }
   fprintf(out, ">\n");
-#endif
   return NS_OK;
 }
+#endif
 
 nsSpaceManager::FrameInfo*
 nsSpaceManager::GetFrameInfoFor(nsIFrame* aFrame)

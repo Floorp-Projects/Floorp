@@ -122,10 +122,9 @@ public:
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
 #ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
-
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   virtual void VerticallyAlignChild(nsIPresContext* aPresContext);
 

@@ -135,13 +135,13 @@ nsGfxButtonControlFrame::GetCID()
   return kButtonCID;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsGfxButtonControlFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("ButtonControl", aResult);
 }
-
-
+#endif
 
 NS_IMETHODIMP 
 nsGfxButtonControlFrame::AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,

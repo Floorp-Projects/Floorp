@@ -796,13 +796,13 @@ nsScrollFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsScrollFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Scroll", aResult);
 }
 
-#ifdef DEBUG
 NS_IMETHODIMP
 nsScrollFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {

@@ -38,6 +38,7 @@ nsIDocumentObserver.h \
 nsIDocumentViewer.h \
 nsIFocusTracker.h \
 nsIFrame.h \
+nsIFrameDebug.h \
 nsIFrameImageLoader.h \
 nsIFrameManager.h \
 nsILayoutDebugger.h \

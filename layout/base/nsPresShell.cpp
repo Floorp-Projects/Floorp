@@ -69,6 +69,9 @@
 #ifdef MOZ_PERF_METRICS
 #include "nsITimeRecorder.h"
 #endif
+#ifdef NS_DEBUG
+#include "nsIFrameDebug.h"
+#endif
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -326,8 +329,9 @@ protected:
 
   PRBool	mCaretEnabled;
   
-#ifdef NS_DEBUG
   nsresult CloneStyleSet(nsIStyleSet* aSet, nsIStyleSet** aResult);
+
+#ifdef NS_DEBUG
   PRBool VerifyIncrementalReflow();
   PRBool mInVerifyReflow;
 #endif
@@ -380,7 +384,7 @@ private:
 static void
 VerifyStyleTree(nsIFrameManager* aFrameManager)
 {
-  if (aFrameManager && nsIFrame::GetVerifyStyleTreeEnable()) {
+  if (aFrameManager && nsIFrameDebug::GetVerifyStyleTreeEnable()) {
     nsIFrame* rootFrame;
 
     aFrameManager->GetRootFrame(&rootFrame);
@@ -927,8 +931,12 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
                  ("enter nsPresShell::InitialReflow: %d,%d", aWidth, aHeight));
 #ifdef NS_DEBUG
-    if (nsIFrame::GetVerifyTreeEnable()) {
-      rootFrame->VerifyTree();
+    if (nsIFrameDebug::GetVerifyTreeEnable()) {
+      nsIFrameDebug*  frameDebug;
+
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+        frameDebug->VerifyTree();
+      }
     }
 #endif
 #ifdef DEBUG_kipp
@@ -951,8 +959,12 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
       
 #ifdef NS_DEBUG
-    if (nsIFrame::GetVerifyTreeEnable()) {
-      rootFrame->VerifyTree();
+    if (nsIFrameDebug::GetVerifyTreeEnable()) {
+      nsIFrameDebug*  frameDebug;
+
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+        frameDebug->VerifyTree();
+      }
     }
 #endif
     VERIFY_STYLE_TREE;
@@ -1004,8 +1016,12 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
                  ("enter nsPresShell::ResizeReflow: %d,%d", aWidth, aHeight));
 #ifdef NS_DEBUG
-    if (nsIFrame::GetVerifyTreeEnable()) {
-      rootFrame->VerifyTree();
+    if (nsIFrameDebug::GetVerifyTreeEnable()) {
+      nsIFrameDebug*  frameDebug;
+
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+        frameDebug->VerifyTree();
+      }
     }
 #endif
 #ifdef DEBUG_kipp
@@ -1026,8 +1042,12 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     rootFrame->Reflow(*mPresContext, desiredSize, reflowState, status);
     rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
 #ifdef NS_DEBUG
-    if (nsIFrame::GetVerifyTreeEnable()) {
-      rootFrame->VerifyTree();
+    if (nsIFrameDebug::GetVerifyTreeEnable()) {
+      nsIFrameDebug*  frameDebug;
+
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+        frameDebug->VerifyTree();
+      }
     }
 #endif
     VERIFY_STYLE_TREE;
@@ -1183,8 +1203,12 @@ PresShell::StyleChangeReflow()
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
                  ("enter nsPresShell::StyleChangeReflow"));
 #ifdef NS_DEBUG
-    if (nsIFrame::GetVerifyTreeEnable()) {
-      rootFrame->VerifyTree();
+    if (nsIFrameDebug::GetVerifyTreeEnable()) {
+      nsIFrameDebug*  frameDebug;
+
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+        frameDebug->VerifyTree();
+      }
     }
 #endif
     nsRect                bounds;
@@ -1203,8 +1227,12 @@ PresShell::StyleChangeReflow()
     rootFrame->Reflow(*mPresContext, desiredSize, reflowState, status);
     rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
 #ifdef NS_DEBUG
-    if (nsIFrame::GetVerifyTreeEnable()) {
-      rootFrame->VerifyTree();
+    if (nsIFrameDebug::GetVerifyTreeEnable()) {
+      nsIFrameDebug*  frameDebug;
+
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+        frameDebug->VerifyTree();
+      }
     }
 #endif
     VERIFY_STYLE_TREE;
@@ -1431,8 +1459,12 @@ PresShell::ProcessReflowCommands()
     NS_IF_RELEASE(rcx);
 
 #ifdef DEBUG
-    if (nsIFrame::GetVerifyTreeEnable()) {
-      rootFrame->VerifyTree();
+    if (nsIFrameDebug::GetVerifyTreeEnable()) {
+      nsIFrameDebug*  frameDebug;
+
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+        frameDebug->VerifyTree();
+      }
     }
     if (GetVerifyReflowEnable()) {
       // First synchronously render what we have so far so that we can
@@ -2085,7 +2117,7 @@ PresShell::Paint(nsIView              *aView,
                
 #ifdef NS_DEBUG
     // Draw a border around the frame
-    if (nsIFrame::GetShowFrameBorders()) {
+    if (nsIFrameDebug::GetShowFrameBorders()) {
       nsRect r;
       frame->GetRect(r);
       aRenderingContext.SetColor(NS_RGB(0,0,255));
@@ -2273,7 +2305,11 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
   printf("verifyreflow: ");
   nsAutoString name;
   if (nsnull != k1) {
-    k1->GetFrameName(name);
+    nsIFrameDebug*  frameDebug;
+
+    if (NS_SUCCEEDED(k1->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+     frameDebug->GetFrameName(name);
+    }
   }
   else {
     name = "(null)";
@@ -2283,7 +2319,11 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
   printf(" != ");
 
   if (nsnull != k2) {
-    k2->GetFrameName(name);
+    nsIFrameDebug*  frameDebug;
+
+    if (NS_SUCCEEDED(k2->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      frameDebug->GetFrameName(name);
+    }
   }
   else {
     name = "(null)";
@@ -2299,14 +2339,20 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
 {
   printf("verifyreflow: ");
   nsAutoString name;
-  k1->GetFrameName(name);
-  fputs(name, stdout);
+  nsIFrameDebug*  frameDebug;
+
+  if (NS_SUCCEEDED(k1->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+    frameDebug->GetFrameName(name);
+    fputs(name, stdout);
+  }
   printf("{%d, %d, %d, %d}", r1.x, r1.y, r1.width, r1.height);
 
   printf(" != ");
 
-  k2->GetFrameName(name);
-  fputs(name, stdout);
+  if (NS_SUCCEEDED(k2->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+    frameDebug->GetFrameName(name);
+    fputs(name, stdout);
+  }
   printf("{%d, %d, %d, %d}", r2.x, r2.y, r2.width, r2.height);
 
   printf(" %s\n", aMsg);
@@ -2445,6 +2491,7 @@ CompareTrees(nsIPresContext* aPresContext, nsIFrame* aA, nsIFrame* aB)
 
   return ok;
 }
+#endif
 
 #if 0
 static nsIFrame*
@@ -2522,6 +2569,7 @@ PresShell::CloneStyleSet(nsIStyleSet* aSet, nsIStyleSet** aResult)
   return NS_OK;
 }
 
+#ifdef DEBUG
 // After an incremental reflow, we verify the correctness by doing a
 // full reflow into a fresh frame tree.
 PRBool
@@ -2640,9 +2688,15 @@ PresShell::VerifyIncrementalReflow()
   PRBool ok = CompareTrees(mPresContext, root1, root2);
   if (!ok && (VERIFY_REFLOW_NOISY & gVerifyReflowFlags)) {
     printf("Verify reflow failed, primary tree:\n");
-    root1->List(mPresContext, stdout, 0);
+    nsIFrameDebug*  frameDebug;
+
+    if (NS_SUCCEEDED(root1->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      frameDebug->List(mPresContext, stdout, 0);
+    }
     printf("Verification tree:\n");
-    root2->List(mPresContext, stdout, 0);
+    if (NS_SUCCEEDED(root2->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      frameDebug->List(mPresContext, stdout, 0);
+    }
   }
 
 //  printf("Incremental reflow doomed view tree:\n");

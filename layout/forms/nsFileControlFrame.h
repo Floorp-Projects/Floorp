@@ -71,7 +71,9 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+#ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight) { return NS_OK; };
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,

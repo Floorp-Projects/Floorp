@@ -45,7 +45,9 @@ public:
                                 nscoord& aWidth,
                                 nscoord& aHeight);
 
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
 
    //nsIRadioControlFrame methods
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);

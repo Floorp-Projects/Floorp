@@ -57,9 +57,11 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow) ;
 
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("CheckboxControl", aResult);
   }
+#endif
 
   virtual const nsIID& GetCID();
   virtual const nsIID& GetIID();

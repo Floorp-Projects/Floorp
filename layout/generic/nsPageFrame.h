@@ -38,8 +38,10 @@ public:
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   
+#ifdef DEBUG
   // Debugging
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
+#endif
 
 protected:
   nsPageFrame();

@@ -102,7 +102,9 @@ void nsFramesetDrag::UnSet()
 class nsHTMLFramesetBorderFrame : public nsLeafFrame {
 
 public:
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
 
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent* aEvent,
@@ -153,7 +155,9 @@ protected:
 class nsHTMLFramesetBlankFrame : public nsLeafFrame {
 
 public:
+#ifdef DEBUG
   NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -1713,10 +1717,12 @@ nsHTMLFramesetBorderFrame::GetCursor(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP nsHTMLFramesetBorderFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("FramesetBorder", aResult);
 }
+#endif
 
 /*******************************************************************************
  * nsHTMLFramesetBlankFrame
@@ -1780,7 +1786,7 @@ nsHTMLFramesetBlankFrame::Paint(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
-
+#ifdef DEBUG
 NS_IMETHODIMP nsHTMLFramesetBlankFrame::List(nsIPresContext* aPresContext,
                                              FILE*   out, 
                                              PRInt32 aIndent) const
@@ -1789,4 +1795,4 @@ NS_IMETHODIMP nsHTMLFramesetBlankFrame::List(nsIPresContext* aPresContext,
   fprintf(out, "%p BLANK \n", this);
   return nsLeafFrame::List(aPresContext, out, aIndent);
 }
-
+#endif

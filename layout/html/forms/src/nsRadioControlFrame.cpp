@@ -164,12 +164,13 @@ nsRadioControlFrame::Reset()
   SetCurrentCheckState(checked);
 }  
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsRadioControlFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("RadioControl", aResult);
 }
-
+#endif
 
 NS_IMETHODIMP
 nsRadioControlFrame::SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioButtonFaceStyleContext)

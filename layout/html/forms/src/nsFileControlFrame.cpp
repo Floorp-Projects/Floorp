@@ -427,11 +427,13 @@ nsFileControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+#ifdef NS_DEBUG
 NS_IMETHODIMP
 nsFileControlFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("FileControl", aResult);
 }
+#endif
 
 NS_IMETHODIMP
 nsFileControlFrame::GetFormContent(nsIContent*& aContent) const

@@ -312,11 +312,13 @@ nsButtonControlFrame::GetCID()
   return kButtonCID;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsButtonControlFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("ButtonControl", aResult);
 }
+#endif
 
 void 
 nsButtonControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)

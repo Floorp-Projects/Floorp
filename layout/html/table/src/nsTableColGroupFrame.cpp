@@ -705,13 +705,13 @@ nsTableColGroupFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsTableColGroupFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("TableColGroup", aResult);
 }
 
-#ifdef DEBUG
 NS_IMETHODIMP
 nsTableColGroupFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {

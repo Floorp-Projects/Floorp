@@ -59,6 +59,16 @@ nsPlaceholderFrame::Reflow(nsIPresContext&          aPresContext,
 }
 
 NS_IMETHODIMP
+nsPlaceholderFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::placeholderFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+
+#ifdef DEBUG
+NS_IMETHODIMP
 nsPlaceholderFrame::Paint(nsIPresContext& aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect& aDirtyRect,
@@ -77,16 +87,6 @@ nsPlaceholderFrame::Paint(nsIPresContext& aPresContext,
   }
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsPlaceholderFrame::GetFrameType(nsIAtom** aType) const
-{
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::placeholderFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsPlaceholderFrame::GetFrameName(nsString& aResult) const
@@ -116,7 +116,6 @@ nsPlaceholderFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aInden
   return NS_OK;
 }
 
-#ifdef DEBUG
 NS_IMETHODIMP
 nsPlaceholderFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {

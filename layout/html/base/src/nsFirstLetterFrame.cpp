@@ -41,7 +41,9 @@ public:
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
+#ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -74,11 +76,13 @@ nsFirstLetterFrame::nsFirstLetterFrame()
 {
 }
 
+#ifdef NS_DEBUG
 NS_IMETHODIMP
 nsFirstLetterFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Letter", aResult);
 }
+#endif
 
 NS_IMETHODIMP
 nsFirstLetterFrame::GetFrameType(nsIAtom** aType) const

@@ -517,6 +517,7 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
         aRenderingContext.DrawImage(image, inner);
       }
 
+#ifdef DEBUG
       if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) &&
           GetShowFrameBorders()) {
         nsImageMap* map = GetImageMap();
@@ -531,6 +532,7 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
           aRenderingContext.PopState(clipState);
         }
       }
+#endif
     }
 
     if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {

@@ -70,11 +70,13 @@ nsInlineFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return nsInlineFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsInlineFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Inline", aResult);
 }
+#endif
 
 NS_IMETHODIMP
 nsInlineFrame::GetFrameType(nsIAtom** aType) const
@@ -660,11 +662,13 @@ nsFirstLineFrame::nsFirstLineFrame()
 {
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsFirstLineFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Line", aResult);
 }
+#endif
 
 NS_IMETHODIMP
 nsFirstLineFrame::GetFrameType(nsIAtom** aType) const

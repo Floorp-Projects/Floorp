@@ -328,12 +328,13 @@ nsTextControlFrame::GetCursor(nsIPresContext& aPresContext, nsPoint& aPoint, PRI
   return NS_OK;
 }
 
-
+#ifdef DEBUG
 NS_IMETHODIMP
 nsTextControlFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("TextControl", aResult);
 }
+#endif
 
 //---------------------------------------------------------
 NS_IMETHODIMP 

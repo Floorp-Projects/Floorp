@@ -37,12 +37,13 @@ class nsScrollbarFrame : public nsBoxFrame,
 public:
   nsScrollbarFrame() {}
 
-    // nsIFrame overrides
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("ScrollbarFrame", aResult);
   }
+#endif
 
- 
+  // nsIFrame overrides
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,

@@ -22,6 +22,9 @@
 #include "nsRect.h"
 #include "nsString.h"
 #include "prlog.h"
+#ifdef NS_DEBUG
+#include "nsIFrameDebug.h"
+#endif
 
 /**
  * nsFrame logging constants. We redefine the nspr
@@ -39,7 +42,7 @@
 #ifdef NS_DEBUG
 #define NS_FRAME_LOG(_bit,_args)                                \
   PR_BEGIN_MACRO                                                \
-    if (NS_FRAME_LOG_TEST(nsIFrame::GetLogModuleInfo(),_bit)) { \
+    if (NS_FRAME_LOG_TEST(nsIFrameDebug::GetLogModuleInfo(),_bit)) { \
       PR_LogPrint _args;                                        \
     }                                                           \
   PR_END_MACRO
@@ -56,14 +59,14 @@
 // XXX remove me
 #define NS_FRAME_TRACE_MSG(_bit,_args)                          \
   PR_BEGIN_MACRO                                                \
-    if (NS_FRAME_LOG_TEST(nsIFrame::GetLogModuleInfo(),_bit)) { \
+    if (NS_FRAME_LOG_TEST(nsIFrameDebug::GetLogModuleInfo(),_bit)) { \
       TraceMsg _args;                                           \
     }                                                           \
   PR_END_MACRO
 
 #define NS_FRAME_TRACE(_bit,_args)                              \
   PR_BEGIN_MACRO                                                \
-    if (NS_FRAME_LOG_TEST(nsIFrame::GetLogModuleInfo(),_bit)) { \
+    if (NS_FRAME_LOG_TEST(nsIFrameDebug::GetLogModuleInfo(),_bit)) { \
       TraceMsg _args;                                           \
     }                                                           \
   PR_END_MACRO
@@ -93,6 +96,9 @@
  * behavior is to keep the frame and view position and size in sync.
  */
 class nsFrame : public nsIFrame
+#ifdef NS_DEBUG
+  , public nsIFrameDebug
+#endif
 {
 public:
   /**
@@ -215,11 +221,13 @@ public:
   NS_IMETHOD  GetNextSibling(nsIFrame** aNextSibling) const;
   NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling);
   NS_IMETHOD  Scrolled(nsIView *aView);
+#ifdef NS_DEBUG
   NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
   NS_IMETHOD  DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
   NS_IMETHOD  VerifyTree() const;
+#endif
   NS_IMETHOD  SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
   NS_IMETHOD  PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) ;
@@ -307,15 +315,18 @@ public:
   // Helper function that verifies that each frame in the list has the
   // NS_FRAME_IS_DIRTY bit set
   static void VerifyDirtyBitSet(nsIFrame* aFrameList);
-#endif
 
   void ListTag(FILE* out) const {
-    ListTag(out, this);
+    ListTag(out, (nsIFrame*)this);
   }
 
-  static void ListTag(FILE* out, const nsIFrame* aFrame) {
+  static void ListTag(FILE* out, nsIFrame* aFrame) {
     nsAutoString tmp;
-    aFrame->GetFrameName(tmp);
+    nsIFrameDebug*  frameDebug;
+
+    if (NS_SUCCEEDED(aFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      frameDebug->GetFrameName(tmp);
+    }
     fputs(tmp, out);
     fprintf(out, "@%p", aFrame);
   }
@@ -323,6 +334,20 @@ public:
   static void IndentBy(FILE* out, PRInt32 aIndent) {
     while (--aIndent >= 0) fputs("  ", out);
   }
+  
+  /**
+   * Dump out the "base classes" regression data. This should dump
+   * out the interior data, not the "frame" XML container. And it
+   * should call the base classes same named method before doing
+   * anything specific in a derived class. This means that derived
+   * classes need not override DumpRegressionData unless they need
+   * some custom behavior that requires changing how the outer "frame"
+   * XML container is dumped.
+   */
+  virtual void DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
+  
+  nsresult MakeFrameName(const char* aKind, nsString& aResult) const;
+#endif
 
 protected:
   // Protected constructor and destructor
@@ -342,19 +367,6 @@ protected:
   //given a frame five me the first/last leaf available
   static void GetLastLeaf(nsIFrame **aFrame);
   static void GetFirstLeaf(nsIFrame **aFrame);
-
-  /**
-   * Dump out the "base classes" regression data. This should dump
-   * out the interior data, not the "frame" XML container. And it
-   * should call the base classes same named method before doing
-   * anything specific in a derived class. This means that derived
-   * classes need not override DumpRegressionData unless they need
-   * some custom behavior that requires changing how the outer "frame"
-   * XML container is dumped.
-   */
-  virtual void DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
-
-  nsresult MakeFrameName(const char* aKind, nsString& aResult) const;
 
   static void XMLQuote(nsString& aString);
 

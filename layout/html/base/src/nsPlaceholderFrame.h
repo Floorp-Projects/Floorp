@@ -42,11 +42,13 @@ public:
                     nsReflowStatus& aStatus);
 
   // nsIFrame overrides
+#ifdef DEBUG
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
   NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
+#endif
 
   /**
    * Get the "type" of the frame
@@ -55,9 +57,9 @@ public:
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
 #endif
 
 protected:

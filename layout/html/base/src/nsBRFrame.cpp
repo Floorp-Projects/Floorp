@@ -30,10 +30,12 @@
 class BRFrame : public nsFrame {
 public:
   // nsIFrame
+#ifdef NS_DEBUG
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
+#endif
 
   // nsIHTMLReflow
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
@@ -70,6 +72,7 @@ BRFrame::~BRFrame()
 {
 }
 
+#ifdef NS_DEBUG
 NS_IMETHODIMP
 BRFrame::Paint(nsIPresContext& aPresContext,
                nsIRenderingContext& aRenderingContext,
@@ -85,6 +88,7 @@ BRFrame::Paint(nsIPresContext& aPresContext,
   }
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 BRFrame::Reflow(nsIPresContext& aPresContext,

@@ -87,10 +87,12 @@ extern nsresult NS_NewRangeList(nsIFrameSelection** aResult);
 extern nsresult NS_NewRange(nsIDOMRange** aResult);
 extern nsresult NS_NewContentIterator(nsIContentIterator** aResult);
 extern nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aResult);
-extern nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 
 extern nsresult NS_NewLayoutDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
+#ifdef NS_DEBUG
+extern nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 extern nsresult NS_NewLayoutDebugger(nsILayoutDebugger** aResult);
+#endif
 extern nsresult NS_NewHTMLElementFactory(nsIHTMLElementFactory** aResult);
 extern nsresult NS_NewHTMLEncoder(nsIDocumentEncoder** aResult);
 extern nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
@@ -263,13 +265,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       return res;
     }
   }
-  else if (mClassID.Equals(kFrameUtilCID)) {
-    res = NS_NewFrameUtil((nsIFrameUtil**) &inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewFrameUtil", res);
-      return res;
-    }
-  }
   else if (mClassID.Equals(kEventListenerManagerCID)) {
     res = NS_NewEventListenerManager((nsIEventListenerManager**) &inst);
     if (NS_FAILED(res)) {
@@ -291,6 +286,14 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       return res;
     }
   }
+#ifdef DEBUG
+  else if (mClassID.Equals(kFrameUtilCID)) {
+    res = NS_NewFrameUtil((nsIFrameUtil**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewFrameUtil", res);
+      return res;
+    }
+  }
   else if (mClassID.Equals(kLayoutDebuggerCID)) {
     res = NS_NewLayoutDebugger((nsILayoutDebugger**) &inst);
     if (NS_FAILED(res)) {
@@ -298,6 +301,7 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       return res;
     }
   }
+#endif
   else if (mClassID.Equals(kHTMLElementFactoryCID)) {
     res = NS_NewHTMLElementFactory((nsIHTMLElementFactory**) &inst);
     if (NS_FAILED(res)) {

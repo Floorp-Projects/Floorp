@@ -86,11 +86,13 @@ nsBulletFrame::Init(nsIPresContext&  aPresContext,
   return NS_OK;
 }
 
+#ifdef NS_DEBUG
 NS_IMETHODIMP
 nsBulletFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Bullet", aResult);
 }
+#endif
 
 NS_IMETHODIMP
 nsBulletFrame::GetFrameType(nsIAtom** aType) const
