@@ -33,7 +33,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContent.h"
 #include "nsIDocument.h"
-#include "nsIHTMLDocument.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsImageMap.h"
@@ -60,7 +59,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIStyleSet.h"
 #include "nsLayoutAtoms.h"
 #include "nsISizeOfHandler.h"
-
+#include "nsImageMapUtils.h"
 #include "nsIFrameManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIMutableAccessible.h"
@@ -1221,43 +1220,25 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
 nsImageMap*
 nsImageFrame::GetImageMap(nsIPresContext* aPresContext)
 {
-  if (nsnull == mImageMap) {
+  if (!mImageMap) {
+    nsCOMPtr<nsIDocument> doc;
+    mContent->GetDocument(*getter_AddRefs(doc));
+    if (!doc) {
+      return nsnull;
+    }
+
     nsAutoString usemap;
     mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);
-    if (usemap.IsEmpty()) {
-      return nsnull;
-    }
 
-    // Strip out whitespace in the name for navigator compatability
-    // XXX NAV QUIRK
-    usemap.StripWhitespace();
+    nsCOMPtr<nsIDOMHTMLMapElement> map;
+    if (NS_SUCCEEDED(nsImageMapUtils::FindImageMap(doc,usemap,getter_AddRefs(map))) && map) {
+      nsCOMPtr<nsIPresShell> presShell;
+      aPresContext->GetShell(getter_AddRefs(presShell));
 
-    nsIDocument* doc = nsnull;
-    mContent->GetDocument(doc);
-    if (nsnull == doc) {
-      return nsnull;
-    }
-
-    if (usemap.First() == '#') {
-      usemap.Cut(0, 1);
-    }
-    nsIHTMLDocument* hdoc;
-    nsresult rv = doc->QueryInterface(NS_GET_IID(nsIHTMLDocument), (void**)&hdoc);
-    NS_RELEASE(doc);
-    if (NS_SUCCEEDED(rv)) {
-      nsIDOMHTMLMapElement* map;
-      rv = hdoc->GetImageMap(usemap, &map);
-      NS_RELEASE(hdoc);
-      if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIPresShell> presShell;
-        aPresContext->GetShell(getter_AddRefs(presShell));
-
-        mImageMap = new nsImageMap();
-        if (nsnull != mImageMap) {
-          NS_ADDREF(mImageMap);
-          mImageMap->Init(presShell, this, map);
-        }
-        NS_IF_RELEASE(map);
+      mImageMap = new nsImageMap();
+      if (mImageMap) {
+        NS_ADDREF(mImageMap);
+        mImageMap->Init(presShell, this, map);
       }
     }
   }

@@ -41,6 +41,7 @@
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLMapElement.h"
+#include "nsImageMapUtils.h"
 #include "nsIHTMLDocument.h"
 #include "nsINameSpaceManager.h"  // for kNameSpaceID_HTML
 #include "nsIWebShell.h"
@@ -2593,59 +2594,47 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
           nsCOMPtr<nsIDOMHTMLImageElement> nextImage(do_QueryInterface(child));
           nsAutoString usemap;
           if (nextImage) {
-            nextImage->GetAttribute(NS_ConvertASCIItoUCS2("usemap"), usemap);
-            if (usemap.Length()) {
-              //Image is an imagemap.  We need to get its maps and walk its children.
-              usemap.StripWhitespace();
-
-              nsCOMPtr<nsIDocument> doc;
-              if (NS_SUCCEEDED(child->GetDocument(*getter_AddRefs(doc))) && doc) {
-                if (usemap.First() == '#') {
-                  usemap.Cut(0, 1);
-                }
-
-                nsCOMPtr<nsIHTMLDocument> hdoc(do_QueryInterface(doc));
-                if (hdoc) {
-                  nsCOMPtr<nsIDOMHTMLMapElement> hmap;
-                  if (NS_SUCCEEDED(hdoc->GetImageMap(usemap, getter_AddRefs(hmap))) && hmap) {
-                    nsCOMPtr<nsIContent> map(do_QueryInterface(hmap));
-                    if (map) {
-                      nsCOMPtr<nsIContent> childArea;
-                      PRInt32 count, index;
-                      map->ChildCount(count);
-                      //First see if mCurrentFocus is in this map
-                      for (index = 0; index < count; index++) {
-                        map->ChildAt(index, *getter_AddRefs(childArea));
-                        if (childArea.get() == mCurrentFocus) {
-                          nsAutoString tabIndexStr;
-                          childArea->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
-                          PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
-                          if (NS_OK == ec && mCurrentTabIndex == val) {
-                            //mCurrentFocus is in this map so we must start iterating past it.
-                            //We skip the case where mCurrentFocus has the same tab index
-                            //as mCurrentTabIndex since the next tab ordered element might
-                            //be before it (or after for backwards) in the child list.
-                            break;
-                          }
-                        }
+            nsCOMPtr<nsIDocument> doc;
+            if (NS_SUCCEEDED(child->GetDocument(*getter_AddRefs(doc))) && doc) {
+              nextImage->GetAttribute(NS_LITERAL_STRING("usemap"), usemap);
+              nsCOMPtr<nsIDOMHTMLMapElement> imageMap;
+              if (NS_SUCCEEDED(nsImageMapUtils::FindImageMap(doc,usemap,getter_AddRefs(imageMap))) && imageMap) {
+                nsCOMPtr<nsIContent> map(do_QueryInterface(imageMap));
+                if (map) {
+                  nsCOMPtr<nsIContent> childArea;
+                  PRInt32 count, index;
+                  map->ChildCount(count);
+                  //First see if mCurrentFocus is in this map
+                  for (index = 0; index < count; index++) {
+                    map->ChildAt(index, *getter_AddRefs(childArea));
+                    if (childArea.get() == mCurrentFocus) {
+                      nsAutoString tabIndexStr;
+                      childArea->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
+                      PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
+                      if (NS_OK == ec && mCurrentTabIndex == val) {
+                        //mCurrentFocus is in this map so we must start iterating past it.
+                        //We skip the case where mCurrentFocus has the same tab index
+                        //as mCurrentTabIndex since the next tab ordered element might
+                        //be before it (or after for backwards) in the child list.
+                        break;
                       }
-                      PRInt32 increment = forward ? 1 : - 1;
-                      PRInt32 start = index < count ? index + increment : (forward ? 0 : count - 1);
-                      for (index = start; index < count && index >= 0; index += increment) {
-                        //Iterate over the children.
-                        map->ChildAt(index, *getter_AddRefs(childArea));
+                    }
+                  }
+                  PRInt32 increment = forward ? 1 : - 1;
+                  PRInt32 start = index < count ? index + increment : (forward ? 0 : count - 1);
+                  for (index = start; index < count && index >= 0; index += increment) {
+                    //Iterate over the children.
+                    map->ChildAt(index, *getter_AddRefs(childArea));
 
-                        //Got the map area, check its tabindex.
-                        nsAutoString tabIndexStr;
-                        childArea->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
-                        PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
-                        if (NS_OK == ec && mCurrentTabIndex == val) {
-                          //tabindex == the current one, use it.
-                          *aResult = childArea;
-                          NS_IF_ADDREF(*aResult);
-                          return NS_OK;
-                        }
-                      }
+                    //Got the map area, check its tabindex.
+                    nsAutoString tabIndexStr;
+                    childArea->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
+                    PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
+                    if (NS_OK == ec && mCurrentTabIndex == val) {
+                      //tabindex == the current one, use it.
+                      *aResult = childArea;
+                      NS_IF_ADDREF(*aResult);
+                      return NS_OK;
                     }
                   }
                 }
