@@ -315,7 +315,7 @@ sub GetGroupsByUserId {
                     AND  user_group_map.group_id = groups.id
                     AND  isbuggroup = 1
                ORDER BY  description "
-               , {}, ($userid));
+               , {Slice => {}}, ($userid));
 
     return $groups;
 }
