@@ -48,6 +48,7 @@ nsHttpTransaction::nsHttpTransaction(nsIStreamListener *listener,
     , mChunkedDecoder(nsnull)
     , mTransactionDone(0)
     , mStatus(NS_OK)
+    , mRestartCount(0)
     , mHaveStatusLine(PR_FALSE)
     , mHaveAllHeaders(PR_FALSE)
     , mFiredOnStart(PR_FALSE)
@@ -182,6 +183,12 @@ nsHttpTransaction::OnDataReadable(nsIInputStream *is)
 
     // check if this transaction needs to be restarted
     if (mPrematureEOF) {
+        // limit the number of restart attempts - bug 92224
+        if (++mRestartCount >= nsHttpHandler::get()->MaxRequestAttempts()) {
+            LOG(("reached max request attempts, failing transaction @%x\n", this));
+            return NS_BINDING_FAILED;
+        }
+
         mPrematureEOF = PR_FALSE;
 
         LOG(("restarting transaction @%x\n", this));
@@ -474,8 +481,10 @@ nsHttpTransaction::HandleContent(char *buf,
         // headers. So, unless the connection is keep-alive, we must make
         // allowances for a possibly invalid Content-Length header. Thus, if
         // NOT keep-alive, we simply accept everything in |buf|.
-        if (mConnection->IsKeepAlive())
-            *countRead = PR_MIN(count, mContentLength - mContentRead);
+        if (mConnection->IsKeepAlive()) {
+            *countRead = PRUint32(mContentLength) - mContentRead;
+            *countRead = PR_MIN(count, *countRead);
+        }
         else {
             *countRead = count;
             // mContentLength might need to be increased...

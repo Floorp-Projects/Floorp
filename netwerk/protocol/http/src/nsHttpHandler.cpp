@@ -86,16 +86,13 @@ nsHttpHandler *nsHttpHandler::mGlobalInstance = 0;
 nsHttpHandler::nsHttpHandler()
     : mAuthCache(nsnull)
     , mHttpVersion(NS_HTTP_VERSION_1_1)
-    , mReferrerLevel(PRUint32(-1)) // by default we always send a referrer
-    , mCapabilities(ALLOW_KEEPALIVE)
-    , mProxyCapabilities(ALLOW_KEEPALIVE)
-    , mProxySSLConnectAllowed(PR_TRUE)
-    , mConnectTimeout(30)
-    , mRequestTimeout(30)
+    , mReferrerLevel(0xff) // by default we always send a referrer
+    , mCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
+    , mProxyCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
     , mIdleTimeout(10)
+    , mMaxRequestAttempts(10)
     , mMaxConnections(16)
     , mMaxConnectionsPerServer(8)
-    , mMaxIdleConnections(16)
     , mMaxIdleConnectionsPerServer(4)
     , mActiveConnections(0)
     , mIdleConnections(0)
@@ -243,7 +240,7 @@ nsHttpHandler::Init()
 
 nsresult
 nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
-                                         PRUint32 caps,
+                                         PRUint8 caps,
                                          PRBool useProxy)
 {
     nsresult rv;
@@ -275,15 +272,16 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
     // and "Keep-alive" request headers should not be sent by HTTP/1.1
     // user-agents.  Otherwise, problems with proxy servers (especially
     // transparent proxies) can result.
+    //
     // However, we need to send something so that we can use keepalive
-    // with HTTP/1.0 servers/proxies. We use Proxy-Connection: when we're
-    // talking to an http proxy, and Connection: otherwise
+    // with HTTP/1.0 servers/proxies. We use "Proxy-Connection:" when 
+    // we're talking to an http proxy, and "Connection:" otherwise
     
     const char* connectionType = "close";
-    if (caps & ALLOW_KEEPALIVE) {
+    if (caps & NS_HTTP_ALLOW_KEEPALIVE) {
         char buf[32];
         
-        PR_snprintf(buf, sizeof(buf), "%d", mIdleTimeout);
+        PR_snprintf(buf, sizeof(buf), "%u", (PRUintn) mIdleTimeout);
         
         rv = request->SetHeader(nsHttp::Keep_Alive, buf);
         if (NS_FAILED(rv)) return rv;
@@ -294,8 +292,9 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
         request->SetHeader(nsHttp::Connection, "close");
     }
 
-    const nsHttpAtom& connAtom = useProxy ? nsHttp::Proxy_Connection : nsHttp::Connection;
-    return request->SetHeader(connAtom, connectionType);
+    const nsHttpAtom &header =
+        useProxy ? nsHttp::Proxy_Connection : nsHttp::Connection;
+    return request->SetHeader(header, connectionType);
 }
 
 PRBool
@@ -632,7 +631,7 @@ nsHttpHandler::ProcessTransactionQ()
 
     PRInt32 i;
     for (i=0; (i < mTransactionQ.Count()) &&
-              (mActiveConnections.Count() < mMaxConnections); ++i) {
+              (mActiveConnections.Count() < PRInt32(mMaxConnections)); ++i) {
 
         pt = (nsPendingTransaction *) mTransactionQ[i];
 
@@ -677,8 +676,8 @@ nsHttpHandler::InitiateTransaction_Locked(nsHttpTransaction *trans,
 
     LOG(("nsHttpHandler::InitiateTransaction_Locked [failIfBusy=%d]\n", failIfBusy));
 
-    if ((mActiveConnections.Count() == mMaxConnections) || 
-        (CountActiveConnections(ci) == PRUint32(mMaxConnectionsPerServer))) {
+    if ((mActiveConnections.Count() == PRInt32(mMaxConnections)) || 
+        (CountActiveConnections(ci) == mMaxConnectionsPerServer)) {
         LOG(("unable to perform the transaction at this time [trans=%x]\n", trans));
         if (failIfBusy) return NS_ERROR_FAILURE;
         return EnqueueTransaction(trans, ci);
@@ -775,10 +774,10 @@ nsHttpHandler::RemovePendingTransaction(nsHttpTransaction *trans)
     return NS_ERROR_NOT_AVAILABLE;
 }
 
-PRUint32
+PRUint8
 nsHttpHandler::CountActiveConnections(nsHttpConnectionInfo *ci)
 {
-    PRUint32 count = 0;
+    PRUint8 count = 0;
     nsHttpConnection *conn = 0;
 
     LOG(("nsHttpHandler::CountActiveConnections [host=%s:%d]\n",
@@ -792,14 +791,14 @@ nsHttpHandler::CountActiveConnections(nsHttpConnectionInfo *ci)
             count++;
     }
 
-    LOG(("found count=%u\n", count));
+    LOG(("found count=%u\n", (PRUintn) count));
     return count;
 }
 
-PRUint32
+PRUint8
 nsHttpHandler::CountIdleConnections(nsHttpConnectionInfo *ci)
 {
-    PRUint32 count = 0;
+    PRUint8 count = 0;
     nsHttpConnection *conn = 0;
 
     if (!ci)
@@ -824,7 +823,7 @@ nsHttpHandler::CountIdleConnections(nsHttpConnectionInfo *ci)
         }
     }
 
-    LOG(("found count=%u\n", count));
+    LOG(("found count=%u\n", (PRUintn) count));
     return count;
 }
 
@@ -1049,18 +1048,51 @@ nsHttpHandler::PrefsChanged(const char *pref)
     }
 
     nsresult rv = NS_OK;
+    PRInt32 val;
 
-    if (bChangedAll || PL_strcmp(pref, "network.http.keep-alive.timeout") == 0)
-        mPrefs->GetIntPref("network.http.keep-alive.timeout", &mIdleTimeout);
+    if (bChangedAll || PL_strcmp(pref, "network.http.keep-alive.timeout") == 0) {
+        rv = mPrefs->GetIntPref("network.http.keep-alive.timeout", &val);
+        if (NS_SUCCEEDED(rv))
+            mIdleTimeout = (PRUint16) CLAMP(val, 1, 0xffff);
+    }
 
-    if (bChangedAll || PL_strcmp(pref, "network.http.max-connections") == 0)
-        mPrefs->GetIntPref("network.http.max-connections", &mMaxConnections);
+    if (bChangedAll || PL_strcmp(pref, "network.http.request.max-attempts") == 0) {
+        rv = mPrefs->GetIntPref("network.http.request.max-attempts", &val);
+        if (NS_SUCCEEDED(rv))
+            mMaxRequestAttempts = (PRUint16) CLAMP(val, 1, 0xffff);
+    }
 
-    if (bChangedAll || PL_strcmp(pref, "network.http.max-connections-per-server") == 0)
-        mPrefs->GetIntPref("network.http.max-connections-per-server", &mMaxConnectionsPerServer);
+    if (bChangedAll || PL_strcmp(pref, "network.http.max-connections") == 0) {
+        rv = mPrefs->GetIntPref("network.http.max-connections", &val);
+        if (NS_SUCCEEDED(rv))
+            mMaxConnections = (PRUint16) CLAMP(val, 1, 0xffff);
+    }
 
-    if (bChangedAll || PL_strcmp(pref, "network.http.sendRefererHeader") == 0)
-        mPrefs->GetIntPref("network.http.sendRefererHeader", (PRInt32 *) &mReferrerLevel);
+    if (bChangedAll || PL_strcmp(pref, "network.http.max-connections-per-server") == 0) {
+        rv = mPrefs->GetIntPref("network.http.max-connections-per-server", &val);
+        if (NS_SUCCEEDED(rv))
+            mMaxConnectionsPerServer = (PRUint8) CLAMP(val, 1, 0xff);
+    }
+
+    /*
+    if (bChangedAll || PL_strcmp(pref, "network.http.keep-alive.max-connections") == 0) {
+        rv = mPrefs->GetIntPref("network.http.keep-alive.max-connections", &val);
+        if (NS_SUCCEEDED(rv))
+            mMaxIdleConnections = (PRUint16) CLAMP(val, 1, 0xffff);
+    }
+    */
+
+    if (bChangedAll || PL_strcmp(pref, "network.http.keep-alive.max-connections-per-server") == 0) {
+        rv = mPrefs->GetIntPref("network.http.keep-alive.max-connections-per-server", &val);
+        if (NS_SUCCEEDED(rv))
+            mMaxIdleConnectionsPerServer = (PRUint8) CLAMP(val, 1, 0xff);
+    }
+
+    if (bChangedAll || PL_strcmp(pref, "network.http.sendRefererHeader") == 0) {
+        rv = mPrefs->GetIntPref("network.http.sendRefererHeader", (PRInt32 *) &val);
+        if (NS_SUCCEEDED(rv))
+            mReferrerLevel = (PRUint8) CLAMP(val, 0, 0xff);
+    }
 
     if (bChangedAll || PL_strcmp(pref, "network.http.version") == 0) {
         nsXPIDLCString httpVersion;
@@ -1076,8 +1108,8 @@ nsHttpHandler::PrefsChanged(const char *pref)
         }
 
         if (mHttpVersion == NS_HTTP_VERSION_1_1) {
-            mCapabilities = ALLOW_KEEPALIVE;
-            mProxyCapabilities = ALLOW_KEEPALIVE;
+            mCapabilities = NS_HTTP_ALLOW_KEEPALIVE;
+            mProxyCapabilities = NS_HTTP_ALLOW_KEEPALIVE;
         }
         else {
             mCapabilities = 0;
@@ -1091,9 +1123,9 @@ nsHttpHandler::PrefsChanged(const char *pref)
         rv = mPrefs->GetBoolPref("network.http.keep-alive", &cVar);
         if (NS_SUCCEEDED(rv)) {
             if (cVar)
-                mCapabilities |= ALLOW_KEEPALIVE;
+                mCapabilities |= NS_HTTP_ALLOW_KEEPALIVE;
             else
-                mCapabilities &= ~ALLOW_KEEPALIVE;
+                mCapabilities &= ~NS_HTTP_ALLOW_KEEPALIVE;
         }
     }
 
@@ -1101,9 +1133,9 @@ nsHttpHandler::PrefsChanged(const char *pref)
         rv = mPrefs->GetBoolPref("network.http.proxy.keep-alive", &cVar);
         if (NS_SUCCEEDED(rv)) {
             if (cVar)
-                mProxyCapabilities |= ALLOW_KEEPALIVE;
+                mProxyCapabilities |= NS_HTTP_ALLOW_KEEPALIVE;
             else
-                mProxyCapabilities &= ~ALLOW_KEEPALIVE;
+                mProxyCapabilities &= ~NS_HTTP_ALLOW_KEEPALIVE;
         }
     }
 
@@ -1111,9 +1143,9 @@ nsHttpHandler::PrefsChanged(const char *pref)
         rv = mPrefs->GetBoolPref("network.http.pipelining", &cVar);
         if (NS_SUCCEEDED(rv)) {
             if (cVar)
-                mCapabilities |=  ALLOW_PIPELINING;
+                mCapabilities |=  NS_HTTP_ALLOW_PIPELINING;
             else
-                mCapabilities &= ~ALLOW_PIPELINING;
+                mCapabilities &= ~NS_HTTP_ALLOW_PIPELINING;
         }
     }
 
@@ -1129,26 +1161,27 @@ nsHttpHandler::PrefsChanged(const char *pref)
         rv = mPrefs->GetBoolPref("network.http.proxy.pipelining", &cVar);
         if (NS_SUCCEEDED(rv)) {
             if (cVar)
-                mProxyCapabilities |=  ALLOW_PIPELINING;
+                mProxyCapabilities |=  NS_HTTP_ALLOW_PIPELINING;
             else
-                mProxyCapabilities &= ~ALLOW_PIPELINING;
+                mProxyCapabilities &= ~NS_HTTP_ALLOW_PIPELINING;
         }
     }
 
-    if (bChangedAll || PL_strcmp(pref, "network.http.proxy.ssl.connect") == 0)
-        mPrefs->GetBoolPref("network.http.proxy.ssl.connect", &mProxySSLConnectAllowed);
+    /*
+    if (bChangedAll || PL_strcmp(pref, "network.http.proxy.ssl.connect") == 0) {
+        rv = mPrefs->GetBoolPref("network.http.proxy.ssl.connect", &cVar);
+        if (NS_SUCCEEDED(rv))
+            mProxySSLConnectAllowed = (cVar != 0);
+    }
+    */
 
+    /*
     if (bChangedAll || PL_strcmp(pref, "network.http.connect.timeout") == 0)
         mPrefs->GetIntPref("network.http.connect.timeout", &mConnectTimeout);
 
     if (bChangedAll || PL_strcmp(pref, "network.http.request.timeout") == 0)
         mPrefs->GetIntPref("network.http.request.timeout", &mRequestTimeout);
-
-    if (bChangedAll || PL_strcmp(pref, "network.http.keep-alive.max-connections") == 0)
-        mPrefs->GetIntPref("network.http.keep-alive.max-connections", &mMaxIdleConnections);
-
-    if (bChangedAll || PL_strcmp(pref, "network.http.keep-alive.max-connections-per-server") == 0)
-        mPrefs->GetIntPref("network.http.keep-alive.max-connections-per-server", &mMaxIdleConnectionsPerServer);
+    */
 
     if (bChangedAll || PL_strcmp(pref, INTL_ACCEPT_LANGUAGES) == 0) {
         nsXPIDLString acceptLanguages;
@@ -1168,9 +1201,8 @@ nsHttpHandler::PrefsChanged(const char *pref)
 
     // general.useragent.override
     if (bChangedAll || PL_strcmp(pref, UA_PREF_PREFIX "override") == 0) {
-        char* temp = 0;
-        rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "override",
-                                  &temp);
+        char *temp = 0;
+        rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "override", &temp);
         if (NS_SUCCEEDED(rv)) {
             mUserAgentOverride.Adopt(temp);
             temp = 0;
@@ -1589,7 +1621,6 @@ nsHttpHandler::NewChannel(nsIURI *uri, nsIChannel **result)
     }
     
     rv = NewProxyChannel(uri,
-
                          nsnull,
                          -1,
                          nsnull,
@@ -1627,10 +1658,10 @@ nsHttpHandler::NewProxyChannel(nsIURI *uri,
     NS_ADDREF(httpChannel);
 
     nsresult rv = httpChannel->Init(uri,
-                               mCapabilities,
-                               proxyHost,
-                               proxyPort,
-                               proxyType);
+                                    mCapabilities,
+                                    proxyHost,
+                                    proxyPort,
+                                    proxyType);
 
     if (NS_SUCCEEDED(rv))
         rv = httpChannel->

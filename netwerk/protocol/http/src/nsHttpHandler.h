@@ -64,11 +64,6 @@ public:
     NS_DECL_NSIHTTPPROTOCOLHANDLER
     NS_DECL_NSIOBSERVER
 
-    enum {
-        ALLOW_KEEPALIVE  = 1 << 0,
-        ALLOW_PIPELINING = 1 << 1
-    };
-
     nsHttpHandler();
     virtual ~nsHttpHandler();
 
@@ -81,15 +76,15 @@ public:
 
     nsresult Init();
     nsresult AddStandardRequestHeaders(nsHttpHeaderArray *,
-                                       PRUint32 capabilities,
+                                       PRUint8 capabilities,
                                        PRBool useProxy);
     PRBool   IsAcceptableEncoding(const char *encoding);
 
     const char   *UserAgent();
-    nsHttpVersion DefaultVersion()  { return (nsHttpVersion) mHttpVersion; }
-    PRUint32      ReferrerLevel()   { return mReferrerLevel; }
-
-    PRUint32      IdleTimeout() { return mIdleTimeout; }
+    nsHttpVersion DefaultVersion()     { return mHttpVersion; }
+    PRUint8       ReferrerLevel()      { return mReferrerLevel; }
+    PRUint16      IdleTimeout()        { return mIdleTimeout; }
+    PRUint16      MaxRequestAttempts() { return mMaxRequestAttempts; }
 
     nsHttpAuthCache *AuthCache() { return mAuthCache; }
 
@@ -173,8 +168,8 @@ private:
 
     nsresult RemovePendingTransaction(nsHttpTransaction *);
 
-    PRUint32 CountActiveConnections(nsHttpConnectionInfo *);
-    PRUint32 CountIdleConnections(nsHttpConnectionInfo *);
+    PRUint8  CountActiveConnections(nsHttpConnectionInfo *);
+    PRUint8  CountIdleConnections(nsHttpConnectionInfo *);
 
     void     DropConnections(nsVoidArray &);
 
@@ -213,20 +208,17 @@ private:
     // prefs
     //
 
-    PRUint32 mHttpVersion;
-    PRUint32 mReferrerLevel;
-    PRUint32 mCapabilities;
-    PRUint32 mProxyCapabilities;
-    PRBool   mProxySSLConnectAllowed;
+    PRUint8  mHttpVersion;
+    PRUint8  mReferrerLevel;
+    PRUint8  mCapabilities;
+    PRUint8  mProxyCapabilities;
 
-    PRInt32  mConnectTimeout;
-    PRInt32  mRequestTimeout;
-    PRInt32  mIdleTimeout;
+    PRUint16 mIdleTimeout;
+    PRUint16 mMaxRequestAttempts;
 
-    PRInt32  mMaxConnections;
-    PRInt32  mMaxConnectionsPerServer;
-    PRInt32  mMaxIdleConnections;
-    PRInt32  mMaxIdleConnectionsPerServer;
+    PRUint16 mMaxConnections;
+    PRUint8  mMaxConnectionsPerServer;
+    PRUint8  mMaxIdleConnectionsPerServer;
 
     nsCString mAccept;
     nsCString mAcceptLanguages;

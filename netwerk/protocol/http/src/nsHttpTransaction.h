@@ -126,10 +126,12 @@ private:
     PRInt32                         mTransactionDone; // set atomically
     nsresult                        mStatus;
 
+    PRUint16                        mRestartCount;    // the number of times this transaction has been restarted
+
     PRPackedBool                    mHaveStatusLine;
     PRPackedBool                    mHaveAllHeaders;
     PRPackedBool                    mFiredOnStart;
-    PRPackedBool                    mNoContent;       // true if we're expecting an empty entity body
+    PRPackedBool                    mNoContent;       // expecting an empty entity body?
     PRPackedBool                    mPrematureEOF;
 };
 

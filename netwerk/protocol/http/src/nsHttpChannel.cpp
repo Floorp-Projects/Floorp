@@ -52,8 +52,8 @@ nsHttpChannel::nsHttpChannel()
     , mPrevTransaction(nsnull)
     , mConnectionInfo(nsnull)
     , mLoadFlags(LOAD_NORMAL)
-    , mCapabilities(0)
     , mStatus(NS_OK)
+    , mCapabilities(0)
     , mReferrerType(REFERRER_NONE)
     , mCachedResponseHead(nsnull)
     , mCacheAccess(0)
@@ -98,7 +98,7 @@ nsHttpChannel::~nsHttpChannel()
 
 nsresult
 nsHttpChannel::Init(nsIURI *uri,
-                    PRUint32 caps,
+                    PRUint8 caps,
                     const char *proxyHost,
                     PRInt32 proxyPort,
                     const char *proxyType)
@@ -171,8 +171,7 @@ nsHttpChannel::Init(nsIURI *uri,
     PRBool useProxy = (proxyHost && !PL_strcmp(proxyType, "http"));
 
     rv = nsHttpHandler::get()->AddStandardRequestHeaders(&mRequestHead.Headers(),
-                                                         caps,
-                                                         useProxy);
+                                                         caps, useProxy);
     if (NS_FAILED(rv)) return rv;
 
     // check to see if authorization headers should be included
@@ -1922,7 +1921,7 @@ nsHttpChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerType)
     mReferrer = referrer;
 
     // save a copy of the referrer type for redirects
-    mReferrerType = referrerType;
+    mReferrerType = (PRUint8) referrerType;
 
     // clear the old referer first
     mRequestHead.SetHeader(nsHttp::Referer, nsnull);
