@@ -1577,15 +1577,20 @@ date_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	      jsval *rval)
 {
     jsdouble *date;
-    char buf[32], *bytes;
+    char buf[DTOSTR_STANDARD_BUFFER_SIZE], *numStr, *bytes;
     JSString *str;
 
     date = date_getProlog(cx, obj, argv);
     if (!date)
 	return JS_FALSE;
 
-    JS_cnvtf(buf, sizeof buf, 20, *date);
-    bytes = JS_smprintf("(new %s(%s))", date_class.name, buf);
+    numStr = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD, 0, *date);
+    if (!numStr) {
+	JS_ReportOutOfMemory(cx);
+	return JS_FALSE;
+    }
+
+    bytes = JS_smprintf("(new %s(%s))", date_class.name, numStr);
     if (!bytes) {
 	JS_ReportOutOfMemory(cx);
 	return JS_FALSE;

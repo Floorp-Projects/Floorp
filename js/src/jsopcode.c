@@ -1614,9 +1614,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    long ival = (long)JSVAL_TO_INT(key);
 		    todo = Sprint(&ss->sprinter, "%ld", ival);
 		} else if (JSVAL_IS_DOUBLE(key)) {
-		    char buf[32];
-		    JS_cnvtf(buf, sizeof buf, 20, *JSVAL_TO_DOUBLE(key));
-		    todo = Sprint(&ss->sprinter, buf);
+		    char buf[DTOSTR_STANDARD_BUFFER_SIZE];
+		    char *numStr = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD, 0, *JSVAL_TO_DOUBLE(key));
+		    if (!numStr) {
+			JS_ReportOutOfMemory(cx);
+			return JS_FALSE;
+		    }
+		    todo = Sprint(&ss->sprinter, numStr);
 		} else if (JSVAL_IS_STRING(key)) {
 		    rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
 				       (jschar)'"');
