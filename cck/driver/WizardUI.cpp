@@ -547,6 +547,18 @@ void CWizardUI::UpdateScreenWidget(WIDGET *curWidget)
 				if (widg)
 				widg->control->EnableWindow(TRUE);
 			}
+			else if ((strcmp(curWidget->value,"Linux")==0) && (direxist != -1))
+			{
+				WIDGET *widg = findWidget("LinuxPath");
+				if (widg)
+					widg->control->EnableWindow(FALSE);
+				widg = findWidget("Text7888");
+				if (widg)
+					widg->control->EnableWindow(FALSE);
+				widg = findWidget("Button9888");
+				if (widg)
+					widg->control->EnableWindow(FALSE);
+			}		
 		}
 
 		if (selRv == CB_ERR)
