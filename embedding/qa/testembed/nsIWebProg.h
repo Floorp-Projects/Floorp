@@ -26,7 +26,7 @@ public:
 	CnsiWebProg(nsIWebBrowser *mWebBrowser,
 				   CBrowserImpl *mpBrowserImpl);
 	nsIWebProgress * GetWebProgObject();
-	void AddWebProgLstnr(void);
+	void AddWebProgLstnr(PRUint32);
 	void RemoveWebProgLstnr(void);
 	void GetTheDOMWindow(void);
 

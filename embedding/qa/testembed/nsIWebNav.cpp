@@ -268,7 +268,7 @@ void CNsIWebNav::GoToIndexTest()
    RvTestResult(rv, "GotoIndex() test", 2);
 }
 
-void CNsIWebNav::LoadUriTest(char *theUrl, const unsigned long theFlag)
+void CNsIWebNav::LoadUriTest(char *theUrl, PRUint32 theFlag)
 {
    char theTotalString[500];
    char theFlagName[200];
@@ -313,7 +313,7 @@ void CNsIWebNav::LoadUriTest(char *theUrl, const unsigned long theFlag)
    RvTestResult(rv, theTotalString, 2);
 }
 
-void CNsIWebNav::ReloadTest(const unsigned long theFlag)
+void CNsIWebNav::ReloadTest(PRUint32 theFlag)
 {
    char theTotalString[500];
    char theFlagName[200];
@@ -357,7 +357,7 @@ void CNsIWebNav::ReloadTest(const unsigned long theFlag)
    RvTestResult(rv, theTotalString, 1);
 }
 
-void CNsIWebNav::StopUriTest(char *theUrl, const unsigned long theFlag)
+void CNsIWebNav::StopUriTest(char *theUrl, PRUint32 theFlag)
 {
    char theTotalString[200];
    char flagString[100];
