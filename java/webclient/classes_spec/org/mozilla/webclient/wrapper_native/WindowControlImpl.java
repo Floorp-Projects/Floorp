@@ -113,7 +113,7 @@ public void createWindow(int nativeWindow, Rectangle bounds)
         synchronized(this) {
             nativeWebShell = nativeCreateInitContext(nativeWindow, bounds.x, 
                                                      bounds.y, bounds.width, 
-                                                     bounds.height);
+                                                     bounds.height, myBrowserControl);
             eventThread = new NativeEventThread("EventThread-" +
                                                 nativeWebShell,
                                                 myBrowserControl);
@@ -208,7 +208,7 @@ public native void nativeSetBounds(int webShellPtr, int x, int y,
  */
 
 public native int nativeCreateInitContext(int nativeWindow, 
-                                          int x, int y, int width, int height);
+                                          int x, int y, int width, int height, BrowserControl myBrowserControlImpl);
 
 public native void nativeMoveWindowTo(int webShellPtr, int x, int y);
 
@@ -233,7 +233,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("WindowControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.1 2000/03/04 01:10:56 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.2 2000/03/07 22:10:06 ashuk%eng.sun.com Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

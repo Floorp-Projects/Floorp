@@ -149,7 +149,7 @@ public void initialize(String verifiedBinDirAbsolutePath) throws Exception
 {
     synchronized(this) {
         if (!hasBeenInitialized()) {
-            nativeInitialize(verifiedBinDirAbsolutePath);
+            nativeAppInitialize(verifiedBinDirAbsolutePath);
             initialized = true;
         }
     }
@@ -185,7 +185,7 @@ public boolean hasBeenInitialized()
 
  */
 
-private native void nativeInitialize (String verifiedBinDirAbsolutePath) throws Exception;
+private native void nativeAppInitialize (String verifiedBinDirAbsolutePath) throws Exception;
 
 /**
 
@@ -222,7 +222,7 @@ public static void main(String [] args)
     WrapperFactory me = new WrapperFactoryImpl();
     Log.setApplicationName("WrapperFactoryImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WrapperFactoryImpl.java,v 1.1 2000/03/04 01:10:56 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: WrapperFactoryImpl.java,v 1.2 2000/03/07 22:10:08 ashuk%eng.sun.com Exp $");
 
     
 }
