@@ -32,10 +32,10 @@
 #include "nsRect.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
-#include "nsPrintManager.h"
-#include "nsPSStructs.h"
 
+class     nsPostScriptObj;
 class PS_State;
+
 typedef void* nsDrawingSurfacePS;
 
 class nsRenderingContextPS : public nsIRenderingContext
@@ -155,18 +155,6 @@ public:
 
   // Postscript utilities
   /** ---------------------------------------------------
-   *  Set the color of the Postscript to a file set up by the nsDeviceContextPS
-   *	@update 12/21/98 dwc
-   */
-  void PostscriptColor(nscolor aColor);
-
-  /** ---------------------------------------------------
-   *  Render a bitmap in postscript to a file set up by the nsDeviceContextPS
-   *	@update 12/21/98 dwc
-   */
-  void PostscriptDrawBitmap(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, IL_Pixmap *aImage, IL_Pixmap *aMask);
-
-  /** ---------------------------------------------------
    *  Set the current postscript font
    *	@update 12/21/98 dwc
    */
@@ -194,12 +182,13 @@ protected:
   PS_State            *mStates;
   nsVoidArray         *mStateCache;
   nsTransform2D		    *mTMatrix;
-  float                mP2T;
+  float               mP2T;
+  nscolor             mCurrentColor;
 
 
   //state management
   PRUint8             *mGammaTable;
-  PSContext           *mPrintContext; //XXX: Remove need for MWContext
+  nsPostScriptObj     *mPSObj;
 
 
 };

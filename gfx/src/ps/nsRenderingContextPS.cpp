@@ -22,19 +22,14 @@
 #include "libimg.h"
 #include "nsDeviceContextPS.h"
 #include "nsIScriptGlobalObject.h"
-#include "prprf.h"
-#include "nsPrintManager.h"
-#include "nsPSStructs.h"        
+//#include "prprf.h"
+//#include "nsPrintManager.h"
+#include "nsPostScriptObj.h"        
 
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
 // Macro to convert from TWIPS (1440 per inch) to POINTS (72 per inch)
-#define NS_TWIPS_TO_POINTS(x) ((x / 20))
 #define NS_PIXELS_TO_POINTS(x) (x * 10)
-#define NS_PS_RED(x) (((float)(NS_GET_R(x))) / 255.0) 
-#define NS_PS_GREEN(x) (((float)(NS_GET_G(x))) / 255.0) 
-#define NS_PS_BLUE(x) (((float)(NS_GET_B(x))) / 255.0) 
-#define NS_IS_BOLD(x) (((x) >= 500) ? 1 : 0) 
 
 #define FLAG_CLIP_VALID       0x0001
 #define FLAG_CLIP_CHANGED     0x0002
@@ -57,9 +52,8 @@ public:
   PS_State        *mNext;
   nsTransform2D   mMatrix;
   nsRect          mLocalClip;
-  nscolor         mBrushColor;
   nsIFontMetrics  *mFontMetrics;
-  nscolor         mPenColor;
+  nscolor         mCurrentColor;
   nscolor         mTextColor;
   nsLineStyle     mLineStyle;
   PRInt32         mFlags;
@@ -74,9 +68,8 @@ PS_State :: PS_State()
   mNext = nsnull;
   mMatrix.SetToIdentity();  
   mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
-  mBrushColor = NS_RGB(0, 0, 0);
   mFontMetrics = nsnull;
-  mPenColor = NS_RGB(0, 0, 0);
+  mCurrentColor = NS_RGB(0, 0, 0);
   mTextColor = RGB(0, 0, 0);
   mLineStyle = nsLineStyle_kSolid;
 }
@@ -92,15 +85,10 @@ PS_State :: PS_State(PS_State &aState) :
 {
   mNext = &aState;
   //mClipRegion = NULL;
-  mBrushColor = aState.mBrushColor;
-  //mSolidBrush = NULL;
+  mCurrentColor = aState.mCurrentColor;
   mFontMetrics = nsnull;
   //mFont = NULL;
-  mPenColor = aState.mPenColor;
-  //mSolidPen = NULL;
-  //mDashedPen = NULL;
-  //mDottedPen = NULL;
-  //mFlags = ~FLAGS_ALL;
+  mFlags = ~FLAGS_ALL;
   mTextColor = aState.mTextColor;
   mLineStyle = aState.mLineStyle;
 }
@@ -115,12 +103,6 @@ PS_State :: ~PS_State()
     //VERIFY(::DeleteObject(mClipRegion));
     //mClipRegion = NULL;
   //}
-
-  //these are killed by the rendering context...
-  //mSolidBrush = NULL;
-  //mSolidPen = NULL;
-  //mDashedPen = NULL;
-  //mDottedPen = NULL;
 
   //don't delete this because it lives in the font metrics
   //mFont = NULL;
@@ -137,7 +119,7 @@ static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 nsRenderingContextPS :: nsRenderingContextPS()
 {
   NS_INIT_REFCNT();
-  mPrintContext = nsnull;     // local copy of printcontext, will be set on the init process
+  mPSObj = nsnull;     // local copy of printcontext, will be set on the init process
   mStateCache = new nsVoidArray();
 
   PushState();
@@ -213,7 +195,7 @@ nsRenderingContextPS :: Init(nsIDeviceContext* aContext)
 float app2dev;
 
   mContext = aContext;
-  mPrintContext = ((nsDeviceContextPS*)mContext)->GetPrintContext();
+  mPSObj = ((nsDeviceContextPS*)mContext)->GetPrintContext();
   NS_IF_ADDREF(mContext);
 
   // initialize the matrix
@@ -289,9 +271,8 @@ nsRenderingContextPS :: PushState(void)
     //clone state info
     state->mMatrix = mStates->mMatrix;
     state->mLocalClip = mStates->mLocalClip;
-    state->mBrushColor = mStates->mBrushColor;
+    state->mCurrentColor = mStates->mCurrentColor;
     state->mFontMetrics = mStates->mFontMetrics;
-    state->mPenColor = mStates->mPenColor;
     state->mTextColor = mStates->mTextColor;
     state->mLineStyle = mStates->mLineStyle;
 
@@ -360,31 +341,31 @@ int     cliptype;
 
   // how we combine the new rect with the previous?
   if (aCombine == nsClipCombine_kIntersect){
-    
-    //PushClipState();
     // push the clipstate onto the postscript stack
-    xl_graphics_save(mPrintContext);
-
-    //cliptype = ::IntersectClipRect(mDC, trect.x,trect.y,trect.XMost(),trect.YMost());
+    mPSObj->graphics_save();
   } else if (aCombine == nsClipCombine_kUnion){
-    //PushClipState();
-    xl_graphics_save(mPrintContext);
-    //HRGN  tregion = ::CreateRectRgn(trect.x,trect.y,trect.XMost(),trect.YMost());
-
-    //cliptype = ::ExtSelectClipRgn(mDC, tregion, RGN_OR);
-    //::DeleteObject(tregion);
+    mPSObj->graphics_save();
+    mPSObj->newpath();
+    mPSObj->moveto( NS_PIXELS_TO_POINTS(trect.x), NS_PIXELS_TO_POINTS(trect.y));
+    mPSObj->box(NS_PIXELS_TO_POINTS(trect.width), NS_PIXELS_TO_POINTS(trect.height));
+    mPSObj->closepath();
+    mPSObj->clip();
   }else if (aCombine == nsClipCombine_kSubtract){
-    //PushClipState();
-    xl_graphics_save(mPrintContext);
-
-    //cliptype = ::ExcludeClipRect(mDC, trect.x,trect.y,trect.XMost(),trect.YMost());
+    mPSObj->graphics_save();
+    mPSObj->newpath();
+    mPSObj->moveto(NS_PIXELS_TO_POINTS(trect.x), NS_PIXELS_TO_POINTS(trect.y));
+    mPSObj->box_subtract(NS_PIXELS_TO_POINTS(trect.width), NS_PIXELS_TO_POINTS(trect.height));
+    mPSObj->closepath();
+    mPSObj->clip();
   }else if (aCombine == nsClipCombine_kReplace){
-    //PushClipState();
-    xl_graphics_save(mPrintContext);
-
-    //HRGN  tregion = ::CreateRectRgn(trect.x,trect.y,trect.XMost(),trect.YMost());
-    //cliptype = ::SelectClipRgn(mDC, tregion);
-    //::DeleteObject(tregion);
+    mPSObj->graphics_save();
+    // set the cliping rectangle to this
+    mPSObj->initclip();
+    mPSObj->newpath();
+    mPSObj->moveto(NS_PIXELS_TO_POINTS(trect.x), NS_PIXELS_TO_POINTS(trect.y));
+    mPSObj->box(NS_PIXELS_TO_POINTS(trect.width), NS_PIXELS_TO_POINTS(trect.height));
+    mPSObj->closepath();
+    mPSObj->clip();
   }else{
     NS_ASSERTION(FALSE, "illegal clip combination");
   }
@@ -420,6 +401,8 @@ nsRenderingContextPS :: GetClipRect(nsRect &aRect, PRBool &aClipValid)
 NS_IMETHODIMP 
 nsRenderingContextPS :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
+
+
   return NS_OK; 
 }
 
@@ -441,7 +424,10 @@ nsRenderingContextPS :: GetClipRegion(nsIRegion **aRegion)
 NS_IMETHODIMP 
 nsRenderingContextPS :: SetColor(nscolor aColor)
 {
-  return NS_OK; 
+  mPSObj->setcolor(aColor);
+  mCurrentColor = aColor;
+
+  return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -450,7 +436,8 @@ nsRenderingContextPS :: SetColor(nscolor aColor)
  */
 NS_IMETHODIMP nsRenderingContextPS :: GetColor(nscolor &aColor) const
 {
-  return NS_OK; 
+  aColor = mCurrentColor;
+  return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -580,7 +567,7 @@ nsRenderingContextPS :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord 
 	mTMatrix->TransformCoord(&aX1,&aY1);
 
   // this has the moveto,lineto and the stroke
-  xl_line(mPrintContext,NS_PIXELS_TO_POINTS(aX0),NS_PIXELS_TO_POINTS(aY0),
+  mPSObj->line(NS_PIXELS_TO_POINTS(aX0),NS_PIXELS_TO_POINTS(aY0),
           NS_PIXELS_TO_POINTS(aX1),NS_PIXELS_TO_POINTS(aY1),1);
 
   return NS_OK;
@@ -604,7 +591,7 @@ POINT           pp;
 	pp.x = np->x;
 	pp.y = np->y;
   mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
-  xl_moveto_loc(mPrintContext,NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
+  mPSObj->moveto_loc(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
   np++;
 
   // we are ignoring the linestyle
@@ -612,11 +599,11 @@ POINT           pp;
 		pp.x = np->x;
 		pp.y = np->y;
 		mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
-    xl_lineto(mPrintContext,NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
+    mPSObj->lineto(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
 	}
 
   // we dont close the path, this will give us a polyline
-  xl_stroke(mPrintContext);
+  mPSObj->stroke();
 
   return NS_OK;
 }
@@ -633,9 +620,11 @@ nsRect	tr;
 	tr = aRect;
 	mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
 
-  xl_moveto(mPrintContext, NS_PIXELS_TO_POINTS(tr.x), NS_PIXELS_TO_POINTS(tr.y));
-  xl_box(mPrintContext, NS_PIXELS_TO_POINTS(tr.width), NS_PIXELS_TO_POINTS(tr.height));
-  xl_stroke(mPrintContext);
+  mPSObj->newpath();
+  mPSObj->moveto(NS_PIXELS_TO_POINTS(tr.x), NS_PIXELS_TO_POINTS(tr.y));
+  mPSObj->box(NS_PIXELS_TO_POINTS(tr.width), NS_PIXELS_TO_POINTS(tr.height));
+  mPSObj->closepath();
+  mPSObj->stroke();
 
   return NS_OK;
 }
@@ -649,10 +638,11 @@ nsRenderingContextPS :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
 {
 
 	mTMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
-  xl_moveto(mPrintContext, NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
-  xl_box(mPrintContext, NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight));
-  xl_stroke(mPrintContext);
-
+  mPSObj->newpath();
+  mPSObj->moveto(NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
+  mPSObj->box(NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight));
+  mPSObj->closepath();
+  mPSObj->stroke();
   return NS_OK;
 }
 
@@ -668,12 +658,11 @@ nsRect	tr;
 	tr = aRect;
 	mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
 
-  xl_moveto(mPrintContext, NS_PIXELS_TO_POINTS(tr.x), NS_PIXELS_TO_POINTS(tr.y));
-  xl_box(mPrintContext, NS_PIXELS_TO_POINTS(tr.width), NS_PIXELS_TO_POINTS(tr.height));
-  xl_stroke(mPrintContext);
-
-  // should be fill, but layout ordering is broken, so we will settle for this now
-  //xl_fill(mPrintContext);
+  mPSObj->newpath();
+  mPSObj->moveto(NS_PIXELS_TO_POINTS(tr.x), NS_PIXELS_TO_POINTS(tr.y));
+  mPSObj->box(NS_PIXELS_TO_POINTS(tr.width), NS_PIXELS_TO_POINTS(tr.height));
+  mPSObj->closepath();
+  mPSObj->fill();
   return NS_OK;
 }
 
@@ -686,10 +675,11 @@ nsRenderingContextPS :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
 {
 
 	mTMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
-  xl_moveto(mPrintContext, NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
-  xl_box(mPrintContext, NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight));
-  xl_stroke(mPrintContext);
-  // should be fill, but layout ordering is broken, so we will settle for this now
+  mPSObj->newpath();
+  mPSObj->moveto(NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
+  mPSObj->box(NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight));
+  mPSObj->closepath();
+  mPSObj->fill();
   return NS_OK;
 }
 
@@ -710,7 +700,7 @@ POINT           pp;
 	pp.x = np->x;
 	pp.y = np->y;
   mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
-  xl_moveto_loc(mPrintContext,NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
+  mPSObj->moveto_loc(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
   np++;
 
   // we are ignoring the linestyle
@@ -718,11 +708,11 @@ POINT           pp;
 		pp.x = np->x;
 		pp.y = np->y;
 		mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
-    xl_lineto(mPrintContext,NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
+    mPSObj->lineto(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
 	}
 
-  xl_closepath(mPrintContext);
-  xl_stroke(mPrintContext);
+  mPSObj->closepath();
+  mPSObj->stroke();
 
   return NS_OK;
 }
@@ -744,7 +734,7 @@ POINT           pp;
 	pp.x = np->x;
 	pp.y = np->y;
   mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
-  xl_moveto_loc(mPrintContext,NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
+  mPSObj->moveto_loc(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
   np++;
 
   // we are ignoring the linestyle
@@ -752,11 +742,11 @@ POINT           pp;
 		pp.x = np->x;
 		pp.y = np->y;
 		mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
-    xl_lineto(mPrintContext,NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
+    mPSObj->lineto(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
 	}
 
-  xl_closepath(mPrintContext);
-  xl_fill(mPrintContext);
+  mPSObj->closepath();
+  mPSObj->fill();
 
   return NS_OK;
 }
@@ -1166,12 +1156,17 @@ nsRenderingContextPS :: DrawImage(nsIImage *aImage, const nsRect& aSRect, const 
 nsRect	sr,dr;
 
 	sr = aSRect;
-	//mTMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
+	mTMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
 
   dr = aDRect;
-	//mTMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
+	mTMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
 
   //return aImage->Draw(*this, mSurface, sr.x, sr.y, sr.width, sr.height, dr.x, dr.y, dr.width, dr.height);
+
+  // we have to output an image using the postscript image operator
+
+
+
   return NS_OK;
 }
 
@@ -1185,7 +1180,7 @@ nsRenderingContextPS :: DrawImage(nsIImage *aImage, const nsRect& aRect)
 nsRect	tr;
 
 	tr = aRect;
-	//mTMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
+	mTMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
 
   //return aImage->Draw(*this, mSurface, tr.x, tr.y, tr.width, tr.height);
   return NS_OK;
@@ -1228,90 +1223,9 @@ nsFontHandle    fontHandle;       // WINDOWS ONLY
   //mStates->mFont = mCurrFont = tfont;
   mStates->mFontMetrics = mFontMetrics;
 
-  PostscriptFont(fontHeight,font->style,font->variant,font->weight,font->decorations);
+  mPSObj->setscriptfont(fontHeight,font->style,font->variant,font->weight,font->decorations);
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsRenderingContextPS.h
- *	@update 12/21/98 dwc
- */
-void 
-nsRenderingContextPS :: PostscriptColor(nscolor aColor)
-{
-  XP_FilePrintf(mPrintContext->prSetup->out,"%3.2f %3.2f %3.2f setrgbcolor\n", NS_PS_RED(aColor), NS_PS_GREEN(aColor),
-		  NS_PS_BLUE(aColor));
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsRenderingContextPS.h
- *	@update 12/21/98 dwc
- */
-void 
-nsRenderingContextPS :: PostscriptDrawBitmap(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, IL_Pixmap *aImage, IL_Pixmap *aMask)
-{
-  //xl_colorimage(mPrintContext, aX, aY, aWidth, aHeight, IL_Pixmap *image,IL_Pixmap *mask);
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsRenderingContextPS.h
- *	@update 12/21/98 dwc
- */
-void 
-nsRenderingContextPS :: PostscriptFont(nscoord aHeight, PRUint8 aStyle, 
-											 PRUint8 aVariant, PRUint16 aWeight, PRUint8 decorations)
-{
-int postscriptFont = 0;
-
-  XP_FilePrintf(mPrintContext->prSetup->out,"%d",NS_TWIPS_TO_POINTS(aHeight));
-	
-  //XXX:PS Add bold, italic and other settings here
-	switch(aStyle){
-	  case NS_FONT_STYLE_NORMAL :
-		  if (NS_IS_BOLD(aWeight)) {
-		    postscriptFont = 1;   // NORMAL BOLD
-      } else {
-	        postscriptFont = 0; // NORMAL
-		  }
-	  break;
-
-	  case NS_FONT_STYLE_ITALIC:
-		  if (NS_IS_BOLD(aWeight)) {		  
-		    postscriptFont = 3; // BOLD ITALIC
-      } else {			  
-		    postscriptFont = 2; // ITALIC
-		  }
-	  break;
-
-	  case NS_FONT_STYLE_OBLIQUE:
-		  if (NS_IS_BOLD(aWeight)) {	
-	        postscriptFont = 7;   // COURIER-BOLD OBLIQUE
-      } else {	
-	        postscriptFont = 6;   // COURIER OBLIQUE
-		  }
-	    break;
-	}
-
-	 XP_FilePrintf(mPrintContext->prSetup->out, " f%d\n", postscriptFont);
-
-#if 0
-     // The style of font (normal, italic, oblique)
-  PRUint8 style;
-
-  // The variant of the font (normal, small-caps)
-  PRUint8 variant;
-
-  // The weight of the font (0-999)
-  PRUint16 weight;
-
-  // The decorations on the font (underline, overline,
-  // line-through). The decorations can be binary or'd together.
-  PRUint8 decorations;
-
-  // The size of the font, in nscoord units
-  nscoord size; 
-#endif
-
-}
 
 /** ---------------------------------------------------
  *  See documentation in nsRenderingContextPS.h
@@ -1332,7 +1246,7 @@ nsFont          *font;
   mFontMetrics->GetFont(font);
 
   yCoord = aY + (fontHeight / 2);
-  xl_moveto(mPrintContext, aX, yCoord);
+  mPSObj->moveto(aX, yCoord);
   if (PR_TRUE == aIsUnicode) {
     //XXX: Investigate how to really do unicode with Postscript
 	  // Just remove the extra byte per character and draw that instead
@@ -1342,10 +1256,10 @@ nsFont          *font;
       buf[i] = aString[ptr];
 	    ptr+=2;
 	  }
-	xl_show(mPrintContext, buf, aLength, "");
+	mPSObj->show(buf, aLength, "");
 	delete buf;
   } else {
-    xl_show(mPrintContext, (char *)aString, aLength, "");
+    mPSObj->show((char *)aString, aLength, "");
   }
 }
 

@@ -17,6 +17,7 @@
  */
 
 #include "nsFontMetricsPS.h"
+#include "nsDeviceContextPS.h"
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 

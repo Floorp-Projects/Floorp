@@ -27,7 +27,8 @@
 #include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
-#include "nsDeviceContextPS.h"
+
+class nsDeviceContextPS;
 
 class nsFontMetricsPS : public nsIFontMetrics
 {

@@ -16,11 +16,8 @@
  * Reserved.
  */
 
-//#define M12N
-
 #include "xp.h"
 #include "xlate.h"
-#include "nsPSStructs.h"
 
 extern PS_FontInfo *PSFE_MaskToFI[N_FONTS];
 
@@ -28,36 +25,3 @@ extern PS_FontInfo *PSFE_MaskToFI[N_FONTS];
 #define TEXT_WIDTH 8
 #define TEXT_HEIGHT 16
 
-// this should be in the devicecontext now.
-extern void xl_begin_document(PSContext*);
-extern void xl_begin_page(PSContext*,int);
-extern void xl_end_page(PSContext*,int);
-extern void xl_end_document(PSContext*);
-extern void xl_show(PSContext *aCX, char* txt, int len, char*);
-extern void xl_moveto(PSContext* aCX, int x, int y);
-extern void xl_moveto_loc(PSContext* aCX, int x, int y);
-extern void xl_lineto(PSContext* aCX, int x1, int y1);
-extern void xl_closepath(PSContext* aCX);
-extern void xl_circle(PSContext* aCX, int w, int h);
-extern void xl_box(PSContext* aCX, int w, int h);
-extern void xl_line(PSContext* aCX, int x1, int y1, int x2, int y2, int thick);
-extern void xl_stroke(PSContext* aCX);
-extern void xl_fill(PSContext* aCX);
-extern void xl_graphics_save(PSContext *aCX);
-extern void xl_graphics_restore(PSContext *aCX);
-extern void xl_colorimage(PSContext *aCX, int x, int y, int w, int h,IL_Pixmap *image, IL_Pixmap *mask);
-extern void xl_begin_squished_text(PSContext*, float);
-extern void xl_end_squished_text(PSContext*);
-extern void xl_initialize_translation(PSContext*, PrintSetup*);
-extern void xl_finalize_translation(PSContext*);
-extern void xl_annotate_page(PSContext* aCX, char*, int, int, int);
-extern void xl_draw_border(PSContext* aCX, int , int , int , int , int );
-extern void xl_draw_3d_border(PSContext* aCX, int , int , int , int , int, int tl, int br );
-extern void xl_draw_3d_radiobox(PSContext* aCX, int , int , int , int , int, int t, int b, int c);
-extern void xl_draw_3d_checkbox(PSContext* aCX, int , int , int , int , int, int tl, int br, int c);
-extern void xl_draw_3d_arrow(PSContext* aCX, int, int, int, int, int, XP_Bool, int, int, int);
-extern XP_Bool xl_item_span(PSContext* aCX, int top, int bottom);
-
-extern XP_Bool psfe_init_image_callbacks(PSContext *cx);
-
-struct LineRecord_struct;
