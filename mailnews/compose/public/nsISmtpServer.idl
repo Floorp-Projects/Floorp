@@ -37,6 +37,7 @@ interface nsISmtpServer : nsISupports {
     attribute string redirectorType;   
 
     attribute long authMethod;
+    readonly attribute boolean trySecAuth;
     attribute long trySSL;
 
     readonly attribute string serverURI;

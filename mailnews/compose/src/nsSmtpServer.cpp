@@ -218,6 +218,22 @@ nsSmtpServer::SetTrySSL(PRInt32 trySSL)
 }
 
 NS_IMETHODIMP
+nsSmtpServer::GetTrySecAuth(PRBool *trySecAuth)
+{
+    nsresult rv;
+    nsCAutoString pref;
+    NS_ENSURE_ARG_POINTER(trySecAuth);
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) return rv;
+    *trySecAuth = PR_TRUE;
+    getPrefString("trySecAuth", pref);
+    rv = prefs->GetBoolPref(pref.get(), trySecAuth);
+    if (NS_FAILED(rv))
+        prefs->GetBoolPref("mail.smtpserver.default.trySecAuth", trySecAuth);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSmtpServer::GetAuthMethod(PRInt32 *authMethod)
 {
     nsresult rv;

@@ -177,6 +177,7 @@ private:
   // *** the following should move to the smtp server when we support
   // multiple smtp servers
   PRInt32 m_prefAuthMethod;
+    PRBool m_prefTrySecAuth;
   PRBool m_usernamePrompted;
     PRInt32 m_prefTrySSL;
   PRBool m_tlsEnabled;

@@ -247,6 +247,7 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
     m_prefAuthMethod = PREF_AUTH_NONE;
     m_usernamePrompted = PR_FALSE;
     m_prefTrySSL = PREF_SSL_TRY;
+    m_prefTrySecAuth = PR_TRUE;
     m_tlsInitiated = PR_FALSE;
 
     m_urlErrorState = NS_ERROR_FAILURE;
@@ -294,6 +295,7 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
     if (smtpServer) {
         smtpServer->GetAuthMethod(&m_prefAuthMethod);
         smtpServer->GetTrySSL(&m_prefTrySSL);
+        smtpServer->GetTrySecAuth(&m_prefTrySecAuth);
     }
 
     rv = RequestOverrideInfo(smtpServer);
@@ -686,6 +688,8 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
             if (m_responseText.Find("EXTERNAL", PR_TRUE, 5) >= 0)  
                 SetFlag(SMTP_AUTH_EXTERNAL_ENABLED);
 
+            if(m_prefTrySecAuth)
+            {
             if (m_responseText.Find("CRAM-MD5", PR_TRUE, 5) >= 0)
             {
                 nsresult rv;
@@ -693,6 +697,7 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
                 // this checks if psm is installed...
                 if (NS_SUCCEEDED(rv))
                   SetFlag(SMTP_AUTH_CRAM_MD5_ENABLED);
+                }
             }
 
             // for use after mechs disabled fallbacks when login failed
