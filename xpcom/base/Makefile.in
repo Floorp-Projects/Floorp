@@ -57,7 +57,6 @@ endif
 EXPORTS		= \
 		nsAgg.h \
 		nsIAllocator.h \
-		nsMemory.h \
 		nsCom.h \
 		nsComObsolete.h \
 		nsCWeakReference.h \

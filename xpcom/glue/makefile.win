@@ -29,6 +29,7 @@ LIBRARY_NAME=xpcomglue
 
 EXPORTS =                  \
         nsCOMPtr.h         \
+        nsMemory.h         \
         $(NULL)			
 
 XPIDLSRCS =               \
@@ -36,10 +37,17 @@ XPIDLSRCS =               \
 
 ################################################################################
 
+
+#For nsXPCOMPrivate.h
+LINCS =              \
+        -I..\build   \
+	$(NULL)
+
 LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 
 CPP_OBJS =                            \
         .\$(OBJDIR)\nsCOMPtr.obj      \
+        .\$(OBJDIR)\nsMemory.obj      \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
@@ -49,3 +57,6 @@ libs:: $(LIBRARY)
 
 clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+
+
+

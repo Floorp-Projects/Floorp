@@ -36,7 +36,6 @@ include <$(DEPTH)\config\config.mak>
 EXPORTS =                  \
         nsAgg.h            \
         nsIAllocator.h     \
-        nsMemory.h         \
         nsCom.h            \
 	nsComObsolete.h  \
         nsCWeakReference.h \

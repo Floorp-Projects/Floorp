@@ -35,15 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsXPComInit_h__
-#define nsXPComInit_h__
+#ifndef nsXPCom_h__
+#define nsXPCom_h__
 
 #include "nscore.h"
 
 class nsIServiceManager;
 class nsIFile;
 class nsIDirectoryServiceProvider;
-
+class nsIMemory;
 /**
  * Initialises XPCOM. You must call this method before proceeding 
  * to use xpcom. The one exception is that you may call 
@@ -101,7 +101,7 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr);
  * Public Method to access to the service manager.
  * 
  * @status FROZEN
- * @param result Interface pointer to the service 
+ * @param result Interface pointer to the service manager 
  *
  * @return NS_OK for success;
  *         other error codes indicate a failure during initialisation.
@@ -109,5 +109,18 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr);
  */
 extern "C" NS_COM nsresult
 NS_GetServiceManager(nsIServiceManager* *result);
+
+/**
+ * Public Method to access to the memory manager.  See nsIMemory
+ * 
+ * @status FROZEN
+ * @param result Interface pointer to the memory manager 
+ *
+ * @return NS_OK for success;
+ *         other error codes indicate a failure during initialisation.
+ *
+ */
+extern "C" NS_COM nsresult
+NS_GetMemoryManager(nsIMemory* *result);
 
 #endif
