@@ -42,6 +42,7 @@ FILES = CGI.pl			\
 	addcheckin.pl		\
 	admin.cgi		\
 	adminfuncs.pl		\
+	adminmail.pl		\
 	branchspam.cgi		\
 	branchspammer.cgi	\
 	closemessage		\
@@ -59,14 +60,17 @@ FILES = CGI.pl			\
 	cvsqueryform.cgi	\
 	cvsregexp.html		\
 	cvsview2.cgi		\
+	defparams.pl		\
 	doadmin.cgi		\
 	doeditcheckin.cgi	\
 	doeditmessage.cgi	\
+	doeditparams.cgi	\
 	doeditwhiteboard.cgi	\
 	dolog.pl		\
 	dotweak.cgi		\
 	editcheckin.cgi		\
 	editmessage.cgi		\
+	editparams.cgi		\
 	editwhiteboard.cgi	\
 	globals.pl		\
 	handleAdminMail.pl	\
@@ -85,7 +89,6 @@ FILES = CGI.pl			\
 	repophook.cgi		\
 	reposfiles.pl		\
 	rview.cgi		\
-	show2.cgi		\
 	showcheckins.cgi	\
 	switchtree.cgi		\
 	testlock.pl		\
