@@ -344,7 +344,7 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
                                               nextNewline-posInString)).get());
 #endif
       // Skip over initial spaces:
-      while (posInString < nextNewline
+      while ((PRInt32)posInString < nextNewline
              && nsCRT::IsAsciiSpace(tString[posInString]))
         ++posInString;
 
@@ -358,7 +358,7 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
 
         // Trim trailing spaces:
         PRInt32 lastRealChar = nextNewline;
-        while (lastRealChar > posInString
+        while ((PRUint32)lastRealChar > posInString
                && nsCRT::IsAsciiSpace(tString[lastRealChar-1]))
           --lastRealChar;
 #ifdef DEBUG_wrapping
