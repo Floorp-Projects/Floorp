@@ -73,7 +73,7 @@ foreach $f (@files) {
         print STDERR "GetT returned '$t' for '$repository/$f' branch '$b'\n";
     }
     if ($t eq "") {
-        $t = "default";
+        $t = $defaultid;
     }
     if (!defined $mode{$t} || $mode{$t} eq "Open") {
         next;

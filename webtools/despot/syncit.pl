@@ -130,12 +130,17 @@ while (@reprow = $repquery->fetchrow()) {
     print COMMITCHECK "# tweak things from there.\n\n";
 
     $query = Query("select partitions.id,partitions.name,state,branches.name from partitions,branches where repositoryid = '$repid' and branches.id=branchid order by partitions.name");
+    $founddefault = 0;
     while (@row = $query->fetchrow()) {
         ($id,$name,$state,$branch) = (@row);
         $d = "\$";
         print COMMITCHECK $d . "mode{'$id'} = '$state';\n";
         print COMMITCHECK $d . "branch{'$id'} = '$branch';\n";
         print COMMITCHECK $d . "fullname{'$id'} = '$name';\n";
+        if ($name eq 'default') {
+            print COMMITCHECK $d . "defaultid = '$id';\n";
+            $founddefault = 1;
+        }
         if ($state ne "Open") {
             foreach $n ("blessed", "super") {
                 print COMMITCHECK $d . "$n" . "{'$id'} = [";
@@ -152,6 +157,9 @@ while (@reprow = $repquery->fetchrow()) {
                 print COMMITCHECK "];\n";
             }
         }
+    }
+    if (!$founddefault) {
+        print COMMITCHECK $d . "defaultid = 'none';\n";
     }
     print COMMITCHECK "sub GetT {\n";
     print COMMITCHECK '($b,$_) = (@_);' . "\n";
