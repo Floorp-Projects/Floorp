@@ -425,8 +425,8 @@ public class PFX implements ASN1Value {
                         // replace the old safe bag with the new
                         safeContents.insertElementAt(
                             new SafeBag( safeBag.getBagType(),
-                                epki, safeBag.getBagAttributes()), i);
-                        safeContents.removeElementAt(i+1);
+                                epki, safeBag.getBagAttributes()), j);
+                        safeContents.removeElementAt(j+1);
                     } else if( val instanceof CertBag ) {
                         System.out.println("   content is CertBag");
                         CertBag cb = (CertBag) val;
