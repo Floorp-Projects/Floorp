@@ -106,16 +106,20 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
 	                                 getter_AddRefs(pMsgDraft));
 	    if (NS_SUCCEEDED(rv) && pMsgDraft)
 		{
+        nsAutoString uriToOpen(originalMsgURI);
+        uriToOpen.Append((const PRUnichar*)
+               NS_LITERAL_STRING("?fetchCompleteMessage=true").get()); 
+
 			switch(type)
 			{
 				case nsIMsgCompType::ForwardInline:
-	    			rv = pMsgDraft->OpenDraftMsg(originalMsgURI, nsnull, identity, PR_TRUE);
+	    			rv = pMsgDraft->OpenDraftMsg(uriToOpen.GetUnicode(), nsnull, identity, PR_TRUE);
 					break;
 				case nsIMsgCompType::Draft:
-	    			rv = pMsgDraft->OpenDraftMsg(originalMsgURI, nsnull, identity, PR_FALSE);
+	    			rv = pMsgDraft->OpenDraftMsg(uriToOpen.GetUnicode(), nsnull, identity, PR_FALSE);
 					break;
 				case nsIMsgCompType::Template:
-	    			rv = pMsgDraft->OpenEditorTemplate(originalMsgURI, nsnull, identity);
+	    			rv = pMsgDraft->OpenEditorTemplate(uriToOpen.GetUnicode(), nsnull, identity);
 					break;
 			}
 
@@ -123,17 +127,17 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
 		return rv;
 	}
 
-	args.AppendWithConversion("type=");
+	args.Append((const PRUnichar*) NS_LITERAL_STRING("type=").get());
 	args.AppendInt(type);
 
-	args.AppendWithConversion(",format=");
+	args.Append((const PRUnichar*) NS_LITERAL_STRING(",format=").get());
 	args.AppendInt(format);
 
 	if (identity) {
 		nsXPIDLCString key;
 		rv = identity->GetKey(getter_Copies(key));
 		if (NS_SUCCEEDED(rv) && key && (PL_strlen(key) > 0)) {
-			args.AppendWithConversion(",preselectid=");
+			args.Append((const PRUnichar*) NS_LITERAL_STRING(",preselectid=").get());
 			args.AppendWithConversion(key);
 		}
 	}
@@ -157,18 +161,19 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
         group.Assign(originalMsgURI);
 
 
-			args.AppendWithConversion(",newsgroups=");
+			args.Append((const PRUnichar*) NS_LITERAL_STRING(",newsgroups=").get());
 			args.Append(group);
       if (host.Length() > 0)
       {
-        args.AppendWithConversion(",newshost=");
+        args.Append((const PRUnichar*) NS_LITERAL_STRING(",newshost=").get());
         args.Append(host);
       }
 		}
 		else {
-			args.AppendWithConversion(",originalMsg='");
+			args.Append((const PRUnichar*)
+                  NS_LITERAL_STRING(",originalMsg='").get());
 			args.Append(originalMsgURI);
-			args.AppendWithConversion("'");
+			args.Append((const PRUnichar*) NS_LITERAL_STRING("'").get());
 		}
 	}
 	
@@ -273,23 +278,24 @@ nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const PRUnichar *m
 	nsAutoString args;
 	nsresult rv;
 
-	args.AppendWithConversion("type=");
+	args.Append((const PRUnichar*) NS_LITERAL_STRING("type=").get());
 	args.AppendInt(type);
 
-	args.AppendWithConversion(",format=");
+	args.Append((const PRUnichar*) NS_LITERAL_STRING(",format=").get());
 	args.AppendInt(format);
 	
 	if (compFields)
 	{
 		NS_ADDREF(compFields);
-		args.AppendWithConversion(",fieldsAddr="); args.AppendInt((PRInt32)compFields, 10);
+		args.Append((const PRUnichar*) NS_LITERAL_STRING(",fieldsAddr=").get());
+    args.AppendInt((PRInt32)compFields, 10);
 	}
 
 	if (identity) {
 		nsXPIDLCString key;
 		rv = identity->GetKey(getter_Copies(key));
 		if (NS_SUCCEEDED(rv) && key && (PL_strlen(key) > 0)) {
-			args.AppendWithConversion(",preselectid=");
+			args.Append((const PRUnichar*) NS_LITERAL_STRING(",preselectid=").get());
 			args.AppendWithConversion(key);
 		}
 	}
