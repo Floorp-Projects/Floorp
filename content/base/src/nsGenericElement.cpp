@@ -1808,7 +1808,7 @@ nsGenericElement::GetClasses(nsVoidArray& aArray) const
 }
 
 NS_IMETHODIMP
-nsGenericElement::HasClass(nsIAtom* aClass) const
+nsGenericElement::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -4273,7 +4273,7 @@ nsXULElement::GetClasses(nsVoidArray& aArray) const
 }
 
 NS_IMETHODIMP
-nsXULElement::HasClass(nsIAtom* aClass) const
+nsXULElement::HasClass(nsIAtom* aClass, PRBool /*aCaseSensitive*/) const
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
     if (Attributes()) {

@@ -828,7 +828,7 @@ public:
 
   NS_IMETHOD GetID(nsIAtom*& aResult) const;
   NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
-  NS_IMETHOD HasClass(nsIAtom* aClass) const;
+  NS_IMETHOD HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
 
   NS_IMETHOD Clone(nsIHTMLAttributes** aInstancePtrResult) const;
 
@@ -968,36 +968,10 @@ NS_IMPL_ISUPPORTS1(HTMLAttributesImpl, nsIHTMLAttributes)
 
 const PRUnichar kNullCh = PRUnichar('\0');
 
-static void ParseClasses(const nsAReadableString& aClassString, nsClassList& aClassList, nsIHTMLContent* aContent)
+static void ParseClasses(const nsAReadableString& aClassString, nsClassList& aClassList)
 {
   nsAutoString  classStr(aClassString);  // copy to work buffer
   classStr.Append(kNullCh);  // put an extra null at the end
-
-  // Find out if we're in quirks mode by walking from aContent
-  // to the presContext (null-checking all the way)
-  nsCOMPtr<nsINodeInfo> ni;
-  aContent->GetNodeInfo(*getter_AddRefs(ni));
-  if (ni) {
-    nsCOMPtr<nsIDocument> doc;
-    ni->GetDocument(*getter_AddRefs(doc));
-    if (doc) {
-      nsCOMPtr<nsIPresShell> shell;
-      doc->GetShellAt(0, getter_AddRefs(shell));
-      if (shell) {
-        nsCOMPtr<nsIPresContext> presContext;
-        shell->GetPresContext(getter_AddRefs(presContext));
-        if (presContext) {
-          nsCompatibility mode;
-          presContext->GetCompatibilityMode(&mode);
-          if (mode == eCompatibility_NavQuirks) {
-            // in quirks mode, we uppercase the class attribute and classes in CSS.
-            // (see also nsCSSParser.cpp)
-            classStr.ToUpperCase();
-          }
-        }
-      }
-    }
-  }
 
   PRUnichar* start = (PRUnichar*)(const PRUnichar*)classStr.get();
   PRUnichar* end   = start;
@@ -1163,7 +1137,7 @@ HTMLAttributesImpl::SetAttributeFor(nsIAtom* aAttrName, const nsAReadableString&
   }
   else if (nsHTMLAtoms::kClass == aAttrName) {
     mFirstClass.Reset();
-    ParseClasses(aValue, mFirstClass, aContent);
+    ParseClasses(aValue, mFirstClass);
   }
 
   PRBool  haveAttr;
@@ -1226,7 +1200,7 @@ HTMLAttributesImpl::SetAttributeFor(nsIAtom* aAttrName,
     if (eHTMLUnit_String == aValue.GetUnit()) {
       nsAutoString  buffer;
       aValue.GetStringValue(buffer);
-      ParseClasses(buffer, mFirstClass, aContent);
+      ParseClasses(buffer, mFirstClass);
     }
   }
 
@@ -1399,12 +1373,27 @@ HTMLAttributesImpl::GetClasses(nsVoidArray& aArray) const
 }
 
 NS_IMETHODIMP
-HTMLAttributesImpl::HasClass(nsIAtom* aClass) const
+HTMLAttributesImpl::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
 {
   const nsClassList* classList = &mFirstClass;
   while (classList) {
-    if (classList->mAtom == aClass) {
-      return NS_OK;
+    if (aCaseSensitive) {
+      if (classList->mAtom == aClass) {
+        return NS_OK;
+      }
+    }
+    else {
+      nsAutoString s1;
+      nsAutoString s2;
+      if (classList->mAtom) {
+        classList->mAtom->ToString(s1);
+      }
+      if (aClass) {
+        aClass->ToString(s2);
+      }
+      if (s1.EqualsIgnoreCase(s2)) {
+        return NS_OK;
+      }
     }
     classList = classList->mNext;
   }

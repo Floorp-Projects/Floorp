@@ -2019,10 +2019,10 @@ nsGenericHTMLElement::GetClasses(nsVoidArray& aArray) const
 }
 
 nsresult
-nsGenericHTMLElement::HasClass(nsIAtom* aClass) const
+nsGenericHTMLElement::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
 {
   if (nsnull != mAttributes) {
-    return mAttributes->HasClass(aClass);
+    return mAttributes->HasClass(aClass, aCaseSensitive);
   }
   return NS_COMFALSE;
 }
