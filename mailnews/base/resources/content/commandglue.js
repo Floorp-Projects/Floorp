@@ -856,8 +856,8 @@ function MsgToggleWorkOffline()
 		switch(prefSendUnsentMessages)
 		{	
 			case 0:
-			    window.openDialog("chrome://messenger/content/sendMsgs.xul", "Send Unsent Messages", 
-							      "chrome,modal,titlebar,resizable=no", args);
+			    window.openDialog("chrome://messenger/content/sendMsgs.xul", "sendUnsentMessages", 
+							      "centerscreen,chrome,modal,titlebar,resizable=no", args);
 			    if(args.result == 1) { 
 				    ioService.offline = !ioService.offline;
 				    broadcaster.removeAttribute("offline");
@@ -908,8 +908,8 @@ function MsgToggleWorkOffline()
 		switch(prefDownloadMessages)
 		{	
 		    case 0:
-				window.openDialog("chrome://messenger/content/downloadMsgs.xul", "Download Messages", 
-								  "chrome,modal,titlebar,resizable=no", args);
+				window.openDialog("chrome://messenger/content/downloadMsgs.xul", "downloadMessages", 
+								  "centerscreen,chrome,modal,titlebar,resizable=no", args);
 				if(args.result == 1) { 
 					ioService.offline = !ioService.offline;
 					broadcaster.setAttribute("offline", "true");
