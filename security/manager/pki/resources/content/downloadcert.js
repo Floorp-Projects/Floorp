@@ -24,6 +24,7 @@
 const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 
 var params;
+var caName;
 
 function onLoad()
 {
