@@ -1784,7 +1784,7 @@ void nsImapServerResponseParser::namespace_data()
 							SetSyntaxError(PR_TRUE);
 						}
 					}
-					PR_FREEIF(namespacePrefix);
+					delete [] namespacePrefix;
 				}
 			}
 		}
