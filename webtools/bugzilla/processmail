@@ -191,7 +191,7 @@ sub GetBugText {
     my $status_whiteboard = "";
     if (Param('useqacontact') && $::bug{'qa_contact'} > 0) {
         $::bug{'qa_contact'} = DBID_to_name($::bug{'qa_contact'});
-        $qa_contact = "$::bug{'qa_contact'}\n";
+        $qa_contact = "QAContact: $::bug{'qa_contact'}\n";
     } else {
         $::bug{'qa_contact'} = "";
     }
