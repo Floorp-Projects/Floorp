@@ -114,6 +114,10 @@
     [% title = "Bugs Not Changed" %]
     Um, you apparently did not change anything on the selected bugs.
                         
+  [% ELSIF error == "chart_too_large" %]
+    [% title = "Chart Too Large" %]
+    Sorry, but 2000 x 2000 is the maximum size for a chart.
+                        
   [% ELSIF error == "comment_required" %]
     [% title = "Comment Required" %]
     You have to specify a <b>comment</b> on this change.  
@@ -361,6 +365,10 @@
     [% title = "New Password Missing" %]
     You must enter a new password.
     
+  [% ELSIF error == "no_axes_defined" %]
+    [% title = "No Axes Defined" %]
+    You didn't define any axes to plot.
+
   [% ELSIF error == "no_bugs_chosen" %]
     [% title = "No Bugs Chosen" %]
     You apparently didn't choose any bugs to modify.
@@ -546,11 +554,6 @@
   [% ELSIF error == "value_out_of_range" %]
     [% title = "Value Out Of Range" %]
     Value is out of range for field <em>[% field_descs.$field %]</em>.
-
-  [% ELSIF error == "z_axis_defined_with_no_x_axis" %]
-    [% title = "Nonsensical Options" %]
-    You've defined a field for multiple tables without having defined
-    a horizontal axis for those tables.
 
   [% ELSIF error == "zero_length_file" %]
     [% title = "File Is Empty" %]

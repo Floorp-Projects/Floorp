@@ -32,9 +32,10 @@
 [% PROCESS "search/search-report-select.html.tmpl" %]
 
 <p>
-  Produce a table of bug counts by choosing one or more fields as your axes, 
-  and then refining your set of bugs using the rest of the form. 
+  Produce a pictorial graph of bug counts by choosing one or more fields as 
+  your axes, and then refining your set of bugs using the rest of the form. 
   If you choose a third axis, it will be represented by multiple tables of data.
+  Note: vertical axis settings will be ignored for pie charts.
 </p>
 
 [% button_name = "Generate Report" %]
@@ -43,34 +44,54 @@
 
 <table align="center">
   <tr>
+    <td valign="middle">
+      <b>Vertical Axis:</b><br>
+      [% PROCESS select name = 'y_axis_field' %]<br>
+      <br>
+        <b>Plot Data Sets:</b><br>
+        <input type="radio" name="cumulate" value="0"
+        [% " checked" IF default.cumulate.0 != "1" %]>
+        Individually<br>
+        <input type="radio" name="cumulate" value="1"
+        [% " checked" IF default.cumulate.0 == "1" %]>
+        Added
+        
+    </td>
+    <td width="150px" height="150px">
+      <table border="1" width="100%" height="100%">
+        <tr>
+          <td align="center" valign="middle">
+            <b>Multiple Images:</b><br>
+            [% PROCESS select name = 'z_axis_field' %]
+          </td>
+        </tr>
+      </table>
+    </td>
+    <td rowspan="2">
+      <b>Format:</b><br>
+      [% chart_formats = [
+        { name => "line", description => "Line Graph" },
+        { name => "bar",  description => "Bar Chart" },
+        { name => "pie",  description => "Pie Chart" } ] %]
+      [% default.chart_format.0 = default.chart_format.0 || "bar" %]
+      
+      [% FOREACH chart_format = chart_formats %]
+        <input type="radio" name="format" 
+               value="[% chart_format.name FILTER html %]" 
+          [% " checked" IF default.chart_format.0 == chart_format.name %]>
+          [% chart_format.description FILTER html %]<br>
+      [% END %]
+    </td>
+  </tr>
+  
+  <tr>
     <td>
     </td>
     <td align="center">
       <b>Horizontal Axis:</b>
       [% PROCESS select name = 'x_axis_field' %]
     </td>
-    <td>&nbsp;&nbsp;</td>
-    <td rowspan="2">
-      <b>Format:</b><br>
-      <input type="radio" name="ctype" value="html" checked>HTML<br>
-      <input type="radio" name="ctype" value="csv">CSV
-    </td>
-  </tr>
-  
-  <tr>
-    <td valign="middle" align="center">
-      <b>Vertical Axis:</b><br>
-      [% PROCESS select name = 'y_axis_field' %]
-    </td>
-    <td width="150px" height="150px">
-      <table border="1" width="100%" height="100%">
-        <tr>
-          <td align="center" valign="middle">
-            <b>Multiple Tables:</b><br>
-            [% PROCESS select name = 'z_axis_field' %]
-          </td>
-        </tr>
-      </table>
+    <td>
     </td>
   </tr>
 </table>  
@@ -81,7 +102,6 @@
 
 <br>
 <input type="submit" value="[% button_name %]">
-<input type="hidden" name="format" value="table">
 <input type="hidden" name="action" value="wrap">
 <hr>
 

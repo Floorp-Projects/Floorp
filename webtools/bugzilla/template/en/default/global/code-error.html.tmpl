@@ -119,6 +119,10 @@
     The [% component FILTER html %] component doesn't exist in the 
     [% product FILTER html %] product.
     
+  [% ELSIF error == "invalid_dimensions" %]
+    [% title = "Invalid Dimensions" %]
+    The width or height specified is not a positive integer.
+    
   [% ELSIF error == "mismatched_bug_ids_on_obsolete" %]
     Attachment [% attach_id FILTER html %] ([% description FILTER html %]) 
     is attached to bug [% attach_bug_id FILTER html %], but you tried to 

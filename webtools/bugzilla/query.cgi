@@ -131,7 +131,8 @@ sub PrefillForm {
                       "bug_file_loc_type", "status_whiteboard",
                       "status_whiteboard_type", "bug_id",
                       "bugidtype", "keywords", "keywords_type",
-                      "x_axis_field", "y_axis_field", "z_axis_field") 
+                      "x_axis_field", "y_axis_field", "z_axis_field",
+                      "chart_format", "cumulate") 
     {
         # This is a bit of a hack. The default, empty list has 
         # three entries to accommodate the needs of the email fields -

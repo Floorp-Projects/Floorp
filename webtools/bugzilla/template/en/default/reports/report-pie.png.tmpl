@@ -18,34 +18,18 @@
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
-[%# INTERFACE:
-  # See report-table.html.tmpl.
-  #%]
-[% num_bugs = "Number of bugs" %]
-[% tbl_field_disp = field_descs.$tbl_field || tbl_field %]
+
+[% PROCESS "global/field-descs.html.tmpl" %]
+
 [% col_field_disp = field_descs.$col_field || col_field %]
-[% row_field_disp = field_descs.$row_field || row_field %]
 
-[% "$tbl_field_disp: $tbl\n" FILTER csv IF tbl_field %]
-[% row_field_disp FILTER csv IF row_field %]
-[% " / " IF col_field AND row_field %]
-[% col_field_disp FILTER csv %],
-[% IF col_field -%]
-[% FOREACH col = col_names -%]
-  [% col FILTER csv -%],
-[% END -%]
-[% ELSE -%]
-  [% num_bugs %],
-[% END %]
-
-[% FOREACH row = row_names %]
-  [% row FILTER csv -%],
-  [% FOREACH col = col_names %]
-    [% IF data.$tbl AND data.$tbl.$col AND data.$tbl.$col.$row %]
-      [% data.$tbl.$col.$row -%],
-    [% ELSE %]
-      [% -%]0,
-    [% END %]
-  [% END %]
-
-[% END %]
+[% FILTER null;
+  USE graph = GD.Graph.pie(width, height);
+    
+  graph.set(title       => col_field_disp,
+            pie_height  => 20,
+            start_angle => 180);
+    
+  graph.plot(data.0).png | stdout(1);
+  END;
+-%]

@@ -21,92 +21,51 @@
   #%]
 
 [%# INTERFACE:
-  # querybase: The base query for this table, in URL form
-  # query: The query for this table, in URL form
-  # data: hash of hash of hash of numbers. Bug counts.
-  # names: hash of hash of strings. Names of tables, rows and columns.
+  # buglistbase: The base query for this table, in URL form
   # col_field: string. Name of the field being plotted as columns.
   # row_field: string. Name of the field being plotted as rows.
   # tbl_field: string. Name of the field being plotted as tables.
+  # col_names: array. List of values for the field being plotted as columns.
+  # row_names: array. List of values for the field being plotted as rows.
+  # data: <depends on format>. Data to plot. Only data.$tbl is accessed. 
+  # tbl: Name of a hash in data which is the table to be plotted.
   #%]
 
 [% PROCESS "global/field-descs.html.tmpl" %]
 
-[% tbl_field_disp = field_descs.$tbl_field || tbl_field %]
 [% col_field_disp = field_descs.$col_field || col_field %]
 [% row_field_disp = field_descs.$row_field || row_field %]
-
-[% title = BLOCK %]
-  Report: 
-  [% "$tbl_field_disp / " IF tbl_field %]
-  [% "$col_field_disp / " IF col_field %]
-  [% row_field_disp %]
-[% END %]
-
-[% PROCESS global/header.html.tmpl 
-  style = "
-    .t1     { background-color: #ffffff } /* white       */
-    .t2     { background-color: #dfefff } /* light blue  */
-    .t3     { background-color: #dddddd } /* grey        */
-    .t4     { background-color: #c3d3ed } /* darker blue */
-    .ttotal { background-color: #cfffdf } /* light green */
-  "
-%]
-
-<div align="right">
-  [% time2str("%Y-%m-%d %H:%M:%S", time) %]
-</div>
-
-[% tbl_names = names.tbl.keys.sort %]
-[% col_names = names.col.keys.sort %]
-[% row_names = names.row.keys.sort %]
-
-[% total_name = "Total" %]
-
-[% FOREACH tbl = tbl_names %]
-  [% FOREACH row = row_names %]
-    [% FOREACH col = col_names %]
-      [% data.$tbl.$col.$row  = (data.$tbl.$col.$row || 0) %]
-      
-      [% IF tbl_field %]
-        [%# Calculate values for the Total table %]
-        [% data.$total_name.$col.$row = 
-          (data.$total_name.$col.$row || 0) + data.$tbl.$col.$row %]
-      [% END %]
-    [% END %]
-  [% END %]
-[% END %]
   
-[% IF tbl_field %]
-  [% tbl_names.push(total_name) %]
+[% IF tbl == "-total-" %]
+  [% urlbase = BLOCK %]buglist.cgi?[% buglistbase %][% END %]
+[% ELSE %]
+  [% urlbase = BLOCK %]buglist.cgi?[% buglistbase %]&amp;
+  [% tbl_field FILTER url_quote %]=[% tbl FILTER url_quote %][% END %]
 [% END %]
 
-<div align="center">
-
-[% FOREACH tbl = tbl_names %]
-  <table>
-    [% IF tbl_field %]
-      <tr>
-        <td>
-        </td>
-        <td align="center">
-          <h2>[% tbl FILTER html %]</h2>
-        </td>
-      </tr>
-    [% END %]  
+<table>
+  [% IF tbl_field %]
     <tr>
       <td>
       </td>
-      <td align="center">
-        <strong>[% col_field_disp FILTER html %]</strong>
+      <td align="center">        
+        <h2>[% tbl_disp %]</h2>
       </td>
     </tr>
+  [% END %]  
+  <tr>
+    <td>
+    </td>
+    <td align="center">
+      <strong>[% col_field_disp FILTER html %]</strong>
+    </td>
+  </tr>
 
-    <tr>
-      <td valign="middle">
-        <strong>[% row_field_disp FILTER html %]</strong>
-      </td>
-      <td>
+  <tr>
+    <td valign="middle">
+      <strong>[% row_field_disp FILTER html %]</strong>
+    </td>
+    <td>
 
 
 [% classes = [ [ "t1", "t2" ] , [ "t3", "t4" ] ] %]
@@ -150,8 +109,7 @@
         [% col_idx = 1 - col_idx %]
         <td class="[% classes.$row_idx.$col_idx %]" align="center">
           [% IF data.$tbl.$col.$row AND data.$tbl.$col.$row > 0 %]
-            <a href="buglist.cgi?[% querybase FILTER html %]&amp;
-              [% tbl_field FILTER url_quote %]=[% tbl FILTER url_quote %]&amp;
+            <a href="[% urlbase %]&amp;
               [% row_field FILTER url_quote %]=[% row FILTER url_quote %]&amp;
               [% col_field FILTER url_quote %]=[% col FILTER url_quote %]">
               [% data.$tbl.$col.$row %]</a>
@@ -161,8 +119,7 @@
         </td>
       [% END %] 
       <td class="ttotal" align="right">
-        <a href="buglist.cgi?[% querybase FILTER html %]&amp;
-          [% tbl_field FILTER url_quote %]=[% tbl FILTER url_quote %]&amp;
+        <a href="[% urlbase %]&amp;
           [% row_field FILTER url_quote %]=[% row FILTER url_quote %]">
         [% row_total %]</a>
         [% grand_total = grand_total + row_total %]
@@ -179,8 +136,7 @@
       [% NEXT IF col == "" %]
       
       <td class="ttotal" align="center">
-        <a href="buglist.cgi?[% querybase FILTER html %]&amp;
-          [% tbl_field FILTER url_quote %]=[% tbl FILTER url_quote %]&amp;
+        <a href="[% urlbase %]&amp;
           [% col_field FILTER url_quote %]=[% col FILTER url_quote %]">
         [% col_totals.$col %]</a>
       <strong>
@@ -188,24 +144,13 @@
     [% END %]
     <td class="ttotal" align="right">
       <strong>
-        <a href="buglist.cgi?[% querybase FILTER html %]">[% grand_total %]</a>
+        <a href="buglist.cgi?[% urlbase %]">[% grand_total %]</a>
       </strong>
     </td>
   </tr>
 </table>
       
       
-      </td>
-    </tr>
-  </table>
-    
-  <br>
-
-[% END %]
-  
-  <a href="query.cgi?[% query FILTER html %]&amp;format=report-table">Edit this report</a>
-</div>
-
-<br>
-
-[% PROCESS global/footer.html.tmpl %]
+    </td>
+  </tr>
+</table>    

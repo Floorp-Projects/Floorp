@@ -258,24 +258,37 @@ foreach my $module (@{$modules}) {
 }
 
 print "\nThe following Perl modules are optional:\n" unless $silent;
-my $charts = 0;
-$charts++ if have_vers("GD","1.19");
-$charts++ if have_vers("Chart::Base","0.99");
-my $xmlparser = have_vers("XML::Parser",0);
+my $gd          = have_vers("GD","1.20");
+my $chartbase   = have_vers("Chart::Base","0.99");
+my $xmlparser   = have_vers("XML::Parser",0);
+my $gdgraph     = have_vers("GD::Graph",0);
+my $gdtextalign = have_vers("GD::Text::Align",0);
 
 print "\n" unless $silent;
-if (($charts != 2) && !$silent) {
-    print "If you you want to see graphical bug dependency charts, you may install\n",
-    "the optional libgd and the Perl modules GD-1.19 and Chart::Base-0.99b, e.g. by\n",
-    "running (as root)\n\n",
-    "   perl -MCPAN -e'install \"LDS/GD-1.19.tar.gz\"'\n",
-    "   perl -MCPAN -e'install \"N/NI/NINJAZ/Chart-0.99b.tar.gz\"'\n\n";
+if ((!$gd || !$chartbase) && !$silent) {
+    print "If you you want to see graphical bug charts (plotting historical ";
+    print "data over \ntime), you should install libgd and the following Perl ";     print "modules:\n\n";
+    print "GD:          perl -MCPAN -e'install \"GD\"'\n" if !$gd;
+    print "Chart 0.99b: perl -MCPAN " . 
+          "-e'install \"N/NI/NINJAZ/Chart-0.99b.tar.gz\"'\n" if !$chartbase;
+    print "\n";
 }
 if (!$xmlparser && !$silent) {
     print "If you want to use the bug import/export feature to move bugs to or from\n",
     "other bugzilla installations, you will need to install the XML::Parser module by\n",
-    "running (as root)\n\n",
+    "running (as root):\n\n",
     "   perl -MCPAN -e'install \"XML::Parser\"'\n\n";
+}
+if ((!$gd || !$gdgraph || !$gdtextalign) && !$silent) {
+    print "If you you want to see graphical bug reports (bar, pie and line ";
+    print "charts of \ncurrent data), you should install libgd and the ";
+    print "following Perl modules:\n\n";
+    print "GD:              perl -MCPAN -e'install \"GD\"'\n" if !$gd;
+    print "GD::Graph:       perl -MCPAN " .
+           "-e'install \"GD::Graph\"'\n" if !$gdgraph;
+    print "GD::Text::Align: perl -MCPAN " . 
+           "-e'install \"GD::Text::Align\"'\n" if !$gdtextalign;
+    print "\n";
 }
 if (%missing) {
     print "\n\n";
@@ -580,6 +593,7 @@ $contenttypes = {
    "xml" => "text/xml" , 
     "js" => "application/x-javascript" , 
    "csv" => "text/plain" ,
+   "png" => "image/png" ,
 };
 ');
 
