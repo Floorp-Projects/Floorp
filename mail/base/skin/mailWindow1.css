@@ -301,10 +301,6 @@ treechildren::-moz-tree-image(subjectCol, new) {
   list-style-image: url("chrome://messenger/skin/icons/message-mail-new.png");
 }
 
-treechildren::-moz-tree-image(subjectCol, imapdeleted) {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-imapdelete.png");
-}
-
 treechildren::-moz-tree-image(subjectCol, news) {
   list-style-image: url("chrome://messenger/skin/icons/message-news.png");
 }
@@ -339,6 +335,13 @@ treechildren::-moz-tree-image(subjectCol, replied, forwarded) {
 
 treechildren::-moz-tree-image(subjectCol, replied, forwarded,read) {
   list-style-image: url("chrome://messenger/skin/icons/message-mail-replied-forw-read.png");
+}
+
+/* IMPORTANT: make sure the imap-deleted column always comes after the replied/forwarded style rules.
+   This ensures that we show that the message is marked as deleted over status information. */
+
+treechildren::-moz-tree-image(subjectCol, imapdeleted) {
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-imapdelete.png");
 }
 
 /* ..... new thread icons for watch and ignore ..... */
