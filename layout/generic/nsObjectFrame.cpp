@@ -89,7 +89,8 @@ public:
   NS_IMETHOD CreateWidget(void);
 
   NS_IMETHOD GetURL(const char *aURL, const char *aTarget, void *aPostData, 
-                    PRUint32 aPostDataLen);
+                    PRUint32 aPostDataLen, void *aHeadersData, 
+                    PRUint32 aHeadersDataLen);
 
   NS_IMETHOD ShowStatus(const char *aStatusMsg);
   
@@ -1671,7 +1672,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetInstance(nsIPluginInstance *&aInstance)
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarget, void *aPostData, PRUint32 aPostDataLen)
+NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarget, void *aPostData, PRUint32 aPostDataLen, void *aHeadersData, 
+                    PRUint32 aHeadersDataLen)
 {
   nsISupports     *container;
   nsILinkHandler  *lh;
@@ -1710,6 +1712,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
             mOwner->GetContent(&content);
             nsCOMPtr<nsISupports> result = nsnull;
             nsCOMPtr<nsIInputStream> postDataStream = nsnull;
+            nsCOMPtr<nsIInputStream> headersDataStream = nsnull;
             if (aPostData) {
               NS_NewByteInputStream(getter_AddRefs(result),
                                     (const char *) aPostData, aPostDataLen);
@@ -1717,18 +1720,17 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
                 postDataStream = do_QueryInterface(result, &rv);
               }
             }
-            if (postDataStream) {
-              rv = lh->OnLinkClick(content, eLinkVerb_Replace, 
-                                   fullurl.GetUnicode(), 
-                                   unitarget.GetUnicode(), 
-                                   postDataStream);
+            if (aHeadersData) {
+              NS_NewByteInputStream(getter_AddRefs(result),
+                                    (const char *) aHeadersData, aHeadersDataLen);
+              if (result) {
+                headersDataStream = do_QueryInterface(result, &rv);
+              }
             }
-            else {
-              rv = lh->OnLinkClick(content, eLinkVerb_Replace, 
-                                   fullurl.GetUnicode(), 
-                                   unitarget.GetUnicode(), 
-                                   nsnull);
-            }
+            rv = lh->OnLinkClick(content, eLinkVerb_Replace, 
+                                 fullurl.GetUnicode(), 
+                                 unitarget.GetUnicode(), 
+                                 postDataStream, headersDataStream);
             NS_IF_RELEASE(content);
           }
           NS_RELEASE(lh);

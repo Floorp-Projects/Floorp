@@ -88,7 +88,8 @@ public:
                          nsLinkVerb aVerb,
                          const PRUnichar* aURLSpec,
                          const PRUnichar* aTargetSpec,
-                         nsIInputStream* aPostDataStream = 0);
+                         nsIInputStream* aPostDataStream = 0,
+			 nsIInputStream* aHeadersDataStream = 0);
   NS_IMETHOD OnOverLink(nsIContent* aContent,
                         const PRUnichar* aURLSpec,
                         const PRUnichar* aTargetSpec);
@@ -111,7 +112,8 @@ public:
                             nsLinkVerb aVerb,
                             const PRUnichar* aURLSpec,
                             const PRUnichar* aTargetSpec,
-                            nsIInputStream* aPostDataStream = 0);
+                            nsIInputStream* aPostDataStream = 0,
+			    nsIInputStream* aHeadersDataStream = 0);
 
   static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 

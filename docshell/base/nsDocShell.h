@@ -173,12 +173,14 @@ protected:
 
 #ifdef SH_IN_FRAMES
    NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI, 
-      nsISupports* owner, PRBool inheritOwnerFromDocument, const char* aWindowTarget=nsnull, 
-      nsIInputStream* aPostData=nsnull, nsDocShellInfoLoadType aLoadType=nsIDocShellLoadInfo::loadNormal, nsISHEntry * aSHEntry = nsnull);
+      nsISupports* owner, PRBool inheritOwnerFromDocument, 
+      const char* aWindowTarget=nsnull, 
+      nsIInputStream* aPostData=nsnull, nsIInputStream* aHeadersData=nsnull, nsDocShellInfoLoadType aLoadType=nsIDocShellLoadInfo::loadNormal, nsISHEntry * aSHEntry = nsnull);
 #else
    NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI, 
-      nsISupports* owner, PRBool inheritOwnerFromDocument, const char* aWindowTarget=nsnull, 
-      nsIInputStream* aPostData=nsnull, nsDocShellInfoLoadType aLoadType=nsIDocShellLoadInfo::loadNormal);
+      nsISupports* owner, PRBool inheritOwnerFromDocument,
+      const char* aWindowTarget=nsnull, 
+      nsIInputStream* aPostData=nsnull, nsIInputStream* aHeadersData=nsnull, nsDocShellInfoLoadType aLoadType=nsIDocShellLoadInfo::loadNormal);
 #endif
 
    NS_IMETHOD CreateFixupURI(const PRUnichar* aStringURI, nsIURI** aURI);
@@ -188,8 +190,11 @@ protected:
    NS_IMETHOD KeywordURIFixup(const PRUnichar* aStringURI, nsIURI** aURI);
    NS_IMETHOD GetCurrentDocumentOwner(nsISupports** aOwner);
    NS_IMETHOD DoURILoad(nsIURI* aURI, nsIURI* aReferrer, nsISupports *aOwner,
-      PRBool inheritOwnerFromDocument, nsURILoadCommand aLoadCmd, const char* aWindowTarget, 
-      nsIInputStream* aPostData);
+      PRBool inheritOwnerFromDocument, nsURILoadCommand aLoadCmd, 
+      const char* aWindowTarget, 
+      nsIInputStream* aPostData, nsIInputStream* aHeadersData);
+   NS_IMETHOD AddHeadersToChannel(nsIInputStream *aHeadersData, 
+                                  nsIChannel *aChannel);
    NS_IMETHOD DoChannelLoad(nsIChannel* aChannel, nsURILoadCommand aLoadCmd,
       const char* aWindowTarget, nsIURILoader *aURILoader);
    NS_IMETHOD ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor);
@@ -291,6 +296,7 @@ protected:
    nsIDocShellTreeItem*       mParent;  // Weak Reference
    nsIDocShellTreeOwner*      mTreeOwner; // Weak Reference
    nsIChromeEventHandler*     mChromeEventHandler; //Weak Reference
+
 };
 
 #endif /* nsDocShell_h__ */
