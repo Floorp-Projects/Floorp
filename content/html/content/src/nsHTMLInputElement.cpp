@@ -366,6 +366,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Disabled, disabled)
 NS_IMPL_INT_ATTR(nsHTMLInputElement, MaxLength, maxlength)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Name, name)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, ReadOnly, readonly)
+NS_IMPL_STRING_ATTR(nsHTMLInputElement, Size, size)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Src, src)
 NS_IMPL_INT_ATTR(nsHTMLInputElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
@@ -417,29 +418,6 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
   }
   // Treat value == defaultValue for other input elements
   return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue); 
-}
-
-NS_IMETHODIMP 
-nsHTMLInputElement::SetSize(const nsAReadableString& aValue)
-{
-
-  nsresult rv = mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::size, aValue, PR_TRUE);
-
-  PRInt32 type;
-  GetType(&type);
-  if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type || NS_FORM_INPUT_FILE == type) {
-    if (mInner.mDocument) {
-      mInner.mDocument->AttributeChanged(this, kNameSpaceID_HTML, nsHTMLAtoms::size, NS_STYLE_HINT_REFLOW);
-    }
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP 
-nsHTMLInputElement::GetSize(nsAWritableString& aValue)
-{
-  return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::size, aValue); 
 }
 
 NS_IMETHODIMP 
