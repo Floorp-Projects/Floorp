@@ -24,6 +24,7 @@
 
 #include "nsISupports.h"
 struct nsSize;
+class imgIRequest;
 
 // {B261A0D5-E696-11d4-9885-00C04FA0CF4B}
 #define NS_IIMAGEFRAME_IID \
@@ -37,6 +38,8 @@ public:
 
   NS_IMETHOD GetNaturalImageSize(PRUint32* naturalWidth, 
                                  PRUint32 *naturalHeight) = 0;
+
+  NS_IMETHOD GetImageRequest(imgIRequest **aRequest) = 0;
 
   NS_IMETHOD IsImageComplete(PRBool* aComplete) = 0;
 };

@@ -1440,6 +1440,14 @@ nsImageFrame::GetNaturalImageSize(PRUint32 *naturalWidth,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsImageFrame::GetImageRequest(imgIRequest **aRequest)
+{
+  *aRequest = mImageRequest;
+  NS_IF_ADDREF(*aRequest);
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsImageFrame::IsImageComplete(PRBool* aComplete)
 {
