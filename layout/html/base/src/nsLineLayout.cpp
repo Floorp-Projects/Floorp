@@ -2144,6 +2144,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   spanFrame->GetPrevInFlow(&spanPrevInFlow);
   PRBool emptyContinuation = spanPrevInFlow && !spanNextInFlow &&
     (0 == spanFramePFD->mBounds.width) && (0 == spanFramePFD->mBounds.height);
+  NS_ASSERTION(!emptyContinuation,
+               "we shouldn't have empty continuations anymore");
 
 #ifdef NOISY_VERTICAL_ALIGN
   printf("[%sSpan]", (psd == mRootSpan)?"Root":"");
@@ -2219,24 +2221,18 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // mode) we don't want big line heights for things like
     // <p><font size="-1">Text</font></p>
 
-    // Don't include any initial whitespace, unless we're preformatted.
-    // See bug 134580.
-    PRUint32 flag = preMode ? PFD_ISTEXTFRAME : PFD_ISNONWHITESPACETEXTFRAME;
+    // We shouldn't include any whitespace that collapses, unless we're
+    // preformatted (in which case it shouldn't, but the width=0 test is
+    // perhaps incorrect).  This includes whitespace at the beginning of
+    // a line and whitespace preceded (?) by other whitespace.
+    // See bug 134580 and bug 155333.
     zeroEffectiveSpanBox = PR_TRUE;
     for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
-      if (pfd->GetFlag(flag)) {
+      if (pfd->GetFlag(PFD_ISTEXTFRAME) &&
+          (pfd->GetFlag(PFD_ISNONWHITESPACETEXTFRAME) || preMode ||
+           pfd->mBounds.width != 0)) {
         zeroEffectiveSpanBox = PR_FALSE;
         break;
-      }
-      // The line could begin with multiple all-whitespace text frames,
-      // and we need to ignore all of them, including those contained
-      // within other inline frames.
-      if (flag != PFD_ISTEXTFRAME) {
-        PRBool empty;
-        pfd->mFrame->IsEmpty(mCompatMode, preMode, &empty);
-        if (!empty) {
-          flag = PFD_ISTEXTFRAME;
-        }
       }
     }
   }
