@@ -48,6 +48,7 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMText.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsITextContent.h"
 #include "nsRange.h"
 #include "nsIEventListenerManager.h"
 #include "nsILinkHandler.h"
@@ -297,6 +298,48 @@ nsNode3Tearoff::GetTextContent(nsIDocument *aDocument,
 NS_IMETHODIMP
 nsNode3Tearoff::SetTextContent(const nsAString &aTextContent)
 {
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
+  NS_ASSERTION(node, "We have an nsIContent which doesn't support nsIDOMNode");
+
+  PRUint16 nodeType;
+  node->GetNodeType(&nodeType);
+  if (nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE ||
+      nodeType == nsIDOMNode::NOTATION_NODE) {
+    return NS_OK;
+  }
+
+  if (nodeType == nsIDOMNode::TEXT_NODE ||
+      nodeType == nsIDOMNode::CDATA_SECTION_NODE ||
+      nodeType == nsIDOMNode::COMMENT_NODE ||
+      nodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE) {
+    return node->SetNodeValue(aTextContent);
+  }
+
+  return SetTextContent(mContent, aTextContent);
+}
+
+// static
+nsresult
+nsNode3Tearoff::SetTextContent(nsIContent* aContent,
+                               const nsAString &aTextContent)
+{
+  PRInt32 childCount = 0;
+  aContent->ChildCount(childCount);
+
+  for (PRInt32 i = childCount - 1; i >= 0; --i) {
+    aContent->RemoveChildAt(i, PR_TRUE);
+  }
+
+  nsCOMPtr<nsITextContent> textContent;
+  NS_NewTextNode(getter_AddRefs(textContent));
+  if (!textContent) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  textContent->SetText(aTextContent, PR_TRUE);
+
+  aContent->AppendChildTo(textContent, PR_TRUE, PR_FALSE);
+
   return NS_OK;
 }
 

@@ -533,6 +533,6 @@ nsDocumentFragment::GetTextContent(nsAString &aTextContent)
 NS_IMETHODIMP
 nsDocumentFragment::SetTextContent(const nsAString& aTextContent)
 {
-  return NS_OK;
+  return nsNode3Tearoff::SetTextContent(this, aTextContent);
 }
 

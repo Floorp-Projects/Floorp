@@ -243,6 +243,9 @@ public:
                                  nsIDOMNode *aNode,
                                  nsAString &aTextContent);
 
+  static nsresult SetTextContent(nsIContent *aContent,
+                                 const nsAString &aTextContent);
+
 protected:
   virtual ~nsNode3Tearoff() {};
 
