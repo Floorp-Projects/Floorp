@@ -58,13 +58,13 @@
   <command id="Tasks:Calendar" oncommand="openCalendar();"/>
 </commandset>
 
-<menupopup id="taskPopup">
+<menupopup id="windowPopup">
   <menuitem
-        position="3"
         label="&calendarCmd.label;"
         accesskey="&calendarCmd.accesskey;"
         key="key_calendar"
-        command="Tasks:Calendar"/>
+        command="Tasks:Calendar"
+        insertafter="tasksMenuNavigator"/>
 </menupopup>
 
 <statusbarpanel id="component-bar">
