@@ -514,7 +514,7 @@ function grabAll(elem)
   }
   else if (elem instanceof nsIImageElement)
   {
-    imageView.addRow([getAbsoluteURL(elem.src, elem), gStrings.mediaImg, (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem]);
+    imageView.addRow([getAbsoluteURL(elem.src, elem), gStrings.mediaImg, (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem, false]);
   }
   else if (elem instanceof nsIAreaElement)
   {
@@ -526,7 +526,7 @@ function grabAll(elem)
     {
       var rel = elem.rel;
       if (/\bicon\b/i.test(rel))
-        imageView.addRow([getAbsoluteURL(elem.href, elem), gStrings.mediaLink, "", elem]);
+        imageView.addRow([getAbsoluteURL(elem.href, elem), gStrings.mediaLink, "", elem, false]);
       else if (/\bstylesheet\b/i.test(rel))
         linkView.addRow([elem.rel, getAbsoluteURL(elem.href, elem), gStrings.linkStylesheet, elem.target]);
       else
@@ -539,7 +539,7 @@ function grabAll(elem)
   else if (elem instanceof nsIInputElement)
   {
     if (/^image$/i.test(elem.type))
-      imageView.addRow([getAbsoluteURL(elem.src, elem), gStrings.mediaInput, (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem]);
+      imageView.addRow([getAbsoluteURL(elem.src, elem), gStrings.mediaInput, (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem, false]);
     else if (/^submit$/i.test(elem.type))
       linkView.addRow([elem.value || gStrings.linkSubmit, getAbsoluteURL(elem.form.getAttribute("action"), elem), gStrings.linkSubmission, elem.form.getAttribute("target")]); // use getAttribute() due to bug 122128
   }
@@ -554,15 +554,15 @@ function grabAll(elem)
     // content from two hosts (bug 136539) so just drop applets from Page Info when
     // Java is on. For the 1.0.1 branch; get a real fix on the trunk.
     if (!navigator.javaEnabled())
-      imageView.addRow([getAbsoluteURL(elem.code || elem.object, elem), gStrings.mediaApplet, "", elem]);
+      imageView.addRow([getAbsoluteURL(elem.code || elem.object, elem), gStrings.mediaApplet, "", elem, false]);
   }
   else if (elem instanceof nsIObjectElement)
   {
-    imageView.addRow([getAbsoluteURL(elem.data, elem), gStrings.mediaObject, getValueText(elem), elem]);
+    imageView.addRow([getAbsoluteURL(elem.data, elem), gStrings.mediaObject, getValueText(elem), elem, false]);
   }
   else if (elem instanceof nsIEmbedElement)
   {
-    imageView.addRow([getAbsoluteURL(elem.src, elem), gStrings.mediaEmbed, "", elem]);
+    imageView.addRow([getAbsoluteURL(elem.src, elem), gStrings.mediaEmbed, "", elem, false]);
   }
   else
     if (elem.hasAttributeNS(XLinkNS, "href"))
@@ -909,11 +909,11 @@ function makePreview(row)
 
   if (width != physWidth || height != physHeight)
   {
-    document.getElementById("physSize").hidden = "false";
+    document.getElementById("physSize").removeAttribute("hidden");
     document.getElementById("physSize").value = theBundle.getFormattedString("mediaPhysSize", [physWidth, physHeight]);
   }
   else
-    document.getElementById("physSize").hidden = "true";
+    document.getElementById("physSize").setAttribute("hidden", "true");
 
 
   imageContainer.removeChild(oldImage);
