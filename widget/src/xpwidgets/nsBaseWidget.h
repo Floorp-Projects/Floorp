@@ -77,6 +77,9 @@ public:
     NS_IMETHOD              UpdateTooltips(nsRect* aNewTips[]);
     NS_IMETHOD              AddMouseListener(nsIMouseListener * aListener);
     NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
+    NS_IMETHOD              GetBounds(nsRect &aRect) = 0;
+    NS_IMETHOD              GetClientBounds(nsRect &aRect);
+    NS_IMETHOD              GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
     virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
 protected:
 

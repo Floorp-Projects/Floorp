@@ -70,8 +70,12 @@ struct nsGUIEvent : public nsEvent {
  */
 
 struct nsSizeEvent : public nsGUIEvent {
-                /// x,y width, height in pixels
+                /// x,y width, height in pixels (client area)
     nsRect          *windowSize;    
+                /// width of entire window (in pixels)
+    PRInt32         mWinWidth;    
+                /// height of entire window (in pixels)
+    PRInt32         mWinHeight;    
 };
 
 /**

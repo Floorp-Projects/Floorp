@@ -98,6 +98,7 @@ public:
     NS_IMETHOD              Enable(PRBool bState);
     NS_IMETHOD              SetFocus(void);
     NS_IMETHOD              GetBounds(nsRect &aRect);
+    NS_IMETHOD              GetClientBounds(nsRect &aRect);
     NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
     virtual nsIFontMetrics* GetFont(void);
     NS_IMETHOD              SetFont(const nsFont &aFont);
@@ -182,6 +183,7 @@ protected:
     HPALETTE    mPalette;
     WNDPROC     mPrevWndProc;
   
+    PRBool      mHas3DBorder;
     HBRUSH      mBrush;
     PRBool      mIsShiftDown;
     PRBool      mIsControlDown;
