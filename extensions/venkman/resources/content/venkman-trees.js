@@ -133,8 +133,8 @@ function initOutliners()
     console.breakpoints.reserveChildren();
     console.projectView.childData.appendChild (console.breakpoints);
 
-    BLRecord.prototype.property = console.projectView.atomBreakpoint;
-    BPRecord.prototype.property = console.projectView.atomBLItem;
+    BPRecord.prototype.property = console.projectView.atomBreakpoint;
+    BLRecord.prototype.property = console.projectView.atomBLItem;
     
 }
 
