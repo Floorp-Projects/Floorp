@@ -146,6 +146,7 @@ private:
     int FindSection(char *aSection, char **aOutSecPtr);
     int FindKey(char *aSecPtr, char *aKey, char **aOutSecPtr);
     int GetValue(char *aSecPtr, char *aKey, char *aVal, int *aIOValSize);
+    int GetAllKeys(char *aSecPtr, char *aVal, int *aIOValSize);
 
     char    *mFileBuf;
     char    *mFilename;

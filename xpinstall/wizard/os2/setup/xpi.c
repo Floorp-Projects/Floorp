@@ -62,11 +62,11 @@ HRESULT InitializeXPIStub()
 {
   char szBuf[MAX_BUF];
   char szXPIStubFile[MAX_BUF];
-  char szEGetProcAddress[MAX_BUF];
+  char szEDosQueryProcAddr[MAX_BUF];
 
   hXPIStubInst = NULL;
 
-  if(!GetPrivateProfileString("Messages", "ERROR_GETPROCADDRESS", "", szEGetProcAddress, sizeof(szEGetProcAddress), szFileIniInstall))
+  if(!GetPrivateProfileString("Messages", "ERROR_DOSQUERYPROCADDR", "", szEDosQueryProcAddr, sizeof(szEDosQueryProcAddr), szFileIniInstall))
     return(1);
 
   /* change current directory to where xpistub.dll */
@@ -96,19 +96,19 @@ HRESULT InitializeXPIStub()
   }
   if(DosQueryProcAddr(hXPIStubInst, 0, "XPI_Init", &pfnXpiInit) != NO_ERROR)
   {
-    sprintf(szBuf, szEGetProcAddress, "XPI_Init");
+    sprintf(szBuf, szEDosQueryProcAddr, "XPI_Init");
     PrintError(szBuf, ERROR_CODE_SHOW);
     return(1);
   }
   if(DosQueryProcAddr(hXPIStubInst, 0, "XPI_Install", &pfnXpiInstall) != NO_ERROR)
   {
-    sprintf(szBuf, szEGetProcAddress, "XPI_Install");
+    sprintf(szBuf, szEDosQueryProcAddr, "XPI_Install");
     PrintError(szBuf, ERROR_CODE_SHOW);
     return(1);
   }
   if(DosQueryProcAddr(hXPIStubInst, 0, "XPI_Exit", &pfnXpiExit) != NO_ERROR)
   {
-    sprintf(szBuf, szEGetProcAddress, "XPI_Exit");
+    sprintf(szBuf, szEDosQueryProcAddr, "XPI_Exit");
     PrintError(szBuf, ERROR_CODE_SHOW);
     return(1);
   }

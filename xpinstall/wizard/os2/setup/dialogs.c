@@ -786,7 +786,7 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
             }
             else
             {
-              break;
+              return (MRESULT)TRUE;
             }
           }
 

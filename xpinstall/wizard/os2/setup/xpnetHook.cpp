@@ -1257,6 +1257,8 @@ CenterWindow(HWND hWndDlg)
 MRESULT EXPENTRY
 DownloadDlgProc(HWND hWndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
+  PSWP pswp;
+
   switch (msg)
   {
     case WM_INITDLG:
@@ -1289,24 +1291,24 @@ DownloadDlgProc(HWND hWndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
       WinSetDlgItemText(hWndDlg, IDRESUME, sgInstallGui.szResume_);
       break;
 
-#ifdef OLDCODE
-    case WM_SIZE:
-      switch(wParam)
-      {
-        case SIZE_MINIMIZED:
-          SetMinimizedDownloadTitle((int)GetPercentSoFar());
-          gbDlgDownloadMinimized = TRUE;
-          gbDlgDownloadJustMinimized = TRUE;
-          break;
-
-        case SIZE_RESTORED:
-          SetStatusUrl();
-          SetRestoredDownloadTitle();
-          gbDlgDownloadMinimized = FALSE;
-          break;
+    case WM_ADJUSTWINDOWPOS:
+      pswp = (PSWP)mp1;
+      if (pswp->fl & SWP_MINIMIZE) {
+        SetMinimizedDownloadTitle((int)GetPercentSoFar());
+        gbDlgDownloadMinimized = TRUE;
+        gbDlgDownloadJustMinimized = TRUE;
       }
-      return(FALSE);
-#endif
+      if (pswp->fl & SWP_RESTORE) {
+        SetStatusUrl();
+        SetRestoredDownloadTitle();
+        gbDlgDownloadMinimized = FALSE;
+      }
+      break;
+
+   case WM_CLOSE:
+      if(AskCancelDlg(hWndDlg))
+        gdwDownloadDialogStatus = CS_CANCEL;
+      return (MRESULT)TRUE;
 
     case WM_COMMAND:
       switch ( SHORT1FROMMP( mp1 ) )

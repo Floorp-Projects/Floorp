@@ -145,7 +145,7 @@ nsINIParser::GetString( char *aSection, char *aKey,
     DUMP("GetString");
 
     /* param check */
-    if ( !aSection || !aKey || !aValBuf || 
+    if ( !aSection || !aValBuf || 
          !aIOValBufSize || (*aIOValBufSize <= 0) )
         return E_PARAM;
 
@@ -154,8 +154,13 @@ nsINIParser::GetString( char *aSection, char *aKey,
     if (mError != OK)
         return mError;
 
-    /* find the key if it exists in the valid section we found */
-    mError = GetValue(secPtr, aKey, aValBuf, aIOValBufSize);
+    if (aKey) {
+        /* find the key if it exists in the valid section we found */
+        mError = GetValue(secPtr, aKey, aValBuf, aIOValBufSize);
+    } else {
+        mError = GetAllKeys(secPtr, aValBuf, aIOValBufSize);
+    }
+
 
     return mError;
 }
@@ -440,6 +445,82 @@ find_end:
     }
 
     return mError;
+}
+
+int
+nsINIParser::GetAllKeys(char *aSecPtr, char *aVal, int *aIOValSize)
+{
+    char *nextNL = NULL;
+    char *secEnd = NULL;
+    char *currLine = aSecPtr;
+    char *nextEq = NULL;
+    char *outPtr = NULL;
+    mError = E_NO_KEY;
+    DUMP("FindKey");
+
+    // param check
+    if (!aSecPtr || !aVal || !aIOValSize || (*aIOValSize <= 0))
+    {
+        mError = E_PARAM;
+        return mError;
+    }
+
+    // determine the section end
+    secEnd = aSecPtr;
+find_end:
+    if (secEnd)
+        secEnd = strchr(secEnd, '['); // search for next sec start
+    if (!secEnd)
+    {
+        secEnd = strchr(aSecPtr, '\0'); // else search for file end
+        if (!secEnd)
+        {
+            mError = E_SEC_CORRUPT; // else this data is corrupt
+            return mError;
+        }
+    }
+
+    // handle start section token ('[') in values for i18n
+    if (*secEnd == '[' && !(secEnd == aSecPtr || *(secEnd-1) == NL))
+    {
+        secEnd++;
+        goto find_end;
+    }
+
+    outPtr = aVal;
+
+    while (currLine < secEnd)
+    {
+        nextNL = NULL;
+        nextNL = strchr(currLine, NL);
+        if (!nextNL)
+            nextNL = mFileBuf + mFileBufSize;
+
+        // ignore commented lines (starting with ;)
+        if (currLine == strchr(currLine, ';'))
+        {
+            currLine = nextNL + 1;
+            continue;
+        }
+
+        // extract key before '='
+        nextEq = NULL;
+        nextEq = strchr(currLine, '=');
+        if (!nextEq || nextEq > nextNL) 
+        {
+            currLine = nextNL + 1;
+            continue;
+        }
+
+        strncpy(aVal, currLine, nextEq-currLine);
+        aVal+= nextEq-currLine;
+        *aVal = \0;
+        aVal++;
+
+        currLine = nextNL + 1;
+    }
+
+    return OK;
 }
 
 int

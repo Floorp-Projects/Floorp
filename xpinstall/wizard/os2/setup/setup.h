@@ -478,8 +478,6 @@ typedef struct dlgInstall
     char szTo[MAX_BUF];
     char szAccept_[MAX_BUF];
     char szDecline_[MAX_BUF];
-    char szProgramFolder_[MAX_BUF];
-    char szExistingFolder_[MAX_BUF];
     char szSetupMessage[MAX_BUF];
     char szYesRestart[MAX_BUF];
     char szNoRestart[MAX_BUF];
