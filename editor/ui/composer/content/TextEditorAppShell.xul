@@ -113,7 +113,7 @@
 
 <toolbox id="EditorToolbox">
    <!-- toolbar filled out from editorOverlay -->
-  <toolbar id="EditToolbar" class="standard chromeclass-toolbar" persist="collapsed">
+  <toolbar class="toolbar-primary chromeclass-toolbar" id="EditToolbar" persist="collapsed">
       <button id="newButton"/>
       <button id="openButton"/>
       <button id="saveButton"/>
