@@ -49,7 +49,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="console.onLoad();" onunload="console.onUnload();"
   persist="width height screenX screenY" title="&vkm.MainWindow.title;"
-  windowtype="mozapp:venkman">
+  onkeypress="console.onWindowKeyPress(event)" windowtype="mozapp:venkman">
 
   <script>
     <![CDATA[
