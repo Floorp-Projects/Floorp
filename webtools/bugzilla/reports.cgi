@@ -648,7 +648,11 @@ FIN
                 print "<TR><TD>\n";
                 SendSQL("select login_name from profiles where userid=$person");
                 my $login_name= FetchSQLData();
-                print("<A HREF=\"buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&target_milestone=$ms&assigned_to=$login_name\">\n");
+                print("<A HREF=\"buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&target_milestone=$ms&assigned_to=$login_name");
+		if( $::FORM{'product'} ne "-All-" ) {
+		    print "&product=" . url_quote($::FORM{'product'});
+		}
+		print("\">\n");
                 print("$bugsperperson{$person}  bugs and features");
                 print("</A>");
                 print(" for \n");
