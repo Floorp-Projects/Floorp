@@ -374,10 +374,8 @@ void nsMsgMailboxParser::UpdateDBFolderInfo()
 // update folder info in db so we know not to reparse.
 void nsMsgMailboxParser::UpdateDBFolderInfo(nsIMsgDatabase *mailDB)
 {
-	// ### wrong - use method on db.
 	mailDB->SetSummaryValid(PR_TRUE);
 	mailDB->Commit(nsMsgDBCommitType::kLargeCommit);
-//	m_mailDB->Close();
 }
 
 // By default, do nothing
@@ -388,38 +386,38 @@ void nsMsgMailboxParser::FolderTypeSpecificTweakMsgHeader(nsIMsgDBHdr * /* tweak
 // Tell the world about the message header (add to db, and view, if any)
 PRInt32 nsMsgMailboxParser::PublishMsgHeader(nsIMsgWindow *msgWindow)
 {
-	FinishHeader();
-	if (m_newMsgHdr)
-	{
-		FolderTypeSpecificTweakMsgHeader(m_newMsgHdr);
-
-		PRUint32 flags;
-        (void)m_newMsgHdr->GetFlags(&flags);
-		if (flags & MSG_FLAG_EXPUNGED)
-		{
-			nsCOMPtr<nsIDBFolderInfo> folderInfo;
-			m_mailDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
-            PRUint32 size;
-            (void)m_newMsgHdr->GetMessageSize(&size);
-            folderInfo->ChangeExpungedBytes(size);
-			m_newMsgHdr = nsnull;
-		}
-		else if (m_mailDB)
-		{
-			m_mailDB->AddNewHdrToDB(m_newMsgHdr, PR_TRUE);
-			m_newMsgHdr = nsnull;
-		}
-		else
-			NS_ASSERTION(PR_FALSE, "no database while parsing local folder");	// should have a DB, no?
-	}
-	else if (m_mailDB)
-	{
-		nsCOMPtr<nsIDBFolderInfo> folderInfo;
-		m_mailDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
-		if (folderInfo)
-			folderInfo->ChangeExpungedBytes(m_position - m_envelope_pos);
-	}
-	return 0;
+  FinishHeader();
+  if (m_newMsgHdr)
+  {
+    FolderTypeSpecificTweakMsgHeader(m_newMsgHdr);
+    
+    PRUint32 flags;
+    (void)m_newMsgHdr->GetFlags(&flags);
+    if (flags & MSG_FLAG_EXPUNGED)
+    {
+      nsCOMPtr<nsIDBFolderInfo> folderInfo;
+      m_mailDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
+      PRUint32 size;
+      (void)m_newMsgHdr->GetMessageSize(&size);
+      folderInfo->ChangeExpungedBytes(size);
+      m_newMsgHdr = nsnull;
+    }
+    else if (m_mailDB)
+    {
+      m_mailDB->AddNewHdrToDB(m_newMsgHdr, PR_TRUE);
+      m_newMsgHdr = nsnull;
+    }
+    else
+      NS_ASSERTION(PR_FALSE, "no database while parsing local folder");	// should have a DB, no?
+  }
+  else if (m_mailDB)
+  {
+    nsCOMPtr<nsIDBFolderInfo> folderInfo;
+    m_mailDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
+    if (folderInfo)
+      folderInfo->ChangeExpungedBytes(m_position - m_envelope_pos);
+  }
+  return 0;
 }
 
 void nsMsgMailboxParser::AbortNewHeader()
