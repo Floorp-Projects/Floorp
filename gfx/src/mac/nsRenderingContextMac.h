@@ -36,7 +36,7 @@
 #include "nsIRegion.h"
 #include "nsDeviceContextMac.h"
 
-class GraphicsState;
+class GraphicState;
 
 typedef GrafPtr nsDrawingSurfaceMac;
 
@@ -102,7 +102,7 @@ public:
   NS_IMETHOD GetWidth(const char *aString, nscoord &aWidth);
   NS_IMETHOD GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth);
   NS_IMETHOD GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth);
- 	NS_IMETHOD DrawString(const char *aString, PRUint32 aLength,nscoord aX, nscoord aY,nscoord aWidth, const nscoord* aSpacing);
+  NS_IMETHOD DrawString(const char *aString, PRUint32 aLength,nscoord aX, nscoord aY,nscoord aWidth, const nscoord* aSpacing);
   NS_IMETHOD DrawString(const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY,nscoord aWidth, const nscoord* aSpacing);
   NS_IMETHOD DrawString(const nsString& aString, nscoord aX, nscoord aY,nscoord aWidth, const nscoord* aSpacing);
   NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY);
@@ -117,7 +117,8 @@ public:
   NS_IMETHOD SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
 
 protected:
-  GrafPtr mOldPort;
+  GrafPtr		mOldPort;
+
   inline void	StartDraw()
   				{
 					::GetPort(&mOldPort);
@@ -130,46 +131,20 @@ protected:
   				}
 	
 protected:
-  float             		mP2T; // Pixel to Twip conversion factor
-  
-  GraphicsState *           mCurStatePtr;      // Pointer to the current state, top of stack
-  
-  nsDrawingSurfaceMac       mOriginalSurface;
-  
-  nsIDeviceContext			*mContext;
-  
-  nsDrawingSurfaceMac		mFrontBuffer;      // screen port
-  nsDrawingSurfaceMac		mCurrentBuffer;    // current buffer to draw into (= mCurStatePtr->mRenderingSurface)
-  
-  // cps - Wierd hack
-  Rect						mMacScreenPortRelativeRect;
-  
-  /*
-  nscolor                   mCurrentColor;
-  nsTransform2D		  		*mTMatrix;         // transform that all the graphics drawn here will obey
-  
-  nsDrawingSurfaceMac		mRenderingSurface; // main drawing surface,Can be a BackBuffer if Selected in
+	float             		mP2T; 				// Pixel to Twip conversion factor
+	nsIDeviceContext *		mContext;
 
+	nsDrawingSurfaceMac		mOriginalSurface;
+	nsDrawingSurfaceMac		mFrontBuffer;		// screen port
+	nsDrawingSurfaceMac		mBackBuffer;		// offscreen port
+	nsDrawingSurfaceMac		mCurrentBuffer;		// current buffer to draw into (= mGS->mRenderingSurface)
   
-  nsDrawingSurfaceMac		mRenderingSurface; // main drawing surface,Can be a BackBuffer if Selected in
-  
-  nsIFontMetrics			*mFontMetrics;
-  RgnHandle					mClipRegion;
-  RgnHandle					mMainRegion;
-  PRInt32                   mCurrFontHandle;
-  PRInt32                   mOffx;
-  PRInt32                   mOffy;
-  
-  // Mac specific state
-  RgnHandle                 mMacOriginRelativeClipRgn;
-  RgnHandle                 mMacPortRelativeClipRgn;
-  
-  PRInt32					mMacPortRelativeX;
-  PRInt32					mMacPortRelativeY;
-  */
+	// cps - Weird hack
+	Rect					mMacScreenPortRelativeRect;
 
-  //state management
-  nsVoidArray               *mStateCache;
+	// graphic state management
+	GraphicState *			mGS;				// Pointer to the current graphic state, top of stack
+	nsVoidArray *			mGSArray;
 };
 
 #endif /* nsRenderingContextMac_h___ */
