@@ -40,6 +40,8 @@
 
 #ifdef XP_UNIX
 #define DIRECTORY_SEPARATOR '/'
+#elif defined XP_BEOS
+#define DIRECTORY_SEPARATOR '/'
 #elif defined WIN32
 #define DIRECTORY_SEPARATOR '\\'
 #elif defined XP_MAC
