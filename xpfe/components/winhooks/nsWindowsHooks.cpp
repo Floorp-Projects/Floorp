@@ -291,6 +291,48 @@ static PRBool isAccessRestricted() {
 
 
 
+// Implementation of method that checks whether the settings match what's in the
+// Windows registry.
+NS_IMETHODIMP
+nsWindowsHooksSettings::GetRegistryMatches( PRBool *_retval ) {
+    NS_ENSURE_ARG( _retval );
+    *_retval = PR_TRUE;
+    // Test registry for all selected attributes.
+    if ( misMatch( mHandleHTTP,   http )
+         ||
+         misMatch( mHandleHTTPS,  https )
+         ||
+         misMatch( mHandleFTP,    ftp )
+         ||
+         misMatch( mHandleCHROME, chrome )
+         ||
+         misMatch( mHandleGOPHER, gopher )
+         ||
+         misMatch( mHandleHTML,   mozillaMarkup )
+         ||
+         misMatch( mHandleJPEG,   jpg )
+         ||
+         misMatch( mHandleGIF,    gif )
+         ||
+         misMatch( mHandlePNG,    png )
+         ||
+         misMatch( mHandleMNG,    mng )
+         ||
+         misMatch( mHandleBMP,    bmp )
+         ||
+         misMatch( mHandleICO,    ico )
+         ||
+         misMatch( mHandleXML,    xml )
+         ||
+         misMatch( mHandleXHTML,  xhtml )
+         ||
+         misMatch( mHandleXUL,    xul ) ) {
+        // Registry is out of synch.
+        *_retval = PR_FALSE;
+    }
+    return NS_OK;
+}
+
 // Implementation of method that checks settings versus registry and prompts user
 // if out of synch.
 NS_IMETHODIMP
@@ -357,35 +399,9 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent,
         // First, make sure the user cares.
         if ( settings->mShowDialog || installing ) {
             // Look at registry setting for all things that are set.
-            if ( misMatch( settings->mHandleHTTP,   http )
-                 ||
-                 misMatch( settings->mHandleHTTPS,  https )
-                 ||
-                 misMatch( settings->mHandleFTP,    ftp )
-                 ||
-                 misMatch( settings->mHandleCHROME, chrome )
-                 ||
-                 misMatch( settings->mHandleGOPHER, gopher )
-                 ||
-                 misMatch( settings->mHandleHTML,   mozillaMarkup )
-                 ||
-                 misMatch( settings->mHandleJPEG,   jpg )
-                 ||
-                 misMatch( settings->mHandleGIF,    gif )
-                 ||
-                 misMatch( settings->mHandlePNG,    png )
-                 ||
-                 misMatch( settings->mHandleMNG,    mng )
-                 ||
-                 misMatch( settings->mHandleBMP,    bmp )
-                 ||
-                 misMatch( settings->mHandleICO,    ico )
-                 ||
-                 misMatch( settings->mHandleXML,    xml )
-                 ||
-                 misMatch( settings->mHandleXHTML,  xhtml )
-                 ||
-                 misMatch( settings->mHandleXUL,    xul )) {
+            PRBool matches = PR_TRUE;
+            settings->GetRegistryMatches( &matches );
+            if ( !matches ) {
                 // Need to prompt user.
                 // First:
                 //   o We need the common dialog service to show the dialog.

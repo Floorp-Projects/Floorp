@@ -143,6 +143,12 @@ interface nsIWindowsHooksSettings : nsISupports {
     // appears on startup if there is a mismatch
     // between registry and these settings.
     attribute boolean showDialog;
+
+    // Registry mismatch indicator.
+    // This is true if the Win32 registry is
+    // currently set to match the preferences
+    // in this object.
+    readonly attribute boolean registryMatches;
 };
 
 /* nsIWindowsHooks

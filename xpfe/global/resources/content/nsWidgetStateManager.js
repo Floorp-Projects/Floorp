@@ -163,8 +163,12 @@ nsWidgetStateManager.prototype =
           var pageData = this.dataManager.getPageData( aPageTag );
           if( 'SetFields' in this.contentArea )
             {
-              this.contentArea.SetFields( pageData );
-              return;
+              if ( !this.contentArea.SetFields( pageData ) )
+              {
+                // If the function returns false (or null/undefined) then it
+                // doesn't want *us* to process the page data.
+                return;
+              }
             }
 
           for( var elementID in pageData )
