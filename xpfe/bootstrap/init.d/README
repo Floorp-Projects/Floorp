@@ -1,0 +1,34 @@
+mozilla/xpfe/bootstrap/init.d/README
+
+This file describes the mechanism for installing and executing
+initialization and termination scripts used to implement pluggable
+shell scripts to modify the behaviour of Mozilla/FireFox/ThunderBird/SunBird.
+
+File names in the mozilla/init.d/ and %user_profile%/init.d/
+(for example ${HOME}/.mozilla/init.d/ for Mozilla) are of the form
+[SK]nn<filename> where 'S' means "run this script at application startup",
+'K' means "run this script at application termination", and 'nn' is the
+sequence number for killing or starting the job.
+When the application (e.g. Mozilla) starts scripts prefixed with 'S' are
+executed (first those in Mozilla's installation directory, then those in
+user's profile directory), on termination those scripts prefixed with 'K'
+are being executed (first those in user's profile dir, finally those in
+mozilla's installation directory).
+
+When executing each script a single argument is passed to it - argument
+'stop' for scripts prefixed with 'K' and the argument 'start' for scripts
+prefixed with 'S'.
+
+An exception of this rule are scripts with the suffix *.sh - they are called
+"inline" in the current shell process which starts/terminates Mozilla. These
+scripts have FULL ACCESS to all variables of the calling script (which means
+these scripts can set/modify/unset environment variables used by Mozilla).
+Since these scripts run in the same shell the author of such scripts should
+ensure that no namespace collisions occur (e.g. accidential modify variable
+names used by the parent script).
+
+Any files which do not match the [SK][0-9][0-9]* pattern are FORBIDDEN
+in ${HOME}/.mozilla/init.d/ and %user_profile%/init.d/. The only
+exception is this README file.
+
+# EOF.
