@@ -4358,6 +4358,9 @@ PRBool
 nsRuleNode::Sweep()
 {
   // If we're not marked, then we have to delete ourself.
+  // However, we never allow the root node to GC itself, because nsStyleSet
+  // wants to hold onto the root node and not worry about re-creating a
+  // rule walker if the root node is deleted.
   if (!(mDependentBits & NS_RULE_NODE_GC_MARK) && !IsRoot()) {
     Destroy();
     return PR_TRUE;

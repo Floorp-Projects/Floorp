@@ -649,7 +649,7 @@ protected:
   // we must share ownership.
   nsIDocument*              mDocument;      // [STRONG]
   nsIPresContext*           mPresContext;   // [STRONG]
-  nsStyleSet*               mStyleSet;      // [STRONG]
+  nsStyleSet*               mStyleSet;      // [OWNS]
   nsIStyleFrameConstruction* mFrameConstructor; // [STRONG]
   nsIViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
   nsIFrameManager*          mFrameManager;  // [STRONG]

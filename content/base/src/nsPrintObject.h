@@ -81,7 +81,7 @@ public:
 
   PrintObjectType mFrameType;
   nsCOMPtr<nsIPresContext> mPresContext;
-  nsStyleSet              *mStyleSet;
+  nsAutoPtr<nsStyleSet>    mStyleSet;
   nsCOMPtr<nsIPresShell>   mPresShell;
   nsCOMPtr<nsIViewManager> mViewManager;
   nsCOMPtr<nsIWidget>      mWindow;

@@ -49,6 +49,10 @@
 
 class nsIURI;
 
+// The style set object is created by the document viewer and ownership is
+// then handed off to the PresShell.  Only the PresShell should delete a
+// style set.
+
 class nsStyleSet
 {
  public:
@@ -156,12 +160,13 @@ class nsStyleSet
   // Free global data at module shutdown
   static void FreeGlobals() { NS_IF_RELEASE(gQuirkURI); }
 
-  // APIs to manipulate the style sheet lists
+  // APIs to manipulate the style sheet lists.
+  // All sheet types are ordered most-significant-first.
   enum sheetType {
     eAgentSheet,
     eUserSheet,
     eDocSheet,
-    eOverrideSheet,  // override sheets are ordered most significant first
+    eOverrideSheet,
     eSheetTypeCount
   };
 
@@ -237,9 +242,10 @@ class nsStyleSet
   PRInt32 mDestroyedCount; // used to batch style context GC
   nsVoidArray mRoots; // style contexts with no parent
 
-  unsigned mBatching : 1;
+  PRUint16 mBatching;
+
   unsigned mInShutdown : 1;
-  unsigned mDirty : 6;  // one dirty bit is used per sheet type
+  unsigned mDirty : 7;  // one dirty bit is used per sheet type
 };
 
 #endif

@@ -57,7 +57,7 @@ class nsILayoutHistoryState;
 
 /** a simple struct (that may someday be expanded)
  * that contains data supplied by the caller to help
- * the style set find a frame for a content node
+ * the frame constructor find a frame for a content node
  */
 struct nsFindFrameHint
 {
