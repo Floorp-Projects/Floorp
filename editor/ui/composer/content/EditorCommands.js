@@ -26,7 +26,6 @@
 /* Main Composer window UI control */
 
 var editorShell;
-var toolbar;
 var documentModified;
 var EditorDisplayMode = 0;  // Normal Editor mode
 
