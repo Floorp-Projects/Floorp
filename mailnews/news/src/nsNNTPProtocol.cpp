@@ -1093,12 +1093,19 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
           nsCOMPtr<nsIStringBundle> bundle;
           nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
 
+          // to handle non-ASCII newsgroup names, we store them internally as escaped.
+          // decode and unescape the newsgroup name so we'll display a proper name.
+          nsXPIDLString unescapedName;
+          rv = NS_MsgDecodeUnescapeURLPath(group.get(), getter_Copies(unescapedName));
+          NS_ENSURE_SUCCESS(rv,rv);
+
           bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
-          const PRUnichar *formatStrings[1] = { NS_ConvertUTF8toUCS2(group).get() };
+          const PRUnichar *formatStrings[1] = { unescapedName.get() };
 
           rv = bundle->FormatStringFromName(NS_LITERAL_STRING("autoSubscribeText").get(),
                                             formatStrings, 1,
                                             getter_Copies(confirmText));
+          NS_ENSURE_SUCCESS(rv,rv);
 
           PRBool confirmResult = PR_FALSE;
           rv = dialog->Confirm(nsnull, confirmText, &confirmResult);

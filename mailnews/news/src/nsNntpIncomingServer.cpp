@@ -1185,46 +1185,63 @@ nsNntpIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
-	return mInner->GetSubscribeListener(aListener);
+    return mInner->GetSubscribeListener(aListener);
 }
 
 NS_IMETHODIMP
 nsNntpIncomingServer::Subscribe(const PRUnichar *aUnicharName)
 {
-	return SubscribeToNewsgroup(NS_LossyConvertUCS2toASCII(aUnicharName).get());
+  return SubscribeToNewsgroup(NS_LossyConvertUCS2toASCII(aUnicharName).get());
 }
 
 NS_IMETHODIMP
 nsNntpIncomingServer::Unsubscribe(const PRUnichar *aUnicharName)
 {
-	nsresult rv;
-	nsCAutoString name;
-	name.AssignWithConversion(aUnicharName);
+  nsresult rv;
 
-	nsCOMPtr<nsIFolder> rootFolder;
-    rv = GetRootFolder(getter_AddRefs(rootFolder));
-    if (NS_FAILED(rv)) return rv;
-	if (!rootFolder) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIFolder> rootFolder;
+  rv = GetRootFolder(getter_AddRefs(rootFolder));
+  if (NS_FAILED(rv)) 
+    return rv;
 
-    nsCOMPtr <nsIMsgFolder> serverFolder = do_QueryInterface(rootFolder, &rv);
-    if (NS_FAILED(rv)) return rv;	
-	if (!serverFolder) return NS_ERROR_FAILURE;
+  if (!rootFolder) 
+    return NS_ERROR_FAILURE;
+  
+  nsCOMPtr <nsIMsgFolder> serverFolder = do_QueryInterface(rootFolder, &rv);
+  if (NS_FAILED(rv)) 
+    return rv;
 
-	nsCOMPtr <nsIFolder> subFolder;
-	rv = serverFolder->FindSubFolder(name.get(), getter_AddRefs(subFolder));
-    if (NS_FAILED(rv)) return rv;	
+  if (!serverFolder) 
+    return NS_ERROR_FAILURE;
+  
+  // to handle non-ASCII newsgroup names, we store them internally as escaped.
+  // so we need to escape and encode the name, in order to find it.
+  nsXPIDLCString escapedName;
+  rv = NS_MsgEscapeEncodeURLPath(aUnicharName, getter_Copies(escapedName));
+  NS_ENSURE_SUCCESS(rv,rv);
 
-    nsCOMPtr <nsIMsgFolder> newsgroupFolder = do_QueryInterface(subFolder, &rv);
-    if (NS_FAILED(rv)) return rv;	
-	if (!newsgroupFolder) return NS_ERROR_FAILURE;
+  nsCOMPtr <nsIFolder> subFolder;
+  rv = serverFolder->FindSubFolder(escapedName.get(), getter_AddRefs(subFolder));
+  if (NS_FAILED(rv)) 
+    return rv;
 
-	rv = serverFolder->PropagateDelete(newsgroupFolder, PR_TRUE /* delete storage */, nsnull);
-    if (NS_FAILED(rv)) return rv;	
+  nsCOMPtr <nsIMsgFolder> newsgroupFolder = do_QueryInterface(subFolder, &rv);
+  if (NS_FAILED(rv)) 
+    return rv;
 
-	/* since we've unsubscribed to a newsgroup, the newsrc needs to be written out */
-    rv = SetNewsrcHasChanged(PR_TRUE);
-	if (NS_FAILED(rv)) return rv;
-	return NS_OK;
+  if (!newsgroupFolder) 
+    return NS_ERROR_FAILURE;
+
+  rv = serverFolder->PropagateDelete(newsgroupFolder, PR_TRUE /* delete storage */, nsnull);
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  // since we've unsubscribed to a newsgroup, the newsrc needs to be written out
+  rv = SetNewsrcHasChanged(PR_TRUE);
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  return NS_OK;
 }
 
 PRInt32
