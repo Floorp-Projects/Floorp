@@ -294,7 +294,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_removeAttributeNode
 
   nsIDOMAttr* ret = nsnull;
   nsresult rv = element->RemoveAttributeNode(oldAttr, &ret);
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv) || !ret) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
         (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
@@ -363,9 +363,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_setAttribute
     env->ReleaseStringUTFChars(jname, name);
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Element.setAttribute: failed (%x)\n", rv));
-
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
         (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INVALID_CHARACTER_ERR ||
          NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR)) {
@@ -403,7 +400,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_setAttributeNode
 
   nsIDOMAttr* ret = nsnull;
   nsresult rv = element->SetAttributeNode(newAttr, &ret);
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv) || !ret) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
         (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
@@ -430,7 +427,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_setAttributeNode
     return NULL;
   }
 
-  if (ret) ret->AddRef();
+  ret->AddRef();
   return jattr;
 }
 

@@ -602,9 +602,14 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getPreviousSibling
 
   nsIDOMNode* ret = nsnull;
   nsresult rv = node->GetPreviousSibling(&ret);
-  if (NS_FAILED(rv) || !ret) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
       "Node.getPreviousSibling: failed", rv);
+    return NULL;
+  }
+  if (!ret) {
+    /* according to the spec, getLastChild may return NULL when there
+       are no children. So this is not an error */
     return NULL;
   }
 
