@@ -41,16 +41,19 @@
 #include <windows.h>
 #endif
 
-char *temparg[20];
+const int TMP_ARG_MAX=21;
+
 int main(int argc, char* argv[])
 {
+  char* temparg[TMP_ARG_MAX+1];
   nsXREAppData appData;
   temparg[0] = argv[0];
   temparg[1] = "-calendar";
   int i;
-  for( i=1; i<argc; i++ ) {
+  for( i=1; i<argc && i<TMP_ARG_MAX-1; i++ ) {
      temparg[i+1]=argv[i];
   }
+  //we still might lose some args. a check would be handy with big neon letters yelling at the user.
   temparg[i+1]=nsnull;
   appData.SetSplashEnabled(PR_FALSE);
   appData.SetProductName(NS_LITERAL_CSTRING("Sunbird"));
