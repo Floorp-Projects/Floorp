@@ -31,19 +31,38 @@ const PRInt32 kNotFound = -1;
 PRUnichar gBadChar = 0;
 const char* kOutOfBoundsError = "Error: out of bounds";
 const char* kNullPointerError = "Error: unexpected null ptr";
+const char* kFoolMsg = "Error: Some fool overwrote the shared buffer.";
 
-//**********************************************
-//NOTE: Our buffer always holds capacity+1 bytes.
-//**********************************************
+PRUnichar kCommonEmptyBuffer[100];   //shared by all strings; NEVER WRITE HERE!!!
+
+PRBool nsString::mSelfTested = PR_FALSE;   
+
+
+/***********************************************************************
+  MODULE NOTES:
+
+    A. There are two philosophies to building string classes:
+        1. Hide the underlying buffer & offer API's allow indirect iteration
+        2. Reveal underlying buffer, risk corruption, but gain performance
+        
+       We chose the second option for performance reasons. 
+
+    B Our internal buffer always holds capacity+1 bytes.
+ ***********************************************************************/
 
 
 /**
- * Default constructor. Assumes the string will be empty, and
- * so it starts with a capacity of 0
+ * Default constructor. Note that we actually allocate a small buffer
+ * to begin with. This is because the "philosophy" of the string class
+ * was to allow developers direct access to the underlying buffer for
+ * performance reasons. 
  */
 nsString::nsString() {
+  NS_ASSERTION(kCommonEmptyBuffer[0]==0,kFoolMsg);
   mLength = mCapacity = 0;
-  mStr = 0;
+  mStr = kCommonEmptyBuffer;
+	if(!mSelfTested)
+		SelfTest();
 }
 
 
@@ -55,10 +74,12 @@ nsString::nsString() {
  */
 nsString::nsString(const char* anISOLatin1) {  
   mLength=mCapacity=0;
-  mStr=0;
-  PRInt32 len=strlen(anISOLatin1);
-  EnsureCapacityFor(len);
-  this->SetString(anISOLatin1,len);
+  mStr = kCommonEmptyBuffer;
+  if(anISOLatin1) {
+    PRInt32 len=strlen(anISOLatin1);
+    EnsureCapacityFor(len);
+    this->SetString(anISOLatin1,len);
+  }
 }
 
 
@@ -69,52 +90,57 @@ nsString::nsString(const char* anISOLatin1) {
  */
 nsString::nsString(const nsString &aString) {
   mLength=mCapacity=0;
-  mStr=0;
-  EnsureCapacityFor(aString.mLength);
-  this->SetString(aString.mStr,aString.mLength);
+  mStr = kCommonEmptyBuffer;
+  if(aString.mLength) {
+    EnsureCapacityFor(aString.mLength);
+    this->SetString(aString.mStr,aString.mLength);
+  }
 }
 
-/*-------------------------------------------------------
- * constructor from unicode string
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
+
+/**
+ * Constructor from a unicode string
+ * @update	gess7/30/98
+ * @param   anicodestr pts to a unicode string
+ */
 nsString::nsString(const PRUnichar* aUnicodeStr){
   mLength=mCapacity=0;
-  mStr=0;
+  mStr = kCommonEmptyBuffer;
+
   PRInt32 len=(aUnicodeStr) ? nsCRT::strlen(aUnicodeStr) : 0;
-  EnsureCapacityFor(len);
-  this->SetString(aUnicodeStr,len);
+  if(len>0) {
+    EnsureCapacityFor(len);
+    this->SetString(aUnicodeStr,len);
+  }
 }
 
-/*-------------------------------------------------------
- * standard destructor 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
+
+/**
+ * Destructor
+ * @update	gess7/30/98
+ */
 nsString::~nsString()
 {
-  delete [] mStr;
+  if(mStr && (mStr!=kCommonEmptyBuffer))
+    delete [] mStr;
   mStr=0;
   mCapacity=mLength=0;
 }
 
-void
-nsString::SizeOf(nsISizeOfHandler* aHandler) const
+void nsString::SizeOf(nsISizeOfHandler* aHandler) const
 {
   aHandler->Add(sizeof(*this));
   aHandler->Add(mCapacity * sizeof(chartype));
 }
 
-/*-------------------------------------------------------
+
+/**
  * This method gets called when the internal buffer needs
  * to grow to a given size.
  * @update  gess 3/30/98
  * @param   aNewLength -- new capacity of string  
  * @return  void
- *------------------------------------------------------*/
+ */
 void nsString::EnsureCapacityFor(PRInt32 aNewLength)
 {
   PRInt32 newCapacity;
@@ -139,35 +165,37 @@ void nsString::EnsureCapacityFor(PRInt32 aNewLength)
     if (mLength > 0) {
       nsCRT::memcpy(temp, mStr, mLength * sizeof(chartype));
     }
-    if(mStr)
+    if(mStr && (mStr!=kCommonEmptyBuffer))
       delete [] mStr;
     mStr = temp;
     mStr[mLength]=0;
   }
 }
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
+
+/**
+ * Call this method if you want string to report a shorter length.
+ * @update	gess7/30/98
+ * @param   aLength -- contains new length for mStr
  * @return
- *------------------------------------------------------*/
+ */
 void nsString::SetLength(PRInt32 aLength) {
-//  NS_WARNING("Depricated method -- not longer required with dynamic strings. Use Truncate() instead.");
-  EnsureCapacityFor(aLength);
-  if (aLength > mLength) {
+  if(aLength>mLength) {
+    EnsureCapacityFor(aLength);
     nsCRT::zero(mStr + mLength, (aLength - mLength) * sizeof(chartype));
   }
+  if((aLength>0) && (aLength<mLength))
+    mStr[aLength]=0;
   mLength=aLength;
 }
 
-/*-------------------------------------------------------
+/**
  * This method truncates this string to given length.
  *
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   anIndex -- new length of string
  * @return  nada
- *------------------------------------------------------*/
+ */
 void nsString::Truncate(PRInt32 anIndex) {
   if((anIndex>-1) && (anIndex<mLength)) {
     mLength=anIndex;
@@ -175,60 +203,30 @@ void nsString::Truncate(PRInt32 anIndex) {
   }
 }
 
+/*********************************************************
+  ACCESSOR METHODS....
+ *********************************************************/
 
-
-                //accessor methods
-
-/*-------------------------------------------------------
+/**
  * Retrieve pointer to internal string value
- * @update	gess 3/27/98
- * @param 
+ * @update	gess 7/27/98
  * @return  PRUnichar* to internal string
- *------------------------------------------------------*/
-PRUnichar* nsString::GetUnicode(void) const{
+ */
+const PRUnichar* nsString::GetUnicode(void) const{
   return mStr;
 }
 
-
-/*-------------------------------------------------------
- * Retrieve pointer to internal string value
- * @update	gess 3/27/98
- * @param 
- * @return  PRUnichar* to internal string
- *------------------------------------------------------*/
 nsString::operator PRUnichar*() const{
   return mStr;
 }
 
 
-/*-------------------------------------------------------
- * Retrieve pointer to internal string value
- * @update	gess 3/27/98
- * @param 
- * @return  new char* copy of internal string
-nsString::operator char*() const{
-  return ToNewCString();
-}
- *------------------------------------------------------*/
-
-
-/*-------------------------------------------------------
- * Retrieve pointer to internal string value
- * @update	gess 3/27/98
- * @param 
+/**
+ * Retrieve unicode char at given index
+ * @update	gess 7/27/98
+ * @param   offset into string
  * @return  PRUnichar* to internal string
- *------------------------------------------------------*/
-PRUnichar* nsString::operator()() const{
-  return mStr;
-}
-
-
-/*-------------------------------------------------------
- * Retrieve pointer to internal string value
- * @update	gess 3/27/98
- * @param 
- * @return  PRUnichar* to internal string
- *------------------------------------------------------*/
+ */
 PRUnichar nsString::operator()(int anIndex) const{
   NS_ASSERTION(anIndex<mLength,kOutOfBoundsError);
   if((anIndex<mLength) && (mStr))
@@ -236,12 +234,12 @@ PRUnichar nsString::operator()(int anIndex) const{
   else return gBadChar;
 }
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
+/**
+ * Retrieve reference to unicode char at given index
+ * @update	gess 7/27/98
+ * @param   offset into string
+ * @return  PRUnichar& from internal string
+ */
 PRUnichar& nsString::operator[](PRInt32 anIndex) const{
 //  NS_ASSERTION(anIndex<mLength,kOutOfBoundsError);
   if((anIndex<mLength) && (mStr))
@@ -249,12 +247,12 @@ PRUnichar& nsString::operator[](PRInt32 anIndex) const{
   else return gBadChar;
 }
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
+/**
+ * Retrieve reference to unicode char at given index
+ * @update	gess 7/27/98
+ * @param   offset into string
+ * @return  PRUnichar& from internal string
+ */
 PRUnichar& nsString::CharAt(PRInt32 anIndex) const{
   NS_ASSERTION(anIndex<mLength,kOutOfBoundsError);
   if((anIndex<mLength) && (mStr))
@@ -262,36 +260,34 @@ PRUnichar& nsString::CharAt(PRInt32 anIndex) const{
   else return gBadChar;
 }
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
+/**
+ * Retrieve reference to first unicode char in string
+ * @update	gess 7/27/98
+ * @return  PRUnichar from internal string
+ */
 PRUnichar& nsString::First() const{
   if((mLength) && (mStr))
     return mStr[0];
   else return gBadChar;
 }
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
+/**
+ * Retrieve reference to last unicode char in string
+ * @update	gess 7/27/98
+ * @return  PRUnichar from internal string
+ */
 PRUnichar& nsString::Last() const{
   if((mLength) && (mStr))
     return mStr[mLength-1];
   else return gBadChar;
 }
 
-/*-------------------------------------------------------
+/**
  * Create a new string by appending given string to this
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   aString -- 2nd string to be appended
- * @return
- *------------------------------------------------------*/
+ * @return  new string
+ */
 nsString nsString::operator+(const nsString& aString){
   nsString temp(*this);
   temp.Append(aString.mStr,aString.mLength);
@@ -299,12 +295,12 @@ nsString nsString::operator+(const nsString& aString){
 }
 
 
-/*-------------------------------------------------------
+/**
  * create a new string by adding this to the given buffer.
- * @update	gess 3/27/98
- * @param   aBuffer: buffer to be added to this
+ * @update	gess 7/27/98
+ * @param   anISOLatin1 is a ptr to cstring to be added to this
  * @return  newly created string
- *------------------------------------------------------*/
+ */
 nsString nsString::operator+(const char* anISOLatin1) {
   nsString temp(*this);
   temp.Append(anISOLatin1);
@@ -312,12 +308,12 @@ nsString nsString::operator+(const char* anISOLatin1) {
 }
 
 
-/*-------------------------------------------------------
+/**
  * create a new string by adding this to the given char.
- * @update	gess 3/27/98
- * @param   aChar: char to be added to this
+ * @update	gess 7/27/98
+ * @param   aChar is a char to be added to this
  * @return  newly created string
- *------------------------------------------------------*/
+ */
 nsString nsString::operator+(char aChar) {
   nsString temp(*this);
   temp.Append(chartype(aChar));
@@ -325,12 +321,12 @@ nsString nsString::operator+(char aChar) {
 }
 
 
-/*-------------------------------------------------------
+/**
  * create a new string by adding this to the given buffer.
- * @update	gess 3/27/98
- * @param   aBuffer: buffer to be added to this
+ * @update	gess 7/27/98
+ * @param   aStr unichar buffer to be added to this
  * @return  newly created string
- *------------------------------------------------------*/
+ */
 nsString nsString::operator+(const PRUnichar* aStr) {
   nsString temp(*this);
   temp.Append(aStr);
@@ -338,12 +334,12 @@ nsString nsString::operator+(const PRUnichar* aStr) {
 }
 
 
-/*-------------------------------------------------------
+/**
  * create a new string by adding this to the given char.
- * @update	gess 3/27/98
- * @param   aChar: char to be added to this
- * @return  newly created string
- *------------------------------------------------------*/
+ * @update	gess 7/27/98
+ * @param   aChar is a unichar to be added to this
+  * @return  newly created string
+ */
 nsString nsString::operator+(PRUnichar aChar) {
   nsString temp(*this);
   temp.Append(aChar);
@@ -351,12 +347,10 @@ nsString nsString::operator+(PRUnichar aChar) {
 }
 
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
+/**
+ * Converts all chars in internal string to lower
+ * @update	gess 7/27/98
+ */
 void nsString::ToLowerCase()
 {
   chartype* cp = mStr;
@@ -370,12 +364,10 @@ void nsString::ToLowerCase()
   }
 }
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
+/**
+ * Converts all chars in internal string to upper
+ * @update	gess 7/27/98
+ */
 void nsString::ToUpperCase()
 {
   chartype* cp = mStr;
@@ -389,12 +381,12 @@ void nsString::ToUpperCase()
   }
 }
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
+/**
+ * Converts chars in this to lowercase, and
+ * stores them in aOut
+ * @update	gess 7/27/98
+ * @param   aOut is a string to contain result
+ */
 void nsString::ToLowerCase(nsString& aOut) const
 {
   aOut.EnsureCapacityFor(mLength);
@@ -412,12 +404,12 @@ void nsString::ToLowerCase(nsString& aOut) const
   *to = 0;
 }
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
+/**
+ * Converts chars in this to lowercase, and
+ * stores them in a given output string
+ * @update	gess 7/27/98
+ * @param   aOut is a string to contain result
+ */
 void nsString::ToUpperCase(nsString& aOut) const
 {
   aOut.EnsureCapacityFor(mLength);
@@ -435,34 +427,31 @@ void nsString::ToUpperCase(nsString& aOut) const
   *to = 0;
 }
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
+/**
+ * Creates a duplicate clone (ptr) of this string.
+ * @update	gess 7/27/98
+ * @return  ptr to clone of this string
+ */
 nsString* nsString::ToNewString() const {
   return new nsString(mStr);
 }
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
+/**
+ * Creates an ISOLatin1 clone of this string
+ * @update	gess 7/27/98
+ * @return  ptr to new isolatin1 string
+ */
 char* nsString::ToNewCString() const
 {
   char* rv = new char[mLength + 1];
   return ToCString(rv,mLength+1);
 }
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
+/**
+ * Creates an unichar clone of this string
+ * @update	gess 7/27/98
+ * @return  ptr to new unichar string
+ */
 PRUnichar* nsString::ToNewUnicode() const
 {
   PRInt32 len = mLength;
@@ -476,31 +465,28 @@ PRUnichar* nsString::ToNewUnicode() const
   return rv;
 }
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
-void nsString::ToString(nsString& aString) const
+/**
+ * Copies contents of this onto given string.
+ * @update	gess 7/27/98
+ * @param   aString to hold copy of this
+ * @return  nada.
+ */
+void nsString::Copy(nsString& aString) const
 {
   aString.mLength = 0;
   aString.Append(mStr, mLength);
 }
 
-/*-------------------------------------------------------
+/**
  * 
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param 
  * @return
- *------------------------------------------------------*/
+ */
 char* nsString::ToCString(char* aBuf, PRInt32 aBufLength) const
 {
   aBufLength--;                 // leave room for the \0
-  PRInt32 len = mLength;
-  if (len > aBufLength) {
-    len = aBufLength;
-  }
+  PRInt32 len = (mLength > aBufLength) ? aBufLength : mLength;
   char* to = aBuf;
   chartype* from = mStr;
   while (--len >= 0) {
@@ -510,12 +496,12 @@ char* nsString::ToCString(char* aBuf, PRInt32 aBufLength) const
   return aBuf;
 }
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
+/**
+ * Perform string to float conversion.
+ * @update	gess 7/27/98
+ * @param   aErrorCode will contain error if one occurs
+ * @return  float rep of string value
+ */
 float nsString::ToFloat(PRInt32* aErrorCode) const
 {
   char buf[40];
@@ -532,12 +518,12 @@ float nsString::ToFloat(PRInt32* aErrorCode) const
   return f;
 }
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
+/**
+ * Perform string to int conversion.
+ * @update	gess 7/27/98
+ * @param   aErrorCode will contain error if one occurs
+ * @return  int rep of string value
+ */
 PRInt32 nsString::ToInteger(PRInt32* aErrorCode) const {
   PRInt32 rv = 0;
   PRUnichar* cp = mStr;
@@ -584,44 +570,44 @@ PRInt32 nsString::ToInteger(PRInt32* aErrorCode) const {
 }
 
 
-/*-------------------------------------------------------
+/**
  * assign given string to this one
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   aString: string to be added to this
  * @return  this
- *------------------------------------------------------*/
+ */
 nsString& nsString::operator=(const nsString& aString) {
   return this->SetString(aString.mStr,aString.mLength);
 }
 
 
-/*-------------------------------------------------------
+/**
  * assign given char* to this string
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   anISOLatin1: buffer to be assigned to this 
  * @return  this
- *------------------------------------------------------*/
+ */
 nsString& nsString::operator=(const char* anISOLatin1) {
   return SetString(anISOLatin1);
 }
 
 
-/*-------------------------------------------------------
+/**
  * assign given char to this string
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   aChar: char to be assignd to this
  * @return  this
- *------------------------------------------------------*/
+ */
 nsString& nsString::operator=(char aChar) {
-  return Append(PRUnichar(aChar));
+  return this->operator=(PRUnichar(aChar));
 }
 
-/*-------------------------------------------------------
+/**
  * assign given PRUnichar* to this string
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   anISOLatin1: buffer to be assigned to this 
  * @return  this
- *------------------------------------------------------*/
+ */
 nsString& nsString::SetString(const PRUnichar* aStr,PRInt32 aLength) {
   if((0 == aLength) || (nsnull == aStr)) {
     mLength=0;
@@ -642,12 +628,12 @@ nsString& nsString::SetString(const PRUnichar* aStr,PRInt32 aLength) {
 }
 
 
-/*-------------------------------------------------------
+/**
  * assign given char* to this string
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   anISOLatin1: buffer to be assigned to this 
  * @return  this
- *------------------------------------------------------*/
+ */
 nsString& nsString::SetString(const char* anISOLatin1,PRInt32 aLength) {
   if(anISOLatin1!=0) {
     PRInt32 len=(kNotFound==aLength) ? nsCRT::strlen(anISOLatin1) : aLength; 
@@ -666,23 +652,23 @@ nsString& nsString::SetString(const char* anISOLatin1,PRInt32 aLength) {
   return *this;
 }
 
-/*-------------------------------------------------------
+/**
  * assign given char* to this string
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   anISOLatin1: buffer to be assigned to this 
  * @return  this
- *------------------------------------------------------*/
+ */
 nsString& nsString::operator=(const PRUnichar* aStr) {
   return this->SetString(aStr);
 }
 
 
-/*-------------------------------------------------------
+/**
  * assign given char to this string
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   aChar: char to be assignd to this
  * @return  this
- *------------------------------------------------------*/
+ */
 nsString& nsString::operator=(PRUnichar aChar) {
   if(mCapacity<1) 
     EnsureCapacityFor(kGrowthDelta);
@@ -692,22 +678,22 @@ nsString& nsString::operator=(PRUnichar aChar) {
   return *this;
 }
 
-/*-------------------------------------------------------
+/**
  * append given string to this string
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   aString : string to be appended to this
  * @return  this
- *------------------------------------------------------*/
+ */
 nsString& nsString::Append(const nsString& aString,PRInt32 aLength) {
   return Append(aString.mStr,aString.mLength);
 }
 
-/*-------------------------------------------------------
+/**
  * append given string to this string
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   aString : string to be appended to this
  * @return  this
- *------------------------------------------------------*/
+ */
 nsString& nsString::Append(const char* anISOLatin1,PRInt32 aLength) {
   if(anISOLatin1!=0) {
     PRInt32 len=(kNotFound==aLength) ? strlen(anISOLatin1) : aLength;
@@ -723,22 +709,22 @@ nsString& nsString::Append(const char* anISOLatin1,PRInt32 aLength) {
   return *this;
 }
 
-/*-------------------------------------------------------
+/**
  * append given string to this string
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   aString : string to be appended to this
  * @return  this
- *------------------------------------------------------*/
+ */
 nsString& nsString::Append(char aChar) {
   return Append(PRUnichar(aChar));
 }
 
-/*-------------------------------------------------------
+/**
  * append given string to this string
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   aString : string to be appended to this
  * @return  this
- *------------------------------------------------------*/
+ */
 nsString& nsString::Append(const PRUnichar* aString,PRInt32 aLength) {
   if(aString!=0) {
     PRInt32 len=(kNotFound==aLength) ? nsCRT::strlen(aString) : aLength;
@@ -753,12 +739,13 @@ nsString& nsString::Append(const PRUnichar* aString,PRInt32 aLength) {
   return *this;
 }
 
-/*-------------------------------------------------------
+
+/**
  * append given string to this string
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   aString : string to be appended to this
  * @return  this
- *------------------------------------------------------*/
+ */
 nsString& nsString::Append(PRUnichar aChar) {
   if(mLength < mCapacity) {
     mStr[mLength++]=aChar;             // the new string len < capacity, so just copy
@@ -773,55 +760,55 @@ nsString& nsString::Append(PRUnichar aChar) {
 }
 
 
-/*-------------------------------------------------------
+/**
  * append given string to this string
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   aString : string to be appended to this
  * @return  this
- *------------------------------------------------------*/
+ */
 nsString& nsString::operator+=(const nsString &aString) {  
   return this->Append(aString.mStr,aString.mLength);
 }
 
 
-/*-------------------------------------------------------
+/**
  * append given buffer to this string
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   anISOLatin1: buffer to be appended to this
  * @return  this
- *------------------------------------------------------*/
+ */
 nsString& nsString::operator+=(const char* anISOLatin1) {
   return Append(anISOLatin1);
 }
 
 
-/*-------------------------------------------------------
+/**
  * append given buffer to this string
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   aBuffer: buffer to be appended to this
  * @return  this
- *------------------------------------------------------*/
+ */
 nsString& nsString::operator+=(const PRUnichar* aBuffer) {
   return Append(aBuffer);
 }
 
 
-/*-------------------------------------------------------
+/**
  * append given char to this string
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param   aChar: char to be appended to this
  * @return  this
- *------------------------------------------------------*/
+ */
 nsString& nsString::operator+=(PRUnichar aChar) {
   return Append(aChar);
 }
 
-/*-------------------------------------------------------
+/**
  * 
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param 
  * @return
- *------------------------------------------------------*/
+ */
 nsString& nsString::Append(PRInt32 aInteger,PRInt32 aRadix) {
   char* fmt = "%d";
   if (8 == aRadix) {
@@ -836,12 +823,12 @@ nsString& nsString::Append(PRInt32 aInteger,PRInt32 aRadix) {
 }
 
 
-/*-------------------------------------------------------
+/**
  * 
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param 
  * @return
- *------------------------------------------------------*/
+ */
 nsString& nsString::Append(float aFloat){
   char buf[40];
   PR_snprintf(buf, sizeof(buf), "%g", aFloat);
@@ -851,7 +838,7 @@ nsString& nsString::Append(float aFloat){
 
 
 
-/**-------------------------------------------------------
+/*
  *  Copies n characters from this string to given string,
  *  starting at the leftmost offset.
  *  
@@ -860,12 +847,12 @@ nsString& nsString::Append(float aFloat){
  *  @param   aCopy -- Receiving string
  *  @param   aCount -- number of chars to copy
  *  @return  number of chars copied
- *------------------------------------------------------*/
+ */
 PRInt32 nsString::Left(nsString& aCopy,PRInt32 aCount) {
   return Mid(aCopy,0,aCount);
 }
 
-/**-------------------------------------------------------
+/*
  *  Copies n characters from this string to given string,
  *  starting at the given offset.
  *  
@@ -875,7 +862,7 @@ PRInt32 nsString::Left(nsString& aCopy,PRInt32 aCount) {
  *  @param   aCount -- number of chars to copy
  *  @param   anOffset -- position where copying begins
  *  @return  number of chars copied
- *------------------------------------------------------*/
+ */
 PRInt32 nsString::Mid(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount) {
   if(anOffset<mLength) {
     aCount=(anOffset+aCount<=mLength) ? aCount : mLength-anOffset;
@@ -893,7 +880,7 @@ PRInt32 nsString::Mid(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount) {
   return aCount;
 }
 
-/**-------------------------------------------------------
+/*
  *  Copies n characters from this string to given string,
  *  starting at rightmost char.
  *  
@@ -902,13 +889,14 @@ PRInt32 nsString::Mid(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount) {
  *  @param  aCopy -- Receiving string
  *  @param  aCount -- number of chars to copy
  *  @return number of chars copied
- *------------------------------------------------------*/
+ */
 PRInt32 nsString::Right(nsString& aCopy,PRInt32 aCount) {
   PRInt32 offset=(mLength-aCount<0) ? 0 : mLength-aCount;
   return Mid(aCopy,offset,aCount);
 }
 
-/**-------------------------------------------------------
+
+/*
  *  This method inserts n chars from given string into this
  *  string at str[anOffset].
  *  
@@ -917,7 +905,7 @@ PRInt32 nsString::Right(nsString& aCopy,PRInt32 aCount) {
  *  @param  anOffset -- insertion position within this str
  *  @param  aCount -- number of chars to be copied from aCopy
  *  @return number of chars inserted into this.
- *------------------------------------------------------*/
+ */
 PRInt32 nsString::Insert(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount) {
   aCount=(aCount>aCopy.mLength) ? aCopy.mLength : aCount; //don't try to copy more than you are given
   if(aCount>0) {
@@ -995,7 +983,7 @@ PRInt32 nsString::Insert(PRUnichar aChar,PRInt32 anOffset){
   return 1;
 }
 
-/**-------------------------------------------------------
+/*
  *  This method is used to cut characters in this string
  *  starting at anOffset, continuing for aCount chars.
  *  
@@ -1003,7 +991,7 @@ PRInt32 nsString::Insert(PRUnichar aChar,PRInt32 anOffset){
  *  @param  anOffset -- start pos for cut operation
  *  @param  aCount -- number of chars to be cut
  *  @return *this
- *------------------------------------------------------*/
+ */
 nsString&
 nsString::Cut(PRInt32 anOffset, PRInt32 aCount)
 {
@@ -1020,14 +1008,14 @@ nsString::Cut(PRInt32 anOffset, PRInt32 aCount)
   return *this;
 }
 
-/**-------------------------------------------------------
+/**
  *  This method is used to remove all occurances of the
  *  characters found in aSet from this string.
  *  
  *  @update gess 3/26/98
  *  @param  aSet -- characters to be cut from this
  *  @return *this 
- *------------------------------------------------------*/
+ */
 nsString& nsString::StripChars(const char* aSet){
   PRUnichar*  from = mStr;
   PRUnichar*  end = mStr + mLength;
@@ -1045,49 +1033,49 @@ nsString& nsString::StripChars(const char* aSet){
   return *this;
 }
 
-/**-------------------------------------------------------
- *  
+/**
+ *  Determine if given char in valid alpha range
  *  
  *  @update  gess 3/31/98
- *  @param   
- *  @return  
- *------------------------------------------------------*/
-PRBool nsString::IsAlpha(PRUnichar ch) {
+ *  @param   aChar is character to be tested
+ *  @return  TRUE if in alpha range
+ */
+PRBool nsString::IsAlpha(PRUnichar aChar) {
   // XXX i18n
-  if (((ch >= 'A') && (ch <= 'Z')) || ((ch >= 'a') && (ch <= 'z'))) {
+  if (((aChar >= 'A') && (aChar <= 'Z')) || ((aChar >= 'a') && (aChar <= 'z'))) {
     return PR_TRUE;
   }
   return PR_FALSE;
 }
 
-/**-------------------------------------------------------
- *  
+/**
+ *  Determine if given char is a valid space character
  *  
  *  @update  gess 3/31/98
- *  @param   
- *  @return  
- *------------------------------------------------------*/
-PRBool nsString::IsSpace(PRUnichar ch) {
+ *  @param   aChar is character to be tested
+ *  @return  TRUE if is valid space char
+ */
+PRBool nsString::IsSpace(PRUnichar aChar) {
   // XXX i18n
-  if ((ch == ' ') || (ch == '\r') || (ch == '\n') || (ch == '\t')) {
+  if ((aChar == ' ') || (aChar == '\r') || (aChar == '\n') || (aChar == '\t')) {
     return PR_TRUE;
   }
   return PR_FALSE;
 }
 
-/**-------------------------------------------------------
- *  
+/**
+ *  Determine if given char is valid digit
  *  
  *  @update  gess 3/31/98
- *  @param   
- *  @return  isalpha
- *------------------------------------------------------*/
-PRBool nsString::IsDigit(PRUnichar ch) {
+ *  @param   aChar is character to be tested
+ *  @return  TRUE if char is a valid digit
+ */PRBool nsString::IsDigit(PRUnichar aChar) {
   // XXX i18n
-  return PRBool((ch >= '0') && (ch <= '9'));
+  return PRBool((aChar >= '0') && (aChar <= '9'));
 }
 
-/**-------------------------------------------------------
+
+/**
  *  This method trims characters found in aTrimSet from
  *  either end of the underlying string.
  *  
@@ -1095,7 +1083,7 @@ PRBool nsString::IsDigit(PRUnichar ch) {
  *  @param   aTrimSet -- contains chars to be trimmed from
  *           both ends
  *  @return  this
- *------------------------------------------------------*/
+ */
 nsString& nsString::Trim(const char* aTrimSet,
                                PRBool aEliminateLeading,
                                PRBool aEliminateTrailing)
@@ -1137,13 +1125,16 @@ nsString& nsString::Trim(const char* aTrimSet,
   return *this;
 }
 
-/**-------------------------------------------------------
- *  
+/**
+ *  This method strips whitespace from string.
+ *  You can control whether whitespace is yanked from
+ *  start and end of string as well.
  *  
  *  @update  gess 3/31/98
- *  @param   
- *  @return  
- *------------------------------------------------------*/
+ *  @param   aEliminateLeading controls stripping of leading ws
+ *  @param   aEliminateTrailing controls stripping of trailing ws
+ *  @return  this
+ */
 nsString& nsString::CompressWhitespace( PRBool aEliminateLeading,
                                               PRBool aEliminateTrailing)
 {
@@ -1176,14 +1167,12 @@ nsString& nsString::CompressWhitespace( PRBool aEliminateLeading,
   return *this;
 }
 
-/**-------------------------------------------------------
- *  XXX This is used by bina all over the place; not sure
- *  it belongs here though
+/**
+ *  This method strips whitespace throughout the string
  *  
- *  @update  gess 3/31/98
- *  @param   
- *  @return  
- *------------------------------------------------------*/
+ *  @update  gess 7/27/98
+ *  @return  this
+ */
 nsString& nsString::StripWhitespace()
 {
   Trim(" \r\n\t");
@@ -1191,13 +1180,13 @@ nsString& nsString::StripWhitespace()
 }
 
 
-/**-------------------------------------------------------
+/**
  *  Search for given buffer within this string
  *  
  *  @update  gess 3/25/98
  *  @param   anISOLatin1Buf - charstr to be found
  *  @return  offset in string, or -1 (kNotFound)
- *------------------------------------------------------*/
+ */
 PRInt32 nsString::Find(const char* anISOLatin1Buf) const{
   NS_ASSERTION(0!=anISOLatin1Buf,kNullPointerError);
   PRInt32 result=-1;
@@ -1212,13 +1201,13 @@ PRInt32 nsString::Find(const char* anISOLatin1Buf) const{
   return result;
 }
 
-/**-------------------------------------------------------
+/**
  *  Search for given buffer within this string
  *  
  *  @update  gess 3/25/98
  *  @param   aString - PUnichar* to be found
  *  @return  offset in string, or -1 (kNotFound)
- *------------------------------------------------------*/
+ */
 PRInt32 nsString::Find(const PRUnichar* aString) const{
   NS_ASSERTION(0!=aString,kNullPointerError);
   PRInt32 result=-1;
@@ -1234,13 +1223,13 @@ PRInt32 nsString::Find(const PRUnichar* aString) const{
 }
 
 
-/**-------------------------------------------------------
+/**
  *  Search for given buffer within this string
  *  
  *  @update  gess 3/25/98
  *  @param   nsString -- buffer to be found
  *  @return  offset in string, or -1 (kNotFound)
- *------------------------------------------------------*/
+ */
 PRInt32 nsString::Find(const nsString& aString) const{
   PRInt32 result=-1;
 
@@ -1256,13 +1245,13 @@ PRInt32 nsString::Find(const nsString& aString) const{
 }
 
 
-/**-------------------------------------------------------
+/**
  *  Search for a given char, starting at given offset
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  offset of found char, or -1 (kNotFound)
- *------------------------------------------------------*/
+ */
 PRInt32 nsString::Find(PRUnichar aChar, PRInt32 anOffset) const{
 
   for(PRInt32 i=anOffset;i<mLength;i++)
@@ -1272,13 +1261,13 @@ PRInt32 nsString::Find(PRUnichar aChar, PRInt32 anOffset) const{
 }
 
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 nsString::FindFirstCharInSet(const char* anISOLatin1Set,PRInt32 anOffset) const{
   NS_ASSERTION(0!=anISOLatin1Set,kNullPointerError);
   if(anISOLatin1Set && (strlen(anISOLatin1Set))) {
@@ -1291,13 +1280,13 @@ PRInt32 nsString::FindFirstCharInSet(const char* anISOLatin1Set,PRInt32 anOffset
   return kNotFound;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 nsString::FindFirstCharInSet(nsString& aSet,PRInt32 anOffset) const{
   if(aSet.Length()) {
     for(PRInt32 i=anOffset;i<mLength;i++){
@@ -1309,13 +1298,13 @@ PRInt32 nsString::FindFirstCharInSet(nsString& aSet,PRInt32 anOffset) const{
   return kNotFound;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return   
- *------------------------------------------------------*/
+ */
 PRInt32 nsString::FindLastCharInSet(const char* anISOLatin1Set,PRInt32 anOffset) const{
   NS_ASSERTION(0!=anISOLatin1Set,kNullPointerError);
   if(anISOLatin1Set && strlen(anISOLatin1Set)) {
@@ -1328,13 +1317,13 @@ PRInt32 nsString::FindLastCharInSet(const char* anISOLatin1Set,PRInt32 anOffset)
   return kNotFound;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return   
- *------------------------------------------------------*/
+ */
 PRInt32 nsString::FindLastCharInSet(nsString& aSet,PRInt32 anOffset) const{
   if(aSet.Length()) {
     for(PRInt32 i=mLength-1;i>0;i--){
@@ -1346,13 +1335,13 @@ PRInt32 nsString::FindLastCharInSet(nsString& aSet,PRInt32 anOffset) const{
   return kNotFound;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 nsString::RFind(const PRUnichar* aString,PRBool aIgnoreCase) const{
   NS_ASSERTION(0!=aString,kNullPointerError);
 
@@ -1372,13 +1361,13 @@ PRInt32 nsString::RFind(const PRUnichar* aString,PRBool aIgnoreCase) const{
   return kNotFound;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 nsString::RFind(const nsString& aString,PRBool aIgnoreCase) const{
   PRInt32 len=aString.mLength;
   if((len) && (len<=mLength)) { //only enter if abuffer length is <= mStr length.
@@ -1394,13 +1383,13 @@ PRInt32 nsString::RFind(const nsString& aString,PRBool aIgnoreCase) const{
   return kNotFound;
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 nsString::RFind(const char* anISOLatin1Set,PRBool aIgnoreCase) const{
   NS_ASSERTION(0!=anISOLatin1Set,kNullPointerError);
 
@@ -1421,14 +1410,14 @@ PRInt32 nsString::RFind(const char* anISOLatin1Set,PRBool aIgnoreCase) const{
 }
 
 
-/**-------------------------------------------------------
+/**
  *  Scans this string backwards for first occurance of
  *  the given char.
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  offset of char in string, or -1 (kNotFound)
- *------------------------------------------------------*/
+ */
 PRInt32 nsString::RFind(PRUnichar aChar,PRBool aIgnoreCase) const{
   chartype uc=nsCRT::ToUpper(aChar);
   for(PRInt32 offset=mLength-1;offset>0;offset--) 
@@ -1442,112 +1431,142 @@ PRInt32 nsString::RFind(PRUnichar aChar,PRBool aIgnoreCase) const{
 
 }
 
- //****** comparision methods... *******
+/**************************************************************
+  COMPARISON METHODS...
+ **************************************************************/
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
-PRInt32 nsString::Compare(const char *anISOLatin1,PRBool aIgnoreCase) const {
+/**
+ * Compares given cstring to this string. 
+ * @update	gess 7/27/98
+ * @param   anISOLatin1 pts to a cstring
+ * @param   aIgnoreCase tells us how to treat case
+ * @return  -1,0,1
+ */
+PRInt32 nsString::Compare(const char *anISOLatin1,PRInt32 aLength,PRBool aIgnoreCase) const {
+  NS_ASSERTION(0!=anISOLatin1,kNullPointerError);
+
+  if(-1!=aLength) {
+
+    //if you're given a length, use it to determine the max # of bytes to compare.
+    //In some cases, this can speed up the string comparison.
+
+    int maxlen=(aLength<mLength) ? aLength : mLength;
+    if (aIgnoreCase) {
+      return nsCRT::strncasecmp(mStr,anISOLatin1,maxlen);
+    }
+    return nsCRT::strncmp(mStr,anISOLatin1,maxlen);
+  }
+
   if (aIgnoreCase) {
     return nsCRT::strcasecmp(mStr,anISOLatin1);
   }
   return nsCRT::strcmp(mStr,anISOLatin1);
 }
 
-/*-------------------------------------------------------
+/**
  * LAST MODS:	gess
  * 
  * @param  
  * @return 
- *------------------------------------------------------*/
+ */
 PRInt32 nsString::Compare(const nsString &S,PRBool aIgnoreCase) const {
+  int maxlen=(S.mLength<mLength) ? S.mLength : mLength;
   if (aIgnoreCase) {
-    return nsCRT::strcasecmp(mStr,S.mStr);
+    return nsCRT::strncasecmp(mStr,S.mStr,maxlen);
   }
-  return nsCRT::strcmp(mStr,S.mStr);
+  return nsCRT::strncmp(mStr,S.mStr,maxlen);
 }
 
-/*-------------------------------------------------------
+/**
  * 
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param 
  * @return
- *------------------------------------------------------*/
-PRInt32 nsString::Compare(const PRUnichar* aString,PRBool aIgnoreCase) const {
+ */
+PRInt32 nsString::Compare(const PRUnichar* aString,PRInt32 aLength,PRBool aIgnoreCase) const {
+  NS_ASSERTION(0!=aString,kNullPointerError);
+  if(-1!=aLength) {
+
+    //if you're given a length, use it to determine the max # of bytes to compare.
+    //In some cases, this can speed up the string comparison.
+
+    int maxlen=(aLength<mLength) ? aLength : mLength;
+    if (aIgnoreCase) {
+      return nsCRT::strncasecmp(mStr,aString,maxlen);
+    }
+    return nsCRT::strncmp(mStr,aString,maxlen);
+  }
+  
   if (aIgnoreCase) {
     return nsCRT::strcasecmp(mStr,aString);
   }
   return nsCRT::strcmp(mStr,aString);
 }
 
-
-PRInt32 nsString::operator==(const nsString &S) const {return Compare(S)==0;}      
-PRInt32 nsString::operator==(const char *s) const {return Compare(s)==0;}
-PRInt32 nsString::operator==(const PRUnichar *s) const {return Compare(s)==0;}
-PRInt32 nsString::operator!=(const nsString &S) const {return Compare(S)!=0;}
-PRInt32 nsString::operator!=(const char *s ) const {return Compare(s)!=0;}
-PRInt32 nsString::operator!=(const PRUnichar *s) const {return Compare(s)==0;}
-PRInt32 nsString::operator<(const nsString &S) const {return Compare(S)<0;}
-PRInt32 nsString::operator<(const char *s) const {return Compare(s)<0;}
-PRInt32 nsString::operator<(const PRUnichar *s) const {return Compare(s)==0;}
-PRInt32 nsString::operator>(const nsString &S) const {return Compare(S)>0;}
-PRInt32 nsString::operator>(const char *s) const {return Compare(s)>0;}
-PRInt32 nsString::operator>(const PRUnichar *s) const {return Compare(s)==0;}
-PRInt32 nsString::operator<=(const nsString &S) const {return Compare(S)<=0;}
-PRInt32 nsString::operator<=(const char *s) const {return Compare(s)<=0;}
-PRInt32 nsString::operator<=(const PRUnichar *s) const {return Compare(s)==0;}
-PRInt32 nsString::operator>=(const nsString &S) const {return Compare(S)>=0;}
-PRInt32 nsString::operator>=(const char *s) const {return Compare(s)>=0;}
-PRInt32 nsString::operator>=(const PRUnichar *s) const {return Compare(s)==0;}
-
+PRBool nsString::operator==(const nsString &S) const {return Equals(S);}      
+PRBool nsString::operator==(const char *s) const {return Equals(s);}
+PRBool nsString::operator==(const PRUnichar *s) const {return Equals(s);}
+PRBool nsString::operator!=(const nsString &S) const {return PRBool(Compare(S)!=0);}
+PRBool nsString::operator!=(const char *s) const {return PRBool(Compare(s)!=0);}
+PRBool nsString::operator!=(const PRUnichar *s) const {return PRBool(Compare(s)!=0);}
+PRBool nsString::operator<(const nsString &S) const {return PRBool(Compare(S)<0);}
+PRBool nsString::operator<(const char *s) const {return PRBool(Compare(s)<0);}
+PRBool nsString::operator<(const PRUnichar *s) const {return PRBool(Compare(s)<0);}
+PRBool nsString::operator>(const nsString &S) const {return PRBool(Compare(S)>0);}
+PRBool nsString::operator>(const char *s) const {return PRBool(Compare(s)>0);}
+PRBool nsString::operator>(const PRUnichar *s) const {return PRBool(Compare(s)>0);}
+PRBool nsString::operator<=(const nsString &S) const {return PRBool(Compare(S)<=0);}
+PRBool nsString::operator<=(const char *s) const {return PRBool(Compare(s)<=0);}
+PRBool nsString::operator<=(const PRUnichar *s) const {return PRBool(Compare(s)<=0);}
+PRBool nsString::operator>=(const nsString &S) const {return PRBool(Compare(S)>=0);}
+PRBool nsString::operator>=(const char *s) const {return PRBool(Compare(s)>=0);}
+PRBool nsString::operator>=(const PRUnichar *s) const {return PRBool(Compare(s)>=0);}
 
 
-/*-------------------------------------------------------
- * Compare this to given string
- * @update gess 3/27/98
- * @param  aString -- string to compare to this
+/**
+ * Compare this to given string; note that we compare full strings here.
+ * 
+ * @update gess 7/27/98
+ * @param  aString is the other nsString to be compared to
  * @return TRUE if equal
- *------------------------------------------------------*/
+ */
 PRBool nsString::Equals(const nsString& aString) const {
-  PRBool  result;
-
-  if (mLength != aString.mLength) {
-    result = PR_FALSE;
-
-  } else if (0 == mLength) {
-    result = PR_TRUE;
-
-  } else {
-    result = (0 == nsCRT::strcmp(mStr,aString.mStr));
+  if(aString.mLength==mLength) {
+    PRInt32 result=nsCRT::strcmp(mStr,aString.mStr);
+    return PRBool(0==result);
   }
-
-
-  return result;
+  return PR_FALSE;
 }
 
 
-/*-------------------------------------------------------
- * Compare this to given string
- * @update gess 3/27/98
+/**
+ * Compare this to given string; note that we compare full strings here.
+ * The optional length argument just lets us know how long the given string is.
+ * If you provide a length, it is compared to length of this string as an
+ * optimization.
+ * 
+ * @update gess 7/27/98
  * @param  aCString -- Cstr to compare to this
+ * @param  aLength -- length of given string.
  * @return TRUE if equal
- *------------------------------------------------------*/
-PRBool nsString::Equals(const char* aCString) const{
+ */
+PRBool nsString::Equals(const char* aCString,PRInt32 aLength) const{
   NS_ASSERTION(0!=aCString,kNullPointerError);
+
+  if((aLength>0) && (aLength!=mLength))
+    return PR_FALSE;
+  
   PRInt32 result=nsCRT::strcmp(mStr,aCString);
   return PRBool(0==result);
 }
 
 
-/*-------------------------------------------------------
+/**
  * Compare this to given atom
- * @update gess 3/27/98
+ * @update gess 7/27/98
  * @param  aAtom -- atom to compare to this
  * @return TRUE if equal
- *------------------------------------------------------*/
+ */
 PRBool nsString::Equals(const nsIAtom* aAtom) const
 {
   NS_ASSERTION(0!=aAtom,kNullPointerError);
@@ -1556,13 +1575,13 @@ PRBool nsString::Equals(const nsIAtom* aAtom) const
 }
 
 
-/*-------------------------------------------------------
+/**
  * Compare given strings
- * @update gess 3/27/98
+ * @update gess 7/27/98
  * @param  s1 -- first string to be compared
  * @param  s2 -- second string to be compared
  * @return TRUE if equal
- *------------------------------------------------------*/
+ */
 PRBool nsString::Equals(const PRUnichar* s1, const PRUnichar* s2) const {
   NS_ASSERTION(0!=s1,kNullPointerError);
   NS_ASSERTION(0!=s2,kNullPointerError);
@@ -1575,24 +1594,27 @@ PRBool nsString::Equals(const PRUnichar* s1, const PRUnichar* s2) const {
 }
 
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
+/**
+ * Compares all chars in both strings w/o regard to case
+ * @update	gess 7/27/98
  * @param 
  * @return
- *------------------------------------------------------*/
+ */
 PRBool nsString::EqualsIgnoreCase(const nsString& aString) const{
-  PRInt32 result=nsCRT::strcasecmp(mStr,aString.mStr);
-  return PRBool(0==result);
+  if(aString.mLength==mLength) {
+    PRInt32 result=nsCRT::strcasecmp(mStr,aString.mStr);
+    return PRBool(0==result);
+  }
+  return PR_FALSE;
 }
 
 
-/*-------------------------------------------------------
+/**
  * 
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param 
  * @return
- *------------------------------------------------------*/
+ */
 PRBool nsString::EqualsIgnoreCase(const nsIAtom *aAtom) const{
   NS_ASSERTION(0!=aAtom,kNullPointerError);
   PRBool result=PR_FALSE;
@@ -1605,12 +1627,13 @@ PRBool nsString::EqualsIgnoreCase(const nsIAtom *aAtom) const{
 
 
 
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
+/**
+ * Compares given unicode string to this w/o regard to case
+ * @update	gess 7/27/98
+ * @param   s1 is the unicode string to be compared with this
+ * @param   aLength is the length of s1, not # of bytes to compare
+ * @return  true if full length of both strings are equal (modulo case)
+ */
 PRBool nsString::EqualsIgnoreCase(const PRUnichar* s1, const PRUnichar* s2) const {
   NS_ASSERTION(0!=s1,kNullPointerError);
   NS_ASSERTION(0!=s2,kNullPointerError);
@@ -1623,29 +1646,33 @@ PRBool nsString::EqualsIgnoreCase(const PRUnichar* s1, const PRUnichar* s2) cons
 }
 
 
-/*-------------------------------------------------------
+/**
+ * Compare this to given string w/o regard to case; note that we compare full strings here.
+ * The optional length argument just lets us know how long the given string is.
+ * If you provide a length, it is compared to length of this string as an optimization.
  * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
-PRBool nsString::EqualsIgnoreCase(const char* aCString) const {
+ * @update gess 7/27/98
+ * @param  aCString -- Cstr to compare to this
+ * @param  aLength -- length of given string.
+ * @return TRUE if equal
+ */
+PRBool nsString::EqualsIgnoreCase(const char* aCString,PRInt32 aLength) const {
   NS_ASSERTION(0!=aCString,kNullPointerError);
-  PRBool  result=PR_FALSE;
-  if(aCString){
-    PRInt32 cmp=nsCRT::strcasecmp(mStr,aCString);
-    result=PRBool(0==cmp);
-  }
-  return result;
+
+  if((aLength>0) && (aLength!=mLength))
+    return PR_FALSE;
+
+  PRInt32 cmp=nsCRT::strcasecmp(mStr,aCString);
+  return PRBool(0==cmp);
 }
 
 
-/*-------------------------------------------------------
+/**
  * 
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param 
  * @return
- *------------------------------------------------------*/
+ */
 void nsString::DebugDump(ostream& aStream) const {
   for(int i=0;i<mLength;i++) {
     aStream <<char(mStr[i]);
@@ -1653,22 +1680,210 @@ void nsString::DebugDump(ostream& aStream) const {
   aStream << endl;
 }
 
-/*-------------------------------------------------------
+
+//----------------------------------------------------------------------
+
+/**
  * 
- * @update	gess 3/27/98
+ * @update	gess 7/27/98
  * @param 
  * @return
- *------------------------------------------------------*/
-void nsString::SelfTest(void) {
-  
-#if 0
+ */
+nsAutoString::nsAutoString() 
+  : nsString() 
+{
+  mStr = mBuf;
+  mLength=0;
+  mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
+  mStr[0] = 0;
+}
 
+/**
+ * 
+ * @update	gess 7/27/98
+ * @param 
+ * @return
+ */
+nsAutoString::nsAutoString(const char* isolatin1) 
+  : nsString()
+{
+  mLength=0;
+  mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
+  mStr=mBuf;
+  SetString(isolatin1);
+}
+
+/**
+ * 
+ * @update	gess 7/27/98
+ * @param 
+ * @return
+ */
+nsAutoString::nsAutoString(const nsString& other)
+  : nsString()
+{
+  mLength=0;
+  mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
+  mStr=mBuf;
+  SetString(other.GetUnicode(),other.Length());
+}
+
+/**
+ * 
+ * @update	gess 7/27/98
+ * @param 
+ * @return
+ */
+nsAutoString::nsAutoString(PRUnichar aChar) 
+  : nsString()
+{
+  mLength=0;
+  mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
+  mStr=mBuf;
+  Append(aChar);
+}
+
+/**
+ * 
+ * @update	gess 7/27/98
+ * @param 
+ * @return
+ */
+nsAutoString::nsAutoString(const nsAutoString& other) 
+  : nsString()
+{
+  mLength=0;
+  mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
+  mStr=mBuf;
+  SetString(other.GetUnicode(),other.mLength);
+}
+
+/**
+ * nsAutoString's buffer growing routine uses a different algorithm
+ * than nsString because the lifetime of the auto string is assumed
+ * to be shorter. Therefore, we double the size of the buffer each
+ * time we grow so that (hopefully) we quickly get to the right
+ * size.
+ */
+void nsAutoString::EnsureCapacityFor(PRInt32 aNewLength) {
+  if (aNewLength > mCapacity) {
+    PRInt32 size = mCapacity * 2;
+    if (size < aNewLength) {
+      size = mCapacity + aNewLength;
+    }
+    mCapacity=size;
+    chartype* temp = new chartype[mCapacity+1];
+    if (mLength > 0) {
+      nsCRT::memcpy(temp, mStr, mLength * sizeof(chartype));
+    }
+    if ((mStr != mBuf) && (0 != mStr)) {
+      delete [] mStr;
+    }
+    mStr = temp;
+  }
+}
+
+/**
+ * 
+ * @update	gess 7/27/98
+ * @param 
+ * @return
+ */
+nsAutoString::nsAutoString(const PRUnichar* unicode, PRInt32 uslen) 
+  : nsString()
+{
+  mStr = mBuf;
+  mCapacity = sizeof(mBuf) / sizeof(chartype);
+  if (0 == uslen) {
+    uslen = nsCRT::strlen(unicode);
+  }
+  Append(unicode, uslen);
+}
+
+/**
+ * 
+ * @update	gess 7/27/98
+ * @param 
+ * @return
+ */
+nsAutoString::~nsAutoString()
+{
+  if (mStr == mBuf) {
+    // Force to null so that baseclass dtor doesn't do damage
+    mStr = nsnull;
+  }
+}
+
+void
+nsAutoString::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  if (mStr != mBuf) {
+    aHandler->Add(mCapacity * sizeof(chartype));
+  }
+}
+
+
+/**
+ *  
+ *  
+ *  @update  gess 3/31/98
+ *  @param   
+ *  @return  
+ */
+void nsAutoString::SelfTest(){
+  nsAutoString xas("Hello there");
+  xas.Append("this string exceeds the max size");
+  xas.DebugDump(cout);
+}
+
+
+/**
+ * 
+ * @update	gess 7/27/98
+ * @param 
+ * @return
+ */
+NS_BASE int fputs(const nsString& aString, FILE* out)
+{
+  char buf[100];
+  char* cp = buf;
+  PRInt32 len = aString.Length();
+  if (len >= PRInt32(sizeof(buf))) {
+    cp = aString.ToNewCString();
+  } else {
+    aString.ToCString(cp, len + 1);
+  }
+  ::fwrite(cp, 1, len, out);
+  if (cp != buf) {
+    delete cp;
+  }
+  return (int) len;
+}
+       
+
+/**
+ * 
+ * @update	gess 7/27/98
+ * @param 
+ * @return
+ */
+void nsString::SelfTest(void) {
+#if 1
+
+  static const char* kConstructorError = kConstructorError;
+  static const char* kComparisonError  = "Comparision error!";
+  static const char* kEqualsError = "Equals error!";
+
+	mSelfTested=PR_TRUE;
+  
   nsAutoString as("Hello there");
   as.SelfTest();
 
   static const char* temp="hello";
 
   //first, let's test the constructors...
+  nsString empty;
   nsString a(temp);
   nsString* a_=new nsString(a);  //test copy constructor
   nsString b("world!");
@@ -1684,15 +1899,15 @@ void nsString::SelfTest(void) {
   //Let's check out the ACCESSORS...
   //**********************************************
 
-  chartype* p1=a.GetUnicode();
-  chartype* p2=a; //should invoke the PRUnichar conversion operator...
+  const chartype* p1=a.GetUnicode();
+  const chartype* p2=a; //should invoke the PRUnichar conversion operator...
   for(int i=0;i<a.Length();i++) {
-    NS_ASSERTION(a[i]==temp[i],"constructor error!");         //test [] operator
-    NS_ASSERTION(a.CharAt(i)==temp[i],"constructor error!");  //test charAt method
-    NS_ASSERTION(a(i)==temp[i],"constructor error!");         //test (i) operator
+    NS_ASSERTION(a[i]==temp[i],kConstructorError);         //test [] operator
+    NS_ASSERTION(a.CharAt(i)==temp[i],kConstructorError);  //test charAt method
+    NS_ASSERTION(a(i)==temp[i],kConstructorError);         //test (i) operator
   }
-  NS_ASSERTION(a.First()==temp[0],"constructor error!");
-  NS_ASSERTION(a.Last()==temp[a.Length()-1],"constructor error!");
+  NS_ASSERTION(a.First()==temp[0],kConstructorError);
+  NS_ASSERTION(a.Last()==temp[a.Length()-1],kConstructorError);
 
   //**********************************************
   //Now let's test the CREATION operators...
@@ -1704,7 +1919,7 @@ void nsString::SelfTest(void) {
   nsString temp4=temp2+'!';
 
     //let's quick check the PRUnichar operator+ method...
-  PRUnichar* uc=temp4.GetUnicode();
+  const PRUnichar* uc=temp4.GetUnicode();
   nsString temp4a("Begin");
   temp4a.DebugDump(cout);
   nsString temp4b=temp4a+uc;
@@ -1714,12 +1929,12 @@ void nsString::SelfTest(void) {
   temp3.DebugDump(cout);
   temp4.DebugDump(cout);
   for(i=0;i<temp2.Length();i++) {
-    NS_ASSERTION(temp1[i]==temp2[i],"constructor error!");         
-    NS_ASSERTION(temp1[i]==temp3[i],"constructor error!");           
-    NS_ASSERTION(temp1[i]==temp4[i],"constructor error!");           
+    NS_ASSERTION(temp1[i]==temp2[i],kConstructorError);         
+    NS_ASSERTION(temp1[i]==temp3[i],kConstructorError);           
+    NS_ASSERTION(temp1[i]==temp4[i],kConstructorError);           
   }
-  NS_ASSERTION(temp4.Last()=='!',"constructor error!");
-  NS_ASSERTION(temp4.Length()>temp3.Length(),"constructor error!"); //should be char longer
+  NS_ASSERTION(temp4.Last()=='!',kConstructorError);
+  NS_ASSERTION(temp4.Length()>temp3.Length(),kConstructorError); //should be char longer
 
   nsString* es1=temp2.ToNewString(); //this should make us a new string
   char* es2=temp2.ToNewCString();
@@ -1739,38 +1954,46 @@ void nsString::SelfTest(void) {
   //**********************************************
 
   nsString temp8("aaaa");
+  nsString temp8a("AAAA");
   nsString temp9("bbbb");
 
   const char* aaaa="aaaa";
   const char* bbbb="bbbb";
 
-  NS_ASSERTION(temp8==temp8,"Error: Comparision routine");
-  NS_ASSERTION(temp8==aaaa,"Error: Comparision routine");
+    //First test the string compare routines...
+  NS_ASSERTION(0>temp8.Compare(temp9),kComparisonError);
+  NS_ASSERTION(0<temp9.Compare(temp8),kComparisonError);
+  NS_ASSERTION(0==temp8.Compare(temp8a,PR_TRUE),kComparisonError);
+  NS_ASSERTION(0==temp8.Compare(aaaa),kComparisonError);
 
-  NS_ASSERTION(temp8!=temp9,"Error: Comparision (!) routine");
-  NS_ASSERTION(temp8!=bbbb,"Error: Comparision (!) routine");
+    //Now test the boolean operators...
+  NS_ASSERTION(temp8==temp8,kComparisonError);
+  NS_ASSERTION(temp8==aaaa,kComparisonError);
 
-  NS_ASSERTION(temp8<temp9,"Error: Comparision (<) routine");
-  NS_ASSERTION(temp8<bbbb,"Error: Comparision (<) routine");
+  NS_ASSERTION(temp8!=temp9,kComparisonError);
+  NS_ASSERTION(temp8!=bbbb,kComparisonError);
 
-  NS_ASSERTION(temp9>temp8,"Error: Comparision (>) routine");
-  NS_ASSERTION(temp9>aaaa,"Error: Comparision (>) routine");
+  NS_ASSERTION(temp8<temp9,kComparisonError);
+  NS_ASSERTION(temp8<bbbb,kComparisonError);
 
-  NS_ASSERTION(temp8<=temp8,"Error: Comparision (<=) routine");
-  NS_ASSERTION(temp8<=temp9,"Error: Comparision (<=) routine");
-  NS_ASSERTION(temp8<=bbbb,"Error: Comparision (<=) routine");
+  NS_ASSERTION(temp9>temp8,kComparisonError);
+  NS_ASSERTION(temp9>aaaa,kComparisonError);
 
-  NS_ASSERTION(temp9>=temp9,"Error: Comparision (<=) routine");
-  NS_ASSERTION(temp9>=temp8,"Error: Comparision (<=) routine");
-  NS_ASSERTION(temp9>=aaaa,"Error: Comparision (<=) routine");
+  NS_ASSERTION(temp8<=temp8,kComparisonError);
+  NS_ASSERTION(temp8<=temp9,kComparisonError);
+  NS_ASSERTION(temp8<=bbbb,kComparisonError);
 
-  NS_ASSERTION(temp8.Equals(temp8),"Equals error");
-  NS_ASSERTION(temp8.Equals(aaaa),"Equals error");
+  NS_ASSERTION(temp9>=temp9,kComparisonError);
+  NS_ASSERTION(temp9>=temp8,kComparisonError);
+  NS_ASSERTION(temp9>=aaaa,kComparisonError);
+
+  NS_ASSERTION(temp8.Equals(temp8),kEqualsError);
+  NS_ASSERTION(temp8.Equals(aaaa),kEqualsError);
   
   nsString temp10(temp8);
   temp10.ToUpperCase();
-  NS_ASSERTION(temp8.EqualsIgnoreCase(temp10),"Equals error");
-  NS_ASSERTION(temp8.EqualsIgnoreCase("AAAA"),"Equals error");
+  NS_ASSERTION(temp8.EqualsIgnoreCase(temp10),kEqualsError);
+  NS_ASSERTION(temp8.EqualsIgnoreCase("AAAA"),kEqualsError);
 
 
   //**********************************************
@@ -1838,7 +2061,7 @@ void nsString::SelfTest(void) {
   temp13= "Hello world!"; //test assignment from char*
   temp14 = '?'; //test assignment from char
 
-  PRUnichar* uni=temp4.GetUnicode();
+  const PRUnichar* uni=temp4.GetUnicode();
   nsString temp14a;
   temp14a=uni; //test PRUnichar assignment operator...
   temp14a.DebugDump(cout);
@@ -1891,190 +2114,5 @@ void nsString::SelfTest(void) {
 
   pos=temp15.RFind(PRUnichar('a'));
   NS_ASSERTION(pos==26,"Error: RFind routine");
-
-
 #endif
 }
-
-
-
-//----------------------------------------------------------------------
-
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
-nsAutoString::nsAutoString() 
-  : nsString() 
-{
-  mStr = mBuf;
-  mLength=0;
-  mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
-  mStr[0] = 0;
-}
-
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
-nsAutoString::nsAutoString(const char* isolatin1) 
-  : nsString()
-{
-  mLength=0;
-  mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
-  mStr=mBuf;
-  SetString(isolatin1);
-}
-
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
-nsAutoString::nsAutoString(const nsString& other)
-  : nsString()
-{
-  mLength=0;
-  mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
-  mStr=mBuf;
-  SetString(other.GetUnicode(),other.Length());
-}
-
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
-nsAutoString::nsAutoString(PRUnichar aChar) 
-  : nsString()
-{
-  mLength=0;
-  mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
-  mStr=mBuf;
-  Append(aChar);
-}
-
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
-nsAutoString::nsAutoString(const nsAutoString& other) 
-  : nsString()
-{
-  mLength=0;
-  mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
-  mStr=mBuf;
-  SetString(other.GetUnicode(),other.mLength);
-}
-
-/**
- * nsAutoString's buffer growing routine uses a different algorithm
- * than nsString because the lifetime of the auto string is assumed
- * to be shorter. Therefore, we double the size of the buffer each
- * time we grow so that (hopefully) we quickly get to the right
- * size.
- */
-void nsAutoString::EnsureCapacityFor(PRInt32 aNewLength) {
-  if (aNewLength > mCapacity) {
-    PRInt32 size = mCapacity * 2;
-    if (size < aNewLength) {
-      size = mCapacity + aNewLength;
-    }
-    mCapacity=size;
-    chartype* temp = new chartype[mCapacity+1];
-    if (mLength > 0) {
-      nsCRT::memcpy(temp, mStr, mLength * sizeof(chartype));
-    }
-    if ((mStr != mBuf) && (0 != mStr)) {
-      delete [] mStr;
-    }
-    mStr = temp;
-  }
-}
-
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
-nsAutoString::nsAutoString(const PRUnichar* unicode, PRInt32 uslen) 
-  : nsString()
-{
-  mStr = mBuf;
-  mCapacity = sizeof(mBuf) / sizeof(chartype);
-  if (0 == uslen) {
-    uslen = nsCRT::strlen(unicode);
-  }
-  Append(unicode, uslen);
-}
-
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
-nsAutoString::~nsAutoString()
-{
-  if (mStr == mBuf) {
-    // Force to null so that baseclass dtor doesn't do damage
-    mStr = nsnull;
-  }
-}
-
-void
-nsAutoString::SizeOf(nsISizeOfHandler* aHandler) const
-{
-  aHandler->Add(sizeof(*this));
-  if (mStr != mBuf) {
-    aHandler->Add(mCapacity * sizeof(chartype));
-  }
-}
-
-
-/**-------------------------------------------------------
- *  
- *  
- *  @update  gess 3/31/98
- *  @param   
- *  @return  
- *------------------------------------------------------*/
-void nsAutoString::SelfTest(){
-  nsAutoString xas("Hello there");
-  xas.Append("this string exceeds the max size");
-  xas.DebugDump(cout);
-}
-
-
-/*-------------------------------------------------------
- * 
- * @update	gess 3/27/98
- * @param 
- * @return
- *------------------------------------------------------*/
-NS_BASE int fputs(const nsString& aString, FILE* out)
-{
-  char buf[100];
-  char* cp = buf;
-  PRInt32 len = aString.Length();
-  if (len >= PRInt32(sizeof(buf))) {
-    cp = aString.ToNewCString();
-  } else {
-    aString.ToCString(cp, len + 1);
-  }
-  ::fwrite(cp, 1, len, out);
-  if (cp != buf) {
-    delete cp;
-  }
-  return (int) len;
-}
-       
