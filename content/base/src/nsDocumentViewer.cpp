@@ -133,8 +133,8 @@
 static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 
 // PrintOptions is now implemented by PrintSettingsService
-static const char* kPrintSettingsServiceCID = "@mozilla.org/gfx/printsettings-service;1";
-static const char* kPrintOptionsCID         = "@mozilla.org/gfx/printsettings-service;1";
+static const char sPrintSettingsServiceContractID[] = "@mozilla.org/gfx/printsettings-service;1";
+static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printsettings-service;1";
 
 // Printing Events
 #include "nsIEventQueue.h"
@@ -6437,7 +6437,7 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
     GetGlobalPrintSettings(getter_AddRefs(mPrt->mPrintSettings));
   }
 
-  mPrt->mPrintOptions = do_GetService(kPrintOptionsCID, &rv);
+  mPrt->mPrintOptions = do_GetService(sPrintOptionsContractID, &rv);
   if (NS_SUCCEEDED(rv) && mPrt->mPrintOptions && mPrt->mPrintSettings) {
     // Get the default printer name and set it into the PrintSettings
     rv = CheckForPrinters(mPrt->mPrintOptions, mPrt->mPrintSettings, NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE, PR_TRUE);
@@ -6746,7 +6746,7 @@ DocumentViewerImpl::Print(PRBool            aSilent,
   // if they don't pass in a PrintSettings, then make one
   // it will have all the default values
   printSettings = aPrintSettings;
-  nsCOMPtr<nsIPrintOptions> printOptions = do_GetService(kPrintOptionsCID, &rv);
+  nsCOMPtr<nsIPrintOptions> printOptions = do_GetService(sPrintOptionsContractID, &rv);
   if (NS_SUCCEEDED(rv)) {
     // if they don't pass in a PrintSettings, then make one
     if (printSettings == nsnull) {
@@ -6831,7 +6831,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     GetGlobalPrintSettings(getter_AddRefs(mPrt->mPrintSettings));
   }
 
-  mPrt->mPrintOptions = do_GetService(kPrintOptionsCID, &rv);
+  mPrt->mPrintOptions = do_GetService(sPrintOptionsContractID, &rv);
   if (NS_SUCCEEDED(rv) && mPrt->mPrintOptions && mPrt->mPrintSettings) {
     // Get the default printer name and set it into the PrintSettings
     rv = CheckForPrinters(mPrt->mPrintOptions, mPrt->mPrintSettings, NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE, PR_TRUE);
@@ -8236,7 +8236,7 @@ DocumentViewerImpl::GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSetti
   NS_ENSURE_ARG_POINTER(aGlobalPrintSettings);
 
   nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPrintSettingsService> printSettingsService = do_GetService(kPrintSettingsServiceCID, &rv);
+  nsCOMPtr<nsIPrintSettingsService> printSettingsService = do_GetService(sPrintSettingsServiceContractID, &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = printSettingsService->GetGlobalPrintSettings(aGlobalPrintSettings);
   }
