@@ -336,7 +336,9 @@ protected:
   nsIHTMLContent* mBody;
   nsIHTMLContent* mFrameset;
   nsIHTMLContent* mHead;
-  nsString mTitle;
+
+  // This will be void until a <title> is found
+  nsXPIDLString mTitle;
 
   nsString mSkippedContent;
 
@@ -2272,7 +2274,7 @@ HTMLContentSink::DidBuildModel(void)
     mNotificationTimer = 0;
   }
 
-  if (mTitle.IsEmpty()) {
+  if (mTitle.IsVoid()) {
     nsCOMPtr<nsIDOMHTMLDocument> domDoc(do_QueryInterface(mHTMLDocument));
     if (domDoc)
       domDoc->SetTitle(mTitle);
@@ -3137,7 +3139,7 @@ HTMLContentSink::SetDocumentTitle(const nsAString& aTitle)
   MOZ_TIMER_START(mWatch);
   NS_ASSERTION(mCurrentContext == mHeadContext, "title not in head");
 
-  if (!mTitle.IsEmpty()) {
+  if (!mTitle.IsVoid()) {
     // If the title was already set then don't try to overwrite it
     // when a new title is encountered - For backwards compatiblity
     //*mTitle = aValue;
