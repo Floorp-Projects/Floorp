@@ -422,7 +422,9 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
     }
   } else {
     // absolute spec
-    mSpec = aSpec.ToNewCString();
+    PRInt32 slen = aSpec.Length();
+    mSpec = (char *) PR_Malloc(slen + 1);
+    aSpec.ToCString(mSpec, slen+1);
 
     // get protocol first
     PRInt32 plen = cp - cSpec;
