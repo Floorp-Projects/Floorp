@@ -2477,8 +2477,8 @@ EOF
        NS_USE_NATIVE=1
     else
        MKSHLIB='$(CC) $(DSO_LDOPTS)'
-       MKSHLIB_FORCE_ALL='-Wl,-z -Wl,allextract'
-       MKSHLIB_UNFORCE_ALL='-Wl,-z -Wl,defaultextract'
+       MKSHLIB_FORCE_ALL='-Wl,--whole-archive'
+       MKSHLIB_UNFORCE_ALL='-Wl,--no-whole-archive'
        AS='$(CC)'
        ASFLAGS='$(CFLAGS)'
     fi
