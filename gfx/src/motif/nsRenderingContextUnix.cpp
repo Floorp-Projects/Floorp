@@ -917,7 +917,7 @@ NS_IMETHODIMP nsRenderingContextUnix :: FillRect(const nsRect& aRect)
 NS_IMETHODIMP nsRenderingContextUnix :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
   if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
-    return NS_ERROR_FAILURE
+    return NS_ERROR_FAILURE;
   }
   nscoord x,y,w,h;
   x = aX;
