@@ -86,7 +86,7 @@
 		</html:div>
 		<html:div>
 			<html:input name="&chooseButton.label;" type="text" id="pref:string:editor.html_editor" />
-			<titledbutton name=""  value="&chooseButton.label;" />
+			<titledbutton class="dialog push" name=""  value="&chooseButton.label;" />
 		</html:div>
 		<html:input name="htmlImageEditorCheckbox" type="checkbox" id="pref:0:int:editor.use_image_editor" />
 	<html:div>
@@ -94,7 +94,7 @@
 		</html:div>
 		<html:div>
 			<html:input name="chooseButton.label" type="text" id="pref:string:editor.image_editor" />
-			<titledbutton name=""  value="&chooseButton.label;" />
+			<titledbutton class="dialog push" name=""  value="&chooseButton.label;" />
 		</html:div> 
 
 	</html:fieldset>
@@ -127,7 +127,7 @@
 			<html:label for="pref:0:int:editor.text_color" accesskey="t" tabindex="0">			
 			</html:label>
 			<menu>
-				<titledbutton value="&NormalText.label;" class="popup" align="right"/>
+				<titledbutton class="dialog push" value="&NormalText.label;" class="popup" align="right"/>
 				<html:div style="width:30px; background-color:white"/>
 				<menupopup>
 					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
@@ -140,7 +140,7 @@
 			<html:label for="pref:0:int:editor.link_color" accesskey="l" tabindex="0">
 			</html:label>
 			<menu>
-				<titledbutton value="&LinkText.label;" class="popup" align="right"/>
+				<titledbutton class="dialog push" value="&LinkText.label;" class="popup" align="right"/>
 				<html:div style="width:30px; background-color:white"/>
 				<menupopup>
 					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
@@ -153,7 +153,7 @@
 			<html:label for="pref:0:int:editor.active_link_color" accesskey="c" tabindex="0">			
 			</html:label>
 			<menu>
-				<titledbutton value="&ActiveLinkText.label;" class="popup" align="right"/>
+				<titledbutton class="dialog push" value="&ActiveLinkText.label;" class="popup" align="right"/>
 				<html:div style="width:30px; background-color:white"/>
 				<menupopup>
 					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
@@ -167,7 +167,7 @@
 			<html:label for="pref:0:int:editor.followed_link_color" accesskey="f" tabindex="0">			
 			</html:label>
 			<menu>
-				<titledbutton value="&FollowedLinkText.label;" class="popup" align="right"/>
+				<titledbutton class="dialog push" value="&FollowedLinkText.label;" class="popup" align="right"/>
 				<html:div style="width:30px; background-color:white"/>
 				<menupopup>
 					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
@@ -182,7 +182,7 @@
 
 			&colorPick; &BackgroundColor.label;
 			<menu>
-				<titledbutton value="&BackgroundColor.label;" class="popup" align="right"/>
+				<titledbutton class="dialog push" value="&BackgroundColor.label;" class="popup" align="right"/>
 				<html:div style="width:30px; background-color:white"/>
 				<menupopup>
 					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>

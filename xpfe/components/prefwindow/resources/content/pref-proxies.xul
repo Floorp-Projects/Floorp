@@ -56,7 +56,7 @@
 			<html:label for="pref:1:int:network.proxy.type" accesskey="m" tabindex="0">
 			&manualTypeRadio.label;
 			</html:label>
-			<titledbutton value="&view.label;" align="left" onclick="openit();"/>
+			<titledbutton class="dialog push" value="&view.label;" align="left" onclick="openit();"/>
 	</html:div>
 	<html:div id="manual-proxy" style="display: none">
 	<box align="horizontal">
@@ -137,7 +137,7 @@
 				<html:label for="pref:2:int:network.proxy.type" accesskey="a" tabindex="0">
 				&autoTypeRadio.label;
 				</html:label>
-				<titledbutton value="&reload.label;" align="left"/>
+				<titledbutton class="dialog push" value="&reload.label;" align="left"/>
 			</html:div>
 
 
@@ -147,7 +147,7 @@
 				&configAutoconfigText.label;
 				<html:input name="" type="text" size="15" id="pref:0:string:network.proxy.autoconfig_url" />
 			</html:div>
-				<spring flex="100%"/><titledbutton value="&view.label;" align="right"/>
+				<spring flex="100%"/><titledbutton class="dialog push" value="&view.label;" align="right"/>
 		</html:fieldset>
 	</box>
 </html:div>

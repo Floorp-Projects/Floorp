@@ -49,9 +49,9 @@
 			</box>
 	<box align="vertical">
 
-		<titledbutton id="newTypeButton" value="&newTypeButton.label;" />
-		<titledbutton id="editButton" value="&editButton.label;" />
-		<titledbutton id="removeButton" value="&removeButton.label;" />
+		<titledbutton class="dialog push" id="newTypeButton" value="&newTypeButton.label;" />
+		<titledbutton class="dialog push" id="editButton" value="&editButton.label;" />
+		<titledbutton class="dialog push" id="removeButton" value="&removeButton.label;" />
 
 	</box>
   </box>
