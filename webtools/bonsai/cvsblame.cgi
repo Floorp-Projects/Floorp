@@ -68,13 +68,6 @@ if (not $user_agent =~ m@^Mozilla/4.@ or $user_agent =~ /MSIE/) {
   $useLayers = 0;
 }
 
-#if ($user_agent =~ /Win/) {
-#    $font_tag = "<PRE><FONT FACE='Lucida Console' SIZE=-1>";
-#} else {
-#    # We don't want your stinking Windows font
-    $font_tag = "<PRE>";
-#}
-
 # Init sanitiazation source checker
 #
 $sanitization_dictionary = $form{'sanitize'};
@@ -189,18 +182,17 @@ foreach $mark (split(',',$mark_arg)) {
 #
 &print_top;
 
+open(BANNER, "<data/banner.html");
+print while <BANNER>;
+
 # Print link at top for directory browsing
 #
 print q(
-<TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
-<TR><TD><A HREF="http://www.mozilla.org/"><IMG
- SRC="http://www.mozilla.org/images/mozilla-banner.gif" ALT=""
- BORDER=0 WIDTH=600 HEIGHT=58></A></TD></TR></TABLE>
 <TABLE BORDER=0 CELLPADDING=5 CELLSPACING=0 WIDTH="100%">
  <TR>
   <TD ALIGN=LEFT VALIGN=CENTER>
    <NOBR><FONT SIZE="+2"><B>
-    Blame Annotated Source
+    CVS Blame
    </B></FONT></NOBR>
    <BR><B>
 );
@@ -221,23 +213,18 @@ print "</A>)";
 print qq(
 </B>
   </TD>
-
   <TD ALIGN=RIGHT VALIGN=TOP WIDTH="1%">
    <TABLE BORDER CELLPADDING=10 CELLSPACING=0>
     <TR>
      <TD NOWRAP BGCOLOR="#FAFAFA">
       <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>
        <TR>
-        <TD>
-         <A HREF="http://lxr.mozilla.org/mozilla/source/$link_path$file_tail">lxr</A>
-        </TD><TD>
-         Browse the source code as hypertext.
+        <TD NOWRAP>
+         <A HREF="http://lxr.mozilla.org/mozilla/source/$link_path$file_tail">LXR: Cross Reference</A>
         </TD>
        </TR><TR>
-        <TD>
-         <A HREF="cvslog.cgi?file=$filename">log</A>&nbsp;
-        </TD><TD>
-         Full change log.
+        <TD NOWRAP>
+         <A HREF="cvslog.cgi?file=$filename">Full Change Log</A>
         </TD>
        </TR>
       </TABLE>
@@ -247,16 +234,12 @@ print qq(
   </TD>
  </TR>
 </TABLE>
-      );
+);
 
-
-
-print $font_tag;
+print "<pre>";
 
 # Print each line of the revision, preceded by its annotation.
 #
-$start_of_mark = 0;
-$end_of_mark = 0;
 $count = $#revision_map;
 if ($count == 0) {
     $count = 1;
@@ -266,6 +249,8 @@ $revision_width = 3;
 $author_width = 5;
 $line = 0;
 $usedlog{$revision} = 1;
+$old_revision = 0;
+$useAlternateColor = 1;
 foreach $revision (@revision_map)
 {
     $text = $text[$line++];
@@ -286,7 +271,6 @@ foreach $revision (@revision_map)
     # Add a link to traverse to included files
     $text = &link_includes($text) if $opt_includes;
 
-
     $output = "<A NAME=$line></A>";
 
     # Highlight lines
@@ -294,18 +278,20 @@ foreach $revision (@revision_map)
         && $mark_cmd ne 'end') {
 	$output .= '</td></tr></TABLE>' if $useAlternateColor;
         $output .= '<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>'
-            ."<TR><TD BGCOLOR=LIGHTGREEN WIDTH='100%'>$font_tag";
+            ."<TR><TD BGCOLOR=LIGHTGREEN WIDTH='100%'><pre>";
 	$inMark = 1;
+	$inTable = 1;
     }
 
     if ($old_revision ne $revision) {
       if ($useAlternateColor) {
 	$useAlternateColor = 0;
-	$output .= "</td></tr></TABLE>$font_tag" unless $inMark;
+	$output .= "</td></tr></TABLE><pre>" if $inTable and not $inMark;
       } else {
 	$useAlternateColor = 1;
 	$output .= '<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH="100%">'
-	  . "<TR><TD BGCOLOR=#e7e7e7>$font_tag" unless $inMark;
+	  . "<TR><TD BGCOLOR=#e7e7e7><pre>" unless $inTable;
+	$inTable = 1;
       }
     }
 
@@ -315,8 +301,8 @@ foreach $revision (@revision_map)
 
         $revision_width = max($revision_width,length($revision));
 
-        $output .= "<A HREF ='cvsblame.cgi?file=$filename&rev=$revision&root=$root'";
-	$output .= "onmouseover='return log(event,\"$prev_revision{$revision}\",\"$revision\");'" if $useLayers;
+        $output .= "<A HREF=\"cvsblame.cgi?file=$filename&rev=$revision&root=$root\"";
+	$output .= " onmouseover='return log(event,\"$prev_revision{$revision}\",\"$revision\");'" if $useLayers;
         $output .= ">";
 	$author = $revision_author{$revision};
 	$author =~ s/%.*$//;
@@ -339,20 +325,21 @@ foreach $revision (@revision_map)
         chop($output);
         $output .= "</TD>";
         #if( defined($prev_revision{$file_rev})) {
-            $output .= "<TD ALIGN=RIGHT><A HREF=\"cvsblame.cgi?file=$filename&rev=$prev_revision{$file_rev}&root=$root&mark=$mark_arg\">Previous&nbsp;Revision&nbsp;($prev_revision{$file_rev})</A></TD><TD BGCOLOR=LIGHTGREEN>&nbsp</TD>";
+            $output .= "<TD ALIGN=RIGHT><A HREF=\"cvsblame.cgi?file=$filename&rev=$prev_revision{$file_rev}&root=$root&mark=$mark_arg\">Previous&nbsp;Revision&nbsp;($prev_revision{$file_rev})</A></TD><TD BGCOLOR=LIGHTGREEN>&nbsp;</TD>";
         #}
         $output .= "</TR></TABLE>";
-	$output .= '<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH="100%">'
-	  . "<TR><TD BGCOLOR=#e7e7e7>$font_tag" if $useAlternateColor;
+
 	$inMark = 0;
+	$inTable = 0;
     }
 
     print $output;
 }
-if ($useAlternateColor && !$inMark) {
-    print "</td></tr></TABLE>$font_tag";
+if ($inTable) {
+  print "</td></tr></table>";
+} else {
+  print "</pre>";
 }
-print "</FONT></PRE>\n";
 
 if ($useLayers) {
   # Write out cvs log messages as a JS variables
@@ -402,17 +389,6 @@ sub print_top {
     $title_text .= ")";
     $title_text =~ s/\(\)//;
 
-    my ($diff_dir_link) = 
-        "cvsview2.cgi?subdir=$rcs_path&files=$file_tail&command=DIRECTORY";
-    $diff_dir_link .= "&root=$form{'root'}" if defined $form{'root'};
-    $diff_dir_link .= "&branch=$browse_revtag" unless $browse_revtag eq 'HEAD';
-
-    my ($diff_link) = "cvsview2.cgi?diff_mode=context&whitespace_mode=show";
-    $diff_link .= "&root=$form{'root'}" if defined $form{'root'};
-    $diff_link .= "&subdir=$rcs_path&command=DIFF_FRAMESET&file=$file_tail";
-    
-    $diff_link = &url_encode3($diff_link);
-
     print "<HTML><HEAD><TITLE>CVS Blame $title_text</TITLE>";
 
     print <<__TOP__ if $useLayers;
@@ -437,19 +413,22 @@ function revToName (rev) {
 }
 
 function log(event, prev_rev, rev) {
-    window.defaultStatus = "";
-    if (prev_rev == '') {
-        window.status = "View diffs for " + file_tail;
-    } else {
-        window.status = "View diff for " + prev_rev + " vs." + rev;
-    }
-
     if (parseInt(navigator.appVersion) < 4) {
         return true;
     }
 
     var l = document.layers['popup'];
-    var shadow = document.layers['shadow'];
+    var guide = document.layers['popup_guide'];
+
+    if (event.target.text.length > max_link_length) {
+      max_link_length = event.target.text.length;
+
+      guide.document.write("<PRE>" + event.target.text);
+      guide.document.close();
+
+      popup_offset = guide.clip.width;
+    }
+
     if (document.loaded) {
         l.document.write("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3><TR><TD BGCOLOR=#F0A000>");
         l.document.write("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=6><TR><TD BGCOLOR=#FFFFFF><tt>");
@@ -463,7 +442,7 @@ function log(event, prev_rev, rev) {
     } else {
          l.top = event.target.y - 9;
     }
-    l.left = event.target.x + 70;
+    l.left = event.target.x + popup_offset;
 
     l.visibility="show";
 
@@ -471,6 +450,8 @@ function log(event, prev_rev, rev) {
 }
 
 file_tail = "$file_tail";
+popup_offset = 5;
+max_link_length = 0;
 
 initialLayer = "<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3><TR><TD BGCOLOR=#F0A000><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=6><TR><TD BGCOLOR=#FFFFFF><B>Page loading...please wait.</B></TD></TR></TABLE></td></tr></table>";
 
@@ -478,6 +459,7 @@ initialLayer = "<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3><TR><TD BGCOLOR=#F0A
 </HEAD>
 <BODY onLoad="finishedLoad();" BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#F0A000">
 <LAYER SRC="javascript:initialLayer" NAME='popup' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 BGCOLOR='#FFFFFF' VISIBILITY='hide'></LAYER>
+<LAYER SRC="javascript:initialLayer" NAME='popup_guide' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 BGCOLOR='#FFFFFF' VISIBILITY='hide'></LAYER>
 __TOP__
   print '<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#F0A000">' if not $useLayers;
 } # print_top
@@ -536,7 +518,7 @@ Add parameters to the query string to view a file.
   <TD>revision</TD>
 </TR><TR>
   <TD>line_nums</TD>
-  <TD>off *</TD>
+  <TD>on *</TD>
   <TD>on
     <BR>off</TD>
   <TD>line numbers</TD>
