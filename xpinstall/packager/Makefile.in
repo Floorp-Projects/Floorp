@@ -288,7 +288,7 @@ endif
 	@echo "Done creating $(PACKAGE)."
 endif
 
-installer:
+installer::
 ifdef INSTALLER_DIR
 	make -C $(INSTALLER_DIR) installer
 endif
