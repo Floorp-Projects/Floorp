@@ -13,6 +13,15 @@ input[type="radio"] {
  border:3px inset;
  background-color:green;
  color:yellow;
+ -moz-border-radius:0;
+}
+
+:-moz-radio {
+ width:8px;
+ width:8px;
+ background-color:yellow;
+ color:yellow;
+ -moz-border-radius:0;
 }
 
 input[type=button] {
