@@ -1554,7 +1554,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * also used for the catch-all trynote for capturing exceptions
              * thrown from catch{} blocks.
              */
-            do {
+            for (;;) {
                 JSStmtInfo stmtInfo2;
                 JSParseNode *disc;
                 ptrdiff_t guardnote;
@@ -1653,7 +1653,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 EMIT_CATCH_GOTO(cx, cg, jmp);
                 if (jmp < 0)
                     return JS_FALSE;
-            } while ((iter = iter->pn_kid2) != NULL);
+                if (!iter->pn_kid2)     /* leave iter at last catch */
+                    break;
+                iter = iter->pn_kid2;
+            }
         }
 
         /*
