@@ -480,9 +480,10 @@ sub BuildClientDist()
     #SILENTDL
     InstallFromManifest(":mozilla:silentdl:MANIFEST",								"$distdirectory:silentdl:");
 
-    #XPINSTALL
+    #XPINSTALL (the one and only!)
     InstallFromManifest(":mozilla:xpinstall:public:MANIFEST",                       "$distdirectory:xpinstall:");
-
+    BuildIDLProject(":mozilla:xpinstall:macbuild:xpinstallIDL.mcp",                 "xpinstall");
+  
    #FULL CIRCLE    
    if ($main::MOZ_FULLCIRCLE)
    {
@@ -552,8 +553,8 @@ sub BuildClientDist()
    InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST",				"$distdirectory:mailnews:");
    BuildIDLProject(":mozilla:mailnews:addrbook:macbuild:msgAddrbookIDL.mcp",		"MsgAddrbook");
    InstallFromManifest(":mozilla:mailnews:addrbook:build:MANIFEST",					"$distdirectory:mailnews:");
-
-	print("--- Client Dist export complete ----\n")
+   
+   print("--- Client Dist export complete ----\n")
 }
 
 
