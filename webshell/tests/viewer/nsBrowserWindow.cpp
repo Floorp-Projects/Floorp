@@ -430,7 +430,7 @@ NS_IMETHODIMP nsBrowserWindow::SetTitle(const PRUnichar* aTitle)
 
    mTitle = aTitle;
 
-   NS_ENSURE_SUCCESS(mWindow->SetTitle(aTitle), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(mWindow->SetTitle(nsAutoString(aTitle)), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -2187,7 +2187,7 @@ nsBrowserWindow::OnStatus(nsIChannel* channel, nsISupports *ctxt,
     rv = sbs->FormatStatusMessage(aStatus, aStatusArg, getter_Copies(msg));
     if (NS_FAILED(rv)) return rv;
     PRUint32 size;
-    nsAutoString msg2 = (const PRUnichar*)msg;
+    nsAutoString msg2( NS_STATIC_CAST(const PRUnichar*, msg));
     mStatus->SetText(msg2, size);
   }
   return NS_OK;

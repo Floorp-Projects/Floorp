@@ -96,7 +96,7 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel, nsIDOMWin
             nsresult rv = httpChannel->GetResponseHeader( atom, getter_Copies( disp ) );
             if ( NS_SUCCEEDED( rv ) && disp ) {
                 // Parse out file name.
-                nsCAutoString contentDisp = (const char*)disp;
+                nsCAutoString contentDisp(NS_STATIC_CAST(const char*, disp));
                 // Remove whitespace.
                 contentDisp.StripWhitespace();
                 // Look for ";filename=".
@@ -122,7 +122,7 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel,
     PRBool isValid = PR_FALSE;
     nsresult rv = SelectFile( parent, 
                               getter_AddRefs( outputFile ),
-                              SuggestNameFor( aChannel, suggestedName ).GetBuffer() );
+                              SuggestNameFor( aChannel, suggestedName ) );
 
     if ( NS_SUCCEEDED( rv )
          &&
@@ -304,7 +304,7 @@ nsStreamTransfer::SelectFile( nsIDOMWindow *parent, nsIFileSpec **aResult, const
 // Guess a save-as file name from channel (URL) and/or "suggested name" (which likely
 // came from content-disposition response header).
 nsCString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel, char const *suggestedName ) {
-    nsCString result = suggestedName;
+    nsCString result(suggestedName);
     if ( !result.IsEmpty() ) {
         // Exclude any path information from this!  This is mandatory as
         // this suggested name comes from a http response header and could

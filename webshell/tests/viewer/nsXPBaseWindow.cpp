@@ -361,7 +361,7 @@ NS_IMETHODIMP nsXPBaseWindow::SetTitle(const PRUnichar* aTitle)
   NS_PRECONDITION(nsnull != mWindow, "null window");
   mTitle = aTitle;
   nsAutoString newTitle(aTitle);
-  mWindow->SetTitle(newTitle.GetUnicode());
+  mWindow->SetTitle(newTitle);
   return NS_OK;
 }
 

@@ -409,7 +409,7 @@ nsStreamXferOp::OnStatus( nsIChannel      *channel,
         nsXPIDLString str;
         rv = sbs->FormatStatusMessage(aStatus, aStatusArg, getter_Copies(str));
         if (NS_FAILED(rv)) return rv;
-        nsAutoString msg = (const PRUnichar*)str;
+        nsAutoString msg(NS_STATIC_CAST(const PRUnichar*, str));
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
                                   NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_PROGID ";onStatus" ).GetUnicode(),
                                   msg.GetUnicode() );
@@ -451,7 +451,7 @@ nsStreamXferOp::OnStopRequest( nsIChannel      *channel,
 
     // Notify observer that the download is complete.
     if ( mObserver ) {
-        nsString msg = aMsg;
+        nsString msg(aMsg);
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
                                   NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_PROGID ";onCompletion" ).GetUnicode(),
                                   msg.GetUnicode() );
