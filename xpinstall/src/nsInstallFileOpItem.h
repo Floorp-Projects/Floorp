@@ -25,7 +25,7 @@
 
 #include "prtypes.h"
 
-#include "nsFileSpec.h"
+#include "nsIFile.h"
 #include "nsSoftwareUpdate.h"
 #include "nsInstallObject.h"
 #include "nsInstall.h"
@@ -47,7 +47,7 @@ class nsInstallFileOpItem : public nsInstallObject
     //   FileOpFileDelete()
     nsInstallFileOpItem(nsInstall*    installObj,
                         PRInt32       aCommand,
-                        nsFileSpec&   aTarget,
+                        nsIFile*      aTarget,
                         PRInt32       aFlags,
                         PRInt32*      aReturn);
 
@@ -58,15 +58,15 @@ class nsInstallFileOpItem : public nsInstallObject
     //   FileMacAlias()
     nsInstallFileOpItem(nsInstall*    installObj,
                         PRInt32       aCommand,
-                        nsFileSpec&   aSrc,
-                        nsFileSpec&   aTarget,
+                        nsIFile*      aSrc,
+                        nsIFile*  aTarget,
                         PRInt32*      aReturn);
 
     // used by:
     //   FileOpDirCreate()
     nsInstallFileOpItem(nsInstall*    aInstallObj,
                         PRInt32       aCommand,
-                        nsFileSpec&   aTarget,
+                        nsIFile*      aTarget,
                         PRInt32*      aReturn);
 
     // used by:
@@ -75,22 +75,22 @@ class nsInstallFileOpItem : public nsInstallObject
     //   FileOpFileRename()
     nsInstallFileOpItem(nsInstall*    aInstallObj,
                         PRInt32       aCommand,
-                        nsFileSpec&   a1,
+                        nsIFile*      a1,
                         nsString&     a2,
                         PRInt32*      aReturn);
 
     // used by:
     //   WindowsShortcut()
-    nsInstallFileOpItem(nsInstall*     aInstallObj,
-                        PRInt32        aCommand,
-                        nsFileSpec&    aTarget,
-                        nsFileSpec&    aShortcutPath,
-                        nsString&      aDescription,
-                        nsFileSpec&    aWorkingPath,
-                        nsString&      aParams,
-                        nsFileSpec&    aIcon,
-                        PRInt32        aIconId,
-                        PRInt32*       aReturn);
+    nsInstallFileOpItem(nsInstall*    aInstallObj,
+                        PRInt32       aCommand,
+                        nsIFile*      aTarget,
+                        nsIFile*      aShortcutPath,
+                        nsString&     aDescription,
+                        nsIFile*      aWorkingPath,
+                        nsString&     aParams,
+                        nsIFile*      aIcon,
+                        PRInt32       aIconId,
+                        PRInt32*      aReturn);
 
     virtual ~nsInstallFileOpItem();
 
@@ -107,20 +107,20 @@ class nsInstallFileOpItem : public nsInstallObject
     
     /* Private Fields */
     
-    nsInstall*    mIObj;        // initiating Install object
-    nsFileSpec*   mSrc;
-    nsFileSpec*   mTarget;
-    nsFileSpec*   mShortcutPath;
-    nsFileSpec*   mWorkingPath;
-    nsFileSpec*   mIcon;
-    nsString*     mDescription;
-    nsString*     mStrTarget;
-    nsString*     mParams;
-    long          mFStat;
-    PRInt32       mFlags;
-    PRInt32       mIconId;
-    PRInt32       mCommand;
-    PRInt32       mAction;
+    nsInstall*          mIObj;        // initiating Install object
+    nsCOMPtr<nsIFile>   mSrc;
+    nsCOMPtr<nsIFile>   mTarget;
+    nsCOMPtr<nsIFile>   mShortcutPath;
+    nsCOMPtr<nsIFile>   mWorkingPath;
+    nsCOMPtr<nsIFile>   mIcon;
+    nsString*           mDescription;
+    nsString*           mStrTarget;
+    nsString*           mParams;
+    long                mFStat;
+    PRInt32             mFlags;
+    PRInt32             mIconId;
+    PRInt32             mCommand;
+    PRInt32             mAction;
     
     /* Private Methods */
 
@@ -135,7 +135,7 @@ class nsInstallFileOpItem : public nsInstallObject
     PRInt32       NativeFileOpFileCopyComplete();
     PRInt32       NativeFileOpFileCopyAbort();
     PRInt32       NativeFileOpFileDeletePrepare();
-    PRInt32       NativeFileOpFileDeleteComplete(nsFileSpec *aTarget);
+    PRInt32       NativeFileOpFileDeleteComplete(nsIFile *aTarget);
     PRInt32       NativeFileOpFileExecutePrepare();
     PRInt32       NativeFileOpFileExecuteComplete();
     PRInt32       NativeFileOpFileMovePrepare();

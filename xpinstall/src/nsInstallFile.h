@@ -79,11 +79,11 @@ class nsInstallFile : public nsInstallObject
     private:
 
         /* Private Fields */
-        nsString*     mVersionInfo;	  /* Version info for this file*/
+        nsString*         mVersionInfo;	  /* Version info for this file*/
         
-        nsString*     mJarLocation;	      /* Location in the JAR */
-        nsFileSpec*   mExtractedFile;	  /* temporary file location */
-        nsFileSpec*   mFinalFile;	      /* final file destination */
+        nsString*         mJarLocation;	      /* Location in the JAR */
+        nsCOMPtr<nsIFile> mExtractedFile;	  /* temporary file location */
+        nsCOMPtr<nsIFile> mFinalFile;	      /* final file destination */
 
         nsString*   mVersionRegistryName; /* full version path */
 

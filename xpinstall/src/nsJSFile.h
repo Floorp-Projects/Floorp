@@ -44,7 +44,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileCopy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 JSBool PR_CALLBACK
-InstallFileOpFileDelete(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+InstallFileOpFileRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 JSBool PR_CALLBACK
 InstallFileOpFileExists(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);

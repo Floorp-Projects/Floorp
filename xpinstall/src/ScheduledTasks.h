@@ -30,11 +30,12 @@
 #include "NSReg.h"
 //#include "mozreg.h"
 #include "nsFileSpec.h"
+#include "nsIFile.h"
 
 PR_BEGIN_EXTERN_C
 
-PRInt32 DeleteFileNowOrSchedule(const nsFileSpec& filename);
-PRInt32 ReplaceFileNowOrSchedule(nsFileSpec& tmpfile, nsFileSpec& target );
+PRInt32 DeleteFileNowOrSchedule(nsIFile* filename);
+PRInt32 ReplaceFileNowOrSchedule(nsIFile* tmpfile, nsIFile* target );
 
 
 void PerformScheduledTasks(HREG reg);

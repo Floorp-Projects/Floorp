@@ -63,7 +63,7 @@ fWindowsSystem = getFolder("Win System");
 logComment("fCommunicator: " + fCommunicator);
 
 // build the uninstall folder path
-szUninstall = fCommunicator + "\\Uninstall";
+szUninstall = fCommunicator + "Uninstall";
 fUninstall  = getFolder("file:///", szUninstall);
 File.dirCreate(fUninstall);
 
@@ -71,8 +71,8 @@ File.dirCreate(fUninstall);
 // the uninstaller.
 // These two files are created after installation is done, thus
 // are normally not logged for uninstall.
-logComment("[0/0] Installing: " + fCommunicator + "\\component.reg");
-logComment("[0/0] Installing: " + fCommunicator + "\\xpcom.log");
+logComment("[0/0] Installing: " + fCommunicator + "component.reg");
+logComment("[0/0] Installing: " + fCommunicator + "xpcom.log");
 
 if(verifyDiskSpace(fCommunicator, srDest) == true)
 {
@@ -88,7 +88,7 @@ if(verifyDiskSpace(fCommunicator, srDest) == true)
   // check return value
   if(!checkError(err))
   {
-    fileComponentRegStr = fCommunicator + "\\component.reg";
+    fileComponentRegStr = fCommunicator + "component.reg";
     fileComponentReg    = getFolder("file:///", fileComponentRegStr);
     err                 = fileDelete(fileComponentReg);
     logComment("fileDelete() returned: " + err);

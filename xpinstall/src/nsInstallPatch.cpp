@@ -37,6 +37,7 @@
 
 #ifdef XP_MAC
 #include "PatchableAppleSingle.h"
+#include "nsILocalFileMac.h"
 #endif
 
 #define BUFSIZE     32768
@@ -89,15 +90,18 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
         *error = nsInstall::NO_SUCH_COMPONENT;
         return;
     }
-	nsString folderSpec; folderSpec.AssignWithConversion(tempTargetFile);
+    nsString folderSpec; folderSpec.AssignWithConversion(tempTargetFile);
+	
+    nsCOMPtr<nsILocalFile> tmp;
+    NS_NewLocalFile((char*)tempTargetFile, getter_AddRefs(tmp));
 
     mPatchFile      =   nsnull;
     mTargetFile     =   nsnull;
     mPatchedFile    =   nsnull;
     mRegistryName   =   new nsString(inVRName);
     mJarLocation    =   new nsString(inJarLocation);
-    mTargetFile     =   new nsFileSpec(folderSpec);
     mVersionInfo    =   new nsInstallVersion();
+    tmp->Clone(getter_AddRefs(mTargetFile));
     
     if (mRegistryName == nsnull ||
         mJarLocation  == nsnull ||
@@ -130,7 +134,7 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
         return;
     }
     
-    nsFileSpec* tmp = folderSpec->GetFileSpec();
+    nsCOMPtr<nsIFile> tmp = folderSpec->GetFileSpec();
     if (!tmp)
     {
         *error = nsInstall::INVALID_ARGUMENTS;
@@ -143,7 +147,7 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
     mRegistryName   =   new nsString(inVRName);
     mJarLocation    =   new nsString(inJarLocation);
     mVersionInfo    =   new nsInstallVersion();
-    mTargetFile     =   new nsFileSpec(*tmp);
+    tmp->Clone(getter_AddRefs(mTargetFile));
 
     if (mRegistryName == nsnull ||
         mJarLocation  == nsnull ||
@@ -156,9 +160,8 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
     
     mVersionInfo->Init(inVInfo);
     
-    
     if(! inPartialPath.IsEmpty())
-        *mTargetFile += inPartialPath;
+        mTargetFile->Append(inPartialPath.ToNewCString());
 }
 
 nsInstallPatch::~nsInstallPatch()
@@ -166,8 +169,8 @@ nsInstallPatch::~nsInstallPatch()
     if (mVersionInfo)
         delete mVersionInfo;
 
-    if (mTargetFile)
-        delete mTargetFile;
+    //if (mTargetFile)
+    //    delete mTargetFile;
 
     if (mJarLocation)
         delete mJarLocation;
@@ -175,11 +178,11 @@ nsInstallPatch::~nsInstallPatch()
     if (mRegistryName)
         delete mRegistryName;
 
-    if (mPatchedFile)
-        delete mPatchedFile;
+    //if (mPatchedFile)
+    //    delete mPatchedFile;
     
-    if (mPatchFile)
-        delete mPatchFile;
+    //if (mPatchFile)
+    //    delete mPatchFile;
 
     MOZ_COUNT_DTOR(nsInstallPatch);
 }
@@ -188,14 +191,16 @@ nsInstallPatch::~nsInstallPatch()
 PRInt32 nsInstallPatch::Prepare()
 {
     PRInt32 err;
-    PRBool deleteOldSrc;
+    PRBool deleteOldSrc, flagExists, flagIsFile;
     
     if (mTargetFile == nsnull)
         return  nsInstall::INVALID_ARGUMENTS;
 
-    if (mTargetFile->Exists())
+    mTargetFile->Exists(&flagExists);
+    if (flagExists)
     {
-        if (mTargetFile->IsFile())
+        mTargetFile->IsFile(&flagIsFile);
+        if (flagIsFile)
         {
             err = nsInstall::SUCCESS;
         }
@@ -214,13 +219,14 @@ PRInt32 nsInstallPatch::Prepare()
         return err;
     }
 
-    err =  mInstall->ExtractFileFromJar(*mJarLocation, mTargetFile, &mPatchFile);
+    err =  mInstall->ExtractFileFromJar(*mJarLocation, mTargetFile, getter_AddRefs(mPatchFile));
    
     
-    nsFileSpec *fileName = nsnull;
-    nsVoidKey ikey( HashFilePath( nsFilePath(*mTargetFile) ) );
-    
-    mInstall->GetPatch(&ikey, &fileName);
+    nsCOMPtr<nsIFile> fileName = nsnull;
+    //nsVoidKey ikey( HashFilePath( nsFilePath(*mTargetFile) ) );//nsIFileXXX: nsFilePath?
+    nsVoidKey ikey( HashFilePath( mTargetFile ));
+
+    mInstall->GetPatch(&ikey, getter_AddRefs(fileName));
 
     if (fileName != nsnull) 
     {
@@ -232,12 +238,13 @@ PRInt32 nsInstallPatch::Prepare()
         deleteOldSrc = PR_FALSE;
     }
 
-    err = NativePatch(  *fileName,           // the file to patch
-                        *mPatchFile,         // the patch that was extracted from the jarfile
-                        &mPatchedFile);     // the new patched file
+    err = NativePatch(  fileName,           // the file to patch
+                        mPatchFile,         // the patch that was extracted from the jarfile
+                        getter_AddRefs(mPatchedFile));     // the new patched file
     
     // clean up extracted diff data file
-    if ( (mPatchFile != nsnull) && (mPatchFile->Exists()) )
+    mPatchFile->Exists(&flagExists);
+    if ( (mPatchFile != nsnull) && (flagExists) )
     {
         mPatchFile->Delete(PR_FALSE);
     }
@@ -246,19 +253,20 @@ PRInt32 nsInstallPatch::Prepare()
     if (err != nsInstall::SUCCESS)
     {   
         // clean up tmp patched file since patching failed
-		if ((mPatchedFile != nsnull) && (mPatchedFile->Exists()))
-        {
-			mPatchedFile->Delete(PR_FALSE);
-        }
+      mPatchFile->Exists(&flagExists);
+ 		  if ((mPatchedFile != nsnull) && (flagExists))
+      {
+			    mPatchedFile->Delete(PR_FALSE);
+      }
 		return err;
     }
 
     PR_ASSERT(mPatchedFile != nsnull);
-	mInstall->AddPatch(&ikey, mPatchedFile );
-	
+    mInstall->AddPatch(&ikey, mPatchedFile );
+
     if ( deleteOldSrc ) 
     {
-		DeleteFileNowOrSchedule(*fileName );
+    DeleteFileNowOrSchedule(fileName );
     }
   
     return err;
@@ -266,6 +274,8 @@ PRInt32 nsInstallPatch::Prepare()
 
 PRInt32 nsInstallPatch::Complete()
 {  
+    PRBool flagEquals;
+
     if ((mInstall == nsnull) || (mVersionInfo == nsnull) || (mPatchedFile == nsnull) || (mTargetFile == nsnull)) 
     {
         return nsInstall::INVALID_ARGUMENTS;
@@ -273,19 +283,23 @@ PRInt32 nsInstallPatch::Complete()
     
     PRInt32 err = nsInstall::SUCCESS;
 
-    nsFileSpec *fileName = nsnull;
-    nsVoidKey ikey( HashFilePath( nsFilePath(*mTargetFile) )  );
+    nsCOMPtr<nsIFile> fileName = nsnull;
+    //nsVoidKey ikey( HashFilePath( nsFilePath(*mTargetFile) )  );//nsIFileXXX: nsFilePath?
+    nsVoidKey ikey( HashFilePath( mTargetFile ));
     
-    mInstall->GetPatch(&ikey, &fileName);
+    mInstall->GetPatch(&ikey, getter_AddRefs(fileName));
     
     if (fileName == nsnull)
     {
         err = nsInstall::UNEXPECTED_ERROR;
     }
-    else if (*fileName == *mPatchedFile) 
+    else
     {
+      fileName->Equals(mPatchedFile, &flagEquals);
+      if (flagEquals) 
+      {
         // the patch has not been superceded--do final replacement
-        err = ReplaceFileNowOrSchedule( *mPatchedFile, *mTargetFile);
+        err = ReplaceFileNowOrSchedule( mPatchedFile, mTargetFile);
         if ( 0 == err || nsInstall::REBOOT_NEEDED == err ) 
         {
             nsString tempVersionString;
@@ -293,12 +307,14 @@ PRInt32 nsInstallPatch::Complete()
             
             char* tempRegName = mRegistryName->ToNewCString();
             char* tempVersion = tempVersionString.ToNewCString();
+            char* tempPath;
+            mTargetFile->GetPath(&tempPath);
 
             // DO NOT propogate version registry errors, it will abort 
             // FinalizeInstall() leaving things hosed. These piddly errors
             // aren't worth that.
             VR_Install( tempRegName, 
-                        (char*)(const char *)mTargetFile->GetNativePathCString(),
+                        tempPath,
                         tempVersion, 
                         PR_FALSE );
             
@@ -310,32 +326,35 @@ PRInt32 nsInstallPatch::Complete()
         {
             err = nsInstall::UNEXPECTED_ERROR;
         }
-    }
-    else
-    {
+      }
+      else
+      {
         // nothing -- old intermediate patched file was
         // deleted by a superceding patch
+      }
     }
-
     return err;
 }
 
 void nsInstallPatch::Abort()
 {
-    nsFileSpec *fileName = nsnull;
-    nsVoidKey ikey( HashFilePath( nsFilePath(*mTargetFile) ) );
+    PRBool flagEquals;
+    nsCOMPtr<nsIFile> fileName = nsnull;
+    //nsVoidKey ikey( HashFilePath( nsFilePath(*mTargetFile) ) ); //nsIFileXXX: nsFilePath?
+    nsVoidKey ikey( HashFilePath( mTargetFile ));
 
-    mInstall->GetPatch(&ikey, &fileName);
+    mInstall->GetPatch(&ikey, getter_AddRefs(fileName));
 
-    if (fileName != nsnull && (*fileName == *mPatchedFile) )
+    fileName->Equals(mPatchedFile, &flagEquals);
+    if (fileName != nsnull && (flagEquals) )
     {
-        DeleteFileNowOrSchedule( *mPatchedFile );
+        DeleteFileNowOrSchedule( mPatchedFile );
     }
 }
 
 char* nsInstallPatch::toString()
 {
-	char* buffer = new char[1024];
+	  char* buffer = new char[1024];
     char* rsrcVal = nsnull;
 
     if (buffer == nsnull || !mInstall)
@@ -347,7 +366,9 @@ char* nsInstallPatch::toString()
 
         if (rsrcVal)
         {
-            sprintf( buffer, rsrcVal, mTargetFile->GetCString()); 
+            char* temp;
+            mTargetFile->GetPath(&temp);
+            sprintf( buffer, rsrcVal, temp); 
             nsCRT::free(rsrcVal);
         }
     }
@@ -370,22 +391,25 @@ nsInstallPatch::RegisterPackageNode()
 
 
 PRInt32
-nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patchFile, nsFileSpec **newFile)
+nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **newFile)  //nsIFileXXX: changed & to *
 {
 
-	DIFFDATA	*dd;
-	PRInt32		status		= GDIFF_ERR_MEM;
-	char 		*tmpurl		= NULL;
-	char 		*realfile	= PL_strdup(nsNSPRPath(sourceFile)); // needs to be sourceFile!!!
-	nsFileSpec  *outFileSpec = new nsFileSpec; 
-    nsFileSpec  *tempSrcFile = new nsFileSpec;   // TODO: do you need to free?
-    
-    if (!outFileSpec) {
-        status = GDIFF_ERR_MEM;
-        goto cleanup;
-    }
-    
-    *outFileSpec = sourceFile;
+	PRBool flagExists;
+  nsresult rv;
+  DIFFDATA	  *dd;
+	PRInt32		  status		   = GDIFF_ERR_MEM;
+	char 		    *tmpurl		   = NULL;
+	//nsFileSpec  *outFileSpec = new nsFileSpec; 
+  //nsFileSpec  *tempSrcFile = new nsFileSpec;   // TODO: do you need to free?
+  nsCOMPtr<nsIFile> outFileSpec;
+  nsCOMPtr<nsIFile> tempSrcFile;
+  nsCOMPtr<nsILocalFile> uniqueSrcFile;
+  nsCOMPtr<nsILocalFile> patchFileLocal = do_QueryInterface(patchFile, &rv);
+  
+  char*        realfile;
+  sourceFile->GetPath(&realfile);
+
+  sourceFile->Clone(getter_AddRefs(outFileSpec));
 
 	dd = (DIFFDATA *)PR_Calloc( 1, sizeof(DIFFDATA));
 	if (dd != NULL)
@@ -401,149 +425,185 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 		dd->bufsize = BUFSIZE;
 
 		// validate patch header & check for special instructions
-		dd->fDiff = PR_Open (nsNSPRPath(patchFile), PR_RDONLY, 0666);
-
+    patchFileLocal->OpenNSPRFileDesc(PR_RDONLY, 0666, &dd->fDiff);
 
 		if (dd->fDiff != NULL)
 		{
 			status = gdiff_parseHeader(dd);
-		} else {
+		} 
+    else 
+    {
 			status = GDIFF_ERR_ACCESS;
 		}
 
 
-        // in case we need to unbind Win32 images OR encode Mac file
-        if (( dd->bWin32BoundImage || dd->bMacAppleSingle) && (status == GDIFF_OK ))
+    // in case we need to unbind Win32 images OR encode Mac file
+    if (( dd->bWin32BoundImage || dd->bMacAppleSingle) && (status == GDIFF_OK ))
+    {
+        // make an unique tmp file  (FILENAME-src.EXT)
+        char* leafName;
+        rv = sourceFile->GetLeafName(&leafName);
+
+        nsString tmpName; tmpName.AssignWithConversion("-src");
+        nsString tmpFileName; tmpFileName.AssignWithConversion(leafName);
+
+        PRInt32 i;
+        if ((i = tmpFileName.RFindChar('.')) > 0)
         {
-            // make an unique tmp file  (FILENAME-src.EXT)
-            *tempSrcFile = sourceFile;
-            nsString tmpName; tmpName.AssignWithConversion("-src");
-		    nsString tmpFileName; tmpFileName.AssignWithConversion(sourceFile.GetLeafName());
-
-            PRInt32 i;
-		    if ((i = tmpFileName.RFindChar('.')) > 0)
-		    {
-                nsString ext;
-                nsString fName;
-                tmpFileName.Right(ext, (tmpFileName.Length() - i) );        
-                tmpFileName.Left(fName, (tmpFileName.Length() - (tmpFileName.Length() - i)));
-                tmpFileName = fName + tmpName + ext;
-
-            } else {
-                tmpFileName += tmpName;
-            }
-        
-
-		    tempSrcFile->SetLeafName(tmpFileName);
-		    tempSrcFile->MakeUnique();
-
-#ifdef WIN32
-            // unbind Win32 images
-            char *tmpFile = PL_strdup(nsNSPRPath(*tempSrcFile));
-            if (su_unbind(realfile, tmpFile))
-            {
-                PL_strfree(realfile);
-                realfile = PL_strdup(tmpFile);
-            }
-            else
-            {
-                status = GDIFF_ERR_MEM;
-            }
-            PL_strfree(tmpFile);
-#endif
-#ifdef XP_MAC
-		   // Encode src file, and put into temp file
-		   FSSpec sourceSpec = sourceFile.GetFSSpec();
-		   FSSpec tempSpec   = tempSrcFile->GetFSSpec();
-		    
-			status = PAS_EncodeFile(&sourceSpec, &tempSpec);   
-				
-			if (status == noErr)
-			{
-				// set
-                PL_strfree(realfile);
-				realfile = PL_strdup(nsNSPRPath(*tempSrcFile));
-			}
-#endif
-        }
-
-		if (status != NS_OK)
-			goto cleanup;
-
-		// make a unique file at the same location of our source file  (FILENAME-ptch.EXT)
-        nsString patchFileName; patchFileName.AssignWithConversion("-ptch");
-		nsString newFileName; newFileName.AssignWithConversion(sourceFile.GetLeafName());
-
-        PRInt32 index;
-		if ((index = newFileName.RFindChar('.')) > 0)
-		{
-            nsString extention;
-            nsString fileName;
-            newFileName.Right(extention, (newFileName.Length() - index) );        
-            newFileName.Left(fileName, (newFileName.Length() - (newFileName.Length() - index)));
-            newFileName = fileName + patchFileName + extention;
+            nsString ext;
+            nsString fName;
+            tmpFileName.Right(ext, (tmpFileName.Length() - i) );        
+            tmpFileName.Left(fName, (tmpFileName.Length() - (tmpFileName.Length() - i)));
+            tmpFileName = fName + tmpName + ext;
 
         } else {
-            newFileName += patchFileName;
+               tmpFileName += tmpName;
         }
         
+    
+        rv = sourceFile->Clone(getter_AddRefs(tempSrcFile));  //Clone the sourceFile
+        tempSrcFile->SetLeafName(tmpFileName.ToNewCString()); //Append the new leafname
+        uniqueSrcFile = do_QueryInterface(tempSrcFile, &rv);  //Create an nsILocalFile version to pass to MakeUnique
+        MakeUnique(uniqueSrcFile); 
 
-		outFileSpec->SetLeafName(newFileName);
-		outFileSpec->MakeUnique();
+       char*        realfile;
+       sourceFile->GetPath(&realfile);
 
-        char *outFile = PL_strdup(nsNSPRPath(*outFileSpec));
+#ifdef WIN32
+        // unbind Win32 images
 
-		// apply patch to the source file
-		dd->fSrc = PR_Open ( realfile, PR_RDONLY, 0666);
-		dd->fOut = PR_Open ( outFile, PR_RDWR|PR_CREATE_FILE|PR_TRUNCATE, 0666);
+        char* unboundFile;
+        uniqueSrcFile->GetPath(&unboundFile);
 
-		if (dd->fSrc != NULL && dd->fOut != NULL)
-		{
-			status = gdiff_validateFile (dd, SRCFILE);
+        if (su_unbind(realfile, unboundFile))  //
+        {
+            PL_strfree(realfile);
+            realfile = PL_strdup(unboundFile);
+        }
+        else
+        {
+            status = GDIFF_ERR_MEM;
+        }
+        PL_strfree(unboundFile);
+#endif
+#ifdef XP_MAC
+   // Encode src file, and put into temp file
+        FSSpec sourceSpec, tempSpec;
+        nsCOMPtr<nsILocalFileMac> tempSourceFile;
+        tempSourceFile = do_QueryInterface(sourceFile, &rv);
+        tempSourceFile->GetFSSpec(&sourceSpec);
+    
+        status = PAS_EncodeFile(&sourceSpec, &tempSpec);   
 
-			// specify why diff failed
-			if (status == GDIFF_ERR_CHECKSUM)
-				status = GDIFF_ERR_CHECKSUM_TARGET;
+        if (status == noErr)
+        {
+            // set
+            PL_strfree(realfile);
+            tempSrcFile->GetPath(&realfile);
+        }
+#endif
+    }
 
-			if (status == GDIFF_OK)
-				status = gdiff_ApplyPatch(dd);
+    if (status != NS_OK)
+    goto cleanup;
 
-			if (status == GDIFF_OK)
-				status = gdiff_validateFile (dd, OUTFILE);
+    // make a unique file at the same location of our source file  (FILENAME-ptch.EXT)
+    nsString patchFileName; patchFileName.AssignWithConversion("-ptch");
+    char* leafName;
+    sourceFile->GetLeafName(&leafName);
+    nsString newFileName; newFileName.AssignWithConversion(leafName);;
 
-			if (status == GDIFF_ERR_CHECKSUM)
-				status = GDIFF_ERR_CHECKSUM_RESULT;
+    PRInt32 index;
+    if ((index = newFileName.RFindChar('.')) > 0)
+    {
+        nsString extention;
+        nsString fileName;
+        newFileName.Right(extention, (newFileName.Length() - index) );        
+        newFileName.Left(fileName, (newFileName.Length() - (newFileName.Length() - index)));
+        newFileName = fileName + patchFileName + extention;
 
-            *newFile = outFileSpec;
-            if ( outFile != nsnull)
-                PL_strfree( outFile );
+    }
+    else
+    {
+        newFileName += patchFileName;
+    }
 
-		} else {
 
-			status = GDIFF_ERR_ACCESS;
-		}		
-	}
+    outFileSpec->SetLeafName(newFileName.ToNewCString());  //Set new leafname
+    nsCOMPtr<nsILocalFile> outFileLocal = do_QueryInterface(outFileSpec, &rv); //Create an nsILocalFile version 
+                                                                               //to send to MakeUnique()
+    MakeUnique(outFileLocal);
+
+    // apply patch to the source file
+    //dd->fSrc = PR_Open ( realfile, PR_RDONLY, 0666);
+    //dd->fOut = PR_Open ( outFile, PR_RDWR|PR_CREATE_FILE|PR_TRUNCATE, 0666);
+    nsCOMPtr<nsILocalFile> realFileLocal = do_CreateInstance(NS_LOCAL_FILE_PROGID);;
+    realFileLocal->InitWithPath(realfile);
+
+    realFileLocal->OpenNSPRFileDesc(PR_RDONLY, 0666, &dd->fSrc);
+    outFileLocal->OpenNSPRFileDesc(PR_RDWR|PR_CREATE_FILE|PR_TRUNCATE, 0666, &dd->fOut);
+
+    if (dd->fSrc != NULL && dd->fOut != NULL)
+    {
+        status = gdiff_validateFile (dd, SRCFILE);
+
+        // specify why diff failed
+        if (status == GDIFF_ERR_CHECKSUM)
+            status = GDIFF_ERR_CHECKSUM_TARGET;
+
+        if (status == GDIFF_OK)
+            status = gdiff_ApplyPatch(dd);
+
+        if (status == GDIFF_OK)
+            status = gdiff_validateFile (dd, OUTFILE);
+
+        if (status == GDIFF_ERR_CHECKSUM)
+            status = GDIFF_ERR_CHECKSUM_RESULT;
+
+        rv = outFileSpec->Clone(getter_AddRefs(newFile));
+    } 
+    else 
+    {
+        status = GDIFF_ERR_ACCESS;
+    }
+  }
 
 
 
 #ifdef XP_MAC
-	if ( dd->bMacAppleSingle && status == GDIFF_OK ) 
-	{
+  if ( dd->bMacAppleSingle && status == GDIFF_OK ) 
+ {
         // create another file, so that we can decode somewhere
-        nsFileSpec anotherName = *outFileSpec;
-        anotherName.MakeUnique();
+        //nsFileSpec anotherName = *outFileSpec;
+        nsCOMPtr<nsILocalFile> anotherName;
+        nsCOMPtr<nsIFile> bsTemp;
+        
+        outFileSpec->Clone(getter_AddRefs(bsTemp));   //Clone because we'll be changing the name
+        anotherName = do_QueryInterface(bsTemp, &rv); //Set the old name
+        MakeUnique(anotherName);  //Now give it the new name
         
 		// Close the out file so that we can read it 		
 		PR_Close( dd->fOut );
 		dd->fOut = NULL;
 		
 		
-		FSSpec outSpec = outFileSpec->GetFSSpec();
-		FSSpec anotherSpec = anotherName.GetFSSpec();
+		FSSpec outSpec;
+		FSSpec anotherSpec;
+		nsCOMPtr<nsILocalFileMac> outSpecMacSpecific;
+		nsCOMPtr<nsILocalFileMac> anotherNameMacSpecific;
 		
-		if ( outFileSpec->Exists() )
+		anotherNameMacSpecific = do_QueryInterface(anotherName, &rv); //set value to nsILocalFileMac (sheesh)
+		outSpecMacSpecific = do_QueryInterface(outFileSpec, &rv); //ditto 
+		
+		anotherNameMacSpecific->GetFSSpec(&anotherSpec);
+		outSpecMacSpecific->GetFSSpec(&outSpec);
+		
+		outFileSpec->Exists(&flagExists);
+		if ( flagExists )
 		{
-			printf("filesize: %d\n", outFileSpec->GetFileSize());
+		    PRInt64 fileSize;
+		    outFileSpec->GetFileSize(&fileSize);
+			printf("filesize: %d\n", fileSize);
 		}
 		
 			
@@ -553,16 +613,18 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 		   	goto cleanup;
         }
 		
-        nsFileSpec parent;
+        nsCOMPtr<nsIFile> parent;
         
-        outFileSpec->GetParent(parent);
+        outFileSpec->GetParent(getter_AddRefs(parent));
         
         outFileSpec->Delete(PR_FALSE);
-        anotherName.CopyToDir(parent);
         
-        *outFileSpec = anotherName;
+        char* leaf;
+        anotherName->GetLeafName(&leaf);
+        anotherName->CopyTo(parent, leaf);
         
-        *newFile = outFileSpec;
+        anotherName->Clone(getter_AddRefs(newFile));
+        
 	}
 	
 #endif 
@@ -574,28 +636,25 @@ cleanup:
         if ( dd->fSrc != nsnull )
             PR_Close( dd->fSrc );
 
-
         if ( dd->fDiff != nsnull )
             PR_Close( dd->fDiff );
-		
-		if ( dd->fOut != nsnull )
-        {
+
+        if ( dd->fOut != nsnull )
             PR_Close( dd->fOut );
-        }
-        
+
         if ( status != GDIFF_OK )
-		   	//XP_FileRemove( outfile, outtype );
-			newFile = NULL;
-		        
-		PR_FREEIF( dd->databuf );
+        //XP_FileRemove( outfile, outtype );
+            newFile = NULL;
+
+        PR_FREEIF( dd->databuf );
         PR_FREEIF( dd->oldChecksum );
         PR_FREEIF( dd->newChecksum );
         PR_DELETE(dd);
     }
 
-	if ( tmpurl != NULL ) {
+    if ( tmpurl != NULL ) {
         //XP_FileRemove( tmpurl, xpURL );
-		tmpurl = NULL;
+        tmpurl = NULL;
         PR_DELETE( tmpurl );
     }
 
@@ -604,50 +663,53 @@ cleanup:
         PL_strfree(realfile);
     }
     
-    if ((tempSrcFile != nsnull) && (tempSrcFile->Exists()) )
+    if (tempSrcFile)
     {
-        tempSrcFile->Delete(PR_FALSE);
+        tempSrcFile->Exists(&flagExists);
+        if (flagExists)
+            tempSrcFile->Delete(PR_FALSE);
     }
 
-	/* lets map any GDIFF error to nice SU errors */
+    /* lets map any GDIFF error to nice SU errors */
 
-	switch (status)
-	{
+    switch (status)
+    {
         case GDIFF_OK:
                 break;
-		case GDIFF_ERR_HEADER:
-		case GDIFF_ERR_BADDIFF:
-		case GDIFF_ERR_OPCODE:
-		case GDIFF_ERR_CHKSUMTYPE:
-				status = nsInstall::PATCH_BAD_DIFF;
-				break;
-		case GDIFF_ERR_CHECKSUM_TARGET:
-				status = nsInstall::PATCH_BAD_CHECKSUM_TARGET;
-				break;
-		case GDIFF_ERR_CHECKSUM_RESULT:
-				status = nsInstall::PATCH_BAD_CHECKSUM_RESULT;
-				break;
-		case GDIFF_ERR_OLDFILE:
-		case GDIFF_ERR_ACCESS:
-		case GDIFF_ERR_MEM:
-		case GDIFF_ERR_UNKNOWN:
-		default:
-				status = nsInstall::UNEXPECTED_ERROR;
-				break;
-	}
+        case GDIFF_ERR_HEADER:
+        case GDIFF_ERR_BADDIFF:
+        case GDIFF_ERR_OPCODE:
+        case GDIFF_ERR_CHKSUMTYPE:
+            status = nsInstall::PATCH_BAD_DIFF;
+            break;
+        case GDIFF_ERR_CHECKSUM_TARGET:
+            status = nsInstall::PATCH_BAD_CHECKSUM_TARGET;
+            break;
+        case GDIFF_ERR_CHECKSUM_RESULT:
+            status = nsInstall::PATCH_BAD_CHECKSUM_RESULT;
+            break;
+        case GDIFF_ERR_OLDFILE:
+        case GDIFF_ERR_ACCESS:
+        case GDIFF_ERR_MEM:
+        case GDIFF_ERR_UNKNOWN:
+        default:
+            status = nsInstall::UNEXPECTED_ERROR;
+            break;
+    }
 
     return status;
 
-	// return -1;	//old return value
+    // return -1;	//old return value
 }
 
 
 void* 
-nsInstallPatch::HashFilePath(const nsFilePath& aPath)
+nsInstallPatch::HashFilePath(nsIFile* aPath)
 {
     PRUint32 rv = 0;
 
-	char* cPath = PL_strdup(nsNSPRPath(aPath));
+    char* cPath;
+    aPath->GetPath(&cPath);
     
     if(cPath != nsnull) 
     {
@@ -661,7 +723,7 @@ nsInstallPatch::HashFilePath(const nsFilePath& aPath)
         }
     }
 
-	PL_strfree(cPath);
+    PL_strfree(cPath);
 
     return (void*)rv;
 }

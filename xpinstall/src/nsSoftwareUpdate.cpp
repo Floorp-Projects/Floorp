@@ -91,7 +91,7 @@ static NS_DEFINE_CID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 static NS_DEFINE_CID(knsRegistryCID, NS_REGISTRY_CID);
 
 nsSoftwareUpdate* nsSoftwareUpdate::mInstance = nsnull;
-nsIFileSpec*      nsSoftwareUpdate::mProgramDir = nsnull;
+nsCOMPtr<nsIFile> nsSoftwareUpdate::mProgramDir = nsnull;
 
 #if NOTIFICATION_ENABLE
 #include "nsUpdateNotification.h"
@@ -154,7 +154,7 @@ nsSoftwareUpdate::~nsSoftwareUpdate()
 
     NR_ShutdownRegistry();
 
-    NS_IF_RELEASE( mProgramDir );
+    //NS_IF_RELEASE( mProgramDir );
 
     mInstance = nsnull;
 }
@@ -296,7 +296,7 @@ nsSoftwareUpdate::SetActiveNotifier(nsIXPINotifier *notifier)
 }
 
 NS_IMETHODIMP
-nsSoftwareUpdate::InstallJar(  nsIFileSpec* aLocalFile,
+nsSoftwareUpdate::InstallJar(  nsIFile* aLocalFile,
                                const PRUnichar* aURL,
                                const PRUnichar* aArguments,
                                long flags,
@@ -478,7 +478,7 @@ nsSoftwareUpdate::RegisterNameset()
 
 
 NS_IMETHODIMP
-nsSoftwareUpdate::StubInitialize(nsIFileSpec *aDir)
+nsSoftwareUpdate::StubInitialize(nsIFile *aDir)
 {
     if (mStubLockout)
         return NS_ERROR_ABORT;
@@ -489,13 +489,12 @@ nsSoftwareUpdate::StubInitialize(nsIFileSpec *aDir)
     mStubLockout = PR_TRUE;
 
     // fix GetFolder return path
-    mProgramDir = aDir;
-    NS_ADDREF(mProgramDir);
+    nsresult rv = aDir->Clone(getter_AddRefs(mProgramDir));
 
     // make sure registry updates go to the right place
-    nsFileSpec instDir;
-    if (NS_SUCCEEDED( aDir->GetFileSpec( &instDir ) ) )
-        VR_SetRegDirectory( instDir.GetNativePathCString() );
+    char* tempPath;
+    rv = aDir->GetPath(&tempPath);
+        VR_SetRegDirectory( tempPath );
 
     // Create the logfile observer
     nsLoggingProgressNotifier *logger = new nsLoggingProgressNotifier();
@@ -503,7 +502,7 @@ nsSoftwareUpdate::StubInitialize(nsIFileSpec *aDir)
 
     // setup version registry path
     char*    path;
-    nsresult rv = aDir->GetNativePath( &path );
+    aDir->GetPath( &path );
     if (NS_SUCCEEDED(rv))
     {
         VR_SetRegDirectory( path );

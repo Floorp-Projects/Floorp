@@ -1865,7 +1865,7 @@ static JSFunctionSpec InstallMethods[] =
   {"dirRemove",                 InstallFileOpDirRemove,                2},
   {"dirRename",                 InstallFileOpDirRename,                2},
   {"fileCopy",                  InstallFileOpFileCopy,                 2},
-  {"fileDelete",                InstallFileOpFileDelete,               2},
+  {"fileDelete",                InstallFileOpFileRemove,               1},
   {"fileExists",                InstallFileOpFileExists,               1},
   {"fileExecute",               InstallFileOpFileExecute,              2},
   {"fileGetNativeVersion",      InstallFileOpFileGetNativeVersion,     1},
@@ -1910,7 +1910,7 @@ static JSFunctionSpec InstallMethods[] =
   {"DirRemove",                 InstallFileOpDirRemove,                2},
   {"DirRename",                 InstallFileOpDirRename,                2},
   {"FileCopy",                  InstallFileOpFileCopy,                 2},
-  {"FileDelete",                InstallFileOpFileDelete,               2},
+  {"FileDelete",                InstallFileOpFileRemove,               1},
   {"FileExists",                InstallFileOpFileExists,               1},
   {"FileExecute",               InstallFileOpFileExecute,              2},
   {"FileGetNativeVersion",      InstallFileOpFileGetNativeVersion,     1},
@@ -1937,7 +1937,7 @@ static JSFunctionSpec InstallMethods[] =
 
 JSObject * InitXPInstallObjects(JSContext *jscontext, 
                              JSObject *global, 
-                             const nsFileSpec& jarfile, 
+                             nsIFile* jarfile, 
                              const PRUnichar* url,
                              const PRUnichar* args,
                              nsIZipReader * theJARFile)

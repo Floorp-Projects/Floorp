@@ -33,19 +33,16 @@
 
 
 static nsresult 
-GetPersistentStringFromSpec(const nsFileSpec& inSpec, char **string)
+GetPersistentStringFromSpec(nsIFile* inSpec, char **string)
 {
+    nsresult rv;
+
     if (!string) return NS_ERROR_NULL_POINTER;
 
-    nsCOMPtr<nsIFileSpec> spec;
-#ifdef XP_MAC
-    nsFileSpec interim = inSpec.GetFSSpec(); /* XXX get rid of mError in nsFileSpec */
-    nsresult rv = NS_NewFileSpecWithSpec(interim, getter_AddRefs(spec));
-#else
-    nsresult rv = NS_NewFileSpecWithSpec(inSpec, getter_AddRefs(spec));
-#endif
+    nsCOMPtr<nsILocalFile> LocalFile = do_QueryInterface(inSpec, &rv);
+
     if (NS_SUCCEEDED(rv)) {
-        rv = spec->GetPersistentDescriptorString(string);
+        rv = LocalFile->GetPath(string);
     } 
     else {
         *string = nsnull;
@@ -61,7 +58,7 @@ GetPersistentStringFromSpec(const nsFileSpec& inSpec, char **string)
 #include <sys/stat.h>
 #include <windows.h>
 
-PRInt32 ReplaceExistingWindowsFile(const nsFileSpec& currentSpec, const nsFileSpec& finalSpec)
+PRInt32 ReplaceExistingWindowsFile(nsIFile* currentSpec, nsIFile* finalSpec)
 {
     // this routine is now for DOS-based windows only. WinNT should 
     // be taken care of by the XP code
@@ -97,9 +94,13 @@ PRInt32 ReplaceExistingWindowsFile(const nsFileSpec& currentSpec, const nsFileSp
         char    Src[_MAX_PATH];   // 8.3 name
         char    Dest[_MAX_PATH];  // 8.3 name
 
-        char* final   = strdup(finalSpec.GetNativePathCString());
-        char* current = strdup(currentSpec.GetNativePathCString());
+        
+        char* final;
+        char* current;
 
+        finalSpec->GetPath(&final);
+        currentSpec->GetPath(&current);
+        
         strlen = GetShortPathName( (LPCTSTR)current, (LPTSTR)Src, (DWORD)sizeof(Src) );
         if ( strlen > 0 ) 
         {
@@ -135,13 +136,15 @@ PRInt32 ReplaceExistingWindowsFile(const nsFileSpec& currentSpec, const nsFileSp
 
 
 
-PRInt32 DeleteFileNowOrSchedule(const nsFileSpec& filename)
+PRInt32 DeleteFileNowOrSchedule(nsIFile* filename)
 {
 
-    PRInt32 result = nsInstall::SUCCESS;
+  PRBool flagExists;  
+  PRInt32 result = nsInstall::SUCCESS;
 
-    filename.Delete(PR_FALSE);
-    if (filename.Exists())
+    filename->Delete(PR_FALSE);
+    filename->Exists(&flagExists);
+    if (flagExists)
     {
         // could not delete, schedule it for later
 
@@ -188,57 +191,75 @@ PRInt32 DeleteFileNowOrSchedule(const nsFileSpec& filename)
 
 
 
-PRInt32 ReplaceFileNow(nsFileSpec& replacementFile, nsFileSpec& doomedFile )
+PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
 {
+    PRBool flagExists, flagIsEqual;
+    nsresult rv;
+
     // replacement file must exist, doomed file doesn't have to
-    if ( !replacementFile.Exists() )
+    replacementFile->Exists(&flagExists);
+    if ( !flagExists )
         return nsInstall::DOES_NOT_EXIST;
 
     // don't have to do anything if the files are the same
-    if ( replacementFile == doomedFile )
+    replacementFile->Equals(doomedFile, &flagIsEqual);
+    if ( flagIsEqual )
         return nsInstall::SUCCESS;
 
 
     PRInt32 result = nsInstall::ACCESS_DENIED;
 
     // first try to rename the doomed file out of the way (if it exists)
-    char*   leafname;
-    nsFileSpec tmpFile( doomedFile );
-    if ( tmpFile.Exists() )
+    char*   leafname = nsnull;
+    nsCOMPtr<nsIFile>      tmpFile;
+    nsCOMPtr<nsILocalFile> tmpLocalFile;
+    nsCOMPtr<nsIFile> parent;
+    
+    doomedFile->Clone(getter_AddRefs(tmpFile));
+    tmpFile->Exists(&flagExists);
+    if ( flagExists )
     {
-        tmpFile.MakeUnique();
-        leafname = tmpFile.GetLeafName();
-        tmpFile = doomedFile;
-        tmpFile.Rename( leafname );
-        nsCRT::free( leafname );
+        tmpLocalFile = do_QueryInterface(tmpFile, &rv); // Convert to an nsILocalFile
+        MakeUnique(tmpLocalFile);                       //   for the call to MakeUnique
+        
+        tmpLocalFile->GetParent(getter_AddRefs(parent)); //get the parent for later use in MoveTo
+        tmpLocalFile->GetLeafName(&leafname);            //this is the new "unique" leafname
+
+        doomedFile->Clone(getter_AddRefs(tmpFile));  // recreate the tmpFile as a doomedFile
+        tmpFile->MoveTo(parent, leafname);
+        
+        if (leafname) nsCRT::free( leafname );
     }
 
 
     // if doomedFile is gone move new file into place
-    nsresult rv;
-    if ( !doomedFile.Exists() )
+    doomedFile->Exists(&flagExists);
+    if ( !flagExists )
     {
-        nsFileSpec parentofFinalFile;
-        nsFileSpec parentofReplacementFile;
+        nsCOMPtr<nsIFile> parentofFinalFile;
+        nsCOMPtr<nsIFile> parentofReplacementFile;
 
-        doomedFile.GetParent(parentofFinalFile);
-        replacementFile.GetParent(parentofReplacementFile);
+        doomedFile->GetParent(getter_AddRefs(parentofFinalFile));
+        replacementFile->GetParent(getter_AddRefs(parentofReplacementFile));
 
         // XXX looks dangerous, the replacement file name may NOT be unique in the
         // target directory if we have to move it! Either we should never move the
         // files like this (i.e. error if not in the same dir) or we need to take
         // a little more care in the move.
-        if(parentofReplacementFile != parentofFinalFile)
+        parentofReplacementFile->Equals(parentofFinalFile, &flagIsEqual);
+        if(!flagIsEqual)
         {
             NS_WARN_IF_FALSE( 0, "File unpacked into a non-dest dir" );
-            rv = replacementFile.MoveToDir(parentofFinalFile);
+            replacementFile->GetLeafName(&leafname);
+            rv = replacementFile->MoveTo(parentofFinalFile, leafname);
         }
         else
         	rv = NS_OK;
         	
-        leafname = doomedFile.GetLeafName();
+        doomedFile->GetLeafName(&leafname);
+        replacementFile->GetParent(getter_AddRefs(parent));
         if ( NS_SUCCEEDED(rv) )
-            rv = replacementFile.Rename( leafname );
+            rv = replacementFile->MoveTo(parent, leafname );
 
         if ( NS_SUCCEEDED(rv) ) 
         {
@@ -249,7 +270,8 @@ PRInt32 ReplaceFileNow(nsFileSpec& replacementFile, nsFileSpec& doomedFile )
         else
         {
             // couldn't rename file, try to put old file back
-            tmpFile.Rename( leafname );
+            tmpFile->GetParent(getter_AddRefs(parent));
+            tmpFile->MoveTo(parent, leafname);
         }
         nsCRT::free( leafname );
     }
@@ -261,7 +283,7 @@ PRInt32 ReplaceFileNow(nsFileSpec& replacementFile, nsFileSpec& doomedFile )
 
 
 
-PRInt32 ReplaceFileNowOrSchedule(nsFileSpec& replacementFile, nsFileSpec& doomedFile )
+PRInt32 ReplaceFileNowOrSchedule(nsIFile* replacementFile, nsIFile* doomedFile )
 {
     PRInt32 result = ReplaceFileNow( replacementFile, doomedFile );
 
@@ -359,6 +381,7 @@ void DeleteScheduledFiles( HREG reg )
     REGERR  err;
     RKEY    key;
     REGENUM state = 0;
+    nsresult rv = NS_OK;
 
     /* perform scheduled file deletions  */
     if (REGERR_OK == NR_RegGetKey(reg,ROOTKEY_PRIVATE,REG_DELETE_LIST_KEY,&key))
@@ -369,10 +392,9 @@ void DeleteScheduledFiles( HREG reg )
         char    namebuf[MAXREGNAMELEN];
         char    valbuf[MAXREGPATHLEN];
 
-        nsFileSpec              doomedFile;
-        nsCOMPtr<nsIFileSpec>   spec;
+        nsCOMPtr<nsIFile>        doomedFile;
+        nsCOMPtr<nsILocalFile>   spec;
 
-        nsresult rv = NS_NewFileSpec(getter_AddRefs(spec));
         if (NS_SUCCEEDED(rv))
         {
             while (REGERR_OK == NR_RegEnumEntries( reg, key, &state, namebuf,
@@ -384,12 +406,15 @@ void DeleteScheduledFiles( HREG reg )
                 {
                     // no need to check return value of 
                     // SetPersistentDescriptorString, it's always NS_OK
-                    spec->SetPersistentDescriptorString(valbuf);
-                    rv = spec->GetFileSpec(&doomedFile);
+                    //spec->SetPersistentDescriptorString(valbuf); //nsIFileXXX: Do we still need this instead of InitWithPath?
+                    NS_NewLocalFile((char*)valbuf, getter_AddRefs(spec));
+                    spec->Clone(getter_AddRefs(doomedFile));
                     if (NS_SUCCEEDED(rv)) 
                     {
-                        doomedFile.Delete(PR_FALSE);
-                        if ( !doomedFile.Exists() )
+                        PRBool flagExists;
+                        doomedFile->Delete(PR_FALSE);
+                        doomedFile->Exists(&flagExists);
+                        if ( !flagExists )
                         {
                             // deletion successful, don't have to retry
                             NR_RegDeleteEntry( reg, key, namebuf );
@@ -422,14 +447,14 @@ void ReplaceScheduledFiles( HREG reg )
         char doomedFile[MAXREGPATHLEN];
         char srcFile[MAXREGPATHLEN];
 
-        nsFileSpec              doomedSpec;
-        nsFileSpec              srcSpec;
-        nsCOMPtr<nsIFileSpec>   src;
-        nsCOMPtr<nsIFileSpec>   dest;
+        nsCOMPtr<nsIFile>       doomedSpec;
+        nsCOMPtr<nsIFile>       srcSpec;
+        nsCOMPtr<nsILocalFile>       src;
+        nsCOMPtr<nsILocalFile>       dest;
         nsresult                rv1, rv2;
 
-        rv1 = NS_NewFileSpec(getter_AddRefs(src));
-        rv2 = NS_NewFileSpec(getter_AddRefs(dest));
+        rv1 = NS_NewLocalFile("", getter_AddRefs(src));
+        rv2 = NS_NewLocalFile("", getter_AddRefs(dest));
         if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2))
         {
             uint32 bufsize;
@@ -447,11 +472,11 @@ void ReplaceScheduledFiles( HREG reg )
 
                 if ( err1 == REGERR_OK && err2 == REGERR_OK )
                 {
-                    src->SetPersistentDescriptorString(srcFile);
-                    rv1 = src->GetFileSpec(&srcSpec);
+                    src->InitWithPath((char*)srcFile);
+                    rv1 = src->Clone(getter_AddRefs(srcSpec));
 
-                    dest->SetPersistentDescriptorString(doomedFile);
-                    rv2 = dest->GetFileSpec(&doomedSpec);
+                    dest->InitWithPath((char*)doomedFile);
+                    rv2 = dest->Clone(getter_AddRefs(doomedSpec));
 
                     if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2))
                     {

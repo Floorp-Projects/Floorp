@@ -31,6 +31,8 @@
 #include "nsISupportsUtils.h"
 #include "nsIXPINotifier.h"
 #include "nsIFileSpec.h"
+#include "nsILocalFile.h"
+#include "nsIOutputStream.h"
 #include "jsapi.h"
 #include "prthread.h"
 #include "plevent.h"
@@ -59,7 +61,8 @@ class nsXPITriggerItem
     nsString    mArguments;
     PRInt32     mFlags;
 
-    nsCOMPtr<nsIFileSpec>  mFile;
+    nsCOMPtr<nsILocalFile>      mFile;
+    nsCOMPtr<nsIOutputStream>   mOutStream;
 
     PRBool  IsFileURL() { return mURL.EqualsWithConversion("file:/",PR_FALSE,6); }
     PRBool  IsRelativeURL();

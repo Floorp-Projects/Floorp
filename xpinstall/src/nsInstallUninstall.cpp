@@ -189,10 +189,14 @@ REGERR su_UninstallProcessItem(char *component_path)
     int refcount;
     int err;
     char filepath[MAXREGPATHLEN];
+    nsCOMPtr<nsILocalFile> nsLFPath;
+    nsCOMPtr<nsIFile> nsFPath;
 
     err = VR_GetPath(component_path, sizeof(filepath), filepath);
     if ( err == REGERR_OK )
     {
+        NS_NewLocalFile((char*)filepath, getter_AddRefs(nsLFPath));
+        nsFPath = nsLFPath;
         err = VR_GetRefCount(component_path, &refcount);  
         if ( err == REGERR_OK )
         {
@@ -202,14 +206,14 @@ REGERR su_UninstallProcessItem(char *component_path)
             else 
             {
                 err = VR_Remove(component_path);
-                DeleteFileNowOrSchedule(nsFileSpec(filepath));
+                DeleteFileNowOrSchedule(nsFPath);
             }
         }
         else
         {
             /* delete node and file */
             err = VR_Remove(component_path);
-            DeleteFileNowOrSchedule(nsFileSpec(filepath));
+            DeleteFileNowOrSchedule(nsFPath);
         }
     }
     return err;
