@@ -214,7 +214,7 @@ nsresult
 editorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   COM_auto_ptr<nsIDOMNode> target;
-  if (NS_OK == aMouseEvent->GetTarget(context_AddRefs(target))) {
+  if (NS_OK == aMouseEvent->GetTarget(func_AddRefs(target))) {
 //    nsSetCurrentNode(aTarget);
   }
   //Should not be error.  Need a new way to do return values
