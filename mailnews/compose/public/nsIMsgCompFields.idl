@@ -19,7 +19,7 @@
 #include "nsISupports.idl"
 
 
-[object, uuid(3E89CAE3-BD2D-11d2-8293-000000000000)]
+[scriptable, uuid(3E89CAE3-BD2D-11d2-8293-000000000000)]
 interface nsIMsgCompFields : nsISupports {
 
 	void Copy(in nsIMsgCompFields pMsgCompFields);
