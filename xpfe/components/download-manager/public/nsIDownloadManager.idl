@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Keeps track of ongoing downloads, in the form of nsIDownloadItem's. 
+// Keeps track of ongoing downloads, in the form of nsIDownload's. 
 
 #include "nsISupports.idl"
 
