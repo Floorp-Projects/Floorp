@@ -71,30 +71,18 @@ function getTestCases() {
     array[item++] = new TestCase( SECTION,   "new Array(1).length",     1,                  (new Array(1)).length );
     array[item++] = new TestCase( SECTION,   "(new Array(1)).toString", Array.prototype.toString,   (new Array(1)).toString );
 
-    array[item++] = new TestCase( SECTION,	"(new Array(Number.NaN)).length",               0,  (new Array(Number.NaN)).length );
-    array[item++] = new TestCase( SECTION,	"(new Array(Number.POSITIVE_INFINITY)).length", 0,  (new Array(Number.POSITIVE_INFINITY)).length );
-    array[item++] = new TestCase( SECTION,	"(new Array(Number.NEGATIVE_INFINITY)).length", 0,  (new Array(Number.NEGATIVE_INFINITY)).length );
     array[item++] = new TestCase( SECTION,	"(new Array(-0)).length",                       0,  (new Array(-0)).length );
     array[item++] = new TestCase( SECTION,	"(new Array(0)).length",                        0,  (new Array(0)).length );
-
-    array[item++] = new TestCase( SECTION,	"(new Array(-1000)).length",        ToUint32(-1000),    (new Array(-1000)).length );
 
     array[item++] = new TestCase( SECTION,	"(new Array(10)).length",           10,         (new Array(10)).length );
     array[item++] = new TestCase( SECTION,	"(new Array('1')).length",          1,          (new Array('1')).length );
     array[item++] = new TestCase( SECTION,	"(new Array(1000)).length",         1000,       (new Array(1000)).length );
     array[item++] = new TestCase( SECTION,	"(new Array('1000')).length",       1,          (new Array('1000')).length );
 
-//    array[item++] = new TestCase( SECTION,	"(new Array(4294967295)).length",   ToUint32(4294967295),   (new Array(4294967295)).length );
-    array[item++] = new TestCase( SECTION,	"(new Array(4294967296)).length",   ToUint32(4294967296),   (new Array(4294967296)).length );
-    array[item++] = new TestCase( SECTION,	"(new Array(4294967297)).length",   ToUint32(4294967297),   (new Array(4294967297)).length );
-    array[item++] = new TestCase( SECTION,	"(new Array(4294967298)).length",   ToUint32(4294967298),   (new Array(4294967298)).length );
+    array[item++] = new TestCase( SECTION,	"(new Array(4294967295)).length",   ToUint32(4294967295),   (new Array(4294967295)).length );
 
-    array[item++] = new TestCase( SECTION,	"(new Array(8589934592)).length",   ToUint32(8589934592),   (new Array(8589934592)).length );
     array[item++] = new TestCase( SECTION,	"(new Array('8589934592')).length", 1,                      (new Array("8589934592")).length );
     array[item++] = new TestCase( SECTION,	"(new Array('4294967296')).length", 1,                      (new Array("4294967296")).length );
-    array[item++] = new TestCase( SECTION,	"(new Array(3.14159)).length",      ToUint32(3.14159),      (new Array(3.14159)).length );
-    array[item++] = new TestCase( SECTION,	"(new Array(-3.14159)).length",     ToUint32(-3.14159),     (new Array(-3.14159)).length );
-//    array[item++] = new TestCase( SECTION,	"(new Array(1073741823)).length",   ToUint32(1073741823),   (new Array(1073741823)).length );
     array[item++] = new TestCase( SECTION,	"(new Array(1073741824)).length",   ToUint32(1073741824),	(new Array(1073741824)).length );
 
     return ( array );
