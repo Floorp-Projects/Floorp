@@ -33,8 +33,8 @@ NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 NS_DEFINE_IID(kICaseConversionIID, NS_ICASECONVERSION_IID);
 
-extern "C" PRInt32 g_InstanceCount = 0;
-extern "C" PRInt32 g_LockCount = 0;
+PRInt32 g_InstanceCount = 0;
+PRInt32 g_LockCount = 0;
 
 class nsUnicharUtilFactory : public nsIFactory {
   NS_DECL_ISUPPORTS
