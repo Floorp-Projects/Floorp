@@ -12,7 +12,7 @@
   
   <Description about="urn:mimetype:text/html"> 
     <NC:value>text/html</NC:value> 
-    <NC:description>Hypertext Document</NC:description> 
+    <NC:description>HyperText Markup Language Document</NC:description> 
     <NC:editable>false</NC:editable> 
     <NC:fileExtensions>htm</NC:fileExtensions> 
     <NC:fileExtensions>html</NC:fileExtensions> 
