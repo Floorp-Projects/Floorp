@@ -91,7 +91,7 @@ public:
     nsIDTD* theDTD;
 
     NS_NewWellFormed_DTD(&theDTD);
-    RegisterDTD(theDTD);
+    mDTDDeque.Push(theDTD);
 
     NS_NewNavHTMLDTD(&theDTD);    //do this as the default HTML DTD...
     mDTDDeque.Push(theDTD);
@@ -123,12 +123,17 @@ public:
   nsDeque mDTDDeque;
 };
 
-static CSharedParserObjects* gSharedParserObjects=0;
+//static CSharedParserObjects* gSharedParserObjects=0;
 
 nsString nsParser::gHackMetaCharset = "";
 nsString nsParser::gHackMetaCharsetURL = "";
 
 //----------------------------------------
+
+CSharedParserObjects& GetSharedObjects() {
+  static CSharedParserObjects gSharedParserObjects;
+  return gSharedParserObjects;
+}
 
 /** 
  *  default constructor
@@ -146,9 +151,6 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
   mTokenObserver=anObserver;
   mStreamStatus=0;
   mDTDVerification=PR_FALSE;
-  if(!gSharedParserObjects) {
-    gSharedParserObjects = new CSharedParserObjects();
-  }
 }
 
  
@@ -283,7 +285,8 @@ nsIContentSink* nsParser::GetContentSink(void){
  *  @return  nothing.
  */
 void nsParser::RegisterDTD(nsIDTD* aDTD){
-  gSharedParserObjects->RegisterDTD(aDTD);
+  CSharedParserObjects& theShare=GetSharedObjects();
+  theShare.RegisterDTD(aDTD);
 }
 
 /**
@@ -328,8 +331,9 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aCommand,nsStri
     if(aParserContext.mDTD->CanParse(aParserContext.mSourceType,aCommand,aBuffer,0))
       return PR_TRUE;
 
-  nsDequeIterator b=gSharedParserObjects->mDTDDeque.Begin(); 
-  nsDequeIterator e=gSharedParserObjects->mDTDDeque.End(); 
+  CSharedParserObjects& gSharedObjects=GetSharedObjects();
+  nsDequeIterator b=gSharedObjects.mDTDDeque.Begin(); 
+  nsDequeIterator e=gSharedObjects.mDTDDeque.End(); 
 
   aParserContext.mAutoDetectStatus=eUnknownDetect;
   nsIDTD* theBestDTD=0;
@@ -732,6 +736,27 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aCon
   return result;
 }
 
+/**
+ *
+ *  @update  gess 04/01/99
+ *  @param   
+ *  @return  
+ */
+PRBool nsParser::IsValidFragment(nsString& aSourceBuffer,nsTagStack& aStack,nsHTMLTag aTag,const nsString& aContentType){
+  PRBool result=PR_FALSE;
+  return result;
+}
+
+/**
+ *
+ *  @update  gess 04/01/99
+ *  @param   
+ *  @return  
+ */
+PRBool nsParser::ParseFragment(nsString& aSourceBuffer,void* aKey,nsTagStack& aStack,nsHTMLTag aTag,const nsString& aContentType){
+  PRBool result=PR_FALSE;
+  return result;
+}
  
 /**
  *  This routine is called to cause the parser to continue
@@ -753,6 +778,10 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD) {
       if(NS_OK==result) {
      
         result=Tokenize();
+        if(eOnStop==mParserContext->mStreamListenerState){
+          nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
+          mParserContext->mDTD->EmitMisplacedContent(theTokenizer);
+        }
         result=BuildModel();
 
         if((!mParserContext->mMultipart) || ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
@@ -973,7 +1002,7 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUin
  *  This is called by the networking library once the last block of data
  *  has been collected from the net.
  *  
- *  @update  vidur 12/11/98
+ *  @update  gess 04/01/99
  *  @param   
  *  @return  
  */
@@ -1044,6 +1073,10 @@ nsresult nsParser::Tokenize(){
     result=theTokenizer->ConsumeToken(*mParserContext->mScanner);
     if(!NS_SUCCEEDED(result)) {
       mParserContext->mScanner->RewindToMark();
+      if(kEOF==result){
+        result=NS_OK;
+        break;
+      }
     }
   } 
   DidTokenize();
@@ -1053,7 +1086,7 @@ nsresult nsParser::Tokenize(){
 /**
  *  This is the tail-end of the code sandwich for the
  *  tokenization process. It gets called once tokenziation
- *  has completed.
+ *  has completed for each phase.
  *  
  *  @update  gess 01/04/99
  *  @param   

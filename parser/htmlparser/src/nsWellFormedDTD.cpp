@@ -253,10 +253,11 @@ NS_IMETHODIMP CWellFormedDTD::BuildModel(nsIParser* aParser,nsITokenizer* aToken
       CToken* theToken=mTokenizer->PopToken();
       if(theToken) {
         result=HandleToken(theToken,aParser);
-        if(NS_SUCCEEDED(result)) {
+        if(NS_SUCCEEDED(result) || (NS_ERROR_HTMLPARSER_BLOCK==result)) {
           theRecycler->RecycleToken(theToken);
         }
-        else if(NS_ERROR_HTMLPARSER_BLOCK!=result){
+        else {
+          // if(NS_ERROR_HTMLPARSER_BLOCK!=result){
           mTokenizer->PushTokenFront(theToken);
         }
         // theRootDTD->Verify(kEmptyString,aParser);
@@ -410,6 +411,16 @@ void CWellFormedDTD::SetVerification(PRBool aEnabled){
 }
 
 /**
+ *  
+ *  
+ *  @update  gess 4/01/99
+ *  @param   aTokenizer 
+ *  @return  
+ */
+void CWellFormedDTD::EmitMisplacedContent(nsITokenizer* aTokenizer){
+}
+
+/**
  *  This method is called to determine whether or not a tag
  *  of one type can contain a tag of another type.
  *  
@@ -450,7 +461,7 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
   mParser=(nsParser*)aParser;
   mSink=aParser->GetContentSink();
 
-  nsCParserNode theNode(theToken,mLineNumber);
+  nsCParserNode theNode(theToken,mLineNumber,mTokenizer->GetTokenRecycler());
   switch(theType) {
 
     case eToken_newline:

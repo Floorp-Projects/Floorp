@@ -48,7 +48,9 @@ public:
   virtual void SetNotationDeclHandler(XML_NotationDeclHandler handler)=0;
   virtual void SetExternalEntityRefHandler(XML_ExternalEntityRefHandler handler)=0;
   virtual void SetUnknownEncodingHandler(XML_UnknownEncodingHandler handler, void *encodingHandlerData)=0;
-  
+
+
+  virtual void FrontloadMisplacedContent(nsDeque& aDeque)=0;  
 };
 
 

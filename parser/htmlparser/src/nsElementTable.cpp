@@ -75,37 +75,6 @@ PRInt32 CTagList::GetBottommostIndexOf(nsTagStack& aTagStack,PRInt32 aStartOffse
   return kNotFound;
 }
 
-
-//*********************************************************************************************
-// The following ints define the standard groups of HTML elements...
-//*********************************************************************************************
-
-static const int kNone= 0x0;
-
-static const int kHTMLContent   = 0x0001; //  HEAD, (FRAMESET | BODY)
-static const int kHeadContent   = 0x0002; //  TITLE, ISINDEX, BASE
-static const int kHeadMisc      = 0x0004; //  SCRIPT, STYLE, META,  LINK, OBJECT
-
-static const int kSpecial       = 0x0008; //  A,    IMG,  APPLET, OBJECT, FONT, BASEFONT, BR, SCRIPT, 
-                                          //  MAP,  Q,    SUB,    SUP,    SPAN, BDO,      IFRAME
-
-static const int kFormControl   = 0x0010; //  INPUT SELECT  TEXTAREA  LABEL BUTTON
-static const int kPreformatted  = 0x0011; //  PRE
-static const int kPreExclusion  = 0x0012; //  IMG,  OBJECT, APPLET, BIG,  SMALL,  SUB,  SUP,  FONT, BASEFONT
-static const int kFontStyle     = 0x0014; //  TT, I, B, U, S, STRIKE, BIG, SMALL
-static const int kPhrase        = 0x0018; //  EM, STRONG, DFN, CODE, SAMP, KBD, VAR, CITE, ABBR, ACRONYM
-static const int kHeading       = 0x0020; //  H1..H6
-static const int kBlockMisc     = 0x0021; //  P, DL, DIV, CENTER, NOSCRIPT, NOFRAMES, BLOCKQUOTE
-                                          //  FORM, ISINDEX, HR, TABLE, FIELDSET, ADDRESS
-
-static const int kList          = 0x0024; //  UL, OL, DIR, MENU
-static const int kPCDATA        = 0x0028; //  just plain text...
-static const int kSelf          = 0x0040; //  whatever THIS tag is...
-
-static const int kInline        = (kPCDATA|kFontStyle|kPhrase|kSpecial|kFormControl);  //  #PCDATA, %fontstyle, %phrase, %special, %formctrl
-static const int kBlock         = (kHeading|kList|kPreformatted|kBlockMisc); //  %heading, %list, %preformatted, %blockmisc
-static const int kFlow          = (kBlock|kInline); //  %block, %inline
-
  
 static eHTMLTags gStyleTags[]={
   eHTMLTag_a,       eHTMLTag_acronym,   eHTMLTag_b,
@@ -113,7 +82,7 @@ static eHTMLTags gStyleTags[]={
   eHTMLTag_center,  eHTMLTag_cite,      eHTMLTag_code,
   eHTMLTag_del,     eHTMLTag_dfn,       eHTMLTag_em,
   eHTMLTag_font,    eHTMLTag_i,         eHTMLTag_ins,
-  eHTMLTag_kbd,     eHTMLTag_nobr,      eHTMLTag_q,
+  eHTMLTag_kbd,     eHTMLTag_q,
   eHTMLTag_s,       eHTMLTag_samp,      eHTMLTag_small,
   eHTMLTag_span,    eHTMLTag_strike,    eHTMLTag_strong,
   eHTMLTag_sub,     eHTMLTag_sup,       eHTMLTag_tt,
@@ -135,10 +104,10 @@ CTagList  gInBody(1,0,eHTMLTag_body);
 CTagList  gInForm(1,0,eHTMLTag_form);
 CTagList  gInFieldset(1,0,eHTMLTag_fieldset);
 CTagList  gInTR(1,0,eHTMLTag_tr);
-CTagList  gInDL(1,0,eHTMLTag_dl);
+CTagList  gInDL(2,0,eHTMLTag_dl,eHTMLTag_body);
 CTagList  gInFrameset(1,0,eHTMLTag_frameset);
 CTagList  gInNoframes(1,0,eHTMLTag_noframes);
-CTagList  gInP(2,0,eHTMLTag_address,eHTMLTag_form);
+CTagList  gInP(3,0,eHTMLTag_address,eHTMLTag_form,eHTMLTag_table);
 CTagList  gOptgroupParents(2,0,eHTMLTag_optgroup,eHTMLTag_select);
 CTagList  gBodyParents(2,0,eHTMLTag_html,eHTMLTag_noframes);
 CTagList  gColParents(2,0,eHTMLTag_colgroup,eHTMLTag_table);
@@ -239,20 +208,30 @@ CTagList  gULCloseTags(1,0,eHTMLTag_li);
 nsHTMLElement gHTMLElements[] = {
 
   { /*tag*/                             eHTMLTag_unknown,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,		
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special properties*/              0,
+    /*special properties*/              kOmitWS,
     /*special parents,kids,skip*/       0,&gContainsHTML,eHTMLTag_unknown},
 
+
+  /*************************************************
+    Note: I changed A to contain flow elements
+          since it's such a popular (but illegal) 
+          idiom.
+   *************************************************/
+
   { /*tag*/                             eHTMLTag_a,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, kInline, kNone,	
-    /*special properties*/              0,
+    /*parent,incl,exclgroups*/          kSpecial, kFlow, kNone,	  
+    /*special properties*/              0,                        
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_abbr,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kPhrase, kInline, kNone,	
@@ -260,6 +239,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_acronym,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kPhrase, (kInline|kSelf), kNone,	
@@ -267,6 +247,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_address,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kBlock, kInline, kNone,	
@@ -274,6 +255,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,&gAddressKids,eHTMLTag_unknown}, 
 
   { /*tag*/                             eHTMLTag_applet,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kSpecial, kFlow, kNone,	
@@ -281,6 +263,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special kids: <PARAM>*/           0,&gContainsParam,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_area,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gAreaParent,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFontStyle, kInline, kSelf,	
@@ -288,6 +271,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gAreaParent,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_b,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFontStyle, (kFlow|kSelf), kNone,	
@@ -295,6 +279,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_base,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInHead,	&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
@@ -302,6 +287,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_basefont,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kSpecial, kNone, kNone,	
@@ -309,6 +295,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_bdo,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kSpecial, (kSelf|kInline), kNone,	
@@ -316,6 +303,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_bgsound,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFlow, kNone, kNone,	
@@ -323,6 +311,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_big,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFontStyle, (kFlow|kSelf), kNone,	
@@ -330,6 +319,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_blink,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFontStyle, (kFlow|kSelf), kNone,	
@@ -337,6 +327,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_blockquote,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
@@ -344,6 +335,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_body,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInHTML,	&gInHTML,
     /*autoclose starttags and endtags*/ &gBodyAutoClose,0,0,
     /*parent,incl,exclgroups*/          kHTMLContent, kFlow, kNone,	
@@ -351,6 +343,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gInNoframes,&gBodyKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_br,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kSpecial, kNone, kNone,	
@@ -358,6 +351,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_button,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFormControl, kFlow, kFormControl,	
@@ -365,6 +359,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,&gButtonKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_caption,
+    /*requiredAncestor*/                eHTMLTag_table,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ &gCaptionAutoClose,0,0,
     /*parent,incl,exclgroups*/          kNone, kInline, kSelf,	
@@ -372,6 +367,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gInTable,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_center,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kBlock, (kInline|kSelf|kFlow), kNone,	
@@ -379,6 +375,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_cite,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kPhrase, (kInline|kSelf), kNone,	
@@ -386,6 +383,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_code,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kPhrase, (kSelf|kInline), kNone,	
@@ -393,20 +391,23 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_col,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gColParents,&gColParents,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special properties*/              0,
+    /*special properties*/              kOmitWS,
     /*special parents,kids,skip*/       &gColParents,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_colgroup,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special properties*/              0,
+    /*special properties*/              kOmitWS,
     /*special parents,kids,skip*/       &gInTable,&gColgroupKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_dd,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInDL,	&gInDL,	
     /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,
     /*parent,incl,exclgroups*/          kNone, kFlow, kNone,	
@@ -414,6 +415,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_del,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFlow, (kSelf|kFlow), kNone,	
@@ -421,6 +423,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gInBody,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_dfn,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kPhrase, (kSelf|kInline), kNone,	
@@ -428,6 +431,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_dir,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlow), kNone,	
@@ -435,6 +439,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,&gULKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_div,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ &gDivAutoClose,0,0,
     /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlow), kNone,	
@@ -442,13 +447,15 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_dl,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kBlock, (kSpecial|kFontStyle), kNone,	
-    /*special properties*/              0,
+    /*special properties*/              kOmitWS,
     /*special parents,kids,skip*/       0,&gDLKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_dt,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInDL,&gInDL,		
     /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,
     /*parent,incl,exclgroups*/          kNone, kInline, kNone,	
@@ -456,6 +463,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents, kids <DT>*/      &gInDL,&gDTKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_em,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kPhrase, (kSelf|kInline), kNone,	
@@ -463,20 +471,31 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_embed,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFlow, kNone, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown},
 
+  { /*tag*/                             eHTMLTag_endnote,
+    /*requiredAncestor*/                eHTMLTag_unknown,
+	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+    /*autoclose starttags and endtags*/ 0,0,0,
+    /*parent,incl,exclgroups*/          kFlow, kFlow, kNone,	
+    /*special properties*/              0,
+    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+
   { /*tag*/                             eHTMLTag_fieldset,
+    /*requiredAncestor*/                eHTMLTag_form,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
-    /*special properties*/              0,
+    /*special properties*/              kOmitWS,
     /*special parents,kids,skip*/       0,&gFieldsetKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_font,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kSpecial, (kSelf|kFlow), kNone,	
@@ -484,6 +503,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,&gFontKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_form,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
@@ -491,6 +511,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,&gFormKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_frame,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInFrameset,&gInFrameset,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
@@ -498,14 +519,16 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gInFrameset,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_frameset,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInHTML,&gInHTML,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kSelf, kNone,	
-    /*special properties*/              0,
+    /*special properties*/              kOmitWS,
     /*special parents,kids,skip*/       &gInHTML,&gFramesetKids,eHTMLTag_unknown},
 
 
   { /*tag*/                             eHTMLTag_h1,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
@@ -513,6 +536,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_h2,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
@@ -520,6 +544,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_h3,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
@@ -527,6 +552,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_h4,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
@@ -534,6 +560,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_h5,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
@@ -541,6 +568,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_h6,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
@@ -548,13 +576,15 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_head,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInHTML,	&gInHTML,
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, (kHeadContent|kHeadMisc), kNone,	
-    /*special properties*/              0,
+    /*special properties*/              kOmitWS,
     /*special parents,kids,skip*/       &gInHTML,&gHeadKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_hr,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ &gHRAutoClose,0,0,
     /*parent,incl,exclgroups*/          kBlock, kNone, kNone,	
@@ -562,13 +592,15 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_html,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gHTMLRootTags,	&gHTMLRootTags,
     /*autoclose starttags and endtags*/ &gAutoClose,0,0,
     /*parent,incl,exclgroups*/          kNone, kHTMLContent, kNone,	
-    /*special properties*/              kOmitEndTag,
+    /*special properties*/              kOmitEndTag|kOmitWS,
     /*special parents,kids,skip*/       0,&gHtmlKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_i,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFontStyle, (kSelf|kFlow), kNone,	
@@ -576,6 +608,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_iframe,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kSpecial, kFlow, kNone,	
@@ -583,13 +616,23 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_ilayer,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
+  { /*tag*/                             eHTMLTag_image,
+    /*requiredAncestor*/                eHTMLTag_unknown,
+	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+    /*autoclose starttags and endtags*/ 0,0,0,
+    /*parent,incl,exclgroups*/          kFlow, kNone, kNone,	
+    /*special properties*/              0,
+    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+
   { /*tag*/                             eHTMLTag_img,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFlow, kNone, kNone,	
@@ -597,6 +640,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_input,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFormControl, kNone, kNone,	
@@ -604,6 +648,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_ins,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFlow, (kSelf|kNone), kNone,	
@@ -611,6 +656,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_isindex,
+    /*requiredAncestor*/                eHTMLTag_form,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          (kBlock|kHeadContent), kFlow, kNone,	
@@ -618,6 +664,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gInBody,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_kbd,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlow), kNone,	
@@ -625,6 +672,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_keygen,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
@@ -632,6 +680,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_label,
+    /*requiredAncestor*/                eHTMLTag_form,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFormControl, kInline, kSelf,	
@@ -639,6 +688,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_layer,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kSelf,	
@@ -646,6 +696,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_legend,
+    /*requiredAncestor*/                eHTMLTag_form,
 	  /*rootnodes,endrootnodes*/          &gInFieldset,&gInFieldset,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kInline, kNone,	
@@ -653,6 +704,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gInFieldset,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_li,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gLIRootTags,&gLIRootTags,	
     /*autoclose starttags and endtags*/ &gLIAutoClose,0,0,
     /*parent,incl,exclgroups*/          kList, kFlow, kSelf,	
@@ -660,6 +712,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,&gLIKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_link,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInHead,&gInHead,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kHeadMisc, kNone, kNone,	
@@ -667,6 +720,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_listing,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
@@ -674,13 +728,15 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_map,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kSpecial, kBlock, kNone,	
-    /*special properties*/              0,
+    /*special properties*/              kOmitWS,
     /*special parents,kids,skip*/       0,&gMapKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_menu,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kList, (kSelf|kFlow), kNone,	
@@ -688,6 +744,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,&gULKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_meta,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInHead,	&gInHead,
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kHeadMisc, kNone, kNone,	
@@ -695,6 +752,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_multicol,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFlow, kNone, kNone,	
@@ -702,13 +760,15 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_nobr,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          kFlow, (kFlow|kSelf), kNone,	
+    /*parent,incl,exclgroups*/          kFlow, (kFlow), kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_noembed, 
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
@@ -716,6 +776,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_noembed},
 
   { /*tag*/                             eHTMLTag_noframes,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gNoframeRoot,&gNoframeRoot,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
@@ -723,6 +784,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gNoframeRoot,&gNoframesKids,eHTMLTag_noframes},
 
   { /*tag*/                             eHTMLTag_nolayer,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
@@ -730,6 +792,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_nolayer},
 
   { /*tag*/                             eHTMLTag_noscript,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
@@ -737,13 +800,15 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_noscript},
 
   { /*tag*/                             eHTMLTag_object,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          (kHeadMisc|kSpecial), kFlow, kNone,	
+    /*parent,incl,exclgroups*/          (kHeadMisc|kSpecial), (kFlow|kSelf), kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_ol,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gOLRootTags,&gOLRootTags,	
     /*autoclose starttags and endtags*/ &gOLAutoClose, &gULCloseTags, 0,
     /*parent,incl,exclgroups*/          kBlock, (kFlow|kSelf), kNone,	
@@ -751,6 +816,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,&gULKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_optgroup,
+    /*requiredAncestor*/                eHTMLTag_select,
 	  /*rootnodes,endrootnodes*/          &gOptgroupParents,&gOptgroupParents,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
@@ -758,6 +824,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gOptgroupParents,&gContainsOpts,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_option,
+    /*requiredAncestor*/                eHTMLTag_form,
 	  /*rootnodes,endrootnodes*/          &gOptgroupParents,&gOptgroupParents,	 
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kPCDATA, kNone,	
@@ -765,13 +832,15 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gOptgroupParents,&gContainsText,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_p,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
-    /*special properties*/              0,
+    /*parent,incl,exclgroups*/          kBlock, kInline, kNone,	  //this used to contain FLOW. But it's really an inline container.
+    /*special properties*/              0,                      //otherwise it tries to contain things like H1..H6
     /*special parents,kids,skip*/       0,&gInP,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_param,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gParamParents,	&gParamParents,	
     /*autoclose starttags and endtags*/ &gPAutoClose,0,0,
     /*parent,incl,exclgroups*/          kFlow, kNone, kNone,	
@@ -779,6 +848,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gParamParents,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_parsererror,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ &gDivAutoClose,0,0,
     /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlow), kNone,	
@@ -786,6 +856,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_plaintext,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFlow, kFlow, kNone,	
@@ -793,6 +864,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_html},
 
   { /*tag*/                             eHTMLTag_pre,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kPreformatted, kInline, kNone,	
@@ -800,6 +872,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,&gPreKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_q,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kSpecial, (kSelf|kInline), kNone,	
@@ -807,6 +880,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_s,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFontStyle, (kSelf|kFlow), kNone,	
@@ -814,6 +888,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_samp,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kPhrase, (kSelf|kInline), kNone,	
@@ -821,6 +896,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_script,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          (kSpecial|kHeadMisc), kPCDATA, kNone,	
@@ -828,13 +904,15 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,&gContainsText,eHTMLTag_script},
 
   { /*tag*/                             eHTMLTag_select,
+    /*requiredAncestor*/                eHTMLTag_form,
 	  /*rootnodes,endrootnodes*/          &gInForm,&gInForm,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFormControl, kNone, kNone,	
-    /*special properties*/              0,
+    /*special properties*/              kOmitWS,
     /*special parents,kids,skip*/       &gInForm,&gContainsOpts,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_server,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
@@ -842,6 +920,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_small,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFontStyle, (kSelf|kFlow), kNone,	
@@ -849,6 +928,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_sound,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
@@ -856,6 +936,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_sourcetext,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ &gDivAutoClose,0,0,
     /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlow), kNone,	
@@ -863,6 +944,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_spacer,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFlow, kNone, kNone,	
@@ -870,6 +952,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_span,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kSpecial, (kSelf|kInline), kNone,	
@@ -877,6 +960,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_strike,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFontStyle, (kSelf|kFlow), kNone,	
@@ -884,6 +968,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_strong,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          (kPhrase|kFontStyle), (kSelf|kFlow), kNone,	
@@ -891,6 +976,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,&gContainsText,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_style,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInHead,	&gInHead,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kHeadMisc, kPCDATA, kNone,	
@@ -898,6 +984,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_style},
 
   { /*tag*/                             eHTMLTag_sub,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFontStyle, (kSelf|kFlow), kNone,	
@@ -905,6 +992,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_sup,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFontStyle, (kSelf|kFlow), kNone,	
@@ -912,20 +1000,23 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_table,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gInBody,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kBlock, kNone, kSelf,	
-    /*special properties*/              0,
+    /*special properties*/              kOmitWS,
     /*special parents,kids,skip*/       0,&gTableKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_tbody,
+    /*requiredAncestor*/                eHTMLTag_table,
 	  /*rootnodes,endrootnodes*/          &gInTable,	&gInTable,	
     /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
-    /*special properties*/              0,
+    /*special properties*/              kOmitWS,
     /*special parents,kids,skip*/       &gInTable,&gTBodyKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_td,
+    /*requiredAncestor*/                eHTMLTag_table,
 	  /*rootnodes,endrootnodes*/          &gTDRootTags,&gTDRootTags,	
     /*autoclose starttags and endtags*/ &gTDCloseTags,&gTDCloseTags,0,
     /*parent,incl,exclgroups*/          kNone, kFlow, kSelf,	
@@ -933,6 +1024,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gTDRootTags,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_textarea,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInForm,	&gInForm,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFormControl, kPCDATA, kNone,	
@@ -940,13 +1032,15 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gInForm,&gContainsText,eHTMLTag_textarea},
 
   { /*tag*/                             eHTMLTag_tfoot,
+    /*requiredAncestor*/                eHTMLTag_table,
 	  /*rootnodes,endrootnodes*/          &gInTable,	&gInTable,
     /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
-    /*special properties*/              0,
+    /*special properties*/              kOmitWS,
     /*special parents,kids,skip*/       &gInTable,&gTableElemKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_th,
+    /*requiredAncestor*/                eHTMLTag_table,
 	  /*rootnodes,endrootnodes*/          &gTDRootTags,&gTDRootTags,	
     /*autoclose starttags and endtags*/ &gTDCloseTags,&gTDCloseTags,0,
     /*parent,incl,exclgroups*/          kNone, kFlow, kSelf,	
@@ -954,27 +1048,31 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       &gTDRootTags,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_thead,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInTable,&gInTable,		
     /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
-    /*special properties*/              0,
+    /*special properties*/              kOmitWS,
     /*special parents,kids,skip*/       &gInTable,&gTableElemKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_title,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInHead,&gInHead,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, (kHeadMisc|kPCDATA), kNone,	
-    /*special properties*/              0,
+    /*special properties*/              kOmitWS,
     /*special parents,kids,skip*/       &gInHead,&gContainsText,eHTMLTag_title},
 
   { /*tag*/                             eHTMLTag_tr,
+    /*requiredAncestor*/                eHTMLTag_table,
 	  /*rootnodes,endrootnodes*/          &gTRParents,&gTRParents,	
     /*autoclose starttags and endtags*/ &gTRCloseTags,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special properties*/              0,
+    /*special properties*/              kOmitWS,
     /*special parents,kids,skip*/       &gTRParents,&gTRKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_tt,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFontStyle, (kSelf|kFlow), kNone,	
@@ -982,6 +1080,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_u,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFontStyle, (kSelf|kFlow), kNone,	
@@ -989,6 +1088,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_ul,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gOLRootTags,&gOLRootTags,	
     /*autoclose starttags and endtags*/ &gOLAutoClose,&gULCloseTags,0,
     /*parent,incl,exclgroups*/          kBlock, (kFlow|kSelf), kNone,	
@@ -996,6 +1096,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,&gULKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_var,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kPhrase, (kSelf|kInline), kNone,	
@@ -1003,6 +1104,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_wbr,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFlow, kNone, kNone,	
@@ -1010,6 +1112,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_xmp,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFlow, kNone, kNone,	
@@ -1017,13 +1120,15 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/        0,0,eHTMLTag_xmp},
 
   { /*tag*/                             eHTMLTag_text,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gTextRootTags,&gTextRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFlow, kNone, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
-  { /*tag*/                             eHTMLTag_whitespace,
+  { /*tag*/                             eHTMLTag_whitespace, 
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gTextRootTags,&gTextRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFlow, kNone, kNone,	
@@ -1031,6 +1136,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_newline,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gTextRootTags,&gTextRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFlow, kNone, kNone,	
@@ -1038,6 +1144,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_comment,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFlow, kNone, kNone,	
@@ -1045,6 +1152,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_entity,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gTextRootTags,&gTextRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFlow, kNone, kNone,	
@@ -1052,6 +1160,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_userdefined,
+    /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
@@ -1249,6 +1358,28 @@ PRBool nsHTMLElement::IsFlowParent(eHTMLTags aTag){
 }
 
 /**
+ * Tells us whether the given tag opens a section
+ * @update	gess 01/04/99
+ * @param   id of tag
+ * @return  TRUE if opens section
+ */
+PRBool nsHTMLElement::IsSectionTag(eHTMLTags aTag){
+  PRBool result=PR_FALSE;
+  switch(aTag){
+    case eHTMLTag_html:
+    case eHTMLTag_frameset:
+    case eHTMLTag_body:
+    case eHTMLTag_head:
+      result=PR_TRUE;
+      break;
+    default:
+      result=PR_FALSE;
+  }
+  return result;
+}
+
+
+/**
  * 
  * @update	gess 01/04/99
  * @param 
@@ -1336,6 +1467,18 @@ PRBool nsHTMLElement::CanContainType(PRInt32 aType) const{
  */
 PRBool nsHTMLElement::IsMemberOf(PRInt32 aSet) const{
   PRBool result=(aSet && TestBits(aSet,mParentBits));
+  return result;
+}
+
+/**
+ * 
+ * @update	gess12/13/98
+ * @param 
+ * @return
+ */
+PRBool nsHTMLElement::IsWhitespaceTag(eHTMLTags aChild) {
+  static eHTMLTags gWSTags[]={eHTMLTag_newline, eHTMLTag_whitespace};
+  PRBool result=FindTagInSet(aChild,gWSTags,sizeof(gWSTags)/sizeof(eHTMLTag_body));
   return result;
 }
 

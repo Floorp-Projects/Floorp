@@ -42,7 +42,7 @@
 #include "nsString.h"
 #include "nsDebug.h"
 
-class CToken;
+// class CToken;
 
 // 6e59f160-2717-11d2-9246-00805f8a7ab6
 #define NS_IPARSER_NODE_IID      \
@@ -110,7 +110,7 @@ class nsIParserNode : public nsISupports {
      * @param   anIndex is the index of the key you want
      * @return  string containing key.
      */
-    virtual const nsString& GetKeyAt(PRInt32 anIndex) const =0;
+    virtual const nsString& GetKeyAt(PRUint32 anIndex) const =0;
 
     /**
      * Retrieve the value (of key/value pair) at given index
@@ -118,7 +118,7 @@ class nsIParserNode : public nsISupports {
      * @param   anIndex is the index of the value you want
      * @return  string containing value.
      */
-    virtual const nsString& GetValueAt(PRInt32 anIndex) const =0;
+    virtual const nsString& GetValueAt(PRUint32 anIndex) const =0;
 
     /**
      * NOTE: When the node is an entity, this will translate the entity

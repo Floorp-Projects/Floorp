@@ -26,7 +26,6 @@
 #include "nsHTMLTokenizer.h"
 #include "nsParser.h"
 #include "nsScanner.h"
-#include "nsDTDUtils.h"
 #include "nsElementTable.h"
 #include "nsHTMLEntities.h"
 
@@ -37,7 +36,6 @@
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kITokenizerIID,  NS_ITOKENIZER_IID);
 static NS_DEFINE_IID(kClassIID,       NS_HTMLTOKENIZER_IID); 
-static CTokenRecycler* gTokenRecycler=0;
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -103,7 +101,7 @@ NS_IMPL_RELEASE(nsHTMLTokenizer)
  *  @param   
  *  @return  
  */
-nsHTMLTokenizer::nsHTMLTokenizer() : nsITokenizer(), mTokenDeque(new CTokenDeallocator()) {
+nsHTMLTokenizer::nsHTMLTokenizer() : nsITokenizer(), mTokenDeque(new CTokenDeallocator()){
   NS_INIT_REFCNT();
   mDoXMLEmptyTags=PR_FALSE;
 }
@@ -123,13 +121,16 @@ nsHTMLTokenizer::~nsHTMLTokenizer(){
   Here begins the real working methods for the tokenizer.
  *******************************************************************/
 
-void nsHTMLTokenizer::AddToken(CToken*& aToken,nsresult aResult,nsDeque& aDeque) {
+void nsHTMLTokenizer::AddToken(CToken*& aToken,nsresult aResult,nsDeque& aDeque,CTokenRecycler* aRecycler) {
   if(aToken) {
     if(NS_SUCCEEDED(aResult)) {
       aDeque.Push(aToken);
     }
     else {
-      delete aToken; 
+      if(aRecycler) {
+        aRecycler->RecycleToken(aToken);
+      }
+      else delete aToken; 
       aToken=0;
     }
   }
@@ -141,10 +142,8 @@ void nsHTMLTokenizer::AddToken(CToken*& aToken,nsresult aResult,nsDeque& aDeque)
  * @return  ptr to recycler (or null)
  */
 nsITokenRecycler* nsHTMLTokenizer::GetTokenRecycler(void) {
-  if (! gTokenRecycler) {
-    gTokenRecycler=new CTokenRecycler();
-  }
-  return gTokenRecycler;
+  static CTokenRecycler gTokenRecycler;
+  return (nsITokenRecycler*)&gTokenRecycler;
 }
 
 
@@ -202,9 +201,37 @@ PRInt32 nsHTMLTokenizer::GetCount(void) {
   return mTokenDeque.GetSize();
 }
 
+/**
+ * 
+ * @update	gess12/29/98
+ * @param 
+ * @return
+ */
 CToken* nsHTMLTokenizer::GetTokenAt(PRInt32 anIndex){
   return (CToken*)mTokenDeque.ObjectAt(anIndex);
 }
+
+
+/**
+ * 
+ * @update	gess12/29/98
+ * @param 
+ * @return
+ */
+void nsHTMLTokenizer::PrependTokens(nsDeque& aDeque){
+
+  PRInt32 aCount=aDeque.GetSize();
+  
+  //last but not least, let's check the misplaced content list.
+  //if we find it, then we have to push it all into the body before continuing...
+  PRInt32 anIndex=0;
+  for(anIndex=0;anIndex<aCount;anIndex++){
+    CToken* theToken=(CToken*)aDeque.Pop();
+    PushTokenFront(theToken);
+  }
+
+}
+
 
 /**
  *  This method repeatedly called by the tokenizer. 
@@ -353,13 +380,14 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
         }
         else {
           theAttrCount++;
-          AddToken(theToken,result,mTokenDeque);
+          AddToken(theToken,result,mTokenDeque,theRecycler);
         }
       }
       else { //if(NS_ERROR_HTMLPARSER_BADATTRIBUTE==result){
         aToken->SetEmpty(PR_TRUE);
         theRecycler->RecycleToken(theToken);
-        result=NS_OK;
+        if(NS_ERROR_HTMLPARSER_BADATTRIBUTE==result)
+          result=NS_OK;
       }
     }//if
     
@@ -422,13 +450,13 @@ nsresult nsHTMLTokenizer::HandleSkippedContent(nsScanner& aScanner,CToken*& aTok
     PRUnichar theChar=0;
     result=ConsumeContentToEndTag(theChar,gHTMLElements[theTag].mSkipTarget,aScanner,skippedToken);
 
-    if((NS_OK==result) && skippedToken){
-      AddToken(skippedToken,result,mTokenDeque);
+    CTokenRecycler* theRecycler=(CTokenRecycler*)GetTokenRecycler();
+    AddToken(skippedToken,result,mTokenDeque,theRecycler);
 
+    if(NS_SUCCEEDED(result) && skippedToken){
       //In the case that we just read a given tag, we should go and
       //consume all the tag content itself (and throw it all away).
 
-      CTokenRecycler* theRecycler=(CTokenRecycler*)GetTokenRecycler();
       nsString& theTagStr=skippedToken->GetStringValueXXX();
       CToken* endtoken=theRecycler->CreateTokenOfType(eToken_end,theTag,theTagStr);
       if(endtoken){
@@ -436,7 +464,7 @@ nsresult nsHTMLTokenizer::HandleSkippedContent(nsScanner& aScanner,CToken*& aTok
         theTagStr.Mid(temp,2,theTagStr.Length()-3);
         //now strip the leading and trailing delimiters...
         endtoken->Reinitialize(theTag,temp);
-        AddToken(endtoken,result,mTokenDeque);
+        AddToken(endtoken,result,mTokenDeque,theRecycler);
       }
     } //if
   } //if
@@ -460,7 +488,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
     result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
     if(NS_SUCCEEDED(result)) {
      
-      AddToken(aToken,result,mTokenDeque);
+      AddToken(aToken,result,mTokenDeque,theRecycler);
       eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
       
       if(((CStartToken*)aToken)->IsAttributed()) {
@@ -505,7 +533,7 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
   
   if(aToken) {
     result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-    AddToken(aToken,result,mTokenDeque);
+    AddToken(aToken,result,mTokenDeque,theRecycler);
   } //if
   return result;
 }
@@ -553,7 +581,7 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
         theRecycler->RecycleToken(aToken);
         aToken=theToken;
       }
-      AddToken(aToken,result,mTokenDeque);
+      AddToken(aToken,result,mTokenDeque,theRecycler);
     }
   }//if
   return result;
@@ -576,7 +604,7 @@ nsresult nsHTMLTokenizer::ConsumeWhitespace(PRUnichar aChar,CToken*& aToken,nsSc
   nsresult result=NS_OK;
   if(aToken) {
     result=aToken->Consume(aChar,aScanner);
-    AddToken(aToken,result,mTokenDeque);
+    AddToken(aToken,result,mTokenDeque,theRecycler);
   }
   return result;
 }
@@ -597,7 +625,7 @@ nsresult nsHTMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScann
   nsresult result=NS_OK;
   if(aToken) {
     result=aToken->Consume(aChar,aScanner);
-    AddToken(aToken,result,mTokenDeque);
+    AddToken(aToken,result,mTokenDeque,theRecycler);
   }
   return result;
 }
@@ -619,15 +647,15 @@ nsresult nsHTMLTokenizer::ConsumeText(const nsString& aString,CToken*& aToken,ns
   if(aToken) {
     PRUnichar ch=0;
     result=aToken->Consume(ch,aScanner);
-    if(result) {
+    if(!NS_SUCCEEDED(result)) {
       nsString& temp=aToken->GetStringValueXXX();
       if(0==temp.Length()){
-        delete aToken;
+        theRecycler->RecycleToken(aToken);
         aToken = nsnull;
       }
       else result=NS_OK;
     }
-    AddToken(aToken,result,mTokenDeque);
+    AddToken(aToken,result,mTokenDeque,theRecycler);
   }
   return result;
 }
@@ -647,7 +675,7 @@ nsresult nsHTMLTokenizer::ConsumeNewline(PRUnichar aChar,CToken*& aToken,nsScann
   nsresult result=NS_OK;
   if(aToken) {
     result=aToken->Consume(aChar,aScanner);
-    AddToken(aToken,result,mTokenDeque);
+    AddToken(aToken,result,mTokenDeque,theRecycler);
   }
   return result;
 }
@@ -668,7 +696,7 @@ nsresult nsHTMLTokenizer::ConsumeProcessingInstruction(PRUnichar aChar,CToken*& 
   nsresult result=NS_OK;
   if(aToken) {
     result=aToken->Consume(aChar,aScanner);
-    AddToken(aToken,result,mTokenDeque);
+    AddToken(aToken,result,mTokenDeque,theRecycler);
   }
   return result;
 }

@@ -53,6 +53,9 @@ public:
   /* nsITokenizer methods */
   virtual nsresult ConsumeToken(nsScanner& aScanner);
 
+  virtual void    FrontloadMisplacedContent(nsDeque& aDeque);
+
+
 protected:
 
     /**

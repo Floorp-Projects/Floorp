@@ -261,6 +261,8 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      */
     NS_IMETHOD WillInterruptParse(void);
 
+    virtual  void EmitMisplacedContent(nsITokenizer* aTokenizer);
+
     /**
      *  This method is called to determine whether or not a tag
      *  of one type can contain a tag of another type.
@@ -507,7 +509,7 @@ protected:
 		nsresult    CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
     nsresult    WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
     nsresult    DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag);
-
+    nsresult    HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags aParent,nsIParserNode& aNode);
 
     nsIHTMLContentSink* mSink;
 
@@ -517,7 +519,6 @@ protected:
     nsDTDContext*       mBodyContext;
     nsDTDContext*       mFormContext;
     nsDTDContext*       mMapContext;
-    PRBool              mAllowUnknownTags;
     PRBool              mHasOpenForm;
     PRBool              mHasOpenMap;
     PRInt32             mHasOpenHead;
@@ -528,7 +529,8 @@ protected:
     PRInt32             mLineNumber;
     nsParser*           mParser;
     nsITokenizer*       mTokenizer;
-    PRBool              mIsPlaintext;
+    nsDeque             mMisplacedContent;
+    PRBool              mHasOpenScript;
 
     PRUint32            mComputedCRC32;
     PRUint32            mExpectedCRC32;

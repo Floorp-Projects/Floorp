@@ -148,7 +148,9 @@ public:
 
 protected:
     nsDeque*  mTokenCache[eToken_last-1];
-    // int       mTotals[eToken_last-1];
+#ifdef  NS_DEBUG
+    int       mTotals[eToken_last-1];
+#endif
 };
 
 /************************************************************************

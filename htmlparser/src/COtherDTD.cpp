@@ -305,7 +305,7 @@ nsresult COtherDTD::HandleScriptToken(nsCParserNode& aNode) {
 nsresult COtherDTD::HandleStyleToken(CToken* aToken){
   return CNavDTD::HandleStyleToken(aToken);
 }
-
+ 
 
 /**
  *  This method is called to determine whether or not a tag

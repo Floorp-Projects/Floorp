@@ -32,6 +32,7 @@
 
 class CToken;
 class nsScanner;
+class nsDeque;
 
 #define NS_ITOKENIZER_IID      \
   {0xe4238ddc, 0x9eb6,  0x11d2, {0xba, 0xa5, 0x0,     0x10, 0x4b, 0x98, 0x3f, 0xd4 }}
@@ -65,13 +66,14 @@ public:
   virtual nsresult          ConsumeToken(nsScanner& aScanner)=0;
   virtual nsITokenRecycler* GetTokenRecycler(void)=0;
 
-  virtual CToken*           PushTokenFront(CToken* theToken)=0;
-  virtual CToken*           PushToken(CToken* theToken)=0;
+  virtual CToken*           PushTokenFront(CToken* aToken)=0;
+  virtual CToken*           PushToken(CToken* aToken)=0;
 	virtual CToken*           PopToken(void)=0;
 	virtual CToken*           PeekToken(void)=0;
 	virtual PRInt32           GetCount(void)=0;
 	virtual CToken*           GetTokenAt(PRInt32 anIndex)=0;
-  
+
+  virtual void              PrependTokens(nsDeque& aDeque)=0;
 };
 
 

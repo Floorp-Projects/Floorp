@@ -282,6 +282,16 @@ void CValidDTD::SetVerification(PRBool aEnabled){
 }
 
 /**
+ *  
+ *  
+ *  @update  gess 4/01/99
+ *  @param   aTokenizer 
+ *  @return  
+ */
+void CValidDTD::EmitMisplacedContent(nsITokenizer* aTokenizer){
+}
+
+/**
  *  This method is called to determine whether or not a tag
  *  of one type can contain a tag of another type.
  *  

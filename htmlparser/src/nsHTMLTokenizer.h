@@ -33,6 +33,7 @@
 #include "nsDeque.h"
 #include "nsScanner.h"
 #include "nsHTMLTokens.h"
+#include "nsDTDUtils.h"
 
 #define NS_HTMLTOKENIZER_IID      \
   {0xe4238ddd, 0x9eb6, 0x11d2, \
@@ -64,6 +65,8 @@ public:
 	virtual CToken*           GetTokenAt(PRInt32 anIndex);
 	virtual PRInt32           GetCount(void);
 
+  virtual void              PrependTokens(nsDeque& aDeque);
+
 protected:
 
   virtual nsresult HandleSkippedContent(nsScanner& aScanner,CToken*& aToken);
@@ -79,8 +82,7 @@ protected:
   virtual nsresult ConsumeContentToEndTag(PRUnichar aChar,eHTMLTags aChildTag,nsScanner& aScanner,CToken*& aToken);
   virtual nsresult ConsumeProcessingInstruction(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
 
-protected: 
-  static void AddToken(CToken*& aToken,nsresult aResult,nsDeque& aDeque);
+  static void AddToken(CToken*& aToken,nsresult aResult,nsDeque& aDeque,CTokenRecycler* aRecycler);
 
   nsDeque mTokenDeque;
   PRBool  mDoXMLEmptyTags;
