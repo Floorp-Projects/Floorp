@@ -29,7 +29,6 @@ EXPORTS =				\
 	nsICaret.h			\
 	nsIContent.h			\
 	nsIContentIterator.h		\
-	nsIDiskDocument.h	\
 	nsIDocument.h			\
 	nsIDocumentContainer.h		\
 	nsIDocumentEncoder.h		\
@@ -92,6 +91,7 @@ MODULE=layout_base
 XPIDLSRCS=					\
 		.\nsIChromeEventHandler.idl	\
 		.\nsIContentPolicy.idl		\
+		.\nsIDiskDocument.idl     \
 		.\nsISelectionController.idl	\
 		.\nsISelectionListener.idl	\
 		.\nsISelection.idl	\

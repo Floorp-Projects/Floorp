@@ -252,20 +252,29 @@ function EditorTestDocument()
 
 // --------------------------- Logging stuff ---------------------------
 
-function EditorExecuteScript(fileSpec)
+function EditorExecuteScript(theFile)
 {
-  fileSpec.openStreamForReading();
+  var inputStream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance();
+  inputStream = inputStream.QueryInterface(Components.interfaces.nsIFileInputStream);
 
+  inputStream.init(theFile, 1, 0);    // open read only
+  
+  var scriptableInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance();
+  scriptableInputStream = scriptableInputStream.QueryInterface(Components.interfaces.nsIScriptableInputStream);
+  
+  scriptableInputStream.init(inputStream);    // open read only
+  
   var buf         = { value:null };
   var tmpBuf      = { value:null };
   var didTruncate = { value:false };
   var lineNum     = 0;
   var ex;
 
+/*
   // Log files can be quite huge, so read in a line
   // at a time and execute it:
 
-  while (!fileSpec.eof())
+  while (!inputStream.eof())
   {
     buf.value         = "";
     didTruncate.value = true;
@@ -273,7 +282,7 @@ function EditorExecuteScript(fileSpec)
     // Keep looping until we get a complete line of
     // text, or we hit the end of file:
 
-    while (didTruncate.value && !fileSpec.eof())
+    while (didTruncate.value && !inputStream.eof())
     {
       didTruncate.value = false;
       fileSpec.readLine(tmpBuf, 1024, didTruncate);
@@ -288,8 +297,15 @@ function EditorExecuteScript(fileSpec)
     }
 
     ++lineNum;
-
-    try       { eval(buf.value); }
+*/
+  {
+    // suck in the entire file
+    var fileSize = scriptableInputStream.available();
+    var fileContents = scriptableInputStream.read(fileSize);
+    
+    dump(fileContents);
+    
+    try       { eval(fileContents); }
     catch(ex) { dump("Playback ERROR: Line " + lineNum + "  " + ex + "\n"); return; }
   }
 
@@ -298,10 +314,11 @@ function EditorExecuteScript(fileSpec)
 
 function EditorGetScriptFileSpec()
 {
-  var fs = Components.classes["@mozilla.org/filespec;1"].createInstance();
-  fs = fs.QueryInterface(Components.interfaces.nsIFileSpec);
-  fs.unixStyleFilePath = "journal.js";
-  return fs;
+  var dirServ = Components.classes['@mozilla.org/file/directory_service;1'].createInstance();
+  dirServ = dirServ.QueryInterface(Components.interfaces.nsIProperties);
+  var processDir = dirServ.get("Home", Components.interfaces.nsIFile);
+  processDir.append("journal.js");
+  return processDir;
 }
 
 function EditorStartLog()

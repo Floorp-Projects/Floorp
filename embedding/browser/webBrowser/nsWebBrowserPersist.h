@@ -29,7 +29,6 @@
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
 #include "nsIInputStream.h"
-#include "nsIFileStream.h"
 #include "nsIChannel.h"
 #include "nsIStyleSheet.h"
 #include "nsIDocumentEncoder.h"
@@ -74,7 +73,7 @@ private:
     nsresult SaveDocumentToFileWithFixup(
         nsIDocument    *pDocument,
         nsIDocumentEncoderNodeFixup *pFixup,
-        nsFileSpec*     aFileSpec,
+        nsIFile*        aFileSpec,
         PRBool          aReplaceExisting,
         PRBool          aSaveCopy,
         const nsString& aFormatType,

@@ -524,8 +524,14 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 		}
 
 		// Create an nsFilelSpec from the selected file path.
-		nsFileSpec fileSpec(szFile, PR_FALSE);
-		
+		nsCOMPtr<nsILocalFile> theFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &hr);
+		if (FAILED(hr))
+		  return hr;
+
+		hr = theFile->InitWithPath(szFile);
+		if (FAILED(hr))
+		  return hr;
+		  		
         // Figure out the mime type from the selection
         nsAutoString mimeType; 
         switch (SaveFileName.nFilterIndex)
@@ -540,8 +546,7 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
         }
 
 		// Save the file.
-        nsAutoString useDocCharset;
-		hr = diskDoc->SaveFile(&fileSpec, PR_TRUE, PR_TRUE, mimeType, useDocCharset, 0, 72);
+		hr = diskDoc->SaveFile(theFile, PR_TRUE, PR_TRUE, mimeType.GetUnicode(), NS_LITERAL_STRING(""), 0, 72);
 	}
 
 	return hr;

@@ -74,8 +74,7 @@
 #include "nsIHTMLContentSink.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
-#include "nsFileSpec.h"
-#include "nsFileStream.h"
+#include "nsIFileStreams.h"
 
 #include "nsRange.h"
 #include "nsIDOMText.h"
@@ -624,7 +623,6 @@ nsDocument::nsDocument()
   mChildNodes = nsnull;
   mWordBreaker = nsnull;
   mModCount = 0;
-  mFileSpec = nsnull;
   mPrincipal = nsnull;
   mNextContentID = NS_CONTENT_ID_COUNTER_BASE;
   mDTD = 0;
@@ -711,9 +709,7 @@ nsDocument::~nsDocument()
   NS_IF_RELEASE(mWordBreaker);
 
   NS_IF_RELEASE(mDTD);
-  
-	delete mFileSpec;
-	
+  	
   delete mBoxObjectTable;
 }
 
@@ -3365,20 +3361,19 @@ NS_IMETHODIMP nsDocument::FindNext(const nsAReadableString& aSearchStr, PRBool a
   return NS_ERROR_FAILURE;
 }
 
-/**
-  * nsIDiskDocument methods
- */
 
 NS_IMETHODIMP
-nsDocument::InitDiskDocument(nsFileSpec* aFileSpec)
+nsDocument::InitDiskDocument(nsIFile *aFile)
 {
-  mFileSpec = nsnull;
+  // aFile may be nsnull here
+  mFileSpec = nsnull;   // delete if we have one
  
-  if (aFileSpec)
+  if (aFile)
   {
-    mFileSpec = new nsFileSpec(*aFileSpec);
-    if (!mFileSpec)
-      return NS_ERROR_OUT_OF_MEMORY;
+    // we clone the nsIFile here, rather than just holding onto a ref,
+    // in case the caller does something to aFile later
+    nsresult rv = aFile->Clone(getter_AddRefs(mFileSpec));
+    if (NS_FAILED(rv)) return rv;
   }
   
   mModCount = 0;
@@ -3388,55 +3383,53 @@ nsDocument::InitDiskDocument(nsFileSpec* aFileSpec)
 
 
 NS_IMETHODIMP
-nsDocument::SaveFile(nsFileSpec*     aFileSpec,
-                     PRBool          aReplaceExisting,
-                     PRBool          aSaveCopy,
-                     const nsString& aFormatType,
-                     const nsString& aSaveCharset,
-                     PRUint32        aFlags,
-                     PRUint32        aWrapColumn)
+nsDocument::SaveFile( nsIFile*          aFile,
+                      PRBool            aReplaceExisting,
+                      PRBool            aSaveCopy,
+                      const PRUnichar*  aFileType,     // MIME type of file to save
+                      const PRUnichar*  aFileCharset,
+                      PRUint32          aSaveFlags,
+                      PRUint32          aWrapColumn)
 {
-  if (!aFileSpec)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aFile);
+  NS_ENSURE_ARG_POINTER(aFileType);
+  NS_ENSURE_ARG_POINTER(aFileCharset);
     
   nsresult  rv = NS_OK;
 
   // if we're not replacing an existing file but the file
   // exists, somethine is wrong
-  if (!aReplaceExisting && aFileSpec->Exists())
+  PRBool  fileExists;
+  rv = aFile->Exists(&fileExists);
+  if (NS_FAILED(rv)) return rv;
+  
+  if (!aReplaceExisting && fileExists)
     return NS_ERROR_FAILURE;				// where are the file I/O errors?
   
-  nsOutputFileStream		stream(*aFileSpec);
-  // if the stream didn't open, something went wrong
-  if (!stream.is_open())
-    return NS_BASE_STREAM_CLOSED;
-
-  // Get a document encoder instance:
-  nsCOMPtr<nsIDocumentEncoder> encoder;
-  char* contractid = (char *)nsMemory::Alloc(strlen(NS_DOC_ENCODER_CONTRACTID_BASE)
-                                            + aFormatType.Length() + 1);
-  if (! contractid)
-    return NS_ERROR_OUT_OF_MEMORY;
-  strcpy(contractid, NS_DOC_ENCODER_CONTRACTID_BASE);
-  char* type = aFormatType.ToNewCString();
-  strcat(contractid, type);
-  nsCRT::free(type);
-  rv = nsComponentManager::CreateInstance(contractid,
-                                          nsnull,
-                                          NS_GET_IID(nsIDocumentEncoder),
-                                          getter_AddRefs(encoder));
-  nsCRT::free(contractid);
+  
+  nsCOMPtr<nsIFileOutputStream> outputStream = do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = outputStream->Init(aFile, -1, -1);
+  if (NS_FAILED(rv)) return rv;
+    
+  // Get a document encoder instance
+  nsCAutoString contractID(NS_DOC_ENCODER_CONTRACTID_BASE);
+  contractID.AppendWithConversion(aFileType);
+  
+  nsCOMPtr<nsIDocumentEncoder> encoder = do_CreateInstance(contractID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  nsAutoString fileType(aFileType);   // sucky copy
+  rv = encoder->Init(this, fileType, aSaveFlags);
   if (NS_FAILED(rv))
     return rv;
 
-  rv = encoder->Init(this, aFormatType, aFlags);
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (aFlags & nsIDocumentEncoder::OutputWrap)
+  if (aSaveFlags & nsIDocumentEncoder::OutputWrap)
     encoder->SetWrapColumn(aWrapColumn);
 
-  nsAutoString charsetStr(aSaveCharset);
+  nsAutoString charsetStr(aFileCharset);
   if (charsetStr.Length() == 0)
   {
 	  rv = GetDocumentCharacterSet(charsetStr);
@@ -3446,7 +3439,7 @@ nsDocument::SaveFile(nsFileSpec*     aFileSpec,
   }
   encoder->SetCharset(charsetStr);
 
-  rv = encoder->EncodeToStream(stream.GetIStream());
+  rv = encoder->EncodeToStream(outputStream);
 
   if (NS_SUCCEEDED(rv))
   {
@@ -3454,13 +3447,13 @@ nsDocument::SaveFile(nsFileSpec*     aFileSpec,
     // store the new fileSpec in the doc
     if (!aSaveCopy)
     {
-      delete mFileSpec;
-      mFileSpec = new nsFileSpec(*aFileSpec);
-      if (!mFileSpec)
-        return NS_ERROR_OUT_OF_MEMORY;
+      // we clone the nsIFile here, rather than just holding onto a ref,
+      // in case the caller does something to aFile later
+      nsresult rv = aFile->Clone(getter_AddRefs(mFileSpec));
+      if (NS_FAILED(rv)) return rv;
       
       // and mark the document as clean
-      ResetModCount();
+      ResetModificationCount();
     }
   }
   
@@ -3468,15 +3461,15 @@ nsDocument::SaveFile(nsFileSpec*     aFileSpec,
 }
 
 NS_IMETHODIMP
-nsDocument::GetFileSpec(nsFileSpec& aFileSpec)
+nsDocument::GetFileSpec(nsIFile * *aFileSpec)
 {
-  if (mFileSpec)
-  {
-    aFileSpec = *mFileSpec;
-    return NS_OK;
-  }
+  NS_ENSURE_ARG_POINTER(aFileSpec);
   
-  return NS_ERROR_NOT_INITIALIZED;
+  if (!mFileSpec)
+    return NS_ERROR_NOT_INITIALIZED;
+    
+  NS_IF_ADDREF(*aFileSpec = mFileSpec);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -3518,7 +3511,7 @@ nsDocument::GetBindingManager(nsIBindingManager** aResult)
 
 
 NS_IMETHODIMP
-nsDocument::GetModCount(PRInt32 *outModCount)
+nsDocument::GetModificationCount(PRInt32 *outModCount)
 {
   if (!outModCount)
   	return NS_ERROR_NULL_POINTER;
@@ -3529,14 +3522,14 @@ nsDocument::GetModCount(PRInt32 *outModCount)
 
 
 NS_IMETHODIMP
-nsDocument::ResetModCount()
+nsDocument::ResetModificationCount()
 {
   mModCount = 0;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocument::IncrementModCount(PRInt32 aNumMods)
+nsDocument::IncrementModificationCount(PRInt32 aNumMods)
 {
   mModCount += aNumMods;
   //NS_ASSERTION(mModCount >= 0, "Modification count went negative");

@@ -8,3 +8,4 @@ nsISelection.idl
 nsISelectionPrivate.idl
 nsISelectionListener.idl
 nsIContentPolicy.idl
+nsIDiskDocument.idl

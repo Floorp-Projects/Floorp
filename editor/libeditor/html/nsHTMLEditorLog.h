@@ -25,9 +25,10 @@
 
 #include "nsHTMLEditor.h"
 #include "nsIEditorLogging.h"
-#include "nsIFileSpec.h"
+#include "nsIFileStreams.h"
 #include "nsCOMPtr.h"
 
+class nsIFile;
 class nsEditorTxnLog;
 
 /** implementation of a transaction listener object.
@@ -38,7 +39,7 @@ class nsHTMLEditorLog : public nsHTMLEditor,
 {
 private:
 
-  nsCOMPtr<nsIFileSpec> mFileSpec;
+  nsCOMPtr<nsIFileOutputStream>     mFileStream;
   nsEditorTxnLog       *mEditorTxnLog;
   PRInt32               mLocked;
   PRInt32               mDepth;
@@ -103,7 +104,7 @@ public:
   NS_IMETHOD NormalizeTable(nsIDOMElement *aTable);
   NS_IMETHOD SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElement **aNewCell);
 
-  NS_IMETHOD StartLogging(nsIFileSpec *aLogFile);
+  NS_IMETHOD StartLogging(nsIFile *aLogFile);
   NS_IMETHOD StopLogging();
 
   /* nsHTMLEditorLog public methods. */

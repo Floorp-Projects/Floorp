@@ -40,9 +40,10 @@
 
 nsHTMLEditorLog::nsHTMLEditorLog()
 {
-  mRefCnt   = 0;
   mLocked   = -1;
   mEditorTxnLog = 0;
+  
+  NS_INIT_ISUPPORTS();
 }
 
 nsHTMLEditorLog::~nsHTMLEditorLog()
@@ -50,32 +51,14 @@ nsHTMLEditorLog::~nsHTMLEditorLog()
   StopLogging();
 }
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLEditorLog, nsHTMLEditor);
-NS_IMPL_RELEASE_INHERITED(nsHTMLEditorLog, nsHTMLEditor);
-
-NS_IMETHODIMP
-nsHTMLEditorLog::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (!aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
-
-  *aInstancePtr = nsnull;
-
-  if (aIID.Equals(NS_GET_IID(nsIEditorLogging))) {
-    *aInstancePtr = (void*)(nsIEditorLogging*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return nsHTMLEditor::QueryInterface(aIID, aInstancePtr);
-}
+NS_IMPL_ISUPPORTS_INHERITED(nsHTMLEditorLog, nsHTMLEditor, nsIEditorLogging);
 
 NS_IMETHODIMP
 nsHTMLEditorLog::SetInlineProperty(nsIAtom *aProperty, const nsString *aAttribute, const nsString *aValue)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     nsAutoString propStr;
 
@@ -103,7 +86,7 @@ nsHTMLEditorLog::SetParagraphFormat(const nsString& aParagraphFormat)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     PrintSelection();
     Write("window.editorShell.SetParagraphFormat(\"");
@@ -121,7 +104,7 @@ nsHTMLEditorLog::RemoveInlineProperty(nsIAtom *aProperty, const nsString *aAttri
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     nsAutoString propStr;
 
@@ -146,7 +129,7 @@ nsHTMLEditorLog::DeleteSelection(nsIEditor::EDirection aAction)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     PrintSelection();
     Write("window.editorShell.DeleteSelection(");
@@ -164,7 +147,7 @@ nsHTMLEditorLog::InsertText(const PRUnichar* aStringToInsert)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     PrintSelection();
 
@@ -184,7 +167,7 @@ nsHTMLEditorLog::InsertLineBreak()
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     PrintSelection();
     Write("window.editorShell.InsertBreak();\n");
@@ -199,7 +182,7 @@ nsHTMLEditorLog::Undo(PRUint32 aCount)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.Undo();\n");
     Flush();
@@ -213,7 +196,7 @@ nsHTMLEditorLog::Redo(PRUint32 aCount)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.Redo();\n");
     Flush();
@@ -227,7 +210,7 @@ nsHTMLEditorLog::BeginTransaction()
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.BeginBatchChanges();\n");
     Flush();
@@ -241,7 +224,7 @@ nsHTMLEditorLog::EndTransaction()
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.EndBatchChanges();\n");
     Flush();
@@ -255,7 +238,7 @@ nsHTMLEditorLog::SelectAll()
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.SelectAll();\n");
     Flush();
@@ -269,7 +252,7 @@ nsHTMLEditorLog::BeginningOfDocument()
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.BeginningOfDocument();\n");
     Flush();
@@ -283,7 +266,7 @@ nsHTMLEditorLog::EndOfDocument()
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.EndOfDocument();\n");
     Flush();
@@ -297,7 +280,7 @@ nsHTMLEditorLog::Cut()
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     PrintSelection();
     Write("window.editorShell.Cut();\n");
@@ -312,7 +295,7 @@ nsHTMLEditorLog::Copy()
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     PrintSelection();
     Write("window.editorShell.Copy();\n");
@@ -327,7 +310,7 @@ nsHTMLEditorLog::Paste(PRInt32 aSelectionType)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     PrintSelection();
     Write("window.editorShell.Paste();\n");
@@ -342,7 +325,7 @@ nsHTMLEditorLog::PasteAsQuotation(PRInt32 aSelectionType)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     PrintSelection();
     Write("window.editorShell.PasteAsQuotation();\n");
@@ -357,7 +340,7 @@ nsHTMLEditorLog::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     PrintSelection();
     Write("window.editorShell.PasteAsQuotation();\n");
@@ -373,7 +356,7 @@ nsHTMLEditorLog::PasteAsCitedQuotation(const nsString& aCitation,
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     PrintSelection();
     Write("window.editorShell.PasteAsCitedQuotation(\"");
@@ -391,7 +374,7 @@ nsHTMLEditorLog::InsertAsQuotation(const nsString& aQuotedText,
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     PrintSelection();
     Write("window.editorShell.InsertAsQuotation(\"");
@@ -409,7 +392,7 @@ nsHTMLEditorLog::InsertAsPlaintextQuotation(const nsString& aQuotedText,
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     PrintSelection();
     Write("window.editorShell.InsertAsQuotation(\"");
@@ -430,7 +413,7 @@ nsHTMLEditorLog::InsertAsCitedQuotation(const nsString& aQuotedText,
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     PrintSelection();
     Write("window.editorShell.InsertAsCitedQuotation(\"");
@@ -450,7 +433,7 @@ nsHTMLEditorLog::SetBackgroundColor(const nsString& aColor)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.SetBackgroundColor(\"");
     PrintUnicode(aColor);
@@ -466,7 +449,7 @@ nsHTMLEditorLog::SetBodyAttribute(const nsString& aAttr, const nsString& aValue)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.SetBodyAttribute(\"");
     PrintUnicode(aAttr);
@@ -484,7 +467,7 @@ nsHTMLEditorLog:: InsertTableCell(PRInt32 aNumber, PRBool aAfter)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.InsertTableCell(\"");
     Write("\");\n");
@@ -500,7 +483,7 @@ nsHTMLEditorLog:: InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.InsertTableColumn(\"");
     Write("\");\n");
@@ -516,7 +499,7 @@ nsHTMLEditorLog:: InsertTableRow(PRInt32 aNumber, PRBool aAfter)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.InsertTableRow(\"");
     Write("\");\n");
@@ -531,7 +514,7 @@ nsHTMLEditorLog:: DeleteTable()
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.DeleteTable();\n");
     Flush();
@@ -545,7 +528,7 @@ nsHTMLEditorLog:: DeleteTableCell(PRInt32 aNumber)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.DeleteTableCell(\"");
     Write("\");\n");
@@ -560,7 +543,7 @@ nsHTMLEditorLog:: DeleteTableCellContents()
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.DeleteTableCellContents();\n");
     Flush();
@@ -575,7 +558,7 @@ nsHTMLEditorLog:: DeleteTableColumn(PRInt32 aNumber)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.DeleteTableColumn(\"");
     Write("\");\n");
@@ -591,7 +574,7 @@ nsHTMLEditorLog:: DeleteTableRow(PRInt32 aNumber)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.DeleteTableRow(\"");
     Write("\");\n");
@@ -606,7 +589,7 @@ nsHTMLEditorLog:: JoinTableCells(PRBool aMergeNonContiguousContents)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.JoinTableCells();\n");
     Flush();
@@ -620,7 +603,7 @@ nsHTMLEditorLog:: SplitTableCell()
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.SplitTableCell();\n");
     Flush();
@@ -635,7 +618,7 @@ nsHTMLEditorLog:: NormalizeTable(nsIDOMElement *aTable)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.NormalizeTable(\"");
     Write("\");\n");
@@ -650,7 +633,7 @@ nsHTMLEditorLog::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMEle
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     Write("window.editorShell.SwitchTableCellHeaderType(\"");
     Write("\");\n");
@@ -665,7 +648,7 @@ nsHTMLEditorLog::MakeOrChangeList(const nsString& aListType, PRBool entireList)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     PrintSelection();
 
@@ -683,7 +666,7 @@ nsHTMLEditorLog::Indent(const nsString& aIndent)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     PrintSelection();
 
@@ -701,7 +684,7 @@ nsHTMLEditorLog::Align(const nsString& aAlign)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     PrintSelection();
 
@@ -719,7 +702,7 @@ nsHTMLEditorLog::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDelet
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     if (!aElement)
       return NS_ERROR_NULL_POINTER;
@@ -745,7 +728,7 @@ nsHTMLEditorLog::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     if (!aAnchorElement)
       return NS_ERROR_NULL_POINTER;
@@ -769,7 +752,7 @@ nsHTMLEditorLog::ApplyStyleSheet(const nsString& aURL, nsICSSStyleSheet **aStyle
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
-  if (!mLocked && mFileSpec)
+  if (!mLocked && mFileStream)
   {
     // Note that the editorShell (IDL) method does
     //  not return the style sheet created from aURL
@@ -786,14 +769,14 @@ nsHTMLEditorLog::ApplyStyleSheet(const nsString& aURL, nsICSSStyleSheet **aStyle
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::StartLogging(nsIFileSpec *aLogFile)
+nsHTMLEditorLog::StartLogging(nsIFile *aLogFile)
 {
   nsresult result = NS_ERROR_FAILURE;
 
   if (!aLogFile)
     return NS_ERROR_NULL_POINTER;
 
-  if (mFileSpec)
+  if (mFileStream)
   {
     result = StopLogging();
 
@@ -801,16 +784,13 @@ nsHTMLEditorLog::StartLogging(nsIFileSpec *aLogFile)
       return result;
   }
 
-  mFileSpec = do_QueryInterface(aLogFile);
+  mFileStream = do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &result);
+  if (NS_FAILED(result)) return result;
 
-  if (!mFileSpec)
-    result = NS_ERROR_NULL_POINTER;
-    
-  result = mFileSpec->OpenStreamForWriting();
-
+  result = mFileStream->Init(aLogFile, -1, -1);
   if (NS_FAILED(result))
   {
-    mFileSpec = nsCOMPtr<nsIFileSpec>();
+    mFileStream = nsnull;
     return result;
   }
 
@@ -842,10 +822,10 @@ nsHTMLEditorLog::StopLogging()
     mEditorTxnLog = 0;
   }
 
-  if (mFileSpec)
+  if (mFileStream)
   {
-    mFileSpec->CloseStream();
-    mFileSpec = nsCOMPtr<nsIFileSpec>();
+    mFileStream->Close();
+    mFileStream = nsnull;
   }
 
   return NS_OK;
@@ -862,18 +842,18 @@ nsHTMLEditorLog::Write(const char *aBuffer)
 
   PRInt32 len = strlen(aBuffer);
 
-  if (mFileSpec)
+  if (mFileStream)
   {
-    PRInt32 retval;
+    PRUint32 retval;
 
-    result = mFileSpec->Write(aBuffer, len, &retval);
+    result = mFileStream->Write(aBuffer, len, &retval);
 
     if (NS_FAILED(result))
       return result;
 
 #ifdef VERY_SLOW
 
-    result = mFileSpec->Flush();
+    result = mFileStream->Flush();
 
     if (NS_FAILED(result))
       return result;
@@ -904,8 +884,8 @@ nsHTMLEditorLog::Flush()
 {
   nsresult result = NS_OK;
 
-  if (mFileSpec)
-    result = mFileSpec->Flush();
+  if (mFileStream)
+    result = mFileStream->Flush();
   else
     fflush(stdout);
 

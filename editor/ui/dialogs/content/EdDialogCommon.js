@@ -774,10 +774,11 @@ function GetPrefs()
 
 function GetScriptFileSpec()
 {
-  var fs = Components.classes["@mozilla.org/filespec;1"].createInstance();
-  fs = fs.QueryInterface(Components.interfaces.nsIFileSpec);
-  fs.unixStyleFilePath = "journal.js";
-  return fs;
+  var dirServ = Components.classes['@mozilla.org/file/directory_service;1'].createInstance();
+  dirServ = dirServ.QueryInterface(Components.interfaces.nsIProperties);
+  var processDir = dirServ.get("CurProcD", Components.interfaces.nsIFile);
+  processDir.append("journal.js");
+  return processDir;
 }
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
