@@ -129,6 +129,11 @@ nsDeviceContextPS::SetSpec(nsIDeviceContextSpec* aSpec)
   psSpec = do_QueryInterface(mSpec, &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = mPSObj->Init(psSpec);
+
+    if (NS_FAILED(rv)) {
+      delete mPSObj;
+      mPSObj = nsnull;
+    }
   }
   
   return rv;  
@@ -192,6 +197,8 @@ NS_IMETHODIMP nsDeviceContextPS::CreateRenderingContext(nsIRenderingContext *&aC
   nsresult rv;
    
   aContext = nsnull;
+
+  NS_ENSURE_TRUE(mPSObj != nsnull, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsRenderingContextPS> renderingContext = new nsRenderingContextPS();
   if (!renderingContext)
@@ -300,14 +307,12 @@ NS_IMETHODIMP nsDeviceContextPS::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRI
 {
   PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetDeviceSurfaceDimensions()\n"));
 
-  nsresult rv = NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(mPSObj && mPSObj->mPrintSetup, NS_ERROR_NULL_POINTER);
 
-  if (mPSObj && mPSObj->mPrintSetup) {
-    aWidth  = NSToIntRound(mPSObj->mPrintSetup->width  * mDevUnitsToAppUnits); 
-    aHeight = NSToIntRound(mPSObj->mPrintSetup->height * mDevUnitsToAppUnits); 
-    rv = NS_OK;
-  }
-  return rv;
+  aWidth  = NSToIntRound(mPSObj->mPrintSetup->width  * mDevUnitsToAppUnits); 
+  aHeight = NSToIntRound(mPSObj->mPrintSetup->height * mDevUnitsToAppUnits); 
+
+  return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -316,6 +321,8 @@ NS_IMETHODIMP nsDeviceContextPS::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRI
 NS_IMETHODIMP nsDeviceContextPS::GetRect(nsRect &aRect)
 {
   PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetRect()\n"));
+
+  NS_ENSURE_TRUE(mPSObj != nsnull, NS_ERROR_NULL_POINTER);
 
   PRInt32 width, height;
   nsresult rv;
@@ -344,7 +351,7 @@ NS_IMETHODIMP nsDeviceContextPS::GetClientRect(nsRect &aRect)
 NS_IMETHODIMP nsDeviceContextPS::GetDeviceContextFor(nsIDeviceContextSpec *aDevice, nsIDeviceContext *&aContext)
 {
   PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::GetDeviceContextFor()\n"));
-
+  aContext = nsnull;
   return NS_OK;
 }
 

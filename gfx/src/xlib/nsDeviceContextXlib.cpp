@@ -528,8 +528,7 @@ NS_IMETHODIMP nsDeviceContextXlib::CreateFontCache()
   if (nsnull == mFontCache) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mFontCache->Init(this);
-  return NS_OK;
+  return mFontCache->Init(this);
 }
 
 
