@@ -56,7 +56,7 @@
           </rule>
         </template>
         <menupopup id="windowPopup">
-          <menuitem label="&navigatorCmd.label;" accesskey="&navigatorCmd.accesskey;" key="key_navigator" command="Tasks:Navigator" id="tasksMenuNavigator"/>
+          <menuitem label="&navigatorCmd.label;" accesskey="&navigatorCmd.accesskey;" key="key_navigator" command="Tasks:Navigator" id="tasksMenuNavigator" class="menuitem-iconic icon-navigator16"/>
 
           <!-- Overlays get stuffed in here. -->
           <menuseparator id="sep-window-list"/>
