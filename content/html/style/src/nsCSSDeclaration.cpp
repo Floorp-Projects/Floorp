@@ -742,15 +742,16 @@ nsCSSDeclaration::AppendImportanceToString(PRBool aIsImportant, nsAString& aStri
 
 void
 nsCSSDeclaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
-                                                 nsAString& aString) const
+                                                 nsCSSProperty aPropertyName,
+                                                 nsAString& aResult) const
 {
   NS_ASSERTION(aProperty, "null CSS property passed to AppendPropertyAndValueToString.");
-  AppendASCIItoUTF16(nsCSSProps::GetStringValue(aProperty), aString);
-  aString.Append(NS_LITERAL_STRING(": "));
-  AppendValueToString(aProperty, aString);
+  AppendASCIItoUTF16(nsCSSProps::GetStringValue(aPropertyName), aResult);
+  aResult.Append(NS_LITERAL_STRING(": "));
+  AppendValueToString(aProperty, aResult);
   PRBool  isImportant = GetValueIsImportant(aProperty);
-  AppendImportanceToString(isImportant, aString);
-  aString.Append(NS_LITERAL_STRING("; "));
+  AppendImportanceToString(isImportant, aResult);
+  aResult.Append(NS_LITERAL_STRING("; "));
 }
 
 PRBool
@@ -974,6 +975,14 @@ case _prop: \
           } \
           break;
 
+#define NS_CASE_OUTPUT_PROPERTY_VALUE_AS(_prop, _propas, _index) \
+case _prop: \
+          if (_index) { \
+            AppendPropertyAndValueToString(property, _propas, aString); \
+            _index = 0; \
+          } \
+          break;
+
 #define NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(_condition, _prop, _index) \
 case _prop: \
           if ((_condition) && _index) { \
@@ -1163,13 +1172,17 @@ nsCSSDeclaration::ToString(nsAString& aString) const
 
       NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_margin_top, marginTop)
       NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_margin_bottom, marginBottom)
-      NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_margin_left, marginLeft)
-      NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_margin_right, marginRight)
+      NS_CASE_OUTPUT_PROPERTY_VALUE_AS(eCSSProperty_margin_left_value,
+                                       eCSSProperty_margin_left, marginLeft)
+      NS_CASE_OUTPUT_PROPERTY_VALUE_AS(eCSSProperty_margin_right_value,
+                                       eCSSProperty_margin_right, marginRight)
 
       NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_padding_top, paddingTop)
       NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_padding_bottom, paddingBottom)
-      NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_padding_left, paddingLeft)
-      NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_padding_right, paddingRight)
+      NS_CASE_OUTPUT_PROPERTY_VALUE_AS(eCSSProperty_padding_left_value,
+                                       eCSSProperty_padding_left, paddingLeft)
+      NS_CASE_OUTPUT_PROPERTY_VALUE_AS(eCSSProperty_padding_right_value,
+                                       eCSSProperty_padding_right, paddingRight)
 
       NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_background_color, bgColor)
       NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_background_image, bgImage)
@@ -1199,6 +1212,33 @@ nsCSSDeclaration::ToString(nsAString& aString) const
         }
         break;
       }
+
+      case eCSSProperty_margin_left_ltr_source:
+      case eCSSProperty_margin_left_rtl_source:
+      case eCSSProperty_margin_right_ltr_source:
+      case eCSSProperty_margin_right_rtl_source:
+      case eCSSProperty_padding_left_ltr_source:
+      case eCSSProperty_padding_left_rtl_source:
+      case eCSSProperty_padding_right_ltr_source:
+      case eCSSProperty_padding_right_rtl_source:
+        break;
+
+      case eCSSProperty_margin_start_value:
+        AppendPropertyAndValueToString(property, eCSSProperty_margin_start,
+                                       aString);
+        break;
+      case eCSSProperty_margin_end_value:
+        AppendPropertyAndValueToString(property, eCSSProperty_margin_end,
+                                       aString);
+        break;
+      case eCSSProperty_padding_start_value:
+        AppendPropertyAndValueToString(property, eCSSProperty_padding_start,
+                                       aString);
+        break;
+      case eCSSProperty_padding_end_value:
+        AppendPropertyAndValueToString(property, eCSSProperty_padding_end,
+                                       aString);
+        break;
 
       default:
         if (0 <= property) {

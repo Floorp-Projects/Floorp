@@ -199,6 +199,12 @@ private:
   PRBool   AllPropertiesSameValue(PRInt32 aFirst, PRInt32 aSecond,
                                   PRInt32 aThird, PRInt32 aFourth) const;
   void     AppendPropertyAndValueToString(nsCSSProperty aProperty,
+                                          nsAString& aResult) const
+  {
+    AppendPropertyAndValueToString(aProperty, aProperty, aResult);
+  }
+  void     AppendPropertyAndValueToString(nsCSSProperty aProperty,
+                                          nsCSSProperty aPropertyName,
                                           nsAString& aResult) const;
 
 private:
