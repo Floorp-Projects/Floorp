@@ -71,8 +71,23 @@ if( $form{'tree'} eq '' ){
     exit;
 }
 else {
+  if( $form{'timeit'} ) {
+    use Benchmark;
+    print "Timing the new express:<br>\n";
+    $t0 = new Benchmark;
+    &do_express_fast;
+    $t1 = new Benchmark;
+    print "express_fast took: ", timestr(timediff($t1,$t0)), "<br>\n";
+    print "Now time the old express:<br>\n";
+    &do_express_old;
+    $t2 = new Benchmark;
+    print "express took: ", timestr(timediff($t2,$t1)), "<br>\n";
+    exit;
+  } 
     if( $form{'express'} ) {
-        &do_express;
+        &do_express_old;
+    } elsif( $form{'express_fast'} ) {
+        &do_express_fast;
     }
     else {
         &load_data;
@@ -354,7 +369,7 @@ sub display_build_table_row {
             }
         }
         else  {
-            print "<td>&nbsp;</td>\n";
+            print "<td></td>\n";
         }
         $bn++;
     }
@@ -668,7 +683,7 @@ $script_str .= "</script>\n";
 }
 
 
-sub do_express {
+sub do_express_old {
     my($mailtime, $buildtime, $buildname, $errorparser, $buildstatus,
        $logfile);
     my $buildrec;
@@ -719,7 +734,64 @@ sub do_express {
                 print "<font color=white>\n";
             }
         }
-        print "$buildname";
+        print "$buildname</td>";
+    }
+    print "</tr></table>\n";
+}
+
+sub do_express_fast {
+    my($mailtime, $buildtime, $buildname, $errorparser, $buildstatus,
+       $logfile);
+    my $buildrec;
+    my %build;
+    my %times;
+
+    { 
+      use Backwards;
+    
+      my ($bw) = Backwards->new("$form{tree}/build.dat") or die;
+
+      $latest_time=0;
+      while( $_ = $bw->readline ) {
+	chop;
+	($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile) = 
+	  split( /\|/ );
+	if( $buildstatus eq 'success' or $buildstatus eq 'busted' ) {
+	  if ($latest_time == 0) {
+	    $latest_time = $buildtime;
+	  }
+	  # Ignore stuff more than 12 hours old
+	  last if $buildtime < $latest_time - 12*60*60;
+	  next if defined $build{$buildname};
+	  
+	  $build{$buildname} = $buildstatus;
+	  $times{$buildname} = $buildtime;
+	}
+      }
+    }
+
+    @keys = sort keys %build;
+    $keycount = @keys;
+    $treename = $form{tree};
+    $tm = &print_time(time);
+    print "<table border=1 align=center><tr><th colspan=$keycount><a href=showbuilds.cgi?tree=$treename";
+    print "&hours=$form{'hours'}" if $form{'hours'};
+    print "&nocrap=1" if $form{'nocrap'};
+    print ">$tree as of $tm</a></tr>"
+          ."<tr>\n";
+    for $buildname (@keys ){
+        if( $build{$buildname} eq 'success' ){
+            print "<td bgcolor=00ff00>";
+        }
+        else {
+            if ($form{'nocrap'}) {
+                print "<td bgcolor=FF0000>";
+            } else {
+                print "<td bgcolor=000000 background=1afi003r.gif>";
+                print "<font color=white>\n";
+            }
+        }
+        print "$buildname</td>";
     }
     print "</tr></table>\n";
 }
