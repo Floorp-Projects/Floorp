@@ -981,8 +981,6 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   //Register ourselves as an observer for the new doc loader
   mDocLoader->AddObserver((nsIDocumentLoaderObserver*)this);
 
-
-  // Create device context
   if (nsnull != aNativeParent) {
     rv = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull,
                                             kIDeviceContextIID,
@@ -2287,7 +2285,7 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
     rv = DoLoadURL(uri,       // URL string
                    "view",        // Command
                    nsnull,        // Post Data
-				   nsISessionHistory::LOAD_HISTORY,  // the reload type
+				           nsISessionHistory::LOAD_HISTORY,  // the reload type
                    0,            // load attributes
                    nsnull);      // referrer
   }
@@ -2657,34 +2655,12 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
       // Fall into replace case
     case eLinkVerb_Replace:
       {
-        nsIWebShell* shell = GetTarget(target.GetUnicode());
-        if (nsnull != shell) {
-          // Allocate since mURL may change beneath us
-          PRUnichar* str = mURL.ToNewUnicode();
-          nsresult rv = NS_OK;
-
-          NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv); 
-          PRBool useURILoader = PR_FALSE;
-          if (NS_SUCCEEDED(rv))
-            prefs->GetBoolPref("browser.uriloader", &useURILoader);
-          if (useURILoader)
-          {
-              // for now, just hack the verb to be view-link-clicked
-              // and down in the load document code we'll detect this and
-              // set the correct uri loader command
-            (void)shell->LoadURL(aURLSpec, "view-link-click", aPostDataStream,
-                                PR_TRUE, nsIChannel::LOAD_NORMAL, 
-                                0, nsnull, str);
-          }
-          else
-          {
-            (void)shell->LoadURL(aURLSpec, aPostDataStream,
-                                 PR_TRUE, nsIChannel::LOAD_NORMAL,
-                                 0, nsnull, str);
-          }
-          Recycle(str);
-          NS_RELEASE(shell);
-        }
+        // for now, just hack the verb to be view-link-clicked
+        // and down in the load document code we'll detect this and
+        // set the correct uri loader command
+        LoadURL(aURLSpec, "view-link-click", aPostDataStream,
+                            PR_TRUE, nsIChannel::LOAD_NORMAL, 
+                            0, nsnull, mURL.GetUnicode());
       }
       break;
     case eLinkVerb_Embed:
