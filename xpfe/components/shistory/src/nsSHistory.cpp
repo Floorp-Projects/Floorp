@@ -116,7 +116,7 @@ nsSHistory::AddEntry(nsISHEntry * aSHEntry, PRBool aPersist)
 
   // Notify any listener about the new addition
   if (mListener) {
-    nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(mListener));
+    nsCOMPtr<nsISHistoryListener> listener(do_QueryReferent(mListener));
     if (listener) {
       nsCOMPtr<nsIURI> uri;
       nsCOMPtr<nsIHistoryEntry> hEntry(do_QueryInterface(aSHEntry));
@@ -356,7 +356,7 @@ nsSHistory::PurgeHistory(PRInt32 aEntries)
   PRBool purgeHistory = PR_TRUE;
   // Notify the listener about the history purge
   if (mListener) {
-    nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(mListener));
+    nsCOMPtr<nsISHistoryListener> listener(do_QueryReferent(mListener));
     if (listener) {
       listener->OnHistoryPurge(aEntries, &purgeHistory);
     } 
@@ -491,7 +491,7 @@ nsSHistory::Reload(PRUint32 aReloadFlags)
   // Notify listeners
   PRBool canNavigate = PR_TRUE;
   if (mListener) {
-    nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(mListener));
+    nsCOMPtr<nsISHistoryListener> listener(do_QueryReferent(mListener));
     // We are reloading. Send Reload notifications. 
     // nsDocShellLoadFlagType is not public, where as nsIWebNavigation
     // is public. So send the reload notifications with the
@@ -590,7 +590,7 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType)
   nsCOMPtr<nsIURI> nextURI;
   nHEntry->GetURI(getter_AddRefs(nextURI));
   if(mListener) {    
-    nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(mListener));
+    nsCOMPtr<nsISHistoryListener> listener(do_QueryReferent(mListener));
     if (listener) {
       if (mIndex+1 == oldIndex) {
         // We are going back one entry. Send GoBack notifications
@@ -801,7 +801,7 @@ nsSHEnumerator::HasMoreElements(PRBool * aReturn)
   PRInt32 cnt;
   *aReturn = PR_FALSE;
   mSHistory->GetCount(&cnt);
-  if (mIndex >= 0 && mIndex < cnt ) { 
+  if (mIndex >= -1 && mIndex < (cnt-1) ) { 
     *aReturn = PR_TRUE;
   }
   return NS_OK;
