@@ -98,10 +98,11 @@ public:
 
   virtual int GetContentLength(ilIURL * aURL);
 
+  nsresult RemoveRequest(ImageConsumer *aConsumer);
   nsresult RequestDone(ImageConsumer *aConsumer, nsIChannel* channel,
                        nsISupports* ctxt, nsresult status, const PRUnichar* aMsg);
 
-  nsVoidArray *mRequests;
+  nsVoidArray *mRequests; // WEAK references to |ImageConsumer|s
   ImgCachePolicy mReloadPolicy;
   nsWeakPtr mLoadContext;
   nsReconnectCB mReconnectCallback;
@@ -561,8 +562,24 @@ ImageConsumer::Interrupt()
 
 ImageConsumer::~ImageConsumer()
 {
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nsnull;
+  }
+  if (mContext) {
+    nsresult res = mContext->RemoveRequest(this);
+    if (NS_SUCCEEDED(res)) {
+      // The load was canceled.
+      mStatus = MK_INTERRUPTED;
+      if (mURL) {
+        nsCOMPtr<ilINetReader> reader( dont_AddRef( mURL->GetReader() ) );
+        reader->StreamAbort(mStatus);
+        reader->NetRequestDone(mURL, mStatus);
+      }
+    }
+    NS_RELEASE(mContext);
+  }
   NS_IF_RELEASE(mURL);
-  NS_IF_RELEASE(mContext);
   NS_IF_RELEASE(mStream);
   if (mBuffer != nsnull) {
     PR_DELETE(mBuffer);
@@ -586,15 +603,7 @@ ImageNetContextImpl::ImageNetContextImpl(ImgCachePolicy aReloadPolicy,
 
 ImageNetContextImpl::~ImageNetContextImpl()
 {
-  if (mRequests != nsnull) {
-    int i, count = mRequests->Count();
-    for (i=0; i < count; i++) {
-      ImageConsumer *ic = (ImageConsumer *)mRequests->ElementAt(i);
-          
-      NS_RELEASE(ic);
-    }
-    delete mRequests;
-  }
+  delete mRequests;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(ImageNetContextImpl, ilINetContext)
@@ -820,7 +829,13 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     // rv = channel->AsyncRead(ic, nsnull);
     if (NS_FAILED(rv)) goto error;
   }
-  return mRequests->AppendElement((void *)ic) ? 0 : -1;
+
+  { // scope for int ret and goto
+    int ret = mRequests->AppendElement((void *)ic) ? 0 : -1;
+    NS_RELEASE(ic); // if nothing else is holding onto it, it will remove
+                    // itself from mRequests
+    return ret;
+  }
 
 error:
   NS_RELEASE(ic);
@@ -828,14 +843,20 @@ error:
 }
 
 nsresult
+ImageNetContextImpl::RemoveRequest(ImageConsumer *aConsumer)
+{
+  nsresult rv = NS_OK;
+  if (mRequests) {
+    rv = mRequests->RemoveElement((void *)aConsumer)?NS_OK:NS_ERROR_FAILURE;
+  }
+  return rv;
+}
+
+nsresult
 ImageNetContextImpl::RequestDone(ImageConsumer *aConsumer, nsIChannel* channel,
                                  nsISupports* ctxt, nsresult status, const PRUnichar* aMsg)
 {
-  if (mRequests != nsnull) {
-    if (mRequests->RemoveElement((void *)aConsumer) == PR_TRUE) {
-      NS_RELEASE(aConsumer);
-    }
-  }
+  RemoveRequest(aConsumer);
 ///  if (mLoadGroup)
 ///    return mLoadGroup->RemoveChannel(channel, ctxt, status, aMsg);
 ///  else
