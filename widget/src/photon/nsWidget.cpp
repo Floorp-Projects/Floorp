@@ -767,10 +767,12 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
 
     if ( GetParentClippedArea(rect) == PR_TRUE)
     {
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 Clipped rect=(%i,%i,%i,%i)\n", rect.x, rect.y, rect.width, rect.height  ));
+
 	  /* Damage has to be relative Widget coords */
       mUpdateArea->SetTo( rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height );
 
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 Clipped mUpdateArea=(%i,%i,%i,%i)\n", rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height  ));
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 Clipped mUpdateArea=(%i,%i,%i,%i)\n", rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height ));
 
       if (PtWidgetIsRealized(mWidget))
       {
@@ -862,7 +864,11 @@ NS_IMETHODIMP nsWidget::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
   PRUint32 i;
 
   PtWidgetArea( mWidget, &area ); // parent coords
-
+  if (PtWidgetIsClass(mWidget, PtWindow))
+  {
+	area.pos.x = area.pos.y = 0;  
+  }
+  
   len = regionRectSet->mRectsLen;
 
   for (i=0;i<len;++i)
@@ -883,6 +889,7 @@ NS_IMETHODIMP nsWidget::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
 
   // drop the const.. whats the right thing to do here?
   ((nsIRegion*)aRegion)->FreeRects(regionRectSet);
+  ((nsIRegion*)aRegion)->SetTo(0,0,0,0);
 
   return NS_OK;
 }
@@ -892,6 +899,8 @@ PRBool nsWidget::GetParentClippedArea( nsRect &rect )
 {
 // Traverse parent heirarchy and clip the passed-in rect bounds
 
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetParentClippedArea 1\n"));
+
   PtArg_t    arg;
   PhArea_t   *area;
   PtWidget_t *parent;
@@ -899,7 +908,7 @@ PRBool nsWidget::GetParentClippedArea( nsRect &rect )
   nsRect     rect2;
   PtWidget_t *disjoint = PtFindDisjoint( mWidget );
 
-//printf( "Clipping widget (%p) rect: %d,%d,%d,%d\n", this, rect.x, rect.y, rect.width, rect.height );
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetParentClippedArea Clipping widget (%p) rect: %d,%d,%d,%d\n", this, rect.x, rect.y, rect.width, rect.height ));
 
   // convert passed-in rect to absolute window coords first...
   PtWidgetOffset( mWidget, &offset );
@@ -907,7 +916,7 @@ PRBool nsWidget::GetParentClippedArea( nsRect &rect )
   rect.y += offset.y;
 
 
-//printf( "  screen coords: %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height );
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetParentClippedArea screen coords: %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height ));
 
   parent = PtWidgetParent( mWidget );
   while( parent )
@@ -918,18 +927,18 @@ PRBool nsWidget::GetParentClippedArea( nsRect &rect )
       rect2.width = area->size.w;
       rect2.height = area->size.h;
 
-      if( parent != disjoint )
+      if ((parent == disjoint) || (PtWidgetIsClass(parent, PtWindow)))
       {
+        rect2.x = rect2.y = 0;
+	  }
+	  else
+	  {
         PtWidgetOffset( parent, &offset );
         rect2.x = area->pos.x + offset.x;
         rect2.y = area->pos.y + offset.y;
       }
-      else
-      {
-        rect2.x = rect2.y = 0;
-      }
 
-//printf( "  parent at: %d,%d,%d,%d\n", rect2.x, rect2.y, rect2.width, rect2.height );
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetParentClippedArea parent at: %d,%d,%d,%d\n", rect2.x, rect2.y, rect2.width, rect2.height ));
 
       if( ( rect.x >= ( rect2.x + rect2.width )) ||   // rect is out of bounds to right
           (( rect.x + rect.width ) <= rect2.x ) ||   // rect is out of bounds to left
@@ -965,7 +974,7 @@ PRBool nsWidget::GetParentClippedArea( nsRect &rect )
           rect.height = (rect2.y + rect2.height) - rect.y;
         }
 
-//printf( "  new widget coords: %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height );
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetParentClippedArea new widget coords: %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height ));
 
       }
     }
@@ -979,7 +988,7 @@ PRBool nsWidget::GetParentClippedArea( nsRect &rect )
   rect.x -= offset.x;
   rect.y -= offset.y;
 
-//printf( "  final widget coords: %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height );
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetParentClippedArea final widget coords: %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height ));
 
   if( rect.width && rect.height )
     return PR_TRUE;
@@ -1977,9 +1986,11 @@ void nsWidget::InitDamageQueue()
   {
     mDmgQueueInited = PR_TRUE;
 
+#if 1
     int Global_Widget_Hold_Count;
       Global_Widget_Hold_Count =  PtHold();
       PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::InitDamageQueue PtHold Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, this));
+#endif
   }
   else
   {
@@ -2076,6 +2087,11 @@ void nsWidget::UpdateWidgetDamage()
   nsRect           temp_rect;
 
     PtWidgetArea( mWidget, &area );
+    if (PtWidgetIsClass(mWidget, PtWindow))
+    {
+	  area.pos.x = area.pos.y = 0;  
+    }
+
     if (NS_FAILED(mUpdateArea->GetRects(&regionRectSet)))
     {
 	  NS_ASSERTION(0,"nsWidget::UpdateWidgetDamaged Error mUpdateArea->GetRects returned NULL");
@@ -2145,10 +2161,12 @@ void nsWidget::RemoveDamagedWidget(PtWidget_t *aWidget)
       {
         mDmgQueueInited = PR_FALSE;
 
+#if 1
         /* The matching PtHold is in nsWidget::InitDamageQueue */
         int Global_Widget_Hold_Count;
           Global_Widget_Hold_Count =  PtRelease();
           PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::RemoveDamagedWidget PtHold/PtRelease Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, this));
+#endif
  
         if( mWorkProcID )
           PtAppRemoveWorkProc( nsnull, mWorkProcID );
@@ -2183,6 +2201,11 @@ int nsWidget::WorkProc( void *data )
         nsRect           temp_rect;
 
         PtWidgetArea( dqe->widget, &area ); // parent coords
+        if (PtWidgetIsClass(dqe->widget, PtWindow))
+        {
+	      area.pos.x = area.pos.y = 0;  
+        }
+  
 PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> area=<%d,%d,%d,%d>\n", dqe->widget, area.pos.x, area.pos.y, area.size.w, area.size.h));
         if (PtWidgetIsClass(dqe->widget, PtWindow))
 		{
@@ -2217,15 +2240,18 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> area=<%
 
     *dq = nsnull;
     mDmgQueueInited = PR_FALSE;
-
-	/* The matching PtHold is in nsWidget::InitDamageQueue */
     int Global_Widget_Hold_Count;
+
+#if 1
+	/* The matching PtHold is in nsWidget::InitDamageQueue */
       Global_Widget_Hold_Count =  PtRelease();
       PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::WorkProc end, PtHold/PtRelease Global_Widget_Hold_Count=<%d>\n", Global_Widget_Hold_Count));
+#endif
 
-//    Global_Widget_Hold_Count = PtFlush();  /* this may not be necessary  since after PtRelease */
-//    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::WorkProc  PtFlush Global_Widget_Hold_Count=<%d>\n", Global_Widget_Hold_Count));
-
+#if 1
+    Global_Widget_Hold_Count = PtFlush();  /* this may not be necessary  since after PtRelease */
+    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::WorkProc  PtFlush Global_Widget_Hold_Count=<%d>\n", Global_Widget_Hold_Count));
+#endif
   }
 
   return Pt_END;

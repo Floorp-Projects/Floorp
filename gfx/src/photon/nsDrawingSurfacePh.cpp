@@ -377,15 +377,12 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Select( void )
       int err;
 	  PhDrawContext_t *oldDC;
 	  
-#if 0
-/* Why flush what might be in there?? */
       err=PmMemFlush( (PmMemoryContext_t *) mGC, mPixmap ); // get the image
       if (err == -1)
 	  {
 		NS_ASSERTION(0, "nsDrawingSurfacePh::Select - Error calling PmMemFlush");
 		return NS_ERROR_FAILURE;
 	  }
-#endif
 
       oldDC=PmMemStart( (PmMemoryContext_t *) mGC);
       if (oldDC == NULL)

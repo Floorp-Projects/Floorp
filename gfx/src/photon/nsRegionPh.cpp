@@ -84,14 +84,7 @@ nsresult nsRegionPh :: Init(void)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Init this=<%p>\n", this));
 
-  /* This looks like a memory leak kirk 10/18/99 */
-#if 0
-  mRegion = NULL;
-  mRegionType = eRegionComplexity_empty;
-#else
-  SetRegionEmpty();		//HACK!
-#endif
-  
+  SetRegionEmpty();
   return NS_OK;
 }
 
