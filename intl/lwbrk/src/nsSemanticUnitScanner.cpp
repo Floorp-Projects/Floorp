@@ -75,8 +75,8 @@ NS_IMETHODIMP nsSemanticUnitScanner::Next(const PRUnichar *text, PRInt32 length,
 
     PRUint8 char_class = nsSampleWordBreaker::GetClass(text[pos]);
 
-    // if we are in chinese mode, return on han letter at a time
-    // we should not do this if we are in Japanese or Korena mode
+    // if we are in chinese mode, return one han letter at a time
+    // we should not do this if we are in Japanese or Korean mode
     if (kWbClassHanLetter == char_class) {
        *begin = pos;
        *end = pos+1;
@@ -87,33 +87,26 @@ NS_IMETHODIMP nsSemanticUnitScanner::Next(const PRUnichar *text, PRInt32 length,
     PRUint32 next;
     PRBool needMoreText;
     // find the next "word"
-    nsresult res = nsSampleWordBreaker::Next(text, (PRUint32) length, (PRUint32) pos, 
+    nsresult res = NextWord(text, (PRUint32) length, (PRUint32) pos, 
         &next, &needMoreText);
 
     NS_ASSERTION(NS_SUCCEEDED(res), "nsSampleWordBreaker::Next failed");
-    if(NS_FAILED(res)) 
+    if (NS_FAILED(res)) 
         return res;
 
     // if we don't have enough text to make decision, return 
     if (needMoreText) {
-       if (isLastBuffer) {
-           *begin = pos;
-           *end = length;
-           *_retval = PR_TRUE;
-           return NS_OK;
-       } else {
-           *begin = pos;
-           *end = pos;
-           *_retval = PR_FALSE;
-           return NS_OK;
-       }
+       *begin = pos;
+       *end = isLastBuffer ? length : pos;
+       *_retval = isLastBuffer;
+       return NS_OK;
     } 
     
     // if what we got is space or punct, look at the next break
-    if ( (char_class == kWbClassSpace) || (char_class == kWbClassPunct) ) {
-          // if the next "word" is not letters, 
-          // call itself recursively with the new pos
-          return Next(text, length, next, isLastBuffer, begin, end, _retval);
+    if ((char_class == kWbClassSpace) || (char_class == kWbClassPunct)) {
+        // if the next "word" is not letters, 
+        // call itself recursively with the new pos
+        return Next(text, length, next, isLastBuffer, begin, end, _retval);
     }
 
     // for the rest, return 

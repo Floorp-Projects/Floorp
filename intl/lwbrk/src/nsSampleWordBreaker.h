@@ -68,18 +68,14 @@ public:
                                       PRUint32 *oWordBegin,
                                       PRUint32 *oWordEnd);
 
-  NS_IMETHOD Next( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
-                   PRUint32* oNext, PRBool *oNeedMoreText);
+  NS_IMETHOD NextWord(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
+                      PRUint32* oNext, PRBool *oNeedMoreText);
 
-  NS_IMETHOD Prev( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
-                   PRUint32* oPrev, PRBool *oNeedMoreText);
+  NS_IMETHOD PrevWord(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
+                      PRUint32* oPrev, PRBool *oNeedMoreText);
 
 protected:
   PRUint8  GetClass(PRUnichar aChar);
-  PRUint32 Next(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
-  PRUint32 Prev(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
-
-
 };
 
 #endif  /* nsSampleWordBreaker_h__ */

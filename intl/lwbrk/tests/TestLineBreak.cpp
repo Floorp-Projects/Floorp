@@ -172,9 +172,9 @@ PRBool TestASCIIWB(nsIWordBreaker *lb,
          PRBool done;
          PRUint32 curr =0;
 
-         for(i = 0, lb->Next(eng1.get(), eng1.Length(), curr, &curr, &done);
+         for(i = 0, lb->NextWord(eng1.get(), eng1.Length(), curr, &curr, &done);
                     (! done ) && (i < 256);
-                    lb->Next(eng1.get(), eng1.Length(), curr, &curr, &done), i++)
+                    lb->NextWord(eng1.get(), eng1.Length(), curr, &curr, &done), i++)
          {
             res [i] = curr;
          }
@@ -438,19 +438,19 @@ void SamplePrintWordWithBreak()
 
       PRUint32 cur = 0;
       PRBool done;
-      res = wbk->Next(fragText.get(), fragText.Length(), cur, &cur, &done);
+      res = wbk->NextWord(fragText.get(), fragText.Length(), cur, &cur, &done);
       PRUint32 start = 0;
       for(PRUint32 j = 0; ! done ; j++)
       {
-            tmp.SetLength(0);
+            tmp.Truncate();
             fragText.Mid(tmp, start, cur - start);
             result.Append(tmp);
             result.Append(NS_LITERAL_STRING("^"));
             start = cur;
-            wbk->Next(fragText.get(), fragText.Length(), cur, &cur, &done);
+            wbk->NextWord(fragText.get(), fragText.Length(), cur, &cur, &done);
       }
 
-      tmp.SetLength(0);
+      tmp.Truncate();
       fragText.Mid(tmp, start, fragText.Length() - start);
       result.Append(tmp);
 
