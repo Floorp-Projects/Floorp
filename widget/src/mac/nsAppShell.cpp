@@ -84,6 +84,15 @@ NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
 	mMacSink = auto_ptr<nsMacMessageSink>( new nsMacMessageSink() );
 	nsIToolkit* toolkit = mToolkit.get();
 	mMacPump = auto_ptr<nsMacMessagePump>( new nsMacMessagePump(static_cast<nsToolkit*>(toolkit), mMacSink.get()) );
+  mMacMemoryCushion = auto_ptr<nsMacMemoryCushion>( new nsMacMemoryCushion() );  
+
+  if (!mMacSink.get() || !mMacPump.get() || !mMacMemoryCushion.get())
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  OSErr err = mMacMemoryCushion->Init(nsMacMemoryCushion::kMemoryReserveSize);
+  if (err != noErr)
+    return NS_ERROR_FAILURE;
+  
 	return NS_OK;
 }
 
@@ -97,6 +106,7 @@ NS_IMETHODIMP nsAppShell::Run(void)
 	if (!mMacPump.get())
 		return NS_ERROR_NOT_INITIALIZED;
 
+  mMacMemoryCushion->StartRepeating();
 	mMacPump->StartRunning();
 	mMacPump->DoMessagePump();
 
