@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.17 $ 
-# $Date: 2001/04/03 15:14:27 $ 
+# $Revision: 1.18 $ 
+# $Date: 2001/04/04 14:23:36 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -186,14 +186,23 @@ sub get_env {
   # check both real and effective uid of the process to see if we have
   # been configured to run with too much privileges.
 
+  # Ideally we do not want the tinderbox application running with the
+  # priveledges of a restricted user id (like: root, daemon, bin,
+  # mail, adm) however the webserver is often given a low uid to run
+  # by many 'modern' unicies.
+
   # On RedHat Linux
   #	user nobody has uid 99
   #	user apache has uid 48
   #	All CGI scripts run as user nobody by defult in RedHat 6.2
   #	All CGI scripts run as user apache by defult in RedHat 7.0
 
-  # The largest Solaris daemon ids is lp at 71
-  my $max_uid = 45;
+  # Debian uses www-data uid 33 to run the web server
+
+  # The largest Solaris daemon ids is lp at 71 the webserver does not
+  # have a system uid
+
+  my $max_uid = 33;
 
   ( $< >= $max_uid ) ||
     die("Security Error. ".
@@ -212,8 +221,12 @@ sub get_env {
   #	the wheel group is group 10
   #	the ftp group is group 50
 
-  # The largest Solaris daemon group is 15
-  my $max_gid = 75;
+  # Debian uses www-data gid 33 to run the web server
+
+  # The largest Solaris daemon group is 15  the webserver does not
+  # have a system gid.
+
+  my $max_gid = 33;
 
   ( $( >= $max_gid ) ||
     die("Security Error. ".
