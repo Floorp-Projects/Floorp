@@ -557,7 +557,7 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:editor:txtsvc:public:MANIFEST",					"$distdirectory:editor:txtsvc");
   
     #SILENTDL
-    _InstallFromManifest(":mozilla:silentdl:MANIFEST",								"$distdirectory:silentdl:");
+    #_InstallFromManifest(":mozilla:silentdl:MANIFEST",								"$distdirectory:silentdl:");
 
     #XPINSTALL (the one and only!)
     _InstallFromManifest(":mozilla:xpinstall:public:MANIFEST",                       "$distdirectory:xpinstall:");

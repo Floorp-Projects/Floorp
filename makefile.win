@@ -79,7 +79,6 @@ DIRS = \
   view				\
   layout			\
   rdf                           \
-  silentdl                      \
   webshell			\
   editor 			\
 !endif
