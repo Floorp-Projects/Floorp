@@ -146,6 +146,7 @@ intl/chardet/Makefile
 intl/chardet/public/Makefile
 intl/chardet/src/Makefile
 intl/uconv/Makefile
+intl/uconv/idl/Makefile
 intl/uconv/public/Makefile
 intl/uconv/src/Makefile
 intl/uconv/tests/Makefile
@@ -191,6 +192,7 @@ js/src/xpconnect/public/Makefile
 js/src/xpconnect/idl/Makefile
 js/src/xpconnect/shell/Makefile
 js/src/xpconnect/src/Makefile
+js/src/xpconnect/loader/Makefile
 js/src/xpconnect/tests/Makefile
 js/src/xpconnect/tests/components/Makefile
 js/src/xpconnect/tests/idl/Makefile
@@ -532,7 +534,12 @@ xpinstall/notifier/Makefile
 xpinstall/packager/Makefile
 xpinstall/public/Makefile
 xpinstall/res/Makefile
+xpinstall/res/content/Makefile
+xpinstall/res/locale/Makefile
+xpinstall/res/locale/en-US/Makefile
+xpinstall/res/skin/Makefile
 xpinstall/src/Makefile
+xpinstall/stub/Makefile
 xpfe/Makefile
 xpfe/AppCores/Makefile
 xpfe/AppCores/public/Makefile
@@ -550,6 +557,9 @@ xpfe/components/sample/Makefile
 xpfe/components/sample/public/Makefile
 xpfe/components/sample/src/Makefile
 xpfe/components/sample/resources/Makefile
+xpfe/components/shistory/Makefile
+xpfe/components/shistory/public/Makefile
+xpfe/components/shistory/src/Makefile
 xpfe/components/bookmarks/Makefile
 xpfe/components/bookmarks/public/Makefile
 xpfe/components/bookmarks/src/Makefile
