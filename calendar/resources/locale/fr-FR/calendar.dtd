@@ -294,6 +294,12 @@
 <!-- Window Title -->
 <!ENTITY window.title            "Mozilla Calendar">
 
+<!-- customizable toolbars -->
+<!ENTITY calendar.context.customize.label             "Customize">
+<!ENTITY calendar.context.customize.accesskey         "C">
+<!ENTITY calendar.maintoolbar.name                    "Main Toolbar">
+<!ENTITY calendar.maintoolbar.accesskey               "M">
+
 <!-- Context Menu -->
 <!ENTITY calendar.context.newevent.label              "Nouvel événement">
 <!ENTITY calendar.context.newevent.accesskey          "n">

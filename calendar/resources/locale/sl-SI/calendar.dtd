@@ -294,6 +294,12 @@
 <!-- Ime okna-->
 <!ENTITY window.title            "Koledar Mozilla">
 
+<!-- customizable toolbars -->
+<!ENTITY calendar.context.customize.label             "Customize">
+<!ENTITY calendar.context.customize.accesskey         "C">
+<!ENTITY calendar.maintoolbar.name                    "Main Toolbar">
+<!ENTITY calendar.maintoolbar.accesskey               "M">
+
 <!-- Kontekstni menu-->
 <!ENTITY calendar.context.newevent.label              "Nov dogodek">
 <!ENTITY calendar.context.newevent.accesskey          "N">
