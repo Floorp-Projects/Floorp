@@ -43,7 +43,7 @@
 #define _nsStr
 
 #include "nscore.h"
-#include "nsCppSharedAllocator.h"
+#include "nsIAllocator.h"
 
 //----------------------------------------------------------------------------------------
 
@@ -60,10 +60,10 @@ class nsIMemoryAgent;
 
 //----------------------------------------------------------------------------------------
 
-class NS_COM CSharedStrBuffer {
+class NS_COM CBufDescriptor {
 public:
-  CSharedStrBuffer(char* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1);
-  CSharedStrBuffer(PRUnichar* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1);
+  CBufDescriptor(char* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1);
+  CBufDescriptor(PRUnichar* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1);
 
   char*     mBuffer;
   eCharSize mCharSize;
@@ -311,11 +311,8 @@ public:
     }
 	  
     aDest.mCapacity=theNewCapacity++;
-    size_t theSize=(theNewCapacity<<aDest.mCharSize);
-
-    // aDest.mStr=new char[theSize];
-		nsCppSharedAllocator<char> shared_allocator;
-		aDest.mStr = shared_allocator.allocate(theSize);
+    PRUint32 theSize=(theNewCapacity<<aDest.mCharSize);
+    aDest.mStr = (char*)nsAllocator::Alloc(theSize);
 
     aDest.mOwnsBuffer=1;
     return PR_TRUE;
@@ -324,9 +321,7 @@ public:
   virtual PRBool Free(nsStr& aDest){
     if(aDest.mStr){
       if(aDest.mOwnsBuffer){
-        // delete [] aDest.mStr;
-        nsCppSharedAllocator<char> shared_allocator;
-        shared_allocator.deallocate(aDest.mStr, aDest.mCapacity);
+        nsAllocator::Free(aDest.mStr);
       }
       aDest.mStr=0;
       aDest.mOwnsBuffer=0;

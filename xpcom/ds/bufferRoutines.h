@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
@@ -286,15 +285,21 @@ CopyChars gCopyChars[2][2]={
  *  @return  index of pos if found, else -1 (kNotFound)
  */
 inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
-  PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
   PRInt32  theIndex=0;
   PRInt32  theLength=(PRInt32)aLength;
-  for(theIndex=(PRInt32)anOffset;theIndex<theLength;theIndex++){
-    PRUnichar theChar=aDest[theIndex];
-    if(aIgnoreCase)
-      theChar=nsCRT::ToUpper(theChar);
-    if(theChar==theCmpChar)
-      return theIndex;
+
+  if(aIgnoreCase) {
+    PRUnichar theChar=nsCRT::ToUpper(aChar);
+    for(theIndex=(PRInt32)anOffset;theIndex<theLength;theIndex++){
+      if(nsCRT::ToUpper(aDest[theIndex])==theChar)
+        return theIndex;
+    }
+  }
+  else {
+    for(theIndex=(PRInt32)anOffset;theIndex<theLength;theIndex++){
+      if(aDest[theIndex]==aChar)
+        return theIndex;
+    }
   }
   return kNotFound;
 }
@@ -311,17 +316,24 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,co
  *  @return  index of pos if found, else -1 (kNotFound)
  */
 inline PRInt32 FindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
-  PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
   PRInt32     theIndex=0;
   PRInt32     theLength=(PRInt32)aLength;
   PRUnichar*  theBuf=(PRUnichar*)aDest;
-  for(theIndex=(PRInt32)anOffset;theIndex<theLength;theIndex++){
-    PRUnichar theChar=theBuf[theIndex];
-    if(aIgnoreCase)
-      theChar=nsCRT::ToUpper(theChar);
-    if(theChar==theCmpChar)
-      return theIndex;
+
+  if(aIgnoreCase) {
+    PRUnichar theChar=nsCRT::ToUpper(aChar);
+    for(theIndex=(PRInt32)anOffset;theIndex<theLength;theIndex++){
+      if(nsCRT::ToUpper(theBuf[theIndex])==theChar)
+        return theIndex;
+    }
   }
+  else {
+    for(theIndex=(PRInt32)anOffset;theIndex<theLength;theIndex++){
+      if(theBuf[theIndex]==aChar)
+        return theIndex;
+    }
+  }
+
   return kNotFound;
 }
 
@@ -338,16 +350,22 @@ inline PRInt32 FindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,co
  *  @return  index of pos if found, else -1 (kNotFound)
  */
 inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
-  PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
   PRInt32 theIndex=0;
-  PRInt32 thePos=(PRInt32)anOffset;
-  for(theIndex=thePos;theIndex>=0;theIndex--){
-    PRUnichar theChar=GetCharAt(aDest,theIndex);
-    if(aIgnoreCase)
-      theChar=nsCRT::ToUpper(theChar);
-    if(theChar==theCmpChar)
-      return theIndex;
+
+  if(aIgnoreCase) {
+    PRUnichar theChar=nsCRT::ToUpper(aChar);
+    for(theIndex=(PRInt32)anOffset;theIndex>=0;theIndex--){
+      if(nsCRT::ToUpper(aDest[theIndex])==theChar)
+        return theIndex;
+    }
   }
+  else {
+    for(theIndex=(PRInt32)anOffset;theIndex>=0;theIndex--){
+      if(aDest[theIndex]==aChar)
+        return theIndex;
+    }
+  }
+
   return kNotFound;
 }
 
@@ -364,16 +382,24 @@ inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRUint32 anOffs
  *  @return  index of pos if found, else -1 (kNotFound)
  */
 inline PRInt32 RFindChar2(const char* aDest,PRUint32 aDestLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
-  PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
+
   PRInt32 theIndex=0;
-  PRInt32 thePos=(PRInt32)anOffset;
-  for(theIndex=thePos;theIndex>=0;theIndex--){
-    PRUnichar theChar=GetUnicharAt(aDest,theIndex);
-    if(aIgnoreCase)
-      theChar=nsCRT::ToUpper(theChar);
-    if(theChar==theCmpChar)
-      return theIndex;
+  PRUnichar*  theBuf=(PRUnichar*)aDest;
+
+  if(aIgnoreCase) {
+    PRUnichar theChar=nsCRT::ToUpper(aChar);
+    for(theIndex=(PRInt32)anOffset;theIndex>=0;theIndex--){
+      if(nsCRT::ToUpper(theBuf[theIndex])==theChar)
+        return theIndex;
+    }
   }
+  else {
+    for(theIndex=(PRInt32)anOffset;theIndex>=0;theIndex--){
+      if(theBuf[theIndex]==aChar)
+        return theIndex;
+    }
+  }
+
   return kNotFound;
 }
 
