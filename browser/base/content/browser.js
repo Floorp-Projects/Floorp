@@ -74,7 +74,7 @@ var gHaveUpdatedToolbarState = false;
 #ifdef XP_WIN
 var gClickSelectsAll = true;
 #else
-var gClickSelectsAll = false;
+var gClickSelectsAll = true;
 #endif
 var gIgnoreFocus = false;
 var gIgnoreClick = false;
@@ -325,7 +325,6 @@ function prepareForStartup()
   gNavigatorBundle = document.getElementById("bundle_browser");
   gProgressMeterPanel = document.getElementById("statusbar-progresspanel");
   gBrowser.addEventListener("DOMUpdatePageReport", UpdatePageReport, false);
-  gBrowser.addEventListener("DOMUpdatePageTheme", updatePageTheme, false);
   
   var webNavigation;
   try {
@@ -2526,6 +2525,8 @@ nsBrowserStatusHandler.prototype =
       }
     }
     UpdateBackForwardButtons();
+    
+    setTimeout("updatePageTheme();", 0);
   },
 
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
@@ -4336,9 +4337,6 @@ function stylesheetSwitchAll(frameset, title) {
   for (var i = 0; i < frameset.frames.length; i++) {
     stylesheetSwitchAll(frameset.frames[i], title);
   }
-
-  // FIXME: Persist the alternate sheet chosen as both a default for this URL and
-  // as the default for the immediate enclosing directory.
 }
 
 function updatePageTheme(evt)
@@ -4368,9 +4366,6 @@ function updatePageTheme(evt)
   }
   else
     gPageThemeButton.removeAttribute("themes");
-
-  // FIXME: Read in the persisted alt sheet data and auto-select the correct
-  // alt sheet.
 }
 /* End of the Page Theme functions */
 
