@@ -711,6 +711,11 @@ NS_IMETHODIMP nsAbCardProperty::CopyCard(nsIAbCard* srcCard)
 	srcCard->GetSecondEmail(&str);
 	SetSecondEmail(str);
 	PR_FREEIF(str);
+
+	PRBool bValue = PR_FALSE;
+	srcCard->GetSendPlainText(&bValue);
+	SetSendPlainText(bValue);
+
 	srcCard->GetWorkPhone(&str);
 	SetWorkPhone(str);
 	PR_FREEIF(str);

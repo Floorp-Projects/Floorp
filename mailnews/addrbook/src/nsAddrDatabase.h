@@ -119,6 +119,9 @@ public:
 	NS_IMETHOD Add2ndEmail(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_2ndEmailColumnToken, value); }
 
+	NS_IMETHOD AddSendPlainText(nsIMdbRow * row, PRBool value)
+	{ return AddBoolColumn(row, m_PlainTextColumnToken, value); }
+
 	NS_IMETHOD AddWorkPhone(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_WorkPhoneColumnToken, value); }
 
@@ -252,6 +255,7 @@ protected:
 	mdb_err AddCharStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, const char* str);
 	mdb_err AddStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, nsString* str);
 	mdb_err AddIntColumn(nsIMdbRow* cardRow, mdb_column inColumn, PRUint32 nValue);
+	mdb_err AddBoolColumn(nsIMdbRow* cardRow, mdb_column inColumn, PRBool bValue);
 	nsresult GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken, nsString& str);
 	nsresult GetIntColumn(nsIMdbRow *cardRow, mdb_token outToken, 
 							PRUint32* pValue, PRUint32 defaultValue);

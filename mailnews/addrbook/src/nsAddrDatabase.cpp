@@ -890,6 +890,7 @@ nsresult nsAddrDatabase::InitMDBInfo()
 			GetStore()->StringToToken(GetEnv(),  kNicknameColumn, &m_NickNameColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kPriEmailColumn, &m_PriEmailColumnToken);
 			GetStore()->StringToToken(GetEnv(),  k2ndEmailColumn, &m_2ndEmailColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kPlainTextColumn, &m_PlainTextColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kWorkPhoneColumn, &m_WorkPhoneColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kHomePhoneColumn, &m_HomePhoneColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kFaxColumn, &m_FaxColumnToken);
@@ -1023,6 +1024,11 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 			}
 		}
 		PR_FREEIF(pUnicodeStr);
+
+		PRBool bValue = PR_FALSE;
+		card->GetSendPlainText(&bValue);
+		AddSendPlainText(cardRow, bValue);
+
 		card->GetWorkPhone(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
 		if (pUnicodeStr && unicharLength)
@@ -1837,6 +1843,19 @@ mdb_err nsAddrDatabase::AddIntColumn(nsIMdbRow* cardRow, mdb_column inColumn, PR
 	return cardRow->AddColumn(GetEnv(),  inColumn, &yarn);
 }
 
+mdb_err nsAddrDatabase::AddBoolColumn(nsIMdbRow* cardRow, mdb_column inColumn, PRBool bValue)
+{
+	struct mdbYarn yarn;
+	char	yarnBuf[100];
+
+	yarn.mYarn_Buf = (void *) yarnBuf;
+	if (bValue)
+		GetIntYarn(1, &yarn);
+	else
+		GetIntYarn(0, &yarn);
+	return cardRow->AddColumn(GetEnv(), inColumn, &yarn);
+}
+
 nsresult nsAddrDatabase::GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken, nsString& str)
 {
 	nsresult	err = NS_ERROR_FAILURE;
@@ -2208,6 +2227,11 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 		nsAllocator::Free(tempCString);
 		PR_Free(unicodeStr);
 	}
+
+	PRBool bValue = PR_FALSE;
+	err = GetBoolColumn(cardRow, m_PlainTextColumnToken, &bValue);
+	if (NS_SUCCEEDED(err))
+		newCard->SetSendPlainText(bValue);
 
 	err = GetStringColumn(cardRow, m_WorkPhoneColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
