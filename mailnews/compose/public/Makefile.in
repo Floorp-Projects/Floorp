@@ -34,6 +34,7 @@ XPIDLSRCS = \
 		nsIMsgSendLater.idl	\
 		nsIMsgDraft.idl	\
 		nsISmtpServer.idl	\
+		nsISmtpUrl.idl \
 		$(NULL)
 
 EXPORTS = \
@@ -41,7 +42,6 @@ EXPORTS = \
 		nsMsgCompFieldsFact.h	\
 		nsMsgSendFact.h \
 		nsMsgSendLaterFact.h \
-		nsISmtpUrl.h	\
 		nsISmtpService.h \
 		$(NULL)
 
