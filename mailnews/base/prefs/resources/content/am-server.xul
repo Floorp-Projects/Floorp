@@ -22,7 +22,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 
 Contributors:
-hwaara@chello.se
+  hwaara@chello.se
 
 -->
 
@@ -36,8 +36,10 @@ hwaara@chello.se
         onload="parent.onPanelLoaded('am-server.xul');"
         orient="vertical">
 
-  <script src="chrome://messenger/content/am-server.js"/>
-  <script src="chrome://global/content/strres.js"/>
+  <script type="text/javascript" src="chrome://messenger/content/am-server.js"/>
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+
+  <broadcaster id="broadcaster_doBiff"/>
 
   <text hidden="true" wsm_persist="true" id="server.type"/>
 
@@ -90,22 +92,21 @@ hwaara@chello.se
             value="&savePassword.label;"/>
 -->
   <box orient="horizontal" autostretch="never">
-    <checkbox wsm_persist="true" id="server.doBiff" value="&biffStart.label;"
-     oncommand="setupBiffUI()"/>
-    <textfield wsm_persist="true" id="server.biffMinutes" size="3"/>
-    <text class="label" id="biffEnd" for="server.biffMinutes" value="&biffEnd.label;"/>
+    <checkbox wsm_persist="true" id="server.doBiff" value="&biffStart.label;" oncommand="setupBiffUI();"/>
+    <textfield wsm_persist="true" id="server.biffMinutes" size="3" observes="broadcaster_doBiff"/>
+    <text class="label" id="biffEnd" for="server.biffMinutes" value="&biffEnd.label;" observes="broadcaster_doBiff"/>
   </box>
   <!-- POP3 -->
   <box orient="vertical" iscontrolcontainer="true" autostretch="never">
-    <checkbox hidable="true" style="margin-left: 2em" hidefor="imap,nntp"
-            wsm_persist="true" id="server.downloadOnBiff"
-            value="&downloadOnBiff.label;"/>
+    <checkbox hidable="true" class="indent" hidefor="imap,nntp"
+              wsm_persist="true" id="server.downloadOnBiff"
+              value="&downloadOnBiff.label;" observes="broadcaster_doBiff"/>
 
     <checkbox wsm_persist="true" id="pop3.leaveMessagesOnServer"
-            value="&leaveOnServer.label;"/>
+              value="&leaveOnServer.label;" oncommand="setupMailOnServerUI();"/>
 
-    <checkbox wsm_persist="true" id="pop3.deleteMailLeftOnServer"
-            value="&deleteOnServer.label;"/>
+    <checkbox wsm_persist="true" id="pop3.deleteMailLeftOnServer" class="indent"
+              value="&deleteOnServer.label;"/>
   </box>
   <box iscontrolcontainer="true" autostretch="never">
     <checkbox hidable="true" hidefor="imap,nntp" wsm_persist="true" value="&maxMessageSizePrefix.label;" id="pop3.limitMessageSize"/>

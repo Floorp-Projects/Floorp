@@ -18,20 +18,18 @@
  * Rights Reserved.
  * 
  * Contributors:
- * alecf@netscape.com
- * sspitzer@netscape.com
- * racham@netscape.com
- * hwaara@chello.se
+ *   alecf@netscape.com
+ *   sspitzer@netscape.com
+ *   racham@netscape.com
+ *   hwaara@chello.se
  */
-
-var stringBundle;
 
 function onInit() 
 {
-    stringBundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
     initServerType();
 
     setupBiffUI();
+    setupMailOnServerUI();
 }
 
 function onPreInit(account, accountValues)
@@ -45,11 +43,10 @@ function onPreInit(account, accountValues)
 function initServerType() {
   var serverType = document.getElementById("server.type").getAttribute("value");
   
-  var verboseName;
-
   var propertyName = "serverType-" + serverType;
 
-  verboseName = stringBundle.GetStringFromName(propertyName);
+  var stringBundle = document.getElementById("bundle_messenger");
+  var verboseName = stringBundle.getString(propertyName);
 
   setDivText("servertype.verbose", verboseName);
 }
@@ -62,17 +59,13 @@ function hideShowControls(serverType)
         var control = controls[i];
 
         var hideFor = control.getAttribute("hidefor");
-        if (!hideFor || hideFor == "") {
-            dump("this should not happen, things that are hidable should have hidefor set\n");
-            continue;
-        }
+        if (!hideFor)
+            throw "this should not happen, things that are hidable should have hidefor set";
 
         var box = getEnclosingContainer(control);
 
-        if (!box) {
-            dump("this should not happen, things that are hidable should be in a box\n");
-            continue;
-        }
+        if (!box)
+            throw "this should not happen, things that are hidable should be in a box";
 
         // hide unsupported server type
         // adding support for hiding multiple server types using hideFor="server1,server2"
@@ -183,21 +176,18 @@ function secureSelect() {
 
 function setupBiffUI()
 { 
-    var parentCheckBox = document.getElementById('server.doBiff');
-    var checkBox = document.getElementById('server.downloadOnBiff');
-    var textField = document.getElementById('server.biffMinutes');
-    var textLabel = document.getElementById('biffEnd');
+   var broadcaster = document.getElementById("broadcaster_doBiff");
 
-    var checked = parentCheckBox.checked;
+   var checked = document.getElementById("server.doBiff").checked;
+   if (checked)
+     broadcaster.removeAttribute("disabled");
+   else
+     broadcaster.setAttribute("disabled", "true");
+}
 
-    if (checked) {
-      checkBox.removeAttribute("disabled");
-      textField.removeAttribute("disabled");
-      textLabel.removeAttribute("disabled");
-    }
-    else {
-      checkBox.setAttribute("disabled", "true");
-      textField.setAttribute("disabled", "true");
-      textLabel.setAttribute("disabled", "true");
-    } 
+function setupMailOnServerUI()
+{ 
+   var checked = document.getElementById("pop3.leaveMessagesOnServer").checked;
+
+   document.getElementById("pop3.deleteMailLeftOnServer").disabled = !checked;
 }
