@@ -257,6 +257,11 @@
               <textbox readonly="true" crop="right" id="imagetitletext"/>
             </row>
             <row>
+              <label value="&mediaAlt;"/>
+              <separator/>
+              <textbox readonly="true" crop="right" id="imagealttext"/>
+            </row>
+            <row>
               <label value="&mediaLongdesc;"/>
               <separator/>
               <textbox readonly="true" crop="right" id="imagelongdesctext"/>
