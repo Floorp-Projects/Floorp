@@ -20,12 +20,14 @@ function setOfflineStatus(aToggleFlag)
       broadcaster.setAttribute("offline", "true");
       broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("offlineTooltip"));
       broadcaster.setAttribute("value", bundle.GetStringFromName("goonline"));
+      FillInTooltip(broadcaster);
     }
   else if (broadcaster)
     {
       broadcaster.removeAttribute("offline");
       broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("onlineTooltip"));
       broadcaster.setAttribute("value", bundle.GetStringFromName("gooffline"));
+      FillInTooltip(broadcaster);
     }
 }
 
