@@ -539,8 +539,8 @@ void
 nsInstallFolder::AppendXPPath(const nsString& aRelativePath)
 {
     nsAutoString segment;
-    PRInt32 start = 0;
-    PRInt32 curr;
+    PRUint32 start = 0;
+    PRUint32 curr;
 
     NS_ASSERTION(!aRelativePath.IsEmpty(),"InstallFolder appending null path");
     do {

@@ -216,7 +216,10 @@ PRInt32 ScheduleFileForDeletion(nsIFile *filename)
                                           strlen(fnamestr)+sizeof('\0'));
 
                     if ( err == REGERR_OK )
+                    {
                          result = nsInstall::REBOOT_NEEDED;
+                         nsSoftwareUpdate::NeedCleanup();
+                    }
                 }
             }
         }
@@ -401,7 +404,10 @@ PRInt32 ReplaceFileNowOrSchedule(nsIFile* replacementFile, nsIFile* doomedFile )
                                                   strlen(fdest)+sizeof('\0'));
 
                             if ( err == REGERR_OK && err2 == REGERR_OK )
+                            {
                                 result = nsInstall::REBOOT_NEEDED;
+                                nsSoftwareUpdate::NeedCleanup();
+                            }
                             else
                                 NR_RegDeleteKey( reg, listkey, valname );
                         }

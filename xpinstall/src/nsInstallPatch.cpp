@@ -596,7 +596,6 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
 		{
 		    PRInt64 fileSize;
 		    outFileSpec->GetFileSize(&fileSize);
-			printf("filesize: %d\n", fileSize);
 		}
 		
 			
