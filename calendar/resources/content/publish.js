@@ -72,7 +72,8 @@ function calendarPublish(aDataString, newLocation, login, password, contentType)
 {
   try
   {
-    var protocolChannel = get_destination_channel(newLocation, login, password);
+     alert( "new location is "+newLocation );
+     var protocolChannel = get_destination_channel(newLocation, login, password);
     if (!protocolChannel)
     {
       dump("failed to get a destination channel\n");
@@ -146,8 +147,7 @@ function get_destination_channel(destinationDirectoryLocation, login, password)
     }
 
     // create a channel for the destination location
-    var fullurl = destinationDirectoryLocation;
-    destChannel = create_channel_from_url(ioService, fullurl, login, password);
+    destChannel = create_channel_from_url(ioService, destinationDirectoryLocation, login, password);
     if (!destChannel)
     {
       dump("can't create dest channel\n");

@@ -410,7 +410,7 @@ calendarManager.prototype.publishCalendar = function calMan_publishCalendar( Sel
    
    calendarUploadFile(SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#path" ), 
                       SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" ), 
-                      SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#login" ), 
+                      SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#username" ), 
                       SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#password" ), 
                       "text/calendar");
 }
