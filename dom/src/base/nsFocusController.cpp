@@ -424,15 +424,15 @@ nsFocusController::SetSuppressFocus(PRBool aSuppressFocus, const char* aReason)
 {
   if(aSuppressFocus) {
     ++mSuppressFocus;
-#ifdef DEBUG_hyatt
-    printf("[%p] SuppressFocus incremented to %d. The reason is %s.\n", this, mSuppressFocus, aReason);
-#endif
+    //#ifdef DEBUG_hyatt
+    //printf("[%p] SuppressFocus incremented to %d. The reason is %s.\n", this, mSuppressFocus, aReason);
+    //#endif
   }
   else if(mSuppressFocus > 0) {
     --mSuppressFocus;
-#ifdef DEBUG_hyatt
-    printf("[%p] SuppressFocus decremented to %d. The reason is %s.\n", this, mSuppressFocus, aReason);
-#endif
+    //#ifdef DEBUG_hyatt
+    //printf("[%p] SuppressFocus decremented to %d. The reason is %s.\n", this, mSuppressFocus, aReason);
+    //#endif
   }
   else 
     NS_ASSERTION(PR_FALSE, "Attempt to decrement focus controller's suppression when no suppression active!\n");
