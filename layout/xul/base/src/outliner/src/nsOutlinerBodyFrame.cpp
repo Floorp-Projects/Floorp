@@ -294,7 +294,7 @@ NS_INTERFACE_MAP_BEGIN(nsOutlinerBodyFrame)
   NS_INTERFACE_MAP_ENTRY(nsICSSPseudoComparator)
   NS_INTERFACE_MAP_ENTRY(nsIScrollbarMediator)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
-NS_INTERFACE_MAP_END_INHERITING(nsLeafFrame)
+NS_INTERFACE_MAP_END_INHERITING(nsLeafBoxFrame)
 
 
 
@@ -367,6 +367,67 @@ nsOutlinerBodyFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
 NS_IMETHODIMP
 nsOutlinerBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 {
+  if (!mView) {
+    mRowHeight = GetRowHeight();
+    EnsureBoxObject();
+    nsCOMPtr<nsIBoxObject> box = do_QueryInterface(mOutlinerBoxObject);
+    if (box) {
+      nsCOMPtr<nsISupports> suppView;
+      box->GetPropertyAsSupports(NS_LITERAL_STRING("view").get(), getter_AddRefs(suppView));
+      nsCOMPtr<nsIOutlinerView> outlinerView(do_QueryInterface(suppView));
+
+      if (outlinerView) {
+        nsXPIDLString rowStr;
+        box->GetProperty(NS_LITERAL_STRING("topRow").get(), getter_Copies(rowStr));
+        nsAutoString rowStr2(rowStr);
+        PRInt32 error;
+        PRInt32 rowIndex = rowStr2.ToInteger(&error);
+
+        // Set our view.
+        SetView(outlinerView);
+
+        // Scroll to the given row.
+        // XXX is this optimal if we haven't laid out yet?
+        ScrollToRow(rowIndex);
+
+        // Clear out the property info for the top row, but we always keep the
+        // view current.
+        box->RemoveProperty(NS_LITERAL_STRING("topRow").get());
+      }
+    }
+
+    if (!mView) {
+      // If we don't have a box object yet, or no view was set on it,
+      // look for a XULOutlinerBuilder or create a content view.
+      
+      nsCOMPtr<nsIContent> parent;
+      mContent->GetParent(*getter_AddRefs(parent));
+      nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(parent);
+      if (xulele) {
+        nsCOMPtr<nsIOutlinerView> view;
+
+        // See if there is a XUL outliner builder associated with
+        // the parent element.
+        nsCOMPtr<nsIXULTemplateBuilder> builder;
+        xulele->GetBuilder(getter_AddRefs(builder));
+        if (builder)
+          view = do_QueryInterface(builder);
+
+        if (!view) {
+          // No outliner builder, create an outliner content view.
+          nsCOMPtr<nsIOutlinerContentView> contentView;
+          NS_NewOutlinerContentView(getter_AddRefs(contentView));
+          if (contentView)
+            view = do_QueryInterface(contentView);
+        }
+
+        // Hook up the view.
+        if (view)
+          SetView(view);
+      }
+    }
+  }
+
   nsCOMPtr<nsIContent> baseElement;
   GetBaseElement(getter_AddRefs(baseElement));
   nsCOMPtr<nsIAtom> tag;
@@ -501,79 +562,15 @@ nsOutlinerBodyFrame::EnsureBoxObject()
   }
 }
 
-NS_IMETHODIMP nsOutlinerBodyFrame::Reflow(nsIPresContext* aPresContext,
-                                          nsHTMLReflowMetrics& aReflowMetrics,
-                                          const nsHTMLReflowState& aReflowState,
-                                          nsReflowStatus& aStatus)
+NS_IMETHODIMP
+nsOutlinerBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect)
 {
-  if (aReflowState.reason == eReflowReason_Initial) {
-    // We might have a box object with some properties already cached.  If so,
-    // pull them out of the box object and restore them here.
-    mRowHeight = GetRowHeight();
-    EnsureBoxObject();
-    nsCOMPtr<nsIBoxObject> box = do_QueryInterface(mOutlinerBoxObject);
-    if (box) {
-      nsAutoString view(NS_LITERAL_STRING("view"));
-      nsCOMPtr<nsISupports> suppView;
-      box->GetPropertyAsSupports(view.get(), getter_AddRefs(suppView));
-      nsCOMPtr<nsIOutlinerView> outlinerView(do_QueryInterface(suppView));
-      
-      if (outlinerView) {
-        nsAutoString topRow(NS_LITERAL_STRING("topRow"));
-        nsXPIDLString rowStr;
-        box->GetProperty(topRow.get(), getter_Copies(rowStr));
-        nsAutoString rowStr2(rowStr);
-        PRInt32 error;
-        PRInt32 rowIndex = rowStr2.ToInteger(&error);
-        
-        // Set our view.
-        SetView(outlinerView);
-        
-        // Scroll to the given row.
-        ScrollToRow(rowIndex);
-        
-        // Clear out the property info for the top row, but we always keep the
-        // view current.
-        box->RemoveProperty(topRow.get());
-        
-        return nsLeafBoxFrame::Reflow(aPresContext, aReflowMetrics, aReflowState, aStatus);
-      }
-    }
+  PRBool recompute = (aRect != mRect);
+  nsresult rv = nsLeafBoxFrame::SetBounds(aBoxLayoutState, aRect);
 
-
-    // A content model view is always created and hooked up,
-    // unless there is a XULOutlinerBuilder view.
-
-    nsCOMPtr<nsIContent> parent;
-    mContent->GetParent(*getter_AddRefs(parent));
-    nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(parent);
-    if (xulele) {
-      nsCOMPtr<nsIOutlinerView> view;
-
-      // First, see if there is a XUL outliner builder
-      // associated with the parent element.
-      nsCOMPtr<nsIXULTemplateBuilder> builder;
-      xulele->GetBuilder(getter_AddRefs(builder));
-      if (builder)
-        view = do_QueryInterface(builder);
-
-      if (!view) {
-        // No outliner builder, create an outliner content view.
-        nsCOMPtr<nsIOutlinerContentView> contentView;
-        NS_NewOutlinerContentView(getter_AddRefs(contentView));
-        if (contentView)
-          view = do_QueryInterface(contentView);
-      }
-
-      // Hook up the view.
-      if (view)
-        SetView(view);
-    }
-  }
-
-  if (mView && mRowHeight && aReflowState.reason == eReflowReason_Resize) {
+  if (recompute) {
     mInnerBox = GetInnerBox();
-    mPageCount = mInnerBox.height / mRowHeight;
+    mPageCount = mRowHeight ? (mInnerBox.height / mRowHeight) : 0;
 
     PRInt32 rowCount;
     mView->GetRowCount(&rowCount);
@@ -582,10 +579,10 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Reflow(nsIPresContext* aPresContext,
       ScrollToRow(lastPageTopRow);
 
     InvalidateScrollbar();
-    CheckVerticalOverflow();
+    CheckVerticalOverflow(aBoxLayoutState.GetReflowState() != nsnull);
   }
 
-  return nsLeafBoxFrame::Reflow(aPresContext, aReflowMetrics, aReflowState, aStatus);
+  return rv;
 }
 
 
@@ -653,7 +650,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
     // Reset scrollbar position.
     UpdateScrollbar();
 
-    CheckVerticalOverflow();
+    CheckVerticalOverflow(PR_FALSE);
   }
  
   return NS_OK;
@@ -858,7 +855,7 @@ nsOutlinerBodyFrame::UpdateScrollbar()
   scrollbarContent->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
 }
 
-nsresult nsOutlinerBodyFrame::CheckVerticalOverflow()
+nsresult nsOutlinerBodyFrame::CheckVerticalOverflow(PRBool aInReflow)
 {
   PRBool verticalOverflowChanged = PR_FALSE;
 
@@ -881,7 +878,7 @@ nsresult nsOutlinerBodyFrame::CheckVerticalOverflow()
     event->nativeMsg = nsnull;
     event->message = mVerticalOverflow ? NS_SCROLLPORT_OVERFLOW : NS_SCROLLPORT_UNDERFLOW;
 
-    if (mState & NS_FRAME_IN_REFLOW) {
+    if (aInReflow) {
       nsCOMPtr<nsIPresShell> shell;
       mPresContext->GetShell(getter_AddRefs(shell));
       shell->PostDOMEvent(mContent, event);
@@ -1499,7 +1496,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCoun
   if (mTopRowIndex == 0) {    
     // Just update the scrollbar and return.
     InvalidateScrollbar();
-    CheckVerticalOverflow();
+    CheckVerticalOverflow(PR_FALSE);
     return NS_OK;
   }
 
@@ -1528,7 +1525,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCoun
   }
 
   InvalidateScrollbar();
-  CheckVerticalOverflow();
+  CheckVerticalOverflow(PR_FALSE);
   return NS_OK;
 }
 
