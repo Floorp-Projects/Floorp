@@ -92,7 +92,7 @@
         <vbox flex="1">
           <spacer flex="1"/>
           <hbox align="start">
-          <html:a class="themesLink" id="themesLink" href="&getNewThemesURL;"
+          <html:a class="themesLink" id="themesLink" href="http://texturizer.net/phoenix/themes.html"
               style="padding-left:4px; display: block;" target="_new">&getNewThemes.label;</html:a>
           </hbox>
         </vbox>
@@ -135,7 +135,7 @@
     </hbox>
     <separator/>
     <hbox align="start">
-          <html:a class="themesLink" href="http://www.mozilla.org/projects/phoenix/extensions/index.html"
+          <html:a class="themesLink" href="http://texturizer.net/phoenix/extensions.html"
               style="padding-left:4px; display: block;" target="_new">Get New Extensions</html:a> <!-- XXXBlake localize this url -->
     </hbox>
   </vbox>
