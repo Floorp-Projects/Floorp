@@ -36,7 +36,8 @@
 			<![CDATA[
 				this.mTextBox = document.getAnonymousNodes(this)[0].childNodes[0];
 				this.mPopup = document.getAnonymousNodes(this)[0].childNodes[1].childNodes[0];
-				
+				this.calendar = document.getAnonymousNodes(this)[0].childNodes[1].childNodes[0].childNodes[0];
+                
 				var val = this.getAttribute("value");
 
 				if (val) this.value = val;
@@ -64,7 +65,14 @@
 			]]></body>
 		</method>
 
-		<method name="getPrettyDate">
+		<method name="refreshDisplay">
+			<body><![CDATA[
+              this.calendar.refreshDisplay( );
+              alert( "in refresh display" );  
+			]]></body>
+		</method>
+        
+        <method name="getPrettyDate">
 		<parameter name="aValue"/>
 			<body><![CDATA[
 				return (aValue.getMonth()+1) + "/" + aValue.getDate() + "/" + aValue.getFullYear();

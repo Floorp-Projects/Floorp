@@ -99,45 +99,52 @@
       
 		<constructor>
 			<![CDATA[
-        if (!this.mInitialized) {
-          this.mInitialized = true;
-
-            // Find out which should be the first day of the week
-            var pref =  Components.classes[
-                "@mozilla.org/preferences-service;1"
-            ].getService(Components.interfaces.nsIPrefBranch);
-            
-            this.weekStart;
-            try {
-                this.weekStart = pref.getIntPref("calendar.week.start");
-            }
-            catch (e) {
-                this.weekStart = 0;
-            }
-
-          // save references for convenience
-          var monthbox = document.getAnonymousNodes(this)[0].childNodes[0];
-          this.mLeftBtn = monthbox.childNodes[0];
-          this.mLeftBtn.mCalendar = this;
-          this.mRightBtn = monthbox.childNodes[4];
-          this.mRightBtn.mCalendar = this;
-          this.mMonthCell = monthbox.childNodes[2];
-
-          var val = this.parentNode.parentNode.parentNode.parentNode.value;
-          if (val) this.mValue = new Date(val);
-          else this.mValue = new Date();
-          var change = this.getAttribute("onchange");
-          if (change) this.onchange = new Function(change);
-          
-          var monthchange = this.getAttribute("onmonthchange");
-          if (monthchange) this.onmonthchange = new Function(monthchange);
-          
-					this.setHeader();
-          this.showMonth(this.mValue);
-        }
-			]]>
+            this.refreshDisplay( );
+            ]]>
 		</constructor>
 
+        <method name="refreshDisplay">
+           <body>
+           <![CDATA[
+            if (!this.mInitialized) {
+              this.mInitialized = true;
+    
+                // Find out which should be the first day of the week
+                var pref =  Components.classes[
+                    "@mozilla.org/preferences-service;1"
+                ].getService(Components.interfaces.nsIPrefBranch);
+                
+                this.weekStart;
+                try {
+                    this.weekStart = pref.getIntPref("calendar.week.start");
+                }
+                catch (e) {
+                    this.weekStart = 0;
+                }
+    
+              // save references for convenience
+              var monthbox = document.getAnonymousNodes(this)[0].childNodes[0];
+              this.mLeftBtn = monthbox.childNodes[0];
+              this.mLeftBtn.mCalendar = this;
+              this.mRightBtn = monthbox.childNodes[4];
+              this.mRightBtn.mCalendar = this;
+              this.mMonthCell = monthbox.childNodes[2];
+    
+              var val = this.parentNode.parentNode.parentNode.parentNode.value;
+              if (val) this.mValue = new Date(val);
+              else this.mValue = new Date();
+              var change = this.getAttribute("onchange");
+              if (change) this.onchange = new Function(change);
+              
+              var monthchange = this.getAttribute("onmonthchange");
+              if (monthchange) this.onmonthchange = new Function(monthchange);
+              
+    		  this.setHeader();
+              this.showMonth(this.mValue);
+            }
+            ]]></body>
+        </method>
+        
 		<method name="setHeader">
 			<body><![CDATA[
 				// need to create string bundle manually instead of
