@@ -127,7 +127,13 @@ public class Global extends ImporterTopLevel {
      *
      * This method is defined as a JavaScript function.
      */
-    public static void quit() {
+    public static void quit(Context cx, Scriptable thisObj,
+                            Object[] args, Function funObj)
+    {
+
+        if (args.length > 0)
+            Main.global.exitCode = (int) Context.toNumber(args[0]);
+
         Main.global.quitting = true;
     }
 
@@ -277,6 +283,7 @@ public class Global extends ImporterTopLevel {
     boolean debug = false;
     boolean processStdin = true;    
     boolean quitting;
+    int exitCode = 0;
     NativeArray history;
     boolean showDebuggerUI = false;
 }

@@ -21,6 +21,7 @@
  * Contributor(s): 
  * Patrick Beard
  * Norris Boyd
+ * Rob Ginda
  * Kurt Westerfeld
  *
  * Alternatively, the contents of this file may be used under the
@@ -137,6 +138,7 @@ public class Main {
             processSource(cx, args.length == 0 ? null : args[0]);
 
         cx.exit();
+        System.exit(global.exitCode);
     }
 
     /**
@@ -314,6 +316,7 @@ public class Main {
                 Context.reportError(ToolErrorReporter.getMessage(
                     "msg.couldnt.open",
                     filename));
+                global.exitCode = EXITCODE_FILE_NOT_FOUND;
                 return;
             } catch (IOException ioe) {
                 err.println(ioe.toString());
@@ -342,6 +345,7 @@ public class Main {
         catch (EcmaError ee) {
             String msg = ToolErrorReporter.getMessage(
                 "msg.uncaughtJSException", ee.toString());
+            global.exitCode = EXITCODE_RUNTIME_ERROR;
             if (ee.getSourceName() != null) {
                 Context.reportError(msg, ee.getSourceName(), 
                                     ee.getLineNumber(), null, 0);
@@ -396,6 +400,8 @@ public class Main {
     static public InputStream in = System.in;
     static public PrintStream out = System.out;
     static public PrintStream err = System.err;
+    static private final int EXITCODE_RUNTIME_ERROR = 125;
+    static private final int EXITCODE_FILE_NOT_FOUND = 126;    
     
     SourceTextManager debug_stm;
     //DebugManager debug_dm; // TODO: enable debugger
