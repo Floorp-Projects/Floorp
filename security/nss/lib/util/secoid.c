@@ -50,6 +50,7 @@
 
 #define NISTALGS    USGOV, 3, 4
 #define AES         NISTALGS, 1
+#define SHAXXX      NISTALGS, 2
 
 /**
  ** The Netscape OID space is allocated by Terry Hayes.  If you need
@@ -179,6 +180,9 @@ CONST_OID pkcs1MD2WithRSAEncryption[]  		= { PKCS1, 0x02 };
 CONST_OID pkcs1MD4WithRSAEncryption[]  		= { PKCS1, 0x03 };
 CONST_OID pkcs1MD5WithRSAEncryption[]  		= { PKCS1, 0x04 };
 CONST_OID pkcs1SHA1WithRSAEncryption[] 		= { PKCS1, 0x05 };
+CONST_OID pkcs1SHA256WithRSAEncryption[] 	= { PKCS1, 11 };
+CONST_OID pkcs1SHA384WithRSAEncryption[] 	= { PKCS1, 12 };
+CONST_OID pkcs1SHA512WithRSAEncryption[] 	= { PKCS1, 13 };
 
 CONST_OID pkcs5PbeWithMD2AndDEScbc[]  		= { PKCS5, 0x01 };
 CONST_OID pkcs5PbeWithMD5AndDEScbc[]  		= { PKCS5, 0x03 };
@@ -413,6 +417,10 @@ CONST_OID aes256_CBC[] 				= { AES, 42 };
 CONST_OID aes256_OFB[] 				= { AES, 43 };
 CONST_OID aes256_CFB[] 				= { AES, 44 };
 #endif
+
+CONST_OID sha256[]                              = { SHAXXX, 1 };
+CONST_OID sha384[]                              = { SHAXXX, 2 };
+CONST_OID sha512[]                              = { SHAXXX, 3 };
 
 #define OI(x) { siDEROID, (unsigned char *)x, sizeof x }
 #ifndef SECOID_NO_STRINGS
@@ -1009,9 +1017,25 @@ const static SECOidData oids[] = {
     OD( sdn702DSASignature, SEC_OID_SDN702_DSA_SIGNATURE, 
 	"SDN.702 DSA Signature", CKM_DSA_SHA1, INVALID_CERT_EXTENSION ),
 
-    OD( ms_smimeEncryptionKeyPreference, SEC_OID_MS_SMIME_ENCRYPTION_KEY_PREFERENCE,
+    OD( ms_smimeEncryptionKeyPreference, 
+        SEC_OID_MS_SMIME_ENCRYPTION_KEY_PREFERENCE,
 	"Microsoft S/MIME Encryption Key Preference", 
 	CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
+
+    OD( sha256, SEC_OID_SHA256, "SHA-256", CKM_SHA256, INVALID_CERT_EXTENSION),
+    OD( sha384, SEC_OID_SHA384, "SHA-384", CKM_SHA384, INVALID_CERT_EXTENSION),
+    OD( sha512, SEC_OID_SHA512, "SHA-512", CKM_SHA512, INVALID_CERT_EXTENSION),
+
+    OD( pkcs1SHA256WithRSAEncryption, SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
+	"PKCS #1 SHA-256 With RSA Encryption", CKM_SHA256_RSA_PKCS,
+	INVALID_CERT_EXTENSION ),
+    OD( pkcs1SHA384WithRSAEncryption, SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION,
+	"PKCS #1 SHA-384 With RSA Encryption", CKM_SHA384_RSA_PKCS,
+	INVALID_CERT_EXTENSION ),
+    OD( pkcs1SHA512WithRSAEncryption, SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION,
+	"PKCS #1 SHA-512 With RSA Encryption", CKM_SHA512_RSA_PKCS,
+	INVALID_CERT_EXTENSION ),
+
 };
 
 /*
