@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: qsearch.pl,v 1.1 1998/07/29 08:59:14 leif Exp $
+# $Id: qsearch.pl,v 1.2 1998/07/29 09:09:20 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -21,7 +21,7 @@
 # Contributor(s):
 #
 # DESCRIPTION
-#    "finger" version using LDAP information (using RFC 2307 objectclass).
+#    Quick Search, like ldapsearch, but in Perl. Look how simple it is.
 #
 #############################################################################
 
