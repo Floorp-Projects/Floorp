@@ -712,7 +712,7 @@ convert_and_encode:
       // so we may over estimate (i.e. threshold may be smaller) but wrapping early is no problem, I think.
 
       /*
-        the 30 lenght is calculated as follows (I think)
+        the 30 length is calculated as follows (I think)
         total:             30 = 7 + 11 + 8 + 4
         --------------------------------------
         Mime Part II tags: 7  = "=?...?B?...?="

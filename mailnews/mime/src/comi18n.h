@@ -101,7 +101,7 @@ extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset,
  *
  * @param header          [IN] A header to encode (utf-8 Cstring).
  * @param mailCharset     [IN] Charset name (in C string) to convert.
- * @param encodedWordSize [IN] Byte lenght limit of the output, ususally 72 (use kMIME_ENCODED_WORD_SIZE).
+ * @param encodedWordSize [IN] Byte length limit of the output, ususally 72 (use kMIME_ENCODED_WORD_SIZE).
  * @return            Encoded buffer (in C string) or NULL in case of error.
  */
 char *MIME_EncodeMimePartIIStr(const char *header, const char* mailCharset, const PRInt32 encodedWordSize);
