@@ -42,11 +42,15 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer);
+
+  // This method paints a single row in the outliner.
   NS_IMETHOD PaintRow(int aRowIndex, 
                       nsIPresContext*      aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       const nsRect&        aDirtyRect,
                       nsFramePaintLayer    aWhichLayer);
+
+  // This method paints a specific cell in a given row of the outliner.
   NS_IMETHOD PaintCell(int aRowIndex, 
                        const PRUnichar* aColID, 
                        nsIPresContext*      aPresContext,
