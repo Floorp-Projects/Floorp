@@ -1,5 +1,6 @@
-<?xml version="1.0"?> <!-- -*- Mode: HTML -*- --> 
+<?xml version="1.0"?>
 <!--
+# -*- Mode: Java; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -13,7 +14,7 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla Firebird about dialog.
+# The Original Code is Mozilla Firefox about dialog.
 #
 # The Initial Developer of the Original Code is
 # Blake Ross (blaker@netscape.com).
@@ -34,7 +35,7 @@
 # the provisions above, a recipient may use your version of this file under
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
-# ***** END LICENSE BLOCK ***** 
+# ***** END LICENSE BLOCK *****
 -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
@@ -43,39 +44,42 @@
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
-<!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/menuOverlay.dtd" >
-%calendarMenuOverlayDTD;
+<!ENTITY % aboutDialogDTD SYSTEM "chrome://calendar/locale/aboutDialog.dtd" >
+%aboutDialogDTD;
 ]>
 
 <dialog xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="aboutDialog"
-        buttons="accept"
-        onload="onLoad();"
-        title="&aboutCmd.label;"
+        buttons="accept,extra2"
+        onload="init(event);" onunload="uninit(event);"
+        title="&aboutDialog.title;" creditslabel="&copyright;" aboutlabel="&aboutLink;"
         style="width: 299px;height: 435px;">
 
-    <script type="application/x-javascript">
-      <![CDATA[
-        function onLoad() {
-          var userAgentField = document.getElementById("userAgent");
-          userAgentField.value = navigator.userAgent;
-        }
-      ]]>
-    </script>
+  <script type="application/x-javascript">
+    <![CDATA[
+      function onLoad() {
+        var userAgentField = document.getElementById("userAgent");
+        userAgentField.value = navigator.userAgent;
+      }
+    ]]>
+  </script>
 
-   <deck id="modes" flex="1">
+  <script type="application/x-javascript" src="chrome://calendar/content/aboutDialog.js"/>
+
+  <deck id="modes" flex="1">
     <vbox flex="1" id="clientBox">
-#expand <label id="version" value="version &version; __MOZ_APP_VERSION__"/>
-#      <description id="copyright">&copyrightText;</description>
+#expand <label id="version" value="&aboutVersion; &version; __APP_VERSION__"/>
+      <description id="copyright">&copyrightText;</description>
       <vbox id="detailsBox" align="center" flex="1">
         <spacer flex="1"/>
         <textbox flex="1" id="userAgent" multiline="true" readonly="true" cols="60"/>
       </vbox>
     </vbox>
-#    <vbox flex="1" id="creditsBox">
-#      <html:iframe style="border: 0px;" id="creditsIframe" src="chrome://calendar/content/credits.xhtml" flex="1"/>
-#    </vbox>
+    <vbox flex="1" id="creditsBox">
+      <html:iframe style="border: 0px;" id="creditsIframe" 
+                   src="chrome://calendar/content/credits.xhtml" flex="1"/>
+    </vbox>
   </deck>
   <separator class="groove" id="groove"/>
 </dialog>
