@@ -319,16 +319,6 @@ void nsCalMonthContextController::PaintMiniCalElement(
 
     mRenderingContext->GetFontMetrics()->GetLeading(leading);
 
-    nsIDeviceContext * dc ;
-
-    float f = 0.0;
-  
-    dc = mRenderingContext->GetDeviceContext();
-  
-    dc->GetTwipsToDevUnits(f);
-
-    NS_RELEASE(dc);
-
     iY = iYTop + leading;
 
     mRenderingContext->DrawString(s, nsCRT::strlen(s), iX, iY, 100);
@@ -1688,17 +1678,6 @@ void nsCalMonthContextController::GetTextExtent(char *p, int iChars, int& iWidth
   fm->GetWidth(p,(nscoord)iWidth);
   fm->GetHeight((nscoord)iHeight);
 
-  nsIDeviceContext * dc ;
-
-  float f = 0.0;
-
-  dc = mRenderingContext->GetDeviceContext();
-
-  dc->GetTwipsToDevUnits(f);
-
-  NS_RELEASE(dc);
-
-  iWidth *= f;
 }
 
 
@@ -1755,18 +1734,6 @@ void nsCalMonthContextController::GetFontInfo(
         fm->GetWidth("0",m_iDigitWidth);
         fm->GetHeight(m_iDigitHeight);
 
-        nsIDeviceContext * dc ;
-
-        float f = 0.0;
-
-        dc = mRenderingContext->GetDeviceContext();
-
-        dc->GetTwipsToDevUnits(f);
-
-        NS_RELEASE(dc);
-
-        m_iDigitWidth *= f;
-
         /*
          *  The next few lines need to be replaced with some code that gets the 
          *  strings for every day of the week and computes the max width...
@@ -1776,8 +1743,6 @@ void nsCalMonthContextController::GetFontInfo(
         sBuf[GetDOWColHdrChars() ] = 0;
 
         fm->GetWidth(sBuf,m_iMaxDOWColHdrWidth);
-
-        m_iMaxDOWColHdrWidth *= f;
 
     }
 

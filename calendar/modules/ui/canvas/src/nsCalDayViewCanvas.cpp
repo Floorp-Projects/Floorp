@@ -289,19 +289,6 @@ nsEventStatus nsCalDayViewCanvas :: PaintForeground(nsIRenderingContext& aRender
 
       aRenderingContext.GetFontMetrics()->GetHeight(fm_height);
 
-      nsIDeviceContext * dc ;
-
-      float f = 0.0;
-      
-      dc = aRenderingContext.GetDeviceContext();
-      
-      dc->GetTwipsToDevUnits(f);
-
-      fm_height *= f;
-
-      NS_RELEASE(dc);
-            
-
       if (rect.height > fm_height)
       {
         // rndctx->SetColor(GetForegroundColor());

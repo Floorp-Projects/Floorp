@@ -96,19 +96,6 @@ nsEventStatus nsCalTimebarTimeHeading :: PaintForeground(nsIRenderingContext& aR
   aRenderingContext.GetFontMetrics()->GetHeight(height);
   aRenderingContext.GetFontMetrics()->GetWidth(*string,width);
 
-  nsIDeviceContext * dc ;
-
-  float f = 0.0;
-  
-  dc = aRenderingContext.GetDeviceContext();
-  
-  dc->GetTwipsToDevUnits(f);
-
-  NS_RELEASE(dc);
-
-  height *= f;
-  width *= f;
-
   /*
    * XXX: If we are too big, remove the Day of the week.  Need a better algorithm
    *      to use string who fits to begin with
@@ -119,7 +106,6 @@ nsEventStatus nsCalTimebarTimeHeading :: PaintForeground(nsIRenderingContext& aR
      pattern = "MMM dd\n";
      GetTimeContext()->GetDTFirstVisible()->strftime(pattern, &string);
      aRenderingContext.GetFontMetrics()->GetWidth(*string,width);
-     width *= f;
    }
 
   /*

@@ -119,11 +119,7 @@ nsresult nsCalCommandCanvas :: Init()
   
   fm->GetWidth(text,width);
 
-  float f;
-
-  GetWidget()->GetDeviceContext()->GetTwipsToDevUnits(f);
-
-  rect.width = width * f;
+  rect.width = width ;
 
   mStaticTextField->SetReadOnly(PR_TRUE);
 
@@ -206,12 +202,9 @@ nsresult nsCalCommandCanvas :: SetBounds(const nsRect &aBounds)
   nsXPFCCanvas::SetBounds(aBounds);
   nsRect rect = aBounds;
   nscoord width = 0;
-  float f = 0.0;
 
 
   if (mStaticTextField) {
-
-    mStaticTextField->GetDeviceContext()->GetTwipsToDevUnits(f);
 
     nsString text("COMMAND: ");
 
@@ -227,7 +220,7 @@ nsresult nsCalCommandCanvas :: SetBounds(const nsRect &aBounds)
 
     fm->GetWidth(text,width);
 
-    rect.width = width * f;
+    rect.width = width ;
 
     mStaticTextField->Invalidate(PR_FALSE);
 
@@ -240,8 +233,8 @@ nsresult nsCalCommandCanvas :: SetBounds(const nsRect &aBounds)
 
     rect = aBounds;
 
-    rect.x += (width*f);
-    rect.width -= (width*f);
+    rect.x += (width);
+    rect.width -= (width);
 
     mTextField->Invalidate(PR_FALSE);
 
