@@ -483,6 +483,18 @@ pref("network.protocol-handler.external.javascript", false);
 pref("network.protocol-handler.external.ms-help", false);
 pref("network.protocol-handler.external.vnd.ms.radio", false);
 
+// Expose only select protocol handlers. All others should go
+// through the external protocol handler route.
+pref("network.protocol-handler.expose-all", false);
+pref("network.protocol-handler.expose.mailto", true);
+pref("network.protocol-handler.expose.news", true);
+pref("network.protocol-handler.expose.snews", true);
+pref("network.protocol-handler.expose.nntp", true);
+pref("network.protocol-handler.expose.imap", true);
+pref("network.protocol-handler.expose.addbook", true);
+pref("network.protocol-handler.expose.pop", true);
+pref("network.protocol-handler.expose.mailbox", true);
+
 pref("network.hosts.smtp_server",           "mail");
 pref("network.hosts.pop_server",            "mail");
 pref("network.protocols.useSystemDefaults",   false); // set to true if user links should use system default handlers
