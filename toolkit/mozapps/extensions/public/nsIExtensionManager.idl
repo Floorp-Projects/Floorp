@@ -53,9 +53,10 @@ interface nsIExtensionManager : nsISupports
   void installTheme(in string aThemeID);
   void uninstallTheme(in string aThemeID);
 
-  const unsigned short MISMATCH_RESULT_OK       = 0x00;
-  const unsigned short MISMATCH_RESULT_RESTART  = 0x01;
-  unsigned short checkForMismatches();
+  /** 
+   * Returns true if mismatches were found and the app needs to restart. 
+   */
+  boolean checkForMismatches();
 
   void update([array, size_is(aItemCount)] in nsIUpdateItem aItems,
                in unsigned long aItemCount);
