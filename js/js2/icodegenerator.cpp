@@ -618,7 +618,7 @@ static bool isSlotName(JSType *t, const StringAtom &name, uint32 &slotIndex, JST
     return false;
 }
 
-TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret)
+TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, RegisterList *args)
 {
     enum {Property, Slot, Static} lValueKind;
     
@@ -653,18 +653,18 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
                 }
             }
             if (lValueKind == Property) {
-                if (base.first == NotARegister)
-                    base = loadName(baseName);
                 if (isSlotName(baseType, name, slotIndex, fieldType))
                     lValueKind = Slot;
                 else {
-                    c = dynamic_cast<JSClass*>(base.second);
+                    c = dynamic_cast<JSClass*>(baseType);
                     if (c && c->hasStatic(name, fieldType))
                         lValueKind = Static;
                     else
                         lValueKind = Property;
                 }
             }
+            if ((lValueKind == Property) && (base.first == NotARegister))
+                base = loadName(baseName);
         }
         else {
             base = genExpr(b->op1);
@@ -680,6 +680,18 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
         }
         TypedRegister v;
         switch (use) {
+        case ExprNode::call:
+            switch (lValueKind) {
+            case Static:
+                ret = staticCall(c, name, *args);
+                break;
+            case Property:
+                ret = methodCall(base, loadString(name), *args);
+                break;
+            default:
+                NOT_REACHED("Bad lvalue kind");
+            }
+            break;
         case ExprNode::dot:
         case ExprNode::addEquals:
         case ExprNode::subtractEquals:
@@ -702,6 +714,8 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
             case Slot:
                 v = getSlot(base, slotIndex);
                 break;
+            default:
+                NOT_REACHED("Bad lvalue kind");
             }
             if (use == ExprNode::dot) {
                 ret = v;
@@ -720,6 +734,8 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
             case Slot:
                 setSlot(base, slotIndex, ret);
                 break;
+            default:
+                NOT_REACHED("Bad lvalue kind");
             }
             break;
         case ExprNode::postDecrement: 
@@ -733,6 +749,8 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
                 break;
             case Slot:
                 ret = slotXcr(base, slotIndex, xcrementOp);
+            default:
+                NOT_REACHED("Bad lvalue kind");
             }
             break;
         case ExprNode::preDecrement: 
@@ -750,6 +768,8 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
                 ret = op(xcrementOp, getSlot(base, slotIndex), loadImmediate(1.0));
                 setSlot(base, slotIndex, ret);
                 break;
+            default:
+                NOT_REACHED("Bad lvalue kind");
             }
             break;
         case ExprNode::Delete:
@@ -757,6 +777,8 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
                 ret = deleteProperty(base, name);
             }
             break;
+        default:
+            NOT_REACHED("unexpected use node");
         }
         ret.second = fieldType;
     }
@@ -834,6 +856,8 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
 
             if (i->op->getKind() == ExprNode::dot) {
                 BinaryExprNode *b = static_cast<BinaryExprNode *>(i->op);
+                ret = handleDot(b, ExprNode::call, xcrementOp, ret, &args);
+/*
                 TypedRegister base = genExpr(b->op1);
                 // might be Class.<method>()
                 const StringAtom &name = static_cast<IdentifierExprNode *>(b->op2)->name;
@@ -848,6 +872,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                     }
                 }
                 ret = methodCall(base, loadString(name), args);
+*/
             }
             else 
                 if (i->op->getKind() == ExprNode::identifier) {
@@ -881,7 +906,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
     case ExprNode::dot :
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
-            ret = handleDot(b, p->getKind(), xcrementOp, ret);
+            ret = handleDot(b, p->getKind(), xcrementOp, ret, NULL);
         }
         break;
     case ExprNode::This :
@@ -934,7 +959,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
             if (u->op->getKind() == ExprNode::dot) {
                 BinaryExprNode *b = static_cast<BinaryExprNode *>(u->op);
-                ret = handleDot(b, p->getKind(), xcrementOp, ret);
+                ret = handleDot(b, p->getKind(), xcrementOp, ret, NULL);
             }
             else
                 if (u->op->getKind() == ExprNode::identifier) {
@@ -974,7 +999,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
             if (u->op->getKind() == ExprNode::dot) {
                 BinaryExprNode *b = static_cast<BinaryExprNode *>(u->op);
-                ret = handleDot(b, p->getKind(), xcrementOp, ret);
+                ret = handleDot(b, p->getKind(), xcrementOp, ret, NULL);
             }
             else
                 if (u->op->getKind() == ExprNode::identifier) {
@@ -1045,7 +1070,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             else
                 if (b->op1->getKind() == ExprNode::dot) {
                     BinaryExprNode *lb = static_cast<BinaryExprNode *>(b->op1);
-                    ret = handleDot(lb, p->getKind(), xcrementOp, ret);
+                    ret = handleDot(lb, p->getKind(), xcrementOp, ret, NULL);
                 }
                 else
                     if (b->op1->getKind() == ExprNode::index) {
@@ -1094,7 +1119,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             else
                 if (b->op1->getKind() == ExprNode::dot) {
                     BinaryExprNode *lb = static_cast<BinaryExprNode *>(b->op1);
-                    ret = handleDot(lb, p->getKind(), xcrementOp, ret);
+                    ret = handleDot(lb, p->getKind(), xcrementOp, ret, NULL);
                 }
                 else
                     if (b->op1->getKind() == ExprNode::index) {
