@@ -59,9 +59,11 @@
 #include "nsReadableUtils.h"
 #include "nsAWritableString.h"
 #include "nsXPIDLString.h"
-
 #include <stdlib.h>
 #include <X11/Xatom.h>
+#ifdef USE_XPRINT
+#include <X11/extensions/Print.h>
+#endif /* USE_XPRINT */
 #include "xlibrgb.h"
 
 /* #define NOISY_FONTS 1 */
@@ -614,14 +616,11 @@ FreeStretch(nsFontStretchXlib* aStretch)
 {
   PR_smprintf_free(aStretch->mScalable);
 
-  PRInt32 count;
-  while ((count = aStretch->mScaledFonts.Count())) {
-    // go backwards to keep nsVoidArray from memmoving everything each time
-    count--; // nsVoidArray is zero based
+  for (PRInt32 count = aStretch->mScaledFonts.Count()-1; count >= 0; --count) {
     nsFontXlib *font = (nsFontXlib*)aStretch->mScaledFonts.ElementAt(count);
-    aStretch->mScaledFonts.RemoveElementAt(count);
     if (font) delete font;
   }
+  // aStretch->mScaledFonts.Clear(); handled by delete of aStretch
 
   for (int i = 0; i < aStretch->mSizesCount; i++) {
     delete aStretch->mSizes[i];

@@ -44,21 +44,15 @@
 
 #include "nsICharRepresentable.h"
 #include "nsCompressedCharMap.h"
-#include "nsIDeviceContext.h"
+#include "nsDeviceContextX.h"
 #include "nsIFontMetrics.h"
 #include "nsIFontEnumerator.h"
-
-#include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "nsDrawingSurfaceXlib.h"
-#ifdef USE_XPRINT
-#include "nsDeviceContextXP.h"
-#endif /* USE_XPRINT */
 #include "nsFont.h"
 #include "nsRenderingContextXlib.h"
 #include "nsString.h"
 #include "nsUnitConversion.h"
-#include "xlibrgb.h"
 
 #undef FONT_HAS_GLYPH
 #define FONT_HAS_GLYPH(map, char) IS_REPRESENTABLE(map, char)

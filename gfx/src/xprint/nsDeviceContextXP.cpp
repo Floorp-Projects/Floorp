@@ -39,7 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
  
 #include "nsDeviceContextXP.h"
-#include "nsRenderingContextXlib.h"
+#include "nsRenderingContextXp.h"
 #include "nsFontMetricsXlib.h"
 #include "nsIDeviceContext.h"
 #include "nsIDeviceContextSpecXPrint.h"
