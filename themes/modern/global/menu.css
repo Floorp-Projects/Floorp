@@ -33,7 +33,14 @@ menuitem[menuactive="true"][disabled="true"]
 menupopup, popup 
   {
     background-color      : #B4C3D4;
-    border                : 1px outset #B4C3D4;
+    border: 1px solid #5B7693;
+    border-right: 1px solid #394B6E;
+    border-bottom: 1px solid #394B6E;
+  }
+
+.popup-internal-box 
+  {
+    border: 1px outset #B4C3D4;
   }
 
 menupopup > menu, popup > menu,
@@ -199,6 +206,11 @@ menuitem[checked="true"][type="radio"][menuactive="true"]
     font-size             : 10px;
     padding               : 2px;
     padding-right		  : 3px;
+  }
+
+.tooltip > .popup-internal-box
+  {
+    border: none;
   }
 
 /*
