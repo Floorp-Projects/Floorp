@@ -19,6 +19,7 @@ DEPTH=..\..\..
 
 EXPORTS =				\
 	nslayout.h			\
+	nsICaret.h			\
 	nsIContent.h			\
 	nsIDocument.h			\
 	nsIDocumentContainer.h		\
@@ -36,6 +37,7 @@ EXPORTS =				\
 	nsIReflowCommand.h		\
 	nsIFrameSelection.h		\
 	nsIDOMSelection.h		\
+	nsIDOMSelectionListener.h		\
 	nsISpaceManager.h		\
 	nsIStyleContext.h		\
 	nsIStyleFrameConstruction.h	\
