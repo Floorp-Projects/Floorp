@@ -95,7 +95,7 @@
   </broadcasterset>
 
 	<!-- keys are appended from the overlay -->
-  <keyset id="defaultKeySet"/>
+  <keyset id="keyset"/>
 
   <toolbox class="toolbox-top" id="EditorToolbox">
   <menubar id="main-menubar" class="chromeclass-menubar">

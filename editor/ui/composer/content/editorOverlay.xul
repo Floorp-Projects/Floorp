@@ -59,7 +59,7 @@
   <key id="decreasefontsizekb"   key="&decreaseFontSize.keybinding;"     observes="cmd_decreaseFont"  modifiers="shift, accel"/>
   <key id="increasefontsizekb"   key="&increaseFontSize.keybinding;"     observes="cmd_increaseFont"  modifiers="shift, accel"/>
 
-  <keyset id="defaultKeySet">
+  <keyset id="keyset">
 
     <!-- defined in globalOverlay -->
     <key id="key_newNavigator"/>
