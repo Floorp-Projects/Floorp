@@ -83,6 +83,7 @@ public:
   void UpdateCachedImage();
   virtual void ImageUpdated(nsIDeviceContext *aContext,
                             PRUint8 aFlags, nsRect *aUpdateRect);
+  virtual PRBool      GetIsImageComplete();
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight,
                            PRInt32 aDepth,
                            nsMaskRequirements aMaskRequirements);

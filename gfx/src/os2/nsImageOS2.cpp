@@ -248,6 +248,17 @@ void nsImageOS2::ImageUpdated( nsIDeviceContext *aContext,
    }
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsIImage.h
+ */
+PRBool nsImageOS2::GetIsImageComplete() {
+  return mInfo &&
+         mDecodedRect.x == 0 &&
+         mDecodedRect.y == 0 &&
+         mDecodedRect.width == mInfo->cx &&
+         mDecodedRect.height == mInfo->cy;
+}
+
 void nsImageOS2::BuildBlenderLookup (void)
 {
   for (int y = 0 ; y < 256 ; y++)

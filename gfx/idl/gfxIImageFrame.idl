@@ -57,7 +57,7 @@ native nsRectRef(nsIntRect &);
  * @author Stuart Parmenter <pavlov@netscape.com>
  * @version 0.1
  */
-[scriptable, uuid(20caf74f-2c35-450f-9f87-c3ecc213553c)]
+[scriptable, uuid(f6d00ee7-defc-4101-b2dc-e72cf4c37c3c)]
 interface gfxIImageFrame : nsISupports
 {
   /**
@@ -115,6 +115,11 @@ interface gfxIImageFrame : nsISupports
    * @see gfxIFormats
    */
   readonly attribute gfx_format format;
+
+  /**
+   * returns whether the image requires the background to be painted
+   */
+  readonly attribute boolean needsBackground;
 
   /* data accessors */
   readonly attribute unsigned long imageBytesPerRow;

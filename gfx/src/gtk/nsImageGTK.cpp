@@ -309,6 +309,16 @@ void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
     mDecodedX2 = aUpdateRect->XMost();
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsIImage.h
+ */
+PRBool nsImageGTK::GetIsImageComplete() {
+  return mDecodedX1 == 0 &&
+         mDecodedY1 == 0 &&
+         mDecodedX2 == mWidth &&
+         mDecodedY2 == mHeight;
+}
+
 void nsImageGTK::UpdateCachedImage()
 {
 #ifdef TRACE_IMAGE_ALLOCATION

@@ -106,6 +106,7 @@ public:
 		mDirtyFlags = aFlags;
 		mPhImage.size.h = mDecodedY2;
 		}
+  virtual PRBool      GetIsImageComplete();
 
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
 //  virtual PRBool      IsOptimized() { return mIsOptimized; }

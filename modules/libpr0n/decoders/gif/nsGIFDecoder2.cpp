@@ -239,7 +239,7 @@ NS_IMETHODIMP nsGIFDecoder2::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     PRUint32 numFrames = 0;
     if (mImageContainer)
       mImageContainer->GetNumFrames(&numFrames);
-    if (numFrames <= 1)
+    if (numFrames <= 0)
       return NS_ERROR_FAILURE;
   }
 
@@ -359,11 +359,7 @@ int nsGIFDecoder2::EndImageFrame(
   }
   decoder->mImageContainer->EndFrameDecode(aFrameNumber, aDelayTimeout);
 
-  // if the gif is corrupt don't mark the frame as complete, as nsCSSRendering
-  // will happily try using it to draw a background
-  if (decoder->mObserver && 
-      decoder->mImageFrame && 
-      decoder->mGIFStruct->state != gif_error) {
+  if (decoder->mObserver && decoder->mImageFrame) {
     decoder->FlushImageData();
 
     if (aFrameNumber == 1) {

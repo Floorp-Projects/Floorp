@@ -193,6 +193,15 @@ nsImageMac::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags,
     mDecodedX2 = aUpdateRect->XMost();
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsIImage.h
+ */
+PRBool nsImageMac::GetIsImageComplete() {
+  return mDecodedX1 == 0 &&
+         mDecodedY1 == 0 &&
+         mDecodedX2 == mWidth &&
+         mDecodedY2 == mHeight;
+}
 
 void DataProviderReleaseFunc(void *info, const void *data, size_t size)
 {

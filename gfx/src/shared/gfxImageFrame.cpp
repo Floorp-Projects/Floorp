@@ -232,6 +232,19 @@ NS_IMETHODIMP gfxImageFrame::GetFormat(gfx_format *aFormat)
   return NS_OK;
 }
 
+/* readonly attribute boolean needsBackground; */
+NS_IMETHODIMP gfxImageFrame::GetNeedsBackground(PRBool *aNeedsBackground)
+{
+  if (!mInitalized)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  *aNeedsBackground = (mFormat != gfxIFormats::RGB && 
+                       mFormat != gfxIFormats::BGR) ||
+                      !mImage->GetIsImageComplete();
+  return NS_OK;
+}
+
+
 /* readonly attribute unsigned long imageBytesPerRow; */
 NS_IMETHODIMP gfxImageFrame::GetImageBytesPerRow(PRUint32 *aBytesPerRow)
 {
