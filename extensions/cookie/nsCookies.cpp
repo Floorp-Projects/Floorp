@@ -1596,7 +1596,7 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
 
 /* saves out the HTTP cookies to disk */
 PUBLIC nsresult
-COOKIE_Write() {
+COOKIE_Write(nsIFile* dir) {
   if (!cookie_changed) {
     return NS_OK;
   }
@@ -1604,9 +1604,19 @@ COOKIE_Write() {
   time_t cur_date = get_current_time();
   char date_string[36];
   nsFileSpec dirSpec;
-  nsresult rv = CKutil_ProfileDirectory(dirSpec);
-  if (NS_FAILED(rv)) {
-    return rv;
+  nsCOMPtr<nsIFileSpec> dirSpec0;
+  nsresult rv;
+  if (dir == nsnull) {
+    rv = CKutil_ProfileDirectory(dirSpec);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  } else {
+    rv = NS_NewFileSpecFromIFile(dir, getter_AddRefs(dirSpec0));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = dirSpec0->GetFileSpec(&dirSpec);
   }
   nsOutputFileStream strm(dirSpec + kCookiesFileName);
   if (!strm.is_open()) {
@@ -1926,7 +1936,7 @@ COOKIE_Remove
         cookie_list->RemoveElementAt(count);
         deleteCookie((void*)cookie, nsnull);
         cookie_changed = PR_TRUE;
-        COOKIE_Write();
+        COOKIE_Write(nsnull);
         break;
       }
     }

@@ -44,6 +44,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 #include "nsIIOService.h"
+#include "nsIFile.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -62,6 +63,11 @@ public:
   nsCookieService();
   virtual ~nsCookieService(void);
   nsresult Init();
+  
+protected:
+  // cached IOService
+  nsCOMPtr<nsIFile> mDir;
+  
 };
 
 #endif /* nsCookieService_h__ */

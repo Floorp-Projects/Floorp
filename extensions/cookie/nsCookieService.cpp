@@ -51,6 +51,7 @@
 #include "nsIWebProgress.h"
 #include "nsCURILoader.h"
 #include "nsNetCID.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 
@@ -72,7 +73,6 @@ nsCookieService::nsCookieService()
 
 nsCookieService::~nsCookieService(void)
 {
-  COOKIE_Write();
   COOKIE_RemoveAll();
 }
 
@@ -80,6 +80,13 @@ nsresult nsCookieService::Init()
 {
   COOKIE_RegisterPrefCallbacks();
   nsresult rv;
+
+  // cache mDir
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mDir));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   COOKIE_Read();
 
   nsCOMPtr<nsIObserverService> observerService = 
@@ -87,7 +94,7 @@ nsresult nsCookieService::Init()
   if (observerService) {
     observerService->AddObserver(this, "profile-before-change", PR_TRUE);
     observerService->AddObserver(this, "profile-do-change", PR_TRUE);
-    observerService->AddObserver(this, "session-logout", PR_TRUE);
+    observerService->AddObserver(this, "xpcom-shutdown", PR_TRUE);
     observerService->AddObserver(this, "cookieIcon", PR_FALSE);
   }
 
@@ -125,10 +132,9 @@ nsCookieService::OnStateChange(nsIWebProgress* aWebProgress,
                                PRUint32 progressStateFlags, 
                                nsresult aStatus)
 {
-    if (progressStateFlags & STATE_IS_DOCUMENT)
-        if (progressStateFlags & STATE_STOP)
-            COOKIE_Write(); // will remove this once bug 158216 is fixed
-            COOKIE_Notify();
+    if ((progressStateFlags & STATE_IS_DOCUMENT) && (progressStateFlags & STATE_STOP)) {
+      COOKIE_Notify();
+    }
     return NS_OK;
 }
 
@@ -226,9 +232,9 @@ NS_IMETHODIMP nsCookieService::Observe(nsISupports *aSubject, const char *aTopic
     // The profile has aleady changed.    
     // Now just read them from the new profile location.
     COOKIE_Read();
-  } else if (!nsCRT::strcmp(aTopic, "session-logout")) {
-    // Quicklaunch exit -- need to remove session cookies.
-    COOKIE_RemoveSessionCookies();
+  } else if (!nsCRT::strcmp(aTopic, "xpcom-shutdown")) {
+    // Leaving browser, need to save cookies
+    COOKIE_Write(mDir);
   } else if (!nsCRT::strcmp(aTopic, "cookieIcon")) {
     gCookieIconVisible = (!nsCRT::strcmp(someData, NS_LITERAL_STRING("on").get()));
   }
