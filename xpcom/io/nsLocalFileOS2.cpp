@@ -99,23 +99,6 @@ static nsresult ConvertOS2Error(int err)
     return rv;
 }
 
-
-static void
-myLL_II2L(PRInt32 hi, PRInt32 lo, PRInt64 *result)
-{
-    PRInt64 a64, b64;  // probably could have been done with 
-                       // only one PRInt64, but these are macros, 
-                       // and I am a wimp.
-
-    // put hi in the low bits of a64.
-    LL_I2L(a64, hi);
-    // now shift it to the upperbit and place it the result in result
-    LL_SHL(b64, a64, 32);
-    // now put the low bits on by adding them to the result.
-    LL_ADD(*result, b64, lo);
-}
-
-
 static void
 myLL_L2II(PRInt64 result, PRInt32 *hi, PRInt32 *lo )
 {

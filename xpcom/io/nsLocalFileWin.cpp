@@ -224,23 +224,6 @@ static nsresult ConvertWinError(DWORD winErr)
     return rv;
 }
 
-
-static void
-myLL_II2L(PRInt32 hi, PRInt32 lo, PRInt64 *result)
-{
-    PRInt64 a64, b64;  // probably could have been done with
-                       // only one PRInt64, but these are macros,
-                       // and I am a wimp.
-
-    // put hi in the low bits of a64.
-    LL_I2L(a64, hi);
-    // now shift it to the upperbit and place it the result in result
-    LL_SHL(b64, a64, 32);
-    // now put the low bits on by adding them to the result.
-    LL_ADD(*result, b64, lo);
-}
-
-
 static void
 myLL_L2II(PRInt64 result, PRInt32 *hi, PRInt32 *lo )
 {
@@ -1435,7 +1418,7 @@ nsLocalFile::Remove(PRBool recursive)
     }
 
     // fixup error code if necessary...
-    if (rv == -1)
+    if (rv == (nsresult)-1)
         rv = NSRESULT_FOR_ERRNO();
     
     MakeDirty();
@@ -1553,15 +1536,7 @@ nsLocalFile::SetModDate(PRInt64 aLastModifiedTime, PRBool resolveTerminal)
 NS_IMETHODIMP
 nsLocalFile::GetPermissions(PRUint32 *aPermissions)
 {
-    nsresult rv = ResolveAndStat(PR_TRUE);
-
-    if (NS_FAILED(rv))
-        return rv;
-
-    const char *filePath = mResolvedPath.get();
-
-
-    return NS_OK;
+    return ResolveAndStat(PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -2279,7 +2254,6 @@ nsLocalFile::Reveal()
 NS_IMETHODIMP
 nsLocalFile::Launch()
 {
-    nsresult rv = NS_OK;
     const nsCString &path = mWorkingPath;
 
     // use the app registry name to launch a shell execute....
