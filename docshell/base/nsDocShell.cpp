@@ -176,7 +176,6 @@ nsDocShellFocusController nsDocShellFocusController::mDocShellFocusControllerSin
 
 nsDocShell::nsDocShell():
     mContentListener(nsnull),
-    mInitInfo(nsnull),
     mMarginWidth(0),
     mMarginHeight(0),
     mItemType(typeContent),
@@ -258,6 +257,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIRefreshURI)
     NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+    NS_INTERFACE_MAP_ENTRY(nsIContentViewerContainer)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 ///*****************************************************************************
@@ -1114,6 +1114,53 @@ nsDocShell::SetParentURIContentListener(nsIURIContentListener * aParent)
     NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
 
     return mContentListener->SetParentContentListener(aParent);
+}
+
+/* [noscript] void setCurrentURI (in nsIURI uri); */
+NS_IMETHODIMP nsDocShell::SetCurrentURI(nsIURI *aURI)
+{
+    mCurrentURI = aURI;         //This assignment addrefs
+    PRBool isRoot = PR_FALSE;   // Is this the root docshell
+    PRBool  isSubFrame=PR_FALSE;  // Is this a subframe navigation?
+
+    if (!mLoadCookie)
+      return NS_OK; 
+
+    nsCOMPtr<nsIDocumentLoader> loader(do_GetInterface(mLoadCookie)); 
+    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
+    nsCOMPtr<nsIDocShellTreeItem> root;
+
+    GetSameTypeRootTreeItem(getter_AddRefs(root));
+    if (root.get() == NS_STATIC_CAST(nsIDocShellTreeItem *, this)) 
+    {
+        // This is the root docshell
+        isRoot = PR_TRUE;
+    }
+    if (mLSHE) {
+      nsCOMPtr<nsIHistoryEntry> historyEntry(do_QueryInterface(mLSHE));
+      
+      // Check if this is a subframe navigation
+      if (historyEntry) {
+        historyEntry->GetIsSubFrame(&isSubFrame);
+      }
+    }
+ 
+    if (!isSubFrame && !isRoot) {
+      /* 
+       * We don't want to send OnLocationChange notifications when
+       * a subframe is being loaded for the first time, while
+       * visiting a frameset page
+       */
+      return NS_OK; 
+    }
+    
+
+    NS_ASSERTION(loader, "No document loader");
+    if (loader) {
+        loader->FireOnLocationChange(webProgress, nsnull, aURI);
+    }
+
+    return NS_OK; 
 }
 
 NS_IMETHODIMP
@@ -2509,11 +2556,6 @@ nsDocShell::Destroy()
 
     SetLoadCookie(nsnull);
 
-    if (mInitInfo) {
-        delete mInitInfo;
-        mInitInfo = nsnull;
-    }
-
     if (mContentListener) {
         mContentListener->DocShell(nsnull);
         mContentListener->SetParentContentListener(nsnull);
@@ -2526,14 +2568,11 @@ nsDocShell::Destroy()
 NS_IMETHODIMP
 nsDocShell::SetPosition(PRInt32 x, PRInt32 y)
 {
+    mBounds.x = x;
+    mBounds.y = y;
+
     if (mContentViewer)
         NS_ENSURE_SUCCESS(mContentViewer->Move(x, y), NS_ERROR_FAILURE);
-    else if (InitInfo()) {
-        mInitInfo->x = x;
-        mInitInfo->y = y;
-    }
-    else
-        NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_FAILURE);
 
     return NS_OK;
 }
@@ -2564,20 +2603,15 @@ NS_IMETHODIMP
 nsDocShell::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
                                PRInt32 cy, PRBool fRepaint)
 {
+    mBounds.x = x;
+    mBounds.y = y;
+    mBounds.width = cx;
+    mBounds.height = cy;
+
     if (mContentViewer) {
         //XXX Border figured in here or is that handled elsewhere?
-        nsRect bounds(x, y, cx, cy);
-
-        NS_ENSURE_SUCCESS(mContentViewer->SetBounds(bounds), NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(mContentViewer->SetBounds(mBounds), NS_ERROR_FAILURE);
     }
-    else if (InitInfo()) {
-        mInitInfo->x = x;
-        mInitInfo->y = y;
-        mInitInfo->cx = cx;
-        mInitInfo->cy = cy;
-    }
-    else
-        NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_FAILURE);
 
     return NS_OK;
 }
@@ -2586,32 +2620,14 @@ NS_IMETHODIMP
 nsDocShell::GetPositionAndSize(PRInt32 * x, PRInt32 * y, PRInt32 * cx,
                                PRInt32 * cy)
 {
-    if (mContentViewer) {
-        nsRect bounds;
-
-        NS_ENSURE_SUCCESS(mContentViewer->GetBounds(bounds), NS_ERROR_FAILURE);
-
-        if (x)
-            *x = bounds.x;
-        if (y)
-            *y = bounds.y;
-        if (cx)
-            *cx = bounds.width;
-        if (cy)
-            *cy = bounds.height;
-    }
-    else if (InitInfo()) {
-        if (x)
-            *x = mInitInfo->x;
-        if (y)
-            *y = mInitInfo->y;
-        if (cx)
-            *cx = mInitInfo->cx;
-        if (cy)
-            *cy = mInitInfo->cy;
-    }
-    else
-        NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_FAILURE);
+    if (x)
+        *x = mBounds.x;
+    if (y)
+        *y = mBounds.y;
+    if (cx)
+        *cx = mBounds.width;
+    if (cy)
+        *cy = mBounds.height;
 
     return NS_OK;
 }
@@ -5062,51 +5078,6 @@ nsDocShell::OnLoadingSite(nsIChannel * aChannel)
 }
 
 void
-nsDocShell::SetCurrentURI(nsIURI * aURI)
-{
-    mCurrentURI = aURI;         //This assignment addrefs
-    PRBool isRoot = PR_FALSE;   // Is this the root docshell
-    PRBool  isSubFrame=PR_FALSE;  // Is this a subframe navigation?
-
-    if (!mLoadCookie)
-      return; 
-
-    nsCOMPtr<nsIDocumentLoader> loader(do_GetInterface(mLoadCookie)); 
-    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
-    nsCOMPtr<nsIDocShellTreeItem> root;
-
-    GetSameTypeRootTreeItem(getter_AddRefs(root));
-    if (root.get() == NS_STATIC_CAST(nsIDocShellTreeItem *, this)) 
-    {
-        // This is the root docshell
-        isRoot = PR_TRUE;
-    }
-    if (mLSHE) {
-      nsCOMPtr<nsIHistoryEntry> historyEntry(do_QueryInterface(mLSHE));
-      
-      // Check if this is a subframe navigation
-      if (historyEntry) {
-        historyEntry->GetIsSubFrame(&isSubFrame);
-      }
-    }
- 
-    if (!isSubFrame && !isRoot) {
-      /* 
-       * We don't want to send OnLocationChange notifications when
-       * a subframe is being loaded for the first time, while
-       * visiting a frameset page
-       */
-      return;
-    }
-    
-
-    NS_ASSERTION(loader, "No document loader");
-    if (loader) {
-        loader->FireOnLocationChange(webProgress, nsnull, aURI);
-    }
-}
-
-void
 nsDocShell::SetReferrerURI(nsIURI * aURI)
 {
     mReferrerURI = aURI;        // This assigment addrefs
@@ -5624,14 +5595,6 @@ nsDocShell::GetLoadType(PRUint32 * aLoadType)
 {
     *aLoadType = mLoadType;
     return NS_OK;
-}
-
-nsDocShellInitInfo *
-nsDocShell::InitInfo()
-{
-    if (mInitInfo)
-        return mInitInfo;
-    return mInitInfo = new nsDocShellInitInfo();
 }
 
 #define DIALOG_STRING_URI "chrome://global/locale/appstrings.properties"

@@ -82,9 +82,15 @@ public:
  * Web shells are also nsIWebShellContainer's because they can contain
  * other web shells.
  */
-class nsIWebShell : public nsIContentViewerContainer {
+class nsIWebShell : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IWEB_SHELL_IID; return iid; }
+
+  /**
+   * WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING !!!!
+   *
+   * THIS INTERFACE IS DEPRECATED. DO NOT ADD STUFF OR CODE TO IT!!!!
+   */
 
   /**
    * Set the nsIWebShellContainer for the WebShell.
@@ -97,55 +103,9 @@ public:
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult) = 0;
 
   /**
-   * Returns the top level window (this would be the containing window
-   * the same object that implements nsIWebShellContainer, nsIWebShellWindow).
-   */
-  NS_IMETHOD GetTopLevelWindow(nsIWebShellContainer** aTopLevelWindow) = 0;
-
-  /**
-   * Return the root WebShell instance.  Since WebShells can be nested 
-   * (when frames are present for example) this instance represents the 
-   * outermost WebShell.
-   */
-  NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult) = 0;
-
-  /**
-   * Get the referrer of the link using this WebShell.
-   */
-  NS_IMETHOD GetReferrer(nsIURI **aReferrer) = 0;
-
-  //
-  // Document load api's
-  //
-  /**
    * Return the nsIDocumentLoader associated with the WebShell.
    */
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult) = 0;
-
-  //
-  // History api's
-  //
-  /**
-   * Load the previous document in the history list.
-   */
-  NS_IMETHOD GoTo(PRInt32 aHistoryIndex) = 0;
-  NS_IMETHOD GetHistoryLength(PRInt32& aResult) = 0;
-  NS_IMETHOD GetHistoryIndex(PRInt32& aResult) = 0;
-  NS_IMETHOD GetURL(PRInt32 aHistoryIndex, PRUnichar **aURLResult) = 0;
-
-  // SetToolBar
-  // SetMenuBar
-  // SetStatusBar
-
-  /**
-    * Finds text in content
-   */
-  NS_IMETHOD FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound) = 0;
-
-  /**
-   * Set the URL of the current WebShell.
-   */
-  NS_IMETHOD SetURL(const PRUnichar* aURL) = 0;
 };
 
 #endif /* nsIWebShell_h___ */

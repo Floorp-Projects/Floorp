@@ -807,13 +807,13 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
   case VIEW_SOURCE:
     {
-      PRInt32 theIndex;
-      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-      webShell->GetHistoryIndex(theIndex);
-      nsXPIDLString theURL;
-      webShell->GetURL(theIndex, getter_Copies(theURL));
-      nsAutoString theString(theURL);
-      mApp->ViewSource(theString);
+//      PRInt32 theIndex;
+//      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+//      webShell->GetHistoryIndex(theIndex);
+//      nsXPIDLString theURL;
+//      webShell->GetURL(theIndex, getter_Copies(theURL));
+//      nsAutoString theString(theURL);
+//      mApp->ViewSource(theString);
       //XXX Find out how the string is allocated, and perhaps delete it...
     }
     break;
@@ -1532,7 +1532,8 @@ nsnull, r.x, r.y, r.width, r.height);
   nsIDocumentViewer* docv;
   aDocumentViewer->CreateDocumentViewerUsing(aPresContext, docv);
   docv->SetContainer(mWebBrowser);
-  webShell->Embed(docv, "duh", nsnull);
+  nsCOMPtr<nsIContentViewerContainer> cvContainer = do_QueryInterface(mDocShell);
+  cvContainer->Embed(docv, "duh", nsnull);
 
 
   webBrowserWin->SetVisibility(PR_TRUE);
