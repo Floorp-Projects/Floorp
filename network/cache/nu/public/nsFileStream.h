@@ -40,6 +40,8 @@ public:
     NS_IMETHOD_(nsrefcnt)   AddRef(void);
     NS_IMETHOD_(nsrefcnt)   Release(void);
 */
+    PRFileDesc* FileDesc(void);
+
     PRInt32     Read(void* o_Buffer, PRUint32 i_Len);
     void        Reset(void);
     PRInt32     Write(const void* i_Buffer, PRUint32 i_Len);
@@ -51,6 +53,12 @@ private:
     nsFileStream& operator=(const nsFileStream& o);
     PRFileDesc* m_pFile;    
 };
+
+inline
+PRFileDesc* nsFileStream::FileDesc(void)
+{
+    return m_pFile;
+}
 
 #endif // nsFileStream_h__
 

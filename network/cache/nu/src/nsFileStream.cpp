@@ -28,6 +28,8 @@ nsFileStream::nsFileStream(PRFileDesc* i_pFile):m_pFile(i_pFile)
 nsFileStream::~nsFileStream()
 {
     //close the file if not closed. todo
+    if (m_pFile)
+        PR_Close(m_pFile);
 }
 
 /*
@@ -61,13 +63,10 @@ PRInt32 nsFileStream::Read(void* o_Buffer, PRUint32 i_Len)
     return 0;
 }
 
-void nsFileStream::Reset(void)
+void nsFileStream::Reset()
 {
-    //Reset states/offsets etc.
     if (m_pFile)
-    {
-        PR_Seek(m_pFile, 0, PR_SEEK_SET);
-    }
+        PR_Close(m_pFile);
 }
 
 PRInt32 nsFileStream::Write(const void* i_Buffer, PRUint32 i_Len)
