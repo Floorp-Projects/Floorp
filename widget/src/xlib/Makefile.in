@@ -55,7 +55,6 @@ CPPSRCS= nsWidgetFactory.cpp \
 	nsAppShell.cpp \
 	nsToolkit.cpp \
 	nsLookAndFeel.cpp \
-	nsDialog.cpp \
 	nsLabel.cpp \
 	nsMenuBar.cpp \
 	nsMenu.cpp \
