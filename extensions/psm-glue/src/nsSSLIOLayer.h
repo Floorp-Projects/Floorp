@@ -30,7 +30,7 @@ PR_BEGIN_EXTERN_C
 
 //typedef PRFileDesc* (PR_CALLBACK *NSPRSocketFN)(void);  ??
 
-PR_EXTERN(PRFileDesc *) nsSSLIOLayerNewSocket(const char* hostName);
+PR_EXTERN(PRFileDesc *) nsSSLIOLayerNewSocket(const char* hostName, PRFileDesc **fd, nsISupports **securityInfo);
 
 PR_END_EXTERN_C
 

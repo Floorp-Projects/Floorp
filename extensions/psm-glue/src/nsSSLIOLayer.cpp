@@ -274,18 +274,22 @@ nsSSLIOLayerWrite( PRFileDesc *fd, const void *buf, PRInt32 amount)
     return result;
 }
 
-PRFileDesc *
-nsSSLIOLayerNewSocket(const char* hostName)
+nsresult
+nsSSLIOLayerNewSocket(const char* hostName, PRFileDesc **fd, nsISupports **securityInfo)
 {
     static PRBool  firstTime = PR_TRUE;
-    PRFileDesc *   sock;
+
+    *fd = nsnull;
+    *securityInfo = nsnull;
+
     PRFileDesc *   layer;
+    PRFileDesc *   sock;
     PRStatus       rv;
 
     /* Get a normal NSPR socket */
     sock = PR_NewTCPSocket();  PR_ASSERT(NULL != sock);
 
-    if (! sock) return NULL;
+    if (! sock) return NS_ERROR_FAILURE;
 
 
     if (firstTime)
@@ -309,7 +313,8 @@ nsSSLIOLayerNewSocket(const char* hostName)
     }
 
     if(PR_SUCCESS != rv)
-        return NULL;
+        return NS_ERROR_FAILURE;
+    *fd = sock;
 
-    return sock;
+    return NS_OK;
 }
