@@ -33,6 +33,8 @@
  *    that irc:// links have the content type x-application-irc (BogusChannel)
  */
 
+dump (">>>>>>>>>>>> chatzilla-service loaded");
+
 /* components defined in this file */
 const CLINE_SERVICE_CONTRACTID =
     "@mozilla.org/commandlinehandler/general-startup;1?type=chat";

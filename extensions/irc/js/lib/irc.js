@@ -59,6 +59,9 @@
  *
  */
 
+const JSIRC_ERR_NO_SOCKET = "JSIRCE:NS";
+const JSIRC_ERR_EXHAUSTED = "JSIRCE:E";
+
 function userIsMe (user)
 {
     
@@ -145,8 +148,10 @@ function net_doconnect(e)
 
     if (this.connectAttempt++ >= this.MAX_CONNECT_ATTEMPTS)
     {
-        ev = new CEvent ("network", "info", this, "onInfo");
-        ev.msg = "Connection attempts exhausted, giving up.";
+        ev = new CEvent ("network", "error", this, "onError");
+        ev.server = this;
+        ev.debug = "Connection attempts exhausted, giving up.";
+        ev.errorCode = JSIRC_ERR_EXHAUSTED;
         this.eventPump.addEvent (ev);        
         return false;
     }
@@ -157,10 +162,11 @@ function net_doconnect(e)
     }
     catch (ex)
     {
-        dd ("cant make socket.");
-        
         ev = new CEvent ("network", "error", this, "onError");
-        ev.meat = "Unable to create socket: " + ex;
+        ev.server = this;
+        ev.debug = "Couldn't create socket :" + ex;
+        ev.errorCode = JSIRC_ERR_NO_SOCKET;
+        ev.exception = ex;
         this.eventPump.addEvent (ev);
         return false;
     }
@@ -172,10 +178,13 @@ function net_doconnect(e)
         host = 0;
     }
 
-    ev = new CEvent ("network", "info", this, "onInfo");
-    ev.msg = "Connecting to " + this.serverList[host].name + ":" +    
-        this.serverList[host].port + ", attempt " + this.connectAttempt +
-        " of " + this.MAX_CONNECT_ATTEMPTS + "...";
+    ev = new CEvent ("network", "startconnect", this, "onStartConnect");
+    ev.debug = "Connecting to " + this.serverList[host].name + ":" +    
+               this.serverList[host].port + ", attempt " + this.connectAttempt +
+               " of " + this.MAX_CONNECT_ATTEMPTS + "...";
+    ev.host = this.serverList[host].name;
+    ev.port = this.serverList[host].port;
+    ev.connectAttempt = this.connectAttempt;
     this.eventPump.addEvent (ev);
 
     var connected = false;
@@ -201,11 +210,6 @@ function net_doconnect(e)
 
     if (!connected)
     { /* connect failed, try again  */
-        ev = new CEvent ("network", "info", this, "onInfo");
-        ev.msg = "Couldn't connect to " + this.serverList[host].name + ":" +    
-            this.serverList[host].port + ", trying next server in list...";
-        this.eventPump.addEvent (ev);
-        
         ev = new CEvent ("network", "do-connect", this, "onDoConnect");
         this.eventPump.addEvent (ev);
     }
@@ -300,36 +304,8 @@ function serv_sockdiscon(status)
     this.connection.isConnected = false;
 
     var ev = new CEvent ("server", "disconnect", this, "onDisconnect");
+    ev.server = this;
     ev.disconnectStatus = status;
-    this.parent.eventPump.addEvent (ev);
-    
-    var msg;
-
-    switch (status)
-    {
-        case NS_ERROR_CONNECTION_REFUSED:
-            msg = "Connection to " + this.connection.host + ":" +
-                this.connection.port + " refused.";
-            break;
-
-        case NS_ERROR_NET_TIMEOUT:
-            msg = "Connection to " + this.connection.host + ":" +
-                this.connection.port + " timed out.";
-            break;
-
-        case NS_ERROR_UNKNOWN_HOST:
-            msg = "Unknown host: " + this.connection.host;
-            break;
-            
-        default:
-            msg = "Connection to " + this.connection.host + ":" +
-                this.connection.port + " closed with status " + status + ".";
-            break;
-            
-    }
-    
-    var ev = new CEvent ("network", "info", this.parent, "onInfo");
-    ev.msg = msg;
     this.parent.eventPump.addEvent (ev);
     
 }
@@ -420,7 +396,7 @@ function serv_senddata (msg)
 CIRCServer.prototype.queuedSendData =
 function serv_senddata (msg)
 {
-
+    
     if (this.sendQueue.length == 0)
         this.parent.eventPump.addEvent (new CEvent ("server", "senddata",
                                                     this, "onSendData"));
@@ -551,6 +527,13 @@ function serv_disconnect(e)
 CIRCServer.prototype.onSendData =
 function serv_onsenddata (e)
 {
+    if (!this.connection.isConnected)
+    {
+        dd ("Can't send to disconnected socket");
+        this.flushSendQueue();
+        return false;
+    }
+        
     var d = new Date();
 
     this.sendsThisRound = 0;
@@ -601,6 +584,7 @@ function serv_poll(e)
         else
         {
             ev = new CEvent ("server", "disconnect", this, "onDisconnect");
+            ev.server = this;
             ev.reason = "error";
             ev.exception = ex;
             this.parent.eventPump.addEvent (ev);

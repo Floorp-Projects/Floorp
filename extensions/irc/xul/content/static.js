@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
+ *  Chiaki Koufugata chiaki@mozilla.gr.jp UI i18n 
  */
 
 if (DEBUG)
@@ -28,9 +29,9 @@ else
 
 var client = new Object();
 
-client.defaultNick = "IRCMonkey";
+client.defaultNick = getMsg( "defaultNick" );
 
-client.version = "0.8.2";
+client.version = "0.8.3";
 
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
@@ -62,13 +63,13 @@ client.DEFAULT_RESPONSE_CODE = "===";
 
 /* XXX maybe move this into css */
 client.responseCodeMap = new Object();
-client.responseCodeMap["HELLO"]  = "[HELLO]";
-client.responseCodeMap["HELP"]  = "[HELP]";
-client.responseCodeMap["USAGE"]  = "[USAGE]";
-client.responseCodeMap["ERROR"]  = "[ERROR]";
-client.responseCodeMap["INFO"]  = "[INFO]";
-client.responseCodeMap["EVAL-IN"]  = "[EVAL-IN]";
-client.responseCodeMap["EVAL-OUT"]  = "[EVAL-OUT]";
+client.responseCodeMap["HELLO"]  = getMsg("responseCodeMapHello");
+client.responseCodeMap["HELP"]  = getMsg("responseCodeMapHelp");
+client.responseCodeMap["USAGE"]  = getMsg("responseCodeMapUsage");
+client.responseCodeMap["ERROR"]  = getMsg("responseCodeMapError");
+client.responseCodeMap["INFO"]  = getMsg("responseCodeMapInfo");
+client.responseCodeMap["EVAL-IN"]  = getMsg("responseCodeMapEvalIn");
+client.responseCodeMap["EVAL-OUT"]  = getMsg("responseCodeMapEvalOut");
 client.responseCodeMap["JOIN"]  = "-->|";
 client.responseCodeMap["PART"]  = "<--|";
 client.responseCodeMap["QUIT"]  = "|<--";
@@ -81,7 +82,7 @@ client.responseCodeMap["376"]  = "---"; /* end of MOTD */
 client.responseCodeMap["318"]  = "---"; /* end of WHOIS */
 client.responseCodeMap["366"]  = "---"; /* end of NAMES */
 
-client.name = "*client*";
+client.name = getMsg("clientname");
 client.viewsArray = new Array();
 client.activityList = new Object();
 client.uiState = new Object(); /* state of ui elements (visible/collapsed) */
@@ -93,15 +94,15 @@ client.stalkingVictims = new Array();
 
 CIRCNetwork.prototype.INITIAL_NICK = client.defaultNick;
 CIRCNetwork.prototype.INITIAL_NAME = "chatzilla";
-CIRCNetwork.prototype.INITIAL_DESC = "New Now Know How";
+CIRCNetwork.prototype.INITIAL_DESC = getMsg("circnetworkInitialDesc");
 CIRCNetwork.prototype.INITIAL_CHANNEL = "";
 CIRCNetwork.prototype.MAX_MESSAGES = 100;
 CIRCNetwork.prototype.IGNORE_MOTD = false;
 
 CIRCServer.prototype.READ_TIMEOUT = 0;
-CIRCServer.prototype.VERSION_RPLY = "ChatZilla 0.8 [" + navigator.userAgent +
-    "]";
-
+CIRCServer.prototype.VERSION_RPLY = getMsg("circserverVersionRply",
+                                           [client.version,
+                                            navigator.userAgent]);
 CIRCUser.prototype.MAX_MESSAGES = 200;
 
 CIRCChannel.prototype.MAX_MESSAGES = 300;
@@ -177,11 +178,7 @@ function initStatic()
 
     onSortCol ("usercol-nick");
 
-    client.display ("Welcome to ChatZilla...\n" +
-                    "Use /attach <network-name> connect to a network, or " +
-                    "click on one of the network names below.\n" +
-                    "For general IRC help and FAQs, please go to " +
-                    "<http://www.irchelp.org>.", "HELLO");
+    client.display (getMsg("welcome"), "HELLO");
     setCurrentObject (client);
 
     client.onInputNetworks();
@@ -458,6 +455,77 @@ function mainStep()
     
 }
 
+function getMsg (msgName)
+{
+    var restCount = arguments.length - 1;
+
+    if (!client.bundle)
+    {       
+        client.bundle = 
+            srGetStrBundle("chrome://chatzilla/locale/chatzilla.properties");
+    }
+    
+    try 
+    {
+        if (restCount == 1 && arguments[1] instanceof Array)
+        {
+            return client.bundle.formatStringFromName (msgName, arguments[1], 
+                                                       arguments[1].length);
+        }
+        else if (restCount > 0)
+        {
+            var subPhrases = new Array();
+            for (var i = 1; i < arguments.length; ++i)
+                subPhrases.push(arguments[i]);
+            return client.bundle.formatStringFromName (msgName, subPhrases,
+                                                         subPhrases.length);
+        }
+
+        return client.bundle.GetStringFromName (msgName);
+    }
+    catch (ex)
+    {
+        dd ("caught exception getting value for ``" + msgName + "''\n" + ex +
+            "\n" + getStackTrace());
+        return msgName;
+    }
+}
+
+function arraySpeak (ary, single, plural)
+{
+    var rv = "";
+    var and = getMsg ("arraySpeakAnd");
+    
+    switch (ary.length)
+    {
+        case 0:
+            break;
+            
+        case 1:
+            rv = ary[0];
+            if (single)
+                rv += " " + single;            
+            break;
+
+        case 2:
+            rv = ary[0] + " " + and + " " + ary[1];
+            if (plural)
+                rv += " " + plural;
+            break;
+
+        default:
+            for (var i = 0; i < ary.length - 1; ++i)
+                rv += ary[i] + ", ";
+            rv += and + " " + ary[ary.length - 1];
+            if (plural)
+                rv += " " + plural;
+            break;
+    }
+
+    return rv;
+    
+}
+
 function quicklistCallback (element, ndx, ary) 
 {   
     /* Check whether the selected attribute == true */
@@ -481,6 +549,7 @@ function getObjectDetails (obj, rv)
     }
     
     rv.orig = obj;
+    rv.parent = obj.parent;
     
     switch (obj.TYPE)
     {
@@ -684,7 +753,7 @@ function gotoIRCURL (url)
     
     if (!url)
     {
-        window.alert ("Invalid IRC URL ``" + url + "''");
+        window.alert (getMsg("gotoIRCURLMsg",url));
         return;
     }
 
@@ -692,7 +761,7 @@ function gotoIRCURL (url)
     var pass = "";
     
     if (url.needpass)
-        pass = window.prompt ("Enter a password for the url " + url.spec);
+        pass = window.prompt (getMsg("gotoIRCURLMsg2",url.spec));
     
     if (url.isserver)
     {
@@ -746,7 +815,7 @@ function gotoIRCURL (url)
     {
         var key = "";
         if (url.needkey)
-            key = window.prompt ("Enter key for url " + url.spec);
+            key = window.prompt (getMsg("gotoIRCURLMsg3",url.spec));
 
         if (url.isnick)
         {
@@ -780,7 +849,7 @@ function gotoIRCURL (url)
     else
     {
         if (!net.messages)
-            net.displayHere ("Network view for ``" + net.name + "'' opened.",
+            net.displayHere (getMsg("gotoIRCURLMsg4",net.name),
                              "INFO");
         setCurrentObject (net);
     }
@@ -863,64 +932,49 @@ function updateTitle (obj)
     if ((obj && obj != client.currentObject) || !client.currentObject)
         return;
 
-    var tstring = "";
-    var o = new Object();
-    
-    getObjectDetails (client.currentObject, o);
-
+    var tstring;
+    var o = getObjectDetails (client.currentObject);
     var net = o.network ? o.network.name : "";
 
     switch (client.currentObject.TYPE)
     {
-        case "IRCServer":
         case "IRCNetwork":
-            var serv = "", nick = "";
+            var serv = "", port = "", nick = "";
             if (o.server)
             {
-                serv  = o.server.connection.host;
+                serv = o.server.connection.host;
+                port = o.server.connection.port;
                 if (o.server.me)
                     nick = o.server.me.properNick;
+                tstring = getMsg("updateTitleNetwork", [nick, net, serv, port]);
             }
-            
-            if (nick) /* user might be disconnected, nick would be undefined */
-                tstring += "user '" + nick + "' ";
-            
-            if (net)
-                if (serv)
-                    tstring += "attached to '" + net + "' via " + serv;
-                else
-                    if (o.network.connecting)
-                        tstring += "attaching to '" + net + "'";
-                    else
-                        tstring += "no longer attached to '" + net + "'";
-            
-            if (tstring)
-                tstring = "ChatZilla: " + tstring;
             else
-                tstring = "ChatZilla!!";
+            {
+                nick = client.currentObject.INITIAL_NICK;
+                tstring = getMsg("updateTitleNetwork2", [nick, net]);
+            }
             break;
             
         case "IRCChannel":
-            var chan = "(none)", mode = "", topic = "";
-
+            var chan = "", mode = "", topic = "";
+            var nick = o.parent.me ? o.parent.me.properNick : 
+                                     getMsg ("updateTitleNoNick");
             chan = o.channel.name;
             mode = o.channel.mode.getModeStr();
-            if (client.uiState["toolbar"])
-                topic = o.channel.topic ? " " + o.channel.topic :
-                    " --no topic--";
-
             if (!mode)
-                mode = "no mode";
-            tstring = "ChatZilla: " + chan + " (" + mode + ") " + topic;
+                mode = getMsg("updateTitleNoMode");
+            topic = o.channel.topic ? o.channel.topic : 
+                                      getMsg("updateTitleNoTopic");
+
+            tstring = getMsg("updateTitleChannel", [nick, chan, mode, topic]);
             break;
 
         case "IRCUser":
-            tstring = "ChatZilla: Conversation with " +
-                client.currentObject.properNick;
+            tstring = getMsg("updateTitleUser", client.currentObject.properNick);
             break;
 
         default:
-            tstring = "ChatZilla!";
+            tstring = getMsg("updateTitleUnknown");
             break;
     }
 
@@ -931,7 +985,8 @@ function updateTitle (obj)
             actl.push ((client.activityList[i] == "!") ?
                        (Number(i) + 1) + "!" : (Number(i) + 1));
         if (actl.length > 0)
-            tstring += " --  Activity [" + actl.join (", ") + "]";
+            tstring = getMsg("updateTitleWithActivity",
+                              [tstring, actl.join (", ")]);
     }
 
     document.title = tstring;
@@ -1303,7 +1358,7 @@ function deleteToolbutton (tb)
         }
         else
         {
-            window.alert ("Current view cannot be deleted.");
+            window.alert (getMsg("deleteToolbuttonMsg"));
             return -1;
         }
             
@@ -1346,11 +1401,11 @@ function cli_load(url, obj)
     }
     catch (ex)
     {
-        var msg = "Error loading subscript: " + ex;
+        var msg = getMsg("cli_loadMsg",ex);
         if (ex.fileName)
-            msg += " file:" + ex.fileName;
+            msg += getMsg("cli_loadMsg2",ex.fileName);
         if (ex.lineNumber)
-            msg += " line:" + ex.lineNumber;
+            msg += getMsg("cli_loadMsg3",ex.lineNumber);
 
         client.currentObject.display (msg, "ERROR");        
     }
@@ -1379,8 +1434,7 @@ function cli_say(msg)
         default:
             if (msg != "")
                 client.currentObject.display 
-                    ("No default action for objects of type ``" +
-                     client.currentObject.TYPE + "''", "ERROR");
+                    (getMsg("cli_sayMsg", client.currentObject.TYPE), "ERROR");
             break;
     }
 
@@ -1684,7 +1738,7 @@ function usr_graphres()
                                        this.parent.parent.parent.name + ":" +
                                        this.parent.name + ":" +
                                        CIRCUser.nextResID++);
-        
+
             //dd ("created cuser resource " + this.rdfRes.Value);
         
         rdf.Assert (this.rdfRes, rdf.resNick, rdf.GetLiteral(this.properNick));

@@ -35,8 +35,9 @@ chatzilla.jar:
 	skin/modern/chatzilla/images/isnt-op.gif            (xul/skin/images/isnt-op.gif) 
 	skin/modern/chatzilla/images/is-voice.gif           (xul/skin/images/is-voice.gif) 
 	skin/modern/chatzilla/images/isnt-voice.gif         (xul/skin/images/isnt-voice.gif) 
-	locale/en-US/chatzilla/chatzillaOverlay.dtd        (xul/locale/en-US/chatzillaOverlay.dtd) 
-        locale/en-US/chatzilla/chatzilla.dtd               (xul/locale/en-US/chatzilla.dtd) 
+	locale/en-US/chatzilla/chatzillaOverlay.dtd         (xul/locale/en-US/chatzillaOverlay.dtd) 
+        locale/en-US/chatzilla/chatzilla.dtd            (xul/locale/en-US/chatzilla.dtd) 
+        locale/en-US/chatzilla/chatzilla.properties     (xul/locale/en-US/chatzilla.properties) 
 	locale/en-US/chatzilla/pref-irc.dtd                (xul/locale/en-US/pref-irc.dtd) 
 
 # XXX fix me...

@@ -389,41 +389,6 @@ function formatDateOffset (seconds, format)
     return format;
 }
 
-function arraySpeak (ary, single, plural)
-{
-    var rv = "";
-    
-    switch (ary.length)
-    {
-        case 0:
-            break;
-            
-        case 1:
-            rv = ary[0];
-            if (single)
-                rv += " " + single;            
-            break;
-
-        case 2:
-            rv = ary[0] + " and " + ary[1];
-            if (plural)
-                rv += " " + plural;
-            break;
-
-        default:
-            for (var i = 0; i < ary.length - 1; ++i)
-                rv += ary[i] + ", ";
-            rv += "and " + ary[ary.length - 1];
-            if (plural)
-                rv += " " + plural;
-            break;
-    }
-
-    return rv;
-    
-}
-
-
 function arrayContains (ary, elem)
 {
     return (arrayIndexOf (ary, elem) != -1);

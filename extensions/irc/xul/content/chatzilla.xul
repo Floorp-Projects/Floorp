@@ -21,7 +21,8 @@
    - Contributor(s):
    -  Robert Ginda, rginda@ndcico.com, original author
    -  Josh Soref, timeless@mac.com, international support
-  -->
+   -  Chiaki Koufugata chiaki@mozilla.gr.jp UI i18n
+   -->
 
 <!DOCTYPE window SYSTEM "chrome://chatzilla/locale/chatzilla.dtd">
 
@@ -38,6 +39,7 @@
         onclose="return onClose();"
         persist="width height" windowtype="irc:chatzilla">
 
+<script src="chrome://global/content/strres.js"/>
 <script src="chrome://chatzilla/content/lib/js/utils.js"/>
 <script src="chrome://chatzilla/content/lib/js/connection-xpcom.js"/>
 <script src="chrome://chatzilla/content/lib/js/events.js"/>
@@ -85,31 +87,31 @@
   <menubar id="main-menubar" persist="collapsed">
     <menu id="menu_File">
       <menupopup id="menu_FilePopup">
-        <menu label="Options">
+        <menu label="&OptionsCmd.label;">
           <menupopup>
 
-            <menuitem id="menu-view-toolbar" label="Show Toolbar" 
+            <menuitem id="menu-view-toolbar" label="&ShowToolbarCmd.label;" 
               type="checkbox" oncommand="onToggleVisibility('toolbar');"/>
-            <menuitem id="menu-view-info" label="Show Userlist" 
+            <menuitem id="menu-view-info" label="&ShowUserlistCmd.label;" 
               type="checkbox" oncommand="onToggleVisibility('info');"/>
-            <menuitem id="menu-view-status" label="Show Statusbar" 
+            <menuitem id="menu-view-status" label="&ShowStatusbarCmd.label;" 
               type="checkbox" oncommand="onToggleVisibility('status');"/>
 
             <menuseparator/>
 
-            <menuitem id="menu-munger" label="Enable Smileys"
+            <menuitem id="menu-munger" label="&EnableSmileysCmd.label;"
               oncommand="onToggleMunger()" type="checkbox"/>
 
             <menuseparator/>
 
-            <menuitem id="menu-dmessages" label="Debug Messages"
+            <menuitem id="menu-dmessages" label="&DebugMsgCmd.label;"
               oncommand="onToggleTraceHook()" type="checkbox"/>
 
             <menuseparator/>
 
-            <menuitem id="menu-settings-save-now" label="Save Settings Now"
+            <menuitem id="menu-settings-save-now" label="&SaveSetNowCmd.label;"
               oncommand="writeIRCPrefs()"/>
-            <menuitem id="menu-settings-autosave" label="Save Settings On Exit"
+            <menuitem id="menu-settings-autosave" label="&SaveSetExitCmd.label;"
               oncommand="onToggleSaveOnExit()" type="checkbox"/>
 
           </menupopup>
@@ -119,14 +121,14 @@
         <menuitem id="menu_close"/>
       </menupopup>
     </menu>
-    <menu label="View">
+    <menu label="&ViewCmd.label;">
       <menupopup>
 
        <!-- hide vs delete nuances are too vague
-        <menuitem label="Hide" oncommand="onHideCurrentView();"/>
+        <menuitem label="&HideCmd.label;" oncommand="onHideCurrentView();"/>
        -->
-        <menuitem label="Clear this view" oncommand="onClearCurrentView();"/>
-        <menuitem label="Delete this view" oncommand="onDeleteCurrentView();"/>
+        <menuitem label="&ClearViewCmd.label;" oncommand="onClearCurrentView();"/>
+        <menuitem label="&DeleteViewCmd.label;" oncommand="onDeleteCurrentView();"/>
 
       </menupopup>
     </menu>

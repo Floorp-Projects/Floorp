@@ -28,8 +28,8 @@ var debugData = {lastEventType: "", lastEventData: ""};
  */
 function event_tracer (e)
 {
-    var name="";
-    var data="";
+    var name = "";
+    var data = (e.debug) ? e.debug : "";
     
     switch (e.set)
     {
@@ -60,7 +60,7 @@ function event_tracer (e)
         case "channel":
             name = e.destObject.name;
             break;
-            
+
         case "user":
             name = e.destObject.nick;
             break;

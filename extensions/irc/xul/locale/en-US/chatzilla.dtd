@@ -26,3 +26,18 @@
 <!ENTITY lastPing.label		"Last Ping">
 <!ENTITY key.label		"Key">
 <!ENTITY network.label		"Network">
+
+<!-- ADD ENTITIES -->
+
+<!ENTITY OptionsCmd.label	"Options">
+<!ENTITY ShowToolbarCmd.label	"Show Toolbar">
+<!ENTITY ShowUserlistCmd.label	"Show Userlist">
+<!ENTITY ShowStatusbarCmd.label	"Show Statusbar">
+<!ENTITY EnableSmileysCmd.label "Enable Smileys">
+<!ENTITY DebugMsgCmd.label	"Debug Messages">
+<!ENTITY SaveSetNowCmd.label	"Save Settings Now">
+<!ENTITY SaveSetExitCmd.label	"Save Settings On Exit">
+<!ENTITY ViewCmd.label	"View">
+<!ENTITY HideCmd.label	"Hide">
+<!ENTITY ClearViewCmd.label	"Clear this view">
+<!ENTITY DeleteViewCmd.label	"Delete this view">
