@@ -957,7 +957,7 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
     nsCOMPtr<nsIMsgDatabase> unusedDB;
     rv = mailDBFactory->OpenFolderDB(child, PR_TRUE, PR_TRUE, getter_AddRefs(unusedDB));
     
-    if (NS_SUCCEEDED(rv) && unusedDB)
+    if ((NS_SUCCEEDED(rv) || rv == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING) && unusedDB)
     {
       //need to set the folder name
       nsCOMPtr<nsIDBFolderInfo> folderInfo;
