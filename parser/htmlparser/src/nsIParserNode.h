@@ -139,10 +139,6 @@ class nsIParserNode : public nsISupports {
 
 };
 
-extern NS_HTMLPARS nsresult NS_NewParserNode(nsIParserNode** aInstancePtrResult,
-                                             CToken* aToken,
-                                             PRInt32 aLineNumber);
-
 #endif
 
 
