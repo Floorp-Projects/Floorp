@@ -53,8 +53,6 @@ class nsWidgetModuleData : public nsISupports
 
    HMODULE hModResources;   // resource module
    SIZEL   szScreen;        // size of screen in pixels
-   BOOL    bMouseSwitched;  // true if MB1 is the RH mouse button
-   LONG    lHtEntryfield;   // ideal height of an entryfield
    BOOL    bIsDBCS;         // true if system is dbcs
    PRBool    bIsTrackPoint;   // true if system has a TrackPoint
    HPOINTER hptrArray[17];
@@ -67,16 +65,6 @@ class nsWidgetModuleData : public nsISupports
    // better-suited elsewhere, but there shouldn't be very many of them.
    HPOINTER GetPointer( nsCursor aCursor);
 
-   // local->Unicode cp. conversion
-   ULONG ConvertToUcs( const char *szText, PRUnichar *pBuffer, ULONG ulSize);
-
-   // Unicode->local cp. conversions
-   char *ConvertFromUcs( const PRUnichar *pText, char *szBuffer, ULONG ulSize);
-   char *ConvertFromUcs( const nsString &aStr, char *szBuffer, ULONG ulSize);
-   // these methods use a single static buffer
-   const char *ConvertFromUcs( const PRUnichar *pText);
-   const char *ConvertFromUcs( const nsString &aStr);
-
    const char *DBCSstrchr( const char *string, int c );
    const char *DBCSstrrchr( const char *string, int c );
 
@@ -84,14 +72,6 @@ class nsWidgetModuleData : public nsISupports
   ~nsWidgetModuleData();
 
    void Init( nsIAppShell *aPrimaevalAppShell);
-
- private:
-
-   // Utility function for creating the Unicode conversion object
-   int CreateUcsConverter();
-
-   UconvObject  converter;
-   BOOL         supplantConverter;
 };
 
 #endif
