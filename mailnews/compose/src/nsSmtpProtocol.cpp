@@ -227,6 +227,11 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
 	if (aURL)
 		m_runningURL = do_QueryInterface(aURL);
 
+    // extract out message feedback if there is any.
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aURL);
+	if (mailnewsUrl)
+		mailnewsUrl->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
+
 	// call base class to set up the url 
 	rv = OpenNetworkSocket(aURL);
 	
@@ -499,12 +504,7 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 		 char * s = nsnull;
 		 if (parser)
 			 parser->MakeFullAddress(nsnull, nsnull, userAddress, &s);
-		 if (!s)
-		 {
-			nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-			url->SetErrorMessage(NET_ExplainErrorDetails(MK_OUT_OF_MEMORY));
-			return(MK_OUT_OF_MEMORY);
-		 }
+
 #ifdef UNREADY_CODE		
 		 if (CE_URL_S->msg_pane) 
 		 {
@@ -1391,6 +1391,11 @@ nsresult nsSmtpProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 				break;
         
 			case SMTP_ERROR_DONE:
+                {
+					nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(m_runningURL);
+					mailNewsUrl->SetUrlState(PR_FALSE, NS_ERROR_FAILURE);
+					m_nextState = SMTP_FREE;
+				}
 	            m_nextState = SMTP_FREE;
 		        break;
         

@@ -25,6 +25,7 @@
 #include "rosetta.h"
 #include HG40855
 #include "nsISmtpUrl.h"
+#include "nsIMsgStatusFeedback.h"
 #include "nsCOMPtr.h"
 
  /* states of the machine
@@ -85,6 +86,7 @@ private:
 	// the nsISmtpURL that is currently running
 	nsCOMPtr<nsISmtpUrl>		m_runningURL;
 	PRUint32 m_LastTime;
+    nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
 
 	// Generic state information -- What state are we in? What state do we want to go to
 	// after the next response? What was the last response code? etc. 
