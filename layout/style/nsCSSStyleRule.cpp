@@ -1435,88 +1435,101 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         if (nsnull != ourMargin->mBorderStyle) {
           nsCSSRect* ourStyle = ourMargin->mBorderStyle;
           if (eCSSUnit_Enumerated == ourStyle->mTop.GetUnit()) {
-            spacing->mBorderStyle[NS_SIDE_TOP] = ourStyle->mTop.GetIntValue();
+            spacing->SetBorderStyle(NS_SIDE_TOP, ourStyle->mTop.GetIntValue());
           }
           else if (eCSSUnit_None == ourStyle->mTop.GetUnit()) {
-            spacing->mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
+            spacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
           }
           else if (eCSSUnit_Inherit == ourStyle->mTop.GetUnit()) {
-            spacing->mBorderStyle[NS_SIDE_TOP] = parentSpacing->mBorderStyle[NS_SIDE_TOP];
+            spacing->SetBorderStyle(NS_SIDE_TOP, parentSpacing->GetBorderStyle(NS_SIDE_TOP));
           }
 
           if (eCSSUnit_Enumerated == ourStyle->mRight.GetUnit()) {
-            spacing->mBorderStyle[NS_SIDE_RIGHT] = ourStyle->mRight.GetIntValue();
+            spacing->SetBorderStyle(NS_SIDE_RIGHT, ourStyle->mRight.GetIntValue());
           }
           else if (eCSSUnit_None == ourStyle->mRight.GetUnit()) {
-            spacing->mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
+            spacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
           }
           else if (eCSSUnit_Inherit == ourStyle->mRight.GetUnit()) {
-            spacing->mBorderStyle[NS_SIDE_RIGHT] = parentSpacing->mBorderStyle[NS_SIDE_RIGHT];
+            spacing->SetBorderStyle(NS_SIDE_RIGHT, parentSpacing->GetBorderStyle(NS_SIDE_RIGHT));
           }
 
           if (eCSSUnit_Enumerated == ourStyle->mBottom.GetUnit()) {
-            spacing->mBorderStyle[NS_SIDE_BOTTOM] = ourStyle->mBottom.GetIntValue();
+            spacing->SetBorderStyle(NS_SIDE_BOTTOM, ourStyle->mBottom.GetIntValue());
           }
           else if (eCSSUnit_None == ourStyle->mBottom.GetUnit()) {
-            spacing->mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
+            spacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
           }
-          else if (eCSSUnit_Inherit == ourStyle->mBottom.GetUnit()) {
-            spacing->mBorderStyle[NS_SIDE_BOTTOM] = parentSpacing->mBorderStyle[NS_SIDE_BOTTOM];
+          else if (eCSSUnit_Inherit == ourStyle->mBottom.GetUnit()) { 
+            spacing->SetBorderStyle(NS_SIDE_BOTTOM, parentSpacing->GetBorderStyle(NS_SIDE_BOTTOM));
           }
 
           if (eCSSUnit_Enumerated == ourStyle->mLeft.GetUnit()) {
-            spacing->mBorderStyle[NS_SIDE_LEFT] = ourStyle->mLeft.GetIntValue();
+            spacing->SetBorderStyle(NS_SIDE_LEFT, ourStyle->mLeft.GetIntValue());
           }
           else if (eCSSUnit_None == ourStyle->mLeft.GetUnit()) {
-            spacing->mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
+           spacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
           }
           else if (eCSSUnit_Inherit == ourStyle->mLeft.GetUnit()) {
-            spacing->mBorderStyle[NS_SIDE_LEFT] = parentSpacing->mBorderStyle[NS_SIDE_LEFT];
+            spacing->SetBorderStyle(NS_SIDE_LEFT, parentSpacing->GetBorderStyle(NS_SIDE_LEFT));
           }
         }
 
         // border-color: color. string, enum, inherit
         if (nsnull != ourMargin->mBorderColor) {
           nsCSSRect* ourColor = ourMargin->mBorderColor;
-          if (! SetColor(ourColor->mTop, parentSpacing->mBorderColor[NS_SIDE_TOP], 
-                         spacing->mBorderColor[NS_SIDE_TOP])) {
+		  nscolor aBorderColor = NS_RGBA(0,0,0,0);
+          if (! SetColor(ourColor->mTop, parentSpacing->GetBorderColor(NS_SIDE_TOP),
+			  aBorderColor)) {
             if (eCSSUnit_Enumerated == ourColor->mTop.GetUnit()) {
-              spacing->mBorderColor[NS_SIDE_TOP] = NS_RGBA(0, 0, 0, 0); // transparent
+              spacing->SetBorderColor(NS_SIDE_TOP ,NS_RGBA(0, 0, 0, 0)); // transparent
             }
             else if (eCSSUnit_Inherit == ourColor->mTop.GetUnit()) {
-              spacing->mBorderColor[NS_SIDE_TOP] = parentSpacing->mBorderColor[NS_SIDE_TOP];
+              spacing->SetBorderColor(NS_SIDE_TOP, parentSpacing->GetBorderColor(NS_SIDE_TOP));
             }
-          }
+		  }
+          else{
+            spacing->SetBorderColor(NS_SIDE_TOP, aBorderColor); 
+		  }
 
-          if (! SetColor(ourColor->mRight, parentSpacing->mBorderColor[NS_SIDE_RIGHT], 
-                         spacing->mBorderColor[NS_SIDE_RIGHT])) {
+          if (! SetColor(ourColor->mRight, parentSpacing->GetBorderColor(NS_SIDE_RIGHT),
+			  aBorderColor)) {
             if (eCSSUnit_Enumerated == ourColor->mRight.GetUnit()) {
-              spacing->mBorderColor[NS_SIDE_RIGHT] = NS_RGBA(0, 0, 0, 0); // transparent
+              spacing->SetBorderColor(NS_SIDE_RIGHT ,NS_RGBA(0, 0, 0, 0)); // transparent
             }
             else if (eCSSUnit_Inherit == ourColor->mRight.GetUnit()) {
-              spacing->mBorderColor[NS_SIDE_RIGHT] = parentSpacing->mBorderColor[NS_SIDE_RIGHT];
+              spacing->SetBorderColor(NS_SIDE_RIGHT, parentSpacing->GetBorderColor(NS_SIDE_RIGHT));
             }
-          }
+		  }
+          else{
+            spacing->SetBorderColor(NS_SIDE_RIGHT, aBorderColor); 
+		  }
 
-          if (! SetColor(ourColor->mBottom, parentSpacing->mBorderColor[NS_SIDE_BOTTOM], 
-                         spacing->mBorderColor[NS_SIDE_BOTTOM])) {
+          if (! SetColor(ourColor->mBottom, parentSpacing->GetBorderColor(NS_SIDE_BOTTOM),
+			  aBorderColor)) {
             if (eCSSUnit_Enumerated == ourColor->mBottom.GetUnit()) {
-              spacing->mBorderColor[NS_SIDE_BOTTOM] = NS_RGBA(0, 0, 0, 0); // transparent
+              spacing->SetBorderColor(NS_SIDE_BOTTOM ,NS_RGBA(0, 0, 0, 0)); // transparent
             }
             else if (eCSSUnit_Inherit == ourColor->mBottom.GetUnit()) {
-              spacing->mBorderColor[NS_SIDE_BOTTOM] = parentSpacing->mBorderColor[NS_SIDE_BOTTOM];
+               spacing->SetBorderColor(NS_SIDE_BOTTOM, parentSpacing->GetBorderColor(NS_SIDE_BOTTOM));
             }
-          }
+		  }
+          else{
+           spacing->SetBorderColor(NS_SIDE_BOTTOM, aBorderColor);
+		  }
 
-          if (! SetColor(ourColor->mLeft, parentSpacing->mBorderColor[NS_SIDE_LEFT], 
-                         spacing->mBorderColor[NS_SIDE_LEFT])) {
+          if (! SetColor(ourColor->mLeft, parentSpacing->GetBorderColor(NS_SIDE_LEFT),
+			  aBorderColor)) {
             if (eCSSUnit_Enumerated == ourColor->mLeft.GetUnit()) {
-              spacing->mBorderColor[NS_SIDE_LEFT] = NS_RGBA(0, 0, 0, 0); // transparent
+              spacing->SetBorderColor(NS_SIDE_LEFT ,NS_RGBA(0, 0, 0, 0)); // transparent
             }
             else if (eCSSUnit_Inherit == ourColor->mLeft.GetUnit()) {
-              spacing->mBorderColor[NS_SIDE_LEFT] = parentSpacing->mBorderColor[NS_SIDE_LEFT];
+              spacing->SetBorderColor(NS_SIDE_LEFT, parentSpacing->GetBorderColor(NS_SIDE_LEFT));
             }
-          }
+	      }
+          else{
+            spacing->SetBorderColor(NS_SIDE_LEFT, aBorderColor);
+		  }
         }
       }
     }
