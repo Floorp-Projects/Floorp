@@ -325,6 +325,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						*p2++ = '\0';
 					else
 						p2 = "A message belongs here.";
+						
 					CString value = replaceVars(parms, NULL);
 
 					if (!value || value.IsEmpty())
@@ -360,8 +361,16 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				}
 				else if (strcmp(pcmd, "VerifyVal") == 0)
 				{
+					char *p2 = strchr(parms, ',');
+
+					if (p2)
+						*p2++ = '\0';
+					else
+						p2 = "Enter a Verification Value";
+						
 					CString Getval = replaceVars(parms, NULL);
-					if (Getval == "0")
+					
+					if (strcmp(Getval,p2) ==0)
 						return FALSE;
 				}
 				else if (strcmp(pcmd, "VerifyDir") == 0)
