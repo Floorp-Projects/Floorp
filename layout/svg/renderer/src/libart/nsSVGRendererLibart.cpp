@@ -120,15 +120,15 @@ NS_NewSVGRendererLibart(nsISVGRenderer** aResult)
 
     if (!nsSVGLibartFreetype::Init()) {
       nsCOMPtr<nsIPromptService> prompter(do_GetService(prompt_service.get()));
-      nsXPIDLString title(NS_LITERAL_STRING("Freetype error"));
-      nsXPIDLString msg(NS_LITERAL_STRING("The Libart/Freetype SVG rendering engine could not initialize the freetype library. Please go to http://www.mozilla.org/projects/fonts/unix/enabling_truetype.html and follow steps 2-7."));
-      prompter->Alert(nsnull, title, msg);
+      NS_NAMED_LITERAL_STRING(title, "Freetype error");
+      NS_NAMED_LITERAL_STRING(msg, "The Libart/Freetype SVG rendering engine could not initialize the freetype library. Please go to http://www.mozilla.org/projects/fonts/unix/enabling_truetype.html and follow steps 2-7.");
+      prompter->Alert(nsnull, title.get(), msg.get());
     }
     else if (!nsSVGLibartFreetype::HasSuitableFonts()) {
       nsCOMPtr<nsIPromptService> prompter(do_GetService(prompt_service.get()));
-      nsXPIDLString title(NS_LITERAL_STRING("Font Configuration Error"));
-      nsXPIDLString msg(NS_LITERAL_STRING("The Libart/Freetype SVG rendering engine can't find any truetype fonts on your system. Please go to http://www.mozilla.org/projects/fonts/unix/enabling_truetype.html and follow steps 2-7."));
-      prompter->Alert(nsnull, title, msg);
+      NS_NAMED_LITERAL_STRING(title, "Font Configuration Error");
+      NS_NAMED_LITERAL_STRING(msg, "The Libart/Freetype SVG rendering engine can't find any truetype fonts on your system. Please go to http://www.mozilla.org/projects/fonts/unix/enabling_truetype.html and follow steps 2-7.");
+      prompter->Alert(nsnull, title.get(), msg.get());
       nsSVGLibartFreetype::Shutdown();
     }
     else {
