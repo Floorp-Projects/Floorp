@@ -41,12 +41,14 @@
 
 #include "nsAddrDatabase.h"
 #include "nsIAddrBookSession.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 
 /* The definition is nsAddressBook.cpp */
@@ -1146,4 +1148,77 @@ nsAbCardProperty::SetNotes(const PRUnichar * aNotes)
 NS_IMETHODIMP
 nsAbCardProperty::SetLastModifiedDate(PRUint32 aLastModifiedDate)
 { return m_LastModDate = aLastModifiedDate; }
+
+NS_IMETHODIMP 
+nsAbCardProperty::GetName(PRUnichar * *aName)
+{
+    nsresult rv = NS_OK;
+	// get name depend on "mail.addr_book.lastnamefirst" 
+	// 0= displayname, 1= lastname first, 2=firstname first
+    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    if (NS_FAILED(rv) || !pPref) 
+		return NS_ERROR_FAILURE;
+
+	PRInt32 lastNameFirst = 0;
+    rv = pPref->GetIntPref("mail.addr_book.lastnamefirst", &lastNameFirst);
+	if (lastNameFirst == 0)
+		GetDisplayName(aName);
+	else
+	{
+		if (aName)
+		{
+			nsString name;
+			nsString firstName;
+			nsString lastName;
+			PRUnichar *str = nsnull;
+			GetFirstName(&str);
+			if (str)
+			{
+				firstName = str;
+				PR_FREEIF(str);
+			}
+			GetLastName(&str);
+			if (str)
+			{
+				lastName = str;
+				PR_FREEIF(str);
+			}
+
+			if (lastName.Length() == 0)
+				name = firstName;
+			else if (firstName.Length() == 0)
+				name = lastName;
+			else
+			{
+				if (lastNameFirst == 1)
+				{
+					name = lastName + ", ";
+					name += firstName;
+				}
+				else
+				{
+					name = firstName + " ";
+					name += lastName;
+				}
+			}
+				
+			*aName = name.ToNewUnicode();
+			if (!(*aName)) 
+				return NS_ERROR_OUT_OF_MEMORY;
+			else
+				return NS_OK;
+		}
+		else
+			return NS_ERROR_NULL_POINTER;
+
+	}
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAbCardProperty::SetName(const PRUnichar * aName)
+{
+	return NS_OK;
+}
 

@@ -88,12 +88,12 @@
 		</html:legend>
 
 		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.addr_book.lastnamefirst" prefindex="false" id="mail.addr_book.lastnamefirst1" name="displayname" type="radio"/>
+			<html:input pref="true" preftype="int" prefstring="mail.addr_book.lastnamefirst" prefindex="0" id="mail.addr_book.lastnamefirst0" name="displayname" type="radio"/>
 			<html:label for="mail.addr_book.lastnamefirst0">&useDisplayName.label;</html:label>
 		</html:div>
 		
 		<html:div>
-			<html:input pref="true" preftype="1" prefstring="mail.addr_book.lastnamefirst" prefindex="true" id="mail.addr_book.lastnamefirst" name="displayname" type="radio"/>
+			<html:input pref="true" preftype="int" prefstring="mail.addr_book.lastnamefirst" prefindex="1" id="mail.addr_book.lastnamefirst1" name="displayname" type="radio"/>
 			<html:label for="mail.addr_book.lastnamefirst1">&useLastFirst.label;</html:label>
 		</html:div>
 		

@@ -116,10 +116,10 @@ function InitEditCard()
 	if ( prefs )
 	{
 		try {
-			editCard.displayLastNameFirst = prefs.GetBoolPref("mail.addr_book.lastnamefirst");
+			editCard.displayLastNameFirst = prefs.GetIntPref("mail.addr_book.displayName.lastnamefirst");
 		}
 		catch (ex) {
-			dump("failed to get the mail.addr_book.lastnamefirst pref\n");
+			dump("failed to get the mail.addr_book.displayName.lastnamefirst pref\n");
 		}
 
 		try {

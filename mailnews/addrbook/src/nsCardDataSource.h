@@ -102,10 +102,18 @@ protected:
 
 	static nsIRDFResource* kNC_CardChild;
 	static nsIRDFResource* kNC_DisplayName;
-	static nsIRDFResource* kNC_PrimaryEmail;
-	static nsIRDFResource* kNC_WorkPhone;
-	static nsIRDFResource* kNC_City;
+	static nsIRDFResource* kNC_Name;
 	static nsIRDFResource* kNC_Nickname;
+	static nsIRDFResource* kNC_PrimaryEmail;
+	static nsIRDFResource* kNC_SecondEmail;
+	static nsIRDFResource* kNC_WorkPhone;
+	static nsIRDFResource* kNC_HomePhone;
+	static nsIRDFResource* kNC_Fax;
+	static nsIRDFResource* kNC_Pager;
+	static nsIRDFResource* kNC_Cellular;
+	static nsIRDFResource* kNC_Title;
+	static nsIRDFResource* kNC_Department;
+	static nsIRDFResource* kNC_Organization;
 
 	static nsIRDFResource* kNC_DisplayNameCollation;
 	static nsIRDFResource* kNC_PrimaryEmailCollation;

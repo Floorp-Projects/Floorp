@@ -83,17 +83,77 @@ NS_IMETHODIMP nsAbCard::OnCardEntryChange
 				NotifyPropertyChanged("DisplayName", nsnull, 
 									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pDisplayName));
 
-			nsXPIDLString pEmail;
-			card->GetPrimaryEmail(getter_Copies(pEmail));
-			if (pEmail)
+			nsXPIDLString pName;
+			card->GetName(getter_Copies(pName));
+			if (pName)
+				NotifyPropertyChanged("Name", nsnull, 
+									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pName));
+
+			nsXPIDLString pNickName;
+			card->GetNickName(getter_Copies(pNickName));
+			if (pNickName)
+				NotifyPropertyChanged("NickName", nsnull, 
+									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pNickName));
+
+			nsXPIDLString pPrimaryEmail;
+			card->GetPrimaryEmail(getter_Copies(pPrimaryEmail));
+			if (pPrimaryEmail)
 				NotifyPropertyChanged("PrimaryEmail", nsnull, 
-									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pEmail));
+									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pPrimaryEmail));
+
+			nsXPIDLString pSecondEmail;
+			card->GetSecondEmail(getter_Copies(pSecondEmail));
+			if (pSecondEmail)
+				NotifyPropertyChanged("SecondEmail", nsnull, 
+									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pSecondEmail));
 
 			nsXPIDLString pWorkPhone;
 			card->GetWorkPhone(getter_Copies(pWorkPhone));
 			if (pWorkPhone)
 				NotifyPropertyChanged("WorkPhone", nsnull, 
 									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pWorkPhone));
+
+			nsXPIDLString pHomePhone;
+			card->GetHomePhone(getter_Copies(pHomePhone));
+			if (pHomePhone)
+				NotifyPropertyChanged("HomePhone", nsnull, 
+									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pHomePhone));
+
+			nsXPIDLString pFaxNumber;
+			card->GetFaxNumber(getter_Copies(pFaxNumber));
+			if (pFaxNumber)
+				NotifyPropertyChanged("FaxNumber", nsnull, 
+									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pFaxNumber));
+
+			nsXPIDLString pPagerNumber;
+			card->GetPagerNumber(getter_Copies(pPagerNumber));
+			if (pPagerNumber)
+				NotifyPropertyChanged("PagerNumber", nsnull, 
+									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pPagerNumber));
+
+			nsXPIDLString pCellularNumber;
+			card->GetCellularNumber(getter_Copies(pCellularNumber));
+			if (pCellularNumber)
+				NotifyPropertyChanged("CellularNumber", nsnull, 
+									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pCellularNumber));
+
+			nsXPIDLString pJobTitle;
+			card->GetJobTitle(getter_Copies(pJobTitle));
+			if (pJobTitle)
+				NotifyPropertyChanged("JobTitle", nsnull, 
+									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pJobTitle));
+
+			nsXPIDLString pDepartment;
+			card->GetDepartment(getter_Copies(pDepartment));
+			if (pDepartment)
+				NotifyPropertyChanged("Department", nsnull, 
+									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pDepartment));
+
+			nsXPIDLString pCompany;
+			card->GetCompany(getter_Copies(pCompany));
+			if (pCompany)
+				NotifyPropertyChanged("Company", nsnull, 
+									  NS_CONST_CAST(PRUnichar*, (const PRUnichar*)pCompany));
 		}
 	}
 	return NS_OK;

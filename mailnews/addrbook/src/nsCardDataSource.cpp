@@ -44,8 +44,18 @@ static NS_DEFINE_CID(kAbCardDataSourceCID, NS_ABCARDDATASOURCE_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 
 nsIRDFResource* nsAbCardDataSource::kNC_DisplayName = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_Name = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_Nickname = nsnull;
 nsIRDFResource* nsAbCardDataSource::kNC_PrimaryEmail = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_SecondEmail = nsnull;
 nsIRDFResource* nsAbCardDataSource::kNC_WorkPhone = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_HomePhone = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_Fax = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_Pager = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_Cellular = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_Title = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_Department = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_Organization = nsnull;
 
 //for locale sorting,
 nsIRDFResource* nsAbCardDataSource::kNC_DisplayNameCollation = nsnull;
@@ -57,8 +67,18 @@ nsIRDFResource* nsAbCardDataSource::kNC_NewCard = nsnull;
 
 
 #define NC_RDF_DISPLAYNAME			"http://home.netscape.com/NC-rdf#DisplayName"
+#define NC_RDF_NAME					"http://home.netscape.com/NC-rdf#Name"
+#define NC_RDF_NICKNAME				"http://home.netscape.com/NC-rdf#Nickname"
 #define NC_RDF_PRIMARYEMAIL			"http://home.netscape.com/NC-rdf#PrimaryEmail"
-#define NC_RDF_WORKNAME				"http://home.netscape.com/NC-rdf#WorkPhone"
+#define NC_RDF_SECONDEMAIL			"http://home.netscape.com/NC-rdf#SecondEmail"
+#define NC_RDF_WORKPHONE			"http://home.netscape.com/NC-rdf#WorkPhone"
+#define NC_RDF_HOMEPHONE			"http://home.netscape.com/NC-rdf#HomePhone"
+#define NC_RDF_FAX					"http://home.netscape.com/NC-rdf#Fax"
+#define NC_RDF_PAGER				"http://home.netscape.com/NC-rdf#Pager"
+#define NC_RDF_CELLULAR				"http://home.netscape.com/NC-rdf#Cellular"
+#define NC_RDF_TITLE				"http://home.netscape.com/NC-rdf#Title"
+#define NC_RDF_DEPARTMENT			"http://home.netscape.com/NC-rdf#Department"
+#define NC_RDF_ORGANIZATION			"http://home.netscape.com/NC-rdf#Company"
 
 #define NC_RDF_DISPLAYNAME_SORT		"http://home.netscape.com/NC-rdf#DisplayName?collation=true"
 #define NC_RDF_PRIMARYEMAIL_SORT	"http://home.netscape.com/NC-rdf#PrimaryEmail?collation=true"
@@ -93,10 +113,30 @@ nsAbCardDataSource::~nsAbCardDataSource (void)
 
 	if (kNC_DisplayName)
 		NS_RELEASE2(kNC_DisplayName, refcnt);
+	if (kNC_Name)
+		NS_RELEASE2(kNC_Name, refcnt);
+	if (kNC_Nickname)
+		NS_RELEASE2(kNC_Nickname, refcnt);
 	if (kNC_PrimaryEmail)
 		NS_RELEASE2(kNC_PrimaryEmail, refcnt);
+	if (kNC_SecondEmail)
+		NS_RELEASE2(kNC_SecondEmail, refcnt);
 	if (kNC_WorkPhone)
 		NS_RELEASE2(kNC_WorkPhone, refcnt);
+	if (kNC_HomePhone)
+		NS_RELEASE2(kNC_HomePhone, refcnt);
+	if (kNC_Fax)
+		NS_RELEASE2(kNC_Fax, refcnt);
+	if (kNC_Pager)
+		NS_RELEASE2(kNC_Pager, refcnt);
+	if (kNC_Cellular)
+		NS_RELEASE2(kNC_Cellular, refcnt);
+	if (kNC_Title)
+		NS_RELEASE2(kNC_Title, refcnt);
+	if (kNC_Department)
+		NS_RELEASE2(kNC_Department, refcnt);
+	if (kNC_Organization)
+		NS_RELEASE2(kNC_Organization, refcnt);
 	 
 	if (kNC_DisplayNameCollation)
 		NS_RELEASE2(kNC_DisplayNameCollation, refcnt);
@@ -129,8 +169,18 @@ nsresult nsAbCardDataSource::Init()
   if (! kNC_DisplayName)
   {
     mRDFService->GetResource(NC_RDF_DISPLAYNAME, &kNC_DisplayName);
+    mRDFService->GetResource(NC_RDF_NAME, &kNC_Name);
+    mRDFService->GetResource(NC_RDF_NICKNAME,	&kNC_Nickname);
     mRDFService->GetResource(NC_RDF_PRIMARYEMAIL, &kNC_PrimaryEmail);
-    mRDFService->GetResource(NC_RDF_WORKNAME,	&kNC_WorkPhone);
+    mRDFService->GetResource(NC_RDF_SECONDEMAIL, &kNC_SecondEmail);
+    mRDFService->GetResource(NC_RDF_WORKPHONE,	&kNC_WorkPhone);
+    mRDFService->GetResource(NC_RDF_HOMEPHONE, &kNC_HomePhone);
+    mRDFService->GetResource(NC_RDF_FAX, &kNC_Fax);
+    mRDFService->GetResource(NC_RDF_PAGER,	&kNC_Pager);
+    mRDFService->GetResource(NC_RDF_CELLULAR, &kNC_Cellular);
+    mRDFService->GetResource(NC_RDF_TITLE, &kNC_Title);
+    mRDFService->GetResource(NC_RDF_DEPARTMENT,	&kNC_Department);
+    mRDFService->GetResource(NC_RDF_ORGANIZATION,	&kNC_Organization);
 
     mRDFService->GetResource(NC_RDF_DISPLAYNAME_SORT, &kNC_DisplayNameCollation);
     mRDFService->GetResource(NC_RDF_PRIMARYEMAIL_SORT, &kNC_PrimaryEmailCollation);
@@ -203,8 +253,13 @@ NS_IMETHODIMP nsAbCardDataSource::GetTargets(nsIRDFResource* source,
   nsCOMPtr<nsIAbCard> card(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv) && card)
   { 
-	if((kNC_DisplayName == property) || (kNC_PrimaryEmail == property) || 
-	   (kNC_WorkPhone == property)) 
+	if((kNC_DisplayName == property) || (kNC_Name == property) || 
+	   (kNC_Nickname == property) || (kNC_PrimaryEmail == property) || 
+	   (kNC_SecondEmail == property) || (kNC_WorkPhone == property) || 
+	   (kNC_HomePhone == property) || (kNC_Fax == property) || 
+	   (kNC_Pager == property) || (kNC_Cellular == property) || 
+	   (kNC_Title == property) || (kNC_Department == property) || 
+	   (kNC_Organization == property)) 
     { 
       nsSingletonEnumerator* cursor =
         new nsSingletonEnumerator(property);
@@ -283,8 +338,18 @@ nsAbCardDataSource::getCardArcLabelsOut(nsIAbCard *card,
 		return rv;
 
 	(*arcs)->AppendElement(kNC_DisplayName);
+	(*arcs)->AppendElement(kNC_Name);
+	(*arcs)->AppendElement(kNC_Nickname);
 	(*arcs)->AppendElement(kNC_PrimaryEmail);
+	(*arcs)->AppendElement(kNC_SecondEmail);
 	(*arcs)->AppendElement(kNC_WorkPhone);
+	(*arcs)->AppendElement(kNC_HomePhone);
+	(*arcs)->AppendElement(kNC_Fax);
+	(*arcs)->AppendElement(kNC_Pager);
+	(*arcs)->AppendElement(kNC_Cellular);
+	(*arcs)->AppendElement(kNC_Title);
+	(*arcs)->AppendElement(kNC_Department);
+	(*arcs)->AppendElement(kNC_Organization);
 	return NS_OK;
 }
 
@@ -386,13 +451,53 @@ NS_IMETHODIMP nsAbCardDataSource::OnItemPropertyChanged(nsISupports *item, const
 		{
 			NotifyPropertyChanged(resource, kNC_DisplayName, oldValue, newValue);
 		}
+		if(PL_strcmp("Name", property) == 0)
+		{
+			NotifyPropertyChanged(resource, kNC_Name, oldValue, newValue);
+		}
+		if(PL_strcmp("NickName", property) == 0)
+		{
+			NotifyPropertyChanged(resource, kNC_Nickname, oldValue, newValue);
+		}
 		if(PL_strcmp("PrimaryEmail", property) == 0)
 		{
 			NotifyPropertyChanged(resource, kNC_PrimaryEmail, oldValue, newValue);
 		}
+		if(PL_strcmp("SecondEmail", property) == 0)
+		{
+			NotifyPropertyChanged(resource, kNC_SecondEmail, oldValue, newValue);
+		}
 		if(PL_strcmp("WorkPhone", property) == 0)
 		{
 			NotifyPropertyChanged(resource, kNC_WorkPhone, oldValue, newValue);
+		}
+		if(PL_strcmp("HomePhone", property) == 0)
+		{
+			NotifyPropertyChanged(resource, kNC_HomePhone, oldValue, newValue);
+		}
+		if(PL_strcmp("FaxNumber", property) == 0)
+		{
+			NotifyPropertyChanged(resource, kNC_Fax, oldValue, newValue);
+		}
+		if(PL_strcmp("PagerNumber", property) == 0)
+		{
+			NotifyPropertyChanged(resource, kNC_Pager, oldValue, newValue);
+		}
+		if(PL_strcmp("CellularNumber", property) == 0)
+		{
+			NotifyPropertyChanged(resource, kNC_Cellular, oldValue, newValue);
+		}
+		if(PL_strcmp("JobTitle", property) == 0)
+		{
+			NotifyPropertyChanged(resource, kNC_Title, oldValue, newValue);
+		}
+		if(PL_strcmp("Department", property) == 0)
+		{
+			NotifyPropertyChanged(resource, kNC_Department, oldValue, newValue);
+		}
+		if(PL_strcmp("Company", property) == 0)
+		{
+			NotifyPropertyChanged(resource, kNC_Organization, oldValue, newValue);
 		}
 	}
 	return NS_OK;
@@ -407,10 +512,30 @@ nsresult nsAbCardDataSource::createCardNode(nsIAbCard* card,
 
 	if ((kNC_DisplayName == property))
 		rv = card->GetDisplayName(&name);
+	else if ((kNC_Name== property))
+		rv = card->GetName(&name);
+	else if ((kNC_Nickname == property))
+		rv = card->GetNickName(&name);
 	else if ((kNC_PrimaryEmail == property))
 		rv = card->GetPrimaryEmail(&name);
+	else if ((kNC_SecondEmail == property))
+		rv = card->GetSecondEmail(&name);
 	else if ((kNC_WorkPhone == property))
 		rv = card->GetWorkPhone(&name);
+	else if ((kNC_HomePhone == property))
+		rv = card->GetHomePhone(&name);
+	else if ((kNC_Fax == property))
+		rv = card->GetFaxNumber(&name);
+	else if ((kNC_Pager == property))
+		rv = card->GetPagerNumber(&name);
+	else if ((kNC_Cellular == property))
+		rv = card->GetCellularNumber(&name);
+	else if ((kNC_Title == property))
+		rv = card->GetJobTitle(&name);
+	else if ((kNC_Department == property))
+		rv = card->GetDepartment(&name);
+	else if ((kNC_Organization == property))
+		rv = card->GetCompany(&name);
 	else if (kNC_DisplayNameCollation == property)
 	{
 		PRUnichar *tempStr = nsnull;

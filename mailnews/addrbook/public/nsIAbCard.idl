@@ -70,6 +70,7 @@ interface nsIAbCard : nsISupports {
 	attribute wstring custom4;
 	attribute wstring notes;
 	attribute unsigned long lastModifiedDate;
+	attribute wstring name;
 
 	attribute boolean sendPlainText;
 
