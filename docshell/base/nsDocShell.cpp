@@ -3854,11 +3854,13 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
             if (specifiesSeconds)
             {
                 // Non-whitespace characters here mean that the string is
-                // malformed.
-                if (iter == iterAfterDigit && !nsCRT::IsAsciiSpace(*iter))
+                // malformed but tolerate sites that specify a decimal point,
+                // even though meta refresh only works on whole seconds.
+                if (iter == iterAfterDigit &&
+                    !nsCRT::IsAsciiSpace(*iter) && *iter != '.')
                 {
-                    // There is no space between the seconds and this character
-                    // so the seconds are garbage!
+                    // The characters between the seconds and the next
+                    // section are just garbage!
                     //   e.g. content="2a0z+,URL=http://www.mozilla.org/"
                     // Just ignore this redirect.
                     return NS_ERROR_FAILURE;
