@@ -35,8 +35,8 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-// The returnmycall is used as a global variable that is set during a callback.
-var returnmycall=false;
+// The gReturnmycall is used as a global variable that is set during a callback.
+var gReturnmycall=false;
 var accountManagerContractID   = "@mozilla.org/messenger/account-manager;1";
 var messengerMigratorContractID   = "@mozilla.org/messenger/migrator;1";
 var gAnyValidIdentity = false; //If there are no valid identities for any account
@@ -125,9 +125,9 @@ function showMailIntegrationDialog() {
 }
 
 function verifyAccounts(wizardcallback) {
-//check to see if the function is called with the callback and if so set the global variable returnmycall to true
+//check to see if the function is called with the callback and if so set the global variable gReturnmycall to true
     if(wizardcallback)
-		returnmycall = true;
+		gReturnmycall = true;
 	var openWizard = false;
     var prefillAccount;
 	var state=true;
@@ -201,7 +201,7 @@ function MsgAccountWizard()
 function msgOpenAccountWizard()
 {
 // Check to see if the verify accounts function was called with callback or not.
-  if (returnmycall)
+  if (gReturnmycall)
       window.openDialog("chrome://messenger/content/AccountWizard.xul",
                         "AccountWizard", "chrome,modal,titlebar,resizable", {okCallback:WizCallback});
   else
