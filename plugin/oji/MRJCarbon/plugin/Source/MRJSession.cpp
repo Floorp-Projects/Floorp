@@ -68,188 +68,31 @@
 extern MRJConsole* theConsole;
 extern short thePluginRefnum;
 
-static Str255 consoleOutFilename = "\pMRJPluginAppletOutput";
-static bool fileCreated = false;
+//
+//	This function allocates a block of CFM glue code which contains the instructions to call CFM routines
+//
+static UInt32 CFM_glue[6] = {0x3D800000, 0x618C0000, 0x800C0000, 0x804C0004, 0x7C0903A6, 0x4E800420};
 
-static SInt32 java_stdin(JMSessionRef session, void *buffer, SInt32 maxBufferLength)
+static void* NewMachOFunctionPointer(void* cfmfp)
 {
-	return -1;
-}
-
-static Boolean java_exit(JMSessionRef session, SInt32 status)
-{
-	return false;					/* not allowed in a plugin. */
-}
-
-static void getItemText(DialogPtr dialog, DialogItemIndex index, ResType textTag, char str[256])
-{
-	ControlHandle control;
-	if (::GetDialogItemAsControl(dialog, index, &control) == noErr) {
-		Size textSize;
-		::GetControlDataSize(control, kControlNoPart, textTag, &textSize);
-		if (textSize > 255) textSize = 255;
-		::GetControlData(control, kControlNoPart, textTag, textSize, (Ptr)str, &textSize);
-		str[textSize] = '\0';
+    UInt32	*mfp = (UInt32*) NewPtr(sizeof(CFM_glue));		//	Must later dispose of allocated memory
+    if (mfp) {
+	    BlockMoveData(CFM_glue, mfp, sizeof(CFM_glue));
+	    mfp[0] |= ((UInt32)cfmfp >> 16);
+	    mfp[1] |= ((UInt32)cfmfp & 0xFFFF);
+	    MakeDataExecutable(mfp, sizeof(CFM_glue));
 	}
+	return mfp;
 }
 
-static void debug_out(const void *label, const void *message, UInt32 messageLengthInBytes)
+static jint JNICALL java_vfprintf(FILE *fp, const char *format, va_list args)
 {
-	long count = 0;
-	OSErr myErr;
-	short myVRef;
-	long myDirID;
-	FSSpec mySpec;
-	short refNum;
-	Str255 holder;
-	
-	myErr = Gestalt(gestaltFindFolderAttr, &count);
-	
-	if ((myErr != noErr) || (! (count & (1 << gestaltFindFolderPresent)))) {
-		return;
-	}
-	
-	myErr = FindFolder(kOnSystemDisk, kPreferencesFolderType, kDontCreateFolder, &myVRef, &myDirID);
-
-	if (myErr == noErr) {
-	
-		myErr = FSMakeFSSpec(myVRef, myDirID, consoleOutFilename, &mySpec);
-		
-		if ((myErr != noErr) && (myErr != fnfErr)) {
-			return;
-		}
-
-		//will err if file exists, we don't care.
-		myErr = FSpCreate(&mySpec, 'ttxt', 'TEXT', smSystemScript);
-
-		//we care if this errs, but not enough to impede mozilla running.
-		myErr = FSpOpenDF(&mySpec, fsWrPerm, &refNum);
-
-		if (myErr != noErr) {
-			return;
-		}
-
-		if (! fileCreated) {
-			//write over
-			myErr = SetEOF(refNum, 0);
-			
-			fileCreated = true;
-			sprintf((char *)holder, "MRJ Console Output.\r");
-			
-			count = strlen((char *)holder);
-			myErr = FSWrite(refNum, &count, holder);
-			
-		} else {
-			//append
-			myErr = SetFPos(refNum, fsFromLEOF, 0);
-		}
-
-		count = strlen((char *)label);
-		myErr = FSWrite(refNum, &count, label);
-
-		count = messageLengthInBytes;
-        myErr = FSWrite(refNum, &count, message);
-        
-		count = 1;
-        myErr = FSWrite(refNum, &count, "\r");
-        
-		FlushVol("\p", refNum);
-        myErr = FSClose(refNum);
-	}
-
-
-//	Str255 pmsg;
-//if (myErr != noErr) {
-//Str255 bla;
-//sprintf((char *)bla, "FSpOpenDF error: %d", myErr);
-//pmsg[0] = strlen((char *)bla);
-//::BlockMoveData(bla, &pmsg[1], pmsg[0]);
-//::DebugStr(pmsg);
-//}
-
-}
-
-static void java_stdout(JMSessionRef session, const void *message, SInt32 messageLengthInBytes)
-{
-	if (theConsole != NULL) {
-		theConsole->write(message, messageLengthInBytes);
-	} else {
-		debug_out("[System.out] ", message, messageLengthInBytes);
-	}
-}
-
-static void java_stderr(JMSessionRef session, const void *message, SInt32 messageLengthInBytes)
-{
-	if (theConsole != NULL) {
-		theConsole->write(message, messageLengthInBytes);
-	} else {
-		debug_out("[System.err] ", message, messageLengthInBytes);
-	}
-}
-
-static ControlHandle getItemControl(DialogPtr dialog, DialogItemIndex index)
-{
-	ControlHandle control;
-	if (::GetDialogItemAsControl(dialog, index, &control) == noErr)
-		return control;
-	else
-		return NULL;
-}
-
-enum {
-	kUserNameIndex = 3,
-	kPasswordIndex,
-	kAuthenticationDialog = 128
-};
-
-static Boolean java_authenticate(JMSessionRef session, const char *url, const char *realm, char userName[255], char password[255])
-{
-	Boolean result = false;
-	if (thePluginRefnum != -1) {
-		// ensure resources come from the plugin (yuck!).
-		short oldRefnum = ::CurResFile();
-		::UseResFile(thePluginRefnum);
-		
-		DialogPtr dialog = ::GetNewDialog(kAuthenticationDialog, NULL, WindowPtr(-1));
-		if (dialog != NULL) {
-			// set up default buttons.
-			::SetDialogDefaultItem(dialog, kStdOkItemIndex);
-			::SetDialogCancelItem(dialog, kStdCancelItemIndex);
-			::SetDialogTracksCursor(dialog, true);
-
-			// set up default keyboard focus.
-			ControlHandle userNameControl = getItemControl(dialog, kUserNameIndex);
-			if (userNameControl != NULL)
-				::SetKeyboardFocus(::GetDialogWindow(dialog), userNameControl, kControlFocusNextPart);
-			
-			::ShowWindow(::GetDialogWindow(dialog));
-
-			DialogItemIndex itemHit = 0;
-			do {
-				::ModalDialog(ModalFilterUPP(NULL), &itemHit);
-			} while (itemHit != 1 && itemHit != 2);
-			
-			if (itemHit == 1) {
-				getItemText(dialog, kUserNameIndex, kControlEditTextTextTag, userName);
-				getItemText(dialog, kPasswordIndex, kControlEditTextPasswordTag, password);
-				result = true;
-			}
-			
-			::DisposeDialog(dialog);
-			::UseResFile(oldRefnum);
-		}
-	}
-	return result;
-}
-
-static void java_lowmem(JMSessionRef session)
-{
-	/* can ask Netscape to purge some memory. */
-	// NPN_MemFlush(512 * 1024);
+    DebugStr("\pjava_vfprintf here.");
+    return 0;
 }
 
 MRJSession::MRJSession()
-	:	mStatus(noErr), mMainEnv(NULL), mJavaVM(NULL),
+	:	mStatus(noErr), mMainEnv(NULL), mJavaVM(NULL), mSession(NULL),
 	    mFirst(NULL), mLast(NULL), mMessageMonitor(NULL), mLockCount(0)
 {
 }
@@ -259,14 +102,14 @@ MRJSession::~MRJSession()
     close();
 }
 
-OSStatus MRJSession::open()
+OSStatus MRJSession::open(const char* consolePath)
 {
-#if TARGET_CARBON
     // Use vanilla JNI invocation API to fire up a fresh JVM.
 
     std::string classPath = getClassPath();
     JavaVMOption theOptions[] = {
-    	{ (char*) classPath.c_str() }
+    	{ (char*) classPath.c_str() },
+    	{ "vfprintf", NewMachOFunctionPointer(&java_vfprintf) }
     };
 
     JavaVMInitArgs theInitArgs = {
@@ -282,37 +125,21 @@ OSStatus MRJSession::open()
        	// create a monitor for the message queue to unblock Java threads.
 		mMessageMonitor = new MRJMonitor(this);
     }
-#else
-	// Make sure JManager exists.
-	if (&::JMGetVersion != NULL && ::JMGetVersion() >= kJMVersion) {
-		static JMSessionCallbacks callbacks = {
-			kJMVersion,					/* should be set to kJMVersion */
-			&java_stdout,				/* JM will route "stdout" to this function. */
-			&java_stderr,				/* JM will route "stderr" to this function. */
-			&java_stdin,				/* read from console - can be nil for default behavior (no console IO) */
-			&java_exit,					/* handle System.exit(int) requests */
-			&java_authenticate,		    /* present basic authentication dialog */
-			&java_lowmem				/* Low Memory notification Proc */
-		};
-
-		JMTextRef nameRef = NULL;
-		JMTextRef valueRef = NULL;
-		OSStatus status = noErr;
-
-		mStatus = ::JMOpenSession(&mSession, eJManager2Defaults, eCheckRemoteCode,
-								  &callbacks, kTextEncodingMacRoman, NULL);
-
-		// capture the main environment, so it can be distinguished from true Java threads.
-		if (mStatus == noErr) {
-			mMainEnv = ::JMGetCurrentEnv(mSession);
-		
-			// create a monitor for the message queue to unblock Java threads.
-			mMessageMonitor = new MRJMonitor(this);
-		}
-	} else {
-		mStatus = kJMVersionError;
-	}
-#endif /* !TARGET_CARBON */
+    
+    JNIEnv* env = mMainEnv;
+    jclass session = env->FindClass("netscape.oji.MRJSession");
+    if (session) {
+        mSession = (jclass) env->NewGlobalRef(session);
+        jmethodID openMethod = env->GetStaticMethodID(session, "open", "(Ljava/lang/String;)V");
+        if (openMethod) {
+            jstring path = env->NewStringUTF(consolePath);
+            if (path) {
+                env->CallStaticVoidMethod(session, openMethod, path);
+                env->DeleteLocalRef(path);
+            }
+        }
+        env->DeleteLocalRef(session);
+    }
 
     return mStatus;
 }
@@ -325,6 +152,16 @@ OSStatus MRJSession::close()
     		delete mMessageMonitor;
     		mMessageMonitor;
     	}
+    	
+    	if (mSession) {
+    	    jclass session = mSession;
+    	    JNIEnv* env = mMainEnv;
+            jmethodID closeMethod = env->GetStaticMethodID(session, "close", "()V");
+            if (closeMethod)
+                env->CallStaticVoidMethod(session, closeMethod);
+    	    env->DeleteGlobalRef(mSession);
+    	    mSession = NULL;
+        }
 
         mJavaVM->DestroyJavaVM();
         mJavaVM = NULL;
