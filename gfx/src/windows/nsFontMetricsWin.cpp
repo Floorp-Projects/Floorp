@@ -1965,7 +1965,7 @@ nsGlyphAgent gGlyphAgent;
 
 // the common part of GetBoundingMetrics used by nsFontWinUnicode
 // and 'wide' nsFontWinNonUnicode.
-inline static nsresult 
+static nsresult 
 GetBoundingMetricsCommon(HDC aDC, const PRUnichar* aString, PRUint32 aLength, 
   nsBoundingMetrics& aBoundingMetrics, PRUnichar* aGlyphStr)
 {
@@ -2003,6 +2003,50 @@ GetBoundingMetricsCommon(HDC aDC, const PRUnichar* aString, PRUint32 aLength,
     ::GetTextExtentPointW(aDC, aString, aLength, &size);
     aBoundingMetrics.width = size.cx;
     aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
+  }
+
+  return NS_OK;
+}
+
+static nsresult 
+GetBoundingMetricsCommonA(HDC aDC, const char* aString, PRUint32 aLength, 
+  nsBoundingMetrics& aBoundingMetrics)
+{
+  // measure the string
+  nscoord descent;
+  GLYPHMETRICS gm;
+  DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(aString[0]), &gm);
+  if (GDI_ERROR == len) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // flip sign of descent for cross-platform compatibility
+  descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
+  aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
+  aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
+  aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+  aBoundingMetrics.descent = descent;
+  aBoundingMetrics.width = gm.gmCellIncX;
+
+  if (1 < aLength) {
+    // loop over each glyph to get the ascent and descent
+    for (PRUint32 i = 1; i < aLength; ++i) {
+      len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(aString[i]), &gm);
+      if (GDI_ERROR == len) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      // flip sign of descent for cross-platform compatibility
+      descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
+      if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
+        aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+      if (aBoundingMetrics.descent < descent)
+        aBoundingMetrics.descent = descent;
+    }
+    // get the final rightBearing and width. Possible kerning is taken into account.
+    SIZE size;
+    ::GetTextExtentPointA(aDC, aString, aLength, &size);
+    aBoundingMetrics.width = size.cx;
+    aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmBlackBoxX;
   }
 
   return NS_OK;
@@ -4007,45 +4051,8 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
 
   }
 
-  // measure the string
-  nscoord descent;
-  GLYPHMETRICS gm;
-  char* pstr = buffer.GetArray();
-  DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[0]), &gm);
-  if (GDI_ERROR == len) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  // flip sign of descent for cross-platform compatibility
-  descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
-  aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
-  aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
-  aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-  aBoundingMetrics.descent = descent;
-  aBoundingMetrics.width = gm.gmCellIncX;
-
-  if (1 < aLength) {
-    // loop over each glyph to get the ascent and descent
-    for (PRUint32 i = 1; i < aLength; ++i) {
-      len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[i]), &gm);
-      if (GDI_ERROR == len) {
-        return NS_ERROR_UNEXPECTED;
-      }
-      // flip sign of descent for cross-platform compatibility
-      descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
-      if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
-        aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-      if (aBoundingMetrics.descent < descent)
-        aBoundingMetrics.descent = descent;
-    }
-    // get the final rightBearing and width. Possible kerning is taken into account.
-    SIZE size;
-    ::GetTextExtentPointA(aDC, pstr, aLength, &size);
-    aBoundingMetrics.width = size.cx;
-    aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmBlackBoxX;
-  }
-
-  return NS_OK;
+  return GetBoundingMetricsCommonA(aDC, buffer.GetArray(), destLength, 
+                                   aBoundingMetrics);
 }
 
 #ifdef NS_DEBUG
@@ -4076,6 +4083,7 @@ SubstituteChars(PRBool              aDisplayUnicode,
                 nsAutoChar16Buffer& aResult,
                 PRUint32*           aCount)
 {
+  nsresult res;
   if (!gFontSubstituteConverter) {
     nsComponentManager::
     CreateInstance(NS_SAVEASCHARSET_CONTRACTID, nsnull,
@@ -4086,7 +4094,6 @@ SubstituteChars(PRBool              aDisplayUnicode,
       //   to literal Unicode points &#xNNNN; for unknown characters
       // otherwise: transliterate, and then fallback to entities for
       //   recorded characters and question marks for unknown characters
-      nsresult res;
       res = gFontSubstituteConverter->Init("ISO-8859-1",
               aDisplayUnicode
               ? nsISaveAsCharset::attr_FallbackHexNCR
@@ -4101,22 +4108,22 @@ SubstituteChars(PRBool              aDisplayUnicode,
   // do the transliteration if we have a converter
   PRUnichar* result; 
   if (gFontSubstituteConverter) {
-    char* conv = nsnull;
+    nsXPIDLCString conv;
     nsAutoString tmp(aString, aLength); // we need to pass a null-terminated string
-    gFontSubstituteConverter->Convert(tmp.get(), &conv);
-    if (conv) {
-      *aCount = strlen(conv);
-      result = aResult.GetArray(*aCount);
-      if (!result) {
-        nsMemory::Free(conv);
-        return NS_ERROR_OUT_OF_MEMORY;
+    res = gFontSubstituteConverter->Convert(tmp.get(), getter_Copies(conv));
+    if (NS_SUCCEEDED(res)) {
+      *aCount = conv.Length();
+      if (*aCount > 0) {
+        result = aResult.GetArray(*aCount);
+        if (!result) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        PRUnichar* u = result;
+        const char* c = conv.get();
+        for (; *c; ++c, ++u) {
+          *u = *c;
+        }
       }
-      PRUnichar* u = result;
-      char* c = conv;
-      for (; *c; ++c, ++u) {
-        *u = *c;
-      }
-      nsMemory::Free(conv);
       return NS_OK;
     }
   }
@@ -4184,48 +4191,8 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
     }
   }
 
-  PRUnichar* pstr = buffer.GetArray();
-  PRUnichar* ps = buf.GetArray();
-
-  // measure the string
-  nscoord descent;
-  GLYPHMETRICS gm;
-  DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, pstr[0], ps[0], &gm);
-  if (GDI_ERROR == len) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  // flip sign of descent for cross-platform compatibility
-  descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
-  aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
-  aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
-  aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-  aBoundingMetrics.descent = descent;
-  aBoundingMetrics.width = gm.gmCellIncX;
-
-  if (1 < aLength) {
-    // loop over each glyph to get the ascent and descent
-    for (PRUint32 i = 1; i < aLength; ++i) {
-      len = gGlyphAgent.GetGlyphMetrics(aDC, pstr[i], ps[i], &gm);        
-      if (GDI_ERROR == len) {
-        return NS_ERROR_UNEXPECTED;
-      }
-      // flip sign of descent for cross-platform compatibility
-      descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
-      if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
-        aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-      if (aBoundingMetrics.descent < descent)
-        aBoundingMetrics.descent = descent;
-    }
-
-    // get the final rightBearing and width. Possible kerning is taken into account.
-    SIZE size;
-    ::GetTextExtentPointW(aDC, pstr, aLength, &size);
-    aBoundingMetrics.width = size.cx;
-    aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
-  }
-
-  return NS_OK;
+  return GetBoundingMetricsCommon(aDC, buffer.GetArray(), aLength, 
+                                  aBoundingMetrics, buf.GetArray());
 }
 
 #ifdef NS_DEBUG
@@ -4330,6 +4297,179 @@ HaveConverterFor(PRUint8 aCharset)
   return 0;
 }
 
+class nsFontSubset : public nsFontWin
+{
+public:
+  nsFontSubset();
+  virtual ~nsFontSubset();
+
+  virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString,
+                           PRUint32 aLength);
+  virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
+                          const PRUnichar* aString, PRUint32 aLength);
+#ifdef MOZ_MATHML
+  virtual nsresult
+  GetBoundingMetrics(HDC                aDC, 
+                     const PRUnichar*   aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics);
+#ifdef NS_DEBUG
+  virtual void DumpFontInfo();
+#endif // NS_DEBUG
+#endif
+
+  int Load(HDC aDC, nsFontMetricsWinA* aFontMetricsWin, nsFontWinA* aFont);
+
+  // convert a Unicode string to ANSI within our codepage
+  virtual void Convert(const PRUnichar* aString, PRUint32 aLength,
+                       nsAutoCharBuffer& aResult, PRUint32* aResultLength);
+
+  BYTE     mCharset;
+  PRUint16 mCodePage;
+};
+
+nsFontSubset::nsFontSubset()
+  : nsFontWin(nsnull, nsnull, nsnull)
+{
+}
+
+nsFontSubset::~nsFontSubset()
+{
+}
+
+void
+nsFontSubset::Convert(const PRUnichar* aString, PRUint32 aLength,
+  nsAutoCharBuffer& aResult, PRUint32* aResultLength)
+{
+  *aResultLength = 0;
+  // Get the number of bytes needed for the conversion
+  int nb = WideCharToMultiByte(mCodePage, 0, aString, aLength,
+                               nsnull, 0, nsnull, nsnull);
+  if (!nb) return;
+  char* buf = aResult.GetArray(nb);
+  if (!buf) return;
+  // Convert the Unicode string to ANSI
+  *aResultLength = WideCharToMultiByte(mCodePage, 0, aString, aLength,
+                                       buf, nb, nsnull, nsnull);
+}
+
+PRInt32
+nsFontSubset::GetWidth(HDC aDC, const PRUnichar* aString, PRUint32 aLength)
+{
+  nsAutoCharBuffer buffer;
+  Convert(aString, aLength, buffer, &aLength);
+  if (aLength) {
+    SIZE size;
+    ::GetTextExtentPoint32A(aDC, buffer.GetArray(), aLength, &size);
+    return size.cx;
+  }
+  return 0;
+}
+
+void
+nsFontSubset::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
+  const PRUnichar* aString, PRUint32 aLength)
+{
+  nsAutoCharBuffer buffer;
+  Convert(aString, aLength, buffer, &aLength);
+  if (aLength) {
+    ::ExtTextOutA(aDC, aX, aY, 0, NULL, buffer.GetArray(), aLength, NULL);
+  }
+}
+
+#ifdef MOZ_MATHML
+nsresult
+nsFontSubset::GetBoundingMetrics(HDC                aDC, 
+                                 const PRUnichar*   aString,
+                                 PRUint32           aLength,
+                                 nsBoundingMetrics& aBoundingMetrics)
+{
+  aBoundingMetrics.Clear();
+  nsAutoCharBuffer buffer;
+  Convert(aString, aLength, buffer, &aLength);
+  if (aLength) {
+    return GetBoundingMetricsCommonA(aDC, buffer.GetArray(), aLength, 
+                                     aBoundingMetrics);
+  }
+  return NS_OK;
+}
+
+#ifdef NS_DEBUG
+void 
+nsFontSubset::DumpFontInfo()
+{
+  printf("FontName: %s @%p\n", mName, this);
+  printf("FontType: nsFontSubset\n");
+}
+#endif // NS_DEBUG
+#endif
+
+class nsFontSubsetSubstitute : public nsFontSubset
+{
+public:
+  nsFontSubsetSubstitute();
+  virtual ~nsFontSubsetSubstitute();
+
+  // overloaded method to convert all chars to substitute chars
+  virtual void Convert(const PRUnichar* aString, PRUint32 aLength,
+                       nsAutoCharBuffer& aResult, PRUint32* aResultLength);
+  //when fontSubstitute declare it support certain char, no need to check subset,
+  // since we have one and only one subset.
+  virtual PRBool HasGlyph(PRUnichar ch) {return PR_TRUE;};
+};
+
+nsFontSubsetSubstitute::nsFontSubsetSubstitute()
+  : nsFontSubset()
+{
+}
+
+nsFontSubsetSubstitute::~nsFontSubsetSubstitute()
+{
+}
+
+void
+nsFontSubsetSubstitute::Convert(const PRUnichar* aString, PRUint32 aLength,
+  nsAutoCharBuffer& aResult, PRUint32* aResultLength)
+{
+  nsAutoChar16Buffer buffer;
+  nsresult rv = SubstituteChars(PR_FALSE, aString, aLength, buffer, &aLength);
+  if (NS_FAILED(rv)) {
+    // this is the out-of-memory error case
+    *aResultLength = 0;
+    return;
+  }
+  if (!aLength) {
+    // this is the case where the substitute string collapsed to nothingness
+    *(aResult.GetArray()) = '\0';
+    *aResultLength = 0;
+    return;
+  }
+  nsFontSubset::Convert(buffer.GetArray(), aLength, aResult, aResultLength);
+}
+
+nsFontWinA::nsFontWinA(LOGFONT* aLogFont, HFONT aFont, PRUint16* aCCMap)
+  : nsFontWin(aLogFont, aFont, aCCMap)
+{
+  NS_ASSERTION(aLogFont, "must pass LOGFONT here");
+  if (aLogFont) {
+    mLogFont = *aLogFont;
+  }
+}
+
+nsFontWinA::~nsFontWinA()
+{
+  if (mSubsets) {
+    nsFontSubset** subset = mSubsets;
+    nsFontSubset** endSubsets = subset + mSubsetsCount;
+    while (subset < endSubsets) {
+      delete *subset;
+      ++subset;
+    }
+    nsMemory::Free(mSubsets);
+    mSubsets = nsnull;
+  }
+}
+
 int
 nsFontWinA::GetSubsets(HDC aDC)
 {
@@ -4395,213 +4535,6 @@ nsFontWinA::GetSubsets(HDC aDC)
   }
 
   return 1;
-}
-
-nsFontSubset::nsFontSubset()
-  : nsFontWin(nsnull, nsnull, nsnull)
-{
-}
-
-nsFontSubset::~nsFontSubset()
-{
-}
-
-void
-nsFontSubset::Convert(const PRUnichar* aString, PRUint32 aLength,
-  char** aResult /*IN/OUT*/, int* aResultLength /*IN/OUT*/)
-{
-  int len = *aResultLength; // current available len of aResult
-  *aResultLength = 0;
-
-  // Get the number of bytes needed for the conversion
-  int nb = WideCharToMultiByte(mCodePage, 0, aString, aLength,
-                               *aResult, 0, nsnull, nsnull);
-  if (!nb) return;
-  if (nb > len) {
-    // Allocate a bigger array that the caller should free
-    *aResult = new char[nb];
-    if (!*aResult) return;
-  }
-  // Convert the Unicode string to ANSI
-  *aResultLength = WideCharToMultiByte(mCodePage, 0, aString, aLength,
-                                       *aResult, nb, nsnull, nsnull);
-}
-
-PRInt32
-nsFontSubset::GetWidth(HDC aDC, const PRUnichar* aString, PRUint32 aLength)
-{
-  char str[CHAR_BUFFER_SIZE];
-  char* pstr = str;
-  int len = CHAR_BUFFER_SIZE;
-  Convert(aString, aLength, &pstr, &len);
-  if (len) {
-    SIZE size;
-    ::GetTextExtentPoint32A(aDC, pstr, len, &size);
-    if (pstr != str) {
-      delete[] pstr;
-    }
-    return size.cx;
-  }
-  return 0;
-}
-
-void
-nsFontSubset::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
-  const PRUnichar* aString, PRUint32 aLength)
-{
-  char str[CHAR_BUFFER_SIZE];
-  char* pstr = str;
-  int len = CHAR_BUFFER_SIZE;
-  Convert(aString, aLength, &pstr, &len);
-  if (len) {
-    ::ExtTextOutA(aDC, aX, aY, 0, NULL, pstr, len, NULL);
-    if (pstr != str) {
-      delete[] pstr;
-    }
-  }
-}
-
-#ifdef MOZ_MATHML
-nsresult
-nsFontSubset::GetBoundingMetrics(HDC                aDC, 
-                                 const PRUnichar*   aString,
-                                 PRUint32           aLength,
-                                 nsBoundingMetrics& aBoundingMetrics)
-{
-  aBoundingMetrics.Clear();
-  char str[CHAR_BUFFER_SIZE];
-  char* pstr = str;
-  int length = CHAR_BUFFER_SIZE;
-  Convert(aString, aLength, &pstr, &length);
-  if (!pstr) return NS_ERROR_OUT_OF_MEMORY;
-  if (!length) return NS_OK;
-
-  // measure the string
-  nscoord descent;
-  GLYPHMETRICS gm;
-  DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[0]), &gm);
-  if (GDI_ERROR == len) {
-    if (pstr != str) {
-      delete[] pstr;
-    }
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  // flip sign of descent for cross-platform compatibility
-  descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
-  aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
-  aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
-  aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-  aBoundingMetrics.descent = descent;
-  aBoundingMetrics.width = gm.gmCellIncX;
-
-  if (1 < length) {
-    // loop over each glyph to get the ascent and descent
-    for (int i = 1; i < length; ++i) {
-      len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[0]), &gm);
-      if (GDI_ERROR == len) {
-        if (pstr != str) {
-          delete[] pstr;
-        }
-        return NS_ERROR_UNEXPECTED;
-      }
-      // flip sign of descent for cross-platform compatibility
-      descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
-      if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
-        aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-      if (aBoundingMetrics.descent > descent)
-        aBoundingMetrics.descent = descent;
-    }
-
-    // get the final rightBearing and width. Possible kerning is taken into account.
-    SIZE size;
-    ::GetTextExtentPointA(aDC, pstr, aLength, &size);
-    aBoundingMetrics.width = size.cx;
-    aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmBlackBoxX;
-  }
-
-  if (pstr != str) {
-    delete[] pstr;
-  }
-
-  return NS_OK;
-}
-
-#ifdef NS_DEBUG
-void 
-nsFontSubset::DumpFontInfo()
-{
-  printf("FontName: %s @%p\n", mName, this);
-  printf("FontType: nsFontSubset\n");
-}
-#endif // NS_DEBUG
-#endif
-
-class nsFontSubsetSubstitute : public nsFontSubset
-{
-public:
-  nsFontSubsetSubstitute();
-  virtual ~nsFontSubsetSubstitute();
-
-  // overloaded method to convert all chars to substitute chars
-  virtual void Convert(const PRUnichar* aString, PRUint32 aLength,
-                       char** aResult, int* aResultLength);
-  //when fontSubstitute declare it support certain char, no need to check subset,
-  // since we have one and only one subset.
-  virtual PRBool HasGlyph(PRUnichar ch) {return PR_TRUE;};
-};
-
-nsFontSubsetSubstitute::nsFontSubsetSubstitute()
-  : nsFontSubset()
-{
-}
-
-nsFontSubsetSubstitute::~nsFontSubsetSubstitute()
-{
-}
-
-void
-nsFontSubsetSubstitute::Convert(const PRUnichar* aString, PRUint32 aLength,
-  char** aResult, int* aResultLength)
-{
-  nsAutoChar16Buffer buffer;
-  nsresult rv = SubstituteChars(PR_FALSE, aString, aLength, buffer, &aLength);
-  if (NS_FAILED(rv)) {
-    // this is the out-of-memory error case
-    *aResult = nsnull;
-    *aResultLength = 0;
-    return;
-  }
-  if (!aLength) {
-    // this is the case where the substitute string collapsed to nothingness
-    **aResult = '\0';
-    *aResultLength = 0;
-    return;
-  }
-  nsFontSubset::Convert(buffer.GetArray(), aLength, aResult, aResultLength);
-}
-
-nsFontWinA::nsFontWinA(LOGFONT* aLogFont, HFONT aFont, PRUint16* aCCMap)
-  : nsFontWin(aLogFont, aFont, aCCMap)
-{
-  NS_ASSERTION(aLogFont, "must pass LOGFONT here");
-  if (aLogFont) {
-    mLogFont = *aLogFont;
-  }
-}
-
-nsFontWinA::~nsFontWinA()
-{
-  if (mSubsets) {
-    nsFontSubset** subset = mSubsets;
-    nsFontSubset** endSubsets = subset + mSubsetsCount;
-    while (subset < endSubsets) {
-      delete *subset;
-      ++subset;
-    }
-    nsMemory::Free(mSubsets);
-    mSubsets = nsnull;
-  }
 }
 
 PRInt32
