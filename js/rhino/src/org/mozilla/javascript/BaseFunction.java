@@ -433,8 +433,6 @@ public class BaseFunction extends IdScriptable implements Function {
         }
     }
 
-    protected int maxInstanceId() { return MAX_INSTANCE_ID; }
-
     protected String getIdName(int id) {
         switch (id) {
             case Id_length:       return "length";
@@ -465,6 +463,8 @@ public class BaseFunction extends IdScriptable implements Function {
         Id_arguments    = 5,
 
         MAX_INSTANCE_ID = 5;
+
+    { setMaxId(MAX_INSTANCE_ID); }
 
     protected int mapNameToId(String s) {
         int id;

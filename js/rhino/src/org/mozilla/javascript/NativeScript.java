@@ -68,17 +68,8 @@ public class NativeScript extends NativeFunction implements Script {
     }
 
     private void scopeInit(Context cx, Scriptable scope, boolean sealed) {
-        // prototypeIdShift != 0 serves as indicator of prototype instance
-        // and as id offset to take into account ids present in each instance
-        // of the base class NativeFunction.
-        // Not to depend on the assumption NativeFunction.maxInstanceId() != 0,
-        // 1 is added super.maxInstanceId() to make sure that
-        // prototypeIdShift != 0 in the NativeScript prototype.
-        // In a similar way the following methods use
-        // methodId - prototypeIdShift + 1, not methodId - prototypeIdShift
-        // to unshift prototype id to [1 .. MAX_PROTOTYPE_ID] interval
-        prototypeIdShift = super.maxInstanceId() + 1;
-        addAsPrototype(MAX_PROTOTYPE_ID + prototypeIdShift - 1,
+        prototypeIdShift = getMaxId();
+        addAsPrototype(prototypeIdShift + MAX_PROTOTYPE_ID,
                        cx, scope, sealed);
     }
 
@@ -99,8 +90,8 @@ public class NativeScript extends NativeFunction implements Script {
     }
 
     public int methodArity(int methodId) {
-        if (prototypeIdShift != 0) {
-            switch (methodId - prototypeIdShift + 1) {
+        if (0 <= prototypeIdShift) {
+            switch (methodId - prototypeIdShift) {
                 case Id_constructor: return 1;
                 case Id_toString:    return 0;
                 case Id_exec:        return 0;
@@ -115,8 +106,8 @@ public class NativeScript extends NativeFunction implements Script {
                              Object[] args)
         throws JavaScriptException
     {
-        if (prototypeIdShift != 0) {
-            switch (methodId - prototypeIdShift + 1) {
+        if (0 <= prototypeIdShift) {
+            switch (methodId - prototypeIdShift) {
                 case Id_constructor:
                     return jsConstructor(cx, scope, args);
 
@@ -228,8 +219,8 @@ public class NativeScript extends NativeFunction implements Script {
     }
 
     protected String getIdName(int id) {
-        if (prototypeIdShift != 0) {
-            switch (id - prototypeIdShift + 1) {
+        if (0 <= prototypeIdShift) {
+            switch (id - prototypeIdShift) {
                 case Id_constructor: return "constructor";
                 case Id_toString:    return "toString";
                 case Id_exec:        return "exec";
@@ -240,13 +231,13 @@ public class NativeScript extends NativeFunction implements Script {
     }
 
     protected int mapNameToId(String s) {
-        if (prototypeIdShift != 0) {
+        if (0 <= prototypeIdShift) {
             int id = toPrototypeId(s);
             if (id != 0) {
                 // Shift [1, MAX_PROTOTYPE_ID] to
-                // [super.maxInstanceId() + 1,
-                //    super.maxInstanceId() + MAX_PROTOTYPE_ID]
-                return id + prototypeIdShift - 1;
+                // [NativeFunction.getMaxId() + 1,
+                //    NativeFunction.getMaxId() + MAX_PROTOTYPE_ID]
+                return prototypeIdShift + id;
             }
         }
         return super.mapNameToId(s);
@@ -281,6 +272,9 @@ public class NativeScript extends NativeFunction implements Script {
 
     private Script script;
 
-    private int prototypeIdShift;
+    // "0 <= prototypeIdShift" serves as indicator of prototype instance
+    // and as id offset to take into account ids present in each instance
+    // of the base class NativeFunction.
+    private int prototypeIdShift = -1;
 }
 

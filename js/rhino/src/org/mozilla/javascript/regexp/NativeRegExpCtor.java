@@ -184,14 +184,6 @@ public class NativeRegExpCtor extends NativeFunction {
         return super.getIdName(id);
     }
 
-    protected int maxInstanceId() {
-        // Note: check for idBase == 0 can not be done in constructor,
-        // because IdScriptable calls maxInstanceId in its constructor
-        // before NativeRegExpCtor constructor gets chance to run any code
-        if (idBase == 0) { idBase = super.maxInstanceId(); }
-        return idBase + MAX_INSTANCE_ID;
-    }
-
 // #string_id_map#
 
     private static final int
@@ -227,6 +219,14 @@ public class NativeRegExpCtor extends NativeFunction {
         Id_DOLLAR_9 = DOLLAR_ID_BASE + 9, // #string=$9#
 
         MAX_INSTANCE_ID = DOLLAR_ID_BASE + 9;
+
+// maxId for superclass
+    private int idBase;
+
+    {
+        idBase = getMaxId();
+        setMaxId(idBase + MAX_INSTANCE_ID);
+    }
 
     protected int mapNameToId(String s) {
         int id;
@@ -266,6 +266,4 @@ public class NativeRegExpCtor extends NativeFunction {
 
         return (id != 0) ? idBase + id : super.mapNameToId(s);
     }
-
-    private static int idBase;
 }

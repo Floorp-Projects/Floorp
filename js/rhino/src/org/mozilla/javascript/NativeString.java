@@ -771,8 +771,6 @@ final class NativeString extends IdScriptable {
         return target.equalsIgnoreCase(strOther);
     }
 
-    protected int maxInstanceId() { return MAX_INSTANCE_ID; }
-
     protected String getIdName(int id) {
         if (id == Id_length) { return "length"; }
 
@@ -822,6 +820,7 @@ final class NativeString extends IdScriptable {
         Id_length                    =  1,
         MAX_INSTANCE_ID              =  1;
 
+    { setMaxId(MAX_INSTANCE_ID); }
 
     protected int mapNameToId(String s) {
         if (s.equals("length")) { return Id_length; }

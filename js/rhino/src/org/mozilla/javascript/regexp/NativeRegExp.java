@@ -72,7 +72,7 @@ public class NativeRegExp extends IdScriptable implements Function {
 
         NativeRegExp proto = new NativeRegExp();
         proto.prototypeFlag = true;
-        proto.activateIdMap(MAX_PROTOTYPE_ID);
+        proto.setMaxId(MAX_PROTOTYPE_ID);
         proto.setSealFunctionsFlag(sealed);
         proto.setFunctionParametrs(cx);
         proto.setParentScope(scope);
@@ -218,7 +218,7 @@ public class NativeRegExp extends IdScriptable implements Function {
         return buf.toString();
     }
 
-    public NativeRegExp() {
+    NativeRegExp() {
     }
 
     private static RegExpImpl getImpl(Context cx) {
@@ -2146,8 +2146,6 @@ public class NativeRegExp extends IdScriptable implements Function {
         return null;
     }
 
-    protected int maxInstanceId() { return MAX_INSTANCE_ID; }
-
 // #string_id_map#
 
     private static final int
@@ -2158,6 +2156,8 @@ public class NativeRegExp extends IdScriptable implements Function {
         Id_multiline    = 5,
 
         MAX_INSTANCE_ID = 5;
+
+    { setMaxId(MAX_INSTANCE_ID); }
 
     protected int mapNameToId(String s) {
         int id;

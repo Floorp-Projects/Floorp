@@ -44,12 +44,13 @@ Any descendant should implement at least the following methods:
     execMethod
     methodArity
 
-To define non-function properties, the descendant should customize
+To define non-function properties, the descendant should override
     getIdValue
     setIdValue
     getIdDefaultAttributes
-    maxInstanceId
 to get/set property value and provide its default attributes.
+
+During initialization descendant should call setMaxId directly or via calling addAsPrototype.
 
 To customize initializition of constructor and protype objects, descendant
 may override scopeInit or fillConstructorProperties methods.
@@ -62,10 +63,6 @@ public abstract class IdScriptable extends ScriptableObject
      ** values
      */
     protected static final Object NULL_TAG = UniqueTag.NULL_VALUE;
-
-    public IdScriptable() {
-        activateIdMap(maxInstanceId());
-    }
 
     public boolean has(String name, Scriptable start) {
         if (maxId != 0) {
@@ -266,9 +263,6 @@ public abstract class IdScriptable extends ScriptableObject
         return result;
     }
 
-    /** Return maximum id number that should be present in each instance. */
-    protected int maxInstanceId() { return 0; }
-
     /**
      * Map name to id of prototype or instance property.
      * Should return 0 if not found
@@ -369,8 +363,15 @@ public abstract class IdScriptable extends ScriptableObject
         return -1;
     }
 
-    /** Activate id support with the given maximum id */
-    protected void activateIdMap(int maxId) {
+    /** Get maximum id mapNameToId can generate */
+    protected final int getMaxId() {
+        return maxId;
+    }
+
+    /** Set maximum id mapNameToId can generate */
+    protected void setMaxId(int maxId) {
+        // maxId can only go up
+        if (maxId < this.maxId) Context.codeBug();
         this.maxId = maxId;
     }
 
@@ -408,7 +409,7 @@ public abstract class IdScriptable extends ScriptableObject
     public void addAsPrototype(int maxId, Context cx, Scriptable scope,
                                boolean sealed)
     {
-        activateIdMap(maxId);
+        setMaxId(maxId);
 
         setSealFunctionsFlag(sealed);
         setFunctionParametrs(cx);

@@ -1101,8 +1101,6 @@ public class NativeArray extends IdScriptable {
         return result;
     }
 
-    protected int maxInstanceId() { return MAX_INSTANCE_ID; }
-
     protected String getIdName(int id) {
         if (id == Id_length) { return "length"; }
 
@@ -1129,6 +1127,8 @@ public class NativeArray extends IdScriptable {
     private static final int
         Id_length        =  1,
         MAX_INSTANCE_ID  =  1;
+
+    { setMaxId(MAX_INSTANCE_ID); }
 
     protected int mapNameToId(String s) {
         if (s.equals("length")) { return Id_length; }

@@ -281,8 +281,6 @@ final class NativeMath extends IdScriptable
 
     private double js_tan(double x) { return Math.tan(x); }
 
-    protected int maxInstanceId() { return MAX_INSTANCE_ID; }
-
     protected String getIdName(int id) {
         switch (id) {
             case Id_abs:      return "abs";
@@ -398,6 +396,8 @@ final class NativeMath extends IdScriptable
         Id_SQRT2        = 26,
 
         MAX_INSTANCE_ID = 26;
+
+    { setMaxId(MAX_INSTANCE_ID); }
 
 // #/string_id_map#
 

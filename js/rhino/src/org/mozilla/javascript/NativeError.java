@@ -168,6 +168,8 @@ final class NativeError extends IdScriptable {
 
         MAX_INSTANCE_ID          = 2;
 
+    { setMaxId(MAX_INSTANCE_ID); }
+
     protected int mapNameToId(String s) {
         int id;
 // #generated# Last update: 2001-05-19 21:55:23 CEST
