@@ -148,7 +148,7 @@ nsInspectorCSSUtils::IsWhiteSpaceSignificant(nsIStyleContext* aStyleContext,
                                              PRBool *aIsSignificant)
 {
   NS_PRECONDITION(aStyleContext, "We'd better have a style context!");
-  NS_PRECONDITION(aStyleContext, "We'd better have an out pointer!");
+  NS_PRECONDITION(aIsSignificant, "We'd better have an out pointer!");
 
   const nsStyleText* text = nsnull;
   ::GetStyleData(aStyleContext, &text);
