@@ -2651,7 +2651,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 
 NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
 {
-  nsresult result;
+  nsresult result = NS_OK;
 
   if (!mCopyState)
     return NS_OK;
