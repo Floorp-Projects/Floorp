@@ -1605,13 +1605,23 @@ nsHttpChannel::Cancel(nsresult status)
 NS_IMETHODIMP
 nsHttpChannel::Suspend()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    LOG(("nsHttpChannel::Suspend [this=%x]\n", this));
+    if (mTransaction)
+        mTransaction->Suspend();
+    else if (mCacheReadRequest)
+        mCacheReadRequest->Suspend();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHttpChannel::Resume()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    LOG(("nsHttpChannel::Resume [this=%x]\n", this));
+    if (mTransaction)
+        mTransaction->Resume();
+    else if (mCacheReadRequest)
+        mCacheReadRequest->Resume();
+    return NS_OK;
 }
 
 NS_IMETHODIMP

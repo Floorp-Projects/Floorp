@@ -636,7 +636,10 @@ nsHttpTransaction::Cancel(nsresult status)
 NS_IMETHODIMP
 nsHttpTransaction::Suspend()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    LOG(("nsHttpTransaction::Suspend [this=%x]\n", this));
+    if (mConnection && !mTransactionDone)
+        mConnection->Suspend();
+    return NS_OK;
 }
 
 // called from the consumer thread, while nothing is happening on the socket thread.
@@ -644,7 +647,7 @@ NS_IMETHODIMP
 nsHttpTransaction::Resume()
 {
     LOG(("nsHttpTransaction::Resume [this=%x]\n", this));
-    if (mConnection)
+    if (mConnection && !mTransactionDone)
         mConnection->Resume();
     return NS_OK;
 }

@@ -76,7 +76,8 @@ public:
     // called by the transaction to inform the connection that it is done.
     nsresult OnTransactionComplete(nsHttpTransaction *, nsresult status);
 
-    // called by the transaction to resume a read-in-progress
+    // called by the transaction to suspend/resume a read-in-progress
+    nsresult Suspend();
     nsresult Resume();
 
     // called to cause the underlying socket to start speaking SSL
