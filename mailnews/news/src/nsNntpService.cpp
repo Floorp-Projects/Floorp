@@ -695,7 +695,7 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
       }
 
       if (currentHost.IsEmpty()) {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
         printf("empty current host!\n");
 #endif
         CRTFREEIF(list);
@@ -703,14 +703,14 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
       }
       
       if (host.IsEmpty()) {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
         printf("got a host, set it\n");
 #endif
         host = currentHost;
       }
       else {
         if (!host.Equals(currentHost)) {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
           printf("no cross posting to multiple hosts!\n");
 #endif
           CRTFREEIF(list);
@@ -1165,37 +1165,64 @@ nsresult nsNntpService::DisplayMessageForPrinting(const char* aMessageURI, nsISu
   return rv;
 }
 
+NS_IMETHODIMP
+nsNntpService::UpdateCounts(nsINntpIncomingServer *aNntpServer)
+{
+	nsresult rv;
+#ifdef DEBUG_NEWS
+	printf("in UpdateCountsForNewsgroup()\n");
+#endif
+	if (!aNntpServer) return NS_ERROR_NULL_POINTER;
+
+	nsCOMPtr<nsIURI> uri;
+	nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(aNntpServer, &rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!server) return NS_ERROR_FAILURE;
+
+	nsXPIDLCString serverUri;
+	rv = server->GetServerURI(getter_Copies(serverUri));
+	if (NS_FAILED(rv)) return rv;
+
+	rv = ConstructNntpUrl((const char *)serverUri, "", nsMsgKey_None, nsnull, getter_AddRefs(uri));
+	if (NS_FAILED(rv)) return rv;
+
+	// run the url to update the counts
+    rv = RunNewsUrl(uri, nsnull, nsnull);  
+	if (NS_FAILED(rv)) return rv;
+
+	return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsNntpService::BuildSubscribeDatasource(nsINntpIncomingServer *aNntpServer)
 {
 	nsresult rv;
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("in BuildSubscribeDatasource()\n");
 #endif
 	if (!aNntpServer) return NS_ERROR_NULL_POINTER;
 
-	nsCOMPtr<nsIURI> aUrl;
-	nsCAutoString uriStr;
-	uriStr = "news://";
-	nsCOMPtr <nsIMsgIncomingServer> server = do_QueryInterface(aNntpServer);
+	nsCOMPtr<nsIURI> uri;
+	nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(aNntpServer, &rv);
+	if (NS_FAILED(rv)) return rv;
 	if (!server) return NS_ERROR_FAILURE;
 
-	nsXPIDLCString hostname;
-	rv = server->GetHostName(getter_Copies(hostname));
-	if (NS_FAILED(rv)) return rv;
+	nsXPIDLCString serverUri;
+	rv = server->GetServerURI(getter_Copies(serverUri));
 
-	uriStr += (const char *)hostname;
+	nsCAutoString uriStr;
+	uriStr += (const char *)serverUri;
 	uriStr += "/*";
 		
-	rv = ConstructNntpUrl((const char *)uriStr, "", nsMsgKey_None, nsnull, getter_AddRefs(aUrl));
+	rv = ConstructNntpUrl((const char *)uriStr, "", nsMsgKey_None, nsnull, getter_AddRefs(uri));
 	if (NS_FAILED(rv)) return rv;
 
 	// first add the newsgroups we are subscribed to.
 	rv = aNntpServer->AddSubscribedNewsgroups();
 	if (NS_FAILED(rv)) return rv;
 
-	// now add the rest
-    rv = RunNewsUrl(aUrl, nsnull, nsnull);  
+	// now run the url to add the rest of the groups
+    rv = RunNewsUrl(uri, nsnull, nsnull);  
 	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;

@@ -692,9 +692,47 @@ function ThreadPaneDoubleClick(treeitem)
 	}
 }
 
+function IfServerGetServer(uri)
+{
+	try {
+		var folder = GetMsgFolderFromUri(uri);
+		if (folder.isServer) {
+			return folder.server;
+		}
+	}
+	catch (ex) {
+	}
+
+	return null;
+}
+
 function FolderPaneOnClick(event)
 {
-	if(event.clickCount == 2)
+    var targetclass = event.target.getAttribute('class');
+    debug('targetclass = ' + targetclass + '\n');
+
+    if (targetclass == 'twisty') {
+        // The twisty is nested three below the treeitem:
+        // <treeitem>
+        //   <treerow>
+        //     <treecell>
+        //         <titledbutton class="twisty"> <!-- anonymous -->
+        var treeitem = event.target.parentNode.parentNode.parentNode;
+		var open = treeitem.getAttribute('open');
+		if(open == "true") {
+			dump("twisty open\n");
+
+			var item = event.target.parentNode.parentNode.parentNode;
+			if (item.nodeName == "treeitem") {
+	    		var uri = treeitem.getAttribute("id");
+				var server = IfServerGetServer(uri);
+				if (server) {
+					server.PerformExpand();
+				}
+			}
+		}
+    }
+	else if(event.clickCount == 2)
 	{
 		var item = event.target.parentNode.parentNode;
 		if (item.nodeName == "treeitem")
@@ -704,24 +742,27 @@ function FolderPaneOnClick(event)
 
 function FolderPaneDoubleClick(treeitem)
 {
-	// don't open a new msg window if we are double clicking on a server.
-	// only do it for folders or newsgroups
+	var server = null;
+
 	if (treeitem) {
 	    var uri = treeitem.getAttribute("id");
-	    try {
-		var folder = GetMsgFolderFromUri(uri);
-		if (folder.isServer) {
-			//dump(uri + " is a server, don't open a new window.\n");
-			folder.server.PerformExpand();
-			return;
+		var open = treeitem.getAttribute('open');
+		server = IfServerGetServer(uri);
+
+		if (server && (open == "true")) {
+			dump("double clicking open, PerformExpand()\n");
+			server.PerformExpand();
 		}
-	    }
-	    catch (ex) {
-		//dump(uri + " is not a server, open a new window.\n");
-	    }
+		else {
+			dump("double clicking close, don't PerformExpand()\n");
+		}
 	}
 
-	MsgOpenNewWindowForFolder(treeitem);
+	// don't open a new msg window if we are double clicking on a server.
+	// only do it for folders or newsgroups
+	if (!server) {
+		MsgOpenNewWindowForFolder(treeitem);
+	}
 }
 
 function ChangeSelection(tree, newSelection)

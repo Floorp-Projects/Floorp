@@ -43,5 +43,7 @@ interface nsINntpService : nsISupports {
   nsIURI cancelMessages (in string hostname, in string newsgroupname, in nsISupportsArray messages, in nsISupports aConsumer, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
 
   void buildSubscribeDatasource(in nsINntpIncomingServer nntpServer);
+
+  void updateCounts(in nsINntpIncomingServer nntpServer);
 };
 

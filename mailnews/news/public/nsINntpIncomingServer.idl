@@ -23,6 +23,8 @@
 #include "nsISupports.idl"
 #include "nsIFileSpec.idl"
 
+interface nsIMsgNewsFolder;
+
 [scriptable, uuid(21ea0654-f773-11d2-8aec-004005263078)]
 interface nsINntpIncomingServer : nsISupports {
 	/* the on-disk path to the newsrc file for this server */
@@ -50,4 +52,9 @@ interface nsINntpIncomingServer : nsISupports {
 	/* used when populating the subscribe dialog */
 	void addNewNewsgroup(in string name, in string state, in string count);
 	void addSubscribedNewsgroups();
+
+	readonly attribute long numGroupsNeedingCounts;
+	readonly attribute nsISupports firstGroupNeedingCounts;
+
+	void displaySubscribedGroup(in nsIMsgNewsFolder msgFolder, in long firstMessage, in long lastMessage, in long totalMessages);
 };

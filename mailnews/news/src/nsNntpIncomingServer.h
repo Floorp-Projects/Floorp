@@ -34,6 +34,8 @@
 #include "plstr.h"
 #include "prprf.h"
 
+#include "nsEnumeratorUtils.h" 
+
 /* get some implementation from nsMsgIncomingServer */
 class nsNntpIncomingServer : public nsMsgIncomingServer,
                              public nsINntpIncomingServer
@@ -49,10 +51,10 @@ public:
     NS_IMETHOD GetLocalStoreType(char * *type);
     NS_IMETHOD CloseCachedConnections();
     NS_IMETHOD PerformExpand();
-	
 
 private:
     PRBool mNewsrcHasChanged;
+	nsAdapterEnumerator *mGroupsEnumerator;
 };
 
 #endif

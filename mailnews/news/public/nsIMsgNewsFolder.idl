@@ -45,4 +45,6 @@ interface nsIMsgNewsFolder : nsISupports {
   readonly attribute string optionLines;
   readonly attribute string unsubscribedNewsgroupLines;
   void SetNewsrcHasChanged(in boolean newsrcHasChanged);
+  void updateSummaryFromNNTPInfo(in long oldest, in long youngest, in long total);
+  
 };

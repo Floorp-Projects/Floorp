@@ -25,7 +25,6 @@
 #include "nsIPref.h"
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
-#include "nsEnumeratorUtils.h"
 #include "nsIMsgNewsFolder.h"
 #include "nsIFolder.h"
 #include "nsIFileSpec.h"
@@ -35,6 +34,7 @@
 
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
+#include "nsMsgNewsCID.h"
 
 #define NEW_NEWS_DIR_NAME        "News"
 #define PREF_MAIL_NEWSRC_ROOT    "mail.newsrc_root"
@@ -53,6 +53,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNntpIncomingServer,
                             nsMsgIncomingServer,
@@ -63,6 +64,7 @@ nsNntpIncomingServer::nsNntpIncomingServer()
     NS_INIT_REFCNT();
 
     mNewsrcHasChanged = PR_FALSE;
+	mGroupsEnumerator = nsnull;
 }
 
 
@@ -70,6 +72,11 @@ nsNntpIncomingServer::nsNntpIncomingServer()
 nsNntpIncomingServer::~nsNntpIncomingServer()
 {
 	nsresult rv;
+
+	if (mGroupsEnumerator) {
+    	delete mGroupsEnumerator;
+		mGroupsEnumerator = nsnull;
+	}
     rv = CloseCachedConnections();
 	NS_ASSERTION(NS_SUCCEEDED(rv), "CloseCachedConnections failed");
 }
@@ -351,21 +358,16 @@ nsNntpIncomingServer::AddNewNewsgroup(const char *aName, const char *aState, con
 	NS_ASSERTION(aName,"attempting to add newsgroup with no name");
 	if (!aName) return NS_ERROR_FAILURE;
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("AddNewNewsgroup(%s)\n",aName);
 #endif
-	nsXPIDLCString hostname;
+	nsXPIDLCString serverUri;
 
-	rv = GetHostName(getter_Copies(hostname));
+	rv = GetServerURI(getter_Copies(serverUri));
 	if (NS_FAILED(rv)) return rv;
 
-	nsCAutoString serverUri;
 	nsCAutoString groupUri;
-
-	serverUri = "news://";
-	serverUri += (const char *)hostname;
-
-	groupUri = serverUri;
+	groupUri = (const char *)serverUri;
 	groupUri += "/";
 	groupUri += aName;
 
@@ -430,8 +432,95 @@ nsNntpIncomingServer::AddNewNewsgroup(const char *aName, const char *aState, con
 NS_IMETHODIMP 
 nsNntpIncomingServer::PerformExpand()
 {
-#ifdef DEBUG_sspitzer
+	nsresult rv;
+#ifdef DEBUG_NEWS
 	printf("PerformExpand for nntp\n");
 #endif
+
+	nsCOMPtr<nsINntpService> nntpService = do_GetService(kNntpServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+	if (!nntpService) return NS_ERROR_FAILURE;
+
+	rv = nntpService->UpdateCounts(this);
+    if (NS_FAILED(rv)) return rv;
 	return NS_OK;
 }
+
+NS_IMETHODIMP 
+nsNntpIncomingServer::GetNumGroupsNeedingCounts(PRInt32 *aNumGroupsNeedingCounts)
+{
+	nsresult rv;
+
+    nsCOMPtr<nsIEnumerator> subFolders;
+    nsCOMPtr<nsIFolder> rootFolder;
+ 
+    rv = GetRootFolder(getter_AddRefs(rootFolder));
+    if (NS_FAILED(rv)) return rv;
+
+	PRBool hasSubFolders = PR_FALSE;
+	rv = rootFolder->GetHasSubFolders(&hasSubFolders);
+    if (NS_FAILED(rv)) return rv;
+	
+	if (!hasSubFolders) {
+		*aNumGroupsNeedingCounts = 0;
+		return NS_OK;
+	}
+
+	rv = rootFolder->GetSubFolders(getter_AddRefs(subFolders));
+    if (NS_FAILED(rv)) return rv;
+
+	if (mGroupsEnumerator) {
+    	delete mGroupsEnumerator;
+		mGroupsEnumerator = nsnull;
+	}
+	mGroupsEnumerator = new nsAdapterEnumerator(subFolders);
+    if (mGroupsEnumerator == nsnull) return NS_ERROR_OUT_OF_MEMORY;
+
+	PRUint32 count = 0;
+	rv = rootFolder->Count(&count);
+    if (NS_FAILED(rv)) return rv;
+		
+	*aNumGroupsNeedingCounts = (PRInt32) count;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetFirstGroupNeedingCounts(nsISupports **aFirstGroupNeedingCounts)
+{
+	nsresult rv;
+
+	if (!aFirstGroupNeedingCounts) return NS_ERROR_NULL_POINTER;
+
+    PRBool moreFolders;
+    if (!mGroupsEnumerator) return NS_ERROR_FAILURE;
+
+	rv = mGroupsEnumerator->HasMoreElements(&moreFolders);
+	if (NS_FAILED(rv)) return rv;
+
+	if (!moreFolders) {
+		*aFirstGroupNeedingCounts = nsnull;
+    	delete mGroupsEnumerator;
+		mGroupsEnumerator = nsnull;
+		return NS_OK;
+	}
+
+    rv = mGroupsEnumerator->GetNext(aFirstGroupNeedingCounts);
+	if (NS_FAILED(rv)) return rv;
+	if (!*aFirstGroupNeedingCounts) return NS_ERROR_FAILURE;
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::DisplaySubscribedGroup(nsIMsgNewsFolder *aMsgFolder, PRInt32 aFirstMessage, PRInt32 aLastMessage, PRInt32 aTotalMessages)
+{
+	nsresult rv;
+
+	if (!aMsgFolder) return NS_ERROR_NULL_POINTER;
+#ifdef DEBUG_NEWS
+	printf("DisplaySubscribedGroup(...,%ld,%ld,%ld)\n",aFirstMessage,aLastMessage,aTotalMessages);
+#endif
+	rv = aMsgFolder->UpdateSummaryFromNNTPInfo(aFirstMessage,aLastMessage,aTotalMessages);
+	return rv;
+}
+

@@ -3509,12 +3509,31 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 	if(!TestFlag(NNTP_NEWSRC_PERFORMED))
 	{
 		SetFlag(NNTP_NEWSRC_PERFORMED);
-        rv = m_newsHost->GetNumGroupsNeedingCounts(&m_newsRCListCount);
+        rv = m_nntpServer->GetNumGroupsNeedingCounts(&m_newsRCListCount);
+		if (NS_FAILED(rv)) return -1;
 	}
 	
-	PR_FREEIF(m_currentGroup);
-    rv = m_newsHost->GetFirstGroupNeedingCounts(&m_currentGroup);
+	nsCOMPtr <nsISupports> currChild;
+	rv = m_nntpServer->GetFirstGroupNeedingCounts(getter_AddRefs(currChild));
+	if (NS_FAILED(rv)) return -1;
 
+	nsCOMPtr<nsIFolder> currFolder;
+    currFolder = do_QueryInterface(currChild, &rv);
+	if (NS_FAILED(rv)) return -1;
+	if (!currFolder) return -1;
+
+    m_newsFolder = do_QueryInterface(currFolder, &rv);
+	if (NS_FAILED(rv)) return -1;
+	if (!m_newsFolder) return -1;
+
+	nsXPIDLString name;
+	rv = currFolder->GetName(getter_Copies(name));
+	if (NS_FAILED(rv)) return -1;
+	if (!name) return -1;
+	nsCAutoString asciiName(name);
+
+	PR_FREEIF(m_currentGroup);
+	m_currentGroup = nsCRT::strdup((const char *)asciiName);
 
 	if(NS_SUCCEEDED(rv) && m_currentGroup)
     {
@@ -3607,6 +3626,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 /* Parses output of GROUP command */
 PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
 {
+	nsresult rv = NS_OK;
 	PRInt32 status = 0;
     if(m_responseCode == MK_NNTP_RESPONSE_GROUP_SELECTED)
     {
@@ -3642,14 +3662,12 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
 			last_art = atol(high);
 		}
 
-#if SETH_HACK
-        rv = m_newsHost->DisplaySubscribedGroup(group,
+        rv = m_nntpServer->DisplaySubscribedGroup(m_newsFolder,
                                               low ? atol(low) : 0,
                                               high ? atol(high) : 0,
-                                              atol(num_arts), PR_FALSE);
-#else
-        NS_ASSERTION(0,"hack required");
-#endif
+                                              atol(num_arts));
+		NS_ASSERTION(NS_SUCCEEDED(rv),"DisplaySubscribedGroup() failed");
+		if (NS_FAILED(rv)) status = -1;
 		if (status < 0)
 		  return status;
 	  }
@@ -3664,12 +3682,9 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
 	  {
 		/* only on news server error or when zero articles
 		 */
-#if SETH_HACK
-        m_newsHost->DisplaySubscribedGroup(m_currentGroup,
-	                                             0, 0, 0, PR_FALSE);
-#else
-        NS_ASSERTION(0,"hack required");
-#endif
+		NS_ASSERTION(PR_FALSE,"check this code");
+        rv = m_nntpServer->DisplaySubscribedGroup(m_newsFolder, 0, 0, 0);
+		NS_ASSERTION(NS_SUCCEEDED(rv),"DisplaySubscribedGroup() failed");
 	  }
 
 	m_nextState = NEWS_DISPLAY_NEWS_RC;
@@ -4473,7 +4488,7 @@ PRInt32 nsNNTPProtocol::SetupForTransfer()
 			m_nextState = NNTP_READ_LIST_BEGIN;
 	}
     else if(m_typeWanted == GROUP_WANTED)
-        m_nextState = NNTP_XOVER_BEGIN;
+		m_nextState = NNTP_XOVER_BEGIN;
 	else if(m_typeWanted == NEW_GROUPS)
 		m_nextState = NNTP_NEWGROUPS_BEGIN;
     else if(m_typeWanted == ARTICLE_WANTED ||

@@ -738,6 +738,92 @@ nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDataba
   return openErr;
 }
 
+/* this used to be MSG_FolderInfoNews::UpdateSummaryFromNNTPInfo() */
+NS_IMETHODIMP 
+nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRInt32 total)
+{
+	nsresult rv = NS_OK;
+#ifdef DEBUG_NEWS
+	printf("oldest=%d,youngest=%d,total=%d\n",oldest,youngest,total);
+#endif
+
+	PRInt32 oldUnreadMessages = mNumUnreadMessages;
+	PRInt32 oldTotalMessages = mNumTotalMessages;
+
+	nsMsgKeySet *set = nsnull;
+	if (mDatabase) {
+	    nsCOMPtr<nsINewsDatabase> db(do_QueryInterface(mDatabase, &rv));
+		if (NS_FAILED(rv)) return rv;
+
+		rv = db->GetReadSet(&set);
+		if (NS_FAILED(rv)) return rv;
+	}
+	else {
+		nsXPIDLCString cachedNewsrcLine;
+        rv = GetCachedNewsrcLine(getter_Copies(cachedNewsrcLine));
+		if (NS_FAILED(rv)) return rv;
+
+		set = nsMsgKeySet::Create((const char *)cachedNewsrcLine);
+	}
+
+	if (!set) return NS_ERROR_FAILURE;
+
+	/* First, mark all of the articles now known to be expired as read. */
+	if (oldest > 1) { 
+		set->AddRange(1, oldest - 1);
+	}
+
+	/* Now search the newsrc line and figure out how many of these messages are marked as unread. */
+
+	/* make sure youngest is a least 1. MSNews seems to return a youngest of 0. */
+	if (youngest == 0) {
+		youngest = 1;
+	}
+
+	PRInt32 unread = set->CountMissingInRange(oldest, youngest);
+	NS_ASSERTION(unread >= 0,"CountMissingInRange reported unread < 0");
+	if (unread < 0) return NS_ERROR_FAILURE;
+	if (unread > total) {
+		/* This can happen when the newsrc file shows more unread than exist in the group (total is not necessarily `end - start'.) */
+		unread = total;
+		PRInt32 deltaInDB = mNumTotalMessages - mNumUnreadMessages;
+		//PRint32 deltaInDB = m_totalInDB - m_unreadInDB;
+		/* if we know there are read messages in the db, subtract that from the unread total */
+		if (deltaInDB > 0) {
+			unread -= deltaInDB;
+		}
+	}
+
+	mNumUnreadMessages = unread;
+	mNumTotalMessages = total;
+#if 0
+	m_nntpHighwater = youngest;
+	m_nntpTotalArticles = total;
+#endif
+
+	//Need to notify listeners that total count changed.
+	if(oldTotalMessages != mNumTotalMessages) {
+		NotifyIntPropertyChanged(kTotalMessagesAtom, oldTotalMessages, mNumTotalMessages);
+	}
+
+	if(oldUnreadMessages != mNumUnreadMessages) {
+		NotifyIntPropertyChanged(kTotalUnreadMessagesAtom, oldUnreadMessages, mNumUnreadMessages);
+	}
+
+	/* re-cache the newsrc line. */
+	if (!mDatabase) {
+		char *setStr = set->Output();
+		if (setStr) {
+			nsCAutoString newsrcLine(setStr);
+        	newsrcLine += MSG_LINEBREAK;
+			rv = SetCachedNewsrcLine((const char *)newsrcLine);
+			delete [] setStr;
+			setStr = nsnull;
+		}
+	}
+	return rv;
+}
+
 NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals(PRBool force)
 {
 #ifdef DEBUG_NEWS
@@ -754,13 +840,11 @@ NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals(PRBool force)
 		mNumUnreadMessages = -2;
 
 	//Need to notify listeners that total count changed.
-	if(oldTotalMessages != mNumTotalMessages)
-	{
+	if(oldTotalMessages != mNumTotalMessages) {
 		NotifyIntPropertyChanged(kTotalMessagesAtom, oldTotalMessages, mNumTotalMessages);
 	}
 
-	if(oldUnreadMessages != mNumUnreadMessages)
-	{
+	if(oldUnreadMessages != mNumUnreadMessages) {
 		NotifyIntPropertyChanged(kTotalUnreadMessagesAtom, oldUnreadMessages, mNumUnreadMessages);
 	}
 
@@ -1467,6 +1551,9 @@ NS_IMETHODIMP
 nsMsgNewsFolder::SetCachedNewsrcLine(const char *newsrcLine)
 {
     if (!newsrcLine) return NS_ERROR_NULL_POINTER;
+#ifdef DEBUG_NEWS
+	printf("SetCachedNewsrcLine: [%s]\n", newsrcLine);
+#endif
 
     mCachedNewsrcLine = nsCRT::strdup(newsrcLine);
     
