@@ -391,13 +391,20 @@ typedef PRBool nsDidReflowStatus;
  * Frames are NOT reference counted. Use the Destroy() member function
  * to destroy a frame. The lifetime of the frame hierarchy is bounded by the
  * lifetime of the presentation shell which owns the frames.
+ *
+ * nsIFrame is a private Gecko interface. If you are not Gecko then you
+ * should not use it. If you're not in layout, then you won't be able to
+ * link to many of the functions defined here. Too bad.
+ *
+ * If you're not in layout but you must call functions in here, at least
+ * restrict yourself to calling virtual methods, which won't hurt you as badly.
  */
 class nsIFrame : public nsISupports
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAME_IID)
 
-  nsIPresContext* GetPresContext() {
+  nsIPresContext* GetPresContext() const {
     return GetStyleContext()->GetRuleNode()->GetPresContext();
   }
 
@@ -543,12 +550,9 @@ public:
                           nsIFrame*       aNewFrame) = 0;
 
   /**
-   * Get the content object associated with this frame. Adds a reference to
-   * the content object so the caller must do a release.
-   *
-   * @see nsISupports#Release()
+   * Get the content object associated with this frame. Does not add a reference.
    */
-  nsresult GetContent(nsIContent** aContent) const {  *aContent = mContent; NS_IF_ADDREF(*aContent); return NS_OK; }
+  nsIContent* GetContent() const { return mContent; }
 
   /**
    * Get the offsets of the frame. most will be 0,0
@@ -619,6 +623,7 @@ public:
   #undef STYLE_STRUCT
 
   // Utility function: more convenient than 2 calls to GetStyleData to get border and padding
+  
   NS_IMETHOD  CalcBorderPadding(nsMargin& aBorderPadding) const = 0;
 
   /**
@@ -639,7 +644,7 @@ public:
   /**
    * Accessor functions for geometric parent
    */
-  nsresult GetParent(nsIFrame** aParent) const { *aParent = mParent; return NS_OK; }
+  nsIFrame* GetParent() const { return mParent; }
   NS_IMETHOD SetParent(const nsIFrame* aParent) { mParent = (nsIFrame*)aParent; return NS_OK; }
 
   /**
@@ -650,45 +655,12 @@ public:
    * Note: moving or sizing the frame does not affect the view's size or
    * position.
    */
-  nsresult GetRect(nsRect& aRect) const {
-    aRect = mRect;
-    return NS_OK;
-  }
-
-  nsresult GetOrigin(nsPoint& aPoint) const {
-    aPoint.x = mRect.x;
-    aPoint.y = mRect.y;
-    return NS_OK;
-  }
-
-  nsresult GetSize(nsSize& aSize) const {
-    aSize.width = mRect.width;
-    aSize.height = mRect.height;
-    return NS_OK;
-  }
-
-  nsresult SetRect(nsIPresContext* aPresContext,
-               const nsRect&   aRect) {
-    MoveTo(aPresContext, aRect.x, aRect.y);
-    SizeTo(aPresContext, aRect.width, aRect.height);
-    return NS_OK;
-  }
-
-  nsresult MoveTo(nsIPresContext* aPresContext,
-                  nscoord         aX,
-                  nscoord         aY) {
-    mRect.x = aX;
-    mRect.y = aY;
-    return NS_OK;
-  }
-
-  nsresult SizeTo(nsIPresContext* aPresContext,
-                  nscoord         aWidth,
-                  nscoord         aHeight) {
-    mRect.width = aWidth;
-    mRect.height = aHeight;
-    return NS_OK;
-  }
+  nsRect GetRect() const { return mRect; }
+  nsPoint GetPosition() const { return nsPoint(mRect.x, mRect.y); }
+  nsSize GetSize() const { return nsSize(mRect.width, mRect.height); }
+  void SetRect(const nsRect& aRect) { mRect = aRect; }
+  void SetPosition(const nsPoint& aPt) { mRect.MoveTo(aPt); }
+  void SetSize(const nsSize& aSize) { mRect.SizeTo(aSize); }
 
   /**
    * Used to iterate the list of additional child list names. Returns the atom
@@ -718,15 +690,8 @@ public:
   /**
    * Child frames are linked together in a singly-linked list
    */
-  nsresult GetNextSibling(nsIFrame** aNextSibling) const {
-    *aNextSibling = mNextSibling;
-    return NS_OK;
-  }
-
-  nsresult SetNextSibling(nsIFrame* aNextSibling) {
-    mNextSibling = aNextSibling;
-    return NS_OK;
-  }
+  nsIFrame* GetNextSibling() const { return mNextSibling; }
+  void SetNextSibling(nsIFrame* aNextSibling) { mNextSibling = aNextSibling; }
 
   /**
    * Paint is responsible for painting the frame. The aWhichLayer
@@ -823,18 +788,13 @@ public:
    * Get the current frame-state value for this frame. aResult is
    * filled in with the state bits. 
    */
-  nsresult GetFrameState(nsFrameState* aResult) {
-    *aResult = mState;
-    return NS_OK;
-  }
+  nsFrameState GetStateBits() { return mState; }
 
   /**
-   * Set the current frame-state value for this frame. 
+   * Update the current frame-state value for this frame. 
    */
-  nsresult SetFrameState(nsFrameState aNewState) {
-    mState = aNewState;
-    return NS_OK;
-  }
+  void AddStateBits(nsFrameState aBits) { mState |= aBits; }
+  void RemoveStateBits(nsFrameState aBits) { mState &= ~aBits; }
 
   /**
    * This call is invoked when content is changed in the content tree.
@@ -1000,20 +960,19 @@ public:
    * GetView returns non-null if and only if |HasView| returns true.
    */
   PRBool HasView() const { return mState & NS_FRAME_HAS_VIEW; }
-  nsIView* GetView(nsIPresContext* aPresContext) const;
-  virtual nsIView* GetViewExternal(nsIPresContext* aPresContext) const;
-  nsresult SetView(nsIPresContext* aPresContext, nsIView* aView);
+  nsIView* GetView() const;
+  virtual nsIView* GetViewExternal() const;
+  nsresult SetView(nsIView* aView);
 
   /**
    * Find the closest view (on |this| or an ancestor).
    */
-  nsIView* GetClosestView(nsIPresContext* aPresContext) const;
+  nsIView* GetClosestView() const;
 
   /**
    * Find the closest ancestor (excluding |this| !) that has a view
    */
-  NS_IMETHOD  GetParentWithView(nsIPresContext* aPresContext,
-                                nsIFrame**      aParent) const = 0;
+  nsIFrame* GetAncestorWithView() const;
 
   /**
    * Returns the offset from this frame to the closest geometric parent that
@@ -1039,7 +998,7 @@ public:
    * Returns true if and only if all views, from |GetClosestView| up to
    * the top of the view hierarchy are visible.
    */
-  virtual PRBool AreAncestorViewsVisible(nsIPresContext* aPresContext);
+  virtual PRBool AreAncestorViewsVisible() const;
 
   /**
    * Returns the window that contains this frame. If this frame has a
@@ -1047,8 +1006,7 @@ public:
    * returned, otherwise this frame's geometric parent is checked
    * recursively upwards.
    */
-  NS_IMETHOD  GetWindow(nsIPresContext* aPresContext,
-                        nsIWidget**     aWidget) const = 0;
+  virtual nsIWidget* GetWindow() const;
 
   /**
    * Get the "type" of the frame. May return a NULL atom pointer
@@ -1259,6 +1217,72 @@ public:
    * this means children can't be made visible again.
    */
   virtual PRBool SupportsVisibilityHidden() { return PR_TRUE; }
+
+  // DEPRECATED COMPATIBILITY METHODS
+  nsresult GetContent(nsIContent** aContent) const {  *aContent = mContent; NS_IF_ADDREF(*aContent); return NS_OK; }
+  nsresult GetParent(nsIFrame** aParent) const { *aParent = mParent; return NS_OK; }
+  nsresult GetRect(nsRect& aRect) const {
+    aRect = mRect;
+    return NS_OK;
+  }
+  nsresult GetOrigin(nsPoint& aPoint) const {
+    aPoint.x = mRect.x;
+    aPoint.y = mRect.y;
+    return NS_OK;
+  }
+  nsresult GetSize(nsSize& aSize) const {
+    aSize.width = mRect.width;
+    aSize.height = mRect.height;
+    return NS_OK;
+  }
+  nsresult SetRect(nsIPresContext* aPresContext,
+               const nsRect&   aRect) {
+    MoveTo(aPresContext, aRect.x, aRect.y);
+    SizeTo(aPresContext, aRect.width, aRect.height);
+    return NS_OK;
+  }
+  nsresult MoveTo(nsIPresContext* aPresContext,
+                  nscoord         aX,
+                  nscoord         aY) {
+    mRect.x = aX;
+    mRect.y = aY;
+    return NS_OK;
+  }
+  nsresult SizeTo(nsIPresContext* aPresContext,
+                  nscoord         aWidth,
+                  nscoord         aHeight) {
+    mRect.width = aWidth;
+    mRect.height = aHeight;
+    return NS_OK;
+  }
+  nsresult GetNextSibling(nsIFrame** aNextSibling) const {
+    *aNextSibling = mNextSibling;
+    return NS_OK;
+  }
+  nsresult GetFrameState(nsFrameState* aResult) {
+    *aResult = mState;
+    return NS_OK;
+  }
+  nsresult SetFrameState(nsFrameState aState) {
+    mState = aState;
+    return NS_OK;
+  }
+  nsIView* GetView(nsIPresContext* aPresContext) const { return GetView(); }
+  nsIView* GetViewExternal(nsIPresContext* aPresContext) const { return GetViewExternal(); }
+  nsresult SetView(nsIPresContext* aPresContext, nsIView* aView) { return SetView(aView); }
+  nsIView* GetClosestView(nsIPresContext* aPresContext) const { return GetClosestView(); }
+  nsresult GetParentWithView(nsIPresContext* aPresContext, nsIFrame** aParent) const {
+    *aParent = GetAncestorWithView();
+    return NS_OK;
+  }
+  PRBool AreAncestorViewsVisible(nsIPresContext* aPresContext) const {
+    return AreAncestorViewsVisible();
+  }
+  nsresult GetWindow(nsIPresContext* aPresContext,
+                     nsIWidget**     aWidget) const {
+    *aWidget = GetWindow();
+    return NS_OK;
+  }
 
 protected:
   // Members

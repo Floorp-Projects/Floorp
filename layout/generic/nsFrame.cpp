@@ -2386,7 +2386,7 @@ NS_IMETHODIMP nsFrame::SetNextInFlow(nsIFrame*)
 
 // Associated view object
 nsIView*
-nsIFrame::GetView(nsIPresContext* aPresContext) const
+nsIFrame::GetView() const
 {
   // Check the frame state bit and see if the frame has a view
   if (!(mState & NS_FRAME_HAS_VIEW))
@@ -2394,7 +2394,7 @@ nsIFrame::GetView(nsIPresContext* aPresContext) const
 
   // Check for a property on the frame
   nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  GetPresContext()->GetShell(getter_AddRefs(presShell));
 
   nsCOMPtr<nsIFrameManager>  frameManager;
   presShell->GetFrameManager(getter_AddRefs(frameManager));
@@ -2410,20 +2410,20 @@ nsIFrame::GetView(nsIPresContext* aPresContext) const
 }
 
 /* virtual */ nsIView*
-nsIFrame::GetViewExternal(nsIPresContext* aPresContext) const
+nsIFrame::GetViewExternal() const
 {
-  return GetView(aPresContext);
+  return GetView();
 }
 
 nsresult
-nsIFrame::SetView(nsIPresContext* aPresContext, nsIView* aView)
+nsIFrame::SetView(nsIView* aView)
 {
   if (aView) {
     aView->SetClientData(this);
 
     // Set a property on the frame
     nsCOMPtr<nsIPresShell>  presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
+    GetPresContext()->GetShell(getter_AddRefs(presShell));
     
     nsCOMPtr<nsIFrameManager> frameManager;
     presShell->GetFrameManager(getter_AddRefs(frameManager));
@@ -2461,20 +2461,14 @@ nsIFrame::SetView(nsIPresContext* aPresContext, nsIView* aView)
 }
 
 // Find the first geometric parent that has a view
-NS_IMETHODIMP nsFrame::GetParentWithView(nsIPresContext* aPresContext,
-                                         nsIFrame**      aParent) const
+nsIFrame* nsIFrame::GetAncestorWithView() const
 {
-  NS_PRECONDITION(nsnull != aParent, "null OUT parameter pointer");
-
-  nsIFrame* parent;
-  for (parent = mParent; nsnull != parent; parent->GetParent(&parent)) {
-    if (parent->HasView()) {
-      break;
+  for (nsIFrame* f = mParent; nsnull != f; f = f->GetParent()) {
+    if (f->HasView()) {
+      return f;
     }
   }
-
-  *aParent = parent;
-  return NS_OK;
+  return nsnull;
 }
 
 // Returns the offset from this frame to the closest geometric parent that
@@ -2610,10 +2604,9 @@ NS_IMETHODIMP nsFrame::GetOriginToViewOffset(nsIPresContext* aPresContext,
 }
 
 /* virtual */ PRBool
-nsIFrame::AreAncestorViewsVisible(nsIPresContext* aPresContext)
+nsIFrame::AreAncestorViewsVisible() const
 {
-  for (nsIView* view = GetClosestView(aPresContext);
-       view; view->GetParent(view)) {
+  for (nsIView* view = GetClosestView(); view; view->GetParent(view)) {
     nsViewVisibility vis;
     view->GetVisibility(vis);
     if (vis == nsViewVisibility_kHide) {
@@ -2623,35 +2616,25 @@ nsIFrame::AreAncestorViewsVisible(nsIPresContext* aPresContext)
   return PR_TRUE;
 }
 
-NS_IMETHODIMP nsFrame::GetWindow(nsIPresContext* aPresContext,
-                                 nsIWidget**     aWindow) const
+nsIWidget* nsIFrame::GetWindow() const
 {
-  NS_PRECONDITION(nsnull != aWindow, "null OUT parameter pointer");
-  
-  nsIFrame*  frame;
+  const nsIFrame* frame;
   nsIWidget* window = nsnull;
-  for (frame = (nsIFrame*)this; nsnull != frame; frame->GetParentWithView(aPresContext, &frame)) {
+  for (frame = this; frame; frame = frame->GetAncestorWithView()) {
     if (frame->HasView()) {
-      frame->GetView(aPresContext)->GetWidget(window);
+      frame->GetView()->GetWidget(window);
       if (nsnull != window) {
-        break;
+        return window;
       }
     }
   }
 
-  if (nsnull == window) {
-    // Ask the view manager for the widget
-    NS_NOTREACHED("this shouldn't happen, should it?");
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    nsCOMPtr<nsIViewManager> vm;
-    shell->GetViewManager(getter_AddRefs(vm));
-    vm->GetWidget(&window);
-  }
+  // Ask the view manager for the widget
+  NS_NOTREACHED("this shouldn't happen, should it?");
+  GetPresContext()->GetViewManager()->GetWidget(&window);
 
   NS_POSTCONDITION(nsnull != window, "no window in frame tree");
-  *aWindow = window;
-  return NS_OK;
+  return window;
 }
 
 NS_IMETHODIMP
@@ -4410,11 +4393,11 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
   return NS_OK;
 }
 
-nsIView* nsIFrame::GetClosestView(nsIPresContext* aPresContext) const
+nsIView* nsIFrame::GetClosestView() const
 {
   for (const nsIFrame *f = this; f; f->GetParent(NS_CONST_CAST(nsIFrame**, &f)))
     if (f->HasView())
-      return f->GetView(aPresContext);
+      return f->GetView();
 
   return nsnull;
 }
