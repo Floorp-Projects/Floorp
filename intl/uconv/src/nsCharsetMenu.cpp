@@ -279,7 +279,7 @@ void nsCharsetMenu::CreateDefaultCharsetList(CharsetInfo *** aArray,
   nsresult res = NS_OK;
   nsIEnumerator * components = NULL;
   nsIRegistry * registry = NULL;
-  nsIRegistry::Key uconvKey, key;
+  nsRegistryKey uconvKey, key;
 
   // get the registry
   res = nsServiceManager::GetService(NS_REGISTRY_PROGID, 

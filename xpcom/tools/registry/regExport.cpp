@@ -25,8 +25,8 @@
 #include "prmem.h"
 #include "plstr.h"
 
-static void display( nsIRegistry *reg, nsIRegistry::Key root, const char *name );
-static void displayValues( nsIRegistry *reg, nsIRegistry::Key root );
+static void display( nsIRegistry *reg, nsRegistryKey root, const char *name );
+static void displayValues( nsIRegistry *reg, nsRegistryKey root );
 static void printString( const char *value, int indent );
 
 int main( int argc, char *argv[] ) {
@@ -115,7 +115,7 @@ int main( int argc, char *argv[] ) {
     return rv;
 }
 
-void display( nsIRegistry *reg, nsIRegistry::Key root, const char *rootName ) {
+void display( nsIRegistry *reg, nsRegistryKey root, const char *rootName ) {
     // Print out key name.
     printf( "%s\n", rootName );
 
@@ -160,7 +160,7 @@ void display( nsIRegistry *reg, nsIRegistry::Key root, const char *rootName ) {
                         PL_strcat( fullName, " -  " );
                         PL_strcat( fullName, name );
                         // Display contents under this subkey.
-                        nsIRegistry::Key key;
+                        nsRegistryKey key;
                         rv = reg->GetSubtreeRaw( root, name, &key );
                         if ( rv == NS_OK ) {
                             display( reg, key, fullName );
@@ -200,7 +200,7 @@ void display( nsIRegistry *reg, nsIRegistry::Key root, const char *rootName ) {
     return;
 }
 
-static void displayValues( nsIRegistry *reg, nsIRegistry::Key root ) {
+static void displayValues( nsIRegistry *reg, nsRegistryKey root ) {
     // Emumerate values at this registry location.
     nsIEnumerator *values;
     nsresult rv = reg->EnumerateValues( root, &values );

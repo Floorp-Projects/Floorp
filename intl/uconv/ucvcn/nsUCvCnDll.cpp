@@ -231,7 +231,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports * aServMgr,
   PRUint32 i;
   nsIComponentManager * compMgr = NULL;
   nsIRegistry * registry = NULL;
-  nsIRegistry::Key key;
+  nsRegistryKey key;
   char buff[1024];
 
   // get the service manager

@@ -204,7 +204,7 @@ nsresult nsCharsetConverterManager::CreateMapping()
   nsresult res = NS_OK;
   nsIRegistry * registry = NULL;
   nsIEnumerator * components = NULL;
-  nsIRegistry::Key uconvKey, key;
+  nsRegistryKey uconvKey, key;
 
   // XXX hack; make these dynamic
   mEncSize = mDecSize = 0;
