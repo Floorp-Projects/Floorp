@@ -224,11 +224,6 @@ nsXPCWrappedJSClass::GetRootJSObject(JSObject* aJSObj)
     return result ? result : aJSObj;
 }
 
-#define JAM_DOUBLE(v,d) (d = (jsdouble)v, DOUBLE_TO_JSVAL(&d))
-#define FIT_32(i,d) (INT_FITS_IN_JSVAL(i) ? INT_TO_JSVAL(i) : JAM_DOUBLE(i,d))
-// Win32 can't handle uint64 to double conversion
-#define JAM_DOUBLE_U64(v,d) JAM_DOUBLE(((int64)v),d)
-
 nsresult
 nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
                                 const nsXPCMethodInfo* info,
@@ -285,69 +280,10 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
             if(type & nsXPCType::IS_POINTER)
                 pv = (nsXPCMiniVarient*) pv->val.p;
 
-            // do the actual conversion...
-
-            // handle special cases first
-
-            if(type == nsXPCType::T_INTERFACE)
+            if(!xpc_ConvertNativeData2JS(&val, &pv->val, type))
             {
-                // XXX implement INTERFACE
-
-                // make sure 'src' is an object
-                // get the nsIInterfaceInfo* from the param and
-                // build a wrapper and then hand over the wrapper.
-                // XXX remember to release the wrapper in cleanup below
-
-                NS_ASSERTION(0,"interface params not supported");
-                continue;
-            }
-            else if(type == nsXPCType::T_INTERFACE_IS)
-            {
-                // XXX implement INTERFACE_IS
-                NS_ASSERTION(0,"interface_is params not supported");
-                continue;
-            }
-            else if(type == nsXPCType::T_STRING)
-            {
-                // XXX implement STRING
-                NS_ASSERTION(0,"string params not supported");
-                continue;
-            }
-            else if(type == nsXPCType::T_P_IID)
-            {
-                // XXX implement IID
-                NS_ASSERTION(0,"iid params not supported");
-                continue;
-            }
-            else if(type == nsXPCType::T_P_VOID)
-            {
-                // XXX implement void*
-                NS_ASSERTION(0,"void* params not supported");
-                continue;
-            }
-            else {
-                jsdouble d;
-
-                switch(type & nsXPCType::TYPE_MASK)
-                {
-                case nsXPCType::T_I8     : val = INT_TO_JSVAL((int32)pv->val.i8);   break;
-                case nsXPCType::T_I16    : val = INT_TO_JSVAL((int32)pv->val.i16);  break;
-                case nsXPCType::T_I32    : val = FIT_32(pv->val.i32,d);             break;
-                case nsXPCType::T_I64    : val = JAM_DOUBLE(pv->val.i64,d);         break;
-                case nsXPCType::T_U8     : val = INT_TO_JSVAL((int32)pv->val.u8);   break;
-                case nsXPCType::T_U16    : val = INT_TO_JSVAL((int32)pv->val.u16);  break;
-                case nsXPCType::T_U32    : val = FIT_32(pv->val.u32,d);             break;
-                case nsXPCType::T_U64    : val = JAM_DOUBLE_U64(pv->val.u64,d);     break;
-                case nsXPCType::T_FLOAT  : val = JAM_DOUBLE(pv->val.f,d);           break;
-                case nsXPCType::T_DOUBLE : val = DOUBLE_TO_JSVAL(&pv->val.d);       break;
-                case nsXPCType::T_BOOL   : val = pv->val.b?JSVAL_TRUE:JSVAL_FALSE;  break;
-                // XXX need to special case cahr* and wchar_t*
-                case nsXPCType::T_CHAR   : val = INT_TO_JSVAL((int32)pv->val.c);    break;
-                case nsXPCType::T_WCHAR  : val = INT_TO_JSVAL((int32)pv->val.wc);   break;
-                default:
-                    NS_ASSERTION(0, "bad type");
-                    continue;
-                }
+                retval = NS_ERROR_FAILURE;
+                goto done;
             }
         }
 
@@ -399,120 +335,10 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
             if(type & nsXPCType::IS_POINTER)
                 pv = (nsXPCMiniVarient*) pv->val.p;
 
-            // do the actual conversion...
-
-            // handle special cases first
-
-            if(type == nsXPCType::T_INTERFACE)
+            if(!xpc_ConvertJSData2Native(cx, &pv->val, &val, type))
             {
-                // XXX implement INTERFACE
-
-                // make sure 'src' is an object
-                // get the nsIInterfaceInfo* from the param and
-                // build a wrapper and then hand over the wrapper.
-                // XXX remember to release the wrapper in cleanup below
-
-                NS_ASSERTION(0,"interface params not supported");
-                continue;
-            }
-            else if(type == nsXPCType::T_INTERFACE_IS)
-            {
-                // XXX implement INTERFACE_IS
-                NS_ASSERTION(0,"interface_is params not supported");
-                continue;
-            }
-            else if(type == nsXPCType::T_STRING)
-            {
-                // XXX implement STRING
-                NS_ASSERTION(0,"string params not supported");
-                continue;
-            }
-            else if(type == nsXPCType::T_P_IID)
-            {
-                // XXX implement IID
-                NS_ASSERTION(0,"iid params not supported");
-                continue;
-            }
-            else if(type == nsXPCType::T_P_VOID)
-            {
-                // XXX implement void*
-                NS_ASSERTION(0,"void* params not supported");
-                continue;
-            }
-            else {
-                int32    ti;
-                uint32   tu;
-                jsdouble td;
-                JSBool   r;
-
-                switch(type & nsXPCType::TYPE_MASK)
-                {
-                case nsXPCType::T_I8     :
-                    r = JS_ValueToECMAInt32(cx,val,&ti);
-                    pv->val.i8  = (int8) ti;
-                    break;
-                case nsXPCType::T_I16    :
-                    r = JS_ValueToECMAInt32(cx,val,&ti);
-                    pv->val.i16  = (int16) ti;
-                    break;
-                case nsXPCType::T_I32    :
-                    r = JS_ValueToECMAInt32(cx,val,&pv->val.i32);
-                    break;
-                case nsXPCType::T_I64    :
-                    if(JSVAL_IS_INT(val))
-                    {
-                        r = JS_ValueToECMAInt32(cx,val,&ti);
-                        pv->val.i64 = (int64) ti;
-                    }
-                    else
-                    {
-                        r = JS_ValueToNumber(cx, val, &td);
-                        if(r) pv->val.i64 = (int64) td;
-                    }
-                    break;
-                case nsXPCType::T_U8     :
-                    r = JS_ValueToECMAUint32(cx,val,&tu);
-                    pv->val.u8  = (uint8) tu;
-                    break;
-                case nsXPCType::T_U16    :
-                    r = JS_ValueToECMAUint32(cx,val,&tu);
-                    pv->val.u16  = (uint16) tu;
-                    break;
-                case nsXPCType::T_U32    :
-                    r = JS_ValueToECMAUint32(cx,val,&pv->val.u32);
-                    break;
-                case nsXPCType::T_U64    :
-                    if(JSVAL_IS_INT(val))
-                    {
-                        r = JS_ValueToECMAUint32(cx,val,&tu);
-                        pv->val.i64 = (int64) tu;
-                    }
-                    else
-                    {
-                        r = JS_ValueToNumber(cx, val, &td);
-                        // XXX Win32 can't handle double to uint64 directly
-                        if(r) pv->val.u64 = (uint64)((int64) td);
-                    }
-                    break;
-                case nsXPCType::T_FLOAT  :
-                    r = JS_ValueToNumber(cx, val, &td);
-                    if(r) pv->val.f = (float) td;
-                    break;
-                case nsXPCType::T_DOUBLE :
-                    r = JS_ValueToNumber(cx, val, &pv->val.d);
-                    break;
-                case nsXPCType::T_BOOL   :
-                    r = JS_ValueToBoolean(cx, val, &pv->val.b);
-                    break;
-
-                // XXX should we special case char* and wchar_t* to be strings?
-                case nsXPCType::T_CHAR   :
-                case nsXPCType::T_WCHAR  :
-                default:
-                    NS_ASSERTION(0, "bad type");
-                    goto done;
-                }
-                continue;
+                NS_ASSERTION(0, "bad type");
+                goto done;
             }
         }
     }
