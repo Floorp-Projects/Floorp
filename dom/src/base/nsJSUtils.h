@@ -102,6 +102,10 @@ public:
                                      JSContext* aContext,
                                      jsval aValue);
 
+  static NS_EXPORT PRBool nsConvertJSValToUint32(PRUint32* aProp,
+                                                 JSContext* aContext,
+                                                 jsval aValue);
+
   static NS_EXPORT PRBool nsConvertJSValToFunc(nsIDOMEventListener** aListener,
                                        JSContext* aContext,
                                        JSObject* aObj,

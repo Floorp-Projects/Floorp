@@ -144,6 +144,7 @@ NS_IMETHODIMP	nsNetSupportDialog::UniversalDialog
 NS_IMETHODIMP nsNetSupportDialog::Prompt(const PRUnichar *dialogTitle, 
                                          const PRUnichar *text,
                                          const PRUnichar *passwordRealm,
+                                         PRUint32 savePassword,
                                          const PRUnichar *defaultText, 
                                          PRUnichar **resultText,
                                          PRBool *returnValue)
@@ -152,7 +153,7 @@ NS_IMETHODIMP nsNetSupportDialog::Prompt(const PRUnichar *dialogTitle,
 	nsresult rv = NS_ERROR_FAILURE;
 	nsCOMPtr< nsIPrompt> dialogService;
     if( GetNSIPrompt( dialogService ) )
-		rv = dialogService->Prompt(dialogTitle, text, passwordRealm, defaultText, resultText, returnValue);
+		rv = dialogService->Prompt(dialogTitle, text, passwordRealm, savePassword, defaultText, resultText, returnValue);
 	 
 	return rv;	
 }
@@ -160,7 +161,7 @@ NS_IMETHODIMP nsNetSupportDialog::Prompt(const PRUnichar *dialogTitle,
 NS_IMETHODIMP nsNetSupportDialog::PromptUsernameAndPassword(const PRUnichar *dialogTitle, 
                                                             const PRUnichar *text,
                                                             const PRUnichar *passwordRealm,
-                                                            PRBool persistPassword, 
+                                                            PRUint32 savePassword, 
                                                             PRUnichar **user,
                                                             PRUnichar **pwd,
                                                             PRBool *returnValue)
@@ -169,21 +170,21 @@ NS_IMETHODIMP nsNetSupportDialog::PromptUsernameAndPassword(const PRUnichar *dia
 	nsresult rv = NS_ERROR_FAILURE;
 	nsCOMPtr< nsIPrompt> dialogService;
     if( GetNSIPrompt( dialogService ) )
-    	rv = dialogService->PromptUsernameAndPassword(dialogTitle, text, passwordRealm, persistPassword, user, pwd, returnValue);
+    	rv = dialogService->PromptUsernameAndPassword(dialogTitle, text, passwordRealm, savePassword, user, pwd, returnValue);
 	return rv;	
 }
 
 NS_IMETHODIMP nsNetSupportDialog::PromptPassword(const PRUnichar *dialogTitle, 
                                                  const PRUnichar *text,
                                                  const PRUnichar *passwordRealm, 
-                                                 PRBool persistPassword, 
+                                                 PRUint32 savePassword, 
                                                  PRUnichar **pwd,
                                                  PRBool *_retval)
 {
 	nsresult rv = NS_ERROR_FAILURE;
 	nsCOMPtr< nsIPrompt> dialogService;
     if( GetNSIPrompt( dialogService ) )
-    	rv = dialogService->PromptPassword(dialogTitle, text, passwordRealm, persistPassword, pwd, _retval);
+    	rv = dialogService->PromptPassword(dialogTitle, text, passwordRealm, savePassword, pwd, _retval);
 	 
 	return rv;	
 }

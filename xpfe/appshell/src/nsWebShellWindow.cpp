@@ -1839,6 +1839,7 @@ NS_IMETHODIMP
 nsDOMWindowPrompter::Prompt(const PRUnichar* dialogTitle,
                             const PRUnichar* text,
                             const PRUnichar* passwordRealm,
+                            PRUint32 savePassword,
                             const PRUnichar* defaultText,
                             PRUnichar* *result,
                             PRBool *_retval)
@@ -1857,12 +1858,12 @@ NS_IMETHODIMP
 nsDOMWindowPrompter::PromptUsernameAndPassword(const PRUnichar* dialogTitle, 
                                                const PRUnichar* text,
                                                const PRUnichar* passwordRealm,
-                                               PRBool persistPassword,
+                                               PRUint32 savePassword,
                                                PRUnichar* *user,
                                                PRUnichar* *pwd,
                                                PRBool *_retval)
 {	
-  // ignore passwordRealm and persistPassword here?
+  // ignore passwordRealm and savePassword here?
   nsresult rv; 
   nsAutoString title(dialogTitle);
   if (title == nsnull)
@@ -1876,11 +1877,11 @@ NS_IMETHODIMP
 nsDOMWindowPrompter::PromptPassword(const PRUnichar* dialogTitle, 
                                     const PRUnichar* text,
                                     const PRUnichar* passwordRealm,
-                                    PRBool persistPassword,
+                                    PRUint32 savePassword,
                                     PRUnichar* *pwd,
                                     PRBool *_retval)
 {
-  // ignore passwordRealm and persistPassword here?
+  // ignore passwordRealm and savePassword here?
   nsresult rv;
   nsAutoString title(dialogTitle);
   if (title == nsnull)
@@ -1932,6 +1933,7 @@ nsDOMWindowPrompter::UniversalDialog(const PRUnichar *inTitleMessage,
                                      PRInt32 *outButtonPressed) /* number of button that was pressed (0 to 3) */
 {
   nsresult rv;
+  NS_ASSERTION(inDialogTitle, "UniversalDialog must have a dialog title supplied");
   rv = mCommonDialogs->UniversalDialog(mDOMWindow, 
                                        inTitleMessage,
                                        inDialogTitle,

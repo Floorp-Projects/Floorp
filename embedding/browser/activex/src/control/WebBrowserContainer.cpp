@@ -117,14 +117,14 @@ NS_IMETHODIMP CWebBrowserContainer::ConfirmCheck(const PRUnichar* dialogTitle, c
 
 /* boolean prompt (in wstring text, in wstring defaultText, out wstring result); */
 NS_IMETHODIMP CWebBrowserContainer::Prompt(const PRUnichar* dialogTitle, const PRUnichar *text, const PRUnichar* passwordRealm,
-                                           const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
+                                           PRUint32 savePassword, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* boolean promptUsernameAndPassword (in wstring text, out wstring user, out wstring pwd); */
 NS_IMETHODIMP CWebBrowserContainer::PromptUsernameAndPassword(const PRUnichar* dialogTitle, const PRUnichar *text, 
-                                                              const PRUnichar* passwordRealm, PRBool persistPassword,
+                                                              const PRUnichar* passwordRealm, PRUint32 savePassword,
                                                               PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -132,7 +132,7 @@ NS_IMETHODIMP CWebBrowserContainer::PromptUsernameAndPassword(const PRUnichar* d
 
 /* boolean promptPassword (in wstring text, in wstring title, out wstring pwd); */
 NS_IMETHODIMP CWebBrowserContainer::PromptPassword(const PRUnichar* dialogTitle, const PRUnichar *text, 
-                                                   const PRUnichar* passwordRealm, PRBool persistPassword,
+                                                   const PRUnichar* passwordRealm, PRUint32 savePassword,
                                                    PRUnichar **pwd, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;

@@ -49,12 +49,21 @@ interface nsIPrompt : nsISupports
                          out boolean checkValue);
 
     /**
+     * Values for the savePassword parameter to prompt, promptPassword and
+     * promptUsernameAndPassword.
+     */
+    const PRUint32 SAVE_PASSWORD_NEVER             = 0;
+    const PRUint32 SAVE_PASSWORD_FOR_SESSION       = 1;
+    const PRUint32 SAVE_PASSWORD_PERMANENTLY       = 2;
+
+    /**
      * Puts up a text input dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */
     boolean prompt(in wstring dialogTitle,
                    in wstring text,
                    in wstring passwordRealm,
+                   in PRUint32 savePassword,
                    in wstring defaultText, 
                    out wstring result);
 
@@ -65,7 +74,7 @@ interface nsIPrompt : nsISupports
     boolean promptUsernameAndPassword(in wstring dialogTitle,
                                       in wstring text,
                                       in wstring passwordRealm,
-                                      in boolean persistPassword,
+                                      in PRUint32 savePassword,
                                       out wstring user, 
                                       out wstring pwd);
 
@@ -76,7 +85,7 @@ interface nsIPrompt : nsISupports
     boolean promptPassword(in wstring dialogTitle,
                            in wstring text,
                            in wstring passwordRealm,
-                           in boolean persistPassword,
+                           in PRUint32 savePassword,
                            out wstring pwd);
     
     /**
