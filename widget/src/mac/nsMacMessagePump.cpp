@@ -229,14 +229,14 @@ void nsMacMessagePump::DoMessagePump()
  */
 PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 {
-	PRBool				haveEvent;
 	long				sleep		= 0;
-	unsigned short		eventMask 	= everyEvent - diskMask;
+	unsigned short		eventMask 	= everyEvent;
 
 	RgnHandle mouseRgn = ::NewRgn();	// may want to move this into a class variable
 	
 	::LMSetSysEvtMask(eventMask);	// we need keyUp events
-	haveEvent = ::WaitNextEvent(eventMask, &theEvent, sleep, mouseRgn) ? PR_TRUE : PR_FALSE;
+	PRBool haveEvent
+		= ::WaitNextEvent(eventMask, &theEvent, sleep, mouseRgn) ? PR_TRUE : PR_FALSE;
 
 	::DisposeRgn(mouseRgn);
 
