@@ -1,5 +1,4 @@
 http://www.mozilla.org
-ftp://ftp.mozilla.org/
 ftp://ftp.mozilla.org/README
 http://www.mozilla.org
 resource:///res/samples/test2.html
