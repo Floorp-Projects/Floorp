@@ -53,6 +53,7 @@
 #include "Minibuffer.h"
 #include "Toolbox.h"
 #include "Dashboard.h"
+#include "URLBar.h"
 #include "Logo.h"
 #include "Netcaster.h"
 #include "ViewGlue.h"
@@ -165,8 +166,10 @@ MenuSpec XFE_Frame::bookmark_submenu_spec[] = {
 	{ "fileBookmarksSubmenu",     DYNA_FANCY_CASCADEBUTTON, NULL, NULL, False, (void*)True, XFE_BookmarkMenu::generate },
 	{ xfeCmdOpenBookmarks,	PUSHBUTTON },
 	MENU_SEPARATOR,
+#ifdef BULLSHIT
 	{ "placesSubmenu",            CASCADEBUTTON, XFE_Frame::places_menu_spec},
 	MENU_SEPARATOR,
+#endif
 	{ "bookmarkPlaceHolder",	DYNA_MENUITEMS, NULL, NULL, False, (void*)False, XFE_BookmarkMenu::generate },
 	{ NULL }
 };
@@ -239,7 +242,6 @@ MenuSpec XFE_Frame::window_menu_spec[] = {
 	{ xfeCmdOpenFolders,			PUSHBUTTON },
 	{ xfeCmdOpenAddressBook,		PUSHBUTTON },
 #endif
-	{ "bookmarksSubmenu",	CASCADEBUTTON, bookmark_submenu_spec },
 	{ xfeCmdOpenHistory,		PUSHBUTTON },
 #ifdef JAVA
 	{ xfeCmdJavaConsole,		PUSHBUTTON },

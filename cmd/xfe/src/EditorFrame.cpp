@@ -351,6 +351,7 @@ MenuSpec XFE_EditorFrame::menu_bar_spec[] = {
   { xfeMenuTools, 	CASCADEBUTTON,
 	(MenuSpec*)&XFE_EditorFrame::tools_menu_spec },
   { xfeMenuWindow, 	CASCADEBUTTON, (MenuSpec*)&XFE_Frame::window_menu_spec },
+  { "bookmarksSubmenu",	CASCADEBUTTON, XFE_Frame::bookmark_submenu_spec },
   { xfeMenuHelp, 	CASCADEBUTTON, (MenuSpec*)&XFE_Frame::help_menu_spec },
   { NULL }
 };

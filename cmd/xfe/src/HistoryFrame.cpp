@@ -101,6 +101,7 @@ MenuSpec XFE_HistoryFrame::menu_bar_spec[] = {
   { xfeMenuEdit,	CASCADEBUTTON, edit_menu_spec },
   { xfeMenuView,	CASCADEBUTTON, view_menu_spec },
   { xfeMenuWindow,	CASCADEBUTTON, XFE_Frame::window_menu_spec },
+  { "bookmarksSubmenu",	CASCADEBUTTON, XFE_Frame::bookmark_submenu_spec },
   { xfeMenuHelp, 	CASCADEBUTTON, XFE_Frame::help_menu_spec },
   { NULL }
 };

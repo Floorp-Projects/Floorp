@@ -192,6 +192,7 @@ MenuSpec XFE_BrowserFrame::menu_bar_spec[] = {
   { xfeMenuView, 	CASCADEBUTTON, (MenuSpec*)&XFE_BrowserFrame::view_menu_spec },
   { xfeMenuGo,		CASCADEBUTTON, (MenuSpec*)&XFE_BrowserFrame::go_menu_spec },
   { xfeMenuWindow, 	CASCADEBUTTON, (MenuSpec*)&XFE_Frame::window_menu_spec },
+  { "bookmarksSubmenu",	CASCADEBUTTON, XFE_Frame::bookmark_submenu_spec },
   { xfeMenuHelp, 	CASCADEBUTTON, (MenuSpec*)&XFE_Frame::help_menu_spec },
   { NULL }
 };

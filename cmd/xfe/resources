@@ -3140,7 +3140,6 @@ Open the mail folders and discussion groups window
 Open the address book
 
 *menuBar*bookmarksSubmenu.labelString:			Bookmarks
-*menuBar*bookmarksSubmenu.mnemonic:				B
 
 *menuBar*toolsSubmenu.labelString:			Tools
 *menuBar*toolsSubmenu.mnemonic:				T
