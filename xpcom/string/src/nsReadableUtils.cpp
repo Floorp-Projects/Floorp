@@ -410,16 +410,16 @@ ToLowerCase( nsACString& aCString )
     copy_string(aCString.BeginWriting(fromBegin), aCString.EndWriting(fromEnd), converter);
   }
 
-template <class StringT, class Comparator>
+template <class StringT, class IteratorT, class Comparator>
 PRBool
-FindInReadable_Impl( const StringT& aPattern, typename StringT::const_iterator& aSearchStart, typename StringT::const_iterator& aSearchEnd, const Comparator& compare )
+FindInReadable_Impl( const StringT& aPattern, IteratorT& aSearchStart, IteratorT& aSearchEnd, const Comparator& compare )
   {
     PRBool found_it = PR_FALSE;
 
       // only bother searching at all if we're given a non-empty range to search
     if ( aSearchStart != aSearchEnd )
       {
-        typename StringT::const_iterator aPatternStart, aPatternEnd;
+        IteratorT aPatternStart, aPatternEnd;
         aPattern.BeginReading(aPatternStart);
         aPattern.EndReading(aPatternEnd);
 
@@ -435,8 +435,8 @@ FindInReadable_Impl( const StringT& aPattern, typename StringT::const_iterator& 
               break;
 
               // otherwise, we're at a potential match, let's see if we really hit one
-            typename StringT::const_iterator testPattern(aPatternStart);
-            typename StringT::const_iterator testSearch(aSearchStart);
+            IteratorT testPattern(aPatternStart);
+            IteratorT testSearch(aSearchStart);
 
               // slow inner loop verifies the potential match (found by the `fast' loop) at the current position
             for(;;)
