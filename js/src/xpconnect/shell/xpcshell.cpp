@@ -443,7 +443,7 @@ GetLine(JSContext *cx, char *bufp, FILE *fh, const char *prompt) {
 }
 
 static void
-Process(JSContext *cx, JSObject *obj, char *filename)
+Process(JSContext *cx, JSObject *obj, char *filename, FILE *filehandle)
 {
     JSBool ok, hitEOF;
     JSScript *script;
@@ -465,7 +465,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
             return;
         }
     } else {
-        fh = stdin;
+        fh = filehandle;
     }
 
     if (!isatty(fileno(fh))) {
@@ -574,11 +574,20 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 {
     int i;
     char *filename = NULL;
+    FILE *filehandle = NULL;
     jsint length;
     jsval *vector;
     jsval *p;
     JSObject *argsObj;
     JSBool isInteractive = JS_TRUE;
+
+    filehandle = fopen("xpcshell.js", "r");
+    if (filehandle != NULL) {
+        printf("[loading 'xpcshell.js'...]\n");
+        Process(cx, obj, NULL, filehandle);
+        // evidently JS closes this for us.
+        // fclose(filehandle);
+    }
 
     for (i=0; i < argc; i++) {
         if (argv[i][0] == '-') {
@@ -607,7 +616,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
                 /* "-f -" means read from stdin */
                 if (filename[0] == '-' && filename[1] == '\0')
                     filename = NULL;
-                Process(cx, obj, filename);
+                Process(cx, obj, filename, NULL);
                 filename = NULL;
                 /* XXX: js -f foo.js should interpret foo.js and then
                  * drop into interactive mode, but that breaks test
@@ -655,7 +664,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         return 1;
 
     if (filename || isInteractive)
-        Process(cx, obj, filename);
+        Process(cx, obj, filename, filename ? NULL : stdin);
     return gExitCode;
 }
 
