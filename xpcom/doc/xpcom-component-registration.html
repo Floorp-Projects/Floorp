@@ -43,30 +43,60 @@ The Registry provides persistent storage of hierarchical keys and name-value
 pairs associated with each key. Each key also keeps a default value.
 <p>XPCOM will use the following registry hierarchy:
 <blockquote><tt>ROOTKEY_COMMON</tt>
-<br><tt>&nbsp;&nbsp;&nbsp; Common - Classes - CLSID</tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b><font color="#CC0000">{108d75a0-bab5-11d2-96c4-0060b0fb9956}</font></b></tt>
+<br><tt>&nbsp;&nbsp;&nbsp; Common</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Classes</tt>
 <br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-InprocServer (S)&nbsp; = <font color="#CC0000">libnfs-protocol.so</font></tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-ProgID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (S)&nbsp; = <b><font color="#CC0000">component://netscape/network-protocol&amp;type=nfs</font></b></tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+CLSID</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+<b><font color="#CC0000">{108d75a0-bab5-11d2-96c4-0060b0fb9956}</font></b></tt>
+<br><tt><nobr>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+InprocServer (S)&nbsp; = <font color="#CC0000">/home/dp/dist/bin/components/libnfs-protocol.so</font></nobr></tt>
+<br><tt><nobr>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ProgID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (S)&nbsp; = <b><font color="#CC0000">component://netscape/network-protocol&amp;type=nfs</font></b></nobr></tt>
+<br><tt><nobr>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 ClassName&nbsp;&nbsp;&nbsp; (S)&nbsp; = <b><font color="#CC0000">NFS Protocol
-Handler</font></b></tt>
-<p><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#CC0000">component://netscape/network-protocol&amp;type=nfs</font></tt>
+Handler</font></b></nobr></tt>
+<p><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<font color="#CC0000">component://netscape/network-protocol&amp;type=nfs</font></tt>
+<br><tt><nobr>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+CLSID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (S)&nbsp; = <font color="#CC0000">{108d75a0-bab5-11d2-96c4-0060b0fb9956}</font></nobr></tt>
+<p><tt><i>&nbsp;&nbsp;&nbsp; </i>Software</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Netscape</tt>
 <br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-CLSID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (S)&nbsp; = <font color="#CC0000">{108d75a0-bab5-11d2-96c4-0060b0fb9956}</font></tt>
-<p><tt><i>&nbsp;&nbsp;&nbsp; </i>Software - Netscape - XPCOM</tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VersionString&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-(S)&nbsp; = <font color="#CC0000">alpha0.20</font></tt>
-<p><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#CC0000">libnfs-protocol.so</font></tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-ComponentsCount&nbsp;&nbsp;&nbsp; (S)&nbsp; = <font color="#CC0000">1</font></tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-FileSize&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (S)&nbsp;
+XPCOM</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+VersionString&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (S)&nbsp;
+= <font color="#CC0000">alpha0.20</font></tt>
+<p><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+<font color="#CC0000">/home/dp/dist/bin/components/libnfs-protocol.so</font></tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ComponentsCount&nbsp;&nbsp;&nbsp; (Int)&nbsp; = <font color="#CC0000">1</font></tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+FileSize&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (Int)&nbsp;
 = <font color="#CC0000">78965</font></tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-LastModTimeStamp&nbsp;&nbsp; (S)&nbsp; = <font color="#CC0000">Wed Feb
-24 11:24:06 PST 1999</font></tt></blockquote>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LastModTimeStamp&nbsp;&nbsp; (S)&nbsp;&nbsp;&nbsp; = <font color="#CC0000">Wed
+Feb 24 11:24:06 PST 1999</font></tt>
+<p><tt><font color="#CC0000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+</font><font color="#000000">Events</font></tt>
+<br><tt><font color="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Startup</font></tt>
+<br><tt><font color="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+</font><font color="#CC0000">{108d75a0-bab5-11d2-96c4-0060b0fb9956}</font></tt>
+<br><tt><font color="#CC0000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{17894983-ab78-8d75-a0bb-511d296c4006}</font></tt>
+<p><tt><font color="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Shutdown</font></tt>
+<br><tt><font color="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+</font><font color="#CC0000">{748958ea-abab-511d-296c-40060b0fb995}</font></tt>
+<br><tt><font color="#CC0000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{45617894-983a-b788-d75a-0bab11d296c4}</font></tt>
+<br>&nbsp;</blockquote>
 
 <h3>
 <a NAME="The Repository: Object instance creation"></a>The Repository:
