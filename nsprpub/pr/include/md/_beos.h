@@ -312,6 +312,7 @@ struct protoent* getprotobynumber(int number);
 #define _MD_READ_DIR _MD_read_dir
 #define _MD_CLOSE_DIR _MD_close_dir
 #define _MD_MAKE_NONBLOCK _MD_make_nonblock
+#define _MD_SET_FD_INHERITABLE _MD_set_fd_inheritable
 #define _MD_INIT_FD_INHERITABLE _MD_init_fd_inheritable
 #define _MD_QUERY_FD_INHERITABLE _MD_query_fd_inheritable
 #define _MD_OPEN _MD_open
