@@ -1,0 +1,28 @@
+var err = initInstall("Chatzilla v0.5", "Chatzilla", "$Version$"); 
+logComment("initInstall: " + err);
+
+addFile("Chatzilla service",
+        "bin/components/chatzilla-service.js",
+        getFolder("Components"),
+        "");
+
+addFile("Chatzilla Chrome",
+        "bin/chrome/chatzilla.jar", // jar source folder 
+        getFolder("Chrome"),        // target folder
+        "");                        // target subdir 
+
+addDirectory("Chatzilla Icons",
+             "bin/chrome/icons",  // jar source folder
+             getFolder("Chrome", "icons"), // target folder
+             "");                 // target subdir
+
+registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome","chatzilla.jar"), "content/chatzilla/");
+registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","chatzilla.jar"), "skin/modern/chatzilla/");
+registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","chatzilla.jar"), "locale/en-US/chatzilla/");
+
+err = getLastError();
+if (err==SUCCESS)
+    performInstall(); 
+else
+    cancelInstall(err);
+
