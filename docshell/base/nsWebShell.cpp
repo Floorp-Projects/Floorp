@@ -1292,6 +1292,7 @@ nsWebShell::Destroy()
   SetContainer(nsnull);
   SetObserver(nsnull);
   SetDocLoaderObserver(nsnull);
+  SetUrlDispatcher(nsnull);
 
   // Remove this webshell from its parent's child list
   if (nsnull != mParent) {
