@@ -83,7 +83,7 @@ public:
   nsStyleSides(void);
 
 //  nsStyleSides&  operator=(const nsStyleSides& aCopy);  // use compiler's version
-//  PRBool         operator==(const nsStyleSides& aOther) const;
+  PRBool         operator==(const nsStyleSides& aOther) const;
 
   nsStyleUnit GetLeftUnit(void) const;
   nsStyleUnit GetTopUnit(void) const;
