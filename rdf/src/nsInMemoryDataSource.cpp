@@ -22,7 +22,7 @@
 
   TO DO:
 
-  1) Maybe convert struct Assertion to an object?
+  1) ArcsIn & ArcsOut cursors.
 
  */
 
@@ -30,32 +30,34 @@
 #include "nsIRDFCursor.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
+#include "nsIRDFObserver.h"
 #include "nsIServiceManager.h"
-#include "nsISupportsArray.h"
+#include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
 #include "nsRDFCID.h"
-#include "nsString.h"
 #include "rdfutil.h"
 #include "plhash.h"
+#include "plstr.h"
 
-static NS_DEFINE_IID(kIRDFCursorIID,     NS_IRDFCURSOR_IID);
-static NS_DEFINE_IID(kIRDFDataSourceIID, NS_IRDFDATASOURCE_IID);
-static NS_DEFINE_IID(kIRDFLiteralIID,    NS_IRDFLITERAL_IID);
-static NS_DEFINE_IID(kIRDFNodeIID,       NS_IRDFNODE_IID);
-static NS_DEFINE_IID(kIRDFResourceIID,   NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIRDFAssertionCursorIID,  NS_IRDFASSERTIONCURSOR_IID);
+static NS_DEFINE_IID(kIRDFArcsInCursorIID,     NS_IRDFARCSINCURSOR_IID);
+static NS_DEFINE_IID(kIRDFArcsOutCursorIID,    NS_IRDFARCSOUTCURSOR_IID);
+static NS_DEFINE_IID(kIRDFCursorIID,           NS_IRDFCURSOR_IID);
+static NS_DEFINE_IID(kIRDFDataSourceIID,       NS_IRDFDATASOURCE_IID);
+static NS_DEFINE_IID(kIRDFLiteralIID,          NS_IRDFLITERAL_IID);
+static NS_DEFINE_IID(kIRDFNodeIID,             NS_IRDFNODE_IID);
+static NS_DEFINE_IID(kIRDFResourceIID,         NS_IRDFRESOURCE_IID);
+static NS_DEFINE_IID(kISupportsIID,            NS_ISUPPORTS_IID);
 
-#define DEFAULT_OBSERVER_ARRAY_LENGTH 10
-
-typedef struct _AssertionStruct {
+// XXX how about some more descriptive names for these slots?
+struct Assertion {
     nsIRDFResource* u;
     nsIRDFResource* s;
     nsIRDFNode*     v;
     PRBool          tv;
-    struct _AssertionStruct* next;
-    struct _AssertionStruct* invNext;
-} AssertionStruct;
+    Assertion*      next;
+    Assertion*      invNext;
+};
 
-typedef AssertionStruct* Assertion;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -65,33 +67,39 @@ rdf_HashPointer(const void* key)
     return (PLHashNumber) key;
 }
 
-static int
-rdf_CompareLiterals (const void* v1, const void* v2) {
+static PRIntn
+rdf_CompareNodes(const void* v1, const void* v2)
+{
     nsIRDFNode* a = (nsIRDFNode*)v1;
-    nsIRDFNode* b = (nsIRDFNode*)v1;
-    return (a->Equals(b));
+    nsIRDFNode* b = (nsIRDFNode*)v2;
+
+    PRBool result;
+    if (NS_FAILED(a->EqualsNode(b, &result)))
+        return 0;
+
+    return (PRIntn) result;
 }
 
 ////////////////////////////////////////////////////////////////////////
+// InMemoryDataSource
 
 
-
-class InMemoryDataSource : public nsIRDFDataSource {
+class InMemoryDataSource : public nsIRDFDataSource
+{
 protected:
     char*        mURL;
-    PLHashTable* mArg1;
-    PLHashTable* mArg2;
-    nsIRDFObserver** mObservers;  
-    size_t       mObserverArrayLength;
-    size_t       mObserverCount; // should probably use vectors here
-    Assertion getArg1 (nsIRDFResource* u);
-    Assertion getArg2 (nsIRDFNode* v);
-    nsresult  setArg1 (nsIRDFResource* u, Assertion as);
-    nsresult  setArg2 (nsIRDFNode* v, Assertion as);
+
+    // XXX how about better names for these tables?
+    PLHashTable* mArg1; // forward arcs
+    PLHashTable* mArg2; // backwards arcs
+
+    nsVoidArray* mObservers;  
+
+    static const PRInt32 kInitialTableSize;
 
 public:
-    InMemoryDataSource(const char* url);
-    virtual ~InMemoryDataSourceImpl(void);
+    InMemoryDataSource(void);
+    virtual ~InMemoryDataSource(void);
 
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -107,7 +115,7 @@ public:
     NS_IMETHOD GetSources(nsIRDFResource* property,
                           nsIRDFNode* target,
                           PRBool tv,
-                          nsIRDFCursor** sources);
+                          nsIRDFAssertionCursor** sources);
 
     NS_IMETHOD GetTarget(nsIRDFResource* source,
                          nsIRDFResource* property,
@@ -117,7 +125,7 @@ public:
     NS_IMETHOD GetTargets(nsIRDFResource* source,
                           nsIRDFResource* property,
                           PRBool tv,
-                          nsIRDFCursor** targets);
+                          nsIRDFAssertionCursor** targets);
 
     NS_IMETHOD Assert(nsIRDFResource* source, 
                       nsIRDFResource* property, 
@@ -139,174 +147,507 @@ public:
     NS_IMETHOD RemoveObserver(nsIRDFObserver* n);
 
     NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
-                           nsIRDFCursor** labels);
+                           nsIRDFArcsInCursor** labels);
 
     NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
-                            nsIRDFCursor** labels);
+                            nsIRDFArcsOutCursor** labels);
 
     NS_IMETHOD Flush();
+
+    // Implemenatation methods
+
+    // XXX how about more descriptive names for these...
+    Assertion* getArg1 (nsIRDFResource* u);
+    Assertion* getArg2 (nsIRDFNode* v);
+    void       setArg1 (nsIRDFResource* u, Assertion* as);
+    void       setArg2 (nsIRDFNode* v, Assertion* as);
 };
+
+const PRInt32 InMemoryDataSource::kInitialTableSize = 500;
+
+////////////////////////////////////////////////////////////////////////
+// InMemoryAssertionCursor
+
+class InMemoryAssertionCursor : public nsIRDFAssertionCursor
+{
+private:
+    InMemoryDataSource* mDataSource;
+    nsIRDFResource* mSource;
+    nsIRDFResource* mLabel;
+    nsIRDFNode*     mTarget;
+    nsIRDFNode*     mValue;
+    PRInt32         mCount;
+    PRBool          mTruthValue;
+    PRBool          mInversep;
+    Assertion*      mNextAssertion;
+
+public:
+    InMemoryAssertionCursor(InMemoryDataSource* ds,
+                            nsIRDFNode* u,
+                            nsIRDFResource* s,
+                            PRBool tv,
+                            PRBool inversep);
+
+    virtual ~InMemoryAssertionCursor(void);
+
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+   
+    // nsIRDFCursor interface
+    NS_IMETHOD Advance(void);
+
+    // nsIRDFAssertionCursor interface
+    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource);
+    NS_IMETHOD GetSubject(nsIRDFResource** aResource);
+    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate);
+    NS_IMETHOD GetObject(nsIRDFNode** aObject);
+    NS_IMETHOD GetTruthValue(PRBool* aTruthValue);
+};
+
+////////////////////////////////////////////////////////////////////////
+
+InMemoryAssertionCursor::InMemoryAssertionCursor (InMemoryDataSource* ds,
+                                                  nsIRDFNode* u,
+                                                  nsIRDFResource* label, 
+                                                  PRBool tv,
+                                                  PRBool inversep)
+    : mDataSource(ds),
+      mLabel(label),
+      mTruthValue(tv),
+      mInversep(inversep),
+      mCount(0),
+      mNextAssertion(nsnull),
+      mValue(nsnull)
+{
+    NS_INIT_REFCNT();
+
+    mInversep = inversep;
+    if (inversep) {
+        mTarget = u;
+        mNextAssertion = mDataSource->getArg2(u);
+    } else {
+        if (NS_SUCCEEDED(u->QueryInterface(kIRDFResourceIID, (void**) &mSource)))
+            mNextAssertion = mDataSource->getArg1(mSource);
+    }
+}
+
+InMemoryAssertionCursor::~InMemoryAssertionCursor(void)
+{
+    NS_IF_RELEASE(mValue);
+}
+
+NS_IMPL_ISUPPORTS(InMemoryAssertionCursor, kIRDFAssertionCursorIID);
+
+NS_IMETHODIMP
+InMemoryAssertionCursor::Advance(void)
+{
+    // XXX I don't think that the semantics of this are quite right:
+    // specifically, I think that the initial Advance() will skip the
+    // first element...
+    nsresult rv;
+
+    NS_IF_RELEASE(mValue);
+
+    while (mNextAssertion) {
+        PRBool eq;
+        if (NS_FAILED(rv = mLabel->EqualsResource(mNextAssertion->s, &eq)))
+            return rv;
+
+        if ((mTruthValue == mNextAssertion->tv) && eq) {
+            if (mInversep) {
+                mValue = mNextAssertion->u;
+                NS_ADDREF(mValue);
+            } else {
+                mValue = mNextAssertion->v;
+                NS_ADDREF(mValue);
+            }
+            return NS_OK;
+        }
+        mNextAssertion = (mInversep ? mNextAssertion->invNext : mNextAssertion->next);
+    }
+
+    // If we get here, the cursor is empty.
+    return NS_ERROR_RDF_CURSOR_EMPTY;
+}
+
+NS_IMETHODIMP
+InMemoryAssertionCursor::GetDataSource(nsIRDFDataSource** aDataSource)
+{
+    NS_PRECONDITION(aDataSource != nsnull, "null ptr");
+    if (! aDataSource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_ADDREF(mDataSource);
+    *aDataSource = mDataSource;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+InMemoryAssertionCursor::GetSubject(nsIRDFResource** aSubject)
+{
+    NS_PRECONDITION(aSubject != nsnull, "null ptr");
+    if (! aSubject)
+        return NS_ERROR_NULL_POINTER;
+
+    if (mInversep) {
+        if (! mValue)
+            return NS_ERROR_UNEXPECTED;
+
+        // this'll AddRef()
+        return mValue->QueryInterface(kIRDFResourceIID, (void**) aSubject);
+    }
+    else {
+        NS_ADDREF(mSource);
+        *aSubject = mSource;
+        return NS_OK;
+    }
+}
+
+
+NS_IMETHODIMP
+InMemoryAssertionCursor::GetPredicate(nsIRDFResource** aPredicate)
+{
+    NS_PRECONDITION(aPredicate != nsnull, "null ptr");
+    if (! aPredicate)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_ADDREF(mLabel);
+    *aPredicate = mLabel;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+InMemoryAssertionCursor::GetObject(nsIRDFNode** aObject)
+{
+    NS_PRECONDITION(aObject != nsnull, "null ptr");
+    if (! aObject)
+        return NS_ERROR_NULL_POINTER;
+
+    if (mInversep) {
+        NS_ADDREF(mTarget);
+        *aObject = mTarget;
+    }
+    else {
+        if (! mValue)
+            return NS_ERROR_UNEXPECTED;
+
+        // this'll AddRef()
+        *aObject = mValue;
+    }
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+InMemoryAssertionCursor::GetTruthValue(PRBool* aTruthValue)
+{
+    NS_PRECONDITION(aTruthValue != nsnull, "null ptr");
+    if (! aTruthValue)
+        return NS_ERROR_NULL_POINTER;
+
+    *aTruthValue = mTruthValue;
+    return NS_OK;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_ISUPPORTS(InMemoryDataSource, kIRDFDataSourceIID);
 
-InMemoryDataSource::InMemoryDataSource (const char* url) {
-    mURL = copyString(url);
-    mArg1 = PL_NewHashTable(500, rdf_HashPointer, PL_CompareValues,
-                            PL_CompareValues,  NULL, NULL);
-    mArg2 = PL_NewHashTable(500, rdf_HashPointer, rdf_CompareLiterals,
-                            PL_CompareValues,  NULL, NULL);
-    mObservers = (nsIRDFObserver**)getMem(DEFAULT_OBSERVER_ARRAY_LENGTH *
-                                          sizeof(nsIRDFObserver*));
-    mObserverArrayLength = DEFAULT_OBSERVER_ARRAY_LENGTH;
-    mObserverCount = 0;
-    
+InMemoryDataSource::InMemoryDataSource(void)
+    : mURL(nsnull),
+      mArg1(nsnull),
+      mArg2(nsnull),
+      mObservers(nsnull)
+{
+    mArg1 = PL_NewHashTable(kInitialTableSize,
+                            rdf_HashPointer,
+                            PL_CompareValues,
+                            PL_CompareValues,
+                            nsnull,
+                            nsnull);
+
+    mArg2 = PL_NewHashTable(kInitialTableSize,
+                            rdf_HashPointer,
+                            rdf_CompareNodes,
+                            PL_CompareValues,
+                            nsnull,
+                            nsnull);
 }
 
 InMemoryDataSource::~InMemoryDataSource(void)
 {
-    PL_HashTableDestroy(mArg1);
-    PL_HashTableDestroy(mArg2);
+    if (mArg1) {
+        PL_HashTableDestroy(mArg1);
+        mArg1 = nsnull;
+    }
+    if (mArg2) {
+        PL_HashTableDestroy(mArg2);
+        mArg2 = nsnull;
+    }
+    if (mObservers) {
+        for (PRInt32 i = mObservers->Count(); i >= 0; --i) {
+            nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+            NS_RELEASE(obs);
+        }
+        delete mObservers;
+    }
 }
 
-Assertion 
-InMemoryDataSource::getArg1 (nsIRDFResource* u) {
-    return PL_HashTableLookup(mArg1, u);
+Assertion*
+InMemoryDataSource::getArg1 (nsIRDFResource* u)
+{
+    // Cast is okay, we're in a closed system
+    return (Assertion*) PL_HashTableLookup(mArg1, u);
 }
 
-Assertion 
-InMemoryDataSource::getArg2 (nsIRDFNode* v) {
-    return PL_HashTableLookup(mArg2, u);
+Assertion*
+InMemoryDataSource::getArg2 (nsIRDFNode* v)
+{
+    // Cast is okay, we're in a closed system
+    return (Assertion*) PL_HashTableLookup(mArg2, v);
 }   
 
-nsresult  
-InMemoryDataSource::setArg1 (nsIRDFResource* u, Assertion as) {
+void
+InMemoryDataSource::setArg1 (nsIRDFResource* u, Assertion* as)
+{
     PL_HashTableAdd(mArg1, u, as);
+}
+
+void
+InMemoryDataSource::setArg2 (nsIRDFNode* v, Assertion* as)
+{
+    PL_HashTableAdd(mArg2, v, as);
+}
+
+NS_IMETHODIMP
+InMemoryDataSource::Init(const char* uri)
+{
+    if ((mURL = PL_strdup(uri)) == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
     return NS_OK;
 }
 
-nsresult  
-InMemoryDataSource::setArg2 (nsIRDFNode* v, Assertion as) {
-    PL_HashTableAdd(mArg2, u, as);
-    return NS_OK;
-}
-
-NS_IMETHOD 
+NS_IMETHODIMP
 InMemoryDataSource::GetSource(nsIRDFResource* property, nsIRDFNode* target,
-                              PRBool tv, nsIRDFResource** source) {
-    Assertion as = getArg2(target);
-    while (as) {
-        if ((as->s == property) && (as->tv == tv)) {
-            **source = as->u;
-            return NS_OK;
-        }
-        as = as->invNext;
+                              PRBool tv, nsIRDFResource** source)
+{
+    nsresult rv;
+    for (Assertion* as = getArg2(target); as != nsnull; as = as->next) {
+        PRBool eq;
+        if (NS_FAILED(rv = property->EqualsResource(as->s, &eq)))
+            return rv;
+
+        if (! eq)
+            continue;
+
+        if (as->tv != tv)
+            continue;
+
+        *source = as->u;
+        return NS_OK;
     }
-    **source = null;
-    return NS_OK;
+    *source = nsnull;
+    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHOD 
+NS_IMETHODIMP
 InMemoryDataSource::GetTarget(nsIRDFResource* source,  nsIRDFResource* property,
                               PRBool tv, nsIRDFNode** target) {
-    Assertion as = getArg1(source);
-    while (as) {
-        if ((as->s == property) && (as->tv == tv)) {
-            **target = as->u;
-            return NS_OK;
-        }
-        as = as->next;
+    nsresult rv;
+    for (Assertion* as = getArg1(source); as != nsnull; as = as->next) {
+        PRBool eq;
+        if (NS_FAILED(rv = property->EqualsResource(as->s, &eq)))
+            return rv;
+
+        if (! eq)
+            continue;
+
+        if (as->tv != tv)
+            continue;
+
+        *target = as->v;
+        return NS_OK;
     }
-    **target = null;
-    return NS_OK;
+
+    // If we get here, then there was no target with for the specified
+    // property & truth value.
+    *target = nsnull;
+    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHOD 
+NS_IMETHODIMP
 InMemoryDataSource::HasAssertion(nsIRDFResource* source, nsIRDFResource* property,
-                                       nsIRDFNode* target, PRBool tv,PRBool* hasAssertion) {
-    Assertion as = getArg1(source);
-    while (as) {
-        if ((as->s == property) && (as->tv == tv) && (as->v == target)) {
-            *hasAssertion = 1;
-            return NS_OK;
-        }
-        as = as->next;
+                                 nsIRDFNode* target, PRBool tv,PRBool* hasAssertion)
+{
+    nsresult rv;
+    for (Assertion* as = getArg1(source); as != nsnull; as = as->next) {
+        PRBool eq;
+        if (NS_FAILED(rv = property->EqualsResource(as->s, &eq)))
+            return rv;
+
+        if (! eq)
+            continue;
+
+        if (NS_FAILED(rv = target->EqualsNode(as->v, &eq)))
+            return rv;
+
+        if (! eq)
+            continue;
+
+        if (as->tv != tv)
+            continue;
+
+        // found it!
+        *hasAssertion = PR_TRUE;
+        return NS_OK;
     }
-    *hasAssertion = 0;
+
+    // If we get here, we couldn't find the assertion
+    *hasAssertion = PR_FALSE;
     return NS_OK;
 }
 
-NS_IMETHOD 
-InMemoryDataSource::GetSources(nsIRDFResource* property,nsIRDFNode* target,
-           PRBool tv, nsIRDFCursor** sources) {
-    **sources = new InMemoryDataSourceCursor (target, property, tv, 1);
+NS_IMETHODIMP
+InMemoryDataSource::GetSources(nsIRDFResource* property, nsIRDFNode* target,
+                               PRBool tv, nsIRDFAssertionCursor** sources)
+{
+    *sources = new InMemoryAssertionCursor (this, target, property, tv, PR_TRUE);
     return NS_OK;
 }
 
-NS_IMETHOD 
+NS_IMETHODIMP
 InMemoryDataSource::GetTargets(nsIRDFResource* source,
-           nsIRDFResource* property,
-           PRBool tv, nsIRDFCursor** targets) {
-    **targets = new InMemoryDataSourceCursor (source, property, tv, 0);
+                               nsIRDFResource* property,
+                               PRBool tv, nsIRDFAssertionCursor** targets)
+{
+    *targets = new InMemoryAssertionCursor (this, source, property, tv, PR_FALSE);
     return NS_OK;
 }
 
-NS_IMETHOD 
+NS_IMETHODIMP
 InMemoryDataSource::Assert(nsIRDFResource* source, nsIRDFResource* property, 
-                           nsIRDFNode* target, PRBool tv) {
-    Assertion next = getArg1(source);
-    Assertion prev = next;
-    Assertion as = 0;
+                           nsIRDFNode* target, PRBool tv) 
+{
+    nsresult rv;
+
+    Assertion* next = getArg1(source);
+    Assertion* prev = next;
+    Assertion* as = nsnull;
+
+    // Walk to the end of the linked list.
+    // XXX shouldn't we just keep a pointer to the end, or insert at the front???
     while (next) {
-        if ((next->property == property) && (next->v == target)) {
-            next->tv = tv;
-            return NS_OK;
+        PRBool eq;
+
+        if (NS_FAILED(rv = property->EqualsResource(next->s, &eq)))
+            return rv;
+
+        if (eq) {
+            if (NS_FAILED(rv = target->EqualsNode(next->v, &eq)))
+                return rv;
+
+            if (eq) {
+                // Wow, we already had the assertion. Make sure that the
+                // truth values are correct and bail.
+                next->tv = tv;
+                return NS_OK;
+            }
         }
+
         prev = next;
         next = as->next;
     }
-    as = makeNewAssertion(source, property, target, tv);
+
+    as = new Assertion;
+    if (! as)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(source);
+    as->u  = source;
+
+    NS_ADDREF(property);
+    as->s  = property;
+
+    NS_ADDREF(target);
+    as->v  = target;
+
+    as->tv = tv;
+
+    // Link it in to the "forward arcs" table
     if (!prev) {
         setArg1(source, as);
     } else {
         prev->next = as;
     }
     
-    prev = 0;
-    for (next = getArg2(target); next != null; next = next->InvNext) {prev = next;}
+    // Link it in to the "reverse arcs" table
+    prev = nsnull;
+
+    // XXX Shouldn't we keep a pointer to the end of the list to make
+    // sure this is O(1)?
+    for (next = getArg2(target); next != nsnull; next = next->invNext) {prev = next;}
     if (!prev) {
         setArg2(target, as);
     } else {
-        prev->InvNext = as;
+        prev->invNext = as;
     }
 
-    for (count = 0; count < mObserverCount ; count++) {
-        mObservers[count]->OnAssert(source, property, target);
+    // notify observers
+    if (mObservers) {
+        for (PRInt32 i = mObservers->Count(); i >= 0; --i) {
+            nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+            obs->OnAssert(source, property, target);
+            // XXX ignore return value?
+        }
     }
-    
+
     return NS_OK;
 }
 
-NS_IMETHOD 
+NS_IMETHODIMP
 InMemoryDataSource::Unassert(nsIRDFResource* source,
-                             nsIRDFResource* property, nsIRDFNode* target) {
-    Assertion next = getArg1(source);
-    Assertion prev = next;
-    Assertion as = 0;
+                             nsIRDFResource* property, nsIRDFNode* target)
+{
+    nsresult rv;
+    Assertion* next = getArg1(source);
+    Assertion* prev = next;
+    Assertion* as = nsnull;
+
     while (next) {
-        if ((next->property == property) && (next->v == target)) {
-            if (prev == next) {
-                setArg1(source, next->next);
-            } else {
-                prev->next = next->next;
+        PRBool eq;
+
+        if (NS_FAILED(rv = property->EqualsResource(next->s, &eq)))
+            return rv;
+
+        if (eq) {
+            if (NS_FAILED(rv = target->EqualsNode(next->v, &eq)))
+                return rv;
+
+            if (eq) {
+                if (prev == next) {
+                    setArg1(source, next->next);
+                } else {
+                    prev->next = next->next;
+                }
+                as = next;
+                break;
             }
-            as = next;
-            break;
         }
+
         prev = next;
         next = as->next;
     }
-    if (!as) return NS_OK;
-    next = prev = getArg2(target) ;
+
+    // We don't even have the assertion, so just bail.
+    if (!as)
+        return NS_OK;
+
+    next = prev = getArg2(target);
     while (next) {
         if (next == as) {
             if (prev == next) {
@@ -314,154 +655,71 @@ InMemoryDataSource::Unassert(nsIRDFResource* source,
             } else {
                 prev->invNext = next->invNext;
             }
-            foundp = 1;
+            break;
         }
         prev = next;
         next = as->invNext;
     }
-    for (count = 0; count < mObserverCount ; count++) {
-        mObservers[count]->OnUnassert(source, property, target);
-    }
 
-    return NS_OK;
-}
+    // XXX delete the assertion struct & release resources?
 
-
-NS_IMETHOD 
-InMemoryDataSource::AddObserver(nsIRDFObserver* observer) {
-    if (mObserverCount >= mObserverArrayLength) {
-        nsIRDFObserver** old = mObservers;
-        mObservers = (nsIRDFObserver**) realloc(mObserver, mObserverArrayLength + 
-                                                DEFAULT_OBSERVER_ARRAY_LENGTH);
-        // garbage collect old
-        mObserverArrayLength = mObserverArrayLength + DEFAULT_OBSERVER_ARRAY_LENGTH;
-    }
-    mObservers[mObserverCount++] = observer;
-    return NS_OK;
-}
-
-NS_IMETHOD 
-InMemoryDataSource::RemoveObserver(nsIRDFObserver* observer) {
-    size_t n;
-    for (n = 0; n < mObserverCount; n++) {
-        if (mObservers[n] == observer) {
-            // reduce reference count to observer?
-            if (n == (mObserverCount -1)) {
-                mObservers[n] = 0;
-            } else {
-                mObservers[n] = mObservers[mObserverCount-1];
-            }
-            mObserverCount--;            
+    if (mObservers) {
+        for (PRInt32 i = mObservers->Count(); i >= 0; --i) {
+            nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+            obs->OnUnassert(source, property, target);
+            // XXX ignore return value?
         }
     }
+
     return NS_OK;
 }
 
-NS_IMETHOD 
-InMemoryDataSource::ArcLabelsIn(nsIRDFNode* node, nsIRDFCursor** labels) {
-    // XXX implement later
-    return NS_ERROR_NOT_IMPLEMENTED; // XXX
-}
-
-NS_IMETHOD 
-InMemoryDataSource::ArcLabelsOut(nsIRDFResource* source,nsIRDFCursor** labels) {
-    // XXX implement later
-    return NS_ERROR_NOT_IMPLEMENTED; // XXX
-}
-
-NS_IMETHOD 
-InMemoryDataSource::Flush() {
-    // XXX implement later
-    return NS_ERROR_NOT_IMPLEMENTED; // XXX
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////
-// InMemoryDataSourceCursor
-
-class InMemoryDataSourceCursor : public nsIRDFCursor {
-private:
-    nsIRDFResource* mSource;
-    nsIRDFResource* mLabel;
-    nsIRDFNode* mTarget;
-    nsIRDFNode* mValue;
-    size_t       mCount;
-    PRBool       mTv;
-    PRBool       mInversep;
-    Assertion    mNextAssertion;
-
-public:
-    InMemoryDataSourceCursor (nsIRDFNode* u, nsIRDFResource* s, PRBool tv, PRBool inversep);
-    virtual ~InMemoryDataSourceCursor(void);
-
-    NS_DECL_ISUPPORTS
-   
-    NS_IMETHOD LoadNext(PRBool *result);
-    NS_IMETHOD CursorValue(nsIRDFNode** u);
-};
-
-InMemoryDataSourceCursor::InMemoryDataSourceCursor (nsIRDFNode* u, nsIRDFResource* label, 
-                                                    PRBool tv, PRBool inversep) {
-    NS_INIT_REFCNT();
-    mInversep = inversep;
-    if (inversep) {
-        mTarget = u;
-    } else {
-        mSource = u;
-    }
-
-    mLabel  = label;
-    mCount  = 0;
-    mTv     = tv;
-    mNextAssertion = (inversep ? getArg2(u) : getArg1(u));    
-}
-
-InMemoryDataSourceCursor::~InMemoryDataSourceCursor(void)
-{
-}
-
-NS_IMPL_ISUPPORTS(InMemoryDataSourceCursor, kIRDFCursorIID);
 
 NS_IMETHODIMP
-InMemoryDataSourceCursor::LoadNext(PRBool* result)
+InMemoryDataSource::AddObserver(nsIRDFObserver* observer)
 {
+    if (! mObservers) {
+        if ((mObservers = new nsVoidArray()) == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-    if (! result )
-        return NS_ERROR_NULL_POINTER;
+    mObservers->AppendElement(observer);
+    return NS_OK;
+}
 
-    if (!mNextAssertion) {
-        *result = 0;
+NS_IMETHODIMP
+InMemoryDataSource::RemoveObserver(nsIRDFObserver* observer)
+{
+    if (! mObservers)
         return NS_OK;
-    }
 
-    while (mNextAssertion) {
-        if ((mTv == mNextAssertion->tv) && (mNextAssertion->label == mLabel)) {
-            if (mInversep) {
-                mValue = mNextAssertion->u;
-            } else {
-                mValue = mNextAssertion->v;
-            }
-            *result = 1;
-            return NS_OK;
-        }
-        mNextAssertion = (mInversep ? mNextAssertion->invNext : mNextAssertion->next);
-    }
-    
-    *result = 0;
+    mObservers->RemoveElement(observer);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-InMemoryDataSourceCursor::CursorValue(nsIRDFNode** result) {    
+InMemoryDataSource::ArcLabelsIn(nsIRDFNode* node, nsIRDFArcsInCursor** labels)
 {
-    if (! result )
-        return NS_ERROR_NULL_POINTER;
+    // XXX implement later
+    return NS_ERROR_NOT_IMPLEMENTED; // XXX
+}
 
-    *result = mValue;
+NS_IMETHODIMP
+InMemoryDataSource::ArcLabelsOut(nsIRDFResource* source,nsIRDFArcsOutCursor** labels)
+{
+    // XXX implement later
+    return NS_ERROR_NOT_IMPLEMENTED; // XXX
+}
+
+NS_IMETHODIMP
+InMemoryDataSource::Flush()
+{
+    // XXX nothing to flush, right?
     return NS_OK;
 }
+
+
+
 
 ////////////////////////////////////////////////////////////////////////
 
