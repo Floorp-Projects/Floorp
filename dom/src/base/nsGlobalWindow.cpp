@@ -444,13 +444,14 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
       // browser scrolling and other browser commands.
       nsCOMPtr<nsIDOMWindowInternal> internal;
       GetPrivateRoot(getter_AddRefs(internal));
-      nsCOMPtr<nsIDOMWindowInternal> us(do_QueryInterface(NS_STATIC_CAST(nsIDOMWindow*,this)));
-      if (internal == us) {
+
+      if (internal == NS_STATIC_CAST(nsIDOMWindowInternal *, this)) {
         nsresult rv;
         nsCOMPtr<nsIXBLService> xblService =
                  do_GetService("@mozilla.org/xbl;1", &rv);
         if (xblService) {
-          nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(mChromeEventHandler));
+          nsCOMPtr<nsIDOMEventReceiver> rec =
+            do_QueryInterface(mChromeEventHandler);
           xblService->AttachGlobalKeyHandler(rec);
 
           // for now, the only way to get drag/drop is to use the XUL
@@ -475,8 +476,6 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
     SetStatus(nsString());
     SetDefaultStatus(nsString());
   }
-
-  PRBool do_clear_scope = PR_FALSE;
 
   if (mDocument) {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
@@ -524,25 +523,14 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
         ClearAllTimeouts();
 
         if (mContext && mJSObject) {
-          do_clear_scope = PR_TRUE;
+          JSContext* cx = (JSContext *)mContext->GetNativeContext();
+          ::JS_ClearScope(cx, mJSObject);
+          ::JS_ClearRegExpStatics(cx);
+
+          mIsScopeClear = PR_TRUE;
         }
       }
     }
-  } else if (!aDocument) {
-    // If both mDocument and aDocument are null we've just left a
-    // full-page plugin page and we need to ensure that the scope is
-    // cleared so that the cached window.document property (which
-    // happens to be null in a full-page plugin window) is cleared.
-
-    do_clear_scope = PR_TRUE;
-  }
-
-  if (do_clear_scope) {
-    JSContext* cx = (JSContext *)mContext->GetNativeContext();
-    ::JS_ClearScope(cx, mJSObject);
-    ::JS_ClearRegExpStatics(cx);
-
-    mIsScopeClear = PR_TRUE;
   }
 
   if (mContext && aDocument) {
