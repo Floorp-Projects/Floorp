@@ -544,7 +544,7 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleE
   return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const PRUnichar* folderName)
+NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const PRUnichar* folderName, nsIMsgWindow *msgWindow )
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
     if (!folderName) return rv;
@@ -998,7 +998,7 @@ NS_IMETHODIMP nsImapMailFolder::Delete ()
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::Rename (const PRUnichar *newName)
+NS_IMETHODIMP nsImapMailFolder::Rename (const PRUnichar *newName, nsIMsgWindow *msgWindow )
 {
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr <nsIImapIncomingServer> incomingImapServer;
