@@ -35,7 +35,6 @@
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIDOMDocument.h"
 #include "nsIMarkupDocumentViewer.h"
-#include "nsIDOMXULDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDiskDocument.h"
 #include "nsIDocument.h"
@@ -185,18 +184,16 @@ GetChromeElement(nsIDocShell *aShell, const char *aID, nsIDOMElement **aElement)
   nsresult rv = GetDocument( aShell, getter_AddRefs(doc) );
   if(NS_SUCCEEDED(rv) && doc)
   {
-    // Up-cast.
-    nsCOMPtr<nsIDOMXULDocument> xulDoc( do_QueryInterface(doc) );
-    if ( xulDoc )
+    nsCOMPtr<nsIDOMDocument> dDoc( do_QueryInterface(doc) );
+    if ( dDoc )
     {
-      // Find specified element.
-      nsCOMPtr<nsIDOMElement> elem;
-      rv = xulDoc->GetElementById( NS_ConvertASCIItoUCS2(aID), getter_AddRefs(elem) );
-      if (elem)
-      {
-        *aElement = elem.get();
-        NS_ADDREF(*aElement);
-      }
+        nsCOMPtr<nsIDOMElement> elem;
+        rv = dDoc->GetElementById( NS_ConvertASCIItoUCS2(aID), getter_AddRefs(elem) );
+        if (elem)
+        {
+            *aElement = elem.get();
+            NS_ADDREF(*aElement);
+        }
     }
   }
   return rv;
@@ -476,7 +473,7 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
   if (!mStateMaintainer) return NS_ERROR_OUT_OF_MEMORY;
   mStateMaintainer->AddRef();      // the owning reference
 
-  // get the XULDoc from the webshell
+  // get the Doc from the webshell
   nsCOMPtr<nsIContentViewer> cv;
   rv = mDocShell->GetContentViewer(getter_AddRefs(cv));
   if (NS_FAILED(rv)) return rv;
@@ -488,11 +485,12 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
   rv = docViewer->GetDocument(*getter_AddRefs(chromeDoc));
   if (NS_FAILED(rv)) return rv;
   
-  nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(chromeDoc, &rv);
+  nsCOMPtr<nsIDOMDocument> dDoc = do_QueryInterface(chromeDoc, &rv);
   if (NS_FAILED(rv)) return rv;
 
+
   // now init the state maintainer
-  rv = mStateMaintainer->Init(mEditor, xulDoc);
+  rv = mStateMaintainer->Init(mEditor, dDoc);
   if (NS_FAILED(rv)) return rv;
   
   // set it up as a selection listener
@@ -608,7 +606,7 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
   // Activate the debug menu only in debug builds
   // by removing the "hidden" attribute set "true" in XUL
   nsCOMPtr<nsIDOMElement> elem;
-  rv = xulDoc->GetElementById(NS_ConvertASCIItoUCS2("debugMenu"), getter_AddRefs(elem));
+  rv = dDoc->GetElementById(NS_ConvertASCIItoUCS2("debugMenu"), getter_AddRefs(elem));
   if (elem)
     elem->RemoveAttribute(NS_ConvertASCIItoUCS2("hidden"));
 #endif
@@ -1485,6 +1483,7 @@ nsEditorShell::UnregisterDocumentStateListener(nsIDocumentStateListener *docList
   
     return editor->RemoveDocumentStateListener(docListener);
   }
+
 
   return NS_OK;
 }
