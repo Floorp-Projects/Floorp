@@ -19,10 +19,13 @@
 #include "nsEditProperty.h"
 #include "nsString.h"
 
+// singleton instance
+static nsEditProperty *gInstance;
 
 NS_IMPL_ADDREF(nsEditProperty)
 
 NS_IMPL_RELEASE(nsEditProperty)
+
 
 // XXX: remove when html atoms are exported from layout
 // inline tags
@@ -50,9 +53,9 @@ nsIAtom * nsIEditProperty::size;
 // special
 nsString * nsIEditProperty::allProperties;
 
-void
-nsEditProperty::InstanceInit()
+nsEditProperty::nsEditProperty()
 {
+  NS_INIT_REFCNT();
   // tags
   nsIEditProperty::a =    NS_NewAtom("a");
   nsIEditProperty::b =    NS_NewAtom("b");
@@ -79,8 +82,7 @@ nsEditProperty::InstanceInit()
   nsIEditProperty::allProperties = new nsString("moz_allproperties");
 }
 
-void
-nsEditProperty::InstanceShutdown()
+nsEditProperty::~nsEditProperty()
 {
   // tags
   NS_IF_RELEASE(nsIEditProperty::a);
@@ -109,6 +111,7 @@ nsEditProperty::InstanceShutdown()
     delete (nsIEditProperty::allProperties);
     nsIEditProperty::allProperties = nsnull;
   }
+  gInstance = nsnull;
 }
 
 NS_IMETHODIMP
@@ -130,14 +133,19 @@ nsEditProperty::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
+/* Factory for edit property object */
 nsresult NS_NewEditProperty(nsIEditProperty **aResult)
 {
   if (aResult)
   {
-    *aResult = new nsEditProperty();
-    if (!*aResult) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    if (!gInstance)
+    {
+      gInstance = new nsEditProperty();
+      if (!gInstance) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
+    *aResult = gInstance;
     NS_ADDREF(*aResult);
     return NS_OK;
   }

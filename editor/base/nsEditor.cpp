@@ -486,11 +486,17 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
 
   mDoc = aDoc;
   mPresShell = aPresShell;		// we don't addref the pres shell
+
+  // Init mEditProperty
+  nsresult result = NS_NewEditProperty(getter_AddRefs(mEditProperty));
+  if (NS_FAILED(result)) { return result; }
+  if (!mEditProperty) {return NS_ERROR_NULL_POINTER;}
+
   mPresShell->GetViewManager(&mViewManager);
-  mPresShell->SetDisplayNonTextSelection(PR_TRUE);//we want to see all the selection reflected to user
   if (mViewManager){
     mViewManager->Release(); //we want a weak link
   }
+  mPresShell->SetDisplayNonTextSelection(PR_TRUE);//we want to see all the selection reflected to user
   mUpdateCount=0;
   InsertTextTxn::ClassInit();
 
@@ -505,9 +511,9 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   //  since we could still be used as the text edit widget without prefs
 
   // Get the prefs service (Note: can't use nsCOMPtr for service pointers)
-  nsresult result = nsServiceManager::GetService(kPrefCID, 
-                                                 nsIPref::GetIID(), 
-                                                 (nsISupports**)&mPrefs);
+  result = nsServiceManager::GetService(kPrefCID, 
+                                        nsIPref::GetIID(), 
+                                        (nsISupports**)&mPrefs);
   if (NS_FAILED(result) || !mPrefs)
   {
     printf("ERROR: Failed to get Prefs Service instance.\n");

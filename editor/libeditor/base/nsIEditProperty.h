@@ -38,10 +38,7 @@ class nsIEditProperty : public nsISupports
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IEDITPROPERTY_IID; return iid; }
 
-  NS_IMETHOD Init(nsIAtom *aPropName, nsIAtom *aValue, PRBool aAppliesToAll)=0;
-  NS_IMETHOD GetProperty(nsIAtom **aProperty) const =0;  
-  NS_IMETHOD GetValue(nsIAtom **aValue) const =0;  
-  NS_IMETHOD GetAppliesToAll(PRBool *aAppliesToAll) const =0;  
+public:
 
 /* we're still trying to decide how edit atoms will work.  Until then, use these */
 // XXX: fix ASAP!
@@ -87,6 +84,10 @@ SUP places text in superscript style
   static nsString *allProperties;   // this magic string represents the union of all inline style tags
 
   // XXX: end temp code
+
+
+
+
 };
 
 extern nsresult NS_NewEditProperty(nsIEditProperty **aResult);
