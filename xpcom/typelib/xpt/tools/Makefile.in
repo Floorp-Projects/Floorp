@@ -67,7 +67,8 @@ endif
 
 
 # Build xpt_link and xpt_dump early.  (libs creates .deps used by libs.)
-export:: libs
+export::
+	@$(MAKE) libs
 
 
 
