@@ -42,8 +42,7 @@
   <![CDATA[
     var _elementIDs = ["enableSSL2", "enableSSL3", "enableTLS", 
         "warnEnteringSecure", "warnEnteringWeak", 
-        "warnInsecurePost", "warnInsecurePostFromSecure",
-        "warnSecureRedirect", "warnSecureRedirectToInsecure",
+        "warnInsecurePost",
         "warnViewMixed" ];
   ]]>
   </script>
@@ -87,13 +86,6 @@
               prefattribute="checked"/>
     <checkbox id="warnInsecurePost" label="&warn.insecurepost;"
               pref="true" preftype="bool" prefstring="security.warn_submit_insecure"
-              prefattribute="checked"/>
-    <checkbox id="warnSecureRedirect" label="&warn.secureredirect;"
-              pref="true" preftype="bool" prefstring="security.warn_secure_redirect"
-              prefattribute="checked"/>
-    <checkbox id="warnSecureRedirectToInsecure" 
-              label="&warn.secureredirecttoinsecure;"
-              pref="true" preftype="bool" prefstring="security.warn_secure_redirect_to_insecure"
               prefattribute="checked"/>
     <checkbox id="warnViewMixed" label="&warn.viewmixed;"
               pref="true" preftype="bool" prefstring="security.warn_viewing_mixed"
