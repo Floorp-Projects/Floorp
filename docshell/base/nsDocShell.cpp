@@ -161,7 +161,7 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
    if(aIID.Equals(NS_GET_IID(nsIURIContentListener)) &&
       NS_SUCCEEDED(EnsureContentListener()))
       *aSink = mContentListener;
-   if(aIID.Equals(NS_GET_IID(nsIURIContentListener)) &&
+   if(aIID.Equals(NS_GET_IID(nsIWebProgressListener)) &&
       NS_SUCCEEDED(EnsureWebProgressListener()))
       *aSink = mWebProgressListener;
    else if(aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)) &&
