@@ -2298,7 +2298,8 @@ void GC_save_callers(struct callinfo info[NFRAMES])
 	
 	for (i = 0; i < NFRAMES; i++) {
 		word* linkageArea = (word *)currentSP;
-		info[i].ci_pc = linkageArea[2];	// LR saved at 8(SP) in each frame.
+		// LR saved at 8(SP) in each frame. subtract 4 to get address of calling instruction.
+		info[i].ci_pc = linkageArea[2] - sizeof(word);
 		currentSP = *((void **)currentSP);
 		// the bottom-most frame is marked as pointing to NULL.
 		if (currentSP == NULL || (word)currentSP & 0x1)
