@@ -195,7 +195,9 @@ PRBool CValidDTD::CanConvert(nsString& aSourceType, nsString& aTargetType, PRInt
  * @param 
  * @return
  */
-NS_IMETHODIMP CValidDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString& aSourceType,eParseMode aParseMode,nsIContentSink* aSink){
+NS_IMETHODIMP CValidDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,
+                                        nsString& aSourceType,eParseMode aParseMode,
+                                        nsString& aCommand,nsIContentSink* aSink){
   nsresult result=NS_OK;
   return result;
 }

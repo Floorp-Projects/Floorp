@@ -106,10 +106,11 @@ class nsIDTD : public nsISupports {
      * @param	aFilename--string that contains name of file being parsed (if applicable)
      * @return  
      */
-    NS_IMETHOD WillBuildModel(  nsString& aFilename,
-                                PRBool aNotifySink,
-                                nsString& aSourceType,
+    NS_IMETHOD WillBuildModel(  nsString&   aFilename,
+                                PRBool      aNotifySink,
+                                nsString&   aSourceType,
                                 eParseMode  aParseMode,
+                                nsString&   aCommand,
                                 nsIContentSink* aSink=0)=0;
 
     /**

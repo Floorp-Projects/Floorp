@@ -40,8 +40,7 @@ struct TagList {
   eHTMLTags   mTags[10];
 };
 
-extern PRBool     Contains(eHTMLTags aTag,TagList& aTagList);
-extern PRInt32    GetTopmostIndexOf(nsEntryStack& aTagStack,TagList& aTagList);
+extern PRInt32    GetTopmostIndexOf(nsDTDContext& aContext,TagList& aTagList);
 extern eHTMLTags  GetTagAt(PRUint32 anIndex,TagList& aTagList);
 
 //*********************************************************************************************
@@ -67,7 +66,7 @@ struct nsHTMLElement {
   static  PRBool  IsInlineEntity(eHTMLTags aTag);
   static  PRBool  IsFlowEntity(eHTMLTags aTag);
   static  PRBool  IsBlockCloser(eHTMLTags aTag);
-  static  int     GetSynonymousGroups(int aGroup);
+  static  int     GetSynonymousGroups(eHTMLTags aTag);
 
   TagList*        GetSynonymousTags(void) const {return mSynonymousTags;}
   TagList*        GetRootTags(void) const {return mRootNodes;}
@@ -75,7 +74,7 @@ struct nsHTMLElement {
   TagList*        GetAutoCloseStartTags(void) const {return mAutocloseStart;}
   TagList*        GetAutoCloseEndTags(void) const {return mAutocloseEnd;}
   TagList*        GetNonAutoCloseEndTags(void) const {return mDontAutocloseEnd;}
-  eHTMLTags       GetCloseTargetForEndTag(nsEntryStack& aTagStack,PRInt32 anIndex) const;
+  eHTMLTags       GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 anIndex) const;
 
   TagList*        GetSpecialChildren(void) const {return mSpecialKids;}
   TagList*        GetSpecialParents(void) const {return mSpecialParents;}

@@ -33,6 +33,7 @@
 #include "nsHTMLEntities.h"
 #include "nsHTMLTokenizer.h"
 #include "nsXMLTokenizer.h"
+//#include "nsTextTokenizer.h"
 #include "nsExpatTokenizer.h"
 #include "nsIParserService.h"
 
@@ -190,6 +191,7 @@ nsParserModule::Shutdown()
     nsHTMLTokenizer::FreeTokenRecycler();
     nsXMLTokenizer::FreeTokenRecycler();
     nsExpatTokenizer::FreeTokenRecycler();
+//    nsTextTokenizer::FreeTokenRecycler();
     nsParser::FreeSharedObjects();
     mInitialized = PR_FALSE;
   }

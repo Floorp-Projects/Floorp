@@ -88,6 +88,8 @@ protected:
   virtual nsresult ConsumeText(const nsString& aString,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeProcessingInstruction(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
+  
+  virtual void     RecordTrailingContent(CStartToken* aStartToken,nsScanner& aScanner);
 
   static void AddToken(CToken*& aToken,nsresult aResult,nsDeque& aDeque,CTokenRecycler* aRecycler);
 

@@ -420,16 +420,21 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aCommand,nsStri
   PRInt32 theDTDIndex=0;
   nsIDTD* theBestDTD=0;
   nsIDTD* theDTD=0;
+  PRBool  thePrimaryFound=PR_FALSE;
 
   while((theDTDIndex<=gSharedObjects.mDTDDeque.GetSize()) && (aParserContext.mAutoDetectStatus!=ePrimaryDetect)){
     theDTD=(nsIDTD*)gSharedObjects.mDTDDeque.ObjectAt(theDTDIndex++);
     if(theDTD) {
       aParserContext.mAutoDetectStatus=theDTD->CanParse(aParserContext.mSourceType,aCommand,aBuffer,0);
-      if((eValidDetect==aParserContext.mAutoDetectStatus) || (ePrimaryDetect==aParserContext.mAutoDetectStatus)) {
+      if(eValidDetect==aParserContext.mAutoDetectStatus){
         theBestDTD=theDTD;
       }
+      else if(ePrimaryDetect==aParserContext.mAutoDetectStatus) {  
+        theBestDTD=theDTD;
+        thePrimaryFound=PR_TRUE;
+      }
     }
-    if((theDTDIndex==gSharedObjects.mDTDDeque.GetSize()) && (!theBestDTD)) {
+    if((theDTDIndex==gSharedObjects.mDTDDeque.GetSize()) && (!thePrimaryFound)) {
       if(!gSharedObjects.mHasXMLDTD) {
         NS_NewWellFormed_DTD(&theDTD);  //do this to view XML files...
         gSharedObjects.mDTDDeque.Push(theDTD);
@@ -556,6 +561,7 @@ nsresult nsParser::WillBuildModel(nsString& aFilename,nsIDTD* aDefaultDTD){
                                                 PRBool(0==mParserContext->mPrevContext),
                                                 mParserContext->mSourceType,
                                                 mParserContext->mParseMode,
+                                                mCommand,
                                                 mSink);
         }//if        
       }//if
@@ -953,6 +959,7 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
 
         if((!mParserContext->mMultipart) || (mInternalState==NS_ERROR_HTMLPARSER_STOPPARSING) || 
           ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
+
           DidBuildModel(mStreamStatus);          
 
           MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
@@ -1131,9 +1138,7 @@ nsresult nsParser::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
 #define UCS4_2143 "X-ISO-10646-UCS-4-2143"
 #define UCS4_3412 "X-ISO-10646-UCS-4-3412"
 
-static PRBool detectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen,
-   nsString& oCharset, nsCharsetSource& oCharsetSource)
-{
+static PRBool detectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsString& oCharset, nsCharsetSource& oCharsetSource) {
  oCharsetSource= kCharsetFromAutoDetection;
  oCharset = "";
  // see http://www.w3.org/TR/1998/REC-xml-19980210#sec-oCharseting
@@ -1395,6 +1400,7 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
 
   nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
   if(theTokenizer){    
+
     MOZ_TIMER_START(mTokenizeTime);
 
     WillTokenize(aIsFinalChunk);

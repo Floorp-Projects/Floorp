@@ -106,6 +106,7 @@ class CWellFormedDTD : public nsIDTD {
                                 PRBool aNotifySink,
                                 nsString& aSourceType,
                                 eParseMode  aParseMode,
+                                nsString& aCommand,
                                 nsIContentSink* aSink=0);
     /**
       * The parser uses a code sandwich to wrap the parsing process. Before

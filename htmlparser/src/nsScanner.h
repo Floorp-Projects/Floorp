@@ -312,6 +312,7 @@ class nsScanner {
       void      SetIncremental(PRBool anIncrValue) {mIncremental=anIncrValue;}
 
       PRUint32  GetOffset(void) {return mOffset;}
+      PRInt32   GetNewlinesSkipped(void) { return mNewlinesSkipped; }
 
   protected:
 
@@ -337,6 +338,7 @@ class nsScanner {
       nsString        mCharset;
       nsIUnicodeDecoder *mUnicodeDecoder;
       nsString        mUnicodeXferBuf;
+      PRInt32         mNewlinesSkipped;
 };
 
 #endif

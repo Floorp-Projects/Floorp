@@ -28,18 +28,7 @@
  */ 
 
 #include "nsElementTable.h"
-
-
-/**
- * 
- * @update	gess 01/04/99
- * @param 
- * @return
- */
-PRBool Contains(eHTMLTags aTag,TagList& aTagList){
-  PRBool result=FindTagInSet(aTag,aTagList.mTags,aTagList.mCount);
-  return result;
-}
+ 
 
 /**
  * 
@@ -47,11 +36,30 @@ PRBool Contains(eHTMLTags aTag,TagList& aTagList){
  * @param  
  * @return
  */
-PRInt32 GetTopmostIndexOf(nsEntryStack& aTagStack,TagList& aTagList){
-  int max = aTagStack.GetCount();
-  int index=0;
+PRInt32 GetTopmostIndexOf(nsDTDContext& aContext,TagList& aTagList){
+  int max = aContext.GetCount();
+  int index;
   for(index=max-1;index>=0;index--){
-    if(FindTagInSet(aTagStack[index],aTagList.mTags,aTagList.mCount)) {
+    PRBool result=FindTagInSet(aContext[index],aTagList.mTags,aTagList.mCount);
+    if(result) {
+      return index;
+    }
+  }
+  return kNotFound;
+}
+
+/**
+ * 
+ * @update	gess 01/04/99
+ * @param 
+ * @return
+ */
+PRInt32 GetBottommostIndexOf(nsDTDContext& aContext,PRInt32 aStartOffset,TagList& aTagList){
+  int max = aContext.GetCount();
+  int index;
+  for(index=aStartOffset;index<max;index++){
+    PRBool result=FindTagInSet(aContext[index],aTagList.mTags,aTagList.mCount);
+    if(result) {
       return index;
     }
   }
@@ -91,8 +99,8 @@ TagList  gInTR={1,{eHTMLTag_tr}};
 TagList  gInDL={2,{eHTMLTag_dl,eHTMLTag_body}};
 TagList  gInFrameset={1,{eHTMLTag_frameset}};
 TagList  gInNoframes={1,{eHTMLTag_noframes}};
-TagList  gInP={4,{eHTMLTag_address,eHTMLTag_form,eHTMLTag_span,eHTMLTag_table}};
-TagList  gOptgroupParents={2,{eHTMLTag_optgroup,eHTMLTag_select}};
+TagList  gInP={3,{eHTMLTag_address,eHTMLTag_span,eHTMLTag_table}};
+TagList  gOptgroupParents={2,{eHTMLTag_select,eHTMLTag_optgroup}};
 TagList  gBodyParents={2,{eHTMLTag_html,eHTMLTag_noframes}};
 TagList  gColParents={2,{eHTMLTag_table,eHTMLTag_colgroup}};
 TagList  gFramesetParents={2,{eHTMLTag_html,eHTMLTag_frameset}};
@@ -571,7 +579,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kSpecial, (kSelf|SPECIALTYPE), kNone,	
+      /*parent,incl,exclgroups*/          kSpecial|kFontStyle, (kSelf|SPECIALTYPE), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gFontKids,eHTMLTag_unknown);
 
@@ -942,7 +950,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gOptgroupParents,&gOptgroupParents,	 
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kPCDATA, kFlowEntity,	
-      /*special props, prop-range*/       kNoPropagate|kNoStyleLeaksIn, kDefaultPropRange,
+      /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
       /*special parents,kids,skip*/       &gOptgroupParents,&gContainsText,eHTMLTag_unknown);
 
     Initialize( 
@@ -1309,7 +1317,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
-      /*special props, prop-range*/       kOmitEndTag,kNoPropRange,
+      /*special props, prop-range*/       kOmitEndTag|kLegalOpen,kNoPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -1341,15 +1349,16 @@ void InitializeElementTable(void) {
   }//if
 };
 
-int nsHTMLElement::GetSynonymousGroups(int aGroup) {
+int nsHTMLElement::GetSynonymousGroups(eHTMLTags aTag) {
   int result=0;
 
-  switch(aGroup) {
+  int theGroup=gHTMLElements[aTag].mParentBits;
+  switch(theGroup) {
 
     case kPhrase:
     case kSpecial:
     case kFontStyle: 
-      result=aGroup; 
+      result=theGroup; 
       break;
 
     case kHTMLContent:
@@ -1373,6 +1382,32 @@ int nsHTMLElement::GetSynonymousGroups(int aGroup) {
       break;
   }
 
+  if(eHTMLTag_font==aTag)  //hack for backward compatibility
+    result+=kFontStyle;
+
+  return result;
+}
+
+/**
+ * 
+ * @update	gess 01/04/99
+ * @param 
+ * @return
+ */
+inline PRBool TestBits(int aBitset,int aTest) {
+  PRInt32 result=aBitset & aTest;
+  return (aTest) ? PRBool(result==aTest) : PR_FALSE;  //was aTest
+}
+
+
+/**
+ * 
+ * @update	gess1/21/99
+ * @param 
+ * @return
+ */
+PRBool nsHTMLElement::HasSpecialProperty(PRInt32 aProperty) const{
+  PRBool result=TestBits(mSpecialProperties,aProperty);
   return result;
 }
 
@@ -1386,23 +1421,10 @@ PRBool nsHTMLElement::IsContainer(eHTMLTags aChild) {
   PRBool result=(eHTMLTag_unknown==aChild);
 
   if(!result){
-    result=!gHTMLElements[aChild].HasSpecialProperty(kNonContainer);
+    result=!TestBits(gHTMLElements[aChild].mSpecialProperties,kNonContainer);
   }
   return result;
 }
-
-
-/**
- * 
- * @update	gess 01/04/99
- * @param 
- * @return
- */
-inline PRBool TestBits(int aBitset,int aTest) {
-  PRInt32 result=aBitset & aTest;
-  return (aTest) ? PRBool(result==aTest) : PR_FALSE;  //was aTest
-}
-
 
 /**
  * 
@@ -1564,7 +1586,7 @@ PRBool nsHTMLElement::CanExclude(eHTMLTags aChild) const{
 
     //Note that special kids takes precedence over exclusions...
   if(mSpecialKids) {
-    if(Contains(aChild,*mSpecialKids)) {
+    if(FindTagInSet(aChild,mSpecialKids->mTags,mSpecialKids->mCount)) {
       return PR_FALSE;
     }
   }
@@ -1608,7 +1630,7 @@ PRBool nsHTMLElement::CanOmitStartTag(eHTMLTags aChild) const{
  * @return
  */
 PRBool nsHTMLElement::IsChildOfHead(eHTMLTags aChild) {
-  PRBool result=Contains(aChild,gHeadKids);
+  PRBool result=FindTagInSet(aChild,gHeadKids.mTags,gHeadKids.mCount);
   return result;
 }
 
@@ -1622,8 +1644,9 @@ PRBool nsHTMLElement::IsChildOfHead(eHTMLTags aChild) {
 PRBool nsHTMLElement::SectionContains(eHTMLTags aChild,PRBool allowDepthSearch) {
   PRBool result=PR_FALSE;
   TagList* theRootTags=gHTMLElements[aChild].GetRootTags();
+
   if(theRootTags){
-    if(!Contains(mTagID,*theRootTags)){
+    if(!FindTagInSet(mTagID,theRootTags->mTags,theRootTags->mCount)){
       eHTMLTags theRootBase=GetTagAt(0,*theRootTags);
       if((eHTMLTag_unknown!=theRootBase) && (allowDepthSearch))
         result=SectionContains(theRootBase,allowDepthSearch);
@@ -1640,21 +1663,40 @@ PRBool nsHTMLElement::SectionContains(eHTMLTags aChild,PRBool allowDepthSearch) 
  * @return
  */
 PRBool nsHTMLElement::IsStyleTag(eHTMLTags aChild) {
-
-  static eHTMLTags gStyleTags[]={
-    eHTMLTag_a,       eHTMLTag_acronym,   eHTMLTag_b,
-    eHTMLTag_bdo,     eHTMLTag_big,       eHTMLTag_blink,
-    eHTMLTag_center,  eHTMLTag_cite,      eHTMLTag_code,
-    eHTMLTag_del,     eHTMLTag_dfn,       eHTMLTag_em,
-    eHTMLTag_font,    eHTMLTag_i,         eHTMLTag_ins,
-    eHTMLTag_kbd,     eHTMLTag_q,
-    eHTMLTag_s,       eHTMLTag_samp,      eHTMLTag_small,
-    eHTMLTag_span,    eHTMLTag_strike,    eHTMLTag_strong,
-    eHTMLTag_sub,     eHTMLTag_sup,       eHTMLTag_tt,
-    eHTMLTag_u,       eHTMLTag_var
+  PRBool result=PR_FALSE;
+  switch(aChild) {
+    case eHTMLTag_a:       
+    case eHTMLTag_acronym:   
+    case eHTMLTag_b:
+    case eHTMLTag_bdo:     
+    case eHTMLTag_big:       
+    case eHTMLTag_blink:
+    case eHTMLTag_center:  
+    case eHTMLTag_cite:      
+    case eHTMLTag_code:
+    case eHTMLTag_del:     
+    case eHTMLTag_dfn:       
+    case eHTMLTag_em:
+    case eHTMLTag_font:    
+    case eHTMLTag_i:         
+    case eHTMLTag_ins:
+    case eHTMLTag_kbd:     
+    case eHTMLTag_q:
+    case eHTMLTag_s:       
+    case eHTMLTag_samp:      
+    case eHTMLTag_small:
+    case eHTMLTag_span:    
+    case eHTMLTag_strike:    
+    case eHTMLTag_strong:
+    case eHTMLTag_sub:     
+    case eHTMLTag_sup:       
+    case eHTMLTag_tt:
+    case eHTMLTag_u:       
+    case eHTMLTag_var:
+      result=PR_TRUE;
+    default:
+      break;
   };
-
-  PRBool result=FindTagInSet(aChild,gStyleTags,sizeof(gStyleTags)/sizeof(eHTMLTag_body));
   return result;
 }
 
@@ -1665,7 +1707,7 @@ PRBool nsHTMLElement::IsStyleTag(eHTMLTags aChild) {
  * @return
  */
 PRBool nsHTMLElement::IsHeadingTag(eHTMLTags aChild) {
-  return Contains(aChild,gHeadingTags);
+  return FindTagInSet(aChild,gHeadingTags.mTags,gHeadingTags.mCount);
 }
 
 
@@ -1699,8 +1741,16 @@ PRBool nsHTMLElement::IsMemberOf(PRInt32 aSet) const{
  * @return
  */
 PRBool nsHTMLElement::IsWhitespaceTag(eHTMLTags aChild) {
-  static eHTMLTags gWSTags[]={eHTMLTag_newline, eHTMLTag_whitespace};
-  PRBool result=FindTagInSet(aChild,gWSTags,sizeof(gWSTags)/sizeof(eHTMLTag_body));
+  PRBool result=PR_FALSE;
+
+  switch(aChild) {
+    case eHTMLTag_newline:
+    case eHTMLTag_whitespace:
+      result=PR_TRUE;
+      break;
+    default:
+      break;
+  }
   return result;
 }
 
@@ -1711,8 +1761,18 @@ PRBool nsHTMLElement::IsWhitespaceTag(eHTMLTags aChild) {
  * @return
  */
 PRBool nsHTMLElement::IsTextTag(eHTMLTags aChild) {
-  static eHTMLTags gTextTags[]={eHTMLTag_text,eHTMLTag_entity,eHTMLTag_newline, eHTMLTag_whitespace};
-  PRBool result=FindTagInSet(aChild,gTextTags,sizeof(gTextTags)/sizeof(eHTMLTag_body));
+  PRBool result=PR_FALSE;
+
+  switch(aChild) {
+    case eHTMLTag_text:
+    case eHTMLTag_entity:
+    case eHTMLTag_newline:
+    case eHTMLTag_whitespace:
+      result=PR_TRUE;
+      break;
+    default:
+      break;
+  }
   return result;
 }
 
@@ -1738,7 +1798,7 @@ PRBool nsHTMLElement::CanAutoCloseTag(eHTMLTags aTag) const{
   if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_userdefined)) {
     TagList* theTagList=gHTMLElements[mTagID].GetNonAutoCloseEndTags();
     if(theTagList) {
-      result=!Contains(aTag,*theTagList);
+      result=!FindTagInSet(aTag,theTagList->mTags,theTagList->mCount);
     }
   }
   return result;
@@ -1750,14 +1810,14 @@ PRBool nsHTMLElement::CanAutoCloseTag(eHTMLTags aTag) const{
  * @param 
  * @return
  */
-eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsEntryStack& aTagStack,PRInt32 anIndex) const{
+eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 anIndex) const{
   eHTMLTags result=eHTMLTag_unknown;
 
-  int theCount=aTagStack.GetCount();
+  int theCount=aContext.GetCount();
   int theIndex=theCount;
   if(IsMemberOf(kPhrase)){
     while((--theIndex>=anIndex) && (eHTMLTag_unknown==result)){
-      eHTMLTags theTag=aTagStack.TagAt(theIndex);
+      eHTMLTags theTag=aContext.TagAt(theIndex);
       if(theTag!=mTagID) {
         //phrasal elements can close other phrasals, along with fontstyle and special tags...
         if(!gHTMLElements[theTag].IsMemberOf(kSpecial|kFontStyle|kPhrase)) {
@@ -1772,7 +1832,7 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsEntryStack& aTagStack,PRInt32
   }
   else if(IsMemberOf(kSpecial)){
     while((--theIndex>=anIndex) && (eHTMLTag_unknown==result)){
-      eHTMLTags theTag=aTagStack.TagAt(theIndex);
+      eHTMLTags theTag=aContext.TagAt(theIndex);
       if(theTag!=mTagID) {
         //phrasal elements can close other phrasals, along with fontstyle and special tags...
         if(gHTMLElements[theTag].IsMemberOf(kSpecial) ||
@@ -1790,7 +1850,7 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsEntryStack& aTagStack,PRInt32
   }
   else if(IsMemberOf(kFormControl|kExtensions)){
     while((--theIndex>=anIndex) && (eHTMLTag_unknown==result)){
-      eHTMLTags theTag=aTagStack.TagAt(theIndex);
+      eHTMLTags theTag=aContext.TagAt(theIndex);
       if(theTag!=mTagID) {
         if(!CanContain(theTag)) {
           break; //it's not something I can close
@@ -1802,9 +1862,9 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsEntryStack& aTagStack,PRInt32
       }
     }
   }
-  else if(IsMemberOf(kFontStyle)){
-    eHTMLTags theTag=aTagStack.Last();
-    if(gHTMLElements[theTag].IsMemberOf(kFontStyle)) {
+  else if(IsStyleTag(mTagID)){
+    eHTMLTags theTag=aContext.Last();
+    if(IsStyleTag(theTag)) {
       result=theTag;
     }
   }
@@ -1833,7 +1893,7 @@ PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
 
     TagList* theCloseTags=gHTMLElements[aChild].GetAutoCloseStartTags();
     if(theCloseTags){
-      if(Contains(mTagID,*theCloseTags))
+      if(FindTagInSet(mTagID,theCloseTags->mTags,theCloseTags->mCount))
         return PR_FALSE;
     }
 
@@ -1867,7 +1927,7 @@ PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
     }
  
     if(mSpecialKids) {
-      if(Contains(aChild,*mSpecialKids)) {
+      if(FindTagInSet(aChild,mSpecialKids->mTags,mSpecialKids->mCount)) {
         return PR_TRUE;
       }
     }
@@ -1877,17 +1937,6 @@ PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
   return PR_FALSE;
 }
 
-
-/**
- * 
- * @update	gess1/21/99
- * @param 
- * @return
- */
-PRBool nsHTMLElement::HasSpecialProperty(PRInt32 aProperty) const{
-  PRBool result=TestBits(mSpecialProperties,aProperty);
-  return result;
-}
 
 void nsHTMLElement::DebugDumpContainment(const char* aFilename,const char* aTitle){
 #ifdef  RICKG_DEBUG

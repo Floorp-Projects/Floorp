@@ -115,6 +115,7 @@ class nsCParserNode :  public nsIParserNode {
      */
     virtual PRInt32 GetTokenType()  const;
 
+
     //***************************************
     //methods for accessing key/value pairs
     //***************************************
@@ -173,11 +174,12 @@ class nsCParserNode :  public nsIParserNode {
      */
     virtual CToken* PopAttributeToken();
     
-  protected:
     PRInt32       mLineNumber;
     CToken*       mToken;
     nsDeque*      mAttributes;
     nsAutoString  mSkippedContent;
+    PRInt32       mUseCount;
+    PRBool        mIsResidual;
 
     nsITokenRecycler* mRecycler;
 };

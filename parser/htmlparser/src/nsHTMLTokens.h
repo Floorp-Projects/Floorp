@@ -113,25 +113,27 @@ protected:
  */
 class CStartToken: public CHTMLToken {
   public:
-                        CStartToken(eHTMLTags aTag);
-                        CStartToken(nsString& aName,eHTMLTags aTag=eHTMLTag_unknown);
-    virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
-    virtual PRInt32     GetTypeID(void);
-    virtual const char* GetClassName(void);
-    virtual PRInt32     GetTokenType(void);
+                          CStartToken(eHTMLTags aTag);
+                          CStartToken(nsString& aName,eHTMLTags aTag=eHTMLTag_unknown);
+    virtual nsresult      Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
+    virtual PRInt32       GetTypeID(void);
+    virtual const char*   GetClassName(void);
+    virtual PRInt32       GetTokenType(void);
 
-            PRBool      IsAttributed(void);
-            void        SetAttributed(PRBool aValue);
-            PRBool      IsEmpty(void);
-            void        SetEmpty(PRBool aValue);
-    virtual void        DebugDumpSource(nsOutputStream& out);
-    virtual void        GetSource(nsString& anOutputString);
+            PRBool        IsAttributed(void);
+            void          SetAttributed(PRBool aValue);
+            PRBool        IsEmpty(void);
+            void          SetEmpty(PRBool aValue);
+    virtual void          DebugDumpSource(nsOutputStream& out);
+    virtual void          GetSource(nsString& anOutputString);
 
-    virtual void        Reinitialize(PRInt32 aTag, const nsString& aString);
+    virtual void          Reinitialize(PRInt32 aTag, const nsString& aString);
   
+            nsAutoString  mTrailingContent;
+            PRInt32       mOrigin;
   protected:
-            PRBool      mAttributed;      
-            PRBool      mEmpty;      
+            PRBool        mAttributed;      
+            PRBool        mEmpty;      
 };
 
 
@@ -272,9 +274,10 @@ class CAttributeToken: public CHTMLToken {
             PRBool        mLastAttribute;
     virtual void          Reinitialize(PRInt32 aTag, const nsString& aString);
 
-  protected:
-             nsString mTextKey;
-};
+              PRBool   mHasEqualWithoutValue;
+              nsString mTextKey;
+             
+}; 
 
 
 /**

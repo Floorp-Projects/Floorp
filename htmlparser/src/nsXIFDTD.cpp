@@ -40,6 +40,7 @@
 #include "prmem.h"
 #include "nsXMLTokenizer.h"
 
+static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_XIF_DTD_CID); 
@@ -334,6 +335,7 @@ nsXIFDTD::nsXIFDTD() : nsIDTD(){
   mLowerCaseAttributes=PR_TRUE;
   mLowerCaseTags=PR_TRUE;
   mCharset = "";
+  mSink=0;
 }
 
 /**
@@ -345,7 +347,7 @@ nsXIFDTD::nsXIFDTD() : nsIDTD(){
  */
 nsXIFDTD::~nsXIFDTD(){
   DeleteTokenHandlers();
-//  NS_RELEASE(mSink);
+  NS_IF_RELEASE(mSink);
 }
 
 
@@ -428,12 +430,17 @@ eAutoDetectResult nsXIFDTD::CanParse(nsString& aContentType, nsString& aCommand,
  * @param 
  * @return
  */
-nsresult nsXIFDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString& aSourceType,eParseMode aParseMode,nsIContentSink* aSink){
+nsresult nsXIFDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,
+                                  nsString& aSourceType,eParseMode aParseMode,
+                                  nsString& aCommand,nsIContentSink* aSink){
   nsresult result=NS_OK;
 
-  mSink=(nsIHTMLContentSink*)aSink;
-  if(mSink) {
-    mSink->WillBuildModel();
+  if(aSink) {
+
+    if(aSink && (!mSink)) {
+      result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink);
+    }
+    result = aSink->WillBuildModel();
   }
   return result;
 }

@@ -191,7 +191,7 @@ eAutoDetectResult COtherDTD::CanParse(nsString& aContentType, nsString& aCommand
  *  @param   aNode -- CParserNode representing this start token
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-nsresult COtherDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode) {
+nsresult COtherDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode *aNode) {
   return CNavDTD::HandleDefaultStartToken(aToken,aChildTag,aNode);
 }
 
@@ -279,7 +279,7 @@ nsresult COtherDTD::HandleAttributeToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-nsresult COtherDTD::HandleScriptToken(nsCParserNode& aNode) {
+nsresult COtherDTD::HandleScriptToken(const nsIParserNode* aNode) {
   return CNavDTD::HandleScriptToken(aNode);
 }
 
@@ -337,8 +337,8 @@ NS_IMETHODIMP COtherDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
  */
-PRBool COtherDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
-  return CNavDTD::CanOmit(aParent,aChild);
+PRBool COtherDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild,PRInt32 aParentContains) const {
+  return CNavDTD::CanOmit(aParent,aChild,aParentContains);
 }
 
 
@@ -388,7 +388,7 @@ nsresult COtherDTD::CloseTransientStyles(eHTMLTags aTag){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::OpenHTML(const nsIParserNode& aNode){
+nsresult COtherDTD::OpenHTML(const nsIParserNode *aNode){
   return CNavDTD::OpenHTML(aNode);
 }
 
@@ -401,7 +401,7 @@ nsresult COtherDTD::OpenHTML(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::CloseHTML(const nsIParserNode& aNode){
+nsresult COtherDTD::CloseHTML(const nsIParserNode *aNode){
   return CNavDTD::CloseHTML(aNode);
 }
 
@@ -414,7 +414,7 @@ nsresult COtherDTD::CloseHTML(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::OpenHead(const nsIParserNode& aNode){
+nsresult COtherDTD::OpenHead(const nsIParserNode *aNode){
   return CNavDTD::OpenHead(aNode);
 }
 
@@ -426,7 +426,7 @@ nsresult COtherDTD::OpenHead(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::CloseHead(const nsIParserNode& aNode){
+nsresult COtherDTD::CloseHead(const nsIParserNode *aNode){
   return CNavDTD::CloseHead(aNode);
 }
 
@@ -438,7 +438,7 @@ nsresult COtherDTD::CloseHead(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::OpenBody(const nsIParserNode& aNode){
+nsresult COtherDTD::OpenBody(const nsIParserNode *aNode){
   return CNavDTD::OpenBody(aNode);
 }
 
@@ -450,7 +450,7 @@ nsresult COtherDTD::OpenBody(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::CloseBody(const nsIParserNode& aNode){
+nsresult COtherDTD::CloseBody(const nsIParserNode *aNode){
   return CNavDTD::CloseBody(aNode);
 }
 
@@ -462,7 +462,7 @@ nsresult COtherDTD::CloseBody(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::OpenForm(const nsIParserNode& aNode){
+nsresult COtherDTD::OpenForm(const nsIParserNode *aNode){
   return CNavDTD::OpenForm(aNode);
 }
 
@@ -474,7 +474,7 @@ nsresult COtherDTD::OpenForm(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::CloseForm(const nsIParserNode& aNode){
+nsresult COtherDTD::CloseForm(const nsIParserNode *aNode){
   return CNavDTD::CloseForm(aNode);
 }
 
@@ -486,7 +486,7 @@ nsresult COtherDTD::CloseForm(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::OpenMap(const nsIParserNode& aNode){
+nsresult COtherDTD::OpenMap(const nsIParserNode *aNode){
   return CNavDTD::OpenMap(aNode);
 }
 
@@ -498,7 +498,7 @@ nsresult COtherDTD::OpenMap(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::CloseMap(const nsIParserNode& aNode){
+nsresult COtherDTD::CloseMap(const nsIParserNode *aNode){
   return CNavDTD::CloseMap(aNode);
 }
 
@@ -510,7 +510,7 @@ nsresult COtherDTD::CloseMap(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::OpenFrameset(const nsIParserNode& aNode){
+nsresult COtherDTD::OpenFrameset(const nsIParserNode *aNode){
   return CNavDTD::OpenFrameset(aNode);
 }
 
@@ -522,7 +522,7 @@ nsresult COtherDTD::OpenFrameset(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::CloseFrameset(const nsIParserNode& aNode){
+nsresult COtherDTD::CloseFrameset(const nsIParserNode *aNode){
   return CNavDTD::CloseFrameset(aNode);
 }
 
@@ -534,8 +534,8 @@ nsresult COtherDTD::CloseFrameset(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
-  return CNavDTD::OpenContainer(aNode,aUpdateStyleStack);
+nsresult COtherDTD::OpenContainer(const nsIParserNode *aNode,eHTMLTags aTarget,PRBool aUpdateStyleStack,PRInt32 aResidualStyleLevel){
+  return CNavDTD::OpenContainer(aNode,aTarget,aUpdateStyleStack,aResidualStyleLevel);
 }
 
 /**
@@ -546,8 +546,8 @@ nsresult COtherDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyle
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRBool aUpdateStyles){
-  return CNavDTD::CloseContainer(aNode,aTag,aUpdateStyles);
+nsresult COtherDTD::CloseContainer(const nsIParserNode *aNode,eHTMLTags aTarget,PRBool aUpdateStyles){
+  return CNavDTD::CloseContainer(aNode,aTarget,aUpdateStyles);
 }
 
 /**
@@ -558,8 +558,8 @@ nsresult COtherDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRB
  * @param   
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aUpdateStyles){
-  return CNavDTD::CloseContainersTo(anIndex,aTag,aUpdateStyles);
+nsresult COtherDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget,PRBool aUpdateStyles){
+  return CNavDTD::CloseContainersTo(anIndex,aTarget,aUpdateStyles);
 }
 
 /**
@@ -570,21 +570,10 @@ nsresult COtherDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aUpd
  * @param   
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
-  return CNavDTD::CloseContainersTo(aTag,aUpdateStyles);
+nsresult COtherDTD::CloseContainersTo(eHTMLTags aTarget,PRBool aUpdateStyles){
+  return CNavDTD::CloseContainersTo(aTarget,aUpdateStyles);
 }
 
-/**
- * This method causes the topmost container on the stack
- * to be closed. 
- * @update  gess4/6/98
- * @see     CloseContainer()
- * @param   
- * @return  TRUE if ok, FALSE if error
- */
-nsresult COtherDTD::CloseTopmostContainer(){
-  return CNavDTD::CloseTopmostContainer();
-}
 
 /**
  * This method does two things: 1st, help construct
@@ -594,7 +583,7 @@ nsresult COtherDTD::CloseTopmostContainer(){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::AddLeaf(const nsIParserNode& aNode){
+nsresult COtherDTD::AddLeaf(const nsIParserNode *aNode){
   return CNavDTD::AddLeaf(aNode);
 }
 
@@ -615,18 +604,6 @@ nsresult COtherDTD::CreateContextStackFor(eHTMLTags aChildTag){
 
 
 /**
- * This method causes all explicit style-tag containers that
- * are opened to be reflected on our internal style-stack.
- *
- * @update	gess6/4/98
- * @param   aTag is the id of the html container being opened
- * @return  0 if all is well.
- */
-nsresult COtherDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag){
-  return CNavDTD::UpdateStyleStackForOpenTag(aTag,anActualTag);
-} //update...
-
-/**
  * This method gets called when an explicit style close-tag is encountered.
  * It results in the style tag id being popped from our internal style stack.
  *
@@ -634,8 +611,8 @@ nsresult COtherDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActual
  * @param 
  * @return  0 if all went well (which it always does)
  */
-nsresult COtherDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTag){
-  return CNavDTD::UpdateStyleStackForCloseTag(aTag,anActualTag);
+nsresult COtherDTD::PopStyle(eHTMLTags aTag){
+  return CNavDTD::PopStyle(aTag);
 } //update...
 
 /**

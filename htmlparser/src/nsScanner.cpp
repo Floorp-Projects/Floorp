@@ -67,6 +67,7 @@ nsScanner::nsScanner(nsString& anHTMLString, const nsString& aCharset, nsCharset
   mCharset = "";
   mCharsetSource = kCharsetUninitialized;
   SetDocumentCharset(aCharset, aSource);
+  mNewlinesSkipped=0;
 }
 
 /**
@@ -96,6 +97,7 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& a
   mCharset = "";
   mCharsetSource = kCharsetUninitialized;
   SetDocumentCharset(aCharset, aSource);
+  mNewlinesSkipped=0;
 }
 
 /**
@@ -122,6 +124,7 @@ nsScanner::nsScanner(nsString& aFilename,nsInputStream& aStream,const nsString& 
   mCharset = "";
   mCharsetSource = kCharsetUninitialized;
   SetDocumentCharset(aCharset, aSource);
+  mNewlinesSkipped=0;
 }
 
 
@@ -454,15 +457,17 @@ nsresult nsScanner::SkipWhitespace(void) {
   PRInt32           theOrigin=mOffset;
   PRBool            found=PR_FALSE;  
 
+  mNewlinesSkipped = 0;
+
 #if 1
   while(NS_OK==result) {
  
     theChar=theBuf[mOffset++];
     if(theChar) {
       switch(theChar) {
-        case ' ':
+        case '\n': mNewlinesSkipped++;
+        case ' ' :
         case '\r':
-        case '\n':
         case '\b':
         case '\t':
           found=PR_TRUE;
