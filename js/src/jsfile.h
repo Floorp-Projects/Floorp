@@ -30,4 +30,3 @@ JS_EXTERN_API(JSObject*)
 js_NewFileObjectFromFILE(JSContext *cx, FILE *nativehandle, char *filename, JSBool open);
 #endif /* JS_HAS_FILE_OBJECT */
 #endif /* _jsfile_h__ */
-

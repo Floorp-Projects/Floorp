@@ -17,7 +17,7 @@
  */
 
 /*
-        Error messages for JSFile. See js.msg for format.
+        Error messages for jsfile.c. See js.msg for format specification.
 */
 
 MSG_DEF(JSFILEMSG_NOT_AN_ERROR,                                    0, 0, JSEXN_NONE, "<Error #0 is reserved>")
@@ -51,10 +51,9 @@ MSG_DEF(JSFILEMSG_FIRST_ARGUMENT_MUST_BE_A_FUNCTION_OR_REGEX,     28, 1, JSEXN_N
 MSG_DEF(JSFILEMSG_CANNOT_DO_LIST_ON_A_FILE,                       29, 1, JSEXN_NONE, "{0} must be a directory, cannot do list")
 MSG_DEF(JSFILEMSG_NATIVE_OPERATION_IS_NOT_SUPPORTED,              30, 2, JSEXN_NONE, "Native operation {0} is not supported on {1}")
 MSG_DEF(JSFILEMSG_CANNOT_SET_PRIVATE_FILE,                        31, 1, JSEXN_NONE, "Cannot set private data for file {0}")
-
-
-
-
-
+MSG_DEF(JSFILEMSG_FIRST_ARGUMENT_MUST_BE_A_NUMBER,                32, 2, JSEXN_NONE, "First argument to {0} must be a number, not {1}")
+MSG_DEF(JSFILEMSG_CANNOT_WRITE,                                   33, 1, JSEXN_NONE, "Cannot write to {0}, file mode is different")
+MSG_DEF(JSFILEMSG_CANNOT_READ,                                    34, 1, JSEXN_NONE, "Cannot read from {0}, file mode is different")
+MSG_DEF(JSFILEMSG_CANNOT_FLUSH,                                   35, 1, JSEXN_NONE, "Flush failed on {0}")
 
 
