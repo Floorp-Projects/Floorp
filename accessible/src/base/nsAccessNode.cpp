@@ -112,9 +112,7 @@ NS_IMETHODIMP nsAccessNode::Init()
     // Create a doc accessible so we can cache this node
     nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
     if (presShell) {
-      nsCOMPtr<nsIDocument> doc;
-      presShell->GetDocument(getter_AddRefs(doc));
-      nsCOMPtr<nsIDOMNode> docNode(do_QueryInterface(doc));
+      nsCOMPtr<nsIDOMNode> docNode(do_QueryInterface(presShell->GetDocument()));
       if (docNode) {
         nsCOMPtr<nsIAccessibilityService> accService = 
           do_GetService("@mozilla.org/accessibilityService;1");

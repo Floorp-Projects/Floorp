@@ -655,7 +655,7 @@ public:
     {}
   };
 
-  already_AddRefed<nsIDocument> GetDocument(nsPresContext* aPresContext);
+  nsIDocument* GetDocument(nsPresContext* aPresContext);
 
   PRIntn PrepareUnicodeText(nsTextTransformer& aTransformer,
                             nsAutoIndexBuffer* aIndexBuffer,
@@ -1325,15 +1325,15 @@ nsTextFrame::~nsTextFrame()
   }
 }
 
-already_AddRefed<nsIDocument>
+nsIDocument*
 nsTextFrame::GetDocument(nsPresContext* aPresContext)
 {
-  nsIDocument* result = nsnull;
+  nsIDocument *result = nsnull;
   if (mContent) {
-    NS_IF_ADDREF(result = mContent->GetDocument());
+    result = mContent->GetDocument();
   }
   if (!result && aPresContext) {
-    aPresContext->PresShell()->GetDocument(&result);
+    result = aPresContext->PresShell()->GetDocument();
   }
   return result;
 }
@@ -2046,8 +2046,7 @@ nsresult nsTextFrame::GetTextInfoForPainting(nsPresContext*          aPresContex
   // transformed when we formatted it, then there's no need to do all
   // this and we should just render the text fragment directly. See
   // PaintAsciiText()...
-  nsCOMPtr<nsIDocument> doc;
-  (*aPresShell)->GetDocument(getter_AddRefs(doc));
+  nsIDocument *doc = (*aPresShell)->GetDocument();
   if (!doc)
     return NS_ERROR_FAILURE;
 
@@ -2488,7 +2487,7 @@ nsTextFrame::GetPositionSlowly(nsPresContext* aPresContext,
       *aNewContent = mContent;
       aOffset =0;
   }
-  nsCOMPtr<nsIDocument> doc(GetDocument(aPresContext));
+  nsIDocument *doc = GetDocument(aPresContext);
 
   // Make enough space to transform
   nsAutoTextBuffer paintBuffer;
@@ -3391,7 +3390,7 @@ nsTextFrame::GetPosition(nsPresContext* aCX,
       SetFontFromStyle(acx, mStyleContext);
 
       // Get the renderable form of the text
-      nsCOMPtr<nsIDocument> doc(GetDocument(aCX));
+      nsIDocument *doc = GetDocument(aCX);
       nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aCX);
       PRInt32 textLength;
       // no need to worry about justification, that's always on the slow path
@@ -3722,7 +3721,7 @@ nsTextFrame::GetPointFromOffset(nsPresContext* aPresContext,
   }
 
   // Transform text from content into renderable form
-  nsCOMPtr<nsIDocument> doc(GetDocument(aPresContext));
+  nsIDocument *doc = GetDocument(aPresContext);
   nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aPresContext);
   PRInt32 textLength;
   PRInt32 numSpaces;
@@ -4336,10 +4335,7 @@ nsTextFrame::CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt
       return NS_ERROR_FAILURE;
 
   //get the document
-    nsCOMPtr<nsIDocument> doc;
-    rv = shell->GetDocument(getter_AddRefs(doc));
-    if (NS_FAILED(rv))
-      return rv;
+    nsIDocument *doc = shell->GetDocument();
     if (!doc)
       return NS_ERROR_FAILURE;
   //create texttransformer

@@ -205,8 +205,7 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
     if (!presShell)
       break;
 
-    nsCOMPtr<nsIDocument> document;
-    presShell->GetDocument(getter_AddRefs(document));
+    nsIDocument *document = presShell->GetDocument();
     if (!document)
       break;
 
@@ -226,12 +225,13 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
       break;
 
     nsCOMPtr<nsIDOMDocument> domDoc;
+    nsCOMPtr<nsIDocument> focusedDoc;
     windowInternal->GetDocument(getter_AddRefs(domDoc));
-    document = do_QueryInterface(domDoc);
-    if (!document)
+    focusedDoc = do_QueryInterface(domDoc);
+    if (!focusedDoc)
       break;
 
-    presShell = document->GetShellAt(0);
+    presShell = focusedDoc->GetShellAt(0);
     nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(presShell));
     // there is no selection controller for full page plugins
     if (!selCon)

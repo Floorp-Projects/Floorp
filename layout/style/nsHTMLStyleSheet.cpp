@@ -500,10 +500,8 @@ NS_IMPL_ISUPPORTS2(nsHTMLStyleSheet, nsIStyleSheet, nsIStyleRuleProcessor)
 
 static nsresult GetBodyColor(nsPresContext* aPresContext, nscolor* aColor)
 {
-  nsCOMPtr<nsIDocument> doc;
   nsIPresShell *shell = aPresContext->PresShell();
-  shell->GetDocument(getter_AddRefs(doc));
-  nsCOMPtr<nsIDOMHTMLDocument> domdoc = do_QueryInterface(doc);
+  nsCOMPtr<nsIDOMHTMLDocument> domdoc = do_QueryInterface(shell->GetDocument());
   if (!domdoc)
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsIDOMHTMLElement> body;

@@ -90,8 +90,8 @@ class nsIStyleSheet;
 class nsCSSFrameConstructor;
 
 #define NS_IPRESSHELL_IID     \
-{ 0x76e79c60, 0x944e, 0x11d1, \
-  {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+{ 0xde106833, 0xf56c, 0x4062, \
+  {0x9c, 0x7c, 0x60, 0x67, 0x40, 0x7e, 0x88, 0x4a} }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -163,7 +163,6 @@ public:
   NS_IMETHOD PopStackMemory() = 0;
   NS_IMETHOD AllocateStackMemory(size_t aSize, void** aResult) = 0;
   
-  NS_IMETHOD GetDocument(nsIDocument** aResult) = 0;
   nsIDocument* GetDocument() { return mDocument; }
 
   NS_IMETHOD GetPresContext(nsPresContext** aResult) = 0;

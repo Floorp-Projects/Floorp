@@ -1329,9 +1329,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
         mFocusedDocSelection->CollapseToStart(); // Hide old doc's selection
         SetSelectionLook(startingPresShell, PR_FALSE, PR_FALSE); // hide caret
 
-        nsCOMPtr<nsIDocument> doc;
-        presShell->GetDocument(getter_AddRefs(doc));
-
+        nsIDocument *doc = presShell->GetDocument();
         if (!doc) {
           return NS_ERROR_FAILURE;
         }
@@ -1472,9 +1470,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDocument> doc;
-  presShell->GetDocument(getter_AddRefs(doc));
-
+  nsIDocument *doc = presShell->GetDocument();
   if (!doc) {
     return NS_ERROR_FAILURE;
   }

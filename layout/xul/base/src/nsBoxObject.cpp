@@ -627,10 +627,8 @@ nsBoxObject::GetDocShell(nsIDocShell** aResult)
   // No nsIFrameFrame available for mContent, try if there's a mapping
   // between mContent's document to mContent's subdocument.
 
-  nsCOMPtr<nsIDocument> doc;
-  mPresShell->GetDocument(getter_AddRefs(doc));
-
-  nsIDocument *sub_doc = doc->GetSubDocumentFor(mContent);
+  nsIDocument *sub_doc =
+    mPresShell->GetDocument()->GetSubDocumentFor(mContent);
 
   if (!sub_doc) {
     return NS_OK;

@@ -1318,9 +1318,9 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
   }
 
   nsIPresShell *shell = presContext->GetPresShell();
-  nsCOMPtr<nsIDocument> document;
+  nsIDocument *document = nsnull;
   if (shell)
-    shell->GetDocument(getter_AddRefs(document));
+    document = shell->GetDocument();
 
   // The anonymous <div> used by <inputs> never gets scrollbars.
   nsCOMPtr<nsITextControlFrame> textFrame(do_QueryInterface(parent));

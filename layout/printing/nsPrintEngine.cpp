@@ -1744,8 +1744,7 @@ nsPrintEngine::IsParentAFrameSet(nsIWebShell * aParent)
   // only check to see if there is a frameset if there is
   // NO parent doc for this doc. meaning this parent is the root doc
   if (shell) {
-    nsCOMPtr<nsIDocument> doc;
-    shell->GetDocument(getter_AddRefs(doc));
+    nsIDocument *doc = shell->GetDocument();
     if (doc) {
       nsIContent *rootContent = doc->GetRootContent();
       if (rootContent) {

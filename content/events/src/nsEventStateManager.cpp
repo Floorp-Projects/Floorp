@@ -1811,9 +1811,7 @@ nsEventStateManager::GetParentScrollingView(nsInputEvent *aEvent,
   if (!aEvent) return NS_ERROR_FAILURE;
   if (!aPresContext) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDocument> doc;
-  aPresContext->PresShell()->GetDocument(getter_AddRefs(doc));
-
+  nsIDocument *doc = aPresContext->PresShell()->GetDocument();
   NS_ASSERTION(doc, "No document in prescontext!");
 
   nsIDocument *parentDoc = doc->GetParentDocument();
@@ -3039,8 +3037,7 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
   parentAsDocShell->GetPresShell(getter_AddRefs(presShell));
   nsCOMPtr<nsPresContext> presContext;
   parentAsDocShell->GetPresContext(getter_AddRefs(presContext));
-  nsCOMPtr<nsIDocument> doc;
-  presShell->GetDocument(getter_AddRefs(doc));
+  nsIDocument *doc = presShell->GetDocument();
 
   nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(doc->GetScriptGlobalObject()));
 
@@ -3327,9 +3324,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
           nsCOMPtr<nsIPresShell> parentShell;
           parentDS->GetPresShell(getter_AddRefs(parentShell));
 
-          nsCOMPtr<nsIDocument> parent_doc;
-          parentShell->GetDocument(getter_AddRefs(parent_doc));
-
+          nsIDocument *parent_doc = parentShell->GetDocument();
           nsIContent *docContent = parent_doc->FindContentForSubDocument(mDocument);
 
           nsCOMPtr<nsPresContext> parentPC;
@@ -4431,7 +4426,7 @@ void
 nsEventStateManager::EnsureDocument(nsIPresShell* aPresShell)
 {
   if (!mDocument && aPresShell)
-    aPresShell->GetDocument(getter_AddRefs(mDocument));
+    mDocument = aPresShell->GetDocument();
 }
 
 void
@@ -4963,8 +4958,7 @@ nsEventStateManager::IsFrameSetDoc(nsIDocShell* aDocShell)
   nsCOMPtr<nsIPresShell> presShell;
   aDocShell->GetPresShell(getter_AddRefs(presShell));
   if (presShell) {
-    nsCOMPtr<nsIDocument> doc;
-    presShell->GetDocument(getter_AddRefs(doc));
+    nsIDocument *doc = presShell->GetDocument();
     nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
     if (htmlDoc) {
       nsIContent *rootContent = doc->GetRootContent();

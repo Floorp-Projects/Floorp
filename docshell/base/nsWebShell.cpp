@@ -577,10 +577,7 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
     GetPresShell(getter_AddRefs(presShell));
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIDocument> currentDoc;
-    presShell->GetDocument(getter_AddRefs(currentDoc));
-
-    if (currentDoc != sourceDoc) {
+    if (presShell->GetDocument() != sourceDoc) {
       // The source is not in the current document, don't let it
       // execute any javascript in the current document.
 

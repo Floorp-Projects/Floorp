@@ -702,8 +702,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
   if (mShell) {
     // Remove ourselves as the charset observer from the shell's doc, because
     // this shell may be going away for good.
-    nsCOMPtr<nsIDocument> doc;
-    mShell->GetDocument(getter_AddRefs(doc));
+    nsIDocument *doc = mShell->GetDocument();
     if (doc) {
       doc->RemoveCharSetObserver(this);
     }
@@ -712,28 +711,26 @@ nsPresContext::SetShell(nsIPresShell* aShell)
   mShell = aShell;
 
   if (mShell) {
-    nsCOMPtr<nsIDocument> doc;
-    if (NS_SUCCEEDED(mShell->GetDocument(getter_AddRefs(doc)))) {
-      NS_ASSERTION(doc, "expect document here");
-      if (doc) {
-        nsIURI *baseURI = doc->GetBaseURI();
+    nsIDocument *doc = mShell->GetDocument();
+    NS_ASSERTION(doc, "expect document here");
+    if (doc) {
+      nsIURI *baseURI = doc->GetBaseURI();
 
-        if (mMedium != nsLayoutAtoms::print && baseURI) {
-            PRBool isChrome = PR_FALSE;
-            PRBool isRes = PR_FALSE;
-            baseURI->SchemeIs("chrome", &isChrome);
-            baseURI->SchemeIs("resource", &isRes);
+      if (mMedium != nsLayoutAtoms::print && baseURI) {
+        PRBool isChrome = PR_FALSE;
+        PRBool isRes = PR_FALSE;
+        baseURI->SchemeIs("chrome", &isChrome);
+        baseURI->SchemeIs("resource", &isRes);
 
-          if (!isChrome && !isRes)
-            mImageAnimationMode = mImageAnimationModePref;
-          else
-            mImageAnimationMode = imgIContainer::kNormalAnimMode;
-        }
+        if (!isChrome && !isRes)
+          mImageAnimationMode = mImageAnimationModePref;
+        else
+          mImageAnimationMode = imgIContainer::kNormalAnimMode;
+      }
 
-        if (mLangService) {
-          doc->AddCharSetObserver(this);
-          UpdateCharSet(doc->GetDocumentCharacterSet().get());
-        }
+      if (mLangService) {
+        doc->AddCharSetObserver(this);
+        UpdateCharSet(doc->GetDocumentCharacterSet().get());
       }
     }
   }
@@ -861,9 +858,8 @@ nsPresContext::SetImageAnimationModeInternal(PRUint16 aMode)
 
   // Now walk the content tree and set the animation mode 
   // on all the images
-  nsCOMPtr<nsIDocument> doc;
   if (mShell != nsnull) {
-    mShell->GetDocument(getter_AddRefs(doc));
+    nsIDocument *doc = mShell->GetDocument();
     if (doc) {
       nsIContent *rootContent = doc->GetRootContent();
       if (rootContent) {
@@ -1055,8 +1051,7 @@ nsPresContext::BidiEnabledInternal() const
   PRBool bidiEnabled = PR_FALSE;
   NS_ASSERTION(mShell, "PresShell must be set on PresContext before calling nsPresContext::GetBidiEnabled");
   if (mShell) {
-    nsCOMPtr<nsIDocument> doc;
-    mShell->GetDocument(getter_AddRefs(doc) );
+    nsIDocument *doc = mShell->GetDocument();
     NS_ASSERTION(doc, "PresShell has no document in nsPresContext::GetBidiEnabled");
     if (doc) {
       bidiEnabled = doc->GetBidiEnabled();
@@ -1075,8 +1070,7 @@ void
 nsPresContext::SetBidiEnabled(PRBool aBidiEnabled) const
 {
   if (mShell) {
-    nsCOMPtr<nsIDocument> doc;
-    mShell->GetDocument(getter_AddRefs(doc) );
+    nsIDocument *doc = mShell->GetDocument();
     if (doc) {
       doc->SetBidiEnabled(aBidiEnabled);
     }

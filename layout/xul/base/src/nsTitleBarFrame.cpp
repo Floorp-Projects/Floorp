@@ -167,9 +167,8 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
 			 if(mTrackingMouseMove)
 			 {				 				 
 			   // get the document and the global script object - should this be cached?
-			   nsCOMPtr<nsIDocument> document;
-			   aPresContext->PresShell()->GetDocument(getter_AddRefs(document));
-			   nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(document->GetScriptGlobalObject()));
+			   nsCOMPtr<nsIDOMWindowInternal>
+           window(do_QueryInterface(aPresContext->PresShell()->GetDocument()->GetScriptGlobalObject()));
 
 
 

@@ -610,8 +610,7 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
       viewHasTransparentContent = PR_FALSE;
     }
 
-    nsCOMPtr<nsIDocument> doc;
-    aPresContext->PresShell()->GetDocument(getter_AddRefs(doc));
+    nsIDocument *doc = aPresContext->PresShell()->GetDocument();
     if (doc) {
       nsIContent *rootElem = doc->GetRootContent();
       if (!doc->GetParentDocument() &&

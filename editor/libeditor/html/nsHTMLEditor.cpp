@@ -3623,12 +3623,10 @@ nsHTMLEditor::ReplaceStyleSheet(const nsAString& aURL)
   nsresult rv = GetCSSLoader(aURL, getter_AddRefs(cssLoader));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDocument> document;
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  rv = ps->GetDocument(getter_AddRefs(document));
-  NS_ENSURE_SUCCESS(rv, rv);;
+  nsIDocument *document = ps->GetDocument();
   if (!document)     return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIURI> uaURI;
@@ -3871,15 +3869,10 @@ nsHTMLEditor::GetCSSLoader(const nsAString& aURL, nsICSSLoader** aCSSLoader)
     return NS_ERROR_NULL_POINTER;
   *aCSSLoader = 0;
 
-  nsresult rv;
-
-  nsCOMPtr<nsIDocument> document;
-
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  rv = ps->GetDocument(getter_AddRefs(document));
-  NS_ENSURE_SUCCESS(rv, rv);;
+  nsIDocument *document = ps->GetDocument();
   if (!document)     return NS_ERROR_NULL_POINTER;
 
   NS_IF_ADDREF(*aCSSLoader = document->GetCSSLoader());

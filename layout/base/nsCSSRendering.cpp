@@ -1546,8 +1546,8 @@ PRBool GetBGColorForHTMLElement( nsPresContext *aPresContext,
 
   nsIPresShell* shell = aPresContext->GetPresShell();
   if (shell) {
-    nsIDocument *doc = nsnull;
-    if (NS_SUCCEEDED(shell->GetDocument(&doc)) && doc) {
+    nsIDocument *doc = shell->GetDocument();
+    if (doc) {
       nsIContent *pContent;
       if ((pContent = doc->GetRootContent())) {
         // make sure that this is the HTML element
@@ -1576,7 +1576,6 @@ PRBool GetBGColorForHTMLElement( nsPresContext *aPresContext,
         }
 #endif
       }// if content
-      NS_RELEASE(doc);
     }// if doc
   } // if shell
 

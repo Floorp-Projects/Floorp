@@ -162,9 +162,8 @@ NS_NewListControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsCOMPtr<nsIDocument> doc;
-  aPresShell->GetDocument(getter_AddRefs(doc));
-  nsListControlFrame* it = new (aPresShell) nsListControlFrame(aPresShell, doc);
+  nsListControlFrame* it =
+    new (aPresShell) nsListControlFrame(aPresShell, aPresShell->GetDocument());
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

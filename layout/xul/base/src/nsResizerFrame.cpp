@@ -152,9 +152,8 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
 			 if(mTrackingMouseMove)
 			 {				 				 
 			   // get the document and the global script object - should this be cached?
-			   nsCOMPtr<nsIDocument> document;
-			   aPresContext->PresShell()->GetDocument(getter_AddRefs(document));
-			   nsIScriptGlobalObject *scriptGlobalObject = document->GetScriptGlobalObject();
+			   nsIScriptGlobalObject *scriptGlobalObject =
+           aPresContext->PresShell()->GetDocument()->GetScriptGlobalObject();
          NS_ENSURE_TRUE(scriptGlobalObject, NS_ERROR_FAILURE);
 
          nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =

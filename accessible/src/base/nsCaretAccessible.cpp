@@ -95,8 +95,7 @@ NS_IMETHODIMP nsCaretAccessible::AttachNewSelectionListener(nsIDOMNode *aCurrent
   if (!presShell)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDocument> doc;
-  presShell->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = presShell->GetDocument();
   if (!doc)  // we also should try to QI to document instead (necessary to do when node is a document)
     doc = do_QueryInterface(aCurrentNode);
   nsCOMPtr<nsIContent> content(do_QueryInterface(aCurrentNode));
