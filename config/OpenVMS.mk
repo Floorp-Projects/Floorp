@@ -47,7 +47,7 @@ HOST_CFLAGS	= $(filter-out -g -O,$(OS_CFLAGS)) -DGETCWD_CANT_MALLOC
 else
 HOST_CFLAGS	= $(filter-out -g -O,$(OS_CFLAGS)) -DGETCWD_CANT_MALLOC -O
 endif
-HOST_CXXFLAGS	= (filter-out -g -O,$(OS_CXXFLAGS)) -O
+HOST_CXXFLAGS	= $(filter-out -g -O,$(OS_CXXFLAGS)) -O
 
 # In addition, we want to lose the OS_FLAGS for POSIX builds.
 ifdef INTERNAL_TOOLS
