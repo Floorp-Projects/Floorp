@@ -173,7 +173,7 @@ nsDownloadManager::Init()
 nsresult
 nsDownloadManager::DownloadStarted(const nsACString& aTargetPath)
 {
-  if (mCurrDownloads.Get(aTargetPath, nsnull))
+  if (mCurrDownloads.GetWeak(aTargetPath))
     AssertProgressInfoFor(aTargetPath);
 
   return NS_OK;
@@ -517,9 +517,7 @@ nsDownloadManager::GetDownload(const nsACString & aTargetPath, nsIDownload** aDo
   // if it's currently downloading we can get it from the table
   // XXX otherwise we should look for it in the datasource and
   //     create a new nsIDownload with the resource's properties
-  nsDownload* item;
-  mCurrDownloads.Get(aTargetPath, &item);
-  *aDownloadItem = item;
+  NS_IF_ADDREF(*aDownloadItem = mCurrDownloads.GetWeak(aTargetPath));
   return NS_OK;
 }
 
@@ -527,7 +525,7 @@ NS_IMETHODIMP
 nsDownloadManager::CancelDownload(const nsACString & aTargetPath)
 {
   nsresult rv = NS_OK;
-  nsDownload* internalDownload = mCurrDownloads.GetWeak(aTargetPath);
+  nsRefPtr<nsDownload> internalDownload = mCurrDownloads.GetWeak(aTargetPath);
   if (!internalDownload)
     return NS_ERROR_FAILURE;
 
@@ -575,7 +573,7 @@ nsDownloadManager::RemoveDownload(const nsACString & aTargetPath)
 {
   // RemoveDownload is for downloads not currently in progress. Having it
   // cancel in-progress downloads would make things complicated, so just return.
-  PRBool inProgress = mCurrDownloads.Get(aTargetPath, nsnull);
+  nsDownload* inProgress = mCurrDownloads.GetWeak(aTargetPath);
   NS_ASSERTION(!inProgress, "Can't call RemoveDownload on a download in progress!");
   if (inProgress)
     return NS_ERROR_FAILURE;
