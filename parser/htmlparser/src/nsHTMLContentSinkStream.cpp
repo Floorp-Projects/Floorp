@@ -748,6 +748,9 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
     {
       Write(kGreaterThan);
       Write(NS_LINEBREAK);
+    }
+    if ( mHTMLTagStack[mHTMLStackPos-1] == eHTMLTag_markupDecl)
+    {
       mHTMLTagStack[--mHTMLStackPos] = eHTMLTag_unknown;
     }
     return;
