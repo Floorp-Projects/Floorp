@@ -5513,8 +5513,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         isReplaced = PR_TRUE;
         rv = NS_NewImageBoxFrame(aPresShell, &newFrame);
       }
-      else if (aTag == nsXULAtoms::spring) {
-        processChildren = PR_TRUE;
+      else if (aTag == nsXULAtoms::spring ||
+               aTag == nsHTMLAtoms::spacer) {
         isReplaced = PR_TRUE;
         rv = NS_NewSpringFrame(aPresShell, &newFrame);
       }
