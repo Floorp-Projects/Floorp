@@ -46,8 +46,8 @@ CPPSRCS = Attr.cpp \
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES += -I$(srcdir)/../.. -I$(srcdir)/../../../base \
-            -I$(srcdir)/../../../net -I$(srcdir)/../../../xpath \
-            -I$(srcdir)/../../../xslt
+INCLUDES += -I$(srcdir) -I$(srcdir)/../..
+            -I$(srcdir)/../../../base -I$(srcdir)/../../../net \
+            -I$(srcdir)/../../../xpath -I$(srcdir)/../../../xslt
 
 libs:: $(OBJS)
