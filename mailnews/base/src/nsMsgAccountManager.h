@@ -23,8 +23,14 @@
  * some platforms (like Windows and Mac) use a map file, because of
  * file name length limitations.
  */
-#if !defined(XP_UNIX) && !defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_BEOS)
+// if you don't use the fat file, then you need to specify the newsrc file prefix you use
+#define NEWSRC_FILE_PREFIX ".newsrc-"
+#else
 #define USE_NEWSRC_MAP_FILE
+
+// in the fat file, the hostname is prefix by this string:
+#define PSUEDO_NAME_PREFIX "newsrc-"
 
 #if defined(XP_PC)
 #define NEWS_FAT_FILE_NAME "fat"
@@ -37,9 +43,9 @@
 #define NEWS_FAT_FILE_NAME "NewsFAT"
 #else
 #error dont_know_what_your_news_fat_file_is
-#endif
+#endif /* XP_PC, XP_MAC */
 
-#endif /* ! XP_UNIX && ! XP_BEOS */
+#endif /* XP_UNIX || XP_BEOS */
 
 
 NS_BEGIN_EXTERN_C

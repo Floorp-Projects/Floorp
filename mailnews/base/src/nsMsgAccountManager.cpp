@@ -38,6 +38,7 @@
 #include "nsIMsgFolderCache.h"
 #include "nsFileStream.h"
 #include "nsMsgUtils.h"
+#include "nsSpecialSystemDirectory.h"
 
 // this should eventually be moved to the pop3 server for upgrading
 #include "nsIPop3IncomingServer.h"
@@ -45,8 +46,6 @@
 #include "nsIImapIncomingServer.h"
 // this should eventually be moved to the nntp server for upgrading
 #include "nsINntpIncomingServer.h"
-
-#define PSUEDO_NAME_PREFIX "newsrc-"
 
 #if defined(DEBUG_alecf) || defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_ACCOUNTMANAGER 1
@@ -298,15 +297,13 @@ nsMsgAccountManager::AddAccount(nsIMsgAccount *account)
     rv = account->GetIncomingServer(getter_AddRefs(server));
     if (NS_FAILED(rv)) return rv;
     if (!isUnique(server)) {
-#ifdef NS_DEBUG
+#ifdef DEBUG_ACCOUNTMANAGER
       printf("nsMsgAccountManager::AddAccount(%s) failed because server was not unique\n", (const char*)accountKey);
 #endif
       // this means the server was found, which is bad.
       return NS_ERROR_UNEXPECTED;
     }
 
-    
-    
 #ifdef DEBUG_ACCOUNTMANAGER
     printf("Adding account %s\n", (const char *)accountKey);
 #endif
@@ -719,8 +716,9 @@ nsMsgAccountManager::LoadAccounts()
                              getter_Copies(accountList));
 
   if (NS_FAILED(rv) || !accountList || !accountList[0]) {
-    // create default bogus accounts
+#ifdef DEBUG_ACCOUNTMANAGER
     printf("No accounts. I'll try to migrate 4.x prefs..\n");
+#endif
     rv = upgradePrefs();
     return rv;
   }
@@ -746,7 +744,7 @@ nsMsgAccountManager::LoadAccounts()
           rv = AddAccount(account);
           if (NS_FAILED(rv)) {
 
-#ifdef NS_DEBUG
+#ifdef DEBUG_ACCOUNTMANAGER
             printf("Error adding account %s\n", str.GetBuffer());
 #endif
             // warn the user here?
@@ -798,8 +796,9 @@ nsMsgAccountManager::MigratePrefs()
 nsIMsgAccount *
 nsMsgAccountManager::LoadAccount(nsString& accountKey)
 {
+#ifdef DEBUG_ACCOUNTMANAGER
   printf("Loading preferences for account: %s\n", accountKey.GetBuffer());
-  
+#endif
   nsIMsgAccount *account = nsnull;
   nsresult rv;
   rv = nsComponentManager::CreateInstance(kMsgAccountCID,
@@ -858,7 +857,9 @@ nsMsgAccountManager::upgradePrefs()
 
     rv = m_prefs->GetIntPref("mail.server_type", &oldMailType);
     if (NS_FAILED(rv)) {
+#ifdef DEBUG_ACCOUNTMANAGER
         printf("Tried to upgrade old prefs, but couldn't find server type!\n");
+#endif
         return rv;
     }
 
@@ -924,7 +925,9 @@ nsMsgAccountManager::upgradePrefs()
       numAccounts += MigrateImapAccounts(identity);
 	}
     else {
+#ifdef DEBUG_ACCOUNTMANAGER
         printf("Unrecognized server type %d\n", oldMailType);
+#endif
         return NS_ERROR_UNEXPECTED;
     }
 
@@ -992,7 +995,9 @@ nsMsgAccountManager::SetPasswordForServer(nsIMsgIncomingServer * server)
 #endif /* PROMPTPASSWORDWORKS */
 
   if (retval) {
+#ifdef DEBUG_ACCOUNTMANAGER
     printf("password = %s\n", password.GetBuffer());
+#endif
     server->SetPassword((char *)(password.GetBuffer()));        
   }
   else {
@@ -1226,10 +1231,14 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   char serverStr[1024];
 
   PR_snprintf(accountStr,1024,"account%d",accountNum);
+#ifdef DEBUG_ACCOUNTMANAGER
   printf("account str = %s\n",accountStr);
+#endif
   account->SetKey(accountStr);
   PR_snprintf(serverStr,1024,"server%d",accountNum);
+#ifdef DEBUG_ACCOUNTMANAGER
   printf("server str = %s\n",serverStr);
+#endif
   server->SetKey(serverStr);
   
   account->SetIncomingServer(server);
@@ -1425,14 +1434,17 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
 			}
 		}
 		
-		if(!PL_strncmp(is_newsgroup, "TRUE", 4)) {			
+		if(!PL_strncmp(is_newsgroup, "TRUE", 4)) {
+#ifdef DEBUG_ACCOUNTMANAGER
 			printf("is_newsgroups_file = TRUE\n");
+#endif
 		}
 		else {
-			printf("is_newsgroups_file = FALSE\n");
-			
-			printf("psuedo_name=%s,filename=%s\n", psuedo_name, filename);
-			
+#ifdef DEBUG_ACCOUNTMANAGER
+          printf("is_newsgroups_file = FALSE\n");
+  
+          printf("psuedo_name=%s,filename=%s\n", psuedo_name, filename);
+#endif			
 #ifdef NEWS_FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS
 			// most likely, the fat file has been copied (or moved ) from
 			// its old location.  So the absolute file paths will be wrong.
@@ -1466,7 +1478,9 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
 			}
 
 			char *hostname = psuedo_name + PL_strlen(PSUEDO_NAME_PREFIX);
-
+#ifdef DEBUG_ACCOUNTMANAGER
+            printf("rcFile?  should it be a const char *?\n");
+#endif
 			if (NS_FAILED(MigrateNewsAccount(identity, hostname, rcFile, baseAccountNum + numAccounts))) {
 				// failed to migrate.  bail out
 				return 0;
@@ -1477,32 +1491,38 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
 	inputStream.close();
 
 #else
-	/*
-	get the $HOME directory
-	for each file of the form .newsrc-%, do this:
+    
+#ifdef XP_UNIX
+    nsSpecialSystemDirectory dirWithTheNewsrcFiles(nsSpecialSystemDirectory::Unix_HomeDirectory);
+#elif XP_BEOS
+    nsSpecialSystemDirectory dirWithTheNewsrcFiles(nsSpecialSystemDirectory::BeOS_HomeDirectory);
+#else
+#error where_are_your_newsrc_files
+#endif /* XP_UNIX, XP_BEOS */
 
-	for (each file of the form .newsrc-%) {
-		numAccounts++;
-		if (NS_FAILED(MigrateNewsAccount(identity, psuedo_name, filename, baseAccountNum + numAccounts))) {
-			// failed to migrate.  bail out
-			return 0;
-		}
-	}
-*/
+    for (nsDirectoryIterator i(dirWithTheNewsrcFiles); i.Exists(); i++) {
+      nsFileSpec possibleRcFile = i.Spec();
 
-/*
-	char *str = nsnull;
-	
-	str = PR_smprintf(".newsrc-%s", newshostname);
-	if (!str) {
-		return NS_ERROR_OUT_OF_MEMORY;
-	}
-	newsrcFile = path;
-	newsrcFile.SetLeafName(str);
-	PR_FREEIF(str);
-	str = nsnull;
-	rv = NS_OK;
-	*/
+      char *filename = possibleRcFile.GetLeafName();
+#ifdef DEBUG_ACCOUNTMANAGER
+      printf("leaf = %s\n", filename);
+#endif
+      
+      if ((PL_strncmp(NEWSRC_FILE_PREFIX, filename, PL_strlen(NEWSRC_FILE_PREFIX)) == 0) && (PL_strlen(filename) > PL_strlen(NEWSRC_FILE_PREFIX))) {
+#ifdef DEBUG_ACCOUNTMANAGER
+        printf("found a newsrc file!\n");
+#endif
+        numAccounts++;
+
+        char *hostname = filename + PL_strlen(NEWSRC_FILE_PREFIX);
+        if (NS_FAILED(MigrateNewsAccount(identity, hostname, possibleRcFile, baseAccountNum + numAccounts))) {
+          // failed to migrate.  bail out
+          return 0;
+        }
+      }
+      nsCRT::free(filename);
+      filename = nsnull;
+    }
 #endif /* USE_NEWSRC_MAP_FILE */
 
 	return numAccounts;
@@ -1536,10 +1556,14 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	char serverStr[1024];
 	
 	PR_snprintf(accountStr,1024,"account%d",accountNum);
+#ifdef DEBUG_ACCOUNTMANAGER
 	printf("account str = %s\n",accountStr);
+#endif
 	account->SetKey(accountStr);
 	PR_snprintf(serverStr,1024,"server%d",accountNum);
+#ifdef DEBUG_ACCOUNTMANAGER
 	printf("server str = %s\n",serverStr);
+#endif
 	server->SetKey(serverStr);
 	
 	account->SetIncomingServer(server);
