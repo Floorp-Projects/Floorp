@@ -11,8 +11,6 @@ cvpics.h
 cvsimple.h
 cvunzip.h
 cvjscfg.h
-magic.h
-magicCID.h
 nsINetPlugin.h
 nsINetPluginInstance.h
 nsINetOStream.h
