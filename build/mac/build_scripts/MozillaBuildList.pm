@@ -142,6 +142,10 @@ sub InstallDefaultsFiles()
     {
       InstallResources(":mozilla:extensions:inspector:resources:content:prefs:MANIFEST", "$default_pref_dir", 0);
     }
+
+    if ($main::options{mdn}) {
+    	InstallResources(":mozilla:mailnews:extensions:mdn:resources:content:MANIFEST_PREFS", "$default_pref_dir", 0);
+    }
     }
 
     {
@@ -2303,15 +2307,20 @@ sub BuildMailNewsProjects()
     }
              
     InstallResources(":mozilla:mailnews:addrbook:src:MANIFEST_COMPONENTS",              "${dist_dir}Components");
-	if ($main::options{smime} && $main::options{psm}) {
+	  if ($main::options{smime} && $main::options{psm}) {
     	BuildOneProject(":mozilla:mailnews:extensions:smime:macbuild:smime.xml",         "msgsmime$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     	InstallResources(":mozilla:mailnews:extensions:smime:src:MANIFEST",				 "${dist_dir}Components");
     } else {
         BuildOneProject(":mozilla:mailnews:mime:cthandlers:smimestub:macbuild:smime.xml",   "smime$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     }
+	  if ($main::options{mdn}) {
+    	BuildOneProject(":mozilla:mailnews:extensions:mdn:macbuild:msgmdn.xml",         "msgmdn$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    }
+
     if ($main::options{mdn}) {
     	InstallResources(":mozilla:mailnews:extensions:mdn:src:MANIFEST",				 "${dist_dir}Components");
     }
+
     EndBuildModule("mailnews");
 }
 
