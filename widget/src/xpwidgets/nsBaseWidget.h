@@ -91,6 +91,7 @@ public:
   NS_IMETHOD              GetBounds(nsRect &aRect);
   NS_IMETHOD              GetBoundsAppUnits(nsRect &aRect, float aAppUnits);
   NS_IMETHOD              GetClientBounds(nsRect &aRect);
+  NS_IMETHOD              GetScreenBounds(nsRect &aRect);
   NS_IMETHOD              GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
   NS_IMETHOD              Paint(nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
   NS_IMETHOD              ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy);
