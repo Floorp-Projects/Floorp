@@ -89,7 +89,7 @@ dnl Initialize the Pthread test variables early so they can be
 dnl  overridden by each platform.
 dnl ========================================================
 USE_PTHREADS=
-PTHREAD_LDFLAGS=""
+_PTHREAD_LDFLAGS=""
 
 dnl Do not allow a separate objdir build if a srcdir build exists.
 dnl ==============================================================
@@ -646,7 +646,7 @@ case "$target" in
     _COMPILER_PREFIX="-Wc,"
     _LINKER_PREFIX="-Wl,"      
 	USE_PTHREADS=1
-	PTHREAD_LDFLAGS=""
+	_PTHREAD_LDFLAGS=""
 	LIBS="$LIBS -lstdc++"
 	HAVE_DEV_ZERO=1
     ;;
@@ -1517,17 +1517,13 @@ dnl
 dnl Try lib pthread
 dnl 
 AC_CHECK_LIB(pthread, pthread_attr_init, 
-             USE_PTHREADS=1 PTHREAD_LDFLAGS="-lpthread")
-
-dnl 
-dnl If the above test failed, try lib c_r
-dnl 
-if test "x$ac_cv_lib_pthread_pthread_attr_init" = "xno" -a \
-"x$ac_cv_lib_c_r_gethostbyname_r" = "xno"
-then
-  AC_CHECK_LIB(c_r, pthread_attr_init,
-               USE_PTHREADS=1 PTHREAD_LDFLAGS="-lc_r")
-fi
+             _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread",
+    AC_CHECK_LIB(c_r, pthread_attr_init,
+        _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r",
+        AC_CHECK_LIB(c, pthread_attr_init,
+            _HAVE_PTHREADS=1 )
+        )
+    )
 
 dnl
 dnl Check the command line for --with-pthreads 
@@ -1542,7 +1538,7 @@ AC_ARG_WITH(pthreads,
            fi
          else
            USE_PTHREADS=
-           PTHREAD_LDFLAGS=""
+           _PTHREAD_LDFLAGS=""
          fi] )
 
 dnl
@@ -1573,9 +1569,9 @@ then
 			AC_DEFINE(_THREAD_SAFE)
 			dnl -pthread links in -lc_r, so don't specify it explicitly.
 			if test "$ac_cv_have_dash_pthread" = "yes"; then
-				PTHREAD_LDFLAGS=""
+				_PTHREAD_LDFLAGS=""
 			else
-				PTHREAD_LDFLAGS="-lc_r"
+				_PTHREAD_LDFLAGS="-lc_r"
 			fi
 			;;
 
@@ -1605,7 +1601,7 @@ fi
 dnl
 dnl Add the pthread flags to the nspr libs
 dnl ========================================================
-NSPR_LIBS="$NSPR_LIBS $PTHREAD_LDFLAGS"
+NSPR_LIBS="$NSPR_LIBS $_PTHREAD_LDFLAGS"
 
 dnl Check for NSPR.
 dnl ========================================================
@@ -1706,7 +1702,7 @@ if test "$MISSING_NSPR"; then
    AC_MSG_RESULT(no (will build it from source))
    NSPR_INCLUDE_DIR=
    NSPR_CFLAGS=
-   NSPR_LIBS="-lplds$NSPR_VERSION -lplc$NSPR_VERSION -lnspr$NSPR_VERSION $PTHREAD_LDFLAGS"
+   NSPR_LIBS="-lplds$NSPR_VERSION -lplc$NSPR_VERSION -lnspr$NSPR_VERSION $_PTHREAD_LDFLAGS"
 dnl
 dnl Otherwise, we are using an NSPR installed in the system.
 dnl
