@@ -872,8 +872,7 @@ FindDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 				nsISupportsArray/*<nsIRDFResource>*/* aArguments,
                                 PRBool* aResult)
 {
-	NS_NOTYETIMPLEMENTED("write me!");
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 
@@ -883,8 +882,7 @@ FindDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 				nsIRDFResource*   aCommand,
 				nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
-	NS_NOTYETIMPLEMENTED("write me!");
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 

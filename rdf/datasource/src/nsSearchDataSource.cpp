@@ -710,8 +710,7 @@ SearchDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSource
                                        nsISupportsArray/*<nsIRDFResource>*/* aArguments,
                                        PRBool* aResult)
 {
-	NS_NOTYETIMPLEMENTED("write me!");
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 
@@ -721,8 +720,7 @@ SearchDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
                                 nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
-	NS_NOTYETIMPLEMENTED("write me!");
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 

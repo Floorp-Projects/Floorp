@@ -1255,7 +1255,10 @@ CompositeDataSourceImpl::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* 
 
         PRBool enabled;
         rv = ds->IsCommandEnabled(aSources, aCommand, aArguments, &enabled);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv) && (rv != NS_ERROR_NOT_IMPLEMENTED))
+        {
+        	return(rv);
+        }
 
         if (! enabled) {
             *aResult = PR_FALSE;
@@ -1274,7 +1277,10 @@ CompositeDataSourceImpl::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
         nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
         nsresult rv = ds->DoCommand(aSources, aCommand, aArguments);
-        if (NS_FAILED(rv)) return rv;   // all datasources must succeed
+        if (NS_FAILED(rv) && (rv != NS_ERROR_NOT_IMPLEMENTED))
+        {
+		return(rv);   // all datasources must succeed
+	}
     }
     return NS_OK;
 }
