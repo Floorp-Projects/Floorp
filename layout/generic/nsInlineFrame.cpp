@@ -1240,10 +1240,25 @@ nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   if (HaveAnonymousBlock()) {
-    rv = ReflowBlockFrame(rs, aMetrics, aStatus);
+    if ((nsnull != aReflowState.lineLayout) &&
+        (0 != aReflowState.lineLayout->GetPlacedFrames())) {
+      // This inline frame cannot be placed on the current line
+      // because there already is an inline frame on this line (and we
+      // contain an anonymous block).
+      aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+      rv = NS_OK;
+    }
+    else {
+      rv = ReflowBlockFrame(rs, aMetrics, aStatus);
+    }
   }
   else {
-    rv = ReflowInlineFrames(rs, aMetrics, aStatus);
+    if (nsnull != aReflowState.lineLayout) {
+      rv = ReflowInlineFrames(rs, aMetrics, aStatus);
+    }
+    else {
+      rv = NS_ERROR_NULL_POINTER;
+    }
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -1308,6 +1323,7 @@ nsInlineFrame::ReflowInlineFrames(ReflowState& rs,
 
   nsInlineReflow ir(*rs.lineLayout, rs, this, PR_FALSE);
   rs.inlineReflow = &ir;
+  rs.lineLayout->PushInline(&ir);
 
   // Compute available area
   nscoord x = rs.mBorderPadding.left;
@@ -1384,6 +1400,7 @@ nsInlineFrame::ReflowInlineFrames(ReflowState& rs,
       *aMetrics.maxElementSize = ir->GetMaxElementSize();
     }
   }
+  rs.lineLayout->PopInline();
 
   return rv;
 }
