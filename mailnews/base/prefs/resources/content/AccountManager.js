@@ -66,7 +66,7 @@ var setDefaultButton;
 // perform initialization here
 function onLoad() {
   
-  var selectedAccount;
+  var selectedServer;
   if (window.arguments && window.arguments[0])
     selectedServer = window.arguments[0].server;
   
@@ -134,11 +134,12 @@ function findFirstTreeItem(tree) {
     }
   }
 
-  var children = treechildren.childNodes;
-  for (var i=0; i<children.length; i++) {
+  children = treechildren.childNodes;
+  for (i=0; i<children.length; i++) {
     if (children[i].localName == "treeitem")
       return children[i];
   }
+  return null;
 }
 
 function onOk() {
@@ -595,6 +596,19 @@ function getFormElementValue(formElement) {
       return null;
     }
   }
+  else if (type == "textfield" &&
+           formElement.getAttribute("datatype") == "nsILocalFile") {
+    if (formElement.value) {
+      var localfile = Components.classes["component://mozilla/file/local"].createInstance(Components.interfaces.nsILocalFile);
+
+      localfile.unicodePath = formElement.value;
+      return localfile;
+
+    }
+    else {
+      return null;
+    }
+  }
 
   else if (type == "text") {
     var val = formElement.getAttribute("value");
@@ -608,8 +622,8 @@ function getFormElementValue(formElement) {
  }
  catch (ex) {
   dump("getFormElementValue failed, ex="+ex+"\n");
-  return null;
  }
+ return null;
 }
 
 //
@@ -661,9 +675,29 @@ function setFormElementValue(formElement, value) {
     } else {
       if (formElement.defaultValue)
         formElement.value = formElement.defaultValue;
+      else
+        formElement.value = "";
     }
   }
 
+  else if (type == "textfield" &&
+           formElement.getAttribute("datatype") == "nsILocalFile") {
+    if (value) {
+      var localfile = value.QueryInterface(Components.interfaces.nsILocalFile);
+      try {
+        formElement.value = localfile.unicodePath;
+      } catch (ex) {
+        dump("Still need to fix uninitialized nsIFile problem!\n");
+      }
+      
+    } else {
+      if (formElement.defaultValue)
+        formElement.value = formElement.defaultValue;
+      else
+        formElement.value = "";
+    }
+  }
+      
   else if (type == "text") {
     if (value == null || value == undefined)
       formElement.removeAttribute("value");
@@ -700,8 +734,8 @@ function getAccountFromServerId(serverId) {
     var account = accountManager.FindAccountForServer(incomingServer);
     return account;
   } catch (ex) {
-    return null;
   }
+  return null;
 }
 
 //
