@@ -642,12 +642,17 @@ nsFileSpec::nsFileSpec(const char* inNativePathString, PRBool inCreateDirs)
     mSpec.vRefNum = 0;
     mSpec.parID = 0;
 
-    mError = NS_FILE_RESULT(
-        MacFileHelpers::FSSpecFromPathname(
-            inNativePathString,
-            mSpec, inCreateDirs));
-    if (mError == NS_FILE_RESULT(fnfErr))
-        mError = NS_OK;
+    if (inNativePathString)
+    {
+        mError = NS_FILE_RESULT(MacFileHelpers::FSSpecFromPathname(
+                  inNativePathString, mSpec, inCreateDirs));
+        if (mError == NS_FILE_RESULT(fnfErr))
+            mError = NS_OK;
+    }
+    else
+    {
+        mError = NS_ERROR_NOT_INITIALIZED;
+    }
 
 } // nsFileSpec::nsFileSpec
 
@@ -698,10 +703,16 @@ void nsFileSpec::operator = (const char* inString)
     mSpec.vRefNum = 0;
     mSpec.parID = 0;
 
-    mError = NS_FILE_RESULT(
-        MacFileHelpers::FSSpecFromPathname(inString, mSpec, true));
-    if (mError == NS_FILE_RESULT(fnfErr))
-        mError = NS_OK;
+    if (inString)
+    {
+        mError = NS_FILE_RESULT(MacFileHelpers::FSSpecFromPathname(inString, mSpec, true));
+        if (mError == NS_FILE_RESULT(fnfErr))
+            mError = NS_OK;
+    }
+    else
+    {
+        mError = NS_ERROR_NOT_INITIALIZED;
+    }
     
 } // nsFileSpec::operator =
 
