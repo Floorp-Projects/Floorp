@@ -236,37 +236,19 @@ NS_IMETHODIMP nsViewManager :: SetWindowDimensions(nscoord width, nscoord height
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager :: GetWindowOffsets(nscoord *xoffset, nscoord *yoffset)
+NS_IMETHODIMP nsViewManager :: GetWindowOffsets(nsIView *aView, nscoord *xoffset, nscoord *yoffset) const
 {
   if (nsnull != mRootView)
   {
     nsIScrollableView *scroller;
 
-    if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
+    if (NS_OK == aView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
       scroller->GetVisibleOffset(xoffset, yoffset);
     else
       *xoffset = *yoffset = 0;
   }
   else
     *xoffset = *yoffset = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsViewManager :: SetWindowOffsets(nscoord xoffset, nscoord yoffset)
-{
-  if (nsnull != mRootView)
-  {
-    nsIScrollableView *scroller;
-    nsresult           retval;
-
-    retval = mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller);
-
-    if (NS_SUCCEEDED(retval))
-      scroller->SetVisibleOffset(xoffset, yoffset);
-
-    return retval;
-  }
-
   return NS_OK;
 }
 
@@ -334,7 +316,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
 
   mContext->GetAppUnitsToDevUnits(scale);
 
-  GetWindowOffsets(&xoff, &yoff);
+  GetWindowOffsets(aView, &xoff, &yoff);
 
   region->Offset(NSTwipsToIntPixels(-xoff, scale), NSTwipsToIntPixels(-yoff, scale));
 //  localcx->SetClipRegion(*region, nsClipCombine_kIntersect);
@@ -423,7 +405,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
   if (aUpdateFlags & NS_VMREFRESH_SCREEN_RECT)
     localcx->SetClipRect(*rect, nsClipCombine_kReplace);
 
-  GetWindowOffsets(&xoff, &yoff);
+  GetWindowOffsets(aView, &xoff, &yoff);
 
   nsRect trect = *rect;
 
@@ -572,15 +554,9 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
     while ((nsnull != par) && (par != widgetView));
   }
 
-  // If widgetView is a scrolling view, then offset the rect by the visible
-  // offset
-  nsIScrollableView *scroller;
-  if (NS_OK == widgetView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
-  {
-    nscoord xoffset, yoffset;
-    scroller->GetVisibleOffset(&xoffset, &yoffset);
-    trect.MoveBy(-xoffset, -yoffset);
-  }
+  nscoord xoffset, yoffset;
+  GetWindowOffsets(widgetView, &xoffset, &yoffset);
+  trect.MoveBy(-xoffset, -yoffset);
 
   // Add this rect to the widgetView's dirty region.
   AddRectToDirtyRegion(widgetView, trect);
@@ -675,15 +651,9 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
         mContext->GetDevUnitsToAppUnits(p2t);
         trect.ScaleRoundOut(p2t);
 
-        // If the view is a scrolling view, then offset the rect by the visible
-        // offset
-        nsIScrollableView *scroller;
-        if (NS_OK == view->QueryInterface(kIScrollableViewIID, (void **)&scroller))
-        {
-          nscoord xoffset, yoffset;
-          scroller->GetVisibleOffset(&xoffset, &yoffset);
-          trect.MoveBy(xoffset, yoffset);
-        }
+        nscoord xoffset, yoffset;
+        GetWindowOffsets(view, &xoffset, &yoffset);
+        trect.MoveBy(xoffset, yoffset);
 
         // Add the rect to the existing dirty region
         AddRectToDirtyRegion(view, trect);
