@@ -322,6 +322,7 @@ components/smime-service.js
 ; core platform files
 regxpcom
 thunderbird-bin
+mozilla-xremote-client
 components/libappcomps.so
 components/autocomplete.xpt
 components/jsdservice.xpt
