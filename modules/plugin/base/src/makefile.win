@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 		  webBrowser_core \
 		  windowwatcher \
 		  gfx \
+		  imglib2 \
 		  $(NULL)
 
 DEFINES =-D_IMPL_NS_PLUGIN -DWIN32_LEAN_AND_MEAN

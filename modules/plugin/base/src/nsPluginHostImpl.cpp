@@ -149,6 +149,8 @@
 
 #include "nsUnicharUtils.h"
 
+#include "imgILoader.h"
+
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK)
 #include <gdk/gdkx.h> // for GDK_DISPLAY()
@@ -2526,6 +2528,13 @@ nsPluginHostImpl::nsPluginHostImpl()
   mDontShowBadPluginMessage = PR_FALSE;
   mIsDestroyed = PR_FALSE;
   mUnusedLibraries = nsnull;
+  mOverrideInternalTypes = PR_FALSE;
+  
+  // check to see if pref is set at startup to let plugins take over in 
+  // full page mode for certain image mime types that we handle internally
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+  if (prefs)
+    prefs->GetBoolPref("plugin.override_internal_types", &mOverrideInternalTypes);
 
   nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1");
   if (obsService)
@@ -3681,8 +3690,21 @@ nsresult nsPluginHostImpl::RegisterPluginMimeTypesWithLayout(nsPluginTag * plugi
   if (!obsoleteManager)
     return rv;
 
-  for(int i = 0; i < pluginTag->mVariants; i++)
-  {
+  nsCOMPtr<imgILoader> loader;
+  if (!mOverrideInternalTypes)
+    loader = do_GetService("@mozilla.org/image/loader;1");
+    
+  for(int i = 0; i < pluginTag->mVariants; i++) {
+
+    // Do not register any doc loader factory content viewers for mime types we do internally
+    // Note: This excludes plugins of these mime types from running in full-page mode.
+    // This gets around Quicktime's default handling of PNG's
+    PRBool bIsSupportedImage = PR_FALSE;
+    if (!mOverrideInternalTypes && 
+        NS_SUCCEEDED(loader->SupportImageWithMimeType(pluginTag->mMimeTypeArray[i], &bIsSupportedImage)) && 
+        bIsSupportedImage)
+      continue;
+    
     static NS_DEFINE_CID(kPluginDocLoaderFactoryCID, NS_PLUGINDOCLOADERFACTORY_CID);
 
     nsCAutoString contractid(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=");

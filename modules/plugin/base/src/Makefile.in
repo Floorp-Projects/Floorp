@@ -56,6 +56,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  webbrwsr \
 		  windowwatcher \
+		  imglib2 \
 		  $(NULL)
 # for xlib port
 REQUIRES	+= xlibxtbin xlibrgb
