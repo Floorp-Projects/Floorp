@@ -20,6 +20,9 @@
  * Contributor(s): 
  */
 
+#ifndef nsHTMLContentSerializer_h__
+#define nsHTMLContentSerializer_h__
+
 #include "nsXMLContentSerializer.h"
 #include "nsIParserService.h"
 #include "nsIEntityConverter.h"
@@ -44,8 +47,6 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   NS_IMETHOD AppendElementEnd(nsIDOMElement *aElement,
                               nsAWritableString& aStr);
  protected:
-  virtual void ReplaceCharacterEntities(nsAWritableString& aStr,
-                                        PRUint32 aOffset);
   PRBool HasDirtyAttr(nsIContent* aContent);
   PRBool LineBreakBeforeOpen(nsIAtom* aName, PRBool aHasDirtyAttr);
   PRBool LineBreakAfterOpen(nsIAtom* aName, PRBool aHasDirtyAttr);
@@ -93,3 +94,7 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   nsString  mLineBreak;
   PRInt32   mLineBreakLen;
 };
+
+extern nsresult NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer);
+
+#endif
