@@ -81,6 +81,7 @@ static const char kURINC_WindowMediatorRoot[] = "NC:WindowMediatorRoot";
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, URL);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, KeyIndex);
 static	nsIRDFService* gRDFService = nsnull;
 
 static nsresult GetDOMWindow( nsIXULWindow* inWindow,
@@ -183,6 +184,7 @@ PRUint32 GetWindowZ(nsIXULWindow *inWindow)
 nsIRDFResource	*nsWindowMediator::kNC_WindowMediatorRoot = NULL;
 nsIRDFResource	*nsWindowMediator::kNC_Name = NULL;
 nsIRDFResource	*nsWindowMediator::kNC_URL = NULL;
+nsIRDFResource	*nsWindowMediator::kNC_KeyIndex = NULL;
 
 PRInt32		nsWindowMediator::gRefCnt;
 nsIRDFDataSource *nsWindowMediator::mInner = NULL;
@@ -217,6 +219,7 @@ nsWindowMediator::~nsWindowMediator()
     NS_IF_RELEASE(kNC_WindowMediatorRoot);
     NS_IF_RELEASE(kNC_Name);
     NS_IF_RELEASE(kNC_URL);
+    NS_IF_RELEASE(kNC_KeyIndex);
     NS_IF_RELEASE(mInner);
     if (mListLock)
       PR_DestroyLock(mListLock);
@@ -815,8 +818,9 @@ nsWindowMediator::Init()
     if (NS_FAILED(rv)) return rv;
 
       gRDFService->GetResource( kURINC_WindowMediatorRoot,   &kNC_WindowMediatorRoot );
-      gRDFService->GetResource (kURINC_Name, &kNC_Name );
+      gRDFService->GetResource( kURINC_Name, &kNC_Name );
       gRDFService->GetResource( kURINC_URL, &kNC_URL );
+      gRDFService->GetResource( kURINC_KeyIndex, &kNC_KeyIndex );
     }
 
     if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
@@ -843,6 +847,36 @@ nsWindowMediator::Init()
 
     // register this as a named data source with the RDF service
     return gRDFService->RegisterDataSource(this, PR_FALSE);
+}
+
+NS_IMETHODIMP nsWindowMediator::GetTarget(nsIRDFResource* source,
+                                          nsIRDFResource* property,
+                                          PRBool tv,
+                                          nsIRDFNode** target)
+{
+    if (property == kNC_KeyIndex)
+    {
+        nsCOMPtr<nsIRDFContainer> container;
+        nsresult rv = NS_NewMediatorListRDFContainer(mInner,
+            kNC_WindowMediatorRoot, getter_AddRefs(container));
+        if (NS_FAILED(rv)) return(rv);
+        if (!container) return(NS_ERROR_FAILURE);
+
+        PRInt32   theIndex = 0;
+        rv = container->IndexOf(source, &theIndex);
+        if (NS_FAILED(rv)) return(rv);
+
+        // only allow the range of 1 to 9 for single key access        
+        if (theIndex < 1 || theIndex > 9) return(NS_RDF_NO_VALUE);
+
+        nsCOMPtr<nsIRDFInt> indexInt;
+        rv = gRDFService->GetIntLiteral(theIndex, getter_AddRefs(indexInt));
+        if (NS_FAILED(rv)) return(rv);
+        if (!indexInt) return(NS_ERROR_FAILURE);
+
+        return(CallQueryInterface(indexInt, target));
+    }
+    return mInner->GetTarget(source, property, tv, target);
 }
 
 NS_IMETHODIMP nsWindowMediator::Assert(nsIRDFResource* aSource,

@@ -109,14 +109,6 @@ public:
       return mInner->GetSources(property, target, tv, sources);
   }
 
-  NS_IMETHOD GetTarget(nsIRDFResource* source,
-                       nsIRDFResource* property,
-                       PRBool tv,
-                       nsIRDFNode** target)
- {
-   return mInner->GetTarget(source, property, tv, target);
- }
-
  	NS_IMETHOD GetTargets(nsIRDFResource* source,
                         nsIRDFResource* property,
                         PRBool tv,
@@ -124,6 +116,11 @@ public:
   {
       return mInner->GetTargets(source, property, tv, targets);
   }
+
+  NS_IMETHOD GetTarget(nsIRDFResource* aSource, 
+                    nsIRDFResource* aProperty, 
+                    PRBool aTruthValue,
+                    nsIRDFNode** target);
 
   NS_IMETHOD Assert(nsIRDFResource* aSource, 
                     nsIRDFResource* aProperty, 
@@ -220,6 +217,7 @@ private:
   static nsIRDFResource* kNC_WindowMediatorRoot;
   static nsIRDFResource* kNC_Name;
   static nsIRDFResource* kNC_URL;
+  static nsIRDFResource* kNC_KeyIndex;
   static PRInt32 gRefCnt;
   static nsIRDFDataSource* mInner;
 };
