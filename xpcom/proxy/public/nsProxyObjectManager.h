@@ -54,7 +54,8 @@
 } 
 
 
-
+#define NS_XPCOMPROXY_PROGID "component://netscape/xpcomproxy"
+#define NS_XPCOMPROXY_CLASSNAME "XPCom Proxy"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsProxyEventFactory:
@@ -89,12 +90,14 @@ public:
     NS_IMETHOD GetProxyObject(PLEventQueue *destQueue, 
                               REFNSIID aIID, 
                               nsISupports* aObj, 
+                              ProxyType proxyType,
                               void** aProxyObject) = 0;
     
     NS_IMETHOD GetProxyObject(PLEventQueue *destQueue, 
                               const nsCID &aClass, 
                               nsISupports *aDelegate, 
-                              const nsIID &aIID, 
+                              const nsIID &aIID,
+                              ProxyType proxyType,
                               void** aProxyObject) = 0;
 };
 

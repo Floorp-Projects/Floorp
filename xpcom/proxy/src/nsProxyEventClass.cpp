@@ -201,7 +201,7 @@ nsProxyEventClass::CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID 
 
     if (rv == NS_OK)
     {
-        nsProxyEventObject* proxyObj = nsProxyEventObject::GetNewOrUsedProxy(self->GetQueue(), aInstancePtr, aIID);
+        nsProxyEventObject* proxyObj = nsProxyEventObject::GetNewOrUsedProxy(self->GetQueue(), PROXY_SYNC, aInstancePtr, aIID);
         if(proxyObj)
         {
             return proxyObj;

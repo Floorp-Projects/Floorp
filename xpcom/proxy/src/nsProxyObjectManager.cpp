@@ -122,15 +122,27 @@ nsProxyObjectManager::GetInstance()
 }
 
 
+// Helpers
+NS_IMETHODIMP 
+nsProxyObjectManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
+{
+    nsProxyObjectManager *proxyObjectManager = GetInstance();
+
+    if (proxyObjectManager == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    return proxyObjectManager->QueryInterface(aIID, aInstancePtr);
+}
+
 
 NS_IMETHODIMP 
-nsProxyObjectManager::GetProxyObject(PLEventQueue *destQueue, REFNSIID aIID, nsISupports* aObj, void** aProxyObject)
+nsProxyObjectManager::GetProxyObject(PLEventQueue *destQueue, REFNSIID aIID, nsISupports* aObj, ProxyType proxyType, void** aProxyObject)
 {
     
     *aProxyObject = nsnull;
     
     // check to see if proxy is there or not.
-    *aProxyObject = nsProxyEventObject::GetNewOrUsedProxy(destQueue, aObj, aIID);
+    *aProxyObject = nsProxyEventObject::GetNewOrUsedProxy(destQueue, proxyType, aObj, aIID);
     if (*aProxyObject != nsnull)
     {
         return NS_OK;
@@ -145,6 +157,7 @@ nsProxyObjectManager::GetProxyObject(PLEventQueue *destQueue,
                                      const nsCID &aClass, 
                                      nsISupports *aDelegate, 
                                      const nsIID &aIID, 
+                                     ProxyType proxyType, 
                                      void** aProxyObject)
 {
     *aProxyObject = nsnull;
@@ -157,7 +170,7 @@ nsProxyObjectManager::GetProxyObject(PLEventQueue *destQueue,
     if (ciObject == nsnull)
         return NS_ERROR_NULL_POINTER;
 
-    nsresult rv = GetProxyObject(destQueue, nsIProxyCreateInstance::GetIID(), ciObject, (void**)&ciProxy);
+    nsresult rv = GetProxyObject(destQueue, nsIProxyCreateInstance::GetIID(), ciObject, PROXY_SYNC, (void**)&ciProxy);
     
     if (NS_FAILED(rv))
     {
@@ -189,7 +202,7 @@ nsProxyObjectManager::GetProxyObject(PLEventQueue *destQueue,
 
     // 5.  Now create a proxy object for the requested object.
 
-    rv = GetProxyObject(destQueue, aIID, aObj, aProxyObject);
+    rv = GetProxyObject(destQueue, aIID, aObj, proxyType, aProxyObject);
 
     
     // 6. release ownership of aObj so that aProxyObject owns it.

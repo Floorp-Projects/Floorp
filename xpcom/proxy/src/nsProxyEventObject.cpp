@@ -37,8 +37,9 @@
 
 nsProxyEventObject* 
 nsProxyEventObject::GetNewOrUsedProxy(PLEventQueue *destQueue,
-                                        nsISupports *aObj,
-                                        REFNSIID aIID)
+                                      ProxyType proxyType, 
+                                      nsISupports *aObj,
+                                      REFNSIID aIID)
 {
     nsProxyEventObject* proxy = NULL;
     nsProxyEventObject* root = NULL;
@@ -84,7 +85,7 @@ nsProxyEventObject::GetNewOrUsedProxy(PLEventQueue *destQueue,
         if (aObj == rootObject)
         {
             // the root will do double duty as the interface wrapper
-            proxy = root = new nsProxyEventObject(destQueue, aObj, clazz, nsnull);
+            proxy = root = new nsProxyEventObject(destQueue, proxyType, aObj, clazz, nsnull);
             if(root)
                 realToProxyMap->Put(&key, root);
             goto return_wrapper;
@@ -98,7 +99,7 @@ nsProxyEventObject::GetNewOrUsedProxy(PLEventQueue *destQueue,
                 goto return_wrapper;
             }
 
-            root = new nsProxyEventObject(destQueue, rootObject, rootClazz, nsnull);
+            root = new nsProxyEventObject(destQueue, proxyType, rootObject, rootClazz, nsnull);
             NS_RELEASE(rootClazz);
 
             if(!root)
@@ -114,7 +115,7 @@ nsProxyEventObject::GetNewOrUsedProxy(PLEventQueue *destQueue,
 
     if(!proxy)
     {
-        proxy = new nsProxyEventObject(destQueue, aObj, clazz, root);
+        proxy = new nsProxyEventObject(destQueue, proxyType, aObj, clazz, root);
         if(!proxy)
         {
             goto return_wrapper;
@@ -147,6 +148,7 @@ return_wrapper:
 
 
 nsProxyEventObject::nsProxyEventObject(PLEventQueue *destQueue,
+                                       ProxyType proxyType,
                                        nsISupports* aObj,
                                        nsProxyEventClass* aClass,
                                        nsProxyEventObject* root)
@@ -154,7 +156,7 @@ nsProxyEventObject::nsProxyEventObject(PLEventQueue *destQueue,
       mNext(NULL)
 {
     mRoot           = (root ? root : this);
-    mProxyObject    = new nsProxyObject(destQueue, aObj);
+    mProxyObject    = new nsProxyObject(destQueue, proxyType, aObj);
 
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
@@ -178,7 +180,7 @@ nsProxyEventObject::~nsProxyEventObject()
     }
 
     if (mProxyObject != nsnull)
-        delete mProxyObject;
+       mProxyObject->Release();
 
     NS_RELEASE(mClass);
     
@@ -271,19 +273,16 @@ nsProxyEventObject::CallMethod(PRUint16 methodIndex,
     uint8 paramCount = info->GetParamCount();
 
     nsXPTCVariant   *fullParam = (nsXPTCVariant*)malloc(sizeof(nsXPTCVariant) * paramCount);
-
+    
     for (int index = 0; index < paramCount; index++)
     {
         fullParam[index].flags = 0;
         fullParam[index].val   = params[index].val;
     }
+    
+    // fullParam will be deleted inside the mProxyObject
 
-    nsresult rv = mProxyObject->Post(methodIndex, paramCount, fullParam);
-
-    if (fullParam)
-        free( (void*) fullParam);
-
-    return rv;
+    return mProxyObject->Post(methodIndex, paramCount, fullParam);
 }
 
 
