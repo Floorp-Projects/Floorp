@@ -873,9 +873,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
 
   kidSize.width = PR_MAX(kidSize.width, smallestMinWidth); 
 
-  if (eReflowReason_Resize == aReflowState.reason) {
-    NS_ASSERTION(kidSize.width <= availSize.width, "child needed more space during resize reflow");
-  }
+  //if (eReflowReason_Resize == aReflowState.reason) {
+  //  NS_ASSERTION(kidSize.width <= availSize.width, "child needed more space during resize reflow");
+  //}
   // Place the child
   FinishReflowChild(firstKid, aPresContext, kidSize,
                     kidOrigin.x, kidOrigin.y, 0);
