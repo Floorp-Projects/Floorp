@@ -74,6 +74,7 @@ SUB_LIBRARIES=                           \
 
 WIN_LIBS = \
 		ole32.lib \
+		shell32.lib \
 		$(NULL)
 
 LLIBS=                                   \
