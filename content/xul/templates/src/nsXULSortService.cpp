@@ -138,6 +138,10 @@ typedef	struct	_sortStruct	{
 	nsCOMPtr<nsIRDFResource>		sortPropertyColl, sortPropertyColl2;
 	nsCOMPtr<nsIRDFResource>		sortPropertySort, sortPropertySort2;
 
+	PRBool					cacheFirstHint;
+	nsCOMPtr<nsIRDFNode>			cacheFirstNode;
+	PRBool					cacheIsFirstNodeCollationKey;
+
 	nsCOMPtr<nsIRDFCompositeDataSource>	db;
 	nsCOMPtr<nsIRDFService>			rdfService;
 	nsCOMPtr<nsIRDFDataSource>		mInner;
@@ -193,6 +197,9 @@ private:
 	static nsIAtom		*kRDF_type;
 
 	static nsString		trueStr;
+	static nsString		naturalStr;
+	static nsString		ascendingStr;
+	static nsString		descendingStr;
 
 	static nsIRDFResource	*kNC_Name;
 	static nsIRDFResource	*kRDF_instanceOf;
@@ -260,6 +267,9 @@ nsIAtom* XULSortServiceImpl::kIdAtom;
 nsIAtom* XULSortServiceImpl::kRDF_type;
 
 nsString XULSortServiceImpl::trueStr;
+nsString XULSortServiceImpl::naturalStr;
+nsString XULSortServiceImpl::ascendingStr;
+nsString XULSortServiceImpl::descendingStr;
 
 nsIRDFResource		*XULSortServiceImpl::kNC_Name;
 nsIRDFResource		*XULSortServiceImpl::kRDF_instanceOf;
@@ -294,6 +304,9 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 		kRDF_type			= NS_NewAtom("type");
  
  		trueStr				= "true";
+ 		naturalStr			= "natural";
+		ascendingStr			= "ascending";
+		descendingStr			= "descending";
  
 		nsresult rv;
 
@@ -576,7 +589,7 @@ XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString &sortRes
 					{
 						sortColIndex = colIndex;
 												
-						if (!sortDirection.EqualsIgnoreCase("natural"))
+						if (!sortDirection.Equals(naturalStr))
 						{
 							found = PR_TRUE;
 							setFlag = PR_TRUE;
@@ -1193,7 +1206,23 @@ XULSortServiceImpl::InplaceSort(nsIContent *node1, nsIContent *node2, sortPtr so
 	sortOrder = 0;
 
 	nsCOMPtr<nsIRDFNode>	cellNode1, cellNode2;
-	GetNodeValue(node1, sortInfo, PR_TRUE, getter_AddRefs(cellNode1), isCollationKey1);
+
+	// rjc: in some cases, the first node is static while the second node changes
+	// per comparison; in these circumstances, we can cache the first node
+	if ((sortInfo->cacheFirstHint == PR_TRUE) && (sortInfo->cacheFirstNode))
+	{
+		cellNode1 = sortInfo->cacheFirstNode;
+		isCollationKey1 = sortInfo->cacheIsFirstNodeCollationKey;
+	}
+	else
+	{
+		GetNodeValue(node1, sortInfo, PR_TRUE, getter_AddRefs(cellNode1), isCollationKey1);
+		if (sortInfo->cacheFirstHint == PR_TRUE)
+		{
+			sortInfo->cacheFirstNode = cellNode1;
+			sortInfo->cacheIsFirstNodeCollationKey = isCollationKey1;
+		}
+	}
 	GetNodeValue(node2, sortInfo, PR_TRUE, getter_AddRefs(cellNode2), isCollationKey2);
 
 	PRBool	bothValid = PR_FALSE;
@@ -1397,7 +1426,7 @@ public:
 
 
 NS_IMETHODIMP
-XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, sortState *sortState, nsIContent *root,
+XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, sortStateClass *sortState, nsIContent *root,
 					nsIContent *trueParent, nsIContent *container, nsIContent *node, PRBool aNotify)
 {
 	nsresult	rv;
@@ -1415,6 +1444,9 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, sortState
 	sortInfo.sortProperty = nsnull;
 	sortInfo.sortProperty2 = nsnull;
 	sortInfo.inbetweenSeparatorSort = PR_FALSE;
+	sortInfo.cacheFirstHint = PR_TRUE;
+	sortInfo.cacheIsFirstNodeCollationKey = PR_FALSE;
+
 	if (sortState->mCache)
 	{
 		sortInfo.mInner = sortState->mCache;		// Note: this can/might be null
@@ -1437,7 +1469,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, sortState
 		}
 		else
 		{
-			sortDirection = "natural";
+			sortDirection = naturalStr;
 		}
 	}
 	else
@@ -1533,11 +1565,11 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, sortState
 	// set up sort order info
 	sortInfo.naturalOrderSort = PR_FALSE;
 	sortInfo.descendingSort = PR_FALSE;
-	if (sortDirection.EqualsIgnoreCase("descending"))
+	if (sortDirection.Equals(descendingStr))
 	{
 		sortInfo.descendingSort = PR_TRUE;
 	}
-	else if (!sortDirection.EqualsIgnoreCase("ascending"))
+	else if (!sortDirection.Equals(ascendingStr))
 	{
 		sortInfo.naturalOrderSort = PR_TRUE;
 	}
@@ -1620,6 +1652,8 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, sortState
 				{
 					container->ChildAt(current, *getter_AddRefs(child));
 					nsIContent	*theChild = child.get();
+					// Note: since cacheFirstHint is PR_TRUE, the first node passed
+					// into inplaceSortCallback() must be the node that doesn't change
 					direction = inplaceSortCallback(&node, &theChild, &sortInfo);
 				}
 				if ( (direction == 0) ||
@@ -1693,6 +1727,8 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	sortInfo.mInner = nsnull;
 	sortInfo.parentContainer = treeNode;
 	sortInfo.inbetweenSeparatorSort = PR_FALSE;
+	sortInfo.cacheFirstHint = PR_FALSE;
+	sortInfo.cacheIsFirstNodeCollationKey = PR_FALSE;
 
 	// remove any sort hints on tree root node
 	treeNode->UnsetAttribute(kNameSpaceID_None, kSortActiveAtom, PR_FALSE);
@@ -1711,7 +1747,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	sortInfo.kNameSpaceID_XUL = kNameSpaceID_XUL;
 
 	// determine new sort resource and direction to use
-	if (sortDirection.EqualsIgnoreCase("natural"))
+	if (sortDirection.Equals(naturalStr))
 	{
 		sortInfo.naturalOrderSort = PR_TRUE;
 		sortInfo.descendingSort = PR_FALSE;
@@ -1719,8 +1755,8 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	else
 	{
 		sortInfo.naturalOrderSort = PR_FALSE;
-		if (sortDirection.EqualsIgnoreCase("ascending"))	sortInfo.descendingSort = PR_FALSE;
-		else if (sortDirection.EqualsIgnoreCase("descending"))	sortInfo.descendingSort = PR_TRUE;
+		if (sortDirection.Equals(ascendingStr))		sortInfo.descendingSort = PR_FALSE;
+		else if (sortDirection.Equals(descendingStr))	sortInfo.descendingSort = PR_TRUE;
 	}
 
 	// get index of sort column, find tree body, and sort. The sort
