@@ -780,7 +780,7 @@ extern "C" JSBool pref_InitInitialObjects()
 }
 
 
-extern "C" JSRuntime* PREF_GetJSRuntime()
+extern JSRuntime* PREF_GetJSRuntime()
 {
   nsresult rv;
 
