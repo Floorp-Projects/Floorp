@@ -868,6 +868,8 @@ nsTransferableFactory::FindParentLinkNode(nsIDOMNode* inNode)
       return node;
     }
   }
+
+  return nsnull;
 }
 
 
