@@ -730,13 +730,16 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
         ::gdk_window_resize(mShell->window, aWidth, aHeight);
       else
       {
+#ifdef DEBUG_pavlov
         g_print("nsWindow::Resize on toplevel window with null gdkwindow for parent -- window not realized\n");
+#endif
         gtk_widget_realize(mShell);
         if (mShell->window)
           gdk_window_resize(mShell->window, aWidth, aHeight);
+#ifdef DEBUG_pavlov
         else
           g_print("still not working..grrr\n");
-
+#endif
         if (GTK_WIDGET_VISIBLE (mShell))
           ::gtk_widget_queue_draw (mShell);
 
