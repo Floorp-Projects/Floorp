@@ -221,6 +221,7 @@ struct nsBorderEdges
 {
   nsVoidArray mEdges[4];
   nsMargin    mMaxBorderWidth;
+  PRBool      mOutsideEdge;
 
   nsBorderEdges();
 };
