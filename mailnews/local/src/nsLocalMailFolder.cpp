@@ -208,7 +208,7 @@ nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **ch
 		return rv;
 	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
 	if (NS_FAILED(rv))
-		return rv;        
+		return rv;
 	delete[] uriStr;
 	folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
 
@@ -264,15 +264,13 @@ nsMsgLocalMailFolder::Enumerate(nsIEnumerator* *result)
 nsresult
 nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
 {
-	nsresult rv;
-  nsFileSpec rootPath;
-  rv = GetPath(rootPath);
-	if (NS_SUCCEEDED(rv) && rootPath == path) {
-    // don't concat the full separator with .sbd
-  }
-  else {
+  
+#ifdef DEBUG_alecf
+  printf("AddDirectorySep(%s) -> ", (const char*)path);
+#endif
+  
     nsAutoString sep;
-    rv = nsGetMailFolderSeparator(sep);
+    nsresult rv = nsGetMailFolderSeparator(sep);
     if (NS_FAILED(rv)) return rv;
     
     // see if there's a dir with the same name ending with .sbd
@@ -282,8 +280,10 @@ nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
     nsAutoString str((nsFilePath)path);
     str += sep;
     path = nsFilePath(str);
-  }
-  
+
+#ifdef DEBUG_alecf
+  printf("%s\n", (const char*)path);
+#endif
 	return rv;
 }
 
@@ -295,9 +295,19 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
     nsresult rv = GetPath(path);
     if (NS_FAILED(rv)) return rv;
 	
-	rv = AddDirectorySeparator(path);
+#ifdef DEBUG_alecf
+    printf("1) checking if %s is a directory..it is%s\n",
+           (const char*)path, path.IsDirectory() ? "":"n't");
+#endif
+    if (!path.IsDirectory())
+      AddDirectorySeparator(path);
+  
 	if(NS_FAILED(rv)) return rv;
 
+#ifdef DEBUG_alecf
+      printf("2) checking if %s is a directory..it is%s\n",
+             (const char*)path, path.IsDirectory() ? "":"n't");
+#endif
     // we have to treat the root folder specially, because it's name
     // doesn't end with .sbd
     PRInt32 newFlags = MSG_FOLDER_FLAG_MAIL;
@@ -743,7 +753,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32 *out
 }
 
 NS_IMETHODIMP 
-nsMsgLocalMailFolder::GetChildNamed(nsString& name, nsISupports ** aChild)
+nsMsgLocalMailFolder::GetChildNamed(const char *name, nsISupports ** aChild)
 {
   NS_ASSERTION(aChild, "NULL child");
 
@@ -765,7 +775,7 @@ nsMsgLocalMailFolder::GetChildNamed(nsString& name, nsISupports ** aChild)
 
       folder->GetName(&folderName);
       // case-insensitive compare is probably LCD across OS filesystems
-      if (folderName && !name.EqualsIgnoreCase(folderName)) {
+      if (folderName && PL_strcasecmp(name, folderName)!=0) {
         *aChild = folder;
         PR_FREEIF(folderName);
         return NS_OK;
@@ -803,21 +813,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetName(char **name)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(nsString& prettyName)
+NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(char ** prettyName)
 {
   if (mDepth == 1) {
     // Depth == 1 means we are on the mail server level
     // override the name here to say "Local Mail"
-    prettyName = PL_strdup("Local Mail");
+    *prettyName = PL_strdup("Local Mail");
   }
-  else {
-    nsresult rv = NS_ERROR_NULL_POINTER;
-    char *pName = prettyName.ToNewCString();
-    if (pName)
-      rv = nsMsgFolder::GetPrettyName(&pName);
-    delete[] pName;
-    return rv;
-  }
+  else
+    return nsMsgFolder::GetPrettyName(prettyName);
 
   return NS_OK;
 }
@@ -846,8 +850,8 @@ nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInf
 
 NS_IMETHODIMP nsMsgLocalMailFolder::UpdateSummaryTotals()
 {
-	PRUint32 oldUnreadMessages = mNumUnreadMessages;
-	PRUint32 oldTotalMessages = mNumTotalMessages;
+	PRInt32 oldUnreadMessages = mNumUnreadMessages;
+	PRInt32 oldTotalMessages = mNumTotalMessages;
 	//We need to read this info from the database
 	ReadDBFolderInfo(PR_TRUE);
 
@@ -960,7 +964,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetRequiresCleanup(PRBool *requiresCleanup)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::GetSizeOnDisk(PRUint32 size)
+NS_IMETHODIMP nsMsgLocalMailFolder::GetSizeOnDisk(PRUint32* size)
 {
 #ifdef HAVE_PORT
   PRInt32 ret = 0;
@@ -1017,7 +1021,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::UserNeedsToAuthenticateForFolder(PRBool disp
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::RememberPassword(char *password)
+NS_IMETHODIMP nsMsgLocalMailFolder::RememberPassword(const char *password)
 {
 #ifdef HAVE_DB
     MailDB *mailDb = NULL;
@@ -1080,8 +1084,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsFileSpec& aPathName)
   nsFileSpec nopath("");
   if (mPath == nopath) {
     nsresult rv = nsLocalURI2Path(kMailboxRootURI, mURI, mPath);
-    printf("Path of %s is %s (%s)\n", mURI, (const char*)mPath,
-           NS_SUCCEEDED(rv) ? "succeeded" : "failed");
     if (NS_FAILED(rv)) return rv;
   }
   aPathName = mPath;
