@@ -451,7 +451,7 @@ XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree, nsString &sortResource, 
 				nsString	value;
 				if (NS_OK == child->GetAttribute(kNameSpaceID_None, kSortAtom, value))
 				{
-					if (value.Equals("true"))
+					if (value.EqualsIgnoreCase("true"))
 					{
 						if (NS_OK == child->GetAttribute(kNameSpaceID_RDF, kResourceAtom, sortResource))
 						{
@@ -810,7 +810,7 @@ XULSortServiceImpl::OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *con
 	char *uri = sortResource.ToNewCString();
 	if (NS_FAILED(rv = gRDFService->GetResource(uri, &sortInfo.sortProperty)))	return(rv);
 	delete [] uri;
-	if (sortDirection.Equals("natural"))
+	if (sortDirection.EqualsIgnoreCase("natural"))
 	{
 		sortInfo.naturalOrderSort = PR_TRUE;
 		sortInfo.descendingSort = PR_FALSE;
@@ -819,7 +819,7 @@ XULSortServiceImpl::OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *con
 	else
 	{
 		sortInfo.naturalOrderSort = PR_FALSE;
-		if (sortDirection.Equals("descending"))
+		if (sortDirection.EqualsIgnoreCase("descending"))
 			sortInfo.descendingSort = PR_TRUE;
 		else
 			sortInfo.descendingSort = PR_FALSE;
@@ -925,17 +925,17 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	if (NS_FAILED(rv = FindTreeElement(contentNode, &treeNode)))	return(rv);
 
 	nsAutoString currentSortDirection;
-    nsAutoString currentSortResource;
 
 	sortInfo.db = nsnull;
 	sortInfo.sortProperty = nsnull;
-	if (NS_SUCCEEDED(rv = GetSortColumnInfo(treeNode, currentSortResource, currentSortDirection)))
+	if (NS_SUCCEEDED(rv = GetSortColumnInfo(treeNode, (nsString &)sortResource, (nsString &)currentSortDirection)))
 	{
 		char *uri = sortResource.ToNewCString();
-		if (NS_FAILED(rv = gRDFService->GetResource(uri, &sortInfo.sortProperty)))	return(rv);
+		rv = gRDFService->GetResource(uri, &sortInfo.sortProperty);
 		delete [] uri;
+		if (NS_FAILED(rv))	return(rv);
 	}
-	if (sortDirection.Equals("natural"))
+	if (sortDirection.EqualsIgnoreCase("natural"))
 	{
 		sortInfo.naturalOrderSort = PR_TRUE;
 		sortInfo.descendingSort = PR_FALSE;
@@ -943,8 +943,8 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	else
 	{
 		sortInfo.naturalOrderSort = PR_FALSE;;
-		if (sortDirection.Equals("ascending"))		sortInfo.descendingSort = PR_FALSE;
-		else if (sortDirection.Equals("descending"))	sortInfo.descendingSort = PR_TRUE;
+		if (sortDirection.EqualsIgnoreCase("ascending"))	sortInfo.descendingSort = PR_FALSE;
+		else if (sortDirection.EqualsIgnoreCase("descending"))	sortInfo.descendingSort = PR_TRUE;
 	}
 
 	if (NS_FAILED(rv = GetSortColumnIndex(treeNode, sortResource, sortDirection, &colIndex)))	return(rv);
