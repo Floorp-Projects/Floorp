@@ -38,9 +38,11 @@
 
 
 #include "nsCookiePermission.h"
-#include "nsICookie.h"
+#include "nsICookie2.h"
 #include "nsIServiceManager.h"
 #include "nsICookiePromptService.h"
+#include "nsICookieManager2.h"
+#include "nsCCookieManager.h"
 #include "nsIURI.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -53,6 +55,8 @@
 #include "nsIChannel.h"
 #include "nsIDOMWindow.h"
 #include "nsString.h"
+#include "nsInt64.h"
+#include "prtime.h"
 
 /****************************************************************
  ************************ nsCookiePermission ********************
@@ -62,6 +66,11 @@ static const PRBool kDefaultPolicy = PR_TRUE;
 static const char kCookiesAskPermission[] = "network.cookie.warnAboutCookies";
 static const char kCookiesDisabledForMailNews[] = "network.cookie.disableCookieForMailNews";
 static const char kPermissionType[] = "cookie";
+
+// XXX these casts and constructs are horrible, but our nsInt64/nsTime
+// classes are lacking so we need them for now. see bug 198694.
+#define USEC_PER_SEC   (nsInt64(1000000))
+#define NOW_IN_SECONDS (nsInt64(PR_Now()) / USEC_PER_SEC)
 
 #ifndef MOZ_PHOENIX
 // returns PR_TRUE if URI appears to be the URI of a mailnews protocol
@@ -215,9 +224,7 @@ nsCookiePermission::CanAccess(nsIURI         *aURI,
 NS_IMETHODIMP 
 nsCookiePermission::CanSetCookie(nsIURI     *aURI,
                                  nsIChannel *aChannel,
-                                 nsICookie  *aCookie,
-                                 PRInt32     aNumCookiesFromHost,
-                                 PRBool      aChangingCookie,
+                                 nsICookie2 *aCookie,
                                  PRBool     *aResult) 
 {
   NS_ASSERTION(aURI, "null uri");
@@ -270,9 +277,38 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
     GetInterfaceFromChannel(aChannel, NS_GET_IID(nsIDOMWindow),
                             getter_AddRefs(parent));
 
+    // get some useful information to present to the user:
+    // whether a previous cookie already exists, and how many cookies this host
+    // has set
+    PRBool foundCookie;
+    PRUint32 countFromHost;
+    nsCOMPtr<nsICookieManager2> cookieManager = do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv))
+      rv = cookieManager->FindMatchingCookie(aCookie, &countFromHost, &foundCookie);
+    if (NS_FAILED(rv)) return rv;
+
+    // check if the cookie we're trying to set is already expired, and return;
+    // but only if there's no previous cookie, because then we need to delete the previous
+    // cookie. we need this check to avoid prompting the user for already-expired cookies.
+    if (!foundCookie) {
+      PRBool isSession;
+      aCookie->GetIsSession(&isSession);
+      if (!isSession) {
+        nsInt64 currentTime = NOW_IN_SECONDS;
+        PRInt64 expiry;
+        aCookie->GetExpiry(&expiry);
+        if (nsInt64(expiry) <= currentTime) {
+          // the cookie has already expired. accept it, and let the backend figure
+          // out it's expired, so that we get correct logging & notifications.
+          *aResult = PR_TRUE;
+          return rv;
+        }
+      }
+    }
+
     PRBool rememberDecision = PR_FALSE;
     rv = cookiePromptService->CookieDialog(parent, aCookie, hostPort, 
-                                           aNumCookiesFromHost, aChangingCookie,
+                                           countFromHost, foundCookie,
                                            &rememberDecision, aResult);
     if (NS_FAILED(rv)) return rv;
 

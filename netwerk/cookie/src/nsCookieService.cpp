@@ -1416,19 +1416,6 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
     return newCookie;
   }
 
-  // count the number of cookies from this host, and find whether a previous cookie
-  // has been set, for prompting purposes
-  PRUint32 countFromHost;
-  const PRBool foundCookie = FindCookiesFromHost(cookie, countFromHost, currentTime);
-
-  // check if the cookie we're trying to set is already expired, and return.
-  // but we need to check there's no previous cookie first, because servers use
-  // this as a trick for deleting previous cookies.
-  if (!foundCookie && !cookie->IsSession() && cookie->Expiry() <= currentTime) {
-    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "cookie has already expired");
-    return newCookie;
-  }
-
   // check permissions from site permission list, or ask the user,
   // to determine if we can set the cookie
   if (mPermissionService) {
@@ -1437,8 +1424,7 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
     // needs one to prompt, so right now it has to fend for itself to get one
     mPermissionService->CanSetCookie(aHostURI,
                                      aChannel,
-                                     NS_STATIC_CAST(nsICookie*, NS_STATIC_CAST(nsCookie*, cookie)),
-                                     countFromHost, foundCookie,
+                                     NS_STATIC_CAST(nsICookie2*, NS_STATIC_CAST(nsCookie*, cookie)),
                                      &permission);
     if (!permission) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "cookie rejected by permission manager");
@@ -2300,21 +2286,28 @@ nsCookieService::RemoveExpiredCookies(nsInt64 aCurrentTime,
   }
 }
 
-// count the number of cookies from this host, and find whether a previous cookie
-// has been set, for prompting purposes. 
-PRBool
-nsCookieService::FindCookiesFromHost(nsCookie *aCookie,
-                                     PRUint32 &aCountFromHost,
-                                     nsInt64  aCurrentTime)
+// find whether a previous cookie has been set, and count the number of cookies from
+// this host, for prompting purposes. this is provided by the nsICookieManager2
+// interface.
+NS_IMETHODIMP
+nsCookieService::FindMatchingCookie(nsICookie2 *aCookie,
+                                    PRUint32   *aCountFromHost,
+                                    PRBool     *aFoundCookie)
 {
-  aCountFromHost = 0;
-  PRBool foundCookie = PR_FALSE;
+  NS_ENSURE_ARG_POINTER(aCookie);
+
+  *aFoundCookie = PR_FALSE;
+  *aCountFromHost = 0;
+  nsInt64 currentTime = NOW_IN_SECONDS;
+
+  // cast aCookie to an nsCookie*, for faster access to its members
+  nsCookie *cookie = NS_STATIC_CAST(nsCookie*, aCookie);
+
+  const nsAFlatCString &host = cookie->Host();
+  const nsAFlatCString &path = cookie->Path();
+  const nsAFlatCString &name = cookie->Name();
 
   nsCookie *cookieInList;
-  const nsAFlatCString &host = aCookie->Host();
-  const nsAFlatCString &path = aCookie->Path();
-  const nsAFlatCString &name = aCookie->Name();
-
   PRInt32 count = mCookieList.Count();
   for (PRInt32 i = 0; i < count; ++i) {
     cookieInList = NS_STATIC_CAST(nsCookie*, mCookieList.ElementAt(i));
@@ -2322,19 +2315,19 @@ nsCookieService::FindCookiesFromHost(nsCookie *aCookie,
 
     // only count session or non-expired cookies
     if (IsInDomain(cookieInList->Host(), host, cookieInList->IsDomain()) &&
-        (cookieInList->IsSession() || cookieInList->Expiry() > aCurrentTime)) {
-      ++aCountFromHost;
+        (cookieInList->IsSession() || cookieInList->Expiry() > currentTime)) {
+      ++*aCountFromHost;
 
       // check if we've found the previous cookie
       if (path.Equals(cookieInList->Path()) &&
           host.Equals(cookieInList->Host()) &&
           name.Equals(cookieInList->Name())) {
-        foundCookie = PR_TRUE;
+        *aFoundCookie = PR_TRUE;
       }
     }
   }
 
-  return foundCookie;
+  return NS_OK;
 }
 
 // find a position to store a cookie (either replacing an existing cookie, or adding

@@ -37,6 +37,8 @@
 
 #include "nsICookieManager.idl"
 
+interface nsICookie2;
+
 /** 
  * Additions to the frozen nsICookieManager
  */
@@ -48,15 +50,41 @@ interface nsICookieManager2 : nsICookieManager
    * Add a cookie. nsICookieService is the normal way to do this. This
    * method is something of a backdoor.
    *
-   * @param aDomain the host or domain for which the cookie is set
-   * @param aPath path within the domain for which the cookie is valid
-   * @param aName cookie name
-   * @param aValue cookie data
-   * @param aSecure true if the cookie should be secure
-   * @param aExpires expiration date. 0 means none; a session cookie.
+   * @param aDomain
+   *        the host or domain for which the cookie is set
+   * @param aPath
+   *        path within the domain for which the cookie is valid
+   * @param aName
+   *        cookie name
+   * @param aValue
+   *        cookie data
+   * @param aSecure
+   *        true if the cookie should be secure
+   * @param aExpires
+   *        expiration date. 0 means none; a session cookie.
    */
   [noscript]
-  void add(in AUTF8String aDomain, in AUTF8String aPath,
-           in ACString aName, in ACString aValue,
-           in boolean aSecure, in PRInt32 aExpires);
+  void add(in AUTF8String aDomain,
+           in AUTF8String aPath,
+           in ACString    aName,
+           in ACString    aValue,
+           in boolean     aSecure,
+           in PRInt32     aExpires);
+
+  /**
+   * Find whether a matching cookie already exists, and how many cookies
+   * a given host has already set. This is useful when e.g. prompting the
+   * user whether to accept a given cookie.
+   *
+   * @param aCookie
+   *        the cookie to look for
+   * @param aCountFromHost
+   *        the number of cookies found whose hosts are the same as, or
+   *        subdomains of, the host field of aCookie
+   *
+   * @return true if a cookie was found which matches the host, path, and name
+   *         fields of aCookie
+   */
+  boolean findMatchingCookie(in nsICookie2     aCookie,
+                             out unsigned long aCountFromHost);
 };
