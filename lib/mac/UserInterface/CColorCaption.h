@@ -67,7 +67,7 @@ private:
 	
 	virtual void ClickSelf ( const SMouseDownEvent & inEvent ) ;
 	virtual void MouseWithin ( Point inWhere, const EventRecord & inEvent ) ;
-	virtual void MouseLeave ( Point inWhere, const EventRecord & inEvent ) ;
+	virtual void MouseLeave ( ) ;
 	
 	MessageT	mMessage;
 	ResIDT		mRolloverTraits;

@@ -406,7 +406,7 @@ CDragBarDockControl :: FindTooltipForMouseLocation ( const EventRecord& inMacEve
 //	¥	
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-Int16 CDragBarDockControl::FindHotSpot(Point inPoint)
+Int16 CDragBarDockControl::FindHotSpot(Point inPoint) const
 {
 	Int16 theHotSpot = 0;
 	CDragBar* theBar;
@@ -427,7 +427,7 @@ Int16 CDragBarDockControl::FindHotSpot(Point inPoint)
 //	¥	
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-Boolean CDragBarDockControl::PointInHotSpot(Point inPoint, Int16 inHotSpot)
+Boolean CDragBarDockControl::PointInHotSpot(Point inPoint, Int16 inHotSpot) const
 {
 	CDragBar* theBar = NULL;
 	mBars.FetchItemAt(inHotSpot, &theBar);
