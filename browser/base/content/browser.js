@@ -315,7 +315,7 @@ function Startup()
       }
     }
   }
-  return;
+
   setTimeout(delayedStartup, 0);
 }
 
