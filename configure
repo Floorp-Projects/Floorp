@@ -7583,6 +7583,8 @@ xpcom/libxpt/src/Makefile
 xpcom/libxpt/tests/Makefile
 silentdl/Makefile
 xpfe/Makefile
+xpfe/browser/Makefile
+xpfe/browser/src/Makefile
 xpfe/appshell/Makefile
 xpfe/appshell/src/Makefile
 xpfe/appshell/public/Makefile
