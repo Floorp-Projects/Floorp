@@ -102,9 +102,9 @@ private:
   /**
    * The Mapping data structures.
    */
-  ConverterInfo *   mEncArray;
+  ConverterInfo     mEncArray[100];
   PRInt32           mEncSize;
-  ConverterInfo *   mDecArray;
+  ConverterInfo     mDecArray[100];
   PRInt32           mDecSize;
 
   PRBool            mMappingDone;
@@ -174,9 +174,7 @@ nsICharsetConverterManager * nsCharsetConverterManager::mInstance = NULL;
 
 nsCharsetConverterManager::nsCharsetConverterManager() 
 {
-  mEncArray     = NULL;
   mEncSize      = 0;
-  mDecArray     = NULL;
   mDecSize      = 0;
 
   mMappingDone  = PR_FALSE;
@@ -190,9 +188,6 @@ nsCharsetConverterManager::nsCharsetConverterManager()
 nsCharsetConverterManager::~nsCharsetConverterManager() 
 {
   mInstance = NULL;
-  if (mEncArray != NULL) delete [] mEncArray;
-  if (mDecArray != NULL) delete [] mDecArray;
-
   PR_AtomicDecrement(&g_InstanceCount);
 }
 
@@ -212,8 +207,6 @@ nsresult nsCharsetConverterManager::CreateMapping()
   nsIRegistry::Key uconvKey, key;
 
   // XXX hack; make these dynamic
-  mEncArray = new ConverterInfo [100];
-  mDecArray = new ConverterInfo [100];
   mEncSize = mDecSize = 0;
 
   // get the registry
@@ -283,7 +276,7 @@ nsresult nsCharsetConverterManager::CreateMapping()
         str.Assign(src);
         GetCharsetName(&str,&mDecArray[mDecSize].mCharset);
         mDecArray[mDecSize].mCID = cid;
-        mDecArray[mEncSize].mFreeCID = PR_TRUE;
+        mDecArray[mDecSize].mFreeCID = PR_TRUE;
         mDecSize++;
       }
 
