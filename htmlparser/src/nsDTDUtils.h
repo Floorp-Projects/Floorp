@@ -251,8 +251,8 @@ public:
 
   nsDeque*  GetObserversForTag(eHTMLTags aTag);
   nsresult  Notify(eHTMLTags aTag,nsIParserNode& aNode,
-                   PRUint32 aUniqueID, nsIDTD* aDTD,
-                   nsAutoString& aCharsetValue,nsCharsetSource& aCharsetSource) ;
+                   PRUint32 aUniqueID, const char* aCommand,
+                   nsAutoString& aCharsetValue,nsCharsetSource& aCharsetSource);
 
 protected:
   void      RegisterObservers(nsString& aTopicList);

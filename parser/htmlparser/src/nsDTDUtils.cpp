@@ -752,7 +752,7 @@ void CObserverService::RegisterObservers(nsString& aTopic) {
  * @param  aCharsetSource  -
  * @return if SUCCESS return NS_OK else return ERROR code.
  */
-nsresult CObserverService::Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 aUniqueID, nsIDTD* aDTD,
+nsresult CObserverService::Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 aUniqueID, const char* aCommand,
                                   nsAutoString& aCharsetValue,nsCharsetSource& aCharsetSource) {
   nsresult  result=NS_OK;
   nsDeque*  theDeque=GetObserversForTag(aTag);
@@ -782,6 +782,13 @@ nsresult CObserverService::Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 a
         intValue.Append(sourceInt,10);
         theValues[index] = intValue.GetUnicode();
 	  	  index++;
+      }
+      if(index < 50) {
+        nsAutoString theDTDKey("X_COMMAND");
+        nsAutoString theDTDValue(aCommand);
+        theKeys[index]=theDTDKey.GetUnicode();
+        theValues[index]=theDTDValue.GetUnicode();
+        index++;
       }
       nsAutoString theTagStr(nsHTMLTags::GetStringValue(aTag));
       nsObserverNotifier theNotifier(theTagStr.GetUnicode(),aUniqueID,index,theKeys,theValues);
