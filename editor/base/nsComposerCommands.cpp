@@ -103,6 +103,8 @@ nsBaseComposerCommand::SetCommandNodeState(const nsAReadableString & aCommandNam
 nsBaseStateUpdatingCommand::nsBaseStateUpdatingCommand(const char* aTagName)
 : nsBaseComposerCommand()
 , mTagName(aTagName)
+, mGotState(PR_FALSE)
+, mState(PR_FALSE)
 {
 }
 
