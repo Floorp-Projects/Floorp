@@ -38,11 +38,7 @@
 // The history window uses JavaScript in bookmarksManager.js too.
 
 var gHistoryTree;
-var gLastHostname;
-var gLastDomain;
 var gGlobalHistory;
-var gDeleteByHostname;
-var gDeleteByDomain;
 var gHistoryBundle;
 var gSearchBox;
 var gHistoryGrouping = "";
@@ -50,8 +46,6 @@ var gHistoryGrouping = "";
 function HistoryCommonInit()
 {
     gHistoryTree =  document.getElementById("historyTree");
-    gDeleteByHostname = document.getElementById("menu_deleteByHostname");
-    gDeleteByDomain =   document.getElementById("menu_deleteByDomain");
     gHistoryBundle =    document.getElementById("historyBundle");    
     gSearchBox = document.getElementById("search-box");
 
@@ -73,68 +67,7 @@ function HistoryCommonInit()
 
 function historyOnSelect()
 {
-    // every time selection changes, save the last hostname
-    gLastHostname = "";
-    gLastDomain = "";
-    var match;
-    var currentIndex = gHistoryTree.currentIndex;
-    var rowIsContainer = (gHistoryGrouping == "day" || gHistoryGrouping == "dayandsite") ? isContainer(gHistoryTree, currentIndex) : false;
-    var url = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder).getResourceAtIndex(currentIndex).Value;
-
-    if (url && !rowIsContainer) {
-        // matches scheme://(hostname)...
-        match = url.match(/^.*?:\/\/(?:([^\/:]*)(?::([^\/:]*))?@)?([^\/:]*)(?::([^\/:]*))?(.*)$/);
-
-        if (match && match.length>1)
-            gLastHostname = match[3];
-     
-    }
-
-    if (gLastHostname) {
-        // matches the last foo.bar in foo.bar or baz.foo.bar
-        match = gLastHostname.match(/([^.]+\.[^.]+$)/);
-        if (match)
-            gLastDomain = match[1];
-    }
-    document.commandDispatcher.updateCommands("select");
-}
-
-function updateEditMenuitems() {
-  var enabled = false, stringId;
-  if (gLastHostname) {
-    stringId = "deleteHost";
-    enabled = true;
-  } else {
-    stringId = "deleteHostNoSelection";
-  }
-  var text = gHistoryBundle.getFormattedString(stringId, [ gLastHostname ]);
-  gDeleteByHostname.setAttribute("label", text);
-  gDeleteByHostname.setAttribute("disabled", enabled ? "false" : "true");
-
-  enabled = false;
-  if (gLastDomain) {
-    stringId = "deleteDomain";
-    enabled = true;
-  } else {
-    stringId = "deleteDomainNoSelection";
-  }
-  text = gHistoryBundle.getFormattedString(stringId, [ gLastDomain ]);
-  gDeleteByDomain.setAttribute("label", text);
-  gDeleteByDomain.setAttribute("disabled", enabled ? "false" : "true");
-}
-
-function deleteByHostname() {
-  if (!gGlobalHistory)
-      gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIBrowserHistory);
-  gGlobalHistory.removePagesFromHost(gLastHostname, false)
-  gHistoryTree.builder.rebuild();
-}
-
-function deleteByDomain() {
-  if (!gGlobalHistory)
-      gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIBrowserHistory);
-  gGlobalHistory.removePagesFromHost(gLastDomain, true)
-  gHistoryTree.builder.rebuild();
+  document.commandDispatcher.updateCommands("select");
 }
 
 var historyDNDObserver = {
