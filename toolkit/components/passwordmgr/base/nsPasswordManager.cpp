@@ -375,7 +375,7 @@ nsPasswordManager::AddUser(const nsACString& aHost,
   }
 
   AddSignonData(aHost, entry);
-  WriteSignonFile();
+  WritePasswords(mSignonFile);
 
   return NS_OK;
 }
@@ -408,7 +408,7 @@ nsPasswordManager::RemoveUser(const nsACString& aHost, const nsAString& aUser)
       if (!hashEnt->head)
         mSignonTable.Remove(aHost);  // deletes hashEnt
 
-      WriteSignonFile();
+      WritePasswords(mSignonFile);
 
       return NS_OK;
     }
@@ -421,7 +421,7 @@ NS_IMETHODIMP
 nsPasswordManager::AddReject(const nsACString& aHost)
 {
   mRejectTable.Put(aHost, 1);
-  WriteSignonFile();
+  WritePasswords(mSignonFile);
   return NS_OK;
 }
 
@@ -429,7 +429,7 @@ NS_IMETHODIMP
 nsPasswordManager::RemoveReject(const nsACString& aHost)
 {
   mRejectTable.Remove(aHost);
-  WriteSignonFile();
+  WritePasswords(mSignonFile);
   return NS_OK;
 }
 
@@ -579,9 +579,8 @@ nsPasswordManager::FindPasswordEntry(const nsACString& aHostURI,
   return NS_OK;
 }
 
-#ifdef MIGRATION_ENABLED
 NS_IMETHODIMP
-nsPasswordManager::AddUserFull(const nsACString& aHost,
+nsPasswordManager::AddUserFull(const nsACString& aKey,
                                const nsAString& aUser,
                                const nsAString& aPassword,
                                const nsAString& aUserFieldName,
@@ -593,9 +592,9 @@ nsPasswordManager::AddUserFull(const nsACString& aHost,
     return NS_OK;
 
   // Check for an existing entry for this host + user
-  if (!aHost.IsEmpty()) {
+  if (!aKey.IsEmpty()) {
     SignonHashEntry *hashEnt;
-    if (mSignonTable.Get(aHost, &hashEnt)) {
+    if (mSignonTable.Get(aKey, &hashEnt)) {
       nsString empty;
       SignonDataEntry *entry = nsnull;
       FindPasswordEntryInternal(hashEnt->head, aUser, empty, empty, &entry);
@@ -616,18 +615,13 @@ nsPasswordManager::AddUserFull(const nsACString& aHost,
   EncryptDataUCS2(aUser, entry->userValue);
   EncryptDataUCS2(aPassword, entry->passValue);
 
-  AddSignonData(aHost, entry);
-  WriteSignonFile();
+  AddSignonData(aKey, entry);
+  WritePasswords(mSignonFile);
 
   return NS_OK;
 }
-#endif
 
-#ifdef MIGRATION_ENABLED
 NS_IMETHODIMP
-#else
-nsresult
-#endif
 nsPasswordManager::ReadPasswords(nsIFile* aPasswordFile)
 {
   nsCOMPtr<nsIInputStream> fileStream;
@@ -734,7 +728,7 @@ nsPasswordManager::ReadPasswords(nsIFile* aPasswordFile)
 
   if (writeOnFinish) {
     fileStream->Close();
-    WriteSignonFile();
+    WritePasswords(mSignonFile);
   }
 
   return NS_OK;
@@ -1082,7 +1076,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
                 if (NS_FAILED(EncryptDataUCS2(passValue, entry->passValue)))
                   return NS_ERROR_FAILURE;
 
-                WriteSignonFile();
+                WritePasswords(mSignonFile);
               }
 
               return NS_OK;
@@ -1120,7 +1114,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
         }
 
         AddSignonData(realm, entry);
-        WriteSignonFile();
+        WritePasswords(mSignonFile);
       } else if (selection == 2) {
         AddReject(realm);
       }
@@ -1234,7 +1228,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
         if (NS_FAILED(EncryptDataUCS2(newValue, changeEntry->passValue)))
           return NS_ERROR_FAILURE;
 
-        WriteSignonFile();
+        WritePasswords(mSignonFile);
       }
     }
     break;
@@ -1584,10 +1578,10 @@ nsPasswordManager::WriteSignonEntryEnumerator(const nsACString& aKey,
 }
 
 void
-nsPasswordManager::WriteSignonFile()
+nsPasswordManager::WritePasswords(nsIFile* aPasswordFile)
 {
   nsCOMPtr<nsIOutputStream> fileStream;
-  NS_NewLocalFileOutputStream(getter_AddRefs(fileStream), mSignonFile, -1,
+  NS_NewLocalFileOutputStream(getter_AddRefs(fileStream), aPasswordFile, -1,
                               0600, 0);
 
   if (!fileStream)

@@ -144,10 +144,7 @@ public:
                             nsIAutoCompleteResult** aResult);
 
 protected:
-#ifndef MIGRATION_ENABLED
-  nsresult ReadPasswords(nsIFile* aPasswordFile);
-#endif
-  void WriteSignonFile();
+  void WritePasswords(nsIFile* aPasswordFile);
   void AddSignonData(const nsACString& aRealm, SignonDataEntry* aEntry);
 
   nsresult FindPasswordEntryInternal(const SignonDataEntry* aEntry,
