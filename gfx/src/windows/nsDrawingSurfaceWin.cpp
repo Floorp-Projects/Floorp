@@ -209,7 +209,7 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: Lock(PRInt32 aX, PRInt32 aY,
         mLockOffset = aY;
         mLockHeight = min((PRInt32)aHeight, (mBitmap.bmHeight - aY));
 
-        mBitmapInfo = CreateBitmapInfo(mBitmap.bmWidth, mBitmap.bmHeight, mBitmap.bmBitsPixel, (void **)&mDIBits, &mPixFormat);
+        mBitmapInfo = CreateBitmapInfo(mBitmap.bmWidth, mBitmap.bmHeight, mBitmap.bmBitsPixel, (void **)&mDIBits);
 
         if (!(aFlags & NS_LOCK_SURFACE_WRITE_ONLY))
           ::GetDIBits(mDC, mLockedBitmap, mLockOffset, mLockHeight, mDIBits, mBitmapInfo, DIB_RGB_COLORS);
@@ -485,7 +485,7 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: IsReleaseDCDestructive(PRBool *aDestructive
 }
 
 BITMAPINFO * nsDrawingSurfaceWin :: CreateBitmapInfo(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
-                                                     void **aBits, nsPixelFormat *aPixFormat)
+                                                     void **aBits)
 {
   PRInt32 palsize, imagesize, spanbytes, allocsize;
   PRUint8 *colortable;
@@ -507,27 +507,24 @@ BITMAPINFO * nsDrawingSurfaceWin :: CreateBitmapInfo(PRInt32 aWidth, PRInt32 aHe
       masks[0] = 0xf800;
       masks[1] = 0x07e0;
       masks[2] = 0x001f;
-
-      if (nsnull != aPixFormat)
-      {
-        aPixFormat->mRedZeroMask = 0x1f;
-        aPixFormat->mGreenZeroMask = 0x3f;
-        aPixFormat->mBlueZeroMask = 0x1f;
-        aPixFormat->mAlphaZeroMask = 0;
-        aPixFormat->mRedMask = masks[0];
-        aPixFormat->mGreenMask = masks[1];
-        aPixFormat->mBlueMask = masks[2];
-        aPixFormat->mAlphaMask = 0;
-        aPixFormat->mRedCount = 5;
-        aPixFormat->mGreenCount = 6;
-        aPixFormat->mBlueCount = 5;
-        aPixFormat->mAlphaCount = 0;
-        aPixFormat->mRedShift = 11;
-        aPixFormat->mGreenShift = 5;
-        aPixFormat->mBlueShift = 0;
-        aPixFormat->mAlphaShift = 0;
-      }
-
+     
+      mPixFormat.mRedZeroMask = 0x1f;
+      mPixFormat.mGreenZeroMask = 0x3f;
+      mPixFormat.mBlueZeroMask = 0x1f;
+      mPixFormat.mAlphaZeroMask = 0;
+      mPixFormat.mRedMask = masks[0];
+      mPixFormat.mGreenMask = masks[1];
+      mPixFormat.mBlueMask = masks[2];
+      mPixFormat.mAlphaMask = 0;
+      mPixFormat.mRedCount = 5;
+      mPixFormat.mGreenCount = 6;
+      mPixFormat.mBlueCount = 5;
+      mPixFormat.mAlphaCount = 0;
+      mPixFormat.mRedShift = 11;
+      mPixFormat.mGreenShift = 5;
+      mPixFormat.mBlueShift = 0;
+      mPixFormat.mAlphaShift = 0;
+  
       break;
 
 		case 24:
@@ -535,25 +532,24 @@ BITMAPINFO * nsDrawingSurfaceWin :: CreateBitmapInfo(PRInt32 aWidth, PRInt32 aHe
 			allocsize = 0;
       bicomp = BI_RGB;
 
-      if (nsnull != aPixFormat)
-      {
-        aPixFormat->mRedZeroMask = 0xff;
-        aPixFormat->mGreenZeroMask = 0xff;
-        aPixFormat->mBlueZeroMask = 0xff;
-        aPixFormat->mAlphaZeroMask = 0;
-        aPixFormat->mRedMask = 0xff;
-        aPixFormat->mGreenMask = 0xff00;
-        aPixFormat->mBlueMask = 0xff0000;
-        aPixFormat->mAlphaMask = 0;
-        aPixFormat->mRedCount = 8;
-        aPixFormat->mGreenCount = 8;
-        aPixFormat->mBlueCount = 8;
-        aPixFormat->mAlphaCount = 0;
-        aPixFormat->mRedShift = 0;
-        aPixFormat->mGreenShift = 8;
-        aPixFormat->mBlueShift = 16;
-        aPixFormat->mAlphaShift = 0;
-      }
+     
+      mPixFormat.mRedZeroMask = 0xff;
+      mPixFormat.mGreenZeroMask = 0xff;
+      mPixFormat.mBlueZeroMask = 0xff;
+      mPixFormat.mAlphaZeroMask = 0;
+      mPixFormat.mRedMask = 0xff;
+      mPixFormat.mGreenMask = 0xff00;
+      mPixFormat.mBlueMask = 0xff0000;
+      mPixFormat.mAlphaMask = 0;
+      mPixFormat.mRedCount = 8;
+      mPixFormat.mGreenCount = 8;
+      mPixFormat.mBlueCount = 8;
+      mPixFormat.mAlphaCount = 0;
+      mPixFormat.mRedShift = 0;
+      mPixFormat.mGreenShift = 8;
+      mPixFormat.mBlueShift = 16;
+      mPixFormat.mAlphaShift = 0;
+     
 
       break;
 
@@ -564,26 +560,24 @@ BITMAPINFO * nsDrawingSurfaceWin :: CreateBitmapInfo(PRInt32 aWidth, PRInt32 aHe
       masks[0] = 0xff0000;
       masks[1] = 0x00ff00;
       masks[2] = 0x0000ff;
-
-      if (nsnull != aPixFormat)
-      {
-        aPixFormat->mRedZeroMask = 0xff;
-        aPixFormat->mGreenZeroMask = 0xff;
-        aPixFormat->mBlueZeroMask = 0xff;
-        aPixFormat->mAlphaZeroMask = 0xff;
-        aPixFormat->mRedMask = masks[0];
-        aPixFormat->mGreenMask = masks[1];
-        aPixFormat->mBlueMask = masks[2];
-        aPixFormat->mAlphaMask = 0xff000000;
-        aPixFormat->mRedCount = 8;
-        aPixFormat->mGreenCount = 8;
-        aPixFormat->mBlueCount = 8;
-        aPixFormat->mAlphaCount = 8;
-        aPixFormat->mRedShift = 16;
-        aPixFormat->mGreenShift = 8;
-        aPixFormat->mBlueShift = 0;
-        aPixFormat->mAlphaShift = 24;
-      }
+     
+      mPixFormat.mRedZeroMask = 0xff;
+      mPixFormat.mGreenZeroMask = 0xff;
+      mPixFormat.mBlueZeroMask = 0xff;
+      mPixFormat.mAlphaZeroMask = 0xff;
+      mPixFormat.mRedMask = masks[0];
+      mPixFormat.mGreenMask = masks[1];
+      mPixFormat.mBlueMask = masks[2];
+      mPixFormat.mAlphaMask = 0xff000000;
+      mPixFormat.mRedCount = 8;
+      mPixFormat.mGreenCount = 8;
+      mPixFormat.mBlueCount = 8;
+      mPixFormat.mAlphaCount = 8;
+      mPixFormat.mRedShift = 16;
+      mPixFormat.mGreenShift = 8;
+      mPixFormat.mBlueShift = 0;
+      mPixFormat.mAlphaShift = 24;
+   
 
       break;
 

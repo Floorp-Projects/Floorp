@@ -68,7 +68,7 @@ private:
   ~nsDrawingSurfaceWin();
 
   BITMAPINFO *CreateBitmapInfo(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
-                               void **aBits = nsnull, nsPixelFormat *aPixFormat = nsnull);
+                               void **aBits = nsnull);
 
 #ifdef NGLAYOUT_DDRAW
   nsresult CreateDDraw(void);
