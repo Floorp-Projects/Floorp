@@ -215,10 +215,8 @@ nsMenuPopupFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView,
   parent = aView;
   while (nsnull != parent) {
     parent->GetBounds(bounds);
-    if (bounds.y >= 0) {
-      aPoint.x += bounds.x;
-      aPoint.y += bounds.y;
-    }
+    aPoint.x += bounds.x;
+    aPoint.y += bounds.y;
     parent->GetParent(parent);
   }
 }
@@ -509,16 +507,6 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   nsIView* containingView = nsnull;
   nsPoint offset;
   aFrame->GetOffsetFromView(aPresContext, offset, &containingView);
-
-  // We add the bounds of the containing view to the offset as 
-  // in the case of a scrolled view (autoscrolling menus), the offset
-  // y dimension includes matter that is not onscreen and should not
-  // be taken into account when positioning submenus. The y dimension
-  // on the bounds of the containing view is negative if any content
-  // is offscreen. For most menus it is 0 so this is a no-op. 
-  nsRect bounds;
-  containingView->GetBounds(bounds);
-  offset += nsPoint(bounds.x, bounds.y);
   
   nsRect parentRect;
   aFrame->GetRect(parentRect);
