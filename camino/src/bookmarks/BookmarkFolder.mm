@@ -110,7 +110,7 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
 -(void)dealloc
 {
-  [[[BookmarkManager sharedBookmarkManager] undoManager] removeAllActionsWithTarget:self];
+  // NOTE: we're no longer clearning the undo stack here because its pointless and is a potential crasher
   if ([mSpecialFlag unsignedIntValue] & kBookmarkDockMenuFolder)
     [[NSNotificationCenter defaultCenter] removeObserver:self name:BookmarkFolderDockMenuChangeNotificaton object:nil];
 
