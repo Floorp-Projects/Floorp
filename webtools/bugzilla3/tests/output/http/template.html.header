@@ -1,0 +1,40 @@
+COSES
+<text xml:space="default" xmlns="http://bugzilla.mozilla.org/coses">
+
+ <!-- - - - - - - -+
+ | HEADER TEMPLATE |
+ + - - - - - - - -->
+
+<!-- HTTP Header -->
+<text>
+HTTP/1.1 <if lvalue="response" condition="ne" rvalue=""><text value="(response)"/></if><else>200 OK</else><br/>
+<if lvalue="headers" condition="ne" rvalue=""><text value="(headers)"/></if>Content-Type: text/html
+</text>
+
+<!-- Separator -->
+<br/><br/>
+
+<!-- HTML Header -->
+<text><![CDATA[
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+ <head>
+  <title>]]><text escape="html" value="(data.app.name): (title)"/><![CDATA[</title>
+  <link rel="stylesheet" href="style">
+]]></text>
+
+<!-- User's stylesheet, if any 
+<if lvalue="(data.session.fields.settings:stylesheet)" condition="ne" rvalue="">
+  &lt;link rel="stylesheet" href="<text escape="html" value="(data.session.fields.settings:stylesheet)"/>"&gt;   
+</if>-->
+
+<!-- End of HTML Header -->
+<text xml:space="preserve"><![CDATA[
+ </head>
+ <body>
+  <h1>]]><text escape="html" value="(title)"/><![CDATA[</h1>
+]]></text>
+
+<!-- See also the footer template. -->
+
+</text>

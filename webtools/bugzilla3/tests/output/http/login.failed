@@ -1,0 +1,47 @@
+COSES
+<text xml:space="default" xmlns="http://bugzilla.mozilla.org/coses">
+
+<set variable="title" value="Login">
+<set variable="response" value="401 Authentication Required">
+<set variable="headers" value="WWW-Authenticate: Basic realm=&quot;(data.app.name)&quot;&#13;">
+  <include href="template.html.header"/>
+</set></set></set>
+
+<text><![CDATA[
+  <form action="nph-Main" method="GET"> <!-- XXX POST -->
+   <p>
+]]></text>
+
+<if lvalue="(data.tried)" condition="=" rvalue="1"> The password or username you used is incorrect. </if>
+<text> If you would like to create a new account, </text>
+<if lvalue="(data.tried)" condition="=" rvalue="1"> or to have your password sent to you, </if>
+<text> fill in your e-mail address or other means of contact: </text>
+
+<text><![CDATA[
+   </p>
+   <p>
+    <input type="hidden" name="command" value="SendPassword">
+    <select name="protocol">
+     <!-- XXX -->
+     <option name="e-mail">email</option>
+    </select>
+    <input type="text" name="address" value="">
+    <input type="hidden" name="pendingCommands" value="
+]]></text>
+
+<flatten source="(data.input.arguments)" target="flatArguments">
+  <text value="(flatArguments)"/>
+</flatten>
+
+<text><![CDATA[">
+    <input type="submit" value="Get Password">
+   </p>
+  </form>
+]]><br/></text>
+
+<text><![CDATA[  <pre>]]><br/></text>
+<text escape="html"><include href="debug.dumpVars"/><br/></text>
+<text><![CDATA[  </pre>]]></text>
+
+<include href="template.html.footer"/>
+</text>

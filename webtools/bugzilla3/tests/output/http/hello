@@ -1,0 +1,25 @@
+COSES
+<text xml:space="default" xmlns="http://bugzilla.mozilla.org/coses">
+
+<set variable="title" value="Hello World">
+  <include href="template.html.header"/>
+</set>
+
+<text><![CDATA[
+  <p>This is the main page of the test PLIF project. It is being generated from an XML text file!</p>
+  <p>From here you may: <a href="nph-Main?command=login">Say Hello</a> or <a href="nph-Main?command=cosesEditor">Edit The Strings</a>.</p>
+  <p>If prompted for a username/password, use "open"/"sesame".</p>
+  <pre>
+]]></text>
+
+<text escape="html">
+  <include href="debug.dumpVars"/>
+</text>
+
+<text><![CDATA[
+  </pre>
+]]></text>
+
+<include href="template.html.footer"/>
+
+</text>

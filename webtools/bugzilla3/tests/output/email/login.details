@@ -1,0 +1,14 @@
+COSES
+<text xml:space="default" xmlns="http://bugzilla.mozilla.org/coses">
+
+<text>
+To: <text value="(data.session.fields.contact:e-mail)"/><br/>
+From: XXX@spam.hixie.ch<br/>
+Subject: Test From PLIF<br/>
+</text>
+
+Hi.
+
+Here's what I know:
+<include href="debug.dumpVars"/>
+</text>

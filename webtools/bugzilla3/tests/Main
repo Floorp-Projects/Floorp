@@ -1,0 +1,89 @@
+#!/usr/local/bin/perl -wT
+# -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
+#
+# This file is MPL/GPL dual-licensed under the following terms:
+# 
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.1 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+# the License for the specific language governing rights and
+# limitations under the License.
+#
+# The Original Code is PLIF 1.0.
+# The Initial Developer of the Original Code is Ian Hickson.
+#
+# Alternatively, the contents of this file may be used under the terms
+# of the GNU General Public License Version 2 or later (the "GPL"), in
+# which case the provisions of the GPL are applicable instead of those
+# above. If you wish to allow use of your version of this file only
+# under the terms of the GPL and not to allow others to use your
+# version of this file under the MPL, indicate your decision by
+# deleting the provisions above and replace them with the notice and
+# other provisions required by the GPL. If you do not delete the
+# provisions above, a recipient may use your version of this file
+# under either the MPL or the GPL.
+
+use strict; # enable stricter Perl syntax rules
+use diagnostics; # enable fuller diagnostics
+use lib "."; # this is required to use the app's modules
+use lib "../../PLIF"; # this is required to use PLIF
+use vars qw(@ISA);
+@ISA = qw(PLIF::Application);
+require PLIF::Application; # engage!
+1;
+
+# register all the components of this app
+sub registerServices {
+    my $self = shift;
+    $self->SUPER::registerServices(@_);
+    # somehow add in all the components
+    $self->register(qw(
+                     PLIF::Input::CGI
+                     PLIF::Input::CommandLine
+                     PLIF::Input::Default
+                     PLIF::DataSource::FileStrings
+                     PLIF::DataSource::DebugStrings
+                     PLIF::DataSource::Strings::MySQL
+                     PLIF::DataSource::User::MySQL
+                     PLIF::Database::DBI
+                     PLIF::DatabaseHelper::DBI
+                     PLIF::Output::Generic
+                     PLIF::Output::Generic::StdOut
+                     PLIF::Service::Coses
+                     PLIF::Service::XML
+                     PLIF::Service::GenericOutputs
+                     PLIF::Service::User
+                     PLIF::Service::Passwords
+                     PLIF::Service::UserField::String
+                     PLIF::Service::UserFieldFactory
+                     PLIF::Service::Components::AdminCommands
+                     PLIF::Service::Components::Login
+                     PLIF::Service::Components::CosesEditor
+                     PLIF::Service::ContactMethod::Email
+                     Output
+                     DataSource::ConsoleStrings
+                     DataSource::HTTPStrings
+                       ));
+}
+
+sub unknownCommand {
+    my $self = shift;
+    $self->output->hello({});
+}
+
+sub cmdLogin {
+    my $self = shift;
+    my $user = $self->getService('user.login')->hasRight($self, 'hello');
+    if (defined($user)) {
+        my %strings = @{$self->getCollectingServiceList('dispatcher.output')->strings};
+        $self->output->hello(\%strings);
+    } # else, user has been notified
+}
+
+sub name {
+    return 'Main Test';
+}

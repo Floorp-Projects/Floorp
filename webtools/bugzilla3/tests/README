@@ -1,0 +1,27 @@
+The files in this directory are part of the PLIF test appliaction, the
+precursor to Bugzilla3.
+
+Note: To test this on Apache, make a symlink called "nph-Main" and
+point it to the file "Main".
+
+You will also then want to create a .htaccess file containing
+something like the following:
+
+
+# set up the CGI scripts without .cgi extensions
+<files nph-Main>
+   SetHandler cgi-script
+</files>
+
+# set up the stylesheets without .css extensions
+<files style>
+   ForceType text/css
+</files>
+
+# describe the files
+AddDescription "The main part of the PLIF test app" nph-Main
+
+# SECURITY_HOLE_PASS_AUTHORIZATION
+RewriteEngine on
+RewriteBase /libraries/perl/PLIF/tests/
+ReWriteRule .? - [E=HTTP_AUTHORIZATION:%{HTTP:AUTHORIZATION},PT]
