@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.11 $';
+$Version = '$Revision: 1.12 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -674,6 +674,9 @@ sub ParseArgs {
 	    $BuildDepend = 1;
  	    $manArg++;
 	}
+	elsif ( $ARGV[$i] eq '--help' || $ARGV[$i] eq '-h' ) {
+	    $PrintUsage;
+	}
 	elsif ( $ARGV[$i] eq '--noreport' ) {
 	    $ReportStatus = 0;
 	}
@@ -702,7 +705,6 @@ sub ParseArgs {
 	} else {
 	    &PrintUsage;
 	}
-
 	$i++;
     }
 
@@ -718,7 +720,7 @@ sub ParseArgs {
 }
 
 sub PrintUsage {
-    die "usage: $0 [--depend | --clobber] [-v | --version ] [--once --classic --noreport -tag TREETAG -t TREENAME ]\n";
+    die "usage: $0 --depend | --clobber [ -v | --version ] [ --once --classic --noreport --notest -tag TREETAG -t TREENAME ]\n";
 }
 
 sub PrintEnv {
