@@ -29,15 +29,6 @@
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 
-// mscott --  this is just one temporary hack until we have a legit stream converter
-// story going....if the file we are opening is an rfc822 file then we want to 
-// go out and convert the data into html before we try to load it. so I'm inserting
-// code which if we are rfc-822 will cause us to literally insert a converter between
-// the file channel stream of incoming data and the consumer at the other end of the
-// AsyncRead call...
-
-#define STREAM_CONVERTER_HACK 
-
 #include "nsIFileChannel.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
@@ -48,11 +39,6 @@
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
 #include "nsCOMPtr.h"
-
-#ifdef STREAM_CONVERTER_HACK
-#include "nsIStreamConverter.h"
-#include "nsXPIDLString.h"
-#endif
 
 class nsFileChannel : public nsIFileChannel,
                       public nsIStreamListener
