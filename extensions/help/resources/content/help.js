@@ -58,6 +58,7 @@ var key = {
  "?cert_backup_pwd":  "chrome://help/locale/certs_help.html#Choose_a_Certificate_Backup_Password",
  "?delete_my_certs":  "chrome://help/locale/certs_help.html#Delete_My_Certificate",
  "?change_pwd":  "chrome://help/locale/passwords_help.html#Change_Master_Password",
+ "?reset_pwd":  "chrome://help/locale/passwords_help.html#Reset_Master_Password",
  "?web_certs":  "chrome://help/locale/certs_help.html#Web_Site_Certificates",
  "?edit_web_certs":  "chrome://help/locale/certs_help.html#Edit_Web_Site_Certificate_Settings",
  "?delete_web_certs":  "chrome://help/locale/certs_help.html#Delete_Web_Site_Certificate",
@@ -84,8 +85,8 @@ var key = {
  "?validation_prefs":  "chrome://help/locale/validation_help.html",
  "?passwords_prefs":  "chrome://help/locale/passwords_help.html",
  "?passwords_master":  "chrome://help/locale/passwords_help.html#Master_Password_Timeout",
- "?forms_prefs":  "chrome://help/locale/using_priv_help.html#using_forms",  
- "?cookies_prefs": "chrome://help/locale/using_priv_help.html#using_cookies",
+ "?forms_prefs":  "chrome://help/locale/using_priv_help.html#forms_prefs",  
+ "?cookies_prefs": "chrome://help/locale/using_priv_help.html#cookie_prefs",
  "?images_prefs": "chrome://help/locale/using_priv_help.html#using_images",
  "?certs_prefs": "chrome://help/locale/certs_prefs_help.html",
 
