@@ -85,6 +85,10 @@ class nsIKBStateControl : public nsISupports {
      */
     NS_IMETHOD GetIMEOpenState(PRBool* aState) = 0;
 
+    /*
+     * Destruct and don't commit the IME composition string.
+     */
+    NS_IMETHOD CancelIMEComposition() = 0;
 };
 
 #endif // nsIKBStateControl_h__

@@ -362,6 +362,7 @@ public:
   NS_IMETHOD ResetInputState();
   NS_IMETHOD SetIMEOpenState(PRBool aState);
   NS_IMETHOD GetIMEOpenState(PRBool* aState);
+  NS_IMETHOD CancelIMEComposition();
 
   PRBool IMEMouseHandling(PRUint32 aEventType, PRInt32 aAction, LPARAM lParam);
   PRBool IMECompositionHitTest(PRUint32 aEventType, POINT * ptPos);
