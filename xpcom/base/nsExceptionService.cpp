@@ -197,13 +197,14 @@ void nsExceptionService::ThreadDestruct( void *data )
 
 void nsExceptionService::Shutdown()
 {
-  mProviders.Reset();
   if (lock) {
+    mProviders.Reset();
     DropAllThreads();
+    PR_SetThreadPrivate(tlsIndex, nsnull);
     PR_DestroyLock(lock);
     lock = nsnull;
-  }
-  PR_SetThreadPrivate(tlsIndex, nsnull);
+  } else
+    PR_SetThreadPrivate(tlsIndex, nsnull);
 }
 
 /* void setCurrentException (in nsIException error); */
