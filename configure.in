@@ -793,6 +793,7 @@ case "$target" in
         IMPLIB='emximp -o'
         FILTER='emxexp'
         AC_DEFINE(OS2)
+        AC_DEFINE(XP_OS2_EMX)
         AC_DEFINE(OS2EMX_PLAIN_CHAR)
         MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/lib $(NSPR_LIBS)'
         MOZ_COMPONENT_XPCOM_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcom.lib'
