@@ -184,7 +184,7 @@ public:
      * Request that a data source write it's contents out to 
      * permanent storage if applicable.
      */
-    NS_IMETHOD Flush() = 0;
+    NS_IMETHOD Flush(void) = 0;
 
     /**
      * Determine whether the specified command is enabled for the

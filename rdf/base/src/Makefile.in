@@ -37,6 +37,7 @@ CPPSRCS =				\
 	nsRDFService.cpp                \
 	nsRDFXMLDataSource.cpp		\
 	rdfutil.cpp			\
+        nsRDFResource.cpp               \
 	$(NULL)
 
 EXPORTS = \
