@@ -227,9 +227,12 @@ public:
 };
 
 
-// XXX Belongs somewhere else
+// XXX These belong somewhere else
 extern NS_LAYOUT nsresult
    NS_NewHTMLDocument(nsIDocument** aInstancePtrResult);
+
+extern NS_LAYOUT nsresult
+   NS_NewImageDocument(nsIDocument** aInstancePtrResult);
 
 // Note: The buffer passed into NewPostData(...) becomes owned by the IPostData
 //       instance and is freed when the instance is destroyed...
