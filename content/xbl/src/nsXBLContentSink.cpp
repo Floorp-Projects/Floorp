@@ -274,9 +274,8 @@ nsXBLContentSink::ReportUnexpectedElement(nsIAtom* aElementName,
                          "XBL Content Sink");
 
   NS_ENSURE_SUCCESS(rv, rv);
-  consoleService->LogMessage(errorObject);
-
-  return NS_OK;
+  
+  return consoleService->LogMessage(errorObject);
 }
 
 NS_IMETHODIMP 
