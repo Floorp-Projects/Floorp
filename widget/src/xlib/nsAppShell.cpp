@@ -41,6 +41,7 @@
 #include "nsIWidget.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
+#include "nsICmdLineService.h"
 #include "nsIDragService.h"
 #include "nsIDragSessionXlib.h"
 #include "nsITimer.h"
@@ -55,6 +56,7 @@
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
 #ifndef MOZ_MONOLITHIC_TOOLKIT
@@ -230,6 +232,10 @@ static void CallProcessTimeoutsProc(Display *aDisplay)
 #endif /* MOZ_MONOLITHIC_TOOLKIT */
 }
 
+#define COMPARE_FLAG1( a,b) ((b)[0]=='-' && !strcmp((a), &(b)[1]))
+#define COMPARE_FLAG2( a,b) ((b)[0]=='-' && (b)[1]=='-' && !strcmp((a), &(b)[2]))
+#define COMPARE_FLAG12(a,b) ((b)[0]=='-' && !strcmp((a), (b)[1]=='-'?&(b)[2]:&(b)[1]))
+
 #define ALL_EVENTS ( KeyPressMask | KeyReleaseMask | ButtonPressMask | \
                      ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | \
                      PointerMotionMask | PointerMotionHintMask | Button1MotionMask | \
@@ -253,17 +259,48 @@ nsAppShell::nsAppShell()
 
 NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 
-NS_METHOD nsAppShell::Create(int* argc, char ** argv)
+NS_METHOD nsAppShell::Create(int* bac, char ** bav)
 {
   char *mArgv[1]; 
   int mArgc = 0;
   XtAppContext app_context;
 
+  int argc = bac ? *bac : 0;
+  char **argv = bav;
+  nsresult rv;
+
+  nsCOMPtr<nsICmdLineService> cmdLineArgs = do_GetService(kCmdLineServiceCID);
+  if (cmdLineArgs) {
+    rv = cmdLineArgs->GetArgc(&argc);
+    if(NS_FAILED(rv))
+      argc = bac ? *bac : 0;
+
+    rv = cmdLineArgs->GetArgv(&argv);
+    if(NS_FAILED(rv))
+      argv = bav;
+  }
+
+  char *displayName=nsnull;
+  bool synchronize=false;
+
+  for (int i = 0; ++i < argc-1; )
+    /*allow both --display and -display*/
+    if (COMPARE_FLAG12 ("display",argv[i])){
+      displayName=argv[i+1];
+      break;
+    }
+  for (int i = 0; ++i < argc; )
+    if (COMPARE_FLAG2 ("sync",argv[i])){
+      synchronize=true;
+      break;
+    } 
+
   // Open the display
   if (mDisplay == nsnull) {
-    mDisplay = XOpenDisplay(NULL);
+    mDisplay = XOpenDisplay(displayName);
 
-    //XSynchronize(mDisplay, True);
+    if (synchronize)
+      XSynchronize(mDisplay, True);
     // Requires XSynchronize(mDisplay, True); To stop X buffering. Use this
     // to make debugging easier. KenF
 
@@ -271,7 +308,7 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
     {
       fprintf(stderr, "%s: Cannot connect to X server %s\n",
               argv[0], 
-              XDisplayName(NULL));
+              XDisplayName(displayName));
     
       exit(1);
     }
