@@ -22,6 +22,8 @@ extern "C" {
 
 #include "config.h"
 
+typedef unsigned long u_long;
+
 // Format of a malloc log entry. This is whats written out to the
 // "malloc-log" file.
 struct malloc_log_entry {

@@ -18,6 +18,8 @@
 #include "dict.h"
 #include "strset.h"
 
+typedef unsigned int u_int;
+
 struct Symbol {
   char *name;
   u_long address;
