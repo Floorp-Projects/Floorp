@@ -62,8 +62,9 @@
   <script type="application/x-javascript" src="chrome://navigator/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
 
-  <commandset id="commands">    
+  <commandset id="commands">
     <commandset id="globalEditMenuItems"/>
     <commandset id="selectEditMenuItems"/>
     <commandset id="clipboardEditMenuItems"/>
@@ -97,13 +98,7 @@
 
   <!-- context menu -->
   <popupset id="p3pSummaryContextSet">
-    <popup id="p3pSummaryContextMenu">
-      <menuitem label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" command="Browser:FindAgain"/>
-      <menuseparator/>
-      <menuitem id="menu_copy_cm" label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" command="cmd_copy"/>
-      <menuseparator/>
-      <menuitem id="menu_selectAll_cm" label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll"/>
-    </popup>
+    <popup id="contentAreaContextMenu"/><!-- XXX Silly hack to quiet mailNavigatorOverlay.xul warning -->
   </popupset>
 
   <!-- Menu --> 
@@ -154,8 +149,8 @@
     </menubar>  
   </toolbox>
   
-  <vbox id="appcontent" flex="1*" ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
-    <browser type="content-primary" id="content" name="content" flex="1*" 
+  <vbox id="appcontent" flex="1" ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
+    <browser type="content-primary" id="content" flex="1"
              onclick="captureContentClick(event);"/>
   </vbox>
   

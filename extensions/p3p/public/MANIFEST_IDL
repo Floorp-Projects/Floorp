@@ -34,7 +34,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-nsIP3PService.idl
 nsIPolicyReference.idl
 nsIPolicyListener.idl
 nsIPolicyTarget.idl

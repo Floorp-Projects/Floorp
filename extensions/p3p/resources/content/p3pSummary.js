@@ -34,9 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const nsIP3PService    = Components.interfaces.nsIP3PService;
 const nsIDocShell      = Components.interfaces.nsIDocShell;
-const nsIPromptService = Components.interfaces.nsIPromptService;
 
 var gBrowser       = null;
 var gDocument      = null;
@@ -46,12 +44,11 @@ function renderMachineReadable()
   var xsltp     = window.arguments[0];
   var source    = window.arguments[1];
   var style     = window.arguments[2];
-  var policyuri = window.arguments[3];
-  var result    = getBrowser().contentDocument;
+  var policyuri = window.arguments[3].clone().QueryInterface(nsIURL);
+  policyuri.ref = "";
 
   try {
-    var docshell  = getBrowser().docShell.QueryInterface(nsIDocShell);
-    var service   = Components.classes["@mozilla.org/p3p/p3pservice;1"].getService(nsIP3PService);
+    var docshell  = getSummaryBrowser().docShell.QueryInterface(nsIDocShell);
     
     // For browser security do not allow javascript on the transformed document.
     docshell.allowJavascript = false; 
@@ -59,18 +56,66 @@ function renderMachineReadable()
     // Set the policy url on the result document ( fabricated ) where
     // the transformation would result. Also, set the policy uri on the
     // docshell for named anchors to work correctly.
+    var resultDocument = getDocument();
     docshell.setCurrentURI(policyuri);
-    service.setDocumentURL(result, policyuri);
-    
-    xsltp.transformDocument(source, style, result, null);
-    window.title = result.getElementById("topic").firstChild.nodeValue;
+
+    xsltp.setParameter("", "policyUri", policyuri.spec);
+    xsltp.importStylesheet(style);
+
+    var result = xsltp.transformToFragment(source, resultDocument);
+
+    // XXX Replacing the documentElement makes scrollbars disappear.
+    //while (resultDocument.lastChild} {
+    //    resultDocument.removeChild(resultDocument.lastChild);
+    //}
+    // XXX appendChild of a DocumentFragment should work but doesn't.
+    //resultDocument.appendChild(result);
+    transferToDocument(result, resultDocument);
+
+    window.title = resultDocument.getElementById("topic").firstChild.nodeValue;
   }
   catch (ex) {
     alertMessage(getBundle().GetStringFromName("InternalError"));
   }
 }
 
-function getBrowser()
+// XXX Temporary function to workaround disappearing scrollbars
+//     and bug in document.appendChild(DocumentFragment).
+function transferToDocument(aResult, aResultDocument)
+{
+    var docElement = aResultDocument.documentElement;
+    while (aResultDocument.firstChild &&
+           aResultDocument.firstChild != docElement) {
+        aResultDocument.removeChild(aResultDocument.firstChild);
+    }
+    while (docElement.lastChild) {
+        docElement.removeChild(docElement.lastChild);
+    }
+    while (aResultDocument.lastChild &&
+           aResultDocument.lastChild != docElement) {
+        aResultDocument.removeChild(aResultDocument.lastChild);
+    }
+    var pastDocumentElement = false;
+    for (var i = 0; i < aResult.childNodes.length; ++i) {
+        var childNode = aResult.childNodes.item(i);
+        if (childNode instanceof HTMLElement) {
+            while (childNode.firstChild) {
+                aResultDocument.documentElement.appendChild(childNode.removeChild(childNode.firstChild));
+            }
+            pastDocumentElement = true;
+        }
+        else {
+            if (pastDocumentElement) {
+                aResultDocument.appendChild(childNode);
+            }
+            else {
+                aResultDocument.insertBefore(childNode, aResultDocument.documentElement);
+            }
+        }
+    }
+}
+
+function getSummaryBrowser()
 {
   if (!gBrowser)
     gBrowser = document.getElementById("content");
@@ -80,7 +125,7 @@ function getBrowser()
 function getDocument()
 {
   if (!gDocument)
-    gDocument = getBrowser().contentDocument;
+    gDocument = getSummaryBrowser().contentDocument;
   return gDocument;
 }
 
@@ -133,17 +178,10 @@ function p3pSummarySavePage()
  */
 function captureContentClick(aEvent)
 {
-  if ("parentNode" in aEvent.target && 
-      aEvent.target.parentNode.hasAttribute("message")) {
-    alertMessage(aEvent.target.parentNode.getAttribute("message"));
+  if (aEvent.target.hasAttribute("message")) {
+    alertMessage(aEvent.target.getAttribute("message"));
+    return true;
   }
-}
 
-function alertMessage(aMessage)
-{
-  if (!gPromptService) {
-    gPromptService = 
-      Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(nsIPromptService);
-  }
-  gPromptService.alert(window, getBrandName(), aMessage);
+  return contentAreaClick(aEvent);
 }

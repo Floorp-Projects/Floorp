@@ -38,7 +38,6 @@
 #ifndef NS_P3PSERVICE_H__
 #define NS_P3PSERVICE_H__
 
-#include "nsIP3PService.h"
 #include "nsICookieConsent.h"
 #include "nsIHttpNotify.h"
 #include "nsCompactPolicy.h"
@@ -46,16 +45,13 @@
 
 class nsIPrefBranch;
 
-class nsP3PService : public nsIP3PService,
-                     public nsICookieConsent,
+class nsP3PService : public nsICookieConsent,
                      public nsIHttpNotify,
                      public nsIObserver
 {
 public:
   // nsISupports
   NS_DECL_ISUPPORTS
-  // nsIP3PService
-  NS_DECL_NSIP3PSERVICE
   // nsICookieConsent
   NS_DECL_NSICOOKIECONSENT
   // nsIHttpNotify

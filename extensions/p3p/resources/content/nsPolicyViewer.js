@@ -81,10 +81,6 @@ function nsPolicyViewer(aDoc)
     gIOService = 
       Components.classes["@mozilla.org/network/io-service;1"].getService(nsIIOService);
   }
-  if (!gPromptService) {
-    gPromptService =
-      Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(nsIPromptService);
-  }
 
   try {
     this.mMainURI = gIOService.newURI(aDoc.location.href, null, null);
@@ -525,7 +521,7 @@ nsPolicyViewer.prototype =
       }
 
       if (sheet) {
-        this.mStyle.load(sheet, "text/xml");
+        this.mStyle.load(sheet);
       }
     }
     catch(ex) {
@@ -586,7 +582,7 @@ nsPolicyViewer.prototype =
     }
     
     var errorMessage = getBundle().formatStringFromName(name, [spec], 1);
-    gPromptService.alert(window, getBrandName(), errorMessage);
+    alertMessage(errorMessage);
   }
 };
 
@@ -656,4 +652,13 @@ function isEquivalent (aLHS, aRHS)
     }
   }
   return false;
+}
+
+function alertMessage(aMessage)
+{
+  if (!gPromptService) {
+    gPromptService =
+      Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(nsIPromptService);
+  }
+  gPromptService.alert(window, getBrandName(), aMessage);
 }

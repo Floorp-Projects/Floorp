@@ -49,6 +49,8 @@
 <!-- set the output properties -->
 <xsl:output method="html"/>
 
+<xsl:param name="policyUri"/>
+
 <!-- POLICY -->
 <xsl:template match="p3p:POLICY">
  <xsl:if test = "@discuri">
@@ -196,7 +198,7 @@
 <xsl:template match="p3p:IMG">
  <xsl:if test = "position()=1">
    <p style="font-weight:bold">&p3p.privacyseal;</p>
-   <a style="padding-left:1em;" href="#dispute">&p3p.resolve;</a><br/><br/>
+   <a style="padding-left:1em;" href="{$policyUri}#dispute">&p3p.resolve;</a><br/><br/>
  </xsl:if>
   <xsl:choose>
    <xsl:when test = "@src">
@@ -645,7 +647,7 @@
   <ul>
   <xsl:for-each select="//p3p:POLICY/p3p:STATEMENT">
    <xsl:variable name="ctr" select="position()"/>
-   <li><a href="#statement{$ctr}">&p3p.statement.1;<xsl:value-of select="$ctr"/></a></li>
+   <li><a href="{$policyUri}#statement{$ctr}">&p3p.statement.1;<xsl:value-of select="$ctr"/></a></li>
  </xsl:for-each>
  </ul>
  </xsl:if>

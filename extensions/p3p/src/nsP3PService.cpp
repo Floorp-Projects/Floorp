@@ -85,8 +85,7 @@ StopListeningToHeaders(nsP3PService* aService)
  *   nsP3PService Implementation   *
  ***********************************/
 
-NS_IMPL_ISUPPORTS5(nsP3PService,
-                   nsIP3PService,
+NS_IMPL_ISUPPORTS4(nsP3PService,
                    nsICookieConsent,
                    nsIHttpNotify,
                    nsINetNotify,
@@ -170,17 +169,6 @@ nsP3PService::PrefChanged(nsIPrefBranch *aPrefBranch,
                                       StopListeningToHeaders(this);
   }
   return result;
-}
-
-NS_IMETHODIMP
-nsP3PService::SetDocumentURL(nsIDOMDocument* aDocument, 
-                             nsIURI* aURI)
-{
-  nsresult result;
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(aDocument, &result));
-  NS_ENSURE_SUCCESS(result, result);
-
-  return document->SetDocumentURL(aURI);
 }
 
 NS_IMETHODIMP
