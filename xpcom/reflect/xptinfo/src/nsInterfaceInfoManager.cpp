@@ -93,7 +93,7 @@ static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
 
 nsInterfaceInfoManager::nsInterfaceInfoManager()
-    : allocator(NULL), typelibRecords(NULL), ctor_succeeded(PR_FALSE)
+    : typelibRecords(NULL), allocator(NULL), ctor_succeeded(PR_FALSE)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
