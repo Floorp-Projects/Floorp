@@ -320,6 +320,13 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     void* mark;
     nsXPConnect* xpc = nsXPConnect::GetXPConnect();
 
+#ifdef DEBUG_stats_jband
+    static int count = 0;
+    static const int interval = 10;
+    if(0 == (++count % interval))
+        printf("<<<<<<<< %d calls on nsXPCWrappedJSs made\n", count);
+#endif
+
     // XXX ASSUMES that retval is last arg.
     paramCount = info->GetParamCount();
     argc = paramCount -
@@ -519,6 +526,8 @@ pre_call_clean_up:
 
     /* this one would be set by our error reporter */
     xpc_exception = mXPCContext->GetException();
+    if(xpc_exception)
+        mXPCContext->SetException(nsnull);
 
     // get this right away in case we do something below to cause JS code
     // to run on this JSContext
@@ -542,22 +551,17 @@ pre_call_clean_up:
 
     if(xpc_exception)
     {
-        // Only throw the exception and fail if the JS code threw something
-        // that does indicate a failure; i.e. 'throw 0' is not really a failure
         nsresult e_result;
-        if(NS_SUCCEEDED(xpc_exception->GetResult(&e_result)) && NS_FAILED(e_result))
+        if(NS_SUCCEEDED(xpc_exception->GetResult(&e_result)))
         {
-            xpc->SetPendingException(xpc_exception);
-            NS_RELEASE(xpc_exception);
-            mXPCContext->SetException(nsnull);
-            retval = e_result;
-            success = JS_FALSE;
+            if(NS_FAILED(e_result))
+            {
+                xpc->SetPendingException(xpc_exception);
+                retval = e_result;
+            }
         }
-        else
-        {
-            pending_result = e_result;
-            NS_RELEASE(xpc_exception);
-        }
+        NS_RELEASE(xpc_exception);
+        success = JS_FALSE;
     }
     else
     {

@@ -979,6 +979,23 @@ nsXPCComponents::GetStack(nsIJSStackFrameLocation * *aStack)
     return nsXPConnect::GetXPConnect()->GetCurrentJSStack(aStack);
 }
 
+NS_IMETHODIMP
+nsXPCComponents::GetManager(nsIComponentManager * *aManager)
+{
+    NS_ENSURE_ARG_POINTER(aManager);
+
+    nsIComponentManager* cm;
+    if(NS_FAILED(NS_GetGlobalComponentManager(&cm)))
+    {
+        *aManager = nsnull;
+        return NS_ERROR_FAILURE;    
+    }
+    NS_IF_ADDREF(cm);
+    *aManager = cm;
+                
+    return NS_OK;
+}
+
 /**********************************************/
 
 // XPC_IMPLEMENT_FORWARD_CREATE(nsXPCComponents)

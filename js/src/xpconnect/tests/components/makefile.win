@@ -26,6 +26,7 @@ MODULE=xpconnect
 DEFINES=-DWIN32_LEAN_AND_MEAN
 
 OBJS=					\
+	.\$(OBJDIR)\xpctest_array.obj	\
 	.\$(OBJDIR)\xpctest_echo.obj	\
 	.\$(OBJDIR)\xpctest_child.obj	\
 	.\$(OBJDIR)\xpctest_noisy.obj	\

@@ -619,6 +619,19 @@ private:
     JSBool BuildMemberDescriptors();
     void  DestroyMemberDescriptors();
 
+    
+    enum SizeMode {GET_SIZE, GET_LENGTH};
+
+    JSBool GetArraySizeFromParam(JSContext* cx, 
+                                 const nsXPTMethodInfo* method,
+                                 const XPCNativeMemberDescriptor* desc,
+                                 const nsXPTParamInfo& param,
+                                 uint8 vtblIndex,
+                                 uint8 paramIndex,
+                                 SizeMode mode,
+                                 jsval *argv,
+                                 JSUint32* result);
+
 private:
     XPCContext* mXPCContext;
     nsIID mIID;
@@ -703,6 +716,32 @@ public:
 /***************************************************************************/
 // data convertion
 
+class XPCArrayDataScavenger
+{
+public:
+    enum CleanupMode {NO_ACTION, DO_FREE, DO_RELEASE};
+
+    void SetDataPtr(void** aData) 
+            {NS_ASSERTION(!mData,"must set data only once"); mData = aData;}
+    void SetCleanupMode(CleanupMode aCleanupMode)
+            {mCleanupMode = aCleanupMode;}
+    void IncrementInitedCount() 
+            {NS_ASSERTION(mData,"must set data first"); mInitedCount++;}
+
+    XPCArrayDataScavenger(XPCArrayDataScavenger* aNext);
+
+    ~XPCArrayDataScavenger();
+
+private:
+    XPCArrayDataScavenger(); // no implementation
+
+private:
+    CleanupMode            mCleanupMode;
+    PRUint32               mInitedCount;        
+    void**                 mData;
+    XPCArrayDataScavenger* mNext;        
+};
+
 // class here just for static methods
 class XPCConvert
 {
@@ -711,12 +750,25 @@ public:
 
     static JSBool NativeData2JS(JSContext* cx, jsval* d, const void* s,
                                 const nsXPTType& type, const nsID* iid,
-                                uintN* pErr);
+                                nsresult* pErr);
 
     static JSBool JSData2Native(JSContext* cx, void* d, jsval s,
                                 const nsXPTType& type,
                                 JSBool useAllocator, const nsID* iid,
-                                uintN* pErr);
+                                nsresult* pErr);
+
+    static JSBool NativeArray2JS(JSContext* cx,
+                                 jsval* d, const void** s,
+                                 const nsXPTType& type, const nsID* iid,
+                                 JSUint32 count,
+                                 nsresult* pErr);
+
+    static JSBool JSArray2Native(JSContext* cx, void** d, jsval s,
+                                 JSUint32 count, JSUint32 capacity,
+                                 XPCArrayDataScavenger* scavenger,
+                                 const nsXPTType& type,
+                                 JSBool useAllocator, const nsID* iid,
+                                 uintN* pErr);
 
     static nsIXPCException* JSValToXPCException(JSContext* cx,
                                                 jsval s,
@@ -889,9 +941,10 @@ public:
 
 /***************************************************************************/
 // a class to put on the stack when we are entering xpconnect from an entry
-// point where the JSContext is known. This pushes and pops the given context
+// point where the JSContext is known. This pushs and pops the given context
 // with the nsThreadJSContextStack service as this object goes into and out
-// of scope.
+// of scope. It is optimized to not push/pop the cx if it is already on top
+// of the stack.
 
 class AutoPushJSContext
 {
