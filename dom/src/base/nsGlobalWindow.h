@@ -53,7 +53,6 @@ class nsIContent;
 class nsIPresContext;
 class nsIDOMEvent;
 class nsIBrowserWindow;
-class nsIModalWindowSupport;
 class nsIScrollableView;
 
 #include "jsapi.h"
@@ -251,7 +250,6 @@ protected:
   nsresult      SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell,
                   char *aFeatures, PRBool aNewWindow, PRBool aDialog);
   nsresult      ReadyOpenedWebShell(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow);
-  nsresult      GetModalWindowSupport(nsIModalWindowSupport **msw);
   nsresult      GetScrollInfo(nsIScrollableView** aScrollableView,
                               float* aP2T, float* aT2P);
 

@@ -43,6 +43,8 @@
 #include "nsIDOMLoadListener.h"
 #include "nsIDOMDragListener.h"
 #include "nsIDOMPaintListener.h"
+#include "nsIEventQueue.h"
+#include "nsIEventQueueService.h"
 #include "nsJSUtils.h"
 #include "nsIScriptEventListener.h"
 #include "nsIPrivateDOMEvent.h"
@@ -55,7 +57,6 @@
 #include "nsCRT.h"
 #include "nsRect.h"
 #include "nsIPrompt.h"
-#include "nsIModalWindowSupport.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresShell.h"
@@ -101,6 +102,7 @@ static NS_DEFINE_IID(kIDOMEventTargetIID, NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -2033,6 +2035,7 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
                                PRBool aDialog,
                                nsIDOMWindow** aReturn)
 {
+  nsresult rv;
   PRUint32 chromeFlags;
   nsAutoString mAbsURL, name;
   JSString* str;
@@ -2057,7 +2060,6 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
       NS_RELEASE(mDoc);
     }
 
-    nsresult rv;
     nsIURI *baseUri = nsnull;
     rv = mDocURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
     if (NS_FAILED(rv)) return rv;
@@ -2065,7 +2067,6 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
     rv = NS_MakeAbsoluteURI(mURL, baseUri, mAbsURL);
     NS_RELEASE(baseUri);
     if (NS_FAILED(rv)) return rv;
-
   }
   
   /* Sanity-check the optional window_name argument. */
@@ -2102,7 +2103,9 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
 
     PRBool windowIsNew;
     PRBool windowIsModal;
-    nsCOMPtr<nsIModalWindowSupport> modalWinSupport;
+    nsIEventQueue *modalEventQueue = nsnull;
+
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
 
     // Check for existing window of same name.
     windowIsNew = PR_FALSE;
@@ -2113,8 +2116,7 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
     if (nsnull == newOuterShell) {
       windowIsNew = PR_TRUE;
       if (chromeFlags & NS_CHROME_MODAL) {
-        GetModalWindowSupport(getter_AddRefs(modalWinSupport));
-        if (modalWinSupport && NS_SUCCEEDED(modalWinSupport->PrepareModality()))
+        if (eventQService && NS_SUCCEEDED(eventQService->PushThreadEventQueue(&modalEventQueue)))
           windowIsModal = PR_TRUE;
       }
 
@@ -2156,7 +2158,7 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
             newWindow->ShowModally(PR_FALSE);
             NS_RELEASE(newWindow);
           }
-          modalWinSupport->FinishModality();
+          eventQService->PopThreadEventQueue(modalEventQueue);
         }
       }
       NS_RELEASE(newOuterShell);
@@ -3382,26 +3384,6 @@ GlobalWindowImpl::GetControllers(nsIControllers** aResult)
   }
   *aResult = mControllers;
   NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-nsresult
-GlobalWindowImpl::GetModalWindowSupport(nsIModalWindowSupport **msw)
-{
-  NS_ASSERTION(msw, "null return param in GetModalWindowSupport");
-  *msw = nsnull;
-
-  if (nsnull == mWebShell)
-    return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIWebShell> rootWebShell;
-  mWebShell->GetRootWebShellEvenIfChrome(*getter_AddRefs(rootWebShell));
-  if (rootWebShell) {
-    nsCOMPtr<nsIWebShellContainer> rootContainer;
-    rootWebShell->GetContainer(*getter_AddRefs(rootContainer));
-    if (rootContainer)
-      rootContainer->QueryInterface(nsIModalWindowSupport::GetIID(), (void**)msw);
-  }
   return NS_OK;
 }
 
