@@ -101,7 +101,8 @@ enum Pop3CapabilityEnum {
     POP3_TOP_UNDEFINED         = 0x00000400,
     POP3_HAS_TOP              = 0x00000800,
     POP3_HAS_AUTH_USER		    = 0x00001000,
-    POP3_HAS_AUTH_CRAM_MD5	    = 0x00002000
+    POP3_HAS_AUTH_CRAM_MD5	    = 0x00002000,
+    POP3_HAS_AUTH_APOP		    = 0x00004000
 };
 
 enum Pop3StatesEnum {
@@ -281,6 +282,7 @@ public:
     virtual PRInt32 HandleLine(char *line, PRUint32 line_length);
 
 private:
+  nsCString m_ApopTimestamp;
   nsCOMPtr<nsIMsgStringService> mStringService;
 
   nsCString m_username;

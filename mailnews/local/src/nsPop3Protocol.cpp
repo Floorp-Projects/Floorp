@@ -800,6 +800,30 @@ nsPop3Protocol::WaitForStartOfConnectionResponse(nsIInputStream* aInputStream,
     else
       m_commandResponse = line;
     
+    if (m_useSecAuth)
+    {
+        PRInt32 endMark = m_commandResponse.FindChar('>');
+        PRInt32 startMark = m_commandResponse.FindChar('<');
+        PRInt32 at = m_commandResponse.FindChar('@');
+
+        if (!(endMark == -1 || startMark == -1 || at == -1 ||
+            endMark < startMark || at > endMark || at < startMark))
+        {
+            nsresult rv;
+            nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
+            // this checks if psm is installed...
+            if (NS_SUCCEEDED(rv))
+            {
+                m_ApopTimestamp = Substring(m_commandResponse, startMark, endMark - startMark + 1);
+                SetCapFlag(POP3_HAS_AUTH_APOP);
+            }
+        }
+    }
+    else
+        ClearCapFlag(POP3_HAS_AUTH_APOP);
+
+    m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+
     m_pop3ConData->next_state = POP3_PROCESS_AUTH;
     m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
   }
@@ -1027,6 +1051,9 @@ PRInt32 nsPop3Protocol::ProcessAuth()
       if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
           m_pop3ConData->next_state = POP3_SEND_USERNAME;
       else
+        if (TestCapFlag(POP3_HAS_AUTH_APOP))
+            m_pop3ConData->next_state = POP3_SEND_PASSWORD;
+        else
           return(Error(CANNOT_PROCESS_SECURE_AUTH));
     }
     else
@@ -1060,12 +1087,16 @@ PRInt32 nsPop3Protocol::AuthFallback()
         // If one authentication failed, we're going to
         // fall back on a less secure login method.
         if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
-            // if CRAM-MD5 enabled, remove it
+            // if CRAM-MD5 enabled, disable it
             ClearCapFlag(POP3_HAS_AUTH_CRAM_MD5);
+        else
+        if (TestCapFlag(POP3_HAS_AUTH_APOP))
+            // if APOP enabled, disable it
+            ClearCapFlag(POP3_HAS_AUTH_APOP);
         else
         if(TestCapFlag(POP3_HAS_AUTH_LOGIN | POP3_HAS_AUTH_USER))
             // if LOGIN or USER enabled,
-            // it was the username which was wrong
+            // it was the username which was wrong -
             // no fallback but return error
             return(Error(POP3_USERNAME_FAILURE));
 
@@ -1157,6 +1188,9 @@ PRInt32 nsPop3Protocol::SendUsername()
 
 PRInt32 nsPop3Protocol::SendPassword()
 {
+    if (m_username.IsEmpty())
+        return(Error(POP3_USERNAME_UNDEFINED));
+
     nsXPIDLCString password;
     PRBool okayValue = PR_TRUE;
 	nsresult rv = GetPassword(getter_Copies(password), &okayValue);
@@ -1207,6 +1241,32 @@ PRInt32 nsPop3Protocol::SendPassword()
             if (NS_FAILED(rv))
                 ClearFlag(POP3_HAS_AUTH_CRAM_MD5);
         }
+        else
+        if (TestCapFlag(POP3_HAS_AUTH_APOP))
+        {
+            char buffer[512];
+            unsigned char digest[DIGEST_LENGTH];
+
+            rv = MSGApopMD5(m_ApopTimestamp.get(), m_ApopTimestamp.Length(), password.get(), password.Length(), digest);
+
+            if (NS_SUCCEEDED(rv) && digest)
+            {
+                nsCAutoString encodedDigest;
+                char hexVal[8];
+
+                for (PRUint32 j=0; j<16; j++) 
+                {
+                    PR_snprintf (hexVal,8, "%.2x", 0x0ff & (unsigned short)digest[j]);
+                    encodedDigest.Append(hexVal); 
+                }
+
+                PR_snprintf(buffer, sizeof(buffer), "APOP %s %s", m_username.get(), encodedDigest.get());
+                cmd = buffer;
+            }
+
+            if (NS_FAILED(rv))
+               ClearFlag(POP3_HAS_AUTH_APOP);
+        }
     }
     else
     {
@@ -1245,6 +1305,12 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
         if(TestFlag(POP3_STOPLOGIN))
             return(Error(POP3_PASSWORD_FAILURE));
 
+        if(!TestCapFlag(POP3_HAS_AUTH_CRAM_MD5) &&
+           TestCapFlag(POP3_HAS_AUTH_APOP))
+            // unsure because APOP failed and we can't determine why
+            Error(CANNOT_PROCESS_APOP_AUTH);
+        else
+          Error(POP3_PASSWORD_FAILURE);
         /* The password failed.
            
            Sever the connection and go back to the `read password' state,
@@ -1254,7 +1320,6 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
            
            But if we're just checking for new mail (biff) then don't bother
            prompting the user for a password: just fail silently. */
-        Error(POP3_PASSWORD_FAILURE);
 
         SetFlag(POP3_PASSWORD_FAILED);
 
