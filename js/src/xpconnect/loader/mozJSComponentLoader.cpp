@@ -848,14 +848,8 @@ mozJSComponentLoader::RegisterDeferredComponents(PRInt32 aWhen,
         return NS_OK;
     
     for (PRUint32 i = 0; i < count; i++) {
-        nsCOMPtr<nsISupports> supports;
         nsCOMPtr<nsIFile> component;
-
-        rv = mDeferredComponents.GetElementAt(i, getter_AddRefs(supports));
-        if (NS_FAILED(rv))
-            continue;
-
-        component = do_QueryInterface(supports, &rv);
+        rv = mDeferredComponents.QueryElementAt(i, NS_GET_IID(nsIFile), getter_AddRefs(component));
         if (NS_FAILED(rv))
             continue;
         
