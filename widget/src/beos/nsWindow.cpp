@@ -769,8 +769,6 @@ NS_METHOD nsWindow::Destroy()
 		toolkit->CallMethod(&info);
 		return NS_ERROR_FAILURE;
 	}
-	if(eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
-		DealWithPopups(DESTROY,nsPoint(0,0));
 	// disconnect from the parent
 	if (!mIsDestroying) {
 		nsBaseWidget::Destroy();
@@ -1718,11 +1716,13 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		break;
 
 	case nsWindow::CLOSEWINDOW :
-		if(gGotQuitShortcut == PR_TRUE)
+		if (gGotQuitShortcut == PR_TRUE)
 		{
 			gGotQuitShortcut = PR_FALSE;
 			return false;
 		}
+		if (eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
+			DealWithPopups(CLOSEWINDOW,nsPoint(0,0));
 		NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
 		DispatchStandardEvent(NS_DESTROY);
 		break;
