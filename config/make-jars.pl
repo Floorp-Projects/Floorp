@@ -31,7 +31,7 @@ sub Cleanup
 sub JarIt
 {
     my ($jarfile, $args) = @_;
-    system "zip -u $jarfile $args\n";
+    system "zip -u $jarfile $args\n" || die "zip failed";
     my $cwd = cwd();
     print "+++ jarred $cwd => $jarfile\n";
     Cleanup();
@@ -72,8 +72,22 @@ sub CopyFile
     #print "copying $from to $to\n";
     open(OUT, ">$to") || die "error: can't open '$to': $!";
     open(IN, "<$from") || die "error: can't open '$from': $!";
-    while (<IN>) {
-        print OUT $_;
+    binmode IN;
+    binmode OUT;
+    my $len;
+    my $buf;
+    while ($len = sysread(IN, $buf, 4096)) {
+        if (!defined $len) {
+            next if $! =~ /^Interrupted/;
+            die "System read error: $!\n";
+        }
+        my $offset = 0;
+        while ($len) {
+            my $written = syswrite(OUT, $buf, $len, $offset);
+            die "System write error: $!\n" unless defined $written;
+            $len -= $written;
+            $offset += $written;
+        }
     }
     close(IN) || die "error: can't close '$from': $!";
     close(OUT) || die "error: can't close '$to': $!";
