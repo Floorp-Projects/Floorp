@@ -132,6 +132,7 @@ protected:
   nsRect                mVisibleArea;
   nsCOMPtr<nsIDeviceContext>  mDeviceContext; // could be weak, but better safe than sorry. Cannot reintroduce cycles
                                               // since there is no dependency from gfx back to layout.
+  nsCOMPtr<nsIAtom>     mLangGroup;
   nsCOMPtr<nsIImageGroup> mImageGroup;
   nsILinkHandler*       mLinkHandler;   // [WEAK]
   nsISupports*          mContainer;     // [WEAK]
