@@ -74,7 +74,7 @@
 #endif
 
 #ifdef XP_OS2_VACPP
-getopt(int nargc, char **nargv, char *ostr);
+int getopt(int nargc, char **nargv, char *ostr);
 #include <dirent.h>
 #include <direct.h>
 #include <io.h>
@@ -118,9 +118,6 @@ extern int fchmod(int fildes, mode_t mode);
 /*looks reasonably safe based on OS/2's stat.h...*/
 #define S_ISLNK(mode)   0 /*no way in hell on a file system that doesn't support it*/
 #ifdef XP_OS2_VACPP
-typedef unsigned short mode_t;
-typedef unsigned short uid_t;
-typedef unsigned short gid_t;
 #define mkdir(path, mode) mkdir(path)
 #define W_OK 1
 #endif /* XP_OS2_VACPP */
@@ -418,6 +415,12 @@ main(int argc, char **argv)
 	usage();
 
     todir = argv[argc-1];
+#ifdef XP_OS2_VACPP
+    /* The stat() function in OS/2 Visual Age C++ doesn't like a path with
+       a trailing backslash.  */
+    if (todir[strlen(todir)-1] == '/')
+      todir[strlen(todir)-1] = '/0';
+#endif
     if ((stat(todir, &sb) < 0 || !S_ISDIR(sb.st_mode)) &&
 	mkdirs(todir, 0777) < 0) {
 	fail("cannot make directory %s", todir);
