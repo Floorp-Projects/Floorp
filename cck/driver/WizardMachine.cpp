@@ -159,9 +159,18 @@ BOOL CWizardMachineApp::InitInstance()
 	
 	argc = --i;
 
+	char tempini[MAX_SIZE];
 	CString iniFile;
 	CString action;
-
+	CString DefaultIni = Root + "WizardMachine.ini";
+	
+	GetPrivateProfileString("Default", "inifile", "", tempini, MAX_SIZE, DefaultIni);
+	iniFile = CString(tempini);
+	if(iniFile.IsEmpty() || (iniFile.Right(4) != ".ini"))
+	{
+		AfxMessageBox("Please enter a valid App name in the WizardMachine.ini file", MB_OK);
+		exit(1);
+	}
 	for (i=0; i < argc; i++)
 	{
 		if (!strcmp(argv[i], "-i"))
@@ -169,8 +178,8 @@ BOOL CWizardMachineApp::InitInstance()
 		if (!strcmp(argv[i], "-p"))
 			action = argv[i+1];
 	}
+#if 0
 	//GlobalFree(argv);
-
 	if ((iniFile.IsEmpty()) || (iniFile.GetLength() < 5) || (iniFile.Right(4) != ".ini"))
 	{
 		// Make life easier on us for now
@@ -182,7 +191,7 @@ BOOL CWizardMachineApp::InitInstance()
 		exit(1);
 		*/
 	}
-
+#endif
 	for (i=iniFile.GetLength() -1; i >= 0 && iniFile[i] != '\\'; i--)
 	{
 		if (iniFile.GetAt(i) == '/' ) {
@@ -1139,7 +1148,7 @@ void CWizardMachineApp::CreateNewCache()
 			&& GlobalWidgetArray[i].type != "Button" 
 			&& GlobalWidgetArray[i].type != "GroupBox" )
 		{
-			if (GlobalWidgetArray[i].name != "")
+			if( (GlobalWidgetArray[i].name != "") || (GlobalWidgetArray[i].name != "Root") )
 			{
 				fprintf(globs, GlobalWidgetArray[i].name + "=" + GlobalWidgetArray[i].value);
 				fprintf(globs, "\n");
