@@ -85,7 +85,20 @@ public:
 																		EventRecord&		aOSEvent,
 																		long						aMenuResult);
 
+		// be notified that a drop has occurred in this window so the appropriate event
+		// can be passed into gecko.
+	virtual PRBool 			DropOccurred ( Point aMouseGlobal, UInt16 aKeyModifiers ) ;
+	//virtual PRBool 			TrackDrag ( Point aMouseGlobal, UInt16 aKeyModifiers ) ;
+
 protected:
+
+	pascal static OSErr DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr theWindow, 
+										void *handlerRefCon, DragReference theDrag );
+	pascal static OSErr DragReceiveHandler (WindowPtr theWindow,
+												void *handlerRefCon, DragReference theDragRef) ;
+	static DragTrackingHandlerUPP sDragTrackingHandlerUPP;
+	static DragReceiveHandlerUPP sDragReceiveHandlerUPP;
+	
 	PRBool							mWindowMadeHere;	// true if we created the window
 	PRBool							mIsDialog;				// true if the window is a dialog
 	auto_ptr<nsMacEventHandler>		mMacEventHandler;

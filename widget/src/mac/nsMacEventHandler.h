@@ -34,6 +34,10 @@ public:
 
 		virtual PRBool	HandleOSEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMenuCommand(EventRecord& aOSEvent, long aMenuResult);
+		
+		// Tell Gecko that a drop has occurred
+		virtual PRBool	DropOccurred ( Point aMouseGlobal, UInt16 aKeyModifiers ) ;
+		//virtual PRBool	TrackDrag ( Point aMouseGlobal, UInt32 aKeyModifiers ) ;
 
 protected:
 		virtual PRBool	HandleKeyEvent(EventRecord& aOSEvent);
