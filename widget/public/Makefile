@@ -74,9 +74,11 @@ EXPORTS =               \
 	nsIImageButtonListener.h \
 	nsIDataModel.h \
 	nsITreeDataModel.h \
+	nsIToolbarDataModel.h \
 	nsIDMWidget.h \
 	nsITreeColumn.h \
-	nsITreeItem.h \
+	nsITreeDMItem.h \
+	nsIToolbarDMItem.h \
 	nsIDMItem.h \
     $(NULL)
 

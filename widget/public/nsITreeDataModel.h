@@ -19,12 +19,11 @@
 #ifndef nsITreeDataModel_h___
 #define nsITreeDataModel_h___
 
-#include "nsIDataModel.h"
 #include "prthread.h"
 #include "nsString.h"
 
 class nsITreeColumn;
-class nsITreeItem;
+class nsITreeDMItem;
 
 // {728D90C2-5B2A-11d2-96ED-00104B7B7DEB}
 #define NS_ITREEDATAMODEL_IID \
@@ -40,8 +39,8 @@ public:
 	
 	// TreeItem APIs
 	NS_IMETHOD GetFirstVisibleItemIndex(PRUint32& index) const = 0;
-	NS_IMETHOD GetNthTreeItem(nsITreeItem*& pItem, PRUint32 n) const = 0;
-	NS_IMETHOD GetItemTextForColumn(nsString& nodeText, nsITreeItem* pItem, nsITreeColumn* pColumn) const = 0;
+	NS_IMETHOD GetNthTreeItem(nsITreeDMItem*& pItem, PRUint32 n) const = 0;
+	NS_IMETHOD GetItemTextForColumn(nsString& nodeText, nsITreeDMItem* pItem, nsITreeColumn* pColumn) const = 0;
 };
 
 #endif /* nsITreeDataModel_h___ */
