@@ -2429,6 +2429,10 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     // set aDesiredSize and aMaxElementSize
   }
 
+  // DumpCellMap is useful for debugging the results of an incremental reflow.  But it's noisy, 
+  // so this module should not be checked in with the call enabled.
+  //DumpCellMap();  
+
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT) 
   {
     if (nsnull!=aDesiredSize.maxElementSize)
@@ -4533,16 +4537,6 @@ void nsTableFrame::GetColumnsByType(const nsStyleUnit aType,
   mColCache->GetColumnsByType(aType, aOutNumColumns, aOutColumnIndexes);
 }
 
-
-NS_METHOD
-nsTableFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  return nsContainerFrame::QueryInterface(aIID, aInstancePtr);
-}
 
 
 /* ----- global methods ----- */
