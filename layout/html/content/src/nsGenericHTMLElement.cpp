@@ -42,6 +42,7 @@
 #include "nsIStyleRule.h"
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
+#include "nsIURLGroup.h"
 #include "nsStyleConsts.h"
 #include "nsXIFConverter.h"
 #include "nsFrame.h"
@@ -97,6 +98,7 @@ public:
   virtual nsresult StylePropertyChanged(const nsString& aPropertyName,
                                         PRInt32 aHint);
   virtual nsresult GetParent(nsISupports **aParent);
+  virtual nsresult GetBaseURL(nsIURL** aURL);
 
 protected:
   nsIHTMLContent *mContent;  
@@ -188,6 +190,27 @@ nsDOMCSSAttributeDeclaration::GetParent(nsISupports **aParent)
   }
 
   return NS_OK;
+}
+
+nsresult 
+nsDOMCSSAttributeDeclaration::GetBaseURL(nsIURL** aURL)
+{
+  NS_ASSERTION(nsnull != aURL, "null pointer");
+
+  nsresult result = NS_ERROR_NULL_POINTER;
+
+  if (nsnull != aURL) {
+    *aURL = nsnull;
+    if (nsnull != mContent) {
+      nsIDocument *doc;
+      result = mContent->GetDocument(doc);
+      if (NS_SUCCEEDED(result) && (nsnull != doc)) {
+        doc->GetBaseURL(*aURL);
+        NS_RELEASE(doc);
+      }
+    }
+  }
+  return result;
 }
 
 //----------------------------------------------------------------------
@@ -471,8 +494,15 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
     if (NS_OK != result) {
       return result;
     }
+
+    nsIURL* docURL = nsnull;
+    if (nsnull != mDocument) {
+      mDocument->GetBaseURL(docURL);
+    }
+
     nsIStyleRule* rule;
-    result = css->ParseDeclarations(aValue, nsnull, rule);
+    result = css->ParseDeclarations(aValue, docURL, rule);
+    NS_IF_RELEASE(docURL);
     if ((NS_OK == result) && (nsnull != rule)) {
       result = SetHTMLAttribute(aAttribute, nsHTMLValue(rule), aNotify);
       NS_RELEASE(rule);
@@ -558,7 +588,7 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
 
 static PRInt32 GetStyleImpactFrom(const nsHTMLValue& aValue)
 {
-  PRInt32 hint = NS_STYLE_HINT_UNKNOWN;
+  PRInt32 hint = NS_STYLE_HINT_NONE;
 
   if (eHTMLUnit_ISupports == aValue.GetUnit()) {
     nsISupports* supports = aValue.GetISupportsValue();
@@ -594,7 +624,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
     PRInt32 hint = NS_STYLE_HINT_UNKNOWN;
     if (aNotify && (nsHTMLAtoms::style == aAttribute)) {
       nsHTMLValue oldValue;
-      PRInt32 oldHint = NS_STYLE_HINT_UNKNOWN;
+      PRInt32 oldHint = NS_STYLE_HINT_NONE;
       if (NS_CONTENT_ATTR_NOT_THERE != GetHTMLAttribute(aAttribute, oldValue)) {
         oldHint = GetStyleImpactFrom(oldValue);
       }
@@ -667,13 +697,23 @@ nsGenericHTMLElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
     return result;
   }
   if (nsnull != mDocument) {  // set attr via style sheet
+    PRInt32 hint = NS_STYLE_HINT_UNKNOWN;
+    if (aNotify && (nsHTMLAtoms::style == aAttribute)) {
+      nsHTMLValue oldValue;
+      if (NS_CONTENT_ATTR_NOT_THERE != GetHTMLAttribute(aAttribute, oldValue)) {
+        hint = GetStyleImpactFrom(oldValue);
+      }
+      else {
+        hint = NS_STYLE_HINT_NONE;
+      }
+    }
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
     if (nsnull != sheet) {
       result = sheet->UnsetAttributeFor(aAttribute, htmlContent, mAttributes);
       NS_RELEASE(sheet);
     }
     if (aNotify) {
-      mDocument->AttributeChanged(mContent, aAttribute, NS_STYLE_HINT_UNKNOWN);
+      mDocument->AttributeChanged(mContent, aAttribute, hint);
     }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
@@ -859,6 +899,69 @@ nsGenericHTMLElement::GetInlineStyleRule(nsIStyleRule*& aResult)
     }
   }
   aResult = rule;
+  return result;
+}
+
+nsresult
+nsGenericHTMLElement::GetBaseURL(nsIURL*& aBaseURL) const
+{
+  nsresult result = NS_OK;
+
+  nsIURL* docBaseURL = nsnull;
+  if (nsnull != mDocument) {
+    result = mDocument->GetBaseURL(docBaseURL);
+  }
+  aBaseURL = docBaseURL;
+  if (nsnull != mAttributes) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::_baseHref, value)) {
+      if (eHTMLUnit_String == value.GetUnit()) {
+        nsAutoString baseHref;
+        value.GetStringValue(baseHref);
+
+        nsIURL* url = nsnull;
+        nsIURLGroup* urlGroup = nsnull;
+        docBaseURL->GetURLGroup(&urlGroup);
+        if (urlGroup) {
+          result = urlGroup->CreateURL(&url, docBaseURL, baseHref, nsnull);
+          NS_RELEASE(urlGroup);
+        }
+        else {
+          result = NS_NewURL(&url, baseHref, docBaseURL);
+        }
+        aBaseURL = url;
+      }
+    }
+  }
+  return result;
+}
+
+nsresult
+nsGenericHTMLElement::GetBaseTarget(nsString& aBaseTarget) const
+{
+  nsresult  result = NS_OK;
+  PRBool    hasLocal = PR_FALSE;
+
+  if (nsnull != mAttributes) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::_baseTarget, value)) {
+      if (eHTMLUnit_String == value.GetUnit()) {
+        value.GetStringValue(aBaseTarget);
+        hasLocal = PR_TRUE;
+      }
+    }
+  }
+  if ((PR_FALSE == hasLocal) && (nsnull != mDocument)) {
+    nsIHTMLDocument* htmlDoc;
+    result = mDocument->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc);
+    if (NS_SUCCEEDED(result)) {
+      result = htmlDoc->GetBaseTarget(aBaseTarget);
+      NS_RELEASE(htmlDoc);
+    }
+  }
+  else {
+    aBaseTarget.Truncate();
+  }
   return result;
 }
 
