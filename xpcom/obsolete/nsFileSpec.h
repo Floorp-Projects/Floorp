@@ -153,7 +153,7 @@
 //========================================================================================
 //                          Compiler-specific macros, as needed
 //========================================================================================
-#if !defined(NS_USING_NAMESPACE) && (defined(__MWERKS__) || defined(XP_WIN))
+#if !defined(NS_USING_NAMESPACE) && (defined(__MWERKS__) || defined(_MSC_VER))
 #define NS_USING_NAMESPACE
 #endif
 

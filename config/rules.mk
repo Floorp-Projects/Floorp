@@ -516,7 +516,7 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 ifdef GNU_CC
 ifndef IS_COMPONENT
-DSO_LDOPTS += -Wl,--export-all-symbols -Wl,--out-implib -Wl,$(IMPORT_LIBRARY)  -Wl,-enable-runtime-pseudo-reloc
+DSO_LDOPTS += -Wl,--out-implib -Wl,$(IMPORT_LIBRARY)
 endif
 endif
 endif
