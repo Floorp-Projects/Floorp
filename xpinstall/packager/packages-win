@@ -310,11 +310,6 @@ bin\components\venkman-service.js
 bin\chrome\venkman.jar
 bin\chrome\icons\default\venkman-window.ico
 
-bin\components\pippki.dll
-bin\components\pippki.xpt
-bin\chrome\pipnss.jar
-bin\chrome\pippki.jar
-
 [inspector]
 bin\components\inspector.dll
 bin\components\inspector.xpt

@@ -215,8 +215,12 @@ components\wallet.xpt
 ; Optional - only if you need HTTPS support
 components\pipboot.dll
 components\pipboot.xpt
+components\pippki.dll
+components\pippki.xpt
 components\pipnss.dll
 components\pipnss.xpt
+chrome\pipnss.jar
+chrome\pippki.jar
 nss3.dll
 smime3.dll
 softokn3.dll
