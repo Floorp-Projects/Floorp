@@ -83,7 +83,7 @@ JS_END_EXTERN_C
 #define JS_HAVE_LONG_LONG
 
 #elif defined(HPUX)
-#undef JS_HAVE_LONG_LONG
+#define JS_HAVE_LONG_LONG
 
 #elif defined(IRIX)
 #define JS_HAVE_LONG_LONG
