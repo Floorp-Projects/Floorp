@@ -75,9 +75,9 @@ EXPORTS =               \
 	nsIDataModel.h \
 	nsITreeDataModel.h \
 	nsIDMWidget.h \
-	nsITreeColumn \
-	nsITreeItem \
-	nsIDMItem \
+	nsITreeColumn.h \
+	nsITreeItem.h \
+	nsIDMItem.h \
     $(NULL)
 
 MODULE = raptor
