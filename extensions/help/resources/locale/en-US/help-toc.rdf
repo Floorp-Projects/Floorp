@@ -16,7 +16,7 @@
         <rdf:li> <rdf:Description ID="using-priv-help" nc:name="Using Privacy Features" nc:link="chrome://help/locale/privacy_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="privacy-doc" nc:name="Privacy on the Internet" nc:link="chrome://help/locale/privacy_help.xhtml#privacy_on_the_internet"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-help-certs" nc:name="Using Certificates" nc:link="chrome://help/locale/using_certs_help.html"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="profile-help" nc:name="Managing Profiles" nc:link="chrome://help/locale/profiles_help.html#managing_profiles"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="profile-help" nc:name="Managing Profiles" nc:link="chrome://help/locale/profiles_help.xhtml#managing_profiles"/> </rdf:li>
         <rdf:li><rdf:Description ID="shortcuts" nc:name="Mozilla Keyboard Shortcuts" nc:link="chrome://help/locale/shortcuts.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -55,7 +55,7 @@
         <rdf:li> <rdf:Description ID="nav-doc-language" nc:name="Using Languages and International Content" nc:link="chrome://help/locale/nav_help.html#nav_language"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-ses" nc:name="Improving Speed and Efficiency" nc:link="chrome://help/locale/nav_help.html#nav_ses"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-proxies" nc:name="Proxies" nc:link="chrome://help/locale/nav_help.html#nav_proxies"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-page-info" nc:name="Viewing Page Info" nc:link="chrome://help/locale/page_info_help.html"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-page-info" nc:name="Viewing Page Info" nc:link="chrome://help/locale/page_info_help.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -134,11 +134,11 @@
   <rdf:Description about="#nav-page-info">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="pageinfo_general" nc:name="General Tab" nc:link="chrome://help/locale/page_info_help.html#pageinfo_general"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="pageinfo_forms" nc:name="Forms Tab" nc:link="chrome://help/locale/page_info_help.html#pageinfo_forms"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="pageinfo_links" nc:name="Links Tab" nc:link="chrome://help/locale/page_info_help.html#pageinfo_links"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="pageinfo_media" nc:name="Media Tab" nc:link="chrome://help/locale/page_info_help.html#pageinfo_media"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="pageinfo_security" nc:name="Security Tab" nc:link="chrome://help/locale/page_info_help.html#pageinfo_security"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="pageinfo_general" nc:name="General Tab" nc:link="chrome://help/locale/page_info_help.xhtml#general_tab"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="pageinfo_forms" nc:name="Forms Tab" nc:link="chrome://help/locale/page_info_help.xhtml#forms_tab"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="pageinfo_links" nc:name="Links Tab" nc:link="chrome://help/locale/page_info_help.xhtml#links_tab"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="pageinfo_media" nc:name="Media Tab" nc:link="chrome://help/locale/page_info_help.xhtml#media_tab"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="pageinfo_security" nc:name="Security Tab" nc:link="chrome://help/locale/page_info_help.xhtml#security_tab"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -814,7 +814,7 @@
         <rdf:li><rdf:Description ID="images-help-managing" nc:name="Managing Images" nc:link="chrome://help/locale/using_priv_help.html#managing_images"/> </rdf:li>
         <rdf:li><rdf:Description ID="images-help-managing" nc:name="Managing Images" nc:link="chrome://help/locale/using_priv_help.html#managing_images"/> </rdf:li>
         <rdf:li><rdf:Description ID="pop_up_blocking" nc:name="Controlling Popups" nc:link="chrome://help/locale/cs_priv_prefs_popup.xhtml"/> </rdf:li>
-        <rdf:li><rdf:Description ID="sec_gen" nc:name="Privacy &amp; Security Preferences" nc:link="chrome://help/locale/privsec_help.html"/> </rdf:li>
+        <rdf:li><rdf:Description ID="sec_gen" nc:name="Privacy &amp; Security Preferences" nc:link="chrome://help/locale/privsec_help.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1140,8 +1140,8 @@
 <rdf:Description about="#profile-help">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="profile-help-create" nc:name="Creating a New Profile" nc:link="chrome://help/locale/profiles_help.html#creating_profiles"/> </rdf:li>
-        <rdf:li><rdf:Description ID="profile-help-delete" nc:name="Deleting or Renaming a Profile" nc:link="chrome://help/locale/profiles_help.html#deleting_profiles"/> </rdf:li>
+        <rdf:li><rdf:Description ID="profile-help-create" nc:name="Creating a New Profile" nc:link="chrome://help/locale/profiles_help.xhtml#creating_a_new_profile"/> </rdf:li>
+        <rdf:li><rdf:Description ID="profile-help-delete" nc:name="Deleting or Renaming a Profile" nc:link="chrome://help/locale/profiles_help.xhtml#deleting_or_renaming_a_profile"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>

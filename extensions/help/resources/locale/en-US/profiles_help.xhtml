@@ -1,19 +1,20 @@
-<html>
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+  %brandDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <title>Managing Profiles</title>
-
-<link rel="stylesheet" href="chrome://help/locale/content_style.css"
-  type="text/css">
-
+<link rel="stylesheet" href="chrome://help/locale/helpFileLayout.css"
+  type="text/css"></link>
 </head>
-
 <body>
 
-
-<a NAME="managing_profiles"></a>
-<a NAME="profiles:managingIDX"></a>
-<hr><h1>Managing Profiles</h1>
+<h1 id="managing_profiles">Managing Profiles</h1>
 
 <p>If you use the Internet at home and at work, you may want to have access to
   a different set of bookmarks, preferences, address books, email accounts,
@@ -26,35 +27,28 @@
   create one or more additional profiles, you will be asked which you want to
   use each time you launch the browser.</p>
 
-<table summary="list of headings" cellpadding=4 cellspacing=2 bgcolor="#cccccc"
-  Width=324>
-<tr>
-<td class="inthissections">
-<p>In this section:</p>
-<p><a href="#creating_profiles">Creating a New Profile</a></p>
-<p><a href="#deleting_profiles">Deleting or Renaming a Profile</a></p>
-</td>
-</tr>
-</table>
+<div class="contentsBox">In this section:
+<ul>
+  <li><a href="#creating_a_new_profile">Creating a New Profile</a></li>
+  <li><a href="#deleting_or_renaming_a_profile">Deleting or Renaming a
+    Profile</a></li>
+</ul>
+</div>
 
+<h2 id="creating_a_new_profile">Creating a New Profile</h2>
 
-<p>&nbsp;</p>
-<a NAME="creating_profiles"></a>
-<a NAME="profiles:creatingIDX"></a>
-<h2>Creating a New Profile</h2>
-
-<p>To create a profile:
+<p>To create a profile:</p>
 
 <ol>
   <li>Open the Profile Manager:
     <ul>
-      <li><strong>If Mozilla is running:</strong> Open the Tools menu and
-        select Switch Profile.</li>
-      <li><strong>If Mozilla is closed:</strong><span class="win"> Open the
-        Start menu and choose Programs, then Mozilla, then Profile
-        Manager.</span><span class="mac"> Hold down the Option key while you're
-        starting Mozilla from the Finder or the Dock.</span><span class="unix">
-        Type the following at the command line:
+      <li><strong>If &brandShortName; is running:</strong> Open the Tools menu
+        and select Switch Profile.</li>
+      <li><strong>If &brandShortName; is closed:</strong><span class="win">
+        Open the Start menu and choose Programs, then &brandShortName;, then
+	Profile Manager.</span><span class="mac"> Hold down the Option key
+	while you're starting &brandShortName; from the Finder or the
+	Dock.</span><span class="unix"> Type the following at the command line:
         <tt> ./mozilla -profilemanager</tt></span></li>
     </ul>
   </li>
@@ -70,11 +64,7 @@
   <li>Click Finish.</li>
 </ol>
 
-<p>&nbsp;</p>
-<a NAME="deleting_profiles"></a>
-<a NAME="profiles:deletingIDX"></a>
-<a NAME="profiles:renamingIDX"></a>
-<h2>Deleting or Renaming a Profile</h2>
+<h2 id="deleting_or_renaming_a_profile">Deleting or Renaming a Profile</h2>
 
 <p>You may want to delete profiles that you don't normally use. To delete or
   rename an existing profile:</p>
@@ -82,15 +72,15 @@
 <ol>
   <li>Open the Profile Manager:
     <ul>
-      <li><strong>If Mozilla is running:</strong> Open the Tools menu and
-        select Switch Profile. <strong>Note:</strong> You can't delete the
+      <li><strong>If &brandShortName; is running:</strong> Open the Tools menu
+        and select Switch Profile. <strong>Note:</strong> You can't delete the
         profile that is in use.</li>
-      <li><strong>If Mozilla is closed:</strong>
+      <li><strong>If &brandShortName; is closed:</strong>
         <span class="win"> Open the Start menu and choose Programs, then
-        Mozilla, then Profile Manager.</span><span class="mac"> Hold down the
-        Option key while you're starting Mozilla from the Finder or the
-        Dock.</span><span class="unix"> Type the following at the command line:
-        <tt> ./mozilla -profilemanager</tt></span></li>
+        &brandShortName;, then Profile Manager.</span><span class="mac"> Hold
+	down the Option key while you're starting &brandShortName; from the
+	Finder or the Dock.</span><span class="unix"> Type the following at the
+	command line: <tt> ./mozilla -profilemanager</tt></span></li>
     </ul>
   </li>
   <li>To delete a profile, select its name and click Delete Profile. In the
@@ -108,12 +98,7 @@
     instructions.</li>
 </ol>
 
-<hr>
-
-<p><i>18 June 2002</i></p>
-
-<hr>
-<p>Copyright &copy; 1998-2003 The Mozilla Foundation.</p>
+<p>Copyright &copy; 2003-2004 The Mozilla Foundation.</p>
 
 </body>
 </html>

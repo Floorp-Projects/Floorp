@@ -1404,7 +1404,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="page_info"
          nc:name="page info"
-	 nc:link="page_info_help.html#page_infoIDX"/>
+	 nc:link="page_info_help.xhtml#viewing_page_info"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="password_manager"
@@ -1453,7 +1453,7 @@
      <rdf:li>
        <rdf:Description ID="profiles"
          nc:name="profiles"
-	 nc:link="profiles_help.html"/>
+	 nc:link="profiles_help.xhtml"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="proxies"
@@ -1639,7 +1639,7 @@
      <rdf:li>
        <rdf:Description ID="preferences:privacy"
          nc:name="privacy preferences"
-	 nc:link="privsec_help.html#preferences:privacyIDX"/>
+	 nc:link="privsec_help.xhtml"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:proxies"
@@ -1649,7 +1649,7 @@
      <rdf:li>
        <rdf:Description ID="preferences:security"
          nc:name="security preferences"
-	 nc:link="privsec_help.html#preferences:securityIDX"/>
+	 nc:link="privsec_help.xhtml"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:smart_browsing"
@@ -1704,12 +1704,12 @@
      <rdf:li>
        <rdf:Description ID="privacy:P3P_standard_and"
          nc:name="P3P standard"
-	 nc:link="page_info_help.html#privacy:P3P_standard_andIDX"/>
+	 nc:link="page_info_help.xhtml"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="privacy:preferences"
          nc:name="privacy preferences"
-	 nc:link="privsec_help.html#privacy:preferencesIDX"/>
+	 nc:link="privsec_help.xhtml"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="privacy:protecting"
@@ -1724,7 +1724,7 @@
      <rdf:li>
        <rdf:Description ID="privacy:viewing_site_policy"
          nc:name="viewing site policy"
-	 nc:link="page_info_help.html#privacy:viewing_site_policyIDX"/>
+	 nc:link="page_info_help.xhtml"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1734,22 +1734,22 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="profiles:creating"
          nc:name="creating a profile"
-	 nc:link="profiles_help.html#profiles:creatingIDX"/>
+	 nc:link="profiles_help.xhtml#creating_a_new_profile"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="profiles:deleting"
          nc:name="deleting a profile"
-	 nc:link="profiles_help.html#profiles:deletingIDX"/>
+	 nc:link="profiles_help.xhtml#deleting_or_renaming_a_profile"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="profiles:managing"
          nc:name="managing profiles"
-	 nc:link="profiles_help.html#profiles:managingIDX"/>
+	 nc:link="profiles_help.xhtml#managing_profiles"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="profiles:renaming"
          nc:name="renaming a profile"
-	 nc:link="profiles_help.html#profiles:renamingIDX"/>
+	 nc:link="profiles_help.xhtml#deleting_or_renaming_a_profile"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1960,7 +1960,7 @@
      <rdf:li>
        <rdf:Description ID="security:preferences"
          nc:name="security preferences"
-	 nc:link="privsec_help.html#security:preferencesIDX"/>
+	 nc:link="privsec_help.xhtml"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>

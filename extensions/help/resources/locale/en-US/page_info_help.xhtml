@@ -1,159 +1,238 @@
-<html>
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" [
+  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+  %brandDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <title>Viewing Page Info</title>
-
-<link rel="stylesheet" href="chrome://help/locale/content_style.css" type="text/css">
-
+<link rel="stylesheet" href="chrome://help/locale/helpFileLayout.css"
+  type="text/css"></link>
 </head>
-
 <body>
 
-<hr>
-<a NAME="page_info_first"></a>
-<a NAME="page_infoIDX"></a>
-<h1>Viewing Page Info</h1>
+<h1 id="viewing_page_info">Viewing Page Info</h1>
 
-<p>The Page Info dialog box consists of several tabs that display different kinds of information about the page you are viewing. This section provides a brief overview of the information available in each tab.
+<p>The Page Info dialog box consists of several tabs that display different
+  kinds of information about the page you are viewing. This section provides a
+  brief overview of the information available in each tab.</p>
 
-<p>To view Page Info for the page currently displayed by the browser, open the View menu and choose Page Info. You can then click the tab that corresponds to the kind of information you want to view. 
+<p>To view Page Info for the page currently displayed by the browser, open the
+  View menu and choose Page Info. You can then click the tab that corresponds
+  to the kind of information you want to view.</p>
 
-<p>Most of the information displayed by the General, Forms, Links and Media tabs in Page Info is taken from the HTML source for the page. This information is usually of interest only to web developers and other specialists. 
+<p>Most of the information displayed by the General, Forms, Links and Media
+  tabs in Page Info is taken from the HTML source for the page. This
+  information is usually of interest only to web developers and other
+  specialists.</p>
 
-<p>For detailed information about HTML, including the tags displayed by Page Info, see the <a href="http://www.w3.org/TR/REC-html40/" target="_blank">HTML 4.01 Specification</a>.
+<p>For detailed information about HTML, including the tags displayed by Page
+  Info, see the <a href="http://www.w3.org/TR/REC-html40/" target="_blank">HTML
+  4.01 Specification</a>.</p>
 
-<p>The Privacy and Security tabs include information about the <a href="glossary.xhtml#platform_for_privacy_preferences">Platform for Privacy Preferences (P3P)</a> policies of the web site whose page you are viewing and the security status of that page.</p>
+<p>The Privacy and Security tabs include information about the
+  <a href="glossary.xhtml#platform_for_privacy_preferences">Platform for
+  Privacy Preferences (P3P)</a> policies of the website whose page you are
+  viewing and the security status of that page.</p>
 
-
-
-<table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=380>
-<tr>
-<td class="inthissection">
-<p>In this section:</p>
-<p><a href="#pageinfo_general">General Tab</a></p>
-<p><a href="#pageinfo_forms">Forms Tab</a></p>
-<p><a href="#pageinfo_links">Links Tab</a></p>
-<p><a href="#pageinfo_media">Media Tab</a></p>
-<p><a href="#pageinfo_security">Security Tab</a></p></td>
-</tr>
-</table>
-
-
-
-<p>&nbsp;</p>
-<a NAME="pageinfo_general"></a>
-<h2>General (Page Info Tab)</h2>
-
-<p>When you choose Page Info from the View menu, the General tab displays basic information about the page that you are viewing in the browser. 
-
-<p>The top portion displays the the name of the page (if it has one) and the following information:
+<div class="contentsBox">In this section:
 <ul>
-	<li><b>URL:</b>&nbsp; The <a href="glossary.xhtml#uniform_resource_locator">Uniform Resource Locator</a> for the page&mdash;that is, the standardized address that appears in the Location Bar near the top of the browser window.
-	<li><b>Render mode:</b>&nbsp; Indicates whether the browser is using <b>quirks mode</b> or <b>standards compliance mode</b> to lay out the page. Quirks mode takes account of nonstandard behavior that may be used by some older web pages designed for older versions of web browsers that are not fully standards compliant. Standards compliance mode adheres strictly to standards specifications. Your browser chooses the render mode automatically according to information contained in the web page itself.
-	<li><b>Source:</b>&nbsp; Indicates whether the source code for this page has been cached.
-	<li><b>Encoding:</b>&nbsp; The character encoding used for this HTML document.
-	<li><b>Size:</b>&nbsp; The size of the file, if available.
-	<li><b>Modified:</b>&nbsp; The date the page was last modified, if available.
-	<li><b>Expires:</b>&nbsp; The date on which the information displayed by the page expires.
+  <li><a href="#general_tab">General Tab</a></li>
+  <li><a href="#forms_tab">Forms Tab</a></li>
+  <li><a href="#links_tab">Links Tab</a></li>
+  <li><a href="#media_tab">Media Tab</a></li>
+  <li><a href="#security_tab">Security Tab</a></li>
+</ul>
+</div>
 
+<h2 id="general_tab">General (Page Info Tab)</h2>
+
+<p>When you choose Page Info from the View menu, the General tab displays basic
+  information about the page that you are viewing in the browser.</p>
+
+<p>The top portion displays the the name of the page (if it has one) and the
+  following information:</p>
+
+<ul>
+  <li><strong>URL:</strong> The
+    <a href="glossary.xhtml#uniform_resource_locator">Uniform Resource
+    Locator</a> for the page&mdash;that is, the standardized address that
+    appears in the Location Bar near the top of the browser window.</li>
+  <li><strong>Render mode:</strong> Indicates whether the browser is using
+    <strong>quirks mode</strong> or <strong>standards compliance mode</strong>
+    to lay out the page. Quirks mode takes account of nonstandard behavior that
+    may be used by some older web pages designed for older versions of web
+    browsers that are not fully standards compliant. Standards compliance mode
+    adheres strictly to standards specifications. Your browser chooses the
+    render mode automatically according to information contained in the web
+    page itself.</li>
+  <li><strong>Source:</strong> Indicates whether the source code for this page
+    has been cached.</li>
+  <li><strong>Encoding:</strong> The character encoding used for this HTML
+    document.</li>
+  <li><strong>Size:</strong> The size of the file, if available.</li>
+  <li><strong>Modified:</strong> The date the page was last modified, if
+    available.</li>
+  <li><strong>Expires:</strong> The date on which the information displayed by
+    the page expires.</li>
 </ul>
 
-<p>The bottom portion displays the metatags specified by the page. Metatags provide information about the type of content displayed by a page, such as a general description of the page, keywords for search engines, copyright information, and so on.
+<p>The bottom portion displays the metatags specified by the page. Metatags
+  provide information about the type of content displayed by a page, such as a
+  general description of the page, keywords for search engines, copyright
+  information, and so on.</p>
 
-	
-<p>&nbsp;</p>
-<a NAME="pageinfo_forms"></a>
-<h2>Forms (Page Info Tab)</h2>
+<h2 id="forms_tab">Forms (Page Info Tab)</h2>
 
-<p>When you choose Page Info from the View menu and click the Forms tab, you see information about all the forms displayed by the page you are currently viewing in the browser.
+<p>When you choose Page Info from the View menu and click the Forms tab, you
+  see information about all the forms displayed by the page you are currently
+  viewing in the browser.</p>
 
-<p>The top portion lists basic information about the way each form in the page is specified in the HTML source: 
+<p>The top portion lists basic information about the way each form in the page
+  is specified in the HTML source:</p>
 
 <ul>
-	<li><b>Name:</b>&nbsp; The form's name, if any.
-	<li><b>Method:</b>&nbsp; The HTML method used to send information captured by the form back to the web server. <tt>GET</tt> appends your filled-in values to the web site address to which it submits the form. <tt>POST</tt> sends the values to the web site as parameters that can be read by a program on the web site.
-	<li><b>Form Action:</b>&nbsp; The URL of the program to be invoked when the form is submitted. 
+  <li><strong>Name:</strong> The form's name, if any.</li>
+  <li><strong>Method:</strong> The HTML method used to send information
+    captured by the form back to the web server. <tt>GET</tt> appends your
+    filled-in values to the website address to which it submits the form.
+    <tt>POST</tt> sends the values to the website as parameters that can be
+    read by a program on the website.</li>
+  <li><strong>Form Action:</strong> The URL of the program to be invoked when
+    the form is submitted.</li>
 </ul>
 
-<p>When you select a form listed in the top portion of the Forms tab, the bottom portion displays detailed information about the way each of of that form's elements is specified in the HTML source:
+<p>When you select a form listed in the top portion of the Forms tab, the
+  bottom portion displays detailed information about the way each of of that
+  form's elements is specified in the HTML source:</p>
+
 <ul>
-	<li><b>Label:</b>&nbsp;The element's label (if it is tagged as such in the HTML).
- 	<li><b>Field Name.</b>&nbsp;The element's name.
-	<li><b>Type:</b>&nbsp;The element's input type, such as <tt>TEXT</tt> (for submitting text), <tt>RADIO</tt> (for a radio button), or <tt>HIDDEN</tt> (for storing information that is submitted but not displayed on the screen).
-	<li><b>Current Value:</b>&nbsp;The current value of the element. For example, the current value of a text element is the text it currently contains.
+  <li><strong>Label:</strong>The element's label (if it is tagged as such in
+    the HTML).</li>
+  <li><strong>Field Name:</strong>The element's name.</li>
+  <li><strong>Type:</strong>The element's input type, such as <tt>TEXT</tt>
+    (for submitting text), <tt>RADIO</tt> (for a radio button), or
+    <tt>HIDDEN</tt> (for storing information that is submitted but not
+    displayed on the screen).</li>
+  <li><strong>Current Value:</strong>The current value of the element. For
+    example, the current value of a text element is the text it currently
+    contains.</li>
 </ul>
 
-<p>&nbsp;</p>
-<a NAME="pageinfo_links"></a>
-<h2>Links (Page Info Tab)</h2>
+<h2 id="links_tab">Links (Page Info Tab)</h2>
 
-<p>When you choose Page Info from the View menu and click the Links tab, you see a list of all the links available on that page. The following information is displayed for each link:
+<p>When you choose Page Info from the View menu and click the Links tab, you
+  see a list of all the links available on that page. The following information
+  is displayed for each link:</p>
 
 <ul>
-	<li><b>Name:</b>&nbsp;The text displayed in the browser as a link.
- 	<li><b>Address.</b>&nbsp;The <a href="glossary.xhtml#uniform_resource_locator">URL</a> for the page to which the link points.
-	<li><b>Type:</b>&nbsp; The type of link, such Anchor (for a link to a specific place in an HTML document) or Form Submission.
+  <li><strong>Name:</strong>The text displayed in the browser as a link.</li>
+  <li><strong>Address.</strong>The
+    <a href="glossary.xhtml#uniform_resource_locator">URL</a> for the page to
+    which the link points.</li>
+  <li><strong>Type:</strong> The type of link, such Anchor (for a link to a
+    specific place in an HTML document) or Form Submission.</li>
 </ul>
 
-<p>&nbsp;</p>
-<a NAME="pageinfo_media"></a>
-<h2>Media (Page Info Tab)</h2>
+<h2 id="media_tab">Media (Page Info Tab)</h2>
 
-<p>When you choose Page Info from the View menu and click the Media tab, you see a list of all the images and other media elements displayed by the page.
+<p>When you choose Page Info from the View menu and click the Media tab, you
+  see a list of all the images and other media elements displayed by the
+  page.</p>
 
-<p>The top portion lists basic information about each element, including its address (<a href="glossary.xhtml#uniform_resource_locator">URL</a>) and type.
+<p>The top portion lists basic information about each element, including its
+  address (<a href="glossary.xhtml#uniform_resource_locator">URL</a>) and
+  type.</p>
 
-<p>When you select a media element listed in the top portion of the Media tab, the bottom portion displays available information about that element, such as description, size, or dimensions. 
+<p>When you select a media element listed in the top portion of the Media tab,
+  the bottom portion displays available information about that element, such as
+  description, size, or dimensions.</p>
 
-<p>You can also see the selected element at the bottom of the dialog box. To see larger images, you need to click the lower-right corner of the Page Info dialog box and drag. 
+<p>You can also see the selected element at the bottom of the dialog box. To
+  see larger images, you need to click the lower-right corner of the Page Info
+  dialog box and drag.</p>
 
-<p>To save a media element as a separate file:
-<ul>
-	<li><b>Save As:</b> Select the element you want to save, click Save As, and navigate to the location where you want to save it.
-	</ul>
-
-<p>&nbsp;</p>
-
-<a NAME="pageinfo_security"></a>
-<h2>Security (Page Info Tab)</h2>
-
-<p>When you choose Page Info from the View menu and click the Security tab, you see information about <a href="glossary.xhtml#authentication">authentication</a> and <a href="glossary.xhtml#encryption">encryption</a> for the web page you are viewing. The top portion indicates whether the web site's identity has been verified, and the bottom portion describes whether the page was encrypted when it was received by the browser.
-
-<p>You can also open the Security tab directly by clicking the lock icon in the lower-right corner of any browser window.
-
-<p>The top portion of the Security tab can display any of these messages:
+<p>To save a media element as a separate file:</p>
 
 <ul>
-	<li><b>Web Site Identity Not Verified.</b> The web site you are viewing did not present a certificate to authenticate itself. Therefore, Certificate Manager cannot verify its identity. It is possible, though unlikely, that the web site is not what it claims to be.
-	<li><b>Web Site Identity Verified.</b> The certificate that Certificate Manager has used to verify this web site's identity was issued by a certificate authority (CA) marked as one that you trust. You can be reasonably confident that the web site is what it claims to be.
+  <li><strong>Save As:</strong> Select the element you want to save, click Save
+    As, and navigate to the location where you want to save it.</li>
 </ul>
 
-<p>The bottom portion of the Security tab can display any of these messages:
+<h2 id="security_tab">Security (Page Info Tab)</h2>
+
+<p>When you choose Page Info from the View menu and click the Security tab, you
+  see information about
+  <a href="glossary.xhtml#authentication">authentication</a> and
+  <a href="glossary.xhtml#encryption">encryption</a> for the web page you are
+  viewing. The top portion indicates whether the website's identity has been
+  verified, and the bottom portion describes whether the page was encrypted
+  when it was received by the browser.</p>
+
+<p>You can also open the Security tab directly by clicking the lock icon in the
+  lower-right corner of any browser window.</p>
+
+<p>The top portion of the Security tab can display any of these messages:</p>
+
 <ul>
-<LI><B>Connection Not Encrypted.</B> It is possible that other people can view information sent from your computer to the web site or information sent by the web site to your computer, but it is unlikely that someone is actually doing so. </LI>
-
-
-<li><b>Connection Encrypted. </b>In general, the strength of an encrypted connection depends on the length of the keys used for encryption, measured in bits. The longer the key, the stronger the encryption&mdash;that is, the harder it is to for an unauthorized person to unscramble the encrypted information.
-<p>The Page Info window describes encryption strength in one of three ways:</p>
-
-
-<ul>
-
-	<LI><B>High-grade encryption.</B> Strongest encryption available, using 128-bit keys at a minimum.</LI>
-	<LI><B>Medium-grade encryption.</B> Somewhat stronger than low-grade encryption, using 56- or 64-bit keys.</LI>
-	<LI><B>Low-grade encryption.</B> Weakest encryption available, using 40-bit keys.</LI>
+  <li><strong>Website Identity Not Verified.</strong> The website you are
+    viewing did not present a certificate to authenticate itself. Therefore,
+    Certificate Manager cannot verify its identity. It is possible, though
+    unlikely, that the website is not what it claims to be.</li>
+  <li><strong>Website Identity Verified.</strong> The certificate that
+    Certificate Manager has used to verify this website's identity was issued
+    by a certificate authority (CA) marked as one that you trust. You can be
+    reasonably confident that the website is what it claims to be.</li>
 </ul>
 
-<p>Most web sites support high-grade encryption. If you are viewing an older web site that supports a weaker form of encryption, it is possible that other people can view information sent from your computer to the web site or information sent by the web site to your computer, but it is unlikely that someone is actually doing so. </ul>
+<p>The bottom portion of the Security tab can display any of these
+  messages:</p>
 
-<p>Lack of any encryption or lack of strong encryption should be of concern only if you are sending or viewing confidential information, such as your credit card number.
+<ul>
+  <li><b>Connection Not Encrypted.</b> It is possible that other people can
+    view information sent from your computer to the website or information
+    sent by the website to your computer, but it is unlikely that someone is
+    actually doing so.</li>
+  <li><strong>Connection Encrypted.</strong> In general, the strength of an
+    encrypted connection depends on the length of the keys used for encryption,
+    measured in bits. The longer the key, the stronger the
+    encryption&mdash;that is, the harder it is to for an unauthorized person to
+    unscramble the encrypted information. 
 
-<p>You can quickly check the encryption status of a web page by noting the state of the lock icon at the bottom-right corner of the browser window. For more details, see <a href="using_certs_help.html#using_certs_info">Checking Security for a Web Page</a>.
+  <p>The Page Info window describes encryption strength in one of three
+    ways:</p>
 
-<p>&nbsp;</p>
+  <ul>
+    <li><b>High-grade encryption.</b> Strongest encryption available, using
+      128-bit keys at a minimum.</li>
+    <li><b>Medium-grade encryption.</b> Somewhat stronger than low-grade
+      encryption, using 56- or 64-bit keys.</li>
+    <li><b>Low-grade encryption.</b> Weakest encryption available, using 40-bit
+      keys.</li>
+  </ul>
+
+  <p>Most websites support high-grade encryption. If you are viewing an older
+    website that supports a weaker form of encryption, it is possible that other
+    people can view information sent from your computer to the website or
+    information sent by the website to your computer, but it is unlikely that
+    someone is actually doing so.</p>
+
+  </li>
+</ul>
+
+<p>Lack of any encryption or lack of strong encryption should be of concern
+  only if you are sending or viewing confidential information, such as your
+  credit card number.</p>
+
+<p>You can quickly check the encryption status of a web page by noting the
+  state of the lock icon at the bottom-right corner of the browser window. For
+  more details, see <a href="using_certs_help.html#using_certs_info">Checking
+  Security for a Web Page</a>.</p>
+
+<p>Copyright &copy; 2003-2004 The Mozilla Foundation.</p>
 
 </body>
 </html>
-
-
-
