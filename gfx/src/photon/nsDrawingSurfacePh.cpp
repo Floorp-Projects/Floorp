@@ -28,6 +28,9 @@
 #include <Pt.h>
 #include <errno.h>
 
+/* Should be defined in the Photon headers somewhere */
+extern void PdReleaseDirectContext( PdDirectContext_t *DirectContext );
+
 /* The Transparency Mask of the last image Draw'd in nsRenderingContextPh */
 /* This is needed for locking and unlocking */
 extern void *Mask;
@@ -95,7 +98,7 @@ nsDrawingSurfacePh :: ~nsDrawingSurfacePh()
 //  PgSetGC(mGC);
 //  PgSetRegion(mGC->rid);
 	mDrawContext->gc=0;
-    PdReleaseDirectContext((PdDirectContext_t *)mDrawContext);	/* this function has an error! */
+     PdReleaseDirectContext((PdDirectContext_t *)mDrawContext);	/* this function has an error! */
     mDrawContext=0;
 }
 //      free(mMC);

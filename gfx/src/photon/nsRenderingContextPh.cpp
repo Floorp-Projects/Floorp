@@ -1489,7 +1489,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const PRUnichar *aString,
   {
     PhRect_t      extent;
 
-    if (PfExtentWideText(&extent, NULL, mPhotonFontName, (wchar_t *) aString, (aLength*2)))
+    if (PfExtentWideText(&extent, NULL, mPhotonFontName, (const uint16_t *) aString, (aLength*2)))
     {
       aWidth = (int) ((extent.lr.x - extent.ul.x + 1) * mP2T);
       PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth6 aWidth=<%d>mPhotonFontName=<%s>\n", aWidth, mPhotonFontName));
