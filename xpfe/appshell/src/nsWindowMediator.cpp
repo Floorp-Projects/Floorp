@@ -562,7 +562,7 @@ NS_IMETHODIMP  nsWindowMediator::UpdateWindowTitle( nsIWebShellWindow* inWindow,
 			nsIRDFResource* window = windowInfo->mRDFID;
 			// Get rid of the old value
 			nsIRDFNode* target = NULL;
-			if ( NS_SUCCEEDED(mInner->GetTarget( window, kNC_Name, PR_TRUE, &target) ) )
+			if ( NS_SUCCEEDED(mInner->GetTarget( window, kNC_Name, PR_TRUE, &target) ) && (target != nsnull) )
 			{
 				mInner->Unassert( window, kNC_Name, target );
 				NS_IF_RELEASE( target );
