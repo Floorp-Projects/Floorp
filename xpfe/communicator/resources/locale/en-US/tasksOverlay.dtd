@@ -3,7 +3,8 @@
 <!ENTITY tasksMenu.accesskey                           "t"> 
 <!-- LOCALIZATION NOTE (navigatorCmd.label): DONT_TRANSLATE -->  
 <!ENTITY navigatorCmd.label					"Navigator">  
-<!ENTITY navigatorCmd.accesskey                         "n">
+<!ENTITY navigatorCmd.accesskey             "n">
+<!ENTITY navigatorCmd.commandkey            "1">
 <!-- LOCALIZATION NOTE (editorCmd.label): DONT_TRANSLATE -->
 <!ENTITY editorCmd.label					  "Composer">
 <!ENTITY editorCmd.accesskey				"c">

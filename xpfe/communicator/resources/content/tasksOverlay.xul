@@ -14,10 +14,20 @@
 <overlay id="tasksOverlay"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-      <script language="JavaScript" src="chrome://communicator/content/tasksOverlay.js"/>
+<script language="JavaScript" src="chrome://communicator/content/tasksOverlay.js"/>
 
-      <broadcasterset id="broadcasterset"/>
- 
+
+
+<keyset id="keyset">
+  <key id="key_navigator" xulkey="true" key="&navigatorCmd.commandkey;" observes="Tasks:Navigator"/>
+</keyset>
+
+<broadcasterset id="broadcasterset">
+  <broadcaster id="Tasks:Navigator" value="&navigatorCmd.label;" oncommand="toNavigator();"/>
+</broadcasterset>
+
+
+
       <!-- Tasks Menu -->
       <menu id="tasksMenu" value="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
         <template>
@@ -29,7 +39,7 @@
         </template>
 
         <menupopup id="taskPopup">
-          <menuitem value="&navigatorCmd.label;" accesskey="&navigatorCmd.accesskey;" oncommand="toNavigator()"/>
+          <menuitem  accesskey="&navigatorCmd.accesskey;" key="key_navigator" observes="Tasks:Navigator"/>
           <menuitem value="&editorCmd.label;"    accesskey="&editorCmd.accesskey;" oncommand="toEditor();" />
           <menuseparator/>
 
