@@ -45,7 +45,7 @@
 #include "netCore.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
-#include "nsIFileSpec.h" // Remove Me later
+
 #if !defined(IS_LITTLE_ENDIAN) && !defined(IS_BIG_ENDIAN)
 ERROR! Must have a byte order
 #endif
@@ -79,26 +79,11 @@ static int PR_CALLBACK folderChanged(const char *pref, void *closure)
 	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
 	if ( NS_FAILED (rv ) )
 		return rv;
-		
-	nsCOMPtr<nsIFileSpec> folder;
-	rv = prefs->GetFilePref(CACHE_DIR_PREF, getter_AddRefs( folder )  );
-	
-	if ( NS_FAILED( rv ) )
-		return rv;
-	
-	// This is really wrong and should be fixed when the pref code is update
-	// If someone has a system where path names are not unique they are going to
-	// be in a world of hurt.
-	
+			
 	nsCOMPtr<nsILocalFile> cacheFolder;
-	char* path = NULL;
-	rv = folder->GetNativePath(& path );
-	if ( NS_FAILED ( rv ) )
-		return rv;
-		
-	rv = NS_NewLocalFile( path, PR_FALSE, getter_AddRefs(cacheFolder));
-	nsMemory::Free( path );
-	
+    rv = prefs->GetFileXPref(CACHE_DIR_PREF, getter_AddRefs( cacheFolder ));
+    if (NS_FAILED(rv)) return rv;
+  
 	return ( (nsNetDiskCache*)closure )->SetDiskCacheFolder( cacheFolder );	
 }
 
