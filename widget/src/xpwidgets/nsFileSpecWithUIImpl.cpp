@@ -182,7 +182,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseDirectory(const char *title, char **_r
 	if (fileWidget->GetFolder(nsnull, title, spec) != nsFileDlgResults_OK)
 		rv = NS_FILE_FAILURE;
 
-  rv = mBaseFileSpec->setFromFileSpec(spec);
+  rv = mBaseFileSpec->SetFromFileSpec(spec);
 	if (NS_FAILED(rv))
 		return rv;
     
