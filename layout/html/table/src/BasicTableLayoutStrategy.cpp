@@ -1011,9 +1011,6 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
         fixWidth = WIDTH_NOT_SET;
         fixContributor = nsnull;
       }
-      else {
-        fixWidth = PR_MAX(fixWidth, minWidth);
-      }
     }
     desWidth = PR_MAX(desWidth, minWidth);
 
@@ -1022,7 +1019,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
     colFrame->SetWidth(DES_CON, desWidth);
     colFrame->SetConstrainingCell(fixContributor);
     if (fixWidth > 0) {
-      colFrame->SetWidth(FIX, PR_MAX(fixWidth, minWidth));
+      colFrame->SetWidth(FIX, fixWidth);
     }
 
     nsStyleCoord colStyleWidth = colFrame->GetStyleWidth();
