@@ -667,7 +667,7 @@ static void myPLstrncpy(Str255 dst, const char* src, int inMax)
 static const char* TruncNodeName(const char *aNode, char *outBuf)
 {
     PRUint32 nodeLen;
-    if ((nodeLen = nsCRT::strlen(aNode)) > 31)
+    if ((nodeLen = strlen(aNode)) > 31)
     {
         static PRBool sInitialized = PR_FALSE;
         static CharByteTable sTable;
