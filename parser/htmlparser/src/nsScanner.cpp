@@ -18,8 +18,12 @@
 
 //#define __INCREMENTAL 1
 
+#define NS_IMPL_IDS
 #include "nsScanner.h"
 #include "nsDebug.h"
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
+
 
 const char* kBadHTMLText="<H3>Oops...</H3>You just tried to read a non-existent document: <BR>";
 const char* kUnorderedStringError = "String argument must be ordered. Don't you read API's?";
@@ -41,7 +45,7 @@ const int   kBufsize=64;
  *  @return  
  */
 nsScanner::nsScanner(nsString& anHTMLString) : 
-  mBuffer(anHTMLString), mFilename("") 
+  mBuffer(anHTMLString), mFilename("") , mCharset("")
 {
   mTotalRead=mBuffer.Length();
   mIncremental=PR_TRUE;
@@ -49,6 +53,8 @@ nsScanner::nsScanner(nsString& anHTMLString) :
   mOffset=0;
   mMarkPos=-1;
   mFileStream=0;
+  mUnicodeDecoder = nsnull;
+  InitUnicodeDecoder();
 }
 
 /**
@@ -61,7 +67,7 @@ nsScanner::nsScanner(nsString& anHTMLString) :
  *  @return  
  */
 nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream) : 
-    mBuffer(""), mFilename(aFilename) 
+    mBuffer(""), mFilename(aFilename) , mCharset("")
 {
   mIncremental=PR_TRUE;
   mOffset=0;
@@ -81,6 +87,9 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream) :
       mFileStream=new fstream(buffer,ios::in);
     #endif
   } //if
+  mUnicodeDecoder = nsnull;
+  InitUnicodeDecoder();
+
 }
 
 /**
@@ -93,7 +102,7 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream) :
  *  @return  
  */
 nsScanner::nsScanner(nsString& aFilename,fstream& aStream,PRBool assumeOwnership) :
-    mBuffer(""), mFilename(aFilename)
+    mBuffer(""), mFilename(aFilename) , mCharset("")
 {    
   mIncremental=PR_TRUE;
   mOffset=0;
@@ -101,6 +110,39 @@ nsScanner::nsScanner(nsString& aFilename,fstream& aStream,PRBool assumeOwnership
   mTotalRead=0;
   mOwnsStream=assumeOwnership;
   mFileStream=&aStream;
+  mUnicodeDecoder = nsnull;
+  InitUnicodeDecoder();
+}
+
+void nsScanner::InitUnicodeDecoder()
+{
+  nsAutoString defaultCharset("ISO-8859-1");
+  SetDocumentCharset(defaultCharset);
+}
+nsresult nsScanner::SetDocumentCharset(nsString& aCharset )
+{
+  nsresult res = NS_OK;
+  if(! mCharset.EqualsIgnoreCase(aCharset)) // see do we need to change a converter.
+  {
+    nsICharsetConverterManager * ccm = nsnull;
+    res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
+                                       kICharsetConverterManagerIID, 
+                                       (nsISupports**)&ccm);
+    if(NS_SUCCEEDED(res) && (nsnull != ccm))
+    {
+      nsIUnicodeDecoder * decoder = nsnull;
+      res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
+      if(NS_SUCCEEDED(res) && (nsnull != decoder))
+      {
+         NS_IF_RELEASE(mUnicodeDecoder);
+
+         mUnicodeDecoder = decoder;
+         mCharset = aCharset;
+      }    
+      nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
+    }
+  }
+  return res;
 }
 
 
@@ -118,6 +160,7 @@ nsScanner::~nsScanner() {
       delete mFileStream;
   }
   mFileStream=0;
+  NS_IF_RELEASE(mUnicodeDecoder);
 }
 
 /**
@@ -176,8 +219,21 @@ PRBool nsScanner::Append(nsString& aBuffer) {
  *  @return  
  */
 PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
-  mBuffer.Append(aBuffer,aLen);
-  mTotalRead+=aLen;
+ 
+  PRInt32 unicharLength = 0;
+  PRInt32 srcLength = aLen;
+  mUnicodeDecoder->Length(aBuffer, 0, aLen, &unicharLength);
+  PRUnichar *unichars = new PRUnichar [ unicharLength ];
+  
+  nsresult res = mUnicodeDecoder->Convert(unichars, 0, &unicharLength,
+                                          aBuffer, 0, &srcLength );
+  mBuffer.Append(unichars, unicharLength);
+  delete unichars;
+  mTotalRead += unicharLength;
+
+  // mBuffer.Append(aBuffer,aLen);
+  // mTotalRead+=aLen;
+
   return PR_TRUE;
 }
 
