@@ -2892,9 +2892,59 @@ doUnary:
             if (!requestedMultiname.subsetOf(definedMultiname))
                 reportError(Exception::definitionError, "Illegal definition", pos);
             bool goodKind;
+            switch (m->kind) {
+            case Member::InstanceVariable:
+                goodKind = (mOverridden->kind == Member::InstanceVariable);
+                break;
+            case Member::InstanceGetter:
+                goodKind = ((mOverridden->kind == Member::InstanceVariable)
+                                || (mOverridden->kind == Member::InstanceGetter));
+                break;
+            case Member::InstanceSetter:
+                goodKind = ((mOverridden->kind == Member::InstanceVariable)
+                                || (mOverridden->kind == Member::InstanceSetter));
+                break;
+            case Member::InstanceMethod:
+                goodKind = (mOverridden->kind == Member::InstanceMethod);
+                break;
+            }
+            if (mOverridden->final || !goodKind)
+                reportError(Exception::definitionError, "Illegal override", pos);
+
+            InstanceBindingEntry **ibeP = c->instanceBindings[*id];
+            if (ibeP) {
+                for (InstanceBindingEntry::NS_Iterator i = (*ibeP)->begin(), end = (*ibeP)->end(); (i != end); i++) {
+                    InstanceBindingEntry::NamespaceBinding &ns = *i;
+                    if ((ns.second->accesses & access) && (ns.first == *nli))
+                        reportError(Exception::definitionError, "Illegal override", pos);
+                }
+            }
+
         }
         
     }
+
+
+if mOverridden.final or not goodKind then throw definitionError end if
+end if;
+if some m2 OE c.instanceMembers satisfies m2.multiname « definedMultiname ! {} and
+accessesOverlap(instanceMemberAccesses(m2), accesses) then
+throw definitionError
+end if;
+case overrideMod of
+{ none } do
+if mBase ! none or searchForOverrides(c, openMultiname, accesses) ! none then
+throw definitionError
+end if;
+{ false } do if mBase ! none then throw definitionError end if;
+{ true } do if mBase = none then throw definitionError end if;
+{ undefined } do nothing
+end case;
+m.multiname ¨ definedMultiname;
+c.instanceMembers ¨ c.instanceMembers » {m};
+return mOverridden
+
+
 
     // Find the possible override conflicts that arise from the given id and namespaces
     // Fall back on the currently open namespace list if no others are specified.

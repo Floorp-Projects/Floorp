@@ -473,18 +473,6 @@ public:
     InstanceMember *content;     // The member to which this qualified name was bound
 };
 
-// Override status is used to resolve overriden definitions for instance members
-#define POTENTIAL_CONFLICT ((InstanceMember *)(-1))
-class OverrideStatus {
-public:
-    OverrideStatus(InstanceMember *overriddenMember, const String *name)
-        : overriddenMember(overriddenMember), multiname(name) { }
-    
-    InstanceMember *overriddenMember;   // NULL for none
-    Multiname multiname;
-};
-typedef std::pair<OverrideStatus *, OverrideStatus *> OverrideStatusPair;
-
 
 template<class Binding> class BindingEntry {
 public:
