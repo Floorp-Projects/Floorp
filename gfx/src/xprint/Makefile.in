@@ -65,8 +65,6 @@ CXXFLAGS	+= $(TK_CFLAGS)
 
 LLIBS		+= $(DIST)/lib/libxpcom.a $(DIST)/lib/libraptorgfx.a
 
-EXTRA_DSO_LDOPTS += $(LIBIDL_LIBS)
-
 INCLUDES	+= \
 		-I$(srcdir)/../gtk \
 		-I$(srcdir)/../xlibrgb \
