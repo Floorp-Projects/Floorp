@@ -27,34 +27,41 @@
 
 nsresult
 nsQueryReferent::operator()( const nsIID& aIID, void** answer ) const
-	{
-		nsresult status;
-		if ( mWeakPtr )
-			{
-				if ( !NS_SUCCEEDED(status = mWeakPtr->QueryReferent(aIID, answer)) )
-					*answer = 0;
-			}
-		else
-			status = NS_ERROR_NULL_POINTER;
-
-		if ( mErrorPtr )
-			*mErrorPtr = status;
-		return status;
-	}
-
-NS_COM nsIWeakReference*
-NS_GetWeakReference( nsISupports* aInstance, nsresult* aResult )
   {
     nsresult status;
-    if ( !aResult )
-      aResult = &status;
+    if ( mWeakPtr )
+      {
+        if ( !NS_SUCCEEDED(status = mWeakPtr->QueryReferent(aIID, answer)) )
+          *answer = 0;
+      }
+    else
+      status = NS_ERROR_NULL_POINTER;
 
-    nsCOMPtr<nsISupportsWeakReference> factoryP = do_QueryInterface(aInstance, aResult);
-		NS_ASSERTION(factoryP, "Did you know you were calling |NS_GetWeakReference()| on something that doesn't support weak references?");
+    if ( mErrorPtr )
+      *mErrorPtr = status;
+    return status;
+  }
 
-    nsIWeakReference* weakP = 0;
-    status = factoryP ? factoryP->GetWeakReference(&weakP) : NS_ERROR_NO_INTERFACE;
-    return weakP;
+NS_COM nsIWeakReference*
+NS_GetWeakReference( nsISupports* aInstancePtr, nsresult* aErrorPtr )
+  {
+    nsresult status;
+    nsIWeakReference* result = 0;
+
+    if ( aInstancePtr )
+      {
+        nsCOMPtr<nsISupportsWeakReference> factoryPtr = do_QueryInterface(aInstancePtr, &status);
+        NS_ASSERTION(factoryPtr, "Did you know you were calling |NS_GetWeakReference()| on something that doesn't support weak references?");
+        if ( factoryPtr )
+          status = factoryPtr->GetWeakReference(&result);
+        // else, |status| has already been set by |do_QueryInterface|
+      }
+    else
+      status = NS_ERROR_NULL_POINTER;
+
+    if ( aErrorPtr )
+      *aErrorPtr = status;
+    return result;
   }
 
 NS_IMETHODIMP
@@ -97,12 +104,12 @@ nsWeakReference::Release()
 NS_IMETHODIMP
 nsWeakReference::QueryInterface( const nsIID& aIID, void** aInstancePtr )
   {
-  	NS_ASSERTION(aInstancePtr, "QueryInterface requires a non-NULL destination!");
+    NS_ASSERTION(aInstancePtr, "QueryInterface requires a non-NULL destination!");
 
     if ( !aInstancePtr )
       return NS_ERROR_NULL_POINTER;
 
-		nsISupports* foundInterface;
+    nsISupports* foundInterface;
     if ( aIID.Equals(nsCOMTypeInfo<nsIWeakReference>::GetIID()) )
       foundInterface = NS_STATIC_CAST(nsIWeakReference*, this);
     else if ( aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()) )
@@ -119,7 +126,7 @@ nsWeakReference::QueryInterface( const nsIID& aIID, void** aInstancePtr )
         status = NS_OK;
       }
 
-		*aInstancePtr = foundInterface;
+    *aInstancePtr = foundInterface;
     return status;
   }
 
