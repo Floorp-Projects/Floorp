@@ -1,28 +1,38 @@
-#!perl
+=head1 NAME
 
-#
-# The contents of this file are subject to the Netscape Public License
-# Version 1.0 (the "NPL"); you may not use this file except in
-# compliance with the NPL.  You may obtain a copy of the NPL at
-# http://www.mozilla.org/NPL/
-#
-# Software distributed under the NPL is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
-# for the specific language governing rights and limitations under the
-# NPL.
-#
-# The Initial Developer of this code under the NPL is Netscape
-# Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
-# Reserved.
-#
+Moz
+
+=head1 DESCRIPTION
+
+...
+
+=head1 COPYRIGHT
+
+The contents of this file are subject to the Netscape Public License
+Version 1.0 (the "NPL"); you may not use this file except in
+compliance with the NPL.  You may obtain a copy of the NPL at
+http://www.mozilla.org/NPL/
+
+Software distributed under the NPL is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+for the specific language governing rights and limitations under the
+NPL.
+
+The Initial Developer of this code under the NPL is Netscape
+Communications Corporation.  Portions created by Netscape are
+Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+Reserved.
+
+=cut
+
+
 
 package			Moz;
 require			Exporter;
 
 @ISA				= qw(Exporter);
 @EXPORT			= qw();
-@EXPORT_OK	= qw(BuildProject,OpenErrorLog,CloseErrorLog,UseCodeWarriorLib,Configure,StopForErrors,DontStopForErrors);
+@EXPORT_OK	= qw(BuildProject,OpenErrorLog,CloseErrorLog,UseCodeWarriorLib,StopForErrors,DontStopForErrors);
 
 	use Cwd;
 
@@ -68,12 +78,6 @@ BEGIN
 		activate_CodeWarrior();
 	}
 
-sub Configure($)
-	{
-		my ($config_file) = @_;
-		# read in the configuration file
-	}
-
 $logging								= 0;
 $recent_errors_file			= "";
 $stop_on_1st_error			= 1;
@@ -107,6 +111,15 @@ sub OpenErrorLog($)
 sub StopForErrors()
 	{
 		$stop_on_1st_error = 1;
+		
+			# Can't stop for errors unless we notice them.
+			# Can't notice them unless we are logging.
+			# If the user didn't explicitly request logging, log to a temporary file.
+
+		if ( ! $recent_errors_file )
+			{
+				OpenErrorLog("${TMPDIR}BuildResults");
+			}
 	}
 
 sub DontStopForErrors()
