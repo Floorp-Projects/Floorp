@@ -53,6 +53,8 @@ static NS_DEFINE_CID(kStreamConvServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_IID(kIImageNetContextIID, IL_INETCONTEXT_IID);
 static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
 
+PRLogModuleInfo *image_net_context_async_log_module = NULL;
+
 #define IMAGE_BUF_SIZE 4096
 
 class ImageConsumer;
@@ -829,11 +831,20 @@ Need code to check freshness of necko cache.
                         getter_AddRefs(defLoadChannel))) && defLoadChannel)
      defLoadChannel->GetLoadAttributes(&defchan_attribs);
 
+#if defined( DEBUG )
+     if (image_net_context_async_log_module == NULL) {
+    	image_net_context_async_log_module = PR_NewLogModule("IMAGENETCTXASYNC");
+     }          
+#endif
      if((nsIChannel::FORCE_VALIDATION & defchan_attribs)||   
         (nsIChannel::VALIDATE_ALWAYS & defchan_attribs) ||
         (nsIChannel::INHIBIT_PERSISTENT_CACHING & defchan_attribs)||
-        (nsIChannel::FORCE_RELOAD & defchan_attribs))           
-                       imglib_attribs = DONT_USE_IMG_CACHE;
+        (nsIChannel::FORCE_RELOAD & defchan_attribs)) {
+     		imglib_attribs = DONT_USE_IMG_CACHE;
+#if defined( DEBUG )
+		PR_LOG(image_net_context_async_log_module, 1, ("ImageNetContextAsync: NS_NewImageNetContext: DONT_USE_IMAGE_CACHE\n"));
+#endif
+     }
   }
 
   ilINetContext *cx = new ImageNetContextImpl( imglib_attribs,
@@ -847,4 +858,3 @@ Need code to check freshness of necko cache.
   return cx->QueryInterface(kIImageNetContextIID, (void **) aInstancePtrResult);
 
 }
-
