@@ -584,6 +584,12 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     mIsTopMarginRoot = PR_TRUE;
     mIsBottomMarginRoot = PR_TRUE;
   }
+  if (0 != aReflowState.mComputedBorderPadding.top) {
+    mIsTopMarginRoot = PR_TRUE;
+  }
+  if (0 != aReflowState.mComputedBorderPadding.bottom) {
+    mIsBottomMarginRoot = PR_TRUE;
+  }
   if (mIsTopMarginRoot) {
     mApplyTopMargin = PR_TRUE;
   }
@@ -672,13 +678,6 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   mMaxElementSize.SizeTo(0, 0);
   mComputeMaximumWidth = NS_REFLOW_CALC_MAX_WIDTH == (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH);
   mMaximumWidth = 0;
-
-  if (0 != borderPadding.top) {
-    mIsTopMarginRoot = PR_TRUE;
-  }
-  if (0 != borderPadding.bottom) {
-    mIsBottomMarginRoot = PR_TRUE;
-  }
 
   mMinLineHeight = nsHTMLReflowState::CalcLineHeight(mPresContext,
                                                      aReflowState.rendContext,
