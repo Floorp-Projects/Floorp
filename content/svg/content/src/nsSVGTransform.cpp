@@ -243,6 +243,8 @@ NS_IMETHODIMP nsSVGTransform::GetAngle(float *aAngle)
 /* void setMatrix (in nsIDOMSVGMatrix matrix); */
 NS_IMETHODIMP nsSVGTransform::SetMatrix(nsIDOMSVGMatrix *matrix)
 {
+  NS_ENSURE_ARG(matrix);
+  
   WillModify();
 
   mType = SVG_TRANSFORM_MATRIX;
