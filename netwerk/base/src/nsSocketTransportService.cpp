@@ -147,15 +147,17 @@ nsresult nsSocketTransportService::AddToWorkQ(nsSocketTransport* aTransport)
   PRStatus status;
   PRBool bFireEvent = PR_FALSE;
   nsresult rv = NS_OK;
+  PRCList* qp;
 
   Lock();
   //
   // Only add the transport if it is *not* already on the list...
   //
-  if (PR_CLIST_IS_EMPTY(aTransport)) {
+  qp = aTransport->GetListNode();
+  if (PR_CLIST_IS_EMPTY(qp)) {
     NS_ADDREF(aTransport);
     bFireEvent = PR_CLIST_IS_EMPTY(&mWorkQ);
-    PR_APPEND_LINK(aTransport, &mWorkQ);
+    PR_APPEND_LINK(qp, &mWorkQ);
   }
   Unlock();
   //
@@ -176,6 +178,7 @@ nsresult nsSocketTransportService::AddToWorkQ(nsSocketTransport* aTransport)
 nsresult nsSocketTransportService::ProcessWorkQ(void)
 {
   nsresult rv = NS_OK;
+  PRCList* qp;
 
   //
   // Only process pending operations while there is space available in the
@@ -190,8 +193,10 @@ nsresult nsSocketTransportService::ProcessWorkQ(void)
     nsSocketTransport* transport;
 
     // Get the next item off of the workQ...
-    transport = (nsSocketTransport*)PR_LIST_HEAD(&mWorkQ);
-    PR_REMOVE_AND_INIT_LINK(transport);
+    qp = PR_LIST_HEAD(&mWorkQ);
+
+    transport = nsSocketTransport::GetInstance(qp);
+    PR_REMOVE_AND_INIT_LINK(qp);
 
     // Try to perform the operation...
     //
