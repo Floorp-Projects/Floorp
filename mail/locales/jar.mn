@@ -19,8 +19,8 @@
   locale/@AB_CD@/messenger/addressbook/abContactsPanel.dtd (@AB_CD@/chrome/messenger/addressbook/abContactsPanel.dtd)
 + locale/@AB_CD@/messenger-mapi/mapi.properties      (@AB_CD@/chrome/messenger-mapi/mapi.properties)
 + locale/@AB_CD@/communicator/utilityOverlay.dtd (@AB_CD@/chrome/communicator/utilityOverlay.dtd)
-+ locale/global/brand.properties            (@AB_CD@/chrome/global/brand.properties)
-* locale/global/brand.dtd                   (@AB_CD@/chrome/global/brand.dtd)
++ locale/@AB_CD@/global/brand.properties            (@AB_CD@/chrome/global/brand.properties)
+* locale/@AB_CD@/global/brand.dtd                   (@AB_CD@/chrome/global/brand.dtd)
 
 # xxxfixme!
 US.jar:
