@@ -40,11 +40,12 @@ void nsFileWidget::Create(nsIWidget        *aParent,
                           const nsRect     &aRect,
                           EVENT_CALLBACK   aHandleEventFunction,
                           nsIDeviceContext *aContext,
+                          nsIAppShell      *aAppShell,
                           nsIToolkit       *aToolkit,
                           nsWidgetInitData *aInitData) 
 {
   nsString title("Load");
-  Create(aParent, title, eMode_load, aContext, aToolkit, aInitData);
+  Create(aParent, title, eMode_load, aContext, aAppShell, aToolkit, aInitData);
 }
 
 
@@ -53,6 +54,7 @@ void   nsFileWidget:: Create(nsIWidget  *aParent,
                              nsString&   aTitle,
                              nsMode      aMode,
                              nsIDeviceContext *aContext,
+                             nsIAppShell *aAppShell,
                              nsIToolkit *aToolkit,
                              void       *aInitData)
 {
@@ -96,6 +98,7 @@ void nsFileWidget::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
@@ -302,10 +305,11 @@ void nsFileWidget::AggFileWidget::Create( nsIWidget *aParent,
                                       nsString& aTitle,
                                       nsMode aMode,
                                       nsIDeviceContext *aContext,
+                                      nsIAppShell *aAppShell,
                                       nsIToolkit *aToolkit,
                                       void *aInitData)
 {
-  GET_OUTER()->Create(aParent, aTitle, aMode, aContext, aToolkit, aInitData);
+  GET_OUTER()->Create(aParent, aTitle, aMode, aContext, aAppShell, aToolkit, aInitData);
 }
 
 void nsFileWidget::AggFileWidget::OnOk()

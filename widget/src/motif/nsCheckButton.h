@@ -41,12 +41,14 @@ public:
               const nsRect &aRect,
               EVENT_CALLBACK aHandleEventFunction,
               nsIDeviceContext *aContext = nsnull,
+              nsIAppShell *aAppShell = nsnull,
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
   void Create(nsNativeWidget aParent,
               const nsRect &aRect,
               EVENT_CALLBACK aHandleEventFunction,
               nsIDeviceContext *aContext = nsnull,
+              nsIAppShell *aAppShell = nsnull,
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
 

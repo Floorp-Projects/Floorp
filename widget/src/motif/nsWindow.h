@@ -24,6 +24,7 @@
 
 #include "nsIWidget.h"
 #include "nsIEnumerator.h"
+#include "nsIAppShell.h"
 
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
@@ -55,17 +56,19 @@ public:
 
     // nsIWidget interface
     virtual void            Create(nsIWidget *aParent,
-                                     const nsRect &aRect,
-                                     EVENT_CALLBACK aHandleEventFunction,
-                                     nsIDeviceContext *aContext,
-                                     nsIToolkit *aToolkit = nsnull,
-                                     nsWidgetInitData *aInitData = nsnull);
+                                   const nsRect &aRect,
+                                   EVENT_CALLBACK aHandleEventFunction,
+                                   nsIDeviceContext *aContext,
+                                   nsIAppShell *aAppShell = nsnull,
+                                   nsIToolkit *aToolkit = nsnull,
+                                   nsWidgetInitData *aInitData = nsnull);
     virtual void            Create(nsNativeWidget aParent,
-                                     const nsRect &aRect,
-                                     EVENT_CALLBACK aHandleEventFunction,
-                                     nsIDeviceContext *aContext,
-                                     nsIToolkit *aToolkit = nsnull,
-                                     nsWidgetInitData *aInitData = nsnull);
+                                   const nsRect &aRect,
+                                   EVENT_CALLBACK aHandleEventFunction,
+                                   nsIDeviceContext *aContext,
+                                   nsIAppShell *aAppShell = nsnull,
+                                   nsIToolkit *aToolkit = nsnull,
+                                   nsWidgetInitData *aInitData = nsnull);
     virtual void            Destroy();
     virtual nsIWidget*      GetParent(void);
     virtual nsIEnumerator*  GetChildren();
@@ -96,6 +99,7 @@ public:
     virtual nsIRenderingContext* GetRenderingContext();
     virtual void            SetColorMap(nsColorMap *aColorMap);
     virtual nsIDeviceContext* GetDeviceContext();
+    virtual nsIAppShell*    GetAppShell();
     virtual void            Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
     virtual nsIToolkit*     GetToolkit();  
     virtual void            SetBorderStyle(nsBorderStyle aBorderStyle); 
@@ -143,6 +147,7 @@ protected:
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData);
 
@@ -150,6 +155,7 @@ protected:
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData);
 
@@ -157,6 +163,7 @@ protected:
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData);
 
@@ -173,6 +180,7 @@ protected:
   nsIDeviceContext *mContext;
   nsIFontMetrics *mFontMetrics;
   nsToolkit   *mToolkit;
+  nsIAppShell *mAppShell;
 
   nsIMouseListener * mMouseListener;
   nsIEventListener * mEventListener;
@@ -238,12 +246,14 @@ public: \
                                      const nsRect &aRect, \
                                      EVENT_CALLBACK aHandleEventFunction, \
                                      nsIDeviceContext *aContext, \
+                                     nsIAppShell *aAppShell, \
                                      nsIToolkit *aToolkit = nsnull, \
                                      nsWidgetInitData *aInitData = nsnull); \
     virtual void            Create(nsNativeWidget aParent, \
                                      const nsRect &aRect, \
                                      EVENT_CALLBACK aHandleEventFunction, \
                                      nsIDeviceContext *aContext, \
+                                     nsIAppShell *aAppShell, \
                                      nsIToolkit *aToolkit = nsnull, \
                                      nsWidgetInitData *aInitData = nsnull); \
     virtual void            Destroy(); \
@@ -276,6 +286,7 @@ public: \
     virtual nsIRenderingContext* GetRenderingContext(); \
     virtual void            SetColorMap(nsColorMap *aColorMap); \
     virtual nsIDeviceContext* GetDeviceContext(); \
+    virtual nsIAppShell*    GetAppShell(); \
     virtual void            Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect); \
     virtual nsIToolkit*     GetToolkit(); \
     virtual void            SetBorderStyle(nsBorderStyle aBorderStyle); \
@@ -322,19 +333,21 @@ public: \
                     const nsRect &aRect, \
                     EVENT_CALLBACK aHandleEventFunction, \
                     nsIDeviceContext *aContext, \
+                    nsIAppShell *aAppShell, \
                     nsIToolkit *aToolkit, \
                     nsWidgetInitData *aInitData) \
     { \
-        GET_OUTER()->Create(aParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData); \
+        GET_OUTER()->Create(aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData); \
     } \
     void _classname::_aggname::Create(nsNativeWidget aParent, \
                  const nsRect &aRect, \
                  EVENT_CALLBACK aHandleEventFunction, \
                  nsIDeviceContext *aContext, \
+                 nsIAppShell *aAppShell, \
                  nsIToolkit *aToolkit, \
                  nsWidgetInitData *aInitData) \
     { \
-        GET_OUTER()->Create(aParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData); \
+        GET_OUTER()->Create(aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData); \
     } \
     void _classname::_aggname::Destroy() \
     { \
@@ -435,6 +448,10 @@ public: \
     nsIDeviceContext* _classname::_aggname::GetDeviceContext() \
     { \
         return GET_OUTER()->GetDeviceContext(); \
+    } \
+    nsIAppShell* _classname::_aggname::GetAppShell() \
+    { \
+        return GET_OUTER()->GetAppShell(); \
     } \
     void _classname::_aggname::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect) \
     { \
