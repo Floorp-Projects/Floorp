@@ -1473,6 +1473,9 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, nsIRegion *aRegion, PR
 NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags)
 {
   NS_PRECONDITION(nsnull != aView, "null view");
+  if (!mRefreshEnabled) {
+    return NS_OK;
+  }
 
   // Ignore any silly requests...
   if ((aRect.width == 0) || (aRect.height == 0))
