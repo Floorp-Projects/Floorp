@@ -41,6 +41,7 @@ typedef PRUint16 imapMessageFlagsType;
 #define kUnmarked    0x02
 #define kNoinferiors 0x04
 #define kNoselect    0x08
+#define kImapTrash   0x10	/* Navigator flag */
 #define kJustExpunged 0x20	/* This update is a post expunge url update. */
 #define kPersonalMailbox	0x40	/* this mailbox is in the personal namespace */
 #define kPublicMailbox		0x80	/* this mailbox is in the public namespace */
