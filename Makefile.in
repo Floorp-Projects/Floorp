@@ -40,6 +40,11 @@ STATIC_MAKEFILES := $(topsrcdir)/nsprpub
 endif
 endif
 
+# boehm needs to be built before XPCOM
+ifdef GC_LEAK_DETECTOR
+DIRS += gc/boehm
+endif
+
 DIRS		+= dbm modules/libreg xpcom
 
 ifndef MOZ_NATIVE_ZLIB
