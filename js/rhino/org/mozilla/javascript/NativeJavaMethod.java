@@ -145,7 +145,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         // OPT: or pass it back somehow
         Class paramTypes[] = meth.getParameterTypes();
 
-        // First, we kill the lawyers.  Er, marshall the args.
+        // First, we marshall the args.
         for (int i = 0; i < args.length; i++) {
             args[i] = NativeJavaObject.coerceType(paramTypes[i], args[i]);
         }

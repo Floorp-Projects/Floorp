@@ -289,6 +289,10 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         // String
         if (type == ScriptRuntime.StringClass)
             return ScriptRuntime.toString(value);
+        
+        // Boolean
+        if (type == Boolean.TYPE || type == ScriptRuntime.BooleanClass)
+            return new Boolean(ScriptRuntime.toBoolean(value));
 
         if (type == Character.TYPE || type == ScriptRuntime.CharacterClass) {
             // Special case for converting a single char string to a character
