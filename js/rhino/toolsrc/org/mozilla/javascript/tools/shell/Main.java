@@ -66,7 +66,8 @@ public class Main {
      */
     public static void main(String args[]) {
         int result = exec(args);
-        System.exit(result);
+        if (result != 0)
+            System.exit(result);
     }
 
     /**
@@ -240,7 +241,21 @@ public class Main {
                 Object result = evaluateReader(cx, global, reader, 
                                                "<stdin>", startline);
                 if (result != cx.getUndefinedValue()) {
-                    getErr().println(cx.toString(result));
+                    try {
+                        getErr().println(cx.toString(result));
+                    } catch (EcmaError ee) {
+                        String msg = ToolErrorReporter.getMessage(
+                            "msg.uncaughtJSException", ee.toString());
+                        exitCode = EXITCODE_RUNTIME_ERROR;
+                        if (ee.getSourceName() != null) {
+                            Context.reportError(msg, ee.getSourceName(), 
+                                                ee.getLineNumber(), 
+                                                ee.getLineSource(), 
+                                                ee.getColumnNumber());
+                        } else {
+                            Context.reportError(msg);
+                        }
+                    }
                 }
                 NativeArray h = global.history;
                 h.put((int)h.jsGet_length(), h, source);

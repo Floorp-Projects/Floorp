@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  * Norris Boyd
+ * David C. Navas
  * Ted Neward
  *
  * Alternatively, the contents of this file may be used under the
@@ -456,9 +457,16 @@ public class FunctionObject extends NativeFunction {
                        Object[] args)
         throws JavaScriptException
     {
-        if (parmsLength < 0)
-            return callVarargs(cx, thisObj, args, false);
-
+        if (parmsLength < 0) {
+            // Ugly: allow variable-arg constructors that need access to the 
+            // scope to get it from the Context. Cleanest solution would be
+            // to modify the varargs form, but that would require users with 
+            // the old form to change their code.
+            cx.ctorScope = scope;
+            Object result = callVarargs(cx, thisObj, args, false);
+            cx.ctorScope = null;
+            return result;
+        }
         if (!isStatic) {
             // OPT: cache "clazz"?
             Class clazz = method != null ? method.getDeclaringClass()

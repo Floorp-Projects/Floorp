@@ -1481,6 +1481,29 @@ public abstract class ScriptableObject implements Scriptable {
         }
         return result;
     }
+    
+    /**
+     * Call a method of an object.
+     * <p>
+     * @param obj the JavaScript object
+     * @param methodName the name of the function property
+     * @param args the arguments for the call
+     * @exception JavaScriptException thrown if there were errors in the call
+     */
+    public static Object callMethod(Scriptable obj, String methodName, 
+                                    Object[] args)
+        throws JavaScriptException
+    {
+        Context cx = Context.enter();
+        try {
+            Object fun = getProperty(obj, methodName);
+            if (fun == NOT_FOUND)
+                fun = Undefined.instance;
+            return ScriptRuntime.call(cx, fun, obj, args, getTopLevelScope(obj));
+        } finally {
+          Context.exit();
+        }
+    }
                 
     private static Scriptable getBase(Scriptable obj, String s) {
         Scriptable m = obj;
