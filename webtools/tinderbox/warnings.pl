@@ -88,7 +88,7 @@ $form{tree} = $tree;
 require 'tbglobals.pl';
 require "$tree/treedata.pl";
 
-$source_root_pat = '^.*/mozilla/';
+$source_root = 'mozilla';
 
 # ===================================================================
 # Warnings to ignore
@@ -264,7 +264,7 @@ sub find_cvs_files {
     return;
   }
   my $dir = $File::Find::dir;
-  $dir =~ s|^$cvs_root/||o;
+  $dir =~ s|^$cvs_root/$source_root/||o;
   $dir =~ s|/$||;
   my $file = substr $_, 0, -2;
 
@@ -308,7 +308,7 @@ sub gcc_parser {
     #
     if (/^gmake\[\d\]: Entering directory \`(.*)\'$/) {
       $build_dir = $1;
-      $build_dir =~ s|$source_root_pat||o;
+      $build_dir =~ s|^.*/$source_root/||o;
     }
     
     # Now only match lines with "warning:"
@@ -344,7 +344,6 @@ sub gcc_parser {
       $warnings{$file}{$line}->{first_seen_line} = $.;
       $warnings{$file}{$line}->{ignorecount} = 0;
     }
-
     my $ignore_it = /$ignore_pat/o;
     unless ($ignore_it) {
       # Now check if the warning should be ignored based on directory
