@@ -73,12 +73,13 @@
 #include "ImportDebug.h"
 
 static NS_DEFINE_IID(kIPOP3IncomingServerIID, NS_IPOP3INCOMINGSERVER_IID);
-static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+static NS_DEFINE_CID(kMsgAccountMgrCID, NS_MSGACCOUNTMANAGER_CID);
+
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -910,19 +911,10 @@ PRBool nsImportGenericMail::GetAccount( nsIMsgFolder **ppFolder)
 	nsresult	rv;
 	
 	*ppFolder = nsnull;
-
-    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
+		
+	NS_WITH_SERVICE( nsIMsgAccountManager, accMgr, kMsgAccountMgrCID, &rv);
     if (NS_FAILED(rv)) {
-		IMPORT_LOG0( "*** Failed to create a mail session!\n");
-		return( PR_FALSE);
-	}
-	
-	nsCOMPtr<nsIMsgAccountManager> accMgr;
-
-	rv = mailSession->GetAccountManager( getter_AddRefs( accMgr));
-	
-	if (NS_FAILED( rv)) {
-		IMPORT_LOG0( "*** Failed to get account manager\n");
+		IMPORT_LOG0( "*** Failed to create a account manager!\n");
 		return( PR_FALSE);
 	}
 
@@ -1055,21 +1047,11 @@ PRBool nsImportGenericMail::FindAccount( nsIMsgFolder **ppFolder)
 	
 	*ppFolder = nsnull;
 
-    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
+ 	NS_WITH_SERVICE( nsIMsgAccountManager, accMgr, kMsgAccountMgrCID, &rv);
     if (NS_FAILED(rv)) {
-		IMPORT_LOG0( "*** Failed to create a mail session!\n");
+		IMPORT_LOG0( "*** Failed to create a account manager!\n");
 		return( PR_FALSE);
-	}
-	
-	nsCOMPtr<nsIMsgAccountManager> accMgr;
-
-	rv = mailSession->GetAccountManager( getter_AddRefs( accMgr));
-	
-	if (NS_FAILED( rv)) {
-		IMPORT_LOG0( "*** Failed to get account manager\n");
-		return( PR_FALSE);
-	}
-	
+	}	
 	/*
 		First check the default account to see if it has a local mail
 		store.  If it does then use this account to import the mail.

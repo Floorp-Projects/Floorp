@@ -47,6 +47,8 @@ static NS_DEFINE_IID(kImportModuleIID,		NS_IIMPORTMODULE_IID);
 
 static nsIImportService *	gImportService = nsnull;
 
+static const char *	kWhitespace = "\b\t\r\n ";
+
 
 class nsImportModuleList;
 
@@ -109,28 +111,29 @@ private:
 
 class ImportModuleDesc {
 public:
-	ImportModuleDesc() { m_pSupports = nsnull; m_pModule = nsnull;}
-	~ImportModuleDesc() { if (m_pSupports != nsnull) nsCRT::free( m_pSupports);
-						  ReleaseModule();	}
+	ImportModuleDesc() { m_pModule = nsnull;}
+	~ImportModuleDesc() { ReleaseModule();	}
 	
 	void	SetCID( const nsCID& cid) { m_cid = cid;}
 	void	SetName( const PRUnichar *pName) { m_name = pName;}
 	void	SetDescription( const PRUnichar *pDesc) { m_description = pDesc;}
-	void	SetSupports( const char *pSupports);
+	void	SetSupports( const char *pSupports) { m_supports = pSupports;}
 	
 	nsCID			GetCID( void) { return( m_cid);}
 	const PRUnichar *GetName( void) { return( m_name.GetUnicode());}
 	const PRUnichar *GetDescription( void) { return( m_description.GetUnicode());}
-	const char *	GetSupports( void) { return( m_pSupports);}
+	const char *	GetSupports( void) { return( (const char *)m_supports);}
 	
 	nsIImportModule *	GetModule( PRBool keepLoaded = PR_FALSE); // Adds ref
 	void				ReleaseModule( void);
 	
+	PRBool			SupportsThings( const char *pThings);
+
 private:
 	nsCID				m_cid;
 	nsString			m_name;
 	nsString			m_description;
-	char *				m_pSupports;
+	nsCString			m_supports;
 	nsIImportModule *	m_pModule;
 };
 
@@ -256,8 +259,16 @@ NS_IMETHODIMP nsImportService::GetModuleCount( const char *filter, PRInt32 *_ret
 
 	DoDiscover();
 	
-	if (m_pModules != nsnull)
-		*_retval = m_pModules->GetCount();
+	if (m_pModules != nsnull) {
+		ImportModuleDesc *	pDesc;
+		PRInt32	count = 0;
+		for (PRInt32 i = 0; i < m_pModules->GetCount(); i++) {
+			pDesc = m_pModules->GetModuleDesc( i);
+			if (pDesc->SupportsThings( filter))
+				count++;
+		}
+		*_retval = count;
+	}
 	else
 		*_retval = 0;
 		
@@ -303,6 +314,9 @@ NS_IMETHODIMP nsImportService::GetModuleInfo( const char *filter, PRInt32 index,
     if (!name || !description)
         return NS_ERROR_NULL_POINTER;
     
+	*name = nsnull;
+	*description = nsnull;
+
     DoDiscover();
     if (!m_pModules)
 		return( NS_ERROR_FAILURE);
@@ -310,14 +324,22 @@ NS_IMETHODIMP nsImportService::GetModuleInfo( const char *filter, PRInt32 index,
 	if ((index < 0) || (index >= m_pModules->GetCount()))
 		return( NS_ERROR_FAILURE);
 	
-	ImportModuleDesc *pDesc;
-	pDesc = m_pModules->GetModuleDesc( index);
-	if (!pDesc) 
-		return( NS_ERROR_FAILURE);	
-	
-	*name = nsCRT::strdup( pDesc->GetName());
-	*description = nsCRT::strdup( pDesc->GetDescription());
-	return( NS_OK);
+	ImportModuleDesc *	pDesc;
+	PRInt32	count = 0;
+	for (PRInt32 i = 0; i < m_pModules->GetCount(); i++) {
+		pDesc = m_pModules->GetModuleDesc( i);
+		if (pDesc->SupportsThings( filter)) {
+			if (count == index) {
+				*name = nsCRT::strdup( pDesc->GetName());
+				*description = nsCRT::strdup( pDesc->GetDescription());
+				return( NS_OK);
+			}
+			else
+				count++;
+		}
+	}
+
+	return( NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP nsImportService::GetModuleName(const char *filter, PRInt32 index, PRUnichar **_retval)
@@ -325,7 +347,9 @@ NS_IMETHODIMP nsImportService::GetModuleName(const char *filter, PRInt32 index, 
     NS_PRECONDITION(_retval != nsnull, "null ptr");
     if (!_retval)
         return NS_ERROR_NULL_POINTER;
-    
+	
+	*_retval = nsnull;
+	    
     DoDiscover();
     if (!m_pModules)
 		return( NS_ERROR_FAILURE);
@@ -333,13 +357,21 @@ NS_IMETHODIMP nsImportService::GetModuleName(const char *filter, PRInt32 index, 
 	if ((index < 0) || (index >= m_pModules->GetCount()))
 		return( NS_ERROR_FAILURE);
 	
-	ImportModuleDesc *pDesc;
-	pDesc = m_pModules->GetModuleDesc( index);
-	if (!pDesc) 
-		return( NS_ERROR_FAILURE);	
+	ImportModuleDesc *	pDesc;
+	PRInt32	count = 0;
+	for (PRInt32 i = 0; i < m_pModules->GetCount(); i++) {
+		pDesc = m_pModules->GetModuleDesc( i);
+		if (pDesc->SupportsThings( filter)) {
+			if (count == index) {
+				*_retval = nsCRT::strdup( pDesc->GetName());
+				return( NS_OK);
+			}
+			else
+				count++;
+		}
+	}
 	
-	*_retval = nsCRT::strdup( pDesc->GetName());
-	return( NS_OK);
+	return( NS_ERROR_FAILURE);
 }
 
 
@@ -349,6 +381,8 @@ NS_IMETHODIMP nsImportService::GetModuleDescription(const char *filter, PRInt32 
     if (!_retval)
         return NS_ERROR_NULL_POINTER;
     
+	*_retval = nsnull;
+
     DoDiscover();
     if (!m_pModules)
 		return( NS_ERROR_FAILURE);
@@ -356,34 +390,55 @@ NS_IMETHODIMP nsImportService::GetModuleDescription(const char *filter, PRInt32 
 	if ((index < 0) || (index >= m_pModules->GetCount()))
 		return( NS_ERROR_FAILURE);
 	
-	ImportModuleDesc *pDesc;
-	pDesc = m_pModules->GetModuleDesc( index);
-	if (!pDesc) 
-		return( NS_ERROR_FAILURE);	
+	ImportModuleDesc *	pDesc;
+	PRInt32	count = 0;
+	for (PRInt32 i = 0; i < m_pModules->GetCount(); i++) {
+		pDesc = m_pModules->GetModuleDesc( i);
+		if (pDesc->SupportsThings( filter)) {
+			if (count == index) {
+				*_retval = nsCRT::strdup( pDesc->GetDescription());
+				return( NS_OK);
+			}
+			else
+				count++;
+		}
+	}
 	
-	*_retval = nsCRT::strdup( pDesc->GetDescription());
-	return( NS_OK);
+	return( NS_ERROR_FAILURE);
 }
 
 
 
 NS_IMETHODIMP nsImportService::GetModule( const char *filter, PRInt32 index, nsIImportModule **_retval)
 {
+    NS_PRECONDITION(_retval != nsnull, "null ptr");
+    if (!_retval)
+        return NS_ERROR_NULL_POINTER;
+	*_retval = nsnull;
+
     DoDiscover();
     if (!m_pModules)
 		return( NS_ERROR_FAILURE);
-	
+		
 	if ((index < 0) || (index >= m_pModules->GetCount()))
 		return( NS_ERROR_FAILURE);
 	
-	ImportModuleDesc *pDesc;
-	pDesc = m_pModules->GetModuleDesc( index);
-	if (!pDesc) 
-		return( NS_ERROR_FAILURE);
-	
-	*_retval = pDesc->GetModule();
+	ImportModuleDesc *	pDesc;
+	PRInt32	count = 0;
+	for (PRInt32 i = 0; i < m_pModules->GetCount(); i++) {
+		pDesc = m_pModules->GetModuleDesc( i);
+		if (pDesc->SupportsThings( filter)) {
+			if (count == index) {
+				*_retval = pDesc->GetModule();
+				break;
+			}
+			else
+				count++;
+		}
+	}
 	if (! (*_retval))
 		return( NS_ERROR_FAILURE);
+
 	return( NS_OK);
 }
 
@@ -545,13 +600,6 @@ nsresult nsImportService::LoadModuleInfo( char *pClsId, const char *pSupports)
 }
 
 
-void ImportModuleDesc::SetSupports( const char *pSupports)
-{
-	if (m_pSupports != nsnull)
-		nsCRT::free( m_pSupports);
-	m_pSupports = nsCRT::strdup( pSupports);
-}
-
 nsIImportModule *ImportModuleDesc::GetModule( PRBool keepLoaded)
 {
 	if (m_pModule) {
@@ -588,6 +636,33 @@ void ImportModuleDesc::ReleaseModule( void)
 	}
 }
 
+PRBool ImportModuleDesc::SupportsThings( const char *pThings)
+{
+	if (!pThings)
+		return( PR_TRUE);
+	if (!(*pThings))
+		return( PR_TRUE);
+
+	nsCString	thing = pThings;
+	nsCString	item;
+	PRInt32		idx;
+	
+	while ((idx = thing.FindChar( ',')) != -1) {
+		thing.Left( item, idx);
+		item.Trim( kWhitespace);
+		item.ToLowerCase();
+		if (item.Length() && (m_supports.Find( item) == -1))
+			return( PR_FALSE);
+		thing.Right( item, thing.Length() - idx - 1);
+		thing = item;
+	}
+	thing.Trim( kWhitespace);
+	thing.ToLowerCase();
+	if (thing.Length() && (m_supports.Find( thing) == -1))
+		return( PR_FALSE);
+	
+	return( PR_TRUE);
+}
 
 void nsImportModuleList::ClearList( void)
 {

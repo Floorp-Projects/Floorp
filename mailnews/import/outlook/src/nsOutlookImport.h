@@ -50,18 +50,7 @@ public:
 	// we suppport the nsIImportModule interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 
-
-	/* readonly attribute wstring name; */
-	NS_IMETHOD GetName(PRUnichar * *aName);
-	
-	/* readonly attribute wstring description; */
-	NS_IMETHOD GetDescription(PRUnichar * *aDescription);
-	
-	/* readonly attribute string supports; */
-	NS_IMETHOD GetSupports(char * *aSupports);
-	
-	/* nsISupports GetImportInterface (in string importType); */
-	NS_IMETHOD GetImportInterface(const char *importType, nsISupports **_retval);
+	NS_DECL_NSIIMPORTMODULE
 		
 protected:		
 };

@@ -47,6 +47,7 @@ static NS_DEFINE_CID( kMsgSendCID, NS_MSGSEND_CID);
 static NS_DEFINE_CID( kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
 static NS_DEFINE_CID( kMsgMailSessionCID,	NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID( kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID( kMsgAccountMgrCID, NS_MSGACCOUNTMANAGER_CID);
 
 
 // We need to do some calculations to set these numbers to something reasonable!
@@ -184,15 +185,13 @@ nsresult nsEudoraCompose::CreateIdentity( void)
 		return( NS_OK);
 
 	nsresult	rv;
-    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
+    NS_WITH_SERVICE(nsIMsgAccountManager, accMgr, kMsgAccountMgrCID, &rv);
     if (NS_FAILED(rv)) return( rv);
-	nsCOMPtr<nsIMsgAccountManager> accMgr;
-	rv = mailSession->GetAccountManager( getter_AddRefs( accMgr));
-	if (NS_FAILED( rv)) return( rv);
 	rv = accMgr->CreateIdentity( &m_pIdentity);
+	nsString	name = "Import Identity";
 	if (m_pIdentity) {
-		m_pIdentity->SetFullName( "Import Identity");
-		m_pIdentity->SetIdentityName( "Import Identity");
+		m_pIdentity->SetFullName( name.GetUnicode());
+		m_pIdentity->SetIdentityName( name.GetUnicode());
 		m_pIdentity->SetEmail( "import@import.service");
 	}
 	

@@ -219,6 +219,16 @@ NS_IMETHODIMP nsOutlookImport::GetSupports( char **supports)
 	return( NS_OK);
 }
 
+NS_IMETHODIMP nsOutlookImport::GetSupportsUpgrade( PRBool *pUpgrade)
+{
+    NS_PRECONDITION(pUpgrade != nsnull, "null ptr");
+    if (! pUpgrade)
+        return NS_ERROR_NULL_POINTER;
+       
+	*pUpgrade = PR_TRUE;
+	return( NS_OK);
+}
+
 NS_IMETHODIMP nsOutlookImport::GetImportInterface( const char *pImportType, nsISupports **ppInterface)
 {
     NS_PRECONDITION(pImportType != nsnull, "null ptr");

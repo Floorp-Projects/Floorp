@@ -33,7 +33,6 @@
 #include "nsIServiceManager.h"
 #include "nsIImportService.h"
 #include "nsOERegUtil.h"
-#include "nsIMsgMailSession.h"
 #include "nsIMsgAccountManager.h"
 #include "nsIMsgAccount.h"
 #include "nsIImportSettings.h"
@@ -47,8 +46,8 @@
 
 static NS_DEFINE_IID(kISupportsIID,        	NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kMsgMailSessionCID,	NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kSmtpServiceCID,		NS_SMTPSERVICE_CID); 
+static NS_DEFINE_CID(kMsgAccountMgrCID, NS_MSGACCOUNTMANAGER_CID);
 
 
 class OESettings {
@@ -209,18 +208,11 @@ PRBool OESettings::DoImport( nsIMsgAccount **ppAccount)
 
 	nsresult	rv;
 	
-    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
+	NS_WITH_SERVICE( nsIMsgAccountManager, accMgr, kMsgAccountMgrCID, &rv);
     if (NS_FAILED(rv)) {
-		IMPORT_LOG0( "*** Failed to create a mail session!\n");
+		IMPORT_LOG0( "*** Failed to create a account manager!\n");
 		return( PR_FALSE);
 	}
-	nsCOMPtr<nsIMsgAccountManager> accMgr;
-	rv = mailSession->GetAccountManager( getter_AddRefs( accMgr));
-	if (NS_FAILED( rv)) {
-		IMPORT_LOG0( "*** Failed to get account manager\n");
-		return( PR_FALSE);
-	}
-
 
 	HKEY		subKey;
 	nsCString	defMailName;
@@ -457,10 +449,16 @@ PRBool OESettings::IdentityMatches( nsIMsgIdentity *pIdent, const char *pName, c
 	//	and the email address is the same (if it is supplied)
 	//	and the reply to address is the same (if it is supplied)
 	//	then we match regardless of the full name.
+	PRUnichar *	ppIName = nsnull;
 
-	nsresult rv = pIdent->GetFullName( &pIName);
+	nsresult rv = pIdent->GetFullName( &ppIName);
 	rv = pIdent->GetEmail( &pIEmail);
 	rv = pIdent->GetReplyTo( &pIReply);
+	if (ppIName) {
+		nsString name = ppIName;
+		nsCRT::free( ppIName);
+		pIName = name.ToNewCString();
+	}
 
 	// for now, if it's the same server and reply to and email then it matches
 	if (pReply) {
@@ -496,8 +494,9 @@ void OESettings::SetIdentities( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc,
 		nsCOMPtr<nsIMsgIdentity>	id;
 		rv = pMgr->CreateIdentity( getter_AddRefs( id));
 		if (id) {
-			id->SetFullName( pName);
-			id->SetIdentityName( pName);
+			nsString fullName = pName;
+			id->SetFullName( fullName.GetUnicode());
+			id->SetIdentityName( fullName.GetUnicode());
 			id->SetEmail( pEmail);
 			if (pReply)
 				id->SetReplyTo( pReply);

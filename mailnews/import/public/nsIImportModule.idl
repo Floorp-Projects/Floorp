@@ -35,7 +35,8 @@ interface nsIImportModule : nsISupports
 	readonly attribute wstring 	name;
 	readonly attribute wstring 	description;
 	readonly attribute string 	supports;
-	
+	readonly attribute boolean	supportsUpgrade;
+		
 	nsISupports GetImportInterface( in string importType);
 };
 

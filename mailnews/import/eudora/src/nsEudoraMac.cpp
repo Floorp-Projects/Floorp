@@ -19,7 +19,6 @@
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsIMsgMailSession.h"
 #include "nsIMsgAccountManager.h"
 #include "nsIMsgAccount.h"
 #include "nsMsgBaseCID.h"
@@ -46,8 +45,8 @@
 static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kMsgMailSessionCID,	NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kSmtpServiceCID,		NS_SMTPSERVICE_CID); 
+static NS_DEFINE_CID(kMsgAccountMgrCID,		NS_MSGACCOUNTMANAGER_CID);
 
 
 static const char *	kWhitespace = "\b\t\r\n ";
@@ -585,15 +584,9 @@ PRBool nsEudoraMac::ImportSettings( nsIFileSpec *pIniFile, nsIMsgAccount **local
 	PRBool		result = PR_FALSE;
 	nsresult	rv;
 
-    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
+	NS_WITH_SERVICE( nsIMsgAccountManager, accMgr, kMsgAccountMgrCID, &rv);
     if (NS_FAILED(rv)) {
-		IMPORT_LOG0( "*** Failed to create a mail session!\n");
-		return( PR_FALSE);
-	}
-	nsCOMPtr<nsIMsgAccountManager> accMgr;
-	rv = mailSession->GetAccountManager( getter_AddRefs( accMgr));
-	if (NS_FAILED( rv)) {
-		IMPORT_LOG0( "*** Failed to get account manager\n");
+		IMPORT_LOG0( "*** Failed to create a account manager!\n");
 		return( PR_FALSE);
 	}
 
@@ -783,8 +776,9 @@ void nsEudoraMac::SetIdentities( nsIMsgAccountManager *accMgr, nsIMsgAccount *ac
 		nsCOMPtr<nsIMsgIdentity>	id;
 		rv = accMgr->CreateIdentity( getter_AddRefs( id));
 		if (id) {
-			id->SetFullName( *(pStrs[kFullNameStr]));
-			id->SetIdentityName( *(pStrs[kFullNameStr]));
+			nsString	fullName = *(pStrs[kFullNameStr]);
+			id->SetFullName( fullName.GetUnicode());
+			id->SetIdentityName( fullName.GetUnicode());
 			id->SetEmail( *(pStrs[kReturnAddressStr]));
 			acc->AddIdentity( id);
 
