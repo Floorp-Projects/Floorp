@@ -38,7 +38,7 @@
 
 CC = xlC_r
 CCC = xlC_r
-CFLAGS += -qarch=com -qnoansialias -qinline+$(INLINES) -DXP_UNIX -DAIX -DAIXV3 -DSYSV -DAIX4_3
+CFLAGS += -qarch=com -qnoansialias -qinline+$(INLINES) -DXP_UNIX -DAIX -DAIXV3 -DSYSV -DAIX4_3 -DHAVE_LOCALTIME_R
 
 RANLIB = ranlib
 
