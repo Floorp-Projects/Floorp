@@ -55,11 +55,11 @@ NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup* group)
     nsresult rv;
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
-    
+
     nsIChannel* channel;
     rv = serv->NewChannelFromURI("load", uri, nsnull, &channel);
     if (NS_FAILED(rv)) return rv;
-
+#if 0
     if (group) {
         rv = group->AddChannel(channel);
         if (NS_FAILED(rv)) {
@@ -67,6 +67,7 @@ NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup* group)
             return rv;
         }
     }
+#endif
     *result = channel;
     return rv;
 }
@@ -131,13 +132,13 @@ NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result)
 }
 
 nsresult
-NS_NewLoadGroup(nsILoadGroup* parent, nsILoadGroup* *result)
+NS_NewLoadGroup(nsILoadGroup* parent, nsISupports* outer, nsILoadGroup* *result)
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
     
-    return serv->NewLoadGroup(parent, result);
+    return serv->NewLoadGroup(parent, outer, result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
