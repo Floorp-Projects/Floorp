@@ -585,19 +585,21 @@ nsXBLEventHandler::RemoveEventHandlers()
   if (mNextHandler)
     mNextHandler->RemoveEventHandlers();
 
-  if (mEventName == NS_LITERAL_STRING("bindingattached") ||
-      mEventName == NS_LITERAL_STRING("bindingdetached")) {
-    // Release and drop.
-    NS_RELEASE_THIS();
-    return;
-  }
-
   // Figure out if we're using capturing or not.
   if (!mProtoHandler)
     return;
 
+  if (mEventName == NS_LITERAL_STRING("bindingattached") ||
+      mEventName == NS_LITERAL_STRING("bindingdetached")) {
+    // Release and drop.
+    mProtoHandler = nsnull;
+    NS_RELEASE_THIS();
+    return;
+  }
+
   nsCOMPtr<nsIContent> handlerElement;
   mProtoHandler->GetHandlerElement(getter_AddRefs(handlerElement));
+  mProtoHandler = nsnull;
   if (!handlerElement)
     return;
   
