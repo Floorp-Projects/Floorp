@@ -292,6 +292,7 @@ XULContentSinkImpl::XULContentSinkImpl()
       mTextLength(0),
       mTextSize(0),
       mConstrainSize(PR_TRUE),
+      mNameSpaceManager(nsnull),
       mInScript(PR_FALSE),
       mScriptLineNo(0),
       mDataSource(nsnull),
