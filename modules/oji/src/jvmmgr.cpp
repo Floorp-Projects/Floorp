@@ -1387,6 +1387,20 @@ JVM_ReleaseJNIEnv(JNIEnv* env)
     }
 }
 
+PR_IMPLEMENT(nsresult)
+JVM_SpendTime(PRUint32 timeMillis)
+{
+#ifdef XP_MAC
+	nsresult result = NS_ERROR_NOT_INITIALIZED;
+    nsIJVMPlugin* jvm = GetRunningJVM();
+    if (jvm != NULL)
+		result = jvm->SpendTime(timeMillis);
+	return result;
+#else
+	return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 PR_IMPLEMENT(PRBool)
 JVM_MaybeStartupLiveConnect()
 {
