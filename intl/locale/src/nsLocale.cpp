@@ -215,8 +215,3 @@ nsLocale::Hash_EnumerateCopy(PLHashEntry *he, PRIntn hashIndex, void* arg)
 
 	return (HT_ENUMERATE_NEXT);
 }
-
-
-
-
-	
