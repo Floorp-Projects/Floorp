@@ -124,7 +124,7 @@ function doResultClick(node)
 				if (target)	target = target.Value;
 				if (target)
 				{
-					var text = "<HTML><HEAD><TITLE>Search</TITLE><BASE TARGET='_BLANK'></HEAD><BODY><FONT POINT-SIZE='9'>";
+					var text = "<HTML><HEAD><TITLE>Search</TITLE><BASE TARGET='_blank'></HEAD><BODY><FONT POINT-SIZE='9'>";
 
 					if (banner)
 					{
