@@ -45,7 +45,7 @@
 
 #include "nsIPlatformCharset.h"
 #include "nsICharsetConverterManager.h"
-
+#include "nsIFileURL.h"
 
 //
 // copied over from nsMacControl since we it's not being built.
