@@ -37,14 +37,6 @@
 
 #define DEBUG_MENUSDEL 1
 //----------------------------------------------------------------------
-// Class IID's
-
-// IID's
-static NS_DEFINE_IID(kIDOMNodeIID,             NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kISupportsIID,            NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIXULCommandIID,          NS_IXULCOMMAND_IID);
-
-//----------------------------------------------------------------------
 nsXULCommand::nsXULCommand()
 {
   NS_INIT_REFCNT();
@@ -62,33 +54,7 @@ NS_IMPL_ADDREF(nsXULCommand)
 NS_IMPL_RELEASE(nsXULCommand)
 
 //----------------------------------------------------------------------
-nsresult
-nsXULCommand::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  //nsresult rv = NS_NOINTERFACE;
-
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (aIID.Equals(kIMenuListenerIID)) {
-    *aInstancePtr = (void*)(nsIMenuListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIXULCommandIID)) {
-    *aInstancePtr = (void*)(nsIXULCommand*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return NS_ERROR_NO_INTERFACE;
-}
+NS_IMPL_QUERY_INTERFACE2(nsXULCommand, nsIMenuListener, nsIXULCommand)
 
 
 //----------------------------------------------------------------------

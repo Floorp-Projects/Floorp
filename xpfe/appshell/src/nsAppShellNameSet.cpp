@@ -28,8 +28,7 @@
 #include "nsAppShellCIDs.h" 
 
 
-static NS_DEFINE_IID(kIScriptExternalNameSetIID, NS_ISCRIPTEXTERNALNAMESET_IID);
-static NS_DEFINE_IID(kXPConnectFactoryCID,       NS_XPCONNECTFACTORY_CID);
+static NS_DEFINE_CID(kXPConnectFactoryCID,       NS_XPCONNECTFACTORY_CID);
 
 nsAppShellNameSet::nsAppShellNameSet()
 {
@@ -40,7 +39,7 @@ nsAppShellNameSet::~nsAppShellNameSet()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsAppShellNameSet, kIScriptExternalNameSetIID);
+NS_IMPL_ISUPPORTS1(nsAppShellNameSet, nsIScriptExternalNameSet);
 
 
 

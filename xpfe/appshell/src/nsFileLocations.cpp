@@ -53,8 +53,6 @@
 #include "prenv.h"
 #include "prmem.h"
 
-static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
-
 // for profile manager
 static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 
@@ -531,8 +529,6 @@ void nsSpecialFileSpec::operator = (Type aType)
 // Implementation of nsIFileLocator
 //========================================================================================
 
-static NS_DEFINE_IID(kIFactoryIID,         NS_IFACTORY_IID);
-
 //========================================================================================
 class nsFileLocator : public nsIFileLocator
 //========================================================================================
@@ -569,7 +565,7 @@ nsFileLocator::~nsFileLocator()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsFileLocator, kIFileLocatorIID);
+NS_IMPL_ISUPPORTS1(nsFileLocator, nsIFileLocator);
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsFileLocator::GetFileLocation(
@@ -656,7 +652,7 @@ nsFileLocatorFactory::~nsFileLocatorFactory()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsFileLocatorFactory, kIFactoryIID);
+NS_IMPL_ISUPPORTS1(nsFileLocatorFactory, nsIFactory);
 
 //----------------------------------------------------------------------------------------
 nsresult nsFileLocatorFactory::CreateInstance(nsISupports *aOuter,

@@ -38,13 +38,7 @@
 }
 
 /* Define Class IDs */
-static NS_DEFINE_IID(kWebShellCID,         NS_WEB_SHELL_CID);
-
-
-/* Define Interface IDs */
-static NS_DEFINE_IID(kIFactoryIID,            NS_IFACTORY_IID);
-static NS_DEFINE_IID(kISessionHistoryIID,     NS_ISESSIONHISTORY_IID);
-static NS_DEFINE_IID(kIHistoryEntryIID,       NS_IHISTORY_ENTRY_IID);
+static NS_DEFINE_CID(kWebShellCID,         NS_WEB_SHELL_CID);
 
 
 // Advance declarations
@@ -797,7 +791,7 @@ nsSessionHistory::~nsSessionHistory()
 }
 
 //ISupports...
-NS_IMPL_ISUPPORTS(nsSessionHistory, kISessionHistoryIID);
+NS_IMPL_ISUPPORTS1(nsSessionHistory, nsISessionHistory);
 
 /**
   * Called to a new page is visited either through link click or
@@ -1425,7 +1419,7 @@ nsSessionHistoryFactory::~nsSessionHistoryFactory()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsSessionHistoryFactory, kIFactoryIID);
+NS_IMPL_ISUPPORTS1(nsSessionHistoryFactory, nsIFactory);
 
 
 nsresult

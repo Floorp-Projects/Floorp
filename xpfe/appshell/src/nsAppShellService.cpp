@@ -72,22 +72,11 @@
 #include "jsapi.h"
 
 /* Define Class IDs */
-static NS_DEFINE_IID(kAppShellCID,          NS_APPSHELL_CID);
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
+static NS_DEFINE_CID(kAppShellCID,          NS_APPSHELL_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
-static NS_DEFINE_IID(kMetaCharsetCID, NS_META_CHARSET_CID);
-
-
-/* Define Interface IDs */
-
-static NS_DEFINE_IID(kIFactoryIID,           NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-static NS_DEFINE_IID(kIAppShellIID,          NS_IAPPSHELL_IID);
-static NS_DEFINE_IID(kIWebShellWindowIID,    NS_IWEBSHELL_WINDOW_IID);
-static NS_DEFINE_IID(kIScriptNameSetRegistryIID, NS_ISCRIPTNAMESETREGISTRY_IID);
-static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
-static NS_DEFINE_IID(kIMetaCharsetServiceIID, NS_IMETA_CHARSET_SERVICE_IID);
+static NS_DEFINE_CID(kMetaCharsetCID, NS_META_CHARSET_CID);
 
 
 // copied from nsEventQueue.cpp
@@ -193,7 +182,7 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
   // Create the Event Queue for the UI thread...
   nsIEventQueueService* eventQService;
   rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                    kIEventQueueServiceIID,
+                                    NS_GET_IID(nsIEventQueueService),
                                     (nsISupports **)&eventQService);
   if (NS_OK == rv) {
     // XXX: What if this fails?
@@ -203,7 +192,7 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
   // Register the nsAppShellNameSet with the global nameset registry...
   nsIScriptNameSetRegistry *registry;
   rv = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
-                                    kIScriptNameSetRegistryIID,
+                                    NS_GET_IID(nsIScriptNameSetRegistry),
                                     (nsISupports **)&registry);
   if (NS_FAILED(rv)) {
     goto done;
@@ -222,7 +211,7 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
 
   nsIMetaCharsetService* metacharset;
   rv = nsServiceManager::GetService(kMetaCharsetCID,
-                                    kIMetaCharsetServiceIID,
+                                    NS_GET_IID(nsIMetaCharsetService),
                                      (nsISupports **) &metacharset);
    if(NS_FAILED(rv)) {
       goto done;
@@ -234,7 +223,7 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
    rv = nsServiceManager::ReleaseService(kMetaCharsetCID, metacharset);
 
   // Create widget application shell
-  rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID,
+  rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, NS_GET_IID(nsIAppShell),
                                     (void**)&mAppShell);
   if (NS_FAILED(rv)) {
     goto done;
@@ -252,7 +241,7 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
   RegisterObserver(PR_TRUE);
  
 // enable window mediation
-  rv = nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID,
+  rv = nsServiceManager::GetService(kWindowMediatorCID, NS_GET_IID(nsIWindowMediator),
                                    (nsISupports**) &mWindowMediator);
 
 //  CreateHiddenWindow();	// rjc: now require this to be explicitly called
@@ -627,7 +616,7 @@ nsAppShellService::JustCreateTopWindow(nsIWebShellWindow *aParent,
     if (NS_SUCCEEDED(rv)) {
 
       // this does the AddRef of the return value
-      rv = window->QueryInterface(kIWebShellWindowIID, (void **) aResult);
+      rv = window->QueryInterface(NS_GET_IID(nsIWebShellWindow), (void **) aResult);
 #if 0
       // If intrinsically sized, don't show until we have the size figured out
       // (6 Dec 99: this is causing new windows opened from anchor links to
@@ -788,20 +777,19 @@ nsAppShellService::RunModalDialog(
 /*
  * Register a new top level window (created elsewhere)
  */
-static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
 NS_IMETHODIMP
 nsAppShellService::RegisterTopLevelWindow(nsIWebShellWindow* aWindow)
 {
   nsresult rv;
 
   nsIWebShellContainer* wsc;
-  rv = aWindow->QueryInterface(kIWebShellContainerIID, (void **) &wsc);
+  rv = aWindow->QueryInterface(NS_GET_IID(nsIWebShellContainer), (void **) &wsc);
   if (NS_SUCCEEDED(rv)) {
     mWindowList->AppendElement(wsc);
     NS_RELEASE(wsc);
     
     nsIWindowMediator* service;
-		if (NS_SUCCEEDED(nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID, (nsISupports**) &service ) ) )
+		if (NS_SUCCEEDED(nsServiceManager::GetService(kWindowMediatorCID, NS_GET_IID(nsIWindowMediator), (nsISupports**) &service ) ) )
 		{
 			service->RegisterWindow( aWindow);
 			nsServiceManager::ReleaseService(kWindowMediatorCID, service);
@@ -825,7 +813,7 @@ nsAppShellService::UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
 	}
   
   nsIWindowMediator* service;
-  if (NS_SUCCEEDED(nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID, (nsISupports**) &service ) ) )
+  if (NS_SUCCEEDED(nsServiceManager::GetService(kWindowMediatorCID, NS_GET_IID(nsIWindowMediator), (nsISupports**) &service ) ) )
   {
 	service->UnregisterWindow( aWindow );
 	nsServiceManager::ReleaseService(kWindowMediatorCID, service);
@@ -834,7 +822,7 @@ nsAppShellService::UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
   nsresult rv;
 
   nsIWebShellContainer* wsc;
-  rv = aWindow->QueryInterface(kIWebShellContainerIID, (void **) &wsc);
+  rv = aWindow->QueryInterface(NS_GET_IID(nsIWebShellContainer), (void **) &wsc);
   if (NS_SUCCEEDED(rv)) {
     mWindowList->RemoveElement(wsc);
     NS_RELEASE(wsc);

@@ -86,7 +86,6 @@
 
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID);
-static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,         NS_RDFXMLDATASOURCE_CID);
 
 static const char kURINC_SearchEngineRoot[]           = "NC:SearchEngineRoot";

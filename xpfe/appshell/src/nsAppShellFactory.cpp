@@ -39,12 +39,12 @@
 nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
 nsresult NS_NewXPConnectFactoryFactory(nsIFactory** aResult);
 
-static NS_DEFINE_IID(kAppShellServiceCID,  NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_IID(kCmdLineServiceCID,   NS_COMMANDLINE_SERVICE_CID);
-static NS_DEFINE_IID(kProtocolHelperCID,   NS_PROTOCOL_HELPER_CID);
-static NS_DEFINE_IID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
-static NS_DEFINE_IID(kFileLocatorCID,      NS_FILELOCATOR_CID);
-static NS_DEFINE_IID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+static NS_DEFINE_CID(kAppShellServiceCID,  NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_CID(kCmdLineServiceCID,   NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_CID(kProtocolHelperCID,   NS_PROTOCOL_HELPER_CID);
+static NS_DEFINE_CID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
+static NS_DEFINE_CID(kFileLocatorCID,      NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kWindowMediatorCID,   NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kSessionHistoryCID,   NS_SESSIONHISTORY_CID);
 

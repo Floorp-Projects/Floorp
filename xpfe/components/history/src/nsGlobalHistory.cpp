@@ -76,8 +76,6 @@ static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kGlobalHistoryCID,     NS_GLOBALHISTORY_CID);
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
- 
-static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 
 #ifdef MOZ_BRPROF
 static NS_DEFINE_CID(kBrowsingProfileCID,   NS_BROWSINGPROFILE_CID);
@@ -547,31 +545,7 @@ NS_NewGlobalHistory(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
 NS_IMPL_ADDREF(nsGlobalHistory);
 NS_IMPL_RELEASE(nsGlobalHistory);
-
-NS_IMETHODIMP
-nsGlobalHistory::QueryInterface(REFNSIID aIID, void** aResult)
-{
-  NS_PRECONDITION(aResult != nsnull, "null ptr");
-  if (! aResult)
-    return NS_ERROR_NULL_POINTER;
-
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-  if (aIID.Equals(nsIGlobalHistory::GetIID()) ||
-      aIID.Equals(kISupportsIID)) {
-    *aResult = NS_STATIC_CAST(nsIGlobalHistory*, this);
-  }
-  else if (aIID.Equals(nsIRDFDataSource::GetIID())) {
-    *aResult = NS_STATIC_CAST(nsIRDFDataSource*, this);
-  }
-  else {
-    *aResult = nsnull;
-    return NS_NOINTERFACE;
-  }
-
-  NS_ADDREF(this);
-  return NS_OK;
-}
+NS_IMPL_QUERY_INTERFACE2(nsGlobalHistory, nsIGlobalHistory, nsIRDFDataSource)
 
 //----------------------------------------------------------------------
 //

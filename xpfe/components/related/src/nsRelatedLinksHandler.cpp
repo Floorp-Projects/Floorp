@@ -68,7 +68,7 @@ static NS_DEFINE_CID(kRelatedLinksHandlerCID,     NS_RELATEDLINKSHANDLER_CID);
 static NS_DEFINE_CID(kComponentManagerCID,        NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGenericFactoryCID,          NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_IID(kPrefCID,                    NS_PREF_CID);
+static NS_DEFINE_CID(kPrefCID,                    NS_PREF_CID);
 
 static const char kURINC_RelatedLinksRoot[] = "NC:RelatedLinks";
 
@@ -747,35 +747,7 @@ NS_NewRelatedLinksHandler(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
 NS_IMPL_ADDREF(RelatedLinksHandlerImpl);
 NS_IMPL_RELEASE(RelatedLinksHandlerImpl);
-
-
-NS_IMETHODIMP
-RelatedLinksHandlerImpl::QueryInterface(REFNSIID aIID, void** aResult)
-{
-	NS_PRECONDITION(aResult != nsnull, "null ptr");
-	if (! aResult)
-		return NS_ERROR_NULL_POINTER;
-
-	static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-	if (aIID.Equals(NS_GET_IID(nsIRelatedLinksHandler)) ||
-	    aIID.Equals(kISupportsIID))
-	{
-		*aResult = NS_STATIC_CAST(nsIRelatedLinksHandler*, this);
-	}
-	else if (aIID.Equals(NS_GET_IID(nsIRDFDataSource))) {
-		*aResult = NS_STATIC_CAST(nsIRDFDataSource*, this);
-	}
-	else
-	{
-		*aResult = nsnull;
-		return NS_NOINTERFACE;
-	}
-
-	// If we get here, we know the QI succeeded
-	NS_ADDREF(this);
-	return NS_OK;
-}
+NS_IMPL_QUERY_INTERFACE2(RelatedLinksHandlerImpl, nsIRelatedLinksHandler, nsIRDFDataSource)
 
 
 

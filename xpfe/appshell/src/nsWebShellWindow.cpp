@@ -112,16 +112,16 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIPopupSetFrame.h"
 
 /* Define Class IDs */
-static NS_DEFINE_IID(kWindowCID,           NS_WINDOW_CID);
-static NS_DEFINE_IID(kWebShellCID,         NS_WEB_SHELL_CID);
-static NS_DEFINE_IID(kAppShellServiceCID,  NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_IID(kAppShellCID,         NS_APPSHELL_CID);
+static NS_DEFINE_CID(kWindowCID,           NS_WINDOW_CID);
+static NS_DEFINE_CID(kWebShellCID,         NS_WEB_SHELL_CID);
+static NS_DEFINE_CID(kAppShellServiceCID,  NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_CID(kAppShellCID,         NS_APPSHELL_CID);
 
 #include "nsWidgetsCID.h"
-static NS_DEFINE_IID(kMenuBarCID,          NS_MENUBAR_CID);
-static NS_DEFINE_IID(kMenuCID,             NS_MENU_CID);
-static NS_DEFINE_IID(kMenuItemCID,         NS_MENUITEM_CID);
-static NS_DEFINE_IID(kContextMenuCID,      NS_CONTEXTMENU_CID);
+static NS_DEFINE_CID(kMenuBarCID,          NS_MENUBAR_CID);
+static NS_DEFINE_CID(kMenuCID,             NS_MENU_CID);
+static NS_DEFINE_CID(kMenuItemCID,         NS_MENUITEM_CID);
+static NS_DEFINE_CID(kContextMenuCID,      NS_CONTEXTMENU_CID);
 
 static NS_DEFINE_CID(kPrefCID,             NS_PREF_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -130,34 +130,10 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
-static NS_DEFINE_IID(kIDocumentLoaderFactoryIID, NS_IDOCUMENTLOADERFACTORY_IID);
 static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
-
-/* Define Interface IDs */
-static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIWidgetIID,             NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
-
-static NS_DEFINE_IID(kIAppShellServiceIID,    NS_IAPPSHELL_SERVICE_IID);
-static NS_DEFINE_IID(kIAppShellIID,           NS_IAPPSHELL_IID);
-static NS_DEFINE_IID(kIDocumentViewerIID,     NS_IDOCUMENT_VIEWER_IID);
-static NS_DEFINE_IID(kIDOMDocumentIID,        NS_IDOMDOCUMENT_IID);
-static NS_DEFINE_IID(kIDOMNodeIID,            NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIDOMElementIID,         NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIDOMCharacterDataIID,   NS_IDOMCHARACTERDATA_IID);
-
-static NS_DEFINE_IID(kIMenuIID,        NS_IMENU_IID);
-static NS_DEFINE_IID(kIMenuBarIID,     NS_IMENUBAR_IID);
-static NS_DEFINE_IID(kIMenuItemIID,    NS_IMENUITEM_IID);
-static NS_DEFINE_IID(kIContextMenuIID, NS_ICONTEXTMENU_IID);
-static NS_DEFINE_IID(kIXULCommandIID,  NS_IXULCOMMAND_IID);
-static NS_DEFINE_IID(kIContentIID,     NS_ICONTENT_IID);
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-
-static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
-
-static NS_DEFINE_IID(kIXULPopupListenerIID, NS_IXULPOPUPLISTENER_IID);
 static NS_DEFINE_CID(kXULPopupListenerCID, NS_XULPOPUPLISTENER_CID);
+
+
 
 #ifdef DEBUG_rods
 #define DEBUG_MENUSDEL 1
@@ -295,7 +271,7 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
   nsRect r(0, 0, aInitialWidth, aInitialHeight);
   
   // Create top level window
-  rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
+  rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, NS_GET_IID(nsIWidget),
                                     (void**)&mWindow);
   if (NS_OK != rv) {
     return rv;
@@ -330,7 +306,7 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
 
   // Create web shell
   rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
-                                    kIWebShellIID,
+                                    NS_GET_IID(nsIWebShell),
                                     (void**)&mWebShell);
   if (NS_OK != rv) {
     return rv;
@@ -661,11 +637,11 @@ NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar,
 {
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
+  nsresult rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, NS_GET_IID(nsIMenu), (void**)&pnsMenu);
   if (NS_OK == rv) {
     // Call Create
     nsISupports * supports = nsnull;
-    aMenuBar->QueryInterface(kISupportsIID, (void**) &supports);
+    aMenuBar->QueryInterface(NS_GET_IID(nsISupports), (void**) &supports);
     pnsMenu->Create(supports, aMenuName);
     NS_RELEASE(supports);
 
@@ -741,7 +717,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
   menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
+  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, NS_GET_IID(nsIMenuItem), (void**)&pnsMenuItem);
   if (NS_OK == rv) {
     // Create MenuDelegate - this is the intermediator inbetween 
     // the DOM node and the nsIMenuItem
@@ -811,7 +787,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
     
     // Make nsMenuItem a child of nsMenu
     nsISupports * supports = nsnull;
-    pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
+    pnsMenuItem->QueryInterface(NS_GET_IID(nsISupports), (void**) &supports);
     pParentMenu->AddItem(supports);
     NS_RELEASE(supports);
           
@@ -834,7 +810,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
     }
     
     nsIXULCommand * icmd;
-    if (NS_OK == menuDelegate->QueryInterface(kIXULCommandIID, (void**) &icmd)) {
+    if (NS_OK == menuDelegate->QueryInterface(NS_GET_IID(nsIXULCommand), (void**) &icmd)) {
       nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(menuDelegate));
 
       if (listener) 
@@ -872,11 +848,11 @@ void nsWebShellWindow::LoadSubMenu(
 
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
+  nsresult rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, NS_GET_IID(nsIMenu), (void**)&pnsMenu);
   if (NS_OK == rv) {
     // Call Create
     nsISupports * supports = nsnull;
-    pParentMenu->QueryInterface(kISupportsIID, (void**) &supports);
+    pParentMenu->QueryInterface(NS_GET_IID(nsISupports), (void**) &supports);
     pnsMenu->Create(supports, menuName);
     NS_RELEASE(supports); // Balance QI
 
@@ -888,7 +864,7 @@ void nsWebShellWindow::LoadSubMenu(
     // Make nsMenu a child of parent nsMenu
     //pParentMenu->AddMenu(pnsMenu);
     supports = nsnull;
-    pnsMenu->QueryInterface(kISupportsIID, (void**) &supports);
+    pnsMenu->QueryInterface(NS_GET_IID(nsISupports), (void**) &supports);
 	pParentMenu->AddItem(supports);
 	NS_RELEASE(supports);
 
@@ -963,12 +939,12 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
   nsCOMPtr<nsIDOMNode> menubarNode(FindNamedDOMNode(nsAutoString("menubar"), window, endCount, 1));
   if (menubarNode) {
     nsIMenuBar * pnsMenuBar = nsnull;
-    rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, kIMenuBarIID, (void**)&pnsMenuBar);
+    rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, NS_GET_IID(nsIMenuBar), (void**)&pnsMenuBar);
     if (NS_OK == rv) {
       if (nsnull != pnsMenuBar) {      
         // set pnsMenuBar as a nsMenuListener on aParentWindow
         nsCOMPtr<nsIMenuListener> menuListener;
-        pnsMenuBar->QueryInterface(kIMenuListenerIID, getter_AddRefs(menuListener));
+        pnsMenuBar->QueryInterface(NS_GET_IID(nsIMenuListener), getter_AddRefs(menuListener));
 
         //fake event
         nsMenuEvent fake;
@@ -1043,14 +1019,14 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
   nsCOMPtr<nsIDOMNode> menubarNode(FindNamedDOMNode(nsAutoString("menubar"), window, endCount, 1));
   if (menubarNode) {
     nsIMenuBar * pnsMenuBar = nsnull;
-    rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, kIMenuBarIID, (void**)&pnsMenuBar);
+    rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, NS_GET_IID(nsIMenuBar), (void**)&pnsMenuBar);
     if (NS_OK == rv) {
       if (nsnull != pnsMenuBar) {
         pnsMenuBar->Create(aParentWindow);
       
         // set pnsMenuBar as a nsMenuListener on aParentWindow
         nsCOMPtr<nsIMenuListener> menuListener;
-        pnsMenuBar->QueryInterface(kIMenuListenerIID, getter_AddRefs(menuListener));
+        pnsMenuBar->QueryInterface(NS_GET_IID(nsIMenuListener), getter_AddRefs(menuListener));
         aParentWindow->AddMenuListener(menuListener);
 
         nsCOMPtr<nsIDOMNode> menuNode;
@@ -1107,10 +1083,10 @@ void nsWebShellWindow::DoContextMenu(
 {
   if (aMenuNode) {
     nsIContextMenu * pnsContextMenu;
-    nsresult rv = nsComponentManager::CreateInstance(kContextMenuCID, nsnull, kIContextMenuIID, (void**)&pnsContextMenu);
+    nsresult rv = nsComponentManager::CreateInstance(kContextMenuCID, nsnull, NS_GET_IID(nsIContextMenu), (void**)&pnsContextMenu);
     if (NS_SUCCEEDED(rv) && pnsContextMenu) {
         nsISupports * supports;
-        aParentWindow->QueryInterface(kISupportsIID, (void**) &supports);
+        aParentWindow->QueryInterface(NS_GET_IID(nsISupports), (void**) &supports);
         pnsContextMenu->Create(supports, aPopupAlignment, aAnchorAlignment);
         NS_RELEASE(supports);
         pnsContextMenu->SetLocation(aX,aY);
@@ -1122,7 +1098,7 @@ void nsWebShellWindow::DoContextMenu(
         
         // Construct and show menu
         nsIMenuListener * listener;
-        pnsContextMenu->QueryInterface(kIMenuListenerIID, (void**) &listener);
+        pnsContextMenu->QueryInterface(NS_GET_IID(nsIMenuListener), (void**) &listener);
         
         // Dynamically construct and track the menu
         listener->MenuSelected(*aMenuEvent);
@@ -1300,7 +1276,7 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
       browser->SetChrome(aChromeMask);
 
     // Spin into the modal loop.
-    rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID, (void**)&subshell);
+    rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, NS_GET_IID(nsIAppShell), (void**)&subshell);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -1442,7 +1418,7 @@ nsWebShellWindow::ShowModalInternal()
   nsIAppShell *subshell;
 
   // spin up a new application shell: event loops live there
-  rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID, (void**)&subshell);
+  rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, NS_GET_IID(nsIAppShell), (void**)&subshell);
   if (NS_FAILED(rv))
     return rv;
 
@@ -2281,7 +2257,7 @@ nsWebShellWindow::AttributeChanged(nsIDocument *aDocument,
     //nsCOMPtr<nsIContent> content(do_QueryInterface(node));
     // Doing this for the must speed
     nsIContent * content;
-    if (NS_OK == node->QueryInterface(kIContentIID, (void**) &content)) {
+    if (NS_OK == node->QueryInterface(NS_GET_IID(nsIContent), (void**) &content)) {
       if (content == aContent) {
         nsAutoString attr;
         aAttribute->ToString(attr);

@@ -64,14 +64,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #define WIDGET_IS_TYPE(macro_widget_string,macro_in_string) ((macro_widget_string).Compare((macro_in_string), PR_TRUE) == 0)
 
 // Globals - how many K are we wasting by putting these in every file?
-static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
-
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
-static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
-
-static NS_DEFINE_IID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_CID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
 #define CHAR_VAL_BUF_LEN 32

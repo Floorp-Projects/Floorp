@@ -30,11 +30,7 @@
 
 
 /* Define Class IDs */
-static NS_DEFINE_IID(kCmdLineServiceCID,         NS_COMMANDLINE_SERVICE_CID);
-
-/* Define Interface IDs */
-
-static NS_DEFINE_IID(kIFactoryIID,         NS_IFACTORY_IID);
+static NS_DEFINE_CID(kCmdLineServiceCID,         NS_COMMANDLINE_SERVICE_CID);
 
 
 class nsCmdLineService : public nsICmdLineService
@@ -323,7 +319,7 @@ nsCmdLineServiceFactory::~nsCmdLineServiceFactory()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsCmdLineServiceFactory, kIFactoryIID);
+NS_IMPL_ISUPPORTS1(nsCmdLineServiceFactory, nsIFactory);
 
 
 nsresult
