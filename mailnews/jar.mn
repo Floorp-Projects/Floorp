@@ -48,7 +48,6 @@ packages/messenger.jar:
     messenger/content/pref-viewing_messages.xul                                (base/prefs/resources/content/pref-viewing_messages.xul)
     messenger/content/pref-receipts.xul                                        (base/prefs/resources/content/pref-receipts.xul)
     messenger/content/custreceipt.xul                                          (base/prefs/resources/content/custreceipt.xul)
-    messenger/content/pref-diskspace.xul                                       (base/prefs/resources/content/pref-diskspace.xul)
     messenger/content/AccountWizard.xul                                        (base/prefs/resources/content/AccountWizard.xul)
     messenger/content/AccountWizard.js                                         (base/prefs/resources/content/AccountWizard.js)
     messenger/content/aw-wizardAdapter.js                                      (base/prefs/resources/content/aw-wizardAdapter.js)
@@ -93,7 +92,6 @@ packages/messenger.jar:
     messenger/content/shareglue.js                                             (base/resources/content/shareglue.js)
     messenger/content/subscribe.xul                                            (base/resources/content/subscribe.xul)
     messenger/content/subscribe.js                                             (base/resources/content/subscribe.js)
-    messenger/content/sidebar-messenger.xul                                    (base/resources/content/sidebar-messenger.xul)
     messenger/content/sidebar-messenger.rdf                                    (base/resources/content/sidebar-messenger.rdf)
     messenger/content/newFolderNameDialog.xul                                  (base/resources/content/newFolderNameDialog.xul)
     messenger/content/newFolderNameDialog.js                                   (base/resources/content/newFolderNameDialog.js)
@@ -135,6 +133,7 @@ packages/messenger.jar:
     messenger/content/messengercompose/addressingWidgetOverlay.xul             (compose/resources/content/addressingWidgetOverlay.xul)
     messenger/content/messengercompose/askSendFormat.js                        (compose/resources/content/askSendFormat.js)
     messenger/content/messengercompose/askSendFormat.xul                       (compose/resources/content/askSendFormat.xul)
+    messenger/content/messengercompose/mailComposeBindings.xml                 (compose/resources/content/mailComposeBindings.xml)
     messenger/content/importDialog.js                                          (import/resources/content/importDialog.js)
     messenger/content/importDialog.xul                                         (import/resources/content/importDialog.xul)
     messenger/content/importProgress.xul                                       (import/resources/content/importProgress.xul)
@@ -238,6 +237,7 @@ locales/en-US.jar:
     messenger/locale/addressbook/pref-addressing.dtd              (addrbook/prefs/resources/locale/en-US/pref-addressing.dtd)
     messenger/locale/mime.properties                              (mime/resources/mime.properties)
     messenger/locale/mimeheader.properties                        (mime/resources/mimeheader.properties)
+    messenger/locale/vcard.properties                             (mime/cthandlers/resources/vcard.properties)
 
 skins/modern.jar:
     messenger/skin/abookstat.gif   (mime/abstatus/resources/skin/abookstat.gif)

@@ -1,0 +1,6 @@
+packages/core.jar:
+        necko/content/redirect_loop.xul  (content/redirect_loop.xul)
+
+locales/en-US.jar:
+        necko/locale/necko.properties   (locale/en-US/necko.properties)
+        necko/locale/redirect_loop.dtd  (locale/en-US/redirect_loop.dtd)

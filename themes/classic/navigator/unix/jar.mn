@@ -1,3 +1,3 @@
-skins\classic.jar:
-       navicator\skin\navigator.css
-       navicator\skin\pageInfo.css
+skins/classic.jar:
+       navigator/skin/navigator.css
+       navigator/skin/pageInfo.css

@@ -1,5 +1,5 @@
 packages/widget-toolkit.jar:
-	global/content/manifest.rdf                 (resources/content/manifest.rdf)
+	manifest.rdf                                (resources/content/manifest.rdf)
 	global/content/hiddenWindow.xul             (resources/content/hiddenWindow.xul) 
 	global/content/globalOverlay.xul            (resources/content/globalOverlay.xul) 
 	global/content/globalOverlay.js             (resources/content/globalOverlay.js) 
@@ -40,12 +40,13 @@ packages/widget-toolkit.jar:
 	global/content/nsJSComponentManager.js      (resources/content/nsJSComponentManager.js) 
 	global/content/nsUserSettings.js            (resources/content/nsUserSettings.js) 
 	global/content/xul.css                      (resources/content/xul.css) 
-	global/skin/htmlBindings.xml                (resources/skin/htmlBindings.xml)
-	global/skin/xulBindings.xml                 (resources/skin/xulBindings.xml)
-	global/skin/radioBindings.xml               (resources/skin/radioBindings.xml)
-	global/skin/treeBindings.xml                (resources/skin/treeBindings.xml)
-	global/skin/menulistBindings.xml            (resources/skin/menulistBindings.xml)
-	global/skin/xul.css                         (resources/skin/xul.css)
+	global/content/toolbarBindings.xml          (resources/content/toolbarBindings.xml) 
+	global/content/htmlBindings.xml             (resources/skin/htmlBindings.xml)
+	global/content/xulBindings.xml              (resources/skin/xulBindings.xml)
+	global/content/radioBindings.xml            (resources/skin/radioBindings.xml)
+	global/content/treeBindings.xml             (resources/skin/treeBindings.xml)
+	global/content/menulistBindings.xml         (resources/skin/menulistBindings.xml)
+	global/content/xul.css                      (resources/skin/xul.css)
 
 locales/en-US.jar:
     global/locale/intl.css                    (resources/locale/en-US/intl.css) 
