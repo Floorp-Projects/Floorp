@@ -1482,6 +1482,11 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
                                      nsIMsgCopyServiceListener* listener, PRBool allowUndo)
 {
   nsresult rv = NS_ERROR_FAILURE;
+  if (!messages) return rv;
+  PRUint32 messageCount;
+  rv = messages->Count(&messageCount);
+  if (messageCount == 0) return rv;
+
   PRBool isTrashFolder = mFlags & MSG_FOLDER_FLAG_TRASH;
   if (!deleteStorage && !isTrashFolder)
   {
@@ -1513,10 +1518,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
       rv = GetDatabase(msgWindow);
       if(NS_SUCCEEDED(rv))
       {
-          PRUint32 messageCount;
           nsCOMPtr<nsISupports> msgSupport;
-          rv = messages->Count(&messageCount);
-
           DeleteMsgsOnPop3Server(messages);
 
           if (NS_FAILED(rv)) return rv;
