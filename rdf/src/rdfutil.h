@@ -22,7 +22,9 @@
 
 #include "prtypes.h"
 
+class nsIRDFCursor;
 class nsIRDFDataBase;
+class nsIRDFDataSource;
 class nsIRDFNode;
 class nsIRDFResourceManager;
 class nsString;
@@ -41,7 +43,7 @@ rdf_IsOrdinalProperty(const nsIRDFNode* property);
  */
 PRBool
 rdf_IsContainer(nsIRDFResourceManager* mgr,
-                nsIRDFDataBase* db,
+                nsIRDFDataSource* db,
                 nsIRDFNode* resource);
 
 /**
@@ -102,42 +104,79 @@ rdf_Assert(nsIRDFResourceManager* mgr,
            const nsString& predicateURI,
            nsIRDFNode* object);
 
-
+/**
+ * Construct a new, "anonymous" node; that is, a node with an internal
+ * resource URI.
+ */
 nsresult
 rdf_CreateAnonymousNode(nsIRDFResourceManager* mgr,
                         nsIRDFNode*& result);
 
 
+/**
+ * Create a bag resource.
+ */
 nsresult
 rdf_CreateBag(nsIRDFResourceManager* mgr,
               nsIRDFDataSource* ds,
               nsIRDFNode*& result);
 
-
+/**
+ * Create a sequence resource.
+ */
 nsresult
-rdf_ContainerGetNextValue(nsIRDFResourceManager* mgr,
-                          nsIRDFDataSource* ds,
-                          nsIRDFNode* container,
-                          PRInt32& result);
+rdf_CreateSequence(nsIRDFResourceManager* mgr,
+                   nsIRDFDataSource* ds,
+                   nsIRDFNode*& result);
+
+/**
+ * Create an alternation resource.
+ */
+nsresult
+rdf_CreateAlternation(nsIRDFResourceManager* mgr,
+                      nsIRDFDataSource* ds,
+                      nsIRDFNode*& result);
 
 
+/**
+ * Add an element to the container.
+ */
 nsresult
 rdf_ContainerAddElement(nsIRDFResourceManager* mgr,
                         nsIRDFDataSource* ds,
                         nsIRDFNode* container,
                         nsIRDFNode* element);
 
+/**
+ * Add an element to the container.
+ */
 nsresult
 rdf_ContainerAddElement(nsIRDFResourceManager* mgr,
                         nsIRDFDataSource* ds,
                         nsIRDFNode* container,
                         const nsString& literalOrURI);
 
+/**
+ * Return <tt>PR_TRUE</tt> if the specified resources are equal.
+ */
 PRBool
 rdf_ResourceEquals(nsIRDFResourceManager* mgr,
                    nsIRDFNode* resource,
                    const nsString& uri);
 
+
+/**
+ * Create a cursor on a container that enumerates its contents in
+ * order
+ */
+nsresult
+NS_NewContainerCursor(nsIRDFDataSource* ds,
+                      nsIRDFNode* container,
+                      nsIRDFCursor*& cursor);
+
+
+// XXX need to move nsEmptyCursor stuff here.
+                       
 #endif // rdfutil_h__
 
 
