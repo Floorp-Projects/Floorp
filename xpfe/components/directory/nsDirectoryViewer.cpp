@@ -93,9 +93,13 @@ static NS_DEFINE_CID(kTextToSubURICID,           NS_TEXTTOSUBURI_CID);
 class nsHTTPIndex : public nsIHTTPIndex, public nsIRDFDataSource
 {
 private:
-	static nsIRDFResource		*kNC_Child;
-	static nsIRDFResource		*kNC_loading;
-    static nsIRDFLiteral        *kTrueLiteral;
+
+	// note: these are NOT statics due to the native of nsHTTPIndex
+	// where it may or may not be treated as a singleton
+
+	nsIRDFResource		*kNC_Child;
+	nsIRDFResource		*kNC_loading;
+	nsIRDFLiteral		*kTrueLiteral;
 
 protected:
 	// We grab a reference to the content viewer container (which
@@ -105,12 +109,13 @@ protected:
 	// an OnStartRequest() notification
 
 	nsCOMPtr<nsIRDFDataSource>	mInner;
-    nsCOMPtr<nsISupportsArray>	mConnectionList;
-    nsCOMPtr<nsITimer>		    mTimer;
+	nsCOMPtr<nsISupportsArray>	mConnectionList;
+	nsCOMPtr<nsITimer>		mTimer;
 	nsISupports			*mContainer;	// [WEAK]
 	nsCString			mBaseURL;
 
 			    nsHTTPIndex(nsISupports* aContainer);
+	nsresult	CommonInit(void);
 	nsresult 	Init(nsIURI* aBaseURL);
 	PRBool		isWellknownContainerURI(nsIRDFResource *r);
 static	void	FireTimer(nsITimer* aTimer, void* aClosure);
@@ -204,11 +209,6 @@ public:
 
 
 nsIRDFService		*gRDF = nsnull;
-PRInt32			gRefCnt = 0;
-
-nsIRDFResource	*nsHTTPIndex::kNC_Child;
-nsIRDFResource	*nsHTTPIndex::kNC_loading;
-nsIRDFLiteral   *nsHTTPIndex::kTrueLiteral;
 
 nsrefcnt nsHTTPIndexParser::gRefCntParser = 0;
 nsIRDFService* nsHTTPIndexParser::gRDF;
@@ -931,7 +931,7 @@ nsHTTPIndexParser::ParseInt(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** 
 //
 
 nsHTTPIndex::nsHTTPIndex()
-	: mInner(nsnull), mContainer(nsnull), mTimer(nsnull), mConnectionList(nsnull)
+	: mContainer(nsnull)
 {
 	NS_INIT_REFCNT();
 }
@@ -939,7 +939,7 @@ nsHTTPIndex::nsHTTPIndex()
 
 
 nsHTTPIndex::nsHTTPIndex(nsISupports* aContainer)
-	: mInner(nsnull), mContainer(aContainer), mTimer(nsnull), mConnectionList(nsnull)
+	: mContainer(aContainer)
 {
 	NS_INIT_REFCNT();
 }
@@ -948,12 +948,12 @@ nsHTTPIndex::nsHTTPIndex(nsISupports* aContainer)
 
 nsHTTPIndex::~nsHTTPIndex()
 {
-	if (--gRefCnt == 0)
-	{
-		NS_IF_RELEASE(kNC_Child);
-		NS_IF_RELEASE(kNC_loading);
+	// note: these are NOT statics due to the native of nsHTTPIndex
+	// where it may or may not be treated as a singleton
 
-		NS_IF_RELEASE(kTrueLiteral);
+	NS_IF_RELEASE(kNC_Child);
+	NS_IF_RELEASE(kNC_loading);
+	NS_IF_RELEASE(kTrueLiteral);
 
     	if (mTimer)
     	{
@@ -965,14 +965,52 @@ nsHTTPIndex::~nsHTTPIndex()
 
         mConnectionList = nsnull;
 
-		if (gRDF)
-		{
-			// XXX robert, this is wrong
-			gRDF->UnregisterDataSource(this);
-			nsServiceManager::ReleaseService(kRDFServiceCID, gRDF);
-			gRDF = nsnull;
-		}
+	if (gRDF)
+	{
+		// this may fail; just ignore errors
+		gRDF->UnregisterDataSource(this);
 	}
+
+	if (gRDF)
+	{
+		nsServiceManager::ReleaseService(kRDFServiceCID, gRDF);
+		gRDF = nsnull;
+	}
+}
+
+
+
+nsresult
+nsHTTPIndex::CommonInit()
+{
+	nsresult	rv = NS_OK;
+
+	// set initial/default encoding to ISO-8859-1 (not UTF-8)
+	mEncoding = "ISO-8859-1";
+
+	rv = nsServiceManager::GetService(kRDFServiceCID,
+		NS_GET_IID(nsIRDFService), (nsISupports**) &gRDF);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
+	if (NS_FAILED(rv)) return rv;
+
+	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
+			nsnull, NS_GET_IID(nsIRDFDataSource), (void**) getter_AddRefs(mInner))))
+	{
+		return(rv);
+	}
+
+	gRDF->GetResource(NC_NAMESPACE_URI "child",   &kNC_Child);
+	gRDF->GetResource(NC_NAMESPACE_URI "loading", &kNC_loading);
+
+        rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), &kTrueLiteral);
+        if (NS_FAILED(rv)) return(rv);
+
+        rv = NS_NewISupportsArray(getter_AddRefs(mConnectionList));
+        if (NS_FAILED(rv)) return(rv);
+
+	// note: don't register DS here
+
+	return(rv);
 }
 
 
@@ -982,36 +1020,16 @@ nsHTTPIndex::Init()
 {
 	nsresult	rv;
 
-    // set initial/default encoding to ISO-8859-1 (not UTF-8)
-    mEncoding = "ISO-8859-1";
+	// set initial/default encoding to ISO-8859-1 (not UTF-8)
+	mEncoding = "ISO-8859-1";
 
-	if (gRefCnt++ == 0)
-	{
-		rv = nsServiceManager::GetService(kRDFServiceCID,
-			NS_GET_IID(nsIRDFService), (nsISupports**) &gRDF);
-		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
-		if (NS_FAILED(rv)) return rv;
+	rv = CommonInit();
+	if (NS_FAILED(rv))	return(rv);
 
-		if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-				nsnull, NS_GET_IID(nsIRDFDataSource), (void**) getter_AddRefs(mInner))))
-		{
-			return(rv);
-		}
+	// (do this last) register this as a named data source with the RDF service
+	rv = gRDF->RegisterDataSource(this, PR_FALSE);
+	if (NS_FAILED(rv)) return(rv);
 
-		gRDF->GetResource(NC_NAMESPACE_URI "child",   &kNC_Child);
-		gRDF->GetResource(NC_NAMESPACE_URI "loading", &kNC_loading);
-
-        rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), &kTrueLiteral);
-        if (NS_FAILED(rv)) return(rv);
-
-        if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(mConnectionList))))
-        	return(rv);
-
-        // XXX robert: this is wrong.
-		// (do this last) register this as a named data source with the RDF service
-		rv = gRDF->RegisterDataSource(this, PR_FALSE);
-		if (NS_FAILED(rv)) return(rv);
-	}
 	return(NS_OK);
 }
 
@@ -1026,13 +1044,16 @@ nsHTTPIndex::Init(nsIURI* aBaseURL)
 
   nsresult rv;
 
+  rv = CommonInit();
+  if (NS_FAILED(rv))	return(rv);
+
+  // note: don't register DS here (singleton case)
+
   nsXPIDLCString url;
   rv = aBaseURL->GetSpec(getter_Copies(url));
   if (NS_FAILED(rv)) return rv;
 
   mBaseURL.Assign(url);
-
-  if (NS_FAILED(rv)) return rv;
 
   return NS_OK;
 }
@@ -1042,25 +1063,23 @@ nsHTTPIndex::Init(nsIURI* aBaseURL)
 nsresult
 nsHTTPIndex::Create(nsIURI* aBaseURL, nsISupports* aContainer, nsIHTTPIndex** aResult)
 {
+  *aResult = nsnull;
+
   nsHTTPIndex* result = new nsHTTPIndex(aContainer);
   if (! result)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv = result->Init();
-  if (NS_FAILED(rv)) {
-    delete result;
-    return rv;
+  nsresult rv = result->Init(aBaseURL);
+  if (NS_SUCCEEDED(rv))
+  {
+    NS_ADDREF(result);
+    *aResult = result;
   }
-
-  rv = result->Init(aBaseURL);
-  if (NS_FAILED(rv)) {
+  else
+  {
     delete result;
-    return rv;
   }
-
-  NS_ADDREF(result);
-  *aResult = result;
-  return NS_OK;
+  return rv;
 }
 
 
@@ -1319,7 +1338,7 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
 					if (NS_SUCCEEDED(rv = channel->AsyncRead(listener, aSource)))
 					{
 					    // mark aSource as "loading"
-						rv = httpIndex->mInner->Assert(aSource, kNC_loading, kTrueLiteral, PR_TRUE);
+						rv = httpIndex->mInner->Assert(aSource, httpIndex->kNC_loading, httpIndex->kTrueLiteral, PR_TRUE);
 					}
         		}
             }
