@@ -40,9 +40,6 @@
 #define __inPNGEncoder_h__
 
 #include "inIPNGEncoder.h"
-#include "inIBitmap.h"
-
-#include "nsCOMPtr.h"
 
 class inPNGEncoder : public inIPNGEncoder 
 {

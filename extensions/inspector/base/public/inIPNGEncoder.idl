@@ -39,6 +39,7 @@
 #include "nsISupports.idl"
 
 interface inIBitmap;
+interface nsILocalFile;
 
 [scriptable, uuid(EC4CE7FC-4268-4f6b-868A-6C0FE3863212)]
 interface inIPNGEncoder : nsISupports 
@@ -46,5 +47,5 @@ interface inIPNGEncoder : nsISupports
   const short BIT8 = 0;
   const short BIT24 = 1;
 
-  void writePNG(in inIBitmap aBitmap, in wstring aURL, in short aType);
+  void writePNG(in inIBitmap aBitmap, in nsILocalFile aFile, in short aType);
 };
