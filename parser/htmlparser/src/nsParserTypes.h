@@ -43,13 +43,13 @@ enum  eParseMode {
 };
 
 
-const PRInt32   kEOF              = 1000000L;
-const PRInt32   kUnknownError     = -1000;
-const PRInt32   kCantPropagate    = -6;
-const PRInt32   kContextMismatch  = -5;
-const PRInt32   kBadFilename      = -4;
-const PRInt32   kBadURL           = -3;
-const PRInt32   kInterrupted      = -2;
+const PRInt32   kEOF              = 10000;
+const PRInt32   kUnknownError     = 10001;
+const PRInt32   kCantPropagate    = 10002;
+const PRInt32   kContextMismatch  = 10003;
+const PRInt32   kBadFilename      = 10004;
+const PRInt32   kBadURL           = 10005;
+const PRInt32   kInterrupted      = 10006;
 const PRInt32   kNotFound         = -1;
 const PRInt32   kNoError          = NS_OK;
 

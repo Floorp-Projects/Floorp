@@ -142,6 +142,7 @@ nsParser::nsParser() {
   mObserver = 0;
   mSink=0;
   mParserContext=0;
+  mParseLevel=0;
 }
 
 
@@ -319,7 +320,7 @@ PRBool FindSuitableDTD( CParserContext& aParserContext) {
     if(theDTD) {
       result=theDTD->CanParse(aParserContext.mSourceType,0); 
       if(result){
-        aParserContext.mDTD=theDTD;
+        nsresult status=theDTD->CreateNewInstance(&aParserContext.mDTD);
         break;
       }
     }
@@ -385,7 +386,7 @@ PRInt32 nsParser::WillBuildModel(nsString& aFilename){
   if(PR_TRUE==FindSuitableDTD(*mParserContext)) {
     mParserContext->mDTD->SetParser(this);
     mParserContext->mDTD->SetContentSink(mSink);
-    mParserContext->mDTD->WillBuildModel(aFilename);
+    mParserContext->mDTD->WillBuildModel(aFilename,mParseLevel);
   }
 
   return kNoError;
@@ -401,7 +402,7 @@ PRInt32 nsParser::DidBuildModel(PRInt32 anErrorCode) {
   //One last thing...close any open containers.
   PRInt32 result=anErrorCode;
   if(mParserContext->mDTD) {
-    result=mParserContext->mDTD->DidBuildModel(anErrorCode);
+    result=mParserContext->mDTD->DidBuildModel(anErrorCode,mParseLevel);
   }
 
   return result;
@@ -454,6 +455,7 @@ PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener, nsIDTDDebug *
   NS_PRECONDITION(0!=aURL,kNullURL);
 
   PRInt32 status=kBadURL;
+  mParseLevel++;
 
 /* Disable DTD Debug for now...
   mDTDDebug = aDTDDebug;
@@ -479,6 +481,7 @@ PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener, nsIDTDDebug *
 PRInt32 nsParser::Parse(fstream& aStream){
 
   PRInt32 status=kNoError;
+  mParseLevel++;
   
   //ok, time to create our tokenizer and begin the process
   CParserContext* pc=new CParserContext(new CScanner(kUnknownFilename,aStream,PR_FALSE),&aStream,0);
@@ -511,12 +514,13 @@ PRInt32 nsParser::Parse(fstream& aStream){
  */
 PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString){
   PRInt32 result=kNoError;
+  mParseLevel++;
 
   CParserContext* pc=new CParserContext(new CScanner(kUnknownFilename,PR_FALSE),&aSourceBuffer,0);
+
   PushContext(*pc);
   if(PR_TRUE==anHTMLString)
     pc->mSourceType="text/html";
-  mParserContext->mScanner->Append(aSourceBuffer);  
   if(eValidDetect==AutoDetectContentType(aSourceBuffer,mParserContext->mSourceType)) {
     WillBuildModel(mParserContext->mScanner->GetFilename());
     result=ResumeParse();
@@ -543,9 +547,9 @@ PRInt32 nsParser::ResumeParse() {
   mParserContext->mDTD->WillResumeParse();
   if(kNoError==result) {
     result=Tokenize();
+    BuildModel();
     if(kInterrupted==result)
       mParserContext->mDTD->WillInterruptParse();
-    BuildModel();
   }
   return result;
 }
@@ -566,27 +570,38 @@ PRInt32 nsParser::BuildModel() {
   if(!mParserContext->mCurrentPos)
     mParserContext->mCurrentPos=new nsDequeIterator(mParserContext->mTokenDeque.Begin());
 
+    //Get the root DTD for use in model building...
+  CParserContext* theRootContext=mParserContext;
+  while(theRootContext->mPrevContext)
+    theRootContext=theRootContext->mPrevContext;
+
+  nsIDTD* theRootDTD=theRootContext->mDTD;
+  
   PRInt32 result=kNoError;
   while((kNoError==result) && ((*mParserContext->mCurrentPos<e))){
     mMinorIteration++;
     CToken* theToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
-
+ 
     /**************************************************************************
       The point of this code to serve as a testbed for parser reentrancy.
       If you set recurse=1, we go reentrant, passing a text string of HTML onto 
       the parser for inline processing, just like javascript/DOM would do it.
       And guess what? It worked the first time!
-      Uncomment the following code to enable the test:
+      Uncomment the following code to enable the test: 
 
       int recurse=0;
       if(recurse){
-        nsString theString("<table border=1><tr><td BGCOLOR=blue>cell</td></tr></table>");
+          nsString theString("  this is just a great big empty string  ");
+//        nsString theString("<P>doc.write");
+//        nsString theString("<table border=1><tr><td BGCOLOR=blue>cell</td></tr></table>");
         Parse(theString,PR_TRUE);
       }
-      **************************************************************************/
+      */
 
     theMarkPos=*mParserContext->mCurrentPos;
-    result=mParserContext->mDTD->HandleToken(theToken);
+    
+    result=theRootDTD->HandleToken(theToken);
+//    result=mParserContext->mDTD->HandleToken(theToken);
     ++(*mParserContext->mCurrentPos);
   }
 
@@ -813,10 +828,11 @@ PRBool nsParser::WillTokenize(){
 PRInt32 nsParser::Tokenize(){
   CToken* theToken=0;
   PRInt32 result=kNoError;
-  PRBool  done=(0==++mMajorIteration) ? (!WillTokenize()) : PR_FALSE;
-  
 
-  while((PR_FALSE==done) && (kNoError==result)) {
+  ++mMajorIteration;
+
+  WillTokenize();
+  while(kNoError==result) {
     mParserContext->mScanner->Mark();
     result=mParserContext->mDTD->ConsumeToken(theToken);
     if(kNoError==result) {
@@ -835,8 +851,7 @@ PRInt32 nsParser::Tokenize(){
       mParserContext->mScanner->RewindToMark();
     }
   } 
-  if((PR_TRUE==done)  && (kInterrupted!=result))
-    DidTokenize();
+  DidTokenize();
   return result;
 }
 
@@ -851,11 +866,6 @@ PRInt32 nsParser::Tokenize(){
  */
 PRBool nsParser::DidTokenize(){
   PRBool result=PR_TRUE;
-
-#ifdef VERBOSE_DEBUG
-    DebugDumpTokens(cout);
-#endif
-
   return result;
 }
 

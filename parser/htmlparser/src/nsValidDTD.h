@@ -73,6 +73,14 @@ class CValidDTD : public nsIDTD {
     virtual ~CValidDTD();
 
     /**
+     * Call this method if you want the DTD to construct a clone of itself.
+     * @update	gess7/23/98
+     * @param 
+     * @return
+     */
+    virtual nsresult CreateNewInstance(nsIDTD** aInstancePtrResult);
+
+    /**
      * This method is called to determine if the given DTD can parse
      * a document in a given source-type. 
      * NOTE: Parsing always assumes that the end result will involve
@@ -103,20 +111,24 @@ class CValidDTD : public nsIDTD {
     virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType);
 
     /**
-     * 
-     * @update	gess5/18/98
-     * @param 
-     * @return
-     */
-    NS_IMETHOD WillBuildModel(nsString& aFilename);
+      * The parser uses a code sandwich to wrap the parsing process. Before
+      * the process begins, WillBuildModel() is called. Afterwards the parser
+      * calls DidBuildModel(). 
+      * @update	gess5/18/98
+      * @param	aFilename is the name of the file being parsed.
+      * @return	error code (almost always 0)
+      */
+    NS_IMETHOD WillBuildModel(nsString& aFilename,PRInt32 aLevel);
 
-    /**
-     * 
+   /**
+     * The parser uses a code sandwich to wrap the parsing process. Before
+     * the process begins, WillBuildModel() is called. Afterwards the parser
+     * calls DidBuildModel(). 
      * @update	gess5/18/98
-     * @param 
-     * @return
+     * @param	anErrorCode contans the last error that occured
+     * @return	error code
      */
-    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode);
+    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel);
 
     /**
      *  

@@ -43,13 +43,24 @@ class CScanner {
 
       /**
        *  Use this constructor if you want i/o to be based on 
+       *  a single string you hand in during construction.
+       *  This short cut was added for Javascript.
+       *
+       *  @update  gess 5/12/98
+       *  @param   aMode represents the parser mode (nav, other)
+       *  @return  
+       */
+      CScanner(nsString& anHTMLString);
+
+      /**
+       *  Use this constructor if you want i/o to be based on 
        *  a file (therefore a stream) or just data you provide via Append().
        *
        *  @update  gess 5/12/98
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      CScanner(nsString& aFilename,PRBool aCreateStream=PR_TRUE);
+      CScanner(nsString& aFilename,PRBool aCreateStream);
 
       /**
        *  Use this constructor if you want i/o to be stream based.
@@ -251,6 +262,7 @@ class CScanner {
       PRInt32         mMarkPos;
       PRInt32         mTotalRead;
       PRBool          mOwnsStream;
+      PRBool          mIncremental;
 };
 
 #endif

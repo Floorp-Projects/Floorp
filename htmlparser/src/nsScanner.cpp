@@ -31,8 +31,27 @@ const int   kBufsize=64;
 
 
 /**
- *  Use this constructor if you want i/o to be based on an
- *  incremental netstream. If you pass a null filename, you
+ *  Use this constructor if you want i/o to be based on 
+ *  a single string you hand in during construction.
+ *  This short cut was added for Javascript.
+ *
+ *  @update  gess 5/12/98
+ *  @param   aMode represents the parser mode (nav, other)
+ *  @return  
+ */
+CScanner::CScanner(nsString& anHTMLString) : 
+  mBuffer(anHTMLString), mFilename("") 
+{
+  mTotalRead=mBuffer.Length();
+  mIncremental=PR_FALSE;
+  mOwnsStream=PR_FALSE;
+  mOffset=0;
+  mFileStream=0;
+}
+
+/**
+ *  Use this constructor if you want i/o to be based on strings 
+ *  the scanner receives. If you pass a null filename, you
  *  can still provide data to the scanner via append.
  *
  *  @update  gess 5/12/98
@@ -42,6 +61,7 @@ const int   kBufsize=64;
 CScanner::CScanner(nsString& aFilename,PRBool aCreateStream) : 
     mBuffer(""), mFilename(aFilename) 
 {
+  mIncremental=PR_TRUE;
   mOffset=0;
   mMarkPos=-1;
   mTotalRead=0;
@@ -71,6 +91,7 @@ CScanner::CScanner(nsString& aFilename,PRBool aCreateStream) :
 CScanner::CScanner(nsString& aFilename,fstream& aStream,PRBool assumeOwnership) :
     mBuffer(""), mFilename(aFilename)
 {    
+  mIncremental=PR_TRUE;
   mOffset=0;
   mMarkPos=-1;
   mTotalRead=0;
@@ -135,26 +156,17 @@ void _PreCompressBuffer(nsString& aBuffer,PRInt32& anOffset,PRInt32& aMarkPos){
   //we've guaranteed the client we can back up to, so make sure
   //you don't lose any of the data beyond that point.
 
-/*
-  if((anOffset!=aMarkPos) && (0<=aMarkPos)) {
-    if(aMarkPos>0) {
-      aBuffer.Cut(0,aMarkPos);
-      if(anOffset>aMarkPos)
-        anOffset-=aMarkPos;
-    }
-  }
-  else aBuffer.Truncate();
-*/
   PRInt32 len=aBuffer.Length();
-  if((aMarkPos<len) && (aMarkPos>=0)) {
+  if((aMarkPos<len) && (aMarkPos>0)) {
     aBuffer.Cut(0,aMarkPos);
     anOffset-=aMarkPos;
+    aMarkPos=0;
   }
-  else {
+  else if((anOffset==aMarkPos) && (0<aMarkPos)) {
     aBuffer.Truncate();
     anOffset=0;
   }
-  aMarkPos=0;
+//  aMarkPos=0;
 }
 
 
@@ -206,7 +218,7 @@ nsresult CScanner::FillBuffer(void) {
       mBuffer.Append((const char*)kBadHTMLText);
       mBuffer.Append(mFilename);
     }
-    else return kInterrupted;
+    else anError=(mIncremental) ? kInterrupted : kEOF;
   }
   else {
     PRInt32 numread=0;

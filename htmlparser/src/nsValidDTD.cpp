@@ -146,6 +146,17 @@ CValidDTD::~CValidDTD(){
 }
 
 /**
+ * Call this method if you want the DTD to construct a fresh 
+ * instance of itself. 
+ * @update	gess7/23/98
+ * @param 
+ * @return
+ */
+nsresult CValidDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
+  return NS_NewValid_DTD(aInstancePtrResult);
+}
+
+/**
  * This method is called to determine if the given DTD can parse
  * a document in a given source-type. 
  * NOTE: Parsing always assumes that the end result will involve
@@ -190,7 +201,7 @@ eAutoDetectResult CValidDTD::AutoDetectContentType(nsString& aBuffer,nsString& a
  * @param 
  * @return
  */
-NS_IMETHODIMP CValidDTD::WillBuildModel(nsString& aFilename){
+NS_IMETHODIMP CValidDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel){
   nsresult result=NS_OK;
   return result;
 }
@@ -201,7 +212,7 @@ NS_IMETHODIMP CValidDTD::WillBuildModel(nsString& aFilename){
  * @param 
  * @return
  */
-NS_IMETHODIMP CValidDTD::DidBuildModel(PRInt32 anErrorCode){
+NS_IMETHODIMP CValidDTD::DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel){
   nsresult result=NS_OK;
 
   return result;

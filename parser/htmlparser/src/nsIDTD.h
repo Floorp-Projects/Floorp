@@ -49,11 +49,21 @@ enum eAutoDetectResult {eUnknownDetect, eValidDetect, eInvalidDetect};
 class nsIDTD : public nsISupports {
   public:
 
+  
     /**
      * Default constructor
      * @update	gess6/24/98
      */
     virtual ~nsIDTD() {};
+
+
+    /**
+     * Call this method if you want the DTD to construct a clone of itself.
+     * @update	gess7/23/98
+     * @param 
+     * @return
+     */
+    virtual nsresult CreateNewInstance(nsIDTD** aInstancePtrResult)=0;
 
     /**
      *  This method informs the DTD about the parser being used to drive the parse process
@@ -100,7 +110,7 @@ class nsIDTD : public nsISupports {
      * @param	aFilename--string that contains name of file being parsed (if applicable)
      * @return  
      */
-    NS_IMETHOD WillBuildModel(nsString& aFilename)=0;
+    NS_IMETHOD WillBuildModel(nsString& aFilename,PRInt32 aLevel)=0;
 
     /**
      * Called by the parser after the parsing process has concluded
@@ -108,7 +118,7 @@ class nsIDTD : public nsISupports {
      * @param	anErrorCode - contains error code resulting from parse process
      * @return
      */
-    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode)=0;
+    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel)=0;
     
     /**
      *	Called during model building phase of parse process. Each token created during

@@ -294,14 +294,13 @@ protected:
     CParserContext*     mParserContext;
     PRInt32             mMajorIteration;
     PRInt32             mMinorIteration;
+    PRInt32             mParseLevel;
 
     nsIStreamObserver*  mObserver;
     nsIContentSink*     mSink;
     nsIParserFilter*    mParserFilter;
 
 	  nsIDTDDebug*		    mDTDDebug;
-
-
 };
 
 
