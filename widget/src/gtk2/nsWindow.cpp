@@ -2155,6 +2155,10 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 
             mDrawingarea = moz_drawingarea_new(nsnull, mContainer);
         }
+        else {
+            NS_WARNING("Warning: tried to create a new child widget with no parent!");
+            return NS_ERROR_FAILURE;
+        }
     }
         break;
     default:
