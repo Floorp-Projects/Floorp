@@ -185,14 +185,17 @@ function EditorSelectAll()
   }
 }
 
-function EditorFind(firstTime)
+function EditorFind()
 {
-  if (firstTime) {
-    window.openDialog("resource:/res/samples/find.xul", "find", "chrome");
-  }
-  
   if (appCore) {
-    appCore.find("test", true, true);
+    appCore.find();
+  }
+}
+
+function EditorFindNext()
+{
+  if (appCore) {
+    appCore.findNext();
   }
 }
 
@@ -403,7 +406,15 @@ function EditorTestSelection()
     }
   }
 }
-  
+
+function EditorUnitTests()
+{
+  if (appCore) {
+    dump("Running Unit Tests\n");
+    appCore.runUnitTests();
+  }
+}
+
 function EditorExit()
 {
     if (appCore) {
