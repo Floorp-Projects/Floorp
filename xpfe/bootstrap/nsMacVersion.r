@@ -44,6 +44,7 @@
 #define		GETINFO_VERSION			VERSION_STRING ", " COPYRIGHT_STRING
 #define		PACKAGE_NAME			"Mozilla " VERSION_STRING
 
+#define   NUM_CANRUN_STRINGS  1
 
 // Resources definition
 
@@ -65,4 +66,11 @@ resource 'vers' (2, "Suite") {
 	verUS,
 	VERSION_STRING,
 	PACKAGE_NAME
+};
+
+resource 'STR#' (1000, "CanRunStrings") {
+  {
+    "You cannot run Ò" PACKAGE_NAME "Ó while another copy of Mozilla or Netscape 6 is running. "
+    "Ò" PACKAGE_NAME "Ó will now quit."
+  }
 };
