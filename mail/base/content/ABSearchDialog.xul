@@ -22,7 +22,6 @@
 
 <?xul-overlay href="chrome://messenger/content/addressbook/abResultsPaneOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
-<?xul-overlay href="chrome://messenger/content/mailWindowOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window [
@@ -63,6 +62,10 @@
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
 
   <broadcaster id="Communicator:WorkMode"/>
+
+  <keyset id="mailKeys">
+    <key keycode="VK_ESCAPE" xulkey="false" oncommand="onSearchStop(); closeWindow(true);"/>
+  </keyset>
 
   <dummy class="usesMailWidgets"/>
     
@@ -191,6 +194,12 @@
       </hbox>      
     </vbox>
 
-    <statusbar class="chromeclass-status" id="status-bar"/>
+  <statusbar class="chromeclass-status" id="status-bar"> 
+    <statusbarpanel id="statusText" crop="right" flex="1"/>   
+    <statusbarpanel class="statusbarpanel-progress" id="statusbar-progresspanel">
+      <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
+    </statusbarpanel>    
+  </statusbar> 
+
 
 </window>
