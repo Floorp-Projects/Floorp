@@ -83,17 +83,21 @@ nsHTMLContainerFrame::CreatePlaceholderFrame(nsIPresContext& aPresContext,
   nsIContent* content;
   aFloatedFrame->GetContent(content);
 
-  // Let the placeholder share the same style context as the floated element
-  nsIStyleContext*  kidSC;
-  aFloatedFrame->GetStyleContext(kidSC);
-
   nsPlaceholderFrame* placeholder;
   NS_NewPlaceholderFrame((nsIFrame**)&placeholder);
-  placeholder->Init(aPresContext, content, this, this, kidSC);
-  placeholder->SetAnchoredItem(aFloatedFrame);
-  NS_IF_RELEASE(content);
-  NS_RELEASE(kidSC);
   
+  // The placeholder frame gets a pseudo style context
+  nsIStyleContext*  kidSC;
+  aFloatedFrame->GetStyleContext(kidSC);
+  nsIStyleContext*  placeholderPseudoStyle =
+    aPresContext.ResolvePseudoStyleContextFor(content,
+                                              nsHTMLAtoms::placeholderPseudo, kidSC);
+  NS_RELEASE(kidSC);
+  placeholder->Init(aPresContext, content, this, this, placeholderPseudoStyle);
+  NS_RELEASE(placeholderPseudoStyle);
+  NS_IF_RELEASE(content);
+
+  placeholder->SetAnchoredItem(aFloatedFrame);
   return placeholder;
 }
 
@@ -108,10 +112,9 @@ nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
   // Initialize OUT parameter
   aPlaceholderFrame = nsnull;
 
-  // See if the element wants to be floated or absolutely positioned
-  PRBool  isFloated =
-    (NS_STYLE_FLOAT_LEFT == aDisplay->mFloats) ||
-    (NS_STYLE_FLOAT_RIGHT == aDisplay->mFloats);
+  // See if the element wants to be floated
+  PRBool  isFloated = (NS_STYLE_FLOAT_LEFT == aDisplay->mFloats) ||
+                      (NS_STYLE_FLOAT_RIGHT == aDisplay->mFloats);
 
   if (isFloated) {
     nsIFrame* nextSibling;
