@@ -27,8 +27,8 @@ static NS_DEFINE_IID(kINameSpaceManagerIID, NS_INAMESPACEMANAGER_IID);
 static NS_DEFINE_IID(kINameSpaceIID, NS_INAMESPACE_IID);
 
 
-static const char kXMLNSNameSpaceURI[] = "urn:Connolly:input:required:too"; // XXX ?? what is it really?
-static const char kXMLNameSpaceURI[] = "urn:Connolly:input:required"; // XXX ?? what is it really?
+static const char kXMLNSNameSpaceURI[] = "<This isn't really a namespace>";
+static const char kXMLNameSpaceURI[] = "http://www.w3.org/XML/1998/namespace";
 static const char kHTMLNameSpaceURI[] = "http://www.w3.org/TR/REC-html40";  // XXX?? "urn:w3-org-ns:HTML"??
 
 //-----------------------------------------------------------
@@ -382,13 +382,7 @@ NameSpaceManagerImpl::CreateRootNameSpace(nsINameSpace*& aRootNameSpace)
   if (nsnull != xmlns) {
     NameSpaceImpl* xml = new NameSpaceImpl(this, xmlns, nsLayoutAtoms::xmlNameSpace, kNameSpaceID_XML);
     if (nsnull != xml) {
-      NameSpaceImpl* html = new NameSpaceImpl(this, xml, nsLayoutAtoms::htmlNameSpace, kNameSpaceID_HTML);
-      if (nsnull != html) {
-        rv = html->QueryInterface(kINameSpaceIID, (void**)&aRootNameSpace);
-      }
-      else {
-        delete xml;
-      }
+      rv = xml->QueryInterface(kINameSpaceIID, (void**)&aRootNameSpace);
     }
     else {
       delete xmlns;
