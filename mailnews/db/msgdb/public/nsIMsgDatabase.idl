@@ -35,6 +35,30 @@ interface nsISimpleEnumerator;
 interface nsIMsgThread;
 interface nsIDBFolderInfo;
 
+typedef unsigned long nsMsgRetainByPreference;
+
+[scriptable, uuid(063bd2ac-de85-11d4-a5b6-0060b0fc04b7)]
+
+interface nsIMsgRetentionSettings : nsISupports
+{
+	const unsigned long nsMsgRetainAll = 0;
+  const unsigned long nsMsgRetainByServerDefaults = 1;
+	const unsigned long nsMsgRetainByAge = 2;
+	const unsigned long nsMsgRetainByNumHeaders = 3;
+
+  attribute nsMsgRetainByPreference retainByPreference;
+  attribute unsigned long daysToKeepHdrs;
+  attribute unsigned long numHeadersToKeep; 
+
+  // this is orthogonal to retaining by age or num headers, i.e., if
+  // it's set, we'll only keep NNN unread messages only, or unread
+  // messages less than NNN days old.
+  attribute boolean keepUnreadMessagesOnly;
+  // this is for keeping offline bodies.
+  attribute unsigned long daysToKeepBodies;
+}; 
+
+
 typedef long nsMsgDBCommit;
 
 [scriptable, uuid(aa4d45d0-3956-11d3-8d76-00805f8a6617)]
@@ -164,6 +188,9 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
                              in nsIDBChangeListener instigator);
 
   readonly attribute nsMsgKey FirstNew;
+
+  attribute nsIMsgRetentionSettings msgRetentionSettings;
+
   boolean HasNew();  
   void ClearNewList(in boolean notify);
   void AddToNewList(in nsMsgKey key);

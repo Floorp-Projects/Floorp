@@ -1206,6 +1206,43 @@ nsMsgDBFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDBFolder::GetRetentionSettings(nsIMsgRetentionSettings **settings)
+{
+  NS_ENSURE_ARG_POINTER(settings);
+  nsresult rv = NS_OK;
+  if (!m_retentionSettings)
+  {
+    GetDatabase(nsnull);
+    if (mDatabase)
+    {
+      // get the settings from the db - if the settings from the db say the folder
+      // is not overriding the incoming server settings, get the settings from the
+      // server.
+      rv = mDatabase->GetMsgRetentionSettings(getter_AddRefs(m_retentionSettings));
+      if (NS_SUCCEEDED(rv) && m_retentionSettings)
+      {
+        nsMsgRetainByPreference retainBy;
+        m_retentionSettings->GetRetainByPreference(&retainBy);
+        if (retainBy == nsIMsgRetentionSettings::nsMsgRetainByServerDefaults)
+        {
+          nsCOMPtr <nsIMsgIncomingServer> incomingServer;
+          rv = GetServer(getter_AddRefs(incomingServer));
+          if (NS_SUCCEEDED(rv) && incomingServer)
+            incomingServer->GetRetentionSettings(getter_AddRefs(m_retentionSettings));
+        }
+
+      }
+    }
+  }
+  *settings = m_retentionSettings;
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgDBFolder::SetRetentionSettings(nsIMsgRetentionSettings *settings)
+{
+  m_retentionSettings = settings;
+  return NS_OK;
+}
 
 nsresult nsMsgDBFolder::NotifyStoreClosedAllHeaders()
 {

@@ -173,7 +173,7 @@ NS_IMETHODIMP nsNewsDatabase::IsRead(nsMsgKey key, PRBool *pRead)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsNewsDatabase::IsHeaderRead(nsIMsgDBHdr *msgHdr, PRBool *pRead)
+nsresult nsNewsDatabase::IsHeaderRead(nsIMsgDBHdr *msgHdr, PRBool *pRead)
 {
     nsresult rv;
     nsMsgKey messageKey;

@@ -27,6 +27,7 @@ interface nsIFolder;
 interface nsIMsgFolderCache;
 interface nsIMsgWindow;
 interface nsIMsgFilterList;
+interface nsIMsgRetentionSettings;
 
 /*
  * Interface for incoming mail/news host
@@ -190,6 +191,8 @@ interface nsIMsgIncomingServer : nsISupports {
   attribute boolean canDelete;
 
   attribute boolean loginAtStartUp;
+
+  attribute nsIMsgRetentionSettings retentionSettings;
 };
 
 %{C++

@@ -30,6 +30,7 @@
 #include "nsIFolder.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
+#include "nsIMsgDatabase.h"
 
 class nsIMsgFolderCache;
 class nsIMsgProtocolInfo;
@@ -68,6 +69,7 @@ protected:
   NS_IMETHOD SetPrefPassword(const char * aPassword);
   
   nsCOMPtr <nsIFolder> m_rootFolder;
+  nsCOMPtr <nsIMsgRetentionSettings> m_retentionSettings;
   nsresult getDefaultCharPref(const char *pref, char **);
   nsresult getDefaultUnicharPref(const char *pref, PRUnichar **);
   nsresult getDefaultBoolPref(const char *pref, PRBool *);

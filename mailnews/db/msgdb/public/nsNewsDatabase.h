@@ -50,7 +50,7 @@ public:
 
   // methods to get and set docsets for ids.
   NS_IMETHOD				IsRead(nsMsgKey key, PRBool *pRead);
-  NS_IMETHOD                IsHeaderRead(nsIMsgDBHdr *msgHdr, PRBool *pRead);
+  virtual nsresult  IsHeaderRead(nsIMsgDBHdr *msgHdr, PRBool *pRead);
 
   virtual PRBool			IsArticleOffline(nsMsgKey key);
   virtual nsresult          AddHdrFromXOver(const char * line,  nsMsgKey *msgId);

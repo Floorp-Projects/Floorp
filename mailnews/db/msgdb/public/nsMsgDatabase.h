@@ -50,162 +50,25 @@ class nsMsgDatabase : public nsIMsgDatabase
 {
 public:
   NS_DECL_ISUPPORTS
-
-  //////////////////////////////////////////////////////////////////////////////
-  // nsIDBChangeAnnouncer methods:
-  NS_IMETHOD AddListener(nsIDBChangeListener *listener);
-  NS_IMETHOD RemoveListener(nsIDBChangeListener *listener);
-
-  NS_IMETHOD NotifyKeyChangeAll(nsMsgKey keyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
-                                nsIDBChangeListener *instigator);
-  NS_IMETHOD NotifyKeyAddedAll(nsMsgKey keyAdded, nsMsgKey parentKey, PRInt32 flags, 
+  NS_DECL_NSIDBCHANGEANNOUNCER
+  NS_DECL_NSIMSGDATABASE
+  virtual nsresult IsHeaderRead(nsIMsgDBHdr *hdr, PRBool *pRead);
+  virtual nsresult MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
                                nsIDBChangeListener *instigator);
-  NS_IMETHOD NotifyKeyDeletedAll(nsMsgKey keyDeleted, nsMsgKey parentKey, PRInt32 flags, 
-                                 nsIDBChangeListener *instigator);
-  NS_IMETHOD NotifyParentChangedAll(nsMsgKey keyReparented, nsMsgKey oldParent, nsMsgKey newParent,
-								nsIDBChangeListener *instigator);
-
-  NS_IMETHOD NotifyReadChanged(nsIDBChangeListener *instigator);
-  NS_IMETHOD NotifyAnnouncerGoingAway(void);
-
-  //////////////////////////////////////////////////////////////////////////////
-  // nsIMsgDatabase methods:
-  NS_IMETHOD Open(nsIFileSpec *folderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB);
-  NS_IMETHOD Close(PRBool forceCommit);
-
-  // argh, these two shouldn't be Interface methods, but I can't diddle the interfaces
-  // until the idl works on windows. grumble grumble.
-  NS_IMETHOD OpenMDB(const char *dbName, PRBool create);
-  NS_IMETHOD CloseMDB(PRBool commit);
-
-  NS_IMETHOD Commit(nsMsgDBCommit commitType);
-  // Force closed is evil, and we should see if we can do without it.
-  // In 4.x, it was mainly used to remove corrupted databases.
-  NS_IMETHOD ForceClosed(void);
-  // get a message header for the given key. Caller must release()!
-  NS_IMETHOD GetMsgHdrForKey(nsMsgKey key, nsIMsgDBHdr **msg);
-
- //Returns whether or not this database contains the given key
-  NS_IMETHOD ContainsKey(nsMsgKey key, PRBool *containsKey);
-
-  // Must call AddNewHdrToDB after creating. The idea is that you create
-  // a new header, fill in its properties, and then call AddNewHdrToDB.
-  // AddNewHdrToDB will send notifications to any listeners.
-  NS_IMETHOD CreateNewHdr(nsMsgKey key, nsIMsgDBHdr **newHdr);
-  virtual nsresult  CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgDBHdr **result);
-
-  NS_IMETHOD CopyHdrFromExistingHdr(nsMsgKey key, nsIMsgDBHdr *existingHdr, nsIMsgDBHdr **newHdr);
-  NS_IMETHOD AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify);
-
-  NS_IMETHOD ListAllKeys(nsMsgKeyArray &outputKeys);
-  NS_IMETHOD EnumerateMessages(nsISimpleEnumerator* *result);
-  NS_IMETHOD EnumerateUnreadMessages(nsISimpleEnumerator* *result);
-  NS_IMETHOD EnumerateThreads(nsISimpleEnumerator* *result);
-
+  virtual nsresult OpenMDB(const char *dbName, PRBool create);
+  virtual nsresult CloseMDB(PRBool commit);
+  virtual nsresult CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgDBHdr **result);
+  virtual nsresult GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **result);
+  virtual nsresult EnumerateUnreadMessages(nsISimpleEnumerator* *result);
   // this might just be for debugging - we'll see.
   nsresult ListAllThreads(nsMsgKeyArray *threadIds);
-
-  // helpers for user command functions like delete, mark read, etc.
-
-  NS_IMETHOD MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
-                         nsIDBChangeListener *instigator);
-
-  NS_IMETHOD MarkHdrReplied(nsIMsgDBHdr *msgHdr, PRBool bReplied,
-                         nsIDBChangeListener *instigator);
-
-  NS_IMETHOD MarkHdrMarked(nsIMsgDBHdr *msgHdr, PRBool mark,
-                         nsIDBChangeListener *instigator);
-
-  // MDN support
-  NS_IMETHOD MarkMDNNeeded(nsMsgKey key, PRBool bNeeded,
-                           nsIDBChangeListener *instigator);
-
-  // MarkMDNneeded only used when mail server is a POP3 server
-  // or when the IMAP server does not support user defined
-  // PERMANENTFLAGS
-  NS_IMETHOD IsMDNNeeded(nsMsgKey key, PRBool *isNeeded);
-
-  NS_IMETHOD MarkMDNSent(nsMsgKey key, PRBool bNeeded,
-                         nsIDBChangeListener *instigator);
-  NS_IMETHOD IsMDNSent(nsMsgKey key, PRBool *isSent);
-
-// methods to get and set docsets for ids.
-  NS_IMETHOD MarkRead(nsMsgKey key, PRBool bRead, 
-                      nsIDBChangeListener *instigator);
-
-  NS_IMETHOD MarkReplied(nsMsgKey key, PRBool bReplied, 
-                         nsIDBChangeListener *instigator);
-
-  NS_IMETHOD MarkForwarded(nsMsgKey key, PRBool bForwarded, 
-                           nsIDBChangeListener *instigator);
-
-  NS_IMETHOD MarkHasAttachments(nsMsgKey key, PRBool bHasAttachments, 
-                                nsIDBChangeListener *instigator);
-
-  NS_IMETHOD MarkThreadRead(nsIMsgThread *thread, nsIDBChangeListener *instigator, nsMsgKeyArray *thoseMarked);
-  NS_IMETHOD MarkThreadIgnored(nsIMsgThread *thread, nsMsgKey threadKey, PRBool bIgnored,
-                               nsIDBChangeListener *instigator);
-  NS_IMETHOD MarkThreadWatched(nsIMsgThread *thread, nsMsgKey threadKey, PRBool bWatched,
-                               nsIDBChangeListener *instigator);
-
-  NS_IMETHOD IsRead(nsMsgKey key, PRBool *pRead);
-  NS_IMETHOD IsIgnored(nsMsgKey key, PRBool *pIgnored);
-  NS_IMETHOD IsMarked(nsMsgKey key, PRBool *pMarked);
-  NS_IMETHOD HasAttachments(nsMsgKey key, PRBool *pHasThem);
-
-  NS_IMETHOD MarkAllRead(nsMsgKeyArray *thoseMarked);
-  NS_IMETHOD MarkReadByDate (PRTime te, PRTime endDate, nsMsgKeyArray *markedIds);
-
-  NS_IMETHOD DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator);
-  NS_IMETHOD DeleteMessage(nsMsgKey key, 
-                           nsIDBChangeListener *instigator,
-                           PRBool commit);
-  NS_IMETHOD DeleteHeader(nsIMsgDBHdr *msgHdr, nsIDBChangeListener *instigator,
-                          PRBool commit, PRBool notify);
-
-  NS_IMETHOD RemoveHeaderMdbRow(nsIMsgDBHdr *msgHdr);
-
-  NS_IMETHOD UndoDelete(nsIMsgDBHdr *msgHdr);
-
-  NS_IMETHOD MarkLater(nsMsgKey key, PRTime until);
-  NS_IMETHOD MarkMarked(nsMsgKey key, PRBool mark,
-                        nsIDBChangeListener *instigator);
-  NS_IMETHOD MarkOffline(nsMsgKey key, PRBool offline,
-                         nsIDBChangeListener *instigator);
-
-  NS_IMETHOD  AllMsgKeysImapDeleted(nsMsgKeyArray *keys, PRBool *allKeysDeleted);
-
-  NS_IMETHOD MarkImapDeleted(nsMsgKey key, PRBool deleted,
-                             nsIDBChangeListener *instigator);
-
-  NS_IMETHOD GetFirstNew(nsMsgKey *result);
-  NS_IMETHOD HasNew(PRBool *_retval);  
-  NS_IMETHOD ClearNewList(PRBool notify);
-  NS_IMETHOD AddToNewList(nsMsgKey key);
-
-  // used mainly to force the timestamp of a local mail folder db to
-  // match the time stamp of the corresponding berkeley mail folder,
-  // but also useful to tell the summary to mark itself invalid
-  NS_IMETHOD SetSummaryValid(PRBool valid);
-
-  // offline operations
-  NS_IMETHOD ListAllOfflineOpIds(nsMsgKeyArray *offlineOpIds);
-  NS_IMETHOD ListAllOfflineDeletes(nsMsgKeyArray *offlineDeletes);
-
-  NS_IMETHOD GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **result);
-  NS_IMETHOD GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIMsgThread **result) ;
-
-  NS_IMETHOD                GetHighWaterArticleNum(nsMsgKey *key);
-  NS_IMETHOD                GetLowWaterArticleNum(nsMsgKey *key);
   //////////////////////////////////////////////////////////////////////////////
   // nsMsgDatabase methods:
 	nsMsgDatabase();
 	virtual ~nsMsgDatabase();
 
-    NS_IMETHOD IsHeaderRead(nsIMsgDBHdr *hdr, PRBool *pRead);
 
 	static nsIMdbFactory	*GetMDBFactory();
-	NS_IMETHOD				GetDBFolderInfo(nsIDBFolderInfo **result);
 	nsIMdbEnv				*GetEnv() {return m_mdbEnv;}
 	nsIMdbStore				*GetStore() {return m_mdbStore;}
 	virtual PRUint32		GetCurVersion();
@@ -293,8 +156,6 @@ protected:
     virtual PRBool  SetHdrReadFlag(nsIMsgDBHdr *, PRBool pRead);
 	virtual PRUint32 GetStatusFlags(nsIMsgDBHdr *msgHdr, PRUint32 origFlags);
 	// helper function which doesn't involve thread object
-    NS_IMETHOD MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
-                               nsIDBChangeListener *instigator);
 
 	virtual nsresult		RemoveHeaderFromDB(nsMsgHdr *msgHdr);
   virtual nsresult    RemoveHeaderFromThread(nsMsgHdr *msgHdr);
@@ -305,6 +166,8 @@ protected:
 
 	nsCOMPtr <nsICollation> m_collationKeyGenerator;
 	nsCOMPtr <nsIMimeConverter> m_mimeConverter;
+  nsCOMPtr <nsIMsgRetentionSettings> m_retentionSettings;
+
 	// mdb bookkeeping stuff
 	nsresult			InitExistingDB();
 	nsresult			InitNewDB();
@@ -379,6 +242,23 @@ protected:
   PLDHashTable  *m_cachedHeaders;
 	PRBool				m_bCacheHeaders;
 
+};
+
+class nsMsgRetentionSettings : public nsIMsgRetentionSettings
+{
+public:
+  nsMsgRetentionSettings();
+  virtual ~nsMsgRetentionSettings();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMSGRETENTIONSETTINGS
+protected:
+  nsMsgRetainByPreference m_retainByPreference;
+  PRUint32                m_daysToKeepHdrs;
+  PRUint32                m_numHeadersToKeep;
+  PRUint32                m_keepUnreadMessagesProp;
+  PRBool                  m_keepUnreadMessagesOnly;
+  PRUint32                m_daysToKeepBodies;
 };
 
 #endif

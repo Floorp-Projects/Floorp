@@ -33,6 +33,7 @@
 #include "nsXPIDLString.h"
 
 #include "nsMsgBaseCID.h"
+#include "nsMsgDBCID.h"
 #include "nsIMsgFolder.h"
 #include "nsIMsgFolderCache.h"
 #include "nsIMsgFolderCacheElement.h"
@@ -1052,6 +1053,27 @@ nsMsgIncomingServer::getProtocolInfo(nsIMsgProtocolInfo **aResult)
     NS_ADDREF(*aResult);
     return NS_OK;
 }
+
+NS_IMETHODIMP nsMsgIncomingServer::GetRetentionSettings(nsIMsgRetentionSettings **settings)
+{
+  NS_ENSURE_ARG_POINTER(settings);
+  if (!m_retentionSettings)
+  {
+    m_retentionSettings = do_CreateInstance(NS_MSG_RETENTIONSETTINGS_CONTRACTID);
+
+    // Create an empty retention settings object, 
+    // get the settings from the server prefs, and init the object from the prefs.
+  }
+  *settings = m_retentionSettings;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgIncomingServer::SetRetentionSettings(nsIMsgRetentionSettings *settings)
+{
+  m_retentionSettings = settings;
+  return NS_OK;
+}
+
 
 // use the convenience macros to implement the accessors
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");

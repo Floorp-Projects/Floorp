@@ -92,6 +92,8 @@ public:
   NS_IMETHOD GetOfflineFileChannel(nsMsgKey msgKey, nsIFileChannel **aFileChannel);
   NS_IMETHOD HasMsgOffline(nsMsgKey msgKey, PRBool *result);
   NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *messages);
+  NS_IMETHOD GetRetentionSettings(nsIMsgRetentionSettings **settings);
+  NS_IMETHOD SetRetentionSettings(nsIMsgRetentionSettings *settings);
 
 protected:
 	virtual nsresult ReadDBFolderInfo(PRBool force);
@@ -126,6 +128,7 @@ protected:
 	// this is currently used when we do a save as of an imap or news message..
 	nsCOMPtr<nsIOutputStream> m_tempMessageStream;
 
+  nsCOMPtr <nsIMsgRetentionSettings> m_retentionSettings;
   static nsIAtom* mFolderLoadedAtom;
   static nsIAtom* mDeleteOrMoveMsgCompletedAtom;
   static nsIAtom* mDeleteOrMoveMsgFailedAtom;

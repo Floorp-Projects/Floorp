@@ -812,7 +812,7 @@ NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *folderName, PRBool create, PRBool
 // Open the MDB database synchronously. If successful, this routine
 // will set up the m_mdbStore and m_mdbEnv of the database object 
 // so other database calls can work.
-NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
+nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 {
 	nsresult ret = NS_OK;
 	nsIMdbFactory *myMDBFactory = GetMDBFactory();
@@ -928,7 +928,7 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 	return ret;
 }
 
-NS_IMETHODIMP nsMsgDatabase::CloseMDB(PRBool commit)
+nsresult nsMsgDatabase::CloseMDB(PRBool commit)
 {
 	if (commit)
 		Commit(nsMsgDBCommitType::kSessionCommit);
@@ -1467,7 +1467,7 @@ PRUint32	nsMsgDatabase::GetStatusFlags(nsIMsgDBHdr *msgHdr, PRUint32 origFlags)
 	return statusFlags;
 }
 
-NS_IMETHODIMP nsMsgDatabase::IsHeaderRead(nsIMsgDBHdr *msgHdr, PRBool *pRead)
+nsresult nsMsgDatabase::IsHeaderRead(nsIMsgDBHdr *msgHdr, PRBool *pRead)
 {
 	if (!msgHdr)
 		return NS_MSG_MESSAGE_NOT_FOUND;
@@ -1541,7 +1541,7 @@ PRBool nsMsgDatabase::SetHdrReadFlag(nsIMsgDBHdr *msgHdr, PRBool bRead)
 	return SetHdrFlag(msgHdr, bRead, MSG_FLAG_READ);
 }
 
-NS_IMETHODIMP nsMsgDatabase::MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
+nsresult nsMsgDatabase::MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
                                              nsIDBChangeListener *instigator)
 {
     nsresult rv;
@@ -2453,7 +2453,7 @@ nsMsgUnreadFilter(nsIMsgDBHdr* msg, void* closure)
     return !wasRead ? NS_OK : NS_COMFALSE;
 }
 
-NS_IMETHODIMP 
+nsresult  
 nsMsgDatabase::EnumerateUnreadMessages(nsISimpleEnumerator* *result)
 {
     nsMsgDBEnumerator* e = new nsMsgDBEnumerator(this, nsMsgUnreadFilter, this);
@@ -3137,7 +3137,7 @@ NS_IMETHODIMP nsMsgDatabase::GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIM
 }
 
 
-NS_IMETHODIMP nsMsgDatabase::GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **result)
+nsresult nsMsgDatabase::GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **result)
 {
 	nsresult ret = NS_OK;
 	if (!result)
@@ -3371,5 +3371,153 @@ nsresult	nsMsgDatabase::DumpThread(nsMsgKey threadId)
 	return rv;
 }
 #endif /* DEBUG */
+
+NS_IMETHODIMP nsMsgDatabase::SetMsgRetentionSettings(nsIMsgRetentionSettings *retentionSettings)
+{
+  m_retentionSettings = retentionSettings;
+  if (retentionSettings && m_dbFolderInfo)
+  {
+    nsresult rv;
+
+    nsMsgRetainByPreference retainByPreference;
+    PRUint32 daysToKeepHdrs;
+    PRUint32 numHeadersToKeep;
+    PRBool keepUnreadMessagesOnly;
+    PRUint32 daysToKeepBodies;
+
+    rv = retentionSettings->GetRetainByPreference(&retainByPreference);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = retentionSettings->GetDaysToKeepHdrs(&daysToKeepHdrs);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = retentionSettings->GetNumHeadersToKeep(&numHeadersToKeep);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = retentionSettings->GetKeepUnreadMessagesOnly(&keepUnreadMessagesOnly);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = retentionSettings->GetDaysToKeepBodies(&daysToKeepBodies);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // need to write this to the db. We'll just use the dbfolderinfo to write properties.
+    m_dbFolderInfo->SetUint32Property("retainBy", retainByPreference);
+    m_dbFolderInfo->SetUint32Property("daysToKeepHdrs", daysToKeepHdrs);
+    m_dbFolderInfo->SetUint32Property("numHdrsToKeep", numHeadersToKeep);
+    m_dbFolderInfo->SetUint32Property("daysToKeepBodies", daysToKeepBodies);
+    m_dbFolderInfo->SetUint32Property("keepUnreadOnly", (keepUnreadMessagesOnly) ? 1 : 0);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDatabase::GetMsgRetentionSettings(nsIMsgRetentionSettings **retentionSettings)
+{
+  NS_ENSURE_ARG_POINTER(retentionSettings);
+  if (!m_retentionSettings)
+  {
+    // create a new one, and initialize it from the db.
+    m_retentionSettings = new nsMsgRetentionSettings;
+    if (m_retentionSettings && m_dbFolderInfo)
+    {
+      nsresult rv;
+
+      nsMsgRetainByPreference retainByPreference;
+      PRUint32 daysToKeepHdrs = 0;
+      PRUint32 numHeadersToKeep = 0;
+      PRUint32 keepUnreadMessagesProp = 0;
+      PRBool keepUnreadMessagesOnly = PR_FALSE;
+      PRUint32 daysToKeepBodies = 0;
+
+      rv = m_dbFolderInfo->GetUint32Property("retainBy", &retainByPreference);
+      m_dbFolderInfo->GetUint32Property("daysToKeepHdrs", &daysToKeepHdrs);
+      m_dbFolderInfo->GetUint32Property("numHdrsToKeep", &numHeadersToKeep);
+      m_dbFolderInfo->GetUint32Property("daysToKeepBodies", &daysToKeepBodies);
+      m_dbFolderInfo->GetUint32Property("keepUnreadOnly", &keepUnreadMessagesProp);
+      keepUnreadMessagesOnly = (keepUnreadMessagesProp == 1);
+      m_retentionSettings->SetRetainByPreference(retainByPreference);
+      m_retentionSettings->SetDaysToKeepHdrs(daysToKeepHdrs);
+      m_retentionSettings->SetNumHeadersToKeep(numHeadersToKeep);
+      m_retentionSettings->SetKeepUnreadMessagesOnly(keepUnreadMessagesOnly);
+      m_retentionSettings->SetDaysToKeepBodies(daysToKeepBodies);
+    }
+  }
+  *retentionSettings = m_retentionSettings;
+  NS_IF_ADDREF(*retentionSettings);
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS1(nsMsgRetentionSettings, nsIMsgRetentionSettings)
+
+nsMsgRetentionSettings::nsMsgRetentionSettings()
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsMsgRetentionSettings::~nsMsgRetentionSettings()
+{
+}
+
+/* attribute unsigned long retainByPreference */
+
+NS_IMETHODIMP nsMsgRetentionSettings::GetRetainByPreference(nsMsgRetainByPreference *retainByPreference)
+{
+  NS_ENSURE_ARG_POINTER(retainByPreference);
+  *retainByPreference = m_retainByPreference;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgRetentionSettings::SetRetainByPreference(nsMsgRetainByPreference retainByPreference)
+{
+  m_retainByPreference = retainByPreference;
+  return NS_OK;
+}
+
+/* attribute long daysToKeepHdrs; */
+NS_IMETHODIMP nsMsgRetentionSettings::GetDaysToKeepHdrs(PRUint32 *aDaysToKeepHdrs)
+{
+  NS_ENSURE_ARG_POINTER(aDaysToKeepHdrs);
+  *aDaysToKeepHdrs = m_daysToKeepHdrs;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgRetentionSettings::SetDaysToKeepHdrs(PRUint32 aDaysToKeepHdrs)
+{
+  m_daysToKeepHdrs = aDaysToKeepHdrs;
+  return NS_OK;
+}
+
+/* attribute long numHeadersToKeep; */
+NS_IMETHODIMP nsMsgRetentionSettings::GetNumHeadersToKeep(PRUint32 *aNumHeadersToKeep)
+{
+  NS_ENSURE_ARG_POINTER(aNumHeadersToKeep);
+  *aNumHeadersToKeep = m_numHeadersToKeep;
+  return NS_OK;
+}
+NS_IMETHODIMP nsMsgRetentionSettings::SetNumHeadersToKeep(PRUint32 aNumHeadersToKeep)
+{
+  m_numHeadersToKeep = aNumHeadersToKeep;
+  return NS_OK;
+}
+
+/* attribute boolean keepUnreadMessagesOnly; */
+NS_IMETHODIMP nsMsgRetentionSettings::GetKeepUnreadMessagesOnly(PRBool *aKeepUnreadMessagesOnly)
+{
+  NS_ENSURE_ARG_POINTER(aKeepUnreadMessagesOnly);
+  *aKeepUnreadMessagesOnly = m_keepUnreadMessagesOnly;
+  return NS_OK;
+}
+NS_IMETHODIMP nsMsgRetentionSettings::SetKeepUnreadMessagesOnly(PRBool aKeepUnreadMessagesOnly)
+{
+  m_keepUnreadMessagesOnly = aKeepUnreadMessagesOnly;
+  return NS_OK;
+}
+
+/* attribute long daysToKeepBodies; */
+NS_IMETHODIMP nsMsgRetentionSettings::GetDaysToKeepBodies(PRUint32 *aDaysToKeepBodies)
+{
+  NS_ENSURE_ARG_POINTER(aDaysToKeepBodies);
+  *aDaysToKeepBodies = m_daysToKeepBodies;
+  return NS_OK;
+}
+NS_IMETHODIMP nsMsgRetentionSettings::SetDaysToKeepBodies(PRUint32 aDaysToKeepBodies)
+{
+  m_daysToKeepBodies = aDaysToKeepBodies;
+  return NS_OK;
+}
 
 

@@ -350,4 +350,6 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 
 	void enableNotifications(in long notificationType, in boolean enable);
 
+  attribute nsIMsgRetentionSettings retentionSettings;
+
 };
