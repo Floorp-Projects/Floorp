@@ -123,11 +123,11 @@ static nsresult Usage(void)
 {
   PR_fprintf(output, "zulu usage:\n");
   PR_fprintf(output, ">zulu [-d] [-c] [-v] [-s <filename>]\n");
-  PR_fprintf(output, "\td\tdebug mode \t(false)\n");
-  PR_fprintf(output, "\tc\tLaunch Command Server\t(none)\n");
-  PR_fprintf(output, "\tv\tverbose output\t(none)\n");
-  PR_fprintf(output, "\ts <filename>\tLaunch Command Script \t(implies -c)\n");
-  return NS_OK; 
+  PR_fprintf(output, "  -d\t\tdebug mode\n");
+  PR_fprintf(output, "  -c\t\tlaunch command server\n");
+  PR_fprintf(output, "  -v\t\tverbose output\n");
+  PR_fprintf(output, "  -s <filename>\tlaunch command script \t(implies -c)\n");
+  return 1; 
 } 
 
 /*
@@ -156,7 +156,8 @@ nsCalendarShell::~nsCalendarShell()
 
   Logoff();
 
-  nsServiceManager::ReleaseService(kCXPFCObserverManagerCID, mObserverManager);
+  if (nsnull != mObserverManager)
+    nsServiceManager::ReleaseService(kCXPFCObserverManagerCID, mObserverManager);
 
   if (mCAPIPassword)
     PR_Free(mCAPIPassword);
@@ -209,7 +210,10 @@ nsresult nsCalendarShell::Init()
    */
 
 
-  ParseCommandLine();
+  res = ParseCommandLine();
+
+  if (NS_OK != res)
+    return res;
     
   /*
    * Register class factrories needed for application
@@ -263,7 +267,7 @@ nsresult nsCalendarShell::ParseCommandLine()
   
   output = PR_GetSpecialFD(PR_StandardError);
 
-  mShellInstance->GetCommandLineOptions(&opt,"cGdl:s:");
+  mShellInstance->GetCommandLineOptions(&opt,"cGhdl:s:");
 
 	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
   {
