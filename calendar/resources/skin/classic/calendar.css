@@ -1342,3 +1342,11 @@ listitem[selected="true"] > .calendar-list-item-class
 {
    list-style-image      : url( "chrome://calendar/skin/unifinder/priority_low.png" )
 }  
+/*--------------------------------------------------------------------
+ * Unifinder 
+ *-------------------------------------------------------------------*/
+/* workaround to avoid Window Flick */
+#unifinder-search-results-listbox
+{
+   min-height : 40px ;
+}
