@@ -567,7 +567,7 @@ nsHTMLAnchorElement::GetSearch(nsAWritableString& aSearch)
       nsIURL* url;
       result = uri->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
       if (NS_SUCCEEDED(result)) {
-        result = url->GetQuery(&search);
+        result = url->GetEscapedQuery(&search);
         NS_RELEASE(url);
       }
       if (result == NS_OK && (nsnull != search) && ('\0' != *search)) {
