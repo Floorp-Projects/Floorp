@@ -1988,7 +1988,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_DROPFILES: {
-          HDROP hDropInfo = (HANDLE) wParam;
+          HDROP hDropInfo = (HDROP) wParam;
 	        UINT nFiles = ::DragQueryFile(hDropInfo, (UINT)-1, NULL, 0);
 
 	        for (UINT iFile = 0; iFile < nFiles; iFile++) {
