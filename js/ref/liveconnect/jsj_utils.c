@@ -301,8 +301,13 @@ jsj_LogError(const char *error_msg)
 	jsj_GetErrorMessage is invoked by the engine whenever it wants 
 	to convert an error number into an error format string.
 */
+/*
+        this define needs to go somewhere sensible
+*/
+#define JSJ_HAS_DFLT_MSG_STRINGS 1
+
 JSErrorFormatString jsj_ErrorFormatString[JSJ_Err_Limit] = {
-#if JS_HAS_DFLT_MSG_STRINGS
+#if JSJ_HAS_DFLT_MSG_STRINGS
 #define MSG_DEF(name, number, count, format) \
     { format, count } ,
 #else
