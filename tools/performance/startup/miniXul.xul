@@ -2,8 +2,7 @@
 
 <!DOCTYPE window>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="onload()">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
     <script type="application/x-javascript">
         <![CDATA[
             function onload() {
@@ -11,6 +10,7 @@
                 if ( n ) {
                     // We need to open more windows.
                     window.opener.openWindows(n);
+                    //window.openDialog("chrome://navigator/content/miniXul.xul","_blank","chrome,all", n);
                 }
             }
         ]]>
