@@ -30,6 +30,8 @@
       </property>
     </implementation>
     <handlers>
+	  <handler event="focus" action="this.outlinerBoxObject.focused = true;"/>
+	  <handler event="blur" action="this.outlinerBoxObject.focused = false;"/>
       <handler event="keypress" keycode="vk_enter">
         <![CDATA[
          if (this.currentIndex == -1)
@@ -391,7 +393,9 @@
 
   <binding id="outlinerrows" extends="xul:box">
     <content>
-      <children/>
+      <xul:box flex="1" class="outliner-bodybox">
+        <children/>
+      </xul:box>
       <xul:scrollbar align="vertical" class="outliner-scrollbar"/>
     </content>
   </binding>

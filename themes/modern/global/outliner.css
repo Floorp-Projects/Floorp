@@ -32,6 +32,11 @@ outlinerbody:-moz-outliner-row(current)
 
 outlinerbody:-moz-outliner-row(selected)
 {
+  background-color:  #CCCCCC;
+}
+
+outlinerbody:-moz-outliner-row(selected,focus)
+{
   background-color:  #486380;
 }
 
@@ -42,11 +47,6 @@ outlinerbody:-moz-outliner-cell
   padding: 0px 0px 1px 1px;
 }
 
-outlinerbody:-moz-outliner-cell(selected)
-{
-  
-}
-
 outlinerbody:-moz-outliner-cell-text
 {
   color: inherit;
@@ -55,6 +55,11 @@ outlinerbody:-moz-outliner-cell-text
 }
 
 outlinerbody:-moz-outliner-cell-text(selected)
+{
+  color: black;  
+}
+
+outlinerbody:-moz-outliner-cell-text(selected,focus)
 {
   color: white;  
 }
