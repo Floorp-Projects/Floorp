@@ -24,61 +24,29 @@
 
 DEPTH		= ..\..\..
 
-
 DEFINES		= -D_IMPL_NS_INTL -DWIN32_LEAN_AND_MEAN
 
 MODULE		= locale
+LIBRARY_NAME	= nslocale_s
+
 DIRS		= windows
 
-MAKE_OBJ_TYPE = DLL
-DLLNAME = nslocale
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-#RESFILE = $(DLLNAME).res
-
-CPPSRCS		=		nsLocale.cpp				\
-				nsLocaleService.cpp			\
-				nsFontPackageService.cpp		\
-				nsFontPackageHandler.cpp		\
-				nsLanguageAtomService.cpp		\
-				nsScriptableDateFormat.cpp			\
-				nsCollation.cpp
-
-
-CPP_OBJS	=	.\$(OBJDIR)\nsLocale.obj			\
-				.\$(OBJDIR)\nsLocaleService.obj		\
-				.\$(OBJDIR)\nsFontPackageService.obj	\
-				.\$(OBJDIR)\nsFontPackageHandler.obj	\
-				.\$(OBJDIR)\nsLanguageAtomService.obj	\
-				.\$(OBJDIR)\nsScriptableDateFormat.obj	\
-				.\$(OBJDIR)\nsCollation.obj		\
-				.\$(OBJDIR)\dlldeps.obj
-
-LINCS		= -I.						\
-			  -I$(PUBLIC)\raptor		\
-			  -I$(PUBLIC)\xpcom 		\
-			  -I$(PUBLIC)\locale		\
-			  -I$(PUBLIC)\uconv			\
-			  -I$(PUBLIC)\unicharutil
-
-
-LLIBS		= $(DIST)\lib\xpcom.lib         \
-                  $(DIST)\lib\nslocalewin_s.lib \
-		  $(LIBNSPR)
-
-LCFLAGS		= $(LCFLAGS) \
-			  $(DEFINES)
+CPP_OBJS	= .\$(OBJDIR)\nsLocale.obj			\
+		  .\$(OBJDIR)\nsLocaleService.obj		\
+		  .\$(OBJDIR)\nsFontPackageService.obj		\
+		  .\$(OBJDIR)\nsFontPackageHandler.obj		\
+		  .\$(OBJDIR)\nsLanguageAtomService.obj		\
+		  .\$(OBJDIR)\nsScriptableDateFormat.obj	\
+		  .\$(OBJDIR)\nsCollation.obj			\
+		  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 	$(MAKE_INSTALL) langGroups.properties $(DIST)\bin\res
 	$(MAKE_INSTALL) language.properties $(DIST)\bin\res
   
 clobber::
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll
-	rm -f $(DIST)\lib\$(DLLNAME).lib
 	rm -f $(DIST)\bin\res\langGroups.properties
-  rm -f $(DIST)\bin\res\language.properties
+	rm -f $(DIST)\bin\res\language.properties
 	
