@@ -78,6 +78,8 @@ public:
   
 protected:
 
+  OSErr           OpenURL(const char* aURL);
+
   nsresult        OpenWindow(const char *chrome, const PRUnichar *url);
     
   char**          mArgs;              // array of arg pointers (augmented argv)
