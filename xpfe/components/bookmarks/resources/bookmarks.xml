@@ -1057,27 +1057,25 @@
           var additiveFlag = false;
           for (var i = 0; i < nodes.length; ++i) {
             if (!nodes[i]) continue;
-            var rCurrent = ksRDF.GetResource(nodes[i]);
-            const krTypeProperty = ksRDF.GetResource("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
-            var rType = this.db.GetTarget(rCurrent, krTypeProperty, true);
-            try {
-              rType = rType.QueryInterface(Components.interfaces.nsIRDFResource);
+            var aNode = nodes[i];
+            var rType = null;
+
+            var tabIndex = aNode.indexOf("\t");
+            if (tabIndex > 0)
+            {
+              rType = ksRDF.GetResource(aNode.substring(tabIndex + 1));
+              aNode = aNode.substring(0, tabIndex);
             }
-            catch (e) {
-              try {
-                rType = rType.QueryInterface(Components.interfaces.nsIRDFLiteral);
-              }
-              catch (e) {
-                // OK, no type exists, so node does not exist in the graph. 
-                // (e.g. user pastes url as text)
-                // Do some housekeeping. 
+            var rCurrent = ksRDF.GetResource(aNode);
+            if (!rType && names[i])
+            {
                 const krName = ksRDF.GetResource(names[i]);
                 const krNameProperty = ksRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
                 const krBookmark = ksRDF.GetResource("http://home.netscape.com/NC-rdf#Bookmark");
                 kBMDS.Assert(rCurrent, krNameProperty, krName, true);
-                kBMDS.Assert(rCurrent, krTypeProperty, krBookmark, true);
-              }
+                // note: never need to assert type (it is derived)
             }
+
             // If the node is a folder, then we need to create a new anonymous 
             // resource and copy all the arcs over.
             if (rType && rType.Value == "http://home.netscape.com/NC-rdf#Folder") {
@@ -1140,13 +1138,25 @@
               var res = this.treeBuilder.getResourceAtIndex(j);
               var urlRes = ksRDF.GetResource("http://home.netscape.com/NC-rdf#URL");
               var nameRes = ksRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
+              var typeRes = ksRDF.GetResource("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+
               var url = this.db.GetTarget(res, urlRes, true);
               if (url)
                 url = url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
               var name = this.db.GetTarget(res, nameRes, true);
               name = name.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+
+              var bmkType = this.db.GetTarget(res, typeRes, true);
+              if (bmkType)
+                bmkType = bmkType.Value;
+
               // XXXben is "\n" the best delimiter here? I think not. 
-              sBookmarkItem += res.Value + "\n";
+              sBookmarkItem += res.Value;
+              if (bmkType)
+              {
+                sBookmarkItem += "\t" + bmkType;
+              }
+              sBookmarkItem += "\n";
               sTextUnicode += url + "\n";
               sTextHTML += "<A HREF=\"" + url + "\">" + name + "</A>";
             }
