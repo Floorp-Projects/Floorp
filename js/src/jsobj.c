@@ -1445,6 +1445,7 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
     size_t nbytes;
     jsval *newslots;
 
+    OBJ_CHECK_SLOT(obj,slot);
     obj->slots[slot] = JSVAL_VOID;
     map = obj->map;
     if (map->freeslot == slot + 1)
@@ -1801,6 +1802,7 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     JSObject *obj2;
     JSScopeProperty *sprop;
+    JSScope *scope;
     jsint slot;
 
     if (!js_LookupProperty(cx, obj, id, &obj2, (JSProperty **)&sprop))
@@ -1831,19 +1833,25 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     }
 
     /* Unlock obj2 before calling getter, relock after to avoid deadlock. */
+    scope = OBJ_SCOPE(obj2);
     slot = sprop->slot;
     *vp = LOCKED_OBJ_GET_SLOT(obj2, slot);
-    JS_UNLOCK_OBJ(cx, obj2);
+#ifndef JS_THREADSAFE
+    JS_ATOMIC_ADDREF(&sprop->nrefs, 1);
+#endif
+    JS_UNLOCK_SCOPE(cx, scope);
     if (!SPROP_GET(cx, sprop, obj, obj2, vp)) {
-	JS_LOCK_OBJ(cx, obj2);
-	OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
+        JS_LOCK_OBJ_VOID(cx, obj2, js_DropScopeProperty(cx, scope, sprop));
 	return JS_FALSE;
     }
-    JS_LOCK_OBJ(cx, obj2);
-    LOCKED_OBJ_SET_SLOT(obj2, slot, *vp);
-    PROPERTY_CACHE_FILL(cx, &cx->runtime->propertyCache, obj2, id,
-			(JSProperty *)sprop);
-    OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
+    JS_LOCK_SCOPE(cx, scope);
+    sprop = js_DropScopeProperty(cx, scope, sprop);
+    if (sprop && SPROP_HAS_VALID_SLOT(sprop)) {
+        LOCKED_OBJ_SET_SLOT(obj2, slot, *vp);
+        PROPERTY_CACHE_FILL(cx, &cx->runtime->propertyCache, obj2, id,
+                            (JSProperty *)sprop);
+    }
+    JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
 }
 
@@ -2056,7 +2064,7 @@ read_only:
     JS_LOCK_OBJ(cx, obj);
 
     sprop = js_DropScopeProperty(cx, scope, sprop);
-    if (!sprop) {
+    if (!sprop || !SPROP_HAS_VALID_SLOT(sprop)) {
 	/* Lost a race with someone who deleted sprop. */
 	JS_UNLOCK_OBJ(cx, obj);
 	return JS_TRUE;

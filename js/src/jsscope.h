@@ -82,6 +82,9 @@ struct JSScope {
 #define SPROP_GETTER(sprop,obj) SPROP_GETTER_SCOPE(sprop, OBJ_SCOPE(obj))
 #define SPROP_SETTER(sprop,obj) SPROP_SETTER_SCOPE(sprop, OBJ_SCOPE(obj))
 
+#define SPROP_INVALID_SLOT       0xffffffff
+#define SPROP_HAS_VALID_SLOT(_s) ((_s)->slot != SPROP_INVALID_SLOT)
+
 #ifdef JS_DOUBLE_HASHING
 
 struct JSScopeProperty {
