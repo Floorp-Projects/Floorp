@@ -159,7 +159,7 @@ nsTableCellFrame::GetSkipSides() const
   * Align the cell's child frame within the cell
   *
   */
-void  nsTableCellFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
+void  nsTableCellFrame::VerticallyAlignChild()
 {
   const nsStyleSpacing* spacing =
       (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
@@ -174,12 +174,10 @@ void  nsTableCellFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
   if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
     verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
   }
-
-  nscoord       height = mRect.height;
-
-  nsRect        kidRect;  
+  nscoord height = mRect.height;
+  nsRect kidRect;  
   mFirstChild->GetRect(kidRect);
-  nscoord       childHeight = kidRect.height;
+  nscoord childHeight = kidRect.height;
   
 
   // Vertically align the child
@@ -618,8 +616,7 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
 
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
-  //tableFrame->GetGeometricParent((nsIFrame *&)tableFrame); // get the outer frame
-  NS_ASSERTION(tableFrame,"Table Must not be null");
+  NS_ASSERTION(tableFrame,"Table must not be null");
   if (!tableFrame)
     return;
 
@@ -654,6 +651,8 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
     border = NSIntPixelsToTwips(1, p2t);
     MapHTMLBorderStyle(aPresContext, *spacingData, border, tableFrame);
   }
+
+  // TODO: map the align attributes here
   
 }
 

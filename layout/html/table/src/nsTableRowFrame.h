@@ -93,8 +93,8 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
-  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
-                       nsDidReflowStatus aStatus);
+  virtual void DidResize(nsIPresContext& aPresContext,
+                         const nsHTMLReflowState& aReflowState);
 
   /** @see nsContainerFrame::CreateContinuingFrame */
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
@@ -213,6 +213,9 @@ protected:
                              const nsMargin&       aKidMargin) const;
   nscoord ComputeCellAvailWidth(const RowReflowState& aState,
                                 nsIFrame*             aKidFrame) const;
+
+  nsIFrame * GetFirstChildForDirection(PRUint8 aDir);
+  nsIFrame * GetNextChildForDirection(PRUint8 aDir, nsIFrame *aCurrentChild);
 
   /**
    * Called for a resize reflow. Typically because the column widths have

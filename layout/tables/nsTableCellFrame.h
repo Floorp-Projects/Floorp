@@ -76,7 +76,7 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
-  void          VerticallyAlignChild(nsIPresContext* aPresContext);
+  virtual void VerticallyAlignChild();
 
   /** return the mapped cell's row span.  Always >= 1. */
   virtual PRInt32 GetRowSpan();
