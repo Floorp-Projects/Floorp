@@ -68,8 +68,11 @@ use DBI;
 
 use Date::Format;               # For time2str().
 use Date::Parse;               # For str2time().
-# use Carp;                       # for confess
+use Carp;                       # for confess
 use RelationSet;
+
+# $ENV{PATH} is not taint safe
+delete $ENV{PATH};
 
 # Contains the version string for the current running Bugzilla.
 $::param{'version'} = '2.13';
@@ -83,6 +86,13 @@ $::dbwritesallowed = 1;
 # Adding a global variable for the value of the superuser groupset.
 # Joe Robins, 7/5/00
 $::superusergroupset = "9223372036854775807";
+
+sub die_with_dignity {
+    my ($err_msg) = @_;
+    print $err_msg;
+    confess($err_msg);
+}
+$::SIG{__DIE__} = \&die_with_dignity;
 
 sub ConnectToDatabase {
     my ($useshadow) = (@_);
@@ -649,6 +659,12 @@ sub DBID_to_real_or_loginname {
 
 sub DBID_to_name {
     my ($id) = (@_);
+    # $id should always be a positive integer
+    if ($id =~ m/^([1-9][0-9]*)$/) {
+        $id = $1;
+    } else {
+        $::cachedNameArray{$id} = "__UNKNOWN__";
+    }
     if (!defined $::cachedNameArray{$id}) {
         PushGlobalSQLState();
         SendSQL("select login_name from profiles where userid = $id");
@@ -668,10 +684,12 @@ sub DBname_to_id {
     SendSQL("select userid from profiles where login_name = @{[SqlQuote($name)]}");
     my $r = FetchOneColumn();
     PopGlobalSQLState();
-    if (!defined $r || $r eq "") {
+    # $r should be a positive integer, this makes Taint mode happy
+    if (defined $r && $r =~ m/^([1-9][0-9]*)$/) {
+        return $1;
+    } else {
         return 0;
     }
-    return $r;
 }
 
 
@@ -697,6 +715,18 @@ sub DBNameToIdAndCheck {
         print "<P>Please hit the <B>Back</B> button and try again.\n";
     }
     exit(0);
+}
+
+# Use detaint_string() when you know that there is no way that the data
+# in a scalar can be tainted, but taint mode still bails on it.
+# WARNING!! Using this routine on data that really could be tainted
+#           defeats the purpose of taint mode.  It should only be
+#           used on variables that cannot be touched by users.
+
+sub detaint_string {
+    my ($str) = @_;
+    $str =~ m/^(.*)$/s;
+    $str = $1;
 }
 
 # This routine quoteUrls contains inspirations from the HTML::FromText CPAN
@@ -965,6 +995,8 @@ sub SqlQuote {
 #     }
     $str =~ s/([\\\'])/\\$1/g;
     $str =~ s/\0/\\0/g;
+    # If it's been SqlQuote()ed, then it's safe, so we tell -T that.
+    $str = detaint_string($str);
     return "'$str'";
 }
 

@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -27,10 +27,18 @@
 
 use diagnostics;
 use strict;
+use lib ".";
 
 require "globals.pl";
 
 use RelationSet;
+
+
+# Shut up misguided -w warnings about "used only once".
+sub processmail_sillyness {
+    my $zz;
+    $zz = $::db;
+}
 
 $| = 1;
 
@@ -102,6 +110,10 @@ sub ProcessOneBug {
         $values{$i} = shift(@row);
     }
     my ($start, $end) = (@row);
+    # $start and $end are considered safe because users can't touch them
+    $start = detaint_string($start);
+    $end = detaint_string($end);
+
     my $ccSet = new RelationSet();
     $ccSet->mergeFromDB("SELECT who FROM cc WHERE bug_id = $id");
     $values{'cc'} = $ccSet->toString();
@@ -471,22 +483,20 @@ sub filterEmailGroup ($$$) {
 
     foreach my $person (@emailList) {
         
-        my $userid;
         my $lastCount = @filteredList;
 
         if ( $person eq '' ) { next; }
 
-        SendSQL("SELECT userid FROM profiles WHERE login_name = " 
-                . SqlQuote($person) );
+        my $userid = DBname_to_id($person);
 
-        if ( !($userid = FetchSQLData()) ) {
+        if ( ! $userid ) {
             push(@filteredList,$person);
             next;
         }
         
         SendSQL("SELECT emailflags FROM profiles WHERE " .
                 "userid = $userid" );
-        
+
         my ($userFlagString) = FetchSQLData();
         
         # If the sender doesn't want email, exclude them from list
@@ -622,6 +632,12 @@ sub NewProcessOnePerson ($$$$$$$$$$) {
       return;
     }
         
+    # Sanitize $values{'groupset'}
+    if ($values{'groupset'} =~ m/(\d+)/) {
+        $values{'groupset'} = $1;
+    } else {
+        $values{'groupset'} = 0;
+    }
     SendSQL("SELECT userid, groupset & $values{'groupset'} " .
             "FROM profiles WHERE login_name = " . SqlQuote($person));
     my ($userid, $groupset) =  (FetchSQLData());
@@ -706,6 +722,9 @@ sub NewProcessOnePerson ($$$$$$$$$$) {
 # Code starts here
 
 ConnectToDatabase();
+# Set Taint mode for the SQL
+$::db->{Taint} = 1;
+# ^^^ Taint mode is still a work in progress...
 GetVersionTable();
 
 if (open(FID, "<data/nomail")) {
@@ -762,7 +781,14 @@ if ($ARGV[0] eq "rescanall") {
         ProcessOneBug($ARGV[0]);
     }
 } else {
-    ProcessOneBug($ARGV[0]);
+    my $bugnum;
+    if ($ARGV[0] =~ m/^([1-9][0-9]*)$/) {
+        $bugnum = $1;
+    } else {
+        print "Error calling processmail (bug id is not an integer)<br>\n";
+        exit;
+    }
+    ProcessOneBug($bugnum);
 }
 
 exit;
