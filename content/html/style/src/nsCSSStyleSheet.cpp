@@ -1677,6 +1677,7 @@ void CSSStyleSheetImpl::ClearHash(void)
   }
 }
 
+static
 PRBool BuildHashEnum(nsISupports* aRule, void* aHash)
 {
   nsICSSStyleRule* rule = (nsICSSStyleRule*)aRule;
