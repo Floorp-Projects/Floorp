@@ -419,12 +419,15 @@ nsXBLPrototypeBinding::GetInsertionPoint(nsIContent* aBoundElement, nsIContent* 
     }
 
     nsCOMPtr<nsIContent> realContent;
-    nsCOMPtr<nsIContent> templContent;
-    GetImmediateChild(kContentAtom, getter_AddRefs(templContent));
-    LocateInstance(templContent, aCopyRoot, content, getter_AddRefs(realContent));
+    if (content) {
+      nsCOMPtr<nsIContent> templContent;
+      GetImmediateChild(kContentAtom, getter_AddRefs(templContent));
+      LocateInstance(templContent, aCopyRoot, content, getter_AddRefs(realContent));
+    }
     if (realContent)
       *aResult = realContent;
-    else *aResult = aBoundElement;
+    else
+      *aResult = aBoundElement;
     NS_IF_ADDREF(*aResult);
   }
   return NS_OK;  
@@ -441,12 +444,15 @@ nsXBLPrototypeBinding::GetSingleInsertionPoint(nsIContent* aBoundElement,
       nsCOMPtr<nsIContent> content = getter_AddRefs(NS_STATIC_CAST(nsIContent*, 
                                                                    mInsertionPointTable->Get(&key)));
       nsCOMPtr<nsIContent> realContent;
-      nsCOMPtr<nsIContent> templContent;
-      GetImmediateChild(kContentAtom, getter_AddRefs(templContent));
-      LocateInstance(templContent, aCopyRoot, content, getter_AddRefs(realContent));
+      if (content) {
+        nsCOMPtr<nsIContent> templContent;
+        GetImmediateChild(kContentAtom, getter_AddRefs(templContent));
+        LocateInstance(templContent, aCopyRoot, content, getter_AddRefs(realContent));
+      }
       if (realContent)
         *aResult = realContent;
-      else *aResult = aBoundElement;
+      else
+        *aResult = aBoundElement;
       NS_IF_ADDREF(*aResult);
     }
     else 
