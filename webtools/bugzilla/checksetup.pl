@@ -322,8 +322,8 @@ print "Checking user setup ...\n";
 $@ = undef;
 if ($ARGV[0]) {
     do $ARGV[0] 
-        or eval die("Error $! processing $ARGV[0]")
-        or die("Error $@ processing $ARGV[0]");
+        or ($@ && die("Error $@ processing $ARGV[0]"))
+        or die("Error $! processing $ARGV[0]");
 }
 do 'localconfig';
 if ($@) { # capture errors in localconfig, bug 97290
