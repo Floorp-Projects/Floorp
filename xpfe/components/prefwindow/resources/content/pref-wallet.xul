@@ -36,7 +36,7 @@
 
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["walletServer", "walletCaptureForms", "signonRememberSignons"];
+    _elementIDs = ["walletServer", "walletCaptureForms", "signonRememberSignons", "encryptEnabled"];
   ]]>
   </script>
           
@@ -99,4 +99,14 @@
               oncommand="viewSignons();"/>
     </box>
   </titledbox>
+
+  <titledbox orient="vertical">
+    <title><text value="&encryptHeader.label;"/></title>
+    <html flex="1">&encryptDescription.label;</html>
+    <checkbox id="encryptEnabled" value="&encryptEnabled.label;" accesskey="&encryptEnabled.accesskey;"
+              pref="true" preftype="bool" prefstring="wallet.crypto"
+              prefattribute="checked"/>
+
+  </titledbox>
+
 </window>

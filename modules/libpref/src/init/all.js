@@ -281,6 +281,7 @@ pref("wallet.fetchPatches",                 false);
 pref("wallet.Server",                       "http://www.mozilla.org/wallet/tables/");
 pref("wallet.version",                      "1");
 pref("wallet.enabled",                      true);
+pref("wallet.crypto",                       false);
 pref("imageblocker.enabled",                false);
 pref("messages.new_window",                 true); // ML obsolete; use mailnews.message_in_thread_window
 pref("intl.accept_languages",               "en");
