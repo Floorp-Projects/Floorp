@@ -1213,13 +1213,68 @@ nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort,
     // XXX do we need types for the faults?
     // XXX ignoring param ordering problem for now.
 
-    // Allocate the param arrays.
-
+    // Allocate the param arrays. On the other hand
+    // no need to allocate the param arrays if the
+    // input type and the output type are null; fixing
+    // bug 200767
+    PRUint32 k = 0;
     PRUint16 primaryParamCount = inParams.GetCount() + outParams.GetCount();
-    rv = set->AllocateParamArray(primaryParamCount, &primaryParamArray);
-    if (NS_FAILED(rv)) {
-      return rv;
+    if (primaryParamCount != 0) { 
+      rv = set->AllocateParamArray(primaryParamCount, &primaryParamArray);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      // Set the appropriate 'in' param flags.
+    
+      // 'input' param cases are easy because they are exactly the same for
+      // primary and primaryAsync.
+
+      pparamDesc = inParams.GetArray();
+
+      for (k = 0; k < inParams.GetCount(); pparamDesc++, k++) {
+        // set direction flag
+        pparamDesc->flags |= XPT_PD_IN;
+
+        // handle array size_of/length_of.
+        if (XPT_TDP_TAG(pparamDesc->type.prefix) == TD_ARRAY) {
+          pparamDesc->type.argnum = 
+              pparamDesc->type.argnum2 = k - 1; 
+        }
+      }
+        
+      // Copy the 'in' param arrays.
+
+      memcpy(primaryParamArray, inParams.GetArray(), 
+             inParams.GetCount() * sizeof(XPTParamDescriptor));
+    
+      // Do 'output' param cases for primary interface.
+
+      pparamDesc = outParams.GetArray();
+      for (k = 0; k < outParams.GetCount(); pparamDesc++, k++) {
+        // handle AString 'out' passing convensions
+        pparamDesc->flags |=
+          (XPT_TDP_TAG(pparamDesc->type.prefix) == TD_DOMSTRING) ?
+              (XPT_PD_IN | XPT_PD_DIPPER) : XPT_PD_OUT;
+
+        // handle array size_of/length_of.
+        if (XPT_TDP_TAG(pparamDesc->type.prefix) == TD_ARRAY) {
+          pparamDesc->type.argnum =
+              pparamDesc->type.argnum2 = inParams.GetCount() + k - 1; 
+        }
+      
+        // handle trailing retval.
+        if (k+1 == outParams.GetCount()) {
+          pparamDesc->flags |= XPT_PD_RETVAL;
+        }
+      }
+
+      memcpy(primaryParamArray + inParams.GetCount(), 
+             outParams.GetArray(), 
+             outParams.GetCount() * sizeof(XPTParamDescriptor));
+      // primaryParamArray is done now.
     }
+
 
     PRUint16 primaryAsyncParamCount = inParams.GetCount() + 1;
     rv = set->AllocateParamArray(primaryAsyncParamCount,
@@ -1228,36 +1283,6 @@ nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort,
       return rv;
     }
 
-    PRUint16 listenerParamCount = 1 + outParams.GetCount();
-    rv = set->AllocateParamArray(listenerParamCount, &listenerParamArray);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // Set the appropriate 'in' param flags.
-    
-    // 'input' param cases are easy because they are exactly the same for
-    // primary and primaryAsync.
-
-    pparamDesc = inParams.GetArray();
-
-    PRUint32 k;
-    for (k = 0; k < inParams.GetCount(); pparamDesc++, k++) {
-      // set direction flag
-      pparamDesc->flags |= XPT_PD_IN;
-
-      // handle array size_of/length_of.
-      if (XPT_TDP_TAG(pparamDesc->type.prefix) == TD_ARRAY) {
-        pparamDesc->type.argnum = 
-            pparamDesc->type.argnum2 = k - 1; 
-      }
-    }
-        
-    // Copy the 'in' param arrays.
-
-    memcpy(primaryParamArray, inParams.GetArray(), 
-           inParams.GetCount() * sizeof(XPTParamDescriptor));
-    
     memcpy(primaryAsyncParamArray, inParams.GetArray(), 
            inParams.GetCount() * sizeof(XPTParamDescriptor));
 
@@ -1270,33 +1295,12 @@ nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort,
     primaryAsyncParamArray[inParams.GetCount()] = paramDesc;
     // primaryAsyncParamArray is done now.
 
-    // Do 'output' param cases for primary interface.
-
-    pparamDesc = outParams.GetArray();
-    for (k = 0; k < outParams.GetCount(); pparamDesc++, k++) {
-      // handle AString 'out' passing convensions
-      pparamDesc->flags |=
-        (XPT_TDP_TAG(pparamDesc->type.prefix) == TD_DOMSTRING) ?
-            (XPT_PD_IN | XPT_PD_DIPPER) : XPT_PD_OUT;
-
-      // handle array size_of/length_of.
-      if (XPT_TDP_TAG(pparamDesc->type.prefix) == TD_ARRAY) {
-        pparamDesc->type.argnum =
-            pparamDesc->type.argnum2 = inParams.GetCount() + k - 1; 
-      }
-      
-      // handle trailing retval.
-      if (k+1 == outParams.GetCount()) {
-        pparamDesc->flags |= XPT_PD_RETVAL;
-      }
+    PRUint16 listenerParamCount = 1 + outParams.GetCount();
+    rv = set->AllocateParamArray(listenerParamCount, &listenerParamArray);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
 
-    memcpy(primaryParamArray + inParams.GetCount(), 
-           outParams.GetArray(), 
-           outParams.GetCount() * sizeof(XPTParamDescriptor));
-    // primaryParamArray is done now.
-
-    
     // Do 'output' param cases for listener interface.
 
     pparamDesc = outParams.GetArray();
