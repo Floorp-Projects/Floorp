@@ -583,7 +583,7 @@ LocationImpl::SetHrefWithBase(const nsAString& aHref,
       } //cx
     }  // stack
 
-    if (aReplace ||  inScriptTag) {
+    if (aReplace || inScriptTag) {
       loadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormalReplace);
     }
 
