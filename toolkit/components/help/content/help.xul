@@ -104,6 +104,10 @@
     </commandset>
     <keyset id="keys">
         <key id="goHome"      keycode="VK_HOME"  command="Help:Home" modifiers="alt"/>
+#ifdef XP_UNIX
+        <key key="&goBackCmd.commandkey;" command="Help:Back" modifiers="accel"/>
+        <key key="&goForwardCmd.commandkey;" command="Help:Forward" modifiers="accel"/>
+#endif
 #ifdef XP_MACOSX
         <key id="goBackKb"    keycode="VK_LEFT"  command="Help:Back" modifiers="accel"/>
         <key id="goForwardKb" keycode="VK_RIGHT" command="Help:Forward" modifiers="accel"/>
