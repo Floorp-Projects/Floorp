@@ -340,8 +340,7 @@ main(int argc, char *argv[])
 		fprintf
 		(
 			view->out,
-			"<html><head><title>View %s</title></head>"
-				"<body><tt><b>\n",
+			"<html><head><title>View %s</title></head><body><pre>",
 			url
 		);
 		viewReport(app, "input url:");
@@ -398,7 +397,6 @@ main(int argc, char *argv[])
 		viewReport(app, "fully qualified url:");
 		viewReport(app, (char *) u->url);
 		viewReportHTML(app, "<hr>");
-		fflush(view->out);
 		if (!strcmp((char *) u->scheme, "http"))
 		{
 			httpProcess(app, u,
@@ -415,7 +413,7 @@ main(int argc, char *argv[])
 				u->scheme
 			);
 		}
-		fprintf(view->out, "</b></tt></body></html>\n");
+		fprintf(view->out, "</pre></body></html>\n");
 	}
 	else
 	{

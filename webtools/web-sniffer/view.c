@@ -27,7 +27,7 @@
 #define CONTROL_START "<font color=#FF0000>"
 #define CONTROL(str) CONTROL_START str CONTROL_END
 #define CONTROL_END "</font>"
-#define NL "<br>"
+#define NL "\n"
 
 static int verbose = 0;
 
