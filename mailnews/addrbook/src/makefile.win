@@ -21,7 +21,7 @@ IGNORE_MANIFEST=1
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=addrbook
-MODULE= mailnews
+MODULE= addressbook
 REQUIRES=xpcom nspr rdf
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
@@ -31,6 +31,7 @@ CPPSRCS=                     \
 	nsAbDirectory.cpp		\
 	nsCardDataSource.cpp	\
 	nsAbCard.cpp	\
+	nsDirPrefs.cpp	\
 	$(NULL)
 
 
@@ -40,6 +41,7 @@ CPP_OBJS=                               \
     .\$(OBJDIR)\nsAbDirectory.obj		\
     .\$(OBJDIR)\nsCardDataSource.obj		\
     .\$(OBJDIR)\nsAbCard.obj		\
+    .\$(OBJDIR)\nsDirPrefs.obj		\
 	$(NULL)
 
 
@@ -48,11 +50,13 @@ EXPORTS=                \
 	nsAbDirectory.h		\
 	nsCardDataSource.h		\
 	nsAbCard.h		\
+	nsDirPrefs.h		\
 	$(NULL)
 
 LINCS=                       \
         -I$(PUBLIC)\xpcom    \
         -I$(PUBLIC)\mailnews \
+        -I$(PUBLIC)\addressbook \
         -I$(PUBLIC)\raptor   \
         -I$(PUBLIC)\rdf      \
         -I$(PUBLIC)\rdfutil  \

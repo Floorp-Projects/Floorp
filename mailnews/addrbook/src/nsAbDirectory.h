@@ -31,6 +31,7 @@
 #include "nsIAbCard.h"
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
+#include "nsDirPrefs.h"
 
  /* 
   * Address Book Directory
@@ -117,6 +118,8 @@ protected:
 //	nsresult NotifyItemDeleted(nsISupports *item);
   nsresult AddSubDirectory(nsAutoString name, nsIAbDirectory **childDir);
   nsresult AddChildCards(nsAutoString name, nsIAbCard **childDir);
+
+  nsVoidArray* GetDirList(){ return DIR_GetDirectories(); }
 
 protected:
   nsString mDirName;

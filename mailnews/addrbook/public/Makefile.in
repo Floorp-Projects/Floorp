@@ -19,7 +19,7 @@ DEPTH = ../../..
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
-MODULE		= mailnews
+MODULE		= addressbook
 
 include $(DEPTH)/config/autoconf.mk
 NO_GEN_XPT=1

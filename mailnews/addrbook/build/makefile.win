@@ -16,7 +16,7 @@
 # Reserved.
 
 DEPTH=..\..\..
-MODULE=mailnews 
+MODULE=addressbook 
 
 MAKE_OBJ_TYPE=DLL
 DLLNAME=addrbook
@@ -51,6 +51,7 @@ MISCDEP=$(LLIBS)
 LINCS=  -I$(DEPTH)\mailnews\local\src	\
 		-I$(PUBLIC)\xpcom				\
 		-I$(PUBLIC)\mailnews			\
+		-I$(PUBLIC)\addressbook			\
 		-I$(PUBLIC)\raptor				\
 		-I$(PUBLIC)\rdf					\
 		-I$(PUBLIC)\rdfutil				\

@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=mailnews
+MODULE=addressbook
 LIBRARY_NAME=addrbook
 IS_COMPONENT=1
 

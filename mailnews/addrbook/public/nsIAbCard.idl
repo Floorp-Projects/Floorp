@@ -18,7 +18,7 @@
  
 #include "nsIAbBase.idl"
 
-[uuid(FA5C977F-04C8-11d3-A2EB-001083003D0C)]
+[scriptable, uuid(FA5C977F-04C8-11d3-A2EB-001083003D0C)]
 interface nsIAbCard : nsIAbBase {
 
 	attribute string personName;

@@ -24,7 +24,7 @@
 
 interface nsIAbListener;
 
-[uuid(013DD009-F73B-11d2-A2DA-001083003D0C)]
+[scriptable, uuid(013DD009-F73B-11d2-A2DA-001083003D0C)]
 interface nsIAbBase : nsICollection {
 
     readonly attribute string URI;

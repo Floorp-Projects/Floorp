@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=mailnewsaddrbook
+MODULE=addressbook
 LIBRARY_NAME=mailnewsaddrbook_s
 
 EXPORTS = \
@@ -30,6 +30,7 @@ EXPORTS = \
 	nsCardDataSource.h \
 	nsAbDirectory.h \
 	nsDirectoryDataSource.h \
+	nsDirPrefs.h \
 	$(NULL)
 
 CPPSRCS = \
@@ -37,6 +38,7 @@ CPPSRCS = \
 	nsAbDirectory.cpp	\
 	nsCardDataSource.cpp	\
 	nsAbCard.cpp	\
+	nsDirPrefs.cpp	\
 	$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

@@ -16,24 +16,17 @@
 # Reserved.
 
 DEPTH=..\..\..
-IGNORE_MANIFEST=1
 
 
-IDLSRCS =						\
-			nsIAbBase.idl		\
-			nsIAbListener.idl	\
-			nsIAbDirectory.idl	\
-			nsIAbCard.idl		\
+XPIDLSRCS =						\
+			.\nsIAbBase.idl		\
+			.\nsIAbListener.idl	\
+			.\nsIAbDirectory.idl	\
+			.\nsIAbCard.idl		\
 			$(NULL)
 
-EXPORTS =                   \
-			nsIAbBase.h		\
-			nsIAbListener.h		\
-			nsIAbDirectory.h	\
-			nsIAbCard.h		\
-			$(NULL)
-
-MODULE=mailnews
+MODULE=addressbook
 
 include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)\config\config.mak>
 

@@ -34,6 +34,7 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 
+
 // this is used for notification of observers using nsVoidArray
 typedef struct _nsAbRDFNotification {
   nsIRDFResource *subject;
@@ -76,12 +77,11 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, NewDirectory);
 static PRBool
 peq(nsIRDFResource* r1, nsIRDFResource* r2)
 {
-  PRBool result;
-  if (NS_SUCCEEDED(r1->EqualsResource(r2, &result)) && result) {
-    return PR_TRUE;
-  } else {
-    return PR_FALSE;
-  }
+	PRBool result;
+	if (NS_SUCCEEDED(r1->EqualsResource(r2, &result)) && result) 
+		return PR_TRUE;
+	else 
+		return PR_FALSE;
 }
 
 static PRBool
@@ -116,7 +116,7 @@ peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort)
 		*isSort = PR_TRUE;
 		return PR_TRUE;
 	}
-  else
+	else
 	{
 		//In case the resources are equal but the values are different.  I'm not sure if this
 		//could happen but it is feasible given interface.
@@ -132,7 +132,8 @@ void nsABDirectoryDataSource::createNode(nsString& str, nsIRDFNode **node)
     NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
     if (NS_FAILED(rv)) return;   // always check this before proceeding 
 	nsIRDFLiteral * value;
-	if(NS_SUCCEEDED(rdf->GetLiteral(str.GetUnicode(), &value))) {
+	if (NS_SUCCEEDED(rdf->GetLiteral(str.GetUnicode(), &value))) 
+	{
 		*node = value;
 	}
 }
@@ -151,38 +152,43 @@ nsABDirectoryDataSource::nsABDirectoryDataSource():
   mInitialized(PR_FALSE),
   mRDFService(nsnull)
 {
-  NS_INIT_REFCNT();
+	NS_INIT_REFCNT();
 
-  nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                             nsIRDFService::GetIID(),
-                                             (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
+	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+											 nsIRDFService::GetIID(),
+											 (nsISupports**) &mRDFService); 
 
-  PR_ASSERT(NS_SUCCEEDED(rv));
+	PR_ASSERT(NS_SUCCEEDED(rv));
 }
 
 nsABDirectoryDataSource::~nsABDirectoryDataSource (void)
 {
-  mRDFService->UnregisterDataSource(this);
+	mRDFService->UnregisterDataSource(this);
 
-  PL_strfree(mURI);
-  if (mObservers) {
-      for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
-          nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-          NS_RELEASE(obs);
-      }
-      delete mObservers;
-  }
-  nsrefcnt refcnt;
-  NS_RELEASE2(kNC_Child, refcnt);
-  NS_RELEASE2(kNC_DirName, refcnt);
-  NS_RELEASE2(kNC_DirChild, refcnt);
-  NS_RELEASE2(kNC_CardChild, refcnt);
+	PL_strfree(mURI);
+	if (mObservers) 
+	{
+		PRInt32 i;
+		for (i = mObservers->Count() - 1; i >= 0; --i) 
+		{
+			nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+			NS_RELEASE(obs);
+		}
+		delete mObservers;
+	}
+	nsrefcnt refcnt;
+	NS_RELEASE2(kNC_Child, refcnt);
+	NS_RELEASE2(kNC_DirName, refcnt);
+	NS_RELEASE2(kNC_DirChild, refcnt);
+	NS_RELEASE2(kNC_CardChild, refcnt);
 
-  NS_RELEASE2(kNC_Delete, refcnt);
-  NS_RELEASE2(kNC_NewDirectory, refcnt);
-
-  nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); // XXX probably need shutdown listener here
-  mRDFService = nsnull;
+	NS_RELEASE2(kNC_Delete, refcnt);
+	NS_RELEASE2(kNC_NewDirectory, refcnt);
+	if (mRDFService)
+	{
+		nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); 
+		mRDFService = nsnull;
+	}
 }
 
 
@@ -192,53 +198,55 @@ NS_IMPL_RELEASE(nsABDirectoryDataSource)
 NS_IMETHODIMP
 nsABDirectoryDataSource::QueryInterface(REFNSIID iid, void** result)
 {
-  if (! result)
-    return NS_ERROR_NULL_POINTER;
+	if (! result)
+		return NS_ERROR_NULL_POINTER;
 
-  *result = nsnull;
-  if (iid.Equals(nsIRDFDataSource::GetIID()) ||
-      iid.Equals(kISupportsIID))
-  {
-    *result = NS_STATIC_CAST(nsIRDFDataSource*, this);
-    AddRef();
-    return NS_OK;
-  }
-  else if(iid.Equals(nsIAbListener::GetIID()))
-  {
-    *result = NS_STATIC_CAST(nsIAbListener*, this);
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
+	*result = nsnull;
+	if (iid.Equals(nsIRDFDataSource::GetIID()) ||
+	    iid.Equals(kISupportsIID))
+	{
+		*result = NS_STATIC_CAST(nsIRDFDataSource*, this);
+		AddRef();
+		return NS_OK;
+	}
+	else if(iid.Equals(nsIAbListener::GetIID()))
+	{
+		*result = NS_STATIC_CAST(nsIAbListener*, this);
+		AddRef();
+		return NS_OK;
+	}
+	return NS_NOINTERFACE;
 }
 
  // nsIRDFDataSource methods
 NS_IMETHODIMP nsABDirectoryDataSource::Init(const char* uri)
 {
-  if (mInitialized)
-      return NS_ERROR_ALREADY_INITIALIZED;
+	if (mInitialized)
+		return NS_ERROR_ALREADY_INITIALIZED;
 
-  if ((mURI = PL_strdup(uri)) == nsnull)
-      return NS_ERROR_OUT_OF_MEMORY;
+	if ((mURI = PL_strdup(uri)) == nsnull)
+		return NS_ERROR_OUT_OF_MEMORY;
 
-  mRDFService->RegisterDataSource(this, PR_FALSE);
+	mRDFService->RegisterDataSource(this, PR_FALSE);
 
-  if (!kNC_Child)
-	mRDFService->GetResource(kURINC_child,		&kNC_Child);
-  if (!kNC_DirName)
-    mRDFService->GetResource(kURINC_DirName,	&kNC_DirName);
-  if (!kNC_DirChild)
-    mRDFService->GetResource(kURINC_DirChild,	&kNC_DirChild);
-  if (!kNC_CardChild)
-    mRDFService->GetResource(kURINC_CardChild,	&kNC_CardChild);
-   
-  if (!kNC_Delete)
-    mRDFService->GetResource(kURINC_Delete, &kNC_Delete);
-  if (!kNC_NewDirectory)
-   mRDFService->GetResource(kURINC_NewDirectory, &kNC_NewDirectory);
- 
-  mInitialized = PR_TRUE;
-  return NS_OK;
+	if (!kNC_Child)
+		mRDFService->GetResource(kURINC_child,		&kNC_Child);
+	if (!kNC_DirName)
+		mRDFService->GetResource(kURINC_DirName,	&kNC_DirName);
+	if (!kNC_DirChild)
+		mRDFService->GetResource(kURINC_DirChild,	&kNC_DirChild);
+	if (!kNC_CardChild)
+		mRDFService->GetResource(kURINC_CardChild,	&kNC_CardChild);
+
+	if (!kNC_Delete)
+		mRDFService->GetResource(kURINC_Delete, &kNC_Delete);
+	if (!kNC_NewDirectory)
+		mRDFService->GetResource(kURINC_NewDirectory, &kNC_NewDirectory);
+	
+	DIR_GetDirServers();
+
+	mInitialized = PR_TRUE;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsABDirectoryDataSource::GetURI(char* *uri)
@@ -457,7 +465,7 @@ NS_IMETHODIMP nsABDirectoryDataSource::ArcLabelsOut(nsIRDFResource* source,
   nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv)) {
     fflush(stdout);
-    rv = getDirectoryArcLabelsOut(directory, getter_AddRefs(arcs));
+   rv = getDirectoryArcLabelsOut(directory, getter_AddRefs(arcs));
   }
   else {
     // how to return an empty cursor?
@@ -484,9 +492,7 @@ nsABDirectoryDataSource::getDirectoryArcLabelsOut(nsIAbDirectory *directory,
 	rv = NS_NewISupportsArray(arcs);
 	if(NS_FAILED(rv))
 		return rv;
-
-	(*arcs)->AppendElement(kNC_DirName);
-
+	
 	nsCOMPtr<nsIEnumerator>  subDirectory;
 	if (NS_SUCCEEDED(directory->GetChildNodes(getter_AddRefs(subDirectory))))
 	{
@@ -555,9 +561,9 @@ nsABDirectoryDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* 
   nsresult rv;
   nsCOMPtr<nsIAbDirectory> directory;
 
-  PRUint32 cnt;
+  PRUint32 i, cnt;
   rv = aSources->Count(&cnt);
-  for (PRUint32 i = 0; i < cnt; i++) {
+  for (i = 0; i < cnt; i++) {
     nsCOMPtr<nsISupports> source = getter_AddRefs(aSources->ElementAt(i));
 		directory = do_QueryInterface(source, &rv);
     if (NS_SUCCEEDED(rv)) {
@@ -582,9 +588,9 @@ nsABDirectoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
 
   // XXX need to handle batching of command applied to all sources
 
-  PRUint32 cnt;
+  PRUint32 i, cnt;
   rv = aSources->Count(&cnt);
-  for (PRUint32 i = 0; i < cnt; i++) {
+  for (i = 0; i < cnt; i++) {
 		nsCOMPtr<nsISupports> supports = getter_AddRefs(aSources->ElementAt(i));
     nsCOMPtr<nsIAbDirectory> directory = do_QueryInterface(supports, &rv);
     if (NS_SUCCEEDED(rv)) {

@@ -173,7 +173,9 @@ nsABCardDataSource::~nsABCardDataSource (void)
 
   PL_strfree(mURI);
   if (mObservers) {
-      for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
+	  PRInt32 i;
+
+      for (i = mObservers->Count() - 1; i >= 0; --i) {
           nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
           NS_RELEASE(obs);
       }
@@ -466,7 +468,7 @@ nsABCardDataSource::getCardArcLabelsOut(nsIAbCard *card,
 		return rv;
 
 	nsCOMPtr<nsIEnumerator> cards;
-	if(NS_SUCCEEDED(card->GetChildNodes(getter_AddRefs(cards)))) 
+	if(NS_SUCCEEDED(card->GetChildNodes(getter_AddRefs(cards))))
 	{
 		if(NS_OK == cards->First())
 		{
@@ -531,9 +533,9 @@ nsABCardDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSour
   nsresult rv;
   nsCOMPtr<nsIAbCard> card;
 
-  PRUint32 cnt;
+  PRUint32 i, cnt;
   rv = aSources->Count(&cnt);
-  for (PRUint32 i = 0; i < cnt; i++) {
+  for (i = 0; i < cnt; i++) {
     nsCOMPtr<nsISupports> source = getter_AddRefs(aSources->ElementAt(i));
 		card = do_QueryInterface(source, &rv);
     if (NS_SUCCEEDED(rv)) {
@@ -558,9 +560,9 @@ nsABCardDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 
   // XXX need to handle batching of command applied to all sources
 
-  PRUint32 cnt;
+  PRUint32 i, cnt;
   rv = aSources->Count(&cnt);
-  for (PRUint32 i = 0; i < cnt; i++) {
+  for (i = 0; i < cnt; i++) {
 		nsCOMPtr<nsISupports> supports = getter_AddRefs(aSources->ElementAt(i));
     nsCOMPtr<nsIAbCard> card = do_QueryInterface(supports, &rv);
     if (NS_SUCCEEDED(rv)) {

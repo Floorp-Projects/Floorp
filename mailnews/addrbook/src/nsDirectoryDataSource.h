@@ -21,9 +21,11 @@
 #include "nsIAbListener.h"
 #include "nsIAbDirectory.h"
 #include "nsIAbCard.h"
+#include "nsDirPrefs.h"
 
 static const char kAddrBookRootURI[] = "abdirectory:/";
 
+class nsIPref;
 
 /**
  * The addressbook data source.
@@ -38,7 +40,7 @@ private:
 
   // The cached service managers
   
-  nsIRDFService* mRDFService;
+  nsIRDFService*	mRDFService;
   
 public:
   
@@ -131,9 +133,8 @@ protected:
 
 	nsresult NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
 														nsIRDFNode *object, PRBool assert);
-	nsresult createDirectoryNode(nsIAbDirectory* directory,
-                                                 nsIRDFResource* property,
-                                                 nsIRDFNode** target);
+	nsresult createDirectoryNode(nsIAbDirectory* directory, nsIRDFResource* property,
+                                 nsIRDFNode** target);
 	nsresult createDirectoryNameNode(nsIAbDirectory *directory,
                                      nsIRDFNode **target);
 	nsresult createDirectoryChildNode(nsIAbDirectory *directory,
@@ -141,7 +142,7 @@ protected:
 	nsresult createCardChildNode(nsIAbDirectory *directory,
                                       nsIRDFNode **target);
   static nsresult getDirectoryArcLabelsOut(nsIAbDirectory *directory,
-                                        nsISupportsArray **arcs);
+                                           nsISupportsArray **arcs);
   
   nsresult DoDeleteFromDirectory(nsIAbDirectory *directory,
 							  nsISupportsArray *arguments);
