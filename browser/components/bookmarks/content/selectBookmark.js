@@ -64,9 +64,11 @@ function updateOK()
   gUrls = [];
   for (var i=0; i<selection.length; ++i) {
     var type     = selection.type[i];
-    var protocol = selection.protocol[i];
-    if ((type == "Bookmark" || type == "") && 
-        protocol != "find" && protocol != "javascript") {
+// XXX protocol is broken since we have unique id...
+//    var protocol = selection.protocol[i];
+//    if ((type == "Bookmark" || type == "") && 
+//        protocol != "find" && protocol != "javascript") {
+    if (type == "Bookmark" || type == "") {
       url = BookmarksUtils.getProperty(selection.item[i], NC_NS+"URL", ds)
       if (url)
         gUrls.push(url);
@@ -76,9 +78,11 @@ function updateOK()
       while (children.hasMoreElements()) {
         var child = children.getNext().QueryInterface(kRDFRSCIID);
         type      = BookmarksUtils.getProperty(child, RDF_NS+"type", ds);
-        protocol  = child.Value.split(":")[0];
-        if (type == NC_NS+"Bookmark" && protocol != "find" && 
-            protocol != "javascript") {
+// XXX protocol is broken since we have unique id...
+//        protocol  = child.Value.split(":")[0];
+//        if (type == NC_NS+"Bookmark" && protocol != "find" && 
+//            protocol != "javascript") {
+          if (type == NC_NS+"Bookmark") {
           url = BookmarksUtils.getProperty(child, NC_NS+"URL", ds);
           if (url)
             gUrls.push(url);
