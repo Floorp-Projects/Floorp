@@ -31,7 +31,6 @@ EXPORT_RESOURCE_SAMPLES = \
 		defaultTextBody.txt \
 		defaultHtmlBody.html \
 		addressAutoComplete.js \
-		composebe_en.properties \
 		MsgAttachPage.xul \
 		MsgAttachPage.js \
 		addressingWidgetOverlay.js \

@@ -25,7 +25,6 @@ install::
 	$(MAKE_INSTALL) defaultTextBody.html $(DIST)\bin\chrome\messengercompose\content\default
 	$(MAKE_INSTALL) defaultTextBody.txt $(DIST)\bin\chrome\messengercompose\content\default
 	$(MAKE_INSTALL) defaultHtmlBody.html $(DIST)\bin\chrome\messengercompose\content\default
-	$(MAKE_INSTALL) composebe_en.properties $(DIST)\bin\chrome\messengercompose\content\default
 	$(MAKE_INSTALL) addressAutoComplete.js $(DIST)\bin\chrome\messengercompose\content\default
 	$(MAKE_INSTALL) MsgAttachPage.js $(DIST)\bin\chrome\messengercompose\content\default
 	$(MAKE_INSTALL) MsgAttachPage.xul $(DIST)\bin\chrome\messengercompose\content\default
@@ -38,7 +37,6 @@ clobber::
 	rm -f $(DIST)\bin\chrome\messengercompose\content\default\defaultTextBody.html
 	rm -f $(DIST)\bin\chrome\messengercompose\content\default\defaultTextBody.txt
 	rm -f $(DIST)\bin\chrome\messengercompose\content\default\defaultHtmlBody.html
-	rm -f $(DIST)\bin\chrome\messengercompose\content\default\composebe_en.properties
 	rm -f $(DIST)\bin\chrome\messengercompose\content\default\addressAutoComplete.js
 	rm -f $(DIST)\bin\chrome\messengercompose\content\default\MsgAttachPage.js
 	rm -f $(DIST)\bin\chrome\messengercompose\content\default\MsgAttachPage.xul

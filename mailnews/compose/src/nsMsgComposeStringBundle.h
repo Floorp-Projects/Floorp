@@ -23,7 +23,7 @@
 
 //
 // The defines needed for error conditions. The corresponding strings
-// are defined in composebe_en.properties
+// are defined in composebe.properties
 // 
 typedef enum {
   NS_MSG_UNABLE_TO_OPEN_FILE = 12500,

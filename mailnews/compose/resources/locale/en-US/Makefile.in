@@ -29,6 +29,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		addressingWidgetOverlay.dtd \
 		MsgAttachPage.dtd \
 		composeMsgs.properties \
+		composebe.properties \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
