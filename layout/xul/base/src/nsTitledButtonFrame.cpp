@@ -81,7 +81,6 @@
 #define BROKEN_IMAGE_URL "resource:/res/html/broken-image.gif"
 #endif
 
-static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 // Value's for mSuppress
 #define SUPPRESS_UNSET   0
@@ -1480,7 +1479,7 @@ nsTitledButtonFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
                                                                          
   *aInstancePtr = NULL;                                                  
                                                                                         
-  if (aIID.Equals(kIBoxIID)) {                                         
+  if (aIID.Equals(NS_GET_IID(nsIBox))) {                                         
     *aInstancePtr = (void*)(nsIBox*) this;                                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
@@ -1511,6 +1510,7 @@ nsTitledButtonFrame::Release(void)
 {
     return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsTitledButtonFrame::GetFrameName(nsString& aResult) const

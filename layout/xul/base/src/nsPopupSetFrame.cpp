@@ -80,22 +80,10 @@ nsPopupSetFrame::Release(void)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsPopupSetFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{           
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }   
-  
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(nsIPopupSetFrame::GetIID())) {                                         
-    *aInstancePtr = (void*)(nsIPopupSetFrame*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }   
-
-  return nsBoxFrame::QueryInterface(aIID, aInstancePtr);                                     
-}
+NS_INTERFACE_MAP_BEGIN(nsPopupSetFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIPopupSetFrame)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPopupSetFrame)
+NS_INTERFACE_MAP_END
 
 //
 // nsPopupSetFrame cntr

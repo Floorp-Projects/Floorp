@@ -47,9 +47,6 @@
 #include "nsIAnonymousContent.h"
 #include "nsIView.h"
 
-static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
-static NS_DEFINE_IID(kIStyledContentIID,               NS_ISTYLEDCONTENT_IID);
-static NS_DEFINE_IID(kIAnonymousContentIID,            NS_IANONYMOUS_CONTENT_IID);
 
 class AnonymousElement : public nsXMLElement, nsIStyledContent, nsIAnonymousContent
 {
@@ -193,26 +190,34 @@ AnonymousElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-AnonymousElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{         
-  if (aIID.Equals(kIStyledContentIID)) {
-    nsIStyledContent* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  } else if (aIID.Equals(kIAnonymousContentIID)) {
-    nsIAnonymousContent* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return nsXMLElement::QueryInterface(aIID, aInstancePtr);                                                                                                                                                       
-}
-
 NS_IMPL_ADDREF_INHERITED(AnonymousElement, nsXMLElement)
 NS_IMPL_RELEASE_INHERITED(AnonymousElement, nsXMLElement)
+
+//
+// QueryInterface
+//
+// Since we inherit from a base class with its own implementation of QI, we
+// need to rely on that for the other interfaces supported, yet we still want
+// to use the map macros. Currently, there is no macro to let you use the
+// inherited version of QI, so we cheat. Hopefully this will change in the near
+// future (pinkerton)
+//
+NS_INTERFACE_MAP_BEGIN(AnonymousElement)
+  NS_INTERFACE_MAP_ENTRY(nsIStyledContent)
+  NS_INTERFACE_MAP_ENTRY(nsIAnonymousContent)
+    foundInterface = 0;
+  nsresult status;
+  if ( !foundInterface )
+    status = nsXMLElement::QueryInterface(aIID, &foundInterface);                                             \
+  else
+    {
+      NS_ADDREF(foundInterface);
+      status = NS_OK;
+    }
+  *aInstancePtr = foundInterface;
+  return status;
+}
+
 
 nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode)
 {
@@ -294,6 +299,11 @@ nsScrollbarFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
 }
 
 
+NS_INTERFACE_MAP_BEGIN(nsScrollbarFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIAnonymousContentCreator)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAnonymousContentCreator)
+NS_INTERFACE_MAP_END
+
 NS_IMETHODIMP
 nsScrollbarFrame::Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,
@@ -333,30 +343,6 @@ nsScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,
   }
 
   return rv;
-}
-
-NS_IMETHODIMP 
-nsScrollbarFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{           
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(kIAnonymousContentCreatorIID)) {                                         
-    *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }
-
-  if (aIID.Equals(kIStyledContentIID)) {                                         
-    *aInstancePtr = (void*)(nsIStyledContent*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }
-
-  return nsBoxFrame::QueryInterface(aIID, aInstancePtr);                                     
 }
 
 NS_IMETHODIMP

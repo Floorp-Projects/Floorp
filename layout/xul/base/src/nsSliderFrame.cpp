@@ -62,8 +62,6 @@
 
 nscoord            nsSliderFrame::gChange = 0;
 
-static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
-static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
 nsresult
 NS_NewSliderFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -509,7 +507,7 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
           nsIView*           view;
           parent->GetView(aPresContext, &view);
           if (view) {
-            nsresult result = view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
+            nsresult result = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
             if (NS_SUCCEEDED(result)) {
                 nscoord xoff = 0;
                 nscoord yoff = 0;
@@ -720,7 +718,6 @@ NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 
-static NS_DEFINE_IID(kIDOMMouseListenerIID,     NS_IDOMMOUSELISTENER_IID);
 
 NS_IMETHODIMP
 nsSliderFrame::SetInitialChildList(nsIPresContext* aPresContext,
@@ -865,7 +862,7 @@ nsSliderFrame::AddListener()
 
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
 
-  reciever->AddEventListenerByIID(this, kIDOMMouseListenerIID);
+  reciever->AddEventListenerByIID(this,NS_GET_IID(nsIDOMMouseListener));
 }
 
 void
@@ -877,36 +874,17 @@ nsSliderFrame::RemoveListener()
 
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
 
-  reciever->RemoveEventListenerByIID(this,kIDOMMouseListenerIID);
+  reciever->RemoveEventListenerByIID(this,NS_GET_IID(nsIDOMMouseListener));
 }
 
-static NS_DEFINE_IID(kITimerCallbackIID, NS_ITIMERCALLBACK_IID);
 
+NS_INTERFACE_MAP_BEGIN(nsSliderFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIAnonymousContentCreator)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAnonymousContentCreator)
+NS_INTERFACE_MAP_END
 
-NS_IMETHODIMP nsSliderFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{           
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(kIAnonymousContentCreatorIID)) {                                         
-    *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  } else if (aIID.Equals(kIDOMMouseListenerIID)) {                                         
-    *aInstancePtr = (void*)(nsIDOMMouseListener*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  } else if (aIID.Equals(kITimerCallbackIID)) {                                         
-    *aInstancePtr = (void*)(nsITimerCallback*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }   
-
-  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);                                     
-}
 
 NS_IMETHODIMP_(nsrefcnt) 
 nsSliderFrame::AddRef(void)

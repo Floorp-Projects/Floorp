@@ -44,10 +44,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_IID(kXULPopupListenerCID,      NS_XULPOPUPLISTENER_CID);
-static NS_DEFINE_IID(kIXULPopupListenerIID,     NS_IXULPOPUPLISTENER_IID);
-static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
-static NS_DEFINE_IID(kIDomEventListenerIID,   NS_IDOMEVENTLISTENER_IID);
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -141,6 +138,16 @@ XULPopupListenerImpl::~XULPopupListenerImpl(void)
 NS_IMPL_ADDREF(XULPopupListenerImpl)
 NS_IMPL_RELEASE(XULPopupListenerImpl)
 
+
+NS_INTERFACE_MAP_BEGIN(XULPopupListenerImpl)
+  NS_INTERFACE_MAP_ENTRY(nsIXULPopupListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseMotionListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMMouseListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULPopupListener)
+NS_INTERFACE_MAP_END
+
+#if 0
 NS_IMETHODIMP
 XULPopupListenerImpl::QueryInterface(REFNSIID iid, void** result)
 {
@@ -174,6 +181,7 @@ XULPopupListenerImpl::QueryInterface(REFNSIID iid, void** result)
 
     return NS_NOINTERFACE;
 }
+#endif
 
 NS_IMETHODIMP
 XULPopupListenerImpl::Init(nsIDOMElement* aElement, const XULPopupType& popup)

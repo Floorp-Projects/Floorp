@@ -38,7 +38,6 @@ class nsBoxInfo;
 
 // {02A560C0-01BF-11d3-B35C-00A0CC3C1CDE} 
 #define NS_IBOX_IID { 0x2a560c0, 0x1bf, 0x11d3, { 0xb3, 0x5c, 0x0, 0xa0, 0xcc, 0x3c, 0x1c, 0xde } }
-static NS_DEFINE_IID(kIBoxIID,     NS_IBOX_IID);
 
 class nsBoxInfo {
 public:

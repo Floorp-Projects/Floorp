@@ -66,28 +66,7 @@ static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
 
 NS_IMPL_ADDREF(nsToolboxFrame::DragListenerDelegate);
 NS_IMPL_RELEASE(nsToolboxFrame::DragListenerDelegate);
-
-
-NS_IMETHODIMP
-nsToolboxFrame::DragListenerDelegate::QueryInterface(REFNSIID aIID, void** aResult)
-{
-  NS_PRECONDITION(aResult != nsnull, "null ptr");
-  if (! aResult)
-    return NS_ERROR_NULL_POINTER;
-
-  if (aIID.Equals(nsCOMTypeInfo<nsIDOMDragListener>::GetIID()) ||
-      aIID.Equals(nsCOMTypeInfo<nsIDOMEventListener>::GetIID()) ||
-      aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
-    *aResult = NS_STATIC_CAST(nsIDOMDragListener*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else {
-    *aResult = nsnull;
-    return NS_NOINTERFACE;
-  }
-}
-
+NS_IMPL_QUERY_INTERFACE2(nsToolboxFrame::DragListenerDelegate, nsIDOMDragListener, nsIDOMEventListener)
 
 
 //

@@ -701,7 +701,7 @@ nsGfxScrollFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIAnonymousContentCreatorIID)) {                                         
     *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
     return NS_OK;                                                        
-  } else if (aIID.Equals(kIBoxIID)) {                                         
+  } else if (aIID.Equals(NS_GET_IID(nsIBox))) {                                         
     *aInstancePtr = (void*)(nsIBox*) this;                                        
     return NS_OK;                                                        
   } else if (aIID.Equals(kIScrollableFrameIID)) {                                         

@@ -67,13 +67,12 @@ nsScrollbarButtonFrame::nsScrollbarButtonFrame()
 {
 }*/
 
-static NS_DEFINE_IID(kITimerCallbackIID, NS_ITIMERCALLBACK_IID);
 
 
 NS_IMETHODIMP 
 nsScrollbarButtonFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {           
-  if (aIID.Equals(kITimerCallbackIID)) {                                         
+  if (aIID.Equals(NS_GET_IID(nsITimerCallback))) {                                         
     *aInstancePtr = (void*)(nsITimerCallback*) this;                                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        

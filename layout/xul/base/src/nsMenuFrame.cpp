@@ -86,29 +86,12 @@ nsMenuFrame::Release(void)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMenuFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{           
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                  
-  *aInstancePtr = NULL;
-  if (aIID.Equals(nsIMenuFrame::GetIID())) {
-    *aInstancePtr = (void*)(nsIMenuFrame*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(nsIAnonymousContentCreator::GetIID())) {                           
-    *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }
-  else if (aIID.Equals(nsITimerCallback::GetIID())) {                           
-    *aInstancePtr = (void*)(nsITimerCallback*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }
-  return nsBoxFrame::QueryInterface(aIID, aInstancePtr);                                     
-}
+NS_INTERFACE_MAP_BEGIN(nsMenuFrame)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsIMenuFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIAnonymousContentCreator)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAnonymousContentCreator)
+NS_INTERFACE_MAP_END
 
 //
 // nsMenuFrame cntr

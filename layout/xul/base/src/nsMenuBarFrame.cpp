@@ -72,22 +72,11 @@ nsMenuBarFrame::Release(void)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMenuBarFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{           
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(nsIMenuParent::GetIID())) {                                         
-    *aInstancePtr = (void*)(nsIMenuParent*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }   
+NS_INTERFACE_MAP_BEGIN(nsMenuBarFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIMenuParent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMenuParent)
+NS_INTERFACE_MAP_END
 
-  return nsToolbarFrame::QueryInterface(aIID, aInstancePtr);                                     
-}
 //
 // nsMenuBarFrame cntr
 //
