@@ -37,6 +37,12 @@
 #include "nsIDocShell.h"         
 #include "nsIBaseWindow.h"       
 #include "nsIAppShellService.h"
+
+// These are needed to load a URL in a browser window.
+#include "nsIDOMLocation.h"
+#include "nsIJSContextStack.h"
+#include "nsIWindowMediator.h"
+
 #include <windows.h>
 #include <ddeml.h>
 #include <stdlib.h>
@@ -268,13 +274,28 @@ private:
                                                     ULONG    dwData1,
                                                     ULONG    dwData2 );
     static void HandleRequest( LPBYTE request );
+    static nsCString ParseDDEArg( HSZ args, int index );
+    static void ActivateLastWindow();
+    static HDDEDATA CreateDDEData( DWORD value );
+    static PRBool   InitTopicStrings();
+    static int      FindTopic( HSZ topic );
     static nsresult GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResult );
     static nsresult OpenWindow( const char *urlstr, const char *args, nsIDOMWindow **aResult = 0 );
     static nsresult OpenBrowserWindow( const char *args );                   
     static nsresult ReParent( nsIDOMWindowInternal *window, HWND newParent );
     static nsCOMPtr<nsIDOMWindowInternal> mCachedWin;                        
     static int   mConversations;
-    static HSZ   mApplication, mTopic;
+    enum {
+        topicOpenURL,
+        topicActivate,
+        topicCancelProgress,
+        topicVersion,
+        topicRegisterViewer,
+        topicUnRegisterViewer,
+        // Note: Insert new values above this line!!!!!
+        topicCount // Count of the number of real topics
+    };
+    static HSZ   mApplication, mTopics[ topicCount ];
     static DWORD mInstance;
     static char *mAppName;
     friend struct MessageWindow;
@@ -568,18 +589,25 @@ NS_CreateSplashScreen( nsISplashScreen **aResult ) {
 }
 
 // Constants
-#define MOZ_DDE_APPLICATION   "Mozilla"
-#define MOZ_DDE_TOPIC         "WWW_OpenURL"
+#define MOZ_DDE_APPLICATION    "Mozilla"
 #define MOZ_STARTUP_MUTEX_NAME "StartupMutex"
 #define MOZ_DDE_START_TIMEOUT 30000
 #define MOZ_DDE_STOP_TIMEOUT  15000
 #define MOZ_DDE_EXEC_TIMEOUT  15000
 
+// The array entries must match the enum ordering!
+const char * const topicNames[] = { "WWW_OpenURL",
+                                    "WWW_Activate",
+                                    "WWW_CancelProgress",
+                                    "WWW_Version",
+                                    "WWW_RegisterViewer",
+                                    "WWW_UnRegisterViewer" };
+
 // Static member definitions.
 nsCOMPtr<nsIDOMWindowInternal> nsNativeAppSupportWin::mCachedWin = 0;
 int   nsNativeAppSupportWin::mConversations = 0;
 HSZ   nsNativeAppSupportWin::mApplication   = 0;
-HSZ   nsNativeAppSupportWin::mTopic         = 0;
+HSZ   nsNativeAppSupportWin::mTopics[nsNativeAppSupportWin::topicCount] = { 0 };
 DWORD nsNativeAppSupportWin::mInstance      = 0;
 
 // Message window encapsulation.
@@ -730,6 +758,26 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
     return rv;
 }
 
+PRBool
+nsNativeAppSupportWin::InitTopicStrings() {
+    for ( int i = 0; i < topicCount; i++ ) {
+        if ( !( mTopics[ i ] = DdeCreateStringHandle( mInstance, topicNames[ i ], CP_WINANSI ) ) ) {
+            return PR_FALSE;
+        }
+    }
+    return PR_TRUE;
+}
+
+int
+nsNativeAppSupportWin::FindTopic( HSZ topic ) {
+    for ( int i = 0; i < topicCount; i++ ) {
+        if ( DdeCmpStringHandles( topic, mTopics[i] ) == 0 ) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 // Start DDE server.
 //
 // This used to be the Start() method when we were using DDE as the
@@ -752,8 +800,7 @@ nsNativeAppSupportWin::StartDDE() {
                     NS_ERROR_FAILURE );     
     
     // Allocate DDE strings.
-    NS_ENSURE_TRUE( ( mApplication = DdeCreateStringHandle( mInstance, mAppName, CP_WINANSI ) ) &&
-                    ( mTopic       = DdeCreateStringHandle( mInstance, MOZ_DDE_TOPIC, CP_WINANSI ) ),
+    NS_ENSURE_TRUE( ( mApplication = DdeCreateStringHandle( mInstance, mAppName, CP_WINANSI ) ) && InitTopicStrings(),
                     NS_ERROR_FAILURE );
 
     // Next step is to register a DDE service.
@@ -801,9 +848,11 @@ nsNativeAppSupportWin::Quit() {
             DdeFreeStringHandle( mInstance, mApplication );
             mApplication = 0;
         }
-        if ( mTopic ) {
-            DdeFreeStringHandle( mInstance, mTopic );
-            mTopic = 0;
+        for ( int i = 0; i < topicCount; i++ ) {
+            if ( mTopics[i] ) {
+                DdeFreeStringHandle( mInstance, mTopics[i] );
+                mTopics[i] = 0;
+            }
         }
         DdeUninitialize( mInstance );
         mInstance = 0;
@@ -894,17 +943,76 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
     HDDEDATA result = 0;
     if ( uType & XCLASS_BOOL ) {
         switch ( uType ) {
-        case XTYP_CONNECT:
-        case XTYP_CONNECT_CONFIRM:
-            // Make sure its for our service/topic.
-            if ( DdeCmpStringHandles( hsz1, mTopic ) == 0
-                 &&
-                 DdeCmpStringHandles( hsz2, mApplication ) == 0 ) {
-                // We support this connection.
+            case XTYP_CONNECT:
+                // Make sure its for our service/topic.
+                if ( FindTopic( hsz1 ) < topicCount ) {
+                    // We support this connection.
+                    result = (HDDEDATA)1;
+                }
+                break;
+            case XTYP_CONNECT_CONFIRM:
+                // We don't care about the conversation handle, at this point.
                 result = (HDDEDATA)1;
-            }
+                break;
         }
     } else if ( uType & XCLASS_DATA ) {
+        if ( uType == XTYP_REQUEST ) {
+            switch ( FindTopic( hsz1 ) ) {
+                case topicOpenURL: {
+                    // Open a given URL...
+                    nsCString url = ParseDDEArg( hsz2, 0 );
+                    // Make it look like command line args.
+                    url.Insert( "mozilla -url ", 0 );
+                    #if MOZ_DEBUG_DDE
+                    printf( "Handling dde XTYP_REQUEST request: [%s]...\n", url.get() );
+                    #endif
+                    // Now handle it.
+                    HandleRequest( LPBYTE( url.get() ) );
+                    // Return pseudo window ID.
+                    result = CreateDDEData( 1 );
+                    break;
+                }
+                case topicActivate: {
+                    // Activate a Nav window...
+                    nsCString windowID = ParseDDEArg( hsz2, 0 );
+                    if ( windowID.Equals( "-1" ) ) {
+                        // We only support activating the most recent window (or a new one).
+                        ActivateLastWindow();
+                        // Return pseudo window ID.
+                        result = CreateDDEData( 1 );
+                    }
+                    break;
+                }
+                case topicVersion: {
+                    // Return version.  We're restarting at 1.0!
+                    DWORD version = 1 << 16; // "1.0"
+                    result = CreateDDEData( version );
+                    break;
+                }
+                case topicRegisterViewer: {
+                    // Register new viewer (not implemented).
+                    result = CreateDDEData( PR_FALSE );
+                    break;
+                }
+                case topicUnRegisterViewer: {
+                    // Unregister new viewer (not implemented).
+                    result = CreateDDEData( PR_FALSE );
+                    break;
+                }
+                default:
+                    break;
+            }
+        } else if ( uType & XTYP_POKE ) {
+            switch ( FindTopic( hsz1 ) ) {
+                case topicCancelProgress: {
+                    // "Handle" progress cancel (actually, pretty much ignored).
+                    result = (HDDEDATA)DDE_FACK;
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
     } else if ( uType & XCLASS_FLAGS ) {
         if ( uType == XTYP_EXECUTE ) {
             // Prove that we received the request.
@@ -920,6 +1028,80 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
         }
     } else if ( uType & XCLASS_NOTIFICATION ) {
     }
+    #if MOZ_DEBUG_DDE
+    printf( "DDE result=%d (0x%08X)\n", (int)result, (int)result );
+    #endif
+    return result;
+}
+
+// Utility to parse out argument from a DDE item string.
+nsCString nsNativeAppSupportWin::ParseDDEArg( HSZ args, int index ) {
+    nsCString result;
+    DWORD argLen = DdeQueryString( mInstance, args, NULL, NULL, CP_WINANSI );
+    if ( argLen ) {
+        nsCString temp;
+        // Ensure result's buffer is sufficiently big.
+        temp.SetLength( argLen + 1 );
+        // Now get the string contents.
+        DdeQueryString( mInstance, args, (char*)temp.get(), temp.Length(), CP_WINANSI );
+        // Parse out the given arg.  We assume there's no commas within quoted strings
+        // (which may not be accurate, but makes life so much easier).
+        const char *p = temp.get();
+        // Skip index commas.
+        PRInt32 offset = index ? temp.FindChar( ',', PR_FALSE, 0, index ) : 0;
+        if ( offset != -1 ) {
+            // Desired argument starts there and ends at next comma.
+            PRInt32 end = temp.FindChar( ',', PR_FALSE, offset+1 );
+            if ( end == -1 ) {
+                // Rest of string.
+                end = temp.Length();
+            }
+            // Extract result.
+            result.Assign( temp.get() + offset, end - offset ); 
+        }
+
+    }
+    return result;
+}
+
+static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
+
+static HWND hwndForDOMWindow( nsIDOMWindowInternal * );
+
+void nsNativeAppSupportWin::ActivateLastWindow() {
+    nsCOMPtr<nsIWindowMediator> med( do_GetService( kWindowMediatorCID ) );
+    if ( med ) {
+        // Get most recently used Nav window.
+        nsCOMPtr<nsIDOMWindowInternal> navWin;
+
+        med->GetMostRecentWindow( NS_LITERAL_STRING("navigator:browser").get(), getter_AddRefs( navWin ) );
+        if ( navWin ) {
+            // Activate that window.
+            HWND hwnd = hwndForDOMWindow( navWin );
+            if ( hwnd ) {
+                // Restore the window in case it is minimized.
+                ::ShowWindow( hwnd, SW_RESTORE );
+                // Use the OS call, if possible.
+                ::SetForegroundWindow( hwnd );
+            } else {
+                // Use internal method.
+                navWin->Focus();
+            }
+        } else {
+            // Need to create a Navigator window, then.
+            OpenBrowserWindow( "about:blank" );
+        }
+    }
+}
+
+HDDEDATA nsNativeAppSupportWin::CreateDDEData( DWORD value ) {
+    HDDEDATA result = DdeCreateDataHandle( mInstance,
+                                           (LPBYTE)&value,
+                                           sizeof value,
+                                           0,
+                                           mApplication,
+                                           CF_TEXT,
+                                           0 );
     return result;
 }
 
@@ -1206,25 +1388,30 @@ static LRESULT CALLBACK focusFilterProc( HWND hwnd, UINT uMsg, WPARAM wParam, LP
     }
 }
 
-nsresult
-nsNativeAppSupportWin::ReParent( nsIDOMWindowInternal *window, HWND newParent ) {
+HWND hwndForDOMWindow( nsIDOMWindowInternal *window ) {
     nsCOMPtr<nsIScriptGlobalObject> ppScriptGlobalObj( do_QueryInterface(window) );
     if ( !ppScriptGlobalObj ) {
-        return NS_ERROR_FAILURE;
+        return 0;
     }
     nsCOMPtr<nsIDocShell> ppDocShell;
     ppScriptGlobalObj->GetDocShell( getter_AddRefs( ppDocShell ) );
     if ( !ppDocShell ) {
-        return NS_ERROR_FAILURE;
+        return 0;
     }
     nsCOMPtr<nsIBaseWindow> ppBaseWindow( do_QueryInterface( ppDocShell ) );
     if ( !ppBaseWindow ) {
-        return NS_ERROR_FAILURE;
+        return 0;
     }
 
     nsCOMPtr<nsIWidget> ppWidget;
     ppBaseWindow->GetMainWidget( getter_AddRefs( ppWidget ) );
-    HWND hMainFrame = (HWND)ppWidget->GetNativeData( NS_NATIVE_WIDGET );
+
+    return (HWND)( ppWidget->GetNativeData( NS_NATIVE_WIDGET ) );
+}
+
+nsresult
+nsNativeAppSupportWin::ReParent( nsIDOMWindowInternal *window, HWND newParent ) {
+    HWND hMainFrame = hwndForDOMWindow( window );
     if ( !hMainFrame ) {
         return NS_ERROR_FAILURE;
     }
@@ -1258,21 +1445,114 @@ nsNativeAppSupportWin::ReParent( nsIDOMWindowInternal *window, HWND newParent ) 
     return NS_OK;
 }
 
+static const char sJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
+
+class SafeJSContext {
+public:
+  SafeJSContext();
+  ~SafeJSContext();
+
+  nsresult   Push();
+  JSContext *get() { return mContext; }
+
+protected:
+  nsCOMPtr<nsIThreadJSContextStack>  mService;
+  JSContext                         *mContext;
+};
+
+SafeJSContext::SafeJSContext() : mContext(nsnull) {
+}
+
+SafeJSContext::~SafeJSContext() {
+  JSContext *cx;
+  nsresult   rv;
+
+  if(mContext) {
+    rv = mService->Pop(&cx);
+    NS_ASSERTION(NS_SUCCEEDED(rv) && cx == mContext, "JSContext push/pop mismatch");
+  }
+}
+
+nsresult SafeJSContext::Push() {
+  nsresult rv;
+
+  if (mContext) // only once
+    return NS_ERROR_FAILURE;
+
+  mService = do_GetService(sJSStackContractID);
+  if(mService) {
+    rv = mService->GetSafeJSContext(&mContext);
+    if (NS_SUCCEEDED(rv) && mContext) {
+      rv = mService->Push(mContext);
+      if (NS_FAILED(rv))
+        mContext = 0;
+    }
+  }
+  return mContext ? NS_OK : NS_ERROR_FAILURE; 
+}
+
+
 nsresult
 nsNativeAppSupportWin::OpenBrowserWindow( const char *args ) {
     nsresult rv = NS_OK;
-    // Check if we have a cached (hidden) window.
-    if ( mCachedWin ) {
-        nsCOMPtr<nsIDOMWindowInternal> win = mCachedWin;
-        // Drop window from cache.
-        mCachedWin = 0;
-        // Show it.
-        ReParent( win, 0 );
-    } else {
-        // No cached window, open a new one.
-        rv = OpenWindow( "chrome://navigator/content", args );
-    }
-    return rv;
+    // Open the argument URL in the most recently used Navigator window.
+    // If there is no Nav window, open a new one.
+    nsCOMPtr<nsIWindowMediator>    med( do_GetService( kWindowMediatorCID ) );
+    nsCOMPtr<nsIDOMWindowInternal> navWin;
+    nsCOMPtr<nsIDOMWindow>         content;
+    nsCOMPtr<nsIDOMWindowInternal> internalContent;
+    nsCOMPtr<nsIDOMLocation>       location;
+    // This isn't really a loop.  We just use "break" statements to fall
+    // out to the OpenWindow call when things go awry.
+    do {
+        if ( !med ) {
+            break;
+        }
+        // Get most recently used Nav window.
+        med->GetMostRecentWindow( NS_LITERAL_STRING( "navigator:browser" ).get(), getter_AddRefs( navWin ) );
+        if ( !navWin ) {
+            // Have to open a new one.
+            break;
+        } else {
+            // Check if we're using the cached (hidden) window.
+            if ( mCachedWin == navWin ) {
+                // Drop window from cache.
+                mCachedWin = 0;
+                // Show it.
+                ReParent( navWin, 0 );
+            }
+        }
+        // Get content window.
+        navWin->GetContent( getter_AddRefs( content ) );
+        if ( !content ) {
+            break;
+        }
+        // Convert that to internal interface.
+        internalContent = do_QueryInterface( content );
+        if ( !internalContent ) {
+            break;
+        }
+        // Get location.
+        internalContent->GetLocation( getter_AddRefs( location ) );
+        if ( !location ) {
+            break;
+        }
+        // Set up environment.
+        SafeJSContext context;
+        if ( NS_FAILED( context.Push() ) ) {
+            break;
+        }
+        // Set href.
+        nsAutoString url; url.AssignWithConversion( args );
+        if ( NS_FAILED( location->SetHref( url ) ) ) {
+            break;
+        }
+        // Finally, if we get here, we're done.
+        return NS_OK;
+    } while ( PR_FALSE );
+
+    // Last resort is to open a brand new window.
+    return OpenWindow( "chrome://navigator/content", args );
 }
 
 NS_IMETHODIMP
