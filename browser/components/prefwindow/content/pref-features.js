@@ -334,6 +334,7 @@ function FinalizePermissionDeletions() {
     permissionmanager.remove(deletedPermissions[p].host, deletedPermissions[p].type);
   }
   deletedPermissions.length = 0;
+  loadPermissions();
 }
 
 function HandlePermissionKeyPress(e) {
