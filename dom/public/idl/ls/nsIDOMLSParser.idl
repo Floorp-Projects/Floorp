@@ -39,22 +39,36 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMLSParser;
-interface nsIDOMLSSerializer;
+interface nsIDOMDOMConfiguration;
+interface nsIDOMLSParserFilter;
 interface nsIDOMLSInput;
-interface nsIDOMLSOutput;
+interface LSException;
 
-[scriptable, uuid(e2c8b03c-a49a-4923-81b0-ba9a86da0e21)]
-interface nsIDOMDOMImplementationLS : nsISupports
+[scriptable, uuid(2a31a3a0-be68-40af-9f64-914192f0fba2)]
+interface nsIDOMLSParser : nsISupports
 {
-  // DOMImplementationLSMode
-  const unsigned short     MODE_SYNCHRONOUS               = 1;
-  const unsigned short     MODE_ASYNCHRONOUS              = 2;
+  readonly attribute nsIDOMDOMConfiguration domConfig;
+           attribute nsIDOMLSParserFilter   filter;
+  readonly attribute boolean                async;
+  readonly attribute boolean                busy;
+  nsIDOMDocument           parse(in nsIDOMLSInput input)
+                                        raises(DOMException, 
+                                               LSException);
+  nsIDOMDocument           parseURI(in DOMString uri)
+                                        raises(DOMException, 
+                                               LSException);
 
-  nsIDOMLSParser           createLSParser(in unsigned short mode, 
-					  in DOMString schemaType)
-                                              raises(DOMException);
-  nsIDOMLSSerializer       createLSSerializer();
-  nsIDOMLSInput            createLSInput();
-  nsIDOMLSOutput           createLSOutput();
+  // ACTION_TYPES
+  const unsigned short      ACTION_APPEND_AS_CHILDREN      = 1;
+  const unsigned short      ACTION_REPLACE_CHILDREN        = 2;
+  const unsigned short      ACTION_INSERT_BEFORE           = 3;
+  const unsigned short      ACTION_INSERT_AFTER            = 4;
+  const unsigned short      ACTION_REPLACE                 = 5;
+
+  nsIDOMNode               parseWithContext(in nsIDOMLSInput input, 
+                                            in nsIDOMNode contextArg, 
+                                            in unsigned short action)
+                                        raises(DOMException, 
+                                               LSException);
+  void                     abort();
 };

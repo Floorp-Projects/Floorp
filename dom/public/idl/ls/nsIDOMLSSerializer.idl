@@ -39,22 +39,24 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMLSParser;
-interface nsIDOMLSSerializer;
-interface nsIDOMLSInput;
+interface nsIDOMDOMConfiguration;
 interface nsIDOMLSOutput;
+interface nsIDOMLSSerializerFilter;
+interface LSException;
 
-[scriptable, uuid(e2c8b03c-a49a-4923-81b0-ba9a86da0e21)]
-interface nsIDOMDOMImplementationLS : nsISupports
+[scriptable, uuid(96ea4792-d362-4c28-a8c2-0337790d648a)]
+interface nsIDOMLSSerializer : nsISupports
 {
-  // DOMImplementationLSMode
-  const unsigned short     MODE_SYNCHRONOUS               = 1;
-  const unsigned short     MODE_ASYNCHRONOUS              = 2;
-
-  nsIDOMLSParser           createLSParser(in unsigned short mode, 
-					  in DOMString schemaType)
-                                              raises(DOMException);
-  nsIDOMLSSerializer       createLSSerializer();
-  nsIDOMLSInput            createLSInput();
-  nsIDOMLSOutput           createLSOutput();
+  readonly attribute nsIDOMDOMConfiguration   domConfig;
+           attribute DOMString                newLine;
+           attribute nsIDOMLSSerializerFilter filter;
+  boolean            write(in nsIDOMNode nodeArg, 
+                           in nsIDOMLSOutput destination)
+                                        raises(LSException);
+  boolean            writeToURI(in nsIDOMNode nodeArg, 
+                                in DOMString uri)
+                                        raises(LSException);
+  DOMString          writeToString(in nsIDOMNode nodeArg)
+                                        raises(DOMException, 
+                                               LSException);
 };
