@@ -55,7 +55,7 @@ CNavCenterWindow :: FinishCreateSelf()
 	// use saved positioning information
 	FinishCreateWindow();
 	
-	mTree = dynamic_cast<CRDFCoordinator*>(FindPaneByID('RCoo'));
+	mTree = dynamic_cast<CRDFCoordinator*>(FindPaneByID(CWindowRDFCoordinator::pane_ID));
 	Assert_(mTree);
 	mTree->RegisterNavCenter(NULL);
 
