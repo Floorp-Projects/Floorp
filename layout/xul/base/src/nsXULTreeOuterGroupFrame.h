@@ -22,6 +22,10 @@
  * Contributor(s): 
  */
 
+#ifndef NSXULTREEOUTERGROUPFRAME
+#define NSXULTREEOUTERGROUPFRAME
+
+
 #include "nsCOMPtr.h"
 #include "nsBoxLayoutState.h"
 #include "nsISupportsArray.h"
@@ -84,6 +88,11 @@ public:
     return nsXULTreeGroupFrame::GetPrefSize(aBoxLayoutState, aSize);
   };
 
+  NS_IMETHOD Paint(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
+                    const nsRect& aDirtyRect, nsFramePaintLayer aWhichLayer);
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext, nsIContent* aChild,
+                                 PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aHint) ;
+
   NS_IMETHOD IsOutermostFrame(PRBool *aResult) { *aResult = PR_TRUE; return NS_OK; };
 
   PRInt32 GetRowCount() { if (mRowGroupInfo && (mRowGroupInfo->mRowCount != -1)) return mRowGroupInfo->mRowCount; PRInt32 count = 0;
@@ -142,10 +151,18 @@ public:
 
   NS_IMETHOD InternalPositionChanged(PRBool aUp, PRInt32 aDelta);
 
+  PRBool IsTreeSorted ( ) const { return mTreeIsSorted; }
+  
 protected: // Data Members
   nsXULTreeRowGroupInfo* mRowGroupInfo;
   PRInt32 mRowHeight;
   nscoord mOnePixel;
   PRInt32 mCurrentIndex; // Row-based
   PRInt32 mTwipIndex; // Not really accurate. Used to handle thumb dragging
+  PRPackedBool mTreeIsSorted;
+
 }; // class nsXULTreeOuterGroupFrame
+
+
+#endif
+
