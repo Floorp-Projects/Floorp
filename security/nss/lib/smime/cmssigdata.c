@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.6 2000/09/14 00:33:28 mcgreer%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.7 2000/09/14 17:14:44 mcgreer%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -559,7 +559,6 @@ NSS_CMSSignedData_AddCertChain(NSSCMSSignedData *sigd, CERTCertificate *cert)
 	return SECFailure;
 
     rv = NSS_CMSSignedData_AddCertList(sigd, certlist);
-    CERT_DestroyCertificateList(certlist);
 
     return rv;
 }
