@@ -77,6 +77,14 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::chooseOutputFile(
     return mBaseFileSpec->setFromFileSpec(spec);
 } // nsFileSpecImpl::chooseOutputFile
 
+NS_IMETHODIMP nsFileSpecWithUIImpl::chooseFile(const char *title, char **_retval)
+{
+	nsresult rv = chooseInputFile(title, eAllFiles, nsnull, nsnull);
+	if (NS_FAILED(rv)) return rv;
+	rv = GetURLString(_retval);
+	return rv;
+}
+
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsFileSpecWithUIImpl::chooseInputFile(
 		const char *inTitle,
