@@ -231,7 +231,7 @@ typedef void
 
 typedef struct JSErrorFormatString {
     const char *format;
-    const uintN argCount;
+    uintN argCount;
 } JSErrorFormatString;
 
 typedef const JSErrorFormatString *
