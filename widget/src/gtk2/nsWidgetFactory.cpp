@@ -102,53 +102,6 @@ nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
 }
 
 static NS_IMETHODIMP
-nsFilePickerRegisterSelf(nsIComponentManager *aCompMgr,
-                         nsIFile *aPath,
-                         const char *aLoaderStr,
-                         const char *aType,
-                         const nsModuleComponentInfo *aInfo)
-{
-  static PRBool been_here;
-  if (!been_here) {
-    been_here = PR_TRUE;
-
-    // Make sure we re-register this so it gets picked up after the XUL picker.
-    return NS_ERROR_FACTORY_REGISTER_AGAIN;
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsIComponentRegistrar> compReg = do_QueryInterface(aCompMgr, &rv);
-
-  if (NS_SUCCEEDED(rv) && compReg) {
-    rv = compReg->RegisterFactoryLocation(kNativeFilePickerCID,
-                                          "Gtk2 File Picker",
-                                          "@mozilla.org/filepicker;1",
-                                          aPath, aLoaderStr, aType);
-  }
-
-  return rv;
-}
-
-static NS_IMETHODIMP
-nsFilePickerUnregisterSelf(nsIComponentManager *aCompMgr,
-                           nsIFile *aPath,
-                           const char *aLoaderStr,
-                           const nsModuleComponentInfo *aInfo)
-{
-  nsFilePicker::Shutdown();
-
-  nsresult rv;
-  nsCOMPtr<nsIComponentRegistrar> compReg = do_QueryInterface(aCompMgr, &rv);
-
-  if (NS_SUCCEEDED(rv) && compReg) {
-    rv = compReg->UnregisterFactoryLocation(kNativeFilePickerCID,
-                                            aPath);
-  }
-
-  return rv;
-}
-
-static NS_IMETHODIMP
 nsNativeKeyBindingsConstructor(nsISupports *aOuter, REFNSIID aIID,
                                void **aResult,
                                NativeKeyBindingsType aKeyBindingsType)
@@ -213,9 +166,7 @@ static const nsModuleComponentInfo components[] =
     { "Gtk2 File Picker",
       NS_FILEPICKER_CID,
       "@mozilla.org/filepicker;1",
-      nsFilePickerConstructor,
-      nsFilePickerRegisterSelf,
-      nsFilePickerUnregisterSelf },
+      nsFilePickerConstructor },
     { "Gtk2 Sound",
       NS_SOUND_CID,
       "@mozilla.org/sound;1",
@@ -265,6 +216,7 @@ static const nsModuleComponentInfo components[] =
 PR_STATIC_CALLBACK(void)
 nsWidgetGtk2ModuleDtor(nsIModule *aSelf)
 {
+  nsFilePicker::Shutdown();
   nsWindow::ReleaseGlobals();
   nsAppShell::ReleaseGlobals();
 }
