@@ -171,7 +171,7 @@ Rights Reserved.
 <!ENTITY searchParentCmd.label ".Search in &lt;parent&gt;">
 <!ENTITY searchParentParentCmd.label ".Search in &lt;parent parent&gt;">
 <!ENTITY searchInternetCmd.label ".Search the Internet...">
-<!ENTITY searchMailCmd.label ".Search all Mail">
+<!ENTITY searchMailCmd.label "Search all Mail">
 <!ENTITY searchBookmarksCmd.label ".Search Bookmarks...">
 <!ENTITY searchPeopleCmd.label ".Search People...">
 <!ENTITY searchLocalCmd.label ".Search on this Computer...">
