@@ -83,7 +83,7 @@ void nsMailboxProtocol::Initialize(nsIURI * aURL)
 		{
 			rv = m_runningUrl->GetMailboxAction(&m_mailboxAction); 
 			nsFileSpec * fileSpec = nsnull;
-			m_runningUrl->GetFilePath(&fileSpec);
+			m_runningUrl->GetFileSpec(&fileSpec);
 			if (m_mailboxAction == nsIMailboxUrl::ActionParseMailbox)
 				rv = OpenFileSocket(aURL, fileSpec, 0, -1 /* read in all the bytes in the file */);
 			else
