@@ -1841,10 +1841,10 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   // author is intending css2 behavior then we act as if strict mode
   // is set.
   //
-  // Finally, for pre-formatted content we don't bother doing this
-  // check because pre-formatted content is always formatted as it is
-  // found.
-  if (!preMode && (emptyContinuation || !InStrictMode()) &&
+  // This code works correctly for preMode, because a blank line
+  // in PRE mode is encoded as a text node with a LF in it, since
+  // text nodes with only whitespace are considered in preMode.
+  if ((emptyContinuation || !InStrictMode()) &&
       ((psd == mRootSpan) ||
        ((0 == spanFramePFD->mBorderPadding.top) &&
         (0 == spanFramePFD->mBorderPadding.right) &&
@@ -1866,7 +1866,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     zeroEffectiveSpanBox = PR_TRUE;
     PerFrameData* pfd = psd->mFirstFrame;
     while (nsnull != pfd) {
-      if (pfd->mIsNonWhitespaceTextFrame) {
+      if (preMode?pfd->mIsTextFrame:pfd->mIsNonWhitespaceTextFrame) {
         zeroEffectiveSpanBox = PR_FALSE;
         break;
       }
@@ -2229,21 +2229,18 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       if ( NS_SUCCEEDED(result) && blockContent) {
         nsCOMPtr<nsIAtom> blockTagAtom;
         result = blockContent->GetTag(*(getter_AddRefs(blockTagAtom)));
-		// XXX There aren't atoms for dd and dt, so I'm converting to
-		// a string.  Is that the right thing to do?
         if ( NS_SUCCEEDED(result) && blockTagAtom) {
-		  nsAutoString blockTag;
-		  blockTagAtom->ToString(blockTag);
           // (2) above, if the first line of LI
-          if (isFirstLine && blockTag.Equals("li")) {
+          if (isFirstLine && blockTagAtom.get() == nsHTMLAtoms::li) {
             applyMinLH = PR_TRUE;
           }
           // (3) above, if the last line of LI, DT, or DD
-          if (!applyMinLH && isLastLine && (blockTag.Equals("li") ||
-                                            blockTag.Equals("dt") ||
-                                            blockTag.Equals("dd"))) {
+          if (!applyMinLH && isLastLine &&
+                ((blockTagAtom.get() == nsHTMLAtoms::li) ||
+                 (blockTagAtom.get() == nsHTMLAtoms::dt) ||
+                 (blockTagAtom.get() == nsHTMLAtoms::dd))) {
             applyMinLH = PR_TRUE;
-		  }
+          }
         }
       }
     }
@@ -2291,7 +2288,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 
   if ((minY == VERTICAL_ALIGN_FRAMES_NO_MINIMUM) ||
       (maxY == VERTICAL_ALIGN_FRAMES_NO_MINIMUM)) {
-    minY = maxY = 0;
+    minY = maxY = baselineY;
   }
 
   if ((psd != mRootSpan) && (psd->mZeroEffectiveSpanBox)) {
