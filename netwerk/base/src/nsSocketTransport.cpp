@@ -33,6 +33,7 @@
 #include "nsIDNSService.h"
 #include "nsISocketProvider.h"
 #include "nsISocketProviderService.h"
+#include "nsStdURL.h"
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kSocketProviderService, NS_SOCKETPROVIDERSERVICE_CID);
@@ -1493,7 +1494,15 @@ nsSocketTransport::OnStopLookup(nsISupports *aContext,
 NS_IMETHODIMP
 nsSocketTransport::GetURI(nsIURI * *aURL)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsStdURL *url;
+  url = new nsStdURL(nsnull);
+  url->SetHost(mHostName);
+  url->SetPort(mPort);
+
+  nsresult rv;
+  rv = CallQueryInterface(url, aURL);
+
+  return rv;
 }
 
 NS_IMETHODIMP
