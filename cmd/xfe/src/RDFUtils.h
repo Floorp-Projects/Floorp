@@ -142,6 +142,13 @@ public:
 	static void		configureMenuCascadeButton		(Widget			item,
 													 HT_Resource	entry);
 
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// Dispatching (load URLs in the Browser, etc.)                     //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+	static void		launchEntry      		(MWContext *	context,
+											 HT_Resource	entry);
 };
 
 #endif // _xfe_rdf_utils_h_

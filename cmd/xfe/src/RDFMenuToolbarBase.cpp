@@ -27,7 +27,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "RDFMenuToolbarBase.h"
-#include "BrowserFrame.h"  /* for fe_reuseBrowser() */
+#include "Frame.h"
 #include "IconGroup.h"
 #include "View.h"
 #include "ToolbarDrop.h"
@@ -484,16 +484,9 @@ XFE_RDFMenuToolbarBase::entryActivated(Widget w, HT_Resource entry)
             }
 
         }
-        else if (!HT_IsContainer(entry) && !HT_IsSeparator(entry))
+        else
         {
-            MWContext *		context = _frame->getContext();
-
-            // Let HT handle the launch first
-            if (!HT_Launch(entry, context)) {
-                char *s = HT_GetNodeURL(entry);
-                URL_Struct *url = NET_CreateURLStruct (s, NET_DONT_RELOAD);
-                fe_reuseBrowser (context, url);
-            }
+            XFE_RDFUtils::launchEntry(_frame->getContext(), entry);
         }
     }
 }

@@ -29,6 +29,7 @@
 #include "RDFUtils.h"
 
 #include "IconGroup.h"
+#include "BrowserFrame.h"   // For fe_reuseBrowser()
 
 #include "xp_str.h"
 #include "xpassert.h"
@@ -47,6 +48,7 @@
 
 #include <Xfe/BmButton.h>	// For XfeIsBmButton()
 #include <Xfe/BmCascade.h>	// For XfeIsBmCascade()
+
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -757,5 +759,28 @@ XFE_RDFUtils::configureMenuCascadeButton(Widget item,HT_Resource entry)
 			XtSetValues(item,av,ac);
 		}
 	}
+}
+//////////////////////////////////////////////////////////////////////////
+/*static*/
+void
+XFE_RDFUtils::launchEntry(MWContext *	context,
+                          HT_Resource	entry)
+{
+    if (!entry) return;
+
+    if (!HT_IsContainer(entry) && !HT_IsSeparator(entry))
+    {
+        // Let HT handle the launch first
+        if (!HT_Launch(entry, context))
+        {
+            char *			address = HT_GetNodeURL(entry);
+            URL_Struct *	url = NET_CreateURLStruct(address,NET_DONT_RELOAD);
+
+            XP_ASSERT( context != NULL );
+
+            fe_reuseBrowser (context, url);
+        }
+    }
+
 }
 //////////////////////////////////////////////////////////////////////////
