@@ -13,6 +13,7 @@ UnregisterComponent__12nsRepositoryFRC4nsIDPCc		# nsRepository::UnregisterCompon
 UnregisterFactory__12nsRepositoryFRC4nsIDPCc		# nsRepository::UnregisterFactory(const nsID&,const char*)
 UnregisterFactory__12nsRepositoryFRC4nsIDP10nsIFactory		# nsRepository::UnregisterFactory(const nsID&,nsIFactory*)
 RegisterFactory__12nsRepositoryFRC4nsIDPCcii		# nsRepository::RegisterFactory(const nsID&,const char*,int,int)
+RegisterFactory__12nsRepositoryFRC4nsIDPCcPCcP10nsIFactoryi		# nsRepository::RegisterFactory(const nsID&,const char*,const char*,nsIFactory*,int)
 RegisterFactory__12nsRepositoryFRC4nsIDP10nsIFactoryi		# nsRepository::RegisterFactory(const nsID&,nsIFactory*,int)
 #CreateInstance2__12nsRepositoryFRC4nsIDP11nsISupportsRC4nsIDPvPPv		# nsRepository::CreateInstance2(const nsID&,nsISupports*,const nsID&,void*,void**)
 CreateInstance__12nsRepositoryFRC4nsIDP11nsISupportsRC4nsIDPPv		# nsRepository::CreateInstance(const nsID&,nsISupports*,const nsID&,void**)
