@@ -377,7 +377,9 @@ nsFileTransport::Process(void)
 
         // if we're reading:
         if (mListener) {
-            mStatus = mListener->OnStartRequest(this, mContext);  // always send the start notification
+            nsresult rv = mListener->OnStartRequest(this, mContext);  // always send the start notification
+            if (NS_SUCCEEDED(mStatus))
+                mStatus = rv;
         }
 
         mXferState = NS_FAILED(mStatus) ? END_READ : START_READ;
