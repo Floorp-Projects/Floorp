@@ -26,22 +26,23 @@
 
 #include "nsInstallProgressDialog.h"
 
-#include "nsIAppShellComponentImpl.h"
 #include "nsIScriptGlobalObject.h"
 
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIServiceManager.h"
 #include "nsIDocumentViewer.h"
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContentViewer.h"
 #include "nsIDOMElement.h"
+#include "nsISupportsArray.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIWindowWatcher.h"
 #include "nsNetUtil.h"
 #include "nsIURL.h"
 #include "nsPIXPIManagerCallbacks.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 
 nsInstallProgressDialog::nsInstallProgressDialog(nsPIXPIManagerCallbacks *aManager)
   : mManager(aManager)
@@ -140,42 +141,36 @@ nsInstallProgressDialog::LogComment(const PRUnichar* comment)
 NS_IMETHODIMP
 nsInstallProgressDialog::Open(nsIDialogParamBlock* ioParamBlock)
 {
-    nsresult rv = NS_OK;
-    
-    // Now do the stuff to create a window and pass the JS args to it.
-    NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv );
-    if ( NS_SUCCEEDED( rv ) ) 
-    {
-        nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
-        JSContext* jsContext;
-        rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs(hiddenWindow), &jsContext);
-        if (NS_SUCCEEDED(rv))
-        {
-            nsCOMPtr<nsPIXPIManagerCallbacks> mgr = do_QueryInterface(mManager);
+  nsresult rv = NS_ERROR_FAILURE;
 
-            void* stackPtr;
-            jsval *argv = JS_PushArguments( jsContext,
-                                            &stackPtr,
-                                            "sss%ip%ip",
-                                            "chrome://communicator/content/xpinstall/xpistatus.xul",
-                                            "_blank",
-                                            "chrome,centered,titlebar,resizable",
-                                            (const nsIID*)&NS_GET_IID(nsIDialogParamBlock),
-                                            (nsISupports*)ioParamBlock,
-                                            (const nsIID*)&NS_GET_IID(nsPIXPIManagerCallbacks),
-                                            (nsISupports*)mgr
-                                            );
-            if (argv)
-            {
-                rv = hiddenWindow->OpenDialog( jsContext,
-                                               argv,
-                                               5,
-                                               getter_AddRefs( mWindow ));
-            }
-            JS_PopArguments( jsContext, stackPtr);  
-        }
+  // build parameter list
+  nsCOMPtr<nsISupportsArray> params(do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID));
+  nsCOMPtr<nsISupportsInterfacePointer> pbwrap(do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID));
+  if (pbwrap) {
+    pbwrap->SetData(ioParamBlock);
+    pbwrap->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
+  }
+  nsCOMPtr<nsPIXPIManagerCallbacks> mgr = do_QueryInterface(mManager);
+  nsCOMPtr<nsISupportsInterfacePointer> callbackwrap(do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID));
+  if (callbackwrap) {
+    callbackwrap->SetData(mgr);
+    callbackwrap->SetDataIID(&NS_GET_IID(nsPIXPIManagerCallbacks));
+  }
+  if (params && pbwrap && callbackwrap) {
+    params->AppendElement(pbwrap);
+    params->AppendElement(callbackwrap);
+
+    // then open the window
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    if (wwatch) {
+      nsCOMPtr<nsIDOMWindow> newWindow;
+      rv = wwatch->OpenWindow(0, "chrome://communicator/content/xpinstall/xpistatus.xul",
+                     "_blank", "chrome,centerscreen,titlebar,resizable",
+                     params, getter_AddRefs(newWindow));
     }
-    return rv;
+  }
+
+  return rv;
 }
 
 

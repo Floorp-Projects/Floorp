@@ -227,36 +227,20 @@ static nsresult OpenWindow(const char *urlstr, const PRUnichar *args)
 #ifdef DEBUG_CMD_LINE
   printf("OpenWindow(%s,?)\n",urlstr);
 #endif /* DEBUG_CMD_LINE */
+
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsISupportsWString> sarg(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
+  if (!wwatch || !sarg)
+    return NS_ERROR_FAILURE;
+
+  sarg->SetData(args);
+
+  nsCOMPtr<nsIDOMWindow> newWindow;
   nsresult rv;
-  nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID, &rv));
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
-      JSContext *jsContext;
-      rv = appShellService->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow),
-                                                         &jsContext);
-      if (NS_SUCCEEDED(rv)) {
-        void *stackPtr;
-        jsval *argv = JS_PushArguments( jsContext,
-                                        &stackPtr,
-                                        "sssW",
-                                        urlstr,
-                                        "_blank",
-                                        "chrome,dialog=no,all",
-                                        args );
+  rv = wwatch->OpenWindow(0, urlstr, "_blank",
+                 "chrome,dialog=no,all", sarg,
+                 getter_AddRefs(newWindow));
 
-        if( argv ) {
-          nsCOMPtr<nsIDOMWindowInternal> newWindow;
-          rv = hiddenWindow->OpenDialog( jsContext,
-                                         argv,
-                                         4,
-                                         getter_AddRefs( newWindow ) );
-
-          JS_PopArguments( jsContext, stackPtr );
-
-        }
-      }
-
-    }
   return rv;
 }
 

@@ -2427,39 +2427,11 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 				NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
 				if (NS_SUCCEEDED(rv))
 				{
-					// get a parent window for the new browser window
-					nsCOMPtr<nsIXULWindow>	parent;
-					appShell->GetHiddenWindow(getter_AddRefs(parent));
-
-					// convert it to a DOMWindow
-					nsCOMPtr<nsIDocShell>	docShell;
-					if (parent)
+					nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+					if (wwatch)
 					{
-						parent->GetDocShell(getter_AddRefs(docShell));
-					}
-					nsCOMPtr<nsIDOMWindowInternal>	domParent(do_GetInterface(docShell));
-					nsCOMPtr<nsIScriptGlobalObject>	sgo(do_QueryInterface(domParent));
-
-					nsCOMPtr<nsIScriptContext>	context;
-					if (sgo)
-					{
-						sgo->GetContext(getter_AddRefs(context));
-					}
-					if (context)
-					{
-						JSContext *jsContext = (JSContext*)context->GetNativeContext();
-						if (jsContext)
-						{
-							void	*stackPtr;
-							jsval	*argv = JS_PushArguments(jsContext, &stackPtr, "s", uri);
-							if (argv)
-							{
-					                        // open the window
-					                        nsIDOMWindowInternal	*newWindow;
-					                        domParent->Open(jsContext, argv, 1, &newWindow);
-					                        JS_PopArguments(jsContext, stackPtr);
-							}
-						}
+						nsCOMPtr<nsIDOMWindow> newWindow;
+						wwatch->OpenWindow(0, uri, "_blank", 0, 0, getter_AddRefs(newWindow));
 					}
 				}
 			}

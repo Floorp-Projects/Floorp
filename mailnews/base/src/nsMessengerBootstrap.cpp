@@ -32,12 +32,13 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgFolderCache.h"
 #include "nsIPref.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIAppShellService.h"
-#include "nsAppShellCIDs.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIWindowWatcher.h"
+#include "nsString.h"
 #include "nsIURI.h"
 
-static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -99,34 +100,21 @@ NS_IMETHODIMP nsMessengerBootstrap::GetChromeUrlForTask(char **aChromeUrlForTask
 
 // Utility function to open a messenger window and pass an argument string to it.
 static nsresult openWindow( const PRUnichar *chrome, const PRUnichar *args ) {
-    nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
-    JSContext *jsContext;
-    nsresult rv;
-    NS_WITH_SERVICE( nsIAppShellService, appShell, kAppShellServiceCID, &rv )
-    if ( NS_SUCCEEDED( rv ) ) {
-        rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
-                                                    &jsContext );
-        if ( NS_SUCCEEDED( rv ) ) {
-            // Set up arguments for "window.openDialog"
-            void *stackPtr;
-            jsval *argv = JS_PushArguments( jsContext,
-                                            &stackPtr,
-                                            "WssW",
-                                            chrome,
-                                            "_blank",
-                                            "chrome,dialog=no,all",
-                                            args );
-            if ( argv ) {
-                nsCOMPtr<nsIDOMWindowInternal> newWindow;
-                rv = hiddenWindow->OpenDialog( jsContext,
-                                               argv,
-                                               4,
-                                               getter_AddRefs( newWindow ) );
-                JS_PopArguments( jsContext, stackPtr );
-            }
-        }
-    }
-    return rv;
+
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsISupportsWString> sarg(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
+  if (!wwatch || !sarg)
+    return NS_ERROR_FAILURE;
+
+  sarg->SetData(args);
+
+  nsCOMPtr<nsIDOMWindow> newWindow;
+  nsresult rv;
+  rv = wwatch->OpenWindow(0, NS_ConvertUCS2toUTF8(chrome).get(), "_blank",
+                 "chrome,dialog=no,all", sarg,
+                 getter_AddRefs(newWindow));
+
+  return rv;
 }
 
 NS_IMETHODIMP nsMessengerBootstrap::OpenMessengerWindowWithUri(nsIURI *aURI)

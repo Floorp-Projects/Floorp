@@ -26,8 +26,6 @@
 #include "nsMsgCompCID.h"
 #include "nsISupportsArray.h"
 #include "nsIServiceManager.h"
-#include "nsIAppShellService.h"
-#include "nsAppShellCIDs.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgIdentity.h"
 #include "nsISmtpUrl.h"
@@ -35,6 +33,8 @@
 #include "nsMsgI18N.h"
 #include "nsIMsgDraft.h"
 #include "nsIMsgComposeParams.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIWindowWatcher.h"
 #include "nsEscape.h"
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
@@ -45,7 +45,6 @@
 #include "nsMsgUtils.h"
 #endif
 
-static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID);
 
 #ifdef NS_DEBUG
@@ -100,37 +99,24 @@ nsMsgComposeService::~nsMsgComposeService()
 // Utility function to open a message compose window and pass an nsIMsgComposeParams parameter to it.
 static nsresult openWindow( const char *chrome, nsIMsgComposeParams *params )
 {
-  nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
-  JSContext *jsContext;
   nsresult rv;
 
-  nsCOMPtr<nsIAppShellService> appShell (do_GetService(kAppShellServiceCID));
-  if (appShell)
-  {
-    rv = appShell->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow), &jsContext);
-    if (NS_SUCCEEDED(rv))
-    {
-      // Set up arguments for "window.openDialog"
-      void *stackPtr;
-      jsval *argv = JS_PushArguments( jsContext,
-                                      &stackPtr,
-                                      "sss%ip",
-                                      (chrome && *chrome) ? chrome : DEFAULT_CHROME,
-                                      "_blank",
-                                      "chrome,dialog=no,all",
-                                      (const nsIID*) (&NS_GET_IID(nsIMsgComposeParams)),
-                                      (nsISupports*) params);
-      if (argv)
-      {
-        nsCOMPtr<nsIDOMWindowInternal> newWindow;
-        rv = hiddenWindow->OpenDialog(jsContext,
-                                      argv,
-                                      4,
-                                      getter_AddRefs(newWindow));
-                                      JS_PopArguments(jsContext, stackPtr);
-      }
-    }
-  }
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  if (!wwatch)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISupportsInterfacePointer> msgParamsWrapper =
+    do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  msgParamsWrapper->SetData(params);
+  msgParamsWrapper->SetDataIID(&NS_GET_IID(nsIMsgComposeParams));
+
+  nsCOMPtr<nsIDOMWindow> newWindow;
+  rv = wwatch->OpenWindow(0, chrome && *chrome ? chrome : DEFAULT_CHROME,
+                 "_blank", "chrome,dialog=no,all", msgParamsWrapper,
+                 getter_AddRefs(newWindow));
+
   return rv;
 }
 

@@ -28,12 +28,11 @@
 #include "nsIPref.h"
 #include "prenv.h" /* for PR_GetEnv */
 
-#include "nsIAppShellComponentImpl.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIServiceManager.h"
 #include "nsIDialogParamBlock.h"
-
-static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+#include "nsISupportsPrimitives.h"
+#include "nsIWindowWatcher.h"
 
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 static NS_DEFINE_IID(kIDeviceContextSpecPSIID, NS_IDEVICE_CONTEXT_SPEC_PS_IID);
@@ -109,96 +108,77 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::Init(PRBool aQuiet)
   char *command;
   char *printfile = nsnull;
 
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIDialogParamBlock> ioParamBlock;
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
 
-  rv = nsComponentManager::CreateInstance("@mozilla.org/embedcomp/dialogparam;1",
-                                          nsnull,
-                                          NS_GET_IID(nsIDialogParamBlock),
-                                          getter_AddRefs(ioParamBlock));
+  nsCOMPtr<nsISupportsInterfacePointer> paramBlockWrapper;
+  if (ioParamBlock)
+    paramBlockWrapper = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
+
+  if (paramBlockWrapper) {
+    paramBlockWrapper->SetData(ioParamBlock);
+    paramBlockWrapper->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
+
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    if (wwatch) {
+      nsCOMPtr<nsIDOMWindow> newWindow;
+      rv = wwatch->OpenWindow(0, "chrome://global/content/printdialog.xul",
+		    "_blank", "chrome,modal", paramBlockWrapper,
+		    getter_AddRefs(newWindow));
+    }
+  }
 
   if (NS_SUCCEEDED(rv)) {
-    NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
-      nsCOMPtr<nsIDOMWindowInternal> mWindow;
-
-      JSContext *jsContext;
-      rv = appShell->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow), &jsContext);
-      if (NS_SUCCEEDED(rv)) {
-        void *stackPtr;
-        jsval *argv = JS_PushArguments(jsContext,
-                                       &stackPtr,
-                                       "sss%ip",
-                                       "chrome://global/content/printdialog.xul",
-                                       "_blank",
-                                       "chrome,modal",
-                                       (const nsIID *) (&NS_GET_IID(nsIDialogParamBlock)),
-                                       (nsISupports *) ioParamBlock);
-        if (argv) {
-          nsCOMPtr<nsIDOMWindowInternal> newWindow;
-
-          rv = hiddenWindow->OpenDialog(jsContext,
-                                        argv,
-                                        4,
-                                        getter_AddRefs(newWindow));
-
-          if (NS_SUCCEEDED(rv)) {
-            JS_PopArguments(jsContext, stackPtr);
-            PRInt32 buttonPressed = 0;
-            ioParamBlock->GetInt(0, &buttonPressed);
-            if (buttonPressed == 0) {
-              nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-              if (NS_SUCCEEDED(rv) && pPrefs) {
-                (void) pPrefs->GetBoolPref("print.print_reversed", &reversed);
-                (void) pPrefs->GetBoolPref("print.print_color", &color);
-                (void) pPrefs->GetBoolPref("print.print_landscape", &landscape);
-                (void) pPrefs->GetIntPref("print.print_paper_size", &paper_size);
-                (void) pPrefs->CopyCharPref("print.print_command", (char **) &command);
-                (void) pPrefs->GetIntPref("print.print_margin_top", &itop);
-                (void) pPrefs->GetIntPref("print.print_margin_left", &ileft);
-                (void) pPrefs->GetIntPref("print.print_margin_bottom", &ibottom);
-                (void) pPrefs->GetIntPref("print.print_margin_right", &iright);
-                (void) pPrefs->CopyCharPref("print.print_file", (char **) &printfile);
-                (void) pPrefs->GetBoolPref("print.print_tofile", &tofile);
-                sprintf(mPrData.command, command);
-                sprintf(mPrData.path, printfile);
-              } else {
+    PRInt32 buttonPressed = 0;
+    ioParamBlock->GetInt(0, &buttonPressed);
+    if (buttonPressed == 0) {
+      nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+      if (NS_SUCCEEDED(rv) && pPrefs) {
+	(void) pPrefs->GetBoolPref("print.print_reversed", &reversed);
+	(void) pPrefs->GetBoolPref("print.print_color", &color);
+	(void) pPrefs->GetBoolPref("print.print_landscape", &landscape);
+	(void) pPrefs->GetIntPref("print.print_paper_size", &paper_size);
+	(void) pPrefs->CopyCharPref("print.print_command", (char **) &command);
+	(void) pPrefs->GetIntPref("print.print_margin_top", &itop);
+	(void) pPrefs->GetIntPref("print.print_margin_left", &ileft);
+	(void) pPrefs->GetIntPref("print.print_margin_bottom", &ibottom);
+	(void) pPrefs->GetIntPref("print.print_margin_right", &iright);
+	(void) pPrefs->CopyCharPref("print.print_file", (char **) &printfile);
+	(void) pPrefs->GetBoolPref("print.print_tofile", &tofile);
+	sprintf(mPrData.command, command);
+	sprintf(mPrData.path, printfile);
+      } else {
 #ifndef VMS
-                sprintf(mPrData.command, "lpr");
+	sprintf(mPrData.command, "lpr");
 #else
-                // Note to whoever puts the "lpr" into the prefs file. Please contact me
-                // as I need to make the default be "print" instead of "lpr" for OpenVMS.
-                sprintf(mPrData.command, "print");
+	// Note to whoever puts the "lpr" into the prefs file. Please contact me
+	// as I need to make the default be "print" instead of "lpr" for OpenVMS.
+	sprintf(mPrData.command, "print");
 #endif
-              }
-
-              mPrData.top       = itop / 1000.0; 
-              mPrData.bottom    = ibottom / 1000.0;
-              mPrData.left      = ileft / 1000.0;
-              mPrData.right     = iright / 1000.0;
-              mPrData.fpf       = !reversed;
-              mPrData.grayscale = !color;
-              mPrData.size      = paper_size;
-              mPrData.toPrinter = !tofile;
-
-              // PWD, HOME, or fail 
-            
-              if (!printfile) {
-                if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) NULL ) 
-                  if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) NULL )
-                    strcpy( mPrData.path, "mozilla.ps" );
-                if ( path != (char *) NULL )
-                  sprintf( mPrData.path, "%s/mozilla.ps", path );
-                else
-                  return NS_ERROR_FAILURE;
-              }
-
-              return NS_OK;
-            }
-          }
-        }
       }
+
+      mPrData.top       = itop / 1000.0; 
+      mPrData.bottom    = ibottom / 1000.0;
+      mPrData.left      = ileft / 1000.0;
+      mPrData.right     = iright / 1000.0;
+      mPrData.fpf       = !reversed;
+      mPrData.grayscale = !color;
+      mPrData.size      = paper_size;
+      mPrData.toPrinter = !tofile;
+
+      // PWD, HOME, or fail 
+    
+      if (!printfile) {
+	if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) NULL ) 
+	  if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) NULL )
+	    strcpy( mPrData.path, "mozilla.ps" );
+	if ( path != (char *) NULL )
+	  sprintf( mPrData.path, "%s/mozilla.ps", path );
+	else
+	  return NS_ERROR_FAILURE;
+      }
+
+      return NS_OK;
     }
   }
   return NS_ERROR_FAILURE;

@@ -32,10 +32,11 @@
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 #include "nsIThreadManager.h"
+#include "nsIWindowWatcher.h"
+#include "nsIPrompt.h"
 #include "nsJSUtils.h"
 #include "nsJSPrincipals.h"
 #include "nsIPrincipal.h"
-#include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 #include "jsapi.h"
 #include "jsdbgapi.h"
@@ -133,7 +134,6 @@ private:
 };
 
 const char * nsCrypto::kPSMComponentContractID = PSM_COMPONENT_CONTRACTID;
-static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 NS_IMPL_ISUPPORTS2(nsCrypto, nsIDOMCrypto,nsIScriptObjectOwner)
 NS_IMPL_ISUPPORTS2(nsCRMFObject, nsIDOMCRMFObject,nsIScriptObjectOwner)
@@ -1134,24 +1134,15 @@ nsCrypto::SignText(JSContext *cx, jsval *argv, PRUint32 argc,
 void
 alertUser(char *message)
 {
-  nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
-  JSContext *jsContext;
-  nsresult rv;
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsIPrompt> prompter;
+  if (wwatch)
+    wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
 
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    rv = appShell->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow),
-                                               &jsContext); 
-    if (NS_SUCCEEDED(rv)) {
-      // set up arguments for window.alert
-
-      void *stackPtr;
-      jsval *argv = JS_PushArguments(jsContext, &stackPtr, "s", message);
-      if (argv) {
-        hiddenWindow->Alert(jsContext, argv, 1);
-        JS_PopArguments(jsContext, stackPtr);
-      }
-    }
+  if (prompter) {
+    nsAutoString wmessage;
+    wmessage.AssignWithConversion(message);
+    prompter->Alert(0, wmessage.get());
   }
 }
 
@@ -1417,26 +1408,18 @@ nsPkcs11::GetScriptObject(nsIScriptContext *aContext,
 PRBool
 confirm_user(char *message)
 {
-  nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
-  JSContext *jsContext;
   PRBool confirmation = PR_FALSE;
-  nsresult rv;
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsIPrompt> prompter;
+  if (wwatch)
+    wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
 
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    rv = appShell->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow),
-                                               &jsContext); 
-    if (NS_SUCCEEDED(rv)) {
-      // set up arguments for window.confirm
-
-      void *stackPtr;
-      jsval *argv = JS_PushArguments(jsContext, &stackPtr, "s", message);
-      if (argv) {
-        hiddenWindow->Confirm(jsContext, argv, 1, &confirmation);
-        JS_PopArguments(jsContext, stackPtr);
-      }
-    }
+  if (prompter) {
+    nsAutoString wmessage;
+    wmessage.AssignWithConversion(message);
+    prompter->Confirm(0, wmessage.get(), &confirmation);
   }
+
   return confirmation;
 }
 
