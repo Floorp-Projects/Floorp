@@ -79,6 +79,7 @@ set_build_permissions:
 	@echo "----- Setting Build directory permissions -----"
 	find $(builddir) -type f | xargs chmod 444
 	find $(builddir)/bin -type f | xargs chmod 555
+	find $(builddir)/test/vcsim -type f | xargs chmod 555
 	find $(builddir)/test -type f -name 'gen*' | xargs chmod 555
 	find $(builddir)/clientbin -type f | xargs chmod 555
 
