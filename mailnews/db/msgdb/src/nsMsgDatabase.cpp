@@ -600,7 +600,7 @@ NS_IMETHODIMP nsMsgDatabase::CloseMDB(PRBool commit)
 {
 	--mRefCnt; 
 	PR_ASSERT(mRefCnt >= 0);
-	if (mRefCnt == 0)
+	if (mRefCnt <= 1)	// this used to be == 0, but the cache holds on to a reference, so we never would close.
 	{
 		if (commit)
 			Commit(kSessionCommit);
@@ -631,11 +631,16 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 {
 	nsresult	err = NS_OK;
 
+	// OK, remove from cache first, because now with the new cache that warren put it,
+	// removing from the cache releases an object. That explains why close was
+	// never getting called. ARGGGHHH!
+	RemoveFromCache(this);
+
 	while (mRefCnt > 0 && NS_SUCCEEDED(err))
 	{
 		int32 saveUseCount = mRefCnt;
 		err = CloseMDB(PR_TRUE);
-		if (saveUseCount == 1)
+		if (saveUseCount <= 2)	// boy, this sucks because the cache holds a ref now...
 			break;
 	}
 	return err;

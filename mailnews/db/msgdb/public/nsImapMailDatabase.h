@@ -29,7 +29,7 @@ public:
 	nsImapMailDatabase();
 	virtual ~nsImapMailDatabase();
 	
-	nsresult		Open(PRBool create, nsImapMailDatabase** pMessageDB, PRBool *dbWasCreated);
+	NS_IMETHOD		Open(nsFileSpec &folderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/);
 	
 	NS_IMETHOD			SetSummaryValid(PRBool valid = TRUE);
 	
