@@ -480,7 +480,7 @@ nsDTDMode nsParser::GetParseMode(void){
  *  @return  parsermode (define in nsIParser.h)
  */
 static 
-void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType aDocType) {
+void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& aDocType) {
   const char* theModeStr= PR_GetEnv("PARSE_MODE");
 
   aParseMode = eDTDMode_unknown;
@@ -507,6 +507,7 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType a
         if(0<=theSubIndex) {
           aDocType=eXHTMLText;
           aParseMode=eDTDMode_strict;
+          return;
         }
         else {
           theSubIndex=aBuffer.Find("ISO/IEC 15445:",PR_TRUE,theIndex+8,theEnd-(theIndex+8));
@@ -515,6 +516,7 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType a
             aParseMode=eDTDMode_strict;
             theMajorVersion=4;
             theSubIndex+=15;
+            return;
           }
           else {
             theSubIndex=aBuffer.Find("HTML",PR_TRUE,theStartPos,theCount);

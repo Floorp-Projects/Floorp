@@ -940,7 +940,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
   PRBool  theParentContains=-1;
   
   do {
-
+ 
     eHTMLTags theParentTag=mBodyContext->TagAt(--theIndex);
     theParentContains=CanContain(theParentTag,aChildTag);  //precompute containment, and pass it to CanOmit()...
 
@@ -1281,7 +1281,7 @@ nsresult CNavDTD::HandleKeyGen(nsIParserNode* aNode) {
 
       theFormType.AssignWithConversion("select"); 
   
-      result=theFormProcessor->ProvideContent(theFormType,theContent,theAttribute); 
+       //result=theFormProcessor->ProvideContent(theFormType,theContent,theAttribute); 
 
       if(NS_SUCCEEDED(result)) {
         nsString* theTextValue=nsnull; 
