@@ -4142,15 +4142,7 @@ NS_IMETHODIMP mozXMLTermSession::ToHTMLString(nsIDOMNode* aNode,
 
   if (domText) {
     // Text node
-    nsCOMPtr<nsIHTMLContent> htmlContent ( do_QueryInterface(aNode) );
-
-    if (htmlContent) {
-      htmlContent->ToHTMLString(htmlString);
-      XMLT_LOG(mozXMLTermSession::ToHTMLString,82,("htmlContent\n"));
-    } else {
-      domText->GetData(htmlString);
-    }
-
+    domText->GetData(htmlString);
   } else {
     nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(aNode);
 
