@@ -350,6 +350,8 @@ Extra Cmd0 Parameter=-kill
 [Check Instance1]
 Process Name=mozturbo.exe
 Extra Cmd0 Parameter=-u
+;*** LOCALIZE ME BABY ***
+Message=Unable to close mozturbo.exe. Please press OK to try again. If this problem persists, press the Cancel button and close mozturbo.exe manually. To do this, go to the directory where $ProductName$ is installed and type 'mozturbo -u'.
 
 [Component XPCOM]
 Description Short=Mozilla XPCOM
