@@ -19,7 +19,7 @@
  *
  * Contributor(s): 
  */
-#include "InternetConfig.h"
+#include <InternetConfig.h>
 #include "PRTypes.h"
 #include "nsError.h"
 

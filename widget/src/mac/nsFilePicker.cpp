@@ -31,7 +31,7 @@
 #include "nsVoidArray.h"
 #include "nsStringUtil.h"
 
-#include <ICAPI.h>
+#include <InternetConfig.h>
 
 #include "nsMacControl.h"
 #include "nsCarbonHelpers.h"
@@ -445,7 +445,7 @@ nsFilePicker :: MapFilterToFileTypes ( )
 {
 	OSType			tempOSType;
 	ICInstance		icInstance;
-	ICError			icErr;
+	OSStatus			icErr;
 	Handle			mappings = NewHandleClear(4);
 	ICAttr			attr;
 	ICMapEntry		icEntry;
@@ -520,7 +520,7 @@ nsFilePicker :: MapFilterToFileTypes ( )
   	  				if (icErr != icPrefNotFoundErr)
   	  				{
   	  					bool addToList = true;
-  	  					tempOSType = icEntry.file_type;
+  	  					tempOSType = icEntry.fileType;
   	  					for (PRUint32 typeIndex = 0; typeIndex < typesInThisFilter; typeIndex++)
   	  					{
   	  						if (mTypeLists[loop1]->osType[typeIndex] == tempOSType)

@@ -270,6 +270,16 @@ sub ConfigureBuildSystem()
         $UNIVERSAL_INTERFACES_VERSION = 0x0330;
     }
 
+    #// Rename IC SDK folder in the Mac OS Support folder
+    my($ic_sdk_folder) = getCodeWarriorPath("MacOS Support:ICProgKit2.0.2");
+    if( -e $ic_sdk_folder)
+    {
+        my($new_ic_folder_name) = getCodeWarriorPath("MacOS Support:(ICProgKit2.0.2)");
+        rename ($ic_sdk_folder, $new_ic_folder_name);
+        # note that CodeWarrior doesn't descnet into folders with () the name
+        print "Mozilla no longer needs the Internet Config SDK to build:\n  Renaming the 'ICProgKit2.0.2' folder to '(ICProgKit2.0.2)'\n";
+    }
+
     printf("UNIVERSAL_INTERFACES_VERSION = 0x%04X\n", $UNIVERSAL_INTERFACES_VERSION);
 
     my($line, $config, $oldconfig, $define, $definevalue, $defines);
