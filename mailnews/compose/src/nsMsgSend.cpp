@@ -1310,8 +1310,9 @@ PRUint32                  i;
       m_attachments[i].m_content_id = mime_gen_content_id(locCount+1, nsnull);  
     else
     {
-      nsString tEmail(myEmail);
-      m_attachments[i].m_content_id = mime_gen_content_id(locCount+1, tEmail.GetBuffer());  
+      nsCAutoString tEmail(myEmail);
+      m_attachments[i].m_content_id = mime_gen_content_id(locCount+1, tEmail);  
+
     }
 
     if (!m_attachments[i].m_content_id)
@@ -1379,7 +1380,7 @@ nsMsgComposeAndSend::CountCompFieldAttachments()
 
   char      *token = nsnull;
   char      *rest = NS_CONST_CAST(char*, (const char*)attachmentList);
-  nsString  str("",eOneByte);
+  nsCAutoString  str;
   
   token = nsCRT::strtok(rest, ",", &rest);
   while (token && *token) 
@@ -1387,7 +1388,7 @@ nsMsgComposeAndSend::CountCompFieldAttachments()
     str = token;
     str.StripWhitespace();
     
-    if (str != "") 
+    if (!str.IsEmpty()) 
     {
       // Check to see if this is a file URL, if so, don't retrieve
       // like a remote URL...
@@ -1397,7 +1398,7 @@ nsMsgComposeAndSend::CountCompFieldAttachments()
         mCompFieldLocalAttachments++;
 #ifdef NS_DEBUG
         printf("Counting LOCAL attachment %d: %s\n", 
-                mCompFieldLocalAttachments, str.GetBuffer());
+                mCompFieldLocalAttachments, str);
 #endif
       }
       else    // This is a remote URL...
@@ -1405,7 +1406,7 @@ nsMsgComposeAndSend::CountCompFieldAttachments()
         mCompFieldRemoteAttachments++;
 #ifdef NS_DEBUG
         printf("Counting REMOTE attachment %d: %s\n", 
-                mCompFieldRemoteAttachments, str.GetBuffer());
+                mCompFieldRemoteAttachments, str);
 #endif
       }
 
@@ -1440,7 +1441,7 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
   PRUint32  newLoc = 0;
   char      *token = nsnull;
   char      *rest = NS_CONST_CAST(char*, (const char*)attachmentList);
-  nsString  str("",eOneByte);
+  nsCAutoString  str;
   
   token = nsCRT::strtok(rest, ",", &rest);
   while (token && *token) 
@@ -1448,13 +1449,13 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
     str = token;
     str.StripWhitespace();
     
-    if (str != "") 
+    if (!str.IsEmpty()) 
     {
       // Just look for local file:// attachments and do the right thing.
       if (str.Compare("file://", PR_TRUE, 7) == 0)
       {
 #ifdef NS_DEBUG
-        printf("Adding LOCAL attachment %d: %s\n", newLoc, str.GetBuffer());
+        printf("Adding LOCAL attachment %d: %s\n", newLoc, str);
 #endif
         //
         // Now we have to setup the m_attachments entry for the file://
@@ -1469,11 +1470,11 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
         if (m_attachments[newLoc].mURL)
           NS_RELEASE(m_attachments[newLoc].mURL);
 
-        nsMsgNewURL(&(m_attachments[newLoc].mURL), str.GetBuffer());
+        nsMsgNewURL(&(m_attachments[newLoc].mURL), str);
 
         if (m_attachments[newLoc].mFileSpec)
           delete (m_attachments[newLoc].mFileSpec);
-			  m_attachments[newLoc].mFileSpec = new nsFileSpec( nsFileURL(str) );
+			  m_attachments[newLoc].mFileSpec = new nsFileSpec( nsFileURL((const char *) str) );
 
 			  msg_pick_real_name(&m_attachments[newLoc], mCompFields->GetCharacterSet());
 
@@ -1526,7 +1527,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
   PRUint32  newLoc = aStartLocation;
   char      *token = nsnull;
   char      *rest = NS_CONST_CAST(char*, (const char*)attachmentList);
-  nsString  str("",eOneByte);
+  nsCAutoString  str;
   
   token = nsCRT::strtok(rest, ",", &rest);
   while (token && *token) 
@@ -1534,7 +1535,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
     str = token;
     str.StripWhitespace();
     
-    if (str != "") 
+    if (!str.IsEmpty()) 
     {
       // Just look for files that are NOT local file attachments and do 
       // the right thing.
@@ -1542,7 +1543,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
       if (str.Compare("file://", PR_TRUE, 7) != 0)
       {
 #ifdef NS_DEBUG
-        printf("Adding REMOTE attachment %d: %s\n", newLoc, str.GetBuffer());
+        printf("Adding REMOTE attachment %d: %s\n", newLoc, str);
 #endif
 
         m_attachments[newLoc].mDeleteFile = PR_TRUE;
@@ -1552,7 +1553,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
         if (m_attachments[newLoc].mURL)
           NS_RELEASE(m_attachments[newLoc].mURL);
 
-        nsMsgNewURL(&(m_attachments[newLoc].mURL), str.GetBuffer());
+        nsMsgNewURL(&(m_attachments[newLoc].mURL), str);
 
 			  PR_FREEIF(m_attachments[newLoc].m_charset);
 			  m_attachments[newLoc].m_charset = PL_strdup (mCompFields->GetCharacterSet());

@@ -284,7 +284,8 @@ GetIMessageFromURI(const PRUnichar *msgURI)
 {
   nsresult                  rv;
   nsIRDFResource            *myRDFNode = nsnull;
-  nsString                 convertString(msgURI);
+  nsCAutoString              convertString(msgURI);
+
   char                      *tmpURI = nsnull;
   nsIMessage                *returnMessage;
 
@@ -292,12 +293,7 @@ GetIMessageFromURI(const PRUnichar *msgURI)
 	if (NS_FAILED(rv) || (!rdfService))
 		return nsnull;
 
-  tmpURI = convertString.ToNewCString();
-  if (!tmpURI)
-    return nsnull;
-
-  rdfService->GetResource(tmpURI, &myRDFNode);
-  PR_FREEIF(tmpURI);
+  rdfService->GetResource(convertString, &myRDFNode);
   if (!myRDFNode)
     return nsnull;
 

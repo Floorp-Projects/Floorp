@@ -475,20 +475,20 @@ mime_generate_headers (nsMsgCompFields *fields,
 		PRUnichar * appInfo = nsnull;
 
 		pNetService->GetAppCodeName(&appInfo);
-		nsAutoString cStr(appInfo, eOneByte);
+		nsCAutoString cStr(appInfo);
 		if (!cStr.IsEmpty()) 
 		{
 			// PUSH_STRING ("X-Mailer: ");  // To be more standards compliant
 			PUSH_STRING ("User-Agent: ");  
-			PUSH_STRING(cStr.GetBuffer());
+			PUSH_STRING(cStr);
 			nsCRT::free(appInfo);
 
 			pNetService->GetAppVersion(&appInfo);
-			cStr = appInfo;
-			if (!cStr.IsEmpty()) 
+			nsCAutoString cStr2 (appInfo);
+			if (!cStr2.IsEmpty()) 
 			{
 				PUSH_STRING (" ");
-				PUSH_STRING(cStr.GetBuffer());
+				PUSH_STRING(cStr2);
 			}
 			nsCRT::free(appInfo);
 			PUSH_NEWLINE ();

@@ -1156,10 +1156,9 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
       PRUnichar *fieldsFCC = nsnull;
       if (NS_SUCCEEDED(compFields->GetFcc(&fieldsFCC)))
       {
-        nsString compString("nocopy://");
         if (fieldsFCC && *fieldsFCC)
         {
-          if (compString == fieldsFCC)
+			if (nsCRT::strcasecmp(fieldsFCC, "nocopy://") == 0)
             mComposeObj->CloseWindow();
         }
       }
