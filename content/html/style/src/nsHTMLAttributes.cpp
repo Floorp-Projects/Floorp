@@ -1047,6 +1047,7 @@ HTMLAttributesImpl::UnsetAttributeName(nsIAtom* aAttrName, PRBool& aFound)
       return NS_OK;
     }
   }
+  aFound = PR_FALSE;
   return NS_OK;
 }
 
