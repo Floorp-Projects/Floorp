@@ -2135,11 +2135,11 @@ PR_IMPLEMENT(void *) PR_EnumerateAddrInfo(void             *iterPtr,
 #if defined(_PR_INET6_PROBE)
     if (!_pr_ipv6_is_present) {
         /* using PRAddrInfoFB */
-        PRIntn iter = (PRIntn) iterPtr;
+        PRIntn iter = (PRIntn)(PRPtrdiff) iterPtr;
         iter = PR_EnumerateHostEnt(iter, &((PRAddrInfoFB *) base)->hostent, port, result);
         if (iter < 0)
             iter = 0;
-        return (void *) iter;
+        return (void *)(PRPtrdiff) iter;
     }
 #endif
 
