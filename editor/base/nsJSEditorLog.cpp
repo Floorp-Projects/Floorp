@@ -112,7 +112,7 @@ nsJSEditorLog::SetTextProperty(nsIAtom *aProperty, const nsString *aAttribute, c
   aProperty->ToString(propStr);
 
   PrintSelection();
-  printf("appCore.setTextProperty(\"");
+  printf("window.editorShell.SetTextProperty(\"");
   PrintUnicode(propStr);
   printf("\", \"");
   if (aAttribute)
@@ -144,7 +144,7 @@ nsJSEditorLog::SetParagraphFormat(const nsString& aParagraphFormat)
     return NS_OK;
 
   PrintSelection();
-  printf("appCore.setParagraphFormat(\"");
+  printf("window.editorShell.SetParagraphFormat(\"");
   PrintUnicode(aParagraphFormat);
   printf("\");\n");
 
@@ -162,7 +162,7 @@ nsJSEditorLog::RemoveTextProperty(nsIAtom *aProperty, const nsString *aAttribute
   aProperty->ToString(propStr);
 
   PrintSelection();
-  printf("appCore.removeTextProperty(\"");
+  printf("window.editorShell.RemoveTextProperty(\"");
   PrintUnicode(propStr);
   printf("\", \"");
   if (aAttribute)
@@ -179,7 +179,7 @@ nsJSEditorLog::DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction)
     return NS_OK;
 
   PrintSelection();
-  printf("appCore.deleteSelection(%d);\n", aAction);
+  printf("window.editorShell.DeleteSelection(%d);\n", aAction);
 
   return NS_OK;
 }
@@ -192,7 +192,7 @@ nsJSEditorLog::InsertText(const nsString& aStringToInsert)
 
   PrintSelection();
 
-  printf("appCore.insertText(\"");
+  printf("window.editorShell.InsertText(\"");
   PrintUnicode(aStringToInsert);
   printf("\");\n");
 
@@ -206,7 +206,7 @@ nsJSEditorLog::InsertBreak()
     return NS_OK;
 
   PrintSelection();
-  printf("appCore.insertBreak();\n");
+  printf("window.editorShell.InsertBreak();\n");
 
   return NS_OK;
 }
@@ -223,7 +223,7 @@ nsJSEditorLog::Undo(PRUint32 aCount)
   if (mLocked)
     return NS_OK;
 
-  printf("appCore.undo();\n");
+  printf("window.editorShell.Undo();\n");
 
   return NS_OK;
 }
@@ -240,7 +240,7 @@ nsJSEditorLog::Redo(PRUint32 aCount)
   if (mLocked)
     return NS_OK;
 
-  printf("appCore.redo();\n");
+  printf("window.editorShell.Redo();\n");
 
   return NS_OK;
 }
@@ -257,7 +257,7 @@ nsJSEditorLog::BeginTransaction()
   if (mLocked)
     return NS_OK;
 
-  printf("appCore.beginBatchChanges();\n");
+  printf("window.editorShell.BeginBatchChanges();\n");
 
   return NS_OK;
 }
@@ -268,7 +268,7 @@ nsJSEditorLog::EndTransaction()
   if (mLocked)
     return NS_OK;
 
-  printf("appCore.endBatchChanges();\n");
+  printf("window.editorShell.EndBatchChanges();\n");
 
   return NS_OK;
 }
@@ -315,7 +315,7 @@ nsJSEditorLog::SelectAll()
   if (mLocked)
     return NS_OK;
 
-  printf("appCore.selectAll();\n");
+  printf("window.editorShell.SelectAll();\n");
 
   return NS_OK;
 }
@@ -326,7 +326,7 @@ nsJSEditorLog::BeginningOfDocument()
   if (mLocked)
     return NS_OK;
 
-  printf("appCore.BeginningOfDocument();\n");
+  printf("window.editorShell.BeginningOfDocument();\n");
 
   return NS_OK;
 }
@@ -337,7 +337,7 @@ nsJSEditorLog::EndOfDocument()
   if (mLocked)
     return NS_OK;
 
-  printf("appCore.EndOfDocument();\n");
+  printf("window.editorShell.EndOfDocument();\n");
 
   return NS_OK;
 }
@@ -381,7 +381,7 @@ nsJSEditorLog::Cut()
     return NS_OK;
 
   PrintSelection();
-  printf("appCore.cut();\n");
+  printf("window.editorShell.Cut();\n");
 
   return NS_OK;
 }
@@ -393,7 +393,7 @@ nsJSEditorLog::Copy()
     return NS_OK;
 
   PrintSelection();
-  printf("appCore.copy();\n");
+  printf("window.editorShell.Copy();\n");
 
   return NS_OK;
 }
@@ -405,7 +405,7 @@ nsJSEditorLog::Paste()
     return NS_OK;
 
   PrintSelection();
-  printf("appCore.paste();\n");
+  printf("window.editorShell.Paste();\n");
 
   return NS_OK;
 }
@@ -417,7 +417,7 @@ nsJSEditorLog::PasteAsQuotation()
     return NS_OK;
 
   PrintSelection();
-  printf("appCore.pasteAsQuotation();\n");
+  printf("window.editorShell.PasteAsQuotation();\n");
 
   return NS_OK;
 }
@@ -429,7 +429,7 @@ nsJSEditorLog::PasteAsCitedQuotation(const nsString& aCitation)
     return NS_OK;
 
   PrintSelection();
-  printf("appCore.pasteAsCitedQuotation(\"");
+  printf("window.editorShell.PasteAsCitedQuotation(\"");
   PrintUnicode(aCitation);
   printf("\");\n");
 
@@ -443,7 +443,7 @@ nsJSEditorLog::InsertAsQuotation(const nsString& aQuotedText)
     return NS_OK;
 
   PrintSelection();
-  printf("appCore.insertAsQuotation(\"");
+  printf("window.editorShell.InsertAsQuotation(\"");
   PrintUnicode(aQuotedText);
   printf("\");\n");
 
@@ -457,7 +457,7 @@ nsJSEditorLog::InsertAsCitedQuotation(const nsString& aQuotedText, const nsStrin
     return NS_OK;
 
   PrintSelection();
-  printf("appCore.insertAsCitedQuotation(\"");
+  printf("window.editorShell.InsertAsCitedQuotation(\"");
   PrintUnicode(aQuotedText);
   printf("\", \"");
   PrintUnicode(aCitation);
@@ -508,7 +508,7 @@ nsJSEditorLog::SetBackgroundColor(const nsString& aColor)
   if (mLocked)
     return NS_OK;
 
-  printf("appCore.setBackgroundColor(\"");
+  printf("window.editorShell.SetBackgroundColor(\"");
   PrintUnicode(aColor);
   printf("\");\n");
 
@@ -521,7 +521,7 @@ nsJSEditorLog::SetBodyAttribute(const nsString& aAttr, const nsString& aValue)
   if (mLocked)
     return NS_OK;
 
-  printf("appCore.setBodyAttribute(\"");
+  printf("window.editorShell.SetBodyAttribute(\"");
   PrintUnicode(aAttr);
   printf("\", \"");
   PrintUnicode(aValue);
@@ -568,7 +568,7 @@ nsJSEditorLog::InsertLink(nsString& aURL)
 
   PrintSelection();
 
-  printf("appCore.insertLink(\"");
+  printf("window.editorShell.InsertLink(\"");
   PrintUnicode(aURL);
   printf("\");\n");
 
@@ -585,7 +585,7 @@ nsJSEditorLog::InsertImage(nsString& aURL, nsString& aWidth, nsString& aHeight,
 
   PrintSelection();
 
-  printf("appCore.insertImage(\"");
+  printf("window.editorShell.InsertImage(\"");
   PrintUnicode(aURL);
   printf("\", \"");
   PrintUnicode(aWidth);
@@ -614,7 +614,7 @@ nsJSEditorLog::InsertList(const nsString& aListType)
 
   PrintSelection();
 
-  printf("appCore.insertList(\"");
+  printf("window.editorShell.InsertList(\"");
   PrintUnicode(aListType);
   printf("\");\n");
 
@@ -629,7 +629,7 @@ nsJSEditorLog::Indent(const nsString& aIndent)
 
   PrintSelection();
 
-  printf("appCore.indent(\"");
+  printf("window.editorShell.Indent(\"");
   PrintUnicode(aIndent);
   printf("\");\n");
 
@@ -644,7 +644,7 @@ nsJSEditorLog::Align(const nsString& aAlign)
 
   PrintSelection();
 
-  printf("appCore.align(\"");
+  printf("window.editorShell.Align(\"");
   PrintUnicode(aAlign);
   printf("\");\n");
 
@@ -676,7 +676,7 @@ nsJSEditorLog::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
 
   PrintSelection();
   PrintNode(node, 0);
-  printf("appCore.insertElement(n0, %s);\n", aDeleteSelection ? "true" : "false");
+  printf("window.editorShell.InsertElement(n0, %s);\n", aDeleteSelection ? "true" : "false");
 
   return NS_OK;
 }
@@ -694,7 +694,7 @@ nsJSEditorLog::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 
   PrintSelection();
   PrintNode(node, 0);
-  printf("appCore.insertLinkAroundSelection(n0);\n");
+  printf("window.editorShell.InsertLinkAroundSelection(n0);\n");
 
   return NS_OK;
 }
@@ -976,7 +976,7 @@ nsJSEditorLog::PrintElementNode(nsIDOMNode *aNode, PRInt32 aDepth)
   if (NS_FAILED(result))
     return result;
 
-  printf("n%d = appCore.editorDocument.createElement(\"", aDepth);
+  printf("n%d = window.editorShell.editorDocument.createElement(\"", aDepth);
   PrintUnicode(tag);
   printf("\");\n");
 
@@ -1033,7 +1033,7 @@ nsJSEditorLog::PrintAttributeNode(nsIDOMNode *aNode, PRInt32 aDepth)
   if (NS_FAILED(result))
     return result;
 
-  printf("a%d = appCore.editorDocument.createAttribute(\"", aDepth);
+  printf("a%d = window.editorShell.editorDocument.createAttribute(\"", aDepth);
   PrintUnicode(str);
   printf("\");\n");
 
@@ -1115,7 +1115,7 @@ nsJSEditorLog::PrintTextNode(nsIDOMNode *aNode, PRInt32 aDepth)
   if (NS_FAILED(result))
     return result;
 
-  printf("n%d = appCore.editorDocument.createTextNode(\"", aDepth);
+  printf("n%d = window.editorShell.editorDocument.createTextNode(\"", aDepth);
   PrintUnicode(str);
   printf("\");\n");
 
@@ -1143,6 +1143,8 @@ nsJSEditorLog::PrintNode(nsIDOMNode *aNode, PRInt32 aDepth)
       result = PrintTextNode(aNode, aDepth);
       break;
     case nsIDOMNode::ATTRIBUTE_NODE:
+      result = PrintAttributeNode(aNode, aDepth);
+      break;
     case nsIDOMNode::CDATA_SECTION_NODE:
     case nsIDOMNode::ENTITY_REFERENCE_NODE:
     case nsIDOMNode::ENTITY_NODE:
@@ -1253,7 +1255,7 @@ function EditorGetNodeAtOffsets(offsets)
   var node = null;
   var i;
 
-  node = appCore.editorDocument;
+  node = window.editorShell.editorDocument;
 
   for (i = 0; i < offsets.length; i++)
   {
@@ -1266,7 +1268,7 @@ function EditorGetNodeAtOffsets(offsets)
 function EditorSetSelectionFromOffsets(selRanges)
 {
   var rangeArr, start, end, i, node, offset;
-  var selection = appCore.editorSelection;
+  var selection = window.editorShell.editorSelection;
 
   selection.clearSelection();
 
@@ -1276,7 +1278,7 @@ function EditorSetSelectionFromOffsets(selRanges)
     start    = rangeArr[0];
     end      = rangeArr[1];
 
-    var range = appCore.editorDocument.createRange();
+    var range = window.editorShell.editorDocument.createRange();
 
     node   = EditorGetNodeAtOffsets(start[0]);
     offset = start[1];
