@@ -917,6 +917,28 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsIFile **p
     return rv;
 }
 
+NS_IMETHODIMP nsProfile::GetProfilePath(const PRUnichar *profileName, PRUnichar **_retval)
+{
+    NS_ENSURE_ARG(profileName);
+    NS_ENSURE_ARG_POINTER(_retval);
+    *_retval = nsnull;
+    
+    nsCOMPtr<nsIFile> profileDir;
+    nsresult rv = GetProfileDir(profileName, getter_AddRefs(profileDir));
+    if (NS_FAILED(rv)) return rv;
+    
+    PRBool isSalted;    
+    nsCOMPtr<nsIFile> prettyDir(profileDir);
+    rv = IsProfileDirSalted(profileDir, &isSalted);
+    if (NS_SUCCEEDED(rv) && isSalted) {
+        nsCOMPtr<nsIFile> parentDir;
+        rv = profileDir->GetParent(getter_AddRefs(parentDir));
+        if (NS_SUCCEEDED(rv))
+            prettyDir = parentDir;
+    }
+    return prettyDir->GetUnicodePath(_retval);
+}
+
 NS_IMETHODIMP nsProfile::GetDefaultProfileParentDir(nsIFile **aDefaultProfileParentDir)
 {
     NS_ENSURE_ARG_POINTER(aDefaultProfileParentDir);
@@ -1222,7 +1244,7 @@ nsProfile::AddLevelOfIndirection(nsIFile *aDir)
   return NS_OK;
 }
 
-nsresult nsProfile::ShouldDeleteProfileParentDir(nsIFile *profileDir, PRBool *isSalted)
+nsresult nsProfile::IsProfileDirSalted(nsIFile *profileDir, PRBool *isSalted)
 {
     nsresult rv;
     NS_ENSURE_ARG_POINTER(isSalted);
@@ -1660,12 +1682,12 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const PRUnichar* profileName, PRBool canD
         if (exists) {
 
             // The profile dir may be located inside a salted dir.
-            // If so, according to ShouldDeleteProfileParentDir,
+            // If so, according to IsProfileDirSalted,
             // delete the parent dir as well.
             
             nsCOMPtr<nsIFile> dirToDelete(profileDir);
             PRBool isSalted;
-            rv = ShouldDeleteProfileParentDir(profileDir, &isSalted);
+            rv = IsProfileDirSalted(profileDir, &isSalted);
             if (NS_SUCCEEDED(rv) && isSalted) {
                 nsCOMPtr<nsIFile> parentDir;
                 rv = profileDir->GetParent(getter_AddRefs(parentDir));

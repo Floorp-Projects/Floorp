@@ -64,7 +64,7 @@ private:
 								
 	nsresult CloneProfileDirectorySpec(nsILocalFile **aLocalFile);
     nsresult AddLevelOfIndirection(nsIFile *aDir);
-    nsresult ShouldDeleteProfileParentDir(nsIFile *profileDir, PRBool *isSalted);
+    nsresult IsProfileDirSalted(nsIFile *profileDir, PRBool *isSalted);
     nsresult DefineLocaleDefaultsDir();
     nsresult UndefineFileLocations();
 

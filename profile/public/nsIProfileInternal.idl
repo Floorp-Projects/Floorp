@@ -65,7 +65,17 @@ interface nsIProfileInternal : nsIProfile {
     void migrateProfile(in wstring profileName, in boolean showProgressAsModalWindow);
     void forgetCurrentProfile();
 
+    /**
+     * Returns the actual profile directory
+     */
     nsIFile getProfileDir(in wstring profileName);
+    
+    /**
+     * Returns the path to a profile which can be shown to the user.
+     * If the actual profile directory is salted, returns the unsalted parent.
+     * This is the directory which will be deleted by deleteProfile(name, true).
+     */
+    wstring getProfilePath(in wstring profileName);
     
     attribute boolean automigrate;
     readonly attribute nsIFile defaultProfileParentDir;

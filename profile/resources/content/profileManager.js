@@ -136,23 +136,37 @@ function ConfirmDelete()
 
   var selected = profileTree.selectedItems[0];
   var name = selected.getAttribute("rowName");
-
+  
+  var dialogTitle = gProfileManagerBundle.getString("deletetitle");
+  var dialogText;
+  
   if( selected.firstChild.firstChild.getAttribute("rowMigrate") == "no" ) {
-      // auto migrate if the user wants to. THIS IS REALLY REALLY DUMB PLEASE FIX THE BACK END.
-    var lString = gProfileManagerBundle.getString("migratebeforedelete");
-    lString = lString.replace(/\s*<html:br\/>/g,"\n");
-    lString = lString.replace(/%brandShortName%/, gBrandBundle.getString("brandShortName"));
-    var title = gProfileManagerBundle.getString("deletetitle");
-    if (promptService.confirm(window, title, lString)) {
+    var brandName = gBrandBundle.getString("brandShortName");
+    dialogText = gProfileManagerBundle.getFormattedString("delete4xprofile", [brandName]);
+    dialogText = dialogText.replace(/\s*<html:br\/>/g,"\n");
+    
+    if (promptService.confirm(window, dialogTitle, dialogText)) {
       profile.deleteProfile( name, false );
       var profileKids = document.getElementById( "profilekids" )
       profileKids.removeChild( selected );
     }
     return;
   }
-
-  var win = window.openDialog('chrome://communicator/content/profile/deleteProfile.xul', 'Deleter', 'chrome,centerscreen,modal=yes,titlebar=yes');
-  return win;
+  else {
+    var path = profile.getProfilePath(name);
+    dialogText = gProfileManagerBundle.getFormattedString("deleteprofile", [path]);
+    dialogText = dialogText.replace(/\s*<html:br\/>/g,"\n");
+    var buttonPressed = {value:0}
+    promptService.confirmEx(window, dialogTitle, dialogText,
+                            (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) +
+                            (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1) +
+                            (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_2),
+                            gProfileManagerBundle.getString("dontDeleteFiles"),
+                            gProfileManagerBundle.getString("deleteFiles"),
+                            null, null, {value:0}, buttonPressed);
+    if (buttonPressed.value != 2)
+        DeleteProfile(buttonPressed.value == 1);
+  }
 }
 
 // Delete the profile, with the delete flag set as per instruction above.
