@@ -397,9 +397,8 @@ void nsWidget::OnDestroy()
   // release references to children, device context, toolkit + app shell
   nsBaseWidget::OnDestroy();
 
-  NS_ADDREF_THIS();
+  nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
   DispatchStandardEvent(NS_DESTROY);
-  NS_ADDREF_THIS();
 }
 
 gint
