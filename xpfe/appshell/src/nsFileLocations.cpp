@@ -164,11 +164,10 @@ static void GetProfileDirectory(nsFileSpec& outSpec)
 
 		    if (currProfileName)
 		    {
-#if defined(XP_PC) && defined(NS_DEBUG)
-		        // Don't print in release version. Don't use stderr in XP code.
-		        fprintf(stderr, "ProfileName : %s\n", currProfileName);
-		        fprintf(stderr, "ProfileDir  : %s\n", currProfileDirSpec.GetCString());
-#endif
+#if defined(NS_DEBUG)
+		        printf("ProfileName : %s\n", currProfileName);
+		        printf("ProfileDir  : %s\n", currProfileDirSpec.GetCString());
+#endif /* NS_DEBUG */
 		        PR_FREEIF(currProfileName);
             }
             if (!currProfileDirSpec.Exists())
