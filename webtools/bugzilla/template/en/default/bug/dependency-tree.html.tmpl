@@ -90,6 +90,8 @@
   [% FOREACH dep_id = tree.$bug_id.dependencies %]
     [% dep = tree.$dep_id %]
     <li>
+      [% "<script>document.write('<a href=\"#\" class=\"toggle\" onclick=\"listToggle(event); return false\">[-]</a>')</script>"
+         IF dep.dependencies.size > 0 && !dep.seen %]
       [% "<strike>" IF !dep.open %]
       <a href="show_bug.cgi?id=[% dep_id %]">[% dep_id %]
         [[% IF dep.milestone %][% dep.milestone FILTER html %], [% END %]
@@ -111,6 +113,40 @@
 [%# Block for depth control toolbar                                         #%]
 [%###########################################################################%]
 
+ <script type="text/javascript" language="JavaScript">
+if (!Node) {
+    /* MSIE doesn't define Node, so provide a compatibility array */
+    var Node = { TEXT_NODE: 3, };
+}
+
+function toggleDisplay(node)
+{
+    var display = node.style.display;
+    if (display == "none") {
+        node.style.display =
+           ("oldDisplay" in node) ? node.oldDisplay : "block";
+        return true;
+    }
+
+    node.oldDisplay = display;
+    node.style.display = "none";
+    return false;
+}
+
+function listToggle(event)
+{
+    var node = event.target;
+    if (node.nodeType == Node.TEXT_NODE)
+        node = node.parentNode;
+    var toggle = node.nextSibling;
+    while (toggle && toggle.tagName != "UL")
+      toggle = toggle.nextSibling;
+    if (toggle) {
+      node.firstChild.data = toggleDisplay(toggle) ? "[-]" : "[+]";
+    }
+}
+
+ </script>
 [% BLOCK depthControlToolbar %]
  <table cellpadding="3" border="0" cellspacing="0" bgcolor="#d0d0d0">
  <tr>
@@ -209,4 +245,5 @@
    </td>
  </tr>
 </table>
+
 [% END %]
