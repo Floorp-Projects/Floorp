@@ -61,11 +61,6 @@ class nsIContentSerializer : public nsISupports {
   NS_IMETHOD AddDoctype(nsIDOMDocumentType *aDoctype,
 			nsAWritableString& aStr) = 0;
 
-  NS_IMETHOD SerializeAttr(const nsAReadableString& aPrefix,
-			   const nsAReadableString& aName,
-			   const nsAReadableString& aValue,
-			   nsAWritableString& aStr) = 0;
-
   NS_IMETHOD AddElementStart(nsIDOMElement *aElement,
 			     nsAWritableString& aStr) = 0;
 
