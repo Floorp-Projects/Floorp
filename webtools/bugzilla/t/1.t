@@ -36,68 +36,13 @@
 #Bugzilla Test 1#
 ###Compilation###
 
-BEGIN { use Test::More tests => 51; }
-BEGIN { use lib '../'; }
+BEGIN { use Test::More tests => 56; }
+BEGIN { use lib 't/'; }
+BEGIN { use Support::Files; }
 
-# First, we test the libs
+# First now we test the scripts                                                   
+@testitems = @Support::Files::testitems; 
 
-#require_ok('CGI.pl');
-#require_ok('globals.pl');
-BEGIN { use_ok('Token'); }
-BEGIN { use_ok('RelationSet'); }
-BEGIN { use_ok('Bug'); }
-
-# and now we test the scripts
-@testitems = split("\n",qq(
-bug_form.pl #4
-buglist.cgi #5
-changepassword.cgi #6
-checksetup.pl #7
-colchange.cgi #8
-collectstats.pl #9
-createaccount.cgi #10
-createattachment.cgi #11
-defparams.pl #12
-describecomponents.cgi #13
-describekeywords.cgi #14
-doeditparams.cgi #15
-doeditvotes.cgi #16
-duplicates.cgi #17
-editcomponents.cgi #18
-editgroups.cgi #19
-editkeywords.cgi #20
-editmilestones.cgi #21
-editparams.cgi #22
-editproducts.cgi #23
-editusers.cgi #24
-editversions.cgi #25
-enter_bug.cgi #26
-globals.pl #27
-importxml.pl #28
-long_list.cgi #29
-move.pl #30
-new_comment.cgi #31
-post_bug.cgi #32
-process_bug.cgi #33
-query.cgi #34
-queryhelp.cgi #35
-quips.cgi #36
-RelationSet.pm #37
-relogin.cgi #38
-reports.cgi #39
-sanitycheck.cgi #40
-show_activity.cgi #41
-show_bug.cgi #42
-showattachment.cgi #43
-showdependencygraph.cgi #44
-showdependencytree.cgi #45
-showvotes.cgi #46
-syncshadowdb #47
-token.cgi #48
-userprefs.cgi #49
-whineatnews.pl #50
-xml.cgi #51
-));
 our $warnings;
 my $verbose = $::ENV{VERBOSE};
 $perlapp=$^X;
@@ -119,4 +64,13 @@ foreach $file (@testitems) {
                 if ($verbose) { print STDERR $loginfo; }
 		ok(0,$file."--ERROR");
         }
-}
+}      
+
+# and the libs:                                                                 
+use_ok('Token'); # 53                                                 
+use_ok('Attachment'); # 54                                            
+use_ok('Bug'); # 55                                                   
+use_ok('RelationSet'); # 56                                           
+
+
+
