@@ -233,8 +233,8 @@ public:
   virtual nsresult GetSelection(nsISelection **aSelection);
   NS_IMETHOD EnterReflowLock();
   NS_IMETHOD ExitReflowLock();
-  virtual void BeginObservingDocument();
-  virtual void EndObservingDocument();
+  NS_IMETHOD BeginObservingDocument();
+  NS_IMETHOD EndObservingDocument();
   NS_IMETHOD InitialReflow(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD ResizeReflow(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD StyleChangeReflow();
@@ -245,8 +245,8 @@ public:
                                     nsIFrame*& aPlaceholderFrame) const;
   NS_IMETHOD SetPlaceholderFrameFor(nsIFrame* aFrame,
                                     nsIFrame* aPlaceholderFrame);
-  virtual void AppendReflowCommand(nsIReflowCommand* aReflowCommand);
-  virtual void ProcessReflowCommands();
+  NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand);
+  NS_IMETHOD ProcessReflowCommands();
   virtual void ClearFrameRefs(nsIFrame*);
   NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame, nsIRenderingContext *&aContext);
 
@@ -566,21 +566,23 @@ PresShell::GetSelection(nsISelection **aSelection)
 
 
 // Make shell be a document observer
-void
+NS_IMETHODIMP
 PresShell::BeginObservingDocument()
 {
   if (nsnull != mDocument) {
     mDocument->AddObserver(this);
   }
+  return NS_OK;
 }
 
 // Make shell stop being a document observer
-void
+NS_IMETHODIMP
 PresShell::EndObservingDocument()
 {
   if (nsnull != mDocument) {
     mDocument->RemoveObserver(this);
   }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -826,19 +828,19 @@ PresShell::EndReflow(nsIDocument *aDocument, nsIPresShell* aShell)
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
 {
 #ifdef NS_DEBUG
   if (mInVerifyReflow) {
-    return;
+    return NS_OK;
   }
 #endif
-  mReflowCommands.AppendElement(aReflowCommand);
   NS_ADDREF(aReflowCommand);
+  return mReflowCommands.AppendElement(aReflowCommand);
 }
 
-void
+NS_IMETHODIMP
 PresShell::ProcessReflowCommands()
 {
   if (0 != mReflowCommands.Count()) {
@@ -899,6 +901,8 @@ PresShell::ProcessReflowCommands()
     }
 #endif
   }
+
+  return NS_OK;
 }
 
 void

@@ -74,10 +74,10 @@ public:
   NS_IMETHOD ExitReflowLock() = 0;
 
   // Make shell be a document observer
-  virtual void BeginObservingDocument() = 0;
+  NS_IMETHOD BeginObservingDocument() = 0;
 
   // Make shell stop being a document observer
-  virtual void EndObservingDocument() = 0;
+  NS_IMETHOD EndObservingDocument() = 0;
 
   /**
    * Perform the initial reflow. Constructs the frame for the root content
@@ -135,9 +135,9 @@ public:
   NS_IMETHOD SetPlaceholderFrameFor(nsIFrame* aFrame,
                                     nsIFrame* aPlaceholderFrame) = 0;
 
-  virtual void AppendReflowCommand(nsIReflowCommand* aReflowCommand) = 0;
+  NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand) = 0;
 
-  virtual void ProcessReflowCommands() = 0;
+  NS_IMETHOD ProcessReflowCommands() = 0;
 
   virtual void ClearFrameRefs(nsIFrame* aFrame) = 0;
   /**
