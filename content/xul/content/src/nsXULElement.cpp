@@ -1158,6 +1158,8 @@ nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
         // We've faulted: create another heavyweight, and then copy
         // stuff by hand.
         rv = nsXULElement::Create(mSlots->mNodeInfo, getter_AddRefs(result));
+        result->SetDocument(mDocument, PR_TRUE, PR_TRUE);
+
         if (NS_FAILED(rv)) return rv;
 
         // Copy namespace stuff.
