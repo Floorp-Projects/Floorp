@@ -4488,6 +4488,9 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
                         nsIFrame* aFrameList,
                         nsIFrame* aPrevSibling)
 {
+  // Clear our line cursor, since our lines may change.
+  ClearLineCursor();
+
   if (nsnull == aFrameList) {
     return NS_OK;
   }
@@ -4682,6 +4685,9 @@ nsresult
 nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
                             nsIFrame* aDeletedFrame)
 {
+  // Clear our line cursor, since our lines may change.
+  ClearLineCursor();
+        
   if (aDeletedFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
     DoRemoveOutOfFlowFrame(aPresContext, aDeletedFrame);
     return NS_OK;
