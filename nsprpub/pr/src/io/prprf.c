@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -48,23 +48,6 @@
 #include "prmem.h"
 
 /*
-** Note: on some platforms va_list is defined as an array,
-** and requires array notation.
-*/
-#if (defined(LINUX) && defined(__x86_64__))
-#define VARARGS_ASSIGN(foo, bar) __va_copy((foo), (bar))
-#elif (defined(LINUX) && defined(__powerpc__)) || \
-    (defined(LINUX) && defined(__s390__)) || \
-    (defined(LINUX) && defined(__s390x__)) || \
-    defined(WIN16) || defined(QNX) || \
-    (defined(__NetBSD__) && defined(__powerpc__) && \
-    __NetBSD_Version__ < 105000000)
-#define VARARGS_ASSIGN(foo, bar) foo[0] = bar[0]
-#else
-#define VARARGS_ASSIGN(foo, bar) (foo) = (bar)
-#endif
-
-/*
 ** WARNING: This code may *NOT* call PR_LOG (because PR_LOG calls it)
 */
 
@@ -86,14 +69,24 @@ struct SprintfStateStr {
 };
 
 /*
-** Numbered Arguement State
+** Numbered Argument
 */
-struct NumArgState{
-    int	    type;		/* type of the current ap                    */
-    va_list ap;			/* point to the corresponding position on ap */
+struct NumArg {
+    int type;           /* type of the numbered argument    */
+    union {             /* the numbered argument            */
+	int i;
+	unsigned int ui;
+	PRInt32 i32;
+	PRUint32 ui32;
+	PRInt64 ll;
+	PRUint64 ull;
+	double d;
+	const char *s;
+	int *ip;
+    } u;
 };
 
-#define NAS_DEFAULT_NUM 20  /* default number of NumberedArgumentState array */
+#define NAS_DEFAULT_NUM 20  /* default number of NumberedArgument array */
 
 
 #define TYPE_INT16	0
@@ -404,12 +397,12 @@ static int cvt_s(SprintfState *ss, const char *s, int width, int prec,
 ** the number must start from 1, and no gap among them
 */
 
-static struct NumArgState* BuildArgArray( const char *fmt, va_list ap, int* rv, struct NumArgState* nasArray )
+static struct NumArg* BuildArgArray( const char *fmt, va_list ap, int* rv, struct NumArg* nasArray )
 {
     int number = 0, cn = 0, i;
     const char* p;
     char  c;
-    struct NumArgState* nas;
+    struct NumArg* nas;
     
 
     /*
@@ -428,7 +421,7 @@ static struct NumArgState* BuildArgArray( const char *fmt, va_list ap, int* rv, 
 
 	while( c != 0 ){
 	    if( c > '9' || c < '0' ){
-		if( c == '$' ){		/* numbered argument csae */
+		if( c == '$' ){		/* numbered argument case */
 		    if( i > 0 ){
 			*rv = -1;
 			return NULL;
@@ -454,7 +447,7 @@ static struct NumArgState* BuildArgArray( const char *fmt, va_list ap, int* rv, 
 
     
     if( number > NAS_DEFAULT_NUM ){
-	nas = (struct NumArgState*)PR_MALLOC( number * sizeof( struct NumArgState ) );
+	nas = (struct NumArg*)PR_MALLOC( number * sizeof( struct NumArg ) );
 	if( !nas ){
 	    *rv = -1;
 	    return NULL;
@@ -619,27 +612,44 @@ static struct NumArgState* BuildArgArray( const char *fmt, va_list ap, int* rv, 
 	    continue;
 	}
 
-	VARARGS_ASSIGN(nas[cn].ap, ap);
-
 	switch( nas[cn].type ){
 	case TYPE_INT16:
 	case TYPE_UINT16:
 	case TYPE_INTN:
-	case TYPE_UINTN:		(void)va_arg( ap, PRIntn );		break;
+	    nas[cn].u.i = va_arg( ap, int );
+	    break;
 
-	case TYPE_INT32:		(void)va_arg( ap, PRInt32 );		break;
+	case TYPE_UINTN:
+	    nas[cn].u.ui = va_arg( ap, unsigned int );
+	    break;
 
-	case TYPE_UINT32:	(void)va_arg( ap, PRUint32 );	break;
+	case TYPE_INT32:
+	    nas[cn].u.i32 = va_arg( ap, PRInt32 );
+	    break;
 
-	case TYPE_INT64:	(void)va_arg( ap, PRInt64 );		break;
+	case TYPE_UINT32:
+	    nas[cn].u.ui32 = va_arg( ap, PRUint32 );
+	    break;
 
-	case TYPE_UINT64:	(void)va_arg( ap, PRUint64 );		break;
+	case TYPE_INT64:
+	    nas[cn].u.ll = va_arg( ap, PRInt64 );
+	    break;
 
-	case TYPE_STRING:	(void)va_arg( ap, char* );		break;
+	case TYPE_UINT64:
+	    nas[cn].u.ull = va_arg( ap, PRUint64 );
+	    break;
 
-	case TYPE_INTSTR:	(void)va_arg( ap, PRIntn* );		break;
+	case TYPE_STRING:
+	    nas[cn].u.s = va_arg( ap, char* );
+	    break;
 
-	case TYPE_DOUBLE:	(void)va_arg( ap, double );		break;
+	case TYPE_INTSTR:
+	    nas[cn].u.ip = va_arg( ap, int* );
+	    break;
+
+	case TYPE_DOUBLE:
+	    nas[cn].u.d = va_arg( ap, double );
+	    break;
 
 	default:
 	    if( nas != nasArray )
@@ -676,10 +686,11 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
     static char *HEX = "0123456789ABCDEF";
     char *hexp;
     int rv, i;
-    struct NumArgState* nas = NULL;
-    struct NumArgState  nasArray[ NAS_DEFAULT_NUM ];
+    struct NumArg* nas = NULL;
+    struct NumArg* nap;
+    struct NumArg  nasArray[ NAS_DEFAULT_NUM ];
     char  pattern[20];
-    const char* dolPt = NULL;  /* in "%4$.2f", dolPt will poiont to . */
+    const char* dolPt = NULL;  /* in "%4$.2f", dolPt will point to . */
 
 
     /*
@@ -733,7 +744,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 		return -1;
 	    }
 
-	    ap = nas[i-1].ap;
+	    nap = &nas[i-1];
 	    dolPt = fmt;
 	    c = *fmt++;
 	}
@@ -832,35 +843,35 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 	  fetch_and_convert:
 	    switch (type) {
 	      case TYPE_INT16:
-		u.l = va_arg(ap, int);
+		u.l = nas ? nap->u.i : va_arg(ap, int);
 		if (u.l < 0) {
 		    u.l = -u.l;
 		    flags |= FLAG_NEG;
 		}
 		goto do_long;
 	      case TYPE_UINT16:
-		u.l = va_arg(ap, int) & 0xffff;
+		u.l = (nas ? nap->u.i : va_arg(ap, int)) & 0xffff;
 		goto do_long;
 	      case TYPE_INTN:
-		u.l = va_arg(ap, int);
+		u.l = nas ? nap->u.i : va_arg(ap, int);
 		if (u.l < 0) {
 		    u.l = -u.l;
 		    flags |= FLAG_NEG;
 		}
 		goto do_long;
 	      case TYPE_UINTN:
-		u.l = (long)va_arg(ap, unsigned int);
+		u.l = (long)(nas ? nap->u.ui : va_arg(ap, unsigned int));
 		goto do_long;
 
 	      case TYPE_INT32:
-		u.l = va_arg(ap, PRInt32);
+		u.l = nas ? nap->u.i32 : va_arg(ap, PRInt32);
 		if (u.l < 0) {
 		    u.l = -u.l;
 		    flags |= FLAG_NEG;
 		}
 		goto do_long;
 	      case TYPE_UINT32:
-		u.l = (long)va_arg(ap, PRUint32);
+		u.l = (long)(nas ? nap->u.ui32 : va_arg(ap, PRUint32));
 	      do_long:
 		rv = cvt_l(ss, u.l, width, prec, radix, type, flags, hexp);
 		if (rv < 0) {
@@ -869,14 +880,14 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 		break;
 
 	      case TYPE_INT64:
-		u.ll = va_arg(ap, PRInt64);
+		u.ll = nas ? nap->u.ll : va_arg(ap, PRInt64);
 		if (!LL_GE_ZERO(u.ll)) {
 		    LL_NEG(u.ll, u.ll);
 		    flags |= FLAG_NEG;
 		}
 		goto do_longlong;
 	      case TYPE_UINT64:
-		u.ll = va_arg(ap, PRUint64);
+		u.ll = nas ? nap->u.ull : va_arg(ap, PRUint64);
 	      do_longlong:
 		rv = cvt_ll(ss, u.ll, width, prec, radix, type, flags, hexp);
 		if (rv < 0) {
@@ -890,7 +901,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 	  case 'E':
 	  case 'f':
 	  case 'g':
-	    u.d = va_arg(ap, double);
+	    u.d = nas ? nap->u.d : va_arg(ap, double);
 	    if( nas != NULL ){
 		i = fmt - dolPt;
 		if( i < sizeof( pattern ) ){
@@ -907,7 +918,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 	    break;
 
 	  case 'c':
-	    u.ch = va_arg(ap, int);
+	    u.ch = nas ? nap->u.i : va_arg(ap, int);
             if ((flags & FLAG_LEFT) == 0) {
                 while (width-- > 1) {
                     rv = (*ss->stuff)(ss, " ", 1);
@@ -955,7 +966,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 #endif
 
 	  case 's':
-	    u.s = va_arg(ap, const char*);
+	    u.s = nas ? nap->u.s : va_arg(ap, const char*);
 	    rv = cvt_s(ss, u.s, width, prec, flags);
 	    if (rv < 0) {
 		return rv;
@@ -963,7 +974,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 	    break;
 
 	  case 'n':
-	    u.ip = va_arg(ap, int*);
+	    u.ip = nas ? nap->u.ip : va_arg(ap, int*);
 	    if (u.ip) {
 		*u.ip = ss->cur - ss->base;
 	    }
