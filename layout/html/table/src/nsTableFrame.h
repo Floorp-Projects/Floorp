@@ -23,7 +23,6 @@
 #include "nsStyleCoord.h"
 
 class nsCellMap;
-class nsCellLayoutData;
 class nsVoidArray;
 class nsTableCellFrame;
 class nsTableColFrame;
@@ -41,29 +40,6 @@ struct nsStyleSpacing;
  {0xff1d2780, 0x06d6, 0x11d2, {0x8f, 0x37, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x0c}}
 
 extern const nsIID kTableFrameCID;
-
-/** Data stored by nsCellMap to rationalize rowspan and colspan cells.
-  * if mCell is null then mRealCell will be the rowspan/colspan source
-  * in addition, if fOverlap is non-null then it will point to the
-  * other cell that overlaps this position
-  * @see nsCellMap
-  * @see nsTableFrame::BuildCellMap
-  * @see nsTableFrame::GrowCellMap
-  * @see nsTableFrame::BuildCellIntoMap
-  * 
-  */
-class CellData
-{
-public:
-  nsTableCellFrame *mCell;
-  CellData *mRealCell;
-  CellData *mOverlap;
-
-  CellData();
-
-  ~CellData();
-};
-
 
 /* ============================================================================ */
 
@@ -153,36 +129,12 @@ public:
     */
   NS_METHOD GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aColFrame);
 
-  /** return the column layout data for this inner table frame.
-    * if this is a continuing frame, return the first-in-flow's column layout data.
-    * @return the column layout data array, or null if there is no info yet.
-    */
-  virtual nsVoidArray *GetColumnLayoutData();
-
-  /** Associate aData with the cell at (aRow,aCol)
-    *
-    * @param aPresContext -- used to resolve style when initializing caches
-    * @param aData  -- the info to cache
-    * @param aCell -- the content object for which layout info is being cached
-    *
-    * @return PR_TRUE if the data was successfully associated with a Cell
-    *         PR_FALSE if there was an error, such as aRow or aCol being invalid
-    */
-  virtual PRBool SetCellLayoutData(nsIPresContext   * aPresContext,
-                                   nsCellLayoutData * aData, 
-                                   nsTableCellFrame * aCell);
-
-  /** Get the layout data associated with the cell at (aRow,aCol)
-    * @return PR_NULL if there was an error, such as aRow or aCol being invalid
-    *         otherwise, the data is returned.
-    */
-  virtual nsCellLayoutData * GetCellLayoutData(nsTableCellFrame *aCell);
-          
+         
   /**
     * DEBUG METHOD
     *
     */
-  virtual void ListColumnLayoutData(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  //virtual void ListColumnLayoutData(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   
   /** return the width of the column at aColIndex    */
@@ -235,11 +187,6 @@ protected:
 
   /** destructor, responsible for mColumnLayoutData and mColumnWidths */
   virtual ~nsTableFrame();
-
-  /** helper method to delete contents of mColumnLayoutData
-    * should be called with care (ie, only by destructor)
-    */
-  virtual void DeleteColumnLayoutData();
 
   /** first pass of ResizeReflow.  
     * lays out all table content with aMaxSize(NS_UNCONSTRAINEDSIZE,NS_UNCONSTRAINEDSIZE) and
@@ -380,6 +327,16 @@ protected:
     */
   virtual void ResetCellMap ();
 
+  /** for debugging only
+    * prints out information about the cell map
+    */
+  void DumpCellMap() const;
+
+  /** for debugging only
+    * prints out info about the table layout state, printing columns and their cells
+    */
+  void ListColumnLayoutData(FILE* out, PRInt32 aIndent) const;
+
   /** ResetColumns is called when the column structure of the table is changed.
     * Call with caution, only when adding or removing columns, changing 
     * column attributes, changing the rowspan or colspan attribute of a cell, etc.
@@ -418,13 +375,6 @@ protected:
     */
   virtual nsTableRowGroupFrame* NextRowGroupFrame (nsTableRowGroupFrame*);
 
-  /** returns the number of rows in this table.
-    * if mCellMap has been created, it is asked for the number of rows.<br>
-    * otherwise, the content is enumerated and the rows are counted.
-    */
-  virtual PRInt32 GetRowCount();
-
-
   /** return the number of columns as specified by the input. 
     * has 2 side effects:<br>
     * calls SetStartColumnIndex on each nsTableColumn<br>
@@ -432,9 +382,18 @@ protected:
     */
   virtual PRInt32 GetSpecifiedColumnCount ();
 
-public:
-  virtual void        DumpCellMap() const; 
-  virtual nsCellMap*  GetCellMap() const;
+public: /* ----- Cell Map public methods ----- */
+
+  /** returns the number of rows in this table.
+    * if mCellMap has been created, it is asked for the number of rows.<br>
+    * otherwise, the content is enumerated and the rows are counted.
+    */
+  virtual PRInt32 GetRowCount();
+
+  nsTableColFrame * GetColFrame(PRInt32 aColIndex);
+
+  nsTableCellFrame * GetCellAt(PRInt32 aRowIndex, PRInt32 aColIndex);
+
 
 
 private:
@@ -446,9 +405,7 @@ private:
     */
   enum {kPASS_UNDEFINED=0, kPASS_FIRST=1, kPASS_SECOND=2, kPASS_THIRD=3, kPASS_INCREMENTAL=4};
 
-  nsVoidArray *mColumnLayoutData;   // array of array of cellLayoutData's
   PRInt32     *mColumnWidths;       // widths of each column
-  //TODO: move all column info into this object
   ColumnInfoCache *mColCache;       // cached information about the table columns
   PRBool       mFirstPassValid;     // PR_TRUE if first pass data is still legit
   PRInt32      mPass;               // which Reflow pass are we currently in?

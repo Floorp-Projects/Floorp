@@ -21,8 +21,6 @@
 #include "nsTablePart.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLContainer.h"
-#include "nsContainerFrame.h"
-#include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
@@ -37,66 +35,6 @@ static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsNoisyRefs = PR_FALSE;
 #endif
 
-
-nsTableColFrame::nsTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsFrame(aContent, aParentFrame)
-{
-  mColIndex = 0;
-  mRepeat = 0;
-}
-
-
-nsTableColFrame::~nsTableColFrame()
-{
-}
-
-NS_METHOD nsTableColFrame::Paint(nsIPresContext& aPresContext,
-                                 nsIRenderingContext& aRenderingContext,
-                                 const nsRect& aDirtyRect)
-{
-  if (gsDebug==PR_TRUE)
-    printf("nsTableColFrame::Paint\n");
-  return NS_OK;
-}
-
-
-NS_METHOD nsTableColFrame::Reflow(nsIPresContext*      aPresContext,
-                                  nsReflowMetrics&     aDesiredSize,
-                                  const nsReflowState& aReflowState,
-                                  nsReflowStatus&      aStatus)
-{
-  NS_ASSERTION(nsnull!=aPresContext, "bad arg");
-  aDesiredSize.width=0;
-  aDesiredSize.height=0;
-  if (nsnull!=aDesiredSize.maxElementSize)
-  {
-    aDesiredSize.maxElementSize->width=0;
-    aDesiredSize.maxElementSize->height=0;
-  }
-  aStatus = NS_FRAME_COMPLETE;
-  return NS_OK;
-}
-
-
-/* ----- static methods ------ */
-
-nsresult nsTableColFrame::NewFrame(nsIFrame** aInstancePtrResult,
-                                   nsIContent* aContent,
-                                   nsIFrame*   aParent)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIFrame* it = new nsTableColFrame(aContent, aParent);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aInstancePtrResult = it;
-  return NS_OK;
-}
-
-//---------------------- nsTableCol implementation -----------------------------------
 
 nsTableCol::nsTableCol(nsIAtom* aTag)
   : nsTableContent(aTag),

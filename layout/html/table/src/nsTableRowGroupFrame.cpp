@@ -29,13 +29,11 @@
 #include "nsIReflowCommand.h"
 
 #ifdef NS_DEBUG
-static PRBool gsDebug1 = PR_FALSE;
-static PRBool gsDebug2 = PR_FALSE;
+static PRBool gsDebug = PR_FALSE;
 //#define NOISY
 //#define NOISY_FLOW
 #else
-static const PRBool gsDebug1 = PR_FALSE;
-static const PRBool gsDebug2 = PR_FALSE;
+static const PRBool gsDebug = PR_FALSE;
 #endif
 
 NS_DEF_PTR(nsIStyleContext);
@@ -195,7 +193,7 @@ void nsTableRowGroupFrame::PlaceChild( nsIPresContext*    aPresContext,
 																			 nsSize*            aMaxElementSize,
 																			 nsSize&            aKidMaxElementSize)
 {
-  if (PR_TRUE==gsDebug1)
+  if (PR_TRUE==gsDebug)
     printf ("rowgroup: placing row at %d, %d, %d, %d\n",
            aKidRect.x, aKidRect.y, aKidRect.width, aKidRect.height);
 
@@ -256,7 +254,7 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
 #endif
 #endif
   NS_PRECONDITION(nsnull != mFirstChild, "no children");
-
+if (gsDebug) printf("\n\nREFLOWMAPPED FOR ROW GROUP FRAME\n");
   PRInt32   childCount = 0;
   nsIFrame* prevKidFrame = nsnull;
 
@@ -1039,7 +1037,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*      aPresContext,
                              const nsReflowState& aReflowState,
                              nsReflowStatus&      aStatus)
 {
-  if (gsDebug1==PR_TRUE)
+  if (gsDebug==PR_TRUE)
     printf("nsTableRowGroupFrame::Reflow - aMaxSize = %d, %d\n",
             aReflowState.maxSize.width, aReflowState.maxSize.height);
 #ifdef NS_DEBUG
@@ -1153,7 +1151,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*      aPresContext,
   PostReflowCheck(aStatus);
 #endif
 
-  if (gsDebug1==PR_TRUE) 
+  if (gsDebug==PR_TRUE) 
   {
     if (nsnull!=aDesiredSize.maxElementSize)
       printf("nsTableRowGroupFrame::RR returning: %s with aDesiredSize=%d,%d, aMES=%d,%d\n",
@@ -1181,7 +1179,7 @@ nsTableRowGroupFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   PrepareContinuingFrame(aPresContext, aParent, aStyleContext, cf);
-  if (PR_TRUE==gsDebug1) printf("nsTableRowGroupFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
+  if (PR_TRUE==gsDebug) printf("nsTableRowGroupFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
   aContinuingFrame = cf;
   return NS_OK;
 }

@@ -48,6 +48,12 @@ public:
   /** set the index of the column this content object represents.  must be >= 0 */
   virtual void SetColumnIndex (int aColIndex);
 
+  /** convenience method, calls into cellmap */
+  nsVoidArray * GetCells();
+
+  /** convenience method, calls into cellmap */
+  PRInt32 Count() const;
+
 protected:
 
   nsTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame);
@@ -55,10 +61,16 @@ protected:
   ~nsTableColFrame();
 
   /** the starting index of the column (starting at 0) that this col object represents */
-  PRInt32            mColIndex;
+  PRInt32  mColIndex;
 
   /** the number of columns that the attributes of this column extend to */
-  PRInt32            mRepeat;
+  PRInt32  mRepeat;
+
+  nscoord  mMaxWidth;
+  nscoord  mMinWidth;
+
+  nscoord mMaxEffectiveWidth;
+  nscoord mMinEffectiveWidth;
 
 };
 

@@ -29,14 +29,12 @@
 #include "nsTableColGroupFrame.h"
 #include "nsTableRowFrame.h"
 #include "nsTableRowGroupFrame.h"
-#include "nsColLayoutData.h"
 
 #include "BasicTableLayoutStrategy.h"
 
 #include "nsIPresContext.h"
 #include "nsCSSRendering.h"
 #include "nsStyleConsts.h"
-#include "nsCellLayoutData.h"
 #include "nsVoidArray.h"
 #include "nsIPtr.h"
 #include "nsIView.h"
@@ -269,7 +267,6 @@ void ColumnInfoCache::GetColumnsByType(const nsStyleUnit aType,
 nsTableFrame::nsTableFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsContainerFrame(aContent, aParentFrame),
     mCellMap(nsnull),
-    mColumnLayoutData(nsnull),
     mColCache(nsnull),
     mColumnWidths(nsnull),
     mTableLayoutStrategy(nsnull),
@@ -279,31 +276,10 @@ nsTableFrame::nsTableFrame(nsIContent* aContent, nsIFrame* aParentFrame)
 {
 }
 
-/**
- * Method to delete all owned objects assoicated
- * with the ColumnLayoutObject instance variable
- */
-void nsTableFrame::DeleteColumnLayoutData()
-{
-  if (nsnull!=mColumnLayoutData)
-  {
-    PRInt32 numCols = mColumnLayoutData->Count();
-    for (PRInt32 i = 0; i<numCols; i++)
-    {
-      nsColLayoutData *colData = (nsColLayoutData *)(mColumnLayoutData->ElementAt(i));
-      delete colData;
-    }
-    delete mColumnLayoutData;
-    mColumnLayoutData = nsnull;
-  }
-}
-
 nsTableFrame::~nsTableFrame()
 {
   if (nsnull!=mCellMap)
     delete mCellMap;
-
-  DeleteColumnLayoutData();
 
   if (nsnull!=mColumnWidths)
     delete [] mColumnWidths;
@@ -351,8 +327,7 @@ nsTableRowGroupFrame* nsTableFrame::NextRowGroupFrame(nsTableRowGroupFrame* aRow
 PRInt32 nsTableFrame::GetSpecifiedColumnCount ()
 {
   mColCount=0;
-  nsIFrame * colGroup;
-  ChildAt (0, (nsIFrame *&)colGroup);
+  nsIFrame * colGroup = mFirstChild;
   while (nsnull!=colGroup)
   {
     const nsStyleDisplay *childDisplay;
@@ -379,8 +354,7 @@ PRInt32 nsTableFrame::GetRowCount ()
   if (nsnull != mCellMap)
     return mCellMap->GetRowCount();
 
-  nsIFrame *child=nsnull;
-  ChildAt(0, child);
+  nsIFrame *child=mFirstChild;
   while (nsnull!=child)
   {
     const nsStyleDisplay *childDisplay;
@@ -393,6 +367,35 @@ PRInt32 nsTableFrame::GetRowCount ()
   }
   return rowCount;
 }
+
+nsTableColFrame * nsTableFrame::GetColFrame(PRInt32 aColIndex)
+{
+  nsTableColFrame *result = nsnull;
+  if (nsnull!=mCellMap)
+  {
+    result = mCellMap->GetColumnFrame(aColIndex);
+  }
+  return result;
+}
+
+// can return nsnull
+nsTableCellFrame * nsTableFrame::GetCellAt(PRInt32 aRowIndex, PRInt32 aColIndex)
+{
+  nsTableCellFrame *result = nsnull;
+  if (nsnull!=mCellMap)
+  {
+    CellData * cellData = mCellMap->GetCellAt(aRowIndex, aColIndex);
+    if (nsnull!=cellData)
+    {
+      result = cellData->mCell;
+      if (nsnull==result)
+        result = cellData->mRealCell->mCell;
+    }
+  }
+  return result;
+}
+
+
 // return the rows spanned by aCell starting at aRowIndex
 // note that this is different from just the rowspan of aCell
 // (that would be GetEffectiveRowSpan (indexOfRowThatContains_aCell, aCell)
@@ -411,13 +414,6 @@ PRInt32 nsTableFrame::GetEffectiveRowSpan (PRInt32 aRowIndex, nsTableCellFrame *
   if (rowCount < (aRowIndex + rowSpan))
     return (rowCount - aRowIndex);
   return rowSpan;
-}
-
-
-// returns the actual cell map, not a copy, so don't mess with it!
-nsCellMap* nsTableFrame::GetCellMap() const
-{
-  return mCellMap;
 }
 
 /* call when the cell structure has changed.  mCellMap will be rebuilt on demand. */
@@ -449,10 +445,9 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
 
   PRInt32 actualColumns = 0;
   nsTableColGroupFrame *lastColGroupFrame = nsnull;
-  nsIFrame * childFrame=nsnull;
   nsIFrame * firstRowGroupFrame=nsnull;
   nsIFrame * prevSibFrame=nsnull;
-  ChildAt (0, (nsIFrame *&)childFrame);
+  nsIFrame * childFrame=mFirstChild;
   while (nsnull!=childFrame)
   {
     const nsStyleDisplay *childDisplay;
@@ -795,35 +790,67 @@ void nsTableFrame::GrowCellMap (PRInt32 aColCount)
  */
 void nsTableFrame::ListColumnLayoutData(FILE* out, PRInt32 aIndent) const
 {
-  // if this is a continuing frame, there will be no output
-  if (nsnull!=mColumnLayoutData)
+  nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
+  if (this!=firstInFlow)
+  {
+    firstInFlow->ListColumnLayoutData(out, aIndent);
+    return;
+  }
+
+  if (nsnull!=mCellMap)
   {
     fprintf(out,"Column Layout Data \n");
     
-    PRInt32 numCols = mColumnLayoutData->Count();
-    for (PRInt32 i = 0; i<numCols; i++)
+    PRInt32 numCols = mCellMap->GetColCount();
+    PRInt32 numRows = mCellMap->GetRowCount();
+    for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
     {
-      nsColLayoutData *colData = (nsColLayoutData *)(mColumnLayoutData->ElementAt(i));
+      for (PRInt32 indent = aIndent; --indent >= 0; ) 
+        fputs("  ", out);
+      fprintf(out,"Column Data [%d] \n",colIndex);
+      for (PRInt32 rowIndex = 0; rowIndex < numRows; rowIndex++)
+      {
+        nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(rowIndex, colIndex);
+        PRInt32 rowIndent;
+        for (rowIndent = aIndent+2; --rowIndent >= 0; ) fputs("  ", out);
+        fprintf(out,"Cell Data [%d] \n",rowIndex);
+        for (rowIndent = aIndent+2; --rowIndent >= 0; ) fputs("  ", out);
+        nsMargin margin;
+        cellFrame->GetMargin(margin);
+        fprintf(out,"Margin -- Top: %d Left: %d Bottom: %d Right: %d \n",  
+                NS_TWIPS_TO_POINTS_INT(margin.top),
+                NS_TWIPS_TO_POINTS_INT(margin.left),
+                NS_TWIPS_TO_POINTS_INT(margin.bottom),
+                NS_TWIPS_TO_POINTS_INT(margin.right));
+      
+        for (rowIndent = aIndent+2; --rowIndent >= 0; ) fputs("  ", out);
 
-      for (PRInt32 indent = aIndent; --indent >= 0; ) fputs("  ", out);
-      fprintf(out,"Column Data [%d] \n",i);
-      colData->List(out,aIndent+2);
+        nscoord top,left,bottom,right;
+    /*
+        top = (mBorderFrame[NS_SIDE_TOP] ? cellFrame->GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_TOP], NS_SIDE_TOP) : 0);
+        left = (mBorderFrame[NS_SIDE_LEFT] ? cellFrame->GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_LEFT], NS_SIDE_LEFT) : 0);
+        bottom = (mBorderFrame[NS_SIDE_BOTTOM] ? cellFrame->GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_BOTTOM], NS_SIDE_BOTTOM) : 0);
+        right = (mBorderFrame[NS_SIDE_RIGHT] ? cellFrame->GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_RIGHT], NS_SIDE_RIGHT) : 0);
+    */
+
+        fprintf(out,"Border -- Top: %d Left: %d Bottom: %d Right: %d \n",  
+                    NS_TWIPS_TO_POINTS_INT(top),
+                    NS_TWIPS_TO_POINTS_INT(left),
+                    NS_TWIPS_TO_POINTS_INT(bottom),
+                    NS_TWIPS_TO_POINTS_INT(right));
+      }
     }
   }
 }
 
 /**
- * For the TableCell in CellData, find the CellLayoutData assocated
- * and add it to the list
-**/
+  * For the TableCell in CellData, add it to the list
+  */
 void nsTableFrame::AppendLayoutData(nsVoidArray* aList, nsTableCellFrame* aTableCell)
 {
-
   if (aTableCell != nsnull)
   {
-    nsCellLayoutData* layoutData = GetCellLayoutData(aTableCell);
-    if (layoutData != nsnull)
-      aList->AppendElement((void*)layoutData);
+    aList->AppendElement((void*)aTableCell);
   }
 }
 
@@ -996,9 +1023,7 @@ void nsTableFrame::RecalcLayoutData()
           r++;
         }
         
-        nsCellLayoutData* cellLayoutData = GetCellLayoutData(cell); 
-        if (cellLayoutData != nsnull)
-          cellLayoutData->RecalcLayoutData(this,boundaryCells);
+        cell->RecalcLayoutData(this,boundaryCells);
       }
     }
   }
@@ -1310,7 +1335,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
       if (nsnull!=prevKidFrame)
         prevKidFrame->GetNextSibling(kidFrame);  // no need to check for an error, just see if it returned null...
       else
-        ChildAt(0, kidFrame);
+        kidFrame=mFirstChild;
 
       // if this is the first time, allocate the frame
       if (nsnull==kidFrame)
@@ -2210,11 +2235,10 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   if (gsDebug)
     printf ("BalanceColumnWidths...\n");
 
-  nsVoidArray *columnLayoutData = GetColumnLayoutData();
-  if (nsnull==columnLayoutData)
+  if (nsnull==mCellMap)
     return; // we don't have any information yet, so we can't do any useful work
 
-  PRInt32 numCols = columnLayoutData->Count();
+  PRInt32 numCols = mCellMap->GetColCount();
   if (nsnull==mColumnWidths)
   {
     mColumnWidths = new PRInt32[numCols];
@@ -2233,9 +2257,22 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
 
   // need to figure out the overall table width constraint
   // default case, get 100% of available space
+
+  // begin REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!
+  nsIFrame * outerTableFrame = nsnull;
+  const nsStylePosition* position;
+  GetGeometricParent(outerTableFrame);
+  outerTableFrame->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)position));
+  // end REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED
+
+
+
   PRInt32 maxWidth;
+  /*
   const nsStylePosition* position =
     (const nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
+  use this line when tableFrame contains its own position style info
+  */
   switch (position->mWidth.GetUnit()) {
   case eStyleUnit_Coord:
     maxWidth = position->mWidth.GetCoordValue();
@@ -2251,7 +2288,6 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
     // XXX for now these fall through
 
   default:
-
     maxWidth = aMaxSize.width;
     break;
   }
@@ -2293,16 +2329,20 @@ void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext)
 
   if (gsDebug==PR_TRUE) printf ("SetTableWidth...");
   PRInt32 tableWidth = 0;
-  nsVoidArray *columnLayoutData = GetColumnLayoutData();
-  if (nsnull==columnLayoutData)
+  if (nsnull==mCellMap)
     return;  // no info, so nothing to do
 
-  PRInt32 numCols = columnLayoutData->Count();
-  for (PRInt32 i = 0; i<numCols; i++)
+  PRInt32 numCols = mCellMap->GetColCount();
+  for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
   {
-    tableWidth += mColumnWidths[i];
+    nscoord totalColWidth = mColumnWidths[colIndex];
+    nsTableCellFrame * cellFrame = GetCellAt(0, colIndex);
+    nsMargin colMargin;
+    GetCellMarginData(cellFrame,colMargin);
+    totalColWidth += colMargin.left + colMargin.right;
     if (gsDebug==PR_TRUE) 
-      printf (" += %d ", mColumnWidths[i]);
+      printf (" += %d ", totalColWidth);
+    tableWidth += totalColWidth;
   }
 
   // Compute the insets (sum of border and padding)
@@ -2384,12 +2424,9 @@ NS_METHOD nsTableFrame::GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aCol
 {
   aColFrame = nsnull; // initialize out parameter
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
-  if (nsnull!=firstInFlow->mColumnLayoutData)
+  if (nsnull!=firstInFlow->mCellMap)
   { // hooray, we get to do this the easy way because the info is cached
-    nsColLayoutData * colData = (nsColLayoutData *)
-      (firstInFlow->mColumnLayoutData->ElementAt(aColIndex));
-    NS_ASSERTION(nsnull != colData, "bad column data");
-    aColFrame = colData->GetColFrame();
+    aColFrame = firstInFlow->mCellMap->GetColumnFrame(aColIndex);
     NS_ASSERTION(nsnull!=aColFrame, "bad col frame");
   }
   else
@@ -2443,31 +2480,46 @@ void nsTableFrame::BuildColumnCache( nsIPresContext*      aPresContext,
     mColCache = new ColumnInfoCache(mColCount);
     nsIFrame * childFrame = mFirstChild;
     while (nsnull!=childFrame)
-    { // for every child, if it's a col group then get the columns
+    { // in this loop, we cache column info and set column style info from cells in first row
       const nsStyleDisplay *childDisplay;
       childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
-      if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay ||
+
+      if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
+      { // if it's a col group then get the columns and cache them in the CellMap
+        nsTableColFrame *colFrame=nsnull;
+        childFrame->FirstChild((nsIFrame *&)colFrame);
+        while (nsnull!=colFrame)
+        { 
+          mCellMap->AppendColumnFrame(colFrame);
+          colFrame->GetNextSibling((nsIFrame *&)colFrame);
+        }
+      }
+      else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay ||
                NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay ||
                NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay )
-      { // for every cell in every row, call SetCellLayoutData with the cached info
-        // QQQ we can probably just leave the info in the table cell frame, not cache it here
+      { // if it's a row group, get the cells and set the column style if appropriate
         nsIFrame *rowFrame;
-        childFrame->ChildAt(0, rowFrame);
-        nsIFrame *cellFrame;
-        rowFrame->ChildAt(0, cellFrame);
-        while (nsnull!=cellFrame)
+        childFrame->FirstChild(rowFrame);
+        if (nsnull!=rowFrame)
         {
-          /* this is the first time we are guaranteed to have both the cell frames
-           * and the column frames, so it's a good time to 
-           * set the column style from the cell's width attribute (if this is the first row)
-           */
-          SetColumnStyleFromCell(aPresContext, (nsTableCellFrame *)cellFrame, (nsTableRowFrame *)rowFrame);
-          cellFrame->GetNextSibling(cellFrame);
+          nsIFrame *cellFrame;
+          rowFrame->FirstChild(cellFrame);
+          while (nsnull!=cellFrame)
+          {
+            /* this is the first time we are guaranteed to have both the cell frames
+             * and the column frames, so it's a good time to 
+             * set the column style from the cell's width attribute (if this is the first row)
+             */
+            SetColumnStyleFromCell(aPresContext, (nsTableCellFrame *)cellFrame, (nsTableRowFrame *)rowFrame);
+            cellFrame->GetNextSibling(cellFrame);
+          }
         }
       }
       childFrame->GetNextSibling(childFrame);
     }
+
     // second time through, set column cache info for each column
+    // we can't do this until the loop above has set the column style info from the cells in the first row
     childFrame = mFirstChild;
     while (nsnull!=childFrame)
     { // for every child, if it's a col group then get the columns
@@ -2476,7 +2528,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext*      aPresContext,
       if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
       {
         nsTableColFrame *colFrame=nsnull;
-        childFrame->ChildAt(0, (nsIFrame *&)colFrame);
+        childFrame->FirstChild((nsIFrame *&)colFrame);
         while (nsnull!=colFrame)
         { // for every column, create an entry in the column cache
           // assumes that the col style has been twiddled to account for first cell width attribute
@@ -2489,175 +2541,13 @@ void nsTableFrame::BuildColumnCache( nsIPresContext*      aPresContext,
       else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay ||
                NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay ||
                NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay )
-      { // for every cell in every row, call SetCellLayoutData with the cached info
-        // QQQ we can probably just leave the info in the table cell frame, not cache it here
-        nsIFrame *rowFrame;
-        childFrame->ChildAt(0, rowFrame);
-        while (nsnull!=rowFrame)
-        {
-          nsIFrame *cellFrame;
-          rowFrame->ChildAt(0, cellFrame);
-          while (nsnull!=cellFrame)
-          {
-            nsCellLayoutData *cld = ((nsTableCellFrame*)cellFrame)->GetCellLayoutData();
-            SetCellLayoutData(aPresContext, cld, (nsTableCellFrame*)cellFrame);
-            cellFrame->GetNextSibling(cellFrame);
-          }
-          rowFrame->GetNextSibling(rowFrame);
-        }
+      {
+        break;  // once we hit a row group, we're done
       }
       childFrame->GetNextSibling(childFrame);
     }
   }
 }
-
-// nsnull is a valid return value.  This is for empty tables.
-nsVoidArray * nsTableFrame::GetColumnLayoutData()
-{
-  nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
-  NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
-  return firstInFlow->mColumnLayoutData;
-}
-
-/** Associate aData with the cell at (aRow,aCol)
-  * @return PR_TRUE if the data was successfully associated with a Cell
-  *         PR_FALSE if there was an error, such as aRow or aCol being invalid
-  */
-PRBool nsTableFrame::SetCellLayoutData(nsIPresContext* aPresContext,
-                                       nsCellLayoutData * aData, nsTableCellFrame *aCell)
-{
-  NS_ASSERTION(nsnull != aPresContext, "bad arg aPresContext");
-  NS_ASSERTION(nsnull != aData, "bad arg aData");
-  NS_ASSERTION(nsnull != aCell, "bad arg aCell");
-
-  PRBool result = PR_TRUE;
-
-  nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
-  NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
-  if (this!=firstInFlow)
-    result = firstInFlow->SetCellLayoutData(aPresContext, aData, aCell);
-  else
-  {
-    if ((kPASS_FIRST==GetReflowPass()) || (kPASS_INCREMENTAL==GetReflowPass()))
-    {
-      if (nsnull==mColumnLayoutData)
-      {
-        PRInt32 rows = GetRowCount();
-        mColumnLayoutData = new nsVoidArray();
-        NS_ASSERTION(nsnull != mColumnLayoutData, "bad alloc");
-        PRInt32 tableKidCount = mContent->ChildCount();
-        nsIFrame * colGroupFrame = mFirstChild;
-        for (PRInt32 i=0; i<tableKidCount; )  // notice increment of i is done just before ChildAt call
-        {
-          const nsStyleDisplay *childDisplay;
-          colGroupFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
-          if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
-          {
-            nsTableColFrame *colFrame=nsnull;
-            colGroupFrame->ChildAt(0, (nsIFrame *&)colFrame);
-            while (nsnull!=colFrame)
-            {
-              // TODO:  unify these 2 kinds of column data
-              // TODO:  cache more column data, like the mWidth.GetUnit and what its value
-              nsColLayoutData *colData = new nsColLayoutData(colFrame, rows);
-              mColumnLayoutData->AppendElement((void *)colData);
-              colFrame->GetNextSibling((nsIFrame *&)colFrame);
-            }
-          }
-          // can't have col groups after row groups, so stop if you find a row group
-          else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay ||
-                   NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay ||
-                   NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay )
-          {
-            break;
-          }
-          i++;
-          ChildAt(i, colGroupFrame);  // can't use colGroupFrame->GetNextSibling because it hasn't been set yet
-        }
-      }
-
-      PRInt32 firstColIndex = aCell->GetColIndex();
-      nsTableRowFrame *row;
-      aCell->GetGeometricParent((nsIFrame*&)row);
-      PRInt32 rowIndex = row->GetRowIndex();
-      PRInt32 colSpan = aCell->GetColSpan();
-      nsColLayoutData * colData = (nsColLayoutData *)(mColumnLayoutData->ElementAt(firstColIndex));
-      nsVoidArray *col = colData->GetCells();
-      if (gsDebugCLD) printf ("     ~ SetCellLayoutData with row = %d, firstCol = %d, colSpan = %d, colData = %ld, col=%ld\n", 
-                           rowIndex, firstColIndex, colSpan, colData, col);
-      /* this logic looks wrong wrong wrong
-         it seems to add an entries in col (the array of cells for a column) for aCell
-         based on colspan.  This is weird, because you would expect one entry in each
-         column spanned for aCell, not multiple entries in the same col.
-       */
-      for (PRInt32 i=0; i<colSpan; i++)
-      {
-        nsSize * cellSize = aData->GetMaxElementSize();
-        nsSize partialCellSize(*cellSize);
-        partialCellSize.width = (cellSize->width)/colSpan;
-        // This method will copy the nsReflowMetrics pointed at by aData->GetDesiredSize()
-        nsCellLayoutData * kidLayoutData = new nsCellLayoutData(aData->GetCellFrame(),
-                                                                aData->GetDesiredSize(),
-                                                                &partialCellSize);
-        NS_ASSERTION(col->Count() > rowIndex, "unexpected count");
-        if (gsDebugCLD) printf ("     ~ replacing rowIndex = %d\n", rowIndex);
-        nsCellLayoutData* data = (nsCellLayoutData*)col->ElementAt(rowIndex);
-        col->ReplaceElementAt((void *)kidLayoutData, rowIndex);
-        if (data != nsnull) {
-          delete data;
-        }
-      }
-    }
-    else
-      result = PR_FALSE;
-  }
-
-  return result;
-}
-
-/** Get the layout data associated with the cell at (aRow,aCol)
-  * @return nsnull if there was an error, such as aRow or aCol being invalid
-  *         otherwise, the data is returned.
-  */
-nsCellLayoutData * nsTableFrame::GetCellLayoutData(nsTableCellFrame *aCell)
-{
-  NS_ASSERTION(nsnull != aCell, "bad arg");
-
-  nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
-  NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
-  nsCellLayoutData *result = nsnull;
-  if (this!=firstInFlow)
-    result = firstInFlow->GetCellLayoutData(aCell);
-  else
-  {
-    if (nsnull!=mColumnLayoutData)
-    {
-      PRInt32 firstColIndex = aCell->GetColIndex();
-      nsColLayoutData * colData = (nsColLayoutData *)(mColumnLayoutData->ElementAt(firstColIndex));
-      nsTableRowFrame *rowFrame;
-      aCell->GetGeometricParent((nsIFrame *&)rowFrame);
-      PRInt32 rowIndex = rowFrame->GetRowIndex();
-      result = colData->ElementAt(rowIndex);
-
-#ifdef NS_DEBUG
-      // Do some sanity checking
-      if (nsnull != result) {
-        nsIContent* inputContent;
-        nsIContent* resultContent;
-        result->GetCellFrame()->GetContent(resultContent);
-        aCell->GetContent(inputContent);
-        NS_ASSERTION(resultContent == inputContent, "unexpected cell");
-        NS_IF_RELEASE(inputContent);
-        NS_IF_RELEASE(resultContent);
-      }
-#endif
-
-    }
-  }
-  return result;
-}
-
-
 
 PRInt32 nsTableFrame::GetReflowPass() const
 {
@@ -2698,7 +2588,7 @@ nsTableFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
   // add headers and footers to cf
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   nsIFrame * rg = nsnull;
-  firstInFlow->ChildAt(0, rg);
+  firstInFlow->FirstChild(rg);
   NS_ASSERTION (nsnull!=rg, "previous frame has no children");
   nsIAtom * tHeadTag = NS_NewAtom(nsTablePart::kRowGroupHeadTagString);  // tHeadTag: REFCNT++
   nsIAtom * tFootTag = NS_NewAtom(nsTablePart::kRowGroupFootTagString);  // tFootTag: REFCNT++
@@ -2758,9 +2648,8 @@ PRInt32 nsTableFrame::GetColumnWidth(PRInt32 aColIndex)
   {
     NS_ASSERTION(nsnull!=mColumnWidths, "illegal state");
 #ifdef DEBUG
-    nsVoidArray *cld = GetColumnLayoutData();
-    NS_ASSERTION(nsnull!=cld, "no column layout data");
-    PRInt32 numCols = cld->Count();
+    NS_ASSERTION(nsnull!=mCellMap, "no column layout data");
+    PRInt32 numCols = mCellMap->GetColCount();
     NS_ASSERTION (numCols > aColIndex, "bad arg, col index out of bounds");
 #endif
     if (nsnull!=mColumnWidths)
@@ -2770,11 +2659,6 @@ PRInt32 nsTableFrame::GetColumnWidth(PRInt32 aColIndex)
   //printf("GET_COL_WIDTH: %p, FIF=%p getting col %d and returning %d\n", this, firstInFlow, aColIndex, result);
 
   // XXX hack
-#if 0
-  if (result <= 0) {
-    result = 100;
-  }
-#endif
   return result;
 }
 
@@ -2936,9 +2820,7 @@ NS_METHOD nsTableFrame::GetCellMarginData(nsTableCellFrame* aKidFrame, nsMargin&
 
   if (nsnull != aKidFrame)
   {
-    nsCellLayoutData* layoutData = GetCellLayoutData(aKidFrame);
-    if (layoutData)
-      result = layoutData->GetMargin(aMargin);
+    result = aKidFrame->GetMargin(aMargin);
   }
 
   return result;
@@ -3217,37 +3099,6 @@ PRBool nsTableFrame::TableIsAutoWidth(nsTableFrame *aTableFrame,
 
   return result; 
 }
-
-/* valuable code not yet used anywhere
-
-    // since the table is a specified width, we need to expand the columns to fill the table
-    nsVoidArray *columnLayoutData = GetColumnLayoutData();
-    PRInt32 numCols = columnLayoutData->Count();
-    PRInt32 spaceUsed = 0;
-    for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
-      spaceUsed += mColumnWidths[colIndex];
-    PRInt32 spaceRemaining = spaceUsed - aMaxWidth;
-    PRInt32 additionalSpaceAdded = 0;
-    if (0<spaceRemaining)
-    {
-      for (colIndex = 0; colIndex<numCols; colIndex++)
-      {
-        nsColLayoutData * colData = (nsColLayoutData *)(columnLayoutData->ElementAt(colIndex));
-        nsTableColPtr col = colData->GetCol();  // col: ADDREF++
-        nsStyleMolecule* colStyle =
-          (nsStyleMolecule*)mStyleContext->GetData(eStyleStruct_Molecule);
-        if (PR_TRUE==IsProportionalWidth(colStyle))
-        {
-          PRInt32 percentage = (100*mColumnWidths[colIndex]) / aMaxWidth;
-          PRInt32 additionalSpace = (spaceRemaining*percentage)/100;
-          mColumnWidths[colIndex] += additionalSpace;
-          additionalSpaceAdded += additionalSpace;
-        }
-      }
-      if (spaceUsed+additionalSpaceAdded < aMaxTableWidth)
-        mColumnWidths[numCols-1] += (aMaxTableWidth - (spaceUsed+additionalSpaceAdded));
-    }
-*/
 
 // For Debugging ONLY
 NS_METHOD nsTableFrame::MoveTo(nscoord aX, nscoord aY)

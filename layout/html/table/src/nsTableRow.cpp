@@ -20,7 +20,6 @@
 #include "nsTableRowGroup.h"
 #include "nsTableCell.h"
 #include "nsTableFrame.h"
-#include "nsCellLayoutData.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLContainer.h"
 #include "nsTableRowFrame.h"

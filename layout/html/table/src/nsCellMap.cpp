@@ -15,7 +15,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 #include "nsCRT.h"
+#include "nsVoidArray.h"
 #include "nsCellMap.h"
 #include "nsTableFrame.h"
 
@@ -25,38 +27,50 @@ static PRBool gsDebug1 = PR_FALSE;
 static const PRBool gsDebug1 = PR_FALSE;
 #endif
 
-static PRInt32 gBytesPerPointer = sizeof(PRInt32);
+static const PRInt32 gBytesPerPointer = sizeof(PRInt32);
 
 nsCellMap::nsCellMap(int aRows, int aColumns)
   : mRowCount(aRows),
     mColCount(aColumns)
 {
   mCells = nsnull;
+  mColFrames = nsnull;
   Reset(aRows, aColumns);
 }
 
 nsCellMap::~nsCellMap()
 {
-  for (int i=0;i<mRowCount;i++)
+  if (nsnull!=mCells)
   {
-    for (int j=0;j<mColCount;j++)
+    for (int i=0;i<mRowCount;i++)
     {
-      int index = (i*mColCount)+j;
-      CellData* data = (CellData*)mCells[index];
-      if (data != nsnull)
+      for (int j=0;j<mColCount;j++)
       {
-        delete data;
-        mCells[index] = 0;
-      }
-    } 
+        int index = (i*mColCount)+j;
+        CellData* data = (CellData*)mCells[index];
+        if (data != nsnull)
+        {
+          delete data;
+          mCells[index] = 0;
+        }
+      } 
+    }
+    delete [] mCells;
   }
-  delete [] mCells;
+  if (nsnull!= mColFrames)
+    delete mColFrames;
   mCells = nsnull;
+  mColFrames = nsnull;
 };
 
 
 void nsCellMap::Reset(int aRows, int aColumns)
 {
+  if (nsnull==mColFrames)
+  {
+    mColFrames = new nsVoidArray();
+  }
+
   // needs to be more efficient, to reuse space if possible
   if (nsnull!=mCells)
   {
@@ -67,6 +81,7 @@ void nsCellMap::Reset(int aRows, int aColumns)
   mColCount = aColumns;
   mCells = new PRInt32 [mRowCount*mColCount*gBytesPerPointer];
   nsCRT::memset (mCells, 0, (mRowCount*mColCount)*gBytesPerPointer);
+
 }
 
 void nsCellMap::GrowTo(int aColCount)
@@ -108,6 +123,11 @@ void nsCellMap::SetCellAt(CellData *aCell, int aRow, int aColumn)
   if (cell != nsnull)
     delete cell;
   mCells[index] = (PRInt32)aCell;
+}
+
+nsTableColFrame* nsCellMap::GetColumnFrame(PRInt32 aColIndex)
+{
+  return (nsTableColFrame *)(mColFrames->ElementAt(aColIndex));
 }
 
 
