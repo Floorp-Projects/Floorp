@@ -93,12 +93,6 @@ nsXMLDocument::nsXMLDocument()
   mInlineStyleSheet = nsnull;
   mCSSLoader = nsnull;
   
-  // XXX The XML world depends on the html atoms
-  nsHTMLAtoms::AddRefAtoms();
-#ifdef INCLUDE_XUL
-  // XUL world lives within XML world until it gets a place of its own
-  nsXULAtoms::AddRefAtoms();
-#endif
 #ifdef XSL
   mTransformMediator = nsnull;
 #endif
@@ -119,9 +113,6 @@ nsXMLDocument::~nsXMLDocument()
     mCSSLoader->DropDocumentReference();
     NS_RELEASE(mCSSLoader);
   }
-#ifdef INCLUDE_XUL
-  nsXULAtoms::ReleaseAtoms();
-#endif
 #ifdef XSL
   NS_IF_RELEASE(mTransformMediator);
 #endif

@@ -1074,7 +1074,6 @@ CSSStyleSheetImpl::CSSStyleSheetImpl()
     mScriptObject(nsnull)
 {
   NS_INIT_REFCNT();
-  nsCSSAtoms::AddRefAtoms();
 
   mInner = new CSSStyleSheetInner(this);
 
@@ -1101,7 +1100,6 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
     mInner(aCopy.mInner)
 {
   NS_INIT_REFCNT();
-  nsCSSAtoms::AddRefAtoms();
 
   mInner->AddSheet(this);
 
@@ -1166,7 +1164,6 @@ CSSStyleSheetImpl::~CSSStyleSheetImpl()
   // XXX The document reference is not reference counted and should
   // not be released. The document will let us know when it is going
   // away.
-  nsCSSAtoms::ReleaseAtoms();
 }
 
 NS_IMPL_ADDREF(CSSStyleSheetImpl)

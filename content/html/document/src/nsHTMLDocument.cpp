@@ -190,7 +190,6 @@ nsHTMLDocument::nsHTMLDocument()
   mLayers = nsnull;
   mNamedItems = nsnull;
   mParser = nsnull;
-  nsHTMLAtoms::AddRefAtoms();
   mDTDMode = eDTDMode_Nav;
   mCSSLoader = nsnull;
   mDocTypeStr=nsnull;
@@ -260,9 +259,6 @@ nsHTMLDocument::~nsHTMLDocument()
     delete mDocTypeStr;
     mDocTypeStr = nsnull;
   }
-
-// XXX don't bother doing this until the dll is unloaded???
-//  nsHTMLAtoms::ReleaseAtoms();
 
   // These will be converted to a nsDeque
   delete[] mParentStack;
