@@ -244,11 +244,13 @@ WSPCallContext::CallCompletionListener()
 
   // If we have an exception, report it now
   if (mException) {
-    dispatchParams[0].val.p = NS_STATIC_CAST(nsIException*, mException);
+    nsCOMPtr<nsISupports> canonical_this = 
+      do_QueryInterface(NS_STATIC_CAST(nsIWebServiceCallContext*, this));
+    dispatchParams[0].val.p = mException.get();
     dispatchParams[0].SetValIsInterface();
     dispatchParams[0].type.flags = XPT_TDP_POINTER | TD_INTERFACE_TYPE;
 
-    dispatchParams[1].val.p = NS_STATIC_CAST(nsIWebServiceCallContext*, this);
+    dispatchParams[1].val.p = canonical_this;
     dispatchParams[1].SetValIsInterface();
     dispatchParams[1].type.flags = XPT_TDP_POINTER | TD_INTERFACE_TYPE;
 
