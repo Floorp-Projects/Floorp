@@ -70,7 +70,7 @@ SetupBuildRootDir(":mozilla:build:mac:build_scripts");
 
 # Set up all the flags on $main::, like DEBUG, CARBON etc.
 # Override the defaults using the preferences files.
-SetupDefaultBuildOptions(0, ":mozilla:dist:viewer:");
+SetupDefaultBuildOptions(0, ":mozilla:dist:viewer:", "");
 
 my($do_checkout)    = 1;
 my($do_build)       = 0;

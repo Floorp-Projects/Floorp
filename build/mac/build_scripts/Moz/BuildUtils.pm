@@ -47,9 +47,9 @@ use vars qw(@ISA @EXPORT);
 #//--------------------------------------------------------------------------------------------------
 #// SetupDefaultBuildOptions
 #//--------------------------------------------------------------------------------------------------
-sub SetupDefaultBuildOptions($$)
+sub SetupDefaultBuildOptions($$$)
 {
-    my($debug, $bin_dir) = @_;
+    my($debug, $bin_dir, $config_header_file_name) = @_;
 
     # Here we set up defaults for the various build flags.
     # If you want to override any of these, it's best to do
@@ -98,6 +98,7 @@ sub SetupDefaultBuildOptions($$)
     #-------------------------------------------------------------
     
     $main::BIN_DIRECTORY = $bin_dir;
+    $main::DEFINESOPTIONS_FILE = $config_header_file_name;
 }
 
 

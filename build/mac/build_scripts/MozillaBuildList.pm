@@ -463,6 +463,7 @@ sub BuildRuntimeDist()
     InstallFromManifest(":mozilla:config:MANIFEST_xpfe",                           "$distdirectory:xpfe:");
     InstallFromManifest(":mozilla:config:mac:MANIFEST",                            "$distdirectory:config:");
     InstallFromManifest(":mozilla:config:mac:MANIFEST_config",                     "$distdirectory:config:");
+    MakeAlias($main::DEFINESOPTIONS_FILE,                                          "$distdirectory:config:DefinesOptions.h");
     
     #NSPR 
     InstallFromManifest(":mozilla:nsprpub:pr:include:MANIFEST",                    "$distdirectory:nspr:");
