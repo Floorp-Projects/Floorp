@@ -22,11 +22,11 @@
 
 #include "nsIDOMRange.h"
 #include "nsCOMPtr.h"
+#include "nsIDOMDocumentFragment.h"
+#include "nsIContent.h"
+#include "nsIDOMNode.h"
 
-class nsIDOMNode;
-class nsIDOMDocumentFragment;
 class nsVoidArray;
-class nsIContent;
 
 class nsRange : public nsIDOMRange
 {
