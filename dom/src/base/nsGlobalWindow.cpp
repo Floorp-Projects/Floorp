@@ -3255,6 +3255,9 @@ GlobalWindowImpl::FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
 
   nsCOMPtr<nsIDOMWindow> topWindow;
   GetTop(getter_AddRefs(topWindow));
+  if (!topWindow)
+    return;
+
   nsCOMPtr<nsIDOMDocument> topDoc;
   topWindow->GetDocument(getter_AddRefs(topDoc));
 
