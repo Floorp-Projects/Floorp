@@ -125,6 +125,7 @@ WIN_LIBS=       \
  ole32.lib      \
  oleaut32.lib   \
  version.lib    \
+ winspool.lib   \
  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -47,7 +47,7 @@ CPP_OBJS= \
 		.\$(OBJDIR)\nsInspectorModule.obj \
 		$(NULL)
 
-LLIBS= \
+SUB_LIBRARIES = \
 		$(DIST)\lib\xpcom.lib \
     $(DIST)\lib\rdfutil_s.lib \
     $(DIST)\lib\inspector_s.lib \

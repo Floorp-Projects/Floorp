@@ -29,7 +29,7 @@
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
 #define DEFAULT_IMAGE_SIZE          16
 
-void extractAttributeValue(const char * searchString, const char * attributeName, char ** result);
+static void extractAttributeValue(const char * searchString, const char * attributeName, char ** result);
  
 ////////////////////////////////////////////////////////////////////////////////
  
@@ -80,7 +80,7 @@ inBitmapURI::GetSpec(char* *aSpec)
 // containing just the attribute value. i.e you could pass in this string with
 // an attribute name of size, this will return 32
 // Assumption: attribute pairs in the string are separated by '&'.
-void extractAttributeValue(const char * searchString, const char * attributeName, char ** result)
+static void extractAttributeValue(const char * searchString, const char * attributeName, char ** result)
 {
   //NS_ENSURE_ARG_POINTER(extractAttributeValue);
 
