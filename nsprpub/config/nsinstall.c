@@ -57,7 +57,9 @@
 
 #include "pathsub.h"
 
+#ifndef HAVE_LCHOWN
 #define HAVE_LCHOWN
+#endif
 
 #if defined(AIX) || defined(BSDI) || defined(HPUX) || defined(LINUX) \
     || defined(SUNOS4) || defined(SCO) || defined(UNIXWARE) \
