@@ -93,10 +93,6 @@ protected:
     NS_IMETHOD CreateNative(QWidget *parentWindow);
 
 private:
-    int AdjustScrollBarPosition(int aPosition);
-
-private:
-
     QScrollBar::Orientation     mOrientation;
     int mMaxValue;
     int mLineStep;
