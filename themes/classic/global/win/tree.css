@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt (hewitt@netscape.com)
+ *   Dean Tessman (dean_tessman@hotmail.com)
  */
 
 /* ===== tree.css ===================================================
@@ -57,7 +58,11 @@ treechildren:-moz-tree-row(selected, focus) {
 }
 
 treechildren:-moz-tree-row(current, focus) {
-  border: 1px dotted #F5DB95;
+  border: 1px dotted #000000;
+}
+
+treechildren:-moz-tree-row(selected, current, focus) {
+  border: 1px dotted #C0C0C0;
 }
 
 /* ::::: tree cells ::::: */

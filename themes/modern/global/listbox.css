@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt (hewitt@netscape.com)
+ *   Dean Tessman (dean_tessman@hotmail.com)
  */
 
 /* ===== listbox.css =======================================================
@@ -47,7 +48,7 @@ listitem {
   border-bottom: 1px solid transparent;
 }
 
-listbox:focus > listitem[selected="true"][current="true"] {
+listbox:focus > listitem[current="true"] {
   border-top-color: #000000;
   border-bottom-color: #000000;
 }
