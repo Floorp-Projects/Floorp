@@ -73,24 +73,9 @@ nsToolbarCoreFactory::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 
 
 
-NS_IMETHODIMP
-nsToolbarCoreFactory::AddRef(void)
-{
-    return ++mRefCnt;
-}
+NS_IMPL_ADDREF(nsToolbarCoreFactory)
+NS_IMPL_RELEASE(nsToolbarCoreFactory)
 
-
-NS_IMETHODIMP
-nsToolbarCoreFactory::Release(void)
-{
-    if (--mRefCnt ==0)
-    {
-        delete this;
-        return 0; // Don't access mRefCnt after deleting!
-    }
-
-    return mRefCnt;
-}
 
 NS_IMETHODIMP
 nsToolbarCoreFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)

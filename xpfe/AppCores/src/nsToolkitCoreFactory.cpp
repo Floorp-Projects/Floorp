@@ -63,23 +63,8 @@ nsToolkitCoreFactory::QueryInterface(REFNSIID aIID, void** aInstancePtr) {
 
 
 
-NS_IMETHODIMP
-nsToolkitCoreFactory::AddRef(void) {
-
-    return ++mRefCnt;
-}
-
-
-NS_IMETHODIMP
-nsToolkitCoreFactory::Release(void) {
-
-    if (--mRefCnt == 0) {
-        delete this;
-        return 0;
-    }
-
-    return mRefCnt;
-}
+NS_IMPL_ADDREF(nsToolkitCoreFactory)
+NS_IMPL_RELEASE(nsToolkitCoreFactory)
 
 NS_IMETHODIMP
 nsToolkitCoreFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult) {

@@ -73,24 +73,10 @@ nsEditorAppCoreFactory::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 
 
 
-NS_IMETHODIMP
-nsEditorAppCoreFactory::AddRef(void)
-{
-    return ++mRefCnt;
-}
+NS_IMPL_ADDREF(nsEditorAppCoreFactory)
 
+NS_IMPL_RELEASE(nsEditorAppCoreFactory)
 
-NS_IMETHODIMP
-nsEditorAppCoreFactory::Release(void)
-{
-    if (--mRefCnt ==0)
-    {
-        delete this;
-        return 0; // Don't access mRefCnt after deleting!
-    }
-
-    return mRefCnt;
-}
 
 NS_IMETHODIMP
 nsEditorAppCoreFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
