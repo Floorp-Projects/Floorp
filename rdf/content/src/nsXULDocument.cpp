@@ -2826,46 +2826,7 @@ nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
         if (NS_FAILED(rv)) return rv;
     }
 
-    // 4. See if we've got any 'special' attributes that are
-    // document-specific, and need extra work to be done.
-    {
-        PRInt32 count;
-        aElement->GetAttributeCount(count);
-
-        for (PRInt32 i = 0; i < count; ++i) {
-            PRInt32 nameSpaceID;
-            nsCOMPtr<nsIAtom> attr;
-            aElement->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attr));
-
-            PRBool reset = PR_FALSE;
-
-            if (nameSpaceID == kNameSpaceID_None) {
-                nsIID iid;
-                rv = gXULUtils->GetEventHandlerIID(attr, &iid, &reset);
-                if (NS_FAILED(rv)) return rv;
-
-                if (! reset) {
-                    if ((attr.get() == kPopupAtom) ||
-                        (attr.get() == kTooltipAtom) ||
-                        (attr.get() == kContextAtom) ||
-                        (attr.get() == kStyleAtom)) {
-                        reset = PR_TRUE;
-                    }
-                }
-            }
-
-            if (reset) {
-                nsAutoString value;
-                rv = aElement->GetAttribute(nameSpaceID, attr, value);
-                if (NS_FAILED(rv)) return rv;
-
-                rv = aElement->SetAttribute(nameSpaceID, attr, value, PR_FALSE);
-                if (NS_FAILED(rv)) return rv;
-            }
-        }
-    }
-
-    // 5. Recurse to children.
+    // 4. Recurse to children.
     PRInt32 count;
     nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
     rv = xulcontent ? xulcontent->PeekChildCount(count) : aElement->ChildCount(count);
