@@ -94,6 +94,9 @@ function junkLog()
 
 function onAccept()
 {
+  // store the current changes
+  storeSettings(gSpamSettings[gCurrentServer.key].settings, gCurrentServer.spamSettings.loggingEnabled);
+
   for (var key in gSpamSettings) {
     // if they hit ok, set the "real" server's spam settings.  
     // this will set prefs.
