@@ -167,7 +167,11 @@ nsInlineFrame::IsEmpty()
       !IsMarginZero(margin->mMargin.GetRightUnit(),
                     margin->mMargin.GetRight(coord)) ||
       !IsMarginZero(margin->mMargin.GetLeftUnit(),
-                    margin->mMargin.GetLeft(coord))) {
+                    margin->mMargin.GetLeft(coord)) ||
+      // do we have any standards-mode text decorations?
+      (GetPresContext()->CompatibilityMode() != eCompatibility_NavQuirks &&
+       (GetStyleTextReset()->mTextDecoration &
+        NS_STYLE_TEXT_DECORATION_LINES_MASK) != 0)) {
     return PR_FALSE;
   }
 
