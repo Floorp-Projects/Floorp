@@ -269,7 +269,7 @@ Contributor(s): ______________________________________. -->
 <!-- Statusbar -->
 <!ENTITY  notifCom.label "[Notification Component]">
 <!ENTITY  statusText.label "Document: Done">
-<!ENTITY  buildId.label "Build ID: 1999070717">
+<!ENTITY  buildId.label "Build ID: 1999070614">
 <!ENTITY  security-button.label "Secure Conn">
 
 <!-- taskbar -->
@@ -551,7 +551,7 @@ Contributor(s): ______________________________________. -->
       <menuitem name="&messengerCmd.label;" onclick="OpenMessenger();" />
       <menuitem name="&editorCmd.label;"    onclick="OpenEditor();" />
       <menuitem name="&textEditorCmd.label;"    onclick="BrowserNewTextEditorWindow();" />
-      <menuitem name="&manageHistoryCmd.label;"    onclick="window.open('file://c|/windows/desktop/arg.xul', '_new', 'chrome');"/>
+      <menuitem name="&manageHistoryCmd.label;"    onclick="OpenHistoryView();" />
       <separator />
       <menu name="&toolsMenu.label;">
 	      <menuitem name="&toolsPluginsInfoCmd.label;" onclick="BrowserReload();"/>
