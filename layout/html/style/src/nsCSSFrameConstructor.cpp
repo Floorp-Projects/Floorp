@@ -61,6 +61,7 @@
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
+#include "nsTriStateCheckboxFrame.h"
 #include "nsTreeFrame.h"
 #include "nsToolboxFrame.h"
 #include "nsToolbarFrame.h"
@@ -1555,6 +1556,7 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
   if (  (nsXULAtoms::button          == tag.get())  ||
 	    (nsXULAtoms::titledbutton    == tag.get())  ||
         (nsXULAtoms::checkbox        == tag.get())  ||
+        (nsXULAtoms::tristatecheckbox == tag.get())  ||
         (nsXULAtoms::radio           == tag.get())  ||
         (nsXULAtoms::text            == tag.get())  ||
         (nsXULAtoms::widget          == tag.get())  ||
@@ -2475,6 +2477,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
       rv = NS_NewButtonControlFrame(newFrame);
     else if (aTag == nsXULAtoms::checkbox)
       rv = NS_NewCheckboxControlFrame(newFrame);
+    else if (aTag == nsXULAtoms::tristatecheckbox)
+      rv = NS_NewTriStateCheckboxFrame(newFrame);
     else if (aTag == nsXULAtoms::radio)
       rv = NS_NewRadioControlFrame(newFrame);
     else if (aTag == nsXULAtoms::text)
