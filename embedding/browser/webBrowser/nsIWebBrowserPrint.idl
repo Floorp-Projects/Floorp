@@ -18,6 +18,7 @@
  * 
  * Contributor(s):
  *   Don Cone <dcone@netscape.com>
+ *   Rod Spears <rods@netscape.com>
  */
 
 #include "nsISupports.idl"
@@ -27,7 +28,9 @@ interface nsIPrintSettings;
 interface nsIWebProgressListener;
 
 /**
- * The nsIWebBrowserPrint
+ * nsIWebBrowserPrint corresponds to the main interface
+ * for printing an embedded Gecko web browser window/document
+ *
  */
 [scriptable, uuid(9A7CA4B0-FBBA-11d4-A869-00105A183419)]
 interface nsIWebBrowserPrint : nsISupports
@@ -174,15 +177,17 @@ interface nsIWebBrowserPrint : nsISupports
    * @return void
    */
   void print(in nsIPrintSettings aThePrintSettings,
-			 in nsIWebProgressListener aWPListener);
+             in nsIWebProgressListener aWPListener);
 
   /**
    * Print Preview the specified DOM window
    *
    * aThePrintOptions - Printer Settings for the print preview
+   * nsIWebProgressListener - is updated during the printpreview
    * @return void
    */
-  void printPreview(in nsIPrintSettings aThePrintSettings);
+  void printPreview(in nsIPrintSettings aThePrintSettings,
+                    in nsIWebProgressListener aWPListener);
 
   /**
    * Print Preview - Navigates within the window

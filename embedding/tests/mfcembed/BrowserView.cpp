@@ -1014,7 +1014,7 @@ void CBrowserView::OnFilePrintPreview()
   nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
 	if(print)
 	{
-    print->PrintPreview(m_PrintSettings);
+    print->PrintPreview(m_PrintSettings, nsnull);
   }
 }
 

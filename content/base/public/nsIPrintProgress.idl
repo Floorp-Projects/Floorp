@@ -37,12 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsISupports.idl"
-#include "domstubs.idl"
-#include "nsIPrompt.idl"
 #include "nsIWebProgressListener.idl"
 
 interface nsIDOMWindowInternal;
 interface nsIObserver;
+interface nsIPrompt;
 
 [scriptable, uuid(7E46BC35-FB7D-4b45-AB35-82FD61015380)]
 interface nsIPrintProgress: nsIWebProgressListener {
@@ -64,6 +63,10 @@ interface nsIPrintProgress: nsIWebProgressListener {
 
   /* Unregister a Web Progress Listener */
   void unregisterListener(in nsIWebProgressListener listener);
+  
+  /* This method is called after the dialog that shows the progress has been shown 
+  */
+  void doneIniting();
   
   /* Retrive the prompter, needed to display modal dialog on top of progress dialog */
   nsIPrompt getPrompter();

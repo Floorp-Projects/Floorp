@@ -6340,7 +6340,8 @@ void DocumentViewerImpl::CheckForHiddenFrameSetFrames()
  *  PrintPreview: See the design spec that is attached to Bug 107562
  */
 NS_IMETHODIMP
-DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
+DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings, 
+                                 nsIWebProgressListener* aWebProgressListener)
 {
   if (!mPresShell) {
     // A frame that's not displayed can't be printed!
@@ -6702,7 +6703,7 @@ DocumentViewerImpl::DoPrintProgress(PRBool aIsForPrinting)
     // If we don't get a service, that's ok, then just don't show progress
     if (mPrt->mShowProgressDialog) {
       PRBool notifyOnOpen;
-      nsresult rv = printPromptService->ShowProgress(domWin, this, mPrt->mPrintSettings, nsnull, getter_AddRefs(mPrt->mPrintProgressListener), getter_AddRefs(mPrt->mPrintProgressParams), &notifyOnOpen);
+      nsresult rv = printPromptService->ShowProgress(domWin, this, mPrt->mPrintSettings, nsnull, PR_TRUE, getter_AddRefs(mPrt->mPrintProgressListener), getter_AddRefs(mPrt->mPrintProgressParams), &notifyOnOpen);
       if (NS_SUCCEEDED(rv)) {
         mPrt->mShowProgressDialog = mPrt->mPrintProgressListener != nsnull && mPrt->mPrintProgressParams != nsnull;
 

@@ -153,15 +153,19 @@ interface nsIPrintingPromptService : nsISupports
    *  @param webBrowserPrint - represents the document to be printed
    *  @param printSettings - PrintSettings for print "job"
    *  @param openDialogObserver - an observer that will be notifed when the dialog is opened
+   *  @param isForPrinting - true - for printing, false for print preview
    *  @param webProgressListener - additional listener can be registered for progress notifications
    *  @param printProgressParams - parameter object for passing progress state
    *  @param notifyOnOpen - this indicates that the observer will be notified when the progress
-   *                        dialog has been opened
+   *                        dialog has been opened. If false is returned it means the observer
+   *                        (usually the caller) shouldn't wait
+   *                        For Print Preview Progress there is intermediate progress
    */
   void showProgress(in nsIDOMWindow parent,
                     in nsIWebBrowserPrint webBrowserPrint,
                     in nsIPrintSettings printSettings,
                     in nsIObserver openDialogObserver,
+                    in boolean isForPrinting,
                     out nsIWebProgressListener webProgressListener,
                     out nsIPrintProgressParams printProgressParams,
                     out boolean notifyOnOpen);

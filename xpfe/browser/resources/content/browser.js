@@ -285,7 +285,7 @@ function BrowserPrintSetup()
           webBrowserPrint.savePrintSettingsToPrefs(gPrintSettings, false, gPrintSettings.kInitSaveNativeData);
         }
         if (webBrowserPrint.doingPrintPreview) {
-          webBrowserPrint.printPreview(gPrintSettings);
+          webBrowserPrint.printPreview(gPrintSettings, null);
         }
       }
     }

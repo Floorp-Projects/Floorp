@@ -91,9 +91,9 @@ nsPrintingPrompt::ShowPrintDialog(nsIWebBrowserPrint *webBrowserPrint, nsIPrintS
 
 /* void showProgress (in nsIWebBrowserPrint webBrowserPrint, in nsIPrintSettings printSettings, out nsIWebProgressListener webProgressListener, out nsIPrintProgressParams printProgressParams); */
 NS_IMETHODIMP 
-nsPrintingPrompt::ShowProgress(nsIWebBrowserPrint *webBrowserPrint, nsIPrintSettings *printSettings, nsIObserver *openDialogObserver, nsIWebProgressListener **webProgressListener, nsIPrintProgressParams** printProgressParams, PRBool* notifyOnOpen)
+nsPrintingPrompt::ShowProgress(nsIWebBrowserPrint *webBrowserPrint, nsIPrintSettings *printSettings, nsIObserver *openDialogObserver, PRBool isForPrinting, nsIWebProgressListener **webProgressListener, nsIPrintProgressParams** printProgressParams, PRBool* notifyOnOpen)
 {
-   return mPromptService->ShowProgress(mParent, webBrowserPrint, printSettings, openDialogObserver, webProgressListener, printProgressParams, notifyOnOpen);
+   return mPromptService->ShowProgress(mParent, webBrowserPrint, printSettings, openDialogObserver, isForPrinting, webProgressListener, printProgressParams, notifyOnOpen);
 }
 
 /* void showPageSetup (in nsIPrintSettings printSettings); */
