@@ -600,6 +600,8 @@ extern PK11ModifyType pk11_modifyType(CK_ATTRIBUTE_TYPE type,
 extern PRBool pk11_isSensitive(CK_ATTRIBUTE_TYPE type, CK_OBJECT_CLASS inClass);
 extern char *pk11_getString(PK11Object *object, CK_ATTRIBUTE_TYPE type);
 extern void pk11_nullAttribute(PK11Object *object,CK_ATTRIBUTE_TYPE type);
+extern CK_RV pk11_GetULongAttribute(PK11Object *object, CK_ATTRIBUTE_TYPE type,
+                                                         CK_ULONG *longData);
 extern CK_RV pk11_forceAttribute(PK11Object *object, CK_ATTRIBUTE_TYPE type,
 				 void *value, unsigned int len);
 extern CK_RV pk11_defaultAttribute(PK11Object *object, CK_ATTRIBUTE_TYPE type,

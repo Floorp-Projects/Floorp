@@ -213,7 +213,8 @@ PK11_CleanKeyList(PK11SlotInfo *slot)
  *      type is the mechanism type 
  */
 PK11SymKey *
-PK11_CreateSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, void *wincx)
+PK11_CreateSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, PRBool owner, 
+								void *wincx)
 {
 
     PK11SymKey *symKey = pk11_getKeyFromList(slot);
@@ -226,7 +227,7 @@ PK11_CreateSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, void *wincx)
     symKey->type = type;
     symKey->data.data = NULL;
     symKey->data.len = 0;
-    symKey->owner = PR_TRUE;
+    symKey->owner = owner;
     symKey->objectID = CK_INVALID_HANDLE;
     symKey->slot = slot;
     symKey->series = slot->series;
@@ -298,14 +299,13 @@ PK11_SymKeyFromHandle(PK11SlotInfo *slot, PK11SymKey *parent, PK11Origin origin,
 	return NULL;
     }
 
-    symKey = PK11_CreateSymKey(slot,type,wincx);
+    symKey = PK11_CreateSymKey(slot,type,owner,wincx);
     if (symKey == NULL) {
 	return NULL;
     }
 
     symKey->objectID = keyID;
     symKey->origin = origin;
-    symKey->owner = owner;
 
     /* adopt the parent's session */
     /* This is only used by SSL. What we really want here is a session
@@ -414,7 +414,7 @@ pk11_ImportSymKeyWithTempl(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     PK11SymKey *    symKey;
     SECStatus	    rv;
 
-    symKey = PK11_CreateSymKey(slot,type,wincx);
+    symKey = PK11_CreateSymKey(slot,type,!isToken,wincx);
     if (symKey == NULL) {
 	return NULL;
     }
@@ -651,6 +651,11 @@ PK11_GetSlotFromKey(PK11SymKey *symKey)
     return PK11_ReferenceSlot(symKey->slot);
 }
 
+CK_KEY_TYPE PK11_GetSymKeyType(PK11SymKey *symKey)
+{
+    return PK11_GetKeyType(symKey->type,symKey->size);
+}
+
 PK11SymKey *
 PK11_FindFixedKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *keyID,
 								void *wincx)
@@ -697,7 +702,7 @@ PK11_ListFixedKeysInSlot(PK11SlotInfo *slot, char *nickname, void *wincx)
     PK11_SETATTRS(attrs, CKA_CLASS, &keyclass, sizeof(keyclass)); attrs++;
     PK11_SETATTRS(attrs, CKA_TOKEN, &ckTrue, sizeof(ckTrue)); attrs++;
     if (nickname) {
-	len = PORT_Strlen(nickname)-1;
+	len = PORT_Strlen(nickname);
 	PK11_SETATTRS(attrs, CKA_LABEL, nickname, len); attrs++;
     }
     tsize = attrs - findTemp;
@@ -709,8 +714,18 @@ PK11_ListFixedKeysInSlot(PK11SlotInfo *slot, char *nickname, void *wincx)
     }
 
     for (i=0; i < objCount ; i++) {
+	SECItem typeData;
+	CK_KEY_TYPE type = CKK_GENERIC_SECRET;
+        SECStatus rv = PK11_ReadAttribute(slot, key_ids[i], 
+						CKA_KEY_TYPE, NULL, &typeData);
+	if (rv == SECSuccess) {
+	    if (typeData.len == sizeof(CK_KEY_TYPE)) {
+	    	type = *(CK_KEY_TYPE *)typeData.data;
+	    }
+	    PORT_Free(typeData.data);
+	}
 	nextKey = PK11_SymKeyFromHandle(slot, NULL, PK11_OriginDerive, 
-			CKM_INVALID_MECHANISM, key_ids[i], PR_FALSE, wincx);
+		PK11_GetKeyMechanism(type), key_ids[i], PR_FALSE, wincx);
 	if (nextKey) {
 	    nextKey->next = topKey;
 	    topKey = nextKey;
@@ -1491,11 +1506,11 @@ PK11_TokenKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *param,
 	    return NULL;
 	}
 
-        symKey = PK11_CreateSymKey(bestSlot,type,wincx);
+        symKey = PK11_CreateSymKey(bestSlot, type, !isToken, wincx);
 
         PK11_FreeSlot(bestSlot);
     } else {
-	symKey = PK11_CreateSymKey(slot, type, wincx);
+	symKey = PK11_CreateSymKey(slot, type, !isToken, wincx);
     }
     if (symKey == NULL) return NULL;
 
@@ -1503,7 +1518,7 @@ PK11_TokenKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *param,
     symKey->origin = (!weird) ? PK11_OriginGenerated : PK11_OriginFortezzaHack;
 
     /* Initialize the Key Gen Mechanism */
-    mechanism.mechanism = PK11_GetKeyGen(type);
+    mechanism.mechanism = PK11_GetKeyGenWithSize(type, keySize);
     if (mechanism.mechanism == CKM_FAKE_RANDOM) {
 	PORT_SetError( SEC_ERROR_NO_MODULE );
 	return NULL;
@@ -2632,7 +2647,7 @@ PK11_DeriveWithFlagsPerm( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive,
         PK11_SETATTRS(attrs, CKA_TOKEN,  &cktrue, sizeof(CK_BBOOL)); attrs++;
     }
     templateCount = attrs - keyTemplate;
-    templateCount += pk11_FlagsToAttributes(flags, keyTemplate, &cktrue);
+    templateCount += pk11_FlagsToAttributes(flags, attrs, &cktrue);
     return pk11_DeriveWithTemplate(baseKey, derive, param, target, operation, 
 				   keySize, keyTemplate, templateCount, isPerm);
 }
@@ -2721,7 +2736,7 @@ pk11_DeriveWithTemplate( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive,
 
 
     /* get our key Structure */
-    symKey = PK11_CreateSymKey(slot,target,baseKey->cx);
+    symKey = PK11_CreateSymKey(slot,target,!isPerm,baseKey->cx);
     if (symKey == NULL) {
 	return NULL;
     }
@@ -2823,7 +2838,7 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
     }
 
     /* get our key Structure */
-    symKey = PK11_CreateSymKey(slot,target,wincx);
+    symKey = PK11_CreateSymKey(slot,target,PR_TRUE,wincx);
     if (symKey == NULL) {
 	return NULL;
     }
@@ -2993,7 +3008,7 @@ PK11_PubDeriveExtended(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 #endif
 
     /* get our key Structure */
-    symKey = PK11_CreateSymKey(slot,target,wincx);
+    symKey = PK11_CreateSymKey(slot,target,PR_TRUE,wincx);
     if (symKey == NULL) {
 	return NULL;
     }
@@ -3281,7 +3296,7 @@ pk11_AnyUnwrapKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
     }
 
     /* get our key Structure */
-    symKey = PK11_CreateSymKey(slot,target,wincx);
+    symKey = PK11_CreateSymKey(slot,target,!isPerm,wincx);
     if (symKey == NULL) {
 	if (param_free) SECITEM_FreeItem(param_free,PR_TRUE);
 	return NULL;
@@ -3362,11 +3377,11 @@ PK11_UnwrapSymKeyWithFlagsPerm(PK11SymKey *wrappingKey,
         PK11_SETATTRS(attrs, CKA_TOKEN,  &cktrue, sizeof(CK_BBOOL)); attrs++;
     }
     templateCount = attrs-keyTemplate;
-    templateCount += pk11_FlagsToAttributes(flags, keyTemplate, &cktrue);
+    templateCount += pk11_FlagsToAttributes(flags, attrs, &cktrue);
 
     return pk11_AnyUnwrapKey(wrappingKey->slot, wrappingKey->objectID,
 		    wrapType, param, wrappedKey, target, operation, keySize, 
-		    wrappingKey->cx, keyTemplate, templateCount, PR_TRUE);
+		    wrappingKey->cx, keyTemplate, templateCount, isPerm);
 }
 
 
@@ -3422,7 +3437,7 @@ PK11_PubUnwrapSymKeyWithFlagsPerm(SECKEYPrivateKey *wrappingKey,
     }
     templateCount = attrs-keyTemplate;
 
-    templateCount += pk11_FlagsToAttributes(flags, keyTemplate, &cktrue);
+    templateCount += pk11_FlagsToAttributes(flags, attrs, &cktrue);
 
     PK11_HandlePasswordCheck(wrappingKey->pkcs11Slot,wrappingKey->wincx);
     

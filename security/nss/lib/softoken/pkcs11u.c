@@ -682,8 +682,11 @@ pk11_FindSecretKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 {
     NSSLOWKEYPrivateKey *key;
     char *label;
+    unsigned char *keyString;
     PK11Attribute *att;
+    int keyTypeLen;
     CK_ULONG keyLen;
+    CK_KEY_TYPE keyType;
 
     switch (type) {
     case CKA_PRIVATE:
@@ -724,8 +727,30 @@ pk11_FindSecretKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     }
     switch (type) {
     case CKA_KEY_TYPE:
-	return pk11_NewTokenAttribute(type,key->u.rsa.coefficient.data,
-					key->u.rsa.coefficient.len, PR_FALSE);
+	/* handle legacy databases. In legacy databases key_type was stored
+	 * in host order, with any leading zeros stripped off. Only key types
+	 * under 0x1f (AES) were stored. We assume that any values which are
+	 * either 1 byte long (big endian), or have byte[0] between 0 and 
+	 * 0x1f and bytes[1]-bytes[3] equal to '0' (little endian). All other
+	 * values are assumed to be from the new database, which is always 4
+	 * bytes in host order */
+	keyType=0;
+	keyString = key->u.rsa.coefficient.data;
+	keyTypeLen = key->u.rsa.coefficient.len;
+	/* only length of 1 or 4 are valid */
+	if ((keyTypeLen != sizeof(keyType)) && (keyTypeLen != 1)) {
+	    PORT_SetError(SEC_ERROR_BAD_DATABASE);
+	    return NULL;
+	}
+	if ((keyTypeLen == 1)  ||
+	    ((keyString[0] <= 0x1f) && (keyString[1] == 0) && 
+	     (keyString[2] == 0)    && (keyString[3] == 0))) {
+	    keyType = (CK_KEY_TYPE) keyString[0] ;
+	} else {
+	    keyType = *(CK_KEY_TYPE *) keyString;
+	    keyType = PR_ntohl(keyType);
+	}
+	return pk11_NewTokenAttribute(type,&keyType,sizeof(keyType),PR_TRUE);
     case CKA_VALUE:
 	return pk11_NewTokenAttribute(type,key->u.rsa.privateExponent.data,
 				key->u.rsa.privateExponent.len, PR_FALSE);
@@ -1892,6 +1917,25 @@ pk11_Attribute2SecItem(PLArenaPool *arena,SECItem *item,PK11Object *object,
     return CKR_OK;
 }
 
+CK_RV
+pk11_GetULongAttribute(PK11Object *object, CK_ATTRIBUTE_TYPE type,
+							 CK_ULONG *longData)
+{
+    int len;
+    PK11Attribute *attribute;
+
+    attribute = pk11_FindAttribute(object, type);
+    if (attribute == NULL) return CKR_TEMPLATE_INCOMPLETE;
+
+    if (attribute->attrib.ulValueLen != sizeof(CK_ULONG)) {
+	return CKR_ATTRIBUTE_VALUE_INVALID;
+    }
+
+    *longData = *(CK_ULONG *)attribute->attrib.pValue;
+    pk11_FreeAttribute(attribute);
+    return CKR_OK;
+}
+
 void
 pk11_DeleteAttributeType(PK11Object *object,CK_ATTRIBUTE_TYPE type)
 {
@@ -2133,7 +2177,7 @@ pk11_NewObject(PK11Slot *slot)
     object->handle = 0;
     object->next = object->prev = NULL;
     object->slot = slot;
-    object->objclass = 0xffff;
+    
     object->refCount = 1;
     sessObject->sessionList.next = NULL;
     sessObject->sessionList.prev = NULL;

@@ -233,7 +233,9 @@ int PK11_GetBestKeyLength(PK11SlotInfo *slot, CK_MECHANISM_TYPE type);
 void PK11_AddMechanismEntry(CK_MECHANISM_TYPE type, CK_KEY_TYPE key,
 		 	CK_MECHANISM_TYPE keygen, int ivLen, int blocksize);
 CK_MECHANISM_TYPE PK11_GetKeyType(CK_MECHANISM_TYPE type,unsigned long len);
+CK_MECHANISM_TYPE PK11_GetKeyMechanism(CK_KEY_TYPE type);
 CK_MECHANISM_TYPE PK11_GetKeyGen(CK_MECHANISM_TYPE type);
+CK_MECHANISM_TYPE PK11_GetKeyGenWithSize(CK_MECHANISM_TYPE type, int size);
 int PK11_GetBlockSize(CK_MECHANISM_TYPE type,SECItem *params);
 int PK11_GetIVLength(CK_MECHANISM_TYPE type);
 SECItem *PK11_ParamFromIV(CK_MECHANISM_TYPE type,SECItem *iv);
@@ -260,7 +262,7 @@ CK_MECHANISM_TYPE PK11_GetPadMechanism(CK_MECHANISM_TYPE);
  *                   Symetric, Public, and Private Keys 
  **********************************************************************/
 PK11SymKey *PK11_CreateSymKey(PK11SlotInfo *slot, 
-					CK_MECHANISM_TYPE type, void *wincx);
+			CK_MECHANISM_TYPE type, PRBool owner, void *wincx);
 void PK11_FreeSymKey(PK11SymKey *key);
 PK11SymKey *PK11_ReferenceSymKey(PK11SymKey *symKey);
 PK11SymKey *PK11_ImportSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
@@ -289,6 +291,7 @@ PK11SymKey *PK11_TokenKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
 PK11SymKey * PK11_ListFixedKeysInSlot(PK11SlotInfo *slot, char *nickname,
 								void *wincx);
 PK11SymKey *PK11_GetNextSymKey(PK11SymKey *symKey);
+CK_KEY_TYPE PK11_GetSymKeyType(PK11SymKey *key);
 
 /* Key Generation specialized for SDR (fixed DES3 key) */
 PK11SymKey *PK11_GenDES3TokenKey(PK11SlotInfo *slot, SECItem *keyid, void *cx);

@@ -2160,6 +2160,8 @@ pk11_mkSecretKeyRep(PK11Object *object)
 {
     NSSLOWKEYPrivateKey *privKey = 0;
     PLArenaPool *arena = 0;
+    CK_KEY_TYPE keyType;
+    SECItem keyTypeItem;
     CK_RV crv;
     SECStatus rv;
     static unsigned char derZero[1] = { 0 };
@@ -2210,9 +2212,17 @@ pk11_mkSecretKeyRep(PK11Object *object)
     privKey->u.rsa.exponent2.data = derZero;
 
     /* Coeficient set to KEY_TYPE */
-    crv=pk11_Attribute2SecItem(arena,&privKey->u.rsa.coefficient,object,CKA_KEY_TYPE);
+    crv = pk11_GetULongAttribute(object, CKA_KEY_TYPE, &keyType);
     if (crv != CKR_OK) goto loser;
-
+    keyType = PR_htonl(keyType);
+    keyTypeItem.data = (unsigned char *)&keyType;
+    keyTypeItem.len = sizeof (keyType);
+    rv = SECITEM_CopyItem(arena, &privKey->u.rsa.coefficient, &keyTypeItem);
+    if (rv != SECSuccess) {
+	crv = CKR_HOST_MEMORY;
+	goto loser;
+    }
+    
     /* Private key version field set normally for compatibility */
     rv = DER_SetUInteger(privKey->arena, 
 			&privKey->u.rsa.version, NSSLOWKEY_VERSION);
@@ -4108,7 +4118,7 @@ loser:
 
 static void
 pk11_searchKeys(PK11Slot *slot, SECItem *key_id, PRBool isLoggedIn,
-	unsigned long classFlags, PK11SearchResults *search,
+	unsigned long classFlags, PK11SearchResults *search, PRBool mustStrict,
 	CK_ATTRIBUTE *pTemplate, CK_ULONG ulCount)
 {
     NSSLOWKEYDBHandle *keyHandle = NULL;
@@ -4162,7 +4172,7 @@ pk11_searchKeys(PK11Slot *slot, SECItem *key_id, PRBool isLoggedIn,
     keyData.templ_count = ulCount;
     keyData.isLoggedIn = isLoggedIn;
     keyData.classFlags = classFlags;
-    keyData.strict = NSC_STRICT;
+    keyData.strict = mustStrict ? mustStrict : NSC_STRICT;
 
     nsslowkey_TraverseKeys(keyHandle, pk11_key_collect, &keyData);
 }
@@ -4625,8 +4635,9 @@ pk11_searchTokenList(PK11Slot *slot, PK11SearchResults *search,
 
     /* keys */
     if (classFlags & (NSC_PRIVATE|NSC_PUBLIC|NSC_KEY)) {
+	PRBool mustStrict = ((classFlags & NSC_KEY) != 0) && (name.len != 0);
 	pk11_searchKeys(slot, &key_id, isLoggedIn, classFlags, search,
-			pTemplate, ulCount);
+			 mustStrict, pTemplate, ulCount);
     }
 
     /* crl's */
