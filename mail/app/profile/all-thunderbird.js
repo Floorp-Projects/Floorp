@@ -272,7 +272,6 @@ pref("browser.chrome.toolbar_style",        2);
 pref("browser.xul.error_pages.enabled", true);
 
 // Dialog modality issues
-pref("browser.prefWindowModal", true);
 pref("browser.show_about_as_stupid_modal_window", false);
 
 pref("browser.download.progressDnldDialog.keepAlive", true); // keep the dnload progress dialog up after dnload is complete
@@ -388,8 +387,6 @@ pref("privacy.popups.statusbar_icon_enabled",     true);
 
 #ifndef XP_MACOSX
 #ifdef XP_UNIX
-// Most Unix people think modal pref windows are stupid:
-pref("browser.prefWindowModal", false);
 // For the download dialog
 pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", false);
 pref("browser.urlbar.clickSelectsAll", false);
