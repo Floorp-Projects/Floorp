@@ -29,7 +29,7 @@
  *   -- 20000326
  *     -- added Mozilla integration code
  *
- * $Id: URIUtils.cpp,v 1.4 2000/03/31 07:07:24 kvisco%ziplink.net Exp $
+ * $Id: URIUtils.cpp,v 1.5 2000/05/25 22:52:23 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "URIUtils.h"
@@ -38,7 +38,7 @@
  * URIUtils
  * A set of utilities for handling URIs
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2000/03/31 07:07:24 $
+ * @version $Revision: 1.5 $ $Date: 2000/05/25 22:52:23 $
 **/
 
 //- Constants -/
@@ -127,7 +127,7 @@ void URIUtils::getDocumentBase(String& href, String& dest) {
     NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &result);
     if (NS_SUCCEEDED(result)) {
         // XXX This is ugly, there must be an easier (cleaner way).
-        char *uriStr = (((MozillaString)href).getConstNSString()).ToNewCString();
+        char *uriStr = (((String)href).getConstNSString()).ToNewCString();
         result = pService->NewURI(uriStr, nsnull, getter_AddRefs(pURL));
         nsCRT::free(uriStr);
         if (NS_SUCCEEDED(result)) {
@@ -183,14 +183,14 @@ void URIUtils::resolveHref(String& href, String& documentBase, String& dest) {
     NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &result);
     if (NS_SUCCEEDED(result)) {
         // XXX This is ugly, there must be an easier (cleaner way).
-        char *baseStr = (((MozillaString)documentBase).getConstNSString()).ToNewCString();
+        char *baseStr = (((String)documentBase).getConstNSString()).ToNewCString();
         result = pService->NewURI(baseStr, nsnull, getter_AddRefs(pURL));
         nsCRT::free(baseStr);
         if (NS_SUCCEEDED(result)) {
             nsXPIDLCString newURL;
 
             // XXX This is ugly, there must be an easier (cleaner way).
-            char *hrefStr = (((MozillaString)documentBase).getConstNSString()).ToNewCString();
+            char *hrefStr = (((String)documentBase).getConstNSString()).ToNewCString();
             result = pURL->Resolve(hrefStr, getter_Copies(newURL));
             nsCRT::free(hrefStr);
             if (NS_SUCCEEDED(result)) {

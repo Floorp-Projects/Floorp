@@ -33,13 +33,13 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "MozillaString.h"
+#include "TxString.h"
 #include <iostream.h>
 
 //
 //Default constructor ( nsString() )
 //
-MozillaString::MozillaString()
+String::String()
 {
   ptrNSString = new nsString();
 }
@@ -47,7 +47,7 @@ MozillaString::MozillaString()
 //
 //Create an nsString with the specified size
 //
-MozillaString::MozillaString(Int32 initSize)
+String::String(Int32 initSize)
 {
   ptrNSString = new nsString();
   ptrNSString->SetCapacity(initSize);
@@ -57,23 +57,7 @@ MozillaString::MozillaString(Int32 initSize)
 //Create an nsString from the provided String object
 //Use the Unicode representation to perform the copy
 // (nsString(source, length(source)) )
-MozillaString::MozillaString(const String& source)
-{
-  ptrNSString = new nsString(source.toUnicode(), source.length());
-}
-
-//
-//Create a new sting by assuming control of the provided nsString
-//
-MozillaString::MozillaString(nsString* theNSString)
-{
-  ptrNSString = theNSString;
-}
-
-//
-//Create a copy of the source string
-//
-MozillaString::MozillaString(const MozillaString& source)
+String::String(const String& source)
 {
   ptrNSString = new nsString(*source.ptrNSString);
 }
@@ -85,7 +69,7 @@ MozillaString::MozillaString(const MozillaString& source)
 //        it calculate its length.
 //
 //
-MozillaString::MozillaString(const char* source)
+String::String(const char* source)
 {
   ptrNSString = new nsString();
   ptrNSString->AssignWithConversion(source);
@@ -97,18 +81,50 @@ MozillaString::MozillaString(const char* source)
 //  NOTE: The length passed to this constructor does not include the NULL
 //        terminator (in C fashion).
 //
-MozillaString::MozillaString(const UNICODE_CHAR* source, Int32 srcLength)
+String::String(const UNICODE_CHAR* source)
+{
+  ptrNSString = new nsString(source);
+}
+
+//
+//Create a string from the Unicode Characters
+//( nsString(source, length(source)) )
+//  NOTE: The length passed to this constructor does not include the NULL
+//        terminator (in C fashion).
+//
+String::String(const UNICODE_CHAR* source, Int32 srcLength)
 {
   ptrNSString = new nsString(source, srcLength);
 }
 
+//
+//Create a new sting by assuming control of the provided nsString
+//
+String::String(nsString* theNSString)
+{
+  ptrNSString = theNSString;
+}
 
 //
 //Destroy the nsString, and free memory
 //
-MozillaString::~MozillaString()
+String::~String()
 {
   delete ptrNSString;
+}
+
+//
+//Convert the UNICODE_CHARs of this String to Chars, and output them to the given
+//ostream
+//
+ostream& operator<<(ostream& output, const String& source)
+{
+  Int32 outputLoop;
+
+  for (outputLoop=0;outputLoop<source.length();outputLoop++)
+    output << (char)source.charAt(outputLoop);
+
+  return output;
 }
 
 //
@@ -117,18 +133,9 @@ MozillaString::~MozillaString()
 //String, MozillaString, and any other object derrived from the String
 //interface.  ( nsString::Assign(PRUnichar*, PRInt32) )
 //
-String& MozillaString::operator=(const String& source)
+String& String::operator=(const String& source)
 {
   //Assign the Unicode Char buffer to the nsString
-  ptrNSString->Assign(source.toUnicode(), source.length());
-  return *this;
-}
-
-//
-//Overloaded '=' operator to assigne the value of a MozillaString to this
-//MozillaString. ( nsString::Assign(const nsString) )
-String& MozillaString::operator=(const MozillaString& source)
-{
   ptrNSString->Assign(source.toUnicode(), source.length());
   return *this;
 }
@@ -137,16 +144,26 @@ String& MozillaString::operator=(const MozillaString& source)
 //Overloaded '=' operator to assign the value of the source C string to this
 //string.  ( nsString::Assign(const char*, PRInt32) )
 //
-String& MozillaString::operator=(const char* source)
+String& String::operator=(const char* source)
 {
   ptrNSString->AssignWithConversion(source);
   return *this;
 }
 
 //
+//Overloaded '=' operator to assign the value of a UNICODE_CHAR string to this
+//string.  Note:  The soucre is "NULL" terminated.
+//
+String& String::operator=(const UNICODE_CHAR* source)
+{
+  ptrNSString->Assign(source);
+  return *this;
+}
+
+//
 //Overloaded '=' operator to assign an integer to this string.
 //
-String& MozillaString::operator=(Int32 source)
+String& String::operator=(Int32 source)
 {
   //Since String::ConvertInt only uses String's public interface, use it to
   //convert "source", and store it in this object
@@ -156,7 +173,7 @@ String& MozillaString::operator=(Int32 source)
 //
 //Append the source character ( nsString::Append(PRUnichar) )
 //
-void MozillaString::append(UNICODE_CHAR source)
+void String::append(UNICODE_CHAR source)
 {
   ptrNSString->Append(source);
 }
@@ -164,7 +181,7 @@ void MozillaString::append(UNICODE_CHAR source)
 //
 //Append a character to the string (nsString::Append(char) )
 //
-void MozillaString::append(char source)
+void String::append(char source)
 {
   ptrNSString->AppendWithConversion(source);
 }
@@ -175,33 +192,23 @@ void MozillaString::append(char source)
 //Ultimately use ( nsString::Append(const PRUnichar*, PRInt32) ) or
 //               ( nsString::Append(const nsString&) )
 //
-void MozillaString::append(const String& source)
+void String::append(const String& source)
 {
   //There are issues if we try to append a string to itself using its unicode
   //buffer!  So if the provided source object is equal to this, then we are
-  //appending this MozillaString to itself, so cast source to a MozillaString
+  //appending this String to itself, so cast source to a String
   //object, and go after its nsString implementation.
   if (this == &source)
-    ptrNSString->Append(*((MozillaString)source).ptrNSString);
+    ptrNSString->Append(*((String)source).ptrNSString);
   else
     ptrNSString->Append(source.toUnicode(), source.length());
-}
-
-  //Need to provide a means to append one mozstring to another.  This seems
-  //to be necessary because nsString seems to get confused if its own
-  //Unicode buffer is passed itself for appending (ie a MozString is appended
-  //to itself using on the functions provided by the public String
-  //interface).
-void MozillaString::append(const MozillaString& source)
-{
-  ptrNSString->Append(*source.ptrNSString);
 }
 
 //
 //Append a string of characters (null terminated arry of chars)
 //( nsString::Append(const char*, PRInt32) )
 //
-void MozillaString::append(const char* source)
+void String::append(const char* source)
 {
   ptrNSString->AppendWithConversion(source);
 }
@@ -210,7 +217,7 @@ void MozillaString::append(const char* source)
 //Append a string of unicode chars (null terminated array of Unicode chars)
 //( nsString::Append(const PRUnichar*, PRInt32) )
 //
-void MozillaString::append(const UNICODE_CHAR* source)
+void String::append(const UNICODE_CHAR* source)
 {
   ptrNSString->Append(source, UnicodeLength(source));
 }
@@ -219,7 +226,7 @@ void MozillaString::append(const UNICODE_CHAR* source)
 //Append a string of DOM Characters whose length is also defined
 //( nsString::Append(const PRUnichar*, PRInt32) )
 //
-void MozillaString::append(const UNICODE_CHAR* source, Int32 length)
+void String::append(const UNICODE_CHAR* source, Int32 length)
 {
   ptrNSString->Append(source, length);
 }
@@ -228,7 +235,7 @@ void MozillaString::append(const UNICODE_CHAR* source, Int32 length)
 //Convert source from an integer to a string, and append it to the current
 //string.  ( nsString::Append(PRInt32, PRInt32 aRadix=10) )
 //
-void MozillaString::append(Int32 source)
+void String::append(Int32 source)
 {
   ptrNSString->AppendInt(source);
 }
@@ -237,7 +244,7 @@ void MozillaString::append(Int32 source)
 //Insert a single UNICODE_CHAR into the string starting at offset
 //( nsString::Insert(PRUnichar, PRUint32) )
 //
-void MozillaString::insert(Int32 offset, const UNICODE_CHAR source)
+void String::insert(Int32 offset, const UNICODE_CHAR source)
 {
   ptrNSString->Insert(source, offset);
 }
@@ -247,7 +254,7 @@ void MozillaString::insert(Int32 offset, const UNICODE_CHAR source)
 //nsString does not seem to support the insertion of a char (it seems to be
 //commented out) so just use nsString::Insert(PRUnichar, PRUint32).
 //
-void MozillaString::insert(Int32 offset, const char source)
+void String::insert(Int32 offset, const char source)
 {
   ptrNSString->Insert((PRUnichar)source, offset);
 }
@@ -258,14 +265,14 @@ void MozillaString::insert(Int32 offset, const char source)
 //derrived from String.
 //( nsString::Insert(const PRUnichar*, PRuint32, PRInt32) )
 //
-void MozillaString::insert(Int32 offset, const String& source)
+void String::insert(Int32 offset, const String& source)
 {
   //There are issues if we try to insert a string into itself using its unicode
   //buffer!  So if the provided source object is equal to this, then we are
   //appending this MozillaString to itself, so cast source to a MozillaString
   //object, and go after its nsString implementation.
   if (this == &source)
-    ptrNSString->Insert(*((MozillaString)source).ptrNSString, offset);
+    ptrNSString->Insert(*((String)source).ptrNSString, offset);
   else
     ptrNSString->Insert(source.toUnicode(), offset, source.length());
 }
@@ -274,7 +281,7 @@ void MozillaString::insert(Int32 offset, const String& source)
 //Insert the source "C" type string into this string starting at offset.
 //( nsString::Insert(const char*, PRUint32, PrInt32) )
 //
-void MozillaString::insert(Int32 offset, const char* source)
+void String::insert(Int32 offset, const char* source)
 {
   ptrNSString->InsertWithConversion(source, offset);
 }
@@ -284,7 +291,7 @@ void MozillaString::insert(Int32 offset, const char* source)
 //offset.  Note that the source is Null Terminated.
 //( nsString::Insert(const PRUnichar*, PRuint32, PRInt32) )
 //
-void MozillaString::insert(Int32 offset, const UNICODE_CHAR* source)
+void String::insert(Int32 offset, const UNICODE_CHAR* source)
 {
   ptrNSString->Insert(source, offset, UnicodeLength(source));
 }
@@ -294,7 +301,7 @@ void MozillaString::insert(Int32 offset, const UNICODE_CHAR* source)
 //offset.  Note that the array is not null terminated, so the lenght must be
 //provided.
 //
-void MozillaString::insert(Int32 offset, const UNICODE_CHAR* source,
+void String::insert(Int32 offset, const UNICODE_CHAR* source,
                            Int32 srcLength)
 {
   ptrNSString->Insert(source, offset, srcLength);
@@ -303,7 +310,7 @@ void MozillaString::insert(Int32 offset, const UNICODE_CHAR* source,
 //
 //Convert source from an integer to a string, and then insert.
 //
-void MozillaString::insert(Int32 offset, Int32 source)
+void String::insert(Int32 offset, Int32 source)
 {
   String convertString;
 
@@ -313,7 +320,7 @@ void MozillaString::insert(Int32 offset, Int32 source)
 //
 //Replace the character specified by offset with the UNICODE_CHAR source
 //
-void MozillaString::replace(Int32 offset, const UNICODE_CHAR source)
+void String::replace(Int32 offset, const UNICODE_CHAR source)
 {
   replace(offset, &source, 1);
 }
@@ -321,7 +328,7 @@ void MozillaString::replace(Int32 offset, const UNICODE_CHAR source)
 //
 //Replace the character specified by offset with the C style character source
 //
-void MozillaString::replace(Int32 offset, const char source)
+void String::replace(Int32 offset, const char source)
 {
   replace(offset, (UNICODE_CHAR)source);
 }
@@ -329,7 +336,7 @@ void MozillaString::replace(Int32 offset, const char source)
 //
 //Replace the substring starting at offset with the String specified by source.
 //
-void MozillaString::replace(Int32 offset, const String& source)
+void String::replace(Int32 offset, const String& source)
 {
   Int32 numToCut = 0;
 
@@ -341,7 +348,7 @@ void MozillaString::replace(Int32 offset, const String& source)
   {
     numToCut = (offset + source.length() > length()) ? length() - offset :
                                                        source.length();
-    ptrNSString->Insert(*((MozillaString)source).ptrNSString ,
+    ptrNSString->Insert(*((String)source).ptrNSString ,
                         offset + source.length());
     ptrNSString->Cut(offset, numToCut);
   }
@@ -352,7 +359,7 @@ void MozillaString::replace(Int32 offset, const String& source)
 //
 //Replace the substring starting at offset with the "C" style character string.
 //See replace for a Unicode String of a specified lenght below for details
-void MozillaString::replace(Int32 offset, const char* source)
+void String::replace(Int32 offset, const char* source)
 {
   Int32 srcLength = strlen(source);
   ptrNSString->Cut(offset, srcLength);
@@ -362,7 +369,7 @@ void MozillaString::replace(Int32 offset, const char* source)
 //
 //Replace the substring starting at offset with the Unicode string.
 //
-void MozillaString::replace(Int32 offset, const UNICODE_CHAR* source)
+void String::replace(Int32 offset, const UNICODE_CHAR* source)
 {
   replace(offset, source, UnicodeLength(source));
 }
@@ -373,7 +380,7 @@ void MozillaString::replace(Int32 offset, const UNICODE_CHAR* source)
 //character by another.  So we will break the operation into pieces.
 //( nsString::Cut(PRUint32, PRInt32) ) - Remove piece being replaced
 //( nsString::Insert(PRUnichar*, PRInt32) ) - Insert the new piece
-void MozillaString::replace(Int32 offset, const UNICODE_CHAR* source,
+void String::replace(Int32 offset, const UNICODE_CHAR* source,
                             Int32 srcLength)
 {
   ptrNSString->Cut(offset, srcLength);
@@ -383,25 +390,63 @@ void MozillaString::replace(Int32 offset, const UNICODE_CHAR* source,
 //
 //Convert source from an integer to a String, and perform a replacement.
 //
-void MozillaString::replace(Int32 offset, Int32 source)
+void String::replace(Int32 offset, Int32 source)
 {
   String convertString;
 
   replace(offset, ConvertInt(source, convertString));
 }
 
+/**
+ * Sets the Length of this String, if length is less than 0, it will
+ * be set to 0; if length > current length, the string will be extended
+ * and padded with '\0' null characters. Otherwise the String
+ * will be truncated
+**/
+void String::setLength(Int32 length) {
+    setLength(length, '\0');
+} //-- setLength
+
+/**
+ * Sets the Length of this String, if length is less than 0, it will
+ * be set to 0; if length > current length, the string will be extended
+ * and padded with given pad character. Otherwise the String
+ * will be truncated.
+ * It is not clear what nsString::Truncate(PRInt32) will do if it is presented
+ * with a length larger than the current string size.  It is clear how ever
+ * that nsString does not support padding the string with a specified
+ * character, so this function will need to be broken into a couple of
+ * pieces.  One if a simple truncation is taking place, and another if
+ * the stirng is being lengthened and padded.
+**/
+void String::setLength(Int32 length, UNICODE_CHAR padChar)
+{
+  Int32 strLength = ptrNSString->Length();
+
+  if (length < strLength)
+  {
+    ptrNSString->Truncate(length);
+  }
+  else if (length > strLength)
+  {
+    ptrNSString->SetCapacity(length);
+    for(Int32 i=strLength; i < length; i++)
+      ptrNSString->Append(padChar);
+  }
+} //-- setLength
+
 //
 //Delete the "substring" starting at "offset" and proceeding for "count" number
 //of characters (or until the end of the string, whichever comes first).
 //
-void MozillaString::deleteChars(Int32 offset, Int32 count)
+void String::deleteChars(Int32 offset, Int32 count)
 {
   ptrNSString->Cut(offset, count);
 }
 
 //Retreive the character stored at "index" (starting from 0)
 //( PRUnichar nsString::CharAt(PRUint32) )
-UNICODE_CHAR MozillaString::charAt(Int32 index) const
+UNICODE_CHAR String::charAt(Int32 index) const
 {
   return ptrNSString->CharAt(index);
 }
@@ -411,7 +456,7 @@ UNICODE_CHAR MozillaString::charAt(Int32 index) const
 //left intact. Apparently ( nsString::Truncate() ), by default, will clear all
 //chars from the string.
 //
-void MozillaString::clear()
+void String::clear()
 {
   ptrNSString->Truncate();
 }
@@ -420,7 +465,7 @@ void MozillaString::clear()
 //Make sure the nsString has room for 'capacity' characters.
 //( nsString::SetCapacity(PRUint32) )
 //
-void MozillaString::ensureCapacity(Int32 capacity)
+void String::ensureCapacity(Int32 capacity)
 {
   ptrNSString->SetCapacity(capacity);
 }
@@ -430,7 +475,7 @@ void MozillaString::ensureCapacity(Int32 capacity)
  * of 'data'.  If found return the index, else return NOT_FOUND.
  * -- changed by kvisco to call indexOf(UNICODE_CHAR, Int32)
 **/
-Int32 MozillaString::indexOf(UNICODE_CHAR data) const
+Int32 String::indexOf(UNICODE_CHAR data) const
 {
     return indexOf(data, 0);
 } //-- indexOf
@@ -441,7 +486,7 @@ Int32 MozillaString::indexOf(UNICODE_CHAR data) const
 //NOT_FOUND.  If the offset is less than zero, then start at zero.
 //( nsString::FindChar(PRUnichar, PRBool, PRInt32) )
 //
-Int32 MozillaString::indexOf(UNICODE_CHAR data, Int32 offset) const
+Int32 String::indexOf(UNICODE_CHAR data, Int32 offset) const
 {
   Int32 searchIndex = offset < 0 ? searchIndex = 0 : searchIndex = offset;
 
@@ -451,7 +496,7 @@ Int32 MozillaString::indexOf(UNICODE_CHAR data, Int32 offset) const
 //
 //Returns the index of the first occurence of data.
 //
-Int32 MozillaString::indexOf(const String& data) const
+Int32 String::indexOf(const String& data) const
 {
   return indexOf(data, 0);
 }
@@ -464,7 +509,7 @@ Int32 MozillaString::indexOf(const String& data) const
 //data's strBuffer, and use that to perform the search.
 //( nsString::Find(const nsString&, PRBool, PRInt32) )
 //
-Int32 MozillaString::indexOf(const String& data, Int32 offset) const
+Int32 String::indexOf(const String& data, Int32 offset) const
 {
   Int32 searchIndex = offset < 0 ? searchIndex = 0 : searchIndex = offset;
 
@@ -477,7 +522,7 @@ Int32 MozillaString::indexOf(const String& data, Int32 offset) const
 //Check for equality between this string, and data.
 //( nsString::Equals(const PRUnichar*, PRBool, PRInt32) )
 //
-MBool MozillaString::isEqual(const String& data) const
+MBool String::isEqual(const String& data) const
 {
   if (this == &data)
     return MB_TRUE;
@@ -498,7 +543,7 @@ MBool MozillaString::isEqual(const String& data) const
  * <BR />
  * Added implementation 19990729 (kvisco)
 **/
-Int32 MozillaString::lastIndexOf(UNICODE_CHAR data) const
+Int32 String::lastIndexOf(UNICODE_CHAR data) const
 {
   return ptrNSString->RFindChar(data);
 } //-- lastIndexOf
@@ -510,7 +555,7 @@ Int32 MozillaString::lastIndexOf(UNICODE_CHAR data) const
  * <BR />
  * Added implementation 19990729 (kvisco)
 **/
-Int32 MozillaString::lastIndexOf(UNICODE_CHAR data, Int32 offset) const
+Int32 String::lastIndexOf(UNICODE_CHAR data, Int32 offset) const
 {
   return ptrNSString->RFindChar(data, PR_FALSE, offset);
 } //-- lastIndexOf
@@ -520,7 +565,7 @@ Int32 MozillaString::lastIndexOf(UNICODE_CHAR data, Int32 offset) const
  * <BR />
  * Added implementation 19990729 (kvisco)
 **/
-Int32 MozillaString::lastIndexOf(const String& data) const
+Int32 String::lastIndexOf(const String& data) const
 {
   return lastIndexOf(data, data.length());
 } //-- lastIndexOf
@@ -534,7 +579,7 @@ Int32 MozillaString::lastIndexOf(const String& data) const
  * <BR />
  * Added implementation 19990729 (kvisco)
 **/
-Int32 MozillaString::lastIndexOf(const String& data, Int32 offset) const
+Int32 String::lastIndexOf(const String& data, Int32 offset) const
 {
   nsString nsData(data.toUnicode(), data.length());
 
@@ -542,53 +587,15 @@ Int32 MozillaString::lastIndexOf(const String& data, Int32 offset) const
 }
 
 //Retreive the length of this string ( PrInt32 nsString::Length() )
-Int32 MozillaString::length() const
+Int32 String::length() const
 {
   return ptrNSString->Length();
 }
 
-/**
- * Sets the Length of this String, if length is less than 0, it will
- * be set to 0; if length > current length, the string will be extended
- * and padded with '\0' null characters. Otherwise the String
- * will be truncated
-**/
-void MozillaString::setLength(Int32 length) {
-    setLength(length, '\0');
-} //-- setLength
-
-/**
- * Sets the Length of this String, if length is less than 0, it will
- * be set to 0; if length > current length, the string will be extended
- * and padded with given pad character. Otherwise the String
- * will be truncated.
- * It is not clear what nsString::Truncate(PRInt32) will do if it is presented
- * with a length larger than the current string size.  It is clear how ever
- * that nsString does not support padding the string with a specified
- * character, so this function will need to be broken into a couple of
- * pieces.  One if a simple truncation is taking place, and another if
- * the stirng is being lengthened and padded.
-**/
-void MozillaString::setLength(Int32 length, UNICODE_CHAR padChar)
-{
-  Int32 strLength = ptrNSString->Length();
-
-  if (length < strLength)
-  {
-    ptrNSString->Truncate(length);
-  }
-  else if (length > strLength)
-  {
-    ptrNSString->SetCapacity(length);
-    for(Int32 i=strLength; i < length; i++)
-      ptrNSString->Append(padChar);
-  }
-} //-- setLength
-
 //
 //Returns a subString starting at start
 //
-String& MozillaString::subString(Int32 start, String& dest) const
+String& String::subString(Int32 start, String& dest) const
 {
   return subString(start, ptrNSString->Length(), dest);
 }
@@ -601,7 +608,7 @@ String& MozillaString::subString(Int32 start, String& dest) const
  * public interface, to ensure compatiability with all classes derrived from
  * String.
 **/
-String& MozillaString::subString(Int32 start, Int32 end, String& dest) const
+String& String::subString(Int32 start, Int32 end, String& dest) const
 {
   Int32 srcLoop;
   Int32 strLength = ptrNSString->Length();
@@ -624,7 +631,7 @@ String& MozillaString::subString(Int32 start, Int32 end, String& dest) const
  * Instantiate a new character buffer (remembering the null terminator) and pass
  * it to toChar(char*).
 **/
-char* MozillaString::toCharArray() const
+char* String::toCharArray() const
 {
   char* tmpBuffer = new char[ptrNSString->Length()+1];
 
@@ -639,7 +646,7 @@ char* MozillaString::toCharArray() const
  * Use ( nsString::GetUnicode() ) to retreive the nsString's buffer, then
  * copy it to dest.
 **/
-char* MozillaString::toCharArray(char* dest) const
+char* String::toCharArray(char* dest) const
 {
   Int32 copyLoop;
   Int32 strLength = ptrNSString->Length();
@@ -661,7 +668,7 @@ char* MozillaString::toCharArray(char* dest) const
  * Use ( nsString::GetUnicode() ) to retreive the nsString's buffer, then
  * copy it to dest.
 **/
-UNICODE_CHAR* MozillaString::toUnicode(UNICODE_CHAR* dest) const
+UNICODE_CHAR* String::toUnicode(UNICODE_CHAR* dest) const
 {
   Int32 copyLoop;
   Int32 strLength = ptrNSString->Length();
@@ -678,7 +685,7 @@ UNICODE_CHAR* MozillaString::toUnicode(UNICODE_CHAR* dest) const
 //This provides a more efficient means to interact with the buffer in a read
 //only fahsion.
 //
-const UNICODE_CHAR* MozillaString::toUnicode() const
+const UNICODE_CHAR* String::toUnicode() const
 {
   return ptrNSString->GetUnicode();
 }
@@ -686,7 +693,7 @@ const UNICODE_CHAR* MozillaString::toUnicode() const
 //
 //Convert String to lowercase ( nsString::ToLowerCase() )
 //
-void MozillaString::toLowerCase()
+void String::toLowerCase()
 {
   ptrNSString->ToLowerCase();
 }
@@ -694,7 +701,7 @@ void MozillaString::toLowerCase()
 //
 //Convert String to uppercase ( nsString::ToUpperCase() )
 //
-void MozillaString::toUpperCase()
+void String::toUpperCase()
 {
   ptrNSString->ToUpperCase();
 }
@@ -704,7 +711,7 @@ void MozillaString::toUpperCase()
 //( nsString::Trim(const char*, PRBool, PRBool) )
 //Currently we trim only spaces!
 //
-void MozillaString::trim()
+void String::trim()
 {
   ptrNSString->Trim(" \n\t\r");
 }
@@ -715,7 +722,7 @@ void MozillaString::trim()
 //nsString::CharAt(PRUint32) and nsString::SetCharAt(PRUnichar, PRUint32) like
 //in Stirng.
 //
-void MozillaString::reverse()
+void String::reverse()
 {
   Int32 reverseLoop;
   Int32 strLength = ptrNSString->Length();
@@ -731,9 +738,63 @@ void MozillaString::reverse()
 }
 
 //
+//Compare the two string representations for equality
+//
+MBool String::isEqual(const UNICODE_CHAR* data, const UNICODE_CHAR* search,
+                      Int32 length) const
+{
+  Int32 compLoop = 0;
+
+  while (compLoop < length)
+    {
+    if (data[compLoop] != search[compLoop])
+      return MB_FALSE;
+
+    compLoop++;
+    }
+
+  return MB_TRUE;
+}
+
+//
+//Convert an Int32 into a String by storing it in target
+//
+String& String::ConvertInt(Int32 value, String& target)
+{
+  UNICODE_CHAR charDigit;
+
+  target.clear();
+
+  while (value)
+    {
+      charDigit = (value % 10) + 48;
+      target.append(charDigit);
+      value /=10;
+    }
+
+  target.reverse();
+
+  return target;
+}
+
+//
+//Calculate the length of a null terminated UNICODE_CHAR string
+//
+Int32 String::UnicodeLength(const UNICODE_CHAR* data)
+{
+  Int32 index = 0;
+
+  //Count UNICODE_CHARs Until a Unicode "NULL" is found.
+  while (data[index] != 0x0000)
+    index++;
+
+  return index;
+}
+
+//
 //Retrieve a reference to the nsString object
 //
-nsString& MozillaString::getNSString()
+nsString& String::getNSString()
 {
   return *ptrNSString;
 }
@@ -741,7 +802,7 @@ nsString& MozillaString::getNSString()
 //
 //Retrieve a const reference to the nsString object
 //
-const nsString& MozillaString::getConstNSString() const
+const nsString& String::getConstNSString() const
 {
   return *ptrNSString;
 }
@@ -749,7 +810,6 @@ const nsString& MozillaString::getConstNSString() const
 //
 //String copies itself to the destination
 //
-//void MozillaString::copyString(SPECIAL_CHAR* dest)
+//void String::copyString(SPECIAL_CHAR* dest)
 //{
 //}
-
