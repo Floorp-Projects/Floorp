@@ -38,6 +38,7 @@ public:
 	IUnknown *pIUnknown;
 	CLSID clsid;
 	OutputStringProc pfnOutputString;
+	CString szTestURL;
 
 	HRESULT GetWebBrowser(IWebBrowserApp **pWebBrowser)
 	{
@@ -68,7 +69,7 @@ public:
 };
 
 
-typedef TestResult (__cdecl *TestProc)(BrowserInfo *pInfo);
+typedef TestResult (__cdecl *TestProc)(BrowserInfo &cInfo);
 
 struct Test
 {

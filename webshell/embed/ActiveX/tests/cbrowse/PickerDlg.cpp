@@ -31,6 +31,7 @@ BrowserControl aControls[] =
 	{ _T("Internet Explorer Control"), &CLSID_InternetExplorer }
 };
 
+
 /////////////////////////////////////////////////////////////////////////////
 // CPickerDlg dialog
 
@@ -39,8 +40,12 @@ CPickerDlg::CPickerDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CPickerDlg::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CPickerDlg)
+	m_szTestURL = _T("");
 	//}}AFX_DATA_INIT
 	m_clsid = CLSID_NULL;
+
+	CWinApp *pApp = AfxGetApp();
+	m_szTestURL = pApp->GetProfileString(SECTION_TEST, KEY_TESTURL, KEY_TESTURL_DEFAULTVALUE);
 }
 
 
@@ -49,6 +54,7 @@ void CPickerDlg::DoDataExchange(CDataExchange* pDX)
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CPickerDlg)
 	DDX_Control(pDX, IDC_LISTBROWSER, m_lbPicker);
+	DDX_Text(pDX, IDC_TESTURL, m_szTestURL);
 	//}}AFX_DATA_MAP
 }
 
@@ -79,6 +85,8 @@ BOOL CPickerDlg::OnInitDialog()
 
 void CPickerDlg::OnOk() 
 {
+	UpdateData();
+
 	int nItem = m_lbPicker.GetCurSel();
 	if (nItem == LB_ERR)
 	{
@@ -87,6 +95,9 @@ void CPickerDlg::OnOk()
 	}
 
 	m_clsid = *aControls[nItem].clsid;
+
+	CWinApp *pApp = AfxGetApp();
+	pApp->WriteProfileString(SECTION_TEST, KEY_TESTURL, m_szTestURL);
 
 	EndDialog(IDOK);
 }

@@ -45,6 +45,11 @@ typedef std::basic_string<TCHAR> tstring;
 
 #include "Tests.h"
 
+#define SECTION_TEST             _T("Test")
+#define KEY_TESTURL              _T("TestURL")
+#define KEY_TESTURL_DEFAULTVALUE _T("http://www.mozilla.org")
+
+
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Developer Studio will insert additional declarations immediately before the previous line.
 

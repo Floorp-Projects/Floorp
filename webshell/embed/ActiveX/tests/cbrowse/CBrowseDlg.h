@@ -49,6 +49,7 @@ public:
 protected:
 	HICON m_hIcon;
 	CImageList m_cImageList;
+	CString m_szTestURL;
 
 	// Generated message map functions
 	//{{AFX_MSG(CBrowseDlg)

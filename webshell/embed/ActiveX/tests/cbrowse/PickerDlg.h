@@ -20,6 +20,7 @@ public:
 	//{{AFX_DATA(CPickerDlg)
 	enum { IDD = IDD_PICKBROWSER };
 	CListBox	m_lbPicker;
+	CString	m_szTestURL;
 	//}}AFX_DATA
 
 	CLSID m_clsid;

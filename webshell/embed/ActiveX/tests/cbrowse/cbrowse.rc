@@ -211,18 +211,23 @@ IDI_TEST                ICON    DISCARDABLE     "res\\test.ico"
 // Dialog
 //
 
-IDD_PICKBROWSER DIALOG DISCARDABLE  0, 0, 186, 71
+IDD_PICKBROWSER DIALOG DISCARDABLE  0, 0, 284, 157
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dialog"
+CAPTION "Welcome to CBrowse!"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,129,24,50,14
-    LISTBOX         IDC_LISTBROWSER,7,38,115,26,LBS_NOINTEGRALHEIGHT | 
+    LTEXT           "This is a browser/test application written in MFC that exercises the IE browser interface of the control that you choose from the list below.",
+                    IDC_STATIC,7,7,213,27
+    LTEXT           "Whatever control you choose, the exact same code is run upon it. Discrepancies in behaviour or test results may indicate a bug!",
+                    IDC_STATIC,7,37,213,20
+    LTEXT           "Pick the browser to test:",IDC_STATIC,7,61,77,8
+    LISTBOX         IDC_LISTBROWSER,7,74,213,26,LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "CBrowse is a test app that exercises the IE browser interface.",
-                    IDC_STATIC,7,7,116,18
-    LTEXT           "Pick the browser to test:",IDC_STATIC,7,28,77,8
+    LTEXT           "Some of the tests require a test URL. You may change the default one if you want. Ensure that the URL is valid otherwise the tests might fail!",
+                    IDC_STATIC,7,108,213,25
+    EDITTEXT        IDC_TESTURL,7,137,213,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,227,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,227,24,50,14
 END
 
 
@@ -237,9 +242,9 @@ BEGIN
     IDD_PICKBROWSER, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 179
+        RIGHTMARGIN, 277
         TOPMARGIN, 7
-        BOTTOMMARGIN, 64
+        BOTTOMMARGIN, 150
     END
 END
 #endif    // APSTUDIO_INVOKED
