@@ -146,6 +146,8 @@
 #include "nsDOMCSSDeclaration.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
+#include "nsXULContentUtils.h"
 
 #include "prlog.h"
 #include "rdf.h"
@@ -260,65 +262,6 @@ RemoveJSGCRoot(void* aScriptObjectRef)
 
 //----------------------------------------------------------------------
 
-struct EventHandlerMapEntry {
-    const char*  mAttributeName;
-    nsIAtom*     mAttributeAtom;
-};
-
-static EventHandlerMapEntry kEventHandlerMap[] = {
-    { "onclick",         nsnull },
-    { "ondblclick",      nsnull },
-    { "onmousedown",     nsnull },
-    { "onmouseup",       nsnull },
-    { "onmouseover",     nsnull },
-    { "onmouseout",      nsnull },
-
-    { "onmousemove",     nsnull },
-
-    { "onkeydown",       nsnull },
-    { "onkeyup",         nsnull },
-    { "onkeypress",      nsnull },
-
-    { "onload",          nsnull },
-    { "onunload",        nsnull },
-    { "onabort",         nsnull },
-    { "onerror",         nsnull },
-
-    { "onpopupshowing",    nsnull },
-    { "onpopupshown",      nsnull },
-    { "onpopuphiding" ,    nsnull },
-    { "onpopuphidden",     nsnull },
-    { "onclose",           nsnull },
-    { "oncommand",         nsnull },
-    { "onbroadcast",       nsnull },
-    { "oncommandupdate",   nsnull },
-
-    { "onoverflow",       nsnull },
-    { "onunderflow",      nsnull },
-    { "onoverflowchanged",nsnull },
-
-    { "onfocus",         nsnull },
-    { "onblur",          nsnull },
-
-    { "onsubmit",        nsnull },
-    { "onreset",         nsnull },
-    { "onchange",        nsnull },
-    { "onselect",        nsnull },
-    { "oninput",         nsnull },
-
-    { "onpaint",         nsnull },
-
-    { "ondragenter",     nsnull },
-    { "ondragover",      nsnull },
-    { "ondragexit",      nsnull },
-    { "ondragdrop",      nsnull },
-    { "ondraggesture",   nsnull },
-
-    { "oncontextmenu",   nsnull },
-
-    { nsnull,            nsnull }
-};
-
 
 // XXX This function is called for every attribute on every element for
 // XXX which we SetDocument, among other places.  A linear search might
@@ -332,44 +275,58 @@ IsEventHandler(nsIAtom* aName)
     if (name[0] != 'o' || name[1] != 'n') {
         return PR_FALSE;
     }
+    
+    return aName == nsLayoutAtoms::onclick         ||
+           aName == nsLayoutAtoms::ondblclick      ||
+           aName == nsLayoutAtoms::onmousedown     ||
+           aName == nsLayoutAtoms::onmouseup       ||
+           aName == nsLayoutAtoms::onmouseover     ||
+           aName == nsLayoutAtoms::onmouseout      ||
+           aName == nsLayoutAtoms::onmousemove     ||
 
-    EventHandlerMapEntry* entry = kEventHandlerMap;
-    while (entry->mAttributeAtom) {
-        if (entry->mAttributeAtom == aName) {
-            return PR_TRUE;
-            break;
-        }
-        ++entry;
-    }
+           aName == nsLayoutAtoms::onkeydown       ||
+           aName == nsLayoutAtoms::onkeyup         ||
+           aName == nsLayoutAtoms::onkeypress      ||
 
-    return PR_FALSE;
-}
+           aName == nsLayoutAtoms::onload          ||
+           aName == nsLayoutAtoms::onunload        ||
+           aName == nsLayoutAtoms::onabort         ||
+           aName == nsLayoutAtoms::onerror         ||
 
-static void
-InitEventHandlerMap()
-{
-    EventHandlerMapEntry* entry = kEventHandlerMap;
-    while (entry->mAttributeName) {
-        entry->mAttributeAtom = NS_NewAtom(entry->mAttributeName);
-        ++entry;
-    }
-}
+           aName == nsLayoutAtoms::onpopupshowing  ||
+           aName == nsLayoutAtoms::onpopupshown    ||
+           aName == nsLayoutAtoms::onpopuphiding   ||
+           aName == nsLayoutAtoms::onpopuphidden   ||
+           aName == nsLayoutAtoms::onclose         ||
+           aName == nsLayoutAtoms::oncommand       ||
+           aName == nsLayoutAtoms::onbroadcast     ||
+           aName == nsLayoutAtoms::oncommandupdate ||
 
+           aName == nsLayoutAtoms::onoverflow      ||
+           aName == nsLayoutAtoms::onunderflow     ||
+           aName == nsLayoutAtoms::onoverflowchanged ||
 
-static void
-FinishEventHandlerMap()
-{
-    EventHandlerMapEntry* entry = kEventHandlerMap;
-    while (entry->mAttributeName) {
-        NS_IF_RELEASE(entry->mAttributeAtom);
-        ++entry;
-    }
+           aName == nsLayoutAtoms::onfocus         ||
+           aName == nsLayoutAtoms::onblur          ||
+
+           aName == nsLayoutAtoms::onsubmit        ||
+           aName == nsLayoutAtoms::onreset         ||
+           aName == nsLayoutAtoms::onchange        ||
+           aName == nsLayoutAtoms::onselect        ||
+           aName == nsLayoutAtoms::oninput         ||
+
+           aName == nsLayoutAtoms::onpaint         ||
+
+           aName == nsLayoutAtoms::ondragenter     ||
+           aName == nsLayoutAtoms::ondragover      ||
+           aName == nsLayoutAtoms::ondragexit      ||
+           aName == nsLayoutAtoms::ondragdrop      ||
+           aName == nsLayoutAtoms::ondraggesture   ||
+
+           aName == nsLayoutAtoms::oncontextmenu;
 }
 
 //----------------------------------------------------------------------
-
-nsrefcnt             nsXULElement::gRefCnt;
-nsIRDFService*       nsXULElement::gRDFService;
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
 PRUint32             nsXULPrototypeAttribute::gNumElements;
@@ -393,23 +350,6 @@ nsXULElement::nsXULElement(nsINodeInfo* aNodeInfo)
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumElements);
 }
 
-
-nsresult
-nsXULElement::Init()
-{
-    if (gRefCnt++ == 0) {
-        nsresult rv;
-
-        rv = CallGetService(kRDFServiceCID, &gRDFService);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
-        if (NS_FAILED(rv)) return rv;
-
-        InitEventHandlerMap();
-    }
-
-    return NS_OK;
-}
-
 nsXULElement::~nsXULElement()
 {
     //XXX SetDocument(nsnull) is not called always before dtor.
@@ -424,13 +364,6 @@ nsXULElement::~nsXULElement()
 
     if (mPrototype)
         mPrototype->Release();
-
-    // Clean up shared statics
-    if (--gRefCnt == 0) {
-        FinishEventHandlerMap();
-
-        NS_IF_RELEASE(gRDFService);
-    }
 }
 
 
@@ -468,9 +401,6 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
     if (! element)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = element->Init();
-    if (NS_FAILED(rv)) return rv;
-
     element->mPrototype = aPrototype;
     if (aDocument) {
       element->mParentPtrBits |= PARENT_BIT_INDOCUMENT;
@@ -506,9 +436,6 @@ NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
 
     // Using kungFuDeathGrip so an early return will clean up properly.
     nsCOMPtr<nsIContent> kungFuDeathGrip = element;
-
-    nsresult rv = element->Init();
-    NS_ENSURE_SUCCESS(rv, rv);
 
     kungFuDeathGrip.swap(*aResult);
 
@@ -1190,8 +1117,9 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
       // If it's not, look at our parent
       if (!controlElement)
         rv = GetParentTree(getter_AddRefs(controlElement));
-      if (controlElement) {
-        nsCOMPtr<nsIDOMNode> parentKid = do_QueryInterface(oldKid);
+
+      nsCOMPtr<nsIDOMElement> oldKidElem = do_QueryInterface(oldKid);
+      if (controlElement && oldKidElem) {
         // Iterate over all of the items and find out if they are contained inside
         // the removed subtree.
         PRInt32 length;
@@ -1199,8 +1127,10 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
         for (PRInt32 i = 0; i < length; i++) {
           nsCOMPtr<nsIDOMXULSelectControlItemElement> node;
           controlElement->GetSelectedItem(i, getter_AddRefs(node));
-          nsCOMPtr<nsIDOMNode> selNode(do_QueryInterface(node));
-          if (selNode == parentKid && NS_SUCCEEDED(rv = controlElement->RemoveItemFromSelection(node))) {
+          // we need to QI here to do an XPCOM-correct pointercompare
+          nsCOMPtr<nsIDOMElement> selElem = do_QueryInterface(node);
+          if (selElem == oldKidElem &&
+              NS_SUCCEEDED(controlElement->RemoveItemFromSelection(node))) {
             length--;
             i--;
             fireSelectionHandler = PR_TRUE;
@@ -1209,16 +1139,14 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 
         nsCOMPtr<nsIDOMXULSelectControlItemElement> curItem;
         controlElement->GetCurrentItem(getter_AddRefs(curItem));
-        nsCOMPtr<nsIDOMNode> curNode = do_QueryInterface(curItem);
-        if (IsAncestor(parentKid, curNode)) {
+        nsCOMPtr<nsIContent> curNode = do_QueryInterface(curItem);
+        if (isSelfOrAncestor(curNode, oldKid)) {
             // Current item going away
             nsCOMPtr<nsIBoxObject> box;
             controlElement->GetBoxObject(getter_AddRefs(box));
             listBox = do_QueryInterface(box);
-            if (listBox) {
-                nsCOMPtr<nsIDOMElement> domElem = do_QueryInterface(parentKid);
-                if (domElem)
-                    listBox->GetIndexOfItem(domElem, &newCurrentIndex);
+            if (listBox && oldKidElem) {
+              listBox->GetIndexOfItem(oldKidElem, &newCurrentIndex);
             }
 
             // If any of this fails, we'll just set the current item to null
@@ -2202,20 +2130,17 @@ nsXULElement::GetRangeList() const
 NS_IMETHODIMP
 nsXULElement::GetResource(nsIRDFResource** aResource)
 {
-    nsresult rv;
-
     nsAutoString id;
-    rv = GetAttr(kNameSpaceID_None, nsXULAtoms::ref, id);
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv = GetAttr(kNameSpaceID_None, nsXULAtoms::ref, id);
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
         rv = GetAttr(kNameSpaceID_None, nsXULAtoms::id, id);
-        if (NS_FAILED(rv)) return rv;
     }
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        rv = gRDFService->GetUnicodeResource(id, aResource);
-        if (NS_FAILED(rv)) return rv;
+        rv = nsXULContentUtils::RDFService()->
+            GetUnicodeResource(id, aResource);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
         *aResource = nsnull;
@@ -2489,432 +2414,69 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
 }
 
 // Methods for setting/getting attributes from nsIDOMXULElement
-nsresult
-nsXULElement::GetId(nsAString& aId)
-{
-  GetAttribute(NS_LITERAL_STRING("id"), aId);
-  return NS_OK;
-}
+#define NS_IMPL_XUL_STRING_ATTR(_method, _atom)                     \
+  NS_IMETHODIMP                                                     \
+  nsXULElement::Get##_method(nsAString& aReturn)                    \
+  {                                                                 \
+    return GetAttr(kNameSpaceID_None, nsXULAtoms::_atom, aReturn);  \
+  }                                                                 \
+  NS_IMETHODIMP                                                     \
+  nsXULElement::Set##_method(const nsAString& aValue)               \
+  {                                                                 \
+    return SetAttr(kNameSpaceID_None, nsXULAtoms::_atom, aValue,    \
+                   PR_TRUE);                                        \
+  }
 
-nsresult
-nsXULElement::SetId(const nsAString& aId)
-{
-  SetAttribute(NS_LITERAL_STRING("id"), aId);
-  return NS_OK;
-}
+#define NS_IMPL_XUL_BOOL_ATTR(_method, _atom)                       \
+  NS_IMETHODIMP                                                     \
+  nsXULElement::Get##_method(PRBool* aResult)                       \
+  {                                                                 \
+    *aResult = BoolAttrIsTrue(nsXULAtoms::_atom);                   \
+                                                                    \
+    return NS_OK;                                                   \
+  }                                                                 \
+  NS_IMETHODIMP                                                     \
+  nsXULElement::Set##_method(PRBool aValue)                         \
+  {                                                                 \
+    if (aValue)                                                     \
+      SetAttr(kNameSpaceID_None, nsXULAtoms::_atom,                 \
+              NS_LITERAL_STRING("true"), PR_TRUE);                  \
+    else                                                            \
+      UnsetAttr(kNameSpaceID_None, nsXULAtoms::_atom, PR_TRUE);     \
+                                                                    \
+    return NS_OK;                                                   \
+  }
 
-nsresult
-nsXULElement::GetClassName(nsAString& aClassName)
-{
-  GetAttribute(NS_LITERAL_STRING("class"), aClassName);
-  return NS_OK;
-}
 
-nsresult
-nsXULElement::SetClassName(const nsAString& aClassName)
-{
-  SetAttribute(NS_LITERAL_STRING("class"), aClassName);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetAlign(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("align"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetAlign(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("align"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetDir(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("dir"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetDir(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("dir"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetFlex(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("flex"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetFlex(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("flex"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetFlexGroup(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("flexgroup"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetFlexGroup(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("flexgroup"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetOrdinal(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("ordinal"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetOrdinal(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("ordinal"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetOrient(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("orient"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetOrient(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("orient"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetPack(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("pack"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetPack(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("pack"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetHidden(PRBool* aResult)
-{
-  *aResult = PR_FALSE;
-  nsAutoString val;
-  GetAttribute(NS_LITERAL_STRING("hidden"), val);
-  if (val.EqualsLiteral("true"))
-    *aResult = PR_TRUE;
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetHidden(PRBool aAttr)
-{
-  if (aAttr)
-    SetAttribute(NS_LITERAL_STRING("hidden"), NS_LITERAL_STRING("true"));
-  else
-    RemoveAttribute(NS_LITERAL_STRING("hidden"));
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetCollapsed(PRBool* aResult)
-{
-  *aResult = PR_FALSE;
-  nsAutoString val;
-  GetAttribute(NS_LITERAL_STRING("collapsed"), val);
-  if (val.EqualsLiteral("true"))
-    *aResult = PR_TRUE;
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetCollapsed(PRBool aAttr)
-{
- if (aAttr)
-    SetAttribute(NS_LITERAL_STRING("collapsed"), NS_LITERAL_STRING("true"));
-  else
-    RemoveAttribute(NS_LITERAL_STRING("collapsed"));
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetAllowEvents(PRBool* aResult)
-{
-  *aResult = PR_FALSE;
-  nsAutoString val;
-  GetAttribute(NS_LITERAL_STRING("allowevents"), val);
-  if (val.EqualsLiteral("true"))
-    *aResult = PR_TRUE;
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetAllowEvents(PRBool aAttr)
-{
- if (aAttr)
-    SetAttribute(NS_LITERAL_STRING("allowevents"), NS_LITERAL_STRING("true"));
-  else
-    RemoveAttribute(NS_LITERAL_STRING("allowevents"));
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetObserves(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("observes"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetObserves(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("observes"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetMenu(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("menu"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetMenu(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("menu"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetContextMenu(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("contextmenu"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetContextMenu(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("contextmenu"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetTooltip(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("tooltip"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetTooltip(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("tooltip"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetWidth(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("width"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetWidth(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("width"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetHeight(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("height"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetHeight(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("height"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetMinWidth(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("minwidth"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetMinWidth(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("minwidth"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetMinHeight(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("minheight"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetMinHeight(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("minheight"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetMaxWidth(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("maxwidth"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetMaxWidth(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("maxwidth"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetMaxHeight(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("maxheight"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetMaxHeight(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("maxheight"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetPersist(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("persist"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetPersist(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("persist"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetLeft(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("left"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetLeft(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("left"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetTop(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("top"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetTop(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("top"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetDatasources(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("datasources"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetDatasources(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("datasources"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetRef(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("ref"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetRef(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("ref"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetTooltipText(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("tooltiptext"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetTooltipText(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("tooltiptext"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::GetStatusText(nsAString& aAttr)
-{
-  GetAttribute(NS_LITERAL_STRING("statustext"), aAttr);
-  return NS_OK;
-}
-
-nsresult
-nsXULElement::SetStatusText(const nsAString& aAttr)
-{
-  SetAttribute(NS_LITERAL_STRING("statustext"), aAttr);
-  return NS_OK;
-}
+NS_IMPL_XUL_STRING_ATTR(Id, id)
+NS_IMPL_XUL_STRING_ATTR(ClassName, clazz)
+NS_IMPL_XUL_STRING_ATTR(Align, align)
+NS_IMPL_XUL_STRING_ATTR(Dir, dir)
+NS_IMPL_XUL_STRING_ATTR(Flex, flex)
+NS_IMPL_XUL_STRING_ATTR(FlexGroup, flexgroup)
+NS_IMPL_XUL_STRING_ATTR(Ordinal, ordinal)
+NS_IMPL_XUL_STRING_ATTR(Orient, orient)
+NS_IMPL_XUL_STRING_ATTR(Pack, pack)
+NS_IMPL_XUL_BOOL_ATTR(Hidden, hidden)
+NS_IMPL_XUL_BOOL_ATTR(Collapsed, collapsed)
+NS_IMPL_XUL_BOOL_ATTR(AllowEvents, allowevents)
+NS_IMPL_XUL_STRING_ATTR(Observes, observes)
+NS_IMPL_XUL_STRING_ATTR(Menu, menu)
+NS_IMPL_XUL_STRING_ATTR(ContextMenu, contextmenu)
+NS_IMPL_XUL_STRING_ATTR(Tooltip, tooltip)
+NS_IMPL_XUL_STRING_ATTR(Width, width)
+NS_IMPL_XUL_STRING_ATTR(Height, height)
+NS_IMPL_XUL_STRING_ATTR(MinWidth, minwidth)
+NS_IMPL_XUL_STRING_ATTR(MinHeight, minheight)
+NS_IMPL_XUL_STRING_ATTR(MaxWidth, maxwidth)
+NS_IMPL_XUL_STRING_ATTR(MaxHeight, maxheight)
+NS_IMPL_XUL_STRING_ATTR(Persist, persist)
+NS_IMPL_XUL_STRING_ATTR(Left, left)
+NS_IMPL_XUL_STRING_ATTR(Top, top)
+NS_IMPL_XUL_STRING_ATTR(Datasources, datasources)
+NS_IMPL_XUL_STRING_ATTR(Ref, ref)
+NS_IMPL_XUL_STRING_ATTR(TooltipText, tooltiptext)
+NS_IMPL_XUL_STRING_ATTR(StatusText, statustext)
 
 nsresult
 nsXULElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
@@ -2955,21 +2517,6 @@ nsXULElement::GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement)
     }
 
     return NS_OK;
-}
-
-PRBool
-nsXULElement::IsAncestor(nsIDOMNode* aParentNode, nsIDOMNode* aChildNode)
-{
-    nsCOMPtr<nsIDOMNode> parent = aChildNode;
-    while (parent && (parent != aParentNode)) {
-        nsCOMPtr<nsIDOMNode> newParent;
-        parent->GetParentNode(getter_AddRefs(newParent));
-        parent = newParent;
-    }
-
-    if (parent)
-        return PR_TRUE;
-    return PR_FALSE;
 }
 
 NS_IMETHODIMP
@@ -3021,9 +2568,7 @@ nsXULElement::Blur()
 NS_IMETHODIMP
 nsXULElement::Click()
 {
-    nsAutoString disabled;
-    GetAttribute(NS_LITERAL_STRING("disabled"), disabled);
-    if (disabled.EqualsLiteral("true"))
+    if (BoolAttrIsTrue(nsXULAtoms::disabled))
         return NS_OK;
 
     nsCOMPtr<nsIDocument> doc = GetCurrentDoc(); // Strong just in case
@@ -3088,9 +2633,7 @@ nsXULElement::DoCommand()
 void
 nsXULElement::SetFocus(nsPresContext* aPresContext)
 {
-    nsAutoString disabled;
-    GetAttribute(NS_LITERAL_STRING("disabled"), disabled);
-    if (disabled.EqualsLiteral("true"))
+    if (BoolAttrIsTrue(nsXULAtoms::disabled))
         return;
 
     aPresContext->EventStateManager()->SetContentState(this,
@@ -3292,6 +2835,16 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
     }
 
     return NS_OK;
+}
+
+PRBool
+nsXULElement::BoolAttrIsTrue(nsIAtom* aName)
+{
+    const nsAttrValue* attr =
+        FindLocalOrProtoAttr(kNameSpaceID_None, aName);
+
+    return attr && attr->Type() == nsAttrValue::eAtom &&
+           attr->GetAtomValue() == nsXULAtoms::_true;
 }
 
 //----------------------------------------------------------------------

@@ -116,6 +116,12 @@ public:
 
     static nsresult
     SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElement);
+    
+    static nsIRDFService*
+    RDFService()
+    {
+        return gRDF;
+    }
 
 #define XUL_RESOURCE(ident, uri) static nsIRDFResource* ident
 #define XUL_LITERAL(ident, val)  static nsIRDFLiteral*  ident
