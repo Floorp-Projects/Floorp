@@ -2214,7 +2214,7 @@ parent.sa_message_sign_status = 2;
 <DIV CLASS=Explanationbox>
 
 <UL><LI>
-{signing_certificate_revoked} %1%s
+{signing_certificate_revoked} %1$s
 </LI></UL>
 <BLOCKQUOTE>
 {do_not_trust_until_sender_verifies}
