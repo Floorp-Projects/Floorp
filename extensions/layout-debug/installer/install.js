@@ -1,7 +1,7 @@
 // Name of the files to be installed
 var PLUGIN_FILE    = "npdebug.dll";
 var COMPONENT_FILE = "npdebug.xpt";
-var SERVICE_FILE = "abozo.txt";
+var SERVICE_FILE = "gkdebug.dll";
 
 //!!! VERY IMPORTANT TO UPDATE
 var LD_MAJOR_VER = "0.5";                           // Major minor version
