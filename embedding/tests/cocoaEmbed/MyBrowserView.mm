@@ -24,7 +24,8 @@
   loadingStatus = DOCUMENT_DONE_STRING;
   [status setStringValue:loadingStatus];
 
-  [progress setControlTint:NSClearControlTint];
+  [progress retain];
+  [progress removeFromSuperview];
 }
 
 - (void)setFrame:(NSRect)frameRect
@@ -41,7 +42,8 @@
     defaultStatus = NULL;
   }
 
-  [progress setControlTint:NSDefaultControlTint];
+  [progressSuper addSubview:progress];
+  [progress release];
   [progress setIndeterminate:YES];
   [progress startAnimation:self];
 
@@ -57,7 +59,8 @@
 {
   [progress setIndeterminate:YES];
   [progress stopAnimation:self];
-  [progress setControlTint:NSClearControlTint];
+  [progress retain];
+  [progress removeFromSuperview];
 
   loadingStatus = DOCUMENT_DONE_STRING;
   if (defaultStatus) {

@@ -5,7 +5,7 @@
             ACTIONS = {load = id; }; 
             CLASS = MyBrowserView; 
             LANGUAGE = ObjC; 
-            OUTLETS = {progress = id; status = id; urlbar = id; }; 
+            OUTLETS = {progress = id; progressSuper = id; status = id; urlbar = id; }; 
             SUPERCLASS = NSView; 
         }
     ); 
