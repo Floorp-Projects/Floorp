@@ -695,9 +695,12 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 
 	// get the widget hit and the hit point inside that widget
 	Point hitPoint = aOSEvent.where;
-	::SetPort(static_cast<GrafPort*>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY)));
+	GrafPtr grafPort = static_cast<GrafPort*>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
+	::SetPort(grafPort);
+	Rect savePortRect = grafPort->portRect;
 	::SetOrigin(0, 0);
 	::GlobalToLocal(&hitPoint);
+	::SetOrigin(savePortRect.left, savePortRect.top);
 	nsPoint widgetHitPoint(hitPoint.h, hitPoint.v);
 
 	// if the mouse button is still down, send events to the last widget hit
