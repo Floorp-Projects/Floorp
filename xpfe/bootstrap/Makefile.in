@@ -25,8 +25,6 @@ PROGRAM = apprunner
 
 MODULE = apprunner
 
-#REQUIRES = raptor xpcom base netlib pref js dom
-
 include $(DEPTH)/config/autoconf.mk
 
 
@@ -34,76 +32,6 @@ TOOLKIT_GFX_LIB     = -lgfx$(MOZ_TOOLKIT)
 TOOLKIT_WIDGET_LIB  = -lwidget$(MOZ_TOOLKIT)
 TOOLKIT_BASE_LIB    = -lgmbase$(MOZ_TOOLKIT)
 
-EXPORT_TOOLBAR = \
-	DialogAddrIcon.gif \
-	DialogAddrIcon_mo.gif \
-	DialogCompIcon.gif \
-	DialogCompIcon_mo.gif \
-	DialogMailIcon.gif \
-	DialogMailIcon_mo.gif \
-	DialogNavIcon.gif \
-	DialogNavIcon_mo.gif \
-	StatusBar-insecure.gif \
-	StatusBar-secure.gif \
-	TB_Back.gif \
-	TB_Back_dis.gif \
-	TB_Back_mo.gif \
-	TB_Bookmarks.gif \
-	TB_Bookmarks_mo.gif \
-	TB_Edit.gif \
-	TB_Edit.mo.gif \
-	TB_EditPage.gif \
-	TB_EditPage.mo.gif \
-	TB_Forward.gif \
-	TB_Forward_dis.gif \
-	TB_Forward_mo.gif \
-	TB_HTab.gif \
-	TB_HTab_mo.gif \
-	TB_Home.gif \
-	TB_Home_mo.gif \
-	TB_LoadImages.gif \
-	TB_LoadImages.mo.gif \
-	TB_Location.gif \
-	TB_Location_mo.gif \
-	TB_MiniAddr.gif \
-	TB_MiniComp.gif \
-	TB_MiniMail.gif \
-	TB_MiniNav.gif \
-	TB_MiniTab.gif \
-	TB_MixSecurity.gif \
-	TB_MixSecurity.mo.gif \
-	TB_Netscape.gif \
-	TB_Netscape_mo.gif \
-	TB_PersonalIcon.gif \
-	TB_Places.gif \
-	TB_Places_mo.gif \
-	TB_Print.gif \
-	TB_Print_mo.gif \
-	TB_Reload.gif \
-	TB_Reload_mo.gif \
-	TB_Search.gif \
-	TB_Search_mo.gif \
-	TB_Secure.gif \
-	TB_Secure_mo.gif \
-	TB_Stop.gif \
-	TB_Stop.mo.gif \
-	TB_Stop_dis.gif \
-	TB_Stop_mo.gif \
-	TB_Tab.gif \
-	TB_TabSmall.gif \
-	TB_TabSmall_mo.gif \
-	TB_Tab_mo.gif \
-	TB_Unsecure.gif \
-	TB_Unsecure.mo.gif \
-	TB_WhatsRelated.gif \
-	TB_WhatsRelated_mo.gif \
-	$(NULL)
-
-# Pull these out of xpviewer for now (i.e. This is a hack).
-#
-EXPORT_RESOURCES := \
-	$(addprefix $(topsrcdir)/xpfe/xpviewer/src/resources/toolbar/, \
-		$(EXPORT_TOOLBAR))
 
 LIBS = \
 	-L$(DIST)/bin	\
@@ -164,5 +92,3 @@ CFLAGS += $(TOOLKIT_CFLAGS)
 
 include $(topsrcdir)/config/rules.mk
 
-install:: $(PROGRAM)
-	$(INSTALL) $(EXPORT_RESOURCES) $(DIST)/bin/res/toolbar
