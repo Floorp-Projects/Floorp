@@ -1,6 +1,7 @@
 #import <Cocoa/Cocoa.h>
 #import <PreferencePanes/NSPreferencePane.h>
 #import "PreferencePaneBase.h"
+#import "ExtendedTableView.h"
 
 class nsIPref;
 class nsIPermissionManager;
@@ -16,7 +17,7 @@ class nsISupportsArray;
   IBOutlet NSButton *mEditWhitelist;
   
   IBOutlet id mWhitelistPanel;
-  IBOutlet NSTableView* mWhitelistTable;
+  IBOutlet ExtendedTableView* mWhitelistTable;
   IBOutlet NSTextField* mAddField;
   nsIPermissionManager* mManager;         // STRONG (should be nsCOMPtr)  
   nsISupportsArray* mCachedPermissions;		// parallel list of permissions for speed, STRONG (should be nsCOMPtr)
