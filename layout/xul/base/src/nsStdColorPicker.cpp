@@ -119,7 +119,7 @@ NS_IMETHODIMP nsStdColorPicker::Init(nsIContent *aContent)
   {
     printf("web picked\n");
     mPalette = WebPalette;
-    mNumCols = 15;
+    mNumCols = 12;
     mColors = sizeof(WebPalette) / sizeof(char *);
   }
   else if (palette.EqualsIgnoreCase("nose"))
@@ -130,7 +130,7 @@ NS_IMETHODIMP nsStdColorPicker::Init(nsIContent *aContent)
     mColors = sizeof(NosePalette) / sizeof(char *);
   }
 
-  mNumRows = NSToIntCeil(mColors/mNumCols);
+  mNumRows = NSToIntCeil(nscoord(mColors/mNumCols));
 
   return NS_OK;
 }
@@ -195,19 +195,19 @@ NS_IMETHODIMP nsStdColorPicker::SetSize(PRInt32 aWidth, PRInt32 aHeight)
   mFrameHeight = aHeight;
 
   if (aWidth != -1)
-    mBlockWidth = NSToIntRound(mFrameWidth / mNumCols);
+    mBlockWidth = NSToIntRound(nscoord(aWidth / mNumCols));
 
   if (aWidth != -1)
-    mBlockHeight = NSToIntRound(mFrameHeight / mNumRows);
+    mBlockHeight = NSToIntRound(nscoord(aHeight / mNumRows));
+
+  mFrameWidth = NSToIntRound(nscoord((mNumCols) * mBlockWidth));
+  mFrameHeight = NSToIntRound(nscoord((mNumRows) * mBlockHeight));
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsStdColorPicker::GetSize(PRInt32 *aWidth, PRInt32 *aHeight)
 {
-  mFrameWidth = NSToIntRound((mNumCols) * mBlockWidth);
-  mFrameHeight = NSToIntRound((mNumRows) * mBlockHeight);
-
   *aWidth = mFrameWidth;
   *aHeight = mFrameHeight;
 
