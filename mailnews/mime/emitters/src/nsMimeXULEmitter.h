@@ -20,18 +20,18 @@
 
 #include "prtypes.h"
 #include "prio.h"
+#include "nsMimeBaseEmitter.h"
 #include "nsIMimeEmitter.h"
 #include "nsMimeRebuffer.h"
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
-#include "nsIURI.h"
-#include "nsIPref.h"
 #include "nsIChannel.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsFileSpec.h"
 #include "nsIMimeMiscStatus.h"
 #include "nsIMsgHeaderParser.h"
+#include "nsCOMPtr.h"
 
 //
 // Used for keeping track of the attachment information...
@@ -52,21 +52,12 @@ typedef struct {
   nsIMimeMiscStatus   *obj;
 } miscStatusType;
 
-class nsMimeXULEmitter : public nsIMimeEmitter {
+class nsMimeXULEmitter : public nsMimeBaseEmitter {
 public: 
     nsMimeXULEmitter ();
     virtual       ~nsMimeXULEmitter (void);
 
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
-
-    // These will be called to start and stop the total operation
-    NS_IMETHOD    Initialize(nsIURI *url, nsIChannel *aChannel);
     NS_IMETHOD    Complete();
-
-    // Set the output stream/listener for processed data.
-    NS_IMETHOD    SetPipe(nsIInputStream * aInputStream, nsIOutputStream *outStream);
-    NS_IMETHOD    SetOutputListener(nsIStreamListener *listener);
 
     // Header handling routines.
     NS_IMETHOD    StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
@@ -77,7 +68,6 @@ public:
 
     // Attachment handling routines
     NS_IMETHOD    StartAttachment(const char *name, const char *contentType, const char *url);
-    NS_IMETHOD    AddAttachmentField(const char *field, const char *value);
     NS_IMETHOD    EndAttachment();
 
     // Body handling routines
@@ -89,8 +79,6 @@ public:
     // libmime needs to pass through without any particular parsing
     // involved (i.e. decoded images, HTML Body Text, etc...
     NS_IMETHOD    Write(const char *buf, PRUint32 size, PRUint32 *amountWritten);
-    NS_IMETHOD    UtilityWrite(const char *buf);
-    NS_IMETHOD    UtilityWriteCRLF(const char *buf);
 
     NS_IMETHOD    WriteXULHeader(const char *msgID);
     NS_IMETHOD    WriteXULTag(const char *tagName, const char *value);
@@ -121,32 +109,7 @@ public:
     char          *GetHeaderValue(const char *aHeaderName);
 
 protected:
-    // For buffer management on output
-    MimeRebuffer        *mBufferMgr;
-
-	// mscott - dont ref count the streams....the emitter is owned by the converter
-	// which owns these streams...
-    nsIOutputStream     *mOutStream;
-	  nsIInputStream	    *mInputStream;
-    nsIStreamListener   *mOutListener;
-	  nsIChannel			    *mChannel;
-
-    PRUint32            mTotalWritten;
-    PRUint32            mTotalRead;
-
-    // For header determination...
-    PRBool              mDocHeader;
-
-    // For content type...
-    char                *mAttachContentType;
-
-    // the url for the data being processed...
-    nsIURI              *mURL;
-
-    // The setting for header output...
-    nsIPref             *mPrefs;          /* Connnection to prefs service manager */
-    PRInt32             mHeaderDisplayType; 
-    PRInt32             mCutoffValue;     
+    PRInt32             mCutoffValue;
 
     // For attachment processing...
     PRInt32             mAttachCount;
@@ -163,8 +126,6 @@ protected:
     // RICHIE SHERRY nsCOMPtr<nsIMimeMiscStatus>   mMiscStatus;
     nsVoidArray         *mMiscStatusArray;
     nsCOMPtr<nsIMsgHeaderParser>  mHeaderParser;
-
-	//nsOutputFileStream* m_outputFile;
 };
 
 

@@ -20,7 +20,7 @@
 
 #include "prtypes.h"
 #include "prio.h"
-#include "nsIMimeEmitter.h"
+#include "nsMimeBaseEmitter.h"
 #include "nsMimeRebuffer.h"
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
@@ -29,23 +29,10 @@
 #include "nsIPref.h"
 #include "nsIChannel.h"
 
-class nsMimeHtmlEmitter : public nsIMimeEmitter {
+class nsMimeHtmlEmitter : public nsMimeBaseEmitter {
 public: 
     nsMimeHtmlEmitter ();
     virtual       ~nsMimeHtmlEmitter (void);
-
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
-
-    // These will be called to start and stop the total operation
-	// need this bogus channel requirement to pass onto the stream listener
-	// for the emitter....
-    NS_IMETHOD    Initialize(nsIURI *url, nsIChannel *aChannel);
-    NS_IMETHOD    Complete();
-
-    // Set the output stream/listener for processed data.
-    NS_IMETHOD    SetPipe(nsIInputStream * aInputStream, nsIOutputStream *outStream);
-    NS_IMETHOD    SetOutputListener(nsIStreamListener *listener);
 
     // Header handling routines.
     NS_IMETHOD    StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
@@ -61,48 +48,15 @@ public:
     // Body handling routines
     NS_IMETHOD    StartBody(PRBool bodyOnly, const char *msgID, const char *outCharset);
     NS_IMETHOD    WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten);
-    NS_IMETHOD    EndBody();
 
     // Generic write routine. This is necessary for output that
     // libmime needs to pass through without any particular parsing
     // involved (i.e. decoded images, HTML Body Text, etc...
-    NS_IMETHOD    Write(const char *buf, PRUint32 size, PRUint32 *amountWritten);
-    NS_IMETHOD    UtilityWrite(const char *buf);
+//    NS_IMETHOD    Write(const char *buf, PRUint32 size, PRUint32 *amountWritten);
 
     NS_IMETHOD    ProcessContentType(const char *ct);
 
 protected:
-    // For buffer management on output
-    MimeRebuffer        *mBufferMgr;
-
-    // For the output stream
-	// mscott - dont ref count the streams....the emitter is owned by the converter
-	// which owns these streams...
-    nsIOutputStream     *mOutStream;
-	nsIInputStream	    *mInputStream;
-    nsIStreamListener   *mOutListener;
-	nsIChannel			*mChannel;
-
-    PRUint32            mTotalWritten;
-    PRUint32            mTotalRead;
-
-    // For header determination...
-    nsIPref             *mPrefs;          /* Connnection to prefs service manager */
-    PRBool              mDocHeader;
-
-    // For content type...
-    char                *mAttachContentType;
-
-    // the url for the data being processed...
-    nsIURI              *mURL;
-
-    // The setting for header output...
-    PRInt32             mHeaderDisplayType;
-
-#ifdef DEBUG_rhp
-    PRBool              mReallyOutput;
-    PRFileDesc          *mLogFile;        /* Temp file to put generated HTML into. */ 
-#endif 
 };
 
 /* this function will be used by the factory to generate an class access object....*/

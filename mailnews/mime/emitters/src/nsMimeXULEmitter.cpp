@@ -15,22 +15,18 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "nsCOMPtr.h"
+#include "msgCore.h"
 #include "stdio.h"
-#include "nsMimeRebuffer.h"
 #include "nsMimeXULEmitter.h"
 #include "plstr.h"
 #include "nsIMimeEmitter.h"
 #include "nsMailHeaders.h"
 #include "nscore.h"
-#include "nsIPref.h"
-#include "nsIServiceManager.h"
 #include "nsEscape.h"
 #include "prmem.h"
 #include "nsEmitterUtils.h"
 #include "nsFileStream.h"
 #include "nsMimeStringResources.h"
-#include "msgCore.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsIComponentManager.h"
 #include "nsEmitterUtils.h"
@@ -39,9 +35,8 @@
 #include "nsIMimeMiscStatus.h"
 #include "nsIAbAddressCollecter.h"
 #include "nsAbBaseCID.h"
+#include "nsCOMPtr.h"
 
-// For the new pref API's
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
 
@@ -55,32 +50,12 @@ nsresult NS_NewMimeXULEmitter(const nsIID& iid, void **result)
 		return NS_ERROR_OUT_OF_MEMORY;
 }
 
-/* 
- * The following macros actually implement addref, release and 
- * query interface for our component. 
- */
-NS_IMPL_ADDREF(nsMimeXULEmitter)
-NS_IMPL_RELEASE(nsMimeXULEmitter)
-NS_IMPL_QUERY_INTERFACE(nsMimeXULEmitter, nsIMimeEmitter::GetIID()); /* we need to pass in the interface ID of this interface */
-
 /*
  * nsMimeXULEmitter definitions....
  */
 nsMimeXULEmitter::nsMimeXULEmitter()
 {
-  NS_INIT_REFCNT(); 
-
- // nsFileSpec fileSpec("c:\\temp\\xulOutput");
-
- // m_outputFile = new nsOutputFileStream(fileSpec, PR_WRONLY |
- //                                                 PR_CREATE_FILE);
-
   mCutoffValue = 3;
-  mBufferMgr = NULL;
-  mTotalWritten = 0;
-  mTotalRead = 0;
-  mDocHeader = PR_FALSE;
-  mAttachContentType = NULL;
 
   // Header cache...
   mHeaderArray = new nsVoidArray();
@@ -95,26 +70,13 @@ nsMimeXULEmitter::nsMimeXULEmitter()
   mBodyFileSpec = nsnull;
   mBodyStarted = PR_FALSE;
 
-  mInputStream = nsnull;
-  mOutStream = nsnull;
-  mOutListener = nsnull;
-  mURL = nsnull;
-  mHeaderDisplayType = nsMimeHeaderDisplayTypes::NormalHeaders;
-
-  nsresult rv = nsServiceManager::GetService(kPrefCID, nsIPref::GetIID(), (nsISupports**)&(mPrefs));
-  if (! (mPrefs && NS_SUCCEEDED(rv)))
-    return;
-
-  if ((mPrefs && NS_SUCCEEDED(rv)))
-  {
-    mPrefs->GetIntPref("mail.show_headers", &mHeaderDisplayType);
+  if (mPrefs)
     mPrefs->GetIntPref("mailnews.max_header_display_length", &mCutoffValue);
-  }
 
   mMiscStatusArray = new nsVoidArray();
   BuildListOfStatusProviders();
 
-  rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
+  nsresult rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
                                           NULL, nsIMsgHeaderParser::GetIID(), 
                                           (void **) getter_AddRefs(mHeaderParser));
   if (NS_FAILED(rv))
@@ -168,52 +130,10 @@ nsMimeXULEmitter::~nsMimeXULEmitter(void)
     delete mMiscStatusArray;
   }
 
-  if (mBufferMgr)
-    delete mBufferMgr;
-
   if (mBodyFileSpec)
     delete mBodyFileSpec;
-
-  // Release the prefs service
-  if (mPrefs)
-    nsServiceManager::ReleaseService(kPrefCID, mPrefs);
 }
 
-// Set the output stream for processed data.
-NS_IMETHODIMP
-nsMimeXULEmitter::SetPipe(nsIInputStream * aInputStream, nsIOutputStream *outStream)
-{
-  mInputStream = aInputStream;
-  mOutStream = outStream;
-  return NS_OK;
-}
-
-// Note - these is setup only...you should not write
-// anything to the stream since these may be image data
-// output streams, etc...
-nsresult       
-nsMimeXULEmitter::Initialize(nsIURI *url, nsIChannel * aChannel)
-{
-  // set the url
-  mURL = url;
-  mChannel = aChannel;
-
-  // Create rebuffering object
-  mBufferMgr = new MimeRebuffer();
-
-  // Counters for output stream
-  mTotalWritten = 0;
-  mTotalRead = 0;
-
-  return NS_OK;
-}
-
-nsresult
-nsMimeXULEmitter::SetOutputListener(nsIStreamListener *listener)
-{
-  mOutListener = listener;
-  return NS_OK;
-}
 
 // Attachment handling routines
 nsresult
@@ -230,13 +150,6 @@ nsMimeXULEmitter::StartAttachment(const char *name, const char *contentType, con
     mCurrentAttachment->contentType = PL_strdup(contentType);
   }
 
-  return NS_OK;
-}
-
-nsresult
-nsMimeXULEmitter::AddAttachmentField(const char *field, const char *value)
-{
-  // If any fields are of interest, do something here with them...
   return NS_OK;
 }
 
@@ -339,92 +252,10 @@ nsMimeXULEmitter::EndBody()
   return NS_OK;
 }
 
-nsresult
-nsMimeXULEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
-{
-  unsigned int        written = 0;
-  PRUint32            rc = 0;
-  PRUint32            needToWrite;
 
- // *m_outputFile << buf;
-  //
-  // Make sure that the buffer we are "pushing" into has enough room
-  // for the write operation. If not, we have to buffer, return, and get
-  // it on the next time through
-  //
-  *amountWritten = 0;
 
-  needToWrite = mBufferMgr->GetSize();
-  // First, handle any old buffer data...
-  if (needToWrite > 0)
-  {
-    rc += mOutStream->Write(mBufferMgr->GetBuffer(), 
-                            mBufferMgr->GetSize(), &written);
-    mTotalWritten += written;
-    mBufferMgr->ReduceBuffer(written);
-//    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
 
-    *amountWritten = written;
 
-    // if we couldn't write all the old data, buffer the new data
-    // and return
-    if (mBufferMgr->GetSize() > 0)
-    {
-      mBufferMgr->IncreaseBuffer(buf, size);
-      return NS_OK;
-    }
-  }
-
-  // if we get here, we are dealing with new data...try to write
-  // and then do the right thing...
-  //
-  // Note: if the body has been started, we shouldn't write to the
-  // output stream, but rather, just append to the body buffer.
-  //
-  if (mBodyStarted)
-  {
-    mBody.Append(buf, size);
-    rc = size;
-    written = size;
-  }
-  else
-    rc = mOutStream->Write(buf, size, &written);
-
-  *amountWritten = written;
-  mTotalWritten += written;
-
-  if (written < size)
-    mBufferMgr->IncreaseBuffer(buf+written, (size-written));
-
-  // Only call the listener if we wrote data into the stream.
-//  if ((!mBodyStarted) && (mOutListener))
-    //mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
-
-  return rc;
-}
-
-nsresult
-nsMimeXULEmitter::UtilityWrite(const char *buf)
-{
-  PRInt32     tmpLen = PL_strlen(buf);
-  PRUint32    written;
-
-  Write(buf, tmpLen, &written);
-
-  return NS_OK;
-}
-
-nsresult
-nsMimeXULEmitter::UtilityWriteCRLF(const char *buf)
-{
-  PRInt32     tmpLen = PL_strlen(buf);
-  PRUint32    written;
-
-  Write(buf, tmpLen, &written);
-  Write(CRLF, 2, &written);
-
-  return NS_OK;
-}
 
 nsresult
 nsMimeXULEmitter::AddHeaderFieldHTML(const char *field, const char *value)
@@ -686,18 +517,7 @@ nsMimeXULEmitter::Complete()
   // Finalize the XUL document...
   UtilityWriteCRLF("</window>");
 
-  // Now, just try to check if we still have any data and if so,
-  // try to flush it this one final time
-  PRUint32      written; 
-  if ( (mBufferMgr) && (mBufferMgr->GetSize() > 0))
-    Write("", 0, &written);
-
-  // now flush things out to layout..
-  PRUint32 bytesInStream;
-  mInputStream->Available(&bytesInStream);
-  mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, bytesInStream);
-
-  return NS_OK;
+  return nsMimeBaseEmitter::Complete();
 }
 
 
@@ -1488,4 +1308,69 @@ nsMimeXULEmitter::GetStatusObjForProgID(nsCString aProgID)
   else
     return returnObj;
 }
+
+NS_IMETHODIMP
+nsMimeXULEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
+{
+  unsigned int        written = 0;
+  PRUint32            rc = 0;
+  PRUint32            needToWrite;
+
+ // *m_outputFile << buf;
+  //
+  // Make sure that the buffer we are "pushing" into has enough room
+  // for the write operation. If not, we have to buffer, return, and get
+  // it on the next time through
+  //
+  *amountWritten = 0;
+
+  needToWrite = mBufferMgr->GetSize();
+  // First, handle any old buffer data...
+  if (needToWrite > 0)
+  {
+    rc += mOutStream->Write(mBufferMgr->GetBuffer(), 
+                            mBufferMgr->GetSize(), &written);
+    mTotalWritten += written;
+    mBufferMgr->ReduceBuffer(written);
+//    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
+
+    *amountWritten = written;
+
+    // if we couldn't write all the old data, buffer the new data
+    // and return
+    if (mBufferMgr->GetSize() > 0)
+    {
+      mBufferMgr->IncreaseBuffer(buf, size);
+      return NS_OK;
+    }
+  }
+
+  // if we get here, we are dealing with new data...try to write
+  // and then do the right thing...
+  //
+  // Note: if the body has been started, we shouldn't write to the
+  // output stream, but rather, just append to the body buffer.
+  //
+  if (mBodyStarted)
+  {
+    mBody.Append(buf, size);
+    rc = size;
+    written = size;
+  }
+  else
+    rc = mOutStream->Write(buf, size, &written);
+
+  *amountWritten = written;
+  mTotalWritten += written;
+
+  if (written < size)
+    mBufferMgr->IncreaseBuffer(buf+written, (size-written));
+
+  // Only call the listener if we wrote data into the stream.
+//  if ((!mBodyStarted) && (mOutListener))
+    //mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
+
+  return rc;
+}
+
 

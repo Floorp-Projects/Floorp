@@ -20,7 +20,7 @@
 
 #include "prtypes.h"
 #include "prio.h"
-#include "nsIMimeEmitter.h"
+#include "nsMimeBaseEmitter.h"
 #include "nsMimeRebuffer.h"
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
@@ -28,68 +28,14 @@
 #include "nsIPref.h"
 #include "nsIChannel.h"
 
-class nsMimeRawEmitter : public nsIMimeEmitter {
+class nsMimeRawEmitter : public nsMimeBaseEmitter {
 public: 
     nsMimeRawEmitter ();
     virtual       ~nsMimeRawEmitter (void);
 
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
-
-    // These will be called to start and stop the total operation
-    NS_IMETHOD    Initialize(nsIURI *url, nsIChannel * aChannel);
-    NS_IMETHOD    Complete();
-
-    // Set the output stream/listener for processed data.
-    NS_IMETHOD    SetPipe(nsIInputStream * aInputStream, nsIOutputStream *outStream);
-    NS_IMETHOD    SetOutputListener(nsIStreamListener *listener);
-
-    // Header handling routines.
-    NS_IMETHOD    StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
-                              const char *outCharset);
-    NS_IMETHOD    AddHeaderField(const char *field, const char *value);
-    NS_IMETHOD    EndHeader();
-
-    // Attachment handling routines
-    NS_IMETHOD    StartAttachment(const char *name, const char *contentType, const char *url);
-    NS_IMETHOD    AddAttachmentField(const char *field, const char *value);
-    NS_IMETHOD    EndAttachment();
-
-    // Body handling routines
-    NS_IMETHOD    StartBody(PRBool bodyOnly, const char *msgID, const char *outCharset);
     NS_IMETHOD    WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten);
-    NS_IMETHOD    EndBody();
-
-    // Generic write routine. This is necessary for output that
-    // libmime needs to pass through without any particular parsing
-    // involved (i.e. decoded images, HTML Body Text, etc...
-    NS_IMETHOD    Write(const char *buf, PRUint32 size, PRUint32 *amountWritten);
-    NS_IMETHOD    UtilityWrite(const char *buf);
 
 protected:
-    // For buffer management on output
-    MimeRebuffer        *mBufferMgr;
-
-    // For the output stream
-	// mscott - dont ref count the streams....the emitter is owned by the converter
-	// which owns these streams...
-    nsIOutputStream     *mOutStream;
-	nsIInputStream	    *mInputStream;
-    nsIStreamListener   *mOutListener;
-	nsIChannel			*mChannel;
-
-    PRUint32            mTotalWritten;
-    PRUint32            mTotalRead;
-
-    nsIPref             *mPrefs;          /* Connnection to prefs service manager */
-
-    // the url for the data being processed...
-    nsIURI              *mURL;
-
-#ifdef DEBUG_rhp
-    PRBool              mReallyOutput;
-    PRFileDesc          *mLogFile;        /* Temp file to put generated HTML into. */ 
-#endif 
 };
 
 /* this function will be used by the factory to generate an class access object....*/
