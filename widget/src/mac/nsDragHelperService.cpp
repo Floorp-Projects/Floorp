@@ -38,9 +38,9 @@
 #include "nsDragHelperService.h"
 
 #include "nsGUIEvent.h"
+#include "nsIDOMNode.h"
 #include "nsIDragSessionMac.h"
 #include "nsIServiceManager.h"
-
 
 #define kDragServiceContractID "@mozilla.org/widget/dragservice;1"
 
