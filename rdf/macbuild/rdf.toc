@@ -4,6 +4,7 @@ mozilla/rdf/base/src/nsContainerCursor.cpp
 mozilla/rdf/base/src/nsEmptyCursor.cpp
 mozilla/rdf/base/src/nsInMemoryDataSource.cpp
 mozilla/rdf/base/src/nsRDFContentSink.cpp
+mozilla/rdf/base/src/nsRDFResource.cpp
 mozilla/rdf/base/src/nsRDFService.cpp
 mozilla/rdf/base/src/nsRDFXMLDataSource.cpp
 mozilla/rdf/base/src/rdfutil.cpp
