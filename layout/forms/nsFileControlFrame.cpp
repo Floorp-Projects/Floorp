@@ -133,6 +133,11 @@ nsFileControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
     reciever->AddEventListenerByIID(this, kIDOMMouseListenerIID);
   }
 
+  nsString value;
+  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::size, value)) {
+    mTextContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::size, value, PR_FALSE);
+  }
+
   return NS_OK;
 }
 
@@ -253,10 +258,9 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
     if (result) {
       nsFileSpec fileSpec;
       fileWidget->GetFile(fileSpec);
-      char* leafName = fileSpec.GetLeafName();
-      if (leafName) {
-        mTextFrame->SetProperty(mPresContext, nsHTMLAtoms::value,leafName);
-        nsCRT::free(leafName);
+      const char * pathName = fileSpec.GetNativePathCString();
+      if (pathName) {
+        mTextFrame->SetProperty(mPresContext, nsHTMLAtoms::value, pathName);
       }
     }
     NS_RELEASE(fileWidget);
@@ -409,13 +413,19 @@ nsFileControlFrame::AttributeChanged(nsIPresContext* aPresContext,
 {
   // set the text control to readonly or not
   if (nsHTMLAtoms::disabled == aAttribute) {
-    //nsAutoString val(nsFormFrame::GetDisabled(this) ? "true":"false");
     nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
     if (textControl)
     {
       textControl->SetDisabled(nsFormFrame::GetDisabled(this));
     }
-    //mTextContent->SetHTMLAttribute(nsHTMLAtoms::disabled, val, PR_TRUE);
+  } else if (nsHTMLAtoms::size == aAttribute) {
+    nsString value;
+    if (nsnull != mTextContent && NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::size, value)) {
+      mTextContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::size, value, PR_TRUE);
+      if (aHint != NS_STYLE_HINT_REFLOW) {
+        nsFormFrame::StyleChangeReflow(aPresContext, this);
+      }
+    }
   }
 
   return nsAreaFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
