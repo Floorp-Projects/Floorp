@@ -264,7 +264,6 @@ protected:
 
   nsCOMPtr<nsIDOMNode>     GetDOMNodeFromWebShell(nsIWebShell *aShell);
   void                     ExecuteStartupCode();
-  void                     SetSizeFromXUL();
   void                     SetTitleFromXUL();
   void                     ShowAppropriateChrome();
   void                     LoadContentAreas();
