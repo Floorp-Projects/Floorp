@@ -359,7 +359,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
     </menupopup>
 	</menu>
 
-    <!-- menu id="debugMenu"/ -->
+    <menu id="debugMenu"/>
 	<menu id="tasksMenu"/>
 	<menu id="menu_Help"/>
 	<spring flex="100%"/>
