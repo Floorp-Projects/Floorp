@@ -83,6 +83,7 @@ comm.jar:
     content/communicator/sidebar/preview.xul                    (sidebar/resources/preview.xul)
     content/communicator/sidebar/sidebarOverlay.js              (sidebar/resources/sidebarOverlay.js)
     content/communicator/sidebar/sidebarOverlay.xul             (sidebar/resources/sidebarOverlay.xul)
+    content/communicator/sidebar/PageNotFound.xul               (sidebar/resources/PageNotFound.xul)
     content/communicator/sidebar/local-panels.rdf               (sidebar/resources/local-panels.rdf)
     content/communicator/timebomb/warn.xul                      (timebomb/resources/content/warn.xul)
     content/communicator/timebomb/expireText.xul                (timebomb/resources/content/expireText.xul)

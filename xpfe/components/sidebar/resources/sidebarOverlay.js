@@ -38,6 +38,17 @@
 // Global variables
 //////////////////////////////////////////////////////////////
 
+
+var gCurFrame;
+var gTimeoutID = null;
+
+function setBlank()
+{
+    gTimeoutID = null;
+    gCurFrame.setAttribute('src', 'chrome://communicator/content/sidebar/PageNotFound.xul');
+}
+
+
 // Uncomment for debug output
 const SB_DEBUG = false;
 
@@ -202,6 +213,12 @@ function ()
 // Removes the "Loading..." screen when the panel has finished loading.
 function panel_loader() {
   debug("panel_loader()");
+
+  if (gTimeoutID != null) {
+      clearTimeout(gTimeoutID);
+      gTimeoutID = null; 
+  }
+
   this.removeEventListener("load", panel_loader, true);
   this.removeAttribute('collapsed');
   this.setAttribute('loadstate','loaded');
@@ -272,6 +289,13 @@ function (force_reload)
           if (saved_src != src) {
             debug("    set src="+saved_src);
             iframe.setAttribute('src', saved_src);
+
+            if (gTimeoutID != null)
+              clearTimeout(gTimeoutID);
+
+            gCurFrame = iframe;
+            gTimeoutID = setTimeout (setBlank, 20000);
+
           }
         }
 
