@@ -1,0 +1,404 @@
+<html>
+
+<!--
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Ashish Bhatt <ashishbhatt@netscape.com>
+ *
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+  -->
+
+<title>nsILocalFile Tets case</title>
+
+<head>
+
+<script type="text/javascript" src="../jslib/bridge.js"></script>
+<script type="text/javascript">
+
+var gLocalFileObject ;
+var buffer ;
+
+var path = "C:\\Program Files" ;
+var localfile = getLocalFileObject();
+var path ;
+var discriptor ;
+
+if (navigator.platform == "Win32")
+{
+	path = "C:\\Program Files" ;
+	discriptor= "..\\..\\" ;
+}
+else if(navigator.platform == "MacPPC")
+{
+	path = "osx:" ;
+	discriptor = "..:..:" ;
+}
+else
+{
+	path = "/usr/local" ;
+	discriptor = "../../" ;
+}
+
+
+
+function getLocalFileObject()
+{
+
+	if (gLocalFileObject)
+	   return gLocalFileObject ;
+
+	try{
+        netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+        gLocalFileObject = Components.classes["@mozilla.org/file/local;1"].
+                createInstance(Components.interfaces.nsILocalFile)
+
+		return gLocalFileObject ;
+	 }
+	 catch(e){
+		if (isRunningStandalone())
+			alert("Exception: " + e);
+		else
+			WriteResults("Exception: " + e);
+	  }
+
+}
+
+function WritePassFail(aValue,e)
+{
+
+  if( aValue ==  "Pass")
+  {
+	  buffer += "<td>"+ e +"</td>" ;
+	  buffer += "<td>Pass</td>"
+  }
+  else
+  {
+	  buffer += "<td>" +"Exception: " + e + "</td>" ;
+	  buffer += "<td bgcolor='#FF0000'>Fail</td>"
+  }
+
+  buffer += "</tr>"
+
+}
+
+function RunAllTests()
+{
+	// "<td bgcolor='#FF0000'>
+
+	buffer = "<b>Results for <a href='http://lxr.mozilla.org/seamonkey/source/xpcom/io/nsILocalFile.idl'>nsILocalFile :</a></b><br><br>"
+	buffer += "<table border cols=4 width='70%'>"
+	buffer += "<tr>"
+	buffer += "<td><b>Property/Method</b></td>"
+	buffer += "<td><b>Params</b></td>"
+	buffer += "<td><b>Output/Bug/Error</b></td>"
+	buffer += "<td><b>Result</b></td>"
+	buffer += "</tr>"
+
+	initWithPath();
+	initWithFile();
+	getfollowLinks();
+	setfollowLinks()
+	GetdiskSpaceAvailable() ;  // maybe we should put this somewhere else.
+	appendRelativePath();
+	GetpersistentDescriptor();
+	reveal();
+	launch();
+	getRelativeDescriptor();
+	setRelativeDescriptor();
+
+	buffer += "</table>"
+	if (isRunningStandalone())
+	{
+	   document.clear();
+	   document.write(buffer);
+	}
+	else
+		WriteResults(buffer);
+
+
+
+}
+
+function initWithPath()
+{
+
+	//var localfile = getLocalFileObject();
+
+	buffer += "<tr>"
+	buffer += "<td>initWithPath()</td>"
+	buffer += "<td>native path</td>"
+
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		localfile.initWithPath(path) ;
+		WritePassFail("Pass","initWithPath :" + path);
+	 }
+	 catch(e){
+		WritePassFail("Fail",e);
+	  }
+}
+
+function appendRelativePath()
+{
+   var localfile = getLocalFileObject();
+
+	buffer += "<tr>"
+	buffer += "<td>appendRelativePath()</td>"
+	buffer += "<td>path</td>"
+   try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		localfile.initWithPath(path) ;
+		localfile.appendRelativePath("try.txt");
+
+		WritePassFail("Pass","");
+	 }
+	 catch(e){
+		WritePassFail("Fail",e);
+	  }
+}
+
+function initWithFile()
+{
+   //var localfile = getLocalFileObject();
+   var Mylocalfile = getLocalFileObject();
+
+	buffer += "<tr>"
+	buffer += "<td>initWithFile()</td>"
+	buffer += "<td>nsILocalFile</td>"
+   try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		Mylocalfile.initWithFile(localfile);
+
+
+		WritePassFail("Pass","");
+	 }
+	 catch(e){
+		WritePassFail("Fail",e);
+	  }
+}
+
+function getfollowLinks()
+{
+   //var localfile = getLocalFileObject();
+
+	buffer += "<tr>"
+	buffer += "<td>followLinks(get)</td>"
+	buffer += "<td>none</td>"
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		abc = localfile.followLinks;
+		WritePassFail("Pass",abc);
+	 }
+	 catch(e){
+		WritePassFail("Fail",e);
+	  }
+}
+
+function setfollowLinks()
+{
+   //var localfile = getLocalFileObject();
+
+	buffer += "<tr>"
+	buffer += "<td>followLinks(set)</td>"
+	buffer += "<td>true/false</td>"
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		localfile.followLinks = true;
+		WritePassFail("Pass","followlinks = true");
+	 }
+	 catch(e){
+		WritePassFail("Fail",e);
+	  }
+}
+
+function GetdiskSpaceAvailable()
+{
+	//var localfile = getLocalFileObject();
+
+	buffer += "<tr>"
+	buffer += "<td>diskSpaceAvailable</td>"
+	buffer += "<td>none</td>"
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+
+		var diskspace = localfile.diskSpaceAvailable;
+		WritePassFail("Pass","Diskspace:" +  diskspace);
+	 }
+	 catch(e){
+		WritePassFail("Fail",e);
+	  }
+}
+
+
+
+
+function GetpersistentDescriptor()
+{
+	//var localfile = getLocalFileObject();
+
+	buffer += "<tr>"
+	buffer += "<td>persistentDescriptor</td>"
+	buffer += "<td>none</td>"
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+
+		var discriptor = localfile.persistentDescriptor;
+		WritePassFail("Pass","Discriptor:" +  discriptor);
+	 }
+	 catch(e){
+		WritePassFail("Fail",e);
+	  }
+}
+
+function reveal()
+{
+	//var localfile = getLocalFileObject();
+
+	buffer += "<tr>"
+	buffer += "<td>reveal()</td>"
+	buffer += "<td>Works only on platform which support this kind of functionality. Should Open the folder where the file is located</td>"
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+
+		localfile.reveal();
+		WritePassFail("Pass","");
+	 }
+	 catch(e){
+		WritePassFail("Fail",e);
+	  }
+}
+
+function launch()
+{
+	//var localfile = getLocalFileObject();
+
+	buffer += "<tr>"
+	buffer += "<td>launch()</td>"
+	buffer += "<td>Works only on platform which support this kind of functionality. Should try to open the file</td>"
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		if(!localfile.exists())
+			localfile.create(0 ,0777)
+		localfile.launch();
+		WritePassFail("Pass","");
+	 }
+	 catch(e){
+		WritePassFail("Fail",e);
+	  }
+}
+
+
+function getRelativeDescriptor()
+{
+	//var localfile = getLocalFileObject();
+
+	buffer += "<tr>"
+	buffer += "<td>getRelativeDescriptor()</td>"
+	buffer += "<td>none</td>"
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+
+		var discriptor = localfile.getRelativeDescriptor(localfile);
+		WritePassFail("Pass","Relative Discriptor:" +  discriptor);
+	 }
+	 catch(e){
+		WritePassFail("Fail",e);
+	  }
+}
+
+function setRelativeDescriptor()
+{
+	//var localfile = getLocalFileObject();
+
+	buffer += "<tr>"
+	buffer += "<td>getRelativeDescriptor()</td>"
+	buffer += "<td>none</td>"
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		localfile.setRelativeDescriptor(localfile,discriptor	);
+		WritePassFail("Pass","Set Discriptor:" +  discriptor);
+	 }
+	 catch(e){
+		WritePassFail("Fail",e);
+	  }
+}
+
+</script>
+
+</head>
+
+<body>
+<script type="text/javascript">
+   RunAllTests();
+</script>
+</body>
+
+</html>
+
