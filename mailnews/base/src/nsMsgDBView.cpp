@@ -993,9 +993,9 @@ nsresult nsMsgDBView::UpdateDisplayMessage(nsMsgViewIndex viewPosition)
 
       mCommandUpdater->DisplayMessageChanged(folder, subject, keywords);
 
-      if (m_folder) 
+      if (folder) 
       {
-        rv = m_folder->SetLastMessageLoaded(m_keys[viewPosition]);
+        rv = folder->SetLastMessageLoaded(m_keys[viewPosition]);
         NS_ENSURE_SUCCESS(rv,rv);
       }
     } // if view position is valid
@@ -5531,7 +5531,9 @@ nsMsgDBView::GetMsgToSelectAfterDelete(nsMsgViewIndex *msgToSelectAfterDelete)
     rv = mTreeSelection->GetRangeAt(i, &startRange, &endRange);
     *msgToSelectAfterDelete = PR_MIN(*msgToSelectAfterDelete, startRange);
   }
-  nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_folder);
+  nsCOMPtr<nsIMsgFolder> folder;
+  GetMsgFolder(getter_AddRefs(folder));
+  nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(folder);
   PRBool thisIsImapFolder = (imapFolder != nsnull);
   if (thisIsImapFolder) //need to update the imap-delete model, can change more than once in a session.
     GetImapDeleteModel(nsnull);

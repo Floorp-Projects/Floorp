@@ -76,6 +76,45 @@ NS_IMETHODIMP nsMsgSearchDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeVal
     return rv;
 }
 
+NS_IMETHODIMP
+nsMsgSearchDBView::CopyDBView(nsMsgDBView *aNewMsgDBView, nsIMessenger *aMessengerInstance, 
+                                       nsIMsgWindow *aMsgWindow, nsIMsgDBViewCommandUpdater *aCmdUpdater)
+{
+  nsMsgDBView::CopyDBView(aNewMsgDBView, aMessengerInstance, aMsgWindow, aCmdUpdater);
+  nsMsgSearchDBView* newMsgDBView = (nsMsgSearchDBView *) aNewMsgDBView;
+
+  // now copy all of our private member data
+  newMsgDBView->mDestFolder = mDestFolder;
+  newMsgDBView->mCommand = mCommand;
+  newMsgDBView->mTotalIndices = mTotalIndices;
+  newMsgDBView->mCurIndex = mCurIndex; 
+
+  if (m_folders)
+    m_folders->Clone(getter_AddRefs(newMsgDBView->m_folders));
+
+  if (m_hdrsForEachFolder)
+    m_hdrsForEachFolder->Clone(getter_AddRefs(newMsgDBView->m_hdrsForEachFolder));
+
+  if (m_copyListenerList)
+    m_copyListenerList->Clone(getter_AddRefs(newMsgDBView->m_copyListenerList));
+
+  if (m_uniqueFoldersSelected)
+    m_uniqueFoldersSelected->Clone(getter_AddRefs(newMsgDBView->m_uniqueFoldersSelected));
+
+
+  PRInt32 count = m_dbToUseList.Count(); 
+  for(PRInt32 i = 0; i < count; i++)
+  {
+    newMsgDBView->m_dbToUseList.AppendObject(m_dbToUseList[i]);
+    // register the new view with the database so it gets notifications
+    m_dbToUseList[i]->AddListener(newMsgDBView);
+  }
+
+  // nsUInt32Array* mTestIndices;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgSearchDBView::Close()
 {
   PRInt32 count = m_dbToUseList.Count();

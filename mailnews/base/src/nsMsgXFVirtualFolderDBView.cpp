@@ -71,6 +71,39 @@ NS_IMETHODIMP nsMsgXFVirtualFolderDBView::Close()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgXFVirtualFolderDBView::CloneDBView(nsIMessenger *aMessengerInstance, nsIMsgWindow *aMsgWindow, 
+                                        nsIMsgDBViewCommandUpdater *aCmdUpdater, nsIMsgDBView **_retval)
+{
+  nsMsgXFVirtualFolderDBView* newMsgDBView;
+  NS_NEWXPCOM(newMsgDBView, nsMsgXFVirtualFolderDBView);
+
+  if (!newMsgDBView)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv = CopyDBView(newMsgDBView, aMessengerInstance, aMsgWindow, aCmdUpdater);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  NS_IF_ADDREF(*_retval = newMsgDBView);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgXFVirtualFolderDBView::CopyDBView(nsMsgDBView *aNewMsgDBView, nsIMessenger *aMessengerInstance, 
+                                       nsIMsgWindow *aMsgWindow, nsIMsgDBViewCommandUpdater *aCmdUpdater)
+{
+  nsMsgSearchDBView::CopyDBView(aNewMsgDBView, aMessengerInstance, aMsgWindow, aCmdUpdater);
+
+  nsMsgXFVirtualFolderDBView* newMsgDBView = (nsMsgXFVirtualFolderDBView *) aNewMsgDBView;
+
+  newMsgDBView->m_viewFolder = m_viewFolder;
+  newMsgDBView->m_numUnread = m_numUnread;
+  newMsgDBView->m_numTotal = m_numTotal;
+
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP nsMsgXFVirtualFolderDBView::GetViewType(nsMsgViewTypeValue *aViewType)
 {
     NS_ENSURE_ARG_POINTER(aViewType);
