@@ -35,10 +35,18 @@ CPPSRCS		= \
                   nsUnicodeToCP932.cpp \
                   nsUCvJaSupport.cpp \
                   nsUCVJADll.cpp \
+                  nsEUCJPToUnicode.cpp \
+                  nsISO2022JPToUnicode.cpp \
+                  nsUnicodeToEUCJP.cpp \
+                  nsUnicodeToISO2022JP.cpp \
+                  nsUnicodeToJISx0201.cpp \
+                  nsUnicodeToJISx0208.cpp \
+                  nsUnicodeToJISx0212.cpp \
 		  $(NULL)
 
 EXPORTS         = \
                   nsUCVJACID.h \
+                  nsUCVJA2CID.h \
 		  $(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

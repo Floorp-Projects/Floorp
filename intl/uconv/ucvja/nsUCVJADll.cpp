@@ -27,9 +27,19 @@
 #include "nsCOMPtr.h"
 #include "nsICharsetConverterInfo.h"
 #include "nsUCVJACID.h"
+#include "nsUCVJA2CID.h"
+
 #include "nsUCVJADll.h"
+
 #include "nsSJIS2Unicode.h"
 #include "nsUnicodeToSJIS.h"
+#include "nsEUCJPToUnicode.h"
+#include "nsISO2022JPToUnicode.h"
+#include "nsUnicodeToEUCJP.h"
+#include "nsUnicodeToISO2022JP.h"
+#include "nsUnicodeToJISx0201.h"
+#include "nsUnicodeToJISx0208.h"
+#include "nsUnicodeToJISx0212.h"
 
 // just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
 #include "nsIUnicodeDecoder.h"
@@ -49,6 +59,30 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 PRInt32 g_InstanceCount = 0;
 PRInt32 g_LockCount = 0;
+PRUint16 g_ut0201Mapping[] = {
+#include "jis0201.ut"
+};
+
+PRUint16 g_ut0208Mapping[] = {
+#include "jis0208.ut"
+};
+
+PRUint16 g_ut0212Mapping[] = {
+#include "jis0212.ut"
+};
+
+PRUint16 g_uf0201Mapping[] = {
+#include "jis0201.uf"
+};
+
+PRUint16 g_uf0208Mapping[] = {
+#include "jis0208.uf"
+};
+
+PRUint16 g_uf0212Mapping[] = {
+#include "jis0212.uf"
+};
+
 
 typedef nsresult (* fpCreateInstance) (nsISupports **);
 
@@ -73,6 +107,48 @@ FactoryData g_FactoryData[] =
     nsUnicodeToSJIS::CreateInstance,
     "Unicode",
     "Shift_JIS"
+  },
+  {
+    &kISO2022JPToUnicodeCID,
+    nsISO2022JPToUnicode::CreateInstance,
+    "ISO-2022-JP",
+    "Unicode"
+  },
+  {
+    &kEUCJPToUnicodeCID,
+    nsEUCJPToUnicode::CreateInstance,
+    "EUC-JP",
+    "Unicode"
+  },
+  {
+    &kUnicodeToEUCJPCID,
+    nsUnicodeToEUCJP::CreateInstance,
+    "Unicode",
+    "EUC-JP"
+  },
+  {
+    &kUnicodeToJISx0201CID,
+    nsUnicodeToJISx0201::CreateInstance,
+    "Unicode",
+    "jis_0201"
+  },
+  {
+    &kUnicodeToJISx0208CID,
+    nsUnicodeToJISx0208::CreateInstance,
+    "Unicode",
+    "jis_0208-1983"
+  },
+  {
+    &kUnicodeToJISx0212CID,
+    nsUnicodeToJISx0212::CreateInstance,
+    "Unicode",
+    "jis_0212-1990"
+  },
+  {
+    &kUnicodeToISO2022JPCID,
+    nsUnicodeToISO2022JP::CreateInstance,
+    "Unicode",
+    "ISO-2022-JP"
   }
 };
 
