@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="EditorDialog.css" type="text/css"?>
-<!DOCTYPE dialog>
+<!DOCTYPE window SYSTEM "paragraphstyledlog.dtd">
 <window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/TR/REC-html40">
 
   <table xmlns="http://www.w3.org/TR/REC-html40">
     <tr>
       <td>
-        <xul:label> Paragraph Alignment </xul:label>
+        <p> Paragraph Alignment </p>
       </td>
       <td>
         <select size="1" name="paragraph.alignment">
@@ -22,7 +22,7 @@
 
     <tr>
       <td>
-        <xul:label>Paragraph Style</xul:label>
+        <p>Paragraph Style</p>
       </td>
       <td>
         <select size="1" name="paragraph.style">
@@ -48,11 +48,15 @@
     <tr>
       <td/>
       <td>
-        <xul:checkbox value="Indent paragraph with Blockquote" />
-        <xul:label>Indent paragraph with Blockquote</xul:label>
-        <xul:label> &nbsp;&nbsp;&nbsp; </xul:label>
-        <xul:label>Indent level</xul:label>
-        <input type="text" size="2" length="2" maxlength="2" name="paragraph.indent" />
+        <p>
+          <xul:checkbox value="Indent paragraph with Blockquote" />
+          Indent paragraph with Blockquote
+        </p>
+        <p> &nbsp;&nbsp;&nbsp; </p>
+        <p>
+          Indent level
+          <input type="text" size="2" length="2" maxlength="2" name="paragraph.indent" />
+        </p>
       </td>
     </tr>
 
@@ -63,7 +67,7 @@
           <table>
             <tr>
               <td>
-                <xul:label>Numbered List Style</xul:label>
+                <p>Numbered List Style</p>
               </td>
               <td>
                 <select size="1" name="number.style">
@@ -78,15 +82,17 @@
                 </select>
               </td>
               <td>
-                <xul:label>Starting Number</xul:label>
-                <input type="text" size="5" length="5" maxlength="5" name="paragraph.liststartnumber" />
+                <p>
+                  Starting Number
+                  <input type="text" size="5" length="5" maxlength="5" name="paragraph.liststartnumber" />
+                </p>
               </td>
             </tr>
 
             <tr>
               <td>
                 <p/>
-                <xul:label>Bulleted List Style</xul:label>
+                <p>Bulleted List Style</p>
               </td>
 
               <td>
@@ -96,13 +102,22 @@
                     <option label="Automatic" value="Automatic">Automatic</option>
                     <option label="Solid Circle" value="Solid Circle">Solid Circle</option>
                     <option label="Open Circle" value="Open Circle">Open Circle</option>
-                    <option label="Open Squares" value="Open Squares">Open Squares</option>
+                    <option label="Open Square" value="Open Square">Open Square</option>
                   </optgroup>
                 </select>
               </td>
             </tr>
           </table>
         </fieldset>
+      </td>
+    </tr>
+    
+    <tr>
+      <td>
+        <input type="button" id="helpbutton" value=" Help " disabled />
+        <input type="button" id="cancelbutton" value=" Cancel " />
+        <input type="button" id="applybutton" value=" Apply " disabled />
+        <input type="button" id="okbutton" value=" OK " disabled />
       </td>
     </tr>
   </table>
