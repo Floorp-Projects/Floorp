@@ -183,8 +183,8 @@ public:
     					NS_ASSERTION(mInputStream, "mInputStream is null!");
 					if (mInputStream) {
 						return mInputStream->Close();                        
-                    return NS_OK;
 					}
+                    return NS_OK;
                                       }
     PRInt32                           read(void* s, PRInt32 n);
 
