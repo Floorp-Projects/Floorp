@@ -792,6 +792,7 @@ struct lo_TopState_struct {
     PRPackedBool is_binary;	/* hack for images instead of HTML doc */
     PRPackedBool insecure_images; /* secure doc with insecure images */
     PRPackedBool out_of_memory;	/* ran out of memory mid-layout */
+	PRPackedBool finished;	/* lo_FinishLayout() has been called */
     NET_ReloadMethod
          force_reload;		/* URL_Struct reload flag */
     intn auto_scroll;		/* Chat auto-scrolling layout, # of lines */

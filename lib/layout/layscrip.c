@@ -423,16 +423,6 @@ done:
 	stream.data_object=(pa_DocData *)top_state->doc_data;
     pa_FlushOverflow(&stream);
 
-    /*
-     * The initial call to lo_UnblockLayout() might have not torn
-     *   everything down because we were waiting for the last
-     *   chunk of data to come out of the doc_data->overflow_buf
-     * We need to get to lo_FlushedBlockedTags() and lo_FinishLayout()
-     *   at the bottom of lo_FlushBlockage().
-     */
-    if (!top_state->layout_blocking_element)
-	lo_FlushBlockage(context, top_state->doc_state, top_state->doc_state);
-
 }
 
 

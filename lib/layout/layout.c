@@ -2502,7 +2502,7 @@ lo_FlushBlockage(MWContext *context, lo_DocState *state,
  	tag_ptr = top_state->tags;
    
 	orig_state = top_state->doc_state;
-	
+
 	up_state = NULL;
 	state = orig_state;
 	while (state->sub_state != NULL)
@@ -2530,6 +2530,10 @@ lo_FlushBlockage(MWContext *context, lo_DocState *state,
 		 * Always keep top_state->tags sane
 		 */
 		top_state->tags = tag_ptr;
+		if (tag_ptr == NULL)
+		{
+			top_state->tags_end = &top_state->tags;
+		}
 
 		/*
 		 * Since script processing is asynchronous we need to do this
@@ -2738,7 +2742,8 @@ lo_FlushBlockage(MWContext *context, lo_DocState *state,
 
 	if ((top_state->layout_blocking_element == NULL)&&
 		(top_state->tags == NULL)&&
-		(top_state->layout_status == PA_COMPLETE))
+		(top_state->layout_status == PA_COMPLETE) &&
+		!top_state->finished)
 	{
 		/*
 		 * makes sure we are at the bottom
@@ -3687,15 +3692,23 @@ lo_FinishLayout(MWContext *context, lo_DocState *state, int32 mocha_event)
 	if ((state != NULL) &&
 		(state->top_state != NULL))
 	{
-		lo_CloseMochaWriteStream(state->top_state, mocha_event);
+		lo_TopState * top_state = state->top_state;
+
+		/* only finish once, please */
+		XP_ASSERT(!top_state->finished);
+		if (top_state->finished)
+			return;
+
+		top_state->finished = TRUE;
+		lo_CloseMochaWriteStream(top_state, mocha_event);
 
 		/* Could be left over if someone forgets to close a tag */
-		if (state->top_state->scriptData)
-			lo_DestroyScriptData(state->top_state->scriptData);
+		if (top_state->scriptData)
+			lo_DestroyScriptData(top_state->scriptData);
 
         /* Handle the page background for the case of a document that contains 
            no displayed layout elements. */
-        if (state->top_state->nothing_displayed != FALSE)
+        if (top_state->nothing_displayed != FALSE)
             lo_use_default_doc_background(context, state);
 	}
 
