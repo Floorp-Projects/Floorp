@@ -40,9 +40,11 @@ interface nsIDNSListener;
 [scriptable, uuid(598f2f80-206f-11d3-9348-00104ba0fd40)]
 interface nsIDNSService : nsISupports
 {
-    nsIRequest lookup(in nsISupports ctxt, in string hostname,
-                      in nsIDNSListener listener);
+    nsIRequest lookup(in string hostname,
+                      in nsIDNSListener listener,
+                      in nsISupports ctxt);
 
+    void init();
     void shutdown();
 };
 

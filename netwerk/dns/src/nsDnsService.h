@@ -26,7 +26,7 @@
 #include "nsIDNSService.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
-#include "nsVoidArray.h"
+#include "nsISupportsArray.h"
 #if defined(XP_MAC)
 #include <OSUtils.h>
 #include <OpenTransport.h>
@@ -36,6 +36,8 @@
 #include <Winsock2.h>
 #endif
 #include "nsCOMPtr.h"
+#include "nsHashtable.h"
+#include "prmon.h"
 
 //#ifdef DEBUG
 #define DNS_TIMING 1    // XXX remove later
@@ -50,39 +52,36 @@ class nsDNSService : public nsIDNSService,
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIRUNNABLE
+    NS_DECL_NSIDNSSERVICE
 
     // nsDNSService methods:
     nsDNSService();
     virtual ~nsDNSService();
-    nsresult Init();
-    nsresult LateInit();
-    nsresult InitDNSThread();
  
     // Define a Create method to be used with a factory:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
-    // nsIDNSService methods:
-    NS_DECL_NSIDNSSERVICE
-
-protected:
     friend class nsDNSLookup;
     
+protected:
+    nsresult LateInit();
+    nsresult InitDNSThread();
+    nsresult GetLookupEntry(const char* hostName, nsDNSLookup* *result);
+
     static nsDNSService * gService;
     static PRBool         gNeedLateInitialization;
     
     nsCOMPtr<nsIThread>   mThread;
-    PRLock *              mThreadLock;
     nsresult              mState;
-
-    // nsDNSLookup cache? - list of nsDNSLookups, hash table (nsHashTable, nsStringKey)
-    // list of nsDNSLookups in order of expiration (PRCList?)
+    PRMonitor*            mMonitor;
+    nsSupportsHashtable   mLookups; // of nsDNSLookups
 
 #if defined(XP_MAC)
     friend pascal void    nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
     PRBool                mThreadRunning;
     InetSvcRef            mServiceRef;
-    QHdr                  mCompletionQueue;
+    QHdr		          mCompletionQueue;
 #if TARGET_CARBON
     OTClientContextPtr    mClientContext;
     OTNotifyUPP           nsDnsServiceNotifierRoutineUPP;
@@ -94,8 +93,8 @@ protected:
     void       FreeMsgID(PRUint32 msgID);
 
     friend static LRESULT CALLBACK nsDNSEventProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    LRESULT LookupComplete(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     HWND                mDNSWindow;
-    nsVoidArray         mCompletionQueue;
     PRUint32            mMsgIDBitVector[4];
 #endif /* XP_PC */
 
