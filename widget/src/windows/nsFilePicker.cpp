@@ -38,7 +38,7 @@
 #include "nsEnumeratorUtils.h"
 #include "nsCRT.h"
 #include <windows.h>
-#include <SHLOBJ.H>
+#include <shlobj.h>
 
 // commdlg.h and cderr.h are needed to build with WIN32_LEAN_AND_MEAN
 #include <commdlg.h>

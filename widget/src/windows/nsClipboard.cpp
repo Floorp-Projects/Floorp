@@ -38,9 +38,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsClipboard.h"
-#include <OLE2.h>
-#include <SHLOBJ.H>
-#include <INTSHCUT.H>
+#include <ole2.h>
+#include <shlobj.h>
+#include <intshcut.h>
 
 // shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <shellapi.h>

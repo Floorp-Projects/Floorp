@@ -37,8 +37,8 @@
 #ifndef _nsNativeDragSource_h_
 #define _nsNativeDragSource_h_
 
-#include <OLE2.h>
-#include <OLEIDL.h>
+#include <ole2.h>
+#include <oleidl.h>
 
 //class nsIDragSource;
 

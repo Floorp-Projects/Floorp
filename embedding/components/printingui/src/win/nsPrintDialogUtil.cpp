@@ -61,7 +61,7 @@ WIN_LIBS=                                       \
 #include "prmem.h"
 #include "plstr.h"
 #include <windows.h>
-#include <TCHAR.H>
+#include <tchar.h>
 
 #include <unknwn.h>
 #include <commdlg.h>

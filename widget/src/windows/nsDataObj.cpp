@@ -45,7 +45,7 @@
 #include "nsITransferable.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "IENUMFE.h"
+#include "IENUMFE.H"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
 #include "nsPrimitiveHelpers.h"
@@ -58,11 +58,11 @@
 #include "prprf.h"
 #include "nsCRT.h"
 
-#include "OLE2.h"
+#include <ole2.h>
 #ifndef __MINGW32__
-#include "URLMON.h"
+#include <urlmon.h>
 #endif
-#include "shlobj.h"
+#include <shlobj.h>
 
 #if 0
 #define PRNTDEBUG(_x) printf(_x);

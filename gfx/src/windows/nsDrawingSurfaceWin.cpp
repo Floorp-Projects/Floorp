@@ -42,7 +42,7 @@
 
 #include "nsDrawingSurfaceWin.h"
 #include "prmem.h"
-#include "nscrt.h"
+#include "nsCRT.h"
 
 //#define GFX_DEBUG
 

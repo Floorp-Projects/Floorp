@@ -50,9 +50,9 @@
 
 #include "nsAutoPtr.h"
 
-#include <OLE2.h>
-#include "OLEIDL.H"
-#include "shlobj.h";
+#include <ole2.h>
+#include <oleidl.h>
+#include <shlobj.h>
 
 // shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <shellapi.h>

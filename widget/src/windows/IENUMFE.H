@@ -38,9 +38,9 @@
 
 #ifndef _IENUMFE_H_
 #define _IENUMFE_H_
-#include "OLE2.h"
+#include <ole2.h>
 #ifndef __MINGW32__
-#include "URLMON.h"
+#include <urlmon.h>
 #endif
 
 /*
