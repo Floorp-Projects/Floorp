@@ -117,8 +117,8 @@ JNI_GEN=                            \
 !ifdef JAVA_OR_OJI
 MODULE = java
 EXPORTS =				       \
-	$(JNI_GEN_DIR)/netscape_javascript_JSObject.h    \
-	$(JNI_GEN_DIR)/netscape_javascript_JSException.h \
+	_jni/netscape_javascript_JSObject.h    \
+	_jni/netscape_javascript_JSException.h \
 	$(NULL)
 !endif
 
