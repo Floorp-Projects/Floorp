@@ -602,7 +602,7 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                                                aEventStatus);
 
   if ((NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
-      !(aFlags & NS_EVENT_FLAG_CAPTURE) && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
+      !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
 
     switch (aEvent->message) {
       case NS_FORM_RESET:
