@@ -428,9 +428,13 @@ void CPlugin::showGetPluginDialog()
 
   if((m_szPageURL != NULL) || (m_szFileURL != NULL) || !m_bJavaScript)
   {
-    CreateDialogParam(m_hInst, MAKEINTRESOURCE(IDD_PLUGIN_DOWNLOAD), m_hWnd,
-                      (DLGPROC)GetPluginDialogProc, (LPARAM)this);
+    // we don't want it more than once
+    if(m_hWndDialog == NULL)
+      CreateDialogParam(m_hInst, MAKEINTRESOURCE(IDD_PLUGIN_DOWNLOAD), m_hWnd,
+                        (DLGPROC)GetPluginDialogProc, (LPARAM)this);
   }
+  else
+    getPlugin();
 }
 
 void CPlugin::getPlugin()
