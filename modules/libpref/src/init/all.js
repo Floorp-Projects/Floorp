@@ -775,17 +775,6 @@ pref("plugin.expose_full_path", false); // if true navigator.plugins reveals ful
 // a popup blocker if they choose.
 pref("browser.popups.showPopupBlocker", true);
 
-// Help Windows NT, 2000, and XP dialup a RAS connection
-// when a network address is unreachable.
-pref("network.autodial-helper.enabled", true);
-
-// Pref to control whether we set ddeexec subkeys for the http
-// Internet shortcut protocol if we are handling it.  These
-// subkeys will be set only while we are running (to avoid the
-// problem of Windows showing an alert when it tries to use DDE
-// and we're not already running).
-pref("advanced.system.supportDDEExec", true);
-
 // Pref to control whether the viewmanager code does double-buffering or not
 // See http://bugzilla.mozilla.org/show_bug.cgi?id=169483 for further details...
 pref("viewmanager.do_doublebuffering", true);

@@ -202,3 +202,13 @@ pref("plugin.scan.WindowsMediaPlayer", "7.0");
 // will be picked up and if set to false the scan will not happen at all
 //pref("plugin.scan.4xPluginFolder", false);
 
+// Help Windows NT, 2000, and XP dialup a RAS connection
+// when a network address is unreachable.
+pref("network.autodial-helper.enabled", true);
+
+// Pref to control whether we set ddeexec subkeys for the http
+// Internet shortcut protocol if we are handling it.  These
+// subkeys will be set only while we are running (to avoid the
+// problem of Windows showing an alert when it tries to use DDE
+// and we're not already running).
+pref("advanced.system.supportDDEExec", true);
