@@ -37,6 +37,9 @@ MODULE = chrome
 
 REQUIRES = xpcom
 
+INCLUDES += -I$(srcdir)/../src		\
+	    $(NULL)
+
 SHARED_LIBRARY_LIBS =			 \
 	$(DIST)/lib/libchrome_s.a	 \
 	$(NULL)
