@@ -18,7 +18,7 @@
 #ifndef nsViewer_h___
 #define nsViewer_h___
 
-#include "nsIWebWidget.h"
+#include "nsIWebShell.h"
 #include "nsIDocumentObserver.h"
 #include "nsIRelatedLinks.h"
 #include "nsIStreamListener.h"
@@ -55,16 +55,21 @@ class nsIScriptGlobalObject;
 #define MAXPATHLEN 1024
 
 // XXX this is redundant with nsLinkHandler
-class DocObserver : public nsIDocumentObserver,
+class DocObserver : public nsIWebShellContainer,
+                    public nsIDocumentObserver,
                     public nsIStreamObserver,
-                    public nsILinkHandler,
                     public nsIScriptContextOwner
 {
 public:
-  DocObserver(nsIWidget* aWindow, nsIWebWidget* aWebWidget);
+  DocObserver(nsIWidget* aWindow, nsIWebShell* aWebWidget);
 
   // nsISupports
   NS_DECL_ISUPPORTS
+
+  // nsIWebShellContainer
+  NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const nsString& aURL);
+  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const nsString& aURL);
+  NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const nsString& aURL);
 
   // nsIDocumentObserver
   NS_IMETHOD SetTitle(const nsString& aTitle);
@@ -98,28 +103,11 @@ public:
                         const nsString& aMsg);
   NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
 
-  // nsILinkHandler
-  NS_IMETHOD Init(nsIWebWidget* aWidget);
-  NS_IMETHOD GetWebWidget(nsIWebWidget** aResult);
-  NS_IMETHOD OnLinkClick(nsIFrame* aFrame, 
-                         const nsString& aURLSpec,
-                         const nsString& aTargetSpec,
-                         nsIPostData* aPostData = 0);
-  NS_IMETHOD OnOverLink(nsIFrame* aFrame, 
-                        const nsString& aURLSpec,
-                        const nsString& aTargetSpec);
-  NS_IMETHOD GetLinkState(const nsString& aURLSpec, nsLinkState& aState);
-
   // nsIScriptContextOwner
   NS_IMETHOD GetScriptContext(nsIScriptContext **aContext);
   NS_IMETHOD ReleaseScriptContext(nsIScriptContext *aContext);
 
-  // DocObserver
-  void HandleLinkClickEvent(const nsString& aURLSpec,
-                            const nsString& aTargetSpec,
-                            nsIPostData* aPostDat = 0);
-
-  nsIWebWidget* mWebWidget;
+  nsIWebShell* mWebWidget;
   nsIWidget* mWindowWidget;
   nsViewer* mViewer;
   nsIScriptGlobalObject *mScriptGlobal;
@@ -129,13 +117,10 @@ public:
 
 protected:
   virtual ~DocObserver();
-
-  nsString mOverURL;
-  nsString mOverTarget;
 };
 
 struct WindowData {
-  nsIWebWidget* ww;
+  nsIWebShell* ww;
   DocObserver* observer;
   nsIWidget* windowWidget;
   nsViewer* mViewer;
@@ -191,7 +176,7 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
     virtual nsEventStatus DispatchMenuItem(PRUint32 aId);
     virtual nsEventStatus ProcessMenu(PRUint32 aId, WindowData* wd);
 
-    virtual nsresult ShowPrintPreview(nsIWebWidget* web, PRIntn aColumns);
+    virtual nsresult ShowPrintPreview(nsIWebShell* web, PRIntn aColumns);
     virtual WindowData* CreateTopLevel(const char* title, int aWidth, int aHeight);
     virtual void AddTestDocs(nsDocLoader* aDocLoader);
 
@@ -214,14 +199,13 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
 
   nsresult GoTo(const nsString& aURLSpec, 
                 const char* aCommand,
-                nsIWebWidget* aContainer,
+                nsIWebShell* aContainer,
                 nsIPostData* aPostData = nsnull,
-                nsISupports* aExtraInfo = nsnull,
-                nsIStreamObserver* anObserver = nsnull);
+                nsISupports* aExtraInfo = nsnull);
 
   nsresult GoTo(const nsString& aURLSpec) {
     return GoTo(aURLSpec, nsnull, mWD->ww,
-                nsnull, nsnull, mWD->observer);
+                nsnull, nsnull);
   }
 
   void Back();
@@ -233,16 +217,17 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
   void DestroyThrobberImages();
 
   // Debug methods
-  void ToggleFrameBorders(nsIWebWidget* aWebWidget);
-  void DumpContent(nsIWebWidget* aWebWidget);
-  void DumpFrames(nsIWebWidget* aWebWidget);
-  void DumpViews(nsIWebWidget* aWebWidget);
-  void DumpStyleSheets(nsIWebWidget* aWebWidget);
-  void DumpStyleContexts(nsIWebWidget* aWebWidget);
-  void ShowContentSize(nsIWebWidget* aWebWidget);
-  void ShowFrameSize(nsIWebWidget* aWebWidget);
-  void ShowStyleSize(nsIWebWidget* aWebWidget);
-  void ForceRefresh(nsIWebWidget* aWebWidget);
+  void ToggleFrameBorders(nsIWebShell* aWebWidget);
+  void DumpContent(nsIWebShell* aWebWidget);
+  void DumpShells(nsIWebShell* aWebWidget);
+  void DumpFrames(nsIWebShell* aWebWidget);
+  void DumpViews(nsIWebShell* aWebWidget);
+  void DumpStyleSheets(nsIWebShell* aWebWidget);
+  void DumpStyleContexts(nsIWebShell* aWebWidget);
+  void ShowContentSize(nsIWebShell* aWebWidget);
+  void ShowFrameSize(nsIWebShell* aWebWidget);
+  void ShowStyleSize(nsIWebShell* aWebWidget);
+  void ForceRefresh(nsIWebShell* aWebWidget);
 
   nsITextWidget* mLocation;
   nsIWidget* mThrobber;

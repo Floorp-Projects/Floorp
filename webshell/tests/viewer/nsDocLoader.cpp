@@ -22,7 +22,7 @@
 #include "nsVoidArray.h"
 #include "plstr.h"
 #include "nsRepository.h"
-#include "nsIWebWidget.h"
+#include "nsIWebShell.h"
 #include "resources.h"
 #include "nsString.h"
 #include "nsViewer.h"
@@ -34,7 +34,10 @@
 
 */
 
-nsDocLoader::nsDocLoader(nsIWebWidget* aWebWidget, nsViewer* aViewer, PRInt32 aSeconds, PRBool aPostExit)
+nsDocLoader::nsDocLoader(nsIWebShell* aShell,
+                         nsViewer* aViewer,
+                         PRInt32 aSeconds,
+                         PRBool aPostExit)
 {
   NS_INIT_REFCNT();
 
@@ -42,7 +45,7 @@ nsDocLoader::nsDocLoader(nsIWebWidget* aWebWidget, nsViewer* aViewer, PRInt32 aS
   mDelay = aSeconds;
   mPostExit = aPostExit;
   mDocNum = 0;
-  mWebWidget = aWebWidget;
+  mWebShell = aShell;
   mViewer = aViewer;
   mTimers = new nsVoidArray();
   mURLList = new nsVoidArray();
@@ -68,7 +71,7 @@ nsDocLoader::~nsDocLoader()
     mTimers = nsnull;
   }
 
-  NS_RELEASE(mWebWidget);
+  NS_RELEASE(mWebShell);
 }
 
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
@@ -152,9 +155,9 @@ nsDocLoader::LoadDoc(PRInt32 aDocNum, PRBool aObserveIt)
 {
   nsString* url = (nsString*)mURLList->ElementAt(aDocNum);
   if (url) {
-    mWebWidget->LoadURL(*url,                           // URL string
-                        aObserveIt ? this : nsnull,     // Observer
-                        nsnull);                        // Post Data
+    mWebShell->LoadURL(*url,                           // URL string
+                       aObserveIt ? this : nsnull,     // Observer
+                       nsnull);                        // Post Data
   }
 }
 

@@ -22,7 +22,7 @@
 #include "nsIStreamListener.h"
 #include "nsString.h"
 
-class nsIWebWidget;
+class nsIWebShell;
 class nsITimer;
 class nsVoidArray;
 class nsViewer;
@@ -36,7 +36,7 @@ class nsViewer;
 class nsDocLoader : public nsIStreamObserver
 {
 public:
-  nsDocLoader(nsIWebWidget* aWebWidget, nsViewer* aViewer, 
+  nsDocLoader(nsIWebShell* aWebWidget, nsViewer* aViewer, 
               PRInt32 aSeconds=1, PRBool aPostExit=PR_TRUE);
 
   // nsISupports
@@ -96,7 +96,7 @@ protected:
   PRBool        mStart;
   PRInt32       mDelay;
   PRBool        mPostExit;
-  nsIWebWidget* mWebWidget;
+  nsIWebShell*  mWebShell;
   nsViewer*     mViewer;
   nsString      mURL;
   nsVoidArray*  mURLList;
