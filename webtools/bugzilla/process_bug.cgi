@@ -402,6 +402,7 @@ my $formCcSet = new RelationSet;
 my $origCcSet = new RelationSet;
 my $origCcString;
 my $removedCcString = "";
+my $duplicate = 0;
 
 # We make sure to check out the CC list before we actually start touching any
 # bugs.  mergeFromString() ultimately searches the database using a quoted
@@ -547,37 +548,7 @@ SWITCH: for ($::FORM{'knob'}) {
             PuntTryAgain("The bug id $::FORM{'id'} is invalid. Please reload this bug ".
                          "and try again.");
         }
-        # Check to see if Reporter of this bug is reporter of Dupe 
-        SendSQL("SELECT reporter FROM bugs WHERE bug_id = " . SqlQuote($::FORM{'id'}));
-        my $reporter = FetchOneColumn();
-        SendSQL("SELECT reporter FROM bugs WHERE bug_id = " . SqlQuote($num) . " and reporter = $reporter");
-        my $isreporter = FetchOneColumn();
-        SendSQL("SELECT who FROM cc WHERE bug_id = " . SqlQuote($num) . " and who = $reporter");
-        my $isoncc = FetchOneColumn();
-        unless ($isreporter || $isoncc) {
-            # The reporter is oblivious to the existance of the new bug... add 'em to the cc (and record activity)
-            SendSQL("SELECT who FROM cc WHERE bug_id = " . SqlQuote($num));
-            my @dupecc;
-            while (MoreSQLData()) {
-                push (@dupecc, DBID_to_name(FetchOneColumn()));
-            }
-            my @newdupecc = @dupecc;
-            push (@newdupecc, DBID_to_name($reporter));
-            my $ccid = GetFieldID("cc");
-            my $whochange = DBNameToIdAndCheck($::FORM{'who'});
-            SendSQL("INSERT INTO bugs_activity (bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
-                    "('$num','$whochange',now(),$ccid,'" . join (",", sort @dupecc) . "','" . join (",", sort @newdupecc) . "')"); 
-            SendSQL("INSERT INTO cc (who, bug_id) VALUES ($reporter, " . SqlQuote($num) . ")");
-        }
-        AppendComment($num, $::FORM{'who'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
-        if ( Param('strictvaluechecks') ) {
-          CheckFormFieldDefined(\%::FORM,'comment');
-        }
-        SendSQL("INSERT INTO duplicates VALUES ($num, $::FORM{'id'})");
-        $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $num ***";
-        print "<TABLE BORDER=1><TD><H2>Notation added to bug $num</H2>\n";
-        system("./processmail", $num, $::FORM{'who'});
-        print "<TD><A HREF=\"show_bug.cgi?id=$num\">Go To BUG# $num</A></TABLE>\n";
+        $duplicate = $num;
 
         last SWITCH;
     };
@@ -935,7 +906,6 @@ The changes made were:
         }
     }
 
-
     # get a snapshot of the newly set values out of the database, 
     # and then generate any necessary bug activity entries by seeing 
     # what has changed since before we wrote out the new values.
@@ -1008,6 +978,40 @@ The changes made were:
     system @ARGLIST;
 
     print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
+
+    if ($duplicate) {
+        # Check to see if Reporter of this bug is reporter of Dupe 
+        SendSQL("SELECT reporter FROM bugs WHERE bug_id = " . SqlQuote($::FORM{'id'}));
+        my $reporter = FetchOneColumn();
+        SendSQL("SELECT reporter FROM bugs WHERE bug_id = " . SqlQuote($duplicate) . " and reporter = $reporter");
+        my $isreporter = FetchOneColumn();
+        SendSQL("SELECT who FROM cc WHERE bug_id = " . SqlQuote($duplicate) . " and who = $reporter");
+        my $isoncc = FetchOneColumn();
+        unless ($isreporter || $isoncc) {
+            # The reporter is oblivious to the existance of the new bug... add 'em to the cc (and record activity)
+            SendSQL("SELECT who FROM cc WHERE bug_id = " . SqlQuote($duplicate));
+            my @dupecc;
+            while (MoreSQLData()) {
+                push (@dupecc, DBID_to_name(FetchOneColumn()));
+            }
+            my @newdupecc = @dupecc;
+            push (@newdupecc, DBID_to_name($reporter));
+            my $ccid = GetFieldID("cc");
+            my $whochange = DBNameToIdAndCheck($::FORM{'who'});
+            SendSQL("INSERT INTO bugs_activity (bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
+                    "('$duplicate','$whochange',now(),$ccid,'" . join (",", sort @dupecc) . "','" . join (",", sort @newdupecc) . "')"); 
+            SendSQL("INSERT INTO cc (who, bug_id) VALUES ($reporter, " . SqlQuote($duplicate) . ")");
+        }
+        AppendComment($duplicate, $::FORM{'who'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
+        if ( Param('strictvaluechecks') ) {
+          CheckFormFieldDefined(\%::FORM,'comment');
+        }
+        SendSQL("INSERT INTO duplicates VALUES ($duplicate, $::FORM{'id'})");
+        $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $duplicate ***";
+        print "<TABLE BORDER=1><TD><H2>Duplicate notation added to bug $duplicate</H2>\n";
+        system("./processmail", $duplicate, $::FORM{'who'});
+        print "<TD><A HREF=\"show_bug.cgi?id=$duplicate\">Go To BUG# $duplicate</A></TABLE>\n";
+    }
 
     foreach my $k (keys(%dependencychanged)) {
         print "<TABLE BORDER=1><TD><H2>Checking for dependency changes on bug $k</H2>\n";
