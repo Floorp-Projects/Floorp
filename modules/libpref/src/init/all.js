@@ -98,9 +98,6 @@ pref("browser.display.focus_text_color",     "#ffffff");
 pref("browser.display.focus_ring_width",     1);
 pref("browser.display.focus_ring_on_anything", false);
 
-pref("browser.new_find", true);  // temporary
-pref("editor.new_find",  true);  // temporary
-
 pref("browser.urlbar.autoFill", false);
 pref("browser.urlbar.showPopup", true);
 pref("browser.urlbar.showSearch", true);

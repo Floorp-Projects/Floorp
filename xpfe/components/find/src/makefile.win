@@ -69,7 +69,6 @@ LLIBS	= \
 #//
 #//------------------------------------------------------------------------
 OBJS =							\
-	.\$(OBJDIR)\nsFindComponent.obj	\
 	.\$(OBJDIR)\nsFindService.obj	\
 	.\$(OBJDIR)\nsFindModule.obj	\
 	$(NULL)

@@ -1,3 +1,2 @@
-nsIFindComponent.idl
 nsISearchContext.idl
 nsIFindService.idl

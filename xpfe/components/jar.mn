@@ -168,7 +168,6 @@ en-US.jar:
     locale/en-US/global/console.properties                      (console/resources/locale/en-US/console.properties)
     locale/en-US/global/finddialog.dtd                          (find/resources/locale/en-US/finddialog.dtd)
     locale/en-US/global/finddialog.properties                          (find/resources/locale/en-US/finddialog.properties)
-    locale/en-US/global/replacedialog.dtd                          (find/resources/locale/en-US/replacedialog.dtd)
     locale/en-US/global/ldapAutoCompErrs.properties             (autocomplete/resources/locale/en-US/ldapAutoCompErrs.properties)
 
 toolkit.jar:
@@ -178,8 +177,6 @@ toolkit.jar:
     content/global/consoleBindings.xml                          (console/resources/content/consoleBindings.xml)
     content/global/finddialog.js                                (find/resources/finddialog.js)
     content/global/finddialog.xul                               (find/resources/finddialog.xul)
-    content/global/replacedialog.js                                (find/resources/replacedialog.js)
-    content/global/replacedialog.xul                               (find/resources/replacedialog.xul)
     content/global/downloadProgress.xul                         (xfer/resources/downloadProgress.xul)
     content/global/downloadProgress.js                          (xfer/resources/downloadProgress.js)
     content/global/autocomplete.xml                             (autocomplete/resources/content/autocomplete.xml)
