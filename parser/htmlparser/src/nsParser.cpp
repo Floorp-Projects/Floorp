@@ -1493,12 +1493,12 @@ void nsParser::HandleParserContinueEvent() {
   ContinueParsing();
 }
 
-nsresult nsParser::DataAdded(const nsSubstring& aData)
+nsresult nsParser::DataAdded(const nsSubstring& aData, nsIRequest *aRequest)
 {
   NS_ASSERTION(sParserDataListeners,
                "Don't call this with no parser data listeners!");
 
-  if (!mSink || !mParserContext || !mParserContext->mRequest) {
+  if (!mSink || !aRequest) {
     return NS_OK;
   }
 
@@ -1509,10 +1509,10 @@ nsresult nsParser::DataAdded(const nsSubstring& aData)
 
   while (count--) {
     rv |= sParserDataListeners->ObjectAt(count)->
-      OnUnicharDataAvailable(mParserContext->mRequest, ctx, aData);
+      OnUnicharDataAvailable(aRequest, ctx, aData);
 
     if (NS_FAILED(rv) && !canceled) {
-      mParserContext->mRequest->Cancel(rv);
+      aRequest->Cancel(rv);
 
       canceled = PR_TRUE;
     }
@@ -2437,7 +2437,7 @@ typedef struct {
 
 /*
  * This function is invoked as a result of a call to a stream's
- * ReadSegments() method. It is called for each contiguous buffer 
+ * ReadSegments() method. It is called for each contiguous buffer
  * of data in the underlying stream or pipe. Using ReadSegments
  * allows us to avoid copying data to read out of the stream.
  */
@@ -2458,17 +2458,16 @@ ParserWriteFunc(nsIInputStream* in,
     return NS_ERROR_FAILURE;
   }
 
-  if(pws->mNeedCharsetCheck) { 
+  if (pws->mNeedCharsetCheck) {
     PRInt32 guessSource;
     nsCAutoString guess;
-    nsCAutoString preferred; 
-  
-    pws->mNeedCharsetCheck = PR_FALSE; 
-    if(pws->mParser->DetectMetaTag(buf, theNumRead,
-                                   guess, guessSource) ||
-       ((count >= 4) && 
-        DetectByteOrderMark((const unsigned char*)buf, 
-                            theNumRead, guess, guessSource))) { 
+    nsCAutoString preferred;
+
+    pws->mNeedCharsetCheck = PR_FALSE;
+    if (pws->mParser->DetectMetaTag(buf, theNumRead, guess, guessSource) ||
+        ((count >= 4) &&
+         DetectByteOrderMark((const unsigned char*)buf,
+                             theNumRead, guess, guessSource))) {
       nsCOMPtr<nsICharsetAlias> alias(do_GetService(NS_CHARSETALIAS_CONTRACTID));
       result = alias->GetPreferred(guess, preferred);
       // Only continue if it's a recognized charset and not
@@ -2481,7 +2480,7 @@ ParserWriteFunc(nsIInputStream* in,
             !preferred.EqualsLiteral("UTF-32BE") &&
             !preferred.EqualsLiteral("UTF-32LE")))) {
         guess = preferred;
-        pws->mParser->SetDocumentCharset(guess, guessSource); 
+        pws->mParser->SetDocumentCharset(guess, guessSource);
         pws->mParser->SetSinkCharset(preferred);
         nsCOMPtr<nsICachingChannel> channel(do_QueryInterface(pws->mRequest));
         if (channel) {
@@ -2500,13 +2499,13 @@ ParserWriteFunc(nsIInputStream* in,
           }
         }
       }
-    } 
-  } 
+    }
+  }
 
-  if(pws->mParserFilter) 
-    pws->mParserFilter->RawBuffer(buf, &theNumRead); 
+  if (pws->mParserFilter)
+    pws->mParserFilter->RawBuffer(buf, &theNumRead);
 
-  result = pws->mScanner->Append(buf, theNumRead);
+  result = pws->mScanner->Append(buf, theNumRead, pws->mRequest);
   if (NS_SUCCEEDED(result)) {
     *writeCount = count;
   }
@@ -2523,60 +2522,59 @@ ParserWriteFunc(nsIInputStream* in,
  *  @return  error code (usually 0)
  */
 
-nsresult nsParser::OnDataAvailable(nsIRequest *request, nsISupports* aContext, 
-                                   nsIInputStream *pIStream, PRUint32 sourceOffset, PRUint32 aLength) 
-{ 
-
- 
-NS_PRECONDITION((eOnStart == mParserContext->mStreamListenerState ||
-                 eOnDataAvail == mParserContext->mStreamListenerState),
+nsresult nsParser::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
+                                   nsIInputStream *pIStream,
+                                   PRUint32 sourceOffset, PRUint32 aLength)
+{
+  NS_PRECONDITION((eOnStart == mParserContext->mStreamListenerState ||
+                   eOnDataAvail == mParserContext->mStreamListenerState),
             "Error: OnStartRequest() must be called before OnDataAvailable()");
 
-  nsresult result=NS_OK; 
+  nsresult rv = NS_OK;
 
-  CParserContext *theContext=mParserContext; 
-  
-  while(theContext) { 
-    if(theContext->mRequest!=request && theContext->mPrevContext) 
-      theContext=theContext->mPrevContext; 
-    else break; 
-  } 
+  CParserContext *theContext=mParserContext;
 
-  if(theContext && theContext->mRequest==request) { 
+  while (theContext) {
+    if (theContext->mRequest != request && theContext->mPrevContext)
+      theContext = theContext->mPrevContext;
+    else break;
+  }
 
-    theContext->mStreamListenerState=eOnDataAvail; 
+  if (theContext && theContext->mRequest == request) {
 
-    if(eInvalidDetect==theContext->mAutoDetectStatus) { 
-      if(theContext->mScanner) { 
+    theContext->mStreamListenerState = eOnDataAvail;
+
+    if (eInvalidDetect == theContext->mAutoDetectStatus) {
+      if (theContext->mScanner) {
         nsScannerIterator iter;
         theContext->mScanner->EndReading(iter);
         theContext->mScanner->SetPosition(iter, PR_TRUE);
-      } 
-    } 
+      }
+    }
 
     PRUint32 totalRead;
     ParserWriteStruct pws;
-    pws.mNeedCharsetCheck = 
-              ((0 == sourceOffset) && (mCharsetSource<kCharsetFromMetaTag)); 
+    pws.mNeedCharsetCheck =
+      (0 == sourceOffset) && (mCharsetSource < kCharsetFromMetaTag);
     pws.mParser = this;
     pws.mParserFilter = mParserFilter;
     pws.mScanner = theContext->mScanner;
     pws.mRequest = request;
 
-    result = pIStream->ReadSegments(ParserWriteFunc, (void*)&pws, aLength, &totalRead);
-    if (NS_FAILED(result)) {
-      return result;
+    rv = pIStream->ReadSegments(ParserWriteFunc, &pws, aLength, &totalRead);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
 
     // Don't bother to start parsing until we've seen some
     // non-whitespace data
     if (theContext->mScanner->FirstNonWhitespacePosition() >= 0) {
-      result = ResumeParse();
+      rv = ResumeParse();
     }
   }
 
-  return result; 
-} 
+  return rv;
+}
 
 /**
  *  This is called by the networking library once the last block of data
