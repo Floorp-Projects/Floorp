@@ -368,7 +368,7 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
 }
 
 nsresult	nsMsgThread::ReparentNonReferenceChildrenOf(nsIMsgDBHdr *topLevelHdr, nsMsgKey newParentKey,
-														nsIDBChangeAnnouncer *announcer)
+                                                            nsIDBChangeAnnouncer *announcer)
 {
   nsCOMPtr <nsIMsgDBHdr> curHdr;
   PRUint32 numChildren;
