@@ -37,7 +37,7 @@
 #include "nsIStringStream.h" 
 #include "nsHTTPEncodeStream.h" 
 #include "nsHTTPAtoms.h"
-
+#include "nsFileSpec.h"
 #include "nsIPref.h" // preferences stuff
 #ifdef DEBUG_gagan
 #include "nsUnixColorPrintf.h"
