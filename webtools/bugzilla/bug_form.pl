@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Dave Miller <dave@intrec.com>
 
 use diagnostics;
 use strict;
@@ -151,9 +152,16 @@ my $component_popup = make_options($::components{$bug{'product'}},
 
 my $ccSet = new RelationSet;
 $ccSet->mergeFromDB("select who from cc where bug_id=$id");
-my $cc_element = '<INPUT NAME=cc SIZE=30 VALUE="' .
-  $ccSet->toString() . '">';
-
+my @ccList = $ccSet->toArrayOfStrings();
+my $cc_element = "<INPUT TYPE=HIDDEN NAME=cc VALUE=\"\">";
+if (scalar(@ccList) > 0) {
+  $cc_element = "<SELECT NAME=cc MULTIPLE SIZE=5>\n";
+  foreach my $ccName ( @ccList ) {
+    $cc_element .= "<OPTION VALUE=\"$ccName\">$ccName\n";
+  }
+  $cc_element .= "</SELECT><BR>\n" .
+        "<INPUT TYPE=CHECKBOX NAME=removecc>Remove selected CCs<br>\n";
+}
 
 my $URL = $bug{'bug_file_loc'};
 
@@ -169,40 +177,55 @@ print "
 <INPUT TYPE=HIDDEN NAME=\"id\" VALUE=$id>
   <TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0><TR>
     <TD ALIGN=RIGHT><B>Bug#:</B></TD><TD><A HREF=\"show_bug.cgi?id=$bug{'bug_id'}\">$bug{'bug_id'}</A></TD>
+  <TD>&nbsp;</TD>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></TD>
     <TD><SELECT NAME=rep_platform>$platform_popup</SELECT></TD>
-    <TD ALIGN=RIGHT><B>Version:</B></TD>
-    <TD><SELECT NAME=version>" .
-    make_options($::versions{$bug{'product'}}, $bug{'version'}) .
-    "</SELECT></TD>
-  </TR><TR>
+  <TD>&nbsp;</TD>
+    <TD ALIGN=RIGHT><B>Reporter:</B></TD><TD>$bug{'reporter'}</TD>
+</TR><TR>
     <TD ALIGN=RIGHT><B>Product:</B></TD>
     <TD><SELECT NAME=product>" .
     make_options(\@::legal_product, $bug{'product'}) .
     "</SELECT></TD>
+  <TD>&nbsp;</TD>
     <TD ALIGN=RIGHT><B>OS:</B></TD>
     <TD><SELECT NAME=op_sys>" .
     make_options(\@::legal_opsys, $bug{'op_sys'}) .
-    "</SELECT><TD ALIGN=RIGHT><B>Reporter:</B></TD><TD>$bug{'reporter'}</TD>
-     </TDTR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html\">Status:</A></B></TD>
-      <TD>$bug{'bug_status'}</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#priority\">Priority:</A></B></TD>
-      <TD><SELECT NAME=priority>$priority_popup</SELECT></TD>
-    <TD ALIGN=RIGHT><B>Cc:</B></TD>
-      <TD> $cc_element </TD>
-  </TR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html\">Resolution:</A></B></TD>
-      <TD>$bug{'resolution'}</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity:</A></B></TD>
-      <TD><SELECT NAME=bug_severity>$sev_popup</SELECT></TD>
+    "</SELECT></TD>
+  <TD>&nbsp;</TD>
+    <TD ALIGN=RIGHT NOWRAP><b>Add CC:</b></TD>
+    <TD><INPUT NAME=newcc SIZE=30 VALUE=\"\"></TD>
+</TR><TR>
     <TD ALIGN=RIGHT><B><A HREF=\"describecomponents.cgi?product=" .
     url_quote($bug{'product'}) . "\">Component:</A></B></TD>
       <TD><SELECT NAME=component>$component_popup</SELECT></TD>
-  </TR><TR>
+  <TD>&nbsp;</TD>
+    <TD ALIGN=RIGHT><B>Version:</B></TD>
+    <TD><SELECT NAME=version>" .
+    make_options($::versions{$bug{'product'}}, $bug{'version'}) .
+    "</SELECT></TD>
+  <TD>&nbsp;</TD>
+    <TD ROWSPAN=4 ALIGN=RIGHT VALIGN=TOP><B>Cc:</B></TD>
+    <TD ROWSPAN=4 VALIGN=TOP> $cc_element </TD>
+</TR><TR>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html\">Status:</A></B></TD>
+      <TD>$bug{'bug_status'}</TD>
+  <TD>&nbsp;</TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#priority\">Priority:</A></B></TD>
+      <TD><SELECT NAME=priority>$priority_popup</SELECT></TD>
+  <TD>&nbsp;</TD>
+</TR><TR>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html\">Resolution:</A></B></TD>
+      <TD>$bug{'resolution'}</TD>
+  <TD>&nbsp;</TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity:</A></B></TD>
+      <TD><SELECT NAME=bug_severity>$sev_popup</SELECT></TD>
+  <TD>&nbsp;</TD>
+</TR><TR>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#assigned_to\">Assigned&nbsp;To:
         </A></B></TD>
-      <TD>$bug{'assigned_to'}</TD>";
+      <TD>$bug{'assigned_to'}</TD>
+  <TD>&nbsp;</TD>";
 
 if (Param("usetargetmilestone")) {
     my $url = "";
@@ -220,8 +243,9 @@ if (Param("usetargetmilestone")) {
 <TD><SELECT NAME=target_milestone>" .
     make_options($::target_milestone{$bug{'product'}},
                  $bug{'target_milestone'}) .
-                     "</SELECT></TD>";
-}
+                     "</SELECT></TD>
+  <TD>&nbsp;</TD>";
+} else { print "<TD></TD><TD></TD><TD>&nbsp;</TD>"; }
 
 print "
 </TR>";
@@ -234,7 +258,7 @@ if (Param("useqacontact")) {
     <TD COLSPAN=6>
       <INPUT NAME=qa_contact VALUE=\"" .
     value_quote($name) .
-    "\" SIZE=60></
+    "\" SIZE=60></TD>
   </TR>";
 }
 
@@ -242,11 +266,11 @@ if (Param("useqacontact")) {
 print "
   <TR>
     <TD ALIGN=\"RIGHT\">$URL
-    <TD COLSPAN=6>
+    <TD COLSPAN=8>
       <INPUT NAME=bug_file_loc VALUE=\"$bug{'bug_file_loc'}\" SIZE=60></TD>
   </TR><TR>
     <TD ALIGN=\"RIGHT\"><B>Summary:</B>
-    <TD COLSPAN=6>
+    <TD COLSPAN=8>
       <INPUT NAME=short_desc VALUE=\"" .
     value_quote($bug{'short_desc'}) .
     "\" SIZE=60></TD>
@@ -256,10 +280,10 @@ if (Param("usestatuswhiteboard")) {
     print "
   <TR>
     <TD ALIGN=\"RIGHT\"><B>Status Whiteboard:</B>
-    <TD COLSPAN=6>
+    <TD COLSPAN=8>
       <INPUT NAME=status_whiteboard VALUE=\"" .
     value_quote($bug{'status_whiteboard'}) .
-    "\" SIZE=60></
+    "\" SIZE=60></TD>
   </TR>";
 }
 
@@ -276,7 +300,7 @@ if (@::legal_keywords) {
     print qq{
 <TR>
 <TD ALIGN=right><B><A HREF="describekeywords.cgi">Keywords</A>:</B>
-<TD COLSPAN=6><INPUT NAME="keywords" VALUE="$value" SIZE=60></TD>
+<TD COLSPAN=8><INPUT NAME="keywords" VALUE="$value" SIZE=60></TD>
 </TR>
 };
 }
@@ -292,7 +316,7 @@ while (MoreSQLData()) {
     $desc = value_quote($desc);
     print qq{<td><a href="$link">$date</a></td><td colspan=4>$desc</td></tr><tr><td></td>};
 }
-print "<td colspan=6><a href=\"createattachment.cgi?id=$id\">Create a new attachment</a> (proposed patch, testcase, etc.)</td></tr></table>\n";
+print "<td colspan=8><a href=\"createattachment.cgi?id=$id\">Create a new attachment</a> (proposed patch, testcase, etc.)</td></tr></table>\n";
 
 
 sub EmitDependList {

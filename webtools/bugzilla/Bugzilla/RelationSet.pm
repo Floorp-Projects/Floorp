@@ -18,6 +18,7 @@
 # 
 # Contributor(s): Dan Mosedale <dmose@mozilla.org>
 #                 Terry Weissman <terry@mozilla.org>
+#                 Dave Miller <dave@intrec.com>
 
 # This object models a set of relations between one item and a group
 # of other items.  An example is the set of relations between one bug
@@ -175,6 +176,42 @@ sub mergeFromString {
   foreach my $person (split(/[ ,]/, shift())) {
     if ($person ne "") {
       $$self{&::DBNameToIdAndCheck($person)} = 1;
+    }
+  }
+}
+
+# remove a set in string form from this set
+#
+sub removeItemsInString {
+  ($#_ == 1) || confess("invalid number of arguments");
+  my $self = shift();
+
+  # do the merge
+  #
+  foreach my $person (split(/[ ,]/, shift())) {
+    if ($person ne "") {
+      my $dbid = &::DBNameToIdAndCheck($person);
+      if (exists $$self{$dbid}) {
+        delete $$self{$dbid};
+      }
+    }
+  }
+}
+
+# remove a set in array form from this set
+#
+sub removeItemsInArray {
+  ($#_ > 0) || confess("invalid number of arguments");
+  my $self = shift();
+
+  # do the merge
+  #
+  while (my $person = shift()) {
+    if ($person ne "") {
+      my $dbid = &::DBNameToIdAndCheck($person);
+      if (exists $$self{$dbid}) {
+        delete $$self{$dbid};
+      }
     }
   }
 }

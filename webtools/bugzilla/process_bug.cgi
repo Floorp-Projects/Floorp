@@ -20,6 +20,7 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
+#                 Dave Miller <dave@intrec.com>
 
 use diagnostics;
 use strict;
@@ -391,10 +392,14 @@ my $origCcString;
 # form of the data it gets from $::FORM{'cc'}, so anything bogus from a 
 # security standpoint should trigger an abort there.
 #
-if (defined $::FORM{'cc'} && defined $::FORM{'id'}) {
+if (defined $::FORM{'newcc'} && defined $::FORM{'id'}) {
     $origCcSet->mergeFromDB("select who from cc where bug_id = $::FORM{'id'}");
+    $formCcSet->mergeFromDB("select who from cc where bug_id = $::FORM{'id'}");
     $origCcString = $origCcSet->toString();  # cache a copy of the string vers
-    $formCcSet->mergeFromString($::FORM{'cc'});
+    if ((exists $::FORM{'removecc'}) && (exists $::FORM{'cc'})) {
+      $formCcSet->removeItemsInArray(@{$::MFORM{'cc'}});
+    }
+    $formCcSet->mergeFromString($::FORM{'newcc'});
 }
 
 if ( Param('strictvaluechecks') ) {
@@ -789,7 +794,7 @@ The changes made were:
         AppendComment($id, $::FORM{'who'}, $::FORM{'comment'});
     }
     
-    if (defined $::FORM{'cc'} && defined $::FORM{'id'}
+    if (defined $::FORM{'newcc'} && defined $::FORM{'id'}
         && ! $origCcSet->isEqual($formCcSet) ) {
 
         # update the database to look like the form
@@ -802,7 +807,7 @@ The changes made were:
 
         my $col = GetFieldID('cc');
         my $origq = SqlQuote($origCcString);
-        my $newq = SqlQuote($::FORM{'cc'});
+        my $newq = SqlQuote($formCcSet->toString());
         SendSQL("INSERT INTO bugs_activity " . 
                 "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " . 
                 "($id,$whoid,'$timestamp',$col,$origq,$newq)");
