@@ -489,8 +489,22 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
   nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(m_editor));
   nsCOMPtr<nsIEditorMailSupport> mailEditor (do_QueryInterface(m_editor));
   m_editor->BeginTransaction();
+  PRInt32 reply_on_top = 0;
+  PRBool sig_bottom = PR_TRUE;
+  m_identity->GetReplyOnTop(&reply_on_top);
+  m_identity->GetSigBottom(&sig_bottom);
+  PRBool sigOnTop = (reply_on_top == 1 && !sig_bottom);
   if ( (aQuoted) )
   {
+    if (!aSignature.IsEmpty() && sigOnTop)
+    {
+      if (aHTMLEditor && htmlEditor)
+        htmlEditor->InsertHTML(aSignature);
+      else if (textEditor)
+        textEditor->InsertText(aSignature);
+      m_editor->EndOfDocument();
+    }
+
     if (!aPrefix.IsEmpty())
     {
       if (aHTMLEditor && htmlEditor)
@@ -515,7 +529,7 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
 
     (void)TagEmbeddedObjects(mailEditor);
 
-    if (!aSignature.IsEmpty())
+    if (!aSignature.IsEmpty() && !sigOnTop)
     {
       if (aHTMLEditor && htmlEditor)
         htmlEditor->InsertHTML(aSignature);
@@ -578,8 +592,6 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
       m_editor->BeginningOfDocument();
     else
     {
-      PRInt32 reply_on_top = 0;
-      m_identity->GetReplyOnTop(&reply_on_top);
       switch (reply_on_top)
         {
           // This should set the cursor after the body but before the sig
@@ -2126,7 +2138,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
       Recycle(target_charset);
     }
 
-    compose->ProcessSignature(mIdentity, &mSignature);
+    compose->ProcessSignature(mIdentity, PR_TRUE, &mSignature);
 
     nsCOMPtr<nsIEditor> editor;
     if (NS_SUCCEEDED(compose->GetEditor(getter_AddRefs(editor))) && editor)
@@ -3219,7 +3231,7 @@ nsMsgCompose::BuildQuotedMessageAndSignature(void)
 // will always append the results to the mMsgBody member variable.
 //
 nsresult
-nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
+nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsString *aMsgBody)
 {
   nsresult    rv;
 
@@ -3246,9 +3258,13 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   PRBool        imageSig = PR_FALSE;
   nsAutoString  sigData;
   nsAutoString sigOutput;
+  PRInt32      reply_on_top = 0;
+  PRBool       sig_bottom = PR_TRUE;
 
   if (identity)
   {
+    identity->GetReplyOnTop(&reply_on_top);
+    identity->GetSigBottom(&sig_bottom);
     rv = identity->GetAttachSignature(&useSigFile);
     if (NS_SUCCEEDED(rv) && useSigFile) 
     {
@@ -3331,7 +3347,8 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
     {
       sigOutput.AppendWithConversion(htmlBreak);
       sigOutput.AppendWithConversion(htmlsigopen);
-      sigOutput.AppendWithConversion(dashes);
+      if (reply_on_top != 1 || sig_bottom || !aQuoted)
+        sigOutput.AppendWithConversion(dashes);
       sigOutput.AppendWithConversion(htmlBreak);
       sigOutput.Append(NS_LITERAL_STRING("<img src=\"file:///"));
            /* XXX pp This gives me 4 slashes on Unix, that's at least one to
@@ -3368,17 +3385,20 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
     else
       sigOutput.AppendWithConversion(CRLF);
 
-    nsDependentSubstring firstFourChars(sigData, 0, 4);
-    
-    if (!(firstFourChars.Equals(NS_LITERAL_STRING("-- \n")) ||
-          firstFourChars.Equals(NS_LITERAL_STRING("-- \r"))))
+    if (reply_on_top != 1 || sig_bottom || !aQuoted)
     {
-      sigOutput.AppendWithConversion(dashes);
+      nsDependentSubstring firstFourChars(sigData, 0, 4);
     
-      if (!m_composeHTML || !htmlSig)
-        sigOutput.AppendWithConversion(CRLF);
-      else if (m_composeHTML)
-        sigOutput.AppendWithConversion(htmlBreak);
+      if (!(firstFourChars.Equals(NS_LITERAL_STRING("-- \n")) ||
+            firstFourChars.Equals(NS_LITERAL_STRING("-- \r"))))
+      {
+        sigOutput.AppendWithConversion(dashes);
+    
+        if (!m_composeHTML || !htmlSig)
+          sigOutput.AppendWithConversion(CRLF);
+        else if (m_composeHTML)
+          sigOutput.AppendWithConversion(htmlBreak);
+      }
     }
 
     sigOutput.Append(sigData);
@@ -3450,7 +3470,7 @@ nsMsgCompose::BuildBodyMessageAndSignature()
   nsAutoString tSignature;
 
   if (addSignature)
-    ProcessSignature(m_identity, &tSignature);
+    ProcessSignature(m_identity, PR_FALSE, &tSignature);
 
   rv = ConvertAndLoadComposeWindow(empty, bodStr, tSignature,
                                    PR_FALSE, m_composeHTML);
@@ -4608,14 +4628,38 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
 
   //Then add the new one if needed
   nsAutoString aSignature;
-  ProcessSignature(identity, &aSignature);
+
+  // No delimiter needed if not a compose window
+  PRBool noDelimiter;
+  switch (mType)
+  {
+    case nsIMsgCompType::New :
+    case nsIMsgCompType::NewsPost :
+    case nsIMsgCompType::MailToUrl :
+    case nsIMsgCompType::ForwardAsAttachment :
+      noDelimiter = PR_FALSE;
+      break;
+    default :
+      noDelimiter = PR_TRUE;
+      break;
+  }
+
+  ProcessSignature(identity, noDelimiter, &aSignature);
 
   if (!aSignature.IsEmpty())
   {
     TranslateLineEnding(aSignature);
 
     m_editor->BeginTransaction();
-    m_editor->EndOfDocument();
+    PRInt32 reply_on_top = 0;
+    PRBool sig_bottom = PR_TRUE;
+    identity->GetReplyOnTop(&reply_on_top);
+    identity->GetSigBottom(&sig_bottom);
+    PRBool sigOnTop = (reply_on_top == 1 && !sig_bottom);
+    if (sigOnTop && noDelimiter)
+      m_editor->BeginningOfDocument();
+    else
+      m_editor->EndOfDocument();
     if (m_composeHTML)
     {
       nsCOMPtr<nsIHTMLEditor> htmlEditor (do_QueryInterface(m_editor));
@@ -4626,6 +4670,8 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
       nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(m_editor));
       rv = textEditor->InsertText(aSignature);
     }
+    if (sigOnTop && noDelimiter)
+      m_editor->EndOfDocument();
     m_editor->EndTransaction();
   }
 

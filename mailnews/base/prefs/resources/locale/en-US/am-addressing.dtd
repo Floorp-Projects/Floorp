@@ -28,3 +28,9 @@
 <!ENTITY belowQuote.accesskey                 "b">
 <!ENTITY selectAndQuote.label                 "select the quoted text">
 <!ENTITY selectAndQuote.accesskey             "e">
+<!ENTITY place.label                          "and place my signature">
+<!ENTITY place.accesskey                      "p">
+<!ENTITY belowText.label                      "below the quoted text (recommended)">
+<!ENTITY belowText.accesskey                  "b">
+<!ENTITY aboveText.label                      "below my reply (above quoted text)">
+<!ENTITY aboveText.accesskey                  "v">

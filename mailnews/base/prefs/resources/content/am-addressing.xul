@@ -42,6 +42,9 @@ Contributors:
         prefstring="mail.identity.%identitykey%.overrideGlobal_Pref"/>
   <label hidden="true" wsm_persist="true" id="overrideGlobalPref" value=""/>
   <label hidden="true" wsm_persist="true" id="directoryServer" value=""/>
+  <checkbox hidden="true" wsm_persist="true" id="identity.attachSignature"
+        pref="true" preftype="bool" prefattribute="value"
+        prefstring="mail.identity.%identitykey%.attach_signature"/>
 
   <dialogheader title="&addressing.label;"/>
   
@@ -64,7 +67,7 @@ Contributors:
     </hbox>
     <hbox class="indent" align="center" id="thenBox">
       <label value="&then.label;" accesskey="&then.accesskey;" control="quoteList"/>
-      <menulist wsm_persist="true" id="identity.replyOnTop"
+      <menulist wsm_persist="true" id="identity.replyOnTop" oncommand="quoteEnabling();"
                 pref="true" preftype="int" prefattribute="value"
                 prefstring="mail.identity.%identitykey%.reply_on_top">
         <menupopup>
@@ -74,8 +77,18 @@ Contributors:
         </menupopup>
       </menulist>        
     </hbox>
+    <hbox class="indent" align="center" id="placeBox">
+      <label value="&place.label;" accesskey="&place.accesskey;" control="sigPosList"/>
+      <menulist wsm_persist="true" id="identity.sig_bottom" genericattr="true"
+                pref="true" preftype="bool" prefattribute="value">
+        <menupopup>
+          <menuitem value="true" label="&belowText.label;" accesskey="&belowText.accesskey;"/>
+          <menuitem value="false" label="&aboveText.label;" accesskey="&aboveText.accesskey;"/>
+        </menupopup>
+      </menulist>
+    </hbox>
   </groupbox>
-  
+
   <separator class="thin"/>
   <groupbox>
     <caption label="&addressingGroupTitle.label;"/>

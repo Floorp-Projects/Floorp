@@ -463,6 +463,7 @@ NS_IMPL_IDPREF_BOOL(AttachSignature, "attach_signature")
 
 NS_IMPL_IDPREF_BOOL(AutoQuote, "auto_quote")
 NS_IMPL_IDPREF_INT(ReplyOnTop, "reply_on_top")
+NS_IMPL_IDPREF_BOOL(SigBottom, "sig_bottom")
 
 NS_IMPL_IDPREF_INT(SignatureDate,"sig_date")
 
@@ -794,6 +795,7 @@ nsMsgIdentity::Copy(nsIMsgIdentity *identity)
     COPY_IDENTITY_FILE_VALUE(identity,GetSignature,SetSignature)
     COPY_IDENTITY_BOOL_VALUE(identity,GetAutoQuote,SetAutoQuote)
     COPY_IDENTITY_INT_VALUE(identity,GetReplyOnTop,SetReplyOnTop)
+    COPY_IDENTITY_BOOL_VALUE(identity,GetSigBottom,SetSigBottom)
     COPY_IDENTITY_INT_VALUE(identity,GetSignatureDate,SetSignatureDate)
 
     return NS_OK;

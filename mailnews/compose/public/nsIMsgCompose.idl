@@ -232,7 +232,9 @@ interface nsIMsgCompose : nsISupports {
   [noscript] attribute string savedFolderURI;
 
   /* Append the signature defined in the identity to the msgBody */
-  [noscript] void processSignature(in nsIMsgIdentity identity, inout nsString aMsgBody);
+  [noscript] void processSignature(in nsIMsgIdentity identity,
+                                   in boolean aQuoted,
+                                   inout nsString aMsgBody);
 
   /* set any reply flags on the original message's folder */
   [noscript] void processReplyFlags();
