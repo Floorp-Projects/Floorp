@@ -136,10 +136,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 8;
         break;
     case eMetric_CheckboxSize:
-        aMetric = 12;
+        aMetric = 15;
         break;
     case eMetric_RadioboxSize:
-        aMetric = 12;
+        aMetric = 15;
         break;
     case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
         aMetric = 15;
