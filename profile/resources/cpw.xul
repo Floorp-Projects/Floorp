@@ -5,12 +5,12 @@
 
 <!DOCTYPE window
 [
-<!ENTITY window.title.label          "Test Example">
+<!ENTITY window.title.label          "Communicator Profile Manager">
 <!ENTITY newprofile.title            "New Profile">
 <!ENTITY dialup.title	             "Dialup">
 <!ENTITY mailnews.title              "Mail News">
 <!ENTITY addrbook.title              "Address Book">
-<!ENTITY previous.label               "Previous">
+<!ENTITY back.label               "Back">
 <!ENTITY next.label                   "Next">
 <!ENTITY cancel.label                 "Cancel">
 <!ENTITY finish.label                 "Finish">
@@ -40,10 +40,11 @@
 	<html:iframe src="about:blank" flex="100%" name="content"  id="content" scrolling="auto"/>
 
 	<box align="horizontal">
-		<titledbutton id="dialog.previous" value="&previous.label;" onclick="onBack()" align="left" style="margin-top: 1em;"/>
-		<titledbutton id="dialog.next" value="&next.label;" onclick="onNext()" align="left" style="margin-top: 1em;"/>
-		<titledbutton id="dialog.cancel" value="&cancel.label;" onclick="cancelApp()" align="left" style=" margin-top: 1em;"/>
-		<titledbutton id="dialog.finish" value="&finish.label;" onclick="Finish(opener)" align="left" style=" margin-top: 1em;"/>
+		<titledbutton id="back" value="&back.label;" onclick="onBack()" align="left" style="margin-top: 1em;"/>
+		<titledbutton id="next" value="&next.label;" onclick="onNext()" align="left" style="margin-top: 1em;"/>
+		<titledbutton id="cancel" value="&cancel.label;" onclick="cancelApp()" align="left" style=" margin-top: 1em;"/>
+		<titledbutton id="finish" value="&finish.label;" onclick="Finish(opener)" align="left" style=" margin-top: 1em;"/>
+
 	</box>
 
 
