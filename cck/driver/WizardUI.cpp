@@ -128,8 +128,15 @@ BOOL CWizardUI::OnSetActive()
 	CPropSheet* pSheet = (CPropSheet*) GetParent();
 	ASSERT_VALID(pSheet);
 
+	pSheet->GetDlgItem(ID_WIZBACK)->SetWindowText(CurrentNode->localVars->wizbut->back);
+	pSheet->GetDlgItem(ID_WIZNEXT)->SetWindowText(CurrentNode->localVars->wizbut->next);
+	pSheet->GetDlgItem(IDCANCEL)->SetWindowText(CurrentNode->localVars->wizbut->cancel);
+
+	// Using the ini files to set the value as mentioned above 
+	//	instead of using the commented out code below 
+
 	// !!! Use an OnEnter for this instead !!!
-	if (CurrentNode->localVars->functionality == "BuildInstallers")
+/*	if (CurrentNode->localVars->functionality == "BuildInstallers")
 	{
 		pSheet->GetDlgItem(ID_WIZNEXT)->SetWindowText("Build &Installers");
 		isBuildInstaller = TRUE;
@@ -138,7 +145,7 @@ BOOL CWizardUI::OnSetActive()
 		isBuildInstaller = FALSE;
 		pSheet->GetDlgItem(ID_WIZNEXT)->SetWindowText("&Next >");
 	}
-
+*/
 	if (theApp.IsLastNode(CurrentNode)) {
 		pSheet->SetWizardButtons(PSWIZB_BACK | PSWIZB_FINISH);
 	}

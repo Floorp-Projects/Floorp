@@ -418,13 +418,38 @@ NODE* CWizardMachineApp::CreateNode(NODE *parentNode, CString iniFile)
 		NewNode->childNodes[i] = NULL;
 	}
 
-	NewNode->localVars = new VARS;
-	GetPrivateProfileString(varSection, "Title", "", buffer, MAX_SIZE, iniFile);
-	NewNode->localVars->title = buffer;
+	NewNode->localVars = new VARS; 
+	GetPrivateProfileString(varSection, "Title", "", buffer, MAX_SIZE, iniFile); 
+	NewNode->localVars->title = buffer; 
+	if (NewNode->localVars->title == "")
+	{ 
+		NewNode->localVars->title = parentNode->localVars->title; 
+	} 
 	GetPrivateProfileString(varSection, "Caption", "", buffer, MAX_SIZE, iniFile);
 	NewNode->localVars->caption = buffer;
 	GetPrivateProfileString(varSection, "Function", "", buffer, MAX_SIZE, iniFile);
 	NewNode->localVars->functionality = buffer;
+
+	NewNode->localVars->wizbut = new WIZBUT;
+	GetPrivateProfileString(varSection, "Back", "", buffer, MAX_SIZE, iniFile); 
+	NewNode->localVars->wizbut->back = buffer; 
+	if (NewNode->localVars->wizbut->back == "")
+	{ 
+		NewNode->localVars->wizbut->back = parentNode->localVars->wizbut->back; 
+	} 
+
+	GetPrivateProfileString(varSection, "Next", "", buffer, MAX_SIZE, iniFile); 
+	NewNode->localVars->wizbut->next = buffer; 
+	if (NewNode->localVars->wizbut->next == "")
+	{ 
+		NewNode->localVars->wizbut->next = parentNode->localVars->wizbut->next; 
+	} 
+	GetPrivateProfileString(varSection, "Cancel", "", buffer, MAX_SIZE, iniFile); 
+	NewNode->localVars->wizbut->cancel = buffer; 
+	if (NewNode->localVars->wizbut->cancel == "")
+	{ 
+		NewNode->localVars->wizbut->cancel = parentNode->localVars->wizbut->cancel; 
+	} 
 
 	CString tempPageVar = "";
 
@@ -584,7 +609,11 @@ void CWizardMachineApp::CreateNode()
 	GlobalDefaults->localVars->caption = "Globals";
 	GlobalDefaults->localVars->pageName = "Globals";
 	GlobalDefaults->localVars->image = "Globals";
-	
+	GlobalDefaults->localVars->wizbut = new WIZBUT;
+	GlobalDefaults->localVars->wizbut->back = "<Back";
+	GlobalDefaults->localVars->wizbut->next = "Next>";
+	GlobalDefaults->localVars->wizbut->cancel = "Exit";
+	GlobalDefaults->localVars->wizbut->back = "Help";
 	GlobalDefaults->subPages = NULL;
 	GlobalDefaults->navControls = NULL;
 	GlobalDefaults->pageWidgets = NULL;
