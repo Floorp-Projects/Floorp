@@ -21,10 +21,6 @@
  *   Dan Haddix (dan6992@hotmail.com)
  */
 
-
-
-
-
 var downTool = false;
 var dragActive = false;
 var dragObject = false;
@@ -97,8 +93,8 @@ function Rect(coords, href, target, alt, construct){
   if (!coords){
     currentRect.style.left = startX+"px";
     currentRect.style.top = startY+"px";
-    currentRect.width = endX+"px";
-    currentRect.height = endX+"px";
+    //currentRect.style.width = endX+"px";
+    //currentRect.style.height = endX+"px";
   }
   else{
     var coordArray = coords.split(',');
@@ -145,8 +141,8 @@ function Circle(coords, href, target, alt, construct){
   if (!coords){
     currentCir.style.left = startX+"px";
     currentCir.style.top = startY+"px";
-    currentCir.width = endX+"px";
-    currentCir.height = endX+"px";
+    //currentCir.style.width = endX+"px";
+    //currentCir.style.height = endX+"px";
   }
   else{
     var coordArray = coords.split(',');
@@ -164,14 +160,6 @@ function Circle(coords, href, target, alt, construct){
   }
   if (construct)
     currentCir = null;
-
-  //cirImg = frameDoc.createElement("img");
-  //cirImg.setAttribute("src", "chrome://editor/skin/images/Map_circleObject.gif");
-  //cirImg.setAttribute("name", "hotspot");
-  //cirImg.setAttribute("cir", "true");
-  //cirImg.style.width = "100%";
-  //cirImg.style.height = "100%";
-  //currentCir.appendChild(cirImg);
 }
 
 function Poly(coords, href, target, alt, construct){
@@ -183,8 +171,9 @@ function Poly(coords, href, target, alt, construct){
   currentPoly = selectElement(frameDoc.body.appendChild(newPoly));
   if (!coords){
     addPoint(null, startX, startY, true);
-    currentPoly.onclick = addPoint;
-    //currentPoly.addEventListener("click", addPoint, false);
+    //currentPoly.onclick = addPoint;
+    currentPoly.style.cursor = "crosshair";
+    currentPoly.addEventListener("click", addPoint, false);
   }
   else{
     var coordArray = coords.split(',');
@@ -223,9 +212,9 @@ function addPoint(event, pointX, pointY, start){
   newPoint.style.top = pointY+"px";
   if (start){
     newPoint.setAttribute("class", "pointStart");
-    newPoint.style.cursor = "sw-resize";
-    newPoint.onclick = polyFinish;
-    //newPoint.addEventListener("click", polyFinish, false);
+    newPoint.style.cursor = "pointer";
+    //newPoint.onclick = polyFinish;
+    newPoint.addEventListener("click", polyFinish, false);
   }
   currentPoly.appendChild(newPoint);
 }
@@ -266,18 +255,20 @@ function polyFinish(event, construct){
     currentPoly.style.top = polyTop+"px";
     currentPoly.style.width = polyWidth+"px";
     currentPoly.style.height = polyHeight+"px";
-    currentPoly.childNodes[0].onclick = null;
-    currentPoly.onclick = null;
-    //currentPoly.childNodes[0].removeEventListener("click", polyFinish, false);
-    //currentPoly.removeEventListener("click", addPoint, false);
+    //currentPoly.childNodes[0].onclick = null;
+    //currentPoly.onclick = null;
+    currentPoly.style.cursor = "auto";
+    currentPoly.childNodes[0].removeEventListener("click", polyFinish, false);
+    currentPoly.removeEventListener("click", addPoint, false);
     if (!construct)
       hotSpotProps(currentPoly);
-    currentPoly = null;
   }
   else
     deleteElement(currentPoly);
   if (event)
     event.preventBubble();
+
+  currentPoly = null;
 }
 
 function deleteElement(el){
@@ -352,6 +343,9 @@ function deSelectElement(el){
       j++;
   }
   currentElement.pop();
+  if (currentElement.length == 1){
+    selectElement(currentElement[0]);
+  }
   if (currentElement.length >= 1){
     document.getElementById("Map:Cut").setAttribute("disabled", "false");
     document.getElementById("Map:Copy").setAttribute("disabled", "false");
@@ -655,14 +649,26 @@ function changeTool(event, what){
   if (!currentPoly){
     for(i=0; i<4; i++){
       buttonArray[i].setAttribute("toggled", 0);
+      if (event.target == buttonArray[i]){
+        buttonArray[i].setAttribute("toggled", 1);
+      }
     }
     currentTool = what;
+    if (currentTool != "pointer"){
+      frameDoc.getElementById("bgDiv").style.cursor = "crosshair";
+      frameDoc.body.style.cursor = "crosshair";
+    }
+    else{
+      frameDoc.getElementById("bgDiv").style.cursor = "default";
+      frameDoc.body.style.cursor = "default";
+    }
+
     dump(what+" selected\n");
   }
   else {
     for(i=0; i<4; i++){
       if (event.target == buttonArray[i]){
-        buttonArray[i].setAttribute("toggled", 1);
+        buttonArray[i].setAttribute("toggled", 0);
       }
     }
   }
@@ -740,14 +746,16 @@ function zoom(direction, ratio){
   imgEl = frameDoc.getElementById("mainImg");
   dump(imgEl.getAttribute("width")+'\n');
   if (ratio > currentZoom){
-    imgEl.setAttribute("width", (parseInt(imgEl.getAttribute("width"))*(ratio/currentZoom)));
-    imgEl.setAttribute("height", (parseInt(imgEl.getAttribute("height"))*(ratio/currentZoom)));
-    frameDoc.getElementById("bgDiv").style.width = (parseInt(frameDoc.getElementById("bgDiv").style.width)*(ratio/currentZoom));
+    imgEl.setAttribute("width", (parseInt(imgEl.offsetWidth)*(ratio/currentZoom)));
+    imgEl.setAttribute("height", (parseInt(imgEl.offsetHeight)*(ratio/currentZoom)));
+    frameDoc.getElementById("bgDiv").style.width = imgEl.getAttribute("width");
+    frameDoc.getElementById("bgDiv").style.height = imgEl.getAttribute("height");
   }
   else{
-    imgEl.setAttribute("width", (parseInt(imgEl.getAttribute("width"))/(currentZoom/ratio)));
-    imgEl.setAttribute("height", (parseInt(imgEl.getAttribute("height"))/(currentZoom/ratio)));
-    frameDoc.getElementById("bgDiv").style.width = (parseInt(frameDoc.getElementById("bgDiv").style.width)*(ratio/currentZoom));
+    imgEl.setAttribute("width", (parseInt(imgEl.offsetWidth)/(currentZoom/ratio)));
+    imgEl.setAttribute("height", (parseInt(imgEl.offsetHeight)/(currentZoom/ratio)));
+    frameDoc.getElementById("bgDiv").style.width = imgEl.getAttribute("width");
+    frameDoc.getElementById("bgDiv").style.height = imgEl.getAttribute("height");
   }
   currentZoom = ratio;  
 }
@@ -800,5 +808,53 @@ function paste(){
     func += clipBoard[i]+'\;';
   }
   eval(func);
+}
+
+  function nudge(event, dir){
+  /*prevent scrolling
+  event.stopPropagation(); 
+  event.preventDefault();*/
+
+  len = currentElement.length;
+  amount = 1;
+  if (event.shiftKey)
+    amount = 5;
+
+  
+  boundRectTop = 1000000;
+  boundRectLeft = 1000000;
+  for (i=0; i<len; i++){
+    curTop = parseInt(currentElement[i].style.top);
+    curLeft = parseInt(currentElement[i].style.left);
+    if (curTop < boundRectTop)
+      boundRectTop = curTop;
+    if (curLeft < boundRectLeft)
+      boundRectLeft = curLeft;
+  }
+
+  for (i=0; i<len; i++){
+    if (dir == "up"){
+      curTop = parseInt(currentElement[i].style.top);
+      if (boundRectTop >= amount)
+        currentElement[i].style.top = (curTop-amount) + "px";
+      else
+        currentElement[i].style.top = (curTop-boundRectTop) + "px";
+    }
+    else if (dir == "left"){
+      curLeft = parseInt(currentElement[i].style.left);
+      if (boundRectLeft >= amount)
+        currentElement[i].style.left = (curLeft-amount) + "px";
+      else
+        currentElement[i].style.left = (curLeft-boundRectLeft) + "px";
+    }
+    else if (dir == "down"){
+      curTop = parseInt(currentElement[i].style.top);
+      currentElement[i].style.top = (curTop+amount) + "px";
+    }
+    else if (dir == "right"){
+      curLeft = parseInt(currentElement[i].style.left);
+      currentElement[i].style.left = (curLeft+amount) + "px";
+    }
+  }
 }
   
