@@ -39,12 +39,10 @@
 #ifndef  NS_TXTCONTENTSINK_STREAM
 #define  NS_TXTCONTENTSINK_STREAM
 
-#include "nsIParserNode.h"
 #include "nsIHTMLContentSink.h"
-#include "nshtmlpars.h"
-#include "nsHTMLTokens.h"
 #include "nsParserCIID.h"
 #include "nsCOMPtr.h"
+#include "nsHTMLTokens.h"  // for eHTMLTags
 
 #define NS_IHTMLCONTENTSINKSTREAM_IID  \
   {0xa39c6bff, 0x15f0, 0x11d2, \
@@ -54,7 +52,8 @@
 class ostream;
 #endif
 
-class nsIUnicodeEncoder;
+class nsIParserNode;
+class nsISaveAsCharset;
 class nsIOutputStream;
 
 class nsIHTMLContentSinkStream : public nsIHTMLContentSink {
@@ -149,10 +148,8 @@ protected:
     void AddIndent();
     void EnsureBufferSize(PRInt32 aNewSize);
 
-    nsresult InitEncoder(const nsString& aCharset);
-
-    void UnicodeToHTMLString(const nsString& aSrc, nsString& aDst);
     void EncodeToBuffer(const nsString& aString);
+    NS_IMETHOD InitEncoder();
     
     void Write(const nsString& aString);
     void Write(const char* aCharBuffer);
@@ -180,8 +177,8 @@ protected:
     PRBool    mDoHeader;
     PRBool    mBodyOnly;
 
-    nsIUnicodeEncoder*  mUnicodeEncoder;
-    nsString            mCharsetOverride;
+    nsCOMPtr<nsISaveAsCharset> mUnicodeEncoder;
+    nsCAutoString mCharsetOverride;
 };
 
 
