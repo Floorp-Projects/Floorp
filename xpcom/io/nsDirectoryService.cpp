@@ -208,20 +208,18 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
             CFURLRef parentURL = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, bundleURL);
             if (parentURL)
             {
-                CFStringRef path = CFURLCopyFileSystemPath(parentURL, kCFURLPOSIXPathStyle);
-                if (path)
+                // Pass PR_TRUE for the "resolveAgainstBase" arg to CFURLGetFileSystemRepresentation.
+                // This will resolve the relative portion of the CFURL against it base, giving a full
+                // path, which CFURLCopyFileSystemPath doesn't do.
+                char buffer[PATH_MAX];
+                if (CFURLGetFileSystemRepresentation(parentURL, PR_TRUE, (UInt8 *)buffer, sizeof(buffer)))
                 {
-                    char buffer[512];
-                    if (CFStringGetCString(path, buffer, sizeof(buffer), kCFStringEncodingUTF8))
-                    {
 #ifdef DEBUG_conrad
-                        printf("nsDirectoryService - CurrentProcessDir is: %s\n", buffer);
+                    printf("nsDirectoryService - CurrentProcessDir is: %s\n", buffer);
 #endif
-                        rv = localFile->InitWithNativePath(nsDependentCString(buffer));
-                        if (NS_SUCCEEDED(rv))
-                            *aFile = localFile;
-                    }
-                    CFRelease(path);
+                    rv = localFile->InitWithNativePath(nsDependentCString(buffer));
+                    if (NS_SUCCEEDED(rv))
+                        *aFile = localFile;
                 }
                 CFRelease(parentURL);
             }
