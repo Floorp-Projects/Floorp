@@ -397,6 +397,15 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
       (eHTMLFrameConstraint_FixedContent == aReflowState.heightConstraint)) {
     if (kidDesiredSize.height < scrollAreaSize.height) {
       kidDesiredSize.height = scrollAreaSize.height;
+
+      // If there's an auto horizontal scrollbar and the scrollbar will be
+      // visible then subtract for the space taken up by the scrollbar;
+      // otherwise, we'll end up with a vertical scrollbar even if we don't
+      // need one...
+      if ((NS_STYLE_OVERFLOW_SCROLL != display->mOverflow) &&
+          (kidDesiredSize.width > scrollAreaSize.width)) {
+        kidDesiredSize.height -= NSToCoordRound(sbHeight);
+      }
     }
     
     if (kidDesiredSize.height <= scrollAreaSize.height) {
