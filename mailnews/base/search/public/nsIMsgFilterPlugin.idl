@@ -47,11 +47,6 @@ interface nsIStreamListener;
 [scriptable, uuid(e2e56690-a676-11d6-80c9-00008646b737)]
 interface nsIMsgFilterPlugin : nsISupports
 {
-    const long unknownToSpam = 0;
-    const long unknownToHam = 1;
-    const long hamToSpam = 2;
-    const long spamToHam = 3;
-
     /**
      * Initialize the plugin object.
      * 
@@ -61,8 +56,9 @@ interface nsIMsgFilterPlugin : nsISupports
     void init(in ACString aServerPrefsKey);
 
     /**
-     * Filter a message by headers.
+     * Filter an email message by content or headers, your choice.
      *
+     * @param aMsgURL       URL to fetch full contents of this message.
      * @param aMsgHdr       Can be used to set properties on the header of the
      *                      message (e.g. for attaching a score to it).
      *
@@ -78,17 +74,12 @@ interface nsIMsgFilterPlugin : nsISupports
      *
      * @param aMsgWindow    Passed back to the listener.
      */
-    void filterMsgByHeaders(in nsIMsgDBHdr aMsgHdr, in unsigned long aCount,
-                            [array, size_is(aCount)] in string aHeaders,
-                            in nsIMsgFilterHitNotify aListener,
-                            in nsIMsgWindow aMsgWindow);
-
-    /**
-     * XXX |string| -- should really be a UTF8 String
-     */
-    void filterMsg(in string aMessageURL,
-                   in nsIMsgDBHdr aMsgHdr, 
-                   in nsIMsgFilterHitNotify aListener);
+    void filterMessage(in string aMsgURL,
+                       in nsIMsgDBHdr aMsgHdr,
+                       in unsigned long aCount,
+                       [array, size_is(aCount)] in string aHeaders,
+                       in nsIMsgFilterHitNotify aListener,
+                       in nsIMsgWindow aMsgWindow);
 
     /**
      * Do any necessary cleanup: flush and close any open files, etc.
@@ -113,3 +104,44 @@ interface nsIMsgFilterPlugin : nsISupports
 
 };
 
+/**
+ * Rather than passing low level details about scores and such, abstract
+ * this away by informing a listener of a message's classification, which
+ * can be one of 3 values:  UNCLASSIFIED, GOOD, or JUNK.
+ */
+[scriptable, uuid(0243f3d6-d583-11d6-898a-00039310a47a)]
+interface nsIJunkMailClassificationListener : nsISupports
+{
+    void onMessageClassified(in string aMsgURL, in long classification);
+};
+
+[scriptable, uuid(caf3d467-d57c-11d6-96a9-00039310a47a)]
+interface nsIJunkMailPlugin : nsIMsgFilterPlugin
+{
+    /**
+     * Message classifications.
+     */
+    const long UNCLASSIFIED = 0;
+    const long GOOD = 1;
+    const long JUNK = 2;
+
+    /**
+     * Given a message URL, determine what its current classification is
+     * according to the current training set.
+     */
+    void classifyMessage(in string aMsgURL,
+                         in nsIJunkMailClassificationListener aListener);
+
+    void classifyMessages(in unsigned long aCount,
+                          [array, size_is(aCount)] in string aMsgURLs,
+                          in nsIJunkMailClassificationListener aListener);
+    
+    /**
+     * Called when a user forces the classification of a message. Should
+     * cause the training set to be updated appropriately.
+     */
+    void setMessageClassification(in string aMsgURL,
+                                  in long aOldClassification,
+                                  in long aNewClassification,
+                                  in nsIJunkMailClassificationListener aListener);
+};

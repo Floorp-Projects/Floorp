@@ -429,44 +429,36 @@ function doHelpButton()
 
 // XXX The following junkmail code might be going away or changing
 
+const NS_BAYESIANFILTER_CONTRACTID = "@mozilla.org/messenger/filter-plugin;1?name=bayesianfilter";
+const nsIJunkMailPlugin = Components.interfaces.nsIJunkMailPlugin;
+
 var gJunkmailComponent;
 
 function getJunkmailComponent()
 {
     if (!gJunkmailComponent) {
-        gJunkmailComponent = Components.classes['@mozilla.org/messenger/filter-plugin;1?name=junkmail']
-                .getService(Components.interfaces.nsISupports).wrappedJSObject;
-        gJunkmailComponent.initComponent();
+        gJunkmailComponent = Components.classes[NS_BAYESIANFILTER_CONTRACTID].getService(nsIJunkMailPlugin);
+        // gJunkmailComponent.initComponent();
+        // who calls init method?
     }
 }
 
 function analyze(aMessage, aNextFunction)
 {
-    function callback(aScore) {
-    }
-
-    callback.prototype = 
+    var listener = {
+        onMessageClassified: function(aMsgURL, aClassification)
         {
-            onMessageScored: function processNext(aScore)
-            {
-                if (aMessage) {
-                    //if (aScore == -1) debugger;
-                    if (aScore == 0) {
-                        aMessage.setStringProperty("score", "0");
-                    }
-                    else if (aScore == 1) {
-                        aMessage.setStringProperty("score", "100");
-                    }
-                }
-                aNextFunction();
-            }
-        };
-
+            dump(aMsgURL + ' is ' + (aClassification == nsIJunkMailPlugin.JUNK ? 'JUNK' : 'GOOD') + '\n');
+            var score = (aClassification == nsIJunkMailPlugin.JUNK ? "100" : "0");
+            aMessage.setStringProperty("score", score);
+            aNextFunction();
+        }
+    };
 
     // XXX TODO jumping through hoops here.
     var messageURI = aMessage.folder.generateMessageURI(aMessage.messageKey) + "?fetchCompleteMessage=true";
     var messageURL = mailSession.ConvertMsgURIToMsgURL(messageURI, msgWindow);
-    gJunkmailComponent.calculate(messageURL, new callback);
+    gJunkmailComponent.classifyMessage(messageURL, listener);
 }
 
 function analyzeFolder()
@@ -509,6 +501,7 @@ function analyzeMessages()
             ++counter;
             while (!message.isRead) {
                 if (counter == messages.length) {
+                    dump('[bayesian filter message analysis complete.]\n');
                     gJunkmailComponent.mBatchUpdate = false;
                     return;
                 }
@@ -519,6 +512,7 @@ function analyzeMessages()
             analyze(message, processNext);
         }
         else {
+            dump('[bayesian filter message analysis complete.]\n');
             gJunkmailComponent.batchUpdate = false;
         }
     }
@@ -527,6 +521,7 @@ function analyzeMessages()
     var messages = GetSelectedMessages();
     var counter = 0;
     gJunkmailComponent.batchUpdate = true;
+    dump('[bayesian filter message analysis begins.]\n');
     processNext();
 }
 
@@ -541,38 +536,22 @@ function mark(aMessage, aSpam, aNextFunction)
     // XXX TODO jumping through hoops here.
     var score = aMessage.getStringProperty("score");
 
-    var action;
-    if (aSpam) {
-        if (score == "100") {
-            // Marking a spam message as spam does nothing
-            return;
-        }
-
-        if (score == "0") {
-            // Marking a non-spam message as spam
-            action = Components.interfaces.nsIMsgFilterPlugin.hamToSpam;
-        }
-        else 
-            action = Components.interfaces.nsIMsgFilterPlugin.unknownToSpam;
-
-    }
-    else {
-        if (score == "0") {
-            // Marking a non-spam message as non-spam does nothing
-            return;
-        }
-
-        if (score == "100") {
-            // Marking a spam message as non-spam
-            action = Components.interfaces.nsIMsgFilterPlugin.spamToHam;
-        }
-        else
-            action = Components.interfaces.nsIMsgFilterPlugin.unknownToHam;
-    }
+    var oldClassification = ((score == "100") ? nsIJunkMailPlugin.JUNK :
+                             (score == "0") ? nsIJunkMailPlugin.GOOD : nsIJunkMailPlugin.UNCLASSIFIED);
+    var newClassification = (aSpam ? nsIJunkMailPlugin.JUNK : nsIJunkMailPlugin.GOOD);
 
     var messageURI = aMessage.folder.generateMessageURI(aMessage.messageKey) + "?fetchCompleteMessage=true";
     var messageURL = mailSession.ConvertMsgURIToMsgURL(messageURI, msgWindow);
-    gJunkmailComponent.mark(messageURL, action, aNextFunction);
+    
+    var listener = (aNextFunction == null ? null :
+                    {
+                        onMessageClassified: function(aMsgURL, aClassification)
+                        {
+                            aNextFunction();
+                        }
+                    });
+    
+    gJunkmailComponent.setMessageClassification(messageURL, oldClassification, newClassification, listener);
 }
 
 function JunkSelectedMessages(setAsJunk)
@@ -620,6 +599,7 @@ function markFolderAsJunk(aSpam)
               message.setStringProperty("score","0");
         }
         else {
+            dump('[folder marking complete.]\n');
             gJunkmailComponent.batchUpdate = false;
         }
     }
@@ -628,5 +608,6 @@ function markFolderAsJunk(aSpam)
     var folder = GetFirstSelectedMsgFolder();
     var messages = folder.getMessages(msgWindow);
     gJunkmailComponent.batchUpdate = true;
+    dump('[folder marking starting.]\n');
     processNext();
 }
