@@ -248,6 +248,10 @@ typedef struct _WZDROPXFER
 #define FCF_CLOSEBUTTON 0x04000000L
 #endif
 
+#ifndef FCF_DIALOGBOX
+#define FCF_DIALOGBOX   0x40000000L
+#endif
+
 #ifndef DRT_URL
 #define DRT_URL "UniformResourceLocator"
 #endif

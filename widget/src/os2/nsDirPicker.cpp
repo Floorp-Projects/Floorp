@@ -208,10 +208,13 @@ struct DirPicker : public FS::ICallbacks
       if( aNode != pMetaNode)
       {
          PTREENODE pNode = DIR2REC(aNode);
-         if( pNode == pCurrRoot)
-            WinSendMsg( hwndCnr, CM_REMOVERECORD,
-                        MPFROMP(&pNode), MPFROM2SHORT(1, 0));
-         WinSendMsg( hwndCnr, CM_FREERECORD, MPFROMP(&pNode), MPFROMSHORT(1));
+         if( pNode)
+         {
+            if( pNode == pCurrRoot)
+               WinSendMsg( hwndCnr, CM_REMOVERECORD,
+                           MPFROMP(&pNode), MPFROM2SHORT(1, 0));
+            WinSendMsg( hwndCnr, CM_FREERECORD, MPFROMP(&pNode), MPFROMSHORT(1));
+         }
       }
    }
 
@@ -231,9 +234,12 @@ struct DirPicker : public FS::ICallbacks
          if( pNode != pCurrRoot->pDir)
          {
             PTREENODE pRecord = DIR2REC(pNode);
-            WinSendMsg( hwndCnr, CM_REMOVERECORD,
-                        MPFROMP(&pRecord), MPFROM2SHORT(1, 0));
-            pRecord->m.flRecordAttr &= ~CRA_FILTERED;
+            if( pRecord)
+            {
+               WinSendMsg( hwndCnr, CM_REMOVERECORD,
+                           MPFROMP(&pRecord), MPFROM2SHORT(1, 0));
+               pRecord->m.flRecordAttr &= ~CRA_FILTERED;
+            }
          }
 
          pNode = pNode->GetNextSibling();

@@ -190,11 +190,18 @@ ULONG nsFrameWindow::GetFCFlags()
                 FCF_CLOSEBUTTON | FCF_NOBYTEALIGN |
                 (gModuleData.bIsDBCS ? FCF_DBE_APPSTAT : 0);
 
-  if (mBorderStyle == eBorderStyle_default) {
-    style |= FCF_DLGBORDER;
-  } else {
+  if (mWindowType == eWindowType_dialog) {
+    style |= FCF_DIALOGBOX;
+    if (mBorderStyle == eBorderStyle_default) {
+      style |= FCF_DLGBORDER;
+    } else {
+      style |= FCF_SIZEBORDER | FCF_MINMAX;
+    }
+  }
+  else {
     style |= FCF_SIZEBORDER | FCF_MINMAX;
   }
+
 
   if (mBorderStyle != eBorderStyle_default && mBorderStyle != eBorderStyle_all) {
     if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_resizeh)) {
