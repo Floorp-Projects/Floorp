@@ -379,21 +379,25 @@ public class NativeArray extends IdScriptable {
      * needed in addition to getLengthProperty, because
      * getLengthProperty always succeeds - tries to convert strings, etc.
      */
-    static double getLengthProperty(Scriptable obj) {
+    static long getLengthProperty(Scriptable obj) {
         // These will both give numeric lengths within Uint32 range.
-        if (obj instanceof NativeString)
-            return (double)((NativeString)obj).jsGet_length();
-        if (obj instanceof NativeArray)
-            return (double)((NativeArray)obj).jsGet_length();
+        if (obj instanceof NativeString) {
+            return ((NativeString)obj).jsGet_length();
+        } else if (obj instanceof NativeArray) {
+            return ((NativeArray)obj).jsGet_length();
+        } else if (!(obj instanceof Scriptable)) {
+            return 0;
+        }
         return ScriptRuntime.toUint32(ScriptRuntime
                                       .getProp(obj, "length", obj));
     }
 
     static boolean hasLengthProperty(Object obj) {
-        if (!(obj instanceof Scriptable) || obj == Context.getUndefinedValue())
-            return false;
-        if (obj instanceof NativeString || obj instanceof NativeArray)
+        if (obj instanceof NativeString || obj instanceof NativeArray) {
             return true;
+        } else if (!(obj instanceof Scriptable) || obj == Undefined.instance) {
+            return false;
+        }
         Scriptable sobj = (Scriptable)obj;
 
         // XXX some confusion as to whether or not to walk to get the length
@@ -458,7 +462,7 @@ public class NativeArray extends IdScriptable {
          * function; StringBuffers are limited to 2^31 in java.
          */
 
-        long length = (long)getLengthProperty(thisObj);
+        long length = getLengthProperty(thisObj);
 
         StringBuffer result = new StringBuffer(256);
 
@@ -548,7 +552,7 @@ public class NativeArray extends IdScriptable {
         StringBuffer result = new StringBuffer();
         String separator;
 
-        double length = getLengthProperty(thisObj);
+        long length = getLengthProperty(thisObj);
 
         // if no args, use "," as separator
         if ((args.length < 1) || (args[0] == Undefined.instance)) {
@@ -574,7 +578,7 @@ public class NativeArray extends IdScriptable {
                                                  Scriptable thisObj,
                                                  Object[] args)
     {
-        long len = (long)getLengthProperty(thisObj);
+        long len = getLengthProperty(thisObj);
 
         long half = len / 2;
         for(long i=0; i < half; i++) {
@@ -595,7 +599,7 @@ public class NativeArray extends IdScriptable {
                                               Object[] args)
         throws JavaScriptException
     {
-        long length = (long)getLengthProperty(thisObj);
+        long length = getLengthProperty(thisObj);
 
         if (length <= 1) { return thisObj; }
 
@@ -798,13 +802,14 @@ public class NativeArray extends IdScriptable {
     private static Object jsFunction_push(Context cx, Scriptable thisObj,
                                           Object[] args)
     {
-        double length = getLengthProperty(thisObj);
+        long length = getLengthProperty(thisObj);
         for (int i = 0; i < args.length; i++) {
-            setElem(thisObj, (long)length + i, args[i]);
+            setElem(thisObj, length + i, args[i]);
         }
 
         length += args.length;
-        ScriptRuntime.setProp(thisObj, "length", new Double(length), thisObj);
+        Double lengthObj = new Double(length);
+        ScriptRuntime.setProp(thisObj, "length", lengthObj, thisObj);
 
         /*
          * If JS1.2, follow Perl4 by returning the last thing pushed.
@@ -817,18 +822,18 @@ public class NativeArray extends IdScriptable {
                 : args[args.length - 1];
 
         else
-            return new Long((long)length);
+            return lengthObj;
     }
 
     private static Object jsFunction_pop(Context cx, Scriptable thisObj,
                                          Object[] args) {
         Object result;
-        double length = getLengthProperty(thisObj);
+        long length = getLengthProperty(thisObj);
         if (length > 0) {
             length--;
 
             // Get the to-be-deleted property's value.
-            result = getElem(thisObj, (long)length);
+            result = getElem(thisObj, length);
 
             // We don't need to delete the last property, because
             // setLength does that for us.
@@ -846,7 +851,7 @@ public class NativeArray extends IdScriptable {
                                            Object[] args)
     {
         Object result;
-        double length = getLengthProperty(thisObj);
+        long length = getLengthProperty(thisObj);
         if (length > 0) {
             long i = 0;
             length--;
@@ -911,45 +916,32 @@ public class NativeArray extends IdScriptable {
         int argc = args.length;
         if (argc == 0)
             return result;
-        double length = getLengthProperty(thisObj);
+        long length = getLengthProperty(thisObj);
 
         /* Convert the first argument into a starting index. */
-        double begin = ScriptRuntime.toInteger(args[0]);
-        double end;
-        double delta;
-        double count;
-
-        if (begin < 0) {
-            begin += length;
-            if (begin < 0)
-                begin = 0;
-        } else if (begin > length) {
-            begin = length;
-        }
+           long begin = toSliceIndex(ScriptRuntime.toInteger(args[0]), length);
         argc--;
 
-        /* Convert the second argument from a count into a fencepost index. */
-        delta = length - begin;
-
+        /* Convert the second argument into count */
+        long count;
         if (args.length == 1) {
-            count = delta;
-            end = length;
+            count = length - begin;
         } else {
-            count = ScriptRuntime.toInteger(args[1]);
-            if (count < 0)
+            double dcount = ScriptRuntime.toInteger(args[1]);
+            if (dcount < 0) {
                 count = 0;
-            else if (count > delta)
-                count = delta;
-            end = begin + count;
-
+            } else if (dcount > (length - begin)) {
+                count = length - begin;
+            } else {
+                count = (long)dcount;
+            }
             argc--;
         }
 
-        long lbegin = (long)begin;
-        long lend = (long)end;
+        long end = begin + count;
 
         /* If there are elements to remove, put them into the return value. */
-        if (count > 0) {
+        if (count != 0) {
             if (count == 1
                 && (cx.getLanguageVersion() == Context.VERSION_1_2))
             {
@@ -964,12 +956,12 @@ public class NativeArray extends IdScriptable {
                  * wrap in [] if necessary.  So JS1.3, default, and other
                  * versions all return an array of length 1 for uniformity.
                  */
-                result = getElem(thisObj, lbegin);
+                result = getElem(thisObj, begin);
             } else {
-                for (long last = lbegin; last < lend; last++) {
+                for (long last = begin; last != end; last++) {
                     Scriptable resultArray = (Scriptable)result;
                     Object temp = getElem(thisObj, last);
-                    setElem(resultArray, last - lbegin, temp);
+                    setElem(resultArray, last - begin, temp);
                 }
             }
         } else if (count == 0
@@ -980,24 +972,24 @@ public class NativeArray extends IdScriptable {
         }
 
         /* Find the direction (up or down) to copy and make way for argv. */
-        delta = argc - count;
+        long delta = argc - count;
 
         if (delta > 0) {
-            for (long last = (long)length - 1; last >= lend; last--) {
+            for (long last = length - 1; last >= end; last--) {
                 Object temp = getElem(thisObj, last);
-                setElem(thisObj, last + (long)delta, temp);
+                setElem(thisObj, last + delta, temp);
             }
         } else if (delta < 0) {
-            for (long last = lend; last < length; last++) {
+            for (long last = end; last < length; last++) {
                 Object temp = getElem(thisObj, last);
-                setElem(thisObj, last + (long)delta, temp);
+                setElem(thisObj, last + delta, temp);
             }
         }
 
         /* Copy from argv into the hole to complete the splice. */
         int argoffset = args.length - argc;
         for (int i = 0; i < argc; i++) {
-            setElem(thisObj, lbegin + i, args[i + argoffset]);
+            setElem(thisObj, begin + i, args[i + argoffset]);
         }
 
         /* Update length in case we deleted elements from the end. */
@@ -1025,7 +1017,7 @@ public class NativeArray extends IdScriptable {
         // create an empty Array to return.
         scope = getTopLevelScope(scope);
         Scriptable result = ScriptRuntime.newObject(cx, scope, "Array", null);
-        double length;
+        long length;
         long slot = 0;
 
         /* Put the target in the result array; only add it as an array
@@ -1068,40 +1060,42 @@ public class NativeArray extends IdScriptable {
     {
         Scriptable scope = getTopLevelScope(this);
         Scriptable result = ScriptRuntime.newObject(cx, scope, "Array", null);
-        double length = getLengthProperty(thisObj);
+        long length = getLengthProperty(thisObj);
 
-        double begin = 0;
-        double end = length;
-
-        if (args.length > 0) {
-            begin = ScriptRuntime.toInteger(args[0]);
-            if (begin < 0) {
-                begin += length;
-                if (begin < 0)
-                    begin = 0;
-            } else if (begin > length) {
-                begin = length;
-            }
-
-            if (args.length > 1) {
-                end = ScriptRuntime.toInteger(args[1]);
-                if (end < 0) {
-                    end += length;
-                    if (end < 0)
-                        end = 0;
-                } else if (end > length) {
-                    end = length;
-                }
+        long begin, end;
+        if (args.length == 0) {
+            begin = 0;
+            end = length;
+        } else {
+            begin = toSliceIndex(ScriptRuntime.toInteger(args[0]), length);
+            if (args.length == 1) {
+                end = length;
+            } else {
+                end = toSliceIndex(ScriptRuntime.toInteger(args[1]), length);
             }
         }
 
-        long lbegin = (long)begin;
-        long lend = (long)end;
-        for (long slot = lbegin; slot < lend; slot++) {
+        for (long slot = begin; slot < end; slot++) {
             Object temp = getElem(thisObj, slot);
-            setElem(result, slot - lbegin, temp);
+            setElem(result, slot - begin, temp);
         }
 
+        return result;
+    }
+
+    private static long toSliceIndex(double value, long length) {
+        long result;
+        if (value < 0.0) {
+            if (value + length < 0.0) {
+                result = 0;
+            } else {
+                result = (long)(value + length);
+            }
+        } else if (value > length) {
+            result = length;
+        } else {
+            result = (long)value;
+        }
         return result;
     }
 

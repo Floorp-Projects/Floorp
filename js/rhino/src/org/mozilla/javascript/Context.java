@@ -1105,22 +1105,27 @@ public class Context {
     /**
      * Get the elements of a JavaScript array.
      * <p>
-     * If the object defines a length property, a Java array with that
-     * length is created and initialized with the values obtained by
+     * If the object defines a length property which can be converted to
+     * a number a Java array with length given by
+     * {@link ScriptRuntime#toUint32(double)} is created and initialized with
+     * the values obtained by
      * calling get() on object for each value of i in [0,length-1]. If
      * there is not a defined value for a property the Undefined value
      * is used to initialize the corresponding element in the array. The
      * Java array is then returned.
-     * If the object doesn't define a length property, null is returned.
+     * If the object doesn't define a length property or it is not a number,
+     * empty array is returned.
      * @param object the JavaScript array or array-like object
      * @return a Java array of objects
      * @since 1.4 release 2
      */
     public Object[] getElements(Scriptable object) {
-        double doubleLen = NativeArray.getLengthProperty(object);
-        if (doubleLen != doubleLen)
-            return null;
-        int len = (int) doubleLen;
+        long longLen = NativeArray.getLengthProperty(object);
+        if (longLen > Integer.MAX_VALUE) {
+            // arrays beyond  MAX_INT is not in Java in any case
+            throw new IllegalArgumentException();
+        }
+        int len = (int) longLen;
         if (len == 0) {
             return ScriptRuntime.emptyArgs;
         } else {

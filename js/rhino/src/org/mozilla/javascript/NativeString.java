@@ -671,8 +671,8 @@ final class NativeString extends IdScriptable {
         return target.toUpperCase();
     }
 
-    public double jsGet_length() {
-        return (double) string.length();
+    int jsGet_length() {
+        return string.length();
     }
 
     /*
