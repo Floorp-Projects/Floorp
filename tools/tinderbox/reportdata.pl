@@ -10,6 +10,8 @@ require 5.003;
 
 use strict;
 
+$::Version = '$Revision: 1.2 $ ';
+
 package ReportData;
 
 # Send data to graph cgi via HTTP.
@@ -48,3 +50,32 @@ sub send_results_to_server {
     }
 }
 
+# Fake a tinderbox message.
+sub send_tbox_packet {
+  #my ($server, $status, $log, $build_name) = @_;
+
+  my $foo;
+
+  my $now = time();
+
+  $foo .= <<END_PRINT;
+tinderbox: tree: Talkback
+tinderbox: builddate: $now
+tinderbox: status: busted
+tinderbox: build: Linux btek Depend 
+tinderbox: errorparser: unix
+tinderbox: buildfamily: unix
+tinderbox: END
+END_PRINT
+  
+  print "foo = \n$foo\n";
+
+  open MSG, ">msg.txt";
+  print MSG $foo;
+  close MSG;
+
+  system "/bin/mail  tinderbox-daemon\@warp.mcom.com " . "< msg.txt";
+
+
+  unlink "msg.txt";
+}
