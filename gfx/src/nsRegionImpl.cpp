@@ -116,15 +116,15 @@ nsresult nsRegionImpl::GetRects (nsRegionRectSet **aRects)
   if (pRegionSet == nsnull)                 // Not yet allocated
   {
     PRUint8* pBuf = new PRUint8 [sizeof (nsRegionRectSet) + NumRects * sizeof (nsRegionRect)];
-    pRegionSet = NS_STATIC_CAST (nsRegionRectSet*, pBuf);
+    pRegionSet = NS_REINTERPRET_CAST (nsRegionRectSet*, pBuf);
     pRegionSet->mRectsLen = NumRects + 1;
   } else                                    // Already allocated in previous call
   {
     if (NumRects > pRegionSet->mRectsLen)   // passed array is not big enough - reallocate it.
     {
-      delete [] NS_STATIC_CAST (PRUint8*, pRegionSet);
+      delete [] NS_REINTERPRET_CAST (PRUint8*, pRegionSet);
       PRUint8* pBuf = new PRUint8 [sizeof (nsRegionRectSet) + NumRects * sizeof (nsRegionRect)];
-      pRegionSet = NS_STATIC_CAST (nsRegionRectSet*, pBuf);
+      pRegionSet = NS_REINTERPRET_CAST (nsRegionRectSet*, pBuf);
       pRegionSet->mRectsLen = NumRects + 1;
     }
   }
@@ -154,7 +154,7 @@ nsresult nsRegionImpl::FreeRects (nsRegionRectSet *aRects)
   if (!aRects)
     return NS_ERROR_NULL_POINTER;
 
-  delete [] NS_STATIC_CAST (PRUint8*, aRects);
+  delete [] NS_REINTERPRET_CAST (PRUint8*, aRects);
   return NS_OK;
 }
 
