@@ -24,7 +24,7 @@
 #include "nsHTTPSHandler.h"
 #include "nsISocketTransportService.h"
 #include "nsIServiceManager.h"
-#include "nsIPSMComponent.h"
+#include "nsISecurityManagerComponent.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
@@ -38,7 +38,7 @@ nsHTTPSHandler::nsHTTPSHandler()
     // This is to ensure that PSM is initialized on the main UI thread.
     // 
     rv = nsServiceManager::GetService( PSM_COMPONENT_CONTRACTID,
-                                       NS_GET_IID(nsIPSMComponent), 
+                                       NS_GET_IID(nsISecurityManagerComponent), 
                                        (nsISupports**)&psm);  
 
     NS_IF_RELEASE(psm);
