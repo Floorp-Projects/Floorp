@@ -123,16 +123,11 @@ nsStreamLoader::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
   char buffer[BUF_SIZE];
   PRUint32 len, lenRead;
   
-  inStr->Available(&len);
+  rv = inStr->Available(&len);
+  if (NS_FAILED(rv)) return rv;
 
   while (len > 0) {
-    if (len < BUF_SIZE) {
-      lenRead = len;
-    }
-    else {
-      lenRead = BUF_SIZE;
-    }
-
+    lenRead = PR_MIN(len, BUF_SIZE);
     rv = inStr->Read(buffer, lenRead, &lenRead);
     if (NS_FAILED(rv) || lenRead == 0) {
       return rv;
