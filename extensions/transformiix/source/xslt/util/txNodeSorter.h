@@ -63,8 +63,7 @@ public:
     txNodeSorter(ProcessorState* aPs);
     ~txNodeSorter();
 
-    MBool addSortElement(Element* aSortElement,
-                         Node* aContext);
+    MBool addSortElement(Element* aSortElement);
     MBool sortNodeSet(NodeSet* aNodes);
 
 private:
@@ -88,7 +87,6 @@ private:
 
     MBool getAttrAsAVT(Element* aSortElement,
                        txAtom* aAttrName,
-                       Node* aContext,
                        String& aResult);
 
     txList mSortKeys;
