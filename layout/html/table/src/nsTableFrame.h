@@ -39,12 +39,6 @@ struct InnerTableReflowState;
 struct nsStylePosition;
 struct nsStyleSpacing;
 
-/* ff1d2780-06d6-11d2-8f37-006008159b0c */
-#define NS_TABLEFRAME_CID \
- {0xff1d2780, 0x06d6, 0x11d2, {0x8f, 0x37, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x0c}}
-
-extern const nsIID kTableFrameCID;
-
 /* ============================================================================ */
 
 /** nsTableFrame maps the inner portion of a table (everything except captions.)
@@ -226,12 +220,6 @@ public:
     * actual number of columns in the table
     */
   PRInt32 GetEffectiveCOLSAttribute();
-
-  /** verify that there are at least aColIndex column frames created.
-    * if not, create the needed col frames
-    */
-  virtual void EnsureColumnFrameAt(PRInt32              aColIndex,
-                                   nsIPresContext&      aPresContext);
 
   /** return the index of the next row that is not yet assigned.
     * If no row is initialized, 0 is returned.
@@ -428,13 +416,6 @@ protected:
   /** sets the width of the table according to the computed widths of each column. */
   virtual void SetTableWidth(nsIPresContext&  aPresContext);
 
-  /**
-    */
-  virtual void VerticallyAlignChildren(nsIPresContext& aPresContext,
-                                        nscoord* aAscents,
-                                        nscoord aMaxAscent,
-                                        nscoord aMaxHeight);
-
   /** given the new parent size, do I really need to do a reflow? */
   virtual PRBool NeedsReflow(const nsHTMLReflowState& aReflowState, 
                              const nsSize&            aMaxSize);
@@ -487,6 +468,7 @@ protected:
     */
   virtual nsCellMap *GetCellMap() const;
 
+#ifdef NS_DEBUG
   /** for debugging only
     * prints out information about the cell map
     */
@@ -496,6 +478,7 @@ protected:
     * prints out info about the table layout state, printing columns and their cells
     */
   void ListColumnLayoutData(FILE* out, PRInt32 aIndent);
+#endif
 
   /** sum the columns represented by all nsTableColGroup objects. 
     * if the cell map says there are more columns than this, 

@@ -61,8 +61,6 @@ static const PRBool gsDebugIR = PR_FALSE;
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
 
-const nsIID kTableFrameCID = NS_TABLEFRAME_CID;
-
 static const PRInt32 kColumnWidthIncrement=100;
 
 /* ----------- CellData ---------- */
@@ -762,128 +760,6 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
   }
 }
 
-/** sum the columns represented by all nsTableColGroup objects
-  * if the cell map says there are more columns than this, 
-  * add extra implicit columns to the content tree.
-  */
-// XXX should be nsresult, not void
-void nsTableFrame::EnsureColumnFrameAt(PRInt32              aColIndex,
-                                       nsIPresContext&      aPresContext)
-{
-  nsresult rv;
-  PRInt32 actualColumns = 0;
-  nsTableColGroupFrame *lastColGroupFrame = nsnull;
-  nsIFrame * firstRowGroupFrame=nsnull;
-  nsIFrame * prevSibFrame=nsnull; // this is the child just before the first row group frame
-  nsIFrame * childFrame=mFirstChild;
-  while (nsnull!=childFrame)
-  {
-    const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
-    {
-      PRInt32 numCols = ((nsTableColGroupFrame*)childFrame)->GetColumnCount();
-      actualColumns += numCols;
-      lastColGroupFrame = (nsTableColGroupFrame *)childFrame;
-      if (actualColumns > aColIndex)
-        break;  // we have enough col frames at this point
-    }
-    else if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
-    {
-      if (nsnull==firstRowGroupFrame)
-        firstRowGroupFrame = childFrame;
-    }
-    if (nsnull==firstRowGroupFrame)
-      prevSibFrame = childFrame;
-    childFrame->GetNextSibling(childFrame);
-  }    
-  if (actualColumns <= aColIndex)
-  {
-    nsIHTMLContent *lastColGroup=nsnull;
-    if (nsnull==lastColGroupFrame)
-    {
-      // create an implicit colgroup
-      nsAutoString colGroupTag;
-      nsHTMLAtoms::colgroup->ToString(colGroupTag);
-      rv = NS_CreateHTMLElement(&lastColGroup, colGroupTag);  // ADDREF a: lastColGroup++
-      //XXX: make synthetic
-      //XXX mark it as implicit!
-      mContent->AppendChildTo(lastColGroup, PR_FALSE);  // add the implicit colgroup to my content
-      // Resolve style for the child
-      nsIStyleContext* colGroupStyleContext =
-        aPresContext.ResolveStyleContextFor(lastColGroup, mStyleContext, PR_TRUE);      // kidStyleContext: REFCNT++
-
-      // Create a col group frame
-      nsIFrame* newFrame;
-      NS_NewTableColGroupFrame(lastColGroup, this, newFrame);
-      lastColGroupFrame = (nsTableColGroupFrame*)newFrame;
-      lastColGroupFrame->SetStyleContext(&aPresContext, colGroupStyleContext);
-      NS_RELEASE(colGroupStyleContext);                                         // kidStyleContenxt: REFCNT--
-
-      // hook lastColGroupFrame into child list
-      if (nsnull==firstRowGroupFrame)
-      { // make lastColGroupFrame the last frame
-        nsIFrame *lastChild = LastFrame(mFirstChild);
-        lastChild->SetNextSibling(lastColGroupFrame);
-      }
-      else
-      { // insert lastColGroupFrame before the first row group frame
-        if (nsnull!=prevSibFrame)
-        { // lastColGroupFrame is inserted between prevSibFrame and lastColGroupFrame
-          prevSibFrame->SetNextSibling(lastColGroupFrame);
-        }
-        else
-        { // lastColGroupFrame is inserted as the first child of this table
-          mFirstChild = lastColGroupFrame;
-        }
-        lastColGroupFrame->SetNextSibling(firstRowGroupFrame);
-      }
-    }
-    else
-    {
-      lastColGroupFrame->GetContent((nsIContent *&)lastColGroup);  // ADDREF b: lastColGroup++
-    }
-
-    nsAutoString colTag;
-    nsHTMLAtoms::col->ToString(colTag);
-    PRInt32 excessColumns = aColIndex - actualColumns;
-    nsIFrame* firstNewColFrame = nsnull;
-    nsIFrame* lastNewColFrame = nsnull;
-    nsIStyleContextPtr  lastColGroupStyle;
-    lastColGroupFrame->GetStyleContext(lastColGroupStyle.AssignRef());
-    for ( ; excessColumns >= 0; excessColumns--)
-    {
-      nsIHTMLContent *col=nsnull;
-      // create an implicit col
-      rv = NS_CreateHTMLElement(&col, colTag);  // ADDREF: col++
-      //XXX: make synthetic
-      lastColGroup->AppendChildTo((nsIContent*)col, PR_FALSE);
-
-      // Create a new col frame
-      nsIFrame* colFrame;
-      NS_NewTableColFrame(col, lastColGroupFrame, colFrame);
-
-      // Set its style context
-      nsIStyleContextPtr colStyleContext =
-        aPresContext.ResolveStyleContextFor(col, lastColGroupStyle, PR_TRUE);
-      colFrame->SetStyleContext(&aPresContext, colStyleContext);
-
-      // XXX Don't release this style context (or we'll end up with a double-free).\
-      // This code is doing what nsTableColGroupFrame::Reflow() does...
-      //NS_RELEASE(colStyleContext);
-
-      // Add it to our list
-      if (nsnull == lastNewColFrame) {
-        firstNewColFrame = colFrame;
-      } else {
-        lastNewColFrame->SetNextSibling(colFrame);
-      }
-      lastNewColFrame = colFrame;
-      NS_RELEASE(col);                          // ADDREF: col--
-    }
-    NS_RELEASE(lastColGroup);                       // ADDREF: lastColGroup--
-  }
-}
 
 void nsTableFrame::AddColumnFrame (nsTableColFrame *aColFrame)
 {
@@ -957,7 +833,14 @@ void nsTableFrame::SetMinColSpanForTable()
       }
     }
     if (1<minColSpan)
+    {
       mCellMap->SetMinColSpan(colIndex, minColSpan);
+      if (gsDebug==PR_TRUE)
+      {
+        printf("minColSpan for col %d set to %d\n", colIndex, minColSpan);
+        DumpCellMap();
+      }
+    }
   }
 }
 
@@ -1040,8 +923,7 @@ NS_METHOD nsTableFrame::ReBuildCellMap()
   return rv;
 }
 
-/**
-  */
+#ifdef NS_DEBUG
 void nsTableFrame::DumpCellMap () 
 {
   printf("dumping CellMap:\n");
@@ -1113,6 +995,7 @@ void nsTableFrame::DumpCellMap ()
   else
     printf ("[nsnull]");
 }
+#endif
 
 void nsTableFrame::BuildCellIntoMap (nsTableCellFrame *aCell, PRInt32 aRowIndex, PRInt32 aColIndex)
 {
@@ -1203,6 +1086,7 @@ void nsTableFrame::GrowCellMap (PRInt32 aColCount)
  * around and lists the cell layout data.
  * This is for debugging purposes only.
  */
+#ifdef NS_DEBUG
 void nsTableFrame::ListColumnLayoutData(FILE* out, PRInt32 aIndent) 
 {
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
@@ -1258,6 +1142,7 @@ void nsTableFrame::ListColumnLayoutData(FILE* out, PRInt32 aIndent)
     }
   }
 }
+#endif
 
 /**
   * For the TableCell in CellData, add it to the list
@@ -1809,7 +1694,6 @@ NS_METHOD nsTableFrame::ResizeReflowPass2(nsIPresContext&          aPresContext,
                                           const nsHTMLReflowState& aReflowState,
                                           nsReflowStatus&          aStatus)
 {
-	//DumpCellMap();
   NS_PRECONDITION(aReflowState.frame == this, "bad reflow state");
   NS_PRECONDITION(aReflowState.parentReflowState->frame == mGeometricParent,
                   "bad parent reflow state");
@@ -2871,13 +2755,6 @@ void nsTableFrame::SetTableWidth(nsIPresContext& aPresContext)
   SetRect(tableSize);
 }
 
-void nsTableFrame::VerticallyAlignChildren(nsIPresContext& aPresContext,
-                                           nscoord* aAscents,
-                                           nscoord aMaxAscent,
-                                           nscoord aMaxHeight)
-{
-}
-
 void nsTableFrame::AdjustColumnsForCOLSAttribute()
 {
   nsCellMap *cellMap = GetCellMap();
@@ -3507,10 +3384,6 @@ nsTableFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kTableFrameCID)) {
-    *aInstancePtr = (void*) (this);
-    return NS_OK;
-  }
   return nsContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -3575,7 +3448,6 @@ NS_METHOD nsTableFrame::GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aT
 /* helper method for determining if this is a nested table or not */
 PRBool nsTableFrame::IsNested(const nsHTMLReflowState& aReflowState, nsStylePosition *& aPosition) const
 {
-  nsresult rv;
   PRBool result = PR_FALSE;
 #ifdef NS_DEBUG
   PRInt32 counter=0;
@@ -3589,12 +3461,12 @@ PRBool nsTableFrame::IsNested(const nsHTMLReflowState& aReflowState, nsStylePosi
     NS_ASSERTION(counter<100000, "infinite loop in IsNested");
     break;
 #endif
-    nsIFrame* parentTable = nsnull;
-    rv = rs->frame->QueryInterface(kTableFrameCID, (void**) &parentTable);
-    if (NS_OK==rv)
+    const nsStyleDisplay *display;
+    rs->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+    if (NS_STYLE_DISPLAY_TABLE==display->mDisplay)
     {
       result = PR_TRUE;
-      parentTable->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)aPosition));
+      rs->frame->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)aPosition));
       break;
     }
     rs = rs->parentReflowState;
@@ -3606,7 +3478,7 @@ PRBool nsTableFrame::IsNested(const nsHTMLReflowState& aReflowState, nsStylePosi
 /* helper method for getting the width of the table's containing block */
 nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowState)
 {
-  nsresult rv;
+  const nsStyleDisplay *display;
   nscoord parentWidth = aReflowState.maxSize.width;
 
   // Walk up the reflow state chain until we find a block
@@ -3618,9 +3490,8 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
   while (nsnull != rs) 
   {
     // if it's a block, use its max width
-    nsIFrame* block = nsnull;
-    rv = rs->frame->QueryInterface(kBlockFrameCID, (void**) &block);
-    if (NS_OK==rv) 
+    rs->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+    if (NS_STYLE_DISPLAY_BLOCK==display->mDisplay) 
     { // we found a block, see if it's really a table cell (which means we're a nested table)
       PRBool skipThisBlock=PR_FALSE;
       const nsReflowState* parentRS = rs->parentReflowState;
@@ -3629,11 +3500,10 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
         parentRS = parentRS->parentReflowState;
         if (nsnull!=parentRS)
         {
-          nsIFrame* cell = nsnull;
-          rv = parentRS->frame->QueryInterface(kTableCellFrameCID, (void**) &cell);
-          if (rv == NS_OK) {
+          parentRS->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+          if (NS_STYLE_DISPLAY_TABLE_CELL==display->mDisplay) {
             if (PR_TRUE==gsDebugNT)
-              printf("%p: found a block pframe %p in a cell, skipping it.\n", aReflowState.frame, block);
+              printf("%p: found a block pframe %p in a cell, skipping it.\n", aReflowState.frame, rs->frame);
             skipThisBlock = PR_TRUE;
           }
         }
@@ -3647,7 +3517,7 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
           parentWidth = rs->maxSize.width;
           if (PR_TRUE==gsDebugNT)
             printf("%p: found a block frame %p, returning width %d\n", 
-                   aReflowState.frame, block, parentWidth);
+                   aReflowState.frame, rs->frame, parentWidth);
           break;
         }
       }
@@ -3658,23 +3528,21 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
       nsMargin borderPadding;
       const nsStylePosition* tablePosition;
       const nsStyleSpacing* spacing;
-      nsIFrame* cell = nsnull;
-      rv = rs->frame->QueryInterface(kTableCellFrameCID, (void**) &cell);
-      // if the cell has a specified width, use it
-      if (NS_OK==rv) 
-      {
+      rs->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+      if (NS_STYLE_DISPLAY_TABLE_CELL==display->mDisplay) 
+      { // if it's a cell and the cell has a specified width, use it
         // Compute and subtract out the insets (sum of border and padding) for the table
         const nsStylePosition* cellPosition;
-        cell->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)cellPosition));
+        rs->frame->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)cellPosition));
         if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit())
         {
           nsTableFrame *tableParent;
-          rv=GetTableFrame(cell, tableParent);
+          nsresult rv=GetTableFrame(rs->frame, tableParent);
           if ((NS_OK==rv) && (nsnull!=tableParent) && (nsnull!=tableParent->mColumnWidths))
           {
             parentWidth=0;
-            PRInt32 colIndex = ((nsTableCellFrame *)cell)->GetColIndex();
-            PRInt32 colSpan = tableParent->GetEffectiveColSpan(colIndex, (nsTableCellFrame *)cell);
+            PRInt32 colIndex = ((nsTableCellFrame *)rs->frame)->GetColIndex();
+            PRInt32 colSpan = tableParent->GetEffectiveColSpan(colIndex, (nsTableCellFrame *)rs->frame);
             for (PRInt32 i=0; i<colSpan; i++)
               parentWidth += tableParent->GetColumnWidth(colIndex);
             break;
@@ -3685,111 +3553,119 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
           {
             parentWidth = cellPosition->mWidth.GetCoordValue();
             // subtract out cell border and padding
-            cell->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-            spacing->CalcBorderPaddingFor(cell, borderPadding);
+            rs->frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+            spacing->CalcBorderPaddingFor(rs->frame, borderPadding);
             parentWidth -= (borderPadding.right + borderPadding.left);
             if (PR_TRUE==gsDebugNT)
               printf("%p: found a cell frame %p with fixed coord width %d, returning parentWidth %d\n", 
-                     aReflowState.frame, cell, cellPosition->mWidth.GetCoordValue(), parentWidth);
+                     aReflowState.frame, rs->frame, cellPosition->mWidth.GetCoordValue(), parentWidth);
             break;
           }
         }
       }
       else
       {
-        nsIFrame* table = nsnull;
-        rv = rs->frame->QueryInterface(kTableFrameCID, (void**) &table);
-        if (NS_OK==rv) {
-          /* We found the nearest containing table (actually, the inner table).  
-             This defines what our percentage size is relative to. Use its desired width 
-             as the basis for computing our width.
-             **********************************************************************************
-             Nav4 compatibility code:  if the inner table has a percent width and the outer
-             table has an auto width, the parentWidth is the width the containing cell would be 
-             without the inner table.
-             **********************************************************************************
-           */
-          // Compute and subtract out the insets (sum of border and padding) for the table
-          table->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)tablePosition);
-          table->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-          if (eStyleUnit_Auto == tablePosition->mWidth.GetUnit())
+        rs->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+        if (NS_STYLE_DISPLAY_TABLE==display->mDisplay) 
+        {
+          // we only want to do this for inner table frames, so check the frame's parent to make sure it is an outer table frame
+          // we know that if both the frame and it's parent map to NS_STYLE_DISPLAY_TABLE, then we have an inner table frame 
+          nsIFrame * tableFrameParent;
+          rs->frame->GetGeometricParent(tableFrameParent);
+          tableFrameParent->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+          if (NS_STYLE_DISPLAY_TABLE==display->mDisplay)
           {
-            parentWidth = NS_UNCONSTRAINEDSIZE;
-            if (nsnull != ((nsTableFrame*)table)->mColumnWidths)
+            /* We found the nearest containing table (actually, the inner table).  
+               This defines what our percentage size is relative to. Use its desired width 
+               as the basis for computing our width.
+               **********************************************************************************
+               Nav4 compatibility code:  if the inner table has a percent width and the outer
+               table has an auto width, the parentWidth is the width the containing cell would be 
+               without the inner table.
+               **********************************************************************************
+             */
+            // Compute and subtract out the insets (sum of border and padding) for the table
+            rs->frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)tablePosition);
+            rs->frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+            if (eStyleUnit_Auto == tablePosition->mWidth.GetUnit())
             {
-              parentWidth=0;
-              PRInt32 colIndex = ((nsTableCellFrame *)greatgrandchildFrame)->GetColIndex();
-              PRInt32 colSpan = ((nsTableFrame*)table)->GetEffectiveColSpan(colIndex, ((nsTableCellFrame *)greatgrandchildFrame));
-              for (PRInt32 i = 0; i<colSpan; i++)
-                parentWidth += ((nsTableFrame*)table)->GetColumnWidth(i+colIndex);
-              // subtract out cell border and padding
-              greatgrandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-              spacing->CalcBorderPaddingFor(greatgrandchildFrame, borderPadding);
-              parentWidth -= (borderPadding.right + borderPadding.left);
-              if (PR_TRUE==gsDebugNT)
-                printf("%p: found a table frame %p with auto width, returning parentWidth %d from cell in col %d with span %d\n", 
-                       aReflowState.frame, table, parentWidth, colIndex, colSpan);
-            }
-            else
-            {
-              if (PR_TRUE==gsDebugNT)
-                printf("%p: found a table frame %p with auto width, returning parentWidth %d because parent has no info yet.\n", 
-                       aReflowState.frame, table, parentWidth);
-            }
-          }
-          else
-          {
-            if (nsnull!=((nsTableFrame*)table)->mColumnWidths)
-            {
-              parentWidth=0;
-              PRInt32 colIndex = ((nsTableCellFrame*)greatgrandchildFrame)->GetColIndex();
-              PRInt32 colSpan = ((nsTableFrame*)table)->GetEffectiveColSpan(colIndex, ((nsTableCellFrame *)greatgrandchildFrame));
-              for (PRInt32 i = 0; i<colSpan; i++)
-                parentWidth += ((nsTableFrame*)table)->GetColumnWidth(i+colIndex);
-              if (eStyleUnit_Percent == tablePosition->mWidth.GetUnit())
+              parentWidth = NS_UNCONSTRAINEDSIZE;
+              if (nsnull != ((nsTableFrame*)rs->frame)->mColumnWidths)
               {
-                float percent = tablePosition->mWidth.GetPercentValue();
-                parentWidth = (nscoord)(percent*((float)parentWidth));
-              }
-            }
-            else
-            {
-              nsSize tableSize;
-              table->GetSize(tableSize);
-              parentWidth = tableSize.width;
-              if (0!=tableSize.width)
-              { // the table has been sized, so we can compute the available space for the child
-                spacing->CalcBorderPaddingFor(rs->frame, borderPadding);
-                parentWidth -= (borderPadding.right + borderPadding.left);
-                // same for the row group
-                childFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-                spacing->CalcBorderPaddingFor(childFrame, borderPadding);
-                parentWidth -= (borderPadding.right + borderPadding.left);
-                // same for the row
-                grandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-                spacing->CalcBorderPaddingFor(grandchildFrame, borderPadding);
-                parentWidth -= (borderPadding.right + borderPadding.left);
-                // same for the cell
+                parentWidth=0;
+                PRInt32 colIndex = ((nsTableCellFrame *)greatgrandchildFrame)->GetColIndex();
+                PRInt32 colSpan = ((nsTableFrame*)rs->frame)->GetEffectiveColSpan(colIndex, ((nsTableCellFrame *)greatgrandchildFrame));
+                for (PRInt32 i = 0; i<colSpan; i++)
+                  parentWidth += ((nsTableFrame*)rs->frame)->GetColumnWidth(i+colIndex);
+                // subtract out cell border and padding
                 greatgrandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
                 spacing->CalcBorderPaddingFor(greatgrandchildFrame, borderPadding);
                 parentWidth -= (borderPadding.right + borderPadding.left);
+                if (PR_TRUE==gsDebugNT)
+                  printf("%p: found a table frame %p with auto width, returning parentWidth %d from cell in col %d with span %d\n", 
+                         aReflowState.frame, rs->frame, parentWidth, colIndex, colSpan);
               }
               else
               {
-                // the table has not yet been sized, so we need to infer the available space
-                parentWidth = rs->maxSize.width;
+                if (PR_TRUE==gsDebugNT)
+                  printf("%p: found a table frame %p with auto width, returning parentWidth %d because parent has no info yet.\n", 
+                         aReflowState.frame, rs->frame, parentWidth);
+              }
+            }
+            else
+            {
+              if (nsnull!=((nsTableFrame*)rs->frame)->mColumnWidths)
+              {
+                parentWidth=0;
+                PRInt32 colIndex = ((nsTableCellFrame*)greatgrandchildFrame)->GetColIndex();
+                PRInt32 colSpan = ((nsTableFrame*)rs->frame)->GetEffectiveColSpan(colIndex, ((nsTableCellFrame *)greatgrandchildFrame));
+                for (PRInt32 i = 0; i<colSpan; i++)
+                  parentWidth += ((nsTableFrame*)rs->frame)->GetColumnWidth(i+colIndex);
                 if (eStyleUnit_Percent == tablePosition->mWidth.GetUnit())
                 {
                   float percent = tablePosition->mWidth.GetPercentValue();
                   parentWidth = (nscoord)(percent*((float)parentWidth));
                 }
               }
+              else
+              {
+                nsSize tableSize;
+                rs->frame->GetSize(tableSize);
+                parentWidth = tableSize.width;
+                if (0!=tableSize.width)
+                { // the table has been sized, so we can compute the available space for the child
+                  spacing->CalcBorderPaddingFor(rs->frame, borderPadding);
+                  parentWidth -= (borderPadding.right + borderPadding.left);
+                  // same for the row group
+                  childFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+                  spacing->CalcBorderPaddingFor(childFrame, borderPadding);
+                  parentWidth -= (borderPadding.right + borderPadding.left);
+                  // same for the row
+                  grandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+                  spacing->CalcBorderPaddingFor(grandchildFrame, borderPadding);
+                  parentWidth -= (borderPadding.right + borderPadding.left);
+                  // same for the cell
+                  greatgrandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+                  spacing->CalcBorderPaddingFor(greatgrandchildFrame, borderPadding);
+                  parentWidth -= (borderPadding.right + borderPadding.left);
+                }
+                else
+                {
+                  // the table has not yet been sized, so we need to infer the available space
+                  parentWidth = rs->maxSize.width;
+                  if (eStyleUnit_Percent == tablePosition->mWidth.GetUnit())
+                  {
+                    float percent = tablePosition->mWidth.GetPercentValue();
+                    parentWidth = (nscoord)(percent*((float)parentWidth));
+                  }
+                }
+              }
+              if (PR_TRUE==gsDebugNT)
+                printf("%p: found a table frame %p, returning parentWidth %d \n", 
+                       aReflowState.frame, rs->frame, parentWidth);
             }
-            if (PR_TRUE==gsDebugNT)
-              printf("%p: found a table frame %p, returning parentWidth %d \n", 
-                     aReflowState.frame, table, parentWidth);
+            break;
           }
-          break;
         }
       }
     }

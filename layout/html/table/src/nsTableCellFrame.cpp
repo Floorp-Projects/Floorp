@@ -36,7 +36,6 @@
 
 NS_DEF_PTR(nsIStyleContext);
 
-const nsIID kTableCellFrameCID = NS_TABLECELLFRAME_CID;
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -297,7 +296,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   if (NS_UNCONSTRAINEDSIZE!=availSize.height)
     availSize.height -= topInset+bottomInset+margin.top+margin.bottom;
 
-  // XXX Kipp added this hack
   if (eReflowReason_Incremental == aReflowState.reason) 
   {
     // XXX We *must* do this otherwise incremental reflow that's
@@ -635,10 +633,6 @@ nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   NS_PRECONDITION(0 != aInstancePtr, "null ptr");
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kTableCellFrameCID)) {
-    *aInstancePtr = (void*) (this);
-    return NS_OK;
   }
   return nsContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
