@@ -179,16 +179,7 @@
 #if defined(XP_MAC)
 #include <Files.h>
 #include "nsILocalFileMac.h"
-#elif defined(XP_UNIX) || defined (XP_OS2) || defined(XP_BEOS)
-#if defined(XP_OS2)
-#define INCL_DOS
-#define INCL_DOSERRORS
-#define INCL_WIN
-#define INCL_GPI
-#include <os2.h>
-#include <sys/types.h> // required for dirent.h
-#include "prio.h"
-#endif
+#elif defined(XP_UNIX) || defined(XP_BEOS)
 #include <dirent.h>
 #elif defined(XP_WIN)
 
@@ -201,6 +192,13 @@
 #undef CreateDirectory
 #endif
 
+#include "prio.h"
+#elif defined(XP_OS2)
+#define INCL_DOS
+#define INCL_DOSERRORS
+#define INCL_WIN
+#define INCL_GPI
+#include <os2.h>
 #include "prio.h"
 #endif
 

@@ -78,19 +78,11 @@ ifeq ($(OS_ARCH), Linux)
 DEFINES         += -D_BSD_SOURCE
 endif
 
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-LOCAL_INCLUDES	+= -I$(srcdir)/os2
-HSRCS		+= dirent.h
-endif
-
 ifeq ($(OS_CONFIG),SunOS4.1)
 NSPR_CFLAGS	+= -I$(srcdir)/../nsprpub/pr/include/md
 endif
 
 HEADERS		= nsBuildID.h $(DEPTH)/mozilla-config.h
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-HEADERS		+= $(srcdir)/os2/dirent.h
-endif
 
 export:: $(TARGETS) $(HEADERS)
 	$(INSTALL) $(IFLAGS1) $(HEADERS) $(DIST)/include

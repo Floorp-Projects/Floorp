@@ -54,7 +54,6 @@ static int isleadbyte(int c);
 
 #ifdef XP_OS2_VACPP
 #include <direct.h>
-#include "dirent.h"
 #else
 #include <unistd.h>
 #endif
@@ -1258,6 +1257,7 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
     
 
     *aFileSize = mFileInfo64.size;
+    printf("filesize = %ld\n", mFileInfo64.size);
     return NS_OK;
 }
 
