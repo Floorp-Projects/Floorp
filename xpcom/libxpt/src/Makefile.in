@@ -30,4 +30,6 @@ CSRCS		= xpt_struct.c 	\
 
 REQUIRES	= $(MODULE)
 
+export:: libs
+
 include $(topsrcdir)/config/rules.mk
