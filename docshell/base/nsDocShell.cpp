@@ -41,6 +41,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIBrowserDOMWindow.h"
 #include "nsIComponentManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -62,6 +63,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIChromeEventHandler.h"
+#include "nsIDOMChromeWindow.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsPoint.h"
@@ -242,7 +244,6 @@ nsDocShell::nsDocShell():
     mEODForCurrentDocument(PR_FALSE),
     mURIResultedInDocument(PR_FALSE),
     mIsBeingDestroyed(PR_FALSE),
-    mDisallowPopupWindows(PR_FALSE),
     mValidateOrigin(PR_TRUE), // validate frame origins by default
     mIsExecutingOnLoadHandler(PR_FALSE),
     mIsPrintingOrPP(PR_FALSE),
@@ -1099,6 +1100,18 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
         }
     }
 
+    PRInt32 linkPref = nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW;
+    if (mustMakeNewWindow) {
+        mPrefs->GetIntPref("browser.link.open_newwindow", &linkPref);
+        if (linkPref == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
+            // force new window to go to _top
+            GetSameTypeRootTreeItem(getter_AddRefs(treeItem));
+            if(!treeItem)
+                *aResult = this;
+            mustMakeNewWindow = PR_FALSE;
+        }
+    }
+
     if (mustMakeNewWindow)
     {
         nsCOMPtr<nsIDOMWindow> newWindow;
@@ -1107,14 +1120,60 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
         // This DocShell is the parent window
         parentWindow = do_GetInterface(NS_STATIC_CAST(nsIDocShell*, this));
         if (!parentWindow) {
-            NS_ASSERTION(0, "Cant get nsIDOMWindowInternal from nsDocShell!");
+            NS_ASSERTION(0, "Can't get nsIDOMWindowInternal from nsDocShell!");
             return NS_ERROR_FAILURE;
         }
 
-        rv = parentWindow->Open(EmptyString(),            // URL to load
-                                name,                     // Window name
-                                EmptyString(),            // Window features
-                                getter_AddRefs(newWindow));
+        if (linkPref == nsIBrowserDOMWindow::OPEN_NEWTAB) {
+
+            // is it a popup?
+
+            PRBool allowTab = PR_TRUE;
+            nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(mScriptGlobal);
+            if (pWindow) {
+              // skip the window search-by-name of GetOpenAllow
+              // by using _self. we don't care about that at this point.
+              OpenAllowValue allow = pWindow->GetOpenAllow(
+                                      NS_LITERAL_STRING("_self"));
+              if (allow == allowNot || allow == allowSelf)
+                  allowTab = PR_FALSE;
+            }
+
+            // try to get our tab-opening interface
+
+            if (allowTab) {
+                nsCOMPtr<nsIBrowserDOMWindow> bwin;
+
+                nsCOMPtr<nsIDocShellTreeItem> rootItem;
+                GetRootTreeItem(getter_AddRefs(rootItem));
+                nsCOMPtr<nsIDOMWindow> rootWin(do_GetInterface(rootItem));
+                nsCOMPtr<nsIDOMChromeWindow> chromeWin(
+                                                do_QueryInterface(rootWin));
+                if (chromeWin)
+                  chromeWin->GetBrowserDOMWindow(getter_AddRefs(bwin));
+
+                // open a new tab
+                if (bwin) {
+                    rv = bwin->OpenURI(0, 0, nsIBrowserDOMWindow::OPEN_NEWTAB,
+                                       nsIBrowserDOMWindow::OPEN_NEW,
+                                       getter_AddRefs(newWindow));
+
+                    nsCOMPtr<nsIScriptGlobalObject> newObj =
+                        do_GetInterface(newWindow);
+                    if (newObj)
+                        newObj->SetOpenerWindow(parentWindow);
+                }
+            }
+            // else fall through to the normal Open method, from which
+            // the appropriate measures will be taken when the popup fails
+        }
+
+        if (!newWindow)
+          rv = parentWindow->Open(EmptyString(),            // URL to load
+                                  name,                     // Window name
+                                  EmptyString(),            // Window features
+                                  getter_AddRefs(newWindow));
+
         if (NS_FAILED(rv)) return rv;
 
         // Get the DocShell from the new window...
@@ -3064,10 +3123,6 @@ nsDocShell::Create()
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool tmpbool;
-
-    rv = mPrefs->GetBoolPref("browser.block.target_new_window", &tmpbool);
-    if (NS_SUCCEEDED(rv))
-      mDisallowPopupWindows = tmpbool;
 
     rv = mPrefs->GetBoolPref("browser.frames.enabled", &tmpbool);
     if (NS_SUCCEEDED(rv))
@@ -5069,7 +5124,9 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         // way for embeddors to get involved in window targeting, this is
         // as good a place as any...
         //
-        if (mDisallowPopupWindows) {
+        PRInt32 linkPref = nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW;
+        mPrefs->GetIntPref("browser.link.open_newwindow", &linkPref);
+        if (linkPref == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
             PRBool bIsChromeOrResource = PR_FALSE;
             if (mCurrentURI)
                 mCurrentURI->SchemeIs("chrome", &bIsChromeOrResource);
