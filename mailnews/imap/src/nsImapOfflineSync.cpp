@@ -49,6 +49,7 @@
 #include "nsIRequestObserver.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIFileStream.h"
+#include "nsIMsgCopyService.h"
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -440,7 +441,9 @@ void nsImapOfflineSync::ProcessMoveOperation(nsIMsgOfflineImapOperation *current
               messages->AppendElement(iSupports);
             }
           }
-          destFolder->CopyMessages(m_currentFolder, messages, PR_TRUE, m_window, this, PR_FALSE, PR_FALSE);
+          nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
+          if (copyService)
+            copyService->CopyMessages(m_currentFolder, messages, destFolder, PR_TRUE, this, m_window, PR_FALSE);
         }
       }
     }
@@ -535,7 +538,9 @@ void nsImapOfflineSync::ProcessCopyOperation(nsIMsgOfflineImapOperation *current
               messages->AppendElement(iSupports);
             }
           }
-          destFolder->CopyMessages(m_currentFolder, messages, PR_FALSE, m_window, this, PR_FALSE, PR_FALSE);
+          nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
+          if (copyService)
+            copyService->CopyMessages(m_currentFolder, messages, destFolder, PR_FALSE, this, m_window, PR_FALSE);
         }
       }
     }

@@ -6148,6 +6148,18 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
     if (txnMgr)
       txnMgr->EndBatch();
   }
+
+
+  // since we don't have a copy state object, we can't use the normal mechanism
+  // of calling OnCopyCompleted to notify the copy service that the copy is complete.
+  // So, we notify the copy service directly.
+  nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID);
+  if (copyService)
+  {
+    nsCOMPtr<nsISupports> supports = do_QueryInterface(srcFolder);
+    (void) copyService->NotifyCompletion(supports, this, rv);
+  }
+
   if (NS_SUCCEEDED(rv) && isMove)
     srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
   return rv;
