@@ -25,10 +25,14 @@
 #include "nsIMsgRFC822Parser.h"
 #include "nsMsgRFC822Parser.h"
 
+#include "nsIDOMMsgAppCore.h"
+#include "nsMsgAppCore.h"
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kCMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID);
 
+static NS_DEFINE_IID(kCMsgAppCoreCID, NS_MSGCORE_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -106,9 +110,16 @@ nsresult nsMsgFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, vo
 	if (mClassID.Equals(kCMsgRFC822ParserCID))
 	{
 		res = NS_NewRFC822Parser((nsIMsgRFC822Parser **) &inst);
-		if (res != NS_OK)  // was there a problem creating the object ?
+		if (NS_FAILED(res))  // was there a problem creating the object ?
 		  return res;   
 	}
+  // this is the main messenger interface
+  if (mClassID.Equals(kCMsgAppCoreCID))  {
+    res = NS_NewMsgAppCore((nsIDOMMsgAppCore **) &inst);
+    if (NS_FAILED(res))
+      return res;
+
+  }
 
 	// End of checking the interface ID code....
 	if (inst)
