@@ -333,11 +333,11 @@ nsInstall::AddDirectory(const nsString& aRegName,
 
     PRBool bInstall;
     
-    nsVector paths;
+    nsVector *paths = new nsVector();
     
-    result = ExtractDirEntries(aJarSource, &paths);
+    result = ExtractDirEntries(aJarSource, paths);
     
-    PRInt32  pathsUpperBound = paths.GetUpperBound();
+    PRInt32  pathsUpperBound = paths->GetUpperBound();
 
     if (result != nsInstall::SUCCESS)
     {
@@ -351,7 +351,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
             
         nsString *fullRegName = new nsString(*qualifiedRegName);
         fullRegName->Append("/");
-        fullRegName->Append(*(nsString *)paths[i]);
+        fullRegName->Append(*(nsString *)paths->Get(i));
         
         char* fullRegNameCString = fullRegName->ToNewCString();
         
@@ -393,18 +393,18 @@ nsInstall::AddDirectory(const nsString& aRegName,
         {
             nsString *newJarSource = new nsString(aJarSource);
             newJarSource->Append("/");
-            newJarSource->Append(*(nsString *)paths[i]);
+            newJarSource->Append(*(nsString *)paths->Get(i));
 
             nsString* newSubDir;
 
             if (subdirectory != "")
             {
                 newSubDir = new nsString(subdirectory);
-                newSubDir->Append(*(nsString*)paths[i]);
+                newSubDir->Append(*(nsString*)paths->Get(i));
             }
             else
             {
-                newSubDir = new nsString(*(nsString*)paths[i]);
+                newSubDir = new nsString(*(nsString*)paths->Get(i));
             }
             
             ie = new nsInstallFile( this,
@@ -431,6 +431,8 @@ nsInstall::AddDirectory(const nsString& aRegName,
         }
     }
     
+    nsInstallInfo::DeleteVector(paths);
+
     if (qualifiedRegName != nsnull)
         delete qualifiedRegName;
     
@@ -494,11 +496,11 @@ nsInstall::AddDirectory(const nsString& aRegName,
 
     PRBool bInstall;
     
-    nsVector paths;
+    nsVector *paths = new nsVector();
     
-    result = ExtractDirEntries(aJarSource, &paths);
+    result = ExtractDirEntries(aJarSource, paths);
     
-    PRInt32  pathsUpperBound = paths.GetUpperBound();
+    PRInt32  pathsUpperBound = paths->GetUpperBound();
 
     if (result != nsInstall::SUCCESS)
     {
@@ -512,7 +514,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
             
         nsString *fullRegName = new nsString(*qualifiedRegName);
         fullRegName->Append("/");
-        fullRegName->Append(*(nsString *)paths[i]);
+        fullRegName->Append(*(nsString *)paths->Get(i));
         
         char* fullRegNameCString = fullRegName->ToNewCString();
         
@@ -554,18 +556,18 @@ nsInstall::AddDirectory(const nsString& aRegName,
         {
             nsString *newJarSource = new nsString(aJarSource);
             newJarSource->Append("/");
-            newJarSource->Append(*(nsString *)paths[i]);
+            newJarSource->Append(*(nsString *)paths->Get(i));
 
             nsString* newSubDir;
 
             if (subdirectory != "")
             {
                 newSubDir = new nsString(subdirectory);
-                newSubDir->Append(*(nsString*)paths[i]);
+                newSubDir->Append(*(nsString*)paths->Get(i));
             }
             else
             {
-                newSubDir = new nsString(*(nsString*)paths[i]);
+                newSubDir = new nsString(*(nsString*)paths->Get(i));
             }
             
             ie = new nsInstallFile( this,
@@ -592,6 +594,8 @@ nsInstall::AddDirectory(const nsString& aRegName,
         }
     }
     
+    nsInstallInfo::DeleteVector(paths);
+
     if (qualifiedRegName != nsnull)
         delete qualifiedRegName;
     
@@ -654,11 +658,11 @@ nsInstall::AddDirectory(const nsString& aRegName,
 
     PRBool bInstall;
     
-    nsVector paths;
+    nsVector *paths = new nsVector();
     
-    result = ExtractDirEntries(aJarSource, &paths);
+    result = ExtractDirEntries(aJarSource, paths);
     
-    PRInt32  pathsUpperBound = paths.GetUpperBound();
+    PRInt32  pathsUpperBound = paths->GetUpperBound();
 
     if (result != nsInstall::SUCCESS)
     {
@@ -672,7 +676,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
             
         nsString *fullRegName = new nsString(*qualifiedRegName);
         fullRegName->Append("/");
-        fullRegName->Append(*(nsString *)paths[i]);
+        fullRegName->Append(*(nsString *)paths->Get(i));
         
         char* fullRegNameCString = fullRegName->ToNewCString();
         
@@ -714,18 +718,18 @@ nsInstall::AddDirectory(const nsString& aRegName,
         {
             nsString *newJarSource = new nsString(aJarSource);
             newJarSource->Append("/");
-            newJarSource->Append(*(nsString *)paths[i]);
+            newJarSource->Append(*(nsString *)paths->Get(i));
 
             nsString* newSubDir;
 
             if (subdirectory != "")
             {
                 newSubDir = new nsString(subdirectory);
-                newSubDir->Append(*(nsString*)paths[i]);
+                newSubDir->Append(*(nsString*)paths->Get(i));
             }
             else
             {
-                newSubDir = new nsString(*(nsString*)paths[i]);
+                newSubDir = new nsString(*(nsString*)paths->Get(i));
             }
             
             ie = new nsInstallFile( this,
@@ -752,6 +756,8 @@ nsInstall::AddDirectory(const nsString& aRegName,
         }
     }
     
+    nsInstallInfo::DeleteVector(paths);
+
     if (qualifiedRegName != nsnull)
         delete qualifiedRegName;
     
@@ -817,11 +823,11 @@ nsInstall::AddDirectory(const nsString& aRegName,
 
     PRBool bInstall;
     
-    nsVector paths;
+    nsVector *paths = new nsVector();
     
-    result = ExtractDirEntries(aJarSource, &paths);
+    result = ExtractDirEntries(aJarSource, paths);
     
-    PRInt32  pathsUpperBound = paths.GetUpperBound();
+    PRInt32  pathsUpperBound = paths->GetUpperBound();
 
     if (result != nsInstall::SUCCESS)
     {
@@ -835,7 +841,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
             
         nsString *fullRegName = new nsString(*qualifiedRegName);
         fullRegName->Append("/");
-        fullRegName->Append(*(nsString *)paths[i]);
+        fullRegName->Append(*(nsString *)paths->Get(i));
         
         char* fullRegNameCString = fullRegName->ToNewCString();
         
@@ -877,18 +883,18 @@ nsInstall::AddDirectory(const nsString& aRegName,
         {
             nsString *newJarSource = new nsString(aJarSource);
             newJarSource->Append("/");
-            newJarSource->Append(*(nsString *)paths[i]);
+            newJarSource->Append(*(nsString *)paths->Get(i));
 
             nsString* newSubDir;
 
             if (subdirectory != "")
             {
                 newSubDir = new nsString(subdirectory);
-                newSubDir->Append(*(nsString*)paths[i]);
+                newSubDir->Append(*(nsString*)paths->Get(i));
             }
             else
             {
-                newSubDir = new nsString(*(nsString*)paths[i]);
+                newSubDir = new nsString(*(nsString*)paths->Get(i));
             }
             
             ie = new nsInstallFile( this,
@@ -914,6 +920,8 @@ nsInstall::AddDirectory(const nsString& aRegName,
             }
         }
     }
+    
+    nsInstallInfo::DeleteVector(paths);
     
     if (qualifiedRegName != nsnull)
         delete qualifiedRegName;
@@ -978,11 +986,11 @@ nsInstall::AddDirectory(const nsString& aRegName,
 
     PRBool bInstall;
     
-    nsVector paths;
+    nsVector *paths = new nsVector();
     
-    result = ExtractDirEntries(aJarSource, &paths);
+    result = ExtractDirEntries(aJarSource, paths);
     
-    PRInt32  pathsUpperBound = paths.GetUpperBound();
+    PRInt32  pathsUpperBound = paths->GetUpperBound();
 
     if (result != nsInstall::SUCCESS)
     {
@@ -996,7 +1004,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
             
         nsString *fullRegName = new nsString(*qualifiedRegName);
         fullRegName->Append("/");
-        fullRegName->Append(*(nsString *)paths[i]);
+        fullRegName->Append(*(nsString *)paths->Get(i));
         
         char* fullRegNameCString = fullRegName->ToNewCString();
         
@@ -1038,18 +1046,18 @@ nsInstall::AddDirectory(const nsString& aRegName,
         {
             nsString *newJarSource = new nsString(aJarSource);
             newJarSource->Append("/");
-            newJarSource->Append(*(nsString *)paths[i]);
+            newJarSource->Append(*(nsString *)paths->Get(i));
 
             nsString* newSubDir;
 
             if (subdirectory != "")
             {
                 newSubDir = new nsString(subdirectory);
-                newSubDir->Append(*(nsString*)paths[i]);
+                newSubDir->Append(*(nsString*)paths->Get(i));
             }
             else
             {
-                newSubDir = new nsString(*(nsString*)paths[i]);
+                newSubDir = new nsString(*(nsString*)paths->Get(i));
             }
             
             ie = new nsInstallFile( this,
@@ -1075,6 +1083,8 @@ nsInstall::AddDirectory(const nsString& aRegName,
             }
         }
     }
+    
+    nsInstallInfo::DeleteVector(paths);
     
     if (qualifiedRegName != nsnull)
         delete qualifiedRegName;
@@ -1140,11 +1150,11 @@ nsInstall::AddDirectory(const nsString& aJarSource,
 
     PRBool bInstall;
     
-    nsVector paths;
+    nsVector *paths = new nsVector();
     
-    result = ExtractDirEntries(aJarSource, &paths);
+    result = ExtractDirEntries(aJarSource, paths);
     
-    PRInt32  pathsUpperBound = paths.GetUpperBound();
+    PRInt32  pathsUpperBound = paths->GetUpperBound();
 
     if (result != nsInstall::SUCCESS)
     {
@@ -1158,7 +1168,7 @@ nsInstall::AddDirectory(const nsString& aJarSource,
             
         nsString *fullRegName = new nsString(*qualifiedRegName);
         fullRegName->Append("/");
-        fullRegName->Append(*(nsString *)paths[i]);
+        fullRegName->Append(*(nsString *)paths->Get(i));
         
         char* fullRegNameCString = fullRegName->ToNewCString();
         
@@ -1200,18 +1210,18 @@ nsInstall::AddDirectory(const nsString& aJarSource,
         {
             nsString *newJarSource = new nsString(aJarSource);
             newJarSource->Append("/");
-            newJarSource->Append(*(nsString *)paths[i]);
+            newJarSource->Append(*(nsString *)paths->Get(i));
 
             nsString* newSubDir;
 
             if (subdirectory != "")
             {
                 newSubDir = new nsString(subdirectory);
-                newSubDir->Append(*(nsString*)paths[i]);
+                newSubDir->Append(*(nsString*)paths->Get(i));
             }
             else
             {
-                newSubDir = new nsString(*(nsString*)paths[i]);
+                newSubDir = new nsString(*(nsString*)paths->Get(i));
             }
             
             ie = new nsInstallFile( this,
@@ -1237,6 +1247,8 @@ nsInstall::AddDirectory(const nsString& aJarSource,
             }
         }
     }
+    
+    nsInstallInfo::DeleteVector(paths);
     
     if (qualifiedRegName != nsnull)
         delete qualifiedRegName;
@@ -3186,5 +3198,29 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
 PRInt32 
 nsInstall::ExtractDirEntries(const nsString& directory, nsVector *paths)
 {
-    return nsInstall::SUCCESS;
+    PRInt32 err;
+    char    buf[512];
+
+    if ( paths )
+    {
+        void* find = ZIP_FindInit( mJarFileData, nsAutoCString(directory) );
+
+        if ( find ) 
+        {
+            err = ZIP_FindNext( find, buf, sizeof(buf) );
+            while ( err == ZIP_OK ) 
+            {
+                paths->Add(new nsString(buf));
+                err = ZIP_FindNext( find, buf, sizeof(buf) );
+            }
+            ZIP_FindFree( find );
+        }
+        else
+            err = ZIP_ERR_GENERAL;
+
+        if ( err == ZIP_ERR_FNF )
+            return SUCCESS;   // found them all
+    }
+
+    return UNEXPECTED_ERROR;
 }

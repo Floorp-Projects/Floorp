@@ -66,6 +66,8 @@ class nsInstallInfo
     long GetFlags();
     
     PRBool    IsMultipleTrigger();
+
+    static void DeleteVector(nsVector* vector);    
     
   private:
     
@@ -76,8 +78,6 @@ class nsInstallInfo
     long       mFlags;
     nsVector  *mFromURLs;
     nsVector  *mLocalFiles;
-
-    void DeleteVector(nsVector* vector);    
 };
 
 
