@@ -32,6 +32,7 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  mimetype \
 		  intl \
+		  unicharutil \
 		  $(NULL)
 
 LIBRARY_NAME=webbrowserpersist_s
