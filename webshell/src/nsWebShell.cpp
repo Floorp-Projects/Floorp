@@ -92,17 +92,17 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("webshell");
 #endif
 
 
-#if XP_UNIX
-  // XXX. This should be changed. 
-  // Allow the event queue to be setup from outside
-  // the webshell.
+#if OLD_EVENT_QUEUE
+  /* The following is not used for the GTK version of the browser.
+   * It is still lurking around  for Motif 
+   */
 PLEventQueue* gWebShell_UnixEventQueue;
 
 void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue)
 {
   gWebShell_UnixEventQueue = aEventQueue;
 }
-#endif
+#endif  /* OLD_EVENT_QUEUE  */
 #if XP_MAC
 // This has all the same problems as the above
 extern "C" PLEventQueue* GetMacPLEventQueue();
@@ -1655,17 +1655,13 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
                (PLHandleEventProc) ::HandlePLEvent,
                (PLDestroyEventProc) ::DestroyPLEvent);
 
-// XXX: These ifdefs should all be replaced by the code in the XP_PC case when
-//      all platforms can use the EventQueueService...
-#ifdef XP_PC 
-  eventQueue = aHandler->GetEventQueue();
-#endif
+// XXX: The MAC ifdef should be replaced by the one in #else when
+// it uses EventQueueService...
 
-#ifdef XP_UNIX
-  eventQueue = gWebShell_UnixEventQueue;
-#endif
 #ifdef XP_MAC 
 	eventQueue = GetMacPLEventQueue();
+#else
+  eventQueue = aHandler->GetEventQueue();
 #endif
 
 	PL_PostEvent(eventQueue, this);
