@@ -20,6 +20,11 @@
 
 DEPTH=..\..\..
 MODULE= mime
+
+!if defined (BUILD_PSM2)
+BUILD_SMIME=1
+!endif
+
 REQUIRES	= xpcom \
 		  string \
 		  msgbase \
@@ -43,7 +48,9 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  xpconnect \
 		  pipnss \
-		  windowwatcher \
+!if defined(BUILD_SMIME)
+		  msgsmime	\
+!endif
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
@@ -78,10 +85,6 @@ EXPORTS =								\
 ## library
 
 LIBRARY_NAME=mime_s
-
-!if defined (BUILD_PSM2)
-BUILD_SMIME=1
-!endif
 
 !if defined(BUILD_SMIME)
 DEFINES = -DENABLE_SMIME $(DEFINES)

@@ -41,8 +41,13 @@
 #include "nspr.h"
 #include "nsEscape.h"
 #include "mimemsg.h"
-#include "nsIWindowWatcher.h"
-#include "nsIPrompt.h"
+#include "mimemoz2.h"
+#include "nsIURI.h"
+#include "nsIMsgWindow.h"
+#include "nsIMsgMailNewsUrl.h"
+#include "nsIMimeMiscStatus.h"
+#include "nsIMsgSMIMEHeaderSink.h"
+#include "nsCOMPtr.h"
 
 
 #define MIME_SUPERCLASS mimeEncryptedClass
@@ -365,9 +370,6 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
 {
   MimeCMSdata *data = (MimeCMSdata *) crypto_closure;
   nsresult rv;
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-  nsCOMPtr<nsIPrompt> prompter;
-  wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
 
   if (!data || !data->output_fn || !data->decoder_context)
 	return -1;
@@ -378,21 +380,44 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
 
 	 We save away the value returned and will use it later to emit a
 	 blurb about whether the signature validation was cool.
-
-   NOTE: We currently put up a dialog box to alert the user. This will go away
-         very soon
    */
 
   PR_SetError(0, 0);
   rv = data->decoder_context->Finish(getter_AddRefs(data->content_info));
-  if (NS_FAILED(rv)) {
+
+  if (NS_FAILED(rv))
 	  data->verify_error = PR_GetError();
-    nsString msg(NS_LITERAL_STRING("Error decrypted message that was encrypted by the sender").get());
-    prompter->Alert(0, msg.get());
-  } else {
-    nsString msg(NS_LITERAL_STRING("Successfully decrypted message that was encrypted by the sender").get());
-    prompter->Alert(0, msg.get());
-  }
+
+  mime_stream_data *msd = (mime_stream_data *) (data->self->options->stream_closure);
+  if (msd)
+  {
+    nsIChannel *channel = msd->channel;  // note the lack of ref counting...
+    if (channel)
+    {
+      nsCOMPtr<nsIURI> uri;
+      nsCOMPtr<nsIMsgWindow> msgWindow;
+      nsCOMPtr<nsIMsgHeaderSink> headerSink;
+      nsCOMPtr<nsIMsgMailNewsUrl> msgurl;
+      nsCOMPtr<nsISupports> securityInfo;
+      nsCOMPtr<nsIMsgSMIMEHeaderSink> smimeHeaderSink;
+      channel->GetURI(getter_AddRefs(uri));
+      if (uri)
+        msgurl = do_QueryInterface(uri);
+      if (msgurl)
+        msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
+      if (msgWindow)
+        msgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
+      if (headerSink)
+        headerSink->GetSecurityInfo(getter_AddRefs(securityInfo));
+      if (securityInfo)
+        smimeHeaderSink = do_QueryInterface(securityInfo);
+      if (smimeHeaderSink)
+      {
+          smimeHeaderSink->EncryptionStatus(NS_SUCCEEDED(rv));
+      }
+    } // if channel
+  } // if msd
+
   data->decoder_context = 0;
 
   /* Is the content info encrypted? */

@@ -60,7 +60,14 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  xpconnect \
 		  pipnss \
-		  windowwatcher \
+		  windowwatcher
+
+ifdef BUILD_SMIME
+REQUIRES += \
+            msgsmime
+endif
+                  
+REQUIRES += \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -39,8 +39,13 @@
 #include "nsMimeTypes.h"
 #include "nspr.h"
 #include "nsMimeStringResources.h"
-#include "nsIWindowWatcher.h"
-#include "nsIPrompt.h"
+#include "mimemoz2.h"
+#include "nsIURI.h"
+#include "nsIMsgWindow.h"
+#include "nsIMsgMailNewsUrl.h"
+#include "nsIMimeMiscStatus.h"
+#include "nsIMsgSMIMEHeaderSink.h"
+#include "nsCOMPtr.h"
 
 #define MIME_SUPERCLASS mimeMultipartSignedClass
 MimeDefClass(MimeMultipartSignedCMS, MimeMultipartSignedCMSClass,
@@ -393,10 +398,6 @@ MimeMultCMS_generate (void *crypto_closure)
   PRBool encrypted_p;
   PRBool unverified_p = PR_FALSE;
   nsresult rv;
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-  nsCOMPtr<nsIPrompt> prompter;
-  wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
-
   if (!data) return 0;
   encrypted_p = data->parent_is_encrypted_p;
 
@@ -443,14 +444,35 @@ MimeMultCMS_generate (void *crypto_closure)
 	  good_p = PR_FALSE;
 	}
 
-  // XXX Temporary hack until we write out to the chrome XXX //
-  if (good_p) {
-    nsString msg(NS_LITERAL_STRING("This is a signed message with a valid signature").get());
-    prompter->Alert(0, msg.get());
-  } else {
-    nsString msg(NS_LITERAL_STRING("This is a signed message with an invalid signature").get());
-    prompter->Alert(0, msg.get());
-  }
+  mime_stream_data *msd = (mime_stream_data *) (data->self->options->stream_closure);
+  if (msd)
+  {
+    nsIChannel *channel = msd->channel;  // note the lack of ref counting...
+    if (channel)
+    {
+      nsCOMPtr<nsIURI> uri;
+      nsCOMPtr<nsIMsgWindow> msgWindow;
+      nsCOMPtr<nsIMsgHeaderSink> headerSink;
+      nsCOMPtr<nsIMsgMailNewsUrl> msgurl;
+      nsCOMPtr<nsISupports> securityInfo;
+      nsCOMPtr<nsIMsgSMIMEHeaderSink> smimeHeaderSink;
+      channel->GetURI(getter_AddRefs(uri));
+      if (uri)
+        msgurl = do_QueryInterface(uri);
+      if (msgurl)
+        msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
+      if (msgWindow)
+        msgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
+      if (headerSink)
+        headerSink->GetSecurityInfo(getter_AddRefs(securityInfo));
+      if (securityInfo)
+        smimeHeaderSink = do_QueryInterface(securityInfo);
+      if (smimeHeaderSink)
+      {
+          smimeHeaderSink->SignedStatus(good_p);
+      }
+    } // if channel
+  } // if msd
 
   unverified_p = data->self->options->missing_parts; 
 
