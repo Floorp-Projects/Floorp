@@ -49,6 +49,10 @@
   0x4a85a5d0, 0xcddd, 0x11d2,                     \
   {0xb7, 0xf6, 0x00, 0x80, 0x5f, 0x05, 0xff, 0xa5}}
 
+#define NS_MESSENGEROPTIONSSTARTUP_CID            \
+{ /* 87A35D6C-9BB9-49f8-9CAC-5D5214550B2D */      \
+  0x87a35d6c, 0x9bb9, 0x49f8,                     \
+  { 0x9c, 0xac, 0x5d, 0x52, 0x14, 0x55, 0xb, 0x2d }}
 
 class nsMessengerBootstrap : public nsICmdLineHandler, public nsIMessengerWindowService {
   
@@ -63,5 +67,24 @@ public:
   
 };
 
+#ifdef MOZ_THUNDERBIRD
+
+// thunderbird has a new command line argument called -options which launches
+// the Options dialog.
+
+class nsMsgOptionsCmdLineHandler : public nsICmdLineHandler
+{
+public:
+  
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICMDLINEHANDLER
+  
+  nsMsgOptionsCmdLineHandler();
+  virtual ~nsMsgOptionsCmdLineHandler();
+
+  CMDLINEHANDLER_REGISTERPROC_DECLS
+};
+ 
+#endif
 
 #endif

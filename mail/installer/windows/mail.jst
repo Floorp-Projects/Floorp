@@ -312,6 +312,11 @@ function updateMapi()
     winreg.createKey(subkey      + "\\shell\\open\\command", "");
     winreg.setValueString(subkey + "\\shell\\open\\command", "", sfpMainExePath);
 
+    winreg.createKey(subkey      + "\\shell\\properties", "");
+    winreg.setValueString(subkey + "\\shell\\properties", "", "Thunderbird &Options");
+    winreg.createKey(subkey      + "\\shell\\properties\\command", "");
+    winreg.setValueString(subkey + "\\shell\\properties\\command", "", sfpMainExePath + " -options");
+
     // Register Thunderbird as a News Reader
     subkey  = "SOFTWARE\\Clients\\News\\$ProductName$";
     winreg.createKey(subkey, "");

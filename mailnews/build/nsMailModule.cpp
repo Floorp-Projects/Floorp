@@ -284,6 +284,7 @@
 // mailnews base factories
 ////////////////////////////////////////////////////////////////////////////////
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessengerBootstrap)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgOptionsCmdLineHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlListenerManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgMailSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessenger)
@@ -575,6 +576,12 @@ static const nsModuleComponentInfo gComponents[] = {
     { "Netscape Messenger Bootstrapper", NS_MESSENGERBOOTSTRAP_CID,
       NS_MESSENGERBOOTSTRAP_CONTRACTID,
       nsMessengerBootstrapConstructor,
+    },
+    { "Options Startup Handler", NS_MESSENGEROPTIONSSTARTUP_CID,
+      NS_MAILOPTIONSTARTUPHANDLER_CONTRACTID,
+      nsMsgOptionsCmdLineHandlerConstructor,
+      nsMsgOptionsCmdLineHandler::RegisterProc,
+      nsMsgOptionsCmdLineHandler::UnregisterProc
     },
     { "Netscape Messenger Window Service", NS_MESSENGERWINDOWSERVICE_CID,
       NS_MESSENGERWINDOWSERVICE_CONTRACTID,

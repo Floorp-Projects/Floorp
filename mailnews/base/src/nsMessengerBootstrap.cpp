@@ -138,3 +138,19 @@ NS_IMETHODIMP nsMessengerBootstrap::OpenMessengerWindowWithUri(const char *windo
 
   return NS_OK;
 }
+
+#ifdef MOZ_THUNDERBIRD
+nsMsgOptionsCmdLineHandler::nsMsgOptionsCmdLineHandler()
+{
+}
+
+nsMsgOptionsCmdLineHandler::~nsMsgOptionsCmdLineHandler()
+{
+}
+
+NS_IMPL_ISUPPORTS1(nsMsgOptionsCmdLineHandler, nsICmdLineHandler) 
+
+CMDLINEHANDLER_IMPL(nsMsgOptionsCmdLineHandler,"-options","", "chrome://communicator/content/pref/pref.xul",
+                   "Open Options Dialog.", NS_MAILOPTIONSTARTUPHANDLER_CONTRACTID,"Mail Options Startup Handler", PR_TRUE,"", PR_TRUE)
+
+#endif
