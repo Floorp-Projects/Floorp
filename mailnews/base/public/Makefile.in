@@ -46,6 +46,8 @@ EXPORTS =				\
 		nsIMsgMailNewsUrl.h	\
 		nsIUrlListener.h	\
 		nsIUrlListenerManager.h \
+		nsIMsgMailSession.h	\
+		nsIMsgIdentity.h	\
 		nsIFolderListener.h	\
 		$(NULL)
 
