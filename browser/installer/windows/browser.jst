@@ -126,17 +126,22 @@ function createShortcuts()
     logComment("scExeDesc               : " + scExeDesc);
     logComment("fProgram                : " + fProgram);
 
+    winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+    subkey              = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
+
     // Explicitly create the fFolderPrograms even though the windowsShortcut 
     // function creates the folder. This is so that the folder creation gets 
     // logged for uninstall to remove it.
-    if(winreg.getValueNumber(subkey, "Create Start Menu Shortcut") != 0 && !File.exists(fFolderPrograms))
+    
+    // Only create the Start Menu folder if the user selected start menu icons
+    if (winreg.getValueNumber(subkey, "Create Start Menu Shortcut") != 0 && !File.exists(fFolderPrograms))
       File.dirCreate(fFolderPrograms);
-    if(winreg.getValueNumber(subkey, "Create Start Menu Shortcut") != 0 && !File.exists(fDefShortcuts))
+    
+    // Always create default shortcuts folder
+    if (!File.exists(fDefShortcuts))
       File.dirCreate(fDefShortcuts);
 
     // Create the Shortcuts
-    winreg.setRootKey(winreg.HKEY_CURRENT_USER);
-    subkey              = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
     if (winreg.getValueNumber(subkey, "Create Desktop Shortcut") != 0)
       File.windowsShortcut(fileExe, fFolderDesktop, scExeDesc, fProgram, "", fileExe, 0);
     if (winreg.getValueNumber(subkey, "Create Start Menu Shortcut") != 0) {
