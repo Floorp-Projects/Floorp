@@ -826,6 +826,51 @@ NS_IMETHODIMP nsMsgDBFolder::ManyHeadersToDownload(PRBool *retval)
 	return NS_OK;
 }
 
+nsresult nsMsgDBFolder::MsgFitsDownloadCriteria(nsMsgKey msgKey, PRBool *result)
+{
+	if(!mDatabase)
+		return NS_ERROR_FAILURE;
+
+	nsresult rv;
+	nsCOMPtr<nsIMsgDBHdr> hdr;
+	rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(hdr));
+	if(NS_FAILED(rv))
+		return rv;
+
+  if (hdr)
+  {
+    PRUint32 msgFlags = 0;
+
+    hdr->GetFlags(&msgFlags);
+    // check if we already have this message body offline
+    if (! (msgFlags & MSG_FLAG_OFFLINE))
+    {
+      *result = PR_TRUE;
+    // check against the server download size limit .
+      nsCOMPtr <nsIMsgIncomingServer> incomingServer;
+      rv = GetServer(getter_AddRefs(incomingServer));
+      if (NS_SUCCEEDED(rv) && incomingServer)
+      {
+        PRBool limitDownloadSize = PR_FALSE;
+        rv = incomingServer->GetLimitOfflineMessageSize(&limitDownloadSize);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (limitDownloadSize)
+        {
+          PRInt32 maxDownloadMsgSize = 0;
+          PRUint32 msgSize;
+          hdr->GetMessageSize(&msgSize);
+          rv = incomingServer->GetMaxMessageSize(&maxDownloadMsgSize);
+          NS_ENSURE_SUCCESS(rv, rv);
+          maxDownloadMsgSize *= 1024;
+          if (msgSize > (PRUint32) maxDownloadMsgSize)
+            *result = PR_FALSE;
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgDBFolder::ShouldStoreMsgOffline(nsMsgKey msgKey, PRBool *result)
 {
   NS_ENSURE_ARG(result);
@@ -834,48 +879,7 @@ NS_IMETHODIMP nsMsgDBFolder::ShouldStoreMsgOffline(nsMsgKey msgKey, PRBool *resu
   GetFlags(&flags);
 
   if (flags & MSG_FOLDER_FLAG_OFFLINE)
-  {
-	  if(!mDatabase)
-		  return NS_ERROR_FAILURE;
-
-	  nsresult rv;
-	  nsCOMPtr<nsIMsgDBHdr> hdr;
-	  rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(hdr));
-	  if(NS_FAILED(rv))
-		  return rv;
-
-    if (hdr)
-    {
-      PRUint32 msgFlags = 0;
-
-      hdr->GetFlags(&msgFlags);
-      // check if we already have this message body offline
-      if (! (msgFlags & MSG_FLAG_OFFLINE))
-      {
-        *result = PR_TRUE;
-      // check against the server download size limit .
-        nsCOMPtr <nsIMsgIncomingServer> incomingServer;
-        rv = GetServer(getter_AddRefs(incomingServer));
-        if (NS_SUCCEEDED(rv) && incomingServer)
-        {
-          PRBool limitDownloadSize = PR_FALSE;
-          rv = incomingServer->GetLimitOfflineMessageSize(&limitDownloadSize);
-          NS_ENSURE_SUCCESS(rv, rv);
-          if (limitDownloadSize)
-          {
-            PRInt32 maxDownloadMsgSize = 0;
-            PRUint32 msgSize;
-            hdr->GetMessageSize(&msgSize);
-            rv = incomingServer->GetMaxMessageSize(&maxDownloadMsgSize);
-            NS_ENSURE_SUCCESS(rv, rv);
-            maxDownloadMsgSize *= 1024;
-            if (msgSize > (PRUint32) maxDownloadMsgSize)
-              *result = PR_FALSE;
-          }
-        }
-      }
-    }
-  }
+    return MsgFitsDownloadCriteria(msgKey, result);
   return NS_OK;
 }
 

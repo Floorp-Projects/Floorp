@@ -116,6 +116,8 @@ protected:
   nsresult WriteStartOfNewLocalMessage();
   nsresult EndNewOfflineMessage();
   nsresult CompactOfflineStore(nsIMsgWindow *inWindow);
+  // this is a helper routine that ignores whether MSG_FLAG_OFFLINE is set for the folder
+  nsresult MsgFitsDownloadCriteria(nsMsgKey msgKey, PRBool *result);
 
 protected:
 	nsCOMPtr<nsIMsgDatabase> mDatabase;

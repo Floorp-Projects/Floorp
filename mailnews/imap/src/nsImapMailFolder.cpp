@@ -605,6 +605,17 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
   // don't run select if we're already running a url/select...
   if (NS_SUCCEEDED(rv) && !m_urlRunning && selectFolder)
   {
+    // check if we should download message bodies because it's the inbox and 
+    // the server is specified as one where where we download msg bodies automatically.
+    if (mFlags & MSG_FOLDER_FLAG_INBOX)
+    {
+      nsCOMPtr<nsIImapIncomingServer> imapServer;
+      nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
+
+      if (NS_SUCCEEDED(rv) && imapServer)
+        imapServer->GetDownloadBodiesOnGetNewMail(&m_downloadingFolderForOfflineUse);
+    }
+
     nsCOMPtr <nsIEventQueue> eventQ;
     NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
     if (NS_SUCCEEDED(rv) && pEventQService)
@@ -932,7 +943,7 @@ NS_IMETHODIMP nsImapMailFolder::GetHierarchyDelimiter(PRUnichar *aHierarchyDelim
 {
   if (!aHierarchyDelimiter)
     return NS_ERROR_NULL_POINTER;
-  ReadDBFolderInfo(PR_FALSE); // update cache first.
+   ReadDBFolderInfo(PR_FALSE); // update cache first.
   *aHierarchyDelimiter = m_hierarchyDelimiter;
   return NS_OK;
 }
@@ -2008,6 +2019,13 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
     if (NS_SUCCEEDED(rv) && pEventQService)
       pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
                         getter_AddRefs(eventQ));
+
+    nsCOMPtr<nsIImapIncomingServer> imapServer;
+    nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
+
+    if (NS_SUCCEEDED(rv) && imapServer)
+      imapServer->GetDownloadBodiesOnGetNewMail(&m_downloadingFolderForOfflineUse);
+
     inbox->SetGettingNewMessages(PR_TRUE);
     rv = imapService->SelectFolder(eventQ, inbox, this, aWindow, nsnull);
   }
@@ -2045,7 +2063,11 @@ nsresult nsImapMailFolder::GetBodysToDownload(nsMsgKeyArray *keysOfMessagesToDow
           PRBool shouldStoreMsgOffline = PR_FALSE;
           nsMsgKey msgKey;
           pHeader->GetMessageKey(&msgKey);
-          ShouldStoreMsgOffline(msgKey, &shouldStoreMsgOffline);
+          // MsgFitsDownloadCriteria ignores MSG_FOLDER_FLAG_OFFLINE, which we want
+          if (m_downloadingFolderForOfflineUse)
+            MsgFitsDownloadCriteria(msgKey, &shouldStoreMsgOffline);
+          else
+            ShouldStoreMsgOffline(msgKey, &shouldStoreMsgOffline);
           if (shouldStoreMsgOffline)
             keysOfMessagesToDownload->Add(msgKey);
         }
@@ -2247,6 +2269,9 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
       {
         nsMsgKeyArray keysToDownload;
         GetBodysToDownload(&keysToDownload);
+        if (keysToDownload.GetSize() > 0)
+          SetNotifyDownloadedLines(PR_TRUE); // ### TODO need to clear this when we've finished
+
         aProtocol->NotifyBodysToDownload(keysToDownload.GetArray(), keysToDownload.GetSize());
       }
       else
@@ -3631,6 +3656,8 @@ NS_IMETHODIMP
 nsImapMailFolder::GetMessageSizeFromDB(const char *id, PRBool idIsUid, PRUint32 *size)
 {
   nsresult rv = NS_ERROR_FAILURE;
+  NS_ENSURE_ARG(size);
+  *size = 0;
   if (id && mDatabase)
   {
     PRUint32 key = atoi(id);
@@ -3685,6 +3712,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
   nsresult rv = NS_OK;
   m_urlRunning = PR_FALSE;
   m_downloadingFolderForOfflineUse = PR_FALSE;
+  SetNotifyDownloadedLines(PR_FALSE);
     NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
   if (aUrl)
   {

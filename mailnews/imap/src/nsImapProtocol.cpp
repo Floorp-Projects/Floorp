@@ -2211,7 +2211,7 @@ nsresult nsImapProtocol::BeginMessageDownLoad(
         msgurl->GetAddDummyEnvelope(&addDummyEnvelope);
 //                m_imapMessageSink->SetupMsgWriteStream(fileSpec, addDummyEnvelope);
         nsXPIDLCString nativePath;
-        NS_ASSERTION(fileSpec, "no fileSpec!");
+//        NS_ASSERTION(fileSpec, "no fileSpec!");
         if (fileSpec) 
 	      {
            fileSpec->GetNativePath(getter_Copies(nativePath));
@@ -3154,7 +3154,6 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
         if ( msgCount && !DeathSignalReceived() && GetServerStateParser().LastCommandSuccessful())
       {
         FolderMsgDump(msgIdList, msgCount, kEveryThingRFC822Peek);
-        PR_FREEIF(msgIdList);
       }
   }
   if (DeathSignalReceived())
