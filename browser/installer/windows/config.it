@@ -222,8 +222,7 @@ C3=Component Langpack
 C4=Component Help
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C5=Component RPT
-C6=Component QFA
+C5=Component QFA
 
 [Setup Type1]
 Description Short=@TYPE_CUSTOM@
@@ -240,8 +239,7 @@ C4=Component Langpack
 C5=Component Help
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C6=Component RPT
-C7=Component QFA
+C6=Component QFA
 
 [Dialog Select Components]
 Show Dialog=TRUE
