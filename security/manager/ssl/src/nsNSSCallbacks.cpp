@@ -165,7 +165,7 @@ char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   if (NS_FAILED(rv))
     return nsnull; 
 
-  const PRUnichar* formatStrings[1] = { ToNewUnicode(nsLiteralCString(PK11_GetTokenName(slot))) };
+  const PRUnichar* formatStrings[1] = { ToNewUnicode(nsDependentCString(PK11_GetTokenName(slot))) };
   rv = nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("CertPassPrompt").get(),
                                       formatStrings, 1,
                                       getter_Copies(promptString));
@@ -217,7 +217,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
       }
 
       nsXPIDLString shortDesc;
-      const PRUnichar* formatStrings[1] = { ToNewUnicode(nsLiteralCString(caName)) };
+      const PRUnichar* formatStrings[1] = { ToNewUnicode(nsDependentCString(caName)) };
       nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
       if (NS_FAILED(rv))
         return; 
