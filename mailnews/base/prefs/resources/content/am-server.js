@@ -33,6 +33,7 @@ function onInit()
     setupBiffUI();
     setupMailOnServerUI();
     setupFixedUI();
+    setupNotifyUI();
 }
 
 function onPreInit(account, accountValues)
@@ -247,4 +248,20 @@ function setupFixedUI()
       otherElement.removeAttribute("collapsed");
     }
   }
+}
+
+function setupNotifyUI()
+{ 
+    var broadcaster = document.getElementById("broadcaster_notify");
+
+    var notify = document.getElementById("nntp.notifyOn");
+    var checked = notify.checked;
+    var locked = getAccountValueIsLocked(notify);
+
+    if (checked)
+      broadcaster.removeAttribute("disabled");
+    else
+      broadcaster.setAttribute("disabled", "true");
+    if (locked)
+      broadcaster.setAttribute("disabled","true");
 }

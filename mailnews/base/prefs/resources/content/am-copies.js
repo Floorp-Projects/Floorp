@@ -62,6 +62,7 @@ function onInit() {
                      tmplFolderPickerId);
     initBccSelf();
     setupFccItems();
+    setupBCCTextbox();
     SetSpecialFolderNamesWithDelims();
     SetupStoreReadMail();
 }
@@ -345,6 +346,15 @@ function setupFccItems()
 	  }
     else
         broadcaster.setAttribute("disabled", "true");
+}
+
+// Disable BCC textbox if BCC checkbox is not checked
+function setupBCCTextbox()
+{
+    var BCCChecked = document.getElementById("identity.bccOthers").checked;
+    var BCCTextbox = document.getElementById("identity.bccList");
+
+    BCCTextbox.disabled = !BCCChecked;
 }
 
 // Set up picker settings for Sent Folder 

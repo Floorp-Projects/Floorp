@@ -37,6 +37,7 @@ Contributors:
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 
   <broadcaster id="broadcaster_doBiff"/>
+  <broadcaster id="broadcaster_notify"/>
   
   <label hidden="true" wsm_persist="true" id="server.type"/>
 
@@ -189,13 +190,16 @@ Contributors:
   <hbox iscontrolcontainer="true">
     <checkbox hidable="true" hidefor="pop3,imap" wsm_persist="true" id="nntp.notifyOn"
               label="&maxMessagesStart.label;"
+              oncommand="setupNotifyUI();"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.notify.on"/>
     <hbox iscontrolcontainer="true" align="center">
       <textbox wsm_persist="true" id="nntp.maxArticles" size="6"
+               observes="broadcaster_notify"
                preftype="int"
                prefstring="mail.server.%serverkey%.max_articles"/>
-      <label control="nntp.maxArticles" value="&maxMessagesEnd.label;"/>
+      <label control="nntp.maxArticles" value="&maxMessagesEnd.label;"
+             observes="broadcaster_notify"/>
     </hbox>
   </hbox>
 <!-- take out for now - bug 45079
