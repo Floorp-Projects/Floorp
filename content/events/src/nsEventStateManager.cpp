@@ -1958,7 +1958,17 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         break;
 
       case MOUSE_SCROLL_TEXTSIZE:
-        ChangeTextSize((msEvent->delta > 0) ? 1 : -1);
+        {
+          // Exclude form controls and XUL content.
+          nsCOMPtr<nsIContent> content;
+          aTargetFrame->GetContent(getter_AddRefs(content));
+          if (content &&
+              !content->IsContentOfType(nsIContent::eHTML_FORM_CONTROL) &&
+              !content->IsContentOfType(nsIContent::eXUL))
+            {
+              ChangeTextSize((msEvent->delta > 0) ? 1 : -1);
+            }
+        }
         break;
       }
       *aStatus = nsEventStatus_eConsumeNoDefault;
