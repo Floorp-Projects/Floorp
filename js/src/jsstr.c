@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -1008,10 +1008,9 @@ interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
 
     /*
      * Allow a real backslash (literal "\\") to escape "$1" etc.
-     *   Do this for versions less than 1.5 (ECMA 3) only
+     * Do this for versions less than 1.5 (ECMA 3) only
      */
-    if (cx->version != JSVERSION_DEFAULT &&
-	    cx->version <= JSVERSION_1_4)
+    if (cx->version != JSVERSION_DEFAULT && cx->version <= JSVERSION_1_4)
         if (dp > rdata->repstr->chars && dp[-1] == '\\')
 	    return NULL;
 
@@ -1019,8 +1018,7 @@ interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
     res = &cx->regExpStatics;
     dc = dp[1];
     if (JS7_ISDEC(dc)) {
-	if (cx->version != JSVERSION_DEFAULT &&
-		cx->version <= JSVERSION_1_4) {
+	if (cx->version != JSVERSION_DEFAULT && cx->version <= JSVERSION_1_4) {
 	    if (dc == '0')
 	        return NULL;
 
@@ -1309,8 +1307,10 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * (i.e. converted to one if necessary) UNLESS it's a reg.exp object.
      */
     if (!match_or_replace(cx, obj, argc, argv, replace_glob, &rdata.base, rval,
-                (cx->version == JSVERSION_DEFAULT || cx->version > JSVERSION_1_4)))
+                          (cx->version == JSVERSION_DEFAULT ||
+                           cx->version > JSVERSION_1_4))) {
 	return JS_FALSE;
+    }
 
     if (!rdata.chars) {
 	if (rdata.base.global || *rval != JSVAL_TRUE) {
@@ -2021,7 +2021,7 @@ static JSFunctionSpec string_methods[] = {
     /* Java-like methods. */
     {js_toString_str,   str_toString,           0,0,0},
     {js_valueOf_str,    str_valueOf,            0,0,0},
-    {"substring",       str_substring,          2,0,0},
+    {"substring",       str_substring,          1,0,0},
     {"toLowerCase",     str_toLowerCase,        0,0,0},
     {"toUpperCase",     str_toUpperCase,        0,0,0},
     {"charAt",          str_charAt,             1,0,0},
@@ -2307,9 +2307,10 @@ js_ValueToSource(JSContext *cx, jsval v)
 	return js_QuoteString(cx, JSVAL_TO_STRING(v), '"');
     if (!JSVAL_IS_PRIMITIVE(v)) {
 	if (!js_TryMethod(cx, JSVAL_TO_OBJECT(v),
-		     cx->runtime->atomState.toSourceAtom,
-		     0, NULL, &v))
+                          cx->runtime->atomState.toSourceAtom,
+                          0, NULL, &v)) {
             return NULL;
+        }
     }
     return js_ValueToString(cx, v);
 }
