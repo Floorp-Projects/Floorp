@@ -51,7 +51,7 @@ class nsParserFactory : public nsIFactory
     NS_IMETHOD LockFactory(PRBool aLock);   
 
     nsParserFactory(const nsCID &aClass);   
-    ~nsParserFactory();   
+    virtual ~nsParserFactory();   
 
   private:   
     nsrefcnt  mRefCnt;   

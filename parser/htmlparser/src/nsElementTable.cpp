@@ -223,7 +223,7 @@ CTagList  gOLAutoClose(3,0,eHTMLTag_p,eHTMLTag_ol,eHTMLTag_ul);
 CTagList  gDivAutoClose(1,0,eHTMLTag_p);
 
 static eHTMLTags gHxList[]={eHTMLTag_h1,eHTMLTag_h2,eHTMLTag_h3,eHTMLTag_h4,eHTMLTag_h5,eHTMLTag_h6};
-CTagList  gHxAutoClose(sizeof(gHxList)/sizeof(eHTMLTag_unknown),gHxList);
+CTagList  gHeadingTags(sizeof(gHxList)/sizeof(eHTMLTag_unknown),gHxList);
 
 CTagList  gTRCloseTags(3,0,eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th);
 CTagList  gTDCloseTags(2,0,eHTMLTag_td,eHTMLTag_th);
@@ -507,42 +507,42 @@ nsHTMLElement gHTMLElements[] = {
 
   { /*tag*/                             eHTMLTag_h1,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ &gHxAutoClose,  &gHxAutoClose, &gHxAutoClose,
+    /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_h2,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ &gHxAutoClose,  &gHxAutoClose, &gHxAutoClose,
+    /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_h3,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ &gHxAutoClose,  &gHxAutoClose, &gHxAutoClose,
+    /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_h4,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ &gHxAutoClose,  &gHxAutoClose, &gHxAutoClose,
+    /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_h5,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ &gHxAutoClose,  &gHxAutoClose, &gHxAutoClose,
+    /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_h6,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ &gHxAutoClose,  &gHxAutoClose, &gHxAutoClose,
+    /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,
     /*parent,incl,exclgroups*/          kBlock, kFlow, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
@@ -1304,6 +1304,16 @@ PRBool nsHTMLElement::IsChildOfHead(eHTMLTags aChild) {
 PRBool nsHTMLElement::IsStyleTag(eHTMLTags aChild) {
   PRBool result=FindTagInSet(aChild,gStyleTags,sizeof(gStyleTags)/sizeof(eHTMLTag_body));
   return result;
+}
+
+/**
+ * 
+ * @update	gess12/13/98
+ * @param 
+ * @return
+ */
+PRBool nsHTMLElement::IsHeadingTag(eHTMLTags aChild) {
+  return gHeadingTags.Contains(aChild);
 }
 
 

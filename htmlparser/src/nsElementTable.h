@@ -101,6 +101,7 @@ struct nsHTMLElement {
   static  PRBool  CanContain(eHTMLTags aParent,eHTMLTags aChild);
   static  PRBool  IsContainer(eHTMLTags aTag) ;
   static  PRBool  IsStyleTag(eHTMLTags aTag) ;
+  static  PRBool  IsHeadingTag(eHTMLTags aTag) ;
   static  PRBool  IsChildOfHead(eHTMLTags aTag) ;
   static  PRBool  IsTextTag(eHTMLTags aTag);
 
@@ -120,7 +121,8 @@ struct nsHTMLElement {
 }; 
 
 extern nsHTMLElement gHTMLElements[];
-
+extern CTagList      gFramesetKids;
+extern CTagList      gHeadingTags;
 
 //special property bits...
 static const int kDiscardTag      = 0x0001; //tells us to toss this tag

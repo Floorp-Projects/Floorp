@@ -61,11 +61,6 @@ static eHTMLTags gFormElementTags[]= {
     eHTMLTag_option,  eHTMLTag_optgroup,  eHTMLTag_select,
     eHTMLTag_textarea};
 
-static eHTMLTags gHeadingTags[]={
-  eHTMLTag_h1,  eHTMLTag_h2,  eHTMLTag_h3,  
-  eHTMLTag_h4,  eHTMLTag_h5,  eHTMLTag_h6};
-
-
 static eHTMLTags gTableChildTags[]={ 
   eHTMLTag_caption, eHTMLTag_col,     eHTMLTag_colgroup,  
   eHTMLTag_tbody,   eHTMLTag_tfoot,   eHTMLTag_tr,  
@@ -782,6 +777,27 @@ eHTMLTags FindAutoCloseTargetForStartTag(eHTMLTags aCurrentTag,nsTagStack& aTagS
   return eHTMLTag_unknown;
 }
 
+/**
+ *  Call this to find the index of a given child, or (if not found)
+ *  the index of its nearest synonym.
+ *   
+ *  @update  gess 3/25/98
+ *  @param   aTagStack -- list of open tags
+ *  @param   aTag -- tag to test for containership
+ *  @return  index of kNotFound
+ */
+static
+PRInt32 GetIndexOfChildOrSynonym(nsTagStack& aTagStack,eHTMLTags aChildTag) {
+  PRInt32 theChildIndex=aTagStack.GetTopmostIndexOf(aChildTag);
+  if(kNotFound==theChildIndex) {
+    CTagList* theSynTags=gHTMLElements[aChildTag].GetSynonymousTags(); //get the list of tags that THIS tag can close
+    if(theSynTags) {
+      theChildIndex=theSynTags->GetTopmostIndexOf(aTagStack);
+    }
+  }
+  return theChildIndex;
+}
+
 /** 
  *  This method is called to determine whether or not the child
  *  tag is happy being OPENED in the context of the current
@@ -799,13 +815,7 @@ PRBool CanBeContained(eHTMLTags aChildTag,nsTagStack& aTagStack) {
   CTagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
   if(theRootTags) {
     PRInt32 theRootIndex=theRootTags->GetTopmostIndexOf(aTagStack);          
-    PRInt32 theChildIndex=aTagStack.GetTopmostIndexOf(aChildTag);
-    if(kNotFound==theChildIndex) {
-      CTagList* theSynTags=gHTMLElements[aChildTag].GetSynonymousTags(); //get the list of tags that THIS tag can close
-      if(theSynTags) {
-        theChildIndex=theSynTags->GetTopmostIndexOf(aTagStack);
-      }
-    }
+    PRInt32 theChildIndex=GetIndexOfChildOrSynonym(aTagStack,aChildTag);
     if(theRootIndex<theChildIndex){
       eHTMLTags thePrevTag=aTagStack.Last();
       result=gHTMLElements[thePrevTag].CanContainType(gHTMLElements[aChildTag].mParentBits);
@@ -816,6 +826,7 @@ PRBool CanBeContained(eHTMLTags aChildTag,nsTagStack& aTagStack) {
   return result;
 }
     
+
 /** 
  *  This method gets called when a start token has been 
  *  encountered in the parse process. If the current container
@@ -915,7 +926,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
 
   }//if(!rickGSkip)...
 
-  if(IsContainer(aChildTag)){
+  if(nsHTMLElement::IsContainer(aChildTag)){
       //first, let's see if it's a style element...
     if(!nsHTMLElement::IsStyleTag(aChildTag)) {
         //it wasn't a style container, so open the element container...
@@ -1103,27 +1114,6 @@ PRBool HasCloseablePeerAboveRoot(CTagList& aRootTagList,nsTagStack& aTagStack,eH
   return PRBool(theRootIndex<theChildIndex);
 }
 
-
-/**
- *  Call this to find the index of a given child, or (if not found)
- *  the index of its nearest synonym.
- *   
- *  @update  gess 3/25/98
- *  @param   aTagStack -- list of open tags
- *  @param   aTag -- tag to test for containership
- *  @return  index of kNotFound
- */
-static
-PRInt32 GetIndexOfChildOrSynonym(nsTagStack& aTagStack,eHTMLTags aChildTag) {
-  PRInt32 theChildIndex=aTagStack.GetTopmostIndexOf(aChildTag);
-  if(kNotFound==theChildIndex) {
-    CTagList* theSynTags=gHTMLElements[aChildTag].GetSynonymousTags(); //get the list of tags that THIS tag can close
-    if(theSynTags) {
-      theChildIndex=theSynTags->GetTopmostIndexOf(aTagStack);
-    }
-  }
-  return theChildIndex;
-}
 
 /**
  *  This method is called to determine whether or not an END tag
@@ -1522,7 +1512,7 @@ PRBool CNavDTD::CanPropagate(eHTMLTags aParentTag,eHTMLTags aChildTag) const {
   PRBool result=PR_FALSE;
   PRBool parentCanContain=CanContain(aParentTag,aChildTag);
 
-  if(IsContainer(aChildTag)){
+  if(nsHTMLElement::IsContainer(aChildTag)){
     if(nsHTMLElement::IsBlockParent(aParentTag) || (gHTMLElements[aParentTag].GetSpecialChildren())) {
       while(eHTMLTag_unknown!=aChildTag) {
         if(parentCanContain){
@@ -1594,6 +1584,10 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
             result=PR_TRUE;
           }
       }
+      break;
+
+    case eHTMLTag_frameset:
+      result=!gFramesetKids.Contains(aChild);
       break;
 
     case eHTMLTag_unknown:
@@ -1709,29 +1703,6 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
   }
   return result;
 }
-
-
-/**
- * This method is called when you want to determine if one tag is
- * synonymous with another. Cases where this are true include style
- * tags (where <i> is allowed to close <b> for example). Another
- * is <H?>, where any open heading tag can be closed by any close heading tag.
- * @update  gess6/16/98
- * @param 
- * @return
- */
-static
-PRBool IsCompatibleTag(eHTMLTags aTag1,eHTMLTags aTag2) {
-  PRBool result=PR_FALSE;
-
-  if(nsHTMLElement::IsStyleTag(aTag1)) {
-    result=nsHTMLElement::IsStyleTag(aTag2);
-  }
-  if(FindTagInSet(aTag1,gHeadingTags,sizeof(gHeadingTags)/sizeof(eHTMLTag_unknown))) {
-    result=FindTagInSet(aTag2,gHeadingTags,sizeof(gHeadingTags)/sizeof(eHTMLTag_unknown));
-  }
-  return result;
-} 
      
 
 /**
@@ -1749,13 +1720,7 @@ PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
     return PR_TRUE;
   }
 
-  PRInt32 theChildIndex=GetTopmostIndexOf(aChild);
-  if(kNotFound==theChildIndex) {
-    CTagList* theSynTags=gHTMLElements[aChild].GetSynonymousTags(); //get the list of tags that THIS tag can close
-    if(theSynTags) {
-      theChildIndex=theSynTags->GetTopmostIndexOf(mBodyContext->mTags);
-    }
-  }
+  PRInt32 theChildIndex=GetIndexOfChildOrSynonym(mBodyContext->mTags,aChild);
   result=PRBool(kNotFound==theChildIndex);
 
   return result;
@@ -1770,8 +1735,7 @@ PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
  *  @return  PR_TRUE if given tag can contain other tags
  */
 PRBool CNavDTD::IsContainer(PRInt32 aTag) const {
-  PRBool result=nsHTMLElement::IsContainer((eHTMLTags)aTag);
-  return result;
+  return nsHTMLElement::IsContainer((eHTMLTags)aTag);
 }
 
 
@@ -2457,9 +2421,15 @@ nsresult CNavDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
   }
 
   eHTMLTags theTopTag=mBodyContext->Last();
-  if(IsCompatibleTag(aTag,theTopTag)) {
-    //if you're here, it's because we're trying to close one style tag,
-    //but a different one is actually open. Because this is NAV4x
+
+  PRBool theTagIsSynonymous=((nsHTMLElement::IsStyleTag(aTag)) && (nsHTMLElement::IsStyleTag(theTopTag)));
+  if(!theTagIsSynonymous){
+    theTagIsSynonymous=((nsHTMLElement::IsHeadingTag(aTag)) && (nsHTMLElement::IsHeadingTag(theTopTag)));  
+  }
+
+  if(theTagIsSynonymous) {
+    //if you're here, it's because we're trying to close one tag,
+    //but a different (synonymous) one is actually open. Because this is NAV4x
     //compatibililty mode, we must close the one that's really open.
     aTag=theTopTag;    
     pos=GetTopmostIndexOf(aTag);

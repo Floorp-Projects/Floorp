@@ -38,6 +38,7 @@
 #include "prtypes.h"
 #include "nsString.h"
 #include <iostream.h>
+#include "nsError.h"
 
 class nsScanner;
 
