@@ -222,9 +222,10 @@ HRESULT Initialize(HINSTANCE hInstance)
   char szBuf[MAX_BUF];
   HWND hwndFW;
 
-  bSDInit         = FALSE;
-  bSDUserCanceled = FALSE;
-  hDlgMessage     = NULL;
+  bSDInit             = FALSE;
+  bSDUserCanceled     = FALSE;
+  bSaveInstallerFiles = FALSE;
+  hDlgMessage         = NULL;
   DetermineOSVersion();
 
   /* load strings from setup.exe */
@@ -332,6 +333,7 @@ void OutputSetupTitle(HDC hDC)
   HFONT     hfontTmp1;
   HFONT     hfontTmp2;
   HFONT     hfontOld;
+  LOGFONT   logFont;
   int       nHeight0;
   int       nHeight1;
   int       nHeight2;
@@ -349,7 +351,16 @@ void OutputSetupTitle(HDC hDC)
 /*
  * Setup Title Line 0
  */
-  nHeight0  = -MulDiv(sgProduct.iSetupTitle0FontSize, GetDeviceCaps(hDC, LOGPIXELSY), 72);
+
+  /* Retrieve the default font used for the system.  Pass this font name to CreateFont.
+   * This is so the proper native characters will show up correctly under different
+   * language OSes such as Japanese */
+  SystemParametersInfo(SPI_GETICONTITLELOGFONT,
+                       sizeof(logFont),
+                       (PVOID)&logFont,
+                       0);
+
+  nHeight0  = -MulDiv(sgProduct.iSetupTitle0FontSize, 72, GetDeviceCaps(hDC, LOGPIXELSY));
   hfontTmp0 = CreateFont(nHeight0,
                         0,
                         0,
@@ -358,12 +369,13 @@ void OutputSetupTitle(HDC hDC)
                         0,
                         0,
                         0,
-                        DEFAULT_CHARSET,
+                        logFont.lfCharSet,
                         OUT_DEFAULT_PRECIS,
                         0,
                         PROOF_QUALITY,
-                        DEFAULT_PITCH | FF_DONTCARE,
-                        "");
+                        logFont.lfPitchAndFamily,
+                        logFont.lfFaceName);
+
   if(hfontTmp0)
     hfontOld = SelectObject(hDC, hfontTmp0);
 
@@ -375,7 +387,7 @@ void OutputSetupTitle(HDC hDC)
   {
     /* Set shadow color to black and draw shadow */
     SetTextColor(hDC, 0);
-    iShadowOffset = (int)(sgProduct.iSetupTitle0FontSize / 6);
+    iShadowOffset = (int)(sgProduct.iSetupTitle0FontSize / 8);
     TextOut(hDC, iLine0x + iShadowOffset, iLine0y + iShadowOffset, TEXT(sgProduct.szSetupTitle0), lstrlen(sgProduct.szSetupTitle0));
   }
 
@@ -390,7 +402,7 @@ void OutputSetupTitle(HDC hDC)
 /*
  * Setup Title Line 1
  */
-  nHeight1  = -MulDiv(sgProduct.iSetupTitle1FontSize, GetDeviceCaps(hDC, LOGPIXELSY), 72);
+  nHeight1  = -MulDiv(sgProduct.iSetupTitle1FontSize, 72, GetDeviceCaps(hDC, LOGPIXELSY));
   hfontTmp1 = CreateFont(nHeight1,
                         0,
                         0,
@@ -399,24 +411,24 @@ void OutputSetupTitle(HDC hDC)
                         0,
                         0,
                         0,
-                        DEFAULT_CHARSET,
+                        logFont.lfCharSet,
                         OUT_DEFAULT_PRECIS,
                         0,
                         PROOF_QUALITY,
-                        DEFAULT_PITCH | FF_DONTCARE,
-                        "");
+                        logFont.lfPitchAndFamily,
+                        logFont.lfFaceName);
   if(hfontTmp1)
     SelectObject(hDC, hfontTmp1);
 
   iLine1x = iLine0x;
-  iLine1y = iLine0y - nHeight0 + 5;
+  iLine1y = iLine0y - nHeight0 + 7;
 
   /* draw shadow */
   if(sgProduct.bSetupTitle1FontShadow == TRUE)
   {
     /* Set shadow color to black and draw shadow */
     SetTextColor(hDC, 0);
-    iShadowOffset = (int)(sgProduct.iSetupTitle1FontSize / 6);
+    iShadowOffset = (int)(sgProduct.iSetupTitle1FontSize / 8);
     TextOut(hDC, iLine1x + iShadowOffset, iLine1y + iShadowOffset, TEXT(sgProduct.szSetupTitle1), lstrlen(sgProduct.szSetupTitle1));
   }
 
@@ -431,7 +443,7 @@ void OutputSetupTitle(HDC hDC)
 /*
  * Setup Title Line 2
  */
-  nHeight2  = -MulDiv(sgProduct.iSetupTitle2FontSize, GetDeviceCaps(hDC, LOGPIXELSY), 72);
+  nHeight2  = -MulDiv(sgProduct.iSetupTitle2FontSize, 72, GetDeviceCaps(hDC, LOGPIXELSY));
   hfontTmp2 = CreateFont(nHeight2,
                         0,
                         0,
@@ -440,17 +452,17 @@ void OutputSetupTitle(HDC hDC)
                         0,
                         0,
                         0,
-                        DEFAULT_CHARSET,
+                        logFont.lfCharSet,
                         OUT_DEFAULT_PRECIS,
                         0,
                         PROOF_QUALITY,
-                        DEFAULT_PITCH | FF_DONTCARE,
-                        "");
+                        logFont.lfPitchAndFamily,
+                        logFont.lfFaceName);
   if(hfontTmp2)
     SelectObject(hDC, hfontTmp2);
 
   iLine2x = iLine1x;
-  iLine2y = iLine1y - nHeight1+ 5;
+  iLine2y = iLine1y - nHeight1 + 7;
 
   /* draw shadow */
   if(sgProduct.bSetupTitle2FontShadow == TRUE)
@@ -458,7 +470,7 @@ void OutputSetupTitle(HDC hDC)
     /* Set shadow color to black and draw shadow */
     SetTextColor(hDC, 0);
 
-    iShadowOffset = (int)(sgProduct.iSetupTitle2FontSize / 6);
+    iShadowOffset = (int)(sgProduct.iSetupTitle2FontSize / 8);
     TextOut(hDC, iLine2x + iShadowOffset, iLine2y + iShadowOffset, TEXT(sgProduct.szSetupTitle2), lstrlen(sgProduct.szSetupTitle2));
   }
 
@@ -762,7 +774,7 @@ HRESULT GetConfigIni()
   return(hResult);
 }
 
-BOOL LocateJar(siC *siCObject)
+BOOL LocateJar(siC *siCObject, LPSTR szPath, DWORD dwPathSize)
 {
   BOOL bRet;
   char szBuf[MAX_BUF * 2];
@@ -778,6 +790,8 @@ BOOL LocateJar(siC *siCObject)
 
   /* initialize default behavior */
   bRet = FALSE;
+  if(szPath != NULL)
+    ZeroMemory(szPath, dwPathSize);
   siCObject->dwAttributes |= SIC_DOWNLOAD_REQUIRED;
 
   lstrcpy(szSEADirTemp, sgProduct.szAlternateArchiveSearchPath);
@@ -796,6 +810,10 @@ BOOL LocateJar(siC *siCObject)
     lstrcpy(siCObject->szArchivePath, sgProduct.szAlternateArchiveSearchPath);
     AppendBackSlash(siCObject->szArchivePath, MAX_BUF);
     bRet = TRUE;
+
+    /* save path where archive is located */
+    if(szPath != NULL)
+      lstrcpy(szPath, sgProduct.szAlternateArchiveSearchPath);
   }
   else
   {
@@ -818,6 +836,10 @@ BOOL LocateJar(siC *siCObject)
         lstrcpy(siCObject->szArchivePath, szTempDirTemp);
         AppendBackSlash(siCObject->szArchivePath, MAX_BUF);
         bRet = TRUE;
+
+        /* save path where archive is located */
+        if(szPath != NULL)
+          lstrcpy(szPath, szTempDirTemp);
       }
 
 #ifdef XXX_SSU_VERIFY_XPI_FILE_AGAINST_ARCHIVE_LIST
@@ -870,6 +892,31 @@ BOOL LocateJar(siC *siCObject)
         lstrcpy(siCObject->szArchivePath, szSetupDirTemp);
         AppendBackSlash(siCObject->szArchivePath, MAX_BUF);
         bRet = TRUE;
+
+        /* save path where archive is located */
+        if(szPath != NULL)
+          lstrcpy(szPath, szSetupDirTemp);
+      }
+      else
+      {
+        /* check the ns_temp dir for the .xpi file */
+        lstrcpy(szBuf, szTempDirTemp);
+        AppendBackSlash(szBuf, sizeof(szBuf));
+        lstrcat(szBuf, siCObject->szArchiveName);
+
+        if(FileExists(szBuf))
+        {
+          /* jar file found.  Unset attribute to download from the net */
+          siCObject->dwAttributes &= ~SIC_DOWNLOAD_REQUIRED;
+          /* save the path of where jar was found at */
+          lstrcpy(siCObject->szArchivePath, szTempDirTemp);
+          AppendBackSlash(siCObject->szArchivePath, MAX_BUF);
+          bRet = TRUE;
+
+          /* save path where archive is located */
+          if(szPath != NULL)
+            lstrcpy(szPath, szTempDirTemp);
+        }
       }
     }
   }
@@ -1108,7 +1155,7 @@ long RetrieveArchives()
     if(siCObject->dwAttributes & SIC_SELECTED)
     {
       /* only download jars if not already in the local machine */
-      if(LocateJar(siCObject) == FALSE)
+      if(LocateJar(siCObject, NULL, 0) == FALSE)
       {
         lstrcpy(szSComponent, "Component");
         lstrcat(szSComponent, szIndex0);
@@ -1147,8 +1194,11 @@ long RetrieveArchives()
     WritePrivateProfileString("Execution",        "exe_param",        siSDObject.szExeParam,        szFileIdiGetArchives);
 
     /* proxy support */
-//    WritePrivateProfileString("Proxy",            "server",           "chainsaw.mcom.com", szFileIdiGetArchives);
-//    WritePrivateProfileString("Proxy",            "port",             "8288",     szFileIdiGetArchives);
+    if((*sgProduct.szProxyServer != '\0') && (*sgProduct.szProxyPort != '\0'))
+    {
+      WritePrivateProfileString("Proxy", "server", sgProduct.szProxyServer, szFileIdiGetArchives);
+      WritePrivateProfileString("Proxy", "port",   sgProduct.szProxyPort,   szFileIdiGetArchives);
+    }
 
     if((lResult = SdArchives(szFileIdiGetArchives, szTempDir)) != 0)
       return(lResult);
@@ -1659,21 +1709,24 @@ void DeInitDlgProgramFolder(diPF *diDialog)
   FreeMemory(&(diDialog->szMessage0));
 }
 
-HRESULT InitDlgAdvancedSettings(diSS *diDialog)
+HRESULT InitDlgAdvancedSettings(diAS *diDialog)
 {
   diDialog->bShowDialog = FALSE;
   if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((diDialog->szMessage1 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
 
   return(0);
 }
 
-void DeInitDlgAdvancedSettings(diSS *diDialog)
+void DeInitDlgAdvancedSettings(diAS *diDialog)
 {
   FreeMemory(&(diDialog->szTitle));
   FreeMemory(&(diDialog->szMessage0));
+  FreeMemory(&(diDialog->szMessage1));
 }
 
 HRESULT InitDlgStartInstall(diSI *diDialog)
@@ -1724,6 +1777,12 @@ HRESULT InitSetupGeneral()
     return(1);
   if((sgProduct.szAlternateArchiveSearchPath  = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((sgProduct.szParentProcessFilename       = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((sgProduct.szProxyServer                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((sgProduct.szProxyPort                   = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
   if((szTempSetupPath                         = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((sgProduct.szSetupTitle0                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -1749,6 +1808,9 @@ void DeInitSetupGeneral()
   FreeMemory(&(sgProduct.szProgramFolderName));
   FreeMemory(&(sgProduct.szProgramFolderPath));
   FreeMemory(&(sgProduct.szAlternateArchiveSearchPath));
+  FreeMemory(&(sgProduct.szParentProcessFilename));
+  FreeMemory(&(sgProduct.szProxyServer));
+  FreeMemory(&(sgProduct.szProxyPort));
   FreeMemory(&(szTempSetupPath));
   FreeMemory(&(sgProduct.szSetupTitle0));
   FreeMemory(&(sgProduct.szSetupTitle1));
@@ -2510,7 +2572,7 @@ ULONGLONG GetDiskSpaceRequired(DWORD dwType)
 
         case DSR_TEMP:
         case DSR_DOWNLOAD_SIZE:
-          if((LocateJar(siCTemp) == FALSE) || (dwType == DSR_DOWNLOAD_SIZE))
+          if((LocateJar(siCTemp, NULL, 0) == FALSE) || (dwType == DSR_DOWNLOAD_SIZE))
             ullTotalSize += siCTemp->ullInstallSizeArchive;
           break;
       }
@@ -2533,7 +2595,7 @@ ULONGLONG GetDiskSpaceRequired(DWORD dwType)
 
           case DSR_TEMP:
           case DSR_DOWNLOAD_SIZE:
-            if((LocateJar(siCTemp) == FALSE) || (dwType == DSR_DOWNLOAD_SIZE))
+            if((LocateJar(siCTemp, NULL, 0) == FALSE) || (dwType == DSR_DOWNLOAD_SIZE))
               ullTotalSize += siCTemp->ullInstallSizeArchive;
             break;
         }
@@ -3543,6 +3605,12 @@ void ParseCommandLine(LPSTR lpszCmdLine)
       GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
       lstrcpy(sgProduct.szAlternateArchiveSearchPath, szArgVBuf);
     }
+    else if((lstrcmpi(szArgVBuf, "-n") == 0) || (lstrcmpi(szArgVBuf, "/n") == 0))
+    {
+      ++i;
+      GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
+      lstrcpy(sgProduct.szParentProcessFilename, szArgVBuf);
+    }
     else if((lstrcmpi(szArgVBuf, "-ma") == 0) || (lstrcmpi(szArgVBuf, "/ma") == 0))
     {
       SetSetupRunMode("AUTO");
@@ -4018,9 +4086,9 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   sgProduct.crSetupTitle2FontColor = DecryptFontColor(szBuf);
 
   /* get setup title font size */
-  sgProduct.iSetupTitle0FontSize = 32;
-  sgProduct.iSetupTitle1FontSize = 32;
-  sgProduct.iSetupTitle2FontSize = 32;
+  sgProduct.iSetupTitle0FontSize = 42;
+  sgProduct.iSetupTitle1FontSize = 42;
+  sgProduct.iSetupTitle2FontSize = 42;
   GetPrivateProfileString("General", "Setup Title0 Font Size", "", szBuf, sizeof(szBuf), szFileIniConfig);
   if(*szBuf != '\0')
     sgProduct.iSetupTitle0FontSize = atoi(szBuf);
@@ -4130,6 +4198,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("Dialog Advanced Settings",       "Show Dialog",  "", szShowDialog,                    MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Advanced Settings",       "Title",        "", diAdvancedSettings.szTitle,      MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Advanced Settings",       "Message0",     "", diAdvancedSettings.szMessage0,   MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Advanced Settings",       "Message1",     "", diAdvancedSettings.szMessage1,   MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diAdvancedSettings.bShowDialog = TRUE;
 
@@ -4385,7 +4454,7 @@ DWORD GetTotalArchivesToDownload()
   {
     if(siCObject->dwAttributes & SIC_SELECTED)
     {
-      if(LocateJar(siCObject) == FALSE)
+      if(LocateJar(siCObject, NULL, 0) == FALSE)
       {
         ++dwTotalArchivesToDownload;
       }
@@ -5311,6 +5380,82 @@ void DeInitialize()
   DeInitializeSmartDownload();
 }
 
+void SaveInstallerFiles()
+{
+  int       i;
+  char      szBuf[MAX_BUF];
+  char      szSource[MAX_BUF];
+  char      szDestination[MAX_BUF];
+  char      szMFN[MAX_BUF];
+  char      szArchivePath[MAX_BUF];
+  DWORD     dwIndex0;
+  siC       *siCObject = NULL;
+
+  lstrcpy(szDestination, sgProduct.szPath);
+  AppendBackSlash(szDestination, sizeof(szDestination));
+  lstrcat(szDestination, "Install");
+  AppendBackSlash(szDestination, sizeof(szDestination));
+
+  /* copy all files from the ns_temp dir to the install dir */
+  CreateDirectoriesAll(szDestination, TRUE);
+
+  /* copy the self extracting file that spawned setup.exe, if one exists */
+  if((*sgProduct.szAlternateArchiveSearchPath != '\0') && (*sgProduct.szParentProcessFilename != '\0'))
+  {
+    lstrcpy(szSource, szSetupDir);
+    AppendBackSlash(szSource, sizeof(szSource));
+    lstrcat(szSource, "*.*");
+
+    lstrcpy(szSource, sgProduct.szAlternateArchiveSearchPath);
+    AppendBackSlash(szSource, sizeof(szSource));
+    lstrcat(szSource, sgProduct.szParentProcessFilename);
+    FileCopy(szSource, szDestination, FALSE);
+  }
+  else
+  {
+    /* Else if self extracting file does not exist, copy the setup files */
+    /* First get the current process' filename (in case it's not really named setup.exe */
+    /* Then copy it to the install folder */
+    GetModuleFileName(NULL, szBuf, sizeof(szBuf));
+    ParsePath(szBuf, szMFN, sizeof(szMFN), PP_FILENAME_ONLY);
+
+    lstrcpy(szBuf, szSetupDir);
+    AppendBackSlash(szBuf, sizeof(szBuf));
+    lstrcat(szBuf, szMFN);
+    FileCopy(szBuf, szDestination, FALSE);
+
+    /* now copy the rest of the setup files */
+    i = 0;
+    while(TRUE)
+    {
+      if(*SetupFileList[i] == '\0')
+        break;
+
+      lstrcpy(szBuf, szSetupDir);
+      AppendBackSlash(szBuf, sizeof(szBuf));
+      lstrcat(szBuf, SetupFileList[i]);
+      FileCopy(szBuf, szDestination, FALSE);
+
+      ++i;
+    }
+  }
+
+  dwIndex0 = 0;
+  siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
+  while(siCObject)
+  {
+    if(LocateJar(siCObject, szArchivePath, sizeof(szArchivePath)) == TRUE)
+    {
+      lstrcpy(szBuf, szArchivePath);
+      AppendBackSlash(szBuf, sizeof(szBuf));
+      lstrcat(szBuf, siCObject->szArchiveName);
+      FileCopy(szBuf, szDestination, FALSE);
+    }
+
+    ++dwIndex0;
+    siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
+  }
+}
 
 
 

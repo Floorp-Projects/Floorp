@@ -25,24 +25,13 @@
 #ifndef _PARSER_H_
 #define _PARSER_H_
 
-#define KEY_INSTALLING                  "installing: "
-#define KEY_REPLACING                   "replacing: "
-#define KEY_STORE_REG_STRING            "store registry value string: "
-#define KEY_STORE_REG_NUMBER            "store registry value number: "
-#define KEY_CREATE_REG_KEY              "create registry key: "
-#define KEY_COPY_FILE                   "copy file: "
-#define KEY_MOVE_FILE                   "move file: "
-#define KEY_RENAME_FILE                 "rename file: "
-#define KEY_CREATE_FOLDER               "create folder: "
-#define KEY_RENAME_DIR                  "rename dir: "
-#define KEY_WINDOWS_SHORTCUT            "windows shortcut: "
-
 sil         *InitSilNodes(char *szFileIni);
 void        DeInitSilNodes(sil **silHead);
 void        ParseCommandLine(LPSTR lpszCmdLine);
 HRESULT     FileExists(LPSTR szFile);
 void        Uninstall(sil* silFile);
 void        ParseForFile(LPSTR szString, LPSTR szKey, LPSTR szShortFilename, DWORD dwShortFilenameBufSize);
+void        ParseForCopyFile(LPSTR szString, LPSTR szKeyStr, LPSTR szShortFilename, DWORD dwShortFilenameBufSize);
 void        ParseForWinRegInfo(LPSTR szString, LPSTR szKeyStr, LPSTR szRootKey, DWORD dwRootKeyBufSize, LPSTR szKey, DWORD dwKeyBufSize, LPSTR szName, DWORD dwNameBufSize);
 void        DeleteWinRegKey(HKEY hkRootKey, LPSTR szKey);
 void        DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName);

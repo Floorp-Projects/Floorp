@@ -469,9 +469,6 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
   switch(msg)
   {
     case WM_INITDIALOG:
-//      if(bCreateDestinationDir)
-//        DirectoryRemove(sgProduct.szPath, FALSE);
-
       SetWindowText(hDlg, diSetupType.szTitle);
 
       SetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szTempSetupPath);
@@ -1551,6 +1548,7 @@ LRESULT CALLBACK DlgAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
     case WM_INITDIALOG:
       SetWindowText(hDlg, diAdvancedSettings.szTitle);
       SetDlgItemText(hDlg, IDC_MESSAGE0, diAdvancedSettings.szMessage0);
+      SetDlgItemText(hDlg, IDC_MESSAGE1, diAdvancedSettings.szMessage1);
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
@@ -1578,17 +1576,35 @@ LRESULT CALLBACK DlgAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
       else
         SendMessage(hwndCBSiteSelector, CB_SETCURSEL, 0, 0);
 
+      if(bSaveInstallerFiles)
+        CheckDlgButton(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, BST_CHECKED);
+      else
+        CheckDlgButton(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, BST_UNCHECKED);
       break;
 
     case WM_COMMAND:
       switch(LOWORD(wParam))
       {
-        LPSTR szSsiDomain = NULL;
-
         case IDWIZNEXT:
+          /* get selected item from the site selector's pull down list */
           iIndex = SendMessage(hwndCBSiteSelector, CB_GETCURSEL, 0, 0);
           SendMessage(hwndCBSiteSelector, CB_GETLBTEXT, (WPARAM)iIndex, (LPARAM)szSiteSelectorDescription);
           dwWizardState = DLG_ADVANCED_SETTINGS;
+
+          /* get the state of the Save Installer Files checkbox */
+          if(IsDlgButtonChecked(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES) == BST_CHECKED)
+            bSaveInstallerFiles = TRUE;
+          else
+            bSaveInstallerFiles = FALSE;
+
+          /* get the proxy server and port information */
+          GetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, sgProduct.szProxyServer, MAX_BUF);
+          GetDlgItemText(hDlg, IDC_EDIT_PROXY_PORT,   sgProduct.szProxyPort,   MAX_BUF);
+          if((*sgProduct.szProxyServer == '\0') || (*sgProduct.szProxyPort == '\0'))
+          {
+            ZeroMemory(sgProduct.szProxyServer, MAX_BUF);
+            ZeroMemory(sgProduct.szProxyPort,   MAX_BUF);
+          }
 
           DestroyWindow(hDlg);
           PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
@@ -1981,6 +1997,10 @@ void DlgSequenceNext()
         ProcessFileOps(T_POST_XPCOM);
         /* PRE_SMARTUPDATE process file manipulation functions */
         ProcessFileOps(T_PRE_SMARTUPDATE);
+
+        /* save the installer files in the local machine */
+        if(bSaveInstallerFiles)
+          SaveInstallerFiles();
 
         hrErr = SmartUpdateJars();
         if((hrErr == WIZ_OK) || (hrErr == 999))
