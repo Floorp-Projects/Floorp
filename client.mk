@@ -288,6 +288,9 @@ cleansrcdir:
 	if [ -f Makefile ]; then \
 	  $(MAKE) realclean && _skip_find=1; \
 	fi; \
+        if [ -f webshell/embed/gtk/Makefile ]; then \
+          $(MAKE) -C webshell/embed/gtk distclean; \
+        fi \
 	if [ ! "$$_skip_find" ]; then \
 	  echo "Removing object files from srcdir..."; \
 	  rm -fr `find . -type d \( -name .deps -print -o -name CVS \
