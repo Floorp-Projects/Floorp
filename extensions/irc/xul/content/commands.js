@@ -168,6 +168,7 @@ function initCommands()
          ["who",               cmdWho,              CMD_NEED_SRV | CMD_CONSOLE],
          ["whois",             cmdWhoIs,            CMD_NEED_SRV | CMD_CONSOLE],
          ["whowas",            cmdSimpleCommand,    CMD_NEED_SRV | CMD_CONSOLE],
+         ["wii",               cmdWhoIsIdle,        CMD_NEED_SRV | CMD_CONSOLE],
 
          /* aliases */
          ["css",              "motif",                             CMD_CONSOLE],
@@ -1969,9 +1970,28 @@ function cmdWho(e)
     e.server.who(e.pattern);
 }
 
-function cmdWhoIs (e)
+function cmdWhoIs(e)
 {
-    e.server.whois(e.nickname);
+    for (var i = 0; i < e.nicknameList.length; i++)
+    {
+        if ((i < e.nicknameList.length - 1) && 
+            (e.server.toLowerCase(e.nicknameList[i]) ==
+             e.server.toLowerCase(e.nicknameList[i + 1])))
+        {
+            e.server.whois(e.nicknameList[i] + " " + e.nicknameList[i]);
+            i++;
+        }
+        else
+        {
+            e.server.whois(e.nicknameList[i]);
+        }
+    }
+}
+
+function cmdWhoIsIdle(e)
+{
+    for (var i = 0; i < e.nicknameList.length; i++)
+        e.server.whois(e.nicknameList[i] + " " + e.nicknameList[i]);
 }
 
 function cmdTopic(e)
