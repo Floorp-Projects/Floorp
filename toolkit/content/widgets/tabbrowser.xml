@@ -515,6 +515,15 @@
         </body>
       </method>
 
+      <method name="onPopupBlocked">
+        <parameter name="evt"/>
+        <body>
+          <![CDATA[
+            evt.preventBubble();
+          ]]> 
+        </body>
+      </method>
+
       <method name="onTitleChanged">
         <parameter name="evt"/>
         <body>
@@ -595,8 +604,9 @@
           <![CDATA[
             this.mTabbedMode = true; // Welcome to multi-tabbed mode.
 
-            // Get the first tab all hooked up with a title listener.
+            // Get the first tab all hooked up with a title listener and popup blocking listener.
             this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
+            this.mCurrentBrowser.addEventListener("DOMPopupBlocked", this.onPopupBlocked, false);
 
             this.setTabTitle(this.mCurrentTab);
 
@@ -670,7 +680,8 @@
             this.mPanelContainer.appendChild(b);
 
             b.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
-            
+            b.addEventListener("DOMPopupBlocked", this.onPopupBlocked, false);
+
             if (this.mStrip.collapsed)
               this.setStripVisibilityTo(true);
 
@@ -765,9 +776,10 @@
             this.mTabFilters.splice(index, 1);
             this.mTabListeners.splice(index, 1);
 
-            // Remove our title change listener
+            // Remove our title change and blocking listeners
             oldBrowser.removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
-            
+            oldBrowser.removeEventListener("DOMPopupBlocked", this.onPopupBlocked, false);
+
             // We are no longer the primary content area.
             oldBrowser.setAttribute("type", "content");
 
@@ -1142,6 +1154,7 @@
 
       <constructor>
         <![CDATA[
+        this.addEventListener("DOMPopupBlocked", this.onPopupBlocked, false);
         this.mCurrentBrowser = this.mPanelContainer.firstChild;
         this.mCurrentTab = this.mTabContainer.firstChild;
         this.mTabBox.setAttribute("handleCtrlTab", "false");
@@ -1156,6 +1169,7 @@
             this.mTabFilters[i] = null;
             this.mTabListeners[i] = null;
             this.mPanelContainer.childNodes[i].removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
+            this.mPanelContainer.childNodes[i].removeEventListener("DOMPopupBlocked", this.onPopupBlocked, false);
           }
           this.mPanelContainer.removeEventListener("DOMLinkAdded", this.onLinkAdded, false);
         ]]>
