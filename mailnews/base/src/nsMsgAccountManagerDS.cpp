@@ -35,9 +35,6 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 
-#include "plstr.h"
-#include "prmem.h"
-
 #include "nsMsgRDFUtils.h"
 #include "nsIMsgFolder.h"
 #include "nsMsgBaseCID.h"
@@ -53,6 +50,8 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 #define NC_RDF_PAGETITLE_COPIES   NC_NAMESPACE_URI "PageTitleCopies"
 #define NC_RDF_PAGETITLE_ADVANCED NC_NAMESPACE_URI "PageTitleAdvanced"
 #define NC_RDF_PAGETAG NC_NAMESPACE_URI "PageTag"
+
+#define NC_RDF_ACCOUNTROOT "msgaccounts:/"
 
 class nsMsgAccountManagerDataSource : public nsMsgRDFDataSource
 {
@@ -86,10 +85,18 @@ protected:
   static nsIRDFResource* kNC_Name;
   static nsIRDFResource* kNC_PageTag;
   static nsIRDFResource* kNC_Child;
+  static nsIRDFResource* kNC_AccountRoot;
+  
   static nsIRDFResource* kNC_Account;
   static nsIRDFResource* kNC_Server;
   static nsIRDFResource* kNC_Identity;
   static nsIRDFResource* kNC_Settings;
+
+  static nsIRDFResource* kNC_PageTitleMain;
+  static nsIRDFResource* kNC_PageTitleServer;
+  static nsIRDFResource* kNC_PageTitleCopies;
+  static nsIRDFResource* kNC_PageTitleAdvanced;
+  
 
 private:
   // enumeration function to convert each server (element)
@@ -110,11 +117,18 @@ nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Child=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Name=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTag=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Settings=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_AccountRoot=nsnull;
 
 // properties corresponding to interfaces
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Account=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Server=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Identity=nsnull;
+
+// individual pages
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleMain=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleServer=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleCopies=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleAdvanced=nsnull;
 
 // RDF to match
 #define NC_RDF_ACCOUNT NC_NAMESPACE_URI "Account"
@@ -152,9 +166,6 @@ nsresult
 nsMsgAccountManagerDataSource::Init()
 {
     nsresult rv=NS_OK;
-#ifdef DEBUG_amds
-    printf("nsMsgAccountManagerDataSource::Init(%s)\n", uri ? uri : "(null)");
-#endif
     
     if (!mAccountManager) {
         NS_WITH_SERVICE(nsIMsgMailSession, mailSession,
@@ -169,11 +180,17 @@ nsMsgAccountManagerDataSource::Init()
     if (! kNC_Child) {
       getRDFService()->GetResource(NC_RDF_CHILD, &kNC_Child);
       getRDFService()->GetResource(NC_RDF_NAME, &kNC_Name);
-      getRDFService()->GetResource(NC_RDF_NAME, &kNC_PageTag);
+      getRDFService()->GetResource(NC_RDF_PAGETAG, &kNC_PageTag);
       getRDFService()->GetResource(NC_RDF_ACCOUNT, &kNC_Account);
       getRDFService()->GetResource(NC_RDF_SERVER, &kNC_Server);
       getRDFService()->GetResource(NC_RDF_IDENTITY, &kNC_Identity);
-
+      getRDFService()->GetResource(NC_RDF_PAGETITLE_MAIN, &kNC_PageTitleMain);
+      getRDFService()->GetResource(NC_RDF_PAGETITLE_SERVER, &kNC_PageTitleServer);
+      getRDFService()->GetResource(NC_RDF_PAGETITLE_COPIES, &kNC_PageTitleCopies);
+      getRDFService()->GetResource(NC_RDF_PAGETITLE_ADVANCED, &kNC_PageTitleAdvanced);
+      
+      getRDFService()->GetResource(NC_RDF_ACCOUNTROOT, &kNC_AccountRoot);
+      
       // eventually these need to exist in some kind of array
       // that's easily extensible
       getRDFService()->GetResource(NC_RDF_SETTINGS, &kNC_Settings);
@@ -190,31 +207,32 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
 {
   nsresult rv;
   
-  char *srcval;
-  rv = source->GetValue(&srcval);
-  char *propval;
-  rv = property->GetValue(&propval);
-
 #ifdef DEBUG_amds
-  printf("GetTarget(%s on arc %s, ..)\n", srcval, propval);
+  nsXPIDLCString srcval;
+  rv = source->GetValue(getter_Copies(srcval));
+  nsXPIDLCString propval;
+  rv = property->GetValue(getter_Copies(propval));
+
+  printf("GetTarget(%s on arc %s, ..)\n",
+         (const char*)srcval, (const char*)propval);
 #endif
   
   rv = NS_RDF_NO_VALUE;
 
   nsString str="";
-  if (PL_strcmp(propval, NC_RDF_NAME)==0) {
+  if (property == kNC_Name) {
 
     // XXX these should be localized
-    if (PL_strcmp(srcval, NC_RDF_PAGETITLE_MAIN)==0)
+    if (source == kNC_PageTitleMain)
       str = "Main";
     
-    else if (PL_strcmp(srcval, NC_RDF_PAGETITLE_SERVER)==0)
+    else if (source == kNC_PageTitleServer)
       str = "Server";
 
-    else if (PL_strcmp(srcval, NC_RDF_PAGETITLE_COPIES)==0)
+    else if (source == kNC_PageTitleCopies)
       str = "Copies";
 
-    else if (PL_strcmp(srcval, NC_RDF_PAGETITLE_ADVANCED)==0)
+    else if (source == kNC_PageTitleAdvanced)
       str = "Advanced";
 
     else {
@@ -228,13 +246,13 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     }
   }
 
-  else if (PL_strcmp(propval, NC_RDF_PAGETAG)==0) {
+  else if (property == kNC_PageTag) {
     // do NOT localize these strings. these are the urls of the XUL files
-    if (PL_strcmp(srcval, NC_RDF_PAGETITLE_SERVER)==0)
+    if (source == kNC_PageTitleServer)
       str = "am-server.xul";
-    else if (PL_strcmp(srcval, NC_RDF_PAGETITLE_COPIES)==0)
+    else if (source == kNC_PageTitleCopies)
       str = "am-copies.xul";
-    else if (PL_strcmp(srcval, NC_RDF_PAGETITLE_ADVANCED)==0)
+    else if (source == kNC_PageTitleAdvanced)
       str = "am-advanced.xul";
     else
       str = "am-main.xul";
@@ -275,18 +293,20 @@ nsMsgAccountManagerDataSource::GetTargets(nsIRDFResource *source,
   // if the property is "server" return a union of all servers
   // in the account (mainly for the folder pane)
 
+#ifdef DEBUG_amds
   nsXPIDLCString source_value;
   rv = source->GetValue(getter_Copies(source_value));
 
+  nsXPIDLCString property_arc;
+  rv = property->GetValue(getter_Copies(property_arc));
   if (NS_FAILED(rv)) return rv;
   
-#ifdef DEBUG_amds
   printf("GetTargets(%s with arc %s...)\n",
          (const char*)source_value,
          (const char*)property_arc);
 #endif
   
-  if (PL_strcmp(source_value, "msgaccounts:/")==0) {
+  if (source == kNC_AccountRoot) {
 
     if (property == kNC_Child ||
         property == kNC_Settings) {
@@ -363,15 +383,14 @@ nsMsgAccountManagerDataSource::createServerResources(nsISupports *element,
   if (NS_FAILED(rv)) return PR_TRUE;
 
   // get the URI from the incoming server
-  char *serverUri;
-  rv = server->GetServerURI(&serverUri);
+  nsXPIDLCString serverUri;
+  rv = server->GetServerURI(getter_Copies(serverUri));
   if (NS_FAILED(rv)) return PR_TRUE;
 
   // get the corresponding RDF resource
   // RDF will create the server resource if it doesn't already exist
   nsCOMPtr<nsIRDFResource> serverResource;
   rv = rdf->GetResource(serverUri, getter_AddRefs(serverResource));
-  PL_strfree(serverUri);
   if (NS_FAILED(rv)) return PR_TRUE;
 
   // make incoming server know about its root server folder so we 
@@ -414,9 +433,7 @@ nsMsgAccountManagerDataSource::ArcLabelsOut(nsIRDFResource *source,
   *_retval = enumerator;
   NS_ADDREF(*_retval);
   
-  char *value=nsnull;
-  source->GetValue(&value);
-  if (PL_strcmp(value, "msgaccounts:/")==0) {
+  if (source == kNC_AccountRoot) {
     arcs->AppendElement(kNC_Server);
   }
 
@@ -425,11 +442,10 @@ nsMsgAccountManagerDataSource::ArcLabelsOut(nsIRDFResource *source,
   arcs->AppendElement(kNC_Name);
   arcs->AppendElement(kNC_PageTag);
 
-#ifdef DEBUG_amds
+#ifdef DEBUG_amds_
   printf("GetArcLabelsOut(%s): Adding child, settings, and name arclabels\n", value);
 #endif
   
-  PR_FREEIF(value);
   return NS_OK;
 }
 
