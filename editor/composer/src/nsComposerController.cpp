@@ -57,6 +57,7 @@ NS_INTERFACE_MAP_END
 
 nsComposerController::nsComposerController()
 {
+  NS_INIT_REFCNT();  
 }
 
 nsComposerController::~nsComposerController()
