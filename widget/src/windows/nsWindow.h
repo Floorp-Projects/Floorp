@@ -177,7 +177,6 @@ protected:
     WNDPROC     mPrevWndProc;
     EVENT_CALLBACK mEventCallback;
     nsIDeviceContext *mContext;
-    nsIFontMetrics *mFontMetrics;
     nsIAppShell *mAppShell;
     nsToolkit   *mToolkit;
 

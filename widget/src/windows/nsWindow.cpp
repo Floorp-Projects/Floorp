@@ -388,11 +388,16 @@ nsWindow::nsWindow(nsISupports *aOuter) : nsObject(aOuter)
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
-    mIsDestroying = PR_TRUE;
-    if (gCurrentWindow == this) {
-      gCurrentWindow = nsnull;
-    }
+  mIsDestroying = PR_TRUE;
+  if (gCurrentWindow == this) {
+    gCurrentWindow = nsnull;
+  }
+
+  // If the widget was released without calling Destroy() then the native
+  // window still exists, and we need to destroy it
+  if (NULL != mWnd) {
     Destroy();
+  }
 }
 
 
@@ -472,7 +477,7 @@ void nsWindow::Create(nsIWidget *aParent,
     // save the event callback function
     mEventCallback = aHandleEventFunction;
 
-    // keep a reference to the toolkit object
+    // keep a reference to the device context
     if (aContext) {
         mContext = aContext;
         NS_ADDREF(mContext);
@@ -573,7 +578,7 @@ void nsWindow::Create(nsNativeWidget aParent,
     // save the event callback function
     mEventCallback = aHandleEventFunction;
 
-    // keep a reference to the toolkit object
+    // keep a reference to the device context
     if (aContext) {
         mContext = aContext;
         NS_ADDREF(mContext);
@@ -639,38 +644,29 @@ NS_IMETHODIMP nsWindow::SetClientData(void* aClientData)
 //-------------------------------------------------------------------------
 void nsWindow::Destroy()
 {
-    //
-    // Switch to the "main gui thread" if necessary... This method must
-    // be executed on the "gui thread"...
-    //
-    if (mToolkit != nsnull && !mToolkit->IsGuiThread()) {
-        MethodInfo info(this, nsWindow::DESTROY);
-        mToolkit->CallMethod(&info);
-        return;
-    }
+  // Switch to the "main gui thread" if necessary... This method must
+  // be executed on the "gui thread"...
+  if (mToolkit != nsnull && !mToolkit->IsGuiThread()) {
+    MethodInfo info(this, nsWindow::DESTROY);
+    mToolkit->CallMethod(&info);
+    return;
+  }
 
-    //if we were in the middle deferred window positioning
-    if (mDeferredPositioner) {
-      VERIFY(::EndDeferWindowPos(mDeferredPositioner));
+  // disconnect from the parent
+  if (!mIsDestroying) {
+    nsIWidget *parent = GetParent();
+    if (parent) {
+      parent->RemoveChild(this);
+      NS_RELEASE(parent);
     }
+  }
 
-    // destroy the nsWindow 
-    if (mWnd) {
-        // destroy the nsWindow
-        mEventCallback = nsnull;  // prevent the widget from causing additional events
-        VERIFY(::DestroyWindow(mWnd));
-    }
-
-    if (mPalette) {
-        VERIFY(::DeleteObject(mPalette));
-        mPalette = NULL;
-    }
-
-      // Destroy the tooltip control
-    if (mTooltip) {
-      VERIFY(::DestroyWindow(mTooltip));
-    }
-    NS_IF_RELEASE(mAppShell);
+  // destroy the HWND
+  if (mWnd) {
+    // prevent the widget from causing additional events
+    mEventCallback = nsnull;
+    VERIFY(::DestroyWindow(mWnd));
+  }
 }
 
 
@@ -681,16 +677,24 @@ void nsWindow::Destroy()
 //-------------------------------------------------------------------------
 nsIWidget* nsWindow::GetParent(void)
 {
-    nsIWidget* widget = NULL;
+    nsWindow* widget = NULL;
     if (mWnd) {
         HWND parent = ::GetParent(mWnd);
         if (parent) {
-            widget = (nsIWidget*)((nsWindow *)::GetWindowLong(mWnd, GWL_USERDATA));
-            NS_ADDREF(widget);
+            widget = (nsWindow *)::GetWindowLong(mWnd, GWL_USERDATA);
+            if (widget) {
+              // If the widget is in the process of being destroyed then
+              // do NOT return it
+              if (widget->mIsDestroying) {
+                widget = NULL;
+              } else {
+                NS_ADDREF(widget);
+              }
+            }
         }
     }
 
-    return widget;
+    return (nsIWidget*)widget;
 }
 
 
@@ -1766,14 +1770,32 @@ void nsWindow::OnDestroy()
 
     // free GDI objects
     if (mBrush) {
-      ::DeleteObject(mBrush);
-      mBrush = nsnull;
+      VERIFY(::DeleteObject(mBrush));
+      mBrush = NULL;
+    }
+    if (mPalette) {
+      VERIFY(::DeleteObject(mPalette));
+      mPalette = NULL;
     }
 
-    // release references to children, device context, and toolkit
+    // free tooltip window
+    if (mTooltip) {
+      VERIFY(::DestroyWindow(mTooltip));
+      mTooltip = NULL;
+    }
+
+    // if we were in the middle of deferred window positioning then
+    // free the memory for the multiple-window position structure
+    if (mDeferredPositioner) {
+      VERIFY(::EndDeferWindowPos(mDeferredPositioner));
+      mDeferredPositioner = NULL;
+    }
+
+    // release references to children, device context, toolkit, and app shell
     NS_IF_RELEASE(mChildren);
     NS_IF_RELEASE(mContext);
     NS_IF_RELEASE(mToolkit);
+    NS_IF_RELEASE(mAppShell);
 
     // dispatch the event
     if (!mIsDestroying) {
@@ -2041,14 +2063,11 @@ nsWindow::Enumerator::Enumerator()
 nsWindow::Enumerator::~Enumerator()
 {   
   if (mChildrens) {
-    // XXX We add ref'd when adding the child widget, so we should release
-    // the reference now, but if we do we'll crash because of the way the
-    // view hierarchy is being destroyed...
-#if 0
+    // We add ref'd when adding the child widgets, so we need to release
+    // the references now
     for (int i = 0; (i < mArraySize) && (nsnull != mChildrens[i]); i++) {
       NS_RELEASE(mChildrens[i]);
     }
-#endif
 
     delete[] mChildrens;
   }
