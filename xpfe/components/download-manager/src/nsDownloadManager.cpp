@@ -58,6 +58,7 @@
 #include "nsIWindowMediator.h"
 #include "nsIPromptService.h"
 #include "nsIObserverService.h"
+#include "nsIProfileChangeStatus.h"
 
 /* Outstanding issues/todo:
  * 1. Implement pause/resume.
@@ -131,7 +132,8 @@ nsDownloadManager::Init()
   nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_FAILED(rv)) return rv;
   
-  obsService->AddObserver(this, "quit-application", PR_FALSE);
+  obsService->AddObserver(this, "profile-before-change", PR_FALSE);
+  obsService->AddObserver(this, "profile-approve-change", PR_FALSE);
 
   rv = CallGetService(kRDFServiceCID, &gRDFService);
   if (NS_FAILED(rv)) return rv;                                                 
@@ -856,7 +858,51 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
       return CancelDownload(utf8Path);  
     }
   }
-  else if (nsCRT::strcmp(aTopic, "quit-application") == 0) {
+  else if (nsCRT::strcmp(aTopic, "profile-approve-change") == 0) {
+    // Only run this on profile switch
+    if (!NS_LITERAL_STRING("switch").Equals(aData))
+      return NS_OK;
+
+    // If count == 0, nothing to do
+    if (mCurrDownloads.Count() == 0)
+      return NS_OK;
+
+    nsCOMPtr<nsIProfileChangeStatus> changeStatus(do_QueryInterface(aSubject));
+    if (!changeStatus)
+      return NS_ERROR_UNEXPECTED;
+
+    nsXPIDLString title, text, proceed, cancel;
+    nsresult rv = mBundle->GetStringFromName(NS_LITERAL_STRING("profileSwitchTitle").get(),
+                                             getter_Copies(title));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mBundle->GetStringFromName(NS_LITERAL_STRING("profileSwitchText").get(),
+                                    getter_Copies(text));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mBundle->GetStringFromName(NS_LITERAL_STRING("profileSwitchContinue").get(),
+                                    getter_Copies(proceed));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIPromptService> promptService(do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv));
+    if (NS_FAILED(rv))
+      return rv;
+
+    PRInt32 button;
+    rv = promptService->ConfirmEx(nsnull, title.get(), text.get(),
+                                  nsIPromptService::BUTTON_TITLE_CANCEL * nsIPromptService::BUTTON_POS_0 |
+                                  nsIPromptService::BUTTON_TITLE_IS_STRING * nsIPromptService::BUTTON_POS_1,
+                                  nsnull,
+                                  proceed.get(),
+                                  nsnull,
+                                  nsnull,
+                                  nsnull,
+                                  &button);
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (button == 0)
+      changeStatus->VetoChange();
+  }
+  else if (nsCRT::strcmp(aTopic, "profile-before-change") == 0) {
     nsCOMPtr<nsISupports> supports;
     nsCOMPtr<nsIRDFResource> res;
     nsCOMPtr<nsIRDFInt> intLiteral;

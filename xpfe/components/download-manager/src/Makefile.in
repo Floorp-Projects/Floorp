@@ -42,6 +42,7 @@ REQUIRES  = xpcom \
             webbrowserpersist \
             appshell \
             dom \
+            profile \
             $(NULL)
 CPPSRCS   = \
     nsDownloadManager.cpp \
