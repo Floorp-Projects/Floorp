@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapi.h,v 1.13 2003/01/16 00:15:19 nelsonb%netscape.com Exp $
+ * $Id: blapi.h,v 1.14 2003/01/30 23:36:35 relyea%netscape.com Exp $
  */
 
 #ifndef _BLAPI_H_
@@ -917,6 +917,17 @@ extern void PQG_DestroyParams(PQGParams *params);
  *  Free the PQGVerify struct and the things it points to.                *
  **************************************************************************/
 extern void PQG_DestroyVerify(PQGVerify *vfy);
+
+
+/**************************************************************************
+ *  Verify a given Shared library signature                               *
+ **************************************************************************/
+PRBool BLAPI_SHVerify(const char *name, PRFuncPtr addr);
+
+/**************************************************************************
+ *  Verify Are Own Shared library signature                               *
+ **************************************************************************/
+PRBool BLAPI_VerifySelf(const char *name);
 
 SEC_END_PROTOS
 

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.c,v 1.12 2003/01/16 01:44:43 nelsonb%netscape.com Exp $
+ * $Id: loader.c,v 1.13 2003/01/30 23:36:36 relyea%netscape.com Exp $
  */
 
 #include "loader.h"
@@ -242,6 +242,7 @@ bl_UnloadLibrary(BLLibrary *lib)
 #define MSB(x) ((x)>>8)
 
 static const FREEBLVector *vector;
+static const char *libraryName = NULL;
 
 /* This function must be run only once. */
 /*  determine if hybrid platform, then actually load the DSO. */
@@ -273,7 +274,8 @@ freebl_LoadDSO( void )
 	if (MSB(dsoVersion) == MSB(myVersion) && 
 	    LSB(dsoVersion) >= LSB(myVersion) &&
 	    dsoVector->length >= sizeof(FREEBLVector)) {
-	  vector = dsoVector;
+          vector = dsoVector;
+	  libraryName = name;
 	  return PR_SUCCESS;
 	}
       }
@@ -1271,3 +1273,24 @@ AESKeyWrap_Decrypt(AESKeyWrapContext *cx, unsigned char *output,
 		                      input, inputLen);
 }
 
+PRBool
+BLAPI_SHVerify(const char *name, PRFuncPtr addr)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return PR_FALSE;
+  return vector->p_BLAPI_SHVerify(name, addr);
+}
+
+/*
+ * The Caller is expected to pass NULL as the name, which will
+ * trigger the p_BLAPI_VerifySelf() to return 'TRUE'. If we really loaded
+ * from a shared library, BLAPI_VerifySelf will get pick up the real name
+ * from the static set in freebl_LoadDSO( void ) 
+ */
+PRBool
+BLAPI_VerifySelf(const char *name)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return PR_FALSE;
+  return vector->p_BLAPI_VerifySelf(libraryName);
+}

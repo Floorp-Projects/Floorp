@@ -43,6 +43,7 @@
 
 #include "prmem.h"
 #include "prerror.h"
+#include "prlink.h"
 
 #include <stdio.h>
 #include <errno.h>
@@ -66,6 +67,7 @@
 #include <rld_interface.h>
 #endif
 
+
 /*
  * Return the pathname of the file that the library "name" was loaded
  * from. "addr" is the address of a function defined in the library.
@@ -74,7 +76,7 @@
  */
 
 char *
-freebl_GetLibraryFilePathname(const char *name, void (*addr)())
+freebl_GetLibraryFilePathname(const char *name, PRFuncPtr addr)
 {
 #if defined(SOLARIS) || defined(LINUX)
     Dl_info dli;
