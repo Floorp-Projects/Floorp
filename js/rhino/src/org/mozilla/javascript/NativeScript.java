@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Norris Boyd
+ * Igor Bukanov
  * Roger Lawrence
  * Mike McCabe
  *
@@ -154,19 +155,33 @@ public class NativeScript extends NativeFunction implements Script
     {
         if (0 <= prototypeIdShift) {
             switch (methodId - prototypeIdShift) {
-                case Id_constructor:
-                    return jsConstructor(cx, scope, args);
-
-                case Id_toString:
-                    return realThis(thisObj, f).js_toString(cx, scope, args);
-
-                case Id_exec:
+                case Id_constructor: {
+                    String source = (args.length == 0)
+                                    ? ""
+                                    : ScriptRuntime.toString(args[0]);
+                    Script script = compile(cx, scope, source);
+                    NativeScript nscript = new NativeScript(script);
+                    nscript.setParentScope(scope);
+                    nscript.setPrototype(getClassPrototype(scope, "Script"));
+                    return nscript;
+                }
+                case Id_toString: {
+                    NativeScript real = realThis(thisObj, f);
+                    Script realScript = real.script;
+                    if (realScript == null) { realScript = real; }
+                    return cx.decompileScript(realScript,
+                                              getTopLevelScope(scope), 0);
+                }
+                case Id_exec: {
                     throw Context.reportRuntimeError1(
                         "msg.cant.call.indirect", "exec");
-
-                case Id_compile:
-                    return realThis(thisObj, f).
-                        js_compile(cx, scope, ScriptRuntime.toString(args, 0));
+                }
+                case Id_compile: {
+                    NativeScript real = realThis(thisObj, f);
+                    String source = ScriptRuntime.toString(args, 0);
+                    real.script = compile(cx, scope, source);
+                    return real;
+                }
             }
         }
 
@@ -178,37 +193,6 @@ public class NativeScript extends NativeFunction implements Script
         if (!(thisObj instanceof NativeScript))
             throw incompatibleCallError(f);
         return (NativeScript)thisObj;
-    }
-
-    /**
-     * The Java method defining the JavaScript Script constructor.
-     *
-     */
-    private static Object jsConstructor(Context cx, Scriptable scope,
-                                        Object[] args)
-    {
-        String source = (args.length == 0)
-                        ? ""
-                        : ScriptRuntime.toString(args[0]);
-
-        Script script = compile(cx, scope, source);
-        NativeScript nscript = new NativeScript(script);
-        nscript.setParentScope(scope);
-        nscript.setPrototype(getClassPrototype(scope, "Script"));
-        return nscript;
-    }
-
-    private Scriptable js_compile(Context cx, Scriptable scope, String source)
-    {
-        script = compile(cx, scope, source);
-        return this;
-    }
-
-    private Object js_toString(Context cx, Scriptable scope, Object[] args)
-    {
-        Script thisScript = script;
-        if (thisScript == null) { thisScript = this; }
-        return cx.decompileScript(thisScript, getTopLevelScope(scope), 0);
     }
 
     private static Script compile(Context cx, Scriptable scope, String source)
