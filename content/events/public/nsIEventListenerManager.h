@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 #ifndef nsIEventListenerManager_h__
@@ -45,59 +45,53 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IEVENTLISTENERMANAGER_IID; return iid; }
 
  /**
-  * Retrieves events listeners of all types. 
+  * Retrieves events listeners of all types.
   * @param
   */
-
   virtual nsresult GetEventListeners(nsVoidArray **aListeners, const nsIID& aIID) = 0;
 
   /**
-  * Sets events listeners of all types. 
+  * Sets events listeners of all types.
   * @param an event listener
   */
-
   virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 flags) = 0;
-  
+
   /**
-  * Removes events listeners of all types. 
+  * Removes events listeners of all types.
   * @param an event listener
   */
-
   virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 flags) = 0;
 
   /**
-  * Sets events listeners of all types. 
+  * Sets events listeners of all types.
   * @param an event listener
   */
-
   virtual nsresult AddEventListenerByType(nsIDOMEventListener *aListener, const nsString& type, PRInt32 flags) = 0;
-  
+
   /**
-  * Removes events listeners of all types. 
+  * Removes events listeners of all types.
   * @param an event listener
   */
-
   virtual nsresult RemoveEventListenerByType(nsIDOMEventListener *aListener, const nsString& type, PRInt32 flags) = 0;
 
   /**
   * Creates a script event listener for the given script object with name mName and function
-  * content mFunc.
+  * body mFunc.
   * @param an event listener
   */
-
-  virtual nsresult AddScriptEventListener(nsIScriptContext*aContext, 
-                                          nsIScriptObjectOwner *aScriptObjectOwner, 
-                                          nsIAtom *aName, 
-                                          const nsString& aFunc, 
+  virtual nsresult AddScriptEventListener(nsIScriptContext*aContext,
+                                          nsIScriptObjectOwner *aScriptObjectOwner,
+                                          nsIAtom *aName,
+                                          const nsString& aFunc,
                                           REFNSIID aIID,
-                                          PRBool aDeferCompilation) = 0; 
+                                          PRBool aDeferCompilation) = 0;
+
   /**
-  * Registers an event listners which already exists on the given script object with the event
+  * Registers an event listener that already exists on the given script object with the event
   * listener manager.
   * @param an event listener
   */
-
-  virtual nsresult RegisterScriptEventListener(nsIScriptContext *aContext, 
+  virtual nsresult RegisterScriptEventListener(nsIScriptContext *aContext,
                                                nsIScriptObjectOwner *aScriptObjectOwner,
                                                nsIAtom* aName,
                                                REFNSIID aIID) = 0;
@@ -107,7 +101,6 @@ public:
   * Event flags live in nsGUIEvent.h
   * @param an event listener
   */
-
   virtual nsresult HandleEvent(nsIPresContext* aPresContext,
                                nsEvent* aEvent,
                                nsIDOMEvent** aDOMEvent,
@@ -127,21 +120,18 @@ public:
   * Captures all events designated for descendant objects at the current level.
   * @param an event listener
   */
-
   virtual nsresult CaptureEvent(nsIDOMEventListener *aListener) = 0;
 
   /**
   * Releases all events designated for descendant objects at the current level.
   * @param an event listener
   */
-
   virtual nsresult ReleaseEvent(nsIDOMEventListener *aListener) = 0;
 
   /**
   * Removes all event listeners registered by this instance of the listener
   * manager.
   */
-
   virtual nsresult RemoveAllListeners(PRBool aScriptOnly) = 0;
 
   /**
@@ -150,16 +140,14 @@ public:
   * Used for security checks that ensure that events can't propagate past
   * trust boundaries.
   */
-
   virtual nsresult SetPrincipal(nsIPrincipal *aListenedToPrincipal) = 0;
 
   /**
   * Gets the principal of the entity being listened to.
   */
-
   virtual nsresult GetPrincipal(nsIPrincipal **aListenedToPrincipal) = 0;
 };
 
-extern NS_HTML nsresult NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult); 
+extern NS_HTML nsresult NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult);
 
 #endif // nsIEventListenerManager_h__
