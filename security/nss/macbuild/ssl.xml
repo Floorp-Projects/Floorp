@@ -850,7 +850,7 @@
                 <SETTING><NAME>MWPEF_olddefversion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_oldimpversion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_currentversion</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWPEF_fragmentname</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWPEF_fragmentname</NAME><VALUE>SSL3</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_collapsereloads</NAME><VALUE>0</VALUE></SETTING>
 
                 <!-- Settings for "PPC Project" panel -->
@@ -2137,7 +2137,7 @@
                 <SETTING><NAME>MWPEF_olddefversion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_oldimpversion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_currentversion</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWPEF_fragmentname</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWPEF_fragmentname</NAME><VALUE>SSL3</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_collapsereloads</NAME><VALUE>0</VALUE></SETTING>
 
                 <!-- Settings for "PPC Project" panel -->
