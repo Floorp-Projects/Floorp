@@ -1116,7 +1116,7 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     {
       ConvertJSValToStr(b0, cx, argv[0]);
       if(NS_OK != nativeThis->GetFolder(b0, b1, &folder))
-        return JS_FALSE;
+        return JS_TRUE;
     }
     else /* it must be an object */
     {
@@ -1124,7 +1124,7 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
       if ((argv[0] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
       {
         *rval = JSVAL_NULL;
-        nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
+        JS_ReportError(cx, "GetFolder:Invalid Parameter");
         return JS_TRUE;
       }
 
@@ -1132,7 +1132,7 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
       if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
       {
         *rval = JSVAL_NULL;
-        nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
+        JS_ReportError(cx, "GetFolder:Invalid Parameter");
         return JS_TRUE; 
       }
 
@@ -1143,11 +1143,11 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
         return JS_FALSE;
       }
       else if(NS_OK != nativeThis->GetFolder(*folder, b1, &folder))
-        return JS_FALSE;
+        return JS_TRUE;
     }
 
     if(nsnull == folder)
-      return JS_FALSE;
+      return JS_TRUE;
   }
   else if(argc >= 1)
   {
@@ -1157,11 +1157,11 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
     if(NS_OK != nativeThis->GetFolder(b0, &folder))
     {
-      return JS_FALSE;
+      return JS_TRUE;
     }
 
     if(nsnull == folder)
-      return JS_FALSE;
+      return JS_TRUE;
   }
   else
   {
