@@ -168,6 +168,7 @@ pull_autoconf:
 	$(CVSCO_NGLAYOUT) mozilla/build/hcpp; \
 	$(CVSCO_NGLAYOUT) mozilla/xpfe; \
 	$(CVSCO_NGLAYOUT) mozilla/Makefile.in; \
+	$(CVSCO_NGLAYOUT) mozilla/aclocal.m4; \
 	$(CVSCO_NGLAYOUT) mozilla/configure.in;
 
 ######################################################################
