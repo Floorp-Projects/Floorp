@@ -1,0 +1,60 @@
+# -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
+################################
+# Currencies Module            #
+################################
+# Originally by Alex Schuilenburg <alex@schuilenburg.org>
+
+package BotModules::Currencies;
+use vars qw(@ISA);
+@ISA = qw(BotModules);
+1;
+
+sub Help {
+    my $self = shift;
+    my ($event) = @_;
+    return {
+        '' => 'This module gets mid-market currency exchange rates from: http://www.xe.com/ucc/full.shtml',
+        'currency' => 'Call this command with two currency symbols to get the exchange rate. Syntax: \'currency [value] SYM/SYM\'. For the list of supported currencies, see: http://www.xe.com/iso4217.htm',
+    };
+}
+
+sub Told {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if ($message =~ /^\s*(?:currency|how\s+much\s+is|what\s+is|what\s+are)\s+(\d*(?:.\d+)?)\s*([A-Z]{3})s?\s*(?:\/|in|as)\s*([A-Z]{3})s?[\s?!.]*$/osi) {
+        my $amount = $1 || 1;
+        my $from = uc $2;
+        my $to = uc $3;
+        $self->getURI($event, "http://www.xe.com/ucc/convert.cgi?From=$from&To=$to&Amount=$amount", 'currency', $from, $to);
+    } else {
+        return $self->SUPER::Told(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub GotURI {
+   my $self = shift;
+   my ($event, $uri, $output, $cmd, $from, $to) = @_;
+   $self->debug($output);
+   my $message = "$event->{'from'}: ";
+   if ($cmd eq 'currency') {
+       my $fromval;
+       if ($output =~ m/([\d,]+\.\d+)\s+$from/s) {
+           $fromval = $1;
+       }
+       my $toval;
+       if ($output =~ m/([\d,]+\.\d+)\s+$to/s) {
+           $toval = $1;
+       }
+       if (defined $fromval and defined $toval) {
+           $message .= "$fromval $from = $toval $to (mid-market rates from xe.com)";
+       } elsif ($output =~ m/The following error occurred:<BR><BR>\s*(.+?)\s*<\//os) {
+           $message .= "xe.com said: $1";
+       } else {
+           $message .= 'I\'m afraid I can\'t get currency conversions right now. Sorry.';
+       }
+   } else {
+       return $self->SUPER::GotURI(@_);
+   }
+   $self->say($event, $message);
+}
