@@ -494,7 +494,7 @@ nsNntpIncomingServer::GetNntpConnection(nsIURI * aUri, nsIMsgWindow *aMsgWindow,
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsINNTPProtocol> connection;
 	nsCOMPtr<nsINNTPProtocol> freeConnection;
-  PRBool isBusy = PR_FALSE;
+  PRBool isBusy = PR_TRUE;
 
 
   PRInt32 maxConnections = 2; // default to be 2
@@ -517,7 +517,7 @@ nsNntpIncomingServer::GetNntpConnection(nsIURI * aUri, nsIMsgWindow *aMsgWindow,
 
   rv = m_connectionCache->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
-  for (PRUint32 i = 0; i < cnt && !isBusy; i++) 
+  for (PRUint32 i = 0; i < cnt && isBusy; i++) 
 	{
     aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
     connection = do_QueryInterface(aSupport);
