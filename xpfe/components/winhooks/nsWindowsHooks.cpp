@@ -351,11 +351,11 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
                  ||
                  misMatch( settings->mHandlePNG,    png )
                  ||
-                 misMatch( settings->mHandlePNG,    mng )
+                 misMatch( settings->mHandleMNG,    mng )
                  ||
-                 misMatch( settings->mHandlePNG,    bmp )
+                 misMatch( settings->mHandleBMP,    bmp )
                  ||
-                 misMatch( settings->mHandlePNG,    ico )
+                 misMatch( settings->mHandleICO,    ico )
                  ||
                  misMatch( settings->mHandleXML,    xml )
                  ||
