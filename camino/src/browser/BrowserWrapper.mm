@@ -142,10 +142,10 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     //[self setSiteIconImage:[NSImage imageNamed:@"globe_ico"]];
     //[self setSiteIconURI: [NSString string]];
     
-    mDefaultStatusString = @"";
-    mLoadingStatusString = @"";
+    mDefaultStatusString = [[NSString alloc] init];
+    mLoadingStatusString = [[NSString alloc] init];
 
-    mTitle = @"";
+    mTitle = [[NSString alloc] init];
     
     [self registerNotificationListener];
   }
