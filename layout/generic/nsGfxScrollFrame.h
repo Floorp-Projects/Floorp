@@ -231,7 +231,7 @@ public:
     return mInner.GetScrolledFrame()->GetView();
   }
 
-  virtual PRBool NeedsView() { return PR_TRUE; }
+  virtual PRBool TypeAlwaysNeedsView() { return PR_TRUE; }
   virtual PRBool DoesClipChildren() { return PR_TRUE; }
 
   // nsIAnonymousContentCreator
@@ -379,7 +379,7 @@ public:
     return mInner.GetScrolledFrame()->GetView();
   }
 
-  virtual PRBool NeedsView() { return PR_TRUE; }
+  virtual PRBool TypeAlwaysNeedsView() { return PR_TRUE; }
   virtual PRBool DoesClipChildren() { return PR_TRUE; }
 
   // nsIAnonymousContentCreator

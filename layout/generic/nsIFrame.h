@@ -715,7 +715,7 @@ public:
   /**
    * Does this frame type always need a view?
    */
-  virtual PRBool NeedsView() { return PR_FALSE; }
+  virtual PRBool TypeAlwaysNeedsView() { return PR_FALSE; }
 
   /**
    * Event handling of GUI events.

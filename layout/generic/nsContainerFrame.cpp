@@ -815,7 +815,7 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
 PRBool
 nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
 {
-  if (aFrame->NeedsView()) {
+  if (aFrame->TypeAlwaysNeedsView()) {
     return PR_TRUE;
   }
 
