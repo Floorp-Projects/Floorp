@@ -70,8 +70,10 @@ void nsTreeFrame::ToggleSelection(nsIPresContext& aPresContext, nsTreeCellFrame*
 			// cell in our row that is found in this column.
 			nsTreeCellFrame* pOtherFrame = (nsTreeCellFrame*)mSelectedItems[0];
 			
-			PRInt32 colIndex = pOtherFrame->GetColIndex();
-			PRInt32 rowIndex = pFrame->GetRowIndex();
+			PRInt32 colIndex;
+      pOtherFrame->GetColIndex(colIndex);
+			PRInt32 rowIndex;
+      pFrame->GetRowIndex(rowIndex);
 
 			// We now need to find the cell at this particular row and column.
 			// This is the cell we should really select.
@@ -113,9 +115,12 @@ void nsTreeFrame::RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame*
 	ClearSelection(aPresContext);
 
 	// Select all cells between the two frames, but only in the start frame's column.
-	PRInt32 colIndex = pStartFrame->GetColIndex(); // The column index of the selection.
-	PRInt32 startRow = pStartFrame->GetRowIndex(); // The starting row for the selection.
-	PRInt32 endRow = pEndFrame->GetRowIndex();	   // The ending row for the selection.
+	PRInt32 colIndex;
+  pStartFrame->GetColIndex(colIndex); // The column index of the selection.
+	PRInt32 startRow;
+  pStartFrame->GetRowIndex(startRow); // The starting row for the selection.
+	PRInt32 endRow;
+  pEndFrame->GetRowIndex(endRow);	   // The ending row for the selection.
 
 	PRInt32 start = startRow > endRow ? endRow : startRow;
 	PRInt32 end = startRow > endRow ? startRow : endRow;
@@ -153,8 +158,10 @@ void nsTreeFrame::ClearSelection(nsIPresContext& aPresContext)
 
 void nsTreeFrame::MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
 {
-	PRInt32 rowIndex = pFrame->GetRowIndex();
-	PRInt32 colIndex = pFrame->GetColIndex();
+	PRInt32 rowIndex;
+  pFrame->GetRowIndex(rowIndex);
+	PRInt32 colIndex;
+  pFrame->GetColIndex(colIndex);
 	if (rowIndex > 0)
 	{
 		MoveTo(aPresContext, rowIndex-1, colIndex, pFrame);
@@ -163,8 +170,10 @@ void nsTreeFrame::MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
 
 void nsTreeFrame::MoveDown(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
 {
-	PRInt32 rowIndex = pFrame->GetRowIndex();
-	PRInt32 colIndex = pFrame->GetColIndex();
+	PRInt32 rowIndex;
+  pFrame->GetRowIndex(rowIndex);
+	PRInt32 colIndex;
+  pFrame->GetColIndex(colIndex);
 	PRInt32 totalRows = mCellMap->GetRowCount();
 
 	if (rowIndex < totalRows-1)
@@ -175,8 +184,10 @@ void nsTreeFrame::MoveDown(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame
 
 void nsTreeFrame::MoveLeft(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
 {
-	PRInt32 rowIndex = pFrame->GetRowIndex();
-	PRInt32 colIndex = pFrame->GetColIndex();
+	PRInt32 rowIndex;
+  pFrame->GetRowIndex(rowIndex);
+	PRInt32 colIndex;
+  pFrame->GetColIndex(colIndex);
 	if (colIndex > 0)
 	{
 		MoveTo(aPresContext, rowIndex, colIndex-1, pFrame);
@@ -185,8 +196,10 @@ void nsTreeFrame::MoveLeft(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame
 
 void nsTreeFrame::MoveRight(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
 {
-	PRInt32 rowIndex = pFrame->GetRowIndex();
-	PRInt32 colIndex = pFrame->GetColIndex();
+	PRInt32 rowIndex;
+  pFrame->GetRowIndex(rowIndex);
+	PRInt32 colIndex;
+  pFrame->GetColIndex(colIndex);
 	PRInt32 totalCols = mCellMap->GetColCount();
 
 	if (colIndex < totalCols-1)
