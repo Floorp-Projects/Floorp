@@ -44,6 +44,10 @@
 #include "mozdrawingarea.h"
 #include "nsWeakReference.h"
 
+#ifdef ACCESSIBILITY
+#include "nsMaiHook.h"
+#endif
+
 #include <gtk/gtkwindow.h>
 
 class nsWindow : public nsCommonWidget, public nsSupportsWeakReference {
@@ -212,6 +216,12 @@ private:
     PRPackedBool        mRetryKeyboardGrab;
     GtkWindow          *mTransientParent;
     PRInt32             mSizeState;
+
+#ifdef ACCESSIBILITY
+    nsIAccessible      *mTopLevelAccessible;
+    void                CreateTopLevelAccessible();
+    NS_IMETHOD_(PRBool) DispatchAccessibleEvent(nsIAccessible** aAccessible);
+#endif
 };
 
 class nsChildWindow : public nsWindow {

@@ -100,6 +100,10 @@ static PRBool                 gJustGotActivate = PR_FALSE;
 nsCOMPtr  <nsIRollupListener> gRollupListener;
 nsWeakPtr                     gRollupWindow;
 
+#ifdef ACCESSIBILITY
+MaiHook *gMaiHook = NULL;
+#endif
+
 // cursor cache
 GdkCursor *gCursorCache[eCursor_count_up_down + 1];
 
@@ -121,6 +125,10 @@ nsWindow::nsWindow()
     mTransientParent     = nsnull;
     mWindowType          = eWindowType_child;
     mSizeState           = nsSizeMode_Normal;
+
+#ifdef ACCESSIBILITY
+    mTopLevelAccessible  = nsnull;
+#endif
 }
 
 nsWindow::~nsWindow()
@@ -141,8 +149,12 @@ nsWindow::Create(nsIWidget        *aParent,
                  nsIToolkit       *aToolkit,
                  nsWidgetInitData *aInitData)
 {
-    return NativeCreate(aParent, nsnull, aRect, aHandleEventFunction,
-                        aContext, aAppShell, aToolkit, aInitData);
+    nsresult rv = NativeCreate(aParent, nsnull, aRect, aHandleEventFunction,
+                               aContext, aAppShell, aToolkit, aInitData);
+#ifdef ACCESSIBILITY
+    CreateTopLevelAccessible();
+#endif
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -154,8 +166,12 @@ nsWindow::Create(nsNativeWidget aParent,
                  nsIToolkit       *aToolkit,
                  nsWidgetInitData *aInitData)
 {
-    return NativeCreate(nsnull, aParent, aRect, aHandleEventFunction,
-                        aContext, aAppShell, aToolkit, aInitData);
+    nsresult rv = NativeCreate(nsnull, aParent, aRect, aHandleEventFunction,
+                               aContext, aAppShell, aToolkit, aInitData);
+#ifdef ACCESSIBILITY
+    CreateTopLevelAccessible();
+#endif
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -227,6 +243,11 @@ nsWindow::Destroy(void)
     }
 
     OnDestroy();
+
+#ifdef ACCESSIBILITY
+    if (gMaiHook && mTopLevelAccessible && gMaiHook->RemoveTopLevelAccessible)
+        (gMaiHook->RemoveTopLevelAccessible)(mTopLevelAccessible);
+#endif
 
     return NS_OK;
 }
@@ -642,9 +663,9 @@ nsWindow::GetNativeData(PRUint32 aDataType)
         break;
 
     case NS_NATIVE_GRAPHIC:
-      NS_ASSERTION(nsnull != mToolkit, "NULL toolkit, unable to get a GC");
-      return (void *)NS_STATIC_CAST(nsToolkit *, mToolkit)->GetSharedGC();
-      break;
+        NS_ASSERTION(nsnull != mToolkit, "NULL toolkit, unable to get a GC");
+        return (void *)NS_STATIC_CAST(nsToolkit *, mToolkit)->GetSharedGC();
+        break;
 
     default:
         NS_WARNING("nsWindow::GetNativeData called with bad value");
@@ -2193,6 +2214,60 @@ window_state_event_cb (GtkWidget *widget, GdkEventWindowState *event)
 
     return FALSE;
 }
+
+#ifdef ACCESSIBILITY
+/**
+ * void
+ * nsWindow::CreateTopLevelAccessible
+ *
+ * request to create the nsIAccessible Object for the toplevel window
+ **/
+void
+nsWindow::CreateTopLevelAccessible()
+{
+    if (!gMaiHook || !(gMaiHook->AddTopLevelAccessible))
+        return;
+    if (mIsTopLevel && !mTopLevelAccessible) {
+        nsCOMPtr<nsIAccessible> acc;
+
+        DispatchAccessibleEvent(getter_AddRefs(acc));
+
+        if (acc) {
+            mTopLevelAccessible = acc;
+            (gMaiHook->AddTopLevelAccessible)(acc);
+        }
+    }
+}
+
+/**
+ * void
+ * nsWindow::DispatchAccessibleEvent
+ * @aAccessible: the out var, hold the new accessible object
+ *
+ * generate the NS_GETACCESSIBLE event, the event handler is
+ * reponsible to create an nsIAccessible instant.
+ **/
+PRBool
+nsWindow::DispatchAccessibleEvent(nsIAccessible** aAccessible)
+{
+    PRBool result = PR_FALSE;
+    nsAccessibleEvent event;
+
+    *aAccessible = nsnull;
+
+    InitAccessibleEvent(event);
+    nsEventStatus status;
+    DispatchEvent(&event, status);
+    result = (nsEventStatus_eConsumeNoDefault == status) ? PR_TRUE : PR_FALSE;
+
+    // if the event returned an accesssible get it.
+    if (event.accessible)
+        *aAccessible = event.accessible;
+
+    return result;
+}
+
+#endif
 
 // nsChildWindow class
 
