@@ -51,12 +51,7 @@ XP_DIST_LIBS	= \
 		$(OJI_LIBS) \
 		$(NULL)
 
-XP_NS_UNDERBAR_CRAP = \
-		$(MOZ_TIMER_LIBS) \
-		$(NULL)
-
 XP_LIBS		= \
-		$(XP_NS_UNDERBAR_CRAP) \
 		$(XP_DIST_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
@@ -120,7 +115,6 @@ XP_DIST_DEP_LIBS := $(filter-out -L$(DIST)/bin -L$(DIST)/lib, $(XP_DIST_LIBS))
 ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXTRA_DEPS	= \
 		$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_DEP_LIBS:-l%_s=lib/lib%_s.a))) \
-		$(XP_NS_UNDERBAR_CRAP) \
 		$(NULL)
 endif
 

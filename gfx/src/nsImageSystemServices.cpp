@@ -80,7 +80,14 @@ ImageSystemServicesImpl::SetTimeout(ilTimeoutCallbackFunction aFunc,
     nsITimer *timer;
     TimerClosure *tc;
 
-    if (NS_NewTimer(&timer) != NS_OK) {
+    nsresult rv;
+    rv = nsComponentManager::CreateInstance("component://netscape/timer",
+                                            nsnull,
+                                            NS_GET_IID(nsITimer),
+                                            (void**)&timer);
+
+
+    if (NS_FAILED(rv)) {
         return nsnull;
     }
 

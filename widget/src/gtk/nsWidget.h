@@ -351,7 +351,7 @@ protected:
   void		    IMECheckPreedit_PostProc();
 
   void              GetXYFromPosition(unsigned long *aX, unsigned long *aY);
-  nsITimer          *mICSpotTimer;
+  nsCOMPtr<nsITimer> mICSpotTimer;
   static void       ICSpotCallback(nsITimer* aTimer, void* aClosure);
   nsresult          KillICSpotTimer();
   nsresult          PrimeICSpotTimer();

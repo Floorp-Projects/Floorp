@@ -35,7 +35,6 @@ LIBS = \
 	-lxpcom	\
 	-lmozjs	\
 	-lmsgbaseutil \
-	$(MOZ_TIMER_LIBS) \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \
 	$(NULL)

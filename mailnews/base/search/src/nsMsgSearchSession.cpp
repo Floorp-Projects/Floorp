@@ -414,13 +414,13 @@ nsresult nsMsgSearchSession::AddUrl(const char *url)
 
 nsresult nsMsgSearchSession::SearchWOUrls ()
 {
-	nsresult err = NS_OK;
-  PRBool done;
+    nsresult err = NS_OK;
+    PRBool done;
 
-	NS_NewTimer(getter_AddRefs(m_backgroundTimer));
-  m_backgroundTimer->Init(TimerCallback, (void *) this, 0, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
-  // ### start meteors?
-  err = TimeSlice(&done);
+    m_backgroundTimer = do_CreateInstance("component://netscape/timer", &err);
+    m_backgroundTimer->Init(TimerCallback, (void *) this, 0, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
+    // ### start meteors?
+    err = TimeSlice(&done);
 #if 0
 	if (!m_urlStruct)
 		m_urlStruct = NET_CreateURLStruct ("search-libmsg:", NET_DONT_RELOAD);

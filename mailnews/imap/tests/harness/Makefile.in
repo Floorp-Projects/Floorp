@@ -43,7 +43,6 @@ LIBS =	\
 		-L$(DIST)/bin \
 		$(XPCOM_LIBS) \
 		$(EXTRA_DSO_LIBS) \
-		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)

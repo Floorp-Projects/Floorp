@@ -87,7 +87,7 @@ class nsCaret : public nsICaret,
 
 	  nsCOMPtr<nsIWeakReference> mPresShell;
 
-    nsITimer*			mBlinkTimer;
+    nsCOMPtr<nsITimer> mBlinkTimer;
 
 		PRUint32			mBlinkRate;					// time for one cyle (off then on), in milliseconds
 		nscoord				mCaretWidth;				// caret width in twips

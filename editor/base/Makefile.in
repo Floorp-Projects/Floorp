@@ -77,7 +77,6 @@ CPPSRCS		= \
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_TIMER_LIBS) \
 		-lmozjs \
 		$(NULL)
 

@@ -175,7 +175,6 @@ nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
 
   mBrowser = nsnull;
   mViewer = aViewer;
-  mTimer = nsnull;
   mCrawl = PR_FALSE;
   mJiggleLayout = PR_FALSE;
   mPostExit = PR_FALSE;
@@ -210,7 +209,6 @@ nsWebCrawler::~nsWebCrawler()
   FreeStrings(mSafeDomains);
   FreeStrings(mAvoidDomains);
   NS_IF_RELEASE(mBrowser);
-  NS_IF_RELEASE(mTimer);
   delete mVisited;
 }
 
@@ -809,8 +807,7 @@ void
 nsWebCrawler::LoadNextURL(PRBool aQueueLoad)
 {
   if (0 != mDelay) {
-    NS_IF_RELEASE(mTimer);
-    NS_NewTimer(&mTimer);
+    mTimer = do_CreateInstance("component://netscape/timer");
     mTimer->Init(TimerCallBack, (void *)this, mDelay * 1000);
   }
 

@@ -2930,8 +2930,8 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
  	    if (mUpdateTimer) {
 			mUpdateTimer->Cancel();
 			mUpdateTimer = nsnull;
-	    } 
- 	    rv = NS_NewTimer(getter_AddRefs(mUpdateTimer));
+	    }
+        mUpdateTimer = do_CreateInstance("component://netscape/timer", &rv);
 		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create timer");
 		if (NS_FAILED(rv)) return -1;
 

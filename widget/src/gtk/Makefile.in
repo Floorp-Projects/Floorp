@@ -59,7 +59,6 @@ SHARED_LIBRARY_LIBS = $(DIST)/lib/libraptorbasewidget_s.a
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		-lraptorgfx \
-		$(MOZ_TIMER_LIBS) \
 		$(NULL)
 
 ifndef MOZ_MONOLITHIC_TOOLKIT

@@ -372,7 +372,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
       }
 
       // We're a menu, we're built, we're closed, and no timer has been kicked off.
-      NS_NewTimer(getter_AddRefs(mOpenTimer));
+      mOpenTimer = do_CreateInstance("component://netscape/timer");
       mOpenTimer->Init(this, menuDelay, NS_PRIORITY_HIGHEST);
     }
   }

@@ -3180,7 +3180,8 @@ NS_IMETHODIMP GlobalWindowImpl::SetTimeoutOrInterval(JSContext* cx, jsval* argv,
    LL_I2L(now, PR_IntervalNow());
    LL_D2L(delta, PR_MillisecondsToInterval((PRUint32)interval));
    LL_ADD(timeout->when, now, delta);
-   nsresult err = NS_NewTimer(&timeout->timer);
+   nsresult err;
+   timeout->timer = do_CreateInstance("component://netscape/timer", &err);
    if(NS_OK != err)
       {
       DropTimeout(timeout);
@@ -3369,11 +3370,10 @@ PRBool GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
           delay32 = 0;
         delay32 = PR_IntervalToMilliseconds(delay32);
 
-        NS_IF_RELEASE(timeout->timer);
-        
         /* Reschedule timeout.  Account for possible error return in
            code below that checks for zero toid. */
-        nsresult err = NS_NewTimer(&timeout->timer);
+        nsresult err;
+        timeout->timer = do_CreateInstance("component://netscape/timer", &err);
         if(NS_OK != err) {
           mTimeoutInsertionPoint = last_insertion_point;
           NS_RELEASE(temp);
@@ -3472,7 +3472,6 @@ void GlobalWindowImpl::DropTimeout(nsTimeoutImpl *aTimeout,
             }
          }
       }
-   NS_IF_RELEASE(aTimeout->timer);
    PR_FREEIF(aTimeout->filename);
    NS_IF_RELEASE(aTimeout->window);
    NS_IF_RELEASE(aTimeout->principal);
@@ -3512,7 +3511,6 @@ NS_IMETHODIMP GlobalWindowImpl::ClearTimeoutOrInterval(PRInt32 aTimerID)
             if(timeout->timer)
                {
                timeout->timer->Cancel();
-               NS_RELEASE(timeout->timer);
                DropTimeout(timeout);
                }
             DropTimeout(timeout);
@@ -3541,7 +3539,6 @@ void GlobalWindowImpl::ClearAllTimeouts()
       if(timeout->timer)
          {
          timeout->timer->Cancel();
-         NS_RELEASE(timeout->timer);
          // Drop the count since the timer isn't going to hold on
          // anymore.
          DropTimeout(timeout);

@@ -27,9 +27,10 @@
 #include "nsIWidget.h"
 #include "nsVoidArray.h"
 #include "nsCRT.h"
+#include "nsCOMPtr.h"
+#include "nsITimer.h"
 
 class nsIImageGroup;
-class nsITimer;
 struct nsRect;
 
 class nsThrobber : public nsIImageRequestObserver {
@@ -78,7 +79,7 @@ protected:
   PRInt32        mNumImages;
   PRInt32        mIndex;
   nsIImageGroup* mImageGroup;
-  nsITimer*      mTimer;
+  nsCOMPtr<nsITimer> mTimer;
   PRBool         mRunning;
   PRUint32       mCompletedImages;
 

@@ -36,7 +36,6 @@ LIBS		+= \
 			$(DIST)/lib/libraptorlayout_s.a \
 			-lraptorgfx \
 			-lmozjs \
-			$(MOZ_TIMER_LIBS) \
 			$(XPCOM_LIBS) \
 			$(NSPR_LIBS) \
 			$(TK_LIBS) \

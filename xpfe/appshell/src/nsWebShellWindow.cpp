@@ -1179,11 +1179,14 @@ nsWebShellWindow::SetPersistenceTimer(PRBool aSize, PRBool aPosition)
     mSPTimerSize |= aSize;
     mSPTimerPosition |= aPosition;
   } else {
-    if (NS_SUCCEEDED(NS_NewTimer(getter_AddRefs(mSPTimer))))
+    nsresult rv;
+    mSPTimer = do_CreateInstance("component://netscape/timer", &rv);
+    if (NS_SUCCEEDED(rv)) {
       mSPTimer->Init(FirePersistenceTimer, this,
                      SIZE_PERSISTENCE_TIMEOUT, NS_TYPE_ONE_SHOT);
       mSPTimerSize = aSize;
       mSPTimerPosition = aPosition;
+    }
   }
   PR_Unlock(mSPTimerLock);
 }

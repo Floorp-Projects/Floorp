@@ -133,7 +133,7 @@ protected:
   nsIView            *mCornerView;
   nsScrollPreference  mScrollPref;
   nsMargin            mInsets;
-  nsITimer           *mScrollingTimer;
+  nsCOMPtr<nsITimer>  mScrollingTimer;
   nscoord             mScrollingDelta;
   PRUint32            mScrollProperties;
   nscoord             mLineHeight;

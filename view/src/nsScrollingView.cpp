@@ -372,7 +372,6 @@ nsScrollingView::nsScrollingView()
   mHScrollBarView = nsnull;
   mCornerView = nsnull;
   mScrollPref = nsScrollPreference_kAuto;
-  mScrollingTimer = nsnull;
   mLineHeight = 240;
   mListeners = nsnull;
 }
@@ -394,10 +393,9 @@ nsScrollingView::~nsScrollingView()
   mClipView = nsnull;
   mCornerView = nsnull;
 
-  if (nsnull != mScrollingTimer)
+  if (mScrollingTimer)
   {
     mScrollingTimer->Cancel();
-    NS_RELEASE(mScrollingTimer);
   }
   
   if (nsnull != mListeners) {
@@ -791,9 +789,9 @@ NS_IMETHODIMP_(void) nsScrollingView::Notify(nsITimer * aTimer)
     NS_RELEASE(obs);
   }
 
-  NS_RELEASE(mScrollingTimer);
-
-  if (NS_OK == NS_NewTimer(&mScrollingTimer))
+  nsresult rv;
+  mScrollingTimer = do_CreateInstance("component://netscape/timer", &rv);
+  if (NS_SUCCEEDED(rv))
     mScrollingTimer->Init(this, 25);
 }
 

@@ -724,7 +724,7 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 		mTimer->Cancel();
 		mTimer = nsnull;
 	}
-	nsresult rv = NS_NewTimer(getter_AddRefs(mTimer));
+	mTimer = do_CreateInstance("component://netscape/timer", &rv);
 	if (NS_FAILED(rv) || (!mTimer)) return;
 	mTimer->Init(InternetSearchDataSource::FireTimer, search,
 		SEARCH_UPDATE_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
@@ -916,14 +916,14 @@ InternetSearchDataSource::Init()
 
 	if (!mTimer)
 	{
-		rv = NS_NewTimer(getter_AddRefs(mTimer));
-		if (mTimer)
-		{
-			mTimer->Init(InternetSearchDataSource::FireTimer, this,
-				SEARCH_UPDATE_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
-			// Note: don't addref "this" as we'll cancel the timer in the
-			//       InternetSearchDataSource destructor
-		}
+	    mTimer = do_CreateInstance("component://netscape/timer", &rv);
+	    if (mTimer)
+	    {
+		mTimer->Init(InternetSearchDataSource::FireTimer, this,
+			     SEARCH_UPDATE_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
+		// Note: don't addref "this" as we'll cancel the timer in the
+		//       InternetSearchDataSource destructor
+	    }
 	}
 
 	mEngineListBuilt = PR_FALSE;

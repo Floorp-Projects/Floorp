@@ -47,7 +47,6 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
 		$(EXTRA_DSO_LIBS) \
-		$(MOZ_TIMER_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)

@@ -66,7 +66,7 @@ protected:
 	nsresult AddBiffEntry(nsBiffEntry *biffEntry);
 
 protected:
-	nsITimer *mBiffTimer;
+	nsCOMPtr<nsITimer> mBiffTimer;
 	nsVoidArray *mBiffArray;
 	PRBool mHaveShutdown;
 };

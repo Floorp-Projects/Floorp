@@ -2377,7 +2377,7 @@ HTMLContentSink::WillInterrupt()
           mNotificationTimer->Cancel();
         }
         
-        result = NS_NewTimer(getter_AddRefs(mNotificationTimer));
+        mNotificationTimer = do_CreateInstance("component://netscape/timer", &result);
         if (NS_SUCCEEDED(result)) {
           SINK_TRACE(SINK_TRACE_REFLOW,
                      ("HTMLContentSink::WillInterrupt: setting up timer with delay %d", delay));

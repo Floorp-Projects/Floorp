@@ -32,7 +32,6 @@ CPPSRCS		= identity.cpp
 LIBS		= \
 		-L$(DIST)/bin \
 		$(XPCOM_LIBS) \
-		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

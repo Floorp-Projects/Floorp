@@ -608,9 +608,8 @@ void TimerCallback(nsITimer* aTimer, void* aClosure)
   }
   flag = !flag;
 
-  NS_RELEASE(gPeriodicTimer);
-
-  if (NS_OK == NS_NewTimer(&gPeriodicTimer)) {
+  gPeriodicTimer = do_CreateInstance("component://netscape/timer", &rv);
+  if (NS_SUCCEEDED(rv)) {
     gPeriodicTimer->Init(TimerCallback, nsnull, 1000*5);
   }
 }
@@ -702,7 +701,9 @@ main(int argc, char* argv[])
   //
   // Start up the timer to test Suspend/Resume APIs on the transport...
   //
-  if (NS_OK == NS_NewTimer(&gPeriodicTimer)) {
+  nsresult rv;
+  gPeriodicTimer = do_CreateInstance("component://netscape/timer", &rv);
+  if (NS_SUCCEEDED(rv)) {
     gPeriodicTimer->Init(TimerCallback, nsnull, 1000);
   }
 #endif /* USE_TIMERS */

@@ -41,7 +41,6 @@ nsMsgBiffManager::nsMsgBiffManager()
 {
 	NS_INIT_REFCNT();
 
-	mBiffTimer = nsnull;
 	mBiffArray = nsnull;
 	mHaveShutdown = PR_FALSE;
 }
@@ -53,7 +52,6 @@ nsMsgBiffManager::~nsMsgBiffManager()
 	if (mBiffTimer) {
 		mBiffTimer->Cancel();
 	}
-	NS_IF_RELEASE(mBiffTimer);
 
 	PRInt32 count = mBiffArray->Count();
     PRInt32 i;
@@ -284,9 +282,8 @@ nsresult nsMsgBiffManager::SetupNextBiff()
 		if(mBiffTimer)
 		{
 			mBiffTimer->Cancel();
-			NS_RELEASE(mBiffTimer);
 		}
-		NS_NewTimer(&mBiffTimer);
+        mBiffTimer = do_CreateInstance("component://netscape/timer");
 		mBiffTimer->Init(OnBiffTimer, (void*)this, timeInMSUint32);
 		
 	}

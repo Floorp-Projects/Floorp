@@ -269,7 +269,7 @@ nsresult nsInterfaceState::PrimeUpdateTimer()
     mUpdateTimer = NULL;      // free it
   }
   
-  rv = NS_NewTimer(getter_AddRefs(mUpdateTimer));
+  mUpdateTimer = do_CreateInstance("component://netscape/timer", &rv);
   if (NS_FAILED(rv)) return rv;
 
   const PRUint32 kUpdateTimerDelay = 150;

@@ -100,7 +100,7 @@ public:
    bool                    mRunning;
    SInt32                  mNumImages, mCompletedImages, mIndex;
    nsIImageGroup           *mImageGroup;
-   nsITimer                *mTimer;
+   nsCOMPtr<nsITimer>      mTimer;
    
    static map<nsIWidget*, CThrobber*> mgThrobberMap;
    

@@ -123,7 +123,6 @@ nsresult nsWidget::KillICSpotTimer ()
    if(mICSpotTimer)
    {
      mICSpotTimer->Cancel();
-     NS_RELEASE(mICSpotTimer);
      mICSpotTimer = nsnull;
    }
    return NS_OK;
@@ -131,9 +130,10 @@ nsresult nsWidget::KillICSpotTimer ()
 nsresult nsWidget::PrimeICSpotTimer ()
 {
    KillICSpotTimer();
-   nsresult err = NS_NewTimer(&mICSpotTimer);
-   if(NS_FAILED(err))
-       return err;
+   nsresult err;
+   mICSpotTimer = do_CreateInstance("component://netscape/timer", &err);
+   if (NS_FAILED(err))
+     return err;
    mICSpotTimer->Init(ICSpotCallback, this, 1000);
    return NS_OK;
 }

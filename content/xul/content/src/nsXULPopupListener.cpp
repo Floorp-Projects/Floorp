@@ -280,7 +280,7 @@ XULPopupListenerImpl::MouseMove(nsIDOMEvent* aMouseEvent)
   if (mPopupContent || mTooltipTimer)
     return NS_OK;
   
-  NS_NewTimer ( getter_AddRefs(mTooltipTimer) );
+  mTooltipTimer = do_CreateInstance("component://netscape/timer");
   if ( mTooltipTimer ) {
     nsCOMPtr<nsIDOMEventTarget> eventTarget;
     nsCOMPtr<nsIDOMNode> eventTargetNode;

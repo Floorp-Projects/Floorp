@@ -34,7 +34,6 @@ CPPSRCS		= \
 		$(NULL)
 
 LIBS = \
-		$(MOZ_TIMER_LIBS) \
 		$(XPCOM_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(NSPR_LIBS) \

@@ -274,7 +274,7 @@ private:
 public:
   //these are public so that our timer callback can poke them.
 #if NS_VIEWMANAGER_NEEDS_TIMER
-  nsITimer          *mTimer;
+  nsCOMPtr<nsITimer> mTimer;
 #endif
   nsRect            mDirtyRect;
   nsIView           *mRootView;

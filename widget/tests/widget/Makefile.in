@@ -34,7 +34,6 @@ CPPSRCS		= \
 		$(NULL)
 
 LIBS		= \
-		$(MOZ_TIMER_LIBS) \
 		$(MOZ_WIDGET_SUPPORT_LIBS) \
 		$(XPCOM_LIBS) \
 		-lmozjs \

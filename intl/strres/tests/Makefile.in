@@ -41,7 +41,6 @@ EXPORT_RESOURCE	= \
 LIBS		= \
 		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
-		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

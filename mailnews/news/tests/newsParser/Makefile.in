@@ -30,7 +30,6 @@ PROGRAM		= newsParserTest
 CPPSRCS		= newsParserTest.cpp
 
 LIBS		= \
-		$(MOZ_TIMER_LIBS) \
 		$(DIST)/lib/libmsgnews_s.a \
 		-lmozjs \
 		-lraptorgfx \

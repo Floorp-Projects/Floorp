@@ -37,7 +37,6 @@ EXTRA_DSO_LIBS	= msgbaseutil
 endif
 
 LIBS		= \
-		$(MOZ_TIMER_LIBS) \
 		$(EXTRA_DSO_LIBS) \
 		$(XPCOM_LIBS) \
 		$(MOZ_JS_LIBS) \

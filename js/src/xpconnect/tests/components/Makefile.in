@@ -60,10 +60,6 @@ CPPSRCS		= \
 		xpctest_out.cpp \
 		$(NULL)
 
-LIBS += \
-		$(MOZ_TIMER_LIBS) \
-		$(NULL)
-
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
 		-lmozjs \

@@ -37,7 +37,6 @@ EXTRA_DSO_LIBS	= raptorgfx msgbaseutil
 endif
 
 LIBS		= \
-		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS)	\
 		$(XPCOM_LIBS) \
 		$(MOZ_JS_LIBS) \

@@ -108,7 +108,6 @@ XP_DIST_LIBS		= \
 			$(NULL)
 
 XP_NS_UNDERBAR_CRAP	= \
-			$(MOZ_TIMER_LIBS) \
 			$(MOZ_WIDGET_SUPPORT_LIBS) \
 			$(NULL)
 
