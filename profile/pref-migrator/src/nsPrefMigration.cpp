@@ -53,7 +53,11 @@
 
 #include "nsVoidArray.h"
 
-#include "nsIWebShellWindow.h"
+#include "nsIBaseWindow.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIWebBrowserChrome.h"
 #include "nsIWebBrowserChrome.h"
 
 #ifdef DEBUG_seth
@@ -239,7 +243,7 @@ nsPrefMigration::GetInstance()
 
 
 
-nsPrefMigration::nsPrefMigration() : m_prefs(0)
+nsPrefMigration::nsPrefMigration()
 {
   NS_INIT_REFCNT();
   mErrorCode = NS_OK;
@@ -257,9 +261,6 @@ PRBool ProfilesToMigrateCleanup(void* aElement, void *aData)
 
 nsPrefMigration::~nsPrefMigration()
 {
-  if (m_prefs) {
-	NS_RELEASE(m_prefs);
-  }
   mProfilesToMigrate.EnumerateForwards((nsVoidArrayEnumFunc)ProfilesToMigrateCleanup, nsnull);
 }
 
@@ -278,15 +279,12 @@ nsPrefMigration::getPrefService()
   if(NS_FAILED(rv))
     return rv;
   
-  rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, 
+  return pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, 
                                             NS_GET_IID(nsIPref), 
                                             pIMyService, 
                                             PROXY_SYNC,
-                                            (void**)&m_prefs);
-  if (NS_FAILED(rv)) return rv;
+                                            getter_AddRefs(m_prefs));
 
-  // m_prefs is good now
-  return NS_OK;   
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsPrefMigration, nsIPrefMigration)
@@ -385,10 +383,18 @@ extern "C" void ProfileMigrationController(void *data)
 NS_IMETHODIMP
 nsPrefMigration::WindowCloseCallback()
 {
-
-   nsCOMPtr<nsIWebShellWindow> progressWindow(do_QueryInterface(mPMProgressWindow));
-   if(progressWindow)
-      progressWindow->Close();
+    nsCOMPtr<nsIDocShell>         docShell;
+    nsresult rv = mPMProgressWindow->GetDocShell(getter_AddRefs(docShell));
+    if (NS_FAILED(rv)) return rv;
+ 
+    nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(docShell));
+    if (treeItem) {
+        nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+        nsresult rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(treeOwner));
+        if (baseWindow) (void)baseWindow->Destroy();
+    }
   
 #ifdef DEBUG
    printf("end of pref migration\n");

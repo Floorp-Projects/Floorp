@@ -140,14 +140,13 @@ class nsPrefMigration: public nsIPrefMigration
 #ifdef NEED_TO_COPY_AND_RENAME_NEWSRC_FILES
       nsresult GetPremigratedFilePref(const char *pref_name, nsIFileSpec **filePath);
 #endif /* NEED_TO_COPY_AND_RENAME_NEWSRC_FILES */
-      
 
-      nsIPref* m_prefs;
       nsresult getPrefService();
-      nsCOMPtr<nsIFileSpec> m_prefsFile; 
-      nsCOMPtr<nsIDOMWindow> m_parentWindow;
-      nsIDOMWindow *m_progressWindow;
-      nsCOMPtr<nsIXULWindow>  mPMProgressWindow;
+
+      nsCOMPtr<nsIPref>         m_prefs;
+      nsCOMPtr<nsIFileSpec>     m_prefsFile; 
+      nsCOMPtr<nsIDOMWindow>    m_parentWindow;
+      nsCOMPtr<nsIXULWindow>    mPMProgressWindow;
 };
 
 #endif /* nsPrefMigration_h___ */
