@@ -22,7 +22,7 @@
 DEPTH=..\..\..
 include <$(DEPTH)/config/config.mak>
 
-DEFINES=-DMOZILLA
+DEFINES=-DMOZ_XSL
 
 MODULE=transformix
 IS_COMPONENT = 1

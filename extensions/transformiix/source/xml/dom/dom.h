@@ -16,10 +16,10 @@
  * Peter Van der Beken
  *    -- original author
  *
- * $Id: dom.h,v 1.7 2000/05/25 01:03:20 axel%pike.org Exp $
+ * $Id: dom.h,v 1.8 2000/07/06 12:35:38 axel%pike.org Exp $
  */
 
-#ifndef MOZILLA
+#ifndef MOZ_XSL
 #include "standalone/dom.h"
 #else
 #include "mozImpl/mozilladom.h"

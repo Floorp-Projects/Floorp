@@ -21,7 +21,7 @@ Contributor(s):
 /* This file can be used for any definitions needed in
 particular environments. */
 
-#ifdef MOZILLA
+#ifdef MOZ_XSL
 
 #include "nspr.h"
 #define malloc(x) PR_Calloc(1,(x))

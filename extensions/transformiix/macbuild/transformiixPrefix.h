@@ -24,6 +24,6 @@
  *
  */
 
-#define MOZILLA
+#define MOZ_XSL
 
 #include "MacSharedPrefix.h"

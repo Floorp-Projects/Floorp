@@ -23,6 +23,7 @@ DEPTH=..\..\..\..\..\..
 
 LIBRARY_NAME=transformix_xml_dom_mozImpl
 MODULE=transformix
+DEFINES=-DMOZ_XSL
 CPPSRCS=						\
 	MozillaAttr.cpp					\
 	MozillaCDATASection.cpp			\
