@@ -30,7 +30,10 @@ nsQueryReferent::operator()( const nsIID& aIID, void** answer ) const
 	{
 		nsresult status;
 		if ( mWeakPtr )
-			status = mWeakPtr->QueryReferent(aIID, answer);
+			{
+				if ( !NS_SUCCEEDED(status = mWeakPtr->QueryReferent(aIID, answer)) )
+					*answer = 0;
+			}
 		else
 			status = NS_ERROR_NULL_POINTER;
 
@@ -39,7 +42,7 @@ nsQueryReferent::operator()( const nsIID& aIID, void** answer ) const
 		return status;
 	}
 
-NS_COM nsIWeakReference *
+NS_COM nsIWeakReference*
 NS_GetWeakReference( nsISupports* aInstance, nsresult* aResult )
   {
     nsresult status;
@@ -47,10 +50,10 @@ NS_GetWeakReference( nsISupports* aInstance, nsresult* aResult )
       aResult = &status;
 
     nsCOMPtr<nsISupportsWeakReference> factoryP = do_QueryInterface(aInstance, aResult);
+		NS_ASSERTION(factoryP, "Did you know you were calling |NS_GetWeakReference()| on something that doesn't support weak references?");
 
     nsIWeakReference* weakP = 0;
-    if ( factoryP )
-      status = factoryP->GetWeakReference(&weakP);
+    status = factoryP ? factoryP->GetWeakReference(&weakP) : NS_ERROR_NO_INTERFACE;
     return weakP;
   }
 
