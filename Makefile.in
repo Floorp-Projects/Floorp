@@ -99,13 +99,8 @@ DIRS		+= \
 		expat \
 		htmlparser \
 		gfx \
-		$(NULL)
-
-ifdef USE_IMG2
-DIRS		+= gfx2 modules/libpr0n
-endif
-
-DIRS		+= \
+		gfx2 \
+		modules/libpr0n \
 		modules/plugin \
 		dom \
 		view \
