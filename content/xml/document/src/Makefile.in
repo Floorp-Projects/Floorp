@@ -34,6 +34,7 @@ INCLUDES += \
 	-I$(srcdir)/../../../html/content/src	\
 	-I$(srcdir)/../../../html/style/src	\
 	-I$(srcdir)/../../../base/src		\
+	-I$(srcdir)/../../../xul/content/src	\
 	-I$(DIST)/public/raptor			\
 	$(NULL)
 
