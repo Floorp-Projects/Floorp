@@ -384,6 +384,9 @@ void MyMainLoop( void )
 	{
 		PtProcessEvent();
 	}
+
+    NS_WARNING("MyMainLoop exiting!\n");
+
 }
 
 //-------------------------------------------------------------------------
@@ -451,6 +454,7 @@ done:
 NS_METHOD nsAppShell::Exit()
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Exit.\n"));
+  NS_WARNING("nsAppShell::Exit Called...\n");
   ExitMainLoop = 1;
 
   return NS_OK;
