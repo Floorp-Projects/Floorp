@@ -92,7 +92,13 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         }
         // TODO: passing 'this' as the scope is bogus since it has 
         //  no parent scope
-        return members.get(this, name, javaObject, false);
+        Object result = members.get(this, name, javaObject, false);
+        if (result == NOT_FOUND) {
+            Scriptable proto = getPrototype();
+            if (proto == null || !ScriptRuntime.hasProp(proto, name))
+                throw members.reportMemberNotFound(name);
+        }
+        return result;
     }
 
     public Object get(int index, Scriptable start) {
@@ -703,8 +709,8 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             }
             return new Character((char)toInteger(value, 
                                                  ScriptRuntime.CharacterClass,
-                                                 Character.MIN_VALUE,
-                                                 Character.MAX_VALUE));
+                                                 (double)Character.MIN_VALUE,
+                                                 (double)Character.MAX_VALUE));
         }
 
         // Double, Float
@@ -750,8 +756,8 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             else {
                 return new Integer((int)toInteger(value, 
                                                   ScriptRuntime.IntegerClass,
-                                                  Integer.MIN_VALUE,
-                                                  Integer.MAX_VALUE));
+                                                  (double)Integer.MIN_VALUE,
+                                                  (double)Integer.MAX_VALUE));
             }
         }
 
@@ -760,10 +766,19 @@ public class NativeJavaObject implements Scriptable, Wrapper {
                 return value;
             }
             else {
+                /* Long values cannot be expressed exactly in doubles.
+                 * We thus use the largest and smallest double value that 
+                 * has a value expressible as a long value. We build these 
+                 * numerical values from their hexidecimal representations
+                 * to avoid any problems caused by attempting to parse a
+                 * decimal representation.
+                 */
+                final double max = Double.longBitsToDouble(0x43dfffffffffffffL);
+                final double min = Double.longBitsToDouble(0xc3e0000000000000L);
                 return new Long(toInteger(value, 
                                           ScriptRuntime.LongClass,
-                                          Long.MIN_VALUE,
-                                          Long.MAX_VALUE));
+                                          min,
+                                          max));
             }
         }
 
@@ -774,8 +789,8 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             else {
                 return new Short((short)toInteger(value, 
                                                   ScriptRuntime.ShortClass,
-                                                  Short.MIN_VALUE,
-                                                  Short.MAX_VALUE));
+                                                  (double)Short.MIN_VALUE,
+                                                  (double)Short.MAX_VALUE));
             }
         }
 
@@ -786,8 +801,8 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             else {
                 return new Byte((byte)toInteger(value, 
                                                 ScriptRuntime.ByteClass,
-                                                Byte.MIN_VALUE,
-                                                Byte.MAX_VALUE));
+                                                (double)Byte.MIN_VALUE,
+                                                (double)Byte.MAX_VALUE));
             }
         }
 
@@ -839,7 +854,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         }
     }
 
-    static long toInteger(Object value, Class type, long min, long max) {
+    static long toInteger(Object value, Class type, double min, double max) {
         double d = toDouble(value);
 
         if (Double.isInfinite(d) || Double.isNaN(d)) {
@@ -854,7 +869,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             d = Math.ceil(d);
         }
 
-        if (d < (double)min || d > (double)max) {
+        if (d < min || d > max) {
             // Convert to string first, for more readable message
             reportConversionError(ScriptRuntime.toString(value), type);
         }

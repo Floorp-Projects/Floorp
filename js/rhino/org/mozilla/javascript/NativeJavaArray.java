@@ -84,7 +84,17 @@ public class NativeJavaArray extends NativeJavaObject {
     public Object get(String id, Scriptable start) {
         if (id.equals("length"))
             return new Integer(length);
-        return super.get(id, start);
+        Object result = super.get(id, start);
+        if (result == NOT_FOUND && 
+            !ScriptRuntime.hasProp(getPrototype(), id)) 
+        {
+            Object errArgs[] = { array.getClass().getName(), 
+                                 id };
+            throw Context.reportRuntimeError(
+                Context.getMessage("msg.java.member.not.found",
+                                   errArgs));
+        }
+        return result;  
     }
 
     public Object get(int index, Scriptable start) {
