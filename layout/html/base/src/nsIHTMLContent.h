@@ -69,7 +69,8 @@ public:
   // XXX this will have to change for CSS2
   NS_IMETHOD GetClass(nsIAtom*& aResult) const = 0;
 
-  NS_IMETHOD GetStyleRule(nsIStyleRule*& aResult) = 0;
+  NS_IMETHOD GetContentStyleRule(nsIStyleRule*& aResult) = 0;
+  NS_IMETHOD GetInlineStyleRule(nsIStyleRule*& aResult) = 0;
 
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                nsHTMLValue& aValue,
