@@ -1916,16 +1916,17 @@ XULContentSinkImpl::UnblockNextOverlay() {
 	
 	PRInt32 count = mOverlayArray->Count();
 	mCurrentOverlay++;
+  nsresult result=NS_OK;
 	if (mCurrentOverlay == count) {
 		// Unblock ourselves
-		mParser->EnableParser(PR_TRUE);
+		result=mParser->EnableParser(PR_TRUE);
 	}
 	else {
 		// Process the next overlay.
 		nsString* href = (nsString*)mOverlayArray->ElementAt(mCurrentOverlay);
 		ProcessOverlay(*href);
 	}
-	return NS_OK;
+	return result;
 }
 
 ////////////////////////////////////////////////////////////////////////
