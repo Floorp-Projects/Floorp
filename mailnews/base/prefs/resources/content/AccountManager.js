@@ -482,6 +482,7 @@ function onRemoveAccount(event) {
 
   var server = account.incomingServer;
   var type = server.type;
+  var prettyName = server.prettyName;
 
   var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
   var canDelete = protocolinfo.canDelete;
@@ -492,9 +493,17 @@ function onRemoveAccount(event) {
     return;
 
   var confirmRemoveAccount =
-    gPrefsBundle.getString("confirmRemoveAccount");
-  if (!window.confirm(confirmRemoveAccount)) 
+    gPrefsBundle.getFormattedString("confirmRemoveAccount", [prettyName]);
+
+  var confirmTitle = gPrefsBundle.getString("confirmRemoveAccountTitle");
+
+  var promptService =
+    Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
+               getService(Components.interfaces.nsIPromptService);
+  if (!promptService ||
+      !promptService.confirm(window, confirmTitle, confirmRemoveAccount)) {
     return;
+  }
 
   try {
     // clear cached data out of the account array
