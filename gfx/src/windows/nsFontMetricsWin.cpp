@@ -4405,7 +4405,7 @@ SubstituteChars(PRBool              aDisplayUnicode,
       res = gFontSubstituteConverter->Init("ISO-8859-1",
               aDisplayUnicode
               ? nsISaveAsCharset::attr_FallbackHexNCR
-              : nsISaveAsCharset::attr_EntityAfterCharsetConv + nsISaveAsCharset::attr_FallbackQuestionMark,
+              : nsISaveAsCharset::attr_EntityAfterCharsetConv + nsISaveAsCharset::attr_FallbackQuestionMark + nsISaveAsCharset::attr_IgnoreIgnorables,
               nsIEntityConverter::transliterate);
       if (NS_FAILED(res)) {
         NS_RELEASE(gFontSubstituteConverter);

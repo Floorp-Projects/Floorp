@@ -3222,7 +3222,8 @@ nsFontXlibSubstitute::Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
     if (mFontMetricsContext->mFontSubConverter) {
       res = mFontMetricsContext->mFontSubConverter->Init("ISO-8859-1",
                              nsISaveAsCharset::attr_FallbackQuestionMark +
-                               nsISaveAsCharset::attr_EntityAfterCharsetConv,
+                               nsISaveAsCharset::attr_EntityAfterCharsetConv +
+                               nsISaveAsCharset::attr_IgnoreIgnorables,
                              nsIEntityConverter::transliterate);
       if (NS_FAILED(res))
         mFontMetricsContext->mFontSubConverter = nsnull; // destroy converter

@@ -699,7 +699,8 @@ PRBool nsUnicodeRenderingToolkit :: LoadTransliterator()
     {
        res = mTrans->Init("x-mac-roman",
                nsISaveAsCharset::attr_FallbackQuestionMark +
-               nsISaveAsCharset::attr_EntityBeforeCharsetConv,
+               nsISaveAsCharset::attr_EntityBeforeCharsetConv +
+               nsISaveAsCharset::attr_IgnoreIgnorables,
                nsIEntityConverter::transliterate);
       NS_ASSERTION(NS_SUCCEEDED(res), "cannot init the converter");
       if (NS_FAILED(res)) 
