@@ -40,9 +40,39 @@ public:
   // Clear any current floaters, returning a new Y coordinate
   nscoord ClearFloaters(nscoord aY, PRUint8 aBreakType);
 
-  nscoord GetTrapezoidCount() const {
+  // Get the raw trapezoid count for this band.
+  PRInt32 GetTrapezoidCount() const {
     return count;
   }
+
+  // Get the number of floaters that are impacting the current
+  // band. Note that this value is relative to the current translation
+  // in the space manager which means that some floaters may be hidden
+  // by the translation and therefore won't be in the count.
+  PRInt32 GetFloaterCount() const {
+    return mLeftFloaters + mRightFloaters;
+  }
+
+  // Get the number of left floaters that are impacting the current
+  // band. Note that this value is relative to the current translation
+  // in the space manager which means that some floaters may be hidden
+  // by the translation and therefore won't be in the count.
+  PRInt32 GetLeftFloaterCount() const {
+    return mLeftFloaters;
+  }
+
+  // Get the number of right floaters that are impacting the current
+  // band. Note that this value is relative to the current translation
+  // in the space manager which means that some floaters may be hidden
+  // by the translation and therefore won't be in the count.
+  PRInt32 GetRightFloaterCount() const {
+    return mRightFloaters;
+  }
+
+  // Return the impact on the max-element-size for this band by
+  // computing the maximum width and maximum height of all the
+  // floaters.
+  void GetMaxElementSize(nscoord* aWidthResult, nscoord* aHeightResult) const;
 
 protected:
   // The spacemanager we are getting space from
@@ -58,6 +88,12 @@ protected:
 
   // Bounding rect of available space between any left and right floaters
   nsRect mAvailSpace;
+
+  // Number of left and right floaters in the current band. Note that
+  // this number may be less than the total number of floaters present
+  // in the band, if our translation in the space manager "hides" some
+  // floaters.
+  PRInt32 mLeftFloaters, mRightFloaters;
 
   void ComputeAvailSpaceRect();
   void GetAvailableSpace(nscoord aY);
