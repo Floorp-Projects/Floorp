@@ -1213,6 +1213,11 @@ nsTableOuterFrame::IsAutoWidth(nsIFrame& aTableOrCaption,
 
   const nsStylePosition* position = aTableOrCaption.GetStylePosition();
 
+#ifdef __SUNPRO_CC
+  // Bug 239962, this is a workaround to avoid incorrect code generation by Sun Forte compiler.
+  float percent = position->mWidth.GetPercentValue();
+#endif
+
   switch (position->mWidth.GetUnit()) {
     case eStyleUnit_Auto:         // specified auto width
     case eStyleUnit_Proportional: // illegal for table, so ignored
@@ -1221,7 +1226,11 @@ nsTableOuterFrame::IsAutoWidth(nsIFrame& aTableOrCaption,
       isAuto = PR_FALSE;
       break;
     case eStyleUnit_Percent:
+#ifdef __SUNPRO_CC
+      if (percent > 0.0f) {
+#else
       if (position->mWidth.GetPercentValue() > 0.0f) {
+#endif
         isAuto = PR_FALSE;
         if (aIsPctWidth) {
           *aIsPctWidth = PR_TRUE;
