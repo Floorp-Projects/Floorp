@@ -78,19 +78,19 @@ NS_IMPL_ISUPPORTS2_CI(nsSchema, nsISchema, nsISchemaComponent)
 nsresult
 nsSchema::Init()
 {
-  nsresult rv = mTypesHash.Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRBool ok = mTypesHash.Init();
+  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  rv = mAttributesHash.Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  ok = mAttributesHash.Init();
+  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  rv = mElementsHash.Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  ok = mElementsHash.Init();
+  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  rv = mAttributeGroupsHash.Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  ok = mAttributeGroupsHash.Init();
+  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  return mModelGroupsHash.Init();
+  return mModelGroupsHash.Init() ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /* readonly attribute wstring targetNamespace; */

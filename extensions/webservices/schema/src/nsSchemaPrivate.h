@@ -224,7 +224,7 @@ public:
 
   nsresult Init()
   {
-    return mAttributesHash.Init();
+    return mAttributesHash.Init() ? NS_OK : NS_ERROR_FAILURE;
   }
 
   NS_IMETHOD SetContentModel(PRUint16 aContentModel);
@@ -467,7 +467,7 @@ public:
 
   nsresult Init()
   {
-    return mAttributesHash.Init();
+    return mAttributesHash.Init() ? NS_OK : NS_ERROR_FAILURE;
   }
 
   NS_IMETHOD AddAttribute(nsISchemaAttributeComponent* aAttribute);
