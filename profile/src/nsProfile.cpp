@@ -516,7 +516,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 #endif /* DEBUG_profile */
 
             nsAutoString currProfileDir; currProfileDir.AssignWithConversion(currProfileDirSpec.GetNativePathCString());
-            rv = CreateNewProfile(currProfileName.GetUnicode(), currProfileDir.GetUnicode());
+            rv = CreateNewProfile(currProfileName.GetUnicode(), currProfileDir.GetUnicode(), PR_TRUE);
             if (NS_SUCCEEDED(rv)) {
                 *profileDirSet = PR_TRUE;
                 mCurrentProfileAvailable = PR_TRUE;
@@ -526,6 +526,8 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 gProfileDataAccess->mProfileDataChanged = PR_TRUE;
                 gProfileDataAccess->UpdateRegistry();
             }
+            rv = ForgetCurrentProfile();
+            if (NS_FAILED(rv)) return rv;
         }
     }
 
@@ -830,7 +832,9 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const PRUnichar *profileName, nsFileSpec&
 
 // Creates a new profile
 NS_IMETHODIMP 
-nsProfile::CreateNewProfile(const PRUnichar* profileName, const PRUnichar* nativeProfileDir)
+nsProfile::CreateNewProfile(const PRUnichar* profileName, 
+                            const PRUnichar* nativeProfileDir, 
+                            PRBool useExistingDir)
 {
     NS_ENSURE_ARG_POINTER(profileName);   
 
@@ -874,7 +878,11 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName, const PRUnichar* nativ
 
         // append profile name
         dirSpec += profileName;
-        dirSpec.MakeUnique();
+
+        // Make profile directory unique only when the user 
+        // decides to not use an already existing profile directory
+        if (!useExistingDir)
+            dirSpec.MakeUnique();
     }
     else {
         dirSpec = nativeProfileDir;
@@ -882,8 +890,12 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName, const PRUnichar* nativ
         // this prevents people from choosing there profile directory
         // or another directory, and remove it when they delete the profile.
         // append profile name
-		dirSpec += profileName;
-        dirSpec.MakeUnique();    
+        dirSpec += profileName;
+
+        // Make profile directory unique only when the user 
+        // decides to not use an already existing profile directory
+        if (!useExistingDir)
+            dirSpec.MakeUnique();
     }
 
 #if defined(DEBUG_profile)
@@ -891,7 +903,10 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName, const PRUnichar* nativ
 #endif
 
     if (!dirSpec.Exists())
+    {
         dirSpec.CreateDirectory();
+        useExistingDir = PR_FALSE;
+    }
 
     // Set the directory value and add the entry to the registry tree.
     // Creates required user directories.
@@ -917,7 +932,7 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName, const PRUnichar* nativ
     profDefaultsDir->GetFileSpec(&defaultsDirSpec);
 
     // Copy contents from defaults folder.
-    if (defaultsDirSpec.Exists())
+    if (defaultsDirSpec.Exists() && (!useExistingDir))
     {
         defaultsDirSpec.RecursiveCopy(dirSpec);
     }
@@ -1510,7 +1525,7 @@ nsProfile::CreateDefaultProfile(void)
     nsAutoString dirSpecStr; dirSpecStr.AssignWithConversion(profileDirSpec.GetNativePathCString());
 
     nsAutoString defaultProfileName; defaultProfileName.AssignWithConversion(DEFAULT_PROFILE_NAME);
-    rv = CreateNewProfile(defaultProfileName.GetUnicode(), dirSpecStr.GetUnicode());
+    rv = CreateNewProfile(defaultProfileName.GetUnicode(), dirSpecStr.GetUnicode(), PR_TRUE);
 
     return rv;
 }
