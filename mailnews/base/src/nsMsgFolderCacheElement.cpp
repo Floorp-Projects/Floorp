@@ -27,7 +27,7 @@ nsMsgFolderCacheElement::nsMsgFolderCacheElement()
 {
 	m_mdbRow = nsnull;
 	m_owningCache = nsnull;
-	m_folderURI = nsnull;
+	m_folderKey = nsnull;
 	NS_INIT_REFCNT();
 }
 
@@ -36,14 +36,14 @@ nsMsgFolderCacheElement::~nsMsgFolderCacheElement()
 	NS_IF_RELEASE(m_mdbRow);
 	// circular reference, don't do it.
 //	NS_IF_RELEASE(m_owningCache);
-	PR_FREEIF(m_folderURI);
+	PR_FREEIF(m_folderKey);
 }
 
 
 NS_IMPL_ISUPPORTS(nsMsgFolderCacheElement, GetIID());
 
-NS_IMPL_GETTER_STR(nsMsgFolderCacheElement::GetURI, m_folderURI)
-NS_IMPL_SETTER_STR(nsMsgFolderCacheElement::SetURI, m_folderURI)
+NS_IMPL_GETTER_STR(nsMsgFolderCacheElement::GetKey, m_folderKey)
+NS_IMPL_SETTER_STR(nsMsgFolderCacheElement::SetKey, m_folderKey)
 
 void nsMsgFolderCacheElement::SetOwningCache(nsMsgFolderCache *owningCache)
 {

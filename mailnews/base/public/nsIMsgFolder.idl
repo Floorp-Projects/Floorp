@@ -307,6 +307,7 @@ interface nsIMsgImapMailFolder : nsISupports {
   attribute boolean explicitlyVerify;
   attribute wchar hierarchyDelimiter;
   attribute long boxFlags;
+  attribute string onlineName;
 };
 
 

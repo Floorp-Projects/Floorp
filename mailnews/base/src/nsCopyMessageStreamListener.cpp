@@ -182,6 +182,9 @@ NS_IMETHODIMP nsCopyMessageStreamListener::OnStopRequest(nsIChannel * aChannel, 
 		// this only happens for local messages, because it checks for a
 		// mailbox uri. Seems wrong.
 		IsMoveMessage(uri, &moveMessage);
+		// OK, this is wrong if we're moving to an imap folder, for example. This really says that
+		// we were able to pull the message from the source, NOT that we were able to
+		// put it in the destination!
 		if(moveMessage)
 		{
 			rv = DeleteMessage(uri, mSrcFolder);

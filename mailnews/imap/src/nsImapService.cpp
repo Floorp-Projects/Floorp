@@ -82,20 +82,12 @@ nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
                              char **folderName)
 {
     nsresult rv;
-    nsCOMPtr<nsIFolder> aFolder(do_QueryInterface(aImapFolder, &rv));
+    nsCOMPtr<nsIMsgImapMailFolder> aFolder(do_QueryInterface(aImapFolder, &rv));
     if (NS_FAILED(rv)) return rv;
-    char *uri = nsnull;
-    rv = aFolder->GetURI(&uri);
+    nsXPIDLCString onlineName;
+    rv = aFolder->GetOnlineName(getter_Copies(onlineName));
     if (NS_FAILED(rv)) return rv;
-    char * hostname = nsnull;
-    rv = aImapFolder->GetHostname(&hostname);
-    if (NS_FAILED(rv)) return rv;
-    nsXPIDLCString name;
-    rv = nsImapURI2FullName(kImapRootURI, hostname, uri, getter_Copies(name));
-    PR_FREEIF(uri);
-    PR_FREEIF(hostname);
-    if (NS_SUCCEEDED(rv))
-		*folderName = nsEscape((const char *) name, url_Path);
+	*folderName = nsEscape((const char *) onlineName, url_Path);
     return rv;
 }
 
@@ -578,7 +570,7 @@ nsImapService::CreateStartOfImapUrl(nsIImapUrl ** imapUrl,
     rv = aImapMailFolder->GetServer(getter_AddRefs(server));
     if (NS_SUCCEEDED(rv)) {
         server->GetPort(&port);
-        if (port == -1) port = IMAP_PORT;
+        if (port == -1 || port == 0) port = IMAP_PORT;
     }
     
 	// now we need to create an imap url to load into the connection. The url

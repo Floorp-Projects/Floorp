@@ -166,10 +166,8 @@ public:
                                          **message);
     NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow);
 
-#if 0
     NS_IMETHOD GetPath(nsIFileSpec** aPathName);
 	NS_IMETHOD SetPath(nsIFileSpec * aPath);
-#endif
 
     // nsIMsgImapMailFolder methods
 	NS_DECL_NSIMSGIMAPMAILFOLDER
@@ -327,7 +325,8 @@ protected:
 	PRBool	m_explicitlyVerify; // whether or not we need to explicitly verify this through LIST
 	PRUnichar m_hierarchyDelimiter;
 	PRInt32 m_boxFlags;
-
+	nsCString m_onlineFolderName;
+	nsFileSpec *m_pathName;
 };
 
 #endif

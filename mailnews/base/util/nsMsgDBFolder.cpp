@@ -252,18 +252,19 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 		result = accountMgr->GetFolderCache(getter_AddRefs(folderCache));
 		if (NS_SUCCEEDED(result) && folderCache)
 		{
-			char *uri;
+			nsCOMPtr <nsIFileSpec> path;
+			GetPath(getter_AddRefs(path));
+			nsXPIDLCString persistentPath;
 
-			result = GetURI(&uri);
-			if (NS_SUCCEEDED(result) && uri)
+			if (NS_SUCCEEDED(result) && path)
 			{
+				path->GetPersistentDescriptorString(getter_Copies(persistentPath));
 				nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
-				result = folderCache->GetCacheElement(uri, PR_FALSE, getter_AddRefs(cacheElement));
+				result = folderCache->GetCacheElement(persistentPath, PR_FALSE, getter_AddRefs(cacheElement));
 				if (NS_SUCCEEDED(result) && cacheElement)
 				{
 					result = ReadFromFolderCacheElem(cacheElement);
 				}
-				PR_Free(uri);
 			}
 
 		}
@@ -628,19 +629,22 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCache(nsIMsgFolderCache *folderCache)
 	if(NS_FAILED(rv)) 
 		return rv;
 
-	char *uri = nsnull;
-	rv = GetURI(&uri);
-
 	if (folderCache)
 	{
 		nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
-		rv = folderCache->GetCacheElement(uri, PR_TRUE, getter_AddRefs(cacheElement));
-		if (NS_SUCCEEDED(rv) && cacheElement)
-			rv = WriteToFolderCacheElem(cacheElement);
-	}
-	PR_FREEIF(uri);
+		nsCOMPtr <nsIFileSpec> path;
+		rv = GetPath(getter_AddRefs(path));
+		nsXPIDLCString persistentPath;
 
-	
+		if (NS_SUCCEEDED(rv) && path)
+		{
+			path->GetPersistentDescriptorString(getter_Copies(persistentPath));
+			rv = folderCache->GetCacheElement(persistentPath, PR_TRUE, getter_AddRefs(cacheElement));
+			if (NS_SUCCEEDED(rv) && cacheElement)
+				rv = WriteToFolderCacheElem(cacheElement);
+		}
+	}
+
 	nsCOMPtr<nsISupports> aItem;
 
 	rv = aEnumerator->First();

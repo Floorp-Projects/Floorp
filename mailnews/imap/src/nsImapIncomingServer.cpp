@@ -638,9 +638,14 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 		nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(child);
 		if (imapFolder)
 		{
+			nsXPIDLCString onlineName;
+
 			imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
 			imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
 			imapFolder->SetBoxFlags(boxFlags);
+			imapFolder->GetOnlineName(getter_Copies(onlineName));
+			if (! ((const char*) onlineName) || nsCRT::strlen((const char *) onlineName) == 0)
+				imapFolder->SetOnlineName(folderPath);
 		}
     }
 	return NS_OK;

@@ -1130,7 +1130,8 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 
   if (m_runningUrl)
     rv = m_runningUrl->GetCopyState(getter_AddRefs(copyState));
-    if (NS_SUCCEEDED(rv) && GetConnectionStatus() >= 0 && m_imapMiscellaneousSink && copyState)
+    if (NS_SUCCEEDED(rv) && GetConnectionStatus() >= 0 && GetServerStateParser().LastCommandSuccessful() 
+		&& m_imapMiscellaneousSink && copyState)
     {
         m_imapMiscellaneousSink->CopyNextStreamMessage(this, copyState);
         WaitForFEEventCompletion();

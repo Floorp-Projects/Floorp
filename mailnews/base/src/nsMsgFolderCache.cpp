@@ -374,22 +374,22 @@ NS_IMETHODIMP nsMsgFolderCache::Init(nsIFileSpec *dbFileSpec)
 	return rv;
 }
 
-typedef struct _findCacheElementByURIEntry {
-  const char *m_uri;
+typedef struct _findCacheElementByKeyEntry {
+  const char *m_key;
   nsIMsgFolderCacheElement *m_cacheElement;
-} findCacheElementByURIEntry;
+} findCacheElementByKeyEntry;
 
-NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(const char *uri, PRBool createIfMissing, 
+NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(const char *pathKey, PRBool createIfMissing, 
 							nsIMsgFolderCacheElement **result)
 {
-	if (!result || !uri)
+	if (!result || !pathKey)
 		return NS_ERROR_NULL_POINTER;
 
-	findCacheElementByURIEntry findEntry;
-	findEntry.m_uri = uri;
+	findCacheElementByKeyEntry findEntry;
+	findEntry.m_key = pathKey;
 	findEntry.m_cacheElement = nsnull;
 
-	m_cacheElements->EnumerateForwards(FindCacheElementByURI, (void *)&findEntry);
+	m_cacheElements->EnumerateForwards(FindCacheElementByKey, (void *)&findEntry);
 
 	if (findEntry.m_cacheElement)
 	{
@@ -408,9 +408,9 @@ NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(const char *uri, PRBool createIf
 			if (NS_SUCCEEDED(err) && hdrRow)
 			{
 				m_mdbAllFoldersTable->AddRow(GetEnv(), hdrRow);
-				nsresult ret = AddCacheElement(uri, hdrRow, result);
+				nsresult ret = AddCacheElement(pathKey, hdrRow, result);
 				if (*result)
-					(*result)->SetStringProperty("uri", uri);
+					(*result)->SetStringProperty("key", pathKey);
 				return ret;
 			}
 		}
@@ -447,21 +447,21 @@ NS_IMETHODIMP nsMsgFolderCache::Close()
 
 
 PRBool
-nsMsgFolderCache::FindCacheElementByURI(nsISupports *aElement, void *data)
+nsMsgFolderCache::FindCacheElementByKey(nsISupports *aElement, void *data)
 {
 	nsresult rv;
 	nsCOMPtr<nsIMsgFolderCacheElement> cacheElement = do_QueryInterface(aElement, &rv);
 	if (NS_FAILED(rv)) 
 		return PR_TRUE;
 
-	findCacheElementByURIEntry *entry = (findCacheElementByURIEntry *) data;
+	findCacheElementByKeyEntry *entry = (findCacheElementByKeyEntry *) data;
 
 	nsXPIDLCString key;
-	rv = cacheElement->GetURI(getter_Copies(key));
+	rv = cacheElement->GetKey(getter_Copies(key));
 	if (NS_FAILED(rv)) 
 		return rv;
   
-	if (entry && entry->m_uri && !PL_strcmp(key, entry->m_uri ))
+	if (entry && entry->m_key && !PL_strcmp(key, entry->m_key ))
 	{
 		entry->m_cacheElement = cacheElement;
 		// caller will addref!
@@ -472,7 +472,7 @@ nsMsgFolderCache::FindCacheElementByURI(nsISupports *aElement, void *data)
 	return PR_TRUE;
 }
 
-nsresult nsMsgFolderCache::AddCacheElement(const char *uri, nsIMdbRow *row, nsIMsgFolderCacheElement **result)
+nsresult nsMsgFolderCache::AddCacheElement(const char *key, nsIMdbRow *row, nsIMsgFolderCacheElement **result)
 {
 	nsMsgFolderCacheElement *cacheElement = new nsMsgFolderCacheElement;
 
@@ -480,16 +480,16 @@ nsresult nsMsgFolderCache::AddCacheElement(const char *uri, nsIMdbRow *row, nsIM
 	{
 		cacheElement->SetMDBRow(row);
 		cacheElement->SetOwningCache(this);
-		// if caller didn't pass in URI, try to get it from row.
-		if (!uri)
+		// if caller didn't pass in key, try to get it from row.
+		if (!key)
 		{
-			char *existingURI = nsnull;
-			cacheElement->GetStringProperty("uri", &existingURI);	
-			cacheElement->SetURI(existingURI);
-			PR_Free(existingURI);
+			char *existingKey = nsnull;
+			cacheElement->GetStringProperty("key", &existingKey);	
+			cacheElement->SetKey(existingKey);
+			PR_Free(existingKey);
 		}
 		else
-			cacheElement->SetURI((char *) uri);
+			cacheElement->SetKey((char *) key);
 		nsCOMPtr<nsISupports> supports(do_QueryInterface(cacheElement));
 		if(supports)
 			m_cacheElements->AppendElement(supports);

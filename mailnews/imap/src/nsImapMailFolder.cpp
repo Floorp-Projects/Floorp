@@ -98,7 +98,7 @@ nsImapMailFolder::nsImapMailFolder() :
 	m_moveCoalescer = nsnull;
 	m_boxFlags = 0;
 	m_hierarchyDelimiter = kOnlineHierarchySeparatorUnknown;
-
+	m_pathName = nsnull;
 }
 
 nsImapMailFolder::~nsImapMailFolder()
@@ -583,7 +583,13 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
 
 			nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(child);
 			if (imapFolder)
+			{
+				nsCAutoString onlineName = m_onlineFolderName; 
+				onlineName += m_hierarchyDelimiter;
+				onlineName += folderNameStr;
 				imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
+				imapFolder->SetOnlineName(onlineName.GetBuffer());
+			}
 
             unusedDB->SetSummaryValid(PR_TRUE);
 			unusedDB->Commit(nsMsgDBCommitType::kLargeCommit);
@@ -979,10 +985,14 @@ NS_IMETHODIMP nsImapMailFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement
 {
 	nsresult rv = nsMsgDBFolder::ReadFromFolderCacheElem(element);
 	PRInt32 hierarchyDelimiter = kOnlineHierarchySeparatorUnknown;
+	nsXPIDLCString onlineName;
 
 	element->GetInt32Property("boxFlags", &m_boxFlags);
 	if (NS_SUCCEEDED(element->GetInt32Property("hierDelim", &hierarchyDelimiter)))
 		m_hierarchyDelimiter = (PRUnichar) hierarchyDelimiter;
+	rv = element->GetStringProperty("onlineName", getter_Copies(onlineName));
+	if (NS_SUCCEEDED(rv) && (const char *) onlineName && nsCRT::strlen((const char *) onlineName))
+		m_onlineFolderName = onlineName;
 	return rv;
 }
 
@@ -991,6 +1001,7 @@ NS_IMETHODIMP nsImapMailFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement 
 	nsresult rv = nsMsgDBFolder::WriteToFolderCacheElem(element);
 	element->SetInt32Property("boxFlags", m_boxFlags);
 	element->SetInt32Property("hierDelim", (PRInt32) m_hierarchyDelimiter);
+	element->SetStringProperty("onlineName", m_onlineFolderName.GetBuffer());
 	return rv;
 }
 
@@ -1024,6 +1035,38 @@ NS_IMETHODIMP nsImapMailFolder::Adopt(nsIMsgFolder *srcFolder,
     return rv;
 }
 
+NS_IMETHODIMP nsImapMailFolder::SetOnlineName(const char * aOnlineFolderName)
+{
+	nsresult rv;
+
+	nsCOMPtr<nsIMsgDatabase> db; 
+	nsCOMPtr<nsIDBFolderInfo> folderInfo;
+	m_onlineFolderName = aOnlineFolderName;
+	rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
+	if(NS_SUCCEEDED(rv))
+	{
+		nsAutoString onlineName(aOnlineFolderName);
+		rv = folderInfo->SetProperty("onlineName", &onlineName);
+		// so, when are we going to commit this? Definitely not every time!
+		// We could check if the online name has changed.
+		db->Commit(nsMsgDBCommitType::kLargeCommit);
+	}
+	folderInfo = null_nsCOMPtr();
+	return rv;
+}
+
+
+NS_IMETHODIMP nsImapMailFolder::GetOnlineName(char ** aOnlineFolderName)
+{
+	if (!aOnlineFolderName)
+		return NS_ERROR_NULL_POINTER;
+	*aOnlineFolderName = m_onlineFolderName.ToNewCString();
+	return (*aOnlineFolderName) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+
+	// ### do we want to read from folder cache first, or has that been done?
+}
+
+
 nsresult nsImapMailFolder::GetDBFolderInfoAndDB(
     nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
 {
@@ -1048,7 +1091,34 @@ nsresult nsImapMailFolder::GetDBFolderInfoAndDB(
     *db = mailDB;
 	NS_IF_ADDREF(*db);
     if (NS_SUCCEEDED(openErr)&& *db)
+	{
         openErr = (*db)->GetDBFolderInfo(folderInfo);
+		if (NS_SUCCEEDED(openErr) && folderInfo)
+		{
+			nsXPIDLCString onlineName;
+			if (NS_SUCCEEDED((*folderInfo)->GetCharPtrProperty("onlineName", getter_Copies(onlineName))))
+			{
+				if ((const char*) onlineName && nsCRT::strlen((const char *) onlineName) > 0)
+					m_onlineFolderName = onlineName;
+				else
+				{
+					char *uri = nsnull;
+					rv = GetURI(&uri);
+					if (NS_FAILED(rv)) return rv;
+					char * hostname = nsnull;
+					rv = GetHostname(&hostname);
+					if (NS_FAILED(rv)) return rv;
+					nsXPIDLCString name;
+					rv = nsImapURI2FullName(kImapRootURI, hostname, uri, getter_Copies(name));
+					m_onlineFolderName = name;
+					nsAutoString onlineName(name);
+					rv = (*folderInfo)->SetProperty("onlineName", &onlineName);
+					PR_FREEIF(uri);
+					PR_FREEIF(hostname);
+				}
+			}
+		}
+	}
     return openErr;
 }
 
@@ -3029,6 +3099,40 @@ nsImapMailFolder::LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
     return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsImapMailFolder::GetPath(nsIFileSpec ** aPathName)
+{
+  nsresult rv;
+  if (! m_pathName) 
+  {
+    m_pathName = new nsNativeFileSpec("");
+    if (! m_pathName)
+       return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = nsImapURI2Path(kImapRootURI, mURI, *m_pathName);
+//         printf("constructing path %s\n", (const char *) *m_pathName);
+    if (NS_FAILED(rv)) return rv;
+  }
+  rv = NS_NewFileSpecWithSpec(*m_pathName, aPathName);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsImapMailFolder::SetPath(nsIFileSpec * aPathName)                
+{                                                                               
+ if (!aPathName)
+     return NS_ERROR_NULL_POINTER;
+
+  if (!m_pathName)
+  {
+	m_pathName = new nsFileSpec("");
+    if (! m_pathName)
+         return NS_ERROR_OUT_OF_MEMORY;
+
+  }
+  return aPathName->GetFileSpec(m_pathName);                                  
+}                                                                               
+                                                                                 
+                                                               
 NS_IMETHODIMP
 nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
                                  PRUint32 aMsgId, const char *extraInfo)
@@ -3218,7 +3322,7 @@ nsImapMailFolder::CreateDirectoryForFolder(nsFileSpec &path) //** dup
 
 	return rv;
 }
-
+// used when copying from local mail folder (or other imap server?)
 nsresult
 nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
                                 nsISupportsArray* messages,

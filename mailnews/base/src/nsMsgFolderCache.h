@@ -45,10 +45,10 @@ public:
     NS_DECL_NSIMSGFOLDERCACHE
 
 protected:
-	static PRBool FindCacheElementByURI(nsISupports *aElement, void *data);
+	static PRBool FindCacheElementByKey(nsISupports *aElement, void *data);
 	static nsIMdbFactory *GetMDBFactory();
 
-	nsresult AddCacheElement(const char *uri, nsIMdbRow *row, nsIMsgFolderCacheElement **result);
+	nsresult AddCacheElement(const char *key, nsIMdbRow *row, nsIMsgFolderCacheElement **result);
 
 	nsresult RowCellColumnToCharPtr(nsIMdbRow *hdrRow, mdb_token columnToken, char **resultPtr);
 	nsresult InitMDBInfo();

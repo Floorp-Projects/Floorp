@@ -26,7 +26,7 @@
 [scriptable, uuid(c3096590-3983-11d3-8d76-00805f8a6617)]
 interface nsIMsgFolderCacheElement : nsISupports 
 {
-	attribute string URI;
+	attribute string Key;
 	string GetStringProperty(in string propertyName);
 	long GetInt32Property(in string propertyName);
 	void SetStringProperty(in string propertyName, in string propertyValue);

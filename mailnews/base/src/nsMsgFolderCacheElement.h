@@ -45,7 +45,7 @@ protected:
 	nsMsgFolderCache *m_owningCache;	// this will be ref-counted. Is this going to be a problem?
 										// I want to avoid circular references, but since this is
 										// scriptable, I think I have to ref-count it.
-	char *m_folderURI;
+	char *m_folderKey;
 
 };
 
