@@ -24,9 +24,17 @@
 #include "nsRenderingContextWin.h"
 #include "nsDeviceContextSpecWin.h"
 #include "il_util.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
 
 // Size of the color cube
 #define COLOR_CUBE_SIZE       216
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
+PRBool nsDeviceContextWin::gRound = PR_TRUE;
+
+static char* nav4rounding = "font.size.nav4rounding";
 
 nsDeviceContextWin :: nsDeviceContextWin()
   : DeviceContextImpl()
@@ -44,6 +52,17 @@ nsDeviceContextWin :: nsDeviceContextWin()
   mHeight = -1;
   mClientRectConverted = PR_FALSE;
   mSpec = nsnull;
+
+  nsresult res = NS_ERROR_FAILURE;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
+  if (NS_SUCCEEDED(res)) {
+    static PRBool roundingInitialized = PR_FALSE;
+    if (!roundingInitialized) {
+      roundingInitialized = PR_TRUE;
+      PrefChanged(nav4rounding, this);
+    }
+    prefs->RegisterCallback(nav4rounding, PrefChanged, this);
+  }
 }
 
 nsDeviceContextWin :: ~nsDeviceContextWin()
@@ -674,4 +693,18 @@ NS_IMETHODIMP nsDeviceContextWin :: EndPage(void)
   }
 
   return NS_OK;
+}
+
+int
+nsDeviceContextWin :: PrefChanged(const char* aPref, void* aClosure)
+{
+  nsresult res = NS_ERROR_FAILURE;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
+  if (NS_SUCCEEDED(res)) {
+    prefs->GetBoolPref(nav4rounding, &gRound);
+    nsDeviceContextWin* deviceContext = (nsDeviceContextWin*) aClosure;
+    deviceContext->FlushFontCache();
+  }
+
+  return 0;
 }
