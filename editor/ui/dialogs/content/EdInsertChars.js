@@ -21,12 +21,6 @@
  *   Baki Bon <bakibon@yahoo.com>   (original author)
  */
 
-var currentTab = 0;
-// These must be the index of the <tab> elements in proper order
-var LatinTab = 0;
-var HangulTab = 1;
-// Add more character classes here
-
 //------------------------------------------------------------------
 // From Unicode 3.0 Page 54. 3.11 Conjoining Jamo Behavior
 var SBase = 0xac00;
@@ -44,127 +38,222 @@ function Startup()
 {
   if (!InitEditorShell())
     return;
-  
-  // Let's try this out without the Korean portion
+
   StartupLatin();
-  StartupHangul();
+
+  doSetOKCancel(onOK, null);
+
+  var okButton = document.getElementById("ok");
+  if (okButton)
+    okButton.setAttribute("value",GetString("Insert"));
+
   window.sizeToContent();
 }
  
-function SelectTab(tabNumber)
+function onOK()
 {
-  currentTab = tabNumber;
-}
-
-function InsertCharacter()
-{
-  // This is non-modal, so check if opener still exists
-  // and simply close if parent is gone
-  // THIS DOESN'T WORK! Editor window is not destroyed yet,
-  //  so we still call into EditorShell -> nsEditor.cpp 
-  //  and crash trying to access mViewManager!
-
-  if (window.opener)
-  {
-    switch (currentTab)
-    {
-      case LatinTab:
-        editorShell.InsertSource(LatinChar);
-        break;
-      case HangulTab:
-        editorShell.InsertSource(HangulChar);
-        break;
-    }
-  }
-  else
-    window.close();
+  editorShell.InsertSource(LatinChar);
+  return true;
 }
 
 //------------------------------------------------------------------
-var HangulL;
-var HangulV;
-var HangulT;
-var HangulChar= String.fromCharCode(SBase);
-
-function StartupHangul()
-{
-
-  HangulL = document.getElementById("HangulL");
-  HangulV = document.getElementById("HangulV");
-  HangulT = document.getElementById("HangulT");
-
-  for(var i =0 ; i < LCount; i++)
-       AppendStringToMenulist(HangulL , String.fromCharCode(i+LBase));
-
-  for(var i =0 ; i < VCount; i++)
-       AppendStringToMenulist(HangulV , String.fromCharCode(i+VBase) );
-
-  AppendStringToMenulist(HangulT , " " );
-  for(var i =1 ; i < TCount; i++)
-       AppendStringToMenulist(HangulT , String.fromCharCode(i+TBase) );
-
-  HangulL.focus();
-}
-
-function SelectHangul()
-{
-  
-  HangulChar =  String.fromCharCode(
-       (HangulL.selectedIndex * VCount + 
-        HangulV.selectedIndex) * TCount + 
-        HangulT.selectedIndex + 
-        SBase ); 
-  HangulCharacter.value = HangulChar;
-}
-
-//------------------------------------------------------------------
-var LatinC;
 var LatinL;
 var LatinM;
 var LatinChar;
-var oldC=0;
 var oldL=0;
 var oldM=0;
 var LItems=0;
-// Index in the "Category list
-var SymbolIndex = 4;
-
+var category;
+var CategoryGroup;
+var initialize = true;
 
 function StartupLatin()
 {
-  LatinC = document.getElementById("LatinC");
+
   LatinL = document.getElementById("LatinL");
   LatinM = document.getElementById("LatinM");
   LatinL_Label = document.getElementById("LatinL_Label");
   LatinM_Label = document.getElementById("LatinM_Label");
-  
-  UpdateLatinL();
-  UpdateLatinM();
-  UpdateLatinC();
+
+  var Symbol      = document.getElementById("Symbol");
+  var AccentUpper = document.getElementById("AccentUpper");
+  var AccentLower = document.getElementById("AccentUpper");
+  var Upper       = document.getElementById("Upper");
+  var Lower       = document.getElementById("Lower");
+  CategoryGroup   = document.getElementById("CatGrp");
+
+  // Initialize which radio button is set from persistent attribute
+  var category = CategoryGroup.getAttribute("category");
+
+  switch (category)
+  {
+    case "AccentUpper": // Uppercase Diacritical
+      AccentUpper.checked = true;
+      break;
+    case "AccentLower": // Lowercase Diacritical
+      AccentLower.checked = true;
+      break;
+    case "Upper": // Uppercase w/o Diacritical
+      Upper.checked = true;
+      break;
+    case "Lower": // Lowercase w/o Diacritical
+      Lower.checked = true;
+      break;
+    default:
+      category = "Symbol";
+      Symbol.checked = true;
+      break;
+  }
+
+  ChangeCategory(category);
+  initialize = false;
 }
-function SelectLatinCategory()
+
+function ChangeCategory(newCategory)
 {
-  if(LatinC.selectedIndex != oldC ) {
+  if (category != newCategory || initialize)
+  {
+    category = newCategory;
+    // Note: Must do L before M to set LatinL.selectedIndex
     UpdateLatinL();
     UpdateLatinM();
-    UpdateLatinC();
-    oldC = LatinC.selectedIndex;
+    UpdateCharacter();
+    
+    // Set persistent attribute  
+    CategoryGroup.setAttribute("category", category);
   }
 }
+
 function SelectLatinLetter()
 {
-  if(LatinL.selectedIndex != oldL ) {
+  if(LatinL.selectedIndex != oldL )
+  {
     UpdateLatinM();
-    UpdateLatinC();
+    UpdateCharacter();
     oldL = LatinL.selectedIndex;
   }
 }
+
 function SelectLatinModifier()
 {
-  if(LatinM.selectedIndex != oldM ) {
-    UpdateLatinC();
+//  if(LatinM.selectedIndex != oldM )
+  {
+    UpdateCharacter();
     oldM = LatinM.selectedIndex;
   }
+}
+function DisableLatinL(disable)
+{
+  LatinL.disabled=disable;
+  LatinL_Label.setAttribute("disabled", disable ? "true" : "false");
+}
+
+function UpdateLatinL()
+{
+  ClearMenulist(LatinL);
+  switch(category) 
+  {
+    case "AccentUpper": // Uppercase Diacritical
+     DisableLatinL(false);
+     for(var basic=0; basic < 26; basic++)
+       AppendStringToMenulist(LatinL , String.fromCharCode(0x41 + basic));
+     if(oldL < 26)
+        LatinL.selectedIndex = oldL; 
+     else 
+        LatinL.selectedIndex = upper.length;
+     break;
+    case "AccentLower": // Lowercase Diacritical
+     DisableLatinL(false);
+     for(var basic=0; basic < 26; basic++)
+       AppendStringToMenulist(LatinL , String.fromCharCode(0x61 + basic));
+     if(oldL < 26)
+        LatinL.selectedIndex = oldL; 
+     else 
+        LatinL.selectedIndex = lower.length;
+     break;
+    default:
+     DisableLatinL(true);
+     break;
+  }
+}
+
+function UpdateLatinM()
+{
+  ClearMenulist(LatinM);
+  switch(category)
+  {
+    case "AccentUpper": // Uppercase Diacritical
+     for(var basic=0; basic < upper[LatinL.selectedIndex].length; basic++)
+       AppendStringToMenulist(LatinM , 
+             String.fromCharCode(upper[LatinL.selectedIndex][basic]));
+     if(oldM < upper[LatinL.selectedIndex].length)
+        LatinM.selectedIndex = oldM; 
+     else 
+        LatinM.selectedIndex = upper[LatinL.selectedIndex].length;
+     break;
+
+    case "AccentLower": // Lowercase Diacritical
+     for(var basic=0; basic < lower[LatinL.selectedIndex].length; basic++)
+       AppendStringToMenulist(LatinM , 
+             String.fromCharCode(lower[LatinL.selectedIndex][basic]));
+     if(oldM < lower[LatinL.selectedIndex].length)
+        LatinM.selectedIndex = oldM; 
+     else 
+        LatinM.selectedIndex = lower[LatinL.selectedIndex].length;
+     break;
+
+    case "Upper": // Uppercase w/o Diacritical
+     for(var i=0; i < otherupper.length; i++)
+       AppendStringToMenulist(LatinM, String.fromCharCode(otherupper[i]));
+     if(oldM < otherupper.length)
+        LatinM.selectedIndex = oldL; 
+     else 
+        LatinM.selectedIndex = otherupper.length;
+     break;
+
+    case "Lower": // Lowercase w/o Diacritical
+     for(var i=0; i < otherlower.length; i++)
+       AppendStringToMenulist(LatinM , String.fromCharCode(otherlower[i]));
+     if(oldL < otherlower.length)
+        LatinM.selectedIndex = oldM; 
+     else 
+        LatinM.selectedIndex = otherlower.length;
+     break;
+
+    case "Symbol": // Symbol
+     for(var i=0; i < symbol.length; i++)
+       AppendStringToMenulist(LatinM , String.fromCharCode(symbol[i]));
+     if(oldM < symbol.length)
+        LatinM.selectedIndex = oldM; 
+     else 
+        LatinM.selectedIndex = symbol.length;
+     break;
+  }
+}
+
+function UpdateCharacter()
+{
+  var index = LatinM.selectedIndex; 
+dump("Character is at: ("+LatinL.selectedIndex+","+index+")\n");
+  switch(category)
+  {
+    case "AccentUpper": // Uppercase Diacritical
+      String.fromCharCode(upper[LatinL.selectedIndex][index]);
+      break;
+    case "AccentLower": // Lowercase Diacritical
+      LatinChar = String.fromCharCode(lower[LatinL.selectedIndex][index]);
+      break;
+    case "Upper": // Uppercase w/o Diacritical
+      LatinChar = String.fromCharCode(otherupper[index]);
+      break;
+    case "Lower": // Lowercase w/o Diacritical
+      LatinChar = String.fromCharCode(otherlower[index]);
+      break;
+    case "Symbol":
+      LatinChar =  String.fromCharCode(symbol[index]);
+      break;
+  }
+dump("Character = "+LatinChar+"\n");
 }
 
 var upper=[ 
@@ -413,106 +502,3 @@ otherlower = [
 0x01cc,
 0x01f3
 ];
-function UpdateLatinL()
-{
-  ClearMenulist(LatinL);
-  switch(LatinC.selectedIndex) {
-    case 0: // Uppercase Diacritical
-     for(var basic=0; basic < 26; basic++)
-       AppendStringToMenulist(LatinL , String.fromCharCode(0x41 + basic));
-     if(oldL < 26)
-        LatinL.selectedIndex = oldL; 
-     else 
-        LatinL.selectedIndex = upper.length;
-     break;
-    case 1: // Lowercase Diacritical
-     for(var basic=0; basic < 26; basic++)
-       AppendStringToMenulist(LatinL , String.fromCharCode(0x61 + basic));
-     if(oldL < 26)
-        LatinL.selectedIndex = oldL; 
-     else 
-        LatinL.selectedIndex = lower.length;
-     break;
-    case 2: // Uppercase w/o Diacritical
-     for(var i=0; i < otherupper.length; i++)
-       AppendStringToMenulist(LatinL , String.fromCharCode(otherupper[i]));
-     if(oldL < otherupper.length)
-        LatinL.selectedIndex = oldL; 
-     else 
-        LatinL.selectedIndex = otherupper.length;
-     break;
-    case 3: // Lowercase w/o Diacritical
-     for(var i=0; i < otherlower.length; i++)
-       AppendStringToMenulist(LatinL , String.fromCharCode(otherlower[i]));
-     if(oldL < otherlower.length)
-        LatinL.selectedIndex = oldL; 
-     else 
-        LatinL.selectedIndex = otherlower.length;
-     break;
-    case 4: // Symbol
-     for(var i=0; i < symbol.length; i++)
-       AppendStringToMenulist(LatinL , String.fromCharCode(symbol[i]));
-     if(oldL < symbol.length)
-        LatinL.selectedIndex = oldL; 
-     else 
-        LatinL.selectedIndex = symbol.length;
-     break;
-    default :
-
-     break;
-  }
-}
-function UpdateLatinM()
-{
-  ClearMenulist(LatinM);
-  switch(LatinC.selectedIndex) {
-    case 0: // Uppercase Diacritical
-     LatinM.disabled=false;
-     LatinM_Label.setAttribute("disabled","false");
-     for(var basic=0; basic < upper[LatinL.selectedIndex].length; basic++)
-       AppendStringToMenulist(LatinM , 
-             String.fromCharCode(upper[LatinL.selectedIndex][basic]));
-     if(oldM < upper[LatinL.selectedIndex].length)
-        LatinM.selectedIndex = oldM; 
-     else 
-        LatinM.selectedIndex = upper[LatinL.selectedIndex].length;
-     break;
-    case 1: // Lowercase Diacritical
-     LatinM.disabled=false;
-     LatinM_Label.setAttribute("disabled","false");
-     for(var basic=0; basic < lower[LatinL.selectedIndex].length; basic++)
-       AppendStringToMenulist(LatinM , 
-             String.fromCharCode(lower[LatinL.selectedIndex][basic]));
-     if(oldM < lower[LatinL.selectedIndex].length)
-        LatinM.selectedIndex = oldM; 
-     else 
-        LatinM.selectedIndex = lower[LatinL.selectedIndex].length;
-     break;
-    default:
-     LatinM.disabled=true;
-     LatinM_Label.setAttribute("disabled","true");
-     break;
-  }
-}
-function UpdateLatinC()
-{
-  switch(LatinC.selectedIndex) {
-    case 0: // Uppercase Diacritical
-       LatinChar = String.fromCharCode(upper[LatinL.selectedIndex][LatinM.selectedIndex]);
-     break;
-    case 1: // Lowercase Diacritical
-       LatinChar = String.fromCharCode(lower[LatinL.selectedIndex][LatinM.selectedIndex]);
-     break;
-    case 2: 
-       LatinChar = String.fromCharCode(otherupper[LatinL.selectedIndex]);
-     break;
-    case 3: 
-       LatinChar = String.fromCharCode(otherlower[LatinL.selectedIndex]);
-     break;
-    case 4: 
-       LatinChar = String.fromCharCode(symbol[LatinL.selectedIndex]);
-     break;
-    default:
-     break;
-  }
-}

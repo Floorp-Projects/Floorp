@@ -69,7 +69,7 @@ function Startup()
     helpTextParent.appendChild(helpText);
   
   // SET FOCUS TO FIRST CONTROL
-  dialog.TitleInput.focus();
+  SetTextfieldFocus(dialog.TitleInput);
   LoadAvailableCharSets();
   initDone = true;
 }

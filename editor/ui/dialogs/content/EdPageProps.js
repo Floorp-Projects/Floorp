@@ -20,13 +20,11 @@
  * Contributor(s): 
  */
 
-var MoreSection;
 var title = "";
 var author = "";
 var description = "";
 var authorElement;
 var descriptionElement;
-var headNode;
 var insertNewAuthor = false;
 var insertNewDescription = false;
 var titleWasEdited = false;
@@ -50,9 +48,6 @@ function Startup()
   dialog.TitleInput       = document.getElementById("TitleInput");
   dialog.AuthorInput      = document.getElementById("AuthorInput");
   dialog.DescriptionInput = document.getElementById("DescriptionInput");
-  dialog.MoreSection      = document.getElementById("MoreSection");
-  dialog.MoreFewerButton  = document.getElementById("MoreFewerButton");
-  dialog.HeadSrcInput     = document.getElementById("HeadSrcInput");
   doSetOKCancel(onOK, null);
   
   // Default string for new page is set from DTD string in XUL,
@@ -92,14 +87,9 @@ function Startup()
     insertNewDescription = true;
   }
   
-  headNode = editorShell.editorDocument.getElementsByTagName("head").item(0);
-  if (!headNode)
-    window.close();
-
-  InitMoreFewer();
   InitDialog();
 
-  dialog.TitleInput.focus();
+  SetTextfieldFocus(dialog.TitleInput);
 }
 
 function InitDialog()
@@ -107,8 +97,6 @@ function InitDialog()
   dialog.TitleInput.value = editorShell.GetDocumentTitle();
   dialog.AuthorInput.value = authorElement.getAttribute("content");
   dialog.DescriptionInput.value = descriptionElement.getAttribute("content");
-  // Get the entire contents of the "head" region.
-  dialog.HeadSrcInput.value = editorShell.GetHeadContentsAsHTML();
 }
 
 function TextfieldChanged(ID)
@@ -139,25 +127,6 @@ function onOK()
 {
   if (ValidateData())
   {
-    // Save only if advanced "head editing" region is open?
-    if (SeeMore)
-    {
-      // Delete existing children of HEAD      
-      // Note that we DO NOT use editorShell method 
-      //  because this is not an undoable task
-      while(headNode.firstChild)
-        headNode.removeChild(headNode.firstChild);
-
-      // This method does not use the transaction system:
-      if (dialog.HeadSrcInput.value.length > 0)
-        editorShell.ReplaceHeadContentsWithHTML(dialog.HeadSrcInput.value);        
-    }
-
-    //Problem: How do we reconcile changes in same elements in 
-    //         advanced region and here? 
-    // 1. Save manually-edited results first
-    // 2. Save each of the 3 textfield results only if user actually changed a value
-
     if (titleWasEdited)
     {
       // Set title contents even if string is empty

@@ -46,13 +46,17 @@
   id        = "AdvancedEditButton"
   class     = "dialog"
   oncommand = "onAdvancedEdit()"
-  value     = "&AdvancedEditButton.label;"/>
+  value     = "&AdvancedEditButton.label;"
+  tooltip   = "aTooltip" 
+  tooltiptext="&AdvancedEditButton.tooltip;"/>
 
 <button 
   id        = "AdvancedEditButton2" 
   class     = "dialog" 
   oncommand = "onAdvancedEdit()" 
-  value     = "&AdvancedEditButton.label;"/>
+  value     = "&AdvancedEditButton.label;"
+  tooltip   = "aTooltip"
+  tooltiptext="&AdvancedEditButton.tooltip;"/>
 
 <button 
   id        = "ChooseFile" 

@@ -35,6 +35,7 @@
 	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	 xmlns:html="http://www.w3.org/1999/xhtml"
    onload = "Startup()"
+   persist="screenX screenY"
    orient="vertical" >
 
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -45,28 +46,20 @@
   <keyset id="keyset"/>
 
   <box orient="vertical" style="min-width: 20em">
-    <titledbox orient="vertical"><title><text id="linkTextCaption" align="left" value="&LinkTitle.label;"/></title>
+    <titledbox orient="vertical"><title><text id="linkTextCaption" align="left"/></title>
       <text class="label" id="linkTextMessage"/> 
-	    <textfield id="linkTextInput" flex="1"/>
+	    <textfield id="linkTextInput" flex="1"  onkeyup="ChangeText()"/>
     </titledbox>
 
     <titledbox orient="vertical"><title><text class="label" value="&LinkURLBox.label;"/></title>
       <text class="label" value="&LinkURLEditField.label;"/>
-      <grid>
-        <columns><column/><column/></columns>
-        <rows>
-          <row autostretch="never" valign="middle">
-            <textfield id="hrefInput" flex="1"/>
-            <button class="dialog" id="ChooseFile" flex="1"/>
-          </row>
-          <row>
-            <box autostretch="never">
-              <button class="dialog" id="MoreFewerButton" align="left" oncommand="onMoreFewer()" persist="more"/>
-            </box>
-            <button class="dialog" id="RemoveLink" oncommand="RemoveLink()" value="&RemoveLinkButton.label;" flex="1"/>
-          </row>
-        </rows>
-      </grid>
+      <box autostretch="never" valign="middle">
+        <textfield id="hrefInput" flex="1" style="min-width: 18em" onkeyup="ChangeLocation()"/>
+        <button class="dialog" id="ChooseFile" flex="1"/>
+      </box>
+      <box autostretch="never">
+        <button class="dialog" id="MoreFewerButton" align="left" oncommand="onMoreFewer()" persist="more"/>
+      </box>
       <box id="MoreSection" orient="vertical">
         <spring class="bigspacer"/>
         <text class="label" align="left" value="&NamedAnchorMsg.label;"/>

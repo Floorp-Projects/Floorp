@@ -139,41 +139,28 @@
           </box>
           <spring class="bigspacer"/>
         </box> <!-- Border and alignment -->
-
-        <titledbox orient="vertical"><title><text align="left" value="&background.label;"/></title>
-        <grid>
-          <columns><column/><column/></columns>
-          <rows>
-            <row valign="middle" autostretch="never">
-              <checkbox id="TableColorCheckbox" value="&color.label;"/>
-              <box valign="middle">
-                <menu class="colorpicker">
-    	            <box>
-                    <spring id="tableBackgroundCW" class="color-well"/>
-                    <image class="popup-trigger"/>
-                  </box>
-    	            <menupopup>
-                    <colorpicker id="tableBackgroundCP" palettename="standard" 
-                      onclick="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW','TableColorCheckbox', this.parentNode);"/>
-                    <button class="dialog" value="&defaultColor.label;" 
-                      oncommand="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW','TableColorCheckbox', this.parentNode)"/>
-    	            </menupopup>
-                </menu>
-                <spring class="spacer"/>
-                <text class="label" id="TableInheritColor" value="&tableInheritColor.label;" collapsed="true"/>
-              </box>
-            </row>
-            <row valign="middle">
-              <checkbox id="TableImageCheckbox" value="&image.label;"/>
-              <textfield id="TableImageInput" flex="1"/>
-              <button class="dialog" value="&ChooseImage.label;" id="TableImageButton" oncommand="ChooseTableImage()"/>
-            </row>
-          </rows>
-        </grid>
-        </titledbox><!-- Table Background -->
+        <spring class="spacer"/>
+        <box>
+          <text class="label" value="&backgroundColor.label;"/>
+          <spring class="spacer"/>
+          <menu class="colorpicker">
+    	      <box>
+              <spring id="tableBackgroundCW" class="color-well"/>
+              <image class="popup-trigger"/>
+            </box>
+    	      <menupopup>
+              <colorpicker id="tableBackgroundCP" palettename="standard" 
+                onclick="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW','TableColorCheckbox', this.parentNode);"/>
+              <button class="dialog" value="&defaultColor.label;" 
+                oncommand="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW','TableColorCheckbox', this.parentNode)"/>
+    	      </menupopup>
+          </menu>
+          <spring class="spacer"/>
+          <text class="label" id="TableInheritColor" value="&tableInheritColor.label;" collapsed="true"/>
+        </box>
         <spring class="spacer"/>
         <box flex="1" autostretch="never">
-          <html  class="wrap" flex="1" style="width: 1em">&tableUseCheckboxHelp.label;</html>
+          <spring flex="1"/>
           <!-- From EdDialogOvlerlay.xul -->
           <button class="dialog" id="AdvancedEditButton"/>
         </box>
@@ -292,37 +279,25 @@
             </menulist>
           </box>
         </box><!-- Alignment and Style -->
-        <titledbox orient="vertical"><title><text align="left" value="&background.label;"/></title>
-        <grid>
-          <columns><column/><column/></columns>
-          <rows>
-            <row valign="middle" autostretch="never">
-              <checkbox id="CellColorCheckbox" value="&color.label;"/>
-              <box valign="middle">
-                <menu class="colorpicker">
-    	            <box>
-                    <spring id="cellBackgroundCW" class="color-well"/>
-                    <image class="popup-trigger"/>
-                  </box>
-    	            <menupopup>
-                    <colorpicker id="cellBackgroundCP" palettename="standard"
-                        onclick="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW', 'CellColorCheckbox', this.parentNode)"/>
-                    <button class="dialog" value="&defaultColor.label;"
-                        oncommand="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW', 'CellColorCheckbox', this.parentNode)"/>
-    	            </menupopup>
-                </menu>
-                <spring class="spacer"/>
-                <text class="label" id="CellInheritColor" value="&cellInheritColor.label;" collapsed="true"/>
-              </box>
-            </row>
-            <row valign="middle" autostretch="never">
-              <checkbox id="CellImageCheckbox" value="&image.label;" />
-              <textfield id="CellImageInput" flex="1"/>
-              <button class="dialog" value="&ChooseImage.label;" id="CellImageButton" oncommand="ChooseCellImage()"/>
-            </row>
-          </rows>
-        </grid>
-        </titledbox><!-- Table Background -->
+        <spring class="spacer"/>
+        <box>
+          <text class="label" value="&backgroundColor.label;"/>
+          <spring class="spacer"/>
+          <menu class="colorpicker">
+    	      <box>
+              <spring id="cellBackgroundCW" class="color-well"/>
+              <image class="popup-trigger"/>
+            </box>
+    	      <menupopup>
+              <colorpicker id="cellBackgroundCP" palettename="standard"
+                  onclick="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW', 'CellColorCheckbox', this.parentNode)"/>
+              <button class="dialog" value="&defaultColor.label;"
+                  oncommand="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW', 'CellColorCheckbox', this.parentNode)"/>
+    	      </menupopup>
+          </menu>
+          <spring class="spacer"/>
+          <text class="label" id="CellInheritColor" value="&cellInheritColor.label;" collapsed="true"/>
+        </box>
         <spring class="spacer"/>
         <box autostretch="never">
           <html  class="wrap" flex="1" style="width: 1em">&cellUseCheckboxHelp.label;</html>

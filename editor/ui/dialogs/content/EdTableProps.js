@@ -106,8 +106,6 @@ function Startup()
   dialog.TableAlignList = document.getElementById("TableAlignList");
   dialog.TableCaptionList = document.getElementById("TableCaptionList");
   dialog.TableInheritColor = document.getElementById("TableInheritColor");
-  dialog.TableImageInput = document.getElementById("TableImageInput");
-  dialog.TableImageButton = document.getElementById("TableImageButton");
 
   dialog.RowsCheckbox = document.getElementById("RowsCheckbox");
   dialog.ColumnsCheckbox = document.getElementById("ColumnsCheckbox");
@@ -119,7 +117,6 @@ function Startup()
   dialog.TableHAlignCheckbox = document.getElementById("TableHAlignCheckbox");
   dialog.TableCaptionCheckbox = document.getElementById("TableCaptionCheckbox");
   dialog.TableColorCheckbox = document.getElementById("TableColorCheckbox");
-  dialog.TableImageCheckbox = document.getElementById("TableImageCheckbox");
 
   // Cell Panel
   dialog.SelectionList = document.getElementById("SelectionList");
@@ -140,8 +137,6 @@ function Startup()
   dialog.CellStyleList = document.getElementById("CellStyleList");
   dialog.TextWrapList = document.getElementById("TextWrapList");
   dialog.CellInheritColor = document.getElementById("CellInheritColor");
-  dialog.CellImageInput = document.getElementById("CellImageInput");
-  dialog.CellImageButton = document.getElementById("CellImageButton");
 
   dialog.CellHeightCheckbox = document.getElementById("CellHeightCheckbox");
   dialog.CellWidthCheckbox = document.getElementById("CellWidthCheckbox");
@@ -152,7 +147,6 @@ function Startup()
   dialog.CellStyleCheckbox = document.getElementById("CellStyleCheckbox");
   dialog.TextWrapCheckbox = document.getElementById("TextWrapCheckbox");
   dialog.CellColorCheckbox = document.getElementById("CellColorCheckbox");
-  dialog.CellImageCheckbox = document.getElementById("CellImageCheckbox");
 
   TabPanel = document.getElementById("TabPanel");
   var TableTab = document.getElementById("TableTab");
@@ -249,7 +243,7 @@ function Startup()
   if (currentPanel == CellPanel)
     dialog.SelectionList.focus(); 
   else
-    dialog.TableRowsInput.focus();
+    SetTextfieldFocus(dialog.TableRowsInput);
 }
 
 
@@ -258,8 +252,8 @@ function InitDialog()
   // Get Table attributes
   dialog.TableRowsInput.value = rowCount;
   dialog.TableColumnsInput.value = colCount;
-  dialog.TableHeightInput.value = InitPixelOrPercentMenulist(globalTableElement, TableElement, "height", "TableHeightUnits");
-  dialog.TableWidthInput.value = InitPixelOrPercentMenulist(globalTableElement, TableElement, "width", "TableWidthUnits");
+  dialog.TableHeightInput.value = InitPixelOrPercentMenulist(globalTableElement, TableElement, "height", "TableHeightUnits", gPercent);
+  dialog.TableWidthInput.value = InitPixelOrPercentMenulist(globalTableElement, TableElement, "width", "TableWidthUnits", gPercent);
   dialog.BorderWidthInput.value = globalTableElement.border;
   dialog.SpacingInput.value = globalTableElement.cellSpacing;
   dialog.PaddingInput.value = globalTableElement.cellPadding;
@@ -287,9 +281,6 @@ dump("Caption Element = "+TableCaptionElement+"\n");
   }
   dialog.TableCaptionList.selectedIndex = index;
   
-  if (globalTableElement.background)
-    dialog.TableImageInput.value = globalTableElement.background;
-  
   SetColor("tableBackgroundCW", globalTableElement.bgColor); 
 
   InitCellPanel(SelectedCellsType);
@@ -303,8 +294,8 @@ function InitCellPanel()
     // This assumes order of items is Cell, Row, Column
     dialog.SelectionList.selectedIndex = SelectedCellsType-1;
 
-    dialog.CellHeightInput.value = InitPixelOrPercentMenulist(globalCellElement, CellElement, "height", "CellHeightUnits");
-    dialog.CellWidthInput.value = InitPixelOrPercentMenulist(globalCellElement, CellElement, "width", "CellWidthUnits");
+    dialog.CellHeightInput.value = InitPixelOrPercentMenulist(globalCellElement, CellElement, "height", "CellHeightUnits", gPercent);
+    dialog.CellWidthInput.value = InitPixelOrPercentMenulist(globalCellElement, CellElement, "width", "CellWidthUnits", gPixel);
 
     dialog.RowSpanInput.value = globalCellElement.getAttribute("rowspan");
     dialog.ColSpanInput.value = globalCellElement.getAttribute("colspan");
@@ -355,9 +346,6 @@ function InitCellPanel()
     dialog.TextWrapList.selectedIndex = globalCellElement.noWrap ? 1 : 0;
     
     SetColor("cellBackgroundCW", globalCellElement.bgColor); 
-    
-    if (globalCellElement.background)
-      dialog.CellImageInput.value = globalCellElement.background;
   }
 }
 
@@ -700,36 +688,6 @@ function SetSpanEnable()
   dialog.ColSpanCheckbox.setAttribute("disabled", (SelectedCellsType == SELECT_ROW) ? "true" : "false");
 }
 
-function ChooseTableImage()
-{
-  // Get a local file, converted into URL format
-  fileName = GetLocalFileURL("img");
-  if (fileName && fileName.length > 0)
-  {
-    dialog.TableImageInput.setAttribute("value",fileName);
-
-    SetCheckbox("TableImageCheckbox");
-  }
-  CellDataChanged = true;
-
-  // Put focus into the input field
-  dialog.TableImageInput.focus();
-}
-
-function ChooseCellImage()
-{
-  fileName = GetLocalFileURL("img");
-  if (fileName && fileName.length > 0)
-  {
-    dialog.CellImageInput.setAttribute("value",fileName);
-    SetCheckbox("CellImageCheckbox");
-  }
-  CellDataChanged = true;
-
-  // Put focus into the input field
-  dialog.CellImageInput.focus();
-}
-
 function SwitchPanel(newPanel)
 {
   if (currentPanel != newPanel)
@@ -776,7 +734,7 @@ function ValidateNumber(inputWidgetID, listWidget, minVal, maxVal, element, attN
       SwitchPanel(validatePanel);
 
       // Error - shift to offending input widget
-      inputWidget.focus();
+      SetTextfieldFocus(inputWidget);
       error = true;
     }
     else      
@@ -804,76 +762,35 @@ function SetAlign(listID, defaultValue, element, attName)
 function ValidateTableData()
 {
   validatePanel = TablePanel;
-  if (dialog.RowsCheckbox.checked)
-  {
-    newRowCount = Number(ValidateNumber("TableRowsInput", null, 1, maxRows, null, null));
-    if (error) return false;
-  }
+  newRowCount = Number(ValidateNumber("TableRowsInput", null, 1, maxRows, null, null));
+  if (error) return false;
 
-  if (dialog.ColumnsCheckbox.checked)
-  {
-    newColCount = Number(ValidateNumber("TableColumnsInput", null, 1, maxColumns, null, null));
-    if (error) return false;
-  }
+  newColCount = Number(ValidateNumber("TableColumnsInput", null, 1, maxColumns, null, null));
+  if (error) return false;
 
-  if (dialog.TableHeightCheckbox.checked)
-  {
-    ValidateNumber("TableHeightInput", dialog.TableHeightUnits, 
-                    1, maxPixels, globalTableElement, "height");
-    if (error) return false;
-  }
 
-  if (dialog.TableWidthCheckbox.checked)
-  {
-    ValidateNumber("TableWidthInput", dialog.TableWidthUnits, 
-                   1, maxPixels, globalTableElement, "width");
-    if (error) return false;
-  }
+  ValidateNumber("TableHeightInput", dialog.TableHeightUnits, 
+                  1, maxPixels, globalTableElement, "height");
+  if (error) return false;
 
-  if (dialog.TableBorderCheckbox.checked)
-  {
-    var border = ValidateNumber("BorderWidthInput", null, 0, maxPixels, globalTableElement, "border");
-    // TODO: Deal with "BORDER" without value issue
-    if (error) return false;
-  }
 
-  if (dialog.CellSpacingCheckbox.checked)
-  {
-    ValidateNumber("SpacingInput", null, 0, maxPixels, globalTableElement, "cellspacing");
-    if (error) return false;
-  }
+  ValidateNumber("TableWidthInput", dialog.TableWidthUnits, 
+                 1, maxPixels, globalTableElement, "width");
+  if (error) return false;
 
-  if (dialog.CellPaddingCheckbox.checked)
-  {
-    ValidateNumber("PaddingInput", null, 0, maxPixels, globalTableElement, "cellpadding");
-    if (error) return false;
-  }
+  var border = ValidateNumber("BorderWidthInput", null, 0, maxPixels, globalTableElement, "border");
+  // TODO: Deal with "BORDER" without value issue
+  if (error) return false;
 
-  if (dialog.TableHAlignCheckbox.checked)
-    SetAlign("TableAlignList", defHAlign, globalTableElement, "align");
+  ValidateNumber("SpacingInput", null, 0, maxPixels, globalTableElement, "cellspacing");
+  if (error) return false;
+
+  ValidateNumber("PaddingInput", null, 0, maxPixels, globalTableElement, "cellpadding");
+  if (error) return false;
+
+  SetAlign("TableAlignList", defHAlign, globalTableElement, "align");
 
   // Color is set on globalCellElement immediately
-
-  // Background Image
-  if (dialog.TableImageCheckbox.checked)
-  {
-    var imageName = dialog.TableImageInput.value.trimString();
-    if (imageName && imageName != "")
-    {
-      if (IsValidImage(imageName))
-        globalTableElement.background = imageName;
-      else
-      {
-        dialog.TableImageInput.focus();
-        // Switch to appropriate panel for error reporting
-        SwitchPanel(validatePanel);
-        ShowInputErrorMessage(GetString("MissingImageError"));
-        return false;
-      }
-    } else {
-      globalTableElement.removeAttribute("background");
-    }
-  }
   return true;
 }
 
@@ -946,27 +863,6 @@ dump("Alignment char="+alignChar+"\n");
     else
       globalCellElement.removeAttribute("nowrap");
   }
-
-  // Background Image
-  if (dialog.CellImageCheckbox.checked)
-  {
-    var imageName = dialog.TableImageInput.value.trimString();
-    if (imageName && imageName != "")
-    {
-      if (IsValidImage(imageName))
-        globalCellElement.background = imageName;
-      else
-      {
-        dialog.CellImageInput.focus();
-        // Switch to appropriate panel for error reporting
-        SwitchPanel(validatePanel);
-        ShowInputErrorMessage(GetString("MissingImageError"));
-      }
-    } else {
-      globalCellElement.removeAttribute("background");
-    }
-  }  
-
   return true;
 }
 
@@ -1260,10 +1156,6 @@ dump("Insert a table caption...\n");
 
   if (dialog.TableColorCheckbox.checked)
     CloneAttribute(TableElement, globalTableElement, "bgcolor");
-
-  if (dialog.TableImageCheckbox.checked)
-    CloneAttribute(TableElement, globalTableElement, "background");
-  
 }
 
 function ApplyCellAttributes()
@@ -1306,9 +1198,6 @@ function ApplyAttributesToOneCell(destElement)
 
   if (dialog.CellColorCheckbox.checked)
     CloneAttribute(destElement, globalCellElement, "bgcolor");
-
-  if (dialog.CellImageCheckbox.checked)
-    CloneAttribute(destElement, globalCellElement, "background");
 
   if (dialog.CellStyleCheckbox.checked)
   {

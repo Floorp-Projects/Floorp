@@ -30,6 +30,8 @@ var newLinkText;
 var HNodeArray;
 var haveNamedAnchors = false;
 var haveHeadings = false;
+var canChangeHeadingSelected = true;
+var canChangeAnchorSelected = true;
 
 // NOTE: Use "href" instead of "a" to distinguish from Named Anchor
 // The returned node is has an "a" tagName
@@ -60,6 +62,7 @@ function Startup()
   dialog.MoreSection         = document.getElementById("MoreSection");
   dialog.MoreFewerButton     = document.getElementById("MoreFewerButton");
   dialog.AdvancedEditSection = document.getElementById("AdvancedEdit");
+  dialog.ok                  = document.getElementById("ok");
 
   var selection = editorShell.editorSelection;
   if (selection)
@@ -72,6 +75,7 @@ function Startup()
   
   if (imageElement)
   {
+dump("Selected imageElement="+imageElement+"\n");
     // Get the parent link if it exists -- more efficient than GetSelectedElement()
     anchorElement = editorShell.GetElementOrParentByTagName("href", imageElement);
     if (anchorElement)
@@ -91,6 +95,8 @@ function Startup()
     // Get an anchor element if caret or
     //   entire selection is within the link.
     anchorElement = editorShell.GetSelectedElement(tagName);
+
+dump("Selected element="+anchorElement+"\n");
 
     if (anchorElement)
     {
@@ -142,6 +148,9 @@ function Startup()
     dialog.linkTextCaption.setAttribute("value",GetString("LinkText"));
     // Message above input field:
     dialog.linkTextMessage.setAttribute("value", GetString("EnterLinkText"));
+    
+    // This sets enable state on OK button
+    ChangeText();
   }
   else
   {
@@ -199,10 +208,10 @@ function Startup()
   if (insertLinkAtCaret) {
     dump("Setting focus to dialog.linkTextInput\n");
     // We will be using the HREF inputbox, so text message
-    dialog.linkTextInput.focus();
+    SetTextfieldFocus(dialog.linkTextInput);
   } else {
     dump("Setting focus to dialog.linkTextInput\n");
-    dialog.hrefInput.focus();
+    SetTextfieldFocus(dialog.hrefInput);
 
     // We will not insert a new link at caret, so remove link text input field
     dialog.linkTextInput.setAttribute("hidden","true");
@@ -227,15 +236,7 @@ function chooseFile()
     dialog.hrefInput.value = fileName;
   }
   // Put focus into the input field
-  dialog.hrefInput.focus();
-}
-
-function RemoveLink()
-{
-  // Simple clear the input field!
-  // BUG: This doesn't clear the input field!
-  dialog.hrefInput.value = "";
-  dialog.hrefInput.focus();
+  SetTextfieldFocus(dialog.hrefInput);
 }
 
 function FillListboxes()
@@ -305,12 +306,28 @@ function FillListboxes()
   }
 }
 
+function ChangeText()
+{
+  if (insertLinkAtCaret)
+  {
+    var text = dialog.linkTextInput.value.trimString();
+    SetElementEnabledById( "ok", (text.length > 0));
+  }
+}
+
+function ChangeLocation()
+{
+  // Unselect the treelists
+  UnselectNamedAnchor();
+  UnselectHeadings();
+}
+
 function GetExistingHeadingIndex(text)
 {
   var len = dialog.HeadingsList.getAttribute("length");
   for (var i=0; i < len; i++)
   {
-    if (dialog.HeadingsList.options[i].value == text)
+    if (GetTreelistValueAt(dialog.HeadingsList, i) == text)
       return i;
   }
   return -1;
@@ -318,16 +335,44 @@ function GetExistingHeadingIndex(text)
 
 function SelectNamedAnchor()
 {
-dump("SelectNamedAnchor. haveNamedAnchors="+haveNamedAnchors+"|\n");
-  if (haveNamedAnchors)
-    dialog.hrefInput.value = "#"+GetSelectedTreelistValue(dialog.NamedAnchorList);
+  if (canChangeAnchorSelected)
+  {
+    if (haveNamedAnchors)
+      dialog.hrefInput.value = "#"+GetSelectedTreelistValue(dialog.NamedAnchorList);
+    else
+      UnselectNamedAnchor();
+  
+    UnselectHeadings();
+  }
 }
 
 function SelectHeading()
 {
-dump("SelectHeading. haveHeadings="+haveHeadings+"|\n");
-  if (haveHeadings)
-    dialog.hrefInput.value = "#"+GetSelectedTreelistValue(dialog.HeadingsList);
+  if (canChangeHeadingSelected)
+  {
+    if (haveHeadings)
+      dialog.hrefInput.value = "#"+GetSelectedTreelistValue(dialog.HeadingsList);
+    else
+      UnselectHeadings();
+
+    UnselectNamedAnchor();
+  }
+}
+
+function UnselectNamedAnchor()
+{
+  // Prevent recursive calling of SelectNamedAnchor()
+  canChangeAnchorSelected = false;
+  dialog.NamedAnchorList.selectedIndex = -1;  
+  canChangeAnchorSelected = true;
+}
+
+function UnselectHeadings()
+{
+  // Prevent recursive calling of SelectHeading()
+  canChangeHeadingSelected = false;
+  dialog.HeadingsList.selectedIndex = -1;  
+  canChangeHeadingSelected = true;
 }
 
 // Get and validate data from widgets.
@@ -355,8 +400,8 @@ function ValidateData()
     newLinkText = TrimString(dialog.linkTextInput.value);
     if (newLinkText.length == 0)
     {
-      ShowInputErrorMessage(GetString("GetInputError"));
-      dialog.linkTextInput.focus();
+      ShowInputErrorMessage(GetString("EmptyLinkTextError"));
+      SetTextfieldFocus(dialog.linkTextInput);
       return false;
     }
   }

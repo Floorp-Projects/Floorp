@@ -48,7 +48,7 @@
   <keyset id="keyset"/>
   <popupset id="aTooltipSet" />
   
-  <titledbox><title><text value="&dimensionsBox.label;"/></title>
+  <titledbox orient="vertical"><title><text value="&dimensionsBox.label;"/></title>
     <grid>
       <columns><column/><column/><column /></columns>
       <rows>
@@ -65,6 +65,7 @@
         </row>
       </rows>
     </grid>        
+    <checkbox id="3dShading" value="&threeDShading.label;" />
   </titledbox>
   <titledbox><title><text align="left" value="&alignmentBox.label;"/></title>
     <radiogroup id="alignmentGroup" orient="horizontal">
@@ -73,24 +74,13 @@
       <radio group="alignmentGroup" id="rightAlign" value="&rightRadio.value;" />
     </radiogroup>
   </titledbox>
+  <spring class="spacer"/>
   <box>
-    <grid flex="1">
-      <columns><column/><column flex="1"/><column/></columns>
-      <rows>
-        <row>
-          <checkbox id="3dShading" value="&threeDShading.label;" />
-          <spring/>
-          <button class="dialog"  id="SaveDefault" value="&saveSettings.label;" 
-               oncommand="onSaveDefault()"
-               tooltip="aTooltip" tooltiptext="&saveSettings.tooltip;" />
-        </row>
-        <row>
-          <spring/>
-          <spring/>
-          <button id="AdvancedEditButton" tooltip="aTooltip" tooltiptext="&advancedButton.tooltip;" />
-        </row>
-      </rows>
-    </grid>
+    <button class="dialog"  id="SaveDefault" value="&saveSettings.label;" 
+         oncommand="onSaveDefault()"
+         tooltip="aTooltip" tooltiptext="&saveSettings.tooltip;" />
+    <spring flex="1"/>
+    <button id="AdvancedEditButton"/>
   </box>
   <separator class="groove"/>
   <!-- from global dialogOverlay -->

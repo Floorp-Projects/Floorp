@@ -61,7 +61,7 @@
           <button class="dialog"  id="RemoveWord" oncommand="RemoveWord()" value="&RemoveButton.label;"/>
           <spring class="spacer"/>
           <spring flex="1"/>
-          <button class="dialog CloseButton"  id="Close" oncommand="onCancel()" value="&CloseButton.label;"/>
+          <button class="exit-dialog" id="cancel" value="&CloseButton.label;" onclick="Close()"/>
         </box>
       </row>
     </rows>

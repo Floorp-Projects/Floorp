@@ -23,6 +23,7 @@
 var MisspelledWord;
 var spellChecker;
 var allowSelectWord = true;
+var PreviousReplaceWord = "";
 
 // dialog initialization code
 function Startup()
@@ -37,15 +38,13 @@ function Startup()
     dump("SpellChecker not found!!!\n");
     window.close();
   }
-  // Save as a property of the window so it can be used by child dialogs
-  window.spellChecker = spellChecker;
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
   if (!dialog)
   {
     dump("Failed to create dialog object!!!\n");
-    window.close();
+    Close();
   }
   dialog.MisspelledWordLabel = document.getElementById("MisspelledWordLabel");
   dialog.MisspelledWord = document.getElementById("MisspelledWord");
@@ -74,6 +73,7 @@ function Startup()
   }
   // Initial replace word is the misspelled word;
   dialog.ReplaceWordInput.value = MisspelledWord;
+  PreviousReplaceWord = MisspelledWord;
 
   if (dialog.LanguageMenulist)
   {
@@ -94,7 +94,9 @@ function Startup()
 
   DoEnabling();
 
-  dialog.SuggestedList.focus();  
+  // Treelist doesn't show any focus feedback! Set to textfield instead
+  //dialog.SuggestedList.focus();  
+  SetTextfieldFocus(dialog.ReplaceWordInput);
 }
 
 function InitLanguageMenu(curLang)
@@ -150,9 +152,9 @@ function DoEnabling()
 {
   if (MisspelledWord.length == 0)
   {
-    dialog.MisspelledWordLabel.setAttribute("value",GetString("CheckSpellingDone"));
+    dialog.MisspelledWord.setAttribute("value",GetString("CheckSpellingDone"));
     
-    SetElementEnabledById("MisspelledWord", false);
+    SetElementEnabledById("MisspelledWordLabel", false);
     SetElementEnabledById("ReplaceWordLabel", false);
     SetElementEnabledById("ReplaceWord", false);
     SetElementEnabledById("CheckWord", false);
@@ -164,9 +166,7 @@ function DoEnabling()
     SetElementEnabledById("ReplaceAll", false);
     SetElementEnabledById("AddToDictionary", false);
   } else {
-    dialog.MisspelledWordLabel.setAttribute("value",GetString("MisspelledWordLabel"));
-
-    SetElementEnabledById("MisspelledWord", true);
+    SetElementEnabledById("MisspelledWordLabel", true);
     SetElementEnabledById("ReplaceWordLabel", true);
     SetElementEnabledById("ReplaceWord", true);
     SetElementEnabledById("CheckWord", true);
@@ -174,9 +174,9 @@ function DoEnabling()
     SetElementEnabledById("SuggestedList", true);
     SetElementEnabledById("Ignore", true);
     SetElementEnabledById("IgnoreAll", true);
-    SetElementEnabledById("Replace", true);
-    SetElementEnabledById("ReplaceAll", true);
     SetElementEnabledById("AddToDictionary", true);
+
+    SetReplaceEnable();
   }
 }
 
@@ -194,12 +194,13 @@ function SetWidgetsForMisspelledWord()
 
   // Initial replace word is misspelled word 
   dialog.ReplaceWordInput.value = MisspelledWord;
+  PreviousReplaceWord = MisspelledWord;
   
   DoEnabling();
   
   // EXPERIMENTAL: Automatically shift focus to replace word editfield
   if (MisspelledWord)
-    dialog.ReplaceWordInput.focus();
+    SetTextfieldFocus(dialog.ReplaceWordInput);
 }
 
 function CheckWord()
@@ -227,8 +228,18 @@ function SelectSuggestedWord()
 {
   if (allowSelectWord)
   {
-    var selValue = GetSelectedTreelistValue(dialog.SuggestedList);
-    dialog.ReplaceWordInput.value = selValue;
+    var index = dialog.SuggestedList.selectedIndex;
+    if (index == -1)
+    {
+      dialog.ReplaceWordInput.value = PreviousReplaceWord;
+dump("Word de-selected\n");
+    }
+    else
+    {
+      var selValue = GetSelectedTreelistValue(dialog.SuggestedList);
+      dialog.ReplaceWordInput.value = selValue;
+    }
+    SetReplaceEnable();
   }
 }
 
@@ -240,9 +251,14 @@ function ChangeReplaceWord()
   allowSelectWord = false;
 
   // Unselect the word in the suggested list when user edits the replacement word
-  dialog.SuggestedList.clearItemSelection();
+  dialog.SuggestedList.selectedIndex = -1;
 
   allowSelectWord = saveAllow;
+
+  // Remember the new word
+  PreviousReplaceWord = dialog.ReplaceWordInput.value;
+
+  SetReplaceEnable();
 }
 
 function Ignore()
@@ -319,13 +335,6 @@ function Recheck()
   }
 }
 
-function Close()
-{
-  // Shutdown the spell check and close the dialog
-  spellChecker.UninitSpellChecker();
-  window.close();
-}
-
 function FillSuggestedList()
 {
   list = dialog.SuggestedList;
@@ -348,8 +357,6 @@ function FillSuggestedList()
     
     var len = list.getAttribute("length");
 
-dump(len+"=number of words in list\n");
-
     if (count == 0) {
       // No suggestions - show a message but don't let user select it
       var item = AppendStringToTreelistById(list, "NoSuggestedWords");
@@ -359,5 +366,24 @@ dump(len+"=number of words in list\n");
       allowSelectWord = true;
     }
   }
+
+  SetReplaceEnable();
+}
+
+function SetReplaceEnable()
+{
+  // Enable "Change..." buttons only if new word is different than misspelled
+  var newWord = dialog.ReplaceWordInput.value;
+  var enable = newWord.length > 0 && newWord != MisspelledWord;
+  SetElementEnabledById("Replace", enable);
+  SetElementEnabledById("ReplaceAll", enable);
+}
+
+function Close()
+{
+dump("Closing spell checker dialog\n");
+  // Shutdown the spell check and close the dialog
+  spellChecker.UninitSpellChecker();
+  window.close();
 }
 

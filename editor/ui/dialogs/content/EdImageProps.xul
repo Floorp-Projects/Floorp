@@ -99,7 +99,7 @@
       persist = "more"/>
     <spring flex="1"/>
     <!-- From EdDialogOverlay.xul -->
-    <button id="AdvancedEditButton" tooltip="aTooltip" tooltiptext="&AdvancedEditButton.tooltip;"/>
+    <button id="AdvancedEditButton"/>
   </box>
 
   <!-- Area that shows and hides via MoreFewerButton --> 
@@ -128,7 +128,7 @@
             <columns><column/><column/><column/></columns>
             <rows>
               <!--//////  IMAGE WIDTH  //////-->
-              <row valign="baseline" autostretch="never">
+              <row valign="middle" autostretch="never">
                 <text class = "label" 
                   id    = "widthLabel"
                   for   = "widthInput"
@@ -143,7 +143,7 @@
                 <!-- contents are appended by JS -->
               </row>
               <!--////// IMAGE HEIGHT //////-->
-              <row valign="baseline" autostretch="never">
+              <row valign="middle" autostretch="never">
                 <text class = "label" 
                   id    = "heightLabel"
                   for   = "heightInput"
@@ -204,7 +204,7 @@
           <grid>
             <columns><column/><column/><column/></columns>
             <rows>
-              <row valign="baseline" autostretch="never">
+              <row valign="middle" autostretch="never">
                 <text 
                   class = "label align-right" 
                   id    = "leftrightLabel"
@@ -219,7 +219,7 @@
                   id    = "leftrighttypeLabel"
                   value = "&pixelsPopup.value;" />
               </row>
-              <row valign="baseline" autostretch="never">
+              <row valign="middle" autostretch="never">
                 <text 
                   class = "label align-right" 
                   id    = "topbottomLabel"
@@ -234,7 +234,7 @@
                   id    = "topbottomtypeLabel"
                   value = "&pixelsPopup.value;" />
               </row>
-              <row valign="baseline" autostretch="never">
+              <row valign="middle" autostretch="never">
                 <text class = "label align-right" 
                   id    = "borderLabel"
                   value = "&borderEditField.label;"/>
@@ -258,7 +258,7 @@
     <box>
       <spring flex="1"/>
       <!-- From EdDialogOverlay -->
-      <button id="AdvancedEditButton2" tooltip="aTooltip" tooltiptext="&AdvancedEditButton2.tooltip;"/>
+      <button id="AdvancedEditButton2"/>
     </box>
   </box> <!-- END OF MORE/FEWER SECTION -->
   <separator class="groove"/>

@@ -17,7 +17,8 @@ function BuildHTMLAttributeTable()
       }
       var name  = nodeMap[i].nodeName.toLowerCase();
       var value = element.getAttribute ( nodeMap[i].nodeName );
-      AddTreeItem ( name, value, "HTMLAList", HTMLAttrs );
+      if (name.indexOf("_moz") != 0)
+        AddTreeItem ( name, value, "HTMLAList", HTMLAttrs );
     }
   }
 }

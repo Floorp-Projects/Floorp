@@ -33,7 +33,8 @@ function Startup()
 
   // Get the spellChecker shell
   spellChecker = editorShell.QueryInterface(Components.interfaces.nsIEditorSpellCheck);
-  if (!spellChecker) {
+  if (!spellChecker)
+  {
     dump("SpellChecker not found!!!\n");
     window.close();
   }
@@ -47,13 +48,14 @@ function Startup()
   FillDictionaryList();
   // Select the supplied word if it is already in the list
   SelectWordToAddInList();
-  WordInput.focus();
+  SetTextfieldFocus(WordInput);
 }
 
 function ValidateWordToAdd()
 {
   WordToAdd = TrimString(WordInput.value);
-  if (WordToAdd.length > 0) {
+  if (WordToAdd.length > 0)
+  {
     return true;
   } else {
     return false;
@@ -62,8 +64,10 @@ function ValidateWordToAdd()
 
 function SelectWordToAddInList()
 {
-  for (index = 0; index < DictionaryList.length; index++) {
-    if (WordToAdd.toLowerCase() == DictionaryList.options[index].text.toLowerCase()) {
+  for (var index = 0; index < DictionaryList.getAttribute("length"); index++)
+  {
+    if (WordToAdd == GetTreelistValueAt(DictionaryList,index))
+    {
       DictionaryList.selectedIndex = index;
       break;
     }
@@ -72,12 +76,13 @@ function SelectWordToAddInList()
 
 function AddWord()
 {
-  if (ValidateWordToAdd()) {
+  if (ValidateWordToAdd())
+  {
     try {
       spellChecker.AddWordToDictionary(WordToAdd);
     }
     catch (e) {
-      dump("Exception occured in spellChecker.AddWordToDictionary\nWord to add probably already existed");
+      dump("Exception occured in spellChecker.AddWordToDictionary\nWord to add probably already existed\n");
     }
 
     // Rebuild the dialog list
@@ -89,18 +94,21 @@ function AddWord()
 
 function ReplaceWord()
 {
-  if (ValidateWordToAdd()) {
+  if (ValidateWordToAdd())
+  {
     selIndex = DictionaryList.selectedIndex;
-    if (selIndex >= 0) {
-      WordToRemove = DictionaryList.options[selIndex].text;
-      dump("Word to remove: "+WordToRemove+"\n");
+    if (selIndex >= 0)
+    {
+
+      WordToRemove = GetSelectedTreelistValue(DictionaryList);
+dump("Word to remove: "+WordToRemove+"\n");
       spellChecker.RemoveWordFromDictionary(WordToRemove);
       try {
         // Add to the dictionary list
         spellChecker.AddWordToDictionary(WordToAdd);
         // Just change the text on the selected item
         //  instead of rebuilding the list
-        ReplaceStringInList(DictionaryList, selIndex, WordToAdd);
+        ReplaceStringInTreeList(DictionaryList, selIndex, WordToAdd);
       } catch (e) {
         // Rebuild list and select the word - it was probably already in the list
         dump("Exception occured adding word in ReplaceWord\n");
@@ -114,12 +122,23 @@ function ReplaceWord()
 function RemoveWord()
 {
   selIndex = DictionaryList.selectedIndex;
-  if (selIndex >= 0) {
-    word = TrimString(DictionaryList.options[selIndex].text);
+dump("RemoveWord/n");
+  if (selIndex >= 0)
+  {
+    word = GetSelectedTreelistValue(DictionaryList);
+
     // Remove word from list
-    DictionaryList.options[selIndex] = null;
+    RemoveSelectedTreelistItem(DictionaryList);
+
     // Remove from dictionary
-    spellChecker.RemoveWordFromDictionary(word);
+    try {
+      //Not working: BUG 43348
+      spellChecker.RemoveWordFromDictionary(word);
+    }
+    catch (e)
+    {
+      dump("Failed to remove word from dictionary\n");
+    }
 
     ResetSelectedItem(selIndex);
   }
@@ -130,16 +149,16 @@ function FillDictionaryList()
   selIndex = DictionaryList.selectedIndex;
 
   // Clear the current contents of the list
-  ClearList(DictionaryList);
+  ClearTreelist(DictionaryList);
   // Get the list from the spell checker
   spellChecker.GetPersonalDictionary()
 
   // Get words until an empty string is returned
   do {
     word = spellChecker.GetPersonalDictionaryWord();
-    if (word != "") {
+    if (word != "")
       AppendStringToTreelist(DictionaryList, word);
-    }
+
   } while (word != "");
 
   ResetSelectedItem(selIndex);
@@ -147,7 +166,7 @@ function FillDictionaryList()
 
 function ResetSelectedItem(index)
 {
-  lastIndex = DictionaryList.length - 1;
+  lastIndex = DictionaryList.getAttribute("length") - 1;
   if (index > lastIndex)
     index = lastIndex;
 
@@ -156,6 +175,15 @@ function ResetSelectedItem(index)
   if (index == -1 && lastIndex >= 0)
     index = 0;
 
+dump("ResetSelectedItem to index="+index+"\n");
+
   DictionaryList.selectedIndex = index;
 }
 
+function Close()
+{
+dump("Closing spelling dictionary dialog\n");
+  // Shutdown the spell check and close the dialog
+  spellChecker.UninitSpellChecker();
+  window.close();
+}
