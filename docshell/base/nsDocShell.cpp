@@ -3253,7 +3253,7 @@ NS_IMETHODIMP nsDocShell::AddHeadersToChannel(nsIInputStream *aHeadersData,
     // add the value as a header to the nsIHTTPChannel
     //
 
-    while (true) {
+    while (PR_TRUE) {
         crlf = headersString.Find("\r\n", PR_TRUE);
         if (-1 == crlf) {
             rv = NS_OK;
