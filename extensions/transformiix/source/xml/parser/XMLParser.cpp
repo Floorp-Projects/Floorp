@@ -34,7 +34,7 @@
  *    -- Removed a number of castings of XML_Char to DOM_CHAR since they
  *       were not working on Windows properly
  *
- * $Id: XMLParser.cpp,v 1.9 2000/07/25 15:12:04 axel%pike.org Exp $
+ * $Id: XMLParser.cpp,v 1.10 2000/08/26 04:50:58 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "XMLParser.h"
@@ -62,7 +62,9 @@
 **/
 XMLParser::XMLParser()
 {
+#ifndef MOZ_XSL
   errorState = MB_FALSE;
+#endif
 } //-- XMLParser
 
 
@@ -71,10 +73,33 @@ XMLParser::~XMLParser()
     //-- clean up
 } //-- ~XMLParser
 
-  /**
-   *  Parses the given input stream and returns a DOM Document.
-   *  A NULL pointer will be returned if errors occurred
-  **/
+Document* XMLParser::getDocumentFromURI
+    (String& href, String& documentBase, String& errMsg)
+{
+
+#ifdef MOZ_XSL
+    return NULL;
+#else
+    istream* xslInput = URIUtils::getInputStream(href, documentBase, errMsg);
+
+    Document* resultDoc = 0;
+    if ( xslInput ) {
+        resultDoc = parse(*xslInput);
+        delete xslInput;
+    }
+    if (!resultDoc) {
+        errMsg.append(getErrorString());
+    }
+    return resultDoc;
+#endif
+
+}
+
+#ifndef MOZ_XSL
+/**
+ *  Parses the given input stream and returns a DOM Document.
+ *  A NULL pointer will be returned if errors occurred
+**/
 Document* XMLParser::parse(istream& inputStream)
 {
   const int bufferSize = 1000;
@@ -186,3 +211,4 @@ void piHandler(void *userData, const XML_Char *target, const XML_Char *data) {
 
 } //-- piHandler
 
+#endif
