@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#define PL_ARENA_CONST_ALIGN_MASK 7
+#define PL_ARENA_CONST_ALIGN_MASK 3
 #include "nslayout.h"
 #include "nsDST.h"
 #include "nsISupports.h"
@@ -24,38 +24,110 @@
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
-// Structure that represents a node in the DST
+// Classes that represents nodes in the DST
+
+// To reduce the amount of memory we use there are two types of nodes:
+// - leaf nodes
+// - two nodes (left and right child)
+//
+// We distinguish the two types of nodes by looking at the low-order
+// bit of the key. If it is 0, then the node is a leaf node. If it is
+// 1, then the node is a two node. Use function Key() when retrieving
+// the key, and function IsLeaf() to tell what type of node it is
+//
+// It's an invariant of the tree that a two node can not have both child links
+// NULL. In that case it must be converted back to a leaf node
+
+// Leaf node class
+class nsDST::LeafNode {
+public:
+  void* mKey;
+  void* mValue;
+  
+  // Constructors
+  LeafNode(void* aKey, void* aValue);
+  LeafNode(const LeafNode& aLeafNode);
+
+  // Accessor for getting the key. Clears the bit used to tell if the
+  // node is a leaf. This function can be safely used on any node without
+  // knowing whether it's a leaf or a two node
+  void*   Key() const {return (void*)(PtrBits(mKey) & ~0x1);}
+
+  // Helper function that returns TRUE if the node is a leaf
+  int     IsLeaf() const {return 0 == (PtrBits(mKey) & 0x1);}
+
+  // Overloaded placement operator for allocating from an arena
+  void* operator new(size_t aSize, NodeArena& aArena) {return aArena.AllocLeafNode();}
+
+private:
+  void  operator delete(void*);  // no implementation
+};
+
+// Constructors
+inline nsDST::LeafNode::LeafNode(void* aKey, void* aValue)
+  : mKey(aKey), mValue(aValue)
+{
+}
+  
+inline nsDST::LeafNode::LeafNode(const LeafNode& aNode)
+  : mKey(aNode.Key()),  // don't assume it's a leaf node
+    mValue(aNode.mValue)
+{
+}
+
+// Two node class
+class nsDST::TwoNode : public nsDST::LeafNode {
+public:
+  LeafNode* mLeft;   // left subtree
+  LeafNode* mRight;  // right subtree
+  
+  TwoNode(const LeafNode& aLeafNode);
+
+  void    SetKeyAndValue(void* aKey, void* aValue) {
+    mKey = (void*)(PtrBits(aKey) | 0x01);
+    mValue = aValue;
+  }
+
+  // Overloaded placement operator for allocating from an arena
+  void* operator new(size_t aSize, NodeArena& aArena) {return aArena.AllocTwoNode();}
+
+private:
+	TwoNode(const TwoNode&);        // no implementation
+	void operator=(const TwoNode&); // no implementation
+  void  operator delete(void*);   // no implementation
+};
 
 // Constructor
-inline nsDST::Node::Node(void* aKey, void* aValue)
-  : mKey(aKey), mValue(aValue), mLeft(0), mRight(0)
+inline nsDST::TwoNode::TwoNode(const LeafNode& aLeafNode)
+  : LeafNode((void*)(PtrBits(aLeafNode.mKey) | 0x1), aLeafNode.mValue),
+    mLeft(0), mRight(0)
 {
 }
 
-// Helper function that returns TRUE if the node is a leaf (i.e., no left or
-// right child), and FALSE otherwise
-inline int nsDST::Node::IsLeaf() const
-{
-  return !mLeft && !mRight;
-}
+// If you know that the node is a leaf node, then you can quickly access
+// the key without clearing the bit that indicates whether it's a leaf or
+// a two node
+#define DST_GET_LEAF_KEY(leaf)  ((leaf)->mKey)
 
-// Overloaded placement operator for allocating from an arena
-inline void* nsDST::Node::operator new(size_t aSize, NodeArena& aArena)
-{
-  return aArena.AllocNode(aSize);
-}
+// Macros to check whether we branch left or branch right for a given
+// key and bit mask
+#define DST_BRANCHES_LEFT(key, mask) \
+  (0 == (PtrBits(key) & (mask)))
+  
+#define DST_BRANCHES_RIGHT(key, mask) \
+  ((mask) == (PtrBits(key) & (mask)))
 
 /////////////////////////////////////////////////////////////////////////////
 // Arena used for fast allocation and deallocation of Node structures.
-// Maintains a free-list of freed objects
+// Maintains free-list of freed objects
 
-#define NS_DST_ARENA_BLOCK_SIZE   1024
+#define NS_DST_ARENA_BLOCK_SIZE   512
 
 MOZ_DECL_CTOR_COUNTER(NodeArena);
 
 // Constructor
 nsDST::NodeArena::NodeArena()
-  : mFreeList(0)
+  : mLeafNodeFreeList(0), mTwoNodeFreeList(0)
 {
   MOZ_COUNT_CTOR(NodeArena);
   PL_INIT_ARENA_POOL(&mPool, "DSTNodeArena", NS_DST_ARENA_BLOCK_SIZE);
@@ -70,35 +142,70 @@ nsDST::NodeArena::~NodeArena()
   PL_FinishArenaPool(&mPool);
 }
 
-// Called by the nsDST::Node's overloaded placement operator when allocating
-// a new node. First checks the free list. If the free list is empty, then
-// it allocates memory from the arena
+// Called by the nsDST::LeafNode's overloaded placement operator when
+// allocating a new node. First checks the free list. If the free list is
+// empty, then it allocates memory from the arena
 void*
-nsDST::NodeArena::AllocNode(size_t aSize)
+nsDST::NodeArena::AllocLeafNode()
 {
   void* p;
   
-  if (mFreeList) {
+  if (mLeafNodeFreeList) {
     // Remove the node at the head of the free-list
-    p = mFreeList;
-    mFreeList = mFreeList->mLeft;
+    p = mLeafNodeFreeList;
+    mLeafNodeFreeList = (LeafNode*)mLeafNodeFreeList->mKey;
+
   } else {
-    PL_ARENA_ALLOCATE(p, &mPool, aSize);
+    PL_ARENA_ALLOCATE(p, &mPool, sizeof(nsDST::LeafNode));
   }
+
+  return p;
+}
+
+// Called by the nsDST::TwoNode's overloaded placement operator when
+// allocating a new node. First checks the free list. If the free list is
+// empty, then it allocates memory from the arena
+void*
+nsDST::NodeArena::AllocTwoNode()
+{
+  void* p;
+  
+  if (mTwoNodeFreeList) {
+    // Remove the node at the head of the free-list
+    p = mTwoNodeFreeList;
+    mTwoNodeFreeList = (TwoNode*)mTwoNodeFreeList->mKey;
+
+  } else {
+    PL_ARENA_ALLOCATE(p, &mPool, sizeof(nsDST::TwoNode));
+  }
+
   return p;
 }
 
 // Called by the DST's DestroyNode() function. Adds the node to the head
 // of the free list where it can be reused by AllocateNode()
 void
-nsDST::NodeArena::FreeNode(void* p)
+nsDST::NodeArena::FreeNode(LeafNode* aLeafNode)
 {
 #ifdef NS_DEBUG
-  memset(p, 0xde, sizeof(Node));
+  memset(aLeafNode, 0xde, sizeof(*aLeafNode));
 #endif
   // Add this node to the head of the free-list
-  ((Node*)p)->mLeft = mFreeList;
-  mFreeList = (Node*)p;
+  aLeafNode->mKey = mLeafNodeFreeList;
+  mLeafNodeFreeList = aLeafNode;
+}
+
+// Called by the DST's DestroyNode() function. Adds the node to the head
+// of the free list where it can be reused by AllocateNode()
+void
+nsDST::NodeArena::FreeNode(TwoNode* aTwoNode)
+{
+#ifdef NS_DEBUG
+  memset(aTwoNode, 0xde, sizeof(*aTwoNode));
+#endif
+  // Add this node to the head of the free-list
+  aTwoNode->mKey = mTwoNodeFreeList;
+  mTwoNodeFreeList = aTwoNode;
 }
 
 // Called by the DST's Clear() function when we want to free the memory
@@ -109,8 +216,9 @@ nsDST::NodeArena::FreeArenaPool()
   // Free the arena in the pool, but continue using it
   PL_FreeArenaPool(&mPool);
 
-  // Clear the free list
-  mFreeList = 0;
+  // Clear the free lists
+  mLeafNodeFreeList = 0;
+  mTwoNodeFreeList = 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -139,26 +247,196 @@ nsDST::Clear()
   mRoot = 0;
 }
 
+// Called by Remove() to destroy a node. Explicitly calls the destructor
+// and then asks the memory arena to free the memory
+inline void
+nsDST::DestroyNode(LeafNode* aLeafNode)
+{
+  aLeafNode->~LeafNode();     // call destructor
+  mArena.FreeNode(aLeafNode); // free memory
+}
+
+// Called by Remove() to destroy a node. Explicitly calls the destructor
+// and then asks the memory arena to free the memory
+inline void
+nsDST::DestroyNode(TwoNode* aTwoNode)
+{
+  aTwoNode->~TwoNode();      // call destructor
+  mArena.FreeNode(aTwoNode); // free memory
+}
+
+nsDST::LeafNode*
+nsDST::ConvertToLeafNode(TwoNode** aTwoNode)
+{
+  LeafNode* leaf = new (mArena)LeafNode((*aTwoNode)->Key(), (*aTwoNode)->mValue);
+
+  DestroyNode(*aTwoNode);
+  *aTwoNode = (TwoNode*)leaf;
+  return leaf;
+}
+
+nsDST::TwoNode*
+nsDST::ConvertToTwoNode(LeafNode** aLeafNode)
+{
+  TwoNode* twoNode = new (mArena)TwoNode(**aLeafNode);
+
+  DestroyNode(*aLeafNode);
+  *aLeafNode = (LeafNode*)twoNode;
+  return twoNode;
+}
+
+// Searches the tree for a node with the specified key. Return the value
+// or NULL if the key is not in the tree
+void*
+nsDST::Search(void* aKey) const
+{
+  NS_PRECONDITION(0 == (PtrBits(aKey) & (mLevelZeroBit - 1)),
+                  "ignored low-order bits are not zero");
+
+  if (mRoot) {
+    LeafNode* node = mRoot;
+    PtrBits   bitMask = mLevelZeroBit;
+
+    while (1) {
+      // Check if the key matches
+      if (node->Key() == aKey) {
+        return node->mValue;
+      }
+
+      // See if this is a leaf node
+      if (node->IsLeaf()) {
+        // We didn't find a matching key
+        break;
+      }
+
+      // Check whether we search the left branch or the right branch
+      if (DST_BRANCHES_LEFT(aKey, bitMask)) {
+        node = ((TwoNode*)node)->mLeft;
+      } else {
+        node = ((TwoNode*)node)->mRight;
+      }
+
+      if (!node) {
+        break;  // we reached a null link
+      }
+
+      // Move to the next bit in the key
+      bitMask <<= 1;
+    }
+
+#ifdef DEBUG_troy
+    // We didn't find a matching node. Use an alternative algorithm to verify
+    // that the key is not in the tree
+    NS_POSTCONDITION(!DepthFirstSearch(mRoot, aKey), "DST search failed");
+#endif
+  }
+
+  return 0;
+}
+
 // Adds a new key to the tree. If the specified key is already in the
 // tree, then the existing value is replaced by the new value. Returns
 // the old value, or NULL if this is a new key
 void*
 nsDST::Insert(void* aKey, void* aValue)
 {
-  // See if there's a matching key
-  Node** node = SearchTree(aKey);
-  void*  previousValue;
+  NS_PRECONDITION(0 == (PtrBits(aKey) & (mLevelZeroBit - 1)),
+                  "ignored low-order bits are not zero");
 
+  LeafNode**  node = (LeafNode**)&mRoot;
+  void*       previousValue = 0;
+  TwoNode*    branchReduction = 0;
+  
+  // See if there's an existing node with a matching key
   if (*node) {
+    PtrBits   bitMask = mLevelZeroBit;
+
+    while (1) {
+      // See if the key matches
+      if ((*node)->Key() == aKey) {
+        break;
+      }
+      
+      // Is this a leaf node?
+      if ((*node)->IsLeaf()) {
+        if (!branchReduction) {
+          // Replace the leaf node with a two node and destroy the
+          // leaf node
+          TwoNode*  twoNode = ConvertToTwoNode(node);
+          
+          // Exit the loop and allocate a new leaf node and set its
+          // key and value
+          node = DST_BRANCHES_LEFT(aKey, bitMask) ? &twoNode->mLeft :
+                                                    &twoNode->mRight;
+        }
+        break;
+
+      } else {
+        TwoNode*& twoNode = *(TwoNode**)node;
+
+        // Check whether we search the left branch or the right branch
+        if (DST_BRANCHES_LEFT(aKey, bitMask)) {
+          // If there's a left node and no right node, then see if we
+          // can reduce the one way braching in the tree
+          if (twoNode->mLeft && !twoNode->mRight) {
+            if (DST_BRANCHES_RIGHT(twoNode->mKey, bitMask)) {
+              // Yes, this node can become the right node of the tree. Remember
+              // this for later in case we don't find a matching node
+              branchReduction = twoNode;
+            }
+          }
+          
+          node = &twoNode->mLeft;
+
+        } else {
+          // If there's a right node and no left node, then see if we
+          // can reduce the one way braching in the tree
+          if (twoNode->mRight && !twoNode->mLeft) {
+            if (DST_BRANCHES_LEFT(twoNode->mKey, bitMask)) {
+              // Yes, this node can become the left node of the tree. Remember
+              // this for later in case we don't find a matching node
+              branchReduction = twoNode;
+            }
+          }
+
+          node = &twoNode->mRight;
+        }
+
+        // Did we reach a null link?
+        if (!*node) {
+          break;
+        }
+      }
+
+      // Move to the next bit in the key
+      bitMask <<= 1;
+    }
+  }
+
+  if (branchReduction) {
+    // Reduce the one way branching by moving the existing key and
+    // value to either the right or left node
+    if (!branchReduction->mLeft) {
+      NS_ASSERTION(branchReduction->mRight, "bad state");
+      branchReduction->mLeft = new (mArena)LeafNode(*branchReduction);
+
+    } else {
+      NS_ASSERTION(!branchReduction->mRight, "bad state");
+      branchReduction->mRight = new (mArena)LeafNode(*branchReduction);
+    }
+
+    // Replace the existing key and value with the new key and value
+    branchReduction->SetKeyAndValue(aKey, aValue);
+
+  } else if (*node) {
+    // We found an existing node with a matching key. Replace the current
+    // value with the new value
     previousValue = (*node)->mValue;
-    
-    // Replace the current value with the new value
     (*node)->mValue = aValue;
 
   } else {
-    // Allocate a new node and insert it into the tree
-    *node = new (mArena)Node(aKey, aValue);
-    previousValue = 0;
+    // Allocate a new leaf node and insert it into the tree
+    *node = new (mArena)LeafNode(aKey, aValue);
   }
 
 #ifdef DEBUG_troy
@@ -167,36 +445,65 @@ nsDST::Insert(void* aKey, void* aValue)
   return previousValue;
 }
 
-// Helper function that returns the left most leaf node of the specified
-// subtree
-nsDST::Node**
-nsDST::GetLeftMostLeafNode(Node** aNode) const
+// Helper function that removes and returns the left most leaf node
+// of the specified subtree.
+// Note: if the parent of the node that is removed is now a leaf,
+// it will be converted to a leaf node...
+nsDST::LeafNode*
+nsDST::RemoveLeftMostLeafNode(TwoNode** aTwoNode)
 {
-keepLooking:
-  // See if the node has none, one, or two child nodes
-  if ((*aNode)->mLeft) {
-    // Walk down the left branch
-    aNode = &(*aNode)->mLeft;
-    goto keepLooking;
+  NS_PRECONDITION(!(*aTwoNode)->IsLeaf(), "bad parameter");
 
-  } else if ((*aNode)->mRight) {
+keepLooking:
+  LeafNode**  child;
+
+  if ((*aTwoNode)->mLeft) {
+    // Walk down the left branch
+    child = &(*aTwoNode)->mLeft;
+    
+    // See if it's a leaf
+    if ((*child)->IsLeaf()) {
+      // Remove the child from its parent
+      LeafNode* result = *child;
+      *child = 0;
+
+      // If there's no right node then the parent is now a leaf so
+      // convert it to a leaf node
+      if (!(*aTwoNode)->mRight) {
+        ConvertToLeafNode(aTwoNode);
+      }
+
+      // Return the leaf node
+      return result;
+    }
+
+
+  } else if ((*aTwoNode)->mRight) {
     // No left branch, so walk down the right branch
-    aNode = &(*aNode)->mRight;
-    goto keepLooking;
+    child = &(*aTwoNode)->mRight;
+
+    if ((*child)->IsLeaf()) {
+      // Remove the child from its parent
+      LeafNode* result = *child;
+      *child = 0;
+
+      // That was the parent's only child node so convert the parent
+      // node to a leaf node
+      ConvertToLeafNode(aTwoNode);
+
+      // Return the leaf node
+      return result;
+    }
 
   } else {
-    // We found a leaf node
-    return aNode;
+    // We should never encounter a two node with both links NULL. It should
+    // have been coverted to a leaf instead...
+    NS_ASSERTION(0, "bad node type");
+    return 0;
   }
-}
 
-// Called by Remove() to destroy a node. Explicitly calls the destructor
-// and then asks the memory arena to free the memory
-inline void
-nsDST::DestroyNode(Node* aNode)
-{
-  aNode->~Node();          // call destructor
-  mArena.FreeNode(aNode);  // free memory
+  aTwoNode = (TwoNode**)child;
+  goto keepLooking;
 }
 
 // Removes a key from the tree. Returns the current value, or NULL if
@@ -204,36 +511,88 @@ nsDST::DestroyNode(Node* aNode)
 void*
 nsDST::Remove(void* aKey)
 {
-  Node** node = SearchTree(aKey);
+  NS_PRECONDITION(0 == (PtrBits(aKey) & (mLevelZeroBit - 1)),
+                  "ignored low-order bits are not zero");
+  if (mRoot) {
+    LeafNode**  node;
+    TwoNode**   parentNode = 0;
+    PtrBits     bitMask = mLevelZeroBit;
+    
+    if (mRoot->Key() == aKey) {
+      node = (LeafNode**)&mRoot;
 
-  if (*node) {
-    Node* tmp = *node;
+    } else if (!mRoot->IsLeaf()) {
+      // Look for a node with a matching key
+      node = (LeafNode**)&mRoot;
+      while (1) {
+        NS_ASSERTION(!(*node)->IsLeaf(), "unexpected leaf mode");
+        parentNode = (TwoNode**)node;
+        
+        // Check whether we search the left branch or the right branch
+        if (DST_BRANCHES_LEFT(aKey, bitMask)) {
+          node = &(*(TwoNode**)node)->mLeft;
+        } else {
+          node = &(*(TwoNode**)node)->mRight;
+        }
+  
+        if (!*node) {
+          // We found a NULL link which means no node with a matching key
+          return 0;
+        }
+        
+        // Check if the key matches
+        if ((*node)->Key() == aKey) {
+          break;
+        }
+
+        // The key doesn't match. If this is a leaf node that means no
+        // node with a matching key
+        if ((*node)->IsLeaf()) {
+          return 0;
+        }
+
+        // Move to the next bit in the key
+        bitMask <<= 1;
+      }
+    }
+
+    // We found a matching node
     void* value = (*node)->mValue;
 
     if ((*node)->IsLeaf()) {
-      // Just disconnect the node from its parent node
+      // Delete the leaf node
+      DestroyNode(*node);
+
+      // Disconnect the node from its parent node
       *node = 0;
+
+      // If the parent now has no child nodes, then convert it to a
+      // leaf frame
+      if (parentNode && !(*parentNode)->mLeft && !(*parentNode)->mRight) {
+        ConvertToLeafNode(parentNode);
+      }
+
     } else {
       // We can't just move the left or right subtree up one level, because
-      // then we would have to re-sort the tree. Instead replace the node
-      // with the left most leaf node
-      Node** leaf = GetLeftMostLeafNode(node);
+      // then we would have to re-sort the tree. Instead replace the node's
+      // key and value with that of its left most leaf node (any leaf frame
+      // would do)
+      LeafNode* leaf = RemoveLeftMostLeafNode((TwoNode**)node);
 
-      // Copy over both the left and right subtree pointers
-      if ((*node)->mLeft != (*leaf)) {
-        (*leaf)->mLeft = (*node)->mLeft;
+      // Copy over the leaf's key and value
+      // Note: RemoveLeftMostLeafNode() may have converted "node" to a 
+      // leaf node so don't make any assumptions here
+      if ((*node)->IsLeaf()) {
+        (*node)->mKey = DST_GET_LEAF_KEY(leaf);
+      } else {
+        (*node)->mKey = (void*)(PtrBits(DST_GET_LEAF_KEY(leaf)) | 0x01);
       }
-      if ((*node)->mRight != (*leaf)) {
-        (*leaf)->mRight = (*node)->mRight;
-      }
+      (*node)->mValue = leaf->mValue;
 
-      // Insert the leaf node in its new level, and disconnect it from its old
-      // parent node
-      *node = *leaf;
-      *leaf = 0;
+      // Delete the leaf node
+      DestroyNode(leaf);
     }
-
-    DestroyNode(tmp);
+  
 #ifdef DEBUG_troy
     VerifyTree(mRoot);
 #endif
@@ -243,71 +602,24 @@ nsDST::Remove(void* aKey)
   return 0;
 }
 
-// Searches the tree for a node with the specified key. Return the value
-// or NULL if the key is not in the tree
-void*
-nsDST::Search(void* aKey) const
-{
-  Node** result = SearchTree(aKey);
-
-#ifdef DEBUG_troy
-  if (!*result) {
-    // Use an alternative algorithm to verify that the key is not in
-    // the tree
-    NS_POSTCONDITION(!DepthFirstSearch(mRoot, aKey), "DST search failed");
-  }
-#endif
-
-  return (*result) ? (*result)->mValue : 0;
-}
-
-// Non-recursive search function. Returns a pointer to the pointer to the
-// node. Called by Search(), Insert(), and Remove()
-nsDST::Node**
-nsDST::SearchTree(void* aKey) const
-{
-  NS_PRECONDITION(0 == (PtrBits(aKey) & (mLevelZeroBit - 1)),
-                  "ignored low-order bits are not zero");
-
-  Node**  result = (Node**)&mRoot;
-  PtrBits bitMask = mLevelZeroBit;
-
-  while (*result) {
-    // Check if the node matches
-    if ((*result)->mKey == aKey) {
-      return result;
-    }
-
-    // Check whether we search the left branch or the right branch
-    if (0 == (PtrBits(aKey) & bitMask)) {
-      result = &(*result)->mLeft;
-    } else {
-      result = &(*result)->mRight;
-    }
-    // Move to the next bit in the key
-    bitMask <<= 1;
-  }
-
-  // We failed to find the key: return where the node would be inserted
-  return result;
-}
-
 #ifdef NS_DEBUG
 // Helper function used to verify the integrity of the tree. Does a
 // depth-first search of the tree looking for a node with the specified
 // key. Called by Search() if we don't find the key using the radix-search
-nsDST::Node*
-nsDST::DepthFirstSearch(Node* aNode, void* aKey) const
+nsDST::LeafNode*
+nsDST::DepthFirstSearch(LeafNode* aNode, void* aKey) const
 {
   if (!aNode) {
     return 0;
-  } else if (aNode->mKey == aKey) {
+  } else if (aNode->Key() == aKey) {
     return aNode;
+  } else if (aNode->IsLeaf()) {
+    return 0;
   } else {
-    Node* result = DepthFirstSearch(aNode->mLeft, aKey);
+    LeafNode* result = DepthFirstSearch(((TwoNode*)aNode)->mLeft, aKey);
 
     if (!result) {
-      result = DepthFirstSearch(aNode->mRight, aKey);
+      result = DepthFirstSearch(((TwoNode*)aNode)->mRight, aKey);
     }
 
     return result;
@@ -317,7 +629,7 @@ nsDST::DepthFirstSearch(Node* aNode, void* aKey) const
 // Helper function that verifies the integrity of the tree. Called
 // by Insert() and Remove()
 void
-nsDST::VerifyTree(Node* aNode, int aLevel, PtrBits aLevelKeyBits) const
+nsDST::VerifyTree(LeafNode* aNode, int aLevel, PtrBits aLevelKeyBits) const
 {
   if (aNode) {
     // Verify that the first "aLevel" bits of this node's key agree with the
@@ -327,31 +639,42 @@ nsDST::VerifyTree(Node* aNode, int aLevel, PtrBits aLevelKeyBits) const
       // When calculating the bit mask, take into consideration the low-order
       // bits we ignore
       PtrBits bitMask = (mLevelZeroBit << aLevel) - 1;
-      NS_ASSERTION(aLevelKeyBits == (PtrBits(aNode->mKey) & bitMask),
+      NS_ASSERTION(aLevelKeyBits == (PtrBits(aNode->Key()) & bitMask),
                    "key's bits don't match");
     }
 
-    // All node keys in the left subtree should have the next bit set to 0
-    VerifyTree(aNode->mLeft, aLevel + 1, aLevelKeyBits);
+    if (!aNode->IsLeaf()) {
+      const TwoNode*  twoNode = (TwoNode*)aNode;
+      NS_ASSERTION(twoNode->mLeft || twoNode->mRight,
+                   "two node with no child nodes");
 
-    // All node keys in the left subtree should have the next bit set to 1
-    VerifyTree(aNode->mRight, aLevel + 1, aLevelKeyBits | (mLevelZeroBit << aLevel));
+      // All node keys in the left subtree should have the next bit set to 0
+      VerifyTree(twoNode->mLeft, aLevel + 1, aLevelKeyBits);
+  
+      // All node keys in the left subtree should have the next bit set to 1
+      VerifyTree(twoNode->mRight, aLevel + 1, aLevelKeyBits | (mLevelZeroBit << aLevel));
+    }
   }
 }
 
 void
-nsDST::GatherStatistics(Node* aNode,
-                        int   aLevel,
-                        int&  aNumNodes,
-                        int   aNodesPerLevel[]) const
+nsDST::GatherStatistics(LeafNode* aNode,
+                        int       aLevel,
+                        int&      aNumLeafNodes,
+                        int&      aNumTwoNodes,
+                        int       aNodesPerLevel[]) const
 {
-  aNumNodes++;
-  aNodesPerLevel[aLevel]++;
-  if (aNode->mLeft) {
-    GatherStatistics(aNode->mLeft, aLevel + 1, aNumNodes, aNodesPerLevel);
-  }
-  if (aNode->mRight) {
-    GatherStatistics(aNode->mRight, aLevel + 1, aNumNodes, aNodesPerLevel);
+  if (aNode) {
+    aNodesPerLevel[aLevel]++;
+    if (aNode->IsLeaf()) {
+      aNumLeafNodes++;
+    } else {
+      aNumTwoNodes++;
+      GatherStatistics(((TwoNode*)aNode)->mLeft, aLevel + 1, aNumLeafNodes,
+                       aNumTwoNodes, aNodesPerLevel);
+      GatherStatistics(((TwoNode*)aNode)->mRight, aLevel + 1, aNumLeafNodes,
+                       aNumTwoNodes, aNodesPerLevel);
+    }
   }
 }
 
@@ -363,12 +686,13 @@ nsDST::Dump(FILE* out) const
   // node level
   static const int maxLevels = sizeof(void*) * 8;
 
-  int numNodes = 0;
+  int numLeafNodes = 0;
+  int numTwoNodes = 0;
   int nodesPerLevel[maxLevels];  // count of the number of nodes at a given level
   memset(&nodesPerLevel, 0, sizeof(int) * maxLevels);
 
   // Walk each node in the tree recording its node level
-  GatherStatistics(mRoot, 0, numNodes, nodesPerLevel);
+  GatherStatistics(mRoot, 0, numLeafNodes, numTwoNodes, nodesPerLevel);
 
   // Calculate the height, average node level, and median node level
   int height, medianLevel = 0, pathLength = 0;
@@ -387,11 +711,28 @@ nsDST::Dump(FILE* out) const
     pathLength += height * count;
   }
 
+  // Calculate the number of arenas in use
+  int numArenas = 0;
+  for (PLArena* arena = mArena.mPool.first.next; arena; arena = arena->next) {
+    numArenas++;
+  }
+
   // Output the statistics
+  int numTotalNodes = numLeafNodes + numTwoNodes;
+
   fputs("DST statistics\n", out);
-  fprintf(out, "  Number of nodes: %d\n", numNodes);
+  fprintf(out, "  Number of leaf nodes: %d\n", numLeafNodes);
+  fprintf(out, "  Number of tree nodes: %d\n", numTwoNodes);
+  if (numTotalNodes > 0) {
+    fprintf(out, "  Average node size: %.1f\n",
+            float(numLeafNodes * sizeof(LeafNode) + numTwoNodes * sizeof(TwoNode)) /
+            float(numTotalNodes));
+  }
+  fprintf(out, "  Number of arenas: %d(%d)\n", numArenas, mArena.mPool.arenasize);
   fprintf(out, "  Height (maximum node level) of the tree: %d\n", height - 1);
-  fprintf(out, "  Average node level: %.1f\n", float(pathLength) / float(numNodes));
+  if (numTotalNodes > 0) {
+    fprintf(out, "  Average node level: %.1f\n", float(pathLength) / float(numTotalNodes));
+  }
   fprintf(out, "  Median node level: %d\n", medianLevel);
   fprintf(out, "  Path length: %d\n", pathLength);
 

@@ -50,54 +50,49 @@ public:
 #endif
 
 private:
-  struct Node;
+  class LeafNode;
+  class TwoNode;
   struct NodeArena;
-  friend struct Node;       // needs access to struct NodeArena
-  friend struct NodeArena;  // needs access to struct Node
-
-  struct Node {
-    void* mKey;
-    void* mValue;
-    Node* mLeft;   // left subtree
-    Node* mRight;  // right subtree
-
-    Node(void* aKey, void* aValue);
-    int IsLeaf() const;
-
-    // Overloaded placement operator for allocating from an arena
-    void* operator new(size_t aSize, NodeArena& aArena);
-  };
+  friend class LeafNode;
+  friend class TwoNode;
+  friend struct NodeArena;  // needs access to structs LeafNode and TwoNode
 
   struct NodeArena {
     PLArenaPool mPool;
-    Node*       mFreeList;
+    LeafNode*   mLeafNodeFreeList;
+    TwoNode*    mTwoNodeFreeList;
 
     NodeArena();
     ~NodeArena();
 
-    void* AllocNode(size_t);
-    void  FreeNode(void*);
-    void  FreeArenaPool();
+    void*   AllocLeafNode();
+    void*   AllocTwoNode();
+    void    FreeNode(LeafNode*);
+    void    FreeNode(TwoNode*);
+    void    FreeArenaPool();
   };
 
-  Node*       mRoot;  // root node of the tree
+  LeafNode*   mRoot;  // root node of the tree
   NodeArena   mArena;
   PtrBits     mLevelZeroBit;
 
 private:
   // Helper functions
-  Node** SearchTree(void* aKey) const;
-  Node** GetLeftMostLeafNode(Node** aNode) const;
-  void   DestroyNode(Node* aNode);
+  LeafNode*   RemoveLeftMostLeafNode(TwoNode** aTwoNode);
+  void        DestroyNode(LeafNode* aLeafNode);
+  void        DestroyNode(TwoNode* aTwoNode);
+  LeafNode*   ConvertToLeafNode(TwoNode** aTwoNode);
+  TwoNode*    ConvertToTwoNode(LeafNode** aLeafNode);
 
 #ifdef NS_DEBUG
   // Diagnostic functions
-  Node* DepthFirstSearch(Node* aNode, void* aKey) const;
-  void  VerifyTree(Node* aNode, int aLevel = 0, PtrBits aLevelKeyBits = 0) const;
-  void  GatherStatistics(Node* aNode,
-                         int   aLevel,
-                         int&  aNumNodes,
-                         int   aNodesPerLevel[]) const;
+  void        VerifyTree(LeafNode* aNode, int aLevel = 0, PtrBits aLevelKeyBits = 0) const;
+  LeafNode*   DepthFirstSearch(LeafNode* aNode, void* aKey) const;
+  void        GatherStatistics(LeafNode* aNode,
+                               int       aLevel,
+                               int&      aNumLeafNodes,
+                               int&      aNumTwoNodes,
+                               int       aNodesPerLevel[]) const;
 #endif
 
 	nsDST(const nsDST&);           // no implementation
