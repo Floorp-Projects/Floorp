@@ -23,19 +23,24 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
+XPIDL_MODULE=appshell 
+
+XPIDLSRCS =                       \
+	nsIFileLocator.idl        \
+	$(NULL)
+
 EXPORTS = \
-	nsIWebShellWindow.h	\
-	nsAppShellCIDs.h          \
-        nsIAppShellService.h      \
-	nsICmdLineService.h	  \
-	nsIWidgetController.h     \
-	nsIXULWindowCallbacks.h   \
-	nsFileLocations.h         \
-	nsIFileLocator.h          \
-	nsIDOMXPConnectFactory.h  \
-	nsINetSupportDialogService.h \
-	nsIWindowMediator.h \
-  nsISessionHistory.h \
+	nsIWebShellWindow.h	          \
+	nsAppShellCIDs.h              \
+	nsIAppShellService.h          \
+	nsICmdLineService.h	          \
+	nsIWidgetController.h         \
+	nsIXULWindowCallbacks.h       \
+	nsFileLocations.h             \
+	nsIDOMXPConnectFactory.h      \
+	nsINetSupportDialogService.h  \
+	nsIWindowMediator.h           \
+	nsISessionHistory.h           \
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
