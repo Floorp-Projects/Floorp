@@ -49,14 +49,14 @@
 
 class nsISimpleEnumerator;
 
-typedef NS_CALLBACK(NS_HASH_ENUMERATOR_CONVERTER) (nsHashKey *key, void *data,
+typedef NS_CALLBACK(nsHashEnumeratorConverterFunc) (nsHashKey *key, void *data,
                                                    void *convert_data,
                                                    nsISupports **retval);
 
 NS_COM nsresult
-NS_NewHashtableEnumerator (nsHashtable *aHash,
-                           NS_HASH_ENUMERATOR_CONVERTER aConverter,
-                           void *aData, nsISimpleEnumerator **retval);
+NS_NewHashtableEnumerator(nsHashtable *aHash,
+                          nsHashEnumeratorConverterFunc aConverter,
+                          void *aData, nsISimpleEnumerator **retval);
 
 #endif /* nsHashtableEnumerator_h___ */
 
