@@ -60,6 +60,7 @@ nsSocketTransportService::nsSocketTransportService()
     : mInitialized(PR_FALSE)
     , mThread(nsnull)
     , mThreadEvent(nsnull)
+    , mAutodialEnabled(PR_FALSE)
     , mEventQLock(PR_NewLock())
     , mActiveCount(0)
     , mIdleCount(0)
@@ -392,13 +393,14 @@ nsSocketTransportService::CreateTransport(const char **types,
 NS_IMETHODIMP
 nsSocketTransportService::GetAutodialEnabled(PRBool *value)
 {
-    *value = PR_FALSE;
+    *value = mAutodialEnabled;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSocketTransportService::SetAutodialEnabled(PRBool value)
 {
+    mAutodialEnabled = value;
     return NS_OK;
 }
 
