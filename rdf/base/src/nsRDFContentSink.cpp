@@ -1542,7 +1542,7 @@ RDFContentSinkImpl::IsXMLNSDirective(const nsString& aAttributeKey, nsIAtom** aP
         return PR_FALSE;
 
     PRInt32 prefixLen = aAttributeKey.Length() - sizeof(kNameSpaceDef);
-    if (prefixLen == 0) {
+    if (prefixLen <= 0) {
         // they're setting the default namespace; leave `prefix'
         // as nsnull.
     }
