@@ -26,6 +26,7 @@
 #include "nsPhGfxLog.h"
 #include <photon/PhRender.h>
 #include <Pt.h>
+#include <errno.h>
 
 /* The Transparency Mask of the last image Draw'd in nsRenderingContextPh */
 /* This is needed for locking and unlocking */
@@ -84,8 +85,8 @@ nsDrawingSurfacePh :: ~nsDrawingSurfacePh()
 	
   if (mIsOffscreen)
   {
-    //PmMemReleaseMC( mMC);				/* this function has an error! */
-      free(mMC);
+    mMC->dc.gc = NULL;					/* leave gc for now (leaks "less") */
+    PmMemReleaseMC( mMC);				/* this function releases the GC  */
     mMC = nsnull;
     PgShmemDestroy( mPixmap->image );
 	mPixmap->image = nsnull;
@@ -349,6 +350,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
 
   if (mPixmap->image == NULL)
   {
+    printf("nsDrawingSurfacePh::Init Out of Memory calling PgShmemCreate dim=<%d,%d> bytes_per_pixel=<%d> errno=<%d>\n", dim.w,dim.h,bytes_per_pixel, errno);
     NS_ASSERTION(0,"nsDrawingSurfacePh::Init Out of Memory calling PgShmemCreate");
 	abort();
     return NS_ERROR_FAILURE;
@@ -450,11 +452,6 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Select( void )
     PgSetGC(mGC);  
   }
 
-  /* Clear out the Multi-clip, it will be reset if needed */
-  /* This fixed the toolbar drawing */
-  //  PgSetMultiClip(0,NULL);		/* Moved this to the Init section  */
-
-
 #ifdef DEBUG
   PhRect_t  *rect;
   int       rect_count;
@@ -546,7 +543,8 @@ NS_IMETHODIMP nsDrawingSurfacePh::Flush(void)
     if (err == -1)
 	{
 	  NS_ASSERTION(0,"nsDrawingSurfacePh::Flush  Error with PgFlush of Offscreen DrawingSurface");
-	  abort();	
+      DebugBreak();
+	  //abort();	
 	}
   }
 }
