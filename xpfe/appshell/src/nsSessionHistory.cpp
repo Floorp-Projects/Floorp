@@ -532,8 +532,11 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
             prev->GetChildCount(pcount);
             ccount = cur->GetChildCnt();
             nsCOMPtr<nsISupports>  historyObject;
-	        GetHistoryState(getter_AddRefs(historyObject));
-	    	prev->LoadURL(cURL, nsnull, PR_FALSE, (nsLoadFlags) (aIsReload?nsIChannel::LOAD_NORMAL:nsISessionHistory::LOAD_HISTORY), 0, historyObject);
+	          GetHistoryState(getter_AddRefs(historyObject));
+            nsLoadType   loadType = (nsLoadType)nsIChannel::LOAD_NORMAL;
+            if (!aIsReload)
+              loadType = (nsLoadType) nsISessionHistory::LOAD_HISTORY;
+	    	    prev->LoadURL(cURL, nsnull, PR_FALSE,  loadType, 0, historyObject);
             if (aIsReload && (pcount > 0)) {
               /* If this is a reload, on a page with frames, you want to return
                * true so that consecutive calls by the frame children in to 
