@@ -30,6 +30,8 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
+
+#include "xprintutil.h"
  
 #include <stdlib.h>
 #include <string.h>
@@ -37,12 +39,6 @@
 #include <limits.h>
 #include <errno.h>
 
-#define NeedFunctionPrototypes (1) /* is this legal from within an app. !? */
-#include <X11/Xlibint.h>
-#include <X11/extensions/Print.h>
-#include <X11/Intrinsic.h>
-
-#include "xprintutil.h"
 
 /*
 ** XprintUtil functions start with Xpu

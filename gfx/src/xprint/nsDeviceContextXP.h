@@ -17,11 +17,12 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
-#ifndef nsDeviceContextXP_h___
-#define nsDeviceContextXP_h___
+#ifndef nsDeviceContextXp_h___
+#define nsDeviceContextXp_h___
 
 #include <X11/Xlib.h>
 #include "nsDeviceContext.h"
@@ -35,10 +36,10 @@
 
 class nsXPrintContext;
 
-class nsDeviceContextXP : public nsIDeviceContextXP
+class nsDeviceContextXp : public nsIDeviceContextXp
 {
 public:
-  nsDeviceContextXP();
+  nsDeviceContextXp();
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -86,7 +87,7 @@ public:
                               nsIFontMetrics*& aMetrics);
 
 protected:
-  virtual         ~nsDeviceContextXP();
+  virtual         ~nsDeviceContextXp();
 
   nsDrawingSurface       mSurface;
   nsXPrintContext      *mPrintContext;  
@@ -96,7 +97,8 @@ protected:
   nsCOMPtr<nsIDeviceContextSpec> mSpec;
   float                 mPixelScale;
   nsCOMPtr<nsISupportsArray> mFontMetrics;  // we are not using the normal font cache
-
+  nsIDeviceContext     *mParentDeviceContext;
+  
 private:
   nsPaletteInfo        mPaletteInfo;
   PRBool               mWriteable;
@@ -106,7 +108,6 @@ private:
   float                mHeightFloat;
   PRInt32              mWidth;
   PRInt32              mHeight;
-
 };
 
-#endif /* !nsDeviceContextPS_h___ */
+#endif /* !nsDeviceContextXp_h___ */

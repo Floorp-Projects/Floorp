@@ -1,4 +1,6 @@
 
+#ifndef XPRINTUTIL_H
+#define XPRINTUTIL_H 1
 /* 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -30,7 +32,13 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
- 
+
+#ifndef NeedFunctionPrototypes 
+#define NeedFunctionPrototypes (1) /* is this legal from within an app. !? */
+#endif
+#include <X11/Xlibint.h>
+#include <X11/extensions/Print.h>
+#include <X11/Intrinsic.h>
 
 /* I don't know how to make this "better" yet... ;-( */
 #ifdef USE_MOZILLA_TYPES
@@ -86,4 +94,5 @@ XPGetDocStatus XpuWaitForPrintFileChild( void *handle );
 
 _XFUNCPROTOEND
 
+#endif /* !XPRINTUTIL_H */
 /* EOF. */

@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Peter Hartshorn <peter@igelaus.com.au>
  *   Tony Tsui <tony@igelaus.com.au>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #include "nsIGenericFactory.h"
@@ -39,6 +40,7 @@
 #include "nsIImageManager.h"
 #include "nsDeviceContextXlib.h"
 #include "nsImageXlib.h"
+#include "nsPrintOptionsXlib.h"
 
 // objects that just require generic constructors
 
@@ -52,6 +54,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerXlib)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsXlib)
 
 // our custom constructors
 
@@ -161,8 +164,13 @@ static nsModuleComponentInfo components[] =
   { "Image Manager",
     NS_IMAGEMANAGER_CID,
     //    "@mozilla.org/gfx/image_manager;1",
-    "@mozilla.org/gfx/imagemanager;1",
+    "@mozilla.org/gfx/imagemanager;1",  
     nsImageManagerConstructor },
+  { "Print Options",
+     NS_PRINTOPTIONS_CID,
+     //    "@mozilla.org/gfx/printoptions;1",
+     "@mozilla.org/gfx/printoptions;1",
+     nsPrintOptionsXlibConstructor },      
   { "Xlib Font Enumerator",
     NS_FONT_ENUMERATOR_CID,
     //    "@mozilla.org/gfx/font_enumerator/xlib;1",

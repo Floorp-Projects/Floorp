@@ -39,7 +39,7 @@
 
 #define NS_IDEVICE_CONTEXT_SPEC_XP_IID { 0xa4ef8910, 0xdd65, 0x11d2, { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 } }
 
-class nsIDeviceContextSpecXP : public nsISupports
+class nsIDeviceContextSpecXp : public nsISupports
 {
 
 public:

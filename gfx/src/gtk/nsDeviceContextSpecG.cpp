@@ -17,7 +17,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *
  */
 
 #include "nsDeviceContextSpecG.h"
@@ -45,7 +47,6 @@ static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 nsDeviceContextSpecGTK :: nsDeviceContextSpecGTK()
 {
   NS_INIT_REFCNT();
-	
 }
 
 /** -------------------------------------------------------
@@ -92,11 +93,12 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: QueryInterface(REFNSIID aIID, void** aIn
 #ifdef USE_XPRINT
   if (aIID.Equals(kIDeviceContextSpecXPIID))
   {
-    *aInstancePtr = (void*) (nsIDeviceContextSpecXP*) this;
+    nsIDeviceContextSpecXp *tmp = this;
+    *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-#endif
+#endif /* USE_XPRINT */
 
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -119,12 +121,28 @@ NS_IMPL_RELEASE(nsDeviceContextSpecGTK)
  *  Initialize the nsDeviceContextSpecGTK
  *  @update   dc 2/15/98
  *  @update   syd 3/2/99
+ *
+ * gisburn: Please note that this function exists as 1:1 copy in other
+ * toolkits including:
+ * - GTK+-toolkit:
+ *   file:     mozilla/gfx/src/gtk/nsDeviceContextSpecG.cpp
+ *   function: NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aQuiet)
+ * - Xlib-toolkit: 
+ *   file:     mozilla/gfx/src/xlib/nsDeviceContextSpecXlib.cpp 
+ *   function: NS_IMETHODIMP nsDeviceContextSpecXlib::Init(PRBool aQuiet)
+ * - Qt-toolkit:
+ *   file:     mozilla/gfx/src/qt/nsDeviceContextSpecQT.cpp
+ *   function: NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
+ * 
+ * ** Please update the other toolkits when changing this function.
  */
-NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
+NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aQuiet)
 {
-  nsresult  rv = NS_ERROR_FAILURE;
-  NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+  nsresult rv = NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIPrintOptions> printService(do_GetService(kPrintOptionsCID, &rv));
+  NS_ASSERTION(nsnull != printService, "No print service.");
+  
   // if there is a current selection then enable the "Selection" radio button
   if (NS_SUCCEEDED(rv) && printService) {
     PRBool isOn;
@@ -135,7 +153,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
     }
   }
 
-  char *path;
+  char      *path;
   PRBool     canPrint       = PR_FALSE;
   PRBool     reversed       = PR_FALSE;
   PRBool     color          = PR_FALSE;
@@ -150,7 +168,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
   double     dright         = 0.5;
   double     dtop           = 0.5;
   double     dbottom        = 0.5; 
-
 
   if (PR_FALSE == aQuiet ) {
     rv = NS_ERROR_FAILURE;
@@ -168,8 +185,8 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
       if (wwatch) {
         nsCOMPtr<nsIDOMWindow> newWindow;
         rv = wwatch->OpenWindow(0, "chrome://global/content/printdialog.xul",
-		      "_blank", "chrome,modal", paramBlockWrapper,
-		      getter_AddRefs(newWindow));
+                      "_blank", "chrome,modal", paramBlockWrapper,
+                      getter_AddRefs(newWindow));
       }
     }
     if (NS_SUCCEEDED(rv)) {
@@ -182,8 +199,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
   } else {
     canPrint = PR_TRUE;
   }
-
-
 
   if (canPrint) {
     if (printService) {
@@ -202,63 +217,57 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
       printService->GetMarginRight(&dright);
 
       if (command != nsnull && printfile != nsnull) {
-	      // convert Unicode strings to cstrings
-	      nsAutoString cmdStr;
-	      nsAutoString printFileStr;
-	      cmdStr        = command;
-	      printFileStr  = printfile;
-	      char *       pCmdStr       = cmdStr.ToNewCString();
-	      char *       pPrintFileStr = printFileStr.ToNewCString();
-	      sprintf( mPrData.command, pCmdStr );
-	      sprintf( mPrData.path, pPrintFileStr);
-	      nsMemory::Free(pCmdStr);
-	      nsMemory::Free(pPrintFileStr);
+        // ToDo: Use LocalEncoding instead of UTF-8 (see bug 73446)
+        strcpy(mPrData.command, NS_ConvertUCS2toUTF8(command).get());  
+        strcpy(mPrData.path,    NS_ConvertUCS2toUTF8(printfile).get());
       }
-
 #ifdef DEBUG_rods
-    printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright);
-    printf("printRange     %d\n", printRange);
-    printf("fromPage       %d\n", fromPage);
-    printf("toPage         %d\n", toPage);
-#endif
-     } else {
-#ifndef VMS
-    sprintf( mPrData.command, "lpr" );
+      printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright);
+      printf("printRange     %d\n", printRange);
+      printf("fromPage       %d\n", fromPage);
+      printf("toPage         %d\n", toPage);
+#endif /* DEBUG_rods */
+    } else {
+#ifdef VMS
+      // Note to whoever puts the "lpr" into the prefs file. Please contact me
+      // as I need to make the default be "print" instead of "lpr" for OpenVMS.
+      strcpy(mPrData.command, "print");
 #else
-	    // Note to whoever puts the "lpr" into the prefs file. Please contact me
-	    // as I need to make the default be "print" instead of "lpr" for OpenVMS.
-	    sprintf( mPrData.command, "print" );
-#endif
-  }
-  
-  mPrData.top     = dtop;
-  mPrData.bottom    = dbottom;
-  mPrData.left      = dleft;
-  mPrData.right     = dright;
-  mPrData.fpf       = !reversed;
-  mPrData.grayscale = !color;
-  mPrData.size      = paper_size;
-  mPrData.toPrinter = !tofile;
-  
-  // PWD, HOME, or fail 
+      strcpy(mPrData.command, "lpr");
+#endif /* VMS */
+    }
+
+    mPrData.top       = dtop;
+    mPrData.bottom    = dbottom;
+    mPrData.left      = dleft;
+    mPrData.right     = dright;
+    mPrData.fpf       = !reversed;
+    mPrData.grayscale = !color;
+    mPrData.size      = paper_size;
+    mPrData.toPrinter = !tofile;
+
+    // PWD, HOME, or fail 
     
-  if (!printfile) {
-    if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) NULL ) 
-      if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) NULL )
-        strcpy( mPrData.path, "mozilla.ps" );
-	          if ( path != (char *) NULL )
-	            sprintf( mPrData.path, "%s/mozilla.ps", path );
-	          else
-	            return NS_ERROR_FAILURE;
-      }
-      if (command != nsnull) {
-	      nsMemory::Free(command);
-      }
-      if (printfile != nsnull) {
-	      nsMemory::Free(printfile);
-      }
+    if (!printfile) {
+      if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) nsnull ) 
+        if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) nsnull )
+          strcpy(mPrData.path, "mozilla.ps");
+          
+      if ( path != (char *) nsnull )
+        sprintf(mPrData.path, "%s/mozilla.ps", path);
+      else
+        return NS_ERROR_FAILURE;
+    }
+    if (command != nsnull) {
+      nsMemory::Free(command);
+    }
+    if (printfile != nsnull) {
+      nsMemory::Free(printfile);
+    }
+
     return NS_OK;
   }
+
   return NS_ERROR_FAILURE;
 }
 
@@ -361,7 +370,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: GetPrintMethod(int &aMethod )
   }
   return NS_OK;
 }
-#endif
+#endif /* USE_XPRINT */
 
 /** -------------------------------------------------------
  * Closes the printmanager if it is open.
@@ -369,5 +378,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: GetPrintMethod(int &aMethod )
  */
 NS_IMETHODIMP nsDeviceContextSpecGTK :: ClosePrintManager()
 {
-	return NS_OK;
-}  
+  return NS_OK;
+}
+

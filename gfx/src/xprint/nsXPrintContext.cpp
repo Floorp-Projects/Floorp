@@ -30,11 +30,16 @@
 #include "nsXPrintContext.h"
 #include "xprintutil.h"
 
+//#define HACK_PRINTONSCREEN 1
+//#define XPRINT_PRINT_IMAGES 1
+
+#ifdef PR_LOGGING 
 /* DEBUG: use 
  * % export NSPR_LOG_MODULES=nsXPrintContext:5 
  * to see these debug messages... 
  */
 static PRLogModuleInfo *nsXPrintContextLM = PR_NewLogModule("nsXPrintContext");
+#endif /* PR_LOGGING */
 
 #ifdef __SUNPRO_C
 extern "C" /* Make Sun Workshop and other conformant compilers happy... :-) */
@@ -45,7 +50,7 @@ int xerror_handler(Display *display, XErrorEvent *ev)
     /* this should _never_ be happen... but if this happens - debug mode or not - scream !!! */
     char errmsg[80];
     XGetErrorText(display, ev->error_code, errmsg, sizeof(errmsg));
-    fprintf(stderr, "lib_xprint: Warning (X Error) -  %s\n", errmsg);
+    fprintf(stderr, "nsGfxXprintModule: Warning (X Error) -  %s\n", errmsg);
     return 0;
 }
 
@@ -63,8 +68,8 @@ nsXPrintContext::nsXPrintContext()
    mGC          = (GC)None;
    mDrawable    = (Drawable)None;
    mDepth       = 0;
-   mAlphaPixmap = (Pixmap)None;
-   mImagePixmap = (Pixmap)None;
+   mIsGrayscale = PR_FALSE; /* default is color output */
+   mIsAPrinter  = PR_TRUE;  /* default destination is printer */
 }
 
 /** ---------------------------------------------------
@@ -86,11 +91,12 @@ nsXPrintContext::~nsXPrintContext()
 #endif /* HACK_PRINTONSCREEN */
 
 NS_IMETHODIMP 
-nsXPrintContext::Init(nsIDeviceContextSpecXP *aSpec)
+nsXPrintContext::Init(nsIDeviceContextSpecXp *aSpec)
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::Init()\n"));
 
-  int   prefDepth = 24; /* 24 or 8 */
+  int   prefDepth = 8; /* 24 or 8... 
+                        * I wish current Xprt would have a StaticGray visual... ;-( */
   char *buf;
 
 /* print on screen(="normal" Xserver) is "DEBUG" for now... 
@@ -101,11 +107,11 @@ nsXPrintContext::Init(nsIDeviceContextSpecXP *aSpec)
   {
     mPDisplay  = (Display *)XOpenDisplay(nsnull);
     mScreen = XDefaultScreenOfDisplay(mPDisplay);
+    mScreenNumber = XScreenNumberOfScreen(mScreen);
     xlib_rgb_init_with_depth(mPDisplay, mScreen, prefDepth);
-    mScreenNumber = XDefaultScreen(mPDisplay);
+
     SetupWindow(0, 0, 1200, 1200);
     mPrintResolution = 300;
-    mTextZoom = 1.0f; 
     XMapWindow(mPDisplay, mDrawable);
   }
   else
@@ -124,7 +130,6 @@ nsXPrintContext::Init(nsIDeviceContextSpecXP *aSpec)
     XpGetPageDimensions(mPDisplay, mPContext, &width, &height, &rect);
     SetupWindow(rect.x, rect.y, rect.width, rect.height);
 
-    mTextZoom = 2.4f; // should this be printer_DPI / display_DPI ?
     XMapWindow(mPDisplay, mDrawable);
   }
   
@@ -144,27 +149,28 @@ nsXPrintContext::SetupWindow(int x, int y, int width, int height)
          ("nsXPrintContext::SetupWindow: x=%d y=%d width=%d height=%d\n", 
          x, y, width, height));
 
-  XSetWindowAttributes xattributes;
-  long xattributes_mask;
-  Window parent_win;
-  XVisualInfo *visual_info;
-  unsigned long gcmask;
-  XGCValues gcvalues;
+  XSetWindowAttributes  xattributes;
+  long                  xattributes_mask;
+  Window                parent_win;
+  XVisualInfo          *visual_info;
+  unsigned long         gcmask;
+  XGCValues             gcvalues;
 
   mWidth = width;
   mHeight = height;
   visual_info = xlib_rgb_get_visual_info();
 
   parent_win = RootWindow(mPDisplay, mScreenNumber);
-  xattributes.background_pixel = WhitePixel (mPDisplay, mScreenNumber);
-  xattributes.border_pixel = BlackPixel (mPDisplay, mScreenNumber);
+  xattributes.background_pixel = WhitePixel(mPDisplay, mScreenNumber);
+  xattributes.border_pixel     = BlackPixel(mPDisplay, mScreenNumber);
   xattributes_mask |= CWBorderPixel | CWBackPixel;
 
   mDrawable = (Drawable)XCreateSimpleWindow(mPDisplay,
                                 parent_win,
                                 x, y,
                                 width, height,
-                                0, BlackPixel(mPDisplay, mScreenNumber),
+                                0, 
+                                BlackPixel(mPDisplay, mScreenNumber),
                                 WhitePixel(mPDisplay, mScreenNumber));
   mDepth  = XDefaultDepth(mPDisplay, mScreenNumber);
   mVisual = XDefaultVisual(mPDisplay, mScreenNumber);
@@ -179,16 +185,17 @@ nsXPrintContext::SetupWindow(int x, int y, int width, int height)
 
 
 NS_IMETHODIMP
-nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXP *aSpec)
+nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::SetupPrintContext()\n"));
   
-  int printSize;
-  float top, bottom, left, right;
-  char *buf;
+  int    printSize;
+  float  top, bottom, left, right;
+  char  *buf;
 
   // Get the Attributes
   aSpec->GetToPrinter(mIsAPrinter);
+  aSpec->GetGrayscale(mIsGrayscale);
   aSpec->GetSize(printSize);
   aSpec->GetTopMargin(top);
   aSpec->GetBottomMargin(bottom);
@@ -382,18 +389,43 @@ nsXPrintContext::DrawImage(nsIImage *aImage,
                 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::DrawImage(%d/%d/%d/%d - %d/%d/%d/%d)\n", 
+         (int)aSX, (int)aSY, (int)aSWidth, (int)aSHeight,
+         (int)aDX, (int)aDY, (int)aDWidth, (int)aDHeight));
+
   PRUint8 *image_bits = aImage->GetBits();
   PRInt32  row_bytes  = aImage->GetLineStride();
-   
+  
+  NS_ASSERTION((aSWidth==aDWidth)&&(aSHeight==aDHeight), 
+               "nsXPrintContext::DrawImage(): Image scaling not implemented yet... ,-( .");  
+
+#ifdef XPRINT_PRINT_IMAGES   
   // XpSetImageResolution(mPDisplay, mPContext, new_res, &prev_res);
-  xlib_draw_gray_image(mDrawable,
-                       mGC,
-                       aDX, aDY, aDWidth, aDHeight,
-                       XLIB_RGB_DITHER_MAX,
-                       image_bits + row_bytes * aSY + 3 * aDX,
-                       row_bytes);
+  
+  if( mIsGrayscale )
+  {  
+    xlib_draw_gray_image(mDrawable,
+                        mGC,
+                        aDX, aDY, aDWidth, aDHeight,
+                        XLIB_RGB_DITHER_MAX,
+                        image_bits + row_bytes * aSY + 3 * aDX,
+                        row_bytes);
+  }
+  else
+  {
+    xlib_draw_rgb_image(mDrawable,
+                        mGC,
+                        aDX, aDY, aDWidth, aDHeight,
+                        XLIB_RGB_DITHER_MAX,
+                        image_bits + row_bytes * aSY + 3 * aDX,
+                        row_bytes);  
+  }                    
 
   // XpSetImageResolution(mPDisplay, mPContext, prev_res, &new_res);
+#else
+    XDrawRectangle(mPDisplay, mDrawable, mGC, aDX, aDY, aDWidth, aDHeight);
+#endif /* XPRINT_PRINT_IMAGES */
+
   return NS_OK;
 }
 
@@ -403,34 +435,38 @@ NS_IMETHODIMP
 nsXPrintContext::DrawImage(nsIImage *aImage,
                            PRInt32 aX, PRInt32 aY,
                            PRInt32 aWidth, PRInt32 aHeight)
-{
+{ 
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::DrawImage(%d/%d/%d/%d)\n",
+         (int)aX, (int)aY, (int)aWidth, (int)aHeight));
+
+#ifdef XPRINT_PRINT_IMAGES
   PRInt32  width         = aImage->GetWidth();
   PRInt32  height        = aImage->GetHeight();
   PRUint8 *alphaBits     = aImage->GetAlphaBits();
   PRInt32  alphaRowBytes = aImage->GetAlphaLineStride();
   PRUint8 *image_bits    = aImage->GetBits();
   PRInt32  row_bytes     = aImage->GetLineStride();
-
+  Pixmap   alpha_pixmap  = None;
+  Pixmap   image_pixmap  = None;
+  
   // XXX kipp: this is temporary code until we eliminate the
   // width/height arguments from the draw method.
   if ((aWidth != width) || (aHeight != height)) 
   {
-     aWidth = width;
-     aHeight = height;
+    aWidth  = width;
+    aHeight = height;
   }
 
-  XImage    *x_image = nsnull;
-  GC         gc;
-  XGCValues  gcv;
-
   // Create gc clip-mask on demand
-  if ((alphaBits != nsnull) && (mAlphaPixmap == None)) {
-    if (mAlphaPixmap==None) {
-      mAlphaPixmap = XCreatePixmap(mPDisplay, 
-                                RootWindow(mPDisplay, mScreenNumber),
-                                aWidth, aHeight, 1); /* ToDo: Check for error */
-    }
-
+  if ( alphaBits != nsnull ) {
+    XImage    *x_image = nsnull;
+    GC         gc;
+    XGCValues  gcv;
+    
+    alpha_pixmap = XCreatePixmap(mPDisplay, 
+                                 mDrawable,
+                                 aWidth, aHeight, 1); /* ToDo: Check for error */
+  
     /* Make an image out of the alpha-bits created by the image library (ToDo: check for error) */
     x_image = XCreateImage(mPDisplay, mVisual,
                            1,                 /* visual depth...1 for bitmaps */
@@ -448,9 +484,9 @@ nsXPrintContext::DrawImage(nsIImage *aImage,
     x_image->bitmap_bit_order = MSBFirst;
 
     /* This definition doesn't depend on client byte ordering
-       because the image library ensures that the bytes in
-       bitmask data are arranged left to right on the screen,
-       low to high address in memory. */
+     * because the image library ensures that the bytes in
+     * bitmask data are arranged left to right on the screen,
+     * low to high address in memory. */
     x_image->byte_order = MSBFirst;
 #if defined(IS_LITTLE_ENDIAN)
     // no, it's still MSB XXX check on this!!
@@ -460,79 +496,98 @@ nsXPrintContext::DrawImage(nsIImage *aImage,
 #else
 #error ERROR! Endianness is unknown;
 #endif
-    // Write into the pixemap that is underneath gdk's mAlphaPixmap
+    // Write into the pixemap that is underneath gdk's alpha_pixmap
     // the image we just created.
     memset(&gcv, 0, sizeof(XGCValues));
     gcv.function = GXcopy;
-    gc = XCreateGC(mPDisplay, mAlphaPixmap, GCFunction, &gcv);
+    gc = XCreateGC(mPDisplay, alpha_pixmap, GCFunction, &gcv);
 
-    XPutImage(mPDisplay, mAlphaPixmap, gc, x_image, 0, 0, 0, 0,
+    XPutImage(mPDisplay, alpha_pixmap, gc, x_image, 0, 0, 0, 0,
               aWidth, aHeight);
     XFreeGC(mPDisplay, gc);
 
     // Now we are done with the temporary image
-    x_image->data = 0;          /* Don't free the IL_Pixmap's bits. */
+    x_image->data = nsnull;          /* Don't free the IL_Pixmap's bits. */
     XDestroyImage(x_image);
   }
   
-  if (mImagePixmap == None) {
-    // Create an off screen pixmap to hold the image bits.
-    mImagePixmap = XCreatePixmap(mPDisplay,
-                                 RootWindow(mPDisplay, mScreenNumber),
-                                 aWidth, aHeight,
-                                 mDepth);
-    XSetClipOrigin(mPDisplay, mGC, 0, 0);
-    XSetClipMask(mPDisplay, mGC, None);
-    GC gc;
-    XGCValues xvalues;
-    unsigned long xvalues_mask;
+  // Create an off screen pixmap to hold the image bits.
+  image_pixmap = XCreatePixmap(mPDisplay,
+                               mDrawable,
+                               aWidth, aHeight,
+                               mDepth);
+  XSetClipOrigin(mPDisplay, mGC, 0, 0);
+  XSetClipMask(mPDisplay, mGC, None);
+  
+  GC            gc;
+  XGCValues     xvalues;
+  unsigned long xvalues_mask;
 
-    xvalues.function           = GXcopy;
-    xvalues.fill_style         = FillSolid;
-    xvalues.arc_mode           = ArcPieSlice;
-    xvalues.subwindow_mode     = ClipByChildren;
-    xvalues.graphics_exposures = True;
-    xvalues_mask = GCFunction | GCFillStyle | GCArcMode | GCSubwindowMode | GCGraphicsExposures;
+  xvalues.function           = GXcopy;
+  xvalues.fill_style         = FillSolid;
+  xvalues.arc_mode           = ArcPieSlice;
+  xvalues.subwindow_mode     = ClipByChildren;
+  xvalues.graphics_exposures = True;
+  xvalues_mask = GCFunction | GCFillStyle | GCArcMode | GCSubwindowMode | GCGraphicsExposures;
 
-    gc = XCreateGC(mPDisplay, mImagePixmap, xvalues_mask, &xvalues); 
+  gc = XCreateGC(mPDisplay, image_pixmap, xvalues_mask, &xvalues); 
 
-    // XpSetImageResolution(mPDisplay, mPContext, new_res, &prev_res);
-    xlib_draw_rgb_image(mImagePixmap,
+  // XpSetImageResolution(mPDisplay, mPContext, new_res, &prev_res);
+  if( mIsGrayscale )
+  {
+    xlib_draw_gray_image(image_pixmap,
+                         gc,
+                         0, 0, aWidth, aHeight,
+                         XLIB_RGB_DITHER_MAX,
+                         image_bits, row_bytes);  
+  }
+  else
+  {
+    xlib_draw_rgb_image(image_pixmap,
                         gc,
                         0, 0, aWidth, aHeight,
-                        XLIB_RGB_DITHER_NONE,
+                        XLIB_RGB_DITHER_MAX,
                         image_bits, row_bytes);
-    // XpSetImageResolution(mPDisplay, mPContext, prev_res, &new_res);
   }
+  // XpSetImageResolution(mPDisplay, mPContext, prev_res, &new_res);
   
-  if (mAlphaPixmap != None)
+  XFreeGC(mPDisplay, gc);
+  
+  if (alpha_pixmap != None)
   {
     // set up the gc to use the alpha pixmap for clipping
     XSetClipOrigin(mPDisplay, mGC, aX, aY);
-    XSetClipMask(mPDisplay, mGC, mAlphaPixmap);
+    XSetClipMask(mPDisplay, mGC, alpha_pixmap);
   }
 
   // copy our off screen pixmap onto the window.
   XCopyArea(mPDisplay,                 // display
-            mImagePixmap,              // source
+            image_pixmap,              // source
             mDrawable,                 // dest
             mGC,                       // GC
             0, 0,                      // xsrc, ysrc
             aWidth, aHeight,           // width, height
             aX, aY);                   // xdest, ydest
 
-  if (mAlphaPixmap != None) 
+  if (alpha_pixmap != None) 
   {
     XSetClipOrigin(mPDisplay, mGC, 0, 0);
     XSetClipMask(mPDisplay, mGC, None);
   }
+  
+  if( image_pixmap != None )  XFreePixmap(mPDisplay, image_pixmap);
+  if( alpha_pixmap != None )  XFreePixmap(mPDisplay, alpha_pixmap);
+#else
+    XDrawRectangle(mPDisplay, mDrawable, mGC, aX, aY, aWidth, aHeight);
+#endif /* XPRINT_PRINT_IMAGES */
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsXPrintContext::GetPrintResolution(int &aPrintResolution) const
 {
-  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::GetPrintResolution()\n"));
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::GetPrintResolution() res=%d\n",
+         (int)mPrintResolution));
   
   aPrintResolution = mPrintResolution;
   return NS_OK;

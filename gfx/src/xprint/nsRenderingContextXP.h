@@ -20,8 +20,8 @@
  * Contributor(s): 
  */
 
-#ifndef nsRenderingContextXP_h___
-#define nsRenderingContextXP_h___
+#ifndef nsRenderingContextXp_h___
+#define nsRenderingContextXp_h___ 1
 
 #include "nsRenderingContextImpl.h"
 #include "nsUnitConversion.h"
@@ -36,16 +36,16 @@
 #include "nsRect.h"
 #include "nsDeviceContextXP.h"
 #include "nsVoidArray.h"
-#include "nsRegionXP.h"
+#include "nsRegionXlib.h"
 
 class XP_State;
 class nsXPrintContext;
 
-class nsRenderingContextXP : public nsRenderingContextImpl
+class nsRenderingContextXp : public nsRenderingContextImpl
 {
 public:
-  nsRenderingContextXP();
-  virtual ~nsRenderingContextXP();
+  nsRenderingContextXp();
+  virtual ~nsRenderingContextXp();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -162,6 +162,12 @@ public:
   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect);
   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
 
+
+#ifdef USE_IMG2
+  NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint);
+  NS_IMETHOD DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect);
+#endif
+
   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
@@ -190,10 +196,10 @@ private:
   void PushClipState(void);
 
 protected:
-  nsCOMPtr<nsIDeviceContextXP>     mContext;
+  nsCOMPtr<nsIDeviceContextXp>     mContext;
   nsXPrintContext     *mPrintContext;
   nsIFontMetrics      *mFontMetrics;
-  nsRegionXP          *mClipRegion;
+  nsRegionXlib        *mClipRegion;
   float                mP2T;
   nscolor              mCurrentColor;
  
@@ -201,10 +207,8 @@ protected:
   XP_State            *mStates;
   nsVoidArray         *mStateCache;
   XFontStruct         *mCurrentFont;        
-
-  //state management
-  PRUint8             *mGammaTable;
 };
 
 
-#endif /* nsRenderingContextXP_h___ */
+#endif /* !nsRenderingContextXp_h___ */
+

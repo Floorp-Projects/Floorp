@@ -20,8 +20,8 @@
  * Contributor(s): 
  */
 
-#ifndef nsGfxFactoryXP_h__
-#define nsGfxFactoryXP_h__
+#ifndef nsGfxFactoryXp_h__
+#define nsGfxFactoryXp_h__
 
 /* {4c2bb896-13c9-11d3-9304-006008948010} */
 #define NS_DEVICECONTEXTXP_CID \
@@ -29,3 +29,4 @@
     {0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01}}
 
 #endif
+

@@ -18,90 +18,108 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Tony Tsui <tony@igelaus.com.au>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen,de>
  */
 
-#ifndef nsFontMetricsXP_h__
-#define nsFontMetricsXP_h__
+#ifndef nsFontMetricsXp_h__
+#define nsFontMetricsXp_h__ 1
 
+#include "nsICharRepresentable.h"
+#include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIFontEnumerator.h"
-#include "nsFont.h"
-#include "nsString.h"
-#include "nsUnitConversion.h"
-#include "nsIDeviceContext.h"
+
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "nsDeviceContextXP.h"
+#ifdef XPRINT_NOT_NOW
+#include "nsDrawingSurfaceXP.h"
+#else
 #include "nsXPrintContext.h"
+#endif
+#include "nsFont.h"
+#include "nsRenderingContextXP.h"
+#include "nsString.h"
+#include "nsUnitConversion.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
 
-#define FONT_SWITCHING 
-/* #undef FONT_SWITCHING */
+// Remove this eventually after I remove all usage from implementation file. TonyT
+#define FONT_SWITCHING
 
-#ifdef ADD_GLYPH
-#undef ADD_GLYPH
-#endif
-#define ADD_GLYPH(map, g) (map)[(g) >> 3] |= (1 << ((g) & 7))
-
-#ifdef FONT_HAS_GLYPH
 #undef FONT_HAS_GLYPH
-#endif
-#define FONT_HAS_GLYPH(map, g) (((map)[(g) >> 3] >> ((g) & 7)) & 1)
+#define FONT_HAS_GLYPH(map, char) IS_REPRESENTABLE(map, char)
 
 typedef struct nsFontCharSetInfo nsFontCharSetInfo;
 
 typedef int (*nsFontCharSetConverter)(nsFontCharSetInfo* aSelf,
-             const PRUnichar* aSrcBuf, PRInt32 aSrcLen, char* aDestBuf,
-             PRInt32 aDestLen);
+             XFontStruct* aFont, const PRUnichar* aSrcBuf, PRInt32 aSrcLen, 
+                   char* aDestBuf, PRInt32 aDestLen);
 
 struct nsFontCharSet;
-class nsFontMetricsXP;
+struct nsFontFamily;
+struct nsFontNode;
+struct nsFontStretch;
 
-struct nsFontXP
+
+class nsFontXpUserDefined;
+class nsFontMetricsXp;
+
+class nsFontXp
 {
-  nsFontXP();
-  virtual ~nsFontXP();
-
+public:
+  nsFontXp();
+  virtual ~nsFontXp();
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
-  void LoadFont(nsFontCharSet* aCharSet, nsFontMetricsXP* aMetrics);
+  void LoadFont(void);
+
+  inline int SupportsChar(PRUnichar aChar)
+    { return mFont && FONT_HAS_GLYPH(mMap, aChar); };
+    
+
   virtual int GetWidth(const PRUnichar* aString, PRUint32 aLength) = 0;
+#ifdef XPRINT_NOT_NOW  
+  virtual int DrawString(nsRenderingContextXp* aContext,
+                         nsDrawingSurfaceXp*   aSurface,
+                         nscoord aX, nscoord aY,
+                         const PRUnichar* aString, PRUint32 aLength) = 0;
+#else
   virtual int DrawString(nsXPrintContext* aSurface,
-                          nscoord aX,
-                          nscoord aY, const PRUnichar* aString,
-                          PRUint32 aLength) = 0;
+                         nscoord aX,
+                         nscoord aY, const PRUnichar* aString,
+                         PRUint32 aLength) = 0;                          
+#endif /* XPRINT_NOT_NOW */                     
+
 #ifdef MOZ_MATHML
-  // bounding metrics for a string
-  // remember returned values are not in app units
+  // bounding metrics for a string 
+  // remember returned values are not in app units 
   // - to emulate GetWidth () above
   virtual nsresult
   GetBoundingMetrics(const PRUnichar*   aString,
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics) = 0;
-#endif
-
+#endif /* MOZ_MATHML */
+        
   XFontStruct           *mFont;
-  PRUint32*              mMap;
-  nsFontCharSetInfo*     mCharSetInfo;
-  char*                  mName;
+  PRUint32              *mMap;
+  nsFontCharSetInfo     *mCharSetInfo;
+  char                  *mName;
+  nsFontXpUserDefined   *mUserDefinedFont;
   PRUint16               mSize;
-  PRUint16               mActualSize;
   PRInt16                mBaselineAdjust;
 };
 
-struct nsFontStretch;
-struct nsFontFamily;
-typedef struct nsFontSearch nsFontSearch;
+//typedef struct nsFontSearch nsFontSearch;
 
-
-class nsFontMetricsXP : public nsIFontMetrics
+class nsFontMetricsXp : public nsIFontMetrics
 {
 public:
-  nsFontMetricsXP();
-  virtual ~nsFontMetricsXP();
+  nsFontMetricsXp();
+  virtual ~nsFontMetricsXp();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -130,50 +148,60 @@ public:
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
-
+  
   virtual nsresult GetSpaceWidth(nscoord &aSpaceWidth);
 
-  nsFontXP* FindFont(PRUnichar aChar);
-  void        FindGenericFont(nsFontSearch* aSearch);
-  void        FindSubstituteFont(nsFontSearch* aSearch);
+  nsFontXp* FindFont(PRUnichar aChar);
+  nsFontXp* FindUserDefinedFont(PRUnichar aChar);
+  nsFontXp* FindLocalFont(PRUnichar aChar);
+  nsFontXp* FindGenericFont(PRUnichar aChar);
+  nsFontXp* FindGlobalFont(PRUnichar aChar);
+  nsFontXp* FindSubstituteFont(PRUnichar aChar);
+
+  nsFontXp* SearchNode(nsFontNode* aNode, PRUnichar aChar);
+  nsFontXp* TryAliases(nsCString* aName, PRUnichar aChar); 
+  nsFontXp* TryFamily(nsCString* aName, PRUnichar aChar);
+  nsFontXp* TryNode(nsCString* aName, PRUnichar aChar);
+
+  nsFontXp* PickASizeAndLoad(nsFontStretch* aStretch,
+                               nsFontCharSetInfo* aCharSet,
+                               PRUnichar aChar);
+
   static nsresult FamilyExists(const nsString& aFontName);
 
-  static void  SetFont(nsXPrintContext* aSurface, Font fid);
-  static void InitFonts(void);
+  nsCAutoString      mDefaultFont;
 
-  friend void PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
-                               nsFontCharSet* aCharSet);
-  friend void TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet);
-  friend void TryFamily(nsFontSearch* aSearch, nsFontFamily* aFamily);
-  friend struct nsFontXP;
+  nsCStringArray     mFonts;
+  PRUint16           mFontsAlloc;
+  PRUint16           mFontsCount;
+  PRUint16           mFontsIndex;
+  nsVoidArray        mFontIsGeneric;
 
-  nsFontXP          **mLoadedFonts;
-  PRUint16            mLoadedFontsAlloc;
-  PRUint16            mLoadedFontsCount;
+  nsCString          *mGeneric;
+  PRUint8            mIsUserDefined;
+  nsCOMPtr<nsIAtom>  mLangGroup;
 
-  int                 mInFindSubstituteFont;
-  nsFontXP           *mSubstituteFont;
+  nsFontXp         **mLoadedFonts;
+  PRUint16           mLoadedFontsAlloc;
+  PRUint16           mLoadedFontsCount;
 
-  nsString           *mFonts;
-  PRUint16            mFontsAlloc;
-  PRUint16            mFontsCount;
-  PRUint16            mFontsIndex;
+  PRUint8            mTriedAllGenerics;
+  nsFontXp         *mSubstituteFont;
 
-  nsString           *mGeneric;
-  int                 mTriedAllGenerics;
-  nsCOMPtr<nsIAtom>   mLangGroup;
-
+  nsCAutoString      mUserDefined;
+   
 protected:
-  char *PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired);
   void RealizeFont();
 
-  Display            *mDisplay;
-  nsIDeviceContext   *mDeviceContext;
-  nsFont             *mFont;
-  XFontStruct        *mFontHandle;
-  XFontStruct        *mFontStruct;
-  nsFontXP           *mWesternFont;
-  nscoord             mHeight;
+  nsIDeviceContext    *mDeviceContext;
+  nsFont              *mFont;
+  XFontStruct         *mFontHandle;
+  XFontStruct         *mFontStruct;
+  nsFontXp            *mWesternFont;
+
+  nscoord             mAscent;
+  nscoord             mDescent;
+  
   nscoord             mLeading;
   nscoord             mEmHeight;
   nscoord             mEmAscent;
@@ -191,24 +219,20 @@ protected:
   nscoord             mUnderlineOffset;
   nscoord             mSpaceWidth;
 
-#ifdef FONT_SWITCHING
-
   PRUint16            mPixelSize;
   PRUint8             mStretchIndex;
   PRUint8             mStyleIndex;
-
-#endif /* FONT_SWITCHING */
-
-private:
-  static Font         mLastSetFont;
 };
 
-class nsFontEnumeratorXP : public nsIFontEnumerator
+class nsFontEnumeratorXp : public nsIFontEnumerator
 {
 public:
-  nsFontEnumeratorXP();
+  nsFontEnumeratorXp();
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFONTENUMERATOR
 };
 
-#endif /* !nsFontMetricsXP_h__ */
+
+
+#endif /* !nsFontMetricsXp_h__ */
+

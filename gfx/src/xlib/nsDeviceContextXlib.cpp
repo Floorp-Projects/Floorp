@@ -22,6 +22,7 @@
  *   Peter Hartshorn <peter@igelaus.com.au>
  *   Ken Faulkner <faulkner@igelaus.com.au>
  *   Tony Tsui <tony@igelaus.com.au>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de> 
  */
 
 #include "nsRenderingContextXlib.h"
@@ -36,8 +37,14 @@
 
 #include "xlibrgb.h"
 
+#include "nsDeviceContextSpecXlib.h"
+
 #include "nsGfxPSCID.h"
 #include "nsIDeviceContextPS.h"
+#ifdef USE_XPRINT
+#include "nsGfxXPrintCID.h"
+#include "nsIDeviceContextXPrint.h"
+#endif
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
@@ -138,12 +145,11 @@ nsDeviceContextXlib::CommonInit(void)
     }
   }
 
-	// Do extra rounding (based on GTK). KenF
-	mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(72)) / float(dpi)));
-  	mTwipsToPixels = 1.0f / mPixelsToTwips;
+  // Do extra rounding (based on GTK). KenF
+  mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(72)) / float(dpi)));
+  mTwipsToPixels = 1.0f / mPixelsToTwips;
 
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("GFX: dpi=%d t2p=%g p2t=%g\n", dpi, mTwipsToPixels, mPixelsToTwips));
-
 
   mWidthFloat = (float) WidthOfScreen(mScreen);
   mHeightFloat = (float) HeightOfScreen(mScreen);
@@ -318,9 +324,9 @@ NS_IMETHODIMP nsDeviceContextXlib::GetDrawingSurface(nsIRenderingContext &aConte
 NS_IMETHODIMP nsDeviceContextXlib::ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::ConvertPixel()\n"));
-  aPixel = xlib_rgb_xpixel_from_rgb(NS_RGB(NS_GET_B(aPixel),
-                                           NS_GET_G(aPixel),
-                                           NS_GET_R(aPixel)));
+  aPixel = xlib_rgb_xpixel_from_rgb(NS_RGB(NS_GET_B(aColor),
+                                           NS_GET_G(aColor),
+                                           NS_GET_R(aColor)));
   return NS_OK;
 }
 
@@ -370,6 +376,31 @@ NS_IMETHODIMP nsDeviceContextXlib::GetClientRect(nsRect &aRect)
 NS_IMETHODIMP nsDeviceContextXlib::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                         nsIDeviceContext *&aContext)
 {
+#ifdef USE_XPRINT
+  int method=-1;
+  nsDeviceContextSpecXlib *spec = NS_STATIC_CAST(nsDeviceContextSpecXlib *, aDevice);
+  spec->GetPrintMethod(method);
+
+  if (method == 1) { // XPRINT
+    static NS_DEFINE_CID(kCDeviceContextXp, NS_DEVICECONTEXTXP_CID);
+    nsresult rv;
+    nsCOMPtr<nsIDeviceContextXp> dcxp(do_CreateInstance(kCDeviceContextXp, &rv));
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create Xp Device context");    
+    if (NS_FAILED(rv)) 
+      return rv;
+    
+    dcxp->SetSpec(aDevice);
+    dcxp->InitDeviceContextXP((nsIDeviceContext*)aContext,
+                              (nsIDeviceContext*)this);
+
+    rv = dcxp->QueryInterface(NS_GET_IID(nsIDeviceContext),
+                              (void **)&aContext);
+    return rv;
+  }
+#endif /* USE_XPRINT */
+
+  // default/PS
   static NS_DEFINE_CID(kCDeviceContextPS, NS_DEVICECONTEXTPS_CID);
   
   // Create a Postscript device context 
