@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #elif defined(XP_UNIX)
 #include <sys/mman.h>
-#include <sys/fcntl.h>
+#include <fcntl.h>
 #endif
 
 /******************************************************************************/
