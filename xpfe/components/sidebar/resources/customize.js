@@ -49,6 +49,8 @@ function Init()
   var all_panels   = document.getElementById('other-panels');
   var current_panels = document.getElementById('current-panels');
 
+  all_panels_datasources = all_panels_datasources.replace(/^\s+/,'');
+  all_panels_datasources = all_panels_datasources.replace(/\s+$/,'');
   all_panels_datasources = all_panels_datasources.split(/\s+/);
   for (var ii = 0; ii < all_panels_datasources.length; ii++) {
     debug("Init: Adding "+all_panels_datasources[ii]);
