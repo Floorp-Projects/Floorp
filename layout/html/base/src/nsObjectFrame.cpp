@@ -64,6 +64,7 @@
 #include "nsIDocumentEncoder.h"
 #include "nsXPIDLString.h"
 #include "nsIDOMRange.h"
+#include "nsIPrintContext.h"
 
 // XXX For temporary paint code
 #include "nsIStyleContext.h"
@@ -673,6 +674,13 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
   nsIFrame * child = mFrames.FirstChild();
   if(child != nsnull)
     return HandleImage(aPresContext, aMetrics, aReflowState, aStatus, child);
+
+  // determine if we are a printcontext
+  nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
+  if  (thePrinterContext) {
+    // we are printing bail for now
+    return rv;
+  }
 
   // if mInstance is null, we need to determine what kind of object we are and instantiate ourselves
   if(!mInstanceOwner)
@@ -1324,16 +1332,24 @@ nsObjectFrame::Paint(nsIPresContext* aPresContext,
                      const nsRect& aDirtyRect,
                      nsFramePaintLayer aWhichLayer)
 {
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-    if ((disp != nsnull) && !disp->IsVisibleOrCollapsed()) {
-        return NS_OK;
-    }
+  // determine if we are a printcontext
+  nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
+  if  (thePrinterContext) {
+    // we are printing bail for now
+    return NS_OK;
+  }
 
-    nsIFrame * child = mFrames.FirstChild();
-    if (child != NULL) {    // This is an image
-        nsObjectFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-        return NS_OK;
-    }
+
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  if ((disp != nsnull) && !disp->IsVisibleOrCollapsed()) {
+    return NS_OK;
+  }
+  
+  nsIFrame * child = mFrames.FirstChild();
+  if (child != NULL) {    // This is an image
+    nsObjectFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+    return NS_OK;
+  }
 
 #if defined (XP_MAC)
     // delegate all painting to the plugin instance.
