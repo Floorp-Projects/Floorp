@@ -297,13 +297,8 @@ MAKE_UNMANGLE=if exist unmangle.bat call unmangle.bat
 #// Common Libraries
 #//
 #//------------------------------------------------------------------------
-!if "$(MOZ_BITS)" == "16"
 LIBNSPR=$(DIST)\lib\nspr3.lib
-LIBNSPR=$(LIBNSPR) $(DIST)\lib\plds3.lib
-!else
-LIBNSPR=$(DIST)\lib\nspr3.lib
-LIBNSPR=$(LIBNSPR) $(DIST)\lib\plds3.lib
-!endif
+LIBNSPR=$(LIBNSPR) $(DIST)\lib\plds3.lib $(DIST)\lib\plc3.lib
 
 NSPRDIR = nsprpub
 CFLAGS = $(CFLAGS) -DNSPR20
@@ -383,7 +378,6 @@ ZPWDLL=$(MOD_ZPW).$(DLL_SUFFIX)
 CONDLL=$(MOD_CON).$(DLL_SUFFIX)
 NPJDLL=$(MOD_NPJ).$(DLL_SUFFIX)
 
-ZIPLIB=$(DIST)\lib\$(MOD_ZIP)
 AWTLIB=$(DIST)\lib\$(MOD_AWT).$(LIB_SUFFIX)
 
 ######################################################################
