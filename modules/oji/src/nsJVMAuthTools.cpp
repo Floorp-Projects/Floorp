@@ -143,7 +143,7 @@ nsJVMAuthTools::GetAuthenticationInfo(const char* protocol,
                                       const char* realm,
                                       nsIAuthenticationInfo **_retval)
 {
-    if (!protocol || !host || !realm)
+    if (!protocol || !host || !scheme || !realm)
         return NS_ERROR_INVALID_ARG;
 
     if (!PL_strcasecmp(protocol, "HTTP") && !PL_strcasecmp(protocol, "HTTPS"))
@@ -153,29 +153,32 @@ nsJVMAuthTools::GetAuthenticationInfo(const char* protocol,
     if (!authManager)
         return NS_ERROR_FAILURE;
     
+    nsDependentCString protocolString(protocol);
     nsDependentCString hostString(host);
+    nsDependentCString schemeString(scheme);
     nsDependentCString realmString(realm);
     nsAutoString       domainString, username, password;
     
-    nsresult rv = authManager->GetAuthIdentity(hostString,
+    nsresult rv = authManager->GetAuthIdentity(protocolString,
+                                               hostString,
                                                port,
+                                               schemeString,
                                                realmString,
-                                               nsCString(), 
+                                               EmptyCString(), 
                                                domainString,
                                                username,
                                                password);
     if (NS_FAILED(rv))
         return NS_ERROR_FAILURE;
-    else {
-        nsAuthenticationInfoImp* authInfo = new nsAuthenticationInfoImp(
-                                                ToNewUTF8String(username),
-                                                ToNewUTF8String(password));
-        NS_ENSURE_TRUE(authInfo, NS_ERROR_OUT_OF_MEMORY);
-        NS_ADDREF(authInfo);
-        *_retval = authInfo;
-        
-        return NS_OK;
-    }
+
+    nsAuthenticationInfoImp* authInfo = new nsAuthenticationInfoImp(
+                                            ToNewUTF8String(username),
+                                            ToNewUTF8String(password));
+    NS_ENSURE_TRUE(authInfo, NS_ERROR_OUT_OF_MEMORY);
+    NS_ADDREF(authInfo);
+    *_retval = authInfo;
+    
+    return NS_OK;
 }
 
 NS_METHOD
@@ -187,7 +190,7 @@ nsJVMAuthTools::SetAuthenticationInfo(const char* protocol,
                                       const char *username,
                                       const char *password)
 {
-    if (!protocol || !host || !realm)
+    if (!protocol || !host || !scheme || !realm)
         return NS_ERROR_INVALID_ARG;
     
     if (!PL_strcasecmp(protocol, "HTTP") && !PL_strcasecmp(protocol, "HTTPS"))
@@ -197,13 +200,17 @@ nsJVMAuthTools::SetAuthenticationInfo(const char* protocol,
     if (!authManager)
         return NS_ERROR_FAILURE;
     
+    nsDependentCString protocolString(protocol);
     nsDependentCString hostString(host);
+    nsDependentCString schemeString(scheme);
     nsDependentCString realmString(realm);
     
-    nsresult rv = authManager->SetAuthIdentity(hostString,
+    nsresult rv = authManager->SetAuthIdentity(protocolString,
+                                               hostString,
                                                port,
+                                               schemeString,
                                                realmString,
-                                               nsCString(),
+                                               EmptyCString(),
                                                nsString(), 
                                                NS_ConvertUTF8toUCS2(username),
                                                NS_ConvertUTF8toUCS2(password));

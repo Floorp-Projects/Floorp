@@ -205,28 +205,31 @@ public:
 
     nsresult Init();
 
-    // |host| and |port| are required
+    // |scheme|, |host|, and |port| are required
     // |path| can be null
     // |entry| is either null or a weak reference
-    nsresult GetAuthEntryForPath(const char *host,
+    nsresult GetAuthEntryForPath(const char *scheme,
+                                 const char *host,
                                  PRInt32     port,
                                  const char *path,
                                  nsHttpAuthEntry **entry);
 
-    // |host| and |port| are required
+    // |scheme|, |host|, and |port| are required
     // |realm| must not be null
     // |entry| is either null or a weak reference
-    nsresult GetAuthEntryForDomain(const char *host,
+    nsresult GetAuthEntryForDomain(const char *scheme,
+                                   const char *host,
                                    PRInt32     port,
                                    const char *realm,
                                    nsHttpAuthEntry **entry);
 
-    // |host| and |port| are required
+    // |scheme|, |host|, and |port| are required
     // |path| can be null
     // |realm| must not be null
     // if |credentials|, |user|, |pass|, and |challenge| are each
     // null, then the entry is deleted.
-    nsresult SetAuthEntry(const char *host,
+    nsresult SetAuthEntry(const char *scheme,
+                          const char *host,
                           PRInt32     port,
                           const char *directory,
                           const char *realm,
@@ -235,7 +238,8 @@ public:
                           const nsHttpAuthIdentity &ident,
                           nsISupports *metadata);
 
-    void ClearAuthEntry(const char *host,
+    void ClearAuthEntry(const char *scheme,
+                        const char *host,
                         PRInt32     port,
                         const char *realm);
 
@@ -243,7 +247,10 @@ public:
     nsresult ClearAll();
 
 private:
-    nsHttpAuthNode *LookupAuthNode(const char *host, PRInt32 port, nsCString &key);
+    nsHttpAuthNode *LookupAuthNode(const char *scheme,
+                                   const char *host,
+                                   PRInt32     port,
+                                   nsCString  &key);
 
     // hash table allocation functions
     static void*        PR_CALLBACK AllocTable(void *, PRSize size);

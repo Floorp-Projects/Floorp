@@ -29,10 +29,12 @@
 #include "prprf.h"
 
 static inline void
-GetAuthKey(const char *host, PRInt32 port, nsCString &key)
+GetAuthKey(const char *scheme, const char *host, PRInt32 port, nsCString &key)
 {
-    key.Assign(host);
-    key.Append(':');
+    key.Assign(nsDependentCString(scheme) +
+               NS_LITERAL_CSTRING("://") +
+               nsDependentCString(host) +
+               NS_LITERAL_CSTRING(":"));
     key.AppendInt(port);
 }
 
@@ -83,16 +85,17 @@ nsHttpAuthCache::Init()
 }
 
 nsresult
-nsHttpAuthCache::GetAuthEntryForPath(const char *host,
+nsHttpAuthCache::GetAuthEntryForPath(const char *scheme,
+                                     const char *host,
                                      PRInt32     port,
                                      const char *path,
                                      nsHttpAuthEntry **entry)
 {
-    LOG(("nsHttpAuthCache::GetAuthEntryForPath [host=%s:%d path=%s]\n",
-        host, port, path));
+    LOG(("nsHttpAuthCache::GetAuthEntryForPath [key=%s://%s:%d path=%s]\n",
+        scheme, host, port, path));
 
     nsCAutoString key;
-    nsHttpAuthNode *node = LookupAuthNode(host, port, key);
+    nsHttpAuthNode *node = LookupAuthNode(scheme, host, port, key);
     if (!node)
         return NS_ERROR_NOT_AVAILABLE;
 
@@ -101,17 +104,18 @@ nsHttpAuthCache::GetAuthEntryForPath(const char *host,
 }
 
 nsresult
-nsHttpAuthCache::GetAuthEntryForDomain(const char *host,
+nsHttpAuthCache::GetAuthEntryForDomain(const char *scheme,
+                                       const char *host,
                                        PRInt32     port,
                                        const char *realm,
                                        nsHttpAuthEntry **entry)
 
 {
-    LOG(("nsHttpAuthCache::GetAuthEntryForDomain [host=%s:%d realm=%s]\n",
-        host, port, realm));
+    LOG(("nsHttpAuthCache::GetAuthEntryForDomain [key=%s://%s:%d realm=%s]\n",
+        scheme, host, port, realm));
 
     nsCAutoString key;
-    nsHttpAuthNode *node = LookupAuthNode(host, port, key);
+    nsHttpAuthNode *node = LookupAuthNode(scheme, host, port, key);
     if (!node)
         return NS_ERROR_NOT_AVAILABLE;
 
@@ -120,7 +124,8 @@ nsHttpAuthCache::GetAuthEntryForDomain(const char *host,
 }
 
 nsresult
-nsHttpAuthCache::SetAuthEntry(const char *host,
+nsHttpAuthCache::SetAuthEntry(const char *scheme,
+                              const char *host,
                               PRInt32     port,
                               const char *path,
                               const char *realm,
@@ -131,8 +136,8 @@ nsHttpAuthCache::SetAuthEntry(const char *host,
 {
     nsresult rv;
 
-    LOG(("nsHttpAuthCache::SetAuthEntry [host=%s:%d realm=%s path=%s metadata=%x]\n",
-        host, port, realm, path, metadata));
+    LOG(("nsHttpAuthCache::SetAuthEntry [key=%s://%s:%d realm=%s path=%s metadata=%x]\n",
+        scheme, host, port, realm, path, metadata));
 
     if (!mDB) {
         rv = Init();
@@ -140,7 +145,7 @@ nsHttpAuthCache::SetAuthEntry(const char *host,
     }
 
     nsCAutoString key;
-    nsHttpAuthNode *node = LookupAuthNode(host, port, key);
+    nsHttpAuthNode *node = LookupAuthNode(scheme, host, port, key);
 
     if (!node) {
         // create a new entry node and set the given entry
@@ -159,7 +164,8 @@ nsHttpAuthCache::SetAuthEntry(const char *host,
 }
 
 void
-nsHttpAuthCache::ClearAuthEntry(const char *host,
+nsHttpAuthCache::ClearAuthEntry(const char *scheme,
+                                const char *host,
                                 PRInt32     port,
                                 const char *realm)
 {
@@ -167,7 +173,7 @@ nsHttpAuthCache::ClearAuthEntry(const char *host,
         return;
 
     nsCAutoString key;
-    GetAuthKey(host, port, key);
+    GetAuthKey(scheme, host, port, key);
     PL_HashTableRemove(mDB, key.get());
 }
 
@@ -188,12 +194,15 @@ nsHttpAuthCache::ClearAll()
 //-----------------------------------------------------------------------------
 
 nsHttpAuthNode *
-nsHttpAuthCache::LookupAuthNode(const char *host, PRInt32 port, nsCString &key)
+nsHttpAuthCache::LookupAuthNode(const char *scheme,
+                                const char *host,
+                                PRInt32     port,
+                                nsCString  &key)
 {
     if (!mDB)
         return nsnull;
 
-    GetAuthKey(host, port, key);
+    GetAuthKey(scheme, host, port, key);
 
     return (nsHttpAuthNode *) PL_HashTableLookup(mDB, key.get());
 }
