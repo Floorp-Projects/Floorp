@@ -56,7 +56,7 @@ var actualmatches = new Array();
 var expectedmatch = '';
 var expectedmatches = new Array();
 
-sBody += '<body onload="alert(event.type);">\n';
+sBody += '<body onXXX="alert(event.type);">\n';
 sBody += '<p>Kibology for all<\/p>\n';
 sBody += '<p>All for Kibology<\/p>\n';
 sBody += '<\/body>';
