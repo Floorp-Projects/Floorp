@@ -748,7 +748,7 @@ case "$host" in
     if test -n "$_WIN32_MSVC"; then
         HOST_CFLAGS="$HOST_CFLAGS -TC -nologo"
     fi
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_PC -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -DNO_X11"
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -DNO_X11"
     HOST_NSPR_MDCPUCFG='\"md/_winnt.cfg\"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     ;;
@@ -1046,7 +1046,6 @@ case "$target" in
     AC_DEFINE(_WINDOWS)
     AC_DEFINE(_WIN32)
     AC_DEFINE(WIN32)
-    AC_DEFINE(XP_PC)
     AC_DEFINE(XP_WIN)
     AC_DEFINE(XP_WIN32)
     AC_DEFINE(HW_THREADS)
@@ -5099,13 +5098,8 @@ fi # $no_x
 dnl Set various defines and substitutions
 dnl ========================================================
 
-if test "$OS_ARCH" = "OS2"; then
-  AC_DEFINE(XP_PC)
-  if test "$VACPP" = "yes"; then
+if test "$OS_ARCH" = "OS2" -a "$VACPP" = "yes"; then
       LIBS='so32dll.lib tcp32dll.lib'
-  fi
-elif test "$OS_ARCH" = "WINNT"; then
-  AC_DEFINE(XP_PC)
 elif test "$OS_ARCH" = "BeOS"; then
   AC_DEFINE(XP_BEOS)
   MOZ_MOVEMAIL=1
@@ -5117,7 +5111,7 @@ elif test "$OS_ARCH" = "Darwin"; then
 elif test "$OS_ARCH" = "OpenVMS"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
-else
+elif test "$OS_ARCH" != "WINNT"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
   MOZ_MOVEMAIL=1
