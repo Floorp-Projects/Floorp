@@ -430,7 +430,7 @@ sub last_status {
     next if $status eq 'building';
     return $status;
   }
-  return '';
+  return 'building';
 }
 
 sub check_password {
