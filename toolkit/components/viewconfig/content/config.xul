@@ -53,9 +53,9 @@
 
 <stringbundle id="configBundle" src="chrome://global/locale/config.properties"/>
 
-<popup id="configContext" onpopupshowing="return updateContextMenu(this);">
-  <menuitem label="&copyName.label;" accesskey="&copyName.accesskey;" oncommand="copyName();"/>
-  <menuitem label="&copyValue.label;" accesskey="&copyValue.accesskey;" oncommand="copyValue();"/>
+<popup id="configContext" onpopupshowing="if (event.target == this) updateContextMenu();">
+  <menuitem id="copyName" label="&copyName.label;" accesskey="&copyName.accesskey;" oncommand="copyName();"/>
+  <menuitem id="copyValue" label="&copyValue.label;" accesskey="&copyValue.accesskey;" oncommand="copyValue();"/>
   <menu label="&new.label;" accesskey="&new.accesskey;">
     <menupopup>
       <menuitem label="&string.label;" accesskey="&string.accesskey;" oncommand="NewPref(nsIPrefBranch.PREF_STRING);"/>
@@ -63,8 +63,9 @@
       <menuitem label="&boolean.label;" accesskey="&boolean.accesskey;" oncommand="NewPref(nsIPrefBranch.PREF_BOOL);"/>
     </menupopup>
   </menu>
-  <menuitem label="&modify.label;" accesskey="&modify.accesskey;" oncommand="ModifySelected();"/>
-  <menuitem label="&reset.label;" accesskey="&reset.accesskey;" oncommand="ResetSelected();"/>
+  <menuitem id="toggleSelected" label="&toggle.label;" accesskey="&toggle.accesskey;" oncommand="ModifySelected();"/>
+  <menuitem id="modifySelected" label="&modify.label;" accesskey="&modify.accesskey;" oncommand="ModifySelected();"/>
+  <menuitem id="resetSelected" label="&reset.label;" accesskey="&reset.accesskey;" oncommand="ResetSelected();"/>
 </popup>
 
 <keyset>
