@@ -104,13 +104,13 @@ typedef struct nsID nsID;
  * Every XPCOM typelib file begins with a header.
  */
 struct XPTHeader {
-    char                        magic[16];
-    uint8                       major_version;
-    uint8                       minor_version;
-    uint16                      num_interfaces;
-    uint32                      file_length;
+    PRUint8                       magic[16];
+    PRUint8                       major_version;
+    PRUint8                       minor_version;
+    PRUint16                      num_interfaces;
+    PRUint32                      file_length;
     XPTInterfaceDirectoryEntry  *interface_directory;
-    uint32                      data_pool;
+    PRUint32                      data_pool;
     XPTAnnotation               *annotations;
 };
 
@@ -119,14 +119,14 @@ struct XPTHeader {
 #define XPT_MINOR_VERSION 0x00
 
 extern XPT_PUBLIC_API(XPTHeader *)
-XPT_NewHeader(uint16 num_interfaces);
+XPT_NewHeader(PRUint16 num_interfaces);
 
 /* size of header and annotations */
-extern XPT_PUBLIC_API(uint32)
+extern XPT_PUBLIC_API(PRUint32)
 XPT_SizeOfHeader(XPTHeader *header);
 
 /* size of header and annotations and InterfaceDirectoryEntries */
-extern XPT_PUBLIC_API(uint32)
+extern XPT_PUBLIC_API(PRUint32)
 XPT_SizeOfHeaderBlock(XPTHeader *header);
 
 /*
@@ -142,7 +142,7 @@ struct XPTInterfaceDirectoryEntry {
     XPTInterfaceDescriptor *interface_descriptor;
 #if 0 /* not yet */
     /* not stored on disk */
-    uint32                 offset; /* the offset for an ID still to be read */
+    PRUint32                 offset; /* the offset for an ID still to be read */
 #endif
 };
 
@@ -156,39 +156,39 @@ XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
  * single XPCOM interface, including all of its methods. 
  */
 struct XPTInterfaceDescriptor {
-    uint16                     parent_interface;
-    uint16                     num_methods;
+    PRUint16                     parent_interface;
+    PRUint16                     num_methods;
     XPTMethodDescriptor        *method_descriptors;
-    uint16                     num_constants;
+    PRUint16                     num_constants;
     XPTConstDescriptor         *const_descriptors;
 };
 
 extern XPT_PUBLIC_API(PRBool)
 XPT_GetInterfaceIndexByName(XPTInterfaceDirectoryEntry *ide_block,
-                            uint16 num_interfaces, char *name, 
-                            uint16 *indexp);
+                            PRUint16 num_interfaces, char *name, 
+                            PRUint16 *indexp);
 
 extern XPT_PUBLIC_API(XPTInterfaceDescriptor *)
-XPT_NewInterfaceDescriptor(uint16 parent_interface, uint16 num_methods,
-                           uint16 num_constants);
+XPT_NewInterfaceDescriptor(PRUint16 parent_interface, PRUint16 num_methods,
+                           PRUint16 num_constants);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_InterfaceDescriptorAddMethods(XPTInterfaceDescriptor *id, uint16 num);
+XPT_InterfaceDescriptorAddMethods(XPTInterfaceDescriptor *id, PRUint16 num);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_InterfaceDescriptorAddConsts(XPTInterfaceDescriptor *id, uint16 num);
+XPT_InterfaceDescriptorAddConsts(XPTInterfaceDescriptor *id, PRUint16 num);
 
 /*
  * This is our special string struct with a length value associated with it,
  * which means that it can contains embedded NULs.
  */
 struct XPTString {
-    uint16 length;
+    PRUint16 length;
     char   *bytes;
 };
 
 extern XPT_PUBLIC_API(XPTString *)
-XPT_NewString(uint16 length, char *bytes);
+XPT_NewString(PRUint16 length, char *bytes);
 
 extern XPT_PUBLIC_API(XPTString *)
 XPT_NewStringZ(char *bytes);
@@ -212,7 +212,7 @@ XPT_NewStringZ(char *bytes);
 
 /* XXX why bother with a struct? */
 struct XPTTypeDescriptorPrefix {
-    uint8 flags;
+    PRUint8 flags;
 };
 
 /* flag bits -- fur and jband were right, I was miserably wrong */
@@ -257,8 +257,8 @@ enum XPTTypeDescriptorTags {
 struct XPTTypeDescriptor {
     XPTTypeDescriptorPrefix prefix;
     union {
-        uint16 interface;
-        uint8  argnum;
+        PRUint16 interface;
+        PRUint8  argnum;
     } type;
 };
 
@@ -286,23 +286,23 @@ struct XPTTypeDescriptor {
  * String record containing the constant string.
  */
 union XPTConstValue {
-    int8      i8;
-    uint8     ui8; 
-    int16     i16; 
-    uint16    ui16;
-    int32     i32; 
-    uint32    ui32;
-    int64     i64; 
-    uint64    ui64; 
+    PRInt8      i8;
+    PRUint8     ui8; 
+    PRInt16     i16; 
+    PRUint16    ui16;
+    PRInt32     i32; 
+    PRUint32    ui32;
+    PRInt64     i64; 
+    PRUint64    ui64; 
     float     flt;
     double    dbl;
     PRBool    bul;
     char      ch; 
-    uint16    wch;
+    PRUint16    wch;
     nsID      *iid;
     XPTString *string;
     char      *str;
-    uint16    *wstr;
+    PRUint16    *wstr;
 }; /* varies according to type */
 
 struct XPTConstDescriptor {
@@ -316,7 +316,7 @@ struct XPTConstDescriptor {
  * single argument to a method or a method's result.
  */
 struct XPTParamDescriptor {
-    uint8             flags;
+    PRUint8             flags;
     XPTTypeDescriptor type;
 };
 
@@ -335,7 +335,7 @@ struct XPTParamDescriptor {
 #define XPT_PARAMDESCRIPTOR_SIZE (XPT_TYPEDESCRIPTOR_SIZE + 1)
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_FillParamDescriptor(XPTParamDescriptor *pd, uint8 flags,
+XPT_FillParamDescriptor(XPTParamDescriptor *pd, PRUint8 flags,
                         XPTTypeDescriptor *type);
 
 /*
@@ -343,9 +343,9 @@ XPT_FillParamDescriptor(XPTParamDescriptor *pd, uint8 flags,
  * interface method.
  */
 struct XPTMethodDescriptor {
-    uint8               flags;
+    PRUint8               flags;
     char                *name;
-    uint8               num_args;
+    PRUint8               num_args;
     XPTParamDescriptor  *params;
     XPTParamDescriptor  *result;
 };
@@ -365,8 +365,8 @@ struct XPTMethodDescriptor {
 #define XPT_MD_IS_HIDDEN(flags)     (flags & XPT_MD_HIDDEN)
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, uint8 flags, char *name,
-                         uint8 num_args);
+XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, PRUint8 flags, char *name,
+                         PRUint8 num_args);
 
 /*
  * Annotation records are variable-size records used to store secondary 
@@ -389,7 +389,7 @@ XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, uint8 flags, char *name,
 
 struct XPTAnnotation {
     XPTAnnotation *next;
-    uint8 flags;
+    PRUint8 flags;
     /* remaining fields are present in typelib iff XPT_ANN_IS_PRIVATE */
     XPTString *creator;
     XPTString *private_data;
@@ -401,7 +401,28 @@ struct XPTAnnotation {
 #define XPT_ANN_IS_PRIVATE(flags)       (flags & XPT_ANN_PRIVATE)
 
 extern XPT_PUBLIC_API(XPTAnnotation *)
-XPT_NewAnnotation(uint8 flags, XPTString *creator, XPTString *private_data);
+XPT_NewAnnotation(PRUint8 flags, XPTString *creator, XPTString *private_data);
+
+/***************************************************************************/
+/* 
+* XXX It's not clear that these should really be exported
+*/
+
+extern XPT_PUBLIC_API(PRUint32)
+XPT_SizeOfTypeDescriptor(XPTTypeDescriptor *td);
+
+extern XPT_PUBLIC_API(PRUint32)
+XPT_SizeOfMethodDescriptor(XPTMethodDescriptor *md);
+
+extern XPT_PUBLIC_API(PRUint32)
+XPT_SizeOfConstDescriptor(XPTConstDescriptor *cd);
+
+extern XPT_PUBLIC_API(PRUint32)
+XPT_SizeOfInterfaceDescriptor(XPTInterfaceDescriptor *id);
+
+extern XPT_PUBLIC_API(PRBool)
+XPT_FillConstDescriptor(XPTConstDescriptor *cd, char *name,
+                        XPTTypeDescriptor type, union XPTConstValue value);
 
 PR_END_EXTERN_C
 
