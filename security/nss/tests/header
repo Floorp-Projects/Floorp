@@ -683,7 +683,7 @@ init_files()
         Debug "About to touch $NEWFILENAME "
         touch $NEWFILENAME || Exit "Error: can't touch $NEWFILENAME"
         if [ "$O_TBX" = "ON" ] ; then
-             echo "QA results in $RESULTDIRURL" >>$NEWFILENAME || Exit "Error: can't write to $NEWFILENAME"
+             echo "QA results in $RESULTDIR" >>$NEWFILENAME || Exit "Error: can't write to $NEWFILENAME"
         fi
         Debug "About to cat $FILENAME >>$NEWFILENAME "
         cat $FILENAME >>$NEWFILENAME || Exit "Error: can't append $FILENAME to $NEWFILENAME"
