@@ -258,103 +258,128 @@ nsUnknownDecoder::OnStopRequest(nsIRequest* request, nsISupports *aCtxt,
   return rv;
 }
 
+// Actual sniffing code
 
-void nsUnknownDecoder::DetermineContentType(nsIRequest* request)
+PRBool nsUnknownDecoder::AllowSniffing(nsIRequest* aRequest)
 {
-  PRUint32 i;
+  if (!mRequireHTMLsuffix) {
+    return PR_TRUE;
+  }
+  
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+  if (!channel) {
+    NS_ERROR("QI failed");
+    return PR_FALSE;
+  }
 
+  nsCOMPtr<nsIURI> uri;
+  if (NS_FAILED(channel->GetURI(getter_AddRefs(uri))) || !uri) {
+    return PR_FALSE;
+  }
+  
+  PRBool isLocalFile = PR_FALSE;
+  if (NS_FAILED(uri->SchemeIs("file", &isLocalFile)) || isLocalFile) {
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+/**
+ * This is the array of sniffer entries that depend on "magic numbers"
+ * in the file.  Each entry has either a type associated with it (set
+ * these with the SNIFFER_ENTRY macro) or a function to be executed
+ * (set these with the SNIFFER_ENTRY_WITH_FUNC macro).  The function
+ * should take a single nsIRequest* and returns PRBool -- PR_TRUE if
+ * it sets mContentType, PR_FALSE otherwise
+ */
+nsUnknownDecoder::nsSnifferEntry nsUnknownDecoder::sSnifferEntries[] = {
+  SNIFFER_ENTRY("%PDF-", APPLICATION_PDF),
+
+  SNIFFER_ENTRY("%!PS-Adobe-", APPLICATION_POSTSCRIPT),
+  SNIFFER_ENTRY("%! PS-Adobe-", APPLICATION_POSTSCRIPT),
+
+  // Files that start with mailbox delimeters let's provisionally call
+  // text/plain
+  SNIFFER_ENTRY("From", TEXT_PLAIN),
+  SNIFFER_ENTRY(">From", TEXT_PLAIN),
+
+  // If the buffer begins with "#!" or "%!" then it is a script of
+  // some sort...  "Scripts" can include arbitrary data to be passed
+  // to an interpreter, so we need to decide whether we can call this
+  // text or whether it's data.
+  SNIFFER_ENTRY_WITH_FUNC("#!", &LastDitchSniff),
+
+  SNIFFER_ENTRY_WITH_FUNC("<?xml", &SniffForXML)
+};
+
+PRUint32 nsUnknownDecoder::sSnifferEntryNum =
+  sizeof(nsUnknownDecoder::sSnifferEntries) /
+    sizeof(nsUnknownDecoder::nsSnifferEntry);
+
+void nsUnknownDecoder::DetermineContentType(nsIRequest* aRequest)
+{
   NS_ASSERTION(mContentType.IsEmpty(), "Content type is already known.");
   if (!mContentType.IsEmpty()) return;
 
-  CBufDescriptor bufDesc((const char*)mBuffer, PR_TRUE, mBufferLen, mBufferLen);
-  nsCAutoString str(bufDesc);
-
-  NS_NAMED_LITERAL_CSTRING(pdfStart, "%PDF-");
-  NS_NAMED_LITERAL_CSTRING(psStart1, "%!PS-Adobe-");
-  NS_NAMED_LITERAL_CSTRING(psStart2, "%! PS-Adobe-");
-  
-  //
-  // If the buffer begins with "%PDF-" it's PDF
-  //
-  if (Substring(str, 0, pdfStart.Length()) == pdfStart) {
-    mContentType = APPLICATION_PDF;
-  }
-  //
-  // If the buffer begins with "%!PS-Adobe-" or "%! PS-Adobe-" it's PostScript
-  //
-  else if (Substring(str, 0, psStart1.Length()) == psStart1 ||
-           Substring(str, 0, psStart2.Length()) == psStart2) {
-    mContentType = APPLICATION_POSTSCRIPT;
-  }
-  //
-  // If the buffer begins with "#!" or "%!" then it is a script of
-  // some sort...  "Scripts" can include arbitrary data to be passed
-  // to an interpreter, so we check the buffer for nulls.
-  //
-  // This false match happened all the time...  For example, CGI scripts
-  // written in sh or perl that emit HTML.
-  //
-  else if (Substring(str, 0, 2).Equals(NS_LITERAL_CSTRING("#!")) || 
-           Substring(str, 0, 2).Equals(NS_LITERAL_CSTRING("%!"))) {
-    for (i=0; i<mBufferLen && mBuffer[i]; i++);
-    if (i == mBufferLen) {
-      mContentType = TEXT_PLAIN;
-    } else {
-      mContentType = APPLICATION_OCTET_STREAM;
+  // First, run through all the types we can detect reliably based on
+  // magic numbers
+  PRUint32 i;
+  for (i = 0; i < sSnifferEntryNum; ++i) {
+    if (mBufferLen >= sSnifferEntries[i].mByteLen &&  // enough data
+        memcmp(mBuffer, sSnifferEntries[i].mBytes, sSnifferEntries[i].mByteLen) == 0) {  // and type matches
+      NS_ASSERTION(sSnifferEntries[i].mMimeType ||
+                   sSnifferEntries[i].mContentTypeSniffer,
+                   "Must have either a type string or a function to set the type");
+      NS_ASSERTION(!sSnifferEntries[i].mMimeType ||
+                   !sSnifferEntries[i].mContentTypeSniffer,
+                   "Both at type string and a type sniffing function set;"
+                   " using type string");
+      if (sSnifferEntries[i].mMimeType) {
+        mContentType = sSnifferEntries[i].mMimeType;
+        return;
+      }
+      else if ((this->*(sSnifferEntries[i].mContentTypeSniffer))(aRequest)) {
+        return;
+      }        
     }
   }
-  //
-  // If the buffer begins with a mailbox delimiter then it is not HTML
-  //
-  else if (Substring(str, 0, 5).Equals(NS_LITERAL_CSTRING("From "),
-                                       nsCaseInsensitiveCStringComparator()) ||
-           Substring(str, 0, 6).Equals(NS_LITERAL_CSTRING(">From "),
-                                       nsCaseInsensitiveCStringComparator())) {
-    mContentType = TEXT_PLAIN;
+
+  if (SniffForImageMimeType(aRequest)) {
+    return;
   }
-  //
-  // If the buffer contains "common" HTML tags then lets call it HTML :-)
-  //
-  else {
 
-    /*
-     * To prevent a possible attack, we will not consider this to be html 
-     * content if it comes from the local file system
-     */
+  /*
+   * To prevent a possible attack, we will not consider this to be
+   * html content if it comes from the local file system and our prefs
+   * are set right
+   */
+  if (AllowSniffing(aRequest)) {
+    // Now look for HTML
+    CBufDescriptor bufDesc((const char*)mBuffer, PR_TRUE, mBufferLen, mBufferLen);
+    nsCAutoString str(bufDesc);
 
-    PRBool isLocalFile = PR_FALSE;
-    if (request) {
-      nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-      if (!aChannel) { NS_WARNING("QI failed"); return; }
+    PRInt32 offset;
 
-      nsCOMPtr<nsIURI> pURL;
-      if (NS_SUCCEEDED(aChannel->GetURI(getter_AddRefs(pURL))))
-          pURL->SchemeIs("file", &isLocalFile);
-    }
-
-    if (!mRequireHTMLsuffix || !isLocalFile) {
-      PRInt32 offset;
-
-      offset = str.Find("<HTML", PR_TRUE);
+    offset = str.Find("<HTML", PR_TRUE);
+    if (offset < 0) {
+      offset = str.Find("<TITLE", PR_TRUE);
       if (offset < 0) {
-        offset = str.Find("<TITLE", PR_TRUE);
+        offset = str.Find("<FRAMESET", PR_TRUE);
         if (offset < 0) {
-          offset = str.Find("<FRAMESET", PR_TRUE);
+          offset = str.Find("<SCRIPT", PR_TRUE);
           if (offset < 0) {
-            offset = str.Find("<SCRIPT", PR_TRUE);
+            offset = str.Find("<BODY", PR_TRUE);
             if (offset < 0) {
-              offset = str.Find("<BODY", PR_TRUE);
+              offset = str.Find("<TABLE", PR_TRUE);
               if (offset < 0) {
-                offset = str.Find("<TABLE", PR_TRUE);
+                offset = str.Find("<DIV", PR_TRUE);
                 if (offset < 0) {
-                  offset = str.Find("<DIV", PR_TRUE);
+                  offset = str.Find("<A HREF", PR_TRUE);
                   if (offset < 0) {
-                    offset = str.Find("<A HREF", PR_TRUE);
+                    offset = str.Find("<APPLET", PR_TRUE);
                     if (offset < 0) {
-                      offset = str.Find("<APPLET", PR_TRUE);
-                      if (offset < 0) {
-                        offset = str.Find("<META", PR_TRUE);
-                      }
+                      offset = str.Find("<META", PR_TRUE);
                     }
                   }
                 }
@@ -363,67 +388,93 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* request)
           }
         }
       }
+    }
 
-      if (offset >= 0) {
-        mContentType = TEXT_HTML;
-      }
+    if (offset >= 0) {
+      mContentType = TEXT_HTML;
+      return;
     }
   }
 
-  if (mContentType.IsEmpty()) {
-    // sniff the first couple bytes to see if we are dealing with an image 
-    // Unlike html, it is safe to sniff for image content types for local files so 
-    // we don't need to check for isLocalFile here..
-    SniffForImageMimeType((const char*)mBuffer, mBufferLen);
+  // We don't know what this is yet.  Before we just give up, try
+  // the URI from the request.
+  if (SniffURI(aRequest)) {
+    return;
+  }
+  
+  LastDitchSniff(aRequest);
+}
+
+PRBool nsUnknownDecoder::SniffForImageMimeType(nsIRequest* aRequest)
+{
+  // Just ask libpr0n
+  nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
+  char* temp;
+  loader->SupportImageWithContents(mBuffer, mBufferLen, &temp);
+  if (temp) {
+    mContentType.Adopt(temp);
   }
 
-  if (mContentType.IsEmpty()) {
-    // We don't know what this is yet.  Before we just give up, try
-    // the URI from the request.
-    nsCOMPtr<nsIMIMEService> mimeService(do_GetService("@mozilla.org/mime;1"));
-    if (mimeService) {
-      nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-      if (channel) {
-        nsCOMPtr<nsIURI> uri;
-        nsresult result = channel->GetURI(getter_AddRefs(uri));
-        if (NS_SUCCEEDED(result) && uri) {
-          nsXPIDLCString type;
-          result = mimeService->GetTypeFromURI(uri, getter_Copies(type));
-          if (NS_SUCCEEDED(result)) {
-            mContentType = type;
-          }
+  return temp != nsnull;
+}
+
+PRBool nsUnknownDecoder::SniffForXML(nsIRequest* aRequest)
+{
+  // Just like HTML, this should be able to be shut off.
+  if (!AllowSniffing(aRequest)) {
+    return PR_FALSE;
+  }
+
+  // First see whether we can glean anything from the uri...
+  if (!SniffURI(aRequest)) {
+    // Oh well; just generic XML will have to do
+    mContentType = TEXT_XML;
+  }
+  
+  return PR_TRUE;
+}
+
+PRBool nsUnknownDecoder::SniffURI(nsIRequest* aRequest)
+{
+  nsCOMPtr<nsIMIMEService> mimeService(do_GetService("@mozilla.org/mime;1"));
+  if (mimeService) {
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+    if (channel) {
+      nsCOMPtr<nsIURI> uri;
+      nsresult result = channel->GetURI(getter_AddRefs(uri));
+      if (NS_SUCCEEDED(result) && uri) {
+        nsXPIDLCString type;
+        result = mimeService->GetTypeFromURI(uri, getter_Copies(type));
+        if (NS_SUCCEEDED(result)) {
+          mContentType = type;
+          return PR_TRUE;
         }
       }
     }
   }
-  
+
+  return PR_FALSE;
+}
+
+PRBool nsUnknownDecoder::LastDitchSniff(nsIRequest* aRequest)
+{
+  // All we can do now is try to guess whether this is text/plain or
+  // application/octet-stream
   //
   // See if the buffer has any embedded nulls.  If not, then lets just
   // call it text/plain...
   //
-  if (mContentType.IsEmpty()) {
-    for (i=0; i<mBufferLen && mBuffer[i]; i++);
-    if (i == mBufferLen) {
-      mContentType = TEXT_PLAIN;
-    }
-  }
+  PRUint32 i;
+  for (i=0; i<mBufferLen && mBuffer[i]; i++);
 
-  //
-  // If the buffer is not text, then just call it application/octet-stream
-  //
-  if (mContentType.IsEmpty()) {
+  if (i == mBufferLen) {
+    mContentType = TEXT_PLAIN;
+  }
+  else {
     mContentType = APPLICATION_OCTET_STREAM;
   }
-}
 
-// the following routine was ripped directly from some code in libpr0n...
-void nsUnknownDecoder::SniffForImageMimeType(const char *buf, PRUint32 len)
-{
-  nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
-  char* temp;
-  loader->SupportImageWithContents(buf, len, &temp);
-  if (temp)
-    mContentType.Adopt(temp);
+  return PR_TRUE;    
 }
 
 

@@ -73,18 +73,60 @@ public:
 protected:
   virtual ~nsUnknownDecoder();
 
-  void DetermineContentType(nsIRequest* request);
+  void DetermineContentType(nsIRequest* aRequest);
   nsresult FireListenerNotifications(nsIRequest* request, nsISupports *aCtxt);
 
 protected:
   nsCOMPtr<nsIStreamListener> mNextListener;
-  void SniffForImageMimeType(const char *buf, PRUint32 len);
 
+  // Function to use to check whether sniffing some potentially
+  // dangerous types (eg HTML) is ok for this request.  We can disable
+  // sniffing for local files if needed using this.  Just a security
+  // precation thingy... who knows when we suddenly need to flip this
+  // pref?
+  PRBool AllowSniffing(nsIRequest* aRequest);
+  
+  // Various sniffer functions.  Returning PR_TRUE means that a type
+  // was determined; PR_FALSE means no luck.
+  PRBool SniffForImageMimeType(nsIRequest* aRequest);
+  PRBool SniffForXML(nsIRequest* aRequest);
+  PRBool SniffURI(nsIRequest* aRequest);
+  PRBool LastDitchSniff(nsIRequest* aRequest);
+
+  /**
+   * An entry struct for our array of sniffers.  Each entry has either
+   * a type associated with it (set these with the SNIFFER_ENTRY macro)
+   * or a function to be executed (set these with the
+   * SNIFFER_ENTRY_WITH_FUNC macro).  The function should take a single
+   * nsIRequest* and returns PRBool -- PR_TRUE if it sets mContentType,
+   * PR_FALSE otherwise
+   */
+  struct nsSnifferEntry {
+    typedef PRBool (nsUnknownDecoder::*TypeSniffFunc)(nsIRequest* aRequest);
+    
+    const char* mBytes;
+    PRUint32 mByteLen;
+    
+    // Exactly one of mMimeType and mContentTypeSniffer should be set non-null
+    const char* mMimeType;
+    TypeSniffFunc mContentTypeSniffer;
+  };
+
+#define SNIFFER_ENTRY(_bytes, _type) \
+  { _bytes, sizeof(_bytes) - 1, _type, nsnull }
+
+#define SNIFFER_ENTRY_WITH_FUNC(_bytes, _func) \
+  { _bytes, sizeof(_bytes) - 1, nsnull, _func }
+
+  static nsSnifferEntry sSnifferEntries[];
+  static PRUint32 sSnifferEntryNum;
+  
   char *mBuffer;
   PRUint32 mBufferLen;
   PRBool mRequireHTMLsuffix;
 
   nsCString mContentType;
+
 };
 
 
