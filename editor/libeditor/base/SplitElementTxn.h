@@ -57,7 +57,7 @@ public:
 
   NS_IMETHOD Undo(void);
 
-  NS_IMETHOD Redo(void);
+  //NS_IMETHOD Redo(void);
 
   NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
 
