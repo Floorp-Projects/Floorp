@@ -268,6 +268,7 @@ nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
   nsCOMPtr<nsIURI> referrer;
   nsCOMPtr<nsISupports> owner;
   PRBool inheritOwner = PR_FALSE;
+  PRBool stopActiveDoc = PR_FALSE;
   nsCOMPtr<nsISHEntry> shEntry;
   nsDocShellInfoLoadType loadType = nsIDocShellLoadInfo::loadNormal;
 
@@ -279,6 +280,7 @@ nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
     aLoadInfo->GetLoadType(&loadType);
     aLoadInfo->GetOwner(getter_AddRefs(owner));
     aLoadInfo->GetInheritOwner(&inheritOwner);
+    aLoadInfo->GetStopActiveDocument(&stopActiveDoc);
     aLoadInfo->GetSHEntry(getter_AddRefs(shEntry));
   }
 
@@ -308,7 +310,7 @@ nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
   if (shEntry) {
     rv = LoadHistoryEntry(shEntry, loadType);
   } else {
-    rv = InternalLoad(aURI, referrer, owner, inheritOwner, nsnull, nsnull, 
+    rv = InternalLoad(aURI, referrer, owner, inheritOwner, stopActiveDoc, nsnull, nsnull, 
                       nsnull, loadType, nsnull);
   }
 
@@ -1332,7 +1334,7 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
    }
    else {
 	   //May be one of those <META> charset reloads in a composer or Messenger
-      return InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, nsnull, 
+      return InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, PR_FALSE, nsnull, 
                           nsnull, nsnull, type);
 
    }
@@ -1342,7 +1344,7 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
    // If this really keeps the crash from re-occuring, may be this can stay. However 
    // there is no major difference between this one and the one inside #if 0
    
-   return InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, nsnull, 
+   return InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, PR_FALSE, nsnull, 
                        nsnull, nsnull, type);
 #endif /* 0 */
 
@@ -1362,7 +1364,7 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
 
    UpdateCurrentSessionHistory();
 
-   NS_ENSURE_SUCCESS(InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE,
+   NS_ENSURE_SUCCESS(InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, PR_FALSE,
                                   nsnull, nsnull, nsnull, type), 
                      NS_ERROR_FAILURE);
    return NS_OK;
@@ -2755,12 +2757,12 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 //*****************************************************************************   
 #ifdef SH_IN_FRAMES
 NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
-   nsISupports* aOwner, PRBool aInheritOwner, const char* aWindowTarget, 
+   nsISupports* aOwner, PRBool aInheritOwner, PRBool aStopActiveDoc, const char* aWindowTarget, 
    nsIInputStream* aPostData, nsIInputStream* aHeadersData,
    nsDocShellInfoLoadType aLoadType, nsISHEntry * aSHEntry)
 #else
 NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
-   nsISupports* aOwner, PRBool aInheritOwner, const char* aWindowTarget, 
+   nsISupports* aOwner, PRBool aInheritOwner, PRBool aStopActiveDoc, const char* aWindowTarget, 
    nsIInputStream* aPostData, nsIInputStream* aHeadersData,
    nsDocShellInfoLoadType aLoadType)
 #endif
@@ -2810,6 +2812,10 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
     NS_ENSURE_SUCCESS(StopLoad(), NS_ERROR_FAILURE);
     // Cancel any timers that were set for this loader.
     CancelRefreshURITimers();
+
+    if (aStopActiveDoc && mContentViewer) {
+      mContentViewer->Stop();
+    }
 
     mLoadType = aLoadType;
 #ifdef SH_IN_FRAMES
@@ -3872,11 +3878,11 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
     
 
 #ifdef SH_IN_FRAMES
-   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, PR_TRUE, nsnull, 
+   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, PR_TRUE, PR_FALSE, nsnull, 
                                   postData, nsnull, aLoadType, aEntry),
       NS_ERROR_FAILURE);
 #else
-   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, nsnull, PR_TRUE,
+   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, nsnull, PR_TRUE, PR_FALSE,
                                   postData, nsnull, 
                                   nsIDocShellLoadInfo::loadHistory),
       NS_ERROR_FAILURE);

@@ -173,12 +173,12 @@ protected:
 
 #ifdef SH_IN_FRAMES
    NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI, 
-      nsISupports* owner, PRBool inheritOwnerFromDocument, 
+      nsISupports* owner, PRBool inheritOwnerFromDocument, PRBool stopActiveDoc,
       const char* aWindowTarget=nsnull, 
       nsIInputStream* aPostData=nsnull, nsIInputStream* aHeadersData=nsnull, nsDocShellInfoLoadType aLoadType=nsIDocShellLoadInfo::loadNormal, nsISHEntry * aSHEntry = nsnull);
 #else
    NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI, 
-      nsISupports* owner, PRBool inheritOwnerFromDocument,
+      nsISupports* owner, PRBool inheritOwnerFromDocument, PRBool stopActiveDoc,
       const char* aWindowTarget=nsnull, 
       nsIInputStream* aPostData=nsnull, nsIInputStream* aHeadersData=nsnull, nsDocShellInfoLoadType aLoadType=nsIDocShellLoadInfo::loadNormal);
 #endif

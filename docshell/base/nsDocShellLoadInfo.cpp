@@ -98,6 +98,20 @@ NS_IMETHODIMP nsDocShellLoadInfo::SetInheritOwner(PRBool aInheritOwner)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsDocShellLoadInfo::GetStopActiveDocument(PRBool* aStopDocument)
+{
+   NS_ENSURE_ARG_POINTER(aStopDocument);
+
+   *aStopDocument = mStopActiveDocument;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellLoadInfo::SetStopActiveDocument(PRBool aStopDocument)
+{
+   mStopActiveDocument = aStopDocument;
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsDocShellLoadInfo::GetLoadType(nsDocShellInfoLoadType * aLoadType)
 {
    NS_ENSURE_ARG_POINTER(aLoadType);
