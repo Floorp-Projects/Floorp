@@ -38,7 +38,16 @@
           <menuseparator/>
 
           <menu value="&walletMenu.label;">
-            <menupopup  id="personalManagers" oncreate="CheckForWalletAndImage()"> 
+            <menupopup  id="strings"
+                        PasswordNotChanged = "&PasswordNotChanged;"
+                        PasswordExpired = "&PasswordExpired;"
+                        PasswordNotExpired = "&PasswordNotExpired;"
+                        AllDataWillBeCleared = "&AllDataWillBeCleared;"
+                        UnableToCapture = "&UnableToCapture;"
+                        Captured = "&Captured;"
+                        NotCaptured = "&NotCaptured;"
+                        noPrefills = "&noPrefills;"
+                        oncreate="CheckForWalletAndImage()"> 
               <menu value="&walletPasswordManager.label;">
                 <menupopup>
                   <menuitem value="&walletDisplaySignonsCmd.label;" oncommand="WalletDialog('signon');"/> 
