@@ -726,13 +726,20 @@ function MsgEmptyTrash()
                         dump ('found trash folder\n');
                         trashElement.setAttribute('open','');
                     }
+                    var trashSelected = IsSpecialFolderSelected('Trash');
+                    if(trashSelected)
+                    {
+                        tree.clearItemSelection();
+                        RefreshThreadTreeView();
+                    }
+                    messenger.EmptyTrash(tree.database, folder.resource);
+                    if (trashSelected)
+                    {
+                        trashElement = document.getElementById(trashUri);
+                        if (trashElement)
+                            ChangeSelection(tree, trashElement);
+                    }
                 }
-				if(IsSpecialFolderSelected('Trash'))
-				{
-                    tree.clearItemSelection();
-					RefreshThreadTreeView();
-				}
-                messenger.EmptyTrash(tree.database, folder.resource);
 			}
         }
     }
