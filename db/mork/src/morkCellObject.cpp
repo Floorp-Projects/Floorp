@@ -82,7 +82,7 @@ morkCellObject::~morkCellObject() // assert CloseCellObject() executed earlier
 morkCellObject::morkCellObject(morkEnv* ev, const morkUsage& inUsage,
   nsIMdbHeap* ioHeap, morkRow* ioRow, morkCell* ioCell,
   mork_column inCol, mork_pos inPos)
-: morkObject(ev, inUsage, ioHeap, (morkHandle*) 0)
+: morkObject(ev, inUsage, ioHeap, morkColor_kNone, (morkHandle*) 0)
 , mCellObject_RowObject( 0 )
 , mCellObject_Row( 0 )
 , mCellObject_Cell( 0 )

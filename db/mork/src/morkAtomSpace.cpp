@@ -138,22 +138,33 @@ morkAtomSpace::NonAtomSpaceTypeError(morkEnv* ev)
 mork_num
 morkAtomSpace::CutAllAtoms(morkEnv* ev, morkPool* ioPool)
 {
+#ifdef MORK_ENABLE_ZONE_ARENAS
+  MORK_USED_2(ev, ioPool);
+  return 0;
+#else /*MORK_ENABLE_ZONE_ARENAS*/
   if ( this->IsAtomSpaceClean() )
     this->MaybeDirtyStoreAndSpace();
   
-  mork_num outSlots = mAtomSpace_AtomAids.mMap_Fill;
+  mork_num outSlots = mAtomSpace_AtomAids.MapFill();
   morkBookAtom* a = 0; // old key atom in the map
   
+  morkStore* store = mSpace_Store;
   mork_change* c = 0;
   morkAtomAidMapIter i(ev, &mAtomSpace_AtomAids);
   for ( c = i.FirstAtom(ev, &a); c ; c = i.NextAtom(ev, &a) )
   {
     if ( a )
-      ioPool->ZapAtom(ev, a);
+      ioPool->ZapAtom(ev, a, &store->mStore_Zone);
+
+#ifdef MORK_ENABLE_PROBE_MAPS
+    // do not cut anything from the map
+#else /*MORK_ENABLE_PROBE_MAPS*/
     i.CutHereAtom(ev, /*key*/ (morkBookAtom**) 0);
+#endif /*MORK_ENABLE_PROBE_MAPS*/
   }
   
   return outSlots;
+#endif /*MORK_ENABLE_ZONE_ARENAS*/
 }
 
 
@@ -163,13 +174,14 @@ morkAtomSpace::MakeBookAtomCopyWithAid(morkEnv* ev,
 // Make copy of inAtom and put it in both maps, using specified ID.
 {
   morkBookAtom* outAtom = 0;
-  if ( ev->Good() )
+  morkStore* store = mSpace_Store;
+  if ( ev->Good() && store )
   {
     morkPool* pool = this->GetSpaceStorePool();
-    outAtom = pool->NewBookAtomCopy(ev, inAtom);
+    outAtom = pool->NewBookAtomCopy(ev, inAtom, &store->mStore_Zone);
     if ( outAtom )
     {
-      if ( mSpace_Store->mStore_CanDirty )
+      if ( store->mStore_CanDirty )
       {
         outAtom->SetAtomDirty();
         if ( this->IsAtomSpaceClean() )
@@ -180,7 +192,7 @@ morkAtomSpace::MakeBookAtomCopyWithAid(morkEnv* ev,
       outAtom->mBookAtom_Space = this;
       mAtomSpace_AtomAids.AddAtom(ev, outAtom);
       mAtomSpace_AtomBodies.AddAtom(ev, outAtom);
-      if ( mSpace_Scope == morkAtomSpace_kColumnScope )
+      if ( this->SpaceScope() == morkAtomSpace_kColumnScope )
         outAtom->MakeCellUseForever(ev);
 
       if ( mAtomSpace_HighUnderId <= inAid )
@@ -201,7 +213,7 @@ morkAtomSpace::MakeBookAtomCopy(morkEnv* ev, const morkBigBookAtom& inAtom)
     if ( store->mStore_CanAutoAssignAtomIdentity )
     {
       morkPool* pool = this->GetSpaceStorePool();
-      morkBookAtom* atom = pool->NewBookAtomCopy(ev, inAtom);
+      morkBookAtom* atom = pool->NewBookAtomCopy(ev, inAtom, &mSpace_Store->mStore_Zone);
       if ( atom )
       {
         mork_aid id = this->MakeNewAtomId(ev, atom);
@@ -218,11 +230,11 @@ morkAtomSpace::MakeBookAtomCopy(morkEnv* ev, const morkBigBookAtom& inAtom)
           atom->mBookAtom_Space = this;
           mAtomSpace_AtomAids.AddAtom(ev, atom);
           mAtomSpace_AtomBodies.AddAtom(ev, atom);
-          if ( mSpace_Scope == morkAtomSpace_kColumnScope )
+          if ( this->SpaceScope() == morkAtomSpace_kColumnScope )
             outAtom->MakeCellUseForever(ev);
         }
         else
-          pool->ZapAtom(ev, atom);
+          pool->ZapAtom(ev, atom, &mSpace_Store->mStore_Zone);
       }
     }
     else

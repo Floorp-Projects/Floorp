@@ -29,9 +29,31 @@
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
+#define orkinHeap_kTag 0x68456150 /* ascii 'hEaP' */
+
 /*| orkinHeap: 
 |*/
 class orkinHeap : public nsIMdbHeap { //
+
+#ifdef MORK_DEBUG_HEAP_STATS
+protected:
+  mork_num sHeap_AllocCount;  // number of times Alloc() is called
+  mork_num sHeap_FreeCount;   // number of times Free() is called
+  mork_num sHeap_BlockCount;  // number of outstanding blocks
+  
+  mork_num sHeap_BlockVolume; // sum of sizes for all outstanding blocks
+  mork_num sHeap_HighWaterVolume;  // largest value of sHeap_BlockVolume seen
+  mork_num sHeap_HighWaterTenKilo; // HighWaterVolume in 10K granularity
+  mork_num sHeap_HighWaterHundredKilo; // HighWaterVolume in 100K granularity
+  
+public: // getters
+  mork_num HeapAllocCount() const { return sHeap_AllocCount; }
+  mork_num HeapFreeCount() const { return sHeap_FreeCount; }
+  mork_num HeapBlockCount() const { return sHeap_AllocCount - sHeap_FreeCount; }
+  
+  mork_num HeapBlockVolume() const { return sHeap_BlockVolume; }
+  mork_num HeapHighWaterVolume() const { return sHeap_HighWaterVolume; }
+#endif /*MORK_DEBUG_HEAP_STATS*/
   
 public:
   orkinHeap(); // does nothing
@@ -51,8 +73,8 @@ public:
   virtual mdb_err Free(nsIMdbEnv* ev, // free block allocated earlier by Alloc()
     void* inBlock);
     
-  virtual mdb_err AddStrongRef(nsIMdbEnv* ev); // does nothing
-  virtual mdb_err CutStrongRef(nsIMdbEnv* ev); // does nothing
+  virtual mdb_err HeapAddStrongRef(nsIMdbEnv* ev); // does nothing
+  virtual mdb_err HeapCutStrongRef(nsIMdbEnv* ev); // does nothing
 // } ===== end nsIMdbHeap methods =====
 
 };

@@ -102,7 +102,7 @@ morkSorting::morkSorting(morkEnv* ev, const morkUsage& inUsage,
     nsIMdbHeap* ioNodeHeap, morkTable* ioTable,
     nsIMdbCompare* ioCompare,
     nsIMdbHeap* ioSlotHeap, mork_column inCol)
-: morkObject(ev, inUsage, ioNodeHeap, (morkHandle*) 0)
+: morkObject(ev, inUsage, ioNodeHeap, morkColor_kNone, (morkHandle*) 0)
 , mSorting_Table( 0 )
 
 , mSorting_Compare( 0 )

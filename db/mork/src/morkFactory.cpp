@@ -73,7 +73,7 @@ morkFactory::~morkFactory() /*i*/ // assert CloseFactory() executed earlier
 
 /*public non-poly*/
 morkFactory::morkFactory() // uses orkinHeap
-: morkObject(morkUsage::kGlobal, (nsIMdbHeap*) 0)
+: morkObject(morkUsage::kGlobal, (nsIMdbHeap*) 0, morkColor_kNone)
 , mFactory_Env(morkUsage::kMember, (nsIMdbHeap*) 0, this,
   new orkinHeap())
 , mFactory_Heap()
@@ -87,7 +87,7 @@ morkFactory::morkFactory() // uses orkinHeap
 
 /*public non-poly*/
 morkFactory::morkFactory(nsIMdbHeap* ioHeap)
-: morkObject(morkUsage::kHeap, ioHeap)
+: morkObject(morkUsage::kHeap, ioHeap, morkColor_kNone)
 , mFactory_Env(morkUsage::kMember, (nsIMdbHeap*) 0, this, ioHeap)
 , mFactory_Heap()
 {
@@ -101,7 +101,7 @@ morkFactory::morkFactory(nsIMdbHeap* ioHeap)
 /*public non-poly*/
 morkFactory::morkFactory(morkEnv* ev, /*i*/
   const morkUsage& inUsage, nsIMdbHeap* ioHeap)
-: morkObject(ev, inUsage, ioHeap, (morkHandle*) 0)
+: morkObject(ev, inUsage, ioHeap, morkColor_kNone, (morkHandle*) 0)
 , mFactory_Env(morkUsage::kMember, (nsIMdbHeap*) 0, this, ioHeap)
 , mFactory_Heap()
 {

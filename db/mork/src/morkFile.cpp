@@ -73,7 +73,7 @@ morkFile::~morkFile() // assert CloseFile() executed earlier
 /*public non-poly*/
 morkFile::morkFile(morkEnv* ev, const morkUsage& inUsage, 
   nsIMdbHeap* ioHeap, nsIMdbHeap* ioSlotHeap)
-: morkObject(ev, inUsage, ioHeap, (morkHandle*) 0)
+: morkObject(ev, inUsage, ioHeap, morkColor_kNone, (morkHandle*) 0)
 , mFile_Frozen( 0 )
 , mFile_DoTrace( 0 )
 , mFile_IoOpen( 0 )

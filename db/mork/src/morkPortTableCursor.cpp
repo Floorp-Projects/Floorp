@@ -286,6 +286,14 @@ morkPortTableCursor::NextTable(morkEnv* ev)
       
     if ( space ) // have a space remaining that might hold tables?
     {
+#ifdef MORK_BEAD_OVER_NODE_MAPS
+      morkTableMapIter* ti = &mPortTableCursor_TableIter;
+      morkTable* table = ( mPortTableCursor_LastTable )?
+        ti->NextTable(ev) : ti->FirstTable(ev);
+
+      for ( ; table && ev->Good(); table = ti->NextTable(ev) )
+      
+#else /*MORK_BEAD_OVER_NODE_MAPS*/
       mork_tid* key = 0; // ignore keys in table map
       morkTable* table = 0; // old value table in the map
       morkTableMapIter* ti = &mPortTableCursor_TableIter;
@@ -293,6 +301,7 @@ morkPortTableCursor::NextTable(morkEnv* ev)
         ti->NextTable(ev, key, &table) : ti->FirstTable(ev, key, &table);
 
       for ( ; c && ev->Good(); c = ti->NextTable(ev, key, &table) )
+#endif /*MORK_BEAD_OVER_NODE_MAPS*/
       {
         if ( table && table->IsTable() )
         {

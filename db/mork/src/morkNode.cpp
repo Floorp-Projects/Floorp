@@ -239,6 +239,20 @@ morkNode::~morkNode() // assert that CloseNode() executed earlier
   
 
 /*public non-poly*/
+morkNode::morkNode( mork_usage inCode )
+: mNode_Heap( 0 )
+, mNode_Base( morkBase_kNode )
+, mNode_Derived ( 0 ) // until subclass sets appropriately
+, mNode_Access( morkAccess_kOpen )
+, mNode_Usage( inCode )
+, mNode_Mutable( morkAble_kEnabled )
+, mNode_Load( morkLoad_kClean )
+, mNode_Uses( 1 )
+, mNode_Refs( 1 )
+{
+}
+
+/*public non-poly*/
 morkNode::morkNode(const morkUsage& inUsage, nsIMdbHeap* ioHeap)
 : mNode_Heap( ioHeap )
 , mNode_Base( morkBase_kNode )
@@ -403,9 +417,9 @@ nsIMdbHeap_SlotStrongHeap(nsIMdbHeap* self, morkEnv* ev, nsIMdbHeap** ioSlot)
     if ( heap )
     {
       *ioSlot = 0;
-      heap->CutStrongRef(menv);
+      heap->HeapCutStrongRef(menv);
     }
-    if ( self && ev->Good() && (self->AddStrongRef(menv)==0) && ev->Good() )
+    if ( self && ev->Good() && (self->HeapAddStrongRef(menv)==0) && ev->Good() )
       *ioSlot = self;
   }
 }

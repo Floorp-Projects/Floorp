@@ -94,7 +94,7 @@ morkTable::morkTable(morkEnv* ev, /*i*/
   morkStore* ioStore, nsIMdbHeap* ioSlotHeap, morkRowSpace* ioRowSpace,
   const mdbOid* inOptionalMetaRowOid, // can be nil to avoid specifying 
   mork_tid inTid, mork_kind inKind, mork_bool inMustBeUnique)
-: morkObject(ev, inUsage, ioHeap, (morkHandle*) 0)
+: morkObject(ev, inUsage, ioHeap, (mork_color) inTid, (morkHandle*) 0)
 , mTable_Store( 0 )
 , mTable_RowSpace( 0 )
 , mTable_MetaRow( 0 )
@@ -109,7 +109,6 @@ morkTable::morkTable(morkEnv* ev, /*i*/
 , mTable_ChangesCount( 0 )
 , mTable_ChangesMax( 3 ) // any very small number greater than zero
 
-, mTable_Id( inTid )
 , mTable_Kind( inKind )
 
 , mTable_Flags( 0 )
@@ -402,8 +401,8 @@ morkTable::GetTableOid(morkEnv* ev, mdbOid* outOid)
   morkRowSpace* space = mTable_RowSpace;
   if ( space )
   {
-    outOid->mOid_Scope = space->mSpace_Scope;
-    outOid->mOid_Id = mTable_Id;
+    outOid->mOid_Scope = space->SpaceScope();
+    outOid->mOid_Id = this->TableId();
   }
   else
     this->NilRowSpaceError(ev);
@@ -813,7 +812,11 @@ morkTableMap::~morkTableMap()
 
 morkTableMap::morkTableMap(morkEnv* ev, const morkUsage& inUsage,
   nsIMdbHeap* ioHeap, nsIMdbHeap* ioSlotHeap)
+#ifdef MORK_BEAD_OVER_NODE_MAPS
+  : morkBeadMap(ev, inUsage, ioHeap, ioSlotHeap)
+#else /*MORK_BEAD_OVER_NODE_MAPS*/
   : morkNodeMap(ev, inUsage, ioHeap, ioSlotHeap)
+#endif /*MORK_BEAD_OVER_NODE_MAPS*/
 {
   if ( ev->Good() )
     mNode_Derived = morkDerived_kTableMap;

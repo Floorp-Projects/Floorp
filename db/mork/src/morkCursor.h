@@ -44,7 +44,8 @@ class morkCursor : public morkObject { // collection iterator
   // mork_uses    mNode_Uses;    // refcount for strong refs
   // mork_refs    mNode_Refs;    // refcount for strong refs + weak refs
 
-  // morkFactory* mObject_Factory;  // weak ref to suite factory
+  // mork_color   mBead_Color;   // ID for this bead
+  // morkHandle*  mObject_Handle;  // weak ref to handle for this object
 
 public: // state is public because the entire Mork system is private
   mork_seed  mCursor_Seed;

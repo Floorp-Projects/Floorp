@@ -82,6 +82,9 @@ typedef mork_token mork_aid;     // token used to id atomize cell values
 typedef mork_token mork_column;  // token used to id columns for rows
 typedef mork_column mork_delta;  // mork_column plus mork_change 
 
+typedef mork_token mork_color;   // bead ID
+#define morkColor_kNone ((mork_color) 0)
+
 typedef mork_u4 mork_magic;      // unsigned magic signature
 
 typedef mork_u4 mork_seed;       // unsigned collection change counter
@@ -105,6 +108,13 @@ typedef mork_u1 mork_priority; // 0..9, for a total of ten different values
 typedef mork_u1 mork_able; // on, off, asleep (clone IronDoc's fe_able)
 typedef mork_u1 mork_load; // dirty or clean (clone IronDoc's fe_load)
 // } %%%%% end specific-size integer scalar typedefs %%%%%
+
+// 'test' is a public domain Mithril for key equality tests in probe maps
+typedef mork_i2 mork_test; /* neg=>kVoid, zero=>kHit, pos=>kMiss */
+
+#define morkTest_kVoid ((mork_test) -1) /* -1: nil key slot, no key order */
+#define morkTest_kHit  ((mork_test) 0)  /*  0: keys are equal, a map hit */
+#define morkTest_kMiss ((mork_test) 1)  /*  1: keys not equal, a map miss */
 
 // { %%%%% begin constants for Mork scalar types %%%%%
 #define morkPriority_kHi  ((mork_priority) 0) /* best priority */
@@ -190,6 +200,7 @@ class morkPool;
 class morkPlace;
 class morkPort;
 class morkPortTableCursor;
+class morkProbeMap;
 class morkRow;
 class morkRowCellCursor;
 class morkRowObject;
@@ -205,6 +216,7 @@ class morkTableChange;
 class morkTableRowCursor;
 class morkThumb;
 class morkWriter;
+class morkZone;
 // } %%%%% end class forward defines %%%%%
 
 // include this config file last for platform & environment specific stuff:

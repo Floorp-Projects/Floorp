@@ -375,7 +375,7 @@ morkBuilder::OnNewTable(morkEnv* ev, const morkPlace& inPlace,
   if ( table )
   {
     if ( table->mTable_RowSpace )
-      mBuilder_TableRowScope = table->mTable_RowSpace->mSpace_Scope;
+      mBuilder_TableRowScope = table->mTable_RowSpace->SpaceScope();
       
     if ( inCutAllRows )
       table->CutAllRows(ev);
@@ -993,7 +993,7 @@ morkBuilder::OnRowMid(morkEnv* ev, const morkSpan& inSpan,
     if ( ev->Good() )
      {
        morkPool* pool = store->StorePool();
-       morkAtom* atom = pool->NewRowOidAtom(ev, rowOid);
+       morkAtom* atom = pool->NewRowOidAtom(ev, rowOid, &store->mStore_Zone);
        if ( atom )
        {
          cell->SetAtom(ev, atom, pool);
@@ -1030,7 +1030,7 @@ morkBuilder::OnTableMid(morkEnv* ev, const morkSpan& inSpan,
     if ( ev->Good() )
      {
        morkPool* pool = store->StorePool();
-       morkAtom* atom = pool->NewTableOidAtom(ev, tableOid);
+       morkAtom* atom = pool->NewTableOidAtom(ev, tableOid, &store->mStore_Zone);
        if ( atom )
        {
          cell->SetAtom(ev, atom, pool);

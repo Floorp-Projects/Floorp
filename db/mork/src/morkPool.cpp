@@ -60,6 +60,10 @@
 #include "morkDeque.h"
 #endif
 
+#ifndef _MORKZONE_
+#include "morkZone.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 // ````` ````` ````` ````` ````` 
@@ -87,6 +91,8 @@ morkPool::morkPool(const morkUsage& inUsage, nsIMdbHeap* ioHeap,
   nsIMdbHeap* ioSlotHeap)
 : morkNode(inUsage, ioHeap)
 , mPool_Heap( ioSlotHeap )
+, mPool_UsedFramesCount( 0 )
+, mPool_FreeFramesCount( 0 )
 {
   // mPool_Heap is NOT refcounted
   MORK_ASSERT(ioSlotHeap);
@@ -99,6 +105,8 @@ morkPool::morkPool(morkEnv* ev,
   const morkUsage& inUsage, nsIMdbHeap* ioHeap, nsIMdbHeap* ioSlotHeap)
 : morkNode(ev, inUsage, ioHeap)
 , mPool_Heap( ioSlotHeap )
+, mPool_UsedFramesCount( 0 )
+, mPool_FreeFramesCount( 0 )
 {
   if ( ioSlotHeap )
   {
@@ -118,8 +126,18 @@ morkPool::ClosePool(morkEnv* ev) // called by CloseMorkNode();
   {
     if ( this->IsNode() )
     {
-      // mPool_Heap is NOT refcounted:
-      // nsIMdbHeap_SlotStrongHeap((nsIMdbHeap*) 0, ev, &mPool_Heap);
+#ifdef morkZone_CONFIG_ARENA
+#else /*morkZone_CONFIG_ARENA*/
+    //MORK_USED_1(ioZone);
+#endif /*morkZone_CONFIG_ARENA*/
+
+      nsIMdbHeap* heap = mPool_Heap;
+      nsIMdbEnv* mev = ev->AsMdbEnv();
+      morkLink* link;
+      morkDeque* d = &mPool_FreeHandleFrames;
+      while ( (link = d->RemoveFirst()) != 0 )
+        heap->Free(mev, link);
+  
       this->MarkShut();
     }
     else
@@ -135,10 +153,34 @@ morkPool::ClosePool(morkEnv* ev) // called by CloseMorkNode();
 
 // alloc and free individual instances of handles (inside hand frames):
 morkHandleFace*
-morkPool::NewHandle(morkEnv* ev, mork_size inSize)
+morkPool::NewHandle(morkEnv* ev, mork_size inSize, morkZone* ioZone)
 {
   void* newBlock = 0;
-  mPool_Heap->Alloc(ev->AsMdbEnv(), inSize, (void**) &newBlock);
+  if ( inSize <= sizeof(morkHandleFrame) )
+  {
+    morkLink* link = mPool_FreeHandleFrames.RemoveFirst();
+    if ( link )
+    {
+      newBlock = link;
+      if ( mPool_FreeFramesCount )
+        --mPool_FreeFramesCount;
+      else
+        ev->NewWarning("mPool_FreeFramesCount underflow");
+    }
+    else
+      mPool_Heap->Alloc(ev->AsMdbEnv(), sizeof(morkHandleFrame),
+        (void**) &newBlock);
+  }
+  else
+  {
+    ev->NewWarning("inSize > sizeof(morkHandleFrame)");
+    mPool_Heap->Alloc(ev->AsMdbEnv(), inSize, (void**) &newBlock);
+  }
+#ifdef morkZone_CONFIG_ARENA
+#else /*morkZone_CONFIG_ARENA*/
+  MORK_USED_1(ioZone);
+#endif /*morkZone_CONFIG_ARENA*/
+
   return (morkHandleFace*) newBlock;
 }
 
@@ -146,39 +188,66 @@ void
 morkPool::ZapHandle(morkEnv* ev, morkHandleFace* ioHandle)
 {
   if ( ioHandle )
-    mPool_Heap->Free(ev->AsMdbEnv(), ioHandle);
+  {
+    morkLink* link = (morkLink*) ioHandle;
+    mPool_FreeHandleFrames.AddLast(link);
+    ++mPool_FreeFramesCount;
+  }
 }
+
 
 // alloc and free individual instances of rows:
 morkRow*
-morkPool::NewRow(morkEnv* ev) // allocate a new row instance
+morkPool::NewRow(morkEnv* ev, morkZone* ioZone) // allocate a new row instance
 {
   morkRow* newRow = 0;
+  
+#ifdef morkZone_CONFIG_ARENA
+  // a zone 'chip' remembers no size, and so cannot be deallocated:
+  newRow = (morkRow*) ioZone->ZoneNewChip(ev, sizeof(morkRow));
+#else /*morkZone_CONFIG_ARENA*/
+  MORK_USED_1(ioZone);
   mPool_Heap->Alloc(ev->AsMdbEnv(), sizeof(morkRow), (void**) &newRow);
+#endif /*morkZone_CONFIG_ARENA*/
+
   if ( newRow )
     MORK_MEMSET(newRow, 0, sizeof(morkRow));
   
-  if ( newRow )
-  {
-  }
   return newRow;
 }
 
 void
-morkPool::ZapRow(morkEnv* ev, morkRow* ioRow) // free old row instance
+morkPool::ZapRow(morkEnv* ev, morkRow* ioRow,
+  morkZone* ioZone) // free old row instance
 {
+#ifdef morkZone_CONFIG_ARENA
+  if ( !ioRow )
+    ev->NilPointerWarning(); // a zone 'chip' cannot be freed
+#else /*morkZone_CONFIG_ARENA*/
+  MORK_USED_1(ioZone);
   if ( ioRow )
     mPool_Heap->Free(ev->AsMdbEnv(), ioRow);
+#endif /*morkZone_CONFIG_ARENA*/
 }
 
 // alloc and free entire vectors of cells (not just one cell at a time)
 morkCell*
-morkPool::NewCells(morkEnv* ev, mork_size inSize)
+morkPool::NewCells(morkEnv* ev, mork_size inSize,
+  morkZone* ioZone)
 {
   morkCell* newCells = 0;
+
   mork_size size = inSize * sizeof(morkCell);
   if ( size )
+  {
+#ifdef morkZone_CONFIG_ARENA
+    // a zone 'run' knows its size, and can indeed be deallocated:
+    newCells = (morkCell*) ioZone->ZoneNewRun(ev, size);
+#else /*morkZone_CONFIG_ARENA*/
+    MORK_USED_1(ioZone);
     mPool_Heap->Alloc(ev->AsMdbEnv(), size, (void**) &newCells);
+#endif /*morkZone_CONFIG_ARENA*/
+  }
     
   // note morkAtom depends on having nil stored in all new mCell_Atom slots:
   if ( newCells )
@@ -187,23 +256,39 @@ morkPool::NewCells(morkEnv* ev, mork_size inSize)
 }
 
 void
-morkPool::ZapCells(morkEnv* ev, morkCell* ioVector, mork_size inSize)
+morkPool::ZapCells(morkEnv* ev, morkCell* ioVector, mork_size inSize,
+  morkZone* ioZone)
 {
   MORK_USED_1(inSize);
+
   if ( ioVector )
+  {
+#ifdef morkZone_CONFIG_ARENA
+    // a zone 'run' knows its size, and can indeed be deallocated:
+    ioZone->ZoneZapRun(ev, ioVector);
+#else /*morkZone_CONFIG_ARENA*/
+    MORK_USED_1(ioZone);
     mPool_Heap->Free(ev->AsMdbEnv(), ioVector);
+#endif /*morkZone_CONFIG_ARENA*/
+  }
 }
 
 // resize (grow or trim) cell vectors inside a containing row instance
 mork_bool
-morkPool::AddRowCells(morkEnv* ev, morkRow* ioRow, mork_size inNewSize)
+morkPool::AddRowCells(morkEnv* ev, morkRow* ioRow, mork_size inNewSize,
+  morkZone* ioZone)
 {
   // note strong implementation similarity to morkArray::Grow()
+
+  MORK_USED_1(ioZone);
+#ifdef morkZone_CONFIG_ARENA
+#else /*morkZone_CONFIG_ARENA*/
+#endif /*morkZone_CONFIG_ARENA*/
 
   mork_fill fill = ioRow->mRow_Length;
   if ( ev->Good() && fill < inNewSize ) // need more cells?
   {
-    morkCell* newCells = this->NewCells(ev, inNewSize);
+    morkCell* newCells = this->NewCells(ev, inNewSize, ioZone);
     if ( newCells )
     {
       morkCell* c = newCells; // for iterating during copy
@@ -219,7 +304,7 @@ morkPool::AddRowCells(morkEnv* ev, morkRow* ioRow, mork_size inNewSize)
       ++ioRow->mRow_Seed;
       
       if ( oldCells )
-        this->ZapCells(ev, oldCells, fill);
+        this->ZapCells(ev, oldCells, fill, ioZone);
     }
   }
   return ( ev->Good() && ioRow->mRow_Length >= inNewSize );
@@ -227,14 +312,20 @@ morkPool::AddRowCells(morkEnv* ev, morkRow* ioRow, mork_size inNewSize)
 
 mork_bool
 morkPool::CutRowCells(morkEnv* ev, morkRow* ioRow,
-  mork_size inNewSize)
+  mork_size inNewSize,
+  morkZone* ioZone)
 {
+  MORK_USED_1(ioZone);
+#ifdef morkZone_CONFIG_ARENA
+#else /*morkZone_CONFIG_ARENA*/
+#endif /*morkZone_CONFIG_ARENA*/
+
   mork_fill fill = ioRow->mRow_Length;
   if ( ev->Good() && fill > inNewSize ) // need fewer cells?
   {
     if ( inNewSize ) // want any row cells at all?
     {
-      morkCell* newCells = this->NewCells(ev, inNewSize);
+      morkCell* newCells = this->NewCells(ev, inNewSize, ioZone);
       if ( newCells )
       {
         morkCell* oldCells = ioRow->mRow_Cells;
@@ -256,7 +347,7 @@ morkPool::CutRowCells(morkEnv* ev, morkRow* ioRow,
         ++ioRow->mRow_Seed;
         
         if ( oldCells )
-          this->ZapCells(ev, oldCells, fill);
+          this->ZapCells(ev, oldCells, fill, ioZone);
       }
     }
     else // get rid of all row cells
@@ -267,7 +358,7 @@ morkPool::CutRowCells(morkEnv* ev, morkRow* ioRow,
       ++ioRow->mRow_Seed;
       
       if ( oldCells )
-        this->ZapCells(ev, oldCells, fill);
+        this->ZapCells(ev, oldCells, fill, ioZone);
     }
   }
   return ( ev->Good() && ioRow->mRow_Length <= inNewSize );
@@ -275,27 +366,51 @@ morkPool::CutRowCells(morkEnv* ev, morkRow* ioRow,
 
 // alloc & free individual instances of atoms (lots of atom subclasses):
 void
-morkPool::ZapAtom(morkEnv* ev, morkAtom* ioAtom) // any subclass (by kind)
+morkPool::ZapAtom(morkEnv* ev, morkAtom* ioAtom,
+  morkZone* ioZone) // any subclass (by kind)
 {
+#ifdef morkZone_CONFIG_ARENA
+  if ( !ioAtom )
+    ev->NilPointerWarning(); // a zone 'chip' cannot be freed
+#else /*morkZone_CONFIG_ARENA*/
+  MORK_USED_1(ioZone);
   if ( ioAtom )
     mPool_Heap->Free(ev->AsMdbEnv(), ioAtom);
+#endif /*morkZone_CONFIG_ARENA*/
 }
 
 morkOidAtom*
-morkPool::NewRowOidAtom(morkEnv* ev, const mdbOid& inOid)
+morkPool::NewRowOidAtom(morkEnv* ev, const mdbOid& inOid,
+  morkZone* ioZone)
 {
   morkOidAtom* newAtom = 0;
+  
+#ifdef morkZone_CONFIG_ARENA
+  // a zone 'chip' remembers no size, and so cannot be deallocated:
+  newAtom = (morkOidAtom*) ioZone->ZoneNewChip(ev, sizeof(morkOidAtom));
+#else /*morkZone_CONFIG_ARENA*/
+  MORK_USED_1(ioZone);
   mPool_Heap->Alloc(ev->AsMdbEnv(), sizeof(morkOidAtom),(void**) &newAtom);
+#endif /*morkZone_CONFIG_ARENA*/
+
   if ( newAtom )
     newAtom->InitRowOidAtom(ev, inOid);
   return newAtom;
 }
 
 morkOidAtom*
-morkPool::NewTableOidAtom(morkEnv* ev, const mdbOid& inOid)
+morkPool::NewTableOidAtom(morkEnv* ev, const mdbOid& inOid,
+  morkZone* ioZone)
 {
   morkOidAtom* newAtom = 0;
+
+#ifdef morkZone_CONFIG_ARENA
+  // a zone 'chip' remembers no size, and so cannot be deallocated:
+  newAtom = (morkOidAtom*) ioZone->ZoneNewChip(ev, sizeof(morkOidAtom));
+#else /*morkZone_CONFIG_ARENA*/
+  MORK_USED_1(ioZone);
   mPool_Heap->Alloc(ev->AsMdbEnv(), sizeof(morkOidAtom), (void**) &newAtom);
+#endif /*morkZone_CONFIG_ARENA*/
   if ( newAtom )
     newAtom->InitTableOidAtom(ev, inOid);
   return newAtom;
@@ -303,17 +418,25 @@ morkPool::NewTableOidAtom(morkEnv* ev, const mdbOid& inOid)
 
 morkAtom*
 morkPool::NewAnonAtom(morkEnv* ev, const morkBuf& inBuf,
-  mork_cscode inForm)
+  mork_cscode inForm,
+  morkZone* ioZone)
 // if inForm is zero, and inBuf.mBuf_Fill is less than 256, then a 'wee'
 // anon atom will be created, and otherwise a 'big' anon atom.
 {
   morkAtom* newAtom = 0;
+
   mork_bool needBig = ( inForm || inBuf.mBuf_Fill > 255 );
   mork_size size = ( needBig )?
     morkBigAnonAtom::SizeForFill(inBuf.mBuf_Fill) :
     morkWeeAnonAtom::SizeForFill(inBuf.mBuf_Fill);
 
+#ifdef morkZone_CONFIG_ARENA
+  // a zone 'chip' remembers no size, and so cannot be deallocated:
+  newAtom = (morkAtom*) ioZone->ZoneNewChip(ev, size);
+#else /*morkZone_CONFIG_ARENA*/
+  MORK_USED_1(ioZone);
   mPool_Heap->Alloc(ev->AsMdbEnv(), size, (void**) &newAtom);
+#endif /*morkZone_CONFIG_ARENA*/
   if ( newAtom )
   {
     if ( needBig )
@@ -326,17 +449,25 @@ morkPool::NewAnonAtom(morkEnv* ev, const morkBuf& inBuf,
 
 morkBookAtom*
 morkPool::NewBookAtom(morkEnv* ev, const morkBuf& inBuf,
-  mork_cscode inForm, morkAtomSpace* ioSpace, mork_aid inAid)
+  mork_cscode inForm, morkAtomSpace* ioSpace, mork_aid inAid,
+  morkZone* ioZone)
 // if inForm is zero, and inBuf.mBuf_Fill is less than 256, then a 'wee'
 // book atom will be created, and otherwise a 'big' book atom.
 {
   morkBookAtom* newAtom = 0;
+
   mork_bool needBig = ( inForm || inBuf.mBuf_Fill > 255 );
   mork_size size = ( needBig )?
     morkBigBookAtom::SizeForFill(inBuf.mBuf_Fill) :
     morkWeeBookAtom::SizeForFill(inBuf.mBuf_Fill);
 
+#ifdef morkZone_CONFIG_ARENA
+  // a zone 'chip' remembers no size, and so cannot be deallocated:
+  newAtom = (morkBookAtom*) ioZone->ZoneNewChip(ev, size);
+#else /*morkZone_CONFIG_ARENA*/
+  MORK_USED_1(ioZone);
   mPool_Heap->Alloc(ev->AsMdbEnv(), size, (void**) &newAtom);
+#endif /*morkZone_CONFIG_ARENA*/
   if ( newAtom )
   {
     if ( needBig )
@@ -350,12 +481,14 @@ morkPool::NewBookAtom(morkEnv* ev, const morkBuf& inBuf,
 }
 
 morkBookAtom*
-morkPool::NewBookAtomCopy(morkEnv* ev, const morkBigBookAtom& inAtom)
+morkPool::NewBookAtomCopy(morkEnv* ev, const morkBigBookAtom& inAtom,
+  morkZone* ioZone)
   // make the smallest kind of book atom that can hold content in inAtom.
   // The inAtom parameter is often expected to be a staged book atom in
   // the store, which was used to search an atom space for existing atoms.
 {
   morkBookAtom* newAtom = 0;
+
   mork_cscode form = inAtom.mBigBookAtom_Form;
   mork_fill fill = inAtom.mBigBookAtom_Size;
   mork_bool needBig = ( form || fill > 255 );
@@ -363,7 +496,13 @@ morkPool::NewBookAtomCopy(morkEnv* ev, const morkBigBookAtom& inAtom)
     morkBigBookAtom::SizeForFill(fill) :
     morkWeeBookAtom::SizeForFill(fill);
 
+#ifdef morkZone_CONFIG_ARENA
+  // a zone 'chip' remembers no size, and so cannot be deallocated:
+  newAtom = (morkBookAtom*) ioZone->ZoneNewChip(ev, size);
+#else /*morkZone_CONFIG_ARENA*/
+  MORK_USED_1(ioZone);
   mPool_Heap->Alloc(ev->AsMdbEnv(), size, (void**) &newAtom);
+#endif /*morkZone_CONFIG_ARENA*/
   if ( newAtom )
   {
     morkBuf buf(inAtom.mBigBookAtom_Body, fill);

@@ -470,7 +470,7 @@ void
 morkWriter::WriteAtomSpaceAsDict(morkEnv* ev, morkAtomSpace* ioSpace)
 {
   morkStream* stream = mWriter_Stream;
-  mork_scope scope = ioSpace->mSpace_Scope;
+  mork_scope scope = ioSpace->SpaceScope();
   if ( scope < 0x80 )
   {
     if ( mWriter_LineSize )
@@ -622,7 +622,11 @@ morkWriter::DirtyAll(morkEnv* ev)
             space->SetRowSpaceDirty();
             if ( ev->Good() )
             {
+#ifdef MORK_ENABLE_PROBE_MAPS
+              morkRowProbeMapIter* ri = &mWriter_RowSpaceRowsIter;
+#else /*MORK_ENABLE_PROBE_MAPS*/
               morkRowMapIter* ri = &mWriter_RowSpaceRowsIter;
+#endif /*MORK_ENABLE_PROBE_MAPS*/
               ri->InitRowMapIter(ev, &space->mRowSpace_Rows);
 
               morkRow* row = 0; // old key row in the map
@@ -646,11 +650,17 @@ morkWriter::DirtyAll(morkEnv* ev)
               morkTableMapIter* ti = &mWriter_RowSpaceTablesIter;
               ti->InitTableMapIter(ev, &space->mRowSpace_Tables);
 
+#ifdef MORK_BEAD_OVER_NODE_MAPS
+              morkTable* table = ti->FirstTable(ev);
+                
+              for ( ; table && ev->Good(); table = ti->NextTable(ev) )
+#else /*MORK_BEAD_OVER_NODE_MAPS*/
               mork_tid* key = 0; // ignore keys in table map
               morkTable* table = 0; // old key row in the map
                 
               for ( c = ti->FirstTable(ev, key, &table); c && ev->Good();
                     c = ti->NextTable(ev, key, &table) )
+#endif /*MORK_BEAD_OVER_NODE_MAPS*/
               {
                 if ( table && table->IsTable() )
                 {
@@ -979,11 +989,17 @@ morkWriter::WriteAllStoreTables(morkEnv* ev)
             morkTableMapIter* ti = &mWriter_RowSpaceTablesIter;
             ti->InitTableMapIter(ev, &space->mRowSpace_Tables);
 
+#ifdef MORK_BEAD_OVER_NODE_MAPS
+            morkTable* table = ti->FirstTable(ev);
+              
+            for ( ; table && ev->Good(); table = ti->NextTable(ev) )
+#else /*MORK_BEAD_OVER_NODE_MAPS*/
             mork_tid* key2 = 0; // ignore keys in table map
             morkTable* table = 0; // old key row in the map
               
             for ( c = ti->FirstTable(ev, key2, &table); c && ev->Good();
                   c = ti->NextTable(ev, key2, &table) )
+#endif /*MORK_BEAD_OVER_NODE_MAPS*/
             {
               if ( table && table->IsTable() )
               {
@@ -1008,7 +1024,11 @@ morkWriter::WriteAllStoreTables(morkEnv* ev)
           {
             mWriter_TableRowScope = 0; // ensure no table context now
             
+#ifdef MORK_ENABLE_PROBE_MAPS
+            morkRowProbeMapIter* ri = &mWriter_RowSpaceRowsIter;
+#else /*MORK_ENABLE_PROBE_MAPS*/
             morkRowMapIter* ri = &mWriter_RowSpaceRowsIter;
+#endif /*MORK_ENABLE_PROBE_MAPS*/
             ri->InitRowMapIter(ev, &space->mRowSpace_Rows);
 
             morkRow* row = 0; // old row in the map
@@ -1299,7 +1319,7 @@ mork_bool
 morkWriter::PutTableDict(morkEnv* ev, morkTable* ioTable)
 {
   morkRowSpace* space = ioTable->mTable_RowSpace;
-  mWriter_TableRowScope = space->mSpace_Scope;
+  mWriter_TableRowScope = space->SpaceScope();
   mWriter_TableForm = 0;     // (f=iso-8859-1)
   mWriter_TableAtomScope = 'v'; // (a=v)
   mWriter_TableKind = ioTable->mTable_Kind;

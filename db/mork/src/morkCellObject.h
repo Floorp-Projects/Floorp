@@ -48,7 +48,8 @@ class morkCellObject : public morkObject { // blob attribute in column scope
   // mork_uses    mNode_Uses;    // refcount for strong refs
   // mork_refs    mNode_Refs;    // refcount for strong refs + weak refs
 
-  // morkFactory* mObject_Factory;  // weak ref to suite factory
+  // mork_color   mBead_Color;   // ID for this bead
+  // morkHandle*  mObject_Handle;  // weak ref to handle for this object
 
 public: // state is public because the entire Mork system is private
   morkRowObject*  mCellObject_RowObject;  // strong ref to row's object

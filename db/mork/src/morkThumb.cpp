@@ -88,7 +88,7 @@ morkThumb::~morkThumb() // assert CloseThumb() executed earlier
 morkThumb::morkThumb(morkEnv* ev,
   const morkUsage& inUsage, nsIMdbHeap* ioHeap,
   nsIMdbHeap* ioSlotHeap, mork_magic inMagic)
-: morkObject(ev, inUsage, ioHeap, (morkHandle*) 0)
+: morkObject(ev, inUsage, ioHeap, morkColor_kNone, (morkHandle*) 0)
 , mThumb_Magic( 0 )
 , mThumb_Total( 0 )
 , mThumb_Current( 0 )

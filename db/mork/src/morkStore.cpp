@@ -126,7 +126,7 @@ morkPort::morkPort(morkEnv* ev, const morkUsage& inUsage,
    morkFactory* inFactory, // the factory for this
    nsIMdbHeap* ioPortHeap  // the heap to hold all content in the port
    )
-: morkObject(ev, inUsage, ioNodeHeap, (morkHandle*) 0)
+: morkObject(ev, inUsage, ioNodeHeap, morkColor_kNone, (morkHandle*) 0)
 , mPort_Env( ev )
 , mPort_Factory( 0 )
 , mPort_Heap( 0 )
@@ -220,6 +220,7 @@ morkStore::morkStore(morkEnv* ev, const morkUsage& inUsage,
 
 , mStore_RowSpaces(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioPortHeap)
 , mStore_AtomSpaces(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioPortHeap)
+, mStore_Zone(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioPortHeap)
 , mStore_Pool(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioPortHeap)
 
 , mStore_CommitGroupIdentity( 0 )
@@ -246,9 +247,6 @@ morkStore::CloseStore(morkEnv* ev) // called by CloseMorkNode();
   {
     if ( this->IsNode() )
     {
-      // morkFile* file = mStore_File;
-      // if ( file && file->IsOpenNode() )
-      //   file->CloseMorkNode(ev);
 
       nsIMdbFile* file = mStore_File;
       if ( file )
@@ -264,7 +262,6 @@ morkStore::CloseStore(morkEnv* ev) // called by CloseMorkNode();
       mStore_AtomSpaces.CloseMorkNode(ev);
       morkBuilder::SlotStrongBuilder((morkBuilder*) 0, ev, &mStore_Builder);
       
-      // morkFile::SlotStrongFile((morkFile*) 0, ev, &mStore_File);
       nsIMdbFile_SlotStrongFile((nsIMdbFile*) 0, ev,
         &mStore_File);
       
@@ -272,6 +269,7 @@ morkStore::CloseStore(morkEnv* ev) // called by CloseMorkNode();
       morkStream::SlotStrongStream((morkStream*) 0, ev, &mStore_OutStream);
 
       mStore_Pool.CloseMorkNode(ev);
+      mStore_Zone.CloseMorkNode(ev);
       this->ClosePort(ev);
       this->MarkShut();
     }
@@ -742,8 +740,9 @@ morkStore::YarnToAtom(morkEnv* ev, const mdbYarn* inYarn)
       }
       else if ( ev->Good() )
       {
-        morkBuf buf(inYarn->mYarn_Buf, inYarn->mYarn_Fill);
-        outAtom = mStore_Pool.NewAnonAtom(ev, buf, inYarn->mYarn_Form);
+        morkBuf b(inYarn->mYarn_Buf, inYarn->mYarn_Fill);
+        morkZone* z = &mStore_Zone;
+        outAtom = mStore_Pool.NewAnonAtom(ev, b, inYarn->mYarn_Form, z);
       }
     }
   }

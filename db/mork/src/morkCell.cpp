@@ -105,8 +105,8 @@ morkCell::SetAtom(morkEnv* ev, morkAtom* ioAtom, morkPool* ioPool)
       mCell_Atom = 0;
       if ( oldAtom->CutCellUse(ev) == 0 )
       {
-		  // this was zapping atoms still in use - comment out until davidmc
-		  // can figure out a better fix.
+      // this was zapping atoms still in use - comment out until davidmc
+      // can figure out a better fix.
 //        if ( ioPool )
 //        {
 //          if ( oldAtom->IsBook() )

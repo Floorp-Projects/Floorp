@@ -57,7 +57,8 @@ class morkFile /*d*/ : public morkObject { /* ````` simple file API ````` */
   
 // public: // slots inherited from morkObject (meant to inform only)
 
-  // morkHandle*    mObject_Handle;   // weak ref to handle for this object
+  // mork_color   mBead_Color;   // ID for this bead
+  // morkHandle*  mObject_Handle;  // weak ref to handle for this object
 
 // ````` ````` ````` `````   ````` ````` ````` `````  
 protected: // protected morkFile members (similar to public domain IronDoc)

@@ -218,9 +218,11 @@ morkRow::InitRow(morkEnv* ev, const mdbOid* inOid, morkRowSpace* ioSpace,
         mRow_Pad = 0;
         mRow_Flags = 0;
         mRow_Tag = morkRow_kTag;
+        
+        morkZone* zone = &ioSpace->mSpace_Store->mStore_Zone;
 
         if ( inLength )
-          mRow_Cells = ioPool->NewCells(ev, inLength);
+          mRow_Cells = ioPool->NewCells(ev, inLength, zone);
 
         if ( this->MaybeDirtySpaceStoreAndRow() ) // new row might dirty store
         {
@@ -385,8 +387,9 @@ morkRow::TakeCells(morkEnv* ev, morkCell* ioVector, mork_fill inVecLength,
     
     if ( growth && ev->Good() ) // need to add any cells?
     {
+      morkZone* zone = &ioStore->mStore_Zone;
       morkPool* pool = ioStore->StorePool();
-      if ( !pool->AddRowCells(ev, this, length + growth) )
+      if ( !pool->AddRowCells(ev, this, length + growth, zone) )
         ev->NewError("cannot take cells");
     }
     if ( ev->Good() )
@@ -429,10 +432,11 @@ morkRow::NewCell(morkEnv* ev, mdb_column inColumn,
   mork_size length = (mork_size) mRow_Length;
   *outPos = (mork_pos) length;
   morkPool* pool = ioStore->StorePool();
+  morkZone* zone = &ioStore->mStore_Zone;
   
   mork_bool canDirty = this->MaybeDirtySpaceStoreAndRow();
   
-  if ( pool->AddRowCells(ev, this, length + 1) )
+  if ( pool->AddRowCells(ev, this, length + 1, zone) )
   {
     morkCell* cell = mRow_Cells + length;
     // next line equivalent to inline morkCell::SetCellDirty():
@@ -594,7 +598,7 @@ morkRow::CutAllColumns(morkEnv* ev)
       this->cut_all_index_entries(ev);
   
     morkPool* pool = store->StorePool();
-    pool->CutRowCells(ev, this, /*newSize*/ 0);
+    pool->CutRowCells(ev, this, /*newSize*/ 0, &store->mStore_Zone);
   }
 }
 
@@ -616,10 +620,10 @@ morkRow::SetRow(morkEnv* ev, const morkRow* inSourceRow)
     
     mork_bool sameStore = ( store == srcStore ); // identical stores?
     morkPool* pool = store->StorePool();
-    if ( pool->CutRowCells(ev, this, /*newSize*/ 0) )
+    if ( pool->CutRowCells(ev, this, /*newSize*/ 0, &store->mStore_Zone) )
     {
       mork_fill fill = inSourceRow->mRow_Length;
-      if ( pool->AddRowCells(ev, this, fill) )
+      if ( pool->AddRowCells(ev, this, fill, &store->mStore_Zone) )
       {
         morkCell* dst = mRow_Cells;
         morkCell* dstEnd = dst + mRow_Length;
@@ -784,7 +788,7 @@ void morkRow::CutColumn(morkEnv* ev, mdb_column inColumn)
         }
         
         if ( ev->Good() )
-          pool->CutRowCells(ev, this, fill - 1);
+          pool->CutRowCells(ev, this, fill - 1, &store->mStore_Zone);
       }
     }
   }

@@ -31,6 +31,10 @@
 #include "morkMap.h"
 #endif
 
+#ifndef _MORKPROBEMAP_
+#include "morkProbeMap.h"
+#endif
+
 #ifndef _MORKINTMAP_
 #include "morkIntMap.h"
 #endif
@@ -39,11 +43,15 @@
 
 #define morkDerived_kAtomAidMap  /*i*/ 0x6141 /* ascii 'aA' */
 
-#define morkAtomAidMap_kStartSlotCount 512
+#define morkAtomAidMap_kStartSlotCount 23
 
 /*| morkAtomAidMap: keys of morkBookAtom organized by atom ID
 |*/
+#ifdef MORK_ENABLE_PROBE_MAPS
+class morkAtomAidMap : public morkProbeMap { // for mapping tokens to maps
+#else /*MORK_ENABLE_PROBE_MAPS*/
 class morkAtomAidMap : public morkMap { // for mapping tokens to maps
+#endif /*MORK_ENABLE_PROBE_MAPS*/
 
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
@@ -60,6 +68,31 @@ public: // dynamic type identification
   { return IsNode() && mNode_Derived == morkDerived_kAtomAidMap; }
 // } ===== end morkNode methods =====
 
+public:
+#ifdef MORK_ENABLE_PROBE_MAPS
+  // { ===== begin morkProbeMap methods =====
+  virtual mork_test // hit(a,b) implies hash(a) == hash(b)
+  MapTest(morkEnv* ev, const void* inMapKey, const void* inAppKey) const;
+
+  virtual mork_u4 // hit(a,b) implies hash(a) == hash(b)
+  MapHash(morkEnv* ev, const void* inAppKey) const;
+
+  virtual mork_u4 ProbeMapHashMapKey(morkEnv* ev, const void* inMapKey) const;
+
+  // virtual mork_bool ProbeMapIsKeyNil(morkEnv* ev, void* ioMapKey);
+
+  // virtual void ProbeMapClearKey(morkEnv* ev, // put 'nil' alls keys inside map
+  //   void* ioMapKey, mork_count inKeyCount); // array of keys inside map
+
+  // virtual void ProbeMapPushIn(morkEnv* ev, // move (key,val) into the map
+  //   const void* inAppKey, const void* inAppVal, // (key,val) outside map
+  //   void* outMapKey, void* outMapVal);      // (key,val) inside map
+
+  // virtual void ProbeMapPullOut(morkEnv* ev, // move (key,val) out from the map
+  //   const void* inMapKey, const void* inMapVal, // (key,val) inside map
+  //   void* outAppKey, void* outAppVal) const;    // (key,val) outside map
+  // } ===== end morkProbeMap methods =====
+#else /*MORK_ENABLE_PROBE_MAPS*/
 // { ===== begin morkMap poly interface =====
   virtual mork_bool // note: equal(a,b) implies hash(a) == hash(b)
   Equal(morkEnv* ev, const void* inKeyA, const void* inKeyB) const;
@@ -69,6 +102,7 @@ public: // dynamic type identification
   Hash(morkEnv* ev, const void* inKey) const;
   // implemented using morkBookAtom::EqualAid()
 // } ===== end morkMap poly interface =====
+#endif /*MORK_ENABLE_PROBE_MAPS*/
 
 public: // other map methods
 
@@ -96,14 +130,25 @@ public: // typesafe refcounting inlines calling inherited morkNode methods
   { morkNode::SlotStrongNode((morkNode*) me, ev, (morkNode**) ioSlot); }
 };
 
-
-class morkAtomAidMapIter: public morkMapIter{ // typesafe wrapper class
+#ifdef MORK_ENABLE_PROBE_MAPS
+class morkAtomAidMapIter: public morkProbeMapIter { // typesafe wrapper class
+#else /*MORK_ENABLE_PROBE_MAPS*/
+class morkAtomAidMapIter: public morkMapIter { // typesafe wrapper class
+#endif /*MORK_ENABLE_PROBE_MAPS*/
 
 public:
+#ifdef MORK_ENABLE_PROBE_MAPS
+  morkAtomAidMapIter(morkEnv* ev, morkAtomAidMap* ioMap)
+  : morkProbeMapIter(ev, ioMap) { }
+ 
+  morkAtomAidMapIter( ) : morkProbeMapIter()  { }
+#else /*MORK_ENABLE_PROBE_MAPS*/
   morkAtomAidMapIter(morkEnv* ev, morkAtomAidMap* ioMap)
   : morkMapIter(ev, ioMap) { }
  
   morkAtomAidMapIter( ) : morkMapIter()  { }
+#endif /*MORK_ENABLE_PROBE_MAPS*/
+
   void InitAtomAidMapIter(morkEnv* ev, morkAtomAidMap* ioMap)
   { this->InitMapIter(ev, ioMap); }
    
@@ -127,11 +172,15 @@ public:
 
 #define morkDerived_kAtomBodyMap  /*i*/ 0x6142 /* ascii 'aB' */
 
-#define morkAtomBodyMap_kStartSlotCount 512
+#define morkAtomBodyMap_kStartSlotCount 23
 
 /*| morkAtomBodyMap: keys of morkBookAtom organized by body bytes
 |*/
+#ifdef MORK_ENABLE_PROBE_MAPS
+class morkAtomBodyMap : public morkProbeMap { // for mapping tokens to maps
+#else /*MORK_ENABLE_PROBE_MAPS*/
 class morkAtomBodyMap : public morkMap { // for mapping tokens to maps
+#endif /*MORK_ENABLE_PROBE_MAPS*/
 
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
@@ -148,6 +197,31 @@ public: // dynamic type identification
   { return IsNode() && mNode_Derived == morkDerived_kAtomBodyMap; }
 // } ===== end morkNode methods =====
 
+public:
+#ifdef MORK_ENABLE_PROBE_MAPS
+  // { ===== begin morkProbeMap methods =====
+  virtual mork_test // hit(a,b) implies hash(a) == hash(b)
+  MapTest(morkEnv* ev, const void* inMapKey, const void* inAppKey) const;
+
+  virtual mork_u4 // hit(a,b) implies hash(a) == hash(b)
+  MapHash(morkEnv* ev, const void* inAppKey) const;
+
+  virtual mork_u4 ProbeMapHashMapKey(morkEnv* ev, const void* inMapKey) const;
+
+  // virtual mork_bool ProbeMapIsKeyNil(morkEnv* ev, void* ioMapKey);
+
+  // virtual void ProbeMapClearKey(morkEnv* ev, // put 'nil' alls keys inside map
+  //   void* ioMapKey, mork_count inKeyCount); // array of keys inside map
+
+  // virtual void ProbeMapPushIn(morkEnv* ev, // move (key,val) into the map
+  //   const void* inAppKey, const void* inAppVal, // (key,val) outside map
+  //   void* outMapKey, void* outMapVal);      // (key,val) inside map
+
+  // virtual void ProbeMapPullOut(morkEnv* ev, // move (key,val) out from the map
+  //   const void* inMapKey, const void* inMapVal, // (key,val) inside map
+  //   void* outAppKey, void* outAppVal) const;    // (key,val) outside map
+  // } ===== end morkProbeMap methods =====
+#else /*MORK_ENABLE_PROBE_MAPS*/
 // { ===== begin morkMap poly interface =====
   virtual mork_bool // note: equal(a,b) implies hash(a) == hash(b)
   Equal(morkEnv* ev, const void* inKeyA, const void* inKeyB) const;
@@ -157,6 +231,7 @@ public: // dynamic type identification
   Hash(morkEnv* ev, const void* inKey) const;
   // implemented using morkBookAtom::HashFormAndBody()
 // } ===== end morkMap poly interface =====
+#endif /*MORK_ENABLE_PROBE_MAPS*/
 
 public: // other map methods
 
@@ -181,13 +256,25 @@ public: // typesafe refcounting inlines calling inherited morkNode methods
   { morkNode::SlotStrongNode((morkNode*) me, ev, (morkNode**) ioSlot); }
 };
 
+#ifdef MORK_ENABLE_PROBE_MAPS
+class morkAtomBodyMapIter: public morkProbeMapIter{ // typesafe wrapper class
+#else /*MORK_ENABLE_PROBE_MAPS*/
 class morkAtomBodyMapIter: public morkMapIter{ // typesafe wrapper class
+#endif /*MORK_ENABLE_PROBE_MAPS*/
 
 public:
+#ifdef MORK_ENABLE_PROBE_MAPS
+  morkAtomBodyMapIter(morkEnv* ev, morkAtomBodyMap* ioMap)
+  : morkProbeMapIter(ev, ioMap) { }
+ 
+  morkAtomBodyMapIter( ) : morkProbeMapIter()  { }
+#else /*MORK_ENABLE_PROBE_MAPS*/
   morkAtomBodyMapIter(morkEnv* ev, morkAtomBodyMap* ioMap)
   : morkMapIter(ev, ioMap) { }
  
   morkAtomBodyMapIter( ) : morkMapIter()  { }
+#endif /*MORK_ENABLE_PROBE_MAPS*/
+  
   void InitAtomBodyMapIter(morkEnv* ev, morkAtomBodyMap* ioMap)
   { this->InitMapIter(ev, ioMap); }
    

@@ -88,6 +88,9 @@ CPP_OBJS=   .\$(OBJDIR)\orkinCell.obj				\
 			.\$(OBJDIR)\morkThumb.obj				\
 			.\$(OBJDIR)\morkWriter.obj				\
 			.\$(OBJDIR)\morkYarn.obj				\
+			.\$(OBJDIR)\morkZone.cpp.obj				\
+			.\$(OBJDIR)\morkProbeMap.cpp.obj				\
+			.\$(OBJDIR)\morkBead.cpp.obj				\
 			$(NULL)
 
 

@@ -47,6 +47,14 @@
 #include "morkNodeMap.h"
 #endif
 
+#ifndef _MORKPROBEMAP_
+#include "morkProbeMap.h"
+#endif
+
+#ifndef _MORKBEAD_
+#include "morkBead.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 class nsIMdbTable;
@@ -97,13 +105,19 @@ class morkTable : public morkObject, public morkLink {
   // mork_uses      mNode_Uses;     // refcount for strong refs
   // mork_refs      mNode_Refs;     // refcount for strong refs + weak refs
 
-  // morkHandle*    mObject_Handle;   // weak ref to handle for this object
+  // mork_color   mBead_Color;   // ID for this bead
+  // morkHandle*  mObject_Handle;  // weak ref to handle for this object
+
+public: // bead color setter & getter replace obsolete member mTable_Id:
+
+  mork_tid     TableId() const { return mBead_Color; }
+  void         SetTableId(mork_tid inTid) { mBead_Color = inTid; }
 
 public: // state is public because the entire Mork system is private
 
   morkStore*      mTable_Store;   // weak ref to port
 
-  // mTable_RowSpace->mSpace_Scope is row scope 
+  // mTable_RowSpace->SpaceScope() is row scope 
   morkRowSpace*   mTable_RowSpace; // weak ref to containing space
 
   morkRow*        mTable_MetaRow; // table's actual meta row
@@ -116,7 +130,7 @@ public: // state is public because the entire Mork system is private
   mork_u2         mTable_ChangesCount; // length of changes list 
   mork_u2         mTable_ChangesMax;   // max list length before rewrite 
   
-  mork_tid        mTable_Id;
+  // mork_tid        mTable_Id;
   mork_kind       mTable_Kind;
   
   mork_u1         mTable_Flags;         // bit flags
@@ -316,7 +330,11 @@ public:
 
 /*| morkTableMap: maps mork_token -> morkTable
 |*/
+#ifdef MORK_BEAD_OVER_NODE_MAPS
+class morkTableMap : public morkBeadMap { 
+#else /*MORK_BEAD_OVER_NODE_MAPS*/
 class morkTableMap : public morkNodeMap { // for mapping tokens to tables
+#endif /*MORK_BEAD_OVER_NODE_MAPS*/
 
 public:
 
@@ -326,8 +344,26 @@ public:
 
 public: // other map methods
 
+#ifdef MORK_BEAD_OVER_NODE_MAPS
   mork_bool  AddTable(morkEnv* ev, morkTable* ioTable)
-  { return this->AddNode(ev, ioTable->mTable_Id, ioTable); }
+  { return this->AddBead(ev, ioTable); }
+  // the AddTable() boolean return equals ev->Good().
+
+  mork_bool  CutTable(morkEnv* ev, mork_tid inTid)
+  { return this->CutBead(ev, inTid); }
+  // The CutTable() boolean return indicates whether removal happened. 
+  
+  morkTable*  GetTable(morkEnv* ev, mork_tid inTid)
+  { return (morkTable*) this->GetBead(ev, inTid); }
+  // Note the returned table does NOT have an increase in refcount for this.
+
+  mork_num CutAllTables(morkEnv* ev)
+  { return this->CutAllBeads(ev); }
+  // CutAllTables() releases all the referenced table values.
+  
+#else /*MORK_BEAD_OVER_NODE_MAPS*/
+  mork_bool  AddTable(morkEnv* ev, morkTable* ioTable)
+  { return this->AddNode(ev, ioTable->TableId(), ioTable); }
   // the AddTable() boolean return equals ev->Good().
 
   mork_bool  CutTable(morkEnv* ev, mork_tid inTid)
@@ -341,11 +377,37 @@ public: // other map methods
   mork_num CutAllTables(morkEnv* ev)
   { return this->CutAllNodes(ev); }
   // CutAllTables() releases all the referenced table values.
+#endif /*MORK_BEAD_OVER_NODE_MAPS*/
+
 };
 
+#ifdef MORK_BEAD_OVER_NODE_MAPS
+class morkTableMapIter: public morkBeadMapIter {
+#else /*MORK_BEAD_OVER_NODE_MAPS*/
 class morkTableMapIter: public morkMapIter{ // typesafe wrapper class
+#endif /*MORK_BEAD_OVER_NODE_MAPS*/
 
 public:
+
+#ifdef MORK_BEAD_OVER_NODE_MAPS
+  morkTableMapIter(morkEnv* ev, morkTableMap* ioMap)
+  : morkBeadMapIter(ev, ioMap) { }
+ 
+  morkTableMapIter( ) : morkBeadMapIter()  { }
+  void InitTableMapIter(morkEnv* ev, morkTableMap* ioMap)
+  { this->InitBeadMapIter(ev, ioMap); }
+   
+  morkTable* FirstTable(morkEnv* ev)
+  { return (morkTable*) this->FirstBead(ev); }
+  
+  morkTable* NextTable(morkEnv* ev)
+  { return (morkTable*) this->NextBead(ev); }
+  
+  morkTable* HereTable(morkEnv* ev)
+  { return (morkTable*) this->HereBead(ev); }
+  
+
+#else /*MORK_BEAD_OVER_NODE_MAPS*/
   morkTableMapIter(morkEnv* ev, morkTableMap* ioMap)
   : morkMapIter(ev, ioMap) { }
  
@@ -369,6 +431,7 @@ public:
   mork_change*
   CutHereTable(morkEnv* ev, mork_tid* outTid, morkTable** outTable)
   { return this->CutHere(ev, outTid, outTable); }
+#endif /*MORK_BEAD_OVER_NODE_MAPS*/
 };
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789

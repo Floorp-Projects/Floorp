@@ -202,6 +202,9 @@ public: // state is public because the entire Mork system is private
   // know all new assocs are contiguous and can chain together adjacently.)
   
   morkAssoc*        mMap_FreeList; // list of unused mMap_Assocs array slots 
+
+public: // getters (morkProbeMap compatibility)
+  mork_fill        MapFill() const { return mMap_Fill; }
   
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods

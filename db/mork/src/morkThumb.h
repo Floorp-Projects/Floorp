@@ -68,7 +68,8 @@ class morkThumb : public morkObject {
   // mork_uses      mNode_Uses;     // refcount for strong refs
   // mork_refs      mNode_Refs;     // refcount for strong refs + weak refs
 
-  // morkHandle*      mObject_Handle;   // weak ref to handle for this object
+  // mork_color   mBead_Color;   // ID for this bead
+  // morkHandle*  mObject_Handle;  // weak ref to handle for this object
 
 public: // state is public because the entire Mork system is private
   // might as well include all the return values here:
