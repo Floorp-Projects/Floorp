@@ -54,27 +54,6 @@
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <!-- Keysets -->
-  <keyset id="navKeys">
-    <!-- File Menu -->
-    <key id="key_close"/>
-    <key id="key_quit"/>
-
-    <!-- Edit Menu -->
-    <key id="key_undo"/>
-    <key id="key_redo"/>
-    <key id="key_cut"/>
-    <key id="key_copy"/>
-    <key id="key_paste"/>
-    <key id="key_delete"/>
-    <key id="key_selectAll"/>
-  
-    <!-- Search Menu -->  
-    <key id="key_find"              key="&findOnCmd.commandkey;" command="Browser:Find" modifiers="accel"/>
-    <key id="key_findAgain"         key="&findAgainCmd.commandkey;" command="Browser:FindAgain" modifiers="accel"/>
-    <keyset id="tasksKeys"/>
-  </keyset>
-
   <commandset id="commands">
     <command id="cmd_quit"/>
     <command id="cmd_close" oncommand="BrowserClose()"/>
@@ -94,6 +73,28 @@
     <commandset id="tasksCommands"/>
   </commandset>
   
+  <!-- Keysets -->
+  <keyset id="navKeys">
+    <!-- File Menu -->
+    <key id="key_close"/>
+    
+    <!-- Edit Menu -->
+    <key id="key_undo"/>
+    <key id="key_redo"/>
+    <key id="key_cut"/>
+    <key id="key_copy"/>
+    <key id="key_paste"/>
+    <key id="key_delete"/>
+    <key id="key_selectAll"/>
+  
+    <!-- Search Menu -->  
+    <key id="key_find"              key="&findOnCmd.commandkey;" command="Browser:Find" modifiers="accel"/>
+    <key id="key_findAgain"         key="&findAgainCmd.commandkey;" command="Browser:FindAgain" modifiers="accel"/>
+  </keyset>
+  <keyset id="tasksKeys">
+      <key id="key_quit"/>
+  </keyset>
+
   
   <!-- Menu -->
   <menubar id="main-menubar" class="chromeclass-menubar">
