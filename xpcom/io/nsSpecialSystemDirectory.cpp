@@ -120,8 +120,42 @@ PR_STATIC_CALLBACK(PRBool) DeleteSystemDirKeys(nsHashKey *aKey, void *aData, voi
 
 #define NS_SYSTEMDIR_HASH_NUM (10)
 static nsHashtable *systemDirectoriesLocations = NULL;
+#if defined (XP_WIN)
+typedef BOOL (WINAPI * GetSpecialPathProc) (HWND hwndOwner, LPSTR lpszPath, int nFolder, BOOL fCreate);
+GetSpecialPathProc gGetSpecialPathProc = NULL;
+static HINSTANCE gShell32DLLInst = NULL;
+#endif
+NS_COM void StartupSpecialSystemDirectory()
+{
+#if defined (XP_WIN)
+    /* On windows, the old method to get file locations is incredibly slow.
+       As of this writing, 3 calls to GetWindowsFolder accounts for 3% of mozilla
+       startup. Replacing these older calls with a single call to SHGetSpecialFolderPath
+       effectively removes these calls from the performace radar.  We need to 
+       support the older way of file location lookup on systems that do not have
+       IE4. 
+    */ 
+    gShell32DLLInst = LoadLibrary("shfolder.dll");
+    if(gShell32DLLInst)
+    {
+        gGetSpecialPathProc  = (GetSpecialPathProc) GetProcAddress(gShell32DLLInst, 
+                                                                   "SHGetSpecialFolderPath");
+    }
+    
+    if (!gGetSpecialPathProc)
+    {
+        if (gShell32DLLInst)
+            FreeLibrary(gShell32DLLInst);
 
-NS_COM void StartupSpecialSystemDirectory(){}
+        gShell32DLLInst = LoadLibrary("Shell32.dll");
+        if(gShell32DLLInst)
+        {
+            gGetSpecialPathProc  = (GetSpecialPathProc) GetProcAddress(gShell32DLLInst, 
+                                                                       "SHGetSpecialFolderPath");
+        }
+    }
+#endif
+}
 
 NS_COM void ShutdownSpecialSystemDirectory()
 {
@@ -130,6 +164,14 @@ NS_COM void ShutdownSpecialSystemDirectory()
         systemDirectoriesLocations->Reset(DeleteSystemDirKeys);
         delete systemDirectoriesLocations;
     }
+#if defined (XP_WIN)
+   if (gShell32DLLInst)
+   {
+       FreeLibrary(gShell32DLLInst);
+       gShell32DLLInst = NULL;
+       gGetSpecialPathProc = NULL;
+   }
+#endif
 }
 
 #if defined (XP_WIN)
@@ -177,6 +219,25 @@ static char* MakeUpperCase(char* aPath)
 static void GetWindowsFolder(int folder, nsFileSpec& outDirectory)
 //----------------------------------------------------------------------------------------
 {
+
+    if (gGetSpecialPathProc) {
+        TCHAR path[MAX_PATH];
+        HRESULT result = gGetSpecialPathProc(NULL, path, folder, true);
+        
+        if (!SUCCEEDED(result)) 
+            return;
+
+        // Append the trailing slash
+        int len = PL_strlen(path);
+        if (len>1 && path[len-1] != '\\') 
+        {
+            path[len]   = '\\';
+            path[len + 1] = '\0';
+        }
+        outDirectory = path;
+        return;
+    }
+
     LPMALLOC pMalloc = NULL;
     LPSTR pBuffer = NULL;
     LPITEMIDLIST pItemIDList = NULL;
