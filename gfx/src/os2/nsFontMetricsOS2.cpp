@@ -537,6 +537,9 @@ static FONTMETRICS* getMetrics( long &lFonts, PCSZ facename, HPS hps)
    lFonts = GFX (::GpiQueryFonts (hps, QF_PUBLIC | QF_PRIVATE,
                                   facename, &lWant, 0, 0),
                  GPI_ALTERROR);
+   if (!lFonts) {
+      return NULL;
+   }
    FONTMETRICS* pMetrics = (FONTMETRICS*)nsMemory::Alloc(lFonts * sizeof(FONTMETRICS));
 
    GFX (::GpiQueryFonts (hps, QF_PUBLIC | QF_PRIVATE, facename,
