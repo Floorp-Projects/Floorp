@@ -483,6 +483,10 @@ nsBrowserAppCore::LoadUrl(const nsString& aUrl)
 NS_IMETHODIMP    
 nsBrowserAppCore::SetToolbarWindow(nsIDOMWindow* aWin)
 {
+  NS_PRECONDITION(aWin != nsnull, "null ptr");
+  if (! aWin)
+    return NS_ERROR_NULL_POINTER;
+
   mToolbarWindow = aWin;
   NS_ADDREF(aWin);
   mToolbarScriptContext = GetScriptContext(aWin);
@@ -493,6 +497,10 @@ nsBrowserAppCore::SetToolbarWindow(nsIDOMWindow* aWin)
 NS_IMETHODIMP    
 nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
 {
+  NS_PRECONDITION(aWin != nsnull, "null ptr");
+  if (! aWin)
+    return NS_ERROR_NULL_POINTER;
+
   mContentWindow = aWin;
 
   NS_ADDREF(aWin);
@@ -530,6 +538,10 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
 NS_IMETHODIMP    
 nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
 {
+  NS_PRECONDITION(aWin != nsnull, "null ptr");
+  if (! aWin)
+    return NS_ERROR_NULL_POINTER;
+
   if (!mContentWindow) {
     return NS_ERROR_FAILURE;
   }
