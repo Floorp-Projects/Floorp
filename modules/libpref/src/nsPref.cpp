@@ -989,6 +989,10 @@ pref_addChild(PLHashEntry *he, int i, void *arg)
 	return 0;
 }
 
+#ifdef XP_OS2_VACPP
+/* See comment in xpcom/ds/nsHashtable.cpp. */
+#define pref_addChild (PRIntn(*_Optlink)(PLHashEntry*,PRIntn,void *))(pref_addChild)
+#endif
 
 NS_IMETHODIMP nsPref::CreateChildList(const char* parent_node, char **child_list)
 {
@@ -1089,7 +1093,7 @@ PrefResult pref_OpenFileSpec(
     //   don't clobber the file when we try to save it
     if ((!readBuf || result != PREF_NOERROR) && is_error_fatal)
         gErrorOpeningUserPrefs = PR_TRUE;
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
     if (gErrorOpeningUserPrefs && is_error_fatal)
         MessageBox(nsnull,"Error in preference file (prefs.js).  Default preferences will be used.","Netscape - Warning", MB_OK);
 #endif
@@ -1188,6 +1192,8 @@ extern "C" JSBool pref_InitInitialObjects()
 		"initpref.js"
 #ifdef XP_MAC
 	,	"macprefs.js"
+#elif defined(XP_OS2)
+   ,	"os2pref.js"
 #elif defined(XP_PC)
 	,	"winpref.js"
 #elif defined(XP_UNIX)
@@ -1396,7 +1402,6 @@ CreateNewPref(nsISupports *aDelegate, REFNSIID aIID, void **aResult)
 static nsModuleComponentInfo components[] = {
     { NS_PREF_CLASSNAME, NS_PREF_CID, NS_PREF_PROGID, CreateNewPref, },
 };
-
 
 extern "C" JSRuntime* PREF_GetJSRuntime()
 {
