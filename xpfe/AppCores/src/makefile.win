@@ -190,6 +190,7 @@ install:: $(DLL)
   $(MAKE_INSTALL) ..\xul\resources\ED_Link.gif			$(DIST)\bin\res\toolbar
   $(MAKE_INSTALL) ..\xul\resources\ED_Numbers.gif			$(DIST)\bin\res\toolbar
   $(MAKE_INSTALL) ..\xul\resources\ED_Paste.gif			$(DIST)\bin\res\toolbar
+  $(MAKE_INSTALL) ..\xul\resources\ED_Redo.gif			$(DIST)\bin\res\toolbar
   $(MAKE_INSTALL) ..\xul\resources\ED_Right.gif			$(DIST)\bin\res\toolbar
   $(MAKE_INSTALL) ..\xul\resources\ED_Spell.gif			$(DIST)\bin\res\toolbar
   $(MAKE_INSTALL) ..\xul\resources\ED_Table.gif			$(DIST)\bin\res\toolbar
@@ -295,6 +296,7 @@ clobber::
   rm -f $(DIST)\bin\res\samples\ED_Link.gif			
   rm -f $(DIST)\bin\res\samples\ED_Numbers.gif			
   rm -f $(DIST)\bin\res\samples\ED_Paste.gif			
+  rm -f $(DIST)\bin\res\samples\ED_Redo.gif			
   rm -f $(DIST)\bin\res\samples\ED_Right.gif			
   rm -f $(DIST)\bin\res\samples\ED_Spell.gif			
   rm -f $(DIST)\bin\res\samples\ED_Table.gif			
