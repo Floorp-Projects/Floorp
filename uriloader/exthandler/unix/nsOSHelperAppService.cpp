@@ -73,11 +73,13 @@ NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIU
   if (aURI)
   {
     nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
-    nsXPIDLCString extenion;
-    url->GetFileExtension(getter_Copies(extenion));
+    if (url) {
+      nsXPIDLCString extenion;
+      url->GetFileExtension(getter_Copies(extenion));
     
-    fileExtension = ".";  
-    fileExtension.Append(extenion);
+      fileExtension = ".";  
+      fileExtension.Append(extenion);
+    }
   }
 
   if (mimeInfo)
