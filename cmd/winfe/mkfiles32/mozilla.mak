@@ -886,7 +886,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\layout\laycell.c
 	$(DEPTH)\lib\layout\laycols.c
 	$(DEPTH)\lib\layout\laydisp.c
-!if defined(DOM)
+!ifdef DOM
 	$(DEPTH)\lib\layout\laydom.c
 !endif
 	$(DEPTH)\lib\layout\layembed.c
