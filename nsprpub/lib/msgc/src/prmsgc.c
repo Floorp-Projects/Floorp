@@ -131,23 +131,31 @@ PRUint32 _pr_gcMeter;
 
 /************************************************************************/
 
+#define LINEAR_BIN_EXPONENT 5
+#define NUM_LINEAR_BINS ((PRUint32)1 << LINEAR_BIN_EXPONENT)
+#define FIRST_LOG_BIN (NUM_LINEAR_BINS - LINEAR_BIN_EXPONENT)
+
 /* Each free list bin holds a chunk of memory sized from
    2^n to (2^(n+1))-1 inclusive. */
-#define NUM_BINS        32
+#define NUM_BINS        (FIRST_LOG_BIN + 32)
 
 /*
  * Find the bin number for a given size (in bytes). This does not round up as
  * values from 2^n to (2^(n+1))-1 share the same bin.
  */
-#define InlineBinNumber(_bin,_bytes)              \
-{                              \
-    PRUint32 _t, _n = (PRUint32) _bytes;              \
-    _bin = 0;                          \
-    if ((_t = (_n >> 16)) != 0) { _bin += 16; _n = _t;    } \
-    if ((_t = (_n >> 8)) != 0)  { _bin += 8; _n = _t; }      \
-    if ((_t = (_n >> 4)) != 0)  { _bin += 4; _n = _t; }      \
-    if ((_t = (_n >> 2)) != 0) { _bin += 2; _n = _t; }      \
-    if ((_n >> 1) != 0) _bin++;                  \
+#define InlineBinNumber(_bin,_bytes)  \
+{  \
+    PRUint32 _t, _n = (PRUint32) _bytes / 4;  \
+    if (_n < NUM_LINEAR_BINS) {  \
+        _bin = _n;  \
+    } else {  \
+        _bin = FIRST_LOG_BIN;  \
+        if ((_t = (_n >> 16)) != 0) { _bin += 16; _n = _t; }  \
+        if ((_t = (_n >> 8)) != 0)  { _bin += 8; _n = _t; }  \
+        if ((_t = (_n >> 4)) != 0)  { _bin += 4; _n = _t; }  \
+        if ((_t = (_n >> 2)) != 0) { _bin += 2; _n = _t; }  \
+        if ((_n >> 1) != 0) _bin++;  \
+    }  \
 }
 
 #define BIG_ALLOC       16384L
@@ -988,7 +996,7 @@ static void EmptyFreelists(void)
         }
         bins[bin] = 0;
     }
-    minBin = 31;
+    minBin = NUM_BINS - 1;
     maxBin = 0;
 }
 
@@ -1021,11 +1029,11 @@ typedef struct GCStat {
     double	lifetimeVariance;
 } GCStat;
 
-#define GCSTAT_BINS	32
+#define GCSTAT_BINS	NUM_BINS
 
 GCStat gcstats[GCSTAT_BINS];
 
-#define GCLTFREQ_BINS	32
+#define GCLTFREQ_BINS	NUM_BINS
 
 PRInt32 gcltfreq[GCSTAT_BINS][GCLTFREQ_BINS];
 
