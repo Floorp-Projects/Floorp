@@ -1070,15 +1070,11 @@ static nsresult VerifyPsmAbsentOrSane(int argc, char **argv)
     // In case the security component can not do its internal initialization, 
     // we must warn the user and exit.
     
-    char *panicMsg = "PANIC! The security component of Mozilla can not initialize.\n\n"
-      "While this can have multiple reasons, it is likely that there is a problem "
-      "with the directory on your hard disk where Mozilla stores your preferences. "
-      "Maybe the files containing security certificates can't be accessed or created.\n\n"
-      "Please check that the profile directory is readable and writeable, i.e. that you "
-      "have the proper permissions to write and read to all those files.\n"
-      "In addition you should check that there is free space left on the disk.\n\n"
-      "Please fix this problem or show this message to your system administrator.\n\n"
-      "The browser will now abort.";
+    char *panicMsg = "Could not initialize the browser's security component. "
+                     "The most likely cause is problems with files in your "
+                     "browser's profile directory. Please check that this "
+                     "directory has no read/write restrictions and your "
+                     "hard disk is not full or close to full.";
 
     char *panicMessageFilename = "nssifail.txt";
     
