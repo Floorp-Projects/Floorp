@@ -44,7 +44,6 @@
 #include "nsIEventStateManager.h"
 #include "nsIDOMSelection.h"
 #include "nsIFrameSelection.h"
-#include "nsIFocusTracker.h"
 #include "nsHTMLParts.h"
 #include "nsLayoutAtoms.h"
 
@@ -143,7 +142,6 @@ nsIFrame::GetLogModuleInfo()
 //----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
-static NS_DEFINE_IID(kIFocusTracker, NS_IFOCUSTRACKER_IID);
 static NS_DEFINE_IID(kIFrameSelection, NS_IFRAMESELECTION_IID);
 nsresult
 NS_NewEmptyFrame(nsIFrame**  aInstancePtrResult)
@@ -165,7 +163,6 @@ NS_IMPL_ZEROING_OPERATOR_NEW(nsFrame)
 nsFrame::nsFrame()
 {
   mState = NS_FRAME_FIRST_REFLOW | NS_FRAME_SYNC_FRAME_AND_VIEW;
-  mSelected = PR_FALSE;
 }
 
 nsFrame::~nsFrame()
@@ -359,7 +356,8 @@ nsFrame::RemoveFrame(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
-  if (mState & NS_FRAME_EXTERNAL_REFERENCE || mSelected) {
+  PRBool isGeneratedContent = (mState & NS_FRAME_GENERATED_CONTENT) == NS_FRAME_GENERATED_CONTENT;
+  if (mState & NS_FRAME_EXTERNAL_REFERENCE || mState & NS_FRAME_SELECTED_CONTENT) {
     nsCOMPtr<nsIPresShell> shell;
     nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
     if (NS_SUCCEEDED(rv) && shell) {
@@ -696,7 +694,12 @@ nsFrame::Paint(nsIPresContext&      aPresContext,
 
     PRInt32 n;
     content->ChildCount(n);
-    if ((n == 0) && mSelected) {
+    nsFrameState  frameState;
+    PRBool        isSelected;
+    GetFrameState(&frameState);
+    isSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
+
+    if ((n == 0) && isSelected) {
       nsRect rect;
       GetRect(rect);
       rect.width--;
@@ -784,17 +787,16 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
       if (NS_SUCCEEDED(GetPosition(aPresContext, acx, aEvent, this, contentOffset, startPos))){
         nsIDOMSelection *selection = nsnull;
         if (NS_SUCCEEDED(shell->GetSelection(&selection))){
-          nsIFocusTracker *tracker;
-          if (NS_SUCCEEDED(shell->QueryInterface(kIFocusTracker,(void **)&tracker))){
-            nsIFrameSelection *frameselection = nsnull;
-            if (NS_SUCCEEDED(selection->QueryInterface(kIFrameSelection,
-                                                  (void **)&frameselection))) {
+          nsIFrameSelection *frameselection = nsnull;
+          if (NS_SUCCEEDED(selection->QueryInterface(kIFrameSelection, (void **)&frameselection))) {
+            nsCOMPtr<nsIContent> content;
+            rv = GetContent(getter_AddRefs(content));
+            if (NS_SUCCEEDED( rv )){
               frameselection->EnableFrameNotification(PR_FALSE);
-              frameselection->TakeFocus(tracker, this, startPos, contentOffset, inputEvent->isShift);
+              frameselection->TakeFocus(content, startPos + contentOffset, inputEvent->isShift);
               frameselection->EnableFrameNotification(PR_TRUE);//prevent cyclic call to reset selection.
-              NS_RELEASE(frameselection);
             }
-            NS_RELEASE(tracker);
+            NS_RELEASE(frameselection);
           }
           NS_RELEASE(selection);
         }
@@ -827,16 +829,16 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
       if (NS_SUCCEEDED(GetPosition(aPresContext, acx, aEvent, this, contentOffset, startPos))){
         nsIDOMSelection *selection = nsnull;
         if (NS_SUCCEEDED(shell->GetSelection(&selection))){
-          nsIFocusTracker *tracker;
-          if (NS_SUCCEEDED(shell->QueryInterface(kIFocusTracker,(void **)&tracker))) {
-            nsIFrameSelection* frameselection;
-            if (NS_SUCCEEDED(selection->QueryInterface(kIFrameSelection, (void **)&frameselection))) {
+          nsIFrameSelection* frameselection;
+          if (NS_SUCCEEDED(selection->QueryInterface(kIFrameSelection, (void **)&frameselection))) {
+            nsCOMPtr<nsIContent> content;
+            rv = GetContent(getter_AddRefs(content));
+            if (NS_SUCCEEDED( rv )){
               frameselection->EnableFrameNotification(PR_FALSE);
-              frameselection->TakeFocus(tracker, this, startPos, contentOffset, PR_TRUE); //TRUE IS THE DIFFERENCE
+              frameselection->TakeFocus(content, startPos + contentOffset, PR_TRUE); //TRUE IS THE DIFFERENCE
               frameselection->EnableFrameNotification(PR_TRUE);//prevent cyclic call to reset selection.
-              NS_RELEASE(frameselection);
             }
-            NS_RELEASE(tracker);
+            NS_RELEASE(frameselection);
           }
           NS_RELEASE(selection);
         }
@@ -1561,68 +1563,28 @@ nsFrame::VerifyTree() const
 /*this method may.. invalidate if the state was changed or if aForceRedraw is PR_TRUE
   it will not update immediately.*/
 NS_IMETHODIMP
-nsFrame::SetSelected(nsSelectionStruct *aSelStruct)
+nsFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, PRBool aSpread)
 {
-  if (!aSelStruct)
-    return NS_ERROR_NULL_POINTER;
-  if (mSelected != (PRBool)(aSelStruct->mType & nsSelectionStruct::SELON ) || aSelStruct->mForceRedraw)
-  {
-    mSelected = aSelStruct->mType & nsSelectionStruct::SELON ;
-    
-/*    nsRect    rect;
-    GetRect(rect);
-    nsIFrame *frame = this;
-    nsIFrame *firstframe = nsnull;
-    while (NS_SUCCEEDED(frame->GetPrevInFlow(&frame)) && frame){
-      firstframe =  frame;
-    }
-    
-    if (firstframe){
-      nsRect    rect2;
-      firstframe->GetRect(rect2);
-      rect.y-= rect.y-rect2.y;
-    }
-*/
-    ForceDrawFrame(this);//invalidate does not work in all cases.
-    //Invalidate(rect,PR_FALSE); //false is for not immediate
-  }
+  nsFrameState  frameState;
+  GetFrameState(&frameState);
+  if ( aSelected )
+    frameState |=  NS_FRAME_SELECTED_CONTENT;
+  else
+    frameState &= ~NS_FRAME_SELECTED_CONTENT;
+  SetFrameState(frameState);
+  nsRect frameRect;
+  GetRect(frameRect);
+  nsRect rect(0, 0, frameRect.width, frameRect.height);
+  Invalidate(rect, PR_TRUE);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFrame::SetSelectedContentOffsets(nsSelectionStruct *aSS, 
-                                   nsIFocusTracker *aTracker,
-                                   nsIFrame **aActualSelected)
-{
-  if (!aActualSelected || !aSS)
-    return NS_ERROR_NULL_POINTER;
-  nsIFrame *child = nsnull;
-  nsresult result = FirstChild(nsnull, &child);
-  if (NS_FAILED(result)){
-    *aActualSelected = this;
-    if (aSS->mAnchorOffset > 0)
-        aTracker->SetFocus(nsnull,this);
-    if (aSS->mFocusOffset > 0)
-        aTracker->SetFocus(this,nsnull);
-    return SetSelected(aSS);
-  }
-  *aActualSelected = nsnull;
-  //wont actually bother with selection here on "this" frame
-  while (child && NS_SUCCEEDED(result)){
-    result |= child->SetSelectedContentOffsets(aSS, aTracker, aActualSelected);
-    if (NS_SUCCEEDED(result) && aActualSelected)
-      return result; //done.
-    result |= child->GetNextSibling(&child);
-  }
-  return result;
-}
-
-NS_IMETHODIMP
-nsFrame::GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset)
+nsFrame::GetSelected(PRBool *aSelected) const
 {
   if (!aSelected )
     return NS_ERROR_NULL_POINTER;
-  *aSelected = mSelected;
+  *aSelected = (PRBool)(mState & NS_FRAME_SELECTED_CONTENT);
   return NS_OK;
 }
 
@@ -1647,9 +1609,9 @@ nsFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRInt32* outFram
 NS_IMETHODIMP
 nsFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32 aStartOffset,
                     nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset,
-                    PRBool aEatingWS)
+                    PRBool aEatingWS) const
 {
-  //this will use the nsFrameTraversal as the default peek method.
+/*  //this will use the nsFrameTraversal as the default peek method.
   //this should change to use geometry and also look to ALL the child lists
   nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
   nsresult result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF,this);
@@ -1673,6 +1635,8 @@ nsFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32 a
   nsIFrame *newFrame = (nsIFrame *)isupports;
   return newFrame->PeekOffset(aAmount, aDirection, aStartOffset, aResultFrame,
                           aFrameOffset, aContentOffset, aEatingWS);
+                          */
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------------

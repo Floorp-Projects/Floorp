@@ -597,35 +597,16 @@ PresShell::Init(nsIDocument* aDocument,
                                                  getter_AddRefs(domselection));
   if (!NS_SUCCEEDED(result))
     return result;
+
   result = domselection->QueryInterface(kIFrameSelectionIID,
-                                        getter_AddRefs(mSelection));
+                                       getter_AddRefs(mSelection));
   if (!NS_SUCCEEDED(result))
     return result;
   domselection->AddSelectionListener(this);//possible circular reference
-  // XXX This code causes the document object (and the entire content model) to be leaked...
-#if 0
-  nsCOMPtr<nsIDOMRange>range;
-  if (NS_SUCCEEDED(nsComponentManager::CreateInstance(kCRangeCID, nsnull, kIDOMRangeIID, getter_AddRefs(range)))){ //create an irange
-    nsCOMPtr<nsIDocument>doc(GetDocument());
-    nsCOMPtr<nsIDOMDocument>domDoc(doc);
-    if (domDoc){
-      nsCOMPtr<nsIDOMElement> domElement;
-      if (NS_SUCCEEDED(domDoc->GetDocumentElement(getter_AddRefs(domElement)))) {//get the first element from the dom
-        nsCOMPtr<nsIDOMNode>domNode(domElement);
-        if (domNode) {//get the node interface for the range object
-          range->SetStart(domNode,0);
-          range->SetEnd(domNode,0);
-          nsCOMPtr<nsISupports>rangeISupports(range);
-          if (rangeISupports) {
-            selection->AddItem(rangeISupports);
-          }
-        }
-      }
-    }
-  }
- 
-#endif
   
+  result = mSelection->Init((nsIFocusTracker *) this);
+  if (!NS_SUCCEEDED(result))
+    return result;
   // Important: this has to happen after the selection has been set up
 #ifdef SHOW_CARET
   nsCaretProperties  *caretProperties = NewCaretProperties();
@@ -836,6 +817,7 @@ PresShell::EndObservingDocument()
     if (!domselection)
       return NS_ERROR_UNEXPECTED;
     domselection->RemoveSelectionListener(this);
+    mSelection->ShutDown();
   }
   return NS_OK;
 }
@@ -958,12 +940,6 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     NS_IF_RELEASE(rcx);
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::ResizeReflow"));
 
-    if (mSelection){
-      DisableScrolling();
-      mSelection->ResetSelection(this, mRootFrame);
-      EnableScrolling();
-    }
-
     // XXX if debugging then we should assert that the cache is empty
   } else {
 #ifdef NOISY
@@ -1049,7 +1025,6 @@ NS_IMETHODIMP PresShell::NotifySelectionChanged()
 {
   if (!mSelection)
     return NS_ERROR_NULL_POINTER;
-  mSelection->ResetSelection(this, mRootFrame);
   return NS_ERROR_NULL_POINTER;
 }
 
@@ -1636,8 +1611,6 @@ PresShell::ContentChanged(nsIDocument *aDocument,
   EnterReflowLock();
   nsresult rv = mStyleSet->ContentChanged(mPresContext, aContent, aSubContent);
   ExitReflowLock();
-  if (mSelection)
-    mSelection->ResetSelection(this, mRootFrame);
 
   return rv;
 }
@@ -1652,8 +1625,6 @@ PresShell::ContentStatesChanged(nsIDocument* aDocument,
   EnterReflowLock();
   nsresult rv = mStyleSet->ContentStatesChanged(mPresContext, aContent1, aContent2);
   ExitReflowLock();
-  //if (mSelection)
-    //mSelection->ResetSelection(this, mRootFrame);
 
   return rv;
 }
@@ -2019,7 +1990,7 @@ PresShell::HandleEvent(nsIView         *aView,
     if (mSelection && mFocusEventFrame && aEvent->eventStructType == NS_KEY_EVENT)
     {
       mSelection->EnableFrameNotification(PR_FALSE);
-      mSelection->HandleKeyEvent((nsIFocusTracker *)this, aEvent);
+      mSelection->HandleKeyEvent(aEvent);
       mSelection->EnableFrameNotification(PR_TRUE); //prevents secondary reset selection called since
       //we are a listener now.
     }

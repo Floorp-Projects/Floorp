@@ -36,8 +36,17 @@
 #include "nsISupportsArray.h"
 #include "nsIDOMEvent.h"
 
+#include "nsIDOMSelectionListener.h"
+#include "nsIContentIterator.h"
+
+
+
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
+
+
+
+#define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
 
 static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -47,16 +56,12 @@ static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
+static NS_DEFINE_IID(kIContentIteratorIID, NS_ICONTENTITERTOR_IID);
 
 //PROTOTYPES
-static void selectFrames(nsIFrame *aBegin, PRUint32 aBeginOffset, nsIFrame *aEnd, PRUint32 aEndOffset, nsDirection aDir, PRUint32 aFlags);
-static void unselectFrames(nsIFrame *aRootFrame);
-static PRInt32 compareFrames(nsIFrame *aBegin, nsIFrame *aEnd);
-static nsIFrame * getNextFrame(nsIFrame *aStart);
 static void printRange(nsIDOMRange *aDomRange);
-//static nsIFrame *findFrameFromContent(nsIFrame *aParent, nsIContent *aContent, PRBool aTurnOff);
 
-enum {FORWARD  =1, BACKWARD = 0};
 
 #if 1
 #define DEBUG_OUT_RANGE(x)  printRange(x)
@@ -79,11 +84,14 @@ public:
   NS_DECL_ISUPPORTS
 
 /*BEGIN nsIFrameSelection interfaces*/
-  NS_IMETHOD HandleTextEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGUIEvent);
-  NS_IMETHOD HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent);
-  NS_IMETHOD TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOffset, PRInt32 aContentOffset, PRBool aContinueSelection);
-  NS_IMETHOD ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame);
+  NS_IMETHOD Init(nsIFocusTracker *aTracker);
+  NS_IMETHOD ShutDown();
+  NS_IMETHOD HandleTextEvent(nsGUIEvent *aGUIEvent);
+  NS_IMETHOD HandleKeyEvent(nsGUIEvent *aGuiEvent);
+  NS_IMETHOD TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRBool aContinueSelection);
   NS_IMETHOD EnableFrameNotification(PRBool aEnable){mNotifyFrames = aEnable; return NS_OK;}
+  NS_IMETHOD LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
+                             PRInt32 *aStart, PRInt32 *aEnd, PRBool *aDrawSelected , PRUint32 aFlag/*not used*/);
 /*END nsIFrameSelection interfacse*/
 
 /*BEGIN nsIDOMSelection interface implementations*/
@@ -120,7 +128,7 @@ private:
   nsresult RemoveItem(nsISupports *aRange);
 
   nsresult Clear();
-  NS_IMETHOD ScrollIntoView(nsIFocusTracker *aTracker);
+  NS_IMETHOD ScrollIntoView();
 
   friend class nsRangeListIterator;
 
@@ -146,6 +154,8 @@ private:
 
   nsresult     NotifySelectionListeners();			// add parameters to say collapsed etc?
 
+  NS_IMETHOD selectFrames(nsIDOMRange *aRange, PRBool aSelect);
+  
   nsCOMPtr<nsISupportsArray> mRangeArray;
 
   nsCOMPtr<nsIDOMNode> mAnchorNode; //where did the selection begin
@@ -162,6 +172,7 @@ private:
   
   // for nsIScriptContextOwner
   void*		mScriptObject;
+  nsCOMPtr<nsIFocusTracker> mTracker;
 };
 
 class nsRangeListIterator : public nsIBidirectionalEnumerator
@@ -553,11 +564,17 @@ nsRangeList::Clear()
   setAnchor(nsnull,0);
   if (!mRangeArray)
     return NS_ERROR_FAILURE;
-  for (PRUint32 i = 0; i < mRangeArray->Count();i++)
+  // Get an iterator
+  while ( mRangeArray->Count())
   {
-    mRangeArray->RemoveElementAt(i);
+    nsCOMPtr<nsIDOMRange> range;
+    nsCOMPtr<nsISupports> isupportsindex = dont_AddRef(mRangeArray->ElementAt(0));
+    range = do_QueryInterface(isupportsindex);
+    mRangeArray->RemoveElementAt(0);
+    selectFrames(range, 0);
     // Does RemoveElementAt also delete the elements?
   }
+
   return NS_OK;
 }
 
@@ -592,51 +609,61 @@ void printRange(nsIDOMRange *aDomRange)
          */
 }
 
+
+
 NS_IMETHODIMP
-nsRangeList::HandleTextEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGUIEvent)
+nsRangeList::Init(nsIFocusTracker *aTracker)
 {
-	if (!aGUIEvent || !aTracker)
+  mTracker = dont_QueryInterface(aTracker);
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsRangeList::ShutDown()
+{
+  nsCOMPtr<nsIFocusTracker> x;
+  mTracker = x;
+  return NS_OK;
+}
+
+  
+  
+NS_IMETHODIMP
+nsRangeList::HandleTextEvent(nsGUIEvent *aGUIEvent)
+{
+	if (!aGUIEvent)
 		return NS_ERROR_NULL_POINTER;
 
 #ifdef DEBUG_TAGUE
 	printf("nsRangeList: HandleTextEvent\n");
 #endif
-
-	nsIFrame *anchor;
-	nsIFrame *frame;
-	nsresult result = aTracker->GetFocus(&frame, &anchor);
-	if (NS_FAILED(result))
-		return result;
+  nsresult result(NS_OK);
 	if (NS_TEXT_EVENT == aGUIEvent->message) {
-		PRBool selected;
-		PRInt32 beginoffset = 0;
-		PRInt32 endoffset;
-		PRInt32 contentoffset;
-		nsresult result = NS_OK;
 
-		nsTextEvent *textEvent = (nsTextEvent *)aGUIEvent; //this is ok. It really is a textevent
-
-		PRInt32   offsetused = beginoffset;
-		nsSelectionAmount amount = eSelectCharacter;		// for now
-		result = frame->GetSelected(&selected,&beginoffset,&endoffset, &contentoffset);
-
-		result = ScrollIntoView(aTracker);
+		result = ScrollIntoView();
 	}
-	return NS_OK;
+	return result;
 }
+
+
 
 /** This raises a question, if this method is called and the aFrame does not reflect the current
  *  focus  DomNode, it is invalid?  The answer now is yes.
  */
 NS_IMETHODIMP
-nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
+nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
 {
-  if (!aGuiEvent ||!aTracker)
+  if (!aGuiEvent)
     return NS_ERROR_NULL_POINTER;
+  STATUS_CHECK_RETURN_MACRO();
+return NS_OK;
+#if 0
 
   nsIFrame *anchor;
   nsIFrame *frame;
-  nsresult result = aTracker->GetFocus(&frame, &anchor);
+  nsresult result = mTracker->GetFocus(&frame, &anchor);
   if (NS_FAILED(result))
     return result;
   if (NS_KEY_DOWN == aGuiEvent->message) {
@@ -654,7 +681,7 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
     PRInt32   offsetused = beginoffset;
     nsIFrame *frameused;
     nsSelectionAmount amount = eSelectCharacter;
-    result = frame->GetSelected(&selected,&beginoffset,&endoffset, &contentoffset);
+    result = frame->GetSelected(&selected);
     if (NS_FAILED(result)){
       return result;
     }
@@ -679,9 +706,9 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
           frameused = anchor;
         }
         if (NS_SUCCEEDED(frameused->PeekOffset(amount, eDirPrevious, offsetused, &resultFrame, &frameOffset, &contentOffset, PR_FALSE)) && resultFrame){
-          result = TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
+          result = TakeFocus(resultFrame, frameOffset, contentOffset, keyEvent->isShift);
         }
-        result = ScrollIntoView(aTracker);
+        result = ScrollIntoView();
         break;
       case nsIDOMEvent::VK_RIGHT : 
         //we need to look for the next PAINTED location to move the cursor to.
@@ -701,9 +728,9 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
           frameused = frame;
         }
         if (NS_SUCCEEDED(frameused->PeekOffset(amount, eDirNext, offsetused, &resultFrame, &frameOffset, &contentOffset, PR_FALSE)) && resultFrame){
-          result = TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
+          result = TakeFocus(resultFrame, frameOffset, contentOffset, keyEvent->isShift);
         }
-        result = ScrollIntoView(aTracker);
+        result = ScrollIntoView();
         break;
       case nsIDOMEvent::VK_UP : 
 #ifdef DEBUG_NAVIGATION
@@ -714,6 +741,7 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
     }
   }
   return result;
+#endif
 }
 
 #ifdef DEBUG
@@ -754,396 +782,228 @@ void nsRangeList::printSelection()
 
 
 
-//recursive-oid method to get next frame
-nsIFrame *
-getNextFrame(nsIFrame *aStart)
-{
-  nsIFrame *result;
-  nsIFrame *parent = aStart;
-  if (parent && NS_SUCCEEDED(parent->FirstChild(nsnull, &result)) && result){
-    return result;
-  }
-  while(parent){
-    if (NS_SUCCEEDED(parent->GetNextSibling(&result)) && result){
-      parent = result;
-      return result;
-    }
-    else
-      if (NS_FAILED(parent->GetParent(&result)) || !result)
-        return nsnull;
-      else 
-        parent = result;
-  }
-  return nsnull;
-}
-
-
-
-//compare the 2 passed in frames -1 first is smaller 1 second is smaller 0 they are the same
-PRInt32
-compareFrames(nsIFrame *aBegin, nsIFrame *aEnd)
-{
-  if (!aBegin || !aEnd)
-    return 0;
-  if (aBegin == aEnd)
-    return 0;
-  nsCOMPtr<nsIContent> beginContent;
-  if (NS_SUCCEEDED(aBegin->GetContent(getter_AddRefs(beginContent))) && beginContent){
-    nsCOMPtr<nsIDOMNode>beginNode (do_QueryInterface(beginContent));
-    nsCOMPtr<nsIContent> endContent;
-    if (NS_SUCCEEDED(aEnd->GetContent(getter_AddRefs(endContent))) && endContent){
-      nsCOMPtr<nsIDOMNode>endNode (do_QueryInterface(endContent));
-      PRBool storage;
-      PRInt32 int1;
-      PRInt32 int2;
-      PRInt32 contentOffset1;
-      PRInt32 contentOffset2;
-      aBegin->GetSelected(&storage,&int1,&int2,&contentOffset1);
-      aEnd->GetSelected(&storage,&int1,&int2,&contentOffset2);
-      return ComparePoints(beginNode, contentOffset1, endNode, contentOffset2);
-    }
-  }
-  return 0;
-}
-
-
-
 //the idea of this helper method is to select, deselect "top to bottom" traversing through the frames
-void
-selectFrames(nsIFrame *aBegin, PRUint32 aBeginOffset, nsIFrame *aEnd, PRUint32 aEndOffset, nsDirection aDir, PRUint32 aFlags)
+NS_IMETHODIMP
+nsRangeList::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
 {
-  if (!aBegin || !aEnd)
-    return;
-  PRBool done = PR_FALSE;
-  while (!done)
+  if (!aRange) 
+    return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIContentIterator> iter;
+  nsresult result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                              kIContentIteratorIID, 
+                                              getter_AddRefs(iter));
+  if ((NS_SUCCEEDED(result)) && iter)
   {
-    PRUint32 type(aFlags);
-
-    nsSelectionStruct ss = {0};
-    if (aBegin == aEnd)
+    iter->Init(aRange);
+    // loop through the content iterator for each content node
+    // for each text node:
+    // get the frame for the content, and from it the style context
+    // ask the style context about the property
+    nsCOMPtr<nsIContent> content;
+    PRBool drawWholeContent = PR_FALSE;
+    result = iter->First();
+    if (NS_FAILED(result))
+      return result;
+    nsIFrame *frame;
+    while (NS_COMFALSE == iter->IsDone())
     {
-      ss.mType = type;
-      ss.mStartFrame = aBeginOffset;
-      ss.mEndFrame = aEndOffset;
-      ss.mDir = aDir;
-      aBegin->SetSelected(&ss);
-      done = PR_TRUE;
-    }
-    else {
-      //else we neeed to select from begin to end 
-      type |= nsSelectionStruct::SELTOEND;
-      ss.mType = type;
-      ss.mStartFrame = aBeginOffset;
-      ss.mEndFrame = aEndOffset;
-      ss.mDir = aDir;
-      aBegin->SetSelected(&ss);
-      aBeginOffset = 0;
-      if (!(aBegin = getNextFrame(aBegin)))
-      {
-        done = PR_TRUE;
-      }
+      result = iter->CurrentNode(getter_AddRefs(content));
+      if (NS_FAILED(result))
+        return result;
+      result = mTracker->GetPrimaryFrameFor(content, &frame);
+      if (NS_SUCCEEDED(result) && frame)
+         frame->SetSelected(aRange,aFlags,PR_TRUE);//spread from here to hit all frames in flow
+      iter->Next();
     }
   }
+  return result;
 }
 
-// unselect all frames under the root frame
-void
-unselectFrames(nsIFrame *aRootFrame)
-{
-  nsIFrame *theFrame = aRootFrame;
-  nsSelectionStruct ss = {0};  // all that's important is that the selection_on flag is not lit.
-  while (theFrame)
-  {
-    theFrame->SetSelected(&ss);
-    theFrame = getNextFrame(theFrame);
-  }
-}
 
 /**
 hard to go from nodes to frames, easy the other way!
  */
 NS_IMETHODIMP
-nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOffset, PRInt32 aContentOffset, PRBool aContinueSelection)
+nsRangeList::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRBool aContinueSelection)
 {
-  if (!aTracker || !aFrame)
+  if (!aNewFocus)
     return NS_ERROR_NULL_POINTER;
   if (GetBatching())
     return NS_ERROR_FAILURE;
+  STATUS_CHECK_RETURN_MACRO();
   //HACKHACKHACK
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIDOMNode> domNode;
-  if (NS_SUCCEEDED(aFrame->GetContent(getter_AddRefs(content))) && content){
-    nsCOMPtr<nsIContent> parent;
-    nsCOMPtr<nsIContent> parent2;
-    if (NS_FAILED(content->GetParent(*getter_AddRefs(parent))) || !parent)
-      return NS_ERROR_FAILURE;
-    if (NS_FAILED(parent->GetParent(*getter_AddRefs(parent2))) || !parent2)
-      return NS_ERROR_FAILURE;
-    domNode = do_QueryInterface(content);
-    parent = nsCOMPtr<nsIContent>();//just force a release now even though we dont have to.
-    parent2 = nsCOMPtr<nsIContent>();
+  nsCOMPtr<nsIContent> parent;
+  nsCOMPtr<nsIContent> parent2;
+  if (NS_FAILED(aNewFocus->GetParent(*getter_AddRefs(parent))) || !parent)
+    return NS_ERROR_FAILURE;
+  if (NS_FAILED(parent->GetParent(*getter_AddRefs(parent2))) || !parent2)
+    return NS_ERROR_FAILURE;
+  domNode = do_QueryInterface(aNewFocus);
+  //traverse through document and unselect crap here
+  if (!aContinueSelection){ //single click? setting cursor down
+    PRUint32 batching = mBatching;//hack to use the collapse code.
+    PRBool changes = mChangesDuringBatching;
+    mBatching = 1;
+    Collapse(domNode, aContentOffset);
+    mBatching = batching;
+    mChangesDuringBatching = changes;
+  }
+  else {
+    //compare anchor to old cursor.
+    nsCOMPtr<nsIDOMNode> anchorNode;
+    nsCOMPtr<nsIDOMNode> focusNode;
+    PRInt32 anchorOffset;
+    PRInt32 focusOffset;
+    nsresult result = NS_OK;
+    result = GetAnchorNode(getter_AddRefs(anchorNode));
+    result |= GetAnchorOffset(&anchorOffset);
+    result |= GetFocusNode(getter_AddRefs(focusNode));
+    result |= GetFocusOffset(&focusOffset);
 
-    nsIFrame *frame;
-    nsIFrame *anchor;
-    PRBool direction(BACKWARD);//true == left to right
-    if (domNode && NS_SUCCEEDED(aTracker->GetFocus(&frame, &anchor))){
-      //traverse through document and unselect crap here
-      if (!aContinueSelection){ //single click? setting cursor down
-        if (anchor && frame && anchor != frame ){
-          //selected across frames, must "deselect" frames between in correct order
-          PRInt32 compareResult = compareFrames(anchor,frame);
-          if ( compareResult < 0 )
-            selectFrames(anchor,0,frame, 0, eDirNext, nsSelectionStruct::SELTOEND); //unselect all between
-          else if (compareResult > 0 )
-            selectFrames(frame,0,anchor, 0, eDirPrevious, nsSelectionStruct::SELTOEND); //unselect all between
-//          else real bad put in assert here
-        }
-        else if (frame && frame != aFrame){
-          nsSelectionStruct ss={nsSelectionStruct::SELTOEND, 0,0, 0,0, 0,0, eDirNext, PR_FALSE};
-          frame->SetSelected(&ss);
-        }
-        nsSelectionStruct ss={nsSelectionStruct::SELON, 0,0, aOffset, aOffset, 0,0, eDirNext, PR_FALSE};
-        aFrame->SetSelected(&ss);
-        aTracker->SetFocus(aFrame,aFrame);
-        PRUint32 batching = mBatching;//hack to use the collapse code.
-        PRBool changes = mChangesDuringBatching;
-        mBatching = 1;
-        Collapse(domNode, aContentOffset + aOffset);
-        mBatching = batching;
-        mChangesDuringBatching = changes;
+
+
+
+    if (NS_FAILED(result))
+      return result;
+    PRInt32 result1 = ComparePoints(anchorNode, anchorOffset 
+                                    ,focusNode, focusOffset);
+    //compare old cursor to new cursor
+    PRInt32 result2 = ComparePoints(focusNode, focusOffset,
+                              domNode, aContentOffset );
+    //compare anchor to new cursor
+    PRInt32 result3 = ComparePoints(anchorNode, anchorOffset,
+                              domNode , aContentOffset );
+
+    if (result1 == 0 && result3 < 0){
+      //selectFrames(anchor,anchorFrameOffsetBegin, aFrame, aOffset , eDirNext, nsSelectionStruct::SELON); 
+    }
+    else if (result1 == 0 && result3 > 0){
+      //selectFrames(aFrame, aOffset , anchor,anchorFrameOffsetBegin, eDirPrevious,nsSelectionStruct::SELON);
+    }
+    else if (result1 <= 0 && result2 <= 0) {//a,1,2 or a1,2 or a,12 or a12
+      //continue selection from 1 to 2
+      //selectFrames(frame,PR_MIN(focusFrameOffsetEnd,focusFrameOffsetBegin), aFrame, aOffset, eDirNext, nsSelectionStruct::SELON);
+    }
+    else{
+      nsCOMPtr<nsIDOMRange> range;
+      result = nsComponentManager::CreateInstance(kRangeCID, nsnull,
+                                         kIDOMRangeIID,
+                                         getter_AddRefs(range));
+      if (NS_FAILED(result))
+        return result;
+      if (result3 <= 0 && result2 >= 0) {//a,2,1 or a2,1 or a,21 or a21
+        //deselect from 2 to 1
+        result = range->SetEnd(focusNode, focusOffset);
+        result |= range->SetStart(domNode, aContentOffset);
+        if (NS_FAILED(result))
+          return result;
+        selectFrames(range, 0);
       }
-      else {
-        if (aFrame == frame){ //drag to same frame
-          PRInt32 beginoffset = 0;
-          PRInt32 begincontentoffset = 0;
-          PRInt32 endoffset = 0;
-          PRBool selected = PR_FALSE;
-          if (NS_SUCCEEDED(aFrame->GetSelected(&selected,&beginoffset,&endoffset, &begincontentoffset))){
-            nsSelectionStruct ss={nsSelectionStruct::SELON, 0,0, beginoffset, aOffset, 0,0, eDirNext, PR_FALSE};
-            aFrame->SetSelected(&ss);
-            //PR_ASSERT(beginoffset == GetAnchorOffset());
-            aTracker->SetFocus(aFrame,anchor);
-            if (beginoffset <= aOffset)
-              direction = FORWARD; //selecting "english" right if true
-          }
-          else return NS_ERROR_FAILURE;
-        }
-        else if (frame){ //we need to check to see what the order is.
-          nsCOMPtr<nsIContent>oldContent;
-          if (NS_SUCCEEDED(frame->GetContent(getter_AddRefs(oldContent))) && oldContent){
-            nsCOMPtr<nsIDOMNode> oldDomNode(do_QueryInterface(oldContent));
-            if (oldDomNode && (oldDomNode.get() == FetchFocusNode())) {
-              nsCOMPtr<nsIContent> anchorContent;
-              if (NS_SUCCEEDED(anchor->GetContent(getter_AddRefs(anchorContent))) && anchorContent){
-                nsCOMPtr<nsIDOMNode>anchorDomNode(do_QueryInterface(anchorContent));
-                if (anchorDomNode && anchorDomNode.get() == FetchAnchorNode()) {
-
-
-                  //get offsets
-                  PRBool selected = PR_FALSE;
-                  PRInt32 anchorFrameOffsetBegin = 0;
-                  PRInt32 anchorFrameOffsetEnd = 0;
-                  PRInt32 anchorFrameContentOffset = 0;
-
-                  if (NS_FAILED(anchor->GetSelected(&selected, &anchorFrameOffsetBegin, &anchorFrameOffsetEnd, &anchorFrameContentOffset)) || !selected)
-                    return NS_ERROR_FAILURE;
-
-                  selected = PR_FALSE;
-                  PRInt32 focusFrameOffsetBegin = 0;
-                  PRInt32 focusFrameOffsetEnd = 0;
-                  PRInt32 focusFrameContentOffset = 0;
-
-                  if (NS_FAILED(frame->GetSelected(&selected, &focusFrameOffsetBegin, &focusFrameOffsetEnd, &focusFrameContentOffset)) || !selected)
-                    return NS_ERROR_FAILURE;
-
-                  //compare anchor to old cursor.
-                  PRInt32 result1 = compareFrames(anchor,frame); //nothing else matters. if they are the same frame.
-                  //compare old cursor to new cursor
-                  PRInt32 result2 = compareFrames(frame,aFrame);
-                  if (result2 == 0)
-                    result2 = ComparePoints(FetchFocusNode(), FetchFocusOffset(),
-                                            domNode, aOffset );
-                  //compare anchor to new cursor
-                  PRInt32 result3 = compareFrames(anchor,aFrame);
-                  if (result3 == 0)
-                    result3 = ComparePoints(FetchAnchorNode(), FetchAnchorOffset(),
-                                            domNode , aOffset );
-
-                  if (result1 == 0 && result3 < 0)
-                  {
-                    selectFrames(anchor,anchorFrameOffsetBegin, aFrame, aOffset , eDirNext, nsSelectionStruct::SELON); 
-                  }
-                  else if (result1 == 0 && result3 > 0)
-                  {
-                    selectFrames(aFrame, aOffset , anchor,anchorFrameOffsetBegin, eDirPrevious,nsSelectionStruct::SELON);
-                  }
-                  else if (result1 <= 0 && result2 <= 0) {//a,1,2 or a1,2 or a,12 or a12
-                    //continue selection from 1 to 2
-                    selectFrames(frame,PR_MIN(focusFrameOffsetEnd,focusFrameOffsetBegin), aFrame, aOffset, eDirNext, nsSelectionStruct::SELON);
-                  }
-                  else if (result3 <= 0 && result2 >= 0) {//a,2,1 or a2,1 or a,21 or a21
-                    //deselect from 2 to 1
-                    selectFrames(aFrame, aOffset, frame,focusFrameOffsetEnd, eDirNext, 0);
-                    if (anchor != aFrame)
-                      selectFrames(aFrame, 0, aFrame,aOffset, eDirNext, nsSelectionStruct::SELON);
-                    else
-                      selectFrames(anchor, anchorFrameOffsetBegin, aFrame, aOffset, eDirNext, nsSelectionStruct::SELON);
-                  }
-                  else if (result1 >= 0 && result3 <= 0) {//1,a,2 or 1a,2 or 1,a2 or 1a2
-                    //deselect from 1 to a
-                    selectFrames(frame, focusFrameOffsetEnd, anchor, anchorFrameOffsetBegin, eDirPrevious, 0);
-                    //select from a to 2
-                    selectFrames(anchor, anchorFrameOffsetBegin, aFrame, aOffset, eDirNext, nsSelectionStruct::SELON);
-                  }
-                  else if (result2 <= 0 && result3 >= 0) {//1,2,a or 12,a or 1,2a or 12a
-                    //deselect from 1 to 2
-                    selectFrames(frame, focusFrameOffsetEnd, aFrame, aOffset, eDirPrevious, 0);
-                    if (anchor != aFrame)
-                      selectFrames(aFrame, aOffset, aFrame, -1, eDirPrevious, nsSelectionStruct::SELON);
-                    else
-                      selectFrames(aFrame, aOffset, anchor, anchorFrameOffsetBegin, eDirPrevious, nsSelectionStruct::SELON);
-
-                  }
-                  else if (result3 >= 0 && result1 <= 0) {//2,a,1 or 2a,1 or 2,a1 or 2a1
-                    //deselect from a to 1
-                    selectFrames(anchor, anchorFrameOffsetBegin, frame, focusFrameOffsetEnd, eDirNext, 0);
-                    //select from 2 to a
-                    selectFrames(aFrame, aOffset, anchor, anchorFrameOffsetBegin, eDirPrevious, nsSelectionStruct::SELON);
-                  }
-                  else if (result2 >= 0 && result1 >= 0) {//2,1,a or 21,a or 2,1a or 21a
-                    //continue selection from 2 to 1
-                    selectFrames(aFrame, aOffset, frame,PR_MAX(focusFrameOffsetEnd,focusFrameOffsetBegin), eDirPrevious, nsSelectionStruct::SELON);
-                  }
-                  if (result3 <= 0)
-                    direction = FORWARD;
-                }
-                aTracker->SetFocus(aFrame,anchor);
-              }
-            }
-          }
-        }
+      else if (result1 >= 0 && result3 <= 0) {//1,a,2 or 1a,2 or 1,a2 or 1a2
+        result = range->SetStart(focusNode, focusOffset);
+        result |= range->SetEnd(anchorNode, anchorOffset);
+        if (NS_FAILED(result))
+          return result;
+        //deselect from 1 to a
+        selectFrames(range, 0);
       }
-
-      // Now update the range list:
-      if (aContinueSelection && domNode)
-      {
-        Extend(domNode, aOffset + aContentOffset);
+      else if (result2 <= 0 && result3 >= 0) {//1,2,a or 12,a or 1,2a or 12a
+        //deselect from 1 to 2
+        result = range->SetEnd(domNode, aContentOffset);
+        result |= range->SetStart(focusNode, focusOffset);
+        if (NS_FAILED(result))
+          return result;
+        selectFrames(range, 0);
+      }
+      else if (result3 >= 0 && result1 <= 0) {//2,a,1 or 2a,1 or 2,a1 or 2a1
+        //deselect from a to 1
+        result = range->SetStart(anchorNode, anchorOffset);
+        result |= range->SetEnd(focusNode, focusOffset);
+        if (NS_FAILED(result))
+          return result;
+        selectFrames(range, 0);
+      }
+      else if (result2 >= 0 && result1 >= 0) {//2,1,a or 21,a or 2,1a or 21a
       }
     }
+    // Now update the range list:
+    if (aContinueSelection && domNode)
+    {
+      Extend(domNode, aContentOffset);
+    }
   }
-  else
-    return NS_ERROR_FAILURE;
     
   return NotifySelectionListeners();
 }
 
 
 
-//the start frame is the "root" of the tree. we need to traverse the tree to look for the content we want
-NS_IMETHODIMP 
-nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
+NS_METHOD
+nsRangeList::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
+                             PRInt32 *aStart, PRInt32 *aEnd, PRBool *aDrawSelected, PRUint32 aFlag/*not used*/)
 {
-  nsCOMPtr<nsIDOMNode> startNode;
-  nsCOMPtr<nsIDOMNode> endNode;
-  PRInt32 startOffset;
-  PRInt32 endOffset;
-  nsIFrame *result;
-  nsresult res;
-  nsCOMPtr<nsIDOMRange> range;
-  if (!GetNotifyFrames())
-    return NS_OK;
-  if (GetBatching()){
-    SetDirty();
-    return NS_OK;
-  }
-  
-  //we will need to check if any "side" is the anchor and send a direction order to the frames.
-  if (!mRangeArray)
+  if (!aContent || !aStart || !aEnd || !aDrawSelected)
+    return NS_ERROR_NULL_POINTER;
+  if (aFlag)
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+  STATUS_CHECK_RETURN_MACRO();
+  //THIS WILL NOT WORK FOR MULTIPLE SELECTIONS YET!!!
+  nsCOMPtr<nsIDOMNode> passedInNode;
+  passedInNode = do_QueryInterface(aContent);
+  if (!passedInNode)
     return NS_ERROR_FAILURE;
-  //reset the focus and anchor points.
-  nsCOMPtr<nsIContent> anchorContent;
-  nsCOMPtr<nsIContent> frameContent;
-  if (FetchAnchorNode() && FetchFocusNode()){
-    anchorContent =  do_QueryInterface(FetchAnchorNode(),&res);
-    if (NS_SUCCEEDED(res))
-      frameContent = do_QueryInterface(FetchFocusNode(),&res);
-  }
-  else
-    res = NS_OK;
-  if (NS_SUCCEEDED(res)){
-    // hack - joe 3/16/99: first tell all frames to unselect
-    unselectFrames(aStartFrame);
-  
-    for (PRUint32 i =0; i<mRangeArray->Count(); i++){
-      //end content and start content do NOT necessarily mean anchor and focus frame respectively
-      PRInt32 anchorOffset = -1; //the frames themselves can talk to the presentation manager.  we will tell them
-      PRInt32 frameOffset = -1;  // where we would "like" to have the anchor pt.  actually we count on it.
-      nsCOMPtr<nsISupports> isupportsindex = dont_AddRef(mRangeArray->ElementAt(i));
-      range = do_QueryInterface(isupportsindex);
-      DEBUG_OUT_RANGE(range);
+
+  *aDrawSelected = PR_FALSE;
+  for (PRUint32 i =0; i<mRangeArray->Count() && i < 1; i++){
+    nsCOMPtr<nsIDOMRange> range;
+    nsCOMPtr<nsISupports> isupportsindex = dont_AddRef(mRangeArray->ElementAt(i));
+    range = do_QueryInterface(isupportsindex);
+    if (range){
+      nsCOMPtr<nsIDOMNode> startNode;
+      nsCOMPtr<nsIDOMNode> endNode;
+      PRInt32 startOffset;
+      PRInt32 endOffset;
       range->GetStartParent(getter_AddRefs(startNode));
       range->GetStartOffset(&startOffset);
       range->GetEndParent(getter_AddRefs(endNode));
       range->GetEndOffset(&endOffset);
-
-      nsCOMPtr<nsIContent> startContent;
-      startContent = do_QueryInterface(startNode,&res);
-      if (startContent){
-        res = aTracker->GetPrimaryFrameFor(startContent,&result);
-          //findFrameFromContent(aStartFrame, startContent,PR_TRUE);
-      }
-      if (result && NS_SUCCEEDED(res)){
-        nsCOMPtr<nsIContent> endContent(do_QueryInterface(endNode));
-        if (endContent == startContent){
-          if (startContent == frameContent)
-            frameOffset = FetchFocusOffset();
-          if ( startContent == anchorContent ) 
-            anchorOffset = FetchAnchorOffset();
-          nsSelectionStruct ss={nsSelectionStruct::SELON|nsSelectionStruct::CHECKANCHOR|nsSelectionStruct::CHECKFOCUS
-            , startOffset, endOffset, 0,0, anchorOffset,frameOffset, eDirNext, PR_FALSE};
-          if (anchorOffset> frameOffset)
-            ss.mDir = eDirPrevious;
-          result->SetSelectedContentOffsets(&ss, 
-                                            aTracker, &result);
-        }
-        else{
-          if (startContent == frameContent)
-            frameOffset = FetchFocusOffset();
-          if ( startContent == anchorContent ) 
-            anchorOffset = FetchAnchorOffset();
-          nsSelectionStruct ss={nsSelectionStruct::SELON|nsSelectionStruct::SELTOEND|nsSelectionStruct::CHECKANCHOR|nsSelectionStruct::CHECKFOCUS
-            , startOffset, 0, 0,0, anchorOffset,frameOffset, eDirNext, PR_FALSE};
-          result->SetSelectedContentOffsets(&ss, aTracker, &result);//select from start to end
-
-          //now we keep selecting until we hit the last content, or the end of the page.
-          anchorOffset = -1;
-          frameOffset = -1;
-          while((result = getNextFrame(result)) != nsnull){
-            nsCOMPtr<nsIContent> content;
-            result->GetContent(getter_AddRefs(content));
-            if (content == endContent){
-              if (endContent == frameContent)
-                frameOffset = FetchFocusOffset();
-              if ( endContent == anchorContent ) 
-                anchorOffset = FetchAnchorOffset();
-              nsSelectionStruct ss={nsSelectionStruct::SELON|nsSelectionStruct::CHECKANCHOR|nsSelectionStruct::CHECKFOCUS
-                , 0, endOffset, 0,0, anchorOffset,frameOffset, eDirNext, PR_FALSE};
-              result->SetSelectedContentOffsets(&ss, aTracker, &result);//select from beginning to endOffset
-              break;
-            }
-            else{
-              nsSelectionStruct ss={nsSelectionStruct::SELON|nsSelectionStruct::SELTOEND, 0,0, 0,0, 0,0, eDirNext, PR_FALSE};
-              result->SetSelected(&ss);
-            }
-          }
+      if (passedInNode == startNode && passedInNode == endNode){
+        if (startOffset < (aContentOffset + aContentLength)  &&
+            endOffset > aContentOffset){
+          *aDrawSelected = PR_TRUE;
+          *aStart = PR_MAX(0,startOffset - aContentOffset);
+          *aEnd = PR_MIN(aContentLength, endOffset - aContentOffset);
         }
       }
-      res = ScrollIntoView(aTracker);
+      else if (passedInNode == startNode){
+        if (startOffset < (aContentOffset + aContentLength)){
+          *aDrawSelected = PR_TRUE;
+          *aStart = PR_MAX(0,startOffset - aContentOffset);
+          *aEnd = aContentLength;
+        }
+      }
+      else if (passedInNode == endNode){
+        if (endOffset > aContentOffset){
+          *aDrawSelected = PR_TRUE;
+          *aStart = 0;
+          *aEnd = PR_MIN(aContentLength, endOffset - aContentOffset);
+        }
+      }
+      else {
+        *aDrawSelected = PR_TRUE;
+        *aStart = 0;
+        *aEnd = aContentLength;
+      }
     }
+    else
+      return NS_ERROR_FAILURE;
   }
-  //printf("debug reset selection has been called\n");
-  return res;
+  return NS_OK;
 }
+
 
 
 NS_METHOD
@@ -1198,18 +1058,15 @@ nsRangeList::EndBatchChanges()
   
   
 NS_IMETHODIMP
-nsRangeList::ScrollIntoView(nsIFocusTracker *aTracker)
+nsRangeList::ScrollIntoView()
 {
-  if (!aTracker)
-    return NS_ERROR_NULL_POINTER;
-
   nsresult result;
   nsIFrame *anchor;
   nsIFrame *frame;
-  result = aTracker->GetFocus(&frame, &anchor);
+  result = mTracker->GetFocus(&frame, &anchor);
   if (NS_FAILED(result))
     return result;
-  result = aTracker->ScrollFrameIntoView(frame);
+  result = mTracker->ScrollFrameIntoView(frame);
   return result;
 }
 
@@ -1333,6 +1190,7 @@ nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
 
 
   result = AddItem(range);
+  selectFrames(range,PR_TRUE);
   if (NS_FAILED(result))
     return result;
     
@@ -1481,6 +1339,10 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
         setFocus(aParentNode, aOffset);
 
       if (NS_FAILED(res)) return res;
+
+      res = selectFrames(range , PR_TRUE);
+
+      if (NS_FAILED(res)) return res;
 #ifdef DEBUG_SELECTION
   nsCOMPtr<nsIContent>content;
   content = do_QueryInterface(aParentNode);
@@ -1506,6 +1368,10 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
       }
       if (NS_SUCCEEDED(res))
         setFocus(aParentNode, aOffset);
+      
+      if (NS_FAILED(res)) return res;
+
+      res = selectFrames(range , PR_TRUE);
 
       if (NS_FAILED(res)) return res;
 #ifdef DEBUG_SELECTION
