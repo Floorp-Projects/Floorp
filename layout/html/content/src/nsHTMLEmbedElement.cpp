@@ -98,7 +98,6 @@ protected:
 
 protected:
   nsGenericHTMLLeafElement mInner;
-  PRBool mReflectedPlugin;
 };
 
 nsresult
@@ -119,7 +118,6 @@ nsHTMLEmbedElement::nsHTMLEmbedElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aNodeInfo);
-  mReflectedPlugin = PR_FALSE;
 }
 
 nsHTMLEmbedElement::~nsHTMLEmbedElement()
@@ -252,6 +250,9 @@ nsHTMLEmbedElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 nsresult
 nsHTMLEmbedElement::GetPluginInstance(nsIPluginInstance** aPluginInstance)
 {
+  NS_ENSURE_ARG_POINTER(aPluginInstance);
+  *aPluginInstance = nsnull;
+
   nsresult result;
   nsCOMPtr<nsIPresContext> context;
   nsCOMPtr<nsIPresShell> shell;
@@ -295,6 +296,8 @@ nsHTMLEmbedElement::GetPluginInstance(nsIPluginInstance** aPluginInstance)
       
       return objectFrame->GetPluginInstance(*aPluginInstance);
     }
+
+    return NS_OK;
   }
 
   return NS_ERROR_FAILURE;
@@ -315,12 +318,12 @@ NS_IMETHODIMP
 nsHTMLEmbedElement::GetScriptObject(nsIScriptContext* aContext,
                                     void** aScriptObject)
 {
-  if (mReflectedPlugin)
+  if (mInner.mDOMSlots && mInner.mDOMSlots->mScriptObject)
     return mInner.GetScriptObject(aContext, aScriptObject);
 
   nsresult rv;
   *aScriptObject = nsnull;
-  
+
   // Get the JS object corresponding to this dom node.  This will become
   // the javascript prototype object of the object we eventually reflect to the
   // DOM.
@@ -329,44 +332,56 @@ nsHTMLEmbedElement::GetScriptObject(nsIScriptContext* aContext,
   if (NS_FAILED(rv) || !elementObject)
     return rv;
 
+  // Flush pending reflows to ensure the plugin is instansiated, assuming
+  // it's visible
+  if (mInner.mDocument) {
+    mInner.mDocument->FlushPendingNotifications();
+  }
+
   nsCOMPtr<nsIPluginInstance> pi;
   rv = GetPluginInstance(getter_AddRefs(pi));
 
-  // Check that the plugin object has the nsIScriptablePlugin
+  // If GetPluginInstance() fails it means there's no frame for this element
+  // yet, in that case we return the script object for the element but we
+  // don't cache it so that the next call can get the correct script object
+  // if the plugin instance is available at the next call.
+  if (NS_FAILED(rv)) {
+    mInner.SetScriptObject(nsnull);
+
+    *aScriptObject = elementObject;
+
+    return NS_OK;
+  }
+
+  // Check if the plugin object has the nsIScriptablePlugin
   // interface, describing how to expose it to JavaScript.  Given this
   // interface, use it to get the scriptable peer object (possibly the
   // plugin object itself) and the scriptable interface to expose it
-  // with.
-  nsIID *scriptableInterface = nsnull;
+  // with
+  nsIID scriptableInterface;
   nsCOMPtr<nsISupports> scriptablePeer;
   if (NS_SUCCEEDED(rv) && pi) {
     nsCOMPtr<nsIScriptablePlugin> spi(do_QueryInterface(pi, &rv));
     if (NS_SUCCEEDED(rv) && spi) {
-      rv = spi->GetScriptableInterface(&scriptableInterface);
-      if (NS_SUCCEEDED(rv) && scriptableInterface)
+      nsIID *scriptableInterfacePtr = nsnull;
+      rv = spi->GetScriptableInterface(&scriptableInterfacePtr);
+
+      if (NS_SUCCEEDED(rv) && scriptableInterfacePtr) {
         rv = spi->GetScriptablePeer(getter_AddRefs(scriptablePeer));
+
+        scriptableInterface = *scriptableInterfacePtr;
+
+        nsMemory::Free(scriptableInterfacePtr);
+      }
     }
   }
 
-  if (NS_FAILED(rv) || !scriptableInterface || !scriptablePeer) {
+  if (NS_FAILED(rv) || !scriptablePeer) {
     // Fall back to returning the element object.
     *aScriptObject = elementObject;
+
     return NS_OK;
   }
-
-  // Find an appropriate parent object to use when wrapping.
-  JSObject* parentObject;
-  nsCOMPtr<nsIScriptObjectOwner> owner;
-  if (mInner.mParent) {
-    owner = do_QueryInterface(mInner.mParent, &rv);
-  } else if (mInner.mDocument) {
-    owner = do_QueryInterface(mInner.mDocument, &rv);
-  }
-  if (NS_SUCCEEDED(rv) && owner) {
-    rv = owner->GetScriptObject(aContext, (void **)&parentObject);
-  }
-  if (NS_FAILED(rv) || !parentObject) // Fall back to using element object.
-    parentObject = elementObject;
 
   // Wrap it.
   JSObject* interfaceObject; // XPConnect-wrapped peer object, when we get it.
@@ -374,15 +389,16 @@ nsHTMLEmbedElement::GetScriptObject(nsIScriptContext* aContext,
   nsCOMPtr<nsIXPConnect> xpc =
     do_GetService(nsIXPConnect::GetCID()); 
   if (cx && xpc) {
+    JSObject* parentObject = JS_GetParent(cx, elementObject);
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     if (NS_SUCCEEDED(xpc->WrapNative(cx, parentObject,
-                                     scriptablePeer, *scriptableInterface,
+                                     scriptablePeer, scriptableInterface,
                                      getter_AddRefs(holder))) && holder && 
         NS_SUCCEEDED(holder->GetJSObject(&interfaceObject)) && interfaceObject) {
       *aScriptObject = interfaceObject;
     }
   }
-  
+
   // If we got an xpconnect-wrapped plugin object, set its' prototype to the
   // element object.
   if (!*aScriptObject || !JS_SetPrototype(cx, interfaceObject, elementObject)) {
@@ -391,8 +407,7 @@ nsHTMLEmbedElement::GetScriptObject(nsIScriptContext* aContext,
   }
 
   // Cache it.
-  if (NS_SUCCEEDED(mInner.SetScriptObject(*aScriptObject)))
-    mReflectedPlugin = PR_TRUE;
+  mInner.SetScriptObject(*aScriptObject);
 
   return NS_OK;
 }
