@@ -806,6 +806,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
     return rv;
   }
   
+  // Bugscape 2369: Type might change during JS event handler
+  //                This pointer is only valid until mInner.HandleDOMEvent
   nsIFormControlFrame* formControlFrame = nsnull;
   rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame, PR_FALSE);
   nsIFrame* formFrame = nsnull;
@@ -824,6 +826,10 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   // If we're a file input we have anonymous content underneath
   // that we need to hide.  We need to set the event target now
   // to ourselves
+  //
+  // Bugscape 2369: Type might change during JS event handler
+  //                This is only valid until mInner.HandleDOMEvent
+  //
   PRInt32 type;
   GetType(&type);
   if (type == NS_FORM_INPUT_FILE ||
@@ -878,17 +884,17 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   // That way if the event is cancelled then the checkbox will not flash.
   //
   // So get the Frame for the checkbox and tell it we are processing an onclick event
-  nsCOMPtr<nsICheckboxControlFrame> chkBx;
-  nsCOMPtr<nsIRadioControlFrame> radio;
-  if (NS_SUCCEEDED(rv)) {
-    chkBx = do_QueryInterface(formControlFrame);
-    if (!chkBx) {
-      radio = do_QueryInterface(formControlFrame);
-    }
-  }
   if (aEvent->message == NS_MOUSE_LEFT_CLICK) {
-    if (chkBx) chkBx->SetIsInClickEvent(PR_TRUE);
-    if (radio) radio->SetIsInClickEvent(PR_TRUE);
+    nsCOMPtr<nsICheckboxControlFrame> chkBx;
+    chkBx = do_QueryInterface(formControlFrame);
+    if (chkBx) {
+      chkBx->SetIsInClickEvent(PR_TRUE);
+    } else {
+      nsCOMPtr<nsIRadioControlFrame> radio;
+      radio = do_QueryInterface(formControlFrame);
+      if (radio)
+        radio->SetIsInClickEvent(PR_TRUE);
+    }
   }
 
   // Try script event handlers first if its not a focus/blur event
@@ -896,17 +902,30 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 
+
+  // Bugscape 2369: Frame might have changed during event handler
+  formControlFrame = nsnull;
+  rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame, PR_FALSE);
+
   // Script is done processing, now tell the checkbox we are no longer doing an onclick
   // and if it was cancelled the checkbox will get the propriate value via the DOM listener
-
   if (aEvent->message == NS_MOUSE_LEFT_CLICK) {
-    if (chkBx) chkBx->SetIsInClickEvent(PR_FALSE);
-    if (radio) radio->SetIsInClickEvent(PR_FALSE);
+    nsCOMPtr<nsICheckboxControlFrame> chkBx;
+    nsCOMPtr<nsIRadioControlFrame> radio;
+    if (NS_SUCCEEDED(rv)) {
+      chkBx = do_QueryInterface(formControlFrame);
+      if (chkBx) {
+        chkBx->SetIsInClickEvent(PR_FALSE);
+      } else {
+        radio = do_QueryInterface(formControlFrame);
+        if (radio)
+          radio->SetIsInClickEvent(PR_FALSE);
+      }
+    }
   }
 
   // Finish the special file control processing...
-  if (type == NS_FORM_INPUT_FILE ||
-      type == NS_FORM_INPUT_TEXT ) {
+  if (oldTarget) {
     // If the event is starting here that's fine.  If it's not
     // init'ing here it started beneath us and needs modification.
     if (!(NS_EVENT_FLAG_INIT & aFlags)) {
@@ -923,6 +942,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
   }
 
+  // Bugscape 2369: type might have changed during event handler
+  GetType(&type);
 
   if ((NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
