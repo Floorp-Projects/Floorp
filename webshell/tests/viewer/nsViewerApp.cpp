@@ -45,8 +45,9 @@ static NS_DEFINE_IID(kINetContainerApplicationIID,
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsViewerApp::nsViewerApp()
-  : mStartURL("resource:/res/samples/test0.html")
 {
+  char * text = PR_GetEnv("NGLAYOUT_HOME");
+  mStartURL = text ? text : "resource:/res/samples/test0.html";
   mDelay = 1;
   mRepeatCount = 1;
   mNumSamples = 10;
