@@ -44,7 +44,7 @@
 #include "nsILineIterator.h"
 #include "nsISizeOfHandler.h"
 
-class nsISpaceManager;
+class nsSpaceManager;
 class nsLineBox;
 class nsFloaterCache;
 class nsFloaterCacheList;
@@ -333,7 +333,7 @@ public:
   void FreeFloaters(nsFloaterCacheFreeList& aFreeList);
   void AppendFloaters(nsFloaterCacheFreeList& aFreeList);
   PRBool RemoveFloater(nsIFrame* aFrame);
-  void RemoveFloatersFromSpaceManager(nsISpaceManager* aSpaceManager);
+  void RemoveFloatersFromSpaceManager(nsSpaceManager* aSpaceManager);
 
   // Combined area
   void SetCombinedArea(const nsRect& aCombinedArea);

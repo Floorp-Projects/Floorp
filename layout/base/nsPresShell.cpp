@@ -39,7 +39,6 @@
 
 #define PL_ARENA_CONST_ALIGN_MASK 3
 #include "nsIPresShell.h"
-#include "nsISpaceManager.h"
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -6513,7 +6512,7 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
         // or they both do and the space managers are equivalent
         nsCOMPtr<nsIFrameManager>fm1;
         nsCOMPtr<nsIPresShell> ps1;
-        nsISpaceManager *sm1; // note, no ref counting here
+        nsSpaceManager *sm1;
         aFirstPresContext->GetShell(getter_AddRefs(ps1));
         NS_ASSERTION(ps1, "no pres shell for primary tree!");
         ps1->GetFrameManager(getter_AddRefs(fm1));
@@ -6523,7 +6522,7 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
         // look at the test frame
         nsCOMPtr<nsIFrameManager>fm2;
         nsCOMPtr<nsIPresShell> ps2;
-        nsISpaceManager *sm2; // note, no ref counting here
+        nsSpaceManager *sm2;
         aSecondPresContext->GetShell(getter_AddRefs(ps2));
         NS_ASSERTION(ps2, "no pres shell for test tree!");
         ps2->GetFrameManager(getter_AddRefs(fm2));

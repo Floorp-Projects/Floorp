@@ -39,7 +39,7 @@
 #include "nsBlockReflowContext.h"
 #include "nsLineLayout.h"
 #include "nsHTMLIIDs.h"
-#include "nsISpaceManager.h"
+#include "nsSpaceManager.h"
 #include "nsIFontMetrics.h"
 #include "nsIPresContext.h"
 #include "nsIContent.h"

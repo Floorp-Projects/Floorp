@@ -30,20 +30,26 @@ MODULE		= layout
 XPIDL_MODULE	= layout_base
 
 EXPORTS		= \
+nsFrameList.h \
+nsFrameTraversal.h \
 nsHTMLReflowMetrics.h \
 nsHTMLReflowState.h \
 nsIAutoCopy.h \
+nsICanvasFrame.h \
 nsICaret.h \
 nsIFocusTracker.h \
 nsIFrame.h \
-nsIImageFrame.h \
-nsIObjectFrame.h \
-nsIFrameTraversal.h \
 nsIFrameDebug.h \
 nsIFrameManager.h \
+nsIFrameSelection.h \
+nsIFrameTraversal.h \
+nsIFrameUtil.h \
+nsIImageFrame.h \
 nsIIndependentSelection.h \
 nsILayoutDebugger.h \
-nsIFrameUtil.h \
+nsILayoutHistoryState.h \
+nsIMutableStyleContext.h \
+nsIObjectFrame.h \
 nsIPageSequenceFrame.h \
 nsIPresContext.h \
 nsIPresShell.h \
@@ -51,21 +57,14 @@ nsIPresState.h \
 nsIPrintContext.h \
 nsIReflowCallback.h \
 nsIReflowCommand.h \
-nsIFrameSelection.h \
-nsISpaceManager.h \
-nsIStyleContext.h \
-nsIMutableStyleContext.h \
-nsIStyleFrameConstruction.h \
-nsIStyleSet.h \
-nsFrameList.h \
-nsFrameTraversal.h \
-nsStyleChangeList.h \
-nsStyleConsts.h \
-nsILayoutHistoryState.h \
-nsIStatefulFrame.h \
 nsIScrollableFrame.h \
 nsIScrollableViewProvider.h \
-nsICanvasFrame.h \
+nsIStatefulFrame.h \
+nsIStyleContext.h \
+nsIStyleFrameConstruction.h \
+nsIStyleSet.h \
+nsStyleChangeList.h \
+nsStyleConsts.h \
 $(NULL)
 
 ifdef IBMBIDI

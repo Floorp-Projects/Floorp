@@ -46,6 +46,7 @@ REQUIRES	= xpcom \
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../../../html/style/src \
 	-I$(srcdir)/../../../html/base/src \
+	-I$(srcdir)/../../../base/src \
         -I$(srcdir)/../../../html/table/src \
 	-I$(srcdir)/../../content/src \
 	$(NULL)

@@ -83,8 +83,9 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   
   mSpaceManager = aReflowState.mSpaceManager;
 
-  NS_ASSERTION( nsnull != mSpaceManager, "SpaceManager should be set in nsBlockReflowState" );
-  if( nsnull != mSpaceManager ) {
+  NS_ASSERTION(mSpaceManager,
+               "SpaceManager should be set in nsBlockReflowState" );
+  if (mSpaceManager) {
     // Translate into our content area and then save the 
     // coordinate system origin for later.
     mSpaceManager->Translate(borderPadding.left, borderPadding.top);

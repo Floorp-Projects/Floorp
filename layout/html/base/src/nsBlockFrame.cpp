@@ -55,7 +55,6 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIReflowCommand.h"
-#include "nsISpaceManager.h"
 #include "nsIStyleContext.h"
 #include "nsIView.h"
 #include "nsIFontMetrics.h"
@@ -688,28 +687,28 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   // Should we create a space manager?
-  nsCOMPtr<nsISpaceManager> spaceManager;
-  nsISpaceManager*          oldSpaceManager = aReflowState.mSpaceManager;
+  nsSpaceManager* spaceManager;
+  nsSpaceManager* oldSpaceManager;
   // XXXldb If we start storing the space manager in the frame rather
   // than keeping it around only during reflow then we should create it
   // only when there are actually floats to manage.  Otherwise things
   // like tables will gain significant bloat.
   if (NS_BLOCK_SPACE_MGR & mState) {
+    oldSpaceManager = aReflowState.mSpaceManager;
+
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
-    nsSpaceManager* rawPtr = nsSpaceManager::Create(shell, this);
-    if (!rawPtr) {
+    spaceManager = new nsSpaceManager(shell, this);
+    if (!spaceManager)
       return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    spaceManager = do_QueryInterface(rawPtr);
 
     // Set the space manager in the existing reflow state
     nsHTMLReflowState& reflowState =
       NS_CONST_CAST(nsHTMLReflowState&, aReflowState);
-    reflowState.mSpaceManager = spaceManager.get();
+    reflowState.mSpaceManager = spaceManager;
 #ifdef NOISY_SPACEMANAGER
-    printf("constructed new space manager %p (replacing %p)\n", reflowState.mSpaceManager, oldSpaceManager);
+    printf("constructed new space manager %p (replacing %p)\n",
+           reflowState.mSpaceManager, oldSpaceManager);
 #endif
   }
 
@@ -851,6 +850,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   // see if verifyReflow is enabled, and if so store off the space manager pointer
 #ifdef DEBUG
   PRInt32 verifyReflowFlags = nsIPresShell::GetVerifyReflowFlags();
+  PRBool transferredSpaceManager = PR_FALSE;
   if (VERIFY_REFLOW_INCLUDE_SPACE_MANAGER & verifyReflowFlags)
   {
     // this is a leak of the space manager, but it's only in debug if verify reflow is enabled, so not a big deal
@@ -861,9 +861,11 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       shell->GetFrameManager(getter_AddRefs(frameManager));  
       if (frameManager) {
         nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
-        NS_ADDREF(reflowState.mSpaceManager);
-        rv = frameManager->SetFrameProperty(this, nsLayoutAtoms::spaceManagerProperty,
-                                            reflowState.mSpaceManager, nsnull /* should be nsSpaceManagerDestroyer*/);
+        rv = frameManager->SetFrameProperty(
+                             this, nsLayoutAtoms::spaceManagerProperty,
+                             reflowState.mSpaceManager,
+                             nsnull /* should be nsSpaceManagerDestroyer*/);
+        transferredSpaceManager = PR_TRUE;
       }
     }
   }
@@ -877,9 +879,13 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     printf("restoring old space manager %p\n", oldSpaceManager);
 #endif
     reflowState.mSpaceManager = oldSpaceManager;
+#ifdef DEBUG
+    // For debugging, we sometimes transfer ownership to the frame manager
+    // (above).
+    if (!transferredSpaceManager)
+#endif
+      delete spaceManager;
   }
-
-  NS_ASSERTION(aReflowState.mSpaceManager == oldSpaceManager, "lost a space manager");
 
 #ifdef NOISY_SPACEMANAGER
   nsHTMLReflowState&  reflowState = NS_CONST_CAST(nsHTMLReflowState&, aReflowState);
@@ -1882,7 +1888,7 @@ nsBlockFrame::RememberFloaterDamage(nsBlockReflowState& aState,
     nscoord oldYMost = aOldCombinedArea.YMost();
     nscoord impactYB = newYMost < oldYMost ? oldYMost : newYMost;
     nscoord impactYA = lineCombinedArea.y;
-    nsISpaceManager *spaceManager = aState.mReflowState.mSpaceManager;
+    nsSpaceManager *spaceManager = aState.mReflowState.mSpaceManager;
     spaceManager->IncludeInDamage(impactYA, impactYB);
   }
 }
@@ -1907,7 +1913,7 @@ nsBlockFrame::PropagateFloaterDamage(nsBlockReflowState& aState,
   NS_PRECONDITION(!aLine->IsDirty(), "should never be called on dirty lines");
 
   // Check the damage region recorded in the float damage.
-  nsISpaceManager *spaceManager = aState.mReflowState.mSpaceManager;
+  nsSpaceManager *spaceManager = aState.mReflowState.mSpaceManager;
   if (spaceManager->HasFloatDamage()) {
     nscoord lineYA = aLine->mBounds.y + aDeltaY;
     nscoord lineYB = lineYA + aLine->mBounds.height;
@@ -2730,7 +2736,7 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
 
 nsresult
 nsBlockFrame::UpdateSpaceManager(nsIPresContext* aPresContext,
-                                 nsISpaceManager* aSpaceManager)
+                                 nsSpaceManager* aSpaceManager)
 {
   for (line_iterator line = begin_lines(), line_end = end_lines();
        line != line_end;
@@ -5309,7 +5315,7 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
 #if 0
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     // Render the bands in the spacemanager
-    nsISpaceManager* sm = mSpaceManager;
+    nsSpaceManager* sm = mSpaceManager;
 
     if (nsnull != sm) {
       nsBlockBandData band;

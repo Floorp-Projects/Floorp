@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsLineBox.h"
-#include "nsISpaceManager.h"
+#include "nsSpaceManager.h"
 #include "nsIStyleContext.h"
 #include "nsLineLayout.h"
 #include "prprf.h"
@@ -407,7 +407,7 @@ nsLineBox::FreeFloaters(nsFloaterCacheFreeList& aFreeList)
 }
 
 void
-nsLineBox::RemoveFloatersFromSpaceManager(nsISpaceManager* aSpaceManager)
+nsLineBox::RemoveFloatersFromSpaceManager(nsSpaceManager* aSpaceManager)
 { 
   if (IsInline()) {
     if (mInlineData) {

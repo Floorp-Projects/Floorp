@@ -244,8 +244,7 @@ nsBoxToBlockAdaptor::operator delete(void* aPtr, size_t sz)
 
 nsBoxToBlockAdaptor::~nsBoxToBlockAdaptor()
 {
-  if (mSpaceManager)
-     NS_RELEASE(mSpaceManager);
+  delete mSpaceManager;
 }
 
 
@@ -624,11 +623,10 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
  // if (frameState & NS_STATE_CURRENTLY_IN_DEBUG)
   //   printf("In debug\n");
   
-  if (mSpaceManager == nsnull) {
+  if (!mSpaceManager) {
       nsCOMPtr<nsIPresShell> shell;
       aPresContext->GetShell(getter_AddRefs(shell));
-      mSpaceManager = nsSpaceManager::Create(shell, mFrame);
-      NS_ADDREF(mSpaceManager);
+      mSpaceManager = new nsSpaceManager(shell, mFrame);
   }
 
   // Modify the reflow state and set the space manager

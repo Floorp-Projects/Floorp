@@ -44,6 +44,7 @@
 #include "nsIFrame.h"
 #include "nsString.h"
 #include "nsIPresShell.h"
+#include "nsMemory.h"
 #ifdef DEBUG
 #include "nsIFrameDebug.h"
 #endif
@@ -52,8 +53,7 @@
 // BandList
 
 PRInt32 nsSpaceManager::sCachedSpaceManagerCount = 0;
-nsSpaceManager *
-  nsSpaceManager::sCachedSpaceManagers[NS_SPACE_MANAGER_CACHE_SIZE];
+void* nsSpaceManager::sCachedSpaceManagers[NS_SPACE_MANAGER_CACHE_SIZE];
 
 #define NSCOORD_MIN (-2147483647 - 1) /* minimum signed value */
 
@@ -84,7 +84,8 @@ nsSpaceManager::BandList::Clear()
 /////////////////////////////////////////////////////////////////////////////
 
 // PresShell Arena allocate callback (for nsIntervalSet use below)
-static void* PR_CALLBACK PSArenaAllocCB(size_t aSize, void* aClosure)
+PR_STATIC_CALLBACK(void*)
+PSArenaAllocCB(size_t aSize, void* aClosure)
 {
   void *rv;
   NS_STATIC_CAST(nsIPresShell*, aClosure)->AllocateFrame(aSize, &rv);
@@ -92,7 +93,8 @@ static void* PR_CALLBACK PSArenaAllocCB(size_t aSize, void* aClosure)
 }
 
 // PresShell Arena free callback (for nsIntervalSet use below)
-static void PR_CALLBACK PSArenaFreeCB(size_t aSize, void* aPtr, void* aClosure)
+PR_STATIC_CALLBACK(void)
+PSArenaFreeCB(size_t aSize, void* aPtr, void* aClosure)
 {
   NS_STATIC_CAST(nsIPresShell*, aClosure)->FreeFrame(aSize, aPtr);
 }
@@ -100,11 +102,13 @@ static void PR_CALLBACK PSArenaFreeCB(size_t aSize, void* aPtr, void* aClosure)
 /////////////////////////////////////////////////////////////////////////////
 // nsSpaceManager
 
+MOZ_DECL_CTOR_COUNTER(nsSpaceManager)
+
 nsSpaceManager::nsSpaceManager(nsIPresShell* aPresShell, nsIFrame* aFrame)
   : mFrame(aFrame),
     mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell)
 {
-  NS_INIT_ISUPPORTS();
+  MOZ_COUNT_CTOR(nsSpaceManager);
   mX = mY = 0;
   mFrameInfoMap = nsnull;
 }
@@ -121,68 +125,30 @@ nsSpaceManager::ClearFrameInfo()
 
 nsSpaceManager::~nsSpaceManager()
 {
+  MOZ_COUNT_DTOR(nsSpaceManager);
   mBandList.Clear();
   ClearFrameInfo();
 }
 
-
-NS_INTERFACE_MAP_BEGIN(nsSpaceManager)
-  NS_INTERFACE_MAP_ENTRY(nsISpaceManager)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsSpaceManager)
-NS_IMPL_RELEASE_WITH_DESTROY(nsSpaceManager, LastRelease())
-
-
 // static
-nsSpaceManager *nsSpaceManager::Create(nsIPresShell* aPresShell,
-                                       nsIFrame* aFrame)
+void* nsSpaceManager::operator new(size_t aSize)
 {
   if (sCachedSpaceManagerCount > 0) {
     // We have cached unused instances of this class, return a cached
     // instance in stead of always creating a new one.
-    nsSpaceManager *spaceManager =
-      sCachedSpaceManagers[--sCachedSpaceManagerCount];
-
-    // Re-initialize the cached space manager by calling its
-    // constructor (using placement new), the destructor was called
-    // when the space manager was put in the cache.
-    return new (spaceManager) nsSpaceManager(aPresShell, aFrame);
+    return sCachedSpaceManagers[--sCachedSpaceManagerCount];
   }
 
-  // The cache is empty, this means we haveto create a new instance.
-  return new nsSpaceManager(aPresShell, aFrame);
+  // The cache is empty, this means we haveto create a new instance using
+  // the global |operator new|.
+  return nsMemory::Alloc(aSize);
 }
-
-
-// static
-void nsSpaceManager::Shutdown()
-{
-  // The layout module is being shut down, clean up the cache and
-  // disable further caching.
-
-  PRInt32 i;
-
-  for (i = 0; i < sCachedSpaceManagerCount; i++) {
-    // The destructor for the cached space managers has already been
-    // called (when the space manager was put in the cache) so we cast
-    // spaceManager to char * when calling delete to prevent the
-    // destructor from being called again.
-
-    nsSpaceManager *spaceManager = sCachedSpaceManagers[i];
-
-    delete (char *)spaceManager;
-  }
-
-  // Disable futher caching.
-  sCachedSpaceManagerCount = -1;
-}
-
 
 void
-nsSpaceManager::LastRelease()
+nsSpaceManager::operator delete(void* aPtr, size_t aSize)
 {
+  if (!aPtr)
+    return;
   // This space manager is no longer used, if there's still room in
   // the cache we'll cache this space manager, unless the layout
   // module was already shut down.
@@ -192,58 +158,49 @@ nsSpaceManager::LastRelease()
     // There's still space in the cache for more instances, put this
     // instance in the cache in stead of deleting it.
 
-    sCachedSpaceManagers[sCachedSpaceManagerCount++] = this;
-
-    // Call the destructor so that the proper cleanup happens
-    this->~nsSpaceManager();
-
+    sCachedSpaceManagers[sCachedSpaceManagerCount++] = aPtr;
     return;
   }
 
   // The cache is full, or the layout module has been shut down,
   // delete this space manager.
-
-  delete this;
+  nsMemory::Free(aPtr);
 }
 
 
-NS_IMETHODIMP
-nsSpaceManager::GetFrame(nsIFrame*& aFrame) const
+/* static */
+void nsSpaceManager::Shutdown()
 {
-  aFrame = mFrame;
-  return NS_OK;
+  // The layout module is being shut down, clean up the cache and
+  // disable further caching.
+
+  PRInt32 i;
+
+  for (i = 0; i < sCachedSpaceManagerCount; i++) {
+    void* spaceManager = sCachedSpaceManagers[i];
+    if (spaceManager)
+      nsMemory::Free(spaceManager);
+  }
+
+  // Disable futher caching.
+  sCachedSpaceManagerCount = -1;
 }
 
-NS_IMETHODIMP
-nsSpaceManager::Translate(nscoord aDx, nscoord aDy)
-{
-  mX += aDx;
-  mY += aDy;
-  return NS_OK;
-}
 
-NS_IMETHODIMP
-nsSpaceManager::GetTranslation(nscoord& aX, nscoord& aY) const
-{
-  aX = mX;
-  aY = mY;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+PRBool
 nsSpaceManager::YMost(nscoord& aYMost) const
 {
-  nsresult  result;
+  PRBool result;
 
   if (mBandList.IsEmpty()) {
     aYMost = 0;
-    result = NS_ERROR_ABORT;
+    result = PR_FALSE;
 
   } else {
     BandRect* lastRect = mBandList.Tail();
 
     aYMost = lastRect->mBottom;
-    result = NS_OK;
+    result = PR_TRUE;
   }
 
   return result;
@@ -368,7 +325,7 @@ nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSpaceManager::GetBandData(nscoord       aYOffset,
                             const nsSize& aMaxSize,
                             nsBandData&   aBandData) const
@@ -383,7 +340,7 @@ nsSpaceManager::GetBandData(nscoord       aYOffset,
   // band, then all the space is available
   nscoord yMost;
   
-  if ((NS_ERROR_ABORT == YMost(yMost)) || (y >= yMost)) {
+  if (!YMost(yMost) || (y >= yMost)) {
     // All the requested space is available
     aBandData.mCount = 1;
     aBandData.mTrapezoids[0] = nsRect(0, aYOffset, aMaxSize.width, aMaxSize.height);
@@ -734,7 +691,7 @@ nsSpaceManager::InsertBandRect(BandRect* aBandRect)
   // If there are no existing bands or this rect is below the bottommost
   // band, then add a new band
   nscoord yMost;
-  if ((NS_ERROR_ABORT == YMost(yMost)) || (aBandRect->mTop >= yMost)) {
+  if (!YMost(yMost) || (aBandRect->mTop >= yMost)) {
     mBandList.Append(aBandRect);
     return;
   }
@@ -823,7 +780,7 @@ nsSpaceManager::InsertBandRect(BandRect* aBandRect)
   }
 }
 
-NS_IMETHODIMP
+nsresult
 nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
 {
   NS_PRECONDITION(nsnull != aFrame, "null frame");
@@ -863,7 +820,7 @@ nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSpaceManager::ResizeRectRegion(nsIFrame*    aFrame,
                                  nscoord      aDeltaWidth,
                                  nscoord      aDeltaHeight,
@@ -892,7 +849,7 @@ nsSpaceManager::ResizeRectRegion(nsIFrame*    aFrame,
   return AddRectRegion(aFrame, rect);
 }
 
-NS_IMETHODIMP
+nsresult
 nsSpaceManager::OffsetRegion(nsIFrame* aFrame, nscoord aDx, nscoord aDy)
 {
   // Get the frame info associated with with aFrame
@@ -915,7 +872,7 @@ nsSpaceManager::OffsetRegion(nsIFrame* aFrame, nscoord aDx, nscoord aDy)
   return AddRectRegion(aFrame, rect);
 }
 
-NS_IMETHODIMP
+nsresult
 nsSpaceManager::RemoveRegion(nsIFrame* aFrame)
 {
   // Get the frame info associated with aFrame
@@ -1019,33 +976,15 @@ nsSpaceManager::RemoveRegion(nsIFrame* aFrame)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsSpaceManager::ClearRegions()
 {
   ClearFrameInfo();
   mBandList.Clear();
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(PRBool) nsSpaceManager::HasFloatDamage()
-{
-  return !mFloatDamage.IsEmpty();
-}
-
-NS_IMETHODIMP_(void) nsSpaceManager::IncludeInDamage(nscoord aIntervalBegin,
-                                                     nscoord aIntervalEnd)
-{
-  mFloatDamage.IncludeInterval(aIntervalBegin + mY, aIntervalEnd + mY);
-}
-
-NS_IMETHODIMP_(PRBool) nsSpaceManager::IntersectsDamage(nscoord aIntervalBegin,
-                                                        nscoord aIntervalEnd)
-{
-  return mFloatDamage.Intersects(aIntervalBegin + mY, aIntervalEnd + mY);
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP
+nsresult
 nsSpaceManager::List(FILE* out)
 {
   nsAutoString tmp;

@@ -44,7 +44,7 @@ class nsIFrame;
 class nsIPresContext;
 class nsIReflowCommand;
 class nsIRenderingContext;
-class nsISpaceManager;
+class nsSpaceManager;
 class nsLineLayout;
 
 struct nsStyleDisplay;
@@ -161,7 +161,7 @@ struct nsHTMLReflowState {
   nsCSSFrameType   mFrameType;
 
   // pointer to the space manager associated with this area
-  nsISpaceManager* mSpaceManager;
+  nsSpaceManager* mSpaceManager;
 
   // LineLayout object (only for inline reflow; set to NULL otherwise)
   nsLineLayout*    mLineLayout;
