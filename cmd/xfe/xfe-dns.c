@@ -54,7 +54,13 @@ int sock;
 #ifdef UNIX_ASYNC_DNS
   static XP_Bool done = FALSE;
 
-  LOG("XFE_InitDNS_Early", ("calling DNS_SpawnProcess.\n"));
+  /*
+   * The following used to be LOG() instead of fprintf(). But, LOG() uses
+   * PR_smprintf() which fires up NSPR.
+   */
+#ifdef PROC1_DEBUG_PRINT
+  fprintf(stderr, "\tproc1 (%d): %s\n", getpid(), "XFE_InitDNS_Early: calling DNS_SpawnProcess.");
+#endif
   sock = DNS_SpawnProcess(argc, argv);
 
   XP_ASSERT(!done);
