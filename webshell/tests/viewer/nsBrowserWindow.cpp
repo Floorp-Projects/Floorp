@@ -210,10 +210,10 @@ GetPresShellFor(nsIWebShell* aWebShell)
       if (nsnull != docv) {
         nsIPresContext* cx;
         docv->GetPresContext(cx);
-	      if (nsnull != cx) {
-	        cx->GetShell(&shell);
-	        NS_RELEASE(cx);
-	      }
+        if (nsnull != cx) {
+          cx->GetShell(&shell);
+          NS_RELEASE(cx);
+        }
         NS_RELEASE(docv);
       }
       NS_RELEASE(cv);
@@ -416,7 +416,7 @@ HandleLocationEvent(nsGUIEvent *aEvent)
       // Translate '\' to '/'
       for (PRInt32 i = 0; i < len; i++) {
         if (str[i] == '\\') {
-	        str[i] = '/';
+          str[i] = '/';
         }
       }
 
@@ -767,15 +767,16 @@ nsBrowserWindow::GoTo(const PRUnichar* aURL,const char* aCommand)
 
 
 static PRBool GetFileFromFileSelector(nsIWidget* aParentWindow,
-					  nsFileSpec& aFileSpec, nsFileSpec& aDisplayDirectory)
+                                      nsFileSpec& aFileSpec,
+                                      nsFileSpec& aDisplayDirectory)
 {
   PRBool selectedFileName = PR_FALSE;
   nsIFileWidget *fileWidget;
   nsString title("Open HTML");
   nsresult rv = nsComponentManager::CreateInstance(kFileWidgetCID,
-					     nsnull,
-					     kIFileWidgetIID,
-					     (void**)&fileWidget);
+                                                   nsnull,
+                                                   kIFileWidgetIID,
+                                                   (void**)&fileWidget);
   if (NS_OK == rv) {
     nsString titles[] = {"All Readable Files", "HTML Files",
                          "XML Files", "Image Files", "All Files"};
@@ -788,10 +789,10 @@ static PRBool GetFileFromFileSelector(nsIWidget* aParentWindow,
 
     fileWidget->SetDisplayDirectory(aDisplayDirectory);
     fileWidget->Create(aParentWindow,
-		       title,
-		       eMode_load,
-		       nsnull,
-		       nsnull);
+                       title,
+                       eMode_load,
+                       nsnull,
+                       nsnull);
 
     PRUint32 result = fileWidget->Show();
     if (result) {
@@ -811,7 +812,7 @@ nsBrowserWindow::DoFileOpen()
 {
   nsFileSpec fileSpec;
   if (GetFileFromFileSelector(mWindow, fileSpec, mOpenFileDirectory)) {
-	nsFileURL fileURL(fileSpec);
+    nsFileURL fileURL(fileSpec);
     // Ask the Web widget to load the file URL
     mWebShell->LoadURL(nsString(fileURL.GetURLString()).GetUnicode());
     Show();
@@ -860,33 +861,33 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
 static void* GetItemsNativeData(nsISupports* aObject)
 {
-	void*                   result = nsnull;
-	nsIWidget*      widget;
-	if (NS_OK == aObject->QueryInterface(kIWidgetIID,(void**)&widget))
-	{
-		result = widget->GetNativeData(NS_NATIVE_WIDGET);
-		NS_RELEASE(widget);
-	}
-	return result;
+  void*                   result = nsnull;
+  nsIWidget*      widget;
+  if (NS_OK == aObject->QueryInterface(kIWidgetIID,(void**)&widget))
+  {
+    result = widget->GetNativeData(NS_NATIVE_WIDGET);
+    NS_RELEASE(widget);
+  }
+  return result;
 }
 
 //---------------------------------------------------------------
 NS_IMETHODIMP nsBrowserWindow::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
 {
-	nsIPresShell* shell = GetPresShell();
-	if (nsnull != shell) {
-	  nsCOMPtr<nsIDocument> doc;
+  nsIPresShell* shell = GetPresShell();
+  if (nsnull != shell) {
+    nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
-	  if (doc) {
-		  //PRBool foundIt = PR_FALSE;
-		  doc->FindNext(aSearchStr, aMatchCase, aSearchDown, aIsFound);
-		  if (!aIsFound) {
-		    // Display Dialog here
-		  }
-		  ForceRefresh();
-	  }
-	  NS_RELEASE(shell);
-	}
+    if (doc) {
+      //PRBool foundIt = PR_FALSE;
+      doc->FindNext(aSearchStr, aMatchCase, aSearchDown, aIsFound);
+      if (!aIsFound) {
+        // Display Dialog here
+      }
+      ForceRefresh();
+    }
+    NS_RELEASE(shell);
+  }
   return NS_OK;
 }
 
@@ -921,84 +922,84 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
 { 
   nsEventStatus result = nsEventStatus_eIgnore;
 
-	  //printf("aEvent->message %d\n", aEvent->message);
-    switch(aEvent->message) {
+  //printf("aEvent->message %d\n", aEvent->message);
+  switch(aEvent->message) {
 
-	case NS_KEY_DOWN: {
-	  nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
-	  if (NS_VK_RETURN == keyEvent->keyCode) {
-	    PRBool matchCase   = PR_FALSE;
-	    mMatchCheckBtn->GetState(matchCase);
-	    PRBool findDwn     = PR_FALSE;
-	    mDwnRadioBtn->GetState(findDwn);
-	    nsString searchStr;
-	    PRUint32 actualSize;
-	    mTextField->GetText(searchStr, 255,actualSize);
-      PRBool foundIt;
-	    FindNext(searchStr, matchCase, findDwn, foundIt);
-	  }
-	} break;
+    case NS_KEY_DOWN: {
+      nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+      if (NS_VK_RETURN == keyEvent->keyCode) {
+        PRBool matchCase   = PR_FALSE;
+        mMatchCheckBtn->GetState(matchCase);
+        PRBool findDwn     = PR_FALSE;
+        mDwnRadioBtn->GetState(findDwn);
+        nsString searchStr;
+        PRUint32 actualSize;
+        mTextField->GetText(searchStr, 255,actualSize);
+        PRBool foundIt;
+        FindNext(searchStr, matchCase, findDwn, foundIt);
+      }
+    } break;
 
-	case NS_MOUSE_LEFT_BUTTON_UP: {
-		nsIWidget* dialogWidget = nsnull;               
-		if (NS_OK !=  mDialog->QueryInterface(kIWidgetIID,(void**)&dialogWidget))
-			break;
-				
-	  if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mCancelBtn)) {
-	    dialogWidget->Show(PR_FALSE);
-	  } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mFindBtn)) {
+    case NS_MOUSE_LEFT_BUTTON_UP: {
+      nsIWidget* dialogWidget = nsnull;               
+      if (NS_OK !=  mDialog->QueryInterface(kIWidgetIID,(void**)&dialogWidget))
+        break;
 
-	    PRBool matchCase   = PR_FALSE;
-	    mMatchCheckBtn->GetState(matchCase);
-	    PRBool findDwn     = PR_FALSE;
-	    mDwnRadioBtn->GetState(findDwn);
-	    PRUint32 actualSize;
-	    nsString searchStr;
-	    mTextField->GetText(searchStr, 255,actualSize);
+      if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mCancelBtn)) {
+        dialogWidget->Show(PR_FALSE);
+      } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mFindBtn)) {
 
-	    nsIPresShell* shell = GetPresShell();
-	    if (nsnull != shell) {
-	      nsCOMPtr<nsIDocument> doc;
-        shell->GetDocument(getter_AddRefs(doc));
-	      if (doc) {
-          PRBool foundIt = PR_FALSE;
-          doc->FindNext(searchStr, matchCase, findDwn, foundIt);
-          if (!foundIt) {
-            // Display Dialog here
+        PRBool matchCase   = PR_FALSE;
+        mMatchCheckBtn->GetState(matchCase);
+        PRBool findDwn     = PR_FALSE;
+        mDwnRadioBtn->GetState(findDwn);
+        PRUint32 actualSize;
+        nsString searchStr;
+        mTextField->GetText(searchStr, 255,actualSize);
+
+        nsIPresShell* shell = GetPresShell();
+        if (nsnull != shell) {
+          nsCOMPtr<nsIDocument> doc;
+          shell->GetDocument(getter_AddRefs(doc));
+          if (doc) {
+            PRBool foundIt = PR_FALSE;
+            doc->FindNext(searchStr, matchCase, findDwn, foundIt);
+            if (!foundIt) {
+              // Display Dialog here
+            }
+            ForceRefresh();
           }
-          ForceRefresh();
-	      }
-	      NS_RELEASE(shell);
-	    }
+          NS_RELEASE(shell);
+        }
 
-	  } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mUpRadioBtn)) {
-	    mUpRadioBtn->SetState(PR_TRUE);
-	    mDwnRadioBtn->SetState(PR_FALSE);
-	  } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mDwnRadioBtn)) {
-	    mDwnRadioBtn->SetState(PR_TRUE);
-	    mUpRadioBtn->SetState(PR_FALSE);
-	  } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mMatchCheckBtn)) {
-	    PRBool state = PR_FALSE;
-		mMatchCheckBtn->GetState(state);
-	    mMatchCheckBtn->SetState(!state);
-	  }
-	  } break;
-	
-	case NS_PAINT: 
+      } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mUpRadioBtn)) {
+        mUpRadioBtn->SetState(PR_TRUE);
+        mDwnRadioBtn->SetState(PR_FALSE);
+      } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mDwnRadioBtn)) {
+        mDwnRadioBtn->SetState(PR_TRUE);
+        mUpRadioBtn->SetState(PR_FALSE);
+      } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mMatchCheckBtn)) {
+        PRBool state = PR_FALSE;
+        mMatchCheckBtn->GetState(state);
+        mMatchCheckBtn->SetState(!state);
+      }
+    } break;
+
+    case NS_PAINT: 
 #ifndef XP_UNIX
-	      // paint the background
-	    if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mDialog)) {
-		nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
-		drawCtx->SetColor(aEvent->widget->GetBackgroundColor());
-		drawCtx->FillRect(*(((nsPaintEvent*)aEvent)->rect));
+      // paint the background
+      if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mDialog)) {
+        nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
+        drawCtx->SetColor(aEvent->widget->GetBackgroundColor());
+        drawCtx->FillRect(*(((nsPaintEvent*)aEvent)->rect));
 
-		return nsEventStatus_eIgnore;
-	    }
+        return nsEventStatus_eIgnore;
+      }
 #endif
-	    break;
-	default:
-	    result = nsEventStatus_eIgnore;
-    }
+      break;
+    default:
+      result = nsEventStatus_eIgnore;
+  }
     //printf("result: %d = %d\n", result, PR_FALSE);
 
     return result;
@@ -1026,7 +1027,7 @@ nsBrowserWindow::DoFind()
   if (rv == NS_OK) {
     dialog->Init(eXPBaseWindowType_dialog, mAppShell, nsnull, findHTML, title, rect, PRUint32(~0), PR_FALSE);
     dialog->SetVisible(PR_TRUE);
- 	  if (NS_OK == dialog->QueryInterface(kIXPBaseWindowIID, (void**) &mXPDialog)) {
+    if (NS_OK == dialog->QueryInterface(kIXPBaseWindowIID, (void**) &mXPDialog)) {
     }
   }
 
@@ -1124,7 +1125,7 @@ NS_IMPL_RELEASE(nsBrowserWindow)
 
 nsresult
 nsBrowserWindow::QueryInterface(const nsIID& aIID,
-				void** aInstancePtrResult)
+                                void** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
   if (nsnull == aInstancePtrResult) {
@@ -1193,7 +1194,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 
   nsRect r(0, 0, aBounds.width, aBounds.height);
   mWindow->Create((nsIWidget*)NULL, r, HandleBrowserEvent,
-		              nsnull, aAppShell, nsnull, &initData);
+                  nsnull, aAppShell, nsnull, &initData);
   mWindow->GetClientBounds(r);
 
   // Create web shell
@@ -1374,71 +1375,70 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   float d2a;
   dc->GetDevUnitsToAppUnits(d2a);
   nsFont font(TOOL_BAR_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-	      NS_FONT_WEIGHT_NORMAL, 0,
-	      nscoord(NSIntPointsToTwips(TOOL_BAR_FONT_SIZE) * t2d * d2a));
+              NS_FONT_WEIGHT_NORMAL, 0,
+              nscoord(NSIntPointsToTwips(TOOL_BAR_FONT_SIZE) * t2d * d2a));
   NS_RELEASE(dc);
 
   // Create and place back button
   rv = nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID,
-                                    (void**)&mBack);
+                                          (void**)&mBack);
   if (NS_OK != rv) {
     return rv;
   }
   nsRect r(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT);
-	
-	nsIWidget* widget = nsnull;
 
+  nsIWidget* widget = nsnull;
   NS_CreateButton(mWindow,mBack,r,HandleBackEvent,&font);
   if (NS_OK == mBack->QueryInterface(kIWidgetIID,(void**)&widget))
-	{
+  {
     nsAutoString back("Back");
     mBack->SetLabel(back);
-		NS_RELEASE(widget);
-	}
+    NS_RELEASE(widget);
+  }
 
 
   // Create and place forward button
   r.SetRect(BUTTON_WIDTH, 0, BUTTON_WIDTH, BUTTON_HEIGHT);  
   rv = nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID,
-				    (void**)&mForward);
+                                          (void**)&mForward);
   if (NS_OK != rv) {
     return rv;
   }
-	if (NS_OK == mForward->QueryInterface(kIWidgetIID,(void**)&widget))
-	{
+  if (NS_OK == mForward->QueryInterface(kIWidgetIID,(void**)&widget))
+  {
     widget->Create(mWindow, r, HandleForwardEvent, NULL);
     widget->SetFont(font);
     widget->Show(PR_TRUE);
     nsAutoString forward("Forward");
     mForward->SetLabel(forward);
-		NS_RELEASE(widget);
-	}
+    NS_RELEASE(widget);
+  }
 
 
   // Create and place location bar
   r.SetRect(2*BUTTON_WIDTH, 0,
-	    aWidth - 2*BUTTON_WIDTH - THROBBER_WIDTH,
-	    BUTTON_HEIGHT);
+            aWidth - 2*BUTTON_WIDTH - THROBBER_WIDTH,
+            BUTTON_HEIGHT);
   rv = nsComponentManager::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID,
-				    (void**)&mLocation);
+                                          (void**)&mLocation);
   if (NS_OK != rv) {
     return rv;
   }
 
   NS_CreateTextWidget(mWindow,mLocation,r,HandleLocationEvent,&font);
-	if (NS_OK == mLocation->QueryInterface(kIWidgetIID,(void**)&widget))
+  if (NS_OK == mLocation->QueryInterface(kIWidgetIID,(void**)&widget))
   { 
     widget->SetForegroundColor(NS_RGB(0, 0, 0));
     widget->SetBackgroundColor(NS_RGB(255, 255, 255));
     PRUint32 size;
     nsAutoString empty;
     mLocation->SetText(empty, size);
-	 NS_RELEASE(widget);
+    NS_RELEASE(widget);
   }
 
   // Create and place throbber
   r.SetRect(aWidth - THROBBER_WIDTH, 0,
-	    THROBBER_WIDTH, THROBBER_HEIGHT);
+            THROBBER_WIDTH, THROBBER_HEIGHT);
   mThrobber = nsThrobber::NewThrobber();
   nsString throbberURL(THROBBER_AT);
   mThrobber->Init(mWindow, r, throbberURL, THROB_NUM);
@@ -1468,32 +1468,32 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   float t2d;
   dc->GetTwipsToDevUnits(t2d);
   nsFont font(STATUS_BAR_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-	      NS_FONT_WEIGHT_NORMAL, 0,
-	      nscoord(t2d * NSIntPointsToTwips(STATUS_BAR_FONT_SIZE)));
+              NS_FONT_WEIGHT_NORMAL, 0,
+              nscoord(t2d * NSIntPointsToTwips(STATUS_BAR_FONT_SIZE)));
   NS_RELEASE(dc);
 
   nsRect r(0, 0, aWidth, THROBBER_HEIGHT);
   rv = nsComponentManager::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID,
-				    (void**)&mStatus);
+                                          (void**)&mStatus);
   if (NS_OK != rv) {
     return rv;
   }
 
   nsIWidget* widget = nsnull;
   NS_CreateTextWidget(mWindow,mStatus,r,HandleLocationEvent,&font);
-	if (NS_OK == mStatus->QueryInterface(kIWidgetIID,(void**)&widget))
-	{
+  if (NS_OK == mStatus->QueryInterface(kIWidgetIID,(void**)&widget))
+  {
     widget->SetForegroundColor(NS_RGB(0, 0, 0));
     PRUint32 size;
     mStatus->SetText("",size);
 
-		nsITextWidget*	textWidget = nsnull;
-		if (NS_OK == mStatus->QueryInterface(kITextWidgetIID,(void**)&textWidget))
-		{
-	    PRBool		wasReadOnly;
-	    textWidget->SetReadOnly(PR_TRUE, wasReadOnly);
-			NS_RELEASE(textWidget);
-		}
+    nsITextWidget* textWidget = nsnull;
+    if (NS_OK == mStatus->QueryInterface(kITextWidgetIID,(void**)&textWidget))
+    {
+      PRBool  wasReadOnly;
+      textWidget->SetReadOnly(PR_TRUE, wasReadOnly);
+      NS_RELEASE(textWidget);
+    }
 
     NS_RELEASE(widget);
   }
@@ -1526,17 +1526,17 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
         NS_SUCCEEDED(mLocation->QueryInterface(kIWidgetIID,
                                                (void**)&locationWidget))) {
       if (mThrobber) {
-	      PRInt32 width = PR_MAX(aWidth - (2*BUTTON_WIDTH + THROBBER_WIDTH), 0);
+        PRInt32 width = PR_MAX(aWidth - (2*BUTTON_WIDTH + THROBBER_WIDTH), 0);
       
-	      locationWidget->Resize(2*BUTTON_WIDTH, menuBarHeight,
+        locationWidget->Resize(2*BUTTON_WIDTH, menuBarHeight,
                                width,
                                BUTTON_HEIGHT,
                                PR_TRUE);
-	      mThrobber->MoveTo(aWidth - THROBBER_WIDTH, menuBarHeight);
+        mThrobber->MoveTo(aWidth - THROBBER_WIDTH, menuBarHeight);
       }
       else {
-	      PRInt32 width = PR_MAX(aWidth - 2*BUTTON_WIDTH, 0);
-	      locationWidget->Resize(2*BUTTON_WIDTH, menuBarHeight,
+        PRInt32 width = PR_MAX(aWidth - 2*BUTTON_WIDTH, 0);
+        locationWidget->Resize(2*BUTTON_WIDTH, menuBarHeight,
                                width,
                                BUTTON_HEIGHT,
                                PR_TRUE);
@@ -1575,7 +1575,7 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
     }
     if (mForward &&
         NS_SUCCEEDED(mForward->QueryInterface(kIWidgetIID, (void**)&w))) {
-        w->Move(BUTTON_WIDTH, menuBarHeight);
+      w->Move(BUTTON_WIDTH, menuBarHeight);
       w->Show(PR_FALSE);
       NS_RELEASE(w);
     }
@@ -1589,8 +1589,8 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   if (mStatus && NS_OK == mStatus->QueryInterface(kIWidgetIID,(void**)&statusWidget)) {
     if (mChromeMask & NS_CHROME_STATUS_BAR_ON) {
       statusWidget->Resize(0, aHeight - txtHeight,
-		      aWidth, txtHeight,
-		      PR_TRUE);
+                           aWidth, txtHeight,
+                           PR_TRUE);
 
       //Since allowing a negative height is a bad idea, let's condition this...
       rr.height = PR_MAX(0,rr.height-txtHeight);
@@ -1698,6 +1698,11 @@ nsBrowserWindow::Close()
   RemoveBrowser(this);
 
   if (nsnull != mWebShell) {
+    nsCOMPtr<nsIDocumentLoader> docLoader;
+    mWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+    if (docLoader) {
+      docLoader->RemoveObserver(this);
+    }
     mWebShell->Destroy();
     NS_RELEASE(mWebShell);
   }
@@ -2012,7 +2017,7 @@ NS_IMETHODIMP
 nsBrowserWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
                                    nsIChannel* channel,
                                    nsresult aStatus,
-  						           nsIDocumentLoaderObserver * aObserver)
+                                   nsIDocumentLoaderObserver * aObserver)
 {
   return NS_OK;
 }
@@ -2359,34 +2364,34 @@ nsBrowserWindow::ShowPrintPreview(PRInt32 aID)
     if ((NS_OK == mWebShell->GetContentViewer(&cv)) && (nsnull != cv)) {
       nsIDocumentViewer* docv = nsnull;
       if (NS_OK == cv->QueryInterface(kIDocumentViewerIID, (void**)&docv)) {
-	      nsIPresContext* printContext;
+        nsIPresContext* printContext;
         nsresult rv =
           nsComponentManager::CreateInstance(kPrintPreviewContextCID,
                                              nsnull,
                                              kIPresContextIID,
                                              (void **)&printContext);
         if (NS_SUCCEEDED(rv)) {
-      	  // Prepare new printContext for print-preview
-      	  nsCOMPtr<nsIDeviceContext> dc;
-      	  nsIPresContext* presContext;
-      	  docv->GetPresContext(presContext);
-      	  presContext->GetDeviceContext(getter_AddRefs(dc));
-      	  printContext->Init(dc, mPrefs);
-      	  NS_RELEASE(presContext);
+          // Prepare new printContext for print-preview
+          nsCOMPtr<nsIDeviceContext> dc;
+          nsIPresContext* presContext;
+          docv->GetPresContext(presContext);
+          presContext->GetDeviceContext(getter_AddRefs(dc));
+          printContext->Init(dc, mPrefs);
+          NS_RELEASE(presContext);
 
-      	  // Make a window using that content viewer
+          // Make a window using that content viewer
           // XXX Some piece of code needs to properly hold the reference to this
           // browser window. For the time being the reference is released by the
           // browser event handling code during processing of the NS_DESTROY event...
-      	  nsBrowserWindow* bw = new nsNativeBrowserWindow;
+          nsBrowserWindow* bw = new nsNativeBrowserWindow;
           bw->SetApp(mApp);
-      	  bw->Init(mAppShell, mPrefs, nsRect(0, 0, 600, 400),
-    		           NS_CHROME_MENU_BAR_ON, PR_TRUE, docv, printContext);
-	        bw->Show();
+          bw->Init(mAppShell, mPrefs, nsRect(0, 0, 600, 400),
+                   NS_CHROME_MENU_BAR_ON, PR_TRUE, docv, printContext);
+          bw->Show();
 
-      	  NS_RELEASE(printContext);
-      	}
-      	NS_RELEASE(docv);
+          NS_RELEASE(printContext);
+        }
+        NS_RELEASE(docv);
       }
       NS_RELEASE(cv);
     }
@@ -2423,9 +2428,10 @@ void nsBrowserWindow::DoPrintSetup()
                                              kIXPBaseWindowIID,
                                              (void**) &dialog);
   if (rv == NS_OK) {
-    dialog->Init(eXPBaseWindowType_dialog, mAppShell, nsnull, printHTML, title, rect, PRUint32(~0), PR_FALSE);
+    dialog->Init(eXPBaseWindowType_dialog, mAppShell, nsnull, printHTML,
+                 title, rect, PRUint32(~0), PR_FALSE);
     dialog->SetVisible(PR_TRUE);
- 	  if (NS_OK == dialog->QueryInterface(kIXPBaseWindowIID, (void**) &mXPDialog)) {
+    if (NS_OK == dialog->QueryInterface(kIXPBaseWindowIID, (void**)&mXPDialog)) {
     }
   }
 
@@ -2470,14 +2476,14 @@ nsIDOMDocument* nsBrowserWindow::GetDOMDocument(nsIWebShell *aWebShell)
     if (nsnull != mCViewer) {
       nsIDocumentViewer* mDViewer;
       if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) {
-	      nsIDocument* mDoc;
-	      mDViewer->GetDocument(mDoc);
-	      if (nsnull != mDoc) {
-	        if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &domDoc)) {
-	        }
-	        NS_RELEASE(mDoc);
-	      }
-	      NS_RELEASE(mDViewer);
+        nsIDocument* mDoc;
+        mDViewer->GetDocument(mDoc);
+        if (nsnull != mDoc) {
+          if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &domDoc)) {
+          }
+          NS_RELEASE(mDoc);
+        }
+        NS_RELEASE(mDViewer);
       }
       NS_RELEASE(mCViewer);
     }
@@ -2486,6 +2492,7 @@ nsIDOMDocument* nsBrowserWindow::GetDOMDocument(nsIWebShell *aWebShell)
 }
 
 //---------------------------------------------------------------
+
 void nsBrowserWindow::DoTableInspector()
 {
   if (mTableInspectorDialog) {
@@ -2501,12 +2508,12 @@ void nsBrowserWindow::DoTableInspector()
 
     nsXPBaseWindow * xpWin = nsnull;
     nsresult rv = nsComponentManager::CreateInstance(kXPBaseWindowCID, nsnull,
-                                               kIXPBaseWindowIID,
-                                               (void**) &xpWin);
+                                                     kIXPBaseWindowIID,
+                                                     (void**) &xpWin);
     if (rv == NS_OK) {
       xpWin->Init(eXPBaseWindowType_dialog, mAppShell, nsnull, printHTML, title, rect, PRUint32(~0), PR_FALSE);
       xpWin->SetVisible(PR_TRUE);
- 	    if (NS_OK == xpWin->QueryInterface(kIXPBaseWindowIID, (void**) &mTableInspectorDialog)) {
+      if (NS_OK == xpWin->QueryInterface(kIXPBaseWindowIID, (void**) &mTableInspectorDialog)) {
         mTableInspector = new nsTableInspectorDialog(this, domDoc); // ref counts domDoc
         if (nsnull != mTableInspector) {
           xpWin->AddWindowListener(mTableInspector); 
@@ -2537,7 +2544,7 @@ void nsBrowserWindow::DoImageInspector()
     if (rv == NS_OK) {
       xpWin->Init(eXPBaseWindowType_dialog, mAppShell, nsnull, printHTML, title, rect, PRUint32(~0), PR_FALSE);
       xpWin->SetVisible(PR_TRUE);
- 	    if (NS_OK == xpWin->QueryInterface(kIXPBaseWindowIID, (void**) &mImageInspectorDialog)) {
+      if (NS_OK == xpWin->QueryInterface(kIXPBaseWindowIID, (void**) &mImageInspectorDialog)) {
         mImageInspector = new nsImageInspectorDialog(this, domDoc); // ref counts domDoc
         if (nsnull != mImageInspector) {
           xpWin->AddWindowListener(mImageInspector); 
@@ -2575,20 +2582,20 @@ nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
       nsIDocumentViewer* mDViewer;
       if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) 
       {
-	      nsIDocument* mDoc;
-	      mDViewer->GetDocument(mDoc);
-	      if (nsnull != mDoc) {
-	        nsIDOMDocument* mDOMDoc;
-	        if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &mDOMDoc)) 
+        nsIDocument* mDoc;
+        mDViewer->GetDocument(mDoc);
+        if (nsnull != mDoc) {
+          nsIDOMDocument* mDOMDoc;
+          if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &mDOMDoc)) 
           {
             nsIPresShell* shell = GetPresShellFor(aWebShell);
-	          NS_InitEditorMode(mDOMDoc, shell);
-	          NS_RELEASE(mDOMDoc);
+            NS_InitEditorMode(mDOMDoc, shell);
+            NS_RELEASE(mDOMDoc);
             NS_IF_RELEASE(shell);
-	        }
-	        NS_RELEASE(mDoc);
-	      }
-	      NS_RELEASE(mDViewer);
+          }
+          NS_RELEASE(mDoc);
+        }
+        NS_RELEASE(mDViewer);
       }
       NS_RELEASE(mCViewer);
     }
@@ -2614,18 +2621,18 @@ nsBrowserWindow::DoEditorTest(nsIWebShell *aWebShell, PRInt32 aCommandID)
       nsIDocumentViewer* mDViewer;
       if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) 
       {
-	      nsIDocument* mDoc;
-	      mDViewer->GetDocument(mDoc);
-	      if (nsnull != mDoc) {
-	        nsIDOMDocument* mDOMDoc;
-	        if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &mDOMDoc)) 
+        nsIDocument* mDoc;
+        mDViewer->GetDocument(mDoc);
+        if (nsnull != mDoc) {
+          nsIDOMDocument* mDOMDoc;
+          if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &mDOMDoc)) 
           {
             NS_DoEditorTest(aCommandID);
-	          NS_RELEASE(mDOMDoc);
-	        }
-	        NS_RELEASE(mDoc);
-	      }
-	      NS_RELEASE(mDViewer);
+            NS_RELEASE(mDOMDoc);
+          }
+          NS_RELEASE(mDoc);
+        }
+        NS_RELEASE(mDViewer);
       }
       NS_RELEASE(mCViewer);
     }
@@ -2708,8 +2715,8 @@ DumpContentRecurse(nsIWebShell* aWebShell, FILE* out)
       if (doc) {
         nsIContent* root = doc->GetRootContent();
         if (nsnull != root) {
-	        root->List(out);
-	        NS_RELEASE(root);
+          root->List(out);
+          NS_RELEASE(root);
         }
       }
       NS_RELEASE(shell);
@@ -2724,7 +2731,7 @@ DumpContentRecurse(nsIWebShell* aWebShell, FILE* out)
       nsIWebShell* child;
       aWebShell->ChildAt(i, child);
       if (nsnull != child) {
-	      DumpContentRecurse(child, out);
+        DumpContentRecurse(child, out);
       }
     }
   }
@@ -2762,7 +2769,7 @@ DumpFramesRecurse(nsIWebShell* aWebShell, FILE* out, nsString *aFilterName)
       nsIWebShell* child;
       aWebShell->ChildAt(i, child);
       if (nsnull != child) {
-	      DumpFramesRecurse(child, out, aFilterName);
+        DumpFramesRecurse(child, out, aFilterName);
       }
     }
   }
@@ -2828,7 +2835,7 @@ GatherFrameDataSizes(nsISizeOfHandler* aHandler, nsIWebShell* aWebShell)
       nsIWebShell* child;
       aWebShell->ChildAt(i, child);
       if (nsnull != child) {
-	      GatherFrameDataSizes(aHandler, child);
+        GatherFrameDataSizes(aHandler, child);
       }
     }
   }
@@ -2890,11 +2897,11 @@ DumpViewsRecurse(nsIWebShell* aWebShell, FILE* out)
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));
       if (vm) {
-	      nsIView* root;
-	      vm->GetRootView(root);
-	      if (nsnull != root) {
-	        root->List(out);
-	      }
+        nsIView* root;
+        vm->GetRootView(root);
+        if (nsnull != root) {
+          root->List(out);
+        }
       }
       NS_RELEASE(shell);
     }
@@ -2909,7 +2916,7 @@ DumpViewsRecurse(nsIWebShell* aWebShell, FILE* out)
       nsIWebShell* child;
       aWebShell->ChildAt(i, child);
       if (nsnull != child) {
-	      DumpViewsRecurse(child, out);
+        DumpViewsRecurse(child, out);
         NS_RELEASE(child);
       }
     }
@@ -2955,17 +2962,17 @@ nsBrowserWindow::DumpStyleContexts(FILE* out)
       nsIFrame* root;
       shell->GetRootFrame(&root);
       if (nsnull == root) {
-	      fputs("null root frame\n", out);
-            } else {
-	      nsIStyleContext* rootContext;
-	      root->GetStyleContext(&rootContext);
-	      if (nsnull != rootContext) {
-	        styleSet->ListContexts(rootContext, out);
-	        NS_RELEASE(rootContext);
-	      }
-	      else {
-	        fputs("null root context", out);
-	      }
+        fputs("null root frame\n", out);
+      } else {
+        nsIStyleContext* rootContext;
+        root->GetStyleContext(&rootContext);
+        if (nsnull != rootContext) {
+          styleSet->ListContexts(rootContext, out);
+          NS_RELEASE(rootContext);
+        }
+        else {
+          fputs("null root context", out);
+        }
       }
     }
     NS_RELEASE(shell);
@@ -3007,11 +3014,91 @@ nsBrowserWindow::ToggleBoolPrefAndRefresh(const char * aPrefName)
   }
 }
 
-void
-nsBrowserWindow::ShowContentSize()
+//----------------------------------------------------------------------
+
+static void
+GatherContentDataSizes(nsISizeOfHandler* aHandler, nsIContent* aContent)
 {
-  // XXX not yet implemented
+  if (aContent) {
+    // Add in the content
+    nsCOMPtr<nsIAtom> tag;
+    aContent->GetTag(*getter_AddRefs(tag));
+    if (!tag) {
+      tag = getter_AddRefs(NS_NewAtom(":content-no-tag"));
+    }
+    PRUint32 contentDataSize;
+    aContent->SizeOf(aHandler, &contentDataSize);
+    aHandler->AddSize(tag, contentDataSize);
+
+    // And all of its children
+    PRInt32 i, childCount;
+    aContent->ChildCount(childCount);
+    for (i = 0; i < childCount; i++) {
+      nsIContent* kid;
+      aContent->ChildAt(i, kid);
+      if (kid) {
+        GatherContentDataSizes(aHandler, kid);
+        NS_RELEASE(kid);
+      }
+    }
+  }
 }
+
+static void
+GatherContentDataSizes(nsISizeOfHandler* aHandler, nsIWebShell* aWebShell)
+{
+  if (nsnull != aWebShell) {
+    nsIPresShell* shell = GetPresShellFor(aWebShell);
+    if (nsnull != shell) {
+      nsIDocument* doc;
+      shell->GetDocument(&doc);
+      if (doc) {
+        nsCOMPtr<nsIContent> rootContent = getter_AddRefs(
+          doc->GetRootContent()
+          );
+        if (rootContent) {
+          GatherContentDataSizes(aHandler, rootContent.get());
+        }
+        NS_RELEASE(doc);
+      }
+      NS_RELEASE(shell);
+    }
+
+    // dump the frames of the sub documents
+    PRInt32 i, n;
+    aWebShell->GetChildCount(n);
+    for (i = 0; i < n; i++) {
+      nsIWebShell* child;
+      aWebShell->ChildAt(i, child);
+      if (nsnull != child) {
+        GatherContentDataSizes(aHandler, child);
+      }
+    }
+  }
+}
+
+void
+nsBrowserWindow::ShowContentSize(FILE* out)
+{
+  nsCOMPtr<nsISizeOfHandler> handler;
+  nsresult rv = NS_NewSizeOfHandler(getter_AddRefs(handler));
+  if (NS_SUCCEEDED(rv) && handler) {
+    GatherContentDataSizes(handler, mWebShell);
+    fprintf(out, "%-20s %-5s %-9s %-7s %-7s %-7s\n",
+            "Content Type", "Count", "TotalSize",
+            "MinSize", "MaxSize", "AvgSize");
+    fprintf(out, "%-20s %-5s %-9s %-7s %-7s %-7s\n",
+            "----------", "-----", "---------",
+            "-------", "-------", "-------");
+    handler->Report(DumpSizeData, (void*) out);
+    PRUint32 totalCount, totalSize;
+    handler->GetTotals(&totalCount, &totalSize);
+    fprintf(out, "%-20s %5d %9d\n",
+            "*** Total ***", totalCount, totalSize);
+  }
+}
+
+//----------------------------------------------------------------------
 
 void
 nsBrowserWindow::ShowStyleSize()
@@ -3059,120 +3146,120 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
   nsEventStatus result = nsEventStatus_eIgnore;
 
   switch(aID) {
-  case VIEWER_VISUAL_DEBUGGING:
-    ToggleFrameBorders();
-    result = nsEventStatus_eConsumeNoDefault;
-    break;
+    case VIEWER_VISUAL_DEBUGGING:
+      ToggleFrameBorders();
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
 
-  case VIEWER_TOGGLE_PAINT_FLASHING:
-	ToggleBoolPrefAndRefresh("nglayout.debug.paint_flashing");
-    result = nsEventStatus_eConsumeNoDefault;
-    break;
+    case VIEWER_TOGGLE_PAINT_FLASHING:
+      ToggleBoolPrefAndRefresh("nglayout.debug.paint_flashing");
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
 
-  case VIEWER_TOGGLE_PAINT_DUMPING:
-	ToggleBoolPrefAndRefresh("nglayout.debug.paint_dumping");
-    result = nsEventStatus_eConsumeNoDefault;
-    break;
+    case VIEWER_TOGGLE_PAINT_DUMPING:
+      ToggleBoolPrefAndRefresh("nglayout.debug.paint_dumping");
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
 
-  case VIEWER_TOGGLE_INVALIDATE_DUMPING:
-	ToggleBoolPrefAndRefresh("nglayout.debug.invalidate_dumping");
-    result = nsEventStatus_eConsumeNoDefault;
-    break;
+    case VIEWER_TOGGLE_INVALIDATE_DUMPING:
+      ToggleBoolPrefAndRefresh("nglayout.debug.invalidate_dumping");
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
 
-  case VIEWER_TOGGLE_EVENT_DUMPING:
-	ToggleBoolPrefAndRefresh("nglayout.debug.event_dumping");
-    result = nsEventStatus_eConsumeNoDefault;
-    break;
+    case VIEWER_TOGGLE_EVENT_DUMPING:
+      ToggleBoolPrefAndRefresh("nglayout.debug.event_dumping");
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
 
-  case VIEWER_TOGGLE_MOTION_EVENT_DUMPING:
-	ToggleBoolPrefAndRefresh("nglayout.debug.motion_event_dumping");
-    result = nsEventStatus_eConsumeNoDefault;
-    break;
+    case VIEWER_TOGGLE_MOTION_EVENT_DUMPING:
+      ToggleBoolPrefAndRefresh("nglayout.debug.motion_event_dumping");
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
 
-  case VIEWER_TOGGLE_CROSSING_EVENT_DUMPING:
-	ToggleBoolPrefAndRefresh("nglayout.debug.crossing_event_dumping");
-    result = nsEventStatus_eConsumeNoDefault;
-    break;
+    case VIEWER_TOGGLE_CROSSING_EVENT_DUMPING:
+      ToggleBoolPrefAndRefresh("nglayout.debug.crossing_event_dumping");
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
 
-  case VIEWER_DUMP_CONTENT:
-    DumpContent();
-    result = nsEventStatus_eConsumeNoDefault;
-    break;
+    case VIEWER_DUMP_CONTENT:
+      DumpContent();
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
 
-  case VIEWER_DUMP_FRAMES:
-    DumpFrames();
-    result = nsEventStatus_eConsumeNoDefault;
-    break;
+    case VIEWER_DUMP_FRAMES:
+      DumpFrames();
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
 
-  case VIEWER_DUMP_VIEWS:
-    DumpViews();
-    result = nsEventStatus_eConsumeNoDefault;
-    break;
+    case VIEWER_DUMP_VIEWS:
+      DumpViews();
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
 
-  case VIEWER_DUMP_STYLE_SHEETS:
-    DumpStyleSheets();
-    result = nsEventStatus_eConsumeNoDefault;
-    break;
+    case VIEWER_DUMP_STYLE_SHEETS:
+      DumpStyleSheets();
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
 
-  case VIEWER_DUMP_STYLE_CONTEXTS:
-    DumpStyleContexts();
-    result = nsEventStatus_eConsumeNoDefault;
-    break;
+    case VIEWER_DUMP_STYLE_CONTEXTS:
+      DumpStyleContexts();
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
 
-  case VIEWER_SHOW_CONTENT_SIZE:
-    ShowContentSize();
-    result = nsEventStatus_eConsumeNoDefault;
-    break;
+    case VIEWER_SHOW_CONTENT_SIZE:
+      ShowContentSize();
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
 
-  case VIEWER_SHOW_FRAME_SIZE:
-    ShowFrameSize();
-    result = nsEventStatus_eConsumeNoDefault;
-    break;
+    case VIEWER_SHOW_FRAME_SIZE:
+      ShowFrameSize();
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
 
-  case VIEWER_SHOW_STYLE_SIZE:
-    ShowStyleSize();
-    result = nsEventStatus_eConsumeNoDefault;
-    break;
+    case VIEWER_SHOW_STYLE_SIZE:
+      ShowStyleSize();
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
 
-  case VIEWER_SHOW_CONTENT_QUALITY:
-    if (nsnull != mWebShell) {
-      nsIPresShell   *ps = GetPresShellFor(mWebShell);
-      nsIViewManager *vm = nsnull;
-      PRBool         qual;
+    case VIEWER_SHOW_CONTENT_QUALITY:
+      if (nsnull != mWebShell) {
+        nsIPresShell   *ps = GetPresShellFor(mWebShell);
+        nsIViewManager *vm = nsnull;
+        PRBool         qual;
 
-      if (ps) {
-        ps->GetViewManager(&vm);
+        if (ps) {
+          ps->GetViewManager(&vm);
 
-        if (vm) {
-          vm->GetShowQuality(qual);
-          vm->ShowQuality(!qual);
+          if (vm) {
+            vm->GetShowQuality(qual);
+            vm->ShowQuality(!qual);
 
-          NS_RELEASE(vm);
+            NS_RELEASE(vm);
+          }
+
+          NS_RELEASE(ps);
         }
-
-        NS_RELEASE(ps);
       }
-    }
 
-    result = nsEventStatus_eConsumeNoDefault;
-    break;
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
 
-  case VIEWER_DEBUGSAVE:
-    DoDebugSave();
-    break;
+    case VIEWER_DEBUGSAVE:
+      DoDebugSave();
+      break;
 
-  case VIEWER_TOGGLE_SELECTION:
-    DoToggleSelection();
-    break;
+    case VIEWER_TOGGLE_SELECTION:
+      DoToggleSelection();
+      break;
 
 
-  case VIEWER_DEBUGROBOT:
-    DoDebugRobot();
-    break;
+    case VIEWER_DEBUGROBOT:
+      DoDebugRobot();
+      break;
 
-  case VIEWER_TOP100:
-    DoSiteWalker();
-    break;
+    case VIEWER_TOP100:
+      DoSiteWalker();
+      break;
   }
   return(result);
 }
@@ -3321,8 +3408,8 @@ public:
 
   // nsIFactory methods
   NS_IMETHOD CreateInstance(nsISupports *aOuter,
-			    const nsIID &aIID,
-			    void **aResult);
+                            const nsIID &aIID,
+                            void **aResult);
 
   NS_IMETHOD LockFactory(PRBool aLock);
 
@@ -3382,8 +3469,8 @@ nsBrowserWindowFactory::Release()
 
 nsresult
 nsBrowserWindowFactory::CreateInstance(nsISupports *aOuter,
-				       const nsIID &aIID,
-				       void **aResult)
+                                       const nsIID &aIID,
+                                       void **aResult)
 {
   nsresult rv;
   nsBrowserWindow *inst;
