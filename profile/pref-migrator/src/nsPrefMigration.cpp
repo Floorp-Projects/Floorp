@@ -55,18 +55,21 @@
 #define PREF_FILE_HEADER_STRING "# Mozilla User Preferences    " 
 
 #if defined(XP_UNIX)
-#define MAIL_FILTER_FILE_NAME_IN_4x "mailrule"
+#define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "mailrule"
+#define POP_MAIL_FILTER_FILE_NAME_IN_4x "mailrule"
 #define SUMMARY_SUFFIX_IN_4x ".summary"
 #define COOKIES_FILE_NAME_IN_4x "cookies"
 #define BOOKMARKS_FILE_NAME_IN_4x "bookmarks.html"
 #elif defined(XP_MAC)
-#define MAIL_FILTER_FILE_NAME_IN_4x "<hostname> Rules"
-#define MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x " Rules"   
+#define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "<hostname> Rules"
+#define IMAP_MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x " Rules"   
+#define POP_MAIL_FILTER_FILE_NAME_IN_4x "Filter Rules"
 #define SUMMARY_SUFFIX_IN_4x ".snm"
 #define COOKIES_FILE_NAME_IN_4x "MagicCookie"
 #define BOOKMARKS_FILE_NAME_IN_4x "Bookmarks.html"
 #else /* XP_PC */
-#define MAIL_FILTER_FILE_NAME_IN_4x "rules.dat"
+#define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "rules.dat"
+#define POP_MAIL_FILTER_FILE_NAME_IN_4x "rules.dat"
 #define SUMMARY_SUFFIX_IN_4x ".snm"
 #define COOKIES_FILE_NAME_IN_4x "cookies.txt"
 #define BOOKMARKS_FILE_NAME_IN_4x "bookmarks.htm"
@@ -74,7 +77,8 @@
 
 #define SUMMARY_SUFFIX_IN_5x ".msf"
 #define COOKIES_FILE_NAME_IN_5x "cookies.txt"
-#define MAIL_FILTER_FILE_NAME_IN_5x "rules.dat"
+#define IMAP_MAIL_FILTER_FILE_NAME_IN_5x "rules.dat"
+#define POP_MAIL_FILTER_FILE_NAME_IN_5x "rules.dat"
 #define BOOKMARKS_FILE_NAME_IN_5x "bookmarks.html"
 
 #define PREMIGRATION_PREFIX "premigration"
@@ -671,7 +675,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 #endif /* XP_UNIX || XP_MAC */
 
   PRBool needToRenameFilterFiles;
-  if (PL_strcmp(MAIL_FILTER_FILE_NAME_IN_4x,MAIL_FILTER_FILE_NAME_IN_5x)) {
+  if (PL_strcmp(IMAP_MAIL_FILTER_FILE_NAME_IN_4x,IMAP_MAIL_FILTER_FILE_NAME_IN_5x)) {
 #ifdef MAIL_FILTER_FILE_SUFFIX_IN_4x
     // if our filter files had a suffix (the weren't all named the same thing)
     // we don't need to rename them when we copy.
@@ -695,13 +699,13 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 #endif /* XP_UNIX */
   if(hasIMAP)
   {
-    rv = DoTheCopyAndRename(oldIMAPMailPath, newIMAPMailPath, PR_TRUE, needToRenameFilterFiles,MAIL_FILTER_FILE_NAME_IN_4x,MAIL_FILTER_FILE_NAME_IN_5x);
+    rv = DoTheCopyAndRename(oldIMAPMailPath, newIMAPMailPath, PR_TRUE, needToRenameFilterFiles,IMAP_MAIL_FILTER_FILE_NAME_IN_4x,IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
     if (NS_FAILED(rv)) return rv;
-    rv = DoTheCopyAndRename(oldIMAPLocalMailPath, newIMAPLocalMailPath, PR_TRUE, needToRenameFilterFiles,MAIL_FILTER_FILE_NAME_IN_4x,MAIL_FILTER_FILE_NAME_IN_5x);
+    rv = DoTheCopyAndRename(oldIMAPLocalMailPath, newIMAPLocalMailPath, PR_TRUE, needToRenameFilterFiles,IMAP_MAIL_FILTER_FILE_NAME_IN_4x,IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
     if (NS_FAILED(rv)) return rv;
   }
   else {
-    rv = DoTheCopyAndRename(oldPOPMailPath, newPOPMailPath, PR_TRUE,needToRenameFilterFiles,MAIL_FILTER_FILE_NAME_IN_4x,MAIL_FILTER_FILE_NAME_IN_5x);
+    rv = DoTheCopyAndRename(oldPOPMailPath, newPOPMailPath, PR_TRUE,needToRenameFilterFiles,IMAP_MAIL_FILTER_FILE_NAME_IN_4x,IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -1081,7 +1085,8 @@ nsresult
 nsPrefMigration::DoSpecialUpdates(nsFileSpec profilePath)
 {
   nsresult rv;
-  
+  PRInt32 serverType;
+
 #if defined(XP_MAC)
   printf("TODO: move and rename the mail filter files\n"); 
 #endif /* XP_MAC*/
@@ -1101,6 +1106,7 @@ nsPrefMigration::DoSpecialUpdates(nsFileSpec profilePath)
    * security hole.
    */
   fsStream << PREF_FILE_HEADER_STRING << nsEndl ;
+  fsStream.close();
 
   // rename the cookies file, but only if we need to.
   rv = Rename4xFileAfterMigration(profilePath,COOKIES_FILE_NAME_IN_4x,COOKIES_FILE_NAME_IN_5x);
@@ -1110,26 +1116,65 @@ nsPrefMigration::DoSpecialUpdates(nsFileSpec profilePath)
   rv = Rename4xFileAfterMigration(profilePath,BOOKMARKS_FILE_NAME_IN_4x,BOOKMARKS_FILE_NAME_IN_5x);
   if (NS_FAILED(rv)) return rv;
 
-#ifdef MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x
-  rv = RenameAndMoveFilterFiles(profilePath);
+#ifdef IMAP_MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x
+  rv = RenameAndMove4xImapFilterFiles(profilePath);
   if (NS_FAILED(rv)) return rv;
-#endif /* MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x */
-     
-  fsStream.close();
+#endif /* IMAP_MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x */
+    
+   /* Create the new mail directory from the setting in prefs.js or a default */
+  rv = m_prefs->GetIntPref(PREF_MAIL_SERVER_TYPE, &serverType);
+  if (NS_FAILED(rv)) return rv; 
+  if (serverType == POP_4X_MAIL_TYPE) {
+	rv = RenameAndMove4xPopFilterFile(profilePath);
+  	if (NS_FAILED(rv)) return rv; 
+  }
 
   return rv;
 }
 
 nsresult
-nsPrefMigration::RenameAndMoveFilterFiles(nsFileSpec profilePath)
+nsPrefMigration::RenameAndMove4xPopFilterFile(nsFileSpec profilePath)
+{
+  nsresult rv = NS_OK;
+
+  // the 4.x pop filter file lives in <profile>/mailrule
+  nsFileSpec file(profilePath);
+  file += POP_MAIL_FILTER_FILE_NAME_IN_4x;
+
+
+  // figure out where the 4.x pop mail directory got copied to
+  char *popServerName = nsnull;
+  nsFileSpec migratedPopDirectory(profilePath);
+  migratedPopDirectory += "Mail";
+  m_prefs->CopyCharPref(PREF_NETWORK_HOSTS_POP_SERVER, &popServerName);
+  migratedPopDirectory += popServerName;
+  PR_FREEIF(popServerName);
+
+  // copy the 4.x file from <profile>/mailrule to the <profile>/Mail/<hostname>/mailrule
+  file.Copy(migratedPopDirectory);
+  
+  // make migratedPopDirectory point the the copied filter file,
+  // <profile>/Mail/<hostname>/mailrule
+  migratedPopDirectory += POP_MAIL_FILTER_FILE_NAME_IN_4x;
+
+  // rename <profile>/Mail/<hostname>/mailrule to <profile>/Mail/<hostname>/rules.dat, if necessary
+  if (PL_strcmp(POP_MAIL_FILTER_FILE_NAME_IN_4x,POP_MAIL_FILTER_FILE_NAME_IN_5x)) {
+	  migratedPopDirectory.Rename(POP_MAIL_FILTER_FILE_NAME_IN_5x);
+  }
+
+  return rv;
+}
+
+nsresult
+nsPrefMigration::RenameAndMove4xImapFilterFiles(nsFileSpec profilePath)
 {
   // unlike windows and unix, in 4.x the mac stored the filter files in
   // <profile>/<hostname> Rules
   // instead of
   // <profile>/ImapMail/<hostname>/rules.dat
   //
-  // find all files in profilePath that end with MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x
-  // hostname = filename - MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x
+  // find all files in profilePath that end with IMAP_MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x
+  // hostname = filename - IMAP_MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x
   // copy file to Mail/<hostname>/MAIL_FILTER_NAME_IN_5x
   // or
   // copy file to ImapMail/<hostname>/MAIL_FILTER_NAME_IN_5x
@@ -1145,7 +1190,6 @@ nsPrefMigration::Rename4xFileAfterMigration(nsFileSpec profilePath, const char *
   }
                
   nsFileSpec file(profilePath);
-
   file += oldFileName;
   
   // make sure it exists before you try to rename it
