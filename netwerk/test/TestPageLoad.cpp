@@ -197,7 +197,6 @@ MyListener::OnDataAvailable(nsIRequest *req, nsISupports *ctxt,
     //printf(">>> OnDataAvailable [count=%u]\n", count);
     nsresult rv = NS_ERROR_FAILURE;
     PRUint32 bytesRead=0;
-    int i=0;
     char buf[1024];
 
     if(ctxt == nsnull) {
@@ -323,7 +322,7 @@ nsresult auxLoad(char *uriBuf)
       uriList->GetElementAt(i, getter_AddRefs(uriTmp));
       uri->Equals(uriTmp, &equal);
       if(equal) {
-        printf("(duplicate, canceling)\n",uriBuf); 
+        printf("(duplicate, canceling) %s\n",uriBuf); 
         return NS_OK;
       }
     }
