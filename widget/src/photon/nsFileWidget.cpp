@@ -85,6 +85,9 @@ PRBool nsFileWidget::Show()
   char      format[] = "100n50d";			/* 100 Pix for Name, 50 Pix for Date */
   int       flags = 0;
   PtFileSelectionInfo_t    info;
+  
+  /* NULL out the structure else it will be a whacky size.. not sure if this is a bug or not... */
+  memset(&info, NULL, sizeof info);
     
   if (mMode == eMode_load)
   {
