@@ -68,6 +68,7 @@
 #include <Timer.h>
 #include <UTCUtils.h>
 #include <Power.h>
+#include <CodeFragments.h>
 #endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
@@ -132,7 +133,8 @@ static void MacintoshInitializeTime(void)
     JSLL_MUL(dstLocalBaseMicroseconds, oneMillion, startupTimeMicroSeconds);
 }
 
-static SleepQRec theSleepQ = { NULL, sleepQType, NULL, 0 };
+static SleepQRec  gSleepQEntry = { NULL, sleepQType, NULL, 0 };
+static JSBool     gSleepQEntryInstalled = JS_FALSE;
 
 static pascal long MySleepQProc(long message, SleepQRecPtr sleepQ)
 {
@@ -155,12 +157,44 @@ static void MyReadLocation(MachineLocation * loc)
         MacintoshInitializeTime();
         ReadLocation(&storedLoc);
         /* install a sleep queue routine, so that when the machine wakes up, time can be recomputed. */
-        if ((theSleepQ.sleepQProc = NewSleepQUPP(MySleepQProc)) != NULL)
-            SleepQInstall(&theSleepQ);
+        if ((gSleepQEntry.sleepQProc = NewSleepQUPP(MySleepQProc)) != NULL) {
+            SleepQInstall(&gSleepQEntry);
+            gSleepQEntryInstalled = JS_TRUE;
+        }
         didReadLocation = JS_TRUE;
      }
      *loc = storedLoc;
 }
+
+
+#ifndef XP_MACOSX
+
+/* CFM library init and terminate routines. We'll use the terminate routine
+   to clean up the sleep Q entry. On Mach-O, the sleep Q entry gets cleaned
+   up for us, so nothing to do there.
+*/
+
+extern pascal OSErr __NSInitialize(const CFragInitBlock* initBlock);
+extern pascal void __NSTerminate();
+
+pascal OSErr __JSInitialize(const CFragInitBlock* initBlock);
+pascal void __JSTerminate(void);
+
+pascal OSErr __JSInitialize(const CFragInitBlock* initBlock)
+{
+	return __NSInitialize(initBlock);
+}
+
+pascal void __JSTerminate()
+{
+  // clean up the sleepQ entry
+  if (gSleepQEntryInstalled)
+    SleepQRemove(&gSleepQEntry);
+  
+	__NSTerminate();
+}
+#endif /* XP_MACOSX */
+
 #endif /* XP_MAC */
 
 #define IS_LEAP(year) \
