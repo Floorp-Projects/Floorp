@@ -1,7 +1,0 @@
-classic.jar:
-+  skin/classic/global/autocomplete.css
-*+  skin/classic/global/checkbox.css
-*+  skin/classic/global/radio.css
-*+  skin/classic/global/button.css
-*+  skin/classic/global/toolbarbutton.css
-+  skin/classic/global/global.css

@@ -1,6 +1,3 @@
 themes/Makefile
 themes/modern/Makefile
 themes/classic/Makefile
-themes/classic/global/mac/Makefile
-themes/classic/global/unix/Makefile
-themes/classic/global/win/Makefile

@@ -42,19 +42,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-THEME_PLATFORM = mac
-else
-THEME_PLATFORM = win
-endif
-
-DIRS  = global/$(THEME_PLATFORM) \
-	$(NULL)
-
-# global/unix contains css rules that more closely match gtk widgets
-ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
-DIRS  += global/unix
-endif
-
 include $(topsrcdir)/config/rules.mk
 
