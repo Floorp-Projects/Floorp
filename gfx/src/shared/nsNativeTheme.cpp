@@ -79,7 +79,7 @@ nsNativeTheme::GetPrimaryPresShell(nsIFrame* aFrame, nsIPresShell** aResult)
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIContent> content;
   aFrame->GetContent(getter_AddRefs(content));
-  content->GetDocument(getter_AddRefs(doc));
+  doc = content->GetDocument();
   if (doc)
     doc->GetShellAt(0, aResult); // addrefs
 }
