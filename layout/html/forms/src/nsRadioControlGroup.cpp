@@ -49,6 +49,9 @@ nsRadioControlGroup::AddRadio(nsRadioControlFrame* aRadio)
 PRBool 
 nsRadioControlGroup::RemoveRadio(nsRadioControlFrame* aRadio) 
 { 
+  if (aRadio == mCheckedRadio) {
+    mCheckedRadio = nsnull;
+  }
   return mRadios.RemoveElement(aRadio);
 }
 
