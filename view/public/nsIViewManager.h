@@ -509,12 +509,20 @@ public:
   NS_IMETHOD AllowDoubleBuffering(PRBool aDoubleBuffer)=0;
 
   /**
-   * Indicate whehter the viewmanager is currently painting
+   * Indicate whether the viewmanager is currently painting
    *
    * @param aPainting PR_TRUE if the viewmanager is painting
    *                  PR_FALSE otherwise
    */
   NS_IMETHOD IsPainting(PRBool& aIsPainting)=0;
+
+
+  /**
+   * Flush pending invalidates which have been queued up
+   * between DisableRefresh and EnableRefresh calls. 
+   */
+  NS_IMETHOD FlushPendingInvalidates()=0;
+
 
 };
 

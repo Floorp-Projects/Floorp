@@ -35,6 +35,7 @@
 #include "nsIScrollableView.h"
 #include "nsIRegion.h"
 #include "nsIBlender.h"
+#include "nsIEventQueue.h"
 
 class nsISupportsArray;
 struct DisplayListElement2;
@@ -161,8 +162,13 @@ public:
   NS_IMETHOD CacheWidgetChanges(PRBool aCache);
   NS_IMETHOD AllowDoubleBuffering(PRBool aDoubleBuffer);
   NS_IMETHOD IsPainting(PRBool& aIsPainting);
+  NS_IMETHOD FlushPendingInvalidates();
+  nsresult ProcessInvalidateEvent();
+  static PRInt32 GetViewManagerCount();
+  static const nsVoidArray* GetViewManagerArray();
 protected:
   virtual ~nsViewManager();
+  void ProcessPendingUpdates(nsIView *aView);
 
 private:
 	nsIRenderingContext *CreateRenderingContext(nsIView &aView);
@@ -171,7 +177,7 @@ private:
 
     PRBool UpdateAllCoveringWidgets(nsIView *aView, nsIView *aTarget, nsRect &aDamagedRect);
 
-	void ProcessPendingUpdates(nsIView *aView);
+	
 	void UpdateViews(nsIView *aView, PRUint32 aUpdateFlags);
 
 	void Refresh(nsIView *aView, nsIRenderingContext *aContext,
@@ -374,6 +380,10 @@ protected:
   nscoord           mX;
   nscoord           mY;
   PRBool            mAllowDoubleBuffering;
+  PRBool            mHasPendingInvalidates;
+  PRBool            mPendingInvalidateEvent;
+  nsCOMPtr<nsIEventQueue>  mEventQueue;
+  void PostInvalidateEvent();
 
 #ifdef NS_VM_PERF_METRICS
   MOZ_TIMER_DECLARE(mWatch) //  Measures compositing+paint time for current document

@@ -34,6 +34,7 @@
 #include "nsIScrollableView.h"
 #include "nsIRegion.h"
 #include "nsIBlender.h"
+#include "nsIEventQueue.h"
 
 class nsISupportsArray;
 struct DisplayListElement2;
@@ -159,16 +160,21 @@ public:
   NS_IMETHOD CacheWidgetChanges(PRBool aCache);
   NS_IMETHOD AllowDoubleBuffering(PRBool aDoubleBuffer);
   NS_IMETHOD IsPainting(PRBool& aIsPainting);
+  NS_IMETHOD FlushPendingInvalidates();
+  nsresult ProcessInvalidateEvent();
+  static PRInt32 GetViewManagerCount();
+  static const nsVoidArray* GetViewManagerArray();
 protected:
   virtual ~nsViewManager2();
-
+  void ProcessPendingUpdates(nsIView *aView);
+ 
 private:
 	nsIRenderingContext *CreateRenderingContext(nsIView &aView);
+ 
 	void AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) const;
 	void InvalidateChildWidgets(nsIView *aView, nsRect& aDirtyRect) const;
 	void UpdateTransCnt(nsIView *oldview, nsIView *newview);
 
-	void ProcessPendingUpdates(nsIView *aView);
 	void UpdateViews(nsIView *aView, PRUint32 aUpdateFlags);
 
 	void Refresh(nsIView *aView, nsIRenderingContext *aContext,
@@ -299,6 +305,8 @@ private:
 	 */
   void GetDrawingSurfaceSize(nsRect& aRequestedSize, nsRect& aSurfaceSize) const;
 
+  
+
 private:
   nsIDeviceContext  *mContext;
   float				mTwipsToPixels;
@@ -324,6 +332,8 @@ private:
 
   //from here to public should be static and locked... MMP
   static PRInt32           mVMCount;        //number of viewmanagers
+    //list of view managers
+  static nsVoidArray       *gViewManagers;
   static nsDrawingSurface  mDrawingSurface; //single drawing surface
   static nsRect            mDSBounds;       //for all VMs
 
@@ -340,9 +350,7 @@ private:
   // Largest requested offscreen size if larger than a full screen.
   static nsSize            gLargestRequestedSize;
 
-  //list of view managers
-  static nsVoidArray       *gViewManagers;
-
+ 
   //compositor regions
   nsIRegion         *mTransRgn;
   nsIRegion         *mOpaqueRgn;
@@ -372,6 +380,10 @@ protected:
   nscoord           mX;
   nscoord           mY;
   PRBool            mAllowDoubleBuffering;
+  PRBool            mHasPendingInvalidates;
+  PRBool            mPendingInvalidateEvent;
+  nsCOMPtr<nsIEventQueue>  mEventQueue;
+  void PostInvalidateEvent();
 
 #ifdef NS_VM_PERF_METRICS
   MOZ_TIMER_DECLARE(mWatch) //  Measures compositing+paint time for current document

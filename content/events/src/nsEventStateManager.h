@@ -116,6 +116,7 @@ protected:
   PRBool CheckDisabled(nsIContent* aContent);
   void EnsureDocument(nsIPresShell* aPresShell);
   void EnsureDocument(nsIPresContext* aPresContext);
+  void FlushPendingEvents(nsIPresContext* aPresContext);
 
   // These functions are for mousewheel scrolling
   nsIScrollableView* GetNearestScrollingView(nsIView* aView);
