@@ -934,17 +934,17 @@ NS_IMETHODIMP nsEditor::Paste()
                                              (nsISupports **)&clipboard);
 
   // Create generic Transferable for getting the data
-  nsIGenericTransferable *genericTrans = 0;
+  nsCOMPtr<nsIGenericTransferable> genericTrans;
   rv = nsComponentManager::CreateInstance(kCGenericTransferableCID, nsnull, 
-                                          kIGenericTransferableIID, (void**) &genericTrans);
+                                          kIGenericTransferableIID, (void**) getter_AddRefs(genericTrans));
   if (NS_OK == rv) {
     // Get the nsITransferable interface for getting the data from the clipboard
-    nsCOMPtr<nsITransferable> trans = do_QueryInterface(genericTrans);
+    nsCOMPtr<nsITransferable> trans(do_QueryInterface(genericTrans));
     if (trans) {
-      nsIDataFlavor *flavor = 0;
+      nsCOMPtr<nsIDataFlavor> flavor;
 
       // Create the desired DataFlavor for the type of data we want to get out of the transferable
-      rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) &flavor);
+      rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) getter_AddRefs(flavor));
       if (NS_OK == rv) {
         // Initialize the DataFlavor and set it into the GenericTransferable
         flavor->Init(kTextMime, "Text");
@@ -961,20 +961,15 @@ NS_IMETHODIMP nsEditor::Paste()
         if (NS_OK == trans->GetTransferData(flavor, (void **)&str, &len)) {
 
           // Make adjustments for null terminated strings
-          if (str) {
-            if (str[len-1] == 0) {
-              len--;
-            }
+          if (str && len > 0) {
             // stuffToPaste is ready for insertion into the content
             stuffToPaste.SetString(str, len);
           }
         }
-        NS_IF_RELEASE(flavor);
       }
     }
-    NS_IF_RELEASE(genericTrans);
   }
-  NS_IF_RELEASE(clipboard);
+  nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
 
   //printf("Trying to insert '%s'\n", stuffToPaste.ToNewCString());
 
