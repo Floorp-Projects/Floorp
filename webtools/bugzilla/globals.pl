@@ -1561,6 +1561,20 @@ $::template ||= Template->new(
         
         html => \&html_quote , 
 
+        # HTML collapses newlines in element attributes to a single space,
+        # so form elements which may have whitespace (ie comments) need
+        # to be encoded using &#013;
+        # See bugs 4928, 22983 and 32000 for more details
+        html_linebreak => sub
+        {
+            my ($var) = @_;
+            $var =~ s/\r\n/\&#013;/g;
+            $var =~ s/\n\r/\&#013;/g;
+            $var =~ s/\r/\&#013;/g;
+            $var =~ s/\n/\&#013;/g;
+            return $var;
+        } ,
+
         # This subroutine in CGI.pl escapes characters in a variable
         # or value string for use in a query string.  It escapes all
         # characters NOT in the regex set: [a-zA-Z0-9_\-.].  The 'uri'

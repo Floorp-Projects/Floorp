@@ -77,6 +77,7 @@ my $template = Template->new(
     # See globals.pl for the actual codebase definitions.
     FILTERS =>
     {
+        html_linebreak => sub { return $_; },
         js        => sub { return $_ } ,
         strike    => sub { return $_ } ,
         url_quote => sub { return $_ } ,

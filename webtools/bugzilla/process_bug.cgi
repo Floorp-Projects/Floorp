@@ -959,9 +959,6 @@ foreach my $id (@idlist) {
 
         $vars->{'start_at'} = $::FORM{'longdesclength'};
         $vars->{'comments'} = GetComments($id);
-        
-        $::FORM{'comment'} =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
-        $::FORM{'comment'} =~ s/\r/\n/g;       # Get rid of mac-style line endings.
 
         $::FORM{'delta_ts'} = $delta_ts;
         $vars->{'form'} = \%::FORM;
