@@ -500,7 +500,7 @@ mork_bool morkMap::grow(morkEnv* ev)
 {
   if ( mMap_Heap ) /* can we grow the map? */
   {
-    mork_num newSlots = ((mMap_Slots * 4) / 3) + 1; /* +33% */
+    mork_num newSlots = (mMap_Slots * 2); /* +100% */
     morkHashArrays old; /* a place to temporarily hold all the old arrays */
     if ( this->new_arrays(ev, &old, newSlots) ) /* have more? */
     {

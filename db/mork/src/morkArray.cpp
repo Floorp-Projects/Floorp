@@ -159,8 +159,10 @@ morkArray::Grow(morkEnv* ev, mork_size inNewSize)
   {
     if ( mArray_Fill <= mArray_Size ) // fill and size fit the invariant?
     {
-      if ( inNewSize - mArray_Size < 3 ) // actually want a few more slots?
+      if (mArray_Size <= 3)
         inNewSize = mArray_Size + 3;
+      else
+        inNewSize = mArray_Size  * 2;// + 3;  // try doubling size here - used to grow by 3
         
       mdb_size newByteSize = inNewSize * sizeof(void*);
       void** newBlock = 0;
