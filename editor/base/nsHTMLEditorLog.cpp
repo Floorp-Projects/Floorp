@@ -610,7 +610,7 @@ nsHTMLEditorLog::StartLogging(nsIFileSpec *aLogFile)
   if (!mFileSpec)
     result = NS_ERROR_NULL_POINTER;
     
-  result = mFileSpec->openStreamForWriting();
+  result = mFileSpec->OpenStreamForWriting();
 
   if (NS_FAILED(result))
   {
@@ -648,7 +648,7 @@ nsHTMLEditorLog::StopLogging()
 
   if (mFileSpec)
   {
-    mFileSpec->closeStream();
+    mFileSpec->CloseStream();
     mFileSpec = nsCOMPtr<nsIFileSpec>();
   }
 
@@ -670,14 +670,14 @@ nsHTMLEditorLog::Write(const char *aBuffer)
   {
     PRInt32 retval;
 
-    result = mFileSpec->write(aBuffer, len, &retval);
+    result = mFileSpec->Write(aBuffer, len, &retval);
 
     if (NS_FAILED(result))
       return result;
 
 #ifdef VERY_SLOW
 
-    result = mFileSpec->flush();
+    result = mFileSpec->Flush();
 
     if (NS_FAILED(result))
       return result;
@@ -709,7 +709,7 @@ nsHTMLEditorLog::Flush()
   nsresult result = NS_OK;
 
   if (mFileSpec)
-    result = mFileSpec->flush();
+    result = mFileSpec->Flush();
   else
     fflush(stdout);
 
