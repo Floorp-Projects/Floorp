@@ -691,20 +691,32 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
     return -1;
 
   /* One shouldn't be trying to read headers when one hasn't finished
-	 parsing them yet... but this can happen if the message ended
-	 prematurely, and has no body at all (as opposed to a null body,
-	 which is more normal.)   So, if we try to read from the headers,
-	 let's assume that the headers are now finished.  If they aren't
-	 in fact finished, then a later attempt to write to them will assert.
+     parsing them yet... but this can happen if the message ended
+     prematurely, and has no body at all (as opposed to a null body,
+     which is more normal.)   So, if we try to read from the headers,
+     let's assume that the headers are now finished.  If they aren't
+     in fact finished, then a later attempt to write to them will assert.
    */
   if (!hdrs->done_p)
-	{
-	  hdrs->done_p = PR_TRUE;
-	  status = MimeHeaders_build_heads_list(hdrs);
-	  if (status < 0) return 0;
-	}
+  {
+    hdrs->done_p = PR_TRUE;
+    status = MimeHeaders_build_heads_list(hdrs);
+    if (status < 0) return 0;
+  }
 
-  char *c2;
+  char *charset = nsnull;
+  if (opt->format_out == nsMimeOutput::nsMimeMessageSaveAs)
+  {
+    if (opt->override_charset)
+      charset = PL_strdup(opt->default_charset);
+    else
+    {
+      char *contentType = MimeHeaders_get(hdrs, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
+      if (contentType)
+        charset = MimeHeaders_get_parameter(contentType, HEADER_PARM_CHARSET, nsnull, nsnull);
+      PR_FREEIF(contentType);
+    }
+  }
 
   for (i = 0; i < hdrs->heads_size; i++)
   {
@@ -715,7 +727,9 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
     char *colon, *ocolon;
     char *contents = end;
     char *name = 0;
-    c2 = 0;
+    char *hdr_value;
+
+    hdr_value = 0;
     
     /* Hack for BSD Mailbox delimiter. */
     if (i == 0 && head[0] == 'F' && !nsCRT::strncmp(head, "From ", 5))
@@ -728,10 +742,8 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
     else
     {
       /* Find the colon. */
-      for (colon = head; colon < end; colon++)
-        if (*colon == ':') break;
-        
-        if (colon >= end) continue;   /* junk */
+      for (colon = head; colon < end && *colon != ':'; colon++)
+        ;
         
         /* Back up over whitespace before the colon. */
         ocolon = colon;
@@ -756,30 +768,41 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
   
     if ( (end - contents) > 0 )
     {
-      c2 = (char *)PR_MALLOC(end - contents + 1);
-      if (!c2)
+      hdr_value = (char *)PR_MALLOC(end - contents + 1);
+      if (!hdr_value)
       {
         PR_Free(name);
         return MIME_OUT_OF_MEMORY;
       }
-      memcpy(c2, contents, end - contents);
-      c2[end - contents] = 0;
+      memcpy(hdr_value, contents, end - contents);
+      hdr_value[end - contents] = 0;
     }
     
+    MimeHeaders_convert_header_value(opt, &hdr_value);
+    // if we're saving as html, we need to convert headers from utf8 to message charset, if any
+    if (opt->format_out == nsMimeOutput::nsMimeMessageSaveAs && charset)
+    {
+      char *convertedStr;
+      if (NS_SUCCEEDED(ConvertFromUnicode(charset, NS_ConvertUTF8toUCS2(hdr_value), &convertedStr)))
+      {
+        PR_FREEIF(hdr_value);
+        hdr_value = convertedStr;
+      }
+    }
+
     if (attachment)
-      status = mimeEmitterAddAttachmentField(opt, name, 
-                                MimeHeaders_convert_header_value(opt, &c2));
+      status = mimeEmitterAddAttachmentField(opt, name, hdr_value);
     else
-      status = mimeEmitterAddHeaderField(opt, name, 
-                                MimeHeaders_convert_header_value(opt, &c2));
+      status = mimeEmitterAddHeaderField(opt, name, hdr_value);
 
     PR_Free(name);
-    PR_FREEIF(c2);
+    PR_FREEIF(hdr_value);
     
     if (status < 0) return status;
     if (!wrote_any_p) 
       wrote_any_p = (status > 0);
   }
+  PR_FREEIF(charset);
 
   return 1;
 }
