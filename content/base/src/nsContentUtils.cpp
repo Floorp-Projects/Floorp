@@ -55,7 +55,10 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOM3Node.h"
+#include "nsIIOService.h"
 #include "nsIURI.h"
+#include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsDOMError.h"
 #include "nsIDOMWindowInternal.h"
@@ -84,6 +87,7 @@ nsIScriptSecurityManager *nsContentUtils::sSecurityManager = nsnull;
 nsIThreadJSContextStack *nsContentUtils::sThreadJSContextStack = nsnull;
 nsIParserService *nsContentUtils::sParserService = nsnull;
 nsINameSpaceManager *nsContentUtils::sNameSpaceManager = nsnull;
+nsIIOService *nsContentUtils::sIOService = nsnull;
 
 // static
 nsresult
@@ -101,6 +105,12 @@ nsContentUtils::Init()
     sSecurityManager = nsnull;
   }
 
+  rv = CallGetService(NS_IOSERVICE_CONTRACTID, &sIOService);
+  if (NS_FAILED(rv)) {
+    // If this fails, that's ok
+    sIOService = nsnull;
+  }
+  
   rv = CallGetService(kJSStackContractID, &sThreadJSContextStack);
   if (NS_FAILED(rv)) {
     sThreadJSContextStack = nsnull;
@@ -120,20 +130,13 @@ nsIParserService*
 nsContentUtils::GetParserServiceWeakRef()
 {
   // XXX: This isn't accessed from several threads, is it?
-  if (sParserService == nsnull) {
+  if (!sParserService) {
     // Lock, recheck sCachedParserService and aquire if this should be
     // safe for multiple threads.
-    nsCOMPtr<nsIServiceManager> mgr;
-    nsresult rv = NS_GetServiceManager(getter_AddRefs(mgr));
-    
-    if (NS_FAILED(rv))
-      return nsnull;
-
-    // This addrefs the service for us and it will be released in
-    // |Shutdown|.
-    mgr->GetService(kParserServiceCID,
-                    NS_GET_IID(nsIParserService),
-                    NS_REINTERPRET_CAST(void**, &sParserService));
+    nsresult rv = CallGetService(kParserServiceCID, &sParserService);
+    if (NS_FAILED(rv)) {
+      sParserService = nsnull;
+    }
   }
 
   return sParserService;
@@ -390,6 +393,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sThreadJSContextStack);
   NS_IF_RELEASE(sNameSpaceManager);
   NS_IF_RELEASE(sParserService);
+  NS_IF_RELEASE(sIOService);
 }
 
 // static
@@ -1535,6 +1539,20 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
   }
 
   return NS_OK;
+}
+
+/* static */ nsresult
+nsContentUtils::NewURIWithDocumentCharset(nsIURI** aResult,
+                                          const nsAString& aSpec,
+                                          nsIDocument* aDocument,
+                                          nsIURI* aBaseURI)
+{
+  nsCAutoString originCharset;
+  if (aDocument && NS_FAILED(aDocument->GetDocumentCharacterSet(originCharset)))
+    originCharset.Truncate();
+
+  return NS_NewURI(aResult, NS_ConvertUCS2toUTF8(aSpec), originCharset.get(),
+                   aBaseURI, sIOService);
 }
 
 void

@@ -103,7 +103,6 @@
 #include "npapi.h"
 #include "nsIPrintSettings.h"
 #include "nsGfxCIID.h"
-#include "nsHTMLUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsTransform2D.h"
 #include "nsIImageLoadingContent.h"
@@ -973,8 +972,7 @@ nsObjectFrame::MakeAbsoluteURL(nsIURI* *aFullURI,
   if (document && NS_FAILED(document->GetDocumentCharacterSet(originCharset)))
     originCharset.Truncate();
  
-  return NS_NewURI(aFullURI, aSrc, originCharset.get(),
-                   aBaseURI, nsHTMLUtils::IOService);
+  return NS_NewURI(aFullURI, aSrc, originCharset.get(), aBaseURI);
 }
 
 NS_IMETHODIMP

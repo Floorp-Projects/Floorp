@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
-#include "nsHTMLUtils.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIDOMHTMLAnchorElement.h"
@@ -164,12 +163,10 @@ NS_NewHTMLAnchorElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLAnchorElement::nsHTMLAnchorElement() : mLinkState(eLinkState_Unknown)
 {
-  nsHTMLUtils::AddRef(); // for GetHrefURI
 }
 
 nsHTMLAnchorElement::~nsHTMLAnchorElement()
 {
-  nsHTMLUtils::Release(); // for GetHrefURI
 }
 
 
@@ -218,6 +215,7 @@ nsHTMLAnchorElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Charset, charset)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Coords, coords)
+NS_IMPL_URI_ATTR(nsHTMLAnchorElement, Href, href)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Hreflang, hreflang)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Rel, rel)
@@ -352,29 +350,6 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext* aPresContext,
 {
   return HandleDOMEventForAnchors(aPresContext, aEvent, aDOMEvent, 
                                   aFlags, aEventStatus);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::GetHref(nsAString& aValue)
-{
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = GetHrefURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCAutoString spec;
-  if (uri) {
-    uri->GetSpec(spec);
-  }
-  CopyUTF8toUTF16(spec, aValue);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetHref(const nsAString& aValue)
-{
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::href, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP

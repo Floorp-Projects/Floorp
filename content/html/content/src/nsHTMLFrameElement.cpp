@@ -170,13 +170,13 @@ nsHTMLFrameElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 
 NS_IMPL_STRING_ATTR(nsHTMLFrameElement, FrameBorder, frameborder)
-NS_IMPL_STRING_ATTR(nsHTMLFrameElement, LongDesc, longdesc)
+NS_IMPL_URI_ATTR(nsHTMLFrameElement, LongDesc, longdesc)
 NS_IMPL_STRING_ATTR(nsHTMLFrameElement, MarginHeight, marginheight)
 NS_IMPL_STRING_ATTR(nsHTMLFrameElement, MarginWidth, marginwidth)
 NS_IMPL_STRING_ATTR(nsHTMLFrameElement, Name, name)
 NS_IMPL_BOOL_ATTR(nsHTMLFrameElement, NoResize, noresize)
 NS_IMPL_STRING_ATTR(nsHTMLFrameElement, Scrolling, scrolling)
-NS_IMPL_STRING_ATTR(nsHTMLFrameElement, Src, src)
+NS_IMPL_URI_ATTR(nsHTMLFrameElement, Src, src)
 
 
 NS_IMETHODIMP

@@ -49,7 +49,6 @@
 #include "nsIEventStateManager.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
-#include "nsHTMLUtils.h"
 #include "nsReadableUtils.h"
 #include "nsIDocument.h"
 
@@ -140,12 +139,10 @@ NS_NewHTMLAreaElement(nsIHTMLContent** aInstancePtrResult,
 nsHTMLAreaElement::nsHTMLAreaElement()
   : mLinkState(eLinkState_Unknown)
 {
-  nsHTMLUtils::AddRef(); // for GetHrefURI
 }
 
 nsHTMLAreaElement::~nsHTMLAreaElement()
 {
-  nsHTMLUtils::Release(); // for GetHrefURI
 }
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLAreaElement, nsGenericElement) 
@@ -194,6 +191,7 @@ nsHTMLAreaElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Alt, alt)
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Coords, coords)
+NS_IMPL_URI_ATTR(nsHTMLAreaElement, Href, href)
 NS_IMPL_BOOL_ATTR(nsHTMLAreaElement, NoHref, nohref)
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Shape, shape)
 NS_IMPL_INT_ATTR(nsHTMLAreaElement, TabIndex, tabindex)
@@ -271,30 +269,6 @@ nsHTMLAreaElement::RemoveFocus(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsHTMLAreaElement::GetHref(nsAString& aValue)
-{
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = GetHrefURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv)) return rv;
-  if (uri) {
-    nsCAutoString spec;
-    uri->GetSpec(spec);
-    CopyUTF8toUTF16(spec, aValue);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLAreaElement::SetHref(const nsAString& aValue)
-{
-  // Clobber our "cache", so we'll recompute it the next time somebody
-  // asks for it.
-  mLinkState = eLinkState_Unknown;
-
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::href, aValue, PR_TRUE);
-}
-
-NS_IMETHODIMP
 nsHTMLAreaElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                PRBool aCompileEventHandlers)
 {
@@ -330,6 +304,10 @@ nsHTMLAreaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 {
   if (aName == nsHTMLAtoms::accesskey && aNameSpaceID == kNameSpaceID_None) {
     RegUnRegAccessKey(PR_FALSE);
+  }
+
+  if (aName == nsHTMLAtoms::href && aNameSpaceID == kNameSpaceID_None) {
+    SetLinkState(eLinkState_Unknown);
   }
 
   nsresult rv =

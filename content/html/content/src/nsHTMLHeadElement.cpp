@@ -144,4 +144,4 @@ nsHTMLHeadElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 
-NS_IMPL_STRING_ATTR(nsHTMLHeadElement, Profile, profile)
+NS_IMPL_URI_ATTR(nsHTMLHeadElement, Profile, profile)

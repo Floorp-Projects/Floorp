@@ -143,4 +143,4 @@ nsHTMLQuoteElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 
-NS_IMPL_STRING_ATTR(nsHTMLQuoteElement, Cite, cite)
+NS_IMPL_URI_ATTR(nsHTMLQuoteElement, Cite, cite)

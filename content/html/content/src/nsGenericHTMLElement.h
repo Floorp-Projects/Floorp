@@ -206,8 +206,6 @@ public:
   /**
    * Standard anchor HandleDOMEvent, used by A, AREA and LINK (parameters
    * are the same as HandleDOMEvent)
-   *
-   * Callers must hold a reference to nsHTMLUtils's global reference count.
    */
   nsresult HandleDOMEventForAnchors(nsIPresContext* aPresContext,
                                     nsEvent* aEvent,
@@ -455,6 +453,12 @@ public:
    */
   static PRBool ScrollingValueToString(const nsHTMLValue& aValue,
                                        nsAString& aResult);
+
+  /**
+   * Take an attribute name, and return the value of that attribute,
+   * resolved to an absolute URI.  Used by NS_IMPL_URI_ATTR macro.
+   */
+  nsresult AttrToURI(nsIAtom* aAttrName, nsAString& aAbsoluteURI);
 
   /**
    * Create the style struct from the style attr.  Used when an element is first
@@ -1144,6 +1148,30 @@ protected:
     nsHTMLValue value(aValue, eHTMLUnit_Pixel);                     \
     return SetHTMLAttribute(nsHTMLAtoms::_atom, value, PR_TRUE);    \
   }
+
+/**
+ * A macro to implement the getter and setter for a given content
+ * property that needs to return a URI in string form.  The method
+ * uses the generic GetAttr and SetAttr methods.  This macro is much
+ * like the NS_IMPL_STRING_ATTR macro, except we make sure the URI is
+ * absolute.
+ */
+#define NS_IMPL_URI_ATTR_GETTER(_class, _method, _atom)             \
+  NS_IMETHODIMP                                                     \
+  _class::Get##_method(nsAString& aValue)                           \
+  {                                                                 \
+    return AttrToURI(nsHTMLAtoms::_atom, aValue);                   \
+  }
+#define NS_IMPL_URI_ATTR_SETTER(_class, _method, _atom)             \
+  NS_IMETHODIMP                                                     \
+  _class::Set##_method(const nsAString& aValue)                     \
+  {                                                                 \
+    return SetAttr(kNameSpaceID_None, nsHTMLAtoms::_atom, aValue,   \
+                   PR_TRUE);                                        \
+  }
+#define NS_IMPL_URI_ATTR(_class, _method, _atom) \
+  NS_IMPL_URI_ATTR_GETTER(_class, _method, _atom) \
+  NS_IMPL_URI_ATTR_SETTER(_class, _method, _atom)
 
 /**
  * QueryInterface() implementation helper macros

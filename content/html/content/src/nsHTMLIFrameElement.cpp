@@ -113,6 +113,11 @@ public:
 
     return rv;
   }
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                     PRBool aNotify) {
+    // This will end up calling our other SetAttr method
+    return nsGenericHTMLContainerElement::SetAttr(aNodeInfo, aValue, aNotify);
+  }
 
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       nsChangeHint& aHint) const;
@@ -211,28 +216,13 @@ nsHTMLIFrameElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, FrameBorder, frameborder)
 NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Height, height)
-NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, LongDesc, longdesc)
+NS_IMPL_URI_ATTR(nsHTMLIFrameElement, LongDesc, longdesc)
 NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, MarginHeight, marginheight)
 NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, MarginWidth, marginwidth)
 NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Scrolling, scrolling)
+NS_IMPL_URI_ATTR(nsHTMLIFrameElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Width, width)
-
-NS_IMETHODIMP
-nsHTMLIFrameElement::GetSrc(nsAString& aSrc)
-{
-  nsGenericHTMLContainerElement::GetAttr(kNameSpaceID_None, nsHTMLAtoms::src,
-                                         aSrc);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLIFrameElement::SetSrc(const nsAString& aSrc)
-{
-  SetAttribute(NS_LITERAL_STRING("src"), aSrc);
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHTMLIFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)

@@ -49,7 +49,6 @@ CPPSRCS		= \
 		nsCSSKeywords.cpp \
 		nsCSSProps.cpp \
 		nsHTMLAtoms.cpp \
-		nsHTMLUtils.cpp   \
 		nsHTMLValue.cpp \
 		nsImageMapUtils.cpp \
 		nsLayoutAtoms.cpp \

@@ -257,8 +257,9 @@ NS_IMPL_STRING_ATTR(nsHTMLImageElement, Alt, alt)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Border, border)
 NS_IMPL_PIXEL_ATTR(nsHTMLImageElement, Hspace, hspace)
 NS_IMPL_BOOL_ATTR(nsHTMLImageElement, IsMap, ismap)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, LongDesc, longdesc)
+NS_IMPL_URI_ATTR(nsHTMLImageElement, LongDesc, longdesc)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Lowsrc, lowsrc)
+NS_IMPL_URI_ATTR_GETTER(nsHTMLImageElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, UseMap, usemap)
 NS_IMPL_PIXEL_ATTR(nsHTMLImageElement, Vspace, vspace)
 
@@ -658,34 +659,6 @@ nsHTMLImageElement::Initialize(JSContext* aContext, JSObject *aObj,
     nsHTMLValue heightVal((PRInt32)height, eHTMLUnit_Pixel);
 
     rv = SetHTMLAttribute(nsHTMLAtoms::height, heightVal, PR_FALSE);
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsHTMLImageElement::GetSrc(nsAString& aSrc)
-{
-  // Resolve url to an absolute url
-  nsresult rv = NS_OK;
-  nsAutoString relURLSpec;
-  nsCOMPtr<nsIURI> baseURL;
-
-  // Get base URL.
-  GetBaseURL(getter_AddRefs(baseURL));
-
-  // Get href= attribute (relative URL).
-  nsGenericHTMLLeafElement::GetAttr(kNameSpaceID_None, nsHTMLAtoms::src,
-                                    relURLSpec);
-  relURLSpec.Trim(" \t\n\r");
-
-  if (baseURL && !relURLSpec.IsEmpty()) {
-    // Get absolute URL.
-    rv = NS_MakeAbsoluteURI(aSrc, relURLSpec, baseURL);
-  }
-  else {
-    // Absolute URL is same as relative URL.
-    aSrc = relURLSpec;
   }
 
   return rv;

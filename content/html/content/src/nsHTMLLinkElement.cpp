@@ -50,7 +50,6 @@
 #include "nsStyleLinkElement.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsHTMLUtils.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIDocument.h"
@@ -141,6 +140,10 @@ public:
 
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                      const nsAString& aValue, PRBool aNotify) {
+    if (aName == nsHTMLAtoms::href && kNameSpaceID_None == aNameSpaceID) {
+      SetLinkState(eLinkState_Unknown);
+    }
+    
     nsresult rv = nsGenericHTMLLeafElement::SetAttr(aNameSpaceID, aName,
                                                     aValue, aNotify);
     if (NS_SUCCEEDED(rv)) {
@@ -226,12 +229,10 @@ NS_NewHTMLLinkElement(nsIHTMLContent** aInstancePtrResult,
 nsHTMLLinkElement::nsHTMLLinkElement()
   : mLinkState(eLinkState_Unknown)
 {
-  nsHTMLUtils::AddRef(); // for GetHrefURI
 }
 
 nsHTMLLinkElement::~nsHTMLLinkElement()
 {
-  nsHTMLUtils::Release(); // for GetHrefURI
 }
 
 
@@ -309,44 +310,13 @@ nsHTMLLinkElement::SetDisabled(PRBool aDisabled)
 
 
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Charset, charset)
+NS_IMPL_URI_ATTR(nsHTMLLinkElement, Href, href)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Hreflang, hreflang)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Media, media)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rel, rel)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rev, rev)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Target, target)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Type, type)
-
-
-NS_IMETHODIMP
-nsHTMLLinkElement::GetHref(nsAString& aValue)
-{
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = GetHrefURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv)) return rv;
-  if (uri) {
-    nsCAutoString spec;
-    uri->GetSpec(spec);
-    CopyUTF8toUTF16(spec, aValue);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLLinkElement::SetHref(const nsAString& aValue)
-{
-  // Clobber our "cache", so we'll recompute it the next time
-  // somebody asks for it.
-  mLinkState = eLinkState_Unknown;
-
-  nsresult rv = nsGenericHTMLLeafElement::SetAttr(kNameSpaceID_None,
-                                                  nsHTMLAtoms::href, aValue,
-                                                  PR_TRUE);
-  if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheet();
-  }
-  return rv;
-}
 
 NS_IMETHODIMP
 nsHTMLLinkElement::HandleDOMEvent(nsIPresContext* aPresContext,
