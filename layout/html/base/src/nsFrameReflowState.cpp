@@ -339,8 +339,15 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
         // 'width' property doesn't apply to table rows and row groups
         widthUnit = eStyleUnit_Auto;
       }
+
       if (eStyleUnit_Auto == widthUnit) {
-        computedWidth = maxSize.width;
+        // Compute border and padding
+        nsMargin borderPadding;
+        ComputeBorderPaddingFor(frame, parentReflowState, borderPadding);
+
+        // Internal table elements don't have margins, but they have border
+        // and padding
+        computedWidth = maxSize.width - borderPadding.left - borderPadding.right;
       } else {
         ComputeHorizontalValue(containingBlockWidth, widthUnit, pos->mWidth,
                                computedWidth);
@@ -349,7 +356,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
       // Calculate the computed height
       if ((NS_STYLE_DISPLAY_TABLE_COLUMN == display->mDisplay) ||
           (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)) {
-        // 'width' property doesn't apply to table columns and column groups
+        // 'height' property doesn't apply to table columns and column groups
         heightUnit = eStyleUnit_Auto;
       }
       if (eStyleUnit_Auto == heightUnit) {
