@@ -253,7 +253,6 @@ class nsIUBidiUtils : public nsISupports {
          (IBMBIDI_SUPPORTMODE_MOZILLA<<20)      | \
          (IBMBIDI_CHARSET_BIDI<<24))
 
-typedef PRUint32 nsBidiOptions;
 
 #define GET_BIDI_OPTION_DIRECTION(bo) (((bo)>>0) & 0x0000000F) /* 4 bits for DIRECTION */
 #define GET_BIDI_OPTION_TEXTTYPE(bo) (((bo)>>4) & 0x0000000F) /* 4 bits for TEXTTYPE */
