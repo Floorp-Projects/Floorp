@@ -54,7 +54,7 @@ ifdef NSBUILDROOT
 override NSBUILDROOT :=
 endif
 
-ifndef GNU_CC
+ifdef GNU_CC
 MODULE_OPTIMIZE_FLAGS = -O3
 endif
 
