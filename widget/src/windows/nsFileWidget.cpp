@@ -377,15 +377,13 @@ void nsFileWidget::GetFileSystemCharset(nsString & fileSystemCharset)
   nsresult rv;
 
   if (aCharset.Length() < 1) {
-	  nsCOMPtr <nsIPlatformCharset> platformCharset;
-	  rv = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID, nsnull, 
-	                                          NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
+    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
 	  if (NS_SUCCEEDED(rv)) 
 		  rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
 	  if (NS_FAILED(rv)) 
-		  aCharset.Assign("ISO-8859-1");
+		  aCharset.Assign("windows-1252");
   }
   fileSystemCharset = aCharset;
 }
@@ -424,7 +422,6 @@ char * nsFileWidget::ConvertToFileSystemCharset(const PRUnichar *inString)
     }
   }
   
-  NS_ASSERTION(NS_SUCCEEDED(rv), "error charset conversion");
   return NS_SUCCEEDED(rv) ? outString : nsnull;
 }
 
