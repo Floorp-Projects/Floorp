@@ -3094,8 +3094,6 @@ nsXULDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)
 NS_IMETHODIMP
 nsXULDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
 {
-    NS_NOTYETIMPLEMENTED("get the inline stylesheet!");
-
     NS_PRECONDITION(nsnull != aResult, "null ptr");
     if (nsnull == aResult) {
         return NS_ERROR_NULL_POINTER;

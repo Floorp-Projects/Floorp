@@ -55,7 +55,9 @@
 #include "nsIStyleSet.h"
 #include "nsISupportsArray.h"
 #include "nsICSSLoader.h"
+#include "nsIDocumentObserver.h"
 
+static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 
@@ -775,6 +777,8 @@ void BreakProviderAndRemainingFromPath(const char* i_path, char** o_provider, ch
 
 NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
 {
+  printf("Refreshing skins!\n");
+
   nsresult rv;
 
   // Flush the style sheet cache completely.
@@ -783,17 +787,22 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
   if (NS_SUCCEEDED(rv) && xulCache) {
     xulCache->Flush();
   }
+  
+  printf("Trying to obtain the window mediator.\n");
 
   // Get the window mediator
-  NS_WITH_SERVICE(nsIWindowMediator, windowMediator, "components://netscape/rdf/datasource?name=window-mediator", &rv);
+  NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+
+    printf("Trying to enumerate...\n");
 
     if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator)))) {
       // Get each dom window
       PRBool more;
       windowEnumerator->HasMoreElements(&more);
       while (more) {
+        printf("Have something that might be a window.\n");
         nsCOMPtr<nsISupports> protoWindow;
         rv = windowEnumerator->GetNext(getter_AddRefs(protoWindow));
         if (NS_SUCCEEDED(rv) && protoWindow) {
@@ -811,6 +820,8 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
 
 NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
 {
+  printf("Refreshing Window!\n");
+
   nsresult rv;
 
   // Get the XUL cache.
@@ -895,6 +906,9 @@ void nsChromeRegistry::RemoveStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDoc
     shell->GetStyleSet(getter_AddRefs(set));
     if (set) {
       set->RemoveDocStyleSheet(aSheet);
+      nsCOMPtr<nsIDocumentObserver> obs = do_QueryInterface(shell);
+      if (obs)
+        obs->StyleSheetRemoved(aDocument, aSheet);
     }
   }
 }
