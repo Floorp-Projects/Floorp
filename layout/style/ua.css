@@ -141,7 +141,6 @@
 
 *|*::-moz-scrolled-content { 
   /* e.g., text inputs, select boxes */
-  background: inherit;
   padding: inherit;
   display: inherit;
   -moz-box-orient: inherit;

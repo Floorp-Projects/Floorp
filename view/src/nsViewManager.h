@@ -282,7 +282,8 @@ private:
                           nsRect& aDirtyRect, PRUint32 aFlags, nscoord aAbsX, nscoord aAbsY,
                           PRBool aAssumeIntersection);
   void OptimizeDisplayList(nsAutoVoidArray* aDisplayList, const nsRegion& aDirtyRegion,
-                           nsRect& aFinalTransparentRect, nsRegion& aOpaqueRgn);
+                           nsRect& aFinalTransparentRect, nsRegion& aOpaqueRgn,
+                           PRBool aTreatUniformAsOpaque);
     // Remove redundant PUSH/POP_CLIP pairs.
   void ComputeViewOffset(nsView *aView, nsPoint *aOrigin);
 

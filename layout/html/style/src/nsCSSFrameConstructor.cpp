@@ -6617,6 +6617,15 @@ nsCSSFrameConstructor::ResolveStyleContext(nsIPresContext*   aPresContext,
   // Resolve the style context based on the content object and the parent
   // style context
   nsStyleContext* parentStyleContext = aParentFrame->GetStyleContext();
+
+  // skip past any parents that are scrolled-content. We want to inherit directly
+  // from the outer scroll frame.
+  nsCOMPtr<nsIAtom> pseudo;
+  while (parentStyleContext && (pseudo = parentStyleContext->GetPseudoType()) ==
+         nsCSSAnonBoxes::scrolledContent) {
+    parentStyleContext = parentStyleContext->GetParent();
+  }
+
   if (aContent->IsContentOfType(nsIContent::eELEMENT)) {
     return aPresContext->ResolveStyleContextFor(aContent, parentStyleContext);
   } else {

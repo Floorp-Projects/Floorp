@@ -74,6 +74,10 @@ enum nsViewVisibility {
 //the view is transparent
 #define NS_VIEW_FLAG_TRANSPARENT          0x0004
 
+// The view is always painted onto a background consisting
+// of a uniform field of opaque pixels.
+#define NS_VIEW_FLAG_UNIFORM_BACKGROUND   0x0008
+
 //indicates that the view should not be bitblt'd when moved
 //or scrolled and instead must be repainted
 #define NS_VIEW_FLAG_DONT_BITBLT          0x0010
@@ -243,6 +247,23 @@ public:
    * @result view's opacity value
    */
   float GetOpacity() const { return mOpacity; }
+
+  /**
+   * Indicate that this view is always painted onto a uniform field of pixels. Thus,
+   * even if the view is transparent, it may still be bitblit scrollable because
+   * the background that shines through does not vary with position.
+   */
+  void SetHasUniformBackground(PRBool aUniform) {
+    if (aUniform) {
+      mVFlags |= NS_VIEW_FLAG_UNIFORM_BACKGROUND;
+    } else {
+      mVFlags &= ~NS_VIEW_FLAG_UNIFORM_BACKGROUND;
+    }
+  }
+
+  PRBool HasUniformBackground() {
+    return mVFlags & NS_VIEW_FLAG_UNIFORM_BACKGROUND;
+  }
 
   /**
    * Set the view's link to client owned data.
