@@ -29,9 +29,12 @@
           sortResource="http://home.netscape.com/NC-rdf#Name?sort=true"
           sortDirection="ascending"
           ref="msgaccounts:/">
+          <treecolgroup>
+            <treecol flex="1"/>
+          </treecolgroup>
           <template>
           <rule>
-            <treechildren>
+            <treechildren flex="1">
 			<treeitem uri="..." open="true"
                 IsDefaultServer="rdf:http://home.netscape.com/NC-rdf#IsDefaultServer"
                 PageTag="rdf:http://home.netscape.com/NC-rdf#PageTag">
