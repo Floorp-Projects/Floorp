@@ -100,7 +100,7 @@ NS_IMETHODIMP
 nsSOAPArray::GetBaseType(nsISchemaType * *aBaseType)
 {
   NS_ENSURE_ARG_POINTER(aBaseType);
-  *aBaseType = nsnull;
+  NS_ADDREF(*aBaseType = mAnyType);
   return NS_OK;
 }
 
