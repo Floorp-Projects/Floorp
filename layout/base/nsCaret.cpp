@@ -70,11 +70,12 @@
 // an insignificant dot
 static const PRUint32 kMinBidiIndicatorPixels = 2;
 
-#if !defined(XP_UNIX) || defined(XP_MACOSX)
+#if !defined(MOZ_WIDGET_GTK2)
 // Because of drawing issues, we currently always make a new RC. See bug 28068
 // Before removing this, stuff will need to be fixed and tested on all platforms.
 // For example, turning this off on Mac right now causes drawing problems on pages
 // with form elements.
+// Also turning this off caused problems on GTK1. See bug 254049.
 #define DONT_REUSE_RENDERING_CONTEXT
 #endif
 
