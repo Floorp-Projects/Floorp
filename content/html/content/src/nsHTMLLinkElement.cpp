@@ -52,6 +52,7 @@
 #include "nsNetUtil.h"
 #include "nsIDocument.h"
 #include "nsIDOMEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsParserUtils.h"
@@ -237,8 +238,13 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
     PRBool noDefault;
     nsCOMPtr<nsIDOMEventTarget> target =
       do_QueryInterface(NS_STATIC_CAST(nsIDOMNode*, this));
-    if (target)
+    if (target) {
+      nsCOMPtr<nsIPrivateDOMEvent> privEvent(do_QueryInterface(event));
+      if (privEvent) {
+        privEvent->SetTrusted(PR_TRUE);
+      }
       target->DispatchEvent(event, &noDefault);
+    }
   }
 }
 
