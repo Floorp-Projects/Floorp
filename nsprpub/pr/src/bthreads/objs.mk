@@ -13,6 +13,6 @@
 # This makefile appends to the variable OBJS the bthread object modules
 # that will be part of the nspr20 library.
 
-include bthreads/bsrcs.mk
+include $(srcdir)/bthreads/bsrcs.mk
 
 OBJS += $(BTCSRCS:%.c=bthreads/$(OBJDIR)/%.$(OBJ_SUFFIX))

@@ -250,6 +250,9 @@ endif
 ifdef USE_AUTOCONF
 
 include $(srcdir)/md/$(PR_MD_ARCH_DIR)/objs.mk
+ifdef USE_BTHREADS
+include $(srcdir)/bthreads/objs.mk
+endif
 
 else
 

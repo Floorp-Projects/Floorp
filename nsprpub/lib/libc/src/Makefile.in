@@ -111,6 +111,10 @@ EXTRA_LIBS =
 endif
 endif #!USE_AUTOCONF
 
+ifdef RESOLVE_LINK_SYMBOLS
+EXTRA_LIBS := -L$(DIST)/lib -lnspr$(MOD_VERSION)
+endif
+
 GARBAGE += $(TINC)
 
 include $(topsrcdir)/config/rules.mk

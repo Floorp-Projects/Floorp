@@ -55,6 +55,8 @@ _OPTIMIZE_FLAGS=-O
 _DEBUG_FLAGS=-g
 MOZ_DEBUG=1
 MOZ_OPTIMIZE=
+dnl Link in libraries necessary to resolve all symbols for shared libs
+RESOLVE_LINK_SYMBOLS=
 
 dnl ========================================================
 dnl =
@@ -321,7 +323,13 @@ case "$target" in
     AC_DEFINE(XP_BEOS)
     AC_DEFINE(BeOS)
     AC_DEFINE(BEOS)
-    MKSHLIB='$(CCC) -shared -o $@'
+    AC_DEFINE(_POSIX_SOURCE)
+    DSO_LDOPTS=-nostart
+    MKSHLIB='$(CCC) $(DSO_LDOPTS) -o $@'
+    MDCPUCFG_H=_beos.cfg
+    USE_BTHREADS=1
+    PR_MD_ARCH_DIR=beos
+    RESOLVE_LINK_SYMBOLS=1
     ;;
 
 *-dgux*)
@@ -973,8 +981,6 @@ AC_CHECK_FUNC(dlopen,,[
     AC_CHECK_LIB(dl, dlopen, [OS_LIBS="-ldl $OS_LIBS"])
 ])
 
-EXTRA_LIBS=
-
 if test -n "$MOZ_OPTIMIZE"; then
     CFLAGS="$CFLAGS $_OPTIMIZE_FLAGS"
     CXXFLAGS="$CXXFLAGS $_OPTIMIZE_FLAGS"
@@ -1041,7 +1047,7 @@ AC_SUBST(RANLIB)
 AC_SUBST(PERL)
 
 AC_SUBST(OS_LIBS)
-AC_SUBST(EXTRA_LIBS)
+AC_SUBST(RESOLVE_LINK_SYMBOLS)
 AC_SUBST(AIX_LINK_OPTS)
 AC_SUBST(NOSUCHFILE)
 AC_SUBST(MOZ_OBJFORMAT)
