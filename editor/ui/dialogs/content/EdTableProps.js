@@ -145,6 +145,9 @@ function Startup()
   gDialog.CellColorCheckbox = document.getElementById("CellColorCheckbox");
   gDialog.TableTab = document.getElementById("TableTab");
   gDialog.CellTab = document.getElementById("CellTab");
+  gDialog.AdvancedEditCell = document.getElementById("AdvancedEditButton2");
+  // Save "normal" tooltip message for Advanced Edit button
+  gDialog.AdvancedEditCellToolTipText = gDialog.AdvancedEditCell.getAttribute("tooltiptext");
 
   TableElement = editorShell.GetElementOrParentByTagName("table", null);
   if(!TableElement)
