@@ -212,3 +212,7 @@ pref("network.autodial-helper.enabled", true);
 // problem of Windows showing an alert when it tries to use DDE
 // and we're not already running).
 pref("advanced.system.supportDDEExec", true);
+
+// Use CP932 compatible map for JIS X 0208
+pref("intl.jis0208.map", "CP932");
+

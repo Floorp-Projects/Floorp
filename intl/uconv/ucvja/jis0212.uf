@@ -1,28 +1,25 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
- *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
- *
- * Contributor(s): 
- */
-/*========================================================
+*
+* The contents of this file are subject to the Netscape Public License
+* Version 1.0 (the "NPL"); you may not use this file except in
+* compliance with the NPL.  You may obtain a copy of the NPL at
+* http://www.mozilla.org/NPL/
+*
+* Software distributed under the NPL is distributed on an "AS IS" basis, 
+* WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL 
+* for the specific language governing rights and limitations under the 
+* NPL. 
+*
+* The Initial Developer of this code under the NPL is Netscape
+* Communications Corporation.  Portions created by Netscape are
+* Copyright (C) 2001 Netscape Communications Corporation.  All Rights
+* Reserved.
+*/
+ /*========================================================
   This is a Generated file. Please don't edit it.
 
-  The tool which used to generate this file is called fromu.
+  The tool which used to generate this file is called umaptable.
+  You can find this tool under mozilla/intl/uconv/tools/umaptable.c.
   If you have any problem of this file. Please contact 
   Netscape Client International Team or 
   ftang@netscape <Frank Tang> 
@@ -99,12 +96,6 @@ Begin of Item 0009
 End of Item 0009 
 
 Begin of Item 000A
- Format 2
-  srcBegin = 007E
-  destBegin = 2237
-End of Item 000A 
-
-Begin of Item 000B
  Format 1
   srcBegin = 00A1
   srcEnd = 017E
@@ -138,9 +129,9 @@ Begin of Item 000B
   2B6C 2A69 2B69 2A66 2B66 2A6B 2B6B 2A68 
   2B68 2A6A 2B6A 2A71 2B71 2A74 2B74 2A73 
   2A75 2B75 2A77 2B77 2A76 2B76 
-End of Item 000B 
+End of Item 000A 
 
-Begin of Item 000C
+Begin of Item 000B
  Format 1
   srcBegin = 01CD
   srcEnd = 01DC
@@ -148,30 +139,30 @@ Begin of Item 000C
  Mapping  = 
   2A26 2B26 2A43 2B43 2A55 2B55 2A67 2B67 
   2A70 2B70 2A6D 2B6D 2A6F 2B6F 2A6E 2B6E 
+End of Item 000B 
+
+Begin of Item 000C
+ Format 2
+  srcBegin = 01F5
+  destBegin = 2B39
 End of Item 000C 
 
 Begin of Item 000D
  Format 2
-  srcBegin = 01F5
-  destBegin = 2B39
+  srcBegin = 02C7
+  destBegin = 2230
 End of Item 000D 
 
 Begin of Item 000E
- Format 2
-  srcBegin = 02C7
-  destBegin = 2230
-End of Item 000E 
-
-Begin of Item 000F
  Format 1
   srcBegin = 02D8
   srcEnd = 02DD
   mappingOffset = 00EE
  Mapping  = 
   222F 2232 2236 2235 FFFD 2233 
-End of Item 000F 
+End of Item 000E 
 
-Begin of Item 0010
+Begin of Item 000F
  Format 1
   srcBegin = 0384
   srcEnd = 0390
@@ -179,18 +170,18 @@ Begin of Item 0010
  Mapping  = 
   2238 2239 2661 FFFD 2662 2663 2664 FFFD 
   2667 FFFD 2669 266C 2676 
-End of Item 0010 
+End of Item 000F 
 
-Begin of Item 0011
+Begin of Item 0010
  Format 1
   srcBegin = 03AA
   srcEnd = 03B0
   mappingOffset = 0101
  Mapping  = 
   2665 266A 2671 2672 2673 2674 267B 
-End of Item 0011 
+End of Item 0010 
 
-Begin of Item 0012
+Begin of Item 0011
  Format 1
   srcBegin = 03C2
   srcEnd = 03CE
@@ -198,39 +189,39 @@ Begin of Item 0012
  Mapping  = 
   2678 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   2675 267A 2677 2679 267C 
-End of Item 0012 
+End of Item 0011 
 
-Begin of Item 0013
+Begin of Item 0012
  Format 1
   srcBegin = 040E
   srcEnd = 040F
   mappingOffset = 0115
  Mapping  = 
   274D 274E 
-End of Item 0013 
+End of Item 0012 
 
-Begin of Item 0014
+Begin of Item 0013
  Format 1
   srcBegin = 045E
   srcEnd = 045F
   mappingOffset = 0117
  Mapping  = 
   277D 277E 
+End of Item 0013 
+
+Begin of Item 0014
+ Format 2
+  srcBegin = 2116
+  destBegin = 2271
 End of Item 0014 
 
 Begin of Item 0015
  Format 2
-  srcBegin = 2116
-  destBegin = 2271
+  srcBegin = 2122
+  destBegin = 226F
 End of Item 0015 
 
 Begin of Item 0016
- Format 2
-  srcBegin = 2122
-  destBegin = 226F
-End of Item 0016 
-
-Begin of Item 0017
  Format 1
   srcBegin = 4E02
   srcEnd = 4E12
@@ -239,9 +230,9 @@ Begin of Item 0017
   3021 FFFD 3022 3023 FFFD FFFD FFFD FFFD 
   FFFD FFFD 3024 FFFD FFFD FFFD FFFD FFFD 
   3025 
-End of Item 0017 
+End of Item 0016 
 
-Begin of Item 0018
+Begin of Item 0017
  Format 1
   srcBegin = 4E1F
   srcEnd = 4E7F
@@ -260,9 +251,9 @@ Begin of Item 0018
   FFFD FFFD FFFD FFFD FFFD 3039 303A FFFD 
   FFFD FFFD 303B FFFD FFFD FFFD FFFD FFFD 
   303C 
-End of Item 0018 
+End of Item 0017 
 
-Begin of Item 0019
+Begin of Item 0018
  Format 1
   srcBegin = 4E8D
   srcEnd = 4E9D
@@ -271,9 +262,9 @@ Begin of Item 0019
   303D FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD 303E 303F FFFD FFFD FFFD FFFD FFFD 
   3040 
-End of Item 0019 
+End of Item 0018 
 
-Begin of Item 001A
+Begin of Item 0019
  Format 1
   srcBegin = 4EAF
   srcEnd = 4EC3
@@ -282,9 +273,9 @@ Begin of Item 001A
   3041 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD 3042 FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD FFFD 3043 
-End of Item 001A 
+End of Item 0019 
 
-Begin of Item 001B
+Begin of Item 001A
  Format 1
   srcBegin = 4ED0
   srcEnd = 4F19
@@ -300,9 +291,9 @@ Begin of Item 001B
   3055 FFFD FFFD 3056 3057 FFFD FFFD FFFD 
   FFFD FFFD 3058 FFFD FFFD 3059 305A 305B 
   FFFD 305C 
-End of Item 001B 
+End of Item 001A 
 
-Begin of Item 001C
+Begin of Item 001B
  Format 1
   srcBegin = 4F2E
   srcEnd = 4F9F
@@ -323,9 +314,9 @@ Begin of Item 001C
   3125 FFFD 3126 FFFD 3127 3128 3129 FFFD 
   FFFD 312A FFFD 312B 312C FFFD FFFD FFFD 
   312D 312E 
-End of Item 001C 
+End of Item 001B 
 
-Begin of Item 001D
+Begin of Item 001C
  Format 1
   srcBegin = 4FB2
   srcEnd = 4FE2
@@ -338,9 +329,9 @@ Begin of Item 001D
   3140 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD 3141 FFFD FFFD FFFD 3142 FFFD 
   3143 
-End of Item 001D 
+End of Item 001C 
 
-Begin of Item 001E
+Begin of Item 001D
  Format 1
   srcBegin = 4FF0
   srcEnd = 5071
@@ -363,9 +354,9 @@ Begin of Item 001E
   316D FFFD 316E 316F FFFD FFFD 3170 3171 
   FFFD FFFD 3172 FFFD FFFD 3173 FFFD FFFD 
   3174 3175 
-End of Item 001E 
+End of Item 001D 
 
-Begin of Item 001F
+Begin of Item 001E
  Format 1
   srcBegin = 5081
   srcEnd = 5166
@@ -400,9 +391,9 @@ Begin of Item 001F
   FFFD FFFD 3268 FFFD 3269 FFFD 326A 326B 
   FFFD FFFD FFFD FFFD FFFD FFFD 326C FFFD 
   FFFD FFFD FFFD 326D FFFD 326E 
-End of Item 001F 
+End of Item 001E 
 
-Begin of Item 0020
+Begin of Item 001F
  Format 1
   srcBegin = 517E
   srcEnd = 5205
@@ -425,9 +416,9 @@ Begin of Item 0020
   332B FFFD FFFD FFFD 332C 332D 332E FFFD 
   FFFD 332F FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD 3330 3331 FFFD FFFD 3332 
-End of Item 0020 
+End of Item 001F 
 
-Begin of Item 0021
+Begin of Item 0020
  Format 1
   srcBegin = 5212
   srcEnd = 5249
@@ -440,9 +431,9 @@ Begin of Item 0021
   333B FFFD FFFD 333C FFFD FFFD FFFD FFFD 
   FFFD FFFD 333D FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD 333E FFFD FFFD FFFD 333F 
-End of Item 0021 
+End of Item 0020 
 
-Begin of Item 0022
+Begin of Item 0021
  Format 1
   srcBegin = 5255
   srcEnd = 534C
@@ -479,9 +470,9 @@ Begin of Item 0022
   3432 FFFD FFFD FFFD FFFD FFFD FFFD 3433 
   3434 3435 FFFD FFFD FFFD 3436 FFFD FFFD 
   FFFD FFFD FFFD FFFD FFFD FFFD 3438 3437 
-End of Item 0022 
+End of Item 0021 
 
-Begin of Item 0023
+Begin of Item 0022
  Format 1
   srcBegin = 5359
   srcEnd = 53E7
@@ -505,21 +496,21 @@ Begin of Item 0023
   FFFD 345A 345B FFFD 345C FFFD FFFD FFFD 
   FFFD 345D FFFD FFFD 345E 345F FFFD 3460 
   FFFD FFFD FFFD FFFD FFFD 3461 3462 
+End of Item 0022 
+
+Begin of Item 0023
+ Format 2
+  srcBegin = 53F5
+  destBegin = 3463
 End of Item 0023 
 
 Begin of Item 0024
  Format 2
-  srcBegin = 53F5
-  destBegin = 3463
+  srcBegin = 5402
+  destBegin = 3464
 End of Item 0024 
 
 Begin of Item 0025
- Format 2
-  srcBegin = 5402
-  destBegin = 3464
-End of Item 0025 
-
-Begin of Item 0026
  Format 1
   srcBegin = 5413
   srcEnd = 5435
@@ -530,9 +521,9 @@ Begin of Item 0026
   FFFD FFFD FFFD FFFD 3468 3469 FFFD 346A 
   FFFD FFFD FFFD FFFD 346B FFFD 346C FFFD 
   FFFD 346D 346E 
-End of Item 0026 
+End of Item 0025 
 
-Begin of Item 0027
+Begin of Item 0026
  Format 1
   srcBegin = 5443
   srcEnd = 544F
@@ -540,9 +531,9 @@ Begin of Item 0027
  Mapping  = 
   346F 3470 FFFD FFFD 3471 FFFD FFFD FFFD 
   FFFD FFFD 3472 FFFD 3473 
-End of Item 0027 
+End of Item 0026 
 
-Begin of Item 0028
+Begin of Item 0027
  Format 1
   srcBegin = 545E
   srcEnd = 54CE
@@ -563,9 +554,9 @@ Begin of Item 0028
   FFFD 3538 FFFD FFFD FFFD FFFD FFFD FFFD 
   3539 FFFD FFFD FFFD 353A FFFD FFFD 353B 
   353C 
-End of Item 0028 
+End of Item 0027 
 
-Begin of Item 0029
+Begin of Item 0028
  Format 1
   srcBegin = 54E0
   srcEnd = 5515
@@ -578,9 +569,9 @@ Begin of Item 0029
   3545 3546 FFFD FFFD FFFD 3547 FFFD FFFD 
   3548 3549 FFFD FFFD 354A 354B 354C FFFD 
   FFFD FFFD FFFD FFFD FFFD 354D 
-End of Item 0029 
+End of Item 0028 
 
-Begin of Item 002A
+Begin of Item 0029
  Format 1
   srcBegin = 552A
   srcEnd = 5566
@@ -594,9 +585,9 @@ Begin of Item 002A
   FFFD FFFD FFFD FFFD FFFD FFFD 355D FFFD 
   355E 355F FFFD FFFD 3560 FFFD 3561 3562 
   FFFD FFFD 3563 FFFD 3564 
-End of Item 002A 
+End of Item 0029 
 
-Begin of Item 002B
+Begin of Item 002A
  Format 1
   srcBegin = 557F
   srcEnd = 5597
@@ -606,9 +597,9 @@ Begin of Item 002B
   FFFD 3569 FFFD FFFD FFFD FFFD FFFD 356A 
   356B FFFD 356C 356D 356E 356F FFFD FFFD 
   3570 
-End of Item 002B 
+End of Item 002A 
 
-Begin of Item 002C
+Begin of Item 002B
  Format 1
   srcBegin = 55A3
   srcEnd = 55B2
@@ -616,9 +607,9 @@ Begin of Item 002C
  Mapping  = 
   3571 3572 FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD 3573 FFFD FFFD FFFD FFFD 3574 
-End of Item 002C 
+End of Item 002B 
 
-Begin of Item 002D
+Begin of Item 002C
  Format 1
   srcBegin = 55BF
   srcEnd = 55E9
@@ -630,9 +621,9 @@ Begin of Item 002D
   3622 3623 FFFD FFFD 3624 FFFD FFFD 3625 
   FFFD FFFD FFFD 3626 FFFD FFFD FFFD FFFD 
   FFFD FFFD 3627 
-End of Item 002D 
+End of Item 002C 
 
-Begin of Item 002E
+Begin of Item 002D
  Format 1
   srcBegin = 55F6
   srcEnd = 560A
@@ -641,15 +632,15 @@ Begin of Item 002E
   3628 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD 3629 FFFD FFFD FFFD FFFD FFFD 362A 
   FFFD FFFD 362B FFFD 362C 
-End of Item 002E 
+End of Item 002D 
 
-Begin of Item 002F
+Begin of Item 002E
  Format 2
   srcBegin = 5619
   destBegin = 3633
-End of Item 002F 
+End of Item 002E 
 
-Begin of Item 0030
+Begin of Item 002F
  Format 1
   srcBegin = 562C
   srcEnd = 5675
@@ -665,9 +656,9 @@ Begin of Item 0030
   FFFD FFFD 364D FFFD FFFD 364E FFFD FFFD 
   FFFD 364F FFFD 3650 FFFD 3651 3652 FFFD 
   FFFD 3653 
-End of Item 0030 
+End of Item 002F 
 
-Begin of Item 0031
+Begin of Item 0030
  Format 1
   srcBegin = 5684
   srcEnd = 5752
@@ -699,9 +690,9 @@ Begin of Item 0031
   FFFD 3739 373A 373B FFFD FFFD FFFD FFFD 
   FFFD 373C 373D FFFD FFFD FFFD FFFD FFFD 
   373E 373F FFFD FFFD FFFD FFFD 3740 
-End of Item 0031 
+End of Item 0030 
 
-Begin of Item 0032
+Begin of Item 0031
  Format 1
   srcBegin = 5762
   srcEnd = 57AC
@@ -717,9 +708,9 @@ Begin of Item 0032
   375A FFFD 375B 375C 375D 375E FFFD 375F 
   FFFD FFFD FFFD FFFD FFFD 3761 3762 3763 
   FFFD FFFD 3764 
-End of Item 0032 
+End of Item 0031 
 
-Begin of Item 0033
+Begin of Item 0032
  Format 1
   srcBegin = 57B8
   srcEnd = 580D
@@ -736,9 +727,9 @@ Begin of Item 0033
   3776 FFFD FFFD FFFD FFFD 3777 3778 3779 
   FFFD FFFD FFFD 377A 377B FFFD FFFD FFFD 
   377C 377D FFFD FFFD 3821 3822 
-End of Item 0033 
+End of Item 0032 
 
-Begin of Item 0034
+Begin of Item 0033
  Format 1
   srcBegin = 581B
   srcEnd = 5868
@@ -754,9 +745,9 @@ Begin of Item 0034
   FFFD FFFD 3832 FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD FFFD 3833 FFFD 3834 FFFD 
   FFFD 3835 FFFD FFFD 3836 3837 
-End of Item 0034 
+End of Item 0033 
 
-Begin of Item 0035
+Begin of Item 0034
  Format 1
   srcBegin = 5878
   srcEnd = 58F3
@@ -778,9 +769,9 @@ Begin of Item 0035
   FFFD 385B 385C FFFD FFFD FFFD FFFD FFFD 
   FFFD 385D FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD 385E 
-End of Item 0035 
+End of Item 0034 
 
-Begin of Item 0036
+Begin of Item 0035
  Format 1
   srcBegin = 5905
   srcEnd = 5946
@@ -795,9 +786,9 @@ Begin of Item 0036
   386F 3870 FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD 3871 FFFD FFFD FFFD 3872 FFFD 
   FFFD 3873 
-End of Item 0036 
+End of Item 0035 
 
-Begin of Item 0037
+Begin of Item 0036
  Format 1
   srcBegin = 5952
   srcEnd = 597C
@@ -809,9 +800,9 @@ Begin of Item 0037
   FFFD 387D FFFD 387E FFFD 3921 FFFD FFFD 
   3922 FFFD FFFD 3923 3924 FFFD FFFD 3925 
   FFFD 3926 3927 
-End of Item 0037 
+End of Item 0036 
 
-Begin of Item 0038
+Begin of Item 0037
  Format 1
   srcBegin = 598B
   srcEnd = 5A30
@@ -838,9 +829,9 @@ Begin of Item 0038
   FFFD FFFD FFFD 3953 FFFD FFFD FFFD FFFD 
   3954 3955 FFFD FFFD 3956 3957 FFFD 3958 
   FFFD FFFD 3959 FFFD FFFD 395A 
-End of Item 0038 
+End of Item 0037 
 
-Begin of Item 0039
+Begin of Item 0038
  Format 1
   srcBegin = 5A44
   srcEnd = 5A7E
@@ -854,9 +845,9 @@ Begin of Item 0039
   FFFD 3966 FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD 3967 FFFD FFFD 3968 3969 
   FFFD FFFD 396A 
-End of Item 0039 
+End of Item 0038 
 
-Begin of Item 003A
+Begin of Item 0039
  Format 1
   srcBegin = 5A8B
   srcEnd = 5B08
@@ -878,9 +869,9 @@ Begin of Item 003A
   FFFD FFFD 3A2B 3A2C FFFD FFFD FFFD FFFD 
   FFFD FFFD 3A2D FFFD FFFD 3A2E 3A2F FFFD 
   FFFD FFFD FFFD FFFD FFFD 3A30 
-End of Item 003A 
+End of Item 0039 
 
-Begin of Item 003B
+Begin of Item 003A
  Format 1
   srcBegin = 5B17
   srcEnd = 5B6F
@@ -898,9 +889,9 @@ Begin of Item 003B
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD 3A40 FFFD FFFD FFFD FFFD FFFD 3A41 
   3A42 
-End of Item 003B 
+End of Item 003A 
 
-Begin of Item 003C
+Begin of Item 003B
  Format 1
   srcBegin = 5B7C
   srcEnd = 5B96
@@ -910,9 +901,9 @@ Begin of Item 003C
   3A48 FFFD 3A49 FFFD FFFD FFFD 3A4A FFFD 
   FFFD FFFD 3A4B FFFD 3A4C 3A4D FFFD 3A4E 
   3A4F FFFD 3A50 
-End of Item 003C 
+End of Item 003B 
 
-Begin of Item 003D
+Begin of Item 003C
  Format 1
   srcBegin = 5BA8
   srcEnd = 5BC1
@@ -922,9 +913,9 @@ Begin of Item 003D
   FFFD 3A56 3A57 FFFD FFFD FFFD FFFD 3A58 
   FFFD FFFD 3A59 FFFD 3A5A FFFD FFFD FFFD 
   3A5B 3A5C 
-End of Item 003D 
+End of Item 003C 
 
-Begin of Item 003E
+Begin of Item 003D
  Format 1
   srcBegin = 5BCD
   srcEnd = 5BE0
@@ -933,9 +924,9 @@ Begin of Item 003E
   3A5D FFFD 3A5E FFFD FFFD FFFD FFFD FFFD 
   FFFD 3A5F 3A60 3A61 3A62 3A63 FFFD FFFD 
   FFFD FFFD FFFD 3A64 
-End of Item 003E 
+End of Item 003D 
 
-Begin of Item 003F
+Begin of Item 003E
  Format 1
   srcBegin = 5BEF
   srcEnd = 5BFD
@@ -943,9 +934,9 @@ Begin of Item 003F
  Mapping  = 
   3A65 FFFD 3A66 FFFD FFFD 3A67 FFFD FFFD 
   FFFD FFFD FFFD FFFD FFFD FFFD 3A68 
-End of Item 003F 
+End of Item 003E 
 
-Begin of Item 0040
+Begin of Item 003F
  Format 1
   srcBegin = 5C0C
   srcEnd = 5C36
@@ -957,9 +948,9 @@ Begin of Item 0040
   FFFD FFFD 3A6E FFFD FFFD 3A6F FFFD 3A70 
   3A71 FFFD 3A72 FFFD 3A73 FFFD 3A74 FFFD 
   FFFD 3A75 3A76 
-End of Item 0040 
+End of Item 003F 
 
-Begin of Item 0041
+Begin of Item 0040
  Format 1
   srcBegin = 5C59
   srcEnd = 5CBA
@@ -978,9 +969,9 @@ Begin of Item 0041
   FFFD 3B34 FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD 3B35 FFFD 3B36 3B37 FFFD FFFD FFFD 
   FFFD 3B38 
-End of Item 0041 
+End of Item 0040 
 
-Begin of Item 0042
+Begin of Item 0041
  Format 1
   srcBegin = 5CC9
   srcEnd = 5CDD
@@ -989,18 +980,18 @@ Begin of Item 0042
   3B39 FFFD 3B3A FFFD FFFD FFFD FFFD FFFD 
   FFFD 3B3B FFFD FFFD FFFD FFFD 3B3D FFFD 
   FFFD FFFD FFFD FFFD 3B3C 
-End of Item 0042 
+End of Item 0041 
 
-Begin of Item 0043
+Begin of Item 0042
  Format 1
   srcBegin = 5CEE
   srcEnd = 5CF4
   mappingOffset = 0D6D
  Mapping  = 
   3B3E FFFD FFFD 3B3F 3B40 FFFD 3B41 
-End of Item 0043 
+End of Item 0042 
 
-Begin of Item 0044
+Begin of Item 0043
  Format 1
   srcBegin = 5D01
   srcEnd = 5D12
@@ -1009,9 +1000,9 @@ Begin of Item 0044
   3B42 FFFD FFFD FFFD FFFD 3B43 FFFD FFFD 
   FFFD FFFD FFFD FFFD 3B44 FFFD FFFD FFFD 
   FFFD 3B45 
-End of Item 0044 
+End of Item 0043 
 
-Begin of Item 0045
+Begin of Item 0044
  Format 1
   srcBegin = 5D23
   srcEnd = 5DE9
@@ -1042,9 +1033,9 @@ Begin of Item 0045
   FFFD FFFD FFFD FFFD FFFD 3B7B 3B7C FFFD 
   FFFD FFFD FFFD FFFD FFFD 3B7D FFFD FFFD 
   FFFD 3B7E FFFD FFFD FFFD FFFD 3C21 
-End of Item 0045 
+End of Item 0044 
 
-Begin of Item 0046
+Begin of Item 0045
  Format 1
   srcBegin = 5DF8
   srcEnd = 5E70
@@ -1066,9 +1057,9 @@ Begin of Item 0046
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   3C3B FFFD 3C3C 3C3D 3C3E 3C3F 3C40 FFFD 
   3C41 
-End of Item 0046 
+End of Item 0045 
 
-Begin of Item 0047
+Begin of Item 0046
  Format 1
   srcBegin = 5E80
   srcEnd = 5E8E
@@ -1076,9 +1067,9 @@ Begin of Item 0047
  Mapping  = 
   3C42 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD 3C43 FFFD FFFD 3C44 
-End of Item 0047 
+End of Item 0046 
 
-Begin of Item 0048
+Begin of Item 0047
  Format 1
   srcBegin = 5EA2
   srcEnd = 5EEB
@@ -1094,9 +1085,9 @@ Begin of Item 0048
   FFFD FFFD 3C58 FFFD 3C59 FFFD FFFD FFFD 
   FFFD FFFD FFFD 3C5A FFFD FFFD FFFD FFFD 
   FFFD 3C5B 
-End of Item 0048 
+End of Item 0047 
 
-Begin of Item 0049
+Begin of Item 0048
  Format 1
   srcBegin = 5F02
   srcEnd = 5FB8
@@ -1125,9 +1116,9 @@ Begin of Item 0049
   3D2F FFFD 3D32 FFFD FFFD 3D30 FFFD FFFD 
   FFFD 3D31 3D33 FFFD FFFD 3D34 3D35 3D36 
   FFFD FFFD FFFD FFFD FFFD FFFD 3D37 
-End of Item 0049 
+End of Item 0048 
 
-Begin of Item 004A
+Begin of Item 0049
  Format 1
   srcBegin = 5FC4
   srcEnd = 6071
@@ -1155,9 +1146,9 @@ Begin of Item 004A
   FFFD 3D67 FFFD FFFD FFFD 3D68 FFFD FFFD 
   FFFD FFFD FFFD 3D69 FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD FFFD FFFD 3D6A 
-End of Item 004A 
+End of Item 0049 
 
-Begin of Item 004B
+Begin of Item 004A
  Format 1
   srcBegin = 607E
   srcEnd = 60E5
@@ -1176,9 +1167,9 @@ Begin of Item 004B
   3E29 3E2A FFFD FFFD FFFD FFFD 3E2B 3E2C 
   FFFD FFFD FFFD 3E2D FFFD 3E2E FFFD 3E2F 
   3E30 FFFD FFFD FFFD 3E31 FFFD FFFD 3E32 
-End of Item 004B 
+End of Item 004A 
 
-Begin of Item 004C
+Begin of Item 004B
  Format 1
   srcBegin = 60F2
   srcEnd = 6149
@@ -1195,18 +1186,18 @@ Begin of Item 004C
   FFFD FFFD FFFD 3E4B 3E4C 3E4D FFFD 3E4E 
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD 3E4F 
   FFFD FFFD FFFD 3E50 3E51 FFFD FFFD 3E52 
-End of Item 004C 
+End of Item 004B 
 
-Begin of Item 004D
+Begin of Item 004C
  Format 1
   srcBegin = 615E
   srcEnd = 6160
   mappingOffset = 1144
  Mapping  = 
   3E53 FFFD 3E54 
-End of Item 004D 
+End of Item 004C 
 
-Begin of Item 004E
+Begin of Item 004D
  Format 1
   srcBegin = 616C
   srcEnd = 61C2
@@ -1223,9 +1214,9 @@ Begin of Item 004E
   FFFD 3E6C FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD FFFD 3E6D 3E6E FFFD FFFD 
   3E6F FFFD FFFD FFFD 3E70 3E71 3E72 
-End of Item 004E 
+End of Item 004D 
 
-Begin of Item 004F
+Begin of Item 004E
  Format 1
   srcBegin = 61CE
   srcEnd = 61EF
@@ -1236,18 +1227,18 @@ Begin of Item 004F
   3E78 3E79 FFFD 3E7A 3E7B FFFD FFFD 3E7E 
   FFFD 3E7C FFFD 3E7D FFFD FFFD 3F21 3F22 
   FFFD 3F23 
-End of Item 004F 
+End of Item 004E 
 
-Begin of Item 0050
+Begin of Item 004F
  Format 1
   srcBegin = 6201
   srcEnd = 6207
   mappingOffset = 11C0
  Mapping  = 
   3F24 FFFD 3F25 3F26 FFFD FFFD 3F27 
-End of Item 0050 
+End of Item 004F 
 
-Begin of Item 0051
+Begin of Item 0050
  Format 1
   srcBegin = 6213
   srcEnd = 622B
@@ -1257,9 +1248,9 @@ Begin of Item 0051
   FFFD 3F2A FFFD FFFD FFFD 3F2B FFFD 3F2C 
   3F2D FFFD FFFD FFFD 3F2E FFFD 3F2F FFFD 
   3F30 
-End of Item 0051 
+End of Item 0050 
 
-Begin of Item 0052
+Begin of Item 0051
  Format 1
   srcBegin = 6239
   srcEnd = 627D
@@ -1274,18 +1265,18 @@ Begin of Item 0052
   FFFD FFFD FFFD FFFD 3F40 FFFD 3F41 FFFD 
   FFFD FFFD 3F42 FFFD FFFD FFFD FFFD FFFD 
   FFFD 3F43 FFFD FFFD 3F44 
-End of Item 0052 
+End of Item 0051 
 
-Begin of Item 0053
+Begin of Item 0052
  Format 1
   srcBegin = 628D
   srcEnd = 6290
   mappingOffset = 1225
  Mapping  = 
   3F45 3F46 3F47 3F48 
-End of Item 0053 
+End of Item 0052 
 
-Begin of Item 0054
+Begin of Item 0053
  Format 1
   srcBegin = 62A6
   srcEnd = 62DA
@@ -1298,9 +1289,9 @@ Begin of Item 0054
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   3F52 FFFD FFFD FFFD FFFD FFFD FFFD 3F53 
   3F54 FFFD FFFD FFFD 3F55 
-End of Item 0054 
+End of Item 0053 
 
-Begin of Item 0055
+Begin of Item 0054
  Format 1
   srcBegin = 62EA
   srcEnd = 6318
@@ -1312,9 +1303,9 @@ Begin of Item 0055
   FFFD 3F5B 3F5C FFFD FFFD FFFD FFFD FFFD 
   3F5D 3F5E FFFD 3F5F FFFD FFFD 3F60 FFFD 
   FFFD 3F61 FFFD FFFD 3F62 FFFD 3F63 
-End of Item 0055 
+End of Item 0054 
 
-Begin of Item 0056
+Begin of Item 0055
  Format 1
   srcBegin = 6329
   srcEnd = 63AF
@@ -1337,9 +1328,9 @@ Begin of Item 0056
   402C 402D FFFD FFFD FFFD 402E FFFD FFFD 
   FFFD FFFD FFFD 402F FFFD 4030 FFFD FFFD 
   FFFD FFFD FFFD FFFD 4031 4032 4033 
-End of Item 0056 
+End of Item 0055 
 
-Begin of Item 0057
+Begin of Item 0056
  Format 1
   srcBegin = 63BD
   srcEnd = 63F9
@@ -1353,9 +1344,9 @@ Begin of Item 0057
   403F FFFD FFFD FFFD FFFD 4040 FFFD 4041 
   FFFD FFFD FFFD FFFD FFFD 4042 4043 FFFD 
   4044 FFFD FFFD 4045 4046 
-End of Item 0057 
+End of Item 0056 
 
-Begin of Item 0058
+Begin of Item 0057
  Format 1
   srcBegin = 6409
   srcEnd = 643F
@@ -1368,9 +1359,9 @@ Begin of Item 0058
   4052 4053 FFFD FFFD FFFD FFFD 4054 4055 
   FFFD FFFD FFFD FFFD 4056 FFFD FFFD FFFD 
   FFFD FFFD FFFD FFFD 4057 FFFD 4058 
-End of Item 0058 
+End of Item 0057 
 
-Begin of Item 0059
+Begin of Item 0058
  Format 1
   srcBegin = 644B
   srcEnd = 64D7
@@ -1394,9 +1385,9 @@ Begin of Item 0059
   FFFD 4121 FFFD FFFD FFFD FFFD 4122 4123 
   4124 4125 FFFD 4126 FFFD 4127 4128 FFFD 
   FFFD FFFD 4129 FFFD 412A 
-End of Item 0059 
+End of Item 0058 
 
-Begin of Item 005A
+Begin of Item 0059
  Format 1
   srcBegin = 64E4
   srcEnd = 656B
@@ -1419,9 +1410,9 @@ Begin of Item 005A
   414F FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD 4150 4151 FFFD FFFD FFFD 
   FFFD FFFD FFFD 4152 FFFD FFFD FFFD 4153 
-End of Item 005A 
+End of Item 0059 
 
-Begin of Item 005B
+Begin of Item 005A
  Format 1
   srcBegin = 657A
   srcEnd = 65DF
@@ -1440,9 +1431,9 @@ Begin of Item 005B
   FFFD FFFD FFFD FFFD 4168 FFFD 4169 FFFD 
   FFFD FFFD 416A FFFD 416B FFFD 416C FFFD 
   FFFD FFFD FFFD FFFD FFFD 416D 
-End of Item 005B 
+End of Item 005A 
 
-Begin of Item 005C
+Begin of Item 005B
  Format 1
   srcBegin = 65F0
   srcEnd = 66EE
@@ -1480,9 +1471,9 @@ Begin of Item 005C
   FFFD FFFD FFFD 4267 FFFD FFFD FFFD 4268 
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   4269 FFFD FFFD 426A 426B FFFD 426C 
-End of Item 005C 
+End of Item 005B 
 
-Begin of Item 005D
+Begin of Item 005C
  Format 1
   srcBegin = 66FA
   srcEnd = 6722
@@ -1494,9 +1485,9 @@ Begin of Item 005D
   FFFD 4271 FFFD FFFD FFFD FFFD FFFD 4272 
   FFFD FFFD 4273 FFFD FFFD FFFD 4274 FFFD 
   4275 
-End of Item 005D 
+End of Item 005C 
 
-Begin of Item 005E
+Begin of Item 005D
  Format 1
   srcBegin = 6733
   srcEnd = 679B
@@ -1516,9 +1507,9 @@ Begin of Item 005E
   FFFD FFFD FFFD 4329 432A FFFD 432B FFFD 
   432C FFFD FFFD 432D FFFD 432E 432F FFFD 
   4330 
-End of Item 005E 
+End of Item 005D 
 
-Begin of Item 005F
+Begin of Item 005E
  Format 1
   srcBegin = 67B0
   srcEnd = 67F9
@@ -1534,9 +1525,9 @@ Begin of Item 005F
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   4345 FFFD 4346 FFFD FFFD FFFD 4347 4348 
   FFFD 4338 
-End of Item 005F 
+End of Item 005E 
 
-Begin of Item 0060
+Begin of Item 005F
  Format 1
   srcBegin = 6814
   srcEnd = 685B
@@ -1551,9 +1542,9 @@ Begin of Item 0060
   4358 4359 FFFD FFFD FFFD FFFD 435A FFFD 
   435B FFFD FFFD FFFD FFFD FFFD 4349 FFFD 
   FFFD 435C FFFD 435D 435E FFFD FFFD 435F 
-End of Item 0060 
+End of Item 005F 
 
-Begin of Item 0061
+Begin of Item 0060
  Format 1
   srcBegin = 686B
   srcEnd = 6888
@@ -1563,9 +1554,9 @@ Begin of Item 0061
   FFFD FFFD 4366 FFFD FFFD FFFD 4367 4368 
   4369 436A FFFD FFFD FFFD FFFD FFFD 436B 
   FFFD 436C FFFD 436D FFFD 436E 
-End of Item 0061 
+End of Item 0060 
 
-Begin of Item 0062
+Begin of Item 0061
  Format 1
   srcBegin = 6896
   srcEnd = 6917
@@ -1588,9 +1579,9 @@ Begin of Item 0062
   4435 FFFD FFFD 4436 4437 FFFD FFFD FFFD 
   FFFD FFFD 4438 4439 FFFD 443A FFFD FFFD 
   443B 443C 
-End of Item 0062 
+End of Item 0061 
 
-Begin of Item 0063
+Begin of Item 0062
  Format 1
   srcBegin = 6931
   srcEnd = 6980
@@ -1606,9 +1597,9 @@ Begin of Item 0063
   444D FFFD FFFD 444E FFFD FFFD FFFD 444F 
   4450 4451 FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD 4452 4453 FFFD FFFD FFFD 4454 4455 
-End of Item 0063 
+End of Item 0062 
 
-Begin of Item 0064
+Begin of Item 0063
  Format 1
   srcBegin = 698D
   srcEnd = 6A03
@@ -1629,9 +1620,9 @@ Begin of Item 0064
   FFFD 446C 446D FFFD 446E FFFD 446F FFFD 
   4470 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD 4471 FFFD 4472 4473 FFFD 4474 
-End of Item 0064 
+End of Item 0063 
 
-Begin of Item 0065
+Begin of Item 0064
  Format 1
   srcBegin = 6A0F
   srcEnd = 6B85
@@ -1684,9 +1675,9 @@ Begin of Item 0065
   FFFD 457C FFFD FFFD FFFD FFFD 457D FFFD 
   FFFD FFFD FFFD FFFD FFFD FFFD 457E 4621 
   FFFD FFFD FFFD 4622 FFFD FFFD 4623 
-End of Item 0065 
+End of Item 0064 
 
-Begin of Item 0066
+Begin of Item 0065
  Format 1
   srcBegin = 6B97
   srcEnd = 6C9F
@@ -1726,18 +1717,18 @@ Begin of Item 0066
   FFFD FFFD FFFD FFFD FFFD 466D 466E FFFD 
   466F 4670 FFFD FFFD FFFD 4671 FFFD FFFD 
   4672 
-End of Item 0066 
+End of Item 0065 
 
-Begin of Item 0067
+Begin of Item 0066
  Format 1
   srcBegin = 6CB0
   srcEnd = 6CB4
   mappingOffset = 1B0D
  Mapping  = 
   4673 FFFD 4674 FFFD 4675 
-End of Item 0067 
+End of Item 0066 
 
-Begin of Item 0068
+Begin of Item 0067
  Format 1
   srcBegin = 6CC2
   srcEnd = 6CF4
@@ -1750,9 +1741,9 @@ Begin of Item 0068
   FFFD FFFD FFFD FFFD FFFD 4724 FFFD 4725 
   FFFD 4726 4727 FFFD 4728 FFFD FFFD FFFD 
   4729 FFFD 472A 
-End of Item 0068 
+End of Item 0067 
 
-Begin of Item 0069
+Begin of Item 0068
  Format 1
   srcBegin = 6D04
   srcEnd = 6D1A
@@ -1761,9 +1752,9 @@ Begin of Item 0069
   472B FFFD FFFD 472C FFFD FFFD 472D FFFD 
   FFFD FFFD 472E 472F FFFD 4730 FFFD 4731 
   FFFD FFFD FFFD FFFD FFFD FFFD 4732 
-End of Item 0069 
+End of Item 0068 
 
-Begin of Item 006A
+Begin of Item 0069
  Format 1
   srcBegin = 6D26
   srcEnd = 6D3F
@@ -1773,9 +1764,9 @@ Begin of Item 006A
   4737 4738 FFFD 4739 FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD 473A FFFD FFFD 473B FFFD 
   FFFD 473C 
-End of Item 006A 
+End of Item 0069 
 
-Begin of Item 006B
+Begin of Item 006A
  Format 1
   srcBegin = 6D57
   srcEnd = 6D70
@@ -1785,9 +1776,9 @@ Begin of Item 006B
   473F FFFD 4740 FFFD FFFD FFFD 4741 FFFD 
   4742 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   4743 4744 
-End of Item 006B 
+End of Item 006A 
 
-Begin of Item 006C
+Begin of Item 006B
  Format 1
   srcBegin = 6D7C
   srcEnd = 6D98
@@ -1797,9 +1788,9 @@ Begin of Item 006C
   FFFD FFFD FFFD 4747 FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD FFFD FFFD 4748 4749 FFFD 
   474A FFFD 474B 474C 474D 
-End of Item 006C 
+End of Item 006B 
 
-Begin of Item 006D
+Begin of Item 006C
  Format 1
   srcBegin = 6DAA
   srcEnd = 6E04
@@ -1817,9 +1808,9 @@ Begin of Item 006D
   FFFD FFFD 4764 FFFD 4765 FFFD FFFD FFFD 
   FFFD FFFD 4766 FFFD FFFD FFFD 4767 FFFD 
   FFFD FFFD 4768 
-End of Item 006D 
+End of Item 006C 
 
-Begin of Item 006E
+Begin of Item 006D
  Format 1
   srcBegin = 6E1E
   srcEnd = 6E7D
@@ -1837,9 +1828,9 @@ Begin of Item 006E
   FFFD FFFD 4823 FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD FFFD FFFD 4824 FFFD FFFD 
   FFFD FFFD FFFD FFFD FFFD 4825 FFFD 4826 
-End of Item 006E 
+End of Item 006D 
 
-Begin of Item 006F
+Begin of Item 006E
  Format 1
   srcBegin = 6E8D
   srcEnd = 6ECF
@@ -1854,9 +1845,9 @@ Begin of Item 006F
   FFFD FFFD 4831 4832 4833 FFFD 4834 FFFD 
   FFFD FFFD 4835 4836 FFFD 4837 FFFD FFFD 
   4838 4839 483A 
-End of Item 006F 
+End of Item 006E 
 
-Begin of Item 0070
+Begin of Item 006F
  Format 1
   srcBegin = 6EEB
   srcEnd = 6F3C
@@ -1873,9 +1864,9 @@ Begin of Item 0070
   FFFD FFFD 4853 FFFD 484D 484E FFFD FFFD 
   484F FFFD FFFD 4850 FFFD FFFD FFFD FFFD 
   4851 4852 
-End of Item 0070 
+End of Item 006F 
 
-Begin of Item 0071
+Begin of Item 0070
  Format 1
   srcBegin = 6F4F
   srcEnd = 6F6C
@@ -1885,9 +1876,9 @@ Begin of Item 0071
   4858 FFFD 4859 485A FFFD FFFD 485B 485C 
   FFFD FFFD 485D 485E FFFD FFFD FFFD FFFD 
   FFFD 485F FFFD FFFD FFFD 4860 
-End of Item 0071 
+End of Item 0070 
 
-Begin of Item 0072
+Begin of Item 0071
  Format 1
   srcBegin = 6F7D
   srcEnd = 6FCA
@@ -1903,9 +1894,9 @@ Begin of Item 0072
   4878 4879 FFFD FFFD FFFD FFFD FFFD 487A 
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   487B FFFD 487C 487D FFFD 487E 
-End of Item 0072 
+End of Item 0071 
 
-Begin of Item 0073
+Begin of Item 0072
  Format 1
   srcBegin = 6FDA
   srcEnd = 7023
@@ -1921,9 +1912,9 @@ Begin of Item 0073
   FFFD FFFD FFFD FFFD FFFD 492F FFFD FFFD 
   FFFD FFFD FFFD FFFD FFFD FFFD 4930 FFFD 
   FFFD 4931 
-End of Item 0073 
+End of Item 0072 
 
-Begin of Item 0074
+Begin of Item 0073
  Format 1
   srcBegin = 702F
   srcEnd = 7086
@@ -1940,9 +1931,9 @@ Begin of Item 0074
   FFFD FFFD FFFD FFFD FFFD FFFD 4946 4947 
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD 4948 
   FFFD FFFD 4949 FFFD FFFD FFFD 494A 494B 
-End of Item 0074 
+End of Item 0073 
 
-Begin of Item 0075
+Begin of Item 0074
  Format 1
   srcBegin = 7094
   srcEnd = 70B7
@@ -1953,9 +1944,9 @@ Begin of Item 0075
   4952 FFFD FFFD FFFD FFFD FFFD FFFD 4953 
   FFFD FFFD FFFD FFFD 4954 4955 FFFD FFFD 
   4956 FFFD FFFD 4957 
-End of Item 0075 
+End of Item 0074 
 
-Begin of Item 0076
+Begin of Item 0075
  Format 1
   srcBegin = 70CA
   srcEnd = 70E4
@@ -1965,9 +1956,9 @@ Begin of Item 0076
   FFFD 495A 495B 495C 495D FFFD 495E FFFD 
   FFFD FFFD 495F FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD 4960 
-End of Item 0076 
+End of Item 0075 
 
-Begin of Item 0077
+Begin of Item 0076
  Format 1
   srcBegin = 70FA
   srcEnd = 710F
@@ -1976,9 +1967,9 @@ Begin of Item 0077
   4961 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD 4962 4963 4964 4965 4966 FFFD FFFD 
   FFFD 4967 4968 FFFD FFFD 4969 
-End of Item 0077 
+End of Item 0076 
 
-Begin of Item 0078
+Begin of Item 0077
  Format 1
   srcBegin = 711E
   srcEnd = 7168
@@ -1994,9 +1985,9 @@ Begin of Item 0078
   FFFD 497A FFFD FFFD 497B FFFD 497C FFFD 
   497D FFFD 497E FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD 4A21 
-End of Item 0078 
+End of Item 0077 
 
-Begin of Item 0079
+Begin of Item 0078
  Format 1
   srcBegin = 7179
   srcEnd = 71A2
@@ -2008,9 +1999,9 @@ Begin of Item 0079
   FFFD 4A27 FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD 4A28 4A29 FFFD FFFD FFFD FFFD 4A2A 
   FFFD 4A2B 
-End of Item 0079 
+End of Item 0078 
 
-Begin of Item 007A
+Begin of Item 0079
  Format 1
   srcBegin = 71AF
   srcEnd = 71DC
@@ -2022,9 +2013,9 @@ Begin of Item 007A
   FFFD FFFD FFFD FFFD 4A35 4A36 FFFD FFFD 
   FFFD FFFD FFFD FFFD 4A37 FFFD FFFD 4A38 
   FFFD FFFD 4A39 4A3A FFFD 4A3B 
-End of Item 007A 
+End of Item 0079 
 
-Begin of Item 007B
+Begin of Item 007A
  Format 1
   srcBegin = 71F8
   srcEnd = 729B
@@ -2051,9 +2042,9 @@ Begin of Item 007B
   FFFD 4A67 FFFD FFFD FFFD 4A68 4A69 FFFD 
   FFFD FFFD FFFD 4A6A FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD 4A6B 
-End of Item 007B 
+End of Item 007A 
 
-Begin of Item 007C
+Begin of Item 007B
  Format 1
   srcBegin = 72A8
   srcEnd = 72E5
@@ -2067,9 +2058,9 @@ Begin of Item 007C
   FFFD FFFD FFFD FFFD FFFD 4A76 4A77 FFFD 
   4A78 FFFD FFFD FFFD FFFD FFFD FFFD 4A79 
   FFFD FFFD FFFD FFFD FFFD 4A7A 
-End of Item 007C 
+End of Item 007B 
 
-Begin of Item 007D
+Begin of Item 007C
  Format 1
   srcBegin = 72F3
   srcEnd = 7426
@@ -2114,9 +2105,9 @@ Begin of Item 007D
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD 4C28 
   4C29 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD 4C2A FFFD 4C2B 
-End of Item 007D 
+End of Item 007C 
 
-Begin of Item 007E
+Begin of Item 007D
  Format 1
   srcBegin = 7439
   srcEnd = 7472
@@ -2130,9 +2121,9 @@ Begin of Item 007E
   FFFD 4C42 FFFD FFFD FFFD 4C43 4C44 4C45 
   FFFD FFFD 4C46 FFFD 4C47 4C48 FFFD FFFD 
   4C49 4C4A 
-End of Item 007E 
+End of Item 007D 
 
-Begin of Item 007F
+Begin of Item 007E
  Format 1
   srcBegin = 7480
   srcEnd = 7506
@@ -2155,9 +2146,9 @@ Begin of Item 007F
   FFFD FFFD FFFD FFFD 4C79 FFFD FFFD FFFD 
   FFFD FFFD 4C7A 4C7B 4C7C FFFD FFFD 4C7D 
   FFFD FFFD FFFD FFFD FFFD FFFD 4C7E 
-End of Item 007F 
+End of Item 007E 
 
-Begin of Item 0080
+Begin of Item 007F
  Format 1
   srcBegin = 7512
   srcEnd = 7561
@@ -2173,18 +2164,18 @@ Begin of Item 0080
   FFFD FFFD FFFD FFFD 4D34 FFFD 4D35 FFFD 
   4D36 FFFD FFFD FFFD FFFD 4D37 FFFD FFFD 
   FFFD FFFD FFFD FFFD 4D38 4D39 FFFD 4D3A 
-End of Item 0080 
+End of Item 007F 
 
-Begin of Item 0081
+Begin of Item 0080
  Format 1
   srcBegin = 756F
   srcEnd = 7571
   mappingOffset = 222A
  Mapping  = 
   4D3B FFFD 4D3C 
-End of Item 0081 
+End of Item 0080 
 
-Begin of Item 0082
+Begin of Item 0081
  Format 1
   srcBegin = 7581
   srcEnd = 75A4
@@ -2195,9 +2186,9 @@ Begin of Item 0082
   FFFD 4D46 4D47 FFFD 4D48 FFFD FFFD FFFD 
   4D49 FFFD FFFD 4D4A FFFD FFFD FFFD FFFD 
   FFFD 4D4B FFFD 4D4C 
-End of Item 0082 
+End of Item 0081 
 
-Begin of Item 0083
+Begin of Item 0082
  Format 1
   srcBegin = 75B4
   srcEnd = 7674
@@ -2228,9 +2219,9 @@ Begin of Item 0083
   4E2E 4E2F FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD 4E30 4E31 4E32 FFFD 4E33 FFFD FFFD 
   4E34 
-End of Item 0083 
+End of Item 0082 
 
-Begin of Item 0084
+Begin of Item 0083
  Format 1
   srcBegin = 7681
   srcEnd = 76AD
@@ -2242,9 +2233,9 @@ Begin of Item 0084
   FFFD FFFD 4E3A 4E3B 4E3C FFFD 4E3D 4E3E 
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD 4E46 FFFD FFFD 4E47 
-End of Item 0084 
+End of Item 0083 
 
-Begin of Item 0085
+Begin of Item 0084
  Format 1
   srcBegin = 76BD
   srcEnd = 7811
@@ -2293,9 +2284,9 @@ Begin of Item 0085
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   4F4E 4F4F FFFD FFFD 4F50 FFFD FFFD FFFD 
   4F51 4F52 FFFD FFFD 4F53 
-End of Item 0085 
+End of Item 0084 
 
-Begin of Item 0086
+Begin of Item 0085
  Format 1
   srcBegin = 781D
   srcEnd = 7837
@@ -2305,9 +2296,9 @@ Begin of Item 0086
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   4F58 4F59 FFFD 4F5A FFFD FFFD FFFD FFFD 
   4F5B FFFD 4F5C 
-End of Item 0086 
+End of Item 0085 
 
-Begin of Item 0087
+Begin of Item 0086
  Format 1
   srcBegin = 7843
   srcEnd = 786E
@@ -2319,18 +2310,18 @@ Begin of Item 0087
   FFFD 4F64 FFFD 4F65 FFFD 4F66 4F67 FFFD 
   4F68 4F69 FFFD FFFD FFFD 4F6A FFFD 4F6B 
   FFFD FFFD FFFD 4F6C 
-End of Item 0087 
+End of Item 0086 
 
-Begin of Item 0088
+Begin of Item 0087
  Format 1
   srcBegin = 787A
   srcEnd = 787E
   mappingOffset = 24DB
  Mapping  = 
   4F6D FFFD FFFD FFFD 4F6E 
-End of Item 0088 
+End of Item 0087 
 
-Begin of Item 0089
+Begin of Item 0088
  Format 1
   srcBegin = 788A
   srcEnd = 797E
@@ -2367,9 +2358,9 @@ Begin of Item 0089
   FFFD 505B FFFD FFFD FFFD FFFD FFFD FFFD 
   505C FFFD FFFD FFFD FFFD FFFD FFFD 505D 
   FFFD 505E 505F FFFD 5060 
-End of Item 0089 
+End of Item 0088 
 
-Begin of Item 008A
+Begin of Item 0089
  Format 1
   srcBegin = 798B
   srcEnd = 7ADB
@@ -2418,9 +2409,9 @@ Begin of Item 008A
   FFFD 5166 FFFD 5167 FFFD FFFD 5168 FFFD 
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   5169 
-End of Item 008A 
+End of Item 0089 
 
-Begin of Item 008B
+Begin of Item 008A
  Format 1
   srcBegin = 7AE8
   srcEnd = 7B07
@@ -2430,9 +2421,9 @@ Begin of Item 008B
   FFFD 516E FFFD FFFD 516F FFFD FFFD FFFD 
   FFFD FFFD FFFD 5170 FFFD 5171 5172 FFFD 
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD 5173 
-End of Item 008B 
+End of Item 008A 
 
-Begin of Item 008C
+Begin of Item 008B
  Format 1
   srcBegin = 7B14
   srcEnd = 7B77
@@ -2451,9 +2442,9 @@ Begin of Item 008C
   522B FFFD 522C FFFD FFFD 522D 522E FFFD 
   FFFD 522F FFFD 5230 FFFD FFFD 5231 5232 
   FFFD FFFD FFFD 5233 
-End of Item 008C 
+End of Item 008B 
 
-Begin of Item 008D
+Begin of Item 008C
  Format 1
   srcBegin = 7B84
   srcEnd = 7BDB
@@ -2470,9 +2461,9 @@ Begin of Item 008D
   FFFD 5249 FFFD FFFD 524A FFFD 524B FFFD 
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   524C FFFD 524D 524E FFFD 524F 5250 5251 
-End of Item 008D 
+End of Item 008C 
 
-Begin of Item 008E
+Begin of Item 008D
  Format 1
   srcBegin = 7BE8
   srcEnd = 7C3A
@@ -2489,9 +2480,9 @@ Begin of Item 008E
   526B FFFD FFFD FFFD 526C FFFD FFFD FFFD 
   FFFD 526D FFFD 526E 526F FFFD 5270 FFFD 
   FFFD 5271 5272 
-End of Item 008E 
+End of Item 008D 
 
-Begin of Item 008F
+Begin of Item 008E
  Format 1
   srcBegin = 7C46
   srcEnd = 7C55
@@ -2499,9 +2490,9 @@ Begin of Item 008F
  Mapping  = 
   5273 FFFD FFFD FFFD 5274 FFFD FFFD FFFD 
   FFFD FFFD FFFD 5276 5277 5278 FFFD 5275 
-End of Item 008F 
+End of Item 008E 
 
-Begin of Item 0090
+Begin of Item 008F
  Format 1
   srcBegin = 7C61
   srcEnd = 7CF5
@@ -2526,9 +2517,9 @@ Begin of Item 0090
   FFFD FFFD FFFD FFFD FFFD 5347 FFFD FFFD 
   5348 FFFD 5349 FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD FFFD 534A 
-End of Item 0090 
+End of Item 008F 
 
-Begin of Item 0091
+Begin of Item 0090
  Format 1
   srcBegin = 7D03
   srcEnd = 7E9E
@@ -2586,9 +2577,9 @@ Begin of Item 0091
   FFFD FFFD 5464 FFFD FFFD FFFD 5465 FFFD 
   FFFD FFFD 5466 FFFD FFFD 5467 FFFD 5468 
   FFFD FFFD 5469 546A 
-End of Item 0091 
+End of Item 0090 
 
-Begin of Item 0092
+Begin of Item 0091
  Format 1
   srcBegin = 7F3B
   srcEnd = 7F71
@@ -2601,9 +2592,9 @@ Begin of Item 0092
   5476 5477 5478 FFFD FFFD FFFD 5479 FFFD 
   547A 547B 547C 547D FFFD FFFD FFFD FFFD 
   FFFD FFFD 547E FFFD FFFD FFFD 5521 
-End of Item 0092 
+End of Item 0091 
 
-Begin of Item 0093
+Begin of Item 0092
  Format 1
   srcBegin = 7F7D
   srcEnd = 7FCF
@@ -2620,9 +2611,9 @@ Begin of Item 0093
   FFFD FFFD 5535 5536 FFFD FFFD 5537 FFFD 
   FFFD FFFD FFFD 5538 FFFD FFFD FFFD FFFD 
   FFFD 5539 553A 
-End of Item 0093 
+End of Item 0092 
 
-Begin of Item 0094
+Begin of Item 0093
  Format 1
   srcBegin = 7FDB
   srcEnd = 8044
@@ -2642,9 +2633,9 @@ Begin of Item 0094
   FFFD 555B 555C FFFD 555D FFFD 555E 555F 
   FFFD 5560 FFFD 5561 FFFD 5562 FFFD FFFD 
   FFFD 5563 
-End of Item 0094 
+End of Item 0093 
 
-Begin of Item 0095
+Begin of Item 0094
  Format 1
   srcBegin = 8060
   srcEnd = 8075
@@ -2653,9 +2644,9 @@ Begin of Item 0095
   5564 FFFD FFFD FFFD 5565 FFFD 5566 FFFD 
   FFFD FFFD FFFD FFFD FFFD 5567 FFFD FFFD 
   FFFD 5568 FFFD FFFD FFFD 5569 
-End of Item 0095 
+End of Item 0094 
 
-Begin of Item 0096
+Begin of Item 0095
  Format 1
   srcBegin = 8081
   srcEnd = 808E
@@ -2663,9 +2654,9 @@ Begin of Item 0096
  Mapping  = 
   556A FFFD FFFD FFFD FFFD FFFD FFFD 556B 
   FFFD FFFD FFFD FFFD FFFD 556C 
-End of Item 0096 
+End of Item 0095 
 
-Begin of Item 0097
+Begin of Item 0096
  Format 1
   srcBegin = 809C
   srcEnd = 80AB
@@ -2673,18 +2664,18 @@ Begin of Item 0097
  Mapping  = 
   556D FFFD 556E FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD 556F 5570 FFFD FFFD FFFD 5571 
-End of Item 0097 
+End of Item 0096 
 
-Begin of Item 0098
+Begin of Item 0097
  Format 1
   srcBegin = 80B8
   srcEnd = 80B9
   mappingOffset = 2BBE
  Mapping  = 
   5572 5573 
-End of Item 0098 
+End of Item 0097 
 
-Begin of Item 0099
+Begin of Item 0098
  Format 1
   srcBegin = 80C8
   srcEnd = 80E0
@@ -2694,9 +2685,9 @@ Begin of Item 0099
   FFFD FFFD 5577 FFFD 5578 5579 FFFD 557A 
   557B FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   557C 
-End of Item 0099 
+End of Item 0098 
 
-Begin of Item 009A
+Begin of Item 0099
  Format 1
   srcBegin = 80ED
   srcEnd = 81A2
@@ -2725,9 +2716,9 @@ Begin of Item 009A
   FFFD 564B FFFD 5646 FFFD FFFD FFFD FFFD 
   FFFD 564C FFFD 564D FFFD FFFD 564E FFFD 
   FFFD 564F FFFD FFFD FFFD 5650 
-End of Item 009A 
+End of Item 0099 
 
-Begin of Item 009B
+Begin of Item 009A
  Format 1
   srcBegin = 81AE
   srcEnd = 8203
@@ -2744,9 +2735,9 @@ Begin of Item 009B
   FFFD FFFD 5664 5665 5666 FFFD FFFD 5667 
   5668 FFFD 5669 566A FFFD FFFD FFFD 566B 
   FFFD 566C 566D FFFD FFFD 566E 
-End of Item 009B 
+End of Item 009A 
 
-Begin of Item 009C
+Begin of Item 009B
  Format 1
   srcBegin = 820F
   srcEnd = 830B
@@ -2784,9 +2775,9 @@ Begin of Item 009C
   575A FFFD FFFD FFFD FFFD FFFD 575B 575C 
   FFFD 575D 575E FFFD FFFD FFFD FFFD FFFD 
   575F 5760 FFFD 5761 5762 
-End of Item 009C 
+End of Item 009B 
 
-Begin of Item 009D
+Begin of Item 009C
  Format 1
   srcBegin = 831B
   srcEnd = 8357
@@ -2800,9 +2791,9 @@ Begin of Item 009D
   5774 5775 FFFD FFFD 5776 FFFD FFFD FFFD 
   FFFD FFFD 5777 5778 FFFD FFFD 5779 FFFD 
   583E 5763 577A 577B 577C 
-End of Item 009D 
+End of Item 009C 
 
-Begin of Item 009E
+Begin of Item 009D
  Format 1
   srcBegin = 8370
   srcEnd = 83AD
@@ -2816,9 +2807,9 @@ Begin of Item 009E
   582B 582C FFFD 582D 582E 582F FFFD FFFD 
   FFFD FFFD FFFD FFFD FFFD FFFD 5830 5831 
   FFFD 5832 FFFD FFFD 5833 584C 
-End of Item 009E 
+End of Item 009D 
 
-Begin of Item 009F
+Begin of Item 009E
  Format 1
   srcBegin = 83BE
   srcEnd = 83EA
@@ -2830,9 +2821,9 @@ Begin of Item 009F
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD 583D 
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD 583F FFFD 5840 
-End of Item 009F 
+End of Item 009E 
 
-Begin of Item 00A0
+Begin of Item 009F
  Format 1
   srcBegin = 83F6
   srcEnd = 8419
@@ -2843,9 +2834,9 @@ Begin of Item 00A0
   5846 FFFD FFFD FFFD 5847 FFFD FFFD FFFD 
   FFFD 5848 FFFD 5849 FFFD FFFD FFFD 584A 
   FFFD FFFD FFFD 584B 
-End of Item 00A0 
+End of Item 009F 
 
-Begin of Item 00A1
+Begin of Item 00A0
  Format 1
   srcBegin = 842F
   srcEnd = 8439
@@ -2853,9 +2844,9 @@ Begin of Item 00A1
  Mapping  = 
   584D FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD 584E 
-End of Item 00A1 
+End of Item 00A0 
 
-Begin of Item 00A2
+Begin of Item 00A1
  Format 1
   srcBegin = 8445
   srcEnd = 8485
@@ -2870,9 +2861,9 @@ Begin of Item 00A2
   FFFD 5864 FFFD 5865 FFFD FFFD FFFD 5866 
   5867 FFFD FFFD FFFD 5868 FFFD FFFD FFFD 
   5869 
-End of Item 00A2 
+End of Item 00A1 
 
-Begin of Item 00A3
+Begin of Item 00A2
  Format 1
   srcBegin = 8492
   srcEnd = 8510
@@ -2894,9 +2885,9 @@ Begin of Item 00A3
   592A 592B FFFD 592C FFFD FFFD FFFD FFFD 
   592D 592E FFFD FFFD FFFD 592F FFFD FFFD 
   FFFD FFFD 5930 FFFD 5931 FFFD 5932 
-End of Item 00A3 
+End of Item 00A2 
 
-Begin of Item 00A4
+Begin of Item 00A3
  Format 1
   srcBegin = 851C
   srcEnd = 8629
@@ -2936,9 +2927,9 @@ Begin of Item 00A4
   FFFD FFFD FFFD FFFD 5A2A 5A2B FFFD 5A2C 
   FFFD FFFD 5A2D FFFD FFFD 5A2E FFFD FFFD 
   FFFD FFFD FFFD 5A2F FFFD 5A30 
-End of Item 00A4 
+End of Item 00A3 
 
-Begin of Item 00A5
+Begin of Item 00A4
  Format 1
   srcBegin = 8636
   srcEnd = 8646
@@ -2947,9 +2938,9 @@ Begin of Item 00A5
   5A31 FFFD 5A32 FFFD 5A33 FFFD 5A34 5A35 
   FFFD FFFD 5A36 3866 5A37 FFFD FFFD FFFD 
   5A38 
-End of Item 00A5 
+End of Item 00A4 
 
-Begin of Item 00A6
+Begin of Item 00A5
  Format 1
   srcBegin = 8652
   srcEnd = 867A
@@ -2961,9 +2952,9 @@ Begin of Item 00A6
   FFFD FFFD 5A46 FFFD FFFD 5A47 FFFD FFFD 
   FFFD FFFD FFFD 5A48 5A49 5A4A FFFD FFFD 
   5A4B 
-End of Item 00A6 
+End of Item 00A5 
 
-Begin of Item 00A7
+Begin of Item 00A6
  Format 1
   srcBegin = 8688
   srcEnd = 86C5
@@ -2977,9 +2968,9 @@ Begin of Item 00A7
   FFFD 5A57 FFFD 5A58 5A59 5A5A FFFD 5A5B 
   5A5C 5A5D FFFD FFFD FFFD FFFD FFFD 5A5E 
   5A5F 5A60 FFFD 5A61 FFFD 5A62 
-End of Item 00A7 
+End of Item 00A6 
 
-Begin of Item 00A8
+Begin of Item 00A7
  Format 1
   srcBegin = 86D1
   srcEnd = 86E7
@@ -2988,9 +2979,9 @@ Begin of Item 00A8
   5A63 5A64 FFFD FFFD 5A65 FFFD 5A66 FFFD 
   FFFD 5A67 FFFD 5A68 FFFD FFFD FFFD 5A69 
   FFFD FFFD 5A6A FFFD 5A6B FFFD 5A6C 
-End of Item 00A8 
+End of Item 00A7 
 
-Begin of Item 00A9
+Begin of Item 00A8
  Format 1
   srcBegin = 86FA
   srcEnd = 877B
@@ -3013,9 +3004,9 @@ Begin of Item 00A9
   FFFD FFFD FFFD FFFD FFFD 5B34 FFFD 5B35 
   5B36 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD 5B37 
-End of Item 00A9 
+End of Item 00A8 
 
-Begin of Item 00AA
+Begin of Item 00A9
  Format 1
   srcBegin = 878B
   srcEnd = 8880
@@ -3052,9 +3043,9 @@ Begin of Item 00AA
   FFFD FFFD FFFD FFFD FFFD FFFD 5C35 FFFD 
   FFFD FFFD FFFD FFFD FFFD FFFD 5C36 FFFD 
   5C37 FFFD FFFD FFFD FFFD 5C38 
-End of Item 00AA 
+End of Item 00A9 
 
-Begin of Item 00AB
+Begin of Item 00AA
  Format 1
   srcBegin = 8898
   srcEnd = 88AA
@@ -3063,9 +3054,9 @@ Begin of Item 00AB
   5C39 FFFD 5C3A 5C3B 5C3C FFFD FFFD 5C3D 
   5C3E FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   5C3F FFFD 5C40 
-End of Item 00AB 
+End of Item 00AA 
 
-Begin of Item 00AC
+Begin of Item 00AB
  Format 1
   srcBegin = 88BA
   srcEnd = 897D
@@ -3096,9 +3087,9 @@ Begin of Item 00AC
   FFFD 5C79 FFFD FFFD 5C7A FFFD 5C7B FFFD 
   FFFD 5C7C FFFD 5C7D FFFD FFFD FFFD FFFD 
   5C7E 5D21 5D22 5D23 
-End of Item 00AC 
+End of Item 00AB 
 
-Begin of Item 00AD
+Begin of Item 00AC
  Format 1
   srcBegin = 8989
   srcEnd = 89BC
@@ -3111,18 +3102,18 @@ Begin of Item 00AD
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD 5D2E 
   FFFD FFFD FFFD 5D2F 5D30 5D31 5D32 FFFD 
   FFFD FFFD FFFD 5D33 
-End of Item 00AD 
+End of Item 00AC 
 
-Begin of Item 00AE
+Begin of Item 00AD
  Format 1
   srcBegin = 89D4
   srcEnd = 89D8
   mappingOffset = 3399
  Mapping  = 
   5D34 5D35 5D36 5D37 5D38 
-End of Item 00AE 
+End of Item 00AD 
 
-Begin of Item 00AF
+Begin of Item 00AE
  Format 1
   srcBegin = 89E5
   srcEnd = 8A67
@@ -3145,9 +3136,9 @@ Begin of Item 00AF
   FFFD 5D5F 5D60 5D61 FFFD FFFD FFFD 5D62 
   5D63 FFFD FFFD FFFD 5D64 FFFD FFFD FFFD 
   5D65 FFFD 5D66 
-End of Item 00AF 
+End of Item 00AE 
 
-Begin of Item 00B0
+Begin of Item 00AF
  Format 1
   srcBegin = 8A75
   srcEnd = 8ADF
@@ -3167,9 +3158,9 @@ Begin of Item 00B0
   FFFD FFFD FFFD FFFD 5E2A FFFD 5E2B 5E2C 
   5E2D FFFD 5E2E FFFD FFFD FFFD FFFD FFFD 
   5E2F FFFD 5E30 
-End of Item 00B0 
+End of Item 00AF 
 
-Begin of Item 00B1
+Begin of Item 00B0
  Format 1
   srcBegin = 8AEC
   srcEnd = 8B1F
@@ -3182,9 +3173,9 @@ Begin of Item 00B1
   FFFD FFFD FFFD FFFD FFFD 5E3B FFFD FFFD 
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   5E3C FFFD 5E3D 5E3E 
-End of Item 00B1 
+End of Item 00B0 
 
-Begin of Item 00B2
+Begin of Item 00B1
  Format 1
   srcBegin = 8B2D
   srcEnd = 8B9F
@@ -3205,9 +3196,9 @@ Begin of Item 00B2
   5E5B FFFD 5E5C FFFD FFFD FFFD FFFD 5E5D 
   5E5E FFFD FFFD FFFD FFFD FFFD FFFD 5E5F 
   FFFD 5E60 5E61 
-End of Item 00B2 
+End of Item 00B1 
 
-Begin of Item 00B3
+Begin of Item 00B2
  Format 1
   srcBegin = 8C38
   srcEnd = 8CA4
@@ -3227,9 +3218,9 @@ Begin of Item 00B3
   5F23 FFFD 5F24 5F25 FFFD FFFD FFFD FFFD 
   FFFD 5F26 FFFD 5F27 5F28 FFFD FFFD FFFD 
   FFFD FFFD FFFD FFFD 5F29 
-End of Item 00B3 
+End of Item 00B2 
 
-Begin of Item 00B4
+Begin of Item 00B3
  Format 1
   srcBegin = 8CB9
   srcEnd = 8D1B
@@ -3248,9 +3239,9 @@ Begin of Item 00B4
   5F42 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD 5F43 FFFD FFFD FFFD FFFD 5F44 FFFD 
   FFFD FFFD 5F45 
-End of Item 00B4 
+End of Item 00B3 
 
-Begin of Item 00B5
+Begin of Item 00B4
  Format 1
   srcBegin = 8D65
   srcEnd = 8D6E
@@ -3258,9 +3249,9 @@ Begin of Item 00B5
  Mapping  = 
   5F46 FFFD FFFD FFFD 5F47 FFFD FFFD 5F48 
   FFFD 5F49 
-End of Item 00B5 
+End of Item 00B4 
 
-Begin of Item 00B6
+Begin of Item 00B5
  Format 1
   srcBegin = 8D7F
   srcEnd = 8EDC
@@ -3310,9 +3301,9 @@ Begin of Item 00B6
   6058 FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   6059 FFFD 605A FFFD FFFD 605B FFFD FFFD 
   FFFD FFFD FFFD FFFD FFFD 605C 
-End of Item 00B6 
+End of Item 00B5 
 
-Begin of Item 00B7
+Begin of Item 00B6
  Format 1
   srcBegin = 8EE8
   srcEnd = 8F65
@@ -3334,9 +3325,9 @@ Begin of Item 00B7
   FFFD 6124 6125 6126 6127 6128 FFFD FFFD 
   6129 FFFD FFFD FFFD FFFD 612A 612B FFFD 
   FFFD FFFD FFFD FFFD FFFD 612C 
-End of Item 00B7 
+End of Item 00B6 
 
-Begin of Item 00B8
+Begin of Item 00B7
  Format 1
   srcBegin = 8F9D
   srcEnd = 8FA6
@@ -3344,9 +3335,9 @@ Begin of Item 00B8
  Mapping  = 
   612D FFFD FFFD 612E 612F FFFD FFFD 6130 
   6131 6132 
-End of Item 00B8 
+End of Item 00B7 
 
-Begin of Item 00B9
+Begin of Item 00B8
  Format 1
   srcBegin = 8FB5
   srcEnd = 900C
@@ -3363,18 +3354,18 @@ Begin of Item 00B9
   6147 6148 FFFD FFFD FFFD FFFD 6149 FFFD 
   FFFD 614A FFFD FFFD FFFD 614B FFFD 614C 
   FFFD FFFD FFFD 614D FFFD FFFD FFFD 614E 
-End of Item 00B9 
+End of Item 00B8 
 
-Begin of Item 00BA
+Begin of Item 00B9
  Format 1
   srcBegin = 9018
   srcEnd = 901B
   mappingOffset = 384B
  Mapping  = 
   614F FFFD FFFD 6150 
-End of Item 00BA 
+End of Item 00B9 
 
-Begin of Item 00BB
+Begin of Item 00BA
  Format 1
   srcBegin = 9028
   srcEnd = 904C
@@ -3385,9 +3376,9 @@ Begin of Item 00BB
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD 615A 
   FFFD FFFD FFFD 615B 615C FFFD FFFD FFFD 
   FFFD FFFD FFFD FFFD 615D 
-End of Item 00BB 
+End of Item 00BA 
 
-Begin of Item 00BC
+Begin of Item 00BB
  Format 1
   srcBegin = 905B
   srcEnd = 9079
@@ -3397,9 +3388,9 @@ Begin of Item 00BC
   FFFD FFFD FFFD 6161 6162 FFFD FFFD FFFD 
   FFFD 6163 FFFD FFFD FFFD 6164 FFFD FFFD 
   FFFD 6165 FFFD FFFD FFFD FFFD 6166 
-End of Item 00BC 
+End of Item 00BB 
 
-Begin of Item 00BD
+Begin of Item 00BC
  Format 1
   srcBegin = 9085
   srcEnd = 91C5
@@ -3446,9 +3437,9 @@ Begin of Item 00BD
   FFFD 627A FFFD FFFD FFFD FFFD 627B 627C 
   627D FFFD 627E FFFD FFFD 6321 6322 FFFD 
   6323 
-End of Item 00BD 
+End of Item 00BC 
 
-Begin of Item 00BE
+Begin of Item 00BD
  Format 1
   srcBegin = 91D3
   srcEnd = 91EA
@@ -3457,9 +3448,9 @@ Begin of Item 00BE
   6324 6325 FFFD FFFD 6326 FFFD 6327 6328 
   FFFD FFFD FFFD 6329 FFFD FFFD FFFD FFFD 
   FFFD 632A 632B FFFD FFFD FFFD 632C 632D 
-End of Item 00BE 
+End of Item 00BD 
 
-Begin of Item 00BF
+Begin of Item 00BE
  Format 1
   srcBegin = 91F7
   srcEnd = 9337
@@ -3506,9 +3497,9 @@ Begin of Item 00BF
   6461 FFFD 6462 6463 FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD FFFD 6464 6465 FFFD 6466 
   6467 
-End of Item 00BF 
+End of Item 00BE 
 
-Begin of Item 00C0
+Begin of Item 00BF
  Format 1
   srcBegin = 9347
   srcEnd = 93E7
@@ -3535,9 +3526,9 @@ Begin of Item 00C0
   FFFD FFFD 6547 FFFD FFFD 6548 FFFD 6549 
   654A FFFD FFFD 654B FFFD FFFD FFFD 654C 
   654D 
-End of Item 00C0 
+End of Item 00BF 
 
-Begin of Item 00C1
+Begin of Item 00C0
  Format 1
   srcBegin = 93F7
   srcEnd = 941F
@@ -3549,9 +3540,9 @@ Begin of Item 00C1
   655B FFFD FFFD FFFD FFFD FFFD 655C 655D 
   655E FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   655F 
-End of Item 00C1 
+End of Item 00C0 
 
-Begin of Item 00C2
+Begin of Item 00C1
  Format 1
   srcBegin = 942E
   srcEnd = 9472
@@ -3566,18 +3557,18 @@ Begin of Item 00C2
   FFFD 6571 FFFD 6572 FFFD 6573 FFFD FFFD 
   FFFD FFFD 6574 FFFD FFFD 6575 FFFD 6576 
   6577 6578 FFFD 6579 657A 
-End of Item 00C2 
+End of Item 00C1 
 
-Begin of Item 00C3
+Begin of Item 00C2
  Format 1
   srcBegin = 9483
   srcEnd = 9484
   mappingOffset = 3C3C
  Mapping  = 
   657C 657B 
-End of Item 00C3 
+End of Item 00C2 
 
-Begin of Item 00C4
+Begin of Item 00C3
  Format 1
   srcBegin = 9578
   srcEnd = 958E
@@ -3586,9 +3577,9 @@ Begin of Item 00C4
   657D 657E FFFD FFFD FFFD FFFD 6621 FFFD 
   FFFD FFFD FFFD FFFD 6622 FFFD FFFD FFFD 
   6623 FFFD FFFD FFFD 6624 6625 6626 
-End of Item 00C4 
+End of Item 00C3 
 
-Begin of Item 00C5
+Begin of Item 00C4
  Format 1
   srcBegin = 959D
   srcEnd = 95E6
@@ -3604,9 +3595,9 @@ Begin of Item 00C5
   FFFD FFFD FFFD FFFD 663C 663D FFFD FFFD 
   663E 663F 6640 6641 FFFD FFFD FFFD 6642 
   FFFD 6643 
-End of Item 00C5 
+End of Item 00C4 
 
-Begin of Item 00C6
+Begin of Item 00C5
  Format 1
   srcBegin = 961D
   srcEnd = 9641
@@ -3617,9 +3608,9 @@ Begin of Item 00C6
   FFFD FFFD FFFD FFFD 664B FFFD 664C FFFD 
   FFFD FFFD 664D 664E 664F 6650 FFFD 6651 
   6652 FFFD FFFD FFFD 6653 
-End of Item 00C6 
+End of Item 00C5 
 
-Begin of Item 00C7
+Begin of Item 00C6
  Format 1
   srcBegin = 9652
   srcEnd = 9661
@@ -3627,9 +3618,9 @@ Begin of Item 00C7
  Mapping  = 
   6654 FFFD 6655 FFFD 6656 6657 6658 FFFD 
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD 6659 
-End of Item 00C7 
+End of Item 00C6 
 
-Begin of Item 00C8
+Begin of Item 00C7
  Format 1
   srcBegin = 966E
   srcEnd = 96BA
@@ -3645,9 +3636,9 @@ Begin of Item 00C8
   666C FFFD FFFD 666D FFFD FFFD FFFD FFFD 
   666E 666F FFFD FFFD FFFD 6670 FFFD FFFD 
   FFFD FFFD FFFD FFFD 6671 
-End of Item 00C8 
+End of Item 00C7 
 
-Begin of Item 00C9
+Begin of Item 00C8
  Format 1
   srcBegin = 96CA
   srcEnd = 9709
@@ -3661,9 +3652,9 @@ Begin of Item 00C9
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   667D FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   667E 6721 FFFD 6722 FFFD FFFD FFFD 6723 
-End of Item 00C9 
+End of Item 00C8 
 
-Begin of Item 00CA
+Begin of Item 00C9
  Format 1
   srcBegin = 971A
   srcEnd = 9733
@@ -3673,9 +3664,9 @@ Begin of Item 00CA
   6728 6729 FFFD FFFD FFFD FFFD 672A FFFD 
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD 672B 
   FFFD 672C 
-End of Item 00CA 
+End of Item 00C9 
 
-Begin of Item 00CB
+Begin of Item 00CA
  Format 1
   srcBegin = 9741
   srcEnd = 9789
@@ -3691,9 +3682,9 @@ Begin of Item 00CB
   FFFD FFFD 673F FFFD 6740 FFFD 6741 6742 
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   6743 
-End of Item 00CB 
+End of Item 00CA 
 
-Begin of Item 00CC
+Begin of Item 00CB
  Format 1
   srcBegin = 9795
   srcEnd = 97FA
@@ -3712,9 +3703,9 @@ Begin of Item 00CC
   FFFD FFFD FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD 676D FFFD 676E FFFD FFFD 676F 
   FFFD FFFD 6770 6771 FFFD 6772 
-End of Item 00CC 
+End of Item 00CB 
 
-Begin of Item 00CD
+Begin of Item 00CC
  Format 1
   srcBegin = 9807
   srcEnd = 986C
@@ -3733,9 +3724,9 @@ Begin of Item 00CD
   6831 FFFD 6832 6833 FFFD FFFD FFFD FFFD 
   FFFD FFFD FFFD 6834 6835 FFFD 6836 6837 
   FFFD FFFD FFFD 6838 FFFD 6839 
-End of Item 00CD 
+End of Item 00CC 
 
-Begin of Item 00CE
+Begin of Item 00CD
  Format 1
   srcBegin = 98AB
   srcEnd = 98CC
@@ -3746,9 +3737,9 @@ Begin of Item 00CE
   6842 FFFD FFFD FFFD 6843 FFFD FFFD 6844 
   FFFD FFFD 6845 FFFD FFFD 6846 FFFD FFFD 
   FFFD 6847 
-End of Item 00CE 
+End of Item 00CD 
 
-Begin of Item 00CF
+Begin of Item 00CE
  Format 1
   srcBegin = 98E1
   srcEnd = 98F6
@@ -3757,9 +3748,9 @@ Begin of Item 00CF
   6848 FFFD 6849 FFFD 684A 684B 684C FFFD 
   FFFD 684D FFFD FFFD FFFD FFFD FFFD FFFD 
   FFFD FFFD 684E FFFD FFFD 684F 
-End of Item 00CF 
+End of Item 00CE 
 
-Begin of Item 00D0
+Begin of Item 00CF
  Format 1
   srcBegin = 9902
   srcEnd = 9960
@@ -3777,9 +3768,9 @@ Begin of Item 00D0
   FFFD FFFD FFFD 686D 686E FFFD FFFD FFFD 
   FFFD FFFD 686F FFFD FFFD FFFD 6870 6871 
   FFFD 6872 6873 FFFD 6874 6875 6876 
-End of Item 00D0 
+End of Item 00CF 
 
-Begin of Item 00D1
+Begin of Item 00D0
  Format 1
   srcBegin = 999B
   srcEnd = 9A5D
@@ -3810,9 +3801,9 @@ Begin of Item 00D1
   694F 6950 FFFD 6951 FFFD FFFD 6952 FFFD 
   FFFD 6953 FFFD 6954 FFFD FFFD FFFD FFFD 
   FFFD FFFD 6955 
-End of Item 00D1 
+End of Item 00D0 
 
-Begin of Item 00D2
+Begin of Item 00D1
  Format 1
   srcBegin = 9AAA
   srcEnd = 9C7B
@@ -3877,15 +3868,15 @@ Begin of Item 00D2
   6B4F 6B51 FFFD FFFD 6B53 FFFD 6B54 FFFD 
   6B55 FFFD FFFD 6B56 FFFD 6B57 FFFD FFFD 
   FFFD 6B58 
-End of Item 00D2 
+End of Item 00D1 
 
-Begin of Item 00D3
+Begin of Item 00D2
  Format 2
   srcBegin = 9CE6
   destBegin = 6B59
-End of Item 00D3 
+End of Item 00D2 
 
-Begin of Item 00D4
+Begin of Item 00D3
  Format 1
   srcBegin = 9CF2
   srcEnd = 9D1E
@@ -3897,9 +3888,9 @@ Begin of Item 00D4
   FFFD 6B5D FFFD FFFD FFFD FFFD FFFD 6B5F 
   FFFD FFFD FFFD FFFD FFFD 6B60 6B61 FFFD 
   FFFD FFFD 6B62 6B63 6B64 
-End of Item 00D4 
+End of Item 00D3 
 
-Begin of Item 00D5
+Begin of Item 00D4
  Format 1
   srcBegin = 9D2F
   srcEnd = 9E1D
@@ -3935,9 +3926,9 @@ Begin of Item 00D5
   6C4F FFFD FFFD 6C4D FFFD FFFD FFFD 6C50 
   FFFD 6C51 6C52 6C53 FFFD FFFD 6C54 6C55 
   FFFD FFFD 6C56 FFFD FFFD 6C57 6C58 
-End of Item 00D5 
+End of Item 00D4 
 
-Begin of Item 00D6
+Begin of Item 00D5
  Format 1
   srcBegin = 9E7A
   srcEnd = 9EB5
@@ -3951,9 +3942,9 @@ Begin of Item 00D6
   FFFD FFFD 6C68 FFFD FFFD FFFD 6C69 FFFD 
   FFFD FFFD 6C6A FFFD 6C6B 6C6C 6C6D FFFD 
   FFFD 6C6E 6C6F 6C70 
-End of Item 00D6 
+End of Item 00D5 
 
-Begin of Item 00D7
+Begin of Item 00D6
  Format 1
   srcBegin = 9EC6
   srcEnd = 9F47
@@ -3976,9 +3967,9 @@ Begin of Item 00D7
   FFFD 6D39 FFFD 6D3A 6D3B FFFD 6D3C 6D3D 
   FFFD 6D3E FFFD 6D3F FFFD 6D40 6D41 6D42 
   6D43 6D44 
-End of Item 00D7 
+End of Item 00D6 
 
-Begin of Item 00D8
+Begin of Item 00D7
  Format 1
   srcBegin = 9F53
   srcEnd = 9F7D
@@ -3990,9 +3981,9 @@ Begin of Item 00D8
   FFFD FFFD 6D4F 6D50 6D51 6D52 6D53 FFFD 
   6D54 FFFD 6D55 FFFD FFFD FFFD FFFD 6D56 
   FFFD FFFD 6D57 
-End of Item 00D8 
+End of Item 00D7 
 
-Begin of Item 00D9
+Begin of Item 00D8
  Format 1
   srcBegin = 9F8F
   srcEnd = 9FA5
@@ -4001,6 +3992,12 @@ Begin of Item 00D9
   6D58 6D59 6D5A 6D5B FFFD 6D5C FFFD 6D5D 
   6D5E FFFD FFFD FFFD FFFD FFFD FFFD 6D5F 
   FFFD FFFD 6D60 6D61 6D62 FFFD 6D63 
+End of Item 00D8 
+
+Begin of Item 00D9
+ Format 2
+  srcBegin = FF5E
+  destBegin = 2237
 End of Item 00D9 
 
 ========================================================*/
@@ -4022,13 +4019,13 @@ End of Item 00D9
 /*	Total of Format 2 : 0x0009			 */
 /*	Total of Format 3 : 0x0000			 */
 
-0x0000, 0x0000, 0x1200, 0x1221, 0x1111, 0x1221, 0x1111, 0x1111, 
-0x1111, 0x1122, 0x1111, 0x2111, 0x1111, 0x1111, 0x1111, 0x1111, 
+0x0000, 0x0000, 0x1100, 0x1122, 0x1111, 0x1122, 0x1111, 0x1111, 
+0x2111, 0x1112, 0x1111, 0x1211, 0x1111, 0x1111, 0x1111, 0x1111, 
 0x1111, 0x1111, 0x1111, 0x1111, 0x1111, 0x1111, 0x1111, 0x1111, 
 0x1111, 0x1111, 0x1111, 0x1111, 0x1111, 0x1111, 0x1111, 0x1111, 
 0x1111, 0x1111, 0x1111, 0x1111, 0x1111, 0x1111, 0x1111, 0x1111, 
 0x1111, 0x1111, 0x1111, 0x1111, 0x1111, 0x1111, 0x1111, 0x1111, 
-0x1111, 0x1111, 0x1111, 0x1111, 0x2111, 0x1111, 0x0011, 
+0x1111, 0x1111, 0x1111, 0x1111, 0x1211, 0x1111, 0x0021, 
 /*-------------------------------------------------------*/
 /*       Offset=0x003B   Start of MapCell Array */ 
 /* 0000 */    0x0402, 0x040C, 0x2742, 
@@ -4041,214 +4038,214 @@ End of Item 00D9
 /* 0007 */    0x855C, 0x8562, 0x5949, 
 /* 0008 */    0x8783, 0x8789, 0x5B38, 
 /* 0009 */    0x91EC, 0x91F1, 0x632E, 
-/* 000A */    0x007E, 0x0000, 0x2237, 
-/* 000B */    0x00A1, 0x017E, 0x0000, 
-/* 000C */    0x01CD, 0x01DC, 0x00DE, 
-/* 000D */    0x01F5, 0x0000, 0x2B39, 
-/* 000E */    0x02C7, 0x0000, 0x2230, 
-/* 000F */    0x02D8, 0x02DD, 0x00EE, 
-/* 0010 */    0x0384, 0x0390, 0x00F4, 
-/* 0011 */    0x03AA, 0x03B0, 0x0101, 
-/* 0012 */    0x03C2, 0x03CE, 0x0108, 
-/* 0013 */    0x040E, 0x040F, 0x0115, 
-/* 0014 */    0x045E, 0x045F, 0x0117, 
-/* 0015 */    0x2116, 0x0000, 0x2271, 
-/* 0016 */    0x2122, 0x0000, 0x226F, 
-/* 0017 */    0x4E02, 0x4E12, 0x0119, 
-/* 0018 */    0x4E1F, 0x4E7F, 0x012A, 
-/* 0019 */    0x4E8D, 0x4E9D, 0x018B, 
-/* 001A */    0x4EAF, 0x4EC3, 0x019C, 
-/* 001B */    0x4ED0, 0x4F19, 0x01B1, 
-/* 001C */    0x4F2E, 0x4F9F, 0x01FB, 
-/* 001D */    0x4FB2, 0x4FE2, 0x026D, 
-/* 001E */    0x4FF0, 0x5071, 0x029E, 
-/* 001F */    0x5081, 0x5166, 0x0320, 
-/* 0020 */    0x517E, 0x5205, 0x0406, 
-/* 0021 */    0x5212, 0x5249, 0x048E, 
-/* 0022 */    0x5255, 0x534C, 0x04C6, 
-/* 0023 */    0x5359, 0x53E7, 0x05BE, 
-/* 0024 */    0x53F5, 0x0000, 0x3463, 
-/* 0025 */    0x5402, 0x0000, 0x3464, 
-/* 0026 */    0x5413, 0x5435, 0x064D, 
-/* 0027 */    0x5443, 0x544F, 0x0670, 
-/* 0028 */    0x545E, 0x54CE, 0x067D, 
-/* 0029 */    0x54E0, 0x5515, 0x06EE, 
-/* 002A */    0x552A, 0x5566, 0x0724, 
-/* 002B */    0x557F, 0x5597, 0x0761, 
-/* 002C */    0x55A3, 0x55B2, 0x077A, 
-/* 002D */    0x55BF, 0x55E9, 0x078A, 
-/* 002E */    0x55F6, 0x560A, 0x07B5, 
-/* 002F */    0x5619, 0x0000, 0x3633, 
-/* 0030 */    0x562C, 0x5675, 0x07CA, 
-/* 0031 */    0x5684, 0x5752, 0x0814, 
-/* 0032 */    0x5762, 0x57AC, 0x08E3, 
-/* 0033 */    0x57B8, 0x580D, 0x092E, 
-/* 0034 */    0x581B, 0x5868, 0x0984, 
-/* 0035 */    0x5878, 0x58F3, 0x09D2, 
-/* 0036 */    0x5905, 0x5946, 0x0A4E, 
-/* 0037 */    0x5952, 0x597C, 0x0A90, 
-/* 0038 */    0x598B, 0x5A30, 0x0ABB, 
-/* 0039 */    0x5A44, 0x5A7E, 0x0B61, 
-/* 003A */    0x5A8B, 0x5B08, 0x0B9C, 
-/* 003B */    0x5B17, 0x5B6F, 0x0C1A, 
-/* 003C */    0x5B7C, 0x5B96, 0x0C73, 
-/* 003D */    0x5BA8, 0x5BC1, 0x0C8E, 
-/* 003E */    0x5BCD, 0x5BE0, 0x0CA8, 
-/* 003F */    0x5BEF, 0x5BFD, 0x0CBC, 
-/* 0040 */    0x5C0C, 0x5C36, 0x0CCB, 
-/* 0041 */    0x5C59, 0x5CBA, 0x0CF6, 
-/* 0042 */    0x5CC9, 0x5CDD, 0x0D58, 
-/* 0043 */    0x5CEE, 0x5CF4, 0x0D6D, 
-/* 0044 */    0x5D01, 0x5D12, 0x0D74, 
-/* 0045 */    0x5D23, 0x5DE9, 0x0D86, 
-/* 0046 */    0x5DF8, 0x5E70, 0x0E4D, 
-/* 0047 */    0x5E80, 0x5E8E, 0x0EC6, 
-/* 0048 */    0x5EA2, 0x5EEB, 0x0ED5, 
-/* 0049 */    0x5F02, 0x5FB8, 0x0F1F, 
-/* 004A */    0x5FC4, 0x6071, 0x0FD6, 
-/* 004B */    0x607E, 0x60E5, 0x1084, 
-/* 004C */    0x60F2, 0x6149, 0x10EC, 
-/* 004D */    0x615E, 0x6160, 0x1144, 
-/* 004E */    0x616C, 0x61C2, 0x1147, 
-/* 004F */    0x61CE, 0x61EF, 0x119E, 
-/* 0050 */    0x6201, 0x6207, 0x11C0, 
-/* 0051 */    0x6213, 0x622B, 0x11C7, 
-/* 0052 */    0x6239, 0x627D, 0x11E0, 
-/* 0053 */    0x628D, 0x6290, 0x1225, 
-/* 0054 */    0x62A6, 0x62DA, 0x1229, 
-/* 0055 */    0x62EA, 0x6318, 0x125E, 
-/* 0056 */    0x6329, 0x63AF, 0x128D, 
-/* 0057 */    0x63BD, 0x63F9, 0x1314, 
-/* 0058 */    0x6409, 0x643F, 0x1351, 
-/* 0059 */    0x644B, 0x64D7, 0x1388, 
-/* 005A */    0x64E4, 0x656B, 0x1415, 
-/* 005B */    0x657A, 0x65DF, 0x149D, 
-/* 005C */    0x65F0, 0x66EE, 0x1503, 
-/* 005D */    0x66FA, 0x6722, 0x1602, 
-/* 005E */    0x6733, 0x679B, 0x162B, 
-/* 005F */    0x67B0, 0x67F9, 0x1694, 
-/* 0060 */    0x6814, 0x685B, 0x16DE, 
-/* 0061 */    0x686B, 0x6888, 0x1726, 
-/* 0062 */    0x6896, 0x6917, 0x1744, 
-/* 0063 */    0x6931, 0x6980, 0x17C6, 
-/* 0064 */    0x698D, 0x6A03, 0x1816, 
-/* 0065 */    0x6A0F, 0x6B85, 0x188D, 
-/* 0066 */    0x6B97, 0x6C9F, 0x1A04, 
-/* 0067 */    0x6CB0, 0x6CB4, 0x1B0D, 
-/* 0068 */    0x6CC2, 0x6CF4, 0x1B12, 
-/* 0069 */    0x6D04, 0x6D1A, 0x1B45, 
-/* 006A */    0x6D26, 0x6D3F, 0x1B5C, 
-/* 006B */    0x6D57, 0x6D70, 0x1B76, 
-/* 006C */    0x6D7C, 0x6D98, 0x1B90, 
-/* 006D */    0x6DAA, 0x6E04, 0x1BAD, 
-/* 006E */    0x6E1E, 0x6E7D, 0x1C08, 
-/* 006F */    0x6E8D, 0x6ECF, 0x1C68, 
-/* 0070 */    0x6EEB, 0x6F3C, 0x1CAB, 
-/* 0071 */    0x6F4F, 0x6F6C, 0x1CFD, 
-/* 0072 */    0x6F7D, 0x6FCA, 0x1D1B, 
-/* 0073 */    0x6FDA, 0x7023, 0x1D69, 
-/* 0074 */    0x702F, 0x7086, 0x1DB3, 
-/* 0075 */    0x7094, 0x70B7, 0x1E0B, 
-/* 0076 */    0x70CA, 0x70E4, 0x1E2F, 
-/* 0077 */    0x70FA, 0x710F, 0x1E4A, 
-/* 0078 */    0x711E, 0x7168, 0x1E60, 
-/* 0079 */    0x7179, 0x71A2, 0x1EAB, 
-/* 007A */    0x71AF, 0x71DC, 0x1ED5, 
-/* 007B */    0x71F8, 0x729B, 0x1F03, 
-/* 007C */    0x72A8, 0x72E5, 0x1FA7, 
-/* 007D */    0x72F3, 0x7426, 0x1FE5, 
-/* 007E */    0x7439, 0x7472, 0x2119, 
-/* 007F */    0x7480, 0x7506, 0x2153, 
-/* 0080 */    0x7512, 0x7561, 0x21DA, 
-/* 0081 */    0x756F, 0x7571, 0x222A, 
-/* 0082 */    0x7581, 0x75A4, 0x222D, 
-/* 0083 */    0x75B4, 0x7674, 0x2251, 
-/* 0084 */    0x7681, 0x76AD, 0x2312, 
-/* 0085 */    0x76BD, 0x7811, 0x233F, 
-/* 0086 */    0x781D, 0x7837, 0x2494, 
-/* 0087 */    0x7843, 0x786E, 0x24AF, 
-/* 0088 */    0x787A, 0x787E, 0x24DB, 
-/* 0089 */    0x788A, 0x797E, 0x24E0, 
-/* 008A */    0x798B, 0x7ADB, 0x25D5, 
-/* 008B */    0x7AE8, 0x7B07, 0x2726, 
-/* 008C */    0x7B14, 0x7B77, 0x2746, 
-/* 008D */    0x7B84, 0x7BDB, 0x27AA, 
-/* 008E */    0x7BE8, 0x7C3A, 0x2802, 
-/* 008F */    0x7C46, 0x7C55, 0x2855, 
-/* 0090 */    0x7C61, 0x7CF5, 0x2865, 
-/* 0091 */    0x7D03, 0x7E9E, 0x28FA, 
-/* 0092 */    0x7F3B, 0x7F71, 0x2A96, 
-/* 0093 */    0x7F7D, 0x7FCF, 0x2ACD, 
-/* 0094 */    0x7FDB, 0x8044, 0x2B20, 
-/* 0095 */    0x8060, 0x8075, 0x2B8A, 
-/* 0096 */    0x8081, 0x808E, 0x2BA0, 
-/* 0097 */    0x809C, 0x80AB, 0x2BAE, 
-/* 0098 */    0x80B8, 0x80B9, 0x2BBE, 
-/* 0099 */    0x80C8, 0x80E0, 0x2BC0, 
-/* 009A */    0x80ED, 0x81A2, 0x2BD9, 
-/* 009B */    0x81AE, 0x8203, 0x2C8F, 
-/* 009C */    0x820F, 0x830B, 0x2CE5, 
-/* 009D */    0x831B, 0x8357, 0x2DE2, 
-/* 009E */    0x8370, 0x83AD, 0x2E1F, 
-/* 009F */    0x83BE, 0x83EA, 0x2E5D, 
-/* 00A0 */    0x83F6, 0x8419, 0x2E8A, 
-/* 00A1 */    0x842F, 0x8439, 0x2EAE, 
-/* 00A2 */    0x8445, 0x8485, 0x2EB9, 
-/* 00A3 */    0x8492, 0x8510, 0x2EFA, 
-/* 00A4 */    0x851C, 0x8629, 0x2F79, 
-/* 00A5 */    0x8636, 0x8646, 0x3087, 
-/* 00A6 */    0x8652, 0x867A, 0x3098, 
-/* 00A7 */    0x8688, 0x86C5, 0x30C1, 
-/* 00A8 */    0x86D1, 0x86E7, 0x30FF, 
-/* 00A9 */    0x86FA, 0x877B, 0x3116, 
-/* 00AA */    0x878B, 0x8880, 0x3198, 
-/* 00AB */    0x8898, 0x88AA, 0x328E, 
-/* 00AC */    0x88BA, 0x897D, 0x32A1, 
-/* 00AD */    0x8989, 0x89BC, 0x3365, 
-/* 00AE */    0x89D4, 0x89D8, 0x3399, 
-/* 00AF */    0x89E5, 0x8A67, 0x339E, 
-/* 00B0 */    0x8A75, 0x8ADF, 0x3421, 
-/* 00B1 */    0x8AEC, 0x8B1F, 0x348C, 
-/* 00B2 */    0x8B2D, 0x8B9F, 0x34C0, 
-/* 00B3 */    0x8C38, 0x8CA4, 0x3533, 
-/* 00B4 */    0x8CB9, 0x8D1B, 0x35A0, 
-/* 00B5 */    0x8D65, 0x8D6E, 0x3603, 
-/* 00B6 */    0x8D7F, 0x8EDC, 0x360D, 
-/* 00B7 */    0x8EE8, 0x8F65, 0x376B, 
-/* 00B8 */    0x8F9D, 0x8FA6, 0x37E9, 
-/* 00B9 */    0x8FB5, 0x900C, 0x37F3, 
-/* 00BA */    0x9018, 0x901B, 0x384B, 
-/* 00BB */    0x9028, 0x904C, 0x384F, 
-/* 00BC */    0x905B, 0x9079, 0x3874, 
-/* 00BD */    0x9085, 0x91C5, 0x3893, 
-/* 00BE */    0x91D3, 0x91EA, 0x39D4, 
-/* 00BF */    0x91F7, 0x9337, 0x39EC, 
-/* 00C0 */    0x9347, 0x93E7, 0x3B2D, 
-/* 00C1 */    0x93F7, 0x941F, 0x3BCE, 
-/* 00C2 */    0x942E, 0x9472, 0x3BF7, 
-/* 00C3 */    0x9483, 0x9484, 0x3C3C, 
-/* 00C4 */    0x9578, 0x958E, 0x3C3E, 
-/* 00C5 */    0x959D, 0x95E6, 0x3C55, 
-/* 00C6 */    0x961D, 0x9641, 0x3C9F, 
-/* 00C7 */    0x9652, 0x9661, 0x3CC4, 
-/* 00C8 */    0x966E, 0x96BA, 0x3CD4, 
-/* 00C9 */    0x96CA, 0x9709, 0x3D21, 
-/* 00CA */    0x971A, 0x9733, 0x3D61, 
-/* 00CB */    0x9741, 0x9789, 0x3D7B, 
-/* 00CC */    0x9795, 0x97FA, 0x3DC4, 
-/* 00CD */    0x9807, 0x986C, 0x3E2A, 
-/* 00CE */    0x98AB, 0x98CC, 0x3E90, 
-/* 00CF */    0x98E1, 0x98F6, 0x3EB2, 
-/* 00D0 */    0x9902, 0x9960, 0x3EC8, 
-/* 00D1 */    0x999B, 0x9A5D, 0x3F27, 
-/* 00D2 */    0x9AAA, 0x9C7B, 0x3FEA, 
-/* 00D3 */    0x9CE6, 0x0000, 0x6B59, 
-/* 00D4 */    0x9CF2, 0x9D1E, 0x41BC, 
-/* 00D5 */    0x9D2F, 0x9E1D, 0x41E9, 
-/* 00D6 */    0x9E7A, 0x9EB5, 0x42D8, 
-/* 00D7 */    0x9EC6, 0x9F47, 0x4314, 
-/* 00D8 */    0x9F53, 0x9F7D, 0x4396, 
-/* 00D9 */    0x9F8F, 0x9FA5, 0x43C1, 
+/* 000A */    0x00A1, 0x017E, 0x0000, 
+/* 000B */    0x01CD, 0x01DC, 0x00DE, 
+/* 000C */    0x01F5, 0x0000, 0x2B39, 
+/* 000D */    0x02C7, 0x0000, 0x2230, 
+/* 000E */    0x02D8, 0x02DD, 0x00EE, 
+/* 000F */    0x0384, 0x0390, 0x00F4, 
+/* 0010 */    0x03AA, 0x03B0, 0x0101, 
+/* 0011 */    0x03C2, 0x03CE, 0x0108, 
+/* 0012 */    0x040E, 0x040F, 0x0115, 
+/* 0013 */    0x045E, 0x045F, 0x0117, 
+/* 0014 */    0x2116, 0x0000, 0x2271, 
+/* 0015 */    0x2122, 0x0000, 0x226F, 
+/* 0016 */    0x4E02, 0x4E12, 0x0119, 
+/* 0017 */    0x4E1F, 0x4E7F, 0x012A, 
+/* 0018 */    0x4E8D, 0x4E9D, 0x018B, 
+/* 0019 */    0x4EAF, 0x4EC3, 0x019C, 
+/* 001A */    0x4ED0, 0x4F19, 0x01B1, 
+/* 001B */    0x4F2E, 0x4F9F, 0x01FB, 
+/* 001C */    0x4FB2, 0x4FE2, 0x026D, 
+/* 001D */    0x4FF0, 0x5071, 0x029E, 
+/* 001E */    0x5081, 0x5166, 0x0320, 
+/* 001F */    0x517E, 0x5205, 0x0406, 
+/* 0020 */    0x5212, 0x5249, 0x048E, 
+/* 0021 */    0x5255, 0x534C, 0x04C6, 
+/* 0022 */    0x5359, 0x53E7, 0x05BE, 
+/* 0023 */    0x53F5, 0x0000, 0x3463, 
+/* 0024 */    0x5402, 0x0000, 0x3464, 
+/* 0025 */    0x5413, 0x5435, 0x064D, 
+/* 0026 */    0x5443, 0x544F, 0x0670, 
+/* 0027 */    0x545E, 0x54CE, 0x067D, 
+/* 0028 */    0x54E0, 0x5515, 0x06EE, 
+/* 0029 */    0x552A, 0x5566, 0x0724, 
+/* 002A */    0x557F, 0x5597, 0x0761, 
+/* 002B */    0x55A3, 0x55B2, 0x077A, 
+/* 002C */    0x55BF, 0x55E9, 0x078A, 
+/* 002D */    0x55F6, 0x560A, 0x07B5, 
+/* 002E */    0x5619, 0x0000, 0x3633, 
+/* 002F */    0x562C, 0x5675, 0x07CA, 
+/* 0030 */    0x5684, 0x5752, 0x0814, 
+/* 0031 */    0x5762, 0x57AC, 0x08E3, 
+/* 0032 */    0x57B8, 0x580D, 0x092E, 
+/* 0033 */    0x581B, 0x5868, 0x0984, 
+/* 0034 */    0x5878, 0x58F3, 0x09D2, 
+/* 0035 */    0x5905, 0x5946, 0x0A4E, 
+/* 0036 */    0x5952, 0x597C, 0x0A90, 
+/* 0037 */    0x598B, 0x5A30, 0x0ABB, 
+/* 0038 */    0x5A44, 0x5A7E, 0x0B61, 
+/* 0039 */    0x5A8B, 0x5B08, 0x0B9C, 
+/* 003A */    0x5B17, 0x5B6F, 0x0C1A, 
+/* 003B */    0x5B7C, 0x5B96, 0x0C73, 
+/* 003C */    0x5BA8, 0x5BC1, 0x0C8E, 
+/* 003D */    0x5BCD, 0x5BE0, 0x0CA8, 
+/* 003E */    0x5BEF, 0x5BFD, 0x0CBC, 
+/* 003F */    0x5C0C, 0x5C36, 0x0CCB, 
+/* 0040 */    0x5C59, 0x5CBA, 0x0CF6, 
+/* 0041 */    0x5CC9, 0x5CDD, 0x0D58, 
+/* 0042 */    0x5CEE, 0x5CF4, 0x0D6D, 
+/* 0043 */    0x5D01, 0x5D12, 0x0D74, 
+/* 0044 */    0x5D23, 0x5DE9, 0x0D86, 
+/* 0045 */    0x5DF8, 0x5E70, 0x0E4D, 
+/* 0046 */    0x5E80, 0x5E8E, 0x0EC6, 
+/* 0047 */    0x5EA2, 0x5EEB, 0x0ED5, 
+/* 0048 */    0x5F02, 0x5FB8, 0x0F1F, 
+/* 0049 */    0x5FC4, 0x6071, 0x0FD6, 
+/* 004A */    0x607E, 0x60E5, 0x1084, 
+/* 004B */    0x60F2, 0x6149, 0x10EC, 
+/* 004C */    0x615E, 0x6160, 0x1144, 
+/* 004D */    0x616C, 0x61C2, 0x1147, 
+/* 004E */    0x61CE, 0x61EF, 0x119E, 
+/* 004F */    0x6201, 0x6207, 0x11C0, 
+/* 0050 */    0x6213, 0x622B, 0x11C7, 
+/* 0051 */    0x6239, 0x627D, 0x11E0, 
+/* 0052 */    0x628D, 0x6290, 0x1225, 
+/* 0053 */    0x62A6, 0x62DA, 0x1229, 
+/* 0054 */    0x62EA, 0x6318, 0x125E, 
+/* 0055 */    0x6329, 0x63AF, 0x128D, 
+/* 0056 */    0x63BD, 0x63F9, 0x1314, 
+/* 0057 */    0x6409, 0x643F, 0x1351, 
+/* 0058 */    0x644B, 0x64D7, 0x1388, 
+/* 0059 */    0x64E4, 0x656B, 0x1415, 
+/* 005A */    0x657A, 0x65DF, 0x149D, 
+/* 005B */    0x65F0, 0x66EE, 0x1503, 
+/* 005C */    0x66FA, 0x6722, 0x1602, 
+/* 005D */    0x6733, 0x679B, 0x162B, 
+/* 005E */    0x67B0, 0x67F9, 0x1694, 
+/* 005F */    0x6814, 0x685B, 0x16DE, 
+/* 0060 */    0x686B, 0x6888, 0x1726, 
+/* 0061 */    0x6896, 0x6917, 0x1744, 
+/* 0062 */    0x6931, 0x6980, 0x17C6, 
+/* 0063 */    0x698D, 0x6A03, 0x1816, 
+/* 0064 */    0x6A0F, 0x6B85, 0x188D, 
+/* 0065 */    0x6B97, 0x6C9F, 0x1A04, 
+/* 0066 */    0x6CB0, 0x6CB4, 0x1B0D, 
+/* 0067 */    0x6CC2, 0x6CF4, 0x1B12, 
+/* 0068 */    0x6D04, 0x6D1A, 0x1B45, 
+/* 0069 */    0x6D26, 0x6D3F, 0x1B5C, 
+/* 006A */    0x6D57, 0x6D70, 0x1B76, 
+/* 006B */    0x6D7C, 0x6D98, 0x1B90, 
+/* 006C */    0x6DAA, 0x6E04, 0x1BAD, 
+/* 006D */    0x6E1E, 0x6E7D, 0x1C08, 
+/* 006E */    0x6E8D, 0x6ECF, 0x1C68, 
+/* 006F */    0x6EEB, 0x6F3C, 0x1CAB, 
+/* 0070 */    0x6F4F, 0x6F6C, 0x1CFD, 
+/* 0071 */    0x6F7D, 0x6FCA, 0x1D1B, 
+/* 0072 */    0x6FDA, 0x7023, 0x1D69, 
+/* 0073 */    0x702F, 0x7086, 0x1DB3, 
+/* 0074 */    0x7094, 0x70B7, 0x1E0B, 
+/* 0075 */    0x70CA, 0x70E4, 0x1E2F, 
+/* 0076 */    0x70FA, 0x710F, 0x1E4A, 
+/* 0077 */    0x711E, 0x7168, 0x1E60, 
+/* 0078 */    0x7179, 0x71A2, 0x1EAB, 
+/* 0079 */    0x71AF, 0x71DC, 0x1ED5, 
+/* 007A */    0x71F8, 0x729B, 0x1F03, 
+/* 007B */    0x72A8, 0x72E5, 0x1FA7, 
+/* 007C */    0x72F3, 0x7426, 0x1FE5, 
+/* 007D */    0x7439, 0x7472, 0x2119, 
+/* 007E */    0x7480, 0x7506, 0x2153, 
+/* 007F */    0x7512, 0x7561, 0x21DA, 
+/* 0080 */    0x756F, 0x7571, 0x222A, 
+/* 0081 */    0x7581, 0x75A4, 0x222D, 
+/* 0082 */    0x75B4, 0x7674, 0x2251, 
+/* 0083 */    0x7681, 0x76AD, 0x2312, 
+/* 0084 */    0x76BD, 0x7811, 0x233F, 
+/* 0085 */    0x781D, 0x7837, 0x2494, 
+/* 0086 */    0x7843, 0x786E, 0x24AF, 
+/* 0087 */    0x787A, 0x787E, 0x24DB, 
+/* 0088 */    0x788A, 0x797E, 0x24E0, 
+/* 0089 */    0x798B, 0x7ADB, 0x25D5, 
+/* 008A */    0x7AE8, 0x7B07, 0x2726, 
+/* 008B */    0x7B14, 0x7B77, 0x2746, 
+/* 008C */    0x7B84, 0x7BDB, 0x27AA, 
+/* 008D */    0x7BE8, 0x7C3A, 0x2802, 
+/* 008E */    0x7C46, 0x7C55, 0x2855, 
+/* 008F */    0x7C61, 0x7CF5, 0x2865, 
+/* 0090 */    0x7D03, 0x7E9E, 0x28FA, 
+/* 0091 */    0x7F3B, 0x7F71, 0x2A96, 
+/* 0092 */    0x7F7D, 0x7FCF, 0x2ACD, 
+/* 0093 */    0x7FDB, 0x8044, 0x2B20, 
+/* 0094 */    0x8060, 0x8075, 0x2B8A, 
+/* 0095 */    0x8081, 0x808E, 0x2BA0, 
+/* 0096 */    0x809C, 0x80AB, 0x2BAE, 
+/* 0097 */    0x80B8, 0x80B9, 0x2BBE, 
+/* 0098 */    0x80C8, 0x80E0, 0x2BC0, 
+/* 0099 */    0x80ED, 0x81A2, 0x2BD9, 
+/* 009A */    0x81AE, 0x8203, 0x2C8F, 
+/* 009B */    0x820F, 0x830B, 0x2CE5, 
+/* 009C */    0x831B, 0x8357, 0x2DE2, 
+/* 009D */    0x8370, 0x83AD, 0x2E1F, 
+/* 009E */    0x83BE, 0x83EA, 0x2E5D, 
+/* 009F */    0x83F6, 0x8419, 0x2E8A, 
+/* 00A0 */    0x842F, 0x8439, 0x2EAE, 
+/* 00A1 */    0x8445, 0x8485, 0x2EB9, 
+/* 00A2 */    0x8492, 0x8510, 0x2EFA, 
+/* 00A3 */    0x851C, 0x8629, 0x2F79, 
+/* 00A4 */    0x8636, 0x8646, 0x3087, 
+/* 00A5 */    0x8652, 0x867A, 0x3098, 
+/* 00A6 */    0x8688, 0x86C5, 0x30C1, 
+/* 00A7 */    0x86D1, 0x86E7, 0x30FF, 
+/* 00A8 */    0x86FA, 0x877B, 0x3116, 
+/* 00A9 */    0x878B, 0x8880, 0x3198, 
+/* 00AA */    0x8898, 0x88AA, 0x328E, 
+/* 00AB */    0x88BA, 0x897D, 0x32A1, 
+/* 00AC */    0x8989, 0x89BC, 0x3365, 
+/* 00AD */    0x89D4, 0x89D8, 0x3399, 
+/* 00AE */    0x89E5, 0x8A67, 0x339E, 
+/* 00AF */    0x8A75, 0x8ADF, 0x3421, 
+/* 00B0 */    0x8AEC, 0x8B1F, 0x348C, 
+/* 00B1 */    0x8B2D, 0x8B9F, 0x34C0, 
+/* 00B2 */    0x8C38, 0x8CA4, 0x3533, 
+/* 00B3 */    0x8CB9, 0x8D1B, 0x35A0, 
+/* 00B4 */    0x8D65, 0x8D6E, 0x3603, 
+/* 00B5 */    0x8D7F, 0x8EDC, 0x360D, 
+/* 00B6 */    0x8EE8, 0x8F65, 0x376B, 
+/* 00B7 */    0x8F9D, 0x8FA6, 0x37E9, 
+/* 00B8 */    0x8FB5, 0x900C, 0x37F3, 
+/* 00B9 */    0x9018, 0x901B, 0x384B, 
+/* 00BA */    0x9028, 0x904C, 0x384F, 
+/* 00BB */    0x905B, 0x9079, 0x3874, 
+/* 00BC */    0x9085, 0x91C5, 0x3893, 
+/* 00BD */    0x91D3, 0x91EA, 0x39D4, 
+/* 00BE */    0x91F7, 0x9337, 0x39EC, 
+/* 00BF */    0x9347, 0x93E7, 0x3B2D, 
+/* 00C0 */    0x93F7, 0x941F, 0x3BCE, 
+/* 00C1 */    0x942E, 0x9472, 0x3BF7, 
+/* 00C2 */    0x9483, 0x9484, 0x3C3C, 
+/* 00C3 */    0x9578, 0x958E, 0x3C3E, 
+/* 00C4 */    0x959D, 0x95E6, 0x3C55, 
+/* 00C5 */    0x961D, 0x9641, 0x3C9F, 
+/* 00C6 */    0x9652, 0x9661, 0x3CC4, 
+/* 00C7 */    0x966E, 0x96BA, 0x3CD4, 
+/* 00C8 */    0x96CA, 0x9709, 0x3D21, 
+/* 00C9 */    0x971A, 0x9733, 0x3D61, 
+/* 00CA */    0x9741, 0x9789, 0x3D7B, 
+/* 00CB */    0x9795, 0x97FA, 0x3DC4, 
+/* 00CC */    0x9807, 0x986C, 0x3E2A, 
+/* 00CD */    0x98AB, 0x98CC, 0x3E90, 
+/* 00CE */    0x98E1, 0x98F6, 0x3EB2, 
+/* 00CF */    0x9902, 0x9960, 0x3EC8, 
+/* 00D0 */    0x999B, 0x9A5D, 0x3F27, 
+/* 00D1 */    0x9AAA, 0x9C7B, 0x3FEA, 
+/* 00D2 */    0x9CE6, 0x0000, 0x6B59, 
+/* 00D3 */    0x9CF2, 0x9D1E, 0x41BC, 
+/* 00D4 */    0x9D2F, 0x9E1D, 0x41E9, 
+/* 00D5 */    0x9E7A, 0x9EB5, 0x42D8, 
+/* 00D6 */    0x9EC6, 0x9F47, 0x4314, 
+/* 00D7 */    0x9F53, 0x9F7D, 0x4396, 
+/* 00D8 */    0x9F8F, 0x9FA5, 0x43C1, 
+/* 00D9 */    0xFF5E, 0x0000, 0x2237, 
 /*-------------------------------------------------------*/
 /*       Offset=0x02C9   Start of MappingTable */ 
 
