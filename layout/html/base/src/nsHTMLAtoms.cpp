@@ -263,6 +263,7 @@ nsIAtom* nsHTMLAtoms::valign;
 nsIAtom* nsHTMLAtoms::value;
 nsIAtom* nsHTMLAtoms::valuetype;
 nsIAtom* nsHTMLAtoms::variable;
+nsIAtom* nsHTMLAtoms::vcard_name;
 nsIAtom* nsHTMLAtoms::version;
 nsIAtom* nsHTMLAtoms::verticalFramesetBorderPseudo;
 nsIAtom* nsHTMLAtoms::visibility;
@@ -525,6 +526,7 @@ void nsHTMLAtoms::AddrefAtoms()
     value = NS_NewAtom("value");
     valuetype = NS_NewAtom("valuetype");
     variable = NS_NewAtom("variable");
+    vcard_name = NS_NewAtom("vcard_name");
     version = NS_NewAtom("version");
     verticalFramesetBorderPseudo = NS_NewAtom(":vframeset-border");
     visibility = NS_NewAtom("visibility");
@@ -773,6 +775,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(value);
     NS_RELEASE(valuetype);
     NS_RELEASE(variable);
+    NS_RELEASE(vcard_name);
     NS_RELEASE(version);
     NS_RELEASE(verticalFramesetBorderPseudo);
     NS_RELEASE(visibility);
