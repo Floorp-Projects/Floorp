@@ -68,6 +68,9 @@ public class WrappedException extends EvaluatorException
         }
     }
 
+    /**
+     * @see Context#throwAsScriptRuntimeEx(Throwable e)
+     */
     public WrappedException(Throwable exception)
     {
         super("Wrapped "+exception.toString());
