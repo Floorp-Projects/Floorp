@@ -296,9 +296,9 @@
               <separator/>
               <hbox>
                 <label value="&mediaWidth;"/>
-                <textbox readonly="true" crop="right" id="imageheight"/>
-                <label value="&mediaHeight;"/>
                 <textbox readonly="true" crop="right" id="imagewidth"/>
+                <label value="&mediaHeight;"/>
+                <textbox readonly="true" crop="right" id="imageheight"/>
               </hbox>
             </row>
 <!--            <row>
