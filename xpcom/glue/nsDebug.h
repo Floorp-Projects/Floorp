@@ -202,17 +202,17 @@ public:
  * The non-debug version of these macros do not evaluate the
  * expression or the message arguments to the macro.
  */
-#define NS_ABORT_IF_FALSE(_expr, _msg) /* nothing */
-#define NS_WARN_IF_FALSE(_expr, _msg)  /* nothing */
-#define NS_PRECONDITION(expr, str)     /* nothing */
-#define NS_ASSERTION(expr, str)        /* nothing */
-#define NS_POSTCONDITION(expr, str)    /* nothing */
-#define NS_NOTYETIMPLEMENTED(str)      /* nothing */
-#define NS_NOTREACHED(str)             /* nothing */
-#define NS_ERROR(str)                  /* nothing */
-#define NS_WARNING(str)                /* nothing */
-#define NS_ABORT()                     /* nothing */
-#define NS_BREAK()                     /* nothing */
+#define NS_ABORT_IF_FALSE(_expr, _msg) PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define NS_WARN_IF_FALSE(_expr, _msg)  PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define NS_PRECONDITION(expr, str)     PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define NS_ASSERTION(expr, str)        PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define NS_POSTCONDITION(expr, str)    PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define NS_NOTYETIMPLEMENTED(str)      PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define NS_NOTREACHED(str)             PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define NS_ERROR(str)                  PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define NS_WARNING(str)                PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define NS_ABORT()                     PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define NS_BREAK()                     PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
 
 #endif /* ! NS_DEBUG */
 #endif /* __cplusplus */
