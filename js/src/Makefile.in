@@ -148,7 +148,13 @@ NSPR_STATIC_PATH	= $(subst -L,,$(findstring -L,$(NSPR_LIBS)))
 else
 NSPR_STATIC_PATH	= $(DIST)/lib
 endif
+
+ifeq ($(OS_ARCH),BeOS)
+LDFLAGS		= $(pathsubst -l%,$(NSPR_STATIC_PATH)/%.a,$(NSPR_LIBS))
+else
 LDFLAGS		= $(pathsubst -l%,$(NSPR_STATIC_PATH)/%.a,$(NSPR_LIBS)) -lm
+endif
+
 
 ifdef JS_SAFE_ARENA
 DEFINES		+= -DJS_USE_SAFE_ARENA
