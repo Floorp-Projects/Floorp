@@ -313,7 +313,7 @@ void nsMailboxTestDriver::InitializeTestDriver()
 	rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
     if (prefs && NS_SUCCEEDED(rv))
 	{
-		prefs->Startup("prefs.js");
+		prefs->Startup("prefs50.js");
 		rv = prefs->GetCharPref(kMsgRootFolderPref, rootPath, &rootLen);
 		nsServiceManager::ReleaseService(kPrefCID, prefs);
 	}

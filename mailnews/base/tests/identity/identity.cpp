@@ -59,7 +59,7 @@ int main() {
     exit(1);
   }
 
-  rv = prefs->Startup("prefs.js");
+  rv = prefs->Startup("prefs50.js");
   if (NS_FAILED(rv)) printf("Couldn't read prefs\n");
 
   nsIMsgAccountManager *accountManager;

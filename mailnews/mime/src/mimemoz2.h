@@ -37,7 +37,7 @@ extern "C" {
 #include "mimei.h"
 #include "nsIPref.h"
 
-#define     MIME_PREFS_FILE   "prefs.js"
+#define     MIME_PREFS_FILE   "prefs50.js"
 
 typedef struct _nsMIMESession nsMIMESession;
 

@@ -47,7 +47,7 @@ nsMsgMailSession::nsMsgMailSession():
     if (NS_FAILED(rv)) return;
     
     if (prefs && NS_SUCCEEDED(rv))
-      rv = prefs->Startup("prefs.js");
+      rv = prefs->Startup("prefs50.js");
     
     (void)nsServiceManager::ReleaseService(kPrefCID, prefs);
 

@@ -205,7 +205,7 @@ char * INTL_GetDefaultMailCharset()
 	  char prefValue[kMAX_CSNAME+1];
   	PRInt32 prefLength = kMAX_CSNAME;
 		
-    prefs->Startup("prefs.js");
+    prefs->Startup("prefs50.js");
 		res = prefs->GetCharPref("intl.character_set_name", prefValue, &prefLength);
     if (NS_SUCCEEDED(res) && prefLength > 0) {
       //TODO: map to mail charset (e.g. Shift_JIS -> ISO-2022-JP) bug#3941.

@@ -249,7 +249,7 @@ char * WH_TempName(XP_FileType /*type*/, const char * prefix)
 	res = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
     if (prefs && NS_SUCCEEDED(res))
 	{
-		prefs->Startup("prefs.js");
+		prefs->Startup("prefs50.js");
 		res = prefs->GetCharPref("browser.download_directory", prefValue, &prefLength);
 		if (NS_SUCCEEDED(res) && prefLength > 0)
 			tempPath = PL_strdup(prefValue);

@@ -2476,7 +2476,7 @@ nsresult nsMsgDatabase::GetBoolPref(const char *prefName, PRBool *result)
 	rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
     if (prefs && NS_SUCCEEDED(rv))
 	{
-//		prefs->Startup("prefs.js");
+//		prefs->Startup("prefs50.js");
 
 		rv = prefs->GetBoolPref(prefName, &prefValue);
 		*result = prefValue;
