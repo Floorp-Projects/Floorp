@@ -42,15 +42,15 @@ nsDeviceContextXlib::nsDeviceContextXlib()
   mPaletteInfo.numReserved = 0;
   mPaletteInfo.palette = NULL;
   mNumCells = 0;
+  mSurface = nsnull;
 }
 
 nsDeviceContextXlib::~nsDeviceContextXlib()
 {
+  nsDrawingSurfaceXlib *surf = (nsDrawingSurfaceXlib *)mSurface;
+  NS_IF_RELEASE(surf);
+  mSurface = nsnull;
 }
-
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextXlib, kDeviceContextIID)
-NS_IMPL_ADDREF(nsDeviceContextXlib)
-NS_IMPL_RELEASE(nsDeviceContextXlib)
 
 NS_IMETHODIMP nsDeviceContextXlib::Init(nsNativeWidget aNativeWidget)
 {
@@ -154,8 +154,11 @@ NS_IMETHODIMP nsDeviceContextXlib::GetSystemAttribute(nsSystemAttrID anID, Syste
 NS_IMETHODIMP nsDeviceContextXlib::GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
   printf("nsDeviceContextXlib::GetDrawingSurface()\n");
-  aContext.CreateDrawingSurface(nsnull, 0, aSurface);
-  return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;  
+  if (NULL == mSurface) {
+    aContext.CreateDrawingSurface(nsnull, 0, mSurface);
+  }
+  aSurface = mSurface;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::ConvertPixel(nscolor aColor, PRUint32 & aPixel)

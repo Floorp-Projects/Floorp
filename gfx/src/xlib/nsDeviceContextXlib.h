@@ -25,9 +25,6 @@ class nsDeviceContextXlib : public DeviceContextImpl
 {
 public:
   nsDeviceContextXlib();
-  ~nsDeviceContextXlib();
-
-  NS_DECL_ISUPPORTS
 
   NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
 
@@ -54,9 +51,11 @@ public:
   NS_IMETHOD EndPage(void);
 
 private:
-  nsPaletteInfo mPaletteInfo;
-  PRBool        mWriteable;
-  PRUint32 mNumCells;
+  virtual              ~nsDeviceContextXlib();
+  nsPaletteInfo        mPaletteInfo;
+  PRBool               mWriteable;
+  PRUint32             mNumCells;
+  nsDrawingSurface     mSurface;
 };
 
 #endif
