@@ -231,7 +231,7 @@ ssm_DrainAndDestroyChildCollection(SSMCollection **coll)
 
     /* Drain the collection. Don't block; presumably this is
        being done at destruction time. */
-    while(SSM_Dequeue(v, SSM_PRIORITY_ANY, (void **) &conn, PR_FALSE) == PR_SUCCESS);
+    while(SSM_Dequeue(v, SSM_PRIORITY_ANY, (void **) &conn, PR_FALSE) == PR_SUCCESS) {;}
 
     /* Destroy the collection. */
     SSM_DestroyCollection(v);
@@ -282,13 +282,7 @@ SSM_AddLogSocket(PRFileDesc *fd)
 }
 
 #ifdef XP_MAC
-/* 
-	Each thread, when registering itself using one of the two functions
-	below, assigns itself as private data at index (thdIndex). This is
-	necessary because when a thread exits, we want it to delete itself
-	from the list of threads we need to kill at exit time. 
-*/
-extern PRUintn thdIndex;
+#include "macglue.h"
 #endif
 
 /* Called by a newly created thread, this associates a name with the thread. */
@@ -300,8 +294,17 @@ SSM_RegisterThread(char *threadName, SSMResource *ptr)
     char *value;
 
 #ifdef XP_MAC
-    if (thdIndex > 0)
-    	PR_SetThreadPrivate(thdIndex, PR_GetCurrentThread());
+    /* 
+    	Each thread, when registering itself using one of the two functions
+    	below, assigns itself as private data at index (thdIndex). This is
+    	necessary because when a thread exits, we want it to delete itself
+    	from the list of threads we need to kill at exit time. 
+    */
+    {
+      PRUintn threadIndex = GetThreadIndex();
+      if (threadIndex > 0)
+      	PR_SetThreadPrivate(threadIndex, PR_GetCurrentThread());
+    }
 #endif
 
     if (ptr)

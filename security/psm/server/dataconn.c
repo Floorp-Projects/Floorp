@@ -44,6 +44,14 @@
 /* How many milliseconds to wait for client input */
 #define SSM_READCLIENT_POKE_INTERVAL 30000
 
+/* keep track of the number of data connections pending. used to throttle cpu usage */
+static int gNumDataConnections = 0;
+
+PRBool AreConnectionsActive(void)
+{
+	return gNumDataConnections > 0;
+}
+
 
 SSMStatus SSMDataConnection_Create(void *arg, SSMControlConnection * connection,
                                   SSMResource **res)
@@ -62,6 +70,7 @@ SSMStatus SSMDataConnection_Create(void *arg, SSMControlConnection * connection,
     SSMDataConnection_Invariant(conn);
     
     *res = SSMRESOURCE(conn);
+
     return PR_SUCCESS;
 
  loser:
@@ -95,8 +104,11 @@ SSMStatus SSMDataConnection_Init(SSMDataConnection *conn,
         goto loser;
     }
 
-	/* Hang our shutdown func. */
-	SSMCONNECTION(conn)->m_auth_func = SSMDataConnection_Authenticate;
+    /* keep track of the number of data connections pending. */
+    gNumDataConnections++;
+
+    /* Hang our shutdown func. */
+    SSMCONNECTION(conn)->m_auth_func = SSMDataConnection_Authenticate;
 
     return PR_SUCCESS;
 
@@ -416,6 +428,10 @@ SSMDataConnection_Shutdown(SSMResource *res, SSMStatus status)
             trv = PR_Close(conn->m_clientSocket);
             conn->m_clientSocket = NULL;
             SSM_DEBUG("Closed client socket (rv == %d).\n",trv);
+
+            /* keep track of the number of data connections pending. */
+            gNumDataConnections--;
+            PR_ASSERT(gNumDataConnections >= 0);
         }
     }
 

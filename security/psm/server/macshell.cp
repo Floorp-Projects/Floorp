@@ -30,249 +30,264 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-// ===========================================================================
-//	CCompleteApp.cp 			©1994-1998 Metrowerks Inc. All rights reserved.
-// ===========================================================================
-//	This file contains the starter code for a complete PowerPlant project that
-//  includes precompiled headers and both debug and release targets.
 
-#include "macshell.h"
+/*
+ * See <http://developer.apple.com/technotes/tn/tn1070.html> for information about BOAs
+ *
+ */
+ 
 
-#include <LGrowZone.h>
-#include <LWindow.h>
-#include <PP_Messages.h>
-#include <PP_Resources.h>
-#include <PPobClasses.h>
-#include <UDrawingState.h>
-#include <UMemoryMgr.h>
-#include <URegistrar.h>
-#include "macstdlibextras.h"
+#include <AppleEvents.h>
+#include <Gestalt.h>
+#include <Errors.h>
+#include <LowMem.h>
+
 
 #include "prthread.h"
 #include "prinit.h"
 #include "prlog.h"
 
 #include "serv.h"
+#include "dataconn.h"
 
-// put declarations for resource ids (ResIDTs) here
+#include "macshell.h"
 
-const PP_PowerPlant::ResIDT	wind_SampleWindow = 128;	// EXAMPLE, create a new window
+#define kSleepMax	20
 
-//
-// NSPR repeater
-//
+static PRBool	 	gQuitFlag;
+static long 		gSleepVal;
 
-class CNSPRRepeater : public LPeriodical
+
+//----------------------------------------------------------------------------
+PRBool GetQuitFlag()
 {
-public:
-	CNSPRRepeater();
-	virtual void SpendTime(const EventRecord& inEvent);
-};
-
-CNSPRRepeater::CNSPRRepeater(void)
-	: LPeriodical()
-{
+	return gQuitFlag;
 }
 
-CNSPRRepeater *gNSPRRepeater;
-
-PRBool gShouldQuit = PR_FALSE;
-
-void
-CNSPRRepeater::SpendTime(const EventRecord& inEvent)
+//----------------------------------------------------------------------------
+void SetQuitFlag(PRBool quitNow)
 {
-	/*  
-		Can't just exit on the Mac, because otherwise the NSPR threads
-		will keep spinning forever. We have to send the app a
-		Quit command so that all the threads will shut down in an orderly
-		way. 
-		
-		On top of that, NSPR threads can't send a Quit Apple Event, because
-		that causes the threads to close improperly. So, we keep a flag and allow
-		threads to raise it. We check for that flag here.
-	*/
+	gQuitFlag = quitNow;
+}
 
-	if (gShouldQuit)
+
+// Apple event handlers to be installed
+
+//----------------------------------------------------------------------------
+static pascal OSErr DoAEOpenApplication(AppleEvent * theAppleEvent, AppleEvent * replyAppleEvent, long refCon)
+{
+    return noErr;
+}
+
+//----------------------------------------------------------------------------
+static pascal OSErr DoAEOpenDocuments(AppleEvent * theAppleEvent, AppleEvent * replyAppleEvent, long refCon)
+{
+    return errAEEventNotHandled;
+}
+
+//----------------------------------------------------------------------------
+static pascal OSErr DoAEPrintDocuments(AppleEvent * theAppleEvent, AppleEvent * replyAppleEvent, long refCon)
+{
+    return errAEEventNotHandled;
+}
+
+//----------------------------------------------------------------------------
+static pascal OSErr DoAEQuitApplication(AppleEvent * theAppleEvent, AppleEvent * replyAppleEvent, long refCon)
+{
+    gQuitFlag = PR_TRUE;
+    return noErr;
+}
+
+// install Apple event handlers
+//----------------------------------------------------------------------------
+static void InitAppleEventsStuff(void)
+{
+    OSErr err;
+
+	err = AEInstallEventHandler(kCoreEventClass, kAEOpenApplication, NewAEEventHandlerProc(DoAEOpenApplication), 0, false);
+
+	if (err == noErr)
+		err = AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments, NewAEEventHandlerProc(DoAEOpenDocuments), 0, false);
+
+	if (err == noErr)
+		err = AEInstallEventHandler(kCoreEventClass, kAEPrintDocuments, NewAEEventHandlerProc(DoAEPrintDocuments), 0, false);
+
+	if (err == noErr)
+		err = AEInstallEventHandler(kCoreEventClass, kAEQuitApplication, NewAEEventHandlerProc(DoAEQuitApplication), 0, false);
+
+#if DEBUG
+	if (err != noErr)
+		DebugStr("\pInstall event handler failed");
+#endif
+}
+
+// high-level event dispatching
+//----------------------------------------------------------------------------
+static void DoHighLevelEvent(EventRecord * theEventRecPtr)
+{
+    (void) AEProcessAppleEvent(theEventRecPtr);
+}
+
+#pragma mark -
+
+
+//----------------------------------------------------------------------------
+// Increase the space allocated for the background only application stack.
+ //
+ // Warning: SetApplLimit always sets the stack to at least as large as the
+ //    default stack for the machine (8K on machines with original QuickDraw,
+ //    24K on machines with Color QuickDraw), so the application partition
+ //    must be large enough to accommodate an appropriate stack and heap.
+ //    Call this only once, at the beginning of the BOA.
+ //
+ // Another warning:
+ //    Don't bother trying to set the stack size to something lower than 24K.
+ //    If SetApplLimit is called to do this, it will silently lower ApplLimit
+ //    to a 24K stack. (The limit is 8K on machines without Color QuickDraw.
+ //    In this sample, we don't allow an increment less than 24K.)
+
+static OSErr IncreaseBOAStack(Size additionalStackSize)
+{
+	OSErr err;
+
+	// Check that we aren't running with a corrupt heap. If we are,
+	// fix the problem.  This was a bug with FBA's before System 7.5.5.
+	// With System Software later than 7.5.5, this "fix" is harmless.
+	THz	myZone = GetZone();
+	if (myZone->bkLim != LMGetHeapEnd())
+		LMSetHeapEnd(myZone->bkLim);
+
+	// Increase the stack size by lowering the heap limit.
+	SetApplLimit((Ptr) ((unsigned long) GetApplLimit() - additionalStackSize));
+	err = MemError();
+	if (err == noErr) MaxApplZone();
+
+	return err;
+}
+   
+//----------------------------------------------------------------------------
+static void MemoryInit(long numMasterBlocks)
+{
+	IncreaseBOAStack(1024 * 64);
+	
+	for (long i = 0; i < numMasterBlocks; i ++)
+		MoreMasters();
+}
+
+#pragma mark -
+
+
+//----------------------------------------------------------------------------
+static void DoIdleProcessing()
+{
+
+	PR_Sleep(PR_INTERVAL_NO_WAIT); // give time to NSPR threads
+
+}
+
+//----------------------------------------------------------------------------
+static OSErr HandleOneEvent()
+{
+	EventRecord	theEvent;
+	Boolean		gotEvent;
+	OSErr			err = noErr;
+
+	// tweak the sleep time depending on whether cartman is doing anything or not	
+	gSleepVal = AreConnectionsActive() ? 0 : kSleepMax;
+
+	gotEvent = WaitNextEvent(everyEvent, &theEvent, gSleepVal, nil);
+
+	if (gotEvent)
 	{
-		if (gNSPRRepeater)
-			gNSPRRepeater->StopIdling();
-		// PR_Interrupt all threads (other than the primordial one)
-		SSM_KillAllThreads();
-		gTheApp->SendAEQuit(); // will cause this repeater to stop repeating
+		switch (theEvent.what)
+		{
+			case kHighLevelEvent:
+				DoHighLevelEvent(&theEvent);
+				break;
+		}
 	}
 	else
-		PR_Sleep(PR_INTERVAL_NO_WAIT); // give time to NSPR threads
+	{
+		DoIdleProcessing();
+	}
+
+	return noErr;
 }
 
-// ===========================================================================
-//		¥ Main Program
-// ===========================================================================
 
-PRIntn MacPSMMain(PRIntn argc, char **argv);
-
-int main()
+//----------------------------------------------------------------------------
+static void DoApplicationCleanup()
 {
-	char *fakeArgv[] = { NULL, NULL };
-#ifndef NDEBUG									
-	SetDebugThrow_(PP_PowerPlant::debugAction_Alert);	// Set Debugging options
-	SetDebugSignal_(PP_PowerPlant::debugAction_Alert);
-#endif
-
-	PP_PowerPlant::InitializeHeap(3);					// Initialize Memory Manager
-														// Parameter is number of Master Pointer
-														// blocks to allocate
-
-#ifdef DEBUG
-	InitializeSIOUX(false);	// prevent us from getting double menus, etc.
-#endif
-	PP_PowerPlant::UQDGlobals::InitializeToolbox(&qd);	// Initialize standard Toolbox managers
-	
-	new PP_PowerPlant::LGrowZone(20000);				// Install a GrowZone function to catch
-														// low memory situations.
-	PR_Initialize(MacPSMMain, 0, fakeArgv, 0);
-	return 0;
-}
-
-CBasicApp *gTheApp;
-
-PRIntn MacPSMMain(PRIntn argc, char **argv)
-{
-	gNSPRRepeater = new CNSPRRepeater;
-	PR_ASSERT(gNSPRRepeater != NULL);
-	gNSPRRepeater->StartIdling();
-	
-	CBasicApp	theApp;									// create instance of your application
-	gTheApp = &theApp;
-
-	theApp.Run();
-	return 0;
-}
-
-// ---------------------------------------------------------------------------
-//		¥ CBasicApp
-// ---------------------------------------------------------------------------
-//	Constructor
-
-CBasicApp::CBasicApp()
-{
-#ifndef NDEBUG
-	PP_PowerPlant::RegisterAllPPClasses();		// Register functions to create core
-#else											// PowerPlant classes								
-	RegisterClass_(PP_PowerPlant::LWindow);
-	RegisterClass_(PP_PowerPlant::LCaption);
-#endif	
+		SSM_KillAllThreads();
 }
 
 
-// ---------------------------------------------------------------------------
-//		¥ ~CBasicApp
-// ---------------------------------------------------------------------------
-//	Destructor
-
-CBasicApp::~CBasicApp()
-{
-}
-
-// ---------------------------------------------------------------------------
-//		¥ StartUp
-// ---------------------------------------------------------------------------
-//	This method lets you do something when the application starts up
-//	without a document. For example, you could issue your own new command.
-
+// this is in main.c
 extern void RunMacPSM(void *);
 
-void
-CBasicApp::StartUp()
+//----------------------------------------------------------------------------
+static PRIntn DoMainEventLoop(PRIntn argc, char **argv)
 {
-	// ObeyCommand(PP_PowerPlant::cmd_New, nil);			// EXAMPLE, create a new window
-	
-	/*
-		The Unix/Win32 main function (which we call RunMacPSM) blocks on 
-		PR_Accept(), listening for control connections. Since we cannot 
-		block from the main thread, we have to spin a separate NSPR thread 
-		for RunMacPSM.
-	*/
-    SSM_CreateAndRegisterThread(PR_USER_THREAD, 
-								RunMacPSM, 
-								NULL, 
-								PR_PRIORITY_NORMAL,
-								PR_LOCAL_THREAD,
-								PR_UNJOINABLE_THREAD, 0);
+
+  SSM_CreateAndRegisterThread(PR_USER_THREAD, 
+							RunMacPSM, 
+							NULL, 
+							PR_PRIORITY_NORMAL,
+							PR_LOCAL_THREAD,
+							PR_UNJOINABLE_THREAD, 0);
+
+	// let's let NSPR threads start off
+	PR_Sleep(PR_INTERVAL_NO_WAIT); // give time to NSPR threads
+
+	// main event loop
+	while (!gQuitFlag)
+	{
+		OSErr	err = HandleOneEvent();
+		
+	}
+
+	DoApplicationCleanup();
+	return 0;
 }
 
-// ---------------------------------------------------------------------------
-//		¥ ObeyCommand
-// ---------------------------------------------------------------------------
-//	This method lets the application respond to commands like Menu commands
 
-Boolean
-CBasicApp::ObeyCommand(
-	PP_PowerPlant::CommandT	inCommand,
-	void					*ioParam)
+//----------------------------------------------------------------------------
+static void DoApplicationSetup()
 {
-	Boolean		cmdHandled = true;
+	char *fakeArgv[] = { NULL, NULL };		// do we need to add the application name in argv[0] ?
 
-	switch (inCommand) {
-	
-		// Handle command messages (defined in PP_Messages.h).
-		case PP_PowerPlant::cmd_New:
-#if 0
-			PP_PowerPlant::LWindow	*theWindow = 
-									PP_PowerPlant::LWindow::CreateWindow(wind_SampleWindow, this);
-			ThrowIfNil_(theWindow);
-
-			// LWindow is not initially visible in PPob resource
-			theWindow->Show();
-			break;
-#endif
-
-		case PP_PowerPlant::cmd_Quit:
-			if (!gShouldQuit) // do this only if repeater hasn't done it for us
-			{
-				if (gNSPRRepeater)
-					gNSPRRepeater->StopIdling();
-				// PR_Interrupt all threads (other than the primordial one)
-				SSM_KillAllThreads();
-			}
-			// fall through to default Quit behavior
-
-		// Any that you don't handle, such as cmd_About and cmd_Quit,
-		// will be passed up to LApplication
-		default:
-			cmdHandled = PP_PowerPlant::LApplication::ObeyCommand(inCommand, ioParam);
-			break;
-	}
-	
-	return cmdHandled;
+	PR_Initialize(DoMainEventLoop, 0, fakeArgv, 0);
 }
 
-// ---------------------------------------------------------------------------
-//		¥ FindCommandStatus
-// ---------------------------------------------------------------------------
-//	This method enables menu items.
+#pragma mark -
 
-void
-CBasicApp::FindCommandStatus(
-	PP_PowerPlant::CommandT	inCommand,
-	Boolean					&outEnabled,
-	Boolean					&outUsesMark,
-	PP_PowerPlant::Char16	&outMark,
-	Str255					outName)
+
+//----------------------------------------------------------------------------
+void main(void)
 {
+	// initialize QuickDraw globals. This is the only Toolbox init that we
+	// should do for an FBA
+	InitGraf(&qd.thePort);
 
-	switch (inCommand) {
-	
-		// Return menu item status according to command messages.
-		case PP_PowerPlant::cmd_New:
-		case PP_PowerPlant::cmd_Quit:
-			outEnabled = true;
-			break;
+	MemoryInit(10);
 
-		// Any that you don't handle, such as cmd_About and cmd_Quit,
-		// will be passed up to LApplication
-		default:
-			PP_PowerPlant::LApplication::FindCommandStatus(inCommand, outEnabled,
-												outUsesMark, outMark, outName);
-			break;
-	}
+	// initialize application globals
+
+	gQuitFlag = PR_FALSE;
+	gSleepVal = kSleepMax;
+
+	// is the Apple Event Manager available?
+	long		gestResponse;
+	Boolean	haveAppleEvents;
+	OSErr err = Gestalt(gestaltAppleEventsAttr, &gestResponse);
+	if (err == noErr && (gestResponse & (1 << gestaltAppleEventsPresent)) != 0)
+		haveAppleEvents = true;
+		
+	if (!haveAppleEvents) return;
+
+	// install Apple event handlers
+	InitAppleEventsStuff();
+
+	// setup the app. This calls into NSPR, which calls our DoMainEventLoop() function.
+	DoApplicationSetup();
 }

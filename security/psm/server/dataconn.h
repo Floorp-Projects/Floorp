@@ -83,6 +83,10 @@ typedef struct SSMDataConnection
                                       (usage depends on subclass) */
 } SSMDataConnection;
 
+
+PRBool AreConnectionsActive(void);
+
+
 SSMStatus SSMDataConnection_Create(void *arg, SSMControlConnection * conn, 
                                   SSMResource **res);
 SSMStatus SSMDataConnection_Init(SSMDataConnection *conn, 

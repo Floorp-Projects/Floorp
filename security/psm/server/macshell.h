@@ -30,36 +30,12 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-// ===========================================================================
-//	CCompleteApp.h				©1994-1998 Metrowerks Inc. All rights reserved.
-// ===========================================================================
-
-#pragma once
-
-#include <PP_Prefix.h>
-#include <LApplication.h>
 
 
-class	CBasicApp : public PP_PowerPlant::LApplication {
 
-public:
-							CBasicApp();		// constructor registers PPobs
-		virtual				~CBasicApp();		// stub destructor
-	
-	
-		// this overriding method handles application commands
-		virtual Boolean		ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioParam);	
-	
-	
-		// this overriding method returns the status of menu items
-		virtual void		FindCommandStatus(PP_PowerPlant::CommandT inCommand,
-									Boolean &outEnabled, Boolean &outUsesMark,
-									PP_PowerPlant::Char16 &outMark, Str255 outName);
-protected:
+PR_BEGIN_EXTERN_C
 
-		virtual void		StartUp();			// override startup functions
+PRBool GetQuitFlag();
+void SetQuitFlag(PRBool quitNow);
 
-};
-
-
-extern CBasicApp *gTheApp;
+PR_END_EXTERN_C

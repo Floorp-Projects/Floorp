@@ -30,8 +30,12 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-#include "TArray.h"
-#include "TArrayIterator.h"
+//#include "TArray.h"
+//#include "TArrayIterator.h"
+
+#include "nsError.h"
+#include "nsVoidArray.h"
+
 #include "prthread.h"
 #include "prlog.h"
 #include "prmem.h"
@@ -43,31 +47,75 @@ typedef struct SSMThreadPrivateData
 	PRUintn indx;
 } SSMThreadPrivateData;
 
-TArray<PRThread *>* myThreads = NULL;
-PRUintn thdIndex = 0;
+
+
+static nsVoidArray*		gThreadsList = NULL;
+static PRUintn 				gThreadIndex = 0;
+
+
+#ifdef DEBUG
+// just here to satisfy linkage in debug mode. nsTraceRefcnt is a class used for tracking
+// memory usage in debug builds. This is fragile, and a hack.
+class nsTraceRefcnt
+{
+
+  static NS_COM void LogCtor(void* aPtr, const char* aTypeName,
+                             PRUint32 aInstanceSize);
+
+  static NS_COM void LogDtor(void* aPtr, const char* aTypeName,
+                             PRUint32 aInstanceSize);
+
+};
+
+void nsTraceRefcnt::LogCtor(void* aPtr, const char* aTypeName,
+                             PRUint32 aInstanceSize)
+{}
+
+void nsTraceRefcnt::LogDtor(void* aPtr, const char* aTypeName,
+                             PRUint32 aInstanceSize)
+{}
+#endif
+
+
+PRUintn GetThreadIndex()
+{
+	return gThreadIndex;
+}
 
 void 
 SSM_MacDelistThread(void *priv)
 {
-	// remove this lump from the list of active threads
-	myThreads->Remove((PRThread *) priv);
+    PR_ASSERT(gThreadsList);
+	
+    PRBool	removed = gThreadsList->RemoveElement(priv);
+    PR_ASSERT(removed);
+	
+    if (gThreadsList->Count() == 0)
+    {
+        delete gThreadsList;
+        gThreadsList = NULL;
+    }
 }
+
+static PRBool InterruptThreadEnumerator(void* aElement, void *aData)
+{
+	PRThread* theThread = (PRThread *)aElement;
+	
+	nsresult rv = PR_Interrupt(theThread); // thread data dtor will deallocate (*priv)
+	PR_ASSERT(rv == PR_SUCCESS);
+	
+	return PR_TRUE;		// continue
+}
+
+
 
 void
 SSM_KillAllThreads(void)
 {
-	int i;
-	SSMThreadPrivateData *priv = NULL;
-	PRStatus rv;
-
-	if (myThreads != nil) {
-		TArrayIterator<PRThread*> iterator(*myThreads);
-		PRThread	*thd;
-		while (iterator.Next(thd)) {
-			rv = PR_Interrupt(thd); // thread data dtor will deallocate (*priv)
-			PR_ASSERT(rv == PR_SUCCESS);
-		}
-	}
+	if (gThreadsList)
+	{
+		gThreadsList->EnumerateForwards(InterruptThreadEnumerator, NULL);
+  	}
 }
 
 PRThread *
@@ -79,19 +127,20 @@ SSM_CreateAndRegisterThread(PRThreadType type,
                      PRThreadState state,
                      PRUint32 stackSize)
 {
-	PRThread *thd;
 
-	if (!myThreads)
+	if (!gThreadsList)
 	{
-		PR_NewThreadPrivateIndex(&thdIndex, SSM_MacDelistThread);
-		myThreads = new TArray<PRThread*>;
+		PR_NewThreadPrivateIndex(&gThreadIndex, SSM_MacDelistThread);
+		gThreadsList = new nsVoidArray;
 	}
 	
-	thd = PR_CreateThread(type, start, arg, priority, scope, state, stackSize);
-	if (thd)
+	PRThread *newThread = PR_CreateThread(type, start, arg, priority, scope, state, stackSize);
+	if (newThread)
 	{
 		/* Add this thread to our list of threads */
-		myThreads->AddItem(thd);
+		gThreadsList->AppendElement((void *)newThread);
 	}
+	
+	return newThread;
 }
 
