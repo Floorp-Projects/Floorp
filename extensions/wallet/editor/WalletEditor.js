@@ -350,7 +350,7 @@ function SchemaSelected()
   var schemanumb =parseInt(schemaId.substring(5, schemaId.length));
   var schemaName = strings[entries[schemas[schemanumb]]];
   var entryText = document.getElementById("entrytext");
-  entryText.setAttribute("value", entryText.getAttribute("value2") + schemaName);
+  entryText.setAttribute("value", entryText.getAttribute("value2") + schemaName + entryText.getAttribute("value3"));
 
   // display instructions above synonym tree
   var synonymText = document.getElementById("synonymtext");
@@ -379,7 +379,7 @@ function EntrySelected()
   var entrynumb =parseInt(entryId.substring(5, entryId.length));
   var entryName = Decrypt(strings[entries[schemas[schemanumb]+entrynumb]+1]);
   var synonymText = document.getElementById("synonymtext");
-  synonymText.setAttribute("value", synonymText.getAttribute("value2") + entryName);
+  synonymText.setAttribute("value", synonymText.getAttribute("value2") + entryName + synonymText.getAttribute("value4"));
 
   // enable certain buttons
   document.getElementById("removeEntry").setAttribute("disabled", "false")
@@ -644,7 +644,7 @@ function AddEntry0() {
   var schemanumb =parseInt(schemaId.substring(5, schemaId.length));
   var schemaName = strings[entries[schemas[schemanumb]]];
   var text = myPrompt
-    (bundle.GetStringFromName("EnterNewEntry")+" "+schemaName, "",
+    (bundle.GetStringFromName("EnterNewEntry")+" "+schemaName+" "+bundle.GetStringFromName("EnterNewEntry1"), "",
      bundle.GetStringFromName("AddingTitle"));
   if (text == "") {
     return;
@@ -683,7 +683,7 @@ function AddSynonym0() {
   var entrynumb =parseInt(entryId.substring(5, entryId.length));
   var entryName = Decrypt(strings[entries[schemas[schemanumb]+entrynumb]+1]);
   var text = myPrompt
-    (bundle.GetStringFromName("EnterNewSynonym")+" "+entryName, "",
+    (bundle.GetStringFromName("EnterNewSynonym")+" "+entryName+" "+bundle.GetStringFromName("EnterNewSynonym1"), "",
      bundle.GetStringFromName("AddingTitle"));
   if (text == "") {
     return;

@@ -63,7 +63,7 @@
         </box>
         <spring style="width: 7px;"/>
         <box orient="vertical">
-          <text class="label" id="entrytext" value2="&treehead.entries.label;"/>
+          <text class="label" id="entrytext" value2="&treehead.entries.label;" value3="&treehead.entries1.label;"/>
           <tree multiple="true" id="entrytree" class="inset"
             style="height: 113px;" orient="vertical" onclick="ViewSynonyms();">
             <treecolgroup>
@@ -72,7 +72,7 @@
             <treechildren flex="1" id="entrieslist"/>
           </tree>
           <spring style="height: 7px;"/>
-          <text class="label" id="synonymtext" value2="&treehead.synonyms.label;" value3="&treehead.synonymsoff.label;"/>
+          <text class="label" id="synonymtext" value2="&treehead.synonyms.label;" value3="&treehead.synonymsoff.label;" value4="&treehead.synonyms1.label;"/>
           <tree multiple="true" id="synonymtree" class="inset"
             style="height: 113px;" orient="vertical" onclick="SynonymSelected();">
             <treecolgroup>
