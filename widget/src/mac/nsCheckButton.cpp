@@ -209,6 +209,7 @@ PRBool nsCheckButton::OnResize(nsSizeEvent &aEvent)
     return PR_FALSE;
 }
 
+#ifdef NOTNOW
 
 
 /*
@@ -229,6 +230,7 @@ nsCheckButton::PtInWindow(PRInt32 aX,PRInt32 aY)
 		result = PR_TRUE;
 	return(result);
 }
+#endif
 
 PRBool 
 nsCheckButton::DispatchMouseEvent(nsMouseEvent &aEvent)
@@ -241,6 +243,7 @@ PRBool 	result;
 			mMouseDownInButton = PR_TRUE;
 			DrawWidget(PR_TRUE);
 			result = nsWindow::DispatchMouseEvent(aEvent);
+			result = nsEventStatus_eConsumeDoDefault;
 			break;
 		case NS_MOUSE_LEFT_BUTTON_UP:
 			mMouseDownInButton = PR_FALSE;
@@ -276,6 +279,7 @@ void
 nsCheckButton::DrawWidget(PRBool	aMouseInside)
 {
 PRInt16							width,x,y,buttonsize=14;
+PRInt32							offx,offy;
 nsRect							therect;
 Rect								macrect,rb;
 GrafPtr							theport;
@@ -283,9 +287,10 @@ RGBColor						blackcolor = {0,0,0};
 RgnHandle						thergn;
 Str255		tempstring;
 
-
+	CalcOffset(offx,offy);
 	GetPort(&theport);
 	::SetPort(mWindowPtr);
+	::SetOrigin(-offx,-offy);
 	GetBounds(therect);
 	nsRectToMacRect(therect,macrect);
 	thergn = ::NewRgn();
@@ -325,6 +330,7 @@ Str255		tempstring;
 		
 	::PenSize(1,1);
 	::SetClip(thergn);
+	::SetOrigin(0,0);
 	::SetPort(theport);
 }
 

@@ -67,7 +67,7 @@ public:
   virtual PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
     
   // Overriden from nsWindow
-  virtual PRBool PtInWindow(PRInt32 aX,PRInt32 aY);
+  //virtual PRBool PtInWindow(PRInt32 aX,PRInt32 aY);
   
   // Mac specific methods
   void LocalToWindowCoordinate(nsPoint& aPoint);

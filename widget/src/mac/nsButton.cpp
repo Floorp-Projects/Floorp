@@ -73,6 +73,7 @@ void nsButton::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData */*aInitData*/) 
 {
+
   mParent = aParent;
   aParent->AddChild(this);
 	
@@ -83,7 +84,7 @@ void nsButton::Create(nsIWidget *aParent,
   } else if (aAppShell) {
     window = (WindowPtr) aAppShell->GetNativeData(NS_NATIVE_SHELL);
   }
-
+  
   mIsMainWindow = PR_FALSE;
   mWindowMadeHere = PR_TRUE;
 	mWindowRecord = (WindowRecord*)window;
@@ -155,6 +156,7 @@ PRBool nsButton::OnResize(nsSizeEvent &aEvent)
     return PR_FALSE;
 }
 
+#ifdef NOTNOW
 /*
  *  @update  gpk 08/27/98
  *  @param   aX -- x offset in widget local coordinates
@@ -167,12 +169,16 @@ nsButton::PtInWindow(PRInt32 aX,PRInt32 aY)
 	PRBool	result = PR_FALSE;
 	nsPoint	hitPt(aX,aY);
 	nsRect	bounds;
+	PRInt32	offx,offy;
 	
+	CalcOffset(offx,offy);
 	GetBounds(bounds);
+	bounds.MoveBy(offx,offy);
 	if(bounds.Contains(hitPt))
 		result = PR_TRUE;
 	return(result);
 }
+#endif
 
 PRBool 
 nsButton::DispatchMouseEvent(nsMouseEvent &aEvent)
@@ -185,6 +191,7 @@ PRBool 	result;
 			mMouseDownInButton = PR_TRUE;
 			DrawWidget(PR_TRUE);
 			result = nsWindow::DispatchMouseEvent(aEvent);
+			result = nsEventStatus_eConsumeDoDefault;
 			break;
 		case NS_MOUSE_LEFT_BUTTON_UP:
 			mMouseDownInButton = PR_FALSE;
@@ -218,21 +225,25 @@ void
 nsButton::DrawWidget(PRBool	aMouseInside)
 {
 PRInt16							width,x,y;
+PRInt32							offx,offy;
 nsRect							therect;
-Rect								macrect;
+Rect								macrect,crect;
 GrafPtr							theport;
 RGBColor						blackcolor = {0,0,0};
 RgnHandle						thergn;
-//FontInfo						fi;
+//FontInfo					fi;
 
-
+	CalcOffset(offx,offy);
 	GetPort(&theport);
 	::SetPort(mWindowPtr);
+	::SetOrigin(-offx,-offy);
 	GetBounds(therect);
 	nsRectToMacRect(therect,macrect);
+	
+	crect = macrect;
 	thergn = ::NewRgn();
 	::GetClip(thergn);
-	::ClipRect(&macrect);
+	::ClipRect(&crect);
 	::PenNormal();
 	::RGBForeColor(&blackcolor);
 	
@@ -262,6 +273,7 @@ RgnHandle						thergn;
 		
 	::PenSize(1,1);
 	::SetClip(thergn);
+	::SetOrigin(0,0);
 	::SetPort(theport);
 }
 

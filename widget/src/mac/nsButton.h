@@ -64,7 +64,7 @@ public:
   	
   
   // Overriden from nsWindow
-  virtual PRBool PtInWindow(PRInt32 aX,PRInt32 aY);
+  //virtual PRBool PtInWindow(PRInt32 aX,PRInt32 aY);
   
 
 private:
