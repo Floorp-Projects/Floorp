@@ -156,7 +156,7 @@ protected:
   nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
 
   // Used by GetInstance and ReleaseInstance
-  static nsTypeAheadFind *mInstance;
+  static nsTypeAheadFind *sInstance;
 
   // Current find state
   nsString mTypeAheadBuffer;
@@ -170,11 +170,9 @@ protected:
   PRInt32 mRepeatingMode;
   PRInt32 mTimeoutLength; // time in ms before find is automatically cancelled
 
-  // gIsFindingText: this flag prevents side effects from listener callbacks 
-  // while selecting/focusing found text.
-  static PRBool gIsFindingText; 
+  static PRBool sIsFindingText; 
 
-  static PRInt32 gAccelKey;  // magic value of -1 indicates unitialized state
+  static PRInt32 sAccelKey;  // magic value of -1 indicates unitialized state
 
   // where selection was when user started the find
   nsCOMPtr<nsIDOMRange> mStartFindRange;
