@@ -293,8 +293,8 @@ URL_Struct* CNetscapeWindow::CreateURLForProxyDrag(char* outTitle)
 			else
 			{
 				// Mail Compose window (for instance?) has no context but has a status bar 
-				CPatternProgressCaption* progressCaption
-					= dynamic_cast<CPatternProgressCaption*>
+				CProgressCaption* progressCaption
+					= dynamic_cast<CProgressCaption*>
 						(nscpWindow->FindPaneByID(kMailNewsStatusPaneID));
 				if (progressCaption)
 					progressCaption->SetDescriptor(inMessage);
