@@ -23,6 +23,7 @@
 messenger.css
 folderPane.css
 threadPane.css
+msgHdrViewOverlay.css
 subscribe.css
 mailfolder.gif
 open-mailfolder.gif
