@@ -71,6 +71,8 @@ function onLoadJSConsole()
     }
 
     cs.registerListener(consoleListener);
+
+    return true;
 }
 
 function onUnloadJSConsole()
@@ -89,6 +91,8 @@ function onUnloadJSConsole()
     }
 
     cs.unregisterListener(consoleListener);
+
+    return true;
 }
 
 /*
