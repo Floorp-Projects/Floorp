@@ -93,7 +93,11 @@ include $(topsrcdir)/config/rules.mk
 ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
 $(OBJDIR)/prdtoa.$(OBJ_SUFFIX): prdtoa.c
 	@$(MAKE_OBJDIR)
+ifeq (,$(filter-out 1100 1200 1300 1310,$(MSC_VER)))
 	$(CC) -Fo$@ -c $(CFLAGS) -Op $(call abspath,$<)
+else
+	$(CC) -Fo$@ -c $(CFLAGS) -fp:precise $(call abspath,$<)
+endif
 endif
 
 #

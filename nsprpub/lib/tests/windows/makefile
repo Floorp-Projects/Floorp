@@ -49,7 +49,7 @@ ifeq ($(OS_TARGET), WIN16)
   LIBPLC= $(DIST)/lib/plc$(MOD_VERSION).lib
   LIBPLDS= $(DIST)/lib/plds$(MOD_VERSION).lib
 else
-  LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
+  LDOPTS = -NOLOGO -DEBUG -INCREMENTAL:NO
   ifeq ($(OS_TARGET), WIN95)
   LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).$(LIB_SUFFIX)
   LIBPLC= $(DIST)/lib/plc$(MOD_VERSION).$(LIB_SUFFIX)
@@ -64,7 +64,7 @@ endif
 
 TARGETS = $(OBJDIR)/winevent.exe
 OS_CFLAGS = $(OS_EXE_CFLAGS)
-LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
+LDOPTS = -NOLOGO -DEBUG -INCREMENTAL:NO
 LDFLAGS += -DEBUG
 LIBPR += $(LIBPLDS)
 LIBPR += kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib

@@ -140,7 +140,7 @@ ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
 TARGETS		= $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
 ifndef BUILD_OPT
 ifdef MSC_VER
-ifneq ($(MSC_VER),1200)
+ifneq (,$(filter-out 1100 1200,$(MSC_VER)))
 TARGETS		+= $(SHARED_LIB_PDB)
 endif
 endif
