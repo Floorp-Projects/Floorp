@@ -116,7 +116,7 @@ nsresult nsShellInstance::Init()
   mPref->Startup(nsnull);
 
 
-  res = NS_InitINetService((nsINetContainerApplication*) nsnull);
+  res = NS_InitINetService();
   if (NS_OK != res)
     return res;
 
@@ -481,7 +481,7 @@ nsEventStatus PR_CALLBACK HandleEventApplication(nsGUIEvent *aEvent)
 
       nsIMenuManager * menumgr = viewer->GetMenuManager();
 
-      nsIXPFCMenuItem * item = menumgr->MenuItemFromID(event->menuItem);
+      nsIXPFCMenuItem * item = menumgr->MenuItemFromID(event->mCommand);
 
       item->SendCommand();
 
