@@ -315,7 +315,10 @@ Contributor(s):
 
       <hbox id="searchBox" persist="collapsed" align="center">
         <label id="searchCriteria" value="&SearchNameOrEmail.label;"/>
-        <textbox id="searchInput" flex="1" oninput="onAbSearchInput(event);"/>
+        <textbox id="searchInput" flex="1" 
+                oninput="onAbSearchInput(false);"
+                onkeypress="onAbSearchKeyPress(event);"/>
+        <button id="clear" label="&clearButton.label;" disabled="true" oncommand="onAbClearSearch();"/>
         <button id="advancedButton" label="&advancedButton.label;" 
                 tooltiptext="&advancedButton.tooltip;" 
                 oncommand="onAdvancedAbSearch();"/>

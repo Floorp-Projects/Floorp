@@ -236,8 +236,8 @@ function onClearSearch()
 {
   if (gSearchInput) 
     gSearchInput.value ="";  //on input does not get fired for some reason
-  onSearchInput(null);
-}  
+  onSearchInput(true);
+}
 
 function disableQuickSearchClearButton()
 {

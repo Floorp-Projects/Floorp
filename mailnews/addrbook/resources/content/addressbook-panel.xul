@@ -78,7 +78,9 @@
     </hbox>
 	<hbox align="center">
 	  <label value="&for.label;"/> 
-	  <textbox id="searchInput" flex="1" oninput="onAbSearchInputMenulist(event);"/> 
+	  <textbox id="searchInput" flex="1"
+      oninput="onAbSearchInput(false);"
+      onkeypress="onAbSearchKeyPress(event);"/>
 	</hbox>
 
 <outliner id="abResultsOutliner" flex="1" context="composeMail" onclick="AbResultsPaneOnClick(event);" class="plain">

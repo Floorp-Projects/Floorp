@@ -77,8 +77,10 @@ Contributor(s):
         </template>
       </menulist>  
 	  <label value="&for.label;"/> 
-	  <textbox id="searchInput" flex="1" oninput="onAbSearchInputMenulist(event);"/>    
-	  <button id="clear" label="&clearButton.label;" oncommand="onAbSearchReset(event);"/>
+	  <textbox id="searchInput" flex="1"
+      oninput="onAbSearchInput(false);"
+      onkeypress="onAbSearchKeyPress(event);"/>  
+	  <button id="clear" label="&clearButton.label;" disabled="true" oncommand="onAbClearSearch();"/>
     </hbox>
     
     <hbox flex="1">    

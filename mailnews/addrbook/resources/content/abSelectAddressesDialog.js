@@ -404,43 +404,6 @@ function onEnterInSearchBar()
   SelectFirstCard();
 }
 
-function onAbSearchInputMenulist(event)
-{
-  SearchInputChanged();
-
-  if (gSearchTimer) {
-    clearTimeout(gSearchTimer);
-    gSearchTimer = null;
-  }
-
-  if (event && event.keyCode == 13) {
-    onEnterInSearchBar();
-  }
-  else {
-    gSearchTimer = setTimeout("onEnterInSearchBar();", 800);
-  }
-}
-
-function onAbSearchReset(event) 
-{
-  gSearchInput.value = "";
-  ChangeDirectoryByDOMNode(abList.selectedItem);
-  
-  SearchInputChanged();
-
-  onReset(event);
-}
-
-function SearchInputChanged() {
-  var clearButton = document.getElementById("clear");
-  if (clearButton) {
-    if (gSearchInput.value && (gSearchInput.value != ""))
-      clearButton.removeAttribute("disabled");
-    else
-      clearButton.setAttribute("disabled", "true");
-  }
-}
-
 function SelectFirstAddressBookMenulist()
 {
   ChangeDirectoryByDOMNode(abList.selectedItem);

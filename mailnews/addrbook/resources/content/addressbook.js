@@ -533,19 +533,3 @@ function onEnterInSearchBar()
   // but not for LDAP searches
   SelectFirstCard();
 }
-
-function onAbSearchInput(event)
-{
-  if (gSearchTimer) {
-    clearTimeout(gSearchTimer);
-    gSearchTimer = null;
-  }
-
-  if (event && event.keyCode == 13) {
-    onEnterInSearchBar();
-  }
-  else {
-    gSearchTimer = setTimeout("onEnterInSearchBar();", 800);
-  }
-}
-
