@@ -89,7 +89,7 @@ system("xcopy /f $inDistPath\\setup.exe     $inDistPath\\setup");
 system("xcopy /f $inDistPath\\setuprsc.dll  $inDistPath\\setup");
 
 # build the self-extracting .exe file.
-printf "/nbuilding self-extracting .exe installer...";
+printf "\nbuilding self-extracting .exe installer...";
 system("$inDistPath\\nszip.exe $inDistPath\\nsinstall.exe $inDistPath\\setup\\*.* $inDistPath\\xpi\\*.*");
 
 print " done!\n";

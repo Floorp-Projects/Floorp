@@ -39,7 +39,7 @@
 use File::Copy;
 use Cwd;
 
-# Make sure there are at least two arguments
+# Make sure there are at least three arguments
 if($#ARGV < 2)
 {
   die "usage: $0 <component name> <staging path> <dest path>
