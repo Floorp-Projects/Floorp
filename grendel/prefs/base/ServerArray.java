@@ -92,7 +92,7 @@ public class ServerArray {
   }
   
   public void add (ServerStructure aServer) {
-    svs.add(aServer);
+    svs.addElement(aServer);
   }
   
   public void remove (int Index) {
