@@ -56,6 +56,4 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-CFLAGS      += -DPM_USE_SESSION_APIS=0
-CXXFLAGS      += -DPM_USE_SESSION_APIS=0
-
+DEFINES      += -DPM_USE_SESSION_APIS=0
