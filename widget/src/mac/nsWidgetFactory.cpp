@@ -186,9 +186,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCRadioButton)) {
         inst = (nsISupports*)(nsWindow*)new nsRadioButton();
     }
-    //else if (mClassID.Equals(kCRadioGroup)) {
-    //    inst = (nsISupports*)(nsObject*)new nsRadioGroup();
-    //}
     else if (mClassID.Equals(kCFileOpen)) {
        inst = (nsISupports*)(nsWindow*)new nsFileWidget();
     }

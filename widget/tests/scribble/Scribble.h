@@ -21,7 +21,6 @@
 
 #include "nsIWidget.h"
 #include "nsIRadioButton.h"
-#include "nsIRadioGroup.h"
 #include "nsITextWidget.h"
 #include "nsPoint.h"
 #include "nsIDeviceContext.h"
@@ -35,7 +34,6 @@ struct ScribbleApp {
     nsITextWidget *green;
     nsITextWidget *blue;
 
-    nsIRadioGroup  *group;
     nsIRadioButton *scribble;
     nsIRadioButton *lines;
 

@@ -28,7 +28,6 @@
 #include "nsListBox.h"
 #include "nsLookAndFeel.h"
 #include "nsRadioButton.h"
-#include "nsRadioGroup.h"
 #include "nsScrollbar.h"
 #include "nsTextAreaWidget.h"
 #include "nsTextHelper.h"
@@ -168,9 +167,6 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     else if (mClassID.Equals(kCRadioButton)) {
         inst = (nsISupports*)(nsWindow*)new nsRadioButton();
     }
-    //else if (mClassID.Equals(kCRadioGroup)) {
-    //    inst = (nsISupports*)(nsObject*)new nsRadioGroup();
-    //}
     else if (mClassID.Equals(kCFileOpen)) {
         inst = (nsISupports*)new nsFileWidget();
     }

@@ -36,7 +36,6 @@ class nsIListBox;
 class nsIListWidget;
 class nsILookAndFeel;
 class nsIMouseListener;
-class nsIRadioGroup;
 class nsITabWidget;
 class nsIToolkit;
 class nsIWidget;
