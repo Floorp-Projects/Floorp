@@ -695,7 +695,7 @@ nsCSSGroupRule::SetStyleSheet(nsICSSStyleSheet* aSheet)
 }
 
 #ifdef DEBUG
-nsresult
+NS_IMETHODIMP
 nsCSSGroupRule::List(FILE* out, PRInt32 aIndent) const
 {
   fputs(" {\n", out);
