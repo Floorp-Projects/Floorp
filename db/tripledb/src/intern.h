@@ -20,21 +20,29 @@
  * Contributor(s): Terry Weissman <terry@mozilla.org>
  */
 
-/* These are debugging routines for the TDB.  Don't use any of these calls
-   in production code! */
+#ifndef _intern_h_
+#define _intern_h_ 1
 
-extern void TDBDumpNode(TDBFileDesc* fid, TDBNode* node);
-extern void TDBDumpTree(TDBFileDesc* fid, TDB* db, TDBInt32 tree);
+extern TDBIntern* tdbInternInit(TDBBase* base);
 
-extern TDBStatus TDBSanityCheck(TDBBase* base, TDBFileDesc* fid);
+extern void tdbInternFree(TDBIntern* intern);
+
+/* tdbIntern() takes a non-interned node and returns an atom representing it.
+   The returned node should be free'd with TDBFreeNode(). */
+
+extern TDBNodePtr tdbIntern(TDBBase* base, TDBNodePtr node);
 
 
-extern void TDBGetCursorStats(TDBCursor* cursor,
-                              TDBInt32* hits,
-                              TDBInt32* misses);
+/* tdbUnintern() takes an atom and allocates a new node representing it.  The
+   returned node should be free'd with TDBFreeNode(). */
+
+extern TDBNodePtr tdbUnintern(TDBBase* base, TDBNodePtr node);
+
+/* tdbRTypeSync() causes any changes made to intern tables to be written out
+   to disk. */
+
+extern TDBStatus tdbInternSync(TDBBase* base);
 
 
-/* Create a "dot" graph file.  To view these, and learn more about them, 
-   see http://www.research.att.com/~north/cgi-bin/webdot.cgi */
 
-extern void TDBMakeDotGraph(TDB* db, const char* filename, TDBInt32 tree);
+#endif /* _intern_h_ */

@@ -20,21 +20,20 @@
  * Contributor(s): Terry Weissman <terry@mozilla.org>
  */
 
-/* These are debugging routines for the TDB.  Don't use any of these calls
-   in production code! */
-
-extern void TDBDumpNode(TDBFileDesc* fid, TDBNode* node);
-extern void TDBDumpTree(TDBFileDesc* fid, TDB* db, TDBInt32 tree);
-
-extern TDBStatus TDBSanityCheck(TDBBase* base, TDBFileDesc* fid);
+#ifndef _node_h_
+#define _node_h_ 1
 
 
-extern void TDBGetCursorStats(TDBCursor* cursor,
-                              TDBInt32* hits,
-                              TDBInt32* misses);
 
 
-/* Create a "dot" graph file.  To view these, and learn more about them, 
-   see http://www.research.att.com/~north/cgi-bin/webdot.cgi */
+extern TDBNode* tdbNodeDup(TDBNode* node);
+extern TDBInt32 tdbNodeSize(TDBNode* node);
+extern TDBNode* tdbGetNode(char** ptr, char* endptr);
+extern TDBStatus tdbPutNode(char** ptr, TDBNode* node, char* endptr);
 
-extern void TDBMakeDotGraph(TDB* db, const char* filename, TDBInt32 tree);
+
+extern TDBNode* tdbGetNodeFromKey(char** ptr, char* endptr);
+extern TDBStatus tdbPutNodeToKey(char** ptr, TDBNode* node, char* endptr,
+                                 TDBUint8 *flags);
+
+#endif /* _node_h_ */

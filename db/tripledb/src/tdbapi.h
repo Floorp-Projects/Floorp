@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Geocast Network Systems.
  * Portions created by Geocast are
- * Copyright (C) 1999 Geocast Network Systems. All
+ * Copyright (C) 2000 Geocast Network Systems. All
  * Rights Reserved.
  *
  * Contributor(s): Terry Weissman <terry@mozilla.org>
@@ -24,7 +24,83 @@
 #define _TDBapi_h_ 1
 
 /* All things are prefixed with TDB, which stands for "Triples
-   DataBase".  Suggestions for better names are always welcome. */
+   DataBase". */
+
+
+/* TDB can be built with or without NSPR.  If built with NSPR, then it can be 
+   built with thread support.  If you want to built it with some non-NSPR
+   threading package, you'll have to do some hacking. */
+
+#define TDB_USE_NSPR 1
+#define TDB_USE_THREADS 1
+
+
+
+#ifdef TDB_USE_NSPR
+#include "prtypes.h"
+#include "prtime.h"
+#include "prmem.h"
+
+typedef PRInt16         TDBInt16;
+typedef PRInt32         TDBInt32;
+typedef PRInt64         TDBInt64;
+typedef PRInt8          TDBInt8;
+typedef PRTime          TDBTime;
+typedef PRUint8         TDBUint8;
+typedef PRUint16        TDBUint16;
+typedef PRUint32        TDBUint32;
+typedef PRUint64        TDBUint64;
+
+typedef PRBool          TDBBool;
+#define TDB_TRUE        PR_TRUE
+#define TDB_FALSE       PR_FALSE
+
+#define TDB_BEGIN_EXTERN_C  PR_BEGIN_EXTERN_C
+#define TDB_END_EXTERN_C    PR_END_EXTERN_C
+#define TDB_EXTERN(t)       PR_EXTERN(t)
+
+typedef struct PRFileDesc       TDBFileDesc;
+
+#define tdb_NEWZAP(x)   PR_NEWZAP(x)
+#define tdb_Malloc PR_Malloc
+#define tdb_Calloc(x,y) PR_Calloc(x,y)
+#define tdb_Realloc(x,y) PR_Realloc(x,y)
+#define tdb_Free(x)     PR_Free(x)
+
+#else
+
+#include <stdio.h>
+
+typedef short           TDBInt16;
+typedef int             TDBInt32;
+typedef long long       TDBInt64;
+typedef signed char     TDBInt8;
+typedef TDBInt64        TDBTime;
+typedef unsigned char   TDBUint8;
+typedef unsigned short  TDBUint16;
+typedef unsigned long   TDBUint32;
+typedef unsigned long long TDBUint64;
+
+typedef int             TDBBool;
+#define TDB_TRUE        1
+#define TDB_FALSE       0
+
+#define TDB_BEGIN_EXTERN_C
+#define TDB_END_EXTERN_C
+#define TDB_EXTERN(t) extern t
+
+#define TDBFileDesc FILE
+
+#define tdb_NEWZAP(x) ((x*)calloc(1, sizeof(x)))
+#define tdb_Malloc malloc
+#define tdb_Calloc(x,y) calloc(x,y)
+#define tdb_Realloc(x,y) realloc(x,y)
+#define tdb_Free(x) free(x)
+
+#endif /* TDB_USE_NSPR */
+
+
+typedef enum { TDB_FAILURE = -1, TDB_SUCCESS = 0 } TDBStatus;
 
 /* A TDBNode contains one of the three items in a triple.  This is a
    structure that defines a very basic type, strings or ints or dates.
@@ -32,29 +108,35 @@
    then this is where we muck things.
 
    It is important that all nodes be strictly ordered.  All the integer values
-   sort together in the obvious way.  PRTimes get sorted with them by treating
-   them as if they were PRInt64's.  All strings are considered to be greater
+   sort together in the obvious way.  TDBTimes get sorted with them by treating
+   them as if they were TDBInt64's.  All strings are considered to be greater
    than all integers. */
 
-#define TDBTYPE_INT8    1       /* 8-bit signed integer */
-#define TDBTYPE_INT16   2       /* 16-bit signed integer */
-#define TDBTYPE_INT32   3       /* 32-bit signed integer */
-#define TDBTYPE_INT64   4       /* 64-bit signed integer */
-#define TDBTYPE_TIME    5       /* NSPR date&time stamp (PRTime) */
-#define TDBTYPE_STRING  6       /* A string (up to 65535 chars long) */
+#define TDBTYPE_INT32   1       /* 32-bit signed integer */
+#define TDBTYPE_INT64   2       /* 64-bit signed integer */
+#define TDBTYPE_ID      3       /* A 64-bit unsigned identifier, generally used
+                                   to represent an RDF resource. */
+#define TDBTYPE_TIME    4       /* NSPR-style date&time stamp -- number of
+                                   microseconds since midnight,
+                                   1/1/1970, GMT. */
+#define TDBTYPE_STRING  5       /* A string (up to 65535 chars long) */
+#define TDBTYPE_BLOB    6       /* A blob, which is just like a string, except
+                                   it is not considered to have searchable text
+                                   in it.) */
 
 typedef struct {
-    PRInt8 type;
+    TDBInt8 type;
     union {
-        PRInt64 i;  /* All the int types are stored here, as an
-                       Int64.  The type just indicates how it is to be
-                       stored in the database. */
+        TDBInt64 i;  /* All the int types are stored here, as an
+                        Int64.  The type just indicates how it is to be
+                        stored in the database. */
+        TDBUint64 id;           /* Unsigned 64-bit identifier. */
 
         struct {
-            PRUint16 length;
+            TDBUint16 length;
             char string[1];
-        } str;
-        PRTime time;
+        } str;                  /* Used for both blobs and strings. */
+        TDBTime time;
     } d;
 } TDBNode, *TDBNodePtr;
 
@@ -65,21 +147,15 @@ typedef struct {
 
 typedef struct {
     TDBNodePtr data[3];
+    TDBBool asserted;           /* If TRUE, then this is a normal triple.
+                                   If FALSE, then this is a triple that we
+                                   have explicitely turned off using
+                                   TDBAddFalse().  The only way to get such
+                                   triples from a query is to turn on the
+                                   includefalse member of the
+                                   TDBSortSpecification passed to
+                                   TDBQuery(). */
 } TDBTriple;
-
-
-/* A TDBNodeRange specifies a range of values for a node.  If min is
-   not NULL, then this matches only nodes that are greater than or
-   equal to min.  If max is not NULL, then this matches only nodes
-   that are less than or equal to max.  Therefore, if both min and
-   max are NULL, then this specifies the range of all possible nodes.
-   If min and max are not NULL, and are the same value, then it specifies
-   exactly that value.  */
-
-typedef struct {
-    TDBNodePtr min;
-    TDBNodePtr max;
-} TDBNodeRange;
 
 
 
@@ -87,14 +163,14 @@ typedef struct {
    come in.  I suspect that there will someday be much more to it than this. */
 
 typedef struct {
-    PRBool reverse;             /* If true, then return biggest results
+    TDBBool reverse;            /* If true, then return biggest results
                                    first.  Otherwise, the smallest
                                    stuff comes first. */
-    PRInt16 keyorder[3];        /* Specify which keys to sort in.  If you use
+    TDBInt16 keyorder[3];       /* Specify which keys to sort in.  If you use
                                    this, then each of the three entries must
                                    be a unique number between 0 and 2.  For
                                    example, if:
-                                   	keyorder[0] == 1
+                                        keyorder[0] == 1
                                         keyorder[1] == 2
                                         keyorder[2] == 0
                                    then results will be returned sorted
@@ -115,19 +191,22 @@ typedef struct {
                                    pick the order it can do most
                                    efficiently.)
 
-                                   Practically speaking, the only reason to
-                                   ever set the keyorder is if your request
-                                   only gives values for one of the ranges,
-                                   and you want to specify which order the
-                                   other fields should be sorted in.  And
-                                   keyorder[0] had better specify which
-                                   entry is the non-NULL one, or things will
-                                   be very slow.
+                                   Practically speaking, there is currently
+                                   no reason to ever set this stuff.
                                 */
+    TDBBool includefalse;       /* Whether this query should include entries
+                                   that were added using TDBAddFalse().  If
+                                   so, such entries will have the asserted
+                                   field the TDBTriple structure turned off. */
 } TDBSortSpecification;
 
 
-/* A TDB* is an opaque pointer that represents an entire database. */
+/* A TDBBase* is an opaque pointer that represents an entire database. */
+
+typedef struct _TDBBase TDBBase;
+
+
+/* A TDB* is an opaque pointer that represents a view on a database. */
 
 typedef struct _TDB TDB;
 
@@ -139,109 +218,162 @@ typedef struct _TDB TDB;
 typedef struct _TDBCursor TDBCursor;
 
 
-/* TDBCallbackFunction is for callbacks notifying of certain database
-   changes. */
-
-typedef void (*TDBCallbackFunction)(TDB* database, void* closure,
-                                    TDBTriple* triple,
-                                    PRInt32 action); /* One of the below
-                                                        TDBACTION_* values. */
-
-#define TDBACTION_ADDED    1    /* The given triple has been added to the
-                                   database. */
-#define TDBACTION_REMOVED  2    /* The given triple has been removed from the
-                                   database. */
 
 
 
 
-PR_BEGIN_EXTERN_C
+TDB_BEGIN_EXTERN_C
 
 
 
-/* Open a database (creating it if non-existant).  Returns NULL on failure. */
+/* TDBOpenBase() opens a database from a file (creating it if non-existant).
+   Returns NULL on failure. */
 
-PR_EXTERN(TDB*) TDBOpen(const char* filename);
-
-
-/* Close an opened database. Frees the storage for TDB; you may not use
-   that pointer after that call. Will flush out any changes that have
-   been made.  This call will fail if you have not freed up all of the
-   cursors that were created with TDBQuery. */
-
-PR_EXTERN(PRStatus) TDBClose(TDB* database);
+TDB_EXTERN(TDBBase*) TDBOpenBase(const char* filename);
 
 
+/* TDBOpenLayers() opens a database, looking at the given layers.  The layers
+   are given in priority order (earlier listed layers override later ones).
+   The first layer is the one that is to be changed by any calls that
+   add or remove triples.
+
+   ### Need to add here or somewhere a lecture on what 'layers' are all
+   about. */
+
+TDB_EXTERN(TDB*) TDBOpenLayers(TDBBase* base, TDBInt32 numlayers,
+                               TDBInt32* layers);
 
 
-/* TDBQuery() returns a cursor that you can use with TDBNextResult() to get 
+
+/* TDBBlowAwayDatabaseFiles() blows away all database files associated with
+   the given pathname.  This very much is throwing away real data; use this
+   call with care! */
+
+TDB_EXTERN(TDBStatus) TDBBlowAwayDatabaseFiles(const char* filename);
+
+
+
+/* TDBGetFilename() returns the filename associated with the database.  The
+   returned string should not be modified in any way. */
+
+const char* TDBGetFilename(TDB* database);
+
+
+
+/* TDBClose() closes an opened database.  Frees the storage for TDB; you may
+   not use that pointer after that call.  Will flush out any changes that have
+   been made.  This call will fail if you have not freed up all of the cursors
+   that were created with TDBQuery. */
+
+TDB_EXTERN(TDBStatus) TDBClose(TDB* database);
+
+
+
+/* TDBCloseBase() closes the base database file.  This call will fail if you
+   have not freed up all of the database views that were created with
+   TDBOpenLayers(). */
+
+TDB_EXTERN(TDBStatus) TDBCloseBase(TDBBase* base);
+
+
+/* TDBSync() makes sure that any changes made to the database have been written
+   out to disk.  It effectively gets called by TDBClose(), and may also be
+   implicitely called from time to time. */
+
+TDB_EXTERN(TDBStatus) TDBSync(TDB* database);
+
+
+
+
+
+#ifdef TDB_USE_THREADS
+
+/* TDBGetBG() returns the TDBBG* object (see tdbbg.h) that represents the
+   thread tripledb uses for its background operations.  If you would like
+   that thread to do some other background operations, you can queue them
+   up.  That can interfere with the performance of tripledb, so you may
+   want to create your own TDBBG* object instead. */
+
+TDB_EXTERN(struct _TDBBG*) TDBGetBG(TDB* database);
+
+#endif
+
+
+/* TDBQuery() returns a cursor that you can use with TDBGetResult() to get 
    the results of a query.  It will return NULL on failure.  If the query
    is legal, but there are no matching results, this will *not* return 
    NULL; it will return a cursor that will have no results.
 
-   If a single value is specified for both range[0] and range[1], then the
-   results are guaranteed to be sorted by range[2].  If a single value is
-   specified for both range[1] and range[2], then the results are guaranteed
-   to be sorted by range[0].  No other sorting rules are promised (at least,
-   not yet.)
+   If a member of a the given triple is not NULL, then only triples with the
+   identical value in that position will be returned.  If it is NULL, then
+   all possible triples are returned.
 
-   A NULL TDBSortSpecification can be provided, which will sort in the
-   default manner. */
-
-PR_EXTERN(TDBCursor*) TDBQuery(TDB* database, TDBNodeRange range[3],
-                               TDBSortSpecification* sortspec);
+   If the only variation in triples are values that are of type
+   TDBTYPE_INT24, then the triples will be sorted by those values.
+   If a non-NULL sortspec is passed in, and it has the "reverse" field set,
+   then these int24's will be sorted in descending order; otherwise, they
+   will be ascending.
 
 
-/* TDBGetResult returns the next result that matches the cursor, and
+   A NULL TDBSortSpecification can be provided, which will make the query
+   behave in the default manner. */
+
+TDB_EXTERN(TDBCursor*) TDBQuery(TDB* database, TDBNodePtr triple[3],
+                                TDBSortSpecification* sortspec);
+
+
+/* TDBQueryWordSubstring() returns a cursor of all triples whose last element
+   is a string and matches the given string.  It will only match by full words;
+   that is, if you provide a partial word, it will not match strings that
+   contain that word inside another one.  It will only return strings which
+   contain the given string as a substring, ignoring case. */
+
+TDB_EXTERN(TDBCursor*) TDBQueryWordSubstring(TDB* database,
+                                             const char* string);
+
+
+/* TDBGetResult() returns the next result that matches the cursor, and
    advances the cursor to the next matching entry.  It will return NULL
    when there are no more matching entries.  The returned triple must
    not be modified in any way by the caller, and is valid only until
    the next call to TDBGetResult(), or until the cursor is freed. */
 
-PR_EXTERN(TDBTriple*) TDBGetResult(TDBCursor* cursor);
+TDB_EXTERN(TDBTriple*) TDBGetResult(TDBCursor* cursor);
+
+
+/* TDBCursorGetTDB() returns the base TDB* object that the given cursor is
+   working on. */
+
+TDB_EXTERN(TDB*) TDBCursorGetTDB(TDBCursor* cursor);
 
 
 /* TDBFreeCursor frees the cursor. */
 
-PR_EXTERN(PRStatus) TDBFreeCursor(TDBCursor* cursor);
-
-
-/* TDBAddCallback calls the given function whenever a change to the database
-   is made that matches the given range.  Note that no guarantees are made
-   about which thread this call will be done in.  It is also possible (though
-   not very likely) that by the time the callback gets called, further changes
-   may have been made to the database, and the action being notified here has
-   already been undone.  (If that happens, though, you will get another
-   callback soon.)
-
-   It is legal for the receiver of the callback to make any queries or
-   modifications it wishes to the database.  It is probably not a good idea
-   to undo the action being notified about; this kind of policy leads to
-   infinite loops.
-
-   The receiver should not take unduly long before returning from the callback;
-   until the callback returns, no other callbacks will occur.
- */
-
-PR_EXTERN(PRStatus) TDBAddCallback(TDB* database, TDBNodeRange range[3],
-                                   TDBCallbackFunction func, void* closure);
-
-/* TDBRemoveCallback will remove a callback that was earlier registered with a
-   call to TDBAddCallback.  */
-
-PR_EXTERN(PRStatus) TDBRemoveCallback(TDB* database, TDBNodeRange range[3],
-                                      TDBCallbackFunction func, void* closure);
+TDB_EXTERN(TDBStatus) TDBFreeCursor(TDBCursor* cursor);
 
 
 /* TDBRemove() removes all entries matching the given parameters from 
    the database.  */
 
-PR_EXTERN(PRStatus) TDBRemove(TDB* database, TDBNodeRange range[3]);
+TDB_EXTERN(TDBStatus) TDBRemove(TDB* database, TDBNodePtr triple[3]);
 
 
-/* TDBAdd() adds a triple into the database. */
+/* TDBAdd() adds a triple into the database.  The "owner" of each triple
+   is recorded, so that we can later remove all things owned by a given
+   owner. */
 
-PR_EXTERN(PRStatus) TDBAdd(TDB* database, TDBNodePtr triple[3]);
+TDB_EXTERN(TDBStatus) TDBAdd(TDB* database, TDBNodePtr triple[3],
+                             TDBUint64 owner);
+
+
+/* TDBAddFalse() adds a triple into the database that explicitely asserts that
+   this triple is *not* to be considered part of the database.  It is useful
+   when this database gets merged into a bigger database (using
+   TDBOpenMergedDatabase()).  In that case, this triple will not be returned
+   by queries, even if it appears in an earlier database on the merge list. */
+
+TDB_EXTERN(TDBStatus) TDBAddFalse(TDB* database, TDBNodePtr triple[3],
+                                  TDBUint64 owner);
 
 
 /* TDBReplace() looks for an existing entry that matches triple[0] and
@@ -251,7 +383,8 @@ PR_EXTERN(PRStatus) TDBAdd(TDB* database, TDBNodePtr triple[3]);
    sense if you know up-front that there is no more than one existing
    triple with the given "subject" and "verb". */
 
-PR_EXTERN(PRStatus) TDBReplace(TDB* database, TDBNodePtr triple[3]);
+TDB_EXTERN(TDBStatus) TDBReplace(TDB* database, TDBNodePtr triple[3],
+                                 TDBUint64 owner);
 
 
 
@@ -259,7 +392,7 @@ PR_EXTERN(PRStatus) TDBReplace(TDB* database, TDBNodePtr triple[3]);
    allocates a new TDBNode that represents the given string.  The
    TDBNode can be free'd using TDBFreeNode(). */
 
-PR_EXTERN(TDBNodePtr) TDBCreateStringNode(const char* string);
+TDB_EXTERN(TDBNodePtr) TDBCreateStringNode(const char* string);
 
 
 /* TDBCreateIntNode() is just a utility routine that correctly
@@ -267,13 +400,28 @@ PR_EXTERN(TDBNodePtr) TDBCreateStringNode(const char* string);
    TDBNode can be free'd using TDBFreeNode().  You must specify
    the correct TDBTYPE_* value for it. */
 
-PR_EXTERN(TDBNodePtr) TDBCreateIntNode(PRInt64 value, PRInt8 type);
+TDB_EXTERN(TDBNodePtr) TDBCreateIntNode(TDBInt64 value, TDBInt8 type);
 
 /* Free up a node created with TDBCreateStringNode or TDBCreateIntNode. */
 
-PR_EXTERN(void) TDBFreeNode(TDBNodePtr node);
+TDB_EXTERN(void) TDBFreeNode(TDBNodePtr node);
 
 
-PR_END_EXTERN_C
+/* TDBCompareNodes() compares two nodes.  Returns negative if the first is less
+   than the second, zero if they are equal, positive if the first is greater.
+   Note That this returns a 64-bit int; be careful! */
+
+TDB_EXTERN(TDBInt64) TDBCompareNodes(TDBNode* n1, TDBNode* n2);
+
+
+/* TDBNodeDup allocates a new node object, and initializes it to have the
+   same value as the given object.  Returns NULL on failure. */
+
+TDB_EXTERN(TDBNodePtr) TDBNodeDup(TDBNodePtr node);
+
+
+
+
+TDB_END_EXTERN_C
 
 #endif /* _TDBapi_h_ */

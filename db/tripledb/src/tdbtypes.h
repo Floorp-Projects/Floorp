@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Geocast Network Systems.
  * Portions created by Geocast are
- * Copyright (C) 1999 Geocast Network Systems. All
+ * Copyright (C) 2000 Geocast Network Systems. All
  * Rights Reserved.
  *
  * Contributor(s): Terry Weissman <terry@mozilla.org>
@@ -26,6 +26,11 @@
 /* These are private, internal type definitions, */
 
 #include <string.h>
+#include "tdbapi.h"
+
+#include "db/db.h"
+
+#ifdef TDB_USE_NSPR
 #include "pratom.h"
 #include "prcvar.h"
 #include "prio.h"
@@ -33,28 +38,100 @@
 #include "prlog.h"
 #include "prmem.h"
 #include "prthread.h"
-#include "prtime.h"
-#include "prtypes.h"
+#include "plstr.h"
 
-#include "tdbapi.h"
+#include "geoassert/geoassert.h" /* This line can be safely removed if you
+                                    are building this in a non-Geocast
+                                    environment. */
+
+typedef PRLock          TDBLock;
+typedef PRThread        TDBThread;
+typedef PRCondVar       TDBCondVar;
+
+#define tdb_Lock(l)     PR_Lock(l)
+#define tdb_Unlock(l)   PR_Unlock(l)
+#ifdef GeoAssert
+#define tdb_ASSERT(x)   GeoAssert(x)
+#else
+#define tdb_ASSERT(x)   PR_ASSERT(x)
+#endif
+
+#define tdb_OpenFileRW(filename) PR_Open(filename, PR_RDWR | PR_CREATE_FILE, 0666)
+#define tdb_OpenFileReadOnly(filename) PR_Open(filename, PR_RDONLY, 0666)
+#define tdb_Close       PR_Close
+#define tdb_Seek(fid, l)        (PR_Seek(fid, l, PR_SEEK_SET) == l ? TDB_SUCCESS : TDB_FAILURE)
+#define tdb_Read        PR_Read
+#define tdb_Write       PR_Write
+#define tdb_Delete      PR_Delete
+#define tdb_Rename      PR_Rename
+#define tdb_MkDir       PR_MkDir
+ 
+#define tdb_strdup      PL_strdup
+#define tdb_strcasestr  PL_strcasestr
+
+#else
+
+#ifdef TDB_USE_THREADS
+#undef TDB_USE_THREADS
+#endif
+
+#include <stdio.h>
+#include <malloc.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <assert.h>
+
+typedef void* TDBLock;
+typedef void* TDBThread;
+typedef void* TDBCondVar;
+
+#define tdb_Lock(l)     ((void) 0)
+#define tdb_Unlock(l)   ((void) 0)
+
+#define tdb_ASSERT assert
+
+#define tdb_OpenFileRW(filename) fopen(filename, "r+")
+#define tdb_OpenFileReadOnly(filename) fopen(filename, "r")
+#define tdb_Close       fclose
+#define tdb_Seek(fid, l)        (fseek(fid, l, SEEK_SET) == l ? TDB_SUCCESS : TDB_FAILURE)
+#define tdb_Read(fid, buf, length)      fread(buf, 1, length, fid)
+#define tdb_Write(fid, buf, length)     fwrite(buf, 1, length, fid)
+#define tdb_Delete      unlink
+#define tdb_Rename      rename
+#define tdb_MkDir       mkdir
+
+#define tdb_strdup      strdup
+#define tdb_strcasestr  strstr  /* WRONG!  Should be a case-independent one!
+                                   XXX ### */
+
+#endif /* TDB_USE_NSPR */
+
+
+
+/* Special node types that are used internally only. */
+
+#define TDBTYPE_MINNODE 0       /* A node that is less than all other nodes. */
+#define TDBTYPE_INTERNED 126    /* An interned string. */
+#define TDBTYPE_MAXNODE 127     /* A node that is bigger than all others. */
+
 
 /* Magic number that appears as first four bytes of db files. */
 #define TDB_MAGIC       "TDB\n"
 
 
-/* Total number of bytes we reserve at the beginning of the db file for
-   special stuff. */
-#define TDB_FILEHEADER_SIZE     1024
-
-
-
 /* Current version number for db files. */
 
-#define TDB_VERSION     1
+#define TDB_MAJOR_VERSION     11
+#define TDB_MINOR_VERSION     0
 
 
-#define NUMTREES 4              /* How many binary trees we're keeping,
-                                   indexing the data. */
+
+/* Maximum number of different record types we are prepared to handle. */
+
+#define TDB_MAXTYPES    20
 
 /* The trees index things in the following orders:
    0:           0, 1, 2
@@ -65,164 +142,56 @@
 
 /* MINRECORDSIZE and MAXRECORDSIZE are the minimum and maximum possible record 
    size.  They're useful for sanity checking. */
-#define BASERECORDSIZE (sizeof(PRInt32) + NUMTREES * (2*sizeof(TDBPtr)+sizeof(PRInt8)))
+#define BASERECORDSIZE (sizeof(TDBInt32) + NUMTREES * (2*sizeof(TDBPtr)+sizeof(TDBInt8)))
 #define MINRECORDSIZE (BASERECORDSIZE + 3 * 2)
 #define MAXRECORDSIZE (BASERECORDSIZE + 3 * 65540)
 
 
-typedef PRInt32 TDBPtr;
+/* The meaning of the various flag bits in a record entry.  */
 
-typedef struct {
-    TDBPtr child[2];
-    PRInt8 balance;
-} TDBTreeEntry;
-
-
-typedef struct _TDBRecord {
-    TDBPtr position;
-    PRInt32 length;
-    PRInt32 refcnt;
-    PRBool dirty;
-    struct _TDBRecord* next;
-    PRUint8 flags;
-    TDBTreeEntry entry[NUMTREES];
-    TDBNode* data[3];
-} TDBRecord;
+#define TDBFLAG_ISASSERT        0x1 /* On if this entry is an assertion, off
+                                       if this entry is a false assertion. */
+#define TDBFLAG_ISEXTENDED      0x2 /* On if this entry is incomplete, and the
+                                       last four bytes of it is actually a
+                                       pointer to an extension record.. */
+#define TDBFLAG_KEYINSUFFICIENT 0x4 /* Even though the data in the key may
+                                       look like it has enough to regenerate
+                                       the entire record content, in fact
+                                       it doesn't.  This gets set in key
+                                       records when string data contains
+                                       embedded nulls, since the technique
+                                       for getting strings to and from
+                                       keys relies on using NULL characters
+                                       to mark end-of-string. */
 
 
-typedef struct _TDBParentChain {
-    TDBRecord* record;
-    struct _TDBParentChain* next;
-} TDBParentChain;
+/* The meaning of various flag bits in a record-type byte. */
+
+#define TDB_FREERECORD          0x80 /* If set, then this record is in the
+                                        free list. */
 
 
+/* The meaning of various flag bits in a index record. */
 
-struct _TDBCursor {
-    TDB* db;
-    TDBNodeRange range[3];
-    TDBRecord* cur;
-    TDBRecord* lasthit;
-    TDBParentChain* parent;
-    PRInt32 tree;
-    PRBool reverse;
-    TDBTriple triple;
-    PRInt32 hits;
-    PRInt32 misses;
-    struct _TDBCursor* nextcursor;
-    struct _TDBCursor* prevcursor;
-};
-
-
-typedef struct _TDBCallbackInfo {
-    struct _TDBCallbackInfo* nextcallback;
-    TDBNodeRange range[3];
-    TDBCallbackFunction func;
-    void* closure;
-} TDBCallbackInfo;
-
-typedef struct _TDBPendingCall {
-    struct _TDBPendingCall* next;
-    TDBCallbackFunction func;
-    void* closure;
-    TDBTriple triple;
-    PRInt32 action;
-} TDBPendingCall;
-    
-    
-
-
-struct _TDB {
-    char* filename;
-    PRInt32 filelength;
-    PRFileDesc* fid;
-    TDBPtr roots[NUMTREES];
-    TDBPtr freeroot;
-    PRBool dirty;
-    PRBool rootdirty;
-    PRLock* mutex;              /* Used to prevent more than one thread
-                                   from doing anything in DB code at the
-                                   same time. */
-    PRThread* callbackthread;   /* Thread ID of the background
-                                   callback-calling thread. */
-    PRCondVar* callbackcvargo;  /* Used to wake up the callback-calling
-                                   thread. */
-    PRCondVar* callbackcvaridle; /* Used by the callback-calling to indicate
-                                    that it is now idle. */
-    PRBool killcallbackthread;
-    PRBool callbackidle;
-    char* iobuf;
-    PRInt32 iobuflength;
-    TDBRecord* firstrecord;
-    TDBCursor* firstcursor;
-    TDBCallbackInfo* firstcallback;
-    TDBPendingCall* firstpendingcall;
-    TDBPendingCall* lastpendingcall;
-};
-
-
-/* ----------------------------- From add.c: ----------------------------- */
-
-extern PRStatus tdbAddToTree(TDB* db, TDBRecord* record, PRInt32 tree); 
-extern PRStatus tdbRemoveFromTree(TDB* db, TDBRecord* record, PRInt32 tree);
-
-
-/* ----------------------------- From callback.c: ------------------------- */
-extern void tdbCallbackThread(void* closure);
-extern PRStatus tdbQueueMatchingCallbacks(TDB* db, TDBRecord* record,
-                                          PRInt32 action);
-
-
-/* ----------------------------- From node.c: ----------------------------- */
-
-
-extern TDBNode* tdbNodeDup(TDBNode* node);
-extern PRInt32 tdbNodeSize(TDBNode* node);
-extern PRInt64 tdbCompareNodes(TDBNode* n1, TDBNode* n2);
-extern TDBNode* tdbGetNode(TDB* db, char** ptr);
-extern void tdbPutNode(TDB* db, char** ptr, TDBNode* node);
-
-
-/* ----------------------------- From query.c: ----------------------------- */
-
-extern TDBCursor* tdbQueryNolock(TDB* db, TDBNodeRange range[3],
-                                 TDBSortSpecification* sortspec);
-extern PRStatus tdbFreeCursorNolock(TDBCursor* cursor);
-extern TDBTriple* tdbGetResultNolock(TDBCursor* cursor);
-extern PRInt64 tdbCompareToRange(TDBRecord* record, TDBNodeRange* range,
-                                 PRInt32 comparerule);
-extern PRBool tdbMatchesRange(TDBRecord* record, TDBNodeRange* range);
-extern void tdbThrowOutCursorCaches(TDB* db);
+#define TDB_LEAFFLAG  0x1
 
 
 
-/* ----------------------------- From record.c: ---------------------------- */
+#define DB_OK 0
 
-extern TDBRecord* tdbLoadRecord(TDB* db, TDBPtr position);
-extern PRStatus tdbSaveRecord(TDB* db, TDBRecord* record);
-extern PRStatus tdbFreeRecord(TDBRecord* record);
-extern TDBRecord* tdbAllocateRecord(TDB* db, TDBNodePtr triple[3]);
-extern PRInt64 tdbCompareRecords(TDBRecord* r1, TDBRecord* r2,
-                                 PRInt32 comparerule);
+typedef TDBInt32 TDBPtr;
 
 
 
-/* ----------------------------- From tdb.c: ----------------------------- */
 
-extern PRStatus tdbFlush(TDB* db);
-extern PRStatus tdbThrowAwayUnflushedChanges(TDB* db);
-extern PRStatus tdbGrowIobuf(TDB* db, PRInt32 length);
-extern PRStatus tdbLoadRoots(TDB* db);
-extern void tdbMarkCorrupted(TDB* db);
+typedef struct _TDBCallbackInfo TDBCallbackInfo;
+typedef struct _TDBIntern TDBIntern;
+typedef struct _TDBPendingCall TDBPendingCall;
+typedef struct _TDBRType TDBRType;
+typedef struct _TDBVector TDBVector;
+typedef struct _TDBWindex TDBWindex;
+typedef struct _TDBWindexCursor TDBWindexCursor;
 
-extern PRInt32 tdbGetInt32(char** ptr);
-extern PRInt32 tdbGetInt16(char** ptr);
-extern PRInt8 tdbGetInt8(char** ptr);
-extern PRInt64 tdbGetInt64(char** ptr);
-extern PRUint16 tdbGetUInt16(char** ptr);
-extern void tdbPutInt32(char** ptr, PRInt32 value);
-extern void tdbPutInt16(char** ptr, PRInt16 value) ;
-extern void tdbPutUInt16(char** ptr, PRUint16 value) ;
-extern void tdbPutInt8(char** ptr, PRInt8 value);
-extern void tdbPutInt64(char** ptr, PRInt64 value);
+
 
 #endif /* _TDBtypes_h_ */

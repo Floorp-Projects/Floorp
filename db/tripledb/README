@@ -18,6 +18,10 @@ database. Each member of a triple can be a string, integer, or date.
 
 For more details, read the API, in tdbapi.h.
 
+Note that TripleDB now depends on the Sleepycat Berkeley DB, version
+3.1.11 or greater.  For more information on that, see
+http://www.sleepycat.com.
+
 
 FAQ:
 
@@ -26,7 +30,7 @@ A: Yeah, yeah, I know.  This is developed as part of a project at
 work, and our Makefiles are all messed up.  If you have one that fits in well
 with other stuff at mozilla.org, please feel free to contribute it.
 
-Q: Um, so else here uses this?
+Q: Um, so nobody else here uses this?
 A: That's right.  But this maps in pretty well to RDF, I believe.  I wouldn't
 be surprised if someone decides to use it to store a biggish RDF database,
 and adds it to mozilla for that purpose.

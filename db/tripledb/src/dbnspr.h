@@ -20,21 +20,9 @@
  * Contributor(s): Terry Weissman <terry@mozilla.org>
  */
 
-/* These are debugging routines for the TDB.  Don't use any of these calls
-   in production code! */
+#ifndef _dbnspr_h_
+#define _dbnspr_h_ 1
 
-extern void TDBDumpNode(TDBFileDesc* fid, TDBNode* node);
-extern void TDBDumpTree(TDBFileDesc* fid, TDB* db, TDBInt32 tree);
+extern TDBStatus tdbMakeDBCompatableWithNSPR(DB_ENV* env);
 
-extern TDBStatus TDBSanityCheck(TDBBase* base, TDBFileDesc* fid);
-
-
-extern void TDBGetCursorStats(TDBCursor* cursor,
-                              TDBInt32* hits,
-                              TDBInt32* misses);
-
-
-/* Create a "dot" graph file.  To view these, and learn more about them, 
-   see http://www.research.att.com/~north/cgi-bin/webdot.cgi */
-
-extern void TDBMakeDotGraph(TDB* db, const char* filename, TDBInt32 tree);
+#endif /* _dbnspr_h_ */

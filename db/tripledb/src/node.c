@@ -14,24 +14,29 @@
  *
  * The Initial Developer of the Original Code is Geocast Network Systems.
  * Portions created by Geocast are
- * Copyright (C) 1999 Geocast Network Systems. All
+ * Copyright (C) 2000 Geocast Network Systems. All
  * Rights Reserved.
  *
  * Contributor(s): Terry Weissman <terry@mozilla.org>
  */
 
-/* Operations that do things on nodes. */
-
 #include "tdbtypes.h"
+
+#include "node.h"
+#include "util.h"
 
 TDBNodePtr TDBCreateStringNode(const char* string)
 {
     TDBNode* result;
-    PRInt32 length;
-    PR_ASSERT(string != NULL);
+    TDBInt32 length;
+    tdb_ASSERT(string != NULL);
     if (string == NULL) return NULL;
     length = strlen(string);
-    result = (TDBNode*) PR_Malloc(sizeof(TDBNode) + length + 1);
+    if (length > 65535) {
+        tdb_ASSERT(0);          /* Don't call us with huge strings! */
+        return NULL;
+    }
+    result = (TDBNode*) tdb_Malloc(sizeof(TDBNode) + length + 1);
 
     if (result == NULL) return NULL;
     result->type = TDBTYPE_STRING;
@@ -41,34 +46,46 @@ TDBNodePtr TDBCreateStringNode(const char* string)
 }
 
 
-TDBNodePtr TDBCreateIntNode(PRInt64 value, PRInt8 type)
+TDBNodePtr TDBCreateIntNode(TDBInt64 value, TDBInt8 type)
 {
     TDBNode* result;
-    PR_ASSERT(type >= TDBTYPE_INT8 && type <= TDBTYPE_TIME);
-    if (type < TDBTYPE_INT8 || type > TDBTYPE_TIME) {
+    if ((type < TDBTYPE_INT32 || type >= TDBTYPE_STRING) && type !=
+          TDBTYPE_INTERNED) {
+        tdb_ASSERT(0);
         return NULL;
     }
-    result = PR_NEW(TDBNode);
+    result = tdb_NEWZAP(TDBNode);
     if (result == NULL) return NULL;
     result->type = type;
     result->d.i = value;
     return result;
 }
 
-void TDBFreeNode(TDBNode* node)
+
+TDBNodePtr tdbCreateSpecialNode(TDBInt8 type)
 {
-    PR_Free(node);
+    TDBNodePtr result;
+    tdb_ASSERT(type == TDBTYPE_MINNODE || type == TDBTYPE_MAXNODE);
+    result = tdb_NEWZAP(TDBNode);
+    if (result == NULL) return NULL;
+    result->type = type;
+    return result;
 }
 
-TDBNode* tdbNodeDup(TDBNode* node)
+void TDBFreeNode(TDBNode* node)
+{
+    tdb_Free(node);
+}
+
+TDBNode* TDBNodeDup(TDBNode* node)
 {
     TDBNode* result;
-    PRInt32 length;
-    PR_ASSERT(node != NULL);
+    TDBInt32 length;
+    tdb_ASSERT(node != NULL);
     if (node == NULL) return NULL;
     if (node->type == TDBTYPE_STRING) {
         length = node->d.str.length;
-        result = PR_Malloc(sizeof(TDBNode) + length + 1);
+        result = tdb_Malloc(sizeof(TDBNode) + length + 1);
         if (result == NULL) return NULL;
         result->type = TDBTYPE_STRING;
         result->d.str.length = length;
@@ -76,54 +93,106 @@ TDBNode* tdbNodeDup(TDBNode* node)
         result->d.str.string[length] = '\0';
         return result;
     }
+    if (node->type == TDBTYPE_MINNODE || node->type == TDBTYPE_MAXNODE) {
+        return tdbCreateSpecialNode(node->type);
+    }
     return TDBCreateIntNode(node->d.i, node->type);
 }
 
 
-PRInt32 tdbNodeSize(TDBNode* node)
+TDBInt32 tdbNodeSize(TDBNode* node)
 {
-    PR_ASSERT(node != NULL);
+    tdb_ASSERT(node != NULL);
     if (node == NULL) return 0;
     switch (node->type) {
-    case TDBTYPE_INT8:
-        return 1 + sizeof(PRInt8);
-    case TDBTYPE_INT16:
-        return 1 + sizeof(PRInt16);
     case TDBTYPE_INT32:
-        return 1 + sizeof(PRInt32);
+        return 1 + sizeof(TDBInt32);
     case TDBTYPE_INT64:
-        return 1 + sizeof(PRInt64);
+        return 1 + sizeof(TDBInt64);
+    case TDBTYPE_ID:
+        return 1 + sizeof(TDBUint64);
     case TDBTYPE_TIME:
-        return 1 + sizeof(PRTime);
+        return 1 + sizeof(TDBTime);
     case TDBTYPE_STRING:
-        return 1 + sizeof(PRUint16) + node->d.str.length;
+        return 1 + node->d.str.length + 1;
+    case TDBTYPE_BLOB:
+        return 1 + sizeof(TDBUint16) + node->d.str.length;
+    case TDBTYPE_INTERNED:
+        return 1 + sizeof(TDBUint32);
     default:
-        PR_ASSERT(0);
+        tdb_ASSERT(0);
         return 0;
     }
 }
 
 
-PRInt64 tdbCompareNodes(TDBNode* n1, TDBNode* n2)
+TDBStatus tdbPutNode(char** ptr, TDBNode* node, char* endptr)
 {
-    if (n1->type == TDBTYPE_STRING && n2->type == TDBTYPE_STRING) {
-        return strcmp(n1->d.str.string, n2->d.str.string);
-    } else if (n1->type != TDBTYPE_STRING && n2->type != TDBTYPE_STRING) {
-        return n1->d.i - n2->d.i;
-    } else {
-        return n1->type - n2->type;
+    if (tdbPutInt8(ptr, node->type, endptr) != TDB_SUCCESS) {
+        return TDB_FAILURE;
+    }
+    switch (node->type) {
+    case TDBTYPE_STRING:
+        if (endptr - *ptr <= node->d.str.length) return TDB_FAILURE;
+        memcpy(*ptr, node->d.str.string, node->d.str.length);
+        *ptr += node->d.str.length;
+        *(*ptr)++ = '\0';
+        return TDB_SUCCESS;
+    case TDBTYPE_BLOB:
+        tdbPutUInt16(ptr, node->d.str.length, endptr);
+        if (endptr - *ptr < node->d.str.length) {
+            return TDB_FAILURE;
+        }
+        memcpy(*ptr, node->d.str.string, node->d.str.length);
+        *ptr += node->d.str.length;
+        return TDB_SUCCESS;
+    case TDBTYPE_INT32:
+        return tdbPutInt32(ptr, (TDBInt32) node->d.i, endptr);
+    case TDBTYPE_INT64:
+    case TDBTYPE_TIME:
+        return tdbPutInt64(ptr, node->d.i, endptr);
+    case TDBTYPE_ID:
+        return tdbPutUInt64(ptr, node->d.i, endptr);
+    case TDBTYPE_INTERNED:
+        return tdbPutUInt32(ptr, node->d.i, endptr);
+    case TDBTYPE_MINNODE:
+    case TDBTYPE_MAXNODE:
+        return TDB_SUCCESS;
+    default:
+        tdb_ASSERT(0);
+        return TDB_FAILURE;
     }
 }
 
 
-TDBNode* tdbGetNode(TDB* db, char** ptr)
+TDBNode* tdbGetNode(char** ptr, char* endptr)
 {
     TDBNode* result;
-    PRInt8 type = tdbGetInt8(ptr);
-    PRInt64 i;
-    if (type == TDBTYPE_STRING) {
-        PRUint16 length = tdbGetUInt16(ptr);
-        result = (TDBNode*) PR_Malloc(sizeof(TDBNode) + length + 1);
+    TDBInt8 type;
+    TDBInt64 i;
+    TDBUint16 length;
+    char* p;
+    type = tdbGetInt8(ptr, endptr);
+    if (*ptr >= endptr) return NULL;
+    switch (type) {
+    case TDBTYPE_STRING:
+        for (p = *ptr ; p <= endptr && *p ; p++) {}
+        if (p > endptr) return NULL;
+        length = p - *ptr;
+        result = (TDBNode*) tdb_Malloc(sizeof(TDBNode) + length + 1);
+        if (result == NULL) {
+            return NULL;
+        }
+        result->type = type;
+        result->d.str.length = length;
+        memcpy(result->d.str.string, *ptr, length + 1);
+        *ptr = p + 1;
+        return result;
+    case TDBTYPE_BLOB:
+        length = tdbGetUInt16(ptr, endptr);
+        if (*ptr > endptr) return NULL;
+        if (*ptr + length > endptr) return NULL;
+        result = (TDBNode*) tdb_Malloc(sizeof(TDBNode) + length + 1);
         if (result == NULL) {
             return NULL;
         }
@@ -132,55 +201,39 @@ TDBNode* tdbGetNode(TDB* db, char** ptr)
         memcpy(result->d.str.string, *ptr, length);
         result->d.str.string[length] = '\0';
         (*ptr) += length;
-    } else {
-        switch(type) {
-        case TDBTYPE_INT8:
-            i = tdbGetInt8(ptr);
-            break;
-        case TDBTYPE_INT16:
-            i = tdbGetInt16(ptr);
-            break;
-        case TDBTYPE_INT32:
-            i = tdbGetInt32(ptr);
-            break;
-        case TDBTYPE_INT64:
-        case TDBTYPE_TIME:
-            i = tdbGetInt64(ptr);
-            break;
-        default:
-            tdbMarkCorrupted(db);
-            return NULL;
-        }
-        result = TDBCreateIntNode(i, type);
+        return result;
+    case TDBTYPE_INT32:
+        i = tdbGetInt32(ptr, endptr);
+        break;
+    case TDBTYPE_INT64:
+    case TDBTYPE_TIME:
+        i = tdbGetInt64(ptr, endptr);
+        break;
+    case TDBTYPE_ID:
+        i = tdbGetUInt64(ptr, endptr);
+        break;
+    case TDBTYPE_INTERNED:
+        i = tdbGetUInt32(ptr, endptr);
+        break;
+    default:
+        return NULL;
     }
-    return result;
+    return TDBCreateIntNode(i, type);
 }
 
 
-void tdbPutNode(TDB* db, char** ptr, TDBNode* node)
+TDBInt64 TDBCompareNodes(TDBNode* n1, TDBNode* n2)
 {
-    tdbPutInt8(ptr, node->type);
-    switch (node->type) {
-        case TDBTYPE_STRING:
-            tdbPutUInt16(ptr, node->d.str.length);
-            memcpy(*ptr, node->d.str.string, node->d.str.length);
-            *ptr += node->d.str.length;
-            break;
-        case TDBTYPE_INT8:
-            tdbPutInt8(ptr, (PRInt8) node->d.i);
-            break;
-        case TDBTYPE_INT16:
-            tdbPutInt16(ptr, (PRInt16) node->d.i);
-            break;
-        case TDBTYPE_INT32:
-            tdbPutInt32(ptr, (PRInt32) node->d.i);
-            break;
-        case TDBTYPE_INT64:
-        case TDBTYPE_TIME:
-            tdbPutInt64(ptr, node->d.i);
-            break;
-        default:
-            tdbMarkCorrupted(db);
-            break;
+    TDBInt64 result;
+    if (n1->type != n2->type) {
+        return n1->type - n2->type;
+    } else if (n1->type == TDBTYPE_STRING || n1->type == TDBTYPE_BLOB) {
+        result = memcmp(n1->d.str.string, n2->d.str.string,
+                        n1->d.str.length < n2->d.str.length ?
+                        n1->d.str.length : n2->d.str.length);
+        if (result != 0) return result;
+        return ((TDBInt64) n1->d.str.length) - ((TDBInt64) n2->d.str.length);
+    } else {
+        return n1->d.i - n2->d.i;
     }
 }

@@ -20,21 +20,25 @@
  * Contributor(s): Terry Weissman <terry@mozilla.org>
  */
 
-/* These are debugging routines for the TDB.  Don't use any of these calls
-   in production code! */
+#ifndef _windex_h_
+#define _windex_h_ 1
 
-extern void TDBDumpNode(TDBFileDesc* fid, TDBNode* node);
-extern void TDBDumpTree(TDBFileDesc* fid, TDB* db, TDBInt32 tree);
+extern TDBWindex* tdbWindexNew(TDBBase* base);
 
-extern TDBStatus TDBSanityCheck(TDBBase* base, TDBFileDesc* fid);
+extern void tdbWindexFree(TDBWindex* windex);
+
+extern TDBStatus tdbWindexSync(TDBWindex* windex);
+
+extern TDBStatus tdbWindexAdd(TDBWindex* windex, TDBVector* vector);
+
+extern TDBStatus tdbWindexRemove(TDBWindex* windex, TDBVector* vector);
+
+extern TDBWindexCursor* tdbWindexGetCursor(TDBWindex* windex,
+                                           const char* string);
+
+extern TDBStatus tdbWindexCursorFree(TDBWindexCursor* cursor);
+
+extern TDBVector* tdbWindexGetCursorValue(TDBWindexCursor* cursor);
 
 
-extern void TDBGetCursorStats(TDBCursor* cursor,
-                              TDBInt32* hits,
-                              TDBInt32* misses);
-
-
-/* Create a "dot" graph file.  To view these, and learn more about them, 
-   see http://www.research.att.com/~north/cgi-bin/webdot.cgi */
-
-extern void TDBMakeDotGraph(TDB* db, const char* filename, TDBInt32 tree);
+#endif /* _windex_h_ */
