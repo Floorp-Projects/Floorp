@@ -1910,13 +1910,17 @@ static int CALLBACK nsFontWeightCallback(const LOGFONT* logFont, const TEXTMETRI
   return TRUE; // Keep looking for more weights.
 }
 
+
 PRUint16 
 nsFontMetricsWin::GetFontWeightTable(HDC aDC, nsString* aFontName) {
 
     // Look for all of the weights for a given font.
   LOGFONT logFont;
   logFont.lfCharSet = DEFAULT_CHARSET;
-  aFontName->ToCString(logFont.lfFaceName, LF_FACESIZE);
+
+  WideCharToMultiByte(CP_ACP, 0, aFontName->GetUnicode(), aFontName->Length() + 1,
+    logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
+ 
   logFont.lfPitchAndFamily = 0;
 
   PRUint16 weights = 0;
@@ -1924,6 +1928,7 @@ nsFontMetricsWin::GetFontWeightTable(HDC aDC, nsString* aFontName) {
 //   printf("font weights for %s dec %d hex %x \n", logFont.lfFaceName, weights, weights);
    return weights;
 }
+
 
 
 // Calculate the closest font weight. This is necessary because we need to
