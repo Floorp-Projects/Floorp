@@ -667,7 +667,6 @@ PRBool
 nsFTPDirListingConv::ConvertUNIXDate(char *aCStr, PRTime& outDate) {
 
     PRExplodedTime curTime;
-
     InitPRExplodedTime(curTime);
 
     char *bcol = aCStr;         /* Column begin */
@@ -771,14 +770,16 @@ nsFTPDirListingConv::ConvertVMSDate(char *aCStr, PRTime& outDate) {
 PRBool
 nsFTPDirListingConv::ConvertDOSDate(char *aCStr, PRTime& outDate) {
 
-    PRExplodedTime curTime;
+    PRExplodedTime curTime, nowTime;
+    PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &nowTime);
+    PRInt16 century = (nowTime.tm_year/1000 + nowTime.tm_year/100) * 100;
 
     InitPRExplodedTime(curTime);
 
     curTime.tm_month      = (aCStr[1]-'0')-1;
 
     curTime.tm_mday     = (((aCStr[3]-'0')*10) + aCStr[4]-'0');
-    curTime.tm_year     = (((aCStr[6]-'0')*10) + aCStr[7]-'0'); 
+    curTime.tm_year     = century + (((aCStr[6]-'0')*10) + aCStr[7]-'0'); 
     curTime.tm_hour     = (((aCStr[10]-'0')*10) + aCStr[11]-'0'); 
 
 	if(aCStr[15] == 'P')
