@@ -54,7 +54,7 @@
             
             // disable the OK button if no text
             if (dialog.findKey.getAttribute("value") == "") {
-	            dialog.find.setAttribute( "disabled", "" );
+	            dialog.find.setAttribute("disabled", "true");
 	       	}
 	       	
 	       	dialog.findKey.focus();
@@ -138,13 +138,13 @@
                     // Disable OK if they delete all the text.
                     if ( dialog.findKey.value == "" ) {
                         dialog.enabled = false;
-                        dialog.find.setAttribute( "disabled", "" );
+                        dialog.find.setAttribute("disabled", "true");
                     }
                 } else {
                     // Enable OK once the user types something.
                     if ( dialog.findKey.value != "" ) {
                         dialog.enabled = true;
-                        dialog.find.removeAttribute( "disabled" );
+                        dialog.find.removeAttribute("disabled");
                     }
                 }
         }
