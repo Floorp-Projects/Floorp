@@ -460,7 +460,7 @@ GlobalWindowImpl::GetStatus(nsString& aStatus)
 {
   nsIBrowserWindow *mBrowser;
   if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
-    PRUnichar *status;
+    const PRUnichar *status;
     mBrowser->GetStatus(&status);
     aStatus = status;
     NS_RELEASE(mBrowser);
@@ -494,7 +494,7 @@ GlobalWindowImpl::SetDefaultStatus(const nsString& aDefaultStatus)
 NS_IMETHODIMP
 GlobalWindowImpl::GetName(nsString& aName)
 {
-  PRUnichar *name;
+  const PRUnichar *name;
   mWebShell->GetName(&name);
   aName = name;
   return NS_OK;
