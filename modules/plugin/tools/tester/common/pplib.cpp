@@ -412,7 +412,9 @@ BOOL PP_WriteString(char * szSection, char * szKey, char * szString, XP_HFILE hF
   if(pBuf == NULL)
     return FALSE;
 
+#if !(defined XP_MAC || defined XP_UNIX || defined XP_OS2)
   long lOldSize = (long)strlen(pBuf);
+#endif
 
   char * pSectionStart = goToSectionBody(pBuf, szSection);
 

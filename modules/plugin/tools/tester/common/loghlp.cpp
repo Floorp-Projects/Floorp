@@ -514,7 +514,7 @@ LogItemStruct * makeLogItemStruct(NPAPI_Action action,
     case action_npp_stream_as_file:
     {
       // strlen not protected from 0!
-      char* str = dw3 ? (LPSTR)dw3 : "";
+      char* str = dw3 ? (char*)dw3 : (char*)"";
       plis->arg3.iLength = strlen(str) + 1;
       plis->arg3.pData = new char[plis->arg3.iLength];
       memcpy(plis->arg3.pData, (LPVOID)str, plis->arg3.iLength);
