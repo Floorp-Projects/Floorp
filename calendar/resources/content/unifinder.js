@@ -136,6 +136,17 @@ function selectSelectedEventsInTree( EventsToSelect )
 var unifinderObserver = {
     mInBatch: false,
 
+    QueryInterface: function (aIID) {
+        if (!aIID.equals(Components.interfaces.nsISupports) &&
+            !aIID.equals(Components.interfaces.calICompositeObserver) &&
+            !aIID.equals(Components.interfaces.calIObserver))
+        {
+            throw Components.results.NS_ERROR_NO_INTERFACE;
+        }
+
+        return this;
+    },
+
     onStartBatch: function() {
         this.mInBatch = true;
     },
@@ -195,7 +206,7 @@ function prepareCalendarUnifinder( )
 function finishCalendarUnifinder( )
 {
   //gICalLib.removeObserver( unifinderEventDataSourceObserver  );
-   var ccalendar=getCalendar();
+   var ccalendar = getDisplayComposite();
    ccalendar.removeObserver(unifinderObserver);
 }
 
@@ -590,10 +601,10 @@ function refreshEventTree( eventArray )
    var StartDate = new Date( Today.getFullYear(), Today.getMonth(), Today.getDate(), 0, 0, 0 );
    var EndDate;
 
-   var calendar = getCalendar();
+   var ccalendar = getDisplayComposite();
    var filter = 0;
 
-   filter |= calendar.ITEM_FILTER_TYPE_EVENT;
+   filter |= ccalendar.ITEM_FILTER_TYPE_EVENT;
 
    switch( document.getElementById( "event-filter-menulist" ).selectedItem.value )
    {
@@ -647,7 +658,7 @@ function refreshEventTree( eventArray )
    }
    var s = StartDate ? jsDateToDateTime(StartDate) : null;
    var e = EndDate ? jsDateToDateTime(EndDate) : null;
-   calendar.getItems (filter, 0, s, e, refreshListener);
+   ccalendar.getItems (filter, 0, s, e, refreshListener);
 
 }
 
