@@ -21,20 +21,21 @@
  */
 
 #include "nsDeviceContextSpecPh.h"
+#include "nsPrintOptionsPh.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "nsPhGfxLog.h"
 
 nsDeviceContextSpecPh :: nsDeviceContextSpecPh()
 {
-  NS_INIT_REFCNT();
-  mPC = nsnull;
+	NS_INIT_REFCNT();
+	mPC = nsnull;
 }
 
 nsDeviceContextSpecPh :: ~nsDeviceContextSpecPh()
 {
-  if (mPC)
-    PpPrintReleasePC(mPC);
+	if (mPC)
+		PpPrintReleasePC(mPC);
 }
 
 static NS_DEFINE_IID(kDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
@@ -43,11 +44,46 @@ NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecPh, kDeviceContextSpecIID)
 NS_IMPL_ADDREF(nsDeviceContextSpecPh)
 NS_IMPL_RELEASE(nsDeviceContextSpecPh)
 
-NS_IMETHODIMP nsDeviceContextSpecPh :: Init(PRBool aQuiet, PpPrintContext_t *aPrintContext)
+NS_IMETHODIMP nsDeviceContextSpecPh :: Init(PRBool aQuiet)
 {
-	/* Create a Printer Context */
-	mPC = aPrintContext;		/* Assume ownership of the Printer Context */
-  	return NS_OK;
+	int action;
+	nsresult rv = NS_OK;
+
+	if (!mPC)
+		mPC = PpCreatePC();
+
+	if (aQuiet)
+	{
+		// no dialogs
+		PpLoadDefaultPrinter(mPC);
+	}
+	else
+	{
+#if 1
+		action = PtPrintSelection(NULL, NULL, NULL, mPC, (Pt_PRINTSEL_DFLT_LOOK));
+		switch (action)
+		{
+			case Pt_PRINTSEL_PRINT:
+			case Pt_PRINTSEL_PREVIEW:
+				rv = NS_OK;
+				break;
+			case Pt_PRINTSEL_CANCEL:
+				rv = NS_ERROR_FAILURE;
+				break;
+		}
+#else
+		// do native print options
+		nsIPrintOptions *printOptions = new nsPrintOptionsPh((void *)mPC);
+		if ((nsPrintOptionsPh *)printOptions->ShowNativeDialog() != NS_OK)
+		{
+			// cancel
+			rv =  NS_ERROR_FAILURE;
+		}
+		delete printOptions;
+#endif
+	}
+
+  	return rv;
 }
 
 //NS_IMETHODIMP nsDeviceContextSpecPh :: GetPrintContext(PpPrintContext_t *&aPrintContext) const
