@@ -145,31 +145,19 @@ nsDogbertProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
     GetSourceProfile(aProfile);
 
   PRBool exists;
-  const MIGRATIONDATA data[] = { { ToNewUnicode(PREF_FILE_NAME_IN_4x),
-                                   nsIBrowserProfileMigrator::SETTINGS,
-                                   PR_TRUE },
-                                 { ToNewUnicode(COOKIES_FILE_NAME_IN_4x),
-                                   nsIBrowserProfileMigrator::COOKIES,
-                                   PR_FALSE },
-                                 { ToNewUnicode(BOOKMARKS_FILE_NAME_IN_4x),
-                                   nsIBrowserProfileMigrator::BOOKMARKS,
-                                   PR_FALSE } };
+  MigrationData data[] = { { ToNewUnicode(PREF_FILE_NAME_IN_4x),
+                             nsIBrowserProfileMigrator::SETTINGS,
+                             PR_TRUE },
+                           { ToNewUnicode(COOKIES_FILE_NAME_IN_4x),
+                             nsIBrowserProfileMigrator::COOKIES,
+                             PR_FALSE },
+                           { ToNewUnicode(BOOKMARKS_FILE_NAME_IN_4x),
+                             nsIBrowserProfileMigrator::BOOKMARKS,
+                             PR_FALSE } };
                                                                   
-  nsCOMPtr<nsIFile> sourceFile; 
-  for (PRInt32 i = 0; i < 3; ++i) {
-    // Don't list items that can only be imported in replace-mode when
-    // we aren't being run in replace-mode.
-    if (!aReplace && data[i].replaceOnly) 
-      continue;
-
-    mSourceProfile->Clone(getter_AddRefs(sourceFile));
-    sourceFile->Append(nsDependentString(data[i].fileName));
-    sourceFile->Exists(&exists);
-    if (exists)
-      *aResult |= data[i].sourceFlag;
-
-    nsCRT::free(data[i].fileName);
-  }
+  // Frees file name strings allocated above.
+  GetMigrateDataFromArray(data, sizeof(data)/sizeof(MigrationData), 
+                          aReplace, mSourceProfile, aResult);
 
   return NS_OK;
 }
@@ -242,7 +230,7 @@ nsDogbertProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
 #define F(a) nsDogbertProfileMigrator::a
 
 static 
-nsDogbertProfileMigrator::PREFTRANSFORM gTransforms[] = {
+nsDogbertProfileMigrator::PrefTransform gTransforms[] = {
   // Simple Copy Prefs
   { "browser.anchor_color",           0, F(GetString),   F(SetString), PR_FALSE, -1 },
   { "browser.visited_color",          0, F(GetString),   F(SetString), PR_FALSE, -1 },
@@ -280,8 +268,8 @@ nsresult
 nsDogbertProfileMigrator::TransformPreferences(const nsAString& aSourcePrefFileName,
                                                const nsAString& aTargetPrefFileName)
 {
-  PREFTRANSFORM* transform;
-  PREFTRANSFORM* end = gTransforms + sizeof(gTransforms)/sizeof(PREFTRANSFORM);
+  PrefTransform* transform;
+  PrefTransform* end = gTransforms + sizeof(gTransforms)/sizeof(PrefTransform);
 
   // Load the source pref file
   nsCOMPtr<nsIPrefService> psvc(do_GetService(NS_PREFSERVICE_CONTRACTID));
@@ -332,7 +320,7 @@ nsDogbertProfileMigrator::CopyPreferences(PRBool aReplace)
 nsresult 
 nsDogbertProfileMigrator::GetHomepage(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   PRInt32 val;
   nsresult rv = aBranch->GetIntPref(xform->sourcePrefName, &val);
   if (NS_SUCCEEDED(rv) && val == 0) {
@@ -345,7 +333,7 @@ nsDogbertProfileMigrator::GetHomepage(void* aTransform, nsIPrefBranch* aBranch)
 nsresult 
 nsDogbertProfileMigrator::GetImagePref(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   PRBool loadImages;
   nsresult rv = aBranch->GetBoolPref(xform->sourcePrefName, &loadImages);
   if (NS_SUCCEEDED(rv)) {

@@ -130,47 +130,34 @@ nsPhoenixProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
   if (!mSourceProfile) 
     GetSourceProfile(aProfile);
 
-  const MIGRATIONDATA data[] = { { ToNewUnicode(FILE_NAME_PREFS),
-                                   nsIBrowserProfileMigrator::SETTINGS,
-                                   PR_TRUE },
-                                 { ToNewUnicode(FILE_NAME_COOKIES),
-                                   nsIBrowserProfileMigrator::COOKIES,
-                                   PR_TRUE },
-                                 { ToNewUnicode(FILE_NAME_HISTORY),
-                                   nsIBrowserProfileMigrator::HISTORY,
-                                   PR_TRUE },
-                                 { ToNewUnicode(FILE_NAME_BOOKMARKS),
-                                   nsIBrowserProfileMigrator::BOOKMARKS,
-                                   PR_TRUE },
-                                 { ToNewUnicode(FILE_NAME_DOWNLOADS),
-                                   nsIBrowserProfileMigrator::OTHERDATA,
-                                   PR_TRUE },
-                                 { ToNewUnicode(FILE_NAME_MIMETYPES),
-                                   nsIBrowserProfileMigrator::OTHERDATA,
-                                   PR_TRUE },
-                                 { ToNewUnicode(FILE_NAME_USERCHROME),
-                                   nsIBrowserProfileMigrator::OTHERDATA,
-                                   PR_TRUE },
-                                 { ToNewUnicode(FILE_NAME_USERCONTENT),
-                                   nsIBrowserProfileMigrator::OTHERDATA,
-                                   PR_TRUE } };
-                                                                  
-  nsCOMPtr<nsIFile> sourceFile; 
-  PRBool exists;
-  for (PRInt32 i = 0; i < 8; ++i) {
-    // Don't list items that can only be imported in replace-mode when
-    // we aren't being run in replace-mode.
-    if (!aReplace && data[i].replaceOnly) 
-      continue;
+  MigrationData data[] = { { ToNewUnicode(FILE_NAME_PREFS),
+                             nsIBrowserProfileMigrator::SETTINGS,
+                             PR_TRUE },
+                           { ToNewUnicode(FILE_NAME_COOKIES),
+                             nsIBrowserProfileMigrator::COOKIES,
+                             PR_TRUE },
+                           { ToNewUnicode(FILE_NAME_HISTORY),
+                             nsIBrowserProfileMigrator::HISTORY,
+                             PR_TRUE },
+                           { ToNewUnicode(FILE_NAME_BOOKMARKS),
+                             nsIBrowserProfileMigrator::BOOKMARKS,
+                             PR_TRUE },
+                           { ToNewUnicode(FILE_NAME_DOWNLOADS),
+                             nsIBrowserProfileMigrator::OTHERDATA,
+                             PR_TRUE },
+                           { ToNewUnicode(FILE_NAME_MIMETYPES),
+                             nsIBrowserProfileMigrator::OTHERDATA,
+                             PR_TRUE },
+                           { ToNewUnicode(FILE_NAME_USERCHROME),
+                             nsIBrowserProfileMigrator::OTHERDATA,
+                             PR_TRUE },
+                           { ToNewUnicode(FILE_NAME_USERCONTENT),
+                             nsIBrowserProfileMigrator::OTHERDATA,
+                             PR_TRUE } };
 
-    mSourceProfile->Clone(getter_AddRefs(sourceFile));
-    sourceFile->Append(nsDependentString(data[i].fileName));
-    sourceFile->Exists(&exists);
-    if (exists)
-      *aResult |= data[i].sourceFlag;
-
-    nsCRT::free(data[i].fileName);
-  }
+  // Frees file name strings allocated above.
+  GetMigrateDataFromArray(data, sizeof(data)/sizeof(MigrationData), 
+                          aReplace, mSourceProfile, aResult);
 
   // Now locate passwords
   nsXPIDLCString signonsFileName;
@@ -181,7 +168,8 @@ nsPhoenixProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
     nsCOMPtr<nsIFile> sourcePasswordsFile;
     mSourceProfile->Clone(getter_AddRefs(sourcePasswordsFile));
     sourcePasswordsFile->Append(fileName);
-    
+
+    PRBool exists;
     sourcePasswordsFile->Exists(&exists);
     if (exists)
       *aResult |= nsIBrowserProfileMigrator::PASSWORDS;

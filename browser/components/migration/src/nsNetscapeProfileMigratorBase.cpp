@@ -235,21 +235,21 @@ nsNetscapeProfileMigratorBase::GetProfileDataFromRegistry(nsILocalFile* aRegistr
 nsresult 
 nsNetscapeProfileMigratorBase::GetString(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   GETPREF(xform, GetCharPref, &xform->stringValue);
 }
 
 nsresult 
 nsNetscapeProfileMigratorBase::SetString(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   SETPREF(xform, SetCharPref, xform->stringValue);
 }
 
 nsresult
 nsNetscapeProfileMigratorBase::GetWString(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   nsCOMPtr<nsIPrefLocalizedString> prefValue;
   nsresult rv = aBranch->GetComplexValue(xform->sourcePrefName, 
                                          NS_GET_IID(nsIPrefLocalizedString),
@@ -268,7 +268,7 @@ nsNetscapeProfileMigratorBase::GetWString(void* aTransform, nsIPrefBranch* aBran
 nsresult 
 nsNetscapeProfileMigratorBase::SetWStringFromASCII(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   if (xform->prefHasValue) {
     nsCOMPtr<nsIPrefLocalizedString> pls(do_CreateInstance("@mozilla.org/pref-localizedstring;1"));
     nsAutoString data; data.AssignWithConversion(xform->stringValue);
@@ -281,7 +281,7 @@ nsNetscapeProfileMigratorBase::SetWStringFromASCII(void* aTransform, nsIPrefBran
 nsresult
 nsNetscapeProfileMigratorBase::SetWString(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   if (xform->prefHasValue) {
     nsCOMPtr<nsIPrefLocalizedString> pls(do_CreateInstance("@mozilla.org/pref-localizedstring;1"));
     nsAutoString data = NS_ConvertUTF8toUCS2(xform->stringValue);
@@ -295,28 +295,28 @@ nsNetscapeProfileMigratorBase::SetWString(void* aTransform, nsIPrefBranch* aBran
 nsresult 
 nsNetscapeProfileMigratorBase::GetBool(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   GETPREF(xform, GetBoolPref, &xform->boolValue);
 }
 
 nsresult 
 nsNetscapeProfileMigratorBase::SetBool(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   SETPREF(xform, SetBoolPref, xform->boolValue);
 }
 
 nsresult 
 nsNetscapeProfileMigratorBase::GetInt(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   GETPREF(xform, GetIntPref, &xform->intValue);
 }
 
 nsresult 
 nsNetscapeProfileMigratorBase::SetInt(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   SETPREF(xform, SetIntPref, xform->intValue);
 }
 

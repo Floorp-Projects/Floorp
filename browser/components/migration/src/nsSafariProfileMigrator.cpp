@@ -167,7 +167,7 @@ GetPListFromFile(nsILocalFile* aPListFile, CFPropertyListRef* aResult)
 #define _SPM(type) nsSafariProfileMigrator::type
 
 static
-nsSafariProfileMigrator::PREFTRANSFORM gTransforms[] = {
+nsSafariProfileMigrator::PrefTransform gTransforms[] = {
   { CFSTR("AlwaysShowTabBar"),            _SPM(BOOL),   "browser.tabs.autoHide",          _SPM(SetBoolInverted), PR_FALSE, -1 },
   { CFSTR("AutoFillPasswords"),           _SPM(BOOL),   "signon.rememberSignons",         _SPM(SetBool), PR_FALSE, -1 },
   { CFSTR("OpenNewTabsInFront"),          _SPM(BOOL),   "browser.tabs.loadInBackground",  _SPM(SetBoolInverted), PR_FALSE, -1 },
@@ -195,35 +195,35 @@ WebKitUserStyleSheetLocationPreferenceKey - STRING
 nsresult
 nsSafariProfileMigrator::SetBool(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   return aBranch->SetBoolPref(xform->targetPrefName, xform->boolValue);
 }
 
 nsresult
 nsSafariProfileMigrator::SetBoolInverted(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   return aBranch->SetBoolPref(xform->targetPrefName, !xform->boolValue);
 }
 
 nsresult
 nsSafariProfileMigrator::SetString(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   return aBranch->SetCharPref(xform->targetPrefName, xform->stringValue);
 }
 
 nsresult
 nsSafariProfileMigrator::SetInt(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   return aBranch->SetIntPref(xform->targetPrefName, !xform->intValue);
 }
 
 nsresult
 nsSafariProfileMigrator::SetDefaultEncoding(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   
   nsCAutoString encodingSuffix;
   nsDependentCString encoding(xform->stringValue);
@@ -282,7 +282,7 @@ nsSafariProfileMigrator::SetDefaultEncoding(void* aTransform, nsIPrefBranch* aBr
 nsresult
 nsSafariProfileMigrator::SetDownloadFolder(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
 
   nsCOMPtr<nsILocalFile> downloadFolder(do_CreateInstance("@mozilla.org/file/local;1"));
   downloadFolder->InitWithNativePath(nsDependentCString(xform->stringValue));
@@ -305,7 +305,7 @@ nsSafariProfileMigrator::SetDownloadFolder(void* aTransform, nsIPrefBranch* aBra
 nsresult
 nsSafariProfileMigrator::SetDownloadHandlers(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   if (!xform->boolValue) {
     // If we're not set to auto-open safe downloads, we need to clear out the mime types 
     // list which contains default handlers. 
@@ -423,8 +423,8 @@ nsSafariProfileMigrator::CopyPreferences(PRBool aReplace)
     return NS_OK;
   
   // Traverse the standard transforms
-  PREFTRANSFORM* transform;
-  PREFTRANSFORM* end = gTransforms + sizeof(gTransforms)/sizeof(PREFTRANSFORM);
+  PrefTransform* transform;
+  PrefTransform* end = gTransforms + sizeof(gTransforms)/sizeof(PrefTransform);
 
   for (transform = gTransforms; transform < end; ++transform) {
     Boolean hasValue = ::CFDictionaryContainsKey(safariPrefs, transform->keyName);

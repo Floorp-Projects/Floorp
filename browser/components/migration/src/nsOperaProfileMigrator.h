@@ -68,7 +68,7 @@ public:
 
   typedef nsresult(*prefConverter)(void*, nsIPrefBranch*);
 
-  typedef struct {
+  struct PrefTransform {
     char*         sectionName;
     char*         keyName;
     PrefType      type;
@@ -80,7 +80,7 @@ public:
       PRBool      boolValue;
       char*       stringValue;
     };
-  } PREFTRANSFORM;
+  };
 
   static nsresult SetFile(void* aTransform, nsIPrefBranch* aBranch);
   static nsresult SetCookieBehavior(void* aTransform, nsIPrefBranch* aBranch);
@@ -177,19 +177,19 @@ private:
   nsVoidArray mDomainStack;
   nsVoidArray mPathStack;
 
-  typedef struct {
+  struct Cookie {
     nsCString id;
     nsCString data;
     PRInt32 expiryTime;
     PRBool isSecure;
-  } COOKIE;
+  };
 
   PRUint32 mAppVersion;
   PRUint32 mFileVersion;
   PRUint16 mTagTypeLength;
   PRUint16 mPayloadTypeLength;
   PRBool   mCookieOpen;
-  COOKIE   mCurrCookie;
+  Cookie   mCurrCookie;
   PRUint8  mCurrHandlingInfo;
 
 };

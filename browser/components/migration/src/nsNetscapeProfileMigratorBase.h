@@ -54,7 +54,7 @@ public:
 public:
   typedef nsresult(*prefConverter)(void*, nsIPrefBranch*);
 
-  typedef struct {
+  struct PrefTransform {
     char*         sourcePrefName;
     char*         targetPrefName;
     prefConverter prefGetterFunc;
@@ -65,7 +65,7 @@ public:
       PRBool      boolValue;
       char*       stringValue;
     };
-  } PREFTRANSFORM;
+  };
 
   static nsresult GetString(void* aTransform, nsIPrefBranch* aBranch);
   static nsresult SetString(void* aTransform, nsIPrefBranch* aBranch);

@@ -125,41 +125,28 @@ nsSeamonkeyProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
   if (!mSourceProfile) 
     GetSourceProfile(aProfile);
 
-  const MIGRATIONDATA data[] = { { ToNewUnicode(FILE_NAME_PREFS),
-                                   nsIBrowserProfileMigrator::SETTINGS,
-                                   PR_TRUE },
-                                 { ToNewUnicode(FILE_NAME_COOKIES),
-                                   nsIBrowserProfileMigrator::COOKIES,
-                                   PR_FALSE },
-                                 { ToNewUnicode(FILE_NAME_HISTORY),
-                                   nsIBrowserProfileMigrator::HISTORY,
-                                   PR_TRUE },
-                                 { ToNewUnicode(FILE_NAME_BOOKMARKS),
-                                   nsIBrowserProfileMigrator::BOOKMARKS,
-                                   PR_FALSE },
-                                 { ToNewUnicode(FILE_NAME_DOWNLOADS),
-                                   nsIBrowserProfileMigrator::OTHERDATA,
-                                   PR_TRUE },
-                                 { ToNewUnicode(FILE_NAME_MIMETYPES),
-                                   nsIBrowserProfileMigrator::OTHERDATA,
-                                   PR_TRUE } };
+  MigrationData data[] = { { ToNewUnicode(FILE_NAME_PREFS),
+                             nsIBrowserProfileMigrator::SETTINGS,
+                             PR_TRUE },
+                           { ToNewUnicode(FILE_NAME_COOKIES),
+                             nsIBrowserProfileMigrator::COOKIES,
+                             PR_FALSE },
+                           { ToNewUnicode(FILE_NAME_HISTORY),
+                             nsIBrowserProfileMigrator::HISTORY,
+                             PR_TRUE },
+                           { ToNewUnicode(FILE_NAME_BOOKMARKS),
+                             nsIBrowserProfileMigrator::BOOKMARKS,
+                             PR_FALSE },
+                           { ToNewUnicode(FILE_NAME_DOWNLOADS),
+                             nsIBrowserProfileMigrator::OTHERDATA,
+                             PR_TRUE },
+                           { ToNewUnicode(FILE_NAME_MIMETYPES),
+                             nsIBrowserProfileMigrator::OTHERDATA,
+                             PR_TRUE } };
                                                                   
-  nsCOMPtr<nsIFile> sourceFile; 
-  PRBool exists;
-  for (PRInt32 i = 0; i < 6; ++i) {
-    // Don't list items that can only be imported in replace-mode when
-    // we aren't being run in replace-mode.
-    if (!aReplace && data[i].replaceOnly) 
-      continue;
-
-    mSourceProfile->Clone(getter_AddRefs(sourceFile));
-    sourceFile->Append(nsDependentString(data[i].fileName));
-    sourceFile->Exists(&exists);
-    if (exists)
-      *aResult |= data[i].sourceFlag;
-
-    nsCRT::free(data[i].fileName);
-  }
+  // Frees file name strings allocated above.
+  GetMigrateDataFromArray(data, sizeof(data)/sizeof(MigrationData), 
+                          aReplace, mSourceProfile, aResult);
 
   // Now locate passwords
   nsXPIDLCString signonsFileName;
@@ -171,6 +158,7 @@ nsSeamonkeyProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
     mSourceProfile->Clone(getter_AddRefs(sourcePasswordsFile));
     sourcePasswordsFile->Append(fileName);
     
+    PRBool exists;
     sourcePasswordsFile->Exists(&exists);
     if (exists)
       *aResult |= nsIBrowserProfileMigrator::PASSWORDS;
@@ -288,7 +276,7 @@ nsSeamonkeyProfileMigrator::FillProfileDataFromSeamonkeyRegistry()
 
 
 static 
-nsSeamonkeyProfileMigrator::PREFTRANSFORM gTransforms[] = {
+nsSeamonkeyProfileMigrator::PrefTransform gTransforms[] = {
   MAKESAMETYPEPREFTRANSFORM("signon.SignonFileName",                    String),
   MAKESAMETYPEPREFTRANSFORM("browser.startup.homepage",                 WString),
   MAKESAMETYPEPREFTRANSFORM("browser.history_expire_days",              Int),
@@ -354,7 +342,7 @@ nsSeamonkeyProfileMigrator::PREFTRANSFORM gTransforms[] = {
 nsresult 
 nsSeamonkeyProfileMigrator::SetImage(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   nsresult rv = NS_OK;
 
   if (xform->prefHasValue)
@@ -366,7 +354,7 @@ nsSeamonkeyProfileMigrator::SetImage(void* aTransform, nsIPrefBranch* aBranch)
 nsresult 
 nsSeamonkeyProfileMigrator::SetCookie(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   nsresult rv = NS_OK;
 
   if (xform->prefHasValue)
@@ -378,7 +366,7 @@ nsSeamonkeyProfileMigrator::SetCookie(void* aTransform, nsIPrefBranch* aBranch)
 nsresult 
 nsSeamonkeyProfileMigrator::SetDownloadManager(void* aTransform, nsIPrefBranch* aBranch)
 {
-  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  PrefTransform* xform = (PrefTransform*)aTransform;
   nsresult rv = NS_OK;
   
   if (xform->prefHasValue) {
@@ -402,8 +390,8 @@ nsresult
 nsSeamonkeyProfileMigrator::TransformPreferences(const nsAString& aSourcePrefFileName,
                                                  const nsAString& aTargetPrefFileName)
 {
-  PREFTRANSFORM* transform;
-  PREFTRANSFORM* end = gTransforms + sizeof(gTransforms)/sizeof(PREFTRANSFORM);
+  PrefTransform* transform;
+  PrefTransform* end = gTransforms + sizeof(gTransforms)/sizeof(PrefTransform);
 
   // Load the source pref file
   nsCOMPtr<nsIPrefService> psvc(do_GetService(NS_PREFSERVICE_CONTRACTID));
@@ -441,7 +429,7 @@ nsSeamonkeyProfileMigrator::TransformPreferences(const nsAString& aSourcePrefFil
   return NS_OK;
 }
 
-typedef struct {
+struct FontPref {
   char*         prefName;
   PRInt32       type;
   union {
@@ -450,7 +438,7 @@ typedef struct {
     PRBool      boolValue;
     PRUnichar*  wstringValue;
   };
-} FontPref;
+};
 
 void
 nsSeamonkeyProfileMigrator::ReadFontsBranch(nsIPrefService* aPrefService, 

@@ -61,7 +61,7 @@ public:
 
   typedef nsresult(*prefConverter)(void*, nsIPrefBranch*);
 
-  typedef struct {
+  struct PrefTransform {
     CFStringRef   keyName;
     PrefType      type;
     char*         targetPrefName;
@@ -72,7 +72,7 @@ public:
       PRBool      boolValue;
       char*       stringValue;
     };
-  } PREFTRANSFORM;
+  };
   
   static nsresult SetBool(void* aTransform, nsIPrefBranch* aBranch);
   static nsresult SetBoolInverted(void* aTransform, nsIPrefBranch* aBranch);
