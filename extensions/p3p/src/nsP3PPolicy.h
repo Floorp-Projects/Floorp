@@ -28,14 +28,14 @@
 #include "nsIP3PDataSchema.h"
 #include "nsIP3PXMLListener.h"
 
-#include <nsIRDFService.h>
-#include <nsIRDFDataSource.h>
-#include <nsIRDFResource.h>
-#include <nsIRDFContainerUtils.h>
+#include "nsIRDFService.h"
+#include "nsIRDFDataSource.h"
+#include "nsIRDFResource.h"
+#include "nsIRDFContainerUtils.h"
 
-#include <nsHashtable.h>
-#include <nsVoidArray.h>
-#include <nsSupportsArray.h>
+#include "nsHashtable.h"
+#include "nsVoidArray.h"
+#include "nsSupportsArray.h"
 
 
 class nsP3PPolicy : public nsIP3PPolicy,

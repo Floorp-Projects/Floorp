@@ -26,11 +26,11 @@
 
 #include "nsP3PObserverFormSubmit.h"
 
-#include <nsIServiceManager.h>
+#include "nsIServiceManager.h"
 
-#include <nsIPresShell.h>
+#include "nsIPresShell.h"
 
-#include <nsString.h>
+#include "nsString.h"
 
 
 // ****************************************************************************

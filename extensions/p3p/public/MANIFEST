@@ -22,3 +22,6 @@
 #
 # This is a list of local files which get exported
 #
+
+nsIP3PService.idl
+nsIP3PUI.idl

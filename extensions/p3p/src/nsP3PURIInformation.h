@@ -26,7 +26,7 @@
 
 #include "nsIP3PURIInformation.h"
 
-#include <nsHashtable.h>
+#include "nsHashtable.h"
 
 
 class nsP3PURIInformation : public nsIP3PURIInformation {

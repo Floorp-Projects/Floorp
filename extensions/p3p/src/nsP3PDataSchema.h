@@ -28,8 +28,8 @@
 #include "nsIP3PXMLListener.h"
 #include "nsIP3PDataStruct.h"
 
-#include <nsHashtable.h>
-#include <nsVoidArray.h>
+#include "nsHashtable.h"
+#include "nsVoidArray.h"
 
 
 class nsP3PDataSchema : public nsIP3PDataSchema,

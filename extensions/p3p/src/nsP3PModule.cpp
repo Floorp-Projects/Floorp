@@ -25,7 +25,7 @@
 #include "nsP3PUIService.h"
 #include "nsP3PUI.h"
 
-#include <nsIGenericFactory.h>
+#include "nsIGenericFactory.h"
 
 
 // Define a table of CIDs implemented by this module:

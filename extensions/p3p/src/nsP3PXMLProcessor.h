@@ -28,27 +28,27 @@
 #include "nsIP3PTag.h"
 #include "nsIP3PXMLListener.h"
 
-#include <nsCOMPtr.h>
-#include <nsISupports.h>
-#include <nsIDOMEventListener.h>
-#include <nsIHttpNotify.h>
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
+#include "nsIDOMEventListener.h"
+#include "nsIHttpNotify.h"
 
-#include <nsAutoLock.h>
+#include "nsAutoLock.h"
 
-#include <nsIXMLHttpRequest.h>
+#include "nsIXMLHttpRequest.h"
 
-#include <nsIDOMDocument.h>
-#include <nsIDOMNode.h>
+#include "nsIDOMDocument.h"
+#include "nsIDOMNode.h"
 
-#include <nsINetModuleMgr.h>
-#include <nsIURI.h>
-#include <nsIHTTPChannel.h>
+#include "nsINetModuleMgr.h"
+#include "nsIURI.h"
+#include "nsIHTTPChannel.h"
 
-#include <nsISupportsArray.h>
+#include "nsISupportsArray.h"
 
-#include <nsString.h>
+#include "nsString.h"
 
-#include <prtime.h>
+#include "prtime.h"
 
 
 class nsP3PXMLProcessor : public nsISupports {

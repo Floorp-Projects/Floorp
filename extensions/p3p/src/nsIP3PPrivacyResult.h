@@ -26,14 +26,14 @@
 
 #include "nsIP3PPolicy.h"
 
-#include <nsCOMPtr.h>
-#include <nsISupports.h>
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
 
-#include <nsIRDFDataSource.h>
+#include "nsIRDFDataSource.h"
 
-#include <nsISupportsArray.h>
+#include "nsISupportsArray.h"
 
-#include <nsString.h>
+#include "nsString.h"
 
 
 #define NS_IP3PPRIVACYRESULT_IID_STR "31430e5d-d43d-11d3-9781-002035aee991"

@@ -24,7 +24,7 @@
 #ifndef nsP3PLogging_h__
 #define nsP3PLogging_h__
 
-#include <prlog.h>
+#include "prlog.h"
 
 #ifndef P3P_LOG_DEFINITION
 extern PRLogModuleInfo  *gP3PLogModule;

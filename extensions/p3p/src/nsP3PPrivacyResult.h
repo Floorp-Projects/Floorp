@@ -27,10 +27,10 @@
 #include "nsIP3PPrivacyResult.h"
 #include "nsIP3PCService.h"
 
-#include <nsIRDFService.h>
-#include <nsIRDFCompositeDataSource.h>
-#include <nsIRDFResource.h>
-#include <nsIRDFContainerUtils.h>
+#include "nsIRDFService.h"
+#include "nsIRDFCompositeDataSource.h"
+#include "nsIRDFResource.h"
+#include "nsIRDFContainerUtils.h"
 
 
 class nsP3PPrivacyResult : public nsIP3PPrivacyResult {

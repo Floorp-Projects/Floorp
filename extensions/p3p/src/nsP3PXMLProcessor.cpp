@@ -28,22 +28,22 @@
 #include "nsP3PTags.h"
 #include "nsP3PLogging.h"
 
-#include <nsIDOMElement.h>
-#include <nsIDOMEventTarget.h>
-#include <nsIDOMNSDocument.h>
+#include "nsIDOMElement.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMNSDocument.h"
 
-#include <nsIChannel.h>
-#include <nsIInputStream.h>
-#include <nsIDOMParser.h>
+#include "nsIChannel.h"
+#include "nsIInputStream.h"
+#include "nsIDOMParser.h"
 
-#include <nsIHTTPChannel.h>
+#include "nsIHTTPChannel.h"
 
-#include <nsLayoutCID.h>
+#include "nsLayoutCID.h"
 
-#include <nsNetUtil.h>
+#include "nsNetUtil.h"
 
-#include <nsIHTTPHeader.h>
-#include <nsIDocument.h>
+#include "nsIHTTPHeader.h"
+#include "nsIDocument.h"
 
 
 // ****************************************************************************

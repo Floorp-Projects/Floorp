@@ -41,23 +41,23 @@
 #include "nsP3PPrivacyResult.h"
 #include "nsP3PLogging.h"
 
-#include <nsIGenericFactory.h>
+#include "nsIGenericFactory.h"
 
-#include <nsIHTTPProtocolHandler.h>
+#include "nsIHTTPProtocolHandler.h"
 
-#include <nsLayoutCID.h>
-#include <nsINameSpaceManager.h>
+#include "nsLayoutCID.h"
+#include "nsINameSpaceManager.h"
 
-#include <nsNetUtil.h>
+#include "nsNetUtil.h"
 
-#include <nsIDOMNode.h>
+#include "nsIDOMNode.h"
 
-#include <nsIWebNavigation.h>
+#include "nsIWebNavigation.h"
 
-#include <nsString.h>
-#include <nsXPIDLString.h>
+#include "nsString.h"
+#include "nsXPIDLString.h"
 
-#include <prprf.h>
+#include "prprf.h"
 
 
 // ****************************************************************************

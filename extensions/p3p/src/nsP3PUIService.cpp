@@ -26,13 +26,13 @@
 #include "nsIP3PCUI.h"
 #include "nsP3PLogging.h"
 
-#include <nsIGenericFactory.h>
-#include <nsIP3PUI.h>
-#include <nsIScriptGlobalObject.h>
-#include <nsIScriptGlobalObjectOwner.h>
-#include <nsLayoutCID.h>
-#include <nsIPromptService.h>
-#include <nsIDOMWindow.h>
+#include "nsIGenericFactory.h"
+#include "nsIP3PUI.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptGlobalObjectOwner.h"
+#include "nsLayoutCID.h"
+#include "nsIPromptService.h"
+#include "nsIDOMWindow.h"
 
 // ****************************************************************************
 // nsP3PUIService Implementation routines

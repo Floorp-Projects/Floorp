@@ -33,26 +33,26 @@
 #include "nsIP3PTag.h"
 #include "nsIP3PPreferences.h"
 
-#include <nsCOMPtr.h>
-#include <nsISupports.h>
-#include <nsIComponentManager.h>
-#include <nsIGenericFactory.h>
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
+#include "nsIComponentManager.h"
+#include "nsIGenericFactory.h"
 
-#include <nsICategoryManager.h>
+#include "nsICategoryManager.h"
 
-#include <nsICookieService.h>
+#include "nsICookieService.h"
 
-#include <nsIObserver.h>
+#include "nsIObserver.h"
 
-#include <nsIHTTPChannel.h>
-#include <nsIHttpNotify.h>
+#include "nsIHTTPChannel.h"
+#include "nsIHttpNotify.h"
 
-#include <nsDeque.h>
-#include <nsHashtable.h>
+#include "nsDeque.h"
+#include "nsHashtable.h"
 
-#include <nsIStringBundle.h>
+#include "nsIStringBundle.h"
 
-#include <prlog.h>
+#include "prlog.h"
 
 class nsP3PServiceReadData;
 

@@ -26,13 +26,13 @@
 
 #include "nsIP3PCService.h"
 
-#include <nsCom.h>
+#include "nsCom.h"
 
-#include <nsIURI.h>
+#include "nsIURI.h"
 
-#include <nsIDocShellTreeItem.h>
+#include "nsIDocShellTreeItem.h"
 
-#include <nsVoidArray.h>
+#include "nsVoidArray.h"
 
 
 class nsP3PObserverUtils {

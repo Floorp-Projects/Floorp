@@ -26,10 +26,10 @@
 
 #include "nsIP3PReference.h"
 
-#include <nsAutoLock.h>
+#include "nsAutoLock.h"
 
-#include <nsHashtable.h>
-#include <nsSupportsArray.h>
+#include "nsHashtable.h"
+#include "nsSupportsArray.h"
 
 
 class nsP3PReference : public nsIP3PReference {

@@ -26,8 +26,8 @@
 #include "nsP3PObserverUtils.h"
 #include "nsP3PLogging.h"
 
-#include <nsString.h>
-#include <nsXPIDLString.h>
+#include "nsString.h"
+#include "nsXPIDLString.h"
 
 
 // P3P Observer Utils: ExamineLINKTag

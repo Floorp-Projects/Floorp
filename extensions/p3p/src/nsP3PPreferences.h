@@ -27,8 +27,8 @@
 #include "nsIP3PPreferences.h"
 #include "nsIP3PCService.h"
 
-#include <nsIPref.h>
-#include <nsHashtable.h>
+#include "nsIPref.h"
+#include "nsHashtable.h"
 
 
 class nsP3PPreferences : public nsIP3PPreferences {

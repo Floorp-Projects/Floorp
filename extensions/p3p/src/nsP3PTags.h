@@ -27,7 +27,7 @@
 #include "nsIP3PTag.h"
 #include "nsP3PXMLUtils.h"
 
-#include <nsVoidArray.h>
+#include "nsVoidArray.h"
 
 
 class nsP3PTag : public nsIP3PTag {

@@ -26,13 +26,13 @@
 
 #include "nsIP3PTag.h"
 
-#include <nsCOMPtr.h>
-#include <nsISupports.h>
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
 
-#include <nsString.h>
+#include "nsString.h"
 
-#include <nsISupportsArray.h>
-#include <nsISimpleEnumerator.h>
+#include "nsISupportsArray.h"
+#include "nsISimpleEnumerator.h"
 
 
 #define NS_IP3PDATASTRUCT_IID_STR "31430e5f-d43d-11d3-9781-002035aee991"

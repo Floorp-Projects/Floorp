@@ -26,7 +26,7 @@
 
 #include "nsIP3PDataStruct.h"
 
-#include <nsVoidArray.h>
+#include "nsVoidArray.h"
 
 
 class nsP3PDataStruct : public nsIP3PDataStruct {

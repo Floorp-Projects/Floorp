@@ -27,14 +27,14 @@
 #include "nsP3PSimpleEnumerator.h"
 #include "nsP3PLogging.h"
 
-#include <nsIServiceManager.h>
-#include <nsIComponentManager.h>
+#include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
 
-#include <rdf.h>
-#include <nsRDFCID.h>
+#include "rdf.h"
+#include "nsRDFCID.h"
 
-#include <nsXPIDLString.h>
-#include <prprf.h>
+#include "nsXPIDLString.h"
+#include "prprf.h"
 
 
 // ****************************************************************************

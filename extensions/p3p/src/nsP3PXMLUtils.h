@@ -24,12 +24,12 @@
 #ifndef nsP3PXMLUtils_h__
 #define nsP3PXMLUtils_h__
 
-#include <nsCom.h>
+#include "nsCom.h"
 
-#include <nsIDOMNode.h>
+#include "nsIDOMNode.h"
 
-#include <nsVoidArray.h>
-#include <nsString.h>
+#include "nsVoidArray.h"
+#include "nsString.h"
 
 
 class nsP3PXMLUtils {

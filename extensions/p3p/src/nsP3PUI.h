@@ -27,19 +27,19 @@
 #include "nsIP3PUI.h"
 #include "nsIP3PUIService.h"
 #include "nsIP3PCService.h"
-#include <nsIPref.h>
-#include <nsCOMPtr.h>
-#include <nsIDOMElement.h>
-#include <nsIObserver.h>
-#include <nsIDOMWindow.h>
-#include <nsXPIDLString.h>
-#include <nsString.h>
-#include <nsIDocShell.h>
-#include <nsIURI.h>
-#include <nsIDocShellTreeItem.h>
-#include <nsIWebProgressListener.h>
-#include <nsIFormSubmitObserver.h>
-#include <nsWeakReference.h>
+#include "nsIPref.h"
+#include "nsCOMPtr.h"
+#include "nsIDOMElement.h"
+#include "nsIObserver.h"
+#include "nsIDOMWindow.h"
+#include "nsXPIDLString.h"
+#include "nsString.h"
+#include "nsIDocShell.h"
+#include "nsIURI.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIWebProgressListener.h"
+#include "nsIFormSubmitObserver.h"
+#include "nsWeakReference.h"
 
 #define P3P_STATUS_NO_P3P               0
 #define P3P_STATUS_NO_POLICY            1

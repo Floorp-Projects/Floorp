@@ -26,22 +26,22 @@
 #include "nsP3PObserverLayout.h"
 #include "nsP3PLogging.h"
 
-#include <nsCOMPtr.h>
-#include <nsIServiceManager.h>
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
 
-#include <nsIPresShell.h>
+#include "nsIPresShell.h"
 
-#include <nsIDocShellTreeItem.h>
-#include <nsIWebNavigation.h>
+#include "nsIDocShellTreeItem.h"
+#include "nsIWebNavigation.h"
 
-#include <nsCURILoader.h>
-#include <nsIURILoader.h>
-#include <nsILoadGroup.h>
-#include <nsIHTTPChannel.h>
-#include <nsISimpleEnumerator.h>
+#include "nsCURILoader.h"
+#include "nsIURILoader.h"
+#include "nsILoadGroup.h"
+#include "nsIHTTPChannel.h"
+#include "nsISimpleEnumerator.h"
 
-#include <nsString.h>
-#include <nsXPIDLString.h>
+#include "nsString.h"
+#include "nsXPIDLString.h"
 
 
 // ****************************************************************************

@@ -26,17 +26,17 @@
 #include "nsP3PHTTPNotify.h"
 #include "nsP3PLogging.h"
 
-#include <nsIServiceManager.h>
+#include "nsIServiceManager.h"
 
-#include <nsIHTTPHeader.h>
-#include <nsIURI.h>
-#include <nsILoadGroup.h>
+#include "nsIHTTPHeader.h"
+#include "nsIURI.h"
+#include "nsILoadGroup.h"
 
-#include <nsIInterfaceRequestor.h>
-#include <nsIDocumentLoader.h>
+#include "nsIInterfaceRequestor.h"
+#include "nsIDocumentLoader.h"
 
-#include <nsString.h>
-#include <nsXPIDLString.h>
+#include "nsString.h"
+#include "nsXPIDLString.h"
 
 
 // ****************************************************************************

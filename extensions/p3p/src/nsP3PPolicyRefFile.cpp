@@ -29,9 +29,9 @@
 #include "nsP3PSimpleEnumerator.h"
 #include "nsP3PLogging.h"
 
-#include <nsNetUtil.h>
+#include "nsNetUtil.h"
 
-#include <nsXPIDLString.h>
+#include "nsXPIDLString.h"
 
 
 // ****************************************************************************

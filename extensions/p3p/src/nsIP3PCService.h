@@ -28,18 +28,18 @@
 #include "nsIP3PTag.h"
 #include "nsIP3PDataStruct.h"
 
-#include <nsCOMPtr.h>
-#include <nsIP3PService.h>
+#include "nsCOMPtr.h"
+#include "nsIP3PService.h"
 
-#include <nsIURI.h>
-#include <nsIDocShellTreeItem.h>
-#include <nsIDOMWindowInternal.h>
-#include <nsIContent.h>
+#include "nsIURI.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIContent.h"
 
-#include <nsIRDFDataSource.h>
+#include "nsIRDFDataSource.h"
 
-#include <nsString.h>
-#include <nsVoidArray.h>
+#include "nsString.h"
+#include "nsVoidArray.h"
 
 
 #define NS_IP3PCSERVICE_IID_STR "31430e56-d43d-11d3-9781-002035aee991"

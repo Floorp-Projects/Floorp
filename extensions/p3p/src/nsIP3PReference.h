@@ -27,11 +27,11 @@
 #include "nsIP3PPolicyRefFile.h"
 #include "nsIP3PPolicy.h"
 
-#include <nsCOMPtr.h>
-#include <nsISupports.h>
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
 
-#include <nsVoidArray.h>
-#include <nsString.h>
+#include "nsVoidArray.h"
+#include "nsString.h"
 
 
 #define NS_IP3PREFERENCE_IID_STR "31430e5a-d43d-11d3-9781-002035aee991"

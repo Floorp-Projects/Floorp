@@ -29,19 +29,19 @@
 #include "nsP3PSimpleEnumerator.h"
 #include "nsP3PLogging.h"
 
-#include <nsIDirectoryService.h>
-#include <nsIProperties.h>
-#include <nsIFile.h>
+#include "nsIDirectoryService.h"
+#include "nsIProperties.h"
+#include "nsIFile.h"
 
-#include <nsNetUtil.h>
+#include "nsNetUtil.h"
 
-#include <nsXPIDLString.h>
+#include "nsXPIDLString.h"
 
-#include <nsIFileLocator.h>
-#include <nsFileLocations.h>
-#include <nsIFileSpec.h>
+#include "nsIFileLocator.h"
+#include "nsFileLocations.h"
+#include "nsIFileSpec.h"
 
-#include <nsAutoLock.h>
+#include "nsAutoLock.h"
 
 
 // ****************************************************************************

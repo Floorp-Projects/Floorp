@@ -25,7 +25,7 @@
 #define nsIP3PUI_h__
 
 #include "nsISupports.h"
-#include <nsIP3PUI.h>
+#include "nsIP3PUI.h"
 
 #define NS_IP3PCUI_IID_STR "31430e62-d43d-11d3-9781-002035aee991"
 #define NS_IP3PCUI_IID     {0x31430e62, 0xd43d, 0x11d3, { 0x97, 0x81, 0x00, 0x20, 0x35, 0xae, 0xe9, 0x91 }}

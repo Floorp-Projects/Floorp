@@ -26,9 +26,9 @@
 #include "nsP3PReference.h"
 #include "nsP3PLogging.h"
 
-#include <nsIComponentManager.h>
+#include "nsIComponentManager.h"
 
-#include <nsXPIDLString.h>
+#include "nsXPIDLString.h"
 
 
 // ****************************************************************************

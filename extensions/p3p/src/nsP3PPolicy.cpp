@@ -29,15 +29,15 @@
 #include "nsP3PSimpleEnumerator.h"
 #include "nsP3PLogging.h"
 
-#include <nsIServiceManager.h>
+#include "nsIServiceManager.h"
 
-#include <rdf.h>
-#include <nsRDFCID.h>
+#include "rdf.h"
+#include "nsRDFCID.h"
 
-#include <nsNetUtil.h>
+#include "nsNetUtil.h"
 
-#include <nsXPIDLString.h>
-#include <prprf.h>
+#include "nsXPIDLString.h"
+#include "prprf.h"
 
 
 // ****************************************************************************
@@ -92,7 +92,7 @@ NS_NewP3PPolicy( nsString&      aPolicyURISpec,
 // P3P Policy: Constructor
 nsP3PPolicy::nsP3PPolicy( )
   : mDataSchemas( 32, PR_TRUE ),
-    mPrefsTime( nsnull ),
+    mPrefsTime( LL_ZERO ),
     mPrefsResult( P3P_PRIVACY_MET ),
     mFailedDataTagRefs( 64, PR_TRUE ) {
 

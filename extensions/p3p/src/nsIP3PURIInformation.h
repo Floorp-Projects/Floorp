@@ -24,13 +24,13 @@
 #ifndef nsIP3PURIInformation_h__
 #define nsIP3PURIInformation_h__
 
-#include <nsCOMPtr.h>
-#include <nsISupports.h>
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
 
-#include <nsIURI.h>
+#include "nsIURI.h"
 
-#include <nsString.h>
-#include <nsVoidArray.h>
+#include "nsString.h"
+#include "nsVoidArray.h"
 
 
 #define NS_IP3PURIINFORMATION_IID_STR "31430e58-d43d-11d3-9781-002035aee991"

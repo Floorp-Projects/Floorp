@@ -24,10 +24,10 @@
 #ifndef nsP3PSimpleEnumerator_h__
 #define nsP3PSimpleEnumerator_h__
 
-#include <nsCOMPtr.h>
-#include <nsISimpleEnumerator.h>
+#include "nsCOMPtr.h"
+#include "nsISimpleEnumerator.h"
 
-#include <nsISupportsArray.h>
+#include "nsISupportsArray.h"
 
 
 class nsP3PSimpleEnumerator : public nsISimpleEnumerator {

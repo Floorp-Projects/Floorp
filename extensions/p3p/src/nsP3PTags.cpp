@@ -27,7 +27,7 @@
 #include "nsP3PSimpleEnumerator.h"
 #include "nsP3PLogging.h"
 
-#include <nsIComponentManager.h>
+#include "nsIComponentManager.h"
 
 
 // ****************************************************************************

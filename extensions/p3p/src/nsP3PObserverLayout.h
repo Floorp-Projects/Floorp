@@ -26,15 +26,15 @@
 
 #include "nsIP3PCService.h"
 
-#include <nsCOMPtr.h>
-#include <nsISupports.h>
-#include <nsIObserver.h>
-#include <nsWeakReference.h>
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
 
-#include <nsIObserverService.h>
+#include "nsIObserverService.h"
 
-#include <nsIDocShell.h>
-#include <nsIURI.h>
+#include "nsIDocShell.h"
+#include "nsIURI.h"
 
 
 class nsP3PObserverLayout : public nsIObserver,

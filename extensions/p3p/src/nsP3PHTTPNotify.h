@@ -26,17 +26,17 @@
 
 #include "nsIP3PCService.h"
 
-#include <nsCOMPtr.h>
-#include <nsISupports.h>
-#include <nsIHttpNotify.h>
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
+#include "nsIHttpNotify.h"
 
-#include <nsINetModuleMgr.h>
+#include "nsINetModuleMgr.h"
 
-#include <nsIHTTPChannel.h>
+#include "nsIHTTPChannel.h"
 
-#include <nsIDocShellTreeItem.h>
+#include "nsIDocShellTreeItem.h"
 
-#include <nsIAtom.h>
+#include "nsIAtom.h"
 
 
 class nsP3PHTTPNotify : public nsIHTTPNotify {

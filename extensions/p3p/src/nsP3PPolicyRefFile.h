@@ -26,8 +26,8 @@
 
 #include "nsIP3PPolicyRefFile.h"
 
-#include <nsHashtable.h>
-#include <nsVoidArray.h>
+#include "nsHashtable.h"
+#include "nsVoidArray.h"
 
 
 class nsP3PPolicyRefFile : public nsIP3PPolicyRefFile,

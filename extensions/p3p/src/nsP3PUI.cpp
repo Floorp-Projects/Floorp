@@ -21,34 +21,34 @@
  *
  */
 
-#include <nspr.h>
+#include "nspr.h"
 
 #include "nsP3PDefines.h"
 #include "nsP3PUI.h"
 #include "nsP3PLogging.h"
-#include <nsIServiceManager.h>
-#include <nsIInterfaceRequestor.h>
+#include "nsIServiceManager.h"
+#include "nsIInterfaceRequestor.h"
 
-#include <nsIObserverService.h>
-#include <nsIDocumentLoader.h>
-#include <nsCURILoader.h>
-#include <nsIDocShell.h>
-#include <nsIDocShellTreeItem.h>
-#include <nsIWebNavigation.h>
-#include <nsIDocumentViewer.h>
-#include <nsCURILoader.h>
-#include <nsIDocument.h>
-#include <nsIDOMHTMLDocument.h>
-#include <nsIDOMXULDocument.h>
-#include <nsIContent.h>
-#include <nsIWebProgress.h>
-#include <nsIChannel.h>
-#include <nsIURI.h>
-#include <nsIScriptGlobalObject.h>
-#include <nsIScriptGlobalObjectOwner.h>
-#include <nsIPrompt.h>
+#include "nsIObserverService.h"
+#include "nsIDocumentLoader.h"
+#include "nsCURILoader.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIWebNavigation.h"
+#include "nsIDocumentViewer.h"
+#include "nsCURILoader.h"
+#include "nsIDocument.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMXULDocument.h"
+#include "nsIContent.h"
+#include "nsIWebProgress.h"
+#include "nsIChannel.h"
+#include "nsIURI.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptGlobalObjectOwner.h"
+#include "nsIPrompt.h"
 
-#include <prmem.h>
+#include "prmem.h"
 
 
 NS_IMPL_ISUPPORTS4( nsP3PUI, nsIP3PUI,
@@ -497,7 +497,7 @@ nsP3PUI::OnStateChange(nsIWebProgress *aWebProgress,
               // Check if this is a redirection
               nsLoadFlags loadFlags = 0;
 
-              rv = pChannel->GetLoadAttributes(&loadFlags);
+              rv = aRequest->GetLoadFlags(&loadFlags);
               if (NS_SUCCEEDED( rv )) {
               
                 if (loadFlags & nsIChannel::LOAD_REPLACE) {

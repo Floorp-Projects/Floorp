@@ -26,8 +26,8 @@
 
 #include "nsISupports.h"
 #include "nsIP3PCUI.h"
-#include <nsIDocShellTreeItem.h>
-#include <nsIDOMWindowInternal.h>
+#include "nsIDocShellTreeItem.h"
+#include "nsIDOMWindowInternal.h"
 
 
 #define NS_IP3PUISERVICE_IID_STR "31430e52-d43d-11d3-9781-002035aee991"

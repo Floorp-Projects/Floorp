@@ -27,17 +27,17 @@
 #include "nsP3PObserverUtils.h"
 #include "nsP3PLogging.h"
 
-#include <nsIServiceManager.h>
+#include "nsIServiceManager.h"
 
-#include <nsIParser.h>
+#include "nsIParser.h"
 
-#include <nsIDocShell.h>
-#include <nsIDocShellTreeItem.h>
-#include <nsIWebNavigation.h>
-#include <nsIDocument.h>
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIWebNavigation.h"
+#include "nsIDocument.h"
 
-#include <nsString.h>
-#include <nsXPIDLString.h>
+#include "nsString.h"
+#include "nsXPIDLString.h"
 
 
 // ****************************************************************************

@@ -25,8 +25,8 @@
 #include "nsP3PPreferences.h"
 #include "nsP3PLogging.h"
 
-#include <nsNetUtil.h>
-#include <nsString.h>
+#include "nsNetUtil.h"
+#include "nsString.h"
 
 
 // ****************************************************************************
@@ -253,7 +253,7 @@ nsP3PPreferences::GetTimePrefsLastChanged( PRTime *aResult ) {
 NS_IMETHODIMP_( PRBool )
 nsP3PPreferences::PrefsChanged( PRTime time ) {
 
-  return (time < mTimePrefsLastChanged);
+  return (LL_CMP(time, <, mTimePrefsLastChanged));
 }
 
 // P3P Preferences:  boolean preference retreival routine

@@ -24,10 +24,10 @@
 #ifndef nsIP3PXMLListener_h__
 #define nsIP3PXMLListener_h__
 
-#include <nsCOMPtr.h>
-#include <nsISupports.h>
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
 
-#include <nsString.h>
+#include "nsString.h"
 
 
 #define NS_IP3PXMLLISTENER_IID_STR "31430e61-d43d-11d3-9781-002035aee991"

@@ -24,10 +24,10 @@
 #ifndef nsIP3PPreferences_h__
 #define nsIP3PPreferences_h__
 
-#include <nsCOMPtr.h>
-#include <nsISupports.h>
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
 
-#include <nsString.h>
+#include "nsString.h"
 
 #define NS_IP3PPREFERENCES_IID_STR "31430e57-d43d-11d3-9781-002035aee991"
 #define NS_IP3PPREFERENCES_IID     {0x31430e57, 0xd43d, 0x11d3, { 0x97, 0x81, 0x00, 0x20, 0x35, 0xae, 0xe9, 0x91 }}

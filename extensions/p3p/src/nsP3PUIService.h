@@ -24,14 +24,14 @@
 #ifndef nsP3PUIService_h__
 #define nsP3PUIService_h__
 
-#include <nsCOMPtr.h>
-#include <nsISupports.h>
-#include <nsIDOMWindowInternal.h>
-#include <nsIDocShellTreeItem.h>
-#include <nsIP3PUI.h>
-#include <nsIPref.h>
-#include <nsDeque.h>
-#include <nsHashtable.h>
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIP3PUI.h"
+#include "nsIPref.h"
+#include "nsDeque.h"
+#include "nsHashtable.h"
 #include "nsIP3PCService.h"
 #include "nsIP3PUIService.h"
 

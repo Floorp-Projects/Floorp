@@ -26,17 +26,17 @@
 
 #include "nsIP3PCService.h"
 
-#include <nsCOMPtr.h>
-#include <nsISupports.h>
-#include <nsIObserver.h>
-#include <nsIContent.h>  // nsIFormSubmitObserver.h does not include nsIContent...
-#include <nsIFormSubmitObserver.h>
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
+#include "nsIObserver.h"
+#include "nsIContent.h"  // nsIFormSubmitObserver.h does not include nsIContent...
+#include "nsIFormSubmitObserver.h"
 
-#include <nsIObserverService.h>
+#include "nsIObserverService.h"
 
-#include <nsIContent.h>
-#include <nsIDOMWindowInternal.h>
-#include <nsIURI.h>
+#include "nsIContent.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIURI.h"
 
 
 class nsP3PObserverFormSubmit : public nsIObserver,

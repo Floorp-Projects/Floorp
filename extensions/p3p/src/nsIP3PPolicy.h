@@ -26,7 +26,7 @@
 
 #include "nsP3PXMLProcessor.h"
 
-#include <nsIRDFDataSource.h>
+#include "nsIRDFDataSource.h"
 
 
 #define NS_IP3PPOLICY_IID_STR "31430e5b-d43d-11d3-9781-002035aee991"

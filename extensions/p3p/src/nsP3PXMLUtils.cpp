@@ -25,16 +25,16 @@
 
 #include "nsP3PXMLUtils.h"
 
-#include <nsIComponentManager.h>
+#include "nsIComponentManager.h"
 
-#include <nsIDOMNodeList.h>
-#include <nsIDOMNamedNodeMap.h>
-#include <nsIDOMAttr.h>
-#include <nsIDOMText.h>
+#include "nsIDOMNodeList.h"
+#include "nsIDOMNamedNodeMap.h"
+#include "nsIDOMAttr.h"
+#include "nsIDOMText.h"
 
-#include <nsITextContent.h>
+#include "nsITextContent.h"
 
-#include <nsXPIDLString.h>
+#include "nsXPIDLString.h"
 
 
 // ****************************************************************************
