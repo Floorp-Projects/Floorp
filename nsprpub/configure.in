@@ -903,8 +903,6 @@ case "$target" in
     if test -z "$GNU_CC"; then
         CC="$CC -Ae"
         CXX="$CXX -ext"
-        CFLAGS="$CFLAGS +ESlit"
-        CXXFLAGS="$CXXFLAGS +ESlit"
         DSO_CFLAGS=+Z
     else
         DSO_CFLAGS=-fPIC
@@ -1860,6 +1858,38 @@ dnl ========================================================
 AC_ARG_ENABLE(strip,
 [  --enable-strip          Enable stripping of shared libs and programs],
   [ ENABLE_STRIP=1 ])
+
+dnl Check for hpux options
+case "${target_os}" in
+hpux*)
+if test -z "$GNU_CC"; then
+
+    AC_CACHE_CHECK(for +Olit support,
+        ac_cv_hpux_usable_olit_option,
+        dnl since aCC doesn't throw an error on invalid options,
+        dnl we have to test this the hard way
+        [ac_cv_hpux_usable_olit_option=no
+        rm -f conftest*
+        echo 'int main() { return 0; }' | cat > conftest.c
+        ${CC-cc} ${CFLAGS} +Olit=all -o conftest conftest.c > conftest.out 2>&1
+        if test $? -eq 0; then
+            if test -z "`egrep -i '(unrecognize|unknown)' conftest.out`"; then
+                ac_cv_hpux_usable_olit_option=yes
+            fi
+        fi
+        rm -f conftest*
+        ])
+
+    if test "$ac_cv_hpux_usable_olit_option" = "yes"; then
+        CFLAGS="$CFLAGS +Olit=all"
+        CXXFLAGS="$CXXFLAGS +Olit=all"
+    else
+        CFLAGS="$CFLAGS +ESlit"
+        CXXFLAGS="$CXXFLAGS +ESlit"
+    fi
+fi
+;;
+esac
 
 dnl
 dnl Apparently, some systems cannot properly check for the pthread
