@@ -83,8 +83,9 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
     aColor = 0; // default color black
 
     switch (aID) {
-        // These colors don't seem to be used for anything anymore
-        // in Mozilla.  The CSS2 colors below are used.
+        // These colors don't seem to be used for anything anymore in Mozilla
+        // (except here at least TextSelectBackground and TextSelectForeground)
+        // The CSS2 colors below are used.
     case eColor_WindowBackground:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
         break;
@@ -110,16 +111,20 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         aColor = NS_RGB(0x40,0x40,0x40);
         break;
     case eColor_TextBackground:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
+        // not used?
+        aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_NORMAL]);
         break;
     case eColor_TextForeground: 
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
+        // not used?
+        aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_NORMAL]);
         break;
     case eColor_TextSelectBackground:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_SELECTED]);
+        // still used
+        aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_SELECTED]);
         break;
     case eColor_TextSelectForeground:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_SELECTED]);
+        // still used
+        aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_SELECTED]);
         break;
 
         // css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
@@ -240,7 +245,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_NORMAL]);
         break;
     case eColor__moz_fieldtext:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
+        aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_NORMAL]);
         break;
     case eColor__moz_dialog:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
