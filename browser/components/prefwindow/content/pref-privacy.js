@@ -204,12 +204,16 @@ var PrivacyPanel = {
       var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
       var state = rdfs.GetResource("http://home.netscape.com/NC-rdf#DownloadState");
       var ds = dlMgr.datasource;
+      var dls = [];
       
-      dlMgr.startBatchUpdate();  
       while (downloads.hasMoreElements()) {
         var download = downloads.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        dls.push(download);
+      }
+      dlMgr.startBatchUpdate();
+      for (var i = 0; i < dls.length; ++i) {
         try {
-          dlMgr.removeDownload(download.Value);
+          dlMgr.removeDownload(dls[i].Value);
         }
         catch (e) {
         }
