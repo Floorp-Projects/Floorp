@@ -214,16 +214,20 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
     // We don't really want to create a new menu, we want to fill in the
     // appropriate preinserted Golden Child Menu
     mMacMenuID = gCurrentMenuDepth;
+#if DEBUG_saari
     if(mMacMenuID == 16)
       SysBeep(30);
-      
+#endif
+
     //mMacMenuHandle = NSStringNewChildMenu(mMacMenuID, mLabel);
     mMacMenuHandle = ::GetMenuHandle(mMacMenuID);
   } else {
     mMacMenuHandle = NSStringNewMenu(mMacMenuIDCount, mLabel);
     mMacMenuID = mMacMenuIDCount;
+#if DEBUG_saari
     if(mMacMenuID == 16)
       SysBeep(30);
+#endif
       
     mMacMenuIDCount++;
     // Replace standard MDEF with our stub MDEF
@@ -939,8 +943,10 @@ void nsMenu::LoadMenuItem(
     // the appropriate nsMenuDelegate object
     nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(menuitemNode));
     if (!domElement) {
-        SysBeep(30);
-		return;
+#if DEBUG_saari
+      SysBeep(30);
+#endif
+		  return;
     }
     
     nsAutoString cmdAtom("oncommand");
