@@ -60,6 +60,8 @@ nsTableCellFrame::nsTableCellFrame(nsIContent* aContent,
   mColSpan=1;
   mColIndex=0;
   mPriorAvailWidth=0;
+  mPriorDesiredSize.width=0;
+  mPriorDesiredSize.height=0;
 }
 
 nsTableCellFrame::~nsTableCellFrame()
@@ -289,6 +291,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   mFirstChild->WillReflow(*aPresContext);
   mFirstChild->MoveTo(leftInset, topInset);
   aStatus = ReflowChild(mFirstChild, aPresContext, kidSize, kidReflowState);
+  SetPriorDesiredSize(kidSize);
 
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
   {

@@ -17,8 +17,7 @@
  */
 #include "nsCRT.h"
 #include "nsCellMap.h"
-#include "nsTablePart.h"
-#include <stdio.h>/* XXX */ // for printf
+#include "nsTableFrame.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug1 = PR_FALSE;

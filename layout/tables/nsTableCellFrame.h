@@ -84,6 +84,10 @@ public:
   
   virtual void SetPriorAvailWidth(nscoord aPriorAvailWidth);
 
+  virtual nsSize GetPriorDesiredSize();
+
+  virtual void SetPriorDesiredSize(const nsReflowMetrics & aDesiredSize);
+
   virtual ~nsTableCellFrame();
 
   // Get the TableFrame that contains this cell frame
@@ -128,6 +132,8 @@ protected:
   /** the available width we were given in our previous reflow */
   nscoord      mPriorAvailWidth;
 
+  nsSize       mPriorDesiredSize;
+
   nsCellLayoutData *mCellLayoutData;
 
 };
@@ -168,5 +174,14 @@ inline nscoord nsTableCellFrame::GetPriorAvailWidth()
 
 inline void nsTableCellFrame::SetPriorAvailWidth(nscoord aPriorAvailWidth)
 { mPriorAvailWidth = aPriorAvailWidth;}
+
+inline nsSize nsTableCellFrame::GetPriorDesiredSize()
+{ return mPriorDesiredSize; }
+
+inline void nsTableCellFrame::SetPriorDesiredSize(const nsReflowMetrics & aDesiredSize)
+{ 
+  mPriorDesiredSize.width = aDesiredSize.width;
+  mPriorDesiredSize.height = aDesiredSize.height;
+}
 
 #endif
