@@ -127,7 +127,7 @@ static const char gIDFormat[] =
 
 // Nonexistent factory entry
 // This is used to mark non-existent contractid mappings
-static const nsFactoryEntry * const kNonExistentContractID = (nsFactoryEntry*) 1;
+static nsFactoryEntry * const kNonExistentContractID = (nsFactoryEntry*) 1;
 
 
 #define NS_EMPTY_IID                                 \
