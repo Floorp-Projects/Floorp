@@ -22,23 +22,6 @@
         -->
         <broadcaster id="data.input" value=""/>
         <broadcaster id="data.output" value=""/>
-        <!--
-            The broadcaster with id="data.execute" is, by convention,
-            special in that it is a "reverse" broadcaster, used to
-            send notifications from the UI to the underlying C++ code.
-
-            There will generally be a set of "commands" that the C++
-            code supports.  The UI indicates the requested command by
-            setting the command attribute of this broadcaster.  The
-            setting of that attribute also triggers the command.
-
-            "Parameters" are passed via other attributes on this element,
-            or, via attributes on other broadcaster elements (as in this
-            example).  If you use other attributes, then take care to set
-            those attributes before the command attribute (as that will
-            trigger the command execution).
-        -->
-        <broadcaster id="data.execute" command=""/>
     </data>
 
     <html:script>
@@ -63,7 +46,6 @@
             data = new Object;
             data.input   = document.getElementById( "data.input" );
             data.output  = document.getElementById( "data.output" );
-            data.execute = document.getElementById( "data.execute" );
         }
 
         /*
@@ -89,6 +71,10 @@
             the dialog, then loads the initial dialog contents.
         */
         function onLoad() {
+
+
+			window.arguments[0].Observe( window, "sample", "onLoad called" );
+
             // Init data.
             initData();
 

@@ -18,6 +18,8 @@
 
 #include "nsIAppShellComponent.idl"
 
+interface nsIObserver;
+
 /*------------------------ nsISampleAppShellComponent --------------------------
 | This file describes the interface for a sample "application shell            |
 | component."                                                                  |
@@ -39,12 +41,12 @@ interface nsISampleAppShellComponent : nsIAppShellComponent {
     |   o Modal dialog from C++                                                |
     |   o Modal dialog from JavaScript                                         |
     --------------------------------------------------------------------------*/
-    void DoDialogTests();
+    void DoDialogTests( in nsISupports parent, in nsIObserver observer );
 };
 
 %{C++
 #define NS_ISAMPLEAPPSHELLCOMPONENT_PROGID NS_IAPPSHELLCOMPONENT_PROGID "/sample"
 #define NS_ISAMPLEAPPSHELLCOMPONENT_CLASSNAME "Mozilla Sample App Shell Component"
 #define NS_DECL_ISAMPLEAPPSHELLCOMPONENT \
-    NS_IMETHOD DoDialogTests();
+    NS_IMETHOD DoDialogTests( nsISupports *, nsIObserver * );
 %}

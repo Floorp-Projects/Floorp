@@ -19,6 +19,11 @@
 
 #include "nsIAppShellComponentImpl.h"
 
+#include "nsIDOMWindow.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIXPConnect.h"
+#include "nsIObserver.h"
+
 #if 0
 #include "nsCOMPtr.h"
 #include "pratom.h"
@@ -79,9 +84,75 @@ private:
 
 
 NS_IMETHODIMP
-nsSampleAppShellComponent::DoDialogTests() {
+nsSampleAppShellComponent::DoDialogTests( nsISupports *parent, nsIObserver *observer ) {
     nsresult rv = NS_OK;
     DEBUG_PRINTF( PR_STDOUT, "nsSampleAppShellComponent::DoDialogTests called\n" );
+
+    if ( parent && observer ) {
+    // Open the dialog from C++.
+    nsCOMPtr<nsIDOMWindow> parentWindow = do_QueryInterface( parent, &rv );
+
+    if ( NS_SUCCEEDED( rv ) ) {
+        // Get JS context from parent window.
+        nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface( parentWindow, &rv );
+        if ( NS_SUCCEEDED( rv ) ) {
+            nsCOMPtr<nsIScriptContext> context;
+            sgo->GetContext( getter_AddRefs( context ) );
+            if ( context ) {
+                JSContext *jsContext = (JSContext*)context->GetNativeContext();
+                if ( jsContext ) {
+                    // Convert observer to jsval so we can pass it as argument.
+                    static NS_DEFINE_CID( kXPConnectCID, NS_XPCONNECT_CID );
+                    NS_WITH_SERVICE( nsIXPConnect, xpc, kXPConnectCID, &rv );
+
+                    if ( NS_SUCCEEDED( rv ) ) {
+                        nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+                        rv = xpc->WrapNative( jsContext,
+                                              observer,
+                                              nsIObserver::GetIID(),
+                                              getter_AddRefs( wrapper ) );
+                        if ( NS_SUCCEEDED( rv ) ) {
+                          JSObject* obj;
+                          rv = wrapper->GetJSObject( &obj );
+                          if ( NS_SUCCEEDED( rv ) ) {
+                            // Get a jsval corresponding to the wrapped object.
+                            jsval arg = OBJECT_TO_JSVAL( obj );
+                            void *stackPtr;
+                            jsval *argv = JS_PushArguments( jsContext, &stackPtr, "ssso",
+                                                            "resource:/res/samples/nsSampleAppShellComponent.xul",
+                                                            "",
+                                                            "chrome",
+                                                            arg );
+                            if ( argv ) {
+                                nsIDOMWindow *newWindow;
+                                rv = parentWindow->OpenDialog( jsContext, argv, 4, &newWindow );
+                                if ( NS_SUCCEEDED( rv ) ) {
+                                } else {
+                                }
+                                JS_PopArguments( jsContext, stackPtr );
+                            } else {
+                            }
+                          }
+                        }
+                        //? NS_RELEASE(aSupports);
+                    } else {
+                    }
+                } else {
+                }
+            } else {
+            }
+        } else {
+        }
+    } else {
+        DEBUG_PRINTF( PR_STDOUT, "%s %d: QueryInterface failed, rv=0x%08X\n",
+                      __FILE__, (int)__LINE__, (int)rv );
+    }
+    } else {
+        DEBUG_PRINTF( PR_STDOUT, "%s %d: DoDialogTests was passed a null pointer!\n",
+                      __FILE__, (int)__LINE__ );
+        rv = NS_ERROR_NULL_POINTER;
+    }
+
     return rv;
 }
 
