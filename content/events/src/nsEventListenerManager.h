@@ -20,6 +20,8 @@
 #define nsEventListenerManager_h__
 
 #include "nsIEventListenerManager.h"
+#include "jsapi.h"
+
 class nsIDOMEvent;
  
 /*
@@ -52,16 +54,28 @@ public:
   * @param an event listener
   */
 
-  virtual nsresult AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
+  virtual nsresult AddEventListener(nsIDOMEventListener *aListener, REFNSIID aIID);
+  virtual nsresult AddScriptEventListener(nsIScriptContext* aContext, 
+                                          nsIScriptObjectOwner *aScriptObjectOwner, 
+                                          nsIAtom *aName, 
+                                          const nsString& aFunc, 
+                                          const nsIID& aIID);
+  virtual nsresult RegisterScriptEventListener(nsIScriptContext *aContext, 
+                                               nsIScriptObjectOwner *aScriptObjectOwner, 
+                                               const nsIID& aIID);
 
-  virtual nsresult RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
+  virtual nsresult RemoveEventListener(nsIDOMEventListener *aListener, REFNSIID aIID);
 
   virtual nsresult CaptureEvent(nsIDOMEventListener *aListener);
   virtual nsresult ReleaseEvent(nsIDOMEventListener *aListener);
 
-  virtual nsresult HandleEvent(nsIPresContext& aPresContext, nsEvent* aEvent, nsIDOMEvent** aDOMEvent, nsEventStatus& aEventStatus);
+  virtual nsresult HandleEvent(nsIPresContext& aPresContext, 
+                               nsEvent* aEvent, 
+                               nsIDOMEvent** aDOMEvent, 
+                               nsEventStatus& aEventStatus);
 
 protected:
+  nsresult SetJSEventListener(nsIScriptContext *aContext, JSObject *aObject, REFNSIID aIID);
 
   PRUint32 mRefCnt : 31;
 

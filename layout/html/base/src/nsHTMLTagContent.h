@@ -103,6 +103,10 @@ public:
 
   virtual nsIStyleRule* GetStyleRule(void);
 
+  // Override from nsHTMLContent to allow setting of event handlers once
+  // tag content is added to the doc tree.
+  virtual void SetDocument(nsIDocument* aDocument);
+
   // nsIScriptObjectOwner interface
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
 
@@ -260,13 +264,14 @@ protected:
                                           nsHTMLValue& aValue,
                                           nsString& aResult) const;
 
+  
+  virtual nsresult AddScriptEventListener(nsIAtom* aAttribute, nsHTMLValue& aValue, REFNSIID aIID);
+  
   void TriggerLink(nsIPresContext& aPresContext,
                  const nsString& aBase,
                  const nsString& aURLSpec,
                  const nsString& aTargetSpec,
                  PRBool aClick);
-
-  nsresult SetScriptEventListener(JSContext *aContext, REFNSIID aListenerTypeIID);
 
   nsIAtom* mTag;
   nsIHTMLAttributes* mAttributes;

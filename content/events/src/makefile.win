@@ -29,15 +29,17 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPPSRCS=    nsEventListenerManager.cpp  \
 	    nsEventStateManager.cpp  \
 	    nsDOMEvent.cpp		\
+	    nsDOMEventsIIDs.cpp		\
 	    $(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsEventListenerManager.obj  \
 	    .\$(OBJDIR)\nsEventStateManager.obj  \
 	    .\$(OBJDIR)\nsDOMEvent.obj	    \
+	    .\$(OBJDIR)\nsDOMEventsIIDs.obj	    \
 	    $(NULL)
 
 
-EXPORTS= nsEventListenerManager.h nsEventStateManager.h	nsDOMEvent.h
+EXPORTS= nsEventListenerManager.h nsEventStateManager.h	nsDOMEvent.h nsDOMEventsIIDs.h
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
   -I$(PUBLIC)\dom -I$(PUBLIC)\js

@@ -130,9 +130,22 @@ public:
   static nsIAtom* nowrap;
 
   static nsIAtom* ol;
+  static nsIAtom* onabort;
   static nsIAtom* onblur;
+  static nsIAtom* onclick;
+  static nsIAtom* ondblclick;
+  static nsIAtom* ondragdrop;
+  static nsIAtom* onerror;
   static nsIAtom* onfocus;
+  static nsIAtom* onkeydown;
+  static nsIAtom* onkeypress;
+  static nsIAtom* onkeyup;
   static nsIAtom* onload;
+  static nsIAtom* onmousedown;
+  static nsIAtom* onmousemove;
+  static nsIAtom* onmouseover;
+  static nsIAtom* onmouseout;
+  static nsIAtom* onmouseup;
   static nsIAtom* onunload;
   static nsIAtom* outOfDate;
   static nsIAtom* overflow;

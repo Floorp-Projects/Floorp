@@ -25,6 +25,7 @@ CPPSRCS =				\
 	nsEventListenerManager.cpp	\
 	nsEventStateManager.cpp	\
 	nsDOMEvent.cpp			\
+	nsDOMEventsIIDs.cpp			\
 	$(NULL)
 
 MODULE = raptor
@@ -33,6 +34,7 @@ EXPORTS = \
 	nsEventListenerManager.h \
 	nsEventStateManager.h \
 	nsDOMEvent.h \
+	nsDOMEventsIIDs.h \
 	$(NULL)
 
 REQUIRES = xpcom raptor dom js

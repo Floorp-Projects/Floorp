@@ -25,7 +25,7 @@
 
 class nsIPresContext;
 class nsIDOMEventListener;
-class nsIDOMEvent;
+class nsIScriptObjectOwner;
 
 /*
  * Event listener manager interface.
@@ -52,6 +52,23 @@ public:
   */
 
   virtual nsresult AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID) = 0;
+  
+  /**
+  * Creates a script event listener for the given script object with name mName and function
+  * content mFunc.
+  * @param an event listener
+  */
+
+  virtual nsresult AddScriptEventListener(nsIScriptContext*aContext, nsIScriptObjectOwner *aScriptObjectOwner, 
+                                          nsIAtom *aName, const nsString& aFunc, REFNSIID aIID) = 0; 
+  /**
+  * Registers an event listners which already exists on the given script object with the event
+  * listener manager.
+  * @param an event listener
+  */
+
+  virtual nsresult RegisterScriptEventListener(nsIScriptContext *aContext, nsIScriptObjectOwner *aScriptObjectOwner, 
+                                               REFNSIID aIID) = 0;
 
   /**
   * Removes events listeners of all types. 
