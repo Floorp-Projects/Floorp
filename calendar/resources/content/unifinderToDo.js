@@ -172,6 +172,10 @@ function getSelectedToDo()
 
 function unifinderClickToDo( event )
 {
+   // only change checkbox on left mouse-button click
+   if( event.button != 0)
+      return;
+      
    var tree = document.getElementById( ToDoUnifinderTreeName );
    var ThisToDo = getToDoFromEvent( event );
    var row = new Object();
@@ -197,12 +201,40 @@ function unifinderClickToDo( event )
 
 function unifinderDoubleClickToDo( event )
 {
-   //open the edit to do dialog box
-
+   //open the edit todo dialog box
    var ThisToDo = getToDoFromEvent( event );
    if( ThisToDo )
-   editToDo( ThisToDo );
+      editToDo( ThisToDo );
+}
 
+/**
+*  Set the context menu on mousedown to change it before it is opened
+*/
+
+function unifinderMouseDownToDo( event )
+{
+   var tree = document.getElementById( ToDoUnifinderTreeName );
+   var treechildren = tree.getElementsByTagName( "treechildren" )[0];
+
+   var ThisToDo = getToDoFromEvent( event );
+   if( ThisToDo ) 
+   {
+      if(event.button == 2)
+         treechildren.setAttribute("context", "taskitem-context-menu")
+
+      // TODO HACK notifiers should be rewritten to integrate events and todos
+      document.getElementById( "delete_command" ).removeAttribute( "disabled" );
+      document.getElementById( "delete_command_no_confirm" ).removeAttribute( "disabled" );
+   } else
+   {
+      if(event.button == 2)
+          treechildren.setAttribute("context", "context-menu");
+      tree.treeBoxObject.selection.clearSelection();
+
+      // TODO HACK notifiers should be rewritten to integrate events and todos
+      document.getElementById( "delete_command" ).setAttribute( "disabled", "true" );
+      document.getElementById( "delete_command_no_confirm" ).setAttribute( "disabled", "true" );
+   }
 }
 
 /**
@@ -213,10 +245,15 @@ function unifinderDeleteToDoCommand( DoNotConfirm )
 {
 // TODO Implement Confirm
    var tree = document.getElementById( ToDoUnifinderTreeName );
-   var treeitem = tree.treeBoxObject.view.getItemAtIndex( tree.treeBoxObject.selection.currentIndex );
-   var todoId = treeitem.getAttribute("toDoID");
-
-   gICalLib.deleteTodo( todoId );
+   if (tree.treeBoxObject.selection.count > 0)
+   {
+      var treeitem = tree.treeBoxObject.view.getItemAtIndex( tree.currentIndex );
+      if(treeitem)
+      {
+         var todoId = treeitem.getAttribute("toDoID");
+         gICalLib.deleteTodo( todoId );
+      }
+   }
 }
 
 function checkboxClick( ThisToDo, completed )
@@ -282,16 +319,21 @@ function setUnifinderToDoTreeItem( treeItem, calendarToDo )
       if( completed > 0 )
       {
          /* for setting some css */
+         var completedDate = new Date( calendarToDo.completed.getTime() );
+         var FormattedCompletedDate = formatUnifinderEventDate( completedDate );
+
+         treeCellCompleteddate.setAttribute( "label", FormattedCompletedDate );
          textProperties = textProperties + " completed";
          treeItem.setAttribute( "checked", "true" );
       }
+      else
+         treeCellCompleteddate.setAttribute( "label", "" );
+         
 
       treeCellTitle.setAttribute( "label", calendarToDo.title );
 
       var startDate     = new Date( calendarToDo.start.getTime() );
       var dueDate = new Date( calendarToDo.due.getTime() );
-      var completedDate = new Date( calendarToDo.completed.getTime() );
-
 
       var tonightMidnight = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59 );
 
@@ -311,12 +353,10 @@ function setUnifinderToDoTreeItem( treeItem, calendarToDo )
 
       var FormattedStartDate = formatUnifinderEventDate( startDate );
       var FormattedDueDate = formatUnifinderEventDate( dueDate );
-      var FormattedCompletedDate = formatUnifinderEventDate( completedDate );
 
       treeCellStartdate.setAttribute( "label", FormattedStartDate );
       treeCellDuedate.setAttribute( "label", FormattedDueDate );
-      treeCellCompleteddate.setAttribute( "label", FormattedCompletedDate );
-      treeCellPercentcomplete.setAttribute( "label", calendarToDo.percent + " %" );
+      treeCellPercentcomplete.setAttribute( "label", calendarToDo.percent + "%" );
       treeCellCategories.setAttribute( "label", calendarToDo.categories );
 
       treeItem.setAttribute( "taskitem", "true" );
@@ -351,7 +391,7 @@ function refreshToDoTree( eventArray )
 {
    // get the old tree children item and remove it
    
-   var oldTreeChildren = document.getElementById( ToDoUnifinderTreeName );
+   var tree = document.getElementById( ToDoUnifinderTreeName );
 
    var elementsToRemove = document.getElementsByAttribute( "taskitem", "true" );
    
@@ -372,7 +412,7 @@ function refreshToDoTree( eventArray )
       
       setUnifinderToDoTreeItem( treeItem, calendarToDo );
 
-      oldTreeChildren.getElementsByTagName( "treechildren" )[0]. appendChild( treeItem );
+      tree.getElementsByTagName( "treechildren" )[0]. appendChild( treeItem );
    }  
 }
 
@@ -383,7 +423,7 @@ function refreshToDoTree( eventArray )
 
 function toDoUnifinderItemUpdate( calendarToDo )
 {
-   var oldTreeChildren = document.getElementById( ToDoUnifinderTreeName );
+   var tree = document.getElementById( ToDoUnifinderTreeName );
 
    var elementsToRemove = document.getElementsByAttribute( "taskitem", "true" );
 
