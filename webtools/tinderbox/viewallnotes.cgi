@@ -23,13 +23,13 @@ require 'lloydcgi.pl';
 require 'header.pl';
 
 use Date::Parse;
-use Date::Format
+use Date::Format;
 
 my $TIMEFORMAT = "%D %T";
 
 $| = 1;
 
-À€ l print "Content-type: text/html\n\n<HTML>\n";
+print "Content-type: text/html\n\n<HTML>\n";
 
 print "<H1>Notes log</H1>\n";
 
