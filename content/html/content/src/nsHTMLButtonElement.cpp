@@ -118,6 +118,7 @@ public:
 
 protected:
   PRInt8 mType;
+  PRPackedBool mHandlingClick;
 
 private:
   // The analogue of defaultValue in the DOM for input and textarea
@@ -158,6 +159,7 @@ NS_NewHTMLButtonElement(nsIHTMLContent** aInstancePtrResult,
 nsHTMLButtonElement::nsHTMLButtonElement()
 {
   mType = NS_FORM_BUTTON_SUBMIT; // default
+  mHandlingClick = PR_FALSE;
 }
 
 nsHTMLButtonElement::~nsHTMLButtonElement()
@@ -280,6 +282,45 @@ NS_IMETHODIMP
 nsHTMLButtonElement::Focus()
 {
   return SetElementFocus(PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsHTMLButtonElement::Click()
+{
+  if (mHandlingClick)
+    return NS_OK;
+
+  mHandlingClick = PR_TRUE;
+  nsCOMPtr<nsIDocument> doc; 
+  GetDocument(*getter_AddRefs(doc));
+
+  if (doc) {
+    PRInt32 numShells = doc->GetNumberOfShells();
+    nsCOMPtr<nsIPresContext> context;
+    for (PRInt32 count=0; count < numShells; count++) {
+      nsCOMPtr<nsIPresShell> shell;
+      doc->GetShellAt(count, getter_AddRefs(shell));
+      if (shell) {
+        shell->GetPresContext(getter_AddRefs(context));
+        if (context) {
+          nsEventStatus status = nsEventStatus_eIgnore;
+          nsMouseEvent event;
+          event.eventStructType = NS_MOUSE_EVENT;
+          event.message = NS_MOUSE_LEFT_CLICK;
+          event.isShift = PR_FALSE;
+          event.isControl = PR_FALSE;
+          event.isAlt = PR_FALSE;
+          event.isMeta = PR_FALSE;
+          event.clickCount = 0;
+          event.widget = nsnull;
+          HandleDOMEvent(context, &event, nsnull,
+                              NS_EVENT_FLAG_INIT, &status);
+        }
+      }
+    }
+  }
+  mHandlingClick = PR_FALSE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
