@@ -566,6 +566,7 @@ function wizardFinish(){
   if ((gPluginInstaller.mSuccessfullPluginInstallation > 0) && 
       (gPluginInstaller.mPluginInfoArray.length != 0) && 
       gPluginInstaller.mTab) {
+    window.opener.getBrowser().hideMessage(window.opener.getBrowser().selectedBrowser, "top");
     window.opener.getBrowser().reloadTab(gPluginInstaller.mTab);
   }
 
