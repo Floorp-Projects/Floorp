@@ -526,6 +526,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_removeAttributeNS
   if (!element || !jnamespaceURI || !jlocalName) {
     JavaDOMGlobals::ThrowException(env,
       "Element.removeAttributeNS: NULL pointer");
+    return;
   }
 
   nsString* namespaceURI = JavaDOMGlobals::GetUnicode(env, jnamespaceURI);
