@@ -20,10 +20,6 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-include $(DEPTH)/config/autoconf.mk
-
-include $(topsrcdir)/config/rules.mk
-
 CHROME_DIR          = bookmarks
 CHROME_CONTENT_DIR  = content/default
 CHROME_SKIN_DIR     = skin/default
