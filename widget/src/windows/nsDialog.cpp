@@ -127,58 +127,7 @@ PRBool nsDialog::OnMove(PRInt32, PRInt32)
 
 PRBool nsDialog::OnPaint()
 {
-#if 0
   return nsWindow::OnPaint();
-#else
-      nsRect    bounds;
-    PRBool result = PR_TRUE;
-    PAINTSTRUCT ps;
-    HDC hDC = ::BeginPaint(mWnd, &ps);
-
-    RECT rect;
-    ::GetClientRect(mWnd, &rect);
-
-    if (rect.left || rect.right || rect.top || rect.bottom) {
-        // call the event callback 
-        if (mEventCallback) {
-            nsPaintEvent event;
-
-            InitEvent(event, NS_PAINT);
-            event.widget = (nsIWidget *)((nsWindow*)this);
-
-            //::GetWindowRect(mWnd, &rect);
-            //::GetClientRect(mWnd, &rect);
-            nsRect rect(rect.left, 
-                        rect.top, 
-                        rect.right - rect.left, 
-                        rect.bottom - rect.top);
-            event.rect = &rect;
-            event.eventStructType = NS_PAINT_EVENT;
-
-            ::EndPaint(mWnd, &ps);
-
-            static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-            static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-
-            if (NS_OK == NSRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&event.renderingContext))
-            {
-              event.renderingContext->Init(mContext, (nsIWidget *)((nsWindow*)this));
-              result = DispatchEvent(&event);
-              NS_RELEASE(event.renderingContext);
-            }
-            else
-              result = PR_FALSE;
-        }
-        else
-            ::EndPaint(mWnd, &ps);
-    }
-    else
-        ::EndPaint(mWnd, &ps);
-
-//    ::EndPaint(mWnd, &ps);
-
-    return result;
-#endif
 }
 
 PRBool nsDialog::OnResize(nsRect &aWindowRect)
