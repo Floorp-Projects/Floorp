@@ -586,7 +586,10 @@ function checkSetRecurTime()
    var recur = getFieldValue( "repeat-checkbox", "checked" );
    
    dump(recurForever+ " and "+ recur+ "\n"); 
-   var state = (recurEndDate.getTime() < endDate.getTime() && !recurForever && recur) ;
+   var state = ( ( recurEndDate.getFullYear() < endDate.getFullYear() ||
+                 recurEndDate.getMonth() != endDate.getMonth() ||
+                 recurEndDate.getDate() != endDate.getDate() )
+                 && !recurForever && recur) ;
    setRecurError(state);
    return(!state );
 }
