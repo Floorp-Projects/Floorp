@@ -26,40 +26,9 @@
 #include "nsIImgDCallbk.h"
 
 
-extern void png_set_expand(png_structp); 
-extern void png_destroy_read_struct(png_structpp, png_infopp, png_infopp);
 extern void png_set_dims(il_container *, png_structp);
-extern void il_get_alpha_channel(uint8 *, int, 
-                                 uint8 *, int);          
-extern void png_set_strip_alpha(png_structp);
 
 
-
-int
-process_data(png_structp *png_ptr, png_infop *info_ptr,
-   png_bytep buffer, png_uint_32 length)
-{
-   if (setjmp((*png_ptr)->jmpbuf))
-   {
-      /* Free the png_ptr and info_ptr memory on error */
-      png_destroy_read_struct(png_ptr, info_ptr, (png_infopp)NULL);
-      
-      return -1;
-   }
-
-   /* This one's new also.  Simply give it chunks of data as
-    * they arrive from the data stream (in order, of course).
-    * On Segmented machines, don't give it any more than 64K.
-    * The library seems to run fine with sizes of 4K, although
-    * you can give it much less if necessary (I assume you can
-    * give it chunks of 1 byte, but I haven't tried with less
-    * than 256 bytes yet).  When this function returns, you may
-    * want to display any rows that were generated in the row
-    * callback, if you aren't already displaying them there.
-    */
-   png_process_data(*png_ptr, *info_ptr, buffer, length);
-   return 1; //ok
-}
 
 void info_callback(png_structp png_ptr, png_infop info)
 {
@@ -74,7 +43,7 @@ void info_callback(png_structp png_ptr, png_infop info)
     double screen_gamma;
 
     /*always decode to 24 bit*/
-    if(png_ptr->color_type == PNG_COLOR_TYPE_PALETTE && png_ptr->bit_depth <= 8)     
+    if(png_ptr->color_type == PNG_COLOR_TYPE_PALETTE && png_ptr->bit_depth <= 8)
        png_set_expand(png_ptr);
 
     if(png_ptr->color_type == PNG_COLOR_TYPE_GRAY && png_ptr->bit_depth <= 8){
@@ -85,10 +54,6 @@ void info_callback(png_structp png_ptr, png_infop info)
     if(png_get_valid(png_ptr, info, PNG_INFO_tRNS))    
        png_set_expand(png_ptr);
 
- 
-   // if(png_ptr->color_type & PNG_COLOR_MASK_ALPHA)
-       // png_set_strip_alpha(png_ptr);
-    /**/
 
     /* implement scr gamma for mac & unix. (do preferences later.) */
 #ifdef XP_MAC
@@ -110,38 +75,6 @@ void info_callback(png_structp png_ptr, png_infop info)
     /* Set the ic values */
     png_set_dims((il_container *)png_ptr->io_ptr, png_ptr);
 
-   /* if(png_ptr->num_trans)
-       il_png_init_transparency( png_ptr, png_ptr->io_ptr, png_ptr->trans_values.index);
-   */
-    
-    
-}
-
-void
-il_create_alpha_mask( il_container *ic ,/* png_bytep mask, int srcwidth, */int xoffset,
-              int destwidth, int destheight)                                  
-{
-           if (!ic->mask) {
-            NI_PixmapHeader *mask_header;
-    
-            if (!(ic->mask = PR_NEWZAP(IL_Pixmap))) {
-                return;
-            }
-
-            mask_header = &ic->mask->header;
-            mask_header->color_space = ic->imgdcb->ImgDCBCreateGreyScaleColorSpace(); //(1,1)
-            if (!mask_header->color_space)
-                return;   /*MK_OUT_OF_MEMORY*/
-            mask_header->width = destwidth;
-            mask_header->height = destheight; 
-            mask_header->widthBytes = (mask_header->width + 7) / 8;
-
-#define HOWMANY(x, r)     (((x) + ((r) - 1)) / (r))
-#define ROUNDUP(x, r)     (HOWMANY(x, r) * (r))
-            /* Mask data must be quadlet aligned for optimizations */
-            mask_header->widthBytes = ROUNDUP(mask_header->widthBytes, 4);
-        }
-    return;
 }
 
 void row_callback( png_structp png_ptr,  png_bytep new_row,
