@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#pragma once
+
 /* 
 	This is included as a prefix file in all Mac projects. It ensures that
 	the correct #defines are set up for this build.
@@ -45,22 +47,18 @@
 	Order below does matter.
 */
 
-#ifndef MacConfigInclude_h_
-#define MacConfigInclude_h_
+/* Read generated build options (written at build time). */
+#ifdef DEBUG
+#include "DefinesOptionsDebug.h"
+#else
+#include "DefinesOptions.h"
+#endif
 
 /* Read compiler options */
-#ifndef IDE_Options_h_
 #include "IDE_Options.h"
-#endif
 
 /* Read file of defines global to the Mac build */
-#ifndef DefinesMac_h_
 #include "DefinesMac.h"
-#endif
 
 /* Read build-wide defines (e.g. MOZILLA_CLIENT) */
-#ifndef DefinesMozilla_h_
 #include "DefinesMozilla.h"
-#endif
-
-#endif /* MacConfigInclude_h_ */
