@@ -251,13 +251,8 @@ sub print_bloat_delta {
     $units = 'K';
   }
 
-  if ($compare > 0) {
-    return "<b><font color='red'>$value$units</font></b>";
-  } elsif ($compare < 0) {
-    return "<b><font color='blue'>$value$units</font></b>";
-  } else {
-    return "$value$units";
-  }
+  # Took out colors because the numbers jump around too much. -slamm
+  return "$value$units";
 }
 
 BEGIN {
