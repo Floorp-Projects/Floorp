@@ -651,7 +651,7 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
     /* Prevent GC activation while compiling. */
     JS_KEEP_ATOMS(cx->runtime);
 
-    /* Push a JSStackFrame for use by FunctionBody and js_EmitFunctionBody. */
+    /* Push a JSStackFrame for use by FunctionBody. */
     fp = cx->fp;
     funobj = fun->object;
     JS_ASSERT(!fp || (fp->fun != fun && fp->varobj != funobj &&
