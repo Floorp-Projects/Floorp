@@ -43,7 +43,7 @@ if ($action=="approve") {
         if (!file_exists($dirpath)) {
             mkdir($dirpath,0755);
         }
-        if (!file_exists("$destination") {
+        if (!file_exists("$destination")) {
         //No File Exists, its safe to rename.
             if (rename("$filename", "$destination")) {
                 //Rename Successfull
