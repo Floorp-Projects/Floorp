@@ -108,7 +108,7 @@ ifeq ($(OS_ARCH), HP-UX)
 endif
 ifeq ($(OS_ARCH), SunOS)
 	# Sun Workshop Compilers 5.0
-	CC	= /tools/ns/workshop-5.0/bin/cc
+#	CC	= /tools/ns/workshop-5.0/bin/cc
 	REL_OS_CFLAGS = -mt -xstrconst -v -O
 	DBG_OS_CFLAGS = -mt -xstrconst -v -g -xs
 	OSDEFS	= -D__SOLARIS__ -DHAVE_SELECT_H -DHAVE_WAIT_H \
