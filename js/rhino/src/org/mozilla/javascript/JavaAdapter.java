@@ -67,7 +67,13 @@ public class JavaAdapter extends ScriptableObject {
         }
         return NativeJavaObject.coerceType(c, result);
     }
-    
+
+    public static Scriptable setAdapterProto(Scriptable obj, Object adapter) {
+        Scriptable res = ScriptRuntime.toObject(ScriptableObject.getTopLevelScope(obj),adapter);
+        res.setPrototype(obj);
+        return res;
+    }
+
     public static Object js_JavaAdapter(Context cx, Object[] args, 
                                         Function ctorObj, boolean inNewExpr)
         throws InstantiationException, NoSuchMethodException, 
@@ -107,7 +113,7 @@ public class JavaAdapter extends ScriptableObject {
         Class[] ctorParms = { Scriptable.class };
         Object[] ctorArgs = { obj };
         Object v = adapterClass.getConstructor(ctorParms).newInstance(ctorArgs);
-        return cx.toObject(v, ScriptableObject.getTopLevelScope(ctorObj));                           
+        return setAdapterProto(obj,v);
     }
 
     public static Class createAdapterClass(Context cx, Scriptable jsObj,
@@ -120,6 +126,9 @@ public class JavaAdapter extends ScriptableObject {
         ClassFileWriter cfw = new ClassFileWriter(adapterName, 
                                                   superClass.getName(), 
                                                   "<adapter>");
+        cfw.addField("delegee", "Lorg/mozilla/javascript/Scriptable;",
+                     (short) (ClassFileWriter.ACC_PUBLIC | 
+                              ClassFileWriter.ACC_FINAL));
         cfw.addField("self", "Lorg/mozilla/javascript/Scriptable;",
                      (short) (ClassFileWriter.ACC_PUBLIC | 
                               ClassFileWriter.ACC_FINAL));
@@ -174,7 +183,7 @@ public class JavaAdapter extends ScriptableObject {
             // has a property of the same name, then an override is intended.
             boolean isAbstractMethod = Modifier.isAbstract(mods);
             if (isAbstractMethod || 
-                (jsObj != null && jsObj.has(method.getName(), jsObj)))
+                (jsObj != null && ScriptableObject.getProperty(jsObj,method.getName()) != Scriptable.NOT_FOUND))
             {
                 // make sure to generate only one instance of a particular 
                 // method/signature.
@@ -201,32 +210,34 @@ public class JavaAdapter extends ScriptableObject {
         
         // Generate Java methods, fields for remaining properties that
         // are not overrides.
-        Object[] ids = jsObj.getIds();
-        for (int j=0; j < ids.length; j++) {
-            if (!(ids[j] instanceof String)) 
-                continue;
-            String id = (String) ids[j];
-            if (generatedMethods.containsKey(id))
-                continue;
-            Object f = jsObj.get(id, jsObj);
-            int length;
-            if (f instanceof Scriptable) {
-                Scriptable p = (Scriptable) f;
-                if (!(p instanceof Function))
+        for (Scriptable o = jsObj; o != null; o = (Scriptable)o.getPrototype()) {
+            Object[] ids = jsObj.getIds();
+            for (int j=0; j < ids.length; j++) {
+                if (!(ids[j] instanceof String)) 
                     continue;
-                length = (int) Context.toNumber(
-                            ScriptableObject.getProperty(p, "length"));
-            } else if (f instanceof FunctionNode) {
-                length = ((FunctionNode) f).getVariableTable().getParameterCount();
-            } else {
-                continue;
-            }
-            Class[] parms = new Class[length];
-            for (int k=0; k < length; k++) 
-                parms[k] = Object.class;
-            generateMethod(cfw, adapterName, id, parms, Object.class);
-        }  
-        
+                String id = (String) ids[j];
+                if (generatedMethods.containsKey(id))
+                    continue;
+                Object f = o.get(id, o);
+                int length;
+                if (f instanceof Scriptable) {
+                    Scriptable p = (Scriptable) f;
+                    if (!(p instanceof Function))
+                        continue;
+                    length = (int) Context.toNumber(
+                                ScriptableObject.getProperty(p, "length"));
+                } else if (f instanceof FunctionNode) {
+                    length = ((FunctionNode) f).getVariableTable()
+                                .getParameterCount();
+                } else {
+                    continue;
+                }
+                Class[] parms = new Class[length];
+                for (int k=0; k < length; k++) 
+                    parms[k] = Object.class;
+                generateMethod(cfw, adapterName, id, parms, Object.class);
+            }  
+        }
         ByteArrayOutputStream out = new ByteArrayOutputStream(512);
         try {
             cfw.write(out);
@@ -285,8 +296,8 @@ public class JavaAdapter extends ScriptableObject {
      * Utility method, which dynamically binds a Context to the current thread, 
      * if none already exists.
      */
-    public static Object callMethod(Scriptable object, String methodId,
-                                    Object[] args) 
+    public static Object callMethod(Scriptable object, Object thisObj,
+                                    String methodId, Object[] args) 
     {
         try {
             Context cx = Context.enter();
@@ -298,7 +309,7 @@ public class JavaAdapter extends ScriptableObject {
                 // the error.
                 fun = Undefined.instance;
             }
-            return ScriptRuntime.call(cx, fun, object, args, object);
+            return ScriptRuntime.call(cx, fun, thisObj, args, object);
         } catch (JavaScriptException ex) {
             throw WrappedException.wrapException(ex);
         } finally {
@@ -328,23 +339,29 @@ public class JavaAdapter extends ScriptableObject {
         cfw.add(ByteCode.ALOAD_0);  // this
         cfw.add(ByteCode.INVOKESPECIAL, superName, "<init>", "()", "V");
         
-        // Save parameter in instance variable "self"
+        // Save parameter in instance variable "delegee"
+        cfw.add(ByteCode.ALOAD_0);  // this
+        cfw.add(ByteCode.ALOAD_1);  // first arg
+        cfw.add(ByteCode.PUTFIELD, adapterName, "delegee", 
+                "Lorg/mozilla/javascript/Scriptable;");
+
+        // create a wrapper object to be used as "this" in method calls
+        cfw.add(ByteCode.ALOAD_1);  // the Scriptable
+        cfw.add(ByteCode.ALOAD_0);  // this
+        cfw.add(ByteCode.INVOKESTATIC,
+                "org/mozilla/javascript/JavaAdapter",
+                "setAdapterProto",
+                "(Lorg/mozilla/javascript/Scriptable;" +
+                 "Ljava/lang/Object;)",
+                "Lorg/mozilla/javascript/Scriptable;");
+        
+        // save the wrapper
+        cfw.add(ByteCode.ASTORE_1);
         cfw.add(ByteCode.ALOAD_0);  // this
         cfw.add(ByteCode.ALOAD_1);  // first arg
         cfw.add(ByteCode.PUTFIELD, adapterName, "self", 
                 "Lorg/mozilla/javascript/Scriptable;");
 
-        // Set the prototype of the js object to be a LiveConnect 
-        // wrapper of the generated class's object
-        cfw.add(ByteCode.ALOAD_1);  // first arg
-        cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.INVOKESTATIC,
-                "org/mozilla/javascript/ScriptRuntime",
-                "setAdapterProto",
-                "(Lorg/mozilla/javascript/Scriptable;" +
-                 "Ljava/lang/Object;)",
-                "V");
-        
         cfw.add(ByteCode.RETURN);
         cfw.stopMethod((short)20, null); // TODO: magic number "20"
     }
@@ -371,22 +388,27 @@ public class JavaAdapter extends ScriptableObject {
                 "Lorg/mozilla/javascript/Scriptable;");
         cfw.add(ByteCode.ASTORE_1);
                 
-        // Save the Scriptable in instance variable "self"
+        // Save the Scriptable in instance variable "delegee"
         cfw.add(ByteCode.ALOAD_0);  // this
         cfw.add(ByteCode.ALOAD_1);  // the Scriptable
-        cfw.add(ByteCode.PUTFIELD, adapterName, "self", 
+        cfw.add(ByteCode.PUTFIELD, adapterName, "delegee", 
                 "Lorg/mozilla/javascript/Scriptable;");
-
-        // Set the prototype of the js object to be a LiveConnect 
-        // wrapper of the generated class's object
+        
+        // create a wrapper object to be used as "this" in method calls
         cfw.add(ByteCode.ALOAD_1);  // the Scriptable
         cfw.add(ByteCode.ALOAD_0);  // this
         cfw.add(ByteCode.INVOKESTATIC,
-                "org/mozilla/javascript/ScriptRuntime",
+                "org/mozilla/javascript/JavaAdapter",
                 "setAdapterProto",
                 "(Lorg/mozilla/javascript/Scriptable;" +
                  "Ljava/lang/Object;)",
-                "V");
+                "Lorg/mozilla/javascript/Scriptable;");
+        //save the wrapper
+        cfw.add(ByteCode.ASTORE_1);
+        cfw.add(ByteCode.ALOAD_0);  // this
+        cfw.add(ByteCode.ALOAD_1);  // first arg
+        cfw.add(ByteCode.PUTFIELD, adapterName, "self", 
+                "Lorg/mozilla/javascript/Scriptable;");
 
         cfw.add(ByteCode.RETURN);
         cfw.stopMethod((short)20, null); // TODO: magic number "20"
@@ -571,7 +593,7 @@ public class JavaAdapter extends ScriptableObject {
                     // load this.self into a local the first time it's needed.
                     // it will provide the scope needed by Context.toObject().
                     cfw.add(ByteCode.ALOAD_0);
-                    cfw.add(ByteCode.GETFIELD, genName, "self", 
+                    cfw.add(ByteCode.GETFIELD, genName, "delegee", 
                             "Lorg/mozilla/javascript/Scriptable;");
                     cfw.add(ByteCode.ASTORE, scopeLocal);
                     loadedScope = true;
@@ -597,10 +619,12 @@ public class JavaAdapter extends ScriptableObject {
             cfw.add(ByteCode.AASTORE);
         }
         
-        cfw.add(ByteCode.ALOAD_0);  // this
+        cfw.add(ByteCode.ALOAD_0);
+        cfw.add(ByteCode.GETFIELD, genName, "delegee", 
+                "Lorg/mozilla/javascript/Scriptable;");
+        cfw.add(ByteCode.ALOAD_0);
         cfw.add(ByteCode.GETFIELD, genName, "self", 
                 "Lorg/mozilla/javascript/Scriptable;");
-        
         cfw.addLoadConstant(methodName);
         cfw.add(ByteCode.ALOAD, arrayLocal);
         
@@ -610,7 +634,7 @@ public class JavaAdapter extends ScriptableObject {
                 "org/mozilla/javascript/JavaAdapter",
                 "callMethod",
                 "(Lorg/mozilla/javascript/Scriptable;" +
-                 "Ljava/lang/String;[Ljava/lang/Object;)",
+                 "Ljava/lang/Object;Ljava/lang/String;[Ljava/lang/Object;)",
                 "Ljava/lang/Object;");
 
         if (returnType.equals(Void.TYPE)) {
@@ -619,7 +643,7 @@ public class JavaAdapter extends ScriptableObject {
         } else {
             generateReturnResult(cfw, returnType);
         }
-        cfw.stopMethod((short)(scopeLocal + 1), null);
+        cfw.stopMethod((short)(scopeLocal + 3), null);
     }
 
     /**
@@ -800,51 +824,51 @@ public class JavaAdapter extends ScriptableObject {
         }
     }
 
-	/**
-	 * Provides a key with which to distinguish previously generated
-	 * adapter classes stored in a hash table.
-	 */
+    /**
+     * Provides a key with which to distinguish previously generated
+     * adapter classes stored in a hash table.
+     */
     static class ClassSignature {
-    	Class mSuperClass;
-    	Class[] mInterfaces;
-    	Object[] mProperties;
+        Class mSuperClass;
+        Class[] mInterfaces;
+        Object[] mProperties;    // JDK1.2: Use HashSet
     
-    	ClassSignature(Class superClass, Class[] interfaces, Scriptable jsObj) {
-    		mSuperClass = superClass;
-    		mInterfaces = interfaces;
-    		mProperties = jsObj.getIds();
-	    }
-	    
-	    public boolean equals(Object obj) {
-	    	if (obj instanceof ClassSignature) {
-	    		ClassSignature sig = (ClassSignature) obj;
-	    		if (mSuperClass == sig.mSuperClass) {
-    				Class[] interfaces = sig.mInterfaces;
-	    			if (mInterfaces != interfaces) {
-	    				if (mInterfaces == null || interfaces == null)
-	    					return false;
-	    				if (mInterfaces.length != interfaces.length)
-	    					return false;
-	    				for (int i = 0; i < interfaces.length; i++)
-	    					if (mInterfaces[i] != interfaces[i])
-	    						return false;
-	    			}
-	    			Object[] properties = sig.mProperties;
-	    			if (mProperties.length != properties.length)
-	    				return false;
-	    			for (int i = 0; i < properties.length; i++)
-	    				if (!mProperties[i].equals(properties[i]))
-	    					return false;
-	    			return true;
-	    		}
-	    	}
-	    	return false;
-	    }
-	    
-	    public int hashCode() {
-	    	return mSuperClass.hashCode();
-	    }
-	}
+        ClassSignature(Class superClass, Class[] interfaces, Scriptable jsObj) {
+            mSuperClass = superClass;
+            mInterfaces = interfaces;
+            mProperties = ScriptableObject.getPropertyIds(jsObj);
+        }
+            
+        public boolean equals(Object obj) {
+            if (obj instanceof ClassSignature) {
+                ClassSignature sig = (ClassSignature) obj;
+                if (mSuperClass == sig.mSuperClass) {
+                    Class[] interfaces = sig.mInterfaces;
+                    if (mInterfaces != interfaces) {
+                        if (mInterfaces == null || interfaces == null)
+                            return false;
+                        if (mInterfaces.length != interfaces.length)
+                            return false;
+                        for (int i=0; i < interfaces.length; i++)
+                            if (mInterfaces[i] != interfaces[i])
+                                return false;
+                    }
+                    if (mProperties.length != sig.mProperties.length)
+                        return false;
+                    for (int i=0; i < mProperties.length; i++) {
+                        if (!mProperties[i].equals(sig.mProperties[i]))
+                            return false;
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+            
+        public int hashCode() {
+            return mSuperClass.hashCode();
+        }
+    }
     
     private static int serial;
     private static MyClassLoader classLoader;

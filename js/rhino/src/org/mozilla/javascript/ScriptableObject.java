@@ -1337,6 +1337,7 @@ public abstract class ScriptableObject implements Scriptable {
      * @return the value of a property with name <code>name</code> found in 
      *         <code>obj</code> or any object in its prototype chain, or 
      *         <code>Scriptable.NOT_FOUND</code> if not found
+     * @since 1.5R2
      */
     public static Object getProperty(Scriptable obj, String name) {
         Scriptable start = obj;
@@ -1363,6 +1364,7 @@ public abstract class ScriptableObject implements Scriptable {
      * @return the value of a property with index <code>index</code> found in 
      *         <code>obj</code> or any object in its prototype chain, or 
      *         <code>Scriptable.NOT_FOUND</code> if not found
+     * @since 1.5R2
      */
     public static Object getProperty(Scriptable obj, int index) {
         Scriptable start = obj;
@@ -1385,6 +1387,7 @@ public abstract class ScriptableObject implements Scriptable {
      * @param obj a JavaScript object 
      * @param name a property name
      * @param value any JavaScript value accepted by Scriptable.put 
+     * @since 1.5R2
      */
     public static void putProperty(Scriptable obj, String name, Object value) {
         Scriptable base = getBase(obj, name);
@@ -1402,6 +1405,7 @@ public abstract class ScriptableObject implements Scriptable {
      * @param obj a JavaScript object 
      * @param index a property index
      * @param value any JavaScript value accepted by Scriptable.put 
+     * @since 1.5R2
      */
     public static void putProperty(Scriptable obj, int index, Object value) {
         Scriptable base = getBase(obj, index);
@@ -1419,6 +1423,7 @@ public abstract class ScriptableObject implements Scriptable {
      * @param obj a JavaScript object
      * @param name a property name
      * @return true if the property doesn't exist or was successfully removed
+     * @since 1.5R2
      */
     public static boolean deleteProperty(Scriptable obj, String name) {
         Scriptable base = getBase(obj, name);
@@ -1437,6 +1442,7 @@ public abstract class ScriptableObject implements Scriptable {
      * @param obj a JavaScript object
      * @param index a property index
      * @return true if the property doesn't exist or was successfully removed
+     * @since 1.5R2
      */
     public static boolean deleteProperty(Scriptable obj, int index) {
         Scriptable base = getBase(obj, index);
@@ -1444,6 +1450,32 @@ public abstract class ScriptableObject implements Scriptable {
             return true;
         base.delete(index);
         return base.get(index, obj) == NOT_FOUND;
+    }
+    
+    /**
+     * Returns an array of all ids from an object and its prototypes.
+     * <p>
+     * @param obj a JavaScript object
+     * @return an array of all ids from all object in the prototype chain.
+     *         If a given id occurs multiple times in the prototype chain,
+     *         it will occur only once in this list.
+     * @since 1.5R2
+     */
+    public static Object[] getPropertyIds(Scriptable obj) {
+        Hashtable h = new Hashtable();  // JDK1.2: use HashSet
+        while (obj != null) {
+            Object[] ids = obj.getIds();
+            for (int i=0; i < ids.length; i++) {
+                h.put(ids[i], ids[i]);
+            }
+        }
+        Object[] result = new Object[h.size()];
+        java.util.Enumeration e = h.elements();
+        int n = 0;
+        while (e.hasMoreElements()) {
+            result[n++] = e.nextElement();
+        }
+        return result;
     }
                 
     private static Scriptable getBase(Scriptable obj, String s) {

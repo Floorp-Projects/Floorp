@@ -1,5 +1,5 @@
 // The Java "NervousText" example ported to JavaScript.
-// Compile using java org.mozilla..javascript.tools.jsc.Main -extends java.applet.Applet -implements java.lang.Runnable NervousText.js
+// Compile using java org.mozilla.javascript.tools.jsc.Main -extends java.applet.Applet -implements java.lang.Runnable NervousText.js
 /*  
 Adapted from Java code by
     Daniel Wyszynski 
@@ -23,9 +23,9 @@ var counter =0;
 var threadSuspended = false; //added by kwalrath
 
 function init() {
-        resize(150,50); 
-        setFont(new Font("TimesRoman",Font.BOLD,36));
-        s = getParameter("text");
+        this.resize(150,50); 
+        this.setFont(new Font("TimesRoman",Font.BOLD,36));
+        s = this.getParameter("text");
         if (s == null) {
             s = "Rhino";
         }
@@ -47,7 +47,7 @@ function stop() {
 function run() {
         while (killme != null) {
         try {Thread.sleep(100);} catch (e){}
-        repaint();
+            this.repaint();
         }
         killme = null;
 }
