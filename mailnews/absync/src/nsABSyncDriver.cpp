@@ -47,6 +47,59 @@ nsAbSyncDriver::~nsAbSyncDriver()
   /* destructor code */
 }
 
+/**
+  * Notify the observer that the AB Sync Authorization operation has begun. 
+  *
+  */
+NS_IMETHODIMP 
+nsAbSyncDriver::OnStartAuthOperation(void)
+{
+  if (mStatus)
+  {
+    PRUnichar   *outValue = nsnull;
+
+    // Tweak the button...
+    mStatus->StopMeteors();
+
+    outValue = GetString(NS_ConvertASCIItoUCS2("syncStartingAuth").GetUnicode());
+    
+    mStatus->ShowStatusString(outValue);
+    PR_FREEIF(outValue);
+  }
+
+  return NS_OK;
+}
+
+/**
+   * Notify the observer that the AB Sync operation has been completed.  
+   * 
+   * This method is called regardless of whether the the operation was 
+   * successful.
+   * 
+   *  aTransactionID    - the ID for this particular request
+   *  aStatus           - Status code for the sync request
+   *  aMsg              - A text string describing the error (if any).
+   *  aCookie           - hmmm...cooookies!
+   */
+NS_IMETHODIMP 
+nsAbSyncDriver::OnStopAuthOperation(nsresult aStatus, const PRUnichar *aMsg, const char *aCookie)
+{
+  if (mStatus)
+  {
+    PRUnichar   *outValue = nsnull;
+
+    if (NS_SUCCEEDED(aStatus))
+      outValue = GetString(NS_ConvertASCIItoUCS2("syncAuthSuccess").GetUnicode());
+    else
+      outValue = GetString(NS_ConvertASCIItoUCS2("syncAuthFailed").GetUnicode());
+    
+    mStatus->ShowStatusString(outValue);
+    PR_FREEIF(outValue);
+  }
+
+  return NS_OK;
+}
+
 /* void OnStartOperation (in PRInt32 aTransactionID, in PRUint32 aMsgSize); */
 NS_IMETHODIMP nsAbSyncDriver::OnStartOperation(PRInt32 aTransactionID, PRUint32 aMsgSize)
 {
@@ -140,7 +193,7 @@ NS_IMETHODIMP nsAbSyncDriver::KickIt(nsIMsgStatusFeedback *aStatus)
     if (mStatus)
     {
       PRUnichar   *msgValue = nsnull;
-      msgValue = GetString(NS_ConvertASCIItoUCS2("syncConnect").GetUnicode());
+      msgValue = GetString(NS_ConvertASCIItoUCS2("syncStartingAuth").GetUnicode());
       mStatus->ShowStatusString(msgValue);
       PR_FREEIF(msgValue);
     }
@@ -150,7 +203,7 @@ NS_IMETHODIMP nsAbSyncDriver::KickIt(nsIMsgStatusFeedback *aStatus)
 
 #define AB_STRING_URL       "chrome://messenger/locale/addressbook/absync.properties"
 
-PRUnichar *
+extern "C" PRUnichar *
 nsAbSyncDriver::GetString(const PRUnichar *aStringName)
 {
 	nsresult    res = NS_OK;

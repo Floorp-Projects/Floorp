@@ -39,6 +39,7 @@
 #include "nsString.h"
 #include "nsTextFormatter.h"
 #include "nsIStringBundle.h"
+#include "nsINetSupportDialogService.h"
 
 static NS_DEFINE_CID(kCAbSyncPostEngineCID, NS_ABSYNC_POST_ENGINE_CID); 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -48,6 +49,7 @@ static NS_DEFINE_CID(kRDFServiceCID,  NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(nsAbSync, nsIAbSync)
@@ -135,19 +137,40 @@ nsAbSync::InternalCleanup()
   PR_FREEIF(mUserName);
 
   if (mDeletedRecordTags)
+  {
     delete mDeletedRecordTags;
+    mDeletedRecordTags = nsnull;
+  }
+
   if (mDeletedRecordValues)
+  {
     delete mDeletedRecordValues;
+    mDeletedRecordValues = nsnull;
+  }
 
   if (mNewRecordTags)
+  {
     delete mNewRecordTags;
+    mNewRecordTags = nsnull;
+  }
+
   if (mNewRecordValues)
+  {
     delete mNewRecordValues;
+    mNewRecordValues = nsnull;
+  }
 
   if (mPhoneTypes)
+  {
     delete mPhoneTypes;
+    mPhoneTypes = nsnull;
+  }
+
   if (mPhoneValues)
+  {
     delete mPhoneValues;
+    mPhoneValues = nsnull;
+  }
 
   return NS_OK;
 }
@@ -246,6 +269,21 @@ nsAbSync::InitSchemaColumns()
   return NS_OK;
 }
 
+nsresult
+nsAbSync::DisplayErrorMessage(const PRUnichar * msg)
+{
+  nsresult rv;
+
+  if ((!msg) || (!*msg))
+    return NS_ERROR_INVALID_ARG;
+
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  rv = dialog->Alert(msg);
+  return NS_OK;
+}
+
+
 /* void AddSyncListener (in nsIAbSyncListener aListener); */
 NS_IMETHODIMP nsAbSync::AddSyncListener(nsIAbSyncListener *aListener)
 {
@@ -311,6 +349,28 @@ nsAbSync::DeleteListeners()
 }
 
 nsresult
+nsAbSync::NotifyListenersOnStartAuthOperation(void)
+{
+  PRInt32 i;
+  for (i=0; i<mListenerArrayCount; i++)
+    if (mListenerArray[i] != nsnull)
+      mListenerArray[i]->OnStartAuthOperation();
+
+  return NS_OK;
+}
+
+nsresult
+nsAbSync::NotifyListenersOnStopAuthOperation(nsresult aStatus, const PRUnichar *aMsg, const char *aCookie)
+{
+  PRInt32 i;
+  for (i=0; i<mListenerArrayCount; i++)
+    if (mListenerArray[i] != nsnull)
+      mListenerArray[i]->OnStopAuthOperation(aStatus, aMsg, aCookie);
+
+  return NS_OK;
+}
+
+nsresult
 nsAbSync::NotifyListenersOnStartSync(PRInt32 aTransactionID, PRUint32 aMsgSize)
 {
   PRInt32 i;
@@ -356,6 +416,35 @@ nsAbSync::NotifyListenersOnStopSync(PRInt32 aTransactionID, nsresult aStatus,
 }
 
 
+/**
+  * Notify the observer that the AB Sync Authorization operation has begun. 
+  *
+  */
+NS_IMETHODIMP 
+nsAbSync::OnStartAuthOperation(void)
+{
+  NotifyListenersOnStartAuthOperation();
+  return NS_OK;
+}
+
+/**
+   * Notify the observer that the AB Sync operation has been completed.  
+   * 
+   * This method is called regardless of whether the the operation was 
+   * successful.
+   * 
+   *  aTransactionID    - the ID for this particular request
+   *  aStatus           - Status code for the sync request
+   *  aMsg              - A text string describing the error (if any).
+   *  aCookie           - hmmm...cooookies!
+   */
+NS_IMETHODIMP 
+nsAbSync::OnStopAuthOperation(nsresult aStatus, const PRUnichar *aMsg, const char *aCookie)
+{
+  NotifyListenersOnStopAuthOperation(aStatus, aMsg, aCookie);
+  return NS_OK;
+}
+
 /* void OnStartOperation (in PRInt32 aTransactionID, in PRUint32 aMsgSize); */
 NS_IMETHODIMP nsAbSync::OnStartOperation(PRInt32 aTransactionID, PRUint32 aMsgSize)
 {
@@ -380,13 +469,15 @@ NS_IMETHODIMP nsAbSync::OnStatus(PRInt32 aTransactionID, const PRUnichar *aMsg)
 /* void OnStopOperation (in PRInt32 aTransactionID, in nsresult aStatus, in wstring aMsg, out string aProtocolResponse); */
 NS_IMETHODIMP nsAbSync::OnStopOperation(PRInt32 aTransactionID, nsresult aStatus, const PRUnichar *aMsg, const char *aProtocolResponse)
 {
+  nsresult    rv;
+
   //
   // Now, figure out what the server told us to do with the sync operation.
   //
   if (aProtocolResponse)
-    ProcessServerResponse(aProtocolResponse);
+    rv = ProcessServerResponse(aProtocolResponse);
 
-  NotifyListenersOnStopSync(aTransactionID, aStatus, aMsg);
+  NotifyListenersOnStopSync(aTransactionID, rv, aMsg);
   InternalCleanup();
 
   mCurrentState = nsIAbSyncState::nsIAbSyncIdle;
@@ -500,11 +591,11 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
 
   // Ok, add the header to this protocol string information...
   if (mPostString.IsEmpty())
-    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=%s&user=%s", 
-                            mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION, mUserName);
+    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=%s", 
+                            mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION);
   else
-    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=%s&user=%s&", 
-                            mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION, mUserName);
+    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=%s&", 
+                            mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION);
   if (!prefixStr)
   {
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -1732,8 +1823,9 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
   // If no response, then this is a problem...
   if (!aProtocolResponse)
   {
-    // RICHIE_TODO START HERE DUDE...NICE DIALOGS!
-    printf("\7RICHIE_GUI: Server returned invalid response!\n");
+    PRUnichar   *outValue = GetString(NS_ConvertASCIItoUCS2("syncInvalidResponse").GetUnicode());
+    DisplayErrorMessage(outValue);
+    PR_FREEIF(outValue);
     return NS_ERROR_FAILURE;
   }
 
@@ -1743,7 +1835,16 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
 
   if (ErrorFromServer(&errorString))
   {
-    printf("\7RICHIE_GUI: Server error: %s\n", errorString);
+    PRUnichar   *outValue = GetString(NS_ConvertASCIItoUCS2("syncServerError").GetUnicode());
+    PRUnichar   *msgValue;
+
+    msgValue = nsTextFormatter::smprintf(outValue, errorString);
+
+    DisplayErrorMessage(msgValue);
+
+    PR_FREEIF(outValue);
+    PR_FREEIF(msgValue);
+
     return NS_ERROR_FAILURE;
   }
 
@@ -2248,7 +2349,7 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
   return rv;
 }
 
-#define AB_STRING_URL       "chrome://messenger/locale/addressbook/addressBook.properties"
+#define AB_STRING_URL       "chrome://messenger/locale/addressbook/absync.properties"
 
 PRUnichar *
 nsAbSync::GetString(const PRUnichar *aStringName)

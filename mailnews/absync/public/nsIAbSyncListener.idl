@@ -31,6 +31,25 @@
 interface nsIAbSyncListener : nsISupports {
 
     /**
+     * Notify the observer that the AB Sync Authorization operation has begun. 
+     *
+     */
+    void OnStartAuthOperation();
+
+    /**
+     * Notify the observer that the AB Sync operation has been completed.  
+     * 
+     * This method is called regardless of whether the the operation was 
+     * successful.
+     * 
+     *  aTransactionID    - the ID for this particular request
+     *  aStatus           - Status code for the sync request
+     *  aMsg              - A text string describing the error (if any).
+     *  aCookie           - hmmm...cooookies!
+     */
+    void OnStopAuthOperation(in nsresult aStatus, in wstring aMsg, in string aCookie);
+
+    /**
      * Notify the observer that the AB Sync operation has begun. This method is
      * called only once, at the beginning of a sync transaction
      *

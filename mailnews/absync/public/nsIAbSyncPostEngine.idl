@@ -27,6 +27,7 @@ interface nsIAbSyncPostEngineState
 { 
   const long nsIAbSyncPostIdle = 0;
   const long nsIAbSyncPostRunning = 1;
+  const long nsIAbSyncAuthenticationRunning = 2;
 }; 
 
 [scriptable, uuid(E0ED29D3-098A-11d4-8FD6-00A024A7D144)]
