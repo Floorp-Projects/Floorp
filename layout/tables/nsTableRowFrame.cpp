@@ -1317,10 +1317,12 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     
     //XXX: this is a hack, shouldn't it be the case that a min size is 
     //     never larger than a desired size?
+#if 0
     if (kidMaxElementSize.width>desiredSize.width)
       desiredSize.width = kidMaxElementSize.width;
     if (kidMaxElementSize.height>desiredSize.height)
       desiredSize.height = kidMaxElementSize.height;
+#endif
     
     // Update the cell layout data.
     ((nsTableCellFrame *)aNextFrame)->SetPass1MaxElementSize(kidMaxElementSize);
@@ -1595,7 +1597,6 @@ nsTableRowFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
     return NS_ERROR_NULL_POINTER;
   }
   PRUint32 sum = sizeof(*this);
-  // XXX write me
   *aResult = sum;
   return NS_OK;
 }

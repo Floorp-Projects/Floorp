@@ -31,6 +31,7 @@
 #include "nsCOMPtr.h"
 #include "nsCSSRendering.h"
 #include "nsIPresShell.h"
+#include "nsLayoutAtoms.h"
 
 NS_DEF_PTR(nsIContent);
 
@@ -696,6 +697,15 @@ NS_NewTableColGroupFrame(nsIFrame** aNewFrame)
 }
 
 NS_IMETHODIMP
+nsTableColGroupFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::tableColGroupFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsTableColGroupFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("TableColGroup", aResult);
@@ -709,7 +719,6 @@ nsTableColGroupFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) cons
     return NS_ERROR_NULL_POINTER;
   }
   PRUint32 sum = sizeof(*this);
-  // XXX write me
   *aResult = sum;
   return NS_OK;
 }

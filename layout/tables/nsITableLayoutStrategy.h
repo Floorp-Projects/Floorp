@@ -26,6 +26,7 @@ class nsIStyleContext;
 struct nsHTMLReflowState;
 class nsTableCellFrame;
 class nsStyleCoord;
+class nsISizeOfHandler;
 
 class nsITableLayoutStrategy
 {
@@ -88,6 +89,10 @@ public:
   virtual PRBool ColumnsAreValidFor(const nsTableCellFrame& aCellFrame,
                                     nscoord                 aPrevCellMin,
                                     nscoord                 aPrevCellDes) const = 0;
+
+#ifdef DEBUG
+  virtual void SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const = 0;
+#endif
 };
 
 #endif

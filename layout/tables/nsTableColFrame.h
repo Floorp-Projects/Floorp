@@ -81,6 +81,13 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::tableColFrame
+   */
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;

@@ -701,4 +701,34 @@ PRBool nsCellMap::ColHasSpanningCells(PRInt32 aColIndex) const
   return PR_FALSE;
 }
 
+#ifdef DEBUG
+void nsCellMap::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  PRUint32 sum = sizeof(*this);
 
+  // Add in the size of the void arrays. Because we have emnbedded objects
+  // and not pointers to void arrays, we need to subtract out the size of the
+  // embedded object so it isn't double counted
+  PRUint32 voidArraySize;
+
+  mRows.SizeOf(aHandler, &voidArraySize);
+  sum += voidArraySize - sizeof(mRows);
+  mColFrames.SizeOf(aHandler, &voidArraySize);
+  sum += voidArraySize - sizeof(mColFrames);
+  mNumCellsOrigInRow.SizeOf(aHandler, &voidArraySize);
+  sum += voidArraySize - sizeof(mNumCellsOrigInRow);
+  mNumCellsOrigInCol.SizeOf(aHandler, &voidArraySize);
+  sum += voidArraySize - sizeof(mNumCellsOrigInCol);
+
+  // Add in the size of the collapsed rows and collapsed column
+  // packed bool arrays
+  if (mIsCollapsedRows) {
+    sum += mRowCount * sizeof(PRPackedBool);
+  }
+  if (mIsCollapsedCols) {
+    sum += mNumCellsOrigInCol.Count() * sizeof(PRPackedBool);
+  }
+
+  *aResult = sum;
+}
+#endif
