@@ -90,7 +90,7 @@
                 <menu label="&viewSidebarMenu.label;"
                       accesskey="&viewSidebarMenu.accesskey;">
                   <menupopup id="viewSidebarMenu">
-                    <menuitem key="key_openDownloadsSidebar" observes="viewDownloadsSidebar"/>
+                    <menuitem key="key_openDownloadsSidebar" observes="viewDownloadsSidebar" key="key_openDownloads"/>
                     <menuitem key="viewBookmarksSidebarKb" observes="viewBookmarksSidebar"/>
                     <menuitem key="key_gotoHistory" observes="viewHistorySidebar"/>
                   </menupopup>
