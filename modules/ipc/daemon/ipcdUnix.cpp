@@ -63,26 +63,29 @@
 // ipc directory and locking...
 //-----------------------------------------------------------------------------
 
-static char *ipcDir;
-static char *ipcSockFile;
-static char *ipcLockFile;
-static int   ipcLockFD;
+static int ipcLockFD = 0;
 
-static PRBool AcquireDaemonLock()
+static PRBool AcquireDaemonLock(const char *baseDir)
 {
     const char lockName[] = "lock";
 
-    int dirLen = strlen(ipcDir);
-    int len = dirLen            // ipcDir
+    int dirLen = strlen(baseDir);
+    int len = dirLen            // baseDir
             + 1                 // "/"
             + sizeof(lockName); // "lock"
 
-    ipcLockFile = (char *) malloc(len);
-    memcpy(ipcLockFile, ipcDir, dirLen);
-    ipcLockFile[dirLen] = '/';
-    memcpy(ipcLockFile + dirLen + 1, lockName, sizeof(lockName));
+    char *lockFile = (char *) malloc(len);
+    memcpy(lockFile, baseDir, dirLen);
+    lockFile[dirLen] = '/';
+    memcpy(lockFile + dirLen + 1, lockName, sizeof(lockName));
 
-    ipcLockFD = open(ipcLockFile, O_WRONLY|O_CREAT|O_TRUNC, S_IWUSR|S_IRUSR);
+    // 
+    // open lock file.  it remains open until we shutdown.
+    //
+    ipcLockFD = open(lockFile, O_WRONLY|O_CREAT, S_IWUSR|S_IRUSR);
+
+    free(lockFile);
+
     if (ipcLockFD == -1)
         return PR_FALSE;
 
@@ -101,10 +104,15 @@ static PRBool AcquireDaemonLock()
         return PR_FALSE;
 
     //
+    // truncate lock file once we have exclusive access to it.
+    //
+    ftruncate(ipcLockFD, 0);
+
+    //
     // write our PID into the lock file (this just seems like a good idea...
     // no real purpose otherwise).
     //
-    char buf[256];
+    char buf[32];
     int nb = PR_snprintf(buf, sizeof(buf), "%u\n", (unsigned long) getpid());
     write(ipcLockFD, buf, nb);
 
@@ -115,63 +123,45 @@ static PRBool InitDaemonDir(const char *socketPath)
 {
     LOG(("InitDaemonDir [sock=%s]\n", socketPath));
 
-    ipcSockFile = PL_strdup(socketPath);
-    ipcDir      = PL_strdup(socketPath);
+    char *baseDir = PL_strdup(socketPath);
 
     //
     // make sure IPC directory exists (XXX this should be recursive)
     //
-    char *p = strrchr(ipcDir, '/');
+    char *p = strrchr(baseDir, '/');
     if (p)
         p[0] = '\0';
-    mkdir(ipcDir, 0700);
+    mkdir(baseDir, 0700);
 
     //
     // if we can't acquire the daemon lock, then another daemon
     // must be active, so bail.
     //
-    if (!AcquireDaemonLock())
-        return PR_FALSE;
+    PRBool haveLock = AcquireDaemonLock(baseDir);
 
-    //
-    // delete an existing socket to prevent bind from failing.
-    //
-    unlink(socketPath);
+    PL_strfree(baseDir);
 
-    return PR_TRUE;
+    if (haveLock) {
+        // delete an existing socket to prevent bind from failing.
+        unlink(socketPath);
+    }
+    return haveLock;
 }
 
 static void ShutdownDaemonDir()
 {
-    LOG(("ShutdownDaemonDir [sock=%s]\n", ipcSockFile));
+    LOG(("ShutdownDaemonDir\n"));
 
-    //
-    // unlink files from directory before giving up lock; otherwise, we'd be
-    // unable to delete it w/o introducing a race condition.
-    //
-    unlink(ipcLockFile);
-    unlink(ipcSockFile);
+    // deleting directory and files underneath it allows another process
+    // to think it has exclusive access.  better to just leave the hidden
+    // directory in /tmp and let the OS clean it up via the usual tmpdir
+    // cleanup cron job.
 
-    //
-    // should be able to remove the ipc directory now.
-    //
-    rmdir(ipcDir);
-
-    // 
     // this removes the advisory lock, allowing other processes to acquire it.
-    //
-    close(ipcLockFD);
-
-    //
-    // free allocated memory
-    //
-    PL_strfree(ipcDir);
-    PL_strfree(ipcSockFile);
-    free(ipcLockFile);
-
-    ipcDir = NULL;
-    ipcSockFile = NULL;
-    ipcLockFile = NULL;
+    if (ipcLockFD) {
+        close(ipcLockFD);
+        ipcLockFD = 0;
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -186,7 +176,7 @@ int        ipcClientCount;
 
 //
 // the first element of this array is always zero; this is done so that the
-// n'th element of ipcClientArray corresponds to the n'th element of
+// k'th element of ipcClientArray corresponds to the k'th element of
 // ipcPollList.
 //
 static ipcClient ipcClientArray[IPC_MAX_CLIENTS + 1];
@@ -250,6 +240,7 @@ static int RemoveClient(int clientIndex)
 
 static void PollLoop(PRFileDesc *listenFD)
 {
+    // the first element of ipcClientArray is unused.
     ipcClients = ipcClientArray + 1;
     ipcClientCount = 0;
 
@@ -312,18 +303,19 @@ static void PollLoop(PRFileDesc *listenFD)
 
                 clientFD = PR_Accept(listenFD, &clientAddr, PR_INTERVAL_NO_WAIT);
                 if (clientFD == NULL) {
+                    // ignore this error... perhaps the client disconnected.
                     LOG(("PR_Accept failed [%d]\n", PR_GetError()));
-                    return;
                 }
+                else {
+                    // make socket non-blocking
+                    PRSocketOptionData opt;
+                    opt.option = PR_SockOpt_Nonblocking;
+                    opt.value.non_blocking = PR_TRUE;
+                    PR_SetSocketOption(clientFD, &opt);
 
-                // make socket non-blocking
-                PRSocketOptionData opt;
-                opt.option = PR_SockOpt_Nonblocking;
-                opt.value.non_blocking = PR_TRUE;
-                PR_SetSocketOption(clientFD, &opt);
-
-                if (AddClient(clientFD) != 0)
-                    PR_Close(clientFD);
+                    if (AddClient(clientFD) != 0)
+                        PR_Close(clientFD);
+                }
             }
         }
 
@@ -363,7 +355,7 @@ IPC_PlatformSendMsg(ipcClient  *client, ipcMessage *msg)
 
 int main(int argc, char **argv)
 {
-    PRFileDesc *listenFD;
+    PRFileDesc *listenFD = NULL;
     PRNetAddr addr;
 
     //
@@ -371,6 +363,7 @@ int main(int argc, char **argv)
     // which spawned this daemon.
     //
     signal(SIGINT, SIG_IGN);
+    // XXX block others?  check cartman
 
     // ensure strict file permissions
     umask(0077);
@@ -383,12 +376,6 @@ int main(int argc, char **argv)
     //LOG(("sleeping for 2 seconds...\n"));
     //PR_Sleep(PR_SecondsToInterval(2));
 
-    listenFD = PR_OpenTCPSocket(PR_AF_LOCAL);
-    if (!listenFD) {
-        LOG(("PR_OpenUDPSocket failed [%d]\n", PR_GetError()));
-        return -1;
-    }
-
     const char *socket_path;
     if (argc < 2)
         socket_path = IPC_DEFAULT_SOCKET_PATH;
@@ -396,8 +383,14 @@ int main(int argc, char **argv)
         socket_path = argv[1];
 
     if (!InitDaemonDir(socket_path)) {
-        PR_Close(listenFD);
-        return 0;
+        LOG(("InitDaemonDir failed\n"));
+        goto end;
+    }
+
+    listenFD = PR_OpenTCPSocket(PR_AF_LOCAL);
+    if (!listenFD) {
+        LOG(("PR_OpenUDPSocket failed [%d]\n", PR_GetError()));
+        goto end;
     }
 
     addr.local.family = PR_AF_LOCAL;
@@ -405,23 +398,30 @@ int main(int argc, char **argv)
 
     if (PR_Bind(listenFD, &addr) != PR_SUCCESS) {
         LOG(("PR_Bind failed [%d]\n", PR_GetError()));
-        return -1;
+        goto end;
     }
 
     IPC_InitModuleReg(argv[0]);
 
     if (PR_Listen(listenFD, 5) != PR_SUCCESS) {
         LOG(("PR_Listen failed [%d]\n", PR_GetError()));
-        return -1;
+        goto end;
     }
 
     PollLoop(listenFD);
 
+end:
     IPC_ShutdownModuleReg();
 
+    // it is critical that we release the lock before closing the socket,
+    // otherwise, a client might launch another daemon that would be unable
+    // to acquire the lock and would then leave the client without a daemon.
+ 
     ShutdownDaemonDir();
 
-    LOG(("closing socket\n"));
-    PR_Close(listenFD);
+    if (listenFD) {
+        LOG(("closing socket\n"));
+        PR_Close(listenFD);
+    }
     return 0;
 }

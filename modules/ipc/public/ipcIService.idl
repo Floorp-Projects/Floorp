@@ -89,7 +89,7 @@ interface ipcIService : nsISupports
      * "news", "addrbook", etc.  other IPC clients can then query the IPC
      * daemon for the client named "mail" in order to talk with a mail program.
      *
-     * An IPC client name resembles a XPCOM contract ID.
+     * XXX An IPC client name resembles a XPCOM contract ID.
      */
     void addClientName(in ACString aName);
     void removeClientName(in ACString aName);
@@ -143,6 +143,8 @@ interface ipcIService : nsISupports
      *        the client observer.
      */
     void setClientObserver(in ipcIClientObserver aObserver);
+
+    // XXX need other functions to enumerate clients, clients implementing targets, etc.
 
     /**
      * set a message observer for a particular message target.
@@ -223,15 +225,19 @@ interface ipcIClientObserver : nsISupports
 interface ipcIClientQueryHandler : nsISupports
 {
     /**
-     * called on successful completion of a client query.
+     * called on completion of a client query.
      *
      * @param aQueryID
      *        the return value from one of the "query" methods.
+     * @param aStatus
+     *        the status of the query.  if this is a failure code, then the
+     *        query failed, otherwise the query succeeded.  the value of this
+     *        parameter explains the reason for any failure.
      * @param aClientID
-     *
      *     ...
      */
     void onQueryComplete(in unsigned long aQueryID,
+                         in nsresult aStatus,
                          in unsigned long aClientID,
                         [array, size_is(aNameCount)]
                          in string aClientNames,
@@ -239,9 +245,6 @@ interface ipcIClientQueryHandler : nsISupports
                         [array, const, size_is(aTargetCount)]
                          in nsIDPtr aClientTargets,
                          in unsigned long aTargetCount);
-
-    void onQueryFailed(in unsigned long aQueryID,
-                       in nsresult aReason);
 };
 
 %{C++

@@ -119,21 +119,16 @@ public:
 NS_IMPL_ISUPPORTS1(myIpcClientQueryHandler, ipcIClientQueryHandler)
 
 NS_IMETHODIMP
-myIpcClientQueryHandler::OnQueryFailed(PRUint32 aQueryID, nsresult aReason)
-{
-    printf("*** query failed [queryID=%u reason=0x%08x]\n", aQueryID, aReason);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 myIpcClientQueryHandler::OnQueryComplete(PRUint32 aQueryID,
+                                         nsresult aStatus,
                                          PRUint32 aClientID,
                                          const char **aNames,
                                          PRUint32 aNameCount,
                                          const nsID **aTargets,
                                          PRUint32 aTargetCount)
 {
-    printf("*** query complete [queryID=%u clientID=%u]\n", aQueryID, aClientID);
+    printf("*** query complete [queryID=%u status=0x%x clientID=%u]\n",
+            aQueryID, aStatus, aClientID);
 
     PRUint32 i;
     printf("***  names:\n");

@@ -43,6 +43,7 @@
 #include "nsIObserverService.h"
 #include "nsICategoryManager.h"
 #include "nsCategoryManagerUtils.h"
+#include "netCore.h"
 
 #include "ipcConfig.h"
 #include "ipcLog.h"
@@ -79,12 +80,10 @@ public:
     static PRUint32 gLastQueryID;
 
     void SetClientID(PRUint32 cID) { mClientID = cID; }
-
-    void OnQueryComplete(const ipcmMessageClientInfo *msg);
-    void OnQueryFailed(nsresult reason);
+    void OnQueryComplete(nsresult status, const ipcmMessageClientInfo *msg);
 
     PRUint32 QueryID()    { return mQueryID; }
-    PRBool   IsCanceled() { return mHandler == nsnull; }
+    PRBool   IsCanceled() { return mHandler == NULL; }
 
     ipcClientQuery                  *mNext;
 private:
@@ -96,44 +95,46 @@ private:
 PRUint32 ipcClientQuery::gLastQueryID = 0;
 
 void
-ipcClientQuery::OnQueryComplete(const ipcmMessageClientInfo *msg)
+ipcClientQuery::OnQueryComplete(nsresult status, const ipcmMessageClientInfo *msg)
 {
     NS_ASSERTION(mHandler, "no handler");
 
-    PRUint32 nameCount = msg->NameCount();
-    PRUint32 targetCount = msg->TargetCount();
-    PRUint32 i;
+    PRUint32 nameCount = 0;
+    PRUint32 targetCount = 0;
+    const char **names = NULL;
+    const nsID **targets = NULL;
 
-    const char **names = (const char **) malloc(nameCount * sizeof(char *));
-    const char *lastName = NULL;
-    for (i = 0; i < nameCount; ++i) {
-        lastName = msg->NextName(lastName);
-        names[i] = lastName;
-    }
+    if (NS_SUCCEEDED(status)) {
+        nameCount = msg->NameCount();
+        targetCount = msg->TargetCount();
+        PRUint32 i;
 
-    const nsID **targets = (const nsID **) malloc(targetCount * sizeof(nsID *));
-    const nsID *lastTarget = NULL;
-    for (i = 0; i < targetCount; ++i) {
-        lastTarget = msg->NextTarget(lastTarget);
-        targets[i] = lastTarget;
+        names = (const char **) malloc(nameCount * sizeof(char *));
+        const char *lastName = NULL;
+        for (i = 0; i < nameCount; ++i) {
+            lastName = msg->NextName(lastName);
+            names[i] = lastName;
+        }
+
+        targets = (const nsID **) malloc(targetCount * sizeof(nsID *));
+        const nsID *lastTarget = NULL;
+        for (i = 0; i < targetCount; ++i) {
+            lastTarget = msg->NextTarget(lastTarget);
+            targets[i] = lastTarget;
+        }
     }
 
     mHandler->OnQueryComplete(mQueryID,
+                              status,
                               mClientID,
                               names, nameCount,
                               targets, targetCount);
+    mHandler = NULL;
 
-    free(names);
-    free(targets);
-}
-
-void
-ipcClientQuery::OnQueryFailed(nsresult status)
-{
-    NS_ASSERTION(mHandler, "no handler");
-
-    mHandler->OnQueryFailed(mQueryID, status);
-    mHandler = nsnull;
+    if (names)
+        free(names);
+    if (targets)
+        free(targets);
 }
 
 //-----------------------------------------------------------------------------
@@ -213,7 +214,7 @@ ipcService::OnIPCMClientInfo(const ipcmMessageClientInfo *msg)
     }
 
     if (!query->IsCanceled())
-        query->OnQueryComplete(msg);
+        query->OnQueryComplete(NS_OK, msg);
 
     mQueryQ.DeleteFirst();
 }
@@ -230,7 +231,7 @@ ipcService::OnIPCMError(const ipcmMessageError *msg)
     }
 
     if (!query->IsCanceled())
-        query->OnQueryFailed(NS_ERROR_FAILURE);
+        query->OnQueryComplete(NS_ERROR_FAILURE, NULL);
 
     mQueryQ.DeleteFirst();
 }
@@ -332,7 +333,7 @@ ipcService::CancelQuery(PRUint32 queryID)
     ipcClientQuery *query = mQueryQ.First();
     while (query) {
         if (query->QueryID() == queryID) {
-            query->OnQueryFailed(NS_ERROR_ABORT);
+            query->OnQueryComplete(NS_BINDING_ABORTED, NULL);
             break;
         }
         query = query->mNext;
@@ -432,7 +433,7 @@ ipcService::OnConnectionLost()
     //
     while (mQueryQ.First()) {
         ipcClientQuery *query = mQueryQ.First();
-        query->OnQueryFailed(NS_ERROR_ABORT);
+        query->OnQueryComplete(NS_BINDING_ABORTED, NULL);
         mQueryQ.DeleteFirst();
     }
 

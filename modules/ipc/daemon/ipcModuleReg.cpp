@@ -40,6 +40,7 @@
 
 #include "prlink.h"
 #include "prio.h"
+#include "prlog.h"
 #include "plstr.h"
 
 #include "ipcConfig.h"
@@ -48,6 +49,8 @@
 #include "ipcModule.h"
 #include "ipcCommandModule.h"
 #include "ipcd.h"
+
+//-----------------------------------------------------------------------------
 
 struct ipcModuleRegEntry
 {
@@ -59,19 +62,32 @@ struct ipcModuleRegEntry
 #define IPC_MAX_MODULE_COUNT 64
 
 static ipcModuleRegEntry ipcModules[IPC_MAX_MODULE_COUNT];
-static int ipcModuleCount;
+static int ipcModuleCount = 0;
+
+//-----------------------------------------------------------------------------
 
 static PRStatus
-AddModule(const nsID &target, ipcModuleMethods *methods, PRLibrary *lib)
+AddModule(const nsID &target, ipcModuleMethods *methods, const char *libPath)
 {
     if (ipcModuleCount == IPC_MAX_MODULE_COUNT) {
         LOG(("too many modules!\n"));
         return PR_FAILURE;
     }
 
+    if (!methods) {
+        PR_NOT_REACHED("null module methods");
+        return PR_FAILURE;
+    }
+
+    //
+    // each ipcModuleRegEntry holds a reference to a PRLibrary, and on
+    // shutdown, each PRLibrary reference will be released.  this ensures
+    // that the library will not be unloaded until all of the modules in
+    // that library are shutdown.
+    //
     ipcModules[ipcModuleCount].target = target;
     ipcModules[ipcModuleCount].methods = methods;
-    ipcModules[ipcModuleCount].lib = lib;
+    ipcModules[ipcModuleCount].lib = PR_LoadLibrary(libPath);
 
     ++ipcModuleCount;
     return PR_SUCCESS;
@@ -82,7 +98,7 @@ InitModuleFromLib(const char *modulesDir, const char *fileName)
 {
     LOG(("InitModuleFromLib [%s]\n", fileName));
 
-    static ipcDaemonMethods gDaemonMethods =
+    static const ipcDaemonMethods gDaemonMethods =
     {
         IPC_DAEMON_METHODS_VERSION,
         IPC_DispatchMsg,
@@ -115,12 +131,13 @@ InitModuleFromLib(const char *modulesDir, const char *fileName)
         LOG(("  func=%p\n", (void*) func));
 
         if (func) {
-            ipcModuleEntry *entries = NULL;
+            const ipcModuleEntry *entries = NULL;
             int count = func(&gDaemonMethods, &entries);
             for (int i=0; i<count; ++i) {
-                AddModule(entries[i].target, entries[i].methods, PR_LoadLibrary(buf));
-                if (entries[i].methods->init)
-                    entries[i].methods->init();
+                if (AddModule(entries[i].target, entries[i].methods, buf)) {
+                    if (entries[i].methods->init)
+                        entries[i].methods->init();
+                }
             }
         }
         PR_UnloadLibrary(lib);
@@ -156,7 +173,7 @@ IPC_InitModuleReg(const char *exePath)
     //
     // register plug-in modules
     //
-    static const char relModDir[] = "ipc/modules";
+    static const char relModDir[] = "ipc/modules"; // XXX fix slashes
 
     char *p = PL_strrchr(exePath, IPC_PATH_SEP_CHAR);
     if (p == NULL) {
@@ -190,6 +207,8 @@ IPC_InitModuleReg(const char *exePath)
         }
         PR_CloseDir(dir);
     }
+
+    free(modulesDir);
 }
 
 void
@@ -198,15 +217,13 @@ IPC_ShutdownModuleReg()
     //
     // shutdown modules in reverse order    
     //
-    for (int i = ipcModuleCount - 1; i >= 0; --i) {
-        ipcModuleRegEntry &entry = ipcModules[i];
+    while (ipcModuleCount) {
+        ipcModuleRegEntry &entry = ipcModules[--ipcModuleCount];
         if (entry.methods->shutdown)
             entry.methods->shutdown();
         if (entry.lib)
             PR_UnloadLibrary(entry.lib);
     }
-    // memset(ipcModules, 0, sizeof(ipcModules));
-    ipcModuleCount = 0;
 }
 
 void

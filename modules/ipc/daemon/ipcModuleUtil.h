@@ -41,10 +41,12 @@
 #include "prlog.h"
 #include "ipcModule.h"
 
-extern ipcDaemonMethods *gIPCDaemonMethods;
+extern const ipcDaemonMethods *gIPCDaemonMethods;
 
 //-----------------------------------------------------------------------------
 // inline wrapper functions
+// 
+// XXX only usable inside module.. blah
 //-----------------------------------------------------------------------------
 
 inline PRStatus
@@ -141,13 +143,14 @@ IPC_SendMsg(PRUint32 clientID, const nsID &target, const void *data, PRUint32 da
 // module factory macros
 //-----------------------------------------------------------------------------
 
-#define IPC_IMPL_GETMODULES(_modName, _modEntries)                        \
-    ipcDaemonMethods *gIPCDaemonMethods;                                  \
-    IPC_EXPORT int                                                        \
-    IPC_GetModules(ipcDaemonMethods *dmeths, ipcModuleEntry **ents) {     \
-        gIPCDaemonMethods = dmeths;                                       \
-        *ents = _modEntries;                                              \
-        return sizeof(_modEntries) / sizeof(ipcModuleEntry);              \
+#define IPC_IMPL_GETMODULES(_modName, _modEntries)                                \
+    const ipcDaemonMethods *gIPCDaemonMethods;                                    \
+    IPC_EXPORT int                                                                \
+    IPC_GetModules(const ipcDaemonMethods *dmeths, const ipcModuleEntry **ents) { \
+        /* XXX do version checking */                                             \
+        gIPCDaemonMethods = dmeths;                                               \
+        *ents = _modEntries;                                                      \
+        return sizeof(_modEntries) / sizeof(ipcModuleEntry);                      \
     }
 
 #endif // !ipcModuleUtil_h__

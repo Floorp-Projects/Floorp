@@ -40,6 +40,7 @@
 
 #include "nsID.h"
 
+// XXX cruft
 #define IPC_EXPORT extern "C" NS_EXPORT
 
 class ipcMessage;
@@ -229,7 +230,7 @@ struct ipcModuleEntry
 };
 
 //
-// IPC_EXPORT int IPC_GetModules(ipcDaemonMethods *, ipcModuleEntry **);
+// IPC_EXPORT int IPC_GetModules(const ipcDaemonMethods *, const ipcModuleEntry **);
 //
 // params:
 //   methods - the daemon's methods
@@ -238,6 +239,6 @@ struct ipcModuleEntry
 // returns:
 //   length of the |entries| array.
 //
-typedef int (* ipcGetModulesFunc) (ipcDaemonMethods *methods, ipcModuleEntry **entries);
+typedef int (* ipcGetModulesFunc) (const ipcDaemonMethods *methods, const ipcModuleEntry **entries);
 
 #endif // !ipcModule_h__
