@@ -314,7 +314,7 @@ sub validateObsolete
   # Make sure the attachment id is valid and the user has permissions to view
   # the bug to which it is attached.
   foreach my $attachid (@{$::MFORM{'obsolete'}}) {
-    $attachid =~ /^[1-9][0-9]*$/
+    detaint_natural($attachid)
       || DisplayError("The attachment number of one of the attachments 
            you wanted to obsolete is invalid.") 
         && exit;
