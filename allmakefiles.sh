@@ -389,6 +389,14 @@ xpfe/components/find/Makefile
 xpfe/components/find/public/Makefile
 xpfe/components/find/src/Makefile
 xpfe/components/find/resources/Makefile
+xpfe/components/xfer/Makefile
+xpfe/components/xfer/public/Makefile
+xpfe/components/xfer/src/Makefile
+xpfe/components/xfer/resources/Makefile
+xpfe/components/ucth/Makefile
+xpfe/components/ucth/public/Makefile
+xpfe/components/ucth/src/Makefile
+xpfe/components/ucth/resources/Makefile
 xpfe/appshell/Makefile
 xpfe/appshell/src/Makefile
 xpfe/appshell/public/Makefile
