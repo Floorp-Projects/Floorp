@@ -28,10 +28,12 @@
 #include "nsString.h"
 #include "nsIStringStream.h"
 
+// for testing only
+#include "nsIHTMLEditor.h"
+// end for testing only
+
 #ifdef NS_DEBUG
-#ifdef EDITOR_SELFTEST
 #include "TextEditorTest.h"
-#endif
 #endif
 
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
@@ -459,8 +461,141 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         }
         break;
 
+      // hard-coded ChangeTextAttributes test -- font size +2
+      case nsIDOMEvent::VK_3:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+          {
+            // XXX: move this logic down into texteditor rules delegate
+            //      should just call mEditor->ChangeTextProperty(prop)
+            PRBool any = PR_FALSE;
+            PRBool all = PR_FALSE;
+            PRBool first = PR_FALSE;
+            nsAutoString prop = "SIZE";
+            nsAutoString value = "+2";
+            mEditor->SetTextProperty(nsIEditProperty::font, &prop, &value);
+          }
+        }
+        break;
+
+      // hard-coded ChangeTextAttributes test -- font size -2
+      case nsIDOMEvent::VK_4:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+          {
+            // XXX: move this logic down into texteditor rules delegate
+            //      should just call mEditor->ChangeTextProperty(prop)
+            PRBool any = PR_FALSE;
+            PRBool all = PR_FALSE;
+            PRBool first = PR_FALSE;
+            nsAutoString prop = "SIZE";
+            nsAutoString value = "-2";
+            mEditor->SetTextProperty(nsIEditProperty::font, &prop, &value);
+          }
+        }
+        break;
+
+              // hard-coded ChangeTextAttributes test -- font face helvetica
+      case nsIDOMEvent::VK_5:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+          {
+            // XXX: move this logic down into texteditor rules delegate
+            //      should just call mEditor->ChangeTextProperty(prop)
+            PRBool any = PR_FALSE;
+            PRBool all = PR_FALSE;
+            PRBool first = PR_FALSE;
+            nsAutoString prop = "FACE";
+            nsAutoString value = "helvetica";
+            mEditor->SetTextProperty(nsIEditProperty::font, &prop, &value);
+          }
+        }
+        break;
+
+      // hard-coded ChangeTextAttributes test -- font face times
+      case nsIDOMEvent::VK_6:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+          {
+            // XXX: move this logic down into texteditor rules delegate
+            //      should just call mEditor->ChangeTextProperty(prop)
+            PRBool any = PR_FALSE;
+            PRBool all = PR_FALSE;
+            PRBool first = PR_FALSE;
+            nsAutoString prop = "FACE";
+            nsAutoString value = "times";
+            mEditor->SetTextProperty(nsIEditProperty::font, &prop, &value);
+          }
+        }
+        break;
+
+      // hard-coded change structure test -- block H1
+      case nsIDOMEvent::VK_7:
+        case nsIDOMEvent::VK_Q:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+          {
+            nsCOMPtr<nsIHTMLEditor>htmlEditor;
+            htmlEditor = do_QueryInterface(mEditor);
+            if (htmlEditor) 
+            {
+              nsAutoString tag;
+              nsIEditProperty::h1->ToString(tag);
+              htmlEditor->AddBlockParent(tag);
+            }
+          }
+        }
+        break;
+
+      // hard-coded change structure test -- block H2
+      case nsIDOMEvent::VK_8:
+        case nsIDOMEvent::VK_W:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+          {
+            nsCOMPtr<nsIHTMLEditor>htmlEditor;
+            htmlEditor = do_QueryInterface(mEditor);
+            if (htmlEditor) 
+            {
+              nsAutoString tag;
+              nsIEditProperty::h2->ToString(tag);
+              htmlEditor->AddBlockParent(tag);
+            }
+          }
+        }
+        break;
+
+      // hard-coded change structure test -- normal
+      case nsIDOMEvent::VK_9:
+        case nsIDOMEvent::VK_E:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+          {
+            nsCOMPtr<nsIHTMLEditor>htmlEditor;
+            htmlEditor = do_QueryInterface(mEditor);
+            if (htmlEditor) {
+              htmlEditor->RemoveBlockParent();
+            }
+          }
+        }
+        break;
+
+
 #ifdef NS_DEBUG
-#ifdef EDITOR_SELFTEST
       // hard-coded Text Editor Unit Test
       case nsIDOMEvent::VK_T:
         if (PR_TRUE==ctrlKey)
@@ -476,7 +611,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           }
         }
         break;
-#endif
 #endif
 
     }
