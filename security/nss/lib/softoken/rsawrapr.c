@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rsawrapr.c,v 1.3 2001/11/08 00:15:40 relyea%netscape.com Exp $
+ * $Id: rsawrapr.c,v 1.4 2001/11/30 23:29:31 relyea%netscape.com Exp $
  */
 
 #include "blapi.h"
@@ -448,7 +448,7 @@ RSA_Sign(NSSLOWKEYPrivateKey *key,
     if (rv != SECSuccess) 
     	goto done;
 
-    rv = RSA_PrivateKeyOp(&key->u.rsa, output, formatted.data);
+    rv = RSA_PrivateKeyOpDoubleChecked(&key->u.rsa, output, formatted.data);
     *output_len = modulus_len;
 
     goto done;
@@ -704,7 +704,7 @@ RSA_SignRaw(NSSLOWKEYPrivateKey *key,
     if (rv != SECSuccess) 
     	goto done;
 
-    rv = RSA_PrivateKeyOp(&key->u.rsa, output, formatted.data);
+    rv = RSA_PrivateKeyOpDoubleChecked(&key->u.rsa, output, formatted.data);
     *output_len = modulus_len;
 
 done:
