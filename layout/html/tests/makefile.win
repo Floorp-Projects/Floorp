@@ -51,12 +51,16 @@ LLIBS=				\
  $(DIST)\lib\raptorhtmlbase_s.lib	\
  $(DIST)\lib\nglhtmlcon_s.lib	\
  $(DIST)\lib\raptorhtmldoc_s.lib	\
+ $(DIST)\lib\raptorhtmlforms_s.lib	\
  $(DIST)\lib\raptorhtmlstyle_s.lib	\
  $(DIST)\lib\raptorhtmltable_s.lib	\
+ $(DIST)\lib\raptorxmlcontent_s.lib	\
+ $(DIST)\lib\raptorxmldoc_s.lib		\
  $(DIST)\lib\gkparser.lib	\
  $(DIST)\lib\raptorlayout_s.lib	\
  $(DIST)\lib\gkgfxwin.lib	\
  $(DIST)\lib\raptorevents_s.lib	\
+ $(DIST)\lib\raptorxulbase_s.lib \
  $(DIST)\lib\raptorxulcontent_s.lib \
  $(DIST)\lib\img32$(VERSION_NUMBER).lib	\
  $(DIST)\lib\util.lib		\
