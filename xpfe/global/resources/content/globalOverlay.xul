@@ -67,6 +67,7 @@
 	<!-- Help Menu -->
 	<menu id="menu_Help" value="&helpMenu.label;">
 	  <menupopup>
+        <!-- Help Menu disabled
 		<menu value="&helpContentCmd.label;">
 			<menupopup>
 			  <menuitem value="&webBrowsingCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/local/browserhelp/navtop.html'"/>
@@ -79,6 +80,7 @@
 			  <menuitem value="&secPrivCmd.label;" oncommand="window.content.location.href='http://home.netscape.com/security/basics/index.html'"/>
 			 </menupopup>
 		</menu>
+	-->
 		<menuseparator/>
 		<menuitem value="&whatNewCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/served/whatsnew/newtop.html'"/>
 			  <menuitem value="&newTutorCmd.label;" oncommand="window.content.location.href='http://home.netscape.com/netcenter/newnet/index.html'"/>
