@@ -63,7 +63,6 @@ nsresult nsUrlListenerManager::UnRegisterListener(nsIUrlListener * aUrlListener)
 nsresult nsUrlListenerManager::BroadcastChange(nsIURL * aUrl, nsUrlNotifyType notification, nsresult aErrorCode)
 {
 	NS_PRECONDITION(aUrl, "we shouldn't get OnStartRunningUrl for the url listener manager without a url...");
-	nsIUrlListener * listener = nsnull;
 	nsresult rv = NS_OK;
 
 	if (m_listeners && aUrl)

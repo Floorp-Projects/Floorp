@@ -629,7 +629,7 @@ nsMsgAppCore::CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement 
 		nsCopyMessageStreamListener* copyStreamListener = new nsCopyMessageStreamListener(srcFolder, dstFolder, nsnull);
 
 		nsIMsgMessageService * messageService = nsnull;
-		nsresult rv = GetMessageServiceFromURI(uri, &messageService);
+		rv = GetMessageServiceFromURI(uri, &messageService);
 
 		if (NS_SUCCEEDED(rv) && messageService)
 		{
