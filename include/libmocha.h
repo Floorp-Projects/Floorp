@@ -31,7 +31,7 @@
 #include "jsapi.h"
 
 /* enable JavaScript Debugger support */
-#if defined (_WIN32) || defined(XP_UNIX) || defined(powerc) || defined(__powerc) || defined(XP_OS2)
+#if defined (_WIN32) || defined(XP_UNIX) || defined(powerc) || defined(__powerc) || defined(XP_OS2) || defined(XP_BEOS)
 #ifdef JAVA
 #define JSDEBUGGER 1 
 #endif
