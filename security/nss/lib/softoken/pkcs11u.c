@@ -1468,9 +1468,10 @@ pk11_forceTokenAttribute(PK11Object *object,CK_ATTRIBUTE_TYPE type,
     }
 
     /* if we are just setting it to the value we already have,
-     * allow it to happen. */
+     * allow it to happen. Let label setting go through so
+     * we have the opportunity to repair any database corruption. */
     attribute=pk11_FindAttribute(object,type);
-    if ((attribute->attrib.ulValueLen == len) &&
+    if ((type != CKA_LABEL) && (attribute->attrib.ulValueLen == len) &&
 	PORT_Memcmp(attribute->attrib.pValue,value,len) == 0) {
 	pk11_FreeAttribute(attribute);
 	return CKR_OK;

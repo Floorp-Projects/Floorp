@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.27 2002/07/13 02:45:04 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.28 2002/07/16 16:44:21 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -2914,12 +2914,12 @@ AddPermSubjectNode(certDBEntrySubject *entry, NSSLOWCERTCertificate *cert,
 								char *nickname)
 {
     SECItem *newCertKeys, *newKeyIDs;
-    unsigned int i;
+    unsigned int i, new_i;
     SECStatus rv;
     NSSLOWCERTCertificate *cmpcert;
     unsigned int nnlen;
     unsigned int ncerts;
-    
+    PRBool added = PR_FALSE;
 
     PORT_Assert(entry);    
     ncerts = entry->ncerts;
@@ -2949,60 +2949,68 @@ AddPermSubjectNode(certDBEntrySubject *entry, NSSLOWCERTCertificate *cert,
 	    return(SECFailure);
     }
 
-    for ( i = 0; i < ncerts; i++ ) {
+    for ( i = 0, new_i=0; i < ncerts; i++ ) {
 	cmpcert = nsslowcert_FindCertByKey(cert->dbhandle,
 						  &entry->certKeys[i]);
-	PORT_Assert(cmpcert);
+	/* The entry has been corrupted, remove it from the list */
+	if (!cmpcert) {
+	    continue;
+	}
+
 	if ( nsslowcert_IsNewer(cert, cmpcert) ) {
 	    /* insert before cmpcert */
-	    rv = SECITEM_CopyItem(entry->common.arena, &newCertKeys[i],
+	    rv = SECITEM_CopyItem(entry->common.arena, &newCertKeys[new_i],
 				      &cert->certKey);
 	    if ( rv != SECSuccess ) {
 		return(SECFailure);
 	    }
-	    rv = SECITEM_CopyItem(entry->common.arena, &newKeyIDs[i],
+	    rv = SECITEM_CopyItem(entry->common.arena, &newKeyIDs[new_i],
 				      &cert->subjectKeyID);
 	    if ( rv != SECSuccess ) {
 		return(SECFailure);
 	    }
+	    new_i++;
 	    /* copy the rest of the entry */
-	    for ( ; i < ncerts; i++ ) {
-		newCertKeys[i+1] = entry->certKeys[i];
-		newKeyIDs[i+1] = entry->keyIDs[i];
+	    for ( ; i < ncerts; i++ ,new_i++) {
+		newCertKeys[new_i] = entry->certKeys[i];
+		newKeyIDs[new_i] = entry->keyIDs[i];
 	    }
 
 	    /* update certKeys and keyIDs */
 	    entry->certKeys = newCertKeys;
 	    entry->keyIDs = newKeyIDs;
 		
-	    /* increment count */
-	    entry->ncerts++;
+	    /* set new count value */
+	    entry->ncerts = new_i;
+	    added = PR_TRUE;
 	    break;
 	}
 	/* copy this cert entry */
-	newCertKeys[i] = entry->certKeys[i];
-	newKeyIDs[i] = entry->keyIDs[i];
+	newCertKeys[new_i] = entry->certKeys[i];
+	newKeyIDs[new_i] = entry->keyIDs[i];
+	new_i++; /* only increment if we copied the entries */
     }
 
-    if ( entry->ncerts == ncerts ) {
+    if ( !added ) {
 	/* insert new one at end */
-	rv = SECITEM_CopyItem(entry->common.arena, &newCertKeys[ncerts],
+	rv = SECITEM_CopyItem(entry->common.arena, &newCertKeys[new_i],
 				  &cert->certKey);
 	if ( rv != SECSuccess ) {
 	    return(SECFailure);
 	}
-	rv = SECITEM_CopyItem(entry->common.arena, &newKeyIDs[ncerts],
+	rv = SECITEM_CopyItem(entry->common.arena, &newKeyIDs[new_i],
 				  &cert->subjectKeyID);
 	if ( rv != SECSuccess ) {
 	    return(SECFailure);
 	}
+	new_i++;
 
 	/* update certKeys and keyIDs */
 	entry->certKeys = newCertKeys;
 	entry->keyIDs = newKeyIDs;
 		
 	/* increment count */
-	entry->ncerts++;
+	entry->ncerts = new_i;
     }
     DeleteDBSubjectEntry(cert->dbhandle, &cert->derSubject);
     rv = WriteDBSubjectEntry(cert->dbhandle, entry);
@@ -3028,6 +3036,9 @@ nsslowcert_TraversePermCertsForSubject(NSSLOWCERTCertDBHandle *handle,
     
     for( i = 0; i < entry->ncerts; i++ ) {
 	cert = nsslowcert_FindCertByKey(handle, &entry->certKeys[i]);
+	if (!cert) {
+	    continue;
+	}
 	rv = (* cb)(cert, cbarg);
 	nsslowcert_DestroyCertificate(cert);
 	if ( rv == SECFailure ) {
@@ -3164,13 +3175,6 @@ nsslowcert_AddPermNickname(NSSLOWCERTCertDBHandle *dbhandle,
     certDBEntryNickname *nicknameEntry = NULL;
     
     nsslowcert_LockDB(dbhandle);
-    
-    PORT_Assert(cert->nickname == NULL);
-    
-    if ( cert->nickname != NULL ) {
-	rv = SECSuccess;
-	goto loser;
-    }
 
     entry = ReadDBSubjectEntry(dbhandle, &cert->derSubject);
     if (entry == NULL) goto loser;
