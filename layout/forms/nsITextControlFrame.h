@@ -46,7 +46,7 @@ class nsISelectionController;
 0xa744cfc9, 0x2da8, 0x416d, \
 { 0xa0, 0x58, 0xad, 0xb1, 0xd4, 0xb3, 0xb5, 0x34 } }
 
-class nsIGfxTextControlFrame2 : public nsIFormControlFrame
+class nsITextControlFrame : public nsIFormControlFrame
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IGFXTEXTCONTROLFRAME2_IID)

@@ -185,7 +185,7 @@ extern nsresult NS_NewFieldSetFrame(nsIPresShell* aPresShell, nsIFrame** aResult
 extern nsresult NS_NewFileControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult NS_NewLegendFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult NS_NewNativeTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-extern nsresult NS_NewGfxTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+extern nsresult NS_NewTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 extern nsresult NS_NewGfxAutoTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 extern nsresult NS_NewGfxRadioControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult NS_NewNativeRadioControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);

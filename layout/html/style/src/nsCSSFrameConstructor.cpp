@@ -4139,7 +4139,7 @@ nsCSSFrameConstructor::ConstructTextControlFrame(nsIPresShell*   aPresShell,
   aPresContext->GetWidgetRenderingMode(&mode);
   if (eWidgetRendering_Gfx == mode) 
   {
-    rv = NS_NewGfxTextControlFrame(aPresShell, &aNewFrame);
+    rv = NS_NewTextControlFrame(aPresShell, &aNewFrame);
     if (NS_FAILED(rv)) {
       aNewFrame = nsnull;
     }

@@ -30,7 +30,7 @@ EXPORTS=nsIListControlFrame.h \
   nsIFormSubmitObserver.h \
   nsIFormProcessor.h \
   nsISelectControlFrame.h \
-  nsIGfxTextControlFrame.h
+  nsITextControlFrame.h
 
 MODULE=layout 
 

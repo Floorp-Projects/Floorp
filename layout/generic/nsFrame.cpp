@@ -83,7 +83,7 @@
 #include "nsIDOMRange.h"
 #include "nsITableLayout.h"    //selection neccesity
 #include "nsITableCellLayout.h"//  "
-#include "nsIGfxTextControlFrame.h"
+#include "nsITextControlFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsIPercentHeightObserver.h"
 
@@ -2650,8 +2650,8 @@ nsFrame::GetSelectionController(nsIPresContext *aPresContext, nsISelectionContro
     nsIFrame *tmp = this;
     while (tmp)
     {
-      nsIGfxTextControlFrame2 *tcf;
-      if (NS_SUCCEEDED(tmp->QueryInterface(NS_GET_IID(nsIGfxTextControlFrame2),(void**)&tcf)))
+      nsITextControlFrame *tcf;
+      if (NS_SUCCEEDED(tmp->QueryInterface(NS_GET_IID(nsITextControlFrame),(void**)&tcf)))
       {
         return tcf->GetSelectionContr(aSelCon);
       }

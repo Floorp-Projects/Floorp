@@ -45,9 +45,9 @@
 #include "nsCOMPtr.h"
 #include "nsIHTMLContent.h"
 
-#include "nsGfxTextControlFrame2.h"
+#include "nsTextControlFrame.h"
 #include "nsFormControlHelper.h"
-typedef   nsGfxTextControlFrame2 nsNewFrame;
+typedef   nsTextControlFrame nsNewFrame;
 
 class nsIPresState;
 class nsISupportsArray;

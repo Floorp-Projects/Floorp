@@ -38,7 +38,7 @@
 
 
 #include "nsCOMPtr.h"
-#include "nsGfxTextControlFrame2.h"
+#include "nsTextControlFrame.h"
 #include "nsIDocument.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
@@ -170,7 +170,7 @@ public:
   /** SetEditor gives an address to the editor that will be accessed
    *  @param aEditor the editor this listener calls for editing operations
    */
-  void SetFrame(nsGfxTextControlFrame2 *aFrame){mFrame = aFrame;}
+  void SetFrame(nsTextControlFrame *aFrame){mFrame = aFrame;}
 
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -226,7 +226,7 @@ protected:
 
 protected:
 
-  nsGfxTextControlFrame2* mFrame;  // weak reference
+  nsTextControlFrame* mFrame;  // weak reference
   
   PRPackedBool    mSelectionWasCollapsed;
   PRPackedBool    mKnowSelectionCollapsed;
@@ -1102,7 +1102,7 @@ NS_IMETHODIMP
 nsTextInputSelectionImpl::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt32 aTarget, nsMouseEvent *aMouseEvent)
 {
   // We should never have a table inside a text control frame!
-  NS_ASSERTION(PR_TRUE, "Calling HandleTableSelection inside nsGfxTextControlFrame2!");
+  NS_ASSERTION(PR_TRUE, "Calling HandleTableSelection inside nsTextControlFrame!");
   return NS_OK;
 }
 
@@ -1254,13 +1254,13 @@ NS_IMETHODIMP nsTextInputSelectionImpl::GetFrameFromLevel(nsIPresContext *aPresC
 
 
 nsresult
-NS_NewGfxTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+NS_NewTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsGfxTextControlFrame2* it = new (aPresShell) nsGfxTextControlFrame2(aPresShell);
+  nsTextControlFrame* it = new (aPresShell) nsTextControlFrame(aPresShell);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1268,12 +1268,12 @@ NS_NewGfxTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-NS_IMPL_ADDREF_INHERITED(nsGfxTextControlFrame2, nsBoxFrame);
-NS_IMPL_RELEASE_INHERITED(nsGfxTextControlFrame2, nsBoxFrame);
+NS_IMPL_ADDREF_INHERITED(nsTextControlFrame, nsBoxFrame);
+NS_IMPL_RELEASE_INHERITED(nsTextControlFrame, nsBoxFrame);
  
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+nsTextControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
@@ -1286,8 +1286,8 @@ nsGfxTextControlFrame2::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;
     return NS_OK;
   }
-  if (aIID.Equals(NS_GET_IID(nsIGfxTextControlFrame2))) {
-    *aInstancePtr = (void*)(nsIGfxTextControlFrame2*) this;
+  if (aIID.Equals(NS_GET_IID(nsITextControlFrame))) {
+    *aInstancePtr = (void*)(nsITextControlFrame*) this;
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIScrollableViewProvider))) {
@@ -1299,7 +1299,7 @@ nsGfxTextControlFrame2::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP nsGfxTextControlFrame2::GetAccessible(nsIAccessible** aAccessible)
+NS_IMETHODIMP nsTextControlFrame::GetAccessible(nsIAccessible** aAccessible)
 {
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
@@ -1311,7 +1311,7 @@ NS_IMETHODIMP nsGfxTextControlFrame2::GetAccessible(nsIAccessible** aAccessible)
 }
 #endif
 
-nsGfxTextControlFrame2::nsGfxTextControlFrame2(nsIPresShell* aShell):nsStackFrame(aShell)
+nsTextControlFrame::nsTextControlFrame(nsIPresShell* aShell):nsStackFrame(aShell)
 {
   mUseEditor = PR_FALSE;
   mIsProcessing = PR_FALSE;
@@ -1322,7 +1322,7 @@ nsGfxTextControlFrame2::nsGfxTextControlFrame2(nsIPresShell* aShell):nsStackFram
   mDidPreDestroy = PR_FALSE;
 }
 
-nsGfxTextControlFrame2::~nsGfxTextControlFrame2()
+nsTextControlFrame::~nsTextControlFrame()
 {
   //delete mTextListener;
   //delete mTextSelImpl; dont delete this since mSelCon will release it.
@@ -1369,7 +1369,7 @@ SuppressEventHandlers(nsIPresContext* aPresContext)
 }
 
 void
-nsGfxTextControlFrame2::PreDestroy(nsIPresContext* aPresContext)
+nsTextControlFrame::PreDestroy(nsIPresContext* aPresContext)
 {
   // notify the editor that we are going away
   if (mEditor)
@@ -1447,7 +1447,7 @@ nsGfxTextControlFrame2::PreDestroy(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP 
-nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
+nsTextControlFrame::Destroy(nsIPresContext* aPresContext)
 {
   if (!mDidPreDestroy) {
     PreDestroy(aPresContext);
@@ -1456,7 +1456,7 @@ nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
 }
 
 void 
-nsGfxTextControlFrame2::RemovedAsPrimaryFrame(nsIPresContext* aPresContext)
+nsTextControlFrame::RemovedAsPrimaryFrame(nsIPresContext* aPresContext)
 {
   if (!mDidPreDestroy) {
     PreDestroy(aPresContext);
@@ -1465,7 +1465,7 @@ nsGfxTextControlFrame2::RemovedAsPrimaryFrame(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP 
-nsGfxTextControlFrame2::GetFrameType(nsIAtom** aType) const 
+nsTextControlFrame::GetFrameType(nsIAtom** aType) const 
 { 
   NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer"); 
   *aType = nsLayoutAtoms::textInputFrame; 
@@ -1474,7 +1474,7 @@ nsGfxTextControlFrame2::GetFrameType(nsIAtom** aType) const
 } 
 
 // XXX: wouldn't it be nice to get this from the style context!
-PRBool nsGfxTextControlFrame2::IsSingleLineTextControl() const
+PRBool nsTextControlFrame::IsSingleLineTextControl() const
 {
   PRInt32 type;
   GetType(&type);
@@ -1484,7 +1484,7 @@ PRBool nsGfxTextControlFrame2::IsSingleLineTextControl() const
   return PR_FALSE; 
 }
 
-PRBool nsGfxTextControlFrame2::IsTextArea() const
+PRBool nsTextControlFrame::IsTextArea() const
 {
   if (!mContent)
     return PR_FALSE;
@@ -1499,13 +1499,13 @@ PRBool nsGfxTextControlFrame2::IsTextArea() const
 }
 
 // XXX: wouldn't it be nice to get this from the style context!
-PRBool nsGfxTextControlFrame2::IsPlainTextControl() const
+PRBool nsTextControlFrame::IsPlainTextControl() const
 {
   // need to check HTML attribute of mContent and/or CSS.
   return PR_TRUE;
 }
 
-PRBool nsGfxTextControlFrame2::IsPasswordTextControl() const
+PRBool nsTextControlFrame::IsPasswordTextControl() const
 {
   PRInt32 type;
   GetType(&type);
@@ -1517,7 +1517,7 @@ PRBool nsGfxTextControlFrame2::IsPasswordTextControl() const
 
 
 nsresult 
-nsGfxTextControlFrame2::GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
+nsTextControlFrame::GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
                                          nsIAtom *     aColSizeAttr,
                                          nsHTMLValue & aColSize,
                                          nsresult &    aColStatus,
@@ -1550,7 +1550,7 @@ nsGfxTextControlFrame2::GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
 
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::ReflowStandard(nsIPresContext*          aPresContext,
+nsTextControlFrame::ReflowStandard(nsIPresContext*          aPresContext,
                                        nsSize&                  aDesiredSize,
                                        const nsHTMLReflowState& aReflowState,
                                        nsReflowStatus&          aStatus,
@@ -1624,7 +1624,7 @@ nsGfxTextControlFrame2::ReflowStandard(nsIPresContext*          aPresContext,
 
 
 PRInt32
-nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContext, 
+nsTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext, 
                                               nsIRenderingContext*  aRendContext,
                                               nsIFormControlFrame*  aFrame,
                                               nsInputDimensionSpec& aSpec, 
@@ -1761,7 +1761,7 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
 
 //------------------------------------------------------------------
 NS_IMETHODIMP
-nsGfxTextControlFrame2::CreateFrameFor(nsIPresContext*   aPresContext,
+nsTextControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
                                        nsIContent *      aContent,
                                        nsIFrame**        aFrame)
 {
@@ -1770,7 +1770,7 @@ nsGfxTextControlFrame2::CreateFrameFor(nsIPresContext*   aPresContext,
 }
 
 nsresult
-nsGfxTextControlFrame2::InitEditor()
+nsTextControlFrame::InitEditor()
 {
   // This method must be called during/after the text
   // control frame's initial reflow to avoid any unintened
@@ -1867,7 +1867,7 @@ nsGfxTextControlFrame2::InitEditor()
   ""
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
+nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
                                            nsISupportsArray& aChildList)
 {
   // Get the PresShell
@@ -2196,12 +2196,12 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::Reflow(nsIPresContext*   aPresContext,
+nsTextControlFrame::Reflow(nsIPresContext*   aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsGfxTextControlFrame2", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsTextControlFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   InitEditor();
@@ -2229,7 +2229,7 @@ nsGfxTextControlFrame2::Reflow(nsIPresContext*   aPresContext,
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::Paint(nsIPresContext*      aPresContext,
+nsTextControlFrame::Paint(nsIPresContext*      aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               const nsRect&        aDirtyRect,
                               nsFramePaintLayer    aWhichLayer,
@@ -2247,12 +2247,12 @@ nsGfxTextControlFrame2::Paint(nsIPresContext*      aPresContext,
     if (NS_FAILED(rv)) return rv;
     rv = nsStackFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FOREGROUND);
   }
-  DO_GLOBAL_REFLOW_COUNT_DSP("nsGfxTextControlFrame2", &aRenderingContext);
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsTextControlFrame", &aRenderingContext);
   return rv;
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetFrameForPoint(nsIPresContext* aPresContext,
+nsTextControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                          const nsPoint& aPoint,
                                          nsFramePaintLayer aWhichLayer,
                                          nsIFrame** aFrame)
@@ -2274,7 +2274,7 @@ nsGfxTextControlFrame2::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsTextControlFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   if (!DoesNeedRecalc(mPrefSize)) {
      aSize = mPrefSize;
@@ -2342,7 +2342,7 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsTextControlFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
 #define FIX_FOR_BUG_40596
 #ifdef FIX_FOR_BUG_40596
@@ -2354,13 +2354,13 @@ nsGfxTextControlFrame2::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
+nsTextControlFrame::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   return nsBox::GetMaxSize(aState, aSize);
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
+nsTextControlFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
 {
   nsSize size;
   nsresult rv = GetPrefSize(aState, size);
@@ -2370,7 +2370,7 @@ nsGfxTextControlFrame2::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
 
 //IMPLEMENTING NS_IFORMCONTROLFRAME
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetName(nsAString* aResult)
+nsTextControlFrame::GetName(nsAString* aResult)
 {
   nsresult rv = NS_FORM_NOTOK;
   if (mContent) {
@@ -2391,7 +2391,7 @@ nsGfxTextControlFrame2::GetName(nsAString* aResult)
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetType(PRInt32* aType) const
+nsTextControlFrame::GetType(PRInt32* aType) const
 {
   nsresult rv = NS_FORM_NOTOK;
   if (mContent) {
@@ -2406,7 +2406,7 @@ nsGfxTextControlFrame2::GetType(PRInt32* aType) const
 }
 
 nsresult
-nsGfxTextControlFrame2::GetSizeFromContent(PRInt32* aSize) const
+nsTextControlFrame::GetSizeFromContent(PRInt32* aSize) const
 {
   *aSize = -1;
   nsresult result = NS_CONTENT_ATTR_NOT_THERE;
@@ -2438,9 +2438,9 @@ nsGfxTextControlFrame2::GetSizeFromContent(PRInt32* aSize) const
   return result;
 }
 
-void    nsGfxTextControlFrame2::SetFocus(PRBool aOn , PRBool aRepaint){}
+void    nsTextControlFrame::SetFocus(PRBool aOn , PRBool aRepaint){}
 
-void    nsGfxTextControlFrame2::ScrollIntoView(nsIPresContext* aPresContext)
+void    nsTextControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 {
   if (aPresContext) {
     nsCOMPtr<nsIPresShell> presShell;
@@ -2452,10 +2452,10 @@ void    nsGfxTextControlFrame2::ScrollIntoView(nsIPresContext* aPresContext)
   }
 }
 
-void    nsGfxTextControlFrame2::MouseClicked(nsIPresContext* aPresContext){}
+void    nsTextControlFrame::MouseClicked(nsIPresContext* aPresContext){}
 
 nscoord 
-nsGfxTextControlFrame2::GetVerticalInsidePadding(nsIPresContext* aPresContext,
+nsTextControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerHeight) const
 {
@@ -2465,7 +2465,7 @@ nsGfxTextControlFrame2::GetVerticalInsidePadding(nsIPresContext* aPresContext,
 
 //---------------------------------------------------------
 nscoord 
-nsGfxTextControlFrame2::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
+nsTextControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                                float aPixToTwip, 
                                                nscoord aInnerWidth,
                                                nscoord aCharWidth) const
@@ -2475,7 +2475,7 @@ nsGfxTextControlFrame2::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP 
-nsGfxTextControlFrame2::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
+nsTextControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 {
   mSuggestedWidth = aWidth;
   mSuggestedHeight = aHeight;
@@ -2483,21 +2483,21 @@ nsGfxTextControlFrame2::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 }
 
 nsresult 
-nsGfxTextControlFrame2::RequiresWidget(PRBool& aRequiresWidget)
+nsTextControlFrame::RequiresWidget(PRBool& aRequiresWidget)
 {
   aRequiresWidget = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetFont(nsIPresContext* aPresContext, 
+nsTextControlFrame::GetFont(nsIPresContext* aPresContext, 
                             const nsFont*&  aFont)
 {
   return nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetFormContent(nsIContent*& aContent) const
+nsTextControlFrame::GetFormContent(nsIContent*& aContent) const
 {
   nsIContent* content;
   nsresult    rv;
@@ -2507,7 +2507,7 @@ nsGfxTextControlFrame2::GetFormContent(nsIContent*& aContent) const
   return rv;
 }
 
-NS_IMETHODIMP nsGfxTextControlFrame2::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue)
+NS_IMETHODIMP nsTextControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue)
 {
   if (!mIsProcessing)//some kind of lock.
   {
@@ -2539,7 +2539,7 @@ NS_IMETHODIMP nsGfxTextControlFrame2::SetProperty(nsIPresContext* aPresContext, 
 }      
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetProperty(nsIAtom* aName, nsAString& aValue)
+nsTextControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
 {
   // Return the value of the property from the widget it is not null.
   // If widget is null, assume the widget is GFX-rendered and return a member variable instead.
@@ -2553,7 +2553,7 @@ nsGfxTextControlFrame2::GetProperty(nsIAtom* aName, nsAString& aValue)
 
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetEditor(nsIEditor **aEditor)
+nsTextControlFrame::GetEditor(nsIEditor **aEditor)
 {
   NS_ENSURE_ARG_POINTER(aEditor);
   *aEditor = mEditor;
@@ -2562,7 +2562,7 @@ nsGfxTextControlFrame2::GetEditor(nsIEditor **aEditor)
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::OwnsValue(PRBool* aOwnsValue)
+nsTextControlFrame::OwnsValue(PRBool* aOwnsValue)
 {
   NS_PRECONDITION(aOwnsValue, "aOwnsValue must be non-null");
   *aOwnsValue = mUseEditor;
@@ -2570,7 +2570,7 @@ nsGfxTextControlFrame2::OwnsValue(PRBool* aOwnsValue)
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetTextLength(PRInt32* aTextLength)
+nsTextControlFrame::GetTextLength(PRInt32* aTextLength)
 {
   NS_ENSURE_ARG_POINTER(aTextLength);
 
@@ -2583,7 +2583,7 @@ nsGfxTextControlFrame2::GetTextLength(PRInt32* aTextLength)
 
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetFirstTextNode(nsIDOMCharacterData* *aFirstTextNode)
+nsTextControlFrame::GetFirstTextNode(nsIDOMCharacterData* *aFirstTextNode)
 {
   if (!mEditor)
     return NS_ERROR_NOT_INITIALIZED;
@@ -2621,7 +2621,7 @@ nsGfxTextControlFrame2::GetFirstTextNode(nsIDOMCharacterData* *aFirstTextNode)
 
 
 nsresult
-nsGfxTextControlFrame2::SelectAllContents()
+nsTextControlFrame::SelectAllContents()
 {
   nsresult rv;
   
@@ -2643,7 +2643,7 @@ nsGfxTextControlFrame2::SelectAllContents()
 
 
 nsresult
-nsGfxTextControlFrame2::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd)
+nsTextControlFrame::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd)
 {
   NS_ASSERTION(IsSingleLineTextControl() || IsTextArea(), "Should only call this on a single line input");
   NS_ASSERTION(mEditor, "Should have an editor here");
@@ -2744,7 +2744,7 @@ nsGfxTextControlFrame2::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::SetSelectionRange(PRInt32 aSelStart, PRInt32 aSelEnd)
+nsTextControlFrame::SetSelectionRange(PRInt32 aSelStart, PRInt32 aSelEnd)
 {
   if (!IsSingleLineTextControl()) return NS_ERROR_NOT_IMPLEMENTED;
   
@@ -2757,7 +2757,7 @@ nsGfxTextControlFrame2::SetSelectionRange(PRInt32 aSelStart, PRInt32 aSelEnd)
 
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::SetSelectionStart(PRInt32 aSelectionStart)
+nsTextControlFrame::SetSelectionStart(PRInt32 aSelectionStart)
 {
   if (!IsSingleLineTextControl() && !IsTextArea()) return NS_ERROR_NOT_IMPLEMENTED;
 
@@ -2769,7 +2769,7 @@ nsGfxTextControlFrame2::SetSelectionStart(PRInt32 aSelectionStart)
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::SetSelectionEnd(PRInt32 aSelectionEnd)
+nsTextControlFrame::SetSelectionEnd(PRInt32 aSelectionEnd)
 {
   if (!IsSingleLineTextControl() && !IsTextArea()) return NS_ERROR_NOT_IMPLEMENTED;
 
@@ -2782,7 +2782,7 @@ nsGfxTextControlFrame2::SetSelectionEnd(PRInt32 aSelectionEnd)
 
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd)
+nsTextControlFrame::GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd)
 {
     NS_ENSURE_ARG_POINTER((aSelectionStart && aSelectionEnd));
 
@@ -2879,7 +2879,7 @@ nsGfxTextControlFrame2::GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSe
 
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetSelectionContr(nsISelectionController **aSelCon)
+nsTextControlFrame::GetSelectionContr(nsISelectionController **aSelCon)
 {
   NS_ENSURE_ARG_POINTER(aSelCon);
   NS_IF_ADDREF(*aSelCon = mSelCon);
@@ -2891,7 +2891,7 @@ nsGfxTextControlFrame2::GetSelectionContr(nsISelectionController **aSelCon)
 
 ////NSIFRAME
 NS_IMETHODIMP
-nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
+nsTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                         nsIContent*     aChild,
                                         PRInt32         aNameSpaceID,
                                         nsIAtom*        aAttribute,
@@ -2999,7 +2999,7 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetText(nsString* aText)
+nsTextControlFrame::GetText(nsString* aText)
 {
   nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
   PRInt32 type;
@@ -3027,7 +3027,7 @@ nsGfxTextControlFrame2::GetText(nsString* aText)
 ///END NSIFRAME OVERLOADS
 /////BEGIN PROTECTED METHODS
 
-void nsGfxTextControlFrame2::RemoveNewlines(nsString &aString)
+void nsTextControlFrame::RemoveNewlines(nsString &aString)
 {
   // strip CR/LF and null
   static const char badChars[] = {10, 13, 0};
@@ -3036,7 +3036,7 @@ void nsGfxTextControlFrame2::RemoveNewlines(nsString &aString)
 
 
 nsresult
-nsGfxTextControlFrame2::GetMaxLength(PRInt32* aSize)
+nsTextControlFrame::GetMaxLength(PRInt32* aSize)
 {
   *aSize = -1;
   nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
@@ -3054,7 +3054,7 @@ nsGfxTextControlFrame2::GetMaxLength(PRInt32* aSize)
 }
 
 nsresult
-nsGfxTextControlFrame2::DoesAttributeExist(nsIAtom *aAtt)
+nsTextControlFrame::DoesAttributeExist(nsIAtom *aAtt)
 {
   nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
 
@@ -3069,7 +3069,7 @@ nsGfxTextControlFrame2::DoesAttributeExist(nsIAtom *aAtt)
 
 // this is where we propagate a content changed event
 NS_IMETHODIMP
-nsGfxTextControlFrame2::InternalContentChanged()
+nsTextControlFrame::InternalContentChanged()
 {
   NS_PRECONDITION(mContent, "illegal to call unless we map to a content node");
 
@@ -3099,13 +3099,13 @@ nsGfxTextControlFrame2::InternalContentChanged()
 }
 
 nsresult
-nsGfxTextControlFrame2::InitFocusedValue()
+nsTextControlFrame::InitFocusedValue()
 {
   return GetText(&mFocusedValue);
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::CheckFireOnChange()
+nsTextControlFrame::CheckFireOnChange()
 {
   nsString value;
   GetText(&value);
@@ -3118,7 +3118,7 @@ nsGfxTextControlFrame2::CheckFireOnChange()
 }
 
 nsresult
-nsGfxTextControlFrame2::FireOnChange()
+nsTextControlFrame::FireOnChange()
 {
   // Dispatch th1e change event
   nsCOMPtr<nsIContent> content;
@@ -3151,7 +3151,7 @@ nsGfxTextControlFrame2::FireOnChange()
 //privates
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetValue(nsAString& aValue, PRBool aIgnoreWrap)
+nsTextControlFrame::GetValue(nsAString& aValue, PRBool aIgnoreWrap)
 {
   aValue.Truncate();  // initialize out param
   
@@ -3205,7 +3205,7 @@ nsGfxTextControlFrame2::GetValue(nsAString& aValue, PRBool aIgnoreWrap)
 // END IMPLEMENTING NS_IFORMCONTROLFRAME
 
 void
-nsGfxTextControlFrame2::SetValue(const nsAString& aValue)
+nsTextControlFrame::SetValue(const nsAString& aValue)
 {
   if (mEditor && mUseEditor) 
   {
@@ -3283,7 +3283,7 @@ nsGfxTextControlFrame2::SetValue(const nsAString& aValue)
 
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
+nsTextControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList)
 {
@@ -3364,7 +3364,7 @@ nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
 
 
 PRInt32 
-nsGfxTextControlFrame2::GetWidthInCharacters() const
+nsTextControlFrame::GetWidthInCharacters() const
 {
   // see if there's a COL attribute, if so it wins
   nsCOMPtr<nsIHTMLContent> content;
@@ -3391,7 +3391,7 @@ nsGfxTextControlFrame2::GetWidthInCharacters() const
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetScrollableView(nsIScrollableView** aView)
+nsTextControlFrame::GetScrollableView(nsIScrollableView** aView)
 {
   nsresult rv = NS_OK;
   *aView = mScrollableView;
@@ -3410,19 +3410,19 @@ nsGfxTextControlFrame2::GetScrollableView(nsIScrollableView** aView)
 }
 
 PRBool
-nsGfxTextControlFrame2::IsScrollable() const
+nsTextControlFrame::IsScrollable() const
 {
   return !IsSingleLineTextControl();
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::OnContentReset()
+nsTextControlFrame::OnContentReset()
 {
   return NS_OK;
 }
 
 void
-nsGfxTextControlFrame2::SetValueChanged(PRBool aValueChanged)
+nsTextControlFrame::SetValueChanged(PRBool aValueChanged)
 {
   nsCOMPtr<nsITextControlElement> elem = do_QueryInterface(mContent);
   if (elem) {
@@ -3431,7 +3431,7 @@ nsGfxTextControlFrame2::SetValueChanged(PRBool aValueChanged)
 }
 
 NS_IMETHODIMP 
-nsGfxTextControlFrame2::HandleEvent(nsIPresContext* aPresContext, 
+nsTextControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                        nsGUIEvent*     aEvent,
                                        nsEventStatus*  aEventStatus)
 {

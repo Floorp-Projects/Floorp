@@ -1741,7 +1741,7 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsGfxTextControlFrame2.cpp</PATH>
+                    <PATH>nsTextControlFrame.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
@@ -2697,7 +2697,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsGfxTextControlFrame2.cpp</PATH>
+                    <PATH>nsTextControlFrame.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -4640,7 +4640,7 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsGfxTextControlFrame2.cpp</PATH>
+                    <PATH>nsTextControlFrame.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
@@ -5596,7 +5596,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsGfxTextControlFrame2.cpp</PATH>
+                    <PATH>nsTextControlFrame.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -6295,7 +6295,7 @@
                     <FILEREF>
                         <TARGETNAME>layout.shlb</TARGETNAME>
                         <PATHTYPE>Name</PATHTYPE>
-                        <PATH>nsGfxTextControlFrame2.cpp</PATH>
+                        <PATH>nsTextControlFrame.cpp</PATH>
                         <PATHFORMAT>MacOS</PATHFORMAT>
                     </FILEREF>
                 </GROUP>

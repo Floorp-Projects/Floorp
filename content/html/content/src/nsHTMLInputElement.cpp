@@ -61,7 +61,8 @@
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsIFormSubmission.h"
-#include "nsIGfxTextControlFrame.h"
+#include "nsITextControlFrame.h"
+#include "nsIRadioControlFrame.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIFormControlFrame.h"
@@ -108,7 +109,7 @@
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
-typedef nsIGfxTextControlFrame2 textControlPlace;
+typedef nsITextControlFrame textControlPlace;
 
 //
 // Accessors for mBitField
@@ -221,7 +222,7 @@ public:
   NS_IMETHOD DoneCreatingElement();
 
   // nsITextControlElement
-  NS_IMETHOD SetValueGuaranteed(const nsAString& aValue, nsIGfxTextControlFrame2* aFrame);
+  NS_IMETHOD SetValueGuaranteed(const nsAString& aValue, nsITextControlFrame* aFrame);
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
 
   // nsIRadioControlElement
@@ -235,7 +236,7 @@ public:
 protected:
   // Helper method
   NS_IMETHOD SetValueSecure(const nsAString& aValue,
-                            nsIGfxTextControlFrame2* aFrame,
+                            nsITextControlFrame* aFrame,
                             PRBool aCheckSecurity);
 
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
@@ -600,7 +601,7 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
 
     PRBool frameOwnsValue = PR_FALSE;
     if (formControlFrame) {
-      nsIGfxTextControlFrame2* textControlFrame = nsnull;
+      nsITextControlFrame* textControlFrame = nsnull;
       CallQueryInterface(formControlFrame, &textControlFrame);
 
       if (textControlFrame) {
@@ -646,14 +647,14 @@ nsHTMLInputElement::SetValue(const nsAString& aValue)
 
 NS_IMETHODIMP
 nsHTMLInputElement::SetValueGuaranteed(const nsAString& aValue,
-                                       nsIGfxTextControlFrame2* aFrame)
+                                       nsITextControlFrame* aFrame)
 {
   return SetValueSecure(aValue, aFrame, PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsHTMLInputElement::SetValueSecure(const nsAString& aValue,
-                                   nsIGfxTextControlFrame2* aFrame,
+                                   nsITextControlFrame* aFrame,
                                    PRBool aCheckSecurity)
 {
   PRInt32 type;
@@ -682,7 +683,7 @@ nsHTMLInputElement::SetValueSecure(const nsAString& aValue,
       }
     }
 
-    nsIGfxTextControlFrame2* textControlFrame = aFrame;
+    nsITextControlFrame* textControlFrame = aFrame;
     nsIFormControlFrame* formControlFrame = textControlFrame;
     if (!textControlFrame) {
       // No need to flush here, if there's no frame at this point we
@@ -1596,7 +1597,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           if (mForm) {
             nsIFrame* primaryFrame = GetPrimaryFrame(PR_FALSE);
             if (primaryFrame) {
-              nsIGfxTextControlFrame2* textFrame = nsnull;
+              nsITextControlFrame* textFrame = nsnull;
               CallQueryInterface(primaryFrame, &textFrame);
 
               // Fire onChange (if necessary)
