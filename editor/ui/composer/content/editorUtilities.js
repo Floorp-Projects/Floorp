@@ -855,7 +855,7 @@ function InsertUsernameIntoUrl(urlspec, username)
     return URI.spec;
   } catch (e) {}
 
-  return url;
+  return urlspec;
 }
 
 function GetOS()
