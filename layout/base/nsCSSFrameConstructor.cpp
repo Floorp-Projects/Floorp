@@ -8982,14 +8982,12 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     // remove the mapping from content objects to frames
     DeletingFrameSubtree(aPresContext, shell, frameManager, childFrame);
 
-    // See if the child frame is a floating or positioned frame
+    // See if the child frame is a floating frame
+    //   (positioned frames are handled below in the "else" clause)
     const nsStyleDisplay* display;
     childFrame->GetStyleData(eStyleStruct_Display,
                              (const nsStyleStruct*&)display);
-    const nsStylePosition* position;
-    childFrame->GetStyleData(eStyleStruct_Position,
-                              (const nsStyleStruct*&)position);
-    if (display->IsFloating() || position->IsPositioned()) {
+    if (display->IsFloating()) {
 #ifdef NOISY_FIRST_LETTER
       printf("  ==> child display is still floating!\n");
 #endif
