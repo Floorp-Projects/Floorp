@@ -4,10 +4,10 @@
 <!ENTITY      tab.nopreview.label             "Forms Never Previewed">
 <!ENTITY      tab.nocapture.label             "Forms Never Saved">
 
-<!ENTITY      spiel.signonsstored.label       "Browser has saved login information for the following sites:">
-<!ENTITY      spiel.signonsnotstored.label    "Browser will never save login information for the following sites:">
-<!ENTITY      spiel.nopreview.label           "Browser will never preview forms from the following sites before pre-filling them for you:">
-<!ENTITY      spiel.nocapture.label           "Browser will never ask to save forms from the following sites:">
+<!ENTITY      spiel.signonsstored.label       "Password Manager has saved login information for the following sites:">
+<!ENTITY      spiel.signonsnotstored.label    "Password Manager will never save login information for the following sites:">
+<!ENTITY      spiel.nopreview.label           "Password Manager will never preview forms from the following sites before pre-filling them for you:">
+<!ENTITY      spiel.nocapture.label           "Password Manager will never ask to save forms from the following sites:">
 
 <!ENTITY      treehead.site.label             "Site">
 <!ENTITY      treehead.username.label         "Username">
