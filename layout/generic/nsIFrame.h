@@ -348,12 +348,13 @@ public:
   NS_IMETHOD  IsSplittable(SplittableType& aIsSplittable) const = 0;
 
   /**
-   * Flow member functions. CreateContinuingFrame() is responsible for appending
-   * the continuing frame to the flow.
+   * Flow member functions. CreateContinuingFrame() is responsible for
+   * appending the continuing frame to the flow.
    */
-  NS_IMETHOD  CreateContinuingFrame(nsIPresContext* aPresContext,
-                                    nsIFrame*       aParent,
-                                    nsIFrame*&      aContinuingFrame) = 0;
+  NS_IMETHOD  CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                    nsIFrame*        aParent,
+                                    nsIStyleContext* aStyleContext,
+                                    nsIFrame*&       aContinuingFrame) = 0;
 
   NS_IMETHOD  GetPrevInFlow(nsIFrame*& aPrevInFlow) const = 0;
   NS_IMETHOD  SetPrevInFlow(nsIFrame*) = 0;
