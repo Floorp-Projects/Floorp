@@ -601,10 +601,8 @@ static void dump_graphedge_list(graphedge *list, FILE *fp)
     for (edge = list; edge; edge = edge->next)
         total += edge->bytes.total;
     for (edge = list; edge; edge = edge->next) {
-        const char *node_name = graphnode_name(edge->node);
-        fprintf(fp, "<a href='#%s' onmouseover='window.status=\"%s\"'>"
-                "%s&nbsp;(%1.2f%%)</a>\n",
-                node_name, node_name,
+        fprintf(fp, "<a href='#%s'>%s&nbsp;(%1.2f%%)</a>\n",
+                graphnode_name(edge->node),
                 prettybig(edge->bytes.total, buf, sizeof buf),
                 percent(edge->bytes.total, total));
     }
@@ -1036,6 +1034,14 @@ int main(int argc, char **argv)
 
     program = *argv;
     start = time(NULL);
+    fprintf(stdout,
+            "<script language=\"JavaScript\">\n"
+            "function onload() {\n"
+            "  document.links[0].__proto__.onmouseover = new Function("
+                "\"window.status ="
+                " this.href.substring(this.href.lastIndexOf('#') + 1)\");\n"
+            "}\n"
+            "</script>\n");
     fprintf(stdout, "%s starting at %s", program, ctime(&start));
     fflush(stdout);
 
