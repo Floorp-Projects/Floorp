@@ -3787,7 +3787,7 @@ public class Codegen extends Interpreter {
 
     private void push(String s)
     {
-        classFile.addLoadConstant(s);
+        classFile.addPush(s);
     }
 
     private void pushUndefined()
