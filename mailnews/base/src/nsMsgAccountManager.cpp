@@ -324,13 +324,12 @@ nsMsgAccountManager::addIdentitiesToArray(nsHashKey *key, void *aData, void *clo
   nsISupportsArray *array = (nsISupportsArray*)closure;
   nsIMsgAccount* account = (nsIMsgAccount *)aData;
 
-  nsISupportsArray *identities = nsnull;
+  nsCOMPtr<nsISupportsArray> identities;
 
   // add each list of identities to the list
   nsresult rv = NS_OK;
-  rv = account->GetIdentities(&identities);
+  rv = account->GetIdentities(getter_AddRefs(identities));
   array->AppendElements(identities);
-  NS_RELEASE(identities);
   
   return PR_TRUE;
 }
@@ -342,12 +341,11 @@ nsMsgAccountManager::addServerToArray(nsHashKey *key, void *aData,
   nsISupportsArray *array = (nsISupportsArray *)closure;
   nsIMsgAccount *account = (nsIMsgAccount *)aData;
 
-  nsIMsgIncomingServer *server;
-  nsresult rv = account->GetIncomingServer(&server);
-  if (NS_SUCCEEDED(rv)) {
-      array->AppendElement(server);
-      NS_RELEASE(server);
-  }
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsresult rv = account->GetIncomingServer(getter_AddRefs(server));
+  if (NS_SUCCEEDED(rv))
+    array->AppendElement(server);
+
   return PR_TRUE;
 }
 
@@ -676,7 +674,7 @@ nsMsgAccountManager::findServerByName(nsISupports *aElement, void *data)
   if (NS_FAILED(rv)) return PR_TRUE;
 
   // do a QI to see if we support this interface, but be sure to release it!
-  nsISupports *dummy;
+  nsISupports* dummy;
   if (PL_strcasecmp(entry->hostname, thisHostname)==0 &&
       NS_SUCCEEDED(server->QueryInterface(*(entry->iid), (void **)&dummy))) {
     NS_RELEASE(dummy);
