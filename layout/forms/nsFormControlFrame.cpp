@@ -226,10 +226,6 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
     static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
     static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
-    // make sure the style context is set
-    if (nsnull == mStyleContext) {
-      GetStyleContext(&aPresContext, mStyleContext);
-    }
     nsresult result = 
 	    nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
                                    (void **)&view);

@@ -123,12 +123,13 @@ public:
 
   virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
                                 nsIContent* aContent,
-                                nsIFrame* aParentFrame,
+                                nsIStyleContext* aParentContext,
                                 nsISupportsArray* aResults);
 
   virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
+                                nsIContent* aParentContent,
                                 nsIAtom* aPseudoTag,
-                                nsIFrame* aParentFrame,
+                                nsIStyleContext* aParentContext,
                                 nsISupportsArray* aResults);
 
   virtual nsIURL* GetURL(void);
@@ -236,72 +237,64 @@ nsresult HTMLCSSStyleSheetImpl::QueryInterface(const nsIID& aIID,
 
 PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                              nsIContent* aContent,
-                                             nsIFrame* aParentFrame,
+                                             nsIStyleContext* aParentContext,
                                              nsISupportsArray* aResults)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   NS_PRECONDITION(nsnull != aContent, "null arg");
-//  NS_PRECONDITION(nsnull != aParentFrame, "null arg");
   NS_PRECONDITION(nsnull != aResults, "null arg");
 
   PRInt32 matchCount = 0;
 
-  nsIContent* parentContent = nsnull;
-  if (nsnull != aParentFrame) {
-    aParentFrame->GetContent(parentContent);
-  }
-
-  if (aContent != parentContent) {  // if not a pseudo frame...
-    nsIHTMLContent* htmlContent;
-    // just get the one and only style rule from the content's STYLE attribute
-    if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
-      nsHTMLValue value;
-      if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetAttribute(nsHTMLAtoms::style, value)) {
-        if (eHTMLUnit_ISupports == value.GetUnit()) {
-          nsISupports*  rule = value.GetISupportsValue();
-          if (nsnull != rule) {
-            aResults->AppendElement(rule);
-            matchCount++;
-            nsICSSStyleRule*  cssRule;
-            if (NS_OK == rule->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule)) {
-              nsIStyleRule* important = cssRule->GetImportantRule();
-              if (nsnull != important) {
-                aResults->AppendElement(important);
-                matchCount++;
-                NS_RELEASE(important);
-              }
-              NS_RELEASE(cssRule);
-            }
-            NS_RELEASE(rule);
-          }
-        }
-      }
-      nsIAtom*  tag;
-      htmlContent->GetTag(tag);
-      if (tag == nsHTMLAtoms::body) {
-        if (nsnull == mBodyRule) {
-          BodyFixupRule*  bodyRule = new BodyFixupRule();
-          if ((nsnull != bodyRule) && 
-              (NS_OK != bodyRule->QueryInterface(kIStyleRuleIID, (void**)&mBodyRule))) {
-            delete bodyRule;
-          }
-        }
-        if (nsnull != mBodyRule) {
-          aResults->AppendElement(mBodyRule);
+  nsIHTMLContent* htmlContent;
+  // just get the one and only style rule from the content's STYLE attribute
+  if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetAttribute(nsHTMLAtoms::style, value)) {
+      if (eHTMLUnit_ISupports == value.GetUnit()) {
+        nsISupports*  rule = value.GetISupportsValue();
+        if (nsnull != rule) {
+          aResults->AppendElement(rule);
           matchCount++;
+          nsICSSStyleRule*  cssRule;
+          if (NS_OK == rule->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule)) {
+            nsIStyleRule* important = cssRule->GetImportantRule();
+            if (nsnull != important) {
+              aResults->AppendElement(important);
+              matchCount++;
+              NS_RELEASE(important);
+            }
+            NS_RELEASE(cssRule);
+          }
+          NS_RELEASE(rule);
         }
       }
-      NS_RELEASE(htmlContent);
     }
+    nsIAtom*  tag;
+    htmlContent->GetTag(tag);
+    if (tag == nsHTMLAtoms::body) {
+      if (nsnull == mBodyRule) {
+        BodyFixupRule*  bodyRule = new BodyFixupRule();
+        if ((nsnull != bodyRule) && 
+            (NS_OK != bodyRule->QueryInterface(kIStyleRuleIID, (void**)&mBodyRule))) {
+          delete bodyRule;
+        }
+      }
+      if (nsnull != mBodyRule) {
+        aResults->AppendElement(mBodyRule);
+        matchCount++;
+      }
+    }
+    NS_RELEASE(htmlContent);
   }
-  NS_IF_RELEASE(parentContent);
 
   return matchCount;
 }
 
 PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
+                                             nsIContent* aParentContent,
                                              nsIAtom* aPseudoTag,
-                                             nsIFrame* aParentFrame,
+                                             nsIStyleContext* aParentContext,
                                              nsISupportsArray* aResults)
 {
   // no pseudo frame style...

@@ -683,7 +683,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
       mContent->AppendChildTo(lastColGroup, PR_FALSE);  // add the implicit colgroup to my content
       // Resolve style for the child
       nsIStyleContext* colGroupStyleContext =
-        aPresContext.ResolveStyleContextFor(lastColGroup, this, PR_TRUE);      // kidStyleContext: REFCNT++
+        aPresContext.ResolveStyleContextFor(lastColGroup, mStyleContext, PR_TRUE);      // kidStyleContext: REFCNT++
 
       // Create a col group frame
       nsIFrame* newFrame;
@@ -723,6 +723,8 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
     PRInt32 excessColumns = colCount - actualColumns;
     nsIFrame* firstNewColFrame = nsnull;
     nsIFrame* lastNewColFrame = nsnull;
+    nsIStyleContextPtr  lastColGroupStyle;
+    lastColGroupFrame->GetStyleContext(lastColGroupStyle.AssignRef());
     for ( ; excessColumns > 0; excessColumns--)
     {
       if (PR_TRUE==gsDebug) printf("EC:creating col\n", actualColumns, colCount);
@@ -738,7 +740,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
 
       // Set its style context
       nsIStyleContextPtr colStyleContext =
-        aPresContext.ResolveStyleContextFor(col, lastColGroupFrame, PR_TRUE);
+        aPresContext.ResolveStyleContextFor(col, lastColGroupStyle, PR_TRUE);
       colFrame->SetStyleContext(&aPresContext, colStyleContext);
       colFrame->Init(aPresContext, nsnull);
 
@@ -809,7 +811,7 @@ void nsTableFrame::EnsureColumnFrameAt(PRInt32              aColIndex,
       mContent->AppendChildTo(lastColGroup, PR_FALSE);  // add the implicit colgroup to my content
       // Resolve style for the child
       nsIStyleContext* colGroupStyleContext =
-        aPresContext.ResolveStyleContextFor(lastColGroup, this, PR_TRUE);      // kidStyleContext: REFCNT++
+        aPresContext.ResolveStyleContextFor(lastColGroup, mStyleContext, PR_TRUE);      // kidStyleContext: REFCNT++
 
       // Create a col group frame
       nsIFrame* newFrame;
@@ -847,6 +849,8 @@ void nsTableFrame::EnsureColumnFrameAt(PRInt32              aColIndex,
     PRInt32 excessColumns = aColIndex - actualColumns;
     nsIFrame* firstNewColFrame = nsnull;
     nsIFrame* lastNewColFrame = nsnull;
+    nsIStyleContextPtr  lastColGroupStyle;
+    lastColGroupFrame->GetStyleContext(lastColGroupStyle.AssignRef());
     for ( ; excessColumns >= 0; excessColumns--)
     {
       nsIHTMLContent *col=nsnull;
@@ -861,7 +865,7 @@ void nsTableFrame::EnsureColumnFrameAt(PRInt32              aColIndex,
 
       // Set its style context
       nsIStyleContextPtr colStyleContext =
-        aPresContext.ResolveStyleContextFor(col, lastColGroupFrame, PR_TRUE);
+        aPresContext.ResolveStyleContextFor(col, lastColGroupStyle, PR_TRUE);
       colFrame->SetStyleContext(&aPresContext, colStyleContext);
 
       // XXX Don't release this style context (or we'll end up with a double-free).\
@@ -2576,7 +2580,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
           nsIFrame* continuingFrame;
            
           nsIStyleContext* kidSC;
-          kidFrame->GetStyleContext(&aPresContext, kidSC);
+          kidFrame->GetStyleContext(kidSC);
           kidFrame->CreateContinuingFrame(aPresContext, this, kidSC, continuingFrame);
           NS_RELEASE(kidSC);
           NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
@@ -2738,7 +2742,7 @@ NS_METHOD nsTableFrame::PullUpChildren(nsIPresContext& aPresContext,
         nsIFrame* continuingFrame;
 
         nsIStyleContext* kidSC;
-        kidFrame->GetStyleContext(&aPresContext, kidSC);
+        kidFrame->GetStyleContext(kidSC);
         kidFrame->CreateContinuingFrame(aPresContext, this, kidSC, continuingFrame);
         NS_RELEASE(kidSC);
         NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
@@ -2946,7 +2950,7 @@ nsTableFrame::SetColumnStyleFromCell(nsIPresContext &  aPresContext,
               printf("TIF SetCSFromCell: colspan was 1 or width was not set from a span\n");
             // get the column style and set the width attribute
             nsIStyleContext *colSC;
-            colFrame->GetStyleContext(&aPresContext, colSC);
+            colFrame->GetStyleContext(colSC);
             nsStylePosition* colPosition = (nsStylePosition*) colSC->GetMutableStyleData(eStyleStruct_Position);
             NS_RELEASE(colSC);
             // set the column width attribute
@@ -3267,7 +3271,7 @@ nsTableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
       printf("found a head or foot in continuing frame\n");
       // Resolve style for the child
       nsIStyleContext* kidStyleContext =
-        aPresContext.ResolveStyleContextFor(content, cf);               // kidStyleContext: REFCNT++
+        aPresContext.ResolveStyleContextFor(content, aStyleContext);     // kidStyleContext: REFCNT++
 
       nsIFrame* duplicateFrame;
       NS_NewTableRowGroupFrame(content, cf, duplicateFrame);

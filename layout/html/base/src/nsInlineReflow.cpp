@@ -1047,8 +1047,8 @@ nsInlineReflow::RelativePositionFrames(nsRect& aCombinedArea)
   aCombinedArea.height = y1 - y0;
 }
 
-// XXX performance todo: this computation can be cached in the
-// style-context
+// XXX performance todo: this computation can be cached,
+// but not in the style-context
 nscoord
 nsInlineReflow::CalcLineHeightFor(nsIPresContext& aPresContext,
                                   nsIFrame* aFrame,
@@ -1057,7 +1057,7 @@ nsInlineReflow::CalcLineHeightFor(nsIPresContext& aPresContext,
   nscoord lineHeight = aBaseLineHeight;
 
   nsIStyleContext* sc;
-  aFrame->GetStyleContext(&aPresContext, sc);
+  aFrame->GetStyleContext(sc);
   const nsStyleFont* elementFont = nsnull;
   if (nsnull != sc) {
     elementFont = (const nsStyleFont*)sc->GetStyleData(eStyleStruct_Font);

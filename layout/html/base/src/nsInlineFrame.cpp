@@ -212,7 +212,7 @@ nsInlineFrame::AppendNewFrames(nsIPresContext& aPresContext,
     else {
       // Wrap the frame in a view if necessary
       nsIStyleContext* kidSC;
-      frame->GetStyleContext(&aPresContext, kidSC);
+      frame->GetStyleContext(kidSC);
       nsresult rv = CreateViewForFrame(aPresContext, frame, kidSC, PR_FALSE);
       NS_RELEASE(kidSC);
       if (NS_OK != rv) {
@@ -480,7 +480,7 @@ nsInlineFrame::InsertNewFrame(nsIPresContext& aPresContext,
   else {
     // Wrap the frame in a view if necessary
     nsIStyleContext* kidSC;
-    aNewFrame->GetStyleContext(&aPresContext, kidSC);
+    aNewFrame->GetStyleContext(kidSC);
     nsresult rv = CreateViewForFrame(aPresContext, aNewFrame, kidSC, PR_FALSE);
     NS_RELEASE(kidSC);
     if (NS_OK != rv) {

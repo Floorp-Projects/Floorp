@@ -566,7 +566,7 @@ nsHTMLButtonControlFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildLis
 
   // Resolve style and set the style context
   nsIStyleContext* styleContext =
-    aPresContext.ResolveStyleContextFor(mContent, this);              
+    aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::buttonContentPseudo, mStyleContext);
   mFirstChild->SetStyleContext(&aPresContext, styleContext);
   NS_RELEASE(styleContext);                                           
 

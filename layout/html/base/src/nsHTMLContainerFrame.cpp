@@ -174,7 +174,7 @@ nsHTMLContainerFrame::CreatePlaceholderFrame(nsIPresContext& aPresContext,
 
   // Let the placeholder share the same style context as the floated element
   nsIStyleContext*  kidSC;
-  aFloatedFrame->GetStyleContext(&aPresContext, kidSC);
+  aFloatedFrame->GetStyleContext(kidSC);
   placeholder->SetStyleContext(&aPresContext, kidSC);
   NS_RELEASE(kidSC);
   
@@ -194,7 +194,7 @@ nsHTMLContainerFrame::CreateAbsolutePlaceholderFrame(nsIPresContext& aPresContex
 
   // Let the placeholder share the same style context as the floated element
   nsIStyleContext*  kidSC;
-  aAbsoluteFrame->GetStyleContext(&aPresContext, kidSC);
+  aAbsoluteFrame->GetStyleContext(kidSC);
   placeholder->SetStyleContext(&aPresContext, kidSC);
   NS_RELEASE(kidSC);
   
@@ -219,13 +219,14 @@ nsHTMLContainerFrame::CreateWrapperFrame(nsIPresContext& aPresContext,
     // The body wrapper frame gets the original style context, and the wrapped
     // frame gets a pseudo style context
     nsIStyleContext*  kidStyle;
-    aFrame->GetStyleContext(&aPresContext, kidStyle);
+    aFrame->GetStyleContext(kidStyle);
     aWrapperFrame->SetStyleContext(&aPresContext, kidStyle);
-    NS_RELEASE(kidStyle);
 
     nsIStyleContext*  pseudoStyle;
-    pseudoStyle = aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::columnPseudo,
-                                                            aWrapperFrame);
+    pseudoStyle = aPresContext.ResolvePseudoStyleContextFor(content, 
+                                                            nsHTMLAtoms::columnPseudo,
+                                                            kidStyle);
+    NS_RELEASE(kidStyle);
     aFrame->SetStyleContext(&aPresContext, pseudoStyle);
     NS_RELEASE(pseudoStyle);
 
@@ -296,7 +297,7 @@ nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
 
     // Wrap the frame in a view if necessary
     nsIStyleContext* kidSC;
-    aFrame->GetStyleContext(&aPresContext, kidSC);
+    aFrame->GetStyleContext(kidSC);
     nsresult rv = CreateViewForFrame(aPresContext, frameToWrapWithAView,
                                      kidSC, PR_FALSE);
     NS_RELEASE(kidSC);
@@ -402,7 +403,7 @@ nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext& aPresContext,
     nsIFrame* nextFrame;
     aFrame->GetNextSibling(nextFrame);
     nsIStyleContext* kidSC;
-    aFrame->GetStyleContext(&aPresContext, kidSC);
+    aFrame->GetStyleContext(kidSC);
     aFrame->CreateContinuingFrame(aPresContext, aOuterFrame,
                                   kidSC, nextInFlow);
     NS_RELEASE(kidSC);

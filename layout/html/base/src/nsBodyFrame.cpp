@@ -96,7 +96,7 @@ nsBodyFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
   }
   mChildCount = 1;
   nsIStyleContext* pseudoStyleContext =
-   aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::columnPseudo, this);
+   aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::columnPseudo, mStyleContext);
   mFirstChild->SetStyleContext(&aPresContext, pseudoStyleContext);
   NS_RELEASE(pseudoStyleContext);
 
@@ -921,7 +921,7 @@ nsBodyFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
       absoluteFrame->GetView(view);
       if (nsnull == view) {
         nsIStyleContext* absSC;
-        absoluteFrame->GetStyleContext(&aPresContext, absSC);
+        absoluteFrame->GetStyleContext(absSC);
         view = CreateAbsoluteView(absSC);
         NS_RELEASE(absSC);
         absoluteFrame->SetView(view);  

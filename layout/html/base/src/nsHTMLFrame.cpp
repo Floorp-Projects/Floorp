@@ -113,7 +113,9 @@ RootFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
   // Construct the root content frame and set its style context
   mFirstChild = new RootContentFrame(mContent, this);
   nsIStyleContext* pseudoStyleContext =
-    aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::rootContentPseudo, this);
+    aPresContext.ResolvePseudoStyleContextFor(mContent, 
+                                              nsHTMLAtoms::rootContentPseudo, 
+                                              mStyleContext);
   mFirstChild->SetStyleContext(&aPresContext, pseudoStyleContext);
   NS_RELEASE(pseudoStyleContext);
 
@@ -508,7 +510,7 @@ RootContentFrame::Reflow(nsIPresContext&          aPresContext,
             // The page isn't complete and it doesn't have a next-in-flow so
             // create a continuing page
             nsIStyleContext* kidSC;
-            kidFrame->GetStyleContext(&aPresContext, kidSC);
+            kidFrame->GetStyleContext(kidSC);
             nsIFrame*  continuingPage;
             nsresult rv = kidFrame->CreateContinuingFrame(aPresContext, this,
                                                           kidSC, continuingPage);

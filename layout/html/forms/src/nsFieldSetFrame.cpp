@@ -38,7 +38,7 @@
 //#include "nsIRadioButton.h"
 //#include "nsWidgetsCID.h"
 //#include "nsSize.h"
-//#include "nsHTMLAtoms.h"
+#include "nsHTMLAtoms.h"
 //#include "nsIView.h"
 //#include "nsIListWidget.h"
 //#include "nsIComboBox.h"
@@ -127,7 +127,9 @@ nsFieldSetFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
   mContentFrame = mFirstChild;
 
   // Resolve style and set the style context
-  nsIStyleContext* styleContext = aPresContext.ResolveStyleContextFor(mContent, this);              
+  nsIStyleContext* styleContext = aPresContext.ResolvePseudoStyleContextFor(mContent, 
+                                                                            nsHTMLAtoms::fieldsetContentPseudo,
+                                                                            mStyleContext);
   mFirstChild->SetStyleContext(&aPresContext, styleContext);
   NS_RELEASE(styleContext);                                           
 
@@ -253,7 +255,7 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
   nsMargin legendMargin;
   if (mLegendFrame) {
     nsIStyleContext* legendSC = nsnull;
-    mLegendFrame->GetStyleContext(&aPresContext, legendSC);
+    mLegendFrame->GetStyleContext(legendSC);
     if (legendSC) {
       const nsStyleSpacing* legendSpacing =
         (const nsStyleSpacing*)legendSC->GetStyleData(eStyleStruct_Spacing);

@@ -50,7 +50,7 @@ void nsPageFrame::CreateFirstChild(nsIPresContext* aPresContext)
         nsIContentDelegate* cd = child->GetDelegate(aPresContext);
         if (nsnull != cd) {
           nsIStyleContext* kidStyleContext =
-            aPresContext->ResolveStyleContextFor(child, this);
+            aPresContext->ResolveStyleContextFor(child, mStyleContext);
           nsresult rv = cd->CreateFrame(aPresContext, child, this,
                                         kidStyleContext, mFirstChild);
           NS_RELEASE(kidStyleContext);
@@ -117,7 +117,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
   
         // Create a continuing child of the previous page's last child
         nsIStyleContext* kidSC;
-        prevLastChild->GetStyleContext(&aPresContext, kidSC);
+        prevLastChild->GetStyleContext(kidSC);
         nsresult rv = prevLastChild->CreateContinuingFrame(aPresContext, this,
                                                            kidSC, mFirstChild);
         NS_RELEASE(kidSC);

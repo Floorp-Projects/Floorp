@@ -393,7 +393,7 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
         // create a continuing frame. This hooks the child into the flow.
         nsIFrame* continuingFrame;
         nsIStyleContext* kidSC;
-        kidFrame->GetStyleContext(&aPresContext, kidSC);
+        kidFrame->GetStyleContext(kidSC);
         kidFrame->CreateContinuingFrame(aPresContext, this, kidSC,
                                         continuingFrame);
         NS_RELEASE(kidSC);
@@ -540,7 +540,7 @@ NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext
         // prepares it for reflow.
         nsIFrame* continuingFrame;
         nsIStyleContext* kidSC;
-        kidFrame->GetStyleContext(&aPresContext, kidSC);
+        kidFrame->GetStyleContext(kidSC);
         kidFrame->CreateContinuingFrame(aPresContext, this, kidSC,
                                         continuingFrame);
         NS_RELEASE(kidSC);
