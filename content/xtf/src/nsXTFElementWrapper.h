@@ -43,8 +43,7 @@
 #include "nsIXTFElementWrapperPrivate.h"
 #include "nsXMLElement.h"
 #include "nsIXTFAttributeHandler.h"
-
-class nsIXTFElement;
+#include "nsIXTFElement.h"
 
 typedef nsXMLElement nsXTFElementWrapperBase;
 
@@ -118,6 +117,11 @@ public:
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
+
+  nsresult CloneState(nsIDOMElement *aElement)
+  {
+    return GetXTFElement()->CloneState(aElement);
+  }
 
 protected:
   // to be implemented by subclasses:

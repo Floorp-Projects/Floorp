@@ -191,6 +191,12 @@ nsXFormsStubElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsStubElement::CloneState(nsIDOMElement *aElement)
+{
+  return NS_OK;
+}
+
 nsresult
 NS_NewXFormsStubElement(nsIXTFElement **aResult)
 {
@@ -369,6 +375,12 @@ nsXFormsXMLVisualStub::DidLayout()
 
 NS_IMETHODIMP
 nsXFormsXMLVisualStub::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsXMLVisualStub::CloneState(nsIDOMElement *aElement)
 {
   return NS_OK;
 }

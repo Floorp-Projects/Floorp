@@ -43,7 +43,7 @@ interface nsIDOMElement;
 interface nsIDOMNode;
 interface nsIDOMEvent;
 
-[scriptable, uuid(e29224e9-429e-4bcc-98de-ee7fc10e5866)]
+[scriptable, uuid(61077434-18c8-4d2d-956c-7c389a7e9bba)]
 interface nsIXTFElement : nsISupports
 {
   // called when the wrapper object is being destroyed.
@@ -153,5 +153,10 @@ interface nsIXTFElement : nsISupports
   // If the return value is true, the event is marked as handled and
   // other default handlers won't be able to handle it again.
   boolean handleDefault(in nsIDOMEvent aEvent);
+
+  // Set this element to be equivalent to |aElement|.  This does not need
+  // to worry about copying attributes or child nodes, but should copy any
+  // other needed state.
+  void cloneState(in nsIDOMElement aElement);
 };
 

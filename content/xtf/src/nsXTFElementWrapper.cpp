@@ -395,13 +395,15 @@ nsXTFElementWrapper::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
         mAttributeHandler->GetAttributeNameAt(i, getter_AddRefs(attrName));
         if (attrName) {
           nsAutoString value;
-          if (NS_SUCCEEDED(mAttributeHandler->GetAttribute(attrName, value)));
+          if (NS_SUCCEEDED(mAttributeHandler->GetAttribute(attrName, value)))
             it->SetAttr(kNameSpaceID_None, attrName, value, PR_TRUE);
         }
       }
     }
     kungFuDeathGrip.swap(*aResult);
   }
+
+  wrapper->CloneState(this);
   return rv;
 }
 
