@@ -1389,6 +1389,17 @@ NS_IMETHODIMP nsScrollingView::GetScrollbarVisibility(PRBool *aVerticalVisible,
   return NS_OK;
 }
 
+// must also disable them or they get turned back on
+NS_IMETHODIMP nsScrollingView::SetScrollbarVisibility(PRBool aVerticalVisible,
+                                                      PRBool aHorizontalVisible)
+{
+  ((ScrollBarView *)mHScrollBarView)->SetEnabled(aHorizontalVisible); 
+  ((ScrollBarView *)mVScrollBarView)->SetEnabled(aVerticalVisible); 
+  mHScrollBarView->SetVisibility(aHorizontalVisible?nsViewVisibility_kShow:nsViewVisibility_kHide);
+  mVScrollBarView->SetVisibility(aVerticalVisible?nsViewVisibility_kShow:nsViewVisibility_kHide);
+  return NS_OK;
+}
+
 void nsScrollingView::AdjustChildWidgets(nsScrollingView *aScrolling, nsView *aView,
                                          nscoord aDx, nscoord aDy, float scale)
 {
