@@ -349,6 +349,12 @@ pref("wallet.Samples",                      "chrome://navigator/locale/navigator
 pref("wallet.version",                      "1");
 pref("wallet.enabled",                      true);
 pref("wallet.crypto",                       false);
+pref("wallet.namePanel.hide",               false);
+pref("wallet.addressPanel.hide",            false);
+pref("wallet.phonePanel.hide",              false);
+pref("wallet.creditPanel.hide",             false);
+pref("wallet.employPanel.hide",             false);
+pref("wallet.miscPanel.hide",               false);
 pref("imageblocker.enabled",                true);
 pref("intl.accept_languages",               "chrome://navigator/locale/navigator.properties");
 pref("intl.accept_charsets",                "iso-8859-1,*,utf-8");

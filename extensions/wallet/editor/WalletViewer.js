@@ -71,6 +71,53 @@ nsWalletViewer.prototype =
           return;
         }
         doSetOKCancel(this.onOK, this.onCancel);
+
+        // allow l10n to hide certain panels
+        var pref;
+        pref = Components.classes['@mozilla.org/preferences;1'];
+        pref = pref.getService();
+        pref = pref.QueryInterface(Components.interfaces.nsIPref);
+        var panel;
+        try {
+          if (pref.GetBoolPref("wallet.namePanel.hide")) {
+            panel = document.getElementById("pnameID");
+            panel.setAttribute("style", "display:none;");
+            panel = document.getElementById("snameID");
+            panel.setAttribute("style", "display:none;");
+            panel = document.getElementById("bnameID");
+            panel.setAttribute("style", "display:none;");
+          }
+          if (pref.GetBoolPref("wallet.addressPanel.hide")) {
+            panel = document.getElementById("paddressID");
+            panel.setAttribute("style", "display:none;");
+            panel = document.getElementById("saddressID");
+            panel.setAttribute("style", "display:none;");
+            panel = document.getElementById("baddressID");
+            panel.setAttribute("style", "display:none;");
+          }
+          if (pref.GetBoolPref("wallet.phonePanel.hide")) {
+            panel = document.getElementById("pphoneID");
+            panel.setAttribute("style", "display:none;");
+            panel = document.getElementById("sphoneID");
+            panel.setAttribute("style", "display:none;");
+            panel = document.getElementById("bphoneID");
+            panel.setAttribute("style", "display:none;");
+          }
+          if (pref.GetBoolPref("wallet.creditPanel.hide")) {
+            panel = document.getElementById("pcreditID");
+            panel.setAttribute("style", "display:none;");
+          }
+          if (pref.GetBoolPref("wallet.employPanel.hide")) {
+            panel = document.getElementById("pemployID");
+            panel.setAttribute("style", "display:none;");
+          }
+          if (pref.GetBoolPref("wallet.miscPanel.hide")) {
+            panel = document.getElementById("pmiscID");
+            panel.setAttribute("style", "display:none;");
+          }
+        } catch(e) {
+          // error -- stop hiding if prefs are missing
+        }
       },
 
       init:
