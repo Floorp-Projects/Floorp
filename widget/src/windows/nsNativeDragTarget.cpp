@@ -144,7 +144,8 @@ void nsNativeDragTarget::DispatchDragDropEvent(PRUint32 aEventType,
                                                POINTL   aPT)
 {
   nsEventStatus status;
-  nsGUIEvent event;
+  nsMouseEvent event;
+  event.eventStructType = NS_DRAGDROP_EVENT;
 
   nsWindow * win = NS_STATIC_CAST(nsWindow *, mWindow);
   win->InitEvent(event, aEventType);
