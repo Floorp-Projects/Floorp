@@ -25,6 +25,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
+#include "nsIIOService.h"
 // Forward Decl
 class nsIURI;
 /* 
@@ -76,6 +77,9 @@ protected:
     nsCOMPtr<nsISupportsArray>  mAuthList; 
     // this needs to be a list becuz pac can produce more ...
     nsCOMPtr<nsISupportsArray>  mProxyAuthList; 
+
+    // optimization
+    nsCOMPtr<nsIIOService>      mIOService;
 
 };
 
