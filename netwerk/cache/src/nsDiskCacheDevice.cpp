@@ -1160,7 +1160,7 @@ nsresult nsDiskCacheDevice::updateDiskCacheEntry(nsDiskCacheEntry* diskEntry)
 {
     nsresult rv;
     nsCacheEntry* entry = diskEntry->getCacheEntry();
-    if (entry->IsMetaDataDirty() || entry->IsEntryDirty()) {
+    if (entry->IsMetaDataDirty() || entry->IsEntryDirty() || entry->IsDataDirty()) {
         // make sure this disk entry is known to the cache map.
         rv = updateCacheMap(diskEntry);
         if (NS_FAILED(rv)) return rv;
@@ -1185,6 +1185,7 @@ nsresult nsDiskCacheDevice::updateDiskCacheEntry(nsDiskCacheEntry* diskEntry)
         // mark the disk entry as being consistent with meta data file.
         entry->MarkMetaDataClean();
         entry->MarkEntryClean();
+        entry->MarkDataClean();
     }
     return NS_OK;
 }
