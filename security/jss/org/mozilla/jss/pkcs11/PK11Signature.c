@@ -247,7 +247,8 @@ Java_org_mozilla_jss_pkcs11_PK11Signature_engineSignNative
      * Finish the signing operation.
      */
     if( SGN_End(ctxt, &signature) != SECSuccess) {
-        JSS_throw(env, SIGNATURE_EXCEPTION);
+        JSS_throwMsgPrErr(env, SIGNATURE_EXCEPTION,
+            "Signing operation failed");
         goto finish;
     }
 
