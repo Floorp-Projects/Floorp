@@ -72,7 +72,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.54 $ $Date: 2001/06/20 06:00:35 $
+ * @version $Revision: 1.55 $ $Date: 2001/06/20 06:45:53 $
 **/
 
 /**
@@ -398,34 +398,39 @@ Document* XSLTProcessor::process(istream& xmlInput, String& xmlFilename) {
 /**
  * Processes the Top level elements for an XSL stylesheet
 **/
-void XSLTProcessor::processTopLevel
-   (Document* xslDocument, ProcessorState* ps)
+void XSLTProcessor::processTopLevel(Document* aSource,
+                                    Document* aStylesheet,
+                                    ProcessorState* aPs)
 {
+    NS_ASSERTION(aStylesheet, "processTopLevel called without stylesheet");
+    if (!aStylesheet)
+        return;
 
-    if (!xslDocument) return;
-
-      //-------------------------------------------------------/
-     //- index templates and process top level xsl elements -/
-    //-------------------------------------------------------/
-
-    Element* stylesheet = xslDocument->getDocumentElement();
-    processTopLevel(stylesheet, ps);
-
+    processTopLevel(aSource, aStylesheet->getDocumentElement(), aPs);
 }
 
-void XSLTProcessor::processTopLevel
-   (Element* stylesheet, ProcessorState* ps)
+/**
+ * Processes the Top level elements for an XSL stylesheet
+**/
+void XSLTProcessor::processTopLevel(Document* aSource,
+                                    Element* aStylesheet,
+                                    ProcessorState* aPs)
 {
-    if (!stylesheet) return;
+    // Index templates and process top level xsl elements
+    NS_ASSERTION(aStylesheet, "processTopLevel called without stylesheet element");
+    if (!aStylesheet)
+        return;
 
-    Node* node = stylesheet->getFirstChild();
+    NS_ASSERTION(aSource, "processTopLevel called without source document");
+                        
+    Node* node = aStylesheet->getFirstChild();
     while (node) {
         if (node->getNodeType() == Node::ELEMENT_NODE) {
             Element* element = (Element*)node;
             String name = element->getNodeName();
-            switch (getElementType(name, ps)) {
+            switch (getElementType(name, aPs)) {
                 case XSLType::ATTRIBUTE_SET:
-                    ps->addAttributeSet(element);
+                    aPs->addAttributeSet(element);
                     break;
                 case XSLType::PARAM :
                 {
@@ -436,9 +441,8 @@ void XSLTProcessor::processTopLevel
                     }
 
                     ExprResult* exprResult
-                        = processVariable(node, element, ps);
-
-                    bindVariable(name, exprResult, MB_TRUE, ps);
+                        = processVariable(aSource, element, aPs);
+                    bindVariable(name, exprResult, MB_TRUE, aPs);
                     break;
                 }
                 case XSLType::INCLUDE :
@@ -447,7 +451,7 @@ void XSLTProcessor::processTopLevel
                     String href = element->getAttribute(HREF_ATTR);
                     //-- Read in XSL document
 
-                    if (ps->getInclude(href)) {
+                    if (aPs->getInclude(href)) {
                         /* XXX this is wrong, it's allowed to include one stylesheet multiple
                            times but we should build some sort of stack to make sure that we
                            don't have circular inclusions */
@@ -471,18 +475,18 @@ void XSLTProcessor::processTopLevel
                     }
                     else {
                         //-- add stylesheet to list of includes
-                        ps->addInclude(href, xslDoc);
-                        processTopLevel(xslDoc, ps);
+                        aPs->addInclude(href, xslDoc);
+                        processTopLevel(aSource, xslDoc, aPs);
                     }
                     break;
 
                 }
                 case XSLType::OUTPUT :
                 {
-                    OutputFormat* format = ps->getOutputFormat();
+                    OutputFormat* format = aPs->getOutputFormat();
 
                     String attValue = element->getAttribute(METHOD_ATTR);
-                    if (attValue.length() > 0) ps->setOutputMethod(attValue);
+                    if (attValue.length() > 0) aPs->setOutputMethod(attValue);
 
                     attValue = element->getAttribute(VERSION_ATTR);
                     if (attValue.length() > 0) format->setVersion(attValue);
@@ -507,7 +511,7 @@ void XSLTProcessor::processTopLevel
                     break;
                 }
                 case XSLType::TEMPLATE :
-                    ps->addTemplate(element);
+                    aPs->addTemplate(element);
                     break;
                 case XSLType::VARIABLE :
                 {
@@ -516,8 +520,8 @@ void XSLTProcessor::processTopLevel
                         notifyError("missing required name attribute for xsl:variable");
                         break;
                     }
-                    ExprResult* exprResult = processVariable(node, element, ps);
-                    bindVariable(name, exprResult, MB_FALSE, ps);
+                    ExprResult* exprResult = processVariable(aSource, element, aPs);
+                    bindVariable(name, exprResult, MB_FALSE, aPs);
                     break;
                 }
                 case XSLType::PRESERVE_SPACE :
@@ -529,7 +533,7 @@ void XSLTProcessor::processTopLevel
                         err.append("xsl:preserve-space");
                         notifyError(err);
                     }
-                    else ps->preserveSpace(elements);
+                    else aPs->preserveSpace(elements);
                     break;
                 }
                 case XSLType::STRIP_SPACE :
@@ -541,7 +545,7 @@ void XSLTProcessor::processTopLevel
                         err.append("xsl:strip-space");
                         notifyError(err);
                     }
-                    else ps->stripSpace(elements);
+                    else aPs->stripSpace(elements);
                     break;
                 }
                 default:
@@ -575,11 +579,16 @@ Document* XSLTProcessor::process
     }
     delete iter;
 
+    NodeSet nodeSet;
+    nodeSet.add(&xmlDocument);
+    ps->pushCurrentNode(&xmlDocument);
+    ps->getNodeSetStack()->push(&nodeSet);
+
       //-------------------------------------------------------/
      //- index templates and process top level xsl elements -/
     //-------------------------------------------------------/
 
-    processTopLevel(&xslDocument, &ps);
+    processTopLevel(&xmlDocument, &xslDocument, &ps);
 
       //----------------------------------------/
      //- Process root of XML source document -/
@@ -613,11 +622,16 @@ void XSLTProcessor::process
     }
     delete iter;
 
+    NodeSet nodeSet;
+    nodeSet.add(&xmlDocument);
+    ps->pushCurrentNode(&xmlDocument);
+    ps->getNodeSetStack()->push(&nodeSet);
+
       //-------------------------------------------------------/
      //- index templates and process top level xsl elements -/
     //-------------------------------------------------------/
 
-    processTopLevel(&xslDocument, &ps);
+    processTopLevel(&xmlDocument, &xslDocument, &ps);
 
       //----------------------------------------/
      //- Process root of XML source document -/
@@ -1782,9 +1796,9 @@ void XSLTProcessor::xslCopyOf(ExprResult* exprResult, ProcessorState* ps) {
 //#define FLUSH  NS_LOG_FLUSH(XSLT)
 NS_IMETHODIMP
 XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
-                               nsIDOMNode* aStyleDOM,
-                               nsIDOMDocument* aOutputDoc,
-                               nsIObserver* aObserver)
+                                 nsIDOMNode* aStyleDOM,
+                                 nsIDOMDocument* aOutputDoc,
+                                 nsIObserver* aObserver)
 {
     nsCOMPtr<nsIDOMDocument> sourceDOMDocument;
     nsCOMPtr<nsIDOMDocument> styleDOMDocument;
@@ -1828,10 +1842,15 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
 
     //-- add error observers
 
+    NodeSet nodeSet;
+    nodeSet.add(sourceDocument);
+    ps->pushCurrentNode(sourceDocument);
+    ps->getNodeSetStack()->push(&nodeSet);
+
       //------------------------------------------------------/
      //- index templates and process top level xsl elements -/
     //------------------------------------------------------/
-    processTopLevel(xslDocument, ps);
+    processTopLevel(sourceDocument, xslDocument, ps);
 
       //---------------------------------------/
      //- Process root of XML source document -/
