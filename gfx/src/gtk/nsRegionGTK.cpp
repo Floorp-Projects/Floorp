@@ -1,23 +1,23 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public
+ * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
- *
+ * the License at http://www.mozilla.org/MPL/
+ * 
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *
+ * 
  * The Original Code is mozilla.org code.
+ * 
+ * The Initial Developer of the Original Code is Stuart Parmenter.
+ * Portions created by Stuart Parmenter are Copyright (C) 1998-2000
+ * Stuart Parmenter.  All Rights Reserved.  
  *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
- *
- * Contributor(s): 
+ * Contributor(s):
+ *    Stuart Parmenter <pavlov@netscape.com>
  */
 
 #include <gtk/gtk.h>
@@ -136,12 +136,14 @@ void nsRegionGTK::Union(const nsIRegion &aRegion)
 {
   nsRegionGTK *pRegion = (nsRegionGTK *)&aRegion;
 
-  if (mRegion) {
-    GdkRegion *nRegion = ::gdk_regions_union(mRegion, pRegion->mRegion);
-    ::gdk_region_destroy(mRegion);
-    mRegion = nRegion;
-  } else {
-    mRegion = gdk_region_copy(pRegion->mRegion);
+  if (pRegion->mRegion) {
+    if (mRegion) {
+      GdkRegion *nRegion = ::gdk_regions_union(mRegion, pRegion->mRegion);
+      ::gdk_region_destroy(mRegion);
+      mRegion = nRegion;
+    } else {
+      mRegion = gdk_region_copy(pRegion->mRegion);
+    }
   }
 }
 
@@ -166,12 +168,14 @@ void nsRegionGTK::Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 void nsRegionGTK::Subtract(const nsIRegion &aRegion)
 {
   nsRegionGTK *pRegion = (nsRegionGTK *)&aRegion;
-  if (mRegion) {
-    GdkRegion *nRegion = ::gdk_regions_subtract(mRegion, pRegion->mRegion);
-    ::gdk_region_destroy(mRegion);
-    mRegion = nRegion;
-  } else {
-    mRegion = ::gdk_regions_subtract(GetCopyRegion(), pRegion->mRegion);
+  if (pRegion->mRegion) {
+    if (mRegion) {
+      GdkRegion *nRegion = ::gdk_regions_subtract(mRegion, pRegion->mRegion);
+      ::gdk_region_destroy(mRegion);
+      mRegion = nRegion;
+    } else {
+      mRegion = ::gdk_regions_subtract(GetCopyRegion(), pRegion->mRegion);
+    }
   }
 }
 
@@ -215,38 +219,47 @@ PRBool nsRegionGTK::IsEqual(const nsIRegion &aRegion)
 
 void nsRegionGTK::GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
 {
-  GdkRectangle rect;
+  if (mRegion) {
+    GdkRectangle rect;
 
-  ::gdk_region_get_clipbox(mRegion, &rect);
+    ::gdk_region_get_clipbox(mRegion, &rect);
 
-  *aX = rect.x;
-  *aY = rect.y;
-  *aWidth = rect.width;
-  *aHeight = rect.height;
+    *aX = rect.x;
+    *aY = rect.y;
+    *aWidth = rect.width;
+    *aHeight = rect.height;
+  } else {
+    *aX = 0;
+    *aY = 0;
+    *aWidth = 0;
+    *aHeight = 0;
+  }
 }
 
 void nsRegionGTK::Offset(PRInt32 aXOffset, PRInt32 aYOffset)
 {
-   ::gdk_region_offset(mRegion, aXOffset, aYOffset);
+  if (mRegion) {
+    ::gdk_region_offset(mRegion, aXOffset, aYOffset);
+  }
 }
 
 PRBool nsRegionGTK::ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  GdkOverlapType containment;
-  GdkRectangle rect;
+  if (mRegion) {
+    GdkOverlapType containment;
+    GdkRectangle rect;
    
-  rect.x = aX;
-  rect.y = aY;
-  rect.width = aWidth;
-  rect.height = aHeight;
+    rect.x = aX;
+    rect.y = aY;
+    rect.width = aWidth;
+    rect.height = aHeight;
    
-  containment = ::gdk_region_rect_in(mRegion, &rect);
+    containment = ::gdk_region_rect_in(mRegion, &rect);
 
-  if (containment != GDK_OVERLAP_RECTANGLE_OUT)
-    return PR_TRUE;
-  else
-    return PR_FALSE;
-
+    if (containment != GDK_OVERLAP_RECTANGLE_OUT)
+      return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP nsRegionGTK::GetRects(nsRegionRectSet **aRects)

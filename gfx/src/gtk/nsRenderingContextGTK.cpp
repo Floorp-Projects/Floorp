@@ -273,10 +273,7 @@ NS_IMETHODIMP nsRenderingContextGTK::PushState(PRInt32 aFlags)
   }
 
   if (aFlags & NS_STATE_CLIP) {
-    if (mClipRegion) {
-      // set the state's clip region to a new copy of the current clip region
-      GetClipRegion(getter_AddRefs(state->mClipRegion));
-    }
+    state->mClipRegion = mClipRegion;
   }
 
   if (aFlags & NS_STATE_LINESTYLE) {
@@ -307,11 +304,8 @@ NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
   else
     mTMatrix = new nsTransform2D(mTMatrix);
 
-  if (mClipRegion)
-  {
-    // set the state's clip region to a new copy of the current clip region
-    GetClipRegion(getter_AddRefs(state->mClipRegion));
-  }
+  // set state to mClipRegion.. SetClip{Rect,Region}() will do copy-on-write stuff
+  state->mClipRegion = mClipRegion;
 
   NS_IF_ADDREF(mFontMetrics);
   state->mFontMetrics = mFontMetrics;
@@ -437,6 +431,26 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
                                                  nsClipCombine aCombine,
                                                  PRBool &aClipEmpty)
 {
+
+
+
+  PRUint32 cnt = mStateCache->Count();
+  nsGraphicsState *state = nsnull;
+
+  if (cnt > 0) {
+    state = (nsGraphicsState *)mStateCache->ElementAt(cnt - 1);
+  }
+
+  if (state) {
+    if (state->mClipRegion) {
+      if (state->mClipRegion == mClipRegion) {
+        nsCOMPtr<nsIRegion> tmpRgn;
+        GetClipRegion(getter_AddRefs(tmpRgn));
+        mClipRegion = tmpRgn;
+      }
+    }
+  }
+
   CreateClipRegion();
 
   nsRect trect = aRect;
@@ -515,6 +529,24 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
                                                    nsClipCombine aCombine,
                                                    PRBool &aClipEmpty)
 {
+
+  PRUint32 cnt = mStateCache->Count();
+  nsGraphicsState *state = nsnull;
+
+  if (cnt > 0) {
+    state = (nsGraphicsState *)mStateCache->ElementAt(cnt - 1);
+  }
+
+  if (state) {
+    if (state->mClipRegion) {
+      if (state->mClipRegion == mClipRegion) {
+        nsCOMPtr<nsIRegion> tmpRgn;
+        GetClipRegion(getter_AddRefs(tmpRgn));
+        mClipRegion = tmpRgn;
+      }
+    }
+  }
+
   CreateClipRegion();
 
   switch(aCombine)
