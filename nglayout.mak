@@ -63,10 +63,11 @@ XPCOM_BRANCH =
 
 !if defined(MOZ_DATE)
 # CVS commands to pull the appropriate branch versions
+CVSCO_LIBPREF = $(CVSCO)
 CVSCO_PLUGIN = $(CVSCO)
 !else
 # CVS commands to pull the appropriate branch versions
-CVSCO_LIBPREF = $(CVSCO)
+CVSCO_LIBPREF = $(CVSCO) -A
 CVSCO_PLUGIN = $(CVSCO) -A
 !endif
 
