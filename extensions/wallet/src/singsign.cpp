@@ -1133,7 +1133,9 @@ si_CheckForReject(char * URLName, char * userName) {
     PRInt32 rejectCount = LIST_COUNT(si_reject_list);
     for (PRInt32 i=0; i<rejectCount; i++) {
       reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(i));
-      if(!PL_strcmp(userName, reject->userName) && !PL_strcmp(URLName, reject->URLName)) {
+      if(!PL_strcmp(URLName, reject->URLName)) {
+// No need for username check on a rejectlist entry.  URL check is sufficient
+//    if(!PL_strcmp(userName, reject->userName) && !PL_strcmp(URLName, reject->URLName)) {
         si_unlock_signon_list();
         return PR_TRUE;
       }
@@ -1733,18 +1735,21 @@ si_WriteChar(nsOutputFileStream strm, char c) {
 }
 
 PRIVATE void
-si_WriteLine(nsOutputFileStream strm, nsOutputFileStream strmx, char * lineBuffer, PRBool obscure) {
+si_WriteLine(nsOutputFileStream strm, nsOutputFileStream strmx, char * lineBuffer, PRBool obscure, PRBool fullSave) {
   char* p = lineBuffer;
   while (*p) {
     if (obscure) {
       strm.put('*');
-      strmx.put(*(p++)^si_GetKey());
+      if (fullSave) {
+        strmx.put(*(p)^si_GetKey());
+      }
+      p++;
     } else {
       strm.put(*p++);
     }
   }
   strm.put('\n');
-  if (obscure) {
+  if (obscure && fullSave) {
     strmx.put('\n'^si_GetKey());
   }
 }
@@ -1820,11 +1825,11 @@ si_SaveSignonDataLocked(PRBool fullSave) {
     PRInt32 rejectCount = LIST_COUNT(si_reject_list);
     for (PRInt32 i=0; i<rejectCount; i++) {
       reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(i));
-      si_WriteLine(strm, strmx, reject->URLName, PR_FALSE);
-      si_WriteLine(strm, strmx, reject->userName, PR_FALSE);
+      si_WriteLine(strm, strmx, reject->URLName, PR_FALSE, fullSave);
+      si_WriteLine(strm, strmx, reject->userName, PR_FALSE, fullSave);
     }
   }
-  si_WriteLine(strm, strmx, ".", PR_FALSE);
+  si_WriteLine(strm, strmx, ".", PR_FALSE, fullSave);
 
   /* format for cached logins shall be:
    * url LINEBREAK {name LINEBREAK value LINEBREAK}*  . LINEBREAK
@@ -1841,7 +1846,7 @@ si_SaveSignonDataLocked(PRBool fullSave) {
       PRInt32 userCount = LIST_COUNT(url->signonUser_list);
       for (PRInt32 i3=0; i3<userCount; i3++) {
         user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i3));
-        si_WriteLine(strm, strmx, url->URLName, PR_FALSE);
+        si_WriteLine(strm, strmx, url->URLName, PR_FALSE, fullSave);
 
         /* write out each data node of the user node */
         PRInt32 dataCount = LIST_COUNT(user->signonData_list);
@@ -1849,16 +1854,14 @@ si_SaveSignonDataLocked(PRBool fullSave) {
           data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i4));
           if (data->isPassword) {
             si_WriteChar(strm, '*');
-            si_WriteLine(strm, strmx, data->name, PR_FALSE);
-            if (fullSave) {
-              si_WriteLine(strm, strmx, data->value, PR_TRUE);
-            }
+            si_WriteLine(strm, strmx, data->name, PR_FALSE, fullSave);
+            si_WriteLine(strm, strmx, data->value, PR_TRUE, fullSave);
           } else {
-            si_WriteLine(strm, strmx, data->name, PR_FALSE);
-            si_WriteLine(strm, strmx, data->value, PR_FALSE);
+            si_WriteLine(strm, strmx, data->name, PR_FALSE, fullSave);
+            si_WriteLine(strm, strmx, data->value, PR_FALSE, fullSave);
           }
         }
-        si_WriteLine(strm, strmx, ".", PR_FALSE);
+        si_WriteLine(strm, strmx, ".", PR_FALSE, fullSave);
       }
     }
   }
