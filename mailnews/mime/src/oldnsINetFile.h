@@ -160,4 +160,4 @@ extern "C" NS_NET nsresult NS_InitINetFile(void);
 
 extern "C" NS_NET nsresult NS_ShutdownINetFile();
 
-#endif __nsINetFile_h
+#endif /*  __nsINetFile_h */
