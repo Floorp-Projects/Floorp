@@ -61,9 +61,6 @@ pref("dom.disable_open_during_load",        false);
 pref("javascript.enabled",                  false);
 pref("offline.news.download.use_days",          0);
 
-// Headers
-pref("network.http.accept.default", "text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,video/x-mng,image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1");
-
 // Enable http compression: comment this out in case of problems with 1.1
 pref("network.http.accept-encoding" ,"gzip,deflate,compress;q=0.9");
 
