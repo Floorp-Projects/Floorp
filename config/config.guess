@@ -187,14 +187,16 @@ EOF
     CRAY-2:UNICOS:*:*)
 	echo cray2-cray-unicos
         exit 0 ;;
-    hp3[0-9][05]:NetBSD:*:*)
-	echo m68k-hp-netbsd${UNAME_RELEASE}
-	exit 0 ;;
     i[3456]86:FreeBSD:*:*)
 	echo ${UNAME_MACHINE}-unknown-freebsd
 	exit 0 ;;
-    i[3456]86:NetBSD:*:*)
+    *:NetBSD:*:*)
+	test ! -z "`echo ${UNAME_MACHINE} | grep hp3`" && echo m68k-unknown-netbsd${UNAME_RELEASE} && exit 0
 	echo ${UNAME_MACHINE}-unknown-netbsd${UNAME_RELEASE}
+	exit 0 ;;
+    *:OpenBSD:*:*)
+	test ! -z "`echo ${UNAME_MACHINE} | grep hp3`" && echo m68k-unknown-openbsd${UNAME_RELEASE} && exit 0
+	echo ${UNAME_MACHINE}-unknown-openbsd${UNAME_RELEASE}
 	exit 0 ;;
     *:Linux:*:*)
 	echo ${UNAME_MACHINE}-unknown-linux
