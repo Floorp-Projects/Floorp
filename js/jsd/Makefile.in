@@ -30,7 +30,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= jsdebug
 LIBRARY_NAME	= jsd
-EXPORT_LIBRARY	= 1
+# Do not set EXPORT_LIBRARY as we do not want jsd in the static libs list
+#EXPORT_LIBRARY	= 1
 FORCE_SHARED_LIB= 1
 ifeq ($(OS_ARCH),WINNT)
 LIBRARY_NAME	= jsd$(MOZ_BITS)$(VERSION_NUMBER)
