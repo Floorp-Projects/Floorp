@@ -190,7 +190,7 @@ typedef PRUint32 nsFrameState;
 #ifdef IBMBIDI
 // If this bit is set, the frame itself is a bidi continuation,
 // or is incomplete (its next sibling is a bidi continuation)
-#define NS_FRAME_IS_BIDI                              0x00200000
+#define NS_FRAME_IS_BIDI                              0x00020000
 #endif
 
 // The lower 20 bits of the frame state word are reserved by this API.
