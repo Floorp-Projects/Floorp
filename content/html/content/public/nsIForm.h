@@ -45,6 +45,7 @@ class nsIFormControl;
 class nsISizeOfHandler;
 class nsIDOMHTMLInputElement;
 class nsIRadioVisitor;
+class nsISimpleEnumerator;
 
 
 #define NS_FORM_METHOD_GET  0
@@ -91,7 +92,7 @@ public:
                                const nsAString& aName) = 0;
 
   /**
-   * Get the element at a specified index position
+   * Get the element at a specified index position in form.elements
    *
    * @param aIndex the index
    * @param aElement the element at that index
@@ -100,7 +101,7 @@ public:
   NS_IMETHOD GetElementAt(PRInt32 aIndex, nsIFormControl** aElement) const = 0;
 
   /**
-   * Get the number of elements in this form
+   * Get the number of elements in form.elements
    *
    * @param aCount the number of elements
    * @return NS_OK if there was an element at that position, -1 otherwise
@@ -142,11 +143,18 @@ public:
                          nsISupports **aResult) = 0;
 
   /**
-   * Get the index of the given control within this form.
+   * Get the index of the given control within form.elements.
    * @param aControl the control to find the index of
    * @param aIndex the index [OUT]
    */
   NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex) = 0;
+
+  /**
+   * Get an enumeration that goes through all controls, including images and
+   * that ilk
+   * @param aEnum the enumeration [OUT]
+   */
+  NS_IMETHOD GetControlEnumerator(nsISimpleEnumerator** aEnum) = 0;
 };
 
 #endif /* nsIForm_h___ */

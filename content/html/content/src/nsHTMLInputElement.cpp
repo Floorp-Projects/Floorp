@@ -1615,11 +1615,16 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
             nsCOMPtr<nsIContent> submitControl;
             PRInt32 numTextControlsFound = 0;
 
+            nsCOMPtr<nsISimpleEnumerator> formControls;
+            mForm->GetControlEnumerator(getter_AddRefs(formControls));
+
+            nsCOMPtr<nsISupports> currentControlSupports;
             nsCOMPtr<nsIFormControl> currentControl;
-            PRUint32 count = 0;
-            mForm->GetElementCount(&count);
-            for (PRUint32 i=0; i < count; i++) {
-              mForm->GetElementAt(i, getter_AddRefs(currentControl));
+            PRBool hasMoreElements;
+            while (NS_SUCCEEDED(formControls->HasMoreElements(&hasMoreElements)) &&
+                   hasMoreElements) {
+              formControls->GetNext(getter_AddRefs(currentControlSupports));
+              currentControl = do_QueryInterface(currentControlSupports);
               if (currentControl) {
                 PRInt32 type;
                 currentControl->GetType(&type);
@@ -2294,8 +2299,8 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
     PRInt32 clickedY;
     nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
-    nsCOMPtr<nsIImageControlFrame> imageControlFrame(
-        do_QueryInterface(formControlFrame));
+    nsIImageControlFrame* imageControlFrame = nsnull;
+    CallQueryInterface(formControlFrame, &imageControlFrame);
     if (imageControlFrame) {
       imageControlFrame->GetClickedX(&clickedX);
       imageControlFrame->GetClickedY(&clickedY);

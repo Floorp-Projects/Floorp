@@ -62,6 +62,7 @@
 #include "nsDoubleHashtable.h"
 #include "nsContentList.h"
 #include "nsGUIEvent.h"
+#include "nsSupportsArray.h"
 
 // form submission
 #include "nsIFormSubmitObserver.h"
@@ -159,6 +160,7 @@ public:
   NS_IMETHOD ResolveName(const nsAString& aName,
                          nsISupports** aReturn);
   NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex);
+  NS_IMETHOD GetControlEnumerator(nsISimpleEnumerator** aEnumerator);
 
   // nsIRadioGroupContainer
   NS_IMETHOD SetCurrentRadioButton(const nsAString& aName,
@@ -187,6 +189,19 @@ public:
                             nsEventStatus* aEventStatus);
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
+
+  /**
+   * Compare two nodes in the same tree (Negative result means a < b, 0 ==,
+   * positive >).  This function may fail if the nodes are not in a tree
+   * or are in different trees.
+   *
+   * @param a the first node
+   * @param b the second node
+   * @param retval whether a < b (negative), a == b (0), or a > b (positive)
+   */
+  static nsresult CompareNodes(nsIDOMNode* a,
+                               nsIDOMNode* b,
+                               PRInt32* retval);
 
 protected:
   nsresult DoSubmitOrReset(nsIPresContext* aPresContext,
@@ -229,19 +244,6 @@ protected:
    */
   nsresult NotifySubmitObservers(nsIURI* aActionURL, PRBool* aCancelSubmit);
 
-  /**
-   * Compare two nodes in the same tree (Negative result means a < b, 0 ==,
-   * positive >).  This function may fail if the nodes are not in a tree
-   * or are in different trees.
-   *
-   * @param a the first node
-   * @param b the second node
-   * @param retval whether a < b (negative), a == b (0), or a > b (positive)
-   */
-  static nsresult CompareNodes(nsIDOMNode* a,
-                               nsIDOMNode* b,
-                               PRInt32* retval);
-
   //
   // Data members
   //
@@ -251,6 +253,8 @@ protected:
   PRPackedBool mGeneratingReset;
   PRPackedBool mIsSubmitting;
   nsCOMPtr<nsIRequest> mSubmittingRequest;
+
+  friend class nsFormControlEnumerator;
 
 protected:
   /** Detection of first form to notify observers */
@@ -300,12 +304,12 @@ public:
 
   nsAutoVoidArray mElements;  // Holds WEAK references - bug 36639
 
-  // This hash holds on to all form controls that are not contained
+  // This array holds on to all form controls that are not contained
   // in mElements (form.elements in JS, see ShouldBeInFormControl()).
   // This is needed to properly clean up the bi-directional references
   // (both weak and strong) between the form and its form controls.
 
-  nsHashtable* mNotInElements; // Holds WEAK references
+  nsSmallVoidArray mNotInElements; // Holds WEAK references
 
 protected:
   // A map from an ID or NAME attribute to the form control(s), this
@@ -315,6 +319,21 @@ protected:
   // references to the form control.
 
   nsSupportsHashtable mNameLookupTable;
+};
+
+
+class nsFormControlEnumerator : public nsISimpleEnumerator {
+public:
+  nsFormControlEnumerator(nsHTMLFormElement* aForm);
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISIMPLEENUMERATOR;
+
+private:
+  nsHTMLFormElement* mForm;
+  PRUint32 mElementsIndex;
+  nsSupportsArray mNotInElementsSorted;
+  PRUint32 mNotInElementsIndex;
 };
 
 
@@ -975,57 +994,24 @@ nsresult
 nsHTMLFormElement::WalkFormElements(nsIFormSubmission* aFormSubmission,
                                     nsIContent* aSubmitElement)
 {
-  //
-  // If the submitter is an input type=image element, it is not in the
-  // form.elements[] array.  So we get the DOMNode pointer to it here so that
-  // later we can determine its proper position in the submit order.
-  //
-  nsCOMPtr<nsIDOMNode> imageElementNode;
-  {
-    nsCOMPtr<nsIFormControl> submitControl = do_QueryInterface(aSubmitElement);
-    if (submitControl) {
-      PRInt32 type;
-      submitControl->GetType(&type);
-      if (type == NS_FORM_INPUT_IMAGE) {
-        imageElementNode = do_QueryInterface(aSubmitElement);
-      }
-    }
-  }
+  nsCOMPtr<nsISimpleEnumerator> formControls;
+  nsresult rv = GetControlEnumerator(getter_AddRefs(formControls));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   //
   // Walk the list of nodes and call SubmitNamesValues() on the controls
   //
-  PRUint32 numElements;
-  GetElementCount(&numElements);
-
-  PRUint32 elementX;
-  for (elementX = 0; elementX < numElements; elementX++) {
-    nsCOMPtr<nsIFormControl> control;
-    GetElementAt(elementX, getter_AddRefs(control));
-
-    // Determine whether/when to submit the image element, which is not in
-    // the list of form.elements[]
-    if (imageElementNode) {
-      // If the input type=image element is before this element, submit it
-      // instead
-      nsCOMPtr<nsIDOMNode> controlNode(do_QueryInterface(control));
-      PRInt32 comparison;
-      CompareNodes(imageElementNode, controlNode, &comparison);
-      if (comparison < 0) {
-        nsCOMPtr<nsIFormControl> image = do_QueryInterface(imageElementNode);
-        image->SubmitNamesValues(aFormSubmission, aSubmitElement);
-        imageElementNode = nsnull;
-      }
-    }
+  PRBool hasMoreElements;
+  nsCOMPtr<nsISupports> controlSupports;
+  nsCOMPtr<nsIFormControl> control;
+  while (NS_SUCCEEDED(formControls->HasMoreElements(&hasMoreElements)) &&
+         hasMoreElements) {
+    rv = formControls->GetNext(getter_AddRefs(controlSupports));
+    NS_ENSURE_SUCCESS(rv, rv);
+    control = do_QueryInterface(controlSupports);
 
     // Tell the control to submit its name/value pairs to the submission
     control->SubmitNamesValues(aFormSubmission, aSubmitElement);
-  }
-
-  // The image appeared after all other controls
-  if (imageElementNode) {
-    nsCOMPtr<nsIFormControl> image = do_QueryInterface(imageElementNode);
-    image->SubmitNamesValues(aFormSubmission, aSubmitElement);
   }
 
   return NS_OK;
@@ -1137,22 +1123,11 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild)
   NS_ENSURE_TRUE(mControls, NS_ERROR_UNEXPECTED);
 
   if (ShouldBeInElements(aChild)) {
-    mControls->mElements.AppendElement(aChild);
     // WEAK - don't addref
+    mControls->mElements.AppendElement(aChild);
   } else {
-    if (!mControls->mNotInElements) {
-      mControls->mNotInElements = new nsHashtable();
-      NS_ENSURE_TRUE(mControls->mNotInElements, NS_ERROR_OUT_OF_MEMORY);
-    }
-
-    nsISupportsKey key(aChild);
-
-    nsISupports *item =
-      NS_STATIC_CAST(nsISupports *, mControls->mNotInElements->Get(&key));
-
-    if (!item) {
-      mControls->mNotInElements->Put(&key, aChild);
-    }
+    // WEAK - don't addref
+    mControls->mNotInElements.AppendElement(aChild);
   }
 
   //
@@ -1207,12 +1182,10 @@ nsHTMLFormElement::RemoveElement(nsIFormControl* aChild)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mControls->mElements.RemoveElement(aChild);
-
-  if (mControls->mNotInElements) {
-    nsISupportsKey key(aChild);
-
-    mControls->mNotInElements->Remove(&key);
+  if (ShouldBeInElements(aChild)) {
+    mControls->mElements.RemoveElement(aChild);
+  } else {
+    mControls->mNotInElements.RemoveElement(aChild);
   }
 
   return NS_OK;
@@ -1316,6 +1289,15 @@ nsHTMLFormElement::OnSecurityChange(nsIWebProgress* aWebProgress,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLFormElement::GetControlEnumerator(nsISimpleEnumerator** aEnum)
+{
+  *aEnum = new nsFormControlEnumerator(this);
+  NS_ENSURE_TRUE(*aEnum, NS_ERROR_OUT_OF_MEMORY);
+  NS_ADDREF(*aEnum);
+  return NS_OK;
+}
+ 
 NS_IMETHODIMP
 nsHTMLFormElement::IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex)
 {
@@ -1452,7 +1434,6 @@ nsHTMLFormElement::RemoveFromRadioGroup(const nsAString& aName,
 
 nsFormControlList::nsFormControlList(nsIDOMHTMLFormElement* aForm)
   : mForm(aForm),
-    mNotInElements(nsnull),
     mNameLookupTable(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE)
 {
   NS_INIT_REFCNT();
@@ -1460,9 +1441,6 @@ nsFormControlList::nsFormControlList(nsIDOMHTMLFormElement* aForm)
 
 nsFormControlList::~nsFormControlList()
 {
-  delete mNotInElements;
-  mNotInElements = nsnull;
-
   mForm = nsnull;
   Clear();
 }
@@ -1473,38 +1451,30 @@ nsFormControlList::SetForm(nsIDOMHTMLFormElement* aForm)
   mForm = aForm; // WEAK - the form owns me
 }
 
-static PRBool PR_CALLBACK
-FormControlResetEnumFunction(nsHashKey *aKey, void *aData, void* closure)
-{
-  nsIFormControl *f = NS_STATIC_CAST(nsIFormControl *, aData);
-
-  f->SetForm(nsnull, PR_FALSE);
-
-  return PR_TRUE;
-}
-
 void
 nsFormControlList::Clear()
 {
   // Null out childrens' pointer to me.  No refcounting here
-  PRInt32 numControls = mElements.Count();
-
-  while (numControls-- > 0) {
+  PRInt32 i;
+  for (i = mElements.Count()-1; i >= 0; i--) {
     nsIFormControl* f = NS_STATIC_CAST(nsIFormControl *,
-                                       mElements.ElementAt(numControls)); 
-
+                                       mElements.ElementAt(i));
     if (f) {
       f->SetForm(nsnull, PR_FALSE); 
     }
   }
-
   mElements.Clear();
 
-  mNameLookupTable.Reset();
-
-  if (mNotInElements) {
-    mNotInElements->Reset(FormControlResetEnumFunction);
+  for (i = mNotInElements.Count()-1; i >= 0; i--) {
+    nsIFormControl* f = NS_STATIC_CAST(nsIFormControl*,
+                                       mNotInElements.ElementAt(i));
+    if (f) {
+      f->SetForm(nsnull, PR_FALSE);
+    }
   }
+  mNotInElements.Clear();
+
+  mNameLookupTable.Reset();
 }
 
 
@@ -1613,20 +1583,6 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild,
                                      const nsAString& aName)
 {
   if (!ShouldBeInElements(aChild)) {
-    if (!mNotInElements) {
-      mNotInElements = new nsHashtable();
-      NS_ENSURE_TRUE(mNotInElements, NS_ERROR_OUT_OF_MEMORY);
-    }
-
-    nsISupportsKey key(aChild);
-
-    nsISupports *item = NS_STATIC_CAST(nsISupports *,
-                                       mNotInElements->Get(&key));
-
-    if (!item) {
-      mNotInElements->Put(&key, aChild);
-    }
-
     return NS_OK;
   }
 
@@ -1708,12 +1664,6 @@ nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild,
                                           const nsAString& aName)
 {
   if (!ShouldBeInElements(aChild)) {
-    if (mNotInElements) {
-      nsISupportsKey key(aChild);
-
-      mNotInElements->Remove(&key);
-    }
-
     return NS_OK;
   }
 
@@ -1787,4 +1737,121 @@ nsHTMLFormElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+
 #endif
+
+// nsFormControlEnumerator
+NS_IMPL_ISUPPORTS1(nsFormControlEnumerator, nsISimpleEnumerator);
+
+nsFormControlEnumerator::nsFormControlEnumerator(nsHTMLFormElement* aForm)
+  : mForm(aForm), mElementsIndex(0), mNotInElementsIndex(0)
+{
+  NS_INIT_ISUPPORTS();
+
+  // Create the sorted mNotInElementsSorted array
+  PRInt32 len = aForm->mControls->mNotInElements.Count();
+  for (PRInt32 indexToAdd=0; indexToAdd < len; indexToAdd++) {
+    // Ref doesn't need to be strong, don't bother making it so
+    nsIFormControl* controlToAdd = NS_STATIC_CAST(nsIFormControl*,
+        aForm->mControls->mNotInElements.ElementAt(indexToAdd));
+
+    // Go through the array and insert the element at the first place where
+    // it is less than the element already in the array
+    nsCOMPtr<nsIDOMNode> controlToAddNode = do_QueryInterface(controlToAdd);
+    nsCOMPtr<nsIDOMNode> existingNode;
+    PRBool inserted = PR_FALSE;
+    // Loop over all elements backwards (from indexToAdd to 0)
+    // indexToAdd is equal to the array length because we've been adding to it
+    // constantly
+    PRUint32 i = indexToAdd;
+    while (i > 0) {
+      i--;
+      existingNode = do_QueryElementAt(&mNotInElementsSorted, i);
+      PRInt32 comparison;
+      if (NS_FAILED(nsHTMLFormElement::CompareNodes(controlToAddNode,
+                                                    existingNode,
+                                                    &comparison))) {
+        break;
+      }
+      if (comparison > 0) {
+        if (mNotInElementsSorted.InsertElementAt(controlToAdd, i+1)) {
+          inserted = PR_TRUE;
+        }
+        break;
+      }
+    }
+
+    // If it wasn't inserted yet, it is greater than everything in the array
+    // and must be appended.
+    if (!inserted) {
+      if (!mNotInElementsSorted.InsertElementAt(controlToAdd,0)) {
+        break;
+      }
+    }
+  }
+}
+
+NS_IMETHODIMP
+nsFormControlEnumerator::HasMoreElements(PRBool* aHasMoreElements)
+{
+  PRUint32 len;
+  mForm->GetElementCount(&len);
+  if (mElementsIndex < len) {
+    *aHasMoreElements = PR_TRUE;
+  } else {
+    PRUint32 notInElementsLen;
+    mNotInElementsSorted.Count(&notInElementsLen);
+    *aHasMoreElements = mNotInElementsIndex < notInElementsLen;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormControlEnumerator::GetNext(nsISupports** aNext)
+{
+  // Holds the current form control in form.elements
+  nsCOMPtr<nsIFormControl> formControl;
+  // First get the form control in form.elements
+  PRUint32 len;
+  mForm->GetElementCount(&len);
+  if (mElementsIndex < len) {
+    mForm->GetElementAt(mElementsIndex, getter_AddRefs(formControl));
+  }
+  // If there are still controls in mNotInElementsSorted, determine whether said
+  // control is before the current control in the array, and if so, choose it
+  // instead
+  PRUint32 notInElementsLen;
+  mNotInElementsSorted.Count(&notInElementsLen);
+  if (mNotInElementsIndex < notInElementsLen) {
+    // Get the not-in-elements control - weak ref
+    
+    nsCOMPtr<nsIFormControl> formControl2 =
+        do_QueryElementAt(&mNotInElementsSorted, mNotInElementsIndex);
+
+    if (formControl) {
+      // Both form controls are there.  We have to compare them and see which
+      // one we need to choose right now.
+      nsCOMPtr<nsIDOMNode> dom1 = do_QueryInterface(formControl);
+      nsCOMPtr<nsIDOMNode> dom2 = do_QueryInterface(formControl2);
+      PRInt32 comparison = 0;
+      nsresult rv = nsHTMLFormElement::CompareNodes(dom1, dom2, &comparison);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (comparison < 0) {
+        *aNext = formControl;
+        mElementsIndex++;
+      } else {
+        *aNext = formControl2;
+        mNotInElementsIndex++;
+      }
+    } else {
+      *aNext = formControl2;
+      mNotInElementsIndex++;
+    }
+  } else {
+    *aNext = formControl;
+    mElementsIndex++;
+  }
+
+  NS_IF_ADDREF(*aNext);
+  return NS_OK;
+}
