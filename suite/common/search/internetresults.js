@@ -14,9 +14,14 @@ function doClick(node)
 			if (internetSearchStore)
 			{
 				var src = rdf.GetResource(theID, true);
+//				var urlProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
 				var bannerProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#Banner", true);
 				var htmlProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#HTML", true);
-
+/*
+				var url = internetSearchStore.GetTarget(src, urlProperty, true);
+				if (url)	url = url.QueryInterface(Components.interfaces.nsIRDFLiteral);
+				if (url)	url = url.Value;
+*/
 				var banner = internetSearchStore.GetTarget(src, bannerProperty, true);
 				if (banner)	banner = banner.QueryInterface(Components.interfaces.nsIRDFLiteral);
 				if (banner)	banner = banner.Value;
@@ -26,13 +31,15 @@ function doClick(node)
 				if (target)	target = target.Value;
 				if (target)
 				{
-					var text = "<BASE TARGET='_NEW'>";
+					var text = "<HTML><HEAD><BASE TARGET='_NEW'></HEAD><BODY><FONT POINT-SIZE='9'>";
+
 					if (banner)
 					{
 						// add a </A> and a <BR> just in case
 						text += banner + "</A><BR>";
 					}
 					text += target;
+					text += "</FONT></BODY></HTML>"
 					
 					var doc = window.frames[0].document;
 					doc.open("text/html", "replace");
