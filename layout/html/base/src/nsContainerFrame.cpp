@@ -1166,27 +1166,24 @@ nsIFrame*
 nsContainerFrame::GetOverflowFrames(nsPresContext* aPresContext,
                                     PRBool          aRemoveProperty) const
 {
-  PRUint32  options = 0;
-
   if (aRemoveProperty) {
-    options |= NS_IFRAME_MGR_REMOVE_PROP;
+    return (nsIFrame*) UnsetProperty(nsLayoutAtoms::overflowProperty);
   }
 
-  return (nsIFrame*) aPresContext->FrameManager()->
-    GetFrameProperty(this, nsLayoutAtoms::overflowProperty, options);
+  return (nsIFrame*) GetProperty(nsLayoutAtoms::overflowProperty);
 }
 
 // Destructor function for the overflow frame property
 static void
-DestroyOverflowFrames(nsPresContext* aPresContext,
-                      nsIFrame*       aFrame,
+DestroyOverflowFrames(void*           aFrame,
                       nsIAtom*        aPropertyName,
-                      void*           aPropertyValue)
+                      void*           aPropertyValue,
+                      void*           aDtorData)
 {
   if (aPropertyValue) {
     nsFrameList frames((nsIFrame*)aPropertyValue);
 
-    frames.DestroyFrames(aPresContext);
+    frames.DestroyFrames(NS_STATIC_CAST(nsPresContext*, aDtorData));
   }
 }
 
@@ -1194,12 +1191,12 @@ nsresult
 nsContainerFrame::SetOverflowFrames(nsPresContext* aPresContext,
                                     nsIFrame*       aOverflowFrames)
 {
-  nsresult rv = aPresContext->FrameManager()->
-    SetFrameProperty(this, nsLayoutAtoms::overflowProperty,
-                     aOverflowFrames, DestroyOverflowFrames);
+  nsresult rv = SetProperty(nsLayoutAtoms::overflowProperty,
+                            aOverflowFrames, DestroyOverflowFrames,
+                            aPresContext);
 
   // Verify that we didn't overwrite an existing overflow list
-  NS_ASSERTION(rv != NS_IFRAME_MGR_PROP_OVERWRITTEN, "existing overflow list");
+  NS_ASSERTION(rv != NS_PROPTABLE_PROP_OVERWRITTEN, "existing overflow list");
 
   return rv;
 }

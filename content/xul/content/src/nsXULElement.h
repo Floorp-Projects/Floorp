@@ -506,6 +506,14 @@ public:
     virtual already_AddRefed<nsIURI> GetBaseURI() const;
     virtual nsresult GetListenerManager(nsIEventListenerManager** aResult);
     virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+    virtual void* GetProperty(nsIAtom  *aPropertyName,
+                              nsresult *aStatus = nsnull) const;
+    virtual nsresult SetProperty(nsIAtom            *aPropertyName,
+                                 void               *aValue,
+                                 NSPropertyDtorFunc  aDtor);
+    virtual nsresult DeleteProperty(nsIAtom *aPropertyName);
+    virtual void* UnsetProperty(nsIAtom  *aPropertyName,
+                                nsresult *aStatus = nsnull);
 
     // nsIXMLContent
     NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell);
@@ -607,7 +615,8 @@ protected:
         nsRefPtr<nsDOMCSSDeclaration>       mDOMStyle;           // [OWNER]
         nsRefPtr<nsDOMAttributeMap>         mAttributeMap;       // [OWNER]
         nsRefPtr<nsChildContentList>        mChildNodes;         // [OWNER]
-        PRUint32                            mLazyState;
+        unsigned                            mLazyState : 3;
+        unsigned                            mHasProperties : 1;
     };
 
     friend struct Slots;
