@@ -61,7 +61,7 @@ accessible      1
 bidi            1      IBMBIDI
 p3p             0
 jsdebugger      0
-moz_logging     1
+moz_logging     1      MOZ_LOGGING
 chatzilla       1
 xml_rpc         1
 cview           1
