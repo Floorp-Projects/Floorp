@@ -34,6 +34,7 @@ DIRS=            \
         jar      \
         datetime \
         res      \
+	finger   \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
