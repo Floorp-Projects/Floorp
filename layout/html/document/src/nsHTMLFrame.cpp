@@ -35,11 +35,14 @@
 #include "nsIScrollableView.h"
 #include "nsStyleCoord.h"
 #include "nsIStyleContext.h"
+#include "nsStyleConsts.h"
 #include "nsCSSLayout.h"
 #include "nsIDocumentLoader.h"
 #include "nsIPref.h"
 //#include "nsIDocumentWidget.h"
 #include "nsHTMLFrameset.h"
+#include "nsIDOMHTMLFRAMEElement.h"
+#include "nsIDOMHTMLIFRAMEElement.h"
 #include "nsGenericHTMLElement.h"
 class nsHTMLFrame;
 
@@ -50,6 +53,8 @@ static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
+static NS_DEFINE_IID(kIDOMHTMLFrameElementIID, NS_IDOMHTMLFRAMEELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLIFrameElementIID, NS_IDOMHTMLIFRAMEELEMENT_IID);
 
 /*******************************************************************************
  * TempObserver XXX temporary until doc manager/loader is in place
@@ -123,6 +128,7 @@ protected:
                               const nsReflowState& aReflowState,
                               nsReflowMetrics& aDesiredSize);
   virtual PRIntn GetSkipSides() const;
+  PRBool *mIsInline;
 };
 
 /*******************************************************************************
@@ -154,8 +160,13 @@ public:
   NS_IMETHOD MoveTo(nscoord aX, nscoord aY);
   NS_IMETHOD SizeTo(nscoord aWidth, nscoord aHeight);
 
-  NS_IMETHOD GetParentContent(nsHTMLFrame*& aContent);
-
+  NS_IMETHOD GetParentContent(nsIContent*& aContent);
+  PRBool GetURL(nsIContent* aContent, nsString& aResult);
+  PRBool GetName(nsIContent* aContent, nsString& aResult);
+  nsScrollPreference GetScrolling(nsIContent* aContent, PRBool aStandardMode);
+  nsFrameborder GetFrameBorder(PRBool aStandardMode);
+  PRInt32 GetMarginWidth(nsIPresContext* aPresContext, nsIContent* aContent);
+  PRInt32 GetMarginHeight(nsIPresContext* aPresContext, nsIContent* aContent);
 protected:
   nsresult CreateWebShell(nsIPresContext& aPresContext, const nsSize& aSize);
 
@@ -172,48 +183,6 @@ protected:
   TempObserver* mTempObserver;
 };
 
-/*******************************************************************************
- * nsHTMLFrame
- ******************************************************************************/
-class nsHTMLFrame : public nsHTMLContainer {
-public:
- 
-  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
-                         nsIFrame*        aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*&       aResult);
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
-  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
-                          PRBool aNotify);
-
-  PRBool GetURL(nsString& aURLSpec);
-  PRBool GetName(nsString& aName);
-  nsScrollPreference GetScrolling();
-  nsFrameborder GetFrameBorder();
-  PRBool IsInline() { return mInline; }
-
-  PRInt32 GetMarginWidth(nsIPresContext* aPresContext);
-  PRInt32 GetMarginHeight(nsIPresContext* aPresContext);  
-
-
-protected:
-  nsHTMLFrame(nsIAtom* aTag, PRBool aInline, nsIWebShell* aParentWebWidget);
-  virtual  ~nsHTMLFrame();
-  PRInt32 GetMargin(nsIAtom* aType, nsIPresContext* aPresContext);
-
-
-  PRBool mInline; // true for <IFRAME>, false for <FRAME>
-  // this is held for a short time until the frame uses it, so it is not ref counted
-  nsIWebShell* mParentWebWidget;  
-
-  friend nsresult NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
-                                   nsIAtom* aTag, nsIWebShell* aWebWidget);
-  friend nsresult NS_NewHTMLFrame(nsIHTMLContent** aInstancePtrResult,
-                                   nsIAtom* aTag, nsIWebShell* aWebWidget);
-  friend class nsHTMLFrameInnerFrame;
-
-};
 
 /*******************************************************************************
  * nsHTMLFrameOuterFrame
@@ -221,11 +190,15 @@ protected:
 nsHTMLFrameOuterFrame::nsHTMLFrameOuterFrame(nsIContent* aContent, nsIFrame* aParent)
   : nsHTMLContainerFrame(aContent, aParent)
 {
+  mIsInline = nsnull;
 }
 
 nsHTMLFrameOuterFrame::~nsHTMLFrameOuterFrame()
 {
   //printf("nsHTMLFrameOuterFrame destructor %X \n", this);
+  if (mIsInline) {
+    delete mIsInline;
+  }
 }
 
 nscoord
@@ -277,7 +250,17 @@ nsHTMLFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
 PRBool nsHTMLFrameOuterFrame::IsInline()
 { 
-  return ((nsHTMLFrame*)mContent)->IsInline(); 
+  if (nsnull == mIsInline) {
+    nsIDOMHTMLFrameElement* frame = nsnull;
+    mContent->QueryInterface(kIDOMHTMLIFrameElementIID, (void**) &frame);
+    if (nsnull != frame) {
+      mIsInline = new PRBool(PR_TRUE);
+      NS_RELEASE(frame);
+    } else {
+      mIsInline = new PRBool(PR_FALSE);
+    }
+  }
+  return *mIsInline;
 }
 
 NS_IMETHODIMP
@@ -370,6 +353,18 @@ nsHTMLFrameOuterFrame::VerifyTree() const
   return NS_OK;
 }
 
+nsresult
+NS_NewHTMLFrameOuterFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                          nsIFrame*& aResult)
+{
+  nsIFrame* frame = new nsHTMLFrameOuterFrame(aContent, aParentFrame);
+  if (nsnull == frame) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  aResult = frame;
+  return NS_OK;
+}
+
 /*******************************************************************************
  * nsHTMLFrameInnerFrame
  ******************************************************************************/
@@ -394,34 +389,155 @@ nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
   NS_RELEASE(mTempObserver);
 }
 
-#if 0
-float nsHTMLFrameInnerFrame::GetTwipsToPixels()
+PRBool nsHTMLFrameInnerFrame::GetURL(nsIContent* aContent, nsString& aResult)
 {
-  nsISupports* parentSup;
-  if (mWebShell) {
-    mWebShell->GetContainer(&parentSup);
-    if (parentSup) {
-      nsIWebShell* parentWidget;
-      nsresult res = parentSup->QueryInterface(kIWebWidgetIID, (void**)&parentWidget);
-      if (NS_OK == res) {
-        nsIPresContext* presContext = parentWidget->GetPresContext();
-        NS_RELEASE(parentWidget);
-        if (presContext) {
-          float ret = presContext->GetTwipsToPixels();
-          NS_RELEASE(presContext);
-          return ret;
-        } 
-      } else {
-        NS_ASSERTION(0, "invalid web widget container");
+  PRBool result = PR_FALSE;
+  nsIHTMLContent* content = nsnull;
+  aContent->QueryInterface(kIHTMLContentIID, (void**) &content);
+  if (nsnull != content) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::src, value))) {
+      if (eHTMLUnit_String == value.GetUnit()) {
+        value.GetStringValue(aResult);
+        result = PR_TRUE;
       }
-    } else {
-      NS_ASSERTION(0, "invalid web widget container");
+    }
+    NS_RELEASE(content);
+  }
+  if (PR_FALSE == result) {
+    aResult.SetLength(0);
+  }
+  return result;
+}
+
+PRBool nsHTMLFrameInnerFrame::GetName(nsIContent* aContent, nsString& aResult)
+{
+  PRBool result = PR_FALSE;
+  nsIHTMLContent* content = nsnull;
+  aContent->QueryInterface(kIHTMLContentIID, (void**) &content);
+  if (nsnull != content) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::name, value))) {
+      if (eHTMLUnit_String == value.GetUnit()) {
+        value.GetStringValue(aResult);
+        result = PR_TRUE;
+      }
+    } 
+    NS_RELEASE(content);
+  }
+  if (PR_FALSE == result) {
+    aResult.SetLength(0);
+  }
+  return result;
+}
+
+nsScrollPreference nsHTMLFrameInnerFrame::GetScrolling(nsIContent* aContent, PRBool aStandardMode)
+{
+  nsIHTMLContent* content = nsnull;
+  aContent->QueryInterface(kIHTMLContentIID, (void**) &content);
+  if (nsnull != content) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::scrolling, value))) {
+      if (eHTMLUnit_Enumerated == value.GetUnit()) {
+        PRInt32 intValue;
+        intValue = value.GetIntValue();
+        if (!aStandardMode) {
+          if ((NS_STYLE_FRAME_ON == intValue) || (NS_STYLE_FRAME_SCROLL == intValue)) {
+            intValue = NS_STYLE_FRAME_YES;
+          } 
+          else if ((NS_STYLE_FRAME_OFF == intValue) || (NS_STYLE_FRAME_NOSCROLL == intValue)) {
+            intValue = NS_STYLE_FRAME_NO;
+          }
+        }
+        if (NS_STYLE_FRAME_YES == intValue) {
+          NS_RELEASE(content);
+          return nsScrollPreference_kAlwaysScroll;
+        } 
+        else if (NS_STYLE_FRAME_NO == intValue) {
+          NS_RELEASE(content);
+          return nsScrollPreference_kNeverScroll;
+        }
+      }      
+    }
+    NS_RELEASE(content);
+  }
+  // XXX if we get here, check for nsIDOMFRAMEElement, nsIDOMIFRAMEElement interfaces
+  return nsScrollPreference_kAuto;
+}
+
+nsFrameborder nsHTMLFrameInnerFrame::GetFrameBorder(PRBool aStandardMode)
+{
+  nsIHTMLContent* content = nsnull;
+  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
+  if (nsnull != content) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::frameborder, value))) {
+      if (eHTMLUnit_Enumerated == value.GetUnit()) {
+        PRInt32 intValue;
+        intValue = value.GetIntValue();
+        if (!aStandardMode) {
+          if (NS_STYLE_FRAME_YES == intValue) {
+            intValue = NS_STYLE_FRAME_0;
+          } 
+          else if (NS_STYLE_FRAME_NO == intValue) {
+            intValue = NS_STYLE_FRAME_1;
+          }
+        }
+        if (NS_STYLE_FRAME_0 == intValue) {
+          NS_RELEASE(content);
+          return eFrameborder_No;
+        } 
+        else if (NS_STYLE_FRAME_1 == intValue) {
+          NS_RELEASE(content);
+          return eFrameborder_Yes;
+        }
+      }      
+    }
+    NS_RELEASE(content);
+  }
+  // XXX if we get here, check for nsIDOMFRAMESETElement interface
+  return eFrameborder_Notset;
+}
+
+
+PRInt32 nsHTMLFrameInnerFrame::GetMarginWidth(nsIPresContext* aPresContext, nsIContent* aContent)
+{
+  PRInt32 marginWidth = -1;
+  nsIHTMLContent* content = nsnull;
+  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
+  if (nsnull != content) {
+    float p2t = aPresContext->GetPixelsToTwips();
+    nsHTMLValue value;
+    content->GetAttribute(nsHTMLAtoms::marginwidth, value);
+    if (eHTMLUnit_Pixel == value.GetUnit()) { 
+      marginWidth = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+      if (marginWidth < 0) {
+        marginWidth = 0;
+      }
+    }
+    NS_RELEASE(content);
+  }
+  return marginWidth;
+}
+
+PRInt32 nsHTMLFrameInnerFrame::GetMarginHeight(nsIPresContext* aPresContext, nsIContent* aContent)
+{
+  PRInt32 marginHeight = -1;
+  nsIHTMLContent* content = nsnull;
+  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
+  if (nsnull != content) {
+    float p2t = aPresContext->GetPixelsToTwips();
+    nsHTMLValue value;
+    content->GetAttribute(nsHTMLAtoms::marginheight, value);
+    if (eHTMLUnit_Pixel == value.GetUnit()) { 
+      marginHeight = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+      if (marginHeight < 0) {
+        marginHeight = 0;
+      }
     }
   }
-  return (float)0.05;  // this should not be reached
+  return marginHeight;
 }
-#endif
-
 
 NS_IMETHODIMP nsHTMLFrameInnerFrame::ListTag(FILE* out) const
 {
@@ -452,7 +568,7 @@ nsHTMLFrameInnerFrame::Paint(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsHTMLFrameInnerFrame::GetParentContent(nsHTMLFrame*& aContent)
+nsHTMLFrameInnerFrame::GetParentContent(nsIContent*& aContent)
 {
   nsHTMLFrameOuterFrame* parent;
   GetGeometricParent((nsIFrame*&)parent);
@@ -481,7 +597,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
                                       const nsSize& aSize)
 {
   nsresult rv;
-  nsHTMLFrame* content;
+  nsIContent* content;
   GetParentContent(content);
 
   rv = nsRepository::CreateInstance(kWebShellCID, nsnull, kIWebShellIID,
@@ -492,11 +608,11 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   }
 
   // pass along marginwidth, marginheight so sub document can use it
-  mWebShell->SetMarginWidth(content->GetMarginWidth(&aPresContext));
-  mWebShell->SetMarginHeight(content->GetMarginHeight(&aPresContext));
+  mWebShell->SetMarginWidth(GetMarginWidth(&aPresContext, content));
+  mWebShell->SetMarginHeight(GetMarginHeight(&aPresContext, content));
 
   nsString frameName;
-  if (content->GetName(frameName)) {
+  if (GetName(content, frameName)) {
     mWebShell->SetName(frameName);
   }
 
@@ -563,7 +679,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   mWebShell->Init(widget->GetNativeData(NS_NATIVE_WIDGET), 
                   webBounds.x, webBounds.y,
                   webBounds.width, webBounds.height,
-                  content->GetScrolling());
+                  GetScrolling(content, PR_FALSE));
   NS_RELEASE(content);
   NS_RELEASE(widget);
 
@@ -590,11 +706,11 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
 
   // use the max size set in aReflowState by the nsHTMLFrameOuterFrame as our size
   if (!mCreatingViewer) {
-    nsHTMLFrame* content;
+    nsIContent* content;
     GetParentContent(content);
 
     nsAutoString url;
-    content->GetURL(url);
+    GetURL(content, url);
     nsSize size;
  
     if (nsnull == mWebShell) {
@@ -649,202 +765,6 @@ nsHTMLFrameInnerFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredSize.height  = 0;
   aDesiredSize.ascent  = 0;
   aDesiredSize.descent = 0;
-}
-
-/*******************************************************************************
- * nsHTMLFrame
- ******************************************************************************/
-nsHTMLFrame::nsHTMLFrame(nsIAtom* aTag, PRBool aInline, nsIWebShell* aParentWebWidget)
-  : nsHTMLContainer(aTag), mInline(aInline), mParentWebWidget(aParentWebWidget)
-{
-}
-
-nsHTMLFrame::~nsHTMLFrame()
-{
-  mParentWebWidget = nsnull;
-}
-
-NS_IMETHODIMP
-nsHTMLFrame::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
-  fprintf(out, "%X ", this);
-  if (mInline) {
-    fprintf(out, "INLINE \n", this);
-  } else {
-    fprintf(out, "\n");
-  }
-  return nsHTMLContent::List(out, aIndent);
-}
-
-NS_IMETHODIMP
-nsHTMLFrame::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
-                          PRBool aNotify)
-{
-  nsHTMLValue val;
-  if (aAttribute == nsHTMLAtoms::bordercolor) {
-    ParseColor(aValue, val);
-    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
-  } else if (ParseImageProperty(aAttribute, aValue, val)) { // convert width or height to pixels
-    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
-  }
-  return nsHTMLContainer::SetAttribute(aAttribute, aValue, aNotify);
-}
-
-
-static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
-                  nsIStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext, aPresContext);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-}
-
-NS_IMETHODIMP
-nsHTMLFrame::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
-{
-  aMapFunc = &MapAttributesInto;
-  return NS_OK;
-}
-
-
-PRInt32 nsHTMLFrame::GetMargin(nsIAtom* aType, nsIPresContext* aPresContext) 
-{
-  float p2t = aPresContext->GetPixelsToTwips();
-  nsAutoString strVal;
-  PRInt32 intVal;
-
-  if (NS_CONTENT_ATTR_HAS_VALUE == (GetAttribute(aType, strVal))) {
-    PRInt32 status;
-    intVal = strVal.ToInteger(&status);
-    if (intVal < 0) {
-      intVal = 0;
-    }
-    return NSIntPixelsToTwips(intVal, p2t);
-  }
-
-  return -1;
-}
-
-PRInt32 nsHTMLFrame::GetMarginWidth(nsIPresContext* aPresContext)
-{
-  return GetMargin(nsHTMLAtoms::marginwidth, aPresContext);
-}
-
-PRInt32 nsHTMLFrame::GetMarginHeight(nsIPresContext* aPresContext)
-{
-  return GetMargin(nsHTMLAtoms::marginheight, aPresContext);
-}
-
-nsresult
-nsHTMLFrame::CreateFrame(nsIPresContext*  aPresContext,
-                          nsIFrame*        aParentFrame,
-                          nsIStyleContext* aStyleContext,
-                          nsIFrame*&       aResult)
-{
-  nsIFrame* frame = new nsHTMLFrameOuterFrame(this, aParentFrame);
-  if (nsnull == frame) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  aResult = frame;
-  frame->SetStyleContext(aPresContext, aStyleContext);
-  return NS_OK;
-}
-
-PRBool nsHTMLFrame::GetURL(nsString& aURLSpec)
-{
-  nsHTMLValue value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == (GetAttribute(nsHTMLAtoms::src, value))) {
-    if (eHTMLUnit_String == value.GetUnit()) {
-      value.GetStringValue(aURLSpec);
-      return PR_TRUE;
-    }
-  }
-  aURLSpec.SetLength(0);
-  return PR_FALSE;
-}
-
-PRBool nsHTMLFrame::GetName(nsString& aName)
-{
-  nsHTMLValue value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == (GetAttribute(nsHTMLAtoms::name, value))) {
-    if (eHTMLUnit_String == value.GetUnit()) {
-      value.GetStringValue(aName);
-      return PR_TRUE;
-    }
-  }
-  aName.SetLength(0);
-  return PR_FALSE;
-}
-
-nsScrollPreference nsHTMLFrame::GetScrolling()
-{
-  nsHTMLValue value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == (GetAttribute(nsHTMLAtoms::scrolling, value))) {
-    if (eHTMLUnit_String == value.GetUnit()) {
-      nsAutoString scrolling;
-      value.GetStringValue(scrolling);
-      if (scrolling.EqualsIgnoreCase("yes")) {
-        return nsScrollPreference_kAlwaysScroll;
-      } 
-      else if (scrolling.EqualsIgnoreCase("no")) {
-        return nsScrollPreference_kNeverScroll;
-      }
-    }
-  }
-  return nsScrollPreference_kAuto;
-}
-
-nsFrameborder nsHTMLFrame::GetFrameBorder()
-{
-  nsHTMLValue value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == (GetAttribute(nsHTMLAtoms::frameborder, value))) {
-    if (eHTMLUnit_String == value.GetUnit()) {
-      nsAutoString frameborder;
-      value.GetStringValue(frameborder);
-      if (frameborder.EqualsIgnoreCase("no") || frameborder.EqualsIgnoreCase("0")) {
-        return eFrameborder_No;
-      } else {
-        return eFrameborder_Yes;
-      }
-    }
-  }
-  return eFrameborder_Notset;
-}
-
-nsresult
-NS_NewHTMLFrame(nsIHTMLContent** aInstancePtrResult,
-                 nsIAtom* aTag, nsIWebShell* aWebWidget)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsIHTMLContent* it = new nsHTMLFrame(aTag, PR_FALSE, aWebWidget);
-
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
-}
-
-nsresult
-NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
-                 nsIAtom* aTag, nsIWebShell* aWebWidget)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsIHTMLContent* it = new nsHTMLFrame(aTag, PR_TRUE, aWebWidget);
-
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
 /*******************************************************************************

@@ -150,7 +150,33 @@ nsHTMLFrameElement::StringToAttribute(nsIAtom* aAttribute,
                                       const nsString& aValue,
                                       nsHTMLValue& aResult)
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::bordercolor) {
+    nsGenericHTMLElement::ParseColor(aValue, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  } 
+  else if (aAttribute == nsHTMLAtoms::frameborder) {
+    // XXX need to check for correct mode
+    nsGenericHTMLElement::ParseFrameborderValue(PR_FALSE, aValue, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  } 
+  else if (aAttribute == nsHTMLAtoms::marginwidth) {
+    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
+                                              eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::marginheight) {
+    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
+                                              eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::noresize) {
+    aResult.SetEmptyValue();
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::scrolling) {
+     nsGenericHTMLElement::ParseScrollingValue(PR_FALSE, aValue, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -159,7 +185,14 @@ nsHTMLFrameElement::AttributeToString(nsIAtom* aAttribute,
                                       nsHTMLValue& aValue,
                                       nsString& aResult) const
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::frameborder) {
+    nsGenericHTMLElement::FrameborderValueToString(PR_FALSE, aValue, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  } 
+  else if (aAttribute == nsHTMLAtoms::scrolling) {
+    nsGenericHTMLElement::ScrollingValueToString(PR_FALSE, aValue, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -168,7 +201,6 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  // XXX write me
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
 
@@ -189,3 +221,4 @@ nsHTMLFrameElement::HandleDOMEvent(nsIPresContext& aPresContext,
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 }
+

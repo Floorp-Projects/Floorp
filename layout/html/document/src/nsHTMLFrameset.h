@@ -152,10 +152,11 @@ protected:
   nscolor GetParentBorderColor() { return mParentBorderColor; }
   void    SetParentBorderColor(nscolor aColor) { mParentBorderColor = aColor; }
 
-  nsFrameborder GetFrameborder();
-  nsFrameborder GetFrameborder(nsHTMLTagContent* aFrameContent);
+  nsFrameborder GetFrameBorder(PRBool aStandardMode);
+  nsFrameborder GetFrameBorder(nsIContent* aContent, PRBool aStandardMode);
   nscolor GetBorderColor();
-  nscolor GetBorderColor(nsHTMLTagContent* aFrameContent);
+  nscolor GetBorderColor(nsIContent* aFrameContent);
+  PRBool GetNoResize(nsIFrame* aChildFrame); 
   
   virtual PRIntn GetSkipSides() const;
 
@@ -196,6 +197,7 @@ protected:
   PRInt32          mMinDrag;
 };
 
+#if 0
 /*******************************************************************************
  * nsHTMLFrameset
  ******************************************************************************/
@@ -223,5 +225,6 @@ protected:
   // this is held for a short time until the frame uses it, so it is not ref counted
   nsIWebShell*    mParentWebShell; 
 };
+#endif
 
 #endif

@@ -132,7 +132,19 @@ nsHTMLFrameSetElement::StringToAttribute(nsIAtom* aAttribute,
                                          const nsString& aValue,
                                          nsHTMLValue& aResult)
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::bordercolor) {
+    nsGenericHTMLElement::ParseColor(aValue, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  } 
+  else if (aAttribute == nsHTMLAtoms::frameborder) {
+    // XXX need to check for correct mode
+    nsGenericHTMLElement::ParseFrameborderValue(PR_FALSE, aValue, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  } 
+  else if (aAttribute == nsHTMLAtoms::border) {
+    nsGenericHTMLElement::ParseValue(aValue, 1, 100, aResult, eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -141,7 +153,11 @@ nsHTMLFrameSetElement::AttributeToString(nsIAtom* aAttribute,
                                          nsHTMLValue& aValue,
                                          nsString& aResult) const
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::frameborder) {
+    // XXX need to check for correct mode
+    nsGenericHTMLElement::FrameborderValueToString(PR_FALSE, aValue, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  } 
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -150,7 +166,6 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  // XXX write me
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
 

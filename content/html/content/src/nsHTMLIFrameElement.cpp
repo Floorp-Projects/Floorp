@@ -26,8 +26,16 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIHTMLAttributes.h"
 
 static NS_DEFINE_IID(kIDOMHTMLIFrameElementIID, NS_IDOMHTMLIFRAMEELEMENT_IID);
+
+static nsGenericHTMLElement::EnumTable kAlignTable[] = {
+  { "left", NS_STYLE_TEXT_ALIGN_LEFT },
+  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
+  { "center", NS_STYLE_TEXT_ALIGN_CENTER },
+  { 0 }
+};
 
 class nsHTMLIFrameElement : public nsIDOMHTMLIFrameElement,
                             public nsIScriptObjectOwner,
@@ -156,7 +164,39 @@ nsHTMLIFrameElement::StringToAttribute(nsIAtom* aAttribute,
                                        const nsString& aValue,
                                        nsHTMLValue& aResult)
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::marginwidth) {
+    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
+                                              eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  } 
+  else if (aAttribute == nsHTMLAtoms::marginheight) {
+    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
+                                              eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  } 
+  if (aAttribute == nsHTMLAtoms::width) {
+    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
+                                              eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  } 
+  else if (aAttribute == nsHTMLAtoms::height) {
+    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
+                                              eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  } 
+  else if (aAttribute == nsHTMLAtoms::frameborder) {
+    nsGenericHTMLElement::ParseFrameborderValue(PR_TRUE, aValue, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  } 
+  else if (aAttribute == nsHTMLAtoms::scrolling) {
+    nsGenericHTMLElement::ParseScrollingValue(PR_TRUE, aValue, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::align) {
+    if (nsGenericHTMLElement::ParseEnumValue(aValue, kAlignTable, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -165,7 +205,20 @@ nsHTMLIFrameElement::AttributeToString(nsIAtom* aAttribute,
                                        nsHTMLValue& aValue,
                                        nsString& aResult) const
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::frameborder) {
+    nsGenericHTMLElement::FrameborderValueToString(PR_TRUE, aValue, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  } 
+  else if (aAttribute == nsHTMLAtoms::scrolling) {
+    nsGenericHTMLElement::ScrollingValueToString(PR_TRUE, aValue, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::align) {
+    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
+      nsGenericHTMLElement::EnumValueToString(aValue, kAlignTable, aResult);
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -174,7 +227,37 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  // XXX write me
+  if (nsnull != aAttributes) {
+    nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aContext, aPresContext);
+
+    nsHTMLValue value;
+
+    float p2t = aPresContext->GetPixelsToTwips();
+    nsStylePosition* pos = (nsStylePosition*)
+      aContext->GetMutableStyleData(eStyleStruct_Position);
+    nsStyleSpacing* spacing = (nsStyleSpacing*)
+      aContext->GetMutableStyleData(eStyleStruct_Spacing);
+
+    // width: value
+    aAttributes->GetAttribute(nsHTMLAtoms::width, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+      pos->mWidth.SetCoordValue(twips);
+    }
+    else if (value.GetUnit() == eHTMLUnit_Percent) {
+      pos->mWidth.SetPercentValue(value.GetPercentValue());
+    }
+
+    // height: value
+    aAttributes->GetAttribute(nsHTMLAtoms::height, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+      pos->mHeight.SetCoordValue(twips);
+    }
+    else if (value.GetUnit() == eHTMLUnit_Percent) {
+      pos->mHeight.SetPercentValue(value.GetPercentValue());
+    }
+  }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
 
