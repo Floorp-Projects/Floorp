@@ -1,0 +1,157 @@
+There has not been a Bugzilla release for a while, but
+development has continued, and the Bugzilla team is proud
+to announce release of Bugzilla 2.12.
+
+If you have to make special code changes to Bugzilla each
+version, you should be aware that Bugzilla 2.14 is intended
+to be released soon, to improve security.  Therefore, you
+may wish to wait, so you do not have to make the changes
+twice.
+
+Recommended Practice For The Upgrade
+------------------------------------
+
+As always, please ensure you have ran checksetup.pl after
+replacing the files in your installation.
+
+It is recommended that you view the sanity check page
+(sanitycheck.cgi) both before the upgrade and after running
+checksetup.pl after the upgrade, to see if there are any
+problems with your installation.
+
+It is also recommended that if you can, you immediately fix
+any problems you find.  Be aware that if the sanity check page
+contains more errors after an upgrade, it doesn't necessarily
+mean there are more errors in your database, as it is likely
+they weren't being checked for in the old version.
+
+New email tech for email notifications is now recommended.
+Old email tech will probably be removed in Bugzilla 2.14.
+It is strongly recommended that you turn on the newemailtech
+and newemailtechdefault options on the Edit Parameters page
+(editparams.cgi), so new accounts will use new email tech.
+
+If you wish, you may move all old accounts over to new email
+tech by executing the following SQL statement in MySQL:
+
+    UPDATE profiles SET newemailtech = '1';
+
+About This Version
+------------------
+
+Bugs referenced in the following text are bug numbers on
+bugzilla.mozilla.org.
+
+*** IMPORTANT CHANGES ***
+
+- There is now a facility for new email tech users to choose
+  the sort of notifications they wish to receive.  This
+  facility will probably be improved in future versions.
+  (bug 17464)
+
+- "Changed" will no longer appear on the subject line of
+  change notification emails.  Because of this, you should
+  change the subject line in your 'changedmail' and
+  'newchangedmail' params on editparams.cgi. The subject
+  line needs to be changed from
+
+    Subject: [Bug %bugid%] %neworchanged% - %summary%
+
+  to
+
+    Subject: [Bug %bugid%] %neworchanged%%summary%
+
+  or whatever is appropriate for the subject you are using
+  on your system. Note the removal of the " - " in the
+  middle.
+  (bug 29820)
+
+*** Other changes of note ***
+
+- Bug titles now appear in the page title, and will hence
+  display in the user's browser's bookmarks and history.
+  (bug 22041)
+- Edit groups functionality (editgroups.cgi).
+  (bug 25010)
+- Support for moving bugs to other Bugzilla databases.
+  (bug 36133)
+- Bugzilla now can generate a frequently reported bugs list
+  based on what duplicates you receive.
+  (bug 25693)
+- When installing Bugzilla fresh, the administrator account is
+  now created in checksetup.pl.
+  (bug 17773)
+- Stored queries now show their name above the bug list, which
+  helps the user when they have multiple bug lists in multiple
+  browser windows.  It also appears in the page title, and will
+  hence display in the user's browser's bookmarks and history.
+  (bug 52228)
+- All states and resolutions can now be collected for charting.
+  (bug 6682)
+- A new search-engine-like "quick search" feature appears on
+  the front page to try and making searching easier.
+  (bug 69793)
+- Querying on dependencies now works in the advanced query
+  section of the query page.
+  (bug 30823)
+- When a bug is marked as a duplicate, the reporter of the
+  resolved bug is automatically added to the CC list of the
+  open bug.
+  (bug 28676)
+
+*** Bug fixes of note ***
+
+- Notification emails using new email tech will now be sent to
+  QA contacts.
+  (bug 30826)
+- When marking a bug as a duplicate, the duplicate stamp marked
+  on the open bug will no longer be written too early (such as
+  on mid-air collisions).
+  (bug 7873)
+- Various bug fixes were made to the initial assignee and QA
+  of a component.  It is no longer possible to enter an
+  invalid address.  They will also now properly update when
+  a user's email address is changed.  Sanity check will now
+  check these.
+  (bug 66876)
+- Administrators can no longer create an email accounts that do
+  not match the global email regexp parameter.  Previously this
+  would cause sanity check errors.
+  (bug 32971)
+- The resolution field can no longer become empty when the
+  bug is resolved.  This occurred because of midair collisions.
+  (bug 49306)
+
+*** Outstanding issues of note ***
+
+- Bug counts (on reports.cgi) can be very slow if you have to
+  count a lot of bugs.  In this case the connection can time
+  out before the  page finishes loading.  Extending the cgi
+  timeout on your web server might help this situation.
+  (bug 63249)
+- Administrators must make sure that certain files are
+  properly inaccessible or confidential information might become
+  available to enterprising individuals.  This includes the
+  localconfig file, the entire shadow directory and the entire
+  data directory except for data/quips.
+  (bug 65572)
+- Renaming or removing keywords will not update the "keyword
+  cache", and queries on keywords may not work properly, until
+  you rebuild the cache on the sanity check page
+  (sanitycheck.cgi).  The changer will receive a warning to do
+  this when altering the keyword.
+  (bug 69621)
+- Email notifications will not work out of the box if you are
+  using Postfix, Exim or possibly other non-SendMail mail
+  transfer agents, as Bugzilla sends mail by default in
+  "deferred" mode using the "-ODeliveryMode=deferred" command
+  line option, which needs to be supported by the sendmail
+  program.  To fix this, you can turn on the "sendmailnow"
+  parameter on the Edit Parameters page (editparams.cgi).
+  (bug 50159)
+
+
+
+
+
+
