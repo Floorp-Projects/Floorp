@@ -25,18 +25,14 @@ include <$(DEPTH)/config/config.mak>
 DEFINES=-D_IMPL_NS_COOKIE -DWIN32_LEAN_AND_MEAN
 MODULE=cookie 
 
-EXPORTS = nsICookieService.h nsIImageService.h nsCookieHTTPNotify.h nsCookie.h
+EXPORTS = nsICookieService.h nsCookieHTTPNotify.h nsCookie.h
 
 CSRCS=				\
  $(NULL)
 
 CPPSRCS=				\
  nsCookieService.cpp			\
- nsImageService.cpp			\
  nsCookie.cpp			\
- nsImage.cpp			\
- nsPermission.cpp			\
- nsUtils.cpp			\
  nsCookieHTTPNotify.cpp			\
  $(NULL)
 
@@ -46,11 +42,7 @@ C_OBJS=				\
 
 CPP_OBJS=				\
  .\$(OBJDIR)\nsCookieService.obj	\
- .\$(OBJDIR)\nsImageService.obj	\
  .\$(OBJDIR)\nsCookie.obj	\
- .\$(OBJDIR)\nsImage.obj	\
- .\$(OBJDIR)\nsPermission.obj	\
- .\$(OBJDIR)\nsUtils.obj	\
  .\$(OBJDIR)\nsCookieHTTPNotify.obj	\
  $(NULL)
 
