@@ -334,7 +334,7 @@ nsXULPrototypeCache::PutStyleSheet(nsICSSStyleSheet* aStyleSheet)
 {
     nsresult rv;
     nsCOMPtr<nsIURI> uri;
-    rv = aStyleSheet->GetURL(*getter_AddRefs(uri));
+    rv = aStyleSheet->GetSheetURI(getter_AddRefs(uri));
     if (NS_SUCCEEDED(rv))
         mStyleSheetTable.Put(uri, aStyleSheet);
 
@@ -435,7 +435,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 FlushSkinSheets(nsIURI* aKey, nsCOMPtr<nsICSSStyleSheet>& aSheet, void* aClosure)
 {
   nsCOMPtr<nsIURI> uri;
-  aSheet->GetURL(*getter_AddRefs(uri));
+  aSheet->GetSheetURI(getter_AddRefs(uri));
   nsCAutoString str;
   uri->GetPath(str);
 

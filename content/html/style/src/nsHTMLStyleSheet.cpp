@@ -658,10 +658,18 @@ nsHTMLStyleSheet::RulesMatching(PseudoRuleProcessorData* aData)
 
   // nsIStyleSheet api
 NS_IMETHODIMP
-nsHTMLStyleSheet::GetURL(nsIURI*& aURL) const
+nsHTMLStyleSheet::GetSheetURI(nsIURI** aSheetURI) const
 {
-  aURL = mURL;
-  NS_IF_ADDREF(aURL);
+  *aSheetURI = mURL;
+  NS_IF_ADDREF(*aSheetURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLStyleSheet::GetBaseURI(nsIURI** aBaseURI) const
+{
+  *aBaseURI = mURL;
+  NS_IF_ADDREF(*aBaseURI);
   return NS_OK;
 }
 

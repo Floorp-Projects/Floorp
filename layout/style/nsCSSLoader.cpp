@@ -723,7 +723,7 @@ SheetLoadData::GetReferrerURI()
 {
   nsIURI* uri = nsnull;
   if (mParentData)
-    mParentData->mSheet->GetURL(uri);
+    mParentData->mSheet->GetSheetURI(&uri);
   if (!uri && mLoader->mDocument)
     NS_IF_ADDREF(uri = mLoader->mDocument->GetDocumentURI());
   return uri;
@@ -844,7 +844,7 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
   if (channelURI) {
     // Enough to set the URI on mSheet, since any sibling datas we have share
     // the same mInner as mSheet and will thus get the same URI.
-    mSheet->SetURL(channelURI);
+    mSheet->SetURIs(channelURI, channelURI);
   }
   
   PRBool completed;
@@ -1086,16 +1086,19 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
 
   if (!*aSheet) {
     aSheetState = eSheetNeedsParser;
-    nsCOMPtr<nsIURI> sheetURI = aURI;
-    if (!sheetURI) {
+    nsIURI *sheetURI = aURI;
+    nsCOMPtr<nsIURI> baseURI = aURI;
+    if (!aURI) {
       // Inline style.  Use the document's base URL so that @import in
       // the inline sheet picks up the right base.
       NS_ASSERTION(aLinkingContent, "Inline stylesheet without linking content?");
-      sheetURI = aLinkingContent->GetBaseURI();
+      baseURI = aLinkingContent->GetBaseURI();
+      sheetURI = aLinkingContent->GetDocument()->GetDocumentURI();
     }
 
-    rv = NS_NewCSSStyleSheet(aSheet, sheetURI);
+    rv = NS_NewCSSStyleSheet(aSheet);
     NS_ENSURE_SUCCESS(rv, rv);
+    (*aSheet)->SetURIs(sheetURI, baseURI);
   }
 
   NS_ASSERTION(*aSheet, "We should have a sheet by now!");
@@ -1475,9 +1478,10 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aStream,
   nsCOMPtr<nsICSSStyleSheet> dummySheet;
   // Push our load data on the stack so any kids can pick it up
   mParsingDatas.AppendElement(aLoadData);
-  nsCOMPtr<nsIURI> uri;
-  aLoadData->mSheet->GetURL(*getter_AddRefs(uri));
-  rv = parser->Parse(aStream, uri, aLoadData->mLineNumber,
+  nsCOMPtr<nsIURI> sheetURI, baseURI;
+  aLoadData->mSheet->GetSheetURI(getter_AddRefs(sheetURI));
+  aLoadData->mSheet->GetBaseURI(getter_AddRefs(baseURI));
+  rv = parser->Parse(aStream, sheetURI, baseURI, aLoadData->mLineNumber,
                      *getter_AddRefs(dummySheet));
   mParsingDatas.RemoveElementAt(mParsingDatas.Count() - 1);
   RecycleParser(parser);
@@ -1779,7 +1783,7 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
 
   // Check whether we should even load
   nsCOMPtr<nsIURI> sheetURI;
-  nsresult rv = aParentSheet->GetURL(*getter_AddRefs(sheetURI));
+  nsresult rv = aParentSheet->GetSheetURI(getter_AddRefs(sheetURI));
   if (NS_FAILED(rv) || !sheetURI) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMNode> owningNode;

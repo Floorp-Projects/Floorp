@@ -4297,7 +4297,7 @@ nsHTMLEditor::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
       // Get the URI, then url spec from the sheet
       nsCOMPtr<nsIStyleSheet> sheet = do_QueryInterface(aSheet);
       nsCOMPtr<nsIURI> uri;
-      rv = sheet->GetURL(*getter_AddRefs(uri));
+      rv = sheet->GetSheetURI(getter_AddRefs(uri));
       if (NS_FAILED(rv))
         return rv;
 

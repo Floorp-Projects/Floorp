@@ -348,7 +348,8 @@ public:
   // basic style sheet data
   NS_IMETHOD Init(nsIURI* aURL, nsIDocument* aDocument);
   NS_IMETHOD Reset(nsIURI* aURL);
-  NS_IMETHOD GetURL(nsIURI*& aURL) const;
+  NS_IMETHOD GetSheetURI(nsIURI** aSheetURL) const;
+  NS_IMETHOD GetBaseURI(nsIURI** aBaseURL) const;
   NS_IMETHOD GetTitle(nsString& aTitle) const;
   NS_IMETHOD GetType(nsString& aType) const;
   NS_IMETHOD GetMediumCount(PRInt32& aCount) const;
@@ -530,10 +531,18 @@ HTMLCSSStyleSheetImpl::Reset(nsIURI* aURL)
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::GetURL(nsIURI*& aURL) const
+HTMLCSSStyleSheetImpl::GetSheetURI(nsIURI** aSheetURL) const
 {
   NS_IF_ADDREF(mURL);
-  aURL = mURL;
+  *aSheetURL = mURL;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::GetBaseURI(nsIURI** aBaseURL) const
+{
+  NS_IF_ADDREF(mURL);
+  *aBaseURL = mURL;
   return NS_OK;
 }
 

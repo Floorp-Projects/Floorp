@@ -231,7 +231,7 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
   if (mStyleSheet && !isInline && uri) {
     nsCOMPtr<nsIURI> oldURI;
 
-    mStyleSheet->GetURL(*getter_AddRefs(oldURI));
+    mStyleSheet->GetBaseURI(getter_AddRefs(oldURI));
     if (oldURI) {
       PRBool equal;
       nsresult rv = oldURI->Equals(uri, &equal);

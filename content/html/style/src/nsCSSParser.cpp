@@ -106,7 +106,8 @@ public:
   NS_IMETHOD SetChildLoader(nsICSSLoader* aChildLoader);
 
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
-                   nsIURI*                aInputURL,
+                   nsIURI*                aSheetURI,
+                   nsIURI*                aBaseURI,
                    PRUint32               aLineNumber,
                    nsICSSStyleSheet*&     aResult);
 
@@ -134,8 +135,8 @@ public:
   void AppendRule(nsICSSRule* aRule);
 
 protected:
-  nsresult InitScanner(nsIUnicharInputStream* aInput, nsIURI* aURI,
-                       PRUint32 aLineNumber);
+  nsresult InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
+                       PRUint32 aLineNumber, nsIURI* aBaseURI);
   nsresult ReleaseScanner(void);
 
   PRBool GetToken(nsresult& aErrorCode, PRBool aSkipWS);
@@ -317,7 +318,7 @@ protected:
   nsCSSScanner* mScanner;
 
   // The URI to be used as a base for relative URIs.
-  nsCOMPtr<nsIURI> mURL;
+  nsCOMPtr<nsIURI> mBaseURL;
 
   // The sheet we're parsing into
   nsCOMPtr<nsICSSStyleSheet> mSheet;
@@ -508,8 +509,8 @@ CSSParserImpl::SetChildLoader(nsICSSLoader* aChildLoader)
 }
 
 nsresult
-CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aURI,
-                           PRUint32 aLineNumber)
+CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
+                           PRUint32 aLineNumber, nsIURI* aBaseURI)
 {
   NS_ASSERTION(! mScanner, "already have scanner");
 
@@ -517,8 +518,8 @@ CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aURI,
   if (! mScanner) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mScanner->Init(aInput, aURI, aLineNumber);
-  mURL = aURI;
+  mScanner->Init(aInput, aSheetURI, aLineNumber);
+  mBaseURL = aBaseURI;
 
   mHavePushBack = PR_FALSE;
 
@@ -532,28 +533,30 @@ CSSParserImpl::ReleaseScanner(void)
     delete mScanner;
     mScanner = nsnull;
   }
-  mURL = nsnull;
+  mBaseURL = nsnull;
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
 CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
-                     nsIURI*                aInputURL,
+                     nsIURI*                aSheetURI,
+                     nsIURI*                aBaseURI,
                      PRUint32               aLineNumber,
                      nsICSSStyleSheet*&     aResult)
 {
-  NS_ASSERTION(nsnull != aInputURL, "need base URL");
+  NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 
   if (! mSheet) {
-    NS_NewCSSStyleSheet(getter_AddRefs(mSheet), aInputURL);
+    NS_NewCSSStyleSheet(getter_AddRefs(mSheet));
+    mSheet->SetURIs(aSheetURI, aBaseURI);
   }
 #ifdef DEBUG
   else {
     nsCOMPtr<nsIURI> uri;
     mSheet->GetURL(*getter_AddRefs(uri));
     PRBool equal;
-    aInputURL->Equals(uri, &equal);
+    aBaseURI->Equals(uri, &equal);
     NS_ASSERTION(equal, "Sheet URI does not match passed URI");
   }
 #endif
@@ -564,7 +567,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
 
   nsresult errorCode = NS_OK;
 
-  nsresult result = InitScanner(aInput, aInputURL, aLineNumber);
+  nsresult result = InitScanner(aInput, aSheetURI, aLineNumber, aBaseURI);
   if (! NS_SUCCEEDED(result)) {
     return result;
   }
@@ -643,7 +646,7 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
     return rv;
   }
 
-  rv = InitScanner(input, aBaseURL, 1); // XXX line number
+  rv = InitScanner(input, aBaseURL, 1, aBaseURL); // XXX line number & URLs
   NS_RELEASE(input);
   if (! NS_SUCCEEDED(rv)) {
     return rv;
@@ -708,7 +711,7 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
     return rv;
   }
 
-  rv = InitScanner(input, aBaseURL, 1); // XXX line number
+  rv = InitScanner(input, aBaseURL, 1, aBaseURL); // XXX line number & URLs
   NS_RELEASE(input);
   if (! NS_SUCCEEDED(rv)) {
     return rv;
@@ -766,7 +769,7 @@ CSSParserImpl::ParseRule(const nsAString& aRule,
     return rv;
   }
 
-  rv = InitScanner(input, aBaseURL, 1); // XXX line number
+  rv = InitScanner(input, aBaseURL, 1, aBaseURL); // XXX line number & URLs
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -825,7 +828,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
     return rv;
   }
 
-  rv = InitScanner(input, aBaseURL, 1); // XXX line number
+  rv = InitScanner(input, aBaseURL, 1, aBaseURL); // XXX line number & URLs
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1190,7 +1193,7 @@ PRBool CSSParserImpl::ProcessImport(nsresult& aErrorCode,
   if (mChildLoader) {
     nsCOMPtr<nsIURI> url;
     // XXX should pass a charset!
-    aErrorCode = NS_NewURI(getter_AddRefs(url), aURLSpec, nsnull, mURL);
+    aErrorCode = NS_NewURI(getter_AddRefs(url), aURLSpec, nsnull, mBaseURL);
 
     if (NS_FAILED(aErrorCode)) {
       // import url is bad
@@ -3792,11 +3795,12 @@ PRBool CSSParserImpl::ParseURL(nsresult& aErrorCode, nsCSSValue& aValue)
       // Translate url into an absolute url if the url is relative to
       // the style sheet.
       nsCOMPtr<nsIURI> uri;
-      NS_NewURI(getter_AddRefs(uri), tk->mIdent, nsnull, mURL);
+      NS_NewURI(getter_AddRefs(uri), tk->mIdent, nsnull, mBaseURL);
       if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
         // Set a null value on failure.  Most failure cases should be
         // NS_ERROR_MALFORMED_URI.
-        nsCSSValue::URL *url = new nsCSSValue::URL(uri, tk->mIdent.get(), mURL);
+        nsCSSValue::URL *url =
+          new nsCSSValue::URL(uri, tk->mIdent.get(), mBaseURL);
         if (!url || !url->mString) {
           aErrorCode = NS_ERROR_OUT_OF_MEMORY;
           delete url;

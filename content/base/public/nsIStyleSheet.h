@@ -68,7 +68,8 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLE_SHEET_IID)
 
   // basic style sheet data
-  NS_IMETHOD GetURL(nsIURI*& aURL) const = 0;
+  NS_IMETHOD GetSheetURI(nsIURI** aSheetURI) const = 0;
+  NS_IMETHOD GetBaseURI(nsIURI** aBaseURI) const = 0;
   NS_IMETHOD GetTitle(nsString& aTitle) const = 0;
   NS_IMETHOD GetType(nsString& aType) const = 0;
   NS_IMETHOD GetMediumCount(PRInt32& aCount) const = 0;

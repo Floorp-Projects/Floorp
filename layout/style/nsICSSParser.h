@@ -81,7 +81,8 @@ public:
   NS_IMETHOD SetChildLoader(nsICSSLoader* aChildLoader) = 0;
 
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
-                   nsIURI*                aInputURL,
+                   nsIURI*                aSheetURL,
+                   nsIURI*                aBaseURI,
                    PRUint32               aLineNumber,
                    nsICSSStyleSheet*&     aResult) = 0;
 

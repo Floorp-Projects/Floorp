@@ -1401,7 +1401,7 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
       nsIStyleSheet *sheet = agentSheets[l];
 
       nsCOMPtr<nsIURI> uri;
-      rv = sheet->GetURL(*getter_AddRefs(uri));
+      rv = sheet->GetSheetURI(getter_AddRefs(uri));
       if (NS_FAILED(rv)) return rv;
 
       if (IsChromeURI(uri)) {
@@ -1446,7 +1446,7 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
   for (i = 0; i < count; i++) {
     nsCOMPtr<nsIStyleSheet> sheet = oldSheets[i];
     nsCOMPtr<nsIURI> uri;
-    rv = sheet->GetURL(*getter_AddRefs(uri));
+    rv = sheet->GetSheetURI(getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
     if (IsChromeURI(uri)) {
