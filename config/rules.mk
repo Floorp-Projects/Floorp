@@ -834,15 +834,15 @@ endif
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CC) -o $@ -c $(HOST_CFLAGS) -I$(DIST)/include $(NSPR_CFLAGS) $<
 
-moc_%.cpp: %.h
+moc_%.cpp: %.h Makefile.in
 	$(MOC) $< -o $@ 
 
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
-%.o: %.s
+%.o: %.s Makefile.in
 	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $<
 
-%.o: %.S
+%.o: %.S Makefile.in
 	$(AS) -o $@ $(ASFLAGS) -c $<
 
 %: %.cpp Makefile.in
@@ -852,12 +852,12 @@ moc_%.cpp: %.h
 #
 # Please keep the next two rules in sync.
 #
-%.o: %.cc
+%.o: %.cc Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS)
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
 
-%.o: %.cpp
+%.o: %.cpp Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS)
 ifdef STRICT_CPLUSPLUS_SUFFIX
