@@ -125,6 +125,10 @@ sub PopGlobalSQLState() {
 
 # MODERN CODE BELOW
 
+#####################################################################
+# Connection Methods
+#####################################################################
+
 sub connect_shadow {
     die "Tried to connect to non-existent shadowdb" unless Param('shadowdb');
 
@@ -207,10 +211,20 @@ sub sql_position {
     return "POSITION($fragment IN $text)";
 }
 
+#####################################################################
+# General Info Methods
+#####################################################################
+
 # XXX - Needs to be documented.
 sub bz_server_version {
     my ($self) = @_;
     return $self->get_info(18); # SQL_DBMS_VER
+}
+
+sub bz_last_key {
+    my ($self, $table, $column) = @_;
+
+    return $self->last_insert_id($db_name, undef, $table, $column);
 }
 
 sub bz_get_field_defs {
@@ -232,6 +246,10 @@ sub bz_get_field_defs {
     }
     return(@fields);
 }
+
+#####################################################################
+# Schema Modification Methods
+#####################################################################
 
 # XXX - Need to make this cross-db compatible
 # XXX - This shouldn't print stuff to stdout
@@ -332,6 +350,10 @@ sub bz_rename_field ($$$) {
     }
 }
 
+#####################################################################
+# Schema Information Methods
+#####################################################################
+
 # XXX - Needs to be made cross-db compatible.
 sub bz_get_field_def ($$) {
     my ($self, $table, $field) = @_;
@@ -385,11 +407,9 @@ sub bz_table_exists ($) {
    return $exists;
 }
 
-sub bz_last_key {
-    my ($self, $table, $column) = @_;
-
-    return $self->last_insert_id($db_name, undef, $table, $column);
-}
+#####################################################################
+# Transaction Methods
+#####################################################################
 
 sub bz_start_transaction {
     my ($self) = @_;
@@ -430,6 +450,10 @@ sub bz_rollback_transaction {
         $self->{private_bz_in_transaction} = 0;
     }
 }
+
+#####################################################################
+# Subclass Helpers
+#####################################################################
 
 sub db_new {
     my ($class, $dsn, $user, $pass, $attributes) = @_;
@@ -598,7 +622,7 @@ should not be called from anywhere else.
 
 =back
 
-=head2 Methods
+=head1 ABSTRACT METHODS
 
 Note: Methods which can be implemented generically for all DBs are implemented in
 this module. If needed, they can be overriden with DB specific code.
@@ -714,6 +738,20 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
               back). False (0) or no param if the operation succeeded.
  Returns:     none
 
+=head1 IMPLEMENTED METHODS
+
+These methods are implemented in Bugzilla::DB, and only need
+to be implemented in subclasses if you need to override them for 
+database-compatibility reasons.
+
+=over 4
+
+=head2 General Information Methods
+
+These methods return information about data in the database.
+
+=over 4
+
 =item C<bz_last_key>
 
  Description: Returns the last serial number, usually from a previous INSERT.
@@ -725,6 +763,12 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
  Params:      $table = name of table containing serial column (scalar)
               $column = name of column containing serial data type (scalar)
  Returns:     Last inserted ID (scalar)
+
+=head2 Schema Modification Methods
+
+These methods modify the current Bugzilla schema.
+
+=over 4
 
 =item C<bz_add_field>
 
@@ -770,6 +814,12 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
               $column = the name of the column you want to rename
               $newname = the new name of the column
  Returns:     none
+
+=head2 Schema Information Methods
+
+These methods return info about the current Bugzilla database schema.
+
+=over 4
 
 =item C<bz_get_field_defs>
 
@@ -825,6 +875,13 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
                        of (scalar)
  Returns:     A true value if the table exists, a false value otherwise.
 
+=head2 Transaction Methods
+
+These methods deal with the starting and stopping of transactions 
+in the database.
+
+=over 4
+
 =item C<bz_start_transaction>
 
  Description: Starts a transaction if supported by the database being used
@@ -844,6 +901,13 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
               the database being used
  Params:      none
  Returns:     none
+
+=head1 SUBCLASS HELPERS
+
+Methods in this class are intended to be used by subclasses to help them
+with their functions.
+
+=over 4
 
 =item C<db_new>
 
