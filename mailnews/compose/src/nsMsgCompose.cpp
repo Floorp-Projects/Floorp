@@ -2580,8 +2580,23 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
   }
   tempFile.close();
 
-  if (NS_FAILED(ConvertToUnicode(nsMsgI18NFileSystemCharset(), readBuf, sigData)))
+  nsAutoString sigEncoding;
+  sigEncoding.AssignWithConversion(nsMsgI18NParseMetaCharset(&fSpec));
+
+  //default to platform encoding for signature files w/o meta charset
+  if (sigEncoding.IsEmpty())
+    sigEncoding.Assign(nsMsgI18NFileSystemCharset());
+
+  if (NS_FAILED(ConvertToUnicode(sigEncoding, readBuf, sigData)))
     sigData.AssignWithConversion(readBuf);
+
+  nsAutoString msgEncoding;
+  msgEncoding.AssignWithConversion(m_compFields->GetCharacterSet());
+
+  //change signature meta charset to the message charset, since they're gonna be co-mingled
+  if (!sigEncoding.Equals(msgEncoding))
+    sigData.ReplaceSubstring(sigEncoding, msgEncoding);
+
   PR_FREEIF(readBuf);
   return NS_OK;
 }
