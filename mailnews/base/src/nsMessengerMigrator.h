@@ -100,7 +100,7 @@ private:
   nsresult MigrateMovemailAccount(nsIMsgIdentity *identity);
 #endif /* HAVE_MOVEMAIL */
   
-  nsresult MigrateLocalMailAccount(nsIMsgIdentity *identity);
+  nsresult MigrateLocalMailAccount();
 
   nsresult MigrateOldMailPrefs(nsIMsgIncomingServer *server);
   

@@ -39,13 +39,10 @@ interface nsINNTPNewsgroupList;
 
 [scriptable, uuid(1A39CD90-ACAF-11d2-B7EE-00805F05FFA5)]
 interface nsINNTPNewsgroup : nsISupports {
-  
+
   attribute string name;
   attribute string prettyName;
   
-  attribute string password;
-  attribute string username;
-
   attribute boolean needsExtraInfo;
   
   boolean IsOfflineArticle(in long num);

@@ -42,12 +42,11 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
 protected:  
+	virtual const char * GetUserName() { return nsnull; }
     nsINNTPNewsgroupPost *m_newsgroupPost;
-	virtual const char * GetUserName() { return m_userName.GetBuffer();}
 	nsNewsAction m_newsAction; // the action this url represents...parse mailbox, display messages, etc.
     
     nsFileSpec	*m_filePath; 
-	nsCString m_userName;
     
     // used by save message to disk
 	nsCOMPtr<nsIFileSpec> m_messageFileSpec;

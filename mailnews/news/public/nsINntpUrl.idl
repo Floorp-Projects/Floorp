@@ -55,7 +55,6 @@ interface nsINntpUrl : nsISupports {
   attribute nsMsgKey messageKey;
   attribute string newsgroupName;
   attribute nsNewsAction newsAction;
-  void SetUsername(in string aUserName);
 
   /* these are nsMailboxActions */
   const long ActionGetNewNews = 0;

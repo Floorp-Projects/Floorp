@@ -121,12 +121,16 @@ protected:
 	PRBool		mGettingNews;
 	PRBool		mInitialized;
 	nsISupportsArray *mMessages;
-	char      *mOptionLines;
-  
+	char      	*mOptionLines;
+
 	// cache this until we open the db.
 	nsCString	m_unreadSet;
 
 	nsCOMPtr<nsIFileSpec> mNewsrcFilePath; 
+
+	// used for auth news
+ 	char 		*mGroupUsername;
+	char		*mGroupPassword;
 };
 
 #endif // nsMsgNewsFolder_h__

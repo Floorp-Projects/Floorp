@@ -966,7 +966,7 @@ NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, const char *ne
 
 #ifdef DEBUG_NEWS
   printf("attempt to cancel the message (key,ID,cancel url): (%d,%s,%s)\n", key, messageId.GetBuffer(),urlStr.GetBuffer());
-#endif  
+#endif /* DEBUG_NEWS */ 
 
   nsCAutoString newsgroupNameStr(newsgroupname);
   nsCOMPtr<nsIURI> url;

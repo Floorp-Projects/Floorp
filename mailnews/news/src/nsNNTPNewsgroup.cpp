@@ -36,8 +36,6 @@ nsNNTPNewsgroup::nsNNTPNewsgroup()
 	NS_INIT_REFCNT();
 	m_groupName = nsnull;
 	m_prettyName = nsnull;
-	m_password = nsnull;
-	m_userName = nsnull;
 	m_needsExtraInfo = PR_FALSE;
 	m_category = PR_FALSE;
 }
@@ -48,8 +46,6 @@ nsNNTPNewsgroup::~nsNNTPNewsgroup()
 	printf("destroying newsgroup: %s", m_groupName ? m_groupName : "");
 #endif
 	PR_FREEIF(m_groupName);
-	PR_FREEIF(m_password);
-	PR_FREEIF(m_userName);
 	PR_FREEIF(m_prettyName);
 }
 
@@ -96,52 +92,6 @@ nsresult nsNNTPNewsgroup::SetPrettyName(const char *aName)
 		printf("Setting pretty newsgroup name to %s. \n", aName);
 #endif
 		m_prettyName = PL_strdup(aName);
-	}
-
-	return NS_OK;
-}
-
-nsresult nsNNTPNewsgroup::GetPassword(char ** aName)
-{
-	if (aName)
-	{
-		*aName = PL_strdup(m_password);
-	}
-
-	return NS_OK;
-}
-
-nsresult nsNNTPNewsgroup::SetPassword(const char *aName)
-{
-	if (aName)
-	{
-#ifdef DEBUG_NEWS
-		printf("Setting password for newsgroup %s to %s. \n", m_groupName, aName);
-#endif
-		m_password = PL_strdup(aName);
-	}
-
-	return NS_OK;
-}
-
-nsresult nsNNTPNewsgroup::GetUsername(char ** aUsername)
-{
-	if (aUsername)
-	{
-		*aUsername = PL_strdup(m_userName);
-	}
-
-	return NS_OK;
-}
-
-nsresult nsNNTPNewsgroup::SetUsername(const char *aUsername)
-{
-	if (aUsername)
-	{
-#ifdef DEBUG_NEWS
-		printf("Setting username for newsgroup %s to %s. \n", m_groupName, aUsername);
-#endif
-		m_userName = PL_strdup(aUsername);
 	}
 
 	return NS_OK;

@@ -79,7 +79,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
      mExpungedBytes(0), mGettingNews(PR_FALSE),
-    mInitialized(PR_FALSE), mOptionLines(nsnull)
+    mInitialized(PR_FALSE), mOptionLines(nsnull), mGroupUsername(nsnull), mGroupPassword(nsnull)
 {
   /* we're parsing the newsrc file, and the line breaks are platform specific.
    * if MSG_LINEBREAK != CRLF, then we aren't looking for CRLF 
@@ -92,9 +92,9 @@ nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
 
 nsMsgNewsFolder::~nsMsgNewsFolder(void)
 {
-
   PR_FREEIF(mOptionLines);
-  mOptionLines = nsnull;
+  PR_FREEIF(mGroupUsername);
+  PR_FREEIF(mGroupPassword);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMsgNewsFolder, nsMsgDBFolder)
@@ -834,7 +834,7 @@ NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages,
       return rv;
     }
     
-    rv = nntpService->CancelMessages(hostname, asciiName.GetBuffer(), messages, nsnull, nsnull, nsnull);
+    rv = nntpService->CancelMessages(hostname, asciiName.GetBuffer(), messages, nsnull /* consumer */, nsnull, nsnull);
     
     PR_FREEIF(hostname);
     PR_FREEIF(newsgroupname);
@@ -1189,3 +1189,47 @@ NS_IMETHODIMP nsMsgNewsFolder::SetUnreadSetStr(const char * aUnreadSetStr)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP nsMsgNewsFolder::GetGroupUsername(char **aGroupUsername)
+{
+	if (!aGroupUsername) return NS_ERROR_NULL_POINTER;
+	if (!mGroupUsername) return NS_ERROR_NOT_INITIALIZED;
+
+	*aGroupUsername = PL_strdup(mGroupUsername);
+	if (!*aGroupUsername) return NS_ERROR_FAILURE;
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgNewsFolder::SetGroupUsername(const char *aGroupUsername)
+{
+	if (!aGroupUsername) return NS_ERROR_INVALID_ARG;
+	PR_FREEIF(mGroupUsername);
+
+	mGroupUsername = PL_strdup(aGroupUsername);
+	if (!mGroupUsername) return NS_ERROR_FAILURE;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgNewsFolder::GetGroupPassword(char **aGroupPassword)
+{
+	if (!aGroupPassword) return NS_ERROR_NULL_POINTER;
+	if (!mGroupPassword) return NS_ERROR_NOT_INITIALIZED;
+
+	*aGroupPassword = PL_strdup(mGroupPassword);
+	if (!*aGroupPassword) return NS_ERROR_FAILURE;
+
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP nsMsgNewsFolder::SetGroupPassword(const char *aGroupPassword)
+{
+	if (!aGroupPassword) return NS_ERROR_INVALID_ARG;
+	PR_FREEIF(mGroupPassword);
+
+	mGroupPassword = PL_strdup(aGroupPassword);
+	if (!mGroupPassword) return NS_ERROR_FAILURE;
+	return NS_OK;
+}
+

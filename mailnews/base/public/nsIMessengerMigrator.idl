@@ -29,6 +29,6 @@ interface nsIMessengerMigrator: nsISupports {
   /* migrate old mailnews prefs to the 5.x world */
   void UpgradePrefs();
 
-  void createLocalMailAccount(in nsIMsgIdentity identity, in boolean migrating);          
+  void createLocalMailAccount(in boolean migrating);          
 };
 

@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *	sspitzer@netscape.com
+ *  alecf@netscape.com
  */
 
 #include "nsIComponentManager.h"
@@ -491,7 +492,7 @@ nsMessengerMigrator::ProceedWithMigration()
 }
 
 NS_IMETHODIMP
-nsMessengerMigrator::CreateLocalMailAccount(nsIMsgIdentity *identity, PRBool migrating)
+nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
 {
   nsresult rv;
   
@@ -515,44 +516,8 @@ nsMessengerMigrator::CreateLocalMailAccount(nsIMsgIdentity *identity, PRBool mig
   nsAutoString localMailFakeHostName(LOCAL_MAIL_FAKE_HOST_NAME);
   server->SetPrettyName(localMailFakeHostName.ToNewUnicode());
 
-
-  // create the identity
-  nsCOMPtr<nsIMsgIdentity> copied_identity;
-  rv = accountManager->CreateIdentity(getter_AddRefs(copied_identity));
-  if (NS_FAILED(rv)) return rv;
-
-    // this only makes sense if we have 4.x prefs, but we don't if identity is null
-  if (identity) {
-    // make this new identity to copy of the identity
-    // that we created out of the 4.x prefs
-    rv = CopyIdentity(identity,copied_identity);
-    if (NS_FAILED(rv)) return rv;
-
-    // only set the cc and fcc values if we were migrating.
-    // otherwise, we won't have them.
-    if (migrating) {
-	rv = SetMailCopiesAndFolders(copied_identity, LOCAL_MAIL_FAKE_USER_NAME, LOCAL_MAIL_FAKE_HOST_NAME);
-	if (NS_FAILED(rv)) return rv;
-    }
-  }
-  else {
-    char *profileName = nsnull;
-    NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    
-    rv = profile->GetCurrentProfile(&profileName);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = copied_identity->SetEmail(profileName);
-    // find out the proper way to delete this
-    // until then, leak it.
-    // PR_FREEIF(profileName);
-    if (NS_FAILED(rv)) return rv;
-  }
-  
   // hook them together
   account->SetIncomingServer(server);
-  account->AddIdentity(copied_identity);
 
   nsCOMPtr<nsINoIncomingServer> noServer;
   noServer = do_QueryInterface(server, &rv);
@@ -569,7 +534,7 @@ nsMessengerMigrator::CreateLocalMailAccount(nsIMsgIdentity *identity, PRBool mig
   // if they used -installer, this pref will point to where their files got copied
   // this only makes sense when we are migrating
   // for a new profile, that pref won't be set.
-  if (identity && migrating) {
+  if (migrating) {
     rv = m_prefs->GetFilePref(PREF_MAIL_DIRECTORY, getter_AddRefs(mailDir));
   }
   else {
@@ -612,6 +577,7 @@ nsMessengerMigrator::CreateLocalMailAccount(nsIMsgIdentity *identity, PRBool mig
   
   return NS_OK;
 }
+
 NS_IMETHODIMP
 nsMessengerMigrator::UpgradePrefs()
 {
@@ -667,7 +633,7 @@ nsMessengerMigrator::UpgradePrefs()
       if (NS_FAILED(rv)) return rv;
 
       // everyone gets a local mail account in 5.0
-      rv = CreateLocalMailAccount(identity, PR_TRUE);
+      rv = CreateLocalMailAccount(PR_TRUE);
       if (NS_FAILED(rv)) return rv;
     }
     else if (m_oldMailType == IMAP_4X_MAIL_TYPE) {
@@ -675,8 +641,8 @@ nsMessengerMigrator::UpgradePrefs()
       if (NS_FAILED(rv)) return rv;
       
       // if they had IMAP in 4.x, they also had "Local Mail"
-      // we need to migrate that, too.  
-      rv = MigrateLocalMailAccount(identity);
+      // we'll migrate that to "Local Folders"
+      rv = MigrateLocalMailAccount();
       if (NS_FAILED(rv)) return rv;
     }
 #ifdef HAVE_MOVEMAIL
@@ -686,7 +652,7 @@ nsMessengerMigrator::UpgradePrefs()
 	if (NS_FAILED(rv)) return rv;
 
         // everyone gets a local mail account in 5.0
-        rv = CreateLocalMailAccount(identity, PR_TRUE);
+        rv = CreateLocalMailAccount(PR_TRUE);
         if (NS_FAILED(rv)) return rv;
     }
 #endif /* HAVE_MOVEMAIL */
@@ -1045,7 +1011,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
 }
 
 nsresult
-nsMessengerMigrator::MigrateLocalMailAccount(nsIMsgIdentity *identity) 
+nsMessengerMigrator::MigrateLocalMailAccount() 
 {
   nsresult rv;
   NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
@@ -1064,22 +1030,8 @@ nsMessengerMigrator::MigrateLocalMailAccount(nsIMsgIdentity *identity)
                             "none", getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
 
-  // create the identity
-  nsCOMPtr<nsIMsgIdentity> copied_identity;
-  rv = accountManager->CreateIdentity(getter_AddRefs(copied_identity));
+  rv = account->SetIncomingServer(server);
   if (NS_FAILED(rv)) return rv;
-
-  // make this new identity to copy of the identity
-  // that we created out of the 4.x prefs
-  rv = CopyIdentity(identity,copied_identity);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = SetMailCopiesAndFolders(copied_identity, LOCAL_MAIL_FAKE_USER_NAME, LOCAL_MAIL_FAKE_HOST_NAME);
-  if (NS_FAILED(rv)) return rv;
-    
-  // hook them together
-  account->SetIncomingServer(server);
-  account->AddIdentity(copied_identity);
   
   // now upgrade all the prefs
   // some of this ought to be moved out into the NONE implementation
@@ -1287,7 +1239,7 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
   if (NS_FAILED(rv)) return rv;
 
   // if we got the port above, set it here
-  if (port != -1) {
+  if ((port != -1) || (port == 0)) {
     server->SetPort(port);
   }
   
@@ -1523,8 +1475,9 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   if (NS_FAILED(rv)) return rv;
 
   // now start migrating 4.x prefs
-  if (port != -1)
+  if ((port != -1) || (port == 0)) {
     server->SetPort(port);
+  }
 
 #ifdef DEBUG_MIGRATOR
   PRInt32 portValue;
@@ -1857,8 +1810,9 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	if (NS_FAILED(rv)) return rv;
     
 	// now upgrade all the prefs
-    if (port != -1)
+    if ((port != -1) || (port == 0)) {
       server->SetPort(port);
+    }
 
 #ifdef DEBUG_MIGRATOR
 	PRInt32 portValue;

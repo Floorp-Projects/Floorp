@@ -18,6 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * mscott@netscape.com
+ * sspitzer@netscape.com
+ * alecf@netscape.com
+ * bienvenu@netscape.com
+ * jefft@netscape.com
+ *
  */
 
 #define FORCE_PR_LOG /* Allow logging in the release build (sorry this breaks the PCH) */
@@ -69,8 +75,17 @@
 #include "nsIMsgStatusFeedback.h" 
 
 #include "nsINntpIncomingServer.h"
+#include "nsIMsgFolder.h"
+
+#include "nsIRDFService.h"
+#include "nsIRDFResource.h"
+#include "nsRDFCID.h"
 
 #define DEFAULT_NEWS_CHUNK_SIZE -1
+
+#ifdef DEBUG_seth
+#define DEBUG_NEWS 1
+#endif 
 
 // ***jt -- the following were pirated from xpcom/io/nsByteBufferInputStream
 // which is not currently in the build system
@@ -111,8 +126,6 @@ protected:
     PRUint32    mLength;
 };
 
-/* #define UNREADY_CODE	*/  /* mscott: generic flag for hiding access to url struct and active entry which are now gone */
-
 /*#define CACHE_NEWSGRP_PASSWORD*/
 
 extern "C"
@@ -128,6 +141,7 @@ static NS_DEFINE_CID(kNNTPHostCID, NS_NNTPHOST_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kCMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 typedef struct _cancelInfoEntry {
     char *from;
@@ -288,11 +302,12 @@ PRInt32 net_NewsChunkSize=DEFAULT_NEWS_CHUNK_SIZE;
 /* PRIVATE PRInt32 net_news_timeout = 170; */
 /* seconds that an idle NNTP conn can live */
 
+#if 0
 static char * last_password = 0;
 static char * last_password_hostname = 0;
 static char * last_username=0;
 static char * last_username_hostname=0;
-
+#endif /* 0 */
 /* end of globals I'd like to move somewhere else */
 
 
@@ -429,14 +444,10 @@ nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL)
 	m_cancelNewsgroups = nsnull;
 	m_cancelDistribution = nsnull;
 	m_cancelID = nsnull;
-	m_cancelMessageFile = nsnull;
-	m_tempErrorFileSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-	m_tempErrorFileSpec += "errorMessage.htm";
 }
 
 nsNNTPProtocol::~nsNNTPProtocol()
 {
-    // leaking m_hostName and m_userName?
 	PR_FREEIF(m_currentGroup);
     delete m_lineStreamBuffer;
 }
@@ -1085,17 +1096,20 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 
     PR_sscanf(line, "%d", &m_responseCode);
     PRInt32 major_opcode = MK_NNTP_RESPONSE_TYPE(m_responseCode); 
-    if ((major_opcode == MK_NNTP_RESPONSE_TYPE_CANNOT) || (major_opcode == MK_NNTP_RESPONSE_TYPE_ERROR)) {
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
-	if (NS_SUCCEEDED(rv) || dialog) {
-		nsXPIDLString errorText;
-        GetNewsStringByName("errorFromServer", getter_Copies(errorText));
-		nsAutoString combinedMsg = NS_STATIC_CAST(const PRUnichar*, errorText);
-		combinedMsg += m_responseText;
-         rv = dialog->Alert(combinedMsg.GetUnicode());  
-		// XXX:  todo, check rv?
-	}
+    if (((major_opcode == MK_NNTP_RESPONSE_TYPE_CANNOT) ||
+         (major_opcode == MK_NNTP_RESPONSE_TYPE_ERROR)) &&
+         ((m_responseCode != MK_NNTP_RESPONSE_AUTHINFO_REQUIRE) &&
+          (m_responseCode != MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_REQUIRE))) {
+        nsresult rv;
+        NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
+        if (NS_SUCCEEDED(rv) || dialog) {
+            nsXPIDLString errorText;
+            GetNewsStringByName("errorFromServer", getter_Copies(errorText));
+            nsAutoString combinedMsg = NS_STATIC_CAST(const PRUnichar*, errorText);
+            combinedMsg += m_responseText;
+            rv = dialog->Alert(combinedMsg.GetUnicode());  
+            // XXX:  todo, check rv?
+        }
     }
     
 	/* authentication required can come at any time
@@ -1838,9 +1852,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
                                           PR_TRUE /* opening */);
 #endif
         }
-#ifdef UNREADY_CODE
-		return net_display_html_error_state(ce);
-#else
+
         /* if the server returned a 400 error then it is an expected
          * error.  the NEWS_ERROR state will not sever the connection
          */
@@ -1849,43 +1861,39 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
         else
           m_nextState = NNTP_ERROR;
 
-        /* START OF HACK TO DISPLAY THE ERROR IN THE MESSAGE PANE */
         nsresult rv = NS_OK;
-        nsXPIDLCString group_name ;
-        char outputBuffer[OUTPUT_BUFFER_SIZE];
+        nsXPIDLCString group_name;
 
-        m_tempErrorFileSpec.Delete(PR_FALSE);
-        nsCOMPtr <nsISupports> supports;
-        NS_NewIOFileStream(getter_AddRefs(supports), m_tempErrorFileSpec, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
-        m_tempErrorStream = do_QueryInterface(supports);
-        
         if (m_newsgroup) {
             rv = m_newsgroup->GetName(getter_Copies(group_name));
         }
 
-        if (NS_SUCCEEDED(rv) && group_name && m_tempErrorStream) {
+        if (NS_SUCCEEDED(rv) && group_name) {
+			//  the right thing todo is:  
+            //  get the right webshell, gotten from the nsIMsgWindow
+            //  build up a data url
+            //  call (webshell)->LoadURL() with that data url
+#ifdef NOT_WORKING_YET
+        	char outputBuffer[OUTPUT_BUFFER_SIZE];
             PRUint32 count = 0;
             
             nsXPIDLString newsErrorStr;
-
 			GetNewsStringByName("htmlNewsError", getter_Copies(newsErrorStr));
 			nsCAutoString cString(newsErrorStr);
-
             PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE, (const char *) cString, m_responseText);
-        	m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+			mDisplayOutputStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
             
 			GetNewsStringByName("articleExpired", getter_Copies(newsErrorStr));
 			nsCAutoString cString2(newsErrorStr);
-
             PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE, (const char *) cString2);
-            m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+			mDisplayOutputStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
             
 			nsMsgKey key = nsMsgKey_None;
 			rv = m_runningURL->GetMessageKey(&key);
             NS_ASSERTION(m_messageID && (key != nsMsgKey_None), "unexpected");
 			if (m_messageID && (key != nsMsgKey_None)) {
 				PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P>&lt;%.512s&gt; (%lu)", m_messageID, key);
-				m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+				mDisplayOutputStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
 			}
 
 			GetNewsStringByName("removeExpiredArtLinkText", getter_Copies(newsErrorStr));
@@ -1898,36 +1906,10 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
                 PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s/%s?list-ids\">%s</A> </P>\n", kNewsRootURI, (const char *)m_hostName, 
 					(const char *) group_name, (const char *) cString3);
             }
-#ifdef DEBUG_NEWS
-            printf("%s\n",outputBuffer);
-#endif            
-            m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+			mDisplayOutputStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+#endif /* NOT_WORKING_YET */
         }
-  
-		// and close the article file if it was open....
-		if (m_tempErrorStream)
-			m_tempErrorStream->Close();
-
-        /* cut and paste from below */
-        if (m_displayConsumer)
-		{
-			nsFileURL  fileURL(m_tempErrorFileSpec);
-			char * error_path_url = PL_strdup(fileURL.GetAsString());
-
-#ifdef DEBUG_NEWS
-			printf("load this url to display the error message: %s\n", error_path_url);
-#endif
-#ifdef DEBUG_mscott
-			printf ("mscott fix me...as part of necko...we don't have stream converters hooked up...");
-#endif
-			m_displayConsumer->LoadURL(nsAutoString(error_path_url).GetUnicode(), nsnull, PR_TRUE);
-			
-			PR_FREEIF(error_path_url);
-		}
-        /* cut and paste from below */
-        /* END OF HACK */        
 		return MK_NNTP_SERVER_ERROR;
-#endif
       }
 
 	/* start the graph progress indicator
@@ -1999,7 +1981,6 @@ PRInt32 nsNNTPProtocol::SendArticleNumber()
     return(status);
 }
 
-
 PRInt32 nsNNTPProtocol::BeginArticle()
 {
   if (m_typeWanted != ARTICLE_WANTED &&
@@ -2048,10 +2029,10 @@ PRInt32 nsNNTPProtocol::BeginArticle()
   // create a pipe to pump the message into...the output will go to whoever
   // is consuming the message display
   if (m_channelListener) {
-	nsresult rv;
-	rv = NS_NewPipe(getter_AddRefs(mDisplayInputStream), getter_AddRefs(mDisplayOutputStream));
-	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create pipe");
-	// TODO: return on failure?
+      nsresult rv;
+      rv = NS_NewPipe(getter_AddRefs(mDisplayInputStream), getter_AddRefs(mDisplayOutputStream));
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create pipe");
+      // TODO: return on failure?
   }
 
   if (m_newsAction == nsINntpUrl::ActionSaveMessageToDisk)
@@ -2262,12 +2243,6 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 		  */
 		if (m_typeWanted != CANCEL_WANTED || nsCRT::strncmp(outputBuffer, "Content-Type:", 13))
 		{
-#ifdef DEBUG_NEWS
-			// for test purposes...we'd want to write this line out to an rfc-822 stream converter...
-			// we don't have one now so print the data out so we can verify that we got it....
-			printf("%s", outputBuffer);
-#endif
-
             // if we are attempting to cancel, we want to snarf the headers and save the aside, which is what
             // ParseHeaderForCancel() does.
             if (m_typeWanted == CANCEL_WANTED) {
@@ -2331,9 +2306,34 @@ void nsNNTPProtocol::ParseHeaderForCancel(char *buf)
 PRInt32 nsNNTPProtocol::BeginAuthorization()
 {
 	char * command = 0;
-	char * username = 0;
-	char * cp;
+    nsXPIDLString username;
+    nsresult rv = NS_OK;
 	PRInt32 status = 0;
+	nsCOMPtr <nsIMsgNewsFolder> newsFolder;
+	nsXPIDLCString cachedUsername;
+#if 0
+	char * cp;
+#endif /* 0 */
+
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	if (NS_FAILED(rv)) return(MK_NNTP_AUTH_FAILED);
+
+	nsCAutoString newsgroupURI;
+	if (m_newsgroup && m_hostName) {
+		nsXPIDLCString groupName;
+    	rv = m_newsgroup->GetName(getter_Copies(groupName));   
+		if (NS_SUCCEEDED(rv) && groupName) {
+			newsgroupURI = kNewsRootURI;
+			newsgroupURI += "/";
+			if (m_userName) {
+				newsgroupURI += m_userName;
+				newsgroupURI += "@";
+			}
+			newsgroupURI += m_hostName;
+			newsgroupURI += "/";
+			newsgroupURI += groupName;
+		}
+	}
 
 #ifdef CACHE_NEWSGRP_PASSWORD
 	/* reuse cached username from newsgroup folder info*/
@@ -2355,34 +2355,24 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 	}
 #endif
 	
-	// mscott: right now we no longer have a pane...why do they want a pane here? 
-	// commenting out for now....
-#ifdef UNREADY_CODE
-	if (cd->pane) 
-#else
-	if (1)
-#endif
-	{
+#if 0
 	/* Following a snews://username:password@newhost.domain.com/newsgroup.topic
 	 * backend calls MSG_Master::FindNewsHost() to locate the folderInfo and setting 
 	 * the username/password to the newsgroup folderInfo
 	 */
-      m_newsgroup->GetUsername(&username);
-	  if (username && *username)
-	  {
-		NET_SACopy(&last_username, username);
-		NET_SACopy(&last_username_hostname, m_hostName);
-		/* use it for only once */
+    m_newsgroup->GetUsername(&username);
+    if (username && *username) {
+        NET_SACopy(&last_username, username);
+        NET_SACopy(&last_username_hostname, m_hostName);
+        /* use it for only once */
         m_newsgroup->SetUsername(NULL);
-	  }
-	  else 
-	  {
-		  /* empty username; free and clear it so it will work with
-		   * our logic
-		   */
-		  PR_FREEIF(username);
-	  }
-	}
+    }
+    else {
+        /* empty username; free and clear it so it will work with
+         * our logic
+         */
+        PR_FREEIF(username);
+    }
 
 	/* If the URL/m_hostName contains @ this must be triggered
 	 * from the bookmark. Use the embed username if we could.
@@ -2419,40 +2409,51 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 		else
 			net_news_last_username_probably_valid = PR_FALSE;
 	  }
+#endif /* 0 */
 
+	if (newsgroupURI) {
+		nsCOMPtr<nsIRDFResource> resource;
+		rv = rdf->GetResource((const char *)newsgroupURI, getter_AddRefs(resource));
+		if (NS_FAILED(rv)) return(MK_NNTP_AUTH_FAILED);
 
-	if (!username) 
-	{
-#ifdef UNREADY_CODE
-#if defined(CookiesAndSignons)
-	  username = SI_Prompt(ce->window_id,
-			       XP_GetString(XP_PROMPT_ENTER_USERNAME),
-                               "",
-			       m_hostName);
+    	newsFolder = do_QueryInterface(resource, &rv);
+		if (NS_FAILED(rv) || !newsFolder) return(MK_NNTP_AUTH_FAILED);
 
-#else
-	  username = FE_Prompt(ce->window_id,
-						   XP_GetString(XP_PROMPT_ENTER_USERNAME),
-						   username ? username : "");
-#endif
-	  
-#endif // UNREADY_CODE
+		rv = newsFolder->GetGroupUsername(getter_Copies(cachedUsername));
+	}
 
-	  /* reset net_news_last_username_probably_valid to false */
-	  net_news_last_username_probably_valid = PR_FALSE;
-	  if(!username) 
-	  {
-		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-		if (mailnewsurl)
-			mailnewsurl->SetErrorMessage(
-		  NET_ExplainErrorDetails( MK_NNTP_AUTH_FAILED, "Aborted by user"));
-		return(MK_NNTP_AUTH_FAILED);
-	  }
-	  else 
-	  {
-		NET_SACopy(&last_username, username);
-		NET_SACopy(&last_username_hostname, m_hostName);
-	  }
+    if (NS_FAILED(rv) || !cachedUsername) {
+#ifdef DEBUG_NEWS
+        printf("ask for the news username\n");
+#endif /* DEBUG_NEWS */
+
+        NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
+        if (NS_FAILED(rv) || !dialog) {
+            return(MK_NNTP_AUTH_FAILED);
+        }
+        nsXPIDLString usernamePromptText;
+        GetNewsStringByName("enterUsername", getter_Copies(usernamePromptText));
+        PRBool okButtonClicked = PR_FALSE;
+        rv = dialog->Prompt(usernamePromptText, nsnull /* default text */, getter_Copies(username), &okButtonClicked);
+
+        if (NS_SUCCEEDED(rv) && !okButtonClicked) {
+            nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+            if (mailnewsurl)
+                mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_AUTH_FAILED, "Aborted by user"));
+#if 0
+            /* reset net_news_last_username_probably_valid to false */
+            net_news_last_username_probably_valid = PR_FALSE;
+#endif /* 0 */
+            return(MK_NNTP_AUTH_FAILED);
+        } 
+
+        if (NS_FAILED(rv) || !username) {
+#if 0
+            /* reset net_news_last_username_probably_valid to false */
+            net_news_last_username_probably_valid = PR_FALSE;
+#endif /* 0 */
+            return(MK_NNTP_AUTH_FAILED);
+        }
 	} // !username
 
 #ifdef CACHE_NEWSGRP_PASSWORD
@@ -2464,15 +2465,29 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 #endif
 
 	NET_SACopy(&command, "AUTHINFO user ");
-	NET_SACopy(&command, username);
-	NET_SACopy(&command, CRLF);
+	if (cachedUsername) {
+#ifdef DEBUG_NEWS
+ 		printf("use %s as the username\n",(const char *)cachedUsername);
+#endif /* DEBUG_NEWS */
+		NET_SACat(&command, (const char *)cachedUsername);
+	}
+	else {
+		nsCAutoString usernameCString(username);
+#ifdef DEBUG_NEWS
+ 		printf("use %s as the username\n",(const char *)usernameCString);
+#endif /* DEBUG_NEWS */
+		if (newsFolder) {
+			rv = newsFolder->SetGroupUsername((const char *)usernameCString);
+		}
+		NET_SACat(&command, (const char *)usernameCString);
+	}
+	NET_SACat(&command, CRLF);
 
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 	if (mailnewsurl)
 		status = SendData(mailnewsurl, command);
 
 	PR_Free(command);
-	PR_Free(username);
 
 	m_nextState = NNTP_RESPONSE;
 	m_nextStateAfterResponse = NNTP_AUTHORIZE_RESPONSE;;
@@ -2484,13 +2499,45 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 
 PRInt32 nsNNTPProtocol::AuthorizationResponse()
 {
+	nsresult rv = NS_OK;
+    nsCOMPtr <nsIMsgNewsFolder> newsFolder;
 	PRInt32 status = 0;
+	nsXPIDLCString cachedPassword;
 
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	if (NS_FAILED(rv)) return(MK_NNTP_AUTH_FAILED);
+
+    nsCAutoString newsgroupURI;
+	if (m_newsgroup && m_hostName) {
+        nsXPIDLCString groupName;
+        rv = m_newsgroup->GetName(getter_Copies(groupName));
+        if (NS_SUCCEEDED(rv) && groupName) {
+			newsgroupURI = kNewsRootURI;
+			newsgroupURI += "/";
+			if (m_userName) {
+				newsgroupURI += m_userName;
+				newsgroupURI += "@";
+			}
+            newsgroupURI += m_hostName;
+            newsgroupURI += "/";
+            newsgroupURI += groupName;
+        }
+    }        
+
+    if (newsgroupURI) {
+        nsCOMPtr<nsIRDFResource> resource;
+        rv = rdf->GetResource((const char *)newsgroupURI, getter_AddRefs(resource));
+        if (NS_FAILED(rv)) return(MK_NNTP_AUTH_FAILED);
+
+        newsFolder = do_QueryInterface(resource, &rv);
+        if (NS_FAILED(rv) || !newsFolder) return(MK_NNTP_AUTH_FAILED);
+        rv = newsFolder->GetGroupPassword(getter_Copies(cachedPassword));
+    }     
+	
     if (MK_NNTP_RESPONSE_AUTHINFO_OK == m_responseCode ||
         MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_OK == m_responseCode) 
 	  {
 		/* successful login */
-        nsresult rv;
         PRBool pushAuth;
 		/* If we're here because the host demanded authentication before we
 		 * even sent a single command, then jump back to the beginning of everything
@@ -2516,23 +2563,9 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 		/* password required
 		 */	
 		char * command = 0;
-		char * password = 0;
-		char * cp;
-
-		// mscott: I'm not sure why we need a pane in order to get the password....
-		// commenting out for now because panes are going away!
+        nsXPIDLString password;
 #if 0
-		if (cd->pane)
-#else
-		if (1)
-#endif
-		{
-            m_newsgroup->GetPassword(&password);
-#ifdef UNREADY_CODE
-            password = XP_STRDUP(password);
-#endif
-            m_newsgroup->SetPassword(NULL);
-		}
+		char * cp;
 
         if (net_news_last_username_probably_valid 
 			&& last_password
@@ -2570,35 +2603,48 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
             *cp = '@';
     
           }
-		if (!password) 
+#endif /* 0 */
+
+		if (!cachedPassword) 
 		{
-#if defined(CookiesAndSignons)
-		  password = SI_PromptPassword
-		      (ce->window_id,
-		      XP_GetString
-			  (XP_PLEASE_ENTER_A_PASSWORD_FOR_NEWS_SERVER_ACCESS),
-		      m_hostName,
-		      PR_TRUE, PR_TRUE);
-#else
-#ifdef UNREADY_CODE
-			password = FE_PromptPassword(ce->window_id, XP_GetString(XP_PLEASE_ENTER_A_PASSWORD_FOR_NEWS_SERVER_ACCESS ) );
-#endif
-#endif
+#ifdef DEBUG_NEWS
+            printf("ask for the news password\n");
+#endif /* DEBUG_NEWS */
+
+            NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
+            if (NS_FAILED(rv) || !dialog) {
+                return(MK_NNTP_AUTH_FAILED);
+            }
+
+            nsXPIDLString passwordPromptText;
+            GetNewsStringByName("enterPassword", getter_Copies(passwordPromptText));
+            nsXPIDLString passwordPromptTitleText;
+            GetNewsStringByName("enterPasswordTitle", getter_Copies(passwordPromptTitleText));
+            PRBool okButtonClicked = PR_FALSE;
+
+            rv = dialog->PromptPassword(passwordPromptText, passwordPromptTitleText, getter_Copies(password), &okButtonClicked);
+            
+            if (NS_SUCCEEDED(rv) && !okButtonClicked) {
+                nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+                if (mailnewsurl)
+                    mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_AUTH_FAILED, "Aborted by user"));
+                return(MK_NNTP_AUTH_FAILED);
+            }
+#if 0
 		  net_news_last_username_probably_valid = PR_FALSE;
+#endif /* 0 */
 		}
 		  
-		if(!password)	
-		{
-		  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-		  if (mailnewsurl)
-			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_AUTH_FAILED, "Aborted by user"));
+		if(NS_FAILED(rv) || (!password && !cachedPassword)) {
 		  return(MK_NNTP_AUTH_FAILED);
 		}
+#if 0
 		else 
 		{
 		  NET_SACopy(&last_password, password);
 		  NET_SACopy(&last_password_hostname, m_hostName);
 		}
+#endif /* 0 */
 
 #ifdef CACHE_NEWSGRP_PASSWORD
         char *garbage_password;
@@ -2613,7 +2659,22 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 #endif
 
 		NET_SACopy(&command, "AUTHINFO pass ");
-		NET_SACat(&command, password);
+		if (cachedPassword) {
+#ifdef DEBUG_NEWS
+            printf("use %s as the password\n",(const char *)cachedPassword);
+#endif /* DEBUG_NEWS */ 
+			NET_SACat(&command, (const char *)cachedPassword);
+		}
+		else {
+			nsCAutoString passwordCString(password); 
+#ifdef DEBUG_NEWS
+        	printf("use %s as the password\n",(const char *)passwordCString);
+#endif /* DEBUG_NEWS */  
+			if (newsFolder) {
+				rv = newsFolder->SetGroupPassword((const char *)passwordCString);
+			}
+			NET_SACat(&command, (const char *)passwordCString);
+		}
 		NET_SACat(&command, CRLF);
 	
 		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
@@ -2621,7 +2682,6 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 			status = SendData(mailnewsurl, command);
 
 		PR_FREEIF(command);
-		PR_FREEIF(password);
 
 		m_nextState = NNTP_RESPONSE;
 		m_nextStateAfterResponse = NNTP_PASSWORD_RESPONSE;
@@ -2677,7 +2737,18 @@ PRInt32 nsNNTPProtocol::PasswordResponse()
 			m_nextState = SEND_FIRST_NNTP_COMMAND;
 
 		net_news_last_username_probably_valid = PR_TRUE;
-        rv = m_newsgroupList->ResetXOVER();
+
+		// if we are posting, m_newsgroup will be null
+		if (!m_newsgroupList && m_newsgroup) {
+    		nsXPIDLCString groupName;
+	    	rv = m_newsgroup->GetName(getter_Copies(groupName));
+			if (NS_SUCCEEDED(rv)) {
+				rv = m_newsHost->GetNewsgroupList(groupName, getter_AddRefs(m_newsgroupList));
+			}
+		}
+		if (m_newsgroupList) {
+        	rv = m_newsgroupList->ResetXOVER();
+		}
         return(0);
 	  }
 	else
@@ -3013,10 +3084,8 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	  return 0;
 	}
 
-
-    nsXPIDLCString groupName ;
-    
 	if (!m_newsgroupList) {
+    	nsXPIDLCString groupName;
 	    rv = m_newsgroup->GetName(getter_Copies(groupName));
 		if (NS_SUCCEEDED(rv))
 			rv = m_newsHost->GetNewsgroupList(groupName, getter_AddRefs(m_newsgroupList));
@@ -3357,8 +3426,6 @@ nsresult nsNNTPProtocol::GetNewsStringByName(const char *aName, PRUnichar **aStr
 }
 
 // sspitzer:  PostMessageInFile is derived from nsSmtpProtocol::SendMessageInFile()
-// 
-
 PRInt32 nsNNTPProtocol::PostMessageInFile(nsIFileSpec *aPostMessageFile)
 {
     nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
@@ -3866,8 +3933,6 @@ PRInt32 nsNNTPProtocol::DoCancel()
       }
   
       if (!cancelInfo.from) {
-            nsXPIDLString newsErrorStr;
-
           GetNewsStringByName("cancelDisallowed", getter_Copies(alertText));
           rv = dialog->Alert(alertText);
 	  // XXX:  todo, check rv?
@@ -3988,8 +4053,6 @@ FAIL:
   PR_FREEIF (distribution);
   PR_FREEIF (other_random_headers);
   PR_FREEIF (body);
-  PR_FREEIF (m_cancelMessageFile);
-  m_cancelMessageFile = nsnull;
 
 #ifdef USE_LIBMSG
   if (fields)

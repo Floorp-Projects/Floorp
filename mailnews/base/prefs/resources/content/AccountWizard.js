@@ -273,19 +273,7 @@ function createAccount(hash) {
         // dump("Creating local mail account\n");
 		// creates a copy of the identity you pass in
         messengerMigrator = Components.classes["component://netscape/messenger/migrator"].getService(Components.interfaces.nsIMessengerMigrator);
-		messengerMigrator.createLocalMailAccount(identity, false);
-
-		// find the local mail server that we just created
-		localMailServer = am.FindServer("","","none");
-
-		var identities = am.GetIdentitiesForServer(localMailServer);
-		if (identities.Count() > 0) {
-			localMailIdentity = identities.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIdentity);
-			setDefaultCopiesAndFoldersPrefs(localMailIdentity, localMailServer);
-		}
-		else {
-			dump("error!  no identity for the local mail account\n");
-		}
+		messengerMigrator.createLocalMailAccount(false /* false, since we are not migrating */);
     }
 
 	var copiesAndFoldersServer = null;

@@ -175,15 +175,9 @@ private:
     void ParseHeaderForCancel(char *buf);
 
     static PRBool CheckIfAuthor(nsISupports *aElement, void *data);
-        
-	// part of temporary libmime converstion trick......these should go away once MIME uses a new stream
-	// converter interface...
-	nsCOMPtr<nsIOutputStream> m_tempArticleStream;
-    // same trick as above, but used for showing error message in the 
-    // message pane.
-	nsCOMPtr<nsIOutputStream> m_tempErrorStream;
-	nsFileSpec m_tempErrorFileSpec;
 
+    nsCOMPtr<nsIOutputStream> m_tempArticleStream; 
+   
 	// News Event Sinks
     nsCOMPtr <nsINNTPNewsgroupList> m_newsgroupList;
     nsCOMPtr <nsINNTPArticleList> m_articleList;
@@ -233,7 +227,6 @@ private:
     char     *m_cancelNewsgroups;
     char     *m_cancelDistribution;
     char     *m_cancelID;
-    char     *m_cancelMessageFile;
     PRInt32	  m_cancelStatus;
 
 	// variables for ReadNewsRC

@@ -40,8 +40,6 @@ public:
 protected:
 	 char * m_groupName;
 	 char * m_prettyName;
-	 char * m_password;
-	 char * m_userName;
 	 
 	 PRBool	m_isSubscribed;
 	 PRBool m_wantsNewTotals;
