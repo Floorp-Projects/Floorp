@@ -47,6 +47,10 @@
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #endif
+#include "nsXPIDLString.h"
+#include "nsIHTTPChannel.h"
+#include "nsIServiceManager.h"
+#include "nsICharsetAlias.h"
 
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
@@ -226,11 +230,51 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   }
 
   nsIWebShell* webShell;
+  nsAutoString charset("utf-8");
+  nsCharsetSource charsetSource = kCharsetFromDocTypeDefault;
 
 #ifdef NECKO
   nsCOMPtr<nsIURI> aUrl;
   rv = aChannel->GetURI(getter_AddRefs(aUrl));
   if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(aChannel);
+  if(httpChannel) {
+     nsIAtom* contentTypeKey = NS_NewAtom("content-type");
+     nsXPIDLCString contenttypeheader;
+     rv = httpChannel->GetResponseHeader(contentTypeKey, getter_Copies(contenttypeheader));
+     NS_RELEASE(contentTypeKey);
+     if (NS_SUCCEEDED(rv)) {
+	nsAutoString contentType;
+	contentType = contenttypeheader;
+	PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
+	if(kNotFound != start)
+	{
+		 start += 8; // 8 = "charset=".length
+		 PRInt32 end = contentType.FindCharInSet(";\n\r ", start  );
+		 if(kNotFound == end )
+			 end = contentType.Length();
+		 nsAutoString theCharset;
+		 contentType.Mid(theCharset, start, end - start);
+		 nsICharsetAlias* calias = nsnull;
+		 rv = nsServiceManager::GetService(
+							kCharsetAliasCID,
+							nsICharsetAlias::GetIID(),
+							(nsISupports**) &calias);
+		 if(NS_SUCCEEDED(rv) && (nsnull != calias) )
+		 {
+			  nsAutoString preferred;
+			  rv = calias->GetPreferred(theCharset, preferred);
+			  if(NS_SUCCEEDED(rv))
+			  {
+				  charset = preferred;
+ 				  charsetSource = kCharsetFromHTTPHeader;
+			  }
+			  nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
+		 }
+        }
+     }
+  }
 #endif
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
@@ -254,8 +298,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 
       if (NS_OK == rv) {
 
-        nsAutoString utf8("utf-8");
-        mParser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
+        mParser->SetDocumentCharset(charset, charsetSource);
         mParser->SetCommand(aCommand);
         mParser->SetContentSink(sink);
         mParser->Parse(aUrl, nsnull, PR_FALSE, (void *)this);
