@@ -114,7 +114,6 @@ editor/txtsvc/src/Makefile
 "
 
 MAKEFILES_expat="
-parser/Makefile
 parser/expat/Makefile
 parser/expat/lib/Makefile
 "
