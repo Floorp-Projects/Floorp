@@ -31,6 +31,14 @@
 
 use FileHandle;
 
+# Terrible globals:
+#   %warnings
+#   %warnings_by_who
+#   %who_count
+#   $ignore_pat
+#   @ignore_match_pat
+#
+
 # This is for gunzip (should add a configure script to handle this).
 $ENV{PATH} .= ":/usr/local/bin";
 
@@ -52,11 +60,11 @@ $lxr_data_root = '/export2/lxr-data';
 $source_root_pat = '^.*/mozilla/';
 
 @ignore = ( 
-  'long long',
   '__cmsg_data',
   'location of the previous definition',
   '\' was hidden',
   'declaration of \`index\' shadows global',
+  'Aggregate has a partly bracketed initializer', # mailnews guys say this has to stay
   'declaration of \`ws\' shadows global', # from istream
   'declaration of \`y0\' shadows global', # from mathcalls.h
   'declaration of \`y1\' shadows global', # from mathcalls.h
@@ -86,13 +94,21 @@ for $br (last_successful_builds($tree)) {
   &build_blame;
 
   my $warn_file = "$tree/warn$log_file";
-  $warn_file =~ s/.gz$/.html/;
+  $warn_file =~ s/\.gz$/.html/;
+  my $warn_file_by_file = $warn_file;
+  $warn_file_by_file =~ s/\.html$/-by-file.html/;
 
   $fh->open(">$warn_file") or die "Unable to open $warn_file: $!\n";
-  my ($total_warnings, $time_str) = print_warnings_as_html($fh, $br);
+  my $time_str = print_html_by_who($fh, $br);
   $fh->close;
 
-  next unless $total_warnings > 0;
+#  $fh->open(">$warn_file_by_file")
+#    or die "Unable to open $warn_file_by_file: $!\n";
+#  print_html_by_file($fh, $br);
+#  $fh->close;
+  
+  my $total_unignored_warnings = $total_warnings_count - $total_ignored_count;
+  next unless $total_unignored_warnings > 0;
 
   # Make it live
   use File::Copy 'move';
@@ -102,17 +118,18 @@ for $br (last_successful_builds($tree)) {
   $warn_summary =~ s/.gz$/.pl/;
 
   $fh->open(">$warn_summary") or die "Unable to open $warn_summary: $!\n";
-  $total_warnings = commify($total_warnings);
+  $total_unignored_warnings = commify($total_unignored_warnings);
   print $fh '$warning_summary=\'<p>Check out the '
       ."<a href=\"http://tinderbox.mozilla.org/$tree/warnings.html\">"
-      ."$total_warnings Build Warnings</a> (updated $time_str). "
+      ."$total_unignored_warnings Build Warnings</a> (updated $time_str). "
       .'-<a href="mailto:slamm@netscape.com?subject=About the Build Warnings">'
       .'slamm</a><p>\';'."\n";
   $fh->close;
 
   move($warn_summary, "$tree/warn.pl");
 
-  warn "$total_warnings warnings (updated $time_str)\n";
+  warn "$total_unignored_warnings warnings ($total_ignored_count ignored),"
+      ." updated $time_str\n";
 
   last;
 }
@@ -198,7 +215,6 @@ sub gcc_parser {
     
     # Now only match lines with "warning:"
     next unless /warning:/;
-    next if /$ignore_pat/o;
 
     chomp; # Yum, yum
 
@@ -223,26 +239,26 @@ sub gcc_parser {
     my $file = "$dir/$filename";
 
     # Special case for "`foo' was hidden\nby `foo2'"
-    $warning_text = "...was hidden " . $warning_text 
-      if $warning_text =~ /^by \`/;
-
+    $warning_text = "...was hidden $warning_text" if $warning_text =~ /^by \`/;
 
     # Remember line of first occurrence in the build log
     $warnings{$file}{$line}->{first_seen_line} = $.
       unless defined $warnings{$file}{$line};
 
+    my $ignore_it = /$ignore_pat/o;
+    if ($ignore_it) {
+      $warnings{$file}{$line}->{ignorecount}++;
+      $total_ignored_count++;
+    }
+
     $warnings{$file}{$line}->{count}++;
     $total_warnings_count++;
-
-    # Do not re-add this warning if it has been seen before
-    for my $rec (@{ $warnings{$file}{$line}->{list} }) {
-      next PARSE_TOP if $rec->{warning_text} eq $warning_text;
-    }
 
     # Remember where in the build log the warning occured
     push @{ $warnings{$file}{$line}->{list} }, {
          log_file        => $log_file,
          warning_text    => $warning_text,
+         ignore          => $ignore_it,
     };
   }
   warn "debug> $. lines read\n" if $debug;
@@ -270,14 +286,14 @@ sub build_blame {
     my $rcs_filename = "$cvsroot/$file,v";
 
     unless (-e $rcs_filename) {
-      warn "Unable to find $rcs_filename\n";
+#      warn "Unable to find $rcs_filename\n";
       $unblamed{$file} = 1;
       next;
     }
 
     my $revision = &parse_cvs_file($rcs_filename);
     @text = &extract_revision($revision);
-    LINE: while (my ($line, $warn_rec) = each %{$lines_hash}) {
+    LINE: while (my ($line, $line_rec) = each %{$lines_hash}) {
       my $line_rev = $revision_map[$line-1];
       my $who = $revision_author{$line_rev};
       my $source_text = join '', @text[$line-3..$line+1];
@@ -285,23 +301,30 @@ sub build_blame {
       
       $who = "$who%netscape.com" unless $who =~ /[%]/;
 
-      $warn_rec->{line_rev} = $line_rev;
-      $warn_rec->{source}   = $source_text;
+      $line_rec->{line_rev} = $line_rev;
+      $line_rec->{source}   = $source_text;
 
-      for $ignore_rec (@ignore_match_pat) {
-        next LINE if $warn_rec->{warning_text} =~ /$ignore_rec->{warning}/
-          and $warn_rec->{source} =~ /$ignore_rec->{source}/;
+      for $ignore_rec (@ignore_match) {
+        for my $warn_rec (@{ $line_rec->{list}}) {
+          if ($warn_rec->{warning_text} =~ /$ignore_rec->{warning}/
+              and $warn_rec->{source} =~ /$ignore_rec->{source}/
+             and not $warn_rec->{ignore}) {
+            $warn_rec->{ignore} = 1;
+            $line_rec->{ignorecount}++;
+            warn "ignored $warn_rec->{warning_text}\n";
+            next LINE;
+          }
+        }
       }
 
-      $warnings_by_who{$who}{$file}{$line} = $warn_rec;
+      $warnings_by_who{$who}{$file}{$line} = $line_rec;
 
-      $total_who_count++ unless exists $who_count{$who};
-      $who_count{$who} += $warn_rec->{count};
+      $who_count{$who} += $line_rec->{count} - $line_rec->{ignorecount};
     }
   }
 }
 
-sub print_warnings_as_html {
+sub print_html_by_who {
   my ($fh, $br) = @_;
   my ($buildname, $buildtime) = ($br->{buildname}, $br->{buildtime});
 
@@ -310,6 +333,7 @@ sub print_warnings_as_html {
   # Change the default destination for print to $fh
   my $old_fh = select($fh);
 
+  my $total_unignored_count = $total_warnings_count - $total_ignored_count;
   print <<"__END_HEADER";
   <html>
     <head>
@@ -321,7 +345,7 @@ sub print_warnings_as_html {
       </b></font><br>
       <font size="+1" face="Helvetica,Arial">
         $buildname on $time_str<br>
-        $total_warnings_count total warnings
+        $total_unignored_count total warnings
       </font><p>
     
 __END_HEADER
@@ -343,6 +367,7 @@ __END_HEADER
       next if $index > $#who_list;
       my $name = $who_list[$index];
       my $count = $who_count{$name};
+      next if $count == 0;
       $name =~ s/%.*//;
       print "  " x $jj;
       print "<td><a href='#$name'>$name</a>";
@@ -356,14 +381,87 @@ __END_HEADER
 
   # Count Unblamed warnings
   #
-  my $total_unblamed_warnigns=0;
   for my $file (keys %unblamed) {
     for my $linenum (keys %{$warnings{$file}}) {
-      $total_unblamed_warnings += $warnings{$file}{$linenum}{count};
+      $who_count{Unblamed} += $warnings{$file}{$linenum}{count};
+      $who_count{Unblamed} -= $warnings{$file}{$linenum}{ignorecount};
       $warnings_by_who{Unblamed}{$file}{$linenum} = $warnings{$file}{$linenum};
     }
   }
-  $who_count{Unblamed} = $total_unblamed_warnings;
+
+  # Print all the warnings
+  #
+  for $who (@who_list, "Unblamed") {
+    my $total_count = $who_count{$who};
+    
+    next if $total_count == 0;
+
+    my ($name, $email);
+    ($name = $who) =~ s/%.*//;
+    ($email = $who) =~ s/%/@/;
+    
+    print "<h2>";
+    print "<a name='$name' href='mailto:$email'>" unless $name eq 'Unblamed';
+    print "$name";
+    print "</a>" unless $name eq 'Unblamed';
+    print " (1 warning)"       if $total_count == 1;
+    print " ($total_count warnings)" if $total_count > 1;
+    print "</h2>";
+
+    print "\n<table>\n";
+    my $count = 1;
+    for $file (sort keys %{$warnings_by_who{$who}}) {
+      for $linenum (sort keys %{$warnings_by_who{$who}{$file}}) {
+        my $line_rec = $warnings_by_who{$who}{$file}{$linenum};
+        next if $line_rec->{ignorecount} == $line_rec->{count};
+        print_count($count, $line_rec->{count});
+        print_warning($tree, $br, $file, $linenum, $line_rec);
+        print_source_code($linenum, $line_rec) unless $unblamed{$file};
+        $count += $line_rec->{count};
+      }
+    }
+    print "</table>\n";
+  }
+
+  print <<"__END_FOOTER";
+  <p>
+    <hr align=left>
+    Send questions or comments to 
+    &lt;<a href="mailto:slamm\@netscape.com?subject=About the Blamed Build Warnings">slamm\@netcape.com</a>&gt;.
+   </body></html>
+__END_FOOTER
+
+  # Change default destination back.
+  select($old_fh);
+
+  return $time_str;
+}
+
+sub print_html_by_file {
+  my ($fh, $br) = @_;
+  my ($buildname, $buildtime) = ($br->{buildname}, $br->{buildtime});
+
+  my $time_str = print_time( $buildtime );
+
+  # Change the default destination for print to $fh
+  my $old_fh = select($fh);
+
+  my $total_unignored_count = $total_warnings_count - $total_ignored_count;
+  print <<"__END_HEADER";
+  <html>
+    <head>
+      <title>Build Warnings By File</title>
+    </head>
+    <body>
+      <font size="+2" face="Helvetica,Arial"><b>
+        Build Warnings By File
+      </b></font><br>
+      <font size="+1" face="Helvetica,Arial">
+        $buildname on $time_str<br>
+        $total_unignored_count total warnings
+      </font><p>
+    
+__END_HEADER
 
   # Print all the warnings
   #
@@ -385,11 +483,12 @@ __END_HEADER
     my $count = 1;
     for $file (sort keys %{$warnings_by_who{$who}}) {
       for $linenum (sort keys %{$warnings_by_who{$who}{$file}}) {
-        my $warn_rec = $warnings_by_who{$who}{$file}{$linenum};
-        print_count($count, $warn_rec->{count});
-        print_warning($tree, $br, $file, $linenum, $warn_rec);
-        print_source_code($linenum, $warn_rec) unless $unblamed{$file};
-        $count += $warn_rec->{count};
+        my $line_rec = $warnings_by_who{$who}{$file}{$linenum};
+        next if $line_rec->{ignorecount} == $line_rec->{count};
+        print_count($count, $line_rec->{count});
+        print_warning($tree, $br, $file, $linenum, $line_rec);
+        print_source_code($linenum, $line_rec) unless $unblamed{$file};
+        $count += $line_rec->{count};
       }
     }
     print "</table>\n";
@@ -405,8 +504,6 @@ __END_FOOTER
 
   # Change default destination back.
   select($old_fh);
-
-  return ($total_warnings_count, $time_str);
 }
 
 sub print_count {
@@ -418,7 +515,7 @@ sub print_count {
 }
 
 sub print_warning {
-  my ($tree, $br, $file, $linenum, $warn_rec) = @_;
+  my ($tree, $br, $file, $linenum, $line_rec) = @_;
 
   print "<td>";
 
@@ -439,21 +536,21 @@ sub print_warning {
   }
 
   # Build log link
-  my $log_line = $warn_rec->{first_seen_line};
+  my $log_line = $line_rec->{first_seen_line};
   print " (<a href='"
         .build_url($tree, $br, $log_line)
         ."'>";
-  if ($warn_rec->{count} == 1) {
+  if ($line_rec->{count} == 1) {
     print "See build log excerpt";
   } else {
-    print "See 1st of $warn_rec->{count} warnings in build log";
+    print "See 1st of $line_rec->{count} warnings in build log";
   }
   print "</a>)";
 
   print "</td></tr><tr><td></td><td>";
 
-  for my $rec (@{ $warn_rec->{list}}) {
-    my $warning  = $rec->{warning_text};
+  for my $warn_rec (@{ $line_rec->{list}}) {
+    my $warning  = $warn_rec->{warning_text};
 
     # Warning text
     print "\u$warning<br>";
@@ -462,27 +559,31 @@ sub print_warning {
 }
 
 sub print_source_code {
-  my ($linenum, $warn_rec) = @_;
-  my $warning = $warn_rec->{warning_text};
+  my ($linenum, $line_rec) = @_;
 
   # Source code fragment
   #
-  my ($keyword) = $warning =~ /\`([^\']*)\'/;
   print "<tr><td></td><td bgcolor=#ededed>";
-  print "<pre><font size='-1'>";
+  print "<pre>";
   
-  my $source_text = trim_common_leading_whitespace($warn_rec->{source});
+  my $source_text = trim_common_leading_whitespace($line_rec->{source});
   $source_text =~ s/&/&amp;/gm;
   $source_text =~ s/</&lt;/gm;
   $source_text =~ s/>/&gt;/gm;
-  $source_text =~ s|\b\Q$keyword\E\b|<b>$keyword</b>|gm unless $keyword eq '';
+  # Highlight the warning's keyword
+  for my $warn_rec (@{ $line_rec->{list}}) {
+    my $warning = $warn_rec->{warning_text};
+    my ($keyword) = $warning =~ /\`([^\']*)\'/;
+    next if $keyword eq '';
+    $source_text =~ s|\b\Q$keyword\E\b|<b>$keyword</b>|gm;
+    last;
+  }
   my $line_index = $linenum - 2;
   $source_text =~ s/^(.*)$/$line_index++." $1"/gme;
   $source_text =~ s|^($linenum.*)$|<font color='red'>\1</font>|gm;
   chomp $source_text;
   print $source_text;
 
-  print "</font>";
   #print "</pre>";
   print "</td></tr>\n";
 }
