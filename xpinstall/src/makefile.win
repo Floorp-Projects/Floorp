@@ -52,18 +52,21 @@ LINCS=                          \
         -I$(PUBLIC)\nspr2       \
 		-I$(PUBLIC)\zlib        \
         -I$(PUBLIC)\xpfe\components \
+        -I$(PUBLIC)\intl        \
+        -I$(PUBLIC)\locale      \
         $(NULL)
 
 LLIBS =                                \
         $(DIST)\lib\jar50.lib          \
         $(DIST)\lib\libreg32.lib       \
         $(DIST)\lib\netlib.lib         \
-        $(DIST)\lib\xpcom.lib        \
+        $(DIST)\lib\xpcom.lib          \
         $(DIST)\lib\js3250.lib         \
         $(DIST)\lib\jsdombase_s.lib    \
         $(DIST)\lib\jsdomevents_s.lib  \
 		$(DIST)\lib\zlib.lib           \
 		$(DIST)\lib\plc3.lib           \
+        $(DIST)\lib\strres.lib         \
         $(LIBNSPR)                     \
         $(NULL)
 
