@@ -79,7 +79,7 @@ static NS_DEFINE_IID(kIStyleContextIID, NS_ISTYLECONTEXT_IID);
   //    by the style set in caching the style contexts (not using the FAST_CACHE)
   //    which is the current situation since the CRC can change when GetMutableStyleData
   //    is used to poke values into the style context data.
-// #define COMPUTE_STYLEDATA_CRC
+#define COMPUTE_STYLEDATA_CRC
 #endif //SHARE_STYLECONTEXTS
 
 #ifdef COMPUTE_STYLEDATA_CRC
@@ -2196,7 +2196,7 @@ protected:
 
   PRUint32          mRuleHash;
   nsISupportsArray* mRules;
-  PRInt32           mDataCode;
+  PRInt16           mDataCode;
 
 #ifdef SHARE_STYLECONTEXTS
 

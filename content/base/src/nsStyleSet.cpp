@@ -54,14 +54,28 @@
 static NS_DEFINE_IID(kIStyleSetIID, NS_ISTYLE_SET_IID);
 static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
 
-// XXX - fast cache cannot be used until we resolve problems with clients changing StyleContextData
-//       behind our backs. GetMutableStyleData must be eliminated and callers converted over to
-//       using Get/SetStyleData so we can re-evaluate the CRC and update the cache.
-//       At that time we can utilize a fast cache with CRC-based first line lookup and get back
-//       another 10% of the performance we lost in sharing style context data
-//#define USE_FAST_CACHE
+// - fast cache uses a CRC32 on the style context to quickly find sharing candidates.
+//   Enabling it by defining USE_FAST_CACHE makes style sharing significantly faster
+//   but introduces more code and logic, and is thus potentially more error-prone
+// - Enabled by default: disable to determine if there are problems in the fast-cache
+// NOTE: make sure the define COMPUTE_STYLEDATA_CRC is ON in nsStyleContext.cpp for 
+//       this to be affective...
+#define USE_FAST_CACHE
 
+#ifdef USE_FAST_CACHE
+///////////////////////////////////////
+// DEBUG defines for the fast cache:
+///////////////////////////////////////
+
+//  - define DUMP_CACHE_STATS to get a dump of the cache's depth and breadth
 //#define DUMP_CACHE_STATS
+
+// - define ENABLE_FAST_CACHE_TICKLE to enable tickling of each element in the cache
+//   whenever the cache is accessed (to find stale pointers)
+//#define ENABLE_FAST_CACHE_TICKLE
+
+#endif //ifdef USE_FAST_CACHE
+
 
 class StyleSetImpl : public nsIStyleSet 
 #ifdef MOZ_PERF_METRICS
@@ -1488,9 +1502,9 @@ StyleContextCache:: ~StyleContextCache(void)
 
 PRUint32 StyleContextCache::Count(void)
 { 
-  // XXX : todo - do debug-checking on the counter...
-
-#ifdef DEBUG
+#ifdef ENABLE_FAST_CACHE_TICKLE
+  // Tickle will test the integrity of the elements in the chace...
+  //  - use if it is in question (has already been tested so it is now being commented-out)
   Tickle("From Count()");
 #endif
 
@@ -1533,8 +1547,15 @@ nsresult StyleContextCache::RemoveContext(scKey aKey, nsIStyleContext *aContext)
 
   if (NS_SUCCEEDED(GetContexts(aKey,&pResults)) && pResults) {
     PRUint32 nCountBefore = Count();
-    if (nCountBefore > 0 && pResults->RemoveElement(aContext)) {
-      mCount--;
+    if (nCountBefore > 0){
+      if(pResults->RemoveElement(aContext)) {
+        mCount--;
+      } 
+#ifdef DEBUG
+      else {
+        NS_ASSERTION(PR_FALSE,"Failure to remove context at provided key!");
+      }
+#endif
     }
     DumpStats();
 
@@ -1551,14 +1572,19 @@ nsresult StyleContextCache::RemoveContext(scKey aKey, nsIStyleContext *aContext)
       }
 #endif
     }
+  } 
+#ifdef DEBUG
+  else {
+    NS_ASSERTION(PR_FALSE, "Failure to find any contexts at provided key!");
   }
+#endif
   return rv;
 }
 
 nsresult StyleContextCache::RemoveAllContexts(scKey aKey)
 {
   nsresult rv = NS_OK;
-  nsVoidKey key((const void *)aKey);
+  nsVoidKey key((void *)aKey);
   nsVoidArray *pResults = (nsVoidArray *)mHashTable.Remove(&key);
   if (pResults) {
     delete pResults;
@@ -1578,7 +1604,7 @@ nsresult StyleContextCache::GetContexts(scKey aKey, nsVoidArray **aResults)
 nsresult StyleContextCache::VerifyList(scKey aKey)
 {
   nsresult rv = NS_OK;
-  nsVoidKey key((const void *)aKey);
+  nsVoidKey key((void *)aKey);
   if (GetList(aKey) == nsnull) {
     nsVoidArray *pList = new nsVoidArray();
     if (pList) {
@@ -1593,7 +1619,7 @@ nsresult StyleContextCache::VerifyList(scKey aKey)
 // returns the list for the key, may be null
 nsVoidArray *StyleContextCache::GetList(scKey aKey)
 {
-  nsVoidKey key((const void *)aKey);
+  nsVoidKey key((void *)aKey);
   return (nsVoidArray *)mHashTable.Get(&key);
 }
 
@@ -1620,7 +1646,7 @@ PRBool HashTableEnumDump(nsHashKey *aKey, void *aData, void* closure)
   if (pList) {
     PRUint32 count = pList->Count();
     printf("List Length at key %lu:\t%ld\n", 
-           (unsigned long)aKey->HashValue(),
+           (unsigned long)aKey->HashCode(),
            (long)count );
     nCount++;
     nTotal += count;
@@ -1647,7 +1673,10 @@ PRBool HashTableEnumTickle(nsHashKey *aKey, void *aData, void* closure)
       if (pContext) {
         scKey key;
         pContext->GetStyleContextKey(key);
-        printf( "%p tickled\n");
+        if((PRUint32)key != (PRUint32)aKey->HashCode()){
+          NS_ASSERTION(PR_FALSE,"Key Changed in context!");
+        }
+        // printf( "%p tickled\n", pContext);
       }
     }
   }
@@ -1668,9 +1697,9 @@ void StyleContextCache::DumpStats(void)
 void StyleContextCache::Tickle(const char *msg)
 {
 #ifdef DEBUG
-  printf("Tickling: %s\n", msg ? msg : "");
+  // printf("Tickling: %s\n", msg ? msg : "");
   mHashTable.Enumerate(HashTableEnumTickle);
-  printf("Tickle done.\n");
+  // printf("Tickle done.\n");
 #endif
 }
 
