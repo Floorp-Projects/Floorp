@@ -304,7 +304,7 @@ protected:
                       const nsCSSProperty aPropIDs[], PRInt32 aNumIDs);
   PRBool ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue);
   PRBool ParseColorComponent(PRInt32& aErrorCode, PRUint8& aComponent,
-                             char aStop);
+                             PRInt32& aType, char aStop);
   PRBool ParseEnum(PRInt32& aErrorCode, nsCSSValue& aValue, const PRInt32 aKeywordTable[]);
   PRInt32 SearchKeywordTable(nsCSSKeyword aKeyword, const PRInt32 aTable[]);
   PRBool ParseVariant(PRInt32& aErrorCode, nsCSSValue& aValue,
@@ -2492,6 +2492,12 @@ CSSParserImpl::ParseDeclarationBlock(PRInt32& aErrorCode,
   return declaration;
 }
 
+// The types to pass to ParseColorComponent.  These correspond to the
+// various datatypes that can go within rgb().
+#define COLOR_TYPE_UNKNOWN 0
+#define COLOR_TYPE_INTEGERS 1
+#define COLOR_TYPE_PERCENTAGES 2
+
 PRBool CSSParserImpl::ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue)
 {
   if (!GetToken(aErrorCode, PR_TRUE)) {
@@ -2531,10 +2537,11 @@ PRBool CSSParserImpl::ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue)
       if (mToken.mIdent.EqualsIgnoreCase("rgb")) {
         // rgb ( component , component , component )
         PRUint8 r, g, b;
+        PRInt32 type = COLOR_TYPE_UNKNOWN;
         if (ExpectSymbol(aErrorCode, '(', PR_FALSE) && // this won't fail
-            ParseColorComponent(aErrorCode, r, ',') &&
-            ParseColorComponent(aErrorCode, g, ',') &&
-            ParseColorComponent(aErrorCode, b, ')')) {
+            ParseColorComponent(aErrorCode, r, type, ',') &&
+            ParseColorComponent(aErrorCode, g, type, ',') &&
+            ParseColorComponent(aErrorCode, b, type, ')')) {
           rgba = NS_RGB(r,g,b);
           aValue.SetColorValue(rgba);
           return PR_TRUE;
@@ -2597,8 +2604,11 @@ PRBool CSSParserImpl::ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue)
   return PR_FALSE;
 }
 
+// aType will be set if we have already parsed other color components
+// in this color spec
 PRBool CSSParserImpl::ParseColorComponent(PRInt32& aErrorCode,
                                           PRUint8& aComponent,
+                                          PRInt32& aType,
                                           char aStop)
 {
   if (!GetToken(aErrorCode, PR_TRUE)) {
@@ -2609,9 +2619,44 @@ PRBool CSSParserImpl::ParseColorComponent(PRInt32& aErrorCode,
   nsCSSToken* tk = &mToken;
   switch (tk->mType) {
   case eCSSToken_Number:
+    switch (aType) {
+      case COLOR_TYPE_UNKNOWN:
+        aType = COLOR_TYPE_INTEGERS;
+        break;
+      case COLOR_TYPE_INTEGERS:
+        break;
+      case COLOR_TYPE_PERCENTAGES:
+        REPORT_UNEXPECTED_TOKEN(
+          NS_LITERAL_STRING("Expected a percentage but found"));
+        UngetToken();
+        return PR_FALSE;
+      default:
+        NS_NOTREACHED("Someone forgot to add the new color component type in here");
+    }
+
+    if (!mToken.mIntegerValid) {
+      REPORT_UNEXPECTED_TOKEN(
+        NS_LITERAL_STRING("Expected an integer but found"));
+      UngetToken();
+      return PR_FALSE;
+    }
     value = tk->mNumber;
     break;
   case eCSSToken_Percentage:
+    switch (aType) {
+      case COLOR_TYPE_UNKNOWN:
+        aType = COLOR_TYPE_PERCENTAGES;
+        break;
+      case COLOR_TYPE_INTEGERS:
+        REPORT_UNEXPECTED_TOKEN(
+          NS_LITERAL_STRING("Expected an integer but found"));
+        UngetToken();
+        return PR_FALSE;
+      case COLOR_TYPE_PERCENTAGES:
+        break;
+      default:
+        NS_NOTREACHED("Someone forgot to add the new color component type in here");
+    }
     value = tk->mNumber * 255.0f;
     break;
   default:
