@@ -132,6 +132,7 @@ Cleanup=TRUE
 ObjectToIgnore0=plugins
 ObjectToIgnore1=uninstall
 ObjectToIgnore2=install_status.log
+ObjectToIgnore3=mozilla.bmp
 
 ; List of files/dirs that is used to determine if a directory is a profile
 ; or not.  This is so the directory is not deleted as part of the Cleanup
