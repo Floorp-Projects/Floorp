@@ -80,3 +80,13 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS)
 
+_FILES = \
+	$(srcdir)/res/EditorOverride.css \
+	$(NULL)
+
+libs::
+	$(INSTALL) $(_FILES) $(DIST)/bin/res
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(_FILES) $(DESTDIR)$(mozappdir)/res
+
