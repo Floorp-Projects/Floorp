@@ -693,25 +693,56 @@ nsGfxScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
      nsBox::AddMargin(mInner->mHScrollbarBox, hSize);
   }
 
-  // if one of the width and height is constrained,
+  // If one of the width and height is constrained,
   // do smarter preferred size checking in case the scrolled frame is a block.
+  // 
+  // Details: We're going to pass our width (or height) constraint
+  // down to nsBoxToBlockAdaptor.  Then when we call
+  // mScrollAreaBox->GetPrefSize below, it will reflow the scrolled
+  // block with this width (or height) constraint, and report the resulting
+  // height (or width) of the block. So if possible we'll be sized exactly to the
+  // height (or width) of the block, which is what we want because 'overflow'
+  // should not affect sizing...
+
+  // Push current constraint. We'll restore it when we're done.
   nsSize oldConstrainedSize;
   aState.GetScrolledBlockSizeConstraint(oldConstrainedSize);
+
   const nsHTMLReflowState* HTMLState = aState.GetReflowState();
+  // This stores the computed width and height, if available.
   nsSize computedSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+  // This stores the maximum width and height we can be, if available.
+  // This is what we use to constrain the block reflow.
+  nsSize computedMax(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
   if (HTMLState != nsnull) {
-    computedSize.width = HTMLState->mComputedWidth;
-    computedSize.height = HTMLState->mComputedHeight;
-    if ((computedSize.width == NS_INTRINSICSIZE)
-          != (computedSize.height == NS_INTRINSICSIZE)) {
+    computedSize = nsSize(HTMLState->mComputedWidth, HTMLState->mComputedHeight);
+    // If we know the computed size, then that's the effective maximum
+    computedMax = computedSize;
+    // Get CSS maxima where we don't have a computed size
+    if (computedMax.width == NS_INTRINSICSIZE) {
+      computedMax.width = HTMLState->mComputedMaxWidth;
+    }
+    if (computedMax.height == NS_INTRINSICSIZE) {
+      computedMax.height = HTMLState->mComputedMaxHeight;
+    }
+
+    // Pass a constraint to the block if we have at least one constraint
+    // and our size is not fixed
+    if (((computedSize.width == NS_INTRINSICSIZE)
+         || (computedSize.height == NS_INTRINSICSIZE))
+        && (computedMax.width != NS_INTRINSICSIZE
+            || computedMax.height != NS_INTRINSICSIZE)) {
       // adjust constraints in case we have scrollbars
-      if (computedSize.width != NS_INTRINSICSIZE) {
-        computedSize.width = PR_MAX(0, computedSize.width - vSize.width);
+      if (computedMax.width != NS_INTRINSICSIZE) {
+        computedMax.width = PR_MAX(0, computedMax.width - vSize.width);
       }
-      if (computedSize.height != NS_INTRINSICSIZE) {
-        computedSize.height = PR_MAX(0, computedSize.height - hSize.height);
+      if (computedMax.height != NS_INTRINSICSIZE) {
+        computedMax.height = PR_MAX(0, computedMax.height - hSize.height);
       }
-      aState.SetScrolledBlockSizeConstraint(computedSize);
+      // For now, constrained height seems to just confuse things because
+      // various places in the block code assume constrained height => printing.
+      // Disable height constraint.
+      aState.SetScrolledBlockSizeConstraint(nsSize(computedMax.width, NS_INTRINSICSIZE));
     } else {
       aState.SetScrolledBlockSizeConstraint(nsSize(-1,-1));
     }
@@ -720,11 +751,15 @@ nsGfxScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   }
 
   nsresult rv = mInner->mScrollAreaBox->GetPrefSize(aState, aSize);
+
+  // Restore old constraint.
   aState.SetScrolledBlockSizeConstraint(oldConstrainedSize);
 
+  // If our height is not constrained, and we will need a horizontal
+  // scrollbar, then add space for the scrollbar to our desired height.
   if (computedSize.height == NS_INTRINSICSIZE
-      && computedSize.width != NS_INTRINSICSIZE
-      && aSize.width > computedSize.width
+      && computedMax.width != NS_INTRINSICSIZE
+      && aSize.width > computedMax.width
       && mInner->mHScrollbarBox
       && styles.mHorizontal == NS_STYLE_OVERFLOW_AUTO) {
     // Add height of horizontal scrollbar which will be needed
@@ -732,9 +767,11 @@ nsGfxScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
     nsBox::AddMargin(mInner->mHScrollbarBox, hSize);
   }
 
+  // If our width is not constrained, and we will need a vertical
+  // scrollbar, then add space for the scrollbar to our desired width.
   if (computedSize.width == NS_INTRINSICSIZE
-      && computedSize.height != NS_INTRINSICSIZE
-      && aSize.height > computedSize.height
+      && computedMax.height != NS_INTRINSICSIZE
+      && aSize.height > computedMax.height
       && mInner->mVScrollbarBox
       && styles.mVertical == NS_STYLE_OVERFLOW_AUTO) {
     // Add width of vertical scrollbar which will be needed
