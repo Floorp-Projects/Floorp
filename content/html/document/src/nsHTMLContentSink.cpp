@@ -375,7 +375,6 @@ public:
   SinkContext* mHeadContext;
   PRInt32 mNumOpenIFRAMES;
   nsSupportsArray mScriptElements;
-  PRBool mParserBlocked;
   PRBool mNeedToBlockParser;
   nsCOMPtr<nsIRequest> mDummyParserRequest;
 
@@ -2298,7 +2297,6 @@ HTMLContentSink::HTMLContentSink() {
   mInsideNoXXXTag  = 0;
   mFlags=0;
   mNeedToBlockParser = PR_FALSE;
-  mParserBlocked = PR_FALSE;
   mDummyParserRequest = nsnull;
 }
 
@@ -2967,7 +2965,6 @@ HTMLContentSink::SetTitle(const nsString& aValue)
 NS_IMETHODIMP
 HTMLContentSink::OpenHTML(const nsIParserNode& aNode)
 {
-
   MOZ_TIMER_START(mWatch);
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenHTML", aNode, 0, this);
@@ -4409,8 +4406,9 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
       if (ssle) {
         ssle->SetEnableUpdates(PR_TRUE);
         result = ssle->UpdateStyleSheet(PR_TRUE, mDocument, mStyleSheetCount);
-        if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK))
+        if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK)) {
           mStyleSheetCount++;
+        }
       }
     }
   }
@@ -4803,13 +4801,12 @@ HTMLContentSink::ScriptAvailable(nsresult aResult,
     return NS_OK;
   }
 
-  if (mParserBlocked) {
+  if (mParser && !mParser->IsParserEnabled()) {
     // make sure to unblock the parser before evaluating the script,
     // we must unblock the parser even if loading the script failed or
     // if the script was empty, if we don't, the parser will never be
     // unblocked.
     mParser->UnblockParser();
-    mParserBlocked = PR_FALSE;
   }
 
   // Mark the current script as loaded
@@ -4958,13 +4955,11 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 
   // If the act of insertion evaluated the script, we're fine.
   // Else, block the parser till the script has loaded.
-  if (mNeedToBlockParser) {
-    mParserBlocked = PR_TRUE;
+  if (mNeedToBlockParser || !mParser->IsParserEnabled()) {
     return NS_ERROR_HTMLPARSER_BLOCK;
   }
-  else {
-    return NS_OK;
-  }
+
+  return NS_OK;
 }
 
 // 3 ways to load a style sheet: inline, style src=, link tag
@@ -5020,8 +5015,9 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       if (ssle) {
         ssle->SetEnableUpdates(PR_TRUE);
         rv = ssle->UpdateStyleSheet(PR_TRUE, mDocument, mStyleSheetCount);
-        if (NS_SUCCEEDED(rv) || (rv == NS_ERROR_HTMLPARSER_BLOCK))
+        if (NS_SUCCEEDED(rv) || (rv == NS_ERROR_HTMLPARSER_BLOCK)) {
           mStyleSheetCount++;
+        }
       }
     }
 
