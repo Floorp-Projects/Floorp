@@ -52,7 +52,7 @@ public:
    * Class constructor.
    */
   nsUnicodeToTIS620();
-  ~nsUnicodeToTIS620();
+  virtual ~nsUnicodeToTIS620();
 
   NS_IMETHOD Convert(const PRUnichar * aSrc, PRInt32 * aSrcLength,
                      char * aDest, PRInt32 * aDestLength);
