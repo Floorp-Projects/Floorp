@@ -45,11 +45,8 @@ function AddItem(aChildren,aCells,aIdfier)
   var item    = document.createElement("treeitem");
   var row     = document.createElement("treerow");
   var cell    = document.createElement("treecell");
-  var button  = document.createElement("titledbutton");
-  button.setAttribute("value",aCells);
-  button.setAttribute("class","displaybutton");
-  button.setAttribute("align","left");
-  cell.appendChild(button);
+  cell.setAttribute("value",aCells);
+  cell.setAttribute("align","left");
   row.appendChild(cell);
   item.appendChild(row);
   item.setAttribute("profile_name", aIdfier);
