@@ -1636,6 +1636,35 @@ NS_IMETHODIMP nsLocalFile::SetFileTypeAndCreator(OSType type, OSType creator)
 	return NS_OK;
 }
 
+NS_IMETHODIMP  
+nsLocalFile::GetFileSizeWithResFork(PRInt64 *aFileSize)
+{
+	NS_ENSURE_ARG(aFileSize);
+	
+	aFileSize->hi = 0;
+	aFileSize->lo = 0;
+
+	ResolveAndStat(PR_TRUE);
+	
+	long dataSize = 0;
+	long resSize = 0;
+	
+	OSErr err = FSpGetFileSize(&mTargetSpec, &dataSize, &resSize);
+							   
+	if (err != noErr)
+		return MacErrorMapper(err);
+	
+	// For now we've only got 32 bits of file size info
+	PRInt64 dataInt64 = LL_Zero();
+	PRInt64 resInt64 = LL_Zero();
+	
+	// Combine the size of the resource and data forks
+	LL_I2L(resInt64, resSize);
+	LL_I2L(dataInt64, dataSize);
+	LL_ADD((*aFileSize), dataInt64, resInt64);
+	
+	return NS_OK;
+}
 
 // Handy dandy utility create routine for something or the other
 nsresult 
