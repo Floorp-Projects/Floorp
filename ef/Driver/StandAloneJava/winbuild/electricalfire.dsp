@@ -768,10 +768,10 @@ InputName=x86-win32
 
 BuildCmds= \
 	$(NSTOOLS)\perl5\perl ..\..\..\tools\nad\nad.pl  $(InputPath)\
-                                                                           ..\..\..\Compiler\PrimitiveGraph\PrimitiveOperations\
-                                                                                                  genfiles\PrimitiveOperations.h genfiles\PrimitiveOperations.cpp\
-                                                                                                    genfiles\$(InputName).nad.burg.h | Burg\Release\burg -I >\
-                                                                                                genfiles\$(InputName).nad.burg.cpp
+                                                                            ..\..\..\Compiler\PrimitiveGraph\PrimitiveOperations\
+                                                                                                   genfiles\PrimitiveOperations.h genfiles\PrimitiveOperations.cpp\
+                                                                                                     genfiles\$(InputName).nad.burg.h | Burg\Release\burg -I >\
+                                                                                                 genfiles\$(InputName).nad.burg.cpp
 
 "genfiles\$(InputName).nad.burg.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
@@ -794,10 +794,10 @@ InputName=x86-win32
 
 BuildCmds= \
 	$(MOZ_TOOLS)\perl5\perl ..\..\..\tools\nad\nad.pl  $(InputPath)\
-                                                                           ..\..\..\Compiler\PrimitiveGraph\PrimitiveOperations\
-                                                                                                  genfiles\PrimitiveOperations.h genfiles\PrimitiveOperations.cpp\
-                                                                                                    genfiles\$(InputName).nad.burg.h | Burg\Debug\burg -I >\
-                                                                                                genfiles\$(InputName).nad.burg.cpp
+                                                                            ..\..\..\Compiler\PrimitiveGraph\PrimitiveOperations\
+                                                                                                   genfiles\PrimitiveOperations.h genfiles\PrimitiveOperations.cpp\
+                                                                                                     genfiles\$(InputName).nad.burg.h | Burg\Debug\burg -I >\
+                                                                                                 genfiles\$(InputName).nad.burg.cpp
 
 "genfiles\$(InputName).nad.burg.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
@@ -1079,8 +1079,8 @@ InputName=PrimitiveOperations
 
 BuildCmds= \
 	$(MOZ_TOOLS)\perl5\perl -I"..\..\..\Tools\PrimitiveOperations"\
-                                            ..\..\..\Tools\PrimitiveOperations\MakePrimOp.pl $(InputPath)\
-                                            genfiles\$(InputName).h genfiles\$(InputName).cpp
+                                             ..\..\..\Tools\PrimitiveOperations\MakePrimOp.pl $(InputPath)\
+                                             genfiles\$(InputName).h genfiles\$(InputName).cpp
 
 "genfiles\$(InputName).h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
@@ -1128,10 +1128,6 @@ SOURCE=..\..\..\Debugger\Debugger.cpp
 # Begin Source File
 
 SOURCE=..\..\..\Debugger\Debugger.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\Debugger\jvmdi.cpp
 # End Source File
 # Begin Source File
 
