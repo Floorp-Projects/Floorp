@@ -1977,7 +1977,7 @@ cookie_LoadCookies() {
     }
     char * expiresCString = expires.ToNewCString();
     new_cookie->expires = atol(expiresCString);
-    delete[] expiresCString;
+    nsCRT::free(expiresCString);
     delete buffer;
 
     /* start new cookie list if one does not already exist */
@@ -2193,7 +2193,7 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
     }
   }
   cookie_UnlockCookieList();
-  delete[] gone;
+  nsCRT::free(gone);
 
   /* step through all permissions and delete those that are in the sequence */
   gone = cookie_FindValueInArgs(results, "|goneP|");
@@ -2211,7 +2211,7 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
   }
   cookie_SavePermissions();
   cookie_UnlockPermissionListst();
-  delete[] gone;
+  nsCRT::free(gone);
 }
 
 #define BUFLEN2 5000
