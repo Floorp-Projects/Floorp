@@ -198,34 +198,6 @@ nsDocumentEncoder::~nsDocumentEncoder()
 {
 }
 
-static PRBool
-IsScriptEnabled(nsIDocument *aDoc)
-{
-  NS_ENSURE_TRUE(aDoc, PR_TRUE);
-
-  nsCOMPtr<nsIScriptSecurityManager> sm(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-  NS_ENSURE_TRUE(sm, PR_TRUE);
-
-  nsCOMPtr<nsIPrincipal> principal;
-  aDoc->GetPrincipal(getter_AddRefs(principal));
-  NS_ENSURE_TRUE(principal, PR_TRUE);
-
-  nsCOMPtr<nsIScriptGlobalObject> globalObject;
-  aDoc->GetScriptGlobalObject(getter_AddRefs(globalObject));
-  NS_ENSURE_TRUE(globalObject, PR_TRUE);
-
-  nsCOMPtr<nsIScriptContext> scriptContext;
-  globalObject->GetContext(getter_AddRefs(scriptContext));
-  NS_ENSURE_TRUE(scriptContext, PR_TRUE);
-
-  JSContext* cx = (JSContext *) scriptContext->GetNativeContext();
-  NS_ENSURE_TRUE(cx, PR_TRUE);
-
-  PRBool enabled = PR_TRUE;
-  sm->CanExecuteScripts(cx, principal, &enabled);
-  return enabled;
-}
-
 NS_IMETHODIMP
 nsDocumentEncoder::Init(nsIDocument* aDocument,
                         const nsAString& aMimeType,
@@ -1112,7 +1084,7 @@ nsHTMLCopyEncoder::Init(nsIDocument* aDocument,
   // (see related bugs #57296, #41924, #58646, #32768)
   mFlags = aFlags | OutputAbsoluteLinks;
 
-  if (!IsScriptEnabled(mDocument))
+  if (!mDocument->IsScriptEnabled())
     mFlags |= OutputNoScriptContent;
 
   return NS_OK;

@@ -501,6 +501,7 @@ public:
                                nsAString& aEncoding,
                                nsAString& Standalone);
   NS_IMETHOD_(PRBool) IsCaseSensitive();
+  NS_IMETHOD_(PRBool) IsScriptEnabled();
 
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName,

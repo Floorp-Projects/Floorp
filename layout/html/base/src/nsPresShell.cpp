@@ -1290,6 +1290,7 @@ protected:
   nsresult SetPrefColorRules(void);
   nsresult SetPrefLinkRules(void);
   nsresult SetPrefFocusRules(void);
+  nsresult SetPrefNoScriptRule();
 
   nsresult GetSelectionForCopy(nsISelection** outSelection);
 
@@ -2172,7 +2173,9 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
       if (NS_SUCCEEDED(result)) {
         result = SetPrefFocusRules();
       }
- 
+      if (NS_SUCCEEDED(result)) {
+        result = SetPrefNoScriptRule();
+      }
 
       // update the styleset now that we are done inserting our rules
       if (NS_SUCCEEDED(result)) {
@@ -2320,6 +2323,26 @@ nsresult PresShell::SetPrefColorRules(void)
   } else {
     return NS_ERROR_FAILURE;
   }
+}
+
+nsresult
+PresShell::SetPrefNoScriptRule()
+{
+  // If script is disabled, change noscript from display: none to display: block
+  if (!mDocument->IsScriptEnabled()) {
+    nsresult rv;
+    if (!mPrefStyleSheet) {
+      rv = CreatePreferenceStyleSheet();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    // get the DOM interface to the stylesheet
+    nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet,&rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRUint32 index = 0;
+    rv = sheet->InsertRule(NS_LITERAL_STRING("noscript{display:block}"), 0, &index);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
 }
 
 nsresult PresShell::SetPrefLinkRules(void)
