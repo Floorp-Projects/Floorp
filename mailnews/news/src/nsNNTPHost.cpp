@@ -87,7 +87,7 @@ public:
 #endif
                
 	virtual ~nsNNTPHost();
-//    static void operator delete(void *);
+
     NS_DECL_ISUPPORTS
     // nsINNTPHost
     
@@ -767,7 +767,7 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 		}
 	}
 	else {
-        PRUint32 depth;
+        PRInt32 depth;
         rv = m_hostinfo->GetDepth(&depth);
         
         if (NS_SUCCEEDED(rv))
