@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.12 $ $Date: 2001/12/14 17:32:19 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.13 $ $Date: 2001/12/14 20:50:58 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -387,11 +387,32 @@ get_nss3trust_from_cktrust(CK_TRUST t)
     return rt;
 }
 
+static CERTCertTrust *
+cert_trust_from_stan_trust(NSSTrust *t, PRArenaPool *arena)
+{
+    CERTCertTrust *rvTrust;
+    unsigned int client;
+    if (!t) {
+	return NULL;
+    }
+    rvTrust = PORT_ArenaAlloc(arena, sizeof(CERTCertTrust));
+    if (!rvTrust) return NULL;
+    rvTrust->sslFlags = get_nss3trust_from_cktrust(t->serverAuth);
+    client = get_nss3trust_from_cktrust(t->clientAuth);
+    if (client & (CERTDB_TRUSTED_CA|CERTDB_NS_TRUSTED_CA)) {
+	client &= ~(CERTDB_TRUSTED_CA|CERTDB_NS_TRUSTED_CA);
+	rvTrust->sslFlags |= CERTDB_TRUSTED_CLIENT_CA;
+    }
+    rvTrust->sslFlags |= client;
+    rvTrust->emailFlags = get_nss3trust_from_cktrust(t->emailProtection);
+    rvTrust->objectSigningFlags = get_nss3trust_from_cktrust(t->codeSigning);
+    return rvTrust;
+}
+
 static CERTCertTrust * 
 nssTrust_GetCERTCertTrustForCert(NSSCertificate *c, CERTCertificate *cc)
 {
-    CERTCertTrust *rvTrust = PORT_ArenaAlloc(cc->arena, sizeof(CERTCertTrust));
-    unsigned int client;
+    CERTCertTrust *rvTrust;
     NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
     NSSToken *tok;
     NSSTrust *tokenTrust;
@@ -404,7 +425,7 @@ nssTrust_GetCERTCertTrustForCert(NSSCertificate *c, CERTCertificate *cc)
          tok  = (NSSToken *)nssListIterator_Next(tokens))
     {
 	tokenTrust = nssToken_FindTrustForCert(tok, NULL, c, 
-	                                       nssTokenSearchType_AllObjects);
+	                                       nssTokenSearchType_TokenOnly);
 	if (tokenTrust) {
 	    if (t) {
 		if (t->serverAuth == CKT_NETSCAPE_TRUST_UNKNOWN) {
@@ -431,16 +452,9 @@ nssTrust_GetCERTCertTrustForCert(NSSCertificate *c, CERTCertificate *cc)
     if (!t) {
 	return NULL;
     }
-    rvTrust->sslFlags = get_nss3trust_from_cktrust(t->serverAuth);
-    client = get_nss3trust_from_cktrust(t->clientAuth);
-    if (client & (CERTDB_TRUSTED_CA|CERTDB_NS_TRUSTED_CA)) {
-	client &= ~(CERTDB_TRUSTED_CA|CERTDB_NS_TRUSTED_CA);
-	rvTrust->sslFlags |= CERTDB_TRUSTED_CLIENT_CA;
-    }
-    rvTrust->sslFlags |= client;
-    rvTrust->emailFlags = get_nss3trust_from_cktrust(t->emailProtection);
-    rvTrust->objectSigningFlags = get_nss3trust_from_cktrust(t->codeSigning);
-    if (PK11_IsUserCert(cc->slot, cc, cc->pkcs11ID)) {
+    rvTrust = cert_trust_from_stan_trust(t, cc->arena);
+    if (!rvTrust) return NULL;
+    if (cc->slot && PK11_IsUserCert(cc->slot, cc, cc->pkcs11ID)) {
 	rvTrust->sslFlags |= CERTDB_USER;
 	rvTrust->emailFlags |= CERTDB_USER;
 	rvTrust->objectSigningFlags |= CERTDB_USER;
@@ -461,6 +475,8 @@ get_cert_instance(NSSCertificate *c)
 static void
 fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc)
 {
+    NSSTrust *nssTrust;
+    NSSCryptoContext *context = c->object.cryptoContext;
     nssCryptokiInstance *instance = get_cert_instance(c);
     /* fill other fields needed by NSS3 functions using CERTCertificate */
     if (!cc->nickname && c->nickname) {
@@ -470,13 +486,22 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc)
 	memcpy(cc->nickname, c->nickname, len-1);
 	cc->nickname[len-1] = '\0';
     }
-    if (instance) {
+    if (context) {
+	/* trust */
+	nssTrust = nssCryptoContext_FindTrustForCertificate(context, c);
+	if (nssTrust) {
+	    cc->trust = cert_trust_from_stan_trust(nssTrust, cc->arena);
+	    nssPKIObject_Destroy(&nssTrust->object);
+	} else {
+	    cc->trust = nssTrust_GetCERTCertTrustForCert(c, cc);
+	}
+    } else if (instance) {
+	/* trust */
+	cc->trust = nssTrust_GetCERTCertTrustForCert(c, cc);
 	/* slot */
 	cc->slot = instance->token->pk11slot;
 	/* pkcs11ID */
 	cc->pkcs11ID = instance->handle;
-	/* trust */
-	cc->trust = nssTrust_GetCERTCertTrustForCert(c, cc);
     } 
     /* database handle is now the trust domain */
     cc->dbhandle = c->object.trustDomain;
@@ -763,7 +788,7 @@ nssTrustDomain_TraverseCertificates
     search.callback = callback;
     search.cbarg = arg;
     search.cached = certList;
-    search.searchType = nssTokenSearchType_AllObjects;
+    search.searchType = nssTokenSearchType_TokenOnly;
     for (token  = (NSSToken *)nssListIterator_Start(td->tokens);
          token != (NSSToken *)NULL;
          token  = (NSSToken *)nssListIterator_Next(td->tokens)) 

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.21 $ $Date: 2001/12/14 17:32:23 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.22 $ $Date: 2001/12/14 20:50:59 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -401,7 +401,7 @@ NSSTrustDomain_FindBestCertificateByNickname
     search.callback = nssBestCertificate_Callback;
     search.cbarg = &best;
     search.cached = nameList;
-    search.searchType = nssTokenSearchType_AllObjects; /* XXX */
+    search.searchType = nssTokenSearchType_TokenOnly;
     /* traverse the tokens */
     for (token  = (NSSToken *)nssListIterator_Start(td->tokens);
          token != (NSSToken *)NULL;
@@ -444,7 +444,7 @@ NSSTrustDomain_FindCertificatesByNickname
     search.callback = collect_certs;
     search.cbarg = &ca;
     search.cached = nameList;
-    search.searchType = nssTokenSearchType_AllObjects; /* XXX */
+    search.searchType = nssTokenSearchType_TokenOnly;
     /* traverse the tokens */
     for (token  = (NSSToken *)nssListIterator_Start(td->tokens);
          token != (NSSToken *)NULL;
@@ -496,7 +496,7 @@ NSSTrustDomain_FindCertificateByIssuerAndSerialNumber
 	                                                         NULL,
 	                                                         issuer,
 	                                                         serialNumber,
-	                                        nssTokenSearchType_AllObjects);
+	                                        nssTokenSearchType_TokenOnly);
 	if (rvCert) {
 	    /* cache it */
 	    nssTrustDomain_AddCertsToCache(td, &rvCert, 1);
@@ -531,7 +531,7 @@ NSSTrustDomain_FindBestCertificateBySubject
     search.callback = nssBestCertificate_Callback;
     search.cbarg = &best;
     search.cached = subjectList;
-    search.searchType = nssTokenSearchType_AllObjects; /* XXX */
+    search.searchType = nssTokenSearchType_TokenOnly;
     /* traverse the tokens */
     for (token  = (NSSToken *)nssListIterator_Start(td->tokens);
          token != (NSSToken *)NULL;
@@ -574,7 +574,7 @@ NSSTrustDomain_FindCertificatesBySubject
     search.callback = collect_certs;
     search.cbarg = &ca;
     search.cached = subjectList;
-    search.searchType = nssTokenSearchType_AllObjects; /* XXX */
+    search.searchType = nssTokenSearchType_TokenOnly;
     /* traverse the tokens */
     for (token  = (NSSToken *)nssListIterator_Start(td->tokens);
          token != (NSSToken *)NULL;
@@ -649,7 +649,7 @@ NSSTrustDomain_FindCertificateByEncodedCertificate
     {
 	rvCert = nssToken_FindCertificateByEncodedCertificate(tok, NULL,
 	                                        encodedCertificate,
-	                                        nssTokenSearchType_AllObjects);
+	                                        nssTokenSearchType_TokenOnly);
 	if (rvCert) {
 	    /* cache it */
 	    nssTrustDomain_AddCertsToCache(td, &rvCert, 1);
@@ -684,7 +684,7 @@ NSSTrustDomain_FindCertificateByEmail
     search.callback = nssBestCertificate_Callback;
     search.cbarg = &best;
     search.cached = emailList;
-    search.searchType = nssTokenSearchType_AllObjects; /* XXX */
+    search.searchType = nssTokenSearchType_TokenOnly;
     /* traverse the tokens */
     for (token  = (NSSToken *)nssListIterator_Start(td->tokens);
          token != (NSSToken *)NULL;
@@ -839,7 +839,7 @@ NSSTrustDomain_TraverseCertificates
     search.callback = callback;
     search.cbarg = arg;
     search.cached = certList;
-    search.searchType = nssTokenSearchType_AllObjects;
+    search.searchType = nssTokenSearchType_TokenOnly;
     /* traverse the tokens */
     for (token  = (NSSToken *)nssListIterator_Start(td->tokens);
          token != (NSSToken *)NULL;
