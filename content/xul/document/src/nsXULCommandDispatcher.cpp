@@ -145,8 +145,10 @@ NS_IMETHODIMP
 nsXULCommandDispatcher::SetFocusedElement(nsIDOMElement* aElement)
 {
   mCurrentElement = aElement;
-  if (mCurrentElement)
-    UpdateCommands(NS_ConvertASCIItoUCS2("focus"));
+  // Need to update focus commands when focus switches from
+  // an element to no element, so don't test mCurrentElement
+  // before updating.
+  UpdateCommands(NS_ConvertASCIItoUCS2("focus"));
   return NS_OK;
 }
 
@@ -260,6 +262,14 @@ nsXULCommandDispatcher::UpdateCommands(const nsString& aEventName)
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element's id");
         if (NS_FAILED(rv)) return rv;
     }
+
+#if 0
+  {
+    char*   actionString = aEventName.ToNewCString();
+    printf("Doing UpdateCommands(\"%s\")\n", actionString);
+    free(actionString);    
+  }
+#endif
   
     for (Updater* updater = mUpdaters; updater != nsnull; updater = updater->mNext) {
         // Skip any nodes that don't match our 'events' or 'targets'
@@ -296,7 +306,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsString& aEventName)
             nsCOMPtr<nsIPresShell> shell = dont_AddRef(document->GetShellAt(i));
             if (! shell)
                 continue;
-
+            
             // Retrieve the context in which our DOM event will fire.
             nsCOMPtr<nsIPresContext> context;
             rv = shell->GetPresContext(getter_AddRefs(context));
@@ -605,6 +615,12 @@ NS_IMETHODIMP
 nsXULCommandDispatcher::SetSuppressFocus(PRBool aSuppressFocus)
 {
   mSuppressFocus = aSuppressFocus;
+
+  // we are unsuppressing after activating, so update focus-related commands
+  // we need this to update commands in the case where an element is focussed.
+  if (!aSuppressFocus && mCurrentElement)
+    UpdateCommands(NS_ConvertASCIItoUCS2("focus"));
+  
   return NS_OK;
 }
 
