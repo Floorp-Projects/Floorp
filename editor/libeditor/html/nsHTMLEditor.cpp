@@ -351,7 +351,12 @@ NS_IMETHODIMP nsHTMLEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  
+  if (aIID.Equals(nsICSSLoaderObserver::GetIID())) {
+    *aInstancePtr = NS_STATIC_CAST(nsICSSLoaderObserver*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
   return nsEditor::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -3029,7 +3034,7 @@ nsHTMLEditor::ApplyDocumentOrOverrideStyleSheet(const nsString& aURL, PRBool aOv
           // We use null for the callback and data pointer because
           //  we MUST ONLY load synchronous local files (no @import)
           rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(cssStyleSheet), complete,
-                                         nsnull, nsnull);
+                                         nsnull);
 
           // Synchronous loads should ALWAYS return completed
           if (!complete || !cssStyleSheet)
@@ -3054,7 +3059,6 @@ nsHTMLEditor::ApplyDocumentOrOverrideStyleSheet(const nsString& aURL, PRBool aOv
         }
         else {
           rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(cssStyleSheet), complete,
-                                         ApplyStyleSheetToPresShellDocument,
                                          this);
 
           if (NS_SUCCEEDED(rv)) {
@@ -4093,6 +4097,12 @@ nsHTMLEditor::ReplaceStyleSheet(nsICSSStyleSheet *aNewSheet)
   return rv;
 }
 
+NS_IMETHODIMP 
+nsHTMLEditor::StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify)
+{
+  ApplyStyleSheetToPresShellDocument(aSheet, this);
+  return NS_OK;
+}
 
 /* static callback */
 void nsHTMLEditor::ApplyStyleSheetToPresShellDocument(nsICSSStyleSheet* aSheet, void *aData)

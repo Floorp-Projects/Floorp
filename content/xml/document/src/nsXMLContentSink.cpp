@@ -1271,8 +1271,8 @@ nsXMLContentSink::ProcessCSSStyleLink(nsIContent* aElement,
     PRBool doneLoading;
     result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, kNameSpaceID_Unknown,
                                        mStyleSheetCount++,
-                                      ((blockParser) ? mParser : nsnull),
-                                      doneLoading);
+                                       ((blockParser) ? mParser : nsnull),
+                                       doneLoading, nsnull);
     NS_RELEASE(url);
     if (NS_SUCCEEDED(result) && blockParser && (! doneLoading)) {
       result = NS_ERROR_HTMLPARSER_BLOCK;
@@ -1610,7 +1610,7 @@ nsXMLContentSink::StartLayout()
 NS_IMETHODIMP
 nsXMLContentSink::ResumeParsing()
 {
-  if (nsnull != mParser) {
+  if (mParser) {
     mParser->EnableParser(PR_TRUE);
   }
 

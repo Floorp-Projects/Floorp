@@ -1013,7 +1013,8 @@ nsChromeRegistry::ProcessStyleSheet(nsIURL* aURL, nsICSSLoader* aLoader, nsIDocu
 															kNameSpaceID_Unknown,
                               aDocument->GetNumberOfStyleSheets(),
                               nsnull,
-                              doneLoading); // Ignore doneLoading. Don't care.
+                              doneLoading,  // Ignore doneLoading. Don't care.
+                              nsnull);
 
   return rv;
 }

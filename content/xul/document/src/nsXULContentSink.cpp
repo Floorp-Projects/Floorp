@@ -895,7 +895,7 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
         rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, kNameSpaceID_Unknown,
                                        doc->GetNumberOfStyleSheets(),
                                        ((blockParser) ? mParser : nsnull),
-                                       doneLoading);
+                                       doneLoading, nsnull);
         if (NS_SUCCEEDED(rv) && blockParser && (! doneLoading)) {
             rv = NS_ERROR_HTMLPARSER_BLOCK;
         }
