@@ -47,7 +47,6 @@
 #include "MRJContext.h"
 #include "MRJConsole.h"
 #include "MRJMonitor.h"
-#include "MRJNetworking.h"
 
 #include <ControlDefinitions.h>
 #include <string.h>
@@ -309,11 +308,6 @@ OSStatus MRJSession::open()
 		
 			// create a monitor for the message queue to unblock Java threads.
 			mMessageMonitor = new MRJMonitor(this);
-
-#ifdef MRJPLUGIN_4X
-            // hook up MRJ networking layer, to permit SSL, etc.
-            ::OpenMRJNetworking(this);
-#endif
 		}
 	} else {
 		mStatus = kJMVersionError;
