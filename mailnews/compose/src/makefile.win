@@ -29,6 +29,7 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPPSRCS=    nsMsgCompFields.cpp \
             nsMsgCompose.cpp    \
             nsSmtpUrl.cpp		\
+			nsSmtpProtocol.cpp	\
             MsgCompGlue.cpp     \
             $(NULL)
 
@@ -36,6 +37,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj \
             .\$(OBJDIR)\nsMsgCompose.obj    \
             .\$(OBJDIR)\nsSmtpUrl.obj		\
             .\$(OBJDIR)\MsgCompGlue.obj     \
+			.\$(OBJDIR)\nsSmtpProtocol.obj	\
             $(NULL)
 
 
