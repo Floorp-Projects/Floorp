@@ -473,12 +473,21 @@ CocoaPromptService::CookieDialog(nsIDOMWindow *parent, nsICookie *cookie, const 
   PRUnichar* checkboxStr = [checkboxText createNewUnicodeBuffer];
   NSString* titleText = NSLocalizedString(@"CookieTitle", @"CookieTitle");
   PRUnichar* titleStr = [titleText createNewUnicodeBuffer];
+  NSString* allowText = NSLocalizedString(@"Allow", @"AllowCookie");
+  PRUnichar* allowStr = [allowText createNewUnicodeBuffer];
+  NSString* denyText = NSLocalizedString(@"Deny", @"AllowCookie");
+  PRUnichar* denyStr = [denyText createNewUnicodeBuffer];
 
-  ConfirmCheck(parent, titleStr, textStr, checkboxStr, rememberDecision, _retval);
+  long buttonFlags = (BUTTON_TITLE_IS_STRING << kButton0) | (BUTTON_TITLE_IS_STRING << kButton1);
+  PRInt32 buttonPressed = 0; 
+  ConfirmEx(parent, titleStr, textStr, buttonFlags, allowStr, denyStr, nil, checkboxStr, rememberDecision, &buttonPressed);
+  *_retval = (buttonPressed == 0);      // button 0 is allow, button 1 is deny, so return true if allow is clicked
 
   nsMemory::Free(textStr);
   nsMemory::Free(checkboxStr);
   nsMemory::Free(titleStr);
+  nsMemory::Free(allowStr);
+  nsMemory::Free(denyStr);
   return NS_OK;
 }
 
