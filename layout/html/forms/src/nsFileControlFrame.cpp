@@ -394,8 +394,8 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
       // messes up the button's rect
       if (txtRect.width + buttonRect.width != aDesiredSize.width ||
           txtRect.height != aDesiredSize.height) {
+        nsHTMLReflowMetrics txtKidSize(PR_TRUE);
         nsSize txtAvailSize(aReflowState.availableWidth, aDesiredSize.height);
-        nsHTMLReflowMetrics txtKidSize(&txtAvailSize);
         nsHTMLReflowState   txtKidReflowState(aPresContext, aReflowState, this, txtAvailSize,
                                               eReflowReason_Resize);
         txtKidReflowState.mComputedHeight = aDesiredSize.height;

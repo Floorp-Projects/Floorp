@@ -1939,14 +1939,14 @@ nsTextControlFrame::Reflow(nsIPresContext*   aPresContext,
 
   nsresult rv = nsStackFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   if (NS_SUCCEEDED(rv))
-  { // fix for bug 40596, width:auto means the control sets it's maxElementSize.width to it's default width
-    if (aDesiredSize.maxElementSize)
+  { // fix for bug 40596, width:auto means the control sets it's mMaxElementWidth to it's default width
+    if (aDesiredSize.mComputeMEW)
     {
       nsStylePosition *stylePosition;
       GetStyleData(eStyleStruct_Position,  (const nsStyleStruct *&)stylePosition);
       nsStyleUnit widthUnit = stylePosition->mWidth.GetUnit();
       if (eStyleUnit_Auto == widthUnit) {
-        aDesiredSize.maxElementSize->width = aDesiredSize.width;
+        aDesiredSize.mMaxElementWidth = aDesiredSize.width;
       }
     }
   }

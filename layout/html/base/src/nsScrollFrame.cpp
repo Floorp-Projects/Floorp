@@ -768,7 +768,7 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
   nsSize              kidReflowSize(scrollAreaSize.width, theHeight);
   nsHTMLReflowState   kidReflowState(aPresContext, aReflowState,
                                      kidFrame, kidReflowSize);
-  nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.maxElementSize);
+  nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.mComputeMEW);
 
   // Reset the computed width based on the scroll area size
   // XXX Eplain why we have to do this...
@@ -946,13 +946,9 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.height += sbHeight;
   }
 
-  if (nsnull != aDesiredSize.maxElementSize) {
-    nscoord maxWidth = aDesiredSize.maxElementSize->width;
-    maxWidth += border.left + border.right + sbWidth;
-    nscoord maxHeight = aDesiredSize.maxElementSize->height;
-    maxHeight += border.top + border.bottom;
-    aDesiredSize.maxElementSize->width = maxWidth;
-    aDesiredSize.maxElementSize->height = maxHeight;
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = kidDesiredSize.mMaxElementWidth +
+      border.left + border.right + sbWidth;
   }
 
   aDesiredSize.ascent =

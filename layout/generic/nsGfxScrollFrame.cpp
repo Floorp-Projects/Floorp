@@ -189,7 +189,7 @@ public:
   nsCOMPtr<nsIDocument> mDocument;
   nsGfxScrollFrame* mOuter;
   nsIScrollableView* mScrollableView;
-  nsSize mMaxElementSize;
+  nscoord mMaxElementWidth;
 
   PRPackedBool mNeverHasVerticalScrollbar;   
   PRPackedBool mNeverHasHorizontalScrollbar; 
@@ -837,29 +837,21 @@ nsGfxScrollFrame::Reflow(nsIPresContext*      aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   // if there is a max element request then set it to -1 so we can see if it gets set
-  if (aDesiredSize.maxElementSize)
+  if (aDesiredSize.mComputeMEW)
   {
-    aDesiredSize.maxElementSize->width = -1;
-    aDesiredSize.maxElementSize->height = -1;
+    aDesiredSize.mMaxElementWidth = -1;
   }
 
   nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   // if it was set then cache it. Otherwise set it.
-  if (aDesiredSize.maxElementSize)
+  if (aDesiredSize.mComputeMEW)
   {
-    nsSize* size = aDesiredSize.maxElementSize;
-
     // if not set then use the cached size. If set then set it.
-    if (size->width == -1)
-      size->width = mInner->mMaxElementSize.width;
+    if (aDesiredSize.mMaxElementWidth == -1)
+      aDesiredSize.mMaxElementWidth = mInner->mMaxElementWidth;
     else 
-      mInner->mMaxElementSize.width = size->width;
-  
-    if (size->height == -1)
-      size->height = mInner->mMaxElementSize.height;
-    else 
-      mInner->mMaxElementSize.height = size->height;
+      mInner->mMaxElementWidth = aDesiredSize.mMaxElementWidth;
   }
   
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
@@ -906,8 +898,7 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsGfxScrollFrame* aOuter):mHScrollb
                                                mHasHorizontalScrollbar(PR_FALSE)
 {
    mOuter = aOuter;
-   mMaxElementSize.width = 0;
-   mMaxElementSize.height = 0;
+   mMaxElementWidth = 0;
    mFirstPass = PR_FALSE;
    mNeverHasVerticalScrollbar   = PR_FALSE;     
    mNeverHasHorizontalScrollbar = PR_FALSE; 

@@ -64,12 +64,11 @@
 
 nsBlockReflowContext::nsBlockReflowContext(nsIPresContext* aPresContext,
                                            const nsHTMLReflowState& aParentRS,
-                                           PRBool aComputeMaxElementSize,
+                                           PRBool aComputeMaxElementWidth,
                                            PRBool aComputeMaximumWidth)
   : mPresContext(aPresContext),
     mOuterReflowState(aParentRS),
-    mMetrics(aComputeMaxElementSize ? &mMaxElementSize : nsnull),
-    mMaxElementSize(0, 0),
+    mMetrics(aComputeMaxElementWidth),
     mIsTable(PR_FALSE),
     mComputeMaximumWidth(aComputeMaximumWidth),
     mBlockShouldInvalidateItself(PR_FALSE)
@@ -501,9 +500,8 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   mMetrics.height = nscoord(0xdeadbeef);
   mMetrics.ascent = nscoord(0xdeadbeef);
   mMetrics.descent = nscoord(0xdeadbeef);
-  if (nsnull != mMetrics.maxElementSize) {
-    mMetrics.maxElementSize->width = nscoord(0xdeadbeef);
-    mMetrics.maxElementSize->height = nscoord(0xdeadbeef);
+  if (mMetrics.mComputeMEW) {
+    mMetrics.mMaxElementWidth = nscoord(0xdeadbeef);
   }
 #endif
 
@@ -555,28 +553,22 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
       nsFrame::ListTag(stdout, mFrame);
       printf(" metrics=%d,%d!\n", mMetrics.width, mMetrics.height);
     }
-    if ((nsnull != mMetrics.maxElementSize) &&
-        ((nscoord(0xdeadbeef) == mMetrics.maxElementSize->width) ||
-         (nscoord(0xdeadbeef) == mMetrics.maxElementSize->height))) {
+    if (mMetrics.mComputeMEW &&
+        (nscoord(0xdeadbeef) == mMetrics.mMaxElementWidth)) {
       printf("nsBlockReflowContext: ");
       nsFrame::ListTag(stdout, mFrame);
       printf(" didn't set max-element-size!\n");
-      mMetrics.maxElementSize->width = 0;
-      mMetrics.maxElementSize->height = 0;
     }
 #ifdef REALLY_NOISY_MAX_ELEMENT_SIZE
     // Note: there are common reflow situations where this *correctly*
     // occurs; so only enable this debug noise when you really need to
     // analyze in detail.
-    if ((nsnull != mMetrics.maxElementSize) &&
-        ((mMetrics.maxElementSize->width > mMetrics.width) ||
-         (mMetrics.maxElementSize->height > mMetrics.height))) {
+    if (mMetrics.mComputeMEW &&
+        (mMetrics.mMaxElementWidth > mMetrics.width)) {
       printf("nsBlockReflowContext: ");
       nsFrame::ListTag(stdout, mFrame);
-      printf(": WARNING: maxElementSize=%d,%d > metrics=%d,%d\n",
-             mMetrics.maxElementSize->width,
-             mMetrics.maxElementSize->height,
-             mMetrics.width, mMetrics.height);
+      printf(": WARNING: maxElementWidth=%d > metrics=%d\n",
+             mMetrics.mMaxElementWidth, mMetrics.width);
     }
 #endif
     if ((mMetrics.width == nscoord(0xdeadbeef)) ||
@@ -592,15 +584,14 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   }
 #endif
 #ifdef DEBUG
-  if (nsBlockFrame::gNoisyMaxElementSize) {
+  if (nsBlockFrame::gNoisyMaxElementWidth) {
     nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
     if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {
-      if (nsnull != mMetrics.maxElementSize) {
+      if (mMetrics.mComputeMEW) {
         printf("  ");
         nsFrame::ListTag(stdout, mFrame);
-        printf(": maxElementSize=%d,%d wh=%d,%d\n",
-               mMetrics.maxElementSize->width,
-               mMetrics.maxElementSize->height,
+        printf(": maxElementSize=%d wh=%d,%d\n",
+               mMetrics.mMaxElementWidth,
                mMetrics.width, mMetrics.height);
       }
     }
@@ -755,34 +746,26 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
       // Adjust the max-element-size in the metrics to take into
       // account the margins around the block element. Note that we
       // use the collapsed top and bottom margin values.
-      if (nsnull != mMetrics.maxElementSize) {
-        nsSize* m = mMetrics.maxElementSize;
+      if (mMetrics.mComputeMEW) {
         nsMargin maxElemMargin = mMargin;
 
         if (NS_SHRINKWRAPWIDTH == mComputedWidth) {
           nscoord dummyXOffset;
           // Base the margins on the max-element size
-          ComputeShrinkwrapMargins(mStyleMargin, m->width, maxElemMargin, dummyXOffset);
+          ComputeShrinkwrapMargins(mStyleMargin, mMetrics.mMaxElementWidth,
+                                   maxElemMargin, dummyXOffset);
         }
 
         // Do not allow auto margins to impact the max-element size
         // since they are springy and don't really count!
         if ((eStyleUnit_Auto != mStyleMargin->mMargin.GetLeftUnit()) && 
             (eStyleUnit_Null != mStyleMargin->mMargin.GetLeftUnit())) {
-          m->width += maxElemMargin.left;
+          mMetrics.mMaxElementWidth += maxElemMargin.left;
         }
         if ((eStyleUnit_Auto != mStyleMargin->mMargin.GetRightUnit()) &&
             (eStyleUnit_Null != mStyleMargin->mMargin.GetRightUnit())) {
-          m->width += maxElemMargin.right;
+          mMetrics.mMaxElementWidth += maxElemMargin.right;
         }
-
-#if 0 // XXX_fix_me
-        // Margin height should affect the max-element height (since
-        // auto top/bottom margins are always zero)
-
-        // XXXldb Should it?
-        m->height += mTopMargin.get() + mBottomMargin;
-#endif
       }
     }
     else {

@@ -292,8 +292,7 @@ nsComboboxControlFrame::nsComboboxControlFrame()
   mCacheSize.width             = kSizeNotSet;
   mCacheSize.height            = kSizeNotSet;
   mCachedAscent                = kSizeNotSet;
-  mCachedMaxElementSize.width  = kSizeNotSet;
-  mCachedMaxElementSize.height = kSizeNotSet;
+  mCachedMaxElementWidth       = kSizeNotSet;
   mCachedAvailableSize.width   = kSizeNotSet;
   mCachedAvailableSize.height  = kSizeNotSet;
   mCachedUncDropdownSize.width  = kSizeNotSet;
@@ -1042,8 +1041,8 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
   /////////////////////////////////////////////////////////
   // The DisplayFrame is a Block frame containing a TextFrame
   // and it is completely anonymous, so we must manually reflow it
+  nsHTMLReflowMetrics txtKidSize(PR_TRUE);
   nsSize txtAvailSize(dispWidth - aBtnWidth, dispHeight);
-  nsHTMLReflowMetrics txtKidSize(&txtAvailSize);
   nsHTMLReflowState   txtKidReflowState(aPresContext, aReflowState, aDisplayFrame, txtAvailSize, reason);
 
   aDisplayFrame->WillReflow(aPresContext);
@@ -1126,9 +1125,8 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
 
   REFLOW_NOISY_MSG3("**AdjustCombobox - Reflow: WW: %d  HH: %d\n", aDesiredSize.width, aDesiredSize.height);
 
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width  = aDesiredSize.width;
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
   }
 
   aDesiredSize.ascent =
@@ -1146,7 +1144,7 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
       mCachedAvailableSize.height = aDesiredSize.height - (aBorderPadding.top + aBorderPadding.bottom);
     }
     nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedAscent,
-                                         mCachedMaxElementSize, aDesiredSize);
+                                         mCachedMaxElementWidth, aDesiredSize);
   }
 
   ///////////////////////////////////////////////////////////////////
@@ -1248,7 +1246,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   // NOTE: this returns whether we are doing an Incremental reflow
   nsFormControlFrame::SkipResizeReflow(mCacheSize,
                                        mCachedAscent,
-                                       mCachedMaxElementSize, 
+                                       mCachedMaxElementWidth,
                                        mCachedAvailableSize, 
                                        aDesiredSize, aReflowState, 
                                        aStatus, 
@@ -1429,9 +1427,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
             aDesiredSize.ascent = mCachedAscent;
             aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
 
-            if (aDesiredSize.maxElementSize != nsnull) {
-              aDesiredSize.maxElementSize->width  = mCachedMaxElementSize.width;
-              aDesiredSize.maxElementSize->height = mCachedMaxElementSize.height;
+            if (aDesiredSize.mComputeMEW) {
+              aDesiredSize.mMaxElementWidth = mCachedMaxElementWidth;
             }
             NS_ASSERTION(aDesiredSize.width != kSizeNotSet,  "aDesiredSize.width != kSizeNotSet");
             NS_ASSERTION(aDesiredSize.height != kSizeNotSet, "aDesiredSize.height != kSizeNotSet");
@@ -1527,9 +1524,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
         aDesiredSize.ascent = mCachedAscent;
         aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
 
-        if (aDesiredSize.maxElementSize != nsnull) {
-          aDesiredSize.maxElementSize->width  = mCachedMaxElementSize.width;
-          aDesiredSize.maxElementSize->height = mCachedMaxElementSize.height;
+        if (aDesiredSize.mComputeMEW) {
+          aDesiredSize.mMaxElementWidth = mCachedMaxElementWidth;
         }
         UNCONSTRAINED_CHECK();
         REFLOW_DEBUG_MSG3("#** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
@@ -1696,9 +1692,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
 #endif // DO_NEW_REFLOW
 
   // Set the max element size to be the same as the desired element size.
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width  = aDesiredSize.width;
-	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
   }
 
 #if 0
@@ -1719,7 +1714,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
        aReflowState.mComputedBorderPadding.bottom);
   }
 
-  nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedAscent, mCachedMaxElementSize, aDesiredSize);
+  nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedAscent, mCachedMaxElementWidth, aDesiredSize);
 
   REFLOW_DEBUG_MSG3("** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
   REFLOW_COUNTER();

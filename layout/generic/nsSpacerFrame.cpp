@@ -160,9 +160,8 @@ SpacerFrame::Reflow(nsIPresContext*          aPresContext,
     if (!aMetrics.height) aMetrics.height = 1;
   }
 
-  if (nsnull != aMetrics.maxElementSize) {
-    aMetrics.maxElementSize->width = aMetrics.width;
-    aMetrics.maxElementSize->height = aMetrics.height;
+  if (aMetrics.mComputeMEW) {
+    aMetrics.mMaxElementWidth = aMetrics.width;
   }
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);

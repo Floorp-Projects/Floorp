@@ -100,7 +100,7 @@ private:
                                PRBool& aRedrawAfterReflow,
                                PRBool& aMoveFrame);
 
-  PRBool CanSetMaxElementSize(nsBoxLayoutState& aState, nsReflowReason& aReason, nsReflowPath **aReflowPath);
+  PRBool CanSetMaxElementWidth(nsBoxLayoutState& aState, nsReflowReason& aReason, nsReflowPath **aReflowPath);
 
   NS_IMETHODIMP RefreshSizeCache(nsBoxLayoutState& aState);
 
@@ -115,7 +115,6 @@ private:
 
   nscoord mFlex;
   nscoord mAscent;
-  nscoord mCachedMaxElementHeight;
 
   nsSize mLastSize;
   nsSize mOverflow;

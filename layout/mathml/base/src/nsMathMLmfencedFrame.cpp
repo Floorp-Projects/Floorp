@@ -299,7 +299,7 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
   PRInt32 count = 0;
   nsReflowStatus childStatus;
   nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
-  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.maxElementSize, 
+  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.mComputeMEW, 
                       aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
   nsIFrame* firstChild;
   aForFrame->FirstChild(aPresContext, nsnull, &firstChild);
@@ -382,6 +382,9 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
                                          STRETCH_CONSIDER_EMBELLISHMENTS,
                                          stretchDir, containerSize);
   }
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = childDesiredSize.mMaxElementWidth;
+  }
 
   //////////////////////////////////////////
   // Prepare the opening fence, separators, and closing fence, and
@@ -462,9 +465,8 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
   aDesiredSize.width = aDesiredSize.mBoundingMetrics.width;
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
 
-  if (aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
   }
 
   mathMLFrame->SetBoundingMetrics(aDesiredSize.mBoundingMetrics);

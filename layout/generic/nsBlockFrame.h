@@ -367,11 +367,11 @@ protected:
   // XXX blech
   void PostPlaceLine(nsBlockReflowState& aState,
                      nsLineBox* aLine,
-                     const nsSize& aMaxElementSize);
+                     nscoord aMaxElementWidth);
 
-  void ComputeLineMaxElementSize(nsBlockReflowState& aState,
-                                 nsLineBox* aLine,
-                                 nsSize* aMaxElementSize);
+  void ComputeLineMaxElementWidth(nsBlockReflowState& aState,
+                                  nsLineBox* aLine,
+                                  nscoord* aMaxElementWidth);
 
   // XXX where to go
   PRBool ShouldJustifyLine(nsBlockReflowState& aState,
@@ -554,7 +554,7 @@ public:
   static PRBool gLameReflowMetrics;
   static PRBool gNoisy;
   static PRBool gNoisyDamageRepair;
-  static PRBool gNoisyMaxElementSize;
+  static PRBool gNoisyMaxElementWidth;
   static PRBool gNoisyReflow;
   static PRBool gReallyNoisyReflow;
   static PRBool gNoisySpaceManager;

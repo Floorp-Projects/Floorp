@@ -590,8 +590,7 @@ nsImageBoxFrame::DidSetStyleContext( nsIPresContext* aPresContext )
 void
 nsImageBoxFrame::GetImageSize(nsIPresContext* aPresContext)
 {
-  nsSize s(0,0);
-  nsHTMLReflowMetrics desiredSize(&s);
+  nsHTMLReflowMetrics desiredSize(PR_TRUE);
   const PRInt32 kDefaultSize = 0;
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);

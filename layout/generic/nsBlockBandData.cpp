@@ -354,19 +354,19 @@ nsBlockBandData::ClearFloaters(nscoord aY, PRUint8 aBreakType)
 //----------------------------------------------------------------------
 
 static void
-MaxElementSizePropertyDtor(nsIPresContext* aPresContext,
-                           nsIFrame*       aFrame,
-                           nsIAtom*        aPropertyName,
-                           void*           aPropertyValue)
+MaxElementWidthPropertyDtor(nsIPresContext* aPresContext,
+                            nsIFrame*       aFrame,
+                            nsIAtom*        aPropertyName,
+                            void*           aPropertyValue)
 {
-  nsSize* size = (nsSize*) aPropertyValue;
+  nscoord* size = (nscoord*) aPropertyValue;
   delete size;
 }
 
 void
-nsBlockBandData::StoreMaxElementSize(nsIPresContext* aPresContext,
-                                     nsIFrame* aFrame,
-                                     const nsSize& aMaxElementSize)
+nsBlockBandData::StoreMaxElementWidth(nsIPresContext* aPresContext,
+                                      nsIFrame* aFrame,
+                                      nscoord aMaxElementWidth)
 {
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
@@ -374,34 +374,34 @@ nsBlockBandData::StoreMaxElementSize(nsIPresContext* aPresContext,
     nsCOMPtr<nsIFrameManager> mgr;
     shell->GetFrameManager(getter_AddRefs(mgr));
     if (mgr) {
-      nsSize* size = new nsSize(aMaxElementSize);
+      nscoord* size = new nscoord(aMaxElementWidth);
       if (size) {
-        mgr->SetFrameProperty(aFrame, nsLayoutAtoms::maxElementSizeProperty,
-                              size, MaxElementSizePropertyDtor);
+        mgr->SetFrameProperty(aFrame, nsLayoutAtoms::maxElementWidthProperty,
+                              size, MaxElementWidthPropertyDtor);
       }
     }
   }
 }
 
 void
-nsBlockBandData::RecoverMaxElementSize(nsIPresContext* aPresContext,
-                                       nsIFrame* aFrame,
-                                       nsSize* aResult)
+nsBlockBandData::RecoverMaxElementWidth(nsIPresContext* aPresContext,
+                                        nsIFrame* aFrame,
+                                        nscoord* aResult)
 {
   if (!aResult) return;
 
-  nsSize answer(0, 0);
+  nscoord answer = 0;
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
   if (shell) {
     nsCOMPtr<nsIFrameManager> mgr;
     shell->GetFrameManager(getter_AddRefs(mgr));
     if (mgr) {
-      nsSize* size = nsnull;
-      mgr->GetFrameProperty(aFrame, nsLayoutAtoms::maxElementSizeProperty,
-                            0, (void**) &size);
-      if (size) {
-        answer = *size;
+      nscoord* width = nsnull;
+      mgr->GetFrameProperty(aFrame, nsLayoutAtoms::maxElementWidthProperty,
+                            0, (void**) &width);
+      if (width) {
+        answer = *width;
       }
     }
   }
@@ -410,9 +410,8 @@ nsBlockBandData::RecoverMaxElementSize(nsIPresContext* aPresContext,
 }
 
 void
-nsBlockBandData::GetMaxElementSize(nsIPresContext* aPresContext,
-                                   nscoord* aWidthResult,
-                                   nscoord* aHeightResult) const
+nsBlockBandData::GetMaxElementWidth(nsIPresContext* aPresContext,
+                                    nscoord* aResult) const
 {
   nsCOMPtr<nsIFrameManager> mgr;
   nsCOMPtr<nsIPresShell> shell;
@@ -423,7 +422,6 @@ nsBlockBandData::GetMaxElementSize(nsIPresContext* aPresContext,
 
   nsRect r;
   nscoord maxWidth = 0;
-  nscoord maxHeight = 0;
   for (PRInt32 i = 0; i < mCount; i++) {
     const nsBandTrapezoid* trap = &mTrapezoids[i];
     if (trap->mState != nsBandTrapezoid::Available) {
@@ -440,23 +438,18 @@ nsBlockBandData::GetMaxElementSize(nsIPresContext* aPresContext,
 
           nsIFrame* f = (nsIFrame*) trap->mFrames->ElementAt(j);
           if (mgr) {
-            nsSize* maxElementSize = nsnull;
-            mgr->GetFrameProperty(f, nsLayoutAtoms::maxElementSizeProperty,
-                                  0, (void**) &maxElementSize);
-            if (maxElementSize) {
+            nscoord* maxElementWidth = nsnull;
+            mgr->GetFrameProperty(f, nsLayoutAtoms::maxElementWidthProperty,
+                                  0, (void**) &maxElementWidth);
+            if (maxElementWidth) {
               useBackupValue = PR_FALSE;
-              if (maxElementSize->width > maxWidth) {
-                maxWidth = maxElementSize->width;
-              }
-              if (maxElementSize->height > maxHeight) {
-                maxHeight = maxElementSize->height;
+              if (*maxElementWidth > maxWidth) {
+                maxWidth = *maxElementWidth;
               }
             }
           }
           if (useBackupValue) {
             usedBackupValue = PR_TRUE;
-            f->GetRect(r);
-            if (r.height > maxHeight) maxHeight = r.height;
           }
         }
 
@@ -468,31 +461,25 @@ nsBlockBandData::GetMaxElementSize(nsIPresContext* aPresContext,
       } else {
         PRBool useBackupValue = PR_TRUE;
         if (mgr) {
-          nsSize* maxElementSize = nsnull;
+          nscoord* maxElementWidth = nsnull;
           mgr->GetFrameProperty(trap->mFrame,
-                                nsLayoutAtoms::maxElementSizeProperty,
-                                0, (void**) &maxElementSize);
-          if (maxElementSize) {
+                                nsLayoutAtoms::maxElementWidthProperty,
+                                0, (void**) &maxElementWidth);
+          if (maxElementWidth) {
             useBackupValue = PR_FALSE;
-            if (maxElementSize->width > maxWidth) {
-              maxWidth = maxElementSize->width;
-            }
-            if (maxElementSize->height > maxHeight) {
-              maxHeight = maxElementSize->height;
+            if (*maxElementWidth > maxWidth) {
+              maxWidth = *maxElementWidth;
             }
           }
         }
         if (useBackupValue) {
           trap->GetRect(r);
           if (r.width > maxWidth) maxWidth = r.width;
-          trap->mFrame->GetRect(r);
-          if (r.height > maxHeight) maxHeight = r.height;
         }
       }
     }
   }
-  *aWidthResult = maxWidth;
-  *aHeightResult = maxHeight;
+  *aResult = maxWidth;
 }
 
 #ifdef DEBUG

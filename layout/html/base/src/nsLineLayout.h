@@ -48,7 +48,7 @@ public:
   nsLineLayout(nsIPresContext* aPresContext,
                nsSpaceManager* aSpaceManager,
                const nsHTMLReflowState* aOuterReflowState,
-               PRBool aComputeMaxElementSize);
+               PRBool aComputeMaxElementWidth);
   ~nsLineLayout();
 
   void Init(nsBlockReflowState* aState, nscoord aMinLineHeight,
@@ -87,7 +87,7 @@ public:
                      nscoord aRightEdge);
 
   void EndSpan(nsIFrame* aFrame, nsSize& aSizeResult,
-               nsSize* aMaxElementSize);
+               nscoord* aMaxElementWidth);
 
   PRInt32 GetCurrentSpanCount() const;
 
@@ -110,7 +110,7 @@ public:
   }
 
   void VerticalAlignLine(nsLineBox* aLineBox,
-                         nsSize& aMaxElementSizeResult);
+                         nscoord* aMaxElementWidthResult);
 
   PRBool TrimTrailingWhiteSpace();
 
@@ -278,7 +278,7 @@ protected:
   nsBlockReflowState* mBlockRS;/* XXX hack! */
   nsCompatibility mCompatMode;
   nscoord mMinLineHeight;
-  PRPackedBool mComputeMaxElementSize;
+  PRPackedBool mComputeMaxElementWidth;
   PRUint8 mTextAlign;
 
   PRUint8 mPlacedFloaters;
@@ -333,7 +333,7 @@ protected:
     // From metrics
     nscoord mAscent, mDescent;
     nsRect mBounds;
-    nsSize mMaxElementSize;
+    nscoord mMaxElementWidth;
     nsRect mCombinedArea;
 
     // From reflow-state

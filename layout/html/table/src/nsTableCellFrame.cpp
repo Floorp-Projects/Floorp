@@ -754,8 +754,8 @@ void DebugCheckChildSize(nsIFrame*            aChild,
       printf("WARNING: cell content %p has large width %d \n", aChild, aMet.width);
     }
   }
-  if (aMet.maxElementSize) {
-    nscoord tmp = aMet.maxElementSize->width;
+  if (aMet.mComputeMEW) {
+    nscoord tmp = aMet.mMaxElementWidth;
     if ((tmp < 0) || (tmp > PROBABLY_TOO_LARGE)) {
       printf("WARNING: cell content %p has large max element width %d \n", aChild, tmp);
     }
@@ -826,17 +826,12 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   aPresContext->GetCompatibilityMode(&compatMode);
 
   // Initialize out parameter
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = 0;
-    aDesiredSize.maxElementSize->height = 0;
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = 0;
   }
 
   aStatus = NS_FRAME_COMPLETE;
   nsSize availSize(aReflowState.availableWidth, availHeight);
-  nsSize maxElementSize;
-  nsSize* pMaxElementSize = aDesiredSize.maxElementSize;
-  if (NS_UNCONSTRAINEDSIZE==aReflowState.availableWidth)
-    pMaxElementSize = &maxElementSize;
 
   PRBool contentEmptyBeforeReflow = GetContentEmpty();
   /* XXX: remove tableFrame when border-collapse inherits */
@@ -884,7 +879,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   if (availSize.height < 0)
     availSize.height = 1;
 
-  nsHTMLReflowMetrics kidSize(pMaxElementSize, aDesiredSize.mFlags);
+  nsHTMLReflowMetrics kidSize(NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth ||
+                              aDesiredSize.mComputeMEW,
+                              aDesiredSize.mFlags);
   kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
   SetPriorAvailWidth(aReflowState.availableWidth);
   nsIFrame* firstKid = mFrames.FirstChild();
@@ -1021,8 +1018,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
         (pos->mHeight.GetUnit() != eStyleUnit_Percent)) {
       PRInt32 pixHeight = (eCompatibility_NavQuirks == compatMode) ? 1 : 0;
       kidSize.height = NSIntPixelsToTwips(pixHeight, p2t);
-      if ((nsnull != aDesiredSize.maxElementSize) && (0 == pMaxElementSize->height))
-        pMaxElementSize->height = kidSize.height;
     }
   }
   // end 0 dimensioned cells
@@ -1067,16 +1062,12 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.ascent  += kidSize.ascent;
   aDesiredSize.descent += kidSize.descent;
 
-  if (aDesiredSize.maxElementSize) {
-    *aDesiredSize.maxElementSize = *pMaxElementSize;
-    if ((0 != pMaxElementSize->height) && (NS_UNCONSTRAINEDSIZE != pMaxElementSize->height)) {
-      aDesiredSize.maxElementSize->height += topInset + bottomInset;
-      aDesiredSize.maxElementSize->height = nsTableFrame::RoundToPixel(aDesiredSize.maxElementSize->height, p2t);
-    }
-    aDesiredSize.maxElementSize->width = PR_MAX(smallestMinWidth, aDesiredSize.maxElementSize->width); 
-    if (NS_UNCONSTRAINEDSIZE != aDesiredSize.maxElementSize->width) {
-      aDesiredSize.maxElementSize->width += leftInset + rightInset;
-      aDesiredSize.maxElementSize->width = nsTableFrame::RoundToPixel(aDesiredSize.maxElementSize->width, p2t);
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth =
+      PR_MAX(smallestMinWidth, kidSize.mMaxElementWidth);
+    if (NS_UNCONSTRAINEDSIZE != aDesiredSize.mMaxElementWidth) {
+      aDesiredSize.mMaxElementWidth = nsTableFrame::RoundToPixel(
+                  aDesiredSize.mMaxElementWidth + leftInset + rightInset, p2t);
     }
   }
   if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
@@ -1086,8 +1077,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
       aDesiredSize.mMaximumWidth = nsTableFrame::RoundToPixel(aDesiredSize.mMaximumWidth, p2t);
     }
     // make sure the preferred width is at least as big as the max element width
-    if (aDesiredSize.maxElementSize) {
-      aDesiredSize.mMaximumWidth = PR_MAX(aDesiredSize.mMaximumWidth, aDesiredSize.maxElementSize->width);
+    if (aDesiredSize.mComputeMEW) {
+      aDesiredSize.mMaximumWidth = PR_MAX(aDesiredSize.mMaximumWidth, aDesiredSize.mMaxElementWidth);
     }
   }
 

@@ -286,9 +286,8 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
     childFrame->GetNextSibling(&childFrame);
   }
 
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
   }
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
   aStatus = NS_FRAME_COMPLETE;

@@ -56,7 +56,7 @@ class nsBlockReflowContext {
 public:
   nsBlockReflowContext(nsIPresContext* aPresContext,
                        const nsHTMLReflowState& aParentRS,
-                       PRBool aComputeMaxElementSize,
+                       PRBool aComputeMaxElementWidth,
                        PRBool aComputeMaximumWidth);
   ~nsBlockReflowContext() { }
 
@@ -93,8 +93,8 @@ public:
     return mMetrics;
   }
 
-  const nsSize& GetMaxElementSize() const {
-    return mMaxElementSize;
+  nscoord GetMaxElementWidth() const {
+    return mMetrics.mMaxElementWidth;
   }
   
   nscoord GetMaximumWidth() const {
@@ -129,7 +129,6 @@ protected:
   nscoord mX, mY;
   nsHTMLReflowMetrics mMetrics;
   nsCollapsingMargin mTopMargin;
-  nsSize mMaxElementSize;
   PRPackedBool mIsTable;
   PRPackedBool mComputeMaximumWidth;
   PRPackedBool mBlockShouldInvalidateItself;

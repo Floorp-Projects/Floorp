@@ -1656,9 +1656,8 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
   aMetrics.ascent += borderPadding.top;
   aMetrics.descent += borderPadding.bottom;
 
-  if (nsnull != aMetrics.maxElementSize) {
-    aMetrics.maxElementSize->width = aMetrics.width;
-    aMetrics.maxElementSize->height = aMetrics.height;
+  if (aMetrics.mComputeMEW) {
+    aMetrics.mMaxElementWidth = aMetrics.width;
   }
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);

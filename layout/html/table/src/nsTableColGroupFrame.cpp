@@ -473,10 +473,9 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.height=0;
   aDesiredSize.ascent=aDesiredSize.height;
   aDesiredSize.descent=0;
-  if (nsnull!=aDesiredSize.maxElementSize)
+  if (aDesiredSize.mComputeMEW)
   {
-    aDesiredSize.maxElementSize->width=0;
-    aDesiredSize.maxElementSize->height=0;
+    aDesiredSize.mMaxElementWidth=0;
   }
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);

@@ -961,9 +961,8 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   // accent
   aMetrics.ascent = aMetrics.height;
 
-  if (nsnull != aMetrics.maxElementSize) {
-    aMetrics.maxElementSize->width = aMetrics.width;
-    aMetrics.maxElementSize->height = aMetrics.height;
+  if (aMetrics.mComputeMEW) {
+    aMetrics.mMaxElementWidth = aMetrics.width;
   }
 }
 
@@ -1252,11 +1251,8 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
   // we need to recalculate this now that we have access to the nsPluginInstanceOwner
   // and its size info (as set in the tag)
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
-  if (nsnull != aMetrics.maxElementSize) 
-  {
-    //XXX              AddBorderPaddingToMaxElementSize(borderPadding);
-    aMetrics.maxElementSize->width = aMetrics.width;
-    aMetrics.maxElementSize->height = aMetrics.height;
+  if (aMetrics.mComputeMEW) {
+    aMetrics.mMaxElementWidth = aMetrics.width;
   }
 
   mInstanceOwner->GetWindow(window);
@@ -1332,11 +1328,8 @@ nsObjectFrame::ReinstantiatePlugin(nsIPresContext* aPresContext, nsHTMLReflowMet
   // we need to recalculate this now that we have access to the nsPluginInstanceOwner
   // and its size info (as set in the tag)
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
-  if (nsnull != aMetrics.maxElementSize) 
-  {
-    //XXX              AddBorderPaddingToMaxElementSize(borderPadding);
-    aMetrics.maxElementSize->width = aMetrics.width;
-    aMetrics.maxElementSize->height = aMetrics.height;
+  if (aMetrics.mComputeMEW) {
+    aMetrics.mMaxElementWidth = aMetrics.width;
   }
 
   mInstanceOwner->GetWindow(window);

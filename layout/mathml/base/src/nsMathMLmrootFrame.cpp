@@ -168,7 +168,7 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
 {
   nsresult rv = NS_OK;
   // ask our children to compute their bounding metrics 
-  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.maxElementSize,
+  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.mComputeMEW,
                       aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
   nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
   nsReflowStatus childStatus;
@@ -209,6 +209,9 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
     }
     count++;
     childFrame->GetNextSibling(&childFrame);
+  }
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = childDesiredSize.mMaxElementWidth;
   }
   if (2 != count) {
     // report an error, encourage people to get their markups in order
@@ -364,9 +367,8 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
   }
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);

@@ -2126,7 +2126,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
 
   // See if we need to calc max elem and/or preferred widths. This isn't done on 
   // continuations or if we have balanced (since it was done then) 
-  if ((aDesiredSize.maxElementSize || (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH)) &&
+  if ((aDesiredSize.mComputeMEW || (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH)) &&
       !mPrevInFlow && !balanced) {
     // Since the calculation has some cost, avoid doing it for an unconstrained initial 
     // reflow (it was done when the strategy was initialized in pass 1 above) and most
@@ -2144,9 +2144,8 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
   // See if we need to return our max element size
-  if (aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width  = GetMinWidth();
-    aDesiredSize.maxElementSize->height = 0;
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth  = GetMinWidth();
   }
   // See if we need to return our maximum width
   if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
@@ -7237,8 +7236,8 @@ void nsTableFrame::DebugReflow(nsIFrame*            aFrame,
       timer->Stop();
       timer->mDesiredWidth  = aMetrics->width;
       timer->mDesiredHeight = aMetrics->height;
-      timer->mMaxElementWidth = (aMetrics->maxElementSize) 
-        ? aMetrics->maxElementSize->width : -1;
+      timer->mMaxElementWidth = (aMetrics->mComputeMEW) 
+        ? aMetrics->mMaxElementWidth : -1;
       timer->mMaxWidth = (aMetrics->mFlags & NS_REFLOW_CALC_MAX_WIDTH) 
         ? aMetrics->mMaximumWidth : -1;
       timer->mStatus = aStatus;

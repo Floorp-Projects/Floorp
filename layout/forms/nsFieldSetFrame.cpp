@@ -307,9 +307,8 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
   // Initialize OUT parameter
    aStatus = NS_FRAME_COMPLETE;
 
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = 0;
-    aDesiredSize.maxElementSize->height = 0;
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = 0;
   }
   
    //------------ Handle Incremental Reflow -----------------
@@ -412,9 +411,9 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
                       0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
 #ifdef NOISY_REFLOW
           printf("  returned (%d, %d)\n", legendDesiredSize.width, legendDesiredSize.height);
-          if (legendDesiredSize.maxElementSize)
-            printf("  and maxES (%d, %d)\n", 
-                   legendDesiredSize.maxElementSize->width, legendDesiredSize.maxElementSize->height);
+          if (legendDesiredSize.mComputeMEW)
+            printf("  and maxEW %d\n", 
+                   legendDesiredSize.mMaxElementWidth);
 #endif
           // figure out the legend's rectangle
           mLegendRect.width  = legendDesiredSize.width + legendMargin.left + legendMargin.right;
@@ -475,7 +474,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
             nsHTMLReflowState kidReflowState(aPresContext, aReflowState, mContentFrame,
                                              availSize, reason);
 
-            nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.maxElementSize, aDesiredSize.mFlags);
+            nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.mComputeMEW, aDesiredSize.mFlags);
             // Reflow the frame
             ReflowChild(mContentFrame, aPresContext, kidDesiredSize, kidReflowState,
                         borderPadding.left + kidReflowState.mComputedMargin.left,
@@ -483,9 +482,9 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
                         0, aStatus);
 #ifdef NOISY_REFLOW
             printf("  returned (%d, %d)\n", kidDesiredSize.width, kidDesiredSize.height);
-            if (kidDesiredSize.maxElementSize)
-              printf("  and maxES (%d, %d)\n", 
-                     kidDesiredSize.maxElementSize->width, kidDesiredSize.maxElementSize->height);
+            if (kidDesiredSize.mComputeMEW)
+              printf("  and maxES %d\n", 
+                     kidDesiredSize.mMaxElementWidth);
 #endif
 
             /*
@@ -508,6 +507,9 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
 
             FinishReflowChild(mContentFrame, aPresContext, &kidReflowState, 
                               kidDesiredSize, contentRect.x, contentRect.y, 0);
+            if (aDesiredSize.mComputeMEW) {
+              aDesiredSize.mMaxElementWidth = kidDesiredSize.mMaxElementWidth;
+            }
 
             nsFrameState  kidState;
             mContentFrame->GetFrameState(&kidState);
@@ -596,21 +598,18 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.ascent  = aDesiredSize.height;
     aDesiredSize.descent = 0;
     aDesiredSize.mMaximumWidth = aDesiredSize.width;
-    if (nsnull != aDesiredSize.maxElementSize) {
+    if (aDesiredSize.mComputeMEW) {
         // if the legend is wider use it
-        if (aDesiredSize.maxElementSize->width < mLegendRect.width)
-            aDesiredSize.maxElementSize->width = mLegendRect.width;
+        if (aDesiredSize.mMaxElementWidth < mLegendRect.width)
+            aDesiredSize.mMaxElementWidth = mLegendRect.width;
 
         // add in padding.
-        aDesiredSize.maxElementSize->width += borderPadding.left + borderPadding.right;
-
-        // height is border + legend
-        aDesiredSize.maxElementSize->height += borderPadding.top + borderPadding.bottom + mLegendRect.height;
+        aDesiredSize.mMaxElementWidth += borderPadding.left + borderPadding.right;
     }
 #ifdef NOISY_REFLOW
-    printf("FIELDSET:  w=%d, maxWidth=%d, MES=%d\n",
+    printf("FIELDSET:  w=%d, maxWidth=%d, MEW=%d\n",
            aDesiredSize.width, aDesiredSize.mMaximumWidth, 
-           aDesiredSize.maxElementSize ? aDesiredSize.maxElementSize->width : -1);
+           aDesiredSize.mComputeMEW ? aDesiredSize.mMaxElementWidth : -1);
     if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH)
       printf("  and preferred size = %d\n", aDesiredSize.mMaximumWidth);
 

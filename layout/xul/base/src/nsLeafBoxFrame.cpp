@@ -345,41 +345,30 @@ nsLeafBoxFrame::Reflow(nsIPresContext*   aPresContext,
 
   // max sure the max element size reflects
   // our min width
-  nsSize* maxElementSize = nsnull;
-  state.GetMaxElementSize(&maxElementSize);
-  if (maxElementSize)
+  nscoord* maxElementWidth = state.GetMaxElementWidth();
+  if (maxElementWidth)
   {
      nsSize minSize(0,0);
      GetMinSize(state,  minSize);
 
      if (mRect.width > minSize.width) {
        if (aReflowState.mComputedWidth == NS_INTRINSICSIZE) {
-         maxElementSize->width = minSize.width;
+         *maxElementWidth = minSize.width;
        } else {
-         maxElementSize->width = mRect.width;
+         *maxElementWidth = mRect.width;
        }
      } else {
-        maxElementSize->width = mRect.width;
-     }
-
-     if (mRect.height > minSize.height) {
-       if (aReflowState.mComputedHeight == NS_INTRINSICSIZE) {
-         maxElementSize->height = minSize.height;
-       } else {
-         maxElementSize->height = mRect.height;
-       }
-     } else {
-        maxElementSize->height = mRect.height;
+        *maxElementWidth = mRect.width;
      }
   }
 #ifdef DO_NOISY_REFLOW
   {
     printf("%p ** nsLBF(done) W:%d H:%d  ", this, aDesiredSize.width, aDesiredSize.height);
 
-    if (maxElementSize) {
-      printf("MW:%d MH:%d\n", maxElementSize->width, maxElementSize->height); 
+    if (maxElementWidth) {
+      printf("MW:%d\n", *maxElementWidth); 
     } else {
-      printf("MW:? MH:?\n"); 
+      printf("MW:?\n"); 
     }
 
   }

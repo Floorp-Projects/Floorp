@@ -105,8 +105,7 @@ nsHTMLButtonControlFrame::nsHTMLButtonControlFrame()
 
   mCacheSize.width             = -1;
   mCacheSize.height            = -1;
-  mCachedMaxElementSize.width  = -1;
-  mCachedMaxElementSize.height = -1;
+  mCachedMaxElementWidth       = -1;
 }
 
 nsHTMLButtonControlFrame::~nsHTMLButtonControlFrame()
@@ -430,7 +429,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
   }
 
 #if 0
-  nsresult skiprv = nsFormControlFrame::SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
+  nsresult skiprv = nsFormControlFrame::SkipResizeReflow(mCacheSize, mCachedMaxElementWidth, aPresContext, 
                                                          aDesiredSize, aReflowState, aStatus);
   if (NS_SUCCEEDED(skiprv)) {
     return skiprv;
@@ -583,16 +582,8 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
   //aDesiredSize.width  += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
   //aDesiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
-#if 0
-  //adjust our max element size, if necessary
-  if (aDesiredSize.maxElementSize) {
-    aDesiredSize.AddBorderPaddingToMaxElementSize(aReflowState.mComputedBorderPadding);
-  }
-#endif
-
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width  = aDesiredSize.width;
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
   }
 
   // Make sure we obey min/max-width and min/max-height
@@ -616,7 +607,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedAscent,
-                                       mCachedMaxElementSize, aDesiredSize);
+                                       mCachedMaxElementWidth, aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }

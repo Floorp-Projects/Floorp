@@ -1737,8 +1737,7 @@ nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
                                    kidAvailSize, aReflowState.reason);
   InitChildReflowState(*aPresContext, tableFrame->IsBorderCollapse(), p2t, kidReflowState);
 
-  nsSize              kidMaxElementSize;
-  nsHTMLReflowMetrics desiredSize(aDesiredSize.maxElementSize ? &kidMaxElementSize : nsnull,
+  nsHTMLReflowMetrics desiredSize(aDesiredSize.mComputeMEW,
                                   aDesiredSize.mFlags);
 
   // Pass along the reflow command

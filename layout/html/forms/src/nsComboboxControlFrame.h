@@ -279,8 +279,8 @@ protected:
 
   // Resize Reflow Optimization
   nsSize                mCacheSize;
-  nsSize                mCachedMaxElementSize;
   nsSize                mCachedAvailableSize;
+  nscoord               mCachedMaxElementWidth;
   nscoord               mCachedAscent;
 
   nsSize                mCachedUncDropdownSize;

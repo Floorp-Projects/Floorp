@@ -413,7 +413,7 @@ protected:
   PRPackedBool mIsScrollbarVisible;
 
   PRInt16 mPassId;
-  nsSize mCachedDesiredMaxSize;
+  nscoord mCachedDesiredMEW;
 
   // Update timer
   nsSelectUpdateTimer * mUpdateTimer;
@@ -423,7 +423,7 @@ protected:
   //Resize Reflow OpitmizationSize;
   nsSize       mCacheSize;
   nscoord      mCachedAscent;
-  nsSize       mCachedMaxElementSize;
+  nscoord      mCachedMaxElementWidth;
   nsSize       mCachedUnconstrainedSize;
   nsSize       mCachedAvailableSize;
 
