@@ -27,7 +27,6 @@
 #ifndef __xpidl_h
 #define __xpidl_h
 
-#include <assert.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>

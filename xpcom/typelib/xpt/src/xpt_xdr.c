@@ -423,7 +423,7 @@ XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **identp)
             return PR_FALSE;
         }
         len = end - start;
-        assert(len > 0);
+        XPT_ASSERT(len > 0);
 
         ident = XPT_MALLOC(arena, len + 1u);
         if (!ident)

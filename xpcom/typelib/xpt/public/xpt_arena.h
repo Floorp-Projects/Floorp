@@ -28,7 +28,6 @@
 #define __xpt_arena_h__
 
 #include "prtypes.h"
-#include <assert.h>
 #include <stdlib.h>
 
 
@@ -106,7 +105,14 @@ XPT_ArenaFree(XPTArena *arena, void* block);
 
 /* --------------------------------------------------------- */
 
-#define XPT_ASSERT(_expr) assert(_expr)
+#ifdef DEBUG
+XPT_PUBLIC_API(void)
+XPT_AssertFailed(const char *s, const char *file, PRUint32 lineno);
+#define XPT_ASSERT(_expr) \
+    ((_expr)?((void)0):XPT_AssertFailed(# _expr, __FILE__, __LINE__))
+#else
+#define XPT_ASSERT(_expr) ((void)0)
+#endif
 
 PR_END_EXTERN_C
 

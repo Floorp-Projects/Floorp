@@ -112,7 +112,7 @@ xpidl_parse_iid(nsID *id, const char *str)
     PRInt32 n1, n2, n3[8];
     PRInt32 n0, i;
 
-    assert(str != NULL);
+    XPT_ASSERT(str != NULL);
     
     if (strlen(str) != 36) {
         return FALSE;
@@ -342,7 +342,7 @@ check_param_attribute(IDL_tree method_tree, IDL_tree param,
         attr_name = "size_is";
         needed_type = "unsigned long (or PRUint32)";
     } else {
-        assert("asked to check an unknown attribute type!");
+        XPT_ASSERT("asked to check an unknown attribute type!");
         return TRUE;
     }
     

@@ -31,7 +31,6 @@
 #include "xpt_arena.h"
 #include <string.h>
 #include <stdio.h>
-#include <assert.h>
 #include <stdlib.h>
 
 /*************************/
@@ -313,3 +312,12 @@ static void xpt_DebugPrintArenaStats(XPTArena *arena)
 
 /***************************************************************************/
 
+#ifdef DEBUG
+XPT_PUBLIC_API(void)
+XPT_AssertFailed(const char *s, const char *file, PRUint32 lineno)
+{
+    fprintf(stderr, "Assertion failed: %s, file %s, line %d\n",
+            s, file, lineno);
+    abort();
+}        
+#endif
