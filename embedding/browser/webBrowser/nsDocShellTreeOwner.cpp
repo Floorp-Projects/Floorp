@@ -107,37 +107,39 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP nsDocShellTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
 {
-   NS_ENSURE_ARG_POINTER(aSink);
+  NS_ENSURE_ARG_POINTER(aSink);
 
-   if(NS_SUCCEEDED(QueryInterface(aIID, aSink)))
+  if(NS_SUCCEEDED(QueryInterface(aIID, aSink)))
+    return NS_OK;
+
+  if (aIID.Equals(NS_GET_IID(nsIPrompt))) {
+    nsIPrompt *prompt;
+    EnsurePrompter();
+    prompt = mPrompter;
+    if (prompt) {
+      NS_ADDREF(prompt);
+      *aSink = prompt;
       return NS_OK;
+    }
+    return NS_NOINTERFACE;
+  }
 
-   if(mOwnerRequestor) {
-      if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
-         if (!mAuthPrompter) {
-            
-            // Get the prompt UI from the owner
-            nsCOMPtr<nsIPrompt> prompt;
-            nsresult rv = mOwnerRequestor->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompt));
-            if (NS_FAILED(rv)) return rv;
-         
-            // Attempt to create a single signon. If that fails, create a simple non-persistent nsIAuthPrompt.
-            mAuthPrompter = do_CreateInstance(NS_SINGLESIGNONPROMPT_CONTRACTID, &rv);
-            if (NS_FAILED(rv)) {
-               mAuthPrompter = new nsNonPersistAuthPrompt;
-               NS_ENSURE_TRUE(mAuthPrompter, NS_ERROR_OUT_OF_MEMORY);
-            }
-            
-            nsCOMPtr<nsISingleSignOnPrompt> siPrompt(do_QueryInterface(mAuthPrompter, &rv));
-            if (NS_FAILED(rv)) return rv;
-            siPrompt->SetPromptDialogs(prompt);
-         }
-         return mAuthPrompter->QueryInterface(aIID, aSink);
-      }
-      return mOwnerRequestor->GetInterface(aIID, aSink);
-   }
+  if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
+    nsIAuthPrompt *prompt;
+    EnsureAuthPrompter();
+    prompt = mAuthPrompter;
+    if (prompt) {
+      NS_ADDREF(prompt);
+      *aSink = prompt;
+      return NS_OK;
+    }
+    return NS_NOINTERFACE;
+  }
 
-   return NS_NOINTERFACE;
+  if(mOwnerRequestor)
+    return mOwnerRequestor->GetInterface(aIID, aSink);
+
+  return NS_NOINTERFACE;
 }
 
 //*****************************************************************************
@@ -289,6 +291,34 @@ nsresult nsDocShellTreeOwner::FindItemWithNameAcrossWindows(
   } while(1);
 
   return rv;
+}
+
+void nsDocShellTreeOwner::EnsurePrompter()
+{
+  if (mPrompter)
+    return;
+
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  if (wwatch && mWebBrowser) {
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (domWindow)
+      wwatch->GetNewPrompter(domWindow, getter_AddRefs(mPrompter));
+  }
+}
+
+void nsDocShellTreeOwner::EnsureAuthPrompter()
+{
+  if (mAuthPrompter)
+    return;
+
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  if (wwatch && mWebBrowser) {
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (domWindow)
+      wwatch->GetNewAuthPrompter(domWindow, getter_AddRefs(mAuthPrompter));
+  }
 }
 
 void nsDocShellTreeOwner::AddToWatcher() {
@@ -677,6 +707,10 @@ void nsDocShellTreeOwner::WebBrowser(nsWebBrowser* aWebBrowser)
 {
   if ( !aWebBrowser )
     RemoveChromeListeners();
+  if (aWebBrowser != mWebBrowser) {
+    mPrompter = 0;
+    mAuthPrompter = 0;
+  }
 
   mWebBrowser = aWebBrowser;
 }
@@ -783,7 +817,6 @@ nsDocShellTreeOwner :: RemoveChromeListeners ( )
   
   return NS_OK;
 }
-
 
 #ifdef XP_MAC
 #pragma mark -

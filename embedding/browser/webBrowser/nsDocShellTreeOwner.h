@@ -43,6 +43,7 @@
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMContextMenuListener.h"
 #include "nsITimer.h"
+#include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
 
 #include "nsCommandHandler.h"
@@ -105,6 +106,9 @@ protected:
     nsresult   FindItemWithNameAcrossWindows(const PRUnichar* aName,
                  nsIDocShellTreeItem **aFoundItem);
 
+    void       EnsurePrompter();
+    void       EnsureAuthPrompter();
+
     void AddToWatcher();
     void RemoveFromWatcher();
 
@@ -118,13 +122,14 @@ protected:
    nsIWebBrowserChrome*    mWebBrowserChrome;
    nsIEmbeddingSiteWindow* mOwnerWin;
    nsIInterfaceRequestor*  mOwnerRequestor;
-   
+
     // the objects that listen for chrome events like context menus and tooltips. 
     // They are separate objects to avoid circular references between |this|
     // and the DOM. These are strong, owning refs.
    ChromeTooltipListener*         mChromeTooltipListener;
    ChromeContextMenuListener*     mChromeContextMenuListener;
-   
+
+   nsCOMPtr<nsIPrompt>     mPrompter;
    nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
 };
 
