@@ -69,11 +69,11 @@ function EditFilter() {
 
     var args = {selectedFilter: selectedFilter};
     
-    window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome", args);
+    window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal", args);
 }
 
 function NewFilter() {
   // pass the URI too, so that we know what filter to put this before
-  window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome");
+  window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal");
 
 }

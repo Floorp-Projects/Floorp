@@ -54,13 +54,13 @@ Rights Reserved.
           <template>
           <rule>
             <treechildren>
-			<treeitem uri="..." open="true"
-                IsEnabled="rdf:http://home.netscape.com/NC-rdf#Enabled">
-		  		<treerow >
-					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-                    <treecell value="rdf:http://home.netscape.com/NC-rdf#Enabled"/>
-		  		</treerow>
-			</treeitem>
+            <treeitem uri="..." open="true"
+                   Enabled="rdf:http://home.netscape.com/NC-rdf#Enabled">
+                  <treerow >
+                    <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                    <treecell allowevents="true" class="enabledcol image"/>
+                  </treerow>
+            </treeitem>
             </treechildren>
           </rule>
           </template>
@@ -95,7 +95,7 @@ Rights Reserved.
   </box>
   <box orient="horizontal">
     <button value="&runFiltersNow.label;" width="0em"/>
-    <spring flex="100%"/>
+    <html style="font: bold">Do NOT file bugs against this dialog. It is not complete.</html>
   </box>
   <separator class="groove"/>
   <box id="okCancelButtons"/>
