@@ -322,7 +322,7 @@ webconfig:
 ifdef _IS_FIRST_CHECKOUT
 # First time, do build target in a new process to pick up new files.
 build::
-	$(MAKE) -f $(TOPSRCDIR)/client.mk build
+	$(MAKE) -f $(TOPSRCDIR)/client.mk
 else
 
 #####################################################
