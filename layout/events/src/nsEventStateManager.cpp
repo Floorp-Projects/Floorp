@@ -826,126 +826,23 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
       switch (action) {
       case MOUSE_SCROLL_N_LINES:
         {
-          nsIFrame* focusFrame = nsnull;
-          nsISelfScrollingFrame* sf = nsnull;
           nsIView* focusView = nsnull;
-          nsCOMPtr<nsIPresShell> presShell;
-          
-          aPresContext->GetShell(getter_AddRefs(presShell));
-          if(!presShell)    // this is bad
-            break;
-          
-#ifdef DEBUG_scroll
-          printf("PostHandleEvent: aTargetFrame = %p, aView = %p\n",
-                 aTargetFrame, aView);
-#endif
-          
-          if (mCurrentFocus) {
-            
-#ifdef DEBUG_scroll
-            printf("PostHandleEvent: mCurrentFocus = %p\n", mCurrentFocus);
-#endif
-            
-            presShell->GetPrimaryFrameFor(mCurrentFocus, &focusFrame);
-            if (focusFrame)
-              focusFrame->GetView(aPresContext, &focusView);
-            
-          }
-          
-          if (focusFrame) {
-            if (!focusView) {
-              // The focused frame doesn't have a view
-              // Revert to the parameters passed in
-              // XXX this might not be right
-              
-#ifdef DEBUG_scroll
-              printf("Could not get a view for the focused frame\n");
-#endif
-              
-              focusFrame = aTargetFrame;
-              focusView = aView;
-            }
-          } else {
-            // Focus is null.  This means the main document has the focus,
-            // and we should scroll that.
-            
-#ifdef DEBUG_scroll
-            printf("PostHandleEvent: mCurrentFocus = NULL\n");
-#endif
-            
-            // We need to make an exception here if we can get a
-            // SelfScrollingFrame. This needs reviewed
-            
-            sf = GetNearestSelfScrollingFrame(aTargetFrame);
-            if (sf) {
-#ifdef DEBUG_scroll
-              printf("Found a SelfScrollingFrame: sf = %p\n", sf);
-#endif
-              focusView = aView;
-            } else {
-              focusFrame = GetDocumentFrame(aPresContext);
-              focusFrame->GetView(aPresContext, &focusView);
-              
-#ifdef DEBUG_scroll
-              if (focusView)
-                printf("Got view for document frame!\n");
-              else      // hopefully we won't be here
-                printf("Couldn't get view for document frame\n");
-#endif
-              
-            }
-          }
+          nsIScrollableView* sv = nsnull;
+          nsISelfScrollingFrame* sf = nsnull;
 
-#ifdef DEBUG_scroll
-          printf("PostHandleEvent: focusFrame = %p, focusView = %p\n",
-                 focusFrame, focusView);
-#endif
-          
-          nsIScrollableView* sv = GetNearestScrollingView(focusView);
-          if (sv) {
-
-#ifdef DEBUG_scroll
-            printf("Found a ScrollingView\n");
-#endif
-            sv->ScrollByLines(numLines);
-        
-            // force the update to happen now, otherwise multiple scrolls can
-            // occur before the update is processed. (bug #7354)
-            nsIViewManager* vm = nsnull;
-            if (NS_OK == focusView->GetViewManager(vm) && nsnull != vm) {
-              // I'd use Composite here, but it doesn't always work.
-              // vm->Composite();
-              nsIView* rootView = nsnull;
-              if (NS_OK == vm->GetRootView(rootView) && nsnull != rootView) {
-                nsIWidget* rootWidget = nsnull;
-                if (NS_OK == rootView->GetWidget(rootWidget) &&
-                    nsnull != rootWidget) {
-                  rootWidget->Update();
-                  NS_RELEASE(rootWidget);
+          if (NS_SUCCEEDED(GetScrollableFrameOrView(aPresContext, aTargetFrame, aView, sv, sf, focusView)))
+            {
+              if (sv)
+                {
+                  sv->ScrollByLines(numLines);
+                  ForceViewUpdate(focusView);
                 }
-              }
-              NS_RELEASE(vm);
+              else if (sf)
+                sf->ScrollByLines(aPresContext, numLines);
             }
-          } else {
-#ifdef DEBUG_scroll
-            printf("No scrolling view, looking for a scrolling frame\n");
-#endif
-            if (!sf)
-              sf = GetNearestSelfScrollingFrame(focusFrame);
-            if (sf) {
-#ifdef DEBUG_scroll
-              printf("Found a scrolling frame\n");
-#endif
-              sf->ScrollByLines(aPresContext, numLines);
-              // Do we need to do something here like above?
-            }
-#ifdef DEBUG_scroll
-            else
-              printf("Could not find a scrolling frame\n");
-#endif
-          }
+          
+          break;
         }
-        break;
       case MOUSE_SCROLL_PAGE:
         if (!mCurrentFocus) {
           nsIScrollableView* sv = GetNearestScrollingView(aView);
@@ -1134,7 +1031,7 @@ nsEventStateManager::GetNearestScrollingView(nsIView* aView)
 }
 
 nsISelfScrollingFrame*
-nsEventStateManager::GetNearestSelfScrollingFrame(nsIFrame* aFrame)
+nsEventStateManager::GetParentSelfScrollingFrame(nsIFrame* aFrame)
 {
   nsISelfScrollingFrame *sf;
   if (NS_OK == aFrame->QueryInterface(NS_GET_IID(nsISelfScrollingFrame),
@@ -1146,7 +1043,7 @@ nsEventStateManager::GetNearestSelfScrollingFrame(nsIFrame* aFrame)
   aFrame->GetParent(&parent);
 
   if (nsnull != parent) {
-    return GetNearestSelfScrollingFrame(parent);
+    return GetParentSelfScrollingFrame(parent);
   }
 
   return nsnull;
@@ -2380,7 +2277,7 @@ nsEventStateManager::GetDocumentFrame(nsIPresContext* aPresContext)
 #ifdef DEBUG_scroll
     printf("Got a null PresShell\n");
 #endif
-    return nsnull;     // someone will have to tell me wtf this means
+    return nsnull;
   }
   presShell->GetDocument(&aDocument);
   presShell->GetPrimaryFrameFor(aDocument->GetRootContent(), &aFrame);
@@ -2395,6 +2292,167 @@ nsEventStateManager::GetDocumentFrame(nsIPresContext* aPresContext)
   return aFrame;
 }
 
+// There are three posibilities for what this function returns:
+//  sv and focusView non-null, sf null  (a view should be scrolled)
+//  sv and focusView null, sf non-null  (a frame should be scrolled)
+//  sv, focusView, and sf all null (nothing to scroll)
+// The location works like this:
+//  First, check for a focused frame and try to get its view.
+//    If we can, and can get an nsIScrollableView for it, use that.
+//  If there is a focused frame but it does not have a view, or it has
+//   a view but no nsIScrollableView, check for an nsISelfScrollingFrame.
+//    If we find one, use that.
+//  If there is no focused frame, we first look for an nsISelfScrollingFrame
+//   as an ancestor of the event target.  If there isn't one, we try to get
+//   an nsIView corresponding to the main document.
+// Confused yet?
+
+nsresult nsEventStateManager::GetScrollableFrameOrView(nsIPresContext* aPresContext,
+                                                       nsIFrame* aTargetFrame,
+                                                       nsIView* aView,
+                                                       nsIScrollableView* &sv,
+                                                       nsISelfScrollingFrame* &sf,
+                                                       nsIView* &focusView)
+{
+  nsIFrame* focusFrame = nsnull;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  if (!presShell)    // this is bad
+    {
+      sv = nsnull;
+      sf = nsnull;
+      focusView = nsnull;
+      return NS_OK;
+    }
+
+#ifdef DEBUG_scroll
+  printf("GetScrollableFrameOrView: aTargetFrame = %p, aView = %p\n",
+         aTargetFrame, aView);
+#endif
+          
+  if (mCurrentFocus) {
+#ifdef DEBUG_scroll
+    printf("GetScrollableFrameOrView: mCurrentFocus = %p\n", mCurrentFocus);
+#endif
+    
+    presShell->GetPrimaryFrameFor(mCurrentFocus, &focusFrame);
+    if (focusFrame)
+      focusFrame->GetView(aPresContext, &focusView);
+  }
+          
+  if (focusFrame) {
+    if (!focusView) {
+      // The focused frame doesn't have a view
+      // Revert to the parameters passed in
+      // XXX this might not be right
+      
+#ifdef DEBUG_scroll
+      printf("Could not get a view for the focused frame\n");
+#endif
+      
+      focusFrame = aTargetFrame;
+      focusView = aView;
+    }
+  } else {
+    // Focus is null.  This means the main document has the focus,
+    // and we should scroll that.
+    
+#ifdef DEBUG_scroll
+    printf("GetScrollableFrameOrView: mCurrentFocus = NULL\n");
+#endif
+    
+    // If we can get an nsISelfScrollingFrame, that is preferable to getting
+    // the document view
+
+    sf = GetParentSelfScrollingFrame(aTargetFrame);
+    if (sf) {
+#ifdef DEBUG_scroll
+      printf("Found a SelfScrollingFrame: sf = %p\n", sf);
+#endif
+      focusView = aView;
+    } else {
+      focusFrame = GetDocumentFrame(aPresContext);
+      focusFrame->GetView(aPresContext, &focusView);
+      
+#ifdef DEBUG_scroll
+      if (focusView)
+        printf("Got view for document frame!\n");
+      else      // hopefully we won't be here
+        printf("Couldn't get view for document frame\n");
+#endif
+      
+    }
+  }
+
+#ifdef DEBUG_scroll
+  printf("GetScrollableFrameOrView: focusFrame = %p, focusView = %p\n",
+         focusFrame, focusView);
+#endif
+  
+  sv = GetNearestScrollingView(focusView);
+
+  if (sv) {
+#ifdef DEBUG_scroll
+    printf("Found a ScrollingView\n");
+#endif
+
+   // We can stop now
+    sf = nsnull;
+    return NS_OK;
+  }
+  else {
+#ifdef DEBUG_scroll
+    printf("No scrolling view, looking for a scrolling frame\n");
+#endif
+    if (!sf)
+      sf = GetParentSelfScrollingFrame(aTargetFrame);
+
+    if (sf) {
+#ifdef DEBUG_scroll
+      printf("Found a scrolling frame\n");
+#endif
+
+      sv = nsnull;
+      focusView = nsnull;
+      return NS_OK;
+
+    }
+    else {
+#ifdef DEBUG_scroll
+      printf("Could not find a scrolling frame\n");
+#endif
+      sf = nsnull;
+      sv = nsnull;
+      focusView = nsnull;
+      return NS_OK;
+    }
+  }
+
+  return NS_OK;
+}
+
+void nsEventStateManager::ForceViewUpdate(nsIView* aView)
+{
+  // force the update to happen now, otherwise multiple scrolls can
+  // occur before the update is processed. (bug #7354)
+
+  nsIViewManager* vm = nsnull;
+  if (NS_OK == aView->GetViewManager(vm) && nsnull != vm) {
+    // I'd use Composite here, but it doesn't always work.
+    // vm->Composite();
+    nsIView* rootView = nsnull;
+    if (NS_OK == vm->GetRootView(rootView) && nsnull != rootView) {
+      nsIWidget* rootWidget = nsnull;
+      if (NS_OK == rootView->GetWidget(rootWidget) &&
+          nsnull != rootWidget) {
+        rootWidget->Update();
+        NS_RELEASE(rootWidget);
+      }
+    }
+    NS_RELEASE(vm);
+  }
+}
 
 nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult)
 {

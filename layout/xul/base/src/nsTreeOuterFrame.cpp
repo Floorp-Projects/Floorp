@@ -158,6 +158,10 @@ nsTreeOuterFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }   
+  else if (aIID.Equals(NS_GET_IID(nsISelfScrollingFrame))) {
+    *aInstancePtr = (void*)(nsISelfScrollingFrame*) this;
+    return NS_OK;
+  }
 
   return nsTableOuterFrame::QueryInterface(aIID, aInstancePtr);                                     
 }
@@ -198,4 +202,27 @@ nsTreeOuterFrame::FixBadReflowState(const nsHTMLReflowState& aParentReflowState,
   
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsTreeOuterFrame::ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines)
+{
+  // What we need to do is call the corresponding method on our TreeFrame
+  // In most cases the TreeFrame will be the only child, but just to make
+  // sure we'll check for the right interface
+
+  nsISelfScrollingFrame* sf;
+  nsIFrame* child;
+  FirstChild(NULL, &child);
+
+  while (child != nsnull) {
+    if (NS_OK == child->QueryInterface(NS_GET_IID(nsISelfScrollingFrame),
+                                       (void**)&sf)) {
+      return sf->ScrollByLines(aPresContext, lines);
+    }
+    child->GetNextSibling(&child);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 

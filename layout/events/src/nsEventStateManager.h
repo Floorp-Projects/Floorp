@@ -96,10 +96,13 @@ protected:
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
   NS_IMETHOD SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent);
   nsIScrollableView* GetNearestScrollingView(nsIView* aView);
-  nsISelfScrollingFrame* GetNearestSelfScrollingFrame(nsIFrame* aFrame);
+  nsISelfScrollingFrame* GetParentSelfScrollingFrame(nsIFrame* aFrame);
   PRBool CheckDisabled(nsIContent* aContent);
 
   nsIFrame* GetDocumentFrame(nsIPresContext* aPresContext);
+  nsresult  GetScrollableFrameOrView(nsIPresContext* aPresContext, nsIFrame* aTargetFrame, nsIView* aView,
+                                     nsIScrollableView* &sv, nsISelfScrollingFrame* &sf, nsIView* &focusView);
+  void ForceViewUpdate(nsIView* aView);
 
   // routines for the d&d gesture tracking state machine
   void BeginTrackingDragGesture ( nsGUIEvent* inDownEvent, nsIFrame* inDownFrame ) ;
