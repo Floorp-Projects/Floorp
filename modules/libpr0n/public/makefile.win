@@ -30,6 +30,7 @@ XPIDL_MODULE	= imglib2
 EXPORTS		= ImageLogging.h
 
 XPIDLSRCS	= \
+		.\imgICache.idl \
 		.\imgIContainer.idl \
 		.\imgIContainerObserver.idl \
 		.\imgIDecoder.idl \

@@ -30,9 +30,8 @@ DLL			= $(OBJDIR)\$(LIBRARY_NAME).dll
 MAKE_OBJ_TYPE	= DLL
 
 OBJS	= \
-		.\$(OBJDIR)\DummyChannel.obj \
-		.\$(OBJDIR)\ImageCache.obj \
 		.\$(OBJDIR)\ImageFactory.obj \
+		.\$(OBJDIR)\imgCache.obj \
 		.\$(OBJDIR)\imgContainer.obj \
 		.\$(OBJDIR)\imgLoader.obj \
 		.\$(OBJDIR)\imgRequest.obj \

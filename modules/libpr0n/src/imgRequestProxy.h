@@ -58,13 +58,12 @@ public:
   nsresult Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *cx);
 
 private:
-  nsCOMPtr<imgIDecoderObserver> mObserver;
+  nsCOMPtr<imgIDecoderObserver> mListener;
 
   nsCOMPtr<nsISupports> mContext;
-
   nsCOMPtr<imgIRequest> mOwner;
 
-  nsCOMPtr<nsIChannel> mDummyChannel;
+  nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   PRBool mCanceled;
 };

@@ -122,9 +122,6 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgIRequest *aRequest)
   mRequest = aRequest;
   mObserver = do_QueryInterface(mRequest);
 
-  mImage = do_CreateInstance("@mozilla.org/image/container;1");
-  aRequest->SetImage(mImage);
-
   /* We set up the normal JPEG error routines, then override error_exit. */
   mInfo.err = jpeg_std_error(&mErr.pub);
   /*   mInfo.err = jpeg_std_error(&mErr.pub); */
@@ -160,8 +157,6 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgIRequest *aRequest)
   src->pub.term_source = term_source;
 
   src->decoder = this;
-
-
 
   return NS_OK;
 }
@@ -279,20 +274,68 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
     mObserver->OnStartDecode(nsnull, nsnull);
 
-    mImage->Init(mInfo.image_width, mInfo.image_height, mObserver);
+
+    /* Check if the request already has an image container.
+       this is the case when multipart/x-mixed-replace is being downloaded
+       if we already have one and it has the same width and height, reuse it.
+     */
+    mRequest->GetImage(getter_AddRefs(mImage));
+    if (mImage) {
+      PRInt32 width, height;
+      mImage->GetWidth(&width);
+      mImage->GetHeight(&height);
+      if ((width != (PRInt32)mInfo.image_width) ||
+          (height != (PRInt32)mInfo.image_height)) {
+        mImage = nsnull;
+      }
+    }
+
+    if (!mImage) {
+      mImage = do_CreateInstance("@mozilla.org/image/container;1");
+      if (!mImage) {
+        mState = JPEG_ERROR;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      mRequest->SetImage(mImage);
+      mImage->Init(mInfo.image_width, mInfo.image_height, mObserver);
+    }
+
     mObserver->OnStartContainer(nsnull, nsnull, mImage);
 
-    mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
-    gfx_format format;
-#ifdef XP_PC
-    format = gfxIFormats::BGR;
-#else
-    format = gfxIFormats::RGB;
-#endif
-    mFrame->Init(0, 0, mInfo.image_width, mInfo.image_height, format);
-    mImage->AppendFrame(mFrame);
-    mObserver->OnStartFrame(nsnull, nsnull, mFrame);
+    mImage->GetFrameAt(0, getter_AddRefs(mFrame));
 
+    PRBool createNewFrame = PR_TRUE;
+
+    if (mFrame) {
+      PRInt32 width, height;
+      mFrame->GetWidth(&width);
+      mFrame->GetHeight(&height);
+
+      if ((width == (PRInt32)mInfo.image_width) &&
+          (height == (PRInt32)mInfo.image_height)) {
+        createNewFrame = PR_FALSE;
+      } else {
+        mImage->Clear();
+      }
+    }
+
+    if (createNewFrame) {
+      mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
+      if (!mFrame) {
+        mState = JPEG_ERROR;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      gfx_format format = gfxIFormats::RGB;
+#ifdef XP_PC
+      format = gfxIFormats::BGR;
+#endif
+
+      mFrame->Init(0, 0, mInfo.image_width, mInfo.image_height, format);
+      mImage->AppendFrame(mFrame);
+    }      
+
+    mObserver->OnStartFrame(nsnull, nsnull, mFrame);
 
     /*
      * Make a one-row-high sample array that will go away
@@ -437,6 +480,12 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   case JPEG_SINK_NON_JPEG_TRAILER:
     PR_LOG(gJPEGlog, PR_LOG_DEBUG,
            ("[this=%p] nsJPEGDecoder::WriteFrom -- entering JPEG_SINK_NON_JPEG_TRAILER case\n", this));
+
+    break;
+
+  case JPEG_ERROR:
+    PR_LOG(gJPEGlog, PR_LOG_DEBUG,
+           ("[this=%p] nsJPEGDecoder::WriteFrom -- entering JPEG_ERROR case\n", this));
 
     break;
   }

@@ -27,6 +27,11 @@
 #include "prlock.h"
 #endif
 
+class imgRequest;
+class imgIRequest;
+class imgIDecoderObserver;
+class nsILoadGroup;
+
 #define NS_IMGLOADER_CID \
 { /* 9f6a0d2e-1dd1-11b2-a5b8-951f13c846f7 */         \
      0x9f6a0d2e,                                     \
@@ -45,4 +50,31 @@ public:
   virtual ~imgLoader();
 
 private:
+  nsresult CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGroup,
+                                    imgIDecoderObserver *aObserver, nsISupports *cx,
+                                    imgIRequest **_retval);
+};
+
+
+
+/**
+ * proxy stream listener class used to handle multipart/x-mixed-replace
+ */
+
+#include "nsCOMPtr.h"
+#include "nsIStreamListener.h"
+
+class ProxyListener : public nsIStreamListener
+{
+public:
+  ProxyListener(nsIStreamListener *dest);
+  virtual ~ProxyListener();
+
+  /* additional members */
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIREQUESTOBSERVER
+
+private:
+  nsCOMPtr<nsIStreamListener> mDestListener;
 };

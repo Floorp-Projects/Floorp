@@ -33,9 +33,8 @@ IS_COMPONENT	= 1
 REQUIRES	= xpcom string necko nkcache layout timer gfx2
 
 CPPSRCS		= \
-			DummyChannel.cpp \
-			ImageCache.cpp   \
 			ImageFactory.cpp \
+			imgCache.cpp     \
 			imgContainer.cpp \
 			imgLoader.cpp    \
 			imgRequest.cpp   \

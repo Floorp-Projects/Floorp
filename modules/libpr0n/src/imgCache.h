@@ -21,27 +21,32 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#ifndef ImageCache_h__
-#define ImageCache_h__
+#include "imgICache.h"
 
-#include "nsIURI.h"
-#include "imgRequest.h"
 #include "prtypes.h"
 
-#ifdef MOZ_NEW_CACHE
-#include "nsICacheEntryDescriptor.h"
-#else
+class imgRequest;
+class nsIURI;
 class nsICacheEntryDescriptor;
-#endif
 
+#define NS_IMGCACHE_CID \
+{ /* fb4fd28a-1dd1-11b2-8391-e14242c59a41 */         \
+     0xfb4fd28a,                                     \
+     0x1dd1,                                         \
+     0x11b2,                                         \
+    {0x83, 0x91, 0xe1, 0x42, 0x42, 0xc5, 0x9a, 0x41} \
+}
 
-class ImageCache
+class imgCache : public imgICache
 {
 public:
-#ifdef MOZ_NEW_CACHE
-  ImageCache();
-  ~ImageCache();
+  NS_DECL_ISUPPORTS
+  NS_DECL_IMGICACHE
 
+  imgCache();
+  virtual ~imgCache();
+
+#ifdef MOZ_NEW_CACHE
   static void Shutdown(); // for use by the factory
 
   /* additional members */
@@ -49,11 +54,10 @@ public:
   static PRBool Get(nsIURI *aKey, imgRequest **aRequest, nsICacheEntryDescriptor **aEntry);
   static PRBool Remove(nsIURI *aKey);
 
+  static nsresult ClearChromeImageCache();
+  static nsresult ClearImageCache();
+
 #else
-
-  ImageCache()  { }
-  ~ImageCache() { }
-
   static void Shutdown() { }
 
   /* additional members */
@@ -66,7 +70,13 @@ public:
   static PRBool Remove(nsIURI *aKey) {
     return PR_FALSE;
   }
+  static nsresult ClearChromeImageCache() {
+    return NS_ERROR_FAILURE;
+  }
+  static nsresult ClearImageCache() {
+    return NS_ERROR_FAILURE;
+  }
+
 #endif /* MOZ_NEW_CACHE */
 };
 
-#endif
