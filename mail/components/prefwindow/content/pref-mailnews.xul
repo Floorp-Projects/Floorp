@@ -49,6 +49,9 @@
     _elementIDs.push("mailnewsEnableMapi");
     _elementIDs.push("mailnewsEnableNews");
 #endif
+#ifdef XP_MACOSX
+    _elementIDs.push("newMailNotificationBounce");
+#endif
 #ifdef MOZ_WIDGET_GTK2
     _elementIDs.push("checkDefaultMail");
     _elementIDs.push("checkDefaultNews");
@@ -161,7 +164,11 @@
     <checkbox id="newMailNotificationAlert" label="&showAnimatedAlert.label;"
               prefstring="mail.biff.show_alert"
               accesskey="&showAnimatedAlert.accesskey;"/>
-    
+#ifdef XP_MACOSX
+    <checkbox id="newMailNotificationBounce" label="&bounceSystemDockIcon.label;"
+              prefstring="mail.biff.animate_dock_icon"
+              accesskey="&bounceSystemDockIcon.accesskey;"/>
+#endif
     <checkbox id="newMailNotification" accesskey="&playSound.accesskey;"
          prefstring="mail.biff.play_sound" label="&playSound.label;"
          oncommand="PlaySoundCheck()"/>
