@@ -8376,36 +8376,32 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
     // won't let it have a frame.
 
   } else {
-    // Find the frame that precedes the insertion point.
-    nsIFrame* prevSibling = (aIndexInContainer == -1) ? 
-                             FindPreviousAnonymousSibling(shell, aContainer, aChild) :
-                             FindPreviousSibling(shell, aContainer, aIndexInContainer);
 
-    nsIFrame* nextSibling = nsnull;
-    PRBool    isAppend = PR_FALSE;
+    // If our container is null, we don't bother fetching previous and next siblings.
+    nsIFrame* parentFrame = GetFrameFor(shell, aPresContext, aContainer);
+
+    if (parentFrame) {
+      // Find the frame that precedes the insertion point.
+      nsIFrame* prevSibling = (aIndexInContainer == -1) ? 
+                               FindPreviousAnonymousSibling(shell, aContainer, aChild) :
+                               FindPreviousSibling(shell, aContainer, aIndexInContainer);
+
+      nsIFrame* nextSibling = nsnull;
+      PRBool    isAppend = PR_FALSE;
     
-    // If there is no previous sibling, then find the frame that follows
-    if (nsnull == prevSibling) {
-      nextSibling = (aIndexInContainer == -1) ? 
-                    FindNextAnonymousSibling(shell, aContainer, aChild) :
-                    FindNextSibling(shell, aContainer, aIndexInContainer);
-    }
+      // If there is no previous sibling, then find the frame that follows
+      if (nsnull == prevSibling) {
+        nextSibling = (aIndexInContainer == -1) ? 
+                      FindNextAnonymousSibling(shell, aContainer, aChild) :
+                      FindNextSibling(shell, aContainer, aIndexInContainer);
+      }
 
-    // Get the geometric parent. Use the prev sibling if we have it;
-    // otherwise use the next sibling
-    nsIFrame* parentFrame;
-    if (nsnull != prevSibling) {
-      prevSibling->GetParent(&parentFrame);
-    }
-    else if (nextSibling) {
-      nextSibling->GetParent(&parentFrame);
-    }
-    else {
-      // No previous or next sibling so treat this like an appended frame.
-      isAppend = PR_TRUE;
-      parentFrame = GetFrameFor(shell, aPresContext, aContainer);
+      // Get the geometric parent. Use the prev sibling if we have it;
+      // otherwise use the next sibling
+      if (!prevSibling && !nextSibling) {
+        // No previous or next sibling so treat this like an appended frame.
+        isAppend = PR_TRUE;
       
-      if (parentFrame) {
         // If we didn't process children when we originally created the frame,
         // then don't do any processing now
         nsCOMPtr<nsIAtom>  frameType;
@@ -8415,10 +8411,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
           return NS_OK;
         }
       }
-    }
 
-    // Construct a new frame
-    if (nsnull != parentFrame) {
       // If the frame we are manipulating is a special frame then do
       // something different instead of just inserting newly created
       // frames.
