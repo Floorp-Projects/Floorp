@@ -71,8 +71,7 @@ var myModule = {
     },
 
     /*
-     * The GetClassObject method is responsible for producing Factory and
-     * SingletonFactory objects (the latter are specialized for services).
+     * The GetClassObject method is responsible for producing Factory objects
      */
     getClassObject: function (compMgr, cid, iid) {
         if (!cid.equals(this.myCID))
