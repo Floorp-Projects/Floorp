@@ -141,7 +141,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   // Clean up filter buffers
   delete[] filterBuffer;
 
-  if (userClicksOK == returnOK)
+  if (userClicksOK == returnOK || userClicksOK == returnReplace)
   {
     nsCOMPtr<nsILocalFile>    localFile(do_CreateInstance("component://mozilla/file/local"));
 	  nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(localFile));
