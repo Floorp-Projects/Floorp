@@ -1036,11 +1036,20 @@ nsContainerFrame::FinishReflowChild(nsIFrame*                 aKidFrame,
                              &aDesiredSize.mOverflowArea,
                              aFlags);
   }
-  else if (0 == (aFlags & NS_FRAME_NO_MOVE_VIEW) &&
-           ((curOrigin.x != aX) || (curOrigin.y != aY))) {
-    // If the frame has moved, then we need to make sure any child views are
-    // correctly positioned
-    PositionChildViews(aPresContext, aKidFrame);
+
+  if (!(aFlags & NS_FRAME_NO_MOVE_VIEW) &&
+      (curOrigin.x != aX || curOrigin.y != aY)) {
+    if (!aKidFrame->HasView()) {
+      // If the frame has moved, then we need to make sure any child views are
+      // correctly positioned
+      PositionChildViews(aPresContext, aKidFrame);
+    }
+
+    // We also need to redraw the frame because if the frame's Reflow issued any
+    // invalidates, then they will be at the wrong offset ... note that this includes
+    // invalidates issued against the frame's children, so we need to invalidate
+    // the overflow area too.
+    aKidFrame->Invalidate(aDesiredSize.mOverflowArea);
   }
   
   return aKidFrame->DidReflow(aPresContext, aReflowState, NS_FRAME_REFLOW_FINISHED);
