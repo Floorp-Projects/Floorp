@@ -53,7 +53,7 @@
 <!ENTITY calendar.new.server.key                "L">
 <!ENTITY calendar.new.server.accesskey          "a">
 
-<!ENTITY calendar.open.file.label               "Ouvrez le fichier d'agenda…">
+<!ENTITY calendar.open.file.label               "Ouvrir le fichier d'agenda…">
 <!ENTITY calendar.open.file.key                 "O">
 <!ENTITY calendar.open.file.accesskey           "O">
 
@@ -126,10 +126,10 @@
 <!ENTITY goMenu.label                           "Aller à">
 <!ENTITY goMenu.accesskey                       "a">
 
-<!ENTITY goTodayCmd.label                       "Aller à aujourd'hui">
+<!ENTITY goTodayCmd.label                       "Aujourd'hui">
 <!ENTITY goTodayCmd.accesskey                   "j">
 
-<!ENTITY goDateCmd.label                        "Aller à une date">
+<!ENTITY goDateCmd.label                        "Une date…">
 <!ENTITY goDateCmd.accesskey                    "d">
 
 <!ENTITY goPreviousCmd.label                    "Précédent">

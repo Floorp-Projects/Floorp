@@ -188,13 +188,13 @@
 <!ENTITY calendar.flat.topbar.new              "Nouvel événement" >
 <!ENTITY calendar.flat.topbar.gototoday        "Aller à aujourd'hui" >
 <!ENTITY calendar.flat.topbar.choosedate       "Aller à la date" >
-<!ENTITY calendar.flat.topbar.dayview          "1 jour par vue" >
+<!ENTITY calendar.flat.topbar.dayview          "Afficher un jour" >
 <!ENTITY calendar.dayview.accesskey            "j" >
-<!ENTITY calendar.flat.topbar.weekview         "1 semaine par vue" >
+<!ENTITY calendar.flat.topbar.weekview         "Afficher une semaine" >
 <!ENTITY calendar.weekview.accesskey           "s" >
-<!ENTITY calendar.flat.topbar.monthview        "1 mois par vue" >
+<!ENTITY calendar.flat.topbar.monthview        "Afficher un mois" >
 <!ENTITY calendar.monthview.accesskey          "m" >
-<!ENTITY calendar.flat.topbar.multiweekview    "Vue multisemaine" >
+<!ENTITY calendar.flat.topbar.multiweekview    "Afficher plusieurs semaines" >
 <!ENTITY calendar.multiweekview.accesskey      "u" >
 <!ENTITY calendar.dayView.key                  "1" >
 <!ENTITY calendar.weekView.key                 "2" >
@@ -216,7 +216,7 @@
 
 <!ENTITY calendar.calendartab.label "Calendrier">
 <!ENTITY calendar.listofcalendarstab.label "Agendas">
-<!ENTITY calendar.gototoday.button.label        "Aller à aujourd'hui" >
+<!ENTITY calendar.gototoday.button.label "Aujourd'hui">
 
 <!ENTITY calendar.calendarlistbox.label "Agendas">
 
@@ -245,13 +245,13 @@
 <!ENTITY calendar.unifinder.tree.status.label    "Statut">
 <!ENTITY calendar.unifinder.tree.filename.label    "Nom de l'agenda">
 
-<!ENTITY calendar.gototoday.button.tooltip        "Aller à aujourd'hui" >
+<!ENTITY calendar.gototoday.button.tooltip        "Revenir à la date d'aujourd'hui" >
 <!ENTITY calendar.choosedate.button.tooltip       "Choisir la date à atteindre" >
 
-<!ENTITY calendar.dayview.button.tooltip          "Passer à 1 jour par vue" >
-<!ENTITY calendar.weekview.button.tooltip         "Passer à 1 semaine par vue" >
-<!ENTITY calendar.monthview.button.tooltip        "Passer à 1 mois par vue" >
-<!ENTITY calendar.multiweekview.button.tooltip        "Passer en multisemaine" >
+<!ENTITY calendar.dayview.button.tooltip          "Afficher un jour" >
+<!ENTITY calendar.weekview.button.tooltip         "Afficher une semaine" >
+<!ENTITY calendar.monthview.button.tooltip        "Afficher un mois" >
+<!ENTITY calendar.multiweekview.button.tooltip        "Afficher plusieurs semaines" >
 
 <!ENTITY calendar.nextday.button.tooltip        "Jour suivant" >
 <!ENTITY calendar.prevday.button.tooltip        "Jour précédent" >
@@ -278,7 +278,7 @@
 <!ENTITY calendar.print.button.label            "Imprimer" >
 
 <!ENTITY calendar.import.button.tooltip            "Importer : Importer des événements à partir d'un fichier local." >
-<!ENTITY calendar.export.button.tooltip            "Exporter : Exporter événements vers un fichier local." >
+<!ENTITY calendar.export.button.tooltip            "Exporter : Exporter des événements vers un fichier local." >
 <!ENTITY calendar.subscribe.button.tooltip         "Souscrire : Souscrire à un fichier d'agenda sur une machine distante." >
 <!ENTITY calendar.publish.button.tooltip            "Publier : Publier des événements sur une machine distante." >
 
@@ -292,14 +292,14 @@
 <!ENTITY calendar.remotereload.button.label   "Actualiser" >
 <!ENTITY calendar.remotereload.button.tooltip   "Actualiser tous les agendas locaux" >
 
-<!ENTITY calendar.dayview.button.label          "1 jour par vue" >
-<!ENTITY calendar.weekview.button.label         "1 semaine par vue" >
-<!ENTITY calendar.monthview.button.label        "1 mois par vue" >
+<!ENTITY calendar.dayview.button.label          "Journée" >
+<!ENTITY calendar.weekview.button.label         "Semaine" >
+<!ENTITY calendar.monthview.button.label        "  Mois  " >
 <!ENTITY calendar.multiweekview.button.label        "Multisemaine" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Semaine de travail seulement" >
 <!ENTITY calendar.onlyworkday.checkbox.accesskey  "S" >
-<!ENTITY calendar.displaytodos.checkbox.label   "Tâches en vue" >
-<!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
+<!ENTITY calendar.displaytodos.checkbox.label   "Afficher les tâches" >
+<!ENTITY calendar.displaytodos.checkbox.accesskey "h" >
 
 <!ENTITY calendar.menu.options.modify           "Modifier" >
 <!ENTITY calendar.menu.options.remove           "Supprimer" >
@@ -310,7 +310,7 @@
 <!ENTITY calendar.main.tab.label        "Événements" >
 <!ENTITY calendar.search.tab.label      "Chercher">
 
-<!ENTITY calendar.search.options.searchfor " contient">
+<!ENTITY calendar.search.options.searchfor " contenant">
 
 <!ENTITY calendar.menu.numberofweeks.label     "Nombre de semaines" >
 <!ENTITY calendar.menu.numberofweeks.1      "1 semaine" >
@@ -367,13 +367,13 @@
 <!ENTITY calendar.context.selectall.accesskey         "t">
 <!ENTITY calendar.context.gototoday.label             "Aller à aujourd'hui">
 <!ENTITY calendar.context.gototoday.accesskey         "j">
-<!ENTITY calendar.context.dayview.label               "Passer à 1 jour par vue">
+<!ENTITY calendar.context.dayview.label               "Afficher un jour">
 <!ENTITY calendar.context.dayview.accesskey           "j">
-<!ENTITY calendar.context.weekview.label              "Passer à une semaine par vue">
+<!ENTITY calendar.context.weekview.label              "Afficher une semaine">
 <!ENTITY calendar.context.weekview.accesskey          "s">
-<!ENTITY calendar.context.monthview.label             "Passer à une vue par mois">
+<!ENTITY calendar.context.monthview.label             "Afficher un mois">
 <!ENTITY calendar.context.monthview.accesskey         "m">
-<!ENTITY calendar.context.multiweekview.label        "Passer en vue multisemaine">
+<!ENTITY calendar.context.multiweekview.label        "Afficher plusieurs semaines">
 <!ENTITY calendar.context.multiweekview.accesskey    "u">
 <!ENTITY calendar.context.reload.label                "Recharger">
 <!ENTITY calendar.context.reload.accesskey            "r">
@@ -431,13 +431,13 @@
 
 <!-- Calendar Server Dialog -->
 <!ENTITY calendar.server.dialog.title.new           "Nouveau fichier d'agenda">
-<!ENTITY calendar.server.dialog.title.open          "Ouvrez le fichier d'agenda">
+<!ENTITY calendar.server.dialog.title.open          "Ouvrir le fichier d'agenda">
 <!ENTITY calendar.server.dialog.title.edit          "Modifier l'agenda">
 <!ENTITY calendar.server.dialog.name.label          "Nom de l'agenda :">
 <!ENTITY calendar.server.dialog.publish.label       "Publier automatiquement les modifications vers l'agenda distant ? Quand ceci est activé, une version à jour de l'agenda est téléchargée avant toute modification que vous avez effectuée. Vos changements sont alors appliqués et l'agenda est renvoyé vers le serveur.">
 <!ENTITY calendar.server.dialog.location.label      "URL du serveur distant :">
 <!ENTITY calendar.server.dialog.local.location.label "Emplacement du fichier local :">
-<!ENTITY calendar.server.dialog.browse.label        "Parcourir à la recherche du fichier local…">
+<!ENTITY calendar.server.dialog.browse.label        "Parcourir…">
 <!ENTITY calendar.server.dialog.help.label          "Vous pouvez entrer un chemin local, ou un chemin distant comme http://www.mozilla.org/projects/calendar/caldata/FranceHolidays.ics">
 <!ENTITY calendar.local.calendar.dialog.help.label  "Vous pouvez utiliser ceci pour indiquer où le fichier d'agenda sera créé sur votre ordinateur. Ceci est optionnel.">
 <!ENTITY calendar.local.calendar.dialog.optional.label "Les options suivantes servent à la publication de l'agenda à une adresse distante.">
@@ -460,7 +460,7 @@
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Importer : importer les événements d'un fichier local dans un agenda existant.">
 <!ENTITY calendar.wizard.export.label              "Exporter : exporter les événements d'un agenda existant dans un fichier local.">
-<!ENTITY calendar.wizard.subscribe.label           "Souscrire : souscrire à un fichier agenda sur une machine distante (càd. sur Internet)">
+<!ENTITY calendar.wizard.subscribe.label           "Souscrire : souscrire à un fichier d'agenda sur une machine distante (càd. sur Internet)">
 <!ENTITY calendar.wizard.publish.label             "Publier : publier des événements sur une machine distante (càd. sur Internet) pour permettre à d'autres d'y souscrire.">
 
 <!-- Calendar Import Outlook CSV Dialog -->

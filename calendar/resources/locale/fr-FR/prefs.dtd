@@ -46,7 +46,7 @@
 <!ENTITY calendar.timezone.label    "Mon fuseau horaire">
 
 <!ENTITY prefWindow.title            "Options de Calendar">
-<!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
+<!ENTITY prefWindow.size             "width: 59em; height: 35em;">
 <!ENTITY prefWindow.category         "Catégorie">
 
 <!ENTITY pref.mainbox.label         "Réglages globaux" >
@@ -112,10 +112,10 @@
 <!ENTITY pref.hour.23    "23:00" >
 
 <!ENTITY pref.calendar.view.allview.caption "Générale">
-<!ENTITY pref.calendar.view.dayview.caption "1 jour par vue"> 
-<!ENTITY pref.calendar.view.weekview.caption "1 semaine par vue"> 
+<!ENTITY pref.calendar.view.dayview.caption "Un jour par vue"> 
+<!ENTITY pref.calendar.view.weekview.caption "Une semaine par vue"> 
 <!ENTITY pref.calendar.view.weekanddayview.caption "Vues par jour et par semaine">
-<!ENTITY pref.calendar.view.monthview.caption "1 mois par vue">
+<!ENTITY pref.calendar.view.monthview.caption "Un mois par vue">
 <!ENTITY pref.calendar.view.multiweekview.caption "Vue multisemaine">
 
 <!ENTITY pref.calendar.view.restrict.label "Restreindre les vues à">
@@ -145,7 +145,7 @@
 
 <!ENTITY pref.timezone.Africa.Abidjan "Afrique/Abidjan" >
 <!ENTITY pref.timezone.Africa.Accra "Afrique/Accra" >
-<!ENTITY pref.timezone.Africa.Addis_Ababa "Afrique/Addis_Ababa" >
+<!ENTITY pref.timezone.Africa.Addis_Ababa "Afrique/Addis-Abeba" >
 <!ENTITY pref.timezone.Africa.Algiers "Afrique/Alger" >
 <!ENTITY pref.timezone.Africa.Asmera "Afrique/Asmera" >
 <!ENTITY pref.timezone.Africa.Bamako "Afrique/Bamako" >
@@ -160,7 +160,7 @@
 <!ENTITY pref.timezone.Africa.Ceuta "Afrique/Ceuta" >
 <!ENTITY pref.timezone.Africa.Conakry "Afrique/Conakry" >
 <!ENTITY pref.timezone.Africa.Dakar "Afrique/Dakar" >
-<!ENTITY pref.timezone.Africa.Dar_es_Salaam "Afrique/Dar es Salaam" >
+<!ENTITY pref.timezone.Africa.Dar_es_Salaam "Afrique/Dar es-Salaam" >
 <!ENTITY pref.timezone.Africa.Djibouti "Afrique/Djibouti" >
 <!ENTITY pref.timezone.Africa.Douala "Afrique/Douala" >
 <!ENTITY pref.timezone.Africa.El_Aaiun "Afrique/El Aaiun" >
@@ -331,7 +331,7 @@
 <!ENTITY pref.timezone.Asia.Ashgabat "Asie/Ashgabat" >
 <!ENTITY pref.timezone.Asia.Baghdad "Asie/Bagdad" >
 <!ENTITY pref.timezone.Asia.Bahrain "Asie/Bahreïn" >
-<!ENTITY pref.timezone.Asia.Baku "Asie/Baku" >
+<!ENTITY pref.timezone.Asia.Baku "Asie/Bakou" >
 <!ENTITY pref.timezone.Asia.Bangkok "Asie/Bangkok" >
 <!ENTITY pref.timezone.Asia.Beirut "Asie/Beyrouth" >
 <!ENTITY pref.timezone.Asia.Bishkek "Asie/Bishkek" >
