@@ -210,6 +210,10 @@ WSPPropertyBagWrapper::GetInterfaceInfo(nsIInterfaceInfo** info)
 NS_IMETHODIMP
 WSPPropertyBagWrapper::GetInterfaces(PRUint32 *count, nsIID * **array)
 {
+  if (!mIID) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   *count = 2;
   nsIID** iids = NS_STATIC_CAST(nsIID**, nsMemory::Alloc(2 * sizeof(nsIID*)));
   if (!iids) {
