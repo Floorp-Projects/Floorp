@@ -17,6 +17,7 @@
  */
 
 #include <gtk/gtk.h>
+#include "nsFontMetricsGTK.h"
 #include "nsRenderingContextGTK.h"
 #include "nsRegionGTK.h"
 #include "nsGfxCIID.h"
@@ -829,6 +830,23 @@ NS_IMETHODIMP nsRenderingContextGTK::FillArc(nscoord aX, nscoord aY,
   return NS_OK;
 }
 
+#ifdef FONT_SWITCHING
+
+NS_IMETHODIMP
+nsRenderingContextGTK::GetWidth(char aC, nscoord &aWidth)
+{
+  return GetWidth(&aC, 1, aWidth);
+}
+
+NS_IMETHODIMP
+nsRenderingContextGTK::GetWidth(PRUnichar aC, nscoord& aWidth,
+                                PRInt32* aFontID)
+{
+  return GetWidth(&aC, 1, aWidth, aFontID);
+}
+
+#else /* FONT_SWITCHING */
+
 NS_IMETHODIMP
 nsRenderingContextGTK::GetWidth(char aC, nscoord &aWidth)
 {
@@ -848,6 +866,8 @@ nsRenderingContextGTK::GetWidth(PRUnichar aC, nscoord& aWidth,
   return NS_OK;
 }
 
+#endif /* FONT_SWITCHING */
+
 NS_IMETHODIMP
 nsRenderingContextGTK::GetWidth(const nsString& aString,
                                 nscoord& aWidth, PRInt32* aFontID)
@@ -860,6 +880,89 @@ nsRenderingContextGTK::GetWidth(const char* aString, nscoord& aWidth)
 {
   return GetWidth(aString, strlen(aString), aWidth);
 }
+
+#ifdef FONT_SWITCHING
+
+NS_IMETHODIMP
+nsRenderingContextGTK::GetWidth(const char* aString, PRUint32 aLength,
+                                nscoord& aWidth)
+{
+  if (0 == aLength) {
+    aWidth = 0;
+  }
+  else {
+    g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
+    gint rawWidth = gdk_text_width (mCurrentFont, aString, aLength);
+    aWidth = NSToCoordRound(rawWidth * mP2T);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRenderingContextGTK::GetWidth(const PRUnichar* aString, PRUint32 aLength,
+                                nscoord& aWidth, PRInt32* aFontID)
+{
+  if (0 == aLength) {
+    aWidth = 0;
+  }
+  else {
+    g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
+
+    nsFontMetricsGTK* metrics = (nsFontMetricsGTK*) mFontMetrics;
+    GdkFont* prevFont = nsnull;
+    nsFontCharSetInfo* prevCharSetInfo = nsnull;
+    gint rawWidth = 0;
+    PRUint32 start = 0;
+    PRUint32 i;
+    for (i = 0; i < aLength; i++) {
+      PRUnichar c = aString[i];
+      GdkFont* currFont = nsnull;
+      nsFontCharSetInfo* currCharSetInfo = nsnull;
+      nsFontGTK* font = metrics->mLoadedFonts;
+      nsFontGTK* end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+      while (font < end) {
+        if (FONT_HAS_GLYPH(font->mMap, c)) {
+	  currFont = font->mFont;
+	  currCharSetInfo = font->mCharSetInfo;
+	  goto FoundFont; // for speed -- avoid "if" statement
+	}
+	font++;
+      }
+      font = metrics->FindFont(c);
+      currFont = font->mFont;
+      currCharSetInfo = font->mCharSetInfo;
+FoundFont:
+      // XXX avoid this test by duplicating code -- erik
+      if (prevFont) {
+	if (currFont != prevFont) {
+          rawWidth += nsFontMetricsGTK::GetWidth(prevFont, prevCharSetInfo,
+	    &aString[start], i - start);
+	  prevFont = currFont;
+	  prevCharSetInfo = currCharSetInfo;
+	  start = i;
+	}
+      }
+      else {
+        prevFont = currFont;
+	prevCharSetInfo = currCharSetInfo;
+	start = i;
+      }
+    }
+
+    if (prevFont) {
+      rawWidth += nsFontMetricsGTK::GetWidth(prevFont, prevCharSetInfo,
+        &aString[start], i - start);
+    }
+
+    aWidth = NSToCoordRound(rawWidth * mP2T);
+  }
+  if (nsnull != aFontID)
+    *aFontID = 0;
+
+  return NS_OK;
+}
+
+#else /* FONT_SWITCHING */
 
 NS_IMETHODIMP
 nsRenderingContextGTK::GetWidth(const char* aString, PRUint32 aLength,
@@ -914,6 +1017,8 @@ nsRenderingContextGTK::GetWidth(const PRUnichar* aString, PRUint32 aLength,
 
   return NS_OK;
 }
+
+#endif /* FONT_SWITCHING */
 
 NS_IMETHODIMP
 nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
