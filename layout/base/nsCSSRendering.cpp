@@ -475,7 +475,7 @@ void nsCSSRendering::DrawDashedSides(PRIntn startSide,
   for (PRIntn whichSide = startSide; whichSide < 4; whichSide++) {
     PRUint8 prevStyle = style;
     style = borderStyles[whichSide];  
-	if ((1<<whichSide) & aSkipSides) {
+    if ((1<<whichSide) & aSkipSides) {
       // Skipped side
       skippedSide = PR_TRUE;
       continue;
@@ -704,7 +704,7 @@ void nsCSSRendering::DrawDashedSides(PRIntn startSide,
   for (PRIntn whichSide = startSide; whichSide < 4; whichSide++) {
     PRUint8 prevStyle = style;
     style = aSpacing.GetBorderStyle(whichSide);  
-	if ((1<<whichSide) & aSkipSides) {
+    if ((1<<whichSide) & aSkipSides) {
       // Skipped side
       skippedSide = PR_TRUE;
       continue;
@@ -926,10 +926,6 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
   PRIntn    cnt;
   nsMargin  border;
   PRBool    printing = nsGlobalVariables::Instance()->GetPrinting(&aPresContext);
-
-
-
-
   aStyle.CalcBorderFor(aForFrame, border);
   if ((0 == border.left) && (0 == border.right) &&
       (0 == border.top) && (0 == border.bottom)) {
@@ -937,42 +933,53 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
     return;
   }
 
-
+  // Turn off rendering for all of the zero sized sides
+  if (0 == border.top) aSkipSides |= (1 << NS_SIDE_TOP);
+  if (0 == border.right) aSkipSides |= (1 << NS_SIDE_RIGHT);
+  if (0 == border.bottom) aSkipSides |= (1 << NS_SIDE_BOTTOM);
+  if (0 == border.left) aSkipSides |= (1 << NS_SIDE_LEFT);
 
   nsRect inside(aBounds);
   nsRect outside(inside);
   outside.Deflate(border);
-
  
   //see if any sides are dotted or dashed
   for (cnt = 0; cnt < 4; cnt++) {
-     if ((aStyle.GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_DOTTED) || 
+    if ((aStyle.GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_DOTTED) || 
         (aStyle.GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_DASHED))  {
       break;
     }
   }
   if (cnt < 4) {
-     DrawDashedSides(cnt, aRenderingContext,aStyle,inside, outside,aSkipSides, aGap);
+    DrawDashedSides(cnt, aRenderingContext,aStyle,
+                    inside, outside, aSkipSides, aGap);
   }
 
   // Draw all the other sides
   nscoord twipsPerPixel = (nscoord)aPresContext.GetPixelsToTwips();
-
   if (0 == (aSkipSides & (1<<NS_SIDE_TOP))) {
- 	DrawSide(aRenderingContext, NS_SIDE_TOP, aStyle.GetBorderStyle(NS_SIDE_TOP),
-             aStyle.GetBorderColor(NS_SIDE_TOP), inside, outside, printing, twipsPerPixel, aGap);
+    DrawSide(aRenderingContext, NS_SIDE_TOP,
+             aStyle.GetBorderStyle(NS_SIDE_TOP),
+             aStyle.GetBorderColor(NS_SIDE_TOP),
+             inside, outside, printing, twipsPerPixel, aGap);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_LEFT))) {
-	DrawSide(aRenderingContext, NS_SIDE_LEFT, aStyle.GetBorderStyle(NS_SIDE_LEFT), 
-             aStyle.GetBorderColor(NS_SIDE_LEFT), inside, outside, printing, twipsPerPixel, aGap);
+    DrawSide(aRenderingContext, NS_SIDE_LEFT,
+             aStyle.GetBorderStyle(NS_SIDE_LEFT), 
+             aStyle.GetBorderColor(NS_SIDE_LEFT),
+             inside, outside, printing, twipsPerPixel, aGap);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_BOTTOM))) {
-	DrawSide(aRenderingContext, NS_SIDE_BOTTOM, aStyle.GetBorderStyle(NS_SIDE_BOTTOM),
-             aStyle.GetBorderColor(NS_SIDE_BOTTOM), inside, outside, printing, twipsPerPixel, aGap);
+    DrawSide(aRenderingContext, NS_SIDE_BOTTOM,
+             aStyle.GetBorderStyle(NS_SIDE_BOTTOM),
+             aStyle.GetBorderColor(NS_SIDE_BOTTOM),
+             inside, outside, printing, twipsPerPixel, aGap);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_RIGHT))) {
-	DrawSide(aRenderingContext, NS_SIDE_RIGHT, aStyle.GetBorderStyle(NS_SIDE_RIGHT),
-            aStyle.GetBorderColor(NS_SIDE_RIGHT), inside, outside, printing, twipsPerPixel, aGap);
+    DrawSide(aRenderingContext, NS_SIDE_RIGHT,
+             aStyle.GetBorderStyle(NS_SIDE_RIGHT),
+             aStyle.GetBorderColor(NS_SIDE_RIGHT),
+             inside, outside, printing, twipsPerPixel, aGap);
   }
 }
 
