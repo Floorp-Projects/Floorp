@@ -45,6 +45,8 @@ public:
                                     const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
   NS_IMETHOD                Notify(PRUint32 aDocumentID, const PRUnichar* aTag, PRUint32 numOfAttributes, 
                                     const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
+  NS_IMETHOD                Notify(nsISupports* aDocumentID, const PRUnichar* aTag, 
+                                    const nsDeque* aKeys, const nsDeque* aValues);
 
   /* methods for nsIObserver */
   NS_DECL_NSIOBSERVER
