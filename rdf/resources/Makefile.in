@@ -24,7 +24,9 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-FILES=\
+include $(topsrcdir)/config/rules.mk
+
+FILES = \
 	bookmarks.html			\
 	history.css			\
 	history.xul			\
@@ -65,7 +67,6 @@ FILES=\
 
 
 FILES := $(addprefix $(srcdir)/, $(FILES))
-
 
 install::
 	$(INSTALL) $(FILES) $(DIST)/bin/res/rdf
