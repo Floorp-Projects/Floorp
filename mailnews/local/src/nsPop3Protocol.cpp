@@ -246,9 +246,10 @@ net_pop3_load_state(const char* searchhost,
       if (buf[0] == '*') {
         /* It's a host&user line. */
         current = NULL;
-        host = nsCRT::strtok(buf + 1, " \t\r\n", &newStr);
         /* XP_FileReadLine uses LF on all platforms */
-        user = nsCRT::strtok(newStr, " \t\r\n", &newStr);
+        host = nsCRT::strtok(buf + 1, " \t\r\n", &newStr);
+        /* without space to also get realnames - see bug 225332 */
+        user = nsCRT::strtok(newStr, "\t\r\n", &newStr);
         if (host == NULL || user == NULL) continue;
         for (tmp = result ; tmp ; tmp = tmp->next) 
         {
