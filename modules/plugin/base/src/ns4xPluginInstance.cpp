@@ -74,9 +74,9 @@ NS_IMPL_ISUPPORTS2(ns4xPluginStreamListener, nsIPluginStreamListener,
 ns4xPluginStreamListener::ns4xPluginStreamListener(nsIPluginInstance* inst, 
                                                    void* notifyData)
     : mNotifyData(notifyData),
-      mStreamInfo(nsnull),
       mStreamStarted(PR_FALSE),
-      mStreamCleanedUp(PR_FALSE)
+      mStreamCleanedUp(PR_FALSE),
+      mStreamInfo(nsnull)
 {
   NS_INIT_REFCNT();
   mInst = (ns4xPluginInstance*) inst;
@@ -218,8 +218,6 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
 
   mStreamInfo = pluginInfo;
 
-  PRLibrary* lib = mInst->fLibrary;
-
   // if we don't know the end of the stream, use 0 instead of -1. bug 59571
   if (mNPStream.end == -1)
     mNPStream.end = 0;
@@ -229,7 +227,7 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
                                                        (char *)contentType,
                                                        &mNPStream,
                                                        seekable,
-                                                       &streamType), lib);
+                                                       &streamType), mInst->fLibrary);
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP NewStream called: this=%p, npp=%p, mime=%s, seek=%d, type=%d, return=%d, url=%s\n",
@@ -328,7 +326,6 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
     if (callbacks->writeready != NULL)
     {
       PRLibrary* lib = nsnull;
-      PRBool started = PR_FALSE;
       lib = mInst->fLibrary;
 
       NS_TRY_SAFE_CALL_RETURN(numtowrite, CallNPP_WriteReadyProc(callbacks->writeready,
@@ -359,14 +356,12 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
 
     if (numtowrite > 0)
     {
-      PRLibrary* lib = mInst->fLibrary;
-
       NS_TRY_SAFE_CALL_RETURN(writeCount, CallNPP_WriteProc(callbacks->write,
                                                             npp,
                                                             &mNPStream, 
                                                             mPosition,
                                                             numtowrite,
-                                                            (void *)mStreamBuffer), lib);
+                                                            (void *)mStreamBuffer), mInst->fLibrary);
 
       NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
       ("NPP Write called: this=%p, npp=%p, pos=%d, len=%d, buf=%s, return(written)=%d,  url=%s\n",
@@ -469,7 +464,6 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
     if (callbacks->writeready != NULL)
     {
       PRLibrary* lib = nsnull;
-      PRBool started = PR_FALSE;
       lib = mInst->fLibrary;
 
       NS_TRY_SAFE_CALL_RETURN(numtowrite, CallNPP_WriteReadyProc(callbacks->writeready,
@@ -499,8 +493,6 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
 
     if (numtowrite > 0)
     {
-      PRLibrary* lib = mInst->fLibrary;
-
 #if 0 // useful for debugging problems with byte range buffers
       printf(">  %d - %d \n", sourceOffset + writeCount + mPosition, numtowrite);
       nsCString x; 
@@ -518,7 +510,7 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
                                                             &mNPStream, 
                                                             sourceOffset + writeCount + mPosition,
                                                             numtowrite,
-                                                            (void *)mStreamBuffer), lib);
+                                                            (void *)mStreamBuffer), mInst->fLibrary);
 
      NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
      ("NPP Write called: this=%p, npp=%p, pos=%d, len=%d, buf=%s, return(written)=%d, url=%s\n",
