@@ -1821,6 +1821,18 @@ sub BuildIDLProjects()
         BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlextrasIDL.mcp", "xmlextras");
     }
 
+	# xpt_link MPW tool, needed for merging xpt files (release build)
+	
+    if ($main::build{xptlink})
+    {
+        my($codewarrior_msl) = getCodeWarriorPath("MSL:MSL_C:MSL_MacOS:");
+    	if ( ! -e $codewarrior_msl . "Lib:PPC:MSL C.PPC MPW(NL).Lib") {
+        	print("MSL PPC MPW Lib not found... Let's build it.\n");
+        	BuildProject($codewarrior_msl . "Project:PPC:MSL C.PPC MPW.mcp", "MSL C.PPC MPW");
+    	}
+        BuildOneProject(":mozilla:xpcom:typelib:xpidl:macbuild:xpidl.mcp", "xpt_link", 0, 0, 0);
+    }
+    
     print("--- IDL projects complete ----\n");
 }
 
