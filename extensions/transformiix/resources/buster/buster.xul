@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+
+<!-- 
+  The contents of this file are subject to the Mozilla Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/MPL/
+  
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+  
+  The Original Code is mozilla.org.
+  
+  The Initial Developer of the Original Code is Axel Hecht.
+  Portions created by Axel Hecht are Copyright (C) 2001 Axel Hecht.
+  All Rights Reserved.
+  
+  Contributor(s):
+    Axel Hecht <axel@pike.org> (Original Author)
+  --> 
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="txTools.css" type="text/css"?> 
+<window id="XalanBuster"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="loaderstuff()"
+        align="vertical">
+<script type="text/javascript" src="DiffDOM.js" />
+<script type="text/javascript" src="txTools.js" />
+<script type="text/javascript" src="xulTxTools.js" />
+<script type="text/javascript" src="DumpDOM.js" />
+<box align="horizontal">
+  <button value="refresh" oncommand="refresh_xalan()" />
+  <button value="check all" oncommand="check(true)" />
+  <button value="uncheck all" oncommand="check(false)" />
+  <button value="invert checks" oncommand="invert_check()" />
+  <button value="hide checked" oncommand="hide_checked(true)" />
+  <button value="hide unchecked" oncommand="hide_checked(false)" />
+  <button value="run checked tests" oncommand="dump_checked()" />
+</box>
+<box align="horizontal">
+  <text value="Xalan base directory: " class="head" />
+  <textfield id="xalan_base" persist="value"/>
+  <button value="browse..." oncommand="browse_base_dir()" />
+</box>
+<box align="horizontal">
+<titledbox align="horizontal"><title value="search" />
+  <button value="Search for " oncommand="select()"/>
+  <textfield style="width: 10em;" id="search-name" /><text value=" in " />
+  <menulist id="search-field">
+    <menupopup>
+      <menuitem data="1" value="Name" />
+      <menuitem data="2" value="Purpose" />
+      <menuitem data="3" value="Comment" />
+    </menupopup>
+  </menulist>
+</titledbox>
+<spring flex="1" /></box>
+<grid> 
+  <columns> 
+    <column/> 
+    <column flex="1"/> 
+    <column flex="1"/> 
+    <column flex="1"/> 
+  </columns> 
+
+  <rows id="xalan_grid">
+    <row flex="1">
+      <text value=" " class="head"/> 
+      <text value="Name" class="head"/> 
+      <text value="Purpose" class="head"/> 
+      <text value="Comment" class="head"/> 
+    </row> 
+  </rows> 
+</grid>
+</window>
