@@ -235,6 +235,11 @@ NS_IMETHODIMP nsWidget::Destroy()
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWidget::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
 {
 

@@ -74,6 +74,7 @@ public:
     NS_IMETHOD              Show(PRBool aState);
     NS_IMETHOD              SetModal(PRBool aModal);
     NS_IMETHOD              IsVisible(PRBool & aState);
+    NS_IMETHOD              ConstrainPosition(PRInt32 *aX, PRInt32 *aY);
     NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
     virtual void            AddChild(nsIWidget* aChild);
     virtual void            RemoveChild(nsIWidget* aChild);
