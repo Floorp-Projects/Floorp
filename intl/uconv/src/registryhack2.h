@@ -85,9 +85,9 @@
   mDecArray[i++].mCID  = &kUCS4LEToUnicodeCID;
   mDecArray[i++].mCID  = &kT61ToUnicodeCID;
   mDecArray[i++].mCID  = &kUserDefinedToUnicodeCID;
-  mDecArray[i++].mCID  = &kObsoletedShiftJISToUnicodeCID;
-  mDecArray[i++].mCID  = &kObsoletedEUCJPToUnicodeCID;
-  mDecArray[i++].mCID  = &kObsoletedISO2022JPToUnicodeCID;
+  mDecArray[i++].mCID  = &kObsSJISToUnicodeCID;
+  mDecArray[i++].mCID  = &kObsEUCJPToUnicodeCID;
+  mDecArray[i++].mCID  = &kObsISO2022JPToUnicodeCID;
 
   mEncSize           = 72;
   mEncArray          = new ConverterInfo [mEncSize];

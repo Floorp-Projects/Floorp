@@ -107,7 +107,7 @@ FactoryData g_FactoryData[] =
     "Unicode"
   },
   {	// To Be Obsoleted
-    &kObsoletedShiftJISToUnicodeCID,
+    &kObsSJISToUnicodeCID,
     nsSJIS2Unicode::CreateInstance,
     "x-obsoleted-Shift_JIS",
     "Unicode"
@@ -131,13 +131,13 @@ FactoryData g_FactoryData[] =
     "Unicode"
   },
   {// To Be Obsoleted
-    &kISO2022JPToUnicodeCID,
+    &kObsISO2022JPToUnicodeCID,
     nsISO2022JPToUnicode::CreateInstance,
     "x-obsoleted-ISO-2022-JP",
     "Unicode"
   },// To Be Obsoleted
   {	// To Be Obsoleted
-    &kEUCJPToUnicodeCID,
+    &kObsEUCJPToUnicodeCID,
     nsEUCJPToUnicode::CreateInstance,
     "x-obsoleted-EUC-JP",
     "Unicode"
