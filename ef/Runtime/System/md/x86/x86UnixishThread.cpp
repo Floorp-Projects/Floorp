@@ -20,17 +20,35 @@
  * Contributor(s): 
  */
 #include <unistd.h>
+#if 0
 #include <sys/ptrace.h>
+#endif
 #include <assert.h>
 #include <signal.h>
 #ifdef _REENTRANT
 #include <pthread.h>
 #endif
+#ifdef LINUX
 #include <linux/ptrace.h>
 #include <sys/user.h>
+#endif
 #include "Thread.h"
 #include "NativeCodeCache.h"
 #include "Exceptions.h"
+
+#if defined( FREEBSD ) || defined ( NETBSD )
+
+#define CONTEXT_EBP(ctxt) ctxt.sc_ebp
+#define CONTEXT_EIP(ctxt) ctxt.sc_eip
+
+#elif defined ( LINUX )
+
+#define CONTEXT_EBP(ctxt) ctxt.ebp
+#define CONTEXT_EIP(ctxt) ctxt.eip
+
+#else
+#error "need CONTEXT_EIP and CONTEXT_EBP for this architecture"
+#endif
 
 // Supend the thread specified by the pid
 void _suspendThread(HANDLE  handle) 
@@ -56,12 +74,14 @@ void _resumeThread(HANDLE  handle)
 bool 
 _getThreadContext(HANDLE handle, ThreadContext& context) 
 {
+#if 0
     if (ptrace(PTRACE_ATTACH, handle, NULL, NULL) == -1)
 		assert(0);
     if (ptrace(PTRACE_PEEKUSR, handle, offsetof(struct user, regs), &context) 
 		== -1)
 		assert(0);
     
+#endif
     return true;
 }
 
@@ -69,34 +89,36 @@ _getThreadContext(HANDLE handle, ThreadContext& context)
 void 
 _setThreadContext(HANDLE handle, ThreadContext &context) 
 {
+#if 0
     if (ptrace(PTRACE_ATTACH, handle, NULL, NULL) == -1)
 		assert(0);
     if (ptrace(PTRACE_POKEUSR, handle, offsetof(struct user, regs), &context) 
 	== -1)
 		assert(0);
+#endif
 }
 
 Int32* 
 _getFramePointer(ThreadContext& context) 
 {
-	return (Int32 *) context.ebp; 
+	return (Int32 *) CONTEXT_EBP(context);
 }
 
 void _setFramePointer(ThreadContext& context, Int32* v) 
 {
-	context.ebp = (long) v;
+	CONTEXT_EBP(context) = (long) v;
 }
 
 Uint8* 
 _getInstructionPointer(ThreadContext &context) 
 {
-	return (Uint8*)context.eip;
+	return (Uint8*)CONTEXT_EIP(context);
 }
 
 void 
 _setInstructionPointer(ThreadContext& context, Uint8 *v) 
 {
-	context.eip = (long) v;
+	CONTEXT_EIP(context) = (long) v;
 }
 
 void Thread::realHandle() 
