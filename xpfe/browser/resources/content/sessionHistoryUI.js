@@ -115,7 +115,7 @@ function createUBHistoryMenu( aParent )
                        .getService(Components.interfaces.nsIRDFService);
 
     if (!gLocalStore)
-      gLocalStore = gRDF.GetDataSource("rdf:localstore");
+      gLocalStore = gRDF.GetDataSource("rdf:local-store");
 
     if (gLocalStore) {
       if (!gRDFC)
@@ -165,10 +165,10 @@ function addToUrlbarHistory()
                       .getService(Components.interfaces.nsIRDFService);
 
   if (!gLocalStore)
-     gLocalStore = gRDF.GetDataSource("rdf:localstore");
+     gLocalStore = gRDF.GetDataSource("rdf:local-store");
 
   if (gLocalStore) {
-      if (!gRDFC)
+     if (!gRDFC)
         gRDFC = Components.classes["@mozilla.org/rdf/container-utils;1"]
                           .getService(Components.interfaces.nsIRDFContainerUtils);
 
