@@ -45,7 +45,7 @@ class nsInstallFolder
        nsresult Init(const nsString& aFolderID, const nsString& aRelativePath);
        nsresult Init(nsIFile* rawIFile);
 
-       void GetDirectoryPath(nsString& aDirectoryPath);
+       void GetDirectoryPath(nsCString& aDirectoryPath);
        nsIFile* GetFileSpec();
        PRInt32 ToString(nsAutoString* outString);
        
@@ -54,7 +54,7 @@ class nsInstallFolder
         nsCOMPtr<nsIFile>  mFileSpec;
 
         void         SetDirectoryPath(const nsString& aFolderID, const nsString& aRelativePath);
-        void         PickDefaultDirectory();
+        void         AppendXPPath(const nsString& aRelativePath);
         PRInt32      MapNameToEnum(const nsString&  name);
 };
 

@@ -257,8 +257,6 @@ nsInstall::InternalAbort(PRInt32 errcode)
     nsInstallObject* ie;
     if (mInstalledFiles != nsnull) 
     {
-        //PRUint32 i;
-        //mInstalledFiles->Count(&i);
         for (PRInt32 i = mInstalledFiles->Count(); i >= 0; i--) 
         {
             ie = (nsInstallObject *)mInstalledFiles->ElementAt(i);
@@ -788,12 +786,8 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
     }
     
 
-    if ( mInstalledFiles != NULL)
+    if ( mInstalledFiles->Count() > 0 )
     {
-      //PRUint32 i = 0;
-      //mInstalledFiles->Count(&i);
-      if ( mInstalledFiles->Count() > 0 )
-      {
         if ( mUninstallPackage )
         {
             VR_UninstallCreateNode( (char*)(const char*) nsAutoCString(mRegistryPackageName), 
@@ -804,7 +798,7 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
         if (mVersionInfo)
         {
             nsString versionString;
-            nsString path;
+            nsCString path;
 
             mVersionInfo->ToString(versionString);
 
@@ -812,15 +806,13 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
                 mPackageFolder->GetDirectoryPath(path);
 
             VR_Install( (char*)(const char*)nsAutoCString(mRegistryPackageName), 
-                        (char*)(const char*)nsAutoCString(path),   
+                        (char*)path.GetBuffer(),
                         (char*)(const char*)nsAutoCString(versionString), 
                         PR_FALSE );
         }
 
         nsInstallObject* ie = nsnull;
 
-        //PRUint32 numberOfFiles = 0;
-        //mInstalledFiles->Count(&numberOfFiles);
         for (PRInt32 i=0; i < mInstalledFiles->Count(); i++) 
         {
             ie = (nsInstallObject*)mInstalledFiles->ElementAt(i);
@@ -883,7 +875,6 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
             mListener->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
             mStatusSent = PR_TRUE;
         }
-      }
     }
     else
     {
@@ -1493,7 +1484,6 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     mVersionInfo->Init(aVersion);
 
     mInstalledFiles = new nsVoidArray();
-    //nsresult rv = NS_NewISupportsArray(getter_AddRefs(mInstalledFiles));
     
     if (mInstalledFiles == nsnull)
     {
@@ -2351,8 +2341,6 @@ nsInstall::CleanUp(void)
     
     if ( mInstalledFiles != nsnull ) 
     {
-        //PRUint32 numberOfObjects = 0;
-        //mInstalledFiles->Count(&numberOfObjects);
         for (PRInt32 i=0; i < mInstalledFiles->Count(); i++) 
         {
             ie = (nsInstallObject*)mInstalledFiles->ElementAt(i);

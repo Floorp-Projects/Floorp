@@ -107,7 +107,7 @@ PRInt32 nsRegisterItem::Complete()
     if ( reg && !(mChromeType & CHROME_DELAYED) )
     {
         if (mChromeType & CHROME_SKIN)
-            rv = reg->InstallSkin(mURL.GetBuffer(), isProfile, PR_FALSE);
+            rv = reg->InstallSkin(mURL.GetBuffer(), isProfile, PR_TRUE);
 
         if (mChromeType & CHROME_LOCALE)
             rv = reg->InstallLocale(mURL.GetBuffer(), isProfile);
@@ -117,9 +117,11 @@ PRInt32 nsRegisterItem::Complete()
     }
     else
     {
-        // Couldn't get the chrome registry (probably during the wizard),
-        // so we need to save this info into the magic startup file
-        result = nsInstall::REBOOT_NEEDED;
+        // Unless the script explicitly told us to register later
+        // return the REBOOT_NEEDED status. If the script requested
+        // it then we assume it knows what it's doing.
+        if (!(mChromeType & CHROME_DELAYED))
+            result = nsInstall::REBOOT_NEEDED;
 
         // First find the "bin" diretory of the install
         PRFileDesc* fd = nsnull;
@@ -173,6 +175,9 @@ PRInt32 nsRegisterItem::Complete()
             {
                 PRInt32 written, actual;
                 char* installStr = nsnull;
+       
+                // this looks redundant, but a single registerChrome()
+                // call can register all three types.
                 if (mChromeType & CHROME_SKIN)
                 {
                     installStr = PR_smprintf("skin,%s,path,%s\n",
@@ -249,6 +254,7 @@ char* nsRegisterItem::toString()
     if (buffer == nsnull || !mInstall)
         return nsnull;
 
+    buffer[0] = '\0';
     switch (mChromeType & CHROME_ALL)
     {
     case CHROME_SKIN:
@@ -271,7 +277,17 @@ char* nsRegisterItem::toString()
 
     if (rsrcVal)
     {
-        PR_snprintf(buffer, 1024, rsrcVal, mURL.GetBuffer());
+        if (mInstall->GetChromeRegistry() && !(mChromeType & CHROME_DELAYED))
+            PR_snprintf(buffer, 1024, rsrcVal, mURL.GetBuffer());
+        else
+        {
+            nsXPIDLCString path;
+            nsresult rv = mChrome->GetPath(getter_Copies(path));
+            if (NS_SUCCEEDED(rv) && path)
+            {
+                PR_snprintf(buffer, 1024, rsrcVal, path);
+            }
+        }
         nsCRT::free(rsrcVal);
     }
 

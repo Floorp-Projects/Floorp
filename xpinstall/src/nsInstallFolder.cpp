@@ -31,6 +31,7 @@
 #include "nsRepository.h"
 
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "nsFileSpec.h"
 #include "nsIFileSpec.h"
 #include "nsIFile.h"
@@ -102,50 +103,10 @@ nsInstallFolder::Init(nsIFile* rawIFile)
 nsresult
 nsInstallFolder::Init(const nsString& aFolderID, const nsString& aRelativePath)
 {
-
-    PRBool flagIsDir, flagExists;
-  
     mFileSpec = nsnull;
-
-    /*
-        aFolderID can be either a Folder enum in which case we merely pass it
-        to SetDirectoryPath, or it can be a Directory.  If it is the later, it
-        must already exist and of course be a directory not a file.  
-    */
 
     SetDirectoryPath( aFolderID, aRelativePath );
 
-    if (mFileSpec)
-        return NS_OK;
-
-    // it didn't, so aFolderID is not one of the magic strings.
-    // maybe it's already a pathname? If so it had better be a directory
-    // if it already exists...
-    nsAutoCString tempFolderID(aFolderID);
-    nsCOMPtr<nsILocalFile> dirCheck;
-    NS_NewLocalFile(tempFolderID, getter_AddRefs(dirCheck));
-    
-    if (!dirCheck)
-        return NS_ERROR_FAILURE;
-
-    dirCheck->IsDirectory(&flagIsDir);
-    dirCheck->Exists(&flagExists);
-
-    if ( flagIsDir && flagExists )
-    {
-        mFileSpec = dirCheck;
-
-        if (aRelativePath.Length() > 0 )
-        {
-            // we've got a subdirectory to tack on
-            nsString morePath(aFolderID);
-            morePath.Append(aRelativePath);
-            nsAutoCString tempMorePath(morePath);
-            NS_NewLocalFile(tempMorePath, getter_AddRefs(dirCheck));
-
-            mFileSpec = dirCheck;
-        }
-    }
     if (mFileSpec)
         return NS_OK;
 
@@ -164,10 +125,7 @@ nsInstallFolder::Init(nsInstallFolder& inFolder, const nsString& subString)
         return NS_ERROR_FAILURE;
 
     if(!subString.IsEmpty())
-    {
-      nsAutoCString tempSubString(subString);
-      mFileSpec->Append(tempSubString);
-    }
+        AppendXPPath(subString);
 
     return NS_OK;
 }
@@ -179,24 +137,24 @@ nsInstallFolder::~nsInstallFolder()
 }
 
 void 
-nsInstallFolder::GetDirectoryPath(nsString& aDirectoryPath)
+nsInstallFolder::GetDirectoryPath(nsCString& aDirectoryPath)
 {
-	PRBool flagIsDir;
-  char*  thePath;
+  PRBool flagIsDir;
+  nsXPIDLCString  thePath;
   
   aDirectoryPath.SetLength(0);
-    
+
     if (mFileSpec != nsnull)
     {
-      // We want the a NATIVE path.
-      mFileSpec->GetPath(&thePath);  
-      aDirectoryPath.AssignWithConversion(thePath);
+      // We want the NATIVE path.
+      mFileSpec->GetPath(getter_Copies(thePath));
+      aDirectoryPath.Assign(thePath);
 
       mFileSpec->IsDirectory(&flagIsDir);
       if (flagIsDir)
       {
         if (aDirectoryPath.Last() != FILESEP)
-            aDirectoryPath.AppendWithConversion(FILESEP);
+            aDirectoryPath.Append(FILESEP);
       }
     }
 }
@@ -205,7 +163,7 @@ void
 nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRelativePath)
 {
     if ( aFolderID.EqualsIgnoreCase("Installed") )
-    {   
+    {
         // XXX block from users or remove "Installed"
         // XXX the filespec creation will fail due to unix slashes on Mac
         nsAutoCString tempRelPath(aRelativePath);
@@ -548,19 +506,48 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
             case -1:
 		    default:
                 mFileSpec = nsnull;
-			   return;
+			    break;
 		}
 
         if (aRelativePath.Length() > 0 && mFileSpec)
         {
-            //nsString tempPath(aRelativePath);
-
-            //if (aRelativePath.Last() != '/' || aRelativePath.Last() != '\\')
-            //    tempPath.AppendWithConversion('/');
-            nsAutoCString tempRelPath(aRelativePath);
-            mFileSpec->Append(tempRelPath);
+            AppendXPPath(aRelativePath);
         }
     }
+}
+
+
+void
+nsInstallFolder::AppendXPPath(const nsString& aRelativePath)
+{
+    nsAutoString segment;
+    PRInt32 start = 0;
+    PRInt32 curr;
+
+    do {
+        curr = aRelativePath.FindChar('/',PR_FALSE,start);
+        if ( curr > start )
+        {
+            // found a segment
+            aRelativePath.Mid(segment,start,curr-start);
+            start = curr+1;
+        }
+        else 
+        {
+            // last segment
+            aRelativePath.Mid(segment,start,-1);
+        }
+            
+        nsresult rv = mFileSpec->AppendUnicode(segment.GetUnicode());
+        if (NS_FAILED(rv))
+        {
+            // Unicode converters not present (likely wizard case)
+            // so do our best with the vanilla conversion.
+            nsCAutoString tmp;
+            tmp.AssignWithConversion(segment);
+            mFileSpec->Append(tmp.GetBuffer());
+        }
+    } while ( curr != kNotFound );
 }
 
 
@@ -596,24 +583,37 @@ nsInstallFolder::ToString(nsAutoString* outString)
 {
   //XXX: May need to fix. Native charset paths will be converted into Unicode when the get to JS
   //     This will appear to work on Latin-1 charsets but won't work on Mac or other charsets.
+  //     On the other hand doing it right requires intl charset converters
+  //     which we don't yet have in the initial install case.
 
-  char* temp;
-  PRBool flagIsFile;
-
-  if (!mFileSpec)
+  if (!mFileSpec || !outString)
       return NS_ERROR_NULL_POINTER;
 
-  nsresult rv = mFileSpec->GetPath(&temp);
+  nsXPIDLString  tempUC;
+  nsresult rv = mFileSpec->GetUnicodePath(getter_Copies(tempUC));
+  if (NS_SUCCEEDED(rv))
+  {
+      outString->Assign(tempUC);
+  }
+  else
+  {
+      // converters not present, most likely in wizard case;
+      // do best we can with stock ASCII conversion
+
+      // XXX NOTE we can make sure our filenames are ASCII, but we have no
+      // control over the directory name which might be localized!!!
+      nsXPIDLCString temp;
+      rv = mFileSpec->GetPath(getter_Copies(temp));
+      outString->AssignWithConversion(temp);
+  }
+
+  PRBool flagIsFile;
   mFileSpec->IsFile(&flagIsFile);
   if (!flagIsFile)
   {
-      nsString tempString; 
-      tempString.AssignWithConversion(temp);
-      tempString.AppendWithConversion(FILESEP);
-      nsAutoCString tempAutoString(tempString);
-      outString->AssignWithConversion(tempAutoString);
+      // assume directory, thus end with slash.
+      outString->AppendWithConversion(FILESEP);
   }
-  else
-      outString->AssignWithConversion(temp);
+
   return rv;
 }

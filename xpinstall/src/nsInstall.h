@@ -159,6 +159,8 @@ class nsInstall
             UNABLE_TO_LOAD_LIBRARY        = -238,
 
             CHROME_REGISTRY_ERROR       = -239,
+
+            MALFORMED_INSTALL           = -240,
             
             OUT_OF_MEMORY               = -299,
 
