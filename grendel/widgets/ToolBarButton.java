@@ -31,7 +31,7 @@ import java.awt.event.MouseListener;
  *  the mouse moves over it. 
  *
  *  @author <a href="mailto:talisman@anamorphic.com">Jeff Galyan</a>
- *  @version $Revision: 1.1 $
+ *  @version $Revision: 1.2 $
  */
 public class ToolBarButton extends JButton implements MouseListener {
 
@@ -86,9 +86,21 @@ public class ToolBarButton extends JButton implements MouseListener {
     setBorder(BorderFactory.createEmptyBorder());
   }
 
+  /** Paints a loweredBevelBorder when the mouse is pressed. We have to 
+   *  have this since the default JButton behaviour is to simply make its
+   *  background color darker.
+   */
+  public void mousePressed(MouseEvent evt) { 
+    setBorder(BorderFactory.createLoweredBevelBorder());
+  }
+
+  /** Paints the border raised again when the mouse is released.
+   */
+  public void mouseReleased(MouseEvent evt) {
+    setBorder(BorderFactory.createRaisedBevelBorder());
+  }
+
   // No-ops to satisfy the implements clause of this class.
 
   public void mouseClicked(MouseEvent evt) { }
-  public void mousePressed(MouseEvent evt) { }
-  public void mouseReleased(MouseEvent evt) { }
 }
