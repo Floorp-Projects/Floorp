@@ -553,7 +553,6 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
   return result;
 }
 
-#include "nsIPresShell.h"
 /**
   */
 void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext, 

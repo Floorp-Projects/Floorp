@@ -269,6 +269,7 @@ nsTableFrame::nsTableFrame(nsIContent* aContent, nsIFrame* aParentFrame)
     mIsInvariantWidth(PR_FALSE)
 {
   mEffectiveColCount = -1;  // -1 means uninitialized
+  mCellMap = new nsCellMap(0, 0);
 }
 
 nsTableFrame::~nsTableFrame()
@@ -290,6 +291,7 @@ NS_IMETHODIMP
 nsTableFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   mFirstChild = aChildList;
+  EnsureColumns(&aPresContext);
   return NS_OK;
 }
 
@@ -610,13 +612,11 @@ void nsTableFrame::ResetCellMap ()
   * add extra implicit columns to the content tree.
   */
 
-// XXX this and ENsureColumnsAt should be 1 method, with -1 for aColIndex meaning "do them all"
-void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
-                                 nsReflowMetrics&     aDesiredSize,
-                                 const nsReflowState& aReflowState,
-                                 nsReflowStatus&      aStatus)
+// XXX this and EnsureColumnsAt should be 1 method, with -1 for aColIndex meaning "do them all"
+void nsTableFrame::EnsureColumns(nsIPresContext* aPresContext)
 {
   nsresult rv;
+  NS_PRECONDITION(nsnull!=mCellMap, "bad state:  null cellmap");
   // XXX sec should only be called on firstInFlow
   SetMinColSpanForTable();
   if (nsnull==mCellMap)
@@ -639,22 +639,29 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
       PRInt32 numCols = ((nsTableColGroupFrame*)childFrame)->GetColumnCount();
       actualColumns += numCols;
       lastColGroupFrame = (nsTableColGroupFrame *)childFrame;
+      if (PR_TRUE==gsDebug) printf("EC: found a col group %p\n", lastColGroupFrame);
     }
     else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay ||
              NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay ||
              NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay )
     {
       firstRowGroupFrame = childFrame;
+      if (PR_TRUE==gsDebug) printf("EC: found a row group %p\n", firstRowGroupFrame);
       break;
     }
     prevSibFrame = childFrame;
     childFrame->GetNextSibling(childFrame);
-  }    
-  if (actualColumns < GetColCount())
+  }
+  PRInt32 colCount = GetColCount();
+  if (PR_TRUE==gsDebug) printf("EC: actual = %d, colCount=%d\n", actualColumns, colCount);
+  if (actualColumns < colCount)
   {
+    PRBool lastColGroupNeedsInit=PR_FALSE;
     nsIHTMLContent *lastColGroup=nsnull;
     if (nsnull==lastColGroupFrame)
     {
+      lastColGroupNeedsInit=PR_TRUE;
+      if (PR_TRUE==gsDebug) printf("EC:creating colgroup\n", actualColumns, colCount);
       // create an implicit colgroup
       nsAutoString colGroupTag;
       nsHTMLAtoms::colgroup->ToString(colGroupTag);
@@ -705,6 +712,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
     nsIFrame* lastNewColFrame = nsnull;
     for ( ; excessColumns > 0; excessColumns--)
     {
+      if (PR_TRUE==gsDebug) printf("EC:creating col\n", actualColumns, colCount);
       nsIHTMLContent *col=nsnull;
       // create an implicit col
       rv = NS_CreateHTMLElement(&col, colTag);  // ADDREF: col++
@@ -719,6 +727,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
       nsIStyleContextPtr colStyleContext =
         aPresContext->ResolveStyleContextFor(col, lastColGroupFrame, PR_TRUE);
       colFrame->SetStyleContext(aPresContext, colStyleContext);
+      colFrame->Init(*aPresContext, nsnull);
 
       // XXX Don't release this style context (or we'll end up with a double-free).\
       // This code is doing what nsTableColGroupFrame::Reflow() does...
@@ -733,20 +742,9 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
       lastNewColFrame = colFrame;
       NS_RELEASE(col);                          // ADDREF: col--
     }
+    if (PR_TRUE==lastColGroupNeedsInit)
+      lastColGroupFrame->Init(*aPresContext, firstNewColFrame);
     NS_RELEASE(lastColGroup);                       // ADDREF: lastColGroup--
-
-    // Generate an appended reflow command
-    // XXX This is really yucky...
-    nsIReflowCommand* reflowCmd;
-
-    NS_NewHTMLReflowCommand(&reflowCmd, lastColGroupFrame, nsIReflowCommand::FrameAppended,
-                            firstNewColFrame);
-    nsReflowState incrReflowState(lastColGroupFrame, aReflowState, aReflowState.maxSize);
-    incrReflowState.reflowCommand = reflowCmd;
-    incrReflowState.reason = eReflowReason_Incremental;
-
-    // Reflow the frames
-    lastColGroupFrame->Reflow(*aPresContext, aDesiredSize, incrReflowState, aStatus);
   }
 }
 
@@ -756,10 +754,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
   */
 // XXX should be nsresult, not void
 void nsTableFrame::EnsureColumnFrameAt(PRInt32              aColIndex,
-                                       nsIPresContext*      aPresContext,
-                                       nsReflowMetrics&     aDesiredSize,
-                                       const nsReflowState& aReflowState,
-                                       nsReflowStatus&      aStatus)
+                                       nsIPresContext*      aPresContext)
 {
   nsresult rv;
   PRInt32 actualColumns = 0;
@@ -873,19 +868,6 @@ void nsTableFrame::EnsureColumnFrameAt(PRInt32              aColIndex,
       NS_RELEASE(col);                          // ADDREF: col--
     }
     NS_RELEASE(lastColGroup);                       // ADDREF: lastColGroup--
-
-    // Generate an appended reflow command
-    // XXX This is really yucky...
-    nsIReflowCommand* reflowCmd;
-
-    NS_NewHTMLReflowCommand(&reflowCmd, lastColGroupFrame, nsIReflowCommand::FrameAppended,
-                            firstNewColFrame);
-    nsReflowState incrReflowState(lastColGroupFrame, aReflowState, aReflowState.maxSize);
-    incrReflowState.reflowCommand = reflowCmd;
-    incrReflowState.reason = eReflowReason_Incremental;
-
-    // Reflow the frames
-    lastColGroupFrame->Reflow(*aPresContext, aDesiredSize, incrReflowState, aStatus);
   }
 }
 
@@ -1584,10 +1566,10 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
   if (PR_TRUE==NeedsReflow(aReflowState.maxSize))
   {
     if (PR_FALSE==IsFirstPassValid())
-    { // we treat the table as if we've never seen the layout data before
-      if (mCellMap!=nsnull)
-        delete mCellMap;
-      mCellMap = new nsCellMap(0, 0);
+    {
+      // XXX TROY:  we used to rebuild the cellmap here for incremental reflow.
+      //            now that the cellmap is built in the constructor 
+      //            we need to reset the cellmap during incremental reflow before we get here
       mPass = kPASS_FIRST;
       aStatus = ResizeReflowPass1(&aPresContext, aDesiredSize, aReflowState, aStatus);
       // check result
@@ -1685,7 +1667,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
 
   nsStyleTable* tableStyle;
   GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
-  if (1||NS_STYLE_TABLE_LAYOUT_FIXED!=tableStyle->mLayoutStrategy)
+  if (NS_STYLE_TABLE_LAYOUT_FIXED!=tableStyle->mLayoutStrategy)
   {
     for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
       nsSize maxKidElementSize(0,0);
@@ -1973,6 +1955,16 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*        aPresContext,
   nsSize*   pKidMaxElementSize = (nsnull != aMaxElementSize) ? &kidMaxElementSize : nsnull;
   PRBool    result = PR_TRUE;
 
+  nsReflowReason reason;
+  nsStyleTable* tableStyle;
+  GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+  if (NS_STYLE_TABLE_LAYOUT_FIXED==tableStyle->mLayoutStrategy)
+  {
+    reason = aState.reflowState.reason;
+  }
+  else
+    reason = eReflowReason_Resize;
+
   for (nsIFrame*  kidFrame = mFirstChild; nsnull != kidFrame; ) {
     nsSize            kidAvailSize(aState.availSize);
     nsReflowMetrics   desiredSize(pKidMaxElementSize);
@@ -2000,10 +1992,10 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*        aPresContext,
       if (PR_FALSE == aState.unconstrainedWidth) {
         kidAvailSize.width -= kidMargin.left + kidMargin.right;
       }
-
+      
       // Reflow the child into the available space
       nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
-                                   eReflowReason_Resize);
+                                   reason);
       kidFrame->WillReflow(*aPresContext);
       nscoord x = aState.leftInset + kidMargin.left;
       nscoord y = aState.topInset + aState.y + topMargin;
@@ -2514,7 +2506,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext*      aPresContext,
   NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
   nsStyleTable* tableStyle;
   GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
-  EnsureColumns(aPresContext, aDesiredSize, aReflowState, aStatus);
+  EnsureColumns(aPresContext);
   if (nsnull==mColCache)
   {
     mColCache = new ColumnInfoCache(mColCount);

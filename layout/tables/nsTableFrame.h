@@ -211,10 +211,7 @@ public:
     * if not, create the needed col frames
     */
   virtual void EnsureColumnFrameAt(PRInt32              aColIndex,
-                                   nsIPresContext*      aPresContext,
-                                   nsReflowMetrics&     aDesiredSize,
-                                   const nsReflowState& aReflowState,
-                                   nsReflowStatus&      aStatus);
+                                   nsIPresContext*      aPresContext);
 
   /** return the index of the next row that is not yet assigned.
     * If no row is initialized, 0 is returned.
@@ -394,10 +391,7 @@ protected:
     * if the cell map says there are more columns than this, 
     * add extra implicit columns to the content tree.
     */ 
-  virtual void EnsureColumns (nsIPresContext*      aPresContext,
-                              nsReflowMetrics&     aDesiredSize,
-                              const nsReflowState& aReflowState,
-                              nsReflowStatus&      aStatus);
+  virtual void EnsureColumns (nsIPresContext* aPresContext);
 
   /** Set the min col span for every column in the table.  Scans the whole table. */
   virtual void SetMinColSpanForTable();
