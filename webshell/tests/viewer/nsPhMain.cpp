@@ -117,24 +117,80 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
   return nsBrowserWindow::DispatchMenuItem(aID);
 }
 
-//----------------------------------------------------------------------
 
+//#ifdef DEBUG_kirkj
+#define CRAWL_STACK_ON_SIGSEGV
+//#endif // DEBUG_kirkj
+
+
+#ifdef CRAWL_STACK_ON_SIGSEGV
+
+#include <signal.h>
+#include <unistd.h>
+#include "nsTraceRefcnt.h"
+
+extern "C" char * strsignal(int);
+
+static char _progname[1024] = "huh?";
+
+void
+ah_crap_handler(int signum)
+{
+  PR_CurrentThread();
+
+  printf("prog = %s\npid = %d\nsignal = %s\n",
+         _progname,
+         getpid(),
+         strsignal(signum));
+  
+  printf("stack logged to someplace\n");
+  printf("need to fix xpcom/base/nsTraceRefCnt.cpp in WalkTheStack.\n");
+  nsTraceRefcnt::WalkTheStack(stdout);
+
+  printf("Sleeping for 5 minutes.\n");
+  printf("Type 'gdb %s %d' to attatch your debugger to this thread.\n",
+         _progname,
+         getpid());
+
+  sleep(300);
+
+  printf("Done sleeping...\n");
+} 
+#endif // CRAWL_STACK_ON_SIGSEGV
+
+//----------------------------------------------------------------------
 int main(int argc, char **argv)
 {
-  nsresult rv;
+#ifdef CRAWL_STACK_ON_SIGSEGV
+  strcpy(_progname,argv[0]);
+  signal(SIGSEGV, ah_crap_handler);
+  signal(SIGILL, ah_crap_handler);
+  signal(SIGABRT, ah_crap_handler);
+#endif // CRAWL_STACK_ON_SIGSEGV
 
-  // Hack to get il_ss set so it doesn't fail in xpcompat.c
-  nsIImageManager *manager;
-  NS_NewImageManager(&manager);
 
-  rv = NS_InitXPCOM(nsnull, nsnull, nsnull);
+  // Initialize XPCOM
+  nsresult rv = NS_InitXPCOM(nsnull, nsnull, nsnull);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
-  NS_VERIFY(NS_SUCCEEDED(nsIThread::SetMainThread()), "couldn't set main thread");
+  if (NS_SUCCEEDED(rv)) {
+    // The toolkit service in mozilla will look in the environment
+    // to determine which toolkit to use.  Yes, it is a dumb hack to
+    // force it here, but we have no choice because of toolkit specific
+    // code linked into the viewer.
+    putenv("MOZ_TOOLKIT=photon");
+	
+    gTheApp = new nsNativeViewerApp();
+    gTheApp->Initialize(argc, argv);
+    gTheApp->Run();
+    delete gTheApp;
 
-  gTheApp = new nsNativeViewerApp();
-  gTheApp->Initialize(argc, argv);
-  gTheApp->Run();
+    NS_FreeImageManager();
 
+    // Shutdown XPCOM
+    rv = NS_ShutdownXPCOM(nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+  }
+  
   return 0;
 }
 
