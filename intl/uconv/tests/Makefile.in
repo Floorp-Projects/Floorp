@@ -41,7 +41,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../ucvja \
 		$(NULL)
 
-LIBS		+= $(NSPR_LIBS) -L$(DIST)/bin -lxpcom
+LIBS		+= -L$(DIST)/bin $(XPCOM_LIBS) $(NSPR_LIBS)
 
 # needed for mac linux
 ifeq ($(OS_ARCH),Linux)

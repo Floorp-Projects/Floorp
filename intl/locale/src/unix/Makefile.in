@@ -30,6 +30,7 @@ MODULE		= locale
 LIBRARY_NAME	= nslocale
 IS_COMPONENT	= 1
 
+SHARED_LIBRARY_LIBS = ../libnslocale_s.a
 
 CPPSRCS		= \
 		nsCollationUnix.cpp \
@@ -40,7 +41,7 @@ CPPSRCS		= \
 		nsPosixLocaleFactory.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS = -L$(DIST)/lib -lnslocale_s \
+EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
