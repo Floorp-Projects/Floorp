@@ -63,7 +63,6 @@ class nsIconDecoder : public imgIDecoder
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIDECODER
-  NS_DECL_NSIOUTPUTSTREAM
 
   nsIconDecoder();
   virtual ~nsIconDecoder();
