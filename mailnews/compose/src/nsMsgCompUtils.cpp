@@ -26,6 +26,7 @@
 #include "prmem.h"
 #include "nsMsgSend.h"
 #include "nsIIOService.h"
+#include "nsIHTTPProtocolHandler.h"
 #include "nsMailHeaders.h"
 #include "nsMsgI18N.h"
 #include "nsIMsgHeaderParser.h"
@@ -47,6 +48,7 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
 
 //
 // Hopefully, someone will write and XP call like this eventually!
@@ -426,28 +428,24 @@ mime_generate_headers (nsMsgCompFields *fields,
 	}
 
 
-	NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &rv); 
-	if (NS_SUCCEEDED(rv) && pNetService)
+	NS_WITH_SERVICE(nsIHTTPProtocolHandler, pHTTPHandler, kHTTPHandlerCID, &rv); 
+	if (NS_SUCCEEDED(rv) && pHTTPHandler)
 	{
-		PRUnichar * appInfo = nsnull;
-
-		pNetService->GetAppCodeName(&appInfo);
-		nsCAutoString cStr(appInfo);
+		nsCAutoString cStr("Netscape");
 		if (!cStr.IsEmpty()) 
 		{
 			// PUSH_STRING ("X-Mailer: ");  // To be more standards compliant
 			PUSH_STRING ("User-Agent: ");  
 			PUSH_STRING(cStr);
-			nsCRT::free(appInfo);
 
-			pNetService->GetAppVersion(&appInfo);
+            nsXPIDLString appInfo;
+			pHTTPHandler->GetAppVersion(getter_Copies(appInfo));
 			nsCAutoString cStr2 (appInfo);
 			if (!cStr2.IsEmpty()) 
 			{
 				PUSH_STRING (" ");
 				PUSH_STRING(cStr2);
 			}
-			nsCRT::free(appInfo);
 			PUSH_NEWLINE ();
 		}
 	}
