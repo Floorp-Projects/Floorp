@@ -2696,7 +2696,7 @@ Boolean CEditView::ClickTrackSelection( const SMouseDownEvent& where,
 	
 // find out what we are doing before we start
 // ARE WE IN TABLE (sizing or selecting)???
-	Boolean bLock = (where.macEvent.modifiers & cmdKey) == cmdKey;
+	Boolean bLock = ((where.macEvent.modifiers & cmdKey) ? true : false);
 	
 	LO_Element *pCurrentElement = NULL;
 	ED_HitType iTableHit;
