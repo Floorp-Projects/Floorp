@@ -15,6 +15,10 @@
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/web-panels.js"/>
+  <hbox align="center">
+    <toolbarbutton label="&addPanel.label;" oncommand="addWebPanel()"/>
+    <toolbarbutton label="&viewPage.label;" oncommand="grabPage()"/>
+  </hbox>
   <browser id="webpanels-browser" type="content" flex="1"
            onclick="return window.parent.contentAreaClick(event, true);"
            ondragdrop="nsDragAndDrop.drop(event, panelAreaDNDObserver);"/>
