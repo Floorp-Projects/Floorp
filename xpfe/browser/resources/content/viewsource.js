@@ -10,7 +10,7 @@ function onLoadViewSource()
 function viewSource(url)
 {
   if (!url)
-    return; // throw Components.results.NS_ERROR_FAILURE;
+    return false; // throw Components.results.NS_ERROR_FAILURE;
   try {
     createBrowserInstance();
     if (appCore == null) {
@@ -22,10 +22,6 @@ function viewSource(url)
 
     // Initialize browser instance..
     appCore.setWebShellWindow(window);
-    if ( window._content ) {
-      dump("Setting content window\n");
-      appCore.setContentWindow( window._content );
-    }
   }
 
   catch(ex) {

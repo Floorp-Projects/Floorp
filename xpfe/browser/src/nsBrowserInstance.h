@@ -89,7 +89,6 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     nsresult GetContentAreaDocShell(nsIDocShell** outDocShell);
     nsresult GetContentWindow(nsIDOMWindowInternal** outContentWindow);
-    nsresult GetContentAreaDocLoader(nsIDocumentLoader** outDocLoader);
     
     nsresult GetFocussedContentWindow(nsIDOMWindowInternal** outFocussedWindow);
     
@@ -108,16 +107,14 @@ class nsBrowserInstance : public nsIBrowserInstance,
                              nsresult aResult);
 
     PRBool              mIsClosed;
+    static PRBool       sCmdLineURLUsed;
 
     nsCOMPtr<nsIXULBrowserWindow> mXULBrowserWindow;
 #ifdef SH_IN_FRAMES
 	nsCOMPtr<nsISHistory>   mSessionHistory;
 #endif
-    nsIScriptContext   *mContentScriptContext;			// weak reference
 
-    nsWeakPtr          mContentWindowWeak;
     nsWeakPtr          mContentAreaDocShellWeak;
-    nsWeakPtr          mContentAreaDocLoaderWeak;
 
     nsIWebShellWindow  *mWebShellWin;								// weak reference
     nsIDocShell *       mDocShell;									// weak reference

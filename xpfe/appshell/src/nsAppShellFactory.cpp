@@ -77,7 +77,7 @@ static nsModuleComponentInfo gAppShellModuleInfo[] =
   },
   { "CommandLine Service",
     NS_COMMANDLINE_SERVICE_CID,
-    NULL,
+    "@mozilla.org/appshell/commandLineService;1",
     nsCmdLineServiceConstructor,
   },
   { "XPConnect Factory?",
