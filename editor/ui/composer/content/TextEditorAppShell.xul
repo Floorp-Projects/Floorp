@@ -142,7 +142,7 @@ editor.xul has these - do we need them?
     <splitter id="sidebar-splitter" class="chromeclass-extrachrome" hidden="true"/>
     <vbox id="appcontent" flex="1">
 
-      <editor type="content-primary" id="content-frame" src="about:blank" flex="1"/>
+      <editor editortype="text" type="content-primary" id="content-frame" src="about:blank" flex="1"/>
 
       <statusbar id="status-bar">
         <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>

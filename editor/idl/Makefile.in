@@ -32,13 +32,11 @@ XPIDLSRCS	= \
 		nsICiter.idl \
 		nsIDocumentStateListener.idl \
 		nsIEditActionListener.idl \
-		nsIEditorController.idl \
 		nsIEditor.idl \
 		nsIEditorIMESupport.idl \
 		nsIEditorLogging.idl \
 		nsIEditorMailSupport.idl \
 		nsIEditorObserver.idl \
-		nsIEditorShell.idl \
 		nsIEditorSpellCheck.idl \
 		nsIEditorStyleSheets.idl \
 		nsIHTMLEditor.idl \

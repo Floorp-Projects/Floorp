@@ -106,7 +106,7 @@ function ComposerSelectDetector(event)
         str.data = prefvalue;
         pref.setComplexValue("intl.charset.detector",
                              Components.interfaces.nsISupportsString, str);
-        editorShell.LoadUrl(editorShell.editorDocument.location);    
+        EditorLoadUrl(GetDocumentUrl());    
     }
     catch (ex) {
         dump("Failed to set the intl.charset.detector preference.\n");

@@ -30,7 +30,6 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
-<script type="application/x-javascript" src="chrome://editor/content/editorOverlay.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/ComposerCommands.js"/>
 
   <keyset id="editorKeys">
@@ -218,7 +217,7 @@
     <command id="cmd_fontFace"        state=""         oncommand="doStatefulCommand('cmd_fontFace', event.target.value)"/>
 
     <!-- No "oncommand", use EditorSelectColor() to bring up color dialog -->
-    <command id="cmd_fontColor"       state="x"/>
+    <command id="cmd_fontColor"       state=""/>
     <command id="cmd_backgroundColor" state=""/>
     <command id="cmd_highlight"       state="transparent"  oncommand="EditorSelectColor('Highlight', event);"/>
 
@@ -404,7 +403,7 @@
       <menuitem accesskey="&insertanchor.accesskey;"     observes="cmd_anchor"      label="&insertAnchorCmd.label;"/>
       <menuitem accesskey="&inserthline.accesskey;"      observes="cmd_hline"       label="&insertHLineCmd.label;"/>
       <menuitem accesskey="&HTMLSourceMode.accesskey;"   observes="cmd_insertHTML"  key="inserthtmlkb"/>
-      <menuitem accesskey="&insertchars.accesskey;"      observes="cmd_insertChars" />
+      <menuitem accesskey="&insertchars.accesskey;"      observes="cmd_insertChars" id="insertChars"/>
       <menuseparator id="insertMenuSeparator"/>
 <!-- Activate this after Enter key inserts P tag and not BR
       <menuitem accesskey="&insertbreak.accesskey;"      observes="cmd_insertBreak"      label="&insertBreakCmd.label;"/>
