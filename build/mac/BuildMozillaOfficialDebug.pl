@@ -38,9 +38,11 @@ DistMozilla();
 
 # Set the build number in about-all.html.  Commented out for now
 # until ckid/mcvs resource problem is resolved.
-SetBuildNumber();
+# SetBuildNumber();
 
 SetAgentString();
+
+SetTimeBomb();
 
 # Now build the projects
 BuildMozilla();
