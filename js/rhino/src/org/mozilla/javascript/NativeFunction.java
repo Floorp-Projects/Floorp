@@ -45,12 +45,6 @@ package org.mozilla.javascript;
  */
 public class NativeFunction extends BaseFunction {
 
-    private boolean nextIs(int i, int token) {
-        if (i + 1 < source.length())
-            return source.charAt(i + 1) == token;
-        return false;
-    }
-
     // how much to indent
     private final static int OFFSET = 4;
 
@@ -85,18 +79,20 @@ public class NativeFunction extends BaseFunction {
 
     public String decompile(Context cx, int indent, boolean justbody) {
         StringBuffer result = new StringBuffer();
-        decompile(indent, true, justbody, result);
+        decompile_r(this, indent, true, justbody, result);
         return result.toString();
 
     }
 
-    private void decompile(int indent, boolean toplevel, boolean justbody,
-                           StringBuffer result)
+    private static void decompile_r(NativeFunction f, int indent,
+                                    boolean toplevel, boolean justbody,
+                                    StringBuffer result)
     {
+        String source = f.source;
         if (source == null) {
             if (!justbody) {
                 result.append("function ");
-                result.append(getFunctionName());
+                result.append(f.getFunctionName());
                 result.append("() {\n\t");
             }
             result.append("[native code]\n");
@@ -106,11 +102,13 @@ public class NativeFunction extends BaseFunction {
             return;
         }
 
+        int length = source.length();
+
         // Spew tokens in source, for debugging.
         // as TYPE number char
         if (printSource) {
-            System.err.println("length:" + source.length());
-            for (int i = 0; i < source.length(); i++) {
+            System.err.println("length:" + length);
+            for (int i = 0; i < length; ++i) {
                 // Note that tokenToName will fail unless Context.printTrees
                 // is true.
                 String tokenname = TokenStream.tokenToName(source.charAt(i));
@@ -131,7 +129,7 @@ public class NativeFunction extends BaseFunction {
 
         int i = 0;
 
-        if (source.length() > 0) {
+        if (length > 0) {
             /* special-case FUNCTION as the first token; if it is,
              * (and it's not followed by a NAME or LP) then we're
              * decompiling a function (and not the toplevel script.)
@@ -154,7 +152,7 @@ public class NativeFunction extends BaseFunction {
             if (source.charAt(0) == TokenStream.FUNCTION
                 // make sure it's not a script that begins with a
                 // reference to a function definition.
-                && source.length() > 1
+                && length > 1
                 && (source.charAt(1) == TokenStream.NAME
                     || source.charAt(1) == TokenStream.LP))
             {
@@ -170,32 +168,32 @@ public class NativeFunction extends BaseFunction {
                      * less than 1.2... or if it's greater than 1.2, because
                      * we need to be closer to ECMA.  (ToSource, please?)
                      */
-                    if (nextIs(i, TokenStream.LP)
-                        && this.version != Context.VERSION_1_2
-                        && this.functionName != null
-                        && this.functionName.equals("anonymous"))
+                    if (nextIs(source, length, i, TokenStream.LP)
+                        && f.version != Context.VERSION_1_2
+                        && f.functionName != null
+                        && f.functionName.equals("anonymous"))
                         result.append("anonymous");
-                    i++;
+                    ++i;
                 } else {
                     /* Skip past the entire function header to the next EOL.
                      * Depends on how NAMEs are encoded.
                      */
-                    while (i < source.length()
+                    while (i < length
                            && (source.charAt(i) != TokenStream.EOL
                                // the length char of a NAME sequence
                                // can look like an EOL.
                                || (i > 0
                                    && source.charAt(i-1) == TokenStream.NAME)))
                     {
-                        i++;
+                        ++i;
                     }
                     // Skip past the EOL, too.
-                    i++;
+                    ++i;
                 }
             }
         }
 
-        while (i < source.length()) {
+        while (i < length) {
             int stop;
             switch(source.charAt(i)) {
             case TokenStream.NAME:
@@ -207,37 +205,34 @@ public class NativeFunction extends BaseFunction {
                  * Also change function-header skipping code above,
                  * used when decompling under decompileFunctionBody.
                  */
-                i++;
+                ++i;
                 stop = i + (int)source.charAt(i);
                 result.append(source.substring(i + 1, stop + 1));
                 i = stop;
                 break;
 
             case TokenStream.NUMBER:
-                i++;
+                ++i;
                 long lbits = 0;
                 switch(source.charAt(i)) {
                 case 'S':
-                    i++;
+                    ++i;
                     result.append((int)source.charAt(i));
                     break;
 
                 case 'J':
-                    i++;
-                    lbits |= (long)source.charAt(i++) << 48;
-                    lbits |= (long)source.charAt(i++) << 32;
-                    lbits |= (long)source.charAt(i++) << 16;
-                    lbits |= (long)source.charAt(i);
+                    lbits |= (long)source.charAt(++i) << 48;
+                    lbits |= (long)source.charAt(++i) << 32;
+                    lbits |= (long)source.charAt(++i) << 16;
+                    lbits |= (long)source.charAt(++i);
 
                     result.append(lbits);
                     break;
                 case 'D':
-                    i++;
-
-                    lbits |= (long)source.charAt(i++) << 48;
-                    lbits |= (long)source.charAt(i++) << 32;
-                    lbits |= (long)source.charAt(i++) << 16;
-                    lbits |= (long)source.charAt(i);
+                    lbits |= (long)source.charAt(++i) << 48;
+                    lbits |= (long)source.charAt(++i) << 32;
+                    lbits |= (long)source.charAt(++i) << 16;
+                    lbits |= (long)source.charAt(++i);
 
                     double dval = Double.longBitsToDouble(lbits);
                     result.append(ScriptRuntime.numberToString(dval, 10));
@@ -246,7 +241,7 @@ public class NativeFunction extends BaseFunction {
                 break;
 
             case TokenStream.STRING:
-                i++;
+                ++i;
                 stop = i + (int)source.charAt(i);
                 result.append('"');
                 result.append(ScriptRuntime.escapeString
@@ -256,7 +251,7 @@ public class NativeFunction extends BaseFunction {
                 break;
 
             case TokenStream.PRIMARY:
-                i++;
+                ++i;
                 switch(source.charAt(i)) {
                 case TokenStream.TRUE:
                     result.append("true");
@@ -294,25 +289,25 @@ public class NativeFunction extends BaseFunction {
                  * where n is given by the byte that follows.
                  */
 
-                i++;
+                ++i;
                 int functionNumber = source.charAt(i);
-                if (nestedFunctions == null
-                    || functionNumber > nestedFunctions.length)
+                if (f.nestedFunctions == null
+                    || functionNumber > f.nestedFunctions.length)
                 {
                     String message;
-                    if (functionName != null && functionName.length() > 0) {
+                    if (f.functionName != null && f.functionName.length() > 0) {
                         message = Context.getMessage2
                             ("msg.no.function.ref.found.in",
-                             new Integer((int)source.charAt(i)), functionName);
+                             new Integer(functionNumber), f.functionName);
                     } else {
                         message = Context.getMessage1
                             ("msg.no.function.ref.found",
-                             new Integer((int)source.charAt(i)));
+                             new Integer(functionNumber));
                     }
                     throw Context.reportRuntimeError(message);
                 }
-                nestedFunctions[functionNumber].
-                    decompile(indent, false, false, result);
+                decompile_r(f.nestedFunctions[functionNumber], indent,
+                            false, false, result);
                 break;
             }
             case TokenStream.COMMA:
@@ -320,7 +315,7 @@ public class NativeFunction extends BaseFunction {
                 break;
 
             case TokenStream.LC:
-                if (nextIs(i, TokenStream.EOL))
+                if (nextIs(source, length, i, TokenStream.EOL))
                     indent += OFFSET;
                 result.append('{');
                 break;
@@ -330,13 +325,13 @@ public class NativeFunction extends BaseFunction {
                  * toplevel function and we're called from
                  * decompileFunctionBody.
                  */
-                if (justbody && toplevel && i + 1 == source.length())
+                if (justbody && toplevel && i + 1 == length)
                     break;
 
-                if (nextIs(i, TokenStream.EOL))
+                if (nextIs(source, length, i, TokenStream.EOL))
                     indent -= OFFSET;
-                if (nextIs(i, TokenStream.WHILE)
-                    || nextIs(i, TokenStream.ELSE)) {
+                if (nextIs(source, length, i, TokenStream.WHILE)
+                    || nextIs(source, length, i, TokenStream.ELSE)) {
                     indent -= OFFSET;
                     result.append("} ");
                 }
@@ -349,7 +344,7 @@ public class NativeFunction extends BaseFunction {
                 break;
 
             case TokenStream.RP:
-                if (nextIs(i, TokenStream.LC))
+                if (nextIs(source, length, i, TokenStream.LC))
                     result.append(") ");
                 else
                     result.append(')');
@@ -370,19 +365,19 @@ public class NativeFunction extends BaseFunction {
                  * less setback if next token is
                  * a label, case or default.
                  */
-                if (i + 1 < source.length()) {
+                if (i + 1 < length) {
                     int less = 0;
-                    if (nextIs(i, TokenStream.CASE)
-                        || nextIs(i, TokenStream.DEFAULT))
+                    if (nextIs(source, length, i, TokenStream.CASE)
+                        || nextIs(source, length, i, TokenStream.DEFAULT))
                         less = SETBACK;
-                    else if (nextIs(i, TokenStream.RC))
+                    else if (nextIs(source, length, i, TokenStream.RC))
                         less = OFFSET;
 
                     /* elaborate check against label... skip past a
                      * following inlined NAME and look for a COLON.
                      * Depends on how NAME is encoded.
                      */
-                    else if (nextIs(i, TokenStream.NAME)) {
+                    else if (nextIs(source, length, i, TokenStream.NAME)) {
                         int skip = source.charAt(i + 2);
                         if (source.charAt(i + skip + 3) == TokenStream.COLON)
                             less = OFFSET;
@@ -454,14 +449,14 @@ public class NativeFunction extends BaseFunction {
                 break;
 
             case TokenStream.BREAK:
-                if (nextIs(i, TokenStream.NAME))
+                if (nextIs(source, length, i, TokenStream.NAME))
                     result.append("break ");
                 else
                     result.append("break");
                 break;
 
             case TokenStream.CONTINUE:
-                if (nextIs(i, TokenStream.NAME))
+                if (nextIs(source, length, i, TokenStream.NAME))
                     result.append("continue ");
                 else
                     result.append("continue");
@@ -476,7 +471,7 @@ public class NativeFunction extends BaseFunction {
                 break;
 
             case TokenStream.RETURN:
-                if (nextIs(i, TokenStream.SEMI))
+                if (nextIs(source, length, i, TokenStream.SEMI))
                     result.append("return");
                 else
                     result.append("return ");
@@ -487,7 +482,7 @@ public class NativeFunction extends BaseFunction {
                 break;
 
             case TokenStream.SEMI:
-                if (nextIs(i, TokenStream.EOL))
+                if (nextIs(source, length, i, TokenStream.EOL))
                     // statement termination
                     result.append(';');
                 else
@@ -496,7 +491,7 @@ public class NativeFunction extends BaseFunction {
                 break;
 
             case TokenStream.ASSIGN:
-                i++;
+                ++i;
                 switch(source.charAt(i)) {
                 case TokenStream.NOP:
                     result.append(" = ");
@@ -561,7 +556,7 @@ public class NativeFunction extends BaseFunction {
                 break;
 
             case TokenStream.COLON:
-                if (nextIs(i, TokenStream.EOL))
+                if (nextIs(source, length, i, TokenStream.EOL))
                     // it's the end of a label
                     result.append(':');
                 else
@@ -590,7 +585,7 @@ public class NativeFunction extends BaseFunction {
                 break;
 
             case TokenStream.EQOP:
-                i++;
+                ++i;
                 switch(source.charAt(i)) {
                 case TokenStream.SHEQ:
                     /*
@@ -600,13 +595,13 @@ public class NativeFunction extends BaseFunction {
                      * decompiling a === opcode), so print the ===
                      * operator as ==.
                      */
-                    result.append(this.version == Context.VERSION_1_2 ? " == "
-                                  : " === ");
+                    result.append(f.version == Context.VERSION_1_2
+                                  ? " == " : " === ");
                     break;
 
                 case TokenStream.SHNE:
-                    result.append(this.version == Context.VERSION_1_2 ? " != "
-                                  : " !== ");
+                    result.append(f.version == Context.VERSION_1_2
+                                  ? " != " : " !== ");
                     break;
 
                 case TokenStream.EQ:
@@ -620,7 +615,7 @@ public class NativeFunction extends BaseFunction {
                 break;
 
             case TokenStream.RELOP:
-                i++;
+                ++i;
                 switch(source.charAt(i)) {
                 case TokenStream.LE:
                     result.append(" <= ");
@@ -645,7 +640,7 @@ public class NativeFunction extends BaseFunction {
                 break;
 
             case TokenStream.SHOP:
-                i++;
+                ++i;
                 switch(source.charAt(i)) {
                 case TokenStream.LSH:
                     result.append(" << ");
@@ -662,7 +657,7 @@ public class NativeFunction extends BaseFunction {
                 break;
 
             case TokenStream.UNARYOP:
-                i++;
+                ++i;
                 switch(source.charAt(i)) {
                 case TokenStream.TYPEOF:
                     result.append("typeof ");
@@ -720,15 +715,18 @@ public class NativeFunction extends BaseFunction {
 
             default:
                 // If we don't know how to decompile it, raise an exception.
-                throw new RuntimeException("Unknown token " +
-                                           source.charAt(i));
+                throw new RuntimeException();
             }
-            i++;
+            ++i;
         }
 
         // add that trailing newline if it's an outermost function.
         if (toplevel && !justbody)
             result.append('\n');
+    }
+
+    private static boolean nextIs(String source, int length, int i, int token) {
+        return (i + 1 < length) ? source.charAt(i + 1) == token : false;
     }
 
     public int getLength() {
