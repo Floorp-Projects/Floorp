@@ -1234,7 +1234,6 @@ for extension in $MOZ_EXTENSIONS; do
             " ;;
         cookie ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/cookie/Makefile
-            extensions/cookie/tests/Makefile
             extensions/cookie/resources/content/contents.rdf
             extensions/cookie/resources/locale/en-US/contents.rdf
             " ;;
