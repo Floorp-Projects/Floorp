@@ -123,7 +123,7 @@ function AddLanguage()
 { 
     //cludge: make pref string available from the popup
     document.getElementById('intlAcceptLanguages').value = pref_string;
-    window.openDialog("chrome://communicator/content/pref/pref-languages-add.xul","","modal=yes,chrome,resizable=no", "addlangwindow");
+    window.openDialog("chrome://communicator/content/pref/pref-languages-add.xul","","modal=yes,chrome,resizable=yes", "addlangwindow");
     UpdateSavePrefString();
 
 }
@@ -395,6 +395,19 @@ function AddAvailableLanguage()
   return true;
 } //AddAvailableLanguage
 
+function HandleDoubleClick(node)
+{
+  var languageId    = node.id;
+  var languageName	= node.getAttribute('value');
+
+  if (languageName && languageName.length > 0)
+  {
+    if (!LangAlreadyActive(languageId)) {
+      AddTreeItem(window.opener.document, active_languages_treeroot, languageId, languageName);
+    }
+    window.close();
+  }//if
+} //HandleDoubleClick
 
 function RemoveActiveLanguage()
 {

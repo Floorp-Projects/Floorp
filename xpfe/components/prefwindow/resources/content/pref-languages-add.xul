@@ -45,7 +45,7 @@
   <html>&languages.customize.available.label;</html>
 
   <tree class="inset" id="available_languages" flex="1"
-        datasources="rdf:null" multiple="true">
+        datasources="rdf:null" multiple="true" ondblclick="HandleDoubleClick(event.target)">
     <treecolgroup>
       <treecol flex="1"/>
     </treecolgroup>
