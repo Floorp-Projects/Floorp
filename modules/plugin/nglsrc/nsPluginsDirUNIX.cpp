@@ -131,20 +131,27 @@ nsPluginFile::~nsPluginFile()
 nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 {
     PRLibSpec libSpec;
-    void * handle;
+    PRLibSpec tempSpec;
+    PRLibrary * handle;
 
-/* This is a hack for Tru64 Unix.  We really should not be calling dlopen()
- * directly, but since the original authors use NSPR functions in other
- * places, I assume they have a reason for not doing it here.
- * jlnance - Mon Apr 24 13:52:14 EDT 2000
- */
-#ifndef RTLD_GLOBAL
-#define RTLD_GLOBAL 0
-#endif
+    ///////////////////////////////////////////////////////////
+    // Normally, Mozilla isn't linked against libXt and libXext
+    // since it's a Gtk/Gdk application.  On the other hand,
+    // legacy plug-ins expect the libXt and libXext symbols
+    // to already exist in the global name space.  This plug-in
+    // wrapper is linked against libXt and libXext, but since
+    // we never call on any of these libraries, plug-ins still
+    // fail to resolve Xt symbols when trying to do a dlopen
+    // at runtime.  Explicitly opening Xt/Xext into the global
+    // namespace before attempting to load the plug-in seems to
+    // work fine.
 
-    // Ok, now to pull a rabbit out of my hat
-    handle = dlopen("libXt.so", RTLD_LAZY|RTLD_GLOBAL);
-    handle = dlopen("libXext.so", RTLD_NOW|RTLD_GLOBAL);
+    tempSpec.type = PR_LibSpec_Pathname;
+    tempSpec.value.pathname = "libXt.so";
+    handle = PR_LoadLibraryWithFlags(tempSpec, PR_LD_NOW|PR_LD_GLOBAL);
+
+    tempSpec.value.pathname = "libXext.so";
+    handle = PR_LoadLibraryWithFlags(tempSpec, PR_LD_NOW|PR_LD_GLOBAL);
 
     libSpec.type = PR_LibSpec_Pathname;
     libSpec.value.pathname = this->GetCString();
