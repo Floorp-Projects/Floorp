@@ -194,7 +194,7 @@ function onOK()
     accountManager.saveVirtualFolders();
 
     if (window.arguments[0].onOKCallback)
-      window.arguments[0].onOKCallback(msgFolder);
+      window.arguments[0].onOKCallback(msgFolder.URI);
       
   } 
   else if (name && uri) // create a new virtual folder

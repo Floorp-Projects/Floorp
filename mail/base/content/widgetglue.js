@@ -208,10 +208,14 @@ function MsgVirtualFolderProperties(aEditExistingVFolder)
                                   msgWindow:msgWindow});
 }
 
-function onEditVirtualFolderPropertiesCallback(aVirtualFolder)
+function onEditVirtualFolderPropertiesCallback(aVirtualFolderURI)
 {
   // we need to reload the folder if it is the currently loaded folder...
+  if (gMsgFolderSelected && aVirtualFolderURI == gMsgFolderSelected.URI)
+  {
+    gMsgFolderSelected = null; // force the folder pane to reload the virtual folder
   FolderPaneSelectionChange();
+}
 }
 
 function MsgFolderProperties() 
