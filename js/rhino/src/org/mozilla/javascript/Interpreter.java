@@ -121,12 +121,16 @@ public class Interpreter
         Icode_REG_STR4                  = BASE_ICODE + 36,
 
     // Load index register to prepare for the following index operation
-        Icode_REG_IND1                  = BASE_ICODE + 37,
-        Icode_REG_IND2                  = BASE_ICODE + 38,
-        Icode_REG_IND4                  = BASE_ICODE + 39,
+        Icode_REG_IND_C0                = BASE_ICODE + 37,
+        Icode_REG_IND_C1                = BASE_ICODE + 38,
+        Icode_REG_IND_C2                = BASE_ICODE + 39,
+        Icode_REG_IND_C3                = BASE_ICODE + 40,
+        Icode_REG_IND1                  = BASE_ICODE + 41,
+        Icode_REG_IND2                  = BASE_ICODE + 42,
+        Icode_REG_IND4                  = BASE_ICODE + 43,
 
     // Last icode
-        MAX_ICODE                       = BASE_ICODE + 39;
+        MAX_ICODE                       = BASE_ICODE + 43;
 
     public Object compile(Scriptable scope,
                           CompilerEnvirons compilerEnv,
@@ -1392,12 +1396,14 @@ public class Interpreter
 
     private int addVarOp(int op, int varIndex, int iCodeTop)
     {
-        if (op == Token.GETVAR || op == Token.SETVAR) {
-            iCodeTop = addToken(op, iCodeTop);
-        } else if (op == Icode_VARINC || op == Icode_VARDEC) {
-            iCodeTop = addIcode(op, iCodeTop);
+        switch (op) {
+          case Token.GETVAR:
+          case Token.SETVAR:
+          case Icode_VARINC:
+          case Icode_VARDEC:
+            return addIndexOp(op, varIndex, iCodeTop);
         }
-        return addByte(varIndex, iCodeTop);
+        throw Kit.codeBug();
     }
 
     private int addStringOp(int op, String str, int iCodeTop)
@@ -1428,16 +1434,46 @@ public class Interpreter
     private int addIndexOp(int op, int index, int iCodeTop)
     {
         if (index < 0) Kit.codeBug();
-        if (index <= 0xFF) {
-            iCodeTop = addIcode(Icode_REG_IND1, iCodeTop);
-            iCodeTop = addByte(index, iCodeTop);
-        } else if (index <= 0xFFFF) {
-            iCodeTop = addIcode(Icode_REG_IND2, iCodeTop);
-            iCodeTop = addShort(index, iCodeTop);
-        } else {
-            iCodeTop = addIcode(Icode_REG_IND4, iCodeTop);
-            iCodeTop = addInt(index, iCodeTop);
+        int indexSize = 0;
+        int indexOp;
+        switch (index) {
+          case 0:
+            indexOp = Icode_REG_IND_C0;
+            break;
+          case 1:
+            indexOp = Icode_REG_IND_C1;
+            break;
+          case 2:
+            indexOp = Icode_REG_IND_C2;
+            break;
+          case 3:
+            indexOp = Icode_REG_IND_C3;
+            break;
+          default:
+            if (index <= 0xFF) {
+                indexOp = Icode_REG_IND1;
+                indexSize = 1;
+             } else if (index <= 0xFFFF) {
+                indexOp = Icode_REG_IND2;
+                indexSize = 2;
+             } else {
+                indexOp = Icode_REG_IND4;
+                indexSize = 4;
+            }
         }
+        iCodeTop = addIcode(indexOp, iCodeTop);
+        switch (indexSize) {
+          case 1:
+            iCodeTop = addByte(index, iCodeTop);
+            break;
+          case 2:
+            iCodeTop = addShort(index, iCodeTop);
+            break;
+          case 4:
+            iCodeTop = addInt(index, iCodeTop);
+            break;
+        }
+
         if (op > BASE_ICODE) {
             iCodeTop = addIcode(op, iCodeTop);
         } else {
@@ -1576,6 +1612,10 @@ public class Interpreter
                     case Icode_REG_STR1:         return "LOAD_STR1";
                     case Icode_REG_STR2:         return "LOAD_STR2";
                     case Icode_REG_STR4:         return "LOAD_STR4";
+                    case Icode_REG_IND_C0:       return "REG_IND_C0";
+                    case Icode_REG_IND_C1:       return "REG_IND_C1";
+                    case Icode_REG_IND_C2:       return "REG_IND_C2";
+                    case Icode_REG_IND_C3:       return "REG_IND_C3";
                     case Icode_REG_IND1:         return "LOAD_IND1";
                     case Icode_REG_IND2:         return "LOAD_IND2";
                     case Icode_REG_IND4:         return "LOAD_IND4";
@@ -1620,15 +1660,6 @@ public class Interpreter
                         int newPC = getTarget(iCode, pc);
                         out.println(tname + " " + newPC);
                         pc += 2;
-                        break;
-                    }
-                    case Icode_VARINC :
-                    case Icode_VARDEC :
-                    case Token.GETVAR :
-                    case Token.SETVAR : {
-                        int slot = (iCode[pc] & 0xFF);
-                        out.println(tname + " " + slot);
-                        pc++;
                         break;
                     }
                     case Icode_CALLSPECIAL : {
@@ -1835,6 +1866,14 @@ public class Interpreter
             case Token.ENUM_INIT :
             case Token.ENUM_NEXT :
             case Token.ENUM_ID :
+            case Icode_REG_IND_C0:
+            case Icode_REG_IND_C1:
+            case Icode_REG_IND_C2:
+            case Icode_REG_IND_C3:
+            case Icode_VARINC :
+            case Icode_VARDEC :
+            case Token.GETVAR :
+            case Token.SETVAR :
                 return 1;
 
             case Token.THROW :
@@ -1848,13 +1887,6 @@ public class Interpreter
             case Icode_IFEQ_POP :
                 // target pc offset
                 return 1 + 2;
-
-            case Icode_VARINC :
-            case Icode_VARDEC :
-            case Token.GETVAR :
-            case Token.SETVAR :
-                // slot index
-                return 1 + 1;
 
             case Icode_CALLSPECIAL :
                 // call type
@@ -2535,6 +2567,18 @@ public class Interpreter
         stringReg = strings[getInt(iCode, pc)];
         pc += 4;
         continue Loop;
+    case Icode_REG_IND_C0:
+        indexReg = 0;
+        continue Loop;
+    case Icode_REG_IND_C1:
+        indexReg = 1;
+        continue Loop;
+    case Icode_REG_IND_C2:
+        indexReg = 2;
+        continue Loop;
+    case Icode_REG_IND_C3:
+        indexReg = 3;
+        continue Loop;
     case Icode_REG_IND1:
         indexReg = 0xFF & iCode[pc];
         ++pc;
@@ -2783,57 +2827,49 @@ public class Interpreter
     case Icode_NAMEDEC :
         stack[++stackTop] = ScriptRuntime.postIncrDecr(scope, stringReg, op == Icode_NAMEINC);
         continue Loop;
-    case Token.SETVAR : {
-        int slot = (iCode[pc] & 0xFF);
+    case Token.SETVAR :
         if (!useActivationVars) {
-            stack[VAR_SHFT + slot] = stack[stackTop];
-            sDbl[VAR_SHFT + slot] = sDbl[stackTop];
+            stack[VAR_SHFT + indexReg] = stack[stackTop];
+            sDbl[VAR_SHFT + indexReg] = sDbl[stackTop];
         } else {
             Object val = stack[stackTop];
             if (val == DBL_MRK) val = doubleWrap(sDbl[stackTop]);
-            activationPut(fnOrScript, scope, slot, val);
+            activationPut(fnOrScript, scope, indexReg, val);
         }
-        ++pc;
         continue Loop;
-    }
-    case Token.GETVAR : {
-        int slot = (iCode[pc] & 0xFF);
+    case Token.GETVAR :
         ++stackTop;
         if (!useActivationVars) {
-            stack[stackTop] = stack[VAR_SHFT + slot];
-            sDbl[stackTop] = sDbl[VAR_SHFT + slot];
+            stack[stackTop] = stack[VAR_SHFT + indexReg];
+            sDbl[stackTop] = sDbl[VAR_SHFT + indexReg];
         } else {
-            stack[stackTop] = activationGet(fnOrScript, scope, slot);
+            stack[stackTop] = activationGet(fnOrScript, scope, indexReg);
         }
-        ++pc;
         continue Loop;
-    }
     case Icode_VARINC :
-    case Icode_VARDEC : {
-        int slot = (iCode[pc] & 0xFF);
+    case Icode_VARDEC :
         ++stackTop;
         if (!useActivationVars) {
-            Object val = stack[VAR_SHFT + slot];
+            Object val = stack[VAR_SHFT + indexReg];
             stack[stackTop] = val;
             double d;
             if (val == DBL_MRK) {
-                d = sDbl[VAR_SHFT + slot];
+                d = sDbl[VAR_SHFT + indexReg];
                 sDbl[stackTop] = d;
             } else {
                 d = ScriptRuntime.toNumber(val);
             }
-            stack[VAR_SHFT + slot] = DBL_MRK;
-            sDbl[VAR_SHFT + slot] = (op == Icode_VARINC) ? d  + 1.0 : d - 1.0;
+            stack[VAR_SHFT + indexReg] = DBL_MRK;
+            sDbl[VAR_SHFT + indexReg] = (op == Icode_VARINC)
+                                        ? d + 1.0 : d - 1.0;
         } else {
-            Object val = activationGet(fnOrScript, scope, slot);
+            Object val = activationGet(fnOrScript, scope, indexReg);
             stack[stackTop] = val;
             double d = ScriptRuntime.toNumber(val);
             val = doubleWrap((op == Icode_VARINC) ? d  + 1.0 : d - 1.0);
-            activationPut(fnOrScript, scope, slot, val);
+            activationPut(fnOrScript, scope, indexReg, val);
         }
-        ++pc;
         continue Loop;
-    }
     case Token.ZERO :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
