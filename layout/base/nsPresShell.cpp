@@ -1378,6 +1378,8 @@ protected:
   nsresult SetPrefLinkRules(void);
   nsresult SetPrefFocusRules(void);
   nsresult SetPrefNoScriptRule();
+  nsresult SetPrefNoFramesRule(void);
+
 
   nsresult GetSelectionForCopy(nsISelection** outSelection);
 
@@ -2202,6 +2204,9 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
       if (NS_SUCCEEDED(result)) {
         result = SetPrefNoScriptRule();
       }
+      if (NS_SUCCEEDED(result)) {
+        result = SetPrefNoFramesRule();
+      }
     }
 #ifdef DEBUG_attinasi
     printf( "Preference Style Rules set: error=%ld\n", (long)result);
@@ -2368,6 +2373,43 @@ PresShell::SetPrefNoScriptRule()
   return rv;
 }
 
+nsresult PresShell::SetPrefNoFramesRule(void)
+{
+  NS_ASSERTION(mPresContext,"null prescontext not allowed");
+  if (!mPresContext) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = NS_OK;
+  
+  if (!mPrefStyleSheet) {
+    rv = CreatePreferenceStyleSheet();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  
+  NS_ASSERTION(mPrefStyleSheet, "prefstylesheet should not be null");
+  
+  // get the DOM interface to the stylesheet
+  nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool allowSubframes = PR_TRUE;
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();     
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+  if (docShell) {
+    docShell->GetAllowSubframes(&allowSubframes);
+  }
+  if (!allowSubframes) {
+    PRUint32 index = 0;
+    rv = sheet->InsertRule(NS_LITERAL_STRING("noframes{display:block}"),
+                           sInsertPrefSheetRulesAt, &index);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = sheet->InsertRule(NS_LITERAL_STRING("frame, frameset, iframe {display:none!important}"),
+                           sInsertPrefSheetRulesAt, &index);
+  }
+  return rv;
+}
+  
 nsresult PresShell::SetPrefLinkRules(void)
 {
   NS_ASSERTION(mPresContext,"null prescontext not allowed");
