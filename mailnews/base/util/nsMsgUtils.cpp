@@ -169,9 +169,9 @@ NS_IMETHODIMP nsMessageFromMsgHdrEnumerator::GetNext(nsISupports **aItem)
 
 	if(NS_SUCCEEDED(rv))
 	{
-		currentItem = do_QueryInterface(message);
+		currentItem = do_QueryInterface(message, &rv);
 		*aItem = currentItem;
-		NS_ADDREF(*aItem);
+		NS_IF_ADDREF(*aItem);
 	}
 
 	NS_ASSERTION(NS_SUCCEEDED(rv),"getnext shouldn't fail");
