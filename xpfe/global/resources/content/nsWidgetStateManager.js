@@ -64,9 +64,8 @@ function nsWidgetStateManager ( aFrameID )
               return this.pageData[aPageTag][aItemID];
             },
       }
-    
-    // content area
-    this.contentArea  = window.frames[ aFrameID ];
+  
+    this.contentID    = aFrameID;
     
     wsm               = this;
 
@@ -94,6 +93,12 @@ function nsWidgetStateManager ( aFrameID )
   
 nsWidgetStateManager.prototype = 
   {
+    contentArea getter: 
+      function() 
+        { 
+          return window.frames[ this.contentID ]; 
+        },
+
     savePageData: 
       function ( aPageTag )
         {
