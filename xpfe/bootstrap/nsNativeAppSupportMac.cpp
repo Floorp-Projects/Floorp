@@ -144,7 +144,7 @@ nsSplashScreenMac::Observe(nsISupports *aSubject, const char *aTopic, const PRUn
   PRInt32   maxLen = statusString.Length();
   if (maxLen > 254)
     maxLen = 254;
-  strncpy((char *)&statusPStr[1], (const char *)statusString, maxLen);
+  strncpy((char *)&statusPStr[1], statusString.get(), maxLen);
   statusPStr[0] = maxLen;
   
   ::SetDialogItemText(item, statusPStr);
