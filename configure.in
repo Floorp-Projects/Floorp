@@ -33,7 +33,7 @@ AC_PREREQ(2.12)
 AC_INIT(config/config.mk)
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
 AC_CANONICAL_SYSTEM
-
+dnl AC_PREFIX_DEFAULT(\${DEPTH}/dist)
 dnl ========================================================
 dnl Pick an option...any option.
 dnl Caveat: random options will override cmdline options.
@@ -125,6 +125,9 @@ AC_DEFINE(USE_AUTOCONF)
 dnl Always set this for mozilla.
 AC_DEFINE(MOZILLA_CLIENT)
 
+TARGET_CPU="${target_cpu}"
+TARGET_OS="${target_os}"
+
 dnl ========================================================
 dnl =
 dnl = Dont change the following two lines.  Doing so breaks:
@@ -211,11 +214,125 @@ then
     break
   fi
 fi
+MOZ_BUILD_ROOT=`pwd`
 
-dnl Checks for programs.
 dnl ========================================================
-AC_PROG_CC
-AC_PROG_CXX
+dnl Checks for compilers.
+dnl ========================================================
+if test "$target" != "$host"; then
+    echo "cross compiling from $host to $target"
+    cross_compiling=yes
+
+    _SAVE_CC="$CC"
+    _SAVE_CFLAGS="$CFLAGS"
+    _SAVE_LDFLAGS="$LDFLAGS"
+
+    AC_MSG_CHECKING([for host c compiler])
+    if test -z "$HOST_CC"; then
+	AC_CHECK_PROGS(HOST_CC, gcc cc /usr/ucb/cc, "")
+	if test -z "$HOST_CC"; then
+	    AC_MSG_ERROR([no acceptable c compiler found in \$PATH])
+	fi
+    fi
+    AC_MSG_RESULT([$HOST_CC])
+    AC_MSG_CHECKING([for host c++ compiler])
+    if test -z "$HOST_CXX"; then
+	AC_CHECK_PROGS(HOST_CXX, $CCC c++ g++ gcc CC cxx cc++ cl, "")
+	if test -z "$HOST_CXX"; then
+	    AC_MSG_ERROR([no acceptable c++ compiler found in \$PATH])
+	fi
+    fi
+    AC_MSG_RESULT([$HOST_CXX])
+
+    if test -z "$HOST_CFLAGS"; then
+	HOST_CFLAGS="$CFLAGS"
+    fi
+    if test -z "$HOST_CXXFLAGS"; then
+	HOST_CXXFLAGS="$CXXFLAGS"
+    fi
+    if test -z "$HOST_LDFLAGS"; then
+	HOST_LDFLAGS="$LDFLAGS"
+    fi
+    if test -z "$HOST_RANLIB"; then
+	AC_CHECK_PROG(HOST_RANLIB, ranlib, ranlib, :)
+    fi
+    CC="$HOST_CC"
+    CFLAGS="$HOST_CFLAGS"
+    LDFLAGS="$HOST_LDFLAGS"
+
+    AC_MSG_CHECKING([whether the host c compiler ($HOST_CC $HOST_CFLAGS $HOST_LDFLAGS) works])
+    AC_TRY_COMPILE([], [return(0);], 
+	[ac_cv_prog_hostcc_works=1 AC_MSG_RESULT([yes])],
+	AC_MSG_ERROR([installation or configuration problem: host compiler $HOST_CC cannot create executables.]) )
+
+    CC="$HOST_CXX"
+    CFLAGS="$HOST_CXXFLAGS"
+
+    AC_MSG_CHECKING([whether the host c++ compiler ($HOST_CXX $HOST_CXXFLAGS $HOST_LDFLAGS) works])
+    AC_TRY_COMPILE([], [return(0);], 
+	[ac_cv_prog_hostcxx_works=1 AC_MSG_RESULT([yes])],
+	AC_MSG_ERROR([installation or configuration problem: host compiler $HOST_CXX cannot create executables.]) )
+    
+    CC=$_SAVE_CC
+    CFLAGS=$_SAVE_CFLAGS
+    LDFLAGS=$_SAVE_LDFLAGS
+
+    if test -z "$CC"; then
+	AC_CHECK_PROGS(CC, "${target_alias}-gcc" "${target}-gcc", :)
+    fi
+    unset ac_cv_prog_CC
+    AC_PROG_CC
+    if test -z "$CXX"; then
+	AC_CHECK_PROGS(CXX, "${target_alias}-g++" "${target}-g++", :)
+    fi
+    unset ac_cv_prog_CXX
+    AC_PROG_CXX
+    if test -z "$RANLIB"; then
+	AC_CHECK_PROGS(RANLIB, "${target_alias}-ranlib" "${target}-ranlib", :)
+    fi
+    if test -z "$AR"; then
+	AC_CHECK_PROGS(AR, "${target_alias}-ar" "${target}-ar", :)
+    fi
+    if test -z "$AS"; then
+	AC_CHECK_PROGS(AS, "${target_alias}-as" "${target}-as", :)
+    fi
+    if test -z "$LD"; then
+	AC_CHECK_PROGS(LD, "${target_alias}-ld" "${target}-ld", :)
+    fi
+    if test -z "$DLLTOOL"; then
+	AC_CHECK_PROGS(DLLTOOL, "${target_alias}-dlltool" "${target}-dlltool", :)
+    fi
+    if test -z "$WINDRES"; then
+	AC_CHECK_PROGS(WINDRES, "${target_alias}-windres" "${target}-windres", :)
+    fi
+else
+    AC_PROG_CC
+    AC_PROG_CXX
+    AC_PROG_RANLIB
+    AC_PATH_PROGS(AS, as, $CC)
+    AC_PATH_PROGS(AR, ar, :)
+    AC_PATH_PROGS(LD, ld, :)
+    AC_PATH_PROGS(DLLTOOL, dlltool, :)
+    if test -z "$HOST_CC"; then
+	HOST_CC="$CC"
+    fi
+    if test -z "$HOST_CFLAGS"; then
+	HOST_CFLAGS="$CFLAGS"
+    fi
+    if test -z "$HOST_CXX"; then
+	HOST_CXX="$CXX"
+    fi
+    if test -z "$HOST_CXXFLAGS"; then
+	HOST_CXXFLAGS="$CXXFLAGS"
+    fi
+    if test -z "$HOST_LDFLAGS"; then
+	HOST_LDFLAGS="$LDFLAGS"
+    fi
+    if test -z "$HOST_RANLIB"; then
+	HOST_RANLIB="$RANLIB"
+    fi
+fi
+
 AC_PROG_CC_C_O
 if grep "NO_MINUS_C_MINUS_O 1" ./confdefs.h >/dev/null; then
     USING_HCC=1
@@ -224,11 +341,34 @@ if grep "NO_MINUS_C_MINUS_O 1" ./confdefs.h >/dev/null; then
     CC="${srcdir}/build/hcc '$CC'"
     CXX="${srcdir}/build/hcpp '$CXX'"
 fi
+
+GNU_CC=
+GNU_CXX=
+if test "$GCC" = "yes"; then
+    GNU_CC=1
+fi
+if test "$GXX" = "yes"; then
+    GNU_CXX=1
+fi
+
+AC_SUBST(GNU_CC)
+AC_SUBST(GNU_CXX)
+
+dnl ========================================================
+dnl Checks for programs.
+dnl ========================================================
 AC_PROG_CPP
 AC_PROG_CXXCPP
 AC_PROG_INSTALL
+AC_PROG_LN_S
 AC_PROG_AWK
-AC_PROG_RANLIB
+AC_PATH_PROGS(PERL, perl5 perl, :)
+AC_PATH_PROGS(EMACS, xemacs lemacs emacs, :)
+AC_PATH_PROGS(PERL, perl5 perl, :)
+AC_PATH_PROG(WHOAMI, whoami, :)
+AC_PATH_PROG(UNZIP, unzip, :)
+AC_PATH_PROG(ZIP, zip, :)
+AC_PATH_PROG(SYSTEM_MAKEDEPEND, makedepend)
 
 dnl Be sure the make we use is GNU make.
 AC_PATH_PROGS(MAKE, gmake make, :)
@@ -266,31 +406,24 @@ AC_PATH_PROG(ZIP, zip, :)
 
 AC_PATH_XTRA
 
-GNU_CC=
-GNU_CXX=
-if test "$GCC" = "yes"; then
-    GNU_CC=1
-fi
-if test "$GXX" = "yes"; then
-    GNU_CXX=1
-fi
-
-AC_SUBST(GNU_CC)
-AC_SUBST(GNU_CXX)
-
+dnl ========================================================
 dnl set the defaults first
 dnl ========================================================
-AR='ar cr $@'
+AR_FLAGS='cr $@'
+AR_LIST='$(AR) t'
+AR_EXTRACT='$(AR) t'
 AS='$(CC)'
-ASFLAGS='$(CFLAGS)'
 AS_DASH_C_FLAG='-c'
-NS_USE_NATIVE=
-DLL_SUFFIX="so"
+DLL_SUFFIX=so
+OBJ_SUFFIX=o
+LIB_SUFFIX=a
+TARGET_MD_ARCH=unix
+
 OS_TARGET=`uname -s`
 CROSS_COMPILE=
-
 _COMPILER_PREFIX=
 
+dnl ========================================================
 dnl GNU specific defaults
 dnl ========================================================
 if test "$GNU_CC"; then
@@ -374,7 +507,17 @@ LOOP_INPUT
   fi
 fi
 
-dnl System overrides of the defaults
+dnl ========================================================
+dnl System overrides of the defaults for host
+dnl ========================================================
+case "$host" in
+*-linux*)
+    HOST_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
+    ;;
+esac
+
+dnl ========================================================
+dnl System overrides of the defaults for target
 dnl ========================================================
 case "$target" in
 *-aix*)
@@ -462,10 +605,15 @@ case "$target" in
     fi
     ;;
 
-dnl Linux Alpha needs -mieee for FPU to work correctly
-alpha*-*-linux*)
-    CFLAGS="$CFLAGS -mieee"
-    CXXFLAGS="$CXXFLAGS -mieee"
+*-*linux*)
+    TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
+
+    case "${host_cpu}" in
+    alpha*)
+	CFLAGS="$CFLAGS -mieee"
+	CXXFLAGS="$CXXFLAGS -mieee"
+        ;;
+    esac
     ;;
 
 *-netbsd*)
@@ -505,7 +653,10 @@ alpha*-*-linux*)
     DSO_PIC_CFLAGS="-shared -Wc,-fPIC -DPIC"
     MKSHLIB='qcc -Vgcc_ntox86 $(DSO_LDOPTS)'
     MKCSHLIB='qcc -Vgcc_ntox86 $(DSO_LDOPTS)'
-    AR='qcc -Vgcc_ntox86 -M -a $@'
+    AR='qcc -Vgcc_ntox86'
+    AR_FLAGS='-M -a $@'
+    AR_LIST='ar.elf t'
+    AR_EXTRACT='ar.elf x'
     _DEFINES_CFLAGS='-Wp,-include,$(DEPTH)/config-defs.h'
     _DEFINES_CXXFLAGS='-Wp,-include,$(DEPTH)/config-defs.h'
     _PREPROCESSOR_PREFIX="-Wp,"
@@ -589,7 +740,10 @@ dnl the qsort routine under solaris is faulty
        MKSHLIB_FORCE_ALL='-z allextract'
        MKSHLIB_UNFORCE_ALL=''
        DSO_LDOPTS='-G -h $@'
-       AR='$(CXX) -xar -o $@'
+       AR_LIST="$AR t"
+       AR_EXTRACT="$AR x"
+       AR='$(CXX) -xar'
+       AR_FLAGS='-o $@'
        AS='/usr/ccs/bin/as'
        AS_DASH_C_FLAG=''
        NS_USE_NATIVE=1
@@ -850,7 +1004,6 @@ then
 	case "$target" in
 		*-linux*)
 			MOZ_ENABLE_GTK_MOZILLA=1
-			MOZ_BUILD_ROOT=`pwd`
 		;;
 	esac
 fi
@@ -2421,9 +2574,15 @@ case "$target" in
 esac
 
 AC_SUBST(AR)
+AC_SUBST(AR_FLAGS)
+AC_SUBST(AR_LIST)
+AC_SUBST(AR_EXTRACT)
 AC_SUBST(AS)
 AC_SUBST(ASFLAGS)
 AC_SUBST(AS_DASH_C_FLAG)
+AC_SUBST(LD)
+AC_SUBST(DLLTOOL)
+AC_SUBST(WINDRES)
 AC_SUBST(NS_USE_NATIVE)
 AC_SUBST(MOZ_WIDGET_TOOLKIT)
 AC_SUBST(MOZ_GFX_TOOLKIT)
@@ -2683,6 +2842,20 @@ AC_SUBST(CXXFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(LIBS)
 
+AC_SUBST(HOST_CC)
+AC_SUBST(HOST_CXX)
+AC_SUBST(HOST_CFLAGS)
+AC_SUBST(HOST_CXXFLAGS)
+
+AC_SUBST(HOST_RANLIB)
+AC_SUBST(HOST_NSPR_MDCPUCFG)
+
+AC_SUBST(TARGET_CPU)
+AC_SUBST(TARGET_OS)
+AC_SUBST(TARGET_NSPR_MDCPUCFG)
+AC_SUBST(TARGET_MD_ARCH)
+AC_SUBST(OS_TARGET)
+
 AC_SUBST(MOZ_DISABLE_DTD_DEBUG)
 
 AC_SUBST(WRAP_MALLOC_CFLAGS)
@@ -2696,6 +2869,8 @@ AC_SUBST(DSO_PIC_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
 AC_SUBST(DLL_SUFFIX)
 AC_DEFINE_UNQUOTED(MOZ_DLL_SUFFIX, ".$DLL_SUFFIX")
+AC_SUBST(LIB_SUFFIX)
+AC_SUBST(OBJ_SUFFIX)
 
 if test "$USING_HCC"; then
    CC='${topsrcdir}/build/hcc'
@@ -3035,9 +3210,14 @@ HOST_CFLAGS="$_SUBDIR_HOST_CFLAGS"
 HOST_LDFLAGS="$_SUBDIR_HOST_LDFLAGS"
 WINDRES=
 DLLTOOL=
-MAKEFILES=
 
+unset MAKEFILES
 unset CONFIG_FILES
+
+if test -z "$MOZ_NATIVE_NSPR" && test -n "$have_autoconfed_nspr"; then
+  ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist"
+  AC_OUTPUT_SUBDIRS(nsprpub)
+fi
 
 if test "$MOZ_ENABLE_GTK_MOZILLA"; then
   ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --with-mozilla=$MOZ_BUILD_ROOT/dist"

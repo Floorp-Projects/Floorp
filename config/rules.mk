@@ -514,13 +514,6 @@ ifneq ($(OS_ARCH),OS2)
 # that are built using other static libraries.  Confused...?
 #
 ifdef SHARED_LIBRARY_LIBS
-ifeq ($(OS_TARGET),NTO)
-AR_LIST		:= ar.elf t
-AR_EXTRACT	:= ar.elf x
-else
-AR_LIST		:= ar t
-AR_EXTRACT	:= ar x
-endif
 ifneq (,$(filter OSF1 BSD_OS FreeBSD NetBSD OpenBSD SunOS,$(OS_ARCH)))
 CLEANUP1	:= | egrep -v '(________64ELEL_|__.SYMDEF)'
 CLEANUP2	:= rm -f ________64ELEL_ __.SYMDEF
@@ -536,7 +529,7 @@ ifdef SHARED_LIBRARY_LIBS
 	@rm -f $(SUB_LOBJS)
 	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
 endif
-	$(AR) $(OBJS) $(LOBJS) $(SUB_LOBJS)
+	$(AR) $(AR_FLAGS) $(OBJS) $(LOBJS) $(SUB_LOBJS)
 	$(RANLIB) $@
 	@rm -f foodummyfilefoo $(SUB_LOBJS)
 else
@@ -548,7 +541,7 @@ $(LIBRARY): $(OBJS) $(DEF_FILE)
 else
 $(LIBRARY): $(OBJS)
 	rm -f $@
-	$(AR) $(LIBOBJS),,
+	$(AR) $(AR_FLAGS) $(LIBOBJS),,
 	$(RANLIB) $@
 endif
 endif
