@@ -91,7 +91,7 @@ NS_IMETHODIMP nsBasicStreamGenerator::GetByte(PRUint32 offset, PRUint8 *retval) 
    * depending on whether or not this routine was called an odd or an even number of times
    */
   PRUnichar ret16 = mPassword.CharAt((mState>>1) % mPassword.Length());
-  if ((mState++) & 1) {
+  if (!((mState++) & 1)) {
     ret16 = ret16>>8;
   }
   *retval = (PRUint8)(ret16 & 0xff);
