@@ -22,6 +22,12 @@
 
 -->
 
+<!--
+// XXX - WARNING - XXX
+// This file is being reimplemented for Mozilla 0.8. Do NOT make modifications
+// to this file without consulting ben@netscape.com first. 
+  -->
+
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>

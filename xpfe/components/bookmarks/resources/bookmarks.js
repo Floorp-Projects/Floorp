@@ -22,6 +22,13 @@
  *   Blake Ross   <blakeross@telocity.com>
  */
 
+////////////////////////////////////////////////////////////////////////////
+// XXX - WARNING - XXX
+// This file is being reimplemented for Mozilla 0.8. Do NOT make modifications
+// to this file without consulting ben@netscape.com first, as most of the 
+// code here is moving elsewhere and your changes will be lost. 
+
+
 
 var NC_NS  = "http://home.netscape.com/NC-rdf#";
 var RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
