@@ -173,10 +173,11 @@ function CalendarWindow( calendarDataSource )
    
       onDeleteItem : function( calendarEvent, nextEvent )
       {
-        calendarWindow.clearSelectedEvent( calendarEvent );
-        
-        if( !gICalLib.batchMode )
-        {
+         //if you put this outside of the batch mode, deleting all events
+         //puts the calendar into an infinite loop.
+           
+         if( !gICalLib.batchMode )
+         {
             calendarWindow.currentView.refreshEvents( );
             
             if ( nextEvent ) 
@@ -190,7 +191,7 @@ function CalendarWindow( calendarDataSource )
                    calendarWindow.currentView.hiliteSelectedDate( );
                 }
             }
-        }
+         }
       },
       onAlarm : function( calendarEvent )
       {
@@ -337,8 +338,7 @@ CalendarWindow.prototype.clearSelectedEvent = function calWin_clearSelectedEvent
    
    this.EventSelection.emptySelection( );
       
-   if( unSelectedEvent === undefined ||
-       unSelectedEvent == null )
+   if( unSelectedEvent === undefined || unSelectedEvent == null )
    {
       this.currentView.clearSelectedEvent( );
    }

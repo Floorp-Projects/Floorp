@@ -653,8 +653,6 @@ WeekView.prototype.hiliteTodaysDate = function( )
 */
 WeekView.prototype.clearSelectedEvent = function( )
 {
-   this.calendarWindow.EventSelection.emptySelection();
-
    //Event = gCalendarWindow.getSelectedEvent();
    
    var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );

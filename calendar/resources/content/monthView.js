@@ -185,7 +185,7 @@ function MonthView( calendarWindow )
          
          // set on click of day boxes
          
-         dayBoxItem.setAttribute( "onmousedown", "gCalendarWindow.monthView.clickDay( event )" );
+         dayBoxItem.setAttribute( "onclick", "gCalendarWindow.monthView.clickDay( event )" );
 
          //set the drop
          dayBoxItem.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,monthViewEventDragAndDropObserver)" );
@@ -276,12 +276,11 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
          }
             
          eventBox.setAttribute( "eventbox", "monthview" );
-         eventBox.setAttribute( "onmousedown", "monthEventBoxClickEvent( this, event )" );
+         eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
          eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
          eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
          eventBox.setAttribute( "tooltip", "savetip" );
          eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
-         //eventBox.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,monthViewEventDragAndDropObserver);" );
          // add a property to the event box that holds the calendarEvent that the
          // box represents
 
@@ -350,7 +349,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
             this.kungFooDeathGripOnEventBoxes.push( eventBox );
             
             eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
-            eventBox.setAttribute( "onmousedown", "monthEventBoxClickEvent( this, event )" );
+            eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
             eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
    
             eventBox.setAttribute( "tooltip", "savetip" );
@@ -752,26 +751,26 @@ MonthView.prototype.clickDay = function monthView_clickDay( event )
       // change the selected date and redraw it
       
       this.calendarWindow.selectedDate.setDate( dayBoxItem.dayNumber );
-      
-      this.calendarWindow.EventSelection.emptySelection();
+
+      gCalendarWindow.EventSelection.emptySelection();
    }
 }
+
+/*
+** Don't forget that clickDay gets called before double click day gets called
+*/
 
 MonthView.prototype.doubleClickDay = function monthView_doubleClickDay( event )
 {
    if( event.button > 0 )
       return;
-  
+   
    var dayBoxItem = event.currentTarget;
 
    if ( dayBoxItem.dayNumber != null ) 
    {
       // change the selected date and redraw it
 
-      this.calendarWindow.selectedDate.setDate( dayBoxItem.dayNumber );
-
-      this.calendarWindow.EventSelection.emptySelection();
-      
       var startDate = this.getNewEventDate();
       
       newEvent( startDate, false );
@@ -798,8 +797,6 @@ MonthView.prototype.clickEventBox = function monthView_clickEventBox( eventBox, 
 
 MonthView.prototype.clearSelectedEvent = function monthView_clearSelectedEvent( )
 {
-   this.calendarWindow.EventSelection.emptySelection();
-
    var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
 
    for( i = 0; i < ArrayOfBoxes.length; i++ )

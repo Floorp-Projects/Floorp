@@ -536,8 +536,6 @@ DayView.prototype.selectBoxForEvent = function dayview_selectBoxForEvent( calend
 */
 DayView.prototype.clearSelectedEvent = function dayview_clearSelectedEvent( )
 {
-   this.calendarWindow.EventSelection.emptySelection();
-
    var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
 
    for( i = 0; i < ArrayOfBoxes.length; i++ )

@@ -94,18 +94,7 @@ function selectSelectedEventsInTree( EventsToSelect )
    SearchTree.onselect = null;
    SearchTree.removeEventListener( "select", unifinderOnSelect, true );
    
-   if( EventsToSelect.length > 1 )
-   {
-      /* selecting all events is taken care of in the selectAllEvents in calendar.js 
-      ** Other than that, there's no other way to get in here. */
-      if( gSelectAll === true )
-      {
-         SearchTree.treeBoxObject.selection.selectAll( );
-         
-         gSelectAll = false;
-      }
-   }
-   else if( EventsToSelect.length == 1 )
+   if( EventsToSelect.length == 1 )
    {
       var RowToScrollTo = SearchTree.eventView.getRowOfCalendarEvent( EventsToSelect[0] );
          
@@ -118,8 +107,22 @@ function selectSelectedEventsInTree( EventsToSelect )
          SearchTree.treeBoxObject.selection.timedSelect( RowToScrollTo, 1 );
       }
    }
+   else if( EventsToSelect.length > 1 )
+   {
+      /* selecting all events is taken care of in the selectAllEvents in calendar.js 
+      ** Other than that, there's no other way to get in here. */
+      if( gSelectAll === true )
+      {
+         SearchTree.treeBoxObject.selection.selectAll( );
+         
+         gSelectAll = false;
+      }   
+   }
    else
+   {
+      dump( "\n--->>>>unifinder.js selection callback :: Clear selection" );
       SearchTree.treeBoxObject.selection.clearSelection( );
+   }
    
    /* This needs to be in a setTimeout */
    setTimeout( "resetAllowSelection()", 1 );
@@ -359,20 +362,32 @@ function unifinderDeleteCommand( DoNotConfirm )
          if( !DoNotConfirm ) {        
             if ( confirm( confirmDeleteEvent+" "+calendarEvent.title+"?" ) ) {
                gICalLib.deleteEvent( calendarEvent.id );
+
+               gCalendarWindow.clearSelectedEvent( calendarEvent );
             }
          }
          else
+         {
             gICalLib.deleteEvent( calendarEvent.id );
+
+            gCalendarWindow.clearSelectedEvent( calendarEvent );
+         }
       }
       else
       {
          if( !DoNotConfirm ) {        
             if ( confirm( confirmDeleteUntitledEvent ) ) {
                gICalLib.deleteEvent( calendarEvent.id );
+
+               gCalendarWindow.clearSelectedEvent( calendarEvent );
             }
          }
          else
+         {
             gICalLib.deleteEvent( calendarEvent.id );
+
+            gCalendarWindow.clearSelectedEvent( calendarEvent );
+         }
       }
    }
    else if( SelectedItems.length > 1 )
@@ -383,6 +398,8 @@ function unifinderDeleteCommand( DoNotConfirm )
       {
          if( confirm( "Are you sure you want to delete everything?" ) )
          {
+            gCalendarWindow.clearSelectedEvent( calendarEvent );
+            
             while( SelectedItems.length )
             {
                var ThisItem = SelectedItems.pop();
@@ -393,6 +410,8 @@ function unifinderDeleteCommand( DoNotConfirm )
       }
       else
       {
+         gCalendarWindow.clearSelectedEvent( calendarEvent );
+            
          while( SelectedItems.length )
          {
             var ThisItem = SelectedItems.pop();
