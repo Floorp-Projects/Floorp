@@ -188,9 +188,6 @@ nsresult nsTableOuterFrame::RecoverState(OuterTableReflowState& aState,
   aState.innerTableMaxSize.width = innerTableSize.width;
   aState.innerTableMaxSize.height = aState.reflowState.maxSize.height;
 
-  // The available space is the width of the inner table
-  aState.availSize.width = aState.innerTableMaxSize.width;
-
   return NS_OK;
 }
 
@@ -293,8 +290,11 @@ nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
   aState.y += topMargin;
   kidFrame->WillReflow(*aPresContext);
   kidFrame->MoveTo(kidMargin.left, aState.y);
-  nsReflowState kidReflowState(kidFrame, aState.reflowState, kidFrame == mInnerTableFrame ?
-                               aState.innerTableMaxSize : aState.availSize);
+  nsReflowState kidReflowState(kidFrame, aState.reflowState, aState.availSize);
+  if (kidFrame != mInnerTableFrame) {
+    // Reflow captions to the width of the inner table
+    kidReflowState.maxSize.width = aState.innerTableMaxSize.width;
+  }
   mInnerTableFrame->SetReflowPass(nsTableFrame::kPASS_INCREMENTAL);
   aStatus = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState,
                         pKidMaxElementSize, aState);

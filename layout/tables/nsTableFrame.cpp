@@ -1108,7 +1108,10 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     // assign table width
     SetTableWidth(aPresContext);
 
-    aStatus = ResizeReflowPass2(aPresContext, aDesiredSize, aReflowState, 0, 0);
+    // Constrain our reflow width to the computed table width
+    nsReflowState    reflowState(aReflowState);
+    reflowState.maxSize.width = mRect.width;
+    aStatus = ResizeReflowPass2(aPresContext, aDesiredSize, reflowState, 0, 0);
 
     if (gsTiming) {
       PRIntervalTime endTime = PR_IntervalNow();
