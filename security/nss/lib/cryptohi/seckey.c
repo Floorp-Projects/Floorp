@@ -1401,6 +1401,29 @@ SECKEY_ConvertAndDecodePublicKey(char *pubkstr)
     return pubk;
 }
 
+SECItem *
+SECKEY_EncodeDERSubjectPublicKeyInfo(SECKEYPublicKey *pubk)
+{
+    CERTSubjectPublicKeyInfo *spki=NULL;
+    SECItem *spkiDER=NULL;
+
+    /* get the subjectpublickeyinfo */
+    spki = SECKEY_CreateSubjectPublicKeyInfo(pubk);
+    if( spki == NULL ) {
+	goto finish;
+    }
+
+    /* DER-encode the subjectpublickeyinfo */
+    spkiDER = SEC_ASN1EncodeItem(NULL /*arena*/, NULL/*dest*/, spki,
+					CERT_SubjectPublicKeyInfoTemplate);
+finish:
+    if (spki!=NULL) {
+	SECKEY_DestroySubjectPublicKeyInfo(spki);
+    }
+    return spkiDER;
+}
+
+
 CERTSubjectPublicKeyInfo *
 SECKEY_DecodeDERSubjectPublicKeyInfo(SECItem *spkider)
 {

@@ -33,7 +33,7 @@
  *
  * key.h - public data structures and prototypes for the private key library
  *
- * $Id: keyhi.h,v 1.3 2001/04/24 20:04:13 relyea%netscape.com Exp $
+ * $Id: keyhi.h,v 1.4 2001/06/07 21:47:29 relyea%netscape.com Exp $
  */
 
 #ifndef _KEYHI_H_
@@ -133,6 +133,13 @@ extern SECKEYPublicKey *SECKEY_ConvertAndDecodePublicKey(char *pubkstr);
 extern CERTSubjectPublicKeyInfo *
 SECKEY_ConvertAndDecodePublicKeyAndChallenge(char *pkacstr, char *challenge,
 								void *cx);
+
+/*
+** Encode a  CERTSubjectPublicKeyInfo structure. into a
+** DER encoded subject public key info. 
+*/
+SECItem *
+SECKEY_EncodeDERSubjectPublicKeyInfo(SECKEYPublicKey *pubk);
 
 /*
 ** Decode a DER encoded subject public key info into a
