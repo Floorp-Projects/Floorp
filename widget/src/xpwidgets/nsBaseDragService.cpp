@@ -64,11 +64,12 @@ NS_IMPL_QUERY_INTERFACE2(nsBaseDragService, nsIDragService, nsIDragSession)
 // DragService constructor
 //
 //-------------------------------------------------------------------------
-nsBaseDragService::nsBaseDragService() :
-  mCanDrop(PR_FALSE), mDoingDrag(PR_FALSE), mTargetSize(0,0), mDragAction(DRAGDROP_ACTION_NONE)
+nsBaseDragService::nsBaseDragService()
+  : mCanDrop(PR_FALSE), mDoingDrag(PR_FALSE),
+    mDragAction(DRAGDROP_ACTION_NONE), mTargetSize(0,0)
 {
   nsresult result = NS_NewISupportsArray(getter_AddRefs(mTransArray));
-  if ( NS_FAILED(result) ) {
+  if (NS_FAILED(result)) {
     //what do we do? we can't throw!
     ;
   }
@@ -85,42 +86,48 @@ nsBaseDragService::~nsBaseDragService()
 
 
 //---------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::SetCanDrop (PRBool aCanDrop) 
+NS_IMETHODIMP
+nsBaseDragService::SetCanDrop(PRBool aCanDrop)
 {
- mCanDrop = aCanDrop;
- return NS_OK;
+  mCanDrop = aCanDrop;
+  return NS_OK;
 }
 
 //---------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::GetCanDrop (PRBool * aCanDrop)
+NS_IMETHODIMP
+nsBaseDragService::GetCanDrop(PRBool * aCanDrop)
 {
   *aCanDrop = mCanDrop;
   return NS_OK;
 }
 
 //---------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::SetDragAction (PRUint32 anAction) 
+NS_IMETHODIMP
+nsBaseDragService::SetDragAction(PRUint32 anAction)
 {
  mDragAction = anAction;
  return NS_OK;
 }
 
 //---------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::GetDragAction (PRUint32 * anAction)
+NS_IMETHODIMP
+nsBaseDragService::GetDragAction(PRUint32 * anAction)
 {
   *anAction = mDragAction;
   return NS_OK;
 }
 
 //---------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::SetTargetSize (nsSize aDragTargetSize) 
+NS_IMETHODIMP
+nsBaseDragService::SetTargetSize(nsSize aDragTargetSize)
 {
- mTargetSize = aDragTargetSize;
- return NS_OK;
+  mTargetSize = aDragTargetSize;
+  return NS_OK;
 }
 
 //---------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::GetTargetSize (nsSize * aDragTargetSize)
+NS_IMETHODIMP
+nsBaseDragService::GetTargetSize(nsSize * aDragTargetSize)
 {
   *aDragTargetSize = mTargetSize;
   return NS_OK;
@@ -128,7 +135,8 @@ NS_IMETHODIMP nsBaseDragService::GetTargetSize (nsSize * aDragTargetSize)
 
 //-------------------------------------------------------------------------
 
-NS_IMETHODIMP nsBaseDragService::GetNumDropItems (PRUint32 * aNumItems)
+NS_IMETHODIMP
+nsBaseDragService::GetNumDropItems(PRUint32 * aNumItems)
 {
   *aNumItems = 0;
   return NS_ERROR_FAILURE;
@@ -142,11 +150,11 @@ NS_IMETHODIMP nsBaseDragService::GetNumDropItems (PRUint32 * aNumItems)
 // nsnull if the drag began outside of our application.
 //
 NS_IMETHODIMP
-nsBaseDragService :: GetSourceDocument ( nsIDOMDocument** aSourceDocument )
+nsBaseDragService::GetSourceDocument(nsIDOMDocument** aSourceDocument)
 {
   *aSourceDocument = mSourceDocument.get();
-  NS_IF_ADDREF ( *aSourceDocument );
-  
+  NS_IF_ADDREF(*aSourceDocument);
+
   return NS_OK;
 }
 
@@ -157,72 +165,83 @@ nsBaseDragService :: GetSourceDocument ( nsIDOMDocument** aSourceDocument )
 // nsnull if the drag began outside of our application.
 //
 NS_IMETHODIMP
-nsBaseDragService :: GetSourceNode ( nsIDOMNode** aSourceNode )
+nsBaseDragService::GetSourceNode(nsIDOMNode** aSourceNode)
 {
   *aSourceNode = mSourceNode.get();
-  NS_IF_ADDREF ( *aSourceNode );
-  
+  NS_IF_ADDREF(*aSourceNode);
+
   return NS_OK;
 }
 
 
 //-------------------------------------------------------------------------
 
-NS_IMETHODIMP nsBaseDragService::GetData (nsITransferable * aTransferable, PRUint32 aItemIndex)
+NS_IMETHODIMP
+nsBaseDragService::GetData(nsITransferable * aTransferable,
+                           PRUint32 aItemIndex)
 {
   return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
+NS_IMETHODIMP
+nsBaseDragService::IsDataFlavorSupported(const char *aDataFlavor,
+                                         PRBool *_retval)
 {
   return NS_ERROR_FAILURE;
 }
 
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * anArrayTransferables, nsIScriptableRegion * aRegion, PRUint32 aActionType)
+NS_IMETHODIMP
+nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
+                                     nsISupportsArray * anArrayTransferables,
+                                     nsIScriptableRegion * aRegion,
+                                     PRUint32 aActionType)
 {
-  NS_WARN_IF_FALSE ( aDOMNode, "No node provided to InvokeDragSession, you should provide one" );
-  if ( aDOMNode ) {
+  NS_WARN_IF_FALSE(aDOMNode, "No node provided to InvokeDragSession, you should provide one");
+  if (aDOMNode) {
     // stash the document of the dom node
-    aDOMNode->GetOwnerDocument ( getter_AddRefs(mSourceDocument) );
+    aDOMNode->GetOwnerDocument(getter_AddRefs(mSourceDocument));
     mSourceNode = aDOMNode;
-    
-    // When the mouse goes down, the selection code starts a mouse capture. However,
-    // this gets in the way of determining drag feedback for things like trees because
-    // the event coordinates are in the wrong coord system. Turn off capture by 
-    // getting the frame associated with the DOM Node.
+
+    // When the mouse goes down, the selection code starts a mouse
+    // capture. However, this gets in the way of determining drag
+    // feedback for things like trees because the event coordinates
+    // are in the wrong coord system. Turn off capture by getting the
+    // frame associated with the DOM Node.
     nsIFrame* dragFrame = nsnull;
     nsCOMPtr<nsPresContext> context;
-    GetFrameFromNode ( aDOMNode, &dragFrame, getter_AddRefs(context) );
-    if ( dragFrame && context )
-      dragFrame->CaptureMouse ( context, PR_FALSE );
+    GetFrameFromNode(aDOMNode, &dragFrame, getter_AddRefs(context));
+    if (dragFrame && context)
+      dragFrame->CaptureMouse(context, PR_FALSE);
   }
   return NS_OK;
 }
 
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::GetCurrentSession (nsIDragSession ** aSession)
+NS_IMETHODIMP
+nsBaseDragService::GetCurrentSession(nsIDragSession ** aSession)
 {
-  if ( !aSession )
+  if (!aSession)
     return NS_ERROR_INVALID_ARG;
-  
-  // "this" also implements a drag session, so say we are one but only if there
-  // is currently a drag going on. 
-  if ( mDoingDrag ) {
+
+  // "this" also implements a drag session, so say we are one but only
+  // if there is currently a drag going on.
+  if (mDoingDrag) {
     *aSession = this;
     NS_ADDREF(*aSession);      // addRef because we're a "getter"
   }
   else
     *aSession = nsnull;
-    
+
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::StartDragSession ()
+NS_IMETHODIMP
+nsBaseDragService::StartDragSession()
 {
   if (mDoingDrag) {
     return NS_ERROR_FAILURE;
@@ -232,14 +251,15 @@ NS_IMETHODIMP nsBaseDragService::StartDragSession ()
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::EndDragSession ()
+NS_IMETHODIMP
+nsBaseDragService::EndDragSession()
 {
   if (!mDoingDrag) {
     return NS_ERROR_FAILURE;
   }
   mDoingDrag = PR_FALSE;
   mSourceDocument = nsnull;     // release the source document we've been holding
-  
+
   return NS_OK;
 }
 
@@ -250,12 +270,12 @@ NS_IMETHODIMP nsBaseDragService::EndDragSession ()
 // Get the frame for this content node (note: frames are not refcounted).
 //
 void
-nsBaseDragService :: GetFrameFromNode ( nsIDOMNode* inNode, nsIFrame** outFrame,
-                                           nsPresContext** outContext )
+nsBaseDragService::GetFrameFromNode(nsIDOMNode* inNode, nsIFrame** outFrame,
+                                    nsPresContext** outContext)
 {
   *outFrame = nsnull;
   *outContext = nsnull;
-  if ( !inNode || !outContext )
+  if (!inNode || !outContext)
     return;
 
   nsCOMPtr<nsIContent> contentNode = do_QueryInterface(inNode);
@@ -263,12 +283,12 @@ nsBaseDragService :: GetFrameFromNode ( nsIDOMNode* inNode, nsIFrame** outFrame,
     nsIDocument* doc = contentNode->GetDocument();
     if (doc) {
       nsIPresShell *presShell = doc->GetShellAt(0);
-      if (presShell) 	{
+      if (presShell) {
         NS_IF_ADDREF(*outContext = presShell->GetPresContext());
-      	presShell->GetPrimaryFrameFor(contentNode, outFrame);
-        NS_ASSERTION ( *outFrame, "Can't get frame for this dom node" );
+        presShell->GetPrimaryFrameFor(contentNode, outFrame);
+        NS_ASSERTION(*outFrame, "Can't get frame for this dom node");
       }
     }
   }
-  
+
 } // GetFrameFromNode
