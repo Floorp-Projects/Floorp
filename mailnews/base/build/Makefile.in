@@ -35,17 +35,18 @@ EXPORTS = \
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libmailnewsbase_s.a	\
+		$(DIST)/lib/librdfutil_s.a	\
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_FORCE_ALL)	\
 		$(SHARED_LIBRARY_LIBS)	\
 		$(MKSHLIB_UNFORCE_ALL)	\
+		-L$(DIST)/bin	\
 		-lmozjs			\
 		-ljsdom			\
 		-ljsurl			\
 		-lraptorbase	\
-		-lrdfutil_s		\
 		-lmsgbaseutil	\
 		-lgmbasegtk		\
 		$(TK_LIBS)		\
@@ -70,8 +71,6 @@ EXTRA_DSO_LDOPTS = \
 		-lsecfree		\
 		$(ZLIB_LIBS)	\
 		$(NSPR_LIBS)	\
-		-L$(DIST)/bin	\
-		-L$(DIST)/lib	\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
