@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.207 $ ';
+$::UtilsVersion = '$Revision: 1.208 $ ';
 
 package TinderUtils;
 
@@ -2071,10 +2071,6 @@ sub StartupPerformanceTest {
     my $min_startuptime = min(@times);
     print_log "Minimum startup time: $min_startuptime\n";
     
-    # Old mechanism here, new = TinderboxPrint.
-    # print_log "\n\n  __avg_startuptime,$avg_startuptime\n\n";
-    # print_log "\n\n  __avg_startuptime,$min_startuptime\n\n";
-    
     my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
     my $print_string = "\n\nTinderboxPrint:<a title=\"Best startup time out of 10 startups\"href=\"http://$Settings::results_server/graph/query.cgi?testname=startup&tbox="
       . ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$min_startuptime\">Ts:" . $min_startuptime . "ms</a>\n\n";
@@ -2401,10 +2397,9 @@ sub BloatTest2 {
         send_results_to_server($newstats->{'allocs'}, "--", $allocs_testname,  ::hostname() );
 
     } else {
-        print_log "TinderboxPrint:";
-        print_log "<abbr title=\"$leaks_testname_label\">Lk</abbr>:" . PrintSize($newstats->{'leaks'},3) . "B,";
-        print_log "<abbr title=\"$maxheap_testname_label\">MH</abbr>:" . PrintSize($newstats->{'mhs'},3) . "B,";
-        print_log "<abbr title=\"$allocs_testname_label\">A</abbr>:" . PrintSize($newstats->{'allocs'},3) . "\n";
+        print_log "TinderboxPrint:<abbr title=\"$leaks_testname_label\">Lk</abbr>:" . PrintSize($newstats->{'leaks'},3) . "B\n";
+        print_log "TinderboxPrint:<abbr title=\"$maxheap_testname_label\">MH</abbr>:" . PrintSize($newstats->{'mhs'},3) . "B\n";
+        print_log "TinderboxPrint:<abbr title=\"$allocs_testname_label\">A</abbr>:" . PrintSize($newstats->{'allocs'},3) . "\n";
     }
 
     if (-e $old_sdleak_log && -e $sdleak_log) {
