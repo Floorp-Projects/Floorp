@@ -50,6 +50,7 @@
 class nsExternalAppHandler;
 class nsIMIMEInfo;
 class nsIRDFService;
+class nsIDownload;
 
 class nsExternalHelperAppService : public nsIExternalHelperAppService, public nsPIExternalAppLauncher, 
                                    public nsIExternalProtocolService, public nsIMIMEService, public nsIObserver
@@ -179,12 +180,12 @@ protected:
 
   // the canceled flag is set if the user canceled the launching of this application before we finished
   // saving the data to a temp file...
-  PRBool mCanceled;
+  PRPackedBool mCanceled;
 
   // have we received information from the user about how they want to dispose of this content...
-  PRBool mReceivedDispostionInfo;
-  PRBool mStopRequestIssued; 
-  PRBool mProgressWindowCreated; 
+  PRPackedBool mReceivedDispostionInfo;
+  PRPackedBool mStopRequestIssued; 
+  PRPackedBool mProgressListenerInitialized;
   PRInt64 mTimeDownloadStarted;
   PRInt32 mContentLength;
   PRInt32 mProgress; // Number of bytes received (for sending progress notifications).
@@ -201,9 +202,11 @@ protected:
   // and load group instead of using the window which initiated the load....RetargetLoadNotifications contains
   // that information...
   nsresult RetargetLoadNotifications(nsIRequest *request); 
-  // if the user tells us how they want to dispose of the content and we still haven't finished downloading while
-  // they were deciding, then throw a progress dialog so they know what's going on...
-  nsresult ShowProgressDialog();
+  // if the user tells us how they want to dispose of the content and
+  // we still haven't finished downloading while they were deciding,
+  // then create a progress listener of some kind so they know
+  // what's going on...
+  nsresult CreateProgressListener();
   nsresult PromptForSaveToFile(nsILocalFile ** aNewFile, const nsAFlatString &aDefaultFile, const nsAFlatString &aDefaultFileExt);
   // if the passed in channel is an nsIHTTPChannel, we'll attempt to extract a suggested file name
   // from the content disposition header...
@@ -220,9 +223,14 @@ protected:
   // an internal method used to actually launch a helper app given the temp file
   // once we are done receiving data AND have showed the progress dialog.
   nsresult OpenWithApplication(nsIFile * aApplication);
+  
   // helper routine which peaks at the mime action specified by mMimeInfo
   // and calls either MoveFile or OpenWithApplication
   nsresult ExecuteDesiredAction();
+
+  // initialize an nsIDownload object for use as a progress object
+  nsresult InitializeDownload(nsIDownload*);
+  
   // helper routine to ensure mSuggestedFileName is "correct";
   // the base class implementation ensures that mSuggestedFileName has
   // mTempFileExtension as extension;

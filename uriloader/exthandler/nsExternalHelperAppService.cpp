@@ -54,7 +54,6 @@
 #include "nsIRefreshURI.h"
 #include "nsIDocumentLoader.h"
 #include "nsIHelperAppLauncherDialog.h"
-#include "nsIProgressDialog.h"
 #include "nsITransport.h"
 #include "nsIFileTransportService.h"
 #include "nsCExternalHandlerService.h" // contains contractids for the helper app service
@@ -730,7 +729,7 @@ nsExternalAppHandler::nsExternalAppHandler()
   mReceivedDispostionInfo = PR_FALSE;
   mStopRequestIssued = PR_FALSE;
   mDataBuffer = (char *) nsMemory::Alloc((sizeof(char) * DATA_BUFFER_SIZE));
-  mProgressWindowCreated = PR_FALSE;
+  mProgressListenerInitialized = PR_FALSE;
   mContentLength = -1;
   mProgress      = 0;
 }
@@ -760,15 +759,11 @@ NS_IMETHODIMP nsExternalAppHandler::Observe(nsISupports *aSubject, const char *a
 
 NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListener * aWebProgressListener)
 { 
-  // The progress window only appears after the helper app dialog has told us
-  // what to do.  We need to be careful not to confuse helper app dialog
-  // calls to this method with ones from the progress dialog!
-  if (mReceivedDispostionInfo && aWebProgressListener)
-  {
-    // this call back means we've succesfully brought up the 
-    // progress window so set the appropriate flag...
-    mProgressWindowCreated = PR_TRUE;
-  }
+  // this call back means we've succesfully brought up the 
+  // progress window so set the appropriate flag, even though
+  // aWebProgressListener might be null
+  
+  mProgressListenerInitialized = PR_TRUE;
 
   // Go ahead and register the progress listener....
 
@@ -1397,7 +1392,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISuppor
 nsresult nsExternalAppHandler::ExecuteDesiredAction()
 {
   nsresult rv = NS_OK;
-  if (mProgressWindowCreated && !mCanceled)
+  if (mProgressListenerInitialized && !mCanceled)
   {
     nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
     mMimeInfo->GetPreferredAction(&action);
@@ -1470,25 +1465,10 @@ NS_IMETHODIMP nsExternalAppHandler::GetSuggestedFileName(PRUnichar ** aSuggested
   return NS_OK;
 }
 
-nsresult nsExternalAppHandler::ShowProgressDialog()
+nsresult nsExternalAppHandler::InitializeDownload(nsIDownload* aDownload)
 {
-  // we are back from the helper app dialog (where the user chooses to save or open), but we aren't
-  // done processing the load. in this case, throw up a progress dialog so the user can see what's going on...
   nsresult rv;
-  nsCOMPtr<nsILocalFile> local = do_QueryInterface(mFinalFileDestination);
-
-  nsCOMPtr<nsIDownload> dl = do_CreateInstance("@mozilla.org/download;1", &rv);
-  if (NS_FAILED(rv)) {
-    // we don't have a progress window implementation available,
-    // so we just proceed normally so that we can handle the file
-    // once the download is complete.
-    mProgressWindowCreated = PR_TRUE;
-
-    // however, we do want to indicate that the progress object was
-    // not created, so return an error
-    return rv;
-  }
-
+  
   nsXPIDLString openWith(NS_LITERAL_STRING(""));  
   nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
   mMimeInfo->GetPreferredAction(&action);
@@ -1510,14 +1490,36 @@ nsresult nsExternalAppHandler::ShowProgressDialog()
       }
     }
   }
-
-  rv = dl->Init(mSourceUrl, local, nsnull, openWith, mTimeDownloadStarted, nsnull);
+  
+  nsCOMPtr<nsILocalFile> local = do_QueryInterface(mFinalFileDestination);
+  
+  rv = aDownload->Init(mSourceUrl, local, nsnull,
+                       openWith, mTimeDownloadStarted, nsnull);
   if (NS_FAILED(rv)) return rv;
+  
+  rv = aDownload->SetObserver(this);
 
-  dl->SetObserver(this);
-  nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(dl);
-  if (listener)
-    SetWebProgressListener(listener);
+  return rv;
+}
+
+nsresult nsExternalAppHandler::CreateProgressListener()
+{
+  // we are back from the helper app dialog (where the user chooses to save or open), but we aren't
+  // done processing the load. in this case, throw up a progress dialog so the user can see what's going on...
+  nsresult rv;
+
+  nsCOMPtr<nsIWebProgressListener> listener;
+  
+  nsCOMPtr<nsIDownload> dl = do_CreateInstance("@mozilla.org/download;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    InitializeDownload(dl);
+    listener = do_QueryInterface(dl);
+  }
+
+  // note we might not have a listener here if the QI() failed, or if
+  // there is no nsIDownload object, but we still call
+  // SetWebProgressListener() to make sure our progress state is sane
+  SetWebProgressListener(listener);
 
   return rv;
 }
@@ -1630,8 +1632,8 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
     
     mFinalFileDestination = do_QueryInterface(fileToUse);
 
-    if (!mProgressWindowCreated) 
-      ShowProgressDialog();
+    if (!mProgressListenerInitialized)
+      CreateProgressListener();
 
     // now that the user has chosen the file location to save to, it's okay to fire the refresh tag
     // if there is one. We don't want to do this before the save as dialog goes away because this dialog
@@ -1731,8 +1733,8 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
   mFinalFileDestination = do_QueryInterface(fileToUse);
 
   // launch the progress window now that the user has picked the desired action.
-  if (!mProgressWindowCreated) 
-   ShowProgressDialog();
+  if (!mProgressListenerInitialized)
+   CreateProgressListener();
 
   return NS_OK;
 }
