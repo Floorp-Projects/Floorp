@@ -36,7 +36,6 @@ EXPORTS =                               \
         nsFastLoadPtr.h                 \
         nsFastLoadService.h             \
         nsFileSpec.h                    \
-        nsFileSpecStreaming.h           \
         nsFileStream.h                  \
         nsIFileStream.h                 \
         nsIUnicharInputStream.h         \
@@ -91,7 +90,6 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsFastLoadService.obj         \
         .\$(OBJDIR)\nsFileSpec.obj                \
         .\$(OBJDIR)\nsFileSpecImpl.obj            \
-        .\$(OBJDIR)\nsFileSpecStreaming.obj       \
         .\$(OBJDIR)\nsFileStream.obj              \
         .\$(OBJDIR)\nsIFileStream.obj             \
         .\$(OBJDIR)\nsStringStream.obj            \
