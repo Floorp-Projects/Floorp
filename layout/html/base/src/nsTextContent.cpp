@@ -1630,17 +1630,19 @@ nsresult Text::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
 
   if (aIID.Equals(kIDOMTextIID)) {
-    *aInstancePtr = (void*)(nsIDOMText*)this;
+    *aInstancePtr = (void*) ((nsIDOMText*)this);
     nsHTMLContent::AddRef();
     return NS_OK;
   }
   if (aIID.Equals(kIDOMNodeIID)) {
-    *aInstancePtr = (void*)(nsIDOMNode*)(nsIDOMText*)this;
+    *aInstancePtr = (void*) ((nsHTMLContent*)this);
     nsHTMLContent::AddRef();
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)(nsIDOMText*)this;
+    *aInstancePtr = (void*) ((nsISupports*)
+                             ((nsIHTMLContent*)
+                              ((nsHTMLContent*)this)));
     nsHTMLContent::AddRef();
     return NS_OK;
   }
