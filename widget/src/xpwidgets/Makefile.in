@@ -33,7 +33,7 @@ INCLUDES += -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor -I$(srcdir)/../$(MOZ_TOOLKIT) -
 ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
 CFLAGS += $(TK_GTK_CFLAGS)
 else
-ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
+ifneq (,$(filter motif, $(MOZ_TOOLKIT)))
 CFLAGS += $(TK_MOTIF_CFLAGS)
 endif
 endif
