@@ -332,12 +332,10 @@ function configureDialer()
 		var thePlatform = parent.parent.globals.getPlatform();
 	
 		var configFile="";
-		if (thePlatform == "Macintosh")	{				// Macintosh support
+		if ( thePlatform == "Macintosh" )				// Macintosh support
 			configFile = profileDir + "Configuration";
-			}
-		else	{										// Windows support
+		else											// Windows support
 			configFile = profileDir + "CONFIG.INI";
-			}
 		
 		parent.parent.globals.document.setupPlugin.SetNameValuePair(configFile,"Account", "Account", newProfileName);		// parent.parent.globals.document.vars.providername.value);
 		parent.parent.globals.document.setupPlugin.SetNameValuePair(configFile,"Modem", "Modem", parent.parent.globals.document.vars.modem.value);
@@ -345,23 +343,20 @@ function configureDialer()
 		
 
 		// write out default Bookmark file (if one doesn't exist yet)
-		
 		var currentBookmarkFilename="";
-		if (thePlatform == "Macintosh")	{				// Macintosh support
+		if ( thePlatform == "Macintosh" )				// Macintosh support
 			currentBookmarkFilename = profileDir + "Bookmarks.html";
-			}
-		else	{										// Windows support
+		else											// Windows support
 			currentBookmarkFilename = profileDir + "BOOKMARK.HTM";
-			}
 
-		var bookmarkData = parent.parent.globals.document.setupPlugin.GetNameValuePair(currentBookmarkFilename,null,null);
-		if ((bookmarkData == null) || (bookmarkData == "") || (bookmarkData.indexOf("HREF")<0))	{
-			var defaultBookmarkFilename = parent.parent.globals.getConfigFolder(self) + "bookmark.htm";
-			bookmarkData = parent.parent.globals.document.setupPlugin.GetNameValuePair(defaultBookmarkFilename,null,null);
-			if (bookmarkData != null && bookmarkData != "")	{
-				parent.parent.globals.document.setupPlugin.SaveTextToFile(currentBookmarkFilename,bookmarkData,false);
-				}
-			}
+		var bookmarkData = parent.parent.globals.document.setupPlugin.GetFileContents( currentBookmarkFilename );
+		if ( ( bookmarkData == null ) || ( bookmarkData == "" ) || ( bookmarkData.indexOf( "HREF" ) < 0 ) )
+		{
+			var defaultBookmarkFilename = parent.parent.globals.getConfigFolder( self ) + "bookmark.htm";
+			bookmarkData = parent.parent.globals.document.setupPlugin.GetFileContents( defaultBookmarkFilename );
+			if ( bookmarkData != null && bookmarkData != "" )
+				parent.parent.globals.document.setupPlugin.SaveTextToFile( currentBookmarkFilename, bookmarkData, false );
+		}
 
 		// copy profile lock file (if one is specified in selected .NCI file)
 		

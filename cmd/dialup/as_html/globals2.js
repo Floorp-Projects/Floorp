@@ -472,7 +472,7 @@ function configureNewAccount()
 		}
 
 
-		var bookmarkData = "" + document.setupPlugin.GetNameValuePair( currentBookmarkFilename, null, null );
+		var bookmarkData = "" + document.setupPlugin.GetFileContents( currentBookmarkFilename );
 		if ( bookmarkData != "" )
 		{
 			if ( bookmarkData.indexOf( "<!DOCTYPE NETSCAPE-Bookmark-file-1>" ) ==0 )
@@ -578,7 +578,7 @@ function configureNewAccount()
 		var ISPurl = findVariable( "ISP_URL" );
 		if ( ISPurl != null && ISPurl != "" )
 		{
-			bookmarkData = "" + document.setupPlugin.GetNameValuePair( currentBookmarkFilename, null, null );
+			bookmarkData = "" + document.setupPlugin.GetFileContents( currentBookmarkFilename );
 			if ( bookmarkData != null && bookmarkData != "" )
 			{
 				var lastDLindex = bookmarkData.lastIndexOf( "</DL>" );
