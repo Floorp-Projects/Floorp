@@ -674,7 +674,7 @@ Contributor(s):
               datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
               ref="NC:BookmarksRoot" flags="dont-test-empty"
               onpopupshowing="document.getElementById('bookmarks-toolbar').showOpenInTabsMenuItem(event.originalTarget)"
-              onpopupshidden="document.getElementById('bookmarks-toolbar').hideOpenInTabsMenuItem(event.originalTarget)"
+              onpopuphidden="document.getElementById('bookmarks-toolbar').hideOpenInTabsMenuItem(event.originalTarget)"
               oncommand="BookmarksUtils.loadBookmarkBrowser(event, event.originalTarget, this.database)"
               onclick="BookmarksUtils.loadBookmarkBrowserMiddleClick(event, this.database)"
               ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
