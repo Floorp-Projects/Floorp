@@ -18,7 +18,6 @@
  * Netscape Communications Corporation. All Rights Reserved.
  */
 
-var toolkit;
 var browser;
 var dialog;
 
@@ -28,16 +27,10 @@ function onLoad() {
   //dialog.current   = document.getElementByID( "xpi.currentlyprocessing");
 	dialog.newWindow   = document.getElementById( "dialog.newWindow" );
 
-	toolkit = XPAppCoresManager.Find( "toolkitCore" );
-	if ( !toolkit ) {
-		toolkit = new ToolkitCore();
-		toolkit.Init( "toolkitCore" );
-	}
-
 	browser = XPAppCoresManager.Find( window.arguments[0] );
 	if ( !browser ) {
 		dump( "unable to get browser app core\n" );
-		toolkit.CloseWindow( window );
+        window.close();
 	}
 
 }
@@ -75,10 +68,10 @@ function open() {
 	browser.loadUrl( url );
 
 	/* Close dialog. */
-	toolkit.CloseWindow( window );
+    window.close();
 }
 
 function cancel() {
-    toolkit.CloseWindow( window );
+    window.close();
 }
 
