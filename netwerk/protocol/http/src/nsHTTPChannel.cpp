@@ -102,7 +102,8 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
     mPipeliningAllowed (PR_TRUE),
     mPipelinedRequest (nsnull),
     mApplyConversion(PR_TRUE),
-    mNotificationProxiesBuilt (PR_FALSE)
+    mNotificationProxiesBuilt (PR_FALSE),
+    mOpenInputStreamHasEventQueue (PR_TRUE)
 {
     NS_INIT_REFCNT();
 			NS_NewISupportsArray ( getter_AddRefs (mStreamAsFileObserverArray ) );
@@ -238,6 +239,24 @@ nsHTTPChannel::SetURI(nsIURI* o_URL)
 }
 
 NS_IMETHODIMP
+nsHTTPChannel::GetOpenInputStreamHasEventQueue (PRBool * hasEventQueue)
+{
+    if (!hasEventQueue)
+        return NS_ERROR_NULL_POINTER;
+
+    *hasEventQueue = mOpenInputStreamHasEventQueue;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetOpenInputStreamHasEventQueue (PRBool hasEventQueue)
+{
+
+    mOpenInputStreamHasEventQueue = hasEventQueue;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTTPChannel::OpenInputStream(nsIInputStream **o_Stream)
 {
     nsresult rv;
@@ -251,6 +270,12 @@ nsHTTPChannel::OpenInputStream(nsIInputStream **o_Stream)
 
     if (NS_FAILED(rv))
         return rv;
+
+    if (mOpenInputStreamHasEventQueue)
+    {
+        rv = AsyncRead (listener, nsnull);
+        return rv;
+    }
 
     nsSyncHelper *helper = new nsSyncHelper ();
     if (!helper)
