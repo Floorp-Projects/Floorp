@@ -191,9 +191,8 @@ nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
 
   if ((PR_FALSE==mStaticImage) || (nsnull == mImage)) {
     BuildImage(aSurface);
-    mStaticImage = PR_TRUE;
   } 
-
+ 
   if (nsnull == mImage)
     return PR_FALSE;
 
@@ -213,10 +212,11 @@ PRBool nsImageUnix :: Draw(nsIRenderingContext &aContext,
 {
 nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
 
+  BuildImage(aSurface);
+
    // Build Image each time if it's not static.
   if ((PR_FALSE==mStaticImage) || (nsnull == mImage)) {
     BuildImage(aSurface);
-    mStaticImage = PR_TRUE;
   } 
  
   if (nsnull == mImage)
@@ -355,8 +355,8 @@ nsresult nsImageUnix::BuildImage(nsDrawingSurface aDrawingSurface)
 
 nsresult nsImageUnix::Optimize(nsIDeviceContext* aContext)
 {
-#if 0
   mStaticImage = PR_TRUE;
+#if 0
   BuildImage(aDrawingSurface);
 #endif
   return NS_OK;
