@@ -557,7 +557,7 @@ nsPICS::Init()
 	   /*  check for security pref that password disables the enableing of
 	     java permissions */
 	    /*
-        if(PREF_CopyCharPref(JAVA_SECURITY_PASSWORD, &password))
+        if(prefs->CopyCharPref(JAVA_SECURITY_PASSWORD, &password))
 		    password = NULL;
 
 	    if(password && *password)
