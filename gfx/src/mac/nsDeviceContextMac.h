@@ -84,6 +84,10 @@ public:
   NS_IMETHOD CheckFontExistence(const nsString& aFontName);
   NS_IMETHOD CreateILColorSpace(IL_ColorSpace*& aColorSpace);
   NS_IMETHOD GetDepth(PRUint32& aDepth);
+  NS_IMETHOD FirstExistingFont(const nsFont& aFont, nsString& aFaceName);
+  NS_IMETHOD GetLocalFontName(const nsString& aFaceName, nsString& aLocalName,
+                              PRBool& aAliased);
+
 
 protected:
   ~nsDeviceContextMac();

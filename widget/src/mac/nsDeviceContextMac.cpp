@@ -548,8 +548,48 @@ nsDrawingSurface nsDeviceContextMac :: GetDrawingSurface()
   return nsnull;
 }
 
+NS_IMETHODIMP nsDeviceContextMac::FirstExistingFont(const nsFont& aFont, nsString& aFaceName)
+{
+
+/*
+
+	IMPLEMENT THIS! -- gpk
+
+  FontEnumData  data(this, aFaceName);
+  if (aFont.EnumerateFamilies(FontEnumCallback, &data)) {
+    return NS_ERROR_FAILURE;  // ran out
+  }
+*/
+ 	return NS_OK;
+}
 
 
+NS_IMETHODIMP nsDeviceContextMac::GetLocalFontName(const nsString& aFaceName, nsString& aLocalName,
+                                                  PRBool& aAliased)
+{
+  nsresult result = NS_OK;
 
+/*
+
+	IMPLEMENT THIS! -- gpk
+  if (nsnull == mFontAliasTable) {
+    result = CreateFontAliasTable();
+  }
+
+  if (nsnull != mFontAliasTable) {
+    StringKey key(aFaceName);
+    const nsString* alias = (const nsString*)mFontAliasTable->Get(&key);
+    if (nsnull != alias) {
+      aLocalName = *alias;
+      aAliased = PR_TRUE;
+    }
+    else {
+      aLocalName = aFaceName;
+      aAliased = PR_FALSE;
+    }
+  }
+*/
+  return result;
+}
 
 
