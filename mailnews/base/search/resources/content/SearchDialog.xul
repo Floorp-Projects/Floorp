@@ -87,7 +87,7 @@ Rights Reserved.
         <vbox id="searchTermListBox" flex="1"/>
         <vbox>
            <spring flex="1"/>
-           <button label="&searchButton.label;" id="search-button" oncommand="onSearchButton(event);"/>
+           <button label="&searchButton.label;" id="search-button" oncommand="onSearchButton(event);" default="true"/>
            <button label="&resetButton.label;" oncommand="onReset(event);"/>
            <spring flex="1"/>
          </vbox>
