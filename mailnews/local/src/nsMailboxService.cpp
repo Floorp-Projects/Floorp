@@ -144,12 +144,12 @@ nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
 	{
 		// okay now generate the url string
 		char * urlSpec = nsnull;
-		nsString folderURI;
+		nsString folderURI (eOneByte);
 		nsFileSpec folderPath ("");
 		nsMsgKey msgKey;
 		
 		nsParseLocalMessageURI(aSrcMailboxURI, folderURI, &msgKey);
-		nsLocalURI2Path(kMailboxMessageRootURI, (const char *) nsAutoCString(folderURI), folderPath);
+		nsLocalURI2Path(kMailboxMessageRootURI, folderURI.GetBuffer(), folderPath);
         
 		nsFilePath filePath(folderPath); // convert to file url representation...
 		urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, msgKey);
@@ -205,12 +205,12 @@ nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
 		char * urlSpec = nsnull;
 		
 		// decompose the uri into a full path and message id...
-		nsString folderURI;
+		nsAutoString folderURI (eOneByte);
 		nsFileSpec folderSpec;
 		nsMsgKey msgIndex;
 
 		nsParseLocalMessageURI(aMessageURI, folderURI, &msgIndex);
-		nsLocalURI2Path(kMailboxMessageRootURI, (const char *) nsAutoCString(folderURI), folderSpec);
+		nsLocalURI2Path(kMailboxMessageRootURI, folderURI.GetBuffer(), folderSpec);
 
 		nsFilePath filePath(folderSpec); // convert to file url representation...
 		urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, msgIndex);
@@ -286,3 +286,13 @@ nsresult nsMailboxService::DisplayMessageNumber(const char *url,
 
 	return rv;
 }
+
+NS_IMETHODIMP nsMailboxService::SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, 
+												  PRBool aAppendToFile, nsIUrlListener *aUrlListener, nsIURL **aURL)
+{
+
+	nsresult rv = NS_OK;
+
+	return rv;
+}
+
