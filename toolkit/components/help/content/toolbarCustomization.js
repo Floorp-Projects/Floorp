@@ -62,7 +62,7 @@ function ToolboxCustomizeDone(aToolboxChanged)
     UpdateToolbar(focus);
 
 # Set the Sidebar Toolbar Button's label appropriately.
-  var sidebarButton = document.getElementById("sidebar-button");
+  var sidebarButton = document.getElementById("help-sidebar-button");
   var strBundle = document.getElementById("bundle_help");
   if (document.getElementById("helpsidebar-box").hidden) {
     sidebarButton.label = strBundle.getString("showSidebarLabel");
