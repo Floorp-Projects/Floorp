@@ -56,7 +56,7 @@
 #include "SplitElementTxn.h"
 #include "JoinElementTxn.h"
 
-
+static NS_DEFINE_IID(kIContentIID,          NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID,          NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMElementIID,       NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID,          NS_IDOMNODE_IID);
@@ -652,7 +652,6 @@ nsEditor::EndTransaction()
 nsresult nsEditor::ScrollIntoView(PRBool aScrollToBegin)
 {
   nsresult result;
-  /*
   if (mPresShell)
   {
     nsCOMPtr<nsIDOMSelection> selection;
@@ -660,11 +659,30 @@ nsresult nsEditor::ScrollIntoView(PRBool aScrollToBegin)
     if (NS_SUCCEEDED(result) && selection)
     {
       // get the content of the start of the selection
-      // get its layout object
-      // get its frame
-      // scroll that frame into view
-      mPresShell->
-*/
+      nsCOMPtr<nsIDOMNode>startNode;
+      PRInt32 offset;
+      result = selection->GetAnchorNodeAndOffset(getter_AddRefs(startNode), &offset);
+      if (NS_SUCCEEDED(result) && startNode)
+      { // get the content from the node
+        nsCOMPtr<nsIContent>startContent;
+        result = startNode->QueryInterface(kIContentIID, getter_AddRefs(startContent));
+        if (NS_SUCCEEDED(result) && startContent)
+        { // get its frame
+          nsIFrame *frame=nsnull;
+          result = mPresShell->GetPrimaryFrameFor(startContent, &frame);
+          if (NS_SUCCEEDED(result) && frame)
+          { // scroll that frame into view
+            result = mPresShell->ScrollFrameIntoView(frame, 
+                                            0, NS_PRESSHELL_SCROLL_TOP |NS_PRESSHELL_SCROLL_ANYWHERE,
+                                            0, NS_PRESSHELL_SCROLL_LEFT|NS_PRESSHELL_SCROLL_ANYWHERE);
+          }
+        }
+      }
+    }
+  }
+  else {
+    result = NS_ERROR_NOT_INITIALIZED;
+  }
   return result;
 }
 
