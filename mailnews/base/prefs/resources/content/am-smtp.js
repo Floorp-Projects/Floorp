@@ -21,20 +21,47 @@
  * Alec Flett <alecf@netscape.com>
  */
 
+var smtpService = Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
+
 function onLoad()
 {
     parent.onPanelLoaded('am-smtp.xul');
-    initSmtpSettings(null);
+    var defaultSmtpServer = null;
+    try {
+        defaultSmtpServer = smtpService.defaultServer;
+    }
+    catch (ex) {
+        defaultSmtpServer = null;
+    }
+    initSmtpSettings(defaultSmtpServer);
 }
 
 function onSave()
 {
-    saveSmtpSettings(null);
+    var defaultSmtpServer = null;
+    try {
+        defaultSmtpServer = smtpService.defaultServer;
+    }
+    catch (ex) {
+        defaultSmtpServer = null;
+    }
+    saveSmtpSettings(defaultSmtpServer);
 }
 
 
 function onAdvanced(event)
 {
+    // fix for bug #60647
+    // when the user presses "Advanced..." we save any changes
+    // they made so that the changes will show up in the advanced dialog
+    // and when they return from the advanced dialog, the changes they
+    // made won't be blown away.
+    //
+    // the only remaing problem is if the user "cancels" out of the
+    // account manager dialog, those changes will get saved.  
+    // that is covered in bug #63825
+    onSave();
+
     var args = {result: false};
     window.openDialog('chrome://messenger/content/SmtpServerList.xul', 'smtp', 'modal,titlebar,chrome', args);
 

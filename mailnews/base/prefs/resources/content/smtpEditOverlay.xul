@@ -47,7 +47,7 @@
       </box>                
       <box orient="vertical" style="margin-left: 2em">
         <box autostretch="never">
-          <text class="label" value="&userName.label;"/>
+          <text id="smtpusernamelabel" class="label" value="&userName.label;"/>
           <textfield wsm_persist="true" id="smtp.username" flex="1"/>
         </box>
       </box>

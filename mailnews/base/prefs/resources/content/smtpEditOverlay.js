@@ -25,6 +25,7 @@
 // with the new XUL widgets
 
 var gSmtpUsername;
+var gSmtpUsernameLabel;
 var gSmtpHostname;
 var gSmtpUseUsername;
 var gSmtpSavePassword;
@@ -34,6 +35,7 @@ var gSavedUsername="";
 function initSmtpSettings(server) {
 
     gSmtpUsername = document.getElementById("smtp.username");
+    gSmtpUsernameLabel = document.getElementById("smtpusernamelabel");
     gSmtpHostname = document.getElementById("smtp.hostname");
     gSmtpUseUsername = document.getElementById("smtp.useUsername");
     gSmtpAuthMethod = document.getElementById("smtp.authMethod");
@@ -79,6 +81,7 @@ function onUseUsername(checkbox, dofocus)
 {
     if (checkbox.checked) {
         gSmtpUsername.removeAttribute("disabled");
+        gSmtpUsernameLabel.removeAttribute("disabled");
         if (dofocus)
             gSmtpUsername.focus();
         if (gSavedUsername && gSavedUsername != "")
@@ -87,6 +90,7 @@ function onUseUsername(checkbox, dofocus)
         gSavedUsername = gSmtpUsername.value;
         gSmtpUsername.value = "";
         gSmtpUsername.setAttribute("disabled", "true");
+        gSmtpUsernameLabel.setAttribute("disabled", "true");
     }        
 }
 
