@@ -98,7 +98,8 @@ ifdef MOZ_CALENDAR
 STATIC_EXTRA_LIBS	+= -lical -licalss
 endif
 
-STATIC_EXTRA_LIBS	+= $(TK_LIBS)
+# Component Makefile always brings in this.
+# STATIC_EXTRA_LIBS	+= $(TK_LIBS)
 
 ifeq ($(OS_ARCH),WINNT)
 STATIC_EXTRA_LIBS += comctl32.lib comdlg32.lib uuid.lib shell32.lib ole32.lib oleaut32.lib version.lib winspool.lib

@@ -48,7 +48,6 @@ CPPSRCS	       += TestGtkEmbedMDI.cpp
 LIBS		= \
 		-lgtkembedmoz \
 		-lgtksuperwin \
-		$(MOZ_COMPONENT_LIBS) \
 		`gnome-config --libs gnomeui` \
 		$(TK_LIBS) \
 		$(NULL)
@@ -58,7 +57,6 @@ else
 LIBS		= \
 		-lgtkembedmoz \
 		-lgtksuperwin \
-		$(MOZ_COMPONENT_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)
 
@@ -76,9 +74,12 @@ include $(topsrcdir)/config/static-config.mk
 
 EXTRA_DEPS	+= $(STATIC_EXTRA_DEPS)
 EXTRA_DSO_LIBS	+= $(STATIC_EXTRA_DSO_LIBS)
+EXTRA_LIBS	+= -L$(DEPTH)/dist/lib/components
 EXTRA_LIBS	+= $(EXTRA_DSO_LIBS) $(STATIC_EXTRA_LIBS)
 
 endif
+
+EXTRA_LIBS	+= $(MOZ_COMPONENT_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
