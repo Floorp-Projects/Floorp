@@ -50,19 +50,17 @@ class nsDownloadListener;
     IBOutlet id mTimeLeftLabel;
     IBOutlet id mElapsedTimeLabel;
     IBOutlet id mProgressBar;
-    IBOutlet id mKeepOpenCheckbox;
-    IBOutlet id mCancelButton;
-    IBOutlet id mPauseResumeButton;
-    IBOutlet id mLaunchButton;
-    IBOutlet id mRevealFolderButton;
-
-    BOOL mDownloadIsPaused;
-    BOOL mSaveFileDialogShouldStayOpen;
 
     NSToolbarItem *pauseResumeToggleToolbarItem;
     NSToolbarItem *leaveOpenToggleToolbarItem;
-    
+
+    BOOL mDownloadIsPaused;
+    BOOL mSaveFileDialogShouldStayOpen;
+    BOOL mDownloadIsComplete;
+    long int aCurrentProgress;	// if progress bar is indeterminate, can still calc stats.
+        
     nsDownloadListener* mDownloadListener;
+    NSTimer *mDownloadTimer;
 }
 
 -(void) setWebPersist: (nsIWebBrowserPersist*)aPersist 
@@ -72,9 +70,15 @@ class nsDownloadListener;
                postData: (nsIInputStream*)aInputStream
                bypassCache: (BOOL)aBypassCache;
 
+-(void) setProgressBar:(long int)aCurProgress
+               maxProg:(long int)aMaxProgress;
+-(void) setDownloadTimer;
+-(void) killDownloadTimer;
+-(void) setDownloadProgress:(NSTimer *)aTimer;
+-(NSString *) formatTime:(int)aSeconds;
+-(NSString *) formatFuzzyTime:(int)aSeconds;
+-(NSString *) formatBytes:(float)aBytes;
 -(void) setSourceURL: (const PRUnichar*)aSource;
 -(void) setDestination: (const PRUnichar*)aDestination;
-
--(NSProgressIndicator*) progressBar;
 
 @end

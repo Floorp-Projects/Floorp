@@ -41,12 +41,11 @@
 #import "CHPreferenceManager.h"
 #include "nsIServiceManager.h"
 #include "nsIProfile.h"
-#include "nsIPrefBranch.h"
+#include "nsIPref.h"
 #include "nsIPrefService.h"
 #include "nsString.h"
 #include "nsEmbedAPI.h"
 
-extern const char *prefContractID;
 
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponent.h"
@@ -82,7 +81,7 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 {
     nsresult rv;
     ICStop (internetConfig);
-    nsCOMPtr<nsIPrefService> pref(do_GetService(prefContractID, &rv));
+    nsCOMPtr<nsIPrefService> pref(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (!NS_FAILED(rv))
         pref->SavePrefFile(nsnull);
     [super dealloc];
@@ -160,7 +159,7 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     int numbuf;
     NSString *string;
 
-    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(prefContractID));
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
     if (!prefs) {
         // XXXw. throw?
         return;
@@ -323,7 +322,7 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 
 - (NSString *) homePage:(BOOL)checkStartupPagePref
 {
-  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(prefContractID));
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (!prefs)
     return @"about:blank";
 
