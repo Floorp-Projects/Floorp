@@ -49,7 +49,6 @@ LIBS = \
 	-lnntp	\
 	-lnntpTest \
 	-lrdf \
-	-lmailnewsbase \
 	-lreg	\
 	-lxpcom	\
 	-lpwcac \
