@@ -76,21 +76,21 @@ PRIOMethods _pr_faulty_methods = {
     (PRReservedFN)_PR_InvalidInt
 };
 
-PRIntn _PR_InvalidInt()
+PRIntn _PR_InvalidInt(void)
 {
     PR_ASSERT(!"I/O method is invalid");
     PR_SetError(PR_INVALID_METHOD_ERROR, 0);
     return -1;
 }  /* _PR_InvalidInt */
 
-PRInt16 _PR_InvalidInt16()
+PRInt16 _PR_InvalidInt16(void)
 {
     PR_ASSERT(!"I/O method is invalid");
     PR_SetError(PR_INVALID_METHOD_ERROR, 0);
     return -1;
 }  /* _PR_InvalidInt */
 
-PRInt64 _PR_InvalidInt64()
+PRInt64 _PR_InvalidInt64(void)
 {
     PRInt64 rv;
     LL_I2L(rv, -1);
@@ -103,7 +103,7 @@ PRInt64 _PR_InvalidInt64()
  * An invalid method that returns PRStatus
  */
 
-PRStatus _PR_InvalidStatus()
+PRStatus _PR_InvalidStatus(void)
 {
     PR_ASSERT(!"I/O method is invalid");
     PR_SetError(PR_INVALID_METHOD_ERROR, 0);
@@ -114,7 +114,7 @@ PRStatus _PR_InvalidStatus()
  * An invalid method that returns a pointer
  */
 
-PRFileDesc *_PR_InvalidDesc()
+PRFileDesc *_PR_InvalidDesc(void)
 {
     PR_ASSERT(!"I/O method is invalid");
     PR_SetError(PR_INVALID_METHOD_ERROR, 0);

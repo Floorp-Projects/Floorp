@@ -180,7 +180,7 @@ static void PR_CALLBACK pr_alarmNotifier(void *arg)
 
 }  /* pr_alarm_notifier */
 
-PR_IMPLEMENT(PRAlarm*) PR_CreateAlarm()
+PR_IMPLEMENT(PRAlarm*) PR_CreateAlarm(void)
 {
     PRAlarm *alarm = PR_NEWZAP(PRAlarm);
     if (alarm != NULL)

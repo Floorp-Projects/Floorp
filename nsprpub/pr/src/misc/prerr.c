@@ -119,6 +119,6 @@ static const struct PRErrorMessage text[] = {
 
 static const struct PRErrorTable et = { text, "prerr", -6000L, 75 };
 
-void nspr_InitializePRErrorTable() {
+void nspr_InitializePRErrorTable(void) {
     PR_ErrorInstallTable(&et);
 }

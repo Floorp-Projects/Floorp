@@ -802,7 +802,7 @@ static void pr_InstallSigchldHandler()
 
 #endif  /* !defined(_PR_NATIVE_THREADS) */
 
-static PRStatus _MD_InitProcesses()
+static PRStatus _MD_InitProcesses(void)
 {
 #if !defined(_PR_NATIVE_THREADS)
     int rv;

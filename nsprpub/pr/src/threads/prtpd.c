@@ -88,7 +88,7 @@ static PRThreadPrivateDTOR *_pr_tpd_destructors = NULL;
 /*
 ** Initialize the thread private data manipulation
 */
-void _PR_InitTPD()
+void _PR_InitTPD(void)
 {
     _pr_tpd_destructors = (PRThreadPrivateDTOR*)
         PR_CALLOC(_PR_TPD_LIMIT * sizeof(PRThreadPrivateDTOR*));

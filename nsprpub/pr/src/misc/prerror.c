@@ -37,13 +37,13 @@
 #include <string.h>
 #include <stdlib.h>
 
-PR_IMPLEMENT(PRErrorCode) PR_GetError()
+PR_IMPLEMENT(PRErrorCode) PR_GetError(void)
 {
     PRThread *thread = PR_GetCurrentThread();
     return thread->errorCode;
 }
 
-PR_IMPLEMENT(PRInt32) PR_GetOSError()
+PR_IMPLEMENT(PRInt32) PR_GetOSError(void)
 {
     PRThread *thread = PR_GetCurrentThread();
     return thread->osErrorCode;

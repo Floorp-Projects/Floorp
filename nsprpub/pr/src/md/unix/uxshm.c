@@ -311,7 +311,6 @@ extern PRSharedMemory * _MD_OpenSharedMemory(
 )
 {
     PRStatus    rc = PR_SUCCESS;
-    PRIntn      id;
     PRInt32     end;
     PRSharedMemory *shm;
     char        ipcname[PR_IPC_NAME_SIZE];

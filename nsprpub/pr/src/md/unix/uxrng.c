@@ -210,7 +210,7 @@ static size_t GetHighResClock(void *buf, size_t maxbuf)
 	        }
 	        iotimer_addr = (unsigned *)
 		    mmap(0, pgoffmask, PROT_READ, MAP_PRIVATE, mfd, (int)raddr);
-	        if (iotimer_addr == (void*)-1) {
+	        if (iotimer_addr == (unsigned*)-1) {
 	    	    close(mfd);
 		        iotimer_addr = NULL;
 		        return 0;

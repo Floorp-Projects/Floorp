@@ -339,7 +339,7 @@ PR_IMPLEMENT(void) PL_CompactArenaPool(PLArenaPool *ap)
 #endif
 }
 
-PR_IMPLEMENT(void) PL_ArenaFinish()
+PR_IMPLEMENT(void) PL_ArenaFinish(void)
 {
     PLArena *a, *next;
 

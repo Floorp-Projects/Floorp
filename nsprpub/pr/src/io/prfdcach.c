@@ -73,7 +73,7 @@ static PRFileDesc **stack2fd = &(((PRFileDesc*)NULL)->higher);
 ** Get a FileDescriptor from the cache if one exists. If not allocate
 ** a new one from the heap.
 */
-PRFileDesc *_PR_Getfd()
+PRFileDesc *_PR_Getfd(void)
 {
     PRFileDesc *fd;
     /*
@@ -248,7 +248,7 @@ PR_IMPLEMENT(PRStatus) PR_SetFDCacheSize(PRIntn low, PRIntn high)
     return PR_SUCCESS;
 }  /* PR_SetFDCacheSize */
 
-void _PR_InitFdCache()
+void _PR_InitFdCache(void)
 {
     /*
     ** The fd caching is enabled by default for DEBUG builds,
