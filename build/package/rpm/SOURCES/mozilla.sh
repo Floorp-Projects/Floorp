@@ -93,7 +93,7 @@ set_jvm_vars() {
 
     # is it relative?  if so append the full path
 
-    echo "${JVM_LINK}" | grep -e "^/"
+    echo "${JVM_LINK}" | grep -e "^/" 2>&1 > /dev/null
 
     if [ "$?" -ne "0" ]; then
 	JVM_LINK=/usr/lib/mozilla/plugins/${JVM_LINK}
