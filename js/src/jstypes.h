@@ -197,7 +197,7 @@
 #    include "jscpucfg.h"        /* Use standard Mac or Windows configuration */
 #elif defined(XP_UNIX)
 #    include "jsautocfg.h"       /* Use auto-detected configuration */
-#    include "jsosdep.h"         /* ...and platform-specific flags */
+/* #    include "jsosdep.h"          ...and platform-specific flags */
 #else
 #    error "Must define one of XP_PC, XP_MAC or XP_UNIX"
 #endif
