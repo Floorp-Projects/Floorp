@@ -15,4 +15,3 @@
                                                in DocumentType doctype)
                                                    raises(DOMException);
    };
-

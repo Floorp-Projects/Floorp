@@ -129,7 +129,7 @@ NS_IMETHODIMP PluginArrayImpl::Item(PRUint32 aIndex, nsIDOMPlugin** aReturn)
   return NS_OK;
 }
 
-NS_IMETHODIMP PluginArrayImpl::NamedItem(const nsAReadableString& aName, nsIDOMPlugin** aReturn)
+NS_IMETHODIMP PluginArrayImpl::NamedItem(const nsString& aName, nsIDOMPlugin** aReturn)
 {
 	NS_PRECONDITION(nsnull != aReturn, "null arg");
 
@@ -142,10 +142,10 @@ NS_IMETHODIMP PluginArrayImpl::NamedItem(const nsAReadableString& aName, nsIDOMP
 	*aReturn = nsnull;
 
 	for (PRUint32 i = 0; i < mPluginCount; i++) {
-		nsAutoString pluginName;
+		nsString pluginName;
 		nsIDOMPlugin* plugin = mPluginArray[i];
 		if (plugin->GetName(pluginName) == NS_OK) {
-			if (pluginName.Equals(aName)) {
+			if (pluginName == aName) {
 				*aReturn = plugin;
 				NS_IF_ADDREF(plugin);
         break;
@@ -253,17 +253,17 @@ NS_IMETHODIMP PluginElementImpl::GetScriptObject(nsIScriptContext *aContext, voi
   return res;
 }
 
-NS_IMETHODIMP PluginElementImpl::GetDescription(nsAWritableString& aDescription)
+NS_IMETHODIMP PluginElementImpl::GetDescription(nsString& aDescription)
 {
 	return mPlugin->GetDescription(aDescription);
 }
 
-NS_IMETHODIMP PluginElementImpl::GetFilename(nsAWritableString& aFilename)
+NS_IMETHODIMP PluginElementImpl::GetFilename(nsString& aFilename)
 {
 	return mPlugin->GetFilename(aFilename);
 }
 
-NS_IMETHODIMP PluginElementImpl::GetName(nsAWritableString& aName)
+NS_IMETHODIMP PluginElementImpl::GetName(nsString& aName)
 {
 	return mPlugin->GetName(aName);
 }
@@ -289,7 +289,7 @@ NS_IMETHODIMP PluginElementImpl::Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)
 	return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP PluginElementImpl::NamedItem(const nsAReadableString& aName, nsIDOMMimeType** aReturn)
+NS_IMETHODIMP PluginElementImpl::NamedItem(const nsString& aName, nsIDOMMimeType** aReturn)
 {
 	if (mMimeTypeArray == nsnull) {
 		nsresult rv = GetMimeTypes();
@@ -299,10 +299,10 @@ NS_IMETHODIMP PluginElementImpl::NamedItem(const nsAReadableString& aName, nsIDO
   
   *aReturn = nsnull;
 	for (PRUint32 i = 0; i < mMimeTypeCount; i++) {
-		nsAutoString type;
+		nsString type;
 		nsIDOMMimeType* mimeType = mMimeTypeArray[i];
 		if (mimeType->GetType(type) == NS_OK) {
-			if (type.Equals(aName)) {
+			if (type == aName) {
 				*aReturn = mimeType;
 				NS_ADDREF(mimeType);
         break;

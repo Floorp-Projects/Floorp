@@ -34,7 +34,6 @@
 #include "nsJSUtils.h"
 #include "prmem.h"
 #include "jsdbgapi.h"   // for JS_ClearWatchPointsForObject
-#include "nsReadableUtils.h"
 
 // Other Classes
 #include "nsEventListenerManager.h"
@@ -871,43 +870,43 @@ NS_IMETHODIMP GlobalWindowImpl::SetOpener(nsIDOMWindow* aOpener)
    return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetStatus(nsAWritableString& aStatus)
+NS_IMETHODIMP GlobalWindowImpl::GetStatus(nsString& aStatus)
 {
    aStatus = mStatus;
    return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetStatus(const nsAReadableString& aStatus)
+NS_IMETHODIMP GlobalWindowImpl::SetStatus(const nsString& aStatus)
 {
    mStatus = aStatus;
 
    nsCOMPtr<nsIWebBrowserChrome> browserChrome;
    GetWebBrowserChrome(getter_AddRefs(browserChrome));
    if(browserChrome)
-      browserChrome->SetJSStatus(nsAutoString(aStatus).GetUnicode());
+      browserChrome->SetJSStatus(aStatus.GetUnicode());
 
    return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetDefaultStatus(nsAWritableString& aDefaultStatus)
+NS_IMETHODIMP GlobalWindowImpl::GetDefaultStatus(nsString& aDefaultStatus)
 {
    aDefaultStatus = mDefaultStatus;
    return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetDefaultStatus(const nsAReadableString& aDefaultStatus)
+NS_IMETHODIMP GlobalWindowImpl::SetDefaultStatus(const nsString& aDefaultStatus)
 {
    mDefaultStatus = aDefaultStatus;
 
    nsCOMPtr<nsIWebBrowserChrome> browserChrome;
    GetWebBrowserChrome(getter_AddRefs(browserChrome));
    if(browserChrome)
-      browserChrome->SetJSDefaultStatus(nsAutoString(aDefaultStatus).GetUnicode());
+      browserChrome->SetJSDefaultStatus(aDefaultStatus.GetUnicode());
 
    return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetName(nsAWritableString& aName)
+NS_IMETHODIMP GlobalWindowImpl::GetName(nsString& aName)
 {
    nsXPIDLString name;
    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
@@ -918,12 +917,12 @@ NS_IMETHODIMP GlobalWindowImpl::GetName(nsAWritableString& aName)
    return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetName(const nsAReadableString& aName)
+NS_IMETHODIMP GlobalWindowImpl::SetName(const nsString& aName)
 {
    nsresult result = NS_OK;
    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
    if(docShellAsItem)
-      result = docShellAsItem->SetName(nsAutoString(aName).GetUnicode());
+      result = docShellAsItem->SetName(aName.GetUnicode());
    return result;
 }
 
@@ -1295,9 +1294,9 @@ NS_IMETHODIMP GlobalWindowImpl::GetLength(PRUint32* aLength)
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::Dump(const nsAReadableString& aStr)
+NS_IMETHODIMP GlobalWindowImpl::Dump(const nsString& aStr)
 {
-   char *cstr = ToNewCString(aStr);
+   char *cstr = aStr.ToNewUTF8String();
   
 #ifdef XP_MAC
    // have to convert \r to \n so that printing to the console works
@@ -1736,37 +1735,37 @@ NS_IMETHODIMP GlobalWindowImpl::DisableExternalCapture()
 
 //Note: This call will lock the cursor, it will not change as it moves.
 //To unlock, the cursor must be set back to CURSOR_AUTO.
-NS_IMETHODIMP GlobalWindowImpl::SetCursor(const nsAReadableString& aCursor)
+NS_IMETHODIMP GlobalWindowImpl::SetCursor(const nsString& aCursor)
 {
   nsresult ret = NS_OK;
   PRInt32 cursor;
 
-  if (aCursor.Equals(NS_LITERAL_STRING("auto"))) cursor = NS_STYLE_CURSOR_AUTO;
-  else if (aCursor.Equals(NS_LITERAL_STRING("default"))) cursor = NS_STYLE_CURSOR_DEFAULT;
-  else if (aCursor.Equals(NS_LITERAL_STRING("pointer"))) cursor = NS_STYLE_CURSOR_POINTER;
-  else if (aCursor.Equals(NS_LITERAL_STRING("crosshair"))) cursor = NS_STYLE_CURSOR_CROSSHAIR;
-  else if (aCursor.Equals(NS_LITERAL_STRING("move"))) cursor = NS_STYLE_CURSOR_MOVE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("text"))) cursor = NS_STYLE_CURSOR_TEXT;
-  else if (aCursor.Equals(NS_LITERAL_STRING("wait"))) cursor = NS_STYLE_CURSOR_WAIT;
-  else if (aCursor.Equals(NS_LITERAL_STRING("help"))) cursor = NS_STYLE_CURSOR_HELP;
-  else if (aCursor.Equals(NS_LITERAL_STRING("n-resize"))) cursor = NS_STYLE_CURSOR_N_RESIZE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("s-resize"))) cursor = NS_STYLE_CURSOR_S_RESIZE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("w-resize"))) cursor = NS_STYLE_CURSOR_W_RESIZE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("e-resize"))) cursor = NS_STYLE_CURSOR_E_RESIZE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("ne-resize"))) cursor = NS_STYLE_CURSOR_NE_RESIZE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("nw-resize"))) cursor = NS_STYLE_CURSOR_NW_RESIZE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("se-resize"))) cursor = NS_STYLE_CURSOR_SE_RESIZE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("sw-resize"))) cursor = NS_STYLE_CURSOR_SW_RESIZE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("copy"))) cursor = NS_STYLE_CURSOR_COPY; // CSS3
-  else if (aCursor.Equals(NS_LITERAL_STRING("alias"))) cursor = NS_STYLE_CURSOR_ALIAS;
-  else if (aCursor.Equals(NS_LITERAL_STRING("context-menu"))) cursor = NS_STYLE_CURSOR_CONTEXT_MENU;
-  else if (aCursor.Equals(NS_LITERAL_STRING("cell"))) cursor = NS_STYLE_CURSOR_CELL;
-  else if (aCursor.Equals(NS_LITERAL_STRING("grab"))) cursor = NS_STYLE_CURSOR_GRAB;
-  else if (aCursor.Equals(NS_LITERAL_STRING("grabbing"))) cursor = NS_STYLE_CURSOR_GRABBING;
-  else if (aCursor.Equals(NS_LITERAL_STRING("spinning"))) cursor = NS_STYLE_CURSOR_SPINNING;
-  else if (aCursor.Equals(NS_LITERAL_STRING("count-up"))) cursor = NS_STYLE_CURSOR_COUNT_UP;
-  else if (aCursor.Equals(NS_LITERAL_STRING("count-down"))) cursor = NS_STYLE_CURSOR_COUNT_DOWN;
-  else if (aCursor.Equals(NS_LITERAL_STRING("count-up-down"))) cursor = NS_STYLE_CURSOR_COUNT_UP_DOWN;
+  if (aCursor.EqualsWithConversion("auto")) cursor = NS_STYLE_CURSOR_AUTO;
+  else if (aCursor.EqualsWithConversion("default")) cursor = NS_STYLE_CURSOR_DEFAULT;
+  else if (aCursor.EqualsWithConversion("pointer")) cursor = NS_STYLE_CURSOR_POINTER;
+  else if (aCursor.EqualsWithConversion("crosshair")) cursor = NS_STYLE_CURSOR_CROSSHAIR;
+  else if (aCursor.EqualsWithConversion("move")) cursor = NS_STYLE_CURSOR_MOVE;
+  else if (aCursor.EqualsWithConversion("text")) cursor = NS_STYLE_CURSOR_TEXT;
+  else if (aCursor.EqualsWithConversion("wait")) cursor = NS_STYLE_CURSOR_WAIT;
+  else if (aCursor.EqualsWithConversion("help")) cursor = NS_STYLE_CURSOR_HELP;
+  else if (aCursor.EqualsWithConversion("n-resize")) cursor = NS_STYLE_CURSOR_N_RESIZE;
+  else if (aCursor.EqualsWithConversion("s-resize")) cursor = NS_STYLE_CURSOR_S_RESIZE;
+  else if (aCursor.EqualsWithConversion("w-resize")) cursor = NS_STYLE_CURSOR_W_RESIZE;
+  else if (aCursor.EqualsWithConversion("e-resize")) cursor = NS_STYLE_CURSOR_E_RESIZE;
+  else if (aCursor.EqualsWithConversion("ne-resize")) cursor = NS_STYLE_CURSOR_NE_RESIZE;
+  else if (aCursor.EqualsWithConversion("nw-resize")) cursor = NS_STYLE_CURSOR_NW_RESIZE;
+  else if (aCursor.EqualsWithConversion("se-resize")) cursor = NS_STYLE_CURSOR_SE_RESIZE;
+  else if (aCursor.EqualsWithConversion("sw-resize")) cursor = NS_STYLE_CURSOR_SW_RESIZE;
+  else if (aCursor.EqualsWithConversion("copy")) cursor = NS_STYLE_CURSOR_COPY; // CSS3
+  else if (aCursor.EqualsWithConversion("alias")) cursor = NS_STYLE_CURSOR_ALIAS;
+  else if (aCursor.EqualsWithConversion("context-menu")) cursor = NS_STYLE_CURSOR_CONTEXT_MENU;
+  else if (aCursor.EqualsWithConversion("cell")) cursor = NS_STYLE_CURSOR_CELL;
+  else if (aCursor.EqualsWithConversion("grab")) cursor = NS_STYLE_CURSOR_GRAB;
+  else if (aCursor.EqualsWithConversion("grabbing")) cursor = NS_STYLE_CURSOR_GRABBING;
+  else if (aCursor.EqualsWithConversion("spinning")) cursor = NS_STYLE_CURSOR_SPINNING;
+  else if (aCursor.EqualsWithConversion("count-up")) cursor = NS_STYLE_CURSOR_COUNT_UP;
+  else if (aCursor.EqualsWithConversion("count-down")) cursor = NS_STYLE_CURSOR_COUNT_DOWN;
+  else if (aCursor.EqualsWithConversion("count-up-down")) cursor = NS_STYLE_CURSOR_COUNT_UP_DOWN;
   else return NS_OK;
 
   nsCOMPtr<nsIPresContext> presContext;
@@ -1853,7 +1852,7 @@ NS_IMETHODIMP GlobalWindowImpl::Close(JSContext* cx, jsval* argv, PRUint32 argc)
 }
 
 NS_IMETHODIMP 
-GlobalWindowImpl::UpdateCommands(const nsAReadableString& anAction)
+GlobalWindowImpl::UpdateCommands(const nsString& anAction)
 {
   if (mChromeEventHandler) {
     // Just jump out to the chrome event handler.
@@ -1901,7 +1900,7 @@ GlobalWindowImpl::UpdateCommands(const nsAReadableString& anAction)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::Escape(const nsAReadableString& aStr, nsAWritableString& aReturn)
+NS_IMETHODIMP GlobalWindowImpl::Escape(const nsString& aStr, nsString& aReturn)
 {
    nsresult result = NS_OK;
    nsCOMPtr<nsIUnicodeEncoder> encoder;
@@ -1933,7 +1932,7 @@ NS_IMETHODIMP GlobalWindowImpl::Escape(const nsAReadableString& aStr, nsAWritabl
 
    PRInt32 maxByteLen, srcLen;
    srcLen = aStr.Length();
-   const PRUnichar* src = nsAutoString(aStr).GetUnicode();
+   const PRUnichar* src = aStr.GetUnicode();
 
    // Get the expected length of result string
    result = encoder->GetMaxLength(src, srcLen, &maxByteLen);
@@ -1961,8 +1960,7 @@ NS_IMETHODIMP GlobalWindowImpl::Escape(const nsAReadableString& aStr, nsAWritabl
 
    // Escape the string
    char* outBuf = nsEscape(dest, nsEscapeMask(url_XAlphas | url_XPAlphas | url_Path)); 
-   // XXX It's weird that we now convert back to Unicode
-   aReturn.Assign(NS_ConvertASCIItoUCS2(outBuf));
+   aReturn.AssignWithConversion(outBuf);
 
    nsMemory::Free(outBuf);
    nsMemory::Free(dest);
@@ -1970,7 +1968,7 @@ NS_IMETHODIMP GlobalWindowImpl::Escape(const nsAReadableString& aStr, nsAWritabl
    return result;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsAReadableString& aStr, nsAWritableString& aReturn)
+NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsString& aStr, nsString& aReturn)
 {
    nsresult result = NS_OK;
    nsCOMPtr<nsIUnicodeDecoder> decoder;
@@ -2001,7 +1999,7 @@ NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsAReadableString& aStr, nsAWrita
       return result;
 
    // Need to copy to do the two-byte to one-byte deflation
-   char* inBuf = ToNewCString(aStr);
+   char* inBuf = aStr.ToNewCString();
    if(!inBuf)
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2302,7 +2300,7 @@ void GlobalWindowImpl::Finalize(JSContext* aContext, JSObject* aObj)
 // GlobalWindowImpl::nsIDOMEventTarget
 //*****************************************************************************   
 
-NS_IMETHODIMP GlobalWindowImpl::AddEventListener(const nsAReadableString& aType, 
+NS_IMETHODIMP GlobalWindowImpl::AddEventListener(const nsString& aType, 
    nsIDOMEventListener* aListener, PRBool aUseCapture)
 {
    nsCOMPtr<nsIEventListenerManager> manager;
@@ -2317,7 +2315,7 @@ NS_IMETHODIMP GlobalWindowImpl::AddEventListener(const nsAReadableString& aType,
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::RemoveEventListener(const nsAReadableString& aType, 
+NS_IMETHODIMP GlobalWindowImpl::RemoveEventListener(const nsString& aType, 
    nsIDOMEventListener* aListener, PRBool aUseCapture)
 {
    if(mListenerManager)
@@ -2717,7 +2715,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetPositionAndSize(PRInt32 *x, PRInt32 *y, PRInt
 //*****************************************************************************   
 
 NS_IMETHODIMP GlobalWindowImpl::GetComputedStyle(nsIDOMElement* aElt,
-                                                 const nsAReadableString& aPseudoElt,
+                                                 const nsString& aPseudoElt,
                                                  nsIDOMCSSStyleDeclaration** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -3345,7 +3343,9 @@ NS_IMETHODIMP GlobalWindowImpl::CheckWindowName(JSContext* cx, nsString& aName)
          nsAutoString warn;
          warn.AssignWithConversion("Illegal character in window name ");
          warn.Append(aName);
-         NS_WARNING(NS_ConvertUCS2toUTF8(warn));
+         char* cp = warn.ToNewCString();
+         NS_WARNING(cp);
+         nsCRT::free(cp);
          return NS_ERROR_FAILURE;
          }
       }
@@ -4241,7 +4241,7 @@ NS_IMETHODIMP NavigatorImpl::GetScriptObject(nsIScriptContext* aContext,
 //    NavigatorImpl::nsIDOMNavigator
 //*****************************************************************************
 
-NS_IMETHODIMP NavigatorImpl::GetUserAgent(nsAWritableString& aUserAgent)
+NS_IMETHODIMP NavigatorImpl::GetUserAgent(nsString& aUserAgent)
 {
    nsresult res;
    nsCOMPtr<nsIHTTPProtocolHandler> service(do_GetService(kHTTPHandlerCID, &res));
@@ -4256,7 +4256,7 @@ NS_IMETHODIMP NavigatorImpl::GetUserAgent(nsAWritableString& aUserAgent)
    return res;
 }
 
-NS_IMETHODIMP NavigatorImpl::GetAppCodeName(nsAWritableString& aAppCodeName)
+NS_IMETHODIMP NavigatorImpl::GetAppCodeName(nsString& aAppCodeName)
 {
    nsresult res;
    nsCOMPtr<nsIHTTPProtocolHandler> service(do_GetService(kHTTPHandlerCID, &res));
@@ -4271,44 +4271,45 @@ NS_IMETHODIMP NavigatorImpl::GetAppCodeName(nsAWritableString& aAppCodeName)
    return res;
 }
 
-NS_IMETHODIMP NavigatorImpl::GetAppVersion(nsAWritableString& aAppVersion)
+NS_IMETHODIMP NavigatorImpl::GetAppVersion(nsString& aAppVersion)
 {
    nsresult res;
    nsCOMPtr<nsIHTTPProtocolHandler> service(do_GetService(kHTTPHandlerCID, &res));
    if(NS_SUCCEEDED(res) && (nsnull != service))
-   {
+      {
       PRUnichar *str = nsnull;
       res = service->GetAppVersion(&str);
       aAppVersion = str;
       Recycle(str);
 
-      aAppVersion.Append(NS_LITERAL_STRING(" (")); 
-      res = service->GetPlatform(&str);
-      if(NS_FAILED(res)) return res;                  
-    
-      aAppVersion += str;
-      Recycle(str);                      
-
-      aAppVersion.Append(NS_LITERAL_STRING("; "));                      
-      res = service->GetLanguage(&str);
-      if (NS_FAILED(res)) return res;
+      aAppVersion.AppendWithConversion(" (");                                                        
+      res = service->GetPlatform(&str);                                           
+      if(NS_FAILED(res)) return res;                                             
                       
-      aAppVersion += str;
-      Recycle(str);
+      aAppVersion += str;                                                         
+      Recycle(str);                                                               
                       
-      aAppVersion.Append(PRUnichar(')'));
-   }
+      aAppVersion.AppendWithConversion("; ");                                                        
+                      
+      res = service->GetLanguage(&str);                                           
+      if (NS_FAILED(res)) return res;                                             
+                      
+      aAppVersion += str;                                                         
+      Recycle(str);                                                               
+                      
+      aAppVersion.AppendWithConversion(')');    
+      }
 
    return res;
 }
 
-NS_IMETHODIMP NavigatorImpl::GetAppName(nsAWritableString& aAppName)
+NS_IMETHODIMP NavigatorImpl::GetAppName(nsString& aAppName)
 {
-   aAppName.Assign(NS_LITERAL_STRING("Netscape"));
+   aAppName.AssignWithConversion("Netscape");
    return NS_OK;
 }
 
-NS_IMETHODIMP NavigatorImpl::GetLanguage(nsAWritableString& aLanguage)
+NS_IMETHODIMP NavigatorImpl::GetLanguage(nsString& aLanguage)
 {
    nsresult res;
    nsCOMPtr<nsIHTTPProtocolHandler> service(do_GetService(kHTTPHandlerCID, &res));
@@ -4323,7 +4324,7 @@ NS_IMETHODIMP NavigatorImpl::GetLanguage(nsAWritableString& aLanguage)
    return res;
 }
 
-NS_IMETHODIMP NavigatorImpl::GetPlatform(nsAWritableString& aPlatform)
+NS_IMETHODIMP NavigatorImpl::GetPlatform(nsString& aPlatform)
 {
    nsresult res;
    nsCOMPtr<nsIHTTPProtocolHandler> service(do_GetService(kHTTPHandlerCID, &res));
@@ -4338,7 +4339,7 @@ NS_IMETHODIMP NavigatorImpl::GetPlatform(nsAWritableString& aPlatform)
    return res;
 }
 
-NS_IMETHODIMP NavigatorImpl::GetOscpu(nsAWritableString& aOSCPU)
+NS_IMETHODIMP NavigatorImpl::GetOscpu(nsString& aOSCPU)
 {
     nsresult res;
     nsCOMPtr<nsIHTTPProtocolHandler> service(do_GetService(kHTTPHandlerCID, &res));
@@ -4353,7 +4354,7 @@ NS_IMETHODIMP NavigatorImpl::GetOscpu(nsAWritableString& aOSCPU)
     return res;
 }
 
-NS_IMETHODIMP NavigatorImpl::GetVendor(nsAWritableString& aVendor)
+NS_IMETHODIMP NavigatorImpl::GetVendor(nsString& aVendor)
 {
     nsresult res;
     nsCOMPtr<nsIHTTPProtocolHandler> service(do_GetService(kHTTPHandlerCID, &res));
@@ -4369,7 +4370,7 @@ NS_IMETHODIMP NavigatorImpl::GetVendor(nsAWritableString& aVendor)
 }
 
 
-NS_IMETHODIMP NavigatorImpl::GetVendorSub(nsAWritableString& aVendorSub)
+NS_IMETHODIMP NavigatorImpl::GetVendorSub(nsString& aVendorSub)
 {
     nsresult res;
     nsCOMPtr<nsIHTTPProtocolHandler> service(do_GetService(kHTTPHandlerCID, &res));
@@ -4384,7 +4385,7 @@ NS_IMETHODIMP NavigatorImpl::GetVendorSub(nsAWritableString& aVendorSub)
     return res;
 }
 
-NS_IMETHODIMP NavigatorImpl::GetProduct(nsAWritableString& aProduct)
+NS_IMETHODIMP NavigatorImpl::GetProduct(nsString& aProduct)
 {
     nsresult res;
     nsCOMPtr<nsIHTTPProtocolHandler> service(do_GetService(kHTTPHandlerCID, &res));
@@ -4399,7 +4400,7 @@ NS_IMETHODIMP NavigatorImpl::GetProduct(nsAWritableString& aProduct)
     return res;
 }
 
-NS_IMETHODIMP NavigatorImpl::GetProductSub(nsAWritableString& aProductSub)
+NS_IMETHODIMP NavigatorImpl::GetProductSub(nsString& aProductSub)
 {
     nsresult res;
     nsCOMPtr<nsIHTTPProtocolHandler> service(do_GetService(kHTTPHandlerCID, &res));
@@ -4414,7 +4415,7 @@ NS_IMETHODIMP NavigatorImpl::GetProductSub(nsAWritableString& aProductSub)
     return res;
 }
 
-NS_IMETHODIMP NavigatorImpl::GetSecurityPolicy(nsAWritableString& aSecurityPolicy)
+NS_IMETHODIMP NavigatorImpl::GetSecurityPolicy(nsString& aSecurityPolicy)
 {
    return NS_OK;
 }

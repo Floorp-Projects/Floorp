@@ -169,10 +169,10 @@ nsDOMException::GetResult(PRUint32* aResult)
 }
 
 NS_IMETHODIMP    
-nsDOMException::GetMessage(nsAWritableString& aMessage)
+nsDOMException::GetMessage(nsString& aMessage)
 {
   if (mMessage) {
-    aMessage.Assign(NS_ConvertASCIItoUCS2(mMessage));
+    aMessage.AssignWithConversion(mMessage);
   }
   else {
     aMessage.Truncate();
@@ -182,10 +182,10 @@ nsDOMException::GetMessage(nsAWritableString& aMessage)
 }
 
 NS_IMETHODIMP    
-nsDOMException::GetName(nsAWritableString& aName)
+nsDOMException::GetName(nsString& aName)
 {
   if (mName) {
-    aName.Assign(NS_ConvertASCIItoUCS2(mName));
+    aName.AssignWithConversion(mName);
   }
   else {
     aName.Truncate();
@@ -195,7 +195,7 @@ nsDOMException::GetName(nsAWritableString& aName)
 }
 
 NS_IMETHODIMP    
-nsDOMException::ToString(nsAWritableString& aReturn)
+nsDOMException::ToString(nsString& aReturn)
 {
   static const char defaultMsg[] = "<no message>";
   static const char defaultLocation[] = "<unknown>";
@@ -211,7 +211,7 @@ nsDOMException::ToString(nsAWritableString& aReturn)
   GetCode(&code);
   char* temp = PR_smprintf(format, msg, code, mResult, resultName, location);
   if (temp) {
-    aReturn.Assign(NS_ConvertASCIItoUCS2(temp));
+    aReturn.AssignWithConversion(temp);
     PR_smprintf_free(temp);
   }
 
