@@ -174,7 +174,7 @@ titledbutton[pseudoclass~="focus"]:-moz-focus-inner {
 titledbutton[pseudoclass~="focus"]:-moz-focus-outer {
 }
 
-titledbutton[pseudoclass~="disabled"] {
+titledbutton[disabled] {
 	opacity: 0.5;
 }
  

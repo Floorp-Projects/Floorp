@@ -5,11 +5,11 @@
 #include "nsGenericHTMLElement.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
+#include "nsHTMLAtoms.h"
 
 #define ACTIVE   "active"
 #define HOVER    "hover"
 #define FOCUS    "focus"
-#define DISABLED "disabled"
 
 nsButtonFrameRenderer::nsButtonFrameRenderer()
 {
@@ -104,7 +104,15 @@ nsButtonFrameRenderer::SetFocus(PRBool aFocus, PRBool notify)
 void
 nsButtonFrameRenderer::SetDisabled(PRBool aDisabled, PRBool notify)
 {
-  ToggleClass(aDisabled, DISABLED, notify);
+   // get the content
+  nsCOMPtr<nsIContent> content;
+  mFrame->GetContent(getter_AddRefs(content));
+
+  if (aDisabled)
+     content->SetAttribute(mNameSpace, nsHTMLAtoms::disabled, "", notify);
+  else
+     content->UnsetAttribute(mNameSpace, nsHTMLAtoms::disabled, notify);
+
 }
 
 PRBool
@@ -132,12 +140,14 @@ nsButtonFrameRenderer::isActive()
 PRBool
 nsButtonFrameRenderer::isDisabled() 
 {
-	nsString pseudo = GetPseudoClassAttribute();
-	PRInt32 index = IndexOfClass(pseudo, DISABLED);
-    if (index != -1)
-		return PR_TRUE;
-	else
-		return PR_FALSE;
+  // get the content
+  nsCOMPtr<nsIContent> content;
+  mFrame->GetContent(getter_AddRefs(content));
+  nsString value;
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(mNameSpace, nsHTMLAtoms::disabled, value))
+    return PR_TRUE;
+
+  return PR_FALSE;
 }
 
 PRBool
