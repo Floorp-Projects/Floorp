@@ -38,7 +38,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsHTMLDocument.h"
-#include "nsHTMLParts.h"
+#include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContent.h"
 #ifdef USE_IMG2

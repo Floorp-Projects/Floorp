@@ -67,7 +67,7 @@
 #include "prtime.h"
 #include "prlog.h"
 
-#include "nsHTMLParts.h"
+#include "nsGenericHTMLElement.h"
 #include "nsIElementFactory.h"
 #include "nsITextContent.h"
 

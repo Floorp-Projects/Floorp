@@ -67,6 +67,7 @@ LINCS=-I..\html\base\src -I..\base\src \
         -I..\xul\templates\src \
 	-I..\xul\base\src \
 	-I..\events\src \
+	-I..\html\content\src
 
 # These are the libraries we need to link with to create the dll
 SUB_LIBRARIES=\

@@ -132,7 +132,7 @@ CPP_OBJS=					\
 
 LINCS=-I..\..\html\base\src -I..\..\html\style\src \
     -I..\..\xul\base\src -I..\..\xul\content\src \
-    -I..\..\events\src
+    -I..\..\events\src -I..\..\html\content\src
 
 LCFLAGS = \
         $(LCFLAGS) \

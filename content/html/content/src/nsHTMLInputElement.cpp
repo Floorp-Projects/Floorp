@@ -266,7 +266,7 @@ NS_NewHTMLInputElement(nsIHTMLContent** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = it->nsGenericElement::Init(aNodeInfo);
+  nsresult rv = NS_STATIC_CAST(nsGenericHTMLElement *, it)->Init(aNodeInfo);
 
   if (NS_FAILED(rv)) {
     delete it;
@@ -326,7 +326,7 @@ nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
 
-  nsresult rv = it->nsGenericElement::Init(mNodeInfo);
+  nsresult rv = NS_STATIC_CAST(nsGenericHTMLElement *, it)->Init(mNodeInfo);
 
   if (NS_FAILED(rv))
     return rv;

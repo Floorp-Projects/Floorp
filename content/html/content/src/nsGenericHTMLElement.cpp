@@ -476,16 +476,66 @@ nsresult
 nsDOMCSSAttributeDeclaration::GetParent(nsISupports **aParent)
 {
   NS_ENSURE_ARG_POINTER(aParent);
-  *aParent = nsnull;
 
-  if (nsnull != mContent) {
-    return mContent->QueryInterface(NS_GET_IID(nsISupports), (void **)aParent);
-  }
+  *aParent = mContent;
+  NS_IF_ADDREF(*aParent);
 
   return NS_OK;
 }
 
 //----------------------------------------------------------------------
+
+
+#ifdef GATHER_ELEMENT_USEAGE_STATISTICS
+
+// static objects that have constructors are kinda bad, but we don't
+// care here, this is only debugging code!
+
+static nsHashtable sGEUS_ElementCounts;
+
+void GEUS_ElementCreated(nsINodeInfo *aNodeInfo)
+{
+  nsAutoString name;
+  aNodeInfo->GetLocalName(name);
+
+  nsStringKey key(name);
+
+  PRInt32 count = (PRInt32)sGEUS_ElementCounts.Get(&key);
+
+  count++;
+
+  sGEUS_ElementCounts.Put(&key, (void *)count);
+}
+
+PRBool GEUS_enum_func(nsHashKey *aKey, void *aData, void *aClosure)
+{
+  const PRUnichar *name_chars = ((nsStringKey *)aKey)->GetString();
+  NS_ConvertUCS2toUTF8 name(name_chars);
+
+  printf ("%s %d\n", name.get(), aData);
+
+  return PR_TRUE;
+}
+
+void GEUS_DumpElementCounts()
+{
+  printf ("Element count statistics:\n");
+
+  sGEUS_ElementCounts.Enumerate(GEUS_enum_func, nsnull);
+
+  printf ("End of element count statistics:\n");
+}
+
+nsresult
+nsGenericHTMLElement::Init(nsINodeInfo *aNodeInfo)
+{
+  GEUS_ElementCreated(aNodeInfo);
+
+  return nsGenericElement::Init(aNodeInfo);
+}
+
+#endif
+
 
 // this function is a holdover from when attributes were shared
 // leaving it in place in case we need to go back to that model
