@@ -7,6 +7,7 @@
 
 import "oaidl.idl";
 import "ocidl.idl";
+import "docobj.idl";
 
 // See note below for why IWebBrowser is not imported this way
 // import "exdisp.idl";
@@ -25,19 +26,6 @@ library MOZILLACONTROLLib
 	// NOTE: There is a very specific reason for repeating the IWebBrowser
 	//       verbatim rather than import'ing exdisp.idl - it stops MIDL
 	//       failing with a MIDL2020 error!
-
-	typedef enum
-	{
-		OLECMDIDF_REFRESH_NORMAL          = 0,
-		OLECMDIDF_REFRESH_IFEXPIRED       = 1,
-		OLECMDIDF_REFRESH_CONTINUE        = 2,
-		OLECMDIDF_REFRESH_COMPLETELY      = 3,
-		OLECMDIDF_REFRESH_NO_CACHE        = 4,
-		OLECMDIDF_REFRESH_RELOAD          = 5,
-		OLECMDIDF_REFRESH_LEVELMASK       = 0x00FF,
-		OLECMDIDF_REFRESH_CLEARUSERINPUT  = 0x1000,
-		OLECMDIDF_REFRESH_PROMPTIFOFFLINE = 0x2000,
-	} OLECMDID_REFRESHFLAG;
 
     [
         uuid(EAB22AC1-30C1-11CF-A7EB-0000C05BAE0B), // IID_IWebBrowser
@@ -149,6 +137,149 @@ library MOZILLACONTROLLib
         HRESULT Busy([out,retval] VARIANT_BOOL *pBool);
     }
 
+
+    typedef
+    [
+        uuid(34A226E0-DF30-11CF-89A9-00A0C9054129),
+        helpstring("Constants for WebBrowser CommandStateChange")
+    ]
+    enum CommandStateChangeConstants {
+        [helpstring("Command Change")]      CSC_UPDATECOMMANDS  = 0xFFFFFFFF,
+        [helpstring("Navigate Forward")]    CSC_NAVIGATEFORWARD = 0x00000001,
+        [helpstring("Navigate Back")]       CSC_NAVIGATEBACK    = 0x00000002,
+    } CommandStateChangeConstants;
+
+    [
+        uuid(0002DF05-0000-0000-C000-000000000046), // IID_IWebBrowserApp
+        helpstring("Web Browser Application Interface."),
+        helpcontext(0x0000),
+        hidden,
+        oleautomation,
+        dual
+    ]
+    interface IWebBrowserApp : IWebBrowser
+    {
+        [id(300), helpstring("Exits application and closes the open document."), helpcontext(0x0000)]
+        HRESULT Quit();
+
+        [id(301), helpstring("Converts client sizes into window sizes."), helpcontext(0x0000)]
+        HRESULT ClientToWindow([in,out] int* pcx, [in,out] int* pcy);
+
+        [id(302), helpstring("Associates vtValue with the name szProperty in the context of the object."), helpcontext(0x0000)]
+        HRESULT PutProperty([in] BSTR Property, [in] VARIANT vtValue);
+
+        [id(303), helpstring("Retrieve the Associated value for the property vtValue in the context of the object."), helpcontext(0x0000)]
+        HRESULT GetProperty([in] BSTR Property, [out, retval] VARIANT *pvtValue);
+
+        [id(0), propget, helpstring("Returns name of the application."), helpcontext(0x0000)]
+        HRESULT Name([out,retval] BSTR* Name);
+
+        [id(DISPID_HWND), propget, helpstring("Returns the HWND of the current IE window."), helpcontext(0x0000)]
+        HRESULT HWND([out,retval] long *pHWND);
+
+        [id(400), propget, helpstring("Returns file specification of the application, including path."), helpcontext(0x0000)]
+        HRESULT FullName([out,retval] BSTR* FullName);
+
+        [id(401), propget, helpstring("Returns the path to the application."), helpcontext(0x0000)]
+        HRESULT Path([out,retval] BSTR* Path);
+
+        [id(402), propget, helpstring("Determines whether the application is visible or hidden."), helpcontext(0x0000)]
+        HRESULT Visible([out, retval] VARIANT_BOOL* pBool);
+        [id(402), propput, helpstring("Determines whether the application is visible or hidden."), helpcontext(0x0000)]
+        HRESULT Visible([in] VARIANT_BOOL Value);
+
+        [id(403), propget, helpstring("Turn on or off the statusbar."), helpcontext(0x0000)]
+        HRESULT StatusBar([out, retval] VARIANT_BOOL* pBool);
+        [id(403), propput, helpstring("Turn on or off the statusbar."), helpcontext(0x0000)]
+        HRESULT StatusBar([in] VARIANT_BOOL Value);
+
+        [id(404), propget, helpstring("Text of Status window."), helpcontext(0x0000)]
+        HRESULT StatusText([out, retval] BSTR *StatusText);
+        [id(404), propput, helpstring("Text of Status window."), helpcontext(0x0000)]
+        HRESULT StatusText([in] BSTR StatusText);
+
+        [id(405), propget, helpstring("Controls which toolbar is shown."), helpcontext(0x0000)]
+        HRESULT ToolBar([out, retval] int * Value);
+        [id(405), propput, helpstring("Controls which toolbar is shown."), helpcontext(0x0000)]
+        HRESULT ToolBar([in] int Value);
+
+        [id(406), propget, helpstring("Controls whether menubar is shown."), helpcontext(0x0000)]
+        HRESULT MenuBar([out, retval] VARIANT_BOOL * Value);
+        [id(406), propput, helpstring("Controls whether menubar is shown."), helpcontext(0x0000)]
+        HRESULT MenuBar([in] VARIANT_BOOL Value);
+
+        [id(407), propget, helpstring("Maximizes window and turns off statusbar, toolbar, menubar, and titlebar."), helpcontext(0x0000)]
+        HRESULT FullScreen([out, retval] VARIANT_BOOL * pbFullScreen);
+        [id(407), propput, helpstring("Maximizes window and turns off statusbar, toolbar, menubar, and titlebar."), helpcontext(0x0000)]
+        HRESULT FullScreen([in] VARIANT_BOOL bFullScreen);
+    }
+
+    [
+        uuid(D30C1661-CDAF-11d0-8A3E-00C04FC9E26E), // IID_IWebBrowser2
+        helpstring("Web Browser Interface for IE4."),
+        helpcontext(0x0000),
+        hidden,
+        oleautomation,
+        dual
+    ]
+    interface IWebBrowser2 : IWebBrowserApp
+    {
+        [id(500), helpstring("Navigates to a URL or file or pidl."), helpcontext(0x0000)]
+        HRESULT Navigate2([in] VARIANT * URL,
+                          [in, optional] VARIANT * Flags,
+                          [in, optional] VARIANT * TargetFrameName,
+                          [in, optional] VARIANT * PostData,
+                          [in, optional] VARIANT * Headers);
+
+
+        [id(501), helpstring("IOleCommandTarget::QueryStatus"), helpcontext(0x0000)]
+        HRESULT QueryStatusWB([in] OLECMDID cmdID, [out, retval] OLECMDF * pcmdf);
+        [id(502), helpstring("IOleCommandTarget::Exec"), helpcontext(0x0000)]
+        HRESULT ExecWB([in] OLECMDID cmdID, [in] OLECMDEXECOPT cmdexecopt, [in, optional] VARIANT * pvaIn, [out, in, optional] VARIANT * pvaOut);
+        [id(503), helpstring("Set BrowserBar to Clsid"), helpcontext(0x0000)]
+        HRESULT ShowBrowserBar( [in] VARIANT * pvaClsid,
+                                [in, optional] VARIANT * pvarShow,
+                                [in, optional] VARIANT * pvarSize );
+
+        [id(DISPID_READYSTATE), propget, bindable]
+        HRESULT ReadyState([retval, out] READYSTATE * plReadyState);
+
+        [id(550), propget, helpstring("Controls if the frame is offline (read from cache)"), helpcontext(0x0000)]
+        HRESULT Offline([out, retval] VARIANT_BOOL * pbOffline);
+        [id(550), propput, helpstring("Controls if the frame is offline (read from cache)"), helpcontext(0x0000)]
+        HRESULT Offline([in] VARIANT_BOOL bOffline);
+
+        [id(551), propget, helpstring("Controls if any dialog boxes can be shown"), helpcontext(0x0000)]
+        HRESULT Silent([out, retval] VARIANT_BOOL * pbSilent);
+        [id(551), propput, helpstring("Controls if any dialog boxes can be shown"), helpcontext(0x0000)]
+        HRESULT Silent([in] VARIANT_BOOL bSilent);
+
+        [id(552), propget, helpstring("Registers OC as a top-level browser (for target name resolution)"), helpcontext(0x0000)]
+        HRESULT RegisterAsBrowser([out, retval] VARIANT_BOOL * pbRegister);
+        [id(552), propput, helpstring("Registers OC as a top-level browser (for target name resolution)"), helpcontext(0x0000)]
+        HRESULT RegisterAsBrowser([in] VARIANT_BOOL bRegister);
+
+        [id(553), propget, helpstring("Registers OC as a drop target for navigation"), helpcontext(0x0000)]
+        HRESULT RegisterAsDropTarget([out, retval] VARIANT_BOOL * pbRegister);
+        [id(553), propput, helpstring("Registers OC as a drop target for navigation"), helpcontext(0x0000)]
+        HRESULT RegisterAsDropTarget([in] VARIANT_BOOL bRegister);
+
+        [id(554), propget, helpstring("Controls if the browser is in theater mode"), helpcontext(0x0000)]
+        HRESULT TheaterMode([out, retval] VARIANT_BOOL * pbRegister);
+        [id(554), propput, helpstring("Controls if the browser is in theater mode"), helpcontext(0x0000)]
+        HRESULT TheaterMode([in] VARIANT_BOOL bRegister);
+
+        [id(555), propget, helpstring("Controls whether address bar is shown"), helpcontext(0x0000)]
+        HRESULT AddressBar([out, retval] VARIANT_BOOL * Value);
+        [id(555), propput, helpstring("Controls whether address bar is shown"), helpcontext(0x0000)]
+        HRESULT AddressBar([in] VARIANT_BOOL Value);
+
+        [id(556), propget, helpstring("Controls whether the window is resizable"), helpcontext(0x0000)]
+        HRESULT Resizable([out, retval] VARIANT_BOOL * Value);
+        [id(556), propput, helpstring("Controls whether the window is resizable"), helpcontext(0x0000)]
+        HRESULT Resizable([in] VARIANT_BOOL Value);
+    }
+
     [
         uuid(EAB22AC2-30C1-11CF-A7EB-0000C05BAE0B), // DIID_DWebBrowserEvents
         helpstring("Web Browser Control Events (old)"),
@@ -212,6 +343,73 @@ library MOZILLACONTROLLib
         void PropertyChange([in] BSTR Property);
     }
 
+    [
+        uuid(34A715A0-6587-11D0-924A-0020AFC7AC4D), // IID_DWebBrowserEvents2
+        helpstring("Web Browser Control events interface"),
+        hidden
+    ]
+    dispinterface DWebBrowserEvents2
+    {
+        properties:
+        methods:
+        [id(DISPID_STATUSTEXTCHANGE), helpstring("Statusbar text changed."), helpcontext(0x0000)]
+        void StatusTextChange([in]BSTR Text);
+
+        [id(DISPID_PROGRESSCHANGE), helpstring("Fired when download progress is updated."), helpcontext(0x0000)]
+        void ProgressChange([in] long Progress, [in] long ProgressMax);
+
+        [id(DISPID_COMMANDSTATECHANGE), helpstring("The enabled state of a command changed."), helpcontext(0x0000)]
+        void CommandStateChange([in] long Command, [in] VARIANT_BOOL Enable);
+
+        [id(DISPID_DOWNLOADBEGIN), helpstring("Download of a page started."), helpcontext(0x000)]
+        void DownloadBegin();
+
+        [id(DISPID_DOWNLOADCOMPLETE), helpstring("Download of page complete."), helpcontext(0x0000)]
+        void DownloadComplete();
+
+        [id(DISPID_TITLECHANGE), helpstring("Document title changed."), helpcontext(0x0000)]
+        void TitleChange([in] BSTR Text);
+
+        [id(DISPID_PROPERTYCHANGE), helpstring("Fired when the PutProperty method has been called."), helpcontext(0x0000)]
+        void PropertyChange([in] BSTR szProperty);
+
+        // New events for IE40:
+        //
+        [id(DISPID_BEFORENAVIGATE2), helpstring("Fired before navigate occurs in the given WebBrowser (window or frameset element). The processing of this navigation may be modified."), helpcontext(0x0000)]
+        void BeforeNavigate2([in] IDispatch* pDisp,
+                             [in] VARIANT * URL, [in] VARIANT * Flags, [in] VARIANT * TargetFrameName, [in] VARIANT * PostData, [in] VARIANT * Headers,
+                             [in,out] VARIANT_BOOL * Cancel);
+
+        [id(DISPID_NEWWINDOW2), helpstring("A new, hidden, non-navigated WebBrowser window is needed."), helpcontext(0x0000)]
+        void NewWindow2([in, out] IDispatch** ppDisp, [in, out] VARIANT_BOOL * Cancel);
+
+        [id(DISPID_NAVIGATECOMPLETE2), helpstring("Fired when the document being navigated to becomes visible and enters the navigation stack."), helpcontext(0x0000)]
+        void NavigateComplete2([in] IDispatch* pDisp, [in] VARIANT * URL );
+
+        [id(DISPID_DOCUMENTCOMPLETE), helpstring("Fired when the document being navigated to reaches ReadyState_Complete."), helpcontext(0x0000)]
+        void DocumentComplete([in] IDispatch* pDisp, [in] VARIANT * URL );
+
+        [id(DISPID_ONQUIT), helpstring("Fired when application is quiting."), helpcontext(0x0000)]
+        void OnQuit();
+
+        [id(DISPID_ONVISIBLE), helpstring("Fired when the window should be shown/hidden"), helpcontext(0x0000)]
+        void OnVisible([in] VARIANT_BOOL Visible);
+
+        [id(DISPID_ONTOOLBAR), helpstring("Fired when the toolbar  should be shown/hidden"), helpcontext(0x0000)]
+        void OnToolBar([in] VARIANT_BOOL ToolBar);
+
+        [id(DISPID_ONMENUBAR), helpstring("Fired when the menubar should be shown/hidden"), helpcontext(0x0000)]
+        void OnMenuBar([in] VARIANT_BOOL MenuBar);
+
+        [id(DISPID_ONSTATUSBAR), helpstring("Fired when the statusbar should be shown/hidden"), helpcontext(0x0000)]
+        void OnStatusBar([in] VARIANT_BOOL StatusBar);
+
+        [id(DISPID_ONFULLSCREEN), helpstring("Fired when fullscreen mode should be on/off"), helpcontext(0x0000)]
+        void OnFullScreen([in] VARIANT_BOOL FullScreen);
+
+        [id(DISPID_ONTHEATERMODE), helpstring("Fired when theater mode should be on/off"), helpcontext(0x0000)]
+        void OnTheaterMode([in] VARIANT_BOOL TheaterMode);
+	}
 
 	[
 		uuid(1339B54C-3453-11D2-93B9-000000000000),
@@ -219,7 +417,9 @@ library MOZILLACONTROLLib
 	]
 	coclass MozillaBrowser
 	{
-		[default] interface IWebBrowser;
+		[default] interface IWebBrowser2;
+		interface IWebBrowser;
+		interface IWebBrowserApp;
 		interface IDispatch;
 //		[default, source] dispinterface DWebBrowserEvents2;
 		[default, source] dispinterface DWebBrowserEvents;

@@ -18,7 +18,7 @@ class ATL_NO_VTABLE CMozillaBrowser :
 	public CComCoClass<CMozillaBrowser, &CLSID_MozillaBrowser>,
 	public CComControl<CMozillaBrowser>,
 	public CProxyDWebBrowserEvents<CMozillaBrowser>,
-	public CStockPropImpl<CMozillaBrowser, IWebBrowser, &IID_IWebBrowser, &LIBID_MOZILLACONTROLLib>,
+	public CStockPropImpl<CMozillaBrowser, IWebBrowser2, &IID_IWebBrowser2, &LIBID_MOZILLACONTROLLib>,
 	public IProvideClassInfo2Impl<&CLSID_MozillaBrowser, &DIID_DWebBrowserEvents, &LIBID_MOZILLACONTROLLib>,
 	public IPersistStreamInitImpl<CMozillaBrowser>,
 	public IPersistStorageImpl<CMozillaBrowser>,
@@ -42,9 +42,10 @@ DECLARE_REGISTRY_RESOURCEID(IDR_MOZILLABROWSER)
 
 BEGIN_COM_MAP(CMozillaBrowser)
 	// IE web browser interface
-	COM_INTERFACE_ENTRY(IWebBrowser)
-//	COM_INTERFACE_ENTRY(IMozillaBrowser)
-	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IWebBrowser)
+	COM_INTERFACE_ENTRY(IWebBrowser2)
+	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IWebBrowser2)
+	COM_INTERFACE_ENTRY_IID(IID_IWebBrowser, IWebBrowser2)
+	COM_INTERFACE_ENTRY_IID(IID_IWebBrowserApp, IWebBrowser2)
 	COM_INTERFACE_ENTRY_IMPL(IViewObjectEx)
 	COM_INTERFACE_ENTRY_IMPL_IID(IID_IViewObject2, IViewObjectEx)
 	COM_INTERFACE_ENTRY_IMPL_IID(IID_IViewObject, IViewObjectEx)
@@ -117,8 +118,8 @@ protected:
 	virtual HRESULT CreateWebShell();
 	virtual BOOL IsValid();
 
-// IWebBrowser implementation
 public:
+// IWebBrowser implementation
     virtual HRESULT STDMETHODCALLTYPE GoBack(void);
     virtual HRESULT STDMETHODCALLTYPE GoForward(void);
     virtual HRESULT STDMETHODCALLTYPE GoHome(void);
@@ -144,6 +145,50 @@ public:
     virtual HRESULT STDMETHODCALLTYPE get_LocationName(BSTR __RPC_FAR *LocationName);
     virtual HRESULT STDMETHODCALLTYPE get_LocationURL(BSTR __RPC_FAR *LocationURL);
     virtual HRESULT STDMETHODCALLTYPE get_Busy(VARIANT_BOOL __RPC_FAR *pBool);
+
+// IWebBrowserApp implementation
+	virtual HRESULT STDMETHODCALLTYPE Quit(void);
+	virtual HRESULT STDMETHODCALLTYPE ClientToWindow(int __RPC_FAR *pcx, int __RPC_FAR *pcy);
+	virtual HRESULT STDMETHODCALLTYPE PutProperty(BSTR Property, VARIANT vtValue);
+	virtual HRESULT STDMETHODCALLTYPE GetProperty(BSTR Property, VARIANT __RPC_FAR *pvtValue);
+	virtual HRESULT STDMETHODCALLTYPE get_Name(BSTR __RPC_FAR *Name);
+	virtual HRESULT STDMETHODCALLTYPE get_HWND(long __RPC_FAR *pHWND);
+	virtual HRESULT STDMETHODCALLTYPE get_FullName(BSTR __RPC_FAR *FullName);
+	virtual HRESULT STDMETHODCALLTYPE get_Path(BSTR __RPC_FAR *Path);
+	virtual HRESULT STDMETHODCALLTYPE get_Visible(VARIANT_BOOL __RPC_FAR *pBool);
+	virtual HRESULT STDMETHODCALLTYPE put_Visible(VARIANT_BOOL Value);
+	virtual HRESULT STDMETHODCALLTYPE get_StatusBar(VARIANT_BOOL __RPC_FAR *pBool);
+	virtual HRESULT STDMETHODCALLTYPE put_StatusBar(VARIANT_BOOL Value);
+	virtual HRESULT STDMETHODCALLTYPE get_StatusText(BSTR __RPC_FAR *StatusText);
+	virtual HRESULT STDMETHODCALLTYPE put_StatusText(BSTR StatusText);
+	virtual HRESULT STDMETHODCALLTYPE get_ToolBar(int __RPC_FAR *Value);
+	virtual HRESULT STDMETHODCALLTYPE put_ToolBar(int Value);
+	virtual HRESULT STDMETHODCALLTYPE get_MenuBar(VARIANT_BOOL __RPC_FAR *Value);
+	virtual HRESULT STDMETHODCALLTYPE put_MenuBar(VARIANT_BOOL Value);
+	virtual HRESULT STDMETHODCALLTYPE get_FullScreen(VARIANT_BOOL __RPC_FAR *pbFullScreen);
+	virtual HRESULT STDMETHODCALLTYPE put_FullScreen(VARIANT_BOOL bFullScreen);
+
+// IWebBrowser2 implementation
+	virtual HRESULT STDMETHODCALLTYPE Navigate2(VARIANT __RPC_FAR *URL, VARIANT __RPC_FAR *Flags, VARIANT __RPC_FAR *TargetFrameName, VARIANT __RPC_FAR *PostData, VARIANT __RPC_FAR *Headers);
+	virtual HRESULT STDMETHODCALLTYPE QueryStatusWB(OLECMDID cmdID, OLECMDF __RPC_FAR *pcmdf);
+	virtual HRESULT STDMETHODCALLTYPE ExecWB(OLECMDID cmdID, OLECMDEXECOPT cmdexecopt, VARIANT __RPC_FAR *pvaIn, VARIANT __RPC_FAR *pvaOut);
+	virtual HRESULT STDMETHODCALLTYPE ShowBrowserBar(VARIANT __RPC_FAR *pvaClsid, VARIANT __RPC_FAR *pvarShow, VARIANT __RPC_FAR *pvarSize);
+	virtual HRESULT STDMETHODCALLTYPE get_ReadyState(READYSTATE __RPC_FAR *plReadyState);
+	virtual HRESULT STDMETHODCALLTYPE get_Offline(VARIANT_BOOL __RPC_FAR *pbOffline);
+	virtual HRESULT STDMETHODCALLTYPE put_Offline(VARIANT_BOOL bOffline);
+	virtual HRESULT STDMETHODCALLTYPE get_Silent(VARIANT_BOOL __RPC_FAR *pbSilent);
+	virtual HRESULT STDMETHODCALLTYPE put_Silent(VARIANT_BOOL bSilent);
+	virtual HRESULT STDMETHODCALLTYPE get_RegisterAsBrowser(VARIANT_BOOL __RPC_FAR *pbRegister);
+	virtual HRESULT STDMETHODCALLTYPE put_RegisterAsBrowser(VARIANT_BOOL bRegister);
+	virtual HRESULT STDMETHODCALLTYPE get_RegisterAsDropTarget(VARIANT_BOOL __RPC_FAR *pbRegister);
+	virtual HRESULT STDMETHODCALLTYPE put_RegisterAsDropTarget(VARIANT_BOOL bRegister);
+	virtual HRESULT STDMETHODCALLTYPE get_TheaterMode(VARIANT_BOOL __RPC_FAR *pbRegister);
+	virtual HRESULT STDMETHODCALLTYPE put_TheaterMode(VARIANT_BOOL bRegister);
+	virtual HRESULT STDMETHODCALLTYPE get_AddressBar(VARIANT_BOOL __RPC_FAR *Value);
+	virtual HRESULT STDMETHODCALLTYPE put_AddressBar(VARIANT_BOOL Value);
+	virtual HRESULT STDMETHODCALLTYPE get_Resizable(VARIANT_BOOL __RPC_FAR *Value);
+	virtual HRESULT STDMETHODCALLTYPE put_Resizable(VARIANT_BOOL Value);
+
 
 public:
 	HRESULT OnDraw(ATL_DRAWINFO& di);
