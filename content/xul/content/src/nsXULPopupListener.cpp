@@ -124,7 +124,12 @@ private:
     
     // The node hovered over that fired the timer. This may turn into the node that
     // triggered the tooltip, but only if the timer ever gets around to firing.
-    nsIDOMNode* mPossibleTooltipNode;     // weak ref.
+    // This is a strong reference, because the tooltip content can be destroyed while we're
+    // waiting for the tooltip to pup up, and we need to detect that.
+    // It's set only when the tooltip timer is created and launched. The timer must
+    // either fire or be cancelled (or possibly released?), and we release this
+    // reference in each of those cases. So we don't leak.
+    nsCOMPtr<nsIDOMNode> mPossibleTooltipNode;
         
 };
 
@@ -133,8 +138,7 @@ private:
 
 XULPopupListenerImpl::XULPopupListenerImpl(void)
   : mElement(nsnull), mPopupContent(nsnull),
-    mMouseClientX(0), mMouseClientY(0),
-    mPossibleTooltipNode(nsnull)
+    mMouseClientX(0), mMouseClientY(0)
 {
 	NS_INIT_REFCNT();	
 }
@@ -288,11 +292,14 @@ XULPopupListenerImpl::MouseMove(nsIDOMEvent* aMouseEvent)
   mTooltipTimer = do_CreateInstance("component://netscape/timer");
   if ( mTooltipTimer ) {
     nsCOMPtr<nsIDOMEventTarget> eventTarget;
-    nsCOMPtr<nsIDOMNode> eventTargetNode;
     aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
-    if (eventTarget) eventTargetNode = do_QueryInterface(eventTarget);
-    mPossibleTooltipNode = eventTargetNode.get();
-    mTooltipTimer->Init(sTooltipCallback, this, 500, NS_PRIORITY_HIGH);   // 500 ms delay
+    if ( eventTarget )
+      mPossibleTooltipNode = do_QueryInterface(eventTarget);
+    if ( mPossibleTooltipNode ) {
+      nsresult rv = mTooltipTimer->Init(sTooltipCallback, this, 500, NS_PRIORITY_HIGH); // 500 ms delay
+      if (NS_FAILED(rv))
+        mPossibleTooltipNode = nsnull;
+    }
   }
   else
     NS_WARNING ( "Could not create a timer for tooltip tracking" );
@@ -327,6 +334,8 @@ XULPopupListenerImpl :: ClosePopup ( )
   if ( mTooltipTimer ) {
     mTooltipTimer->Cancel();
     mTooltipTimer = nsnull;
+    // release tooltip target
+    mPossibleTooltipNode = nsnull;
   }
   
   if ( mPopupContent ) {
@@ -582,28 +591,36 @@ void
 XULPopupListenerImpl :: sTooltipCallback (nsITimer *aTimer, void *aClosure)
 {
   XULPopupListenerImpl* self = NS_STATIC_CAST(XULPopupListenerImpl*, aClosure);
-  if ( self ) {
+  if ( self && self->mPossibleTooltipNode ) {
     // set the node in the document that triggered the tooltip and show it
     nsCOMPtr<nsIDOMXULDocument> doc;
     self->FindDocumentForNode ( self->mElement, getter_AddRefs(doc) );
     if ( doc ) {
-      nsCOMPtr<nsIDOMElement> element ( do_QueryInterface(self->mPossibleTooltipNode) );
-      if ( element ) {
-        // check that node is enabled before showing tooltip
-        nsAutoString disabledState;
-        element->GetAttribute ( NS_ConvertASCIItoUCS2("disabled"), disabledState );
-        if ( !disabledState.EqualsWithConversion("true") ) {
-          doc->SetTooltipNode ( element );        
-          doc->SetPopupNode ( element );        
-          self->LaunchPopup (self->mMouseClientX, self->mMouseClientY+16);
-        } // if node enabled
-      } else {
+      // Make sure the target node is still attached to some document. It might have been deleted.
+      nsCOMPtr<nsIDOMDocument> targetDoc;
+      self->mPossibleTooltipNode->GetOwnerDocument(getter_AddRefs(targetDoc));
+      if ( targetDoc ) {
+        nsCOMPtr<nsIDOMElement> element ( do_QueryInterface(self->mPossibleTooltipNode) );
+        if ( element ) {
+          // check that node is enabled before showing tooltip
+          nsAutoString disabledState;
+          element->GetAttribute ( NS_ConvertASCIItoUCS2("disabled"), disabledState );
+          if ( !disabledState.EqualsWithConversion("true") ) {
+            doc->SetTooltipNode ( element );        
+            doc->SetPopupNode ( element );        
+            self->LaunchPopup (self->mMouseClientX, self->mMouseClientY+16);
+          } // if node enabled
+        } else {
           // Tooltip on non-element; e.g., text
           doc->SetTooltipNode ( self->mPossibleTooltipNode );        
           doc->SetPopupNode ( self->mPossibleTooltipNode );        
           self->LaunchPopup ( self->mMouseClientX, self->mMouseClientY+16);
-      }
-    } // if document
+        }
+      } // if tooltip target's document exists
+     } // if document
+
+    // release tooltip target if there is one, NO MATTER WHAT
+    self->mPossibleTooltipNode = nsnull;
   } // if "self" data valid
   
 } // sTimerCallback
