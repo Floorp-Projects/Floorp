@@ -50,7 +50,7 @@ INLINES = js_compare_and_swap:js_fast_lock1:js_fast_unlock1:js_lock_get_slot:js_
 
 #-lpthreads -lc_r
 
-MKSHLIB = /usr/lpp/xlC/bin/makeC++SharedLib_r -p 0 -G -berok
+MKSHLIB = /usr/lpp/xlC/bin/makeC++SharedLib_r -p 0 -G -berok -bM:UR
 
 ifdef JS_THREADSAFE
 XLDFLAGS += -ldl
