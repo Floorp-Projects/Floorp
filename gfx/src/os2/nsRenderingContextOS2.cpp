@@ -1364,15 +1364,15 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const char* aString,
 
    SetupFontAndColor(); // select font
 
-   POINTL ptls[ 4];
+   POINTL ptls[ 5];
 
    const char* aStringTemp = aString;
 
    while( lLength) // max data to gpi function is 512 chars.
    {
       ULONG thislen = min( lLength, 512);
-      GpiQueryTextBox( mSurface->mPS, thislen, (PCH) aStringTemp, 4, ptls);
-      sum += ptls[ TXTBOX_TOPRIGHT].x - ptls[ TXTBOX_TOPLEFT].x;
+      GpiQueryTextBox( mSurface->mPS, thislen, (PCH) aStringTemp, 5, ptls);
+      sum += ptls[ TXTBOX_CONCAT].x;
       lLength -= thislen;
       aStringTemp += thislen;
    }
