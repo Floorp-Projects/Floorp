@@ -19,7 +19,8 @@
 #ifndef nsToolbar_h___
 #define nsToolbar_h___
 
-#include "nsIToolbar.h"
+#include "nsIToolbar.h" //*** not for long
+#include "nsIContentConnector.h"
 #include "nsWindow.h"
 #include "nsIImageButton.h"
 #include "nsIToolbarItem.h"
@@ -27,10 +28,22 @@
 
 
 class ToolbarLayoutInfo;
+class nsIImageGroup;
+
+
+//
+// pinkerton's notes 
+//
+// The only access to the toolbars should be through the DOM. As a result,
+// we don't need a separate toolbar interface to the outside world besides the
+// minimum required to be loaded by the loader (nsILoader or something). The
+// |nsIToolbar| interface will probably go away soon.
+//
 
 //------------------------------------------------------------
 class nsToolbar : public nsDataModelWidget,
-                  public nsIToolbar,
+                  public nsIToolbar,  //*** not for long
+                  public nsIContentConnector,
                   public nsIToolbarItem
                   
 {
@@ -40,33 +53,32 @@ public:
 
     NS_DECL_ISUPPORTS
 
+	// nsIContentConnector Interface --------------------------------
+	NS_IMETHOD SetContentRoot(nsIContent* pContent);
+	NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent);
+
+	// nsIToolbar interface that won't be around much longer....
     NS_IMETHOD AddItem(nsIToolbarItem* anItem, PRInt32 aLeftGap, PRBool aStretchable);
     NS_IMETHOD InsertItemAt(nsIToolbarItem* anItem, 
                             PRInt32         aLeftGap, 
                             PRBool          aStretchable, 
                             PRInt32         anIndex);
     NS_IMETHOD GetItemAt(nsIToolbarItem*& anItem, PRInt32 anIndex);
-
-
     NS_IMETHOD DoLayout();
     NS_IMETHOD SetHorizontalLayout(PRBool aDoHorizontalLayout);
     NS_IMETHOD SetHGap(PRInt32 aGap);
     NS_IMETHOD SetVGap(PRInt32 aGap);
     NS_IMETHOD SetMargin(PRInt32 aMargin);
-
     NS_IMETHOD SetLastItemIsRightJustified(const PRBool & aState);
     NS_IMETHOD SetNextLastItemIsStretchy(const PRBool & aState);
-
     NS_IMETHOD SetToolbarManager(nsIToolbarManager * aToolbarManager);
     NS_IMETHOD GetToolbarManager(nsIToolbarManager *& aToolbarManager);
     NS_IMETHOD SetBorderType(nsToolbarBorderType aBorderType);
-
-    NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent);
     NS_IMETHOD_(nsEventStatus) OnPaint(nsIRenderingContext& aRenderingContext,
                                        const nsRect& aDirtyRect);
 	virtual void HandleDataModelEvent(int event, nsHierarchicalDataItem* pItem) ;
 
-    // nsIToolbarItem
+    // nsIToolbarItem Interface  --------------------------------
     NS_IMETHOD Repaint(PRBool aIsSynchronous);
     NS_IMETHOD GetBounds(nsRect &aRect);
     NS_IMETHOD SetVisible(PRBool aState);
@@ -114,6 +126,10 @@ protected:
               const nsString& aDisabledURL,
               const nsString& aRollOverURL);
 
+
+  //*** these should be smart pointers ***
+//nsToolbarDataModel* mDataModel;   // The data source from which everything to draw is obtained.
+  nsIImageGroup* mImageGroup;    // Used to make requests for toolbar images.
 
   // This will be changed to a nsVoidArray or a Deque
   ToolbarLayoutInfo ** mItems;

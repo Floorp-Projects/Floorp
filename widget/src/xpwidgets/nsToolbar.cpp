@@ -88,7 +88,8 @@ static CNavTokenDeallocator gItemInfoKiller;*/
 //--------------------------------------------------------------------
 //-- nsToolbar Constructor
 //--------------------------------------------------------------------
-nsToolbar::nsToolbar() : nsDataModelWidget(), nsIToolbar()
+nsToolbar::nsToolbar() : nsDataModelWidget(), nsIToolbar(),
+	mImageGroup(nsnull)
 {
   NS_INIT_REFCNT();
 
@@ -114,6 +115,7 @@ nsToolbar::nsToolbar() : nsDataModelWidget(), nsIToolbar()
 nsToolbar::~nsToolbar()
 {
   NS_IF_RELEASE(mToolbarMgr);
+  NS_IF_RELEASE(mImageGroup);
 
   //delete mItemDeque;
 
@@ -206,6 +208,22 @@ HandleTabEvent(nsGUIEvent *aEvent)
   return result;
 }
 
+
+//
+// SetContentRoot
+//
+// Hook up the toolbar to the content model rooted at the given node
+//
+NS_METHOD
+nsToolbar::SetContentRoot(nsIContent* pContent)
+{
+#if PINK_NOT_YET_IMPLEMENTED
+	if (mDataModel)
+		mDataModel->SetContentRoot(pContent);
+#endif
+
+	return NS_OK;
+}
 
 
 //--------------------------------------------------------------------
@@ -919,25 +937,17 @@ NS_METHOD nsToolbar::CreateTab(nsIWidget *& aTab)
 {
   nsresult rv;
 
-  // Get the toolbar's widget (the parent of the tab)
-  nsIWidget* parent;
-	if (NS_OK != QueryInterface(kIWidgetIID,(void**)&parent)) {
-    return NS_ERROR_FAILURE;
-  }
-
   // Create the generic toolbar holder for the tab widget
   nsIToolbarItemHolder * toolbarItemHolder;
   rv = nsRepository::CreateInstance(kToolbarItemHolderCID, nsnull, kIToolbarItemHolderIID,
                                     (void**)&toolbarItemHolder);
   if (NS_OK != rv) {
-    NS_RELEASE(parent);
     return rv;
   }
 
   // Get the ToolbarItem interface for adding it to the toolbar
   nsIToolbarItem * toolbarItem;
 	if (NS_OK != toolbarItemHolder->QueryInterface(kIToolbarItemIID,(void**)&toolbarItem)) {
-    NS_RELEASE(parent);
     NS_RELEASE(toolbarItemHolder);
     return NS_OK;
   }
@@ -948,7 +958,6 @@ NS_METHOD nsToolbar::CreateTab(nsIWidget *& aTab)
   rv = nsRepository::CreateInstance(kImageButtonCID, nsnull, kIImageButtonIID,
                                     (void**)&tab);
   if (NS_OK != rv) {
-    NS_RELEASE(parent);
     NS_RELEASE(toolbarItem);
     NS_RELEASE(toolbarItemHolder);
     return rv;
@@ -958,9 +967,9 @@ NS_METHOD nsToolbar::CreateTab(nsIWidget *& aTab)
   // and it can be put into the generic ToolbarItemHolder
   nsIWidget * widget = nsnull;
 	if (NS_OK == tab->QueryInterface(kIWidgetIID,(void**)&widget)) {
-	  widget->Create(parent, rt, NULL, NULL);
+	  widget->Create(this, rt, NULL, NULL);
 	  widget->Show(PR_TRUE);
-	  widget->SetClientData((void *)parent);
+	  widget->SetClientData(NS_STATIC_CAST(void*, this));
 
 	  widget->Resize(0, 1, TAB_WIDTH, TAB_HEIGHT, PR_FALSE);
 
@@ -986,7 +995,6 @@ NS_METHOD nsToolbar::CreateTab(nsIWidget *& aTab)
         
     aTab = widget;
 	}
-  NS_RELEASE(parent);
   NS_RELEASE(tab);
   NS_RELEASE(toolbarItem);
   NS_RELEASE(toolbarItemHolder);
