@@ -79,6 +79,18 @@ jclass bcJavaMarshalToolkit::iidArrayClass = NULL;
 jmethodID bcJavaMarshalToolkit::getClassMID = NULL;
 
 
+
+//maping from java types to *connect types
+
+#define boolean_map PRBool
+#define byte_map PRInt8
+#define short_map PRInt16
+#define int_map PRInt32
+#define long_map PRInt64
+#define float_map float
+#define double_map double
+#define char_map PRInt16
+
 static NS_DEFINE_CID(kJavaStubsAndProxies,BC_JAVASTUBSANDPROXIES_CID);
 
 bcJavaMarshalToolkit::bcJavaMarshalToolkit(PRUint16 _methodIndex,
@@ -126,7 +138,6 @@ nsresult bcJavaMarshalToolkit::Marshal(bcIMarshaler *m, jobject retval) {
 }
 
 nsresult bcJavaMarshalToolkit::Marshal(bcIMarshaler *m) {
-
     PRUint32 paramCount = info->GetParamCount();
     nsresult r = NS_OK;
     for (unsigned int i = 0; (i < paramCount) && NS_SUCCEEDED(r); i++) {
@@ -143,7 +154,7 @@ nsresult bcJavaMarshalToolkit::Marshal(bcIMarshaler *m) {
         }
     }
     return r;
-
+    
 }
 
 nsresult bcJavaMarshalToolkit::UnMarshal(bcIUnMarshaler *um, jobject *retval) {
@@ -194,6 +205,12 @@ nsresult bcJavaMarshalToolkit::UnMarshal(bcIUnMarshaler *um) {
     return NS_OK;
 }
 
+/* 
+ *JNIEnv *env; jobject value; PRBool isOut; ArrayModifier modifier; bcIMarshaler *m;
+ * should be defined before calling this mavro
+ *
+ */
+
 #define MARSHAL_SIMPLE_ELEMENT(_type_,_Type_)                                                       \
     do {                                                                                            \
         int indexInArray;                                                                           \
@@ -210,7 +227,8 @@ nsresult bcJavaMarshalToolkit::UnMarshal(bcIUnMarshaler *um) {
             env->Get##_Type_##ArrayRegion((j##_type_##Array)value, indexInArray, 1, &data);         \
             EXCEPTION_CHECKING(env);                                                                \
         }                                                                                           \
-        m->WriteSimple(&data,type);                                                                 \
+        _type_##_map tmpData = data;                                                                \
+        m->WriteSimple(&tmpData,type);                                                              \
     } while (0)
 
 nsresult
@@ -402,8 +420,10 @@ bcJavaMarshalToolkit::MarshalElement(bcIMarshaler *m, jobject value,  PRBool isO
              do {                         \
                 int indexInArray;      \
                 j##_type_ data;            \
+                _type_##_map tmpData;      \
                 if (um) {              \
-                    um->ReadSimple(&data,type); \
+                    um->ReadSimple(&tmpData,type); \
+                    data = tmpData;             \
                 }                               \
                 if ( ! isOut                    \
                      && (modifier == none) ) {  \
