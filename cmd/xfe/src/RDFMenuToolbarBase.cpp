@@ -867,11 +867,11 @@ XFE_RDFMenuToolbarBase::createCascadeButton(Widget        menu,
     // Create some extra booleans to clear up the logic
     // of the if-statement below.
     XP_Bool want_children                = !ignore_children;
-    XP_Bool has_folder_children          = ht_FolderHasFolderChildren(entry);
     XP_Bool want_non_folder_children_too = !_onlyHeaders;
     
     if (want_children && 
-        (has_folder_children || want_non_folder_children_too))
+        (want_non_folder_children_too
+         || ht_FolderHasFolderChildren(entry)))
     {
         pulldown_name = "bookmarkPulldown";
     }
