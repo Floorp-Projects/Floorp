@@ -35,17 +35,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-%{C++
-#error "You should not be including this file"
+#include "nsISupports.idl"
+#include "nsIVariant.idl"
+
+%{ C++
+// {40c4883d-079f-43db-82a9-df0a59d37998}
+#define NS_IDISPATCH_SUPPORT_CID \
+    { 0x40c4883d, 0x079f, 0x43db, \
+      { 0x82, 0xa9, 0xdf, 0x0a, 0x59, 0xd3, 0x79, 0x98 } }
+
+#define NS_IDISPATCH_SUPPORT_CONTRACTID "@mozilla.org/nsdispatchsupport;1"
 %}
 
-#include "nsISupports.idl"
+native COMVARIANT(VARIANT);
+[ptr] native COMVARIANTPtr(VARIANT);
+native JSVal(jsval);
 
-/**
- * This interface is not to be used directly, it is to be used internally
- * for XPConnect's IDispatch support
- */
-[scriptable, uuid(00020400-0000-0000-C000-000000000046)]
-interface IDispatch : nsISupports
+interface IDispatch;
+
+[uuid(38df70e9-12f8-4732-af91-df36c38dc6f6)]
+interface nsIDispatchSupport : nsISupports
 {
+    /**
+     * Converts a COM Variant to a jsval
+     * @param comvar The COM Variant to be converted
+     * @param val The jsval to receive the converted value
+     */
+    void COMVariant2JSVal(in COMVARIANTPtr comvar, out JSVal val);
+    /**
+     * Converts a jsval to a COM Variant
+     * @param var The jsval to be converted
+     * @param comvar The COM Variant to receive the converted value
+     */
+    void JSVal2COMVariant(in JSVal var, out COMVARIANT comvar);
+    /**
+     * Instantiate a COM component
+     * This checks to see if the component is scriptable. If it is, it instantiates it
+     * @param className contract ID or class ID of the desired component to instantiate 
+     * @return The IDispatch interface pointer if instantiated
+     */
+    IDispatch CreateInstance(in string className, in PRBool testScriptability);
 };

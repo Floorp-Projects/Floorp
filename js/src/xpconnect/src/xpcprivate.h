@@ -120,6 +120,7 @@
 extern CComModule _Module;
 
 #include <atlcom.h>
+#include <atlctl.h>
 // MS clutters the global namespace with so many macro names :-(
 // I tried to keep these includes in the CPP's but it became too
 // convoluted
@@ -973,6 +974,10 @@ XPC_WN_GetterSetter(JSContext *cx, JSObject *obj,
 extern JSBool
 xpc_InitWrappedNativeJSOps();
 
+// Comes from xpcwrappednativeops.cpp
+extern void
+xpc_MarkForValidWrapper(JSContext *cx, XPCWrappedNative* wrapper, void *arg);
+
 /***************************************************************************/
 
 /***************************************************************************/
@@ -1682,12 +1687,11 @@ public:
     void SetNative(nsISupports*  Native)              {mNative = Native;}
     void SetJSObject(JSObject*  JSObj);
 
-    void JSObjectFinalized() {mJSObject = nsnull;}
+    void JSObjectFinalized() {SetJSObject(nsnull);}
 
     XPCWrappedNativeTearOff()
         : mInterface(nsnull), mNative(nsnull), mJSObject(nsnull) {}
-    ~XPCWrappedNativeTearOff()
-        {NS_ASSERTION(!(GetInterface()||GetNative()||GetJSObject()), "tearoff not empty in dtor");}
+    ~XPCWrappedNativeTearOff();
 
     void Mark()       {mJSObject = (JSObject*)(((jsword)mJSObject) | 1);}
     void Unmark()     {mJSObject = (JSObject*)(((jsword)mJSObject) & ~1);}

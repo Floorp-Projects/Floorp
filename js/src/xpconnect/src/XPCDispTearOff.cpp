@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -155,8 +156,7 @@ STDMETHODIMP XPCDispatchTearOff::QueryInterface(const struct _GUID & guid,
         return NS_OK;
     }
 
-    nsIID iid;
-    return mWrappedJS->QueryInterface(XPCDispGUID2nsIID(guid, iid), pPtr);
+    return mWrappedJS->QueryInterface(XPCDispGUID2nsIID(guid), pPtr);
 }
 
 STDMETHODIMP XPCDispatchTearOff::GetTypeInfoCount(unsigned int FAR * pctinfo)
@@ -600,7 +600,7 @@ pre_call_clean_up:
             {
                 if((pDispParams->rgvarg[index].vt & VT_BYREF) != 0)
                 {
-                    XPCDispObject::CleanupVariant(pDispParams->rgvarg[i]);
+                    VariantClear(pDispParams->rgvarg + i);
                 }
             }
         }

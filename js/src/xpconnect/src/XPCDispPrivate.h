@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -40,6 +41,8 @@
 #ifndef xpcprivate_h___
 #error "DispPrivate.h should not be included directly, please use XPCPrivate.h"
 #endif
+
+#include "nsIDispatchSupport.h"
 
 #define NS_DECL_IUNKNOWN                                                      \
 public:                                                                       \
@@ -109,10 +112,10 @@ public:
      * @param src JS Value to convert
      * @param dest COM variant to receive the converted value
      * @param err receives the error code if any of a failed conversion
-     * @return Returns true if the conversion succeeded
+     * @return True if the conversion succeeded
      */
     static
-    JSBool JSToCOM(XPCCallContext& ccx, jsval src, VARIANT & dest, uintN & err);
+    JSBool JSToCOM(XPCCallContext& ccx, jsval src, VARIANT & dest, nsresult& err);
 
     /**
      * Converts a COM variant to a jsval
@@ -123,65 +126,31 @@ public:
      * @return Returns true if the conversion succeeded
      */
     static
-    JSBool COMToJS(XPCCallContext& ccx, const VARIANT & src, jsval & dest,
-                   uintN & err);
+    JSBool COMToJS(XPCCallContext& ccx, const _variant_t & src, jsval & dest,
+                   nsresult& err);
 private:
     /**
      * Converts a JS Array to a safe array
+     * @param ccx XPConnect call context
+     * @param ccx
      */
     static
     JSBool JSArrayToCOMArray(XPCCallContext& ccx, JSObject *obj, VARIANT & var,
-                          uintN & err);
+                          nsresult& err);
     /**
      * Converts a COM Array to a JS Array
      */
     static
-    JSBool COMArrayToJSArray(XPCCallContext& ccx, const VARIANT & src,
-                             jsval & dest,uintN& err);
+    JSBool COMArrayToJSArray(XPCCallContext& ccx, const _variant_t & src,
+                             jsval & dest, nsresult& err);
 };
 
 JSBool JS_DLL_CALLBACK
-XPC_IDispatch_CallMethod(JSContext *cx, JSObject *obj,
-                  uintN argc, jsval *argv, jsval *vp);
+XPC_IDispatch_CallMethod(JSContext *cx, JSObject *obj, uintN argc,
+                         jsval *argv, jsval *vp);
 JSBool JS_DLL_CALLBACK
-XPC_IDispatch_GetterSetter(JSContext *cx, JSObject *obj,
-                    uintN argc, jsval *argv, jsval *vp);
-
-/**
- * Used to invoke IDispatch methods
- */
-class XPCDispObject
-{
-public:
-    enum CallMode {CALL_METHOD, CALL_GETTER, CALL_SETTER};
-    /**
-     * Used to invoke an IDispatch method
-     */
-    static
-    JSBool Invoke(XPCCallContext & ccx, CallMode mode);
-    /**
-     * Instantiates a COM object given a class ID or a prog ID
-     */
-    static
-    IDispatch * COMCreateInstance(const char * className);
-    /**
-     * Create a COM object from an existing IDispatch interface (e.g. returned by another object)
-     */
-    static
-    PRBool COMCreateFromIDispatch(IDispatch *pDispatch, JSContext *cx, JSObject *obj, jsval *rval);
-
-    /**
-     * Throws an error, converting the errNum to an exception
-     */
-    static
-    JSBool Throw(uintN errNum, JSContext* cx);
-    /**
-     * Cleans up a variant if it was allocated
-     */
-    inline
-    static
-    void CleanupVariant(VARIANT & var);
-};
+XPC_IDispatch_GetterSetter(JSContext *cx, JSObject *obj, uintN argc, 
+                           jsval *argv, jsval *vp);
 
 /**
  * This class holds an array of names. It indexes based on a *one based* dispid
@@ -510,7 +479,7 @@ public:
         {
         public:
             ParamInfo(const ELEMDESC * paramInfo);
-            JSBool InitializeOutputParam(char * varBuffer, 
+            JSBool InitializeOutputParam(void * varBuffer, 
                                          VARIANT & var) const;
             /**
              * Tests if a specific flag is set
@@ -531,7 +500,7 @@ public:
         /**
          * Placement new is needed to initialize array in class XPCDispInterface
          */
-        void* operator new(size_t, Member* p);
+        void* operator new(size_t, Member* p) CPP_THROW_NEW;
         PRBool IsSetter() const;
         /**
          * Returns true if this is a getter
@@ -541,6 +510,10 @@ public:
          * Returns true if this is a setter
          */
         PRBool IsProperty() const;
+        /**
+         * Returns true if this is a parameterized property
+         */
+        PRBool IsParameterizedProperty() const;
         /**
          * Returns true if this is a function
          */
@@ -619,17 +592,25 @@ public:
     JSObject* GetJSObject() const;
     void SetJSObject(JSObject* jsobj);
     const Member * FindMember(jsval name) const;
+    /**
+     * Looksup a member ignoring case
+     * @param ccx A call context
+     * @param name The name of the member
+     * @return A pointer to a member or nsnull if not found
+     */
+    const Member* FindMemberCI(XPCCallContext& ccx, jsval name) const;
     const Member & GetMember(PRUint32 index);
     PRUint32 GetMemberCount() const;
 
     static
     XPCDispInterface* NewInstance(JSContext* cx, nsISupports * pIface);
     void operator delete(void * p);
+    ~XPCDispInterface();
 private:
     XPCDispInterface(JSContext* cx, 
                           ITypeInfo * pTypeInfo,
                           PRUint32 members);
-    void * operator new (size_t, PRUint32 members);
+    void * operator new (size_t, PRUint32 members) CPP_THROW_NEW;
 
     JSObject*   mJSObject;
     PRUint32    mMemberCount;
@@ -637,6 +618,42 @@ private:
 
     void InspectIDispatch(JSContext * cx, ITypeInfo * pTypeInfo, 
                           PRUint32 members);
+};
+
+/**
+ * Used to invoke IDispatch methods
+ */
+class XPCDispObject
+{
+public:
+    enum CallMode {CALL_METHOD, CALL_GETTER, CALL_SETTER};
+    static
+    JSBool Dispatch(XPCCallContext& ccx, IDispatch * pDisp,
+                    DISPID dispID, CallMode mode, XPCDispParams & params,
+                    jsval* retval, XPCDispInterface::Member* member = nsnull,
+                    XPCJSRuntime* rt = nsnull);
+    /**
+     * Used to invoke an IDispatch method
+     */
+    static
+    JSBool Invoke(XPCCallContext & ccx, CallMode mode);
+    /**
+     * Instantiates a COM object given a class ID or a prog ID
+     */
+    static
+    nsresult COMCreateInstance(const char * className, 
+                               PRBool testScriptability, IDispatch ** result);
+    /**
+     * Create a COM object from an existing IDispatch interface (e.g. returned by another object)
+     */
+    static
+    PRBool COMCreateFromIDispatch(IDispatch *pDispatch, JSContext *cx,
+                                  JSObject *obj, jsval *rval);
+    /**
+     * Throws an error, converting the errNum to an exception
+     */
+    static
+    JSBool Throw(uintN errNum, JSContext* cx);
 };
 
 class XPCIDispatchExtension
@@ -658,6 +675,85 @@ public:
 
 private:
     static PRBool  mIsEnabled;
+};
+
+class XPCDispParams
+{
+public:
+    XPCDispParams(PRUint32 args);
+    /**
+     * Makes a copy
+     * Makes a copy and transfers ownership of buffers
+     */
+    XPCDispParams(XPCDispParams & other);
+    ~XPCDispParams();
+    void SetNamedPropID();
+    VARIANT & GetParamRef(PRUint32 index);
+    _variant_t GetParam(PRUint32 index) const;
+    void * GetOutputBuffer(PRUint32 index);
+    DISPPARAMS* GetDispParams() { return &mDispParams; }
+    uintN GetParamCount() const { return mDispParams.cArgs; }
+    void InsertParam(_variant_t & var);
+private:
+    XPCDispParams& operator =(const XPCDispParams&) {
+        NS_ERROR("XPCDispParams can't be assigned"); }
+
+    
+    enum
+    {
+        DEFAULT_ARG_ARRAY_SIZE = 8,
+// This is the size of the largest member in the union in VARIANT
+        VARIANT_UNION_SIZE = sizeof(VARIANT) - sizeof(VARTYPE) - sizeof(unsigned short) * 3
+    };
+#define XPC_VARIANT_BUFFER_SIZE(count)  (VARIANT_UNION_SIZE * count)
+
+    DISPPARAMS  mDispParams;
+    char*       mVarBuffer;
+    char        mVarStackBuffer[XPC_VARIANT_BUFFER_SIZE(DEFAULT_ARG_ARRAY_SIZE)];
+    VARIANT     mStackArgs[DEFAULT_ARG_ARRAY_SIZE];
+    DISPID      mPropID;
+};
+
+/**
+ * Parameterized property object JSClass
+ * This class is used to support parameterized properties for IDispatch
+ */
+class XPCDispParamPropJSClass
+{
+public:
+    static JSBool GetNewOrUsed(XPCCallContext& ccx, XPCWrappedNative* wrapper,
+                               PRUint32 dispID,
+                               XPCDispParams& dispParams,
+                               jsval* paramPropObj);
+    ~XPCDispParamPropJSClass();
+    XPCWrappedNative*       GetWrapper() const { return mWrapper; }
+    JSBool                  Invoke(XPCCallContext& ccx, 
+                                   XPCDispObject::CallMode mode, 
+                                   jsval* retval);
+    XPCDispParams&    GetParams() { return mDispParams; }
+private:
+    XPCDispParamPropJSClass(XPCWrappedNative* wrapper, nsISupports* dispObj, 
+                            PRUint32 dispID, XPCDispParams& dispParams);
+
+    XPCWrappedNative*       mWrapper;
+    PRUint32                mDispID;
+    XPCDispParams           mDispParams;
+    IDispatch*              mDispObj;
+};
+
+class nsDispatchSupport : public nsIDispatchSupport
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDISPATCHSUPPORT
+
+  nsDispatchSupport();
+  virtual ~nsDispatchSupport();
+  static nsDispatchSupport* GetSingleton();
+  static void FreeSingleton() { NS_IF_RELEASE(mInstance); }
+
+private:
+  static nsDispatchSupport* mInstance;
 };
 
 #include "XPCDispInlines.h"

@@ -216,7 +216,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     // in a pointer that hasn't been QI'd to IDispatch properly this could
     // create multiple wrappers for the same object, creating a fair bit of
     // confusion.
-    if(!nsXPConnect::IsIDispatchEnabled() && Interface->GetIID()->Equals(NSID_IDISPATCH))
+    if(nsXPConnect::IsIDispatchEnabled() && Interface->GetIID()->Equals(NSID_IDISPATCH))
         identity = Object;
     else
 #endif
@@ -937,6 +937,10 @@ XPCWrappedNative::SystemIsBeingShutDown(XPCCallContext& ccx)
             if(to->GetJSObject())
             {
                 JS_SetPrivate(ccx, to->GetJSObject(), nsnull);
+#ifdef XPC_IDISPATCH_SUPPORT
+                if(to->IsIDispatch())
+                    delete to->GetIDispatchInfo();
+#endif
                 to->SetJSObject(nsnull);
             }
             // We leak the tearoff mNative

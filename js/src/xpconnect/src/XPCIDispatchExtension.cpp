@@ -40,9 +40,9 @@ static const char* const IDISPATCH_NAME = "IDispatch";
 
 PRBool XPCIDispatchExtension::mIsEnabled = PR_TRUE;
 
-JS_STATIC_DLL_CALLBACK(JSBool)
-COMObjectConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
-                     jsval *rval)
+static JSBool
+CommonConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
+                     jsval *rval, PRBool testScriptability)
 {
     // Make sure we were called with one string parameter
     if(argc != 1 || (argc == 1 && !JSVAL_IS_STRING(argv[0])))
@@ -65,12 +65,18 @@ COMObjectConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     // Instantiate the desired COM object
-    IDispatch* pDispatch = XPCDispObject::COMCreateInstance(bytes);
+    IDispatch* pDispatch = nsnull;;
+    nsresult rv = XPCDispObject::COMCreateInstance(bytes, testScriptability, &pDispatch);
+    if (NS_FAILED(rv))
+    {
+        // TODO: error reporting
+        return JS_FALSE;
+    }
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    nsresult rv = nsXPConnect::GetXPConnect()->WrapNative(cx, obj, 
+    rv = nsXPConnect::GetXPConnect()->WrapNative(cx, obj, 
                                   NS_REINTERPRET_CAST(nsISupports*, pDispatch),
                                   NSID_IDISPATCH, getter_AddRefs(holder));
-    if(FAILED(rv) || !holder)
+    if(FAILED(rv))
     {
         // TODO: error reporting
         return JS_FALSE;
@@ -82,33 +88,64 @@ COMObjectConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_TRUE;
 }
 
+JS_STATIC_DLL_CALLBACK(JSBool)
+COMObjectConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
+                     jsval *rval)
+{
+    return CommonConstructor(cx, obj, argc, argv, rval, PR_FALSE);
+}
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+ActiveXConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
+                     jsval *rval)
+{
+    return CommonConstructor(cx, obj, argc, argv, rval, PR_TRUE);
+}
+
 JSBool XPCIDispatchExtension::Initialize(JSContext * aJSContext,
                                   JSObject * aGlobalJSObj)
 {
     // TODO: Cleanup error code
-    return JS_DefineFunction(aJSContext, aGlobalJSObj, "COMObject", 
-                         COMObjectConstructor, 1, 0) ? PR_TRUE : PR_FALSE;
+    JSBool result = JS_DefineFunction(aJSContext, aGlobalJSObj, "ActiveXObject", 
+                                      ActiveXConstructor, 1, 0) != nsnull;
+#ifdef XPC_COMOBJECT
+    if (result)
+       result = JS_DefineFunction(aJSContext, aGlobalJSObj, "COMObject", 
+                                  COMObjectConstructor, 1, 0) != nsnull;
+#endif
+    return result;
 }
 
-JSBool XPCIDispatchExtension::DefineProperty(XPCCallContext & ccx, JSObject *obj, jsval idval,
-                     XPCWrappedNative* wrapperToReflectInterfaceNames,
-                     uintN propFlags, JSBool* resolved)
+JSBool XPCIDispatchExtension::DefineProperty(XPCCallContext & ccx, 
+                                             JSObject *obj, jsval idval,
+                                             XPCWrappedNative* wrapperToReflectInterfaceNames,
+                                             uintN propFlags, JSBool* resolved)
 {
     XPCNativeInterface* iface = XPCNativeInterface::GetNewOrUsed(ccx, "IDispatch");
-    if (iface == nsnull)
+    if(iface == nsnull)
         return JS_FALSE;
     XPCWrappedNativeTearOff* to = 
         wrapperToReflectInterfaceNames->FindTearOff(ccx, iface, JS_TRUE);
-    if (to == nsnull)
+    if(to == nsnull)
         return JS_FALSE;
 
     JSObject* jso = to->GetJSObject();
-    if (jso == nsnull)
+    if(jso == nsnull)
         return JS_FALSE;
 
-    const XPCDispInterface::Member * member = to->GetIDispatchInfo()->FindMember(idval);
-    if (member == nsnull)
+    if(!JSVAL_IS_STRING(idval))
         return JS_FALSE;
+    const XPCDispInterface::Member * member = to->GetIDispatchInfo()->FindMember(idval);
+    if(!member)
+    {
+        // IDispatch is case insensitive, so if we don't find a case sensitive
+        // match, we'll try a more expensive case-insensisitive search
+        // TODO: We need to create cleaner solution that doesn't create
+        // multiple properties of different case on the JS Object
+        member = to->GetIDispatchInfo()->FindMemberCI(ccx, idval);
+        if(!member)
+            return JS_FALSE;
+    }
     jsval funval;
     if(!member->GetValue(ccx, iface, &funval))
         return JS_FALSE;
@@ -116,7 +153,7 @@ JSBool XPCIDispatchExtension::DefineProperty(XPCCallContext & ccx, JSObject *obj
     if(!funobj)
         return JS_FALSE;
     jsid id;
-    if (member->IsFunction())
+    if(member->IsFunction() || member->IsParameterizedProperty())
     {
         AutoResolveName arn(ccx, idval);
         if(resolved)
@@ -125,9 +162,9 @@ JSBool XPCIDispatchExtension::DefineProperty(XPCCallContext & ccx, JSObject *obj
                OBJ_DEFINE_PROPERTY(ccx, obj, id, OBJECT_TO_JSVAL(funobj),
                                    nsnull, nsnull, propFlags, nsnull);
     }
-    NS_ASSERTION(!member || member->IsSetter(), "way broken!");
+    NS_ASSERTION(member->IsProperty(), "way broken!");
     propFlags |= JSPROP_GETTER | JSPROP_SHARED;
-    if (member->IsSetter())
+    if(member->IsSetter())
     {
         propFlags |= JSPROP_SETTER;
         propFlags &= ~JSPROP_READONLY;

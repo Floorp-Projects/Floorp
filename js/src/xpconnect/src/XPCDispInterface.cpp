@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -40,6 +41,7 @@
  */
 
 #include "xpcprivate.h"
+#include <MBSTRING.H>
 
 /**
  * Is this function reflectable
@@ -198,6 +200,46 @@ void XPCDispInterface::InspectIDispatch(JSContext * cx, ITypeInfo * pTypeInfo, P
     }
 }
 
+inline
+PRUnichar* JSString2PRUnichar(XPCCallContext& ccx, jsval val, size_t* length)
+{
+    JSString* str = JS_ValueToString(ccx, val);
+    if(!str)
+        return nsnull;
+    *length = JS_GetStringLength(str);
+    PRUnichar * string = NS_REINTERPRET_CAST(PRUnichar*,JS_GetStringChars(str));
+    return string;
+}
+
+inline
+PRBool CaseInsensitiveCompare(XPCCallContext& ccx, const PRUnichar* lhs, size_t lhsLength, jsval rhs)
+{
+    size_t rhsLength;
+    PRUnichar* rhsString = JSString2PRUnichar(ccx, rhs, &rhsLength);
+    return rhsString && 
+        lhsLength == rhsLength &&
+        _wcsnicmp(lhs, rhsString, lhsLength * sizeof(PRUnichar)) == 0;
+}
+
+const XPCDispInterface::Member* XPCDispInterface::FindMemberCI(XPCCallContext& ccx, jsval name) const
+{
+    size_t nameLength;
+    PRUnichar* sName = JSString2PRUnichar(ccx, name, &nameLength);
+    if(!sName)
+        return nsnull;
+    // Iterate backwards to save time
+    const Member* member = mMembers + mMemberCount;
+    while(member > mMembers)
+    {
+        --member;
+        if(CaseInsensitiveCompare(ccx, sName, nameLength, member->GetName()))
+        {
+            return member;
+        }
+    }
+    return nsnull;
+}
+
 JSBool XPCDispInterface::Member::GetValue(XPCCallContext& ccx,
                                           XPCNativeInterface * iface, 
                                           jsval * retval) const
@@ -216,7 +258,8 @@ JSBool XPCDispInterface::Member::GetValue(XPCCallContext& ccx,
         intN argc;
         intN flags;
         JSNative callback;
-        if(IsFunction())
+        // Is this a function or a parameterized getter/setter
+        if(IsFunction() || IsParameterizedProperty())
         {
             argc = GetParamCount();
             flags = 0;

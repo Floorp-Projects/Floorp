@@ -63,6 +63,10 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIJSRuntimeService, nsJSRuntimeService
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptError)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCComponents_Interfaces)
 
+#ifdef XPC_IDISPATCH_SUPPORT
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIDispatchSupport, nsDispatchSupport::GetSingleton)
+#endif
+
 NS_DECL_CLASSINFO(nsXPCException)
 
 #ifdef XPCONNECT_STANDALONE
@@ -87,6 +91,10 @@ static const nsModuleComponentInfo components[] = {
   { "JS subscript loader", MOZ_JSSUBSCRIPTLOADER_CID,
     mozJSSubScriptLoadContractID, mozJSSubScriptLoaderConstructor },
 #endif
+#ifdef XPC_IDISPATCH_SUPPORT
+  { nsnull, NS_IDISPATCH_SUPPORT_CID,            NS_IDISPATCH_SUPPORT_CONTRACTID,
+    nsIDispatchSupportConstructor }
+#endif
 };
 
 PR_STATIC_CALLBACK(void)
@@ -97,6 +105,9 @@ xpcModuleDtor(nsIModule* self)
     nsXPCThreadJSContextStackImpl::FreeSingleton();
     nsJSRuntimeServiceImpl::FreeSingleton();
     xpc_DestroyJSxIDClassObjects();
+#ifdef XPC_IDISPATCH_SUPPORT
+    nsDispatchSupport::FreeSingleton();
+#endif
 }
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(xpconnect, components, xpcModuleDtor)
