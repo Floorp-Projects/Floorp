@@ -3309,6 +3309,18 @@ nsImapMailFolder::EndMessage(nsIMsgMailNewsUrl * aUrl, nsMsgKey uidOfMessage)
 }
 
 NS_IMETHODIMP
+nsImapMailFolder::NotifySearchHit(nsIMsgMailNewsUrl * aUrl, 
+                                  const char* searchHitLine)
+{
+#ifdef DEBUG_bienvenu
+    printf("search hit %s\n", searchHitLine);
+#endif
+    // get the search session from the url.
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsImapMailFolder::SetAppendMsgUid(nsIImapProtocol* aProtocol,
                                   nsMsgKey aKey,
                                   nsIImapUrl * aUrl)

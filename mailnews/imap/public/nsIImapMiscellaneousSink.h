@@ -48,8 +48,6 @@ public:
 		return iid;
 	}
 	
-	NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 
-														 const char* searchHitLine) = 0;
 	NS_IMETHOD GetArbitraryHeaders(nsIImapProtocol* aProtocol,
 																 GenericInfo* aInfo) = 0;
 	NS_IMETHOD GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,

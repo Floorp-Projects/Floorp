@@ -630,9 +630,52 @@ nsImapService::CopyMessages(nsMsgKeyArray *keys, nsIMsgFolder *srcFolder, nsIStr
   return rv;
 }
 
-NS_IMETHODIMP nsImapService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgWindow *aMsgWindow, const char *aMessageUri)
+NS_IMETHODIMP nsImapService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgWindow *aMsgWindow, nsIMsgFolder *aMsgFolder, const char *aSearchUri)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_OK;
+  nsCAutoString	folderURI;
+  nsMsgKey key;
+
+  nsCOMPtr<nsIImapUrl> imapUrl;
+  nsCAutoString urlSpec;
+  PRUnichar hierarchySeparator = GetHierarchyDelimiter(aMsgFolder);
+  rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), aMsgFolder, nsnull, urlSpec, hierarchySeparator);
+  if (NS_FAILED(rv)) 
+        return rv;
+  nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(imapUrl));
+
+  msgurl->SetMsgWindow(aMsgWindow);
+
+  imapUrl->AddChannelToLoadGroup();
+  rv = SetImapUrlSink(aMsgFolder, imapUrl);
+
+  if (NS_SUCCEEDED(rv))
+  {
+	nsXPIDLCString folderName;
+    GetFolderName(aMsgFolder, getter_Copies(folderName));
+
+	nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(imapUrl);
+	urlSpec.Append("search>UID>");
+	urlSpec.Append(hierarchySeparator);
+    urlSpec.Append('>');
+    urlSpec.Append((const char *) folderName);
+    urlSpec.Append('>');
+    urlSpec.Append(aSearchUri);
+    rv = mailNewsUrl->SetSpec((char *) urlSpec.GetBuffer());
+    if (NS_SUCCEEDED(rv))
+    {
+      nsCOMPtr<nsIEventQueue> queue;	
+      // get the Event Queue for this thread...
+	    NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+
+      if (NS_FAILED(rv)) return rv;
+
+      rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+      if (NS_FAILED(rv)) return rv;
+       rv = GetImapConnectionAndLoadUrl(queue, imapUrl, nsnull, nsnull);
+    }
+  }
+  return rv;
 }
 
 // just a helper method to break down imap message URIs....

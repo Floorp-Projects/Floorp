@@ -357,32 +357,6 @@ static NS_DEFINE_IID(kIImapMiscellaneousSinkIID, NS_IIMAPMISCELLANEOUSSINK_IID);
 NS_IMPL_THREADSAFE_ISUPPORTS(nsImapMiscellaneousSinkProxy, kIImapMiscellaneousSinkIID);
 
 NS_IMETHODIMP
-nsImapMiscellaneousSinkProxy::AddSearchResult(nsIImapProtocol* aProtocol, 
-                                          const char* searchHitLine)
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (searchHitLine, "Oops... null searchHitLine");
-    if(!searchHitLine)
-        return NS_ERROR_NULL_POINTER;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        AddSearchResultProxyEvent *ev =
-            new AddSearchResultProxyEvent(this, searchHitLine);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-            ev->PostEvent(m_eventQueue);
-    }
-    else
-    {
-        res = m_realImapMiscellaneousSink->AddSearchResult(aProtocol, searchHitLine);
-    }
-    return res;
-}
-
-NS_IMETHODIMP
 nsImapMiscellaneousSinkProxy::GetArbitraryHeaders(nsIImapProtocol* aProtocol,
                                               GenericInfo* aInfo)
 {
@@ -1004,33 +978,6 @@ nsImapMiscellaneousSinkProxyEvent::nsImapMiscellaneousSinkProxyEvent(
 nsImapMiscellaneousSinkProxyEvent::~nsImapMiscellaneousSinkProxyEvent()
 {
     NS_IF_RELEASE (m_proxy);
-}
-
-AddSearchResultProxyEvent::AddSearchResultProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy, const char* searchHitLine) :
-    nsImapMiscellaneousSinkProxyEvent(aProxy)
-{
-    NS_ASSERTION (searchHitLine, "Oops... a null search hit line");
-    if (searchHitLine)
-        m_searchHitLine = PL_strdup(searchHitLine);
-    else
-        m_searchHitLine = nsnull;
-}
-
-AddSearchResultProxyEvent::~AddSearchResultProxyEvent()
-{
-    if (m_searchHitLine)
-        PL_strfree(m_searchHitLine);
-}
-
-NS_IMETHODIMP
-AddSearchResultProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapMiscellaneousSink->AddSearchResult(
-        m_proxy->m_protocol, m_searchHitLine);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
 }
 
 GetArbitraryHeadersProxyEvent::GetArbitraryHeadersProxyEvent(

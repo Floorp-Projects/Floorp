@@ -97,8 +97,6 @@ public:
 
     NS_DECL_ISUPPORTS
 	
-    NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 
-														 const char* searchHitLine);
     NS_IMETHOD GetArbitraryHeaders(nsIImapProtocol* aProtocol,
                                    GenericInfo* aInfo);
     NS_IMETHOD GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
@@ -228,15 +226,6 @@ struct nsImapMiscellaneousSinkProxyEvent : public nsImapEvent
     nsImapMiscellaneousSinkProxyEvent(nsImapMiscellaneousSinkProxy* aProxy);
     virtual ~nsImapMiscellaneousSinkProxyEvent();
     nsImapMiscellaneousSinkProxy* m_proxy;
-};
-
-struct AddSearchResultProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    AddSearchResultProxyEvent(nsImapMiscellaneousSinkProxy* aProxy, 
-                              const char* searchHitLine);
-    virtual ~AddSearchResultProxyEvent();
-    NS_IMETHOD HandleEvent();
-    char* m_searchHitLine;
 };
 
 struct GetArbitraryHeadersProxyEvent : public nsImapMiscellaneousSinkProxyEvent

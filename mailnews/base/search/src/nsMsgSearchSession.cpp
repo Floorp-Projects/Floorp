@@ -350,9 +350,10 @@ nsresult nsMsgSearchSession::GetNextUrl()
 
   m_urlQueue.CStringAt(0, nextUrl);
   nsresult rv = GetMessageServiceFromURI(nextUrl.GetBuffer(), getter_AddRefs(msgService));
+  nsMsgSearchScopeTerm *currentTerm = GetRunningScope();
 
-  if (NS_SUCCEEDED(rv) && msgService)
-    msgService->Search(this, m_window, nextUrl.GetBuffer());
+  if (NS_SUCCEEDED(rv) && msgService && currentTerm)
+    msgService->Search(this, m_window, currentTerm->m_folder, nextUrl.GetBuffer());
 
 	return rv;
 

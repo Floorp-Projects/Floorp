@@ -3727,8 +3727,10 @@ nsImapProtocol::NotifyMessageFlags(imapMessageFlagsType flags, nsMsgKey key)
 void
 nsImapProtocol::NotifySearchHit(const char * hitLine)
 {
-    if (m_imapMiscellaneousSink)
-        m_imapMiscellaneousSink->AddSearchResult(this, hitLine);
+    nsresult rv;
+    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningUrl, &rv);
+    if (m_imapMailFolderSink)
+        m_imapMailFolderSink->NotifySearchHit(mailnewsUrl, hitLine);
 }
 
 void nsImapProtocol::SetMailboxDiscoveryStatus(EMailboxDiscoverStatus status)
