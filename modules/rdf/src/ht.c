@@ -1243,6 +1243,7 @@ HT_PaneFromURL(void *pContext, char *url, HT_Notification n, PRBool autoFlush, i
           }
           if (strcmp(param_name, "title") == 0) {
             title = *(param_values + pn);
+	    XP_ASSERT(IsUTF8String(title));		
           }
           pn++;
         }
@@ -1353,6 +1354,7 @@ HT_AddToContainer (HT_Resource container, char *url, char *optionalTitle)
 	XP_ASSERT(container->view->pane != NULL);
 	XP_ASSERT(container->view->pane->db != NULL);
 	XP_ASSERT(url != NULL);
+	XP_ASSERT(IsUTF8String(optionalTitle));		
 
 	db = container->view->pane->db;
 
@@ -1460,6 +1462,7 @@ HT_AddBookmark (char *url, char *optionalTitle)
 	RDF_Resource		nbFolder, r;
 
 	XP_ASSERT(url != NULL);
+	XP_ASSERT( IsUTF8String(optionalTitle));		
 
 	if ((nbFolder = RDFUtil_GetNewBookmarkFolder()) != NULL)
 	{
@@ -1695,6 +1698,7 @@ HT_NewWorkspace(HT_Pane pane, char *id, char *optionalTitle)
 {
 	XP_ASSERT(pane != NULL);
 	XP_ASSERT(id != NULL);
+	XP_ASSERT( IsUTF8String(optionalTitle));		
 	if (pane == NULL)	return;
 	if (id == NULL)		return;
 
@@ -2320,6 +2324,7 @@ HT_GetViewName(HT_View view)
 	{
 		HT_GetNodeData (view->top, gCoreVocab->RDF_name, HT_COLUMN_STRING, &name);
 	}
+	XP_ASSERT( IsUTF8String(name));		
 	return(name);
 }
 
@@ -2932,7 +2937,10 @@ HT_GetNextColumn(HT_Cursor cursor, char **colName, uint32 *colWidth,
 
 	if ((column = cursor->columns) == NULL)	return(false);
 
-	if (colName != NULL)	*colName = column->name;
+	if (colName != NULL) {
+		*colName = column->name;
+		XP_ASSERT( IsUTF8String(*colName));		
+	}
 	if (colWidth != NULL)	*colWidth = column->width;
 	if (token != NULL)	*token = column->token;
 	if (tokenType != NULL)	*tokenType = column->tokenType;
@@ -4053,6 +4061,7 @@ HT_GetMenuCmdName(HT_MenuCmd menuCmd)
 			menuCommand = menuCommand->next;
 		} 
 	}
+	XP_ASSERT( IsUTF8String(menuName));		
 	return(menuName);
 }
 
@@ -5504,6 +5513,7 @@ HT_NodeDisplayString (HT_Resource node, char *buffer, int bufferLen)
 			name[bufferLen-1]='\0';
 		}
 	}  
+	XP_ASSERT( IsUTF8String(buffer));		
 	return HT_NoErr;
 }
 
@@ -5528,6 +5538,7 @@ HT_ViewDisplayString (HT_View view, char *buffer, int bufferLen)
 			name[bufferLen-1]='\0';
 		}
 	}  
+	XP_ASSERT( IsUTF8String(buffer));		
 	return HT_NoErr;
 }
 
@@ -6642,6 +6653,7 @@ HT_Find(char *hint)
 	char			*dynStr = NULL, *postHTMLdynStr = NULL;
 	MWContext		*context;
 
+	XP_ASSERT( IsUTF8String(hint));		
 	dynStr = constructBasicHTML(dynStr, RDF_FIND_STR1, "", "");
 
 	/* build location select */
@@ -7047,6 +7059,7 @@ HT_GetNodeName(HT_Resource node)
 	{
 		HT_GetNodeData (node, gCoreVocab->RDF_name, HT_COLUMN_STRING, &name);
 	}
+	XP_ASSERT( IsUTF8String(name));		
 	return(name);
 }
 
@@ -7849,6 +7862,7 @@ HT_MakeNewContainer(HT_Resource parent, char* name)
 	double			doubletm;
 #endif
 
+	XP_ASSERT( IsUTF8String(name));		
 	if (mutableContainerp(parent->node))
 	{
 		db = parent->view->pane->db;
@@ -7951,6 +7965,7 @@ HT_DropURLAndTitleOn(HT_Resource dropTarget, char* url, char *title)
 	HT_DropAction		ac;
 	char			*newTitle;
 
+	XP_ASSERT( IsUTF8String(title));		
 	newTitle = possiblyCleanUpTitle(title);
 	ac = dropURLOn(dropTarget, url, newTitle, 0);
 	if (newTitle != NULL)
@@ -8157,6 +8172,7 @@ HT_DropURLAndTitleAtPos(HT_Resource dropTarget, char* url, char *title, PRBool b
 	HT_DropAction		ac;
 	char			*newTitle;
 
+	XP_ASSERT( IsUTF8String(title));		
 	newTitle = possiblyCleanUpTitle(title);
 	ac = copyRDFLinkURLAt(dropTarget, url, newTitle, before);
 	if (newTitle != NULL)
@@ -8588,6 +8604,7 @@ HT_TypeTo(HT_Pane pane, char *typed)
 
 	XP_ASSERT(pane != NULL);
 	XP_ASSERT(typed != NULL);
+	XP_ASSERT( IsUTF8String(typed));		
 
 	if ((pane == NULL) || (typed == NULL))	return;
 	if ((view = HT_GetSelectedView(pane)) == NULL)	return;
@@ -9487,6 +9504,7 @@ HT_AddSitemapFor(HT_Pane htPane, char *pUrl, char *pSitemapUrl, char* name)
 	RDFT				sp;
 	char				*nm;
 	
+	XP_ASSERT( IsUTF8String(name));		
 	sp = htPane->htdb;
 	if (sp == NULL) return;
 	nu = RDF_GetResource(htPane->db, pSitemapUrl, 1);

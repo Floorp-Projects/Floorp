@@ -71,7 +71,8 @@ char *		makeResourceName (RDF_Resource node);
 char* opTypeToString (RDF_EventType opType) ;
 void traceNotify (char* event, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type) ;
 
-
+PRBool		IsUTF8Text(const char* utf8, int32 len);
+PRBool		IsUTF8String(const char* utf8);
 
 void		AddCookieResource(char* name, char* path, char* host, char* expires);
 void		RDF_ReadCookies(char * filename);
