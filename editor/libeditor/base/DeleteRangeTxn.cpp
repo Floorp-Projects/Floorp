@@ -36,7 +36,7 @@ static NS_DEFINE_IID(kDeleteTextTxnIID,     DELETE_TEXT_TXN_IID);
 static NS_DEFINE_IID(kDeleteElementTxnIID,  DELETE_ELEMENT_TXN_IID);
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_FALSE;
+static PRBool gNoisy = PR_TRUE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
@@ -111,6 +111,7 @@ DeleteRangeTxn::~DeleteRangeTxn()
 
 NS_IMETHODIMP DeleteRangeTxn::Do(void)
 {
+  if (gNoisy) { printf("Do Delete Range\n"); }
   if (!mStartParent || !mEndParent || !mCommonParent)
     return NS_ERROR_NULL_POINTER;
 
@@ -157,6 +158,7 @@ NS_IMETHODIMP DeleteRangeTxn::Do(void)
 
 NS_IMETHODIMP DeleteRangeTxn::Undo(void)
 {
+  if (gNoisy) { printf("Undo Delete Range\n"); }
   if (!mStartParent || !mEndParent || !mCommonParent)
     return NS_ERROR_NULL_POINTER;
 
@@ -177,6 +179,7 @@ NS_IMETHODIMP DeleteRangeTxn::Undo(void)
 
 NS_IMETHODIMP DeleteRangeTxn::Redo(void)
 {
+  if (gNoisy) { printf("Redo Delete Range\n"); }
   if (!mStartParent || !mEndParent || !mCommonParent)
     return NS_ERROR_NULL_POINTER;
 

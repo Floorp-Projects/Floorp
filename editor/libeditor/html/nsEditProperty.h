@@ -44,6 +44,10 @@ public:
   NS_IMETHOD GetValue(nsIAtom **aValue) const;  
   NS_IMETHOD GetAppliesToAll(PRBool *aAppliesToAll) const; 
 
+  // temporary methods
+  static void InstanceInit();
+  static void InstanceShutdown();
+
 protected:
   nsCOMPtr<nsIAtom>mProperty;
   nsCOMPtr<nsIAtom>mValue;

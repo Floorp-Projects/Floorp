@@ -19,7 +19,14 @@
 #include "SplitElementTxn.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMSelection.h"
+#include "nsIDOMCharacterData.h"
 #include "nsIEditorSupport.h"
+
+#ifdef NS_DEBUG
+static PRBool gNoisy = PR_TRUE;
+#else
+static const PRBool gNoisy = PR_FALSE;
+#endif
 
 static NS_DEFINE_IID(kIEditorSupportIID,    NS_IEDITORSUPPORT_IID);
 
@@ -45,6 +52,7 @@ SplitElementTxn::~SplitElementTxn()
 
 NS_IMETHODIMP SplitElementTxn::Do(void)
 {
+  if (gNoisy) { printf("%p Do Split of node %p offset %d\n", this, mExistingRightNode.get(), mOffset); }
   NS_ASSERTION(mExistingRightNode, "bad state");
   if (!mExistingRightNode) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -55,6 +63,7 @@ NS_IMETHODIMP SplitElementTxn::Do(void)
 
   if ((NS_SUCCEEDED(result)) && (mNewLeftNode))
   {
+    if (gNoisy) { printf("  created left node = %p\n", this, mNewLeftNode.get()); }
     // get the parent node
     result = mExistingRightNode->GetParentNode(getter_AddRefs(mParent));
     // insert the new node
@@ -85,6 +94,10 @@ NS_IMETHODIMP SplitElementTxn::Do(void)
 
 NS_IMETHODIMP SplitElementTxn::Undo(void)
 {
+  if (gNoisy) { 
+    printf("%p Undo Split of existing node %p and new node %p offset %d\n", 
+           this, mExistingRightNode.get(), mNewLeftNode.get(), mOffset); 
+  }
   NS_ASSERTION(mExistingRightNode && mNewLeftNode && mParent, "bad state");
   if (!mExistingRightNode || !mNewLeftNode || !mParent) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -112,8 +125,9 @@ NS_IMETHODIMP SplitElementTxn::Undo(void)
   if (NS_SUCCEEDED(result) && editor) 
   {
     result = editor->JoinNodesImpl(mExistingRightNode, mNewLeftNode, mParent, PR_FALSE);
-    if (NS_SUCCEEDED(result) && mNewLeftNode)
+    if (NS_SUCCEEDED(result))
     {
+      if (gNoisy) { printf("  left node = %p removed\n", this, mNewLeftNode.get()); }
       nsCOMPtr<nsIDOMSelection>selection;
       mEditor->GetSelection(getter_AddRefs(selection));
       if (selection)
@@ -128,25 +142,48 @@ NS_IMETHODIMP SplitElementTxn::Undo(void)
   return result;
 }
 
-/*
+/* redo cannot simply resplit the right node, because subsequent transactions
+ * on the redo stack may depend on the left node existing in its previous state.
+ */
 NS_IMETHODIMP SplitElementTxn::Redo(void)
 {
   NS_ASSERTION(mExistingRightNode && mNewLeftNode && mParent, "bad state");
   if (!mExistingRightNode || !mNewLeftNode || !mParent) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+  if (gNoisy) { 
+    printf("%p Redo Split of existing node %p and new node %p offset %d\n", 
+           this, mExistingRightNode.get(), mNewLeftNode.get(), mOffset); 
+  }
   nsresult result;
-  nsCOMPtr<nsIEditorSupport> editor;
-  result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
-  if (NS_SUCCEEDED(result) && editor) {
-    result = editor->SplitNodeImpl(mExistingRightNode, mOffset, mNewLeftNode, mParent);
+  nsCOMPtr<nsIDOMNode>resultNode;
+  // first, massage the existing node so it is in its post-split state
+  nsCOMPtr<nsIDOMCharacterData>rightNodeAsText;
+  rightNodeAsText = do_QueryInterface(mExistingRightNode);
+  if (rightNodeAsText)
+  {
+    result = rightNodeAsText->DeleteData(0, mOffset);
   }
-  else {
-    result = NS_ERROR_NOT_IMPLEMENTED;
+  else
+  {
+    nsCOMPtr<nsIDOMNode>child;
+    nsCOMPtr<nsIDOMNode>nextSibling;
+    result = mExistingRightNode->GetFirstChild(getter_AddRefs(child));
+    PRInt32 i;
+    for (i=0; i<mOffset; i++)
+    {
+      if (NS_FAILED(result)) {return result;}
+      if (!child) {return NS_ERROR_NULL_POINTER;}
+      child->GetNextSibling(getter_AddRefs(nextSibling));
+      result = mExistingRightNode->RemoveChild(child, getter_AddRefs(resultNode));
+      child = do_QueryInterface(nextSibling);
+    }
   }
+  // second, re-insert the left node into the tree 
+  result = mParent->InsertBefore(mNewLeftNode, mExistingRightNode, getter_AddRefs(resultNode));
   return result;
 }
-*/
+
 
 NS_IMETHODIMP SplitElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {

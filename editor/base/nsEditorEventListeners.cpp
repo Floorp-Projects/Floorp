@@ -310,7 +310,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           aProcessed=PR_TRUE;
           if (mEditor)
           {
-            mEditor->SetTextProperty(nsIEditProperty::italic);
+            mEditor->SetTextProperty(nsIEditProperty::i);
           }
         }
 
@@ -336,81 +336,22 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           aProcessed=PR_TRUE;
           if (mEditor)
           {
-            mEditor->SetTextProperty(nsIEditProperty::bold);
+            mEditor->SetTextProperty(nsIEditProperty::b);
           }
         }
         break;
 
+      // hard-coded ChangeTextAttributes test -- underline
       case nsIDOMEvent::VK_U:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
           if (mEditor)
           {
-            PRBool any, all;
-            mEditor->GetTextProperty(nsIEditProperty::bold, any, all);
-            printf("the selection has BOLD any=%d all=%d\n", any, all);
+            mEditor->SetTextProperty(nsIEditProperty::u);
           }
         }
         break;
-
-
-      //XXX: test for change and remove attribute, hard-coded to be width on first table in doc
-      case nsIDOMEvent::VK_TAB:
-        {
-          //XXX: should be from a factory
-          //XXX: should manage the refcount of txn
-          /*
-          nsAutoString attribute("width");
-          nsAutoString value("400");
-
-          nsAutoString tableTag("TABLE");
-          nsCOMPtr<nsIDOMNode> currentNode;
-          nsCOMPtr<nsIDOMElement> element;
-          if (NS_SUCCEEDED(mEditor->GetFirstNodeOfType(nsnull, tableTag, getter_AddRefs(currentNode))))
-          {
-            if (NS_SUCCEEDED(currentNode->QueryInterface(kIDOMElementIID, getter_AddRefs(element)))) 
-            {
-              nsresult result;
-              if (PR_TRUE==ctrlKey)   // remove the attribute
-                result = mEditor->RemoveAttribute(element, attribute);
-              else                    // change the attribute
-                result = mEditor->SetAttribute(element, attribute, value);
-            }
-          }
-          */
-        }
-//      aProcessed=PR_TRUE;
-        break;
-
-      case nsIDOMEvent::VK_INSERT:
-        {
-          //XXX: should be from a factory
-          //XXX: should manage the refcount of txn
-          /*
-          nsresult result;
-          nsAutoString attribute("src");
-          nsAutoString value("resource:/res/samples/raptor.jpg");
-
-          nsAutoString imgTag("HR");
-          nsAutoString bodyTag("BODY");
-          nsCOMPtr<nsIDOMNode> currentNode;
-          result = mEditor->GetFirstNodeOfType(nsnull, bodyTag, getter_AddRefs(currentNode));
-          if (NS_SUCCEEDED(result))
-          {
-            PRInt32 position;
-            if (PR_TRUE==ctrlKey)
-              position=CreateElementTxn::eAppend;
-            else
-              position=0;
-            result = mEditor->CreateNode(imgTag, currentNode, position);
-          }
-          mEditor->InsertNode(nsnull, nsnull, 0);
-          */
-        }
-        aProcessed=PR_TRUE;
-        break;
-
     }
   }
   return NS_OK;

@@ -39,6 +39,7 @@ PlaceholderTxn::~PlaceholderTxn()
 
 NS_IMETHODIMP PlaceholderTxn::Do(void)
 {
+  if (gNoisy) { printf("PlaceholderTxn Do\n"); }
   return NS_OK;
 }
 
@@ -55,6 +56,7 @@ NS_IMETHODIMP PlaceholderTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransact
     { // yep, it's one of ours.  Assimilate it.
       AppendChild(editTxn);
       *aDidMerge = PR_TRUE;
+      if (gNoisy) { printf("Placeholder txn assimilated %p\n", aTransaction); }
     }
     else
     { // let our last child txn make the choice

@@ -26,8 +26,56 @@ NS_IMPL_ADDREF(nsEditProperty)
 
 NS_IMPL_RELEASE(nsEditProperty)
 
-nsIAtom * nsIEditProperty::bold = NS_NewAtom("BOLD");
-nsIAtom * nsIEditProperty::italic = NS_NewAtom("ITALIC");
+// XXX: remove when html atoms are exported from layout
+// tags
+nsIAtom * nsIEditProperty::a;
+nsIAtom * nsIEditProperty::b;
+nsIAtom * nsIEditProperty::big;
+nsIAtom * nsIEditProperty::font;
+nsIAtom * nsIEditProperty::i;
+nsIAtom * nsIEditProperty::span;
+nsIAtom * nsIEditProperty::small;
+nsIAtom * nsIEditProperty::strike;
+nsIAtom * nsIEditProperty::sub;
+nsIAtom * nsIEditProperty::sup;
+nsIAtom * nsIEditProperty::tt;
+nsIAtom * nsIEditProperty::u;
+
+void
+nsEditProperty::InstanceInit()
+{
+  // tags
+  nsIEditProperty::a =    NS_NewAtom("A");
+  nsIEditProperty::b =    NS_NewAtom("B");
+  nsIEditProperty::big =  NS_NewAtom("BIG");
+  nsIEditProperty::font = NS_NewAtom("FONT");
+  nsIEditProperty::i =    NS_NewAtom("I");
+  nsIEditProperty::span = NS_NewAtom("SPAN");
+  nsIEditProperty::small =NS_NewAtom("SMALL");
+  nsIEditProperty::strike=NS_NewAtom("STRIKE");
+  nsIEditProperty::sub =  NS_NewAtom("SUB");
+  nsIEditProperty::sup =  NS_NewAtom("SUP");
+  nsIEditProperty::tt =   NS_NewAtom("TT");
+  nsIEditProperty::u =    NS_NewAtom("U");
+}
+
+void
+nsEditProperty::InstanceShutdown()
+{
+  // tags
+  NS_IF_RELEASE(nsIEditProperty::a);
+  NS_IF_RELEASE(nsIEditProperty::b);
+  NS_IF_RELEASE(nsIEditProperty::big);
+  NS_IF_RELEASE(nsIEditProperty::font);
+  NS_IF_RELEASE(nsIEditProperty::i);
+  NS_IF_RELEASE(nsIEditProperty::span);
+  NS_IF_RELEASE(nsIEditProperty::small);
+  NS_IF_RELEASE(nsIEditProperty::strike);
+  NS_IF_RELEASE(nsIEditProperty::sub);
+  NS_IF_RELEASE(nsIEditProperty::sup);
+  NS_IF_RELEASE(nsIEditProperty::tt);
+  NS_IF_RELEASE(nsIEditProperty::u);
+}
 
 NS_IMETHODIMP
 nsEditProperty::QueryInterface(REFNSIID aIID, void** aInstancePtr)

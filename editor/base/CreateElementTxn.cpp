@@ -24,15 +24,21 @@
 #include "nsIDOMElement.h"
 #include "nsIEditorSupport.h"
 
+#ifdef NS_DEBUG
+static PRBool gNoisy = PR_TRUE;
+#else
+static const PRBool gNoisy = PR_FALSE;
+#endif
+
 CreateElementTxn::CreateElementTxn()
   : EditTxn()
 {
 }
 
 NS_IMETHODIMP CreateElementTxn::Init(nsIEditor *aEditor,
-                                const nsString& aTag,
-                                nsIDOMNode *aParent,
-                                PRUint32 aOffsetInParent)
+                                     const nsString& aTag,
+                                     nsIDOMNode *aParent,
+                                     PRUint32 aOffsetInParent)
 {
   NS_ASSERTION(aEditor&&aParent, "null args");
   if (aEditor && aParent)
@@ -41,8 +47,6 @@ NS_IMETHODIMP CreateElementTxn::Init(nsIEditor *aEditor,
     mTag = aTag;
     mParent = do_QueryInterface(aParent);
     mOffsetInParent = aOffsetInParent;
-    mNewNode = do_QueryInterface(nsnull);
-    mRefNode = do_QueryInterface(nsnull);
 #ifdef NS_DEBUG
     {
       nsCOMPtr<nsIDOMNodeList> testChildNodes;
@@ -63,6 +67,8 @@ CreateElementTxn::~CreateElementTxn()
 
 NS_IMETHODIMP CreateElementTxn::Do(void)
 {
+  if (gNoisy) { printf("Do Create Element parent = %p, offset = %d\n", 
+                        mParent.get(), mOffsetInParent); }
   NS_ASSERTION(mEditor, "bad state -- null editor");
   nsresult result = NS_ERROR_NULL_POINTER;
   if (mEditor)
@@ -92,6 +98,7 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
       NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewNode)), "could not create element.");
       if ((NS_SUCCEEDED(result)) && (mNewNode))
       {
+        if (gNoisy) { printf("  newNode = %p\n", mNewNode.get()); }
         // insert the new node
         nsCOMPtr<nsIDOMNode> resultNode;
         if (CreateElementTxn::eAppend==mOffsetInParent)
@@ -134,6 +141,8 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
 
 NS_IMETHODIMP CreateElementTxn::Undo(void)
 {
+  if (gNoisy) { printf("Undo Create Element, mParent = %p, node = %p\n",
+                        mParent.get(), mNewNode.get()); }
   nsCOMPtr<nsIDOMNode> resultNode;
   nsresult result = mParent->RemoveChild(mNewNode, getter_AddRefs(resultNode));
   if (NS_SUCCEEDED(result))
@@ -154,6 +163,18 @@ NS_IMETHODIMP CreateElementTxn::Undo(void)
 
 NS_IMETHODIMP CreateElementTxn::Redo(void)
 {
+  if (gNoisy) { printf("Redo Create Element\n"); }
+
+  // first, reset mNewNode so it has no attributes or content
+  nsCOMPtr<nsIDOMCharacterData>nodeAsText;
+  nodeAsText = do_QueryInterface(mNewNode);
+  if (nodeAsText)
+  {
+    nsAutoString nullString;
+    nodeAsText->SetData(nullString);
+  }
+  
+  // now, reinsert mNewNode
   nsCOMPtr<nsIDOMNode> resultNode;
   nsresult result = mParent->InsertBefore(mNewNode, mRefNode, getter_AddRefs(resultNode));
   if (NS_SUCCEEDED(result))

@@ -17,9 +17,10 @@
  */
 
 #include "InsertElementTxn.h"
+#include "nsIDOMSelection.h"
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_FALSE;
+static PRBool gNoisy = PR_TRUE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
@@ -32,14 +33,17 @@ InsertElementTxn::InsertElementTxn()
 
 NS_IMETHODIMP InsertElementTxn::Init(nsIDOMNode *aNode,
                                      nsIDOMNode *aParent,
-                                     PRInt32     aOffset)
+                                     PRInt32     aOffset,
+                                     nsIEditor  *aEditor)
 {
-  if (!aNode || !aParent)
+  NS_ASSERTION(aNode && aParent && aEditor, "bad arg");
+  if (!aNode || !aParent || !aEditor)
     return NS_ERROR_NULL_POINTER;
 
   mNode = do_QueryInterface(aNode);
   mParent = do_QueryInterface(aParent);
   mOffset = aOffset;
+  mEditor = do_QueryInterface(aEditor);
   return NS_OK;
 }
 
@@ -50,6 +54,7 @@ InsertElementTxn::~InsertElementTxn()
 
 NS_IMETHODIMP InsertElementTxn::Do(void)
 {
+  if (gNoisy) { printf("Do Insert Element\n"); }
   if (!mNode || !mParent)
     return NS_ERROR_NULL_POINTER;
 
@@ -75,11 +80,21 @@ NS_IMETHODIMP InsertElementTxn::Do(void)
 
   nsCOMPtr<nsIDOMNode> resultNode;
   result = mParent->InsertBefore(mNode, refNode, getter_AddRefs(resultNode));
+  if (NS_SUCCEEDED(result) && resultNode)
+  {
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = mEditor->GetSelection(getter_AddRefs(selection));
+    if ((NS_SUCCEEDED(result)) && selection)
+    {
+      selection->Collapse(mParent, mOffset);
+    }    
+  }
   return result;
 }
 
 NS_IMETHODIMP InsertElementTxn::Undo(void)
 {
+  if (gNoisy) { printf("Undo Insert Element\n"); }
   if (!mNode || !mParent)
     return NS_ERROR_NULL_POINTER;
 

@@ -20,6 +20,7 @@
 #define InsertElementTxn_h__
 
 #include "EditTxn.h"
+#include "nsIEditor.h"
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
 
@@ -42,7 +43,8 @@ public:
     */
   NS_IMETHOD Init(nsIDOMNode *aNode,
                   nsIDOMNode *aParent,
-                  PRInt32     aOffset);
+                  PRInt32     aOffset,
+                  nsIEditor  *aEditor);
 
 private:
   InsertElementTxn();
@@ -70,6 +72,9 @@ protected:
 
   /** the node into which the new node will be inserted */
   nsCOMPtr<nsIDOMNode> mParent;
+
+  /** the editor for this transaction */
+  nsCOMPtr<nsIEditor> mEditor;
 
   /** the index in mParent for the new node */
   PRInt32 mOffset;

@@ -22,8 +22,9 @@
 #include "nsIEditor.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
+#include "TypeInState.h"
 
-class nsEditor;
+class nsTextEditor;
 class PlaceholderTxn;
 
 /** Object that encapsulates HTML text-specific editing rules.
@@ -44,17 +45,19 @@ public:
   nsTextEditRules();
   virtual ~nsTextEditRules();
 
-  NS_IMETHOD Init(nsEditor *aEditor);
+  NS_IMETHOD Init(nsTextEditor *aEditor);
 
   NS_IMETHOD WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel);
   NS_IMETHOD DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult);
 
-  NS_IMETHOD WillInsertText(nsIDOMSelection *aSelection, 
-                            const nsString& aInputString, 
-                            PRBool *aCancel,
-                            nsString& aOutputString,
-                            PlaceholderTxn ** aTxn);
+  NS_IMETHOD WillInsertText(nsIDOMSelection  *aSelection, 
+                            const nsString  &aInputString, 
+                            PRBool          *aCancel,
+                            nsString        &aOutputString,
+                            TypeInState     &aTypeInState,
+                            PlaceholderTxn **aTxn);
   NS_IMETHOD DidInsertText(nsIDOMSelection *aSelection, const nsString& aStringToInsert, nsresult aResult);
+  NS_IMETHOD CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInState &aTypeInState);
 
   NS_IMETHOD WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel);
   NS_IMETHOD DidInsert(nsIDOMSelection *aSelection, nsresult aResult);
@@ -74,7 +77,7 @@ protected:
   static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag);
   static PRBool IsEditable(nsIDOMNode *aNode);
   
-  nsEditor *mEditor;  // note that we do not refcount the editor
+  nsTextEditor *mEditor;  // note that we do not refcount the editor
   nsCOMPtr<nsIDOMNode> mBogusNode;  // magic node acts as placeholder in empty doc
 };
 

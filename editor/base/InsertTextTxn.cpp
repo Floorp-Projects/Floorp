@@ -26,6 +26,12 @@
 static NS_DEFINE_IID(kInsertTextTxnIID, INSERT_TEXT_TXN_IID);
 static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
 
+#ifdef NS_DEBUG
+static PRBool gNoisy = PR_TRUE;
+#else
+static const PRBool gNoisy = PR_FALSE;
+#endif
+
 nsIAtom *InsertTextTxn::gInsertTextTxnName;
 
 nsresult InsertTextTxn::ClassInit()
@@ -45,9 +51,9 @@ InsertTextTxn::~InsertTextTxn()
 }
 
 NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
-                             PRUint32 aOffset,
-                             const nsString& aStringToInsert,
-                             nsIPresShell* aPresShell)
+                                  PRUint32             aOffset,
+                                  const nsString      &aStringToInsert,
+                                  nsIPresShell        *aPresShell)
 {
   mElement = do_QueryInterface(aElement);
   mOffset = aOffset;
@@ -58,6 +64,7 @@ NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
 
 NS_IMETHODIMP InsertTextTxn::Do(void)
 {
+  if (gNoisy) { printf("Do Insert Text element = %p\n", mElement.get()); }
   // advance caret: This requires the presentation shell to get the selection.
   nsCOMPtr<nsIDOMSelection> selection;
   nsresult result = mPresShell->GetSelection(getter_AddRefs(selection));
@@ -74,6 +81,7 @@ NS_IMETHODIMP InsertTextTxn::Do(void)
 
 NS_IMETHODIMP InsertTextTxn::Undo(void)
 {
+  if (gNoisy) { printf("Undo Insert Text element = %p\n", mElement.get()); }
   nsresult result;
   PRUint32 length = mStringToInsert.Length();
   result = mElement->DeleteData(mOffset, length);
@@ -108,6 +116,7 @@ NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransacti
         otherTxn->GetData(otherData);
         mStringToInsert += otherData;
         *aDidMerge = PR_TRUE;
+        if (gNoisy) { printf("InsertTextTxn assimilated %p\n", aTransaction); }
       }
     }
     else
@@ -117,7 +126,7 @@ NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransacti
       {
         nsCOMPtr<nsIAtom> txnName;
         otherTxn->GetName(getter_AddRefs(txnName));
-        if (txnName.get()==gInsertTextTxnName)
+        if (txnName && txnName.get()==gInsertTextTxnName)
         { // yep, it's one of ours.  By definition, it must contain only
           // another aggregate with a single child,
           // or a single InsertTextTxn
@@ -135,6 +144,7 @@ NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransacti
                 otherInsertTxn->GetData(otherData);
                 mStringToInsert += otherData;
                 *aDidMerge = PR_TRUE;
+                if (gNoisy) { printf("InsertTextTxn assimilated %p\n", aTransaction); }
               }
             }
           }
