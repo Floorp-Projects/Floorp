@@ -1446,32 +1446,6 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const nsString& aString, nscoord
   return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
 }
 
-#ifndef FONT_SWITCHING
-
-NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
-                                                PRUint32 aLength,
-                                                nscoord &aWidth,
-                                                PRInt32 *aFontID)
-{
-  if (nsnull != mFontMetrics)
-  {
-    SIZE  size;
-
-    SetupFontAndColor();
-    ::GetTextExtentPoint32W(mDC, aString, aLength, &size);
-    aWidth = NSToCoordRound(float(size.cx) * mP2T);
-
-    if (nsnull != aFontID)
-      *aFontID = 0;
-
-    return NS_OK;
-  }
-  else
-    return NS_ERROR_FAILURE;
-}
-
-#else /* FONT_SWITCHING */
-
 NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
                                                 PRUint32 aLength,
                                                 nscoord &aWidth,
@@ -1546,8 +1520,6 @@ FoundFont:
     return NS_ERROR_FAILURE;
 }
 
-#endif /* FONT_SWITCHING */
-
 NS_IMETHODIMP nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
                                                   nscoord aX, nscoord aY,
                                                   const nscoord* aSpacing)
@@ -1576,66 +1548,6 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const char *aString, PRUint32 
 
   return NS_OK;
 }
-
-#ifndef FONT_SWITCHING
-
-NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                                  nscoord aX, nscoord aY,
-                                                  PRInt32 aFontID,
-                                                  const nscoord* aSpacing)
-{
-  PRInt32 x = aX;
-  PRInt32 y = aY;
-
-  SetupFontAndColor();
-
-  if (nsnull != aSpacing)
-  {
-    // XXX Fix path to use a twips transform in the DC and use the
-    // spacing values directly and let windows deal with the sub-pixel
-    // positioning.
-
-    // Slow, but accurate rendering
-    const PRUnichar* end = aString + aLength;
-    while (aString < end)
-    {
-      // XXX can shave some cycles by inlining a version of transform
-      // coord where y is constant and transformed once
-      x = aX;
-      y = aY;
-      mTMatrix->TransformCoord(&x, &y);
-      ::ExtTextOutW(mDC, x, y, 0, NULL, aString, 1, NULL);
-      aX += *aSpacing++;
-      aString++;
-    }
-  }
-  else
-  {
-    mTMatrix->TransformCoord(&x, &y);
-    ::ExtTextOutW(mDC, x, y, 0, NULL, aString, aLength, NULL);
-  }
-
-#if 0
-  if (nsnull != mFontMetrics)
-  {
-    nsFont *font;
-    mFontMetrics->GetFont(font);
-    PRUint8 decorations = font->decorations;
-
-    if (decorations & NS_FONT_DECORATION_OVERLINE)
-    {
-      nscoord offset;
-      nscoord size;
-      mFontMetrics->GetUnderline(offset, size);
-      FillRect(aX, aY, aWidth, size);
-    }
-  }
-#endif
-
-  return NS_OK;
-}
-
-#else /* FONT_SWITCHING */
 
 NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                                   nscoord aX, nscoord aY,
@@ -1748,8 +1660,6 @@ FoundFont:
   else
     return NS_ERROR_FAILURE;
 }
-
-#endif /* FONT_SWITCHING */
 
 NS_IMETHODIMP nsRenderingContextWin :: DrawString(const nsString& aString,
                                                   nscoord aX, nscoord aY,
