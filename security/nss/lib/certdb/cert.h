@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.5 2001/01/08 19:24:22 mcgreer%netscape.com Exp $
+ * $Id: cert.h,v 1.6 2001/01/08 19:43:01 mcgreer%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -993,10 +993,6 @@ CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
 SECItem *
 CERT_FindSMimeProfile(CERTCertificate *cert);
 
-SECStatus
-CERT_FindFullSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
-                          SECItem *profileTime);
-
 int
 CERT_GetDBContentVersion(CERTCertDBHandle *handle);
 
@@ -1392,26 +1388,6 @@ CERT_SPKDigestValueForCert(PRArenaPool *arena, CERTCertificate *cert,
  * fill in nsCertType field of the cert based on the cert extension
  */
 extern SECStatus CERT_GetCertType(CERTCertificate *cert);
-
-extern SECStatus
-SEC_TraverseDBEntries(CERTCertDBHandle *handle,
-		      certDBEntryType type,
-		      SECStatus (* callback)(SECItem *data, SECItem *key,
-					    certDBEntryType type, void *pdata),
-		      void *udata );
-
-extern SECStatus
-SEC_GetCertDBEntryList(SECItem *data, SECItem *key, 
-                       certDBEntryType type, void *pdata);
-
-extern void
-SEC_DestroyDBEntry(certDBEntry *entry);
-
-extern SECStatus
-CERT_RedoHandlesForSubjects(CERTCertDBHandle *handle, 
-                            SECStatus (* callback)(char *emailAddr,
-                                         certDBEntryListNode *subjectsForEmail,
-                                         certDBEntrySubject *subjectToUse));
 
 SEC_END_PROTOS
 
