@@ -404,12 +404,12 @@ static float64 testObjects(World &world, int32 n)
     ICodeGenerator initCG;
     
     // var global = new Object();
-    StringAtom& global = world.identifiers[L"global"];
+    StringAtom& global = world.identifiers[widenCString("global")];
     initCG.beginStatement(position);
     initCG.saveName(global, initCG.newObject());
 
     // global.counter = 0;
-    StringAtom& counter = world.identifiers[L"counter"];
+    StringAtom& counter = world.identifiers[widenCString("counter")];
     initCG.beginStatement(position);
     initCG.setProperty(counter, initCG.loadName(global), initCG.loadImmediate(0.0));
 
