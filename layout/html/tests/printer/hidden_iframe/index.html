@@ -1,10 +1,23 @@
 <HTML>
 <HEAD>
+<style>
+@media print {
+ 
+  iframe.hide {
+    display: none;
+  }
+
+}
+</style>
 <TITLE>Sub Doc 1</TITLE>
 <BASE target="header">
 </HEAD>
 <BODY>
-<iframe src=the_iframe.html style="visibility:hidden;"></iframe>
+You should see 2 iframes when in the Browser<br>
+You should see 1 iframe for Printing and Print Preview<br>
+<iframe src=the_iframe1.html></iframe><br>
+<iframe class=hide src=the_iframe2.html></iframe><br>
+<iframe src=the_iframe3.html style="visibility:hidden;"></iframe><br>
 Line 1<br>
 Line 2<br>
 Line 3<br>
