@@ -319,7 +319,7 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
   else {
     // Get our outermost embellished container and its parent
     nsIFrame* aParent = this;
-    nsIFrame* embellishAncestor = this;
+    embellishAncestor = this;
     do {
       embellishAncestor = aParent;
       aParent->GetParent(&aParent);
@@ -704,8 +704,6 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   if (!NS_MATHML_OPERATOR_HAS_EMBELLISH_ANCESTOR(mFlags)) {
 
     // Get the value of 'em'
-    nsStyleFont font;
-    mStyleContext->GetStyle(eStyleStruct_Font, font);
     nscoord em = NSToCoordRound(float(font.mFont.size));
 
     // Account the spacing
