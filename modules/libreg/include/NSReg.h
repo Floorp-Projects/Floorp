@@ -161,6 +161,19 @@ VR_INTERFACE(REGERR) NR_RegClose(
 
 
 /* ---------------------------------------------------------------------
+ * NR_RegFlush - Manually flush data in a netscape XP registry
+ *
+ * Parameters:
+ *    hReg     - handle of open registry to be flushed.
+ *
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegFlush(
+         HREG hReg         /* handle of open registry to flush */
+       );
+
+
+/* ---------------------------------------------------------------------
  * NR_RegIsWritable - Check read/write status of open registry
  *
  * Parameters:

@@ -1058,7 +1058,7 @@ VR_INTERFACE(REGERR) VR_SetRefCount(char *component_path, int refcount)
 {
     REGERR err;
     RKEY rootKey;
-    RKEY key;
+    RKEY key = 0;
     char rcstr[MAXREGNAMELEN];
 
     err = vr_Init();
@@ -1312,7 +1312,7 @@ static REGERR vr_unmanglePackageName(char *mangledPackageName, char *regPackageN
 VR_INTERFACE(REGERR) VR_UninstallCreateNode(char *regPackageName, char *userPackageName)
 {
     REGERR err;
-    RKEY key;
+    RKEY key = 0;
     char *regbuf;
     uint32 regbuflen = 0;
 
@@ -1345,7 +1345,7 @@ VR_INTERFACE(REGERR) VR_UninstallCreateNode(char *regPackageName, char *userPack
     }
 
     if (err == REGERR_OK)
-        err = NR_RegSetEntryString( vreg, key, PACKAGENAMESTR, userPackageName );
+        err = NR_RegSetEntryString(vreg, key, PACKAGENAMESTR, userPackageName);
   
     return err;
 
@@ -1354,7 +1354,7 @@ VR_INTERFACE(REGERR) VR_UninstallCreateNode(char *regPackageName, char *userPack
 VR_INTERFACE(REGERR) VR_GetUninstallUserName(char *regPackageName, char *outbuf, uint32 buflen)
 {
     REGERR err;
-    RKEY key;
+    RKEY key = 0;
     char *regbuf = NULL;
     char *convertedName = NULL;
     uint32 convertedDataLength = 0;
@@ -1402,7 +1402,7 @@ VR_INTERFACE(REGERR) VR_GetUninstallUserName(char *regPackageName, char *outbuf,
 VR_INTERFACE(REGERR) VR_UninstallAddFileToList(char *regPackageName, char *vrName)
 {
     REGERR err;
-    RKEY key;
+    RKEY key = 0;
     char *regbuf;
     uint32 regbuflen = 0;
     uint32 curregbuflen = 0;
@@ -1442,12 +1442,8 @@ VR_INTERFACE(REGERR) VR_UninstallAddFileToList(char *regPackageName, char *vrNam
         err = REGERR_MEMORY;
     }
 
-    if (err != REGERR_OK)
-    {
-        return err;
-    }
-
-    err = NR_RegSetEntryString( vreg, key, vrName, "");
+    if (err == REGERR_OK)
+        err = NR_RegSetEntryString( vreg, key, vrName, "");
   
     return err;
 
@@ -1456,7 +1452,7 @@ VR_INTERFACE(REGERR) VR_UninstallAddFileToList(char *regPackageName, char *vrNam
 VR_INTERFACE(REGERR) VR_UninstallFileExistsInList(char *regPackageName, char *vrName)
 {
     REGERR err;
-    RKEY key;
+    RKEY key = 0;
     char *regbuf;
     char  sharedfilesstr[MAXREGNAMELEN];
     uint32 regbuflen = 0;
@@ -1497,12 +1493,8 @@ VR_INTERFACE(REGERR) VR_UninstallFileExistsInList(char *regPackageName, char *vr
         err = REGERR_MEMORY;
     }
     
-    if (err != REGERR_OK)
-    {
-        return err;
-    }
-   
-    err = NR_RegGetEntryString( vreg, key, vrName, sharedfilesstr,
+    if (err == REGERR_OK)
+        err = NR_RegGetEntryString( vreg, key, vrName, sharedfilesstr,
                                     sizeof(sharedfilesstr) );
     return err;
 
@@ -1512,7 +1504,7 @@ VR_INTERFACE(REGERR) VR_UninstallEnumSharedFiles(char *component_path, REGENUM *
                                          char *buffer, uint32 buflen)
 {
     REGERR err;
-    RKEY key;
+    RKEY key = 0;
     char *regbuf;
     char *converted_component_path;
     uint32 convertedDataLength = 0;
@@ -1566,10 +1558,8 @@ VR_INTERFACE(REGERR) VR_UninstallEnumSharedFiles(char *component_path, REGENUM *
     
     XP_FREE(converted_component_path);
 
-    if (err != REGERR_OK)
-        return err;
-
-    err = NR_RegEnumEntries( vreg, key, state, buffer, buflen, NULL);
+    if (err == REGERR_OK)
+        err = NR_RegEnumEntries( vreg, key, state, buffer, buflen, NULL);
 
     return err;
 
@@ -1578,7 +1568,7 @@ VR_INTERFACE(REGERR) VR_UninstallEnumSharedFiles(char *component_path, REGENUM *
 VR_INTERFACE(REGERR) VR_UninstallDeleteFileFromList(char *component_path, char *vrName)
 {
     REGERR err;
-    RKEY key;
+    RKEY key = 0;
     char *regbuf;
     char *converted_component_path;
     uint32 convertedDataLength = 0;
@@ -1635,12 +1625,9 @@ VR_INTERFACE(REGERR) VR_UninstallDeleteFileFromList(char *component_path, char *
     
     XP_FREE(converted_component_path);
 
-    if (err != REGERR_OK)
-    {
-        return err;
-    }
-   
-    err = NR_RegDeleteEntry( vreg, key, vrName);
+    if (err == REGERR_OK)
+        err = NR_RegDeleteEntry( vreg, key, vrName);
+
     return err;
 
 }   /* UninstallDeleteFileFromList */

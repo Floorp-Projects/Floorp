@@ -158,7 +158,7 @@ typedef MmioFile* XP_File;
 #define XP_FileTell(file)               bufio_Tell(file)
 #define XP_FileClose(file)              bufio_Close(file)
 #define XP_FileOpen(path, mode)         bufio_Open((path), (mode))
-#define XP_FileFlush(file)              ((void)1)
+#define XP_FileFlush(file)              bufio_Flush(file)
 
 
 
@@ -181,10 +181,7 @@ typedef BufioFile* XP_File;
 #define XP_FileTell(file)               PR_Seek(file, 0, PR_SEEK_CUR)
 #define XP_FileOpen(path, mode)         PR_Open((path), mode )
 #define XP_FileClose(file)              PR_Close(file)
-#ifdef XP_MAC
 #define XP_FileFlush(file)              PR_Sync(file)
-#else
-#define XP_FileFlush(file)              ((void)1)
 #endif
 
 typedef PRFileDesc* XP_File;

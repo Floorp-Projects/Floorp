@@ -78,7 +78,7 @@
 #define MAX_PATH 1024
 #endif
 #elif defined(WIN32)
-#include <windef.h>  /* for MAX_PATH */
+#define MAX_PATH _MAX_PATH
 #elif defined(XP_MAC)
 #define MAX_PATH 512
 #elif defined(XP_BEOS)
@@ -2119,6 +2119,11 @@ static REGERR nr_RegClose( HREG hReg )
     {
         XP_ASSERT( VALID_FILEHANDLE(reg->fh) );
 
+        /* save changed header info */
+        if ( reg->hdrDirty ) {
+            nr_WriteHdr( reg );
+        }
+
         /* lower REGFILE user count */
         reg->refCount--;
 
@@ -2126,13 +2131,15 @@ static REGERR nr_RegClose( HREG hReg )
         if ( reg->refCount < 1 ) 
         {
             /* ...then close the file */
-            if ( reg->hdrDirty ) {
-                nr_WriteHdr( reg );
-            }
             nr_CloseFile( &(reg->fh) );
 
             /* ...and mark REGFILE node for deletion from list */
             needDelete = TRUE;
+        }
+        else
+        {
+            /* ...otherwise make sure any writes are flushed */
+            XP_FileFlush( reg->fh );
         }
 
         reghnd->magic = 0;    /* prevent accidental re-use */  
@@ -2303,6 +2310,51 @@ VR_INTERFACE(REGERR) NR_RegClose( HREG hReg )
     return err;
 
 }   /* NR_RegClose */
+
+
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegFlush - Manually flush data in a netscape XP registry
+ *
+ * Parameters:
+ *    hReg     - handle of open registry to be flushed.
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegFlush( HREG hReg )
+{
+    REGERR      err;
+    REGFILE*    reg;
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    /* can't flush a read-only registry */
+    if ( reg->readOnly )
+        return REGERR_READONLY;
+
+    /* lock the registry file */
+    err = nr_Lock( reg );
+    if ( err == REGERR_OK )
+    {
+        if ( reg->hdrDirty ) {
+            nr_WriteHdr( reg );
+        }
+
+        XP_FileFlush( reg->fh );
+
+        /* unlock the registry */
+        nr_Unlock( reg );
+    }
+
+    return err;
+
+} /* NR_RegFlush */
+
 
 
 
@@ -3238,6 +3290,9 @@ VR_INTERFACE(REGERR) NR_RegEnumSubkeys( HREG hReg, RKEY key, REGENUM *state,
     if ( err != REGERR_OK )
         return err;
 
+    desc.down     = 0; /* initialize to quiet warnings */
+    desc.location = 0;
+
     /* verify starting key */
     key = nr_TranslateKey( reg, key );
     if ( key == 0 )
@@ -3521,6 +3576,7 @@ VR_INTERFACE(REGERR) NR_RegEnumEntries( HREG hReg, RKEY key, REGENUM *state,
 #ifndef STANDALONE_REGISTRY
 #include "VerReg.h"
 
+#ifdef RESURRECT_LATER
 static REGERR nr_createTempRegName( char *filename, uint32 filesize );
 static REGERR nr_addNodesToNewReg( HREG hReg, RKEY rootkey, HREG hRegNew, void *userData, nr_RegPackCallbackFunc fn );
 /* -------------------------------------------------------------------- */
@@ -3528,7 +3584,7 @@ static REGERR nr_createTempRegName( char *filename, uint32 filesize )
 {
     struct stat statbuf;
     XP_Bool nameFound = FALSE;
-    char tmpname[MAX_PATH];
+    char tmpname[MAX_PATH+1];
     uint32 len;
     int err;
 
@@ -3634,8 +3690,8 @@ static REGERR nr_addNodesToNewReg( HREG hReg, RKEY rootkey, HREG hRegNew, void *
 
     XP_FREEIF(buffer);
     return err;
-
 }
+#endif /* RESURRECT_LATER */
 
 
 
@@ -3654,8 +3710,8 @@ VR_INTERFACE(REGERR) NR_RegPack( HREG hReg, void *userData, nr_RegPackCallbackFu
     XP_File  fh;
     REGFILE* reg;
     HREG hRegTemp;
-    char tempfilename[MAX_PATH] = {0};
-    char oldfilename[MAX_PATH] = {0};
+    char tempfilename[MAX_PATH+1] = {0};
+    char oldfilename[MAX_PATH+1] = {0};
 
     XP_Bool bCloseTempFile = FALSE;
 
