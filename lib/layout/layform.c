@@ -333,7 +333,11 @@ LO_isTabableFormElement( LO_FormElementStruct * next_ele )
 		|| next_ele->element_data->type == FORM_TYPE_SELECT_ONE
 		|| next_ele->element_data->type == FORM_TYPE_SELECT_MULT
 		|| next_ele->element_data->type == FORM_TYPE_TEXTAREA
-		|| next_ele->element_data->type == FORM_TYPE_FILE)
+		|| next_ele->element_data->type == FORM_TYPE_FILE
+#ifdef ENDER
+        || next_ele->element_data->type == FORM_TYPE_HTMLAREA
+#endif /*ENDER*/
+        )
 	{
 		return(TRUE);
 	}
@@ -363,6 +367,7 @@ LO_isTabableFormElement( LO_FormElementStruct * next_ele )
  *  FORM_TYPE_SELECT_ONE
  *  FORM_TYPE_SELECT_MULT
  *  FORM_TYPE_TEXTAREA
+ *  FORM_TYPE_HTMLAREA
  *
  * If the last element is passed in the first element is returned.
  * If garbage is passed in the first element is returned.
@@ -394,7 +399,11 @@ LO_ReturnNextFormElementInTabGroup(MWContext *context,
 			|| next_ele->element_data->type == FORM_TYPE_SELECT_ONE
 			|| next_ele->element_data->type == FORM_TYPE_SELECT_MULT
 			|| next_ele->element_data->type == FORM_TYPE_TEXTAREA
-			|| next_ele->element_data->type == FORM_TYPE_FILE)
+			|| next_ele->element_data->type == FORM_TYPE_FILE
+#ifdef ENDER
+			|| next_ele->element_data->type == FORM_TYPE_HTMLAREA
+#endif /*ENDER*/
+            )
 		  {
 
 			return(next_ele);
@@ -2293,6 +2302,10 @@ lo_BeginTextareaTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	LO_TextAttr tmp_attr;
 	LO_TextAttr *old_attr;
 	LO_TextAttr *attr;
+#ifdef ENDER
+	PA_Block type_block; 
+	char *type_str;
+#endif /*ENDER*/
 
 	old_attr = state->font_stack->text_attr;
 	lo_CopyTextAttr(old_attr, &tmp_attr);
@@ -2301,8 +2314,25 @@ lo_BeginTextareaTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 
 	lo_PushFont(state, tag->type, attr);
 
+#ifdef ENDER
+	type_block = lo_FetchParamValue(context, tag, PARAM_TYPE);
+	if (type_block)
+	{
+		PA_LOCK(type_str, char *, type_block);
+		if (!XP_STRCMP(type_str,"htmlarea")) //ONLY LOWERCASE??
+			form_element = lo_form_textarea(context, state, tag,
+				FORM_TYPE_HTMLAREA);
+		else
+			form_element = lo_form_textarea(context, state, tag,
+				FORM_TYPE_TEXTAREA);
+
+		PA_FREE(type_block);
+	}
+	else
+#else
 	form_element = lo_form_textarea(context, state, tag,
 		FORM_TYPE_TEXTAREA);
+#endif /*ENDER*/
 
 	/*
 	 * Make a copy of the tag so that we can correctly reflect this
@@ -2602,6 +2632,9 @@ lo_get_form_element_data(MWContext *context,
 		    }
 			break;
 		case FORM_TYPE_TEXTAREA:
+#ifdef ENDER
+           case FORM_TYPE_HTMLAREA :
+#endif /*ENDER*/
 		    {
 			lo_FormElementTextareaData *form_data;
 
@@ -4116,6 +4149,9 @@ lo_clone_form_element_data(LO_FormElementData *element_data)
 				break;
 
 			case FORM_TYPE_TEXTAREA:
+#ifdef ENDER
+           case FORM_TYPE_HTMLAREA:
+#endif /*ENDER*/
 				{
 					lo_FormElementTextareaData *form_data, *new_form_data;
 

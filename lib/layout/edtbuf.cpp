@@ -1518,6 +1518,9 @@ CEditBuffer::CEditBuffer(MWContext *pContext, XP_Bool bImportText):
         m_pBackgroundImage(0),
         m_bBackgroundNoSave(FALSE),
         m_pBodyExtra(0),
+#ifdef ENDER
+		m_pImportedStream(0), //ENDER
+#endif //ENDER
         m_pLoadingImage(0),
         m_pSaveObject(0),
         m_bMultiSpaceMode(TRUE),
@@ -10205,6 +10208,7 @@ void CEditBuffer::FinishedLoad2()
     m_pRoot->ValidateTree();
 #endif
 
+
     // Temporarily set a legal selection.
     m_pCurrent = m_pRoot->NextLeafAll();
     while ( m_pCurrent && m_pCurrent->GetElementType() == eInternalAnchorElement ) {
@@ -10230,6 +10234,14 @@ void CEditBuffer::FinishedLoad2()
     XP_Bool bIsNewDocument = EDT_IS_NEW_DOCUMENT(m_pContext)
                                     && !GetCommandLog()->InReload();
 
+#if ENDER
+	if (m_pImportedStream)//ENDER
+	{
+		PasteText( m_pImportedStream, FALSE, FALSE, TRUE ,TRUE);
+		XP_FREE(m_pImportedStream);
+		m_pImportedStream=NULL;
+	}
+#endif //ENDER
     if( bIsNewDocument )
     {
         m_bDummyCharacterAddedDuringLoad = TRUE; /* Sometimes it's a no-break space. */
@@ -10274,7 +10286,6 @@ void CEditBuffer::FinishedLoad2()
     //  if we imported a text file
     if( m_bImportText )
         ConvertCurrentDocToNewDoc();
-
     if ( bShouldSendOpenEvent ) {
 		History_entry * hist_entry = SHIST_GetCurrent(&(m_pContext->hist));
         char* pURL = hist_entry ? hist_entry->address : 0;

@@ -145,6 +145,9 @@ lo_FreeFormElementData(LO_FormElementData *element_data)
 			}
 			break;
 		case FORM_TYPE_TEXTAREA:
+#ifdef ENDER
+           case FORM_TYPE_HTMLAREA :
+#endif /*ENDER*/
 			{
 				lo_FormElementTextareaData *form_data;
 
@@ -324,6 +327,9 @@ lo_CleanFormElementData(LO_FormElementData *element_data)
 			}
 			break;
 		case FORM_TYPE_TEXTAREA:
+#ifdef ENDER
+           case FORM_TYPE_HTMLAREA :
+#endif /*ENDER*/
 			{
 				lo_FormElementTextareaData *form_data;
 

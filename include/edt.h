@@ -627,6 +627,9 @@ void EDT_SetDirtyFlag( MWContext *pContext, XP_Bool bValue );
 
 EDT_ClipboardResult EDT_InsertText( MWContext *pContext, char *pText );
 EDT_ClipboardResult EDT_PasteText( MWContext *pContext, char *pText );
+#ifdef ENDER
+EDT_ClipboardResult EDT_SetDefaultText( MWContext *pContext, char *pText ); //can done before finishedload can be called.
+#endif /*ENDER*/
 EDT_ClipboardResult EDT_PasteHTML( MWContext *pContext, char *pHtml );
 
 /** API for pasting quoted text into the editor.

@@ -583,6 +583,9 @@ struct LO_SubDocStruct_struct {
 #define FORM_TYPE_KEYGEN        16
 #define FORM_TYPE_READONLY      17
 #define FORM_TYPE_OBJECT        18
+#ifdef ENDER
+#define FORM_TYPE_HTMLAREA      19
+#endif /*ENDER*/
 
 #define FORM_METHOD_GET		0
 #define FORM_METHOD_POST	1
