@@ -28,7 +28,6 @@
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
-<?xul-overlay href="chrome://messenger/content/mailOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/bookmarks/bookmarks.dtd">
 
@@ -108,8 +107,6 @@
           <menuitem value="&menuitem.newSeparator.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=newseparator');"/>
           <menuseparator/>
 	    <menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
-	    <menuitem id="menu_newMessage"   observes="cmd_newMessage"/>
-	    <menuitem id="menu_newCard"      observes="cmd_newCard"/>
 	    <menuitem id="menu_newEditor"    observes="cmd_newEditor"/>
         </menupopup>
       </menu>
@@ -347,19 +344,8 @@
                            'bookmarksTree');"/>
 </tree>
 
-<!--
-pinkerton
-This extra "status" bar is necessary because the bottom right corner of
-the window on MacOS is taken up by the growBox. If this window had a
-horizontal scrollbar, we'd be alright, but since it doesn't the bottom
-arrow on the vertical scrollbar was being hidden by this growBox. To
-combat this, we can just stick in a 16px high bar to bump up the bottom
-of the tree so that the scrollbar is visible. Yes, I know this is not
-necessary for win32 or gtk, but we can use this area for information
-(maybe full URL of selected item or the like) in the future.
--->
-<box id="status-bar" style="height:16px; max-height:16px;">
-  <text id="statusbar-text" />
-</box>
-
+<statusbar id="status-bar">
+  <statusbarpanel id="statusbar-text" flex="1"/>
+</statusbar>
 </window>
+
