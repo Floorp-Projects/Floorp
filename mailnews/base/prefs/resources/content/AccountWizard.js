@@ -206,6 +206,7 @@ function onFinish() {
         prefs.SavePrefFile();
     } catch (ex) {
         dump("Error saving prefs!\n");
+		dump("ex = " + ex + "\n");
     }
     window.close();
 }
@@ -273,10 +274,17 @@ function createAccount(hash) {
 		// creates a copy of the identity you pass in
 		am.createLocalMailAccount(identity, false);
 
-		// we'll need the "local folders" server to exist, if defaultCopiesAndFoldersPrefsToServer is false
-		// because that is where the copies and folders will live
-		if (!defaultCopiesAndFoldersPrefsToServer) 
-			localMailServer = am.FindServer("","","none");
+		// find the local mail server that we just created
+		localMailServer = am.FindServer("","","none");
+
+		var identities = am.GetIdentitiesForServer(localMailServer);
+		if (identities.Count() > 0) {
+			localMailIdentity = identities.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIdentity);
+			setDefaultCopiesAndFoldersPrefs(localMailIdentity, localMailServer);
+		}
+		else {
+			dump("error!  no identity for the local mail account\n");
+		}
     }
 
 	var copiesAndFoldersServer = null;
@@ -291,9 +299,23 @@ function createAccount(hash) {
 		copiesAndFoldersServer = localMailServer;
 	}
 	
-	dump("finding folders on server = " + copiesAndFoldersServer.hostName + "\n");
+	setDefaultCopiesAndFoldersPrefs(identity, copiesAndFoldersServer);
 
-	var rootFolder = copiesAndFoldersServer.RootFolder;
+    return true;
+
+    } catch (ex) {
+        // return false (meaning we did not create the account)
+        // on any error
+        dump("Error creating account:\n" + ex);
+        return false;
+    }
+}
+
+function setDefaultCopiesAndFoldersPrefs(identity, server)
+{
+	dump("finding folders on server = " + server.hostName + "\n");
+
+	var rootFolder = server.RootFolder;
 
 	// we need to do this or it is possible that the server's draft, stationery fcc folder
 	// will not be in rdf
@@ -326,13 +348,5 @@ function createAccount(hash) {
 	dump("draftFolder = " + identity.draftFolder + "\n");
 	dump("stationeryFolder = " + identity.stationeryFolder + "\n");
 
-    return true;
-
-    } catch (ex) {
-        // return false (meaning we did not create the account)
-        // on any error
-        dump("Error creating account:\n" + ex);
-        return false;
-    }
+	return;
 }
-
