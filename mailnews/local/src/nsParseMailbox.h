@@ -34,6 +34,7 @@
 #include "nsIMsgHdr.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsXPIDLString.h"
+#include "nsLocalStringBundle.h"
 #include "nsCOMPtr.h"
 #include "nsTime.h"
 
@@ -64,8 +65,9 @@ class nsParseMailMessageState : public nsIMsgParseMailMsgState
 {
 public:
 	NS_DECL_ISUPPORTS
-    NS_DECL_NSIMSGPARSEMAILMSGSTATE
-					nsParseMailMessageState();
+  NS_DECL_NSIMSGPARSEMAILMSGSTATE
+	
+  nsParseMailMessageState();
 	virtual			~nsParseMailMessageState();
 	
 	void			Init(PRUint32 fileposition);
@@ -125,6 +127,9 @@ public:
 	PRUint16			m_body_lines;
 	
 	PRBool			m_IgnoreXMozillaStatus;
+protected:
+  nsCOMPtr<nsIMsgStringService> mStringService;
+
 };
 
 // this should go in some utility class.

@@ -31,6 +31,7 @@
 #include "nsMsgLineBuffer.h"
 #include "nsMsgProtocol.h"
 #include "MailNewsTypes.h"
+#include "nsLocalStringBundle.h"
 #include "nsIMsgStatusFeedback.h"
 
 #include "prerror.h"
@@ -259,8 +260,9 @@ public:
 	NS_IMETHOD Cancel();  // handle stop button
 
 private:
+  nsCOMPtr<nsIMsgStringService> mStringService;
 
-    nsCString m_username;
+  nsCString m_username;
 	nsCString m_senderInfo;
 	nsCString m_commandResponse;
 	nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
@@ -271,8 +273,8 @@ private:
 	void UpdateStatusWithString(PRUnichar * aString);
 
 	PRInt32	m_bytesInMsgReceived; 
-    PRInt32	m_totalFolderSize;    
-  	PRInt32	m_totalDownloadSize; /* Number of bytes we're going to
+  PRInt32	m_totalFolderSize;    
+  PRInt32	m_totalDownloadSize; /* Number of bytes we're going to
                                     download.  Might be much less
                                     than the total_folder_size. */
 	PRInt32 m_totalBytesReceived; // total # bytes received for the connection
@@ -282,16 +284,16 @@ private:
 	virtual nsresult CloseSocket();
 	virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer);
 
-    nsCOMPtr<nsIURI> m_url;
-    nsCOMPtr<nsIPop3Sink> m_nsIPop3Sink;
-    nsCOMPtr<nsIPop3IncomingServer> m_pop3Server;
+  nsCOMPtr<nsIURI> m_url;
+  nsCOMPtr<nsIPop3Sink> m_nsIPop3Sink;
+  nsCOMPtr<nsIPop3IncomingServer> m_pop3Server;
 	
 	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
-    Pop3ConData* m_pop3ConData;
-    PRBool m_allow_at_sign_in_mail_user_name;
-    void FreeMsgInfo();
+  Pop3ConData* m_pop3ConData;
+  PRBool m_allow_at_sign_in_mail_user_name;
+  void FreeMsgInfo();
 
-	//////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
 	// Begin Pop3 protocol state handlers
 	//////////////////////////////////////////////////////////////////////////////////////////
     PRInt32 WaitForStartOfConnectionResponse(nsIInputStream* inputStream, 

@@ -441,6 +441,8 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
  * turn it off if they want
  */
   rv = prefs->GetBoolPref(PREF_MAIL_ALLOW_AT_SIGN_IN_USER_NAME, &m_allow_at_sign_in_mail_user_name);
+
+  mStringService = do_GetService(NS_MSG_POPSTRINGSERVICE_PROGID);
   return rv;
 }
 
@@ -463,7 +465,8 @@ void nsPop3Protocol::UpdateStatus(PRInt32 aStatusID)
 {
 	if (m_statusFeedback)
 	{
-		PRUnichar * statusString = LocalGetStringByID(aStatusID);
+    PRUnichar * statusString = nsnull;
+    mStringService->GetStringByID(aStatusID, &statusString);
 		UpdateStatusWithString(statusString);
 		nsCRT::free(statusString);
 	}
@@ -531,25 +534,30 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword)
         // if the last prompt got us a bad password then show a special dialog
         if (TestFlag(POP3_PASSWORD_FAILED))
         {
-            PRUnichar *passwordTemplate = LocalGetStringByID(POP3_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC);
+            PRUnichar *passwordTemplate = nsnull;
+            mStringService->GetStringByID(POP3_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC, &passwordTemplate);
             if (m_commandResponse.Length())
                 passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, m_commandResponse.GetBuffer(), (const char *) userName, (const char *) hostName);
             else
             {
-                PRUnichar * noAnswerText = LocalGetStringByID(POP3_NO_ANSWER);
+                PRUnichar * noAnswerText = nsnull;
+                mStringService->GetStringByID(POP3_NO_ANSWER, &noAnswerText);
                 passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, noAnswerText, (const char *) userName, (const char *) hostName);
                 nsCRT::free(noAnswerText);
             } 
+            nsCRT::free(passwordTemplate);
         } // otherwise this is the first time we've asked about the server's password so show a first time prompt
         else
         {
-            PRUnichar * passwordTemplate = LocalGetStringByID(POP3_ENTER_PASSWORD_PROMPT);
+            PRUnichar * passwordTemplate = nsnull; 
+            mStringService->GetStringByID(POP3_ENTER_PASSWORD_PROMPT, &passwordTemplate);
             passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
             nsCRT::free(passwordTemplate);
         }
 
         // now go get the password!!!!
-        PRUnichar * passwordTitle = LocalGetStringByID(POP3_ENTER_PASSWORD_PROMPT_TITLE);
+        PRUnichar * passwordTitle = nsnull;
+        mStringService->GetStringByID(POP3_ENTER_PASSWORD_PROMPT_TITLE, &passwordTitle);
         rv =  server->GetPasswordWithUI(passwordPromptString, passwordTitle, aPassword);
         nsCRT::free(passwordTitle);
         nsTextFormatter::smprintf_free(passwordPromptString);
@@ -755,7 +763,8 @@ nsPop3Protocol::Error(PRInt32 err_code)
 	NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
 	if (NS_SUCCEEDED(rv))
 	{
-		PRUnichar * alertString = LocalGetStringByID(err_code);
+		PRUnichar * alertString = nsnull;
+    mStringService->GetStringByID(err_code, &alertString);
 		if (alertString)
 			dialog->Alert(alertString); 
 		nsCRT::free(alertString);
@@ -1282,7 +1291,8 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
            in a bunch if we download their mail anyway. (bug 11561)
            */
 
-		PRUnichar * statusTemplate = LocalGetStringByID(POP3_SERVER_DOES_NOT_SUPPORT_UIDL_ETC);
+		PRUnichar * statusTemplate = nsnull;
+    mStringService->GetStringByID(POP3_SERVER_DOES_NOT_SUPPORT_UIDL_ETC, &statusTemplate);
 		if (statusTemplate)
 		{
 			nsXPIDLCString hostName;
@@ -1951,7 +1961,8 @@ nsPop3Protocol::SendRetr()
 		}
 		else
 		{
-			PRUnichar * statusString = LocalGetStringByID(LOCAL_STATUS_RECEIVING_MESSAGE_OF);
+			PRUnichar * statusString = nsnull;
+      mStringService->GetStringByID(LOCAL_STATUS_RECEIVING_MESSAGE_OF, &statusString);
 			if (statusString && m_statusFeedback)
 			{
 				// all this ugly conversion stuff is necessary because we can't sprintf a value
@@ -2173,8 +2184,8 @@ nsPop3Protocol::TopResponse(nsIInputStream* inputStream, PRUint32 length)
         m_pop3ConData->truncating_cur_msg = PR_FALSE;
 #endif
 
-		PRUnichar * statusTemplate =
-            LocalGetStringByID(POP3_SERVER_DOES_NOT_SUPPORT_THE_TOP_COMMAND); 
+		PRUnichar * statusTemplate = nsnull;
+    mStringService->GetStringByID(POP3_SERVER_DOES_NOT_SUPPORT_THE_TOP_COMMAND, &statusTemplate);
 		if (statusTemplate)
 		{
 			nsXPIDLCString hostName;
@@ -2680,7 +2691,8 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                     }
                     else 
 					{
-						PRUnichar * statusTemplate = LocalGetStringByID(POP3_DOWNLOAD_COUNT);
+						PRUnichar * statusTemplate = nsnull;
+            mStringService->GetStringByID(POP3_DOWNLOAD_COUNT, &statusTemplate);
 						if (statusTemplate)
 						{
 							PRUnichar * statusString = nsTextFormatter::smprintf(statusTemplate, 
@@ -2764,7 +2776,8 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
             if(m_pop3ConData->msg_del_started)
             {
 
-				PRUnichar * statusTemplate = LocalGetStringByID(POP3_DOWNLOAD_COUNT);
+				PRUnichar * statusTemplate = nsnull;
+        mStringService->GetStringByID(POP3_DOWNLOAD_COUNT, &statusTemplate);
 				if (statusTemplate)
 				{
 					PRUnichar * statusString = nsTextFormatter::smprintf(statusTemplate, 

@@ -203,7 +203,11 @@ void nsMsgMailboxParser::UpdateStatusText (PRUint32 stringID)
 {
 	if (m_statusFeedback)
 	{
-		PRUnichar * statusString = LocalGetStringByID(stringID);
+    if (!mStringService) // if we haven't gotten the serivce yet...
+      mStringService = do_GetService(NS_MSG_MAILBOXSTRINGSERVICE_PROGID);
+    
+		PRUnichar * statusString = nsnull; 
+    mStringService->GetStringByID(stringID, &statusString);
 
 		if (stringID == LOCAL_STATUS_SELECTING_MAILBOX)
 		{
