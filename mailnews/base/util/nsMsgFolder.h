@@ -156,6 +156,7 @@ public:
   NS_IMETHOD GetRootFolder(nsIMsgFolder * *aRootFolder);
   NS_IMETHOD GetMsgDatabase(nsIMsgWindow *aMsgWindow,
                             nsIMsgDatabase * *aMsgDatabase);
+  NS_IMETHOD GetMessageHeader(nsMsgKey msgKey, nsIMsgDBHdr **aMsgHdr);
   NS_IMETHOD GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, 
                                   nsIMsgDatabase **db) = 0;
 

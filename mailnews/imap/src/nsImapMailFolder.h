@@ -261,8 +261,6 @@ public:
 	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore);
 
 
-	nsresult GetMessageHeader(nsMsgKey key, nsIMsgDBHdr ** aMsgHdr);
-
 	nsresult MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 									   nsIMsgDatabase *sourceDB, 
                                      const char *destFolder,
@@ -326,10 +324,6 @@ protected:
 
 	virtual nsresult CreateBaseMessageURI(const char *aURI);
 
-  // offline support methods.
-  nsresult StartNewOfflineMessage();
-  nsresult WriteStartOfNewLocalMessage();
-
   PRBool m_initialized;
   PRBool m_haveDiscoveredAllFolders;
   PRBool m_haveReadNameFromDB;
@@ -341,9 +335,6 @@ protected:
 	PRInt32			m_nextMessageByteLength;
   nsCOMPtr<nsIEventQueue> m_eventQueue;
   PRBool m_urlRunning;
-
-	// this is currently used when we do a save as of an imap message..
-	nsCOMPtr<nsIOutputStream> m_tempMessageStream;
 
   // *** jt - undo move/copy trasaction support
   nsCOMPtr<nsITransactionManager> m_transactionManager;

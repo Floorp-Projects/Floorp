@@ -31,6 +31,12 @@
 #include "nsINntpIncomingServer.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgUtils.h"
+#include "nsIRDFService.h"
+#include "nsIRDFResource.h"
+#include "nsRDFCID.h"
+#include "nsIMsgNewsFolder.h"
+
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 static nsresult
 nsGetNewsServer(const char* username, const char *hostname,
@@ -189,6 +195,28 @@ nsParseNewsMessageURI(const char* uri, nsCString& messageUriWithoutKey, PRUint32
 		return errorCode;
 	}
 	return NS_ERROR_FAILURE;
+
+}
+
+nsresult nsGetNewsGroupFromUri(const char *uri, nsIMsgNewsFolder **aFolder)
+{
+  NS_ENSURE_ARG(aFolder);
+  NS_ENSURE_ARG(uri);
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+  if (NS_FAILED(rv)) return(rv);
+
+  nsCOMPtr<nsIRDFResource> resource;
+  rv = rdf->GetResource(uri, getter_AddRefs(resource));
+  if (NS_FAILED(rv)) return(rv);
+
+  rv = resource->QueryInterface(NS_GET_IID(nsIMsgNewsFolder), (void **) aFolder);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "uri is not for a news folder!"); 
+  if (NS_FAILED(rv)) return rv;
+
+  if (!*aFolder) return NS_ERROR_FAILURE;
+  return NS_OK;
 
 }
 

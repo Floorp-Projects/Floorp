@@ -2978,56 +2978,6 @@ nsImapMailFolder::SetNotifyDownloadedLines(PRBool notifyDownloadedLines)
   return NS_OK;
 }
 
-nsresult nsImapMailFolder::StartNewOfflineMessage()
-{
-  nsresult rv = GetOfflineStoreOutputStream(getter_AddRefs(m_tempMessageStream));
-  WriteStartOfNewLocalMessage();
-  return rv;
-}
-
-nsresult nsImapMailFolder::WriteStartOfNewLocalMessage()
-{
-  nsCAutoString result;
-  char *ct;
-  PRUint32 writeCount;
-  time_t now = time ((time_t*) 0);
-  ct = ctime(&now);
-  ct[24] = 0;
-  result = "From - ";
-  result += ct;
-  result += MSG_LINEBREAK;
-  
-  nsCOMPtr <nsIRandomAccessStore> randomStore;
-  PRInt32 curStorePos;
-
-  if (m_offlineHeader)
-    randomStore = do_QueryInterface(m_tempMessageStream);
-
-  if (randomStore)
-  {
-    randomStore->Tell(&curStorePos);
-    m_offlineHeader->SetMessageOffset(curStorePos);
-  }
-  m_tempMessageStream->Write(result.GetBuffer(), result.Length(),
-                             &writeCount);
-  if (randomStore)
-  {
-    m_tempMessageStream->Flush();
-    randomStore->Tell(&curStorePos);
-    m_offlineHeader->SetStatusOffset(curStorePos);
-  }
-
-  result = "X-Mozilla-Status: 0001";
-  result += MSG_LINEBREAK;
-  m_tempMessageStream->Write(result.GetBuffer(), result.Length(),
-                             &writeCount);
-  result =  "X-Mozilla-Status2: 00000000";
-  result += MSG_LINEBREAK;
-  nsresult rv = m_tempMessageStream->Write(result.GetBuffer(), result.Length(),
-                             &writeCount);
-  return rv;
-}
-
 NS_IMETHODIMP 
 nsImapMailFolder::ParseAdoptedMsgLine(const char *adoptedMessageLine, nsMsgKey uidOfMessage)
 {
@@ -3059,25 +3009,7 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage, PRBool markRead
 
   if (m_offlineHeader)
   {
-    nsCOMPtr <nsIRandomAccessStore> randomStore;
-    PRInt32 curStorePos;
-    PRUint32 messageOffset;
-    nsMsgKey messageKey;
-
-    m_offlineHeader->GetMessageKey(&messageKey);
-    if (m_tempMessageStream)
-      randomStore = do_QueryInterface(m_tempMessageStream);
-
-    mDatabase->MarkOffline(messageKey, PR_TRUE, nsnull);
-    if (randomStore)
-    {
-      m_tempMessageStream->Flush();
-
-      randomStore->Tell(&curStorePos);
-      m_offlineHeader->GetMessageOffset(&messageOffset);
-      m_offlineHeader->SetOfflineMessageSize(curStorePos - messageOffset);
-    }
-    m_offlineHeader = nsnull;
+    EndNewOfflineMessage();
     commit = PR_TRUE;
   }
   if (m_tempMessageStream)
@@ -3109,26 +3041,6 @@ nsImapMailFolder::AbortMsgWriteStream()
     return NS_ERROR_FAILURE;
 }
 
-nsresult nsImapMailFolder::GetMessageHeader(nsMsgKey key, nsIMsgDBHdr ** aMsgHdr)
-{
-  nsresult rv = NS_OK;
-  if (aMsgHdr)
-  {
-    rv = GetDatabase(nsnull);
-    // In theory, there shouldn't be contention over
-    // m_curMsgUid, but it currently describes both the most
-    // recent header we downloaded, and most recent message we've
-    // downloaded. We may want to break this up.
-    if (NS_SUCCEEDED(rv) && mDatabase) // did we get a db back?
-      rv = mDatabase->GetMsgHdrForKey(key, aMsgHdr);
-  }
-  else
-    rv = NS_ERROR_NULL_POINTER;
-
-  return rv;
-}
-
-    
     // message move/copy related methods
 NS_IMETHODIMP 
 nsImapMailFolder::OnlineCopyCompleted(nsIImapProtocol *aProtocol, ImapOnlineCopyState aCopyState)

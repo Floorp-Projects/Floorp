@@ -2427,3 +2427,20 @@ NS_IMETHODIMP nsMsgFolder::EnableNotifications(PRInt32 notificationType, PRBool 
 }
 
 
+NS_IMETHODIMP nsMsgFolder::GetMessageHeader(nsMsgKey msgKey, nsIMsgDBHdr **aMsgHdr)
+{
+  nsresult rv = NS_OK;
+  if (aMsgHdr)
+  {
+    nsCOMPtr <nsIMsgDatabase> database;
+
+    rv = GetMsgDatabase(nsnull, getter_AddRefs(database));
+    if (NS_SUCCEEDED(rv) && database) // did we get a db back?
+      rv = database->GetMsgHdrForKey(msgKey, aMsgHdr);
+  }
+  else
+    rv = NS_ERROR_NULL_POINTER;
+
+  return rv;
+}
+

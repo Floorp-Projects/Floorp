@@ -32,6 +32,7 @@
 #include "nsIDBChangeListener.h"
 #include "nsIUrlListener.h"
 #include "nsIMsgHdr.h"
+#include "nsIOutputStream.h"
 
 class nsIMsgFolderCacheElement;
 
@@ -108,6 +109,11 @@ protected:
 
   virtual nsresult GetOfflineStoreInputStream(nsIInputStream **inputStream);
   virtual nsresult GetOfflineStoreOutputStream(nsIOutputStream **outputStream);
+  // offline support methods.
+  nsresult StartNewOfflineMessage();
+  nsresult WriteStartOfNewLocalMessage();
+  nsresult EndNewOfflineMessage();
+
 
 protected:
 	nsCOMPtr<nsIMsgDatabase> mDatabase;
@@ -117,6 +123,8 @@ protected:
   PRBool mGettingNewMessages;
 
   nsCOMPtr <nsIMsgDBHdr> m_offlineHeader;
+	// this is currently used when we do a save as of an imap or news message..
+	nsCOMPtr<nsIOutputStream> m_tempMessageStream;
 
   static nsIAtom* mFolderLoadedAtom;
   static nsIAtom* mDeleteOrMoveMsgCompletedAtom;

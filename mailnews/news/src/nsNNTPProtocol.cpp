@@ -77,10 +77,6 @@
 #include "nsIMsgFolder.h"
 #include "nsIMsgNewsFolder.h"
 
-#include "nsIRDFService.h"
-#include "nsIRDFResource.h"
-#include "nsRDFCID.h"
-
 #include "nsIPref.h"
 
 #include "nsIMsgWindow.h"
@@ -157,7 +153,8 @@ static NS_DEFINE_CID(kNNTPHostCID, NS_NNTPHOST_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kCMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kPrefServiceCID,NS_PREF_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 typedef struct _cancelInfoEntry {
     char *from;
@@ -633,26 +630,8 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
 nsresult
 nsNNTPProtocol::InitializeNewsFolderFromUri(const char *uri)
 {
-        nsresult rv;
-
-        NS_ENSURE_ARG_POINTER(uri);
-
-		PR_LOG(NNTP,PR_LOG_ALWAYS,("InitializeNewsFolderFromUri(%s)",uri));
-
-        NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-        if (NS_FAILED(rv)) return(rv);
-
-        nsCOMPtr<nsIRDFResource> resource;
-        rv = rdf->GetResource(uri, getter_AddRefs(resource));
-        if (NS_FAILED(rv)) return(rv);
-
-        m_newsFolder = do_QueryInterface(resource, &rv);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "uri is not for a news folder!"); 
-        if (NS_FAILED(rv)) return rv;
-
-        if (!m_newsFolder) return NS_ERROR_FAILURE;
-
-        return NS_OK;
+	PR_LOG(NNTP,PR_LOG_ALWAYS,("InitializeNewsFolderFromUri(%s)",uri));
+  return nsGetNewsGroupFromUri(uri, getter_AddRefs(m_newsFolder));
 }
 
 /* void IsBusy (out boolean aIsConnectionBusy); */
@@ -2247,6 +2226,9 @@ PRInt32 nsNNTPProtocol::DisplayArticle(nsIInputStream * inputStream, PRUint32 le
 			PR_FREEIF(line);
 			return status;
 		}
+
+    if (m_newsFolder)
+      m_newsFolder->NotifyDownloadedLine(line, m_articleNumber);
 
 		if (line[0] == '.' && line[1] == 0)
 		{
@@ -5320,13 +5302,8 @@ nsNNTPProtocol::AlertError(PRInt32 errorCode, const char *text)
     NS_ENSURE_SUCCESS(rv,rv);
 	alertText.Append(str);
 
-	rv = GetNewsStringByID(errorCode, getter_Copies(str));
-    NS_ENSURE_SUCCESS(rv, rv);
-	alertText.Append(str);
-
-	if (text) {
-	  alertText.AppendWithConversion(text);
-    }
+	  if (text)
+		  alertText.AppendWithConversion(text);
 
 	rv = dialog->Alert(nsnull, alertText.GetUnicode());
     NS_ENSURE_SUCCESS(rv, rv);

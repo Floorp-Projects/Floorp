@@ -27,6 +27,8 @@
 #include "nsString.h"
 #include "nsIMsgIncomingServer.h"
 
+class nsIMsgNewsFolder;
+
 static const char kNewsRootURI[] = "news:/";
 static const char kNewsMessageRootURI[] = "news_message:/";
 
@@ -44,6 +46,8 @@ nsBuildNewsMessageURI(const char *baseURI, PRUint32 key, nsCString& uri);
 
 extern nsresult
 nsCreateNewsBaseMessageURI(const char *baseURI, char **baseMessageURI);
+
+extern nsresult nsGetNewsGroupFromUri(const char *uri, nsIMsgNewsFolder **aFolder);
 
 #endif //NS_NEWSUTILS_H
 

@@ -33,6 +33,7 @@ interface nsIMsgNewsFolder : nsISupports {
 
   readonly attribute string asciiName;
   readonly attribute nsINntpIncomingServer nntpServer;
+  attribute boolean saveArticleOffline;
    
   string getGroupPasswordWithUI(in wstring aPromptString, in wstring aPromptTitle, in nsIMsgWindow aMsgWindow);
   string getGroupUsernameWithUI(in wstring aPromptString, in wstring aPromptTitle, in nsIMsgWindow aMsgWindow);
@@ -54,4 +55,5 @@ interface nsIMsgNewsFolder : nsISupports {
   void cancelComplete();
   void cancelFailed();
   void getNextNMessages(in nsIMsgWindow aMsgWindow);
+  void notifyDownloadedLine(in string line, in nsMsgKey key);
 };

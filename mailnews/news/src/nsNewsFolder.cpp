@@ -101,7 +101,8 @@ static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
      mExpungedBytes(0), mGettingNews(PR_FALSE),
-    mInitialized(PR_FALSE), mOptionLines(""), mUnsubscribedNewsgroupLines(""), mCachedNewsrcLine(nsnull), mGroupUsername(nsnull), mGroupPassword(nsnull)
+    mInitialized(PR_FALSE), mOptionLines(""), mUnsubscribedNewsgroupLines(""), 
+    m_downloadMessageForOfflineUse(PR_FALSE), mCachedNewsrcLine(nsnull), mGroupUsername(nsnull), mGroupPassword(nsnull)
 {
   MOZ_COUNT_CTOR(nsNewsFolder); // double count these for now.
   /* we're parsing the newsrc file, and the line breaks are platform specific.
@@ -1703,4 +1704,61 @@ NS_IMETHODIMP nsMsgNewsFolder::CancelFailed()
 {
   NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
   return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgNewsFolder::GetSaveArticleOffline(PRBool *aBool)
+{
+  NS_ENSURE_ARG(aBool);
+  *aBool = m_downloadMessageForOfflineUse;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgNewsFolder::SetSaveArticleOffline(PRBool aBool)
+{
+  m_downloadMessageForOfflineUse = aBool;
+  return NS_OK;
+}
+
+// line does not have a line terminator (e.g., CR or CRLF)
+NS_IMETHODIMP nsMsgNewsFolder::NotifyDownloadedLine(const char *line, nsMsgKey keyOfArticle)
+{
+  nsresult rv = NS_OK;
+  PRBool commit = PR_FALSE;
+  if (m_downloadMessageForOfflineUse && !m_tempMessageStream)
+  {
+    GetMessageHeader(keyOfArticle, getter_AddRefs(m_offlineHeader));
+    rv = StartNewOfflineMessage();
+  }
+
+  if (m_tempMessageStream)
+  {
+    if (line[0] == '.' && line[1] == 0)
+    {
+      // end of article.
+      if (m_offlineHeader)
+      {
+        EndNewOfflineMessage();
+        commit = PR_TRUE;
+      }
+      if (m_tempMessageStream)
+      {
+        m_tempMessageStream->Close();
+        m_tempMessageStream = nsnull;
+      }
+    }
+    else
+    {
+      PRUint32 count = 0;
+      rv = m_tempMessageStream->Write(line, 
+         nsCRT::strlen(line), &count);
+      if (NS_SUCCEEDED(rv))
+        rv = m_tempMessageStream->Write(MSG_LINEBREAK, MSG_LINEBREAK_LEN, &count);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to write to stream");
+    }
+  }
+                                                                                
+  if (commit && mDatabase)
+    mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+  return rv;
+
 }

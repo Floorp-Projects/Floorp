@@ -172,6 +172,7 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
 #endif
 
   nsCAutoString uri(aMessageURI);
+  nsCAutoString newsGroupNameUri(aMessageURI);
   nsCAutoString newsgroupName;
   nsMsgKey key = nsMsgKey_None;
  
@@ -183,6 +184,14 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
 	// todo:  if we get here, make sure uri really a news article url (example:  "news://host/aa@bb")
   }
 
+  newsGroupNameUri.ReplaceSubstring("news_message:", "news:");
+  PRInt32 poundPos = newsGroupNameUri.RFindChar('#', PR_FALSE);
+  nsCOMPtr <nsIMsgNewsFolder> newsFolder;
+  if (poundPos != -1)
+  {
+    newsGroupNameUri.Truncate(poundPos);
+    nsGetNewsGroupFromUri(newsGroupNameUri, getter_AddRefs(newsFolder));
+  }
   // now create a url with this uri spec
   nsCOMPtr<nsIURI> myuri;
 
@@ -199,7 +208,23 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
     msgUrl->SetMsgWindow(aMsgWindow);
     nntpUrl->SetNewsAction(nsINntpUrl::ActionDisplayArticle);
     nsCOMPtr<nsIMsgI18NUrl> i18nurl (do_QueryInterface(msgUrl));
+    nsCOMPtr <nsIMsgFolder> folder;
+
     i18nurl->SetCharsetOverRide(aCharsetOverride);
+
+    PRBool shouldStoreMsgOffline = PR_FALSE;
+    PRBool hasMsgOffline = PR_FALSE;
+
+    if (newsFolder)
+    {
+      nsCOMPtr <nsIMsgFolder> folder = do_QueryInterface(newsFolder);
+      if (folder)
+      {
+        folder->ShouldStoreMsgOffline(key, &shouldStoreMsgOffline);
+        folder->HasMsgOffline(key, &hasMsgOffline);
+      }
+      newsFolder->SetSaveArticleOffline(shouldStoreMsgOffline);
+    }
 
     // now is where our behavior differs....if the consumer is the docshell then we want to 
     // run the url in the webshell in order to display it. If it isn't a docshell then just

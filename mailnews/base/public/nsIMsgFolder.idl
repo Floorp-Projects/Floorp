@@ -335,7 +335,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 	void markThreadRead(in nsIMsgThread thread);
     nsIMsgDatabase getMsgDatabase(in nsIMsgWindow msgWindow);
     nsIMsgDatabase getDBFolderInfoAndDB(out nsIDBFolderInfo folderInfo);
-
+  nsIMsgDBHdr GetMessageHeader(in nsMsgKey msgKey);
   boolean shouldStoreMsgOffline(in nsMsgKey msgKey);
   boolean hasMsgOffline(in nsMsgKey msgKey);
   nsIFileChannel getOfflineFileChannel(in nsMsgKey msgKey);
