@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include "plstr.h"
 
 #include "nsIStreamNotification.h"
 #include "nsIInputStream.h"
@@ -134,7 +135,9 @@ NS_IMETHODIMP TestConsumer::OnStopBinding(void)
 
 int main(int argc, char **argv)
 {
+#ifdef XP_PC
     MSG msg;
+#endif
     char *url_address;
     nsIStreamNotification *pConsumer;
     nsINetService *pNetlib;
@@ -153,7 +156,7 @@ int main(int argc, char **argv)
     }
 
     // Turn on netlib tracing...
-    if (stricmp(argv[1], "-trace") == 0) {
+    if (PL_strcasecmp(argv[1], "-trace") == 0) {
         NET_ToggleTrace();
         url_address = argv[2];
         bTraceEnabled = PR_TRUE;
@@ -179,12 +182,14 @@ int main(int argc, char **argv)
 
     // Enter the message pump to allow the URL load to proceed.
     while ( !urlLoaded ) {
+#ifdef XP_PC
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+#endif
 
-        if (NET_PollSockets() == FALSE) urlLoaded = 1;
+        if (NET_PollSockets() == PR_FALSE) urlLoaded = 1;
     }
 
     pNetlib->Release();
