@@ -88,12 +88,12 @@ protected:
     nsCOMPtr<nsICacheService>       mCacheService;
     nsCOMPtr<nsICacheSession>       mCacheSession;
     nsCOMPtr<nsITransactionManager> mTransactionManager;
+    nsCOMPtr<nsILocalFile>          mBookmarksFile;
 
     PRUint32      htmlSize;
     PRInt32       mUpdateBatchNest;
     nsXPIDLString mPersonalToolbarName;
     nsXPIDLString mBookmarksRootName;
-    PRBool        mBookmarksAvailable;
     PRBool        mDirty;
     PRBool        mBrowserIcons;
     PRBool        busySchedule;
@@ -121,7 +121,7 @@ protected:
 
     nsresult GetBookmarkToPing(nsIRDFResource **theBookmark);
 
-    nsresult GetBookmarksFile(nsIFile* *aResult);
+    nsresult EnsureBookmarksFile();
 
     nsresult WriteBookmarks(nsIFile* bookmarksFile, nsIRDFDataSource *ds,
                             nsIRDFResource *root);
