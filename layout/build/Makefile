@@ -31,10 +31,14 @@ CPPSRCS=dlldeps.cpp
 
 #INCLUDES +=  -I../html/base/src -I../base/src -I../css/layout/src
 
+ifeq ($(OS_ARCH),IRIX)
 LD = $(CCC)
+LD_ALL = -all
+LD_NONE = -none
+endif
 
-LOBJS = \
-	-all						\
+EXTRA_DSO_LDOPTS = \
+	$(LD_ALL)						\
 	$(DIST)/lib/libraptorlayout_s.a			\
 	$(DIST)/lib/libraptorhtmlbase_s.a		\
 	$(DIST)/lib/libnglhtmlcon_s.a			\
@@ -43,11 +47,8 @@ LOBJS = \
 	$(DIST)/lib/libraptorhtmlforms_s.a		\
 	$(DIST)/lib/libraptorhtmlstyle_s.a		\
 	$(DIST)/lib/libraptorhtmltable_s.a		\
-	$(DIST)/lib/libraptorevents_s.a
-
-
-EXTRA_DSO_LDOPTS = \
-	-none						\
+	$(DIST)/lib/libraptorevents_s.a			\
+	$(LD_NONE)						\
 	$(DIST)/bin/libraptorhtmlpars.so		\
 	$(DIST)/bin/libraptorgfx.so			\
 	$(DIST)/bin/libraptorbase.so			\
