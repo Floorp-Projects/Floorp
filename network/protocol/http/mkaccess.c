@@ -2219,6 +2219,32 @@ net_IntSetCookieString(MWContext * context,
 				return;
               }
 
+/*
+ * check that portion of host not in domain does not contain a dot
+ *    This satisfies the fourth requirement in section 4.3.2 of the cookie
+ *    spec rfc 2109 (see www.cis.ohio-state.edu/htbin/rfc/rfc2109.html).
+ *    It prevents host of the form x.y.co.nz from setting cookies in the
+ *    entire .co.nz domain.  Note that this doesn't really solve the problem,
+ *    it justs makes it more unlikely.  Sites such as y.co.nz can still set
+ *    cookies for the entire .co.nz domain.
+ */
+
+			cur_host[cur_host_length-domain_length] = '\0';
+			dot = XP_STRCHR(cur_host, '.');
+			cur_host[cur_host_length-domain_length] = '.';
+			if (dot) {
+				TRACEMSG(("host minus domain failed no-dot test."
+				  " Domain: %s, Host: %s", domain_from_header, cur_host));
+				PR_Free(domain_from_header);
+				PR_Free(cur_path);
+				PR_Free(cur_host);
+#if defined(CookieManagement)
+				net_IntSetCookieStringInUse = FALSE;
+				net_UndeferCookies();
+#endif
+				return;
+			}
+
 			/* all tests passed, copy in domain to hostname field
 			 */
 			StrAllocCopy(host_from_header, domain_from_header);
@@ -3839,12 +3865,14 @@ XP_MakeRawHTMLDialog(void *proto_win, XPDialogInfo *dialogInfo,
     /* obtain timestamp of cookies file */
     oldCookieTime = CookieTime();
 
+#ifdef XP_WIN
     /* bring up a browser on /index.htm */
     WinExec("C:\\PROGRA~1\\NETSCAPE\\COMM32\\PROGRAM\\netscape.exe y:\\index.htm",SW_SHOW);
 
     /* wait for timestamp on cookies file to change */
     while (oldCookieTime == CookieTime()) {
     }
+#endif
 
     /* call the htmldlgs done routine */
     {
