@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.49 2002/12/19 00:26:23 wtc%netscape.com Exp $
+ * $Id: certdb.c,v 1.50 2003/01/31 02:49:13 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -1200,6 +1200,8 @@ CERT_CheckKeyUsage(CERTCertificate *cert, unsigned int requiredUsage)
      */
     if ( requiredUsage & KU_KEY_AGREEMENT_OR_ENCIPHERMENT ) {
 	key = CERT_ExtractPublicKey(cert);
+	if (!key)
+	    return SECFailure;
 	if ( ( key->keyType == keaKey ) || ( key->keyType == fortezzaKey ) ||
 	     ( key->keyType == dhKey ) ) {
 	    requiredUsage |= KU_KEY_AGREEMENT;
