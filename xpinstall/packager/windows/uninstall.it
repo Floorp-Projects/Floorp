@@ -55,7 +55,7 @@ Key=[Product CurrentVersion]\Uninstall
 Decrypt Key=TRUE
 
 Uninstall Filename=$UninstallFile$
-
+Defaults Info Filename=defaults_info.ini
 
 [Check Instance0]
 Class Name=MozillaMessageWindow

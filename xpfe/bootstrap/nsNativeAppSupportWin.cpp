@@ -635,17 +635,22 @@ nsNativeAppSupportWin::CheckConsole() {
         }
     }
 
+    PRBool checkTurbo = PR_TRUE;
     for ( int j = 1; j < __argc; j++ ) {
         if (strcmp("-killAll", __argv[j]) == 0 || strcmp("/killAll", __argv[j]) == 0 ||
             strcmp("-kill", __argv[j]) == 0 || strcmp("/kill", __argv[j]) == 0) {
             gAbortServer = PR_TRUE;
             break;
         }
+
+        if ( strcmp( "-silent", __argv[j] ) == 0 || strcmp( "/silent", __argv[j] ) == 0 ) {
+            checkTurbo = PR_FALSE;
+        }
     }
 
     // check if this is a restart of the browser after quiting from
     // the servermoded browser instance.
-    if (!mServerMode ) {
+    if ( checkTurbo && !mServerMode ) {
         HKEY key;
         LONG result = ::RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_QUERY_VALUE, &key );
         if ( result == ERROR_SUCCESS ) {
@@ -2065,7 +2070,13 @@ printf( "Setting ddexec subkey entries\n" );
   rv = profileMgr->GetIsStartingUp(&doingProfileStartup);
   if (NS_FAILED(rv) || doingProfileStartup) return NS_ERROR_FAILURE;
 
-  rv = appShell->DoProfileStartup(args, PR_TRUE);
+  // See if profile manager is being suppressed via -silent flag.
+  PRBool canInteract = PR_TRUE;
+  nsXPIDLCString arg;
+  if (NS_SUCCEEDED(args->GetCmdLineValue("-silent", getter_Copies(arg))) && (const char*)arg) {
+    canInteract = PR_FALSE;
+  }
+  rv = appShell->DoProfileStartup(args, canInteract);
 
   mForceProfileStartup = PR_FALSE;
 

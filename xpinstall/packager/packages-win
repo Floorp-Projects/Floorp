@@ -264,6 +264,7 @@ bin\components\transformiix.xpt
 bin\components\transformiix.dll
 bin\ISimpleDOMNodeMarshal.dll
 bin\ISimpleDOMDocumentMarshal.dll
+bin\components\nsSetDefaultBrowser.js
 
 ; LDAP components need to be in the browser for AutoConfig
 bin\components\mozldap.dll
@@ -398,6 +399,8 @@ bin\components\mapihook.xpt
 bin\components\msgmdn.dll
 bin\components\msgmdn.xpt
 bin\components\mdn-service.js
+bin\components\nsSetDefaultMail.js
+bin\components\nsUnsetDefaultMail.js
 
 [chatzilla]
 bin\components\chatzilla-service.js

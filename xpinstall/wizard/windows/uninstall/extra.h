@@ -58,6 +58,7 @@ HRESULT           DecryptString(LPSTR szOutputStr, LPSTR szInputStr);
 HRESULT           DecryptVariable(LPSTR szVariable, DWORD dwVariableSize);
 void              GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, DWORD dwSize);
 void              SetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, DWORD dwType, LPSTR szData, DWORD dwSize);
+void              SetWinRegNumValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName, DWORD dwData);
 HRESULT           InitUninstallGeneral(void);
 HRESULT           InitDlgUninstall(diU *diDialog);
 sil               *CreateSilNode();
@@ -87,6 +88,7 @@ LPSTR             GetArgV(LPSTR lpszCommandLine, int iIndex, LPSTR lpszDest, int
 void              ParseCommandLine(LPSTR lpszCmdLine);
 void              SetUninstallRunMode(LPSTR szMode);
 void              Delay(DWORD dwSeconds);
+HRESULT           GetAppPath();
 HRESULT           GetUninstallLogPath();
 
 #endif

@@ -1,3 +1,28 @@
+function IsWinnt()
+{
+  /* Determines if the script is running under NT or not.
+   *
+   */
+  var winreg = getWinRegistry();
+  var subkey;
+  var valname;
+  var szCurrentVersion;
+
+  winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+  subkey              = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+  valname             = "CurrentVersion";
+  szCurrentVersion    = winreg.getValueString(subkey, valname);
+  logComment("szCurrentVersion: " + szCurrentVersion);
+  if((szCurrentVersion == "") || (szCurrentVersion == null))
+  {
+    return false;
+  }
+  else
+  {
+    return true;
+  }
+}
+
 function registerProgramFolderKey(winreg, fFolderPath)
 {
   var subkey;
@@ -196,6 +221,49 @@ function createShortcuts()
 
     winreg.setRootKey(winreg.HKEY_CURRENT_USER);
     registerProgramFolderKey(winreg, fFolderPath);
+
+    // Register as a windows XP mail application
+    if( IsWinnt() )
+    {
+      subkey = "Software\\Clients\\Mail\\$ProductNameNoVersion$";
+      winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+
+      winreg.createKey(subkey,"");
+      winreg.createKey(subkey + "\\DefaultsIcon", "");
+      winreg.createKey(subkey + "\\shell", "");
+      winreg.createKey(subkey + "\\shell\\open", "");
+      winreg.createKey(subkey + "\\shell\\open\\command", "");
+      winreg.createKey(subkey + "\\InstallInfo","");
+
+      valname = "";
+      data = "$ProductName$ Mail";
+      winreg.setValueString(subkey, valname, data);
+
+      valname = "";
+      // path does not need to be quoted per MS doc
+      data = fProgram + "chrome\\icons\\default\\messengerWindow.ico,0";
+      winreg.setValueString(subkey + "\\DefaultsIcon", valname, data);
+
+      valname = "";
+      data = "\"" + fProgram + "$MainExeFile$\" -mail";
+      winreg.setValueString(subkey + "\\shell\\open\\command", valname, data);
+
+      valname = "HideIconsCommand";
+      data = "\"" + fProgram + "uninstall\\MozillaUninstall.exe\" /ms /ua \"$UserAgent$\" /hs mail";
+      winreg.setValueString(subkey + "\\InstallInfo", valname, data);
+
+      valname = "IconsVisible";
+      // set this value to 0 because we're not creating the mail shortcuts yet.
+      winreg.setValueNumber(subkey + "\\InstallInfo", valname, 0);
+
+      valname = "ReinstallCommand";
+      data = "\"" + fProgram + "$MainExeFile$\" -silent -nosplash -setDefaultMail";
+      winreg.setValueString(subkey + "\\InstallInfo", valname, data);
+
+      valname = "ShowIconsCommand";
+      data = "\"" + fProgram + "uninstall\\MozillaUninstall.exe\" /ms /ua \"$UserAgent$\" /ss mail";
+      winreg.setValueString(subkey + "\\InstallInfo", valname, data);
+    }
   }
   else
   {
