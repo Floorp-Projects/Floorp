@@ -466,6 +466,7 @@ protected:
   PRPackedBool m_folderNeedsSubscribing;
   PRPackedBool m_folderNeedsAdded;
   PRPackedBool m_folderNeedsACLListed;
+  PRPackedBool m_performingBiff;
 
   nsMsgIMAPFolderACL *m_folderACL;
 

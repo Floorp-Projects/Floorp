@@ -197,7 +197,8 @@ nsImapMailFolder::nsImapMailFolder() :
     m_folderNeedsAdded(PR_FALSE),
     m_folderNeedsACLListed(PR_TRUE),
     m_downloadMessageForOfflineUse(PR_FALSE),
-    m_downloadingFolderForOfflineUse(PR_FALSE)
+    m_downloadingFolderForOfflineUse(PR_FALSE),
+    m_performingBiff(PR_FALSE)
 {
       MOZ_COUNT_CTOR(nsImapMailFolder); // double count these for now.
       
@@ -2163,10 +2164,17 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlList
   if(NS_SUCCEEDED(rv) && rootFolder) {
 
     nsCOMPtr<nsIImapIncomingServer> imapServer;
-    rv = GetImapIncomingServer(getter_AddRefs(imapServer));
+    GetImapIncomingServer(getter_AddRefs(imapServer));
  
-    if (NS_SUCCEEDED(rv) && imapServer)
+    PRBool performingBiff = PR_FALSE;
+
+    if (imapServer)
+    {
       imapServer->GetDownloadBodiesOnGetNewMail(&m_downloadingFolderForOfflineUse);
+      nsCOMPtr<nsIMsgIncomingServer> incomingServer = do_QueryInterface(imapServer, &rv);
+      if (incomingServer)
+        incomingServer->GetPerformingBiff(&performingBiff);
+    }
 
     // Check preferences to see if we should check all folders for new 
     // messages, or just the inbox and marked ones
@@ -2190,13 +2198,17 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlList
       rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
       if (inbox)
       {
+        nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(inbox, &rv);
+        if (imapFolder)
+          imapFolder->SetPerformingBiff(PR_TRUE);
+
         inbox->SetGettingNewMessages(PR_TRUE);
         rv = inbox->UpdateFolder(aWindow);
       }
 
     // Get new messages for other folders if marked, or all of them if the pref is set
-    if (NS_SUCCEEDED(rv) && imapServer)
-      rv = imapServer->GetNewMessagesForNonInboxFolders(rootFolder, aWindow, checkAllFolders);
+    if (imapServer)
+      rv = imapServer->GetNewMessagesForNonInboxFolders(rootFolder, aWindow, checkAllFolders, performingBiff);
   }
 
   return rv;
@@ -2396,13 +2408,20 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
           total = keysToDelete.GetSize();
       }
     }
-    // if this is the INBOX, tell the stand-alone biff about the new high water mark
-    if (mFlags & MSG_FOLDER_FLAG_INBOX)
+    // If we are performing biff for this folder, tell the
+    // stand-alone biff about the new high water mark
+    if (m_performingBiff)
     {
       PRInt32 numRecentMessages = 0;
 
       if (keysToFetch.GetSize() > 0)
       {
+        // We must ensure that the server knows that we are performing biff.
+        // Otherwise the stand-alone biff won't fire.
+        nsCOMPtr<nsIMsgIncomingServer> server;
+        if (NS_SUCCEEDED(GetServer(getter_AddRefs(server))) && server)
+          server->SetPerformingBiff(PR_TRUE);
+
         SetNumNewMessages(keysToFetch.GetSize());
         SetBiffState(nsIMsgFolder::nsMsgBiffState_NewMail);
       }
@@ -4385,6 +4404,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
       GetServer(getter_AddRefs(server));
       if (server)
         server->SetPerformingBiff(PR_FALSE);
+      m_performingBiff = PR_FALSE;
     }
   }
   SetGettingNewMessages(PR_FALSE); // if we're not running a url, we must not be getting new mail :-)
@@ -6961,3 +6981,21 @@ nsImapMailFolder::GetCanDeleteMessages(PRBool *aCanDeleteMessages)
   *aCanDeleteMessages = GetFolderACL()->GetCanIDeleteInFolder();
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsImapMailFolder::GetPerformingBiff(PRBool *aPerformingBiff)
+{
+  if (!aPerformingBiff)
+    return NS_ERROR_NULL_POINTER;
+  
+  *aPerformingBiff = m_performingBiff;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapMailFolder::SetPerformingBiff(PRBool aPerformingBiff)
+{
+  m_performingBiff = aPerformingBiff;
+  return NS_OK;
+}
+

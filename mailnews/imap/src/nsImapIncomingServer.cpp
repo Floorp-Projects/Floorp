@@ -3584,7 +3584,8 @@ nsImapIncomingServer::GetSearchScope(nsMsgSearchScopeValue *searchScope)
 NS_IMETHODIMP 
 nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aRootFolder,
                                                        nsIMsgWindow *aWindow,
-                                                       PRBool forceAllFolders)
+                                                       PRBool forceAllFolders,
+                                                       PRBool performingBiff)
 {
   nsresult retval = NS_OK;
 
@@ -3597,8 +3598,16 @@ nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aRootFolder
   aRootFolder->GetFlags(&flags);
   if ((forceAllFolders && !(flags & MSG_FOLDER_FLAG_INBOX)) || (flags & MSG_FOLDER_FLAG_CHECK_NEW))
   {
-  // Get new messages for this folder. 
-  aRootFolder->UpdateFolder(aWindow);
+    // Get new messages for this folder.
+    aRootFolder->SetGettingNewMessages(PR_TRUE);
+    if (performingBiff)
+    {
+      nsresult rv;
+      nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(aRootFolder, &rv);
+      if (imapFolder)
+        imapFolder->SetPerformingBiff(PR_TRUE);
+    }
+    aRootFolder->UpdateFolder(aWindow);
   }
 
   // Loop through all subfolders to get new messages for them.
@@ -3619,7 +3628,7 @@ nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aRootFolder
     nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(aSupport, &rv);
     NS_ASSERTION((NS_SUCCEEDED(rv) && msgFolder), "nsIMsgFolder service not found.");
 
-    retval = GetNewMessagesForNonInboxFolders(msgFolder, aWindow, forceAllFolders);
+    retval = GetNewMessagesForNonInboxFolders(msgFolder, aWindow, forceAllFolders, performingBiff);
 
     more = aEnumerator->Next();
   }

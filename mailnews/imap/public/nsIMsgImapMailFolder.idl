@@ -88,5 +88,6 @@ interface nsIMsgImapMailFolder : nsISupports {
   readonly attribute boolean canIOpenThisFolder;
   attribute string adminUrl;
   readonly attribute boolean hasAdminUrl;
+  attribute boolean performingBiff;
 };
 
