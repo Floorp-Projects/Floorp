@@ -160,8 +160,8 @@ var abDirTreeObserver = {
         var abView = GetAbView();
         var directory = GetDirectoryFromURI(targetURI);
 
-      for (var i=0;i<numrows;i++) {
-        var card = abView.getCardFromRow(rows[i]);
+      for (var j = 0; j < numrows; j++) {
+        var card = abView.getCardFromRow(rows[j]);
         directory.dropCard(card, needToCopyCard);
       }
       var statusText = document.getElementById("statusText");
