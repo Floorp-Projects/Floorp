@@ -44,7 +44,6 @@
 #include "nsIStringBundle.h"
 #include "nsICSSStyleSheet.h"
 
-class nsIBrowserWindow;
 class nsIWebShell;
 class nsIScriptContext;
 class nsIDOMWindow;
