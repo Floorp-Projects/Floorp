@@ -23,7 +23,7 @@
 #include "nscore.h"
 #include "nsMacEventHandler.h"
 #include "nsMacTSMMessagePump.h"
-
+#include "nsString.h"
 #include <Script.h>
 #include <TextServices.h>
 
@@ -115,7 +115,8 @@ pascal OSErr nsMacTSMMessagePump::PositionToOffsetHandler(const AppleEvent *theA
 	err = AEGetParamPtr(theAppleEvent,keyAETSMDocumentRefcon,typeLongInteger,&returnedType,
 						&eventHandler,sizeof(eventHandler),&actualSize);
 	NS_ASSERTION(err==noErr,"nsMacTSMMessagePump::PositionToOffsetHandler: AEGetParamPtr[TSMRefcon] failed");
-	if (err!=noErr) return err;
+	if (err!=noErr) 
+		return err;
 	
 	//
 	// Extract the Position parameter.
@@ -123,7 +124,8 @@ pascal OSErr nsMacTSMMessagePump::PositionToOffsetHandler(const AppleEvent *theA
 	err = AEGetParamPtr(theAppleEvent,keyAECurrentPoint,typeQDPoint,&returnedType,
 						&thePoint,sizeof(thePoint),&actualSize);
 	NS_ASSERTION(err==noErr,"nsMacTSMMessagePump::PositionToOffsetHandler: AGGetParamPtr[Point] failed");
-	if (err!=noErr) return err;
+	if (err!=noErr) 
+		return err;
 
 	//
 	// pass the request to the widget system
@@ -135,11 +137,13 @@ pascal OSErr nsMacTSMMessagePump::PositionToOffsetHandler(const AppleEvent *theA
 	//
 	err = AEPutParamPtr(reply,keyAEOffset,typeLongInteger,&offset,sizeof(offset));
 	NS_ASSERTION(err==noErr,"nsMacTSMMessagePump::PositionToOffsetHandler: AEPutParamPtr failed");
-	if (err!=noErr) return err;
+	if (err!=noErr) 
+		return err;
 	
 	err = AEPutParamPtr(reply,keyAERegionClass,typeShortInteger,&regionClass,sizeof(regionClass));
 	NS_ASSERTION(err==noErr,"nsMacTSMMessagePump::PositionToOffsetHandler: AEPutParamPtr failed");
-	if (err!=noErr) return err;
+	if (err!=noErr) 
+		return err;
 
 	return noErr;
 }
@@ -151,7 +155,7 @@ pascal OSErr nsMacTSMMessagePump::OffsetToPositionHandler(const AppleEvent *theA
 	Size				actualSize;
 	Point				thePoint;
 	long				offset;
-	PRBool				rv;
+	nsresult			res;
 
 	//
 	// Extract the nsMacEvenbtHandler for this TSMDocument.  It's stored as the refcon.
@@ -159,7 +163,8 @@ pascal OSErr nsMacTSMMessagePump::OffsetToPositionHandler(const AppleEvent *theA
 	err = AEGetParamPtr(theAppleEvent,keyAETSMDocumentRefcon,typeLongInteger,&returnedType,
 						&eventHandler,sizeof(eventHandler),&actualSize);
 	NS_ASSERTION(err==noErr,"nsMacTSMMessagePump::OffsetToPositionHandler: AEGetParamPtr[TSMRefcon] failed.");
-	if (err!=noErr) return err;
+	if (err!=noErr) 
+		return err;
 	
 	//
 	// Extract the Offset parameter
@@ -167,21 +172,24 @@ pascal OSErr nsMacTSMMessagePump::OffsetToPositionHandler(const AppleEvent *theA
 	err = AEGetParamPtr(theAppleEvent,keyAEOffset,typeLongInteger,&returnedType,
 						&offset,sizeof(offset),&actualSize);
 	NS_ASSERTION(err==noErr,"nsMacTSMMessagePump::PositionToOffsetHandler: AEGetParamPtr[Offset] failed.");					
-	if (err!=noErr) return err;
+	if (err!=noErr) 
+		return err;
 	
 	//
 	// Pass the OffsetToPosition request to the widgets to handle
 	//
-	rv = eventHandler->HandleOffsetToPosition(offset,&thePoint);
-	NS_ASSERTION(rv==PR_TRUE,"nsMacMessagePup::PositionToOffsetHandler: OffsetToPosition handler failed.");
-	if (err!=PR_TRUE) return err;
+	res = eventHandler->HandleOffsetToPosition(offset,&thePoint);
+	NS_ASSERTION(NS_SUCCEEDED(res),"nsMacMessagePup::PositionToOffsetHandler: OffsetToPosition handler failed.");
+	if (NS_FAILED(res)) 
+		return paramErr;
 	
 	//
 	// build up the reply (point)
 	//
 	err = AEPutParamPtr(reply,keyAEPoint,typeQDPoint,&thePoint,sizeof(Point));
 	NS_ASSERTION(err==noErr,"nsMacTSMMessagePump::PositionToOffsetHandler: AEPutParamPtr[Point][ failed.");
-	if (err!=noErr) return err;
+	if (err!=noErr) 
+		return err;
 	
 	return noErr;
 }
@@ -194,7 +202,7 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
 	AEDesc					text, hiliteRangeArray;
 	ScriptCode				textScript;
 	long					fixLength;
-	PRBool					rv;
+	nsresult				res;
 	TextRangeArray*			hiliteRangePtr;
 	
 	//
@@ -203,63 +211,81 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
 	err = AEGetParamPtr(theAppleEvent,keyAETSMDocumentRefcon,typeLongInteger,&returnedType,
 						&eventHandler,sizeof(eventHandler),&actualSize);
 	NS_ASSERTION(err==noErr,"nsMacTSMMessagePump::UpdateHandler: AEGetParamPtr[TSMRefcon] failed.");
-	if (err!=noErr) return err;
+	if (err!=noErr) 
+		return err;
 	
 	//
 	// IME update text
 	//
 	err = AEGetParamDesc(theAppleEvent,keyAETheData,typeChar,&text);
 	NS_ASSERTION(err==noErr,"nsMacTSMMessagePump::UpdateHandler: AEGetParamDesc[Text] failed.");
-	if (err!=noErr) return err;
+	if (err!=noErr) 
+		return err;
 	
 	//
 	// get the script of text for Unicode conversion
 	//
-	textScript = (ScriptCode)GetScriptManagerVariable(smKeyScript);
+	textScript=smUninterp;
+	AEDesc slr;
+	err = AEGetParamDesc(theAppleEvent,keyAETSMScriptTag,typeIntlWritingCode,&slr);
+	NS_ASSERTION(err==noErr,"nsMacTSMMessagePump::UpdateHandler: AEGetParamDesc[keyAETSMScriptTag] failed.");
+	if (err!=noErr) 
+		return err;
+	
+	textScript = ((ScriptLanguageRecord *)(*(slr.dataHandle)))->fScript;
+	NS_ASSERTION( (textScript < smUninterp), "Illegal script code");
+	
+	NS_ASSERTION(textScript == (ScriptCode)::GetScriptManagerVariable(smKeyScript) , "wrong script code");
 	//
 	// length of converted text
 	//
 	err = AEGetParamPtr(theAppleEvent,keyAEFixLength,typeLongInteger,&returnedType,
 						&fixLength,sizeof(fixLength),&actualSize);
 	NS_ASSERTION(err==noErr,"nsMacTSMMessagePump::UpdateHandler: AEGetParamPtr[fixlen] failed.");
-  	if (err!=noErr) return err;
+  	if (err!=noErr) 
+  		return err;
 
   	//
   	// extract the hilite ranges (optional param)
   	//
   	err = AEGetParamDesc(theAppleEvent,keyAEHiliteRange,typeTextRangeArray,&hiliteRangeArray);
 	NS_ASSERTION(err==noErr||err==errAEDescNotFound,"nsMacTSMMessagePump::UpdateHandler: AEGetParamPtr[fixlen] failed.");
-  	if (err==errAEDescNotFound) hiliteRangePtr=NULL;
-  	else if (err==noErr) { ::HLock(hiliteRangeArray.dataHandle); hiliteRangePtr=(TextRangeArray*)*(hiliteRangeArray.dataHandle);}
-  	else return err;
+  	if (err==errAEDescNotFound) {
+  		hiliteRangePtr=NULL;
+  	} else if (err==noErr) { 
+  		::HLock(hiliteRangeArray.dataHandle); 
+  		hiliteRangePtr=(TextRangeArray*)*(hiliteRangeArray.dataHandle);
+  	} else { 
+  		return err;
+  	}
   	
 #if TARGET_CARBON
 	// еее Fix Me !!!!!
- 	rv = eventHandler->HandleUpdateInputArea((char*)textPtr,textScript,fixLength,hiliteRangePtr);
+ 	res = eventHandler->HandleUpdateInputArea((char*)textPtr,textScript,fixLength,hiliteRangePtr);
 #else
-	::HLock(text.dataHandle);
-	Size text_size = GetHandleSize(text.dataHandle);
-	char* mbcsText = new char[text_size+1];
-	strncpy(mbcsText,*(text.dataHandle),text_size);
-	mbcsText[text_size]=0;
+	nsCAutoString mbcsText;
+	Size text_size = ::GetHandleSize(text.dataHandle);
+	mbcsText.SetCapacity(text_size+1);
+	char* mbcsTextPtr = (char*)mbcsText.GetBuffer();
+	strncpy(mbcsTextPtr,*(text.dataHandle),text_size);
+	mbcsTextPtr[text_size]=0;
 	
 	//
 	// must pass HandleUpdateInputArea a null-terminated multibyte string, the text size must include the terminator
 	//
-	rv = eventHandler->HandleUpdateInputArea(mbcsText,text_size+1,textScript,fixLength,hiliteRangePtr);
+	res = eventHandler->HandleUpdateInputArea(mbcsTextPtr,text_size,textScript,fixLength,hiliteRangePtr);
 
 #endif
-	NS_ASSERTION(rv==PR_TRUE,"nsMacMessagePump::UpdateHandler: HandleUpdated failed.");
-	if (rv!=PR_TRUE) return paramErr;
+	NS_ASSERTION(NS_SUCCEEDED(res),"nsMacMessagePump::UpdateHandler: HandleUpdated failed.");
+	if (NS_FAILED(res)) 
+		return paramErr;
 	
 	//
 	// clean up
 	//
 #if !TARGET_CARBON
-	::HUnlock(text.dataHandle);
-	::HUnlock(hiliteRangeArray.dataHandle);
-	delete [] mbcsText;
-	
+	if(hiliteRangePtr)
+		::HUnlock(hiliteRangeArray.dataHandle);
 #endif
 
 	(void)AEDisposeDesc(&text);
