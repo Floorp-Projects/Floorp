@@ -800,6 +800,10 @@ nsXULTreeBuilder::SetTree(nsITreeBoxObject* tree)
 
     mBoxObject = tree;
 
+    // If this is teardown time, then we're done.
+    if (! mBoxObject)
+        return NS_OK;
+
     nsCOMPtr<nsIDocument> doc;
     mRoot->GetDocument(getter_AddRefs(doc));
     NS_ASSERTION(doc, "element has no document");
