@@ -62,4 +62,31 @@ interface nsILDAPAutoCompFormatter : nsISupports {
      */
     void getAttributes(out unsigned long aCount, 
                        [retval, array, size_is(aCount)] out string aAttrs);
+
+    /** 
+     * This method formats an error condition into an nsIAutoCompleteItem
+     * for display to the user.  Specifically, the state that the session
+     * was in when the error occured (aState) is formatted into a general
+     * error message which is put in the value attribute of the item,
+     * and the specific error (aErrorCode) is formatted into another message
+     * which is put in an nsISupportsWString in the param attribute of the
+     * item.
+     *
+     * @param aState        state of autocomplete session when error occurred
+     * @param aErrorCode    specific error encountered
+     *
+     * @return              newly generated item
+     */
+    nsIAutoCompleteItem formatException(in long aState, 
+                                        in nsresult aErrorCode);
+
+    /**
+     *  Possible states that can be passed in aState to formatException
+     */
+    const long STATE_UNBOUND = 0;
+    const long STATE_INITIALIZING = 1;
+    const long STATE_BINDING = 2;
+    const long STATE_BOUND = 3;
+    const long STATE_SEARCHING = 4;
+
 };

@@ -72,8 +72,10 @@
           this.ifSetAttribute("hideHistory", true);
         
         // turn js handler attributes into functions
-        attr = this.getAttribute("ontextcommand");
+        var attr = this.getAttribute("ontextcommand");
         if (attr) this.ontextcommand = new Function("userAction", attr);
+        attr = this.getAttribute("onerrorcommand");
+        if (attr) this.onerrorcommand = new Function("errItem", attr);
         attr = this.getAttribute("ontextrevert");
         if (attr) this.ontextrevert = new Function(attr);
         attr = this.getAttribute("oninit");
@@ -109,7 +111,8 @@
           this.mSessions = {};
           this.mListeners = {};
           this.mLastResults = {};
-          
+          this.mLastStatus = {};
+
           for (var i in list) {
             var name = list[i];
             if (name != "") {
@@ -124,6 +127,7 @@
               this.mSessions[name] = session;
               this.mListeners[name] = new (this.mAutoCompleteListener)(name);
               this.mLastResults[name] = null;
+              this.mLastStatus[name] = null;
               ++this.sessionCount;
             }
           }
@@ -259,6 +263,7 @@
       <property name="mSessions">null</property>
       <property name="mListeners">null</property>
       <property name="mLastResults">null</property>
+      <property name="mLastStatus">null</property>
       <property name="mLastKeyCode">null</property>
       <property name="mAutoCompleteTimer">0</property>
       <property name="mMenuOpen">false</property>
@@ -273,6 +278,7 @@
       <property name="oninit">null</property>
       <property name="ontextcommand">null</property>
       <property name="ontextrevert">null</property>
+      <property name="onerrorcommand">null</property>
 
       <property name="mAutoCompleteListener"><![CDATA[
         var listener = function(aSession) { this.sessionName = aSession };
@@ -314,6 +320,17 @@
           return null;
         ]]></body>
       </method>
+
+      <!-- get the autocomplete session status returned by the session
+           that a given item came from -->
+      <method name="getSessionStatusAt">
+        <parameter name="aIndex"/>
+        <body><![CDATA[
+          var obj = this.convertIndexToSession(aIndex);
+          return obj ? this.mLastStatus[obj.session] : null;
+        ]]></body>
+      </method>
+
 
       <!-- get a value from the autocomplete results as a string via an absolute index-->
       <method name="getResultValueAt">
@@ -389,6 +406,7 @@
           this.mSessions[name] = aSession;
           this.mListeners[name] = new (this.mAutoCompleteListener)(name);
           this.mLastResults[name] = null;
+          this.mLastStatus[name] = null;
         ]]></body>
       </method>
 
@@ -401,6 +419,7 @@
               delete this.mSessions[name];
               delete this.mListeners[name];
               delete this.mLastResults[name];
+              delete this.mLastStatus[name];
               --this.sessionCount;
               break;
             }
@@ -417,10 +436,12 @@
           this.mSessions = {};
           this.mListeners = {};
           this.mLastResults = {};
+          this.mLastStatus = {};
           for (var name in aCopyFrom.mSessions) {
             this.mSessions[name] = aCopyFrom.mSessions[name];
             this.mListeners[name] = new (this.mAutoCompleteListener)(name);
             this.mLastResults[name] = null;
+            this.mLastStatus[name] = null;
           }
         ]]></body>
       </method>
@@ -491,6 +512,7 @@
           this.isSearching = true;
           this.mSessionReturns = this.sessionCount;
           this.mFailureCount = 0;
+          this.mFailureItems = 0;
 
           // tell each session to start searching...
           for (var name in this.mSessions)
@@ -531,7 +553,9 @@
           
           if (firstReturn)
             this.clearResults(false); // clear results, but don't repaint yet
-          
+
+          this.mLastStatus[aSessionName] = aStatus;
+
           // check the many criteria for failure
           if (aStatus == Components.interfaces.nsIAutoCompleteStatus.failed ||
               aStatus == Components.interfaces.nsIAutoCompleteStatus.ignored || 
@@ -543,6 +567,9 @@
             this.mLastResults[aSessionName] = null;
             this.searchFailed();
             return;
+          } else if (aStatus == 
+                     Components.interfaces.nsIAutoCompleteStatus.failureItems){
+            ++this.mFailureItems;
           }
           
           this.mLastResults[aSessionName] = aResults;
@@ -567,8 +594,9 @@
         ]]></body>
       </method>
 
-      <!-- called each time a search fails. If all searches have failed, 
-           clear the list and close the popup -->
+      <!-- called each time a search fails, except when failure items need
+           to be displayed. If all searches have failed, clear the list
+           and close the popup -->
       <method name="searchFailed">
         <body><![CDATA[
           // if it's the last session to return, time to clean up...
@@ -662,12 +690,22 @@
       <!--  when the user clicks an entry in the autocomplete popup -->
       <method name="onResultClick">
         <body><![CDATA[
-          // set textbox value to either override value, or the clicked result
+         // set textbox value to either override value, or the clicked result
+          var errItem=null;
           var val = this.resultsPopup.getOverrideValue();
-          if (val)
-            this.value = val;
-          else if (this.resultsPopup.selectedIndex != null && !this.noMatch) {
-            this.value = this.getResultValueAt(this.resultsPopup.selectedIndex);
+            if (val)
+              this.value = val;
+          else if (this.resultsPopup.selectedIndex != null &&
+                   !this.noMatch) {
+            if (this.getSessionStatusAt(this.resultsPopup.selectedIndex) ==
+                Components.interfaces.nsIAutoCompleteStatus.failureItems) {
+              this.value = this.currentSearchString;
+              this.mTransientValue = true;
+              errItem = this.getResultAt(this.resultsPopup.selectedIndex);
+            } else { 
+              this.value = this.getResultValueAt(
+                                             this.resultsPopup.selectedIndex);
+            }
           }
 
           this.mNeedToFinish = false;
@@ -677,6 +715,9 @@
 
           this.currentSearchString = "";
 
+          if (errItem) {
+            this.fireErrorCommand(errItem);
+          }
           this.fireTextCommand("clicking");
         ]]></body>
       </method>
@@ -766,9 +807,21 @@
               break;              
               
             case KeyEvent.DOM_VK_RETURN:
+
+              // if this is a failure item, save it for fireErrorCommand
+              var errItem = null;
+              if (this.resultsPopup.selectedIndex != null && 
+                  this.getSessionStatusAt(this.resultsPopup.selectedIndex) ==
+                  Components.interfaces.nsIAutoCompleteStatus.failureItems) {
+                errItem = this.getResultAt(this.resultsPopup.selectedIndex);
+              }
+
               killEvent = this.mMenuOpen;
               this.finishAutoComplete(true, true);
               this.closeResultPopup();
+              if (errItem) {
+                  this.fireErrorCommand(errItem);
+              }
               break;
 
             case KeyEvent.DOM_VK_ESCAPE:
@@ -831,7 +884,12 @@
             // determine which value to place in the textbox
             this.ignoreInputEvent = true;
             if (selected != null) {
-              this.value = this.getResultValueAt(selected);
+              if (this.getSessionStatusAt(selected) == 
+                  Components.interfaces.nsIAutoCompleteStatus.failureItems) { 
+                this.value = this.currentSearchString;
+              } else {
+                this.value = this.getResultValueAt(selected);
+              }
               this.mTransientValue = true;
             } else {
               this.value = this.currentSearchString;
@@ -891,7 +949,9 @@
       <!--  -->
       <method name="openResultPopup">
         <body><![CDATA[
-          if (!this.mMenuOpen && this.showPopup && this.focused && (this.getResultCount("") >= this.minResultsForPopup) ) {
+          if (!this.mMenuOpen && this.showPopup && this.focused &&
+               (this.getResultCount("") >= this.minResultsForPopup
+                || this.mFailureItems)) {
             if (this.flexPopup) {
               var w = this.boxObject.width;
               if (w != this.resultsPopup.boxObject.width)
@@ -941,8 +1001,10 @@
       <!--  -->
       <method name="clearResultData">
         <body><![CDATA[
-          for (var name in this.mSessions)
+          for (var name in this.mSessions) {
             this.mLastResults[name] = null;
+            this.mLastStatus[name] = null;
+          }
         ]]></body>
       </method>
 
@@ -983,6 +1045,14 @@
         <parameter name="aUserAction"/>
         <body><![CDATA[
           return this.ontextcommand ? this.ontextcommand(aUserAction) : null;
+        ]]></body>
+      </method>
+
+      <!-- execute the external command handler -->
+      <method name="fireErrorCommand">
+        <parameter name="aErrorItem"/>
+        <body><![CDATA[
+          return this.onerrorcommand ? this.onerrorcommand(aErrorItem) : null;
         ]]></body>
       </method>
 
@@ -1056,6 +1126,7 @@
               var svc = Components.classes["@mozilla.org/atom-service;1"].getService(i);
               return svc.getAtom(aVal);
             } catch(ex) { }
+            return null; // XXX equivalent to falling off the end?
           },
 
           //////////////////////////////////////////////////////////
