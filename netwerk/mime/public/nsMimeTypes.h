@@ -60,6 +60,7 @@
 #define APPLICATION_FORTEZZA_KRL            "application/x-fortezza-krl"
 #define APPLICATION_GZIP                    "application/x-gzip"
 #define APPLICATION_GZIP2                   "application/gzip"
+#define APPLICATION_GZIP3                   "application/x-gunzip"
 #define APPLICATION_HTTP_INDEX_FORMAT       "application/http-index-format"
 #define APPLICATION_JAVASCRIPT              "application/x-javascript"
 #define APPLICATION_NETSCAPE_REVOCATION     "application/x-netscape-revocation"
