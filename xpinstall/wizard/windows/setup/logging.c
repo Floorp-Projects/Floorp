@@ -125,6 +125,15 @@ void LogISDestinationPath(void)
   UpdateInstallStatusLog(szBuf);
 }
 
+void LogISShared(void)
+{
+  char szBuf[MAX_BUF];
+
+  if(sgProduct.bSharedInst == TRUE)
+    wsprintf(szBuf,"\n    Shared Installation:  TRUE\n");
+  UpdateInstallStatusLog(szBuf);
+}
+
 void LogISSetupType(void)
 {
   char szBuf[MAX_BUF_TINY];

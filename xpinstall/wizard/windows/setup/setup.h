@@ -402,6 +402,11 @@ typedef struct setupStruct
   LPSTR     szAlternateArchiveSearchPath;
   LPSTR     szParentProcessFilename;
   BOOL      bLockPath;
+  BOOL      bSharedInst;
+  BOOL      bInstallFiles;
+  LPSTR     szAppID;
+  LPSTR     szAppPath;
+  LPSTR     szRegPath;
 } setupGen;
 
 typedef struct sinfoSmartDownload
