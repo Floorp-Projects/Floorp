@@ -2,16 +2,21 @@
 <!ENTITY rHeader "HTTP Network Preferences">
 
 <!-- Network-->
-<!ENTITY prefNetworking.label            "HTTP Networking Options">
-<!ENTITY prefEnableHTTP10.label          "Use HTTP 1.0">
-<!ENTITY prefEnableHTTP10.accesskey      "U">
-<!ENTITY prefEnableHTTP11.label          "Use HTTP 1.1">
-<!ENTITY prefEnableHTTP11.accesskey      "H">
-<!ENTITY prefEnableKeepAlive.label       "Enable Persistent Connections">
-<!ENTITY prefEnableKeepAlive.accesskey   "C">
-<!ENTITY prefEnablePipelining.label      "Enable Pipelining">
-<!ENTITY prefEnablePipelining.accesskey  "P">
-<!ENTITY acceptEncoding.label            "Accept-Encoding:">
-<!ENTITY acceptEncoding.accesskey        "A">
-<!ENTITY resetButton.label               "Restore Default">
-<!ENTITY resetButton.accesskey           "R">
+<!ENTITY prefDirect.label                    "Direct Connection Options">
+<!ENTITY prefProxy.label                     "Proxy Connection Options">
+<!ENTITY prefEnableHTTP10.label              "Use HTTP 1.0">
+<!ENTITY prefEnableHTTP10.accesskey          "U">
+<!ENTITY prefEnableHTTP10Proxy.accesskey     "S">
+<!ENTITY prefEnableHTTP11.label              "Use HTTP 1.1">
+<!ENTITY prefEnableHTTP11.accesskey          "H">
+<!ENTITY prefEnableHTTP11Proxy.accesskey     "T">
+<!ENTITY prefEnableKeepAlive.label           "Enable Keep-Alive">
+<!ENTITY prefEnableKeepAlive.accesskey       "K">
+<!ENTITY prefEnableKeepAliveProxy.accesskey  "L">
+<!ENTITY prefEnablePipelining.label          "Enable Pipelining">
+<!ENTITY prefEnablePipelining.accesskey      "P">
+<!ENTITY prefEnablePipeliningProxy.accesskey "I">
+<!ENTITY acceptEncoding.label                "Accept-Encoding:">
+<!ENTITY acceptEncoding.accesskey            "A">
+<!ENTITY resetButton.label                   "Restore Default">
+<!ENTITY resetButton.accesskey               "R">
