@@ -75,7 +75,7 @@ class PreferencesBase extends Properties implements Preferences {
     OutputStream out = null;
     try {
       out = new FileOutputStream(outfile);
-      save(out, "Grendel User Preferences.  Do not directly modify this file!");
+      store(out, "Grendel User Preferences.  Do not directly modify this file!");
       out.close();
     } catch (IOException e) {
       e.printStackTrace();
