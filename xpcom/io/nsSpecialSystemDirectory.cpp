@@ -328,6 +328,11 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
         case Unix_LibDirectory:
             *this = "/usr/local/lib/netscape/";
             break;
+
+        case Unix_HomeDirectory:
+            *this = PR_GetEnv("HOME");
+            break;
+
 #endif        
 
         default:

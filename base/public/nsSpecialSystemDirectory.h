@@ -62,7 +62,8 @@ class NS_BASE nsSpecialSystemDirectory : public nsFileSpec
         ,   Win_WindowsDirectory      =   202
         
         ,   Unix_LocalDirectory       =   301
-        ,   Unix_LibDirectory         =   302    
+        ,   Unix_LibDirectory         =   302
+        ,   Unix_HomeDirectory        =   303
         };
 
                     //nsSpecialSystemDirectory();
