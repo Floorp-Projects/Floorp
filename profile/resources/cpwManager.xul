@@ -9,6 +9,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="Profile Manager" align="vertical"> 
 
+<html:div flex="100%">
 
 <html:script>
 var profName = "";
@@ -102,4 +103,5 @@ function Finish()
 <html:iframe src="content1.xul" name="frame1" width="100%" height="350px"> </html:iframe>
 <html:iframe src="navigationManagerStart.xul" name="frame2" width="100%" height="90px"> </html:iframe>
 
+</html:div>
 </window>
