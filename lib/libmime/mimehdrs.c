@@ -176,8 +176,8 @@ MimeHeaders_compact (MimeHeaders *hdrs)
   hdrs->obuffer_size = 0;
 
   /* These really shouldn't have gotten out of whack again. */
-  XP_ASSERT(hdrs->all_headers_fp <= hdrs->all_headers_size &&
-			hdrs->all_headers_fp + 100 > hdrs->all_headers_size);
+  XP_ASSERT((uint32)hdrs->all_headers_fp <= hdrs->all_headers_size &&
+			(uint32)hdrs->all_headers_fp + 100 > hdrs->all_headers_size);
 }
 
 
@@ -207,7 +207,7 @@ MimeHeaders_parse_line (const char *buffer, int32 size, MimeHeaders *hdrs)
   /* Tack this data on to the end of our copy.
    */
   desired_size = hdrs->all_headers_fp + size + 1;
-  if (desired_size >= hdrs->all_headers_size)
+  if ((uint32)desired_size >= hdrs->all_headers_size)
 	{
 	  status = XP_GrowBuffer (desired_size, sizeof(char), 255,
                               &hdrs->all_headers, &hdrs->all_headers_size);
@@ -243,8 +243,8 @@ MimeHeaders_build_heads_list(MimeHeaders *hdrs)
   /* At this point, we might as well realloc all_headers back down to the
 	 minimum size it must be (it could be up to 1k bigger.)  But don't
 	 bother if we're only off by a tiny bit. */
-  XP_ASSERT(hdrs->all_headers_fp <= hdrs->all_headers_size);
-  if (hdrs->all_headers_fp + 60 <= hdrs->all_headers_size)
+  XP_ASSERT((uint32)hdrs->all_headers_fp <= hdrs->all_headers_size);
+  if ((uint32)(hdrs->all_headers_fp + 60) <= hdrs->all_headers_size)
 	{
 	  char *s = XP_REALLOC(hdrs->all_headers, hdrs->all_headers_fp);
 	  if (s) /* can this ever fail?  we're making it smaller... */
@@ -1721,10 +1721,11 @@ MimeHeaders_write_interesting_headers (MimeHeaders *hdrs,
 		  if (reply_to)
 			{
 			  char *from = MimeHeaders_get (hdrs, HEADER_FROM, FALSE, FALSE);
-			  char *froma = (from
+/* XXX need prototypes for MSG_* in some header? */
+			  char *froma = (char *)(from
 							 ? MSG_ExtractRFC822AddressMailboxes(from)
 							 : 0);
-			  char *repa  = ((reply_to && froma)
+			  char *repa  = (char *)((reply_to && froma)
 							 ? MSG_ExtractRFC822AddressMailboxes(reply_to)
 							 : 0);
 
@@ -2143,7 +2144,8 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
   id = MimeHeaders_get(hdrs, HEADER_MESSAGE_ID, FALSE, FALSE);
 #endif
 
-  name = MSG_ExtractRFC822AddressNames (from);
+/* XXX need prototype for this function in some header? */
+  name = (char *) MSG_ExtractRFC822AddressNames (from);
   if (!name)
 	{
 	  name = from;
@@ -2839,6 +2841,8 @@ MimeHeaders_get_name(MimeHeaders *hdrs)
 
 
 
+#ifdef XP_UNIX
+
 /* This piece of junk is so that I can use BBDB with Mozilla.
    = Put bbdb-srv.perl on your path.
    = Put bbdb-srv.el on your lisp path.
@@ -2874,6 +2878,8 @@ MimeHeaders_do_unix_display_hook_hack(MimeHeaders *hdrs)
 		}
 	}
 }
+
+#endif /* XP_UNIX */
 
 #endif /*MOZ_ENDER_MIME*/
 
