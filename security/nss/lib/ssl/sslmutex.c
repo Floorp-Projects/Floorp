@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslmutex.c,v 1.5 2001/10/06 00:16:56 jpierre%netscape.com Exp $
+ * $Id: sslmutex.c,v 1.6 2001/10/08 18:49:17 jpierre%netscape.com Exp $
  */
 
 #include "sslmutex.h"
@@ -203,17 +203,17 @@ sslMutex_Unlock(sslMutex *pMutex)
         return single_process_sslMutex_Unlock(pMutex);
     }
 
-    if (pMutex->mPipes[2] != SSL_MUTEX_MAGIC) {
+    if (pMutex->u.pipeStr.mPipes[2] != SSL_MUTEX_MAGIC) {
 	PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
 	return SECFailure;
     }
     /* Do Memory Barrier here. */
-    oldValue = PR_AtomicDecrement(&pMutex->nWaiters);
+    oldValue = PR_AtomicDecrement(&pMutex->u.pipeStr.nWaiters);
     if (oldValue > 1) {
 	int  cc;
 	char c  = 1;
 	do {
-	    cc = write(pMutex->mPipes[1], &c, 1);
+	    cc = write(pMutex->u.pipeStr.mPipes[1], &c, 1);
 	} while (cc < 0 && (errno == EINTR || errno == EAGAIN));
 	if (cc != 1) {
 	    if (cc < 0)
@@ -234,17 +234,17 @@ sslMutex_Lock(sslMutex *pMutex)
         return single_process_sslMutex_Lock(pMutex);
     }
 
-    if (pMutex->mPipes[2] != SSL_MUTEX_MAGIC) {
+    if (pMutex->u.pipeStr.mPipes[2] != SSL_MUTEX_MAGIC) {
 	PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
 	return SECFailure;
     }
-    oldValue = PR_AtomicDecrement(&pMutex->nWaiters);
+    oldValue = PR_AtomicDecrement(&pMutex->u.pipeStr.nWaiters);
     /* Do Memory Barrier here. */
     if (oldValue > 0) {
 	int   cc;
 	char  c;
 	do {
-	    cc = read(pMutex->mPipes[0], &c, 1);
+	    cc = read(pMutex->u.pipeStr.mPipes[0], &c, 1);
 	} while (cc < 0 && errno == EINTR);
 	if (cc != 1) {
 	    if (cc < 0)
