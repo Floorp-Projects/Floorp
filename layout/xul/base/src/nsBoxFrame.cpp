@@ -124,7 +124,7 @@ class nsInfoListImpl: public nsInfoList
 {
 public:
     nsInfoListImpl();
-    ~nsInfoListImpl();
+    virtual ~nsInfoListImpl();
     virtual nsCalculatedBoxInfo* GetFirst();
     virtual nsCalculatedBoxInfo* GetLast();
     virtual nsCalculatedBoxInfo* GetFirstCreateIfNeeded();
