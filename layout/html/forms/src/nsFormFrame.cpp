@@ -454,6 +454,7 @@ NS_NewFormFrame(nsIFrame*& aResult)
 }
 
 
+PRIVATE
 void DebugPrint(char* aLabel, nsString aString)
 {
   char* out = aString.ToNewCString();
@@ -547,6 +548,7 @@ DebugPrint("data", data);
 // conver each non alphanumeric char to %XY where XY is the hexadecimal 
 // equavalent of the binary representation of the character. 
 // 
+PRIVATE
 void URLEncode(char* aInString, char* aOutString)
 {
   if (nsnull == aInString) {
@@ -571,6 +573,7 @@ void URLEncode(char* aInString, char* aOutString)
   *outChar = 0;  // terminate the string
 }
 
+PRIVATE
 nsString* URLEncode(nsString& aString) 
 {  
   char* inBuf  = aString.ToNewCString();
