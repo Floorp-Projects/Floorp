@@ -444,6 +444,7 @@ sub validateID {
 
 sub validateName {
     $::FORM{'name'}
+      && $::FORM{'name'} !~ /[ ,]/
       && length($::FORM{'name'}) <= 50
       || ThrowUserError("flag_type_name_invalid", { name => $::FORM{'name'} });
 }
