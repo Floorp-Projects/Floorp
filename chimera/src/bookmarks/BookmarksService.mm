@@ -38,6 +38,7 @@
 #import "CHBrowserView.h"
 #import "BookmarksService.h"
 #import "BookmarkInfoController.h"
+#import "StringUtils.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
@@ -352,6 +353,10 @@
   }
 }
 
+-(NSString*) resolveKeyword: (NSString*) aKeyword
+{
+  return BookmarksService::ResolveKeyword(aKeyword);
+}
 
 //
 // outlineView:shouldEditTableColumn:item: (delegate method)
@@ -638,6 +643,9 @@
   [mRenameSheet orderOut:self];
   [NSApp endSheet:mRenameSheet returnCode:0];
   
+  nsAutoString buff;
+  NSStringTo_nsString([mRenameTextField stringValue], buff);
+#if 0
   // extract the string from the text field into a unicode buffer
   unsigned int len = [[mRenameTextField stringValue] length];
   PRUnichar* buffer = new PRUnichar[len + 1];
@@ -645,11 +653,11 @@
     return;
   [[mRenameTextField stringValue] getCharacters:buffer];
   buffer[len] = (PRUnichar)'\0';
-  
+  nsXPIDLString buff; buff.Adopt(buffer);
+#endif  
   // stuff it into our bookmarks item. |buff| takes ownership of |buffer| so
   // it doesn't have to be deleted manually
   BookmarkItem* item = [mOutlineView itemAtRow: [mOutlineView selectedRow]];
-  nsXPIDLString buff; buff.Adopt(buffer);
   [item contentNode]->SetAttr(kNameSpaceID_None, BookmarksService::gNameAtom, buff, PR_TRUE);
   mBookmarks->BookmarkChanged([item contentNode]);
 }
@@ -1034,12 +1042,39 @@ BookmarksService::AddObserver()
         NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
         profileDir->Append(NS_LITERAL_STRING("bookmarks.xml"));
     
+        PRBool fileExists;
+        profileDir->Exists(&fileExists);
+
+        // If the bookmarks file does not exist, copy from the defaults so we don't
+        // crash or anything dumb like that. 
+        if (!fileExists) {
+            nsCOMPtr<nsIFile> defaultBookmarksFile;
+            NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR, getter_AddRefs(defaultBookmarksFile));
+            defaultBookmarksFile->Append(NS_LITERAL_STRING("bookmarks.xml"));
+          
+            // XXX for some reason unknown to me, leaving this code in causes the program to crash
+            //     with 'cannot dereference null COMPtr.'
+#if I_WANT_TO_CRASH
+            PRBool defaultFileExists;
+            defaultBookmarksFile->Exists(&defaultFileExists);
+            if (defaultFileExists)
+                return;
+#endif
+
+            nsCOMPtr<nsIFile> profileDirectory;
+            NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDirectory));
+
+            defaultBookmarksFile->CopyToNative(profileDirectory, NS_LITERAL_CSTRING("bookmarks.xml"));
+        }
+        
         nsCAutoString bookmarksFileURL;
         NS_GetURLSpecFromFile(profileDir, bookmarksFileURL);
         
         nsCOMPtr<nsIURI> uri;
         NS_NewURI(getter_AddRefs(uri), bookmarksFileURL.get());
     
+        // XXX this is somewhat lame. we have no way of knowing whether or not the parse succeeded
+        //     or failed. sigh. 
         nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));    
         xblService->FetchSyncXMLDocument(uri, &gBookmarks); // The addref is here.
         
@@ -1147,10 +1182,13 @@ BookmarksService::DeleteBookmark(nsIDOMElement* aBookmark)
 void
 BookmarksService::FlushBookmarks()
 {
+    // XXX we need to insert a mechanism here to ensure that we don't write corrupt
+    //     bookmarks files (e.g. full disk, program crash, whatever), because our
+    //     error handling in the parse stage is NON-EXISTENT. 
     nsCOMPtr<nsIFile> bookmarksFile;
     NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(bookmarksFile));
     bookmarksFile->Append(NS_LITERAL_STRING("bookmarks.xml"));
-
+    
     nsCOMPtr<nsIOutputStream> outputStream;
     NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), bookmarksFile);
 
@@ -1584,6 +1622,30 @@ BookmarksService::OpenBookmarkGroup(id aTabView, nsIDOMElement* aFolder)
   // Select and activate the first tab.
   [aTabView selectTabViewItemAtIndex: 0];
   [[[[aTabView tabViewItemAtIndex: 0] view] getBrowserView] setActive: YES];
+}
+
+NSString* 
+BookmarksService::ResolveKeyword(NSString* aKeyword)
+{
+  nsAutoString keyword;
+  NSStringTo_nsString(aKeyword, keyword);
+
+  if (keyword.IsEmpty())
+    return [NSString stringWithCString:""];
+  
+  NSLog(@"str = %s", keyword.get());
+  
+  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(gBookmarks));
+  nsCOMPtr<nsIDOMElement> elt;
+  domDoc->GetElementById(keyword, getter_AddRefs(elt));
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(elt));
+  nsAutoString url;
+  if (content) {
+    content->GetAttr(kNameSpaceID_None, gHrefAtom, url);
+    return [NSString stringWithCharacters: url.get() length: url.Length()];
+  }
+  return [NSString stringWithCString:""];
 }
 
 NSImage*
