@@ -42,7 +42,6 @@ sub sillyness {
 
 
 require 'CGI.pl';
-require 'cvsquery.pl';
 
 $::CVS_ROOT = $::FORM{'cvsroot'};
 $::CVS_ROOT = pickDefaultRepository() unless $::CVS_ROOT;
@@ -55,6 +54,8 @@ $::TreeID = 'default'
          exists($::TreeInfo{$::TreeID}{'nobonsai'}));
 
 LoadTreeConfig();
+
+require 'cvsquery.pl';
 
 my $userdomain = Param('userdomain');
 $| = 1;
