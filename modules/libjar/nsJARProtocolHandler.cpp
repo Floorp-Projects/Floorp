@@ -28,6 +28,7 @@
 #include "nsJARURI.h"
 #include "nsIURL.h"
 #include "nsJARChannel.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kJARUriCID,        NS_JARURI_CID);
@@ -94,16 +95,19 @@ NS_IMETHODIMP
 nsJARProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                              nsIURI **result)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
     nsIURI* url;
-    if (aBaseURI) {
-        rv = aBaseURI->Clone(&url);
+
+    rv = nsJARURI::Create(nsnull, NS_GET_IID(nsIJARURI), (void**)&url);
+    if (NS_FAILED(rv)) return rv;
+
+    if (aBaseURI)
+    {
+        nsXPIDLCString aResolvedURI;
+        rv = aBaseURI->Resolve(aSpec, getter_Copies(aResolvedURI));
         if (NS_FAILED(rv)) return rv;
-        rv = url->SetRelativePath(aSpec);
-    }
-    else {
-        rv = nsJARURI::Create(nsnull, NS_GET_IID(nsIJARURI), (void**)&url);
-        if (NS_FAILED(rv)) return rv;
+        rv = url->SetSpec(aResolvedURI);
+    } else {
         rv = url->SetSpec((char*)aSpec);
     }
 

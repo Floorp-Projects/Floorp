@@ -95,22 +95,15 @@ nsAboutProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 {
     nsresult rv;
 
-    // about: URIs are implemented by the "Simple URI" implementation
+    // no concept of a relative about url
+    NS_ASSERTION(!aBaseURI, "base url passed into about protocol handler");
 
     nsIURI* url;
-    if (aBaseURI) {
-        rv = aBaseURI->Clone(&url);
-        if (NS_FAILED(rv)) return rv;
-        rv = url->SetRelativePath(aSpec);
-    }
-    else {
-        rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
-                                                NS_GET_IID(nsIURI),
-                                                (void**)&url);
-        if (NS_FAILED(rv)) return rv;
-        rv = url->SetSpec((char*)aSpec);
-
-    }
+    rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
+                                            NS_GET_IID(nsIURI),
+                                            (void**)&url);
+    if (NS_FAILED(rv)) return rv;
+    rv = url->SetSpec((char*)aSpec);
     if (NS_FAILED(rv)) {
         NS_RELEASE(url);
         return rv;

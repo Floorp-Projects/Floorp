@@ -181,31 +181,30 @@ nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                       nsIURI **result)
 {
     nsresult rv = NS_OK;
-
     nsCOMPtr<nsIURI> url;
     nsCOMPtr<nsIURLParser> urlparser; 
+    rv = nsComponentManager::CreateInstance(kAuthUrlParserCID, 
+                             nsnull, NS_GET_IID(nsIURLParser),
+                             getter_AddRefs(urlparser));
+    if (NS_FAILED(rv)) return rv;
+    rv = nsComponentManager::CreateInstance(kStandardUrlCID, 
+                             nsnull, NS_GET_IID(nsIURI),
+                             getter_AddRefs(url));
+    if (NS_FAILED(rv)) return rv;
+    rv = url->SetURLParser(urlparser);
+    if (NS_FAILED(rv)) return rv;
+
     if (aBaseURI)
     {
-        rv = aBaseURI->Clone(getter_AddRefs(url));
+        nsXPIDLCString aResolvedURI;
+        rv = aBaseURI->Resolve(aSpec, getter_Copies(aResolvedURI));
         if (NS_FAILED(rv)) return rv;
-        rv = url->SetRelativePath(aSpec);
-    }
-    else
-    {
-        rv = nsComponentManager::CreateInstance(kAuthUrlParserCID, 
-                                    nsnull, NS_GET_IID(nsIURLParser),
-                                    getter_AddRefs(urlparser));
-        if (NS_FAILED(rv)) return rv;
-        rv = nsComponentManager::CreateInstance(kStandardUrlCID, 
-                                    nsnull, NS_GET_IID(nsIURI),
-                                    getter_AddRefs(url));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = url->SetURLParser(urlparser);
-        if (NS_FAILED(rv)) return rv;
+        rv = url->SetSpec(aResolvedURI);
+    } else {
         rv = url->SetSpec((char*)aSpec);
     }
     if (NS_FAILED(rv)) return rv;
+
     *result = url.get();
     NS_ADDREF(*result);
     return rv;

@@ -151,16 +151,21 @@ nsResChannel::Substitutions::Next(nsIURI* *result)
     PRBool ok = mSubstitutions->RemoveCStringAt(0);
     if (!ok) return NS_ERROR_FAILURE;
 
-    char* path;
+    char* path = nsnull;
     rv = channel->mResourceURI->GetPath(&path);
     if (NS_FAILED(rv)) return rv;
 
     // XXX this path[0] check is a hack -- it seems to me that GetPath 
     // shouldn't include the leading slash:
-    rv = resolvedURI->SetRelativePath(path[0] == '/' ? path+1 : path);
+    nsXPIDLCString aResolvedURI;
+    rv = resolvedURI->Resolve(path[0] == '/' ? path+1 : path, 
+                              getter_Copies(aResolvedURI));
     nsCRT::free(path);
     if (NS_FAILED(rv)) return rv;
     
+    rv = resolvedURI->SetSpec(aResolvedURI);
+    if (NS_FAILED(rv)) return rv;
+
     *result = resolvedURI;
     NS_IF_ADDREF(*result);
     return NS_OK;
