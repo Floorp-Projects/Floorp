@@ -28,7 +28,6 @@
 #include "nsIScriptLoader.h"
 #include "nsIDOMHTMLScriptElement.h"
 #include "nsIScriptLoaderObserver.h"
-#include "nsCommonString.h"
 #include "nsIURI.h"
 #include "nsSupportsArray.h"
 #include "nsIDocument.h"
