@@ -86,7 +86,7 @@ nsViewerApp::nsViewerApp()
 //  mStartURL = text ? text : "resource:/res/samples/test0.html";
 
   //rickg 20Nov98: For the sake of a good demo, pre-load a decent URL...
-  mStartURL = text ? text : "http://home.netscape.com/eng/mozilla/5.0/DR1/hello.html";
+  mStartURL = text ? text : "http://developer.netscape.com/software/communicator/ngl/index.html";
 
   mDelay = 1;
   mRepeatCount = 1;
