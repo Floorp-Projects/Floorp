@@ -45,6 +45,8 @@ public:
 protected:
 	static PRBool FindCacheElementByURI(nsISupports *aElement, void *data);
 	static nsIMdbFactory *GetMDBFactory();
+
+	nsresult AddCacheElement(const char *uri, nsIMsgFolderCacheElement **result);
 	nsresult InitMDBInfo();
 	nsresult InitNewDB();
 	nsresult InitExistingDB();

@@ -108,6 +108,29 @@ nsresult nsMsgFolderCache::InitExistingDB()
 	if (err == NS_OK)
 	{
 		err = GetStore()->GetTable(GetEnv(), &m_allFoldersTableOID, &m_mdbAllFoldersTable);
+		if (NS_SUCCEEDED(err) && m_mdbAllFoldersTable)
+		{
+			nsIMdbTableRowCursor* rowCursor = nsnull;
+			err = m_mdbAllFoldersTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
+			if (NS_SUCCEEDED(err) && rowCursor)
+			{
+				// iterate over the table rows and create nsMsgFolderCacheElements for each.
+				while (TRUE)
+				{
+					nsresult rv;
+					nsIMdbRow* hdrRow;
+					mdb_pos rowPos;
+
+					rv = rowCursor->NextRow(GetEnv(), &hdrRow, &rowPos);
+					if (NS_FAILED(rv) || !hdrRow)
+						break;
+
+//					rv = mDB->CreateMsgHdr(hdrRow, key, &mResultHdr);
+					if (NS_FAILED(rv))
+						return rv;
+				}
+			}
+		}
 	}
 	return err;
 }
@@ -266,14 +289,20 @@ NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(char *uri, PRBool createIfMissin
 	}
 	else if (createIfMissing)
 	{
-		*result = new nsMsgFolderCacheElement;
-		if (*result)
+		nsIMdbRow* hdrRow;
+
+		if (GetStore())
 		{
-			(*result)->SetURI(uri);
-			nsCOMPtr<nsISupports> supports(do_QueryInterface(*result));
-			if(supports)
-				m_cacheElements->AppendElement(supports);
-			return NS_OK;
+			mdb_err err = GetStore()->NewRow(GetEnv(), m_folderRowScopeToken,   // row scope for row ids
+				&hdrRow);
+			if (NS_SUCCEEDED(err) && hdrRow)
+			{
+				m_mdbAllFoldersTable->AddRow(GetEnv(), hdrRow);
+				nsresult ret = AddCacheElement(uri, result);
+				if (*result)
+					(*result)->SetStringProperty("uri", uri);
+				return ret;
+			}
 		}
 	}
 	return NS_COMFALSE;
@@ -288,22 +317,41 @@ NS_IMETHODIMP nsMsgFolderCache::Close()
 PRBool
 nsMsgFolderCache::FindCacheElementByURI(nsISupports *aElement, void *data)
 {
-  nsresult rv;
-  nsCOMPtr<nsIMsgFolderCacheElement> cacheElement = do_QueryInterface(aElement, &rv);
-  if (NS_FAILED(rv)) return PR_TRUE;
+	nsresult rv;
+	nsCOMPtr<nsIMsgFolderCacheElement> cacheElement = do_QueryInterface(aElement, &rv);
+	if (NS_FAILED(rv)) return PR_TRUE;
 
-  findCacheElementByURIEntry *entry = (findCacheElementByURIEntry *) data;
+	findCacheElementByURIEntry *entry = (findCacheElementByURIEntry *) data;
 
-  nsXPIDLCString key;
-  rv = cacheElement->GetURI(getter_Copies(key));
-  if (NS_FAILED(rv)) return rv;
+	nsXPIDLCString key;
+	rv = cacheElement->GetURI(getter_Copies(key));
+	if (NS_FAILED(rv)) 
+		return rv;
   
-  if (entry && entry->m_uri && !PL_strcmp(key, entry->m_uri ))
-  {
-    entry->m_cacheElement = cacheElement;
-    NS_ADDREF(entry->m_cacheElement);
-    return PR_FALSE;
-  }
+	if (entry && entry->m_uri && !PL_strcmp(key, entry->m_uri ))
+	{
+		entry->m_cacheElement = cacheElement;
+		NS_ADDREF(entry->m_cacheElement);
+		return PR_FALSE;
+	}
 
-  return PR_TRUE;
+	return PR_TRUE;
+}
+
+nsresult nsMsgFolderCache::AddCacheElement(const char *uri, nsIMsgFolderCacheElement **result)
+{
+	nsMsgFolderCacheElement *cacheElement = new nsMsgFolderCacheElement;
+
+	if (cacheElement)
+	{
+		cacheElement->SetURI((char *) uri);
+		nsCOMPtr<nsISupports> supports(do_QueryInterface(cacheElement));
+		if(supports)
+			m_cacheElements->AppendElement(supports);
+		if (result)
+			*result = cacheElement;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_OUT_OF_MEMORY;
 }
