@@ -116,6 +116,15 @@ void CPlugin::clear()
 #endif
 }
 
+void CPlugin::getVersion(char* *aVersion)
+{
+  const char *ua = NPN_UserAgent(m_pNPInstance);
+  char*& version = *aVersion;
+  version = (char*)NPN_MemAlloc(1 + strlen(ua));
+  if (version)
+    strcpy(version, ua);
+}
+
 // ==============================
 // ! Scriptability related code !
 // ==============================

@@ -111,3 +111,10 @@ NS_IMETHODIMP nsScriptablePeer::Clear()
 
   return NS_OK;
 }
+
+NS_IMETHODIMP nsScriptablePeer::GetVersion(char * *aVersion)
+{
+  if (mPlugin)
+    mPlugin->getVersion(aVersion);
+  return NS_OK;
+}
