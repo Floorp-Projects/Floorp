@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+	/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -79,6 +79,8 @@ nsIAtom * nsMsgDBView::kLowPriorityAtom = nsnull;
 nsIAtom * nsMsgDBView::kUnreadMsgAtom	= nsnull;
 nsIAtom * nsMsgDBView::kNewMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kReadMsgAtom	= nsnull;
+nsIAtom * nsMsgDBView::kRepliedMsgAtom = nsnull;
+nsIAtom * nsMsgDBView::kForwardedMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kOfflineMsgAtom	= nsnull;
 nsIAtom * nsMsgDBView::kFlaggedMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kNewsMsgAtom = nsnull;
@@ -162,6 +164,8 @@ void nsMsgDBView::InitializeAtomsAndLiterals()
   kUnreadMsgAtom = NS_NewAtom("unread");
   kNewMsgAtom = NS_NewAtom("new");
   kReadMsgAtom = NS_NewAtom("read");
+  kRepliedMsgAtom = NS_NewAtom("replied");
+  kForwardedMsgAtom = NS_NewAtom("forwarded");
   kOfflineMsgAtom = NS_NewAtom("offline");
   kFlaggedMsgAtom = NS_NewAtom("flagged");
   kNewsMsgAtom = NS_NewAtom("news");
@@ -208,6 +212,8 @@ nsMsgDBView::~nsMsgDBView()
     NS_IF_RELEASE(kUnreadMsgAtom);
     NS_IF_RELEASE(kNewMsgAtom);
     NS_IF_RELEASE(kReadMsgAtom);
+    NS_IF_RELEASE(kRepliedMsgAtom);
+    NS_IF_RELEASE(kForwardedMsgAtom);
     NS_IF_RELEASE(kOfflineMsgAtom);
     NS_IF_RELEASE(kFlaggedMsgAtom);
     NS_IF_RELEASE(kNewsMsgAtom);
@@ -1151,8 +1157,14 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
   else 
     properties->AppendElement(kReadMsgAtom);  
 
+  if (flags & MSG_FLAG_REPLIED)
+    properties->AppendElement(kRepliedMsgAtom);
+  
+  if (flags & MSG_FLAG_FORWARDED)
+    properties->AppendElement(kForwardedMsgAtom);
+  
   if (flags & MSG_FLAG_NEW)
-    properties->AppendElement(kNewMsgAtom);  
+    properties->AppendElement(kNewMsgAtom);
 
   if (flags & MSG_FLAG_OFFLINE)
     properties->AppendElement(kOfflineMsgAtom);  

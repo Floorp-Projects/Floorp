@@ -111,6 +111,8 @@ protected:
   static nsIAtom* kUnreadMsgAtom;
   static nsIAtom* kNewMsgAtom;
   static nsIAtom* kReadMsgAtom;
+  static nsIAtom* kRepliedMsgAtom;
+  static nsIAtom* kForwardedMsgAtom;
   static nsIAtom* kOfflineMsgAtom;
   static nsIAtom* kFlaggedMsgAtom;
   static nsIAtom* kNewsMsgAtom;
