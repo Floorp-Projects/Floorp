@@ -1228,8 +1228,11 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
                     trashFolder->PropagateDelete(aFolder, PR_TRUE, msgWindow);
             }
         }
+
+        return NS_OK;
     }
-    return NS_OK;
+
+    return rv;
 }
 
 NS_IMETHODIMP nsImapMailFolder::Delete ()
