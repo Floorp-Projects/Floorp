@@ -123,9 +123,16 @@ nsCacheMetaData::SetElement(const nsAReadableCString * key,
  */
 
 const void *
-nsCacheMetaData::GetKey( PLDHashTable * /*table*/, PLDHashEntryHdr *hashEntry)
+nsCacheMetaData::GetKey( PLDHashTable * /* table */, PLDHashEntryHdr *hashEntry)
 {
     return ((nsCacheMetaDataHashTableEntry *)hashEntry)->key;
+}
+
+PLDHashNumber
+nsCacheMetaData::HashKey( PLDHashTable * /* table */, const void *key)
+{
+    //** need scc's new flat string abstract class here (bug 70075)
+    return PLDHashNumber(((nsCString *)key)->get());
 }
 
 PRBool
