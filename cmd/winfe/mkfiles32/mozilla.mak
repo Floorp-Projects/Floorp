@@ -489,15 +489,15 @@ LINK_LIBS= \
  $(NGLAYOUT_DIST)\lib\raptorhtml.lib	\
  $(NGLAYOUT_DIST)\lib\raptorweb.lib	\
 !endif
-!if "$(WINOS)" == "WIN95"
-    $(DIST)\lib\xpcom$(MOZ_BITS).lib \
-!else
-    $(DIST)\lib\xpcom$(MOZ_BITS).lib \
-!endif
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
     $(GLOWDIR)\glowcode.lib \
 !endif
+!if "$(WINOS)" == "WIN95"
+    $(DIST)\lib\xpcom$(MOZ_BITS).lib
+!else
+    $(DIST)\lib\xpcom$(MOZ_BITS).lib \
     $(NULL)
+!endif
 
 ##      Specify MFC libs before other libs and before .obj files,
 ##              such that _CrtDumpMemoryLeaks will be called
@@ -1346,7 +1346,6 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\shcutdlg.cpp   
 	$(DEPTH)\cmd\winfe\slavewnd.cpp 
 	$(DEPTH)\cmd\winfe\splash.cpp 
-	$(DEPTH)\cmd\winfe\spiwrap.c 
 	$(DEPTH)\cmd\winfe\srvritem.cpp   
 	$(DEPTH)\cmd\winfe\statbar.cpp 
 !ifndef MOZ_NGLAYOUT
