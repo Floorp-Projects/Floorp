@@ -38,13 +38,6 @@ include $(DEPTH)/config/rules.mk
 
 INCLUDES	+= -I../src
 
-# needed for mac linux
-ifeq ($(OS_ARCH),Linux)
-ifneq ($(OS_RELEASE),1.2)
-OS_LIBS		+= /usr/lib/libdl.so
-endif
-endif
-
 $(OBJDIR)/%.o: %.cpp
 	@$(MAKE_OBJDIR)
 	$(CCC) -o $@ $(CFLAGS) -c $*.cpp
