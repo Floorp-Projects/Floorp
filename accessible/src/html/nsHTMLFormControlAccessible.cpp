@@ -300,30 +300,9 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccName(nsAString& _retval)
 nsHTMLTextFieldAccessible::nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
 nsFormControlAccessible(aNode, aShell)
 { 
-#ifdef MOZ_ACCESSIBILITY_ATK
-  SetTextNode(aNode);
-
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
-  if (shell) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-    nsIFrame *frame = nsnull;
-    shell->GetPrimaryFrameFor(content, &frame);
-    nsITextControlFrame *textFrame;
-    frame->QueryInterface(NS_GET_IID(nsITextControlFrame), (void**)&textFrame);
-    if (textFrame) {
-      nsCOMPtr<nsIEditor> editor;
-      textFrame->GetEditor(getter_AddRefs(editor));
-      SetEditor(editor);
-    }
-  }
-#endif //MOZ_ACCESSIBILITY_ATK
 }
 
-#ifndef MOZ_ACCESSIBILITY_ATK
 NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTextFieldAccessible, nsFormControlAccessible)
-#else
-NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLTextFieldAccessible, nsFormControlAccessible, nsIAccessibleEditableText, nsIAccessibleText)
-#endif
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccRole(PRUint32 *_retval)
 {

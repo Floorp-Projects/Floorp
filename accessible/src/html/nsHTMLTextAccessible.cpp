@@ -73,38 +73,6 @@ NS_IMETHODIMP nsHTMLHRAccessible::GetAccState(PRUint32 *aState)
   return NS_OK;
 }
 
-#ifdef MOZ_ACCESSIBILITY_ATK
-
-NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLBlockAccessible, nsBlockAccessible, nsIAccessibleHyperText, nsIAccessibleText)
-
-nsHTMLBlockAccessible::nsHTMLBlockAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsBlockAccessible(aDomNode, aShell), nsAccessibleHyperText(aDomNode, aShell)
-{ 
-}
-
-NS_IMETHODIMP nsHTMLBlockAccessible::GetAccName(nsAString& aName)
-{
-  nsAutoString name(NS_LITERAL_STRING("Paragraph "));
-  name.AppendInt(GetIndex());
-  aName = name;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsHTMLBlockAccessible::GetAccRole(PRUint32 *aRole)
-{
-  *aRole = ROLE_TEXT;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsHTMLBlockAccessible::GetAccState(PRUint32 *aState)
-{
-  nsAccessible::GetAccState(aState);
-  *aState &= ~STATE_FOCUSABLE;
-  return NS_OK;
-}
-
-#endif //MOZ_ACCESSIBILITY_ATK
-
 nsHTMLLabelAccessible::nsHTMLLabelAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsTextAccessible(aDomNode, aShell)
 { 

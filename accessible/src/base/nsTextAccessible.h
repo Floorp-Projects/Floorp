@@ -40,99 +40,14 @@
 #ifndef _nsTextAccessible_H_
 #define _nsTextAccessible_H_
 
-#include "nsAccessibleEventData.h"
 #include "nsBaseWidgetAccessible.h"
-#include "nsIAccessibleEditableText.h"
-#include "nsIAccessibleText.h"
-#include "nsIEditActionListener.h"
-#include "nsIEditor.h"
-#include "nsISelectionController.h"
-#include "nsITextControlFrame.h"
-
-#ifdef MOZ_ACCESSIBILITY_ATK
-
-enum EGetTextType { eGetBefore=-1, eGetAt=0, eGetAfter=1 };
-
-class nsAccessibleText : public nsIAccessibleText
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIACCESSIBLETEXT
-
-  nsAccessibleText();
-  virtual ~nsAccessibleText();
-
-  void SetTextNode(nsIDOMNode *aNode);
-
-  static PRBool gSuppressedNotifySelectionChanged;
-
-protected:
-  nsCOMPtr<nsIDOMNode> mTextNode;
-
-  nsresult GetSelections(nsISelectionController **aSelCon, nsISelection **aDomSel);
-  nsresult GetTextHelperCore(EGetTextType aType, nsAccessibleTextBoundary aBoundaryType, 
-                             PRInt32 aOffset, PRInt32 *aStartOffset, PRInt32 *aEndOffset, 
-                             nsISelectionController *aSelCon, nsISelection *aDomSel, 
-                             nsISupports *aClosure, nsAString & aText);
-  nsresult GetTextHelper(EGetTextType aType, nsAccessibleTextBoundary aBoundaryType, 
-                         PRInt32 aOffset, PRInt32 *aStartOffset, PRInt32 *aEndOffset, 
-                         nsISupports *aClosure, nsAString & aText);
-
-  static nsresult DOMPointToOffset(nsISupports *aClosure, nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32 *aResult);
-  static nsresult OffsetToDOMPoint(nsISupports *aClosure, PRInt32 aOffset, nsIDOMNode** aResult, PRInt32* aPosition);
-  static nsresult GetCurrectOffset(nsISupports *aClosure, nsISelection *aDomSel, PRInt32 *aOffset);
-
-  friend class nsAccessibleHyperText;
-};
-
-class nsAccessibleEditableText : public nsAccessibleText, 
-                                 public nsIAccessibleEditableText,
-                                 public nsIEditActionListener
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIACCESSIBLEEDITABLETEXT
-  NS_DECL_NSIEDITACTIONLISTENER
-
-  nsAccessibleEditableText();
-  virtual ~nsAccessibleEditableText();
-
-  NS_IMETHOD GetCaretOffset(PRInt32 *aCaretOffset);
-  NS_IMETHOD SetCaretOffset(PRInt32 aCaretOffset);
-  NS_IMETHOD GetCharacterCount(PRInt32 *aCharacterCount);
-  NS_IMETHOD GetText(PRInt32 startOffset, PRInt32 endOffset, nsAString & aText);
-  NS_IMETHOD GetTextBeforeOffset(PRInt32 aOffset, nsAccessibleTextBoundary aBoundaryType, 
-                                 PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & aText);
-  NS_IMETHOD GetTextAtOffset(PRInt32 aOffset, nsAccessibleTextBoundary aBoundaryType, 
-                             PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & aText);
-  NS_IMETHOD GetTextAfterOffset(PRInt32 aOffset, nsAccessibleTextBoundary aBoundaryType, 
-                                PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & aText);
-
-  static PRBool IsSingleLineTextControl(nsIDOMNode *aDomNode);
-
-protected:
-  void SetEditor(nsIEditor *aEditor);
-  nsITextControlFrame* GetTextFrame();
-  nsresult GetSelectionRange(PRInt32 *aStartPos, PRInt32 *aEndPos);
-  nsresult SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos);
-  nsresult FireTextChangeEvent(AtkTextChange *aTextData);
-
-  nsCOMPtr<nsIEditor>  mEditor;
-};
-
-#endif //MOZ_ACCESSIBILITY_ATK
 
  /**
   * Text nodes have no children, but since double inheritance
   *  no-worky we have to re-impl the LeafAccessiblity blocks 
   *  this way.
   */
-#ifndef MOZ_ACCESSIBILITY_ATK
 class nsTextAccessible : public nsLinkableAccessible
-#else
-class nsTextAccessible : public nsLinkableAccessible,
-                         public nsAccessibleText
-#endif
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

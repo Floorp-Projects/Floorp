@@ -40,7 +40,6 @@
 #ifndef _nsHTMLTextAccessible_H_
 #define _nsHTMLTextAccessible_H_
 
-#include "nsHyperTextAccessible.h"
 #include "nsTextAccessible.h"
 
 class nsIWeakReference;
@@ -61,22 +60,6 @@ public:
   NS_IMETHOD GetAccRole(PRUint32 *aRole); 
   NS_IMETHOD GetAccState(PRUint32 *aState); 
 };
-
-#ifdef MOZ_ACCESSIBILITY_ATK
-
-class nsHTMLBlockAccessible : public nsBlockAccessible,
-                              public nsAccessibleHyperText
-{
-  NS_DECL_ISUPPORTS_INHERITED
-
-public:
-  nsHTMLBlockAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAString& aName);
-  NS_IMETHOD GetAccRole(PRUint32 *aRole); 
-  NS_IMETHOD GetAccState(PRUint32 *aState); 
-};
-
-#endif //MOZ_ACCESSIBILITY_ATK
 
 class nsHTMLLabelAccessible : public nsTextAccessible 
 {

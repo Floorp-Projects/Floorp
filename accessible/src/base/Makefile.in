@@ -58,7 +58,6 @@ CPPSRCS = \
   nsAccessibleTreeWalker.cpp \
   nsBaseWidgetAccessible.cpp \
   nsFormControlAccessible.cpp \
-  nsHyperTextAccessible.cpp \
   nsRootAccessible.cpp \
   nsCaretAccessible.cpp \
   nsTextAccessible.cpp \
@@ -81,3 +80,9 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../xul \
   -I$(srcdir)/../../../layout/html/base/src \
   $(NULL)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+LOCAL_INCLUDES += \
+  -I$(srcdir)/../atk \
+  $(NULL)
+endif

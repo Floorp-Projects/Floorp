@@ -35,24 +35,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// NOTE: alphabetically ordered
 #include "nsAccessibilityService.h"
-#include "nsIServiceManagerUtils.h"
 #include "nsCaretAccessible.h"
-#include "nsIDocument.h"
+#include "nsIAccessibleEventReceiver.h"
+#include "nsICaret.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
-#include "nsICaret.h"
-#include "nsISelectionController.h"
 #include "nsIFrame.h"
+#include "nsIPresShell.h"
+#include "nsISelectionController.h"
 #include "nsISelectionPrivate.h"
+#include "nsIServiceManagerUtils.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
-#include "nsIPresShell.h"
-#include "nsTextAccessible.h"
 #include "nsRootAccessible.h"
-#include "nsIAccessibleEventReceiver.h"
+#include "nsTextAccessible.h"
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+#include "nsAccessibleText.h"
+#endif
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsCaretAccessible, nsLeafAccessible, nsIAccessibleCaret, nsISelectionListener)
 
