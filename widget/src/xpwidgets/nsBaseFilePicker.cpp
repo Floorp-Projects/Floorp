@@ -69,7 +69,7 @@ NS_IMETHODIMP nsBaseFilePicker::DOMWindowToWidget(nsIDOMWindowInternal *dw, nsIW
       nsCOMPtr<nsIPresShell> presShell;
       rv = docShell->GetPresShell(getter_AddRefs(presShell));
 
-      if (NS_SUCCEEDED(rv)) {
+      if (NS_SUCCEEDED(rv) && presShell) {
         nsCOMPtr<nsIViewManager> viewManager;
         rv = presShell->GetViewManager(getter_AddRefs(viewManager));
             
