@@ -115,23 +115,19 @@ protected:
   nsresult UseInWindow(nsIDOMWindow *aDomWin);
   void SetSelectionLook(nsIPresShell *aPresShell, PRBool aChangeColor, 
                         PRBool aEnabled);
-  void AttachNewSelectionListener();
-  void RemoveCurrentSelectionListener();
-  void AttachNewScrollPositionListener(nsIPresShell *aPresShell);
-  void RemoveCurrentScrollPositionListener();
-  void AttachKeypressListener(nsIDOMWindow *aDOMWin);
-  void RemoveKeypressListener(nsIDOMWindow *aDOMWin);
+  void AttachDocListeners(nsIPresShell *aPresShell);
+  void RemoveDocListeners();
+  void AttachWindowListeners(nsIDOMWindow *aDOMWin);
+  void RemoveWindowListeners(nsIDOMWindow *aDOMWin);
   void GetChromeEventHandler(nsIDOMWindow *aDOMWin, 
                              nsIDOMEventTarget **aChromeTarget);
-  //void AttachWindowFocusListener(nsIDOMWindow *aDOMWin);
-  //void RemoveWindowFocusListener(nsIDOMWindow *aDOMWin);
 
   void RangeStartsInsideLink(nsIDOMRange *aRange, nsIPresShell *aPresShell, 
                              PRBool *aIsInsideLink, PRBool *aIsStartingLink);
 
-  // GetSelection: if aCurrentNode is nsnull, gets selection for document
-  void GetSelection(nsIPresShell *aPresShell, nsIDOMNode *aCurrentNode, 
-                    nsISelectionController **aSelCon, nsISelection **aDomSel);
+  // Get selection and selection controller for current pres shell
+  void GetSelection(nsIPresShell *aPresShell, nsISelectionController **aSelCon, 
+                    nsISelection **aDomSel);
   PRBool IsRangeVisible(nsIPresShell *aPresShell, nsIPresContext *aPresContext,
                          nsIDOMRange *aRange, PRBool aMustBeVisible, 
                          nsIDOMRange **aNewRange);
@@ -153,6 +149,10 @@ protected:
   // Current find state
   nsString mTypeAheadBuffer;
   nsString mFindNextBuffer;
+
+  // PRBool's are used instead of PRPackedBool's where the address of the
+  // boolean variable is getting passed into a method. For example:
+  // GetBoolPref("accessibility.typeaheadfind.linksonly", &mLinksOnlyPref);
   PRBool mLinksOnlyPref;
   PRBool mStartLinksOnlyPref;
   PRPackedBool mLinksOnly;
@@ -166,6 +166,8 @@ protected:
   // mIsFindingText = PR_TRUE when we need to prevent listener callbacks 
   // from resetting us during typeahead find processing
   PRPackedBool mIsFindingText; 
+  PRPackedBool mIsMenuBarActive;
+  PRPackedBool mIsMenuPopupActive;
   PRBool mIsFindAllowedInWindow;
   PRInt32 mRepeatingMode;
   PRInt32 mTimeoutLength; // time in ms before find is automatically cancelled
