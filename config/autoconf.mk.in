@@ -301,12 +301,6 @@ MOZ_DEMANGLE_SYMBOLS = @MOZ_DEMANGLE_SYMBOLS@
 MOZ_FULLCIRCLE	= @MOZ_FULLCIRCLE@
 FULLCIRCLE_LIBS	= @FULLCIRCLE_LIBS@
 
-# Pulled these out of configure.in,
-# so undefine them now instead of subst
-MOZ_NETCAST	=
-MOZ_LDAP	=
-SMART_MAIL	=
-
 # XXX - these need to be cleaned up and have real checks added -cls
 CM_BLDTYPE=dbg 
 AWT_11=1 

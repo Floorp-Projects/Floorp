@@ -254,12 +254,6 @@ struct MWContext_ {
 								   display this string.  libmsg changes this
 								   string all the time for mail and news
 								   contexts. */
-#if 0
-	CL_Compositor *compositor;  /* The compositor associated with this context */
-	XP_Bool blink_hidden;       /* State of blink layers */
-	void *blink_timeout;        /* Timeout used for blink hiding/unhiding */
-#endif /* LAYERS */
-
 	int32      doc_id;			/* unique identifier for generated documents */
 	int32      context_id;			/* unique identifier for context */
 
