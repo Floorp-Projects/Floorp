@@ -613,7 +613,7 @@ loser:
 CMTStatus CMT_PKCS7EncoderFinish(PCMT_CONTROL control, CMUint32 connectionID)
 {
     CMTP7Private *priv;
-    unsigned long nbytes;
+    CMInt32 nbytes;
     char buf[128];
     CMTSocket sock, ctrlsock, sockArr[2], selSock;
 
