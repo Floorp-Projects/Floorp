@@ -3544,7 +3544,7 @@ nsGfxListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
               if (multipleSelections && isShift) {
                 REFLOW_DEBUG_MSG2("mStartExtendedIndex: %d\n", mStartExtendedIndex);
 
-                if (mSelectedIndex <= mStartExtendedIndex) {
+                if (mSelectedIndex < mStartExtendedIndex) {
                   SetContentSelected(mSelectedIndex, PR_TRUE);
                 } else {
                   SetContentSelected(mSelectedIndex, PR_TRUE);
@@ -3573,7 +3573,7 @@ nsGfxListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
               PRBool multipleSelections = PR_FALSE;
               GetMultiple(&multipleSelections);
               if (multipleSelections && isShift) {
-                if (mSelectedIndex >= mStartExtendedIndex) {
+                if (mSelectedIndex > mStartExtendedIndex) {
                   SetContentSelected(mSelectedIndex, PR_TRUE);
                 } else {
                   SetContentSelected(mSelectedIndex, PR_TRUE);
