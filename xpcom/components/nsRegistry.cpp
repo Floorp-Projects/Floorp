@@ -814,7 +814,9 @@ NS_IMETHODIMP nsRegistry::GetSubtree( Key baseKey, const char *path, Key *result
     // Make sure we have a place for the result.
     if( result ) {
         // Get key.
+        PR_Lock(mregLock);
         mErr = NR_RegGetKey( mReg,(RKEY)baseKey,(char*)path,(RKEY*)result );
+        PR_Unlock(mregLock);
         // Convert result.
         rv = regerr2nsresult( mErr );
     } else {
