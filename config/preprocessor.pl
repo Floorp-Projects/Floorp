@@ -194,12 +194,13 @@ sub undefine {
 
 sub get {
     my $self = shift;
-    my($variable) = @_;
+    my($variable, $required) = @_;
     die "not a valid variable name: '$variable'\n" if $variable =~ m/\W/;
     my $value = $self->{'variables'}->{$variable};
     if (defined($value)) {
         return $value;
     } else {
+        die "variable '$variable' is not defined\n" if $required;
         return '';
     }
 }
@@ -418,7 +419,13 @@ sub slashslash {
 
 sub substitution {
     my($stack, $text) = @_;
-    $text =~ s/@(\w+)@/$stack->get($1)/gose;
+    $text =~ s/@(\w+)@/$stack->get($1, 1)/gose;
+    return $text;
+}
+
+sub attemptSubstitution {
+    my($stack, $text) = @_;
+    $text =~ s/@(\w+)@/$stack->get($1, 0)/gose;
     return $text;
 }
 
