@@ -149,7 +149,7 @@ typedef struct sec_PKCS12EncoderContextStr {
     unsigned int currentSafe;
 
     /* hmac context */
-    void *hmacCx;
+    PK11Context *hmacCx;
 } sec_PKCS12EncoderContext;
 
 
@@ -1588,6 +1588,9 @@ sec_pkcs12_encoder_start_context(SEC_PKCS12ExportContext *p12exp)
 {
     sec_PKCS12EncoderContext *p12enc = NULL;
     unsigned int i, nonEmptyCnt;
+    SECStatus rv;
+    SECItem ignore = {0};
+    void *mark;
 
     if(!p12exp || !p12exp->safeInfos) {
 	return NULL;
@@ -1607,6 +1610,7 @@ sec_pkcs12_encoder_start_context(SEC_PKCS12ExportContext *p12exp)
     p12exp->authSafe.encodedSafes[nonEmptyCnt] = NULL;
 
     /* allocate the encoder context */
+    mark = PORT_ArenaMark(p12exp->arena);
     p12enc = (sec_PKCS12EncoderContext*)PORT_ArenaZAlloc(p12exp->arena, 
     			      sizeof(sec_PKCS12EncoderContext));
     if(!p12enc) {
@@ -1646,7 +1650,6 @@ sec_pkcs12_encoder_start_context(SEC_PKCS12ExportContext *p12exp)
 	    goto loser;
 	}
 	if(SEC_PKCS7IncludeCertChain(p12enc->aSafeCinfo,NULL) != SECSuccess) {
-	    SEC_PKCS7DestroyContentInfo(p12enc->aSafeCinfo);
 	    goto loser;
 	}
 	rv = SEC_PKCS7AddSigningTime(p12enc->aSafeCinfo);
@@ -1675,7 +1678,7 @@ sec_pkcs12_encoder_start_context(SEC_PKCS12ExportContext *p12exp)
 	    SECITEM_ZfreeItem(salt, PR_TRUE);
 
 	    /* generate HMAC key */
-	    if(!sec_pkcs12_convert_item_to_unicode(p12exp->arena, &pwd, 
+	    if(!sec_pkcs12_convert_item_to_unicode(NULL, &pwd, 
 			p12exp->integrityInfo.pwdInfo.password, PR_TRUE, 
 			PR_TRUE, PR_TRUE)) {
 		goto loser;
@@ -1683,6 +1686,7 @@ sec_pkcs12_encoder_start_context(SEC_PKCS12ExportContext *p12exp)
 	    pbeCtxt = PBE_CreateContext(p12exp->integrityInfo.pwdInfo.algorithm,
 					pbeBitGenIntegrityKey, &pwd, 
 					&(p12enc->mac.macSalt), 160, 1);
+	    SECITEM_ZfreeItem(&pwd, PR_FALSE);
 	    if(!pbeCtxt) {
 		goto loser;
 	    }
@@ -1693,21 +1697,26 @@ sec_pkcs12_encoder_start_context(SEC_PKCS12ExportContext *p12exp)
 	    }
 
 	    /* initialize hmac */
-	    p12enc->hmacCx = HMAC_Create(
-				p12exp->integrityInfo.pwdInfo.algorithm,
-				key->data, key->len);
+	    p12enc->hmacCx = PK11_CreateContextByRawKey(NULL, 
+	     sec_pkcs12_algtag_to_mech(p12exp->integrityInfo.pwdInfo.algorithm),
+                                                   PK11_OriginDerive, CKA_SIGN, 
+                                                   key, &ignore, NULL);
 	    SECITEM_ZfreeItem(key, PR_TRUE);
 	    if(!p12enc->hmacCx) {
 		PORT_SetError(SEC_ERROR_NO_MEMORY);
 		goto loser;
 	    }
-	    HMAC_Begin((HMACContext*)p12enc->hmacCx);
+	    rv = PK11_DigestBegin(p12enc->hmacCx);
+	    if (rv != SECSuccess)
+		goto loser;
 	}
     }
 
     if(!p12enc->aSafeCinfo) {
 	goto loser;
     }
+
+    PORT_ArenaUnmark(p12exp->arena, mark);
 
     return p12enc;
 
@@ -1716,9 +1725,12 @@ loser:
 	if(p12enc->aSafeCinfo) {
 	    SEC_PKCS7DestroyContentInfo(p12enc->aSafeCinfo);
 	}
-
-	PORT_Free(p12enc);
+	if(p12enc->hmacCx) {
+	    PK11_DestroyContext(p12enc->hmacCx, PR_TRUE);
+	}
     }
+    if (p12exp->arena != NULL)
+	PORT_ArenaRelease(p12exp->arena, mark);
 
     return NULL;
 }
@@ -1774,7 +1786,7 @@ sec_pkcs12_asafe_update_hmac_and_encode_bits(void *arg, const char *buf,
     sec_PKCS12EncoderContext *p12ecx;
 
     p12ecx = (sec_PKCS12EncoderContext*)arg;
-    HMAC_Update((HMACContext*)p12ecx->hmacCx, (unsigned char *)buf, len);
+    PK11_DigestOp(p12ecx->hmacCx, (unsigned char *)buf, len);
     sec_pkcs12_wrap_pkcs7_encoder_update(p12ecx->aSafeP7Ecx, buf, len,
     					 depth, data_kind);
 }
@@ -1898,8 +1910,7 @@ sec_pkcs12_update_mac(sec_PKCS12EncoderContext *p12ecx)
 	return SECFailure;
     }
 
-    rv = HMAC_Finish((HMACContext*)p12ecx->hmacCx,
-    		     hmac.data, &hmac.len, SHA1_LENGTH);
+    rv = PK11_DigestFinal(p12ecx->hmacCx, hmac.data, &hmac.len, SHA1_LENGTH);
 
     if(rv != SECSuccess) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
@@ -1936,7 +1947,7 @@ loser:
     if(hmac.data) {
 	SECITEM_ZfreeItem(&hmac, PR_FALSE);
     }
-    HMAC_Destroy((HMACContext*)p12ecx->hmacCx);
+    PK11_DestroyContext(p12ecx->hmacCx, PR_TRUE);
     p12ecx->hmacCx = NULL;
 
     return rv;

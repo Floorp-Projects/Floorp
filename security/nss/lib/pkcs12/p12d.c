@@ -1151,9 +1151,11 @@ sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
     PBEBitGenContext *pbeCtxt = NULL;
     SECItem *hmacKey = NULL, hmacRes;
     unsigned char buf[IN_BUF_LEN];
-    void *hmacCx;
     unsigned int bufLen;
     int iteration;
+    PK11Context *pk11cx;
+    SECOidTag algtag;
+    SECItem ignore = {0};
     
     if(!p12dcx || p12dcx->error) {
 	return SECFailure;
@@ -1180,16 +1182,18 @@ sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
     }
 
     /* init hmac */
-    hmacCx = HMAC_Create(SECOID_GetAlgorithmTag(
-				&p12dcx->macData.safeMac.digestAlgorithm),
-			 hmacKey->data, hmacKey->len);
+    algtag = SECOID_GetAlgorithmTag(&p12dcx->macData.safeMac.digestAlgorithm);
+    pk11cx = PK11_CreateContextByRawKey(NULL, 
+                                        sec_pkcs12_algtag_to_mech(algtag),
+                                        PK11_OriginDerive, CKA_SIGN, 
+                                        hmacKey, &ignore, NULL);
     SECITEM_ZfreeItem(hmacKey, PR_TRUE);
     hmacKey = NULL;
-    if(!hmacCx) {
+    if(!pk11cx) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	return SECFailure;
     }
-    HMAC_Begin((HMACContext*)hmacCx);
+    rv = PK11_DigestBegin(pk11cx);
 
     /* try to open the data for readback */
     if(p12dcx->dOpen && ((*p12dcx->dOpen)(p12dcx->dArg, PR_TRUE) 
@@ -1209,16 +1213,14 @@ sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
 	    goto loser;
 	}
 
-	HMAC_Update((HMACContext*)hmacCx, buf, bytesRead);
+	rv = PK11_DigestOp(pk11cx, buf, bytesRead);
 	if(bytesRead < IN_BUF_LEN) {
 	    break;
 	}
     }
 
     /* finish the hmac context */
-    HMAC_Finish((HMACContext*)hmacCx, buf, &bufLen, IN_BUF_LEN);
-    HMAC_Destroy((HMACContext*)hmacCx);
-    hmacCx = NULL;
+    rv = PK11_DigestFinal(pk11cx, buf, &bufLen, IN_BUF_LEN);
 
     hmacRes.data = buf;
     hmacRes.len = bufLen;
@@ -1237,8 +1239,8 @@ loser:
 	(*p12dcx->dClose)(p12dcx->dArg, PR_TRUE);
     }
 
-    if(hmacCx) {
-	HMAC_Destroy((HMACContext*)hmacCx);
+    if(pk11cx) {
+	PK11_DestroyContext(pk11cx, PR_TRUE);
     }
 
     if(hmacKey) {

@@ -49,6 +49,21 @@
 SEC_ASN1_MKSUB(SECKEY_PrivateKeyInfoTemplate)
 SEC_ASN1_MKSUB(sgn_DigestInfoTemplate)
 
+CK_MECHANISM_TYPE
+sec_pkcs12_algtag_to_mech(SECOidTag algtag)
+{
+    switch (algtag) {
+    case SEC_OID_MD2:
+	return CKM_MD2_HMAC;
+    case SEC_OID_MD5:
+	return CKM_MD5_HMAC;
+    case SEC_OID_SHA1:
+	return CKM_SHA_1_HMAC;
+    }
+    /* get rid of compiler warnings... isn't there an INVALID? */
+    return CKM_SHA_1_HMAC;
+}
+
 /* helper functions */
 /* returns proper bag type template based upon object type tag */
 const SEC_ASN1Template *
@@ -424,7 +439,8 @@ sec_pkcs12_generate_mac(SECItem *key,
 {
     SECStatus res = SECFailure;
     SECItem *mac = NULL;
-    HMACContext *cx;
+    PK11Context *pk11cx = NULL;    
+    SECItem ignore = {0};
 
     if((key == NULL) || (msg == NULL)) {
 	return NULL;
@@ -435,31 +451,43 @@ sec_pkcs12_generate_mac(SECItem *key,
     }
 
     /* allocate return item */
-    mac = (SECItem *)PORT_ZAlloc(sizeof(SECItem));
-    if(mac == NULL) {
-    	return NULL;
-    }
-    mac->data = (unsigned char *)PORT_ZAlloc(sizeof(unsigned char)
-    					     * SHA1_LENGTH);
-    mac->len = SHA1_LENGTH;
-    if(mac->data == NULL) {
-	PORT_Free(mac);
+    mac = SECITEM_AllocItem(NULL, NULL, SHA1_LENGTH);
+    if (mac == NULL) {
 	return NULL;
     }
 
-    /* compute MAC using HMAC */
-    cx = HMAC_Create(SEC_OID_SHA1, key->data, key->len);
-    if(cx != NULL) {
-	HMAC_Begin(cx);
-	HMAC_Update(cx, msg->data, msg->len);
-	res = HMAC_Finish(cx, mac->data, &mac->len, SHA1_LENGTH);
-	HMAC_Destroy(cx);
+    pk11cx = PK11_CreateContextByRawKey(NULL, CKM_SHA_1_HMAC, PK11_OriginDerive,
+                                        CKA_SIGN, key, &ignore, NULL);
+    if (pk11cx == NULL) {
+	goto loser;
     }
 
+    res = PK11_DigestBegin(pk11cx);
+    if (res == SECFailure) {
+	goto loser;
+    }
+
+    res = PK11_DigestOp(pk11cx, msg->data, msg->len);
+    if (res == SECFailure) {
+	goto loser;
+    }
+
+    res = PK11_DigestFinal(pk11cx, mac->data, &mac->len, SHA1_LENGTH);
+    if (res == SECFailure) {
+	goto loser;
+    }
+
+    PK11_DestroyContext(pk11cx, PR_TRUE);
+    pk11cx = NULL;
+
+loser:
 
     if(res != SECSuccess) {
 	SECITEM_ZfreeItem(mac, PR_TRUE);
 	mac = NULL;
+	if (pk11cx) {
+	    PK11_DestroyContext(pk11cx, PR_TRUE);
+	}
     }
 
     return mac;

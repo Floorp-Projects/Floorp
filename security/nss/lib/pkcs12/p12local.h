@@ -67,6 +67,7 @@ extern void *sec_pkcs12_find_object(SEC_PKCS12SafeContents *safe,
 extern PRBool sec_pkcs12_convert_item_to_unicode(PRArenaPool *arena, SECItem *dest,
 						 SECItem *src, PRBool zeroTerm,
 						 PRBool asciiConvert, PRBool toUnicode);
+extern CK_MECHANISM_TYPE sec_pkcs12_algtag_to_mech(SECOidTag algtag);
 
 /* create functions */
 extern SEC_PKCS12PFXItem *sec_pkcs12_new_pfx(void);
