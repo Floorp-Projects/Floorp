@@ -33,7 +33,7 @@ MAKE_OBJ_TYPE=DLL
 
 #//--- pick at most one of the IO types. Commenting both of
 #//--- them out gives you normal NSPR I/O
-USE_BUFFERED_REGISTRY_IO=1
+#USE_BUFFERED_REGISTRY_IO=1
 #USE_MMAP_REGISTRY_IO=1
 
 #//------------------------------------------------------------------------
