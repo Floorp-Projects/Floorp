@@ -30,7 +30,7 @@
 #include "VerReg.h"
 #include "nsInstallFile.h"
 
-#include "nsIDOMInstall.h"
+#include "nsInstall.h"
 #include "nsIDOMInstallFolder.h"
 #include "nsIDOMInstallVersion.h"
 
@@ -60,7 +60,7 @@ static PRBool endsWith(nsString* str, char* string_to_find)
         inJarLocation   - location inside the JAR file
         inFinalFileSpec	- final	location on disk
 */
-nsInstallFile::nsInstallFile(nsIDOMInstall* inInstall,
+nsInstallFile::nsInstallFile(nsInstall* inInstall,
                              const nsString& inVRName,
                              nsIDOMInstallVersion* inVInfo,
                              const nsString& inJarLocation,
@@ -135,8 +135,6 @@ nsInstallFile::~nsInstallFile()
  */
 PRInt32 nsInstallFile::Prepare()
 {
-    char *errorMsg = NULL;
-
     if (mInstall == NULL || mFinalFile == NULL || mJarLocation == NULL) 
         return nsIDOMInstall::SUERR_INVALID_ARGUMENTS;
 
@@ -153,7 +151,7 @@ PRInt32 nsInstallFile::Prepare()
  */
 PRInt32 nsInstallFile::Complete()
 {
-    int err;
+    PRInt32 err;
     int refCount;
     int rc;
 
@@ -226,6 +224,8 @@ PRInt32 nsInstallFile::Complete()
         {
             refCount = 0;
         }
+//FIX need to delete char* created by .ToNewCString().  There should be 5 of them.  mcmullen told me that 
+// he was working on a nsAutoString that would do this.
 
         if (!mUpgradeFile) 
         {
@@ -234,7 +234,7 @@ PRInt32 nsInstallFile::Complete()
                 rc = 1 + refCount;
                 nsString tempString;
                 mVersionInfo->ToString(tempString);
-                VR_Install( vr_name, final_file, (char*)(PRUnichar*) tempString, PR_FALSE );
+                VR_Install( vr_name, final_file, tempString.ToNewCString(), PR_FALSE );
                 VR_SetRefCount( vr_name, rc );
             } 
             else 
@@ -243,14 +243,14 @@ PRInt32 nsInstallFile::Complete()
                 {
                     nsString tempString;
                     mVersionInfo->ToString(tempString);
-                    VR_Install( vr_name, final_file, (char*)(PRUnichar*) tempString, PR_FALSE);
+                    VR_Install( vr_name, final_file, tempString.ToNewCString(), PR_FALSE);
                     VR_SetRefCount( vr_name, 2 );
                 }
                 else
                 {
                     nsString tempString;
                     mVersionInfo->ToString(tempString);
-                    VR_Install( vr_name, final_file, (char*)(PRUnichar*) tempString, PR_FALSE );
+                    VR_Install( vr_name, final_file, tempString.ToNewCString(), PR_FALSE );
                     VR_SetRefCount( vr_name, 1 );
                 }
             }
@@ -261,14 +261,14 @@ PRInt32 nsInstallFile::Complete()
             {
                 nsString tempString;
                 mVersionInfo->ToString(tempString);
-                VR_Install( vr_name, final_file, (char*)(PRUnichar*) tempString, PR_FALSE );
+                VR_Install( vr_name, final_file, tempString.ToNewCString(), PR_FALSE );
                 VR_SetRefCount( vr_name, 1 );
             } 
             else 
             {
                 nsString tempString;
                 mVersionInfo->ToString(tempString);
-                VR_Install( vr_name, final_file, (char*)(PRUnichar*) tempString, PR_FALSE );
+                VR_Install( vr_name, final_file, tempString.ToNewCString(), PR_FALSE );
                 VR_SetRefCount( vr_name, 0 );
             }
         }

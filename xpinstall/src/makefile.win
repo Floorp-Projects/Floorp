@@ -76,6 +76,9 @@ OBJS = \
     .\$(OBJDIR)\nsSoftwareUpdateStream.obj   \
     .\$(OBJDIR)\nsInstallErrorMessages.obj   \
     .\$(OBJDIR)\nsInstallFile.obj   \
+    .\$(OBJDIR)\nsInstallDelete.obj   \
+    .\$(OBJDIR)\nsInstallExecute.obj   \
+    .\$(OBJDIR)\nsInstallPatch.obj   \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

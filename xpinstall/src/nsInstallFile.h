@@ -24,7 +24,7 @@
 
 #include "nsInstallObject.h"
 
-#include "nsIDOMInstall.h"
+#include "nsInstall.h"
 #include "nsIDOMInstallFolder.h"
 #include "nsIDOMInstallVersion.h"
 
@@ -43,7 +43,7 @@ class nsInstallFile : public nsInstallObject
        *    inJarLocation   - location inside the JAR file
        *    inFinalFileSpec	- final	location on	disk
        *************************************************************/
-        nsInstallFile(  nsIDOMInstall* inInstall,
+        nsInstallFile(  nsInstall* inInstall,
                         const nsString& inVRName,
                         nsIDOMInstallVersion* inVInfo,
                         const nsString& inJarLocation,

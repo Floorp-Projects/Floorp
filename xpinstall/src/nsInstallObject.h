@@ -20,13 +20,14 @@
 #define nsInstallObject_h__
 
 #include "prtypes.h"
-#include "nsIDOMInstall.h"
+
+class nsInstall;
 
 class nsInstallObject 
 {
     public:
         /* Public Methods */
-        nsInstallObject(nsIDOMInstall* inInstall) {mInstall = inInstall; }
+        nsInstallObject(nsInstall* inInstall) {mInstall = inInstall; }
 
         /* Override with your set-up action */
         virtual PRInt32 Prepare() = 0;
@@ -45,7 +46,7 @@ class nsInstallObject
         virtual PRBool RegisterPackageNode() = 0;
 
     protected:
-        nsIDOMInstall* mInstall;
+        nsInstall* mInstall;
 };
 
 #endif /* nsInstallObject_h__ */

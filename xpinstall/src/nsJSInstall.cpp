@@ -28,7 +28,6 @@
 #include "nsString.h"
 #include "nsIDOMInstall.h"
 #include "nsIDOMInstallFolder.h"
-#include "nsIDOMInstallVersion.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsRepository.h"
 #include "nsDOMCID.h"
@@ -39,11 +38,9 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIInstallIID, NS_IDOMINSTALL_IID);
 static NS_DEFINE_IID(kIInstallFolderIID, NS_IDOMINSTALLFOLDER_IID);
-static NS_DEFINE_IID(kIInstallVersionIID, NS_IDOMINSTALLVERSION_IID);
 
 NS_DEF_PTR(nsIDOMInstall);
 NS_DEF_PTR(nsIDOMInstallFolder);
-NS_DEF_PTR(nsIDOMInstallVersion);
 
 //
 // Install property ids
@@ -264,7 +261,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   JSBool rBool = JS_FALSE;
   PRInt32 nativeRet;
   nsAutoString b0;
-  nsIDOMInstallVersionPtr b1;
+  nsAutoString b1;
   nsAutoString b2;
   nsIDOMInstallFolderPtr b3;
   nsAutoString b4;
@@ -281,13 +278,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
-                                           kIInstallVersionIID,
-                                           "InstallVersion",
-                                           cx,
-                                           argv[1])) {
-      return JS_FALSE;
-    }
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
     nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
 
@@ -606,7 +597,7 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   nsIDOMInstall *nativeThis = (nsIDOMInstall*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMInstallFolder* nativeRet;
-  nsIDOMInstallFolderPtr b0;
+  nsAutoString b0;
   nsAutoString b1;
 
   *rval = JSVAL_NULL;
@@ -618,13 +609,7 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
   if (argc >= 2) {
 
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
-                                           kIInstallFolderIID,
-                                           "InstallFolder",
-                                           cx,
-                                           argv[0])) {
-      return JS_FALSE;
-    }
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
@@ -973,49 +958,6 @@ InstallUninstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 }
 
 
-//
-// Native method ExtractFileFromJar
-//
-PR_STATIC_CALLBACK(JSBool)
-InstallExtractFileFromJar(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMInstall *nativeThis = (nsIDOMInstall*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  PRInt32 nativeRet;
-  nsAutoString b0;
-  nsAutoString b1;
-  nsAutoString b2;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 3) {
-
-    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
-    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
-
-    nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
-
-    if (NS_OK != nativeThis->ExtractFileFromJar(b0, b1, b2, &nativeRet)) {
-      return JS_FALSE;
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else {
-    JS_ReportError(cx, "Function ExtractFileFromJar requires 3 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
 /***********************************************************************/
 //
 // class for Install
@@ -1069,7 +1011,6 @@ static JSFunctionSpec InstallMethods[] =
   {"SetPackageFolder",          InstallSetPackageFolder,     1},
   {"StartInstall",          InstallStartInstall,     4},
   {"Uninstall",          InstallUninstall,     1},
-  {"ExtractFileFromJar",          InstallExtractFileFromJar,     3},
   {0}
 };
 

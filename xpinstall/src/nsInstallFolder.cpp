@@ -124,7 +124,6 @@ nsInstallFolder::nsInstallFolder()
 {
     mScriptObject   = nsnull;
 
-	char *errorMsg = NULL;
 	mUrlPath = mFolderID = mVersionRegistryPath = mUserPackageName = nsnull;
 
     NS_INIT_REFCNT();
@@ -233,12 +232,19 @@ NS_IMETHODIMP
 nsInstallFolder::MakeFullPath(const nsString& aRelativePath, nsString& aFullPath)
 {
     nsString *tempString = GetNativePath(aRelativePath);
+    
     aFullPath.SetLength(0);
-    aFullPath.Append( *mUrlPath );
-    aFullPath.Append( *tempString );
+    
+    if (mUrlPath != nsnull)
+    {
+        aFullPath.Append( *mUrlPath );
+    }
 
-    if (tempString) 
+    if (tempString != nsnull)
+    {
+        aFullPath.Append( *tempString );
         delete tempString;
+    }
 
     return NS_OK;
 }
