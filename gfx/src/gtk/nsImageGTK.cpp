@@ -1871,83 +1871,116 @@ nsresult nsImageGTK::Optimize(nsIDeviceContext* aContext)
 }
 
 //------------------------------------------------------------
-// lock the image pixels. nothing to do on gtk
+// lock the image pixels
 NS_IMETHODIMP
 nsImageGTK::LockImagePixels(PRBool aMaskPixels)
 {
-  if (mOptimized && mImagePixmap) {
-    XImage *ximage, *xmask=0;
-    unsigned pix;
+  if (!mOptimized)
+    return NS_OK;
 
-    ximage = XGetImage(GDK_WINDOW_XDISPLAY(mImagePixmap),
-                       GDK_WINDOW_XWINDOW(mImagePixmap),
-                       0, 0, mWidth, mHeight,
-                       AllPlanes, ZPixmap);
+  if (aMaskPixels) {
+    if (mAlphaDepth != 1 || !mAlphaPixmap)
+      return NS_OK;
 
-    if ((mAlphaDepth==1) && mAlphaPixmap)
-      xmask = XGetImage(GDK_WINDOW_XDISPLAY(mAlphaPixmap),
-                        GDK_WINDOW_XWINDOW(mAlphaPixmap),
-                        0, 0, mWidth, mHeight,
-                        AllPlanes, XYPixmap);
+    XImage *xmask = XGetImage(GDK_WINDOW_XDISPLAY(mAlphaPixmap),
+                              GDK_WINDOW_XWINDOW(mAlphaPixmap),
+                              0, 0, mWidth, mHeight,
+                              AllPlanes, XYPixmap);
 
-    mImageBits = (PRUint8*) new PRUint8[mSizeImage];
-    GdkVisual *visual = gdk_rgb_get_visual();
-    GdkColormap *colormap = gdk_rgb_get_cmap();
+    mAlphaBits = new PRUint8[mAlphaRowBytes * mHeight];
+    memset(mAlphaBits, 0, mAlphaRowBytes * mHeight);
 
-    unsigned redScale, greenScale, blueScale, redFill, greenFill, blueFill;
-    redScale   = 8 - visual->red_prec;
-    greenScale = 8 - visual->green_prec;
-    blueScale  = 8 - visual->blue_prec;
-    redFill    = 0xff >> visual->red_prec;
-    greenFill  = 0xff >> visual->green_prec;
-    blueFill   = 0xff >> visual->blue_prec;
+    for (PRInt32 y = 0; y < mHeight; ++y) {
+      PRUint8 *alphaTarget = mAlphaBits + y*mAlphaRowBytes;
+      PRUint32 alphaBitPos = 7;
 
-    /* read back the image in the slowest (but simplest) way possible... */
-    for (PRInt32 y=0; y<mHeight; y++) {
-      PRUint8 *target = mImageBits + y*mRowBytes;
-      for (PRInt32 x=0; x<mWidth; x++) {
-        if (xmask && !XGetPixel(xmask, x, y)) {
-          *target++ = 0xFF;
-          *target++ = 0xFF;
-          *target++ = 0xFF;
-        } else {
-          pix = XGetPixel(ximage, x, y);
-          switch (visual->type) {
-          case GDK_VISUAL_STATIC_GRAY:
-          case GDK_VISUAL_GRAYSCALE:
-          case GDK_VISUAL_STATIC_COLOR:
-          case GDK_VISUAL_PSEUDO_COLOR:
-            *target++ = colormap->colors[pix].red   >>8;
-            *target++ = colormap->colors[pix].green >>8;
-            *target++ = colormap->colors[pix].blue  >>8;
-            break;
-        
-          case GDK_VISUAL_DIRECT_COLOR:
-            *target++ = 
-              colormap->colors[(pix&visual->red_mask)>>visual->red_shift].red       >> 8;
-            *target++ = 
-              colormap->colors[(pix&visual->green_mask)>>visual->green_shift].green >> 8;
-            *target++ =
-              colormap->colors[(pix&visual->blue_mask)>>visual->blue_shift].blue    >> 8;
-            break;
-            
-          case GDK_VISUAL_TRUE_COLOR:
-            *target++ = 
-              redFill|((pix&visual->red_mask)>>visual->red_shift)<<redScale;
-            *target++ = 
-              greenFill|((pix&visual->green_mask)>>visual->green_shift)<<greenScale;
-            *target++ = 
-              blueFill|((pix&visual->blue_mask)>>visual->blue_shift)<<blueScale;
-            break;
-          }
+      for (PRInt32 x = 0; x < mWidth; ++x) {
+        *alphaTarget |= (XGetPixel(xmask, x, y) << alphaBitPos);
+        if (alphaBitPos-- == 0) {
+          ++alphaTarget;
+          alphaBitPos = 7;
         }
       }
     }
-    
-    XDestroyImage(ximage);
-    if (xmask)
-      XDestroyImage(xmask);
+
+    XDestroyImage(xmask);
+    return NS_OK;
   }
+
+  if (!mImagePixmap)
+    return NS_OK;
+
+  XImage *ximage, *xmask=0;
+  unsigned pix;
+
+  ximage = XGetImage(GDK_WINDOW_XDISPLAY(mImagePixmap),
+                     GDK_WINDOW_XWINDOW(mImagePixmap),
+                     0, 0, mWidth, mHeight,
+                     AllPlanes, ZPixmap);
+
+  if ((mAlphaDepth==1) && mAlphaPixmap)
+    xmask = XGetImage(GDK_WINDOW_XDISPLAY(mAlphaPixmap),
+                      GDK_WINDOW_XWINDOW(mAlphaPixmap),
+                      0, 0, mWidth, mHeight,
+                      AllPlanes, XYPixmap);
+
+  mImageBits = (PRUint8*) new PRUint8[mSizeImage];
+  GdkVisual *visual = gdk_rgb_get_visual();
+  GdkColormap *colormap = gdk_rgb_get_cmap();
+
+  unsigned redScale, greenScale, blueScale, redFill, greenFill, blueFill;
+  redScale   = 8 - visual->red_prec;
+  greenScale = 8 - visual->green_prec;
+  blueScale  = 8 - visual->blue_prec;
+  redFill    = 0xff >> visual->red_prec;
+  greenFill  = 0xff >> visual->green_prec;
+  blueFill   = 0xff >> visual->blue_prec;
+
+  /* read back the image in the slowest (but simplest) way possible... */
+  for (PRInt32 y=0; y<mHeight; y++) {
+    PRUint8 *target = mImageBits + y*mRowBytes;
+    for (PRInt32 x=0; x<mWidth; x++) {
+      if (xmask && !XGetPixel(xmask, x, y)) {
+        *target++ = 0xFF;
+        *target++ = 0xFF;
+        *target++ = 0xFF;
+      } else {
+        pix = XGetPixel(ximage, x, y);
+        switch (visual->type) {
+        case GDK_VISUAL_STATIC_GRAY:
+        case GDK_VISUAL_GRAYSCALE:
+        case GDK_VISUAL_STATIC_COLOR:
+        case GDK_VISUAL_PSEUDO_COLOR:
+          *target++ = colormap->colors[pix].red   >>8;
+          *target++ = colormap->colors[pix].green >>8;
+          *target++ = colormap->colors[pix].blue  >>8;
+          break;
+
+        case GDK_VISUAL_DIRECT_COLOR:
+          *target++ = 
+            colormap->colors[(pix&visual->red_mask)>>visual->red_shift].red       >> 8;
+          *target++ = 
+            colormap->colors[(pix&visual->green_mask)>>visual->green_shift].green >> 8;
+          *target++ =
+            colormap->colors[(pix&visual->blue_mask)>>visual->blue_shift].blue    >> 8;
+          break;
+
+        case GDK_VISUAL_TRUE_COLOR:
+          *target++ = 
+            redFill|((pix&visual->red_mask)>>visual->red_shift)<<redScale;
+          *target++ = 
+            greenFill|((pix&visual->green_mask)>>visual->green_shift)<<greenScale;
+          *target++ = 
+            blueFill|((pix&visual->blue_mask)>>visual->blue_shift)<<blueScale;
+          break;
+        }
+      }
+    }
+  }
+
+  XDestroyImage(ximage);
+  if (xmask)
+    XDestroyImage(xmask);
 
   return NS_OK;
 }
