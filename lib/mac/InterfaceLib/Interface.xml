@@ -1924,13 +1924,6 @@
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>MergeLibrary</FILEFLAGS>
                 </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>FontManager</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Library</FILEKIND>
-                    <FILEFLAGS>MergeLibrary</FILEFLAGS>
-                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -1941,11 +1934,6 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>NavigationLib</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>FontManager</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -2064,12 +2052,6 @@
                 <TARGETNAME>MacOS Interfaces</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>NavigationLib</PATH>
-                <PATHFORMAT>MacOS</PATHFORMAT>
-            </FILEREF>
-            <FILEREF>
-                <TARGETNAME>MacOS Interfaces</TARGETNAME>
-                <PATHTYPE>Name</PATHTYPE>
-                <PATH>FontManager</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
