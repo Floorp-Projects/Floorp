@@ -294,13 +294,6 @@
   list-style-image: url("chrome://communicator/skin/icons/search-act.gif");
 }
 
-/* ::::: personal toolbar ::::: */
-
-#bookmarks-button,
-#bookmarks-button[open="true"] {
-  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-button.gif");
-}
-
 /* ::::: sidebar splitter ::::: */
 
 #sidebar-splitter {
@@ -349,6 +342,11 @@
 
 /* ::::: personal toolbar ::::: */
 
+#bookmarks-button,
+#bookmarks-button[open="true"] {
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-button.gif");
+}
+
 #home-button {
   list-style-image: url("chrome://communicator/skin/bookmarks/home.gif");
 }
@@ -365,4 +363,12 @@
   border-left: 1px solid ThreeDHighlight;
   border-top: 1px solid ThreeDHighlight;
   border-bottom: 1px solid ThreeDShadow;
+}
+
+toolbarbutton.chevron {
+  list-style-image: url("chrome://global/skin/toolbar/chevron.gif") !important;
+}
+
+toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
+  display: none;
 }

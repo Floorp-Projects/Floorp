@@ -624,10 +624,13 @@ function LoadBookmarksCallback()
   initBMService();
   var hasRead = BMSVC.readBookmarks();  
   var bt = document.getElementById("bookmarks-ptf");
-  if (bt && hasRead) 
-    bt.builder.rebuild();
+  if (bt) {
+    if (hasRead) 
+      bt.builder.rebuild();
+    bt.database.AddObserver(BookmarksToolbarRDFObserver);
+  }
+  window.addEventListener("resize", BookmarksToolbar.resizeFunc, false);
   controllers.appendController(BookmarksMenuController);
-
 }
 
 function WindowFocusTimerCallback(element)

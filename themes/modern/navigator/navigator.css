@@ -538,6 +538,14 @@ toolbox {
   height: 17px;
 }
 
+toolbarbutton.chevron {
+  list-style-image: url("chrome://global/skin/toolbar/chevron.gif") !important;
+}
+
+toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
+  display: none;
+}
+
 /* ::::: content area ::::: */
 
 #content {

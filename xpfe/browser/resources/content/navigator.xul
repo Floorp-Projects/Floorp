@@ -286,6 +286,17 @@ Contributor(s):
             oncommand="BookmarksMenu.loadBookmark(event.target, this.database)"
             rdf:type="http://home.netscape.com/NC-rdf#Folder">
       </hbox>
+      <hbox class="bookmarks-toolbar-overflow-items" mousethrough="always">
+        <hbox mousethrough="always" id="overflow-padder" flex="1"/>
+        <toolbarbutton id="bookmarks-chevron" type="menu" class="chevron"
+                       mousethrough="never" collapsed="true" 
+                       datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
+                       template="bookmarksMenuTemplate" 
+                       ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
+                       oncommand="BookmarksUtils.loadBookmarkBrowser(event, event.target, this.database)">
+          <menupopup onpopupshowing="if (event.target == this) BookmarksToolbar.updateOverflowMenu(this);"/>
+        </toolbarbutton>
+      </hbox>
     </toolbar>
 
   </toolbox>
