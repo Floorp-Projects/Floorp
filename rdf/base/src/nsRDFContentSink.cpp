@@ -988,7 +988,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             nsAutoString uri = aNode.GetValueAt(i);
             nsRDFParserUtils::StripAndConvert(uri);
 
-            rdf_MakeAbsoluteURI(nsCAutoString(docURI), uri);
+            rdf_MakeAbsoluteURI(nsAutoString(docURI), uri);
 
             return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
         }
@@ -1018,7 +1018,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             // attribute.
             name.Insert('#', 0);
             
-            rdf_MakeAbsoluteURI(nsCAutoString(docURI), name);
+            rdf_MakeAbsoluteURI(nsAutoString(docURI), name);
 
             return gRDFService->GetUnicodeResource(name.GetUnicode(), aResource);
         }
@@ -1073,7 +1073,7 @@ RDFContentSinkImpl::GetResourceAttribute(const nsIParserNode& aNode,
             const char* documentURL;
 #endif
             mDocumentURL->GetSpec(&documentURL);
-            rdf_MakeAbsoluteURI(documentURL, uri);
+            rdf_MakeAbsoluteURI(nsAutoString(documentURL), uri);
 #ifdef NECKO
             nsCRT::free(documentURL);
 #endif
