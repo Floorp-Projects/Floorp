@@ -3468,7 +3468,10 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsStrin
     else
       sigOutput.AppendWithConversion(CRLF);
 
-    if (reply_on_top != 1 || sig_bottom || !aQuoted)
+    if ((reply_on_top != 1 || sig_bottom || !aQuoted) &&
+        sigData.Find("\r-- \r", PR_TRUE) < 0 &&
+        sigData.Find("\n-- \n", PR_TRUE) < 0 &&
+        sigData.Find("\n-- \r", PR_TRUE) < 0)
     {
       nsDependentSubstring firstFourChars(sigData, 0, 4);
     
