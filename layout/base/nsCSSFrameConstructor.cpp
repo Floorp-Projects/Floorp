@@ -481,9 +481,9 @@ GetNifOrSpecialSibling(nsFrameManager *aFrameManager, nsIFrame *aFrame)
 }
 
 static void
-SetFrameIsSpecial(nsFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame* aSpecialSibling)
+SetFrameIsSpecial(nsIFrame* aFrame, nsIFrame* aSpecialSibling)
 {
-  NS_PRECONDITION(aFrameManager && aFrame, "bad args!");
+  NS_PRECONDITION(aFrame, "bad args!");
 
   // Mark the frame and all of its siblings as "special".
   for (nsIFrame* frame = aFrame; frame != nsnull; frame = frame->GetNextInFlow()) {
@@ -10802,7 +10802,8 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
 
           nsIFrame* prevToFirstBlock;
           nsIFrame* list2 = FindFirstBlock(aPresContext, list1, &prevToFirstBlock);
-
+          NS_ASSERTION(list2, "Why did we get into this code?");
+          
           if (prevToFirstBlock)
             prevToFirstBlock->SetNextSibling(nsnull);
           else list1 = nsnull;
@@ -10819,9 +10820,11 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
           // Create "special" inline-block linkage between the frames
           // XXXldb Do we really need to do this?  It doesn't seem
           // consistent with the use in ConstructInline.
-          SetFrameIsSpecial(state.mFrameManager, list1, list2);
-          SetFrameIsSpecial(state.mFrameManager, list2, list3);
-          SetFrameIsSpecial(state.mFrameManager, list3, nsnull);
+          SetFrameIsSpecial(list1, list2);
+          SetFrameIsSpecial(list2, list3);
+          if (list3) {
+            SetFrameIsSpecial(list3, nsnull);
+          }
 
           // Recursively split inlines back up to the first containing
           // block frame.
@@ -13137,13 +13140,13 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
   // Mark the 3 frames as special. That way if any of the
   // append/insert/remove methods try to fiddle with the children, the
   // containing block will be reframed instead.
-  SetFrameIsSpecial(aState.mFrameManager, aNewFrame, blockFrame);
-  SetFrameIsSpecial(aState.mFrameManager, blockFrame, inlineFrame);
+  SetFrameIsSpecial(aNewFrame, blockFrame);
+  SetFrameIsSpecial(blockFrame, inlineFrame);
   MarkIBSpecialPrevSibling(aPresContext, aState.mFrameManager,
                            blockFrame, aNewFrame);
 
   if (inlineFrame)
-    SetFrameIsSpecial(aState.mFrameManager, inlineFrame, nsnull);
+    SetFrameIsSpecial(inlineFrame, nsnull);
 
 #ifdef DEBUG
   if (gNoisyInlineConstruction) {
@@ -13522,9 +13525,9 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsPresContext* aPresContext,
   // back to find it.
   nsIFrame* firstInFlow = aFrame->GetFirstInFlow();
 
-  SetFrameIsSpecial(aState.mFrameManager, firstInFlow, blockFrame);
-  SetFrameIsSpecial(aState.mFrameManager, blockFrame, inlineFrame);
-  SetFrameIsSpecial(aState.mFrameManager, inlineFrame, nsnull);
+  SetFrameIsSpecial(firstInFlow, blockFrame);
+  SetFrameIsSpecial(blockFrame, inlineFrame);
+  SetFrameIsSpecial(inlineFrame, nsnull);
 
   MarkIBSpecialPrevSibling(aPresContext, aState.mFrameManager,
                            blockFrame, firstInFlow);
