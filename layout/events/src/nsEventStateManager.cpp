@@ -200,9 +200,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
       }
     }
     break;
-#if 0
   case NS_KEY_DOWN:
-    ret = DispatchKeyPressEvent(aPresContext, (nsKeyEvent*)aEvent, aStatus);
     if (nsEventStatus_eConsumeNoDefault != aStatus) {
       switch(((nsKeyEvent*)aEvent)->keyCode) {
         case NS_VK_TAB:
@@ -251,7 +249,6 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
       }
     }
     break;
-#endif
   }
   return ret;
 }
