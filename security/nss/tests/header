@@ -468,7 +468,7 @@ tbx_dirs()
     if [ -z "${RESULTDIR}" ] ; then # needs to be different for tinderbox
         Debug "Setting RESULTDIR for tinderbox"
         TBX_NOBITS=""
-        echo $NSS_VER_DIR | grep 64  >/dev/null && TBX_NOBITS=64
+        echo $QASCRIPT_DIR | grep 64  >/dev/null && TBX_NOBITS=64
         TRD="${HOST}${TBX_NOBITS}-`date +%Y%m%d-%H.%M`"
         RESULTDIR="${NSS_VER_DIR}/tinderbox/tests_results/security/${TRD}"
     fi
