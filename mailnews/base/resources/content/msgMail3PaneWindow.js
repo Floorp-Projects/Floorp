@@ -21,6 +21,7 @@
  *   Jan Varga (varga@utcru.sk)
  *   Håkan Waara (hwaara@chello.se)
  *   Neil Rashbrook (neil@parkwaycc.co.uk)
+ *   Seth Spitzer <sspitzer@netscape.com>
  */
 
 /* This is where functions related to the 3 pane window are kept */
@@ -330,6 +331,12 @@ function HandleDeleteOrMoveMsgFailed(folder)
   // ThreadPaneSelectionChange(true);
 }
 
+// WARNING
+// this is a fragile and complicated function.
+// be careful when hacking on it.
+// don't forget about things like different imap 
+// delete models, multiple views (from multiple thread panes, 
+// search windows, stand alone message windows)
 function HandleDeleteOrMoveMsgCompleted(folder)
 {
   // you might not have a db view.  this can happen if
@@ -338,78 +345,128 @@ function HandleDeleteOrMoveMsgCompleted(folder)
     return;
 
   gDBView.onDeleteCompleted(true);
-  if (gNextMessageViewIndexAfterDelete != -2) 
-  {
-    if (IsCurrentLoadedFolder(folder)) 
+
+  if (!IsCurrentLoadedFolder(folder)) {
+    // default value after delete/move/copy is over
+    gNextMessageViewIndexAfterDelete = -2;
+    return;
+  }
+
+  var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
+  var treeSelection = treeView.selection;
+          
+  if (gNextMessageViewIndexAfterDelete == -2) {
+    // a move or delete can cause our selection can change underneath us.
+    // this can happen when the user
+    // deletes message from the stand alone msg window
+    // or the search view, or another 3 pane
+    if (treeSelection.count == 0) {
+      // this can happen if you double clicked a message
+      // in the thread pane, and deleted it from the stand alone msg window
+      // see bug #172392
+      treeSelection.clearSelection();
+      setTitleFromFolder(folder, null);
+      ClearMessagePane();
+      UpdateMailToolbar("delete from another view, 0 rows now selected");
+    }
+    else if (treeSelection.count == 1) {
+      // this can happen if you had two messages selected
+      // in the thread pane, and you deleted one of them from another view
+      // (like the view in the stand alone msg window)
+      // since one item is selected, we should load it.
+      var startIndex = {};
+      var endIndex = {};
+      treeSelection.getRangeAt(0, startIndex, endIndex);
+        
+      // select the selected item, so we'll load it
+      treeSelection.select(startIndex.value); 
+      treeView.selectionChanged();
+
+      EnsureRowInThreadTreeIsVisible(startIndex.value); 
+
+      UpdateMailToolbar("delete from another view, 1 row now selected");
+    }
+    else {
+      // this can happen if you have more than 2 messages selected
+      // in the thread pane, and you deleted one of them from another view
+      // (like the view in the stand alone msg window)
+      // since multiple messages are still selected, do nothing.
+    }
+  }
+  else {
+    if (gNextMessageViewIndexAfterDelete != nsMsgViewIndex_None) 
     {
-      var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
-      var treeSelection = treeView.selection;
-      if (gNextMessageViewIndexAfterDelete != nsMsgViewIndex_None) 
+      viewSize = treeView.rowCount;
+      if (gNextMessageViewIndexAfterDelete >= viewSize) 
       {
-        viewSize = treeView.rowCount;
-        if (gNextMessageViewIndexAfterDelete >= viewSize) 
-        {
-          if (viewSize > 0)
-            gNextMessageViewIndexAfterDelete = viewSize - 1;
-          else
-          {           
-            gNextMessageViewIndexAfterDelete = nsMsgViewIndex_None;
+        if (viewSize > 0)
+          gNextMessageViewIndexAfterDelete = viewSize - 1;
+        else
+        {           
+          gNextMessageViewIndexAfterDelete = nsMsgViewIndex_None;
 
-            //there is nothing to select viewSize is 0
-
-            treeSelection.clearSelection();
-            setTitleFromFolder(folder,null);
-            ClearMessagePane();
-          }
+          // there is nothing to select viewSize is 0
+          treeSelection.clearSelection();
+          setTitleFromFolder(folder, null);
+          ClearMessagePane();
+          UpdateMailToolbar("delete from current view, 0 rows left");
         }
       }
-
-      // if we are about to set the selection with a new element then DON'T clear
-      // the selection then add the next message to select. This just generates
-      // an extra round of command updating notifications that we are trying to
-      // optimize away.
-      if (gNextMessageViewIndexAfterDelete != nsMsgViewIndex_None) 
-      {
-        // when deleting a message we don't update the commands when the selection goes to 0
-        // (we have a hack in nsMsgDBView which prevents that update) so there is no need to
-        // update commands when we select the next message after the delete; the commands already
-        // have the right update state...
-        gDBView.suppressCommandUpdating = true;
-
-        // This check makes sure that the tree does not perform a
-        // selection on a non selected row (row < 0), else assertions will
-        // be thrown.
-        if (gNextMessageViewIndexAfterDelete >= 0)
-          treeSelection.select(gNextMessageViewIndexAfterDelete);
-        
-        // if gNextMessageViewIndexAfterDelete has the same value 
-        // as the last index we had selected, the tree won't generate a
-        // selectionChanged notification for the tree view. So force a manual
-        // selection changed call. (don't worry it's cheap if we end up calling it twice).
-        if (treeView)
-          treeView.selectionChanged();
-
-        EnsureRowInThreadTreeIsVisible(gNextMessageViewIndexAfterDelete); 
-        gDBView.suppressCommandUpdating = false;
-
-        // hook for extra toolbar items
-        // XXX I think there is a bug in the suppression code above.
-        // what if I have two rows selected, and I hit delete, and so we load the next row.
-        // what if I have commands that only enable where exactly one row is selected?
-        NotifyObservers(window, "mail:updateToolbarItems", null);
-      }
     }
-      gNextMessageViewIndexAfterDelete = -2;  
-     //default value after delete/move/copy is over
+
+    // if we are about to set the selection with a new element then DON'T clear
+    // the selection then add the next message to select. This just generates
+    // an extra round of command updating notifications that we are trying to
+    // optimize away.
+    if (gNextMessageViewIndexAfterDelete != nsMsgViewIndex_None) 
+    {
+      // when deleting a message we don't update the commands 
+      // when the selection goes to 0
+      // (we have a hack in nsMsgDBView which prevents that update) 
+      // so there is no need to
+      // update commands when we select the next message after the delete; 
+      // the commands already
+      // have the right update state...
+      gDBView.suppressCommandUpdating = true;
+
+      // This check makes sure that the tree does not perform a
+      // selection on a non selected row (row < 0), else assertions will
+      // be thrown.
+      if (gNextMessageViewIndexAfterDelete >= 0)
+        treeSelection.select(gNextMessageViewIndexAfterDelete);
+        
+      // if gNextMessageViewIndexAfterDelete has the same value 
+      // as the last index we had selected, the tree won't generate a
+      // selectionChanged notification for the tree view. So force a manual
+      // selection changed call. 
+      // (don't worry it's cheap if we end up calling it twice).
+      if (treeView)
+        treeView.selectionChanged();
+
+      EnsureRowInThreadTreeIsVisible(gNextMessageViewIndexAfterDelete); 
+      gDBView.suppressCommandUpdating = false;
+
+      // hook for extra toolbar items
+      // XXX TODO
+      // I think there is a bug in the suppression code above.
+      // what if I have two rows selected, and I hit delete, 
+      // and so we load the next row.
+      // what if I have commands that only enable where 
+      // exactly one row is selected?
+      UpdateMailToolbar("delete from current view, at least one row selected");
+    }
   }
+
+  // default value after delete/move/copy is over
+  gNextMessageViewIndexAfterDelete = -2;
 }
 
-function HandleCompactCompleted (folder)
+function HandleCompactCompleted(folder)
 {
-  if(folder)
+  if (folder)
   {
     var resource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-    if(resource)
+    if (resource)
     {
       var uri = resource.Value;
       var msgFolder = msgWindow.openFolder;
@@ -972,7 +1029,6 @@ function ClearMessagePane()
 		HideMessageHeaderPane();
 	}
 }
-
 
 function GetSelectedFolderIndex()
 {
