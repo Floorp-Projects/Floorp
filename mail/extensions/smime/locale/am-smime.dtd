@@ -18,3 +18,8 @@
 <!ENTITY  managecerts.accesskey  "M">
 <!ENTITY  managedevices.button   "Manage Security Devices...">
 <!ENTITY  managedevices.accesskey   "S">
+
+<!-- used by overloaded pref-smime-advanced overlay --> 
+<!ENTITY  managecertsPref.label  "Manage your personal certificates:"> 
+<!ENTITY  managedevicesPref.label "Manage your security devices such as smart cards:"> 
+<!ENTITY  passwordAndSecurity.label      "Passwords and Security">
