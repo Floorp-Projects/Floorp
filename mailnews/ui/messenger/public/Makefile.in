@@ -24,7 +24,6 @@ include $(DEPTH)/config/autoconf.mk
 
 EXPORTS = \
 	nsIDOMMsgAppCore.h	\
-	nsIMessenger.h	\
 	$(NULL)
 
 
