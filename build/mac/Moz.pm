@@ -37,7 +37,7 @@ use Mac::Processes;
 use File::Copy;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw(BuildProject BuildProjectClean GetFileModDate OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest InstallResources SetBuildNumber SetAgentString SetTimeBomb Delay ActivateApplication);
+@EXPORT			= qw(LaunchCodeWarrior BuildProject BuildProjectClean GetFileModDate OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest InstallResources SetBuildNumber SetAgentString SetTimeBomb Delay ActivateApplication);
 @EXPORT_OK	= qw(CloseErrorLog UseCodeWarriorLib QUIET);
 
 	use Cwd;
@@ -498,6 +498,12 @@ sub GetFileModDate($)
     return $mtime;
 }
 
+
+sub LaunchCodeWarrior()
+{
+  # this both launches and writes idepath.txt
+  CodeWarriorLib::activate();
+}
 
 sub ActivateApplication($)
 {
