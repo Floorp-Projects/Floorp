@@ -1110,6 +1110,8 @@ public final class Context {
     public static Scriptable toObject(Object value, Scriptable scope, 
                                       Class staticType) 
     {
+        if (value == null && staticType != null)
+            return null;
         return ScriptRuntime.toObject(scope, value, staticType);
     }
 
