@@ -44,15 +44,21 @@
 #include "nsIChannel.h"
 #include "nsIBadCertListener.h"
 #include "nsNSSCertificate.h"
+#include "nsINSSDialogs.h"
 
 #include "nsXPIDLString.h"
+#include "nsVoidArray.h"
 
 #include "nsNSSHelper.h"
 
 #include "ssl.h"
 #include "secerr.h"
 #include "sslerr.h"
+#include "secder.h"
+#include "secasn1.h"
+#include "genname.h"
 #include "certdb.h"
+#include "cert.h"
 
 //#define DEBUG_SSL_VERBOSE //Enable this define to get minimal 
                             //reports when doing SSL read/write
@@ -63,7 +69,24 @@
                        //Uses PR_LOG except on Mac where
                        //we always write out to our own
                        //file.
+/* SSM_UserCertChoice: enum for cert choice info */
+typedef enum {ASK, AUTO} SSM_UserCertChoice;
 
+
+/* strings for marking invalid user cert nicknames */
+#define NICKNAME_EXPIRED_STRING " (expired)"
+#define NICKNAME_NOT_YET_VALID_STRING " (not yet valid)"
+
+static SECStatus PR_CALLBACK
+nsNSS_SSLGetClientAuthData(void *arg, PRFileDesc *socket,
+						   CERTDistNames *caNames,
+						   CERTCertificate **pRetCert,
+						   SECKEYPrivateKey **pRetKey);
+static SECStatus PR_CALLBACK
+nsNSS_SSLGetClientAuthData(void *arg, PRFileDesc *socket,
+						   CERTDistNames *caNames,
+						   CERTCertificate **pRetCert,
+						   SECKEYPrivateKey **pRetKey);
 static nsISecurityManagerComponent* gNSSService = nsnull;
 static PRBool firstTime = PR_TRUE;
 static PRDescIdentity nsSSLIOLayerIdentity;
@@ -714,6 +737,710 @@ verifyCertAgain(CERTCertificate *cert,
   PR_FREEIF(hostname);
   return rv;
 }
+/*
+ * Function: SECStatus nsConvertCANamesToStrings()
+ * Purpose: creates CA names strings from (CERTDistNames* caNames)
+ *
+ * Arguments and return values
+ * - arena: arena to allocate strings on
+ * - caNameStrings: filled with CA names strings on return
+ * - caNames: CERTDistNames to extract strings from
+ * - return: SECSuccess if successful; error code otherwise
+ *
+ * Note: copied in its entirety from Nova code
+ */
+SECStatus nsConvertCANamesToStrings(PRArenaPool* arena, char** caNameStrings,
+                                      CERTDistNames* caNames)
+{
+    SECItem* dername;
+    SECStatus rv;
+    int headerlen;
+    uint32 contentlen;
+    SECItem newitem;
+    int n;
+    char* namestring;
+
+    for (n = 0; n < caNames->nnames; n++) {
+        newitem.data = NULL;
+        dername = &caNames->names[n];
+
+        rv = DER_Lengths(dername, &headerlen, &contentlen);
+
+        if (rv != SECSuccess) {
+            goto loser;
+        }
+
+        if (headerlen + contentlen != dername->len) {
+            /* This must be from an enterprise 2.x server, which sent
+             * incorrectly formatted der without the outer wrapper of
+             * type and length.  Fix it up by adding the top level
+             * header.
+             */
+            if (dername->len <= 127) {
+                newitem.data = (unsigned char *) PR_Malloc(dername->len + 2);
+                if (newitem.data == NULL) {
+                    goto loser;
+                }
+                newitem.data[0] = (unsigned char)0x30;
+                newitem.data[1] = (unsigned char)dername->len;
+                (void)memcpy(&newitem.data[2], dername->data, dername->len);
+            }
+            else if (dername->len <= 255) {
+                newitem.data = (unsigned char *) PR_Malloc(dername->len + 3);
+                if (newitem.data == NULL) {
+                    goto loser;
+                }
+                newitem.data[0] = (unsigned char)0x30;
+                newitem.data[1] = (unsigned char)0x81;
+                newitem.data[2] = (unsigned char)dername->len;
+                (void)memcpy(&newitem.data[3], dername->data, dername->len);
+            }
+            else {
+                /* greater than 256, better be less than 64k */
+                newitem.data = (unsigned char *) PR_Malloc(dername->len + 4);
+                if (newitem.data == NULL) {
+                    goto loser;
+                }
+                newitem.data[0] = (unsigned char)0x30;
+                newitem.data[1] = (unsigned char)0x82;
+                newitem.data[2] = (unsigned char)((dername->len >> 8) & 0xff);
+                newitem.data[3] = (unsigned char)(dername->len & 0xff);
+                memcpy(&newitem.data[4], dername->data, dername->len);
+            }
+            dername = &newitem;
+        }
+
+        namestring = CERT_DerNameToAscii(dername);
+        if (namestring == NULL) {
+            /* XXX - keep going until we fail to convert the name */
+            caNameStrings[n] = "";
+        }
+        else {
+            caNameStrings[n] = PORT_ArenaStrdup(arena, namestring);
+            PR_Free(namestring);
+            if (caNameStrings[n] == NULL) {
+                goto loser;
+            }
+        }
+
+        if (newitem.data != NULL) {
+            PR_Free(newitem.data);
+        }
+    }
+
+    return SECSuccess;
+loser:
+    if (newitem.data != NULL) {
+        PR_Free(newitem.data);
+    }
+    return SECFailure;
+}
+
+/*
+ * structs and ASN1 templates for the limited scope-of-use extension
+ *
+ * CertificateScopeEntry ::= SEQUENCE {
+ *     name GeneralName, -- pattern, as for NameConstraints
+ *     portNumber INTEGER OPTIONAL }
+ *
+ * CertificateScopeOfUse ::= SEQUENCE OF CertificateScopeEntry
+ */
+/*
+ * CERTCertificateScopeEntry: struct for scope entry that can be consumed by
+ *                            the code
+ * certCertificateScopeOfUse: struct that represents the decoded extension data
+ */
+typedef struct {
+    SECItem derConstraint;
+    SECItem derPort;
+    CERTGeneralName* constraint; /* decoded constraint */
+    PRIntn port; /* decoded port number */
+} CERTCertificateScopeEntry;
+
+typedef struct {
+    CERTCertificateScopeEntry** entries;
+} certCertificateScopeOfUse;
+
+/* corresponding ASN1 templates */
+static const SEC_ASN1Template cert_CertificateScopeEntryTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 
+      0, NULL, sizeof(CERTCertificateScopeEntry) },
+    { SEC_ASN1_ANY,
+      offsetof(CERTCertificateScopeEntry, derConstraint) },
+    { SEC_ASN1_OPTIONAL | SEC_ASN1_INTEGER,
+      offsetof(CERTCertificateScopeEntry, derPort) },
+    { 0 }
+};
+
+static const SEC_ASN1Template cert_CertificateScopeOfUseTemplate[] = {
+    { SEC_ASN1_SEQUENCE_OF, 0, cert_CertificateScopeEntryTemplate }
+};
+
+/* 
+ * decodes the extension data and create CERTCertificateScopeEntry that can
+ * be consumed by the code
+ */
+static
+SECStatus cert_DecodeScopeOfUseEntries(PRArenaPool* arena, SECItem* extData,
+                                       CERTCertificateScopeEntry*** entries,
+                                       int* numEntries)
+{
+    certCertificateScopeOfUse* scope = NULL;
+    SECStatus rv = SECSuccess;
+    int i;
+
+    *entries = NULL; /* in case of failure */
+    *numEntries = 0; /* ditto */
+
+    scope = (certCertificateScopeOfUse*)
+        PORT_ArenaZAlloc(arena, sizeof(certCertificateScopeOfUse));
+    if (scope == NULL) {
+        goto loser;
+    }
+
+    rv = SEC_ASN1DecodeItem(arena, (void*)scope, 
+                            cert_CertificateScopeOfUseTemplate, extData);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
+
+    *entries = scope->entries;
+    PR_ASSERT(*entries != NULL);
+
+    /* first, let's count 'em. */
+    for (i = 0; (*entries)[i] != NULL; i++) ;
+    *numEntries = i;
+
+    /* convert certCertificateScopeEntry sequence into what we can readily
+     * use
+     */
+    for (i = 0; i < *numEntries; i++) {
+        (*entries)[i]->constraint = 
+            cert_DecodeGeneralName(arena, &((*entries)[i]->derConstraint), 
+                                   NULL);
+        if ((*entries)[i]->derPort.data != NULL) {
+            (*entries)[i]->port = 
+                (int)DER_GetInteger(&((*entries)[i]->derPort));
+        }
+        else {
+            (*entries)[i]->port = 0;
+        }
+    }
+
+    goto done;
+loser:
+    if (rv == SECSuccess) {
+        rv = SECFailure;
+    }
+done:
+    return rv;
+}
+
+static SECStatus cert_DecodeCertIPAddress(SECItem* genname, 
+                                          PRUint32* constraint, PRUint32* mask)
+{
+    /* in case of failure */
+    *constraint = 0;
+    *mask = 0;
+
+    PR_ASSERT(genname->data != NULL);
+    if (genname->data == NULL) {
+        return SECFailure;
+    }
+    if (genname->len != 8) {
+        /* the length must be 4 byte IP address with 4 byte subnet mask */
+        return SECFailure;
+    }
+
+    /* get them in the right order */
+    *constraint = PR_ntohl((PRUint32)(*genname->data));
+    *mask = PR_ntohl((PRUint32)(*(genname->data + 4)));
+
+    return SECSuccess;
+}
+
+static char* _str_to_lower(char* string)
+{
+#ifdef XP_WIN
+    return _strlwr(string);
+#else
+    int i;
+    for (i = 0; string[i] != '\0'; i++) {
+        string[i] = tolower(string[i]);
+    }
+    return string;
+#endif
+}
+
+/*
+ * Sees if the client certificate has a restriction in presenting the cert
+ * to the host: returns PR_TRUE if there is no restriction or if the hostname
+ * (and the port) satisfies the restriction, or PR_FALSE if the hostname (and
+ * the port) does not satisfy the restriction
+ */
+static PRBool CERT_MatchesScopeOfUse(CERTCertificate* cert, char* hostname,
+                                     char* hostIP, PRIntn port)
+{
+    PRBool rv = PR_TRUE; /* whether the cert can be presented */
+    SECStatus srv;
+    SECItem extData;
+    PRArenaPool* arena = NULL;
+    CERTCertificateScopeEntry** entries = NULL;
+    /* arrays of decoded scope entries */
+    int numEntries = 0;
+    int i;
+    char* hostLower = NULL;
+    PRUint32 hostIPAddr = 0;
+
+    PR_ASSERT((cert != NULL) && (hostname != NULL) && (hostIP != NULL));
+
+    /* find cert extension */
+    srv = CERT_FindCertExtension(cert, SEC_OID_NS_CERT_EXT_SCOPE_OF_USE,
+                                 &extData);
+    if (srv != SECSuccess) {
+        /* most of the time, this means the extension was not found: also,
+         * since this is not a critical extension (as of now) we may simply
+         * return PR_TRUE
+         */
+        goto done;
+    }
+
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (arena == NULL) {
+        goto done;
+    }
+
+    /* decode the scope of use entries into pairs of GeneralNames and
+     * an optional port numbers
+     */
+    srv = cert_DecodeScopeOfUseEntries(arena, &extData, &entries, &numEntries);
+    if (srv != SECSuccess) {
+        /* XXX What should we do when we failed to decode the extension?  This
+         *     may mean either the extension was malformed or some (unlikely)
+         *     fatal error on our part: my argument is that if the extension 
+         *     was malformed the extension "disqualifies" as a valid 
+         *     constraint and we may present the cert
+         */
+        goto done;
+    }
+
+    /* loop over these structures */
+    for (i = 0; i < numEntries; i++) {
+        /* determine whether the GeneralName is a DNS pattern, an IP address 
+         * constraint, or else
+         */
+        CERTGeneralName* genname = entries[i]->constraint;
+
+        /* if constraint is NULL, don't bother looking */
+        if (genname == NULL) {
+            /* this is not a failure: just continue */
+            continue;
+        }
+
+        switch (genname->type) {
+        case certDNSName: {
+            /* we have a DNS name constraint; we should use only the host name
+             * information
+             */
+            char* pattern = NULL;
+            char* substring = NULL;
+
+            /* null-terminate the string */
+            genname->name.other.data[genname->name.other.len] = '\0';
+            pattern = _str_to_lower((char*)genname->name.other.data);
+
+            if (hostLower == NULL) {
+                /* so that it's done only if necessary and only once */
+                hostLower = _str_to_lower(PL_strdup(hostname));
+            }
+
+            /* the hostname satisfies the constraint */
+            if (((substring = strstr(hostLower, pattern)) != NULL) &&
+                /* the hostname contains the pattern */
+                (strlen(substring) == strlen(pattern)) &&
+                /* the hostname ends with the pattern */
+                ((substring == hostLower) || (*(substring-1) == '.'))) {
+                /* the hostname either is identical to the pattern or
+                 * belongs to a subdomain
+                 */
+                rv = PR_TRUE;
+            }
+            else {
+                rv = PR_FALSE;
+            }
+            /* clean up strings if necessary */
+            break;
+        }
+        case certIPAddress: {
+            PRUint32 constraint;
+            PRUint32 mask;
+            PRNetAddr addr;
+            
+            if (hostIPAddr == 0) {
+                /* so that it's done only if necessary and only once */
+                PR_StringToNetAddr(hostIP, &addr);
+                hostIPAddr = addr.inet.ip;
+            }
+
+            if (cert_DecodeCertIPAddress(&(genname->name.other), &constraint, 
+                                         &mask) != SECSuccess) {
+                continue;
+            }
+            if ((hostIPAddr & mask) == (constraint & mask)) {
+                rv = PR_TRUE;
+            }
+            else {
+                rv = PR_FALSE;
+            }
+            break;
+        }
+        default:
+            /* ill-formed entry: abort */
+            continue; /* go to the next entry */
+        }
+
+        if (!rv) {
+            /* we do not need to check the port: go to the next entry */
+            continue;
+        }
+
+        /* finally, check the optional port number */
+        if ((entries[i]->port != 0) && (port != entries[i]->port)) {
+            /* port number does not match */
+            rv = PR_FALSE;
+            continue;
+        }
+
+        /* we have a match */
+        PR_ASSERT(rv);
+        break;
+    }
+done:
+    /* clean up entries */
+    if (arena != NULL) {
+        PORT_FreeArena(arena, PR_FALSE);
+    }
+    if (hostLower != NULL) {
+        PR_Free(hostLower);
+    }
+    return rv;
+}
+
+/*
+ * Function: SSMStatus SSM_SetUserCertChoice()
+
+ * Purpose: sets certChoice by reading the preference
+ *
+ * Arguments and return values
+ * - conn: SSMSSLDataConnection
+ * - returns: SSM_SUCCESS if successful; SSM_FAILURE otherwise
+ *
+ * Note: If done properly, this function will read the identifier strings
+ *		 for ASK and AUTO modes, read the selected strings from the
+ *		 preference, compare the strings, and determine in which mode it is
+ *		 in.
+ *       We currently use ASK mode for UI apps and AUTO mode for UI-less
+ *       apps without really asking for preferences.
+ */
+SSM_UserCertChoice nsGetUserCertChoice()
+{
+	return AUTO;
+}
+
+/*
+ * Function: SECStatus SSM_SSLGetClientAuthData()
+ * Purpose: this callback function is used to pull client certificate
+ *			information upon server request
+ *
+ * Arguments and return values
+ * - arg: SSL data connection
+ * - socket: SSL socket we're dealing with
+ * - caNames: list of CA names
+ * - pRetCert: returns a pointer to a pointer to a valid certificate if
+ *			   successful; otherwise NULL
+ * - pRetKey: returns a pointer to a pointer to the corresponding key if
+ *			  successful; otherwise NULL
+ * - returns: SECSuccess if successful; error code otherwise
+ */
+SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
+								   CERTDistNames* caNames,
+								   CERTCertificate** pRetCert,
+								   SECKEYPrivateKey** pRetKey)
+{
+	void* wincx = NULL;
+	SECStatus ret = SECFailure;
+	nsresult rv;
+	nsNSSSocketInfo* info = NULL;
+    PRArenaPool* arena = NULL;
+    char** caNameStrings;
+    CERTCertificate* cert = NULL;
+    CERTCertificate* serverCert = NULL;
+    SECKEYPrivateKey* privKey = NULL;
+    CERTCertList* certList = NULL;
+    CERTCertListNode* node;
+    CERTCertNicknames* nicknames = NULL;
+    char* extracted = NULL;
+    PRIntn keyError = 0; /* used for private key retrieval error */
+    SSM_UserCertChoice certChoice;
+	
+	/* do some argument checking */
+	if (socket == NULL || caNames == NULL || pRetCert == NULL ||
+		pRetKey == NULL) {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return SECFailure;
+	}
+	
+	/* get PKCS11 pin argument */
+	wincx = SSL_RevealPinArg(socket);
+	if (wincx == NULL) {
+		return SECFailure;
+	}
+	
+	/* get the socket info */
+	info = (nsNSSSocketInfo*)socket->higher->secret;
+
+    /* create caNameStrings */
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (arena == NULL) {
+        goto loser;
+    }
+
+    caNameStrings = (char**)PORT_ArenaAlloc(arena, 
+                                            sizeof(char*)*(caNames->nnames));
+    if (caNameStrings == NULL) {
+        goto loser;
+    }
+
+
+    ret = nsConvertCANamesToStrings(arena, caNameStrings, caNames);
+    if (ret != SECSuccess) {
+        goto loser;
+    }
+
+    /* get the preference */
+	if (certChoice = nsGetUserCertChoice()) {
+		goto loser;
+	}
+
+	/* find valid user cert and key pair */	
+	if (certChoice == AUTO) {
+		/* automatically find the right cert */
+
+        /* find all user certs that are valid and for SSL */
+        certList = CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(), 
+                                             certUsageSSLClient, PR_TRUE,
+                                             PR_TRUE, wincx);
+        if (certList == NULL) {
+            goto noCert;
+        }
+
+        /* filter the list to those issued by CAs supported by the server */
+        ret = CERT_FilterCertListByCANames(certList, caNames->nnames,
+                                          caNameStrings, certUsageSSLClient);
+        if (ret != SECSuccess) {
+            goto noCert;
+        }
+
+        /* make sure the list is not empty */
+        node = CERT_LIST_HEAD(certList);
+        if (CERT_LIST_END(node, certList)) {
+            goto noCert;
+        }
+
+        /* loop through the list until we find a cert with a key */
+        while (!CERT_LIST_END(node, certList)) {
+            /* if the certificate has restriction and we do not satisfy it
+             * we do not use it
+             */
+#if 0		/* XXX This must be re-enabled */
+            if (!CERT_MatchesScopeOfUse(node->cert, info->GetHostName,
+                                        info->GetHostIP, info->GetHostPort)) {
+                node = CERT_LIST_NEXT(node);
+                continue;
+            }
+#endif
+
+            privKey = PK11_FindKeyByAnyCert(node->cert, wincx);
+            if (privKey != NULL) {
+                /* this is a good cert to present */
+                cert = CERT_DupCertificate(node->cert);
+                break;
+            }
+            keyError = PR_GetError();
+            if (keyError == SEC_ERROR_BAD_PASSWORD) {
+                /* problem with password: bail */
+                goto loser;
+            }
+
+            node = CERT_LIST_NEXT(node);
+        }
+        if (cert == NULL) {
+            goto noCert;
+        }
+	}
+	else {
+        /* user selects a cert to present */
+        int i;
+	    nsIClientAuthDialogs *dialogs = NULL;
+		PRUnichar *cn = NULL;
+		PRUnichar *org = NULL;
+		PRUnichar *issuer = NULL;
+		PRUnichar *unicodeNicknameChosen = NULL;
+		PRUnichar **certNicknameList = NULL;
+		PRBool canceled;
+
+
+        /* find all user certs that are valid and for SSL */
+        /* note that we are allowing expired certs in this list */
+        certList = CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(), 
+                                             certUsageSSLClient, PR_TRUE, 
+                                             PR_FALSE, wincx);
+        if (certList == NULL) {
+            goto noCert;
+        }
+
+        if (caNames->nnames != 0) {
+            /* filter the list to those issued by CAs supported by the 
+             * server 
+             */
+            ret = CERT_FilterCertListByCANames(certList, caNames->nnames, 
+                                              caNameStrings, 
+                                              certUsageSSLClient);
+            if (ret != SECSuccess) {
+                goto loser;
+            }
+        }
+
+        if (CERT_LIST_END(CERT_LIST_HEAD(certList), certList)) {
+            /* list is empty - no matching certs */
+            goto noCert;
+        }
+
+        /* filter it further for hostname restriction */
+        node = CERT_LIST_HEAD(certList);
+        while (!CERT_LIST_END(node, certList)) {
+#if 0 /* XXX Fix this */
+            if (!CERT_MatchesScopeOfUse(node->cert, conn->hostName,
+                                        conn->hostIP, conn->port)) {
+                CERTCertListNode* removed = node;
+                node = CERT_LIST_NEXT(removed);
+                CERT_RemoveCertListNode(removed);
+            }
+            else {
+                node = CERT_LIST_NEXT(node);
+            }
+#endif
+            node = CERT_LIST_NEXT(node);
+        }
+        if (CERT_LIST_END(CERT_LIST_HEAD(certList), certList)) {
+            goto noCert;
+        }
+
+        nicknames = CERT_NicknameStringsFromCertList(certList,
+                                                     NICKNAME_EXPIRED_STRING,
+                                                     NICKNAME_NOT_YET_VALID_STRING);
+        if (nicknames == NULL) {
+            goto loser;
+	    }
+
+		/* Get the SSL Certificate */
+		serverCert = SSL_PeerCertificate(socket);
+		if (serverCert == NULL) {
+			/* couldn't get the server cert: what do I do? */
+			goto loser;
+		}
+
+		/* Get CN and O of the subject and O of the issuer */
+		cn = NS_ConvertUTF8toUCS2(CERT_GetCommonName(&serverCert->subject)).ToNewUnicode();
+		org = NS_ConvertUTF8toUCS2(CERT_GetOrgName(&serverCert->subject)).ToNewUnicode();
+		issuer = NS_ConvertUTF8toUCS2(CERT_GetOrgName(&serverCert->issuer)).ToNewUnicode();
+
+		certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * caNames->nnames);
+		for (i = 0; i < nicknames->numnicknames; i++) {
+			certNicknameList[i] = NS_ConvertUTF8toUCS2(nicknames->nicknames[i]).ToNewUnicode();
+		}
+
+		/* Throw up the client auth dialog and get back the nuckname of the cert */
+		rv = getNSSDialogs((void**)&dialogs,
+			               NS_GET_IID(nsIClientAuthDialogs));
+
+		if (NS_FAILED(rv)) goto loser;
+
+		rv = dialogs->ChooseCertificate(NULL,
+								cn, org, issuer, (const PRUnichar**)certNicknameList, nicknames->numnicknames,
+								&unicodeNicknameChosen, &canceled);
+		NS_RELEASE(dialogs);
+		if (NS_FAILED(rv)) goto loser;
+
+		if (canceled) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
+
+        /* first we need to extract the real nickname in case the cert
+         * is an expired or not a valid one yet
+         */
+		char * nicknameChosen = NS_ConvertUCS2toUTF8(unicodeNicknameChosen).ToNewCString();
+		nsMemory::Free(unicodeNicknameChosen);
+        extracted = CERT_ExtractNicknameString(nicknameChosen,
+                                               NICKNAME_EXPIRED_STRING,
+                                               NICKNAME_NOT_YET_VALID_STRING);
+        if (extracted == NULL) {
+            goto loser;
+        }
+
+        /* find the cert under that nickname */
+        node = CERT_LIST_HEAD(certList);
+        while (!CERT_LIST_END(node, certList)) {
+            if (PL_strcmp(node->cert->nickname, extracted) == 0) {
+                cert = CERT_DupCertificate(node->cert);
+                break;
+            }
+            node = CERT_LIST_NEXT(node);
+        }
+        if (cert == NULL) {
+            goto loser;
+        }
+	
+        /* go get the private key */
+        privKey = PK11_FindKeyByAnyCert(cert, wincx);
+        if (privKey == NULL) {
+            keyError = PR_GetError();
+            if (keyError == SEC_ERROR_BAD_PASSWORD) {
+                /* problem with password: bail */
+                goto loser;
+            }
+            else {
+                goto noCert;
+            }
+        }
+	}
+	goto done;
+noCert:
+loser:
+    if (ret == SECSuccess) {
+        ret = SECFailure;
+    }
+    if (cert != NULL) {
+        CERT_DestroyCertificate(cert);
+        cert = NULL;
+    }
+done:
+    if (extracted != NULL) {
+        PR_Free(extracted);
+    }
+    if (nicknames != NULL) {
+        CERT_FreeNicknames(nicknames);
+    }
+    if (certList != NULL) {
+        CERT_DestroyCertList(certList);
+    }
+    if (arena != NULL) {
+        PORT_FreeArena(arena, PR_FALSE);
+    }
+
+    *pRetCert = cert;
+    *pRetKey = privKey;
+
+	return ret;
+}
 
 static SECStatus
 nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
@@ -787,8 +1514,8 @@ nsSSLIOLayerAddToSocket(const char* host,
   infoObject->SetFileDescPtr(sslSock);
   SSL_SetPKCS11PinArg(sslSock, (nsIInterfaceRequestor*)infoObject);
   SSL_HandshakeCallback(sslSock, HandshakeCallback, infoObject);
-  SSL_GetClientAuthDataHook(sslSock, (SSLGetClientAuthData)NSS_GetClientAuthData,
-                            nsnull);
+  SSL_GetClientAuthDataHook(sslSock, (SSLGetClientAuthData)nsNSS_SSLGetClientAuthData,
+                            infoObject);
 
   ret = SSL_SetURL(sslSock, host);
   if (ret == -1) {
