@@ -45,6 +45,7 @@
 #include "nsIDOMCharacterData.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIDTD.h"
+#include "nsIDOMElement.h"
 
 class nsIEditActionListener;
 class nsIDocumentStateListener;
