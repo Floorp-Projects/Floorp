@@ -26,22 +26,8 @@
 #include "xp_mcom.h"
 #include "net.h"
 
-/* stolen from fe_proto.h - stolen because fe_proto.h is evil */
-#ifdef XP_MAC
-#  define LINEBREAK             "\012"
-#  define LINEBREAK_LEN 1
-#else
-#  if defined(XP_WIN) || defined(XP_OS2)
-#    define LINEBREAK           "\015\012"
-#    define LINEBREAK_LEN       2
-#  else
-#    ifdef XP_UNIX
-#      define LINEBREAK         "\012"
-#      define LINEBREAK_LEN     1
-#    endif /* XP_UNIX */
-#  endif /* XP_WIN */
-#endif /* XP_MAC */
-
+/* for linebreak, CR, LF, etc */
+#include "fe_proto.h"
 
 extern "C" {
 	extern int MK_OUT_OF_MEMORY;
