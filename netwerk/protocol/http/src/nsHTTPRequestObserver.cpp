@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-#include "nsIString.h"
 #include "nsHTTPRequestObserver.h"
 #include "nsHTTPResponseListener.h"
 #include "nsIChannel.h"
@@ -47,7 +46,7 @@ nsHTTPRequestObserver::OnStartBinding(nsISupports* /*i_pContext*/)
 NS_IMETHODIMP
 nsHTTPRequestObserver::OnStopBinding(nsISupports* i_pContext,
                                  nsresult iStatus,
-                                 nsIString* i_pMsg)
+                                 const PRUnichar* i_pMsg)
 {
     //printf("nsHTTPRequestObserver::OnStopBinding...\n");
     // if we could write successfully... 

@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-#include "nsIString.h"
 #include "nsIStreamListener.h"
 #include "nsHTTPResponseListener.h"
 #include "nsIChannel.h"
@@ -27,7 +26,7 @@
 #include "nsCRT.h"
 #include "stdio.h" //sscanf
 
-#include "nsIHTTPNotify.h"
+#include "nsIHttpNotify.h"
 #include "nsINetModRegEntry.h"
 #include "nsProxyObjectManager.h"
 #include "nsIServiceManager.h"
@@ -326,7 +325,7 @@ nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
 NS_IMETHODIMP
 nsHTTPResponseListener::OnStopBinding(nsISupports* i_pContext,
                                  nsresult i_Status,
-                                 nsIString* i_pMsg)
+                                 const PRUnichar* i_pMsg)
 {
     //printf("nsHTTPResponseListener::OnStopBinding...\n");
     //NS_ASSERTION(m_pResponse, "Response object not created yet or died?!");
@@ -350,7 +349,7 @@ nsHTTPResponseListener::OnStartRequest(nsISupports* i_pContext)
 NS_IMETHODIMP
 nsHTTPResponseListener::OnStopRequest(nsISupports* i_pContext,
                                       nsresult iStatus,
-                                      nsIString* i_pMsg)
+                                      const PRUnichar* i_pMsg)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

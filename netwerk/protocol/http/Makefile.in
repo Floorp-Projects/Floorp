@@ -15,20 +15,19 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-#  
-#
-
 DEPTH	= ../../..
+
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+
 MODULE		= netwerk
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS=          \
-        public \
-        src    \
+DIRS=          	\
+        public 	\
+        src    	\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

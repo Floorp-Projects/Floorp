@@ -21,7 +21,6 @@
 
 #include "nsIStreamListener.h"
 class nsIChannel;
-class nsIString;
 class nsHTTPResponse;
 class nsIHTTPChannel;
 /* 
@@ -62,9 +61,9 @@ public:
 
     NS_IMETHOD OnStopBinding(nsISupports* context,
                             nsresult aStatus,
-                            nsIString* aMsg);
+                            const PRUnichar* aMsg);
     NS_IMETHOD OnStartRequest(nsISupports *ctxt);
-    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, nsIString *errorMsg);
+    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
 
 protected:
     PRBool              m_bHeadersDone;

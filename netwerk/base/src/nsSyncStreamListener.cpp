@@ -17,7 +17,6 @@
  */
 
 #include "nsIStreamListener.h"
-#include "nsIString.h"
 #include "nsCRT.h"
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
@@ -34,11 +33,11 @@ public:
     NS_IMETHOD OnStartBinding(nsISupports* context);
     NS_IMETHOD OnStopBinding(nsISupports* context,
                              nsresult aStatus,
-                             nsIString* aMsg);
+                             const PRUnichar* aMsg);
     NS_IMETHOD OnStartRequest(nsISupports* context);
     NS_IMETHOD OnStopRequest(nsISupports* context,
                              nsresult aStatus,
-                             nsIString* aMsg);
+                             const PRUnichar* aMsg);
 
     // nsIStreamListener methods:
     NS_IMETHOD OnDataAvailable(nsISupports* context,
@@ -105,7 +104,7 @@ nsSyncStreamListener::OnStartBinding(nsISupports* context)
 NS_IMETHODIMP 
 nsSyncStreamListener::OnStopBinding(nsISupports* context,
                                     nsresult aStatus,
-                                    nsIString* aMsg)
+                                    const PRUnichar* aMsg)
 {
     // XXX what do we do with the status and error message?
     return mOutputStream->Close();
@@ -120,7 +119,7 @@ nsSyncStreamListener::OnStartRequest(nsISupports* context)
 NS_IMETHODIMP 
 nsSyncStreamListener::OnStopRequest(nsISupports* context,
                                     nsresult aStatus,
-                                    nsIString* aMsg)
+                                    const PRUnichar* aMsg)
 {
     // XXX what do we do with the status and error message?
     return mOutputStream->Close();

@@ -21,8 +21,6 @@
 
 #include "nsIStreamListener.h"
 
-class nsIString;
-
 /* 
     The nsIHTTPEventSink class is the interface thru which the
     HTTP handler reports specific http events back to a client. 

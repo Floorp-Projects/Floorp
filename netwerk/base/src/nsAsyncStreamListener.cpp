@@ -19,7 +19,7 @@
 #include "nsIStreamObserver.h"
 #include "nsIStreamListener.h"
 #include "nsIBufferInputStream.h"
-#include "nsIString.h"
+#include "nsString.h"
 #include "nsCRT.h"
 #include "nsIEventQueue.h"
 
@@ -32,11 +32,11 @@ public:
     NS_IMETHOD OnStartBinding(nsISupports* context);
     NS_IMETHOD OnStopBinding(nsISupports* context,
                              nsresult aStatus,
-                             nsIString* aMsg);
+                             const PRUnichar* aMsg);
     NS_IMETHOD OnStartRequest(nsISupports* context);
     NS_IMETHOD OnStopRequest(nsISupports* context,
                              nsresult aStatus,
-                             nsIString* aMsg);
+                             const PRUnichar* aMsg);
 
     // nsAsyncStreamObserver methods:
     nsAsyncStreamObserver(nsIEventQueue* aEventQ) 
@@ -59,7 +59,7 @@ public:
     void SetStatus(nsresult value)  { mStatus = value; }
 
 protected:
-    nsIEventQueue*       mEventQueue;
+    nsIEventQueue*      mEventQueue;
     nsIStreamObserver*  mReceiver;
     nsresult            mStatus;
 };
@@ -79,7 +79,7 @@ public:
 
     NS_IMETHOD OnStopBinding(nsISupports* context,
                              nsresult aStatus,
-                             nsIString* aMsg) 
+                             const PRUnichar* aMsg) 
     { 
       return nsAsyncStreamObserver::OnStopBinding(context, aStatus, aMsg); 
     }
@@ -91,7 +91,7 @@ public:
 
     NS_IMETHOD OnStopRequest(nsISupports* context,
                              nsresult aStatus,
-                             nsIString* aMsg) 
+                             const PRUnichar* aMsg) 
     { 
       return nsAsyncStreamObserver::OnStopRequest(context, aStatus, aMsg); 
     }
@@ -262,25 +262,23 @@ public:
           mStatus(NS_OK), mMessage(nsnull) {}
     virtual ~nsOnStopBindingEvent();
 
-    nsresult Init(nsresult status, nsIString* aMsg);
+    nsresult Init(nsresult status, PRUnichar* aMsg);
     NS_IMETHOD HandleEvent();
 
 protected:
     nsresult    mStatus;
-    nsIString*  mMessage;
+    PRUnichar*  mMessage;
 };
 
 nsOnStopBindingEvent::~nsOnStopBindingEvent()
 {
-    NS_IF_RELEASE(mMessage);
 }
 
 nsresult
-nsOnStopBindingEvent::Init(nsresult status, nsIString* aMsg)
+nsOnStopBindingEvent::Init(nsresult status, PRUnichar* aMsg)
 {
     mStatus = status;
     mMessage = aMsg;
-    NS_IF_ADDREF(mMessage);
     return NS_OK;
 }
 
@@ -294,7 +292,7 @@ nsOnStopBindingEvent::HandleEvent()
 NS_IMETHODIMP 
 nsAsyncStreamObserver::OnStopBinding(nsISupports* context,
                                           nsresult aStatus,
-                                          nsIString* aMsg)
+                                          const PRUnichar* aMsg)
 {
     nsresult rv = GetStatus();
     if (NS_FAILED(rv)) return rv;
@@ -383,25 +381,23 @@ public:
           mStatus(NS_OK), mMessage(nsnull) {}
     virtual ~nsOnStopRequestEvent();
 
-    nsresult Init(nsresult status, nsIString* aMsg);
+    nsresult Init(nsresult status, PRUnichar* aMsg);
     NS_IMETHOD HandleEvent();
 
 protected:
     nsresult    mStatus;
-    nsIString*  mMessage;
+    PRUnichar*  mMessage;
 };
 
 nsOnStopRequestEvent::~nsOnStopRequestEvent()
 {
-    NS_IF_RELEASE(mMessage);
 }
 
 nsresult
-nsOnStopRequestEvent::Init(nsresult status, nsIString* aMsg)
+nsOnStopRequestEvent::Init(nsresult status, PRUnichar* aMsg)
 {
     mStatus = status;
     mMessage = aMsg;
-    NS_IF_ADDREF(mMessage);
     return NS_OK;
 }
 
@@ -415,7 +411,7 @@ nsOnStopRequestEvent::HandleEvent()
 NS_IMETHODIMP 
 nsAsyncStreamObserver::OnStopRequest(nsISupports* context,
                                           nsresult aStatus,
-                                          nsIString* aMsg)
+                                          const PRUnichar* aMsg)
 {
     nsresult rv = GetStatus();
     if (NS_FAILED(rv)) return rv;

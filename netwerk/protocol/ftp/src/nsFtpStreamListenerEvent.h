@@ -79,12 +79,12 @@ public:
           mStatus(NS_OK), mMessage(nsnull) {}
     virtual ~nsFtpOnStopBindingEvent();
 
-    nsresult Init(nsresult status, nsIString* aMsg);
+    nsresult Init(nsresult status, PRUnichar* aMsg);
     NS_IMETHOD HandleEvent();
 
 protected:
     nsresult    mStatus;
-    nsIString*  mMessage;
+    PRUnichar*  mMessage;
 };
 
 #endif // ___nsftpstreamlistener_h__

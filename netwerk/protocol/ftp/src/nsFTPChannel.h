@@ -62,11 +62,11 @@ public:
     NS_IMETHOD OnStartBinding(nsISupports* context);
     NS_IMETHOD OnStopBinding(nsISupports* context,
                              nsresult aStatus,
-                             nsIString* aMsg);
+                             const PRUnichar* aMsg);
     NS_IMETHOD OnStartRequest(nsISupports *ctxt);
     NS_IMETHOD OnStopRequest(nsISupports *ctxt,
                              nsresult status,
-                             nsIString *errorMsg);
+                             const PRUnichar *errorMsg);
 
     // nsIStreamListener methods:
     NS_IMETHOD OnDataAvailable(nsISupports* context,

@@ -184,7 +184,7 @@ nsFtpConnectionThread::Run() {
             case FTP_ERROR:
                 {
                 // We have error'd out. Stop binding and pass the error back to the user.
-                nsIString* errorMsg = nsnull;
+                PRUnichar* errorMsg = nsnull;
                 nsFtpOnStopBindingEvent* event =
                     new nsFtpOnStopBindingEvent(mListener, nsnull);
                 if (!event)
@@ -1440,7 +1440,7 @@ nsFtpConnectionThread::FindGetState(void) {
 }
 
 nsresult
-nsFtpConnectionThread::MapResultCodeToString(nsresult aResultCode, nsIString* *aOutMsg) {
+nsFtpConnectionThread::MapResultCodeToString(nsresult aResultCode, PRUnichar* *aOutMsg) {
 #if 0  // XXX waiting on NS_NewString() to make it's way into the builds (raptorbase.dll)
     nsresult rv;
     nsStr* string = nsnull;

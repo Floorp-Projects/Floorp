@@ -18,19 +18,17 @@
 
 #include "nsISupports.idl"
 
-interface nsIString;
-
 [scriptable, uuid(a63f70c0-148b-11d3-9333-00104ba0fd40)]
 interface nsIPrompt : nsISupports
 {
-    boolean Confirm(in nsISupports ctxt, in nsIString text);
+    boolean Confirm(in nsISupports ctxt, in wstring text);
 
-    boolean Prompt(in nsISupports ctxt, in nsIString text,
-                   in nsIString defaultText, out nsIString result);
+    boolean Prompt(in nsISupports ctxt, in wstring text,
+                   in wstring defaultText, out wstring result);
 
-    boolean PromptUsernameAndPassword(in nsISupports ctxt, in nsIString text,
-                                      out nsIString user, out nsIString pwd);
+    boolean PromptUsernameAndPassword(in nsISupports ctxt, in wstring text,
+                                      out wstring user, out wstring pwd);
 
-    boolean PromptPassword(in nsISupports ctxt, in nsIString text, 
-                           out nsIString pwd);
+    boolean PromptPassword(in nsISupports ctxt, in wstring text, 
+                           out wstring pwd);
 };

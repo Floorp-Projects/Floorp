@@ -25,7 +25,7 @@
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 
-#include "nsIHTTPNotify.h"
+#include "nsIHttpNotify.h"
 #include "nsINetModRegEntry.h"
 #include "nsProxyObjectManager.h"
 #include "nsIServiceManager.h"

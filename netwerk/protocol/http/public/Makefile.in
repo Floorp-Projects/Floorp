@@ -18,6 +18,7 @@
 MODULE = netwerk
 
 DEPTH = ../../../..
+
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
