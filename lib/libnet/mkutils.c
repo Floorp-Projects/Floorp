@@ -472,7 +472,7 @@ Snip-n-shift, snip-n-shift, etc....
 
    for (p=dst,i=0; i < srclen; i += 3) {
         /* Do 3 bytes of src */
-        register char b0, b1, b2;
+        register unsigned char b0, b1, b2;
 
         b0 = src[0];
         if (i==srclen-1)
