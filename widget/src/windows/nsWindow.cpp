@@ -3917,15 +3917,21 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             }
 
             if (wParam == VK_MENU || (wParam == VK_F10 && !mIsShiftDown)) {
-              // This is required to prevent Windows
-              // default menu processing getting in the
-              // way of XP menus and key handling.
-              // Without this we call DefWindowProc which will 
-              // send us WM_COMMAND and/or WM_SYSCOMMAND messages.
-              // Do not remove!  Talk to me if you have
-              // questions. - hyatt@netscape.com
-              result = PR_TRUE;
-              *aRetValue = 0;           
+              // We need to let Windows handle this keypress,
+              // by returning PR_FALSE, if there's a native menu
+              // bar somewhere in our containing window hierarchy.
+              // Otherwise we handle the keypress and don't pass
+              // it on to Windows, by returning PR_TRUE.
+              PRBool hasNativeMenu = PR_FALSE;
+              HWND hWnd = mWnd;
+              while (hWnd) {
+                if (::GetMenu(hWnd)) {
+                  hasNativeMenu = PR_TRUE;
+                  break;
+                }
+                hWnd = ::GetParent(hWnd);
+              }
+              result = !hasNativeMenu;
             }
             DispatchPendingEvents();
             break;
