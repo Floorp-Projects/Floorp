@@ -402,7 +402,10 @@ DayView.prototype.createEventBox = function(itemOccurrence)
     else
         eventTitleLabel.setAttribute( "value", calEvent.title );
 
-    var eventText = document.createTextNode( calEvent.description );
+    var desc = calEvent.getProperty("description");
+    if (!desc)
+        desc = ""
+    var eventText = document.createTextNode(desc);
     var eventDescription = document.createElement( "description" );
     eventDescription.setAttribute( "class", "day-view-event-description-class" );
     eventDescription.appendChild( eventText );
