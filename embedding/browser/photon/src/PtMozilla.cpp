@@ -806,23 +806,23 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 	/* HTML Options */
 	if( !strcmp( option, "A:link color" ) || !strcmp( option, "A:active color" ) ) {
 		nsXPIDLCString colorStr;
-		pref->CopyCharPref( "browser.anchor_color", getter_Copies(colorStr) );
-		strcpy( value, colorStr );
+		if( pref->CopyCharPref( "browser.anchor_color", getter_Copies(colorStr) ) == NS_OK )
+			strcpy( value, colorStr );
 		}
 	else if( !strcmp( option, "A:visited color" ) ) {
 		nsXPIDLCString colorStr;
-		pref->CopyCharPref( "browser.visited_color", getter_Copies(colorStr) );
-		strcpy( value, colorStr );
+		if( pref->CopyCharPref( "browser.visited_color", getter_Copies(colorStr) ) == NS_OK )
+			strcpy( value, colorStr );
 		}
 	else if( !strcmp( option, "BODY color" ) ) {
 		nsXPIDLCString colorStr;
-		pref->CopyCharPref( "browser.display.foreground_color", getter_Copies(colorStr) );
-		strcpy( value, colorStr );
+		if( pref->CopyCharPref( "browser.display.foreground_color", getter_Copies(colorStr) ) == NS_OK )
+			strcpy( value, colorStr );
 		}
 	else if( !strcmp( option, "BODY background" ) ) {
 		nsXPIDLCString colorStr;
-		pref->CopyCharPref( "browser.display.background_color", getter_Copies(colorStr) );
-		strcpy( value, colorStr );
+		if( pref->CopyCharPref( "browser.display.background_color", getter_Copies(colorStr) ) == NS_OK )
+			strcpy( value, colorStr );
 		}
 	else if( !strcmp( option, "bIgnoreDocumentAttributes" ) ) {
 		PRBool val;
@@ -845,28 +845,28 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 		}
 	else if( !strcmp( option, "BODY font-family" ) || !strcmp( option, "H* font-family" ) ) {
 		/* set the current font */
-		char *font_default = NULL, *font = NULL;
+		char *font_default = NULL, *font;
 		char preference[256];
 
 		pref->CopyCharPref( "font.default", &font_default );
 		if( !font_default ) font_default = "serif";
 
 		sprintf( preference, "font.name.%s.x-western", font_default );
-		pref->CopyCharPref( preference, &font );
-		strcpy( value, font );
+		if( pref->CopyCharPref( preference, &font ) == NS_OK )
+			strcpy( value, font );
 		}
 	else if( !strcmp( option, "PRE font-family" ) ) {
 		/* set the current font */
-		char *font = NULL;
-		pref->CopyCharPref( "font.name.monospace.x-western", &font );
-		strcpy( value, font );
+		char *font;
+		if( pref->CopyCharPref( "font.name.monospace.x-western", &font ) == NS_OK )
+			strcpy( value, font );
 		}
 
 /* HTTP options */
   else if( !strcmp( option, "http_proxy_host" ) ) {
-		char *s = NULL;
-		pref->CopyCharPref( "network.proxy.http", &s );
-		if( s ) strcpy( value, s );
+		char *s;
+		if( pref->CopyCharPref( "network.proxy.http", &s ) == NS_OK )
+			strcpy( value, s );
 		}
   else if( !strcmp( option, "http_proxy_port" ) ) {
 		int n;
@@ -874,14 +874,14 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 		sprintf( value, "%d", n );
 		}
   else if( !strcmp( option, "proxy_overrides" ) ) {
-		char *s = NULL;
-		pref->CopyCharPref( "network.proxy.no_proxies_on", &s );
-		if( s ) strcpy( value, s );
+		char *s;
+		if( pref->CopyCharPref( "network.proxy.no_proxies_on", &s ) == NS_OK )
+			strcpy( value, s );
 		}
   else if( !strcmp( option, "https_proxy_host" ) ) {
-		char *s = NULL;
-		pref->CopyCharPref( "network.proxy.ssl", &s );
-		if( s ) strcpy( value, s );
+		char *s;
+		if( pref->CopyCharPref( "network.proxy.ssl", &s ) == NS_OK )
+			strcpy( value, s );
     }
   else if( !strcmp( option, "https_proxy_port" ) ) {
 		int n;
@@ -892,9 +892,9 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 
 /* FTP options */
   else if( !strcmp( option, "ftp_proxy_host" ) ) {
-		char *s = NULL;
-		pref->CopyCharPref( "network.proxy.ftp", &s );
-		if( s ) strcpy( value, s );
+		char *s;
+		if( pref->CopyCharPref( "network.proxy.ftp", &s ) == NS_OK )
+			strcpy( value, s );
 		}
   else if( !strcmp( option, "ftp_proxy_port" ) ) {
 		int n;
@@ -904,9 +904,9 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 
 /* Gopher options */
   else if( !strcmp( option, "gopher_proxy_host" ) ) {
-		char *s = NULL;
-		pref->CopyCharPref( "network.proxy.gopher", &s );
-		if( s ) strcpy( value, s );
+		char *s;
+		if( pref->CopyCharPref( "network.proxy.gopher", &s ) == NS_OK )
+			strcpy( value, s );
 		}
   else if( !strcmp( option, "gopher_proxy_port" ) ) {
 		int n;
