@@ -15,13 +15,13 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH = ..\..
+DEPTH = ..\..\..
 
 MODULE = netwerk
 
-DIRS=        \
-	ftp  \
-        http \
+DIRS=          \
+        public \
+        src    \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
