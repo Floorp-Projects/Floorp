@@ -391,10 +391,6 @@ SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance
 extern PRBool
 SI_GetBoolPref(const char * prefname, PRBool defaultvalue);
 
-extern void
-SI_SetBoolPref(char * prefname, PRBool prefvalue);
-
-
 static const char *pref_captureForms =
     "wallet.captureForms";
 PRIVATE Bool wallet_captureForms = PR_FALSE;
@@ -2708,7 +2704,7 @@ wallet_ClearStopwatch();
 #define MAX_ARRAY_SIZE 500
 
 extern void
-SI_RememberSignonDat2
+SINGSIGN_RememberSignonData
   (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt);
 
 PUBLIC void
@@ -2800,7 +2796,7 @@ WLLT_OnSubmit(nsIContent* formNode) {
       }
 
       /* save login if appropriate */
-      SI_RememberSignonDat2
+      SINGSIGN_RememberSignonData
         (URLName, (char**)name_array, (char**)value_array, (char**)type_array, value_cnt);
 
       /* save form if it meets all necessary conditions */

@@ -32,9 +32,6 @@
 XP_BEGIN_PROTOS
 
 extern void
-SINGSIGN_DisplaySignonInfoAsHTML();
-
-extern void
 SINGSIGN_GetSignonListForViewer (nsString& aSignonList);
 
 extern void
