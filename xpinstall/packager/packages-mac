@@ -332,3 +332,9 @@ viewer:res:Mailnews:*
 [chatzilla]
 viewer:Components:chatzilla-service.js
 viewer:chrome:chatzilla.jar
+
+[FullCircle]
+; Dummy FullCircle.xpi must be generated with the mozilla 
+; distribution so that it can be seamlessly replaced with a
+; legitimate one for milestone builds, without breaking the
+; installer nor having to rebuild it.
