@@ -78,5 +78,11 @@ DEF_FILE	= $(LIBRARY_NAME).def
 TARGETS		= $(LIBRARY)
 endif
 
+
 include $(DEPTH)/config/rules.mk
 
+# From nsprpub/config/config.mk, mozilla/jpeg needs to know
+# about USE_PTHREADS.  This fixes platforms like SparcLinux. -mcafee
+ifeq ($(USE_PTHREADS), 1)
+OS_CFLAGS += -D_PR_PTHREADS -UHAVE_CVAR_BUILT_ON_SEM
+endif
