@@ -881,7 +881,25 @@ function RevealSearchPanel()
   }
 
   function openNewWindowWith( url ) {
-    var newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
+    var newWin;
+    var wintype = document.firstChild.getAttribute('windowtype');
+    
+    // if and only if the current window is a browser window and it has a document with a character
+    // set, then extract the current charset menu setting from the current document and use it to
+    // initialize the new browser window...
+    if (window && (wintype == "navigator:browser") && window._content && window._content.document)
+    {
+      var DocCharset = window._content.document.characterSet;
+      charsetArg = "charset="+DocCharset;
+      dump("*** Current document charset: " + DocCharset + "\n");
+
+      //we should "inherit" the charset menu setting in a new window
+      newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url, charsetArg );
+    }
+    else // forget about the charset information.
+    {
+      newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
+    }
 
     // Fix new window.    
     newWin.saveFileAndPos = true;

@@ -103,11 +103,12 @@ function OpenBrowserWindow()
   handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
   var startpage = handler.defaultArgs;
   var url = handler.chromeUrlForTask;
+  var wintype = document.firstChild.getAttribute('windowtype');
 
   // if and only if the current window is a browser window and it has a document with a character
   // set, then extract the current charset menu setting from the current document and use it to
   // initialize the new browser window...
-  if (window && (window.windowtype == "navigator:browser") && window._content && window._content.document)
+  if (window && (wintype == "navigator:browser") && window._content && window._content.document)
   {
     var DocCharset = window._content.document.characterSet;
     charsetArg = "charset="+DocCharset;
