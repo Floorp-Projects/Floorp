@@ -423,114 +423,66 @@ NS_IMETHODIMP nsMsgNewsFolder::BuildFolderURL(char **url)
 
 }
 
-/* Finds the directory associated with this folder.  That is if the path is
-   c:\Inbox, it will return c:\Inbox.sbd if it succeeds.  If that path doesn't
-   currently exist then it will create it
-  */
-nsresult nsMsgNewsFolder::CreateDirectoryForFolder(nsFileSpec &path)
+
+NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *newsgroupname)
 {
-#if 0
 	nsresult rv = NS_OK;
+  
+	if (!newsgroupname) return NS_ERROR_NULL_POINTER;
+	if (PL_strlen(newsgroupname) == 0) return NS_ERROR_FAILURE;
 
-	rv = GetPath(path);
-	if(NS_FAILED(rv))
-		return rv;
+    nsFileSpec path;
+	nsCOMPtr<nsIFileSpec> pathSpec;
+	rv = GetPath(getter_AddRefs(pathSpec));
+	if (NS_FAILED(rv)) return rv;
 
-	if(!path.IsDirectory())
-	{
-		//If the current path isn't a directory, add directory separator
-		//and test it out.
-		rv = AddDirectorySeparator(path);
-		if(NS_FAILED(rv))
-			return rv;
+	rv = pathSpec->GetFileSpec(&path);
 
-		//If that doesn't exist, then we have to create this directory
-		if(!path.IsDirectory())
-		{
-			//If for some reason there's a file with the directory separator
-			//then we are going to fail.
-			if(path.Exists())
-			{
-				return NS_MSG_COULD_NOT_CREATE_DIRECTORY;
-			}
-			//otherwise we need to create a new directory.
-			else
-			{
-				path.CreateDirectory();
-				//Above doesn't return an error value so let's see if
-				//it was created.
-				if(!path.IsDirectory())
-					return NS_MSG_COULD_NOT_CREATE_DIRECTORY;
-			}
-		}
-	}
-
-	return rv;
-#else
-  PR_ASSERT(0);
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
-NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *folderName)
-{
-#if 0
-	nsresult rv = NS_OK;
-    
-	nsFileSpec path;
-  nsCOMPtr <nsIMsgFolder> child;
-  //Get a directory based on our current path.
-	rv = CreateDirectoryForFolder(path);
-	if(NS_FAILED(rv))
-		return rv;
-
+    nsCOMPtr<nsIMsgFolder> child;
+   
+	// Create an empty database for this mail folder, set its name from the user  
+	nsCOMPtr<nsIMsgDatabase> newsDBFactory;
+	nsIMsgDatabase *newsDB = nsnull;
 
 	//Now we have a valid directory or we have returned.
 	//Make sure the new folder name is valid
-	path += folderName;
+	path += newsgroupname;
 	path.MakeUnique();
 
-	nsOutputFileStream outputStream(path);	
-   
-	// Create an empty database for this news folder, set its name from the user  
-	nsCOMPtr<nsIMsgDatabase> newsDBFactory;
+#ifdef DEBUG_NEWS
+	printf("echo %s: to the newsrc file\n", newsgroupname);
+#endif
+
+	nsOutputFileStream outputStream(path);
 
 	rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
 	if (NS_SUCCEEDED(rv) && newsDBFactory) {
-    nsIMsgDatabase *unusedDB = nsnull;
-		rv = newsDBFactory->Open(path, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) &unusedDB);
-    
-    if (NS_SUCCEEDED(rv) && unusedDB) {
-      //need to set the folder name
-			nsCOMPtr <nsIDBFolderInfo> folderInfo;
-			rv = unusedDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
-			if(NS_SUCCEEDED(rv)) {
-				//folderInfo->SetNewsgroupName(leafNameFromUser);
-			}
-      
+		nsCOMPtr <nsIFileSpec> dbFileSpec;
+		NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
+		rv = newsDBFactory->Open(dbFileSpec, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) &newsDB);
+		if (NS_SUCCEEDED(rv) && newsDB) {
 			//Now let's create the actual new folder
-			nsAutoString folderNameStr(folderName);
-			rv = AddSubfolder(folderName, getter_AddRefs(child), "");
-      unusedDB->SetSummaryValid(PR_TRUE);
-      unusedDB->Close(PR_TRUE);
-    }
-    else {
-			path.Delete(PR_FALSE);
-      rv = NS_MSG_CANT_CREATE_FOLDER;
-    }
+			char *setStr = PR_smprintf("");
+			rv = AddSubfolder(newsgroupname, getter_AddRefs(child), setStr);
+			PR_FREEIF(setStr);
+            newsDB->SetSummaryValid(PR_TRUE);
+            newsDB->Close(PR_TRUE);
+        }
+        else
+        {
+            rv = NS_MSG_CANT_CREATE_FOLDER;
+        }
 	}
-	if(NS_SUCCEEDED(rv) && child) {
-		nsCOMPtr <nsISupports> folderSupports;
-    
-		rv = child->QueryInterface(kISupportsIID, getter_AddRefs(folderSupports));
-		if(NS_SUCCEEDED(rv)) {
+	if(rv == NS_OK && child)
+	{
+		nsCOMPtr<nsISupports> folderSupports(do_QueryInterface(child, &rv));
+
+		if(NS_SUCCEEDED(rv))
+		{
 			NotifyItemAdded(folderSupports);
 		}
 	}
 	return rv;
-#endif
-  PR_ASSERT(0);  
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::Delete()

@@ -99,8 +99,6 @@ protected:
 	nsresult CreateSubFolders(nsFileSpec &path);
 	nsresult AddDirectorySeparator(nsFileSpec &path);
 	nsresult GetDatabase();
-  
-	nsresult CreateDirectoryForFolder(nsFileSpec &path);
 
 	//Creates a subfolder with the name 'name' and adds it to the list of children.
 	//Returns the child as well.
