@@ -193,10 +193,8 @@ function formatUnifinderEventTime( time )
 function unifinderRefresh()
 {
    //gEventSource.onlyFutureEvents = (document.getElementById( 'unifinder-future-events' ).getAttribute( "checked" ) == "true" );
-   eventTable = gEventSource.getCurrentEvents();
+   eventTable = getEventTable();
 
-   gEventSource.onlyFutureEvents = false;
-   
    unifinderSearchKeyPress( document.getElementById( 'unifinder-search-field' ), null );
 }
 
@@ -411,7 +409,7 @@ function doSearch( )
    
    if ( searchText == '' ) 
    {
-      eventTable = gEventSource.getCurrentEvents();
+      eventTable = getEventTable();
    }
    else if ( searchText == " " ) 
    {
@@ -436,21 +434,13 @@ function doSearch( )
 }
 
 
-function unifinderShowEventsWithAlarmsOnly()
-{
-   var eventTable = gEventSource.getEventsWithAlarms();
-
-   refreshEventTree( eventTable );
-}
-
-
-function unifinderDoFilterEvents( event )
+function getEventTable( )
 {
    var Today = new Date();
    //do this to allow all day events to show up all day long
    var StartDate = new Date( Today.getFullYear(), Today.getMonth(), Today.getDate(), 0, 0, 0 );
    
-   switch( event.currentTarget.parentNode.selectedItem.value )
+   switch( document.getElementById( "event-filter-menulist" ).selectedItem.value )
    {
       case "all":
          gEventSource.onlyFutureEvents = false;
@@ -482,7 +472,12 @@ function unifinderDoFilterEvents( event )
          break;
    }
 
-   refreshEventTree( eventTable );
+   return( eventTable );
+}
+
+function unifinderDoFilterEvents( event )
+{
+   refreshEventTree( false );
 
    /* The following isn't exactly right. It should actually reload after the next event happens. */
 
@@ -562,6 +557,11 @@ function setUnifinderEventTreeItem( treeItem, calendarEvent )
 
 function refreshEventTree( eventArray )
 {
+   if( eventArray === false )
+   {
+      eventArray = getEventTable();
+   }
+
    // get the old tree children item and remove it
    
    var tree = document.getElementById( UnifinderTreeName );
@@ -586,15 +586,6 @@ function refreshEventTree( eventArray )
 
       tree.getElementsByTagName( "treechildren" )[0]. appendChild( treeItem );
    }  
-}
-
-function unifinderClearSearchCommand()
-{
-   document.getElementById( "unifinder-search-field" ).value = "";
-
-   var eventTable = gEventSource.getCurrentEvents();
-
-   refreshEventTree( eventTable );
 }
 
 function focusFirstItemIfNoSelection()

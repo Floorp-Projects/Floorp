@@ -313,10 +313,7 @@ function onResponseAndRefresh( )
 
    gCalendarWindow.calendarManager.addCalendar( calendarToGet );
 
-   //refresh the views
-   var eventTable = gEventSource.getCurrentEvents();
-
-   refreshEventTree( eventTable );
+   refreshEventTree( false );
 
    gCalendarWindow.currentView.refreshEvents();
 }
@@ -339,10 +336,7 @@ function removeCalendar( event )
    else
       gCalendarWindow.calendarManager.removeCalendar( event.currentTarget.calendarObject );
 
-   //refresh the views
-   var eventTable = gEventSource.getCurrentEvents();
-
-   refreshEventTree( eventTable );
+   refreshEventTree( false );
 
    gCalendarWindow.currentView.refreshEvents();
 }
