@@ -1201,9 +1201,9 @@ unless ($switch{'no_templates'}) {
         return if ($name !~ /\.tmpl$/);
         $name =~ s/\Q$::templatepath\E\///; # trim the bit we don't pass to TT
 
-        # Do this to avoid actually processing the templates
-        my ($data, $err) = $::provider->fetch($name);
-        die "Could not compile $name: " . $data . "\n" if $err;
+        # Compile the template but throw away the result. This has the side-
+        # effect of writing the compiled version to disk.
+        $::template->context()->template($name);
     }
     
     eval("use Template");
@@ -1212,46 +1212,13 @@ unless ($switch{'no_templates'}) {
         print "Precompiling templates ...\n" unless $silent;
 
         use File::Find;
-
+        require Bugzilla::Template;
+        
         # Don't hang on templates which use the CGI library
         eval("use CGI qw(-no_debug)");
+        $::template = Bugzilla::Template->create();
+
         foreach $::templatepath (@templatepaths) {
-           $::provider = Template::Provider->new(
-           {
-               # Directories containing templates.
-               INCLUDE_PATH => $::templatepath,
-
-               PRE_CHOMP => 1 ,
-               TRIM => 1 ,
-
-               # => $datadir/template/`pwd`/template/{en, ...}/{custom,default}
-               COMPILE_DIR => "$datadir/template",
-
-               # Initialize templates (f.e. by loading plugins like Hook).
-               PRE_PROCESS => "global/initialize.none.tmpl",
-
-               # These don't actually need to do anything here, just exist
-               FILTERS =>
-               {
-                inactive => sub { return $_; } ,
-                closed => sub { return $_; },
-                obsolete => sub { return $_; },
-                js => sub { return $_; },
-                html_linebreak => sub { return $_; },
-                no_break => sub { return $_; },
-                url_quote => sub { return $_; },
-                xml => sub { return $_; },
-                quoteUrls => sub { return $_; },
-                bug_link => [ sub { return sub { return $_; } }, 1],
-                csv => sub { return $_; },
-                unitconvert => sub { return $_; },
-                time => sub { return $_; },
-                wrap_comment => sub { return $_; },
-                none => sub { return $_; } ,
-               },
-           }) || die ("Could not create Template Provider: "
-                       . Template::Provider->error() . "\n");
-
            # Traverse the template hierarchy. 
            find({ wanted => \&compile, no_chdir => 1 }, $::templatepath);
        }

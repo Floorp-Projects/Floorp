@@ -218,8 +218,7 @@ sub create {
 
         # Functions for processing text within templates in various ways.
         # IMPORTANT!  When adding a filter here that does not override a
-        # built-in filter, please also add a stub filter to checksetup.pl
-        # and t/004template.t.
+        # built-in filter, please also add a stub filter to t/004template.t.
         FILTERS => {
 
             # Render text in required style.
