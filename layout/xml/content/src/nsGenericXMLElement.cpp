@@ -144,13 +144,10 @@ nsGenericXMLElement::GetScriptObject(nsIScriptContext* aContext,
                                        mParent, (void**)&slots->mScriptObject);
     NS_RELEASE(factory);
     
-    char tagBuf[50];
-    tag.ToCString(tagBuf, sizeof(tagBuf));
-    
     if (nsnull != mDocument) {
       aContext->AddNamedReference((void *)&slots->mScriptObject,
                                   slots->mScriptObject,
-                                  tagBuf);
+                                  "nsGenericXMLElement::mScriptObject");
     }
   }
   *aScriptObject = slots->mScriptObject;
