@@ -20,17 +20,6 @@ box.padded {
 	width: 100%;
 }
 
-tree[class="attachment"] treeitem > treerow > treecell > titledbutton {
-	vertical-align: bottom;
-	min-height: 1px;
-	min-width: 1px;
-	height: 1em;
-	width: 1em;
-	margin:0px;
-	padding:0px;
-	border:2px groove black;
-	list-style-image: url("chrome://messenger/skin/addressbook/myaddrbk.gif");
-}
 
 /* addressing widget */
 
