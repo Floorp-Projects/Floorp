@@ -225,7 +225,7 @@ protected:
     int mMaxNLoaderData;
 
     PRBool              mRegistryDirty;
-    nsVoidArray         mAutoRegEntries;
+    nsHashtable         mAutoRegEntries;
     nsCOMPtr<nsICategoryManager>  mCategoryManager;
 
     PLArenaPool   mArena;
