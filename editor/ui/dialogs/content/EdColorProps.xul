@@ -141,8 +141,7 @@
       </row>
       <row autostretch="never" valign="middle">
         <html class="label wrap" flex="1">&saveImageMsg.label;</html>
-        <button class="dialog" id="AdvancedEditButton" flex="1"
-              tooltip="aTooltip" tooltiptext="&AdvancedEditButton.tooltip;" />
+        <button class="dialog" id="AdvancedEditButton" flex="1"/>
       </row>
     </rows>
   </grid>
