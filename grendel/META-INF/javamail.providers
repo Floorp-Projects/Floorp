@@ -1,0 +1,25 @@
+## Stores
+
+# POP3 default
+protocol=pop3;     type=store; class=com.sun.mail.pop3.POP3Store;         vendor=Sun Microsystems, Inc;
+# Two POP3 choices
+protocol=spop3;    type=store; class=com.sun.mail.pop3.POP3Store;         vendor=Sun Microsystems, Inc
+protocol=gpop3;    type=store; class=grendel.storage.PopStore;            vendor=Mozilla.org, Grendel
+
+# News default
+protocol=news;     type=store; class=grendel.storage.NewsStore;           vendor=Mozilla.org, Grendel
+# Two News choices
+protocol=gnews;    type=store; class=grendel.storage.NewsStore;           vendor=Mozilla.org, Grendel
+protocol=dnews;    type=store; class=dog.mail.nntp.NNTPStore;             vendor=dog@dog.net.uk;
+
+# Berkeley local store
+protocol=berkeley; type=store; class=grendel.storage.BerkeleyStore;       vendor=Mozilla.org, Grendel
+
+# IMAP
+protocol=imap;     type=store; class=com.sun.mail.imap.IMAPStore;         vendor=Sun Microsystems, Inc;
+
+
+## Transports
+
+# SMTP 
+protocol=smtp;     type=transport; class=com.sun.mail.smtp.SMTPTransport; vendor=Sun Microsystems, Inc;
