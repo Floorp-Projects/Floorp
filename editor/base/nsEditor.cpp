@@ -869,7 +869,7 @@ NS_IMETHODIMP nsEditor::Paste()
   nsresult rv = nsServiceManager::GetService(kCClipboardCID,
                                              kIClipboardIID,
                                              (nsISupports **)&clipboard);
-  nsITransferable * trans;
+  nsITransferable *trans = 0;
   rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, kITransferableIID, (void**) &trans);
 
   //nsIFormatConverter * xifConverter;
@@ -877,21 +877,23 @@ NS_IMETHODIMP nsEditor::Paste()
 
   //trans->SetConverter(xifConverter);
 
-  nsIDataFlavor * flavor;
+  nsIDataFlavor *flavor = 0;
   rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) &flavor);
   flavor->Init(kTextMime, "Text");
   trans->AddDataFlavor(flavor);
 
   clipboard->GetData(trans);
 
-  char * str;
+  char *str = 0;
   PRUint32 len;
   trans->GetTransferData(flavor, (void **)&str, &len);
 
-  if (str[len-1] == 0) {
-    len--;
+  if (str) {
+    if (str[len-1] == 0) {
+      len--;
+    }
+    stuffToPaste.SetString(str, len);
   }
-  stuffToPaste.SetString(str, len);
 
   NS_IF_RELEASE(flavor);
   NS_IF_RELEASE(trans);
