@@ -206,7 +206,7 @@ function loadCalendarEventDialog()
    setFieldValue( "alarm-length-field", gEvent.alarmLength );
    setFieldValue( "alarm-length-units", gEvent.alarmUnits );
 
-   if( gEvent.alarmEmailAddress == "" )
+   if( gEvent.alarmEmailAddress == "" && "new" == args.mode )
       gEvent.alarmEmailAddress = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "alarms.emailaddress", "" );
 
    if ( gEvent.alarmEmailAddress && gEvent.alarmEmailAddress != "" ) 
@@ -216,7 +216,8 @@ function loadCalendarEventDialog()
    }
    else
    {
-      setFieldValue( "invite-checkbox", false, "checked" );
+      setFieldValue( "alarm-email-checkbox", false, "checked" );
+      setFieldValue( "alarm-email-field", true, "disabled" );
    }
    
    if ( gEvent.inviteEmailAddress != undefined && gEvent.inviteEmailAddress != "" ) 
