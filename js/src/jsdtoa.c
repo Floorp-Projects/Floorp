@@ -1632,8 +1632,8 @@ dig_done:
         word0(rv0) = Exp_1 - P*Exp_msk1;
         word1(rv0) = 0;
         if ((word0(rv) & Exp_mask) <= P*Exp_msk1
-         && word1(rv) & 1
-         && dsign != 2)
+              && word1(rv) & 1
+              && dsign != 2) {
             if (dsign) {
 #ifdef Sudden_Underflow
                 /* rv will be 0, but this would give the  */
@@ -1645,8 +1645,9 @@ dig_done:
                 }
             else
                 word1(rv) &= ~1;
-        rv *= rv0;
         }
+        rv *= rv0;
+    }
 #endif /* Avoid_Underflow */
 retfree:
     Bfree(bb);
@@ -2157,7 +2158,7 @@ JS_dtoa(double d, int mode, JSBool biasUp, int ndigits,
         ds = tens[k];
         if (ndigits < 0 && ilim <= 0) {
             S = mhi = 0;
-            if (ilim < 0 || d < 5*ds || !biasUp && d == 5*ds)
+            if (ilim < 0 || d < 5*ds || (!biasUp && d == 5*ds))
                 goto no_digits;
             goto one_digit;
         }
@@ -2318,7 +2319,7 @@ JS_dtoa(double d, int mode, JSBool biasUp, int ndigits,
     if (ilim <= 0 && mode > 2) {
         /* We're doing fixed-mode output and d is less than the minimum nonzero output in this mode.
            Output either zero or the minimum nonzero output depending on which is closer to d. */
-        if (ilim < 0 || (i = cmp(b,S = multadd(S,5,0))) < 0 || i == 0 && !biasUp) {
+        if (ilim < 0 || (i = cmp(b,S = multadd(S,5,0))) < 0 || (i == 0 && !biasUp)) {
         /* Always emit at least one digit.  If the number appears to be zero
            using the current mode, then emit one '0' digit and set decpt to 1. */
         /*no_digits:
@@ -2601,7 +2602,7 @@ divrem(Bigint *b, uint32 divisor)
         
         remainder = dividend - quotientHi*divisor;
         JS_ASSERT(quotientHi <= 0xFFFF && remainder < divisor);
-        dividend = remainder << 16 | a & 0xFFFF;
+        dividend = remainder << 16 | (a & 0xFFFF);
         quotientLo = dividend / divisor;
         remainder = dividend - quotientLo*divisor;
         JS_ASSERT(quotientLo <= 0xFFFF && remainder < divisor);
