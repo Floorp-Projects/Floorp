@@ -93,6 +93,24 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 	}
 }
 
+#elif defined(__GNUC__) && defined(__i386__) && !defined(NSPR_LOCK)
+
+/* Note: This fails on 386 cpus, cmpxchgl is a >= 486 instruction */
+JS_INLINE int
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+{
+    unsigned int res;
+
+    __asm__ __volatile__ (
+                          "lock cmpxchgl %2, (%1)\n"
+                          "sete %%al\n"
+                          "andl $1, %%eax\n"
+                          : "=a" (res)
+                          : "r" (w), "r" (nv), "a" (ov) 
+                          : "cc", "memory");
+    return res;
+}
+
 #elif defined(SOLARIS) && defined(sparc) && !defined(NSPR_LOCK)
 
 #ifndef ULTRA_SPARC
