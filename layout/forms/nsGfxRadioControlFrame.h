@@ -39,6 +39,7 @@
 #define nsGfxRadioControlFrame_h___
 
 #include "nsFormControlFrame.h"
+#include "nsIStatefulFrame.h"
 #include "nsIRadioControlFrame.h"
 
 #ifdef ACCESSIBILITY
@@ -51,6 +52,7 @@ class nsIAccessible;
 #define NS_GFX_RADIO_CONTROL_FRAME_LAST_CONTEXT_INDEX   0
 
 class nsGfxRadioControlFrame : public nsFormControlFrame,
+                               public nsIStatefulFrame,
                                public nsIRadioControlFrame
 
 {
@@ -94,6 +96,10 @@ public:
 
   // nsIFormControlFrame
   NS_IMETHOD OnContentReset();
+
+  //nsIStatefulFrame
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
   ///XXX: End o the temporary methods
 #ifdef DEBUG_rodsXXX

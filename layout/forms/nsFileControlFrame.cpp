@@ -63,6 +63,7 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIPresShell.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIStatefulFrame.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMWindowInternal.h"
@@ -148,16 +149,10 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   if (NS_SUCCEEDED(rv)) {
     mTextContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("text"), PR_FALSE);
-    nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
-    if (textControl) {
-      textControl->SetDisabled(nsFormFrame::GetDisabled(this));
-      // Initialize value when we create the content in case the value was set
-      // before we got here
-      nsCOMPtr<nsIDOMHTMLInputElement> fileContent = do_QueryInterface(mContent);
-      if (fileContent) {
-        nsAutoString value;
-        fileContent->GetValue(value);
-        textControl->SetValue(value);
+    if (nsFormFrame::GetDisabled(this)) {
+      nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
+      if (textControl) {
+        textControl->SetDisabled(nsFormFrame::GetDisabled(this));
       }
     }
     aChildList.AppendElement(mTextContent);
@@ -203,6 +198,9 @@ nsFileControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   } else  if (aIID.Equals(NS_GET_IID(nsIDOMMouseListener))) {
     *aInstancePtr = (void*)(nsIDOMMouseListener*) this;
+    return NS_OK;
+  } else  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
+    *aInstancePtr = (void*)(nsIStatefulFrame*) this;
     return NS_OK;
   }
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
@@ -678,6 +676,54 @@ nsFileControlFrame::Paint(nsIPresContext*      aPresContext,
   if (NS_FAILED(rv)) return rv;
   
   return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+}
+
+//----------------------------------------------------------------------
+// nsIStatefulFrame
+//----------------------------------------------------------------------
+NS_IMETHODIMP
+nsFileControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  // Don't save state before we are initialized
+  if (!mTextFrame && !mCachedState) {
+    return NS_OK;
+  }
+
+  // Get the value string
+  nsAutoString stateString;
+  nsresult res = GetProperty(nsHTMLAtoms::value, stateString);
+  NS_ENSURE_SUCCESS(res, res);
+
+  // Compare to default value, and only save if needed (Bug 62713)
+  nsAutoString defaultStateString;
+  nsCOMPtr<nsIDOMHTMLInputElement> formControl(do_QueryInterface(mContent));
+  if (formControl) {
+    formControl->GetDefaultValue(defaultStateString);
+  }
+
+  if (! stateString.Equals(defaultStateString)) {
+
+    // Construct a pres state and store value in it.
+    res = NS_NewPresState(aState);
+    NS_ENSURE_SUCCESS(res, res);
+    res = (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), stateString);
+  }
+
+  return res;
+}
+
+NS_IMETHODIMP
+nsFileControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  nsAutoString string;
+  aState->GetStateProperty(NS_LITERAL_STRING("value"), string);
+  SetProperty(aPresContext, nsHTMLAtoms::value, string);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

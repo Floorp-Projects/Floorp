@@ -553,6 +553,10 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*)(nsIDOMKeyListener*) this;                                        
     return NS_OK;                                                        
   }
+  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
+    *aInstancePtr = (void*)(nsIStatefulFrame*) this;
+    return NS_OK;
+  }
   return nsScrollFrame::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -1449,7 +1453,7 @@ nsListControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
   // First check to see if all the content has been added
   nsCOMPtr<nsISelectElement> element(do_QueryInterface(mContent));
   if (element) {
-    element->IsDoneAddingChildren(&mIsAllContentHere);
+    element->IsDoneAddingContent(&mIsAllContentHere);
     if (!mIsAllContentHere) {
       mIsAllFramesHere    = PR_FALSE;
       mHasBeenInitialized = PR_FALSE;
@@ -1965,7 +1969,7 @@ PRBool nsListControlFrame::CheckIfAllFramesHere()
 
 //-------------------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::DoneAddingChildren(PRBool aIsDone)
+nsListControlFrame::DoneAddingContent(PRBool aIsDone)
 {
   mIsAllContentHere = aIsDone;
   if (mIsAllContentHere) {
@@ -1999,7 +2003,7 @@ nsListControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
   if (!mIsAllContentHere) {
     nsCOMPtr<nsISelectElement> element(do_QueryInterface(mContent));
     if (element) {
-      element->IsDoneAddingChildren(&mIsAllContentHere);
+      element->IsDoneAddingContent(&mIsAllContentHere);
       if (!mIsAllContentHere) {
         mIsAllFramesHere    = PR_FALSE;
         mHasBeenInitialized = PR_FALSE;
@@ -2771,8 +2775,15 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
       if (NS_SUCCEEDED(mPresContext->GetEventStateManager(getter_AddRefs(stateManager)))) {
         nsIFrame * frame;
         stateManager->GetEventTarget(&frame);
-        if (!IsClickingInCombobox(aMouseEvent)) {
-          return NS_OK;
+        nsCOMPtr<nsIListControlFrame> listFrame(do_QueryInterface(frame));
+        if (listFrame) {
+          if (!IsClickingInCombobox(aMouseEvent)) {
+            return NS_OK;
+          }
+        } else {
+          if (!IsClickingInCombobox(aMouseEvent)) {
+            return NS_OK;
+          }
         }
         // This will consume the focus event we get from the clicking on the dropdown
         //stateManager->ConsumeFocusEvents(PR_TRUE);
@@ -3563,4 +3574,22 @@ nsListControlFrame::ItemsHaveBeenRemoved(nsIPresContext * aPresContext)
   if (IsInDropDownMode()) {
     ResetList(aPresContext);
   }
+}
+
+
+//--------------------------------------------------------
+// nsIStatefulFrame
+//--------------------------------------------------------
+NS_IMETHODIMP
+nsListControlFrame::SaveState(nsIPresContext* aPresContext,
+                              nsIPresState** aState)
+{
+  return nsFormControlHelper::SaveContentState(this, aPresContext, aState);
+}
+
+NS_IMETHODIMP
+nsListControlFrame::RestoreState(nsIPresContext* aPresContext,
+                                 nsIPresState* aState)
+{
+  return nsFormControlHelper::RestoreContentState(this, aPresContext, aState);
 }

@@ -73,7 +73,6 @@
 #include "nsIDOMText.h"
 #include "nsReadableUtils.h"
 #include "nsITextContent.h"
-#include "nsITextAreaElement.h"
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
@@ -81,8 +80,7 @@ static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 class nsHTMLTextAreaElement : public nsGenericHTMLContainerFormElement,
                               public nsIDOMHTMLTextAreaElement,
                               public nsIDOMNSHTMLTextAreaElement,
-                              public nsITextControlElement,
-                              public nsITextAreaElement
+                              public nsITextControlElement
 {
 public:
   nsHTMLTextAreaElement();
@@ -106,16 +104,13 @@ public:
   // nsIDOMNSHTMLTextAreaElement
   NS_DECL_NSIDOMNSHTMLTEXTAREAELEMENT
 
-  // nsITextAreaElement
-  NS_DECL_NSITEXTAREAELEMENT
-
   // nsIFormControl
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
-  NS_IMETHOD SaveState();
-  NS_IMETHOD RestoreState(nsIPresState* aState);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
   // nsITextControlElement
   NS_IMETHOD SetValueGuaranteed(const nsAString& aValue, nsIGfxTextControlFrame2* aFrame);
@@ -202,7 +197,6 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTextAreaElement,
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTextAreaElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLTextAreaElement)
   NS_INTERFACE_MAP_ENTRY(nsITextControlElement)
-  NS_INTERFACE_MAP_ENTRY(nsITextAreaElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLTextAreaElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -795,14 +789,6 @@ nsHTMLTextAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
   return rv;
 }
 
-// nsITextAreaElement
-NS_IMETHODIMP
-nsHTMLTextAreaElement::DoneAddingChildren()
-{
-  RestoreFormControlState(this, this);
-  return NS_OK;
-}
-
 // nsIFormControl
 
 NS_IMETHODIMP
@@ -928,33 +914,30 @@ nsHTMLTextAreaElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
 
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::SaveState()
+nsHTMLTextAreaElement::SaveState(nsIPresContext* aPresContext,
+                                 nsIPresState** aState)
 {
-  nsresult rv = NS_OK;
-
-  // Only save if value != defaultValue (bug 62713)
-  if (mValueChanged) {
-    nsCOMPtr<nsIPresState> state;
-    rv = GetPrimaryPresState(this, getter_AddRefs(state));
-    if (state) {
-      nsAutoString value;
-      GetValue(value);
-
-      rv = nsLinebreakConverter::ConvertStringLineBreaks(
-               value,
-               nsLinebreakConverter::eLinebreakPlatform,
-               nsLinebreakConverter::eLinebreakContent);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Converting linebreaks failed!");
-      rv = state->SetStateProperty(NS_LITERAL_STRING("value"), value);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "value save failed!");
-    }
+  nsresult rv = GetPrimaryPresState(this, aState);
+  if (*aState) {
+    nsString value;
+    GetValue(value);
+    // XXX Should use nsAutoString above but ConvertStringLineBreaks requires
+    // mOwnsBuffer!
+    rv = nsLinebreakConverter::ConvertStringLineBreaks(
+             value,
+             nsLinebreakConverter::eLinebreakPlatform,
+             nsLinebreakConverter::eLinebreakContent);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Converting linebreaks failed!");
+    rv = (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), value);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "value save failed!");
   }
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::RestoreState(nsIPresState* aState)
+nsHTMLTextAreaElement::RestoreState(nsIPresContext* aPresContext,
+                                    nsIPresState* aState)
 {
   nsresult rv = NS_OK;
 

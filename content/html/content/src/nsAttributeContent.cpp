@@ -139,10 +139,6 @@ public:
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  NS_IMETHOD DoneCreatingElement() {
-    return NS_OK;
-  }
-
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsAString& aValue,
                      PRBool aNotify) {  return NS_OK; }
   NS_IMETHOD SetAttr(nsINodeInfo *aNodeInfo, const nsAString& aValue,

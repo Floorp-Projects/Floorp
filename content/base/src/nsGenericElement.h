@@ -251,7 +251,6 @@ public:
   NS_IMETHOD SetBindingParent(nsIContent* aParent);
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
-  NS_IMETHOD DoneCreatingElement();
 
 
   // nsIStyledContent interface methods

@@ -892,3 +892,37 @@ nsFormControlHelper::Reset(nsIFrame* aFrame, nsIPresContext* aPresContext)
   return NS_ERROR_FAILURE;
 }
 
+nsresult
+nsFormControlHelper::SaveContentState(nsIFrame* aFrame,
+                                      nsIPresContext* aPresContext,
+                                      nsIPresState** aState)
+{
+  nsCOMPtr<nsIContent> controlContent;
+  aFrame->GetContent(getter_AddRefs(controlContent));
+
+  nsCOMPtr<nsIFormControl> control = do_QueryInterface(controlContent);
+  if (control) {
+    control->SaveState(aPresContext, aState);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsFormControlHelper::RestoreContentState(nsIFrame* aFrame,
+                                         nsIPresContext* aPresContext,
+                                         nsIPresState* aState)
+{
+  nsCOMPtr<nsIContent> controlContent;
+  aFrame->GetContent(getter_AddRefs(controlContent));
+
+  nsCOMPtr<nsIFormControl> control = do_QueryInterface(controlContent);
+  if (control) {
+    control->RestoreState(aPresContext, aState);
+    return NS_OK;
+  }
+
+  NS_NOTREACHED("no content");
+  return NS_ERROR_FAILURE;
+}

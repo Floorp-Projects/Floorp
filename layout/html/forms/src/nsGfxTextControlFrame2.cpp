@@ -1329,6 +1329,10 @@ nsGfxTextControlFrame2::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*)(nsIGfxTextControlFrame2*) this;
     return NS_OK;
   }
+  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
+    *aInstancePtr = (void*)(nsIStatefulFrame*) this;
+    return NS_OK;
+  }
   if (aIID.Equals(NS_GET_IID(nsIScrollableViewProvider))) {
     *aInstancePtr = (void*)(nsIScrollableViewProvider*) this;
     return NS_OK;
@@ -3399,6 +3403,21 @@ nsGfxTextControlFrame2::GetWidthInCharacters() const
   
   // otherwise, the default is just returned.
   return DEFAULT_COLUMN_WIDTH;
+}
+
+//----------------------------------------------------------------------
+// nsIStatefulFrame
+//----------------------------------------------------------------------
+NS_IMETHODIMP
+nsGfxTextControlFrame2::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
+{
+  return nsFormControlHelper::SaveContentState(this, aPresContext, aState);
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
+{
+  return nsFormControlHelper::RestoreContentState(this, aPresContext, aState);
 }
 
 NS_IMETHODIMP

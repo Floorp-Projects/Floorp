@@ -23,7 +23,6 @@ DEPTH=..\..\..\..
 
 XPIDLSRCS = \
 	.\nsISelectElement.idl \
-	.\nsITextAreaElement.idl \
 	$(NULL)
 
 EXPORTS= \
