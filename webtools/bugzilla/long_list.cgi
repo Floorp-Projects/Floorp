@@ -73,6 +73,7 @@ where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and";
 
 $::FORM{'buglist'} = "" unless exists $::FORM{'buglist'};
 foreach my $bug (split(/:/, $::FORM{'buglist'})) {
+    if (!detaint_natural($bug)) || next;
     SendSQL(SelectVisible("$generic_query bugs.bug_id = $bug",
                           $::userid, $::usergroupset));
 
