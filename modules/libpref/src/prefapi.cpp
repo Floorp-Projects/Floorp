@@ -103,7 +103,7 @@ PR_STATIC_CALLBACK(void) pref_FreeTable(void *pool, void *item)
 
 PR_STATIC_CALLBACK(PLHashEntry*) pref_AllocEntry(void *pool, const void *key)
 {
-    return malloc(sizeof(PLHashEntry));
+    return (PLHashEntry*)malloc(sizeof(PLHashEntry));
 }
 
 PR_STATIC_CALLBACK(void) pref_FreeEntry(void *pool, PLHashEntry *he, PRUint32 flag)
@@ -515,7 +515,7 @@ PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
         /* Free up gSavedLine to avoid MLK. */
         if (gSavedLine) 
             free(gSavedLine);
-        gSavedLine = malloc(i+1);
+        gSavedLine = (char*)malloc(i+1);
         if (!gSavedLine)
             return JS_FALSE;
         memcpy(gSavedLine, js_buffer, i);
@@ -543,7 +543,7 @@ static char * str_escape(const char * original)
     if (original == NULL)
         return NULL;
     
-    ret_str = malloc(2 * PL_strlen(original) + 1);
+    ret_str = (char*)malloc(2 * PL_strlen(original) + 1);
     /* Paranoid worst case all slashes will free quickly */
     p = original;
     q = ret_str;
@@ -598,7 +598,7 @@ PREF_SetBoolPref(const char *pref_name, PRBool value)
 PrefResult
 PREF_SetBinaryPref(const char *pref_name, void * value, long size)
 {
-    char* buf = PL_Base64Encode(value, (PRUint32)size, NULL);
+    char* buf = PL_Base64Encode((const char*)value, (PRUint32)size, NULL);
 
     if (buf) {
         PrefValue pref;
@@ -685,7 +685,7 @@ PREF_SetDefaultBoolPref(const char *pref_name,PRBool value)
 PrefResult
 PREF_SetDefaultBinaryPref(const char *pref_name,void * value,long size)
 {
-    char* buf = PL_Base64Encode(value, (PRUint32)size, NULL);
+    char* buf = PL_Base64Encode((const char*)value, (PRUint32)size, NULL);
     if (buf) {
         PrefValue pref;
         pref.stringVal = buf;
@@ -1008,7 +1008,7 @@ PREF_GetBinaryPref(const char *pref_name, void * return_value, int *size, PRBool
             return PREF_ERROR;
         }
     
-        PL_Base64Decode(buf, (PRUint32)(*size), return_value);
+        PL_Base64Decode(buf, (PRUint32)(*size), (char*)return_value);
         
         PR_Free(buf);
     }
@@ -1078,8 +1078,8 @@ pref_DeleteItem(PLHashEntry *he, int i, void *arg)
     
     /* note if we're deleting "ldap" then we want to delete "ldap.xxx"
         and "ldap" (if such a leaf node exists) but not "ldap_1.xxx" */
-    if (to_delete && (PL_strncmp(he->key, to_delete, (PRUint32) len) == 0 ||
-        (len-1 == (int)PL_strlen(he->key) && PL_strncmp(he->key, to_delete, (PRUint32)(len-1)) == 0)))
+    if (to_delete && (PL_strncmp((char*)he->key, to_delete, (PRUint32) len) == 0 ||
+        (len-1 == (int)PL_strlen((char*)he->key) && PL_strncmp((char*)he->key, to_delete, (PRUint32)(len-1)) == 0)))
         return HT_ENUMERATE_REMOVE;
     else
         return HT_ENUMERATE_NEXT;
@@ -1147,7 +1147,7 @@ pref_ClearUserPref(PLHashEntry *he, int i, void *arg)
     {
         pref->flags &= ~PREF_USERSET;
         if (gCallbacksEnabled)
-            pref_DoCallback(he->key);
+            pref_DoCallback((const char*)he->key);
         return HT_ENUMERATE_REMOVE;
     }
     return HT_ENUMERATE_NEXT;
@@ -1544,14 +1544,14 @@ int
 pref_addChild(PLHashEntry *he, int i, void *arg)
 {
     PrefChildIter* pcs = (PrefChildIter*) arg;
-    if ( PL_strncmp(he->key, pcs->parent, PL_strlen(pcs->parent)) == 0 )
+    if ( PL_strncmp((const char*)he->key, pcs->parent, PL_strlen(pcs->parent)) == 0 )
     {
         char buf[512];
         char* nextdelim;
         PRUint32 parentlen = PL_strlen(pcs->parent);
         char* substring;
 
-        strncpy(buf, he->key, PR_MIN(512, PL_strlen(he->key) + 2));
+        strncpy(buf, (const char*)he->key, PR_MIN(512, PL_strlen((const char*)he->key) + 2));
         nextdelim = buf + parentlen;
         if (parentlen < PL_strlen(buf))
         {
@@ -1914,14 +1914,14 @@ pref_printDebugInfo(PLHashEntry *he, int i, void *arg)
                           (PrefType) PREF_TYPE(pref)) && 
         !PREF_IS_LOCKED(pref))
     {
-        buf1 = PR_smprintf("<font color=\"blue\">%s = ", (char*) he->key);
+        buf1 = PR_smprintf("<font color=\"blue\">%s = ", (const char*) he->key);
         val = pref->userPref;
     }
     else
     {
         buf1 = PR_smprintf("<font color=\"%s\">%s = ",
             PREF_IS_LOCKED(pref) ? "red" : (PREF_IS_CONFIG(pref) ? "black" : "green"),
-            (char*) he->key);
+            (const char*) he->key);
         val = pref->defaultPref;
     }
     
@@ -2265,7 +2265,7 @@ PrefResult PREF_SetListPref(const char* pref, char** list)
     for ( len = 0, p = list; p != NULL && *p != NULL; p++ )
         len+= (PL_strlen(*p)+1); /* The '+1' is for a comma or '\0' */
 
-    if ( len <= 0 || (value = PR_MALLOC((PRUint32)len)) == NULL )
+    if ( len <= 0 || (value = (char*)PR_MALLOC((PRUint32)len)) == NULL )
         return PREF_ERROR;
 
     (void) PL_strcpy(value, *list);
