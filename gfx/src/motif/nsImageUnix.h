@@ -105,7 +105,6 @@ private:
   PRInt32    mOriginalRowBytes;
   Pixmap     mThePixMap;
   PRUint8    *mImageBits;
-  PRUint8    *mAlphaBits;
   PRUint8    *mConvertedBits;
   PRBool     mConverted;
   PRUint8    *mBitsForCreate;
@@ -114,6 +113,16 @@ private:
   nsColorMap *mColorMap;
   PRInt16     mNumPalleteColors;
   PRInt8      mNumBytesPixel;
+
+ // alpha layer members
+  PRUint8    *mAlphaBits;
+  PRInt8     mAlphaDepth;        // alpha layer depth
+  PRInt16    mARowBytes;
+  PRInt16    mAlphaWidth;        // alpha layer width
+  PRInt16    mAlphaHeight;       // alpha layer height
+  nsPoint    mLocation;          // alpha mask location
+
+
 };
 
 #endif

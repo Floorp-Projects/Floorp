@@ -106,12 +106,11 @@ nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsM
 
   mColorMap = new nsColorMap;
 
-  if (mColorMap != nsnull)
-    {
+  if (mColorMap != nsnull) {
     mColorMap->NumColors = mNumPalleteColors;
     mColorMap->Index = new PRUint8[3 * mNumPalleteColors];
     memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPalleteColors));
-    }
+  }
 
   return NS_OK;
 }
@@ -239,7 +238,28 @@ void nsImageUnix::CompositeImage(nsIImage *aTheImage, nsPoint *aULLocation,nsBle
 // lets build an alpha mask from this image
 PRBool nsImageUnix::SetAlphaMask(nsIImage *aTheMask)
 {
+PRInt32   num;
+PRUint8   *srcbits;
+
+  if (aTheMask && 
+       (((nsImageUnix*)aTheMask)->mNumBytesPixel == 1)) {
+    mLocation.x = 0;
+    mLocation.y = 0;
+    mAlphaDepth = 8;
+    mAlphaWidth = aTheMask->GetWidth();
+    mAlphaHeight = aTheMask->GetWidth();
+    num = mAlphaWidth*mAlphaHeight;
+    mARowBytes = aTheMask->GetLineStride();
+    mAlphaBits = new unsigned char[mARowBytes * mAlphaHeight];
+
+    srcbits = aTheMask->GetBits();
+    memcpy(mAlphaBits,srcbits,num);
+
+    return(PR_TRUE);
+  }
+
   return(PR_FALSE);
+
 }
 
 
