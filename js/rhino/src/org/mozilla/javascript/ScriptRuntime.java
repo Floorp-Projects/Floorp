@@ -705,7 +705,7 @@ public class ScriptRuntime {
                                         Throwable t)
     {
         if (t instanceof JavaScriptException) {
-	    return ((JavaScriptException)t).getValue();
+            return ((JavaScriptException)t).getValue();
         } else if (t instanceof EcmaError) {
             return ((EcmaError)t).getErrorObject();
         } else {
@@ -718,8 +718,8 @@ public class ScriptRuntime {
             } else if (t instanceof EcmaError) {
                 return ((EcmaError)t).getErrorObject();
             }
-	    return cx.getWrapFactory().wrap(cx, scope, t, null);
-	}
+            return cx.getWrapFactory().wrap(cx, scope, t, null);
+        }
     }
 
     /**
@@ -1798,15 +1798,11 @@ public class ScriptRuntime {
         return new ImporterTopLevel(cx);
     }
 
-    public static void main(Class scriptClass, String[] args)
+    public static void main(Script script, String[] args)
         throws JavaScriptException
     {
         Context cx = Context.enter();
         try {
-            Script script = (Script)newInstanceOrNull(scriptClass);
-            if (script == null) {
-                throw new RuntimeException("Error creating script object");
-            }
             ScriptableObject global = getGlobal(cx);
 
             // get the command line arguments and define "arguments"

@@ -487,16 +487,18 @@ public class Codegen extends Interpreter {
         cfw.startMethod("main", "([Ljava/lang/String;)V",
                         (short)(ClassFileWriter.ACC_PUBLIC
                                 | ClassFileWriter.ACC_STATIC));
-        cfw.addPush(cfw.getClassName());  // load the name of this class
-        cfw.addInvoke(ByteCode.INVOKESTATIC,
-                      "java/lang/Class",
-                      "forName",
-                      "(Ljava/lang/String;)Ljava/lang/Class;");
-        cfw.add(ByteCode.ALOAD_0); // load 'args'
+
+        // load new ScriptImpl()
+        cfw.add(ByteCode.NEW, cfw.getClassName());
+        cfw.add(ByteCode.DUP);
+        cfw.addInvoke(ByteCode.INVOKESPECIAL, cfw.getClassName(),
+                      "<init>", "()V");
+         // load 'args'
+        cfw.add(ByteCode.ALOAD_0);
         cfw.addInvoke(ByteCode.INVOKESTATIC,
                       "org/mozilla/javascript/ScriptRuntime",
                       "main",
-                      "(Ljava/lang/Class;[Ljava/lang/String;)V");
+                      "(Lorg/mozilla/javascript/Script;[Ljava/lang/String;)V");
         cfw.add(ByteCode.RETURN);
         // 1 = String[] args
         cfw.stopMethod((short)1, null);
