@@ -842,7 +842,7 @@ SEARCH_NEWLINE:
 			{
 			  char *newh = (char*) PR_Realloc ((*header),
 											   PL_strlen(*header) + L + 10);
-			  if (!newh) return MK_OUT_OF_MEMORY;
+			  if (!newh) return NS_ERROR_OUT_OF_MEMORY;
 			  *header = newh;
 			  newh = (*header) + PL_strlen (*header);
 			  *newh++ = ',';
@@ -853,7 +853,7 @@ SEARCH_NEWLINE:
 		  else
 			{
 			  *header = (char *) PR_Malloc(L+1);
-			  if (!*header) return MK_OUT_OF_MEMORY;
+			  if (!*header) return NS_ERROR_OUT_OF_MEMORY;
         nsCRT::memcpy((*header), value, L);
 			  (*header)[L] = 0;
 			}
@@ -874,7 +874,7 @@ SEARCH_NEWLINE:
 		  int L = buf - value;
 		  char *draftInfo = (char*) PR_Malloc(L+1);
 		  char *receipt = NULL;
-		  if (!draftInfo) return MK_OUT_OF_MEMORY;
+		  if (!draftInfo) return NS_ERROR_OUT_OF_MEMORY;
       nsCRT::memcpy(draftInfo, value, L);
 		  *(draftInfo+L)=0;
 		  receipt = PL_strstr(draftInfo, "receipt=");

@@ -870,7 +870,8 @@ int nsMsgComposeAndSend::HackAttachments(
 						  const struct nsMsgAttachedFile *preloaded_attachments)
 {
   MWContext *x = NULL;
-	INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(x);
+  INTL_CharSetInfo c;
+  c = LO_GetDocumentCharacterSetInfo(x);
   if (preloaded_attachments)
 		NS_ASSERTION(!attachments, "not-null attachments");
 	if (attachments)
@@ -1087,7 +1088,7 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
 	if (mCompFields)
 		mCompFields->AddRef();
 	else
-		return MK_OUT_OF_MEMORY;
+		return NS_ERROR_OUT_OF_MEMORY;
 
   const char *cset = fields->GetCharacterSet();
   // Make sure charset is sane...
@@ -1236,7 +1237,7 @@ nsMsgComposeAndSend::Init(
   // see if we should continue
   //
 	if (!fields)
-		return MK_OUT_OF_MEMORY;
+		return NS_ERROR_OUT_OF_MEMORY;
 
   rv = InitCompositionFields(fields);
   if (NS_FAILED(rv))
@@ -1293,7 +1294,7 @@ nsMsgComposeAndSend::Init(
 		{
 			char *newb = (char *) PR_Malloc (attachment1_body_length + 1);
 			if (! newb)
-				return MK_OUT_OF_MEMORY;
+				return NS_ERROR_OUT_OF_MEMORY;
       nsCRT::memcpy (newb, attachment1_body, attachment1_body_length);
 			newb [attachment1_body_length] = 0;
 			m_attachment1_body = newb;
@@ -1395,7 +1396,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     Fail(MK_OUT_OF_MEMORY, eMsg);
     NotifyListenersOnStopSending(nsnull, MK_OUT_OF_MEMORY, nsnull, nsnull);
     PR_FREEIF(eMsg);
-    return MK_OUT_OF_MEMORY;
+    return NS_ERROR_OUT_OF_MEMORY;
 	}
 
 	PL_strcpy (buf, "");
@@ -1421,7 +1422,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     {
       // RICHIE_TODO - message loss here?
       nsMsgDisplayMessageByString("Unable to create SMTP listener service. Send failed.");
-      return MK_OUT_OF_MEMORY;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
 
     mSendListener->SetMsgComposeAndSendObject(this);
@@ -1451,7 +1452,7 @@ nsMsgComposeAndSend::DeliverFileAsNews()
     {
       // RICHIE_TODO - message loss here?
       nsMsgDisplayMessageByString("Unable to create NNTP listener service. News Delivery failed.");
-      return MK_OUT_OF_MEMORY;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
 
     mSendListener->SetMsgComposeAndSendObject(this);
@@ -2307,7 +2308,6 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   char          *ibuffer = 0;
   PRInt32       ibuffer_size = TEN_K;
   char          *obuffer = 0;
-  PRInt32       obuffer_size = 0, obuffer_fp = 0;
   PRInt32       n;
   char          *envelopeLine = nsMsgGetEnvelopeLine();
 
@@ -2368,7 +2368,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 
   if (!ibuffer)
 	{
-	  status = MK_OUT_OF_MEMORY;
+	  status = NS_ERROR_OUT_OF_MEMORY;
 	  goto FAIL;
 	}
 
@@ -2470,7 +2470,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 	  char  *buf = (char *) PR_Malloc (L);
 	  if (!buf)
 		{
-		  status = MK_OUT_OF_MEMORY;
+		  status = NS_ERROR_OUT_OF_MEMORY;
 		  goto FAIL;
 		}
 
@@ -2496,7 +2496,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 	  char *buf = (char *) PR_Malloc (L);
 	  if (!buf)
 		{
-		  status = MK_OUT_OF_MEMORY;
+		  status = NS_ERROR_OUT_OF_MEMORY;
 		  goto FAIL;
 		}
 
@@ -2547,7 +2547,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 		  orig_hap = 0;
 		  if (!line)
 			{
-			  status = MK_OUT_OF_MEMORY;
+			  status = NS_ERROR_OUT_OF_MEMORY;
 			  goto FAIL;
 			}
 
@@ -2649,7 +2649,7 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
 {
   mCopyObj = new nsMsgCopy(); // SHERRY do_QueryInterface(new nsMsgCopy());
   if (!mCopyObj)
-    return MK_OUT_OF_MEMORY;
+    return NS_ERROR_OUT_OF_MEMORY;
 
   if (!mCompFields->GetFcc() || !*mCompFields->GetFcc())
     return mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 

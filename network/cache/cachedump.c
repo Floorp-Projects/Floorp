@@ -66,14 +66,10 @@ net_OpenExtCacheFatDB(char *filename)
 
 int main(int argc, char **argv)
 {
-    char url[4028];
-    struct stat stat_s;
     net_CacheObject * cache_obj;
 	DB * ext_cache_database=0;
 	DBT key;
 	DBT data;
-    int len;
-    char *end;
 
     memset(&cache_obj, 0, sizeof(net_CacheObject));
 

@@ -1553,7 +1553,7 @@ mimeEmitterAddAttachmentField(MimeDisplayOptions *opt, const char *field, const 
 {
   mime_stream_data  *msd = GetMSD(opt);
   if (!msd) 
-    return -1;
+    return NS_ERROR_FAILURE;
 
   if (msd->output_emitter)
   {
@@ -1566,7 +1566,7 @@ mimeEmitterAddAttachmentField(MimeDisplayOptions *opt, const char *field, const 
     return emitter2->AddAttachmentField(field, value);
   }
 
-  return -1;
+  return NS_ERROR_FAILURE;
 }
 
 extern "C" nsresult     
@@ -1574,7 +1574,7 @@ mimeEmitterAddHeaderField(MimeDisplayOptions *opt, const char *field, const char
 {
   mime_stream_data  *msd = GetMSD(opt);
   if (!msd) 
-    return -1;
+    return NS_ERROR_FAILURE;
 
   if (msd->output_emitter)
   {
@@ -1587,7 +1587,7 @@ mimeEmitterAddHeaderField(MimeDisplayOptions *opt, const char *field, const char
     return emitter2->AddHeaderField(field, value);
   }
 
-  return -1;
+  return NS_ERROR_FAILURE;
 }
 
 extern "C" nsresult     
@@ -1595,7 +1595,7 @@ mimeEmitterStartAttachment(MimeDisplayOptions *opt, const char *name, const char
 {
   mime_stream_data  *msd = GetMSD(opt);
   if (!msd) 
-    return -1;
+    return NS_ERROR_FAILURE;
 
   if (msd->output_emitter)
   {
@@ -1608,7 +1608,7 @@ mimeEmitterStartAttachment(MimeDisplayOptions *opt, const char *name, const char
     return emitter2->StartAttachment(name, contentType, url);
   }
 
-  return -1;
+  return NS_ERROR_FAILURE;
 }
 
 extern "C" nsresult     
@@ -1616,7 +1616,7 @@ mimeEmitterEndAttachment(MimeDisplayOptions *opt)
 {
   mime_stream_data  *msd = GetMSD(opt);
   if (!msd) 
-    return -1;
+    return NS_ERROR_FAILURE;
 
   if (msd->output_emitter)
   {
@@ -1629,7 +1629,7 @@ mimeEmitterEndAttachment(MimeDisplayOptions *opt)
     return emitter2->EndAttachment();
   }
 
-  return -1;
+  return NS_ERROR_FAILURE;
 }
 
 extern "C" nsresult     
@@ -1637,7 +1637,7 @@ mimeEmitterStartBody(MimeDisplayOptions *opt, PRBool bodyOnly, const char *msgID
 {
   mime_stream_data  *msd = GetMSD(opt);
   if (!msd) 
-    return -1;
+    return NS_ERROR_FAILURE;
 
   if (msd->output_emitter)
   {
@@ -1650,7 +1650,7 @@ mimeEmitterStartBody(MimeDisplayOptions *opt, PRBool bodyOnly, const char *msgID
     return emitter2->StartBody(bodyOnly, msgID, outCharset);
   }
 
-  return -1;
+  return NS_ERROR_FAILURE;
 }
 
 extern "C" nsresult     
@@ -1658,7 +1658,7 @@ mimeEmitterEndBody(MimeDisplayOptions *opt)
 {
   mime_stream_data  *msd = GetMSD(opt);
   if (!msd) 
-    return -1;
+    return NS_ERROR_FAILURE;
 
   if (msd->output_emitter)
   {
@@ -1671,7 +1671,7 @@ mimeEmitterEndBody(MimeDisplayOptions *opt)
     return emitter2->EndBody();
   }
 
-  return -1;
+  return NS_ERROR_FAILURE;
 }
 
 extern "C" nsresult     
@@ -1679,7 +1679,7 @@ mimeEmitterEndHeader(MimeDisplayOptions *opt)
 {
   mime_stream_data  *msd = GetMSD(opt);
   if (!msd) 
-    return -1;
+    return NS_ERROR_FAILURE;
 
   if (msd->output_emitter)
   {
@@ -1692,7 +1692,7 @@ mimeEmitterEndHeader(MimeDisplayOptions *opt)
     return emitter2->EndHeader();
   }
 
-  return -1;
+  return NS_ERROR_FAILURE;
 }
 
 extern "C" nsresult     
@@ -1701,7 +1701,7 @@ mimeEmitterStartHeader(MimeDisplayOptions *opt, PRBool rootMailHeader, PRBool he
 {
   mime_stream_data  *msd = GetMSD(opt);
   if (!msd) 
-    return -1;
+    return NS_ERROR_FAILURE;
 
   if (msd->output_emitter)
   {
@@ -1714,7 +1714,7 @@ mimeEmitterStartHeader(MimeDisplayOptions *opt, PRBool rootMailHeader, PRBool he
     return emitter2->StartHeader(rootMailHeader, headerOnly, msgID, outCharset);
   }
 
-  return -1;
+  return NS_ERROR_FAILURE;
 }
 
 

@@ -413,14 +413,15 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
   // temp file where we will save this data
   mFileSpec = nsMsgCreateTempFileSpec("nsmail.tmp");
   if (! mFileSpec )
-  	return (MK_OUT_OF_MEMORY);
+  	return (NS_ERROR_OUT_OF_MEMORY);
 
   mOutFile = new nsOutputFileStream(*mFileSpec, PR_WRONLY | PR_CREATE_FILE);
   if (!mOutFile)
   {
     delete mFileSpec;
     mFileSpec = nsnull;
-	  return MK_UNABLE_TO_OPEN_TMP_FILE; 
+    //return MK_UNABLE_TO_OPEN_TMP_FILE; 
+    return NS_ERROR_FAILURE;
   }
 
   mURL->GetSpec(&url_string);
@@ -557,7 +558,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
   mFetcher = new nsURLFetcher();
   if (!mFetcher)
   {
-    return MK_OUT_OF_MEMORY;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   NS_ADDREF(mURL);

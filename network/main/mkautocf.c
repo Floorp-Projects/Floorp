@@ -715,7 +715,8 @@ PRIVATE int pacf_read_config(void) {
 
 /* Private stream object methods for receiving the proxy autoconfig file. */
 PRIVATE int pacf_write(NET_StreamClass *stream, CONST char *buf, int32 len) {
-	PACF_Object *obj=stream->data_object;	
+	PACF_Object *obj;
+	obj=stream->data_object;	
     if (len > 0) {
 	if (!pacf_src_buf)
 	    pacf_src_buf = (char*)PR_Malloc(len + 1);
@@ -1009,7 +1010,6 @@ MODULE_PRIVATE int NET_LoadProxyConfig(char *autoconf_url,
 				       MWContext *window_id,
 				       Net_GetUrlExitFunc *exit_routine) {
     URL_Struct *my_url_s = NULL;
-	char * global_url = NULL;
 
     if (!autoconf_url)
 	return -1;

@@ -205,7 +205,6 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
   nsresult                  rv = NS_OK;
   nsIMsgFolder              *msgFolder= nsnull;
   PRUint32                  cnt = 0;
-  PRUint32                  subCnt = 0;
   PRUint32                  i;
   PRBool                    fixed = PR_FALSE;
   char                      *savePref = "";

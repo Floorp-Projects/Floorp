@@ -71,7 +71,7 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IMSGCOPY_IID; return iid; }
 
   nsMsgCopy();
-  ~nsMsgCopy();
+  virtual ~nsMsgCopy();
 
   // nsISupports interface
   NS_DECL_ISUPPORTS
