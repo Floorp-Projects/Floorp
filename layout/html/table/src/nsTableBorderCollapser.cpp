@@ -441,7 +441,9 @@ void nsTableBorderCollapser::ComputeTopBorderForEdgeAt(nsIPresContext& aPresCont
     widthToAdd = NSToCoordCeil(p2t);
   border->mWidth *= NSToCoordCeil(p2t);
   border->mLength = mTableFrame.GetColumnWidth(aColIndex);
-  border->mInsideNeighbor = cellFrame->mBorderEdges;
+  if (cellFrame) {
+    border->mInsideNeighbor = cellFrame->mBorderEdges;
+  }
   if (0 == aColIndex) {
     // if we're the first column, factor in the thickness of the left table border
     nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(0));
