@@ -188,6 +188,9 @@ class Node : public MozillaObjectWrapper
 
         virtual MBool hasChildNodes() const;
 
+        //From DOM3 26-Jan-2001 WD
+        virtual String getBaseURI();
+
     protected:
         String nodeName;
         String nodeValue;
@@ -330,6 +333,9 @@ class Document : public Node
                     const String& aTagName);
 
         Element* getElementById(const String aID);
+
+        //Override to return documentBaseURI
+        String getBaseURI();
 
     private:
         nsIDOMDocument* nsDocument;

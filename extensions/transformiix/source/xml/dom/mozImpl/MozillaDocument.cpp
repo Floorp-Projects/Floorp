@@ -28,6 +28,7 @@
 
 #include "mozilladom.h"
 #include "nsLayoutCID.h"
+#include "nsIURL.h"
 
 static NS_DEFINE_CID(kIDOMDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
 
@@ -845,4 +846,23 @@ MITREObject* Document::removeWrapper(MozillaObjectWrapper* aObject)
 {
     nsISupportsKey key(aObject->getNSObj());
     return (MITREObject*)wrapperHashTable->Remove(&key);
+}
+
+
+String Document::getBaseURI()
+{
+    String url;
+
+    nsIURI* docURL = nsnull;
+    nsCOMPtr<nsIDocument> sourceNsDocument(do_QueryInterface(nsDocument));
+    sourceNsDocument->GetBaseURL(docURL);
+    if (docURL) {
+        char* urlString;
+        docURL->GetSpec(&urlString);
+        url = urlString;
+        nsCRT::free(urlString);
+        NS_IF_RELEASE(docURL);
+    }
+    
+    return url;
 }

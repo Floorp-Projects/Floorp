@@ -27,7 +27,10 @@
 */
 
 #include "mozilladom.h"
+#include "ArrayList.h"
+#include "URIUtils.h"
 
+const String XMLBASE_ATTR = "xml:base";
 MOZ_DECL_CTOR_COUNTER(Node)
 
 /**
@@ -405,3 +408,49 @@ MBool Node::hasChildNodes() const
     nsNode->HasChildNodes(&returnValue);
     return returnValue;
 }
+
+/**
+ * Returns the base URI of the node. Acccounts for xml:base
+ * attributes.
+ *
+ * @return base URI for the node
+**/
+String Node::getBaseURI()
+{
+    Node* node=this;
+    ArrayList baseUrls;
+    String url;
+    Node* xbAttr;
+    
+    while(node) {
+        switch(node->getNodeType()) {
+         case Node::ELEMENT_NODE :
+            xbAttr = ((Element*)node)->getAttributeNode(XMLBASE_ATTR);
+            if(xbAttr)
+                baseUrls.add(new String(xbAttr->getNodeValue()));
+            break;
+
+         case Node::DOCUMENT_NODE :
+            baseUrls.add(new String(((Document*)node)->getBaseURI()));
+            break;
+            
+         default:
+            break;
+        }
+        node = node->getParentNode();
+    }
+
+    if(baseUrls.size()) {
+        url = *((String*)baseUrls.get(baseUrls.size()-1));
+
+        for(int i=baseUrls.size()-2;i>=0;i--) {
+            String dest;
+            URIUtils::resolveHref(*(String*)baseUrls.get(i), url, dest);
+            url = dest;
+        }
+    }
+
+    baseUrls.clear(MB_TRUE);
+    
+    return url;
+} //-- getBaseURI

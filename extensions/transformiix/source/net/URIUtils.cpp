@@ -29,7 +29,7 @@
  *   -- 20000326
  *     -- added Mozilla integration code
  *
- * $Id: URIUtils.cpp,v 1.7 2001/01/12 20:06:13 axel%pike.org Exp $
+ * $Id: URIUtils.cpp,v 1.8 2001/03/06 00:12:40 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "URIUtils.h"
@@ -38,7 +38,7 @@
  * URIUtils
  * A set of utilities for handling URIs
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.7 $ $Date: 2001/01/12 20:06:13 $
+ * @version $Revision: 1.8 $ $Date: 2001/03/06 00:12:40 $
 **/
 
 #ifndef MOZ_XSL
@@ -60,53 +60,25 @@ const short  URIUtils::PATH_MODE      = 4;
  * Returns an InputStream for the file represented by the href
  * argument
  * @param href the href of the file to get the input stream for.
- * @param documentBase the document base of the href argument, if it
- * is a relative href
- * set documentBase to null if there is none.
  * @return an InputStream to the desired resource
  * @exception java.io.FileNotFoundException when the file could not be
  * found
 **/
 istream* URIUtils::getInputStream
-    (String& href, String& documentBase, String& errMsg)
+    (String& href, String& errMsg)
 {
 
     istream* inStream = 0;
 
-    //-- check for URL
     ParsedURI* uri = parseURI(href);
-    if ( !uri->isMalformed ) {
-        inStream = openStream(uri);
-        delete uri;
-        return inStream;
-    }
-    delete uri;
-
-    //-- join document base + href
-    String xHref;
-    if (documentBase.length() > 0) {
-        xHref.append(documentBase);
-        if (documentBase.charAt(documentBase.length()-1) != HREF_PATH_SEP)
-            xHref.append(HREF_PATH_SEP);
-    }
-    xHref.append(href);
-
-    //-- check new href
-    uri = parseURI(xHref);
     if ( !uri->isMalformed ) {
         inStream = openStream(uri);
     }
     else {
         // Try local files
-        char* fchars = new char[xHref.length()+1];
-        ifstream* inFile = new ifstream(xHref.toCharArray(fchars), ios::in);
+        char* fchars = new char[href.length()+1];
+        inStream = new ifstream(href.toCharArray(fchars), ios::in);
         delete fchars;
-        if ( ! *inFile ) {
-            fchars = new char[href.length()+1];
-            (*inFile).open(href.toCharArray(fchars), ios::in);
-            delete fchars;
-        }
-        inStream = inFile;
     }
     delete uri;
 
@@ -119,7 +91,7 @@ istream* URIUtils::getInputStream
     * Returns the document base of the href argument
     * @return the document base of the given href
 **/
-void URIUtils::getDocumentBase(String& href, String& dest) {
+void URIUtils::getDocumentBase(const String& href, String& dest) {
 #ifdef MOZ_XSL
     String docBase("");
     nsCOMPtr<nsIURI> pURL;
@@ -173,7 +145,7 @@ void URIUtils::getDocumentBase(String& href, String& dest) {
  * if necessary.
  * The new resolved href will be appended to the given dest String
 **/
-void URIUtils::resolveHref(String& href, String& documentBase, String& dest) {
+void URIUtils::resolveHref(const String& href, const String& base, String& dest) {
 #ifdef MOZ_XSL
     nsCOMPtr<nsIURI> pURL;
     nsresult result = NS_OK;
@@ -181,7 +153,7 @@ void URIUtils::resolveHref(String& href, String& documentBase, String& dest) {
     NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &result);
     if (NS_SUCCEEDED(result)) {
         // XXX This is ugly, there must be an easier (cleaner way).
-        char *baseStr = (documentBase.getConstNSString()).ToNewCString();
+        char *baseStr = (base.getConstNSString()).ToNewCString();
         result = pService->NewURI(baseStr, nsnull, getter_AddRefs(pURL));
         nsCRT::free(baseStr);
         if (NS_SUCCEEDED(result)) {
@@ -197,6 +169,9 @@ void URIUtils::resolveHref(String& href, String& documentBase, String& dest) {
         }
     }
 #else
+    String documentBase;
+    getDocumentBase(base, documentBase);
+
     //-- check for URL
     ParsedURI* uri = parseURI(href);
     if ( !uri->isMalformed ) {
@@ -231,8 +206,27 @@ void URIUtils::resolveHref(String& href, String& documentBase, String& dest) {
     }
     delete uri;
     delete newUri;
+    //cout << "\n---\nhref='" << href << "', base='" << base << "'\ndocumentBase='" << documentBase << "', dest='" << dest << "'\n---\n";
 #endif
 } //-- resolveHref
+
+void URIUtils::getFragmentIdentifier(const String& href, String& frag) {
+    Int32 pos;
+    pos = href.lastIndexOf('#');
+    if(pos != NOT_FOUND)
+        href.subString(pos+1, frag);
+    else
+        frag.clear();
+} //-- getFragmentIdentifier
+
+void URIUtils::getDocumentURI(const String& href, String& docUri) {
+    Int32 pos;
+    pos = href.lastIndexOf('#');
+    if(pos != NOT_FOUND)
+        href.subString(0,pos,docUri);
+    else
+        docUri = href;
+} //-- getFragmentIdentifier
 
 #ifndef MOZ_XSL
 istream* URIUtils::openStream(ParsedURI* uri) {

@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.h,v 1.10 2001/01/27 15:05:39 axel%pike.org Exp $
+ * $Id: ProcessorState.h,v 1.11 2001/03/06 00:12:28 Peter.VanderBeken%pandora.be Exp $
  */
 
 
@@ -49,7 +49,7 @@
 /**
  * Class used for keeping the current state of the XSL Processor
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.10 $ $Date: 2001/01/27 15:05:39 $
+ * @version $Revision: 1.11 $ $Date: 2001/03/06 00:12:28 $
 **/
 class ProcessorState : public ContextState {
 
@@ -264,6 +264,15 @@ public:
     **/
     void stripSpace(String& names);
 
+    /**
+     * Adds a document to set of loaded documents
+    **/
+    void addLoadedDocument(Document* doc, String& location);
+    
+    /**
+     * Returns a loaded document given it's url. NULL if no such doc exists
+    **/
+    Document* getLoadedDocument(String& url);
 
     //-------------------------------------/
     //- Virtual Methods from ContextState -/
@@ -407,6 +416,11 @@ private:
      * A set of all availabe templates
     **/
     NodeSet        templates;
+    
+    /**
+     * the set of loaded documents
+    **/
+    NamedMap       loadedDocuments;
 
 
     XSLTAction*    currentAction;

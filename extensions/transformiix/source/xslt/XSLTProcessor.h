@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLTProcessor.h,v 1.13 2001/01/27 15:05:40 axel%pike.org Exp $
+ * $Id: XSLTProcessor.h,v 1.14 2001/03/06 00:12:21 Peter.VanderBeken%pandora.be Exp $
  */
 
 
@@ -75,7 +75,7 @@
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.13 $ $Date: 2001/01/27 15:05:40 $
+ * @version $Revision: 1.14 $ $Date: 2001/03/06 00:12:21 $
 **/
 class XSLTProcessor
 #ifdef MOZ_XSL
@@ -140,11 +140,9 @@ public:
      * will be retrieved from the XML Stylesheet Processing instruction,
      * otherwise an empty document will be returned.
      * @param xmlDocument the XML document to process
-     * @param documentBase the document base of the XML document, for
-     * resolving relative URIs
      * @return the result tree.
     **/
-    Document* process(Document& xmlDocument, String& documentBase);
+    Document* process(Document& xmlDocument);
 
 #endif
 
@@ -154,7 +152,7 @@ public:
      * @param documentBase the document base for resolving relative URIs.
     **/
     Document* process
-         (Document& xmlDocument, Document& xslDocument, String& documentBase);
+         (Document& xmlDocument, Document& xslDocument);
 
     /**
      * Reads an XML Document from the given XML input stream, and
@@ -163,8 +161,8 @@ public:
      * @param documentBase the document base for resolving relative URIs.
      * @return the result tree.
     **/
-    Document* process(istream& xmlInput, istream& xslInput,
-           String& documentBase);
+    Document* process(istream& xmlInput, String& xmlFilename,
+                      istream& xslInput, String& xslFilename);
 
 #ifndef MOZ_XSL
     /**
@@ -177,7 +175,7 @@ public:
      * resolving relative URIs
      * @return the result tree.
     **/
-    Document* process(istream& xmlInput, String& documentBase);
+    Document* process(istream& xmlInput, String& xmlFilename);
 
        //----------------------------------------------/
       //-- Methods that print the result to a stream -/
@@ -191,7 +189,7 @@ public:
      * The result tree is printed to the given ostream argument,
      * will not close the ostream argument
     **/
-    void process(istream& xmlInput, ostream& out, String& documentBase);
+    void process(istream& xmlInput, String& xmlFilename, ostream& out);
 
     /**
      * Processes the given XML Document using the given XSL document.
@@ -199,9 +197,8 @@ public:
      * will not close the ostream argument
      * @param documentBase the document base for resolving relative URIs.
     **/
-    void process
-      (Document& xmlDocument, Document& xslDocument,
-         ostream& out, String& documentBase);
+    void process(Document& xmlDocument, Document& xslDocument,
+                 ostream& out);
 
     /**
      * Reads an XML Document from the given XML input stream, and
@@ -211,8 +208,9 @@ public:
      * will not close the ostream argument
      * @param documentBase the document base for resolving relative URIs.
     **/
-    void process(istream& xmlInput, istream& xslInput,
-           ostream& out, String& documentBase);
+    void process(istream& xmlInput, String& xmlFilename,
+                 istream& xslInput, String& xslFilename,
+                 ostream& out);
 
 #endif
 
