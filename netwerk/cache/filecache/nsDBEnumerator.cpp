@@ -98,8 +98,11 @@ nsDBEnumerator::GetNext(nsISupports **_retval)
   *_retval = nsnull ;
 
   nsresult rv = m_CacheEntry->RetrieveInfo(m_tempEntry, m_tempEntry_length) ;
-  if(NS_FAILED(rv))
+  if(NS_FAILED(rv)) {
+    // do some error recovery
+    m_DiskCache->DBRecovery() ;
     return rv ;
+  }
 
   *_retval = NS_STATIC_CAST(nsISupports*, m_CacheEntry) ;
   NS_ADDREF(*_retval) ; // all good getter addref 

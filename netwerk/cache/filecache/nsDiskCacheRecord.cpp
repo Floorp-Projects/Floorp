@@ -466,7 +466,12 @@ nsDiskCacheRecord::RetrieveInfo(void* aInfo, PRUint32 aInfoLength)
 
   PRInt32 id ;
   mDB->GetID(mKey, mKeyLength, &id) ;
-  NS_ASSERTION(id==mRecordID, "\t ++++++ bad record, somethings wrong\n") ;
+//  NS_ASSERTION(id==mRecordID, "\t ++++++ bad record, somethings wrong\n") ;
+
+  // bad record, somethings wrong
+  if (id != mRecordID) {
+    return NS_ERROR_FAILURE;  
+  }
 
   // set mMetaDataLength
   COPY_INT32(&mMetaDataLength, cur_ptr) ;
