@@ -115,6 +115,16 @@
                         <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
                         <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
                     </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>SearchPath</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>:</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
+                        </SETTING>
+                        <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
+                    </SETTING>
                 </SETTING>
                 <SETTING><NAME>SystemSearchPaths</NAME>
                     <SETTING>
@@ -577,7 +587,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0&lt;s&#144;</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -1038,34 +1048,6 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsXULColorPickerAccessible.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsXULFormControlAccessible.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsXULMenuAccessible.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsXULTextAccessible.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsHTMLAreaAccessible.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -1175,6 +1157,13 @@
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>accessible_xul.o</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Library</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
             </FILELIST>
             <LINKORDER>
@@ -1220,26 +1209,6 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsXULColorPickerAccessible.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsXULFormControlAccessible.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsXULMenuAccessible.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsXULTextAccessible.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsHTMLAreaAccessible.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
@@ -1316,6 +1285,11 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsAccessibilityFactory.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>accessible_xul.o</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -1375,6 +1349,16 @@
                     <SETTING>
                         <SETTING><NAME>SearchPath</NAME>
                             <SETTING><NAME>Path</NAME><VALUE>:::dist:</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
+                        </SETTING>
+                        <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>SearchPath</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>:</VALUE></SETTING>
                             <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
                             <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
                         </SETTING>
@@ -1844,7 +1828,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0&lt;s&#144;</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -2305,34 +2289,6 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsXULColorPickerAccessible.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsXULFormControlAccessible.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsXULMenuAccessible.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsXULTextAccessible.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsHTMLAreaAccessible.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -2442,6 +2398,13 @@
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>accessible_xulDebug.o</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Library</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
             </FILELIST>
             <LINKORDER>
@@ -2487,26 +2450,6 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsXULColorPickerAccessible.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsXULFormControlAccessible.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsXULMenuAccessible.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsXULTextAccessible.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsHTMLAreaAccessible.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
@@ -2583,6 +2526,11 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsAccessibilityFactory.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>accessible_xulDebug.o</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -2688,30 +2636,6 @@
         <FILEREF>
             <TARGETNAME>accessible.shlb</TARGETNAME>
             <PATHTYPE>Name</PATHTYPE>
-            <PATH>nsXULColorPickerAccessible.cpp</PATH>
-            <PATHFORMAT>MacOS</PATHFORMAT>
-        </FILEREF>
-        <FILEREF>
-            <TARGETNAME>accessible.shlb</TARGETNAME>
-            <PATHTYPE>Name</PATHTYPE>
-            <PATH>nsXULFormControlAccessible.cpp</PATH>
-            <PATHFORMAT>MacOS</PATHFORMAT>
-        </FILEREF>
-        <FILEREF>
-            <TARGETNAME>accessible.shlb</TARGETNAME>
-            <PATHTYPE>Name</PATHTYPE>
-            <PATH>nsXULMenuAccessible.cpp</PATH>
-            <PATHFORMAT>MacOS</PATHFORMAT>
-        </FILEREF>
-        <FILEREF>
-            <TARGETNAME>accessible.shlb</TARGETNAME>
-            <PATHTYPE>Name</PATHTYPE>
-            <PATH>nsXULTextAccessible.cpp</PATH>
-            <PATHFORMAT>MacOS</PATHFORMAT>
-        </FILEREF>
-        <FILEREF>
-            <TARGETNAME>accessible.shlb</TARGETNAME>
-            <PATHTYPE>Name</PATHTYPE>
             <PATH>nsAccessibilityFactory.cpp</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
@@ -2806,6 +2730,24 @@
                 <PATH>InterfacesStubs</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
+        </GROUP>
+        <GROUP><NAME>Options</NAME>
+            <GROUP><NAME>Debug</NAME>
+                <FILEREF>
+                    <TARGETNAME>accessibleDebug.shlb</TARGETNAME>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>accessible_xulDebug.o</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+            </GROUP>
+            <GROUP><NAME>Optimized</NAME>
+                <FILEREF>
+                    <TARGETNAME>accessible.shlb</TARGETNAME>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>accessible_xul.o</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+            </GROUP>
         </GROUP>
     </GROUPLIST>
 
