@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.12 $ $Date: 2001/11/08 00:15:20 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.13 $ $Date: 2001/11/08 05:19:30 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -887,8 +887,44 @@ NSSTrustDomain_FindCertificateByEmail
   NSSPolicies *policiesOpt
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+    NSSCertificate *rvCert = NULL;
+    PRStatus nssrv;
+    struct get_best_cert_arg_str best;
+    CK_ATTRIBUTE email_template[] =
+    {
+	{ CKA_CLASS,          NULL, 0 },
+	{ CKA_NETSCAPE_EMAIL, NULL, 0 }
+    };
+    CK_ULONG ctsize;
+    nssList *emailList;
+    /* set up the search template */
+    ctsize = (CK_ULONG)(sizeof(email_template) / sizeof(email_template[0]));
+    NSS_CK_SET_ATTRIBUTE_ITEM(email_template, 0, &g_ck_class_cert);
+    email_template[1].pValue = (CK_VOID_PTR)email;
+    email_template[1].ulValueLen = (CK_ULONG)nssUTF8_Length(email, &nssrv);
+    /* set the criteria for determining the best cert */
+    best.td = td;
+    best.cert = NULL;
+    best.time = (timeOpt) ? timeOpt : NSSTime_Now(NULL);
+    best.usage = usage;
+    best.policies = policiesOpt;
+    /* find all matching certs in the cache */
+    emailList = nssList_Create(NULL, PR_FALSE);
+    (void)nssTrustDomain_GetCertsForEmailAddressFromCache(td, email, emailList);
+    best.cached = emailList;
+    /* now find the best cert on tokens */
+    rvCert = find_best_cert_for_template(td, NULL, 
+                                         &best, email_template, ctsize);
+    if (!rvCert) {
+	/* This is to workaround the fact that PKCS#11 doesn't specify
+	 * whether the '\0' should be included.  XXX Is that still true?
+	 */
+	email_template[1].ulValueLen++;
+	rvCert = find_best_cert_for_template(td, NULL, 
+	                                     &best, email_template, ctsize);
+    }
+    nssList_Destroy(emailList);
+    return rvCert;
 }
 
 NSS_IMPLEMENT NSSCertificate **

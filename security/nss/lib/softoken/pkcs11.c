@@ -3555,7 +3555,6 @@ pk11_searchTokenList(PK11Slot *slot, PK11SearchResults *search,
 	    break;
 	case CKA_NETSCAPE_EMAIL:
 	    copy = &email;
-	    classFlags &= NSC_SMIME;
 	    break;
 	case CKA_NETSCAPE_SMIME_TIMESTAMP:
 	    classFlags &= NSC_SMIME;
