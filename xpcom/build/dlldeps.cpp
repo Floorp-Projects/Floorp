@@ -94,6 +94,9 @@ void XXXNeverCalled()
     NS_NewPipe(NULL, NULL, NULL, 0, 0);
     nsFileSpec s;
     nsFixedSizeAllocator a;
+    a.Init(0, 0, 0, 0, 0);
+    a.Alloc(0);
+    a.Free(0, 0);
     NS_NewIOFileStream(NULL, s, 0, 0);
     nsInputFileStream(s, 0, 0);
     nsPersistentFileDescriptor d;
