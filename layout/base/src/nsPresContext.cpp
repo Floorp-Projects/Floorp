@@ -175,8 +175,9 @@ nsPresContext::~nsPresContext()
     mPrefs->UnregisterCallback("font.", PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("browser.display.", PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("browser.underline_anchors", PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("browser.link_color", PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("browser.anchor_color", PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("browser.visited_color", PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("network.image.imageBehavior", PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("image.animation_mode", PrefChangedCallback, (void*)this);
   }
 #ifdef IBMBIDI
@@ -294,6 +295,18 @@ nsPresContext::GetUserPreferences()
       mDefaultBackgroundColor = (nscolor)colorPref;
     }
   }
+  else {
+    // Without this here, checking the "use system colors" checkbox
+    // has no affect until the constructor is called again
+    mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
+    mDefaultBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
+    nsCOMPtr<nsILookAndFeel> look;
+    if (NS_SUCCEEDED(GetLookAndFeel(getter_AddRefs(look))) && look) {
+      look->GetColor(nsILookAndFeel::eColor_WindowForeground, mDefaultColor);
+      look->GetColor(nsILookAndFeel::eColor_WindowBackground, mDefaultBackgroundColor);
+    }
+  }
+
   if (NS_OK == mPrefs->GetBoolPref("browser.display.use_document_colors", &boolPref)) {
     mUseDocumentColors = boolPref;
   }
@@ -427,8 +440,9 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
     mPrefs->RegisterCallback("font.", PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("browser.display.", PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("browser.underline_anchors", PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("browser.link_color", PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("browser.anchor_color", PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("browser.visited_color", PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("network.image.imageBehavior", PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("image.animation_mode", PrefChangedCallback, (void*)this);
 
     // Initialize our state from the user preferences
