@@ -142,12 +142,12 @@
     margin                : 2px 4px 2px 2px;
   } 
 
-#page-proxy-button:hover
+#page-proxy-button[pageproxystate="valid"]:hover
   {
 	  list-style-image      : url("chrome://communicator/skin/bookmarks/location-hover.gif");
   }
   
-#page-proxy-button:hover:active
+#page-proxy-button[pageproxystate="valid"]:hover:active
   {
 	  list-style-image      : url("chrome://communicator/skin/bookmarks/location-clicked.gif");
   }
@@ -155,6 +155,7 @@
 #page-proxy-button[pageproxystate="invalid"] 
   {
     cursor                  : default;
+	  list-style-image        : url("chrome://communicator/skin/bookmarks/location-disabled.gif");
   }
 
 #ubhist-keyword-popup 

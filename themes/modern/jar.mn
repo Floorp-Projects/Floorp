@@ -15,6 +15,7 @@ modern.jar:
   skin/modern/communicator/bookmarks/bookmark-folder-closed.gif    (communicator/bookmarks/bookmark-folder-closed.gif)
   skin/modern/communicator/bookmarks/bookmark-folder-open.gif      (communicator/bookmarks/bookmark-folder-open.gif)
   skin/modern/communicator/bookmarks/bookmark-item.gif             (communicator/bookmarks/bookmark-item.gif)
+  skin/modern/communicator/bookmarks/bookmark-item-dis.gif         (communicator/bookmarks/bookmark-item-dis.gif)
   skin/modern/communicator/bookmarks/bookmarks.css                 (communicator/bookmarks/bookmarks.css)
   skin/modern/communicator/bookmarks/bookmarksToolbar.css          (communicator/bookmarks/bookmarksToolbar.css)
   skin/modern/communicator/bookmarks/bookmarksWindow.css           (communicator/bookmarks/bookmarksWindow.css)

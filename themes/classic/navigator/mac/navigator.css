@@ -131,12 +131,12 @@
     margin                : 0px 2px 0px 0px;
   } 
 
-#page-proxy-button:hover
+#page-proxy-button[pageproxystate="valid"]:hover
   {
 	  list-style-image      : url("chrome://communicator/skin/bookmarks/location-hover.gif");
   }
-
-#page-proxy-button:hover:active
+  
+#page-proxy-button[pageproxystate="valid"]:hover:active
   {
 	  list-style-image      : url("chrome://communicator/skin/bookmarks/location-clicked.gif");
   }
@@ -144,6 +144,7 @@
 #page-proxy-button[pageproxystate="invalid"] 
   {
     cursor                  : default;
+	  list-style-image        : url("chrome://communicator/skin/bookmarks/location-disabled.gif");
   }
 
 #ubhist-keyword-popup, #ubhist-keyword-popup:hover, #ubhist-keyword-popup:hover:active 

@@ -347,6 +347,7 @@
 
 #page-proxy-button[pageproxystate="invalid"] {
   cursor: default;
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item-dis.gif"); 
 }
 
 #home-button {

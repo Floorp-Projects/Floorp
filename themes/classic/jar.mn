@@ -29,6 +29,7 @@ classic.jar:
     skin/classic/communicator/bookmarks/location.gif                     (communicator/bookmarks/location.gif)
     skin/classic/communicator/bookmarks/location-clicked.gif             (communicator/bookmarks/location-clicked.gif)
     skin/classic/communicator/bookmarks/location-hover.gif               (communicator/bookmarks/location-hover.gif)
+    skin/classic/communicator/bookmarks/location-disabled.gif            (communicator/bookmarks/location-disabled.gif)
     skin/classic/communicator/bookmarks/iefolder.gif                     (communicator/bookmarks/iefolder.gif)
     skin/classic/communicator/bookmarks/bookmarksWindow.css              (communicator/bookmarks/bookmarksWindow.css)
     skin/classic/communicator/bookmarks/bookmarksToolbar.css             (communicator/bookmarks/bookmarksToolbar.css)
