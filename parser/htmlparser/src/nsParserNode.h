@@ -180,6 +180,15 @@ class nsCParserNode :  public nsIParserNode {
      */
     virtual void GetSource(nsString& aString);
 
+    /*
+     * Get and set the ID attribute atom for this node.
+     * See http://www.w3.org/TR/1998/REC-xml-19980210#sec-attribute-types
+     * for the definition of an ID attribute.
+     *
+     */
+    virtual nsresult GetIDAttributeAtom(nsIAtom** aResult) const;
+    virtual nsresult SetIDAttributeAtom(nsIAtom* aID);
+
     /**
      * This pair of methods allows us to set a generic bit (for arbitrary use)
      * on each node stored in the context.
@@ -194,6 +203,7 @@ class nsCParserNode :  public nsIParserNode {
     nsString* mSkippedContent;
     PRInt32   mUseCount;
     PRBool    mGenericState;
+    nsCOMPtr<nsIAtom> mIDAttributeAtom;
     
     nsITokenRecycler* mRecycler;
 };

@@ -22,13 +22,13 @@
 
 /*
  * nsINodeInfo is an interface to node info, such as name, prefix, namespace
- * ID and possibly other data that is shared shared between nodes (elements
+ * ID and possibly other data that is shared between nodes (elements
  * and attributes) that have the same name, prefix and namespace ID within
  * the same document.
  *
  * nsINodeInfoManager is an interface to an object that manages a list of
  * nsINodeInfo's, every document object should hold a strong reference to
- * a nsINodeInfoManager and every nsINodeInfo also holds a string reference
+ * a nsINodeInfoManager and every nsINodeInfo also holds a strong reference
  * to their owning manager. When a nsINodeInfo is no longer used it will
  * automatically remove itself from its owner manager, and when all
  * nsINodeInfo's have been removed from a nsINodeInfoManager and all external
@@ -145,12 +145,21 @@ public:
   NS_IMETHOD GetNamespaceID(PRInt32& aResult) = 0;
 
   /*
+   * Get and set the ID attribute atom for this node.  
+   * See http://www.w3.org/TR/1998/REC-xml-19980210#sec-attribute-types
+   * for the definition of an ID attribute.
+   *
+   */
+  NS_IMETHOD GetIDAttributeAtom(nsIAtom** aResult) = 0;  
+  NS_IMETHOD SetIDAttributeAtom(nsIAtom* aResult) = 0;
+
+  /*
    * Get the owning node info manager, this will never return null.
    */
   NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager) = 0;
 
   /*
-   * Utility functions that can be used to check if a nodeinfo holds a spcific
+   * Utility functions that can be used to check if a nodeinfo holds a specific
    * name, name and prefix, name and prefix and namespace ID, or just
    * namespace ID.
    */

@@ -140,6 +140,24 @@ void CStartToken::Reinitialize(PRInt32 aTag, const nsString& aString){
   mTrailingContent.Truncate();
 }
 
+nsresult CStartToken::GetIDAttributeAtom(nsIAtom** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = mIDAttributeAtom;
+
+  return NS_OK;
+}
+
+
+nsresult CStartToken::SetIDAttributeAtom(nsIAtom* aID)
+{
+  NS_ENSURE_ARG(aID);
+  mIDAttributeAtom = aID;
+
+  return NS_OK;
+}
+
+
 /*
  *  This method returns the typeid (the tag type) for this token.
  *  

@@ -34,7 +34,7 @@ static PRBool kStrictDOMLevel2 = PR_FALSE;
 nsNodeInfo::nsNodeInfo()
   : mInner(), mOwnerManager(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_REFCNT();  
 
   static PRInt32 been_here = 0;
 
@@ -49,6 +49,7 @@ nsNodeInfo::nsNodeInfo()
     been_here = 1;
   }
 // End of temp hack.
+
 }
 
 
@@ -211,6 +212,26 @@ nsNodeInfo::GetNamespaceID(PRInt32& aResult)
 
   return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsNodeInfo::GetIDAttributeAtom(nsIAtom** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = mInner.mIDAttributeAtom;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNodeInfo::SetIDAttributeAtom(nsIAtom* aID)
+{
+  NS_ENSURE_ARG(aID);
+  mInner.mIDAttributeAtom = aID;
+
+  return NS_OK;
+}
+
 
 
 NS_IMETHODIMP

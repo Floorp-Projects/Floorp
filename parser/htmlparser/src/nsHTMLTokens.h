@@ -130,14 +130,23 @@ class CStartToken: public CHTMLToken {
     virtual void          DebugDumpSource(nsOutputStream& out);
     virtual void          GetSource(nsString& anOutputString);
     virtual void          AppendSource(nsString& anOutputString);
-
     virtual void          Reinitialize(PRInt32 aTag, const nsString& aString);
+
+    /*
+     * Get and set the ID attribute atom for this element.  
+     * See http://www.w3.org/TR/1998/REC-xml-19980210#sec-attribute-types
+     * for the definition of an ID attribute.
+     *
+     */
+    virtual nsresult      GetIDAttributeAtom(nsIAtom** aResult);
+    virtual nsresult      SetIDAttributeAtom(nsIAtom* aID);
   
             nsString      mTrailingContent;
             PRInt32       mOrigin;
   protected:
             PRBool        mAttributed;      
-            PRBool        mEmpty;      
+            PRBool        mEmpty;     
+            nsCOMPtr<nsIAtom>      mIDAttributeAtom;
 };
 
 
@@ -283,8 +292,7 @@ class CAttributeToken: public CHTMLToken {
     virtual void          Reinitialize(PRInt32 aTag, const nsString& aString);
 
               PRBool   mHasEqualWithoutValue;
-              nsString mTextKey;
-             
+              nsString mTextKey;              
 }; 
 
 

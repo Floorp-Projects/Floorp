@@ -48,7 +48,7 @@
 #include "nsIView.h"
 
 
-class AnonymousElement : public nsXMLElement, public nsIStyledContent, public nsIAnonymousContent
+class AnonymousElement : public nsXMLElement, public nsIAnonymousContent
 {
 public:
   AnonymousElement(nsINodeInfo *aNodeInfo):nsXMLElement(aNodeInfo) {}

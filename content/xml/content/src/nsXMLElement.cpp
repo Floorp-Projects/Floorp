@@ -113,7 +113,12 @@ nsXMLElement::QueryInterface(REFNSIID aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  
+  if (aIID.Equals(nsIStyledContent::GetIID())) {
+    nsIStyledContent* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }  
   return NS_NOINTERFACE;
 }
 
@@ -494,3 +499,53 @@ nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
+// nsIStyledContent implementation
+
+NS_IMETHODIMP
+nsXMLElement::GetID(nsIAtom*& aResult) const
+{
+  nsresult rv;  
+  nsCOMPtr<nsIAtom> atom;
+  rv = mInner.mNodeInfo->GetIDAttributeAtom(getter_AddRefs(atom));
+  
+  aResult = nsnull;
+  if (NS_SUCCEEDED(rv) && atom) {
+    nsAutoString value;
+    rv = GetAttribute(kNameSpaceID_Unknown, atom, value);
+    if (NS_SUCCEEDED(rv))
+      aResult = NS_NewAtom(value);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsXMLElement::GetClasses(nsVoidArray& aArray) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXMLElement::HasClass(nsIAtom* aClass) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXMLElement::GetContentStyleRules(nsISupportsArray* aRules)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXMLElement::GetInlineStyleRules(nsISupportsArray* aRules)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXMLElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                       PRInt32& aHint) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

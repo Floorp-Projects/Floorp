@@ -383,3 +383,20 @@ void nsCParserNode::GetSource(nsString& aString) {
   aString.AppendWithConversion(">");
 }
 
+nsresult
+nsCParserNode::GetIDAttributeAtom(nsIAtom** aResult) const
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = mIDAttributeAtom;
+
+  return NS_OK;
+}
+
+nsresult
+nsCParserNode::SetIDAttributeAtom(nsIAtom* aID)
+{
+  NS_ENSURE_ARG(aID);
+  mIDAttributeAtom = aID;
+
+  return NS_OK;
+}

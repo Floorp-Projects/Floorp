@@ -633,6 +633,14 @@ nsresult CWellFormedDTD::HandleStartToken(CToken* aToken) {
       else return kEOF;
     }
   }
+
+  // Pass the ID Attribute atom from the start token to the parser node
+  CStartToken* startToken = NS_STATIC_CAST(CStartToken *, aToken);
+  nsCOMPtr<nsIAtom> IDAttr;
+  result = startToken->GetIDAttributeAtom(getter_AddRefs(IDAttr));
+  if (IDAttr && NS_SUCCEEDED(result))
+    result = theNode.SetIDAttributeAtom(IDAttr);
+
   if(NS_OK==result){
     if(mSink) {
       result=mSink->OpenContainer(theNode); 
@@ -646,7 +654,7 @@ nsresult CWellFormedDTD::HandleStartToken(CToken* aToken) {
 
 /**
  *  This method gets called when an end token has been 
- *  encountered in the parse process. 
+ *  encountered in the parse process.
  *  
  *  @update  harishd 08/18/99
  *

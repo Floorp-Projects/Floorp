@@ -26,6 +26,8 @@
 #include "nsINodeInfo.h"
 #include "nsINameSpaceManager.h"
 #include "plhash.h"
+#include "nsIAtom.h"
+#include "nsCOMPtr.h"
 
 /*
  * nsNodeInfoInner is used for two things:
@@ -43,10 +45,10 @@
 struct nsNodeInfoInner
 {
   nsNodeInfoInner(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID)
-    : mName(aName), mPrefix(aPrefix), mNamespaceID(aNamespaceID) {}
+    : mName(aName), mPrefix(aPrefix), mNamespaceID(aNamespaceID) { }
 
   nsNodeInfoInner()
-    : mName(nsnull), mPrefix(nsnull), mNamespaceID(kNameSpaceID_None) {}
+    : mName(nsnull), mPrefix(nsnull), mNamespaceID(kNameSpaceID_None) { }
 
   static PRIntn PR_CALLBACK KeyCompare(const void *key1, const void *key2);
   static PLHashNumber PR_CALLBACK GetHashValue(const void *key);
@@ -54,6 +56,7 @@ struct nsNodeInfoInner
   nsIAtom*            mName;
   nsIAtom*            mPrefix;
   PRInt32             mNamespaceID;
+  nsCOMPtr<nsIAtom>   mIDAttributeAtom;
 };
 
 
@@ -73,6 +76,8 @@ public:
   NS_IMETHOD GetPrefixAtom(nsIAtom*& aAtom);
   NS_IMETHOD GetNamespaceURI(nsAWritableString& aNameSpaceURI);
   NS_IMETHOD GetNamespaceID(PRInt32& aResult);
+  NS_IMETHOD GetIDAttributeAtom(nsIAtom** aResult);
+  NS_IMETHOD SetIDAttributeAtom(nsIAtom* aResult);
   NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager);
   NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom);
   NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName);
