@@ -681,7 +681,8 @@ void nsXtWidget_Menu_Callback(Widget w, XtPointer p, XtPointer call_data)
 
     mevent.time = 0; //TBD
 
-    mevent.widget->DispatchEvent((nsGUIEvent *)&mevent);
+    nsEventStatus status;
+    mevent.widget->DispatchEvent((nsGUIEvent *)&mevent, status);
 
     if (DBG) fprintf(stderr, "Out nsXtWidget_ExposureMask_EventHandler\n");
 
