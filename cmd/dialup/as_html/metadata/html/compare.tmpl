@@ -40,10 +40,26 @@
 
 	<ILAYER LEFT=0 NAME="level2isp">
 	<LAYER NAME="control" HEIGHT=20>
-	<LAYER LEFT=200 NAME="hide"><A HREF="about:blank" onClick="toggle( 'level2isp' ); return false;"><P CLASS="compare">Hide Additional ISPs</P></A></LAYER>
-	<LAYER LEFT=200 NAME="show"><A HREF="about:blank" onClick="toggle( 'level2isp' ); return false;"><P CLASS="compare">Show Additional ISPs</P></A></LAYER>
+	
+	<LAYER LEFT=200 NAME="hide">
+		<A HREF="about:blank"
+		onClick="document.images['hide'].src='metadata/images/preshide.gif'; toggle( 'level2isp' ); document.images['hide'].src='metadata/images/nomohide.gif'; return false;"
+		onMouseOver="document.images['hide'].src='metadata/images/mohide.gif'"
+		onMouseOut="document.images['hide'].src='metadata/images/nomohide.gif'">
+		<IMG NAME="hide" SRC="metadata/images/nomohide.gif" BORDER=0 HEIGHT=19 WIDTH=187>
+		</A>
 	</LAYER>
-		
+	<LAYER LEFT=200 NAME="show">
+		<A HREF="about:blank"
+		onClick="document.images['show'].src='metadata/images/presshow.gif'; toggle( 'level2isp' ); document.images['show'].src='metadata/images/nomoshow.gif'; return false;"
+		onMouseOver="document.images['show'].src='metadata/images/moshow.gif'"
+		onMouseOut="document.images['show'].src='metadata/images/nomoshow.gif'">
+		<IMG NAME="show" SRC="metadata/images/nomoshow.gif" BORDER=0 HEIGHT=19 WIDTH=187>
+		</A>
+	</LAYER>
+	
+	</LAYER>
+	
 	<LAYER TOP=20 NAME="levelDisplay">
 	###level2###
 	</LAYER>
