@@ -54,22 +54,16 @@ abstract class PK11Key {
 	}
 
     /**
-     * Unimplemented way of getting a standard encoding of the key.  Use
-     * a key factory instead.
+     * Subclasses that support encoding can overload this method.
      */
     public byte[] getEncoded() {
-		Assert.notYetImplemented("PK11Key.getEncoded");
-        // !!!
         return null;
     }
 
     /**
-     * Unimplemented way of getting standard encoding format of the key.
-     * Use a key factory instead.
+     * Subclasses that support encoding can overload this method.
      */
     public String getFormat() {
-		Assert.notYetImplemented("PK11Key.getFormat");
-        // !!!
         return null;
     }
 
