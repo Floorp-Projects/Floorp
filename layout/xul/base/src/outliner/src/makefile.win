@@ -29,11 +29,13 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPPSRCS=					\
 	nsOutlinerBoxObject.cpp \
 	nsOutlinerBodyFrame.cpp \
+	nsOutlinerColFrame.cpp \
 	$(NULL)
 
 CPP_OBJS=		\
     .\$(OBJDIR)\nsOutlinerBoxObject.obj \
 	.\$(OBJDIR)\nsOutlinerBodyFrame.obj \
+	.\$(OBJDIR)\nsOutlinerColFrame.obj \
 	$(NULL)
 
 EXPORTS =					\

@@ -24,6 +24,7 @@
 
 #include "nsIOutlinerBoxObject.idl"
 #include "nsISupportsArray.idl"
+#include "domstubs.idl"
 
 interface nsIOutlinerSelection;
 
@@ -67,7 +68,7 @@ interface nsIOutlinerView : nsISupports
   void toggleOpenState(in long index);
 
   // Called on the store when a header is clicked.
-  void cycleHeader(in wstring colID);
+  void cycleHeader(in nsIDOMElement elt);
 
   // Called on the store when a cell in a non-selectable cycling column (e.g., unread/flag/etc.) is clicked.
   void cycleCell(in long row, in wstring colID);

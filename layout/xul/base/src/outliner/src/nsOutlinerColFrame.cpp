@@ -1,0 +1,146 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Original Author: David W. Hyatt (hyatt@netscape.com)
+ *
+ * Contributor(s): 
+ */
+
+#include "nsCOMPtr.h"
+#include "nsOutlinerColFrame.h"
+#include "nsXULAtoms.h"
+#include "nsIContent.h"
+#include "nsIStyleContext.h"
+#include "nsINameSpaceManager.h" 
+
+//
+// NS_NewOutlinerColFrame
+//
+// Creates a new col frame
+//
+nsresult
+NS_NewOutlinerColFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, 
+                        nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
+{
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsOutlinerColFrame* it = new (aPresShell) nsOutlinerColFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal);
+  if (!it)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  *aNewFrame = it;
+  return NS_OK;
+  
+} // NS_NewOutlinerColFrame
+
+NS_IMETHODIMP_(nsrefcnt) 
+nsOutlinerColFrame::AddRef(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsOutlinerColFrame::Release(void)
+{
+  return NS_OK;
+}
+
+//
+// QueryInterface
+//
+NS_INTERFACE_MAP_BEGIN(nsOutlinerColFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIOutlinerColFrame)
+NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
+// Constructor
+nsOutlinerColFrame::nsOutlinerColFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
+:nsBoxFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal) 
+{}
+
+// Destructor
+nsOutlinerColFrame::~nsOutlinerColFrame()
+{
+}
+
+NS_IMETHODIMP
+nsOutlinerColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                     const nsPoint& aPoint, 
+                                     nsFramePaintLayer aWhichLayer,
+                                     nsIFrame**     aFrame)
+{
+  if (! ( mRect.Contains(aPoint) || ( mState & NS_FRAME_OUTSIDE_CHILDREN)) )
+  {
+    return NS_ERROR_FAILURE;
+  }
+
+  // If we are in either the first 2 pixels or the last 2 pixels, we're going to
+  // do something really strange.  Check for an adjacent splitter.
+  PRBool left = PR_FALSE;
+  PRBool right = PR_FALSE;
+  if (mRect.x + mRect.width - 60 < aPoint.x)
+    right = PR_TRUE;
+  else if (mRect.x + 60 > aPoint.x)
+    left = PR_TRUE;
+
+  if (left || right) {
+    // We are a header. Look for the correct splitter.
+    nsIFrame* firstChild;
+    mParent->FirstChild(aPresContext, nsnull, &firstChild);
+    nsFrameList frames(firstChild);
+    nsIFrame* child;
+    if (left)
+      child = frames.GetPrevSiblingFor(this);
+    else GetNextSibling(&child);
+
+    nsCOMPtr<nsIAtom> tag;
+    nsCOMPtr<nsIContent> content;
+    if (child) {
+      child->GetContent(getter_AddRefs(content));
+      content->GetTag(*getter_AddRefs(tag));
+      if (tag.get() == nsXULAtoms::splitter) {
+        *aFrame = child;
+        return NS_OK;
+      }
+    }
+  }
+
+  nsresult result = nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+  nsCOMPtr<nsIContent> content;
+  if (result == NS_OK) {
+    (*aFrame)->GetContent(getter_AddRefs(content));
+    if (content) {
+      // This allows selective overriding for subcontent.
+      nsAutoString value;
+      content->GetAttribute(kNameSpaceID_None, nsXULAtoms::allowevents, value);
+      if (value.EqualsWithConversion("true"))
+        return result;
+    }
+  }
+  if (mRect.Contains(aPoint)) {
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp->IsVisible()) {
+      *aFrame = this; // Capture all events.
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+

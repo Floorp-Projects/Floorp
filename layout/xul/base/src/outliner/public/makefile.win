@@ -26,6 +26,7 @@ XPIDLSRCS=      .\nsIOutlinerRangeList.idl                  \
 				.\nsIOutlinerView.idl    \
                 .\nsIOutlinerSelection.idl               \
                 .\nsIOutlinerBoxObject.idl \
+				.\nsIOutlinerColFrame.idl \
                 $(NULL)
 
 MODULE=layout_xul_outliner

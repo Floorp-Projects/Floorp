@@ -177,6 +177,9 @@ protected:
   // the pseudo-styles passed in and place them into the cache.
   nsresult GetPseudoStyleContext(nsIPresContext* aPresContext, nsIStyleContext** aResult);
 
+  // Builds our cache of column info.
+  void EnsureColumns();
+
 protected: // Data Members
   // The current view for this outliner widget.  We get all of our row and cell data
   // from the view.
@@ -187,6 +190,9 @@ protected: // Data Members
   // occurs in the tree, so for n distinct properties, this cache could have 2 to the n entries
   // (the power set of all row properties).
   nsOutlinerStyleCache mStyleCache;
+
+  // Cached column information.
+  nsOutlinerColumn* mColumns;
 
   // The index of the first visible row and the # of rows visible onscreen.  
   // The outliner only examines onscreen rows, starting from
