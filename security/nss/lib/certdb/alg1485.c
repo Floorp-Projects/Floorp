@@ -912,6 +912,147 @@ finish:
     return(rawEmailAddr);
 }
 
+static char *
+appendStringToBuf(char *dest, char *src, PRUint32 *pRemaining)
+{
+    PRUint32 len;
+    if (dest && src && src[0] && *pRemaining > (len = PL_strlen(src))) {
+	PRUint32 i;
+	for (i = 0; i < len; ++i)
+	    dest[i] = tolower(src[i]);
+	dest[len] = 0;
+	dest        += len + 1;
+	*pRemaining -= len + 1;
+    }
+    return dest;
+}
+
+static char *
+appendItemToBuf(char *dest, SECItem *src, PRUint32 *pRemaining)
+{
+    if (dest && src && src->data && src->len && src->data[0] && 
+        *pRemaining > src->len + 1 ) {
+	PRUint32 len = src->len;
+	PRUint32 i;
+	for (i = 0; i < len && src->data[i] ; ++i)
+	    dest[i] = tolower(src->data[i]);
+	dest[len] = 0;
+	dest        += len + 1;
+	*pRemaining -= len + 1;
+    }
+    return dest;
+}
+
+/* Returns a pointer to an environment-like string, a series of 
+** null-terminated strings, terminated by a zero-length string.
+** This function is intended to be internal to NSS.
+*/
+char *
+cert_GetCertificateEmailAddresses(CERTCertificate *cert)
+{
+    char *           rawEmailAddr = NULL;
+    char *           addrBuf      = NULL;
+    char *           pBuf         = NULL;
+    PRArenaPool *    tmpArena     = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    PRUint32         maxLen       = 0;
+    PRInt32          finalLen     = 0;
+    SECStatus        rv;
+    SECItem          subAltName;
+    
+    if (!tmpArena) 
+    	return addrBuf;
+
+    subAltName.data = NULL;
+    maxLen = cert->derCert.len;
+    PORT_Assert(maxLen);
+    if (!maxLen) 
+	maxLen = 2000;  /* a guess, should never happen */
+
+    pBuf = addrBuf = (char *)PORT_ArenaZAlloc(tmpArena, maxLen + 1);
+    if (!addrBuf) 
+    	goto loser;
+
+    rawEmailAddr = CERT_GetNameElement(tmpArena, &cert->subject,
+				       SEC_OID_PKCS9_EMAIL_ADDRESS);
+    pBuf = appendStringToBuf(pBuf, rawEmailAddr, &maxLen);
+
+    rawEmailAddr = CERT_GetNameElement(tmpArena, &cert->subject, 
+				       SEC_OID_RFC1274_MAIL);
+    pBuf = appendStringToBuf(pBuf, rawEmailAddr, &maxLen);
+
+    rv = CERT_FindCertExtension(cert,  SEC_OID_X509_SUBJECT_ALT_NAME, 
+				&subAltName);
+    if (rv == SECSuccess && subAltName.data) {
+	CERTGeneralName *nameList     = NULL;
+
+	if (!!(nameList = CERT_DecodeAltNameExtension(tmpArena, &subAltName))) {
+	    CERTGeneralName *current = nameList;
+	    do {
+		if (current->type == certDirectoryName) {
+		    rawEmailAddr = CERT_GetNameElement(tmpArena,
+			                       &current->name.directoryName, 
+					       SEC_OID_PKCS9_EMAIL_ADDRESS);
+		    pBuf = appendStringToBuf(pBuf, rawEmailAddr, &maxLen);
+
+		    rawEmailAddr = CERT_GetNameElement(tmpArena,
+					      &current->name.directoryName, 
+					      SEC_OID_RFC1274_MAIL);
+		    pBuf = appendStringToBuf(pBuf, rawEmailAddr, &maxLen);
+		} else if (current->type == certRFC822Name) {
+		    pBuf = appendItemToBuf(pBuf, &current->name.other, &maxLen);
+		}
+		current = cert_get_next_general_name(current);
+	    } while (current != nameList);
+	}
+	SECITEM_FreeItem(&subAltName, PR_FALSE);
+	/* Don't free nameList, it's part of the tmpArena. */
+    }
+    /* now copy superstring to cert's arena */
+    finalLen = (pBuf - addrBuf) + 1;
+    pBuf = PORT_ArenaAlloc(cert->arena, finalLen);
+    if (pBuf) {
+    	PORT_Memcpy(pBuf, addrBuf, finalLen);
+    }
+     
+loser:
+    if (tmpArena)
+	PORT_FreeArena(tmpArena, PR_FALSE);
+
+    return pBuf;
+}
+
+/* returns pointer to storage in cert's arena.  Storage remains valid
+** as long as cert's reference count doesn't go to zero.
+** Caller should strdup or otherwise copy.
+*/
+const char *	/* const so caller won't muck with it. */
+CERT_GetFirstEmailAddress(CERTCertificate * cert)
+{
+    if (cert && cert->emailAddr && cert->emailAddr[0])
+    	return (const char *)cert->emailAddr;
+    return NULL;
+}
+
+/* returns pointer to storage in cert's arena.  Storage remains valid
+** as long as cert's reference count doesn't go to zero.
+** Caller should strdup or otherwise copy.
+*/
+const char *	/* const so caller won't muck with it. */
+CERT_GetNextEmailAddress(CERTCertificate * cert, const char * prev)
+{
+    if (cert && prev && prev[0]) {
+    	PRUint32 len = PL_strlen(prev);
+	prev += len + 1;
+	if (prev && prev[0])
+	    return prev;
+    }
+    return NULL;
+}
+
+/* This is seriously bogus, now that certs store their email addresses in
+** subject Alternative Name extensions. 
+** Returns a string allocated by PORT_StrDup, which the caller must free.
+*/
 char *
 CERT_GetCertEmailAddress(CERTName *name)
 {
