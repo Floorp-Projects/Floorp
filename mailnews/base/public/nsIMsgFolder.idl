@@ -297,7 +297,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 
   string getUriForMsg(in nsIMsgDBHdr msgHdr);
 
-	void deleteMessages(in nsISupportsArray message,
+	void deleteMessages(in nsISupportsArray messages,
                       in nsIMsgWindow msgWindow,
                       in boolean deleteStorage, in boolean isMove,
                       in nsIMsgCopyServiceListener listener, in boolean allowUndo);

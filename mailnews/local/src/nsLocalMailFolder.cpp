@@ -1570,11 +1570,12 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
                                      PRBool deleteStorage, PRBool isMove,
                                      nsIMsgCopyServiceListener* listener, PRBool allowUndo)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  if (!messages) return rv;
+  NS_ENSURE_ARG_POINTER(messages);
+
   PRUint32 messageCount;
-  rv = messages->Count(&messageCount);
-  if (messageCount == 0) return rv;
+  nsresult rv = messages->Count(&messageCount);
+  if (!messageCount)
+    return rv;
 
   PRBool isTrashFolder = mFlags & MSG_FOLDER_FLAG_TRASH;
   if (!deleteStorage && !isTrashFolder)

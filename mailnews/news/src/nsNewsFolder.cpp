@@ -1608,17 +1608,19 @@ nsMsgNewsFolder::GetNntpServer(nsINntpIncomingServer **result)
 
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = GetServer(getter_AddRefs(server));
-    if (NS_FAILED(rv)) return rv;
-    if (!server) return NS_ERROR_NULL_POINTER;
+    if (NS_FAILED(rv)) 
+      return rv;
+
+    if (!server) 
+      return NS_ERROR_NULL_POINTER;
 
     nsCOMPtr<nsINntpIncomingServer> nntpServer;
     rv = server->QueryInterface(NS_GET_IID(nsINntpIncomingServer),
                                 getter_AddRefs(nntpServer));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) 
+      return rv;
 
-    *result = nntpServer;
-    NS_IF_ADDREF(*result);
-
+    NS_IF_ADDREF(*result = nntpServer);
     return NS_OK;
 }
 

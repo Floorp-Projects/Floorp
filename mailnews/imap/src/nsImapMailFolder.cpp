@@ -1921,7 +1921,6 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                                                nsIMsgCopyServiceListener* listener,
                                                PRBool allowUndo)
 {
-  nsresult rv = NS_ERROR_FAILURE;
   // *** jt - assuming delete is move to the trash folder for now
   nsCOMPtr<nsIEnumerator> aEnumerator;
   nsCOMPtr<nsIRDFResource> res;
@@ -1933,7 +1932,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
   nsMsgImapDeleteModel deleteModel = nsMsgImapDeleteModels::MoveToTrash;
   
   nsCOMPtr<nsIImapIncomingServer> imapServer;
-  rv = GetFlag(MSG_FOLDER_FLAG_TRASH, &deleteImmediatelyNoTrash);
+  nsresult rv = GetFlag(MSG_FOLDER_FLAG_TRASH, &deleteImmediatelyNoTrash);
   rv = GetImapIncomingServer(getter_AddRefs(imapServer));
   
   if (NS_SUCCEEDED(rv) && imapServer)

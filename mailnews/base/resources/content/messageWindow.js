@@ -189,7 +189,6 @@ const nsMsgKey_None = 0xFFFFFFFF;
 
 function HandleDeleteOrMoveMsgCompleted(folder)
 {
-	dump("In HandleDeleteOrMoveMsgCompleted\n");
 	var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
 	if (!folderResource)
 		return;
