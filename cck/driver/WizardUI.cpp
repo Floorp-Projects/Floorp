@@ -141,15 +141,15 @@ BOOL CWizardUI::OnSetActive()
 		pSheet->GetDlgItem(ID_WIZNEXT)->SetWindowText("&Next >");
 	}
 */
-	if (theApp.IsLastNode(CurrentNode)) {
-		pSheet->SetWizardButtons(PSWIZB_BACK | PSWIZB_FINISH);
-	}
-	else if (theApp.IsFirstNode(CurrentNode)) {
-		pSheet->SetWizardButtons(PSWIZB_NEXT);
-	}
-	else {
-		pSheet->SetWizardButtons(PSWIZB_BACK | PSWIZB_NEXT);
-	}
+//	if (theApp.IsLastNode(CurrentNode)) {
+//		pSheet->SetWizardButtons(PSWIZB_BACK | PSWIZB_FINISH);
+//	}
+//	if (theApp.IsFirstNode(CurrentNode)) {
+//		pSheet->SetWizardButtons(PSWIZB_NEXT);
+//	}
+//	else {
+//		pSheet->SetWizardButtons(PSWIZB_BACK | PSWIZB_NEXT);
+//	}
 
 	// TODO: Add your specialized code here and/or call the base class
 //	SetModified(1);
