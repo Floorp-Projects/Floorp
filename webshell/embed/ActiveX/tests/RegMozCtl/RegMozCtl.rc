@@ -26,22 +26,32 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Dialog
 //
 
-IDD_REGMOZCTL_DIALOG DIALOGEX 0, 0, 210, 116
+IDD_REGMOZCTL_DIALOG DIALOGEX 0, 0, 210, 199
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "RegMozCtl"
 FONT 8, "MS Sans Serif"
 BEGIN
+    ICON            IDI_MOZILLA,IDC_STATIC,7,7,20,20
     LTEXT           "This application registers/deregisters the Mozilla Control and ensures that its dependent DLLs are listed as SHARED so that they can be found when the control is used by other applications.",
                     IDC_STATIC,34,7,169,35
     LTEXT           "You must choose the directory containing the Mozilla control and click on the Register or Deregister as appropriate.",
-                    IDC_STATIC,7,47,196,24
-    DEFPUSHBUTTON   "&Register",IDC_REGISTER,7,95,50,14
-    PUSHBUTTON      "&Unregister",IDC_UNREGISTER,80,95,50,14
-    PUSHBUTTON      "&Close",IDCANCEL,153,95,50,14
-    ICON            IDI_ICON2,IDC_STATIC,7,7,21,20
-    EDITTEXT        IDC_MOZILLADIR,7,73,179,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "...",IDC_PICKDIR,190,73,13,14
+                    IDC_STATIC,7,47,196,17
+    EDITTEXT        IDC_MOZILLADIR,7,70,182,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_PICKDIR,190,70,13,14
+    LTEXT           "Now choose the component registry file and component directory the control uses or let RegMozCtl try to guess correct values for you.",
+                    IDC_STATIC,7,89,196,27
+    EDITTEXT        IDC_COMPONENTFILE,7,134,182,14,ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    PUSHBUTTON      "...",IDC_PICKCOMPONENTFILE,190,134,13,14,WS_DISABLED
+    EDITTEXT        IDC_COMPONENTPATH,7,157,182,14,ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    PUSHBUTTON      "...",IDC_PICKCOMPONENTPATH,190,157,13,14,WS_DISABLED
+    DEFPUSHBUTTON   "&Register",IDC_REGISTER,7,178,50,14
+    PUSHBUTTON      "&Unregister",IDC_UNREGISTER,80,178,50,14
+    PUSHBUTTON      "&Close",IDCANCEL,153,178,50,14
+    CONTROL         "Automatic",IDC_AUTOMATIC,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,119,46,10
 END
 
 
@@ -101,7 +111,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 203
         TOPMARGIN, 7
-        BOTTOMMARGIN, 109
+        BOTTOMMARGIN, 192
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -165,7 +175,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON    DISCARDABLE     "res\\RegMozCtl.ico"
-IDI_ICON2               ICON    DISCARDABLE     "MozillaBrowser.ico"
+IDI_MOZILLA             ICON    DISCARDABLE     "MozillaBrowser.ico"
 #endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 

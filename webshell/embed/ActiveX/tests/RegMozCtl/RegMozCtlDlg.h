@@ -20,7 +20,14 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CRegMozCtlDlg)
 	enum { IDD = IDD_REGMOZCTL_DIALOG };
+	CEdit	m_edtComponentPath;
+	CEdit	m_edtComponentFile;
+	CButton	m_btnPickComponentPath;
+	CButton	m_btnPickComponentFile;
 	CString	m_szMozillaDir;
+	CString	m_szComponentPath;
+	CString	m_szComponentFile;
+	BOOL	m_bAutomatic;
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
@@ -41,6 +48,9 @@ protected:
 	afx_msg void OnRegister();
 	afx_msg void OnUnregister();
 	afx_msg void OnPickDir();
+	afx_msg void OnPickComponentFile();
+	afx_msg void OnPickComponentPath();
+	afx_msg void OnAutomatic();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
