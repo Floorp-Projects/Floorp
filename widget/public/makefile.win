@@ -22,6 +22,7 @@ DEFINES=-D_IMPL_NS_UI
 MODULE=raptor 
 
 EXPORTS=nsui.h \
+#  nsIFileListTransferable.h \
   nsIFormatConverter.h \
   nsIClipboardOwner.h \
   nsIClipboard.h \
@@ -29,6 +30,7 @@ EXPORTS=nsui.h \
   nsITransferable.h \
   nsIGenericTransferable.h \
   nsIDragService.h \
+  nsIDragSession.h \
   nsIWidget.h \
   nsIButton.h \
   nsICheckButton.h \
