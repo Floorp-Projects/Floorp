@@ -4669,7 +4669,9 @@ nsXULTemplateBuilder::SubstituteTextForValue(const Value& aValue, nsString& aRes
     switch (aValue.GetType()) {
     case Value::eISupports:
         {
-            nsISupports* isupports = NS_STATIC_CAST(nsISupports*, aValue); // no addref
+            // Need to const_cast<> aValue because QI() and Release()
+            // are not `const'
+            nsISupports* isupports = NS_STATIC_CAST(nsISupports*, NS_CONST_CAST(Value&, aValue)); // no addref
 
             nsCOMPtr<nsIRDFNode> node = do_QueryInterface(isupports);
             if (node) {
