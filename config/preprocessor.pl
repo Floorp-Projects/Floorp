@@ -74,10 +74,19 @@ package main;
 
 sub include {
     my($stack, $filename) = @_;
-    local $stack->{'variables'}->{'FILE'} = $filename;
+    my $fullFilename = $stack->{'variables'}->{'DIRECTORY'} . internalise($filename);
+    $fullFilename =~ s|^.*//||os; # strip everything up to a double slash
+    if ($fullFilename !~ m|^(.*/)?(.+)$|os) { # extract the directory and file portions
+        die "Not a valid filename: $filename\n";
+    }
+    local $stack->{'variables'}->{'DIRECTORY'} = $1;
+    if (not defined($stack->{'variables'}->{'DIRECTORY'})) {
+        $stack->{'variables'}->{'DIRECTORY'} = '';
+    }
+    local $stack->{'variables'}->{'FILE'} = $2;
     local $stack->{'variables'}->{'LINE'} = 0;
     local *FILE;
-    open(FILE, $filename);
+    open(FILE, nativise($filename)) or die "Couldn't open $filename: $!\n";
     while (<FILE>) {
         # on cygwin, line endings are screwed up, so normalise them.
         s/[\x0D\x0A]+$/\n/os if $^O eq 'cygwin';
@@ -132,6 +141,40 @@ sub fatal {
     exit(1);
 }
 
+sub nativise {
+    my $filename = shift;
+    if ($^O eq 'linux' or
+        $^O eq 'cygwin') {
+        return $filename;
+    } elsif ($^O eq 'MSWin32') {
+        $filename =~ s|^/(.)/|$1:/|gos;
+        $filename =~ s|/|\\|gos;
+        return $filename;
+    } elsif ($^O eq 'MacOS') {
+        $filename =~ s|/|:|gos;
+        return $filename;
+    } else {
+        die("Platform '$^O' not recognised. Contact ian\@hixie.ch.\n");
+    }
+}
+
+sub internalise {
+    my $filename = shift;
+    if ($^O eq 'linux' or
+        $^O eq 'cygwin') {
+        return $filename;
+    } elsif ($^O eq 'MSWin32') {
+        $filename =~ s|\\|/|gos;
+        $filename =~ s|^(.):/|/$1/|gos;
+        return $filename;
+    } elsif ($^O eq 'MacOS') {
+        $filename =~ s|/|:|gos;
+        return $filename;
+    } else {
+        die("Platform '$^O' not recognised. Contact ian\@hixie.ch.\n");
+    }
+}
+
 
 ########################################################################
 
@@ -142,6 +185,7 @@ sub new {
         'variables' => {
             # %ENV,
             'LINE' => 0, # the line number in the source file
+            'DIRECTORY' => '', # the directory of the source filename
             'FILE' => '', # source filename
             '1' => 1, # for convenience
         },
@@ -389,7 +433,7 @@ sub spaces {
     my($stack, $text) = @_;
     $text =~ s/ +/ /gos; # middle spaces
     $text =~ s/^ //gos; # start spaces
-    $text =~ s/ \n?$//gos; # end spaces
+    $text =~ s/ (\n?)$/$1/gos; # end spaces
     return $text;
 }
 
