@@ -23,13 +23,15 @@
 # Double-Colon rules for utilizing the binary release model.          #
 #######################################################################
 
+DOCDIRS = nglayout xpcom img dom netlib raptor trex xpfc pref nls julian
+DOCDIRS_PRIVATE = trex xpfc
 
-all:: export private_export libs program install
+all:: export libs program install
 
 ifeq ($(AUTOCLEAN),1)
-autobuild:: clean export private_export libs program install
+autobuild:: clean export libs program install
 else
-autobuild:: export private_export libs program install
+autobuild:: export libs program install
 endif
 
 platform::
@@ -75,16 +77,13 @@ import::
 
 
 export::
-	+$(LOOP_OVER_DIRS)
-
-private_export::
-	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_EXPORT_DIRS)
 
 release_export::
 	+$(LOOP_OVER_DIRS)
 
 libs::
-	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_LIBS_DIRS)
 
 libs program install:: $(TARGETS)
 ifdef LIBRARY
@@ -136,6 +135,16 @@ depend::
 #######################################################################
 # Double-Colon rules for populating the binary release model.         #
 #######################################################################
+docs::
+	rm -rf $(GDEPTH)/dist/docs
+	@mkdir $(GDEPTH)/dist/docs
+	@for d in $(DOCDIRS); do							\
+		$(DOCXX) $(DOCXX_FLAGS) -d $(MOZ_SRC)\\mozilla\\dist\\docs\\$$d $(MOZ_SRC)\\mozilla\\dist\\public\\$$d\\*.h; \
+	done
+#	@for d in $(DOCDIRS_PRIVATE); do							\
+#		$(DOCXX) $(DOCXX_FLAGS) -d $(MOZ_SRC)\\mozilla\\dist\\docs\\$$d $(MOZ_SRC)\\mozilla\\dist\\private\\$$d\\*.h; \
+#	done
+	@echo Documentation written to $(GDEPTH)/dist/docs
 
 
 release_clean::
@@ -652,10 +661,10 @@ $(PRIVATE_EXPORT_DIR)::
 		$(NSINSTALL) -D $@; \
 	fi
 
-private_export:: $(PRIVATE_EXPORTS) $(PRIVATE_EXPORT_DIR)
+export:: $(PRIVATE_EXPORTS) $(PRIVATE_EXPORT_DIR)
 	$(INSTALL) -m 444 $(PRIVATE_EXPORTS) $(PRIVATE_EXPORT_DIR)
 else
-private_export:: 
+export:: 
 	@echo There are no private exports.;
 endif
 

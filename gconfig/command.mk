@@ -35,6 +35,10 @@ ifdef NSPR20
 DEFINES     += -DNSPR20
 endif
 
+MOZ_TOOLS_FLIPPED=$(MOZ_TOOLS:\=/)
+DOCXX         = $(MOZ_TOOLS_FLIPPED)/bin/docxx
+DOCXX_FLAGS   = -H -A -p -f -j -a -u -G -b
+
 #
 # For purify
 #
