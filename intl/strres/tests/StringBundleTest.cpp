@@ -121,7 +121,7 @@ main(int argc, char *argv[])
   registrar->AutoRegister(nsnull);
   
   nsCOMPtr<nsIStringBundleService> service =
-      do_GetService(kStringBundleServiceCID);
+      do_GetService(NS_STRINGBUNDLE_CONTRACTID);
   if (!service) {
     printf("cannot create service\n");
     return 1;
