@@ -147,17 +147,16 @@ public:
    */
   NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult) = 0;
 
-  /** 
-   * Get the default font
-   */
+  /** Get the default font */
   NS_IMETHOD GetDefaultFont(nsFont& aResult) = 0;
-
+  /** Set the default font */
+  NS_IMETHOD SetDefaultFont(nsFont& aFont) = 0;
   virtual const nsFont& GetDefaultFontDeprecated() = 0;
 
-  /** 
-   * Get the default fixed pitch font
-   */
+  /** Get the default fixed pitch font */
   NS_IMETHOD GetDefaultFixedFont(nsFont& aResult) = 0;
+  /** Set the default fixed pitch font */
+  NS_IMETHOD SetDefaultFixedFont(nsFont& aFont) = 0;
   virtual const nsFont& GetDefaultFixedFontDeprecated() = 0;
 
   /**
@@ -171,8 +170,17 @@ public:
    */
   NS_IMETHOD GetDefaultColor(nscolor* aColor) = 0;
   NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor) = 0;
+  NS_IMETHOD GetDefaultBackgroundImage(nsString& aImage) = 0;
+  NS_IMETHOD GetDefaultBackgroundImageRepeat(PRUint8* aRepeat) = 0;
+  NS_IMETHOD GetDefaultBackgroundImageOffset(nscoord* aX, nscoord* aY) = 0;
+  NS_IMETHOD GetDefaultBackgroundImageAttachment(PRUint8* aRepeat) = 0;
+
   NS_IMETHOD SetDefaultColor(nscolor aColor) = 0;
   NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor) = 0;
+  NS_IMETHOD SetDefaultBackgroundImage(const nsString& aImage) = 0;
+  NS_IMETHOD SetDefaultBackgroundImageRepeat(PRUint8 aRepeat) = 0;
+  NS_IMETHOD SetDefaultBackgroundImageOffset(nscoord aX, nscoord aY) = 0;
+  NS_IMETHOD SetDefaultBackgroundImageAttachment(PRUint8 aRepeat) = 0;
 
   NS_IMETHOD GetImageGroup(nsIImageGroup** aGroupResult) = 0;
 
