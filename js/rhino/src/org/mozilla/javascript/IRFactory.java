@@ -953,6 +953,7 @@ public class IRFactory {
             case TokenStream.DEC:
             case TokenStream.SETPROP:
             case TokenStream.SETELEM:
+            case TokenStream.SETNAME:
             case TokenStream.CALL:
             case TokenStream.NEW:
                 return true;
