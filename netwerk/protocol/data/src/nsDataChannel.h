@@ -33,7 +33,6 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIInterfaceRequestor.h"
-
 #include "nsCOMPtr.h"
 
 class nsDataChannel : public nsIDataChannel {
