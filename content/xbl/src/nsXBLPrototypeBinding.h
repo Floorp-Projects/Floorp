@@ -40,7 +40,6 @@
 #include "nsCOMPtr.h"
 #include "nsIXBLPrototypeBinding.h"
 #include "nsIXBLPrototypeHandler.h"
-#include "nsIXBLPrototypeProperty.h"
 #include "nsXBLPrototypeResources.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"
@@ -82,12 +81,19 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding, public nsSupportsWea
 
   NS_IMETHOD GetPrototypeHandlers(nsIXBLPrototypeHandler** aHandler);
   NS_IMETHOD SetPrototypeHandlers(nsIXBLPrototypeHandler* aHandler);
-  
-  NS_IMETHOD GetPrototypeProperties(nsIXBLPrototypeProperty** aResult);
-  NS_IMETHOD SetProtoTypeProperties(nsIXBLPrototypeProperty* aResult);
-  NS_IMETHOD GetCompiledClassObject(const nsCString& aClassName, nsIScriptContext * aContext, void * aScriptObject, void ** aClassObject);
+
+  NS_IMETHOD GetConstructor(nsIXBLPrototypeHandler** aResult);
+  NS_IMETHOD SetConstructor(nsIXBLPrototypeHandler* aConstructor);
+  NS_IMETHOD GetDestructor(nsIXBLPrototypeHandler** aResult);
+  NS_IMETHOD SetDestructor(nsIXBLPrototypeHandler* aDestructor);
+
   NS_IMETHOD InitClass(const nsCString& aClassName, nsIScriptContext * aContext, void * aScriptObject, void ** aClassObject);
   
+  NS_IMETHOD ConstructInterfaceTable(const nsAReadableString& aImpls);
+  
+  NS_IMETHOD SetImplementation(nsXBLProtoImpl* aImpl) { mImplementation = aImpl; return NS_OK; };
+  NS_IMETHOD InstallImplementation(nsIContent* aBoundElement);
+
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag, 
                               nsIContent* aChangedElement, nsIContent* aAnonymousContent);
 
@@ -127,8 +133,6 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding, public nsSupportsWea
 
   NS_IMETHOD AddResourceListener(nsIContent* aBoundElement);
 
-  NS_IMETHOD GetConstructor(nsIXBLPrototypeHandler** aResult) { *aResult = mConstructor; NS_IF_ADDREF(*aResult); return NS_OK; };
-
   NS_IMETHOD Initialize();
 
 public:
@@ -149,11 +153,8 @@ public:
                       nsIContent* aTemplChild, nsIContent** aCopyResult);
 
 protected:  
-  void BuildConstructorAndDestructor();
-  void ConstructProperties();
   void ConstructAttributeTable(nsIContent* aElement);
   void ConstructInsertionTable(nsIContent* aElement);
-  void ConstructInterfaceTable(nsIContent* aElement);
   void GetNestedChildren(nsIAtom* aTag, nsIContent* aContent, nsISupportsArray** aList);
   
 protected:
@@ -182,14 +183,13 @@ protected:
 
 // MEMBER VARIABLES
 protected:
-  nsCString mID;
+  char* mID;
 
   nsCOMPtr<nsIContent> mBinding; // Strong. We own a ref to our content element in the binding doc.
   nsCOMPtr<nsIXBLPrototypeHandler> mPrototypeHandler; // Strong. DocInfo owns us, and we own the handlers.
-  nsCOMPtr<nsIXBLPrototypeHandler> mConstructor; // Strong.  Our constructor.
-  nsCOMPtr<nsIXBLPrototypeHandler> mDestructor; // Strong. Our destructor.
-
-  nsCOMPtr<nsIXBLPrototypeProperty> mPrototypeProperty;
+  
+  nsXBLProtoImpl* mImplementation; // Our prototype implementation (includes methods, properties, fields,
+                                   // the constructor, and the destructor).
 
   nsCOMPtr<nsIXBLPrototypeBinding> mBaseBinding; // Strong. We own the base binding in our explicit inheritance chain.
   PRPackedBool mInheritStyle;
@@ -209,6 +209,4 @@ protected:
 
   PRInt32 mBaseNameSpaceID;    // If we extend a tagname/namespace, then that information will
   nsCOMPtr<nsIAtom> mBaseTag;  // be stored in here.
-
-  void * mClassObject; // the class object for the binding. We'll use this to pre-compile properties and methods for the binding.
 };

@@ -146,11 +146,17 @@ nsXBLPrototypeHandler::GetHandlerElement(nsIContent** aResult)
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeHandler::SetHandlerText(const nsAReadableString& aText) 
+nsXBLPrototypeHandler::AppendHandlerText(const nsAReadableString& aText) 
 {
-  if (mHandlerText)
+  if (mHandlerText) {
+    // Append our text to the existing text.
+    nsAutoString currText(mHandlerText);
+    currText += aText;
     nsMemory::Free(mHandlerText);
-  mHandlerText = ToNewUnicode(aText);
+    mHandlerText = ToNewUnicode(currText);
+  }
+  else
+    mHandlerText = ToNewUnicode(aText);
   return NS_OK;
 }
 

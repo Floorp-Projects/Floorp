@@ -76,6 +76,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
 #include "nsXBLAtoms.h"
+#include "nsXBLProtoImpl.h"
 
 #include "nsIScriptContext.h"
 
@@ -255,17 +256,18 @@ NS_IMPL_ISUPPORTS2(nsXBLPrototypeBinding, nsIXBLPrototypeBinding, nsISupportsWea
 // Constructors/Destructors
 nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsAReadableCString& aID, nsIXBLDocumentInfo* aInfo,
                                              nsIContent* aElement)
-: mID(aID), 
-  mInheritStyle(PR_TRUE), 
+: mInheritStyle(PR_TRUE), 
   mHasBaseProto(PR_TRUE),
   mResources(nsnull),
+  mImplementation(nsnull),
   mAttributeTable(nsnull), 
   mInsertionPointTable(nsnull),
-  mInterfaceTable(nsnull),
-  mClassObject(nsnull)
+  mInterfaceTable(nsnull)
 {
   NS_INIT_REFCNT();
   
+  mID = ToNewCString(aID);
+
   mXBLDocInfoWeak = getter_AddRefs(NS_GetWeakReference(aInfo));
   
   gRefCnt++;
@@ -284,15 +286,6 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsAReadableCString& aID, nsIX
 NS_IMETHODIMP
 nsXBLPrototypeBinding::Initialize()
 {
-  nsCOMPtr<nsIXBLDocumentInfo> info(do_QueryReferent(mXBLDocInfoWeak));
-  
-  PRBool allowScripts;
-  info->GetScriptAccess(&allowScripts);
-  if (allowScripts) {
-    BuildConstructorAndDestructor();
-    ConstructProperties();
-  }
-
   nsCOMPtr<nsIContent> content;
   GetImmediateChild(nsXBLAtoms::content, getter_AddRefs(content));
   if (content) {
@@ -300,20 +293,17 @@ nsXBLPrototypeBinding::Initialize()
     ConstructInsertionTable(content);
   }
 
-  nsCOMPtr<nsIContent> impl;
-  GetImmediateChild(nsXBLAtoms::implementation, getter_AddRefs(impl));
-  if (impl)
-    ConstructInterfaceTable(impl);
-
   return NS_OK;
 }
 
 nsXBLPrototypeBinding::~nsXBLPrototypeBinding(void)
 {
+  nsMemory::Free(mID);
   delete mResources;
   delete mAttributeTable;
   delete mInsertionPointTable;
   delete mInterfaceTable;
+  delete mImplementation;
   gRefCnt--;
   if (gRefCnt == 0) {
     delete kAttrPool;
@@ -437,16 +427,16 @@ nsXBLPrototypeBinding::AddResource(nsIAtom* aResourceType, const nsAReadableStri
 NS_IMETHODIMP
 nsXBLPrototypeBinding::BindingAttached(nsIDOMEventReceiver* aReceiver)
 {
-  if (mConstructor)
-    return mConstructor->BindingAttached(aReceiver);
+  if (mImplementation && mImplementation->mConstructor)
+    return mImplementation->mConstructor->BindingAttached(aReceiver);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXBLPrototypeBinding::BindingDetached(nsIDOMEventReceiver* aReceiver)
 {
-  if (mDestructor)
-    return mDestructor->BindingDetached(aReceiver);
+  if (mImplementation && mImplementation->mDestructor)
+    return mImplementation->mDestructor->BindingDetached(aReceiver);
   return NS_OK;
 }
 
@@ -500,17 +490,52 @@ nsXBLPrototypeBinding::SetPrototypeHandlers(nsIXBLPrototypeHandler* aHandler)
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeBinding::GetPrototypeProperties(nsIXBLPrototypeProperty ** aResult)
+nsXBLPrototypeBinding::GetConstructor(nsIXBLPrototypeHandler** aResult)
 {
-  *aResult = mPrototypeProperty;
-  NS_IF_ADDREF(*aResult);
+  if (mImplementation && mImplementation->mConstructor) {
+    *aResult = mImplementation->mConstructor; 
+    NS_ADDREF(*aResult);
+  }
+  else
+    *aResult = nsnull;
+  return NS_OK; 
+}
+
+NS_IMETHODIMP
+nsXBLPrototypeBinding::GetDestructor(nsIXBLPrototypeHandler** aResult)
+{
+  if (mImplementation && mImplementation->mDestructor) {
+    *aResult = mImplementation->mDestructor; 
+    NS_ADDREF(*aResult);
+  }
+  else
+    *aResult = nsnull;
+  return NS_OK; 
+}
+
+NS_IMETHODIMP
+nsXBLPrototypeBinding::SetConstructor(nsIXBLPrototypeHandler* aHandler)
+{
+  if (!mImplementation)
+    return NS_ERROR_FAILURE;
+  mImplementation->mConstructor = aHandler;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeBinding::SetProtoTypeProperties(nsIXBLPrototypeProperty* aResult)
+nsXBLPrototypeBinding::SetDestructor(nsIXBLPrototypeHandler* aHandler)
 {
-  mPrototypeProperty = aResult;
+  if (!mImplementation)
+    return NS_ERROR_FAILURE;
+  mImplementation->mDestructor = aHandler;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLPrototypeBinding::InstallImplementation(nsIContent* aBoundElement)
+{
+  if (mImplementation)
+    return mImplementation->InstallImplementation(this, aBoundElement);
   return NS_OK;
 }
 
@@ -829,30 +854,6 @@ nsXBLPrototypeBinding::GetImmediateChild(nsIAtom* aTag, nsIContent** aResult)
 
   return;
 }
-
-void
-nsXBLPrototypeBinding::ConstructProperties()
-{
-  nsCOMPtr<nsIContent> properties;
-  GetImmediateChild(nsXBLAtoms::implementation, getter_AddRefs(properties));
-  if (properties && mBinding) {
-    nsXBLService::BuildPropertyChain(this, properties, getter_AddRefs(mPrototypeProperty));
-  }
-}
-
-NS_IMETHODIMP
-nsXBLPrototypeBinding::GetCompiledClassObject(const nsCString& aClassName, nsIScriptContext * aContext, void * aScriptObject, void ** aClassObject)
-{
-  if (mClassObject) {
-    *aClassObject = mClassObject;
-    return NS_OK;
-  }
-
-  InitClass(aClassName, aContext, aScriptObject, &mClassObject);
-  *aClassObject = mClassObject;
-
-  return NS_OK;
-}
  
 NS_IMETHODIMP
 nsXBLPrototypeBinding::InitClass(const nsCString& aClassName, nsIScriptContext * aContext, void * aScriptObject, void ** aClassObject)
@@ -942,38 +943,6 @@ nsXBLPrototypeBinding::InitClass(const nsCString& aClassName, nsIScriptContext *
   ::JS_SetPrototype(jscontext, scriptObject, proto);
 
   return NS_OK;
-}
-
-void
-nsXBLPrototypeBinding::BuildConstructorAndDestructor()
-{
-  nsCOMPtr<nsIContent> impl;
-  GetImmediateChild(nsXBLAtoms::implementation, getter_AddRefs(impl));
-  if (impl) {
-    // Look for <constructor> and <destructor>.
-    PRInt32 count;
-    impl->ChildCount(count);
-    for (PRInt32 i = 0; i < count; i++) {
-      nsCOMPtr<nsIContent> child;
-      impl->ChildAt(i, *getter_AddRefs(child));
-      nsCOMPtr<nsIAtom> tag;
-      child->GetTag(*getter_AddRefs(tag));
-      if (tag == nsXBLAtoms::constructor) {
-        nsAutoString value;
-        nsXBLBinding::GetTextData(child, value);
-        NS_NewXBLPrototypeHandler(nsnull, nsnull, &value, nsnull, nsnull, nsnull, nsnull,
-                                  nsnull, nsnull, getter_AddRefs(mConstructor));
-        mConstructor->SetEventName(tag);
-      }
-      else if (tag == nsXBLAtoms::destructor) {
-        nsAutoString value;
-        nsXBLBinding::GetTextData(child, value);
-        NS_NewXBLPrototypeHandler(nsnull, nsnull, &value, nsnull, nsnull, nsnull, nsnull,
-                                  nsnull, nsnull, getter_AddRefs(mDestructor));
-        mDestructor->SetEventName(tag);
-      }
-    }
-  }
 }
 
 void
@@ -1365,24 +1334,22 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
   }
 }
 
-void
-nsXBLPrototypeBinding::ConstructInterfaceTable(nsIContent* aElement)
+NS_IMETHODIMP
+nsXBLPrototypeBinding::ConstructInterfaceTable(const nsAReadableString& aImpls)
 {
-  nsAutoString impls;
-  aElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::implements, impls);
-  if (!impls.IsEmpty()) {
+  if (!aImpls.IsEmpty()) {
     // Obtain the interface info manager that can tell us the IID
     // for a given interface name.
     nsCOMPtr<nsIInterfaceInfoManager> infoManager = getter_AddRefs(XPTI_GetInterfaceInfoManager());
     if (!infoManager)
-      return;
+      return NS_ERROR_FAILURE;
 
     // Create the table.
     if (!mInterfaceTable)
       mInterfaceTable = new nsSupportsHashtable(4);
 
     // The user specified at least one attribute.
-    char* str = ToNewCString(impls);
+    char* str = ToNewCString(aImpls);
     char* newStr;
     // XXX We should use a strtok function that tokenizes PRUnichars
     // so that we don't have to convert from Unicode to ASCII and then back
@@ -1404,6 +1371,8 @@ nsXBLPrototypeBinding::ConstructInterfaceTable(nsIContent* aElement)
 
     nsMemory::Free(str);
   }
+
+  return NS_OK;
 }
 
 void

@@ -77,7 +77,6 @@
 #include "nsXBLAtoms.h"
 
 #include "nsIXBLPrototypeHandler.h"
-#include "nsIXBLPrototypeProperty.h"
 
 #include "nsIChromeRegistry.h"
 #include "nsIPref.h"
@@ -308,7 +307,6 @@ nsXBLStreamListener::OnStopRequest(nsIRequest* request, nsISupports* aCtxt, nsre
 
   if (NS_FAILED(rv) || NS_FAILED(aStatus))
   {
-  	
     nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
     if (aChannel)
   	{
@@ -685,7 +683,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsAReadableString& aURL, 
     } while (nextBinding);
 
     // XXX Handle adjusting the prototype chain! We need to somehow indicate to
-    // InstallProperties that the whole chain should just be whacked and rebuilt.
+    // InstallImplementation that the whole chain should just be whacked and rebuilt.
     // We are becoming the new binding.
     bindingManager->SetBinding(aContent, newBinding);
     baseBinding->SetBaseBinding(binding);
@@ -714,7 +712,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsAReadableString& aURL, 
   newBinding->InstallEventHandlers();
 
   // Set up our properties
-  newBinding->InstallProperties();
+  newBinding->InstallImplementation();
 
   // Figure out if we need to execute a constructor.
   newBinding->GetFirstBindingWithConstructor(aBinding);
@@ -1343,40 +1341,6 @@ static void GetImmediateChild(nsIAtom* aTag, nsIContent* aParent, nsIContent** a
       return;
     }
   }
-}
-
-nsresult 
-nsXBLService::BuildPropertyChain(nsIXBLPrototypeBinding * aPrototypeBinding, nsIContent * aContent, nsIXBLPrototypeProperty ** aResult)
-{
-  nsCOMPtr<nsIXBLPrototypeProperty> firstProperty;
-  nsCOMPtr<nsIXBLPrototypeProperty> currProperty;
-  PRInt32 propertyCount = 0;
-  aContent->ChildCount(propertyCount);
-
-  for (PRInt32 j = 0; j < propertyCount; j++) {
-    nsCOMPtr<nsIContent> property;
-    aContent->ChildAt(j, *getter_AddRefs(property));
-    
-    nsCOMPtr<nsIXBLPrototypeProperty> newProperty;
-    NS_NewXBLPrototypeProperty(aPrototypeBinding, getter_AddRefs(newProperty));
-
-    if (!newProperty) return NS_ERROR_FAILURE;
-    
-    newProperty->ConstructProperty(aContent, property);
-
-    if (newProperty) {
-      if (currProperty)
-        currProperty->SetNextProperty(newProperty);
-      else 
-        firstProperty = newProperty;
-      currProperty = newProperty;
-    }
-  }
-
-  *aResult = firstProperty;
-  NS_IF_ADDREF(*aResult);
-  
-  return NS_OK;
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

@@ -94,7 +94,6 @@
 #include "nsIDOMAttr.h"
 #include "nsIDOMNamedNodeMap.h"
 
-#include "nsIXBLPrototypeProperty.h"
 #include "nsXBLPrototypeHandler.h"
 
 #include "nsXBLKeyHandler.h"
@@ -994,47 +993,17 @@ nsXBLBinding::InstallEventHandlers()
 }
 
 NS_IMETHODIMP
-nsXBLBinding::InstallProperties()
+nsXBLBinding::InstallImplementation()
 {
   // Always install the base class properties first, so that
   // derived classes can reference the base class properties.
 
   if (mNextBinding)
-    mNextBinding->InstallProperties();
+    mNextBinding->InstallImplementation();
 
   // iterate through each property in the prototype's list and install the property.
-  if (AllowScripts()) {
-    nsCOMPtr<nsIXBLPrototypeProperty> propertyChain;
-    mPrototypeBinding->GetPrototypeProperties(getter_AddRefs(propertyChain));
-
-    if (!propertyChain) return NS_OK; // kick out if our list is empty
-
-    nsCOMPtr<nsIDocument> document;
-    mBoundElement->GetDocument(*getter_AddRefs(document));
-    if (!document) return NS_OK;
-
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    document->GetScriptGlobalObject(getter_AddRefs(global));
-    if (!global) return NS_OK;
-
-    nsCOMPtr<nsIScriptContext> context;
-    nsresult rv = global->GetContext(getter_AddRefs(context));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!context) return NS_OK;
-
-    void * targetScriptObject = nsnull;
-    void * targetClassObject = nsnull;
-    rv = propertyChain->InitTargetObjects(context, mBoundElement, &targetScriptObject, &targetClassObject);
-    NS_ENSURE_SUCCESS(rv, rv); // kick out if we were unable to properly intialize our target objects
-
-    nsCOMPtr<nsIXBLPrototypeProperty> curr = propertyChain;
-    do  {
-      curr->InstallProperty(context, mBoundElement, targetScriptObject, targetClassObject);
-      curr->GetNextProperty(getter_AddRefs(propertyChain));
-      curr = propertyChain;
-    } while (curr);
-  }
+  if (AllowScripts())
+    mPrototypeBinding->InstallImplementation(mBoundElement);
 
   return NS_OK;
 }
