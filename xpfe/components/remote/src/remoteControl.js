@@ -135,7 +135,7 @@ var module = {
     myCID: Components.ID("{97c8d0de-1dd1-11b2-bc64-86a3aaf8f5c5}"),
 
     myFactory: {
-        CreateInstance: function (outer, iid) {
+        createInstance: function (outer, iid) {
             if (outer != null)
                 throw Components.results.NS_ERROR_NO_AGGREGATION;
             

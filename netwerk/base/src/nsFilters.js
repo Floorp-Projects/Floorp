@@ -77,7 +77,7 @@ filterModule.canUnload =
     }
 
 var filtersFactory = new Object();
-filtersFactory.CreateInstance =
+filtersFactory.createInstance =
     function (outer, iid) {
         if (outer != null)
             throw Components.results.NS_ERROR_NO_AGGREGATION;
