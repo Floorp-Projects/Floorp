@@ -628,7 +628,7 @@ char * TextFrame::CompressWhiteSpace(char            * aBuffer,
       char* s = aBuffer;
       PRInt32 maxLen = end - cp;
       if (maxLen > aBufSize) {
-        s = new char[maxLen];
+        s0 = s = new char[maxLen];
         aShouldDeleteStr = PR_TRUE;
       }
 
@@ -1096,7 +1096,7 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         if (endPnt->GetOffset() == mContentOffset+mContentLength) {
           endOffset = compressedStrLen;
         } else {
-          if (endPnt->GetOffset() == compressedStrLen) {
+          if (endPnt->GetOffset() == (PRInt32)compressedStrLen) {
             endOffset = compressedStrLen;
           } else {
             endOffset = indexes[endPnt->GetOffset()-mContentOffset]-mContentOffset;
@@ -1610,6 +1610,10 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
 
   aOffset = i;
   aWidth  = width;
+
+  if (shouldDelete) {
+    delete compressedStr;
+  }
 
 }
 
