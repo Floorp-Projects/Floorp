@@ -35,6 +35,7 @@ public:
     nsTextHelper();
     virtual ~nsTextHelper();
     NS_IMETHOD        SelectAll();
+    NS_IMETHOD        PreCreateWidget(nsWidgetInitData *aInitData);
     NS_IMETHOD        SetMaxTextLength(PRUint32 aChars);
     NS_IMETHOD        GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PRUint32& aActualSize);
     NS_IMETHOD        SetText(const nsString &aText, PRUint32& aActualSize);
