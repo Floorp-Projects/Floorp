@@ -160,6 +160,8 @@ ifdef MOZ_STATIC_COMPONENTS
 DIRS   += modules/staticmod
 endif
 
+DIRS	+= xpfe/bootstrap
+
 endif # BUILD_MODULES == all
 
 STATIC_MAKEFILES := $(NSPRPUB_DIR) directory/c-sdk/ldap
