@@ -39,7 +39,7 @@
 #include "plhash.h"
 #include "nsINameSpaceManager.h"
 
-static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
+static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kFrameUtilCID, NS_FRAME_UTIL_CID);
 static NS_DEFINE_IID(kIFrameUtilIID, NS_IFRAME_UTIL_IID);
@@ -196,64 +196,28 @@ nsWebCrawler::~nsWebCrawler()
   delete mVisited;
 }
 
-NS_IMPL_ISUPPORTS(nsWebCrawler, kIStreamObserverIID)
+NS_IMPL_ISUPPORTS(nsWebCrawler, kIDocumentLoaderObserverIID)
 
 NS_IMETHODIMP
-nsWebCrawler::OnStartBinding(nsIURL* aURL, const char *aContentType)
-{
-  if (mVerbose) {
-    printf("Crawler: starting ");
-    PRUnichar* tmp;
-    aURL->ToString(&tmp);
-    nsAutoString tmp2 = tmp;
-    fputs(tmp2, stdout);
-    delete tmp;
-    printf("\n");
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebCrawler::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+nsWebCrawler::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL,
+                                  const char* aCommand)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebCrawler::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebCrawler::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg)
-{
-  if (mVerbose) {
-    printf("Crawler: stopping ");
-    PRUnichar* tmp;
-    aURL->ToString(&tmp);
-    nsAutoString tmp2 = tmp;
-    fputs(tmp2, stdout);
-    delete tmp;
-    printf("\n");
-  }
-  return NS_OK;
-}
-
-void
-nsWebCrawler::EndLoadURL(nsIWebShell* aShell,
-                         const PRUnichar* aURL,
-                         PRInt32 aStatus)
+nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
+                                nsIURL* aURL,
+                                PRInt32 aStatus)
 {
   if (nsnull == aURL) {
-    return;
+    return NS_OK;
   }
 
-  nsAutoString tmp(aURL);
   if (mVerbose) {
-    printf("Crawler: done loading ");
-    fputs(tmp, stdout);
-    printf("\n");
+    const char* spec;
+    aURL->GetSpec(&spec);
+    printf("Crawler: done loading %s\n", spec);
   }
 
   // Make sure the document bits make it to the screen at least once
@@ -277,25 +241,19 @@ nsWebCrawler::EndLoadURL(nsIWebShell* aShell,
       if (nsnull != root) {
         if (mOutputDir.Length() > 0)
         {
-          nsIURL* url;
-          nsresult rv = NS_NewURL(&url, tmp);
-          if (NS_SUCCEEDED(rv) && (nsnull != url)) {
-            nsAutoString regressionFileName;
-            FILE *fp = GetOutputFile(url, regressionFileName);
-            if (nsnull!=fp)
-            {
-              root->DumpRegressionData(fp, 0);
-              fclose(fp);
-              if (mRegressing) {
-                PerformRegressionTest(regressionFileName);
-              }
+          nsAutoString regressionFileName;
+          FILE *fp = GetOutputFile(aURL, regressionFileName);
+          if (fp) {
+            root->DumpRegressionData(fp, 0);
+            fclose(fp);
+            if (mRegressing) {
+              PerformRegressionTest(regressionFileName);
             }
-            else {
-              const char* file;
-              (void)url->GetFile(&file);
-              printf("could not open output file for %s\n", file);
-            }
-            NS_RELEASE(url);
+          }
+          else {
+            const char* file;
+            (void)aURL->GetFile(&file);
+            printf("could not open output file for %s\n", file);
           }
         }
         else
@@ -329,6 +287,46 @@ nsWebCrawler::EndLoadURL(nsIWebShell* aShell,
   if (0 == mDelay) {
     LoadNextURL();
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebCrawler::OnStartURLLoad(nsIDocumentLoader* loader, nsIURL* aURL,
+                             const char* aContentType, 
+                             nsIContentViewer* aViewer)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebCrawler::OnProgressURLLoad(nsIDocumentLoader* loader,
+                                nsIURL* aURL, PRUint32 aProgress, 
+                                PRUint32 aProgressMax)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebCrawler::OnStatusURLLoad(nsIDocumentLoader* loader, nsIURL* aURL,
+                              nsString& aMsg)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebCrawler::OnEndURLLoad(nsIDocumentLoader* loader, nsIURL* aURL,
+                           PRInt32 aStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebCrawler::HandleUnknownContentType(nsIDocumentLoader* loader,
+                                       nsIURL *aURL,
+                                       const char *aContentType,
+                                       const char *aCommand)
+{
+  return NS_OK;
 }
 
 FILE*
@@ -426,10 +424,9 @@ void
 nsWebCrawler::Start()
 {
   // Enable observing each URL load...
-  nsIWebShell* shell = nsnull;
-  mBrowser->GetWebShell(shell);
-  shell->SetObserver(this);
-
+//  nsIWebShell* shell = nsnull;
+//  mBrowser->GetWebShell(shell);
+//  shell->SetObserver(this);
   LoadNextURL();
 }
 

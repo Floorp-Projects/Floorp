@@ -20,7 +20,7 @@
 #define nsWebCrawler_h___
 
 #include "nsIBrowserWindow.h"
-#include "nsIStreamListener.h"
+#include "nsIDocumentLoaderObserver.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
 
@@ -33,7 +33,7 @@ class nsIPresShell;
 class nsViewerApp;
 class AtomHashTable;
 
-class nsWebCrawler : public nsIStreamObserver {
+class nsWebCrawler : public nsIDocumentLoaderObserver {
 public:
   // Make a new web-crawler for the given viewer. Note: the web
   // crawler does not addref the viewer.
@@ -42,11 +42,25 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  // nsIStreamObserver
-  NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg);
+  // nsIDocumentLoaderObserver
+  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL,
+                                 const char* aCommand);
+  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aURL,
+                               PRInt32 aStatus);
+  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURL* aURL,
+                            const char* aContentType, 
+                            nsIContentViewer* aViewer);
+  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
+                               nsIURL* aURL, PRUint32 aProgress, 
+                               PRUint32 aProgressMax);
+  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIURL* aURL,
+                             nsString& aMsg);
+  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIURL* aURL,
+                          PRInt32 aStatus);
+  NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
+                                      nsIURL *aURL,
+                                      const char *aContentType,
+                                      const char *aCommand);
 
   // Add a url to load
   void AddURL(const nsString& aURL);
@@ -103,8 +117,6 @@ public:
   void SetVerbose(PRBool aSetting) {
     mVerbose = aSetting;
   }
-
-  void EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus);
 
 protected:
   virtual ~nsWebCrawler();
