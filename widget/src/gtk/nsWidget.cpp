@@ -39,11 +39,13 @@
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_keyboard_get_modifiers()
 
 #include "nsIPref.h"
+#include "prefapi.h"
 #include "nsGtkIMEHelper.h"
 
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 // keeping track of a list of simultaneously modal widgets
 class ModalWidgetList {
@@ -137,6 +139,28 @@ nsIWidget         *nsWidget::gRollupWidget = nsnull;
 PRBool             nsWidget::gRollupConsumeRollupEvent = PR_FALSE;
 PRBool             nsWidget::mGDKHandlerInstalled = PR_FALSE;
 
+#ifdef NS_DEBUG
+// debugging window
+static GtkWidget *debugTopLevel = NULL;
+static GtkWidget *debugBox = NULL;
+static GtkWidget *debugEntryBox = NULL;
+static GtkWidget *debugButton = NULL;
+static nsWidget  *debugWidget = NULL;
+static PRBool     debugCheckedDebugWindow = PR_FALSE;
+static PRBool     debugCallbackRegistered = PR_FALSE;
+
+static void      debugHandleActivate(GtkEditable *editable,
+                                     gpointer user_data);
+static void      debugHandleClicked (GtkButton   *button,
+                                     gpointer user_data);
+static void      debugSetupWindow   (void);
+static void      debugDestroyWindow (void);
+static int       debugWindowPrefChanged (const char *newpref, void *data);
+static void      debugRegisterCallback  (void);
+static gint      debugHandleWindowClose(GtkWidget *window, void *data);
+const char      *debugPrefName = "nglayout.widget.debugWindow";
+#endif /* NS_DEBUG */
+
 //
 // Keep track of the last widget being "dragged"
 //
@@ -219,6 +243,17 @@ nsWidget::nsWidget()
     // they have been converted to GDK, but before GTK+ gets them
     gdk_event_handler_set (handle_gdk_event, NULL, NULL);
   }
+#ifdef NS_DEBUG
+  // see if we need to set up the debugging window
+  if (!debugCheckedDebugWindow) {
+    debugSetupWindow();
+  }
+  // this will set up the callback for when the debug
+  // pref changes
+  if (!debugCallbackRegistered) {
+    debugRegisterCallback();
+  }
+#endif /* NS_DEBUG */
 }
 
 nsWidget::~nsWidget()
@@ -1863,8 +1898,8 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   nsMouseScrollEvent scrollEvent;
   PRUint32 eventType = 0;
 
-#if defined(DEBUG_pavlov)
-  printf("button press\n");
+#if defined(DEBUG_pavlov) || defined(DEBUG_blizzard)
+  printf("button press for %p\n", this);
 #endif
 
   if (gRollupWidget && gRollupListener)
@@ -2733,8 +2768,6 @@ NS_IMETHODIMP nsWidget::PasswordFieldInit()
 //////////////////////////////////////////////////////////////////////
 
 
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-
 #define PREF_XIM_PREEDIT "xim.preedit"
 #define PREF_XIM_STATUS "xim.status"
 #define SUPPORTED_PREEDIT (GDK_IM_PREEDIT_AREA |        \
@@ -3017,3 +3050,140 @@ GtkWindow *nsWidget::GetTopLevelWindow(void)
   else
     return NULL;
 }
+
+#ifdef NS_DEBUG
+
+static void setDebugWindow(void)
+{
+  gchar *text = NULL;
+  int val = 0;
+
+  text = gtk_editable_get_chars(GTK_EDITABLE(debugEntryBox), 0, -1);
+  if (!text) {
+    return;
+  }
+
+  if (strlen(text) == 0) {
+    g_print("setting value to null\n");
+    debugWidget = NULL;
+    g_free(text);
+    return;
+  }
+  
+  if (strlen(text) < 3) {
+    g_print("string not long enough\n");
+    return;
+  }
+
+  if (memcmp(text, "0x", 2) != 0) {
+    g_print("string must begin in 0x\n");
+    return;
+  }
+
+  sscanf(&text[2], "%x", &val);
+
+  printf("setting value to 0x%x\n", val);
+  debugWidget = (nsWidget *)val;
+
+  g_free(text);
+}
+
+static void debugHandleActivate(GtkEditable *editable,
+                                gpointer user_data)
+{
+  setDebugWindow();
+}
+
+static void      debugHandleClicked (GtkButton   *button,
+                                     gpointer user_data)
+{
+  setDebugWindow();
+}
+
+static void      debugDestroyWindow (void)
+{
+  // this will destroy all of the widgets inside the window, too.
+  gtk_widget_destroy(debugTopLevel);
+  debugTopLevel = NULL;
+  debugBox = NULL;
+  debugEntryBox = NULL;
+  debugButton = NULL;
+  debugWidget = NULL;  
+}
+
+static void      debugSetupWindow   (void)
+{
+  PRBool   enable_window = PR_FALSE;
+  nsresult rv;
+  
+  debugCheckedDebugWindow = PR_TRUE;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if (!NS_FAILED(rv) && (prefs)) {
+    rv = prefs->GetBoolPref(debugPrefName, &enable_window);
+    if (!NS_FAILED(rv) && enable_window) {
+      debugTopLevel = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+      gtk_signal_connect(GTK_OBJECT(debugTopLevel),
+                         "delete_event",
+                         GTK_SIGNAL_FUNC(debugHandleWindowClose),
+                         NULL);
+      
+      debugBox = gtk_hbox_new(PR_FALSE, 0);
+      gtk_container_add(GTK_CONTAINER(debugTopLevel), debugBox);
+      
+      debugEntryBox = gtk_entry_new();
+      gtk_box_pack_start_defaults(GTK_BOX(debugBox), debugEntryBox);
+      gtk_signal_connect(GTK_OBJECT(debugEntryBox), "activate",
+                         GTK_SIGNAL_FUNC(debugHandleActivate), NULL);
+      
+      debugButton = gtk_button_new_with_label("Set Window");
+      gtk_box_pack_start_defaults(GTK_BOX(debugBox), debugButton);
+      gtk_signal_connect(GTK_OBJECT(debugButton), "clicked",
+                         GTK_SIGNAL_FUNC(debugHandleClicked), NULL);
+      
+      gtk_widget_show_all(debugTopLevel);
+    }
+  }
+}
+
+static int debugWindowPrefChanged (const char *newpref, void *data)
+{
+  PRBool enable_window;
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if (!NS_FAILED(rv) && (prefs)) {
+    rv = prefs->GetBoolPref(debugPrefName, &enable_window);
+    if (!NS_FAILED(rv) && enable_window) {
+      if (!debugTopLevel) {
+        // this will trigger the creation of the window
+        debugCheckedDebugWindow = PR_FALSE;
+        debugSetupWindow();
+      }
+    }
+    else if (!NS_FAILED(rv) && (!enable_window)) {
+      if (debugTopLevel) {
+        debugDestroyWindow();
+      }
+    }
+  }
+  return PREF_NOERROR;
+}
+
+static void      debugRegisterCallback  (void)
+{
+  nsresult rv;
+  
+  // make sure we don't call in here again
+  debugCallbackRegistered = PR_TRUE;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if (!NS_FAILED(rv)) {
+    rv = prefs->RegisterCallback(debugPrefName, debugWindowPrefChanged, NULL);
+  }
+}
+
+static gint debugHandleWindowClose(GtkWidget *window, void *data)
+{
+  debugDestroyWindow();
+  return TRUE;
+}
+
+#endif /* NS_DEBUG */

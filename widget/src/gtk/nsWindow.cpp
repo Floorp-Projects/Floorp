@@ -1090,6 +1090,15 @@ void * nsWindow::GetNativeData(PRUint32 aDataType)
     }
     return (void *)mSuperWin;
   }
+  else if (aDataType == NS_NATIVE_PLUGIN_PORT) {
+    if (mSuperWin) {
+      GdkWindowPrivate *private_window = (GdkWindowPrivate *)mSuperWin->bin_window;
+      if (private_window->destroyed == PR_TRUE) {
+        return NULL;
+      }
+    }
+    return (void *)mSuperWin;
+  }
 
   return nsWidget::GetNativeData(aDataType);
 }
