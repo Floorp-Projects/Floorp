@@ -637,6 +637,23 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     }
 
     /**
+     * Custom <tt>==</tt> operator.
+     * Should return <tt>null</tt> if this object does not have custom equality
+     * operator for the given value,
+     * <tt>Boolean.TRUE</tt> if this object is equivalent to <tt>value</tt>,
+     * <tt>Boolean.FALSE</tt> if this object is not equivalent to
+     * <tt>value</tt>.
+     * <p>
+     * The default implementation returns Boolean.TRUE
+     * if <tt>this == value</tt> or null otherwise to indicate no custom
+     * equality is available unless <tt>value</tt> is <tt>this</tt>.
+     */
+    public Boolean equivalentValues(Object value)
+    {
+        return (this == value) ? Boolean.TRUE : null;
+    }
+
+    /**
      * Defines JavaScript objects from a Java class that implements Scriptable.
      *
      * If the given class has a method
