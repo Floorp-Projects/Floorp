@@ -69,9 +69,6 @@ static GtkWidget        *sFolder;
 static GSList           *sGroup;
 static GtkWidget        *sCreateDestDlg;
 static GtkWidget        *sDelInstDlg;
-static int              sFilePickerUp = FALSE;
-static int              sConfirmCreateUp = FALSE;
-static int              sDelInstUp = FALSE;
 static nsLegacyCheck    *sLegacyChecks = NULL;
 static nsObjectIgnore   *sObjectsToIgnore = NULL;
 
@@ -123,10 +120,6 @@ nsSetupTypeDlg::Next(GtkWidget *aWidget, gpointer aData)
         gCtx->bMoving = FALSE;
         return;
     }
-
-    // creation confirmation dlg still up
-    if (sConfirmCreateUp || sDelInstUp)
-        return;
 
     // verify selected destination directory exists
     if (OK != nsSetupTypeDlg::VerifyDestination())
@@ -693,13 +686,11 @@ nsSetupTypeDlg::SelectFolder(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("SelectFolder");
 
-    if (sFilePickerUp)
-        return;
-
     GtkWidget *fileSel = NULL;
     char *selDir = gCtx->opt->mDestination;
 
     fileSel = gtk_file_selection_new(gCtx->Res("SELECT_DIR"));
+    gtk_window_set_modal(GTK_WINDOW(fileSel), TRUE);
     gtk_file_selection_set_filename(GTK_FILE_SELECTION(fileSel), selDir);
     gtk_signal_connect(GTK_OBJECT(GTK_FILE_SELECTION(fileSel)->ok_button),
                        "clicked", (GtkSignalFunc) SelectFolderOK, fileSel);
@@ -708,7 +699,6 @@ nsSetupTypeDlg::SelectFolder(GtkWidget *aWidget, gpointer aData)
                                 "clicked", (GtkSignalFunc) SelectFolderCancel,
                                 GTK_OBJECT(fileSel));
     gtk_widget_show(fileSel); 
-    sFilePickerUp = TRUE;
 }
 
 void
@@ -734,7 +724,6 @@ nsSetupTypeDlg::SelectFolderOK(GtkWidget *aWidget, GtkFileSelection *aFileSel)
 
     // tear down file sel dlg
     gtk_object_destroy(GTK_OBJECT(aFileSel)); 
-    sFilePickerUp = FALSE;
 }
 
 void
@@ -744,7 +733,6 @@ nsSetupTypeDlg::SelectFolderCancel(GtkWidget *aWidget,
     // tear down file sel dlg
     gtk_object_destroy(GTK_OBJECT(aWidget)); 
     gtk_object_destroy(GTK_OBJECT(aFileSel)); 
-    sFilePickerUp = FALSE;
 }
 
 void
@@ -773,6 +761,7 @@ nsSetupTypeDlg::VerifyDestination()
         sprintf(message, gCtx->Res("NO_PERMS"), gCtx->opt->mDestination);
 
         noPermsDlg = gtk_dialog_new();
+        gtk_window_set_modal(GTK_WINDOW(noPermsDlg), TRUE);
         label = gtk_label_new(message);
         okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
 
@@ -808,6 +797,7 @@ nsSetupTypeDlg::VerifyDestination()
     sprintf(message, gCtx->Res("DOESNT_EXIST"), gCtx->opt->mDestination);
 
     sCreateDestDlg = gtk_dialog_new();
+    gtk_window_set_modal(GTK_WINDOW(sCreateDestDlg), TRUE);
     label = gtk_label_new(message);
     yesButton = gtk_button_new_with_label(gCtx->Res("YES_LABEL"));
     noButton = gtk_button_new_with_label(gCtx->Res("NO_LABEL"));
@@ -829,7 +819,6 @@ nsSetupTypeDlg::VerifyDestination()
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sCreateDestDlg)->vbox), label);
     
     gtk_widget_show_all(sCreateDestDlg);
-    sConfirmCreateUp = TRUE;
 
     return err;
 }
@@ -877,7 +866,6 @@ nsSetupTypeDlg::CreateDestYes(GtkWidget *aWidget, gpointer aData)
     umask(oldPerms); // restore original umask
 
     gtk_widget_destroy(sCreateDestDlg);
-    sConfirmCreateUp = FALSE;
 
     if (err != 0)
     {
@@ -906,7 +894,6 @@ nsSetupTypeDlg::CreateDestNo(GtkWidget *aWidget, gpointer aData)
     DUMP("CreateDestNo");
 
     gtk_widget_destroy(sCreateDestDlg);
-    sConfirmCreateUp = FALSE;
 }
 
 int
@@ -939,6 +926,7 @@ nsSetupTypeDlg::DeleteOldInst()
       {
           // throw up delete dialog 
           sDelInstDlg = gtk_dialog_new();
+          gtk_window_set_modal(GTK_WINDOW(sDelInstDlg), TRUE);
           gtk_window_set_title(GTK_WINDOW(sDelInstDlg), gCtx->opt->mTitle);
           gtk_window_set_position(GTK_WINDOW(sDelInstDlg), GTK_WIN_POS_CENTER);
 
@@ -984,7 +972,6 @@ nsSetupTypeDlg::DeleteOldInst()
                   FALSE, FALSE, 0);
           }
           gtk_widget_show_all(sDelInstDlg);
-          sDelInstUp = TRUE;
       
           err = E_OLD_INST;
           break;
@@ -999,8 +986,6 @@ void
 nsSetupTypeDlg::DeleteInstDelete(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("DeleteInstDelete");
-
-    sDelInstUp = FALSE;
 
     if (!fork())
     {
@@ -1032,7 +1017,6 @@ nsSetupTypeDlg::DeleteInstCancel(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("DeleteInstCancel");
 
-    sDelInstUp = FALSE;
     gtk_widget_destroy(sDelInstDlg);
 }
 
@@ -1124,6 +1108,7 @@ nsSetupTypeDlg::VerifyDiskSpace(void)
                 gCtx->Res("NO_DISK_SPACE"));
 
         noDSDlg = gtk_dialog_new();
+        gtk_window_set_modal(GTK_WINDOW(noDSDlg), TRUE);
         label = gtk_label_new(message);
         okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
         packer = gtk_packer_new(); 
