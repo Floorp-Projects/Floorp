@@ -2479,9 +2479,33 @@ nsTypeAheadFind::DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent,
       key.Append(NS_LITERAL_STRING("found"));
 
       if (NS_SUCCEEDED(GetTranslatedString(key, statusString))) {
+        if (mRepeatingMode == eRepeatingChar || 
+            mRepeatingMode == eRepeatingCharReverse) {
+          statusString += mTypeAheadBuffer.First();
+        }
+        else {
+          statusString += mTypeAheadBuffer;
+        }
+
         nsAutoString closeQuoteString, urlString;
         GetTranslatedString(NS_LITERAL_STRING("closequote"), closeQuoteString);
-        statusString += mTypeAheadBuffer + closeQuoteString;
+        statusString += closeQuoteString;
+
+        if (mRepeatingMode != eRepeatingNone) {
+          if (mRepeatingMode == eRepeatingChar) {
+            key = NS_LITERAL_STRING("repeated");
+          }
+          else if (mRepeatingMode == eRepeatingForward) {
+            key = NS_LITERAL_STRING("nextmatch");
+          }
+          else {
+            key = NS_LITERAL_STRING("prevmatch");
+          }
+          nsAutoString repeatedModeString;
+          GetTranslatedString(key, repeatedModeString);
+          statusString += NS_LITERAL_STRING(" ") + repeatedModeString;
+        }
+
         nsCOMPtr<nsIDOMNode> focusedNode(do_QueryInterface(aFocusedContent));
         if (focusedNode) {
           presShell->GetLinkLocation(focusedNode, urlString);
