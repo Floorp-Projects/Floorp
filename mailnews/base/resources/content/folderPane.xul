@@ -31,83 +31,81 @@
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <outliner id="folderOutliner" class="plain" flex="1" seltype="single">
-    <outlinerbody flex="1"
-                  datasources="rdf:null"
-                  statedatasource="rdf:mailnewsfolders"
-                  flags="dont-build-content"
-                  ondraggesture="BeginDragFolderOutliner(event);"
-                  onselect="FolderPaneSelectionChange();">
-      <template>
-        <rule>
-          <conditions>
-            <outlineritem uri="?container"/>
-            <member container="?container" child="?member" />
-          </conditions>
+  <outliner id="folderOutliner" class="plain" flex="1" seltype="single"
+            datasources="rdf:null"
+            statedatasource="rdf:mailnewsfolders"
+            flags="dont-build-content"
+            ondraggesture="BeginDragFolderOutliner(event);"
+            onselect="FolderPaneSelectionChange();">
+    <template>
+      <rule>
+        <conditions>
+          <outlineritem uri="?container"/>
+          <member container="?container" child="?member" />
+        </conditions>
 
-          <bindings>
-            <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#FolderTreeName"
-                     object="?folderTreeName" />
-            <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#FolderTreeName?sort=true"
-                     object="?folderTreeNameSort" />
-            <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#FolderTreeSimpleName"
-                     object="?folderTreeSimpleName" />
-            <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#SpecialFolder"
-                     object="?specialFolder" />
-            <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#BiffState"
-                     object="?biffState" />
-            <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#IsServer"
-                     object="?isServer" />
-            <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#NewMessages"
-                     object="?newMessages" />
-            <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#HasUnreadMessages"
-                     object="?hasUnreadMessages" />
-            <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#SubfoldersHaveUnreadMessages"
-                     object="?subfoldersHaveUnreadMessages" />
-            <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#IsSecure"
-                     object="?isSecure" />
-            <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#ServerType"
-                     object="?serverType" />
-            <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#NoSelect"
-                     object="?noSelect" />
-            <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#TotalUnreadMessages"
-                     object="?unreadCount" />
-            <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#TotalMessages"
-                     object="?totalCount" />
-          </bindings>
+        <bindings>
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#FolderTreeName"
+                   object="?folderTreeName" />
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#FolderTreeName?sort=true"
+                   object="?folderTreeNameSort" />
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#FolderTreeSimpleName"
+                   object="?folderTreeSimpleName" />
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#SpecialFolder"
+                   object="?specialFolder" />
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#BiffState"
+                   object="?biffState" />
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#IsServer"
+                   object="?isServer" />
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#NewMessages"
+                   object="?newMessages" />
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#HasUnreadMessages"
+                   object="?hasUnreadMessages" />
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#SubfoldersHaveUnreadMessages"
+                   object="?subfoldersHaveUnreadMessages" />
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#IsSecure"
+                   object="?isSecure" />
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#ServerType"
+                   object="?serverType" />
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#NoSelect"
+                   object="?noSelect" />
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#TotalUnreadMessages"
+                   object="?unreadCount" />
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#TotalMessages"
+                   object="?totalCount" />
+        </bindings>
 
-          <action>
-            <outlinerchildren>
-              <outlineritem uri="?member">
-                <outlinerrow>
-                  <outlinercell id="folderNameCell"
-                                label="?folderTreeName"
-                                properties="specialFolder-?specialFolder biffState-?biffState isServer-?isServer newMessages-?newMessages hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages isSecure-?isSecure serverType-?serverType noSelect-?noSelect"/>
-                  <outlinercell label="?unreadCount"
-                                properties="hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages"/>
-                  <outlinercell label="?totalCount"
-                                properties="hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages"/>
-                </outlinerrow>
-              </outlineritem>
-            </outlinerchildren>
-          </action>
-        </rule>
-      </template>
-    </outlinerbody>
+        <action>
+          <outlinerchildren>
+            <outlineritem uri="?member">
+              <outlinerrow>
+                <outlinercell id="folderNameCell"
+                              label="?folderTreeName"
+                              properties="specialFolder-?specialFolder biffState-?biffState isServer-?isServer newMessages-?newMessages hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages isSecure-?isSecure serverType-?serverType noSelect-?noSelect"/>
+                <outlinercell label="?unreadCount"
+                              properties="hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages"/>
+                <outlinercell label="?totalCount"
+                              properties="hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages"/>
+              </outlinerrow>
+            </outlineritem>
+          </outlinerchildren>
+        </action>
+      </rule>
+    </template>
     <outlinercols>
       <outlinercol id="folderNameCol"
                    flex="5"

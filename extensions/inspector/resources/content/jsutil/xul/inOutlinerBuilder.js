@@ -40,7 +40,7 @@
 * inOutlinerBuilder -------------------------------------------------
 *  Automatically builds up an outliner so that it will display a tabular
 *  set of data with titled columns and optionally an icon for each row.
-*  The outliner that is supplied must have an outlinerbody with an 
+*  The outliner that is supplied must have an outlinerchildren with an 
 *  empty template inside of it.
 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 * REQUIRED IMPORTS:
@@ -95,7 +95,7 @@ inOutlinerBuilder.prototype =
   { 
     this.mOutliner = aVal;
     if (aVal)
-      this.mOutlinerBody = aVal.getElementsByTagName("outlinerbody")[0];
+      this.mOutlinerBody = aVal.getElementsByTagName("outlinerchildren")[0];
     aVal._outlinerBuilder = this 
   },
 
@@ -258,7 +258,7 @@ inOutlinerBuilder.prototype =
   {
     var kids = this.mOutliner.childNodes;
     for (var i = 0 ; i < kids.length; ++i)
-      if (kids[i].localName != "outlinerbody")
+      if (kids[i].localName != "outlinerchildren")
         this.mOutliner.removeChild(kids[i]);
       
     this.clearChildren(this.mBindings);

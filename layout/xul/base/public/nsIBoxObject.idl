@@ -45,6 +45,8 @@ interface nsIDOMElement;
 [scriptable, uuid(CAABF76F-9D35-401f-BEAC-3955817C645C)]
 interface nsIBoxObject : nsISupports
 {
+  readonly attribute nsIDOMElement element;
+
   attribute nsIBoxLayoutManager layoutManager;
   attribute nsIBoxPaintManager paintManager;
 

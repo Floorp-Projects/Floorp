@@ -213,20 +213,25 @@
         <![CDATA[
          if (this.currentIndex == -1)
            return;
-         if (!this.outlinerBoxObject.view.isContainer(this.currentIndex))
-           return;
-         if (this.outlinerBoxObject.view.isContainerOpen(this.currentIndex))
+         if (this.outlinerBoxObject.view.isContainer(this.currentIndex) &&
+             this.outlinerBoxObject.view.isContainerOpen(this.currentIndex)) {
            this.outlinerBoxObject.view.toggleOpenState(this.currentIndex);
+         }
+         else {
+           var parentIndex = this.outlinerBoxObject.view.getParentIndex(this.currentIndex);
+           if (parentIndex >= 0)
+             this.outlinerBoxObject.selection.select(parentIndex);
+         }
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_right">
         <![CDATA[
          if (this.currentIndex == -1)
            return;
-         if (!this.outlinerBoxObject.view.isContainer(this.currentIndex))
-           return;
-         if (!this.outlinerBoxObject.view.isContainerOpen(this.currentIndex))
-           this.outlinerBoxObject.view.toggleOpenState(this.currentIndex);
+         if (this.outlinerBoxObject.view.isContainer(this.currentIndex)) {
+           if (!this.outlinerBoxObject.view.isContainerOpen(this.currentIndex))
+             this.outlinerBoxObject.view.toggleOpenState(this.currentIndex);
+         }
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_up">
@@ -576,7 +581,7 @@
       <xul:hbox flex="1" class="outliner-bodybox">
         <children/>
       </xul:hbox>
-      <xul:scrollbar orient="vertical" class="outliner-scrollbar"/>
+      <xul:scrollbar orient="vertical" class="outliner-scrollbar" collapsed="true"/>
     </content>
     <handlers>
       <handler event="underflow">

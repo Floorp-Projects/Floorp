@@ -3,7 +3,12 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         orient="vertical">
-  <outliner flex="1">
+  <outliner id="tree"
+            flex="1"
+            datasources="rdf:ldap"
+            ref="ldap://alpha.dante.org.uk:389/dc=dante,dc=org,dc=uk??one?(objectclass=*)"
+            containment="http://home.netscape.com/NC-rdf#recursiveChild"
+            flags="dont-build-content">
     <outlinercols>
       <outlinercol id="description"
                    class="sortDirectionIndicator"
@@ -23,25 +28,17 @@
                    sort="rdf:http://www.mozilla.org/LDAPATTR-rdf#cn"
                    persist="width sortActive sortDirection" />
     </outlinercols>
-
-    <outlinerbody id="tree"
-                  datasources="rdf:ldap"
-                  ref="ldap://alpha.dante.org.uk:389/dc=dante,dc=org,dc=uk??one?(objectclass=*)"
-                  flex="1"
-                  containment="http://home.netscape.com/NC-rdf#recursiveChild"
-                  flags="dont-build-content">
-      <template>
-        <outlinerchildren>
-          <outlineritem uri="rdf:http://home.netscape.com/NC-rdf#recursiveChild">
-            <outlinerrow>
-              <outlinercell ref="description"
-                            label="rdf:http://www.mozilla.org/LDAPATTR-rdf#description" />
-              <outlinercell ref="cn"
-                            label="rdf:http://www.mozilla.org/LDAPATTR-rdf#cn" />
-            </outlinerrow>
-          </outlineritem>
-        </outlinerchildren>
-      </template>
-    </outlinerbody>
+    <template>
+      <outlinerchildren>
+        <outlineritem uri="rdf:http://home.netscape.com/NC-rdf#recursiveChild">
+          <outlinerrow>
+            <outlinercell ref="description"
+                          label="rdf:http://www.mozilla.org/LDAPATTR-rdf#description" />
+            <outlinercell ref="cn"
+                          label="rdf:http://www.mozilla.org/LDAPATTR-rdf#cn" />
+          </outlinerrow>
+        </outlineritem>
+      </outlinerchildren>
+    </template>
   </outliner>
 </window>

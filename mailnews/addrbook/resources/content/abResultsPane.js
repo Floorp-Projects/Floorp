@@ -61,7 +61,7 @@ function AbResultsPaneOnClick(event)
       }
       SortAndUpdateIndicators(t.id, sortDirection);
     }
-    else if (t.localName == "outlinerbody") {
+    else if (t.localName == "outlinerchildren") {
        var row = new Object;
        var colID = new Object;
        var childElt = new Object;

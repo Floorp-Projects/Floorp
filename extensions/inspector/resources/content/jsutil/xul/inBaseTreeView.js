@@ -62,6 +62,8 @@ inBaseOutlinerView.prototype =
   isContainer: function(aIndex) {},
   isContainerOpen: function(aIndex) {},
   isContainerEmpty: function(aIndex) {},
+  isSeparator: function(aIndex) {},
+  isSorted: function() {},
   toggleOpenState: function(aIndex) {},
   selectionChanged: function() {},
   cycleHeader: function(aColId, aElt) {},
@@ -71,7 +73,6 @@ inBaseOutlinerView.prototype =
   performAction: function(aAction) {},
   performActionOnRow: function(aAction, aRow) {},
   performActionOnCell: function(aAction, aRow, aColId) {},
-  isSeparator: function(aIndex) {},
   
   
   // extra utility stuff

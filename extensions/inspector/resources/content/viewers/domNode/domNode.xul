@@ -72,7 +72,7 @@
           <splitter class="tree-splitter"/>
           <outlinercol id="colNodeValue" label="nodeValue" persist="width,hidden,ordinal" flex="1"/>
         </outlinercols>
-        <outlinerbody id="olAttrBody" flex="1" context="ppAttrContext"/>
+        <outlinerchildren id="olAttrBody" context="ppAttrContext"/>
       </outliner>
 
     </vbox>

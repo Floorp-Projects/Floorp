@@ -316,7 +316,7 @@ function onCancel()
 
 function onDblClick(e) {
   var t = e.originalTarget;
-  if (t.localName != "outlinerbody")
+  if (t.localName != "outlinerchildren")
     return;
 
   openSelectedFile();
@@ -454,7 +454,7 @@ function onFileSelected(file) {
     }
   }
 
-  okButton.disabled = (textField.value != "");
+  okButton.disabled = (textInput.value != "");
 }
 
 function onTextFieldFocus() {

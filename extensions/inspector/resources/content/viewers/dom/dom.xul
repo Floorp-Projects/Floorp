@@ -89,6 +89,6 @@
       <splitter class="tree-splitter"/>
       <outlinercol id="col@class" label="class" persist="width,hidden,ordinal" flex="1"/>
     </outlinercols>
-    <outlinerbody id="trDOMOutlinerBody" flex="1" context="ppDOMContext"/>
+    <outlinerchildren id="trDOMOutlinerBody" context="ppDOMContext"/>
   </outliner>
 </page>

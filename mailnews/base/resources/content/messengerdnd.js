@@ -339,6 +339,9 @@ function BeginDragFolderOutliner(event)
 {
     debugDump("BeginDragFolderOutliner\n");
 
+    if (event.originalTarget.localName != "outlinerchildren")
+      return;
+
     var folderOutliner = GetFolderOutliner();
     var row = {};
     var col = {};

@@ -124,11 +124,9 @@
       </xul:outlinercols>
       <xul:outlinerrows class="select-outlinerrows outliner-rows" flex="1">
         <xul:hbox flex="1" class="outliner-bodybox">
-          <xul:outlinerbody flex="1" class="select-outlinerbody">
-            <xul:outlinerchildren>
-              <children/>
-            </xul:outlinerchildren>
-          </xul:outlinerbody>
+          <xul:outlinerchildren class="select-outlinerbody">
+            <children/>
+          </xul:outlinerchildren>
         </xul:hbox>
         <xul:scrollbar orient="vertical" class="outliner-scrollbar"/>
       </xul:outlinerrows>

@@ -40,39 +40,39 @@
 
 /* :::::::: node type color coding :::::::: */
 
-outlinerbody:-moz-outliner-cell-text(ELEMENT_NODE) {
+outlinerchildren:-moz-outliner-cell-text(ELEMENT_NODE) {
   color: #000000;
 }
 
-outlinerbody:-moz-outliner-cell-text(ATTRIBUTE_NODE) {
+outlinerchildren:-moz-outliner-cell-text(ATTRIBUTE_NODE) {
   color: #556b2f;
 }
 
-outlinerbody:-moz-outliner-cell-text(CDATA_SECTION_NODE),
-outlinerbody:-moz-outliner-cell-text(TEXT_NODE) {
+outlinerchildren:-moz-outliner-cell-text(CDATA_SECTION_NODE),
+outlinerchildren:-moz-outliner-cell-text(TEXT_NODE) {
   color: #0000AA;
 }
 
-outlinerbody:-moz-outliner-cell-text(COMMENT_NODE) {
+outlinerchildren:-moz-outliner-cell-text(COMMENT_NODE) {
   color: #228b22;
 }
 
-outlinerbody:-moz-outliner-cell-text(anonymous) {
+outlinerchildren:-moz-outliner-cell-text(anonymous) {
   color: #ff0000;
 }
 
 
-outlinerbody:-moz-outliner-cell-text(selected, focus) {
+outlinerchildren:-moz-outliner-cell-text(selected, focus) {
   color: #FFFFFF;
 }
 
 /* :::::::: drag and drop insertion indicators :::::::: */
 
-outlinerbody:-moz-outliner-column(dnd-insert-before) {
+outlinerchildren:-moz-outliner-column(dnd-insert-before) {
   border-left: 2px solid #000000;
 }
 
-outlinerbody:-moz-outliner-column(dnd-insert-after) {
+outlinerchildren:-moz-outliner-column(dnd-insert-after) {
   border-right: 2px solid #000000;
 }
 

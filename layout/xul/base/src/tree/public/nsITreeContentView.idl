@@ -45,7 +45,7 @@ interface nsIOutlinerContentView : nsISupports
   /**
    * The element in the DOM which this view uses as root content.
    */
-  attribute nsIDOMElement root;
+  readonly attribute nsIDOMElement root;
 
   /**
    * Retrieve the content item associated with the specified index.

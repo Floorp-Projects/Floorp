@@ -136,7 +136,7 @@
           <outlinercol id="cmp-number" flex="1" label="Number"
             persist="hidden width"/>
         </outlinercols>
-        <outlinerbody id="project-body" flex="1"/>
+        <outlinerchildren id="project-body"/>
       </outliner>
 
     </vbox>
@@ -160,7 +160,7 @@
           <outlinercol id="ifc-number" flex="1" label="Number"
             persist="hidden width"/>
         </outlinercols>
-        <outlinerbody id="project-body" flex="1"/>
+        <outlinerchildren id="project-body"/>
       </outliner>
 
     </vbox>

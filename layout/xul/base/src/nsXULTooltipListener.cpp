@@ -252,11 +252,11 @@ nsXULTooltipListener::Init(nsIContent* aSourceNode, nsIRootBox* aRootBox)
   mSourceNode = aSourceNode;
   AddTooltipSupport(aSourceNode);
   
-  // if the target is an outlinerbody, we may have some special
+  // if the target is an outlinerchildren, we may have some special
   // case handling to do
   nsCOMPtr<nsIAtom> tag;
   mSourceNode->GetTag(*getter_AddRefs(tag));
-  mIsTargetOutliner = tag == nsXULAtoms::outlinerbody;
+  mIsTargetOutliner = tag == nsXULAtoms::outlinerchildren;
 
   static PRBool prefChangeRegistered = PR_FALSE;
 

@@ -1000,7 +1000,7 @@ function GetFolderNameFromUri(uri, outliner)
 {
 	var folderResource = RDF.GetResource(uri);
 
-	var db = outliner.outlinerBoxObject.outlinerBody.database;
+	var db = outliner.database;
 
 	var nameProperty = RDF.GetResource('http://home.netscape.com/NC-rdf#Name');
 

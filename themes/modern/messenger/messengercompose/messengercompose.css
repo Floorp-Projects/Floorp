@@ -226,24 +226,24 @@
 
 /* ::::: autocomplete icons ::::: */
 
-outlinerbody:-moz-outliner-cell-text(default-match) {
+outlinerchildren:-moz-outliner-cell-text(default-match) {
   margin: 2px -3px 2px 15px;
   border: none;
 }
 
-outlinerbody:-moz-outliner-image(local-abook) {
+outlinerchildren:-moz-outliner-image(local-abook) {
   margin: 2px -3px 2px 4px;
   border: none;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/myaddrbk.gif");
 }
 
-outlinerbody:-moz-outliner-image(remote-abook) {
+outlinerchildren:-moz-outliner-image(remote-abook) {
   margin: 2px -4px 2px 3px;
   border: none;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/directory.gif");
 }
 
-outlinerbody:-moz-outliner-image(remote-err) {
+outlinerchildren:-moz-outliner-image(remote-err) {
   margin: 2px -4px 2px 3px;
   border: none;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/directory-down.gif");

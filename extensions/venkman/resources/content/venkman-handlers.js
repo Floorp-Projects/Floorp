@@ -901,7 +901,7 @@ function con_sourceclick (e)
 {
     var target = e.originalTarget;
     
-    if (target.localName == "outlinerbody")
+    if (target.localName == "outlinerchildren")
     {
         var row = new Object();
         var colID = new Object();

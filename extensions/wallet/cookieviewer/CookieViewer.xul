@@ -53,7 +53,8 @@
           <label value="&div.cookiesonsystem.label;"/>
           <separator class="thin"/>
           <outliner id="cookiesOutliner" flex="1" style="height: 10em;" multiple="true"
-                    onkeypress="HandleCookieKeyPress(event)">
+                    onkeypress="HandleCookieKeyPress(event)"
+                    onselect="CookieSelected();">
             <outlinercols>
               <outlinercol id="domainCol" label="&treehead.cookiedomain.label;" flex="3"
                            onclick="CookieColumnSort('rawHost');"/>
@@ -61,7 +62,7 @@
               <outlinercol id="nameCol" label="&treehead.cookiename.label;" flex="7"
                            onclick="CookieColumnSort('name');"/>
             </outlinercols>
-            <outlinerbody flex="1" onselect="CookieSelected();"/>
+            <outlinerchildren/>
           </outliner>
           <groupbox>
             <caption label="&treehead.infoselected.label;"/>
@@ -118,7 +119,8 @@
           <description id="permissionsText" value="&div.bannedservers.label;"/>
           <separator class="thin"/>
           <outliner id="permissionsOutliner" flex="1" style="height: 10em;" multiple="true"
-                    onkeypress="HandlePermissionKeyPress(event)">
+                    onkeypress="HandlePermissionKeyPress(event)"
+                    onselect="PermissionSelected();">
             <outlinercols>
               <outlinercol id="siteCol" label="&treehead.sitename.label;" flex="5"
                            onclick="PermissionColumnSort('rawHost');"/>
@@ -126,7 +128,7 @@
               <outlinercol id="statusCol" label="&treehead.status.label;" flex="5"
                            onclick="PermissionColumnSort('capability');"/>
             </outlinercols>
-            <outlinerbody flex="1" onselect="PermissionSelected();"/>
+            <outlinerchildren/>
           </outliner>
           <hbox>
             <button id="removePermission" disabled="true" 

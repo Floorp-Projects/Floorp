@@ -89,6 +89,16 @@ nsBoxObject::~nsBoxObject(void)
 }
 
 NS_IMETHODIMP
+nsBoxObject::GetElement(nsIDOMElement** aResult)
+{
+  if (mContent)
+    mContent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aResult);
+  else
+    *aResult = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBoxObject::GetLayoutManager(nsIBoxLayoutManager** aResult)
 {
   *aResult = mLayoutManager;

@@ -30,7 +30,7 @@
           <splitter class="tree-splitter"/>
           <outlinercol id="colNodeValue" label="nodeValue" flex="1"/>
         </outlinercols>
-        <outlinerbody id="olbContent" flex="1"/>
+        <outlinerchildren id="olbContent"/>
       </outliner>
     </multipanel>
 
@@ -40,7 +40,7 @@
         <outlinercols>
           <outlinercol id="olcMethodName" flex="1"/>
         </outlinercols>
-        <outlinerbody id="olbMethods" flex="1" context="ppDOMContext"/>
+        <outlinerchildren id="olbMethods" context="ppDOMContext"/>
       </outliner>
     </multipanel>
   
@@ -55,7 +55,7 @@
           <outlinercols>
             <outlinercol id="olcPropName" label="Property" flex="1"/>
           </outlinercols>
-          <outlinerbody id="olbProps" flex="1" context="ppDOMContext"/>
+          <outlinerchildren id="olbProps" context="ppDOMContext"/>
         </outliner>
       </vbox>
     </multipanel>
@@ -67,7 +67,7 @@
           <outlinercol id="olcHandlerEvent" flex="1"/>
           <outlinercol id="olcHandlerPhase"/>
         </outlinercols>
-        <outlinerbody id="olbHandlers" flex="1" context="ppDOMContext"/>
+        <outlinerchildren id="olbHandlers" context="ppDOMContext"/>
       </outliner>
     </multipanel>
   
@@ -77,7 +77,7 @@
           <outlinercol id="olcResourceType" flex="1"/>
           <outlinercol id="olcResourceSrc" flex="2"/>
         </outlinercols>
-        <outlinerbody id="olbResources" flex="1" context="ppDOMContext"/>
+        <outlinerchildren id="olbResources" context="ppDOMContext"/>
       </outliner>
     </multipanel>
 

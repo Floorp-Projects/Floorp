@@ -54,11 +54,11 @@
 
 /* ::::: file/directory items ::::: */
 
-outlinerbody:-moz-outliner-image(FilenameColumn, directory) {
+outlinerchildren:-moz-outliner-image(FilenameColumn, directory) {
   list-style-image: url("chrome://global/skin/filepicker/dir-closed.gif");
 }
 
-outlinerbody:-moz-outliner-image(FilenameColumn, file) {
+outlinerchildren:-moz-outliner-image(FilenameColumn, file) {
   list-style-image: url("chrome://global/skin/filepicker/blank.gif");
 }
 

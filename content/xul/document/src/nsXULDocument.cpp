@@ -6382,7 +6382,7 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
     // Flag "dont-build-content" is used to identify that we shouldn't build
     // content and just attach the outliner builder view.
     if ((nameSpaceID == kNameSpaceID_XUL) &&
-        (baseTag.get() == nsXULAtoms::outlinerbody)) {
+        (baseTag.get() == nsXULAtoms::outliner)) {
         nsAutoString flags;
         aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::flags, flags);
         if (flags.Find(NS_LITERAL_STRING("dont-build-content").get()) >= 0) {
@@ -6399,6 +6399,19 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
             nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
             if (xuldoc)
                 xuldoc->SetTemplateBuilderFor(aElement, builder);
+
+            nsCOMPtr<nsIContent> bodyContent;
+            nsXULContentUtils::FindChildByTag(aElement, kNameSpaceID_XUL, nsXULAtoms::outlinerchildren, getter_AddRefs(bodyContent));
+            if (!bodyContent) {
+                nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(doc);
+                if (domdoc) {
+                    nsCOMPtr<nsIDOMElement> bodyElement;
+                    domdoc->CreateElement(NS_LITERAL_STRING("outlinerchildren"),
+                                          getter_AddRefs(bodyElement));
+                    bodyContent = do_QueryInterface(bodyElement);
+                    aElement->AppendChildTo(bodyContent, PR_FALSE, PR_TRUE);
+                }
+            }
 
             return NS_OK;
         }

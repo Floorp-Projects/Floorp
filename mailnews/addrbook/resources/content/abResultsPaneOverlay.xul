@@ -50,7 +50,8 @@
 <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abDragDrop.js"/>
 
 <outliner id="abResultsOutliner" flex="1" enableColumnDrag="true" class="plain"
-    onclick="AbResultsPaneOnClick(event);">
+    onclick="AbResultsPaneOnClick(event);"
+    onselect="this.view.selectionChanged();">
 
   <outlinercols id="abResultsOutlinerCols">
   <!-- these column ids must match up to the mork column names, except for GeneratedName, see nsIAddrDatabase.idl -->
@@ -106,9 +107,7 @@
     hiddenbydefault="true"
     flex="1" label="&Department.label;"/>
   </outlinercols>
-  <outlinerbody flex="1"
-    onselect="this.parentNode.outlinerBoxObject.view.selectionChanged();"
-    ondraggesture="nsDragAndDrop.startDrag(event, abResultsPaneObserver);" />
+  <outlinerchildren ondraggesture="nsDragAndDrop.startDrag(event, abResultsPaneObserver);"/>
 </outliner>
 
 </overlay>

@@ -79,7 +79,7 @@
     hiddenbydefault="true"
     flex="1" label="&PrimaryEmail.label;"/>
   </outlinercols>
-  <outlinerbody flex="1" />
+  <outlinerchildren/>
 </outliner>
 
   </vbox>

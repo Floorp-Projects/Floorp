@@ -40,7 +40,7 @@ function ThreadPaneOnClick(event)
     if (t.localName == "outlinercol") {
        HandleColumnClick(t.id);
     }
-    else if (event.detail == 2 && t.localName == "outlinerbody") {
+    else if (event.detail == 2 && t.localName == "outlinerchildren") {
        var row = new Object;
        var colID = new Object;
        var childElt = new Object;

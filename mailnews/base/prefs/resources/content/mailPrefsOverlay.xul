@@ -45,7 +45,7 @@
 
   <!-- category tree entries for mail/news -->
   <outlinerchildren id="panelChildren">
-    <outlineritem container="true" open="true" id="mailnews" position="3">
+    <outlineritem container="true" id="mailnews" position="3">
       <outlinerrow>       
         <outlinercell url="chrome://messenger/content/pref-mailnews.xul" label="&mail.label;"/> 
       </outlinerrow>

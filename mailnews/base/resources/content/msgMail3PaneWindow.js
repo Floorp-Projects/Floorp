@@ -685,9 +685,9 @@ function OnLoadFolderPane()
     database.AddDataSource(accountManagerDataSource);
     database.AddDataSource(folderDataSource);
     var folderOutliner = GetFolderOutliner();
-    folderOutliner.outlinerBoxObject.outlinerBody.setAttribute("ref", "msgaccounts:/");
+    folderOutliner.setAttribute("ref", "msgaccounts:/");
 
-    var folderOutlinerBuilder = folderOutliner.outlinerBoxObject.outlinerBody.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+    var folderOutlinerBuilder = folderOutliner.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
     folderOutlinerBuilder.addObserver(folderObserver);
     folderOutliner.addEventListener("click",FolderPaneOnClick,true);
 }
@@ -724,7 +724,7 @@ function OnLoadThreadPane()
 function GetFolderDatasource()
 {
     var folderOutliner = GetFolderOutliner();
-    return folderOutliner.outlinerBoxObject.outlinerBody.database;
+    return folderOutliner.database;
 }
 
 /* Functions for accessing particular parts of the window*/
@@ -1140,20 +1140,20 @@ function GetDBView()
 
 function GetFolderResource(outliner, index)
 {
-    var outlinerBuilder = outliner.outlinerBoxObject.outlinerBody.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+    var outlinerBuilder = outliner.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
     return outlinerBuilder.getResourceAtIndex(index);
 }
 
 function GetFolderIndex(outliner, resource)
 {
-    var outlinerBuilder = outliner.outlinerBoxObject.outlinerBody.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+    var outlinerBuilder = outliner.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
     return outlinerBuilder.getIndexOfResource(resource);
 }
 
 function GetFolderAttribute(outliner, source, attribute)
 {
     var property = RDF.GetResource("http://home.netscape.com/NC-rdf#" + attribute);
-    var target = outliner.outlinerBoxObject.outlinerBody.database.GetTarget(source, property, true);
+    var target = outliner.database.GetTarget(source, property, true);
     if (target)
         target = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
     return target;

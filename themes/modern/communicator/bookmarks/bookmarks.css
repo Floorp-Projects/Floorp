@@ -46,20 +46,20 @@
 /* ::::: bookmark items ::::: */
 
 .bookmark-item,
-outlinerbody:-moz-outliner-image(Name) {
+outlinerchildren:-moz-outliner-image(Name) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
 }
 
 .bookmark-item[container="true"],
-outlinerbody:-moz-outliner-image(Name, container) {
+outlinerchildren:-moz-outliner-image(Name, container) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
 }
 
 .bookmark-item[open="true"],
-outlinerbody:-moz-outliner-image(Name, open) {
+outlinerchildren:-moz-outliner-image(Name, open) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
 }
 
-outlinerbody:-moz-outliner-image(Name) {
+outlinerchildren:-moz-outliner-image(Name) {
   padding-right: 2px;
 }

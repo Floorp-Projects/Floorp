@@ -56,8 +56,9 @@
       <vbox id="savedsignons" flex="1">
           <description>&spiel.signonsstored.label;</description>
           <separator class="thin"/>
-          <outliner id="signonsOutliner" flex="1" style="height: 10em;" multiple="true"
-                    onkeypress="HandleSignonKeyPress(event)">
+          <outliner id="signonsOutliner" flex="1" style="height: 10em;"
+                    onkeypress="HandleSignonKeyPress(event)"
+                    onselect="SignonSelected();">
             <outlinercols>
               <outlinercol id="siteCol" label="&treehead.site.label;" flex="5"
                            onclick="SignonColumnSort('host');"/>
@@ -65,7 +66,7 @@
               <outlinercol id="userCol" label="&treehead.username.label;" flex="5"
                            onclick="SignonColumnSort('user');"/>
             </outlinercols>
-            <outlinerbody flex="1" onselect="SignonSelected();"/>
+            <outlinerchildren/>
           </outliner>
           <separator class="thin"/>
           <hbox>
@@ -80,13 +81,14 @@
       <vbox id="rejectedsites" flex="1">
           <description>&spiel.signonsnotstored.label;</description>
           <separator class="thin"/>
-          <outliner id="rejectsOutliner" flex="1" style="height: 10em;" multiple="true"
-                    onkeypress="HandleRejectKeyPress(event)">
+          <outliner id="rejectsOutliner" flex="1" style="height: 10em;"
+                    onkeypress="HandleRejectKeyPress(event)"
+                    onselect="RejectSelected();">
             <outlinercols>
               <outlinercol id="rejectCol" label="&treehead.site.label;" flex="5"
                            onclick="RejectColumnSort('host');"/>
             </outlinercols>
-            <outlinerbody flex="1" onselect="RejectSelected();"/>
+            <outlinerchildren/>
           </outliner>
           <separator class="thin"/>
           <hbox>
@@ -102,12 +104,13 @@
           <description>&spiel.nopreview.label;</description>
           <separator class="thin"/>
           <outliner id="nopreviewsOutliner" flex="1" style="height: 10em;" multiple="true"
-                    onkeypress="HandleNopreviewKeyPress(event)">
+                    onkeypress="HandleNopreviewKeyPress(event)"
+                    onselect="NopreviewSelected();">
             <outlinercols>
               <outlinercol id="nopreviewCol" label="&treehead.site.label;" flex="5"
                            onclick="NopreviewColumnSort('host');"/>
             </outlinercols>
-            <outlinerbody flex="1" onselect="NopreviewSelected();"/>
+            <outlinerchildren/>
           </outliner>
           <separator class="thin"/>
           <hbox>
@@ -123,12 +126,13 @@
           <description>&spiel.nocapture.label;</description>
           <separator class="thin"/>
           <outliner id="nocapturesOutliner" flex="1" style="height: 10em;" multiple="true"
-                    onkeypress="HandleNocaptureKeyPress(event)">
+                    onkeypress="HandleNocaptureKeyPress(event)"
+                    onselect="NocaptureSelected();">
             <outlinercols>
               <outlinercol id="nocaptureCol" label="&treehead.site.label;" flex="5"
                            onclick="NocaptureColumnSort('host');"/>
             </outlinercols>
-            <outlinerbody flex="1" onselect="NocaptureSelected();"/>
+            <outlinerchildren/>
           </outliner>
           <separator class="thin"/>
           <hbox>

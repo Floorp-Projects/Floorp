@@ -59,7 +59,7 @@ Seth Spitzer <sspitzer@netscape.com>
         persist="hidden width sortActive sortDirection"/>
   </outlinercols>
 
-  <outlinerbody id="configOutlinerBody" flex="1" />
+  <outlinerchildren id="configOutlinerBody"/>
 </outliner>
 </window>
 

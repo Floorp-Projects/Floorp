@@ -307,7 +307,7 @@ function SearchOnClick(event)
 
   var t = event.originalTarget;
 
-  if (t.localName == "outlinerbody") {
+  if (t.localName == "outlinerchildren") {
     var row = new Object;
     var colID = new Object;
     var childElt = new Object;

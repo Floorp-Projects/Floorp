@@ -27,18 +27,18 @@
     font-family: monospace;
 }
 
-outlinerbody:-moz-outliner-image(cmp-name,component) {
+outlinerchildren:-moz-outliner-image(cmp-name,component) {
     list-style-image: url("chrome://cview/skin/images/component.gif");
 }
 
-outlinerbody:-moz-outliner-image(cmp-name,interface) {
+outlinerchildren:-moz-outliner-image(cmp-name,interface) {
     list-style-image: url("chrome://cview/skin/images/interface.gif");
 }
 
-outlinerbody:-moz-outliner-image(cmp-name,method) {
+outlinerchildren:-moz-outliner-image(cmp-name,method) {
     list-style-image: url("chrome://cview/skin/images/method.gif");
 }
 
-outlinerbody:-moz-outliner-image(ifc-name) {
+outlinerchildren:-moz-outliner-image(ifc-name) {
     list-style-image: url("chrome://cview/skin/images/interface.gif");
 }

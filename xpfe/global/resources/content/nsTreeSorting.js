@@ -65,7 +65,7 @@ function SortInNewDirection(direction)
 function SortColumn(columnID)
 {
   var column = document.getElementById(columnID);
-  column.parentNode.outlinerBoxObject.view.cycleHeader(columnID, column);
+  column.parentNode.parentNode.outlinerBoxObject.view.cycleHeader(columnID, column);
 }
 
 // search over the columns to find the first one with an active sort

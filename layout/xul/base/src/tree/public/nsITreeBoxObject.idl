@@ -126,6 +126,7 @@ interface nsIOutlinerBoxObject : nsISupports
   void invalidateColumn(in wstring colID);
   void invalidateRow(in long index);
   void invalidateCell(in long row, in wstring colID);
+  void invalidatePrimaryCell(in long row);
   void invalidateRange(in long startIndex, in long endIndex);
   void invalidateScrollbar();
 

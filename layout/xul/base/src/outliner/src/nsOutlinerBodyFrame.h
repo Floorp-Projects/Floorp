@@ -184,6 +184,7 @@ public:
   PRBool IsCycler() { return mIsCyclerCol; };
 
   PRInt32 GetCropStyle() { return mCropStyle; };
+  PRInt32 GetTextAlignment() { return mTextAlignment; };
 
   PRInt32 GetColIndex() { return mColIndex; };
 };
@@ -387,8 +388,8 @@ protected:
   // Our internal scroll method, used by all the public scroll methods.
   nsresult ScrollInternal(PRInt32 aRow);
   
-  // convert pixels, probably from an event, into twips in our coordinate space
-  void AdjustEventCoordsToBoxCoordSpace ( PRInt32 inX, PRInt32 inY, PRInt32* outX, PRInt32* outY ) ;
+  // Convert pixels, probably from an event, into twips in our coordinate space.
+  void AdjustEventCoordsToBoxCoordSpace (PRInt32 aX, PRInt32 aY, PRInt32* aResultX, PRInt32* aResultY);
 
   // Convert a border style into line style.
   nsLineStyle ConvertBorderStyleToLineStyle(PRUint8 aBorderStyle);
@@ -402,6 +403,12 @@ protected:
   void GetCellWidth(PRInt32 aRow, const nsAString& aColID, nscoord& aDesiredSize,
                     nscoord& aCurrentSize);
   nscoord CalcMaxRowWidth(nsBoxLayoutState& aState);
+
+  // Calc the row and above/below/on status given where the mouse currently is hovering.
+  void ComputeDropPosition(nsIDOMEvent* aEvent, PRInt32* aRow, PRInt16* aOrient);
+
+  // Calculate if we're in the region in which we want to auto-scroll the outliner.
+  PRBool IsInDragScrollRegion (nsIDOMEvent* aEvent, PRBool* aScrollUp);
 
 protected: // Data Members
   // Our cached pres context.
@@ -448,41 +455,29 @@ protected: // Data Members
 
   // A scratch array used when looking up cached style contexts.
   nsCOMPtr<nsISupportsArray> mScratchArray;
-  
-  enum { kIllegalRow = -1 } ;
-  enum { kDrawFeedback = PR_TRUE, kUndrawFeedback = PR_FALSE } ;
-  enum DropOrientation { kNoOrientation, kBeforeRow = 1, kOnRow = 2, kAfterRow = 3 } ;
-  
-    // draw (or undraw) feedback at the given location with the given orientation
-  void DrawDropFeedback ( PRInt32 inDropRow, DropOrientation inDropOrient, PRBool inDrawFeedback ) ;
-  
-    // calc the row and above/below/on status given where the mouse currently is hovering
-  void ComputeDropPosition ( nsIDOMEvent* inEvent, PRInt32* outRow, DropOrientation* outOrient ) ;
 
-    // calculate if we're in the region in which we want to auto-scroll the outliner
-  PRBool IsInDragScrollRegion ( nsIDOMEvent* inEvent, PRBool* outScrollUp ) ;
-  
-  PRInt32 mDropRow;               // the row the mouse is hovering over during a drop
-  DropOrientation mDropOrient;    // where we want to draw feedback (above/below/on this row) if allowed
   // Whether or not we're currently focused.
   PRPackedBool mFocused;
 
   // An indicator that columns have changed and need to be rebuilt
   PRPackedBool mColumnsDirty;
 
-  PRPackedBool mDropAllowed;            // if the drop is actually allowed here or not. we draw if this is true
-  PRPackedBool mAlreadyUndrewDueToScroll;   // we undraw early during auto-scroll; did we do this already?
+  // If the drop is actually allowed here or not.
+  PRPackedBool mDropAllowed;
 
   // Do we have a fixed number of onscreen rows?
   PRPackedBool mHasFixedRowCount;
 
   PRPackedBool mVerticalOverflow;
 
-  // timer for opening spring-loaded folders
+  // The row the mouse is hovering over during a drop.
+  PRInt32 mDropRow;
+  // Where we want to draw feedback (above/on this row/below) if allowed.
+  PRInt16 mDropOrient;
+  nsCOMPtr<nsIDragSession> mDragSession;
+
+  // Timer for opening spring-loaded folders.
   nsCOMPtr<nsITimer> mOpenTimer;
   PRInt32 mOpenTimerRow;
 
-  nsCOMPtr<nsIDragSession> mDragSession;
-  nsCOMPtr<nsIRenderingContext> mRenderingContext;
-  
 }; // class nsOutlinerBodyFrame

@@ -79,7 +79,7 @@
                 persist="hidden width"/>
             </outlinercols>
 
-            <outlinerbody id="project-body" flex="1"/>
+            <outlinerchildren id="project-body"/>
           </outliner>
 
           <splitter collapse="before"><grippy/></splitter>
@@ -100,7 +100,7 @@
               <outlinercol flex="1" id="script-line-extent"
                 label="&ScriptCol2.header;" persist="hidden width" hidden="true"/>
             </outlinercols>
-            <outlinerbody id="script-list-body" flex="1"/>
+            <outlinerchildren id="script-list-body"/>
           </outliner>
         </vbox>
 
@@ -120,7 +120,7 @@
             <splitter class="tree-splitter"/>
             <outlinercol id="source-line-text" flex="90" persist="hidden width"/>
           </outlinercols>
-          <outlinerbody id="source-outliner-body" flex="1"/>
+          <outlinerchildren id="source-outliner-body"/>
         </outliner>
 
       </hbox>
@@ -151,7 +151,7 @@
               label="&StackCol3.header;" hidden="true"/>
           </outlinercols>
 
-          <outlinerbody id="stack-body" flex="1"/>
+          <outlinerchildren id="stack-body"/>
         </outliner>
 
         <splitter collapse="after" persist="left"><grippy/></splitter>

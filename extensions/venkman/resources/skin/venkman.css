@@ -147,171 +147,171 @@
     list-style-image: url("chrome://venkman/skin/images/step-out-act.png");
 }
 
-outlinerbody:-moz-outliner-cell(breakpoint-col) {
+outlinerchildren:-moz-outliner-cell(breakpoint-col) {
     background: #CCCCCC;
     border-right: 1px grey solid;
 }
 
-outlinerbody:-moz-outliner-cell(source-line-number) {
+outlinerchildren:-moz-outliner-cell(source-line-number) {
     border-right: 2px #CCCCCC solid;
     text-align: right;
     background: #EEEEEE;
 }
 
-outlinerbody:-moz-outliner-row(current-line, selected) {
+outlinerchildren:-moz-outliner-row(current-line, selected) {
     background: green !important;
 }
 
-outlinerbody:-moz-outliner-cell(source-line-number, highlight-start),
-outlinerbody:-moz-outliner-cell(source-line-number, highlight-range),
-outlinerbody:-moz-outliner-cell(source-line-number, highlight-end) {
+outlinerchildren:-moz-outliner-cell(source-line-number, highlight-start),
+outlinerchildren:-moz-outliner-cell(source-line-number, highlight-range),
+outlinerchildren:-moz-outliner-cell(source-line-number, highlight-end) {
     border-right: 2px #919bd6 solid;
     background: #d5d5e0;
 }
 
-outlinerbody:-moz-outliner-cell(source-line-text, highlight-start),
-outlinerbody:-moz-outliner-cell(source-line-text, highlight-range),
-outlinerbody:-moz-outliner-cell(source-line-text, highlight-end) {
+outlinerchildren:-moz-outliner-cell(source-line-text, highlight-start),
+outlinerchildren:-moz-outliner-cell(source-line-text, highlight-range),
+outlinerchildren:-moz-outliner-cell(source-line-text, highlight-end) {
     border-left: 1px black solid;
     background: #EEEEEE;
 }
 
-outlinerbody:-moz-outliner-cell(source-line-text, selected),
-outlinerbody:-moz-outliner-cell(source-line-number, selected) {
+outlinerchildren:-moz-outliner-cell(source-line-text, selected),
+outlinerchildren:-moz-outliner-cell(source-line-number, selected) {
     border-left: inherit !important;
     background: inherit !important;
 }
 
-outlinerbody:-moz-outliner-row {
+outlinerchildren:-moz-outliner-row {
     border: 0px;
 }
 
-outlinerbody:-moz-outliner-cell(source-line-number, current-line),
-outlinerbody:-moz-outliner-cell(source-line-text, current-line) {
+outlinerchildren:-moz-outliner-cell(source-line-number, current-line),
+outlinerchildren:-moz-outliner-cell(source-line-text, current-line) {
     background: #ecef34;
 }
 
-outlinerbody:-moz-outliner-image(breakpoint-col, code) {
+outlinerchildren:-moz-outliner-image(breakpoint-col, code) {
     list-style-image: url("chrome://venkman/skin/images/code-line.gif");
 }
 
-outlinerbody:-moz-outliner-image(breakpoint-col, code, prettyprint) {
+outlinerchildren:-moz-outliner-image(breakpoint-col, code, prettyprint) {
     list-style-image: url("chrome://venkman/skin/images/code-line-dis.gif");
 }
 
-outlinerbody:-moz-outliner-image(breakpoint-col, breakpoint) {
+outlinerchildren:-moz-outliner-image(breakpoint-col, breakpoint) {
     list-style-image: url("chrome://venkman/skin/images/breakpoint-line.gif");
 }
 
-outlinerbody:-moz-outliner-image(current-frame-flag){
+outlinerchildren:-moz-outliner-image(current-frame-flag){
     list-style-image: url("chrome://venkman/skin/images/current-frame.gif");
 }
 
-outlinerbody:-moz-outliner-cell(script-name,fn-guessed) {
+outlinerchildren:-moz-outliner-cell(script-name,fn-guessed) {
     color: red;
     font-style: italic;
 }
 
-outlinerbody:-moz-outliner-image(project-col-0,pj-blacklist){
+outlinerchildren:-moz-outliner-image(project-col-0,pj-blacklist){
     list-style-image: url("chrome://venkman/skin/images/proj-blacklist.png");
 }
 
-outlinerbody:-moz-outliner-image(project-col-0,pj-bl-item){
+outlinerchildren:-moz-outliner-image(project-col-0,pj-bl-item){
     list-style-image: url("chrome://venkman/skin/images/proj-bl-item.png");
 }
 
-outlinerbody:-moz-outliner-image(project-col-0,pj-breakpoints){
+outlinerchildren:-moz-outliner-image(project-col-0,pj-breakpoints){
     list-style-image: url("chrome://venkman/skin/images/proj-breakpoints.png");
 }
 
-outlinerbody:-moz-outliner-image(project-col-0,pj-breakpoint){
+outlinerchildren:-moz-outliner-image(project-col-0,pj-breakpoint){
     list-style-image: url("chrome://venkman/skin/images/proj-breakpoint.png");
 }
 
-outlinerbody:-moz-outliner-image(script-name){
+outlinerchildren:-moz-outliner-image(script-name){
     list-style-image: url("chrome://venkman/skin/images/file-function.png");
 }
 
-outlinerbody:-moz-outliner-image(script-name,has-bp){
+outlinerchildren:-moz-outliner-image(script-name,has-bp){
     list-style-image: url("chrome://venkman/skin/images/file-function-bp.png");
 }
 
-outlinerbody:-moz-outliner-image(script-name,ft-unk){
+outlinerchildren:-moz-outliner-image(script-name,ft-unk){
     list-style-image: url("chrome://venkman/skin/images/file-unknown.png");
 }
 
-outlinerbody:-moz-outliner-image(script-name,ft-js){
+outlinerchildren:-moz-outliner-image(script-name,ft-js){
     list-style-image: url("chrome://venkman/skin/images/file-js.png");
 }
 
-outlinerbody:-moz-outliner-image(script-name,ft-html){
+outlinerchildren:-moz-outliner-image(script-name,ft-html){
     list-style-image: url("chrome://venkman/skin/images/file-html.png");
 }
 
-outlinerbody:-moz-outliner-image(script-name,ft-xul){
+outlinerchildren:-moz-outliner-image(script-name,ft-xul){
     list-style-image: url("chrome://venkman/skin/images/file-xul.png");
 }
 
-outlinerbody:-moz-outliner-image(script-name,ft-xml){
+outlinerchildren:-moz-outliner-image(script-name,ft-xml){
     list-style-image: url("chrome://venkman/skin/images/file-xml.png");
 }
 
-outlinerbody:-moz-outliner-image(script-name,ft-unk,has-bp){
+outlinerchildren:-moz-outliner-image(script-name,ft-unk,has-bp){
     list-style-image: url("chrome://venkman/skin/images/file-unknown-bp.png");
 }
 
-outlinerbody:-moz-outliner-image(script-name,ft-js,has-bp){
+outlinerchildren:-moz-outliner-image(script-name,ft-js,has-bp){
     list-style-image: url("chrome://venkman/skin/images/file-js-bp.png");
 }
 
-outlinerbody:-moz-outliner-image(script-name,ft-html,has-bp){
+outlinerchildren:-moz-outliner-image(script-name,ft-html,has-bp){
     list-style-image: url("chrome://venkman/skin/images/file-html-bp.png");
 }
 
-outlinerbody:-moz-outliner-image(script-name,ft-xul,has-bp){
+outlinerchildren:-moz-outliner-image(script-name,ft-xul,has-bp){
     list-style-image: url("chrome://venkman/skin/images/file-xul-bp.png");
 }
 
-outlinerbody:-moz-outliner-image(script-name,ft-xml,has-bp){
+outlinerchildren:-moz-outliner-image(script-name,ft-xml,has-bp){
     list-style-image: url("chrome://venkman/skin/images/file-xml-bp.png");
 }
 
-outlinerbody:-moz-outliner-image(stack-col-0,w-stack){
+outlinerchildren:-moz-outliner-image(stack-col-0,w-stack){
     list-style-image: url("chrome://venkman/skin/images/watch-stack.png");
 }
 
-outlinerbody:-moz-outliner-image(stack-col-0,w-frame){
+outlinerchildren:-moz-outliner-image(stack-col-0,w-frame){
     list-style-image: url("chrome://venkman/skin/images/watch-frame.png");
 }
 
-outlinerbody:-moz-outliner-image(stack-col-0,w-void){
+outlinerchildren:-moz-outliner-image(stack-col-0,w-void){
     list-style-image: url("chrome://venkman/skin/images/watch-void.png");
 }
 
-outlinerbody:-moz-outliner-image(stack-col-0,w-null){
+outlinerchildren:-moz-outliner-image(stack-col-0,w-null){
     list-style-image: url("chrome://venkman/skin/images/watch-null.png");
 }
 
-outlinerbody:-moz-outliner-image(stack-col-0,w-bool){
+outlinerchildren:-moz-outliner-image(stack-col-0,w-bool){
     list-style-image: url("chrome://venkman/skin/images/watch-bool.png");
 }
 
-outlinerbody:-moz-outliner-image(stack-col-0,w-int){
+outlinerchildren:-moz-outliner-image(stack-col-0,w-int){
     list-style-image: url("chrome://venkman/skin/images/watch-int.png");
 }
 
-outlinerbody:-moz-outliner-image(stack-col-0,w-double){
+outlinerchildren:-moz-outliner-image(stack-col-0,w-double){
     list-style-image: url("chrome://venkman/skin/images/watch-double.png");
 }
 
-outlinerbody:-moz-outliner-image(stack-col-0,w-string){
+outlinerchildren:-moz-outliner-image(stack-col-0,w-string){
     list-style-image: url("chrome://venkman/skin/images/watch-string.png");
 }
 
-outlinerbody:-moz-outliner-image(stack-col-0,w-function){
+outlinerchildren:-moz-outliner-image(stack-col-0,w-function){
     list-style-image: url("chrome://venkman/skin/images/watch-function.png");
 }
 
-outlinerbody:-moz-outliner-image(stack-col-0,w-object){
+outlinerchildren:-moz-outliner-image(stack-col-0,w-object){
     list-style-image: url("chrome://venkman/skin/images/watch-object.png");
 }

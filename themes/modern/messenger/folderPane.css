@@ -45,122 +45,122 @@
 
 /* ::::: mail folder ::::: */
 
-outlinerbody:-moz-outliner-image(folderNameCol) {
+outlinerchildren:-moz-outliner-image(folderNameCol) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-closed.gif");
 }
 
-outlinerbody:-moz-outliner-image(folderNameCol, newMessages-true) {
+outlinerchildren:-moz-outliner-image(folderNameCol, newMessages-true) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-new.gif");
 }
 
 /* ..... Inbox ..... */
 
-outlinerbody:-moz-outliner-image(folderNameCol, specialFolder-Inbox) {
+outlinerchildren:-moz-outliner-image(folderNameCol, specialFolder-Inbox) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-inbox.gif");
 }
 
-outlinerbody:-moz-outliner-image(folderNameCol, specialFolder-Inbox, newMessages-true) {
+outlinerchildren:-moz-outliner-image(folderNameCol, specialFolder-Inbox, newMessages-true) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-inbox-new.gif");
 }
 
 /* ..... Sent ..... */
 
-outlinerbody:-moz-outliner-image(folderNameCol, specialFolder-Sent) {
+outlinerchildren:-moz-outliner-image(folderNameCol, specialFolder-Sent) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-sent.gif");
 }
 
 /* ..... Drafts ..... */
 
-outlinerbody:-moz-outliner-image(folderNameCol, specialFolder-Drafts) {
+outlinerchildren:-moz-outliner-image(folderNameCol, specialFolder-Drafts) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-draft.gif");
 }
 
 /* ..... Templates ..... */
 
-outlinerbody:-moz-outliner-image(folderNameCol, specialFolder-Templates) {
+outlinerchildren:-moz-outliner-image(folderNameCol, specialFolder-Templates) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-template.gif");
 }
 
 /* ..... Unsent Messages ..... */
 
-outlinerbody:-moz-outliner-image(folderNameCol, specialFolder-Unsent Messages) {
+outlinerchildren:-moz-outliner-image(folderNameCol, specialFolder-Unsent Messages) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-outbox.gif");
 }
 
 /* ..... Trash ..... */
 
-outlinerbody:-moz-outliner-image(folderNameCol, specialFolder-Trash) {
+outlinerchildren:-moz-outliner-image(folderNameCol, specialFolder-Trash) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-trash.gif");
 }
 
 /* ..... Server Folders ..... */
 
-outlinerbody:-moz-outliner-image(folderNameCol, isServer-true) {
+outlinerchildren:-moz-outliner-image(folderNameCol, isServer-true) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/server-mail.gif");
 }
 
-outlinerbody:-moz-outliner-image(folderNameCol, biffState-NewMail, isServer-true) {
+outlinerchildren:-moz-outliner-image(folderNameCol, biffState-NewMail, isServer-true) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/server-mail-new.gif");
 }
 
-outlinerbody:-moz-outliner-image(folderNameCol, isServer-true, serverType-pop3, isSecure-true) {
+outlinerchildren:-moz-outliner-image(folderNameCol, isServer-true, serverType-pop3, isSecure-true) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.gif");
 }
 
-outlinerbody:-moz-outliner-image(folderNameCol, isServer-true, serverType-imap, isSecure-true) {
+outlinerchildren:-moz-outliner-image(folderNameCol, isServer-true, serverType-imap, isSecure-true) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.gif");
 }
 
-outlinerbody:-moz-outliner-image(folderNameCol, isServer-true, serverType-none) {
+outlinerchildren:-moz-outliner-image(folderNameCol, isServer-true, serverType-none) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/server-local.gif");
 }
 
 /* ..... News Folders ..... */
 
-outlinerbody:-moz-outliner-image(folderNameCol, serverType-nntp) {
+outlinerchildren:-moz-outliner-image(folderNameCol, serverType-nntp) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.gif");
 }
 
 /* ..... News Servers ..... */
 
-outlinerbody:-moz-outliner-image(folderNameCol, isServer-true, serverType-nntp) {
+outlinerchildren:-moz-outliner-image(folderNameCol, isServer-true, serverType-nntp) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/server-news.gif");
 }
 
-outlinerbody:-moz-outliner-image(folderNameCol, isServer-true, serverType-nntp, isSecure-true) {
+outlinerchildren:-moz-outliner-image(folderNameCol, isServer-true, serverType-nntp, isSecure-true) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/server-news-lock.gif");
 }
 
 /* ::::: All Servers ::::: */
 
-outlinerbody:-moz-outliner-cell-text(closed, subfoldersHaveUnreadMessages-true)
+outlinerchildren:-moz-outliner-cell-text(closed, subfoldersHaveUnreadMessages-true)
 {
   font-weight: bold;
 }
 
-outlinerbody:-moz-outliner-cell-text(folderNameCol, isServer-true),
-outlinerbody:-moz-outliner-cell-text(hasUnreadMessages-true) {
+outlinerchildren:-moz-outliner-cell-text(folderNameCol, isServer-true),
+outlinerchildren:-moz-outliner-cell-text(hasUnreadMessages-true) {
   font-weight: bold;
 }
 
-outlinerbody:-moz-outliner-cell-text(folderNameCol, noSelect-true) {
+outlinerchildren:-moz-outliner-cell-text(folderNameCol, noSelect-true) {
   color: gray;
   font-style: italic;
 }
@@ -169,17 +169,20 @@ outlinerbody:-moz-outliner-cell-text(folderNameCol, noSelect-true) {
   list-style-image: none;
 }
 
-outlinerbody:-moz-outliner-image(syncCol) {
+outlinerchildren:-moz-outliner-image(syncCol) {
   list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
 }
 
-outlinerbody:-moz-outliner-image(syncCol, synchronize-true) {
+outlinerchildren:-moz-outliner-image(syncCol, synchronize-true) {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
 }
 
-outlinerbody:-moz-outliner-image(syncCol, isServer-true) {
+outlinerchildren:-moz-outliner-image(syncCol, isServer-true) {
   list-style-image: none;
 }
 
-
+#folderUnreadCol,
+#folderTotalCol {
+  text-align: right;
+}
 

@@ -31,7 +31,7 @@
         <outlinercol flex="1" id="sample-gender" label="Gender"
           class="outlinercol-header outlinercol-inset-header"/>
       </outlinercols>
-      <outlinerbody id="sample-body" flex="1"/>
+      <outlinerchildren id="sample-body"/>
     </outliner>
 
   <button onclick="document.location.href=document.location.href" label="reload"/>

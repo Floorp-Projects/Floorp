@@ -51,54 +51,54 @@ Contributors:
     <keyset id="keyset"/>
     <description class="desc">&MsgSelectDesc.label;</description>
 
-    <outliner flex="1" id="synchronizeOutliner">
-      <outlinerbody flex="1" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" ref="msgaccounts:/" flags="dont-build-content" onclick="onSynchronizeClick(event);">
-        <template>
-          <rule>
-            <conditions>
-              <outlineritem uri="?container"/>
-              <member container="?container" child="?member"/>
-              <triple subject="?member" predicate="http://home.netscape.com/NC-rdf#SupportsOffline" object="true"/>
-            </conditions>
+    <outliner id="synchronizeOutliner" flex="1"
+              datasources="rdf:msgaccountmanager rdf:mailnewsfolders" ref="msgaccounts:/" flags="dont-build-content"
+              onclick="onSynchronizeClick(event);">
+      <template>
+        <rule>
+          <conditions>
+            <outlineritem uri="?container"/>
+            <member container="?container" child="?member"/>
+            <triple subject="?member" predicate="http://home.netscape.com/NC-rdf#SupportsOffline" object="true"/>
+          </conditions>
 
-            <bindings>
-              <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#FolderTreeName"
-                     object="?folderTreeName" />
-              <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#FolderTreeName?sort=true"
-                     object="?folderTreeNameSort" />
-              <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#SpecialFolder"
-                     object="?specialFolder" />
-              <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#IsServer"
-                     object="?isServer" />
-              <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#IsSecure"
-                     object="?isSecure" />
-              <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#ServerType"
-                     object="?serverType" />
-              <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#Synchronize"
-                     object="?synchronize" />
-            </bindings>
+          <bindings>
+            <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#FolderTreeName"
+                   object="?folderTreeName" />
+            <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#FolderTreeName?sort=true"
+                   object="?folderTreeNameSort" />
+            <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#SpecialFolder"
+                   object="?specialFolder" />
+            <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#IsServer"
+                   object="?isServer" />
+            <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#IsSecure"
+                   object="?isSecure" />
+            <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#ServerType"
+                   object="?serverType" />
+            <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#Synchronize"
+                   object="?synchronize" />
+          </bindings>
              
-            <action>
-              <outlinerchildren>
-                <outlineritem uri="?member">
-                  <outlinerrow>
-                    <outlinercell label="?folderTreeName"
-                                  properties="specialFolder-?specialFolder isServer-?isServer isSecure-?isSecure serverType-?serverType"/>
-                    <outlinercell properties="synchronize-?synchronize isServer-?isServer"/>
-                  </outlinerrow>
-                </outlineritem>
-              </outlinerchildren>
-            </action>
-          </rule>
-        </template>
-      </outlinerbody>
+          <action>
+            <outlinerchildren>
+              <outlineritem uri="?member">
+                <outlinerrow>
+                  <outlinercell label="?folderTreeName"
+                                properties="specialFolder-?specialFolder isServer-?isServer isSecure-?isSecure serverType-?serverType"/>
+                  <outlinercell properties="synchronize-?synchronize isServer-?isServer"/>
+                </outlinerrow>
+              </outlineritem>
+            </outlinerchildren>
+          </action>
+        </rule>
+      </template>
       <outlinercols>
         <outlinercol id="folderNameCol" flex="5" persist="hidden width" label="&MsgSelectItems.label;" primary="true" />
         <splitter class="tree-splitter"/>		  

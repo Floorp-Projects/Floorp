@@ -201,7 +201,7 @@ function goHome() {
 function selectItem() {
   var outliner = document.getElementById("help-toc-outliner");
   if (!gBuilder)
-    gBuilder = outliner.outlinerBoxObject.outlinerBody.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+    gBuilder = outliner.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
 
   var source = gBuilder.getResourceAtIndex(outliner.outlinerBoxObject.selection.currentIndex);
   if (!gRDF)
@@ -209,7 +209,7 @@ function selectItem() {
 
   var property = gRDF.GetResource("http://home.netscape.com/NC-rdf#link");
   
-  var target = outliner.outlinerBoxObject.outlinerBody.database.GetTarget(source, property, true);
+  var target = outliner.database.GetTarget(source, property, true);
   if (target)
     target = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
   loadURI(target);

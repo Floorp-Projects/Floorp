@@ -75,16 +75,16 @@
 
 /* ::::: for search in subscribe ::::: */
 
-outlinerbody:-moz-outliner-image(nameCol, nntp) {
+outlinerchildren:-moz-outliner-image(nameCol, nntp) {
   padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.gif");
 }
 
-outlinerbody:-moz-outliner-image(subscribedCol) {
+outlinerchildren:-moz-outliner-image(subscribedCol) {
   list-style-image: url("chrome://messenger/skin/icons/dot.gif");
 }
 
-outlinerbody:-moz-outliner-image(subscribedCol, subscribed) {
+outlinerchildren:-moz-outliner-image(subscribedCol, subscribed) {
   list-style-image: url("chrome://messenger/skin/icons/check.gif");
 }
 

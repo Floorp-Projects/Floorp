@@ -43,19 +43,19 @@
  * Style rules for generic bookmarks items. 
  */    
  
-outlinerbody:-moz-outliner-image(Name) {
+outlinerchildren:-moz-outliner-image(Name) {
     padding-right: 2px;
 }
  
-.bookmark-item, outlinerbody:-moz-outliner-image(Name) {
+.bookmark-item, outlinerchildren:-moz-outliner-image(Name) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
 }
 
-.bookmark-item[container="true"], outlinerbody:-moz-outliner-image(Name, container) {
+.bookmark-item[container="true"], outlinerchildren:-moz-outliner-image(Name, container) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
 }
 
-.bookmark-item[container="true"][open="true"], outlinerbody:-moz-outliner-image(Name, open) {
+.bookmark-item[container="true"][open="true"], outlinerchildren:-moz-outliner-image(Name, open) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
 }
 
