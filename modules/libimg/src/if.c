@@ -1884,8 +1884,10 @@ IL_GetImage(const char* image_url,
 #endif /* M12N */
     }        
     
+#if 0
     /* Add the referer to the URL. */
     IL_AddReferer(ic->net_cx, urls);
+#endif
 
     /* EXTREME HACK ALERT!
        Special signal for Composer (Editor)
