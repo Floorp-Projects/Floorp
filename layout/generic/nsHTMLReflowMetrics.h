@@ -96,6 +96,14 @@ struct nsCollapsingMargin {
           mMostNeg = aCoord;
       }
 
+    void Include(const nsCollapsingMargin& aOther)
+      {
+        if (aOther.mMostPos > mMostPos)
+          mMostPos = aOther.mMostPos;
+        if (aOther.mMostNeg < mMostNeg)
+          mMostNeg = aOther.mMostNeg;
+      }
+
     void Zero()
       {
         mMostPos = 0;

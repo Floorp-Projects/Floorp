@@ -82,7 +82,7 @@ public:
   }
 
   nscoord GetTopMargin() const {
-    return mTopMargin;
+    return mTopMargin.get();
   }
 
   const nsMargin& GetMargin() const {
@@ -128,7 +128,7 @@ protected:
   nsMargin mMargin;
   nscoord mX, mY;
   nsHTMLReflowMetrics mMetrics;
-  nscoord mTopMargin;
+  nsCollapsingMargin mTopMargin;
   nsSize mMaxElementSize;
   PRPackedBool mIsTable;
   PRPackedBool mComputeMaximumWidth;

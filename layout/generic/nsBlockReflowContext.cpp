@@ -409,7 +409,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
       aFrameRS.availableHeight -= aPrevBottomMargin.get();
     }
   }
-  mTopMargin = aPrevBottomMargin.get();
+  mTopMargin = aPrevBottomMargin;
 
   // Compute x/y coordinate where reflow will begin. Use the rules
   // from 10.3.3 to determine what to apply. At this point in the
@@ -419,7 +419,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   mStyleMargin = aFrameRS.mStyleMargin;
   mStylePadding = aFrameRS.mStylePadding;
   nscoord x;
-  nscoord y = mSpace.y + mTopMargin;
+  nscoord y = mSpace.y + mTopMargin.get();
 
   // If it's a right floated element, then calculate the x-offset
   // differently
@@ -687,13 +687,12 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
 
     y = mSpace.y;
 
-    // Empty blocks do not have anything special done to them and they
-    // always fit. Note: don't force the width to 0
-    nsRect r(x, y, mMetrics.width, 0);
-
     // Now place the frame and complete the reflow process
     nsContainerFrame::FinishReflowChild(mFrame, mPresContext, &aReflowState, mMetrics, x, y, 0);
-    aInFlowBounds = r;
+
+    // Empty blocks do not have anything special done to them and they
+    // always fit. Note: don't force the width to 0
+    aInFlowBounds = nsRect(x, y, mMetrics.width, 0);
 
     // Retain combined area information in case we contain a floater
     // and nothing else.
@@ -773,7 +772,7 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
         // auto top/bottom margins are always zero)
 
         // XXXldb Should it?
-        m->height += mTopMargin + mBottomMargin;
+        m->height += mTopMargin.get() + mBottomMargin;
 #endif
       }
     }
