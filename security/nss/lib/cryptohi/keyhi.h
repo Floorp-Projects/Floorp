@@ -33,7 +33,7 @@
  *
  * key.h - public data structures and prototypes for the private key library
  *
- * $Id: keyhi.h,v 1.4 2001/06/07 21:47:29 relyea%netscape.com Exp $
+ * $Id: keyhi.h,v 1.5 2001/06/25 19:31:04 nicolson%netscape.com Exp $
  */
 
 #ifndef _KEYHI_H_
@@ -227,6 +227,29 @@ SECKEY_CopyEncryptedPrivateKeyInfo(PRArenaPool *poolp,
 KeyType SECKEY_GetPrivateKeyType(SECKEYPrivateKey *privKey);
 KeyType SECKEY_GetPublicKeyType(SECKEYPublicKey *pubKey);
 
+/*
+ * Creates a PublicKey from its DER encoding.
+ * Currently only supports RSA and DSA keys.
+ */
+SECKEYPublicKey*
+SECKEY_ImportDERPublicKey(SECItem *derKey, CK_KEY_TYPE type);
+
+SECKEYPrivateKeyList*
+SECKEY_NewPrivateKeyList(void);
+
+void
+SECKEY_DestroyPrivateKeyList(SECKEYPrivateKeyList *keys);
+
+void
+SECKEY_RemovePrivateKeyListNode(SECKEYPrivateKeyListNode *node);
+
+SECStatus
+SECKEY_AddPrivateKeyToListTail( SECKEYPrivateKeyList *list,
+                                SECKEYPrivateKey *key);
+
+#define PRIVKEY_LIST_HEAD(l) ((SECKEYPrivateKeyListNode*)PR_LIST_HEAD(&l->list))
+#define PRIVKEY_LIST_NEXT(n) ((SECKEYPrivateKeyListNode *)n->links.next)
+#define PRIVKEY_LIST_END(n,l) (((void *)n) == ((void *)&l->list))
 
 SEC_END_PROTOS
 

@@ -336,6 +336,7 @@ SECItem * PK11_GetKeyIDFromPrivateKey(SECKEYPrivateKey *key, void *wincx);
 SECItem* PK11_DEREncodePublicKey(SECKEYPublicKey *pubk);
 PK11SymKey* PK11_CopySymKeyForSigning(PK11SymKey *originalKey,
 	CK_MECHANISM_TYPE mech);
+SECKEYPrivateKeyList* PK11_ListPrivateKeysInSlot(PK11SlotInfo *slot);
 
 /**********************************************************************
  *                   Certs
@@ -403,6 +404,8 @@ SECStatus PK11_TraverseCertsInSlot(PK11SlotInfo *slot,
        SECStatus(* callback)(CERTCertificate*, void *), void *arg);
 CERTCertList *
 PK11_ListCerts(PK11CertListType type, void *pwarg);
+CERTCertList *
+PK11_ListCertsInSlot(PK11SlotInfo *slot);
 
 
 /**********************************************************************

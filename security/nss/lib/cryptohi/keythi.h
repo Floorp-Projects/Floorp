@@ -38,6 +38,7 @@
 #include "plarena.h"
 #include "pkcs11t.h"
 #include "secmodt.h"
+#include "prclist.h"
 
 /*
 ** A Generic  public key object.
@@ -79,5 +80,15 @@ typedef struct {
     PK11SlotInfo *slot;
     void *wincx;
 } SEC_PKCS5KeyAndPassword;
+
+typedef struct {
+    PRCList links;
+    SECKEYPrivateKey *key;
+} SECKEYPrivateKeyListNode;
+
+typedef struct {
+    PRCList list;
+    PRArenaPool *arena;
+} SECKEYPrivateKeyList;
 
 #endif /* _KEYTHI_H_ */
