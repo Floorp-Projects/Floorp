@@ -341,7 +341,6 @@ NS_IMETHODIMP nsClipboard::GetData(nsITransferable *aTransferable,
     }
   } else {
     data_atom = XInternAtom(sDisplay, "DATA_ATOM", only_if_exists = False);
-    data = (unsigned char *)malloc(16384);
     XConvertSelection(sDisplay, XA_PRIMARY, XA_STRING, data_atom,
                       sWindow, CurrentTime);
 
@@ -367,21 +366,21 @@ NS_IMETHODIMP nsClipboard::GetData(nsITransferable *aTransferable,
                            event.xselection.property, 0, 16384/4,
                            0, AnyPropertyType,
                            &type, &format, &items, &bytes, &data);
+        // XXX could return BadValue or BadWindow or ...
         bytes = strlen((char *)data);
       }
     }
     mBlocking = PR_FALSE;
 
     // Place the data in the transferable
-    PRInt32 length = bytes;
-    PRUnichar *testing = (PRUnichar *)malloc(strlen((char *)data)*2+1);
-    nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode((const char *)data,
-                                                          length,
+    const char *constData = "";
+    if (data)
+       constData = (char*) data;
+    nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(constData,
+                                                          (PRInt32)bytes,
                                                           &testing,
                                                           &length);
 
-    // FIXME Just leave as 2 for now.... but this should change... KenF
-    length = length * 2;
     nsCOMPtr<nsISupports> genDataWrapper;
     nsPrimitiveHelpers::CreatePrimitiveForData("text/unicode",
                                                testing, length,
@@ -390,7 +389,8 @@ NS_IMETHODIMP nsClipboard::GetData(nsITransferable *aTransferable,
     aTransferable->SetTransferData("text/unicode",
                                    genDataWrapper,
                                    length);
-    free(data);
+    if (data)
+      XFree(data);
     free(testing);
   }
   return NS_OK;
