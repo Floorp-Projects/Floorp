@@ -34,7 +34,6 @@ CPPSRCS=				\
 	nsBulletFrame.cpp		\
 	nsContainerFrame.cpp		\
 	nsFrame.cpp			\
-	nsGlobalVariables.cpp		\
 	nsHRFrame.cpp			\
 	nsHTMLAtoms.cpp			\
 	nsHTMLContainerFrame.cpp	\
@@ -59,12 +58,11 @@ CPPSRCS=				\
 	nsSplittableFrame.cpp		\
 	nsTextFrame.cpp			\
 	nsTextTransformer.cpp		\
-	nsViewportFrame.cpp			\
+	nsViewportFrame.cpp		\
 	nsWBRFrame.cpp			\
 	$(NULL)
 
 EXPORTS =				\
-	nsGlobalVariables.h		\
 	nsIHTMLContent.h		\
 	$(NULL)
 

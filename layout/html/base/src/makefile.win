@@ -34,7 +34,6 @@ CPPSRCS=				\
 	nsBulletFrame.cpp		\
 	nsContainerFrame.cpp		\
 	nsFrame.cpp			\
-	nsGlobalVariables.cpp		\
 	nsHRFrame.cpp			\
 	nsHTMLAtoms.cpp			\
 	nsHTMLContainerFrame.cpp	\
@@ -72,7 +71,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsBulletFrame.obj		\
 	.\$(OBJDIR)\nsContainerFrame.obj	\
 	.\$(OBJDIR)\nsFrame.obj			\
-	.\$(OBJDIR)\nsGlobalVariables.obj	\
 	.\$(OBJDIR)\nsHRFrame.obj		\
 	.\$(OBJDIR)\nsHTMLAtoms.obj		\
 	.\$(OBJDIR)\nsHTMLContainerFrame.obj	\
@@ -100,8 +98,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsViewportFrame.obj	\
 	.\$(OBJDIR)\nsWBRFrame.obj		\
 	$(NULL)
-
-EXPORTS=nsGlobalVariables.h
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
  -I$(PUBLIC)\dom -I$(PUBLIC)\netlib	-I$(PUBLIC)\unicharutil			\
