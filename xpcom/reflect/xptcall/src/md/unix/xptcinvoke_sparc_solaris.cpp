@@ -24,6 +24,7 @@
 #error "This code is for Sparc only"
 #endif
 
+typedef unsigned nsXPCVariant;
 
 PRUint32
 invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
@@ -83,7 +84,7 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
     we're trying to populate.
 */
     uint32 *l_d = d;
-    nsXPCVariant *l_s = s;
+    nsXPTCVariant *l_s = s;
     uint32 l_paramCount = paramCount;
 
     for(uint32 i = 0; i < l_paramCount; i++, l_d++, l_s++)
