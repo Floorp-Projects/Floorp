@@ -156,13 +156,6 @@ interface nsIAbDirectory : nsISupports {
 	attribute wstring listNickName;
 	attribute wstring description;
 
-	/**
-	 * Adds a new mail list into the directory
-	 * defined by the uri
-	 * XXX javadoc me
-	 */
-	void addMailListToDatabase(in string uri);
-
     /**
      * Edits an existing mailing list (specified as listCard)
 	 * into the directory specified by the uri

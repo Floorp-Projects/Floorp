@@ -100,30 +100,6 @@ NS_IMPL_ISUPPORTS_INHERITED4(nsAbMDBDirectory, nsRDFResource,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-
-// Not called
-nsresult nsAbMDBDirectory::AddMailList(const char *uriName)
-{
-  if (!uriName)
-    return NS_ERROR_NULL_POINTER;
-
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsCOMPtr<nsIRDFResource> res;
-  rv = rdf->GetResource(uriName, getter_AddRefs(res));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(res, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mSubDirectories->AppendElement(directory);
-   
-  return rv;
-}
-
 nsresult nsAbMDBDirectory::RemoveCardFromAddressList(nsIAbCard* card)
 {
   nsresult rv = NS_OK;
@@ -675,8 +651,7 @@ NS_IMETHODIMP nsAbMDBDirectory::AddMailList(nsIAbDirectory *list)
     nsCOMPtr<nsIAbDirectory> newlist = getter_AddRefs(NS_STATIC_CAST(nsIAbDirectory*, dblistproperty));
     newlist->CopyMailList(list);
     list = newlist;
-    dblist = do_QueryInterface(list);
-    rv = NS_OK;
+    dblist = do_QueryInterface(list, &rv);
   }
 
   mDatabase->CreateMailListAndAddToDB(list, PR_TRUE);
@@ -684,10 +659,13 @@ NS_IMETHODIMP nsAbMDBDirectory::AddMailList(nsIAbDirectory *list)
 
   PRUint32 dbRowID;
   dblist->GetDbRowID(&dbRowID);
-  char *listUri = PR_smprintf("%s/MailList%ld", mURI, dbRowID);
+
+  nsCAutoString listUri;
+  listUri = nsDependentCString(mURI) + NS_LITERAL_CSTRING("/MailList");
+  listUri.AppendInt(dbRowID);
 
   nsCOMPtr<nsIAbDirectory> newList;
-  rv = AddDirectory(listUri, getter_AddRefs(newList));
+  rv = AddDirectory(listUri.get(), getter_AddRefs(newList));
   nsCOMPtr<nsIAbMDBDirectory> dbnewList(do_QueryInterface(newList));
   if (NS_SUCCEEDED(rv) && newList)
   {

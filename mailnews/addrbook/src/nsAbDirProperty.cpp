@@ -196,24 +196,6 @@ NS_IMETHODIMP nsAbDirProperty::SetAddressLists(nsISupportsArray * aAddressLists)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsAbDirProperty::AddMailListToDatabase(const char *uri)
-{
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	nsCOMPtr<nsIRDFResource> res;
-	rv = rdf->GetResource(uri, getter_AddRefs(res));
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(res, &rv));
-	NS_ENSURE_SUCCESS(rv, rv);      
-
-	rv = directory->AddMailList(this);
-  NS_ENSURE_SUCCESS(rv, rv);   
-	return rv;
-}
-
 NS_IMETHODIMP nsAbDirProperty::CopyMailList(nsIAbDirectory* srcList)
 {
   nsXPIDLString str;

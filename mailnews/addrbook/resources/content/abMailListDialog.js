@@ -38,7 +38,6 @@
 top.MAX_RECIPIENTS = 1;
 var inputElementType = "";
 
-var mailList;
 var gParentURI;
 var gListCard;
 var gEditList;
@@ -174,11 +173,13 @@ function MailListOKButton()
     // -----
 
     //Add mailing list to database
-    mailList = Components.classes["@mozilla.org/addressbook/directoryproperty;1"].createInstance();
+    var mailList = Components.classes["@mozilla.org/addressbook/directoryproperty;1"].createInstance();
     mailList = mailList.QueryInterface(Components.interfaces.nsIAbDirectory);
 
-    if (GetListValue(mailList, true))
-      mailList.addMailListToDatabase(uri);
+    if (GetListValue(mailList, true)) {
+       var parentDirectory = GetDirectoryFromURI(uri);
+       parentDirectory.addMailList(mailList);
+    }
     else
       return false;
   }

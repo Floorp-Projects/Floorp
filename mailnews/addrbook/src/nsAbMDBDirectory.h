@@ -114,8 +114,6 @@ protected:
   nsresult NotifyItemChanged(nsISupports *item);
 	nsresult RemoveCardFromAddressList(nsIAbCard* card);
 
-	nsresult AddMailList(const char *uriName);
-
 	nsresult GetAbDatabase();
 	nsCOMPtr<nsIAddrDatabase> mDatabase;  
 
