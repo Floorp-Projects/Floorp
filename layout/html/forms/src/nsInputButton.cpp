@@ -390,8 +390,8 @@ NS_METHOD nsInputButtonFrame::Paint(nsIPresContext& aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               const nsRect& aDirtyRect)
 {
-  nsStyleDisplay* disp =
-    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
+  const nsStyleDisplay* disp =
+    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (disp->mVisible) {
     // let super do processing if there is no image

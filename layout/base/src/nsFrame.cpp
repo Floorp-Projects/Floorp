@@ -307,11 +307,11 @@ NS_METHOD nsFrame::DidSetStyleContext(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
-NS_METHOD nsFrame::GetStyleData(nsStyleStructID aSID, nsStyleStruct*& aStyleStruct) const
+NS_METHOD nsFrame::GetStyleData(nsStyleStructID aSID, const nsStyleStruct*& aStyleStruct) const
 {
   NS_ASSERTION(mStyleContext!=nsnull,"null style context");
   if (mStyleContext) {
-    aStyleStruct = mStyleContext->GetData(aSID);
+    aStyleStruct = mStyleContext->GetStyleData(aSID);
   } else {
     aStyleStruct = nsnull;
   }
@@ -1289,14 +1289,14 @@ void nsFrame::Invalidate(const nsRect& aDamageRect) const
 // Style sizing methods
 NS_METHOD nsFrame::IsPercentageBase(PRBool& aBase) const
 {
-  nsStylePosition* position;
-  GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)position);
+  const nsStylePosition* position;
+  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
   if (position->mPosition != NS_STYLE_POSITION_NORMAL) {
     aBase = PR_TRUE;
   }
   else {
-    nsStyleDisplay* display;
-    GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
+    const nsStyleDisplay* display;
+    GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
     if ((display->mDisplay == NS_STYLE_DISPLAY_BLOCK) || 
         (display->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM)) {
       aBase = PR_TRUE;

@@ -458,8 +458,8 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
     nsIStyleContextPtr kidSC;
 
     kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
-    nsStyleSpacing* kidSpacing =
-      (nsStyleSpacing*)kidSC->GetData(eStyleStruct_Spacing);
+    const nsStyleSpacing* kidSpacing =
+      (const nsStyleSpacing*)kidSC->GetStyleData(eStyleStruct_Spacing);
     nsMargin kidMargin;
     kidSpacing->CalcMarginFor(kidFrame, kidMargin);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMargin);
@@ -895,8 +895,8 @@ nsTableOuterFrame::ReflowChild( nsIFrame*        aKidFrame,
 
     aKidFrame->GetStyleContext(aPresContext, captionStyleContext.AssignRef());
     NS_ASSERTION(captionStyleContext.IsNotNull(), "null style context for caption");
-    nsStyleText* captionStyle =
-      (nsStyleText*)captionStyleContext->GetData(eStyleStruct_Text);
+    const nsStyleText* captionStyle =
+      (const nsStyleText*)captionStyleContext->GetStyleData(eStyleStruct_Text);
     NS_ASSERTION(nsnull != captionStyle, "null style molecule for caption");
     if ((eStyleUnit_Enumerated == captionStyle->mVerticalAlign.GetUnit()) && 
         (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionStyle->mVerticalAlign.GetIntValue()))
@@ -974,8 +974,8 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
       nsIStyleContextPtr captionStyleContext =
         aPresContext->ResolveStyleContextFor(caption, this);
       NS_ASSERTION(captionStyleContext.IsNotNull(), "bad style context for caption.");
-      nsStyleText* captionStyle = 
-        (nsStyleText*)captionStyleContext->GetData(eStyleStruct_Text);
+      const nsStyleText* captionStyle = 
+        (const nsStyleText*)captionStyleContext->GetStyleData(eStyleStruct_Text);
       // create the frame
       nsIFrame *captionFrame=nsnull;
       frameCreated = ((nsIHTMLContent*)(nsIContent*)caption)->CreateFrame(aPresContext, 
@@ -1072,8 +1072,8 @@ nsTableOuterFrame::ResizeReflowTopCaptionsPass2(nsIPresContext*        aPresCont
        
       captionFrame->GetStyleContext(aPresContext, captionStyleContext.AssignRef());
       NS_ASSERTION(captionStyleContext.IsNotNull(), "null style context for caption");
-      nsStyleText* captionStyle =
-        (nsStyleText*)captionStyleContext->GetData(eStyleStruct_Text);
+      const nsStyleText* captionStyle =
+        (const nsStyleText*)captionStyleContext->GetStyleData(eStyleStruct_Text);
       NS_ASSERTION(nsnull != captionStyle, "null style molecule for caption");
 
       if ((eStyleUnit_Enumerated == captionStyle->mVerticalAlign.GetUnit()) && 

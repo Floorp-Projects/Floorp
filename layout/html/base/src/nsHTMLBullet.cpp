@@ -79,10 +79,10 @@ protected:
    */
   nsBlockReflowState* GetListContainerReflowState(nsIPresContext* aCX);
 
-  PRInt32 GetListItemOrdinal(nsIPresContext* aCX, nsStyleList& aMol);
+  PRInt32 GetListItemOrdinal(nsIPresContext* aCX, const nsStyleList& aMol);
 
   void GetListItemText(nsIPresContext* aCX, nsString& aResult,
-                       nsStyleList& aMol);
+                       const nsStyleList& aMol);
 
   PRPackedBool mOrdinalValid;
   PRInt32 mOrdinal;
@@ -102,7 +102,7 @@ Bullet::MapAttributesInto(nsIStyleContext* aContext,
 {
   // Force display to be inline (bullet's are not block level)
   nsStyleDisplay* display = (nsStyleDisplay*)
-    aContext->GetData(eStyleStruct_Display);
+    aContext->GetMutableStyleData(eStyleStruct_Display);
   display->mDisplay = NS_STYLE_DISPLAY_INLINE;
 }
 
@@ -193,12 +193,12 @@ BulletFrame::Paint(nsIPresContext&      aCX,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect)
 {
-  nsStyleDisplay* disp =
-    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
+  const nsStyleDisplay* disp =
+    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (disp->mVisible) {
-    nsStyleList* myList =
-      (nsStyleList*)mStyleContext->GetData(eStyleStruct_List);
+    const nsStyleList* myList =
+      (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
 
     if (myList->mListStyleImage.Length() > 0) {
       nsIImage* image = mImageLoader.GetImage();
@@ -217,10 +217,10 @@ BulletFrame::Paint(nsIPresContext&      aCX,
       }
     }
 
-    nsStyleFont* myFont =
-      (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
-    nsStyleColor* myColor =
-      (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
+    const nsStyleFont* myFont =
+      (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+    const nsStyleColor* myColor =
+      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
     nsIFontMetrics* fm;
     aRenderingContext.SetColor(myColor->mColor);
 
@@ -332,7 +332,7 @@ BulletFrame::GetListContainerReflowState(nsIPresContext* aCX)
 
 PRInt32
 BulletFrame::GetListItemOrdinal(nsIPresContext* aCX,
-                                nsStyleList&    aListStyle)
+                                const nsStyleList& aListStyle)
 {
   if (mOrdinalValid) {
     return mOrdinal;
@@ -398,7 +398,7 @@ static const char* gUpperAlphaChars  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 void
 BulletFrame::GetListItemText(nsIPresContext* aCX,
                              nsString& result,
-                             nsStyleList& aListStyle)
+                             const nsStyleList& aListStyle)
 {
   PRInt32 ordinal = GetListItemOrdinal(aCX, aListStyle);
   char cbuf[40];
@@ -520,8 +520,8 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
                             const nsReflowState& aReflowState,
                             nsReflowMetrics& aDesiredSize)
 {
-  nsStyleList* myList =
-    (nsStyleList*)mStyleContext->GetData(eStyleStruct_List);
+  const nsStyleList* myList =
+    (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
   if (myList->mListStyleImage.Length() > 0) {
     mImageLoader.SetURL(myList->mListStyleImage);
     mImageLoader.GetDesiredSize(aCX, aReflowState, aDesiredSize);
@@ -533,8 +533,8 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
     }
   }
 
-  nsStyleFont* myFont =
-    (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
+  const nsStyleFont* myFont =
+    (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
   nsIFontMetrics* fm = aCX->GetMetricsFor(myFont->mFont);
   nscoord bulletSize;
   float p2t;

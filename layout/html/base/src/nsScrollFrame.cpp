@@ -462,8 +462,8 @@ nsScrollOuterFrame::Reflow(nsIPresContext*      aPresContext,
     mChildCount = 1;
   }
 
-  nsStyleSpacing* spacing = (nsStyleSpacing*)
-    mStyleContext->GetData(eStyleStruct_Spacing);
+  const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+    mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
   nscoord lr = borderPadding.left + borderPadding.right;

@@ -760,7 +760,7 @@ nsHTMLTagContent::MapImagePropertiesInto(nsIStyleContext* aContext,
 
     float p2t = aPresContext->GetPixelsToTwips();
     nsStylePosition* pos = (nsStylePosition*)
-      aContext->GetData(eStyleStruct_Position);
+      aContext->GetMutableStyleData(eStyleStruct_Position);
 
     // width: value
     GetAttribute(nsHTMLAtoms::width, value);
@@ -809,7 +809,7 @@ nsHTMLTagContent::MapImageBorderInto(nsIStyleContext* aContext,
     // Fixup border-padding sums: subtract out the old size and then
     // add in the new size.
     nsStyleSpacing* spacing = (nsStyleSpacing*)
-      aContext->GetData(eStyleStruct_Spacing);
+      aContext->GetMutableStyleData(eStyleStruct_Spacing);
     nsStyleCoord coord;
     coord.SetCoordValue(twips);
     spacing->mBorder.SetTop(coord);
@@ -831,8 +831,8 @@ nsHTMLTagContent::MapImageBorderInto(nsIStyleContext* aContext,
     }
     else {
       // Color is inherited from "color"
-      nsStyleColor* styleColor = (nsStyleColor*)
-        aContext->GetData(eStyleStruct_Color);
+      const nsStyleColor* styleColor = (const nsStyleColor*)
+        aContext->GetStyleData(eStyleStruct_Color);
       nscolor color = styleColor->mColor;
       spacing->mBorderColor[0] = color;
       spacing->mBorderColor[1] = color;

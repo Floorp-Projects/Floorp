@@ -20,6 +20,7 @@
 
 #include "nscore.h"
 #include "nsContainerFrame.h"
+#include "nsStyleCoord.h"
 
 class nsCellLayoutData;
 class nsTableCell;
@@ -33,7 +34,6 @@ class ColumnInfoCache;
 struct InnerTableReflowState;
 struct nsStylePosition;
 struct nsStyleSpacing;
-enum nsStyleUnit;
 
 /** nsTableFrame maps the inner portion of a table (everything except captions.)
   * Used as a pseudo-frame within nsTableOuterFrame, 

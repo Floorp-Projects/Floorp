@@ -74,7 +74,7 @@ struct ProportionalColumnLayoutStruct
 /* return true if the style indicates that the width is proportional 
  * for the purposes of column width determination
  */
-PRBool BasicTableLayoutStrategy::IsFixedWidth(nsStylePosition* aStylePosition)
+PRBool BasicTableLayoutStrategy::IsFixedWidth(const nsStylePosition* aStylePosition)
 {
   PRBool result = PR_FALSE; // assume that it is not fixed width
   PRInt32 unitType;
@@ -105,7 +105,7 @@ PRBool BasicTableLayoutStrategy::IsFixedWidth(nsStylePosition* aStylePosition)
   return result;
 }
 
-PRBool BasicTableLayoutStrategy::IsAutoWidth(nsStylePosition* aStylePosition)
+PRBool BasicTableLayoutStrategy::IsAutoWidth(const nsStylePosition* aStylePosition)
 {
   PRBool result = PR_TRUE; // assume that it is
   if (nsnull!=aStylePosition)
@@ -240,7 +240,7 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
     // Get the columns's style
     nsIStyleContextPtr colSC;
     colFrame->GetStyleContext(aPresContext, colSC.AssignRef());
-    nsStylePosition* colPosition = (nsStylePosition*) colSC->GetData(eStyleStruct_Position);
+    const nsStylePosition* colPosition = (const nsStylePosition*) colSC->GetStyleData(eStyleStruct_Position);
 
     // Get column width if it has one
     PRBool haveColWidth = PR_FALSE;
@@ -320,8 +320,8 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
         // Get the cell's style
         nsIStyleContextPtr cellSC;
         cellFrame->GetStyleContext(aPresContext, cellSC.AssignRef());
-        nsStylePosition* cellPosition = (nsStylePosition*)
-          cellSC->GetData(eStyleStruct_Position);
+        const nsStylePosition* cellPosition = (const nsStylePosition*)
+          cellSC->GetStyleData(eStyleStruct_Position);
         switch (cellPosition->mWidth.GetUnit()) {
         case eStyleUnit_Coord:
           haveCellWidth = PR_TRUE;
@@ -496,7 +496,7 @@ PRBool BasicTableLayoutStrategy::SetColumnsToMinWidth(nsIPresContext* aPresConte
     if (gsDebug==PR_TRUE) printf ("  for col %d\n", colIndex);
 
     // XXX need column frame to ask this question
-    nsStylePosition* colPosition = nsnull;
+    const nsStylePosition* colPosition = nsnull;
 
     if (PR_FALSE==IsFixedWidth(colPosition))
     {
@@ -569,7 +569,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
     NS_ASSERTION(nsnull!=colFrame, "bad col frame");
     nsIStyleContextPtr colSC;
     colFrame->GetStyleContext(aPresContext, colSC.AssignRef());
-    nsStylePosition* colPosition = (nsStylePosition*) colSC->GetData(eStyleStruct_Position);
+    const nsStylePosition* colPosition = (const nsStylePosition*) colSC->GetStyleData(eStyleStruct_Position);
     if (gsDebug) printf("col %d has frame %p with style %p and pos %p\n", 
                          colIndex, colFrame, (nsIStyleContext *)colSC, colPosition);
 
@@ -622,8 +622,8 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
         nscoord specifiedCellWidth=-1;
         nsIStyleContextPtr cellSC;
         data->GetCellFrame()->GetStyleContext(aPresContext, cellSC.AssignRef());
-        nsStylePosition* cellPosition = (nsStylePosition*)
-          cellSC->GetData(eStyleStruct_Position);
+        const nsStylePosition* cellPosition = (const nsStylePosition*)
+          cellSC->GetStyleData(eStyleStruct_Position);
         switch (cellPosition->mWidth.GetUnit()) {
           case eStyleUnit_Coord:
             specifiedCellWidth = cellPosition->mWidth.GetCoordValue();
@@ -896,7 +896,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
     NS_ASSERTION(nsnull!=colFrame, "bad col frame");
     nsIStyleContextPtr colSC;
     colFrame->GetStyleContext(aPresContext, colSC.AssignRef());
-    nsStylePosition* colPosition = (nsStylePosition*) colSC->GetData(eStyleStruct_Position);
+    const nsStylePosition* colPosition = (const nsStylePosition*) colSC->GetStyleData(eStyleStruct_Position);
 
     if (PR_FALSE==IsFixedWidth(colPosition))
     {

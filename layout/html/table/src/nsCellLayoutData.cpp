@@ -124,8 +124,8 @@ nscoord nsCellLayoutData::GetMargin(nsIFrame* aFrame, PRUint8 aEdge) const
 
   if (aFrame)
   {
-    nsStyleSpacing* spacing;
-    aFrame->GetStyleData(eStyleStruct_Spacing, (nsStyleStruct*&)spacing);
+    const nsStyleSpacing* spacing;
+    aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
     nsMargin  margin;
     spacing->CalcMarginFor(aFrame, margin);
     switch (aEdge)
@@ -162,8 +162,8 @@ nscoord nsCellLayoutData::GetBorderWidth(nsIFrame* aFrame, PRUint8 aEdge) const
 
   if (aFrame)
   {
-    nsStyleSpacing* spacing;
-    aFrame->GetStyleData(eStyleStruct_Spacing, (nsStyleStruct*&)spacing);
+    const nsStyleSpacing* spacing;
+    aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
     nsMargin  border;
     spacing->CalcBorderFor(aFrame, border);
     switch (aEdge)
@@ -200,8 +200,8 @@ nscoord nsCellLayoutData::GetPadding(nsIFrame* aFrame, PRUint8 aEdge) const
 
   if (aFrame)
   {
-    nsStyleSpacing* spacing;
-    aFrame->GetStyleData(eStyleStruct_Spacing, (nsStyleStruct*&)spacing);
+    const nsStyleSpacing* spacing;
+    aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
     nsMargin  padding;
     spacing->CalcPaddingFor(aFrame, padding);
     switch (aEdge)
@@ -301,10 +301,10 @@ nsIFrame* nsCellLayoutData::CompareCellBorders(nsIFrame* aFrame1,
     result = aFrame2;
   else // width1 == width2
   {
-    nsStyleSpacing*  border1;
-    nsStyleSpacing*  border2;
-    aFrame1->GetStyleData(eStyleStruct_Spacing, (nsStyleStruct*&)border1);
-    aFrame2->GetStyleData(eStyleStruct_Spacing, (nsStyleStruct*&)border2);
+    const nsStyleSpacing*  border1;
+    const nsStyleSpacing*  border2;
+    aFrame1->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)border1);
+    aFrame2->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)border2);
     if (border1->mBorderStyle[aEdge1] >= border2->mBorderStyle[aEdge2])
       result = aFrame1;
     else
@@ -527,8 +527,8 @@ void nsCellLayoutData::CalculateMargins(nsTableFrame*     aTableFrame,
 { 
   // By default the margin is just the margin found in the 
   // table cells style 
-  nsStyleSpacing* spacing;
-  mCellFrame->GetStyleData(eStyleStruct_Spacing, (nsStyleStruct*&)spacing);
+  const nsStyleSpacing* spacing;
+  mCellFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
   spacing->CalcMarginFor(mCellFrame, mMargin);
 
   // Left and Top Margins are collapsed with their neightbors

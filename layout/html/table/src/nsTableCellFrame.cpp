@@ -57,14 +57,14 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
                                   nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect)
 {
-  nsStyleDisplay* disp =
-    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
+  const nsStyleDisplay* disp =
+    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (disp->mVisible) {
-    nsStyleColor* myColor =
-      (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
-    nsStyleSpacing* mySpacing =
-      (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
+    const nsStyleColor* myColor =
+      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+    const nsStyleSpacing* mySpacing =
+      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
     NS_ASSERTION(nsnull!=myColor, "bad style color");
     NS_ASSERTION(nsnull!=mySpacing, "bad style spacing");
 
@@ -98,10 +98,10 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
 
 void  nsTableCellFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
 {
-  nsStyleSpacing* spacing =
-      (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
-  nsStyleText* textStyle =
-      (nsStyleText*)mStyleContext->GetData(eStyleStruct_Text);
+  const nsStyleSpacing* spacing =
+      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  const nsStyleText* textStyle =
+      (const nsStyleText*)mStyleContext->GetStyleData(eStyleStruct_Text);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
   
@@ -269,8 +269,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   // SEC: what about ascent and decent???
 
   // Compute the insets (sum of border and padding)
-  nsStyleSpacing* spacing =
-    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
+  const nsStyleSpacing* spacing =
+    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
 
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
@@ -454,7 +454,7 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext, nsStyleS
   
   tableFrame->GetStyleContext(aPresContext,styleContext);
   
-  nsStyleColor*   colorData = (nsStyleColor*)styleContext->GetData(eStyleStruct_Color);
+  const nsStyleColor*   colorData = (const nsStyleColor*)styleContext->GetStyleData(eStyleStruct_Color);
 
    // Look until we find a style context with a NON-transparent background color
   while (styleContext)
@@ -464,7 +464,7 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext, nsStyleS
       nsIStyleContext* temp = styleContext;
       styleContext = styleContext->GetParent();
       NS_RELEASE(temp);
-      colorData = (nsStyleColor*)styleContext->GetData(eStyleStruct_Color);
+      colorData = (const nsStyleColor*)styleContext->GetStyleData(eStyleStruct_Color);
     }
     else
     {
@@ -539,7 +539,7 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   spacing_result = table->GetAttribute(nsHTMLAtoms::cellspacing,spacing_value);
   border_result = table->GetAttribute(nsHTMLAtoms::border,border_value);
 
-  nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
+  nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetMutableStyleData(eStyleStruct_Spacing);
 
   // check to see if cellpadding or cellspacing is defined
   if (spacing_result == eContentAttr_HasValue || padding_result == eContentAttr_HasValue)
@@ -586,7 +586,7 @@ void nsTableCellFrame::MapTextAttributes(nsIPresContext* aPresContext)
   ((nsTableCell*)mContent)->GetAttribute(nsHTMLAtoms::align, value);
   if (value.GetUnit() == eHTMLUnit_Enumerated) 
   {
-    nsStyleText* text = (nsStyleText*)mStyleContext->GetData(eStyleStruct_Text);
+    nsStyleText* text = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
     text->mTextAlign = value.GetIntValue();
   }
 }

@@ -424,8 +424,8 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     nscoord cellHeight = desiredSize.height;
     nsIStyleContextPtr kidSC;
     kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
-    nsStylePosition* kidPosition = (nsStylePosition*)
-      kidSC->GetData(eStyleStruct_Position);
+    const nsStylePosition* kidPosition = (const nsStylePosition*)
+      kidSC->GetStyleData(eStyleStruct_Position);
     switch (kidPosition->mHeight.GetUnit()) {
     case eStyleUnit_Coord:
       specifiedHeight = kidPosition->mHeight.GetCoordValue();
@@ -1163,7 +1163,7 @@ nsTableRowFrame::SetColumnStyleFromCell(nsIPresContext*   aPresContext,
     if (0==rowIndex)
     {
       // get the cell style info
-      nsStylePosition* cellPosition = (nsStylePosition*) aCellSC->GetData(eStyleStruct_Position);
+      const nsStylePosition* cellPosition = (const nsStylePosition*) aCellSC->GetStyleData(eStyleStruct_Position);
       if ((eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) ||
            (eStyleUnit_Percent==cellPosition->mWidth.GetUnit())) {
 
@@ -1179,7 +1179,7 @@ nsTableRowFrame::SetColumnStyleFromCell(nsIPresContext*   aPresContext,
           // get the column style and set the width attribute
           nsIStyleContextPtr colSC;
           colFrame->GetStyleContext(aPresContext, colSC.AssignRef());
-          nsStylePosition* colPosition = (nsStylePosition*) colSC->GetData(eStyleStruct_Position);
+          nsStylePosition* colPosition = (nsStylePosition*) colSC->GetMutableStyleData(eStyleStruct_Position);
           // set the column width attribute
           if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit())
           {

@@ -92,9 +92,9 @@ void nsInput::MapAttributesInto(nsIStyleContext* aContext,
 {
   if (ALIGN_UNSET != mAlign) {
     nsStyleDisplay* display = (nsStyleDisplay*)
-      aContext->GetData(eStyleStruct_Display);
+      aContext->GetMutableStyleData(eStyleStruct_Display);
     nsStyleText* text = (nsStyleText*)
-      aContext->GetData(eStyleStruct_Text);
+      aContext->GetMutableStyleData(eStyleStruct_Text);
     switch (mAlign) {
     case NS_STYLE_TEXT_ALIGN_LEFT:
       display->mFloats = NS_STYLE_FLOAT_LEFT;

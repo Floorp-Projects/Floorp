@@ -43,14 +43,14 @@ nsHTMLFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
       aFrame->GetGeometricParent(parent);
       if (nsnull != parent) {
         // Get my nsStyleColor
-        nsStyleColor* myColor = (nsStyleColor*)
-          aStyleContext->GetData(eStyleStruct_Color);
+        const nsStyleColor* myColor = (const nsStyleColor*)
+          aStyleContext->GetStyleData(eStyleStruct_Color);
 
         // Get parent's nsStyleColor
         nsIStyleContext* parentSC;
         parent->GetStyleContext(aPresContext, parentSC);
-        nsStyleColor* parentColor = (nsStyleColor*)
-          parentSC->GetData(eStyleStruct_Color);
+        const nsStyleColor* parentColor = (const nsStyleColor*)
+          parentSC->GetStyleData(eStyleStruct_Color);
 
         // If the opacities are different then I need a view
         if (myColor->mOpacity != parentColor->mOpacity) {
@@ -65,8 +65,8 @@ nsHTMLFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
 
     // See if the frame is being relatively positioned
     if (!aForce) {
-      nsStylePosition* position = (nsStylePosition*)
-        aStyleContext->GetData(eStyleStruct_Position);
+      const nsStylePosition* position = (const nsStylePosition*)
+        aStyleContext->GetStyleData(eStyleStruct_Position);
       if (NS_STYLE_POSITION_RELATIVE == position->mPosition) {
         NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
           ("nsHTMLFrame::CreateViewForFrame: frame=%p relatively positioned",
