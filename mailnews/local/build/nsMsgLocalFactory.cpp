@@ -43,6 +43,7 @@ static NS_DEFINE_CID(kMailboxMessageResourceCID, NS_MAILBOXMESSAGERESOURCE_CID);
 static NS_DEFINE_CID(kPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kPop3UrlCID, NS_POP3URL_CID);
 static NS_DEFINE_CID(kPop3IncomingServerCID, NS_POP3INCOMINGSERVER_CID);
+static NS_DEFINE_CID(kParseMailMsgStateCID, NS_PARSEMAILMSGSTATE_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -197,9 +198,12 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports * /* aOuter */, const nsI
 		if (NS_FAILED(rv) && localMessage)
 			delete localMessage;
  	}
+	else if (mClassID.Equals(kParseMailMsgStateCID))
+		rv = NS_NewParseMailMessageState(aIID, aResult);
   else if (mClassID.Equals(kPop3IncomingServerCID))
     rv = NS_NewPop3IncomingServer(nsISupports::GetIID(), aResult);
-	else
+	
+  else
 		rv = NS_NOINTERFACE;
   
 	return rv;
@@ -304,6 +308,13 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   "Pop3 Incoming Server",
                                   "component://netscape/messenger/server&type=pop3",
                                   path, PR_TRUE, PR_TRUE);
+	
+  if (NS_FAILED(rv)) goto done;
+   rv = compMgr->RegisterComponent(kParseMailMsgStateCID,
+                                  "Parse MailMessage State",
+                                  "component://netscape/messenger/messagestateparser",
+                                  path, PR_TRUE, PR_TRUE);
+  
                                   
   
   if (NS_FAILED(rv)) goto done;
@@ -349,7 +360,10 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 
   rv = compMgr->UnregisterComponent(kPop3IncomingServerCID, path);
   if (NS_FAILED(rv)) goto done;
-  
+
+  rv = compMgr->UnregisterComponent(kParseMailMsgStateCID, path);
+  if (NS_FAILED(rv)) goto done;
+
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
