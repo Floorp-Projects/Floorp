@@ -725,26 +725,6 @@ nsresult nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFor
       }
     }
 
-    // Use the base URL as a referer for now
-    char* spec = nsnull;
-    nsIURI* docURL = nsnull;
-    nsIDocument* doc = nsnull;
-    mContent->GetDocument(doc);
-    NS_ASSERTION(doc, "No document found in Form Submit!\n");
-    if (!doc) {
-      rv = NS_ERROR_UNEXPECTED;
-    } else {
-      doc->GetBaseURL(docURL);
-      NS_RELEASE(doc);
-      NS_ASSERTION(docURL, "No base URL found in Form Submit!\n");
-      if (!docURL) {
-        rv = NS_ERROR_UNEXPECTED;
-      } else {
-        docURL->GetSpec(&spec);
-        NS_RELEASE(docURL);
-      }
-    }
-
     aData.SetLength(0);
     if (isPost) {
       char size[16];
@@ -756,22 +736,12 @@ nsresult nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFor
       aData += "; charset=";
       aData += charset;
 #endif
-      aData += CRLF;
-      if (spec) {
-        aData += "Referer: ";
-        aData += spec;
-        nsCRT::free(spec);
-        aData += CRLF;
-      }
       aData += "Content-Length: ";
       aData += size;
       aData += CRLF;
       aData += CRLF;
     } else {
       aData += '?';
-      if (spec) {
-        nsCRT::free(spec);
-      }
     }
   }
   aData += buf;
