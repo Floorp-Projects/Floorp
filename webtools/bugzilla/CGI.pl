@@ -213,7 +213,7 @@ sub CheckEmailSyntax {
     my ($addr) = (@_);
     my $match = Param('emailregexp');
     if ($addr !~ /$match/ || $addr =~ /[\\\(\)<>&,;:"\[\] \t\r\n]/) {
-        ThrowUserError("illegal_email_address", { addr => $addr });
+        ThrowUserError("illegal_email_address", { addr => $addr }, 'abort');
     }
 }
 

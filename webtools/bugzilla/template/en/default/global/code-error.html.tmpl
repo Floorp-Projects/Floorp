@@ -185,7 +185,11 @@
   [% ELSIF error == "invalid_keyword_id" %]
     The keyword ID <em>[% id FILTER html %]</em> couldn't be
     found.
-    
+
+  [% ELSIF error == "invalid_user_id" %]
+    [% title = "Invalid User ID" %]
+    There is no user account with ID <em>[% userid FILTER html %]</em>.
+
   [% ELSIF error == "missing_bug_id" %]
     No [% terms.bug %] ID was given.
     

@@ -86,6 +86,7 @@ sub _create {
         'name'           => '',
         'login'          => '',
         'showmybugslink' => 0,
+        'disabledtext'   => '',
         'flags'          => {},
     };
     bless ($self, $class);
@@ -101,9 +102,11 @@ sub _create {
     my ($id,
         $login,
         $name,
+        $disabledtext,
         $mybugslink) = $dbh->selectrow_array(qq{SELECT userid,
                                                        login_name,
                                                        realname,
+                                                       disabledtext,
                                                        mybugslink
                                                   FROM profiles
                                                  WHERE $cond},
@@ -115,6 +118,7 @@ sub _create {
     $self->{'id'}             = $id;
     $self->{'name'}           = $name;
     $self->{'login'}          = $login;
+    $self->{'disabledtext'}   = $disabledtext;
     $self->{'showmybugslink'} = $mybugslink;
 
     # Now update any old group information if needed
@@ -951,12 +955,14 @@ sub get_userlist {
     return $self->{'userlist'};
 }
 
-sub insert_new_user ($$) {
-    my ($username, $realname) = (@_);
+sub insert_new_user ($$;$$) {
+    my ($username, $realname, $password, $disabledtext) = (@_);
     my $dbh = Bugzilla->dbh;
 
-    # Generate a new random password for the user.
-    my $password = &::GenerateRandomPassword();
+    $disabledtext ||= '';
+
+    # If not specified, generate a new random password for the user.
+    $password ||= &::GenerateRandomPassword();
     my $cryptpassword = bz_crypt($password);
 
     # XXX - These should be moved into ValidateNewUser or CheckEmailSyntax
@@ -966,10 +972,12 @@ sub insert_new_user ($$) {
 
     # Insert the new user record into the database.
     $dbh->do("INSERT INTO profiles 
-                          (login_name, realname, cryptpassword, emailflags) 
-                   VALUES (?, ?, ?, ?)",
+                          (login_name, realname, cryptpassword, emailflags,
+                           disabledtext) 
+                   VALUES (?, ?, ?, ?, ?)",
              undef, 
-             ($username, $realname, $cryptpassword, DEFAULT_EMAIL_SETTINGS));
+             ($username, $realname, $cryptpassword, DEFAULT_EMAIL_SETTINGS,
+              $disabledtext));
 
     # Return the password to the calling code so it can be included
     # in an email sent to the user.
@@ -1039,7 +1047,7 @@ Bugzilla::User - Object for a Bugzilla user
   my $user = new Bugzilla::User($id);
 
   # Class Functions
-  $random_password = insert_new_user($username, $realname);
+  $password = insert_new_user($username, $realname, $password, $disabledtext);
 
 =head1 DESCRIPTION
 
@@ -1131,6 +1139,10 @@ query - The text for the query
 linkinfooter - Whether or not the query should be displayed in the footer.
 
 =back
+
+=item C<disabledtext>
+
+Returns the disable text of the user, if any.
 
 =item C<flush_queries_cache>
 
@@ -1254,12 +1266,18 @@ called "statically," just like a normal procedural function.
 
 =item C<insert_new_user>
 
-Creates a new user in the database with a random password.
+Creates a new user in the database.
 
 Params: $username (scalar, string) - The login name for the new user.
         $realname (scalar, string) - The full name for the new user.
+        $password (scalar, string) - Optional. The password for the new user;
+                                     if not given, a random password will be
+                                     generated.
+        $disabledtext (scalar, string) - Optional. The disable text for the new
+                                         user; if not given, it will be empty.
 
-Returns: The password that we randomly generated for this user, in plain text.
+Returns: The password for this user, in plain text, so it can be included
+         in an e-mail sent to the user.
 
 =item C<is_available_username>
 

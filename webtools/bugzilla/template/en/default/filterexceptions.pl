@@ -581,6 +581,31 @@
   'deleted_bug_count'
 ],
 
+'admin/users/confirm-delete.html.tmpl' => [
+  'andstring',
+  'responsibilityterms.$responsibility',
+  'bugs',
+  'cc',
+  'flags.requestee',
+  'flags.setter',
+  'longdescs',
+  'namedqueries',
+  'votes',
+  'series',
+  'watch.watched',
+  'watch.watcher',
+  'whine_events',
+  'whine_schedules',
+  'otheruser.id'
+],
+
+'admin/users/edit.html.tmpl' => [
+  'otheruser.id',
+  'group.id',
+  'perms.directbless',
+  'perms.directmember',
+],
+
 'admin/components/edit.html.tmpl' => [
   'bug_count'
 ],

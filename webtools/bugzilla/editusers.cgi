@@ -11,23 +11,9 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is the Bugzilla Bug Tracking System.
 #
-# The Initial Developer of the Original Code is Holger
-# Schurig. Portions created by Holger Schurig are
-# Copyright (C) 1999 Holger Schurig. All
-# Rights Reserved.
-#
-# Contributor(s): Holger Schurig <holgerschurig@nikocity.de>
-#                 Dave Miller <justdave@syndicomm.com>
-#                 Joe Robins <jmrobins@tgix.com>
-#                 Dan Mosedale <dmose@mozilla.org>
-#                 Joel Peshkin <bugreport@peshkin.net>
-#                 Erik Stambaugh <erik@dasbistro.com>
-#
-# Direct any questions on this source code to
-#
-# Holger Schurig <holgerschurig@nikocity.de>
+# Contributor(s): Marc Schumann <wurblzap@gmail.com>
 
 use strict;
 use lib ".";
@@ -35,827 +21,735 @@ use lib ".";
 require "CGI.pl";
 require "globals.pl";
 
-use Bugzilla;
+use vars qw( $vars );
+
 use Bugzilla::User;
 use Bugzilla::Constants;
 use Bugzilla::Auth;
 
-# Shut up misguided -w warnings about "used only once".  "use vars" just
-# doesn't work for me.
-
-sub sillyness {
-    my $zz;
-    $zz = $::userid;
-}
-
-my $editall;
-
-
-
-# TestUser:  just returns if the specified user does exists
-# CheckUser: same check, optionally  emit an error text
-
-sub TestUser ($)
-{
-    my $user = shift;
-
-    # does the product exist?
-    SendSQL("SELECT login_name
-             FROM profiles
-             WHERE login_name=" . SqlQuote($user));
-    return FetchOneColumn();
-}
-
-sub CheckUser ($)
-{
-    my $user = shift;
-
-    # do we have a user?
-    unless ($user) {
-        print "Sorry, you haven't specified a user.";
-        PutTrailer();
-        exit;
-    }
-
-    unless (TestUser $user) {
-        print "Sorry, user '$user' does not exist.";
-        PutTrailer();
-        exit;
-    }
-}
-
-
-
-sub EmitElement ($$)
-{
-    my ($name, $value) = (@_);
-    $value = value_quote($value);
-    if ($editall) {
-        print qq{<TD><INPUT SIZE=64 MAXLENGTH=255 NAME="$name" VALUE="$value"></TD>\n};
-    } else {
-        print qq{<TD>$value<INPUT TYPE=HIDDEN  NAME="$name" VALUE="$value"></TD>\n};
-    }
-}
-
-
-#
-# Displays the form to edit a user parameters
-#
-
-sub EmitFormElements ($$$$)
-{
-    my ($user_id, $user, $realname, $disabledtext) = @_;
-
-    print "  <TH ALIGN=\"right\">Login name:</TH>\n";
-    EmitElement("user", $user);
-
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"right\">Real name:</TH>\n";
-    EmitElement("realname", $realname);
-
-    if ($editall) {
-        print "</TR><TR>\n";
-        print "  <TH ALIGN=\"right\">Password:</TH>\n";
-          print qq|
-            <TD><INPUT TYPE="PASSWORD" SIZE="16" MAXLENGTH="16" NAME="password" VALUE=""><br>
-                (enter new password to change)
-            </TD>
-          |;
-        print "</TR><TR>\n";
-
-        print "  <TH ALIGN=\"right\">Disable text:</TH>\n";
-        print "  <TD ROWSPAN=2><TEXTAREA NAME=\"disabledtext\" ROWS=10 COLS=60>" .
-            value_quote($disabledtext) . "</TEXTAREA>\n";
-        print "  </TD>\n";
-        print "</TR><TR>\n";
-        print "  <TD VALIGN=\"top\">If non-empty, then the account will\n";
-        print "be disabled, and this text should explain why.</TD>\n";
-    }
-        
-    
-    if($user ne "") {
-        print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Group Access:</TH><TD><TABLE><TR>";
-        SendSQL("SELECT groups.id, groups.name, groups.description, " .
-                "MAX(CASE WHEN grant_type = " . GRANT_DIRECT . " THEN 1 ELSE 0 END)," .
-                "MAX(CASE WHEN grant_type = " . GRANT_DERIVED . " THEN 1 ELSE 0 END)," .
-                "MAX(CASE WHEN grant_type = " . GRANT_REGEXP . " THEN 1 ELSE 0 END)" .
-                "FROM groups " .
-                "LEFT JOIN user_group_map " .
-                "ON user_group_map.group_id = groups.id " .
-                "AND isbless = 0 " .
-                "AND user_id = $user_id " .
-                "GROUP BY groups.name ");
-        if (MoreSQLData()) {
-            if ($editall) {
-                print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
-                print "</TR><TR>\n<TD ALIGN=CENTER><B>|</B></TD>\n";
-            }
-            print "<TD COLSPAN=2 ALIGN=LEFT><B>User is a member of these groups</B></TD>\n";
-            while (MoreSQLData()) {
-                my ($groupid, $name, $description, $checked, $isderived, $isregexp) = FetchSQLData();
-                next unless ($editall || Bugzilla->user->can_bless($name));
-                PushGlobalSQLState();
-                SendSQL("SELECT user_id " .
-                        "FROM user_group_map " .
-                        "WHERE isbless = 1 " .
-                        "AND user_id = $user_id " .
-                        "AND group_id = $groupid");
-                my ($blchecked) = FetchSQLData() ? 1 : 0;
-                SendSQL("SELECT grantor_id FROM user_group_map, 
-                    group_group_map 
-                    WHERE $groupid = grantor_id 
-                    AND user_group_map.user_id = $user_id
-                    AND user_group_map.isbless = 0
-                    AND group_group_map.grant_type = " . GROUP_BLESS . "
-                    AND user_group_map.group_id = member_id");
-                my $derivedbless = FetchOneColumn();
-                PopGlobalSQLState();
-                print "</TR><TR";
-                print ' bgcolor=#cccccc' if ($isderived || $isregexp);
-                print ">\n";
-                print "<INPUT TYPE=HIDDEN NAME=\"oldgroup_$groupid\" VALUE=\"$checked\">\n";
-                print "<INPUT TYPE=HIDDEN NAME=\"oldbless_$groupid\" VALUE=\"$blchecked\">\n";
-                if ($editall) {
-                    $blchecked = ($blchecked) ? "CHECKED" : "";
-                    print "<TD ALIGN=CENTER>";
-                    print "[" if $derivedbless;
-                    print "<INPUT TYPE=CHECKBOX NAME=\"bless_$groupid\" $blchecked VALUE=\"$groupid\">";
-                    print "]" if $derivedbless;
-                    print "</TD>\n";
-                }
-                $checked = ($checked) ? "CHECKED" : "";
-                print "<TD ALIGN=CENTER>";
-                print '[' if ($isderived);
-                print '*' if ($isregexp);
-                print "<INPUT TYPE=CHECKBOX NAME=\"group_$groupid\" $checked VALUE=\"$groupid\">";
-                print ']' if ($isderived);
-                print '*' if ($isregexp);
-                print "</TD><TD><B>";
-                print ucfirst($name) . "</B>: $description</TD>\n";
-            }
-        }
-        print "</TR></TABLE></TD>\n";
-    }
-}
-
-
-
-#
-# Displays a text like "a.", "a or b.", "a, b or c.", "a, b, c or d."
-#
-
-sub PutTrailer (@)
-{
-    my (@links) = ("Back to the <a href=\"./\">index</a>");
-    if($editall) {
-          push(@links,
-              "<a href=\"editusers.cgi?action=add\">add</a> a new user");
-    }
-    push(@links, @_);
-
-    my $count = $#links;
-    my $num = 0;
-    print "<P>\n";
-    foreach (@links) {
-        print $_;
-        if ($num == $count) {
-            print ".\n";
-        }
-        elsif ($num == $count-1) {
-            print " or ";
-        }
-        else {
-            print ", ";
-        }
-        $num++;
-    }
-    PutFooter();
-}
-
-
-
-#
-# Preliminary checks:
-#
-
 Bugzilla->login(LOGIN_REQUIRED);
+
+my $cgi       = Bugzilla->cgi();
+my $template  = Bugzilla->template();
+my $dbh       = Bugzilla->dbh;
+my $user      = Bugzilla->user();
+my $userid    = $user->id();
+my $editusers = UserInGroup('editusers');
+my $action    = $cgi->param('action') || 'search';
+
+# Reject access if there is no sense in continuing.
+$editusers
+    || Bugzilla->user->can_bless()
+    || ThrowUserError("auth_failure", {group  => "editusers",
+                                       reason => "cant_bless",
+                                       action => "edit",
+                                       object => "users"});
 
 print Bugzilla->cgi->header();
 
-$editall = UserInGroup("editusers");
+$vars->{'editusers'} = $editusers;
+mirrorListSelectionValues();
 
-$editall
-  || Bugzilla->user->can_bless
-  || ThrowUserError("auth_failure", {group  => "editusers",
-                                     reason => "cant_bless",
-                                     action => "edit",
-                                     object => "users"});
+###########################################################################
+if ($action eq 'search') {
+    # Allow to restrict the search to any group the user is allowed to bless.
+    $vars->{'restrictablegroups'} = groupsUserMayBless($user, 'id', 'name');
+    $template->process('admin/users/search.html.tmpl', $vars)
+       || ThrowTemplateError($template->error());
 
+###########################################################################
+} elsif ($action eq 'list') {
+    my $matchstr      = $cgi->param('matchstr');
+    my $matchtype     = $cgi->param('matchtype');
+    my $grouprestrict = $cgi->param('grouprestrict') || '0';
+    my $groupid       = $cgi->param('groupid');
+    my $query = 'SELECT DISTINCT userid, login_name, realname, disabledtext ' .
+                'FROM profiles';
+    my @bindValues;
+    my $nextCondition;
 
-#
-# often used variables
-#
-my $user    = trim($::FORM{user}   || '');
-my $action  = trim($::FORM{action} || '');
-my $localtrailer = '<a href="editusers.cgi?">edit more users</a>';
-my $candelete = Param('allowuserdeletion');
-
-my $dbh = Bugzilla->dbh;
-
-#
-# action='' -> Ask for match string for users.
-#
-
-unless ($action) {
-    PutHeader("Select match string");
-    print qq{
-<FORM METHOD=GET ACTION="editusers.cgi">
-<INPUT TYPE=HIDDEN NAME="action" VALUE="list">
-List users with login name matching: 
-<INPUT SIZE=32 NAME="matchstr">
-<SELECT NAME="matchtype">
-<OPTION VALUE="substr" SELECTED>case-insensitive substring
-<OPTION VALUE="regexp">case-sensitive regexp
-<OPTION VALUE="notregexp">not (case-sensitive regexp)
-</SELECT>
-<BR>
-<INPUT TYPE=SUBMIT VALUE="Submit">
-</FORM>
-};
-    PutTrailer();
-    exit;
-}
-
-
-#
-# action='list' -> Show nice list of matching users
-#
-
-if ($action eq 'list') {
-    PutHeader("Select user");
-    my $query = "";
-    my $matchstr = $::FORM{'matchstr'};
-    if (exists $::FORM{'matchtype'}) {
-      $query = "SELECT login_name,realname,disabledtext " .
-          "FROM profiles WHERE login_name ";
-      if ($::FORM{'matchtype'} eq 'substr') {
-          $query .= "like";
-          $matchstr = '%' . $matchstr . '%';
-      } elsif ($::FORM{'matchtype'} eq 'regexp') {
-          $query .= $dbh->sql_regexp();
-          $matchstr = '.'
-                unless $matchstr;
-      } elsif ($::FORM{'matchtype'} eq 'notregexp') {
-          $query .= $dbh->sql_not_regexp();
-          $matchstr = '.'
-                unless $matchstr;
-      } else {
-          die "Unknown match type";
-      }
-      $query .= SqlQuote($matchstr) . " ORDER BY login_name";
-    } elsif (exists $::FORM{'group'}) {
-      detaint_natural($::FORM{'group'});
-      $query = "SELECT DISTINCT login_name,realname,disabledtext " .
-          "FROM profiles, user_group_map WHERE profiles.userid = user_group_map.user_id
-           AND group_id=" . $::FORM{'group'} . " ORDER BY login_name";
+    if (Param('usevisibilitygroups')) {
+        # Show only users in visible groups.
+        my $visibleGroups = visibleGroupsAsString();
+        $query .= qq{, user_group_map AS ugm
+                     WHERE ugm.user_id = profiles.userid
+                       AND ugm.isbless = 0
+                       AND ugm.group_id IN ($visibleGroups)
+                    };
+        $nextCondition = 'AND';
     } else {
-      die "Missing parameters";
-    }
-
-    SendSQL($query);
-    my $count = 0;
-    my $header = "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">
-<TH ALIGN=\"left\">Edit user ...</TH>
-<TH ALIGN=\"left\">Real name</TH>
-";
-    if ($candelete) {
-        $header .= "<TH ALIGN=\"left\">Action</TH>\n";
-    }
-    $header .= "</TR>\n";
-    print $header;
-    while ( MoreSQLData() ) {
-        $count++;
-        if ($count % 100 == 0) {
-            print "</table>$header";
+        if ($grouprestrict eq '1') {
+            $query .= ', user_group_map AS ugm';
         }
-        my ($user, $realname, $disabledtext) = FetchSQLData();
-        my $s = "";
-        my $e = "";
-        if ($disabledtext) {
-            $s = '<span class="bz_inactive">';
-            $e = '</span>';
+        $nextCondition = 'WHERE';
+    }
+
+    # Selection by user name.
+    if (defined($matchtype)) {
+        $query .= " $nextCondition profiles.login_name ";
+        if ($matchtype eq 'regexp') {
+            $query .= $dbh->sql_regexp . ' ?';
+            $matchstr = '.' unless $matchstr;
+        } elsif ($matchtype eq 'notregexp') {
+            $query .= $dbh->sql_not_regexp . ' ?';
+            $matchstr = '.' unless $matchstr;
+        } else { # substr or unknown
+            $query .= 'like ?';
+            $matchstr = "%$matchstr%";
         }
-        $realname = ($realname ? html_quote($realname) : "<FONT COLOR=\"red\">missing</FONT>");
-        print "<TR>\n";
-        print "  <TD VALIGN=\"top\"><A HREF=\"editusers.cgi?action=edit&user=", url_quote($user), "\"><B>$s", html_quote($user), "$e</B></A></TD>\n";
-        print "  <TD VALIGN=\"top\">$s$realname$e</TD>\n";
-        if ($candelete) {
-            print "  <TD VALIGN=\"top\"><A HREF=\"editusers.cgi?action=del&user=", url_quote($user), "\">Delete</A></TD>\n";
+        $nextCondition = 'AND';
+        # We can trick_taint because we use the value in a SELECT only, using
+        # a placeholder.
+        trick_taint($matchstr);
+        push(@bindValues, $matchstr);
+    }
+
+    # Selection by group.
+    if ($grouprestrict eq '1') {
+        $query .= " $nextCondition profiles.userid = ugm.user_id " .
+                  'AND ugm.group_id = ?';
+        # We can trick_taint because we use the value in a SELECT only, using
+        # a placeholder.
+        trick_taint($groupid);
+        push(@bindValues, $groupid);
+    }
+    $query .= ' ORDER BY profiles.login_name';
+
+    $vars->{'users'} = $dbh->selectall_arrayref($query,
+                                                {'Slice' => {}},
+                                                @bindValues);
+    $template->process('admin/users/list.html.tmpl', $vars)
+       || ThrowTemplateError($template->error());
+
+###########################################################################
+} elsif ($action eq 'add') {
+    $editusers || ThrowUserError("auth_failure", {group  => "editusers",
+                                                  action => "add",
+                                                  object => "users"});
+
+    $template->process('admin/users/create.html.tmpl', $vars)
+       || ThrowTemplateError($template->error());
+
+###########################################################################
+} elsif ($action eq 'new') {
+    $editusers || ThrowUserError("auth_failure", {group  => "editusers",
+                                                  action => "add",
+                                                  object => "users"});
+
+    my $login = $cgi->param('login');
+    my $password = $cgi->param('password');
+
+    # Cleanups
+    my $realname = trim($cgi->param('name') || '');
+    my $disabledtext = trim($cgi->param('disabledtext') || '');
+
+    # Lock tables during the check+creation session.
+    $dbh->bz_lock_tables('profiles WRITE',
+                         'profiles_activity WRITE',
+                         'namedqueries READ',
+                         'whine_queries READ',
+                         'tokens READ');
+
+    # Validity checks
+    $login || ThrowUserError('user_login_required');
+    CheckEmailSyntax($login);
+    is_available_username($login) || ThrowUserError('account_exists',
+                                                    {'email' => $login});
+    ValidatePassword($password);
+
+    # Login and password are validated now, and realname and disabledtext
+    # are allowed to contain anything
+    trick_taint($login);
+    trick_taint($realname);
+    trick_taint($password);
+    trick_taint($disabledtext);
+
+    insert_new_user($login, $realname, $password, $disabledtext);
+    my $userid = $dbh->bz_last_key('profiles', 'userid');
+    $dbh->bz_unlock_tables();
+    userDataToVars($userid);
+
+    $vars->{'message'} = 'account_created';
+    $template->process('admin/users/edit.html.tmpl', $vars)
+       || ThrowTemplateError($template->error());
+
+###########################################################################
+} elsif ($action eq 'edit') {
+    my $otherUser = new Bugzilla::User($cgi->param('userid'))
+        || ThrowCodeError('invalid_user_id', {'userid' => $cgi->param('userid')});
+    my $otherUserID = $otherUser->id();
+
+    canSeeUser($otherUserID)
+        || ThrowUserError('auth_failure', {reason => "not_visible",
+                                           action => "modify",
+                                           object => "user"});
+
+    userDataToVars($otherUserID);
+
+    $template->process('admin/users/edit.html.tmpl', $vars)
+       || ThrowTemplateError($template->error());
+
+###########################################################################
+} elsif ($action eq 'update') {
+    my $otherUser = new Bugzilla::User($cgi->param('userid'))
+        || ThrowCodeError('invalid_user_id', {'userid' => $cgi->param('userid')});
+    my $otherUserID = $otherUser->id();
+    my $logoutNeeded = 0;
+    my @changedFields;
+
+    # Lock tables during the check+update session.
+    $dbh->bz_lock_tables('profiles WRITE',
+                         'profiles_activity WRITE',
+                         'fielddefs READ',
+                         'namedqueries READ',
+                         'whine_queries READ',
+                         'tokens WRITE',
+                         'logincookies WRITE',
+                         'groups READ',
+                         'user_group_map WRITE',
+                         'group_group_map READ');
+ 
+    canSeeUser($otherUserID)
+        || ThrowUserError('auth_failure', {reason => "not_visible",
+                                           action => "modify",
+                                           object => "user"},
+                          'abort');
+
+    # Cleanups
+    my $login           = trim($cgi->param('login')           || '');
+    my $loginold        =      $cgi->param('loginold')        || '';
+    my $realname        = trim($cgi->param('name')            || '');
+    my $realnameold     =      $cgi->param('nameold')         || '';
+    my $password        =      $cgi->param('password')        || '';
+    my $disabledtext    = trim($cgi->param('disabledtext')    || '');
+    my $disabledtextold =      $cgi->param('disabledtextold') || '';
+
+    # Update profiles table entry; silently skip doing this if the user
+    # is not authorized.
+    if ($editusers) {
+        my @values;
+
+        if ($login ne $loginold) {
+            # Validate, then trick_taint.
+            $login || ThrowUserError('user_login_required', undef, 'abort');
+            CheckEmailSyntax($login);
+            is_available_username($login) || ThrowUserError('account_exists',
+                                                            {'email' => $login},
+                                                             'abort');
+            trick_taint($login);
+            push(@changedFields, 'login_name');
+            push(@values, $login);
+            $logoutNeeded = 1;
+
+            # Since we change the login, silently delete any tokens.
+            $dbh->do('DELETE FROM tokens WHERE userid = ?', {}, $otherUserID);
         }
-        print "</TR>";
-    }
-    if ($editall) {
-        print "<TR>\n";
-        my $span = $candelete ? 3 : 2;
-        print qq{
-<TD VALIGN="top" COLSPAN=$span ALIGN="right">
-    <A HREF=\"editusers.cgi?action=add\">add a new user</A>
-</TD>
-};
-        print "</TR>";
-    }
-    print "</TABLE>\n";
-    print "$count users found.\n";
-
-    PutTrailer($localtrailer);
-    exit;
-}
-
-
-
-
-#
-# action='add' -> present form for parameters for new user
-#
-# (next action will be 'new')
-#
-
-if ($action eq 'add') {
-    $editall || ThrowUserError("auth_failure", {group  => "editusers",
-                                                action => "add",
-                                                object => "users"});
-    PutHeader("Add user");
-    print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
-    print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
-
-    EmitFormElements(0, '', '', '');
-
-    print "</TR></TABLE>\n<HR>\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"new\">\n";
-    print "</FORM>";
-
-    my $other = $localtrailer;
-    $other =~ s/more/other/;
-    PutTrailer($other);
-    exit;
-}
-
-
-
-#
-# action='new' -> add user entered in the 'action=add' screen
-#
-
-if ($action eq 'new') {
-    $editall || ThrowUserError("auth_failure", {group  => "editusers",
-                                                action => "add",
-                                                object => "users"});
-
-    # Cleanups and valididy checks
-    my $realname = trim($::FORM{realname} || '');
-    # We don't trim the password since that could falsely lead the user
-    # to believe a password with a space was accepted even though a space 
-    # is an illegal character in a Bugzilla password.
-    my $password = $::FORM{'password'};
-    my $disabledtext = trim($::FORM{disabledtext} || '');
-    my $emailregexp = Param("emailregexp");
-
-    PutHeader("Adding new user");
-    unless ($user) {
-        print "You must enter a name for the new user. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
-        exit;
-    }
-    unless ($user =~ m/$emailregexp/) {
-        print "The user name entered must be a valid e-mail address. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
-        exit;
-    }
-    if (!is_available_username($user)) {
-        print "The user '$user' does already exist. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
-        exit;
-    }
-    my $passworderror = ValidatePassword($password);
-    if ( $passworderror ) {
-        print $passworderror;
-        PutTrailer($localtrailer);
-        exit;
-    }
-
-    # Add the new user
-    SendSQL("INSERT INTO profiles ( " .
-            "login_name, cryptpassword, realname,  " .
-            "emailflags, disabledtext" .
-            " ) VALUES ( " .
-            SqlQuote($user) . "," .
-            SqlQuote(bz_crypt($password)) . "," .
-            SqlQuote($realname) . "," .
-            SqlQuote(Bugzilla::Constants::DEFAULT_EMAIL_SETTINGS) . "," .
-            SqlQuote($disabledtext) . ")" );
-
-    #+++ send e-mail away
-
-    print "OK, done.<br>\n";
-    my $newuserid = $dbh->bz_last_key('profiles', 'userid');
-
-    my $changeduser = new Bugzilla::User($newuserid);
-    $changeduser->derive_groups();
-    print "To change ${user}'s permissions, go back and " .
-        "<a href=\"editusers.cgi?action=edit&user=" . url_quote($user) .
-        "\">edit</a> this user.";
-    print "<p>\n";
-    PutTrailer($localtrailer);
-    exit;
-
-}
-
-
-
-#
-# action='del' -> ask if user really wants to delete
-#
-# (next action would be 'delete')
-#
-
-if ($action eq 'del') {
-    $candelete || ThrowUserError("users_deletion_disabled");
-    $editall || ThrowUserError("auth_failure", {group  => "editusers",
-                                                action => "delete",
-                                                object => "users"});
-    CheckUser($user);
-
-    # display some data about the user
-    SendSQL("SELECT userid, realname FROM profiles
-             WHERE login_name=" . SqlQuote($user));
-    my ($thisuserid, $realname) = 
-      FetchSQLData();
-    $realname = ($realname ? html_quote($realname) : "<FONT COLOR=\"red\">missing</FONT>");
-    
-    PutHeader("Delete user $user");
-    print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>\n";
-    print "<TR BGCOLOR=\"#6666FF\">\n";
-    print "  <TH VALIGN=\"top\" ALIGN=\"left\">Part</TH>\n";
-    print "  <TH VALIGN=\"top\" ALIGN=\"left\">Value</TH>\n";
-
-    print "</TR><TR>\n";
-    print "  <TD VALIGN=\"top\">Login name:</TD>\n";
-    print "  <TD VALIGN=\"top\">$user</TD>\n";
-
-    print "</TR><TR>\n";
-    print "  <TD VALIGN=\"top\">Real name:</TD>\n";
-    print "  <TD VALIGN=\"top\">$realname</TD>\n";
-
-    print "</TR><TR>\n";
-    print "  <TD VALIGN=\"top\">Group set:</TD>\n";
-    print "  <TD VALIGN=\"top\">";
-    SendSQL("SELECT name
-             FROM groups, user_group_map
-             WHERE groups.id = user_group_map.group_id
-             AND user_group_map.user_id = $thisuserid
-             AND isbless = 0
-             ORDER BY name");
-    my $found = 0;
-    while ( MoreSQLData() ) {
-        my ($name) = FetchSQLData();
-        print "<br>\n" if $found;
-        print ucfirst $name;
-        $found = 1;
-    }
-    print "none" unless $found;
-    print "</TD>\n</TR>";
-
-
-    # Check if the user is an initialowner
-    my $nodelete = '';
-
-    SendSQL("SELECT products.name, components.name " .
-            "FROM products, components " .
-            "WHERE products.id = components.product_id " .
-            " AND initialowner=" . login_to_id($user));
-    $found = 0;
-    while (MoreSQLData()) {
-        if ($found) {
-            print "<BR>\n";
-        } else {
-            print "<TR>\n";
-            print "  <TD VALIGN=\"top\">Initial owner:</TD>\n";
-            print "  <TD VALIGN=\"top\">";
+        if ($realname ne $realnameold) {
+            # The real name may be anything; we use a placeholder for our
+            # INSERT, and we rely on displaying code to FILTER html.
+            trick_taint($realname);
+            push(@changedFields, 'realname');
+            push(@values, $realname);
         }
-        my ($product, $component) = FetchSQLData();
-        print "<a href=\"editcomponents.cgi?product=", url_quote($product),
-                "&component=", url_quote($component),
-                "&action=edit\">$product: $component</a>";
-        $found    = 1;
-        $nodelete = 'initial bug owner';
-    }
-    print "</TD>\n</TR>" if $found;
-
-
-    # Check if the user is an initialqacontact
-
-    SendSQL("SELECT products.name, components.name " .
-            "FROM products, components " .
-            "WHERE products.id = components.product_id " .
-            " AND initialqacontact=" . login_to_id($user));
-    $found = 0;
-    while (MoreSQLData()) {
-        if ($found) {
-            print "<BR>\n";
-        } else {
-            print "<TR>\n";
-            print "  <TD VALIGN=\"top\">Initial QA contact:</TD>\n";
-            print "  <TD VALIGN=\"top\">";
+        if ($password) {
+            # Validate, then trick_taint.
+            ValidatePassword($password) if $password;
+            trick_taint($password);
+            push(@changedFields, 'cryptpassword');
+            push(@values, bz_crypt($password));
+            $logoutNeeded = 1;
         }
-        my ($product, $component) = FetchSQLData();
-        print "<a href=\"editcomponents.cgi?product=", url_quote($product),
-                "&component=", url_quote($component),
-                "&action=edit\">$product: $component</a>";
-        $found    = 1;
-        $nodelete = 'initial QA contact';
-    }
-    print "</TD>\n</TR>" if $found;
-
-    print "</TABLE>\n";
-
-
-    if ($nodelete) {
-        print "<P>You can't delete this user because '$user' is an $nodelete ",
-              "for at least one product.";
-        PutTrailer($localtrailer);
-        exit;
-    }
-
-
-    print "<H2>Confirmation</H2>\n";
-    print "<P>Do you really want to delete this user?<P>\n";
-
-    print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Yes, delete\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"delete\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"user\" VALUE=\"$user\">\n";
-    print "</FORM>";
-
-    PutTrailer($localtrailer);
-    exit;
-}
-
-
-
-#
-# action='delete' -> really delete the user
-#
-
-if ($action eq 'delete') {
-    $candelete || ThrowUserError("users_deletion_disabled");
-    $editall || ThrowUserError("auth_failure", {group  => "editusers",
-                                                action => "delete",
-                                                object => "users"});
-    CheckUser($user);
-
-    SendSQL("SELECT userid
-             FROM profiles
-             WHERE login_name=" . SqlQuote($user));
-    my $userid = FetchOneColumn();
-
-    Bugzilla->logout_user_by_id($userid);
-    SendSQL("DELETE FROM profiles
-             WHERE login_name=" . SqlQuote($user));
-    SendSQL("DELETE FROM user_group_map
-             WHERE user_id=" . $userid);
-
-    PutHeader("Deleting user");
-    print "User deleted.<BR>\n";
-    PutTrailer($localtrailer);
-    exit;
-}
-
-
-
-#
-# action='edit' -> present the user edit from
-#
-# (next action would be 'update')
-#
-
-if ($action eq 'edit') {
-    PutHeader("Edit user $user");
-    CheckUser($user);
-
-    # get data of user
-    SendSQL("SELECT userid, realname, disabledtext
-             FROM profiles
-             WHERE login_name=" . SqlQuote($user));
-    my ($thisuserid, $realname, $disabledtext) = FetchSQLData();
-
-    if ($thisuserid > 0) {
-        # Force groups to be up to date
-        my $changeduser = new Bugzilla::User($thisuserid);
-        $changeduser->derive_groups();
-    }
-    print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
-    print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
-
-    EmitFormElements($thisuserid, $user, $realname, $disabledtext);
-    
-    print "</TR></TABLE>\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"userold\" VALUE=\"$user\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"realnameold\" VALUE=\"$realname\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"disabledtextold\" VALUE=\"" .
-        value_quote($disabledtext) . "\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
-    print "<BR>User is a member of any groups shown with a check or grey bar.
-           A grey bar indicates indirect membership, either derived from other
-           groups (marked with square brackets) or via regular expression
-           (marked with '*').<p> 
-           Square brackets around the bless checkbox indicate the ability
-           to bless users (grant them membership in the group) as a result
-           of membership in another group.
-       <BR>";
-
-    print "</FORM>";
-    if ($candelete) {
-        print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
-        print "<INPUT TYPE=SUBMIT VALUE=\"Delete User\">\n";
-        print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"del\">\n";
-        print "<INPUT TYPE=HIDDEN NAME=\"user\" VALUE=\"$user\">\n";
-        print "</FORM>";
+        if ($disabledtext ne $disabledtextold) {
+            # The disable text may be anything; we use a placeholder for our
+            # INSERT, and we rely on displaying code to FILTER html.
+            trick_taint($disabledtext);
+            push(@changedFields, 'disabledtext');
+            push(@values, $disabledtext);
+            $logoutNeeded = 1;
+        }
+        if (@changedFields) {
+            push (@values, $otherUserID);
+            $logoutNeeded && Bugzilla->logout_user_by_id($otherUserID);
+            $dbh->do('UPDATE profiles SET ' .
+                     join(' = ?,', @changedFields).' = ? ' .
+                     'WHERE userid = ?',
+                     undef, @values);
+            # FIXME: should create profiles_activity entries.
+        }
     }
 
-    my $x = $localtrailer;
-    $x =~ s/more/other/;
-    PutTrailer($x);
-    exit;
-}
+    # Update group settings.
+    my $sth_add_mapping = $dbh->prepare(
+        qq{INSERT INTO user_group_map (
+                  user_id, group_id, isbless, grant_type
+                 ) VALUES (
+                  ?, ?, ?, ?
+                 )
+          });
+    my $sth_remove_mapping = $dbh->prepare(
+        qq{DELETE FROM user_group_map
+            WHERE user_id = ?
+              AND group_id = ?
+              AND isbless = ?
+              AND grant_type = ?
+          });
 
-#
-# action='update' -> update the user
-#
+    # We need the group names, too -- for display and for profiles_activity.
+    my $groups = $dbh->selectall_hashref('SELECT id, name FROM groups', 'id');
+    my @groupsAddedTo;
+    my @groupsRemovedFrom;
+    my @groupsGrantedRightsToBless;
+    my @groupsDeniedRightsToBless;
 
-if ($action eq 'update') {
-    my $userold               = trim($::FORM{userold}              || '');
-    my $realname              = trim($::FORM{realname}             || '');
-    my $realnameold           = trim($::FORM{realnameold}          || '');
-    my $password              = $::FORM{password}                  || '';
-    my $disabledtext          = trim($::FORM{disabledtext}         || '');
-    my $disabledtextold       = trim($::FORM{disabledtextold}      || '');
-    my @localtrailers         = ($localtrailer);
-    $localtrailer = qq|<a href="editusers.cgi?action=edit&user=XXX">edit user again</a>|;
-    PutHeader("Updating user $userold" . ($realnameold && " ($realnameold)"));
+    # Regard only groups the user is allowed to bless and skip all others
+    # silently.
+    # FIXME: checking for existence of each user_group_map entry
+    #        would allow to display a friendlier error message on page reloads.
+    foreach (@{groupsUserMayBless($user, 'id')}) {
+        my $id = $$_{'id'};
 
-    CheckUser($userold);
-    SendSQL("SELECT userid FROM profiles
-             WHERE login_name=" . SqlQuote($userold));
-    my ($thisuserid) = FetchSQLData();
-
-    my $emailregexp = Param("emailregexp");
-    unless ($user =~ m/$emailregexp/) {
-        print "The user name entered must be a valid e-mail address. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
-        exit;
-    }
-
-    my @grpadd = ();
-    my @grpdel = ();
-    my $chggrp = 0;
-    SendSQL("SELECT id, name FROM groups");
-    while (my ($groupid, $name) = FetchSQLData()) {
-        next unless ($editall || Bugzilla->user->can_bless($name));
-        if ($::FORM{"oldgroup_$groupid"} != ($::FORM{"group_$groupid"} ? 1 : 0)) {
-            # group membership changed
-            PushGlobalSQLState();
-            $chggrp = 1;
-            SendSQL("DELETE FROM user_group_map 
-                     WHERE user_id = $thisuserid
-                     AND group_id = $groupid
-                     AND isbless = 0
-                     AND grant_type = " . GRANT_DIRECT);
-            if ($::FORM{"group_$groupid"}) {
-                SendSQL("INSERT INTO user_group_map 
-                         (user_id, group_id, isbless, grant_type)
-                         VALUES ($thisuserid, $groupid, 0," . GRANT_DIRECT . ")");
-                print "Added user to group $name<BR>\n";
-                push(@grpadd, $name);
+        # Change memberships.
+        my $oldgroupid = $cgi->param("oldgroup_$id") || '0';
+        my $groupid    = $cgi->param("group_$id")    || '0';
+        if ($groupid ne $oldgroupid) {
+            if ($groupid eq '0') {
+                $sth_remove_mapping->execute(
+                    $otherUserID, $id, 0, GRANT_DIRECT);
+                push(@groupsRemovedFrom, $$groups{$id}{'name'});
             } else {
-                print "Dropped user from group $name<BR>\n";
-                push(@grpdel, $name);
+                $sth_add_mapping->execute(
+                    $otherUserID, $id, 0, GRANT_DIRECT);
+                push(@groupsAddedTo, $$groups{$id}{'name'});
             }
-            PopGlobalSQLState();
         }
-        if ($editall && ($::FORM{"oldbless_$groupid"} != ($::FORM{"bless_$groupid"} ? 1 : 0))) {
-            # group membership changed
-            PushGlobalSQLState();
-            SendSQL("DELETE FROM user_group_map 
-                     WHERE user_id = $thisuserid
-                     AND group_id = $groupid
-                     AND isbless = 1
-                     AND grant_type = " . GRANT_DIRECT);
-            if ($::FORM{"bless_$groupid"}) {
-                SendSQL("INSERT INTO user_group_map 
-                         (user_id, group_id, isbless, grant_type)
-                         VALUES ($thisuserid, $groupid, 1," . GRANT_DIRECT . ")");
-                print "Granted user permission to bless group $name<BR>\n";
-            } else {
-                print "Revoked user's permission to bless group $name<BR>\n";
+
+        # Only members of the editusers group may change bless grants.
+        # Skip silently if this is not the case.
+        if ($editusers) {
+            my $oldgroupid = $cgi->param("oldbless_$id") || '0';
+            my $groupid    = $cgi->param("bless_$id")    || '0';
+            if ($groupid ne $oldgroupid) {
+                if ($groupid eq '0') {
+                    $sth_remove_mapping->execute(
+                        $otherUserID, $id, 1, GRANT_DIRECT);
+                    push(@groupsDeniedRightsToBless, $$groups{$id}{'name'});
+                } else {
+                    $sth_add_mapping->execute(
+                        $otherUserID, $id, 1, GRANT_DIRECT);
+                    push(@groupsGrantedRightsToBless, $$groups{$id}{'name'});
+                }
             }
-            PopGlobalSQLState();
-            
         }
     }
-    my $fieldid = GetFieldID("bug_group");
-    if ($chggrp) {
-        SendSQL("INSERT INTO profiles_activity " .  
-                "(userid, who, profiles_when, fieldid, oldvalue, newvalue) " .  
-                "VALUES " .  "($thisuserid, $::userid, now(), $fieldid, " .  
-                SqlQuote(join(", ",@grpdel)) . ", " .
-                SqlQuote(join(", ",@grpadd)) . ")");
-        SendSQL("UPDATE profiles SET refreshed_when='1900-01-01 00:00:00' " .
-                "WHERE userid = $thisuserid");
+    if (@groupsAddedTo || @groupsRemovedFrom) {
+        $dbh->do(qq{INSERT INTO profiles_activity (
+                           userid, who,
+                           profiles_when, fieldid,
+                           oldvalue, newvalue
+                          ) VALUES (
+                           ?, ?, now(), ?, ?, ?
+                          )
+                   },
+                 undef,
+                 ($otherUserID, $userid,
+                  GetFieldID('bug_group'),
+                  join(', ', @groupsRemovedFrom), join(', ', @groupsAddedTo)));
+        $dbh->do('UPDATE profiles SET refreshed_when=? WHERE userid = ?',
+                 undef, ('1900-01-01 00:00:00', $otherUserID));
+    }
+    # FIXME: should create profiles_activity entries for blesser changes.
+
+    $dbh->bz_unlock_tables();
+
+    # FIXME: userDataToVars may be off when editing ourselves.
+    userDataToVars($otherUserID);
+
+    $vars->{'message'} = 'account_updated';
+    $vars->{'loginold'} = $loginold;
+    $vars->{'changed_fields'} = \@changedFields;
+    $vars->{'groups_added_to'} = \@groupsAddedTo;
+    $vars->{'groups_removed_from'} = \@groupsRemovedFrom;
+    $vars->{'groups_granted_rights_to_bless'} = \@groupsGrantedRightsToBless;
+    $vars->{'groups_denied_rights_to_bless'} = \@groupsDeniedRightsToBless;
+    $template->process('admin/users/edit.html.tmpl', $vars)
+       || ThrowTemplateError($template->error());
+
+###########################################################################
+} elsif ($action eq 'del') {
+    my $otherUser = new Bugzilla::User($cgi->param('userid'))
+        || ThrowCodeError('invalid_user_id', {'userid' => $cgi->param('userid')});
+    my $otherUserID = $otherUser->id();
+
+    Param('allowuserdeletion') || ThrowUserError('users_deletion_disabled');
+    $editusers || ThrowUserError('auth_failure', {group  => "editusers",
+                                                  action => "delete",
+                                                  object => "users"});
+    canSeeUser($otherUserID) || ThrowUserError('auth_failure',
+                                               {reason => "not_visible",
+                                                action => "delete",
+                                                object => "user"});
+
+    $vars->{'otheruser'}      = $otherUser;
+    $vars->{'editcomponents'} = UserInGroup('editcomponents');
+
+    # If the user is initial owner or initial QA contact of a component,
+    # then no deletion is possible.
+    $vars->{'product_responsibilities'} = productResponsibilities($otherUserID);
+
+    # Find other cross references.
+    $vars->{'bugs'} = $dbh->selectrow_array(
+        qq{SELECT COUNT(*)
+           FROM bugs
+           WHERE assigned_to = ? OR
+                 qa_contact = ? OR
+                 reporter = ?
+          },
+        undef, ($otherUserID, $otherUserID, $otherUserID));
+    $vars->{'cc'} = $dbh->selectrow_array(
+        'SELECT COUNT(*) FROM cc WHERE who = ?',
+        undef, $otherUserID);
+    $vars->{'bugs_activity'} = $dbh->selectrow_array(
+        'SELECT COUNT(*) FROM bugs_activity WHERE who = ?',
+        undef, $otherUserID);
+    $vars->{'flags'}{'requestee'} = $dbh->selectrow_array(
+        'SELECT COUNT(*) FROM flags WHERE requestee_id = ?',
+        undef, $otherUserID);
+    $vars->{'flags'}{'setter'} = $dbh->selectrow_array(
+        'SELECT COUNT(*) FROM flags WHERE setter_id = ?',
+        undef, $otherUserID);
+    $vars->{'groups'} = $dbh->selectall_arrayref(
+        qq{SELECT name
+           FROM groups, user_group_map
+           WHERE id = group_id
+           AND user_id = ?
+           AND isbless = 0
+           ORDER BY name
+          },
+        {'Slice' => {}}, $otherUserID);
+    $vars->{'longdescs'} = $dbh->selectrow_array(
+        'SELECT COUNT(*) FROM longdescs WHERE who = ?',
+        undef, $otherUserID);
+    $vars->{'namedqueries'} = $dbh->selectrow_array(
+        'SELECT COUNT(*) FROM namedqueries WHERE userid = ?',
+        undef, $otherUserID);
+    $vars->{'profiles_activity'} = $dbh->selectrow_array(
+        'SELECT COUNT(*) FROM profiles_activity WHERE who = ? AND userid != ?',
+        undef, ($otherUserID, $otherUserID));
+    $vars->{'series'} = $dbh->selectrow_array(
+        'SELECT COUNT(*) FROM series WHERE creator = ?',
+        undef, $otherUserID);
+    $vars->{'votes'} = $dbh->selectrow_array(
+        'SELECT COUNT(*) FROM votes WHERE who = ?',
+        undef, $otherUserID);
+    $vars->{'watch'}{'watched'} = $dbh->selectrow_array(
+        'SELECT COUNT(*) FROM watch WHERE watched = ?',
+        undef, $otherUserID);
+    $vars->{'watch'}{'watcher'} = $dbh->selectrow_array(
+        'SELECT COUNT(*) FROM watch WHERE watcher = ?',
+        undef, $otherUserID);
+    $vars->{'whine_events'} = $dbh->selectrow_array(
+        'SELECT COUNT(*) FROM whine_events WHERE owner_userid = ?',
+        undef, $otherUserID);
+    $vars->{'whine_schedules'} = $dbh->selectrow_array(
+        qq{SELECT COUNT(distinct eventid)
+           FROM whine_schedules
+           WHERE mailto = ?
+           AND mailto_type = ?
+          },
+        undef, ($otherUserID, MAILTO_USER));
+
+    $template->process('admin/users/confirm-delete.html.tmpl', $vars)
+       || ThrowTemplateError($template->error());
+
+###########################################################################
+} elsif ($action eq 'delete') {
+    my $otherUser = new Bugzilla::User($cgi->param('userid'))
+        || ThrowCodeError('invalid_user_id', {'userid' => $cgi->param('userid')});
+    my $otherUserID = $otherUser->id();
+    my $otherUserLogin = $otherUser->login();
+
+    # Lock tables during the check+removal session.
+    # FIXME: if there was some change on these tables after the deletion
+    #        confirmation checks, we may do something here we haven't warned
+    #        about.
+    $dbh->bz_lock_tables('products READ',
+                         'components READ',
+                         'logincookies WRITE',
+                         'profiles WRITE',
+                         'profiles_activity WRITE',
+                         'groups READ',
+                         'user_group_map WRITE',
+                         'group_group_map READ',
+                         'flags WRITE',
+                         'cc WRITE',
+                         'namedqueries WRITE',
+                         'tokens WRITE',
+                         'votes WRITE',
+                         'watch WRITE',
+                         'series WRITE',
+                         'series_data WRITE',
+                         'whine_schedules WRITE',
+                         'whine_queries WRITE',
+                         'whine_events WRITE');
+
+    Param('allowuserdeletion')
+        || ThrowUserError('users_deletion_disabled', undef, 'abort');
+    $editusers || ThrowUserError('auth_failure',
+                                 {group  => "editusers",
+                                  action => "delete",
+                                  object => "users"},
+                                 'abort');
+    canSeeUser($otherUserID) || ThrowUserError('auth_failure',
+                                               {reason => "not_visible",
+                                                action => "delete",
+                                                object => "user"},
+                                               'abort');
+    productResponsibilities($otherUserID)
+        && ThrowUserError('user_has_responsibility', undef, 'abort');
+
+    Bugzilla->logout_user_by_id($otherUserID);
+
+    # Reference removals.
+    $dbh->do('UPDATE flags set requestee_id = NULL WHERE requestee_id = ?',
+             undef, $otherUserID);
+
+    # Simple deletions in referred tables.
+    $dbh->do('DELETE FROM cc WHERE who = ?', undef, $otherUserID);
+    $dbh->do('DELETE FROM logincookies WHERE userid = ?', undef, $otherUserID);
+    $dbh->do('DELETE FROM namedqueries WHERE userid = ?', undef, $otherUserID);
+    $dbh->do('DELETE FROM profiles_activity WHERE userid = ? OR who = ?', undef,
+             ($otherUserID, $otherUserID));
+    $dbh->do('DELETE FROM tokens WHERE userid = ?', undef, $otherUserID);
+    $dbh->do('DELETE FROM user_group_map WHERE user_id = ?', undef,
+             $otherUserID);
+    $dbh->do('DELETE FROM votes WHERE who = ?', undef, $otherUserID);
+    $dbh->do('DELETE FROM watch WHERE watcher = ? OR watched = ?', undef,
+             ($otherUserID, $otherUserID));
+
+    # More complex deletions in referred tables.
+    my $id;
+
+    # 1) Series
+    my $sth_seriesid = $dbh->prepare(
+           'SELECT series_id FROM series WHERE creator = ?');
+    my $sth_deleteSeries = $dbh->prepare(
+           'DELETE FROM series WHERE series_id = ?');
+    my $sth_deleteSeriesData = $dbh->prepare(
+           'DELETE FROM series_data WHERE series_id = ?');
+
+    $sth_seriesid->execute($otherUserID);
+    while ($id = $sth_seriesid->fetchrow_array()) {
+        $sth_deleteSeriesData->execute($id);
+        $sth_deleteSeries->execute($id);
     }
 
+    # 2) Whines
+    my $sth_whineidFromSchedules = $dbh->prepare(
+           qq{SELECT eventid FROM whine_schedules
+              WHERE mailto = ? AND mailto_type = ?});
+    my $sth_whineidFromEvents = $dbh->prepare(
+           'SELECT id FROM whine_events WHERE owner_userid = ?');
+    my $sth_deleteWhineEvent = $dbh->prepare(
+           'DELETE FROM whine_events WHERE id = ?');
+    my $sth_deleteWhineQuery = $dbh->prepare(
+           'DELETE FROM whine_queries WHERE eventid = ?');
+    my $sth_deleteWhineSchedule = $dbh->prepare(
+           'DELETE FROM whine_schedules WHERE eventid = ?');
 
-    # Update the database with the user's new password if they changed it.
-    if ( $editall && $password ) {
-        my $passworderror = ValidatePassword($password);
-        if ( !$passworderror ) {
-            my $cryptpassword = SqlQuote(bz_crypt($password));
-            my $loginname = SqlQuote($userold);
-            SendSQL("UPDATE  profiles
-                     SET     cryptpassword = $cryptpassword
-                     WHERE   login_name = $loginname");
-            SendSQL("SELECT userid
-                     FROM profiles
-                     WHERE login_name=" . SqlQuote($userold));
-            my $userid = FetchOneColumn();
-            Bugzilla->logout_user_by_id($userid);
-            print "Updated password.<BR>\n";
-        } else {
-            print "Did not update password: $passworderror<br>\n";
-        }
+    $sth_whineidFromSchedules->execute($otherUserID, MAILTO_USER);
+    while ($id = $sth_whineidFromSchedules->fetchrow_array()) {
+        $sth_deleteWhineQuery->execute($id);
+        $sth_deleteWhineSchedule->execute($id);
+        $sth_deleteWhineEvent->execute($id);
     }
-    if ($editall && $realname ne $realnameold) {
-        SendSQL("UPDATE profiles
-                 SET realname=" . SqlQuote($realname) . "
-                 WHERE login_name=" . SqlQuote($userold));
-        print 'Updated real name to <q>' . html_quote($realname) . "</q>.<BR>\n";
-    }
-    if ($editall && $disabledtext ne $disabledtextold) {
-        SendSQL("UPDATE profiles
-                 SET disabledtext=" . SqlQuote($disabledtext) . "
-                 WHERE login_name=" . SqlQuote($userold));
-        SendSQL("SELECT userid
-                 FROM profiles
-                 WHERE login_name=" . SqlQuote($userold));
-        my $userid = FetchOneColumn();
-        Bugzilla->logout_user_by_id($userid);
-        print "Updated disabled text.<BR>\n";
-    }
-    if ($editall && $user ne $userold) {
-        unless ($user) {
-            print "Sorry, I can't delete the user's name.";
-            $userold = url_quote($userold);
-            $localtrailer =~ s/XXX/$userold/;
-            push @localtrailers, $localtrailer;
-            PutTrailer(@localtrailers);
-            exit;
-        }
-        if (TestUser($user)) {
-            print "Sorry, user name '$user' is already in use.";
-            $userold = url_quote($userold);
-            $localtrailer =~ s/XXX/$userold/;
-            push @localtrailers, $localtrailer;
-            PutTrailer($localtrailer);
-            exit;
-        }
 
-        SendSQL("UPDATE profiles
-                 SET login_name=" . SqlQuote($user) . "
-                 WHERE login_name=" . SqlQuote($userold));
-
-        print q|Updated user's name to <a href="mailto:| .
-              url_quote($user) . '">' . html_quote($user) . "</a>.<BR>\n";
+    $sth_whineidFromEvents->execute($otherUserID);
+    while ($id = $sth_whineidFromEvents->fetchrow_array()) {
+        $sth_deleteWhineQuery->execute($id);
+        $sth_deleteWhineSchedule->execute($id);
+        $sth_deleteWhineEvent->execute($id);
     }
-    my $changeduser = new Bugzilla::User($thisuserid);
-    $changeduser->derive_groups();
 
-    $user = url_quote($user);
-    $localtrailer =~ s/XXX/$user/;
-    push @localtrailers, $localtrailer;
-    PutTrailer(@localtrailers);
-    exit;
+    # Finally, remove the user account itself.
+    $dbh->do('DELETE FROM profiles WHERE userid = ?', undef, $otherUserID);
+
+    $dbh->bz_unlock_tables();
+
+    $vars->{'message'} = 'account_deleted';
+    $vars->{'otheruser'}{'login'} = $otherUserLogin;
+    $vars->{'restrictablegroups'} = groupsUserMayBless($user, 'id', 'name');
+    $template->process('admin/users/search.html.tmpl', $vars)
+       || ThrowTemplateError($template->error());
+
+###########################################################################
+} else {
+    $vars->{'action'} = $action;
+    ThrowCodeError('action_unrecognized', $vars);
 }
 
+exit;
 
+###########################################################################
+# Helpers
+###########################################################################
 
-#
-# No valid action found
-#
+# Copy incoming list selection values from CGI params to template variables.
+sub mirrorListSelectionValues {
+    if (defined($cgi->param('matchtype'))) {
+        foreach ('matchstr', 'matchtype', 'grouprestrict', 'groupid') {
+            $vars->{'listselectionvalues'}{$_} = $cgi->param($_);
+        }
+    }
+}
 
-PutHeader("Error");
-print "I don't have a clue what you want.<BR>\n";
+# Give a list of IDs of groups the user can see.
+sub visibleGroupsAsString {
+    return join(', ', @{$user->visible_groups_direct()});
+}
+
+# Give a list of IDs of groups the user may bless.
+sub groupsUserMayBless {
+    my $user = shift;
+    my $fieldList = join(', ', @_);
+    my $query;
+    my $connector;
+    my @bindValues;
+
+    $user->derive_groups(1);
+
+    if ($editusers) {
+        $query = "SELECT DISTINCT $fieldList FROM groups";
+        $connector = 'WHERE';
+    } else {
+        $query = qq{SELECT DISTINCT $fieldList
+                    FROM groups, user_group_map AS ugm
+                    LEFT JOIN group_group_map AS ggm
+                           ON ggm.member_id = ugm.group_id
+                          AND ggm.grant_type = ?
+                    WHERE user_id = ?
+                      AND ((id = group_id AND isbless = 1) OR
+                           (id = grantor_id))
+                   };
+        @bindValues = (GROUP_BLESS, $userid);
+        $connector = 'AND';
+    }
+
+    # If visibilitygroups are used, restrict the set of groups.
+    if (Param('usevisibilitygroups')) {
+        my $visibleGroups = visibleGroupsAsString();
+        $query .= " $connector id in ($visibleGroups)";
+    }
+
+    $query .= ' ORDER BY name';
+
+    return $dbh->selectall_arrayref($query, {'Slice' => {}}, @bindValues);
+}
+
+# Determine whether the user can see a user. (Checks for existence, too.)
+sub canSeeUser {
+    my $otherUserID = shift;
+    my $query;
+
+    if (Param('usevisibilitygroups')) {
+        my $visibleGroups = visibleGroupsAsString();
+        $query = qq{SELECT COUNT(DISTINCT userid)
+                    FROM profiles, user_group_map
+                    WHERE userid = ?
+                    AND user_id = userid
+                    AND isbless = 0
+                    AND group_id IN ($visibleGroups)
+                   };
+    } else {
+        $query = qq{SELECT COUNT(userid)
+                    FROM profiles
+                    WHERE userid = ?
+                   };
+    }
+    return $dbh->selectrow_array($query, undef, $otherUserID);
+}
+
+# Retrieve product responsibilities, usable for both display and verification.
+sub productResponsibilities {
+    my $userid = shift;
+    my $h = $dbh->selectall_arrayref(
+           qq{SELECT products.name AS productname,
+                     components.name AS componentname,
+                     initialowner,
+                     initialqacontact
+              FROM products, components
+              WHERE products.id = components.product_id
+                AND ? IN (initialowner, initialqacontact)
+             },
+           {'Slice' => {}}, $userid);
+
+    if (@$h) {
+        return $h;
+    } else {
+        return undef;
+    }
+}
+
+# Retrieve user data for the user editing form. User creation and user
+# editing code rely on this to call derive_groups().
+sub userDataToVars {
+    my $userid = shift;
+    my $user = new Bugzilla::User($userid);
+    my $query;
+
+    $user->derive_groups();
+
+    $vars->{'otheruser'} = $user;
+    $vars->{'groups'} = groupsUserMayBless($user, 'id', 'name', 'description');
+    $vars->{'disabledtext'} = $dbh->selectrow_array(
+        'SELECT disabledtext FROM profiles WHERE userid = ?', undef, $userid);
+
+    $vars->{'permissions'} = $dbh->selectall_hashref(
+        qq{SELECT id,
+                  COUNT(directmember.group_id) AS directmember,
+                  COUNT(regexpmember.group_id) AS regexpmember,
+                  COUNT(derivedmember.group_id) AS derivedmember,
+                  COUNT(directbless.group_id) AS directbless
+           FROM groups
+           LEFT JOIN user_group_map AS directmember
+                  ON directmember.group_id = id
+                 AND directmember.user_id = ?
+                 AND directmember.isbless = 0
+                 AND directmember.grant_type = ?
+           LEFT JOIN user_group_map AS regexpmember
+                  ON regexpmember.group_id = id
+                 AND regexpmember.user_id = ?
+                 AND regexpmember.isbless = 0
+                 AND regexpmember.grant_type = ?
+           LEFT JOIN user_group_map AS derivedmember
+                  ON derivedmember.group_id = id
+                 AND derivedmember.user_id = ?
+                 AND derivedmember.isbless = 0
+                 AND derivedmember.grant_type = ?
+           LEFT JOIN user_group_map AS directbless
+                  ON directbless.group_id = id
+                 AND directbless.user_id = ?
+                 AND directbless.isbless = 1
+                 AND directbless.grant_type = ?
+           GROUP BY id
+          },
+        'id', undef,
+        ($userid, GRANT_DIRECT,
+         $userid, GRANT_REGEXP,
+         $userid, GRANT_DERIVED,
+         $userid, GRANT_DIRECT));
+
+    # Find indirect bless permission.
+    $query = qq{SELECT groups.id
+                FROM groups, user_group_map AS ugm, group_group_map AS ggm
+                WHERE ugm.user_id = ?
+                  AND groups.id = ggm.grantor_id
+                  AND ggm.member_id = ugm.group_id
+                  AND ugm.isbless = 0
+                  AND ggm.grant_type = ?
+                GROUP BY id
+               };
+    foreach (@{$dbh->selectall_arrayref($query, undef, ($userid, GROUP_BLESS))}) {
+        # Merge indirect bless permissions into permission variable.
+        $vars->{'permissions'}{${$_}[0]}{'indirectbless'} = 1;
+    }
+}

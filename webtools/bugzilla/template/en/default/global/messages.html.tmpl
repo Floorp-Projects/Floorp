@@ -30,7 +30,77 @@
 [% message_tag = message %]
 
 [% message = BLOCK %]
-  [% IF    message_tag == "buglist_adding_field" %]
+  [% IF    message_tag == "account_created" %]
+    [% title = "User $otheruser.login created" %]
+    A new user account [% otheruser.login FILTER html %] has been created
+    successfully.
+    [% IF groups.size %]
+      You may want to edit the group settings now, using the form below.
+    [% END %]
+
+  [% ELSIF message_tag == "account_updated" %]
+    [% IF changed_fields.size
+          + groups_added_to.size + groups_removed_from.size
+          + groups_granted_rights_to_bless.size + groups_denied_rights_to_bless.size %]
+      [% title = "User $loginold updated" %]
+      The following changes have been made to the user account
+      [%+ loginold FILTER html %]:
+      <ul>
+        [% FOREACH field = changed_fields %]
+          <li>
+            [% IF    field == 'login_name' %]
+              The login is now [% otheruser.login FILTER html %].
+            [% ELSIF field == 'realname' %]
+              The real name has been updated.
+            [% ELSIF field == 'cryptpassword' %]
+              A new password has been set.
+            [% ELSIF field == 'disabledtext' %]
+              The disable text has been modified.
+            [% END %]
+          </li>
+        [% END %]
+        [% IF groups_added_to.size %]
+          <li>
+            The account has been added to the
+            [%+ groups_added_to.join(', ') FILTER html %]
+            group[% 's' IF groups_added_to.size > 1 %].
+          </li>
+        [% END %]
+        [% IF groups_removed_from.size %]
+          <li>
+            The account has been removed from the
+            [%+ groups_removed_from.join(', ') FILTER html %]
+            group[% 's' IF groups_removed_from.size > 1 %].
+          </li>
+        [% END %]
+        [% IF groups_granted_rights_to_bless.size %]
+          <li>
+            The account has been granted rights to bless the
+            [%+ groups_granted_rights_to_bless.join(', ') FILTER html %]
+            group[% 's' IF groups_granted_rights_to_bless.size > 1 %].
+          </li>
+        [% END %]
+        [% IF groups_denied_rights_to_bless.size %]
+          <li>
+            The account has been denied rights to bless the
+            [%+ groups_denied_rights_to_bless.join(', ') FILTER html %]
+            group[% 's' IF groups_denied_rights_to_bless.size > 1 %].
+          </li>
+        [% END %]
+      </ul>
+    [% ELSE %]
+      [% title = "User $otheruser.login not changed" %]
+      You didn't request any change on the user account
+      [%+ otheruser.login FILTER html %].
+    [% END %]
+    [%# changed_fields.join(', ') %]
+
+  [% ELSIF message_tag == "account_deleted" %]
+    [% title = "User $otheruser.login deleted" %]
+    The user account [% otheruser.login FILTER html %] has been deleted
+    successfully.
+
+  [% ELSIF message_tag == "buglist_adding_field" %]
     [% title = "Adding field to search page..." %]
     [% link  = "Click here if the page does not redisplay automatically." %]
 

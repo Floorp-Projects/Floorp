@@ -1061,10 +1061,12 @@ Reason: %reason%
 
   {
    name => 'allowuserdeletion',
-   desc => 'The pages to edit users can also let you delete a user. But there ' .
-           'is no code that goes and cleans up any references to that user in ' .
-           'other tables, so such deletions are kinda scary. So, you have to ' .
-           'turn on this option before any such deletions will ever happen.',
+   desc => 'The pages to edit users can also let you delete a user. ' .
+           'Bugzilla will issue a warning in case you\'d run into ' .
+           'inconsistencies when you\'re about to do so, ' .
+           'but such deletions remain kinda scary. ' .
+           'So, you have to turn on this option before any such deletions ' .
+           'will ever happen.',
    type => 'b',
    default => 0
   },

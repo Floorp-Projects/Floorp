@@ -108,6 +108,8 @@
       [% IF group %] and [% END %]
       [% IF reason == "cant_bless" %]
         you don't have permissions to put people in or out of any group,
+      [% ELSIF reason == "not_visible" %]
+        there are visibility restrictions on certain user groups,
       [% END %]
     [% END %]
 
@@ -146,6 +148,8 @@
       products
     [% ELSIF object == "reports" %]
       whine reports
+    [% ELSIF object == "user" %]
+      the user you specified
     [% ELSIF object == "users" %]
       users
     [% ELSIF object == "versions" %]
@@ -1045,6 +1049,16 @@
   [% ELSIF error == "users_deletion_disabled" %]
     [% title = "Deletion not activated" %]
     Sorry, the deletion of user accounts is not allowed.
+
+  [% ELSIF error == "user_has_responsibility" %]
+    [% title = "Can't Delete User Account" %]
+    The user you want to delete is set up for roles as initial [% terms.bug %]
+    owner or QA contact for at least one component.
+    For this reason, you cannot delete the account at this time.
+
+  [% ELSIF error == "user_login_required" %]
+    [% title = "Login Name Required" %]
+    You must enter a login name for the new user.
 
   [% ELSIF error == "votes_must_be_nonnegative" %]
     [% title = "Votes Must Be Non-negative" %]

@@ -613,11 +613,11 @@ sub ValidatePassword {
     my ($password, $matchpassword) = @_;
     
     if (length($password) < 3) {
-        ThrowUserError("password_too_short");
+        ThrowUserError("password_too_short", undef, 'abort');
     } elsif (length($password) > 16) {
-        ThrowUserError("password_too_long");
+        ThrowUserError("password_too_long", undef, 'abort');
     } elsif ((defined $matchpassword) && ($password ne $matchpassword)) {
-        ThrowUserError("passwords_dont_match");
+        ThrowUserError("passwords_dont_match", undef, 'abort');
     }
 }
 
