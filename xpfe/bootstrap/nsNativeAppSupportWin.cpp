@@ -939,6 +939,12 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
     NS_ENSURE_ARG( aResult );
     NS_ENSURE_TRUE( mInstance == 0, NS_ERROR_NOT_INITIALIZED );
 
+    if (getenv("MOZ_NO_REMOTE"))
+    {
+        *aResult = PR_TRUE;
+        return NS_OK;
+    }
+
     nsresult rv = NS_ERROR_FAILURE;
     *aResult = PR_FALSE;
 
