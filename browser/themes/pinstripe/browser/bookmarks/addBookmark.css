@@ -1,0 +1,54 @@
+.folder-icon > .menulist-label-box > .menulist-icon,
+.folder-icon > .menu-iconic-left > .menu-iconic-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.folder-icon > .menu-iconic-left {
+  display: -moz-box;
+}
+
+.folder-icon {
+  list-style-image: url("chrome://global/skin/tree/folder.png") !important;
+}
+
+.menulist-icon {
+	margin: 0px !important;
+}
+
+#folder-tree {
+	margin: 6px 0px;
+	font: message-box;
+}
+
+dialog {
+	font: menu;
+}
+
+#expander {
+  -moz-appearance: none;
+  margin-left: 8px;
+  padding: 0px;
+  min-width: 0px;
+}
+
+#addgroup {
+	margin-top: 6px;
+        margin-bottom: 0px;
+}
+
+.up {
+	list-style-image: url("chrome://browser/skin/bookmarks/expander-open.png") !important;
+}
+
+.down {
+	list-style-image: url("chrome://browser/skin/bookmarks/expander-closed.png") !important;
+}
+
+.down:hover:active {
+	list-style-image: url("chrome://browser/skin/bookmarks/expander-closed-active.png") !important;
+}
+
+.up:hover:active {
+	list-style-image: url("chrome://browser/skin/bookmarks/expander-open-active.png") !important;
+}

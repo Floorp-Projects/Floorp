@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+
+<bindings id="globalBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <!-- :::/ widgets \ ::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
+
+  <binding id="toolbar-menu-button" display="xul:menu"
+           extends="chrome://global/content/bindings/toolbarbutton.xml#menu-button">
+    <content>
+      <children includes="observes|template|menupopup|tooltip"/>
+	<xul:stack class="box-inherit toolbarbutton-menubutton-stack" flex="1">
+        <xul:toolbarbutton class="box-inherit toolbarbutton-menubutton-button"
+             anonid="button" allowevents="true"
+             xbl:inherits="disabled,image,label,crop,accesskey,command,
+                           buttonover,buttondown,align,dir,pack,orient"/>
+        <xul:dropmarker type="menu-button" xbl:inherits="open,disabled"
+                        class="toolbarbutton-menubutton-dropmarker"/>
+      </xul:stack>
+    </content>
+  </binding>
+  <binding id="bookmark-left">
+    <content>
+      	<xul:spacer class="bookmark-image-left" xbl:inherits="selected"/>
+        <children/>
+    </content>
+  </binding>
+
+  <binding id="bm-toolbarbutton" display="xul:button"            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">     <resources>       <stylesheet src="chrome://global/skin/toolbarbutton.css"/>     </resources>          <content>       <children includes="observes|template|menupopup|tooltip"/>       <xul:spacer class="bookmark-image-left" xbl:inherits="accesskey,crop,toolbarmode,buttonstyle"/>
+	<xul:label class="toolbarbutton-text" crop="right" flex="1"                  xbl:inherits="value=label,accesskey,crop,toolbarmode,buttonstyle"/>
+	<xul:spacer class="bookmark-image-right" xbl:inherits="accesskey,crop,toolbarmode,buttonstyle"/>     </content>   </binding>
+</bindings>
