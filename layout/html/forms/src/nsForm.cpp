@@ -866,7 +866,7 @@ nsForm::SetAttribute(const nsString& aName, const nsString& aValue,
   else {
     // Use default storage for unknown attributes
     if (nsnull == mAttributes) {
-      NS_NewHTMLAttributes(&mAttributes, nsnull);
+      NS_NewHTMLAttributes(&mAttributes);
     }
     if (nsnull != mAttributes) {
       PRInt32 na;
