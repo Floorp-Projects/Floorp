@@ -28,6 +28,7 @@
 #include "xpgetstr.h"
 #include <Xm/Xm.h>
 #include <XmL/Tree.h>
+#include <Xfe/Xfe.h>
 
 #define TREE_NAME "RdfTree"
 
@@ -214,8 +215,11 @@ XFE_RDFView::init_pixmaps(void)
     
     XtVaGetValues(m_widget, XmNbackground, &bg_pixel, 0);
 
+    Widget  shell = XfeAncestorFindByClass(getToplevel()->getBaseWidget(),
+                                           shellWidgetClass,
+                                           XfeFIND_ANY);
     if (!bookmark.pixmap)
-      fe_NewMakeIcon(m_widget,
+      fe_NewMakeIcon(shell,
 		     BlackPixelOfScreen(XtScreen(m_widget)),
 		     bg_pixel,
 		     &bookmark,
@@ -224,7 +228,7 @@ XFE_RDFView::init_pixmaps(void)
 		     BM_Bookmark.mono_bits, BM_Bookmark.color_bits,
              BM_Bookmark.mask_bits, FALSE);
     if (!closedFolder.pixmap)
-      fe_NewMakeIcon(m_widget,
+      fe_NewMakeIcon(shell,
 		     BlackPixelOfScreen(XtScreen(m_widget)),
 		     bg_pixel,
 		     &closedFolder,
@@ -234,7 +238,7 @@ XFE_RDFView::init_pixmaps(void)
              BM_Folder.mask_bits, FALSE);
 
     if (!openedFolder.pixmap)
-      fe_NewMakeIcon(m_widget,
+      fe_NewMakeIcon(shell,
 		     BlackPixelOfScreen(XtScreen(m_widget)),
 		     bg_pixel,
 		     &openedFolder,
