@@ -75,7 +75,7 @@ public:
    * Reflow the frame model into a new width and height.  The
    * coordinates for aWidth and aHeight must be in standard nscoord's.
    */
-  virtual void ResizeReflow(nscoord aWidth, nscoord aHeight) = 0;
+  NS_IMETHOD ResizeReflow(nscoord aWidth, nscoord aHeight) = 0;
 
   virtual nsIFrame* GetRootFrame() = 0;
 
