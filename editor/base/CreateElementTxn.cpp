@@ -142,7 +142,9 @@ NS_IMETHODIMP CreateElementTxn::Undo(void)
     nsresult selectionResult = mEditor->GetSelection(getter_AddRefs(selection));
     if (NS_SUCCEEDED(selectionResult) && selection) {
       PRInt32 offset=0;
-      nsIEditorSupport::GetChildOffset(mRefNode, mParent, offset);
+      if (mRefNode) {
+        nsIEditorSupport::GetChildOffset(mRefNode, mParent, offset);
+      }
       selectionResult = selection->Collapse(mParent, offset);
       NS_ASSERTION((NS_SUCCEEDED(selectionResult)), "selection could not be collapsed after undo of insert.");
     }
