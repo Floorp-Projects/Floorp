@@ -282,6 +282,9 @@ PK11SDR_Decrypt(SECItem *data, SECItem *result, void *cx)
   slot = PK11_GetInternalKeySlot();
   if (!slot) { rv = SECFailure; goto loser; }
 
+  rv = PK11_Authenticate(slot, PR_TRUE, cx);
+  if (rv != SECSuccess) goto loser;
+
   /* Use triple-DES (Should look up the algorithm) */
   type = CKM_DES3_CBC;
   key = PK11_FindFixedKey(slot, type, &sdrResult.keyid, cx);
