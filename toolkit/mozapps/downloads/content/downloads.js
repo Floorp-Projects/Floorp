@@ -41,7 +41,7 @@
 
 const kObserverServiceProgID = "@mozilla.org/observer-service;1";
 const NC_NS = "http://home.netscape.com/NC-rdf#";
-const PREF_BDM_CLOSEWHENDONE = "browser.download.closeWhenDone";
+const PREF_BDM_CLOSEWHENDONE = "browser.download.manager.closeWhenDone";
 
 var gDownloadManager  = null;
 var gDownloadListener = null;
