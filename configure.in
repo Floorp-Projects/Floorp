@@ -1237,22 +1237,28 @@ dnl [  --enable-ldap           Enable LDAP directory access],
 dnl [ MOZ_LDAP=1 NO_UNIX_LDAP= ],
 dnl [ NO_UNIX_LDAP=1 ])
 
-MOZ_ARG_ENABLE_BOOL(mailnews,
-[  --enable-mailnews       Enable Mail & News],
-  [ MOZ_MAIL_NEWS=1 ] )
+dnl build Mail & News by default
+MOZ_MAIL_NEWS=1
+
+MOZ_ARG_DISABLE_BOOL(mailnews,
+[  --disable-mailnews      Dont build Mail & News],
+  MOZ_MAIL_NEWS= )
 
 dnl Note: This conflicts with --disable-shared
 MOZ_ARG_ENABLE_BOOL(oji,
 [  --enable-oji            Enable use of Open JVM Interface],
   [MOZ_OJI=1 FULL_STATIC_BUILD= NO_SHARED_LIB=])
 
-MOZ_ARG_ENABLE_BOOL(tests,
-[  --enable-tests          Enable test stubs],
-  ENABLE_TESTS=1)
+dnl build the tests by default
+ENABLE_TESTS=1
+
+MOZ_ARG_DISABLE_BOOL(tests,
+[  --disable-tests         Dont build the tests],
+  ENABLE_TESTS= )
 
 dnl Build PICS (mozilla/extensions/pics) code
 MOZ_ARG_ENABLE_BOOL(pics,
-[  --enable-pics          Enable PICS code],
+[  --enable-pics           Enable PICS code],
   ENABLE_PICS=1)
 
 AC_DEFINE(ENABLE_PICS)
