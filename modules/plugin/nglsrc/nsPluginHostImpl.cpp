@@ -2076,6 +2076,8 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 	return rv;
 }
 
+#ifndef XP_WIN // for now keep the old plugin finding logic for non-Windows platforms
+
 NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 {
 	do {
@@ -2131,6 +2133,144 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 	
 	return NS_ERROR_FAILURE;
 }
+
+#else // go for new plugin finding logic on Windows
+
+static void fillPluginTagStruct(nsPluginTag* pluginTag, nsPluginFile* pluginFile)
+{
+	nsPluginInfo info = { sizeof(info) };
+	if (pluginFile->GetPluginInfo(info) == NS_OK) 
+  {
+		pluginTag->mName = info.fName;
+		pluginTag->mDescription = info.fDescription;
+		pluginTag->mMimeType = info.fMimeType;
+		pluginTag->mMimeDescription = info.fMimeDescription;
+		pluginTag->mExtensions = info.fExtensions;
+		pluginTag->mVariants = info.fVariantCount;
+		pluginTag->mMimeTypeArray = info.fMimeTypeArray;
+		pluginTag->mMimeDescriptionArray = info.fMimeDescriptionArray;
+		pluginTag->mExtensionsArray = info.fExtensionArray;
+		pluginTag->mFileName = info.fFileName;
+	}
+	pluginTag->mEntryPoint = NULL;
+	pluginTag->mFlags = 0;
+}
+
+static PRBool areTheSameFileNames(char * name1, char * name2)
+{
+  if((name1 == nsnull) || (name2 == nsnull))
+    return PR_FALSE;
+
+  char * filename1 = PL_strrchr(name1, '\\');
+	if(filename1 != nsnull)
+		filename1++;
+	else
+		filename1 = name1;
+
+  char * filename2 = PL_strrchr(name2, '\\');
+	if(filename2 != nsnull)
+		filename2++;
+	else
+		filename2 = name2;
+
+  if(PL_strlen(filename1) != PL_strlen(filename2))
+    return PR_FALSE;
+
+  return (nsnull == PL_strncmp(filename1, filename2, PL_strlen(filename1)));
+}
+
+NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
+{
+// currently we decided to look in both local plugins dir and 
+// that of the previous 4.x installation combining plugins from both places.
+// See bug #21938
+// As of 1.27.00 this selective mechanism is natively supported in Windows 
+// native implementation of nsPluginsDir.
+
+	nsPluginsDir pluginsDir4x(PLUGINS_DIR_LOCATION_4DOTX);
+	nsPluginsDir pluginsDirMoz(PLUGINS_DIR_LOCATION_MOZ_LOCAL);
+
+  if(!pluginsDir4x.Valid() || !pluginsDirMoz.Valid())
+  	return NS_ERROR_FAILURE;
+
+	// firts, make a list from MOZ_LOCAL installation
+  for (nsDirectoryIterator iter(pluginsDirMoz, PR_TRUE); iter.Exists(); iter++) 
+  {
+		const nsFileSpec& file = iter;
+		if (pluginsDirMoz.IsPluginFile(file)) {
+			nsPluginFile pluginFile(file);
+			PRLibrary* pluginLibrary = NULL;
+
+#ifndef XP_WIN
+			// load the plugin's library so we can ask it some questions but not for Windows for now
+      if (pluginFile.LoadPlugin(pluginLibrary) == NS_OK && pluginLibrary != NULL) 
+      {
+#endif
+				// create a tag describing this plugin.
+				nsPluginTag* pluginTag = new nsPluginTag();
+        if(pluginTag == nsnull)
+          return NS_ERROR_OUT_OF_MEMORY;
+
+				pluginTag->mNext = mPlugins;
+				mPlugins = pluginTag;
+				
+        fillPluginTagStruct(pluginTag, &pluginFile);
+        pluginTag->mLibrary = pluginLibrary;
+
+#ifndef XP_WIN
+			}
+#endif
+		}
+	}
+
+  // now check the 4.x plugins dir and add new files
+  for (nsDirectoryIterator iter2(pluginsDir4x, PR_TRUE); iter2.Exists(); iter2++) 
+  {
+		const nsFileSpec& file = iter2;
+		if (pluginsDir4x.IsPluginFile(file)) 
+    {
+			nsPluginFile pluginFile(file);
+			PRLibrary* pluginLibrary = NULL;
+
+#ifndef XP_WIN
+			// load the plugin's library so we can ask it some questions but not for Windows for now
+      if (pluginFile.LoadPlugin(pluginLibrary) == NS_OK && pluginLibrary != NULL) 
+      {
+#endif
+				// create a tag describing this plugin.
+				nsPluginTag* pluginTag = new nsPluginTag();
+        if(pluginTag == nsnull)
+          return NS_ERROR_OUT_OF_MEMORY;
+
+        fillPluginTagStruct(pluginTag, &pluginFile);
+				pluginTag->mLibrary = pluginLibrary;
+
+        // search for a match in the list of MOZ_LOCAL plugins, ignore if found, add if not
+        PRBool bFound = PR_FALSE;
+        for(nsPluginTag* tag = mPlugins; tag != nsnull; tag = tag->mNext)
+        {
+          if(areTheSameFileNames(tag->mFileName, pluginTag->mFileName))
+          {
+            bFound = PR_TRUE;
+            break;
+          }
+        }
+
+        if(!bFound)
+        {
+				  pluginTag->mNext = mPlugins;
+				  mPlugins = pluginTag;
+        }
+
+#ifndef XP_WIN
+			}
+#endif
+		}
+  }
+	mPluginsLoaded = PR_TRUE;
+	return NS_OK;
+}
+#endif // XP_WIN -- end new plugin finding logic
 
 /* Called by GetURL and PostURL */
 
