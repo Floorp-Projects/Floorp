@@ -31,7 +31,7 @@ class nsIDOMCSSStyleRuleCollection;
 class nsIDOMCSSStyleSheet;
 
 #define NS_IDOMCSSSTYLESHEET_IID \
-{ 0x6f765339,  0xee43, 0x11d1, \
+{ 0x6f76533a,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
 class nsIDOMCSSStyleSheet : public nsIDOMStyleSheet {

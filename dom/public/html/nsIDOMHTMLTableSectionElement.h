@@ -29,7 +29,7 @@ class nsIDOMHTMLElement;
 class nsIDOMHTMLCollection;
 
 #define NS_IDOMHTMLTABLESECTIONELEMENT_IID \
-{ 0x6f765326,  0xee43, 0x11d1, \
+{ 0x6f765327,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
 class nsIDOMHTMLTableSectionElement : public nsIDOMHTMLElement {
