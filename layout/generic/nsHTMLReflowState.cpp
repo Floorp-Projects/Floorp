@@ -1129,16 +1129,51 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
 
       } else {
         // Only 'width' is 'auto' so just solve for 'width'
-        mComputedWidth = containingBlockWidth - mComputedOffsets.left -
+        PRInt32 autoWidth = containingBlockWidth - mComputedOffsets.left -
           mComputedMargin.left - mComputedBorderPadding.left -
           mComputedBorderPadding.right -
           mComputedMargin.right - mComputedOffsets.right;
 
-        mComputedWidth = PR_MAX(mComputedWidth, 0);
+        if (autoWidth < 0) {
+          autoWidth = 0;
+        }
+        mComputedWidth = autoWidth;
 
         AdjustComputedWidth(PR_FALSE);
 
-        // XXX If the direction is rtl then we need to reevaluate left...
+        if (autoWidth != mComputedWidth) {
+          // Re-calculate any 'auto' margin values since the computed width
+          // was adjusted by a 'min-width' or 'max-width'.
+          PRInt32 availMarginSpace = autoWidth - mComputedWidth;
+
+          if (eStyleUnit_Auto == mStyleMargin->mMargin.GetLeftUnit()) {
+            if (eStyleUnit_Auto == mStyleMargin->mMargin.GetRightUnit()) {
+              // Both margins are 'auto' so their computed values are equal.
+              mComputedMargin.left = availMarginSpace / 2;
+              mComputedMargin.right = availMarginSpace - mComputedMargin.left;
+            } else {
+              mComputedMargin.left = availMarginSpace - mComputedMargin.right;
+            }
+          } else if (eStyleUnit_Auto == mStyleMargin->mMargin.GetRightUnit()) {
+            mComputedMargin.right = availMarginSpace - mComputedMargin.left;
+          } else {
+            // We're over-constrained - ignore the value for 'left' or 'right'
+            // and solve for that value.
+            if (NS_STYLE_DIRECTION_LTR == direction) {
+              // ignore 'right'
+              mComputedOffsets.right = containingBlockWidth - mComputedOffsets.left -
+                mComputedMargin.left - mComputedBorderPadding.left -
+                mComputedWidth - mComputedBorderPadding.right -
+                mComputedMargin.right;
+            } else {
+              // ignore 'left'
+              mComputedOffsets.left = containingBlockWidth - 
+                mComputedMargin.left - mComputedBorderPadding.left -
+                mComputedWidth - mComputedBorderPadding.right -
+                mComputedMargin.right - mComputedOffsets.right;
+            }
+          }
+        }
       }
 
     } else {
@@ -1280,14 +1315,41 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
 
       } else {
         // Only 'height' is 'auto' so just solve for 'height'
-        mComputedHeight = containingBlockHeight - mComputedOffsets.top -
+        PRInt32 autoHeight = containingBlockHeight - mComputedOffsets.top -
           mComputedMargin.top - mComputedBorderPadding.top -
           mComputedBorderPadding.bottom -
           mComputedMargin.bottom - mComputedOffsets.bottom;
 
-        mComputedHeight = PR_MAX(mComputedHeight, 0);
+        if (autoHeight < 0) {
+          autoHeight = 0;
+        }
+        mComputedHeight = autoHeight;
         
         AdjustComputedHeight(PR_FALSE);
+
+        if (autoHeight != mComputedHeight) {
+          // Re-calculate any 'auto' margin values since the computed height
+          // was adjusted by a 'min-height' or 'max-height'.
+          PRInt32 availMarginSpace = autoHeight - mComputedHeight;
+    
+          if (eStyleUnit_Auto == mStyleMargin->mMargin.GetTopUnit()) {
+            if (eStyleUnit_Auto == mStyleMargin->mMargin.GetBottomUnit()) {
+              // Both margins are 'auto' so their computed values are equal
+              mComputedMargin.top = availMarginSpace / 2;
+              mComputedMargin.bottom = availMarginSpace - mComputedMargin.top;
+            } else {
+              mComputedMargin.top = availMarginSpace - mComputedMargin.bottom;
+            }
+          } else if (eStyleUnit_Auto == mStyleMargin->mMargin.GetBottomUnit()) {
+            mComputedMargin.bottom = availMarginSpace - mComputedMargin.top;
+          } else {
+            // We're over-constrained - ignore 'bottom'.
+            mComputedOffsets.bottom = containingBlockHeight - mComputedOffsets.top -
+              mComputedMargin.top - mComputedBorderPadding.top -
+              mComputedHeight - mComputedBorderPadding.bottom -
+              mComputedMargin.bottom;
+          }
+        }
       }
 
     } else {
