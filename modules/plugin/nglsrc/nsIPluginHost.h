@@ -36,6 +36,7 @@ class nsIURL;
 struct nsIPluginHost : public nsIFactory
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGINHOST_IID)
 
   NS_IMETHOD
   Init(void) = 0;

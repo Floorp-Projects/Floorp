@@ -40,8 +40,17 @@
 // Plugin Manager 2 Interface
 // These extensions to nsIPluginManager are only available in Communicator 5.0.
 
+#define NS_IPLUGINMANAGER2_IID                       \
+{ /* d2962dc0-4eb6-11d2-8164-006008119d7a */         \
+    0xd2962dc0,                                      \
+    0x4eb6,                                          \
+    0x11d2,                                          \
+    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
 class nsIPluginManager2 : public nsIPluginManager {
 public:
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGINMANAGER2_IID)
 
     /**
      * Puts up a wait cursor.
@@ -174,14 +183,6 @@ public:
     ProcessNextEvent(PRBool *bEventHandled) = 0;
 #endif
 };
-
-#define NS_IPLUGINMANAGER2_IID                       \
-{ /* d2962dc0-4eb6-11d2-8164-006008119d7a */         \
-    0xd2962dc0,                                      \
-    0x4eb6,                                          \
-    0x11d2,                                          \
-    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
