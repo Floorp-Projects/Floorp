@@ -201,6 +201,16 @@ ifdef QTDIR
 ALL_TRASH		+= $(MOCSRCS)
 endif
 
+#
+# the Solaris WorkShop template repository cache.  it occasionally can get
+# out of sync, so targets like clobber should kill it.
+#
+ifeq ($(OS_ARCH),SunOS)
+ifeq ($(GNU_CXX),)
+ALL_TRASH += SunWS_cache
+endif
+endif
+
 ifdef JAVA_OR_NSJVM
 JMC_SUBDIR              = _jmc
 else
