@@ -772,26 +772,6 @@ nsLDAPChannel::AsyncWrite(nsIInputStream* fromStream,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
-nsLDAPChannel::pipeWrite(const char *str)
-{
-    PRUint32 bytesWritten=0;
-    nsresult rv = NS_OK;
-
-    rv = mReadPipeOut->Write(str, strlen(str), &bytesWritten);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // XXXdmose deal more gracefully with an error here
-    //
-    rv = mListener->OnDataAvailable(this, mResponseContext, 
-                                    mReadPipeIn, mReadPipeOffset, 
-                                    nsCRT::strlen(str));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mReadPipeOffset += bytesWritten;
-    return NS_OK;
-}
-
 /**
  * Messages received are passed back via this function.
  *
@@ -966,6 +946,7 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
 {
     nsresult rv;
     nsXPIDLCString dn;
+    nsCString entry;
 
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("entry returned!\n"));
 
@@ -975,9 +956,9 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
     rv = aMessage->GetDn(getter_Copies(dn));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    this->pipeWrite("dn: ");
-    this->pipeWrite(dn);
-    this->pipeWrite("\n");
+    entry.SetCapacity(256);
+    entry = NS_LITERAL_CSTRING("dn: ") + nsLiteralCString(dn) 
+        + NS_LITERAL_CSTRING("\n");
 
     char **attrs;
     PRUint32 attrCount;
@@ -1015,10 +996,10 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
         // print all values of this attribute
         //
         for ( PRUint32 j=0 ; vals[j] != NULL; ++j ) {
-            this->pipeWrite(attrs[i]);
-            this->pipeWrite(": ");
-            this->pipeWrite(vals[j]);
-            this->pipeWrite("\n");
+            entry.Append(attrs[i]);
+            entry.Append(": ");
+            entry.Append(vals[j]);
+            entry.Append("\n");
         }
 
         ldap_value_free(vals);
@@ -1036,7 +1017,31 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
 
     // separate this entry from the next
     //
-    this->pipeWrite("\n");
+    entry.Append("\n");
+
+    // do the write
+    // XXX better err handling
+    //
+    PRUint32 bytesWritten = 0;
+    PRUint32 entryLength = entry.Length();
+
+    rv = mReadPipeOut->Write(entry, entryLength, &bytesWritten);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // short writes shouldn't happen on blocking pipes!
+    // XXX runtime error handling too
+    //
+    NS_ASSERTION(bytesWritten == entryLength, 
+                 "nsLDAPChannel::OnLDAPSearchEntry(): "
+                 "internal error: blocking pipe returned a short write");
+
+    // XXXdmose deal more gracefully with an error here
+    //
+    rv = mListener->OnDataAvailable(this, mResponseContext, mReadPipeIn, 
+                                    mReadPipeOffset, entryLength);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mReadPipeOffset += entryLength;
 
     return NS_OK;
 }

@@ -175,7 +175,7 @@ nsLDAPMessage::GetErrorString(void)
 //
 nsresult
 nsLDAPMessage::IterateAttrErrHandler(PRInt32 aLderrno, PRUint32 *aAttrCount, 
-                                     char** *aAttibutes, BerElement *position)
+                                     char** *aAttributes, BerElement *position)
 {
 
     // if necessary, free the position holder used by 
@@ -188,7 +188,9 @@ nsLDAPMessage::IterateAttrErrHandler(PRInt32 aLderrno, PRUint32 *aAttrCount,
     // deallocate any entries in the array that have been allocated, then
     // the array itself
     //
-    // XXX need code here, but does delete[] do this for us?
+    if (*aAttributes) {
+        NSLDAP_FREE_XPIDL_ARRAY(*aAttrCount, *aAttributes, nsMemory::Free);
+    }
 
     // possibly spit out a debugging message, then return an appropriate
     // error code

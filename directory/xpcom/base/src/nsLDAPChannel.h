@@ -81,10 +81,6 @@ protected:
   nsresult OnLDAPSearchEntry(nsILDAPMessage *aMessage);
   nsresult OnLDAPBind(nsILDAPMessage *aMessage);
 
-  // write down the pipe to whoever is consuming our data
-  //
-  nsresult pipeWrite(const char *str);
-  
   // instance vars for read/write nsIChannel attributes
   //
   nsresult mStatus;
