@@ -25,15 +25,13 @@
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 
-// jud
-#if 0
+#include "nsIHTTPNotify.h"
 #include "nsINetModRegEntry.h"
 #include "nsProxyObjectManager.h"
 #include "nsIServiceManager.h"
 #include "nsINetModuleMgr.h"
-#include "nsCookieModTest.h"
 #include "nsIEventQueueService.h"
-#endif // 0
+
 
 nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, 
                              nsIEventQueue* i_EQ, 
@@ -222,13 +220,6 @@ nsHTTPChannel::GetResponseHeader(const char* i_Header, char* *o_Value)
         return NS_ERROR_NOT_IMPLEMENTED; // NS_ERROR_NO_RESPONSE_YET ? 
 }
 
-// XXX jud
-#if 0
-static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
-static NS_DEFINE_IID(kINetModuleMgrIID, NS_INETMODULEMGR_IID);
-static NS_DEFINE_CID(kCookieModuleCID, NS_COOKIEMODULE_CID);
-#endif // jud
-
 NS_IMETHODIMP
 nsHTTPChannel::GetResponseStatus(nsresult *o_Status)
 {
@@ -277,14 +268,10 @@ nsHTTPChannel::GetResponseDataListener(nsIStreamListener* *aListener)
   return rv;
 }
 
-// XXX jud
-#if 0
+
 static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
-static NS_DEFINE_IID(kINetModuleMgrIID, NS_INETMODULEMGR_IID);
-static NS_DEFINE_CID(kCookieModuleCID, NS_COOKIEMODTEST_CID);
-#endif // jud
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTTPChannel methods:
@@ -315,82 +302,96 @@ nsHTTPChannel::Open(void)
     NS_ASSERTION(port>0, "Bad port setting!");
     PRUint32 unsignedPort = port;
 
-// jud
-#if 0
-    // XXX this is not the right place for this
     // Check for any modules that want to set headers before we
     // send out a request.
-    nsINetModuleMgr* pNetModuleMgr = nsnull;
-    nsresult ret = nsServiceManager::GetService(kNetModuleMgrCID, kINetModuleMgrIID,
-        (nsISupports**) &pNetModuleMgr);
-    if (NS_FAILED(ret)) return ret;
-
-    nsIEventQueue* eventQ;
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
-    }
+    NS_WITH_SERVICE(nsINetModuleMgr, pNetModuleMgr, kNetModuleMgrCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCookieModTest* cookieMod = new nsCookieModTest();
-    nsIHTTPNotify* httpNotify = nsnull;
-    rv = cookieMod->QueryInterface(nsIHTTPNotify::GetIID(), (void**)&httpNotify);
+    nsISimpleEnumerator* pModules = nsnull;
+    rv = pNetModuleMgr->EnumerateModules("http-request", &pModules);
+    NS_RELEASE(pNetModuleMgr);
+    if (NS_FAILED(rv)) return rv;
 
-
-    // register the cookie mod for http-requests
-    pNetModuleMgr->RegisterModule("http-request", eventQ, httpNotify, &kCookieModuleCID);
-
-
-    if (NS_SUCCEEDED(ret)) {
-        nsISimpleEnumerator* pModules = nsnull;
-        ret = pNetModuleMgr->EnumerateModules("http-request", &pModules);
-        if (NS_SUCCEEDED(ret)) {
-            nsIProxyObjectManager*  proxyObjectManager = nsnull; 
-            ret = nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
-                                                kProxyObjectManagerIID,
-                                                (nsISupports **)&proxyObjectManager);
-            nsISupports *supEntry = nsnull;
-            nsINetModRegEntry *entry = nsnull;
-
-            pModules->GetNext(&supEntry);
-            while (NS_SUCCEEDED(ret)) {
-                ret = supEntry->QueryInterface(nsINetModRegEntry::GetIID(), (void**)&entry);
-                // send the SetHeaders event to each registered module,
-                // using the nsISupports Proxy service
-                nsIHTTPNotify *pNotify = nsnull;
-                nsCID *lCID;
-                nsIEventQueue* lEventQ = nsnull;
-
-                ret = entry->GetMCID(&lCID);
-                if (NS_FAILED(ret))
-                    return ret;
-
-                ret = entry->GetMEventQ(&lEventQ);
-                if (NS_FAILED(ret))
-                    return ret;
-                
-                ret = proxyObjectManager->GetProxyObject(lEventQ, 
-                                                   *lCID,
-                                                   nsnull,
-                                                   nsIHTTPNotify::GetIID(),
-                                                   PROXY_SYNC,
-                                                   (void**)&pNotify);
-
-                if (NS_SUCCEEDED(ret)) {
-                    // send off the notification, and block.
-                    ret = pNotify->ModifyRequest(this);
-                    if (NS_SUCCEEDED(ret)) {
-                        ;
-                    }
-                }
-
-                NS_RELEASE(entry);
-                pModules->GetNext(&supEntry);
-  
-            }
-        }
+    nsIProxyObjectManager*  proxyObjectManager = nsnull; 
+    rv = nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
+                                        kProxyObjectManagerIID,
+                                        (nsISupports **)&proxyObjectManager);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(pModules);
+        return rv;
     }
-#endif // jud
+
+    nsISupports *supEntry = nsnull;
+
+    // Go through the external modules and notify each one.
+    rv = pModules->GetNext(&supEntry);
+    while (NS_SUCCEEDED(rv)) {
+        nsINetModRegEntry *entry = nsnull;
+        rv = supEntry->QueryInterface(nsINetModRegEntry::GetIID(), (void**)&entry);
+        NS_RELEASE(supEntry);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(pModules);
+            NS_RELEASE(proxyObjectManager);
+            return rv;
+        }
+
+        nsCID *lCID;
+        nsIEventQueue* lEventQ = nsnull;
+
+        rv = entry->GetMCID(&lCID);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(pModules);
+            NS_RELEASE(proxyObjectManager);
+            return rv;
+        }
+
+        rv = entry->GetMEventQ(&lEventQ);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(pModules);
+            NS_RELEASE(proxyObjectManager);            
+            return rv;
+        }
+
+        nsIHTTPNotify *pNotify = nsnull;
+        // if this call fails one of the following happened.
+        // a) someone registered an object for this topic but didn't
+        //    implement the nsIHTTPNotify interface on that object.
+        // b) someone registered an object for this topic bud didn't
+        //    put the .xpt lib for that object in the components dir
+        rv = proxyObjectManager->GetProxyObject(lEventQ, 
+                                           *lCID,
+                                           nsnull,
+                                           nsIHTTPNotify::GetIID(),
+                                           PROXY_SYNC,
+                                           (void**)&pNotify);
+        NS_RELEASE(proxyObjectManager);
+        
+        NS_RELEASE(lEventQ);
+
+        if (NS_SUCCEEDED(rv)) {
+            // send off the notification, and block.
+            nsIHTTPNotify* externMod = nsnull;
+            rv = pNotify->QueryInterface(nsIHTTPNotify::GetIID(), (void**)&externMod);
+            NS_RELEASE(pNotify);
+            
+            if (NS_FAILED(rv)) {
+                NS_ASSERTION(0, "proxy object manager found an interface we can not QI for");
+                NS_RELEASE(pModules);
+                return rv;
+            }
+
+            // make the nsIHTTPNotify api call
+            externMod->ModifyRequest(this);
+            NS_RELEASE(externMod);
+            // we could do something with the return code from the external
+            // module, but what????            
+        }
+
+        NS_RELEASE(entry);
+        rv = pModules->GetNext(&supEntry); // go around again
+    }
+    NS_RELEASE(pModules);
+    NS_IF_RELEASE(proxyObjectManager);
 
     rv = m_pHandler->GetTransport(host, unsignedPort, &temp);
     nsCRT::free(host);
