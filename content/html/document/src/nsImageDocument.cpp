@@ -177,9 +177,9 @@ ImageListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
   imgDoc->UpdateTitleAndCharset();
   
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(imgDoc->mImageElement);
-  NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
-
-  imageLoader->RemoveObserver(imgDoc);
+  if (imageLoader) {
+    imageLoader->RemoveObserver(imgDoc);
+  }
 
   return nsMediaDocumentStreamListener::OnStopRequest(request, ctxt, status);
 }
