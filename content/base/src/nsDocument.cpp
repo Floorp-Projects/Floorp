@@ -148,6 +148,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsIPrefService.h"
 
 #include "nsScriptEventManager.h"
+#include "nsIXPathEvaluatorInternal.h"
 
 /**
  * A struct that holds all the information about a radio group.
@@ -654,6 +655,13 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
           return NS_ERROR_NO_INTERFACE;
       }
       NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIXPathEvaluatorInternal> internal =
+          do_QueryInterface(evaluator);
+      if (internal) {
+          internal->SetDocument(this);
+      }
+      
       mXPathDocument = new nsXPathDocumentTearoff(evaluator, this);
       NS_ENSURE_TRUE(mXPathDocument, NS_ERROR_OUT_OF_MEMORY);
     }

@@ -75,6 +75,11 @@ public:
     virtual nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
                                          FunctionCall*& aFunction) = 0;
 
+    /**
+     * Should nametests parsed in this context be case-sensitive
+     */
+    virtual PRBool caseInsensitiveNameTests() = 0;
+
     /*
      * Callback to be used by the Parser if errors are detected.
      */
