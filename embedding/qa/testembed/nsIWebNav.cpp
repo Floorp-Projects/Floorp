@@ -459,9 +459,15 @@ void CNsIWebNav::GetSHTest(PRInt16 displayMode)
 
 void CNsIWebNav::SetSHTest(PRInt16 displayMode)
 {
-   nsCOMPtr<nsISHistory> theSessionHistory;
-   rv = qaWebNav->SetSessionHistory(theSessionHistory);
+   nsCOMPtr<nsISHistory> theSessionHistory, tempSHObject;
+   // we want to save the existing session history
+   rv =  qaWebNav->GetSessionHistory(getter_AddRefs(theSessionHistory));
+   // this will create the test session history object
+   tempSHObject = do_CreateInstance(NS_SHISTORY_CONTRACTID);
+   rv = qaWebNav->SetSessionHistory(tempSHObject);
    RvTestResult(rv, "SetSessionHistory() test", displayMode);
-   if (!theSessionHistory)
-      QAOutput("We didn't get the session history. Test failed.", 2);
+   if (!tempSHObject)
+      QAOutput("We didn't get the session history test object. Test failed.", 2);
+	// we now reset the previous session history
+   rv =  qaWebNav->SetSessionHistory(theSessionHistory);
 }
