@@ -90,8 +90,7 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   virtual void AppendToString(const PRUnichar* aStr,
                               PRInt32 aLength,
                               nsAString& aOutputStr);
-  virtual void AppendToString(const PRUnichar aChar,
-                              nsAString& aOutputStr);
+  virtual void AppendToString(const PRUnichar aChar, nsAString& aOutputStr);
   virtual void AppendToString(const nsAString& aStr,
                               nsAString& aOutputStr,
                               PRBool aTranslateEntities = PR_FALSE,
@@ -116,9 +115,15 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   PRBool IsShorthandAttr(const nsIAtom* aAttrName,
                          const nsIAtom* aElementName);
 
+  // Functions to check for newlines that needs to be added between nodes in
+  // the root of a document.
+  void MaybeAddNewline(nsAString& aStr);
+  void MaybeFlagNewline(nsIDOMNode* aNode);
+
   PRInt32 mPrefixIndex;
   nsVoidArray mNameSpaceStack;
-  PRBool mInAttribute;
+  PRPackedBool mInAttribute;
+  PRPackedBool mAddNewline;
 };
 
 nsresult
