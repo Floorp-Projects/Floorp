@@ -1526,6 +1526,9 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
 
     proto = JS_InitClass(cx, obj, NULL, &js_ObjectClass, Object, 1,
                          object_props, object_methods, NULL, NULL);
+    if (!proto)
+        return NULL;
+
 #if JS_HAS_OBJ_PROTO_PROP
     if (!JS_InitClass(cx, obj, NULL, &js_WithClass, With, 0,
                       NULL, NULL, NULL, NULL)) {
