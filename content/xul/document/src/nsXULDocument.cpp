@@ -81,6 +81,7 @@
 #include "nsITimer.h"
 #include "nsIDocShell.h"
 #include "nsXULAtoms.h"
+#include "nsHTMLAtoms.h"
 #include "nsIXULContent.h"
 #include "nsIXULContentSink.h"
 #include "nsXULContentUtils.h"
@@ -2973,6 +2974,10 @@ nsXULDocument::ResumeWalk()
     // certain that we've been embedded in a presentation shell.
 
     StartLayout();
+
+    nsAutoString title;
+    mRootContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::title, title);
+    SetTitle(title);
 
     if (mIsWritingFastLoad && IsChromeURI(mDocumentURI))
         gXULCache->WritePrototype(mMasterPrototype);

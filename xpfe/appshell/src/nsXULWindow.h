@@ -105,7 +105,6 @@ protected:
    PRBool     LoadSizeFromXUL();
    PRBool     LoadMiscPersistentAttributesFromXUL();
    nsresult   LoadChromeHidingFromXUL();
-   NS_IMETHOD LoadTitleFromXUL();
    NS_IMETHOD LoadWindowClassFromXUL();
    NS_IMETHOD LoadIconFromXUL();
    NS_IMETHOD SavePersistentAttributes();
