@@ -59,7 +59,7 @@
 #include "nsContentCID.h"
 #include "nsLayoutCID.h"
 
-#include "nsIRuleWalker.h"
+#include "nsRuleWalker.h"
 
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
@@ -567,7 +567,7 @@ public:
                            nsIAtom* aMedium,
                            nsIContent* aContent,
                            nsIStyleContext* aParentContext,
-                           nsIRuleWalker* aRuleWalker);
+                           nsRuleWalker* aRuleWalker);
 
   NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
                            nsIAtom* aMedium,
@@ -575,7 +575,7 @@ public:
                            nsIAtom* aPseudoTag,
                            nsIStyleContext* aParentContext,
                            nsICSSPseudoComparator* aComparator,
-                           nsIRuleWalker* aRuleWalker);
+                           nsRuleWalker* aRuleWalker);
 
   NS_IMETHOD HasStateDependentStyle(nsIPresContext* aPresContext,
                                     nsIAtom*        aMedium,
@@ -808,7 +808,7 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                   nsIAtom* aMedium,
                                   nsIContent* aContent,
                                   nsIStyleContext* aParentContext,
-                                  nsIRuleWalker* aRuleWalker)
+                                  nsRuleWalker* aRuleWalker)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   NS_PRECONDITION(nsnull != aContent, "null arg");
@@ -922,7 +922,7 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                   nsIAtom* aPseudoTag,
                                   nsIStyleContext* aParentContext,
                                   nsICSSPseudoComparator* aComparator,
-                                  nsIRuleWalker* aRuleWalker)
+                                  nsRuleWalker* aRuleWalker)
 {
   // no pseudo frame style
   return NS_OK;

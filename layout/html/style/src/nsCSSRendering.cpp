@@ -34,7 +34,6 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsCSSRendering.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIImage.h"
@@ -56,6 +55,7 @@
 #include "nsIScrollableFrame.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
+#include "nsCSSRendering.h"
 
 #define BORDER_FULL    0        //entire side
 #define BORDER_INSIDE  1        //inside half

@@ -38,7 +38,6 @@
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
 #include "nsIPresContext.h"
-#include "nsIStyleContext.h"
 #include "nsIReflowCommand.h"
 #include "nsIDeviceContext.h"
 #include "nsPageFrame.h"

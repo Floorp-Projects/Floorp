@@ -50,7 +50,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsHTMLParts.h"
-#include "nsIRuleNode.h"
+#include "nsRuleNode.h"
 
 // temporary
 #include "nsIDocument.h"

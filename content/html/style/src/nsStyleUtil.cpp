@@ -39,7 +39,6 @@
 #include <math.h>
 #include "nsStyleUtil.h"
 #include "nsCRT.h"
-#include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsUnitConversion.h"
 
@@ -59,7 +58,7 @@
 
 // XXX This is here because nsCachedStyleData is accessed outside of
 // the content module; e.g., by nsCSSFrameConstructor.
-#include "nsIRuleNode.h"
+#include "nsRuleNode.h"
 
 nsCachedStyleData::StyleStructInfo
 nsCachedStyleData::gInfo[] = {

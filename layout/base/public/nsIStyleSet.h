@@ -53,7 +53,7 @@ class nsIFrame;
 class nsIDocument;
 class nsIFrameManager;
 class nsISupportsArray;
-class nsIRuleNode;
+class nsRuleNode;
 struct nsFindFrameHint;
 
 #include "nsVoidArray.h"
@@ -96,7 +96,8 @@ public:
   virtual nsIStyleSheet* GetBackstopStyleSheetAt(PRInt32 aIndex) = 0;
   virtual void ReplaceBackstopStyleSheets(nsISupportsArray* aNewSheets) = 0;
   
-  virtual nsresult GetRuleTree(nsIRuleNode** aResult) = 0;
+  virtual nsresult GetRuleTree(nsRuleNode** aResult) = 0;
+  virtual nsresult ClearCachedDataInRuleTree(nsIStyleRule* aRule) = 0;
 
   virtual nsresult RemoveBodyFixupRule(nsIDocument *aDocument) = 0;
 

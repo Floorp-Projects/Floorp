@@ -45,7 +45,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
-#include "nsIRuleNode.h"
+#include "nsRuleNode.h"
 
 class nsHTMLHeadingElement : public nsGenericHTMLContainerElement,
                              public nsIDOMHTMLHeadingElement

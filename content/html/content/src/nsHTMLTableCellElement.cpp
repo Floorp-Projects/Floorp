@@ -48,7 +48,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "nsIRuleNode.h"
+#include "nsRuleNode.h"
 
 class nsHTMLTableCellElement : public nsGenericHTMLContainerElement,
                                public nsIHTMLTableCellElement,
@@ -84,7 +84,7 @@ public:
                                const nsHTMLValue& aValue,
                                nsAWritableString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-  NS_IMETHOD WalkContentStyleRules(nsIRuleWalker* aRuleWalker);
+  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
 #ifdef DEBUG
@@ -248,7 +248,7 @@ nsHTMLTableCellElement::GetCellIndex(PRInt32* aCellIndex)
 
 
 NS_IMETHODIMP
-nsHTMLTableCellElement::WalkContentStyleRules(nsIRuleWalker* aRuleWalker)
+nsHTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
   // get table, add its rules too
   // XXX can we safely presume structure or do we need to QI on the way up?

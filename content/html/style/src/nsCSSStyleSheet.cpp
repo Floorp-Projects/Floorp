@@ -80,7 +80,7 @@
 #include "nsIPresShell.h"
 #include "nsICSSParser.h"
 #include "nsICSSLoader.h"
-#include "nsIRuleWalker.h"
+#include "nsRuleWalker.h"
 #include "nsCSSAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsINameSpace.h"
@@ -717,7 +717,7 @@ public:
                            nsIAtom* aMedium, 
                            nsIContent* aContent,
                            nsIStyleContext* aParentContext,
-                           nsIRuleWalker* aRuleWalker);
+                           nsRuleWalker* aRuleWalker);
 
   NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
                            nsIAtom* aMedium, 
@@ -725,7 +725,7 @@ public:
                            nsIAtom* aPseudoTag,
                            nsIStyleContext* aParentContext,
                            nsICSSPseudoComparator* aComparator,
-                           nsIRuleWalker* aRuleWalker);
+                           nsRuleWalker* aRuleWalker);
 
   NS_IMETHOD HasStateDependentStyle(nsIPresContext* aPresContext,
                                     nsIAtom* aMedium, 
@@ -3226,7 +3226,7 @@ MOZ_DECL_CTOR_COUNTER(SelectorMatchesData)
 
 struct SelectorMatchesData {
   SelectorMatchesData(nsIPresContext* aPresContext, nsIContent* aContent, 
-                  nsIRuleWalker* aRuleWalker, nsCompatibility* aCompat = nsnull);
+                  nsRuleWalker* aRuleWalker, nsCompatibility* aCompat = nsnull);
   
   virtual ~SelectorMatchesData() 
   {
@@ -3256,7 +3256,7 @@ struct SelectorMatchesData {
   nsIPresContext*   mPresContext;
   nsIContent*       mContent;
   nsIContent*       mParentContent; // if content, content->GetParent()
-  nsCOMPtr<nsIRuleWalker>        mRuleWalker; // Used to add rules to our results.
+  nsRuleWalker*     mRuleWalker; // Used to add rules to our results.
   nsCOMPtr<nsIStyleRuleSupplier> mStyleRuleSupplier; // used to query for the current scope
   
   nsIAtom*          mContentTag;    // if content, then content->GetTag()
@@ -3275,7 +3275,7 @@ struct SelectorMatchesData {
 };
 
 SelectorMatchesData::SelectorMatchesData(nsIPresContext* aPresContext, nsIContent* aContent, 
-                nsIRuleWalker* aRuleWalker,
+                nsRuleWalker* aRuleWalker,
                 nsCompatibility* aCompat /*= nsnull*/)
 {
   MOZ_COUNT_CTOR(SelectorMatchesData);
@@ -3797,7 +3797,7 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
 
 struct ContentEnumData : public SelectorMatchesData {
   ContentEnumData(nsIPresContext* aPresContext, nsIContent* aContent, 
-                  nsIRuleWalker* aRuleWalker)
+                  nsRuleWalker* aRuleWalker)
   : SelectorMatchesData(aPresContext,aContent,aRuleWalker)
   {}
 };
@@ -3947,7 +3947,7 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
                                 nsIAtom* aMedium, 
                                 nsIContent* aContent,
                                 nsIStyleContext* aParentContext,
-                                nsIRuleWalker* aRuleWalker)
+                                nsRuleWalker* aRuleWalker)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   NS_PRECONDITION(nsnull != aContent, "null arg");
@@ -3994,7 +3994,7 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
 struct PseudoEnumData : public SelectorMatchesData {
   PseudoEnumData(nsIPresContext* aPresContext, nsIContent* aParentContent,
                  nsIAtom* aPseudoTag, nsICSSPseudoComparator* aComparator,
-                 nsIRuleWalker* aRuleWalker)
+                 nsRuleWalker* aRuleWalker)
   : SelectorMatchesData(aPresContext, aParentContent, aRuleWalker)
   {
     mPseudoTag = aPseudoTag;
@@ -4061,7 +4061,7 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
                                 nsIAtom* aPseudoTag,
                                 nsIStyleContext* aParentContext,
                                 nsICSSPseudoComparator* aComparator,
-                                nsIRuleWalker* aRuleWalker)
+                                nsRuleWalker* aRuleWalker)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   NS_PRECONDITION(nsnull != aPseudoTag, "null arg");

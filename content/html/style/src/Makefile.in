@@ -65,9 +65,7 @@ CPPSRCS		= \
 		nsHTMLCSSStyleSheet.cpp \
 		nsComputedDOMStyle.cpp \
 		nsROCSSPrimitiveValue.cpp \
-    nsRuleNode.cpp \
-    nsRuleWalker.cpp \
-		$(NULL)
+    $(NULL)
 
 EXPORTS		= \
 		nsDOMCSSDeclaration.h \

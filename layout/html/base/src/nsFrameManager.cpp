@@ -1101,7 +1101,7 @@ DumpContext(nsIFrame* aFrame, nsIStyleContext* aContext)
       NS_RELEASE(pseudoTag);
     }
 
-/* XXXdwh fix debugging here.  Need to add a List method to nsIRuleNode
+/* XXXdwh fix debugging here.  Need to add a List method to nsRuleNode
    and have the context call list on its rule node.
     PRInt32 count = aContext->GetStyleRuleCount();
     if (0 < count) {

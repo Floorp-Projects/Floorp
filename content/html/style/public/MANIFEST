@@ -7,6 +7,4 @@ nsICSSLoaderObserver.h
 nsICSSParser.h
 nsICSSPseudoComparator.h
 nsICSSStyleSheet.h
-nsIRuleWalker.h
-nsIRuleNode.h
 nsIMediaList.h

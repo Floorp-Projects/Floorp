@@ -28,6 +28,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  dom \
 		  webshell \
+      docshell \
 		  pref \
 		  necko \
 		  htmlparser \
@@ -52,6 +53,7 @@ CPPSRCS =				\
   nsHTMLValue.cpp \
   nsImageMapUtils.cpp \
   nsLayoutAtoms.cpp \
+  nsRuleNode.cpp \
   nsStyleUtil.cpp \
   nsStyleStruct.cpp \
   nsTextFragment.cpp \
@@ -69,6 +71,7 @@ CPP_OBJS=					\
   .\$(OBJDIR)\nsHTMLValue.obj \
   .\$(OBJDIR)\nsImageMapUtils.obj \
   .\$(OBJDIR)\nsLayoutAtoms.obj \
+  .\$(OBJDIR)\nsRuleNode.obj \
   .\$(OBJDIR)\nsStyleUtil.obj \
   .\$(OBJDIR)\nsStyleStruct.obj \
   .\$(OBJDIR)\nsTextFragment.obj \

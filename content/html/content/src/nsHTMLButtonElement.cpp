@@ -50,6 +50,7 @@
 #include "nsIForm.h"
 #include "nsIURL.h"
 
+#include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"

@@ -84,7 +84,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsMutationEvent.h"
 
-#include "nsIRuleNode.h"
+#include "nsRuleNode.h"
 
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 

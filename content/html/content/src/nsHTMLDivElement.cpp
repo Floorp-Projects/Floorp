@@ -45,7 +45,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
-#include "nsIRuleNode.h"
+#include "nsRuleNode.h"
 
 // XXX support missing nav attributes? gutter, cols, width
 

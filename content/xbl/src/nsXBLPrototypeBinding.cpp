@@ -554,6 +554,14 @@ nsXBLPrototypeBinding::LoadResources(PRBool* aResult)
         resource->GetAttr(kNameSpaceID_None, nsHTMLAtoms::media, media);
         PRInt32 numSheets = 0;
         doc->GetNumberOfStyleSheets(&numSheets);
+
+#ifdef DEBUG
+        nsCOMPtr<nsILoadGroup> loadGroup;
+        doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+        
+        NS_ASSERTION(loadGroup, "An XBL scoped stylesheet is unable to locate a load group. This means the onload is going to fire too early!");
+#endif
+
         rv = cssLoader->LoadStyleLink(nsnull, url, empty, media, kNameSpaceID_Unknown,
                                       numSheets,
                                       nsnull,

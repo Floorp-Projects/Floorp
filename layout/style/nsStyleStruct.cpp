@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsUnitConversion.h"
@@ -49,6 +48,7 @@
 #include "nsCOMPtr.h"
 #include "nsIStyleSet.h"
 #include "nsIPresShell.h"
+#include "nsIFrame.h"
 #include "nsLayoutAtoms.h"
 #include "prenv.h"
 

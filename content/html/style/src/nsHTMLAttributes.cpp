@@ -56,7 +56,7 @@
 #include "nsCOMPtr.h"
 
 #include "nsIStyleSet.h"
-#include "nsIRuleWalker.h"
+#include "nsRuleWalker.h"
 
 MOZ_DECL_CTOR_COUNTER(HTMLAttribute)
 
@@ -856,7 +856,7 @@ public:
 
   NS_IMETHOD SetStyleSheet(nsIHTMLStyleSheet* aSheet);
 
-  NS_IMETHOD WalkMappedAttributeStyleRules(nsIRuleWalker* aRuleWalker) const;
+  NS_IMETHOD WalkMappedAttributeStyleRules(nsRuleWalker* aRuleWalker) const;
 
 #ifdef UNIQUE_ATTR_SUPPORT
   NS_IMETHOD AddContentRef(void);
@@ -1474,7 +1474,7 @@ HTMLAttributesImpl::SetStyleSheet(nsIHTMLStyleSheet* aSheet)
 }
 
 NS_IMETHODIMP
-HTMLAttributesImpl::WalkMappedAttributeStyleRules(nsIRuleWalker* aRuleWalker) const
+HTMLAttributesImpl::WalkMappedAttributeStyleRules(nsRuleWalker* aRuleWalker) const
 {
   if (aRuleWalker && mMapped)
     aRuleWalker->Forward((nsIStyleRule*)mMapped);

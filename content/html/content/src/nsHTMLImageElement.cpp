@@ -76,7 +76,7 @@
 
 #include "nsILoadGroup.h"
 
-#include "nsIRuleNode.h"
+#include "nsRuleNode.h"
 
 #include "nsIJSContextStack.h"
 
