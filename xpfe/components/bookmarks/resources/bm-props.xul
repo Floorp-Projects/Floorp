@@ -20,10 +20,19 @@
 
 <?xml-stylesheet href="bookmarks.css" type="text/css"?>
 
+<!DOCTYPE window
+[
+<!ENTITY bookmarks.title.label        "Bookmarks Properties">
+<!ENTITY bookmarks.name.label         "Name:">
+<!ENTITY bookmarks.location.label     "Location:">
+<!ENTITY bookmarks.shortcut.label     "Shortcut:">
+<!ENTITY bookmarks.description.label  "Description:">
+]>
+
 <xul:window
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns="http://www.w3.org/TR/REC-html40"
-  title="Bookmark Properties">
+  title="&bookmarks.title.label;">
 
 
   <xul:data>
@@ -32,76 +41,31 @@
     <xul:observes element="dialog.start" attribute="ready" onchange="onLoad()"/>
   </xul:data>
 
-  <script>
-    var node;
-    var form_ids;
-    var bm_attrs;
+  <script src="bm-props.js" />
 
-    function onLoad() {
-      node = new Object;
-      node = document.getElementById("properties_node");
-
-      form_ids = new Array("name", "url", "shortcut",    "description");
-      bm_attrs = new Array("Name", "url", "ShortcutURL", "Description");
-
-      var element;
-      var value;
-      for (var ii=0; ii != form_ids.length; ii++) {
-        element = document.getElementById(form_ids[ii]);
-        value = node.getAttribute(bm_attrs[ii]);
-        element.setAttribute("value", value);
-      }
-    }
-    function commit() {
-      var element;
-      var value;
-      for (var ii=0; ii != form_ids.length; ii++) {
-        element = document.getElementById(form_ids[ii]);
-        node.setAttribute(bm_attrs[ii], element.value);
-      }
-      closeDialog();
-    }
-
-    function cancel() {
-      closeDialog();
-    }
-    function closeDialog() {
-      // XXX This needs to be replaced with window.close()!
-      var toolkitCore = XPAppCoresManager.Find("toolkitCore");
-      if (!toolkitCore) {
-        toolkitCore = new ToolkitCore();
-        if (toolkitCore) {
-          toolkitCore.Init("toolkitCore");
-        }
-      }
-      if (toolkitCore) {
-        toolkitCore.CloseWindow(window);
-      }
-    }
-  </script>
    <table><tr><td>
     <table>
      <tr>
       <td align="right">
-       Name:
+       &bookmarks.name.label;
       </td><td>
        <input type="text" id="name" size="60"/>
       </td>
      </tr><tr>
       <td align="right">
-       Location:
+       &bookmarks.location.label;
       </td><td>
        <input type="text" id="url" size="60"/>
       </td>
      </tr><tr>
       <td align="right">
-       Shortcut:
+       &bookmarks.shortcut.label;
       </td><td>
        <input type="text" id="shortcut" size="60"/>
       </td>
      </tr><tr valign="top">
       <td align="right">
-       Description:
+       &bookmarks.description.label;
       </td><td>
        <textarea id="description" rows="7" cols="60" wrap="hard">
        </textarea>
