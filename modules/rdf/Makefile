@@ -2,7 +2,7 @@
 
 DEPTH = ../..
 
-DIRS = classes include src
+DIRS = include src
 
 INCLUDE = $(INCLUDE) -I$(DEPTH)/modules/libimg/public
 

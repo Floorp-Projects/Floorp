@@ -56,7 +56,6 @@ CSRCS		+= \
 		  pm2rdf.c \
 		  es2mcf.c \
 		  columns.c \
-		  rdfjava.c \
 		  ht.c \
 		  $(NULL)
 endif

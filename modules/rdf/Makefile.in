@@ -7,7 +7,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = classes include src
+DIRS = include src
 
 INCLUDE += -I$(topsrcdir)/modules/libimg/public
 
