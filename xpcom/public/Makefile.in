@@ -47,6 +47,7 @@ EXPORTS		= \
 		  nsXPComFactory.h	\
 		  nsXPComCIID.h		\
 		  nsIEventQueueService.h \
+		  nsIGenericFactory.h \
 		  $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
