@@ -392,12 +392,22 @@ nsFocusController::GetSuppressFocus(PRBool* aSuppressFocus)
 }
 
 NS_IMETHODIMP
-nsFocusController::SetSuppressFocus(PRBool aSuppressFocus)
+nsFocusController::SetSuppressFocus(PRBool aSuppressFocus, char* aReason)
 {
-  if(aSuppressFocus)
+  if(aSuppressFocus) {
     ++mSuppressFocus;
-  else if(mSuppressFocus > 0)
+#ifdef DEBUG_hyatt
+    printf("[%d] SuppressFocus incremented to %d. The reason is %s.\n", this, mSuppressFocus, aReason);
+#endif
+  }
+  else if(mSuppressFocus > 0) {
     --mSuppressFocus;
+#ifdef DEBUG_hyatt
+    printf("[%d] SuppressFocus decremented to %d. The reason is %s.\n", this, mSuppressFocus, aReason);
+#endif
+  }
+  else 
+    NS_ASSERTION(PR_FALSE, "Attempt to decrement focus controller's suppression when no suppression active!\n");
 
   // we are unsuppressing after activating, so update focus-related commands
   // we need this to update commands in the case where an element is focused.

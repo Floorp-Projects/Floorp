@@ -376,7 +376,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             if(ourWindow) {
               ourWindow->GetRootFocusController(getter_AddRefs(focusController));
               if (focusController)
-                focusController->SetSuppressFocus(PR_TRUE);
+                focusController->SetSuppressFocus(PR_TRUE, "NS_GOTFOCUS ESM Suppression");
             }
             
             gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &blurevent, nsnull, NS_EVENT_FLAG_INIT, &blurstatus);
@@ -385,7 +385,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
               
 
             if (focusController) {
-              focusController->SetSuppressFocus(PR_FALSE);
+              focusController->SetSuppressFocus(PR_FALSE, "NS_GOTFOCUS ESM Suppression");
             }
           }
         }
@@ -494,7 +494,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         PRBool isSuppressed;
         focusController->GetSuppressFocus(&isSuppressed);
         while(isSuppressed){
-          focusController->SetSuppressFocus(PR_FALSE); // Unsuppress and let the command dispatcher listen again.
+          focusController->SetSuppressFocus(PR_FALSE, "Activation Suppression"); // Unsuppress and let the command dispatcher listen again.
           focusController->GetSuppressFocus(&isSuppressed);
         }
         focusController->SetSuppressFocusScroll(PR_FALSE);
@@ -533,7 +533,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         ourWindow->GetRootFocusController(getter_AddRefs(focusController));
         if (focusController) {
           // Suppress the command dispatcher.
-          focusController->SetSuppressFocus(PR_TRUE);
+          focusController->SetSuppressFocus(PR_TRUE, "Deactivate Suppression");
         }
       }
 
@@ -587,7 +587,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
       if (focusController) {
         focusController->SetActive(PR_FALSE);
-        //focusController->SetSuppressFocus(PR_FALSE);
+        focusController->SetSuppressFocus(PR_FALSE, "Deactivate Suppression");
       }
     } 
     
@@ -3158,7 +3158,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
             if(oldWindow)
 			  oldWindow->GetRootFocusController(getter_AddRefs(oldFocusController));
             if(oldFocusController && oldFocusController != newFocusController)
-              oldFocusController->SetSuppressFocus(PR_TRUE);
+              oldFocusController->SetSuppressFocus(PR_TRUE, "SendFocusBlur Window Switch");
           }
           
           nsCOMPtr<nsIEventStateManager> esm;
@@ -3207,7 +3207,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
 		    newWindow->GetRootFocusController(getter_AddRefs(newFocusController));
 		    oldWindow->GetRootFocusController(getter_AddRefs(oldFocusController));
             if(oldFocusController && oldFocusController != newFocusController)
-			  oldFocusController->SetSuppressFocus(PR_TRUE);
+			  oldFocusController->SetSuppressFocus(PR_TRUE, "SendFocusBlur Window Switch #2");
 		  }
 
       nsCOMPtr<nsIEventStateManager> esm;
