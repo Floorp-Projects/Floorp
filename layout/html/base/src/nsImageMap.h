@@ -126,7 +126,6 @@ protected:
   nsresult AddArea(nsIContent* aArea);
  
   nsresult ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus);
-  nsresult Invalidate(nsIPresContext* aPresContext, nsIFrame* aFrame, nsRect& aRect);
 
   void MaybeUpdateAreas(nsIContent *aContent);
 

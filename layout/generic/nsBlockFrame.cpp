@@ -2307,10 +2307,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
         printf("%p invalidate 6 (%d, %d, %d, %d)\n",
                this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
 #endif
-        if (!dirtyRect.IsEmpty()) {
-          Invalidate(aState.mPresContext, dirtyRect);
-        }
-
+        Invalidate(dirtyRect);
       } else {
         if (oldCombinedArea.width != lineCombinedArea.width) {
           nsRect  dirtyRect;
@@ -2329,9 +2326,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
           printf("%p invalidate 7 (%d, %d, %d, %d)\n",
                  this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
 #endif
-          if (!dirtyRect.IsEmpty()) {
-            Invalidate(aState.mPresContext, dirtyRect);
-          }
+          Invalidate(dirtyRect);
         }
         if (oldCombinedArea.height != lineCombinedArea.height) {
           nsRect  dirtyRect;
@@ -2350,9 +2345,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
           printf("%p invalidate 8 (%d, %d, %d, %d)\n",
                  this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
 #endif
-          if (!dirtyRect.IsEmpty()) {
-            Invalidate(aState.mPresContext, dirtyRect);
-          }
+          Invalidate(dirtyRect);
         }
       }
     }
@@ -2467,9 +2460,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       if (aLine->IsForceInvalidate())
         printf("  dirty line is %p\n", NS_STATIC_CAST(void*, aLine.get());
 #endif
-      if (!dirtyRect.IsEmpty()) {
-        Invalidate(aState.mPresContext, dirtyRect);
-      }
+      Invalidate(dirtyRect);
     }
   }
 
@@ -2558,15 +2549,15 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
     else {
       // Free up the fromLine now that it's empty
       // Its bounds might need to be redrawn, though.
-      if (aDamageDeletedLines && !fromLine->mBounds.IsEmpty()) {
-        Invalidate(aState.mPresContext, fromLine->mBounds);
+      // XXX WHY do we invalidate the bounds AND the combined area? doesn't
+      // the combined area always enclose the bounds?
+      if (aDamageDeletedLines) {
+        Invalidate(fromLine->mBounds);
       }
       if (aFromLine.next() != end_lines())
         aFromLine.next()->MarkPreviousMarginDirty();
 
-      nsRect combinedArea = fromLine->GetCombinedArea();
-      if (!combinedArea.IsEmpty())
-        Invalidate(aState.mPresContext, combinedArea);
+      Invalidate(fromLine->GetCombinedArea());
       aFromContainer.erase(aFromLine);
       aState.FreeLineBox(fromLine);
     }
@@ -2615,16 +2606,10 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
 {
   NS_PRECONDITION(aDY != 0, "why slide a line nowhere?");
 
-  nsRect lineCombinedArea(aLine->GetCombinedArea());
-
-  PRBool doInvalidate = !lineCombinedArea.IsEmpty();
-  if (doInvalidate)
-    Invalidate(aState.mPresContext, lineCombinedArea);
+  Invalidate(aLine->GetCombinedArea());
   // Adjust line state
   aLine->SlideBy(aDY);
-  if (doInvalidate) {
-    Invalidate(aState.mPresContext, aLine->GetCombinedArea());
-  }
+  Invalidate(aLine->GetCombinedArea());
 
   // Adjust the frames in the line
   nsIFrame* kid = aLine->mFirstChild;
@@ -4796,9 +4781,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
         printf("%p invalidate 10 (%d, %d, %d, %d)\n",
                this, lineCombinedArea.x, lineCombinedArea.y, lineCombinedArea.width, lineCombinedArea.height);
 #endif
-        if (!lineCombinedArea.IsEmpty()) {
-          Invalidate(aPresContext, lineCombinedArea);
-        }
+        Invalidate(lineCombinedArea);
         cur->Destroy(presShell);
 
         // If we're removing a line, ReflowDirtyLines isn't going to
@@ -6279,10 +6262,9 @@ nsBlockFrame::RenumberListsFor(nsIPresContext* aPresContext,
         if (changed) {
           kidRenumberedABullet = PR_TRUE;
 
-          nsRect damageRect = listItem->mBullet->GetRect();
-          damageRect.x = damageRect.y = 0;
-          if (damageRect.width > 0 || damageRect.height > 0)
-            listItem->mBullet->Invalidate(aPresContext, damageRect);
+          // Invalidate the bullet content area since it may look different now
+          nsRect damageRect(nsPoint(0, 0), listItem->mBullet->GetSize());
+          listItem->mBullet->Invalidate(damageRect);
         }
       }
 

@@ -565,9 +565,8 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
   
   // handle iconLoads first...
   if (HandleIconLoads(aRequest, PR_FALSE)) {
-    if (!aRect->IsEmpty()) {
-      Invalidate(GetPresContext(), *aRect, PR_FALSE);
-    }
+    // Image changed, invalidate
+    Invalidate(*aRect, PR_FALSE);
     return NS_OK;
   }
 
@@ -591,10 +590,8 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
 
   nsRect r = ConvertPxRectToTwips(*aRect);
   mTransform.TransformCoord(&r.x, &r.y, &r.width, &r.height);
-
-  if (!r.IsEmpty()) {
-    Invalidate(GetPresContext(), r, PR_FALSE);
-  }
+  // Invalidate updated image
+  Invalidate(r, PR_FALSE);
   
   return NS_OK;
 }
@@ -647,9 +644,8 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
       } else {
         nsSize s = GetSize();
         nsRect r(0, 0, s.width, s.height);
-        if (!r.IsEmpty()) {
-          Invalidate(presContext, r, PR_FALSE);
-        }
+        // Update border+content to account for image change
+        Invalidate(r, PR_FALSE);
       }
     }
   }
@@ -682,9 +678,8 @@ nsImageFrame::FrameChanged(imgIContainer *aContainer,
   nsRect r = ConvertPxRectToTwips(*aDirtyRect);
   mTransform.TransformCoord(&r.x, &r.y, &r.width, &r.height);
 
-  if (!r.IsEmpty()) {
-    Invalidate(GetPresContext(), r, PR_FALSE);
-  }
+  // Update border+content to account for image change
+  Invalidate(r, PR_FALSE);
   return NS_OK;
 }
 
@@ -1928,7 +1923,8 @@ void nsImageFrame::InvalidateIcon()
               NSIntPixelsToTwips(ICON_SIZE+ICON_PADDING, p2t),
               NSIntPixelsToTwips(ICON_SIZE+ICON_PADDING, p2t));
   NS_ASSERTION(!rect.IsEmpty(), "icon rect cannot be empty!");
-  Invalidate(presContext, rect, PR_FALSE);
+  // update image area
+  Invalidate(rect, PR_FALSE);
 }
 
 NS_IMPL_ISUPPORTS1(nsImageFrame::IconLoad, nsIObserver)

@@ -320,9 +320,7 @@ ViewportFrame::Reflow(nsIPresContext*          aPresContext,
       (eReflowReason_Resize == aReflowState.reason) ||
       (eReflowReason_StyleChange == aReflowState.reason)) {
     nsRect damageRect(0, 0, aDesiredSize.width, aDesiredSize.height);
-    if (!damageRect.IsEmpty()) {
-      Invalidate(aPresContext, damageRect, PR_FALSE);
-    }
+    Invalidate(damageRect, PR_FALSE);
   }
 
   NS_FRAME_TRACE_REFLOW_OUT("ViewportFrame::Reflow", aStatus);

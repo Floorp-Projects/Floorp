@@ -1719,9 +1719,7 @@ nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
           // repaint the entire row
           // XXX Improve this so the row knows it should bitblt (or repaint) those
           // cells that change position...
-          if (!kidRect.IsEmpty()) {
-            Invalidate(aPresContext, kidRect);
-          }
+          Invalidate(kidRect);
           
           // Invalidate the area we're offseting. Note that we only repaint within
           // our existing frame bounds.
@@ -1730,7 +1728,7 @@ nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
           if (kidRect.YMost() < mRect.height) {
             nsRect  dirtyRect(0, kidRect.YMost(),
                               mRect.width, mRect.height - kidRect.YMost());
-            Invalidate(aPresContext, dirtyRect);
+            Invalidate(dirtyRect);
           }
 
           // Adjust the frames that follow
@@ -1760,7 +1758,7 @@ nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
       // XXX We should change CalculateRowHeights() to return the bounding
       // rect of what changed. Or whether anything moved or changed size...
       nsRect  dirtyRect(0, 0, mRect.width, mRect.height);
-      Invalidate(aPresContext, dirtyRect);
+      Invalidate(dirtyRect);
     }
     else {
       // need to recover the  OverflowArea

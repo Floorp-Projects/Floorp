@@ -1045,10 +1045,11 @@ nsContainerFrame::FinishReflowChild(nsIFrame*                 aKidFrame,
       PositionChildViews(aPresContext, aKidFrame);
     }
 
-    // We also need to redraw the frame because if the frame's Reflow issued any
-    // invalidates, then they will be at the wrong offset ... note that this includes
-    // invalidates issued against the frame's children, so we need to invalidate
-    // the overflow area too.
+    // We also need to redraw everything associated with the frame
+    // because if the frame's Reflow issued any invalidates, then they
+    // will be at the wrong offset ... note that this includes
+    // invalidates issued against the frame's children, so we need to
+    // invalidate the overflow area too.
     aKidFrame->Invalidate(aDesiredSize.mOverflowArea);
   }
   

@@ -239,7 +239,7 @@ NS_IMETHODIMP
 nsGfxRadioControlFrame::OnChecked(nsIPresContext* aPresContext,
                                   PRBool aChecked)
 {
-  nsFormControlHelper::ForceDrawFrame(aPresContext, this);
+  Invalidate(GetOutlineRect(), PR_FALSE);
   return NS_OK;
 }
 

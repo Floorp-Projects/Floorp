@@ -104,8 +104,6 @@ public:
                                  nsIFormControlFrame * aFrame,
                                  nsIFontMetrics** aFontMet);
 
-  static void ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame * aFrame);
-
   // Map platform line endings (CR, CRLF, LF) to DOM line endings (LF)
   static void PlatformToDOMLineBreaks(nsString &aString);
 

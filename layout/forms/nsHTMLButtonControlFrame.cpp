@@ -415,7 +415,8 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
     // See if it's targeted at us
     nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
     if (command) {
-      Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+      // I'm not sure what exactly this Invalidate is for
+      Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
 
       nsReflowType  reflowType;
       command->GetType(reflowType);

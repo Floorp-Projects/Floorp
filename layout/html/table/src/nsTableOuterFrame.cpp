@@ -628,7 +628,7 @@ nsTableOuterFrame::InvalidateDamage(nsIPresContext* aPresContext,
       damage.UnionRect(damage, *aOldOverflowArea);
     }
   }
-  Invalidate(aPresContext, damage);
+  Invalidate(damage);
 }
 
 nscoord

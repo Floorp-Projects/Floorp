@@ -1010,13 +1010,26 @@ public:
    */
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const = 0;
 
-  // Invalidate part of the frame by asking the view manager to repaint.
-  // aDamageRect is in the frame's local coordinate space
+  /**
+   * Invalidate part of the frame by asking the view manager to repaint.
+   * aDamageRect is allowed to extend outside the frame's bounds. We'll do the right
+   * thing. But it must be within the bounds of the view enclosing this frame.
+   * We deliberately don't have an Invalidate() method that defaults to the frame's bounds.
+   * We want all callers to *think* about what has changed in the frame and what area might
+   * need to be repainted.
+   *
+   * @param aDamageRect is in the frame's local coordinate space
+   */
   void Invalidate(const nsRect& aDamageRect, PRBool aImmediate = PR_FALSE) const;
-  // XXX deprecated, remove once we've fixed all callers
-  void Invalidate(nsIPresContext* aPresContext,
-                  const nsRect& aDamageRect, PRBool aImmediate = PR_FALSE) const
-  { Invalidate(aDamageRect, aImmediate); }
+
+  /**
+   * Computes a rect that includes this frame's outline. The returned rect is
+   * relative to this frame's origin.
+   *
+   * @param if nonnull, we record whether this rect is bigger than the frame's bounds
+   * @return the rect relative to this frame's origin
+   */
+  nsRect GetOutlineRect(PRBool* aAnyOutline = nsnull) const;
 
   /** Selection related calls
    */

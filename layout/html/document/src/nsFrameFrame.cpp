@@ -393,14 +393,9 @@ nsSubDocumentFrame::Reflow(nsIPresContext*          aPresContext,
   // Determine if we need to repaint our border, background or outline
   CheckInvalidateSizeChange(aPresContext, aDesiredSize, aReflowState);
 
-  {
-    // Invalidate the frame
-    nsRect frameRect = GetRect();
-    nsRect rect(0, 0, frameRect.width, frameRect.height);
-    if (!rect.IsEmpty()) {
-      Invalidate(aPresContext, rect, PR_FALSE);
-    }
-  }
+  // Invalidate the frame contents
+  nsRect rect(nsPoint(0, 0), GetSize());
+  Invalidate(rect, PR_FALSE);
 
   if (!aPresContext->IsPaginated()) {
     nsCOMPtr<nsIDocShell> docShell;

@@ -1721,24 +1721,10 @@ NS_IMETHODIMP nsBulletFrame::OnDataAvailable(imgIRequest *aRequest,
                                              gfxIImageFrame *aFrame,
                                              const nsRect *aRect)
 {
-  if (!aRect) return NS_ERROR_NULL_POINTER;
-  NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED); // Why are we bothering?
-  
-
-  // XXX Should we do anything here if an error occured in the decode?
-  
-  nsRect r(*aRect);
-
-  // XXX what if this frame ever has a padding or border?
-  
-  float p2t;
-  p2t = mPresContext->PixelsToTwips();
-  r.x = NSIntPixelsToTwips(r.x, p2t);
-  r.y = NSIntPixelsToTwips(r.y, p2t);
-  r.width = NSIntPixelsToTwips(r.width, p2t);
-  r.height = NSIntPixelsToTwips(r.height, p2t);
-
-  Invalidate(mPresContext, r, PR_FALSE);
+  // The image has changed.
+  // Invalidate the entire content area. Maybe it's not optimal but it's simple and
+  // always correct, and I'll be a stunned mullet if it ever matters for performance
+  Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
 
   return NS_OK;
 }
@@ -1768,18 +1754,9 @@ NS_IMETHODIMP nsBulletFrame::FrameChanged(imgIContainer *aContainer,
                                           gfxIImageFrame *aNewFrame,
                                           nsRect *aDirtyRect)
 {
-  NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED); // Why are we bothering?
-
-  nsRect r(*aDirtyRect);
-
-  float p2t;
-  p2t = mPresContext->PixelsToTwips();
-  r.x = NSIntPixelsToTwips(r.x, p2t);
-  r.y = NSIntPixelsToTwips(r.y, p2t);
-  r.width = NSIntPixelsToTwips(r.width, p2t);
-  r.height = NSIntPixelsToTwips(r.height, p2t);
-
-  Invalidate(mPresContext, r, PR_FALSE);
+  // Invalidate the entire content area. Maybe it's not optimal but it's simple and
+  // always correct.
+  Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
 
   return NS_OK;
 }

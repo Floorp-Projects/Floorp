@@ -1413,25 +1413,6 @@ nsListBoxBodyFrame::GetListItemNextSibling(nsIContent* aListItem, nsIContent** a
   aSiblingIndex = -1; // no match, so there is no next sibling
 }
 
-void
-nsListBoxBodyFrame::ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame * aFrame)
-{
-  if (aFrame == nsnull) {
-    return;
-  }
-  nsIView * view;
-  nsPoint   pnt;
-  aFrame->GetOffsetFromView(aPresContext, pnt, &view);
-  nsRect rect = aFrame->GetRect();
-  rect.x = pnt.x;
-  rect.y = pnt.y;
-  if (view) {
-    nsIViewManager* viewMgr = view->GetViewManager();
-    if (viewMgr)
-      viewMgr->UpdateView(view, rect, NS_VMREFRESH_IMMEDIATE);
-  }
-}
-
 //////////////////////////////////////////////////////////////////////////
 ///// nsListboxScrollPortFrame
 
