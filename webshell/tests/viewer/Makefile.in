@@ -117,6 +117,10 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 RESFILE		= viewer.res
 EXTRA_DSO_LIBS	+= xpwidgets_s dbgrobot widget_windows
+# Get rid of console window
+ifdef GNU_CC
+LDFLAGS		+= -mwindows
+endif
 endif
 
 ifeq ($(OS_ARCH),OS2)
