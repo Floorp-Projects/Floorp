@@ -38,6 +38,7 @@ class nsString;
 class nsStringArray;
 class nsICaret;
 class nsIStyleContext;
+class nsISelectionMgr;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \
@@ -254,6 +255,11 @@ public:
                                  PRUint32  aVFlags,
                                  PRInt32   aHOffsetPercent, 
                                  PRUint32  aHFlags) const = 0;
+
+  /**
+   * Notify the SelectionMgr that we have something to copy.
+   */
+  NS_IMETHOD DoCopy(nsISelectionMgr* aSelectionMgr) = 0;
 
   /**
    * Get the caret, if it exists. AddRefs it.

@@ -2067,68 +2067,9 @@ nsBrowserWindow::DoCopy()
 {
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
-    nsCOMPtr<nsIDocument> doc;
-    shell->GetDocument(getter_AddRefs(doc));
-    if (doc) {
-      nsString buffer;
-    
-      nsIDOMSelection* sel = nsnull;
-      shell->GetSelection(&sel);
-      
-      if (sel != nsnull)
-        doc->CreateXIF(buffer,sel);
-      NS_IF_RELEASE(sel);
-
-      nsIParser* parser;
-
-      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-
-      nsresult rv = nsRepository::CreateInstance(kCParserCID, 
-                                                 nsnull, 
-                                                 kCParserIID, 
-                                                 (void **)&parser);
-
-      if (NS_OK == rv) {
-        nsIHTMLContentSink* sink = nsnull;
-	
-        rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
-
-        nsISelectionMgr* selectionMgr;
-        if (!NS_SUCCEEDED(mAppShell->GetSelectionMgr(&selectionMgr))
-            || !selectionMgr)
-          return;
-
-        ostream* copyStream;
-        if (!NS_SUCCEEDED(selectionMgr->GetCopyOStream(&copyStream)))
-        {
-          NS_RELEASE(selectionMgr);
-          return;
-        }
-        ((nsHTMLContentSinkStream*)sink)->SetOutputStream(*copyStream);
-
-        if (NS_OK == rv) {
-          parser->SetContentSink(sink);
-	  
-          nsIDTD* dtd = nsnull;
-          rv = NS_NewXIFDTD(&dtd);
-          if (NS_OK == rv) 
-          {
-            parser->RegisterDTD(dtd);
-            //dtd->SetContentSink(sink);
-            //dtd->SetParser(parser);
-            parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
-          }
-          NS_IF_RELEASE(dtd);
-          NS_IF_RELEASE(sink);
-
-          selectionMgr->CopyToClipboard();
-          NS_RELEASE(selectionMgr);
-        }
-        NS_RELEASE(parser);
-      }
-    }
-
+    nsISelectionMgr* selectionMgr;
+    if (NS_SUCCEEDED(mAppShell->GetSelectionMgr(&selectionMgr)))
+      shell->DoCopy(selectionMgr);
     NS_RELEASE(shell);
   }
 }
