@@ -52,6 +52,7 @@ content/communicator/printPageSetup.js,               comm/content/communicator/
 content/communicator/printPageSetup.xul,              comm/content/communicator/printPageSetup.xul
 content/communicator/printPreviewBindings.xml,        comm/content/communicator/printPreviewBindings.xml
 content/communicator/printing.js,                     comm/content/communicator/printing.js
+content/communicator/XPCNativeWrapper.js,             comm/content/communicator/XPCNativeWrapper.js
 
 # from xpfe\components jar.mn
 content/communicator/alerts,                          comm/content/communicator/alerts
