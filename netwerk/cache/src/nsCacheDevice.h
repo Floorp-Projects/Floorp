@@ -26,6 +26,8 @@
 
 #include "nspr.h"
 #include "nsError.h"
+#include "nsITransport.h"
+#include "nsCacheEntry.h"
 
 
 class nsCacheEntry;
@@ -33,25 +35,20 @@ class nsCacheEntry;
 
 class nsCacheDevice {
 public:
-    nsCacheDevice(PRUint32  deviceID) : mDeviceID(deviceID){}
     virtual ~nsCacheDevice() = 0;
 
-    //** decide on strings or ints for IDs
-    virtual PRUint32 GetDeviceID(void)     { return mDeviceID; }
+    virtual const char *  GetDeviceID(void) = 0;
 
     virtual nsresult ActivateEntryIfFound( nsCacheEntry * entry ) = 0;
     virtual nsresult DeactivateEntry( nsCacheEntry * entry ) = 0;
-
     virtual nsresult BindEntry( nsCacheEntry * entry ) = 0;
 
-    //** need to define stream factory methods
+    virtual nsresult GetTransportForEntry( nsCacheEntry * entry,
+                                           nsITransport **transport ) = 0;
+
+    virtual nsresult OnDataSizeChanged( nsCacheEntry * entry ) = 0;
 
     //** need to define methods for enumerating entries
-
-    //** need notification methods for size changes on non-streamBased entries
-
-protected:
-    PRUint32  mDeviceID;
 };
 
 #endif // _nsCacheDevice_h_

@@ -26,7 +26,6 @@
 
 
 nsMemoryCacheDevice::nsMemoryCacheDevice()
-    : nsCacheDevice(kMemoryCacheID)
 {
 
 }
@@ -63,6 +62,13 @@ nsMemoryCacheDevice::Create(nsCacheDevice **result)
     }
     *result = device;
     return rv;
+}
+
+
+const char *
+nsMemoryCacheDevice::GetDeviceID()
+{
+    return "memory";
 }
 
 
@@ -112,8 +118,17 @@ nsMemoryCacheDevice::BindEntry(nsCacheEntry * entry)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-//** need stream factory methods
+nsresult
+nsMemoryCacheDevice::GetTransportForEntry( nsCacheEntry * entry,
+                                           nsITransport **transport )
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsMemoryCacheDevice::OnDataSizeChanged( nsCacheEntry * entry )
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 //** need methods for enumerating entries
-
-//** need notification methods for size changes on non-streamBased entries (for eviction)

@@ -26,7 +26,6 @@
 
 
 nsDiskCacheDevice::nsDiskCacheDevice()
-  : nsCacheDevice(kDiskCacheID)
 {
 
 }
@@ -61,6 +60,13 @@ nsDiskCacheDevice::Create(nsCacheDevice **result)
 }
 
 
+const char *
+nsDiskCacheDevice::GetDeviceID()
+{
+    return "disk";
+}
+
+
 nsresult
 nsDiskCacheDevice::ActivateEntryIfFound(nsCacheEntry * entry)
 {
@@ -81,6 +87,17 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-//** need stream factory methods
+nsresult
+nsDiskCacheDevice::GetTransportForEntry( nsCacheEntry * entry,
+                                           nsITransport **transport )
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsDiskCacheDevice::OnDataSizeChanged( nsCacheEntry * entry )
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 //** need methods for enumerating entries
