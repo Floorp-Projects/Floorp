@@ -30,6 +30,16 @@
      var controller =
        document.commandDispatcher.getControllerForCommand('cmd_endLine');
      controller.doCommand('cmd_endLine');"/>
+<key id="key_up" keycode="VK_UP" shift="true"
+  onkeypress="
+    var controller =
+      document.commandDispatcher.getControllerForCommand('cmd_beginLine');
+    controller.doCommand('cmd_selectBeginLine');"/>
+<key id="key_down" keycode="VK_DOWN" shift="true"
+   onkeypress="
+     var controller =
+       document.commandDispatcher.getControllerForCommand('cmd_endLine');
+     controller.doCommand('cmd_selectEndLine');"/>
 
 </keyset>
 <!-- End Mac-specific key bindings -->
