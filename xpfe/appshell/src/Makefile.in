@@ -44,7 +44,10 @@ CPPSRCS		= \
 		nsAbout.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS = -L$(DIST)/bin -ljsdom $(FULLCIRCLE_LIBS)
+EXTRA_DSO_LDOPTS = \
+		-L$(DIST)/bin -ljsdom \
+		$(MOZ_NECKO_UTIL_LIBS) \
+		$(FULLCIRCLE_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
